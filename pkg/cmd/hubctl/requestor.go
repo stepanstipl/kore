@@ -220,7 +220,10 @@ func (c *Requestor) makeValues(in io.Reader, paths []string) ([]string, error) {
 		}
 		v, err := op.Apply(data)
 		if err != nil {
-			return list, fmt.Errorf("failed to apply jsonpath to response body: %s", err)
+			if !strings.Contains(err.Error(), "key not found") {
+				return list, fmt.Errorf("failed to apply jsonpath to response body: %s", err)
+			}
+			v = []byte("Unknown")
 		}
 
 		list = append(list, strings.ReplaceAll(string(v), "\"", ""))

@@ -5,7 +5,6 @@ metadata:
   name: readonly
 spec:
   enabled: true
-  teams: [devs]
   description: Provides a cluster role issuing readonly permissions to the cluster resources
   rules:
     - nonResourceURLs:

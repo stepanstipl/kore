@@ -78,7 +78,7 @@ func GetClustersCommand(config Config) cli.Command {
 			{
 				Name:  "get",
 				Usage: "Used to retrieve one of all cluster from the hub",
-				Flags: []cli.Flag{
+				Flags: append([]cli.Flag{
 					cli.StringFlag{
 						Name:  "name,n",
 						Usage: "The name of the integration to retrieve `NAME`",
@@ -87,7 +87,7 @@ func GetClustersCommand(config Config) cli.Command {
 						Name:  "team,t",
 						Usage: "Used to filter the results by team `TEAM`",
 					},
-				},
+				}, DefaultOptions...),
 				Action: func(ctx *cli.Context) error {
 					return NewRequest().
 						WithConfig(config).
@@ -98,7 +98,7 @@ func GetClustersCommand(config Config) cli.Command {
 						Render(
 							Column("Name", ".metadata.name"),
 							Column("Domain", ".spec.domain"),
-							Column("Domain", ".status.endpoint"),
+							Column("Endpoint", ".status.endpoint"),
 							Column("Status", ".status.status"),
 						).
 						Get()

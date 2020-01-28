@@ -24,6 +24,8 @@ import (
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -36,6 +38,18 @@ func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (rec
 	logger.Debug("attempting to delete the object")
 
 	finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
+
+	// @step: we should delete the secert from api
+	if err := kubernetes.DeleteIfExists(ctx, a.mgr.GetClient(), &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      object.Name,
+			Namespace: object.Namespace,
+		},
+	}); err != nil {
+		log.WithError(err).Error("trying to delete the secret from api")
+
+		return reconcile.Result{}, err
+	}
 
 	if err := finalizer.Remove(object); err != nil {
 		log.WithError(err).Error("trying to remove the finalizer")

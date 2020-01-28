@@ -2,7 +2,8 @@
 apiVersion: gke.compute.hub.appvia.io/v1alpha1
 kind: GKE
 metadata:
-  name: dev
+  name: prod
+  namespace: devs
 spec:
   description: Dev Cluster
   version: 1.14.8-gke.33
@@ -37,14 +38,16 @@ spec:
 apiVersion: clusters.compute.hub.appvia.io/v1
 kind: Kubernetes
 metadata:
-  name: dev
+  name: prod
 spec:
   domain: labs.appvia.io
+  inheritTeamMembers: true
+  defaultTeamRole: cluster-admin
   provider:
     group: gke.compute.hub.appvia.io
     version: v1alpha1
     kind: GKE
-    namespace: hub-admin
-    name: dev
+    namespace: devs
+    name: prod
   enableDefaultTrafficBlock: false
   clusterUsers: []

@@ -319,8 +319,17 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 		return err
 	}
 
-	// @step: create a deployment for external dns
-	// @TODO this needs to be completely changed but it's ok for now
+	// @step: wait for the service to have an endpoint
+	timeout, cancel := context.WithTimeout(ctx, 60*time.Second)
+	defer cancel()
+
+	endpoint, err := kubernetes.WaitForServiceEndpoint(timeout, cc, KubeProxyNamespace, "proxy")
+	if err != nil {
+		logger.WithError(err).Error("trying to wait for service endpont")
+
+		return err
+	}
+	cluster.Status.Endpoint = endpoint
 
 	return nil
 }

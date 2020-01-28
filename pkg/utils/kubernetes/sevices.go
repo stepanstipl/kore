@@ -19,7 +19,6 @@
 
 package kubernetes
 
-/*
 import (
 	"context"
 	"time"
@@ -37,29 +36,37 @@ func WaitForServiceEndpoint(ctx context.Context, cc client.Client, namespace, na
 		"name":      name,
 	})
 	logger.Debug("checking if the service has and endpoint yet")
-	var endpoint string
 
 	for {
+		service := &v1.Service{}
 		err := func() error {
 			select {
 			case <-ctx.Done():
 			default:
 			}
-			service := &v1.Service{}
-			if err := cc.Get(ctx, types.NamespacedName{Namespace: namespace, Name: name}, service); err != nil {
+			if err := cc.Get(ctx, types.NamespacedName{
+				Namespace: namespace,
+				Name:      name}, service); err != nil {
 				return err
 			}
 
+			return nil
 		}()
 		if err != nil {
 			logger.WithError(err).Debug("unable to retrieve a service endpoint, will retry")
 		}
 		if err == nil {
-			logger
+			if len(service.Status.LoadBalancer.Ingress) <= 0 {
+				logger.Debug("loadbalancer does not have a status yet")
+			} else {
+				if service.Status.LoadBalancer.Ingress[0].IP != "" {
+					logger.Debug("found an ip address for the service")
 
+					return service.Status.LoadBalancer.Ingress[0].IP, nil
+				}
+			}
 		}
 
 		time.Sleep(10 * time.Second)
 	}
 }
-*/

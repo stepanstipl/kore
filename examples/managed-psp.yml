@@ -1,0 +1,32 @@
+---
+apiVersion: clusters.compute.hub.appvia.io/v1
+kind: ManagedPodSecurityPolicy
+metadata:
+  name: psp:default
+spec:
+  description: Provides a safe collection of defaults for pods to run under
+  policy:
+    privileged: false
+    fsGroup:
+      rule: RunAsAny
+    hostPID: false
+    hostIPC: false
+    hostNetwork: false
+    runAsUser:
+      rule: MustRunAsNonRoot
+    requiredDropCapabilities:
+      - SETUID
+      - SETGID
+    seLinux:
+      rule: RunAsAny
+    supplementalGroups:
+      rule: RunAsAny
+    volumes:
+    - configMap
+    - downwardAPI
+    - emptyDir
+    - gitRepo
+    - persistentVolumeClaim
+    - projected
+    - secret
+

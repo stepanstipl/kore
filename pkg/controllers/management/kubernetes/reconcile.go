@@ -145,7 +145,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 				Status:  corev1.FailureStatus,
 			})
 
-			return reconcile.Result{RequeueAfter: 5 * time.Minute}, err
+			return reconcile.Result{RequeueAfter: 2 * time.Minute}, err
 		}
 
 		object.Status.Status = corev1.FailureStatus
@@ -324,7 +324,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 		object.Status.APIEndpoint = string(token.Data["endpoint"])
 		object.Status.CaCertificate = string(token.Data["ca.crt"])
-		object.Status.Endpoint = a.APIHostname(object)
+		//object.Status.Endpoint = a.APIHostname(object)
 		object.Status.Status = corev1.SuccessStatus
 
 		object.Status.Components.SetCondition(corev1.Component{

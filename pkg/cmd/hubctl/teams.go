@@ -100,24 +100,6 @@ func GetTeamsCommands(config Config) cli.Command {
 				},
 			},
 			{
-				Name:  "edit",
-				Usage: "Used to edit a team in the hub",
-				Flags: []cli.Flag{
-					cli.StringFlag{
-						Name:  "name,n",
-						Usage: "The name of the team to edit",
-					},
-				},
-				Action: func(ctx *cli.Context) error {
-					return NewRequest().
-						WithConfig(config).
-						WithContext(ctx).
-						WithEndpoint("/teams/{name}").
-						PathParameter("name", true).
-						Edit()
-				},
-			},
-			{
 				Name:    "members",
 				Aliases: []string{"mb"},
 				Usage:   "Used to get, list, add and remove users to the team",
@@ -125,12 +107,12 @@ func GetTeamsCommands(config Config) cli.Command {
 					{
 						Name:  "get",
 						Usage: "Used to list all the users in the team",
-						Flags: []cli.Flag{
+						Flags: append([]cli.Flag{
 							cli.StringFlag{
 								Name:  "team,t",
 								Usage: "The name of the team you wish to list the users",
 							},
-						},
+						}, DefaultOptions...),
 						Action: func(ctx *cli.Context) error {
 							return NewRequest().
 								WithConfig(config).
