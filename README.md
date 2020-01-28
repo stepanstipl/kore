@@ -1,32 +1,44 @@
-## **Development**
+# Kore
+Kubernetes Operations Reliably Engineered
 
-In order to setup a local environment
+---
+Kore is more than just Kubernetes management! Not only does it provide a way to centrally manage Kubernetes clusters, it enhances the operations, security and developer experience by making it simple for everyone!
+---
 
-* Install and start [Docker](https://www.docker.com/products/docker-desktop)
-* Run the following commands:
-```shell
-$ git clone git@github.com:appvia/hub-apiserver.git
-$ cd hub-apiserver
-$ make compose
-# deploy the crds for the hub
-$ git clone git@github.com:appvia/hub-apis.git
-$ cd hub-apis
-$ KUBECONFIG="none" kubectl apply -f ./deploy
-# run the hub
-$ cd hub-apiserver
-$ export GOPRIVATE=github.com/appvia
-$ make
-$ bin/hub-apiserver --kube-api-server http://127.0.0.1:8080 --verbose --dex-public-url http://127.0.0.1:5556 --dex-grpc-server 127.0.0.1 --admin-pass xyz
-```
 
-### Swagger UI
+[Overview]
 
-You can view the swagger at `http://127.0.0.1:10080/swagger.json`. Note if you want to see the pretty swagger UI, can you download the swagger-ui from https://github.com/swagger-api/swagger-ui/. Grab the `dist` folder inside the repo and move to the base swagger-ui/ in this repo. You can then open: http://127.0.0.1:10080/apidocs/?url=http://localhost:10080/swagger.json
+[Get Started]
 
-### Demo
+[Who is it For]
 
-To run a demo of the hub simply type: `make demo` in the base of the repo. If you want to ensure this is a fresh install use `make clean`
+[Architecture]
 
-### Auth
+[Cloud Support]
 
-See [configure an IDP](./docs/idp.md)
+[Contributing]
+
+[User Management]
+
+[Policies]
+
+[Global Configuration]
+
+[License]
+
+
+## Overview
+Kubernetes is an amazing open source project that really helps businesses with container management and scheduling. As it is fast becoming more of a commodity, especially with cloud offerings such as GKE, EKS and AKS, there is still a lot of configuration that could lead to unnecessary cloud costs, security risks, bad practice and poor visibility across multiple teams in your organisation.
+
+Kore is there to bring the sensible and secure to hand-cranked and commoditised Kubernetes!
+
+[Overview]: #Overview
+[Get Started]: doc/getting-started.md
+[Who is it For]: doc/users.md
+[Architecture]: doc/architecture.md
+[Cloud Support]: doc/cloud.md
+[Contributing]: contributing.md
+[User Management]: doc/user-management.md
+[Policies]: doc/policies.md
+[Global Configuration]: doc/global-configuration.md
+[License]: LICENSE
