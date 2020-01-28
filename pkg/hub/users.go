@@ -95,7 +95,7 @@ func (h *usersImpl) EnableUser(ctx context.Context, username, email string) erro
 		}
 		logger.WithField("count", count).Debug("we have x users already in the hub")
 
-		isAdmin := count == 1
+		isAdmin := count == 2
 		roles := []string{"members"}
 		if isAdmin {
 			logger.Info("enabling the first user in the hub and providing admin access")

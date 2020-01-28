@@ -22,6 +22,7 @@ import (
 
 	api "github.com/appvia/kore/pkg/apiserver"
 	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/services/users"
 )
 
 // Interface is the contract to the server
@@ -54,4 +55,6 @@ type Config struct {
 	Kubernetes KubernetesAPI `json:"kubernetes"`
 	// Hub is the configuration for the hub bridge
 	Hub hub.Config `json:"hub"`
+	// UsersMgr are the user management service options
+	UsersMgr users.Config `json:"usersMgr"`
 }

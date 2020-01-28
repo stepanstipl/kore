@@ -29,8 +29,8 @@ import (
 	"github.com/appvia/kore/pkg/hub"
 	"github.com/appvia/kore/pkg/register"
 	"github.com/appvia/kore/pkg/schema"
-	"github.com/appvia/kore/pkg/services/audit/fake"
 	"github.com/appvia/kore/pkg/services/audit"
+	"github.com/appvia/kore/pkg/services/audit/fake"
 	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils/crds"
@@ -102,9 +102,9 @@ func New(config Config) (Interface, error) {
 
 	// @step: create the users service
 	usermgr, err := users.New(users.Config{
-		Driver:        "mysql",
-		EnableLogging: false,
-		StoreURL:      "root:pass@tcp(127.0.0.1:3306)/hub?parseTime=true",
+		Driver:        config.UsersMgr.Driver,
+		EnableLogging: config.UsersMgr.EnableLogging,
+		StoreURL:      config.UsersMgr.StoreURL,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("trying to create the user management service: %s", err)

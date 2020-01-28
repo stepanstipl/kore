@@ -26,6 +26,7 @@ import (
 	"github.com/appvia/kore/pkg/apiserver"
 	"github.com/appvia/kore/pkg/hub"
 	"github.com/appvia/kore/pkg/server"
+	"github.com/appvia/kore/pkg/services/users"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -79,6 +80,11 @@ func invoke(ctx *cli.Context) error {
 				GRPCClientCrt: ctx.String("dex-grpc-client-crt"),
 				GRPCClientKey: ctx.String("dex-grpc-client-key"),
 			},
+		},
+		UsersMgr: users.Config{
+			EnableLogging: ctx.Bool("enabled-user-db-logging"),
+			Driver:        ctx.String("users-db-driver"),
+			StoreURL:      ctx.String("users-db-url"),
 		},
 	}
 
