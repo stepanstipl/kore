@@ -1,0 +1,54 @@
+apiVersion: clusters.compute.hub.appvia.io/v1
+kind: ManagedClusterRole
+metadata:
+  name: hub:ingress:sa
+spec: 
+  description: Provides permissions for ingress controller service account
+  enabled: true 
+  rules:
+    - apiGroups:
+      - ""
+      resources:
+      - configmaps
+      - endpoints
+      - nodes
+      - pods
+      - secrets
+      verbs:
+      - list
+      - watch
+    - apiGroups:
+      - ""
+      resources:
+      - nodes
+      verbs:
+      - get
+    - apiGroups:
+      - ""
+      resources:
+      - services
+      verbs:
+      - get
+      - list
+      - watch
+    - apiGroups:
+      - extensions
+      resources:
+      - ingresses
+      verbs:
+      - get
+      - list
+      - watch
+    - apiGroups:
+      - ""
+      resources:
+      - events
+      verbs:
+      - patch
+      - create
+    - apiGroups:
+      - extensions
+      resources:
+      - ingresses/status
+      verbs:
+      - update

@@ -1,0 +1,14 @@
+---
+# Example file - used for a CLI OAuth2 test client
+# See https://github.com/dexidp/dex/blob/master/Documentation/getting-started.md#running-a-client
+apiVersion: core.hub.appvia.io/v1
+kind: IDPClient
+metadata:
+  namespace: hub
+  name: default
+spec:
+  displayName: Example Dex CLI app
+  secret: ZXhhbXBsZS1hcHAtc2VjcmV0
+  id: 12393b111ae937e32181
+  redirectURIs:
+    - 'http://127.0.0.1:5555/callback'

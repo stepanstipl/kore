@@ -1,0 +1,20 @@
+---
+# Example file - used for a CLI OAuth2 test client
+# See https://github.com/dexidp/dex/blob/master/Documentation/getting-started.md#running-a-client
+apiVersion: dex.coreos.com/v1
+kind: OAuth2Client
+metadata:
+  # If we use ./hack/kubeconfig.local
+  # ...we can't specify the namespace for DEX resources
+  namespace: default
+  # This needs to be generated using the following code:
+  # https://play.golang.org/p/gSMY2NbDFQW
+  name: gezdgojtmiytcmlbmu4tgn3fgmzdcobrzpzjzzeeeirsk
+# Client ID:
+id: 12393b111ae937e32181
+# Client Secret:
+secret: ZXhhbXBsZS1hcHAtc2VjcmV0
+redirectURIs:
+- 'http://127.0.0.1:5555/callback'
+# Name to show user:
+name: Example Dex CLI app

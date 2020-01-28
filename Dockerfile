@@ -1,0 +1,19 @@
+FROM alpine:3.10
+LABEL Name=hub-apiserver \
+      Release=https://github.com/appvia/kore \
+      Maintainer=gambol99@gmail.com \
+      Url=https://github.com/appvia/kore \
+      Help=https://github.com/appvia/kore/issues
+
+ENV SWAGGER_UI_VERSION=v3.24.2
+
+RUN apk add curl --no-cache
+
+RUN curl -sL -o /tmp/swagger-ui.zip https://github.com/swagger-api/swagger-ui/archive/${SWAGGER_UI_VERSION}.tar.gz && \
+    tar -zxf /tmp/swagger-ui.zip -C /opt
+
+COPY bin/hub-apiserver /hub-apiserver
+
+USER 65534
+
+ENTRYPOINT [ "/hub-apiserver" ]

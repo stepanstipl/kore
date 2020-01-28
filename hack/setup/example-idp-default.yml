@@ -1,0 +1,12 @@
+# Example file
+apiVersion: core.hub.appvia.io/v1
+kind: IDP
+metadata:
+  namespace: hub
+  name: default
+spec:
+  displayName: Github IDP
+  config:
+    github:
+      clientID: ${GITHUB_CLIENT_ID}
+      clientSecret: ${GITHUB_CLIENT_SECRET}

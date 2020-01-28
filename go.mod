@@ -1,0 +1,105 @@
+module github.com/appvia/kore
+
+require (
+	github.com/Masterminds/goutils v1.1.0 // indirect
+	github.com/Masterminds/semver v1.5.0 // indirect
+	github.com/Masterminds/sprig v2.22.0+incompatible
+	github.com/RoaringBitmap/roaring v0.4.21 // indirect
+	github.com/appvia/hub-apis v0.0.3-0.20191223133102-ebe0ca263289
+	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/blevesearch/bleve v0.8.1
+	github.com/blevesearch/blevex v0.0.0-20190916190636-152f0fe5c040 // indirect
+	github.com/blevesearch/go-porterstemmer v1.0.2 // indirect
+	github.com/blevesearch/segment v0.0.0-20160915185041-762005e7a34f // indirect
+	github.com/coreos/go-oidc v2.1.0+incompatible
+	github.com/couchbase/vellum v0.0.0-20190829182332-ef2e028c01fd // indirect
+	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
+	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
+	github.com/cznic/strutil v0.0.0-20181122101858-275e90344537 // indirect
+	github.com/davecgh/go-spew v1.1.1
+	github.com/dexidp/dex v0.0.0-00010101000000-000000000000
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/emicklei/go-restful v2.11.1+incompatible
+	github.com/emicklei/go-restful-openapi v1.2.0
+	github.com/etcd-io/bbolt v1.3.3 // indirect
+	github.com/facebookgo/ensure v0.0.0-20160127193407-b4ab57deab51 // indirect
+	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
+	github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870 // indirect
+	github.com/gambol99/hub-utils v0.0.0-20191108161735-f3ffc063b42e
+	github.com/ghodss/yaml v1.0.0
+	github.com/go-logr/zapr v0.1.1 // indirect
+	github.com/go-openapi/spec v0.19.4
+	github.com/go-resty/resty/v2 v2.1.0
+	github.com/google/go-cmp v0.3.1 // indirect
+	github.com/google/uuid v1.1.1
+	github.com/hashicorp/golang-lru v0.5.3 // indirect
+	github.com/huandu/xstrings v1.2.1 // indirect
+	github.com/imdario/mergo v0.3.8 // indirect
+	github.com/jinzhu/gorm v1.9.12
+	github.com/jmhodges/levigo v1.0.0 // indirect
+	github.com/json-iterator/go v1.1.8 // indirect
+	github.com/mailru/easyjson v0.7.0 // indirect
+	github.com/mitchellh/copystructure v1.0.0 // indirect
+	github.com/onsi/ginkgo v1.10.2 // indirect
+	github.com/onsi/gomega v1.7.0 // indirect
+	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/prometheus/client_golang v1.0.0
+	github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4
+	github.com/prometheus/common v0.6.0
+	github.com/romanyx/polluter v1.2.2
+	github.com/savaki/jq v0.0.0-20161209013833-0e6baecebbf8
+	github.com/sirupsen/logrus v1.4.2
+	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
+	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/steveyen/gtreap v0.0.0-20150807155958-0abe01ef9be2 // indirect
+	github.com/stretchr/testify v1.4.0
+	github.com/syndtr/goleveldb v1.0.0 // indirect
+	github.com/tecbot/gorocksdb v0.0.0-20191019123150-400c56251341 // indirect
+	github.com/urfave/cli v1.22.1
+	golang.org/x/crypto v0.0.0-20191205180655-e7c4368fe9dd
+	golang.org/x/net v0.0.0-20191004110552-13f9640d40b9
+	golang.org/x/oauth2 v0.0.0-20191202225959-858c2ad4c8b6
+	golang.org/x/sys v0.0.0-20191113165036-4c7a9d0fe056 // indirect
+	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
+	google.golang.org/api v0.10.0
+	google.golang.org/appengine v1.6.5 // indirect
+	google.golang.org/grpc v1.25.1
+	gopkg.in/resty.v1 v1.12.0
+	gopkg.in/square/go-jose.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v2 v2.2.7
+	k8s.io/api v0.0.0
+	k8s.io/apiextensions-apiserver v0.0.0
+	k8s.io/apimachinery v0.0.0
+	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
+	k8s.io/klog v1.0.0 // indirect
+	k8s.io/kube-openapi v0.0.0-20191107075043-30be4d16710a
+	k8s.io/kubernetes v1.13.0
+	k8s.io/utils v0.0.0-20191218082557-f07c713de883 // indirect
+	sigs.k8s.io/controller-runtime v0.3.0
+)
+
+// Pinned to kubernetes-1.15.4
+replace (
+	k8s.io/api => k8s.io/api v0.0.0-20190918195907-bd6ac527cfd2
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20190918201827-3de75813f604
+	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20190817020851-f2f3a405f61d
+	k8s.io/client-go => k8s.io/client-go v0.0.0-20190918200256-06eb1244587a
+	k8s.io/cloud-provider => k8s.io/cloud-provider v0.0.0-20190918203125-ae665f80358a
+)
+
+replace (
+	git.apache.org/thrift.git => github.com/apache/thrift v0.0.0-20180902110319-2566ecd5d999
+	github.com/coreos/prometheus-operator => github.com/coreos/prometheus-operator v0.31.1
+	// Pinned to v2.10.0 (kubernetes-1.14.1) so https://proxy.golang.org can
+	// resolve it correctly.
+	github.com/prometheus/prometheus => github.com/prometheus/prometheus v1.8.2-0.20190525122359-d20e84d0fb64
+)
+
+replace github.com/operator-framework/operator-sdk => github.com/operator-framework/operator-sdk v0.11.0
+
+// Use appvia dex fork
+//replace github.com/dexidp/dex => github.com/appvia/dex v0.0.0-20191216122359-b147340
+// TODO: use github hosted dex
+replace github.com/dexidp/dex => github.com/appvia/dex v0.0.0-20191213161401-b147340b9bc0
+
+go 1.13

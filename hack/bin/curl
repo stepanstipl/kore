@@ -1,0 +1,3 @@
+#!/bin/bash
+# To work around old curl on CircleCI machine executor
+docker run -i --network host --rm byrnedo/alpine-curl ${@}

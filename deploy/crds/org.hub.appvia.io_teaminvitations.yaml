@@ -1,0 +1,87 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: teaminvitations.org.hub.appvia.io
+spec:
+  group: org.hub.appvia.io
+  names:
+    kind: TeamInvitation
+    listKind: TeamInvitationList
+    plural: teaminvitations
+    singular: teaminvitation
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: TeamInvitation is the Schema for the teams API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: TeamInvitationSpec defines the desired state of Team
+          properties:
+            team:
+              description: Team is the name of the team
+              type: string
+            username:
+              description: Username is the user being bound to the team
+              type: string
+          required:
+          - team
+          - username
+          type: object
+        status:
+          description: TeamInvitationStatus defines the observed state of Team
+          properties:
+            conditions:
+              description: Conditions is a collection of possible errors
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+            status:
+              description: Status is the status of the resource
+              type: string
+          required:
+          - status
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

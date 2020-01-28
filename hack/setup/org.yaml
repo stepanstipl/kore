@@ -1,0 +1,135 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: team-devs
+---
+apiVersion: org.hub.appvia.io/v1
+kind: User
+metadata:
+  namespace: hub
+  name: marcin
+spec:
+  username: marcin
+---
+apiVersion: org.hub.appvia.io/v1
+kind: User
+metadata:
+  namespace: hub
+  name: lewis
+spec:
+  username: lewis
+---
+apiVersion: org.hub.appvia.io/v1
+kind: User
+metadata:
+  namespace: hub
+  name: kashif
+spec:
+  username: kashif
+---
+apiVersion: org.hub.appvia.io/v1
+kind: User
+metadata:
+  namespace: hub
+  name: rohith
+spec:
+  username: rohith
+---
+apiVersion: org.hub.appvia.io/v1
+kind: User
+metadata:
+  namespace: hub
+  name: jonathan
+spec:
+  username: jonathan
+---
+apiVersion: org.hub.appvia.io/v1
+kind: User
+metadata:
+  namespace: hub
+  name: james
+spec:
+  username: james
+---
+apiVersion: org.hub.appvia.io/v1
+kind: Team
+metadata:
+  name: devs
+  namespace: hub
+  labels:
+    hub.appvia.io/team: dev
+spec:
+  summary: devs
+  description: devs
+---
+apiVersion: org.hub.appvia.io/v1
+kind: Team
+metadata:
+  name: frontend
+  namespace: hub
+  labels:
+    hub.appvia.io/team: frontend
+spec:
+  summary: frontend
+  description: front
+---
+apiVersion: org.hub.appvia.io/v1
+kind: Workspace
+metadata:
+  name: app1
+  namespace: team-devs
+  labels:
+    hub.appvia.io/team: dev
+    hub.appvia.io/workspace: app1
+spec:
+  summary: Apps Workspace
+  description: Apps Workspace
+---
+apiVersion: org.hub.appvia.io/v1
+kind: TeamMembership
+metadata:
+  name: rohith
+  namespace: team-devs
+  labels:
+    hub.appvia.io/team: dev
+    hub.appvia.io/user: rohith
+spec:
+  team: devs
+  username: rohith
+---
+apiVersion: org.hub.appvia.io/v1
+kind: TeamMembership
+metadata:
+  name: jonathan
+  namespace: team-devs
+  labels:
+    hub.appvia.io/team: devs
+    hub.appvia.io/user: jonathan
+spec:
+  team: devs
+  username: jonathan
+---
+apiVersion: org.hub.appvia.io/v1
+kind: TeamMembership
+metadata:
+  name: admin
+  namespace: team-devs
+  labels:
+    hub.appvia.io/team: devs
+    hub.appvia.io/user: admin
+spec:
+  team: devs
+  username: admin
+---
+apiVersion: org.hub.appvia.io/v1
+kind: TeamMembership
+metadata:
+  name: admin
+  namespace: team-frontend
+  labels:
+    hub.appvia.io/team: frontend
+    hub.appvia.io/user: admin
+spec:
+  team: frontend
+  username: frontend

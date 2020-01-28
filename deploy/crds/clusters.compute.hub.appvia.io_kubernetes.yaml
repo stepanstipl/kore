@@ -1,0 +1,202 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: kubernetes.clusters.compute.hub.appvia.io
+spec:
+  group: clusters.compute.hub.appvia.io
+  names:
+    kind: Kubernetes
+    listKind: KubernetesList
+    plural: kubernetes
+    singular: kubernetes
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: Kubernetes is the Schema for the roles API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: KubernetesSpec defines the desired state of Cluster
+          properties:
+            clusterUsers:
+              description: ClusterUsers is a collection of users from the team whom
+                have permissions across the cluster
+              items:
+                description: ClusterUser defines a user and their role in the cluster
+                properties:
+                  roles:
+                    description: Roles is the roles the user is permitted access to
+                    items:
+                      type: string
+                    minItems: 1
+                    type: array
+                  username:
+                    description: Username is the team member the role is being applied
+                      to
+                    minLength: 1
+                    type: string
+                required:
+                - roles
+                - username
+                type: object
+              type: array
+            defaultTeamRole:
+              description: DefaultTeamRole is role inherited by all team members
+              type: string
+            domain:
+              description: Domain is the domain of the cluster
+              minLength: 1
+              type: string
+            enabledDefaultTrafficBlock:
+              description: EnabledDefaultTrafficBlock indicates the cluster shoukd
+                default to enabling blocking network policies on all namespaces
+              type: boolean
+            inheritTeamMembers:
+              description: InheritTeamMembers inherits indicates all team members
+                are inherited as having access to cluster by default.
+              type: boolean
+            provider:
+              description: Provider is the cloud cluster provider type for this kubernetes
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
+            proxyImage:
+              description: ProxyImage is the kube api proxy used to sso into the cluster
+                post provision
+              type: string
+          required:
+          - domain
+          type: object
+        status:
+          description: KubernetesStatus defines the observed state of Cluster
+          properties:
+            adminToken:
+              description: AdminToken is the hub-admin service account token which
+                is bound to cluster-admin
+              properties:
+                apiVersion:
+                  description: 'APIVersion defines the versioned schema of this representation
+                    of an object. Servers should convert recognized schemas to the
+                    latest internal value, and may reject unrecognized values. More
+                    info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+                  type: string
+                data:
+                  additionalProperties:
+                    format: byte
+                    type: string
+                  description: Data contains the secret data. Each key must consist
+                    of alphanumeric characters, '-', '_' or '.'. The serialized form
+                    of the secret data is a base64 encoded string, representing the
+                    arbitrary (possibly non-string) data value here. Described in
+                    https://tools.ietf.org/html/rfc4648#section-4
+                  type: object
+                kind:
+                  description: 'Kind is a string value representing the REST resource
+                    this object represents. Servers may infer this from the endpoint
+                    the client submits requests to. Cannot be updated. In CamelCase.
+                    More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+                  type: string
+                metadata:
+                  description: 'Standard object''s metadata. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata'
+                  type: object
+                stringData:
+                  additionalProperties:
+                    type: string
+                  description: stringData allows specifying non-binary secret data
+                    in string form. It is provided as a write-only convenience method.
+                    All keys and values are merged into the data field on write, overwriting
+                    any existing values. It is never output when reading from the
+                    API.
+                  type: object
+                type:
+                  description: Used to facilitate programmatic handling of secret
+                    data.
+                  type: string
+              type: object
+            apiEndpoint:
+              description: APIEndpoint is the endpoint of client proxy for this cluster
+              type: string
+            caCertificate:
+              description: CaCertificate is the base64 encoded cluster certificate
+              type: string
+            components:
+              description: Components is a collection of component statuses
+              items:
+                description: Component the state of a component of the resource
+                properties:
+                  detail:
+                    description: Detail is additional details on the error is any
+                    type: string
+                  message:
+                    description: Message is a human readable message on the status
+                      of the component
+                    type: string
+                  name:
+                    description: Name is the name of the component
+                    type: string
+                  status:
+                    description: Status is the status of the component
+                    type: string
+                type: object
+              type: array
+            endpoint:
+              description: Endpoint is the kubernetes endpoint url
+              minLength: 1
+              type: string
+            status:
+              description: Status is overall status of the workspace
+              type: string
+          required:
+          - status
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

@@ -1,0 +1,136 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: allocations.config.hub.appvia.io
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.summary
+    description: A summary of what is being shared
+    name: Summary
+    type: string
+  - JSONPath: .spec.resource.group
+    description: The API group of the resource being shared
+    name: Group
+    type: string
+  - JSONPath: .spec.resource.namespace
+    description: The namespace of the resource being shared
+    name: Resource Namespace
+    type: string
+  - JSONPath: .spec.resource.name
+    description: The name of the resource being shared
+    name: Resource Name
+    type: string
+  group: config.hub.appvia.io
+  names:
+    kind: Allocation
+    listKind: AllocationList
+    plural: allocations
+    singular: allocation
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: Allocation is the Schema for the allocations API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: AllocationSpec defines the desired state of Allocation
+          properties:
+            name:
+              description: Name is the name of the resource being shared
+              type: string
+            resource:
+              description: Resource is the resource which is being shared with another
+                team
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
+            summary:
+              description: Summary is the summary of the resource being shared
+              type: string
+            teams:
+              description: Teams is a collection of teams the allocation is permitted
+                to use
+              items:
+                type: string
+              minItems: 1
+              type: array
+          required:
+          - name
+          - resource
+          - summary
+          type: object
+        status:
+          description: AllocationStatus defines the observed state of Allocation
+          properties:
+            conditions:
+              description: Conditions is a collection of potential issues
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+            status:
+              description: Status is the general status of the resource
+              type: string
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

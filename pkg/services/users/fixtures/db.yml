@@ -1,0 +1,42 @@
+---
+users:
+  - id: 1
+    username: rohith
+  - id: 2
+    username: test
+  - id: 3
+    username: no_teams
+  - id: 4
+    username: not_enabled
+identities:
+  - user_id: 1
+    provider: api_token
+    provider_token: 123456
+  - user_id: 1
+    provider: github
+    provider_username: gambol99
+    provider_email: gambol99@gmail.com
+    provider_uid: 42324234234
+teams:
+  - id: 1
+    name: All
+    description: All Teams
+  - id: 2
+    name: devs
+    description: devs
+  - id: 3
+    name: frontend
+    description: frontend
+  - id: 4
+    name: no_members
+    description: no_members
+  - id: 5
+    name: no_workspaces
+    description: no_workspaces
+members:
+  - team_id: 2
+    user_id: 1
+  - team_id: 3
+    user_id: 1
+  - team_id: 3
+    user_id: 2

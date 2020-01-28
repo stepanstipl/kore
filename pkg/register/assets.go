@@ -1,0 +1,4410 @@
+// Code generated for package register by go-bindata DO NOT EDIT. (@generated)
+// sources:
+// deploy/crds/apps.hub.appvia.io_appdeployments.yaml
+// deploy/crds/apps.hub.appvia.io_installplans.yaml
+// deploy/crds/aws.compute.hub.appvia.io_awscredentials.yaml
+// deploy/crds/aws.compute.hub.appvia.io_eksclusters.yaml
+// deploy/crds/clusters.compute.hub.appvia.io_kubernetes.yaml
+// deploy/crds/clusters.compute.hub.appvia.io_managedclusterrole.yaml
+// deploy/crds/clusters.compute.hub.appvia.io_managedclusterrolebinding.yaml
+// deploy/crds/clusters.compute.hub.appvia.io_managedconfig.yaml
+// deploy/crds/clusters.compute.hub.appvia.io_managedpodsecuritypoliies.yaml
+// deploy/crds/clusters.compute.hub.appvia.io_managedrole.yaml
+// deploy/crds/clusters.compute.hub.appvia.io_namespaceclaims.yaml
+// deploy/crds/clusters.compute.hub.appvia.io_namespacepolicy.yaml
+// deploy/crds/config.hub.appvia.io_allocations.yaml
+// deploy/crds/config.hub.appvia.io_plans.yaml
+// deploy/crds/core.hub.appvia.io_idp.yaml
+// deploy/crds/core.hub.appvia.io_oidclient.yaml
+// deploy/crds/gke.compute.hub.appvia.io_gkecredentials.yaml
+// deploy/crds/gke.compute.hub.appvia.io_gkes.yaml
+// deploy/crds/org.hub.appvia.io_members.yaml
+// deploy/crds/org.hub.appvia.io_teaminvitations.yaml
+// deploy/crds/org.hub.appvia.io_teams.yaml
+// deploy/crds/org.hub.appvia.io_users.yaml
+package register
+
+import (
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+)
+type asset struct {
+	bytes []byte
+	info  os.FileInfo
+}
+
+type bindataFileInfo struct {
+	name    string
+	size    int64
+	mode    os.FileMode
+	modTime time.Time
+}
+
+// Name return file name
+func (fi bindataFileInfo) Name() string {
+	return fi.name
+}
+
+// Size return file size
+func (fi bindataFileInfo) Size() int64 {
+	return fi.size
+}
+
+// Mode return file mode
+func (fi bindataFileInfo) Mode() os.FileMode {
+	return fi.mode
+}
+
+// Mode return file modify time
+func (fi bindataFileInfo) ModTime() time.Time {
+	return fi.modTime
+}
+
+// IsDir return file whether a directory
+func (fi bindataFileInfo) IsDir() bool {
+	return fi.mode&os.ModeDir != 0
+}
+
+// Sys return file is sys mode
+func (fi bindataFileInfo) Sys() interface{} {
+	return nil
+}
+
+var _crdsAppsHubAppviaIo_appdeploymentsYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: appdeployments.apps.hub.appvia.io
+spec:
+  group: apps.hub.appvia.io
+  names:
+    kind: AppDeployment
+    listKind: AppDeploymentList
+    plural: appdeployments
+    singular: appdeployment
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: AppDeployment is the Schema for the allocations API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: AppDeploymentSpec defines the desired state of Allocation
+          properties:
+            capabilities:
+              description: Capabilities defines the features supported by the package
+              items:
+                type: string
+              minItems: 1
+              type: array
+            cluster:
+              description: Cluster is the cluster the application should be deployed
+                on
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
+            description:
+              description: Decription is a longer description of what the application
+                provides
+              minLength: 1
+              type: string
+            keywords:
+              description: Keywords keywords whuch describe the application
+              items:
+                type: string
+              minItems: 1
+              type: array
+            official:
+              description: Offical indicates if the applcation is offically published
+                by Appvia
+              type: boolean
+            package:
+              description: Package is the name of the resource being shared
+              minLength: 1
+              type: string
+            replaces:
+              description: Replaces indicates the version this replaces
+              minLength: 1
+              type: string
+            source:
+              description: Source is the source of the package
+              minLength: 1
+              type: string
+            subscription:
+              description: Subscription is the nature of upgrades i.e manual or automatic
+              enum:
+              - Automatic
+              - Manual
+              minLength: 1
+              type: string
+            summary:
+              description: Summary is a summary of what the application is
+              type: string
+            values:
+              description: Values are optional values suppilied to the application
+                deployment
+              x-kubernetes-preserve-unknown-fields: true
+            vendor:
+              description: Vendor is the entity whom published the package
+              minLength: 1
+              type: string
+            version:
+              description: Version is the verison of the package to install
+              minLength: 1
+              type: string
+          required:
+          - description
+          - keywords
+          - official
+          - package
+          - replaces
+          - source
+          - subscription
+          - summary
+          - vendor
+          - version
+          type: object
+        status:
+          description: AppDeploymentStatus defines the observed state of Allocation
+          properties:
+            conditions:
+              description: Conditions is a collection of potential issues
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+            installPlan:
+              description: InstallPlan in the name of the installplan which this deployment
+                has deployed from
+              type: string
+            status:
+              description: Status is the general status of the resource
+              type: string
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsAppsHubAppviaIo_appdeploymentsYamlBytes() ([]byte, error) {
+	return _crdsAppsHubAppviaIo_appdeploymentsYaml, nil
+}
+
+func crdsAppsHubAppviaIo_appdeploymentsYaml() (*asset, error) {
+	bytes, err := crdsAppsHubAppviaIo_appdeploymentsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/apps.hub.appvia.io_appdeployments.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsAppsHubAppviaIo_installplansYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: installplans.apps.hub.appvia.io
+spec:
+  group: apps.hub.appvia.io
+  names:
+    kind: InstallPlan
+    listKind: InstallPlanList
+    plural: installplans
+    singular: installplan
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: InstallPlan is the Schema for the allocations API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: InstallPlanSpec defines the desired state of Allocation
+          properties:
+            approved:
+              description: Approved indicates if the update has been approved
+              type: boolean
+          type: object
+        status:
+          description: InstallPlanStatus defines the observed state of Allocation
+          properties:
+            conditions:
+              description: Conditions is a collection of potential issues
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+            deployed:
+              description: Deployed is the applciation deployment parameters
+              properties:
+                apiVersion:
+                  description: 'APIVersion defines the versioned schema of this representation
+                    of an object. Servers should convert recognized schemas to the
+                    latest internal value, and may reject unrecognized values. More
+                    info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+                  type: string
+                kind:
+                  description: 'Kind is a string value representing the REST resource
+                    this object represents. Servers may infer this from the endpoint
+                    the client submits requests to. Cannot be updated. In CamelCase.
+                    More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+                  type: string
+                metadata:
+                  type: object
+                spec:
+                  description: AppDeploymentSpec defines the desired state of Allocation
+                  properties:
+                    capabilities:
+                      description: Capabilities defines the features supported by
+                        the package
+                      items:
+                        type: string
+                      minItems: 1
+                      type: array
+                    cluster:
+                      description: Cluster is the cluster the application should be
+                        deployed on
+                      properties:
+                        group:
+                          description: Group is the api group
+                          type: string
+                        kind:
+                          description: Kind is the name of the resource under the
+                            group
+                          type: string
+                        name:
+                          description: Name is name of the resource
+                          type: string
+                        namespace:
+                          description: Namespace is the location of the object
+                          type: string
+                        version:
+                          description: Version is the group version
+                          type: string
+                      required:
+                      - group
+                      - kind
+                      - name
+                      - namespace
+                      - version
+                      type: object
+                    description:
+                      description: Decription is a longer description of what the
+                        application provides
+                      minLength: 1
+                      type: string
+                    keywords:
+                      description: Keywords keywords whuch describe the application
+                      items:
+                        type: string
+                      minItems: 1
+                      type: array
+                    official:
+                      description: Offical indicates if the applcation is offically
+                        published by Appvia
+                      type: boolean
+                    package:
+                      description: Package is the name of the resource being shared
+                      minLength: 1
+                      type: string
+                    replaces:
+                      description: Replaces indicates the version this replaces
+                      minLength: 1
+                      type: string
+                    source:
+                      description: Source is the source of the package
+                      minLength: 1
+                      type: string
+                    subscription:
+                      description: Subscription is the nature of upgrades i.e manual
+                        or automatic
+                      enum:
+                      - Automatic
+                      - Manual
+                      minLength: 1
+                      type: string
+                    summary:
+                      description: Summary is a summary of what the application is
+                      type: string
+                    values:
+                      description: Values are optional values suppilied to the application
+                        deployment
+                      x-kubernetes-preserve-unknown-fields: true
+                    vendor:
+                      description: Vendor is the entity whom published the package
+                      minLength: 1
+                      type: string
+                    version:
+                      description: Version is the verison of the package to install
+                      minLength: 1
+                      type: string
+                  required:
+                  - description
+                  - keywords
+                  - official
+                  - package
+                  - replaces
+                  - source
+                  - subscription
+                  - summary
+                  - vendor
+                  - version
+                  type: object
+                status:
+                  description: AppDeploymentStatus defines the observed state of Allocation
+                  properties:
+                    conditions:
+                      description: Conditions is a collection of potential issues
+                      items:
+                        description: Condition is a reason why something failed
+                        properties:
+                          detail:
+                            description: Detail is a actual error which might contain
+                              technical reference
+                            type: string
+                          message:
+                            description: Message is a human readable message
+                            type: string
+                        required:
+                        - detail
+                        - message
+                        type: object
+                      type: array
+                    installPlan:
+                      description: InstallPlan in the name of the installplan which
+                        this deployment has deployed from
+                      type: string
+                    status:
+                      description: Status is the general status of the resource
+                      type: string
+                  type: object
+              type: object
+            status:
+              description: Status is the general status of the resource
+              type: string
+            update:
+              description: Update is the incoming deployment is requiring approval
+              properties:
+                apiVersion:
+                  description: 'APIVersion defines the versioned schema of this representation
+                    of an object. Servers should convert recognized schemas to the
+                    latest internal value, and may reject unrecognized values. More
+                    info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+                  type: string
+                kind:
+                  description: 'Kind is a string value representing the REST resource
+                    this object represents. Servers may infer this from the endpoint
+                    the client submits requests to. Cannot be updated. In CamelCase.
+                    More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+                  type: string
+                metadata:
+                  type: object
+                spec:
+                  description: AppDeploymentSpec defines the desired state of Allocation
+                  properties:
+                    capabilities:
+                      description: Capabilities defines the features supported by
+                        the package
+                      items:
+                        type: string
+                      minItems: 1
+                      type: array
+                    cluster:
+                      description: Cluster is the cluster the application should be
+                        deployed on
+                      properties:
+                        group:
+                          description: Group is the api group
+                          type: string
+                        kind:
+                          description: Kind is the name of the resource under the
+                            group
+                          type: string
+                        name:
+                          description: Name is name of the resource
+                          type: string
+                        namespace:
+                          description: Namespace is the location of the object
+                          type: string
+                        version:
+                          description: Version is the group version
+                          type: string
+                      required:
+                      - group
+                      - kind
+                      - name
+                      - namespace
+                      - version
+                      type: object
+                    description:
+                      description: Decription is a longer description of what the
+                        application provides
+                      minLength: 1
+                      type: string
+                    keywords:
+                      description: Keywords keywords whuch describe the application
+                      items:
+                        type: string
+                      minItems: 1
+                      type: array
+                    official:
+                      description: Offical indicates if the applcation is offically
+                        published by Appvia
+                      type: boolean
+                    package:
+                      description: Package is the name of the resource being shared
+                      minLength: 1
+                      type: string
+                    replaces:
+                      description: Replaces indicates the version this replaces
+                      minLength: 1
+                      type: string
+                    source:
+                      description: Source is the source of the package
+                      minLength: 1
+                      type: string
+                    subscription:
+                      description: Subscription is the nature of upgrades i.e manual
+                        or automatic
+                      enum:
+                      - Automatic
+                      - Manual
+                      minLength: 1
+                      type: string
+                    summary:
+                      description: Summary is a summary of what the application is
+                      type: string
+                    values:
+                      description: Values are optional values suppilied to the application
+                        deployment
+                      x-kubernetes-preserve-unknown-fields: true
+                    vendor:
+                      description: Vendor is the entity whom published the package
+                      minLength: 1
+                      type: string
+                    version:
+                      description: Version is the verison of the package to install
+                      minLength: 1
+                      type: string
+                  required:
+                  - description
+                  - keywords
+                  - official
+                  - package
+                  - replaces
+                  - source
+                  - subscription
+                  - summary
+                  - vendor
+                  - version
+                  type: object
+                status:
+                  description: AppDeploymentStatus defines the observed state of Allocation
+                  properties:
+                    conditions:
+                      description: Conditions is a collection of potential issues
+                      items:
+                        description: Condition is a reason why something failed
+                        properties:
+                          detail:
+                            description: Detail is a actual error which might contain
+                              technical reference
+                            type: string
+                          message:
+                            description: Message is a human readable message
+                            type: string
+                        required:
+                        - detail
+                        - message
+                        type: object
+                      type: array
+                    installPlan:
+                      description: InstallPlan in the name of the installplan which
+                        this deployment has deployed from
+                      type: string
+                    status:
+                      description: Status is the general status of the resource
+                      type: string
+                  type: object
+              type: object
+          required:
+          - deployed
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsAppsHubAppviaIo_installplansYamlBytes() ([]byte, error) {
+	return _crdsAppsHubAppviaIo_installplansYaml, nil
+}
+
+func crdsAppsHubAppviaIo_installplansYaml() (*asset, error) {
+	bytes, err := crdsAppsHubAppviaIo_installplansYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/apps.hub.appvia.io_installplans.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsAwsComputeHubAppviaIo_awscredentialsYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: awscredentials.aws.compute.hub.appvia.io
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.accountId
+    description: The AWS account ID for the credentials
+    name: AccountID
+    type: string
+  - JSONPath: .spec.accessKeyId
+    description: The AWS access key we are using
+    name: AccessKeyID
+    type: string
+  - JSONPath: .status.verified
+    description: Indicates if the credentials have been verified
+    name: Verified
+    type: string
+  group: aws.compute.hub.appvia.io
+  names:
+    kind: AWSCredentials
+    listKind: AWSCredentialsList
+    plural: awscredentials
+    singular: awscredentials
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: AWSCredential is the Schema for the awscredentials API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: AWSCredentialsSpec defines the desired state of AWSCredential
+          properties:
+            accessKeyID:
+              description: AccessKeyID is the AWS access key credentials
+              minLength: 1
+              type: string
+            accountID:
+              description: AccountID is the AWS account these credentials reside
+              minLength: 1
+              type: string
+            secretAccessKey:
+              description: SecretAccessKey is the AWS secret key credentials containing
+                the permissions to provision EKS
+              minLength: 1
+              type: string
+          type: object
+        status:
+          description: AWSCredentialsStatus defines the observed state of AWSCredential
+          properties:
+            status:
+              description: Status provides a overall status
+              type: string
+            verified:
+              description: Verified checks that the credentials are ok and valid
+              type: boolean
+          required:
+          - status
+          - verified
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsAwsComputeHubAppviaIo_awscredentialsYamlBytes() ([]byte, error) {
+	return _crdsAwsComputeHubAppviaIo_awscredentialsYaml, nil
+}
+
+func crdsAwsComputeHubAppviaIo_awscredentialsYaml() (*asset, error) {
+	bytes, err := crdsAwsComputeHubAppviaIo_awscredentialsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/aws.compute.hub.appvia.io_awscredentials.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsAwsComputeHubAppviaIo_eksclustersYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: eksclusters.aws.compute.hub.appvia.io
+spec:
+  group: aws.compute.hub.appvia.io
+  names:
+    kind: EKSCluster
+    listKind: EKSClusterList
+    plural: eksclusters
+    singular: ekscluster
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: EKSCluster is the Schema for the eksclusters API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: EKSClusterSpec defines the desired state of EKSCluster
+          properties:
+            credentials:
+              description: Credentials is a reference to an AWSCredentials object
+                to use for authentication
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
+            region:
+              description: Region is the AWS region which the EKS cluster should be
+                provisioned.
+              type: string
+            roleARN:
+              description: RoleARN is the role arn which provides permissions to EKS.
+              type: string
+            securityGroupID:
+              description: SecurityGroupID is a list of security group IDs which the
+                EKS cluster should be attached to - If not defined we will provision
+                on behalf of
+              items:
+                type: string
+              type: array
+            subnetID:
+              description: SubnetID is a collection of subnet id's which the EKS cluster
+                should be attached to - if not defined we will provision on behalf
+                of
+              items:
+                type: string
+              type: array
+            version:
+              type: string
+            vpc:
+              description: VPC is the AWS VPC Id which the EKS cluster should reside.
+                If not defined we will provision on your behalf.
+              type: string
+          required:
+          - region
+          type: object
+        status:
+          description: EKSClusterStatus defines the observed state of EKSCluster
+          properties:
+            caCertificate:
+              description: CACertificate is the certificate for this cluster
+              type: string
+            conditions:
+              description: Conditions is the status of the components
+              items:
+                description: Component the state of a component of the resource
+                properties:
+                  detail:
+                    description: Detail is additional details on the error is any
+                    type: string
+                  message:
+                    description: Message is a human readable message on the status
+                      of the component
+                    type: string
+                  name:
+                    description: Name is the name of the component
+                    type: string
+                  status:
+                    description: Status is the status of the component
+                    type: string
+                type: object
+              type: array
+            endpoint:
+              description: Endpoint is the endpoint of the cluster
+              type: string
+            status:
+              description: Status provides a overall status
+              type: string
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsAwsComputeHubAppviaIo_eksclustersYamlBytes() ([]byte, error) {
+	return _crdsAwsComputeHubAppviaIo_eksclustersYaml, nil
+}
+
+func crdsAwsComputeHubAppviaIo_eksclustersYaml() (*asset, error) {
+	bytes, err := crdsAwsComputeHubAppviaIo_eksclustersYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/aws.compute.hub.appvia.io_eksclusters.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsClustersComputeHubAppviaIo_kubernetesYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: kubernetes.clusters.compute.hub.appvia.io
+spec:
+  group: clusters.compute.hub.appvia.io
+  names:
+    kind: Kubernetes
+    listKind: KubernetesList
+    plural: kubernetes
+    singular: kubernetes
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: Kubernetes is the Schema for the roles API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: KubernetesSpec defines the desired state of Cluster
+          properties:
+            clusterUsers:
+              description: ClusterUsers is a collection of users from the team whom
+                have permissions across the cluster
+              items:
+                description: ClusterUser defines a user and their role in the cluster
+                properties:
+                  roles:
+                    description: Roles is the roles the user is permitted access to
+                    items:
+                      type: string
+                    minItems: 1
+                    type: array
+                  username:
+                    description: Username is the team member the role is being applied
+                      to
+                    minLength: 1
+                    type: string
+                required:
+                - roles
+                - username
+                type: object
+              type: array
+            defaultTeamRole:
+              description: DefaultTeamRole is role inherited by all team members
+              type: string
+            domain:
+              description: Domain is the domain of the cluster
+              minLength: 1
+              type: string
+            enabledDefaultTrafficBlock:
+              description: EnabledDefaultTrafficBlock indicates the cluster shoukd
+                default to enabling blocking network policies on all namespaces
+              type: boolean
+            inheritTeamMembers:
+              description: InheritTeamMembers inherits indicates all team members
+                are inherited as having access to cluster by default.
+              type: boolean
+            provider:
+              description: Provider is the cloud cluster provider type for this kubernetes
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
+            proxyImage:
+              description: ProxyImage is the kube api proxy used to sso into the cluster
+                post provision
+              type: string
+          required:
+          - domain
+          type: object
+        status:
+          description: KubernetesStatus defines the observed state of Cluster
+          properties:
+            adminToken:
+              description: AdminToken is the hub-admin service account token which
+                is bound to cluster-admin
+              properties:
+                apiVersion:
+                  description: 'APIVersion defines the versioned schema of this representation
+                    of an object. Servers should convert recognized schemas to the
+                    latest internal value, and may reject unrecognized values. More
+                    info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+                  type: string
+                data:
+                  additionalProperties:
+                    format: byte
+                    type: string
+                  description: Data contains the secret data. Each key must consist
+                    of alphanumeric characters, '-', '_' or '.'. The serialized form
+                    of the secret data is a base64 encoded string, representing the
+                    arbitrary (possibly non-string) data value here. Described in
+                    https://tools.ietf.org/html/rfc4648#section-4
+                  type: object
+                kind:
+                  description: 'Kind is a string value representing the REST resource
+                    this object represents. Servers may infer this from the endpoint
+                    the client submits requests to. Cannot be updated. In CamelCase.
+                    More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+                  type: string
+                metadata:
+                  description: 'Standard object''s metadata. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata'
+                  type: object
+                stringData:
+                  additionalProperties:
+                    type: string
+                  description: stringData allows specifying non-binary secret data
+                    in string form. It is provided as a write-only convenience method.
+                    All keys and values are merged into the data field on write, overwriting
+                    any existing values. It is never output when reading from the
+                    API.
+                  type: object
+                type:
+                  description: Used to facilitate programmatic handling of secret
+                    data.
+                  type: string
+              type: object
+            apiEndpoint:
+              description: APIEndpoint is the endpoint of client proxy for this cluster
+              type: string
+            caCertificate:
+              description: CaCertificate is the base64 encoded cluster certificate
+              type: string
+            components:
+              description: Components is a collection of component statuses
+              items:
+                description: Component the state of a component of the resource
+                properties:
+                  detail:
+                    description: Detail is additional details on the error is any
+                    type: string
+                  message:
+                    description: Message is a human readable message on the status
+                      of the component
+                    type: string
+                  name:
+                    description: Name is the name of the component
+                    type: string
+                  status:
+                    description: Status is the status of the component
+                    type: string
+                type: object
+              type: array
+            endpoint:
+              description: Endpoint is the kubernetes endpoint url
+              minLength: 1
+              type: string
+            status:
+              description: Status is overall status of the workspace
+              type: string
+          required:
+          - status
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsClustersComputeHubAppviaIo_kubernetesYamlBytes() ([]byte, error) {
+	return _crdsClustersComputeHubAppviaIo_kubernetesYaml, nil
+}
+
+func crdsClustersComputeHubAppviaIo_kubernetesYaml() (*asset, error) {
+	bytes, err := crdsClustersComputeHubAppviaIo_kubernetesYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/clusters.compute.hub.appvia.io_kubernetes.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsClustersComputeHubAppviaIo_managedclusterroleYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: managedclusterrole.clusters.compute.hub.appvia.io
+spec:
+  group: clusters.compute.hub.appvia.io
+  names:
+    kind: ManagedClusterRole
+    listKind: ManagedClusterRoleList
+    plural: managedclusterrole
+    singular: managedclusterrole
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: Kubernetes is the Schema for the roles API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: ManagedClusterRoleSpec defines the desired state of Cluster
+            role
+          properties:
+            clusters:
+              description: Clusters is used to apply to one of more clusters role
+                to a specific cluster
+              items:
+                description: Ownership indicates the ownership of a resource
+                properties:
+                  group:
+                    description: Group is the api group
+                    type: string
+                  kind:
+                    description: Kind is the name of the resource under the group
+                    type: string
+                  name:
+                    description: Name is name of the resource
+                    type: string
+                  namespace:
+                    description: Namespace is the location of the object
+                    type: string
+                  version:
+                    description: Version is the group version
+                    type: string
+                required:
+                - group
+                - kind
+                - name
+                - namespace
+                - version
+                type: object
+              type: array
+            description:
+              description: Description provides a short summary of the nature of the
+                role
+              minLength: 10
+              type: string
+            enabled:
+              description: Enabled indicates if the role is enabled or not
+              type: boolean
+            rules:
+              description: Rules are the permissions on the role
+              items:
+                description: PolicyRule holds information that describes a policy
+                  rule, but does not contain information about who the rule applies
+                  to or which namespace the rule applies to.
+                properties:
+                  apiGroups:
+                    description: APIGroups is the name of the APIGroup that contains
+                      the resources.  If multiple API groups are specified, any action
+                      requested against one of the enumerated resources in any API
+                      group will be allowed.
+                    items:
+                      type: string
+                    type: array
+                  nonResourceURLs:
+                    description: NonResourceURLs is a set of partial urls that a user
+                      should have access to.  *s are allowed, but only as the full,
+                      final step in the path Since non-resource URLs are not namespaced,
+                      this field is only applicable for ClusterRoles referenced from
+                      a ClusterRoleBinding. Rules can either apply to API resources
+                      (such as "pods" or "secrets") or non-resource URL paths (such
+                      as "/api"),  but not both.
+                    items:
+                      type: string
+                    type: array
+                  resourceNames:
+                    description: ResourceNames is an optional white list of names
+                      that the rule applies to.  An empty set means that everything
+                      is allowed.
+                    items:
+                      type: string
+                    type: array
+                  resources:
+                    description: Resources is a list of resources this rule applies
+                      to.  ResourceAll represents all resources.
+                    items:
+                      type: string
+                    type: array
+                  verbs:
+                    description: Verbs is a list of Verbs that apply to ALL the ResourceKinds
+                      and AttributeRestrictions contained in this rule.  VerbAll represents
+                      all kinds.
+                    items:
+                      type: string
+                    type: array
+                required:
+                - verbs
+                type: object
+              type: array
+            teams:
+              description: Teams is used to filter the clusters to apply by team references
+              items:
+                type: string
+              type: array
+          type: object
+        status:
+          description: ManagedClusterRoleStatus defines the observed state of Cluster
+          properties:
+            conditions:
+              description: Conditions is a set of condition which has caused an error
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+            status:
+              description: Status is overall status of the workspace
+              type: string
+          required:
+          - conditions
+          - status
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsClustersComputeHubAppviaIo_managedclusterroleYamlBytes() ([]byte, error) {
+	return _crdsClustersComputeHubAppviaIo_managedclusterroleYaml, nil
+}
+
+func crdsClustersComputeHubAppviaIo_managedclusterroleYaml() (*asset, error) {
+	bytes, err := crdsClustersComputeHubAppviaIo_managedclusterroleYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/clusters.compute.hub.appvia.io_managedclusterrole.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsClustersComputeHubAppviaIo_managedclusterrolebindingYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: managedclusterrolebinding.clusters.compute.hub.appvia.io
+spec:
+  group: clusters.compute.hub.appvia.io
+  names:
+    kind: ManagedClusterRoleBinding
+    listKind: ManagedClusterRoleBindingList
+    plural: managedclusterrolebinding
+    singular: managedclusterrolebinding
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: Kubernetes is the Schema for the roles API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: ManagedClusterRoleBindingSpec defines the desired state of
+            Cluster role
+          properties:
+            binding:
+              description: Binding is the cluster role binding you wish to propogate
+                to the clusters
+              properties:
+                apiVersion:
+                  description: 'APIVersion defines the versioned schema of this representation
+                    of an object. Servers should convert recognized schemas to the
+                    latest internal value, and may reject unrecognized values. More
+                    info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+                  type: string
+                kind:
+                  description: 'Kind is a string value representing the REST resource
+                    this object represents. Servers may infer this from the endpoint
+                    the client submits requests to. Cannot be updated. In CamelCase.
+                    More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+                  type: string
+                metadata:
+                  description: Standard object's metadata.
+                  type: object
+                roleRef:
+                  description: RoleRef can only reference a ClusterRole in the global
+                    namespace. If the RoleRef cannot be resolved, the Authorizer must
+                    return an error.
+                  properties:
+                    apiGroup:
+                      description: APIGroup is the group for the resource being referenced
+                      type: string
+                    kind:
+                      description: Kind is the type of resource being referenced
+                      type: string
+                    name:
+                      description: Name is the name of resource being referenced
+                      type: string
+                  required:
+                  - apiGroup
+                  - kind
+                  - name
+                  type: object
+                subjects:
+                  description: Subjects holds references to the objects the role applies
+                    to.
+                  items:
+                    description: Subject contains a reference to the object or user
+                      identities a role binding applies to.  This can either hold
+                      a direct API object reference, or a value for non-objects such
+                      as user and group names.
+                    properties:
+                      apiGroup:
+                        description: APIGroup holds the API group of the referenced
+                          subject. Defaults to "" for ServiceAccount subjects. Defaults
+                          to "rbac.authorization.k8s.io" for User and Group subjects.
+                        type: string
+                      kind:
+                        description: Kind of object being referenced. Values defined
+                          by this API group are "User", "Group", and "ServiceAccount".
+                          If the Authorizer does not recognized the kind value, the
+                          Authorizer should report an error.
+                        type: string
+                      name:
+                        description: Name of the object being referenced.
+                        type: string
+                      namespace:
+                        description: Namespace of the referenced object.  If the object
+                          kind is non-namespace, such as "User" or "Group", and this
+                          value is not empty the Authorizer should report an error.
+                        type: string
+                    required:
+                    - kind
+                    - name
+                    type: object
+                  type: array
+              required:
+              - roleRef
+              type: object
+            clusters:
+              description: Clusters is used to apply the cluster role to a specific
+                cluster
+              items:
+                description: Ownership indicates the ownership of a resource
+                properties:
+                  group:
+                    description: Group is the api group
+                    type: string
+                  kind:
+                    description: Kind is the name of the resource under the group
+                    type: string
+                  name:
+                    description: Name is name of the resource
+                    type: string
+                  namespace:
+                    description: Namespace is the location of the object
+                    type: string
+                  version:
+                    description: Version is the group version
+                    type: string
+                required:
+                - group
+                - kind
+                - name
+                - namespace
+                - version
+                type: object
+              type: array
+            teams:
+              description: Teams is a filter on the teams
+              items:
+                type: string
+              type: array
+          required:
+          - binding
+          type: object
+        status:
+          description: ManagedClusterRoleStatus defines the observed state of a cluster
+            role binding
+          properties:
+            conditions:
+              description: Conditions is a set of condition which has caused an error
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+            status:
+              description: Status is overall status of the workspace
+              type: string
+          required:
+          - conditions
+          - status
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsClustersComputeHubAppviaIo_managedclusterrolebindingYamlBytes() ([]byte, error) {
+	return _crdsClustersComputeHubAppviaIo_managedclusterrolebindingYaml, nil
+}
+
+func crdsClustersComputeHubAppviaIo_managedclusterrolebindingYaml() (*asset, error) {
+	bytes, err := crdsClustersComputeHubAppviaIo_managedclusterrolebindingYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/clusters.compute.hub.appvia.io_managedclusterrolebinding.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsClustersComputeHubAppviaIo_managedconfigYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: managedconfig.clusters.compute.hub.appvia.io
+spec:
+  group: clusters.compute.hub.appvia.io
+  names:
+    kind: ManagedConfig
+    listKind: ManagedConfigList
+    plural: managedconfig
+    singular: managedconfig
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: ManagedConfig is the Schema for the roles API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: ManagedConfigSpec defines the configuration for a cluster
+          properties:
+            certificateAuthority:
+              description: CertificateAuthority is the location of the API certificate
+                authority
+              properties:
+                apiVersion:
+                  description: 'APIVersion defines the versioned schema of this representation
+                    of an object. Servers should convert recognized schemas to the
+                    latest internal value, and may reject unrecognized values. More
+                    info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+                  type: string
+                data:
+                  additionalProperties:
+                    format: byte
+                    type: string
+                  description: Data contains the secret data. Each key must consist
+                    of alphanumeric characters, '-', '_' or '.'. The serialized form
+                    of the secret data is a base64 encoded string, representing the
+                    arbitrary (possibly non-string) data value here. Described in
+                    https://tools.ietf.org/html/rfc4648#section-4
+                  type: object
+                kind:
+                  description: 'Kind is a string value representing the REST resource
+                    this object represents. Servers may infer this from the endpoint
+                    the client submits requests to. Cannot be updated. In CamelCase.
+                    More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+                  type: string
+                metadata:
+                  description: 'Standard object''s metadata. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata'
+                  type: object
+                stringData:
+                  additionalProperties:
+                    type: string
+                  description: stringData allows specifying non-binary secret data
+                    in string form. It is provided as a write-only convenience method.
+                    All keys and values are merged into the data field on write, overwriting
+                    any existing values. It is never output when reading from the
+                    API.
+                  type: object
+                type:
+                  description: Used to facilitate programmatic handling of secret
+                    data.
+                  type: string
+              type: object
+            clientCertificate:
+              description: ClientCertificate is the location of the client certificate
+                to speck back to the API
+              properties:
+                apiVersion:
+                  description: 'APIVersion defines the versioned schema of this representation
+                    of an object. Servers should convert recognized schemas to the
+                    latest internal value, and may reject unrecognized values. More
+                    info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+                  type: string
+                data:
+                  additionalProperties:
+                    format: byte
+                    type: string
+                  description: Data contains the secret data. Each key must consist
+                    of alphanumeric characters, '-', '_' or '.'. The serialized form
+                    of the secret data is a base64 encoded string, representing the
+                    arbitrary (possibly non-string) data value here. Described in
+                    https://tools.ietf.org/html/rfc4648#section-4
+                  type: object
+                kind:
+                  description: 'Kind is a string value representing the REST resource
+                    this object represents. Servers may infer this from the endpoint
+                    the client submits requests to. Cannot be updated. In CamelCase.
+                    More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+                  type: string
+                metadata:
+                  description: 'Standard object''s metadata. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata'
+                  type: object
+                stringData:
+                  additionalProperties:
+                    type: string
+                  description: stringData allows specifying non-binary secret data
+                    in string form. It is provided as a write-only convenience method.
+                    All keys and values are merged into the data field on write, overwriting
+                    any existing values. It is never output when reading from the
+                    API.
+                  type: object
+                type:
+                  description: Used to facilitate programmatic handling of secret
+                    data.
+                  type: string
+              type: object
+            domain:
+              description: Domain is the domain name for this cluster
+              minLength: 5
+              type: string
+          type: object
+        status:
+          description: ManagedConfigStatus defines the observed state of Cluster
+          properties:
+            conditions:
+              description: Conditions is a set of condition which has caused an error
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+            phase:
+              description: Phase indicates the phase of the cluster
+              type: string
+            status:
+              description: Status is overall status of the workspace
+              type: string
+          required:
+          - phase
+          - status
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsClustersComputeHubAppviaIo_managedconfigYamlBytes() ([]byte, error) {
+	return _crdsClustersComputeHubAppviaIo_managedconfigYaml, nil
+}
+
+func crdsClustersComputeHubAppviaIo_managedconfigYaml() (*asset, error) {
+	bytes, err := crdsClustersComputeHubAppviaIo_managedconfigYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/clusters.compute.hub.appvia.io_managedconfig.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsClustersComputeHubAppviaIo_managedpodsecuritypoliiesYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: managedpodsecuritypoliies.clusters.compute.hub.appvia.io
+spec:
+  group: clusters.compute.hub.appvia.io
+  names:
+    kind: ManagedPodSecurityPolicy
+    listKind: ManagedPodSecurityPolicyList
+    plural: managedpodsecuritypoliies
+    singular: managedpodsecuritypolicy
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: Kubernetes is the Schema for the roles API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: ManagedPodSecurityPolicySpec defines the desired state of Cluster
+            role
+          properties:
+            clusters:
+              description: Clusters is used to apply the cluster role to a specific
+                cluster
+              items:
+                description: Ownership indicates the ownership of a resource
+                properties:
+                  group:
+                    description: Group is the api group
+                    type: string
+                  kind:
+                    description: Kind is the name of the resource under the group
+                    type: string
+                  name:
+                    description: Name is name of the resource
+                    type: string
+                  namespace:
+                    description: Namespace is the location of the object
+                    type: string
+                  version:
+                    description: Version is the group version
+                    type: string
+                required:
+                - group
+                - kind
+                - name
+                - namespace
+                - version
+                type: object
+              type: array
+            description:
+              description: Description describes the nature of this pod security policy
+              minLength: 1
+              type: string
+            policy:
+              description: Policy defined a managed pod security policy across the
+                clusters
+              properties:
+                allowPrivilegeEscalation:
+                  description: allowPrivilegeEscalation determines if a pod can request
+                    to allow privilege escalation. If unspecified, defaults to true.
+                  type: boolean
+                allowedCSIDrivers:
+                  description: AllowedCSIDrivers is a whitelist of inline CSI drivers
+                    that must be explicitly set to be embedded within a pod spec.
+                    An empty value indicates that any CSI driver can be used for inline
+                    ephemeral volumes. This is an alpha field, and is only honored
+                    if the API server enables the CSIInlineVolume feature gate.
+                  items:
+                    description: AllowedCSIDriver represents a single inline CSI Driver
+                      that is allowed to be used.
+                    properties:
+                      name:
+                        description: Name is the registered name of the CSI driver
+                        type: string
+                    required:
+                    - name
+                    type: object
+                  type: array
+                allowedCapabilities:
+                  description: allowedCapabilities is a list of capabilities that
+                    can be requested to add to the container. Capabilities in this
+                    field may be added at the pod author's discretion. You must not
+                    list a capability in both allowedCapabilities and requiredDropCapabilities.
+                  items:
+                    description: Capability represent POSIX capabilities type
+                    type: string
+                  type: array
+                allowedFlexVolumes:
+                  description: allowedFlexVolumes is a whitelist of allowed Flexvolumes.  Empty
+                    or nil indicates that all Flexvolumes may be used.  This parameter
+                    is effective only when the usage of the Flexvolumes is allowed
+                    in the "volumes" field.
+                  items:
+                    description: AllowedFlexVolume represents a single Flexvolume
+                      that is allowed to be used.
+                    properties:
+                      driver:
+                        description: driver is the name of the Flexvolume driver.
+                        type: string
+                    required:
+                    - driver
+                    type: object
+                  type: array
+                allowedHostPaths:
+                  description: allowedHostPaths is a white list of allowed host paths.
+                    Empty indicates that all host paths may be used.
+                  items:
+                    description: AllowedHostPath defines the host volume conditions
+                      that will be enabled by a policy for pods to use. It requires
+                      the path prefix to be defined.
+                    properties:
+                      pathPrefix:
+                        description: "pathPrefix is the path prefix that the host
+                          volume must match. It does not support `+"`"+`*`+"`"+`. Trailing slashes
+                          are trimmed when validating the path prefix with a host
+                          path. \n Examples: `+"`"+`/foo`+"`"+` would allow `+"`"+`/foo`+"`"+`, `+"`"+`/foo/`+"`"+` and
+                          `+"`"+`/foo/bar`+"`"+` `+"`"+`/foo`+"`"+` would not allow `+"`"+`/food`+"`"+` or `+"`"+`/etc/foo`+"`"+`"
+                        type: string
+                      readOnly:
+                        description: when set to true, will allow host volumes matching
+                          the pathPrefix only if all volume mounts are readOnly.
+                        type: boolean
+                    type: object
+                  type: array
+                allowedProcMountTypes:
+                  description: AllowedProcMountTypes is a whitelist of allowed ProcMountTypes.
+                    Empty or nil indicates that only the DefaultProcMountType may
+                    be used. This requires the ProcMountType feature flag to be enabled.
+                  items:
+                    type: string
+                  type: array
+                allowedUnsafeSysctls:
+                  description: "allowedUnsafeSysctls is a list of explicitly allowed
+                    unsafe sysctls, defaults to none. Each entry is either a plain
+                    sysctl name or ends in \"*\" in which case it is considered as
+                    a prefix of allowed sysctls. Single * means all unsafe sysctls
+                    are allowed. Kubelet has to whitelist all allowed unsafe sysctls
+                    explicitly to avoid rejection. \n Examples: e.g. \"foo/*\" allows
+                    \"foo/bar\", \"foo/baz\", etc. e.g. \"foo.*\" allows \"foo.bar\",
+                    \"foo.baz\", etc."
+                  items:
+                    type: string
+                  type: array
+                defaultAddCapabilities:
+                  description: defaultAddCapabilities is the default set of capabilities
+                    that will be added to the container unless the pod spec specifically
+                    drops the capability.  You may not list a capability in both defaultAddCapabilities
+                    and requiredDropCapabilities. Capabilities added here are implicitly
+                    allowed, and need not be included in the allowedCapabilities list.
+                  items:
+                    description: Capability represent POSIX capabilities type
+                    type: string
+                  type: array
+                defaultAllowPrivilegeEscalation:
+                  description: defaultAllowPrivilegeEscalation controls the default
+                    setting for whether a process can gain more privileges than its
+                    parent process.
+                  type: boolean
+                forbiddenSysctls:
+                  description: "forbiddenSysctls is a list of explicitly forbidden
+                    sysctls, defaults to none. Each entry is either a plain sysctl
+                    name or ends in \"*\" in which case it is considered as a prefix
+                    of forbidden sysctls. Single * means all sysctls are forbidden.
+                    \n Examples: e.g. \"foo/*\" forbids \"foo/bar\", \"foo/baz\",
+                    etc. e.g. \"foo.*\" forbids \"foo.bar\", \"foo.baz\", etc."
+                  items:
+                    type: string
+                  type: array
+                fsGroup:
+                  description: fsGroup is the strategy that will dictate what fs group
+                    is used by the SecurityContext.
+                  properties:
+                    ranges:
+                      description: ranges are the allowed ranges of fs groups.  If
+                        you would like to force a single fs group then supply a single
+                        range with the same start and end. Required for MustRunAs.
+                      items:
+                        description: IDRange provides a min/max of an allowed range
+                          of IDs.
+                        properties:
+                          max:
+                            description: max is the end of the range, inclusive.
+                            format: int64
+                            type: integer
+                          min:
+                            description: min is the start of the range, inclusive.
+                            format: int64
+                            type: integer
+                        required:
+                        - max
+                        - min
+                        type: object
+                      type: array
+                    rule:
+                      description: rule is the strategy that will dictate what FSGroup
+                        is used in the SecurityContext.
+                      type: string
+                  type: object
+                hostIPC:
+                  description: hostIPC determines if the policy allows the use of
+                    HostIPC in the pod spec.
+                  type: boolean
+                hostNetwork:
+                  description: hostNetwork determines if the policy allows the use
+                    of HostNetwork in the pod spec.
+                  type: boolean
+                hostPID:
+                  description: hostPID determines if the policy allows the use of
+                    HostPID in the pod spec.
+                  type: boolean
+                hostPorts:
+                  description: hostPorts determines which host port ranges are allowed
+                    to be exposed.
+                  items:
+                    description: HostPortRange defines a range of host ports that
+                      will be enabled by a policy for pods to use.  It requires both
+                      the start and end to be defined.
+                    properties:
+                      max:
+                        description: max is the end of the range, inclusive.
+                        format: int32
+                        type: integer
+                      min:
+                        description: min is the start of the range, inclusive.
+                        format: int32
+                        type: integer
+                    required:
+                    - max
+                    - min
+                    type: object
+                  type: array
+                privileged:
+                  description: privileged determines if a pod can request to be run
+                    as privileged.
+                  type: boolean
+                readOnlyRootFilesystem:
+                  description: readOnlyRootFilesystem when set to true will force
+                    containers to run with a read only root file system.  If the container
+                    specifically requests to run with a non-read only root file system
+                    the PSP should deny the pod. If set to false the container may
+                    run with a read only root file system if it wishes but it will
+                    not be forced to.
+                  type: boolean
+                requiredDropCapabilities:
+                  description: requiredDropCapabilities are the capabilities that
+                    will be dropped from the container.  These are required to be
+                    dropped and cannot be added.
+                  items:
+                    description: Capability represent POSIX capabilities type
+                    type: string
+                  type: array
+                runAsGroup:
+                  description: RunAsGroup is the strategy that will dictate the allowable
+                    RunAsGroup values that may be set. If this field is omitted, the
+                    pod's RunAsGroup can take any value. This field requires the RunAsGroup
+                    feature gate to be enabled.
+                  properties:
+                    ranges:
+                      description: ranges are the allowed ranges of gids that may
+                        be used. If you would like to force a single gid then supply
+                        a single range with the same start and end. Required for MustRunAs.
+                      items:
+                        description: IDRange provides a min/max of an allowed range
+                          of IDs.
+                        properties:
+                          max:
+                            description: max is the end of the range, inclusive.
+                            format: int64
+                            type: integer
+                          min:
+                            description: min is the start of the range, inclusive.
+                            format: int64
+                            type: integer
+                        required:
+                        - max
+                        - min
+                        type: object
+                      type: array
+                    rule:
+                      description: rule is the strategy that will dictate the allowable
+                        RunAsGroup values that may be set.
+                      type: string
+                  required:
+                  - rule
+                  type: object
+                runAsUser:
+                  description: runAsUser is the strategy that will dictate the allowable
+                    RunAsUser values that may be set.
+                  properties:
+                    ranges:
+                      description: ranges are the allowed ranges of uids that may
+                        be used. If you would like to force a single uid then supply
+                        a single range with the same start and end. Required for MustRunAs.
+                      items:
+                        description: IDRange provides a min/max of an allowed range
+                          of IDs.
+                        properties:
+                          max:
+                            description: max is the end of the range, inclusive.
+                            format: int64
+                            type: integer
+                          min:
+                            description: min is the start of the range, inclusive.
+                            format: int64
+                            type: integer
+                        required:
+                        - max
+                        - min
+                        type: object
+                      type: array
+                    rule:
+                      description: rule is the strategy that will dictate the allowable
+                        RunAsUser values that may be set.
+                      type: string
+                  required:
+                  - rule
+                  type: object
+                runtimeClass:
+                  description: runtimeClass is the strategy that will dictate the
+                    allowable RuntimeClasses for a pod. If this field is omitted,
+                    the pod's runtimeClassName field is unrestricted. Enforcement
+                    of this field depends on the RuntimeClass feature gate being enabled.
+                  properties:
+                    allowedRuntimeClassNames:
+                      description: allowedRuntimeClassNames is a whitelist of RuntimeClass
+                        names that may be specified on a pod. A value of "*" means
+                        that any RuntimeClass name is allowed, and must be the only
+                        item in the list. An empty list requires the RuntimeClassName
+                        field to be unset.
+                      items:
+                        type: string
+                      type: array
+                    defaultRuntimeClassName:
+                      description: defaultRuntimeClassName is the default RuntimeClassName
+                        to set on the pod. The default MUST be allowed by the allowedRuntimeClassNames
+                        list. A value of nil does not mutate the Pod.
+                      type: string
+                  required:
+                  - allowedRuntimeClassNames
+                  type: object
+                seLinux:
+                  description: seLinux is the strategy that will dictate the allowable
+                    labels that may be set.
+                  properties:
+                    rule:
+                      description: rule is the strategy that will dictate the allowable
+                        labels that may be set.
+                      type: string
+                    seLinuxOptions:
+                      description: 'seLinuxOptions required to run as; required for
+                        MustRunAs More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/'
+                      properties:
+                        level:
+                          description: Level is SELinux level label that applies to
+                            the container.
+                          type: string
+                        role:
+                          description: Role is a SELinux role label that applies to
+                            the container.
+                          type: string
+                        type:
+                          description: Type is a SELinux type label that applies to
+                            the container.
+                          type: string
+                        user:
+                          description: User is a SELinux user label that applies to
+                            the container.
+                          type: string
+                      type: object
+                  required:
+                  - rule
+                  type: object
+                supplementalGroups:
+                  description: supplementalGroups is the strategy that will dictate
+                    what supplemental groups are used by the SecurityContext.
+                  properties:
+                    ranges:
+                      description: ranges are the allowed ranges of supplemental groups.  If
+                        you would like to force a single supplemental group then supply
+                        a single range with the same start and end. Required for MustRunAs.
+                      items:
+                        description: IDRange provides a min/max of an allowed range
+                          of IDs.
+                        properties:
+                          max:
+                            description: max is the end of the range, inclusive.
+                            format: int64
+                            type: integer
+                          min:
+                            description: min is the start of the range, inclusive.
+                            format: int64
+                            type: integer
+                        required:
+                        - max
+                        - min
+                        type: object
+                      type: array
+                    rule:
+                      description: rule is the strategy that will dictate what supplemental
+                        groups is used in the SecurityContext.
+                      type: string
+                  type: object
+                volumes:
+                  description: volumes is a white list of allowed volume plugins.
+                    Empty indicates that no volumes may be used. To allow all volumes
+                    you may use '*'.
+                  items:
+                    description: FSType gives strong typing to different file systems
+                      that are used by volumes.
+                    type: string
+                  type: array
+              required:
+              - fsGroup
+              - runAsUser
+              - seLinux
+              - supplementalGroups
+              type: object
+            teams:
+              description: Teams is a filter on the teams
+              items:
+                type: string
+              type: array
+          type: object
+        status:
+          description: ManagedPodSecurityPolicyStatus defines the observed state of
+            Cluster
+          properties:
+            conditions:
+              description: Conditions is a set of condition which has caused an error
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+            status:
+              description: Status is overall status of the workspace
+              type: string
+          required:
+          - conditions
+          - status
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsClustersComputeHubAppviaIo_managedpodsecuritypoliiesYamlBytes() ([]byte, error) {
+	return _crdsClustersComputeHubAppviaIo_managedpodsecuritypoliiesYaml, nil
+}
+
+func crdsClustersComputeHubAppviaIo_managedpodsecuritypoliiesYaml() (*asset, error) {
+	bytes, err := crdsClustersComputeHubAppviaIo_managedpodsecuritypoliiesYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/clusters.compute.hub.appvia.io_managedpodsecuritypoliies.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsClustersComputeHubAppviaIo_managedroleYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: managedrole.clusters.compute.hub.appvia.io
+spec:
+  group: clusters.compute.hub.appvia.io
+  names:
+    kind: ManagedRole
+    listKind: ManagedRoleList
+    plural: managedrole
+    singular: managedrole
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: Kubernetes is the Schema for the roles API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: ManagedRoleSpec defines the desired state of Cluster role
+          properties:
+            cluster:
+              description: Cluster provides a link to the cluster which the role should
+                reside
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
+            description:
+              description: Description is a description for the role
+              type: string
+            role:
+              description: Role are the permissions on the role
+              items:
+                description: PolicyRule holds information that describes a policy
+                  rule, but does not contain information about who the rule applies
+                  to or which namespace the rule applies to.
+                properties:
+                  apiGroups:
+                    description: APIGroups is the name of the APIGroup that contains
+                      the resources.  If multiple API groups are specified, any action
+                      requested against one of the enumerated resources in any API
+                      group will be allowed.
+                    items:
+                      type: string
+                    type: array
+                  nonResourceURLs:
+                    description: NonResourceURLs is a set of partial urls that a user
+                      should have access to.  *s are allowed, but only as the full,
+                      final step in the path Since non-resource URLs are not namespaced,
+                      this field is only applicable for ClusterRoles referenced from
+                      a ClusterRoleBinding. Rules can either apply to API resources
+                      (such as "pods" or "secrets") or non-resource URL paths (such
+                      as "/api"),  but not both.
+                    items:
+                      type: string
+                    type: array
+                  resourceNames:
+                    description: ResourceNames is an optional white list of names
+                      that the rule applies to.  An empty set means that everything
+                      is allowed.
+                    items:
+                      type: string
+                    type: array
+                  resources:
+                    description: Resources is a list of resources this rule applies
+                      to.  ResourceAll represents all resources.
+                    items:
+                      type: string
+                    type: array
+                  verbs:
+                    description: Verbs is a list of Verbs that apply to ALL the ResourceKinds
+                      and AttributeRestrictions contained in this rule.  VerbAll represents
+                      all kinds.
+                    items:
+                      type: string
+                    type: array
+                required:
+                - verbs
+                type: object
+              type: array
+          required:
+          - description
+          type: object
+        status:
+          description: ManagedRoleStatus defines the observed state of Cluster
+          properties:
+            conditions:
+              description: Conditions is a set of condition which has caused an error
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+            status:
+              description: Status is overall status of the workspace
+              type: string
+          required:
+          - conditions
+          - status
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsClustersComputeHubAppviaIo_managedroleYamlBytes() ([]byte, error) {
+	return _crdsClustersComputeHubAppviaIo_managedroleYaml, nil
+}
+
+func crdsClustersComputeHubAppviaIo_managedroleYaml() (*asset, error) {
+	bytes, err := crdsClustersComputeHubAppviaIo_managedroleYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/clusters.compute.hub.appvia.io_managedrole.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsClustersComputeHubAppviaIo_namespaceclaimsYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: namespaceclaims.clusters.compute.hub.appvia.io
+spec:
+  group: clusters.compute.hub.appvia.io
+  names:
+    kind: NamespaceClaim
+    listKind: NamespaceClaimList
+    plural: namespaceclaims
+    singular: namespaceclaim
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: NamespaceClaim is the Schema for the namespaceclaims API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: NamespaceClaimSpec defines the desired state of NamespaceClaim
+          properties:
+            annotations:
+              additionalProperties:
+                type: string
+              description: Annotations is a series of annotations on the namespace
+              type: object
+            cluster:
+              description: Cluster is the cluster the namespace resides
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
+            labels:
+              additionalProperties:
+                type: string
+              description: Labels is a series of labels for the namespace
+              type: object
+            limits:
+              description: Limits are the limits placs on the namespace
+              properties:
+                apiVersion:
+                  description: 'APIVersion defines the versioned schema of this representation
+                    of an object. Servers should convert recognized schemas to the
+                    latest internal value, and may reject unrecognized values. More
+                    info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+                  type: string
+                kind:
+                  description: 'Kind is a string value representing the REST resource
+                    this object represents. Servers may infer this from the endpoint
+                    the client submits requests to. Cannot be updated. In CamelCase.
+                    More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+                  type: string
+                metadata:
+                  description: 'Standard object''s metadata. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata'
+                  type: object
+                spec:
+                  description: 'Spec defines the limits enforced. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#spec-and-status'
+                  properties:
+                    limits:
+                      description: Limits is the list of LimitRangeItem objects that
+                        are enforced.
+                      items:
+                        description: LimitRangeItem defines a min/max usage limit
+                          for any resource that matches on kind.
+                        properties:
+                          default:
+                            additionalProperties:
+                              type: string
+                            description: Default resource requirement limit value
+                              by resource name if resource limit is omitted.
+                            type: object
+                          defaultRequest:
+                            additionalProperties:
+                              type: string
+                            description: DefaultRequest is the default resource requirement
+                              request value by resource name if resource request is
+                              omitted.
+                            type: object
+                          max:
+                            additionalProperties:
+                              type: string
+                            description: Max usage constraints on this kind by resource
+                              name.
+                            type: object
+                          maxLimitRequestRatio:
+                            additionalProperties:
+                              type: string
+                            description: MaxLimitRequestRatio if specified, the named
+                              resource must have a request and limit that are both
+                              non-zero where limit divided by request is less than
+                              or equal to the enumerated value; this represents the
+                              max burst for the named resource.
+                            type: object
+                          min:
+                            additionalProperties:
+                              type: string
+                            description: Min usage constraints on this kind by resource
+                              name.
+                            type: object
+                          type:
+                            description: Type of resource that this limit applies
+                              to.
+                            type: string
+                        type: object
+                      type: array
+                  required:
+                  - limits
+                  type: object
+              type: object
+            name:
+              description: Name is the name of the namespace to create
+              minLength: 3
+              type: string
+          required:
+          - cluster
+          - name
+          type: object
+        status:
+          description: NamespaceClaimStatus defines the observed state of NamespaceClaim
+          properties:
+            conditions:
+              description: Conditions is a series of things that caused the failure
+                if any
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+            phase:
+              description: Phase is used to hold the current phase of the resource
+              type: string
+            status:
+              description: Status is the status of the namespace
+              type: string
+          required:
+          - conditions
+          - phase
+          - status
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsClustersComputeHubAppviaIo_namespaceclaimsYamlBytes() ([]byte, error) {
+	return _crdsClustersComputeHubAppviaIo_namespaceclaimsYaml, nil
+}
+
+func crdsClustersComputeHubAppviaIo_namespaceclaimsYaml() (*asset, error) {
+	bytes, err := crdsClustersComputeHubAppviaIo_namespaceclaimsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/clusters.compute.hub.appvia.io_namespaceclaims.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsClustersComputeHubAppviaIo_namespacepolicyYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: namespacepolicy.clusters.compute.hub.appvia.io
+spec:
+  group: clusters.compute.hub.appvia.io
+  names:
+    kind: NamepacePolicy
+    listKind: NamepacePolicyList
+    plural: namespacepolicy
+    singular: namepacepolicy
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: Kubernetes is the Schema for the roles API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: NamepacePolicySpec defines the desired state of Cluster role
+          properties:
+            defaultAnnotations:
+              additionalProperties:
+                type: string
+              description: DefaultAnnotations are default annotations applied to all
+                managed namespaces
+              type: object
+            defaultLabels:
+              additionalProperties:
+                type: string
+              description: DefaultLabels are the labels applied to all managed namespaces
+              type: object
+            defaultLimits:
+              description: DefaultLimits are the default resource limits applied to
+                the namespace
+              properties:
+                apiVersion:
+                  description: 'APIVersion defines the versioned schema of this representation
+                    of an object. Servers should convert recognized schemas to the
+                    latest internal value, and may reject unrecognized values. More
+                    info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+                  type: string
+                kind:
+                  description: 'Kind is a string value representing the REST resource
+                    this object represents. Servers may infer this from the endpoint
+                    the client submits requests to. Cannot be updated. In CamelCase.
+                    More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+                  type: string
+                metadata:
+                  description: 'Standard object''s metadata. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata'
+                  type: object
+                spec:
+                  description: 'Spec defines the limits enforced. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#spec-and-status'
+                  properties:
+                    limits:
+                      description: Limits is the list of LimitRangeItem objects that
+                        are enforced.
+                      items:
+                        description: LimitRangeItem defines a min/max usage limit
+                          for any resource that matches on kind.
+                        properties:
+                          default:
+                            additionalProperties:
+                              type: string
+                            description: Default resource requirement limit value
+                              by resource name if resource limit is omitted.
+                            type: object
+                          defaultRequest:
+                            additionalProperties:
+                              type: string
+                            description: DefaultRequest is the default resource requirement
+                              request value by resource name if resource request is
+                              omitted.
+                            type: object
+                          max:
+                            additionalProperties:
+                              type: string
+                            description: Max usage constraints on this kind by resource
+                              name.
+                            type: object
+                          maxLimitRequestRatio:
+                            additionalProperties:
+                              type: string
+                            description: MaxLimitRequestRatio if specified, the named
+                              resource must have a request and limit that are both
+                              non-zero where limit divided by request is less than
+                              or equal to the enumerated value; this represents the
+                              max burst for the named resource.
+                            type: object
+                          min:
+                            additionalProperties:
+                              type: string
+                            description: Min usage constraints on this kind by resource
+                              name.
+                            type: object
+                          type:
+                            description: Type of resource that this limit applies
+                              to.
+                            type: string
+                        type: object
+                      type: array
+                  required:
+                  - limits
+                  type: object
+              type: object
+          type: object
+        status:
+          description: NamepacePolicyStatus defines the observed state of Cluster
+          properties:
+            conditions:
+              description: Conditions is a set of condition which has caused an error
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+            status:
+              description: Status is overall status of the workspace
+              type: string
+          required:
+          - conditions
+          - status
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsClustersComputeHubAppviaIo_namespacepolicyYamlBytes() ([]byte, error) {
+	return _crdsClustersComputeHubAppviaIo_namespacepolicyYaml, nil
+}
+
+func crdsClustersComputeHubAppviaIo_namespacepolicyYaml() (*asset, error) {
+	bytes, err := crdsClustersComputeHubAppviaIo_namespacepolicyYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/clusters.compute.hub.appvia.io_namespacepolicy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsConfigHubAppviaIo_allocationsYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: allocations.config.hub.appvia.io
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.summary
+    description: A summary of what is being shared
+    name: Summary
+    type: string
+  - JSONPath: .spec.resource.group
+    description: The API group of the resource being shared
+    name: Group
+    type: string
+  - JSONPath: .spec.resource.namespace
+    description: The namespace of the resource being shared
+    name: Resource Namespace
+    type: string
+  - JSONPath: .spec.resource.name
+    description: The name of the resource being shared
+    name: Resource Name
+    type: string
+  group: config.hub.appvia.io
+  names:
+    kind: Allocation
+    listKind: AllocationList
+    plural: allocations
+    singular: allocation
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: Allocation is the Schema for the allocations API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: AllocationSpec defines the desired state of Allocation
+          properties:
+            name:
+              description: Name is the name of the resource being shared
+              type: string
+            resource:
+              description: Resource is the resource which is being shared with another
+                team
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
+            summary:
+              description: Summary is the summary of the resource being shared
+              type: string
+            teams:
+              description: Teams is a collection of teams the allocation is permitted
+                to use
+              items:
+                type: string
+              minItems: 1
+              type: array
+          required:
+          - name
+          - resource
+          - summary
+          type: object
+        status:
+          description: AllocationStatus defines the observed state of Allocation
+          properties:
+            conditions:
+              description: Conditions is a collection of potential issues
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+            status:
+              description: Status is the general status of the resource
+              type: string
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsConfigHubAppviaIo_allocationsYamlBytes() ([]byte, error) {
+	return _crdsConfigHubAppviaIo_allocationsYaml, nil
+}
+
+func crdsConfigHubAppviaIo_allocationsYaml() (*asset, error) {
+	bytes, err := crdsConfigHubAppviaIo_allocationsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/config.hub.appvia.io_allocations.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsConfigHubAppviaIo_plansYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: plans.config.hub.appvia.io
+spec:
+  group: config.hub.appvia.io
+  names:
+    kind: Plan
+    listKind: PlanList
+    plural: plans
+    singular: plan
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: Plan is the Schema for the plans API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: PlanSpec defines the desired state of Plan
+          properties:
+            description:
+              description: Description provides a summary of the configuration provided
+                by this plan
+              minLength: 1
+              type: string
+            summary:
+              description: Summary provides a short title summary for the plan
+              minLength: 1
+              type: string
+            values:
+              description: Values are the key values to the plan
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+          required:
+          - values
+          type: object
+        status:
+          description: PlanStatus defines the observed state of Plan
+          properties:
+            conditions:
+              description: Conditions is a set of condition which has caused an error
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+            status:
+              description: Status is overall status of the workspace
+              type: string
+          required:
+          - status
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsConfigHubAppviaIo_plansYamlBytes() ([]byte, error) {
+	return _crdsConfigHubAppviaIo_plansYaml, nil
+}
+
+func crdsConfigHubAppviaIo_plansYaml() (*asset, error) {
+	bytes, err := crdsConfigHubAppviaIo_plansYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/config.hub.appvia.io_plans.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsCoreHubAppviaIo_idpYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: idp.core.hub.appvia.io
+spec:
+  group: core.hub.appvia.io
+  names:
+    kind: IDP
+    listKind: IDPList
+    plural: idp
+    singular: idp
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: IDP is the Schema for the class API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: IDPSpec defines the spec for a configured instance of an IDP
+          properties:
+            config:
+              description: IDPConfig
+              properties:
+                github:
+                  description: Google represents a Google IDP config
+                  properties:
+                    clientID:
+                      description: ClientID is the field name in a Github OAuth app
+                      type: string
+                    clientSecret:
+                      description: ClientSecret is the field name in a Github OAuth
+                        app
+                      type: string
+                    orgs:
+                      description: ClientSecret is the list of possible Organisations
+                        in Github the user must be part of
+                      items:
+                        type: string
+                      type: array
+                  required:
+                  - clientID
+                  - clientSecret
+                  - orgs
+                  type: object
+                google:
+                  description: GoogleIDP provides config for a Google Identity provider
+                  properties:
+                    clientID:
+                      description: ClientID is the field name in a Google OAuth app
+                      type: string
+                    clientSecret:
+                      description: ClientSecret is the field name in a Google OAuth
+                        app
+                      type: string
+                    domains:
+                      description: Domains are the google accounts whitelisted for
+                        authentication
+                      items:
+                        type: string
+                      type: array
+                  required:
+                  - clientID
+                  - clientSecret
+                  - domains
+                  type: object
+                oidc:
+                  description: OIDCIDP config for a generoc Open ID Connect provider
+                  properties:
+                    clientID:
+                      description: ClientID provides the OIDC client ID string
+                      type: string
+                    clientSecret:
+                      description: ClientSecret provides the OIDC client secret string
+                      type: string
+                    issuer:
+                      description: Issuer provides the IDP URL
+                      type: string
+                  required:
+                  - clientID
+                  - clientSecret
+                  - issuer
+                  type: object
+                saml:
+                  description: SAMLIDP provides configuration for a generic SAML Identity
+                    provider
+                  properties:
+                    allowedGroups:
+                      description: AllowedGroups provides a list of allowed groups
+                      items:
+                        type: string
+                      type: array
+                    caData:
+                      description: CAData is byte array representing the PEM data
+                        for the IDP signing CA
+                      format: byte
+                      type: string
+                    emailAttr:
+                      description: EmailAttr attribute in the returned assertion to
+                        map to ID token claims
+                      type: string
+                    groupsAttr:
+                      description: GroupsAttr attribute in the returned assertion
+                        to map to ID token claims
+                      type: string
+                    groupsDelim:
+                      description: GroupsDelim characters used to split the single
+                        groups field to obtain the user group membership
+                      type: string
+                    ssoURL:
+                      description: SSOURL provides the SSO URL used for POST value
+                        to IDP
+                      type: string
+                    usernameAttr:
+                      description: UsernameAttr attribute in the returned assertion
+                        to map to ID token claims
+                      type: string
+                  required:
+                  - caData
+                  - emailAttr
+                  - ssoURL
+                  - usernameAttr
+                  type: object
+              type: object
+            displayName:
+              description: DisplayName
+              type: string
+          required:
+          - config
+          - displayName
+          type: object
+        status:
+          description: IDPStatus defines the observed state of an IDP (ID Providers)
+          properties:
+            conditions:
+              description: Conditions is a set of condition which has caused an error
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+            status:
+              description: Status is overall status of the IDP configuration
+              type: string
+          required:
+          - status
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsCoreHubAppviaIo_idpYamlBytes() ([]byte, error) {
+	return _crdsCoreHubAppviaIo_idpYaml, nil
+}
+
+func crdsCoreHubAppviaIo_idpYaml() (*asset, error) {
+	bytes, err := crdsCoreHubAppviaIo_idpYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/core.hub.appvia.io_idp.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsCoreHubAppviaIo_oidclientYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: oidclient.core.hub.appvia.io
+spec:
+  group: core.hub.appvia.io
+  names:
+    kind: IDPClient
+    listKind: IDPClientList
+    plural: oidclient
+    singular: idpclient
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: IDPClient is the Schema for the class API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: IDPClientSpec defines the spec for a IDP client
+          properties:
+            displayName:
+              description: DisplayName
+              type: string
+            id:
+              description: ID of OIDC client
+              type: string
+            redirectURIs:
+              description: RedirectURIs where to send client after IDP auth
+              items:
+                type: string
+              type: array
+            secret:
+              description: Secret for OIDC client
+              type: string
+          required:
+          - displayName
+          - id
+          - redirectURIs
+          - secret
+          type: object
+        status:
+          description: IDPClientStatus defines the observed state of an IDP (ID Providers)
+          properties:
+            conditions:
+              description: Conditions is a set of condition which has caused an error
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+            status:
+              description: Status is overall status of the IDP configuration
+              type: string
+          required:
+          - status
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsCoreHubAppviaIo_oidclientYamlBytes() ([]byte, error) {
+	return _crdsCoreHubAppviaIo_oidclientYaml, nil
+}
+
+func crdsCoreHubAppviaIo_oidclientYaml() (*asset, error) {
+	bytes, err := crdsCoreHubAppviaIo_oidclientYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/core.hub.appvia.io_oidclient.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsGkeComputeHubAppviaIo_gkecredentialsYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: gkecredentials.gke.compute.hub.appvia.io
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.region
+    description: The name of the GCP region the clusters will reside
+    name: Region
+    type: string
+  - JSONPath: .spec.project
+    description: The name of the GCP project
+    name: Project
+    type: string
+  - JSONPath: .status.verified
+    description: Indicates is the credentials have been verified
+    name: Verified
+    type: string
+  group: gke.compute.hub.appvia.io
+  names:
+    kind: GKECredentials
+    listKind: GKECredentialsList
+    plural: gkecredentials
+    singular: gkecredentials
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: GKECredentials is the Schema for the gkecredentials API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: GKECredentialsSpec defines the desired state of GKECredentials
+          properties:
+            account:
+              description: Account is the credentials used to speak the GCP APIs;
+                you create a service account under the Cloud IAM within the project,
+                adding the permissions 'Compute Admin' role to the service account
+                via IAM tab. Once done you can create a key under 'Service Accounts'
+                and copy and paste the JSON payload here.
+              minLength: 1
+              type: string
+            project:
+              description: Project is the GCP project these credentias pretain to
+              minLength: 1
+              type: string
+            region:
+              description: Region is the GCP region you wish to the cluster to reside
+                within
+              minLength: 1
+              type: string
+          required:
+          - account
+          - project
+          - region
+          type: object
+        status:
+          description: GKECredentialsStatus defines the observed state of GKECredentials
+          properties:
+            conditions:
+              description: Conditions is a collection of potential issues
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+            status:
+              description: Status provides a overall status
+              type: string
+            verified:
+              description: Verified checks that the credentials are ok and valid
+              type: boolean
+          required:
+          - status
+          - verified
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsGkeComputeHubAppviaIo_gkecredentialsYamlBytes() ([]byte, error) {
+	return _crdsGkeComputeHubAppviaIo_gkecredentialsYaml, nil
+}
+
+func crdsGkeComputeHubAppviaIo_gkecredentialsYaml() (*asset, error) {
+	bytes, err := crdsGkeComputeHubAppviaIo_gkecredentialsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/gke.compute.hub.appvia.io_gkecredentials.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsGkeComputeHubAppviaIo_gkesYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: gkes.gke.compute.hub.appvia.io
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.description
+    description: A description of the GKE cluster
+    name: Description
+    type: string
+  - JSONPath: .status.endpoint
+    description: The endpoint of the gke cluster
+    name: Endpoint
+    type: string
+  - JSONPath: .status.status
+    description: The overall status of the cluster
+    name: Status
+    type: string
+  group: gke.compute.hub.appvia.io
+  names:
+    kind: GKE
+    listKind: GKEList
+    plural: gkes
+    singular: gke
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: GKE is the Schema for the gkes API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: GKESpec defines the desired state of GKE
+          properties:
+            authorizedMasterNetworks:
+              description: AuthorizedMasterNetworks is a collection of authorized
+                networks which is permitted to speak to the kubernetes API, default
+                to all if not provided.
+              items:
+                description: AuthorizedNetwork provides a definition for the authorized
+                  networks
+                properties:
+                  cidr:
+                    description: CIDR is the network range associated to this network
+                    type: string
+                  name:
+                    description: Name provides a descriptive name for this network
+                    type: string
+                required:
+                - cidr
+                - name
+                type: object
+              type: array
+            clusterIPV4Cidr:
+              description: ClusterIPV4Cidr is an optional network CIDR which is used
+                to place the pod network on
+              type: string
+            credentials:
+              description: GKECredentials is a reference to the gke credentials object
+                to use
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
+            description:
+              description: Description provides a short summary / description of the
+                cluster.
+              minLength: 1
+              type: string
+            diskSize:
+              description: DiskSize is the size of the disk used by the compute nodes.
+              format: int64
+              minimum: 100
+              type: integer
+            enableAutoUpgrade:
+              description: EnableAutoUpgrade indicates if the cluster should be configured
+                with autograding enabled; meaning both nodes are masters are autoscated
+                scheduled to upgrade during your maintenance window.
+              type: boolean
+            enableAutorepair:
+              description: EnableAutorepair indicates if the cluster should be configured
+                with auto repair is enabled
+              type: boolean
+            enableAutoscaler:
+              description: EnableAutoscaler indicates if the cluster should be configured
+                with cluster autoscaling turned on
+              type: boolean
+            enableHTTPLoadBalancer:
+              description: EnableHTTPLoadBalancer indicates if the cluster should
+                be configured with the GKE ingress controller. When enabled GKE will
+                autodiscover your ingress resources and provision load balancer on
+                your behalf.
+              type: boolean
+            enableHorizontalPodAutoscaler:
+              description: EnableHorizontalPodAutoscaler indicates if the cluster
+                is configured with the horizontal pod autoscaler addon. This automatically
+                adjusts the cpu and memory resources of pods in accordances with their
+                demand. You should ensure you use PodDisruptionBudgets if this is
+                enabled.
+              type: boolean
+            enableIstio:
+              description: EnableIstio indicates if the GKE Istio service mesh is
+                deployed to the cluster; this provides a more feature rich routing
+                and instrumentation.
+              type: boolean
+            enablePrivateNetwork:
+              description: EnablePrivateNetwork indicates if compute nodes should
+                have external ip addresses or use private networking and a cloud-nat
+                device.
+              type: boolean
+            enableStackDriverLogging:
+              description: EnableStackDriverLogging indicates if Stackdriver logging
+                should be enabled for the cluster
+              type: boolean
+            enableStackDriverMetrics:
+              description: EnableStackDriverMetrics indicates if Stackdriver metrics
+                should be enabled for the cluster
+              type: boolean
+            imageType:
+              description: ImageType is the operating image to use for the default
+                compute pool.
+              minLength: 1
+              type: string
+            machineType:
+              description: MachineType is the machine type which the default nodes
+                pool should use.
+              minLength: 1
+              type: string
+            maintenanceWindow:
+              description: MaintenanceWindow is the maintenance window provided for
+                GKE to perform upgrades if enabled.
+              minLength: 1
+              type: string
+            masterIPV4Cidr:
+              description: MasterIPV4Cidr is network range used when private networking
+                is enabled. This is the peering subnet used to to GKE master api layer.
+                Note, this must be unique within the network.
+              type: string
+            maxSize:
+              description: MaxSize assuming the autoscaler is enabled this is the
+                maximum number nodes permitted
+              format: int64
+              minimum: 2
+              type: integer
+            network:
+              description: Network is the GCP network the cluster reside on, which
+                have to be unique within the GCP project and created beforehand.
+              minLength: 1
+              type: string
+            servicesIPV4Cidr:
+              description: ServicesIPV4Cidr is an optional network cidr configured
+                for the cluster services
+              type: string
+            size:
+              description: Size is the number of nodes per zone which should exist
+                in the cluster.
+              format: int64
+              minimum: 1
+              type: integer
+            subnetwork:
+              description: Subnetwork is name of the GCP subnetwork which the cluster
+                nodes should reside
+              minLength: 1
+              type: string
+            tags:
+              additionalProperties:
+                type: string
+              description: Tags is a collection of tags related to the cluster type
+              type: object
+            version:
+              description: Version is the initial kubernetes version which the cluster
+                should be configured with.
+              minLength: 1
+              type: string
+          required:
+          - credentials
+          - description
+          - diskSize
+          - imageType
+          - machineType
+          - maintenanceWindow
+          - maxSize
+          - network
+          - size
+          - subnetwork
+          - version
+          type: object
+        status:
+          description: GKEStatus defines the observed state of GKE
+          properties:
+            caCertificate:
+              description: CACertificate is the certificate for this cluster
+              type: string
+            conditions:
+              description: Conditions is the status of the components
+              items:
+                description: Component the state of a component of the resource
+                properties:
+                  detail:
+                    description: Detail is additional details on the error is any
+                    type: string
+                  message:
+                    description: Message is a human readable message on the status
+                      of the component
+                    type: string
+                  name:
+                    description: Name is the name of the component
+                    type: string
+                  status:
+                    description: Status is the status of the component
+                    type: string
+                type: object
+              type: array
+            endpoint:
+              description: Endpoint is the endpoint of the cluster
+              type: string
+            status:
+              description: Status provides a overall status
+              type: string
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsGkeComputeHubAppviaIo_gkesYamlBytes() ([]byte, error) {
+	return _crdsGkeComputeHubAppviaIo_gkesYaml, nil
+}
+
+func crdsGkeComputeHubAppviaIo_gkesYaml() (*asset, error) {
+	bytes, err := crdsGkeComputeHubAppviaIo_gkesYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/gke.compute.hub.appvia.io_gkes.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsOrgHubAppviaIo_membersYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: members.org.hub.appvia.io
+spec:
+  group: org.hub.appvia.io
+  names:
+    kind: TeamMember
+    listKind: TeamMemberList
+    plural: members
+    singular: teammember
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: TeamMember is the Schema for the teams API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: TeamMemberSpec defines the desired state of Team
+          properties:
+            roles:
+              description: Role is the role of the user in the team
+              items:
+                type: string
+              type: array
+            team:
+              description: Team is the name of the team
+              type: string
+            username:
+              description: Username is the user being bound to the team
+              type: string
+          required:
+          - roles
+          - team
+          - username
+          type: object
+        status:
+          description: TeamMemberStatus defines the observed state of Team
+          properties:
+            conditions:
+              description: Conditions is a collection of possible errors
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+            status:
+              description: Status is the status of the resource
+              type: string
+          required:
+          - status
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsOrgHubAppviaIo_membersYamlBytes() ([]byte, error) {
+	return _crdsOrgHubAppviaIo_membersYaml, nil
+}
+
+func crdsOrgHubAppviaIo_membersYaml() (*asset, error) {
+	bytes, err := crdsOrgHubAppviaIo_membersYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/org.hub.appvia.io_members.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsOrgHubAppviaIo_teaminvitationsYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: teaminvitations.org.hub.appvia.io
+spec:
+  group: org.hub.appvia.io
+  names:
+    kind: TeamInvitation
+    listKind: TeamInvitationList
+    plural: teaminvitations
+    singular: teaminvitation
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: TeamInvitation is the Schema for the teams API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: TeamInvitationSpec defines the desired state of Team
+          properties:
+            team:
+              description: Team is the name of the team
+              type: string
+            username:
+              description: Username is the user being bound to the team
+              type: string
+          required:
+          - team
+          - username
+          type: object
+        status:
+          description: TeamInvitationStatus defines the observed state of Team
+          properties:
+            conditions:
+              description: Conditions is a collection of possible errors
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+            status:
+              description: Status is the status of the resource
+              type: string
+          required:
+          - status
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsOrgHubAppviaIo_teaminvitationsYamlBytes() ([]byte, error) {
+	return _crdsOrgHubAppviaIo_teaminvitationsYaml, nil
+}
+
+func crdsOrgHubAppviaIo_teaminvitationsYaml() (*asset, error) {
+	bytes, err := crdsOrgHubAppviaIo_teaminvitationsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/org.hub.appvia.io_teaminvitations.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsOrgHubAppviaIo_teamsYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: teams.org.hub.appvia.io
+spec:
+  group: org.hub.appvia.io
+  names:
+    kind: Team
+    listKind: TeamList
+    plural: teams
+    singular: team
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: Team is the Schema for the teams API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: TeamSpec defines the desired state of Team
+          properties:
+            description:
+              description: Description is a description for the team
+              type: string
+            summary:
+              description: Summary is a summary name for this team
+              type: string
+          required:
+          - description
+          - summary
+          type: object
+        status:
+          description: TeamStatus defines the observed state of Team
+          properties:
+            conditions:
+              description: Conditions is a collection of possible errors
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+            status:
+              description: Status is the status of the resource
+              type: string
+          required:
+          - status
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsOrgHubAppviaIo_teamsYamlBytes() ([]byte, error) {
+	return _crdsOrgHubAppviaIo_teamsYaml, nil
+}
+
+func crdsOrgHubAppviaIo_teamsYaml() (*asset, error) {
+	bytes, err := crdsOrgHubAppviaIo_teamsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/org.hub.appvia.io_teams.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsOrgHubAppviaIo_usersYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: users.org.hub.appvia.io
+spec:
+  group: org.hub.appvia.io
+  names:
+    kind: User
+    listKind: UserList
+    plural: users
+    singular: user
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: User is the Schema for the users API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: UserSpec defines the desired state of User
+          properties:
+            disabled:
+              description: Disabled indicates if the user is disabled
+              type: boolean
+            email:
+              description: Email is the email for the user
+              minLength: 1
+              type: string
+            username:
+              description: Username is the userame or identity for this user
+              minLength: 1
+              type: string
+          required:
+          - username
+          type: object
+        status:
+          description: UserStatus defines the observed state of User
+          properties:
+            conditions:
+              description: Conditions is collection of potentials error causes
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+            status:
+              description: Status provides an overview of the user status
+              type: string
+          required:
+          - status
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsOrgHubAppviaIo_usersYamlBytes() ([]byte, error) {
+	return _crdsOrgHubAppviaIo_usersYaml, nil
+}
+
+func crdsOrgHubAppviaIo_usersYaml() (*asset, error) {
+	bytes, err := crdsOrgHubAppviaIo_usersYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/org.hub.appvia.io_users.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+// Asset loads and returns the asset for the given name.
+// It returns an error if the asset could not be found or
+// could not be loaded.
+func Asset(name string) ([]byte, error) {
+	cannonicalName := strings.Replace(name, "\\", "/", -1)
+	if f, ok := _bindata[cannonicalName]; ok {
+		a, err := f()
+		if err != nil {
+			return nil, fmt.Errorf("Asset %s can't read by error: %v", name, err)
+		}
+		return a.bytes, nil
+	}
+	return nil, fmt.Errorf("Asset %s not found", name)
+}
+
+// MustAsset is like Asset but panics when Asset would return an error.
+// It simplifies safe initialization of global variables.
+func MustAsset(name string) []byte {
+	a, err := Asset(name)
+	if err != nil {
+		panic("asset: Asset(" + name + "): " + err.Error())
+	}
+
+	return a
+}
+
+// AssetInfo loads and returns the asset info for the given name.
+// It returns an error if the asset could not be found or
+// could not be loaded.
+func AssetInfo(name string) (os.FileInfo, error) {
+	cannonicalName := strings.Replace(name, "\\", "/", -1)
+	if f, ok := _bindata[cannonicalName]; ok {
+		a, err := f()
+		if err != nil {
+			return nil, fmt.Errorf("AssetInfo %s can't read by error: %v", name, err)
+		}
+		return a.info, nil
+	}
+	return nil, fmt.Errorf("AssetInfo %s not found", name)
+}
+
+// AssetNames returns the names of the assets.
+func AssetNames() []string {
+	names := make([]string, 0, len(_bindata))
+	for name := range _bindata {
+		names = append(names, name)
+	}
+	return names
+}
+
+// _bindata is a table, holding each asset generator, mapped to its name.
+var _bindata = map[string]func() (*asset, error){
+	"crds/apps.hub.appvia.io_appdeployments.yaml":                        crdsAppsHubAppviaIo_appdeploymentsYaml,
+	"crds/apps.hub.appvia.io_installplans.yaml":                          crdsAppsHubAppviaIo_installplansYaml,
+	"crds/aws.compute.hub.appvia.io_awscredentials.yaml":                 crdsAwsComputeHubAppviaIo_awscredentialsYaml,
+	"crds/aws.compute.hub.appvia.io_eksclusters.yaml":                    crdsAwsComputeHubAppviaIo_eksclustersYaml,
+	"crds/clusters.compute.hub.appvia.io_kubernetes.yaml":                crdsClustersComputeHubAppviaIo_kubernetesYaml,
+	"crds/clusters.compute.hub.appvia.io_managedclusterrole.yaml":        crdsClustersComputeHubAppviaIo_managedclusterroleYaml,
+	"crds/clusters.compute.hub.appvia.io_managedclusterrolebinding.yaml": crdsClustersComputeHubAppviaIo_managedclusterrolebindingYaml,
+	"crds/clusters.compute.hub.appvia.io_managedconfig.yaml":             crdsClustersComputeHubAppviaIo_managedconfigYaml,
+	"crds/clusters.compute.hub.appvia.io_managedpodsecuritypoliies.yaml": crdsClustersComputeHubAppviaIo_managedpodsecuritypoliiesYaml,
+	"crds/clusters.compute.hub.appvia.io_managedrole.yaml":               crdsClustersComputeHubAppviaIo_managedroleYaml,
+	"crds/clusters.compute.hub.appvia.io_namespaceclaims.yaml":           crdsClustersComputeHubAppviaIo_namespaceclaimsYaml,
+	"crds/clusters.compute.hub.appvia.io_namespacepolicy.yaml":           crdsClustersComputeHubAppviaIo_namespacepolicyYaml,
+	"crds/config.hub.appvia.io_allocations.yaml":                         crdsConfigHubAppviaIo_allocationsYaml,
+	"crds/config.hub.appvia.io_plans.yaml":                               crdsConfigHubAppviaIo_plansYaml,
+	"crds/core.hub.appvia.io_idp.yaml":                                   crdsCoreHubAppviaIo_idpYaml,
+	"crds/core.hub.appvia.io_oidclient.yaml":                             crdsCoreHubAppviaIo_oidclientYaml,
+	"crds/gke.compute.hub.appvia.io_gkecredentials.yaml":                 crdsGkeComputeHubAppviaIo_gkecredentialsYaml,
+	"crds/gke.compute.hub.appvia.io_gkes.yaml":                           crdsGkeComputeHubAppviaIo_gkesYaml,
+	"crds/org.hub.appvia.io_members.yaml":                                crdsOrgHubAppviaIo_membersYaml,
+	"crds/org.hub.appvia.io_teaminvitations.yaml":                        crdsOrgHubAppviaIo_teaminvitationsYaml,
+	"crds/org.hub.appvia.io_teams.yaml":                                  crdsOrgHubAppviaIo_teamsYaml,
+	"crds/org.hub.appvia.io_users.yaml":                                  crdsOrgHubAppviaIo_usersYaml,
+}
+
+// AssetDir returns the file names below a certain
+// directory embedded in the file by go-bindata.
+// For example if you run go-bindata on data/... and data contains the
+// following hierarchy:
+//     data/
+//       foo.txt
+//       img/
+//         a.png
+//         b.png
+// then AssetDir("data") would return []string{"foo.txt", "img"}
+// AssetDir("data/img") would return []string{"a.png", "b.png"}
+// AssetDir("foo.txt") and AssetDir("notexist") would return an error
+// AssetDir("") will return []string{"data"}.
+func AssetDir(name string) ([]string, error) {
+	node := _bintree
+	if len(name) != 0 {
+		cannonicalName := strings.Replace(name, "\\", "/", -1)
+		pathList := strings.Split(cannonicalName, "/")
+		for _, p := range pathList {
+			node = node.Children[p]
+			if node == nil {
+				return nil, fmt.Errorf("Asset %s not found", name)
+			}
+		}
+	}
+	if node.Func != nil {
+		return nil, fmt.Errorf("Asset %s not found", name)
+	}
+	rv := make([]string, 0, len(node.Children))
+	for childName := range node.Children {
+		rv = append(rv, childName)
+	}
+	return rv, nil
+}
+
+type bintree struct {
+	Func     func() (*asset, error)
+	Children map[string]*bintree
+}
+
+var _bintree = &bintree{nil, map[string]*bintree{
+	"crds": &bintree{nil, map[string]*bintree{
+		"apps.hub.appvia.io_appdeployments.yaml":                        &bintree{crdsAppsHubAppviaIo_appdeploymentsYaml, map[string]*bintree{}},
+		"apps.hub.appvia.io_installplans.yaml":                          &bintree{crdsAppsHubAppviaIo_installplansYaml, map[string]*bintree{}},
+		"aws.compute.hub.appvia.io_awscredentials.yaml":                 &bintree{crdsAwsComputeHubAppviaIo_awscredentialsYaml, map[string]*bintree{}},
+		"aws.compute.hub.appvia.io_eksclusters.yaml":                    &bintree{crdsAwsComputeHubAppviaIo_eksclustersYaml, map[string]*bintree{}},
+		"clusters.compute.hub.appvia.io_kubernetes.yaml":                &bintree{crdsClustersComputeHubAppviaIo_kubernetesYaml, map[string]*bintree{}},
+		"clusters.compute.hub.appvia.io_managedclusterrole.yaml":        &bintree{crdsClustersComputeHubAppviaIo_managedclusterroleYaml, map[string]*bintree{}},
+		"clusters.compute.hub.appvia.io_managedclusterrolebinding.yaml": &bintree{crdsClustersComputeHubAppviaIo_managedclusterrolebindingYaml, map[string]*bintree{}},
+		"clusters.compute.hub.appvia.io_managedconfig.yaml":             &bintree{crdsClustersComputeHubAppviaIo_managedconfigYaml, map[string]*bintree{}},
+		"clusters.compute.hub.appvia.io_managedpodsecuritypoliies.yaml": &bintree{crdsClustersComputeHubAppviaIo_managedpodsecuritypoliiesYaml, map[string]*bintree{}},
+		"clusters.compute.hub.appvia.io_managedrole.yaml":               &bintree{crdsClustersComputeHubAppviaIo_managedroleYaml, map[string]*bintree{}},
+		"clusters.compute.hub.appvia.io_namespaceclaims.yaml":           &bintree{crdsClustersComputeHubAppviaIo_namespaceclaimsYaml, map[string]*bintree{}},
+		"clusters.compute.hub.appvia.io_namespacepolicy.yaml":           &bintree{crdsClustersComputeHubAppviaIo_namespacepolicyYaml, map[string]*bintree{}},
+		"config.hub.appvia.io_allocations.yaml":                         &bintree{crdsConfigHubAppviaIo_allocationsYaml, map[string]*bintree{}},
+		"config.hub.appvia.io_plans.yaml":                               &bintree{crdsConfigHubAppviaIo_plansYaml, map[string]*bintree{}},
+		"core.hub.appvia.io_idp.yaml":                                   &bintree{crdsCoreHubAppviaIo_idpYaml, map[string]*bintree{}},
+		"core.hub.appvia.io_oidclient.yaml":                             &bintree{crdsCoreHubAppviaIo_oidclientYaml, map[string]*bintree{}},
+		"gke.compute.hub.appvia.io_gkecredentials.yaml":                 &bintree{crdsGkeComputeHubAppviaIo_gkecredentialsYaml, map[string]*bintree{}},
+		"gke.compute.hub.appvia.io_gkes.yaml":                           &bintree{crdsGkeComputeHubAppviaIo_gkesYaml, map[string]*bintree{}},
+		"org.hub.appvia.io_members.yaml":                                &bintree{crdsOrgHubAppviaIo_membersYaml, map[string]*bintree{}},
+		"org.hub.appvia.io_teaminvitations.yaml":                        &bintree{crdsOrgHubAppviaIo_teaminvitationsYaml, map[string]*bintree{}},
+		"org.hub.appvia.io_teams.yaml":                                  &bintree{crdsOrgHubAppviaIo_teamsYaml, map[string]*bintree{}},
+		"org.hub.appvia.io_users.yaml":                                  &bintree{crdsOrgHubAppviaIo_usersYaml, map[string]*bintree{}},
+	}},
+}}
+
+// RestoreAsset restores an asset under the given directory
+func RestoreAsset(dir, name string) error {
+	data, err := Asset(name)
+	if err != nil {
+		return err
+	}
+	info, err := AssetInfo(name)
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll(_filePath(dir, filepath.Dir(name)), os.FileMode(0755))
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(_filePath(dir, name), data, info.Mode())
+	if err != nil {
+		return err
+	}
+	err = os.Chtimes(_filePath(dir, name), info.ModTime(), info.ModTime())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// RestoreAssets restores an asset under the given directory recursively
+func RestoreAssets(dir, name string) error {
+	children, err := AssetDir(name)
+	// File
+	if err != nil {
+		return RestoreAsset(dir, name)
+	}
+	// Dir
+	for _, child := range children {
+		err = RestoreAssets(dir, filepath.Join(name, child))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func _filePath(dir, name string) string {
+	cannonicalName := strings.Replace(name, "\\", "/", -1)
+	return filepath.Join(append([]string{dir}, strings.Split(cannonicalName, "/")...)...)
+}

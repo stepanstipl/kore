@@ -1,0 +1,98 @@
+---
+apiVersion: extensions/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: default
+  annotations:
+    apparmor.security.beta.kubernetes.io/allowedProfileNames": runtime/default
+    apparmor.security.beta.kubernetes.io/defaultProfileName":  runtime/default
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames": runtime/default,docker/default
+    seccomp.security.alpha.kubernetes.io/defaultProfileName":  docker/default
+spec:
+  privileged: false
+  fsGroup:
+    rule: RunAsAny
+  hostPID: false
+  hostIPC: false
+  hostNetwork: false
+  runAsUser:
+    rule: MustRunAsNonRoot
+  requiredDropCapabilities:
+    - SETUID
+    - SETGID
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  volumes:
+  - configMap
+  - downwardAPI
+  - emptyDir
+  - gitRepo
+  - persistentVolumeClaim
+  - projected
+  - secret
+---
+apiVersion: extensions/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: privileged
+  annotations:
+    apparmor.security.beta.kubernetes.io/allowedProfileNames": runtime/default
+    apparmor.security.beta.kubernetes.io/defaultProfileName":  runtime/default
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames": runtime/default,docker/default
+    seccomp.security.alpha.kubernetes.io/defaultProfileName":  docker/default
+spec:
+  allowedCapabilities:
+  - '*'
+  fsGroup:
+    rule: RunAsAny
+  hostPID: true
+  hostIPC: true
+  hostNetwork: true
+  hostPorts:
+  - min: 1
+    max: 65536
+  privileged: true
+  runAsUser:
+    rule: RunAsAny
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  volumes:
+  - '*'
+---
+apiVersion: extensions/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: runasroot
+  annotations:
+    apparmor.security.beta.kubernetes.io/allowedProfileNames": runtime/default
+    apparmor.security.beta.kubernetes.io/defaultProfileName":  runtime/default
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames": runtime/default,docker/default
+    seccomp.security.alpha.kubernetes.io/defaultProfileName":  docker/default
+spec: 
+  privileged: false
+  fsGroup:
+    rule: RunAsAny
+  hostPID: false
+  hostIPC: false
+  hostNetwork: false
+  runAsUser:
+    rule: RunAsAny
+  requiredDropCapabilities:
+    - SETUID
+    - SETGID
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  volumes:
+  - configMap
+  - downwardAPI
+  - emptyDir
+  - gitRepo
+  - persistentVolumeClaim
+  - projected
+  - secret

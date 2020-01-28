@@ -1,0 +1,353 @@
+/**
+ * Copyright (C) 2020 Appvia Ltd <info@appvia.io>
+ *
+ * This file is part of hub-apiserver.
+ *
+ * hub-apiserver is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * hub-apiserver is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with hub-apiserver.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package hubctl
+
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"strings"
+	"text/tabwriter"
+
+	"github.com/savaki/jq"
+	log "github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
+	yaml "gopkg.in/yaml.v2"
+)
+
+// Requestor is responsible for calling out to the API
+type Requestor struct {
+	// config is the cli configuration
+	config Config
+	// cliCtx is the cli context
+	cliCtx *cli.Context
+	// endpoint is the uri endpoint to call
+	endpoint string
+	// params are the parameters off the cli to substitute
+	params map[string]bool
+	// queryParams are query params
+	queryParams map[string]string
+	// render is the render paths
+	render []string
+	// paths are the paths for render
+	paths []string
+	// errorResult
+	errorResult map[string]interface{}
+	// response is the decoded json
+	response map[string]interface{}
+	// hc is the http client
+	hc *http.Client
+	// body is the content read bac
+	body *bytes.Buffer
+}
+
+// NewRequest creates and returns a requestor
+func NewRequest() *Requestor {
+	return &Requestor{
+		errorResult: make(map[string]interface{}),
+		params:      make(map[string]bool),
+		queryParams: make(map[string]string),
+		response:    make(map[string]interface{}),
+	}
+}
+
+// Column sets a column option
+func Column(name, path string) string {
+	return fmt.Sprintf("%s/%s", name, path)
+}
+
+// Get is responsible for performing the request
+func (c *Requestor) Get() error {
+	url, err := c.makeURI()
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.makeRequest(http.MethodGet, url)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return c.handleResponse(resp)
+	}
+
+	return c.parseResponse()
+}
+
+// Edit is responsible for performing the request
+func (c *Requestor) Edit() error {
+	return nil
+}
+
+// Update is responsible for performing the request
+func (c *Requestor) Update() error {
+	url, err := c.makeURI()
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.makeRequest(http.MethodPut, url)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return c.handleResponse(resp)
+	}
+
+	return nil
+}
+
+// Delete is responsible for performing the request
+func (c *Requestor) Delete() error {
+	url, err := c.makeURI()
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.makeRequest(http.MethodDelete, url)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return c.handleResponse(resp)
+	}
+
+	return nil
+}
+
+// parseResponse
+func (c *Requestor) parseResponse() error {
+	if c.cliCtx.IsSet("output") {
+		format := c.cliCtx.String("output")
+		switch format {
+		case "json":
+			return json.NewEncoder(os.Stdout).Encode(c.response)
+		case "yaml":
+			return yaml.NewEncoder(os.Stdout).Encode(c.response)
+		default:
+			return errors.New("unsupport output type")
+		}
+	}
+	w := new(tabwriter.Writer)
+	w.Init(os.Stdout, 20, 20, 0, ' ', 10)
+
+	columns := strings.Join(c.render, "\t")
+	fmt.Fprintf(w, "%s\n", columns)
+
+	islist := c.response["items"] != nil
+	switch islist {
+	case true:
+		items, found := c.response["items"].([]interface{})
+		if !found {
+			return errors.New("invalid response list, no items found")
+		}
+		for _, x := range items {
+			decoded := &bytes.Buffer{}
+			if err := json.NewEncoder(decoded).Encode(x); err != nil {
+				return err
+			}
+			values, err := c.makeValues(decoded, c.paths)
+			if err != nil {
+				return err
+			}
+			fmt.Fprintf(w, "%s\n", strings.Join(values, "\t"))
+		}
+	default:
+		values, err := c.makeValues(c.Body(), c.paths)
+		if err != nil {
+			return err
+
+		}
+		fmt.Fprintf(w, "%s", strings.Join(values, "\t"))
+	}
+	_, _ = w.Write([]byte("\n"))
+
+	return w.Flush()
+}
+
+// makeValues returns the jsonpath values
+func (c *Requestor) makeValues(in io.Reader, paths []string) ([]string, error) {
+	var list []string
+
+	if in == nil {
+		return []string{}, errors.New("no request body")
+	}
+	data, err := ioutil.ReadAll(in)
+	if err != nil {
+		return []string{}, err
+	}
+
+	for _, x := range paths {
+		op, err := jq.Parse(x)
+		if err != nil {
+			return list, fmt.Errorf("invalid jsonpath expression: %s, error: %s", x, err)
+		}
+		v, err := op.Apply(data)
+		if err != nil {
+			return list, fmt.Errorf("failed to apply jsonpath to response body: %s", err)
+		}
+
+		list = append(list, strings.ReplaceAll(string(v), "\"", ""))
+	}
+
+	return list, nil
+}
+
+// handleResponse is used to wrap common errors
+func (c Requestor) handleResponse(resp *http.Response) error {
+	switch resp.StatusCode {
+	case http.StatusUnauthorized:
+		fmt.Println("[error] authorization required, please use the 'authorize' command")
+	case http.StatusNotFound:
+		fmt.Println("[error] from server (notfound): resource not found")
+	case http.StatusForbidden:
+		fmt.Println("[error] request has been denied, check credentials")
+	case http.StatusBadRequest:
+		fmt.Println("[error] invalid request")
+	default:
+		fmt.Printf("invalid response: %d from api server", resp.StatusCode)
+	}
+
+	return nil
+}
+
+// makeRequest creates and returns a http request
+func (c *Requestor) makeRequest(method, url string) (*http.Response, error) {
+	req, err := http.NewRequest(method, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+c.config.Credentials.IDToken)
+
+	resp, err := c.hc.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Body != nil {
+		content, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(content) > 0 {
+			if err := json.NewDecoder(bytes.NewReader(content)).Decode(&c.response); err != nil {
+				return nil, err
+			}
+		}
+		c.body = bytes.NewBuffer(content)
+	}
+
+	return resp, nil
+}
+
+// makeURI is responsible for generating the uri for the requestor
+func (c *Requestor) makeURI() (string, error) {
+	uri := c.endpoint
+	for name, required := range c.params {
+		found := c.cliCtx.IsSet(name)
+		if !found && required {
+			return "", fmt.Errorf("invalid request, option: %s must be set", name)
+		}
+		if found {
+			value := fmt.Sprintf("%s", c.cliCtx.Generic(name))
+			token := fmt.Sprintf("{%s}", name)
+
+			if !strings.Contains(uri, token) {
+				uri = fmt.Sprintf("%s/%s", uri, value)
+			} else {
+				uri = strings.ReplaceAll(uri, token, value)
+			}
+		}
+	}
+	if len(c.queryParams) <= 0 {
+		return fmt.Sprintf("%s/%s", c.config.GetAPI(), strings.TrimPrefix(uri, "/")), nil
+	}
+	var list []string
+
+	for k, v := range c.queryParams {
+		list = append(list, fmt.Sprintf("%s=%v", k, v))
+	}
+
+	url := fmt.Sprintf("%s/%s?%s", c.config.GetAPI(), strings.TrimPrefix(uri, "/"), strings.Join(list, "&"))
+
+	log.WithField("url", url).Debug("making request to hub apiserver")
+
+	return url, nil
+}
+
+// Render is used to set a render layout
+func (c *Requestor) Render(opts ...string) *Requestor {
+	for _, x := range opts {
+		items := strings.Split(x, "/")
+		if len(items) == 2 {
+			c.render = append(c.render, items[0])
+			c.paths = append(c.paths, items[1])
+		}
+	}
+
+	return c
+}
+
+// QueryParam sets a query parameters
+func (c *Requestor) QueryParam(param string, value interface{}) *Requestor {
+	c.queryParams[param] = fmt.Sprintf("%s", value)
+
+	return c
+}
+
+// PathParameter sets a path parameters
+func (c *Requestor) PathParameter(param string, required bool) *Requestor {
+	c.params[param] = required
+
+	return c
+}
+
+// WithEndpoint sets the endpoint
+func (c *Requestor) WithEndpoint(uri string) *Requestor {
+	c.endpoint = uri
+
+	return c
+}
+
+// WithContext adds the cli context
+func (c *Requestor) WithContext(ctx *cli.Context) *Requestor {
+	c.cliCtx = ctx
+
+	return c
+}
+
+// WithConfig adds the configuration
+func (c *Requestor) WithConfig(config Config) *Requestor {
+	c.config = config
+	c.hc = http.DefaultClient
+
+	return c
+}
+
+func (c *Requestor) Body() io.Reader {
+	return c.body
+}

@@ -1,0 +1,24 @@
+---
+apiVersion: clusters.compute.hub.appvia.io/v1
+kind: ManagedClusterRole
+metadata:
+  name: readonly
+spec:
+  enabled: true
+  teams: [devs]
+  description: Provides a cluster role issuing readonly permissions to the cluster resources
+  rules:
+    - nonResourceURLs:
+      - "*"
+      verbs:
+      - get
+      - list
+      - watch
+    - apiGroups:
+      - "*"
+      resources:
+      - "*"
+      verbs:
+      - get
+      - list
+      - watch

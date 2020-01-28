@@ -1,0 +1,198 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: namespaceclaims.clusters.compute.hub.appvia.io
+spec:
+  group: clusters.compute.hub.appvia.io
+  names:
+    kind: NamespaceClaim
+    listKind: NamespaceClaimList
+    plural: namespaceclaims
+    singular: namespaceclaim
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: NamespaceClaim is the Schema for the namespaceclaims API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: NamespaceClaimSpec defines the desired state of NamespaceClaim
+          properties:
+            annotations:
+              additionalProperties:
+                type: string
+              description: Annotations is a series of annotations on the namespace
+              type: object
+            cluster:
+              description: Cluster is the cluster the namespace resides
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
+            labels:
+              additionalProperties:
+                type: string
+              description: Labels is a series of labels for the namespace
+              type: object
+            limits:
+              description: Limits are the limits placs on the namespace
+              properties:
+                apiVersion:
+                  description: 'APIVersion defines the versioned schema of this representation
+                    of an object. Servers should convert recognized schemas to the
+                    latest internal value, and may reject unrecognized values. More
+                    info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+                  type: string
+                kind:
+                  description: 'Kind is a string value representing the REST resource
+                    this object represents. Servers may infer this from the endpoint
+                    the client submits requests to. Cannot be updated. In CamelCase.
+                    More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+                  type: string
+                metadata:
+                  description: 'Standard object''s metadata. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata'
+                  type: object
+                spec:
+                  description: 'Spec defines the limits enforced. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#spec-and-status'
+                  properties:
+                    limits:
+                      description: Limits is the list of LimitRangeItem objects that
+                        are enforced.
+                      items:
+                        description: LimitRangeItem defines a min/max usage limit
+                          for any resource that matches on kind.
+                        properties:
+                          default:
+                            additionalProperties:
+                              type: string
+                            description: Default resource requirement limit value
+                              by resource name if resource limit is omitted.
+                            type: object
+                          defaultRequest:
+                            additionalProperties:
+                              type: string
+                            description: DefaultRequest is the default resource requirement
+                              request value by resource name if resource request is
+                              omitted.
+                            type: object
+                          max:
+                            additionalProperties:
+                              type: string
+                            description: Max usage constraints on this kind by resource
+                              name.
+                            type: object
+                          maxLimitRequestRatio:
+                            additionalProperties:
+                              type: string
+                            description: MaxLimitRequestRatio if specified, the named
+                              resource must have a request and limit that are both
+                              non-zero where limit divided by request is less than
+                              or equal to the enumerated value; this represents the
+                              max burst for the named resource.
+                            type: object
+                          min:
+                            additionalProperties:
+                              type: string
+                            description: Min usage constraints on this kind by resource
+                              name.
+                            type: object
+                          type:
+                            description: Type of resource that this limit applies
+                              to.
+                            type: string
+                        type: object
+                      type: array
+                  required:
+                  - limits
+                  type: object
+              type: object
+            name:
+              description: Name is the name of the namespace to create
+              minLength: 3
+              type: string
+          required:
+          - cluster
+          - name
+          type: object
+        status:
+          description: NamespaceClaimStatus defines the observed state of NamespaceClaim
+          properties:
+            conditions:
+              description: Conditions is a series of things that caused the failure
+                if any
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+            phase:
+              description: Phase is used to hold the current phase of the resource
+              type: string
+            status:
+              description: Status is the status of the namespace
+              type: string
+          required:
+          - conditions
+          - phase
+          - status
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

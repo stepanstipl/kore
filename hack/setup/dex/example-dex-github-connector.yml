@@ -1,0 +1,12 @@
+# Example file see ./doc/dex.md
+apiVersion: dex.coreos.com/v1
+kind: Connector
+metadata:
+  # If we use ./hack/kubeconfig.local
+  # ...we can't specify the namespace for DEX resources
+  namespace: default
+  name: github
+type: github
+id: github
+name: github
+config: ${BASE64_GITHUB_OAUTH}

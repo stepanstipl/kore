@@ -1,0 +1,7 @@
+apiVersion: org.hub.appvia.io/v1
+kind: Team
+metadata:
+  name: devs
+spec:
+  summary: Dev Team
+  description: Dev Team
