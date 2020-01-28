@@ -45,7 +45,7 @@ func GetTeamsCommands(config Config) cli.Command {
 					return NewRequest().
 						WithConfig(config).
 						WithContext(c).
-						WithEndpoint("/teams").
+						WithEndpoint("/teams/{name}").
 						PathParameter("name", false).
 						Render(
 							Column("Name", ".metadata.name"),
@@ -55,36 +55,28 @@ func GetTeamsCommands(config Config) cli.Command {
 				},
 			},
 			{
-				Name:    "create",
-				Aliases: []string{"cr"},
-				Usage:   "Used to provision a team in the hub",
+				Name:  "apply",
+				Usage: "Used to provision a team in the hub",
 				Flags: []cli.Flag{
 					cli.StringFlag{
-						Name:  "name,n",
-						Usage: "The name of the team to create",
+						Name:  "file,f",
+						Usage: "The path to a file containing the definition",
 					},
 				},
 				Action: func(ctx *cli.Context) error {
 					err := NewRequest().
 						WithConfig(config).
 						WithContext(ctx).
+						WithPayload("file").
 						WithEndpoint("/teams/{name}").
 						PathParameter("name", true).
 						Update()
 					if err != nil {
 						return err
 					}
+					fmt.Println("[status] team has been successfully created")
 
-					return NewRequest().
-						WithConfig(config).
-						WithContext(ctx).
-						WithEndpoint("/teams").
-						PathParameter("name", false).
-						Render(
-							Column("Name", ".metadata.name"),
-							Column("Description", ".spec.description"),
-						).
-						Get()
+					return nil
 				},
 			},
 

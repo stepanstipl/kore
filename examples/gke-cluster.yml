@@ -1,0 +1,53 @@
+---
+apiVersion: gke.compute.hub.appvia.io/v1alpha1
+kind: GKE
+metadata:
+  name: dev
+spec:
+  description: Dev Cluster
+  version: 1.14.8-gke.33
+  size: 1
+  maxSize: 10
+  diskSize: 100
+  imageType: COS
+  machineType: n1-standard-2
+  authorizedMasterNetworks:
+    - name: default
+      cidr: 0.0.0.0/0
+  network: default
+  subnetwork: default
+  enableAutorepair: true
+  enableAutoscaler: true
+  enableAutoUpgrade: false
+  enableHorizontalPodAutoscaler: false
+  enableHTTPLoadBalancer: true
+  enableIstio: false
+  enableStackDriverLogging: false
+  enableStackDriverMetrics: false
+  enablePrivateNetwork: true
+  masterIPV4Cidr: 172.16.0.0/28
+  maintenanceWindow: '03:00'
+  # Were reference to the credentials we wish to use
+  credentials:
+    group: gke.compute.hub.appvia.io
+    version: v1alpha1
+    kind: GKECredentials
+    name: gke
+    namespace: hub-admin
+---
+# We create a
+apiVersion: clusters.compute.hub.appvia.io/v1
+kind: Kubernetes
+metadata:
+  name: dev
+spec:
+  domain: CHANGE_ME
+  inheritTeamMembers: true
+  defaultTeamRole: 'cluster-admin'
+  provider:
+    group: gke.compute.hub.appvia.io
+    version: v1alpha1
+    kind: GKE
+    namespace: hub-admin
+    name: dev
+  enableDefaultTrafficBlock: false

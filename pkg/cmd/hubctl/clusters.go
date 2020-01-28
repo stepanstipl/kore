@@ -92,7 +92,7 @@ func GetClustersCommand(config Config) cli.Command {
 					return NewRequest().
 						WithConfig(config).
 						WithContext(ctx).
-						WithEndpoint("/teams/{team}/clusters/{name}").
+						WithEndpoint("/teams/{team}/clusters").
 						PathParameter("team", true).
 						PathParameter("name", false).
 						Render(

@@ -75,10 +75,10 @@ type KubernetesStatus struct {
 	CaCertificate string `json:"caCertificate,omitempty"`
 	// Components is a collection of component statuses
 	Components corev1.Components `json:"components,omitempty"`
-	// Endpoint is the kubernetes endpoint url
+	// APIEndpoint is the endpoint of client proxy for this cluster
 	// +kubebuilder:validation:MinLength=1
 	Endpoint string `json:"endpoint,omitempty"`
-	// APIEndpoint is the endpoint of client proxy for this cluster
+	// Endpoint is the kubernetes endpoint url
 	APIEndpoint string `json:"apiEndpoint,omitempty"`
 	// Status is overall status of the workspace
 	Status corev1.Status `json:"status"`

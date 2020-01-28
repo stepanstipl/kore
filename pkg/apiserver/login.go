@@ -214,7 +214,7 @@ func (l *loginHandler) callbackHandler(req *restful.Request, resp *restful.Respo
 		// @step: build an authorization response and hold in the cache
 		res := &AuthorizationResponse{
 			AccessToken:      otoken.AccessToken,
-			AuthorizationURL: l.provider.Endpoint().AuthURL,
+			AuthorizationURL: l.Config().DiscoveryURL,
 			ClientID:         l.Config().ClientID,
 			ClientSecret:     l.Config().ClientSecret,
 			IDToken:          rawToken,

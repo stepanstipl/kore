@@ -319,5 +319,8 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 		return err
 	}
 
+	// @step: create a deployment for external dns
+	// @TODO this needs to be completely changed but it's ok for now
+
 	return nil
 }

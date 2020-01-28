@@ -30,6 +30,7 @@ import (
 	"github.com/appvia/kore/pkg/hub/authentication"
 	"github.com/appvia/kore/pkg/services/audit"
 	"github.com/appvia/kore/pkg/store"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -66,7 +67,7 @@ func (t *teamsImpl) Delete(ctx context.Context, name string) error {
 	}
 
 	// @step: retrieve the team
-	team, err := t.Get(ctx, name)
+	team, err := t.usermgr.Teams().Get(ctx, name)
 	if err != nil {
 		return err
 	}
@@ -97,14 +98,28 @@ func (t *teamsImpl) Delete(ctx context.Context, name string) error {
 		"team": name,
 	}).Info("deleting the team from the hub")
 
-	return t.Store().Client().Delete(ctx, store.DeleteOptions.From(team))
+	// @step: delete in the db
+	if err := t.usermgr.Teams().Delete(ctx, team); err != nil {
+		log.WithError(err).Error("trying to delete the team in hub")
+
+		return err
+	}
+
+	tm := &orgv1.Team{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      team.Name,
+			Namespace: HubNamespace,
+		},
+	}
+
+	return t.Store().Client().Delete(ctx, store.DeleteOptions.From(tm))
 }
 
 // Get returns the team from the hub
 func (t *teamsImpl) Get(ctx context.Context, name string) (*orgv1.Team, error) {
 	model, err := t.usermgr.Teams().Get(ctx, name)
 	if err != nil {
-		log.WithError(err).Error("trying to retrieve the user")
+		log.WithField("name", name).WithError(err).Error("trying to retrieve the user")
 
 		return nil, err
 	}

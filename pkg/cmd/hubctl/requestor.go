@@ -31,10 +31,17 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/ghodss/yaml"
 	"github.com/savaki/jq"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
-	yaml "gopkg.in/yaml.v2"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+)
+
+var (
+	// convertor is the unstructured converter client
+	converter = runtime.DefaultUnstructuredConverter
 )
 
 // Requestor is responsible for calling out to the API
@@ -61,6 +68,10 @@ type Requestor struct {
 	hc *http.Client
 	// body is the content read bac
 	body *bytes.Buffer
+	// payload
+	payload *bytes.Buffer
+	// injections - oh my god - this is what happens when you write things fast
+	injections map[string]string
 }
 
 // NewRequest creates and returns a requestor
@@ -70,6 +81,8 @@ func NewRequest() *Requestor {
 		params:      make(map[string]bool),
 		queryParams: make(map[string]string),
 		response:    make(map[string]interface{}),
+		injections:  make(map[string]string),
+		payload:     nil,
 	}
 }
 
@@ -146,7 +159,9 @@ func (c *Requestor) parseResponse() error {
 		case "json":
 			return json.NewEncoder(os.Stdout).Encode(c.response)
 		case "yaml":
-			return yaml.NewEncoder(os.Stdout).Encode(c.response)
+			out, err := yaml.Marshal(c.response)
+			fmt.Fprintf(os.Stdout, "%s", out)
+			return err
 		default:
 			return errors.New("unsupport output type")
 		}
@@ -183,8 +198,6 @@ func (c *Requestor) parseResponse() error {
 		}
 		fmt.Fprintf(w, "%s", strings.Join(values, "\t"))
 	}
-	_, _ = w.Write([]byte("\n"))
-
 	return w.Flush()
 }
 
@@ -236,7 +249,13 @@ func (c Requestor) handleResponse(resp *http.Response) error {
 
 // makeRequest creates and returns a http request
 func (c *Requestor) makeRequest(method, url string) (*http.Response, error) {
-	req, err := http.NewRequest(method, url, nil)
+	var req *http.Request
+	var err error
+	if c.payload == nil {
+		req, err = http.NewRequest(method, url, nil)
+	} else {
+		req, err = http.NewRequest(method, url, c.payload)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -267,21 +286,29 @@ func (c *Requestor) makeRequest(method, url string) (*http.Response, error) {
 // makeURI is responsible for generating the uri for the requestor
 func (c *Requestor) makeURI() (string, error) {
 	uri := c.endpoint
+
 	for name, required := range c.params {
-		found := c.cliCtx.IsSet(name)
+		value, found := c.injections[name]
+		if !found {
+			found = c.cliCtx.IsSet(name)
+			value = fmt.Sprintf("%s", c.cliCtx.Generic(name))
+		}
 		if !found && required {
 			return "", fmt.Errorf("invalid request, option: %s must be set", name)
 		}
+		token := fmt.Sprintf("{%s}", name)
 		if found {
-			value := fmt.Sprintf("%s", c.cliCtx.Generic(name))
-			token := fmt.Sprintf("{%s}", name)
-
 			if !strings.Contains(uri, token) {
 				uri = fmt.Sprintf("%s/%s", uri, value)
 			} else {
 				uri = strings.ReplaceAll(uri, token, value)
 			}
+		} else {
+			if strings.Contains(uri, token) {
+				uri = strings.ReplaceAll(uri, token, "")
+			}
 		}
+
 	}
 	if len(c.queryParams) <= 0 {
 		return fmt.Sprintf("%s/%s", c.config.GetAPI(), strings.TrimPrefix(uri, "/")), nil
@@ -336,6 +363,34 @@ func (c *Requestor) WithEndpoint(uri string) *Requestor {
 // WithContext adds the cli context
 func (c *Requestor) WithContext(ctx *cli.Context) *Requestor {
 	c.cliCtx = ctx
+
+	return c
+}
+
+func (c *Requestor) WithPayload(name string) *Requestor {
+	path := c.cliCtx.String(name)
+	if path == "" {
+		return c
+	}
+	content, err := ioutil.ReadFile(path)
+	if err != nil {
+		panic(fmt.Sprintf("trying to read file: %s", path))
+	}
+	encoded, err := yaml.YAMLToJSON(content)
+	if err != nil {
+		panic(fmt.Sprintf("trying to parse the yaml to json: %s", path))
+	}
+	u := &unstructured.Unstructured{}
+	if err := u.UnmarshalJSON(encoded); err != nil {
+		panic(fmt.Sprintf("trying to parse the contents of file: %s", err))
+	}
+
+	if u.GetName() == "" {
+		panic("resource does not have a name")
+	}
+
+	c.injections["name"] = u.GetName()
+	c.payload = bytes.NewBuffer(encoded)
 
 	return c
 }

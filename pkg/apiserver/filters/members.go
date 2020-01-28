@@ -46,7 +46,6 @@ func (a *MembersHandler) Filter(req *restful.Request, resp *restful.Response, ch
 
 		return
 	}
-	
 
 	// @step: ensure the user is a member of the team
 	user := authentication.MustGetIdentity(req.Request.Context())
