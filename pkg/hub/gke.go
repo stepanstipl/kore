@@ -100,10 +100,18 @@ func (h *gkeImpl) Delete(ctx context.Context, name string) error {
 func (h *gkeImpl) Get(ctx context.Context, name string) (*gke.GKE, error) {
 	cluster := &gke.GKE{}
 
-	return cluster, h.Store().Client().Get(ctx,
+	err := h.Store().Client().Get(ctx,
 		store.GetOptions.InNamespace(h.team),
+		store.GetOptions.InTo(cluster),
 		store.GetOptions.WithName(name),
 	)
+	if err != nil {
+		log.WithError(err).Error("trying to retrieve the cluster")
+
+		return nil, err
+	}
+
+	return cluster, nil
 }
 
 // List returns all the gke cluster in the team
@@ -160,6 +168,7 @@ func (h *gkeImpl) Update(ctx context.Context, cluster *gke.GKE) (*gke.GKE, error
 	// @step: update the resource in the api
 	if err := h.Store().Client().Update(ctx,
 		store.UpdateOptions.To(cluster),
+		store.UpdateOptions.WithCreate(true),
 	); err != nil {
 		logger.WithError(err).Error("trying to update the gke cluster")
 

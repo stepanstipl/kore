@@ -1,9 +1,9 @@
 module github.com/appvia/kore
 
 require (
+	github.com/Masterminds/goutils v1.1.0 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
-	github.com/Masterminds/sprig/v3 v3.0.2 // indirect
 	github.com/RoaringBitmap/roaring v0.4.21 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blevesearch/bleve v0.8.1
@@ -39,6 +39,7 @@ require (
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.8 // indirect
 	github.com/mailru/easyjson v0.7.0 // indirect
+	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/onsi/ginkgo v1.10.2 // indirect
 	github.com/onsi/gomega v1.7.0 // indirect
 	github.com/prometheus/client_golang v1.0.0

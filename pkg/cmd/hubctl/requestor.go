@@ -323,18 +323,19 @@ func (c *Requestor) makeURI() (string, error) {
 				uri = strings.ReplaceAll(uri, token, "")
 			}
 		}
-
 	}
+	uri = strings.TrimSuffix(uri, "/")
+	uri = strings.TrimPrefix(uri, "/")
+
 	if len(c.queryParams) <= 0 {
-		return fmt.Sprintf("%s/%s", c.config.GetAPI(), strings.TrimPrefix(uri, "/")), nil
+		return fmt.Sprintf("%s/%s", c.config.GetAPI(), uri), nil
 	}
 	var list []string
 
 	for k, v := range c.queryParams {
 		list = append(list, fmt.Sprintf("%s=%v", k, v))
 	}
-
-	url := fmt.Sprintf("%s/%s?%s", c.config.GetAPI(), strings.TrimPrefix(uri, "/"), strings.Join(list, "&"))
+	url := fmt.Sprintf("%s/%s?%s", c.config.GetAPI(), uri, strings.Join(list, "&"))
 
 	log.WithField("url", url).Debug("making request to hub apiserver")
 
@@ -364,6 +365,13 @@ func (c *Requestor) QueryParam(param string, value interface{}) *Requestor {
 // PathParameter sets a path parameters
 func (c *Requestor) PathParameter(param string, required bool) *Requestor {
 	c.params[param] = required
+
+	return c
+}
+
+// WithInject
+func (c *Requestor) WithInject(name, value string) *Requestor {
+	c.injections[name] = value
 
 	return c
 }

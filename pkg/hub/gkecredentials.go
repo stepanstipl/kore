@@ -89,6 +89,7 @@ func (h *gkeCredsImpl) Get(ctx context.Context, name string) (*gke.GKECredential
 
 	return cluster, h.Store().Client().Get(ctx,
 		store.GetOptions.InNamespace(h.team),
+		store.GetOptions.InTo(cluster),
 		store.GetOptions.WithName(name),
 	)
 }

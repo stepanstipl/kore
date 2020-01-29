@@ -1,7 +1,7 @@
 apiVersion: org.hub.appvia.io/v1
 kind: Team
 metadata:
-  name: devs
+  name: rohith
 spec:
   summary: Dev Team
   description: Dev Team

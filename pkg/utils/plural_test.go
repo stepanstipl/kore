@@ -54,6 +54,10 @@ func TestPlural(t *testing.T) {
 			Name:     "teams",
 			Expected: "teams",
 		},
+		{
+			Name:     "managedpodsecuritypolicys",
+			Expected: "managedpodsecuritypolicies",
+		},
 	}
 	for _, c := range cases {
 		assert.Equal(t, c.Expected, ToPlural(c.Name))

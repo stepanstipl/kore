@@ -21,6 +21,7 @@ import (
 	"net/http"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/appvia/kore/pkg/hub"
@@ -179,6 +180,36 @@ func (u *teamHandler) Register(i hub.Interface, builder utils.PathBuilder) (*res
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
 	)
 
+	// Team Allocations
+	ws.Route(
+		ws.GET("/{team}/allocations").To(u.findAllocations).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Doc("Used to return a list of all the allocations in the team").
+			Returns(http.StatusOK, "Contains the former team definition from the hub", configv1.AllocationList{}).
+			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+	)
+	ws.Route(
+		ws.GET("/{team}/allocations/{name}").To(u.findAllocation).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Doc("Used to return all team resources under the team").
+			Returns(http.StatusOK, "Contains the former team definition from the hub", configv1.Allocation{}).
+			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+	)
+	ws.Route(
+		ws.PUT("/{team}/allocations/{name}").To(u.updateAllocation).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Doc("Used to return all team resources under the team").
+			Returns(http.StatusOK, "Contains the former team definition from the hub", configv1.Allocation{}).
+			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+	)
+	ws.Route(
+		ws.DELETE("/{team}/allocations/{name}").To(u.deleteAllocation).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Doc("Used to return all team resources under the team").
+			Returns(http.StatusOK, "Contains the former team definition from the hub", configv1.Allocation{}).
+			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+	)
+
 	// Team Clusters
 
 	ws.Route(
@@ -192,21 +223,25 @@ func (u *teamHandler) Register(i hub.Interface, builder utils.PathBuilder) (*res
 	ws.Route(
 		ws.GET("/{team}/clusters/{name}").To(u.findCluster).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the kubernetes cluster you are acting upon")).
 			Doc("Used to return the cluster definition from the hub").
 			Returns(http.StatusOK, "Contains the former team definition from the hub", clustersv1.Kubernetes{}).
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
-		ws.GET("/{team}/clusters").To(u.findClusters).
+		ws.PUT("/{team}/clusters/{name}").To(u.updateCluster).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the kubernetes cluster you are acting upon")).
 			Doc("Used to return all team resources under the team").
-			Returns(http.StatusOK, "Contains the former team definition from the hub", clustersv1.KubernetesList{}).
+			Reads(clustersv1.Kubernetes{}, "The definition for kubernetes cluster").
+			Returns(http.StatusOK, "Contains the former team definition from the hub", clustersv1.Kubernetes{}).
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
-		ws.GET("/{team}/clusters/{name}").To(u.findCluster).
+		ws.DELETE("/{team}/clusters/{name}").To(u.deleteCluster).
+			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Doc("Used to return the cluster definition from the hub").
 			Returns(http.StatusOK, "Contains the former team definition from the hub", clustersv1.Kubernetes{}).

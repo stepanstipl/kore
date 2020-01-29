@@ -174,10 +174,10 @@ data:
       provider: google
       google:
         # @TODO need to change this to one with reduced perms
-        serviceAccountKey: '{{ .Credentials.GKE.Account | toRawJson }}'
+        serviceAccountSecret: google
       {{- end }}
       domainFilters:
-        - .{{ .Domain }}
+        - {{ .Domain }}
       policy: sync
       metrics:
         enabled: true
@@ -250,18 +250,19 @@ data:
         auth:
           disable_signout_menu: false
         auth.basic:
-          enabled: true
-        auth.anonymous:
           enabled: false
+        auth.anonymous:
+          enabled: true
         auth.generic_oauth:
           allow_sign_up: true
           enabled: true
           client_id : {{ .Grafana.ClientID }}
           client_secret: {{ .Grafana.ClientSecret }}
           scopes: email,profile
+          api_url: {{ .Grafana.UserInfoURL }}
           auth_url: {{ .Grafana.AuthURL }}
           token_url: {{ .Grafana.TokenURL }}
-          allowed_domains: {{ .Domain }}
+          #allowed_domains: {{ .Domain }}
         database:
           host: grafana-db
           name: grafana
