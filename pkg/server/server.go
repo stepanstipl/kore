@@ -30,7 +30,6 @@ import (
 	"github.com/appvia/kore/pkg/register"
 	"github.com/appvia/kore/pkg/schema"
 	"github.com/appvia/kore/pkg/services/audit"
-	"github.com/appvia/kore/pkg/services/audit/fake"
 	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils/crds"
@@ -109,7 +108,11 @@ func New(config Config) (Interface, error) {
 	if err != nil {
 		return nil, fmt.Errorf("trying to create the user management service: %s", err)
 	}
-	auditor := fake.NewFakeAudit(audit.Config{})
+	auditor, err := audit.New(audit.Config{
+		Driver:        config.Audit.Driver,
+		EnableLogging: config.Audit.EnableLogging,
+		StoreURL:      config.Audit.StoreURL,
+	})
 
 	// @step: we need to create the hub bridge / business logic
 	hubcc, err := hub.New(storecc, usermgr, auditor, config.Hub)

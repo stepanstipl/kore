@@ -26,6 +26,8 @@ import (
 	"github.com/appvia/kore/pkg/hub/authentication"
 	"github.com/appvia/kore/pkg/services/audit"
 	"github.com/appvia/kore/pkg/store"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // Cluster returns the clusters interface
@@ -65,11 +67,19 @@ func (c *clsImpl) List(ctx context.Context) (*clustersv1.KubernetesList, error) 
 func (c *clsImpl) Get(ctx context.Context, name string) (*clustersv1.Kubernetes, error) {
 	cluster := &clustersv1.Kubernetes{}
 
-	return cluster, c.Store().Client().Get(ctx,
+	if err := c.Store().Client().Get(ctx,
 		store.GetOptions.InNamespace(c.team),
 		store.GetOptions.InTo(cluster),
 		store.GetOptions.WithName(name),
-	)
+	); err != nil {
+		log.WithError(err).Error("trying to retrieve the cluster")
+
+		return nil, err
+	}
+	cluster.APIVersion = clustersv1.GroupVersion.String()
+	cluster.Kind = "Kubernetes"
+
+	return cluster, nil
 }
 
 // Update is used to update the kubernetes object

@@ -20,12 +20,13 @@
 package hubctl
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/urfave/cli"
 )
 
-func GetGetCommand(config Config) cli.Command {
+func GetGetCommand(config *Config) cli.Command {
 	return cli.Command{
 		Name:  "get",
 		Usage: "Used to retrieve a resource from the api",
@@ -37,7 +38,36 @@ func GetGetCommand(config Config) cli.Command {
 		}, DefaultOptions...),
 
 		Action: func(ctx *cli.Context) error {
-			fmt.Println(ctx.Args())
+			if !ctx.Args().Present() {
+				return errors.New("you need to specify a resource type")
+			}
+			req := NewRequest().
+				WithConfig(config).
+				WithContext(ctx).
+				PathParameter("resource", true).
+				PathParameter("name", false)
+
+			endpoint := "/teams/{team}/{resource}/{name}"
+
+			if IsGlobalResource(ctx.Args().First()) {
+				endpoint = "/{resource}/{name}"
+			} else {
+				req.PathParameter("team", true)
+			}
+
+			req.WithEndpoint(endpoint).
+				WithInject("resource", ctx.Args().First()).
+				Render(
+					Column("Name", ".metadata.name"),
+				)
+
+			if ctx.NArg() == 2 {
+				req.WithInject("name", ctx.Args().Get(1))
+			}
+			if err := req.Get(); err != nil {
+				return err
+			}
+			fmt.Println("")
 
 			return nil
 		},

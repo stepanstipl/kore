@@ -17,24 +17,23 @@
  * along with kore.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package utils
+package hubctl
 
-import (
-	"fmt"
-	"strings"
-)
+import "github.com/urfave/cli"
 
-// ToPlural convers the type to a plural
-func ToPlural(name string) string {
-	if strings.HasSuffix(name, "ss") {
-		return fmt.Sprintf("%ses", name)
-	}
-	if strings.HasSuffix(name, "ys") {
-		return fmt.Sprintf("%sies", strings.TrimSuffix(name, "ys"))
-	}
-	if strings.HasSuffix(name, "es") || strings.HasSuffix(name, "s") {
-		return name
-	}
+func GetAuditCommand(config *Config) cli.Command {
+	return cli.Command{
+		Name:  "audit",
+		Usage: "Used to list and query the audit trail",
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:  "team,t",
+				Usage: "Used to filter the results by team `TEAM`",
+			},
+		},
+		Action: func(ctx *cli.Context) error {
 
-	return fmt.Sprintf("%ss", name)
+			return nil
+		},
+	}
 }

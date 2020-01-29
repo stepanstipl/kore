@@ -49,7 +49,7 @@ type Allocations interface {
 type acaImpl struct {
 	*hubImpl
 	// team and namespace
-	team, namespace string
+	team string
 }
 
 // IsPermitted checks if a team is permitted access to a resource via an allocation
@@ -66,7 +66,7 @@ func (a acaImpl) IsPermitted(ctx context.Context, resource corev1.Ownership) (bo
 
 	err := a.Store().Client().List(ctx,
 		store.ListOptions.InTo(list),
-		store.ListOptions.InNamespace(a.namespace),
+		store.ListOptions.InNamespace(resource.Namespace),
 	)
 	if err != nil {
 		log.WithError(err).Error("attempting to list allocations from team")
@@ -97,7 +97,7 @@ func (a acaImpl) IsPermitted(ctx context.Context, resource corev1.Ownership) (bo
 func (a acaImpl) Exists(ctx context.Context, name string) (bool, error) {
 	return a.Store().Client().Has(ctx,
 		store.HasOptions.From(&configv1.Allocation{}),
-		store.HasOptions.InNamespace(a.namespace),
+		store.HasOptions.InNamespace(a.team),
 		store.HasOptions.WithName(name),
 	)
 }
@@ -126,7 +126,7 @@ func (a acaImpl) Get(ctx context.Context, name string) (*configv1.Allocation, er
 	object := &configv1.Allocation{}
 
 	if err := a.Store().Client().Get(ctx,
-		store.GetOptions.InNamespace(a.namespace),
+		store.GetOptions.InNamespace(a.team),
 		store.GetOptions.InTo(object),
 		store.GetOptions.WithName(name),
 	); err != nil {
@@ -145,7 +145,7 @@ func (a acaImpl) List(ctx context.Context) (*configv1.AllocationList, error) {
 	items := &configv1.AllocationList{}
 
 	return items, a.Store().Client().List(ctx,
-		store.ListOptions.InNamespace(a.namespace),
+		store.ListOptions.InNamespace(a.team),
 		store.ListOptions.InTo(items),
 	)
 }
@@ -163,18 +163,19 @@ func (a acaImpl) Update(ctx context.Context, allocation *configv1.Allocation) er
 	logger.Info("attempting to create allocation for resource")
 
 	// @step: ensure our namespace
-	if allocation.Namespace != a.namespace {
+	if allocation.Namespace != a.team {
 		return ErrNotAllowed{message: "allocation must be within your team"}
 	}
 
 	// @step: ensure the resource exists in our namespace - though it will be
 	// picked up the controller anyhow
-	if allocation.Spec.Resource.Namespace != a.namespace {
+	if allocation.Spec.Resource.Namespace != a.team {
 		return ErrNotAllowed{message: "you cannot allocate a resource which you do not own"}
 	}
 
 	return a.Store().Client().Update(ctx,
-		store.UpdateOptions.From(allocation),
+		store.UpdateOptions.To(allocation),
+		store.UpdateOptions.WithCreate(true),
 		store.UpdateOptions.WithForce(true),
 	)
 }

@@ -58,7 +58,6 @@ func ParseDocument(src io.Reader, namespace string) ([]*Document, error) {
 	// @step: split the yaml documents up
 	splitter := regexp.MustCompile("^---$")
 	documents := splitter.Split(string(content), -1)
-	global := []string{"teams", "users", "plans"}
 
 	for _, x := range documents {
 		if x == "" {
@@ -91,10 +90,9 @@ func ParseDocument(src io.Reader, namespace string) ([]*Document, error) {
 
 		// @step: we pluralize the kind and use that route the resource
 		kind := strings.ToLower(utils.ToPlural(u.GetKind()))
-		isGlobal := utils.Contains(kind, global)
 
 		team := u.GetNamespace()
-		if !isGlobal {
+		if !IsGlobalResource(kind) {
 			if namespace != "" {
 				if team != "" && team != namespace {
 					return nil, errors.New("resource name and team selected are different")
@@ -119,7 +117,7 @@ func ParseDocument(src io.Reader, namespace string) ([]*Document, error) {
 		}
 
 		item := &Document{Object: u}
-		switch isGlobal {
+		switch IsGlobalResource(kind) {
 		case true:
 			item.Endpoint = fmt.Sprintf("%s/%s", kind, name)
 		default:
@@ -130,6 +128,11 @@ func ParseDocument(src io.Reader, namespace string) ([]*Document, error) {
 	}
 
 	return list, nil
+}
+
+// IsGlobalResource is a global resource
+func IsGlobalResource(name string) bool {
+	return utils.Contains(name, []string{"teams", "users", "plans"})
 }
 
 // GetCaches is responsible for checking if are caches are up to date

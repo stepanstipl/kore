@@ -19,9 +19,14 @@ package bootstrap
 
 // GrafanaOptions are the opts for grafana
 type GrafanaOptions struct {
-	Password     string
-	ClientID     string
+	// Password is the default pass for grafana
+	Password string
+	// ClientID is the password
+	ClientID string
+	// ClientSecret is the openid secret
 	ClientSecret string
+	// UserInfoURL is the useinfo url
+	UserInfoURL string
 	// AuthURL is the auth url
 	AuthURL string
 	// TokenURL is the sso token url

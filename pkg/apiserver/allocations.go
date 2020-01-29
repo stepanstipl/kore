@@ -18,40 +18,75 @@
 package apiserver
 
 import (
+	"net/http"
+
+	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
+
 	restful "github.com/emicklei/go-restful"
 )
 
-// listAllocations returns a list of the teams in the allocation
-func (u teamHandler) listAllocations(req *restful.Request, resp *restful.Response) {
+// findAllocations returns a list of the teams in the allocation
+func (u teamHandler) findAllocations(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
-		return nil
+		team := req.PathParameter("team")
+
+		list, err := u.Teams().Team(team).Allocations().List(req.Request.Context())
+		if err != nil {
+			return err
+		}
+
+		return resp.WriteHeaderAndEntity(http.StatusOK, list)
 	})
 }
 
-// setAllocation is responsible for updating the allocations
-func (u teamHandler) setAllocation(req *restful.Request, resp *restful.Response) {
+// findAllocation returns an allocation in the team
+func (u teamHandler) findAllocation(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
-		return nil
+		team := req.PathParameter("team")
+		name := req.PathParameter("name")
+
+		obj, err := u.Teams().Team(team).Allocations().Get(req.Request.Context(), name)
+		if err != nil {
+			return err
+		}
+
+		return resp.WriteHeaderAndEntity(http.StatusOK, obj)
 	})
 }
 
-// updateAllocation updates the allocation to include the team if required
+// updateAllocation is responsible for updating the allocations
 func (u teamHandler) updateAllocation(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
-		return nil
+		team := req.PathParameter("team")
+		name := req.PathParameter("name")
+
+		obj := &configv1.Allocation{}
+		if err := req.ReadEntity(obj); err != nil {
+			return err
+		}
+		obj.Name = name
+
+		if err := u.Teams().Team(team).Allocations().Update(req.Request.Context(), obj); err != nil {
+			return err
+		}
+
+		return resp.WriteHeaderAndEntity(http.StatusOK, obj)
 	})
 }
 
-// deleteAllocationsWithTeam removes any allocations from the team
-func (u teamHandler) deleteAllocationsWithTeam(req *restful.Request, resp *restful.Response) {
-	handleErrors(req, resp, func() error {
-		return nil
-	})
-}
+//fu
 
-// deleteAllocations removes a team from the binding allocation
-func (u teamHandler) deleteAllocations(req *restful.Request, resp *restful.Response) {
+// deleteAllocation removes any allocations from the team
+func (u teamHandler) deleteAllocation(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
-		return nil
+		team := req.PathParameter("team")
+		name := req.PathParameter("name")
+
+		obj, err := u.Teams().Team(team).Allocations().Delete(req.Request.Context(), name)
+		if err != nil {
+			return err
+		}
+
+		return resp.WriteHeaderAndEntity(http.StatusOK, obj)
 	})
 }

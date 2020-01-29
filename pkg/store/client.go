@@ -283,41 +283,34 @@ func (r *rclient) Update(ctx context.Context, options ...UpdateOptionFunc) error
 		return errors.New("no name on resource")
 	}
 
-	// @step: is the create option enabled and if so check if the resource is there
-	var current runtime.Object
-
-	if r.withCreate || r.withForceApply {
-		// @step: we need to check if the object already exists
-		current = r.value.DeepCopyObject()
-
+	// @step: check if the resource exists already
+	original, found, err := func() (runtime.Object, bool, error) {
+		current := r.value.DeepCopyObject()
 		if err := r.client.Get(ctx, key, current); err != nil {
-			if kerrors.IsNotFound(err) {
-				return r.client.Create(ctx, r.value)
-			}
 			if !kerrors.IsNotFound(err) {
-				return err
-			}
-		}
-	}
-
-	if r.withForceApply && current != nil {
-		r.value.(metav1.Object).SetGeneration(current.(metav1.Object).GetGeneration())
-		r.value.(metav1.Object).SetResourceVersion(current.(metav1.Object).GetResourceVersion())
-	}
-
-	// @step: we check if the object already exists
-	err = func() error {
-		if r.current != nil && r.value != nil {
-			if err := r.client.Patch(ctx, r.value, client.MergeFrom(r.current)); err != nil {
-				return err
+				return nil, false, err
 			}
 
-			return r.client.Get(ctx, key, r.value)
+			return nil, false, nil
 		}
 
-		return r.client.Update(ctx, r.value)
+		return current, true, nil
 	}()
 	if err != nil {
+		return err
+	}
+
+	if !found && r.withCreate {
+		return r.client.Create(ctx, r.value)
+	}
+	if r.withForceApply {
+		r.value.(metav1.Object).SetGeneration(original.(metav1.Object).GetGeneration())
+		r.value.(metav1.Object).SetResourceVersion(original.(metav1.Object).GetResourceVersion())
+
+		return r.client.Update(ctx, r.value)
+	}
+
+	if err := r.client.Patch(ctx, r.value, client.MergeFrom(original)); err != nil {
 		return err
 	}
 

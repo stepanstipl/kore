@@ -22,7 +22,6 @@ import (
 	"strings"
 	"time"
 
-	aws "github.com/appvia/kore/pkg/apis/aws/v1alpha1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/utils"
@@ -35,7 +34,9 @@ import (
 	batch "k8s.io/api/batch/v1"
 	core "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -90,8 +91,7 @@ func (t bsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 		return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
 	}
 
-	status, found = cluster.Status.Components.GetStatus("applications")
-	if !found {
+	if _, found = cluster.Status.Components.GetStatus("applications"); !found {
 		cluster.Status.Components.SetCondition(corev1.Component{
 			Name:    "applications",
 			Status:  corev1.PendingStatus,
@@ -125,26 +125,26 @@ func (t bsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 
 		switch provider {
 		case "gke":
-			u := &gke.GKECredentials{}
+			u := &gke.GKE{}
 			if err := converter.FromUnstructured(us.Object, u); err != nil {
 				logger.WithError(err).Error("trying to convert object type")
 
 				return reconcile.Result{}, err
 			}
-			credentials.GKE.Account = u.Spec.Account
+			creds := &gke.GKECredentials{}
+			creds.SetName(u.Spec.Credentials.Name)
+			creds.SetNamespace(u.Spec.Credentials.Namespace)
+			ref := types.NamespacedName{
+				Namespace: u.Spec.Credentials.Namespace,
+				Name:      u.Spec.Credentials.Name,
+			}
+
+			if err := t.mgr.GetClient().Get(ctx, ref, creds); err != nil {
+				return reconcile.Result{}, err
+			}
+
+			credentials.GKE.Account = creds.Spec.Account
 		case "eks":
-			u := &aws.AWSCredentials{}
-			if err := converter.FromUnstructured(us.Object, u); err != nil {
-				logger.WithError(err).Error("trying to convert object type")
-
-				return reconcile.Result{}, err
-			}
-			credentials.AWS = AWSCredentials{
-				AccessKey: u.Spec.AccessKeyID,
-				AccountID: u.Spec.AccountID,
-				Region:    "eu-west-2",
-				SecretKey: u.Spec.SecretAccessKey,
-			}
 		default:
 			logger.WithField("provider", provider).Warn("unknown cloud provider")
 		}
@@ -155,6 +155,32 @@ func (t bsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 			logger.WithError(err).Error("trying to retrieve the credentials")
 
 			return reconcile.Result{}, err
+		}
+
+		// @step: ensure kube-dns
+		if err := kubernetes.EnsureNamespace(ctx, client, &core.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "kube-dns",
+			},
+		}); err != nil {
+			logger.WithError(err).Error("trying to create kube-dns namespace")
+
+			return reconcile.Result{}, err
+		}
+		if provider == "gke" {
+			if _, err := kubernetes.CreateOrUpdate(ctx, client, &core.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "google",
+					Namespace: "kube-dns",
+				},
+				Data: map[string][]byte{
+					"credentials.json": []byte(credentials.GKE.Account),
+				},
+			}); err != nil {
+				logger.WithError(err).Error("trying to create gcp secret")
+
+				return reconcile.Result{}, err
+			}
 		}
 
 		// @step: check if the job configmap exists
@@ -308,8 +334,9 @@ func (t bsCtrl) GetClusterConfiguration(ctx context.Context, cluster *clusterv1.
 			ClientID:     t.Config().ClientID,
 			ClientSecret: t.Config().ClientSecret,
 			Hostname:     "grafana." + cluster.Name + "." + cluster.Namespace + "." + cluster.Spec.Domain,
-			Password:     utils.Random(12),
-			TokenURL:     t.Config().DiscoveryURL + "/openid-connect/token",
+			Password:     utils.Random(24),
+			TokenURL:     t.Config().DiscoveryURL + "/protocol/openid-connect/token",
+			UserInfoURL:  t.Config().DiscoveryURL + "/protocol/openid-connect/userinfo",
 			Database: DatabaseOptions{
 				Name:     "grafana",
 				Password: utils.Random(12),

@@ -114,9 +114,9 @@ func Options() []cli.Flag {
 		// @related to the user management service
 		//
 		cli.BoolFlag{
-			Name:   "enabled-user-db-logging",
-			Usage:  "enabled debug logging on the users and teams database `BOOL`",
-			EnvVar: "ENABLE_DEX",
+			Name:   "enable-user-db-logging",
+			Usage:  "enable debug logging on the users and teams database `BOOL`",
+			EnvVar: "ENABLE_USER_DB_LOGGING",
 		},
 		cli.StringFlag{
 			Name:   "users-db-driver",
@@ -129,6 +129,27 @@ func Options() []cli.Flag {
 			Usage:  "the database dsn used to connect to the users db `DSN`",
 			EnvVar: "USERS_DB_URL",
 			Value:  "root:pass@tcp(127.0.0.1:3306)/hub?parseTime=true",
+		},
+
+		//
+		// @related to the user management service
+		//
+		cli.BoolFlag{
+			Name:   "enable-audit-db-logging",
+			Usage:  "enables debug logging on the audit and teams database `BOOL`",
+			EnvVar: "ENABLE_AUDIT_DB_LOGGING",
+		},
+		cli.StringFlag{
+			Name:   "audit-db-driver",
+			Usage:  "the database driver which the user managaement service uses `DRIVER`",
+			EnvVar: "AUDIT_DB_DRIVER",
+			Value:  "mysql",
+		},
+		cli.StringFlag{
+			Name:   "audit-db-url",
+			Usage:  "the database dsn used to connect to the audit db `DSN`",
+			EnvVar: "AUDIT_DB_URL",
+			Value:  "root:pass@tcp(127.0.0.1:3306)/audit?parseTime=true",
 		},
 
 		//
