@@ -35,7 +35,7 @@ golang:
 build: golang
 	@echo "--> Compiling the project"
 	@mkdir -p bin
-	@for binary in hub-apiserver hubctl; do \
+	@for binary in hub-apiserver korectl; do \
 		echo "--> Building $${binary} binary" ; \
 		go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go ; \
 	done
@@ -43,15 +43,15 @@ build: golang
 static: golang deps
 	@echo "--> Compiling the static binary"
 	@mkdir -p bin
-	@for binary in hub-apiserver hubctl; do \
+	@for binary in hub-apiserver korectl; do \
 		echo "--> Building $${binary} binary" ; \
 		CGO_ENABLED=0 GOOS=linux go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go ; \
 	done
 
-hubctl: golang deps
-	@echo "--> Compiling the hubctl binary"
+korectl: golang deps
+	@echo "--> Compiling the korectl binary"
 	@mkdir -p bin
-	GOOS=linux go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/hubctl cmd/hubctl/*.go
+	GOOS=linux go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/korectl cmd/korectl/*.go
 
 docker-build:
 	@echo "--> Running docker"
@@ -210,7 +210,7 @@ clean:
 	rm -rf ./bin 2>/dev/null
 	rm -rf ./release 2>/dev/null
 	@echo "--> Removing any previous state in docker"
-	@docker-compose --file docker-compose.yml -f hack/demo.yml down
+#	@docker-compose --file docker-compose.yml -f hack/demo.yml down
 
 authors:
 	@echo "--> Updating the AUTHORS"

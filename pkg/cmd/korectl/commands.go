@@ -17,27 +17,22 @@
  * along with hub-apiserver.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package hubctl
+package korectl
 
-import "github.com/urfave/cli"
+import (
+	"github.com/urfave/cli"
+)
 
-func GetWhoamiCommand(config *Config) cli.Command {
-	return cli.Command{
-		Name:    "whoami",
-		Aliases: []string{"who"},
-		Usage:   "Used to retrieve details on your identity within the hub",
-
-		Action: func(ctx *cli.Context) error {
-			return NewRequest().
-				WithConfig(config).
-				WithContext(ctx).
-				WithEndpoint("/whoami").
-				Render(
-					Column("Username", ".username"),
-					Column("Email", ".email"),
-					Column("Teams", ".teams"),
-				).
-				Get()
-		},
+// GetCommands returns all the commands
+func GetCommands(config *Config) []cli.Command {
+	return []cli.Command{
+		GetApplyCommand(config),
+		GetDeleteCommand(config),
+		GetClustersCommand(config),
+		//GetGetCommand(config),
+		GetLoginCommand(config),
+		GetTeamsCommands(config),
+		GetUsersCommands(config),
+		GetWhoamiCommand(config),
 	}
 }

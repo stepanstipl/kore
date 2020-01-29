@@ -23,9 +23,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/appvia/kore/cmd/hubctl/options"
+	"github.com/appvia/kore/cmd/korectl/options"
 	"github.com/appvia/kore/pkg/cmd"
-	"github.com/appvia/kore/pkg/cmd/hubctl"
+	"github.com/appvia/kore/pkg/cmd/korectl"
 	"github.com/appvia/kore/pkg/version"
 
 	log "github.com/sirupsen/logrus"
@@ -39,11 +39,11 @@ func init() {
 
 func main() {
 	logger := log.WithFields(log.Fields{
-		"config": hubctl.HubConfig,
+		"config": korectl.HubConfig,
 	})
 
 	// @step: load the api config
-	config, err := hubctl.GetClientConfiguration()
+	config, err := korectl.GetClientConfiguration()
 	if err != nil {
 		logger.WithError(err).Warn("failed to load the hub api configuration")
 		logger.Warn("please check the documentation for how to configure the cli")
@@ -52,19 +52,19 @@ func main() {
 	}
 
 	// @step: we need to pull down the swagger and resource cache if required
-	if err := hubctl.GetCaches(config); err != nil {
+	if err := korectl.GetCaches(config); err != nil {
 		logger.WithError(err).Error("failed to load the cache, try refreshing the cache")
 
 		os.Exit(1)
 	}
 
 	app := &cli.App{
-		Name:                 "hubctl",
+		Name:                 "korectl",
 		Authors:              version.Authors,
 		Author:               version.Prog,
 		Email:                version.Email,
 		Flags:                options.Options(),
-		Usage:                "Hubctl provides a CLI for the " + version.Prog,
+		Usage:                "korectl provides a CLI for the " + version.Prog,
 		Version:              version.Version(),
 		EnableBashCompletion: true,
 
@@ -82,7 +82,7 @@ func main() {
 			os.Exit(1)
 		},
 
-		Commands: hubctl.GetCommands(config),
+		Commands: korectl.GetCommands(config),
 
 		Before: func(ctx *cli.Context) error {
 			for _, x := range ctx.Args() {
