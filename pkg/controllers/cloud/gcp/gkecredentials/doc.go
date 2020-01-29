@@ -17,28 +17,6 @@
  * along with hub-apiserver.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package hub
-
-// Cloud returns a collection of cloud providers
-type Cloud interface {
-	// GKE returms the GKE interface
-	GKE() GKE
-	// GKECredentials provides access to the gkes credentials
-	GKECredentials() GKECredentials
-}
-
-type cloudImpl struct {
-	*hubImpl
-	// team is the requesting team
-	team string
-}
-
-// GKE returns a gke interface
-func (c *cloudImpl) GKE() GKE {
-	return &gkeImpl{cloudImpl: c, team: c.team}
-}
-
-// GKECredentials returns a gke interface
-func (c *cloudImpl) GKECredentials() GKECredentials {
-	return &gkeCredsImpl{cloudImpl: c, team: c.team}
-}
+// Package gkecredentia takes a specification for GKE and builds / updates a cluster
+// the cloud
+package gkecredentials

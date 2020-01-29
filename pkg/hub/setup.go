@@ -43,6 +43,13 @@ func (h hubImpl) Setup(ctx context.Context) error {
 		}
 	}
 
+	// @step: ensure the default user is there
+	for _, x := range []string{HubAdminUser} {
+		if err := h.ensureHubAdminUser(ctx, x, "admin@local"); err != nil {
+			return err
+		}
+	}
+
 	// @step: ensure the hub admin team exists
 	for _, x := range []string{HubAdminTeam, HubDefaultTeam} {
 		if err := h.ensureHubTeam(ctx, x, "Team for "+x); err != nil {
@@ -50,19 +57,16 @@ func (h hubImpl) Setup(ctx context.Context) error {
 		}
 	}
 
-	// @step: ensure an OIDC client is created in IDP broker
-	if h.Config().DEX.EnabledDex {
-		if err := h.ensureHubIDPClientExists(ctx); err != nil {
+	// @step: ensure the hub admin user
+	for _, x := range []string{HubAdminUser} {
+		if err := h.ensureHubAdminMembership(ctx, x, HubAdminTeam); err != nil {
 			return err
 		}
 	}
 
-	// @step: ensure the default user is there
-	for _, x := range []string{HubAdminUser} {
-		if err := h.ensureHubAdminUser(ctx, x, "admin@local"); err != nil {
-			return err
-		}
-		if err := h.ensureHubAdminMembership(ctx, x, HubAdminTeam); err != nil {
+	// @step: ensure an OIDC client is created in IDP broker
+	if h.Config().DEX.EnabledDex {
+		if err := h.ensureHubIDPClientExists(ctx); err != nil {
 			return err
 		}
 	}

@@ -17,16 +17,19 @@
 
 package bootstrap
 
-// BrokerOptions are setting for the service broker
-type BrokerOptions struct {
-	// Name is the name of the broker
-	Name string `json:"name,omitempty"`
-	// Password is the password
-	Password string `json:"password,omitempty"`
-	// Username is a username to use
-	Username string `json:"username,omitempty"`
-	// Database are options for the database
-	Database DatabaseOptions `json:"database,omitempty"`
+// GrafanaOptions are the opts for grafana
+type GrafanaOptions struct {
+	Password     string
+	ClientID     string
+	ClientSecret string
+	// AuthURL is the auth url
+	AuthURL string
+	// TokenURL is the sso token url
+	TokenURL string
+	// Hostname is the hostname for the instance
+	Hostname string
+	// Database
+	Database DatabaseOptions
 }
 
 // DatabaseOptions are the database options
@@ -97,8 +100,6 @@ type CatalogOptions struct {
 
 // NamespaceOptions is a name to create
 type NamespaceOptions struct {
-	// EnableIstio indicates istio should be enabled
-	EnableIstio bool `json:"enable_istio,omitempty"`
 	// Name is the name of the namespace
 	Name string `json:"name,omitempty"`
 }
@@ -107,20 +108,14 @@ type NamespaceOptions struct {
 type Parameters struct {
 	// BootImage is the image we are using to bootstrap
 	BootImage string `json:"boot_image,omitempty"`
-	// Broker are setting for the service broker
-	Broker BrokerOptions `json:"broker,omitempty"`
 	// Catalog are parameters for OLM catalog
 	Catalog CatalogOptions `json:"catalog,omitempty"`
 	// Credentials are creds for the providers
 	Credentials Credentials `json:"credentials,omitempty"`
 	// Domain is the cluster domain
 	Domain string `json:"domain,omitempty"`
-	// EnableIstio indicates if istio is enabled
-	EnableIstio bool `json:"enable_istio,omitempty"`
-	// EnableKiali indicates kiali should be enabled
-	EnableKiali bool `json:"enable_kiali,omitempty"`
-	// EnableServiceBroker indicates the broker is enabled
-	EnableServiceBroker bool `json:"enable_service_broker,omitempty"`
+	// Grafana are the options for grafana
+	Grafana GrafanaOptions `json:"grafana,omitempty"`
 	// Kiali are options for the kiali service
 	Kiali KialiOptions `json:"kiali,omitempty"`
 	// Namespaces is a collection of namespaces to create

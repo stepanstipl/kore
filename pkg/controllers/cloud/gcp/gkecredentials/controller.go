@@ -17,7 +17,7 @@
  * along with hub-apiserver.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package gke
+package gkecredentials
 
 import (
 	"context"
@@ -52,7 +52,7 @@ func init() {
 
 // Name returns the name of the controller
 func (t *gkeCtrl) Name() string {
-	return "gke"
+	return "gke-credentials"
 }
 
 // Run starts the controller
@@ -70,22 +70,18 @@ func (t *gkeCtrl) Run(ctx context.Context, cfg *rest.Config, hubi hub.Interface)
 	t.mgr = mgr
 	t.Interface = hubi
 
-	// @step: create the controller
 	ctrl, err := controller.New(t.Name(), mgr, controllers.DefaultControllerOptions(t))
 	if err != nil {
-		log.WithError(err).Error("failed to create the controller")
+		logger.WithError(err).Error("failed to create the controller")
 
 		return err
 	}
 
-	// @step: setup watches for the resources
-	if err := ctrl.Watch(&source.Kind{Type: &gke.GKE{}},
+	if err := ctrl.Watch(&source.Kind{Type: &gke.GKECredentials{}},
 		&handler.EnqueueRequestForObject{},
-		&predicate.GenerationChangedPredicate{},
-	); err != nil {
+		&predicate.GenerationChangedPredicate{}); err != nil {
 
-		log.WithError(err).Error("failed to create watcher on resource")
-
+		log.WithError(err).Error("failed to add the controller watcher")
 		return err
 	}
 

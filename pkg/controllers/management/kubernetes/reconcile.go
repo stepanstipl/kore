@@ -136,11 +136,11 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 					return reconcile.Result{}, err
 				}
 
-				object.Status.Status = corev1.FailureStatus
+				object.Status.Status = corev1.PendingStatus
 				object.Status.Components.SetCondition(corev1.Component{
 					Name:    "provision",
 					Message: "credentials are not available",
-					Status:  corev1.FailureStatus,
+					Status:  corev1.PendingStatus,
 				})
 
 				return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil

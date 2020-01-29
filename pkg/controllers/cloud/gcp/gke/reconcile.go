@@ -43,7 +43,6 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 		"name":      request.NamespacedName.Name,
 		"namespace": request.NamespacedName.Namespace,
 	})
-
 	logger.Debug("attempting to reconcile gke cluster")
 
 	resource := &gke.GKE{}
@@ -60,6 +59,11 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 	// @step: are we deleting the resource
 	if finalizer.IsDeletionCandidate(resource) {
 		return t.Delete(request)
+	}
+
+	// @step: we need to mark the cluster as pending
+	if resource.Status.Conditions == nil {
+		resource.Status.Conditions = &core.Components{}
 	}
 
 	requeue, err := func() (bool, error) {

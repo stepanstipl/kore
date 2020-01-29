@@ -24,69 +24,68 @@ import (
 	"text/template"
 	"time"
 
-	clusterv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	"github.com/Masterminds/sprig"
-	kutils "github.com/gambol99/hub-utils/pkg/kubernetes"
 	yaml "github.com/ghodss/yaml"
-	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	batchv1 "k8s.io/api/batch/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// ClusterRoleExists checks if a cluster role exists
-func ClusterRoleExists(ctx context.Context, client kubernetes.Interface, name string) (bool, error) {
-	_, err := client.RbacV1().ClusterRoles().Get(name, metav1.GetOptions{})
-	if err != nil {
-		if !kerrors.IsNotFound(err) {
-			return false, err
-		}
-
-		return false, nil
-	}
-
-	return true, nil
-}
-
 // JobConfigExists checks if the configuration exists already
-func JobConfigExists(ctx context.Context, client kubernetes.Interface) (bool, error) {
-	return HasConfigMap(ctx, client, jobName)
+func JobConfigExists(ctx context.Context, cc client.Client) (bool, error) {
+	return HasConfigMap(ctx, cc, jobName)
 }
 
 // JobOLMConfigExists check if the olm configuration exists
-func JobOLMConfigExists(ctx context.Context, client kubernetes.Interface) (bool, error) {
-	return HasConfigMap(ctx, client, jobOLMConfig)
+func JobOLMConfigExists(ctx context.Context, cc client.Client) (bool, error) {
+	return HasConfigMap(ctx, cc, jobOLMConfig)
 }
 
 // HasConfigMap checks if a configmap exists
-func HasConfigMap(ctx context.Context, client kubernetes.Interface, name string) (bool, error) {
-	if _, err := client.CoreV1().ConfigMaps(jobNamespace).Get(name, metav1.GetOptions{}); err != nil {
-		if !kerrors.IsNotFound(err) {
-			return false, err
-		}
-
-		return false, nil
-	}
-
-	return true, nil
+func HasConfigMap(ctx context.Context, cc client.Client, name string) (bool, error) {
+	return kubernetes.CheckIfExists(ctx, cc, &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: jobNamespace,
+		},
+	})
 }
 
 // JobExists checks if the bootstrap job there
-func JobExists(ctx context.Context, client kubernetes.Interface) (bool, error) {
-	_, err := client.BatchV1().Jobs(jobNamespace).Get(jobName, metav1.GetOptions{})
-	if err != nil {
-		if !kerrors.IsNotFound(err) {
-			return false, err
-		}
+func JobExists(ctx context.Context, cc client.Client) (bool, error) {
+	return kubernetes.CheckIfExists(ctx, cc, &batchv1.Job{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      jobName,
+			Namespace: jobNamespace,
+		},
+	})
+}
 
-		return false, nil
+// GetBatchJob returns a job from the api
+func GetBatchJob(ctx context.Context, cc client.Client, name string) (*batchv1.Job, error) {
+	job := &batchv1.Job{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: jobNamespace,
+		},
 	}
 
-	return true, nil
+	found, err := kubernetes.GetIfExists(ctx, cc, job)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, errors.New("resource not found")
+	}
+
+	return job, nil
 }
 
 // WaitOnJob checks the status of the job and if not successful returns the error
-func WaitOnJob(ctx context.Context, client kubernetes.Interface) error {
+func WaitOnJob(ctx context.Context, cc client.Client) error {
 	for {
 		select {
 		case <-ctx.Done():
@@ -95,7 +94,7 @@ func WaitOnJob(ctx context.Context, client kubernetes.Interface) error {
 		}
 
 		err := func() error {
-			job, err := client.BatchV1().Jobs(jobNamespace).Get(jobName, metav1.GetOptions{})
+			job, err := GetBatchJob(ctx, cc, jobName)
 			if err != nil {
 				return err
 			}
@@ -110,15 +109,6 @@ func WaitOnJob(ctx context.Context, client kubernetes.Interface) error {
 		}
 		time.Sleep(10 * time.Second)
 	}
-}
-
-// makeKubernetesClient returns a client from a cluster
-func makeKubernetesClient(obj *clusterv1.Kubernetes) (kubernetes.Interface, error) {
-	return kutils.NewFromToken(
-		obj.Spec.Endpoint,
-		obj.Spec.Token,
-		obj.Spec.CaCertificate,
-	)
 }
 
 // DecodeInTo decodes the template into the thing

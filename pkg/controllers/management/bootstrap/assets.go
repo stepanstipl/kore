@@ -18,88 +18,6 @@
 package bootstrap
 
 const (
-	// NamespaceAdminClusterRole is used by the namespace admin
-	NamespaceAdminClusterRole = `
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRole
-metadata:
-  name: hub:system:ns-admin
-rules:
-- nonResourceURLs:
-  - /swagger*
-  - /swaggerapi
-  - /swaggerapi/*
-  - /version
-  verbs:
-  - get
-- apiGroups:
-  - apps
-  - batch
-  - extensions
-  - networking.k8s.io
-  resources:
-  - cronjobs
-  - deployments
-  - deployments/rollback
-  - deployments/scale
-  - ingresses
-  - jobs
-  - networkpolicies
-  - replicasets
-  - replicasets/scale
-  - replicationcontrollers/scale
-  - statefulsets
-  - statefulsets/scale
-  verbs:
-  - '*'
-- apiGroups:
-  - policy
-  resources:
-  - poddisruptionbudgets
-  verbs:
-  - '*'
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  - endpoints
-  - persistentvolumeclaims
-  - persistentvolumes
-  - pods
-  - pods/attach
-  - pods/exec
-  - pods/log
-  - pods/portforward
-  - secrets
-  - serviceaccounts
-  - services
-  verbs:
-  - '*'
-- apiGroups:
-  - autoscaling
-  resources:
-  - "*"
-  verbs:
-  - "*"
-- apiGroups:
-  - '*'
-  resources:
-  - '*'
-  verbs:
-  - get
-  - watch
-  - list
-- apiGroups:
-  - certmanager.k8s.io
-  resources:
-  - certificates
-  - challenges
-  - orders
-  verbs:
-  - "*"
-`
-
 	// BootstrapJobTemplate is the template for the job
 	BootstrapJobTemplate = `
 ---
@@ -155,24 +73,8 @@ data:
     svc-cat,https://svc-catalog-charts.storage.googleapis.com
   charts: |
     # helm source for the service catalog
-    svc-cat/catalog,catalog,--values /config/bundles/catalog.yaml
+    # svc-cat/catalog,catalog,--values /config/bundles/catalog.yaml
     # The values supplied to the service-catalog
-  catalog.yaml: |
-    imagePullPolicy: IfNotPresent
-    apiserver:
-      storage:
-        etcd:
-          image: quay.io/coreos/etcd:v3.4.1@sha256:49d3d4a81e0d030d3f689e7167f23e120abf955f7d08dbedf3ea246485acee9f
-          imagePullPolicy: IfNotPresent
-          persistence:
-            enabled: true
-            size: 4Gi
-    controllerManager:
-      annotations:
-        prometheus.io/scheme: https
-      brokerRelistInterval: 20m
-      enablePrometheusScrape: true
-      resyncInterval: 5m
 `
 
 	// BootstrapJobOLMConfig is the configuration for the olm
@@ -192,10 +94,6 @@ data:
     kind: Namespace
     metadata:
       name: {{ .Name }}
-      {{- if .EnableIstio }}
-      labels:
-        'istio-injection': 'enabled'
-      {{- end }}
     ---
     apiVersion: operators.coreos.com/v1
     kind: OperatorGroup
@@ -276,10 +174,10 @@ data:
       provider: google
       google:
         # @TODO need to change this to one with reduced perms
-        serviceAccountKey: '{{ .Credentials.GKE.Account | toJson }}'
+        serviceAccountKey: '{{ .Credentials.GKE.Account | toRawJson }}'
       {{- end }}
       domainFilters:
-        - {{ .Domain }}
+        - .{{ .Domain }}
       policy: sync
       metrics:
         enabled: true
@@ -294,6 +192,157 @@ data:
         - ingress
         - service
       fullnameOverride: external-dns
+
+  ## Grafana
+  crd-grafana.yaml: |
+    ---
+    apiVersion: helm.appvia.io/v1alpha1
+    kind: Mariadb
+    metadata:
+      name: grafana-db
+      namespace: grafana
+    spec:
+      db:
+        forcePassword: false
+        name: grafana
+      master:
+        persistence:
+          enabled: true
+          size: 10Gi
+      rootUser:
+        forcePassword: true
+        password: {{ .Grafana.Database.Password }}
+      fullnameOverride: grafana-db
+      metrics:
+        enabled: true
+        serviceMonitor:
+          enabled: false
+      replication:
+        enabled: false
+      serviceAccount:
+        create: true
+      slave:
+        replicas: 0
+    ---
+    apiVersion: integreatly.org/v1alpha1
+    kind: Grafana
+    metadata:
+      name: grafana
+      namespace: grafana
+    spec:
+      initialReplicas: 3
+      {{- if eq .Provider "eks" }} 
+      service:
+        type: LoadBalancer
+        annotations:
+          'service.beta.kubernetes.io/aws-load-balancer-backend-protocol': 'http'
+          'external-dns.alpha.kubernetes.io/hostname': '{{ .Grafana.Hostname }}'
+      {{- else }}
+      ingress:
+        enabled: true
+        hostname: {{ .Grafana.Hostname }}
+      service:
+        type: NodePort
+      {{- end }}
+      config:
+        analytics:
+          check_for_updates: true
+        auth:
+          disable_signout_menu: false
+        auth.basic:
+          enabled: true
+        auth.anonymous:
+          enabled: false
+        auth.generic_oauth:
+          allow_sign_up: true
+          enabled: true
+          client_id : {{ .Grafana.ClientID }}
+          client_secret: {{ .Grafana.ClientSecret }}
+          scopes: email,profile
+          auth_url: {{ .Grafana.AuthURL }}
+          token_url: {{ .Grafana.TokenURL }}
+          allowed_domains: {{ .Domain }}
+        database:
+          host: grafana-db
+          name: grafana
+          password: {{ .Grafana.Database.Password }}
+          type: mysql
+          user: root
+        log:
+          level: info
+          mode: console
+        paths:
+          data: /var/lib/grafana/data
+          logs: /var/log/grafana
+          plugins: /var/lib/grafana/plugins
+          provisioning: /etc/grafana/provisioning
+        security:
+          admin_password: {{ .Grafana.Password }}
+          admin_user: admin
+        server:
+          domain: {{ .Grafana.Hostname }}
+          enable_gzip: true
+          root_url: http://{{ .Grafana.Hostname }}
+        users:
+          auto_assign_org_role: Editor
+      dashboardLabelSelector:
+        - matchExpressions:
+          - key: app
+            operator: In
+            values:
+              - grafana
+
+  ## Logging
+  crd-logging.yaml: |
+    ---
+    apiVersion: helm.appvia.io/v1alpha1
+    kind: Loki
+    metadata:
+      name: loki
+      namespace: logging
+    spec:
+      loki:
+        enabled: true
+        image:
+          repository: grafana/loki
+          tag: v0.3.0
+        persistence:
+          accessModes:
+            - ReadWriteOnce
+          enabled: true
+          size: 10Gi
+          storageClassName: {{ .StorageClass }}
+        replicas: 1
+        serviceMonitor:
+          enabled: true
+          additionalLabels:
+            metrics: prometheus
+
+      promtail:
+        enabled: true
+        image:
+          pullPolicy: IfNotPresent
+          repository: grafana/promtail
+          tag: v0.3.0
+        serviceMonitor:
+          additionalLabels:
+            metrics: prometheus
+    ---
+    apiVersion: integreatly.org/v1alpha1
+    kind: GrafanaDataSource
+    metadata:
+      name: loki
+      namespace: grafana
+    spec:
+      name: logging.yaml
+      datasources:
+        - access: proxy
+          editable: false
+          isDefault: false
+          name: loki
+          type: loki
+          url: http://loki.logging.svc.cluster.local:3100
+          version: 1
   crd-monitoring.yaml: |
     ---
     apiVersion: helm.appvia.io/v1alpha1
@@ -340,126 +389,5 @@ data:
         fullnameOverride: kube-state-metrics
       prometheus-node-exporter:
         fullnameOverride: node-exporter
-  ## Cloud Service Brokers
-  {{ if and (eq .Provider "eks") ( .EnableServiceBroker ) }}
-  crd-aws-service-broker.yaml: |
-    apiVersion: helm.appvia.io/v1alpha1
-    kind: AwsServicebroker
-    metadata:
-      name: aws-broker
-      namespace: brokers
-    spec:
-      image: awsservicebroker/aws-servicebroker:beta
-      aws:
-        accesskeyid: {{ .Credentials.AWS.AccessKey }}
-        bucket: awsservicebroker
-        key: templates/latest
-        region: {{ .Credentials.AWS.Region }}
-        s3region: us-east-1
-        secretkey: {{ .Credentials.AWS.SecretKey }}
-        tablename: awssb
-        targetaccountid: {{ .Credentials.AWS.AccountID }}
-  {{- end }}
-  {{ if and (eq .Provider "gke") ( .EnableServiceBroker ) }}
-  crd-gcp-service-broker.yaml: |
-    {{- if .EnableIstio }}
-    # Due to the MySQL protocol we need to mitigate this when in
-    # permissive mode
-    # https://istio.io/faq/security/#mysql-with-mtls
-    ---
-    apiVersion: "authentication.istio.io/v1alpha1"
-    kind: Policy
-    metadata:
-      name: gcp-broker-db-mtls
-      namespace: brokers
-    spec:
-      targets:
-        - name: gcp-broker-db
-    {{- end }}
-    ---
-    apiVersion: helm.appvia.io/v1alpha1
-    kind: Mariadb
-    metadata:
-      name: gcp-broker-db
-      namespace: brokers
-    spec:
-      db:
-        forcePassword: false
-        name: {{ .Broker.Name }}
-      master:
-        persistence:
-          enabled: true
-          size: 4Gi
-      rootUser:
-        forcePassword: true
-        password: {{ .Broker.Database.Password }}
-      fullnameOverride: gcp-broker-db
-      metrics:
-        enabled: true
-        serviceMonitor:
-          enabled: false
-      replication:
-        enabled: false
-      serviceAccount:
-        create: true
-      slave:
-        replicas: 0
-    ---
-    apiVersion: helm.appvia.io/v1alpha1
-    kind: GcpServiceBroker
-    metadata:
-      name: gcp-broker
-      namespace: brokers
-    spec:
-      broker:
-        password: {{ .Broker.Password }}
-        service_account_json: '{{ .Credentials.GKE.Account | toJson }}'
-        username: {{ .Broker.Username }}
-      image:
-        repository: gcr.io/gcp-service-broker/gcp-service-broker
-        tag: v4.3.0
-      mysql:
-        embedded: false
-        host: gcp-broker-db
-        mysqlDatabase: {{ .Broker.Database.Name }}
-        mysqlPassword: {{ .Broker.Database.Password }}
-        mysqlUser: root
-      replicaCount: 1
-  {{- end }}
-  {{ if .EnableKiali }}
-  crd-kiali.yaml: |
-    ---
-    apiVersion: v1
-    kind: Secret
-    metadata:
-      name: kiali
-      namespace: istio-system
-    type: Opaque
-    data:
-      passphrase: {{ .Kiali.Password | b64enc }}
-      username: {{ "admin" | b64enc }}
-    ---
-    apiVersion: kiali.io/v1alpha1
-    kind: Kiali
-    metadata:
-      name: kiali
-      namespace: istio-system
-    spec:
-      installation_tag: Appvia
-      istio_namespace: istio-system
-      deployment:
-        namespace: istio-system
-        verbose_mode: '4'
-        view_only_mode: false
-      external_services:
-        grafana:
-          url: 'http://grafana-service.grafana.svc.cluster.local:3000'
-        prometheus:
-          url: 'http://prometheus.prometheus.svc.cluster.local:9090'
-        #tracing:
-        #  url: ''
-      server:
-        web_root: "/kiali"
-  {{- end }}
 `
 )
