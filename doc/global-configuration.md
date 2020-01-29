@@ -1,9 +1,9 @@
 # Global Configuration
 ## Single Sign On
 
-Currently Appvia Kore requires an external identity provider providing authenticate to both API, clusters built and applications provisioned. The options are easily configured on the command line of the api server via --client-id / --client-secret  and --discovery-url (OpenID’s discovery URL). User’s can authorize themselves via the CLI: hubctl authorize which will create the user locally within the hub. Note the first user who authenticates is deemed an admin, while the rest will be placed into the hub-default team (a catch all for users).
+Currently Appvia Kore requires an external identity provider providing authenticate to both API, clusters built and applications provisioned. The options are easily configured on the command line of the api server via --client-id / --client-secret  and --discovery-url (OpenID’s discovery URL). User’s can authorize themselves via the CLI: korectl authorize which will create the user locally within the hub. Note the first user who authenticates is deemed an admin, while the rest will be placed into the hub-default team (a catch all for users).
 
-The same authentication process is also used across the estate. Once in a team, administrators can control user access at a team, cluster or namespace level. Permissions are covered later but for a quick howto once a cluster has been built gaining access requires as hubctl clusters auth. The command (assuming you’ve already authenticated) will retrieve a list of your clusters across all teams and provision you kubeconfig accordingly.
+The same authentication process is also used across the estate. Once in a team, administrators can control user access at a team, cluster or namespace level. Permissions are covered later but for a quick howto once a cluster has been built gaining access requires as korectl clusters auth. The command (assuming you’ve already authenticated) will retrieve a list of your clusters across all teams and provision you kubeconfig accordingly.
 
 
 ## Cloud Provider Configuration

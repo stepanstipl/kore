@@ -17,7 +17,7 @@
  * along with hub-apiserver.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package hubctl
+package korectl
 
 import (
 	"bytes"
@@ -36,7 +36,7 @@ func (c *Config) GetSwaggerCachedFile() string {
 	return path.Join(os.ExpandEnv(c.GetDirectory()), "cache.json")
 }
 
-// GetDirectory returns the hubctl home
+// GetDirectory returns the korectl home
 func (c *Config) GetDirectory() string {
 	if os.Getenv("HUB_CLI_HOME") != "" {
 		return os.Getenv("HUB_CLI_HOME")

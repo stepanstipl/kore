@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2020 Appvia Ltd <info@appvia.io>
+ * Copyright (C) 2020 Rohith Jayawardene <gambol99@gmail.com>
  *
  * This file is part of hub-apiserver.
  *
@@ -17,19 +17,23 @@
  * along with hub-apiserver.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package hubctl
+package korectl
 
-import "github.com/urfave/cli"
+import (
+	"github.com/urfave/cli"
+)
 
-// DefaultsOptions are options for all commands
-var DefaultOptions = []cli.Flag{
-	cli.StringFlag{
-		Name:  "output,o",
-		Usage: "The output format of the resource `FORMAT`",
-		Value: "yaml",
-	},
-	cli.BoolFlag{
-		Name:  "debug,D",
-		Usage: "Indicates for verbose logging `BOOL`",
-	},
+// GetCommands returns all the commands
+func GetCommands(config *Config) []cli.Command {
+	return []cli.Command{
+		GetAutoCompleteCommand(config),
+		GetApplyCommand(config),
+		GetDeleteCommand(config),
+		GetClustersCommand(config),
+		GetGetCommand(config),
+		GetLoginCommand(config),
+		GetTeamsCommands(config),
+		GetUsersCommands(config),
+		GetWhoamiCommand(config),
+	}
 }

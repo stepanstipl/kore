@@ -17,13 +17,13 @@
  * along with hub-apiserver.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package hubctl
+package korectl
 
 import resty "gopkg.in/resty.v1"
 
 var (
-	// DefaultHome is the home directory for the hubctl
-	DefaultHome = "${HOME}/.hubctl"
+	// DefaultHome is the home directory for the korectl
+	DefaultHome = "${HOME}/.korectl"
 	// HubConfig is the configuration file for the api
 	HubConfig = DefaultHome + "/config"
 )

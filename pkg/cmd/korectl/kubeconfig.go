@@ -17,7 +17,7 @@
  * along with hub-apiserver.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package hubctl
+package korectl
 
 import (
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
