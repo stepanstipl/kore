@@ -29,6 +29,24 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// GetIfExists retrieves an object if it exists
+func GetIfExists(ctx context.Context, cc client.Client, object runtime.Object) (bool, error) {
+	key, err := client.ObjectKeyFromObject(object)
+	if err != nil {
+		return false, err
+	}
+
+	if err := cc.Get(ctx, key, object); err != nil {
+		if !kerrors.IsNotFound(err) {
+			return false, err
+		}
+
+		return false, nil
+	}
+
+	return true, nil
+}
+
 // DeleteIfExists removes the resource if it exists
 func DeleteIfExists(ctx context.Context, cc client.Client, object runtime.Object) error {
 	if err := cc.Delete(ctx, object); err != nil {

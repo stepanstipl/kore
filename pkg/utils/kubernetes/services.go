@@ -21,6 +21,7 @@ package kubernetes
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -39,23 +40,20 @@ func WaitForServiceEndpoint(ctx context.Context, cc client.Client, namespace, na
 
 	for {
 		service := &v1.Service{}
-		err := func() error {
-			select {
-			case <-ctx.Done():
-			default:
-			}
-			if err := cc.Get(ctx, types.NamespacedName{
-				Namespace: namespace,
-				Name:      name}, service); err != nil {
-				return err
-			}
 
-			return nil
-		}()
-		if err != nil {
-			logger.WithError(err).Debug("unable to retrieve a service endpoint, will retry")
+		// @step: we break out or continue
+		select {
+		case <-ctx.Done():
+			return "", errors.New("operation has been cancelled")
+		default:
 		}
-		if err == nil {
+
+		if err := cc.Get(ctx, types.NamespacedName{
+			Namespace: namespace,
+			Name:      name}, service); err != nil {
+
+			logger.WithError(err).Debug("unable to retrieve a service endpoint, will retry")
+		} else {
 			if len(service.Status.LoadBalancer.Ingress) <= 0 {
 				logger.Debug("loadbalancer does not have a status yet")
 			} else {
@@ -67,6 +65,6 @@ func WaitForServiceEndpoint(ctx context.Context, cc client.Client, namespace, na
 			}
 		}
 
-		time.Sleep(10 * time.Second)
+		time.Sleep(15 * time.Second)
 	}
 }

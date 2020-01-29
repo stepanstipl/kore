@@ -25,7 +25,7 @@ import (
 )
 
 // GetTeamsCommand returns the teams command
-func GetTeamsCommands(config Config) cli.Command {
+func GetTeamsCommands(config *Config) cli.Command {
 	return cli.Command{
 		Name:    "teams",
 		Aliases: []string{"tm"},
@@ -54,32 +54,6 @@ func GetTeamsCommands(config Config) cli.Command {
 						Get()
 				},
 			},
-			{
-				Name:  "apply",
-				Usage: "Used to provision a team in the hub",
-				Flags: []cli.Flag{
-					cli.StringFlag{
-						Name:  "file,f",
-						Usage: "The path to a file containing the definition",
-					},
-				},
-				Action: func(ctx *cli.Context) error {
-					err := NewRequest().
-						WithConfig(config).
-						WithContext(ctx).
-						WithPayload("file").
-						WithEndpoint("/teams/{name}").
-						PathParameter("name", true).
-						Update()
-					if err != nil {
-						return err
-					}
-					fmt.Println("[status] team has been successfully created")
-
-					return nil
-				},
-			},
-
 			{
 				Name:    "delete",
 				Aliases: []string{"rm"},

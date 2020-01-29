@@ -21,12 +21,14 @@ package hubctl
 
 import (
 	"fmt"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	"github.com/appvia/kore/pkg/utils"
+
 	"github.com/urfave/cli"
 )
 
-func GetClustersCommand(config Config) cli.Command {
+func GetClustersCommand(config *Config) cli.Command {
 	return cli.Command{
 		Name:    "clusters",
 		Aliases: []string{"cls"},
@@ -61,13 +63,18 @@ func GetClustersCommand(config Config) cli.Command {
 					if err := utils.DecodeToJSON(resp.Body(), clusters); err != nil {
 						return err
 					}
+					if len(clusters.Items) <= 0 {
+						fmt.Println("no clusters found in this teams namespace")
+
+						return nil
+					}
 
 					kubeconfig, err := GetKubeConfig()
 					if err != nil {
 						return err
 					}
 
-					if err := PopulateKubeconfig(clusters, kubeconfig, &config); err != nil {
+					if err := PopulateKubeconfig(clusters, kubeconfig, config); err != nil {
 						return err
 					}
 					fmt.Println("Successfull updated you kubeconfig with credentuals")

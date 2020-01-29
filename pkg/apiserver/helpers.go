@@ -20,6 +20,7 @@ package apiserver
 import (
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/appvia/kore/pkg/hub"
 	log "github.com/sirupsen/logrus"
@@ -66,6 +67,9 @@ func handleErrors(req *restful.Request, resp *restful.Response, handler func() e
 			code = http.StatusBadRequest
 		case io.EOF:
 			code = http.StatusBadRequest
+		}
+		if strings.Contains(err.Error(), "record not found") {
+			code = http.StatusNotFound
 		}
 
 		e := newError(err.Error()).

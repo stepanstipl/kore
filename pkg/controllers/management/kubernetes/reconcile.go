@@ -103,6 +103,39 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			// the secret doesn't appear to be available yet - it's either been pushed
 			// of the provider hasn't finished
 			if hub.IsProviderBacked(object) {
+
+				// @step: check if the provider is still pending
+				u, err := hub.ToUnstructuredFromOwnership(object.Spec.Provider)
+				if err != nil {
+					logger.WithError(err).Error("invalid group version kind in resource")
+
+					object.Status.Status = corev1.FailureStatus
+					object.Status.Components.SetCondition(corev1.Component{
+						Name:    "provision",
+						Message: "invalid provider cloud provider reference",
+						Status:  corev1.FailureStatus,
+					})
+
+					return reconcile.Result{}, err
+				}
+
+				if found, err := kubernetes.GetIfExists(context.Background(), a.mgr.GetClient(), u); err != nil {
+					logger.WithError(err).Error("trying to get the cloud provider resource")
+
+					return reconcile.Result{}, err
+				} else if !found {
+					logger.WithError(err).Error("cloud provider resource does not exist")
+
+					object.Status.Status = corev1.FailureStatus
+					object.Status.Components.SetCondition(corev1.Component{
+						Name:    "provision",
+						Message: "cloud provider resource does not exist",
+						Status:  corev1.FailureStatus,
+					})
+
+					return reconcile.Result{}, err
+				}
+
 				object.Status.Status = corev1.FailureStatus
 				object.Status.Components.SetCondition(corev1.Component{
 					Name:    "provision",
@@ -139,7 +172,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 			object.Status.Status = corev1.FailureStatus
 			object.Status.Components.SetCondition(corev1.Component{
-				Name:    "provision",
+				Name:    "api",
 				Message: "unable to create client from cluster credentials",
 				Detail:  err.Error(),
 				Status:  corev1.FailureStatus,

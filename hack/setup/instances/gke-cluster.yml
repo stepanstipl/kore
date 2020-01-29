@@ -2,7 +2,7 @@
 apiVersion: gke.compute.hub.appvia.io/v1alpha1
 kind: GKE
 metadata:
-  name: prod
+  name: dev
   namespace: devs
 spec:
   description: Dev Cluster
@@ -38,7 +38,7 @@ spec:
 apiVersion: clusters.compute.hub.appvia.io/v1
 kind: Kubernetes
 metadata:
-  name: prod
+  name: dev
 spec:
   domain: labs.appvia.io
   inheritTeamMembers: true
@@ -48,6 +48,6 @@ spec:
     version: v1alpha1
     kind: GKE
     namespace: devs
-    name: prod
+    name: dev
   enableDefaultTrafficBlock: false
   clusterUsers: []

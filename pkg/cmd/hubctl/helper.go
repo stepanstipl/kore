@@ -24,21 +24,122 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/appvia/kore/pkg/utils"
+	yml "github.com/ghodss/yaml"
 	log "github.com/sirupsen/logrus"
 	yaml "gopkg.in/yaml.v2"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
-// GetCaches is responsible for checking if are caches are up to date
-func GetCaches(config Config) error {
-	_, err := GetSwaggerCache(config)
+type Document struct {
+	// Endpoint is the rest storage endpoint
+	Endpoint string
+	// Object the resource to send
+	Object *unstructured.Unstructured
+}
+
+// ParseDocument returns a collection of parsed documents and the api endpoints
+func ParseDocument(src io.Reader, namespace string) ([]*Document, error) {
+	var list []*Document
+
+	// @step: read in the content of the file
+	content, err := ioutil.ReadAll(src)
 	if err != nil {
-		return err
+		return nil, err
 	}
+	// @step: split the yaml documents up
+	documents := strings.Split(string(content), "---")
+	global := []string{"teams", "users", "plans"}
+
+	for _, x := range documents {
+		if x == "" {
+			continue
+		}
+
+		doc, err := yml.YAMLToJSON([]byte(x))
+		if err != nil {
+			return nil, err
+		}
+		// @step: attempt to read the document into an unstructured
+		u := &unstructured.Unstructured{}
+		if err := u.UnmarshalJSON(doc); err != nil {
+			return nil, err
+		}
+
+		// @checks
+		// - ensure we have a name
+		// - ensure we have a api kind
+		if u.GetName() == "" {
+			return nil, errors.New("resource must have names")
+		}
+		if u.GetKind() == "" {
+			return nil, errors.New("resource must have an api kind")
+		}
+		if u.GetAPIVersion() == "" {
+			return nil, errors.New("resource requires an api group")
+		}
+
+		// @step: we pluralize the kind and use that route the resource
+		kind := strings.ToLower(utils.ToPlural(u.GetKind()))
+		isGlobal := utils.Contains(kind, global)
+
+		team := u.GetNamespace()
+		if !isGlobal {
+			if namespace != "" {
+				if team != "" && team != namespace {
+					return nil, errors.New("resource name and team selected are different")
+				}
+				team = namespace
+			}
+			if team == "" {
+				return nil, errors.New("all resource must have a team namespace")
+			}
+		}
+		team = strings.ToLower(team)
+		name := strings.ToLower(u.GetName())
+
+		remapping := map[string]string{
+			"kubernetes": "clusters",
+		}
+		for k, v := range remapping {
+			if k == kind {
+				kind = v
+			}
+		}
+
+		item := &Document{Object: u}
+		switch isGlobal {
+		case true:
+			item.Endpoint = fmt.Sprintf("%s/%s", kind, name)
+		default:
+			item.Endpoint = fmt.Sprintf("%s/%s/%s", team, kind, name)
+		}
+
+		list = append(list, item)
+	}
+
+	return list, nil
+}
+
+// GetCaches is responsible for checking if are caches are up to date
+func GetCaches(config *Config) error {
+	/*
+		content, err := GetSwaggerCache(*config)
+		if err != nil {
+			return err
+		}
+		_, err = fastjson.Parse(string(content))
+		if err != nil {
+			return err
+		}
+	*/
 
 	return nil
 }
@@ -64,6 +165,9 @@ func GetKubeConfig() (string, error) {
 
 	return path, nil
 }
+
+// BuildResourcesFromSwagger builds a list of global and namespaces resources
+// from the swagger
 
 // GetSwaggerCache is responsible for updating the swagger cache
 func GetSwaggerCache(config Config) ([]byte, error) {
@@ -117,8 +221,8 @@ func GetFileChecksum(path string) (string, error) {
 }
 
 // GetClientConfiguration is responsible for retrieving the client configuration
-func GetClientConfiguration() (Config, error) {
-	config := Config{}
+func GetClientConfiguration() (*Config, error) {
+	config := &Config{}
 
 	resolved := os.ExpandEnv(HubConfig)
 
@@ -136,5 +240,5 @@ func GetClientConfiguration() (Config, error) {
 	}
 
 	// @step: parse the configuration
-	return config, yaml.NewDecoder(bytes.NewReader(content)).Decode(&config)
+	return config, yaml.NewDecoder(bytes.NewReader(content)).Decode(config)
 }

@@ -215,7 +215,7 @@ func (u *teamHandler) Register(i hub.Interface, builder utils.PathBuilder) (*res
 	// Team Cloud Providers
 
 	ws.Route(
-		ws.GET("/{team}/cloud/gke").To(u.findClusters).
+		ws.GET("/{team}/gkes").To(u.findClusters).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Doc("Is the used tor return a list of Google Container Engine clusters which thhe team has access").
 			Returns(http.StatusOK, "Contains the former team definition from the hub", clustersv1.Kubernetes{}).
@@ -223,7 +223,7 @@ func (u *teamHandler) Register(i hub.Interface, builder utils.PathBuilder) (*res
 	)
 
 	ws.Route(
-		ws.GET("/{team}/cloud/gke/{name}").To(u.findCluster).
+		ws.GET("/{team}/gkes/{name}").To(u.findCluster).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
 			Doc("Is the used tor return a list of Google Container Engine clusters which thhe team has access").
@@ -232,7 +232,7 @@ func (u *teamHandler) Register(i hub.Interface, builder utils.PathBuilder) (*res
 	)
 
 	ws.Route(
-		ws.PUT("/{team}/cloud/gke/{name}").To(u.findCluster).
+		ws.PUT("/{team}/gkes/{name}").To(u.findCluster).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
 			Doc("Is used to provision or update a GKE cluster in the hub").
@@ -241,7 +241,7 @@ func (u *teamHandler) Register(i hub.Interface, builder utils.PathBuilder) (*res
 	)
 
 	ws.Route(
-		ws.DELETE("/{team}/cloud/gke/{name}").To(u.findCluster).
+		ws.DELETE("/{team}/gkes/{name}").To(u.findCluster).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
 			Doc("Is used to delete a managed GKE cluster from the hub").

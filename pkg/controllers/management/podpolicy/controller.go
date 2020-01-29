@@ -82,7 +82,7 @@ func (a *pspCtrl) Run(ctx context.Context, cfg *rest.Config, hi hub.Interface) e
 	}
 
 	// @step: setup watches for the resources
-	if err := ctrl.Watch(&source.Kind{Type: &clustersv1.Kubernetes{}},
+	if err := ctrl.Watch(&source.Kind{Type: &clustersv1.ManagedPodSecurityPolicy{}},
 		&handler.EnqueueRequestForObject{},
 		&predicate.GenerationChangedPredicate{},
 	); err != nil {

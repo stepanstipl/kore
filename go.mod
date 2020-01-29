@@ -1,11 +1,10 @@
 module github.com/appvia/kore
 
 require (
-	github.com/Masterminds/goutils v1.1.0 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
+	github.com/Masterminds/sprig/v3 v3.0.2 // indirect
 	github.com/RoaringBitmap/roaring v0.4.21 // indirect
-	github.com/appvia/hub-apis v0.0.3-0.20191223133102-ebe0ca263289
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blevesearch/bleve v0.8.1
 	github.com/blevesearch/blevex v0.0.0-20190916190636-152f0fe5c040 // indirect
@@ -28,8 +27,9 @@ require (
 	github.com/gambol99/hub-utils v0.0.0-20191108161735-f3ffc063b42e
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-logr/zapr v0.1.1 // indirect
+	github.com/go-openapi/jsonreference v0.19.3 // indirect
 	github.com/go-openapi/spec v0.19.4
-	github.com/go-resty/resty/v2 v2.1.0
+	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/google/go-cmp v0.3.1 // indirect
 	github.com/google/uuid v1.1.1
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
@@ -39,13 +39,10 @@ require (
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.8 // indirect
 	github.com/mailru/easyjson v0.7.0 // indirect
-	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/onsi/ginkgo v1.10.2 // indirect
 	github.com/onsi/gomega v1.7.0 // indirect
-	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.0.0
 	github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4
-	github.com/prometheus/common v0.6.0
 	github.com/romanyx/polluter v1.2.2
 	github.com/savaki/jq v0.0.0-20161209013833-0e6baecebbf8
 	github.com/sirupsen/logrus v1.4.2
@@ -57,7 +54,7 @@ require (
 	github.com/tecbot/gorocksdb v0.0.0-20191019123150-400c56251341 // indirect
 	github.com/urfave/cli v1.22.1
 	golang.org/x/crypto v0.0.0-20191205180655-e7c4368fe9dd
-	golang.org/x/net v0.0.0-20191004110552-13f9640d40b9
+	golang.org/x/net v0.0.0-20191004110552-13f9640d40b9 // indirect
 	golang.org/x/oauth2 v0.0.0-20191202225959-858c2ad4c8b6
 	golang.org/x/sys v0.0.0-20191113165036-4c7a9d0fe056 // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
@@ -73,7 +70,6 @@ require (
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 	k8s.io/klog v1.0.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20191107075043-30be4d16710a
-	k8s.io/kubernetes v1.13.0
 	k8s.io/utils v0.0.0-20191218082557-f07c713de883 // indirect
 	sigs.k8s.io/controller-runtime v0.3.0
 )

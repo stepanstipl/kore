@@ -26,28 +26,36 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"strings"
 	"text/tabwriter"
+	"time"
 
 	"github.com/ghodss/yaml"
 	"github.com/savaki/jq"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 var (
-	// convertor is the unstructured converter client
-	converter = runtime.DefaultUnstructuredConverter
+	hc = &http.Client{
+		Timeout: time.Second * 10,
+		Transport: &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout: 5 * time.Second,
+			}).Dial,
+			TLSHandshakeTimeout: 5 * time.Second,
+		},
+	}
 )
 
 // Requestor is responsible for calling out to the API
 type Requestor struct {
 	// config is the cli configuration
-	config Config
+	config *Config
 	// cliCtx is the cli context
 	cliCtx *cli.Context
 	// endpoint is the uri endpoint to call
@@ -60,12 +68,8 @@ type Requestor struct {
 	render []string
 	// paths are the paths for render
 	paths []string
-	// errorResult
-	errorResult map[string]interface{}
 	// response is the decoded json
 	response map[string]interface{}
-	// hc is the http client
-	hc *http.Client
 	// body is the content read bac
 	body *bytes.Buffer
 	// payload
@@ -77,7 +81,6 @@ type Requestor struct {
 // NewRequest creates and returns a requestor
 func NewRequest() *Requestor {
 	return &Requestor{
-		errorResult: make(map[string]interface{}),
 		params:      make(map[string]bool),
 		queryParams: make(map[string]string),
 		response:    make(map[string]interface{}),
@@ -242,10 +245,11 @@ func (c Requestor) handleResponse(resp *http.Response) error {
 	case http.StatusForbidden:
 		fmt.Println("[error] request has been denied, check credentials")
 	case http.StatusBadRequest:
-		fmt.Println("[error] invalid request")
+		fmt.Println("[error] api responded with invalid request")
 	default:
 		fmt.Printf("invalid response: %d from api server", resp.StatusCode)
 	}
+	os.Exit(1)
 
 	return nil
 }
@@ -265,7 +269,7 @@ func (c *Requestor) makeRequest(method, url string) (*http.Response, error) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+c.config.Credentials.IDToken)
 
-	resp, err := c.hc.Do(req)
+	resp, err := hc.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -370,6 +374,16 @@ func (c *Requestor) WithContext(ctx *cli.Context) *Requestor {
 	return c
 }
 
+func (c *Requestor) WithRuntimeObject(obj *unstructured.Unstructured) *Requestor {
+	encoded, err := obj.MarshalJSON()
+	if err != nil {
+		panic(fmt.Sprintf("failed to marshal the resource: %s", err))
+	}
+	c.payload = bytes.NewBuffer(encoded)
+
+	return c
+}
+
 func (c *Requestor) WithPayload(name string) *Requestor {
 	path := c.cliCtx.String(name)
 	if path == "" {
@@ -399,9 +413,8 @@ func (c *Requestor) WithPayload(name string) *Requestor {
 }
 
 // WithConfig adds the configuration
-func (c *Requestor) WithConfig(config Config) *Requestor {
+func (c *Requestor) WithConfig(config *Config) *Requestor {
 	c.config = config
-	c.hc = http.DefaultClient
 
 	return c
 }

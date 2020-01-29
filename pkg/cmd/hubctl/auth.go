@@ -39,7 +39,7 @@ import (
 
 // @TODO Change everthing here and polish it up
 
-func GetLoginCommand(config Config) cli.Command {
+func GetLoginCommand(config *Config) cli.Command {
 	return cli.Command{
 		Name:    "authorize",
 		Aliases: []string{"auth"},
@@ -103,6 +103,8 @@ func GetLoginCommand(config Config) cli.Command {
 				}
 			}()
 
+			fmt.Printf("authenticating to kore api: %s\n", config.Server)
+
 			// @step: open a brower to the to the api server
 			url := fmt.Sprintf("%s/oauth/authorize?redirect_url=http://localhost:3001", config.Server)
 			if err := open.Run(url); err != nil {
@@ -133,7 +135,7 @@ func GetLoginCommand(config Config) cli.Command {
 			if err := config.Update(); err != nil {
 				return fmt.Errorf("trying to update the client configuration: %s", err)
 			}
-			fmt.Println("You have successfully authenticated")
+			fmt.Println("successfully authenticated")
 
 			return nil
 		},

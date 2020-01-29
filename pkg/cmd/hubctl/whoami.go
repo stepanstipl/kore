@@ -21,7 +21,7 @@ package hubctl
 
 import "github.com/urfave/cli"
 
-func GetWhoamiCommand(config Config) cli.Command {
+func GetWhoamiCommand(config *Config) cli.Command {
 	return cli.Command{
 		Name:    "whoami",
 		Aliases: []string{"who"},

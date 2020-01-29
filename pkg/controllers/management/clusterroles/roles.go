@@ -264,7 +264,6 @@ func (a crCtrl) ReconcileRoles(request reconcile.Request) (reconcile.Result, err
 			role.Status.Status = corev1.WarningStatus
 			role.Status.Conditions = []corev1.Condition{{
 				Message: fmt.Sprintf("failed to provision on all clusters, %d out of %d failed", len(failed.Items), len(list.Items)),
-				Detail:  err.Error(),
 			}}
 
 			return errors.New("provisioning managed cluster roles")

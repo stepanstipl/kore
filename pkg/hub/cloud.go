@@ -23,6 +23,7 @@ package hub
 type Cloud interface {
 	// GKE returms the GKE interface
 	GKE() GKE
+	// GKE
 }
 
 type cloudImpl struct {

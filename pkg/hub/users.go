@@ -204,9 +204,7 @@ func (h *usersImpl) Delete(ctx context.Context, username string) (*orgv1.User, e
 
 // Update is responsible for updating the user
 func (h *usersImpl) Update(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
-	if user.Namespace != HubNamespace {
-		return nil, NewErrNotAllowed("hub users must be created in the hub namespace")
-	}
+	user.Namespace = HubNamespace
 
 	// @step: we need to validate the user
 	if user.Spec.Username == "" || user.Name == "" {

@@ -115,7 +115,7 @@ func (a pspCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 				}
 				logger.Debug("creating the managed cluster pod security policy in cluster")
 
-				policyName := "hub:managed:" + policy.Name
+				policyName := "hub.managed." + policy.Name
 
 				if _, err := kubernetes.CreateOrUpdate(ctx, client, &psp.PodSecurityPolicy{
 					ObjectMeta: metav1.ObjectMeta{

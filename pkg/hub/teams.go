@@ -151,6 +151,7 @@ func (t *teamsImpl) Update(ctx context.Context, team *orgv1.Team) (*orgv1.Team, 
 	team.Annotations = map[string]string{
 		Label("changed"): fmt.Sprintf("%d", time.Now().Unix()),
 	}
+
 	// @step: check the team is ok
 	if team.Name == "" {
 		return nil, errors.New("no name for team defined")
@@ -192,6 +193,16 @@ func (t *teamsImpl) Update(ctx context.Context, team *orgv1.Team) (*orgv1.Team, 
 	}
 
 	if !found {
+		// @step: add the user whom created is a admin member
+		if err := t.usermgr.Members().AddUser(ctx,
+			user.Username(), team.Name, []string{"members", "admin"}); err != nil {
+
+			logger.WithError(err).Error("trying to add the user a admin user on the team")
+
+			return nil, err
+		}
+
+		// @step: update in the api
 		if _, err := team, t.Store().Client().Update(ctx,
 			store.UpdateOptions.To(team),
 			store.UpdateOptions.WithCreate(true),

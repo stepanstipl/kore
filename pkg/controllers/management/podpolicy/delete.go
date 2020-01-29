@@ -20,7 +20,13 @@
 package podpolicy
 
 import (
+	"context"
+
+	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
+
 	log "github.com/sirupsen/logrus"
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -31,6 +37,25 @@ func (a pspCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 		"namespace": request.Name,
 	})
 	logger.Debug("attempting to delete the object")
+
+	// @step: retrieve the type from the api
+	policy := &clustersv1.ManagedPodSecurityPolicy{}
+	if err := a.mgr.GetClient().Get(context.Background(), request.NamespacedName, policy); err != nil {
+		if kerrors.IsNotFound(err) {
+			return reconcile.Result{}, nil
+		}
+
+		return reconcile.Result{}, err
+	}
+
+	// @step: create a finalizer and check if we are deleting
+	finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
+
+	if err := finalizer.Remove(policy); err != nil {
+		log.WithError(err).Error("trying to remove the pod security policy")
+
+		return reconcile.Result{}, err
+	}
 
 	return reconcile.Result{}, nil
 }

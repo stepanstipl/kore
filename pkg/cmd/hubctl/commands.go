@@ -24,11 +24,12 @@ import (
 )
 
 // GetCommands returns all the commands
-func GetCommands(config Config) []cli.Command {
+func GetCommands(config *Config) []cli.Command {
 	return []cli.Command{
-		//GetIntegrationCommands(),
-		//GetResourcesCommands(config),
+		GetApplyCommand(config),
+		GetDeleteCommand(config),
 		GetClustersCommand(config),
+		//GetGetCommand(config),
 		GetLoginCommand(config),
 		GetTeamsCommands(config),
 		GetUsersCommands(config),

@@ -21,10 +21,10 @@ package hubctl
 
 import (
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/tools/clientcmd/api"
 
 	log "github.com/sirupsen/logrus"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/clientcmd/api"
 )
 
 // Populate kubeconfig is used to populate the users kubeconfig
@@ -38,10 +38,11 @@ func PopulateKubeconfig(clusters *clustersv1.KubernetesList, kubeconfig string, 
 		AuthProvider: &api.AuthProviderConfig{
 			Name: "oidc",
 			Config: map[string]string{
+				"access-token":   config.Credentials.AccessToken,
 				"client-id":      config.Credentials.ClientID,
 				"client-secret":  config.Credentials.ClientSecret,
-				"idp-issuer-url": config.AuthorizeURL,
 				"id-token":       config.Credentials.IDToken,
+				"idp-issuer-url": config.AuthorizeURL,
 				"refresh-token":  config.Credentials.RefreshToken,
 			},
 		},

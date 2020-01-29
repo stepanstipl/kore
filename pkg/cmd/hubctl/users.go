@@ -22,7 +22,7 @@ package hubctl
 import "github.com/urfave/cli"
 
 // GetUsersCommand returns the users command
-func GetUsersCommands(config Config) cli.Command {
+func GetUsersCommands(config *Config) cli.Command {
 	return cli.Command{
 		Name:    "users",
 		Aliases: []string{"us"},
@@ -32,12 +32,12 @@ func GetUsersCommands(config Config) cli.Command {
 			{
 				Name:  "get",
 				Usage: "Used to retrieve one of more users from the hub",
-				Flags: []cli.Flag{
+				Flags: append([]cli.Flag{
 					cli.StringFlag{
 						Name:  "name,n",
 						Usage: "The name of the user to retrieve `NAME`",
 					},
-				},
+				}, DefaultOptions...),
 				Action: func(ctx *cli.Context) error {
 					return NewRequest().
 						WithConfig(config).
@@ -49,24 +49,6 @@ func GetUsersCommands(config Config) cli.Command {
 							Column("Email", ".spec.email"),
 						).
 						Get()
-				},
-			},
-			{
-				Name:  "apply",
-				Usage: "Used to apply a user to the hub",
-				Flags: []cli.Flag{
-					cli.StringSliceFlag{
-						Name:     "file,f",
-						Usage:    "The path to a file containing one of more user definitions `PATH`",
-						Required: true,
-					},
-				},
-				Action: func(ctx *cli.Context) error {
-					return NewRequest().
-						WithConfig(config).
-						WithContext(ctx).
-						WithEndpoint("/users/{name}").
-						Update()
 				},
 			},
 			{
