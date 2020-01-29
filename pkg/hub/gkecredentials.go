@@ -24,9 +24,7 @@ import (
 
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	"github.com/appvia/kore/pkg/hub/authentication"
-	"github.com/appvia/kore/pkg/services/audit"
 	"github.com/appvia/kore/pkg/store"
-	kerrors "k8s.io/apimachinery/pkg/api/errors"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -39,13 +37,13 @@ import (
 // GKECredentials is the gke interface
 type GKECredentials interface {
 	// Delete is responsible for deleting a gke environment
-	Delete(context.Context, *gke.GKE) error
+	Delete(context.Context, string) error
 	// Get return the definition from the api
-	Get(context.Context, string) (*gke.GKE, error)
+	Get(context.Context, string) (*gke.GKECredentials, error)
 	// List returns all the gke cluster in the team
-	List(context.Context) (*gke.GKEList, error)
+	List(context.Context) (*gke.GKECredentialsList, error)
 	// Update is used to update the gke cluster definition
-	Update(context.Context, *gke.GKE) (*gke.GKE, error)
+	Update(context.Context, *gke.GKECredentials) (*gke.GKECredentials, error)
 }
 
 type gkeCredsImpl struct {
@@ -55,24 +53,24 @@ type gkeCredsImpl struct {
 }
 
 // Delete is responsible for deleting a gke environment
-func (h *gkeCredsImpl) Delete(ctx context.Context, cluster *gke.GKE) error {
+func (h *gkeCredsImpl) Delete(ctx context.Context, name string) error {
 	logger := log.WithFields(log.Fields{
-		"name": cluster.Name,
+		"name": name,
 		"team": h.team,
 	})
 	user := authentication.MustGetIdentity(ctx)
+	if !user.IsGlobalAdmin() {
+		return ErrUnauthorized
+	}
 
-	if cluster.Namespace != h.team {
-		h.Audit().Record(ctx,
-			audit.ResourceUID(string(cluster.UID)),
-			audit.Resource("GKE"),
-			audit.Team(h.team),
-			audit.User(user.Username()),
-		).Event("user attempting to delete the cluster from hub")
+	creds := &gke.GKECredentials{}
+	if err := h.Store().Client().Get(ctx,
+		store.GetOptions.InNamespace(h.team),
+		store.GetOptions.InTo(creds),
+	); err != nil {
+		logger.WithError(err).Error("trying to retrieve the credentials")
 
-		logger.Warn("attempting to delete a cluster from another team")
-
-		return NewErrNotAllowed("you cannot delete a cluster from another team")
+		return err
 	}
 
 	// @TODO check the user us an admin in the team
@@ -82,12 +80,12 @@ func (h *gkeCredsImpl) Delete(ctx context.Context, cluster *gke.GKE) error {
 	// @TODO add an audit entry indicating the request to remove the option
 
 	// @step: issue the request to remove the cluster
-	return h.Store().Client().Delete(ctx, store.DeleteOptions.From(cluster))
+	return h.Store().Client().Delete(ctx, store.DeleteOptions.From(creds))
 }
 
 // Get return the definition from the api
-func (h *gkeCredsImpl) Get(ctx context.Context, name string) (*gke.GKE, error) {
-	cluster := &gke.GKE{}
+func (h *gkeCredsImpl) Get(ctx context.Context, name string) (*gke.GKECredentials, error) {
+	cluster := &gke.GKECredentials{}
 
 	return cluster, h.Store().Client().Get(ctx,
 		store.GetOptions.InNamespace(h.team),
@@ -96,8 +94,8 @@ func (h *gkeCredsImpl) Get(ctx context.Context, name string) (*gke.GKE, error) {
 }
 
 // List returns all the gke cluster in the team
-func (h *gkeCredsImpl) List(ctx context.Context) (*gke.GKEList, error) {
-	list := &gke.GKEList{}
+func (h *gkeCredsImpl) List(ctx context.Context) (*gke.GKECredentialsList, error) {
+	list := &gke.GKECredentialsList{}
 
 	return list, h.Store().Client().List(ctx,
 		store.ListOptions.InNamespace(h.team),
@@ -106,49 +104,18 @@ func (h *gkeCredsImpl) List(ctx context.Context) (*gke.GKEList, error) {
 }
 
 // Update is called to update or create a gke instance
-func (h *gkeCredsImpl) Update(ctx context.Context, cluster *gke.GKE) (*gke.GKE, error) {
+func (h *gkeCredsImpl) Update(ctx context.Context, cluster *gke.GKECredentials) (*gke.GKECredentials, error) {
 	logger := log.WithFields(log.Fields{
 		"name": cluster.Name,
 		"team": h.team,
 	})
 
-	// @TODO perform any checks on the cluster options before processing
-	cluster.Namespace = h.team
-
-	// @TODO check the user is a admin within the team - i.e they have the permission
-	// to update the cluster
-
-	// @step: we need to check if team has access to the credentials
-	permitted, err := h.Teams().Team(h.team).Allocations().IsPermitted(ctx, cluster.Spec.Credentials)
-	if err != nil {
-		logger.WithError(err).Error("trying to check for credentials allocation")
-
-		return nil, err
-	}
-	if !permitted {
-		logger.Warn("team attempting to build cluster of credentials which have not been allocated")
-
-		return nil, NewErrNotAllowed("the requested credentials have not been allocated to you")
-	}
-
-	// @step: inform the audit service of the change
-
-	// @step: we need to check if the update is permitted by gke
-	_, err = h.Get(ctx, cluster.Name)
-	if err != nil {
-		if !kerrors.IsNotFound(err) {
-			logger.WithError(err).Error("trying to retrieve from cluster")
-
-			return nil, err
-		}
-
-		// @TODO: we need to check if what they are updating is permitted
-
-	}
-
 	// @step: update the resource in the api
 	if err := h.Store().Client().Update(ctx,
 		store.UpdateOptions.To(cluster),
+		store.UpdateOptions.WithCreate(true),
+		store.UpdateOptions.WithForce(true),
+		store.UpdateOptions.WithPatch(true),
 	); err != nil {
 		logger.WithError(err).Error("trying to update the gke cluster")
 

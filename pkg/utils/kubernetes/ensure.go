@@ -29,6 +29,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// CheckIfExists checks if a runtime object exist in the api
+func CheckIfExists(ctx context.Context, cc client.Client, object runtime.Object) (bool, error) {
+	return GetIfExists(ctx, cc, object)
+}
+
 // GetIfExists retrieves an object if it exists
 func GetIfExists(ctx context.Context, cc client.Client, object runtime.Object) (bool, error) {
 	key, err := client.ObjectKeyFromObject(object)

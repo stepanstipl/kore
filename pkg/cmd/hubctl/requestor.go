@@ -124,7 +124,6 @@ func (c *Requestor) Update() error {
 	if err != nil {
 		return err
 	}
-
 	resp, err := c.makeRequest(http.MethodPut, url)
 	if err != nil {
 		return err
@@ -237,6 +236,12 @@ func (c *Requestor) makeValues(in io.Reader, paths []string) ([]string, error) {
 
 // handleResponse is used to wrap common errors
 func (c Requestor) handleResponse(resp *http.Response) error {
+	// @step: does the error contain custom error?
+	if c.response["code"] != nil && c.response["message"] != "" {
+		fmt.Printf("[error] [%d] %s\n", int(c.response["code"].(float64)), c.response["message"])
+		os.Exit(1)
+	}
+
 	switch resp.StatusCode {
 	case http.StatusUnauthorized:
 		fmt.Println("[error] authorization required, please use the 'authorize' command")
@@ -273,12 +278,15 @@ func (c *Requestor) makeRequest(method, url string) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, errors.New("endpoint does not exist")
+	}
+
 	if resp.Body != nil {
 		content, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return nil, err
 		}
-
 		if len(content) > 0 {
 			if err := json.NewDecoder(bytes.NewReader(content)).Decode(&c.response); err != nil {
 				return nil, err
@@ -379,6 +387,7 @@ func (c *Requestor) WithRuntimeObject(obj *unstructured.Unstructured) *Requestor
 	if err != nil {
 		panic(fmt.Sprintf("failed to marshal the resource: %s", err))
 	}
+
 	c.payload = bytes.NewBuffer(encoded)
 
 	return c

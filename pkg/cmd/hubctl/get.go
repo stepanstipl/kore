@@ -39,7 +39,6 @@ func GetGetCommand(config Config) cli.Command {
 		Action: func(ctx *cli.Context) error {
 			fmt.Println(ctx.Args())
 
-
 			return nil
 		},
 	}

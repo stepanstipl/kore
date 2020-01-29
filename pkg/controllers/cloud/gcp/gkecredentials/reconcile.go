@@ -17,7 +17,7 @@
  * along with hub-apiserver.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package gke
+package gkecredentials
 
 import (
 	"context"
@@ -30,8 +30,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-// ReconcileCredentials is the entrypoint for the reconcilation logic
-func (t gkeCtrl) ReconcileCredentials(request reconcile.Request) (reconcile.Result, error) {
+// Reconcile is the entrypoint for the reconcilation logic
+func (t gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	ctx := context.Background()
 
 	logger := log.WithFields(log.Fields{

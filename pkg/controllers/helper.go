@@ -21,10 +21,14 @@ package controllers
 
 import (
 	"context"
+	"errors"
 
+	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	"github.com/appvia/kore/pkg/hub"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -62,6 +66,27 @@ func CreateClientFromSecret(ctx context.Context, cc client.Client, name, namespa
 	}
 
 	return kubernetes.NewRuntimeClientFromSecret(credentials)
+}
+
+// GetCloudProviderCredentials is used to retrieve the cloud provider credentials of a cluster
+func GetCloudProviderCredentials(ctx context.Context, cc client.Client, cluster *clustersv1.Kubernetes) (*unstructured.Unstructured, error) {
+	if !hub.IsProviderBacked(cluster) {
+		return nil, errors.New("cluster is not back by a cloud provider")
+	}
+	object, err := hub.ToUnstructuredFromOwnership(cluster.Spec.Provider)
+	if err != nil {
+		return nil, err
+	}
+
+	found, err := kubernetes.GetIfExists(ctx, cc, object)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, errors.New("cloud provider credentials not found")
+	}
+
+	return object, nil
 }
 
 // NewController is used to create and return a controller

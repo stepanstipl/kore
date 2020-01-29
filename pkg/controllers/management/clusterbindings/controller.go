@@ -1,23 +1,23 @@
 /**
  * Copyright (C) 2020 Appvia Ltd <info@appvia.io>
- *
- * This file is part of hub-apiserver.
- *
- * hub-apiserver is free software: you can redistribute it and/or modify
+ * 
+ * This file is part of kore.
+ * 
+ * kore is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
- *
- * hub-apiserver is distributed in the hope that it will be useful,
+ * 
+ * kore is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
- * along with hub-apiserver.  If not, see <http://www.gnu.org/licenses/>.
+ * along with kore.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package clusterroles
+package clusterbindings
 
 import (
 	"context"
@@ -33,10 +33,10 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
@@ -50,13 +50,13 @@ type crCtrl struct {
 
 func init() {
 	if err := controllers.Register(&crCtrl{}); err != nil {
-		log.WithError(err).Fatal("failed to register cluster roles controller")
+		log.WithError(err).Fatal("failed to register cluster bindings controller")
 	}
 }
 
 // Name returns the name of the controller
 func (a crCtrl) Name() string {
-	return "cluster-roles"
+	return "cluster-bindings"
 }
 
 // Run is called when the controller is started
@@ -71,7 +71,7 @@ func (a *crCtrl) Run(ctx context.Context, cfg *rest.Config, hi hub.Interface) er
 		return err
 	}
 	a.mgr = mgr
-	a.Interface = hi
+
 
 	// @step: create the controller
 	ctrl, err := controller.New(a.Name(), mgr, controllers.DefaultControllerOptions(a))
@@ -82,16 +82,15 @@ func (a *crCtrl) Run(ctx context.Context, cfg *rest.Config, hi hub.Interface) er
 	}
 
 	// @step: setup watches for the resources
-	if err := ctrl.Watch(&source.Kind{Type: &clustersv1.ManagedClusterRole{}},
+	if err := ctrl.Watch(&source.Kind{Type: &clustersv1.ManagedClusterRoleBinding{}},
 		&handler.EnqueueRequestForObject{},
 		&predicate.GenerationChangedPredicate{},
-	); err != nil {
+		); err != nil {
 
-		log.WithError(err).Error("failed to create watcher on resource")
+		log.WithField("error", err.Error()).Error("failed to create watcher on resource")
 
 		return err
 	}
-
 	go func() {
 		log.Info("starting the controller loop")
 

@@ -17,21 +17,5 @@
  * along with kore.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package utils
-
-import (
-	"fmt"
-	"strings"
-)
-
-// ToPlural convers the type to a plural
-func ToPlural(name string) string {
-	if strings.HasSuffix(name, "ss") {
-		return fmt.Sprintf("%ses", name)
-	}
-	if strings.HasSuffix(name, "es") || strings.HasSuffix(name, "s") {
-		return name
-	}
-
-	return fmt.Sprintf("%ss", name)
-}
+// Package clusterbindings is responsible reconsciling the bindings
+package clusterbindings

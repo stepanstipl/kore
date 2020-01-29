@@ -23,11 +23,13 @@ import (
 	// importing the cloud providers
 	_ "github.com/appvia/kore/pkg/controllers/cloud/aws/eks"
 	_ "github.com/appvia/kore/pkg/controllers/cloud/gcp/gke"
+	_ "github.com/appvia/kore/pkg/controllers/cloud/gcp/gkecredentials"
 
 	// importing the management controller
-	//_ "github.com/appvia/kore/pkg/controllers/management/bootstrap"
+	_ "github.com/appvia/kore/pkg/controllers/management/bootstrap"
 	_ "github.com/appvia/kore/pkg/controllers/management/clusterconfig"
 	_ "github.com/appvia/kore/pkg/controllers/management/clusterroles"
+	_ "github.com/appvia/kore/pkg/controllers/management/clusterbindings"
 	_ "github.com/appvia/kore/pkg/controllers/management/kubernetes"
 	_ "github.com/appvia/kore/pkg/controllers/management/podpolicy"
 

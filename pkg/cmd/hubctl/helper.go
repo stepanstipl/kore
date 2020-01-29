@@ -29,6 +29,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/appvia/kore/pkg/utils"
@@ -55,7 +56,8 @@ func ParseDocument(src io.Reader, namespace string) ([]*Document, error) {
 		return nil, err
 	}
 	// @step: split the yaml documents up
-	documents := strings.Split(string(content), "---")
+	splitter := regexp.MustCompile("^---$")
+	documents := splitter.Split(string(content), -1)
 	global := []string{"teams", "users", "plans"}
 
 	for _, x := range documents {
@@ -67,6 +69,7 @@ func ParseDocument(src io.Reader, namespace string) ([]*Document, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		// @step: attempt to read the document into an unstructured
 		u := &unstructured.Unstructured{}
 		if err := u.UnmarshalJSON(doc); err != nil {
@@ -102,6 +105,7 @@ func ParseDocument(src io.Reader, namespace string) ([]*Document, error) {
 				return nil, errors.New("all resource must have a team namespace")
 			}
 		}
+		u.SetNamespace(team)
 		team = strings.ToLower(team)
 		name := strings.ToLower(u.GetName())
 
@@ -119,7 +123,7 @@ func ParseDocument(src io.Reader, namespace string) ([]*Document, error) {
 		case true:
 			item.Endpoint = fmt.Sprintf("%s/%s", kind, name)
 		default:
-			item.Endpoint = fmt.Sprintf("%s/%s/%s", team, kind, name)
+			item.Endpoint = fmt.Sprintf("teams/%s/%s/%s", team, kind, name)
 		}
 
 		list = append(list, item)

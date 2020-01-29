@@ -103,6 +103,8 @@ func ToUnstructuredFromOwnership(resource corev1.Ownership) (*unstructured.Unstr
 		Version: resource.Version,
 		Kind:    resource.Kind,
 	})
+	u.SetName(resource.Name)
+	u.SetNamespace(resource.Namespace)
 
 	return u, nil
 }

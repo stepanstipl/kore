@@ -34,7 +34,7 @@ import (
 // GKE is the gke interface
 type GKE interface {
 	// Delete is responsible for deleting a gke environment
-	Delete(context.Context, *gke.GKE) error
+	Delete(context.Context, string) error
 	// Get return the definition from the api
 	Get(context.Context, string) (*gke.GKE, error)
 	// List returns all the gke cluster in the team
@@ -50,16 +50,27 @@ type gkeImpl struct {
 }
 
 // Delete is responsible for deleting a gke environment
-func (h *gkeImpl) Delete(ctx context.Context, cluster *gke.GKE) error {
+func (h *gkeImpl) Delete(ctx context.Context, name string) error {
 	logger := log.WithFields(log.Fields{
-		"name": cluster.Name,
+		"name": name,
 		"team": h.team,
 	})
 	user := authentication.MustGetIdentity(ctx)
 
+	// @step: retrieve the cluster
+	cluster := &gke.GKE{}
+	err := h.Store().Client().Get(ctx,
+		store.GetOptions.InNamespace(h.team),
+		store.GetOptions.InTo(cluster),
+	)
+	if err != nil {
+		logger.WithError(err).Error("trying to retrieve the cluster from api")
+
+		return err
+	}
+
 	if cluster.Namespace != h.team {
 		h.Audit().Record(ctx,
-			audit.ResourceUID(string(cluster.UID)),
 			audit.Resource("GKE"),
 			audit.Team(h.team),
 			audit.User(user.Username()),
@@ -75,6 +86,11 @@ func (h *gkeImpl) Delete(ctx context.Context, cluster *gke.GKE) error {
 	// @step: check if we have any namespaces allocated to teams
 
 	// @TODO add an audit entry indicating the request to remove the option
+	_ = h.Audit().Record(ctx,
+		audit.Resource("GKE"),
+		audit.Team(h.team),
+		audit.User(user.Username()),
+	).Event("user has deleted the cluster from hub")
 
 	// @step: issue the request to remove the cluster
 	return h.Store().Client().Delete(ctx, store.DeleteOptions.From(cluster))
