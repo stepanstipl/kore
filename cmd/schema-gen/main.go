@@ -196,7 +196,7 @@ func main() {
 			return err
 		}
 
-		packageTemplate.Execute(file, struct {
+		err = packageTemplate.Execute(file, struct {
 			Definitions string
 			Package     string
 			Schema      string
@@ -205,6 +205,9 @@ func main() {
 			Package:     packageName,
 			Schema:      string(encoded),
 		})
+		if err != nil {
+			return err
+		}
 
 		return nil
 	}()

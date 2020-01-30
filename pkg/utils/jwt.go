@@ -18,8 +18,8 @@
 package utils
 
 import (
-	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/coreos/go-oidc"
+	jwt "github.com/dgrijalva/jwt-go"
 )
 
 // Claims is used as a helper to JWT claims

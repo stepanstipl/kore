@@ -402,7 +402,7 @@ func (g *gkeClient) GetClusters() ([]*container.Cluster, error) {
 
 	path := fmt.Sprintf("projects/%s/locations/%s", g.credentials.Spec.Project, g.credentials.Spec.Region)
 
-	wait.ExponentialBackoff(retry.DefaultRetry, func() (done bool, err error) {
+	_ = wait.ExponentialBackoff(retry.DefaultRetry, func() (done bool, err error) {
 		resp, err := g.ce.Projects.Locations.Clusters.List(path).Do()
 		if err != nil {
 			log.Error(err, "failed to retrieve clusters")
@@ -425,10 +425,9 @@ func (g *gkeClient) CreateCluster(ctx context.Context, request *container.Create
 	if err := wait.ExponentialBackoff(retry.DefaultRetry, func() (done bool, err error) {
 		resp, err := g.ce.Projects.Locations.Clusters.Create(path, request).Do()
 		if err != nil {
-			switch err.(type) {
+			switch err := err.(type) {
 			case *googleapi.Error:
-				aerr := err.(*googleapi.Error)
-				if aerr.Code == http.StatusBadRequest {
+				if err.Code == http.StatusBadRequest {
 					return false, err
 				}
 			default:
@@ -569,7 +568,7 @@ func (g *gkeClient) GetOperation(id string) (*container.Operation, error) {
 	var o *container.Operation
 
 	// @step: retrieve the operation
-	wait.ExponentialBackoff(retry.DefaultRetry, func() (done bool, err error) {
+	_ = wait.ExponentialBackoff(retry.DefaultRetry, func() (done bool, err error) {
 
 		resp, err := g.ce.Projects.Locations.Operations.Get(path).Do()
 		if err != nil {

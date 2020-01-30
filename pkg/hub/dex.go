@@ -25,7 +25,7 @@ import (
 	"strings"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-	
+
 	"github.com/dexidp/dex/api"
 	"github.com/dexidp/dex/connector/github"
 	"github.com/dexidp/dex/connector/oidc"

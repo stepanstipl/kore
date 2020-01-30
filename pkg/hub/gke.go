@@ -70,7 +70,7 @@ func (h *gkeImpl) Delete(ctx context.Context, name string) error {
 	}
 
 	if cluster.Namespace != h.team {
-		h.Audit().Record(ctx,
+		_ = h.Audit().Record(ctx,
 			audit.Resource("GKE"),
 			audit.Team(h.team),
 			audit.User(user.Username()),

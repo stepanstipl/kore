@@ -87,11 +87,6 @@ func TestGetGroupKindVersionOK(t *testing.T) {
 			Kind:    "Team",
 		},
 		{
-			Object:  &orgv1.TeamMemberList{},
-			Version: orgv1.GroupVersion.String(),
-			Kind:    "TeamMembershipList",
-		},
-		{
 			Object:  &configv1.Allocation{},
 			Version: configv1.GroupVersion.String(),
 			Kind:    "Allocation",

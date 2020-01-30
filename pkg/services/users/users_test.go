@@ -35,7 +35,7 @@ func TestGetUsersSize(t *testing.T) {
 
 	size, err := store.Users().Size(context.Background())
 	require.NoError(t, err)
-	assert.Equal(t, int64(4), size)
+	assert.Equal(t, int64(5), size)
 }
 
 func TestGetUserBad(t *testing.T) {
