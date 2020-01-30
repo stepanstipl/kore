@@ -169,6 +169,7 @@ func (h *gkeImpl) Update(ctx context.Context, cluster *gke.GKE) (*gke.GKE, error
 	if err := h.Store().Client().Update(ctx,
 		store.UpdateOptions.To(cluster),
 		store.UpdateOptions.WithCreate(true),
+		store.UpdateOptions.WithForce(true),
 	); err != nil {
 		logger.WithError(err).Error("trying to update the gke cluster")
 

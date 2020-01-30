@@ -127,7 +127,7 @@ func (a crCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 				// @step: update or create the role
 				if _, err := kubernetes.CreateOrUpdateManagedClusterRole(ctx, client, &rbacv1.ClusterRole{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: "hub:managed:" + role.Name,
+						Name: role.Name,
 						Labels: map[string]string{
 							hub.Label("owned"): "true",
 						},

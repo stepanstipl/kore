@@ -149,7 +149,7 @@ func Options() []cli.Flag {
 			Name:   "audit-db-url",
 			Usage:  "the database dsn used to connect to the audit db `DSN`",
 			EnvVar: "AUDIT_DB_URL",
-			Value:  "root:pass@tcp(127.0.0.1:3306)/audit?parseTime=true",
+			Value:  "",
 		},
 
 		//
