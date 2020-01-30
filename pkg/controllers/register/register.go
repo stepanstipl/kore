@@ -27,9 +27,9 @@ import (
 
 	// importing the management controller
 	_ "github.com/appvia/kore/pkg/controllers/management/bootstrap"
+	_ "github.com/appvia/kore/pkg/controllers/management/clusterbindings"
 	_ "github.com/appvia/kore/pkg/controllers/management/clusterconfig"
 	_ "github.com/appvia/kore/pkg/controllers/management/clusterroles"
-	_ "github.com/appvia/kore/pkg/controllers/management/clusterbindings"
 	_ "github.com/appvia/kore/pkg/controllers/management/kubernetes"
 	_ "github.com/appvia/kore/pkg/controllers/management/podpolicy"
 

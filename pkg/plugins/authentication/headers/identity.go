@@ -20,9 +20,9 @@ package headers
 import (
 	"context"
 
+	plugin "github.com/appvia/kore/pkg/apiserver/plugins/identity"
 	"github.com/appvia/kore/pkg/hub"
 	"github.com/appvia/kore/pkg/hub/authentication"
-	plugin "github.com/appvia/kore/pkg/apiserver/plugins/identity"
 )
 
 type hdrImpl struct {

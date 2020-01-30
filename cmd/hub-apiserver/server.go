@@ -26,8 +26,8 @@ import (
 	"github.com/appvia/kore/pkg/apiserver"
 	"github.com/appvia/kore/pkg/hub"
 	"github.com/appvia/kore/pkg/server"
-	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/services/audit"
+	"github.com/appvia/kore/pkg/services/users"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"

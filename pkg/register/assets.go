@@ -32,6 +32,7 @@ import (
 	"strings"
 	"time"
 )
+
 type asset struct {
 	bytes []byte
 	info  os.FileInfo
@@ -1854,10 +1855,10 @@ spec:
                     properties:
                       pathPrefix:
                         description: "pathPrefix is the path prefix that the host
-                          volume must match. It does not support `+"`"+`*`+"`"+`. Trailing slashes
+                          volume must match. It does not support ` + "`" + `*` + "`" + `. Trailing slashes
                           are trimmed when validating the path prefix with a host
-                          path. \n Examples: `+"`"+`/foo`+"`"+` would allow `+"`"+`/foo`+"`"+`, `+"`"+`/foo/`+"`"+` and
-                          `+"`"+`/foo/bar`+"`"+` `+"`"+`/foo`+"`"+` would not allow `+"`"+`/food`+"`"+` or `+"`"+`/etc/foo`+"`"+`"
+                          path. \n Examples: ` + "`" + `/foo` + "`" + ` would allow ` + "`" + `/foo` + "`" + `, ` + "`" + `/foo/` + "`" + ` and
+                          ` + "`" + `/foo/bar` + "`" + ` ` + "`" + `/foo` + "`" + ` would not allow ` + "`" + `/food` + "`" + ` or ` + "`" + `/etc/foo` + "`" + `"
                         type: string
                       readOnly:
                         description: when set to true, will allow host volumes matching
@@ -4336,29 +4337,29 @@ type bintree struct {
 }
 
 var _bintree = &bintree{nil, map[string]*bintree{
-	"crds": &bintree{nil, map[string]*bintree{
-		"apps.hub.appvia.io_appdeployments.yaml":                        &bintree{crdsAppsHubAppviaIo_appdeploymentsYaml, map[string]*bintree{}},
-		"apps.hub.appvia.io_installplans.yaml":                          &bintree{crdsAppsHubAppviaIo_installplansYaml, map[string]*bintree{}},
-		"aws.compute.hub.appvia.io_awscredentials.yaml":                 &bintree{crdsAwsComputeHubAppviaIo_awscredentialsYaml, map[string]*bintree{}},
-		"aws.compute.hub.appvia.io_eksclusters.yaml":                    &bintree{crdsAwsComputeHubAppviaIo_eksclustersYaml, map[string]*bintree{}},
-		"clusters.compute.hub.appvia.io_kubernetes.yaml":                &bintree{crdsClustersComputeHubAppviaIo_kubernetesYaml, map[string]*bintree{}},
-		"clusters.compute.hub.appvia.io_managedclusterrole.yaml":        &bintree{crdsClustersComputeHubAppviaIo_managedclusterroleYaml, map[string]*bintree{}},
-		"clusters.compute.hub.appvia.io_managedclusterrolebinding.yaml": &bintree{crdsClustersComputeHubAppviaIo_managedclusterrolebindingYaml, map[string]*bintree{}},
-		"clusters.compute.hub.appvia.io_managedconfig.yaml":             &bintree{crdsClustersComputeHubAppviaIo_managedconfigYaml, map[string]*bintree{}},
-		"clusters.compute.hub.appvia.io_managedpodsecuritypoliies.yaml": &bintree{crdsClustersComputeHubAppviaIo_managedpodsecuritypoliiesYaml, map[string]*bintree{}},
-		"clusters.compute.hub.appvia.io_managedrole.yaml":               &bintree{crdsClustersComputeHubAppviaIo_managedroleYaml, map[string]*bintree{}},
-		"clusters.compute.hub.appvia.io_namespaceclaims.yaml":           &bintree{crdsClustersComputeHubAppviaIo_namespaceclaimsYaml, map[string]*bintree{}},
-		"clusters.compute.hub.appvia.io_namespacepolicy.yaml":           &bintree{crdsClustersComputeHubAppviaIo_namespacepolicyYaml, map[string]*bintree{}},
-		"config.hub.appvia.io_allocations.yaml":                         &bintree{crdsConfigHubAppviaIo_allocationsYaml, map[string]*bintree{}},
-		"config.hub.appvia.io_plans.yaml":                               &bintree{crdsConfigHubAppviaIo_plansYaml, map[string]*bintree{}},
-		"core.hub.appvia.io_idp.yaml":                                   &bintree{crdsCoreHubAppviaIo_idpYaml, map[string]*bintree{}},
-		"core.hub.appvia.io_oidclient.yaml":                             &bintree{crdsCoreHubAppviaIo_oidclientYaml, map[string]*bintree{}},
-		"gke.compute.hub.appvia.io_gkecredentials.yaml":                 &bintree{crdsGkeComputeHubAppviaIo_gkecredentialsYaml, map[string]*bintree{}},
-		"gke.compute.hub.appvia.io_gkes.yaml":                           &bintree{crdsGkeComputeHubAppviaIo_gkesYaml, map[string]*bintree{}},
-		"org.hub.appvia.io_members.yaml":                                &bintree{crdsOrgHubAppviaIo_membersYaml, map[string]*bintree{}},
-		"org.hub.appvia.io_teaminvitations.yaml":                        &bintree{crdsOrgHubAppviaIo_teaminvitationsYaml, map[string]*bintree{}},
-		"org.hub.appvia.io_teams.yaml":                                  &bintree{crdsOrgHubAppviaIo_teamsYaml, map[string]*bintree{}},
-		"org.hub.appvia.io_users.yaml":                                  &bintree{crdsOrgHubAppviaIo_usersYaml, map[string]*bintree{}},
+	"crds": {nil, map[string]*bintree{
+		"apps.hub.appvia.io_appdeployments.yaml":                        {crdsAppsHubAppviaIo_appdeploymentsYaml, map[string]*bintree{}},
+		"apps.hub.appvia.io_installplans.yaml":                          {crdsAppsHubAppviaIo_installplansYaml, map[string]*bintree{}},
+		"aws.compute.hub.appvia.io_awscredentials.yaml":                 {crdsAwsComputeHubAppviaIo_awscredentialsYaml, map[string]*bintree{}},
+		"aws.compute.hub.appvia.io_eksclusters.yaml":                    {crdsAwsComputeHubAppviaIo_eksclustersYaml, map[string]*bintree{}},
+		"clusters.compute.hub.appvia.io_kubernetes.yaml":                {crdsClustersComputeHubAppviaIo_kubernetesYaml, map[string]*bintree{}},
+		"clusters.compute.hub.appvia.io_managedclusterrole.yaml":        {crdsClustersComputeHubAppviaIo_managedclusterroleYaml, map[string]*bintree{}},
+		"clusters.compute.hub.appvia.io_managedclusterrolebinding.yaml": {crdsClustersComputeHubAppviaIo_managedclusterrolebindingYaml, map[string]*bintree{}},
+		"clusters.compute.hub.appvia.io_managedconfig.yaml":             {crdsClustersComputeHubAppviaIo_managedconfigYaml, map[string]*bintree{}},
+		"clusters.compute.hub.appvia.io_managedpodsecuritypoliies.yaml": {crdsClustersComputeHubAppviaIo_managedpodsecuritypoliiesYaml, map[string]*bintree{}},
+		"clusters.compute.hub.appvia.io_managedrole.yaml":               {crdsClustersComputeHubAppviaIo_managedroleYaml, map[string]*bintree{}},
+		"clusters.compute.hub.appvia.io_namespaceclaims.yaml":           {crdsClustersComputeHubAppviaIo_namespaceclaimsYaml, map[string]*bintree{}},
+		"clusters.compute.hub.appvia.io_namespacepolicy.yaml":           {crdsClustersComputeHubAppviaIo_namespacepolicyYaml, map[string]*bintree{}},
+		"config.hub.appvia.io_allocations.yaml":                         {crdsConfigHubAppviaIo_allocationsYaml, map[string]*bintree{}},
+		"config.hub.appvia.io_plans.yaml":                               {crdsConfigHubAppviaIo_plansYaml, map[string]*bintree{}},
+		"core.hub.appvia.io_idp.yaml":                                   {crdsCoreHubAppviaIo_idpYaml, map[string]*bintree{}},
+		"core.hub.appvia.io_oidclient.yaml":                             {crdsCoreHubAppviaIo_oidclientYaml, map[string]*bintree{}},
+		"gke.compute.hub.appvia.io_gkecredentials.yaml":                 {crdsGkeComputeHubAppviaIo_gkecredentialsYaml, map[string]*bintree{}},
+		"gke.compute.hub.appvia.io_gkes.yaml":                           {crdsGkeComputeHubAppviaIo_gkesYaml, map[string]*bintree{}},
+		"org.hub.appvia.io_members.yaml":                                {crdsOrgHubAppviaIo_membersYaml, map[string]*bintree{}},
+		"org.hub.appvia.io_teaminvitations.yaml":                        {crdsOrgHubAppviaIo_teaminvitationsYaml, map[string]*bintree{}},
+		"org.hub.appvia.io_teams.yaml":                                  {crdsOrgHubAppviaIo_teamsYaml, map[string]*bintree{}},
+		"org.hub.appvia.io_users.yaml":                                  {crdsOrgHubAppviaIo_usersYaml, map[string]*bintree{}},
 	}},
 }}
 
