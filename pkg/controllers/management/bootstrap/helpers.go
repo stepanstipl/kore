@@ -21,71 +21,27 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"text/template"
 	"time"
 
+	"github.com/appvia/kore/pkg/clusterman"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	"github.com/Masterminds/sprig"
 	yaml "github.com/ghodss/yaml"
-	batchv1 "k8s.io/api/batch/v1"
+	apps "k8s.io/api/apps/v1"
+	core "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// JobConfigExists checks if the configuration exists already
-func JobConfigExists(ctx context.Context, cc client.Client) (bool, error) {
-	return HasConfigMap(ctx, cc, jobName)
-}
-
-// JobOLMConfigExists check if the olm configuration exists
-func JobOLMConfigExists(ctx context.Context, cc client.Client) (bool, error) {
-	return HasConfigMap(ctx, cc, jobOLMConfig)
-}
-
-// HasConfigMap checks if a configmap exists
-func HasConfigMap(ctx context.Context, cc client.Client, name string) (bool, error) {
-	return kubernetes.CheckIfExists(ctx, cc, &v1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: jobNamespace,
-		},
-	})
-}
-
-// JobExists checks if the bootstrap job there
-func JobExists(ctx context.Context, cc client.Client) (bool, error) {
-	return kubernetes.CheckIfExists(ctx, cc, &batchv1.Job{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      jobName,
-			Namespace: jobNamespace,
-		},
-	})
-}
-
-// GetBatchJob returns a job from the api
-func GetBatchJob(ctx context.Context, cc client.Client, name string) (*batchv1.Job, error) {
-	job := &batchv1.Job{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: jobNamespace,
-		},
-	}
-
-	found, err := kubernetes.GetIfExists(ctx, cc, job)
-	if err != nil {
-		return nil, err
-	}
-	if !found {
-		return nil, errors.New("resource not found")
-	}
-
-	return job, nil
-}
-
-// WaitOnJob checks the status of the job and if not successful returns the error
-func WaitOnJob(ctx context.Context, cc client.Client) error {
+// WaitOnStatus will wait until the status object exists
+// TODO: define a status object suitabvle for overall cluster status
+func WaitOnStatus(ctx context.Context, cc client.Client) error {
+	// WaitOnStatus checks the status of the job and if not successful returns the error
 	for {
 		select {
 		case <-ctx.Done():
@@ -94,21 +50,171 @@ func WaitOnJob(ctx context.Context, cc client.Client) error {
 		}
 
 		err := func() error {
-			job, err := GetBatchJob(ctx, cc, jobName)
+			exists, err := StatusExists(ctx, cc)
 			if err != nil {
 				return err
 			}
-			if job.Status.Succeeded > 0 {
+			if exists {
 				return nil
 			}
 
-			return errors.New("job no completed yet")
+			return errors.New("Kore cluster manager has not reported status yet")
 		}()
 		if err == nil {
 			return nil
 		}
 		time.Sleep(10 * time.Second)
 	}
+}
+
+// StatusExists checks if the status exists already
+func StatusExists(ctx context.Context, cc client.Client) (bool, error) {
+	return HasConfigMap(ctx, cc, clusterman.StatusCongigMap)
+}
+
+// CreateConfig creates a configmap for configuring the kore cluster manager
+func CreateConfig(ctx context.Context, cc client.Client, params Parameters) error {
+	b, err := yaml.Marshal(params)
+	if err != nil {
+		return errors.New("can not marshall params into yaml")
+	}
+	// Specify the parameters in the config map
+	cm := &core.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      clustermanConfig,
+			Namespace: clustermanNamespace,
+		},
+		Data: (map[string]string{"clusterconfig": string(b)}),
+	}
+	if _, err := kubernetes.CreateOrUpdate(ctx, cc, cm); err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetConfig will retrieve the cluster configuration values
+func GetConfig(ctx context.Context, cc client.Client) (params *Parameters, err error) {
+	p := &Parameters{}
+	cm := &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      clustermanConfig,
+			Namespace: clustermanNamespace,
+		},
+	}
+	exists, err := kubernetes.GetIfExists(ctx, cc, cm)
+	if err != nil {
+		return p, fmt.Errorf(
+			"error obtaining config for %s/%s - %s",
+			clustermanNamespace,
+			clustermanConfig,
+			err,
+		)
+	}
+	if exists {
+		// get the data from the configmap data key
+		b := []byte(cm.Data[clustermanConfigKey])
+		if err := yaml.Unmarshal(b, p); err != nil {
+			return p, fmt.Errorf(
+				"unable to deserialize yaml data from config map: %s/%s, key: %s",
+				clustermanNamespace,
+				clustermanConfig,
+				clustermanConfigKey,
+			)
+		}
+		return p, nil
+	}
+	return p, fmt.Errorf(
+		"missing configmap %s in namespace %s",
+		clustermanConfig,
+		clustermanNamespace,
+	)
+}
+
+// ConfigExists check if the cluster configuration exists
+func ConfigExists(ctx context.Context, cc client.Client) (bool, error) {
+	return HasConfigMap(ctx, cc, clustermanConfig)
+}
+
+// HasConfigMap checks if a configmap exists
+func HasConfigMap(ctx context.Context, cc client.Client, name string) (bool, error) {
+	return kubernetes.CheckIfExists(ctx, cc, &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: clustermanNamespace,
+		},
+	})
+}
+
+// NamespaceExists checks if the bootstrap job there
+func NamespaceExists(ctx context.Context, cc client.Client) (bool, error) {
+	return kubernetes.CheckIfExists(ctx, cc, &core.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: clustermanNamespace,
+		},
+	})
+}
+
+// DeploymentExists checks if the bootstrap job there
+func DeploymentExists(ctx context.Context, cc client.Client) (bool, error) {
+	return kubernetes.CheckIfExists(ctx, cc, &apps.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      clustermanDeployment,
+			Namespace: clustermanNamespace,
+		},
+	})
+}
+
+// EnsureNamespace creates a namespace for the clustermanager if required
+func EnsureNamespace(ctx context.Context, cc client.Client) error {
+	return kubernetes.EnsureNamespace(ctx, cc, &core.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: clustermanNamespace,
+		},
+	})
+}
+
+// GetDeployment returns a deployment from the api
+func GetDeployment(ctx context.Context, cc client.Client, name string) (*apps.Deployment, error) {
+	deployment := &apps.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: clustermanNamespace,
+		},
+	}
+
+	found, err := kubernetes.GetIfExists(ctx, cc, deployment)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, errors.New("resource not found")
+	}
+
+	return deployment, nil
+}
+
+// CreateClusterRoleBinding creates (or updates) the cluster role binding required for the clustermanager
+func CreateClusterRoleBinding(ctx context.Context, cc client.Client) error {
+	if _, err := kubernetes.CreateOrUpdateManagedClusterRoleBinding(ctx, cc, &rbacv1.ClusterRoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "kore-clusterman",
+		},
+		Subjects: []rbacv1.Subject{
+			{
+				Kind:      "ServiceAccount",
+				Name:      "default",
+				Namespace: clustermanNamespace,
+			},
+		},
+		RoleRef: rbacv1.RoleRef{
+			APIGroup: "rbac.authorization.k8s.io",
+			Kind:     "ClusterRole",
+			Name:     "cluster-admin",
+		},
+	}); err != nil {
+		return fmt.Errorf("error tying to apply kore clusterman clusterrole %q", err)
+	}
+	return nil
 }
 
 // DecodeInTo decodes the template into the thing

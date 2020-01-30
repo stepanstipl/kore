@@ -12,6 +12,9 @@ dev.env
 # Git meld
 *.orig
 
+# Mac finder rubbish
+*.DS_Store
+
 # Temporary Build Files
 *.orig
 build/_output

@@ -13,6 +13,7 @@ RUN curl -sL -o /tmp/swagger-ui.zip https://github.com/swagger-api/swagger-ui/ar
     tar -zxf /tmp/swagger-ui.zip -C /opt
 
 COPY bin/kore-apiserver /kore-apiserver
+COPY bin/kore-clusterman /kore-clusterman
 
 USER 65534
 
