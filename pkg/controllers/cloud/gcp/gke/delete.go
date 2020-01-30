@@ -70,7 +70,7 @@ func (t *gkeCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 			return false, fmt.Errorf("checking if cluster exists: %s", err)
 		}
 		if found {
-			//return false, client.Delete(ctx)
+			return false, client.Delete(ctx)
 		}
 
 		return false, nil

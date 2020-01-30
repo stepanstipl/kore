@@ -70,8 +70,63 @@ func NewClient(credentials *gke.GKECredentials, cluster *gke.GKE) (*gkeClient, e
 	}, nil
 }
 
-// Delete deletes the cluster
+// Delete attempts to delete the cluster from gke
 func (g *gkeClient) Delete(ctx context.Context) error {
+	logger := log.WithFields(log.Fields{
+		"cluster":   g.cluster.Name,
+		"namespace": g.cluster.Namespace,
+		"project":   g.credentials.Spec.Project,
+		"region":    g.credentials.Spec.Region,
+	})
+	logger.Info("attempting to delete the cluster fomr gcp")
+
+	found, err := g.Exists()
+	if err != nil {
+		logger.WithError(err).Error("trying to check for the cluster")
+
+		return err
+	}
+	if !found {
+		return nil
+	}
+
+	cluster, _, err := g.GetCluster()
+	if err != nil {
+		logger.WithError(err).Error("trying to retrieve the cluster")
+
+		return err
+	}
+	path := fmt.Sprintf("projects/%s/locations/%s/clusters/%s",
+		g.credentials.Spec.Project,
+		g.credentials.Spec.Region,
+		cluster.Name)
+
+	// @step: check for any ongoing operation
+	id, found, err := g.FindOperation(ctx, "DELETE_CLUSTER", "clusters", cluster.Name)
+	if err != nil {
+		logger.WithError(err).Error("trying to check for current operations")
+
+		return err
+	}
+	if !found {
+		operation, err := g.ce.Projects.Locations.Clusters.Delete(path).Do()
+		if err != nil {
+			logger.WithError(err).Error("trying to delete the cluster")
+
+			return err
+		}
+		id = operation.Name
+	}
+
+	logger.Info("waiting for the operation to complete or fail")
+
+	if err := g.WaitOnOperation(ctx, id, 30*time.Second, 10*time.Minute); err != nil {
+		logger.WithError(err).Error("trying to wait for operaion to complete")
+
+		return err
+	}
+	logger.Info("gke cluster has been deleted")
+
 	return nil
 }
 
@@ -93,12 +148,20 @@ func (g *gkeClient) Create(ctx context.Context) (*container.Cluster, error) {
 		return nil, err
 	}
 
-	// @step: we request the cluster
-	ticket, err := g.CreateCluster(ctx, def)
+	// @step: looking for any ongoing operation
+	id, found, err := g.FindOperation(ctx, "CREATE_CLUSTER", "clusters", g.cluster.Name)
 	if err != nil {
-		logger.WithError(err).Error("attempting to request the cluster")
-
 		return nil, err
+	}
+	if !found {
+		// @step: we request the cluster
+		ticket, err := g.CreateCluster(ctx, def)
+		if err != nil {
+			logger.WithError(err).Error("attempting to request the cluster")
+
+			return nil, err
+		}
+		id = ticket.Name
 	}
 
 	// @step: wait for the google to finish
@@ -106,7 +169,7 @@ func (g *gkeClient) Create(ctx context.Context) (*container.Cluster, error) {
 	timeout := time.Duration(20) * time.Minute
 
 	// @step: we wait for it to finish
-	if err := g.WaitOnOperation(ctx, ticket.Name, interval, timeout); err != nil {
+	if err := g.WaitOnOperation(ctx, id, interval, timeout); err != nil {
 		logger.WithError(err).Error("attempting to wait for operation to complete")
 
 		return nil, err
@@ -524,6 +587,35 @@ func (g *gkeClient) GetOperation(id string) (*container.Operation, error) {
 	return o, nil
 }
 
+// FindOperation is responsible for checking for a running operation
+func (g *gkeClient) FindOperation(ctx context.Context, operationType, resource, name string) (string, bool, error) {
+	logger := log.WithFields(log.Fields{
+		"resource": resource,
+		"type":     operationType,
+		"name":     name,
+	})
+	logger.Debug("searching for any running operations")
+
+	resp, err := g.ce.Projects.Locations.Operations.List(fmt.Sprintf("projects/%s/locations/%s",
+		g.credentials.Spec.Project, g.credentials.Spec.Region)).Do()
+	if err != nil {
+		logger.WithError(err).Error("trying to retrieve a list of operations")
+
+		return "", false, err
+	}
+	for _, x := range resp.Operations {
+		if x.OperationType == operationType {
+			if strings.HasSuffix(x.TargetLink, fmt.Sprintf("%s/%s", resource, name)) {
+				if x.Status == "RUNNING" {
+					return x.Name, true, nil
+				}
+			}
+		}
+	}
+
+	return "", false, nil
+}
+
 // WaitOnOperation is responsible for waiting on a operation to complete fail
 func (g *gkeClient) WaitOnOperation(ctx context.Context, id string, interval, timeout time.Duration) error {
 	logger := log.WithFields(log.Fields{
@@ -540,10 +632,10 @@ func (g *gkeClient) WaitOnOperation(ctx context.Context, id string, interval, ti
 			return false, nil
 		}
 
-		if status == nil || status.Progress == nil {
+		if status == nil {
 			return false, nil
 		}
-		if status.Progress != nil && status.Status == "DONE" {
+		if status.Status == "DONE" {
 			return true, nil
 		}
 
