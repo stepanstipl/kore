@@ -22,6 +22,7 @@ import (
 	"fmt"
 
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
+	"github.com/appvia/kore/pkg/services/audit"
 	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/services/users/model"
 
@@ -100,6 +101,11 @@ func (h *usersImpl) EnableUser(ctx context.Context, username, email string) erro
 		if isAdmin {
 			logger.Info("enabling the first user in the hub and providing admin access")
 
+			_ = h.Audit().Record(ctx,
+				audit.Type(audit.Update),
+				audit.User(username),
+			).Event("adding first user as administrator")
+
 			if err := h.usermgr.Members().AddUser(ctx, username, HubAdminTeam, roles); err != nil {
 				logger.WithError(err).Error("trying to add user to admin team")
 
@@ -107,6 +113,11 @@ func (h *usersImpl) EnableUser(ctx context.Context, username, email string) erro
 			}
 		} else {
 			logger.Info("adding the user into the hub")
+
+			_ = h.Audit().Record(ctx,
+				audit.Type(audit.Update),
+				audit.User(username),
+			).Event("adding a user to the hub")
 
 			if err := h.usermgr.Teams().AddUser(ctx, username, HubDefaultTeam, roles); err != nil {
 				logger.WithError(err).Error("trying to add user to default team")
