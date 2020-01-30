@@ -1,0 +1,119 @@
+---
+version: 2
+
+jobs:
+  build:
+    environment:
+      GOPATH: /go
+
+  docker:
+    - image: circleci/golang:1.13
+    - name: etcd
+      image: bitnami/etcd:latest
+      environment:
+        ALLOW_NONE_AUTHENTICATION: "yes"
+
+    - name: database
+      image: mariadb:bionic
+      environment:
+        MYSQL_ROOT_PASSWORD: pass
+        MYSQL_DATABASE: hub
+      ports:
+        - 3306:3306
+
+    - name: kube-controller-manager
+      image: mirrorgooglecontainers/kube-controller-manager-amd64:v1.14.8
+      command:
+        - /usr/local/bin/kube-controller-manager
+        - --master=http://kube-apiserver:8080
+
+    - name: kube-apiserver
+      image: mirrorgooglecontainers/kube-apiserver-amd64:v1.14.8
+      command:
+        - /usr/local/bin/kube-apiserver
+        - --address=0.0.0.0
+        - --alsologtostderr
+        - --authorization-mode=RBAC
+        - --bind-address=0.0.0.0
+        - --default-watch-cache-size=200
+        - --delete-collection-workers=10
+        - --etcd-servers=http://etcd:2379
+        - --log-flush-frequency=10s
+        - --runtime-config=autoscaling/v1=false
+        - --runtime-config=autoscaling/v2beta1=false
+        - --runtime-config=autoscaling/v2beta2=false
+        - --runtime-config=batch/v1=false
+        - --runtime-config=batch/v1beta1=false
+        - --runtime-config=networking.k8s.io/v1=false
+        - --runtime-config=networking.k8s.io/v1beta1=false
+        - --runtime-config=node.k8s.io/v1beta1=false
+
+    working_directory: /go/src/github.com/appvia/kore
+
+    steps:
+      - checkout
+      - run:
+          name: Test & Build
+          command: |
+            make test
+            make static
+      - run:
+          command: |
+            bin/hub-apiserver --verbose
+          background: true
+          environment:
+            HUB_ADMIN_TOKEN: "password"
+            HUB_AUTHENTICATION_PLUGINS: "admintoken"
+            HUB_CERTIFICATE_AUTHORITY: "hack/ca/ca.pem"
+            HUB_CERTIFICATE_AUTHORITY_KEY: "hack/ca/ca-key.pem"
+            HUB_HMAC: "bdT2Qg6DybsLIwc0TbYWrkGC4auovscg"
+            KUBE_API_SERVER: "http://kube-apiserver:8080"
+            USERS_DB_URL: "root:pass@tcp(localhost:3306)/hub?parseTime=true"
+      - run:
+          name: Checking swagger
+          command: |
+            make swagger-json
+            make swagger-validate
+            hack/bin/swagger-check.sh
+      - persist_to_workspace:
+          root: bin
+          paths:
+            - hub-apiserver
+
+  release:
+    environment:
+      DOCKER_IMAGE: quay.io/appvia/hub-apiserver
+      GOPATH: /go
+
+    docker:
+      - image: circleci/golang:1.13
+
+    working_directory: /go/src/github.com/appvia/kore
+
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - attach_workspace:
+          at: bin
+      - deploy:
+          command: |
+            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
+            docker build -t ${DOCKER_IMAGE}:${CIRCLE_TAG:-latest} .
+
+workflows:
+  version: 2
+  workflow:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /^v.*$/
+#      - release:
+#          requires:
+#            - build
+#          filters:
+#            branches:
+#              only: master
+#            tags:
+#              only: /^v.*$/
