@@ -37,12 +37,6 @@ import (
 
 func init() {
 	log.SetOutput(ioutil.Discard)
-	if os.Getenv("DATABASE_URL") != "" {
-		dbURL = os.Getenv("DATABASE_URL")
-	}
-	if os.Getenv("DATABASE_DRIVER") != "" {
-		dbDriver = os.Getenv("DATABASE_DRIVER")
-	}
 }
 
 var (
@@ -52,17 +46,27 @@ var (
 	db      *sql.DB
 )
 
-var (
-	mysqlURL = "root:pass@tcp(127.0.0.1:3306)/audit?parseTime=true"
-	dbURL    = mysqlURL
-	dbDriver = "mysql"
-)
+func getTestDBURL() string {
+	if os.Getenv("TEST_AUDIT_DATABASE_URL") != "" {
+		return os.Getenv("TEST_AUDIT_DATABASE_URL")
+	}
+
+	return "root:pass@tcp(127.0.0.1:3306)/audit?parseTime=true"
+}
+
+func getTestDBDriver() string {
+	if os.Getenv("TEST_AUDIT_DATABASE_DRIVER") != "" {
+		return os.Getenv("TEST_AUDIT_DATABASE_DRIVER")
+	}
+
+	return "mysql"
+}
 
 func makeTestConfig() Config {
 	return Config{
-		Driver:        dbDriver,
+		Driver:        getTestDBDriver(),
 		EnableLogging: false,
-		StoreURL:      dbURL,
+		StoreURL:      getTestDBURL(),
 	}
 }
 
@@ -71,14 +75,17 @@ type testframework interface {
 }
 
 func makeTestStore(t testframework) Interface {
+	driver := getTestDBDriver()
+	url := getTestDBURL()
+
 	dbClean.Do(func() {
-		d, err := sql.Open(dbDriver, dbURL)
+		d, err := sql.Open(driver, url)
 		if err != nil {
 			t.Fatalf("failed to open the database connection: %s", err)
 		}
 		db = d
 
-		switch dbDriver {
+		switch driver {
 		case "mysql":
 			if _, err := db.Exec("drop database if exists audit"); err != nil {
 				t.Fatalf("failed to drop the database: %s", err)
@@ -106,7 +113,7 @@ func makeTestStore(t testframework) Interface {
 				t.Fatalf("failed to open database file: %s", err)
 			}
 			var p *polluter.Polluter
-			switch dbDriver {
+			switch driver {
 			case "mysql":
 				p = polluter.New(polluter.MySQLEngine(db))
 			case "postgres":
