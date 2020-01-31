@@ -153,7 +153,7 @@ spec:
                   type: string
               type: object
             apiEndpoint:
-              description: APIEndpoint is the endpoint of client proxy for this cluster
+              description: Endpoint is the kubernetes endpoint url
               type: string
             caCertificate:
               description: CaCertificate is the base64 encoded cluster certificate
@@ -179,7 +179,7 @@ spec:
                 type: object
               type: array
             endpoint:
-              description: Endpoint is the kubernetes endpoint url
+              description: APIEndpoint is the endpoint of client proxy for this cluster
               minLength: 1
               type: string
             status:

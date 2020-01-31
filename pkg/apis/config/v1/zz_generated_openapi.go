@@ -230,6 +230,28 @@ func schema_pkg_apis_config_v1_PlanSpec(ref common.ReferenceCallback) common.Ope
 				Description: "PlanSpec defines the desired state of Plan",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Resource refers to the resource type this is a plan for",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"labels": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Labels is a collection of labels for this plan",
+							Type:        []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
 					"description": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Description provides a summary of the configuration provided by this plan",
@@ -251,7 +273,7 @@ func schema_pkg_apis_config_v1_PlanSpec(ref common.ReferenceCallback) common.Ope
 						},
 					},
 				},
-				Required: []string{"values"},
+				Required: []string{"kind", "description", "summary", "values"},
 			},
 		},
 		Dependencies: []string{

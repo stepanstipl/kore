@@ -49,6 +49,8 @@ type plansImpl struct {
 
 // Update is responsible for update a plan in the hub
 func (p plansImpl) Update(ctx context.Context, plan *configv1.Plan) error {
+	plan.Namespace = HubNamespace
+
 	// @TODO: check the user is admin or has hub permissions
 	user := authentication.MustGetIdentity(ctx)
 	if !user.IsGlobalAdmin() {
@@ -60,6 +62,7 @@ func (p plansImpl) Update(ctx context.Context, plan *configv1.Plan) error {
 	err := p.Store().Client().Update(ctx,
 		store.UpdateOptions.To(plan),
 		store.UpdateOptions.WithCreate(true),
+		store.UpdateOptions.WithForce(true),
 	)
 	if err != nil {
 		log.WithError(err).Error("trying to update a plan in the hub")

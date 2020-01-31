@@ -25,6 +25,15 @@
         ],
         "summary": "Returns all the classes available to initialized in the hub",
         "operationId": "findPlans",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Returns all plans for a specific resource type",
+            "name": "kind",
+            "in": "path",
+            "required": true
+          }
+        ],
         "responses": {
           "200": {
             "description": "A list of all the classes in the hub",
@@ -2146,11 +2155,23 @@
     },
     "v1.PlanSpec": {
       "required": [
+        "kind",
+        "description",
+        "summary",
         "values"
       ],
       "properties": {
         "description": {
           "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "summary": {
           "type": "string"

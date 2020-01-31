@@ -30,7 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-const finalizerName = "allocations.hub.appvia.io"
+const finalizerName = "allocations"
 
 // Reconcile is the entrypoint for the reconcilation logic
 func (a acCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {

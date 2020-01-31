@@ -35,7 +35,7 @@ import (
 )
 
 const (
-	finalizerName = "teams-controller.hub.appvia.io"
+	finalizerName = "teams"
 )
 
 // Reconcile is the entrypoint for the reconcilation logic

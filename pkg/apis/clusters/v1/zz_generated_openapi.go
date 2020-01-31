@@ -212,14 +212,14 @@ func schema_pkg_apis_clusters_v1_KubernetesStatus(ref common.ReferenceCallback) 
 					},
 					"endpoint": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Endpoint is the kubernetes endpoint url",
+							Description: "APIEndpoint is the endpoint of client proxy for this cluster",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"apiEndpoint": {
 						SchemaProps: spec.SchemaProps{
-							Description: "APIEndpoint is the endpoint of client proxy for this cluster",
+							Description: "Endpoint is the kubernetes endpoint url",
 							Type:        []string{"string"},
 							Format:      "",
 						},

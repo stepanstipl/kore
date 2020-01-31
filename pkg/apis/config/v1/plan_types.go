@@ -27,12 +27,21 @@ import (
 // PlanSpec defines the desired state of Plan
 // +k8s:openapi-gen=true
 type PlanSpec struct {
+	// Resource refers to the resource type this is a plan for
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Required
+	Kind string `json:"kind"`
+	// Labels is a collection of labels for this plan
+	// +kubebuilder:validation:Optional
+	Labels map[string]string `json:"labels,omitempty"`
 	// Description provides a summary of the configuration provided by this plan
 	// +kubebuilder:validation:MinLength=1
-	Description string `json:"description,omitempty"`
+	// +kubebuilder:validation:Required
+	Description string `json:"description"`
 	// Summary provides a short title summary for the plan
 	// +kubebuilder:validation:MinLength=1
-	Summary string `json:"summary,omitempty"`
+	// +kubebuilder:validation:Required
+	Summary string `json:"summary"`
 	// Values are the key values to the plan
 	// +kubebuilder:validation:Type=object
 	Values apiextv1.JSON `json:"values"`
