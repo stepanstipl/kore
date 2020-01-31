@@ -82,7 +82,7 @@ func (l *loginHandler) Register(i hub.Interface, builder utils.PathBuilder) (*re
 			ClientID:     l.Config().ClientID,
 			ClientSecret: l.Config().ClientSecret,
 			Endpoint:     provider.Endpoint(),
-			Scopes:       []string{oidc.ScopeOpenID, "profile", "email", "offline"},
+			Scopes:       append([]string{oidc.ScopeOpenID}, l.Config().ClientScopes...),
 		}
 
 		l.verifier = provider.Verifier(&oidc.Config{ClientID: l.Config().ClientID})
@@ -140,6 +140,7 @@ func (l *loginHandler) authorizerHandler(req *restful.Request, resp *restful.Res
 	log.WithFields(log.Fields{
 		"client_ip":    req.Request.RemoteAddr,
 		"redirect_url": l.oidcConfig.RedirectURL,
+		"scopes":       l.Config().ClientScopes,
 	}).Info("providing authorization redirect to identity service")
 
 	http.Redirect(resp.ResponseWriter, req.Request, l.oidcConfig.AuthCodeURL(state), http.StatusTemporaryRedirect)

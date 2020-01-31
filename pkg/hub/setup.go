@@ -181,6 +181,9 @@ func (h hubImpl) ensureHubIDPClientExists(ctx context.Context) error {
 				DisplayName: "The API server OIDC client",
 				ID:          h.Config().ClientID,
 				Secret:      h.Config().ClientSecret,
+				RedirectURIs: []string{
+					h.Config().PublicAPIURL + "/oauth/callback",
+				},
 			},
 		})
 		if err != nil {
