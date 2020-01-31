@@ -117,6 +117,20 @@ func (h hubImpl) ensureHubAdminUser(ctx context.Context, name, email string) err
 		}
 	}
 
+	if h.Config().AdminPass != "" && !h.Config().DEX.EnabledDex {
+		user, err := h.usermgr.Users().Get(ctx, name)
+		if err != nil {
+			return err
+		}
+
+		return h.usermgr.Identities().Update(ctx, &model.Identity{
+			Provider:      "basicauth",
+			ProviderEmail: email,
+			ProviderToken: h.Config().AdminPass,
+			UserID:        user.ID,
+		})
+	}
+
 	return nil
 }
 
@@ -139,7 +153,10 @@ func (h hubImpl) ensureHubTeam(ctx context.Context, name, description string) er
 				Name:      name,
 				Namespace: HubNamespace,
 			},
-			Spec: orgv1.TeamSpec{Description: description},
+			Spec: orgv1.TeamSpec{
+				Description: description,
+				Summary:     description,
+			},
 		})
 
 		return err

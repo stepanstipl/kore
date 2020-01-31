@@ -36,3 +36,20 @@ func GetBearerToken(header string) (string, bool) {
 
 	return items[1], true
 }
+
+// GetBasicAuthToken is used to retrieve the basic authentication
+func GetBasicAuthToken(header string) (string, bool) {
+	if header == "" {
+		return "", false
+	}
+	items := strings.Split(header, " ")
+	if len(items) != 2 {
+		return "", false
+	}
+
+	if strings.ToLower(items[0]) != "basic" {
+		return "", false
+	}
+
+	return items[1], true
+}

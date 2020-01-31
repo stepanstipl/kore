@@ -90,6 +90,23 @@ func (h *hubImpl) GetUserIdentity(ctx context.Context, username string) (authent
 	}, true, nil
 }
 
+// GetUserIdentityByProvider returns the user model by proviser if any
+func (h *hubImpl) GetUserIdentityByProvider(ctx context.Context, username, provider string) (*model.Identity, bool, error) {
+	id, err := h.usermgr.Identities().Get(ctx,
+		users.Filter.WithUser(username),
+		users.Filter.WithProvider(provider),
+	)
+	if err != nil {
+		if !users.IsNotFound(err) {
+			return nil, false, err
+		}
+
+		return nil, false, nil
+	}
+
+	return id, true, nil
+}
+
 func getAdminContext(ctx context.Context) context.Context {
 	ident := &identImpl{
 		user: &model.User{
