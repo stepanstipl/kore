@@ -5,6 +5,8 @@ jobs:
   build:
     environment:
       GOPATH: /go
+    
+    working_directory: /go/src/github.com/appvia/kore
 
     docker:
       - image: circleci/golang:1.13
@@ -22,8 +24,6 @@ jobs:
             echo 'CREATE DATABASE IF NOT EXISTS hub;' > /docker-entrypoint-initdb.d/init.sql;
             echo 'CREATE DATABASE IF NOT EXISTS audit;' >> /docker-entrypoint-initdb.d/init.sql;
             /usr/local/bin/docker-entrypoint.sh --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
-        ports:
-          - 3306:3306
 
       - name: kube-controller-manager
         image: mirrorgooglecontainers/kube-controller-manager-amd64:v1.14.8
@@ -51,7 +51,6 @@ jobs:
           - --runtime-config=networking.k8s.io/v1=false
           - --runtime-config=networking.k8s.io/v1beta1=false
           - --runtime-config=node.k8s.io/v1beta1=false
-        working_directory: /go/src/github.com/appvia/kore
 
     steps:
       - checkout
