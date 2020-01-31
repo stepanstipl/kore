@@ -193,6 +193,7 @@ func (u *teamHandler) Register(i hub.Interface, builder utils.PathBuilder) (*res
 	ws.Route(
 		ws.GET("/{team}/allocations/{name}").To(u.findAllocation).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is the name of the allocation you wish to return")).
 			Doc("Used to return all team resources under the team").
 			Returns(http.StatusOK, "Contains the former team definition from the hub", configv1.Allocation{}).
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
@@ -200,6 +201,7 @@ func (u *teamHandler) Register(i hub.Interface, builder utils.PathBuilder) (*res
 	ws.Route(
 		ws.PUT("/{team}/allocations/{name}").To(u.updateAllocation).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is the name of the allocation you wish to update")).
 			Doc("Used to return all team resources under the team").
 			Returns(http.StatusOK, "Contains the former team definition from the hub", configv1.Allocation{}).
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
@@ -207,6 +209,7 @@ func (u *teamHandler) Register(i hub.Interface, builder utils.PathBuilder) (*res
 	ws.Route(
 		ws.DELETE("/{team}/allocations/{name}").To(u.deleteAllocation).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is the name of the allocation you wish to delete")).
 			Doc("Used to return all team resources under the team").
 			Returns(http.StatusOK, "Contains the former team definition from the hub", configv1.Allocation{}).
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),

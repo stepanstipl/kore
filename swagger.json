@@ -331,7 +331,7 @@
         }
       }
     },
-    "/api/v1alpha1/teams/{team}/cloud/gke": {
+    "/api/v1alpha1/teams/{team}/allocations": {
       "get": {
         "consumes": [
           "application/json"
@@ -339,8 +339,8 @@
         "produces": [
           "application/json"
         ],
-        "summary": "Is the used tor return a list of Google Container Engine clusters which thhe team has access",
-        "operationId": "findClusters",
+        "summary": "Used to return a list of all the allocations in the team",
+        "operationId": "findAllocations",
         "parameters": [
           {
             "type": "string",
@@ -348,13 +348,19 @@
             "name": "team",
             "in": "path",
             "required": true
+          },
+          {
+            "type": "string",
+            "description": "Retrieves all allocations which have been assigned to you",
+            "name": "assigned",
+            "in": "query"
           }
         ],
         "responses": {
           "200": {
             "description": "Contains the former team definition from the hub",
             "schema": {
-              "$ref": "#/definitions/v1.Kubernetes"
+              "$ref": "#/definitions/v1.AllocationList"
             }
           },
           "default": {
@@ -366,7 +372,7 @@
         }
       }
     },
-    "/api/v1alpha1/teams/{team}/cloud/gke/{name}": {
+    "/api/v1alpha1/teams/{team}/allocations/{name}": {
       "get": {
         "consumes": [
           "application/json"
@@ -374,8 +380,8 @@
         "produces": [
           "application/json"
         ],
-        "summary": "Is the used tor return a list of Google Container Engine clusters which thhe team has access",
-        "operationId": "findCluster",
+        "summary": "Used to return all team resources under the team",
+        "operationId": "findAllocation",
         "parameters": [
           {
             "type": "string",
@@ -386,7 +392,7 @@
           },
           {
             "type": "string",
-            "description": "Is name the of the GKE cluster you are acting upon",
+            "description": "Is the name of the allocation you wish to return",
             "name": "name",
             "in": "path",
             "required": true
@@ -396,7 +402,7 @@
           "200": {
             "description": "Contains the former team definition from the hub",
             "schema": {
-              "$ref": "#/definitions/v1.Kubernetes"
+              "$ref": "#/definitions/v1.Allocation"
             }
           },
           "default": {
@@ -414,8 +420,8 @@
         "produces": [
           "application/json"
         ],
-        "summary": "Is used to provision or update a GKE cluster in the hub",
-        "operationId": "findCluster",
+        "summary": "Used to return all team resources under the team",
+        "operationId": "updateAllocation",
         "parameters": [
           {
             "type": "string",
@@ -426,7 +432,7 @@
           },
           {
             "type": "string",
-            "description": "Is name the of the GKE cluster you are acting upon",
+            "description": "Is the name of the allocation you wish to update",
             "name": "name",
             "in": "path",
             "required": true
@@ -436,7 +442,7 @@
           "200": {
             "description": "Contains the former team definition from the hub",
             "schema": {
-              "$ref": "#/definitions/v1.Kubernetes"
+              "$ref": "#/definitions/v1.Allocation"
             }
           },
           "default": {
@@ -454,8 +460,8 @@
         "produces": [
           "application/json"
         ],
-        "summary": "Is used to delete a managed GKE cluster from the hub",
-        "operationId": "findCluster",
+        "summary": "Used to return all team resources under the team",
+        "operationId": "deleteAllocation",
         "parameters": [
           {
             "type": "string",
@@ -466,7 +472,7 @@
           },
           {
             "type": "string",
-            "description": "Is name the of the GKE cluster you are acting upon",
+            "description": "Is the name of the allocation you wish to delete",
             "name": "name",
             "in": "path",
             "required": true
@@ -476,7 +482,7 @@
           "200": {
             "description": "Contains the former team definition from the hub",
             "schema": {
-              "$ref": "#/definitions/v1.Kubernetes"
+              "$ref": "#/definitions/v1.Allocation"
             }
           },
           "default": {
@@ -540,6 +546,13 @@
             "name": "team",
             "in": "path",
             "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name the of the kubernetes cluster you are acting upon",
+            "name": "name",
+            "in": "path",
+            "required": true
           }
         ],
         "responses": {
@@ -547,6 +560,411 @@
             "description": "Contains the former team definition from the hub",
             "schema": {
               "$ref": "#/definitions/v1.Kubernetes"
+            }
+          },
+          "default": {
+            "description": "An generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Used to return all team resources under the team",
+        "operationId": "updateCluster",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name the of the kubernetes cluster you are acting upon",
+            "name": "name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "The definition for kubernetes cluster",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.Kubernetes"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former team definition from the hub",
+            "schema": {
+              "$ref": "#/definitions/v1.Kubernetes"
+            }
+          },
+          "default": {
+            "description": "An generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Used to return the cluster definition from the hub",
+        "operationId": "deleteCluster",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is name the of the GKE cluster you are acting upon",
+            "name": "name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former team definition from the hub",
+            "schema": {
+              "$ref": "#/definitions/v1.Kubernetes"
+            }
+          },
+          "default": {
+            "description": "An generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/teams/{team}/gkecredentials": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Is the used tor return a list of Google Container Engine clusters which thhe team has access",
+        "operationId": "findGKECredientalss",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former team definition from the hub",
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.GKECredentialsList"
+            }
+          },
+          "default": {
+            "description": "An generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/teams/{team}/gkecredentials/{name}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Is the used tor return a list of Google Container Engine clusters which thhe team has access",
+        "operationId": "findGKECredientals",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name the of the GKE cluster you are acting upon",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former team definition from the hub",
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.GKECredentials"
+            }
+          },
+          "default": {
+            "description": "An generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Is used to provision or update a GKE cluster in the hub",
+        "operationId": "updateGKECredientals",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name the of the GKE cluster you are acting upon",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former team definition from the hub",
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.GKECredentials"
+            }
+          },
+          "default": {
+            "description": "An generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Is used to delete a managed GKE cluster from the hub",
+        "operationId": "deleteGKECredientals",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name the of the GKE cluster you are acting upon",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former team definition from the hub",
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.GKECredentials"
+            }
+          },
+          "default": {
+            "description": "An generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/teams/{team}/gkes": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Is the used tor return a list of Google Container Engine clusters which thhe team has access",
+        "operationId": "findGKEs",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former team definition from the hub",
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.GKEList"
+            }
+          },
+          "default": {
+            "description": "An generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/teams/{team}/gkes/{name}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Is the used tor return a list of Google Container Engine clusters which thhe team has access",
+        "operationId": "findGKE",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name the of the GKE cluster you are acting upon",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former team definition from the hub",
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.GKE"
+            }
+          },
+          "default": {
+            "description": "An generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Is used to provision or update a GKE cluster in the hub",
+        "operationId": "updateGKE",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name the of the GKE cluster you are acting upon",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former team definition from the hub",
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.GKE"
+            }
+          },
+          "default": {
+            "description": "An generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/teams/{team}/gkescredentials/{name}": {
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Is used to delete a managed GKE cluster from the hub",
+        "operationId": "deleteGKE",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name the of the GKE cluster you are acting upon",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former team definition from the hub",
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.GKE"
             }
           },
           "default": {
@@ -1215,6 +1633,88 @@
           }
         },
         "username": {
+          "type": "string"
+        }
+      }
+    },
+    "v1.Allocation": {
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1.AllocationSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/v1.AllocationStatus"
+        }
+      }
+    },
+    "v1.AllocationList": {
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.Allocation"
+          }
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ListMeta"
+        }
+      }
+    },
+    "v1.AllocationSpec": {
+      "required": [
+        "name",
+        "summary",
+        "resource"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "resource": {
+          "$ref": "#/definitions/v1.Ownership"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "teams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "v1.AllocationStatus": {
+      "properties": {
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.Condition"
+          }
+        },
+        "status": {
           "type": "string"
         }
       }
@@ -2107,6 +2607,281 @@
           "items": {
             "$ref": "#/definitions/v1.Condition"
           }
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "v1alpha1.AuthorizedNetwork": {
+      "required": [
+        "name",
+        "cidr"
+      ],
+      "properties": {
+        "cidr": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "v1alpha1.GKE": {
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1alpha1.GKESpec"
+        },
+        "status": {
+          "$ref": "#/definitions/v1alpha1.GKEStatus"
+        }
+      }
+    },
+    "v1alpha1.GKECredentials": {
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1alpha1.GKECredentialsSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/v1alpha1.GKECredentialsStatus"
+        }
+      }
+    },
+    "v1alpha1.GKECredentialsList": {
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1alpha1.GKECredentials"
+          }
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ListMeta"
+        }
+      }
+    },
+    "v1alpha1.GKECredentialsSpec": {
+      "required": [
+        "account",
+        "project",
+        "region"
+      ],
+      "properties": {
+        "account": {
+          "type": "string"
+        },
+        "project": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        }
+      }
+    },
+    "v1alpha1.GKECredentialsStatus": {
+      "required": [
+        "verified",
+        "status"
+      ],
+      "properties": {
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.Condition"
+          }
+        },
+        "status": {
+          "type": "string"
+        },
+        "verified": {
+          "type": "boolean"
+        }
+      }
+    },
+    "v1alpha1.GKEList": {
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1alpha1.GKE"
+          }
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ListMeta"
+        }
+      }
+    },
+    "v1alpha1.GKESpec": {
+      "required": [
+        "credentials",
+        "description",
+        "version",
+        "size",
+        "maxSize",
+        "diskSize",
+        "imageType",
+        "machineType",
+        "authorizedMasterNetworks",
+        "network",
+        "subnetwork",
+        "servicesIPV4Cidr",
+        "clusterIPV4Cidr",
+        "enableAutorepair",
+        "enableAutoscaler",
+        "enableAutoUpgrade",
+        "enableHorizontalPodAutoscaler",
+        "enableHTTPLoadBalancer",
+        "enableIstio",
+        "enableStackDriverLogging",
+        "enableStackDriverMetrics",
+        "enablePrivateNetwork",
+        "masterIPV4Cidr",
+        "maintenanceWindow"
+      ],
+      "properties": {
+        "authorizedMasterNetworks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1alpha1.AuthorizedNetwork"
+          }
+        },
+        "clusterIPV4Cidr": {
+          "type": "string"
+        },
+        "credentials": {
+          "$ref": "#/definitions/v1.Ownership"
+        },
+        "description": {
+          "type": "string"
+        },
+        "diskSize": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "enableAutoUpgrade": {
+          "type": "boolean"
+        },
+        "enableAutorepair": {
+          "type": "boolean"
+        },
+        "enableAutoscaler": {
+          "type": "boolean"
+        },
+        "enableHTTPLoadBalancer": {
+          "type": "boolean"
+        },
+        "enableHorizontalPodAutoscaler": {
+          "type": "boolean"
+        },
+        "enableIstio": {
+          "type": "boolean"
+        },
+        "enablePrivateNetwork": {
+          "type": "boolean"
+        },
+        "enableStackDriverLogging": {
+          "type": "boolean"
+        },
+        "enableStackDriverMetrics": {
+          "type": "boolean"
+        },
+        "imageType": {
+          "type": "string"
+        },
+        "machineType": {
+          "type": "string"
+        },
+        "maintenanceWindow": {
+          "type": "string"
+        },
+        "masterIPV4Cidr": {
+          "type": "string"
+        },
+        "maxSize": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "network": {
+          "type": "string"
+        },
+        "servicesIPV4Cidr": {
+          "type": "string"
+        },
+        "size": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "subnetwork": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
+    "v1alpha1.GKEStatus": {
+      "properties": {
+        "caCertificate": {
+          "type": "string"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.Component"
+          }
+        },
+        "endpoint": {
+          "type": "string"
         },
         "status": {
           "type": "string"
