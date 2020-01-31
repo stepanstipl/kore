@@ -29,6 +29,17 @@ import (
 func (u teamHandler) findAllocations(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		team := req.PathParameter("team")
+		assigned := req.QueryParameter("assigned")
+
+		// @NOTE: this will do for now
+		if assigned != "" {
+			list, err := u.Teams().Team(team).Allocations().ListAllocationsAssigned(req.Request.Context())
+			if err != nil {
+				return err
+			}
+
+			return resp.WriteHeaderAndEntity(http.StatusOK, list)
+		}
 
 		list, err := u.Teams().Team(team).Allocations().List(req.Request.Context())
 		if err != nil {
