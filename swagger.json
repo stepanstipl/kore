@@ -30,8 +30,7 @@
             "type": "string",
             "description": "Returns all plans for a specific resource type",
             "name": "kind",
-            "in": "path",
-            "required": true
+            "in": "query"
           }
         ],
         "responses": {
