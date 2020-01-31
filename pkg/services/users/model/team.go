@@ -33,4 +33,6 @@ type Team struct {
 	Name string `gorm:"primary_key"`
 	// Description is a description for the team
 	Description string `gorm:"not null"`
+	// Summary is a short liner for the team
+	Summary string
 }

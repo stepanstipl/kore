@@ -120,6 +120,7 @@ func (c Convertor) ToTeamModel(team *orgv1.Team) *model.Team {
 	return &model.Team{
 		Name:        team.Name,
 		Description: team.Spec.Description,
+		Summary:     team.Spec.Summary,
 	}
 }
 
@@ -137,6 +138,7 @@ func (c Convertor) FromTeamModel(team *model.Team) *orgv1.Team {
 		},
 		Spec: orgv1.TeamSpec{
 			Description: team.Description,
+			Summary:     team.Summary,
 		},
 		Status: orgv1.TeamStatus{
 			Status:     corev1.SuccessStatus,
