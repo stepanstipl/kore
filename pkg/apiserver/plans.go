@@ -58,7 +58,7 @@ func (p *plansHandler) Register(i hub.Interface, builder utils.PathBuilder) (*re
 	ws.Route(
 		ws.GET("").To(p.findPlans).
 			Doc("Returns all the classes available to initialized in the hub").
-			Param(ws.PathParameter("kind", "Returns all plans for a specific resource type")).
+			Param(ws.QueryParameter("kind", "Returns all plans for a specific resource type")).
 			Returns(http.StatusOK, "A list of all the classes in the hub", configv1.PlanList{}).
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
 	)
