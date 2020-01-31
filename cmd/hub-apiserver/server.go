@@ -70,6 +70,7 @@ func invoke(ctx *cli.Context) error {
 			AdminToken:              ctx.String("admin-token"),
 			ClientID:                ctx.String("client-id"),
 			ClientSecret:            ctx.String("client-secret"),
+			ClientScopes:            ctx.StringSlice("client-scopes"),
 			CertificateAuthority:    ctx.String("certificate-authority"),
 			CertificateAuthorityKey: ctx.String("certificate-authority-key"),
 			DiscoveryURL:            ctx.String("discovery-url"),

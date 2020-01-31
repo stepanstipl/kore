@@ -100,6 +100,8 @@ type Config struct {
 	ClientID string `json:"client-id,omitempty"`
 	// ClientSecret is the client secret to use
 	ClientSecret string `json:"client-secret,omitempty"`
+	// ClientScopes are additional scopes to add to the request
+	ClientScopes []string `json:"client-scopes,omitempty"`
 	// CertificateAuthority is the path to a CA
 	CertificateAuthority string `json:"certificate-authority,omitempty"`
 	// CertificateAuthorityKey is the path to the private key

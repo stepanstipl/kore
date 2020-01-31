@@ -66,6 +66,12 @@ func Options() []cli.Flag {
 			EnvVar: "HUB_CLIENT_SECRET",
 			Value:  "this-should-be-changed",
 		},
+		cli.StringSliceFlag{
+			Name:   "client-scopes",
+			Usage:  "additional scopes to add the login request `SCOPE`",
+			EnvVar: "HUB_CLIENT_SCOPES",
+			Value:  &cli.StringSlice{"profile", "email", "offline"},
+		},
 		cli.StringFlag{
 			Name:   "discovery-url",
 			Usage:  "the openid discovery url to use for the openid authenticator `URL`",
