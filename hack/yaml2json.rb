@@ -2,7 +2,7 @@
 #
 # frozen_string_literal: true
 
-# Copyright (C) 2019 Rohith Jayawardene <gambol99@gmail.com>
+# Copyright (C) 2019 Appvia Ltd <info@appvia.io>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License

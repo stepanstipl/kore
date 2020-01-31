@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2020 Rohith Jayawardene <gambol99@gmail.com>
+ * Copyright (C) 2020 Appvia Ltd <info@appvia.io>
  *
  * This file is part of hub-apiserver.
  *
