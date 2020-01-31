@@ -181,9 +181,11 @@ func (u *teamHandler) Register(i hub.Interface, builder utils.PathBuilder) (*res
 	)
 
 	// Team Allocations
+
 	ws.Route(
 		ws.GET("/{team}/allocations").To(u.findAllocations).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.QueryParameter("assigned", "Retrieves all allocations which have been assigned to you")).
 			Doc("Used to return a list of all the allocations in the team").
 			Returns(http.StatusOK, "Contains the former team definition from the hub", configv1.AllocationList{}).
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),

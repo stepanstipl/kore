@@ -41,6 +41,8 @@ type Allocations interface {
 	Get(context.Context, string) (*configv1.Allocation, error)
 	// List returns a list of all the allocations
 	List(context.Context) (*configv1.AllocationList, error)
+	// ListAllocationsAssigned returns a list of all allocations shared to me
+	ListAllocationsAssigned(context.Context) (*configv1.AllocationList, error)
 	// Update is responsible for updating / creating an allocation
 	Update(context.Context, *configv1.Allocation) error
 }
@@ -138,6 +140,36 @@ func (a acaImpl) Get(ctx context.Context, name string) (*configv1.Allocation, er
 	}
 
 	return object, nil
+}
+
+// ListAllocationsAssigned returns a list of all allocations which you have access to
+func (a acaImpl) ListAllocationsAssigned(ctx context.Context) (*configv1.AllocationList, error) {
+	// @step: find all in the hub
+	all := &configv1.AllocationList{}
+
+	if err := a.Store().Client().List(ctx,
+		store.ListOptions.InAllNamespaces(),
+		store.ListOptions.InTo(all),
+	); err != nil {
+		log.WithError(err).Error("trying to retrieve a list of all allocations")
+
+		return nil, err
+	}
+
+	list := &configv1.AllocationList{}
+
+	// @step: find anything for use or all teams
+	for _, x := range all.Items {
+		if utils.Contains("*", x.Spec.Teams) || utils.Contains(a.team, x.Spec.Teams) {
+			list.Items = append(list.Items, x)
+		}
+		// add anything owned by us
+		if x.Namespace == a.team {
+			list.Items = append(list.Items, x)
+		}
+	}
+
+	return list, nil
 }
 
 // List returns a list of all the allocations
