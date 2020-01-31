@@ -42,6 +42,15 @@ spec:
                 by this plan
               minLength: 1
               type: string
+            kind:
+              description: Resource refers to the resource type this is a plan for
+              minLength: 1
+              type: string
+            labels:
+              additionalProperties:
+                type: string
+              description: Labels is a collection of labels for this plan
+              type: object
             summary:
               description: Summary provides a short title summary for the plan
               minLength: 1
@@ -51,6 +60,9 @@ spec:
               type: object
               x-kubernetes-preserve-unknown-fields: true
           required:
+          - description
+          - kind
+          - summary
           - values
           type: object
         status:

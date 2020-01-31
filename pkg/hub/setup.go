@@ -24,6 +24,7 @@ import (
 
 	core "github.com/appvia/kore/pkg/apis/core/v1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
+	"github.com/appvia/kore/pkg/hub/assets"
 	"github.com/appvia/kore/pkg/services/users/model"
 	"github.com/appvia/kore/pkg/store"
 
@@ -67,6 +68,13 @@ func (h hubImpl) Setup(ctx context.Context) error {
 	// @step: ensure an OIDC client is created in IDP broker
 	if h.Config().DEX.EnabledDex {
 		if err := h.ensureHubIDPClientExists(ctx); err != nil {
+			return err
+		}
+	}
+
+	// @step: ensure some default plans
+	for _, x := range assets.GetDefaultPlans() {
+		if err := h.Plans().Update(getAdminContext(ctx), x); err != nil {
 			return err
 		}
 	}

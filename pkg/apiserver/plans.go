@@ -19,6 +19,7 @@ package apiserver
 
 import (
 	"net/http"
+	"strings"
 
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	"github.com/appvia/kore/pkg/hub"
@@ -26,6 +27,7 @@ import (
 
 	restful "github.com/emicklei/go-restful"
 	log "github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func init() {
@@ -56,6 +58,7 @@ func (p *plansHandler) Register(i hub.Interface, builder utils.PathBuilder) (*re
 	ws.Route(
 		ws.GET("").To(p.findPlans).
 			Doc("Returns all the classes available to initialized in the hub").
+			Param(ws.PathParameter("kind", "Returns all plans for a specific resource type")).
 			Returns(http.StatusOK, "A list of all the classes in the hub", configv1.PlanList{}).
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
 	)
@@ -108,7 +111,23 @@ func (p plansHandler) findPlans(req *restful.Request, resp *restful.Response) {
 			return err
 		}
 
-		return resp.WriteHeaderAndEntity(http.StatusOK, plans)
+		kind := strings.ToLower(req.QueryParameter("kind"))
+
+		filtered := &configv1.PlanList{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: "v1",
+				Kind:       "PlanList",
+			},
+			Items: []configv1.Plan{},
+		}
+		for _, x := range plans.Items {
+			if kind != "" && strings.ToLower(x.Spec.Kind) != kind {
+				continue
+			}
+			filtered.Items = append(filtered.Items, x)
+		}
+
+		return resp.WriteHeaderAndEntity(http.StatusOK, filtered)
 	})
 }
 
