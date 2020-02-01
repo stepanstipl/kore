@@ -23,6 +23,7 @@ import (
 
 	"github.com/appvia/kore/pkg/hub/authentication"
 	"github.com/appvia/kore/pkg/services/audit"
+	"github.com/appvia/kore/pkg/services/users/model"
 	"github.com/appvia/kore/pkg/store"
 )
 
@@ -54,6 +55,8 @@ type Interface interface {
 	Invitations() Invitations
 	// GetUserIdenity returns the idenity if any of the a user
 	GetUserIdentity(context.Context, string) (authentication.Identity, bool, error)
+	// GetUserIdenityByProvider returns the idenity if any of the a user
+	GetUserIdentityByProvider(context.Context, string, string) (*model.Identity, bool, error)
 	// Plans returns the plans interface
 	Plans() Plans
 	// IDP returns the IDP interface

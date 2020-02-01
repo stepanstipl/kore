@@ -24,6 +24,7 @@ import (
 	"github.com/appvia/kore/pkg/apiserver/plugins/identity"
 	"github.com/appvia/kore/pkg/hub"
 	"github.com/appvia/kore/pkg/plugins/authentication/admintoken"
+	"github.com/appvia/kore/pkg/plugins/authentication/basicauth"
 	"github.com/appvia/kore/pkg/plugins/authentication/headers"
 	"github.com/appvia/kore/pkg/plugins/authentication/openid"
 
@@ -52,6 +53,8 @@ func makeAuthenticators(hubcc hub.Interface, config Config) error {
 				return admintoken.New(hubcc, admintoken.Config{
 					Token: config.Hub.AdminToken,
 				})
+			case "basicauth":
+				return basicauth.New(hubcc)
 			case "identity":
 				return headers.New(hubcc)
 			case "openid":
