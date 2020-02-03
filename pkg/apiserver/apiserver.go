@@ -66,15 +66,15 @@ func New(kore kore.Interface, config Config) (Interface, error) {
 	}
 
 	// @step: register the resource handlers
+	dexHandler := (&idpHandler{}).Name()
+
 	for _, x := range GetRegisteredHandlers() {
 		ws, err := x.Register(kore, utils.NewPathBuilder(APIVersion))
 		if err != nil {
 			return nil, err
 		}
-		if !config.EnableDex && x.Name() == "idp" {
-			log.Info("skipping the registation of dex endpoint as feature has been disabled")
-
-			continue
+		if !config.EnableDex && x.Name() == dexHandler {
+			ws = ws.Filter(filters.DefaultNotImplementedHandler.Filter)
 		}
 		if x.EnableAuthentication() {
 			ws = ws.Filter(authFilter.Filter).Filter(filters.DefaultMembersHandler.Filter)
@@ -87,9 +87,9 @@ func New(kore kore.Interface, config Config) (Interface, error) {
 
 	// @step: register the openapi endpoint service
 	c.Add(restfulspec.NewOpenAPIService(restfulspec.Config{
-		WebServices:                   c.RegisteredWebServices(),
 		APIPath:                       "/swagger.json",
 		PostBuildSwaggerObjectHandler: EnrichSwagger,
+		WebServices:                   c.RegisteredWebServices(),
 	}).Filter(filters.SwaggerChecksum.Filter))
 
 	// @step: provide static server of the swagger-ui
