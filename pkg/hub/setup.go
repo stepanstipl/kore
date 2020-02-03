@@ -117,7 +117,7 @@ func (h hubImpl) ensureHubAdminUser(ctx context.Context, name, email string) err
 		}
 	}
 
-	if h.Config().AdminPass != "" && !h.Config().DEX.EnabledDex {
+	if h.Config().AdminPass != "" {
 		user, err := h.usermgr.Users().Get(ctx, name)
 		if err != nil {
 			return err
