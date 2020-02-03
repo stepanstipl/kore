@@ -35,6 +35,8 @@ import (
 type GKE interface {
 	// Delete is responsible for deleting a gke environment
 	Delete(context.Context, string) error
+	// Exists checks if the cluster exists already
+	Exists(context.Context, string) (bool, error)
 	// Get return the definition from the api
 	Get(context.Context, string) (*gke.GKE, error)
 	// List returns all the gke cluster in the team
@@ -128,9 +130,11 @@ func (h *gkeImpl) List(ctx context.Context) (*gke.GKEList, error) {
 
 // Update is called to update or create a gke instance
 func (h *gkeImpl) Update(ctx context.Context, cluster *gke.GKE) (*gke.GKE, error) {
+	user := authentication.MustGetIdentity(ctx)
 	logger := log.WithFields(log.Fields{
 		"name": cluster.Name,
 		"team": h.team,
+		"user": user.Username(),
 	})
 
 	// @TODO perform any checks on the cluster options before processing
@@ -152,20 +156,19 @@ func (h *gkeImpl) Update(ctx context.Context, cluster *gke.GKE) (*gke.GKE, error
 		return nil, NewErrNotAllowed("the requested credentials have not been allocated to you")
 	}
 
-	// @step: inform the audit service of the change
-
-	// @step: we need to check if the update is permitted by gke
-	_, err = h.Get(ctx, cluster.Name)
+	// @step: check if we are creating new cluster or upgrading an existing ing
+	found, err := h.Exists(ctx, cluster.Name)
 	if err != nil {
-		if !kerrors.IsNotFound(err) {
-			logger.WithError(err).Error("trying to retrieve from cluster")
+		logger.WithError(err).Error("trying to check for clusetr existence")
 
-			return nil, err
-		}
-
-		// @TODO: we need to check if what they are updating is permitted
+		return nil, err
+	}
+	if found {
+		logger.Debug("we are attempting to update an existing cluster")
 
 	}
+
+	// @TODO: inform the audit service of the change
 
 	// @step: update the resource in the api
 	if err := h.Store().Client().Update(ctx,
@@ -175,10 +178,23 @@ func (h *gkeImpl) Update(ctx context.Context, cluster *gke.GKE) (*gke.GKE, error
 	); err != nil {
 		logger.WithError(err).Error("trying to update the gke cluster")
 
-		// @TODO update the audit
+		h.Audit().Record(ctx,
+			audit.Resource("GKE"),
+			audit.Team(h.team),
+			audit.User(user.Username()),
+		).Event("user has deleted the cluster from hub")
 
 		return nil, err
 	}
 
 	return cluster, nil
+}
+
+// Exists checks if the cluster exists
+func (h *gkeImpl) Exists(ctx context.Context, name string) (bool, error) {
+	return h.Store().Client().Has(ctx,
+		store.HasOptions.From(&gke.GKE{}),
+		store.HasOptions.InNamespace(h.team),
+		store.HasOptions.WithName(name),
+	)
 }
