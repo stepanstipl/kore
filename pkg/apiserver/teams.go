@@ -284,7 +284,7 @@ func (u *teamHandler) Register(i hub.Interface, builder utils.PathBuilder) (*res
 	)
 
 	ws.Route(
-		ws.DELETE("/{team}/gkescredentials/{name}").To(u.deleteGKE).
+		ws.DELETE("/{team}/gkes/{name}").To(u.deleteGKE).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
 			Doc("Is used to delete a managed GKE cluster from the hub").

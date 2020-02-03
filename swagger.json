@@ -940,9 +940,7 @@
             }
           }
         }
-      }
-    },
-    "/api/v1alpha1/teams/{team}/gkescredentials/{name}": {
+      },
       "delete": {
         "consumes": [
           "application/json"
