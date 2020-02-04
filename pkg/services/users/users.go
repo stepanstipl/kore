@@ -140,7 +140,7 @@ func (u userImpl) Update(ctx context.Context, user *model.User) error {
 	defer timed.ObserveDuration()
 
 	return u.conn.Model(&model.Team{}).
-		Where("id = ?", user.ID).
+		Where("username = ?", user.Username).
 		Update(user).
 		FirstOrCreate(user).
 		Error
