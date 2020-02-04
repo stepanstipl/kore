@@ -17,7 +17,7 @@
  * along with kore.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package hubctl
+package korectl
 
 import "github.com/urfave/cli"
 
