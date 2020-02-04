@@ -6,7 +6,7 @@ DEX provides an identity brokering service by proving a generic OIDC client and 
 
 Internally DEX stores it's configuration either statically or using CRD's
 
-Dex should be configured through the hub IDP and IDPClient types not directly but the notes below descibe how to configure DEX using the DEX CRD's direct for troubleshooting only.
+Dex should be configured through the kore IDP and IDPClient types not directly but the notes below descibe how to configure DEX using the DEX CRD's direct for troubleshooting only.
 
 ### Github with DEX CRD
 GitHub Authentication can be configured with a CLI client for docker-compose by running the command below.

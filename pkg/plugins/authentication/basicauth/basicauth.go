@@ -25,17 +25,17 @@ import (
 	"strings"
 
 	"github.com/appvia/kore/pkg/apiserver/plugins/identity"
-	"github.com/appvia/kore/pkg/hub"
-	"github.com/appvia/kore/pkg/hub/authentication"
+	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/utils"
 )
 
 type authImpl struct {
-	hub.Interface
+	kore.Interface
 }
 
 // New returns a new header based identity provider
-func New(h hub.Interface) (identity.Plugin, error) {
+func New(h kore.Interface) (identity.Plugin, error) {
 	return &authImpl{Interface: h}, nil
 }
 

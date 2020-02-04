@@ -16,5 +16,5 @@
  */
 
 // Package server is responsible for tying the pieces together, i.e
-// creating the apiserver, the store and the hub bridge
+// creating the apiserver, the store and the kore bridge
 package server

@@ -1,4 +1,4 @@
-apiVersion: org.hub.appvia.io/v1
+apiVersion: org.kore.appvia.io/v1
 kind: Team
 metadata:
   name: devs

@@ -99,7 +99,7 @@ func TestGetGroupKindVersionOK(t *testing.T) {
 		{
 			Object: &unstructured.Unstructured{
 				Object: map[string]interface{}{
-					"apiVersion": "org.hub.appvia.io/v1",
+					"apiVersion": "org.kore.appvia.io/v1",
 					"kind":       "User",
 				},
 			},

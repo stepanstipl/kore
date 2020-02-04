@@ -16,5 +16,5 @@
  */
 
 // Package teams is the controller provide background tasks for managing
-// the teams in the hub
+// the teams in the kore
 package teams

@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/appvia/kore/pkg/controllers"
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
@@ -37,7 +37,7 @@ import (
 )
 
 type k8sCtrl struct {
-	hub.Interface
+	kore.Interface
 	// mgr is the manager
 	mgr manager.Manager
 	// stopCh is the stop channel
@@ -58,7 +58,7 @@ func (a k8sCtrl) Name() string {
 }
 
 // Run is called when the controller is started
-func (a *k8sCtrl) Run(ctx context.Context, cfg *rest.Config, hi hub.Interface) error {
+func (a *k8sCtrl) Run(ctx context.Context, cfg *rest.Config, hi kore.Interface) error {
 	a.Interface = hi
 
 	logger := log.WithFields(log.Fields{

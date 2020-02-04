@@ -18,5 +18,5 @@
 // Package v1 contains API Schema definitions for the config v1 API group
 // +k8s:deepcopy-gen=package,register
 // +kubebuilder:object:generate
-// +groupName=clusters.compute.hub.appvia.io
+// +groupName=clusters.compute.kore.appvia.io
 package v1

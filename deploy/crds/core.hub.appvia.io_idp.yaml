@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: idp.core.hub.appvia.io
+  name: idp.core.kore.appvia.io
 spec:
-  group: core.hub.appvia.io
+  group: core.kore.appvia.io
   names:
     kind: IDP
     listKind: IDPList

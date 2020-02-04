@@ -26,7 +26,7 @@ import (
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/controllers"
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -41,7 +41,7 @@ import (
 )
 
 type crCtrl struct {
-	hub.Interface
+	kore.Interface
 	// mgr is the manager
 	mgr manager.Manager
 	// stopCh is the stop channel
@@ -60,7 +60,7 @@ func (a crCtrl) Name() string {
 }
 
 // Run is called when the controller is started
-func (a *crCtrl) Run(ctx context.Context, cfg *rest.Config, hi hub.Interface) error {
+func (a *crCtrl) Run(ctx context.Context, cfg *rest.Config, hi kore.Interface) error {
 	a.Interface = hi
 
 	// @step: create the manager for the controller
@@ -125,7 +125,7 @@ func (a *crCtrl) Stop(context.Context) error {
 	return nil
 }
 
-// FilterClustersBySource returns a list of kubenetes cluster in the hub - if the
+// FilterClustersBySource returns a list of kubenetes cluster in the kore - if the
 // namespace is global we retrieve all clusters, else just the local teams
 func (a *crCtrl) FilterClustersBySource(ctx context.Context,
 	clusters []corev1.Ownership,
@@ -169,7 +169,7 @@ func (a *crCtrl) FilterClustersBySource(ctx context.Context,
 		return list, nil
 	}
 
-	if hub.IsGlobalTeam(namespace) {
+	if kore.IsGlobalTeam(namespace) {
 		return list, a.mgr.GetClient().List(ctx, list, client.InNamespace(""))
 	}
 

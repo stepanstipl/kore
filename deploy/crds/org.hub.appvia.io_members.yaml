@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: members.org.hub.appvia.io
+  name: members.org.kore.appvia.io
 spec:
-  group: org.hub.appvia.io
+  group: org.kore.appvia.io
   names:
     kind: TeamMember
     listKind: TeamMemberList

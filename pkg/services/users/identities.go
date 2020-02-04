@@ -1,20 +1,20 @@
 /**
  * Copyright (C) 2020 Appvia Ltd <info@appvia.io>
  *
- * This file is part of hub-apiserver.
+ * This file is part of kore-apiserver.
  *
- * hub-apiserver is free software: you can redistribute it and/or modify
+ * kore-apiserver is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
  *
- * hub-apiserver is distributed in the hope that it will be useful,
+ * kore-apiserver is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with hub-apiserver.  If not, see <http://www.gnu.org/licenses/>.
+ * along with kore-apiserver.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package users
@@ -31,7 +31,7 @@ import (
 
 // Identities provides access to the identities
 type Identities interface {
-	// Delete removes a user identity from the hub
+	// Delete removes a user identity from the kore
 	Delete(context.Context, *model.Identity) error
 	// Get returns a single identity if any
 	Get(context.Context, ...ListFunc) (*model.Identity, error)
@@ -51,7 +51,7 @@ type idImpl struct {
 	conn *gorm.DB
 }
 
-// Delete removes a user identity from the hub
+// Delete removes a user identity from the kore
 func (i *idImpl) Delete(ctx context.Context, id *model.Identity) error {
 	timed := prometheus.NewTimer(deleteLatency)
 	defer timed.ObserveDuration()

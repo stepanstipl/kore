@@ -1,0 +1,158 @@
+#
+## Pod Security Roles
+#
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: kore:psp:default
+rules:
+- apiGroups:
+  - policy
+  resources:
+  - podsecuritypolicies
+  resourceNames:
+  - default
+  verbs: 
+  - use  
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: kore:psp:privileged
+rules:
+- apiGroups:
+  - policy
+  resources:
+  - podsecuritypolicies
+  resourceNames:
+  - privileged
+  verbs: 
+  - use  
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: kore:psp:runasroot
+rules:
+- apiGroups:
+  - policy
+  resources:
+  - podsecuritypolicies
+  resourceNames:
+  - runasroot
+  verbs: 
+  - use  
+#
+## Generic Roles
+#
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: kore:readonly
+rules:   
+- nonResourceURLs:
+  - "*"  
+  verbs: 
+  - get  
+  - list 
+  - watch
+- apiGroups:
+  - "*"  
+  resources:
+  - "*"  
+  verbs: 
+  - get  
+  - list 
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: kore:robot:default
+rules:   
+- nonResourceURLs:
+  - /swagger*
+  - /swaggerapi
+  - /swaggerapi/*
+  - /version
+  verbs: 
+  - get  
+- apiGroups:
+  - apps 
+  - batch
+  - extensions
+  - networking.k8s.io
+  resources:
+  - cronjobs
+  - deployments
+  - deployments/rollback
+  - deployments/scale
+  - ingresses
+  - jobs 
+  - networkpolicies
+  - replicasets
+  - replicasets/scale
+  - replicationcontrollers/scale
+  - statefulsets
+  - statefulsets/scale
+  verbs: 
+  - '*'  
+- apiGroups:
+  - policy 
+  resources:
+  - poddisruptionbudgets
+  verbs: 
+  - '*'  
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - endpoints
+  - persistentvolumeclaims
+  - persistentvolumes
+  - pods
+  - pods/attach
+  - pods/exec
+  - pods/log
+  - pods/portforward
+  - secrets
+  - serviceaccounts
+  - services
+  verbs:
+  - '*'
+- apiGroups:
+  - autoscaling
+  resources:
+  - "*"
+  verbs:
+  - "*"
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups:
+  - certmanager.k8s.io
+  resources:
+  - certificates
+  - challenges
+  - orders
+  verbs:
+  - "*"
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: kore:secret-management
+rules:   
+  - apiGroups:
+      - "" 
+    resources:
+      - "secrets"
+    verbs: 
+      - "*"

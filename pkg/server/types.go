@@ -21,7 +21,7 @@ import (
 	"context"
 
 	api "github.com/appvia/kore/pkg/apiserver"
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/services/audit"
 	"github.com/appvia/kore/pkg/services/users"
 )
@@ -56,8 +56,8 @@ type Config struct {
 	Audit audit.Config `json:"audit,omitempty"`
 	// Kubernetes is configuration for the api
 	Kubernetes KubernetesAPI `json:"kubernetes"`
-	// Hub is the configuration for the hub bridge
-	Hub hub.Config `json:"hub"`
+	// Kore is the configuration for the kore bridge
+	Kore kore.Config `json:"kore"`
 	// UsersMgr are the user management service options
 	UsersMgr users.Config `json:"usersMgr"`
 }

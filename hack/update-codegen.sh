@@ -6,7 +6,7 @@ set -o pipefail
 
 HUB_APIS=$(find pkg/apis -name "v*" -type d | sed -e 's/pkg\/apis\///' -e 's/\//:/' | sort | tr '\n' ' ')
 if [[ -z "${HUB_APIS}" ]]; then 
-  echo "[error] unable to find hub apis"
+  echo "[error] unable to find kore apis"
   exit 1
 fi
 

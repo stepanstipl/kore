@@ -24,7 +24,7 @@ import (
 	"crypto/x509"
 	"net/http"
 
-	"github.com/appvia/kore/pkg/hub/authentication"
+	"github.com/appvia/kore/pkg/kore/authentication"
 )
 
 // Requestor is the interface for a request
@@ -36,7 +36,7 @@ type Requestor interface {
 }
 
 // Plugin provides the interface for a authentication plugin, the purpose
-// of which is to take an incoming bearer token and expand into a hub
+// of which is to take an incoming bearer token and expand into a kore
 // user identity
 type Plugin interface {
 	// Admit is a handler which passed

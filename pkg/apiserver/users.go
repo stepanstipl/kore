@@ -23,7 +23,7 @@ import (
 	"net/http"
 
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 
 	restful "github.com/emicklei/go-restful"
@@ -35,7 +35,7 @@ func init() {
 }
 
 type usersHandler struct {
-	hub.Interface
+	kore.Interface
 	// DefaultHandlder implements default features
 	DefaultHandler
 }
@@ -46,7 +46,7 @@ func (u usersHandler) Name() string {
 }
 
 // Register is responsible for registering the webserver
-func (u *usersHandler) Register(i hub.Interface, builder utils.PathBuilder) (*restful.WebService, error) {
+func (u *usersHandler) Register(i kore.Interface, builder utils.PathBuilder) (*restful.WebService, error) {
 	log.WithFields(log.Fields{
 		"path": builder.Path("users"),
 	}).Info("registering the user webservice with container")
@@ -60,33 +60,33 @@ func (u *usersHandler) Register(i hub.Interface, builder utils.PathBuilder) (*re
 
 	ws.Route(
 		ws.GET("").To(u.findUsers).
-			Doc("Returns all the users in the hub").
-			Returns(http.StatusOK, "A list of all the users in the hub", orgv1.UserList{}).
+			Doc("Returns all the users in the kore").
+			Returns(http.StatusOK, "A list of all the users in the kore", orgv1.UserList{}).
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
 		ws.GET("/{user}").To(u.findUser).
-			Doc("Return information related to the specific user in the hub").
+			Doc("Return information related to the specific user in the kore").
 			Param(ws.PathParameter("user", "The name of the user you wish to retrieve")).
-			Returns(http.StatusOK, "Contains the user definintion from the hub", orgv1.User{}).
+			Returns(http.StatusOK, "Contains the user definintion from the kore", orgv1.User{}).
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
 		ws.PUT("/{user}").To(u.updateUser).
-			Doc("Used to create or update a user in the hub").
-			Param(ws.PathParameter("user", "The name of the user are updating or creating in the hub")).
-			Reads(orgv1.User{}, "The specification for a user in the hub").
-			Returns(http.StatusOK, "Contains the user definintion from the hub", orgv1.User{}).
+			Doc("Used to create or update a user in the kore").
+			Param(ws.PathParameter("user", "The name of the user are updating or creating in the kore")).
+			Reads(orgv1.User{}, "The specification for a user in the kore").
+			Returns(http.StatusOK, "Contains the user definintion from the kore", orgv1.User{}).
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
 		ws.DELETE("/{user}").To(u.deleteUser).
-			Doc("Used to delete a user from the hub").
-			Param(ws.PathParameter("user", "The name of the user are deleting from the hub")).
-			Returns(http.StatusOK, "Contains the former user definition from the hub", orgv1.User{}).
+			Doc("Used to delete a user from the kore").
+			Param(ws.PathParameter("user", "The name of the user are deleting from the kore")).
+			Returns(http.StatusOK, "Contains the former user definition from the kore", orgv1.User{}).
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
 	)
 
@@ -115,7 +115,7 @@ func (u usersHandler) findUserTeams(req *restful.Request, resp *restful.Response
 	})
 }
 
-// findUsers returns all the users in the hub
+// findUsers returns all the users in the kore
 func (u usersHandler) findUsers(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		users, err := u.Users().List(req.Request.Context())
@@ -139,7 +139,7 @@ func (u usersHandler) findUser(req *restful.Request, resp *restful.Response) {
 	})
 }
 
-// updateUser is responsible for updating for creating a user in the hub
+// updateUser is responsible for updating for creating a user in the kore
 func (u usersHandler) updateUser(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		user := &orgv1.User{}
@@ -156,7 +156,7 @@ func (u usersHandler) updateUser(req *restful.Request, resp *restful.Response) {
 	})
 }
 
-// deleteUser is responsible for deleting a user from the hub
+// deleteUser is responsible for deleting a user from the kore
 func (u usersHandler) deleteUser(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		username := req.PathParameter("user")

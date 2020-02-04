@@ -122,7 +122,7 @@ func TestClientListUnstructuredOK(t *testing.T) {
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      username,
-					Namespace: "hub",
+					Namespace: "kore",
 				},
 			}),
 		)
@@ -138,7 +138,7 @@ func TestClientListUnstructuredOK(t *testing.T) {
 	})
 
 	require.NoError(t, s.Client().List(context.TODO(),
-		ListOptions.InNamespace("hub"),
+		ListOptions.InNamespace("kore"),
 		ListOptions.InTo(list),
 		ListOptions.WithCache(true),
 	))
@@ -153,7 +153,7 @@ func TestClientListUnstructuredOK(t *testing.T) {
 
 	/*
 		require.NoError(t, s.Client().List(context.TODO(),
-			ListOptions.InNamespace("hub"),
+			ListOptions.InNamespace("kore"),
 			ListOptions.InTo(nocache),
 			ListOptions.WithCache(false),
 		))
@@ -174,7 +174,7 @@ func TestClientListTypedOK(t *testing.T) {
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      username,
-					Namespace: "hub",
+					Namespace: "kore",
 				},
 			}),
 		)
@@ -191,7 +191,7 @@ func TestClientListTypedOK(t *testing.T) {
 				},
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      name,
-					Namespace: "hub",
+					Namespace: "kore",
 				},
 			}),
 		)
@@ -200,7 +200,7 @@ func TestClientListTypedOK(t *testing.T) {
 
 	list := &orgv1.UserList{}
 	require.NoError(t, s.Client().List(context.TODO(),
-		ListOptions.InNamespace("hub"),
+		ListOptions.InNamespace("kore"),
 		ListOptions.WithCache(true),
 		ListOptions.InTo(list),
 	))

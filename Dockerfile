@@ -1,5 +1,5 @@
 FROM alpine:3.10
-LABEL Name=hub-apiserver \
+LABEL Name=kore-apiserver \
       Release=https://github.com/appvia/kore \
       Maintainer=gambol99@gmail.com \
       Url=https://github.com/appvia/kore \
@@ -12,8 +12,8 @@ RUN apk add curl --no-cache
 RUN curl -sL -o /tmp/swagger-ui.zip https://github.com/swagger-api/swagger-ui/archive/${SWAGGER_UI_VERSION}.tar.gz && \
     tar -zxf /tmp/swagger-ui.zip -C /opt
 
-COPY bin/hub-apiserver /hub-apiserver
+COPY bin/kore-apiserver /kore-apiserver
 
 USER 65534
 
-ENTRYPOINT [ "/hub-apiserver" ]
+ENTRYPOINT [ "/kore-apiserver" ]

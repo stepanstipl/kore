@@ -21,7 +21,7 @@ import (
 	"context"
 
 	clusterv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
-	"github.com/gambol99/hub-utils/pkg/finalizers"
+	"github.com/appvia/kore/pkg/utils/finalizers"
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"

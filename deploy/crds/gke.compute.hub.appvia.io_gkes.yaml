@@ -6,7 +6,7 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: gkes.gke.compute.hub.appvia.io
+  name: gkes.gke.compute.kore.appvia.io
 spec:
   additionalPrinterColumns:
   - JSONPath: .spec.description
@@ -21,7 +21,7 @@ spec:
     description: The overall status of the cluster
     name: Status
     type: string
-  group: gke.compute.hub.appvia.io
+  group: gke.compute.kore.appvia.io
   names:
     kind: GKE
     listKind: GKEList

@@ -1,8 +1,8 @@
 # Example file
-apiVersion: core.hub.appvia.io/v1
+apiVersion: core.kore.appvia.io/v1
 kind: IDP
 metadata:
-  namespace: hub
+  namespace: kore
   name: default
 spec:
   displayName: Github IDP

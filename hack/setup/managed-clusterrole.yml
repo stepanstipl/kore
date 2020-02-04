@@ -1,7 +1,7 @@
-apiVersion: clusters.compute.hub.appvia.io/v1
+apiVersion: clusters.compute.kore.appvia.io/v1
 kind: ManagedClusterRole
 metadata:
-  name: hub:ingress:sa
+  name: kore:ingress:sa
 spec: 
   description: Provides permissions for ingress controller service account
   enabled: true 

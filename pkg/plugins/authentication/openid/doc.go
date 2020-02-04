@@ -15,5 +15,5 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// Package openid provides an openid authentication plugin for the hub
+// Package openid provides an openid authentication plugin for the kore
 package openid

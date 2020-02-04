@@ -17,5 +17,5 @@
 
 // Package v1 contains API Schema definitions for the org v1 API group
 // +k8s:deepcopy-gen=package,register
-// +groupName=org.hub.appvia.io
+// +groupName=org.kore.appvia.io
 package v1

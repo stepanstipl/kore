@@ -24,7 +24,7 @@ import (
 	"net/http"
 
 	"github.com/appvia/kore/pkg/apiserver/plugins/identity"
-	"github.com/appvia/kore/pkg/hub/authentication"
+	"github.com/appvia/kore/pkg/kore/authentication"
 
 	restful "github.com/emicklei/go-restful"
 )

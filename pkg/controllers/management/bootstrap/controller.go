@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/appvia/kore/pkg/controllers"
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 
 	clusterv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 
@@ -36,7 +36,7 @@ import (
 )
 
 type bsCtrl struct {
-	hub.Interface
+	kore.Interface
 	// mgr is the controller manager
 	mgr manager.Manager
 	// stopCh is the stop channel
@@ -55,7 +55,7 @@ func (t *bsCtrl) Name() string {
 }
 
 // Run starts the controller
-func (t *bsCtrl) Run(ctx context.Context, cfg *rest.Config, i hub.Interface) error {
+func (t *bsCtrl) Run(ctx context.Context, cfg *rest.Config, i kore.Interface) error {
 	t.Interface = i
 
 	logger := log.WithFields(log.Fields{"controller": t.Name()})
