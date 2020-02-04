@@ -110,7 +110,7 @@ func (a crCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 			logger.Debug("creatin the managed cluster role in cluster")
 
 			// @step: update or create the role
-			name := fmt.Sprintf("hub:managed:%s", role.Name)
+			name := fmt.Sprintf("kore:managed:%s", role.Name)
 			if err := kubernetes.DeleteClusterRoleIfExists(context.Background(), client, name); err != nil {
 				logger.WithError(err).Error("trying to remove the managed role")
 

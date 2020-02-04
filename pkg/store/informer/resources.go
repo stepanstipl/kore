@@ -66,7 +66,7 @@ func ResourceNames() []string {
 // ResourceVersions returns a map of supported resources versions
 func ResourceVersions() map[string]schema.GroupVersionResource {
 	return map[string]schema.GroupVersionResource{
-		// Appvia Hub APIs
+		// Appvia Kore APIs
 		NiceVersion(orgv1.SchemeGroupVersion.WithResource("users")):           orgv1.SchemeGroupVersion.WithResource("users"),
 		NiceVersion(orgv1.SchemeGroupVersion.WithResource("teams")):           orgv1.SchemeGroupVersion.WithResource("teams"),
 		NiceVersion(orgv1.SchemeGroupVersion.WithResource("teammemberships")): orgv1.SchemeGroupVersion.WithResource("teammemberships"),

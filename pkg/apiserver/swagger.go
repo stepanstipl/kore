@@ -25,8 +25,8 @@ import "github.com/go-openapi/spec"
 func EnrichSwagger(swo *spec.Swagger) {
 	swo.Info = &spec.Info{
 		InfoProps: spec.InfoProps{
-			Title:       "Appvia Hub API",
-			Description: "Hub API provides the frontend API for the Appvia Hub (hub.appvia.io)",
+			Title:       "Appvia Kore API",
+			Description: "Kore API provides the frontend API for the Appvia Kore (kore.appvia.io)",
 			Contact: &spec.ContactInfo{
 				Name:  "Rohith Jayawardene",
 				Email: "info@appvia.io",

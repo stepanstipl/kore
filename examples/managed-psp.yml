@@ -1,5 +1,5 @@
 ---
-apiVersion: clusters.compute.hub.appvia.io/v1
+apiVersion: clusters.compute.kore.appvia.io/v1
 kind: ManagedPodSecurityPolicy
 metadata:
   name: default

@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: namespacepolicy.clusters.compute.hub.appvia.io
+  name: namespacepolicy.clusters.compute.kore.appvia.io
 spec:
-  group: clusters.compute.hub.appvia.io
+  group: clusters.compute.kore.appvia.io
   names:
     kind: NamepacePolicy
     listKind: NamepacePolicyList

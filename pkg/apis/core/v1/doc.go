@@ -18,5 +18,5 @@
 // Package v1 contains the core api resources
 // +k8s:deepcopy-gen=package,register
 // +kubebuilder:object:generate
-// +groupName=core.hub.appvia.io
+// +groupName=core.kore.appvia.io
 package v1

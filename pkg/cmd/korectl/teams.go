@@ -1,20 +1,20 @@
 /**
  * Copyright (C) 2020 Appvia Ltd <info@appvia.io>
  *
- * This file is part of hub-apiserver.
+ * This file is part of kore-apiserver.
  *
- * hub-apiserver is free software: you can redistribute it and/or modify
+ * kore-apiserver is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
  *
- * hub-apiserver is distributed in the hope that it will be useful,
+ * kore-apiserver is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with hub-apiserver.  If not, see <http://www.gnu.org/licenses/>.
+ * along with kore-apiserver.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package korectl
@@ -29,11 +29,11 @@ func GetTeamsCommands(config *Config) cli.Command {
 	return cli.Command{
 		Name:    "teams",
 		Aliases: []string{"tm"},
-		Usage:   "Used to interact, get, list and update teams in the hub",
+		Usage:   "Used to interact, get, list and update teams in the kore",
 		Subcommands: []cli.Command{
 			{
 				Name:  "get",
-				Usage: "Used to retrieve the details of a team in the hub",
+				Usage: "Used to retrieve the details of a team in the kore",
 				Flags: append([]cli.Flag{
 					cli.StringFlag{
 						Name:     "name,n",
@@ -57,7 +57,7 @@ func GetTeamsCommands(config *Config) cli.Command {
 			{
 				Name:    "delete",
 				Aliases: []string{"rm"},
-				Usage:   "Used to delete a team from the hub",
+				Usage:   "Used to delete a team from the kore",
 				Flags: []cli.Flag{
 					cli.StringFlag{
 						Name:  "name,n",
@@ -101,7 +101,7 @@ func GetTeamsCommands(config *Config) cli.Command {
 					},
 					{
 						Name:  "add",
-						Usage: "Used to add a hub member into the team",
+						Usage: "Used to add a kore member into the team",
 						Flags: []cli.Flag{
 							cli.StringFlag{
 								Name:     "team,t",
@@ -132,7 +132,7 @@ func GetTeamsCommands(config *Config) cli.Command {
 					},
 					{
 						Name:  "remove",
-						Usage: "Used to remove a member from a team in th hub",
+						Usage: "Used to remove a member from a team in th kore",
 						Flags: []cli.Flag{
 							cli.StringFlag{
 								Name:     "team,t",

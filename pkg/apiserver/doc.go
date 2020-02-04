@@ -17,5 +17,5 @@
  * along with kore.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// Package apiserver provides the frontend api for the hub
+// Package apiserver provides the frontend api for the kore
 package apiserver

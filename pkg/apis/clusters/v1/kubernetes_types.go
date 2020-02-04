@@ -69,7 +69,7 @@ type ClusterUser struct {
 // KubernetesStatus defines the observed state of Cluster
 // +k8s:openapi-gen=true
 type KubernetesStatus struct {
-	// AdminToken is the hub-admin service account token which is bound to cluster-admin
+	// AdminToken is the kore-admin service account token which is bound to cluster-admin
 	AdminToken core.Secret `json:"adminToken,omitempty"`
 	// CaCertificate is the base64 encoded cluster certificate
 	CaCertificate string `json:"caCertificate,omitempty"`

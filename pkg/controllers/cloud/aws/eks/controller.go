@@ -1,20 +1,20 @@
 /**
  * Copyright (C) 2020 Appvia Ltd <info@appvia.io>
  *
- * This file is part of hub-apiserver.
+ * This file is part of kore-apiserver.
  *
- * hub-apiserver is free software: you can redistribute it and/or modify
+ * kore-apiserver is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
  *
- * hub-apiserver is distributed in the hope that it will be useful,
+ * kore-apiserver is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with hub-apiserver.  If not, see <http://www.gnu.org/licenses/>.
+ * along with kore-apiserver.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package eks
@@ -25,7 +25,7 @@ import (
 
 	aws "github.com/appvia/kore/pkg/apis/aws/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/rest"
@@ -34,7 +34,7 @@ import (
 )
 
 type eksCtrl struct {
-	hub.Interface
+	kore.Interface
 	// mgr is the controller manager
 	mgr manager.Manager
 	// stopCh is the stop channel
@@ -49,11 +49,11 @@ func init() {
 
 // Name returns the name of the controller
 func (t *eksCtrl) Name() string {
-	return "gke.compute.hub.appvia.io"
+	return "gke.compute.kore.appvia.io"
 }
 
 // Run starts the controller
-func (t *eksCtrl) Run(ctx context.Context, cfg *rest.Config, hubi hub.Interface) error {
+func (t *eksCtrl) Run(ctx context.Context, cfg *rest.Config, hubi kore.Interface) error {
 	logger := log.WithFields(log.Fields{
 		"controller": t.Name(),
 	})
@@ -69,7 +69,7 @@ func (t *eksCtrl) Run(ctx context.Context, cfg *rest.Config, hubi hub.Interface)
 
 	// @step: create the controller
 	_, err = controllers.NewController(
-		"eks-credentials.hub.appvia.io", t.mgr,
+		"eks-credentials.kore.appvia.io", t.mgr,
 		&source.Kind{Type: &aws.AWSCredentials{}},
 		&controllers.ReconcileHandler{
 			HandlerFunc: t.ReconcileCredentials,

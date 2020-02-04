@@ -21,7 +21,7 @@ import (
 	"net/http"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 
 	restful "github.com/emicklei/go-restful"
@@ -33,7 +33,7 @@ func init() {
 }
 
 type idpHandler struct {
-	hub.Interface
+	kore.Interface
 	// DefaultHandlder implements default features
 	DefaultHandler
 }
@@ -44,7 +44,7 @@ func (id idpHandler) Name() string {
 }
 
 // Register is responsible for handling the registration
-func (id *idpHandler) Register(i hub.Interface, builder utils.PathBuilder) (*restful.WebService, error) {
+func (id *idpHandler) Register(i kore.Interface, builder utils.PathBuilder) (*restful.WebService, error) {
 	log.Info("registering the idp webservice")
 	id.Interface = i
 
@@ -56,24 +56,24 @@ func (id *idpHandler) Register(i hub.Interface, builder utils.PathBuilder) (*res
 	// Types of IDP providers that can be configured
 	ws.Route(
 		ws.GET("/types").To(id.getTypes).
-			Doc("Returns a list of all the possible identity providers supported in the hub").
+			Doc("Returns a list of all the possible identity providers supported in the kore").
 			Returns(http.StatusOK, "A list of all the possible identity providers types", []corev1.IDPConfig{}).
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
 	)
 
-	// The default IDP provider for identity in the hub
+	// The default IDP provider for identity in the kore
 	ws.Route(
 		ws.GET("/default").To(id.getDefaultIDP).
-			Doc("Returns the default identity provider configured in the hub").
+			Doc("Returns the default identity provider configured in the kore").
 			Returns(http.StatusOK, "The default configured identity provider", corev1.IDP{}).
-			Returns(http.StatusNotFound, "Indicate the class was not found in the hub", nil).
+			Returns(http.StatusNotFound, "Indicate the class was not found in the kore", nil).
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
 	)
 
 	// All configured IDP providers
 	ws.Route(
 		ws.GET("/configured/").To(id.findIDPs).
-			Doc("Returns a list of all the configured identity providers in the hub").
+			Doc("Returns a list of all the configured identity providers in the kore").
 			Returns(http.StatusOK, "A list of all the configured identity providers", []corev1.IDP{}).
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
 	)
@@ -83,7 +83,7 @@ func (id *idpHandler) Register(i hub.Interface, builder utils.PathBuilder) (*res
 			Doc("Returns the definition for a specific identity provider").
 			Param(ws.PathParameter("name", "The name of the configured IDP provider to retrieve")).
 			Returns(http.StatusOK, "the specified identity provider", corev1.IDP{}).
-			Returns(http.StatusNotFound, "Indicate the class was not found in the hub", nil).
+			Returns(http.StatusNotFound, "Indicate the class was not found in the kore", nil).
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
 	)
 
@@ -92,17 +92,17 @@ func (id *idpHandler) Register(i hub.Interface, builder utils.PathBuilder) (*res
 			Doc("Returns the definition for a specific ID provider").
 			Param(ws.PathParameter("name", "The name of the configured IDP provider to update")).
 			Reads(corev1.IDP{}, "The definition for the ID provider").
-			Returns(http.StatusOK, "A list of all the IDPs in the hub", corev1.IDP{}).
+			Returns(http.StatusOK, "A list of all the IDPs in the kore", corev1.IDP{}).
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
 	)
 
-	// CLients confgured by name in the hub
+	// CLients confgured by name in the kore
 	ws.Route(
 		ws.PUT("/clients/{name}").To(id.putIDPClient).
 			Doc("Returns the definition for a specific idp client").
 			Param(ws.PathParameter("name", "The name of the IDP client provider to update")).
 			Reads(corev1.IDPClient{}, "The definition for the idp client").
-			Returns(http.StatusOK, "The configured client in the hub", corev1.IDPClient{}).
+			Returns(http.StatusOK, "The configured client in the kore", corev1.IDPClient{}).
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
 	)
 
@@ -121,7 +121,7 @@ func (id idpHandler) getTypes(req *restful.Request, resp *restful.Response) {
 	})
 }
 
-// findIDPs returns all the providers in the hub
+// findIDPs returns all the providers in the kore
 func (id idpHandler) findIDPs(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		idp, err := id.IDP().List(req.Request.Context())
@@ -133,7 +133,7 @@ func (id idpHandler) findIDPs(req *restful.Request, resp *restful.Response) {
 	})
 }
 
-// getIDP returns a specific provider from the hub
+// getIDP returns a specific provider from the kore
 func (id idpHandler) getIDP(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		name := req.PathParameter("name")
@@ -147,11 +147,11 @@ func (id idpHandler) getIDP(req *restful.Request, resp *restful.Response) {
 	})
 }
 
-// getDefaultIDP returns a specific provider from the hub
+// getDefaultIDP returns a specific provider from the kore
 func (id idpHandler) getDefaultIDP(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		idp, err := id.IDP().Default(req.Request.Context())
-		if err == hub.ErrNotFound {
+		if err == kore.ErrNotFound {
 			return resp.WriteHeaderAndEntity(http.StatusNotFound, idp)
 		}
 		if err != nil {

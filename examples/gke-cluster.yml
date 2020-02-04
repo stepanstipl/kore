@@ -1,5 +1,5 @@
 ---
-apiVersion: gke.compute.hub.appvia.io/v1alpha1
+apiVersion: gke.compute.kore.appvia.io/v1alpha1
 kind: GKE
 metadata:
   name: dev
@@ -29,14 +29,14 @@ spec:
   maintenanceWindow: '03:00'
   # Were reference to the credentials we wish to use
   credentials:
-    group: gke.compute.hub.appvia.io
+    group: gke.compute.kore.appvia.io
     version: v1alpha1
     kind: GKECredentials
     name: gke
-    namespace: hub-admin
+    namespace: kore-admin
 ---
 # We create a
-apiVersion: clusters.compute.hub.appvia.io/v1
+apiVersion: clusters.compute.kore.appvia.io/v1
 kind: Kubernetes
 metadata:
   name: dev
@@ -45,9 +45,9 @@ spec:
   inheritTeamMembers: true
   defaultTeamRole: 'cluster-admin'
   provider:
-    group: gke.compute.hub.appvia.io
+    group: gke.compute.kore.appvia.io
     version: v1alpha1
     kind: GKE
-    namespace: hub-admin
+    namespace: kore-admin
     name: dev
   enableDefaultTrafficBlock: false

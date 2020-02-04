@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: managedpodsecuritypoliies.clusters.compute.hub.appvia.io
+  name: managedpodsecuritypoliies.clusters.compute.kore.appvia.io
 spec:
-  group: clusters.compute.hub.appvia.io
+  group: clusters.compute.kore.appvia.io
   names:
     kind: ManagedPodSecurityPolicy
     listKind: ManagedPodSecurityPolicyList

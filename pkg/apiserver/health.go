@@ -20,7 +20,7 @@
 package apiserver
 
 import (
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 
 	restful "github.com/emicklei/go-restful"
@@ -32,13 +32,13 @@ func init() {
 }
 
 type healthHandler struct {
-	hub.Interface
+	kore.Interface
 	// provides the default handler
 	DefaultHandler
 }
 
 // Register is responsible for handling the registration
-func (l *healthHandler) Register(i hub.Interface, builder utils.PathBuilder) (*restful.WebService, error) {
+func (l *healthHandler) Register(i kore.Interface, builder utils.PathBuilder) (*restful.WebService, error) {
 	log.Info("registering the healt webservice with container")
 
 	l.Interface = i

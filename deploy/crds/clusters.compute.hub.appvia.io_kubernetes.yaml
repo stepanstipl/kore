@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: kubernetes.clusters.compute.hub.appvia.io
+  name: kubernetes.clusters.compute.kore.appvia.io
 spec:
-  group: clusters.compute.hub.appvia.io
+  group: clusters.compute.kore.appvia.io
   names:
     kind: Kubernetes
     listKind: KubernetesList
@@ -110,7 +110,7 @@ spec:
           description: KubernetesStatus defines the observed state of Cluster
           properties:
             adminToken:
-              description: AdminToken is the hub-admin service account token which
+              description: AdminToken is the kore-admin service account token which
                 is bound to cluster-admin
               properties:
                 apiVersion:

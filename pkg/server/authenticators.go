@@ -22,7 +22,7 @@ import (
 	"fmt"
 
 	"github.com/appvia/kore/pkg/apiserver/plugins/identity"
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/plugins/authentication/admintoken"
 	"github.com/appvia/kore/pkg/plugins/authentication/basicauth"
 	"github.com/appvia/kore/pkg/plugins/authentication/headers"
@@ -34,15 +34,15 @@ import (
 // makeAuthenticators is responsible for configuration any authentication plugins
 // @QUESTION: should we just move the configuration of theses into flags configured
 // on the init()?
-func makeAuthenticators(hubcc hub.Interface, config Config) error {
-	if len(config.Hub.Authenticators) <= 0 {
+func makeAuthenticators(hubcc kore.Interface, config Config) error {
+	if len(config.Kore.Authenticators) <= 0 {
 		log.Warn("no authentication plugins have configured")
 
 		return nil
 	}
 
 	// @step: we need to create any authentication plugins
-	for _, x := range config.Hub.Authenticators {
+	for _, x := range config.Kore.Authenticators {
 		logger := log.WithFields(log.Fields{
 			"plugin": x,
 		})
@@ -51,7 +51,7 @@ func makeAuthenticators(hubcc hub.Interface, config Config) error {
 			switch x {
 			case "admintoken":
 				return admintoken.New(hubcc, admintoken.Config{
-					Token: config.Hub.AdminToken,
+					Token: config.Kore.AdminToken,
 				})
 			case "basicauth":
 				return basicauth.New(hubcc)
@@ -59,9 +59,9 @@ func makeAuthenticators(hubcc hub.Interface, config Config) error {
 				return headers.New(hubcc)
 			case "openid":
 				return openid.New(hubcc, openid.Config{
-					ClientID:     config.Hub.ClientID,
-					DiscoveryURL: config.Hub.DiscoveryURL,
-					UserClaims:   config.Hub.UserClaims,
+					ClientID:     config.Kore.ClientID,
+					DiscoveryURL: config.Kore.DiscoveryURL,
+					UserClaims:   config.Kore.UserClaims,
 				})
 			default:
 				return nil, errors.New("unknown plugin")

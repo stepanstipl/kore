@@ -1,27 +1,27 @@
 // Code generated for package register by go-bindata DO NOT EDIT. (@generated)
 // sources:
-// deploy/crds/apps.hub.appvia.io_appdeployments.yaml
-// deploy/crds/apps.hub.appvia.io_installplans.yaml
-// deploy/crds/aws.compute.hub.appvia.io_awscredentials.yaml
-// deploy/crds/aws.compute.hub.appvia.io_eksclusters.yaml
-// deploy/crds/clusters.compute.hub.appvia.io_kubernetes.yaml
-// deploy/crds/clusters.compute.hub.appvia.io_managedclusterrole.yaml
-// deploy/crds/clusters.compute.hub.appvia.io_managedclusterrolebinding.yaml
-// deploy/crds/clusters.compute.hub.appvia.io_managedconfig.yaml
-// deploy/crds/clusters.compute.hub.appvia.io_managedpodsecuritypoliies.yaml
-// deploy/crds/clusters.compute.hub.appvia.io_managedrole.yaml
-// deploy/crds/clusters.compute.hub.appvia.io_namespaceclaims.yaml
-// deploy/crds/clusters.compute.hub.appvia.io_namespacepolicy.yaml
-// deploy/crds/config.hub.appvia.io_allocations.yaml
-// deploy/crds/config.hub.appvia.io_plans.yaml
-// deploy/crds/core.hub.appvia.io_idp.yaml
-// deploy/crds/core.hub.appvia.io_oidclient.yaml
-// deploy/crds/gke.compute.hub.appvia.io_gkecredentials.yaml
-// deploy/crds/gke.compute.hub.appvia.io_gkes.yaml
-// deploy/crds/org.hub.appvia.io_members.yaml
-// deploy/crds/org.hub.appvia.io_teaminvitations.yaml
-// deploy/crds/org.hub.appvia.io_teams.yaml
-// deploy/crds/org.hub.appvia.io_users.yaml
+// deploy/crds/apps.kore.appvia.io_appdeployments.yaml
+// deploy/crds/apps.kore.appvia.io_installplans.yaml
+// deploy/crds/aws.compute.kore.appvia.io_awscredentials.yaml
+// deploy/crds/aws.compute.kore.appvia.io_eksclusters.yaml
+// deploy/crds/clusters.compute.kore.appvia.io_kubernetes.yaml
+// deploy/crds/clusters.compute.kore.appvia.io_managedclusterrole.yaml
+// deploy/crds/clusters.compute.kore.appvia.io_managedclusterrolebinding.yaml
+// deploy/crds/clusters.compute.kore.appvia.io_managedconfig.yaml
+// deploy/crds/clusters.compute.kore.appvia.io_managedpodsecuritypoliies.yaml
+// deploy/crds/clusters.compute.kore.appvia.io_managedrole.yaml
+// deploy/crds/clusters.compute.kore.appvia.io_namespaceclaims.yaml
+// deploy/crds/clusters.compute.kore.appvia.io_namespacepolicy.yaml
+// deploy/crds/config.kore.appvia.io_allocations.yaml
+// deploy/crds/config.kore.appvia.io_plans.yaml
+// deploy/crds/core.kore.appvia.io_idp.yaml
+// deploy/crds/core.kore.appvia.io_oidclient.yaml
+// deploy/crds/gke.compute.kore.appvia.io_gkecredentials.yaml
+// deploy/crds/gke.compute.kore.appvia.io_gkes.yaml
+// deploy/crds/org.kore.appvia.io_members.yaml
+// deploy/crds/org.kore.appvia.io_teaminvitations.yaml
+// deploy/crds/org.kore.appvia.io_teams.yaml
+// deploy/crds/org.kore.appvia.io_users.yaml
 package register
 
 import (
@@ -83,9 +83,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: appdeployments.apps.hub.appvia.io
+  name: appdeployments.apps.kore.appvia.io
 spec:
-  group: apps.hub.appvia.io
+  group: apps.kore.appvia.io
   names:
     kind: AppDeployment
     listKind: AppDeploymentList
@@ -259,7 +259,7 @@ func crdsAppsHubAppviaIo_appdeploymentsYaml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "crds/apps.hub.appvia.io_appdeployments.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "crds/apps.kore.appvia.io_appdeployments.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -272,9 +272,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: installplans.apps.hub.appvia.io
+  name: installplans.apps.kore.appvia.io
 spec:
-  group: apps.hub.appvia.io
+  group: apps.kore.appvia.io
   names:
     kind: InstallPlan
     listKind: InstallPlanList
@@ -647,7 +647,7 @@ func crdsAppsHubAppviaIo_installplansYaml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "crds/apps.hub.appvia.io_installplans.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "crds/apps.kore.appvia.io_installplans.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -660,7 +660,7 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: awscredentials.aws.compute.hub.appvia.io
+  name: awscredentials.aws.compute.kore.appvia.io
 spec:
   additionalPrinterColumns:
   - JSONPath: .spec.accountId
@@ -675,7 +675,7 @@ spec:
     description: Indicates if the credentials have been verified
     name: Verified
     type: string
-  group: aws.compute.hub.appvia.io
+  group: aws.compute.kore.appvia.io
   names:
     kind: AWSCredentials
     listKind: AWSCredentialsList
@@ -755,7 +755,7 @@ func crdsAwsComputeHubAppviaIo_awscredentialsYaml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "crds/aws.compute.hub.appvia.io_awscredentials.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "crds/aws.compute.kore.appvia.io_awscredentials.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -768,9 +768,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: eksclusters.aws.compute.hub.appvia.io
+  name: eksclusters.aws.compute.kore.appvia.io
 spec:
-  group: aws.compute.hub.appvia.io
+  group: aws.compute.kore.appvia.io
   names:
     kind: EKSCluster
     listKind: EKSClusterList
@@ -912,7 +912,7 @@ func crdsAwsComputeHubAppviaIo_eksclustersYaml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "crds/aws.compute.hub.appvia.io_eksclusters.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "crds/aws.compute.kore.appvia.io_eksclusters.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -925,9 +925,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: kubernetes.clusters.compute.hub.appvia.io
+  name: kubernetes.clusters.compute.kore.appvia.io
 spec:
-  group: clusters.compute.hub.appvia.io
+  group: clusters.compute.kore.appvia.io
   names:
     kind: Kubernetes
     listKind: KubernetesList
@@ -1029,7 +1029,7 @@ spec:
           description: KubernetesStatus defines the observed state of Cluster
           properties:
             adminToken:
-              description: AdminToken is the hub-admin service account token which
+              description: AdminToken is the kore-admin service account token which
                 is bound to cluster-admin
               properties:
                 apiVersion:
@@ -1131,7 +1131,7 @@ func crdsClustersComputeHubAppviaIo_kubernetesYaml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "crds/clusters.compute.hub.appvia.io_kubernetes.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "crds/clusters.compute.kore.appvia.io_kubernetes.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -1144,9 +1144,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: managedclusterrole.clusters.compute.hub.appvia.io
+  name: managedclusterrole.clusters.compute.kore.appvia.io
 spec:
-  group: clusters.compute.hub.appvia.io
+  group: clusters.compute.kore.appvia.io
   names:
     kind: ManagedClusterRole
     listKind: ManagedClusterRoleList
@@ -1320,7 +1320,7 @@ func crdsClustersComputeHubAppviaIo_managedclusterroleYaml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "crds/clusters.compute.hub.appvia.io_managedclusterrole.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "crds/clusters.compute.kore.appvia.io_managedclusterrole.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -1333,9 +1333,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: managedclusterrolebinding.clusters.compute.hub.appvia.io
+  name: managedclusterrolebinding.clusters.compute.kore.appvia.io
 spec:
-  group: clusters.compute.hub.appvia.io
+  group: clusters.compute.kore.appvia.io
   names:
     kind: ManagedClusterRoleBinding
     listKind: ManagedClusterRoleBindingList
@@ -1528,7 +1528,7 @@ func crdsClustersComputeHubAppviaIo_managedclusterrolebindingYaml() (*asset, err
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "crds/clusters.compute.hub.appvia.io_managedclusterrolebinding.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "crds/clusters.compute.kore.appvia.io_managedclusterrolebinding.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -1541,9 +1541,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: managedconfig.clusters.compute.hub.appvia.io
+  name: managedconfig.clusters.compute.kore.appvia.io
 spec:
-  group: clusters.compute.hub.appvia.io
+  group: clusters.compute.kore.appvia.io
   names:
     kind: ManagedConfig
     listKind: ManagedConfigList
@@ -1717,7 +1717,7 @@ func crdsClustersComputeHubAppviaIo_managedconfigYaml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "crds/clusters.compute.hub.appvia.io_managedconfig.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "crds/clusters.compute.kore.appvia.io_managedconfig.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -1730,9 +1730,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: managedpodsecuritypoliies.clusters.compute.hub.appvia.io
+  name: managedpodsecuritypoliies.clusters.compute.kore.appvia.io
 spec:
-  group: clusters.compute.hub.appvia.io
+  group: clusters.compute.kore.appvia.io
   names:
     kind: ManagedPodSecurityPolicy
     listKind: ManagedPodSecurityPolicyList
@@ -2217,7 +2217,7 @@ func crdsClustersComputeHubAppviaIo_managedpodsecuritypoliiesYaml() (*asset, err
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "crds/clusters.compute.hub.appvia.io_managedpodsecuritypoliies.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "crds/clusters.compute.kore.appvia.io_managedpodsecuritypoliies.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -2230,9 +2230,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: managedrole.clusters.compute.hub.appvia.io
+  name: managedrole.clusters.compute.kore.appvia.io
 spec:
-  group: clusters.compute.hub.appvia.io
+  group: clusters.compute.kore.appvia.io
   names:
     kind: ManagedRole
     listKind: ManagedRoleList
@@ -2394,7 +2394,7 @@ func crdsClustersComputeHubAppviaIo_managedroleYaml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "crds/clusters.compute.hub.appvia.io_managedrole.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "crds/clusters.compute.kore.appvia.io_managedrole.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -2407,9 +2407,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: namespaceclaims.clusters.compute.hub.appvia.io
+  name: namespaceclaims.clusters.compute.kore.appvia.io
 spec:
-  group: clusters.compute.hub.appvia.io
+  group: clusters.compute.kore.appvia.io
   names:
     kind: NamespaceClaim
     listKind: NamespaceClaimList
@@ -2609,7 +2609,7 @@ func crdsClustersComputeHubAppviaIo_namespaceclaimsYaml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "crds/clusters.compute.hub.appvia.io_namespaceclaims.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "crds/clusters.compute.kore.appvia.io_namespaceclaims.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -2622,9 +2622,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: namespacepolicy.clusters.compute.hub.appvia.io
+  name: namespacepolicy.clusters.compute.kore.appvia.io
 spec:
-  group: clusters.compute.hub.appvia.io
+  group: clusters.compute.kore.appvia.io
   names:
     kind: NamepacePolicy
     listKind: NamepacePolicyList
@@ -2789,7 +2789,7 @@ func crdsClustersComputeHubAppviaIo_namespacepolicyYaml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "crds/clusters.compute.hub.appvia.io_namespacepolicy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "crds/clusters.compute.kore.appvia.io_namespacepolicy.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -2802,7 +2802,7 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: allocations.config.hub.appvia.io
+  name: allocations.config.kore.appvia.io
 spec:
   additionalPrinterColumns:
   - JSONPath: .spec.summary
@@ -2821,7 +2821,7 @@ spec:
     description: The name of the resource being shared
     name: Resource Name
     type: string
-  group: config.hub.appvia.io
+  group: config.kore.appvia.io
   names:
     kind: Allocation
     listKind: AllocationList
@@ -2942,7 +2942,7 @@ func crdsConfigHubAppviaIo_allocationsYaml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "crds/config.hub.appvia.io_allocations.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "crds/config.kore.appvia.io_allocations.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -2955,9 +2955,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: plans.config.hub.appvia.io
+  name: plans.config.kore.appvia.io
 spec:
-  group: config.hub.appvia.io
+  group: config.kore.appvia.io
   names:
     kind: Plan
     listKind: PlanList
@@ -3052,7 +3052,7 @@ func crdsConfigHubAppviaIo_plansYaml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "crds/config.hub.appvia.io_plans.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "crds/config.kore.appvia.io_plans.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -3065,9 +3065,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: idp.core.hub.appvia.io
+  name: idp.core.kore.appvia.io
 spec:
-  group: core.hub.appvia.io
+  group: core.kore.appvia.io
   names:
     kind: IDP
     listKind: IDPList
@@ -3256,7 +3256,7 @@ func crdsCoreHubAppviaIo_idpYaml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "crds/core.hub.appvia.io_idp.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "crds/core.kore.appvia.io_idp.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -3269,9 +3269,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: oidclient.core.hub.appvia.io
+  name: oidclient.core.kore.appvia.io
 spec:
-  group: core.hub.appvia.io
+  group: core.kore.appvia.io
   names:
     kind: IDPClient
     listKind: IDPClientList
@@ -3370,7 +3370,7 @@ func crdsCoreHubAppviaIo_oidclientYaml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "crds/core.hub.appvia.io_oidclient.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "crds/core.kore.appvia.io_oidclient.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -3383,7 +3383,7 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: gkecredentials.gke.compute.hub.appvia.io
+  name: gkecredentials.gke.compute.kore.appvia.io
 spec:
   additionalPrinterColumns:
   - JSONPath: .spec.region
@@ -3398,7 +3398,7 @@ spec:
     description: Indicates is the credentials have been verified
     name: Verified
     type: string
-  group: gke.compute.hub.appvia.io
+  group: gke.compute.kore.appvia.io
   names:
     kind: GKECredentials
     listKind: GKECredentialsList
@@ -3503,7 +3503,7 @@ func crdsGkeComputeHubAppviaIo_gkecredentialsYaml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "crds/gke.compute.hub.appvia.io_gkecredentials.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "crds/gke.compute.kore.appvia.io_gkecredentials.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -3516,7 +3516,7 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: gkes.gke.compute.hub.appvia.io
+  name: gkes.gke.compute.kore.appvia.io
 spec:
   additionalPrinterColumns:
   - JSONPath: .spec.description
@@ -3531,7 +3531,7 @@ spec:
     description: The overall status of the cluster
     name: Status
     type: string
-  group: gke.compute.hub.appvia.io
+  group: gke.compute.kore.appvia.io
   names:
     kind: GKE
     listKind: GKEList
@@ -3789,7 +3789,7 @@ func crdsGkeComputeHubAppviaIo_gkesYaml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "crds/gke.compute.hub.appvia.io_gkes.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "crds/gke.compute.kore.appvia.io_gkes.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -3802,9 +3802,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: members.org.hub.appvia.io
+  name: members.org.kore.appvia.io
 spec:
-  group: org.hub.appvia.io
+  group: org.kore.appvia.io
   names:
     kind: TeamMember
     listKind: TeamMemberList
@@ -3899,7 +3899,7 @@ func crdsOrgHubAppviaIo_membersYaml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "crds/org.hub.appvia.io_members.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "crds/org.kore.appvia.io_members.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -3912,9 +3912,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: teaminvitations.org.hub.appvia.io
+  name: teaminvitations.org.kore.appvia.io
 spec:
-  group: org.hub.appvia.io
+  group: org.kore.appvia.io
   names:
     kind: TeamInvitation
     listKind: TeamInvitationList
@@ -4003,7 +4003,7 @@ func crdsOrgHubAppviaIo_teaminvitationsYaml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "crds/org.hub.appvia.io_teaminvitations.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "crds/org.kore.appvia.io_teaminvitations.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -4016,9 +4016,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: teams.org.hub.appvia.io
+  name: teams.org.kore.appvia.io
 spec:
-  group: org.hub.appvia.io
+  group: org.kore.appvia.io
   names:
     kind: Team
     listKind: TeamList
@@ -4107,7 +4107,7 @@ func crdsOrgHubAppviaIo_teamsYaml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "crds/org.hub.appvia.io_teams.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "crds/org.kore.appvia.io_teams.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -4120,9 +4120,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: users.org.hub.appvia.io
+  name: users.org.kore.appvia.io
 spec:
-  group: org.hub.appvia.io
+  group: org.kore.appvia.io
   names:
     kind: User
     listKind: UserList
@@ -4215,7 +4215,7 @@ func crdsOrgHubAppviaIo_usersYaml() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "crds/org.hub.appvia.io_users.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "crds/org.kore.appvia.io_users.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -4272,28 +4272,28 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"crds/apps.hub.appvia.io_appdeployments.yaml":                        crdsAppsHubAppviaIo_appdeploymentsYaml,
-	"crds/apps.hub.appvia.io_installplans.yaml":                          crdsAppsHubAppviaIo_installplansYaml,
-	"crds/aws.compute.hub.appvia.io_awscredentials.yaml":                 crdsAwsComputeHubAppviaIo_awscredentialsYaml,
-	"crds/aws.compute.hub.appvia.io_eksclusters.yaml":                    crdsAwsComputeHubAppviaIo_eksclustersYaml,
-	"crds/clusters.compute.hub.appvia.io_kubernetes.yaml":                crdsClustersComputeHubAppviaIo_kubernetesYaml,
-	"crds/clusters.compute.hub.appvia.io_managedclusterrole.yaml":        crdsClustersComputeHubAppviaIo_managedclusterroleYaml,
-	"crds/clusters.compute.hub.appvia.io_managedclusterrolebinding.yaml": crdsClustersComputeHubAppviaIo_managedclusterrolebindingYaml,
-	"crds/clusters.compute.hub.appvia.io_managedconfig.yaml":             crdsClustersComputeHubAppviaIo_managedconfigYaml,
-	"crds/clusters.compute.hub.appvia.io_managedpodsecuritypoliies.yaml": crdsClustersComputeHubAppviaIo_managedpodsecuritypoliiesYaml,
-	"crds/clusters.compute.hub.appvia.io_managedrole.yaml":               crdsClustersComputeHubAppviaIo_managedroleYaml,
-	"crds/clusters.compute.hub.appvia.io_namespaceclaims.yaml":           crdsClustersComputeHubAppviaIo_namespaceclaimsYaml,
-	"crds/clusters.compute.hub.appvia.io_namespacepolicy.yaml":           crdsClustersComputeHubAppviaIo_namespacepolicyYaml,
-	"crds/config.hub.appvia.io_allocations.yaml":                         crdsConfigHubAppviaIo_allocationsYaml,
-	"crds/config.hub.appvia.io_plans.yaml":                               crdsConfigHubAppviaIo_plansYaml,
-	"crds/core.hub.appvia.io_idp.yaml":                                   crdsCoreHubAppviaIo_idpYaml,
-	"crds/core.hub.appvia.io_oidclient.yaml":                             crdsCoreHubAppviaIo_oidclientYaml,
-	"crds/gke.compute.hub.appvia.io_gkecredentials.yaml":                 crdsGkeComputeHubAppviaIo_gkecredentialsYaml,
-	"crds/gke.compute.hub.appvia.io_gkes.yaml":                           crdsGkeComputeHubAppviaIo_gkesYaml,
-	"crds/org.hub.appvia.io_members.yaml":                                crdsOrgHubAppviaIo_membersYaml,
-	"crds/org.hub.appvia.io_teaminvitations.yaml":                        crdsOrgHubAppviaIo_teaminvitationsYaml,
-	"crds/org.hub.appvia.io_teams.yaml":                                  crdsOrgHubAppviaIo_teamsYaml,
-	"crds/org.hub.appvia.io_users.yaml":                                  crdsOrgHubAppviaIo_usersYaml,
+	"crds/apps.kore.appvia.io_appdeployments.yaml":                        crdsAppsHubAppviaIo_appdeploymentsYaml,
+	"crds/apps.kore.appvia.io_installplans.yaml":                          crdsAppsHubAppviaIo_installplansYaml,
+	"crds/aws.compute.kore.appvia.io_awscredentials.yaml":                 crdsAwsComputeHubAppviaIo_awscredentialsYaml,
+	"crds/aws.compute.kore.appvia.io_eksclusters.yaml":                    crdsAwsComputeHubAppviaIo_eksclustersYaml,
+	"crds/clusters.compute.kore.appvia.io_kubernetes.yaml":                crdsClustersComputeHubAppviaIo_kubernetesYaml,
+	"crds/clusters.compute.kore.appvia.io_managedclusterrole.yaml":        crdsClustersComputeHubAppviaIo_managedclusterroleYaml,
+	"crds/clusters.compute.kore.appvia.io_managedclusterrolebinding.yaml": crdsClustersComputeHubAppviaIo_managedclusterrolebindingYaml,
+	"crds/clusters.compute.kore.appvia.io_managedconfig.yaml":             crdsClustersComputeHubAppviaIo_managedconfigYaml,
+	"crds/clusters.compute.kore.appvia.io_managedpodsecuritypoliies.yaml": crdsClustersComputeHubAppviaIo_managedpodsecuritypoliiesYaml,
+	"crds/clusters.compute.kore.appvia.io_managedrole.yaml":               crdsClustersComputeHubAppviaIo_managedroleYaml,
+	"crds/clusters.compute.kore.appvia.io_namespaceclaims.yaml":           crdsClustersComputeHubAppviaIo_namespaceclaimsYaml,
+	"crds/clusters.compute.kore.appvia.io_namespacepolicy.yaml":           crdsClustersComputeHubAppviaIo_namespacepolicyYaml,
+	"crds/config.kore.appvia.io_allocations.yaml":                         crdsConfigHubAppviaIo_allocationsYaml,
+	"crds/config.kore.appvia.io_plans.yaml":                               crdsConfigHubAppviaIo_plansYaml,
+	"crds/core.kore.appvia.io_idp.yaml":                                   crdsCoreHubAppviaIo_idpYaml,
+	"crds/core.kore.appvia.io_oidclient.yaml":                             crdsCoreHubAppviaIo_oidclientYaml,
+	"crds/gke.compute.kore.appvia.io_gkecredentials.yaml":                 crdsGkeComputeHubAppviaIo_gkecredentialsYaml,
+	"crds/gke.compute.kore.appvia.io_gkes.yaml":                           crdsGkeComputeHubAppviaIo_gkesYaml,
+	"crds/org.kore.appvia.io_members.yaml":                                crdsOrgHubAppviaIo_membersYaml,
+	"crds/org.kore.appvia.io_teaminvitations.yaml":                        crdsOrgHubAppviaIo_teaminvitationsYaml,
+	"crds/org.kore.appvia.io_teams.yaml":                                  crdsOrgHubAppviaIo_teamsYaml,
+	"crds/org.kore.appvia.io_users.yaml":                                  crdsOrgHubAppviaIo_usersYaml,
 }
 
 // AssetDir returns the file names below a certain
@@ -4338,28 +4338,28 @@ type bintree struct {
 
 var _bintree = &bintree{nil, map[string]*bintree{
 	"crds": {nil, map[string]*bintree{
-		"apps.hub.appvia.io_appdeployments.yaml":                        {crdsAppsHubAppviaIo_appdeploymentsYaml, map[string]*bintree{}},
-		"apps.hub.appvia.io_installplans.yaml":                          {crdsAppsHubAppviaIo_installplansYaml, map[string]*bintree{}},
-		"aws.compute.hub.appvia.io_awscredentials.yaml":                 {crdsAwsComputeHubAppviaIo_awscredentialsYaml, map[string]*bintree{}},
-		"aws.compute.hub.appvia.io_eksclusters.yaml":                    {crdsAwsComputeHubAppviaIo_eksclustersYaml, map[string]*bintree{}},
-		"clusters.compute.hub.appvia.io_kubernetes.yaml":                {crdsClustersComputeHubAppviaIo_kubernetesYaml, map[string]*bintree{}},
-		"clusters.compute.hub.appvia.io_managedclusterrole.yaml":        {crdsClustersComputeHubAppviaIo_managedclusterroleYaml, map[string]*bintree{}},
-		"clusters.compute.hub.appvia.io_managedclusterrolebinding.yaml": {crdsClustersComputeHubAppviaIo_managedclusterrolebindingYaml, map[string]*bintree{}},
-		"clusters.compute.hub.appvia.io_managedconfig.yaml":             {crdsClustersComputeHubAppviaIo_managedconfigYaml, map[string]*bintree{}},
-		"clusters.compute.hub.appvia.io_managedpodsecuritypoliies.yaml": {crdsClustersComputeHubAppviaIo_managedpodsecuritypoliiesYaml, map[string]*bintree{}},
-		"clusters.compute.hub.appvia.io_managedrole.yaml":               {crdsClustersComputeHubAppviaIo_managedroleYaml, map[string]*bintree{}},
-		"clusters.compute.hub.appvia.io_namespaceclaims.yaml":           {crdsClustersComputeHubAppviaIo_namespaceclaimsYaml, map[string]*bintree{}},
-		"clusters.compute.hub.appvia.io_namespacepolicy.yaml":           {crdsClustersComputeHubAppviaIo_namespacepolicyYaml, map[string]*bintree{}},
-		"config.hub.appvia.io_allocations.yaml":                         {crdsConfigHubAppviaIo_allocationsYaml, map[string]*bintree{}},
-		"config.hub.appvia.io_plans.yaml":                               {crdsConfigHubAppviaIo_plansYaml, map[string]*bintree{}},
-		"core.hub.appvia.io_idp.yaml":                                   {crdsCoreHubAppviaIo_idpYaml, map[string]*bintree{}},
-		"core.hub.appvia.io_oidclient.yaml":                             {crdsCoreHubAppviaIo_oidclientYaml, map[string]*bintree{}},
-		"gke.compute.hub.appvia.io_gkecredentials.yaml":                 {crdsGkeComputeHubAppviaIo_gkecredentialsYaml, map[string]*bintree{}},
-		"gke.compute.hub.appvia.io_gkes.yaml":                           {crdsGkeComputeHubAppviaIo_gkesYaml, map[string]*bintree{}},
-		"org.hub.appvia.io_members.yaml":                                {crdsOrgHubAppviaIo_membersYaml, map[string]*bintree{}},
-		"org.hub.appvia.io_teaminvitations.yaml":                        {crdsOrgHubAppviaIo_teaminvitationsYaml, map[string]*bintree{}},
-		"org.hub.appvia.io_teams.yaml":                                  {crdsOrgHubAppviaIo_teamsYaml, map[string]*bintree{}},
-		"org.hub.appvia.io_users.yaml":                                  {crdsOrgHubAppviaIo_usersYaml, map[string]*bintree{}},
+		"apps.kore.appvia.io_appdeployments.yaml":                        {crdsAppsHubAppviaIo_appdeploymentsYaml, map[string]*bintree{}},
+		"apps.kore.appvia.io_installplans.yaml":                          {crdsAppsHubAppviaIo_installplansYaml, map[string]*bintree{}},
+		"aws.compute.kore.appvia.io_awscredentials.yaml":                 {crdsAwsComputeHubAppviaIo_awscredentialsYaml, map[string]*bintree{}},
+		"aws.compute.kore.appvia.io_eksclusters.yaml":                    {crdsAwsComputeHubAppviaIo_eksclustersYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_kubernetes.yaml":                {crdsClustersComputeHubAppviaIo_kubernetesYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_managedclusterrole.yaml":        {crdsClustersComputeHubAppviaIo_managedclusterroleYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_managedclusterrolebinding.yaml": {crdsClustersComputeHubAppviaIo_managedclusterrolebindingYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_managedconfig.yaml":             {crdsClustersComputeHubAppviaIo_managedconfigYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_managedpodsecuritypoliies.yaml": {crdsClustersComputeHubAppviaIo_managedpodsecuritypoliiesYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_managedrole.yaml":               {crdsClustersComputeHubAppviaIo_managedroleYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_namespaceclaims.yaml":           {crdsClustersComputeHubAppviaIo_namespaceclaimsYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_namespacepolicy.yaml":           {crdsClustersComputeHubAppviaIo_namespacepolicyYaml, map[string]*bintree{}},
+		"config.kore.appvia.io_allocations.yaml":                         {crdsConfigHubAppviaIo_allocationsYaml, map[string]*bintree{}},
+		"config.kore.appvia.io_plans.yaml":                               {crdsConfigHubAppviaIo_plansYaml, map[string]*bintree{}},
+		"core.kore.appvia.io_idp.yaml":                                   {crdsCoreHubAppviaIo_idpYaml, map[string]*bintree{}},
+		"core.kore.appvia.io_oidclient.yaml":                             {crdsCoreHubAppviaIo_oidclientYaml, map[string]*bintree{}},
+		"gke.compute.kore.appvia.io_gkecredentials.yaml":                 {crdsGkeComputeHubAppviaIo_gkecredentialsYaml, map[string]*bintree{}},
+		"gke.compute.kore.appvia.io_gkes.yaml":                           {crdsGkeComputeHubAppviaIo_gkesYaml, map[string]*bintree{}},
+		"org.kore.appvia.io_members.yaml":                                {crdsOrgHubAppviaIo_membersYaml, map[string]*bintree{}},
+		"org.kore.appvia.io_teaminvitations.yaml":                        {crdsOrgHubAppviaIo_teaminvitationsYaml, map[string]*bintree{}},
+		"org.kore.appvia.io_teams.yaml":                                  {crdsOrgHubAppviaIo_teamsYaml, map[string]*bintree{}},
+		"org.kore.appvia.io_users.yaml":                                  {crdsOrgHubAppviaIo_usersYaml, map[string]*bintree{}},
 	}},
 }}
 

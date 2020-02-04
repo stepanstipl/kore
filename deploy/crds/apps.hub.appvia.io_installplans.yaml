@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: installplans.apps.hub.appvia.io
+  name: installplans.apps.kore.appvia.io
 spec:
-  group: apps.hub.appvia.io
+  group: apps.kore.appvia.io
   names:
     kind: InstallPlan
     listKind: InstallPlanList

@@ -30,7 +30,7 @@ spec:
   backoffLimit: 20
   template:
     spec:
-      serviceAccountName: "hub-admin"
+      serviceAccountName: "kore-admin"
       restartPolicy: OnFailure
       containers:
         - name: bootstrap

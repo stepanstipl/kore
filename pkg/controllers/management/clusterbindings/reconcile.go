@@ -24,7 +24,7 @@ import (
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
@@ -107,7 +107,7 @@ func (a crCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 				ObjectMeta: metav1.ObjectMeta{
 					Name: binding.Name,
 					Labels: map[string]string{
-						hub.Label("owner"): "true",
+						kore.Label("owner"): "true",
 					},
 				},
 				RoleRef:  binding.Spec.Binding.RoleRef,

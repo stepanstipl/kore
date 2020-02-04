@@ -23,7 +23,7 @@ import (
 
 	core "github.com/appvia/kore/pkg/apis/core/v1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
@@ -88,7 +88,7 @@ func (t teamController) Reconcile(request reconcile.Request) (reconcile.Result, 
 				ObjectMeta: metav1.ObjectMeta{
 					Name: team.Name,
 					Labels: map[string]string{
-						hub.Label("team"): team.Name,
+						kore.Label("team"): team.Name,
 					},
 				},
 			}); err != nil {

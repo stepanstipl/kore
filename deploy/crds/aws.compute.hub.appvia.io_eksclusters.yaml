@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: (devel)
   creationTimestamp: null
-  name: eksclusters.aws.compute.hub.appvia.io
+  name: eksclusters.aws.compute.kore.appvia.io
 spec:
-  group: aws.compute.hub.appvia.io
+  group: aws.compute.kore.appvia.io
   names:
     kind: EKSCluster
     listKind: EKSClusterList

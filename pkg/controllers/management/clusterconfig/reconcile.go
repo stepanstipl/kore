@@ -1,20 +1,20 @@
 /**
  * Copyright (C) 2020 Appvia Ltd <info@appvia.io>
  *
- * This file is part of hub-apiserver.
+ * This file is part of kore-apiserver.
  *
- * hub-apiserver is free software: you can redistribute it and/or modify
+ * kore-apiserver is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
  *
- * hub-apiserver is distributed in the hope that it will be useful,
+ * kore-apiserver is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with hub-apiserver.  If not, see <http://www.gnu.org/licenses/>.
+ * along with kore-apiserver.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package clusterconfig
@@ -24,7 +24,7 @@ import (
 	"time"
 
 	clusterv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
@@ -98,22 +98,22 @@ func (t ccCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 		return reconcile.Result{RequeueAfter: 2 * time.Minute}, nil
 	}
 
-	logger.Debug("checking if the hub namespace exists in the remote cluster")
+	logger.Debug("checking if the kore namespace exists in the remote cluster")
 
 	// @step: ensure the namespace is there
-	for _, namespace := range []string{hub.HubNamespace, hub.HubOperatorsNamespace} {
+	for _, namespace := range []string{kore.HubNamespace, kore.HubOperatorsNamespace} {
 		if err := client.Create(context.Background(), &core.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: namespace,
 				Labels: map[string]string{
-					hub.Label("owned"): "true",
+					kore.Label("owned"): "true",
 				},
 			},
 		}); err != nil {
-			logger.WithField("namespace", namespace).Debug("hub namespace already exists, skipping")
+			logger.WithField("namespace", namespace).Debug("kore namespace already exists, skipping")
 
 			if !kerrors.IsAlreadyExists(err) {
-				logger.WithError(err).Error("trying to create the hub namespace")
+				logger.WithError(err).Error("trying to create the kore namespace")
 			}
 		}
 	}
@@ -121,25 +121,25 @@ func (t ccCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	logger.Debug("creating the configuration secret in the remote clsuter")
 
 	// @step: ensure there is a client certificate for us
-	secretName := "hub-config"
-	found, err := kubernetes.HasSecret(ctx, client, hub.HubNamespace, secretName)
+	secretName := "kore-config"
+	found, err := kubernetes.HasSecret(ctx, client, kore.HubNamespace, secretName)
 	if err != nil {
-		logger.WithError(err).Error("trying to check for hub configuration secret")
+		logger.WithError(err).Error("trying to check for kore configuration secret")
 
 		return reconcile.Result{}, err
 	}
 	// @TODO we need to check if the secret exists, then check the client certificate
 	// and if near expiration we need to rotate it.
 	if found {
-		logger.Debug("skipping hub configuration as cluster already has configuration")
+		logger.Debug("skipping kore configuration as cluster already has configuration")
 
 		return reconcile.Result{}, nil
 	}
 
 	config := &core.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "hub-config",
-			Namespace: hub.HubNamespace,
+			Name:      "kore-config",
+			Namespace: kore.HubNamespace,
 		},
 		Data: map[string][]byte{
 			"api_url":       []byte(t.Config().PublicAPIURL),

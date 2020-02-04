@@ -24,7 +24,7 @@ import (
 	"strings"
 
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 
 	restful "github.com/emicklei/go-restful"
@@ -37,13 +37,13 @@ func init() {
 }
 
 type plansHandler struct {
-	hub.Interface
+	kore.Interface
 	// DefaultHandlder implements default features
 	DefaultHandler
 }
 
 // Register is called by the api server on registration
-func (p *plansHandler) Register(i hub.Interface, builder utils.PathBuilder) (*restful.WebService, error) {
+func (p *plansHandler) Register(i kore.Interface, builder utils.PathBuilder) (*restful.WebService, error) {
 	path := builder.Add("plans")
 
 	log.WithFields(log.Fields{
@@ -59,34 +59,34 @@ func (p *plansHandler) Register(i hub.Interface, builder utils.PathBuilder) (*re
 
 	ws.Route(
 		ws.GET("").To(p.findPlans).
-			Doc("Returns all the classes available to initialized in the hub").
+			Doc("Returns all the classes available to initialized in the kore").
 			Param(ws.QueryParameter("kind", "Returns all plans for a specific resource type")).
-			Returns(http.StatusOK, "A list of all the classes in the hub", configv1.PlanList{}).
+			Returns(http.StatusOK, "A list of all the classes in the kore", configv1.PlanList{}).
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
 		ws.GET("/{name}").To(p.findPlan).
-			Doc("Returns a specific class plan from the hub").
+			Doc("Returns a specific class plan from the kore").
 			Param(ws.PathParameter("name", "The name of the plan you wish to retrieve")).
-			Returns(http.StatusOK, "Contains the class definintion from the hub", configv1.Plan{}).
+			Returns(http.StatusOK, "Contains the class definintion from the kore", configv1.Plan{}).
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
 		ws.PUT("/{name}").To(p.updatePlan).
-			Doc("Used to create or update a plan in the hub").
+			Doc("Used to create or update a plan in the kore").
 			Param(ws.PathParameter("name", "The name of the plan you wish to act upon")).
 			Reads(configv1.Plan{}, "The specification for the plan you are updating").
-			Returns(http.StatusOK, "Contains the class definintion from the hub", configv1.Plan{}).
+			Returns(http.StatusOK, "Contains the class definintion from the kore", configv1.Plan{}).
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
 		ws.DELETE("/{name}").To(p.deletePlan).
-			Doc("Used to delete a plan from the hub").
+			Doc("Used to delete a plan from the kore").
 			Param(ws.PathParameter("name", "The name of the plan you wish to act upon")).
-			Returns(http.StatusOK, "Contains the class definintion from the hub", configv1.Plan{}).
+			Returns(http.StatusOK, "Contains the class definintion from the kore", configv1.Plan{}).
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
 	)
 
@@ -105,7 +105,7 @@ func (p plansHandler) findPlan(req *restful.Request, resp *restful.Response) {
 	})
 }
 
-// findPlans returns all plans in the hub
+// findPlans returns all plans in the kore
 func (p plansHandler) findPlans(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		plans, err := p.Plans().List(req.Request.Context())
@@ -133,7 +133,7 @@ func (p plansHandler) findPlans(req *restful.Request, resp *restful.Response) {
 	})
 }
 
-// updatePlan is used to update or create a plan in the hub
+// updatePlan is used to update or create a plan in the kore
 func (p plansHandler) updatePlan(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		name := req.PathParameter("name")
@@ -152,7 +152,7 @@ func (p plansHandler) updatePlan(req *restful.Request, resp *restful.Response) {
 	})
 }
 
-// deletePlan is used to update or create a plan in the hub
+// deletePlan is used to update or create a plan in the kore
 func (p plansHandler) deletePlan(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		name := req.PathParameter("name")

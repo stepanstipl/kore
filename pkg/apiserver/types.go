@@ -22,14 +22,14 @@ package apiserver
 import (
 	"context"
 
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 
 	restful "github.com/emicklei/go-restful"
 )
 
 const (
-	// APIVersion is the hub api server we are serving
+	// APIVersion is the kore api server we are serving
 	APIVersion = "/api/v1alpha1"
 )
 
@@ -110,5 +110,5 @@ type Handler interface {
 	// Name returns the name of the api handler
 	Name() string
 	// Register is called to allow the handler to register
-	Register(hub.Interface, utils.PathBuilder) (*restful.WebService, error)
+	Register(kore.Interface, utils.PathBuilder) (*restful.WebService, error)
 }

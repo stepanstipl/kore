@@ -26,7 +26,7 @@ import (
 
 	"github.com/appvia/kore/pkg/apiserver"
 	"github.com/appvia/kore/pkg/controllers"
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/register"
 	"github.com/appvia/kore/pkg/schema"
 	"github.com/appvia/kore/pkg/services/audit"
@@ -44,8 +44,8 @@ import (
 type serverImpl struct {
 	// storecc is the store interface
 	storecc store.Store
-	// hubcc is the hub interface
-	hubcc hub.Interface
+	// hubcc is the kore interface
+	hubcc kore.Interface
 	// apicc is the api interface
 	apicc apiserver.Interface
 	// cfg is the rest.Config for the clients
@@ -76,17 +76,17 @@ func New(config Config) (Interface, error) {
 		return nil, fmt.Errorf("failed creating kubernetes client: %s", err)
 	}
 
-	// @step: ensure we have the hub crds
+	// @step: ensure we have the kore crds
 	crdc, err := crds.NewExtentionsAPIClient(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create api extensions client: %s", err)
 	}
 	resources, err := register.GetCustomResourceDefinitions()
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode the hub crds resources: %s", err)
+		return nil, fmt.Errorf("failed to decode the kore crds resources: %s", err)
 	}
 	if err := crds.ApplyCustomResourceDefinitions(crdc, resources); err != nil {
-		return nil, fmt.Errorf("failed to apply the hub crds: %s", err)
+		return nil, fmt.Errorf("failed to apply the kore crds: %s", err)
 	}
 
 	cc, err = rc.New(cfg, rc.Options{Scheme: schema.GetScheme()})
@@ -126,10 +126,10 @@ func New(config Config) (Interface, error) {
 		}
 	}
 
-	// @step: we need to create the hub bridge / business logic
-	hubcc, err := hub.New(storecc, usermgr, auditor, config.Hub)
+	// @step: we need to create the kore bridge / business logic
+	hubcc, err := kore.New(storecc, usermgr, auditor, config.Kore)
 	if err != nil {
-		return nil, fmt.Errorf("trying to create the hub bridge: %s", err)
+		return nil, fmt.Errorf("trying to create the kore bridge: %s", err)
 	}
 
 	if err := makeAuthenticators(hubcc, config); err != nil {
