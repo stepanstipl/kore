@@ -51,6 +51,12 @@ func GetDefaultPlans() []*configv1.Plan {
 				Values: apiextv1.JSON{
 					Raw: []byte(`
 						{
+							"authorizedMasterNetworks": [
+								{
+									"name": "default",
+									"cidr": "0.0.0.0/0"
+								}
+                            ],       
 							"diskSize":               100,
 							"enableAutorepair":       true,
 							"enableAutoscaler":       true,
@@ -89,6 +95,12 @@ func GetDefaultPlans() []*configv1.Plan {
 				Values: apiextv1.JSON{
 					Raw: []byte(`
 						{
+							"authorizedMasterNetworks": [
+								{
+									"name": "default",
+									"cidr": "0.0.0.0/0"
+								}
+                            ],       
 							"diskSize":               100,
 							"enableAutorepair":       true,
 							"enableAutoscaler":       true,
