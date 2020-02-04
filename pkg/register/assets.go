@@ -1028,51 +1028,8 @@ spec:
         status:
           description: KubernetesStatus defines the observed state of Cluster
           properties:
-            adminToken:
-              description: AdminToken is the hub-admin service account token which
-                is bound to cluster-admin
-              properties:
-                apiVersion:
-                  description: 'APIVersion defines the versioned schema of this representation
-                    of an object. Servers should convert recognized schemas to the
-                    latest internal value, and may reject unrecognized values. More
-                    info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
-                  type: string
-                data:
-                  additionalProperties:
-                    format: byte
-                    type: string
-                  description: Data contains the secret data. Each key must consist
-                    of alphanumeric characters, '-', '_' or '.'. The serialized form
-                    of the secret data is a base64 encoded string, representing the
-                    arbitrary (possibly non-string) data value here. Described in
-                    https://tools.ietf.org/html/rfc4648#section-4
-                  type: object
-                kind:
-                  description: 'Kind is a string value representing the REST resource
-                    this object represents. Servers may infer this from the endpoint
-                    the client submits requests to. Cannot be updated. In CamelCase.
-                    More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
-                  type: string
-                metadata:
-                  description: 'Standard object''s metadata. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata'
-                  type: object
-                stringData:
-                  additionalProperties:
-                    type: string
-                  description: stringData allows specifying non-binary secret data
-                    in string form. It is provided as a write-only convenience method.
-                    All keys and values are merged into the data field on write, overwriting
-                    any existing values. It is never output when reading from the
-                    API.
-                  type: object
-                type:
-                  description: Used to facilitate programmatic handling of secret
-                    data.
-                  type: string
-              type: object
             apiEndpoint:
-              description: APIEndpoint is the endpoint of client proxy for this cluster
+              description: Endpoint is the kubernetes endpoint url
               type: string
             caCertificate:
               description: CaCertificate is the base64 encoded cluster certificate
@@ -1098,7 +1055,7 @@ spec:
                 type: object
               type: array
             endpoint:
-              description: Endpoint is the kubernetes endpoint url
+              description: APIEndpoint is the endpoint of client proxy for this cluster
               minLength: 1
               type: string
             status:
@@ -2991,6 +2948,15 @@ spec:
                 by this plan
               minLength: 1
               type: string
+            kind:
+              description: Resource refers to the resource type this is a plan for
+              minLength: 1
+              type: string
+            labels:
+              additionalProperties:
+                type: string
+              description: Labels is a collection of labels for this plan
+              type: object
             summary:
               description: Summary provides a short title summary for the plan
               minLength: 1
@@ -3000,6 +2966,9 @@ spec:
               type: object
               x-kubernetes-preserve-unknown-fields: true
           required:
+          - description
+          - kind
+          - summary
           - values
           type: object
         status:
