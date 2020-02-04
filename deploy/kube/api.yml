@@ -77,7 +77,7 @@ spec:
             valueFrom:
               secretKeyRef: 
                 name: kore 
-                key: kore.api.sso
+                key: kore.sso.url
           - name: HUB_ADMIN_TOKEN
             # a random string used for admintoken plugin
             valueFrom: 
