@@ -138,7 +138,9 @@ func (t teamImpl) Update(ctx context.Context, team *model.Team) error {
 	return t.conn.
 		Where("name = ?", team.Name).
 		Assign(&model.Team{
+			Name:        team.Name,
 			Description: team.Description,
+			Summary:     team.Summary,
 		}).
 		FirstOrCreate(team).
 		Error

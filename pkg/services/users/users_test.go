@@ -96,6 +96,31 @@ func TestUserDelete(t *testing.T) {
 	require.False(t, found)
 }
 
+func TestUsersNoDups(t *testing.T) {
+	store := makeTestStore(t)
+	defer store.Stop()
+
+	name := "test_dups"
+
+	user := &model.User{Username: name, Email: "email@email.com"}
+	require.NoError(t, store.Users().Update(context.Background(), user))
+
+	list, err := store.Users().List(context.Background(), Filter.WithUser(name))
+	require.NoError(t, err)
+	require.NotNil(t, list)
+	require.Equal(t, 1, len(list))
+
+	user = &model.User{Username: name, Email: "email@email.com"}
+	require.NoError(t, store.Users().Update(context.Background(), user))
+	user = &model.User{Username: name, Email: "email@email.com"}
+	require.NoError(t, store.Users().Update(context.Background(), user))
+
+	list, err = store.Users().List(context.Background(), Filter.WithUser(name))
+	require.NoError(t, err)
+	require.NotNil(t, list)
+	require.Equal(t, 1, len(list))
+}
+
 func TestUserExists(t *testing.T) {
 	found, err := makeTestStore(t).Users().Exists(context.Background(), "not_there")
 	assert.NoError(t, err)

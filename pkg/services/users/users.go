@@ -113,8 +113,8 @@ func (u userImpl) List(ctx context.Context, opts ...ListFunc) ([]*model.User, er
 	if terms.HasDisabled() {
 		q = q.Where("disabled = ?", terms.GetDisabled())
 	}
-	if terms.HasName() {
-		q = q.Where("name = ?", terms.GetName())
+	if terms.HasUser() {
+		q = q.Where("username = ?", terms.GetUser())
 	}
 	if terms.HasID() {
 		q = q.Where("id = ?", terms.GetID())
@@ -140,8 +140,12 @@ func (u userImpl) Update(ctx context.Context, user *model.User) error {
 	defer timed.ObserveDuration()
 
 	return u.conn.Model(&model.Team{}).
-		Where("id = ?", user.ID).
-		Update(user).
+		Where("username = ?", user.Username).
+		Assign(&model.User{
+			Disabled: user.Disabled,
+			Email:    user.Email,
+			Username: user.Username,
+		}).
 		FirstOrCreate(user).
 		Error
 }
