@@ -79,7 +79,6 @@ jobs:
           command: |
             make swagger-json
             make swagger-validate
-            hack/bin/swagger-check.sh
       - persist_to_workspace:
           root: bin
           paths:
