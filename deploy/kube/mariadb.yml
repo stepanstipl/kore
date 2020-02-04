@@ -1,0 +1,46 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+  labels:
+    name: db
+spec:
+  type: ClusterIP
+  ports:
+  - name: mysql
+    port: 3306
+    targetPort: 3306
+  sessionAffinity: ClientIP
+  selector:
+    name: db
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: db
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        name: db
+        service: db
+    spec:
+      containers:
+      - name: mariadb
+        image: mariadb:bionic
+        envFrom:
+          - secretRef:
+              name: kore
+        env:
+          - name: MYSQL_DATABASE
+            value: hub
+        ports:
+        - name: mysql
+          containerPort: 3306
