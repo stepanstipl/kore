@@ -1,0 +1,56 @@
+---
+dexVersion: v1
+kind: Service
+metadata:
+  name: dex
+  labels:
+    name: dex
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 5556
+    targetPort: 5556
+  sessionAffinity: ClientIP
+  selector:
+    name: dex
+---
+dexVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: dex
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        name: dex
+        service: dex
+    spec:
+      securityContext:
+        fsGroup: 1000
+        runAsNonRoot: true
+      containers:
+      - name: dex
+        image: quay.io/appvia/dex:v2.20.0-master_grpc-connectors
+        command:
+          - serve
+          - /config/dex.yml
+        ports:
+          - name: http
+            containerPort: 5556
+          - name: grpc
+            containerPort: 5557
+        volumeMounts:
+          - name: config
+            readOnly: true
+            mountPath: /config
+      volumes:
+        - name: config
+          secret:
+            secretName: dex

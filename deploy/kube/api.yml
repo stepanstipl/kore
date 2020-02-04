@@ -60,8 +60,8 @@ spec:
             value: email,profile
           - name: KUBE_API_SERVER
             value: http://apiserver:8080
-            # the admin password for kore 
           - name: HUB_ADMIN_PASS
+            # the admin password for kore 
             valueFrom: 
               secretKeyRef: 
                 name: kore 
@@ -85,8 +85,8 @@ spec:
                 name: kore 
                 key: kore.admin.token
           - name: USERS_DB_URL
-            valueFrom: 
             # DSN value: "root:some_password@tcp(db:3306)/hub?parseTime=true"
+            valueFrom: 
               secretKeyRef: 
                 name: kore
                 key: kore.db.url
