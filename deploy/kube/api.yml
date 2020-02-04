@@ -20,7 +20,7 @@ kind: Deployment
 metadata:
   name: api
 spec:
-  replicas: 3
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -36,9 +36,6 @@ spec:
         prometheus.io/scheme: "http"
         prometheus.io/scrape: "true"
     spec:
-      securityContext:
-        fsGroup: 1000
-        runAsNonRoot: true
       containers:
       - name: api
         image: quay.io/appvia/hub-apiserver:latest
@@ -46,67 +43,18 @@ spec:
           - name: http
             containerPort: 10080
         env:
-          - name: ENABLE_DEX
-            value: "true"
-          - name: HUB_AUTHENTICATION_PLUGINS
-            value: admintoken,basicauth,openid
-          - name: HUB_CERTIFICATE_AUTHORITY
-            value: /tls/tls.crt
-          - name: HUB_CERTIFICATE_AUTHORITY_KEY
-            value: /tls/tls.key
-          - name: HUB_CLIENT_ID
-            value: broker
-          - name: HUB_CLIENT_SCOPES
-            value: email,profile
           - name: KUBE_API_SERVER
             value: http://apiserver:8080
-          - name: HUB_ADMIN_PASS
-            # the admin password for kore 
-            valueFrom: 
-              secretKeyRef: 
-                name: kore 
-                key: kore.admin.pass
-          - name: HUB_API_PUBLIC_URL
-            # the external url for the api
-            valueFrom:
-              secretKeyRef: 
-                name: kore 
-                key: kore.api.url
-          - name: HUB_DISCOVERY_URL
-            # the external url for dex 
-            valueFrom:
-              secretKeyRef: 
-                name: kore 
-                key: kore.sso.url
-          - name: HUB_ADMIN_TOKEN
-            # a random string used for admintoken plugin
-            valueFrom: 
-              secretKeyRef: 
-                name: kore 
-                key: kore.admin.token
-          - name: USERS_DB_URL
-            # DSN value: "root:some_password@tcp(db:3306)/hub?parseTime=true"
-            valueFrom: 
-              secretKeyRef: 
-                name: kore
-                key: kore.db.url
-          - name: HUB_HMAC
-            # a random string used for a hmac
-            valueFrom: 
-              secretKeyRef: 
-                name: kore 
-                key: kore.hmac
-          - name: HUB_CLIENT_SECRET
-            # openid client secret
-            valueFrom: 
-              secretKeyRef: 
-                name: kore
-                key: oauth.client_secret
+          - name: DEX_GRPC_SERVER
+            value: dex.demo.svc.cluster.local
+        envFrom:
+          - secretRef:
+              name: kore
         volumeMounts:
           - name: certs
             readOnly: true
-            mountPath: /tls
+            mountPath: /ca
       volumes:
       - name: certs
         secret:
-          secretName: tls
+          secretName: certs

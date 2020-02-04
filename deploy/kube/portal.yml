@@ -1,0 +1,46 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: portal
+  labels:
+    name: portal
+spec:
+  type: ClusterIP
+  ports:
+  - name: portal
+    port: 3000
+    targetPort: 3000
+  sessionAffinity: ClientIP
+  selector:
+    name: portal
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: portal
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        name: portal
+        service: portal
+    spec:
+      containers:
+      - name: portal
+        image: quay.io/appvia/kore-ui:latest
+        imagePullPolicy: Always
+        env:
+          - name: HUB_API_URL
+            value: http://api.demo.svc.cluster.local:10080/api/v1alpha1
+          - name: REDIS_URL
+            value: redis://redis:6379
+        envFrom:
+          - secretRef:
+              name: kore

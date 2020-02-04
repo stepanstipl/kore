@@ -37,9 +37,6 @@ spec:
         prometheus.io/scheme: "http"
         prometheus.io/scrape: "true"
     spec:
-      securityContext:
-        fsGroup: 1000
-        runAsNonRoot: true
       containers:
       - name: apiserver
         image: mirrorgooglecontainers/kube-apiserver-amd64:v1.14.8

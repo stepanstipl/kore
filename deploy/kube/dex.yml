@@ -1,5 +1,5 @@
 ---
-dexVersion: v1
+apiVersion: v1
 kind: Service
 metadata:
   name: dex
@@ -11,11 +11,14 @@ spec:
   - name: http
     port: 5556
     targetPort: 5556
+  - name: grpc
+    port: 5557
+    targetPort: 5557
   sessionAffinity: ClientIP
   selector:
     name: dex
 ---
-dexVersion: extensions/v1beta1
+apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: dex
@@ -32,15 +35,12 @@ spec:
         name: dex
         service: dex
     spec:
-      securityContext:
-        fsGroup: 1000
-        runAsNonRoot: true
       containers:
       - name: dex
         image: quay.io/appvia/dex:v2.20.0-master_grpc-connectors
-        command:
+        args:
           - serve
-          - /config/dex.yml
+          - /config/config.yml
         ports:
           - name: http
             containerPort: 5556

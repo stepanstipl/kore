@@ -32,23 +32,15 @@ spec:
         name: db
         service: db
     spec:
-      securityContext:
-        fsGroup: 1000
-        runAsNonRoot: true
       containers:
       - name: mariadb
         image: mariadb:bionic
-        env: 
-          - name: MYSQL_ROOT_PASSWORD
-            valueFrom: 
-              secretKeyRef: 
-                name: kore 
-                key: kore.db.pass
-        command:
-          - sh -c "
-            echo 'CREATE DATABASE IF NOT EXISTS hub;' > /docker-entrypoint-initdb.d/init.sql;
-            echo 'CREATE DATABASE IF NOT EXISTS audit;' >> /docker-entrypoint-initdb.d/init.sql;
-            /usr/local/bin/docker-entrypoint.sh --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
+        envFrom:
+          - secretRef:
+              name: kore
+        env:
+          - name: MYSQL_DATABASE
+            value: hub
         ports:
         - name: mysql
           containerPort: 3306
