@@ -352,6 +352,12 @@ func (t bsCtrl) GetClusterConfiguration(ctx context.Context, cluster *clusterv1.
 		},
 		StorageClass: "default",
 	}
+	if t.Config().DEX.EnabledDex {
+		params.Grafana.AuthURL = t.Config().DiscoveryURL + "/auth"
+		params.Grafana.TokenURL = t.Config().DiscoveryURL + "/token"
+		params.Grafana.UserInfoURL = t.Config().DiscoveryURL + "/userinfo"
+	}
+
 	switch provider {
 	case "gke":
 		params.StorageClass = "standard"
