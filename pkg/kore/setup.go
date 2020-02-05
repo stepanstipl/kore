@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"time"
 
+	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	core "github.com/appvia/kore/pkg/apis/core/v1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/appvia/kore/pkg/kore/assets"
@@ -76,6 +77,23 @@ func (h hubImpl) Setup(ctx context.Context) error {
 	for _, x := range assets.GetDefaultPlans() {
 		if err := h.Plans().Update(getAdminContext(ctx), x); err != nil {
 			return err
+		}
+	}
+	for _, x := range assets.GetDefaultClusterRoles() {
+		x.Namespace = HubAdminTeam
+
+		found, err := h.Store().Client().Has(ctx,
+			store.HasOptions.From(&clustersv1.ManagedClusterRole{}),
+			store.HasOptions.InNamespace(HubAdminTeam),
+			store.HasOptions.WithName(x.Name),
+		)
+		if err != nil {
+			return err
+		}
+		if !found {
+			if err := h.Store().Client().Create(ctx, store.CreateOptions.From(&x)); err != nil {
+				return err
+			}
 		}
 	}
 

@@ -22,7 +22,7 @@ package namespaceclaims
 const (
 	// ClusterRoleName is the name of the cluster role we will bind the
 	// teams users to
-	ClusterRoleName = "kore:system:ns-admin"
+	ClusterRoleName = "kore-nsadmin"
 	// RoleBindingName is the name namespace role binding
 	RoleBindingName = "kore:team"
 )

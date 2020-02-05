@@ -1192,9 +1192,21 @@ func schema_pkg_apis_clusters_v1_NamespaceClaimSpec(ref common.ReferenceCallback
 						},
 					},
 					"limits": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Limits are the limits placs on the namespace",
-							Ref:         ref("k8s.io/api/core/v1.LimitRange"),
+							Description: "Limits are the limits places on the namespace",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("k8s.io/api/core/v1.LimitRangeItem"),
+									},
+								},
+							},
 						},
 					},
 				},
@@ -1202,7 +1214,7 @@ func schema_pkg_apis_clusters_v1_NamespaceClaimSpec(ref common.ReferenceCallback
 			},
 		},
 		Dependencies: []string{
-			"github.com/appvia/kore/pkg/apis/core/v1.Ownership", "k8s.io/api/core/v1.LimitRange"},
+			"github.com/appvia/kore/pkg/apis/core/v1.Ownership", "k8s.io/api/core/v1.LimitRangeItem"},
 	}
 }
 
@@ -1238,15 +1250,8 @@ func schema_pkg_apis_clusters_v1_NamespaceClaimStatus(ref common.ReferenceCallba
 							},
 						},
 					},
-					"phase": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Phase is used to hold the current phase of the resource",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
 				},
-				Required: []string{"status", "conditions", "phase"},
+				Required: []string{"status", "conditions"},
 			},
 		},
 		Dependencies: []string{

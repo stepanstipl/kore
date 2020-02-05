@@ -42,9 +42,10 @@ type NamespaceClaimSpec struct {
 	// Labels is a series of labels for the namespace
 	// +kubebuilder:validation:Optional
 	Labels map[string]string `json:"labels,omitempty"`
-	// Limits are the limits placs on the namespace
+	// Limits are the limits places on the namespace
 	// +kubebuilder:validation:Optional
-	Limits v1.LimitRange `json:"limits,omitempty"`
+	// +listType
+	Limits []v1.LimitRangeItem `json:"limits,omitempty"`
 }
 
 // NamespaceClaimStatus defines the observed state of NamespaceClaim
