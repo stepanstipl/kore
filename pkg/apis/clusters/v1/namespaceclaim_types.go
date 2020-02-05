@@ -55,8 +55,6 @@ type NamespaceClaimStatus struct {
 	// Conditions is a series of things that caused the failure if any
 	// +listType
 	Conditions []corev1.Condition `json:"conditions"`
-	// Phase is used to hold the current phase of the resource
-	Phase string `json:"phase"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
