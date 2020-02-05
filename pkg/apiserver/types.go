@@ -24,6 +24,7 @@ import (
 
 	"github.com/appvia/kore/pkg/hub"
 	"github.com/appvia/kore/pkg/utils"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	restful "github.com/emicklei/go-restful"
 )
@@ -97,6 +98,22 @@ type AuthorizationResponse struct {
 	IDToken string `json:"id_token,omitempty"`
 	// TokenEndpointURL is the token endpoint
 	TokenEndpointURL string `json:"token_endpoint_url,omitempty"`
+}
+
+// Resource defines a resource handler
+type Resource interface {
+	// Name is the name of resource
+	Name() string
+	// Kind returns the resource type
+	Kind() runtime.Object
+	// Delete is called to remove a resource
+	Delete(context.Context, string) error
+	// Get returns a runtime object
+	Get(context.Context, string) (runtime.Object, error)
+	// List is called to return a list of the resources
+	List(context.Context) ([]runtime.Object, error)
+	// Update is the update handler
+	Update(context.Context, runtime.Object) error
 }
 
 // Handler is the contract to a resource handler
