@@ -1,10 +1,10 @@
 ---
 # Example file - used for a CLI OAuth2 test client
 # See https://github.com/dexidp/dex/blob/master/Documentation/getting-started.md#running-a-client
-apiVersion: core.hub.appvia.io/v1
+apiVersion: core.kore.appvia.io/v1
 kind: IDPClient
 metadata:
-  namespace: hub
+  namespace: kore
   name: default
 spec:
   displayName: Example Dex CLI app

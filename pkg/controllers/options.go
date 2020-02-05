@@ -20,7 +20,7 @@ package controllers
 import (
 	"time"
 
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/schema"
 
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -50,7 +50,7 @@ func DefaultManagerOptions(handler NameInterface) manager.Options {
 	return manager.Options{
 		LeaderElection:          true,
 		LeaderElectionID:        handler.Name() + "-lck",
-		LeaderElectionNamespace: hub.HubNamespace,
+		LeaderElectionNamespace: kore.HubNamespace,
 		MetricsBindAddress:      "0",
 		Scheme:                  schema.GetScheme(),
 		SyncPeriod:              &resync,

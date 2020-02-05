@@ -33,7 +33,7 @@ import (
 )
 
 const (
-	finalizerName = "gke.compute.hub.appvia.io"
+	finalizerName = "gke.compute.kore.appvia.io"
 )
 
 // Reconcile is the entrypoint for the reconcilation logic

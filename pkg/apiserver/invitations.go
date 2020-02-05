@@ -24,7 +24,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 	restful "github.com/emicklei/go-restful"
 )
 
@@ -59,7 +59,7 @@ func (u teamHandler) inviteLink(req *restful.Request, resp *restful.Response) {
 		if err != nil {
 			return err
 		}
-		options := hub.GenerateLinkOptions{Duration: duration, User: user}
+		options := kore.GenerateLinkOptions{Duration: duration, User: user}
 
 		token, err := u.Teams().Team(team).Members().GenerateLink(ctx, options)
 		if err != nil {
@@ -82,7 +82,7 @@ func (u teamHandler) inviteUser(req *restful.Request, resp *restful.Response) {
 		if err != nil {
 			return err
 		}
-		options := hub.InvitationOptions{Duration: duration}
+		options := kore.InvitationOptions{Duration: duration}
 
 		if err := u.Teams().Team(team).Members().Invite(ctx, user, options); err != nil {
 			return err

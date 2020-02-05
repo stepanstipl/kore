@@ -20,7 +20,7 @@ package filters
 import (
 	"time"
 
-	"github.com/appvia/kore/pkg/hub/authentication"
+	"github.com/appvia/kore/pkg/kore/authentication"
 
 	restful "github.com/emicklei/go-restful"
 	log "github.com/sirupsen/logrus"

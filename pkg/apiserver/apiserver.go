@@ -25,7 +25,7 @@ import (
 	"net/http"
 
 	"github.com/appvia/kore/pkg/apiserver/filters"
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 
 	restful "github.com/emicklei/go-restful"
@@ -38,12 +38,12 @@ type server struct {
 	*Config
 	// container is the base container for the services
 	container *restful.Container
-	// store is the hub bridge interface
-	store hub.Interface
+	// store is the kore bridge interface
+	store kore.Interface
 }
 
-// New returns a new api server for the hub
-func New(hub hub.Interface, config Config) (Interface, error) {
+// New returns a new api server for the kore
+func New(kore kore.Interface, config Config) (Interface, error) {
 	// @step: verify the configuration
 	if err := config.isValid(); err != nil {
 		return nil, fmt.Errorf("invalid api config: %s", err)
@@ -62,12 +62,12 @@ func New(hub hub.Interface, config Config) (Interface, error) {
 	c.Filter(cors.Filter)
 
 	authFilter := filters.AuthenticationHandler{
-		Realm: hub.Config().DiscoveryURL,
+		Realm: kore.Config().DiscoveryURL,
 	}
 
 	// @step: register the resource handlers
 	for _, x := range GetRegisteredHandlers() {
-		ws, err := x.Register(hub, utils.NewPathBuilder(APIVersion))
+		ws, err := x.Register(kore, utils.NewPathBuilder(APIVersion))
 		if err != nil {
 			return nil, err
 		}
@@ -98,11 +98,11 @@ func New(hub hub.Interface, config Config) (Interface, error) {
 			http.FileServer(http.Dir(config.SwaggerUIPath)),
 		))
 
-	return &server{Config: &config, container: c, store: hub}, nil
+	return &server{Config: &config, container: c, store: kore}, nil
 }
 
-// Hub returns the interface to the hub
-func (h *server) Hub() hub.Interface {
+// Kore returns the interface to the kore
+func (h *server) Kore() kore.Interface {
 	return h.store
 }
 
@@ -116,7 +116,7 @@ func (h *server) Run(ctx context.Context) error {
 	log.WithFields(log.Fields{
 		"listen":      h.Listen,
 		"tls_enabled": h.UseTLS(),
-	}).Info("starting the hub-api")
+	}).Info("starting the kore-api")
 
 	// @step: setup the http handler
 	s := &http.Server{

@@ -30,7 +30,7 @@ import (
 func GetDeleteCommand(config *Config) cli.Command {
 	return cli.Command{
 		Name:  "delete",
-		Usage: "Used to delete one of more resources from the hub",
+		Usage: "Used to delete one of more resources from the kore",
 		Flags: []cli.Flag{
 			cli.StringSliceFlag{
 				Name:     "file,f",

@@ -1,20 +1,20 @@
 /**
  * Copyright (C) 2020 Appvia Ltd <info@appvia.io>
  *
- * This file is part of hub-apiserver.
+ * This file is part of kore-apiserver.
  *
- * hub-apiserver is free software: you can redistribute it and/or modify
+ * kore-apiserver is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
  *
- * hub-apiserver is distributed in the hope that it will be useful,
+ * kore-apiserver is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with hub-apiserver.  If not, see <http://www.gnu.org/licenses/>.
+ * along with kore-apiserver.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package kubernetes
@@ -25,7 +25,7 @@ import (
 	"time"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
@@ -71,7 +71,7 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 		ObjectMeta: metav1.ObjectMeta{
 			Name: KubeProxyNamespace,
 			Labels: map[string]string{
-				hub.Label("owned"): "true",
+				kore.Label("owned"): "true",
 			},
 		},
 	}); err != nil {
@@ -143,7 +143,7 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 			Name:      "proxy",
 			Namespace: KubeProxyNamespace,
 			Labels: map[string]string{
-				hub.Label("owner"): "true",
+				kore.Label("owner"): "true",
 			},
 		},
 	}); err != nil {
@@ -155,7 +155,7 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 	// @step: ensure the cluster role and binding exist
 	if _, err := kubernetes.CreateOrUpdateManagedClusterRole(ctx, cc, &rbacv1.ClusterRole{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "hub:oidc:proxy",
+			Name: "kore:oidc:proxy",
 		},
 		Rules: []rbacv1.PolicyRule{
 			{
@@ -176,12 +176,12 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 	}
 	if _, err := kubernetes.CreateOrUpdateManagedClusterRoleBinding(ctx, cc, &rbacv1.ClusterRoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "hub:oidc:proxy",
+			Name: "kore:oidc:proxy",
 		},
 		RoleRef: rbacv1.RoleRef{
 			APIGroup: rbacv1.SchemeGroupVersion.Group,
 			Kind:     "ClusterRole",
-			Name:     "hub:oidc:proxy",
+			Name:     "kore:oidc:proxy",
 		},
 		Subjects: []rbacv1.Subject{
 			{

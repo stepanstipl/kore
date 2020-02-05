@@ -1,20 +1,20 @@
 /**
  * Copyright (C) 2020 Appvia Ltd <info@appvia.io>
  *
- * This file is part of hub-apiserver.
+ * This file is part of kore-apiserver.
  *
- * hub-apiserver is free software: you can redistribute it and/or modify
+ * kore-apiserver is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
  *
- * hub-apiserver is distributed in the hope that it will be useful,
+ * kore-apiserver is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with hub-apiserver.  If not, see <http://www.gnu.org/licenses/>.
+ * along with kore-apiserver.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package users
@@ -54,7 +54,7 @@ func getTestDBURL() string {
 		return os.Getenv("TEST_USERS_DATABASE_URL")
 	}
 
-	return "root:pass@tcp(127.0.0.1:3306)/hub?parseTime=true"
+	return "root:pass@tcp(127.0.0.1:3306)/kore?parseTime=true"
 }
 
 func getTestDBDriver() string {
@@ -90,15 +90,15 @@ func makeTestStore(t testframework) Interface {
 
 		switch driver {
 		case "mysql":
-			if _, err := db.Exec("drop database if exists hub"); err != nil {
+			if _, err := db.Exec("drop database if exists kore"); err != nil {
 				t.Fatalf("failed to drop the database: %s", err)
 			}
 
-			if _, err := db.Exec("create database if not exists hub"); err != nil {
+			if _, err := db.Exec("create database if not exists kore"); err != nil {
 				t.Fatalf("failed to create the database: %s", err)
 			}
 
-			if _, err := db.Exec("use hub"); err != nil {
+			if _, err := db.Exec("use kore"); err != nil {
 				t.Fatalf("failed to select database: %s", err)
 			}
 		}

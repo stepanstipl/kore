@@ -21,7 +21,7 @@ jobs:
           MYSQL_ROOT_PASSWORD: pass
         command:
           sh -c "
-            echo 'CREATE DATABASE IF NOT EXISTS hub;' > /docker-entrypoint-initdb.d/init.sql;
+            echo 'CREATE DATABASE IF NOT EXISTS kore;' > /docker-entrypoint-initdb.d/init.sql;
             echo 'CREATE DATABASE IF NOT EXISTS audit;' >> /docker-entrypoint-initdb.d/init.sql;
             /usr/local/bin/docker-entrypoint.sh --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
 
@@ -58,13 +58,13 @@ jobs:
           name: Test & Build
           environment:
             TEST_AUDIT_DATABASE_URL: "root:pass@tcp(database:3306)/audit?parseTime=true"
-            TEST_USERS_DATABASE_URL: "root:pass@tcp(database:3306)/hub?parseTime=true"
+            TEST_USERS_DATABASE_URL: "root:pass@tcp(database:3306)/kore?parseTime=true"
           command: |
             make test
             make static
       - run:
           command: |
-            bin/hub-apiserver --verbose
+            bin/kore-apiserver --verbose
           background: true
           environment:
             HUB_ADMIN_TOKEN: "password"
@@ -73,7 +73,7 @@ jobs:
             HUB_CERTIFICATE_AUTHORITY_KEY: "hack/ca/ca-key.pem"
             HUB_HMAC: "bdT2Qg6DybsLIwc0TbYWrkGC4auovscg"
             KUBE_API_SERVER: "http://kube-apiserver:8080"
-            USERS_DB_URL: "root:pass@tcp(database:3306)/hub?parseTime=true"
+            USERS_DB_URL: "root:pass@tcp(database:3306)/kore?parseTime=true"
       - run:
           name: Checking swagger
           command: |
@@ -82,11 +82,11 @@ jobs:
       - persist_to_workspace:
           root: bin
           paths:
-            - hub-apiserver
+            - kore-apiserver
 
   release:
     environment:
-      DOCKER_IMAGE: quay.io/appvia/hub-apiserver
+      DOCKER_IMAGE: quay.io/appvia/kore-apiserver
       GOPATH: /go
 
     docker:

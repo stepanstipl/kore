@@ -47,7 +47,7 @@ var (
 )
 
 const (
-	finalizerName = "bootstrap.compute.hub.appvia.io"
+	finalizerName = "bootstrap.compute.kore.appvia.io"
 	// jobNamespace is the namespace the job runs in
 	jobNamespace = "kube-system"
 	// jobName is the name of the job
@@ -323,7 +323,7 @@ func (t bsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 // GetClusterConfiguration is responsible for generate the parameters for the cluster
 func (t bsCtrl) GetClusterConfiguration(ctx context.Context, cluster *clusterv1.Kubernetes, provider string) (Parameters, error) {
 	params := Parameters{
-		BootImage: "quay.io/appvia/hub-bootstrap:v0.2.0",
+		BootImage: "quay.io/appvia/kore-bootstrap:v0.2.0",
 		Catalog:   CatalogOptions{Image: "v0.0.2"},
 		Kiali: KialiOptions{
 			Password: utils.Random(12),

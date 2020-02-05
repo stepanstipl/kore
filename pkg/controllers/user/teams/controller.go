@@ -23,7 +23,7 @@ import (
 
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/appvia/kore/pkg/controllers"
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/rest"
@@ -53,13 +53,13 @@ func (t *teamController) Name() string {
 }
 
 // Run starts the controller
-func (t *teamController) Run(ctx context.Context, cfg *rest.Config, _ hub.Interface) error {
+func (t *teamController) Run(ctx context.Context, cfg *rest.Config, _ kore.Interface) error {
 	logger := log.WithFields(log.Fields{
 		"controller": t.Name(),
 	})
 
 	options := controllers.DefaultManagerOptions(t)
-	options.Namespace = hub.HubNamespace
+	options.Namespace = kore.HubNamespace
 
 	mgr, err := manager.New(cfg, controllers.DefaultManagerOptions(t))
 	if err != nil {

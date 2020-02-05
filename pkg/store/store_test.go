@@ -119,20 +119,20 @@ func TestStoreGetByLabels(t *testing.T) {
 	oa := &unstructured.Unstructured{
 		Object: map[string]interface{}{"metadata": map[string]string{"name": "test1"}},
 	}
-	s.APIVersion("hub.io").Kind("Workspace").Namespace("hub").Label("team.io", "dev").Set("test", o)
-	s.APIVersion("hub.io").Kind("Workspace").Namespace("hub").Label("team.io", "apps").Set("test1", oa)
+	s.APIVersion("kore.io").Kind("Workspace").Namespace("kore").Label("team.io", "dev").Set("test", o)
+	s.APIVersion("kore.io").Kind("Workspace").Namespace("kore").Label("team.io", "apps").Set("test1", oa)
 
-	items, err := s.APIVersion("hub.io").Kind("Workspace").Namespace("hub").List()
+	items, err := s.APIVersion("kore.io").Kind("Workspace").Namespace("kore").List()
 	require.NoError(t, err)
 	require.NotNil(t, items)
 	assert.Equal(t, 2, len(items))
 
-	items, err = s.APIVersion("hub.io").Kind("Workspace").Namespace("hub").Label("team.io", "dev").List()
+	items, err = s.APIVersion("kore.io").Kind("Workspace").Namespace("kore").Label("team.io", "dev").List()
 	require.NoError(t, err)
 	require.NotNil(t, items)
 	assert.Equal(t, 1, len(items))
 
-	items, err = s.APIVersion("hub.io").Kind("Workspace").Namespace("hub").Label("team.io", "apps").List()
+	items, err = s.APIVersion("kore.io").Kind("Workspace").Namespace("kore").Label("team.io", "apps").List()
 	require.NoError(t, err)
 	require.NotNil(t, items)
 	assert.Equal(t, 1, len(items))

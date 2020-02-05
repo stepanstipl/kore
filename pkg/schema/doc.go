@@ -15,5 +15,5 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// Package schema provides a schema for all the "known" hub types
+// Package schema provides a schema for all the "known" kore types
 package schema

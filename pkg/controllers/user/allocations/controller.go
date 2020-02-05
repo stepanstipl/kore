@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/appvia/kore/pkg/controllers"
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
@@ -41,7 +41,7 @@ import (
 )
 
 type acCtrl struct {
-	hub.Interface
+	kore.Interface
 	// mgr is the manager
 	mgr manager.Manager
 	// stopCh is the stop channel
@@ -60,7 +60,7 @@ func (a acCtrl) Name() string {
 }
 
 // Run is called when the controller is started
-func (a *acCtrl) Run(ctx context.Context, cfg *rest.Config, hi hub.Interface) error {
+func (a *acCtrl) Run(ctx context.Context, cfg *rest.Config, hi kore.Interface) error {
 	a.Interface = hi
 
 	// @step: create the manager for the controller

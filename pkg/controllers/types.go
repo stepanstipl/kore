@@ -20,7 +20,7 @@ package controllers
 import (
 	"context"
 
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"k8s.io/client-go/rest"
@@ -35,7 +35,7 @@ type NameInterface interface {
 type RegisterInterface interface {
 	NameInterface
 	// Run starts the controller
-	Run(context.Context, *rest.Config, hub.Interface) error
+	Run(context.Context, *rest.Config, kore.Interface) error
 	// Stop instructs the controller to stop
 	Stop(context.Context) error
 }

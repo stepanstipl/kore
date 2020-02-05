@@ -40,7 +40,7 @@ spec:
               name: kore
         env:
           - name: MYSQL_DATABASE
-            value: hub
+            value: kore
         ports:
         - name: mysql
           containerPort: 3306

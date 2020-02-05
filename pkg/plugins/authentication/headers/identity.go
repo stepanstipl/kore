@@ -21,16 +21,16 @@ import (
 	"context"
 
 	plugin "github.com/appvia/kore/pkg/apiserver/plugins/identity"
-	"github.com/appvia/kore/pkg/hub"
-	"github.com/appvia/kore/pkg/hub/authentication"
+	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/kore/authentication"
 )
 
 type hdrImpl struct {
-	hub.Interface
+	kore.Interface
 }
 
 // New returns a new header based identity provider
-func New(h hub.Interface) (plugin.Plugin, error) {
+func New(h kore.Interface) (plugin.Plugin, error) {
 	return &hdrImpl{Interface: h}, nil
 }
 
@@ -41,7 +41,7 @@ func (h hdrImpl) Admit(ctx context.Context, req plugin.Requestor) (authenticatio
 	if username == "" {
 		return nil, false
 	}
-	identity, found, err := hub.Client.GetUserIdentity(ctx, username)
+	identity, found, err := kore.Client.GetUserIdentity(ctx, username)
 	if err != nil || !found {
 		return nil, false
 	}

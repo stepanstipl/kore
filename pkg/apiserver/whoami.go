@@ -23,8 +23,8 @@ import (
 	"net/http"
 
 	"github.com/appvia/kore/pkg/apiserver/types"
-	"github.com/appvia/kore/pkg/hub"
-	"github.com/appvia/kore/pkg/hub/authentication"
+	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/utils"
 
 	restful "github.com/emicklei/go-restful"
@@ -36,7 +36,7 @@ func init() {
 }
 
 type whoImpl struct {
-	hub.Interface
+	kore.Interface
 	// DefaultHandlder implements default features
 	DefaultHandler
 }
@@ -47,7 +47,7 @@ func (u whoImpl) Name() string {
 }
 
 // Register is responsible for registering the webserver
-func (u *whoImpl) Register(i hub.Interface, builder utils.PathBuilder) (*restful.WebService, error) {
+func (u *whoImpl) Register(i kore.Interface, builder utils.PathBuilder) (*restful.WebService, error) {
 	log.WithFields(log.Fields{
 		"path": builder.Path("whoami"),
 	}).Info("registering the user webservice with container")
@@ -62,7 +62,7 @@ func (u *whoImpl) Register(i hub.Interface, builder utils.PathBuilder) (*restful
 	ws.Route(
 		ws.GET("").To(u.findWho).
 			Doc("Returns information about who the user is and what teams they are a member").
-			Returns(http.StatusOK, "A list of all the users in the hub", types.WhoAmI{}).
+			Returns(http.StatusOK, "A list of all the users in the kore", types.WhoAmI{}).
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
 	)
 

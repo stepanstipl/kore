@@ -4,132 +4,132 @@ kind: Namespace
 metadata:
   name: team-devs
 ---
-apiVersion: org.hub.appvia.io/v1
+apiVersion: org.kore.appvia.io/v1
 kind: User
 metadata:
-  namespace: hub
+  namespace: kore
   name: marcin
 spec:
   username: marcin
 ---
-apiVersion: org.hub.appvia.io/v1
+apiVersion: org.kore.appvia.io/v1
 kind: User
 metadata:
-  namespace: hub
+  namespace: kore
   name: lewis
 spec:
   username: lewis
 ---
-apiVersion: org.hub.appvia.io/v1
+apiVersion: org.kore.appvia.io/v1
 kind: User
 metadata:
-  namespace: hub
+  namespace: kore
   name: kashif
 spec:
   username: kashif
 ---
-apiVersion: org.hub.appvia.io/v1
+apiVersion: org.kore.appvia.io/v1
 kind: User
 metadata:
-  namespace: hub
+  namespace: kore
   name: rohith
 spec:
   username: rohith
 ---
-apiVersion: org.hub.appvia.io/v1
+apiVersion: org.kore.appvia.io/v1
 kind: User
 metadata:
-  namespace: hub
+  namespace: kore
   name: jonathan
 spec:
   username: jonathan
 ---
-apiVersion: org.hub.appvia.io/v1
+apiVersion: org.kore.appvia.io/v1
 kind: User
 metadata:
-  namespace: hub
+  namespace: kore
   name: james
 spec:
   username: james
 ---
-apiVersion: org.hub.appvia.io/v1
+apiVersion: org.kore.appvia.io/v1
 kind: Team
 metadata:
   name: devs
-  namespace: hub
+  namespace: kore
   labels:
-    hub.appvia.io/team: dev
+    kore.appvia.io/team: dev
 spec:
   summary: devs
   description: devs
 ---
-apiVersion: org.hub.appvia.io/v1
+apiVersion: org.kore.appvia.io/v1
 kind: Team
 metadata:
   name: frontend
-  namespace: hub
+  namespace: kore
   labels:
-    hub.appvia.io/team: frontend
+    kore.appvia.io/team: frontend
 spec:
   summary: frontend
   description: front
 ---
-apiVersion: org.hub.appvia.io/v1
+apiVersion: org.kore.appvia.io/v1
 kind: Workspace
 metadata:
   name: app1
   namespace: team-devs
   labels:
-    hub.appvia.io/team: dev
-    hub.appvia.io/workspace: app1
+    kore.appvia.io/team: dev
+    kore.appvia.io/workspace: app1
 spec:
   summary: Apps Workspace
   description: Apps Workspace
 ---
-apiVersion: org.hub.appvia.io/v1
+apiVersion: org.kore.appvia.io/v1
 kind: TeamMembership
 metadata:
   name: rohith
   namespace: team-devs
   labels:
-    hub.appvia.io/team: dev
-    hub.appvia.io/user: rohith
+    kore.appvia.io/team: dev
+    kore.appvia.io/user: rohith
 spec:
   team: devs
   username: rohith
 ---
-apiVersion: org.hub.appvia.io/v1
+apiVersion: org.kore.appvia.io/v1
 kind: TeamMembership
 metadata:
   name: jonathan
   namespace: team-devs
   labels:
-    hub.appvia.io/team: devs
-    hub.appvia.io/user: jonathan
+    kore.appvia.io/team: devs
+    kore.appvia.io/user: jonathan
 spec:
   team: devs
   username: jonathan
 ---
-apiVersion: org.hub.appvia.io/v1
+apiVersion: org.kore.appvia.io/v1
 kind: TeamMembership
 metadata:
   name: admin
   namespace: team-devs
   labels:
-    hub.appvia.io/team: devs
-    hub.appvia.io/user: admin
+    kore.appvia.io/team: devs
+    kore.appvia.io/user: admin
 spec:
   team: devs
   username: admin
 ---
-apiVersion: org.hub.appvia.io/v1
+apiVersion: org.kore.appvia.io/v1
 kind: TeamMembership
 metadata:
   name: admin
   namespace: team-frontend
   labels:
-    hub.appvia.io/team: frontend
-    hub.appvia.io/user: admin
+    kore.appvia.io/team: frontend
+    kore.appvia.io/user: admin
 spec:
   team: frontend
   username: frontend

@@ -1,14 +1,14 @@
 ---
-apiVersion: kube.hub.appvia.io/v1
+apiVersion: kube.kore.appvia.io/v1
 kind: NamespaceClaim
 metadata:
   name: app
   labels:
-    hub.appvia.io/binding: dev
-    hub.appvia.io/name: app
-    hub.appvia.io/scope: workspace
-    hub.appvia.io/team: devs
-    hub.appvia.io/workspace: app1
+    kore.appvia.io/binding: dev
+    kore.appvia.io/name: app
+    kore.appvia.io/scope: workspace
+    kore.appvia.io/team: devs
+    kore.appvia.io/workspace: app1
 spec:
   name: app
   labels:
@@ -16,7 +16,7 @@ spec:
   annotations:
     hello: world
   use:
-    group: clusters.compute.hub.appvia.io
+    group: clusters.compute.kore.appvia.io
     kind: Kubernetes
     name: dev
     namespace: team-devs

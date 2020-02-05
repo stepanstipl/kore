@@ -1,20 +1,20 @@
 /**
  * Copyright (C) 2020 Appvia Ltd <info@appvia.io>
  *
- * This file is part of hub-apiserver.
+ * This file is part of kore-apiserver.
  *
- * hub-apiserver is free software: you can redistribute it and/or modify
+ * kore-apiserver is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
  *
- * hub-apiserver is distributed in the hope that it will be useful,
+ * kore-apiserver is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with hub-apiserver.  If not, see <http://www.gnu.org/licenses/>.
+ * along with kore-apiserver.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package clusterroles
@@ -26,7 +26,7 @@ import (
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/controllers"
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -41,7 +41,7 @@ import (
 )
 
 type crCtrl struct {
-	hub.Interface
+	kore.Interface
 	// mgr is the manager
 	mgr manager.Manager
 	// stopCh is the stop channel
@@ -60,7 +60,7 @@ func (a crCtrl) Name() string {
 }
 
 // Run is called when the controller is started
-func (a *crCtrl) Run(ctx context.Context, cfg *rest.Config, hi hub.Interface) error {
+func (a *crCtrl) Run(ctx context.Context, cfg *rest.Config, hi kore.Interface) error {
 	a.Interface = hi
 
 	// @step: create the manager for the controller
@@ -127,7 +127,7 @@ func (a *crCtrl) Stop(context.Context) error {
 	return nil
 }
 
-// FilterClustersBySource returns a list of kubenetes cluster in the hub - if the
+// FilterClustersBySource returns a list of kubenetes cluster in the kore - if the
 // namespace is global we retrieve all clusters, else just the local teams
 func (a *crCtrl) FilterClustersBySource(ctx context.Context,
 	clusters []corev1.Ownership,
@@ -171,7 +171,7 @@ func (a *crCtrl) FilterClustersBySource(ctx context.Context,
 		return list, nil
 	}
 
-	if hub.IsGlobalTeam(namespace) {
+	if kore.IsGlobalTeam(namespace) {
 		return list, a.mgr.GetClient().List(ctx, list, client.InNamespace(""))
 	}
 

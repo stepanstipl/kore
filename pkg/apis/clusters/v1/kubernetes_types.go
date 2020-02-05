@@ -20,6 +20,7 @@ package v1
 import (
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 
+	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -68,6 +69,8 @@ type ClusterUser struct {
 // KubernetesStatus defines the observed state of Cluster
 // +k8s:openapi-gen=true
 type KubernetesStatus struct {
+	// AdminToken is the kore-admin service account token which is bound to cluster-admin
+	AdminToken core.Secret `json:"adminToken,omitempty"`
 	// CaCertificate is the base64 encoded cluster certificate
 	CaCertificate string `json:"caCertificate,omitempty"`
 	// Components is a collection of component statuses

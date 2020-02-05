@@ -1,20 +1,20 @@
 /**
  * Copyright (C) 2020 Appvia Ltd <info@appvia.io>
  *
- * This file is part of hub-apiserver.
+ * This file is part of kore-apiserver.
  *
- * hub-apiserver is free software: you can redistribute it and/or modify
+ * kore-apiserver is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
  *
- * hub-apiserver is distributed in the hope that it will be useful,
+ * kore-apiserver is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with hub-apiserver.  If not, see <http://www.gnu.org/licenses/>.
+ * along with kore-apiserver.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package clusterroles
@@ -28,7 +28,7 @@ import (
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/controllers"
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
@@ -40,7 +40,7 @@ import (
 )
 
 const (
-	rolesFinalizer = "managedclusterroles.hub.appvia.io"
+	rolesFinalizer = "managedclusterroles.kore.appvia.io"
 )
 
 // Reconcile ensures the clusters roles across all the managed clusters
@@ -129,7 +129,7 @@ func (a crCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 					ObjectMeta: metav1.ObjectMeta{
 						Name: role.Name,
 						Labels: map[string]string{
-							hub.Label("owned"): "true",
+							kore.Label("owned"): "true",
 						},
 					},
 					Rules: rules,

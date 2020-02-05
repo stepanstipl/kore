@@ -32,7 +32,7 @@ import (
 )
 
 var (
-	// hs is the schema for hub resources
+	// hs is the schema for kore resources
 	hs *runtime.Scheme
 )
 

@@ -1,17 +1,17 @@
-NAME=hub-apiserver
+NAME=kore-apiserver
 AUTHOR ?= appvia
 AUTHOR_EMAIL=gambol99@gmail.com
 BUILD_TIME=$(shell date '+%s')
 DEPS=$(shell go list -f '{{range .TestImports}}{{.}} {{end}}' ./...)
 GIT_SHA=$(shell git --no-pager describe --always --dirty)
-HUB_APIS_SHA=$(shell cd ../hub-apis && git log | head -n 1 | cut -d' ' -f2)
+HUB_APIS_SHA=$(shell cd ../kore-apis && git log | head -n 1 | cut -d' ' -f2)
 GOVERSION ?= 1.12.7
 HARDWARE=$(shell uname -m)
 LFLAGS ?= -X main.gitsha=${GIT_SHA} -X main.compiled=${BUILD_TIME}
 PACKAGES=$(shell go list ./...)
 REGISTRY=quay.io
 ROOT_DIR=${PWD}
-VERSION ?= $(shell awk '/release.*=/ { print $$3 }' cmd/hub-apiserver/main.go | sed 's/"//g')
+VERSION ?= $(shell awk '/release.*=/ { print $$3 }' cmd/kore-apiserver/main.go | sed 's/"//g')
 VETARGS ?= -asmdecl -atomic -bool -buildtags -copylocks -methods -nilfunc -printf -rangeloops -unsafeptr
 APIS ?= $(shell find pkg/apis -name "v*" -type d | sed -e 's/pkg\/apis\///' | sort | tr '\n' ' ')
 UNAME := $(shell uname)
@@ -35,7 +35,7 @@ golang:
 build: golang
 	@echo "--> Compiling the project"
 	@mkdir -p bin
-	@for binary in hub-apiserver korectl; do \
+	@for binary in kore-apiserver korectl; do \
 		echo "--> Building $${binary} binary" ; \
 		go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go ; \
 	done
@@ -43,7 +43,7 @@ build: golang
 static: golang deps
 	@echo "--> Compiling the static binary"
 	@mkdir -p bin
-	@for binary in hub-apiserver korectl; do \
+	@for binary in kore-apiserver korectl; do \
 		echo "--> Building $${binary} binary" ; \
 		CGO_ENABLED=0 GOOS=linux go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go ; \
 	done
@@ -72,7 +72,7 @@ in-docker-build:
 
 swagger: compose
 	@echo "--> Retrieving the swagger api"
-	@cd bin && { ./hub-apiserver --kube-api-server http://127.0.0.1:8080 2>/dev/null >/dev/null & echo $$! > $@; }
+	@cd bin && { ./kore-apiserver --kube-api-server http://127.0.0.1:8080 2>/dev/null >/dev/null & echo $$! > $@; }
 	@$(MAKE) swagger-json
 	@$(MAKE) compose-down
 	@$(MAKE) swagger-validate
@@ -103,7 +103,7 @@ docker-swagger-validate:
 		-v ${PWD}:${PWD} \
 		-w ${PWD} \
 		-e API_HOST=$(API_HOST_IN_DOCKER) \
-		quay.io/appvia/hub-apiserver-build:v0.0.1 \
+		quay.io/appvia/kore-apiserver-build:v0.0.1 \
 		make in-docker-swagger
 
 compose-up:
@@ -129,7 +129,7 @@ run:
 
 run-api-only:
 	@echo "--> Starting api..."
-	bin/hub-apiserver \
+	bin/kore-apiserver \
 		--kube-api-server http://127.0.0.1:8080 \
 		--verbose \
 		--dex-public-url http://127.0.0.1:5556 \

@@ -1,20 +1,20 @@
 /**
  * Copyright (C) 2020 Appvia Ltd <info@appvia.io>
  *
- * This file is part of hub-apiserver.
+ * This file is part of kore-apiserver.
  *
- * hub-apiserver is free software: you can redistribute it and/or modify
+ * kore-apiserver is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
  *
- * hub-apiserver is distributed in the hope that it will be useful,
+ * kore-apiserver is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with hub-apiserver.  If not, see <http://www.gnu.org/licenses/>.
+ * along with kore-apiserver.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package apiserver
@@ -28,7 +28,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 
 	"github.com/coreos/go-oidc"
@@ -42,7 +42,7 @@ func init() {
 }
 
 type loginHandler struct {
-	hub.Interface
+	kore.Interface
 	// oidcConfig is the openid configuration
 	oidcConfig *oauth2.Config
 	// verifier is responsible for verification of the tokens
@@ -56,7 +56,7 @@ type loginHandler struct {
 // @TODO Quick and dirty - the while this needs to be polished up
 
 // Register is responsible for handling the registration
-func (l *loginHandler) Register(i hub.Interface, builder utils.PathBuilder) (*restful.WebService, error) {
+func (l *loginHandler) Register(i kore.Interface, builder utils.PathBuilder) (*restful.WebService, error) {
 	log.WithFields(log.Fields{
 		"path": "login",
 	}).Info("registering the login webservice with container")
@@ -207,7 +207,7 @@ func (l *loginHandler) callbackHandler(req *restful.Request, resp *restful.Respo
 			return http.StatusForbidden, errors.New("no email found in the token")
 		}
 
-		// @step: ensure this matches a user in the hub - else we create him
+		// @step: ensure this matches a user in the kore - else we create him
 		if err := l.Users().EnableUser(req.Request.Context(), username, email); err != nil {
 			return http.StatusInternalServerError, err
 		}
@@ -242,7 +242,7 @@ func (l *loginHandler) callbackHandler(req *restful.Request, resp *restful.Respo
 		return http.StatusOK, nil
 	}()
 	if err != nil {
-		log.WithError(err).Error("failed to authorize the user to hub")
+		log.WithError(err).Error("failed to authorize the user to kore")
 
 		resp.WriteHeader(hcode)
 	}

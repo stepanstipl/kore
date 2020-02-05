@@ -22,8 +22,8 @@ import (
 	"errors"
 
 	"github.com/appvia/kore/pkg/apiserver/plugins/identity"
-	"github.com/appvia/kore/pkg/hub"
-	"github.com/appvia/kore/pkg/hub/authentication"
+	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/openid"
 
@@ -31,7 +31,7 @@ import (
 )
 
 type authImpl struct {
-	hub.Interface
+	kore.Interface
 	// config is the configuration
 	config Config
 	// verifier is the openid verifer
@@ -39,7 +39,7 @@ type authImpl struct {
 }
 
 // New returns an openid authenticator
-func New(h hub.Interface, config Config) (identity.Plugin, error) {
+func New(h kore.Interface, config Config) (identity.Plugin, error) {
 	// @step: verify the configuration
 	if err := config.IsValid(); err != nil {
 		return nil, err
@@ -97,7 +97,7 @@ func (o *authImpl) Admit(ctx context.Context, req identity.Requestor) (authentic
 			return nil, err
 		}
 		if !found {
-			return nil, errors.New("user not found in the hub")
+			return nil, errors.New("user not found in the kore")
 		}
 
 		return id, nil

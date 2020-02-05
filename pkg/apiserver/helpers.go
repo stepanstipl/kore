@@ -24,7 +24,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 	log "github.com/sirupsen/logrus"
 
 	restful "github.com/emicklei/go-restful"
@@ -54,18 +54,18 @@ func makeListWithSize(size int) *List {
 	return l
 }
 
-// handleErrors is a generic wrapper for handling the error from downstream hub brigde
+// handleErrors is a generic wrapper for handling the error from downstream kore brigde
 func handleErrors(req *restful.Request, resp *restful.Response, handler func() error) {
 	if err := handler(); err != nil {
 		code := http.StatusInternalServerError
 		switch err {
-		case hub.ErrNotFound:
+		case kore.ErrNotFound:
 			code = http.StatusNotFound
-		case hub.ErrNotAllowed{}:
+		case kore.ErrNotAllowed{}:
 			code = http.StatusNotAcceptable
-		case hub.ErrUnauthorized:
+		case kore.ErrUnauthorized:
 			code = http.StatusForbidden
-		case hub.ErrRequestInvalid:
+		case kore.ErrRequestInvalid:
 			code = http.StatusBadRequest
 		case io.EOF:
 			code = http.StatusBadRequest

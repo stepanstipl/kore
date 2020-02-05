@@ -24,7 +24,7 @@ import (
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
@@ -37,7 +37,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-const finalizerName = "kubernetes.clusters.hub.appvia.io"
+const finalizerName = "kubernetes.clusters.kore.appvia.io"
 
 // Reconcile is the entrypoint for the reconcilation logic
 func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
@@ -89,7 +89,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			logger.Debug("no credentials found from cluster")
 
 			// it wasn't found - is the cluster provider backed?
-			if !hub.IsProviderBacked(object) {
+			if !kore.IsProviderBacked(object) {
 				object.Status.Status = corev1.WarningStatus
 				object.Status.Components.SetCondition(corev1.Component{
 					Name:    "provision",
@@ -102,10 +102,10 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 			// the secret doesn't appear to be available yet - it's either been pushed
 			// of the provider hasn't finished
-			if hub.IsProviderBacked(object) {
+			if kore.IsProviderBacked(object) {
 
 				// @step: check if the provider is still pending
-				u, err := hub.ToUnstructuredFromOwnership(object.Spec.Provider)
+				u, err := kore.ToUnstructuredFromOwnership(object.Spec.Provider)
 				if err != nil {
 					logger.WithError(err).Error("invalid group version kind in resource")
 
@@ -195,9 +195,9 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			for name, users := range ClusterUserRolesToMap(object.Spec.ClusterUsers) {
 				binding := &rbacv1.ClusterRoleBinding{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: "hub:clusterusers:" + name,
+						Name: "kore:clusterusers:" + name,
 						Labels: map[string]string{
-							hub.Label("owned"): "true",
+							kore.Label("owned"): "true",
 						},
 					},
 					RoleRef: rbacv1.RoleRef{
@@ -243,7 +243,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			})
 		} else {
 			logger.Debug("removing any bindings for cluster users as non defined")
-			if err := kubernetes.DeleteBindingsWithPrefix(context.Background(), client, "hub:clusterusers:"); err != nil {
+			if err := kubernetes.DeleteBindingsWithPrefix(context.Background(), client, "kore:clusterusers:"); err != nil {
 				logger.WithError(err).Error("trying to delete any cluster user role bindings")
 
 				return reconcile.Result{}, err
@@ -266,9 +266,9 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 				// @step: we need to provision binding and all users
 				binding := &rbacv1.ClusterRoleBinding{
 					ObjectMeta: metav1.ObjectMeta{
-						Name: "hub:team:inherited",
+						Name: "kore:team:inherited",
 						Labels: map[string]string{
-							hub.Label("owned"): "true",
+							kore.Label("owned"): "true",
 						},
 					},
 					RoleRef: rbacv1.RoleRef{
@@ -332,7 +332,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 			if err := kubernetes.DeleteIfExists(context.Background(), client, &rbacv1.ClusterRoleBinding{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: "hub:team:inherited",
+					Name: "kore:team:inherited",
 				},
 			}); err != nil {
 				logger.WithError(err).Error("trying to delete any inherited role binding")

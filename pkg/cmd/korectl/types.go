@@ -1,20 +1,20 @@
 /**
  * Copyright (C) 2020 Rohith Jayawardene <info@appvia.io>
  *
- * This file is part of hub-apiserver.
+ * This file is part of kore-apiserver.
  *
- * hub-apiserver is free software: you can redistribute it and/or modify
+ * kore-apiserver is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
  *
- * hub-apiserver is distributed in the hope that it will be useful,
+ * kore-apiserver is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with hub-apiserver.  If not, see <http://www.gnu.org/licenses/>.
+ * along with kore-apiserver.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package korectl
@@ -61,9 +61,9 @@ type AuthorizationResponse struct {
 	TokenEndpointURL string `json:"token_endpoint_url,omitempty" yaml:"token_endpoint_url"`
 }
 
-// Identity is the identity within the hub
+// Identity is the identity within the kore
 type Identity struct {
-	// AccessToken is the access token retrieved from hub
+	// AccessToken is the access token retrieved from kore
 	AccessToken string `json:"access-token,omitempty" yaml:"access_token"`
 	// ClientID is the client id for the user
 	ClientID string `json:"client-id,omitempty" yaml:"client_id"`
