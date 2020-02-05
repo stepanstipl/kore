@@ -22,13 +22,12 @@ import (
 	"strings"
 	"time"
 
+	clusterv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
-
-	clusterv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
-	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 
 	log "github.com/sirupsen/logrus"
 	batch "k8s.io/api/batch/v1"
@@ -323,7 +322,7 @@ func (t bsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 // GetClusterConfiguration is responsible for generate the parameters for the cluster
 func (t bsCtrl) GetClusterConfiguration(ctx context.Context, cluster *clusterv1.Kubernetes, provider string) (Parameters, error) {
 	params := Parameters{
-		BootImage: "quay.io/appvia/kore-bootstrap:v0.2.0",
+		BootImage: "quay.io/appvia/hub-bootstrap:v0.2.0",
 		Catalog:   CatalogOptions{Image: "v0.0.2"},
 		Kiali: KialiOptions{
 			Password: utils.Random(12),
