@@ -89,12 +89,12 @@ func New(sc store.Store, usermgr users.Interface, auditor audit.Interface, confi
 		store:   sc,
 		signer:  signer,
 	}
+	h.idp = &idpImpl{Interface: h}
 	h.invitations = &ivImpl{Interface: h}
 	h.plans = &plansImpl{Interface: h}
 	h.teams = &teamsImpl{hubImpl: h}
-	h.users = &usersImpl{hubImpl: h}
 	h.usermgr = usermgr
-	h.idp = &idpImpl{Interface: h}
+	h.users = &usersImpl{hubImpl: h}
 
 	// @step: call the setup code for the kore
 	if err := h.Setup(context.Background()); err != nil {
