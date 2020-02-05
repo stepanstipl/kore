@@ -7,7 +7,7 @@ services:
       KUBE_API_SERVER: http://kube-apiserver:8080
       DEX_PUBLIC_URL: http://${LOCALHOST_DNS}:5556
       DEX_GRPC_SERVER: dex-operator
-      HUB_ADMIN_PASS: Pa55w0rd
+      KORE_ADMIN_PASS: Pa55w0rd
     ports:
       - 10080:10080
     restart: always
@@ -15,7 +15,7 @@ services:
   kore-ui:
     image: quay.io/appvia/kore-ui:v0.0.2
     environment:
-      HUB_API_URL: http://kore-apiserver:10080/api/v1alpha1
+      KORE_API_URL: http://kore-apiserver:10080/api/v1alpha1
       REDIS_URL: redis://redis:6379
       AUTH_URL: http://${LOCALHOST_DNS}:5556
     ports:
