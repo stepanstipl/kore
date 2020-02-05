@@ -15,26 +15,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package namespaceclaim
+package namespaceclaims
 
 import (
 	"context"
-	"fmt"
-	"net/http"
 
-	core "github.com/appvia/hub-apiserver/pkg/apis/core/v1"
-	"github.com/appvia/hub-apiserver/pkg/hub"
+	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	core "github.com/appvia/kore/pkg/apis/core/v1"
+	"github.com/appvia/kore/pkg/controllers"
+	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
+	log "github.com/sirupsen/logrus"
 
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+)
+
+const (
+	// finalizerName is our finalizer name
+	finalizerName = "namespaceclaims.kore.appvia.io"
 )
 
 // Reconcile is resposible for reconciling the resource
-func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Request, error) {
+func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	ctx := context.Background()
 
 	// --- Logic ---
@@ -48,14 +55,14 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Request, error)
 	// we sit back, relax and contain our smug smile
 
 	logger := log.WithFields(log.Fields{
-		"name": request.Name,
+		"name":      request.Name,
 		"namespace": request.Namespace,
 	})
 	logger.Debug("attempting to reconcile the nameresource claim")
 
 	// @step: retrieve the resource from the api
 	resource := &clustersv1.NamespaceClaim{}
-	if err := a.mgr.GetClient().Get(ctx, request.NameresourcedName, space); err != nil {
+	if err := a.mgr.GetClient().Get(ctx, request.NamespacedName, resource); err != nil {
 		if !kerrors.IsNotFound(err) {
 			return reconcile.Result{}, err
 		}
@@ -64,17 +71,29 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Request, error)
 	}
 	original := resource.DeepCopy()
 
+	// @step: create a finalizer for the resource
+	finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
+
+	if resource.GetDeletionTimestamp() != nil {
+		if finalizer.IsDeletionCandidate(resource) {
+			return a.Delete(request)
+		}
+
+		return reconcile.Result{}, nil
+	}
+
 	result, err := func() (reconcile.Result, error) {
-		// @step: create credentials for the cluster 
-		client, err := controllers.CreateClientFromSecret(context.Background(), a.mgr.GetClient(), resource.Name, space.Namespace)
+		// @step: create credentials for the cluster
+		client, err := controllers.CreateClientFromSecret(context.Background(), a.mgr.GetClient(),
+			resource.Spec.Cluster.Namespace, resource.Spec.Cluster.Name)
 		if err != nil {
 			logger.WithError(err).Error("trying to create client from cluster secret")
 
 			return reconcile.Result{}, err
 		}
 
-		// @step: ensure the namespace claim exists 
-		if _, err := kubernetes.EnsureNamespace(ctx, client, &corev1.Namespace{
+		// @step: ensure the namespace claim exists
+		if err := kubernetes.EnsureNamespace(ctx, client, &corev1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:        resource.Spec.Name,
 				Labels:      resource.Spec.Labels,
@@ -94,7 +113,7 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Request, error)
 				Name:      RoleBindingName,
 				Namespace: resource.Spec.Name,
 				Labels: map[string]string{
-					hub.Label("owned"): "true",
+					kore.Label("owned"): "true",
 				},
 			},
 			RoleRef: rbacv1.RoleRef{
@@ -103,18 +122,20 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Request, error)
 				Name:     ClusterRoleName,
 			},
 		}
-		// @step: retrieve all the users in the team
-		membership, err := MakeTeamMembersList(ctx, cl, resource.GetLabels()[hub.Label("team")])
-		if err != nil {
-			logger.WithError(err).Error("trying to retrieve a list of users in team")
 
-			return err
+		// @step: retrieve all the users in the team
+		users, err := a.Teams().Team(request.Namespace).Members().List(ctx)
+		if err != nil {
+			logger.WithError(err).Error("trying to retrieve a list of members in the team")
+
+			return reconcile.Result{}, err
 		}
+
 		logger.WithField(
 			"users", len(users.Items),
 		).Debug("found the x members in the team")
 
-		for _, x := range membership.Items {
+		for _, x := range users.Items {
 			binding.Subjects = append(binding.Subjects, rbacv1.Subject{
 				APIGroup: rbacv1.GroupName,
 				Kind:     rbacv1.UserKind,
@@ -122,17 +143,22 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Request, error)
 			})
 		}
 
-		if err := kubernetes.CreateOrUpdate(ctx, client, )
+		// @step: ensuring the binding exists
+		if _, err := kubernetes.CreateOrUpdate(ctx, client, binding); err != nil {
+			logger.WithError(err).Error("trying to ensure the namespace team binding")
 
+			return reconcile.Result{}, err
+		}
 
+		return reconcile.Result{}, nil
 	}()
 	if err != nil {
 		logger.WithError(err).Error("trying to reconcile the nameresource claim")
 
 		resource.Status.Status = core.FailureStatus
 		resource.Status.Conditions = []core.Condition{{
-			Message: "failed trying to reconcile the nameresource claim", 
-			Detail: err.Error(),
+			Message: "failed trying to reconcile the nameresource claim",
+			Detail:  err.Error(),
 		}}
 	} else {
 		if finalizer.NeedToAdd(resource) {
@@ -146,65 +172,11 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Request, error)
 		}
 	}
 
-	if err := a.mgr.GetClient().Status().Patch(ctx, role, client.MergeFrom(original)); err != nil {
+	if err := a.mgr.GetClient().Status().Patch(ctx, resource, client.MergeFrom(original)); err != nil {
 		logger.WithError(err).Error("trying to update the status of the resource")
 
 		return reconcile.Result{}, err
 	}
 
-	return reconcile.Result{}, err
-
-
-
-	err = func() error {
-		if _, err := cc.RbacV1().RoleBindings(resource.Spec.Name).Get(RoleBindingName, metav1.GetOptions{}); err != nil {
-			if !kerrors.IsNotFound(err) {
-				return fmt.Errorf("failed to check role binding exists: %s", err)
-			}
-
-			if _, err := cc.RbacV1().RoleBindings(resource.Spec.Name).Create(binding); err != nil {
-				return fmt.Errorf("failed to creale role binding: %s", err)
-			}
-		} else {
-			if _, err := cc.RbacV1().RoleBindings(resource.Spec.Name).Update(binding); err != nil {
-				return fmt.Errorf("failed to creale role binding: %s", err)
-			}
-		}
-		// @step: set the phase of the resource
-		resource.Status.Phase = PhaseInstalled
-		resource.Status.Status = core.SuccessStatus
-		resource.Status.Conditions = []core.Condition{}
-
-		return nil
-	}()
-	if err != nil {
-		resource.Status.Status = core.FailureStatus
-		resource.Status.Conditions = []core.Condition{{
-			Message: err.Error(),
-			Code:    http.StatusServiceUnavailable,
-		}}
-
-		return err
-	}
-	if err := cl.Status().Update(ctx, resource); err != nil {
-		log.Error(err, "failed to update the status")
-
-		return err
-	}
-
-	// @step: set ourselves as the finalizer on the resource if not there already
-	finalizer := finalizers.NewFinalizer(cl, FinalizerName)
-	if finalizer.NeedToAdd(resource) {
-		rlog.WithValues(
-			"finalizer", FinalizerName,
-		).Info("adding our finalizer to the resource")
-
-		if err := finalizer.Add(resource); err != nil {
-			rlog.Error(err, "failed to add the finalizer to the resource")
-
-			return err
-		}
-	}
-
-	return nil
+	return result, err
 }

@@ -32,6 +32,7 @@ import (
 	_ "github.com/appvia/kore/pkg/controllers/management/clusterroles"
 	_ "github.com/appvia/kore/pkg/controllers/management/kubernetes"
 	_ "github.com/appvia/kore/pkg/controllers/management/podpolicy"
+	_ "github.com/appvia/kore/pkg/controllers/management/namespaceclaims"
 
 	// importing the user controllers
 	_ "github.com/appvia/kore/pkg/controllers/user/allocations"

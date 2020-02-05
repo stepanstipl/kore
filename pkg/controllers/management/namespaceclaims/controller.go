@@ -23,13 +23,13 @@ import (
 	"context"
 	"time"
 
-	orgv1 "github.com/appvia/hub-apis/pkg/apis/org/v1"
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/appvia/kore/pkg/controllers"
-	"github.com/appvia/kore/pkg/hub"
+	"github.com/appvia/kore/pkg/kore"
 
-	"k8s.io/client-go/rest"
 	log "github.com/sirupsen/logrus"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -39,7 +39,7 @@ import (
 )
 
 type nsCtrl struct {
-	hub.Interface
+	kore.Interface
 	// mgr is the manager
 	mgr manager.Manager
 	// stopCh is the stop channel
@@ -52,13 +52,8 @@ func init() {
 	}
 }
 
-// Name returns the name of the controller
-func (a nsCtrl) Name() string {
-	return "namespaceclaims"
-}
-
 // Run is called when the controller is started
-func (a *nsCtrl) Run(ctx context.Context, cfg *rest.Config, hi hub.Interface) error {
+func (a *nsCtrl) Run(ctx context.Context, cfg *rest.Config, hi kore.Interface) error {
 	a.Interface = hi
 
 	// @step: create the manager for the controller
@@ -72,7 +67,7 @@ func (a *nsCtrl) Run(ctx context.Context, cfg *rest.Config, hi hub.Interface) er
 	a.Interface = hi
 
 	// @step: create the controller
-	ctrl, err := controllers.New(a.Name(), mgr, controllers.DefaultControllerOptions(a))
+	ctrl, err := controller.New(a.Name(), mgr, controllers.DefaultControllerOptions(a))
 	if err != nil {
 		log.WithError(err).Error("trying to create the controller")
 
@@ -140,4 +135,9 @@ func (a *nsCtrl) Stop(context.Context) error {
 	}).Info("attempting to stop the controller")
 
 	return nil
+}
+
+// Name returns the name of the controller
+func (a *nsCtrl) Name() string {
+	return "namespaceclaims"
 }

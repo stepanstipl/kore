@@ -55,7 +55,7 @@ func (r *ReconcileHandler) Reconcile(request reconcile.Request) (reconcile.Resul
 }
 
 // CreateClientFromSecret is used to retrieve the secret and create a runtime client
-func CreateClientFromSecret(ctx context.Context, cc client.Client, name, namespace string) (client.Client, error) {
+func CreateClientFromSecret(ctx context.Context, cc client.Client, namespace, name string) (client.Client, error) {
 	// @step: retrieve the credentials for the cluster
 	credentials := &v1.Secret{}
 	if err := cc.Get(ctx, types.NamespacedName{

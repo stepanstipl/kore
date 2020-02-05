@@ -110,8 +110,7 @@ func (a crCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 			logger.Debug("attempting to reconcile the managed role in cluster")
 
 			err := func() error {
-				client, err := controllers.CreateClientFromSecret(ctx, a.mgr.GetClient(),
-					cluster.Name, cluster.Namespace)
+				client, err := controllers.CreateClientFromSecret(ctx, a.mgr.GetClient(), cluster.Namespace, cluster.Name)
 				if err != nil {
 					logger.WithError(err).Error("trying to create kubernetes client")
 
