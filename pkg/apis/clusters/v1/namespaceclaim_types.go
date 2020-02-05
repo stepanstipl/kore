@@ -42,9 +42,10 @@ type NamespaceClaimSpec struct {
 	// Labels is a series of labels for the namespace
 	// +kubebuilder:validation:Optional
 	Labels map[string]string `json:"labels,omitempty"`
-	// Limits are the limits placs on the namespace
+	// Limits are the limits places on the namespace
 	// +kubebuilder:validation:Optional
-	Limits v1.LimitRange `json:"limits,omitempty"`
+	// +listType
+	Limits []v1.LimitRangeItem `json:"limits,omitempty"`
 }
 
 // NamespaceClaimStatus defines the observed state of NamespaceClaim
@@ -55,8 +56,6 @@ type NamespaceClaimStatus struct {
 	// Conditions is a series of things that caused the failure if any
 	// +listType
 	Conditions []corev1.Condition `json:"conditions"`
-	// Phase is used to hold the current phase of the resource
-	Phase string `json:"phase"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

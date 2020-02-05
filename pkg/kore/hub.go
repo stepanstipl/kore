@@ -65,7 +65,7 @@ func New(sc store.Store, usermgr users.Interface, auditor audit.Interface, confi
 	}
 
 	// @step: ensure we have a hmax for the signing of things
-	if config.HasHMAC() {
+	if !config.HasHMAC() {
 		log.Warn("no hmac for kore was provided, generating a random one (this has consequences!)")
 		config.HMAC = utils.Random(32)
 	}

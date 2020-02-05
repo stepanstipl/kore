@@ -75,7 +75,7 @@ func (fi bindataFileInfo) Sys() interface{} {
 	return nil
 }
 
-var _crdsAppsHubAppviaIo_appdeploymentsYaml = []byte(`
+var _crdsAppsKoreAppviaIo_appdeploymentsYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -249,12 +249,12 @@ status:
   storedVersions: []
 `)
 
-func crdsAppsHubAppviaIo_appdeploymentsYamlBytes() ([]byte, error) {
-	return _crdsAppsHubAppviaIo_appdeploymentsYaml, nil
+func crdsAppsKoreAppviaIo_appdeploymentsYamlBytes() ([]byte, error) {
+	return _crdsAppsKoreAppviaIo_appdeploymentsYaml, nil
 }
 
-func crdsAppsHubAppviaIo_appdeploymentsYaml() (*asset, error) {
-	bytes, err := crdsAppsHubAppviaIo_appdeploymentsYamlBytes()
+func crdsAppsKoreAppviaIo_appdeploymentsYaml() (*asset, error) {
+	bytes, err := crdsAppsKoreAppviaIo_appdeploymentsYamlBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -264,7 +264,7 @@ func crdsAppsHubAppviaIo_appdeploymentsYaml() (*asset, error) {
 	return a, nil
 }
 
-var _crdsAppsHubAppviaIo_installplansYaml = []byte(`
+var _crdsAppsKoreAppviaIo_installplansYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -637,12 +637,12 @@ status:
   storedVersions: []
 `)
 
-func crdsAppsHubAppviaIo_installplansYamlBytes() ([]byte, error) {
-	return _crdsAppsHubAppviaIo_installplansYaml, nil
+func crdsAppsKoreAppviaIo_installplansYamlBytes() ([]byte, error) {
+	return _crdsAppsKoreAppviaIo_installplansYaml, nil
 }
 
-func crdsAppsHubAppviaIo_installplansYaml() (*asset, error) {
-	bytes, err := crdsAppsHubAppviaIo_installplansYamlBytes()
+func crdsAppsKoreAppviaIo_installplansYaml() (*asset, error) {
+	bytes, err := crdsAppsKoreAppviaIo_installplansYamlBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -652,7 +652,7 @@ func crdsAppsHubAppviaIo_installplansYaml() (*asset, error) {
 	return a, nil
 }
 
-var _crdsAwsComputeHubAppviaIo_awscredentialsYaml = []byte(`
+var _crdsAwsComputeKoreAppviaIo_awscredentialsYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -745,12 +745,12 @@ status:
   storedVersions: []
 `)
 
-func crdsAwsComputeHubAppviaIo_awscredentialsYamlBytes() ([]byte, error) {
-	return _crdsAwsComputeHubAppviaIo_awscredentialsYaml, nil
+func crdsAwsComputeKoreAppviaIo_awscredentialsYamlBytes() ([]byte, error) {
+	return _crdsAwsComputeKoreAppviaIo_awscredentialsYaml, nil
 }
 
-func crdsAwsComputeHubAppviaIo_awscredentialsYaml() (*asset, error) {
-	bytes, err := crdsAwsComputeHubAppviaIo_awscredentialsYamlBytes()
+func crdsAwsComputeKoreAppviaIo_awscredentialsYaml() (*asset, error) {
+	bytes, err := crdsAwsComputeKoreAppviaIo_awscredentialsYamlBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -760,7 +760,7 @@ func crdsAwsComputeHubAppviaIo_awscredentialsYaml() (*asset, error) {
 	return a, nil
 }
 
-var _crdsAwsComputeHubAppviaIo_eksclustersYaml = []byte(`
+var _crdsAwsComputeKoreAppviaIo_eksclustersYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -902,12 +902,12 @@ status:
   storedVersions: []
 `)
 
-func crdsAwsComputeHubAppviaIo_eksclustersYamlBytes() ([]byte, error) {
-	return _crdsAwsComputeHubAppviaIo_eksclustersYaml, nil
+func crdsAwsComputeKoreAppviaIo_eksclustersYamlBytes() ([]byte, error) {
+	return _crdsAwsComputeKoreAppviaIo_eksclustersYaml, nil
 }
 
-func crdsAwsComputeHubAppviaIo_eksclustersYaml() (*asset, error) {
-	bytes, err := crdsAwsComputeHubAppviaIo_eksclustersYamlBytes()
+func crdsAwsComputeKoreAppviaIo_eksclustersYaml() (*asset, error) {
+	bytes, err := crdsAwsComputeKoreAppviaIo_eksclustersYamlBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -917,7 +917,7 @@ func crdsAwsComputeHubAppviaIo_eksclustersYaml() (*asset, error) {
 	return a, nil
 }
 
-var _crdsClustersComputeHubAppviaIo_kubernetesYaml = []byte(`
+var _crdsClustersComputeKoreAppviaIo_kubernetesYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -1028,6 +1028,49 @@ spec:
         status:
           description: KubernetesStatus defines the observed state of Cluster
           properties:
+            adminToken:
+              description: AdminToken is the kore-admin service account token which
+                is bound to cluster-admin
+              properties:
+                apiVersion:
+                  description: 'APIVersion defines the versioned schema of this representation
+                    of an object. Servers should convert recognized schemas to the
+                    latest internal value, and may reject unrecognized values. More
+                    info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+                  type: string
+                data:
+                  additionalProperties:
+                    format: byte
+                    type: string
+                  description: Data contains the secret data. Each key must consist
+                    of alphanumeric characters, '-', '_' or '.'. The serialized form
+                    of the secret data is a base64 encoded string, representing the
+                    arbitrary (possibly non-string) data value here. Described in
+                    https://tools.ietf.org/html/rfc4648#section-4
+                  type: object
+                kind:
+                  description: 'Kind is a string value representing the REST resource
+                    this object represents. Servers may infer this from the endpoint
+                    the client submits requests to. Cannot be updated. In CamelCase.
+                    More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+                  type: string
+                metadata:
+                  description: 'Standard object''s metadata. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata'
+                  type: object
+                stringData:
+                  additionalProperties:
+                    type: string
+                  description: stringData allows specifying non-binary secret data
+                    in string form. It is provided as a write-only convenience method.
+                    All keys and values are merged into the data field on write, overwriting
+                    any existing values. It is never output when reading from the
+                    API.
+                  type: object
+                type:
+                  description: Used to facilitate programmatic handling of secret
+                    data.
+                  type: string
+              type: object
             apiEndpoint:
               description: Endpoint is the kubernetes endpoint url
               type: string
@@ -1078,12 +1121,12 @@ status:
   storedVersions: []
 `)
 
-func crdsClustersComputeHubAppviaIo_kubernetesYamlBytes() ([]byte, error) {
-	return _crdsClustersComputeHubAppviaIo_kubernetesYaml, nil
+func crdsClustersComputeKoreAppviaIo_kubernetesYamlBytes() ([]byte, error) {
+	return _crdsClustersComputeKoreAppviaIo_kubernetesYaml, nil
 }
 
-func crdsClustersComputeHubAppviaIo_kubernetesYaml() (*asset, error) {
-	bytes, err := crdsClustersComputeHubAppviaIo_kubernetesYamlBytes()
+func crdsClustersComputeKoreAppviaIo_kubernetesYaml() (*asset, error) {
+	bytes, err := crdsClustersComputeKoreAppviaIo_kubernetesYamlBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -1093,7 +1136,7 @@ func crdsClustersComputeHubAppviaIo_kubernetesYaml() (*asset, error) {
 	return a, nil
 }
 
-var _crdsClustersComputeHubAppviaIo_managedclusterroleYaml = []byte(`
+var _crdsClustersComputeKoreAppviaIo_managedclusterroleYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -1267,12 +1310,12 @@ status:
   storedVersions: []
 `)
 
-func crdsClustersComputeHubAppviaIo_managedclusterroleYamlBytes() ([]byte, error) {
-	return _crdsClustersComputeHubAppviaIo_managedclusterroleYaml, nil
+func crdsClustersComputeKoreAppviaIo_managedclusterroleYamlBytes() ([]byte, error) {
+	return _crdsClustersComputeKoreAppviaIo_managedclusterroleYaml, nil
 }
 
-func crdsClustersComputeHubAppviaIo_managedclusterroleYaml() (*asset, error) {
-	bytes, err := crdsClustersComputeHubAppviaIo_managedclusterroleYamlBytes()
+func crdsClustersComputeKoreAppviaIo_managedclusterroleYaml() (*asset, error) {
+	bytes, err := crdsClustersComputeKoreAppviaIo_managedclusterroleYamlBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -1282,7 +1325,7 @@ func crdsClustersComputeHubAppviaIo_managedclusterroleYaml() (*asset, error) {
 	return a, nil
 }
 
-var _crdsClustersComputeHubAppviaIo_managedclusterrolebindingYaml = []byte(`
+var _crdsClustersComputeKoreAppviaIo_managedclusterrolebindingYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -1475,12 +1518,12 @@ status:
   storedVersions: []
 `)
 
-func crdsClustersComputeHubAppviaIo_managedclusterrolebindingYamlBytes() ([]byte, error) {
-	return _crdsClustersComputeHubAppviaIo_managedclusterrolebindingYaml, nil
+func crdsClustersComputeKoreAppviaIo_managedclusterrolebindingYamlBytes() ([]byte, error) {
+	return _crdsClustersComputeKoreAppviaIo_managedclusterrolebindingYaml, nil
 }
 
-func crdsClustersComputeHubAppviaIo_managedclusterrolebindingYaml() (*asset, error) {
-	bytes, err := crdsClustersComputeHubAppviaIo_managedclusterrolebindingYamlBytes()
+func crdsClustersComputeKoreAppviaIo_managedclusterrolebindingYaml() (*asset, error) {
+	bytes, err := crdsClustersComputeKoreAppviaIo_managedclusterrolebindingYamlBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -1490,7 +1533,7 @@ func crdsClustersComputeHubAppviaIo_managedclusterrolebindingYaml() (*asset, err
 	return a, nil
 }
 
-var _crdsClustersComputeHubAppviaIo_managedconfigYaml = []byte(`
+var _crdsClustersComputeKoreAppviaIo_managedconfigYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -1664,12 +1707,12 @@ status:
   storedVersions: []
 `)
 
-func crdsClustersComputeHubAppviaIo_managedconfigYamlBytes() ([]byte, error) {
-	return _crdsClustersComputeHubAppviaIo_managedconfigYaml, nil
+func crdsClustersComputeKoreAppviaIo_managedconfigYamlBytes() ([]byte, error) {
+	return _crdsClustersComputeKoreAppviaIo_managedconfigYaml, nil
 }
 
-func crdsClustersComputeHubAppviaIo_managedconfigYaml() (*asset, error) {
-	bytes, err := crdsClustersComputeHubAppviaIo_managedconfigYamlBytes()
+func crdsClustersComputeKoreAppviaIo_managedconfigYaml() (*asset, error) {
+	bytes, err := crdsClustersComputeKoreAppviaIo_managedconfigYamlBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -1679,7 +1722,7 @@ func crdsClustersComputeHubAppviaIo_managedconfigYaml() (*asset, error) {
 	return a, nil
 }
 
-var _crdsClustersComputeHubAppviaIo_managedpodsecuritypoliiesYaml = []byte(`
+var _crdsClustersComputeKoreAppviaIo_managedpodsecuritypoliiesYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -2164,12 +2207,12 @@ status:
   storedVersions: []
 `)
 
-func crdsClustersComputeHubAppviaIo_managedpodsecuritypoliiesYamlBytes() ([]byte, error) {
-	return _crdsClustersComputeHubAppviaIo_managedpodsecuritypoliiesYaml, nil
+func crdsClustersComputeKoreAppviaIo_managedpodsecuritypoliiesYamlBytes() ([]byte, error) {
+	return _crdsClustersComputeKoreAppviaIo_managedpodsecuritypoliiesYaml, nil
 }
 
-func crdsClustersComputeHubAppviaIo_managedpodsecuritypoliiesYaml() (*asset, error) {
-	bytes, err := crdsClustersComputeHubAppviaIo_managedpodsecuritypoliiesYamlBytes()
+func crdsClustersComputeKoreAppviaIo_managedpodsecuritypoliiesYaml() (*asset, error) {
+	bytes, err := crdsClustersComputeKoreAppviaIo_managedpodsecuritypoliiesYamlBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -2179,7 +2222,7 @@ func crdsClustersComputeHubAppviaIo_managedpodsecuritypoliiesYaml() (*asset, err
 	return a, nil
 }
 
-var _crdsClustersComputeHubAppviaIo_managedroleYaml = []byte(`
+var _crdsClustersComputeKoreAppviaIo_managedroleYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -2341,12 +2384,12 @@ status:
   storedVersions: []
 `)
 
-func crdsClustersComputeHubAppviaIo_managedroleYamlBytes() ([]byte, error) {
-	return _crdsClustersComputeHubAppviaIo_managedroleYaml, nil
+func crdsClustersComputeKoreAppviaIo_managedroleYamlBytes() ([]byte, error) {
+	return _crdsClustersComputeKoreAppviaIo_managedroleYaml, nil
 }
 
-func crdsClustersComputeHubAppviaIo_managedroleYaml() (*asset, error) {
-	bytes, err := crdsClustersComputeHubAppviaIo_managedroleYamlBytes()
+func crdsClustersComputeKoreAppviaIo_managedroleYaml() (*asset, error) {
+	bytes, err := crdsClustersComputeKoreAppviaIo_managedroleYamlBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -2356,7 +2399,7 @@ func crdsClustersComputeHubAppviaIo_managedroleYaml() (*asset, error) {
 	return a, nil
 }
 
-var _crdsClustersComputeHubAppviaIo_namespaceclaimsYaml = []byte(`
+var _crdsClustersComputeKoreAppviaIo_namespaceclaimsYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -2431,77 +2474,46 @@ spec:
               description: Labels is a series of labels for the namespace
               type: object
             limits:
-              description: Limits are the limits placs on the namespace
-              properties:
-                apiVersion:
-                  description: 'APIVersion defines the versioned schema of this representation
-                    of an object. Servers should convert recognized schemas to the
-                    latest internal value, and may reject unrecognized values. More
-                    info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
-                  type: string
-                kind:
-                  description: 'Kind is a string value representing the REST resource
-                    this object represents. Servers may infer this from the endpoint
-                    the client submits requests to. Cannot be updated. In CamelCase.
-                    More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
-                  type: string
-                metadata:
-                  description: 'Standard object''s metadata. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#metadata'
-                  type: object
-                spec:
-                  description: 'Spec defines the limits enforced. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#spec-and-status'
-                  properties:
-                    limits:
-                      description: Limits is the list of LimitRangeItem objects that
-                        are enforced.
-                      items:
-                        description: LimitRangeItem defines a min/max usage limit
-                          for any resource that matches on kind.
-                        properties:
-                          default:
-                            additionalProperties:
-                              type: string
-                            description: Default resource requirement limit value
-                              by resource name if resource limit is omitted.
-                            type: object
-                          defaultRequest:
-                            additionalProperties:
-                              type: string
-                            description: DefaultRequest is the default resource requirement
-                              request value by resource name if resource request is
-                              omitted.
-                            type: object
-                          max:
-                            additionalProperties:
-                              type: string
-                            description: Max usage constraints on this kind by resource
-                              name.
-                            type: object
-                          maxLimitRequestRatio:
-                            additionalProperties:
-                              type: string
-                            description: MaxLimitRequestRatio if specified, the named
-                              resource must have a request and limit that are both
-                              non-zero where limit divided by request is less than
-                              or equal to the enumerated value; this represents the
-                              max burst for the named resource.
-                            type: object
-                          min:
-                            additionalProperties:
-                              type: string
-                            description: Min usage constraints on this kind by resource
-                              name.
-                            type: object
-                          type:
-                            description: Type of resource that this limit applies
-                              to.
-                            type: string
-                        type: object
-                      type: array
-                  required:
-                  - limits
-                  type: object
-              type: object
+              description: Limits are the limits places on the namespace
+              items:
+                description: LimitRangeItem defines a min/max usage limit for any
+                  resource that matches on kind.
+                properties:
+                  default:
+                    additionalProperties:
+                      type: string
+                    description: Default resource requirement limit value by resource
+                      name if resource limit is omitted.
+                    type: object
+                  defaultRequest:
+                    additionalProperties:
+                      type: string
+                    description: DefaultRequest is the default resource requirement
+                      request value by resource name if resource request is omitted.
+                    type: object
+                  max:
+                    additionalProperties:
+                      type: string
+                    description: Max usage constraints on this kind by resource name.
+                    type: object
+                  maxLimitRequestRatio:
+                    additionalProperties:
+                      type: string
+                    description: MaxLimitRequestRatio if specified, the named resource
+                      must have a request and limit that are both non-zero where limit
+                      divided by request is less than or equal to the enumerated value;
+                      this represents the max burst for the named resource.
+                    type: object
+                  min:
+                    additionalProperties:
+                      type: string
+                    description: Min usage constraints on this kind by resource name.
+                    type: object
+                  type:
+                    description: Type of resource that this limit applies to.
+                    type: string
+                type: object
+              type: array
             name:
               description: Name is the name of the namespace to create
               minLength: 3
@@ -2531,15 +2543,11 @@ spec:
                 - message
                 type: object
               type: array
-            phase:
-              description: Phase is used to hold the current phase of the resource
-              type: string
             status:
               description: Status is the status of the namespace
               type: string
           required:
           - conditions
-          - phase
           - status
           type: object
       type: object
@@ -2556,12 +2564,12 @@ status:
   storedVersions: []
 `)
 
-func crdsClustersComputeHubAppviaIo_namespaceclaimsYamlBytes() ([]byte, error) {
-	return _crdsClustersComputeHubAppviaIo_namespaceclaimsYaml, nil
+func crdsClustersComputeKoreAppviaIo_namespaceclaimsYamlBytes() ([]byte, error) {
+	return _crdsClustersComputeKoreAppviaIo_namespaceclaimsYaml, nil
 }
 
-func crdsClustersComputeHubAppviaIo_namespaceclaimsYaml() (*asset, error) {
-	bytes, err := crdsClustersComputeHubAppviaIo_namespaceclaimsYamlBytes()
+func crdsClustersComputeKoreAppviaIo_namespaceclaimsYaml() (*asset, error) {
+	bytes, err := crdsClustersComputeKoreAppviaIo_namespaceclaimsYamlBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -2571,7 +2579,7 @@ func crdsClustersComputeHubAppviaIo_namespaceclaimsYaml() (*asset, error) {
 	return a, nil
 }
 
-var _crdsClustersComputeHubAppviaIo_namespacepolicyYaml = []byte(`
+var _crdsClustersComputeKoreAppviaIo_namespacepolicyYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -2736,12 +2744,12 @@ status:
   storedVersions: []
 `)
 
-func crdsClustersComputeHubAppviaIo_namespacepolicyYamlBytes() ([]byte, error) {
-	return _crdsClustersComputeHubAppviaIo_namespacepolicyYaml, nil
+func crdsClustersComputeKoreAppviaIo_namespacepolicyYamlBytes() ([]byte, error) {
+	return _crdsClustersComputeKoreAppviaIo_namespacepolicyYaml, nil
 }
 
-func crdsClustersComputeHubAppviaIo_namespacepolicyYaml() (*asset, error) {
-	bytes, err := crdsClustersComputeHubAppviaIo_namespacepolicyYamlBytes()
+func crdsClustersComputeKoreAppviaIo_namespacepolicyYaml() (*asset, error) {
+	bytes, err := crdsClustersComputeKoreAppviaIo_namespacepolicyYamlBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -2751,7 +2759,7 @@ func crdsClustersComputeHubAppviaIo_namespacepolicyYaml() (*asset, error) {
 	return a, nil
 }
 
-var _crdsConfigHubAppviaIo_allocationsYaml = []byte(`
+var _crdsConfigKoreAppviaIo_allocationsYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -2889,12 +2897,12 @@ status:
   storedVersions: []
 `)
 
-func crdsConfigHubAppviaIo_allocationsYamlBytes() ([]byte, error) {
-	return _crdsConfigHubAppviaIo_allocationsYaml, nil
+func crdsConfigKoreAppviaIo_allocationsYamlBytes() ([]byte, error) {
+	return _crdsConfigKoreAppviaIo_allocationsYaml, nil
 }
 
-func crdsConfigHubAppviaIo_allocationsYaml() (*asset, error) {
-	bytes, err := crdsConfigHubAppviaIo_allocationsYamlBytes()
+func crdsConfigKoreAppviaIo_allocationsYaml() (*asset, error) {
+	bytes, err := crdsConfigKoreAppviaIo_allocationsYamlBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -2904,7 +2912,7 @@ func crdsConfigHubAppviaIo_allocationsYaml() (*asset, error) {
 	return a, nil
 }
 
-var _crdsConfigHubAppviaIo_plansYaml = []byte(`
+var _crdsConfigKoreAppviaIo_plansYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -3011,12 +3019,12 @@ status:
   storedVersions: []
 `)
 
-func crdsConfigHubAppviaIo_plansYamlBytes() ([]byte, error) {
-	return _crdsConfigHubAppviaIo_plansYaml, nil
+func crdsConfigKoreAppviaIo_plansYamlBytes() ([]byte, error) {
+	return _crdsConfigKoreAppviaIo_plansYaml, nil
 }
 
-func crdsConfigHubAppviaIo_plansYaml() (*asset, error) {
-	bytes, err := crdsConfigHubAppviaIo_plansYamlBytes()
+func crdsConfigKoreAppviaIo_plansYaml() (*asset, error) {
+	bytes, err := crdsConfigKoreAppviaIo_plansYamlBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -3026,7 +3034,7 @@ func crdsConfigHubAppviaIo_plansYaml() (*asset, error) {
 	return a, nil
 }
 
-var _crdsCoreHubAppviaIo_idpYaml = []byte(`
+var _crdsCoreKoreAppviaIo_idpYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -3215,12 +3223,12 @@ status:
   storedVersions: []
 `)
 
-func crdsCoreHubAppviaIo_idpYamlBytes() ([]byte, error) {
-	return _crdsCoreHubAppviaIo_idpYaml, nil
+func crdsCoreKoreAppviaIo_idpYamlBytes() ([]byte, error) {
+	return _crdsCoreKoreAppviaIo_idpYaml, nil
 }
 
-func crdsCoreHubAppviaIo_idpYaml() (*asset, error) {
-	bytes, err := crdsCoreHubAppviaIo_idpYamlBytes()
+func crdsCoreKoreAppviaIo_idpYaml() (*asset, error) {
+	bytes, err := crdsCoreKoreAppviaIo_idpYamlBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -3230,7 +3238,7 @@ func crdsCoreHubAppviaIo_idpYaml() (*asset, error) {
 	return a, nil
 }
 
-var _crdsCoreHubAppviaIo_oidclientYaml = []byte(`
+var _crdsCoreKoreAppviaIo_oidclientYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -3329,12 +3337,12 @@ status:
   storedVersions: []
 `)
 
-func crdsCoreHubAppviaIo_oidclientYamlBytes() ([]byte, error) {
-	return _crdsCoreHubAppviaIo_oidclientYaml, nil
+func crdsCoreKoreAppviaIo_oidclientYamlBytes() ([]byte, error) {
+	return _crdsCoreKoreAppviaIo_oidclientYaml, nil
 }
 
-func crdsCoreHubAppviaIo_oidclientYaml() (*asset, error) {
-	bytes, err := crdsCoreHubAppviaIo_oidclientYamlBytes()
+func crdsCoreKoreAppviaIo_oidclientYaml() (*asset, error) {
+	bytes, err := crdsCoreKoreAppviaIo_oidclientYamlBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -3344,7 +3352,7 @@ func crdsCoreHubAppviaIo_oidclientYaml() (*asset, error) {
 	return a, nil
 }
 
-var _crdsGkeComputeHubAppviaIo_gkecredentialsYaml = []byte(`
+var _crdsGkeComputeKoreAppviaIo_gkecredentialsYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -3462,12 +3470,12 @@ status:
   storedVersions: []
 `)
 
-func crdsGkeComputeHubAppviaIo_gkecredentialsYamlBytes() ([]byte, error) {
-	return _crdsGkeComputeHubAppviaIo_gkecredentialsYaml, nil
+func crdsGkeComputeKoreAppviaIo_gkecredentialsYamlBytes() ([]byte, error) {
+	return _crdsGkeComputeKoreAppviaIo_gkecredentialsYaml, nil
 }
 
-func crdsGkeComputeHubAppviaIo_gkecredentialsYaml() (*asset, error) {
-	bytes, err := crdsGkeComputeHubAppviaIo_gkecredentialsYamlBytes()
+func crdsGkeComputeKoreAppviaIo_gkecredentialsYaml() (*asset, error) {
+	bytes, err := crdsGkeComputeKoreAppviaIo_gkecredentialsYamlBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -3477,7 +3485,7 @@ func crdsGkeComputeHubAppviaIo_gkecredentialsYaml() (*asset, error) {
 	return a, nil
 }
 
-var _crdsGkeComputeHubAppviaIo_gkesYaml = []byte(`
+var _crdsGkeComputeKoreAppviaIo_gkesYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -3748,12 +3756,12 @@ status:
   storedVersions: []
 `)
 
-func crdsGkeComputeHubAppviaIo_gkesYamlBytes() ([]byte, error) {
-	return _crdsGkeComputeHubAppviaIo_gkesYaml, nil
+func crdsGkeComputeKoreAppviaIo_gkesYamlBytes() ([]byte, error) {
+	return _crdsGkeComputeKoreAppviaIo_gkesYaml, nil
 }
 
-func crdsGkeComputeHubAppviaIo_gkesYaml() (*asset, error) {
-	bytes, err := crdsGkeComputeHubAppviaIo_gkesYamlBytes()
+func crdsGkeComputeKoreAppviaIo_gkesYaml() (*asset, error) {
+	bytes, err := crdsGkeComputeKoreAppviaIo_gkesYamlBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -3763,7 +3771,7 @@ func crdsGkeComputeHubAppviaIo_gkesYaml() (*asset, error) {
 	return a, nil
 }
 
-var _crdsOrgHubAppviaIo_membersYaml = []byte(`
+var _crdsOrgKoreAppviaIo_membersYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -3858,12 +3866,12 @@ status:
   storedVersions: []
 `)
 
-func crdsOrgHubAppviaIo_membersYamlBytes() ([]byte, error) {
-	return _crdsOrgHubAppviaIo_membersYaml, nil
+func crdsOrgKoreAppviaIo_membersYamlBytes() ([]byte, error) {
+	return _crdsOrgKoreAppviaIo_membersYaml, nil
 }
 
-func crdsOrgHubAppviaIo_membersYaml() (*asset, error) {
-	bytes, err := crdsOrgHubAppviaIo_membersYamlBytes()
+func crdsOrgKoreAppviaIo_membersYaml() (*asset, error) {
+	bytes, err := crdsOrgKoreAppviaIo_membersYamlBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -3873,7 +3881,7 @@ func crdsOrgHubAppviaIo_membersYaml() (*asset, error) {
 	return a, nil
 }
 
-var _crdsOrgHubAppviaIo_teaminvitationsYaml = []byte(`
+var _crdsOrgKoreAppviaIo_teaminvitationsYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -3962,12 +3970,12 @@ status:
   storedVersions: []
 `)
 
-func crdsOrgHubAppviaIo_teaminvitationsYamlBytes() ([]byte, error) {
-	return _crdsOrgHubAppviaIo_teaminvitationsYaml, nil
+func crdsOrgKoreAppviaIo_teaminvitationsYamlBytes() ([]byte, error) {
+	return _crdsOrgKoreAppviaIo_teaminvitationsYaml, nil
 }
 
-func crdsOrgHubAppviaIo_teaminvitationsYaml() (*asset, error) {
-	bytes, err := crdsOrgHubAppviaIo_teaminvitationsYamlBytes()
+func crdsOrgKoreAppviaIo_teaminvitationsYaml() (*asset, error) {
+	bytes, err := crdsOrgKoreAppviaIo_teaminvitationsYamlBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -3977,7 +3985,7 @@ func crdsOrgHubAppviaIo_teaminvitationsYaml() (*asset, error) {
 	return a, nil
 }
 
-var _crdsOrgHubAppviaIo_teamsYaml = []byte(`
+var _crdsOrgKoreAppviaIo_teamsYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -4066,12 +4074,12 @@ status:
   storedVersions: []
 `)
 
-func crdsOrgHubAppviaIo_teamsYamlBytes() ([]byte, error) {
-	return _crdsOrgHubAppviaIo_teamsYaml, nil
+func crdsOrgKoreAppviaIo_teamsYamlBytes() ([]byte, error) {
+	return _crdsOrgKoreAppviaIo_teamsYaml, nil
 }
 
-func crdsOrgHubAppviaIo_teamsYaml() (*asset, error) {
-	bytes, err := crdsOrgHubAppviaIo_teamsYamlBytes()
+func crdsOrgKoreAppviaIo_teamsYaml() (*asset, error) {
+	bytes, err := crdsOrgKoreAppviaIo_teamsYamlBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -4081,7 +4089,7 @@ func crdsOrgHubAppviaIo_teamsYaml() (*asset, error) {
 	return a, nil
 }
 
-var _crdsOrgHubAppviaIo_usersYaml = []byte(`
+var _crdsOrgKoreAppviaIo_usersYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -4174,12 +4182,12 @@ status:
   storedVersions: []
 `)
 
-func crdsOrgHubAppviaIo_usersYamlBytes() ([]byte, error) {
-	return _crdsOrgHubAppviaIo_usersYaml, nil
+func crdsOrgKoreAppviaIo_usersYamlBytes() ([]byte, error) {
+	return _crdsOrgKoreAppviaIo_usersYaml, nil
 }
 
-func crdsOrgHubAppviaIo_usersYaml() (*asset, error) {
-	bytes, err := crdsOrgHubAppviaIo_usersYamlBytes()
+func crdsOrgKoreAppviaIo_usersYaml() (*asset, error) {
+	bytes, err := crdsOrgKoreAppviaIo_usersYamlBytes()
 	if err != nil {
 		return nil, err
 	}
@@ -4241,28 +4249,28 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
-	"crds/apps.kore.appvia.io_appdeployments.yaml":                        crdsAppsHubAppviaIo_appdeploymentsYaml,
-	"crds/apps.kore.appvia.io_installplans.yaml":                          crdsAppsHubAppviaIo_installplansYaml,
-	"crds/aws.compute.kore.appvia.io_awscredentials.yaml":                 crdsAwsComputeHubAppviaIo_awscredentialsYaml,
-	"crds/aws.compute.kore.appvia.io_eksclusters.yaml":                    crdsAwsComputeHubAppviaIo_eksclustersYaml,
-	"crds/clusters.compute.kore.appvia.io_kubernetes.yaml":                crdsClustersComputeHubAppviaIo_kubernetesYaml,
-	"crds/clusters.compute.kore.appvia.io_managedclusterrole.yaml":        crdsClustersComputeHubAppviaIo_managedclusterroleYaml,
-	"crds/clusters.compute.kore.appvia.io_managedclusterrolebinding.yaml": crdsClustersComputeHubAppviaIo_managedclusterrolebindingYaml,
-	"crds/clusters.compute.kore.appvia.io_managedconfig.yaml":             crdsClustersComputeHubAppviaIo_managedconfigYaml,
-	"crds/clusters.compute.kore.appvia.io_managedpodsecuritypoliies.yaml": crdsClustersComputeHubAppviaIo_managedpodsecuritypoliiesYaml,
-	"crds/clusters.compute.kore.appvia.io_managedrole.yaml":               crdsClustersComputeHubAppviaIo_managedroleYaml,
-	"crds/clusters.compute.kore.appvia.io_namespaceclaims.yaml":           crdsClustersComputeHubAppviaIo_namespaceclaimsYaml,
-	"crds/clusters.compute.kore.appvia.io_namespacepolicy.yaml":           crdsClustersComputeHubAppviaIo_namespacepolicyYaml,
-	"crds/config.kore.appvia.io_allocations.yaml":                         crdsConfigHubAppviaIo_allocationsYaml,
-	"crds/config.kore.appvia.io_plans.yaml":                               crdsConfigHubAppviaIo_plansYaml,
-	"crds/core.kore.appvia.io_idp.yaml":                                   crdsCoreHubAppviaIo_idpYaml,
-	"crds/core.kore.appvia.io_oidclient.yaml":                             crdsCoreHubAppviaIo_oidclientYaml,
-	"crds/gke.compute.kore.appvia.io_gkecredentials.yaml":                 crdsGkeComputeHubAppviaIo_gkecredentialsYaml,
-	"crds/gke.compute.kore.appvia.io_gkes.yaml":                           crdsGkeComputeHubAppviaIo_gkesYaml,
-	"crds/org.kore.appvia.io_members.yaml":                                crdsOrgHubAppviaIo_membersYaml,
-	"crds/org.kore.appvia.io_teaminvitations.yaml":                        crdsOrgHubAppviaIo_teaminvitationsYaml,
-	"crds/org.kore.appvia.io_teams.yaml":                                  crdsOrgHubAppviaIo_teamsYaml,
-	"crds/org.kore.appvia.io_users.yaml":                                  crdsOrgHubAppviaIo_usersYaml,
+	"crds/apps.kore.appvia.io_appdeployments.yaml":                        crdsAppsKoreAppviaIo_appdeploymentsYaml,
+	"crds/apps.kore.appvia.io_installplans.yaml":                          crdsAppsKoreAppviaIo_installplansYaml,
+	"crds/aws.compute.kore.appvia.io_awscredentials.yaml":                 crdsAwsComputeKoreAppviaIo_awscredentialsYaml,
+	"crds/aws.compute.kore.appvia.io_eksclusters.yaml":                    crdsAwsComputeKoreAppviaIo_eksclustersYaml,
+	"crds/clusters.compute.kore.appvia.io_kubernetes.yaml":                crdsClustersComputeKoreAppviaIo_kubernetesYaml,
+	"crds/clusters.compute.kore.appvia.io_managedclusterrole.yaml":        crdsClustersComputeKoreAppviaIo_managedclusterroleYaml,
+	"crds/clusters.compute.kore.appvia.io_managedclusterrolebinding.yaml": crdsClustersComputeKoreAppviaIo_managedclusterrolebindingYaml,
+	"crds/clusters.compute.kore.appvia.io_managedconfig.yaml":             crdsClustersComputeKoreAppviaIo_managedconfigYaml,
+	"crds/clusters.compute.kore.appvia.io_managedpodsecuritypoliies.yaml": crdsClustersComputeKoreAppviaIo_managedpodsecuritypoliiesYaml,
+	"crds/clusters.compute.kore.appvia.io_managedrole.yaml":               crdsClustersComputeKoreAppviaIo_managedroleYaml,
+	"crds/clusters.compute.kore.appvia.io_namespaceclaims.yaml":           crdsClustersComputeKoreAppviaIo_namespaceclaimsYaml,
+	"crds/clusters.compute.kore.appvia.io_namespacepolicy.yaml":           crdsClustersComputeKoreAppviaIo_namespacepolicyYaml,
+	"crds/config.kore.appvia.io_allocations.yaml":                         crdsConfigKoreAppviaIo_allocationsYaml,
+	"crds/config.kore.appvia.io_plans.yaml":                               crdsConfigKoreAppviaIo_plansYaml,
+	"crds/core.kore.appvia.io_idp.yaml":                                   crdsCoreKoreAppviaIo_idpYaml,
+	"crds/core.kore.appvia.io_oidclient.yaml":                             crdsCoreKoreAppviaIo_oidclientYaml,
+	"crds/gke.compute.kore.appvia.io_gkecredentials.yaml":                 crdsGkeComputeKoreAppviaIo_gkecredentialsYaml,
+	"crds/gke.compute.kore.appvia.io_gkes.yaml":                           crdsGkeComputeKoreAppviaIo_gkesYaml,
+	"crds/org.kore.appvia.io_members.yaml":                                crdsOrgKoreAppviaIo_membersYaml,
+	"crds/org.kore.appvia.io_teaminvitations.yaml":                        crdsOrgKoreAppviaIo_teaminvitationsYaml,
+	"crds/org.kore.appvia.io_teams.yaml":                                  crdsOrgKoreAppviaIo_teamsYaml,
+	"crds/org.kore.appvia.io_users.yaml":                                  crdsOrgKoreAppviaIo_usersYaml,
 }
 
 // AssetDir returns the file names below a certain
@@ -4307,28 +4315,28 @@ type bintree struct {
 
 var _bintree = &bintree{nil, map[string]*bintree{
 	"crds": {nil, map[string]*bintree{
-		"apps.kore.appvia.io_appdeployments.yaml":                        {crdsAppsHubAppviaIo_appdeploymentsYaml, map[string]*bintree{}},
-		"apps.kore.appvia.io_installplans.yaml":                          {crdsAppsHubAppviaIo_installplansYaml, map[string]*bintree{}},
-		"aws.compute.kore.appvia.io_awscredentials.yaml":                 {crdsAwsComputeHubAppviaIo_awscredentialsYaml, map[string]*bintree{}},
-		"aws.compute.kore.appvia.io_eksclusters.yaml":                    {crdsAwsComputeHubAppviaIo_eksclustersYaml, map[string]*bintree{}},
-		"clusters.compute.kore.appvia.io_kubernetes.yaml":                {crdsClustersComputeHubAppviaIo_kubernetesYaml, map[string]*bintree{}},
-		"clusters.compute.kore.appvia.io_managedclusterrole.yaml":        {crdsClustersComputeHubAppviaIo_managedclusterroleYaml, map[string]*bintree{}},
-		"clusters.compute.kore.appvia.io_managedclusterrolebinding.yaml": {crdsClustersComputeHubAppviaIo_managedclusterrolebindingYaml, map[string]*bintree{}},
-		"clusters.compute.kore.appvia.io_managedconfig.yaml":             {crdsClustersComputeHubAppviaIo_managedconfigYaml, map[string]*bintree{}},
-		"clusters.compute.kore.appvia.io_managedpodsecuritypoliies.yaml": {crdsClustersComputeHubAppviaIo_managedpodsecuritypoliiesYaml, map[string]*bintree{}},
-		"clusters.compute.kore.appvia.io_managedrole.yaml":               {crdsClustersComputeHubAppviaIo_managedroleYaml, map[string]*bintree{}},
-		"clusters.compute.kore.appvia.io_namespaceclaims.yaml":           {crdsClustersComputeHubAppviaIo_namespaceclaimsYaml, map[string]*bintree{}},
-		"clusters.compute.kore.appvia.io_namespacepolicy.yaml":           {crdsClustersComputeHubAppviaIo_namespacepolicyYaml, map[string]*bintree{}},
-		"config.kore.appvia.io_allocations.yaml":                         {crdsConfigHubAppviaIo_allocationsYaml, map[string]*bintree{}},
-		"config.kore.appvia.io_plans.yaml":                               {crdsConfigHubAppviaIo_plansYaml, map[string]*bintree{}},
-		"core.kore.appvia.io_idp.yaml":                                   {crdsCoreHubAppviaIo_idpYaml, map[string]*bintree{}},
-		"core.kore.appvia.io_oidclient.yaml":                             {crdsCoreHubAppviaIo_oidclientYaml, map[string]*bintree{}},
-		"gke.compute.kore.appvia.io_gkecredentials.yaml":                 {crdsGkeComputeHubAppviaIo_gkecredentialsYaml, map[string]*bintree{}},
-		"gke.compute.kore.appvia.io_gkes.yaml":                           {crdsGkeComputeHubAppviaIo_gkesYaml, map[string]*bintree{}},
-		"org.kore.appvia.io_members.yaml":                                {crdsOrgHubAppviaIo_membersYaml, map[string]*bintree{}},
-		"org.kore.appvia.io_teaminvitations.yaml":                        {crdsOrgHubAppviaIo_teaminvitationsYaml, map[string]*bintree{}},
-		"org.kore.appvia.io_teams.yaml":                                  {crdsOrgHubAppviaIo_teamsYaml, map[string]*bintree{}},
-		"org.kore.appvia.io_users.yaml":                                  {crdsOrgHubAppviaIo_usersYaml, map[string]*bintree{}},
+		"apps.kore.appvia.io_appdeployments.yaml":                        {crdsAppsKoreAppviaIo_appdeploymentsYaml, map[string]*bintree{}},
+		"apps.kore.appvia.io_installplans.yaml":                          {crdsAppsKoreAppviaIo_installplansYaml, map[string]*bintree{}},
+		"aws.compute.kore.appvia.io_awscredentials.yaml":                 {crdsAwsComputeKoreAppviaIo_awscredentialsYaml, map[string]*bintree{}},
+		"aws.compute.kore.appvia.io_eksclusters.yaml":                    {crdsAwsComputeKoreAppviaIo_eksclustersYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_kubernetes.yaml":                {crdsClustersComputeKoreAppviaIo_kubernetesYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_managedclusterrole.yaml":        {crdsClustersComputeKoreAppviaIo_managedclusterroleYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_managedclusterrolebinding.yaml": {crdsClustersComputeKoreAppviaIo_managedclusterrolebindingYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_managedconfig.yaml":             {crdsClustersComputeKoreAppviaIo_managedconfigYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_managedpodsecuritypoliies.yaml": {crdsClustersComputeKoreAppviaIo_managedpodsecuritypoliiesYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_managedrole.yaml":               {crdsClustersComputeKoreAppviaIo_managedroleYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_namespaceclaims.yaml":           {crdsClustersComputeKoreAppviaIo_namespaceclaimsYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_namespacepolicy.yaml":           {crdsClustersComputeKoreAppviaIo_namespacepolicyYaml, map[string]*bintree{}},
+		"config.kore.appvia.io_allocations.yaml":                         {crdsConfigKoreAppviaIo_allocationsYaml, map[string]*bintree{}},
+		"config.kore.appvia.io_plans.yaml":                               {crdsConfigKoreAppviaIo_plansYaml, map[string]*bintree{}},
+		"core.kore.appvia.io_idp.yaml":                                   {crdsCoreKoreAppviaIo_idpYaml, map[string]*bintree{}},
+		"core.kore.appvia.io_oidclient.yaml":                             {crdsCoreKoreAppviaIo_oidclientYaml, map[string]*bintree{}},
+		"gke.compute.kore.appvia.io_gkecredentials.yaml":                 {crdsGkeComputeKoreAppviaIo_gkecredentialsYaml, map[string]*bintree{}},
+		"gke.compute.kore.appvia.io_gkes.yaml":                           {crdsGkeComputeKoreAppviaIo_gkesYaml, map[string]*bintree{}},
+		"org.kore.appvia.io_members.yaml":                                {crdsOrgKoreAppviaIo_membersYaml, map[string]*bintree{}},
+		"org.kore.appvia.io_teaminvitations.yaml":                        {crdsOrgKoreAppviaIo_teaminvitationsYaml, map[string]*bintree{}},
+		"org.kore.appvia.io_teams.yaml":                                  {crdsOrgKoreAppviaIo_teamsYaml, map[string]*bintree{}},
+		"org.kore.appvia.io_users.yaml":                                  {crdsOrgKoreAppviaIo_usersYaml, map[string]*bintree{}},
 	}},
 }}
 

@@ -209,8 +209,6 @@ clean:
 	@echo "--> Cleaning up the environment"
 	rm -rf ./bin 2>/dev/null
 	rm -rf ./release 2>/dev/null
-	@echo "--> Removing any previous state in docker"
-	@docker-compose --file docker-compose.yml -f hack/demo.yml down
 
 authors:
 	@echo "--> Updating the AUTHORS"

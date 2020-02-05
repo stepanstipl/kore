@@ -150,7 +150,7 @@ func (t bsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 		}
 
 		// @step: build a client from the cluster secret
-		client, err := controllers.CreateClientFromSecret(ctx, t.mgr.GetClient(), cluster.Name, cluster.Namespace)
+		client, err := controllers.CreateClientFromSecret(ctx, t.mgr.GetClient(), cluster.Namespace, cluster.Name)
 		if err != nil {
 			logger.WithError(err).Error("trying to retrieve the credentials")
 
