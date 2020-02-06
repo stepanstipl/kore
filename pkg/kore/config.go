@@ -19,12 +19,19 @@ package kore
 
 import (
 	"errors"
+
+	"github.com/appvia/kore/pkg/utils"
 )
 
 // IsValid checks the options
 func (c Config) IsValid() error {
-	if c.DEX.EnabledDex && c.AdminPass == "" {
-		return errors.New("you must set the admin password for dex")
+	if c.DEX.EnabledDex {
+		if c.AdminPass == "" {
+			return errors.New("you must set the admin password for dex")
+		}
+		if utils.Contains("offline", c.ClientScopes) {
+			return errors.New("'offline' scope when using dex should be 'offline_access'")
+		}
 	}
 	if c.CertificateAuthority == "" {
 		return errors.New("no certificate authority has been defined")
