@@ -1,5 +1,5 @@
 # DEX config file
-issuer: http://{{LOCALHOST_DNS}}:5556/
+issuer: http://localhost:5556/
 storage:
   type: kubernetes
   config:

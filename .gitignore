@@ -4,7 +4,6 @@ vendor/
 swagger-ui/
 hack/setup/instances/credentials.yml
 hack/setup/class.yml
-hack/setup/dex/config.yaml
 cmd/cluster-controller
 deploy/kube/ingress.yml
 deploy/kube/secrets.yml

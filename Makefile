@@ -17,11 +17,9 @@ APIS ?= $(shell find pkg/apis -name "v*" -type d | sed -e 's/pkg\/apis\///' | so
 UNAME := $(shell uname)
 ifeq ($(UNAME), Darwin)
 API_HOST_IN_DOCKER = host.docker.internal
-LOCALHOST_DNS = docker.for.mac.localhost
 endif
 ifeq ($(UNAME), Linux)
 API_HOST_IN_DOCKER = 127.0.0.1
-LOCALHOST_DNS = localhost
 endif
 
 .PHONY: test authors changelog build docker static release cover vet glide-install demo golangci-lint apis go-swagger swagger
@@ -114,7 +112,7 @@ compose-up:
 		--file hack/compose/kube.yml \
 		--file hack/compose/operators.yml up -d 
 
-compose: build generate-dex-config compose-up
+compose: build compose-up
 	@echo "--> Building a test environment"
 	@echo "--> Open a browser: http://localhost:3000"
 	@echo "--> Note: the UI is running on host-network (some machines might have an issue)"
@@ -122,7 +120,6 @@ compose: build generate-dex-config compose-up
 
 run:
 	@echo "--> Starting dependancies..."
-	@$(MAKE) generate-dex-config
 	@$(MAKE) compose-up
 	@$(MAKE) kube-api-wait
 	@$(MAKE) run-api-only
@@ -165,16 +162,10 @@ compose-logs:
 		--file hack/compose/kube.yml \
 		--file hack/compose/operators.yml logs -f 
 
-generate-dex-config:
-	@echo "--> Generating Dex config file from template"
-	@cat ./hack/setup/dex/config-template.yaml | sed "s~{{LOCALHOST_DNS}}~${LOCALHOST_DNS}~g" > ./hack/setup/dex/config.yaml
-
 demo:
 	@echo "--> Building the demo environment"
 	@echo "--> Open a browser: http://localhost:3000"
-	@echo "--> Using ${LOCALHOST_DNS} as localhost DNS"
-	@$(MAKE) generate-dex-config
-	LOCALHOST_DNS=${LOCALHOST_DNS} docker-compose \
+	@docker-compose \
 		--file hack/compose/kube.yml \
 		--file hack/compose/operators.yml \
 		--file hack/compose/demo.yml \
