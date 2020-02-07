@@ -50,7 +50,43 @@ type clsImpl struct {
 
 // Delete is used to delete a cluster from the kore
 func (c *clsImpl) Delete(ctx context.Context, name string) (*clustersv1.Kubernetes, error) {
-	return nil, nil
+	user := authentication.MustGetIdentity(ctx)
+	logger := log.WithFields(log.Fields{
+		"cluster": name,
+		"team":    c.team,
+		"user":    user.Username(),
+	})
+	logger.Info("attempting to delete the cluster")
+
+	original, err := c.Get(ctx, name)
+	if err != nil {
+		logger.WithError(err).Error("trying to retrieve the cluster")
+
+		return nil, err
+	}
+
+	// @step: check if we have any namespace on the cluster
+	list, err := c.Teams().Team(c.team).NamespaceClaims().List(ctx)
+	if err != nil {
+		logger.WithError(err).Error("trying to list any namespace claims")
+
+		return nil, err
+	}
+	for _, x := range list.Items {
+		if x.Spec.Cluster.Namespace == c.team && x.Spec.Cluster.Name == name {
+			return nil, ErrNotAllowed{message: "cluster has allocated namespaces please delete first"}
+		}
+	}
+
+	_ = c.Audit().Record(ctx,
+		audit.Team(c.team),
+		audit.User(user.Username()),
+		audit.Type(audit.Delete),
+		audit.Resource(name),
+		audit.ResourceUID(string(original.GetUID())),
+	).Event("deleting the cluster from the team")
+
+	return original, c.Store().Client().Delete(ctx, store.DeleteOptions.From(original))
 }
 
 // List returns a list of cluster we have access to
