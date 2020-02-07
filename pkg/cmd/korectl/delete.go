@@ -21,6 +21,7 @@ package korectl
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 
@@ -29,13 +30,13 @@ import (
 
 func GetDeleteCommand(config *Config) cli.Command {
 	return cli.Command{
-		Name:  "delete",
-		Usage: "Used to delete one of more resources from the kore",
+		Name:      "delete",
+		Usage:     "Used to delete one of more resources from the kore",
+		ArgsUsage: "-f <file> | <kind> <name>",
 		Flags: []cli.Flag{
 			cli.StringSliceFlag{
-				Name:     "file,f",
-				Usage:    "The path to the file containing the resources definitions `PATH`",
-				Required: true,
+				Name:  "file,f",
+				Usage: "The path to the file containing the resources definitions `PATH`",
 			},
 			cli.StringFlag{
 				Name:  "team,t",
@@ -68,6 +69,31 @@ func GetDeleteCommand(config *Config) cli.Command {
 					}
 
 					fmt.Printf("%s/%s deleted\n", gvk.Group, x.Endpoint)
+				}
+			}
+			if len(ctx.StringSlice("file")) <= 0 {
+				if ctx.NArg() != 2 {
+					return errors.New("you need to specify a resource type and ")
+				}
+				req := NewRequest().
+					WithConfig(config).
+					WithContext(ctx).
+					PathParameter("resource", true).
+					PathParameter("name", false)
+
+				endpoint := "/teams/{team}/{resource}/{name}"
+
+				if IsGlobalResource(ctx.Args().First()) {
+					endpoint = "/{resource}/{name}"
+				} else {
+					req.PathParameter("team", true)
+				}
+				req.WithEndpoint(endpoint).
+					WithInject("resource", ctx.Args().First()).
+					WithInject("name", ctx.Args().Tail()[0])
+
+				if err := req.Delete(); err != nil {
+					return err
 				}
 			}
 
