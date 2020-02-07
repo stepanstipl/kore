@@ -220,7 +220,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	// Team Namespaces
 
 	ws.Route(
-		ws.GET("/{team}/namespace").To(u.findNamespaces).
+		ws.GET("/{team}/namespaceclaims").To(u.findNamespaces).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Doc("Used to return all team resources under the team").
 			Returns(http.StatusOK, "Contains the former definition from the kore", clustersv1.NamespaceClaimList{}).
@@ -228,7 +228,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	)
 
 	ws.Route(
-		ws.GET("/{team}/namespace/{name}").To(u.findNamespace).
+		ws.GET("/{team}/namespaceclaims/{name}").To(u.findNamespace).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the namespace claim you are acting upon")).
 			Doc("Used to return the cluster definition from the kore").
@@ -237,7 +237,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	)
 
 	ws.Route(
-		ws.PUT("/{team}/namespace/{name}").To(u.updateNamespace).
+		ws.PUT("/{team}/namespaceclaims/{name}").To(u.updateNamespace).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the namespace claim you are acting upon")).
 			Doc("Used to return all team resources under the team").
@@ -247,7 +247,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	)
 
 	ws.Route(
-		ws.DELETE("/{team}/namespace/{name}").To(u.deleteNamespace).
+		ws.DELETE("/{team}/namespaceclaims/{name}").To(u.deleteNamespace).
 			Param(ws.PathParameter("name", "Is name the of the namespace claim you are acting upon")).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Doc("Used to return the cluster definition from the kore").

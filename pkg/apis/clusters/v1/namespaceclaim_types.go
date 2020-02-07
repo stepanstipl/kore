@@ -22,7 +22,6 @@ package v1
 import (
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -42,10 +41,6 @@ type NamespaceClaimSpec struct {
 	// Labels is a series of labels for the namespace
 	// +kubebuilder:validation:Optional
 	Labels map[string]string `json:"labels,omitempty"`
-	// Limits are the limits places on the namespace
-	// +kubebuilder:validation:Optional
-	// +listType
-	Limits []v1.LimitRangeItem `json:"limits,omitempty"`
 }
 
 // NamespaceClaimStatus defines the observed state of NamespaceClaim
