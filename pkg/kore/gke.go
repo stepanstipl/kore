@@ -62,6 +62,7 @@ func (h *gkeImpl) Delete(ctx context.Context, name string) error {
 	err := h.Store().Client().Get(ctx,
 		store.GetOptions.InNamespace(h.team),
 		store.GetOptions.InTo(cluster),
+		store.GetOptions.WithName(name),
 	)
 	if err != nil {
 		logger.WithError(err).Error("trying to retrieve the cluster from api")
