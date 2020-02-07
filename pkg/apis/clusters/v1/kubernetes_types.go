@@ -24,12 +24,19 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// AuthenticationMode indicates the authentication modes for the remote cluster
+type AuthenticationMode string
+
+const (
+	// OIDCMode indicates using a oidc model
+	OIDCMode = "oidc"
+)
+
 // KubernetesSpec defines the desired state of Cluster
 // +k8s:openapi-gen=true
 type KubernetesSpec struct {
-	// ProxyImage is the kube api proxy used to sso into the cluster post provision
-	// +kubebuilder:validation:Optional
-	ProxyImage string `json:"proxyImage,omitempty"`
+	// Authentication indicates a mode of user authentication
+	Authentication *AuthenticationMode `json:"authentication,omitempty"`
 	// ClusterUsers is a collection of users from the team whom have
 	// permissions across the cluster
 	// +kubebuilder:validation:Optional
@@ -52,6 +59,9 @@ type KubernetesSpec struct {
 	// Provider is the cloud cluster provider type for this kubernetes
 	// +kubebuilder:validation:Optional
 	Provider corev1.Ownership `json:"provider,omitempty"`
+	// ProxyImage is the kube api proxy used to sso into the cluster post provision
+	// +kubebuilder:validation:Optional
+	ProxyImage string `json:"proxyImage,omitempty"`
 }
 
 // ClusterUser defines a user and their role in the cluster

@@ -217,6 +217,44 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
 	)
 
+	// Team Namespaces
+
+	ws.Route(
+		ws.GET("/{team}/namespaceclaims").To(u.findNamespaces).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Doc("Used to return all team resources under the team").
+			Returns(http.StatusOK, "Contains the former definition from the kore", clustersv1.NamespaceClaimList{}).
+			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.GET("/{team}/namespaceclaims/{name}").To(u.findNamespace).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the namespace claim you are acting upon")).
+			Doc("Used to return the cluster definition from the kore").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", clustersv1.NamespaceClaim{}).
+			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.PUT("/{team}/namespaceclaims/{name}").To(u.updateNamespace).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the namespace claim you are acting upon")).
+			Doc("Used to return all team resources under the team").
+			Reads(clustersv1.NamespaceClaim{}, "The definition for namespace claim").
+			Returns(http.StatusOK, "Contains the definition from the kore", clustersv1.NamespaceClaim{}).
+			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.DELETE("/{team}/namespaceclaims/{name}").To(u.deleteNamespace).
+			Param(ws.PathParameter("name", "Is name the of the namespace claim you are acting upon")).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Doc("Used to return the cluster definition from the kore").
+			Returns(http.StatusOK, "Contains the former definition from the kore", clustersv1.NamespaceClaim{}).
+			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+	)
+
 	// Team Clusters
 
 	ws.Route(

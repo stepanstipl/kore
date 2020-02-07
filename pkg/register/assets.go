@@ -956,6 +956,9 @@ spec:
         spec:
           description: KubernetesSpec defines the desired state of Cluster
           properties:
+            authentication:
+              description: Authentication indicates a mode of user authentication
+              type: string
             clusterUsers:
               description: ClusterUsers is a collection of users from the team whom
                 have permissions across the cluster
@@ -2473,47 +2476,6 @@ spec:
                 type: string
               description: Labels is a series of labels for the namespace
               type: object
-            limits:
-              description: Limits are the limits places on the namespace
-              items:
-                description: LimitRangeItem defines a min/max usage limit for any
-                  resource that matches on kind.
-                properties:
-                  default:
-                    additionalProperties:
-                      type: string
-                    description: Default resource requirement limit value by resource
-                      name if resource limit is omitted.
-                    type: object
-                  defaultRequest:
-                    additionalProperties:
-                      type: string
-                    description: DefaultRequest is the default resource requirement
-                      request value by resource name if resource request is omitted.
-                    type: object
-                  max:
-                    additionalProperties:
-                      type: string
-                    description: Max usage constraints on this kind by resource name.
-                    type: object
-                  maxLimitRequestRatio:
-                    additionalProperties:
-                      type: string
-                    description: MaxLimitRequestRatio if specified, the named resource
-                      must have a request and limit that are both non-zero where limit
-                      divided by request is less than or equal to the enumerated value;
-                      this represents the max burst for the named resource.
-                    type: object
-                  min:
-                    additionalProperties:
-                      type: string
-                    description: Min usage constraints on this kind by resource name.
-                    type: object
-                  type:
-                    description: Type of resource that this limit applies to.
-                    type: string
-                type: object
-              type: array
             name:
               description: Name is the name of the namespace to create
               minLength: 3

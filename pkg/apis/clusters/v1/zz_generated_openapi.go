@@ -109,9 +109,9 @@ func schema_pkg_apis_clusters_v1_KubernetesSpec(ref common.ReferenceCallback) co
 				Description: "KubernetesSpec defines the desired state of Cluster",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"proxyImage": {
+					"authentication": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ProxyImage is the kube api proxy used to sso into the cluster post provision",
+							Description: "Authentication indicates a mode of user authentication",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -166,6 +166,13 @@ func schema_pkg_apis_clusters_v1_KubernetesSpec(ref common.ReferenceCallback) co
 						SchemaProps: spec.SchemaProps{
 							Description: "Provider is the cloud cluster provider type for this kubernetes",
 							Ref:         ref("github.com/appvia/kore/pkg/apis/core/v1.Ownership"),
+						},
+					},
+					"proxyImage": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ProxyImage is the kube api proxy used to sso into the cluster post provision",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 				},
@@ -1191,30 +1198,12 @@ func schema_pkg_apis_clusters_v1_NamespaceClaimSpec(ref common.ReferenceCallback
 							},
 						},
 					},
-					"limits": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "Limits are the limits places on the namespace",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Ref: ref("k8s.io/api/core/v1.LimitRangeItem"),
-									},
-								},
-							},
-						},
-					},
 				},
 				Required: []string{"cluster", "name"},
 			},
 		},
 		Dependencies: []string{
-			"github.com/appvia/kore/pkg/apis/core/v1.Ownership", "k8s.io/api/core/v1.LimitRangeItem"},
+			"github.com/appvia/kore/pkg/apis/core/v1.Ownership"},
 	}
 }
 
