@@ -150,6 +150,9 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			return reconcile.Result{}, err
 		}
 
+		resource.Status.Status = core.SuccessStatus
+		resource.Status.Conditions = []core.Condition{}
+
 		return reconcile.Result{}, nil
 	}()
 	if err != nil {
