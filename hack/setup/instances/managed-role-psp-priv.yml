@@ -1,0 +1,17 @@
+---
+apiVersion: clusters.compute.kore.appvia.io/v1
+kind: ManagedClusterRole
+metadata:
+  name: psp-all
+spec:
+  enabled: true
+  description: Provides a cluster role issuing readonly permissions to the cluster resources
+  rules:
+  - apiGroups:
+    - policy
+    resources:
+      - podsecuritypolicies
+    resourceNames:
+      - privileged
+    verbs:
+      - use

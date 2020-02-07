@@ -1,0 +1,17 @@
+---
+apiVersion: clusters.compute.kore.appvia.io/v1
+kind: NamespaceClaim
+metadata:
+  name: app
+spec:
+  name: app
+  labels:
+    hello: world
+  annotations:
+    hello: world
+  cluster:
+    group: clusters.compute.kore.appvia.io
+    kind: Kubernetes
+    name: dev
+    namespace: devs
+    version: v1

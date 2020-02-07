@@ -1,0 +1,19 @@
+---
+apiVersion: clusters.compute.kore.appvia.io/v1
+kind: Kubernetes
+metadata:
+  name: dev
+spec:
+  domain: labs.appvia.io
+  inheritTeamMembers: true
+  defaultTeamRole: cluster-admin
+  provider:
+    group: gke.compute.kore.appvia.io
+    version: v1alpha1
+    kind: GKE
+    namespace: devs
+    name: dev
+  enableDefaultTrafficBlock: false
+  clusterUsers:
+  - username: jon
+    roles: [readonly]

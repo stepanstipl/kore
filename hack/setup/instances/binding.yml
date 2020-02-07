@@ -1,0 +1,15 @@
+---
+apiVersion: clusters.compute.kore.appvia.io/v1
+kind: ManagedClusterRoleBinding
+metadata:
+  name: hub-loki
+spec:
+  binding:
+    roleRef:
+      kind: ClusterRole
+      name: hub-priviledged
+      apiGroup: rbac.authorization.k8s.io
+    subjects:
+    - kind: ServiceAccount
+      name: loki
+      namespace: logging
