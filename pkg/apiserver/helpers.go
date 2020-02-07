@@ -28,6 +28,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	restful "github.com/emicklei/go-restful"
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -71,6 +72,9 @@ func handleErrors(req *restful.Request, resp *restful.Response, handler func() e
 			code = http.StatusBadRequest
 		}
 		if strings.Contains(err.Error(), "record not found") {
+			code = http.StatusNotFound
+		}
+		if kerrors.IsNotFound(err) {
 			code = http.StatusNotFound
 		}
 

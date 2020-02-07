@@ -279,7 +279,7 @@ func (c *Requestor) makeRequest(method, url string) (*http.Response, error) {
 		return nil, err
 	}
 	if resp.StatusCode == http.StatusNotFound {
-		return nil, errors.New("endpoint does not exist")
+		return nil, errors.New("kind or resource does not exist")
 	}
 
 	if resp.Body != nil {
