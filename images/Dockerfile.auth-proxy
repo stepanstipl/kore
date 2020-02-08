@@ -1,0 +1,14 @@
+FROM alpine:3.11
+LABEL Name=auth-proxy \
+      Release=https://github.com/appvia/kore \
+      Maintainer=gambol99@gmail.com \
+      Url=https://github.com/appvia/kore \
+      Help=https://github.com/appvia/kore/issues
+
+RUN apk add ca-certificates --no-cache
+
+COPY bin/auth-proxy /auth-proxy
+
+USER 65534
+
+ENTRYPOINT [ "/auth-proxy" ]

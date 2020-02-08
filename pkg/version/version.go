@@ -37,7 +37,7 @@ var (
 	// GitSHA is the sha this was built off
 	GitSHA = "no gitsha provided"
 	// Release is the releasing version
-	Release = "v0.0.1"
+	Release = "v0.0.3"
 )
 
 // Version returns the proxy version

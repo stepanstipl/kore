@@ -11,7 +11,7 @@ LFLAGS ?= -X main.gitsha=${GIT_SHA} -X main.compiled=${BUILD_TIME}
 PACKAGES=$(shell go list ./...)
 REGISTRY=quay.io
 ROOT_DIR=${PWD}
-VERSION ?= $(shell awk '/release.*=/ { print $$3 }' cmd/kore-apiserver/main.go | sed 's/"//g')
+VERSION ?= $(shell awk '/Release.*=/ { print $$3 }' pkg/version/version.go | sed 's/"//g')
 VETARGS ?= -asmdecl -atomic -bool -buildtags -copylocks -methods -nilfunc -printf -rangeloops -unsafeptr
 APIS ?= $(shell find pkg/apis -name "v*" -type d | sed -e 's/pkg\/apis\///' | sort | tr '\n' ' ')
 UNAME := $(shell uname)
@@ -33,15 +33,15 @@ golang:
 build: golang
 	@echo "--> Compiling the project"
 	@mkdir -p bin
-	@for binary in kore-apiserver korectl; do \
+	@for binary in kore-apiserver korectl auth-proxy; do \
 		echo "--> Building $${binary} binary" ; \
 		go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go ; \
 	done
 
 static: golang deps
-	@echo "--> Compiling the static binary"
+	@echo "--> Compiling the static binaries"
 	@mkdir -p bin
-	@for binary in kore-apiserver korectl; do \
+	@for binary in kore-apiserver korectl auth-proxy; do \
 		echo "--> Building $${binary} binary" ; \
 		CGO_ENABLED=0 GOOS=linux go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go ; \
 	done
@@ -50,6 +50,11 @@ korectl: golang deps
 	@echo "--> Compiling the korectl binary"
 	@mkdir -p bin
 	GOOS=linux go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/korectl cmd/korectl/*.go
+
+auth-proxy: golang deps
+	@echo "--> Compiling the auth-proxy binary"
+	@mkdir -p bin
+	GOOS=linux go build -ldflags "${LFLAGS}" -o bin/auth-proxy cmd/auth-proxy/*.go
 
 docker-build:
 	@echo "--> Running docker"
@@ -61,6 +66,16 @@ docker-build:
 		-e GO111MODULE=on \
 		golang:${GOVERSION} \
 		make in-docker-build
+
+images: static
+	@$(MAKE) images-only
+
+images-only: 
+	@echo "--> Building docker images"
+	@for name in kore-apiserver auth-proxy; do \
+		echo "--> Building docker image $${name}" ; \
+		docker build -t ${REGISTRY}/${AUTHOR}/$${name}:${VERSION} -f images/Dockerfile.$${name} . ; \
+	done
 
 in-docker-build:
 	@echo "--> Building in Docker"
