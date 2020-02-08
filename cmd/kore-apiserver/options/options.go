@@ -137,30 +137,7 @@ func Options() []cli.Flag {
 			Value:  "root:pass@tcp(127.0.0.1:3306)/kore?parseTime=true",
 		},
 
-		//
-		// @related to the user management service
-		//
-		cli.BoolFlag{
-			Name:   "enable-audit-db-logging",
-			Usage:  "enables debug logging on the audit and teams database `BOOL`",
-			EnvVar: "ENABLE_AUDIT_DB_LOGGING",
-		},
-		cli.StringFlag{
-			Name:   "audit-db-driver",
-			Usage:  "the database driver which the user managaement service uses `DRIVER`",
-			EnvVar: "AUDIT_DB_DRIVER",
-			Value:  "mysql",
-		},
-		cli.StringFlag{
-			Name:   "audit-db-url",
-			Usage:  "the database dsn used to connect to the audit db `DSN`",
-			EnvVar: "AUDIT_DB_URL",
-			Value:  "",
-		},
-
-		//
 		// @related to Dex Identity Provider IDP
-		//
 		cli.BoolFlag{
 			Name:   "enable-dex",
 			Usage:  "Indicates if we should enable the dex integration `BOOL`",

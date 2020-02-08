@@ -25,6 +25,7 @@ import (
 
 // Migrations performs the migrations
 func Migrations(db *gorm.DB) error {
+	db.AutoMigrate(AuditEvent{})
 	db.AutoMigrate(Identity{})
 	db.AutoMigrate(Invitation{})
 	db.AutoMigrate(Member{})

@@ -22,7 +22,7 @@ import (
 
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	"github.com/appvia/kore/pkg/kore/authentication"
-	"github.com/appvia/kore/pkg/services/audit"
+	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/store"
 
 	log "github.com/sirupsen/logrus"
@@ -70,11 +70,11 @@ func (p plansImpl) Update(ctx context.Context, plan *configv1.Plan) error {
 		return err
 	}
 
-	_ = p.Audit().Record(ctx,
-		audit.Resource(plan.Name),
-		audit.ResourceUID(string(plan.UID)),
-		audit.Type(audit.Update),
-		audit.User(user.Username()),
+	p.Audit().Record(ctx,
+		users.Resource(plan.Name),
+		users.ResourceUID(string(plan.UID)),
+		users.Type(users.AuditUpdate),
+		users.User(user.Username()),
 	).Event("the plan has been update in the kore")
 
 	return nil
@@ -110,11 +110,11 @@ func (p plansImpl) Delete(ctx context.Context, name string) (*configv1.Plan, err
 	}
 
 	// @TODO add an audit event about the deletion
-	_ = p.Audit().Record(ctx,
-		audit.Resource(plan.Name),
-		audit.ResourceUID(string(plan.UID)),
-		audit.Type(audit.Update),
-		audit.User(user.Username()),
+	p.Audit().Record(ctx,
+		users.Resource(plan.Name),
+		users.ResourceUID(string(plan.UID)),
+		users.Type(users.AuditUpdate),
+		users.User(user.Username()),
 	).Event("the plan has been removed from the kore")
 
 	return plan, nil

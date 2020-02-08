@@ -29,8 +29,6 @@ import (
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/register"
 	"github.com/appvia/kore/pkg/schema"
-	"github.com/appvia/kore/pkg/services/audit"
-	"github.com/appvia/kore/pkg/services/audit/fake"
 	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils/crds"
@@ -110,24 +108,8 @@ func New(config Config) (Interface, error) {
 		return nil, fmt.Errorf("trying to create the user management service: %s", err)
 	}
 
-	var auditor audit.Interface
-
-	if config.Audit.StoreURL == "" {
-		log.Warn("no audit provider is set, defaulting to /dev/null")
-		auditor = fake.NewFakeAudit(config.Audit)
-	} else {
-		auditor, err = audit.New(audit.Config{
-			Driver:        config.Audit.Driver,
-			EnableLogging: config.Audit.EnableLogging,
-			StoreURL:      config.Audit.StoreURL,
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	// @step: we need to create the kore bridge / business logic
-	hubcc, err := kore.New(storecc, usermgr, auditor, config.Kore)
+	hubcc, err := kore.New(storecc, usermgr, config.Kore)
 	if err != nil {
 		return nil, fmt.Errorf("trying to create the kore bridge: %s", err)
 	}

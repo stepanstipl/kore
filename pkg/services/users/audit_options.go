@@ -17,9 +17,9 @@
  * along with kore-apiserver.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package audit
+package users
 
-import "github.com/appvia/kore/pkg/services/audit/model"
+import "github.com/appvia/kore/pkg/services/users/model"
 
 // AuditFunc sets an option in the record
 type AuditFunc func(m *model.AuditEvent)

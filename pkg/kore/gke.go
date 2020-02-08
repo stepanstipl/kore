@@ -24,7 +24,7 @@ import (
 
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	"github.com/appvia/kore/pkg/kore/authentication"
-	"github.com/appvia/kore/pkg/services/audit"
+	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/store"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 
@@ -71,10 +71,10 @@ func (h *gkeImpl) Delete(ctx context.Context, name string) error {
 	}
 
 	if cluster.Namespace != h.team {
-		_ = h.Audit().Record(ctx,
-			audit.Resource("GKE"),
-			audit.Team(h.team),
-			audit.User(user.Username()),
+		h.Audit().Record(ctx,
+			users.Resource("GKE"),
+			users.Team(h.team),
+			users.User(user.Username()),
 		).Event("user attempting to delete the cluster from kore")
 
 		logger.Warn("attempting to delete a cluster from another team")
@@ -87,10 +87,11 @@ func (h *gkeImpl) Delete(ctx context.Context, name string) error {
 	// @step: check if we have any namespaces allocated to teams
 
 	// @TODO add an audit entry indicating the request to remove the option
-	_ = h.Audit().Record(ctx,
-		audit.Resource("GKE"),
-		audit.Team(h.team),
-		audit.User(user.Username()),
+	h.Audit().Record(ctx,
+		users.Resource("GKE"),
+		users.Team(h.team),
+		users.Type(users.AuditDelete),
+		users.User(user.Username()),
 	).Event("user has deleted the cluster from kore")
 
 	// @step: issue the request to remove the cluster

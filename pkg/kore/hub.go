@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/appvia/kore/pkg/services/audit"
 	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils"
@@ -33,8 +32,6 @@ import (
 
 // hubImpl is the implementation for the kore api
 type hubImpl struct {
-	// auditor is the audit interface
-	auditor audit.Interface
 	// config is the configuration of the kore
 	config *Config
 	// store is the access layer / kubernetes api
@@ -56,7 +53,7 @@ type hubImpl struct {
 }
 
 // New returns a new instance of the kore bridge
-func New(sc store.Store, usermgr users.Interface, auditor audit.Interface, config Config) (Interface, error) {
+func New(sc store.Store, usermgr users.Interface, config Config) (Interface, error) {
 	log.Info("initializing the kore api bridge")
 
 	// @step: check the options
@@ -84,10 +81,9 @@ func New(sc store.Store, usermgr users.Interface, auditor audit.Interface, confi
 	// @step: enable the open
 
 	h := &hubImpl{
-		auditor: auditor,
-		config:  &config,
-		store:   sc,
-		signer:  signer,
+		config: &config,
+		store:  sc,
+		signer: signer,
 	}
 	h.idp = &idpImpl{Interface: h}
 	h.invitations = &ivImpl{Interface: h}
@@ -141,8 +137,8 @@ func (h hubImpl) SignedServerCertificate(hosts []string, duration time.Duration)
 }
 
 // Audit returns the auditor
-func (h *hubImpl) Audit() audit.Interface {
-	return h.auditor
+func (h *hubImpl) Audit() users.Audit {
+	return h.usermgr.Audit()
 }
 
 // Users returns the user implementation

@@ -147,6 +147,11 @@ func (l *ListOptions) HasTeamID() bool {
 	return l.Has("team.id")
 }
 
+// HasType checks the type
+func (l *ListOptions) HasType() bool {
+	return l.Has("audit.type")
+}
+
 // HasEnabled checks the enabled
 func (l *ListOptions) HasEnabled() bool {
 	return l.Has("enabled")
@@ -200,6 +205,11 @@ func (l *ListOptions) GetDisabled() bool {
 // GetTeam gets the team
 func (l *ListOptions) GetTeam() string {
 	return l.GetString("team")
+}
+
+// GetType checks the type
+func (l *ListOptions) GetType() string {
+	return l.GetString("audit.type")
 }
 
 // GetNotTeam gets the team

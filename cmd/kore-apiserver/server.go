@@ -26,7 +26,6 @@ import (
 	"github.com/appvia/kore/pkg/apiserver"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/server"
-	"github.com/appvia/kore/pkg/services/audit"
 	"github.com/appvia/kore/pkg/services/users"
 
 	log "github.com/sirupsen/logrus"
@@ -47,11 +46,6 @@ func invoke(ctx *cli.Context) error {
 
 	// @step: construct the server config
 	config := server.Config{
-		Audit: audit.Config{
-			EnableLogging: ctx.Bool("enabled-audit-db-logging"),
-			Driver:        ctx.String("audit-db-driver"),
-			StoreURL:      ctx.String("audit-db-url"),
-		},
 		APIServer: apiserver.Config{
 			EnableDex:     ctx.Bool("enable-dex"),
 			Listen:        ctx.String("listen"),

@@ -19,6 +19,21 @@
 
 package users
 
+import (
+	"context"
+
+	"github.com/appvia/kore/pkg/services/users/model"
+)
+
+const (
+	// AuditCreate is a creation event
+	AuditCreate = "create"
+	// AuditDelete is a deletion event
+	AuditDelete = "delete"
+	// AuditUpdate is a update event
+	AuditUpdate = "update"
+)
+
 // Config is the configuratin for the store
 type Config struct {
 	// Driver is the database driver to use
@@ -31,6 +46,8 @@ type Config struct {
 
 // Interface defines the interface to the db store
 type Interface interface {
+	// Audit returns the audit interface
+	Audit() Audit
 	// Identities returns the identities interface
 	Identities() Identities
 	// Invitations returns the invitations interface
@@ -43,4 +60,25 @@ type Interface interface {
 	Teams() Teams
 	// Users returns the users interface
 	Users() Users
+}
+
+// Audit is the interface to the audit service
+type Audit interface {
+	// Find is used to retrieve records from the log
+	Find(context.Context, ...ListFunc) Find
+	// Record records an event in the audit log
+	Record(context.Context, ...AuditFunc) Log
+	// Stop stops the service and releases resources
+	Stop() error
+}
+
+type Find interface {
+	// Do performs the query and returns the results
+	Do() ([]*model.AuditEvent, error)
+}
+
+// RecordEntry defines a interface for adding a entry
+type Log interface {
+	// Event is responsible for entering the record into the audit
+	Event(string)
 }
