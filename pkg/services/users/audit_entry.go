@@ -74,9 +74,16 @@ func (e *entryImpl) Do() ([]*model.AuditEvent, error) {
 	if e.filter.HasTeams() {
 		q = q.Where("q.team IN (?)", e.filter.GetTeams())
 	}
+	if e.filter.HasTeamsNotNull() {
+		q = q.Where("q.team != \"\"")
+	}
 	if e.filter.HasUser() {
 		q = q.Where("q.user = ?", e.filter.GetUser())
 	}
+	if e.filter.HasDuration() {
+		q = q.Where("timestampdiff(minute, q.created_at, NOW()) < ?", int(e.filter.GetDuration().Minutes()))
+	}
+
 	list := []*model.AuditEvent{}
 
 	return list, q.Find(&list).Error

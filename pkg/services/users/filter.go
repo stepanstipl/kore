@@ -19,6 +19,8 @@
 
 package users
 
+import "time"
+
 var (
 	// List provides a default list
 	List ListFuncs
@@ -51,9 +53,16 @@ func (q ListFuncs) WithProvider(v string) ListFunc {
 }
 
 // WithProviderToken sets the provider token
-func (q ListFunc) WithProviderToken(v string) ListFunc {
+func (q ListFuncs) WithProviderToken(v string) ListFunc {
 	return func(o *ListOptions) {
 		o.Fields["provider.token"] = v
+	}
+}
+
+// WithDuration searchs for a duration
+func (q ListFuncs) WithDuration(since time.Duration) ListFunc {
+	return func(o *ListOptions) {
+		o.Fields["duration"] = since
 	}
 }
 
@@ -68,6 +77,13 @@ func (q ListFuncs) WithTeam(v string) ListFunc {
 func (q ListFuncs) NotTeam(v ...string) ListFunc {
 	return func(o *ListOptions) {
 		o.Fields["team.not"] = append([]string{}, v...)
+	}
+}
+
+// WithTeamNotNull ensures the team is there
+func (q ListFuncs) WithTeamNotNull() ListFunc {
+	return func(o *ListOptions) {
+		o.Fields["teams.not_null"] = true
 	}
 }
 

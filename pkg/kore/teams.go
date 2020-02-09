@@ -37,6 +37,8 @@ import (
 
 // Teams is the kore api teams interface
 type Teams interface {
+	// AuditEvents returns a stream of events in relation to the teams since x
+	AuditEvents(context.Context, time.Duration) (*orgv1.AuditEventList, error)
 	// Delete removes the team from the kore
 	Delete(context.Context, string) error
 	// Exists checks if the team exists
@@ -238,6 +240,32 @@ func (t *teamsImpl) IsValidTeamName(name string) bool {
 	}
 
 	return true
+}
+
+// AuditEvents returns a stream of events in relation to the teams since x
+func (t *teamsImpl) AuditEvents(ctx context.Context, since time.Duration) (*orgv1.AuditEventList, error) {
+	// @step: must be a admin user
+	user := authentication.MustGetIdentity(ctx)
+	if !user.IsGlobalAdmin() {
+		log.WithField(
+			"username", user.Username(),
+		).Warn("user trying to access the audit logs")
+
+		return nil, ErrUnauthorized
+	}
+
+	// @step: retrieve a list of audit events across all teams
+	list, err := t.Audit().Find(ctx,
+		users.Filter.WithDuration(since),
+		users.Filter.WithTeamNotNull(),
+	).Do()
+	if err != nil {
+		log.WithError(err).Error("trying to retrieve audit logs for teams")
+
+		return nil, err
+	}
+
+	return DefaultConvertor.FromAuditModelList(list), nil
 }
 
 // Team returns the team interface

@@ -22,6 +22,7 @@ package users
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -55,4 +56,24 @@ func TestAuditFind(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, list)
 	assert.Equal(t, 1, len(list))
+}
+
+func TestAuditFindByDuration(t *testing.T) {
+	store := makeTestStore(t)
+	defer store.Stop()
+
+	store.Audit().Record(context.Background(),
+		User("no_one"),
+		Team("no_one"),
+		Type(AuditUpdate),
+	).Event("test message")
+
+	list, err := store.Audit().Find(context.Background(),
+		Filter.WithUser("no_one"),
+		Filter.WithTeam("no_one"),
+		Filter.WithDuration(2*time.Minute),
+	).Do()
+	require.NoError(t, err)
+	require.NotNil(t, list)
+	assert.Equal(t, 2, len(list))
 }
