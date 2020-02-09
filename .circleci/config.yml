@@ -22,7 +22,6 @@ jobs:
         command:
           sh -c "
             echo 'CREATE DATABASE IF NOT EXISTS kore;' > /docker-entrypoint-initdb.d/init.sql;
-            echo 'CREATE DATABASE IF NOT EXISTS audit;' >> /docker-entrypoint-initdb.d/init.sql;
             /usr/local/bin/docker-entrypoint.sh --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
 
       - name: kube-controller-manager
@@ -57,7 +56,6 @@ jobs:
       - run:
           name: Test & Build
           environment:
-            TEST_AUDIT_DATABASE_URL: "root:pass@tcp(database:3306)/audit?parseTime=true"
             TEST_USERS_DATABASE_URL: "root:pass@tcp(database:3306)/kore?parseTime=true"
           command: |
             make test

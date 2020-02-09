@@ -28,7 +28,7 @@ import (
 
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/appvia/kore/pkg/kore/authentication"
-	"github.com/appvia/kore/pkg/services/audit"
+	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/store"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -215,11 +215,11 @@ func (t *teamsImpl) Update(ctx context.Context, team *orgv1.Team) (*orgv1.Team, 
 	}
 
 	// @step: add the entry into the audit
-	_ = t.Audit().Record(ctx,
-		audit.Resource(team.Name),
-		audit.ResourceUID(string(team.UID)),
-		audit.Type(audit.Update),
-		audit.User(user.Username()),
+	t.Audit().Record(ctx,
+		users.Resource(team.Name),
+		users.ResourceUID(string(team.UID)),
+		users.Type(users.AuditUpdate),
+		users.User(user.Username()),
 	).Event("team has been update or created in the kore")
 
 	return DefaultConvertor.FromTeamModel(model), nil

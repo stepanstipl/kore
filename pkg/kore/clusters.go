@@ -24,7 +24,7 @@ import (
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	"github.com/appvia/kore/pkg/kore/authentication"
-	"github.com/appvia/kore/pkg/services/audit"
+	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/store"
 
 	log "github.com/sirupsen/logrus"
@@ -78,12 +78,12 @@ func (c *clsImpl) Delete(ctx context.Context, name string) (*clustersv1.Kubernet
 		}
 	}
 
-	_ = c.Audit().Record(ctx,
-		audit.Team(c.team),
-		audit.User(user.Username()),
-		audit.Type(audit.Delete),
-		audit.Resource(name),
-		audit.ResourceUID(string(original.GetUID())),
+	c.Audit().Record(ctx,
+		users.Team(c.team),
+		users.User(user.Username()),
+		users.Type(users.AuditDelete),
+		users.Resource(name),
+		users.ResourceUID(string(original.GetUID())),
 	).Event("deleting the cluster from the team")
 
 	return original, c.Store().Client().Delete(ctx, store.DeleteOptions.From(original))
@@ -126,11 +126,11 @@ func (c *clsImpl) Update(ctx context.Context, cluster *clustersv1.Kubernetes) er
 	cluster.Namespace = c.team
 
 	// @TODO add an entity into the audit log
-	_ = c.Audit().Record(ctx,
-		audit.Team(c.team),
-		audit.User(user.Username()),
-		audit.Type(audit.Update),
-		audit.Resource(c.team+"/"+cluster.Name),
+	c.Audit().Record(ctx,
+		users.Team(c.team),
+		users.User(user.Username()),
+		users.Type(users.AuditUpdate),
+		users.Resource(c.team+"/"+cluster.Name),
 	).Event("user is update the kubernetes cluster")
 
 	return c.Store().Client().Update(ctx,

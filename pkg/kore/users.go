@@ -22,7 +22,6 @@ import (
 	"fmt"
 
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
-	"github.com/appvia/kore/pkg/services/audit"
 	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/services/users/model"
 
@@ -101,9 +100,9 @@ func (h *usersImpl) EnableUser(ctx context.Context, username, email string) erro
 		if isAdmin {
 			logger.Info("enabling the first user in the kore and providing admin access")
 
-			_ = h.Audit().Record(ctx,
-				audit.Type(audit.Update),
-				audit.User(username),
+			h.Audit().Record(ctx,
+				users.Type(users.AuditUpdate),
+				users.User(username),
 			).Event("adding first user as administrator")
 
 			if err := h.usermgr.Members().AddUser(ctx, username, HubAdminTeam, roles); err != nil {
@@ -114,9 +113,9 @@ func (h *usersImpl) EnableUser(ctx context.Context, username, email string) erro
 		} else {
 			logger.Info("adding the user into the kore")
 
-			_ = h.Audit().Record(ctx,
-				audit.Type(audit.Update),
-				audit.User(username),
+			h.Audit().Record(ctx,
+				users.Type(users.AuditUpdate),
+				users.User(username),
 			).Event("adding a user to the kore")
 
 			if err := h.usermgr.Teams().AddUser(ctx, username, HubDefaultTeam, roles); err != nil {

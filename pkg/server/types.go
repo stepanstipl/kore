@@ -22,7 +22,6 @@ import (
 
 	api "github.com/appvia/kore/pkg/apiserver"
 	"github.com/appvia/kore/pkg/kore"
-	"github.com/appvia/kore/pkg/services/audit"
 	"github.com/appvia/kore/pkg/services/users"
 )
 
@@ -52,8 +51,6 @@ type KubernetesAPI struct {
 type Config struct {
 	// APIServer is the config for the api server
 	APIServer api.Config `json:"apiServer"`
-	// Audit options
-	Audit audit.Config `json:"audit,omitempty"`
 	// Kubernetes is configuration for the api
 	Kubernetes KubernetesAPI `json:"kubernetes"`
 	// Kore is the configuration for the kore bridge

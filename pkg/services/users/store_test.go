@@ -162,3 +162,11 @@ func TestUsers(t *testing.T) {
 	defer store.Stop()
 	assert.NotNil(t, store.Users())
 }
+
+func TestAudit(t *testing.T) {
+	store, err := New(makeTestConfig())
+	require.NoError(t, err)
+	require.NotNil(t, store)
+	defer store.Stop()
+	assert.NotNil(t, store.Audit())
+}

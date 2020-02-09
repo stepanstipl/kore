@@ -17,13 +17,12 @@
  * along with kore-apiserver.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package audit
+package users
 
 import (
 	"context"
-	"errors"
 
-	"github.com/appvia/kore/pkg/services/audit/model"
+	"github.com/appvia/kore/pkg/services/users/model"
 
 	"github.com/jinzhu/gorm"
 )
@@ -84,14 +83,11 @@ func (e *entryImpl) Do() ([]*model.AuditEvent, error) {
 }
 
 // Event records the entry into the audit log
-func (e *entryImpl) Event(message string) error {
-	if e.event.Type == "" {
-		return errors.New("no event type defined")
-	}
-	if message == "" {
-		return errors.New("no message defined")
+func (e *entryImpl) Event(message string) {
+	if e.event.Type == "" || message == "" {
+		return
 	}
 	e.event.Message = message
 
-	return e.db.Model(&model.AuditEvent{}).Save(e.event).Error
+	e.db.Model(&model.AuditEvent{}).Save(e.event)
 }
