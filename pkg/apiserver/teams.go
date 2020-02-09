@@ -21,6 +21,7 @@ package apiserver
 
 import (
 	"net/http"
+	"time"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
@@ -101,6 +102,17 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", orgv1.Team{}).
 			Returns(http.StatusNotAcceptable, "Indicates you cannot delete the team for one of more reasons", Error{}).
+			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+	)
+
+	// Team Audit Events
+
+	ws.Route(
+		ws.GET("/{team}/audit").To(u.findTeamAudit).
+			Doc("Used to return a collection of events against the team").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.QueryParameter("since", "The duration to retrieve from the audit log").DefaultValue("60m")).
+			Returns(http.StatusOK, "A collection of audit events against the team", orgv1.AuditEventList{}).
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
 	)
 
@@ -373,6 +385,29 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 // Name returns the name of the handler
 func (u teamHandler) Name() string {
 	return "teams"
+}
+
+// findTeamAudit returns the audit log for a team
+func (u teamHandler) findTeamAudit(req *restful.Request, resp *restful.Response) {
+	handleErrors(req, resp, func() error {
+		team := req.PathParameter("team")
+
+		since := req.QueryParameter("since")
+		if since == "" {
+			since = "60m"
+		}
+		tm, err := time.ParseDuration(since)
+		if err != nil {
+			return err
+		}
+
+		list, err := u.Teams().Team(team).AuditEvents(req.Request.Context(), tm)
+		if err != nil {
+			return err
+		}
+
+		return resp.WriteHeaderAndEntity(http.StatusOK, list)
+	})
 }
 
 // Teams Management

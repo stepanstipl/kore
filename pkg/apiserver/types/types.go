@@ -19,6 +19,7 @@
 
 package types
 
+// WhoAmI provides a description to who you are
 type WhoAmI struct {
 	// Email is the user email
 	Email string `json:"email,omitempty"`

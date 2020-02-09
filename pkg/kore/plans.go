@@ -75,6 +75,7 @@ func (p plansImpl) Update(ctx context.Context, plan *configv1.Plan) error {
 		users.ResourceUID(string(plan.UID)),
 		users.Type(users.AuditUpdate),
 		users.User(user.Username()),
+		users.Team(HubAdminTeam),
 	).Event("the plan has been update in the kore")
 
 	return nil
@@ -115,6 +116,7 @@ func (p plansImpl) Delete(ctx context.Context, name string) (*configv1.Plan, err
 		users.ResourceUID(string(plan.UID)),
 		users.Type(users.AuditUpdate),
 		users.User(user.Username()),
+		users.Team(HubAdminTeam),
 	).Event("the plan has been removed from the kore")
 
 	return plan, nil

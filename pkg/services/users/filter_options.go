@@ -19,6 +19,8 @@
 
 package users
 
+import "time"
+
 // ListFunc are terms to search on
 type ListFunc func(*ListOptions)
 
@@ -60,6 +62,18 @@ func (l *ListOptions) GetString(k string) string {
 	}
 
 	return ""
+}
+
+// GetDurationValue returns a duration
+func (l *ListOptions) GetDurationValue(k string) time.Duration {
+	v, found := l.Fields[k]
+	if found {
+		if s, ok := v.(time.Duration); ok {
+			return s
+		}
+	}
+
+	return time.Duration(0)
 }
 
 // GetStringSlice returns a string slice
@@ -127,6 +141,11 @@ func (l *ListOptions) HasProviderToken() bool {
 	return l.Has("provider.token")
 }
 
+// HasDuration checks for a duration
+func (l *ListOptions) HasDuration() bool {
+	return l.Has("duration")
+}
+
 // HasTeam checks the team
 func (l *ListOptions) HasTeam() bool {
 	return l.Has("team")
@@ -140,6 +159,11 @@ func (l *ListOptions) HasNotTeam() bool {
 // HasTeams checks the team
 func (l *ListOptions) HasTeams() bool {
 	return l.Has("teams")
+}
+
+// HasTeamsNotNull checks the team
+func (l *ListOptions) HasTeamsNotNull() bool {
+	return l.Has("teams.not_null")
 }
 
 // HasTeamID checks for a team id
@@ -190,6 +214,11 @@ func (l *ListOptions) GetProvider() string {
 // GetProviderToken gets the provider token
 func (l *ListOptions) GetProviderToken() string {
 	return l.GetString("provider.token")
+}
+
+// GetDuration gets the duration
+func (l *ListOptions) GetDuration() time.Duration {
+	return l.GetDurationValue("duration")
 }
 
 // GetEnabled gets the enabled

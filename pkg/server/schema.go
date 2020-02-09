@@ -29,9 +29,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-// registerCustomResources is used to register the CRDs with the kubernetes api
-func registerCustomResources(cc client.Interface) error {
-	filtered := []schema.GroupVersionKind{
+var (
+	filtered = []schema.GroupVersionKind{
 		{
 			Group:   orgv1.GroupVersion.Group,
 			Version: orgv1.GroupVersion.Version,
@@ -47,8 +46,16 @@ func registerCustomResources(cc client.Interface) error {
 			Version: orgv1.GroupVersion.Version,
 			Kind:    "User",
 		},
+		{
+			Group:   orgv1.GroupVersion.Group,
+			Version: orgv1.GroupVersion.Version,
+			Kind:    "AuditEvent",
+		},
 	}
+)
 
+// registerCustomResources is used to register the CRDs with the kubernetes api
+func registerCustomResources(cc client.Interface) error {
 	isFiltered := func(crd *apiextensions.CustomResourceDefinition, list []schema.GroupVersionKind) bool {
 		for _, x := range list {
 			if x.Group == crd.Spec.Group && x.Version == crd.Spec.Version && x.Kind == crd.Spec.Names.Kind {

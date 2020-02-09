@@ -42,6 +42,46 @@ func (c Convertor) ToUserModel(user *orgv1.User) *model.User {
 	}
 }
 
+// FromAuditModel convets the model
+func (c Convertor) FromAuditModel(i *model.AuditEvent) *orgv1.AuditEvent {
+	return &orgv1.AuditEvent{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: orgv1.SchemeGroupVersion.String(),
+			Kind:       "AuditEvent",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:              i.Team,
+			CreationTimestamp: metav1.NewTime(i.CreatedAt),
+		},
+		Spec: orgv1.AuditEventSpec{
+			CreatedAt:   metav1.NewTime(i.CreatedAt),
+			Type:        i.Type,
+			Team:        i.Team,
+			User:        i.User,
+			Message:     i.Message,
+			Resource:    i.Resource,
+			ResourceUID: i.ResourceUID,
+		},
+	}
+}
+
+// FromAuditModelList returns a list of
+func (c Convertor) FromAuditModelList(list []*model.AuditEvent) *orgv1.AuditEventList {
+	l := &orgv1.AuditEventList{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "AuditEventList",
+		},
+		Items: make([]orgv1.AuditEvent, len(list)),
+	}
+	length := len(list)
+	for i := 0; i < length; i++ {
+		l.Items[i] = *c.FromAuditModel(list[i])
+	}
+
+	return l
+}
+
 // FromInvitationModel convert the model
 func (c Convertor) FromInvitationModel(i *model.Invitation) *orgv1.TeamInvitation {
 	return &orgv1.TeamInvitation{

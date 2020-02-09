@@ -135,6 +135,11 @@ func IsGlobalResource(name string) bool {
 	return utils.Contains(name, []string{"teams", "users", "plans"})
 }
 
+// IsGlobalResourceOptional checks if the team is optional
+func IsGlobalResourceOptional(name string) bool {
+	return utils.Contains(name, []string{"audit"})
+}
+
 // GetCaches is responsible for checking if are caches are up to date
 func GetCaches(config *Config) error {
 	/*

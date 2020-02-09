@@ -17,8 +17,19 @@
 
 package kore
 
+import (
+	"context"
+	"time"
+
+	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
+	"github.com/appvia/kore/pkg/services/users"
+	log "github.com/sirupsen/logrus"
+)
+
 // Team is the contract to a team
 type Team interface {
+	// AuditEvents returns a collection of audit events for this team
+	AuditEvents(context.Context, time.Duration) (*orgv1.AuditEventList, error)
 	// Allocations returns the team allocation interface
 	Allocations() Allocations
 	// Cloud returns the cloud providers
@@ -74,4 +85,19 @@ func (t *tmImpl) NamespaceClaims() NamespaceClaims {
 		hubImpl: t.hubImpl,
 		team:    t.team,
 	}
+}
+
+// AuditEvents returns a stream of events in relation to the teams since x
+func (t *tmImpl) AuditEvents(ctx context.Context, since time.Duration) (*orgv1.AuditEventList, error) {
+	list, err := t.Audit().Find(ctx,
+		users.Filter.WithTeam(t.team),
+		users.Filter.WithDuration(since),
+	).Do()
+	if err != nil {
+		log.WithError(err).Error("trying to retrieve audit logs for team")
+
+		return nil, err
+	}
+
+	return DefaultConvertor.FromAuditModelList(list), nil
 }

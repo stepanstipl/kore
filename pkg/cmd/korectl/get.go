@@ -51,6 +51,12 @@ func GetGetCommand(config *Config) cli.Command {
 
 			if IsGlobalResource(ctx.Args().First()) {
 				endpoint = "/{resource}/{name}"
+			} else if IsGlobalResourceOptional(ctx.Args().First()) {
+				if !ctx.IsSet("team") {
+					endpoint = "/{resource}/{name}"
+				} else {
+					req.PathParameter("team", true)
+				}
 			} else {
 				req.PathParameter("team", true)
 			}
