@@ -46,7 +46,7 @@ func GetLoginCommand(config *Config) cli.Command {
 		Usage:   "Used to authenticate yourself and retrieve an authentication token",
 
 		Action: func(ctx *cli.Context) error {
-			if config.Server == "" {
+			if config.GetCurrentServer().Endpoint == "" {
 				return errors.New("the 'server' field in the config needs setting the kore api service url")
 			}
 
@@ -103,10 +103,10 @@ func GetLoginCommand(config *Config) cli.Command {
 				}
 			}()
 
-			fmt.Printf("authenticating to kore api: %s\n", config.Server)
+			fmt.Printf("authenticating to kore api: %s\n", config.GetCurrentServer())
 
 			// @step: open a brower to the to the api server
-			url := fmt.Sprintf("%s/oauth/authorize?redirect_url=http://localhost:3001", config.Server)
+			url := fmt.Sprintf("%s/oauth/authorize?redirect_url=http://localhost:3001", config.GetCurrentServer().Endpoint)
 			if err := open.Run(url); err != nil {
 				fmt.Fprintf(os.Stderr, "[error] failed to open web brower to %s, error: %s", url, err)
 				os.Exit(1)
@@ -123,13 +123,15 @@ func GetLoginCommand(config *Config) cli.Command {
 				os.Exit(1)
 			}
 
-			config.AuthorizeURL = token.AuthorizationURL
-			config.TokenURL = token.TokenEndpointURL
-			config.Credentials.ClientID = token.ClientID
-			config.Credentials.ClientSecret = token.ClientSecret
-			config.Credentials.AccessToken = token.AccessToken
-			config.Credentials.RefreshToken = token.RefreshToken
-			config.Credentials.IDToken = token.IDToken
+			auth := config.GetCurrentAuthInfo()
+			auth.OIDC = &OIDC{}
+			auth.OIDC.AuthorizeURL = token.AuthorizationURL
+			auth.OIDC.TokenURL = token.TokenEndpointURL
+			auth.OIDC.ClientID = token.ClientID
+			auth.OIDC.ClientSecret = token.ClientSecret
+			auth.OIDC.AccessToken = token.AccessToken
+			auth.OIDC.RefreshToken = token.RefreshToken
+			auth.OIDC.IDToken = token.IDToken
 
 			// @step: update the configuration
 			if err := config.Update(); err != nil {

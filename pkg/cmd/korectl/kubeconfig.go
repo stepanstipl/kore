@@ -20,6 +20,8 @@
 package korectl
 
 import (
+	"errors"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 
 	log "github.com/sirupsen/logrus"
@@ -33,17 +35,21 @@ func PopulateKubeconfig(clusters *clustersv1.KubernetesList, kubeconfig string, 
 	if err != nil {
 		return err
 	}
+	auth := config.GetCurrentAuthInfo()
+	if auth.OIDC == nil {
+		return errors.New("you must be using a context backed by a idp")
+	}
 
 	cfg.AuthInfos["kore"] = &api.AuthInfo{
 		AuthProvider: &api.AuthProviderConfig{
 			Name: "oidc",
 			Config: map[string]string{
-				"access-token":   config.Credentials.AccessToken,
-				"client-id":      config.Credentials.ClientID,
-				"client-secret":  config.Credentials.ClientSecret,
-				"id-token":       config.Credentials.IDToken,
-				"idp-issuer-url": config.AuthorizeURL,
-				"refresh-token":  config.Credentials.RefreshToken,
+				"access-token":   auth.OIDC.AccessToken,
+				"client-id":      auth.OIDC.ClientID,
+				"client-secret":  auth.OIDC.ClientSecret,
+				"id-token":       auth.OIDC.IDToken,
+				"idp-issuer-url": auth.OIDC.AuthorizeURL,
+				"refresh-token":  auth.OIDC.RefreshToken,
 			},
 		},
 	}
