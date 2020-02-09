@@ -272,7 +272,13 @@ func (c *Requestor) makeRequest(method, url string) (*http.Response, error) {
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+c.config.Credentials.IDToken)
+	auth := c.config.GetCurrentAuthInfo()
+	if auth.Token != nil {
+		req.Header.Set("Authorization", "Bearer "+*auth.Token)
+	}
+	if auth.OIDC != nil {
+		req.Header.Set("Authorization", "Bearer "+auth.OIDC.AccessToken)
+	}
 
 	resp, err := hc.Do(req)
 	if err != nil {
