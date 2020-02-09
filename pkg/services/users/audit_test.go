@@ -75,5 +75,5 @@ func TestAuditFindByDuration(t *testing.T) {
 	).Do()
 	require.NoError(t, err)
 	require.NotNil(t, list)
-	assert.Equal(t, 1, len(list))
+	assert.Equal(t, 2, len(list))
 }
