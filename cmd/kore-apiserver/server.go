@@ -83,7 +83,7 @@ func invoke(ctx *cli.Context) error {
 			},
 		},
 		UsersMgr: users.Config{
-			EnableLogging: ctx.Bool("enabled-user-db-logging"),
+			EnableLogging: ctx.Bool("enable-user-db-logging"),
 			Driver:        ctx.String("users-db-driver"),
 			StoreURL:      ctx.String("users-db-url"),
 		},
