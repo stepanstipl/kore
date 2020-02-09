@@ -27,7 +27,6 @@ import (
 	"github.com/appvia/kore/pkg/apiserver"
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
-	"github.com/appvia/kore/pkg/register"
 	"github.com/appvia/kore/pkg/schema"
 	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/store"
@@ -79,11 +78,7 @@ func New(config Config) (Interface, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create api extensions client: %s", err)
 	}
-	resources, err := register.GetCustomResourceDefinitions()
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode the kore crds resources: %s", err)
-	}
-	if err := crds.ApplyCustomResourceDefinitions(crdc, resources); err != nil {
+	if err := registerCustomResources(crdc); err != nil {
 		return nil, fmt.Errorf("failed to apply the kore crds: %s", err)
 	}
 
