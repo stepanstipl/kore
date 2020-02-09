@@ -264,7 +264,6 @@ func (t *teamsImpl) AuditEvents(ctx context.Context, since time.Duration) (*orgv
 
 		return nil, err
 	}
-	fmt.Println("SIZE ", len(list))
 
 	return DefaultConvertor.FromAuditModelList(list), nil
 }
