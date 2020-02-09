@@ -42,6 +42,8 @@ type AuditEventSpec struct {
 	ResourceUID string `json:"resourceUID,omitempty"`
 }
 
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
 // AuditEvent is the Schema for the users API
 // +k8s:openapi-gen=false
 // +kubebuilder:subresource:status
@@ -52,6 +54,8 @@ type AuditEvent struct {
 
 	Spec AuditEventSpec `json:"spec,omitempty"`
 }
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // AuditEventList contains a list of User
 type AuditEventList struct {
