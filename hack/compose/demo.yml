@@ -5,7 +5,7 @@ services:
     image: quay.io/appvia/kore-apiserver:v0.0.3
     environment:
       DEX_GRPC_SERVER: dex-operator
-      DEX_PUBLIC_URL: http://localhost:5556/
+      DEX_PUBLIC_URL: http://${LOCALHOST_DNS:-localhost}:5556/
       ENABLE_DEX: "true"
       KORE_ADMIN_PASS: password
       KORE_ADMIN_TOKEN: password
