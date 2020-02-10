@@ -7,7 +7,7 @@ GIT_SHA=$(shell git --no-pager describe --always --dirty)
 HUB_APIS_SHA=$(shell cd ../kore-apis && git log | head -n 1 | cut -d' ' -f2)
 GOVERSION ?= 1.12.7
 HARDWARE=$(shell uname -m)
-LFLAGS ?= -X main.gitsha=${GIT_SHA} -X main.compiled=${BUILD_TIME}
+LFLAGS ?= -X github.com/appvia/kore/pkg/version.GitSHA=${GIT_SHA} -X github.com/appvia/kore/pkg/version.Compiled=${BUILD_TIME}
 PACKAGES=$(shell go list ./...)
 REGISTRY=quay.io
 ROOT_DIR=${PWD}
