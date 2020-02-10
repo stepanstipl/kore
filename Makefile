@@ -182,8 +182,8 @@ demo:
 	@echo "--> Open a browser: http://localhost:3000"
 	@docker-compose \
 		--file hack/compose/kube.yml \
-		--file hack/compose/operators.yml \
 		--file hack/compose/demo.yml \
+                --file hack/compose/operators.yml \
 		up --force-recreate
 
 docker-release:
