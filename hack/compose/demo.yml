@@ -2,7 +2,7 @@
 version: '3'
 services:
   kore-apiserver:
-    image: quay.io/appvia/kore-apiserver:latest
+    image: quay.io/appvia/kore-apiserver:v0.0.3
     environment:
       DEX_GRPC_SERVER: dex-operator
       DEX_PUBLIC_URL: http://localhost:5556/
