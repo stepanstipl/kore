@@ -156,31 +156,22 @@ func (h hubImpl) ensureHubAdminUser(ctx context.Context, name, email string) err
 func (h hubImpl) ensureHubTeam(ctx context.Context, name, description string) error {
 	nc := getAdminContext(ctx)
 
-	found, err := h.Teams().Exists(nc, name)
-	if err != nil {
-		return err
-	}
+	log.WithFields(log.Fields{
+		"team": name,
+	}).Info("provisioning the default kore team in api")
 
-	if !found {
-		log.WithFields(log.Fields{
-			"team": name,
-		}).Info("provisioning the default kore team in api")
+	_, err := h.Teams().Update(nc, &orgv1.Team{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: HubNamespace,
+		},
+		Spec: orgv1.TeamSpec{
+			Description: description,
+			Summary:     description,
+		},
+	})
 
-		_, err := h.Teams().Update(nc, &orgv1.Team{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      name,
-				Namespace: HubNamespace,
-			},
-			Spec: orgv1.TeamSpec{
-				Description: description,
-				Summary:     description,
-			},
-		})
-
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // ensureNamespace ensures the namespace exists in the kore

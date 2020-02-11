@@ -179,29 +179,20 @@ func (t *teamsImpl) Update(ctx context.Context, team *orgv1.Team) (*orgv1.Team, 
 
 	model := DefaultConvertor.ToTeamModel(team)
 
-	// @step: does the team exist already?
-	found, err := t.usermgr.Teams().Exists(ctx, team.Name)
-	if err != nil {
-		logger.WithError(err).Error("trying to check for team in kore")
+	// @step: update or create in the kore
+	if err := t.usermgr.Teams().Update(ctx, model); err != nil {
+		log.WithError(err).Error("trying to update a team in user management")
 
 		return nil, err
 	}
-	if !found {
-		// @step: update or create in the kore
-		if err := t.usermgr.Teams().Update(ctx, model); err != nil {
-			log.WithError(err).Error("trying to update a team in user management")
 
-			return nil, err
-		}
+	// @step: add the user whom created is a admin member
+	if err := t.usermgr.Members().AddUser(ctx,
+		user.Username(), team.Name, []string{"members", "admin"}); err != nil {
 
-		// @step: add the user whom created is a admin member
-		if err := t.usermgr.Members().AddUser(ctx,
-			user.Username(), team.Name, []string{"members", "admin"}); err != nil {
+		logger.WithError(err).Error("trying to add the user a admin user on the team")
 
-			logger.WithError(err).Error("trying to add the user a admin user on the team")
-
-			return nil, err
-		}
+		return nil, err
 	}
 
 	// @step: check if the team is in the api
