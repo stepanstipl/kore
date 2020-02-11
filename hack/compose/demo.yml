@@ -2,38 +2,22 @@
 version: '3'
 services:
   kore-apiserver:
-    image: quay.io/appvia/kore-apiserver:v0.0.3
+    image: quay.io/appvia/kore-apiserver:v0.0.2
     environment:
-      DEX_GRPC_SERVER: dex-operator
-      DEX_PUBLIC_URL: http://${LOCALHOST_DNS:-localhost}:5556/
-      ENABLE_DEX: "true"
-      KORE_ADMIN_PASS: password
-      KORE_ADMIN_TOKEN: password
-      KORE_API_PUBLIC_URL: http://localhost:10080
-      KORE_AUTHENTICATION_PLUGINS: basicauth,admintoken
-      KORE_CERTIFICATE_AUTHORITY: hack/ca/ca.pem
-      KORE_CERTIFICATE_AUTHORITY_KEY: hack/ca/ca-key.pem
-      KORE_CLIENT_ID: broker
-      KORE_CLIENT_SCOPES: email,profile,offline_access
-      KORE_CLIENT_SECRET: temporarysecretfortesting
       KUBE_API_SERVER: http://kube-apiserver:8080
-      USERS_DB_URL: root:pass@tcp(database:3306)/kore?parseTime=true
+      DEX_PUBLIC_URL: http://${LOCALHOST_DNS}:5556
+      DEX_GRPC_SERVER: dex-operator
+      KORE_ADMIN_PASS: Pa55w0rd
     ports:
       - 10080:10080
     restart: always
-    volumes:
-      - ../:/hack
 
   kore-ui:
-    image: quay.io/appvia/kore-ui:v0.0.3
+    image: quay.io/appvia/kore-ui:v0.0.2
     environment:
-      KORE_BASE_URL: http://localhost:3000
       KORE_API_URL: http://kore-apiserver:10080/api/v1alpha1
-      KORE_API_TOKEN: password
-      KORE_UI_CLIENT_ID: broker
-      KORE_UI_CLIENT_SECRET: temporarysecretfortesting
       REDIS_URL: redis://redis:6379
-      DEX_PUBLIC_URL: http://dex-operator:5556/
+      AUTH_URL: http://${LOCALHOST_DNS}:5556
     ports:
       - 3000:3000
     restart: always
@@ -42,3 +26,9 @@ services:
     image: redis:5
     ports:
       - 6379:6379
+
+  gke-operator:
+    image: quay.io/appvia/gke-operator:v0.0.2
+
+  kube-operator:
+    image: quay.io/appvia/kube-operator:v0.0.2
