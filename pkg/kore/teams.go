@@ -186,15 +186,14 @@ func (t *teamsImpl) Update(ctx context.Context, team *orgv1.Team) (*orgv1.Team, 
 
 		return nil, err
 	}
-
-	// @step: update or create in the kore
-	if err := t.usermgr.Teams().Update(ctx, model); err != nil {
-		log.WithError(err).Error("trying to update a team in user management")
-
-		return nil, err
-	}
-
 	if !found {
+		// @step: update or create in the kore
+		if err := t.usermgr.Teams().Update(ctx, model); err != nil {
+			log.WithError(err).Error("trying to update a team in user management")
+
+			return nil, err
+		}
+
 		// @step: add the user whom created is a admin member
 		if err := t.usermgr.Members().AddUser(ctx,
 			user.Username(), team.Name, []string{"members", "admin"}); err != nil {
@@ -203,9 +202,15 @@ func (t *teamsImpl) Update(ctx context.Context, team *orgv1.Team) (*orgv1.Team, 
 
 			return nil, err
 		}
+	}
 
-		// @step: update in the api
-		if _, err := team, t.Store().Client().Update(ctx,
+	// @step: check if the team is in the api
+	if found, err := t.Store().Client().Has(ctx, store.HasOptions.From(team)); err != nil {
+		log.WithError(err).Error("trying to check for team in the api")
+
+		return nil, err
+	} else if !found {
+		if err := t.Store().Client().Update(ctx,
 			store.UpdateOptions.To(team),
 			store.UpdateOptions.WithCreate(true),
 			store.UpdateOptions.WithForce(true),
