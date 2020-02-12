@@ -92,7 +92,7 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 	parameters.Name = cluster.Name
 	parameters.Domain = cluster.Spec.Domain
 	parameters.Hostname = a.APIHostname(cluster)
-	parameters.Image = "quay.io/jetstack/kube-oidc-proxy:v0.2.0"
+	parameters.Image = "quay.io/appvia/auth-proxy:v0.0.3"
 	if cluster.Spec.ProxyImage != "" {
 		parameters.Image = cluster.Spec.ProxyImage
 	}
@@ -222,7 +222,7 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 				Ports: []v1.ServicePort{
 					{
 						Port:       443,
-						TargetPort: intstr.FromInt(443),
+						TargetPort: intstr.FromInt(10443),
 						Protocol:   v1.ProtocolTCP,
 						Name:       "https",
 					},
@@ -269,14 +269,14 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 							Name:  name,
 							Image: parameters.Image,
 							Ports: []v1.ContainerPort{
-								{ContainerPort: 443},
+								{ContainerPort: 10443},
 								{ContainerPort: 8080},
 							},
 							ReadinessProbe: &v1.Probe{
 								Handler: v1.Handler{
 									HTTPGet: &v1.HTTPGetAction{
 										Path: "/ready",
-										Port: intstr.FromInt(8080),
+										Port: intstr.FromInt(10443),
 									},
 								},
 								InitialDelaySeconds: 5,
@@ -284,12 +284,14 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 							},
 							Command: []string{"kube-oidc-proxy"},
 							Args: []string{
-								"--oidc-client-id=" + a.Config().ClientID,
-								"--oidc-issuer-url=" + a.Config().DiscoveryURL,
-								"--oidc-username-claim=" + a.Config().UserClaims[0],
-								"--secure-port=443",
-								"--tls-cert-file=/tls/tls.crt",
-								"--tls-private-key-file=/tls/tls.key",
+								"--client-id=" + a.Config().ClientID,
+								"--discovery-url=" + a.Config().DiscoveryURL,
+								"--user-claims=preferred_username",
+								"--user-claims=name",
+								"--user-claims=username",
+								"--user-claims=email",
+								"--tls-cert=/tls/tls.crt",
+								"--tls-key=/tls/tls.key",
 							},
 							VolumeMounts: []v1.VolumeMount{
 								{

@@ -145,6 +145,14 @@ func (a *authImpl) Run(ctx context.Context) error {
 		router.Handle(method, "/*catchall", func(resp http.ResponseWriter, req *http.Request, p httprouter.Params) {
 			var username string
 
+			// @step: handle a simple health check
+			if req.URL.Path == "/ready" {
+				resp.WriteHeader(http.StatusOK)
+				_, _ = resp.Write([]byte("OK\n"))
+
+				return
+			}
+
 			err := func() error {
 				// @step: extract the token from the request
 				bearer, found := utils.GetBearerToken(req.Header.Get("Authorization"))
