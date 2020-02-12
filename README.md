@@ -92,3 +92,22 @@ The following provides a quick start guide for rolling out and playing with the 
 - Docker: install instructions can be found [here]([https://docs.docker.com/install/](https://docs.docker.com/install/))</em>
 - Docker Compose: installation instructions can found [here](https://docs.docker.com/compose/install/)
 
+
+### Configuring Auth0 as an Identity provider
+
+Auth0, found [here](https://auth0.com/), provides an enterprise SAAS identity provider
+
+- Sign up for an account from the [home page](https://auth0.com)
+- From the dashboard side menu choose 'Applications' and then 'Create Application'
+- Given the application a name and choose 'Regular Web Applications'
+- Once provisioned click on the 'Settings' tab and scroll down to 'Allowed Callback URLs'. These are the permitted redirects for the applications. Since we are running the application locally off the laptop are and add `http://localhost:3000/callback` and `http://127.0.0.1:10080/oauth/callback` (Note the comma separation in the Auth0 UI.
+- Scroll to the bottom of the settings and click the 'Show Advanced Settings'
+- Choose the 'OAuth' tab from the advanced settings and ensure that the 'JsonWebToken Signature Algorithm' is set to RS256 and 'OIDC Conformant' is toggled on.
+- Select the 'Endpoints' tab and note down the 'OpenID Configuration'.
+- You can then scroll back to the top and note down the 'ClientID' and 'Client Secret'
+
+Once you have the three pieces of the information *(ClientID, Client Secret and the OpenID endpoint)* you can substitute these settings on the [demo.yml](https://github.com/appvia/kore/blob/master/hack/compose/demo.yml); mapping to to ClientID, Client Secret and Discovery URL.
+
+The next logical step would be to return to the dashboard of Auth0 and create one or more test users under the 'Users & Roles' settig
+
+You can then run the `make demo` command from the root directory; which will bring up the dependencies within docker-compose. From here the UI will be available on http://localhost:3000
