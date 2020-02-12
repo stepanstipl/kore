@@ -45,7 +45,6 @@ services:
     entrypoint:
       sh -c "
         echo 'CREATE DATABASE IF NOT EXISTS kore;' > /docker-entrypoint-initdb.d/init.sql;
-        echo 'CREATE DATABASE IF NOT EXISTS audit;' >> /docker-entrypoint-initdb.d/init.sql;
         /usr/local/bin/docker-entrypoint.sh --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
     ports:
       - 3306:3306
