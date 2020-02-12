@@ -5,7 +5,7 @@ metadata:
   name: dev
 spec:
   description: Dev Cluster
-  version: 1.14.8-gke.33
+  version: 1.14.10-gke.17
   size: 1
   maxSize: 10
   diskSize: 100

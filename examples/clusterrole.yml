@@ -5,7 +5,8 @@ metadata:
   name: readonly
 spec:
   enabled: true
-  description: Provides a cluster role issuing readonly permissions to the cluster resources
+  description: |
+    Provides a cluster role issuing readonly permissions to the cluster resources
   rules:
     - nonResourceURLs:
       - "*"

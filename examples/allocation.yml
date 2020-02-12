@@ -5,7 +5,9 @@ kind: Allocation
 metadata:
   name: gke
 spec:
+  # The name of the allocation
   name: GKE (London)
+  # A short description provided for the UI
   summary: Provide GKE credentials for the London region
   # We reference the above resource when allocating to one
   # or more teams

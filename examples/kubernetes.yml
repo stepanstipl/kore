@@ -4,13 +4,18 @@ kind: Kubernetes
 metadata:
   name: dev
 spec:
+  # A domain within the account to provision services within
   domain: CHANGE_ME
+  # Indicates if team members are automatically provide access to the cluster
   inheritTeamMembers: true
+  # The role to use for the above if enabled
   defaultTeamRole: 'cluster-admin'
+  # If backed by a cloud provider, this provides a reference back to the resource
   provider:
     group: gke.compute.kore.appvia.io
     version: v1alpha1
     kind: GKE
     namespace: kore-admin
     name: dev
+  # Not used at the moment  
   enableDefaultTrafficBlock: false
