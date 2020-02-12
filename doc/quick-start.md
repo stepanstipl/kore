@@ -1,13 +1,12 @@
-- [**Getting Started**](#getting-started)
+## **Getting Started**
 
 ## Contents
-- [Contents](#contents)
-  - [Supported Cloud Providers](#supported-cloud-providers)
-  - [What is required?](#what-is-required)
-  - [Identity Broker](#identity-broker)
-  - [Configuring Auth0](#configuring-auth0)
-  - [Running the Demo](#running-the-demo)
-  - [Provisioning Credentials](#provisioning-credentials)
+- [Supported Cloud Providers](#supported-cloud-providers)
+- [What is required?](#what-is-required)
+- [Identity Broker](#identity-broker)
+- [Configuring Auth0](#configuring-auth0)
+- [Running the Demo](#running-the-demo)
+- [Provisioning Credentials](#provisioning-credentials)
 
 ![Demo Video](images/demo.gif)
 
