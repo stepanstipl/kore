@@ -1,7 +1,0 @@
-apiVersion: org.kore.appvia.io/v1
-kind: Team
-metadata:
-  name: helper
-spec:
-  summary: Dev Team
-  description: Dev Team

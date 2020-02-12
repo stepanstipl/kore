@@ -26,6 +26,7 @@ import (
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
@@ -111,41 +112,45 @@ func (t bsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	// - retrieve the credentials for the broker from the cluster provider
 	// - wait for kube api to be ready
 	result, err := func() (reconcile.Result, error) {
-		// @step: we need to grab the credentials for the cloud provider
-		us, err := controllers.GetCloudProviderCredentials(ctx, t.mgr.GetClient(), cluster)
-		if err != nil {
-			logger.WithError(err).Error("trying to retrieve cloud provider credentials")
-
-			return reconcile.Result{}, err
-		}
-
 		var credentials Credentials
-		provider := strings.ToLower(cluster.Spec.Provider.Kind)
+		var provider string
 
-		switch provider {
-		case "gke":
-			u := &gke.GKE{}
-			if err := converter.FromUnstructured(us.Object, u); err != nil {
-				logger.WithError(err).Error("trying to convert object type")
+		if kore.IsProviderBacked(cluster) {
+			// @step: we need to grab the credentials for the cloud provider
+			us, err := controllers.GetCloudProviderCredentials(ctx, t.mgr.GetClient(), cluster)
+			if err != nil {
+				logger.WithError(err).Error("trying to retrieve cloud provider credentials")
 
 				return reconcile.Result{}, err
 			}
-			creds := &gke.GKECredentials{}
-			creds.SetName(u.Spec.Credentials.Name)
-			creds.SetNamespace(u.Spec.Credentials.Namespace)
-			ref := types.NamespacedName{
-				Namespace: u.Spec.Credentials.Namespace,
-				Name:      u.Spec.Credentials.Name,
-			}
 
-			if err := t.mgr.GetClient().Get(ctx, ref, creds); err != nil {
-				return reconcile.Result{}, err
-			}
+			provider = strings.ToLower(cluster.Spec.Provider.Kind)
 
-			credentials.GKE.Account = creds.Spec.Account
-		case "eks":
-		default:
-			logger.WithField("provider", provider).Warn("unknown cloud provider")
+			switch provider {
+			case "gke":
+				u := &gke.GKE{}
+				if err := converter.FromUnstructured(us.Object, u); err != nil {
+					logger.WithError(err).Error("trying to convert object type")
+
+					return reconcile.Result{}, err
+				}
+				creds := &gke.GKECredentials{}
+				creds.SetName(u.Spec.Credentials.Name)
+				creds.SetNamespace(u.Spec.Credentials.Namespace)
+				ref := types.NamespacedName{
+					Namespace: u.Spec.Credentials.Namespace,
+					Name:      u.Spec.Credentials.Name,
+				}
+
+				if err := t.mgr.GetClient().Get(ctx, ref, creds); err != nil {
+					return reconcile.Result{}, err
+				}
+
+				credentials.GKE.Account = creds.Spec.Account
+			case "eks":
+			default:
+				logger.WithField("provider", provider).Warn("unknown cloud provider")
+			}
 		}
 
 		// @step: build a client from the cluster secret
