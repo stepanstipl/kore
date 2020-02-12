@@ -69,7 +69,9 @@ KORE_CLIENT_SECRET: <YOUR_CLIENT_SECRET>
 DISCOVERY_URL: <OPENID_ENDPOINT>
 ```
 
-You can then run the `make demo` command from the root directory; which will bring up the dependencies within docker-compose. From here you can open up the browser and point it at http://localhost:3000
+You can then run the `make demo` command from the root directory; which will bring up the dependencies within docker-compose. From here you can open up the browser and point it at http://localhost:3000; the password defaults for 'password' and can found on the KORE_ADMIN_PASS environment variable. You can then configure specific cloud providers, for GCP, this will be a project credential for GKE that should be a service account credential with privileges for GKE.
+
+Once this is configured, all teams can use these downstream to provision clusters using the defined plans.
 
 ### Provisioning Credentials
 

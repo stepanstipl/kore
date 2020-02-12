@@ -68,6 +68,14 @@ All of the components run as a set of containers, so as long as there is Docker,
 
 Note Appvia Kore is deemed an early release, the project is not regarded as production ready and is under rapid development; thus expect new features to rollout.
 
+### Administrator Flow
+
+![Admin Flow](doc/images/kore_admin_flow.svg)
+
+### Developer Team Flow
+
+![Developer Flow](doc/images/kore_dev_flow.svg)
+
 ## Roadmap
 
 Currently on the roadmap the following is either near completion and merge or currently in the works.
