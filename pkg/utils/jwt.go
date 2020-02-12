@@ -28,21 +28,21 @@ type Claims struct {
 }
 
 // NewClaims returns a claims
-func NewClaims(claims jwt.MapClaims) Claims {
-	return Claims{claims: claims}
+func NewClaims(claims jwt.MapClaims) *Claims {
+	return &Claims{claims: claims}
 }
 
-func NewClaimsFromToken(token *oidc.IDToken) (Claims, error) {
+func NewClaimsFromToken(token *oidc.IDToken) (*Claims, error) {
 	c := jwt.MapClaims{}
 	if err := token.Claims(&c); err != nil {
-		return Claims{}, err
+		return nil, err
 	}
 
 	return NewClaims(c), nil
 }
 
 // GetUserClaim returns the username claim - defaults to 'name'
-func (c Claims) GetUserClaim(claims ...string) (string, bool) {
+func (c *Claims) GetUserClaim(claims ...string) (string, bool) {
 	if len(claims) <= 0 {
 		return c.GetString("name")
 	}
@@ -56,17 +56,17 @@ func (c Claims) GetUserClaim(claims ...string) (string, bool) {
 }
 
 // GetEmail returns the email claim
-func (c Claims) GetEmail() (string, bool) {
+func (c *Claims) GetEmail() (string, bool) {
 	return c.GetString("email")
 }
 
 // GetEmailVerified returns if the email is verified
-func (c Claims) GetEmailVerified() (bool, bool) {
+func (c *Claims) GetEmailVerified() (bool, bool) {
 	return c.GetBool("email_verified")
 }
 
 // GetBool returns the boolean
-func (c Claims) GetBool(key string) (bool, bool) {
+func (c *Claims) GetBool(key string) (bool, bool) {
 	v, found := c.claims[key]
 	if !found {
 		return false, false
@@ -80,8 +80,19 @@ func (c Claims) GetBool(key string) (bool, bool) {
 	return value, true
 }
 
+// GetStringClaims trys to look for claims in token
+func (c *Claims) GetStringClaims(keys ...string) (string, bool) {
+	for _, name := range keys {
+		if v, found := c.GetString(name); found {
+			return v, true
+		}
+	}
+
+	return "", false
+}
+
 // GetString returns the string from the claims
-func (c Claims) GetString(key string) (string, bool) {
+func (c *Claims) GetString(key string) (string, bool) {
 	v, found := c.claims[key]
 	if !found {
 		return "", false

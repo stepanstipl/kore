@@ -176,6 +176,8 @@ func (l *loginHandler) callbackHandler(req *restful.Request, resp *restful.Respo
 		// @step: exchange the authorization code with the identity provider
 		otoken, err := l.oidcConfig.Exchange(req.Request.Context(), code)
 		if err != nil {
+			log.WithError(err).Error("trying to exchange the token to the idp")
+
 			return http.StatusServiceUnavailable, errors.New("exchanging authorization code")
 		}
 
@@ -188,6 +190,8 @@ func (l *loginHandler) callbackHandler(req *restful.Request, resp *restful.Respo
 		// @step: parse and verify id token payload
 		token, err := l.verifier.Verify(req.Request.Context(), rawToken)
 		if err != nil {
+			log.WithError(err).Error("trying to verify the token from the idp")
+
 			return http.StatusForbidden, errors.New("token failed verification")
 		}
 
