@@ -12,7 +12,6 @@
 
 ## Contents
 - [Kubernetes for Teams via Appvia Kore](#kubernetes-for-teams-via-appvia-kore)
-- [Contents](#contents)
 - [Why Appvia Kore?](#why-appvia-kore)
 - [The Developer](#the-developer)
 - [The DevOps](#the-devops)
