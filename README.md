@@ -1,6 +1,3 @@
-
-<h1><img src="https://www.appvia.io/hubfs/APPVIA_November2019/Images/appvia_logo.svg" alt="Appvia Kore" width="200"></h1><em>
-
 ### **[Architecture](#architecture)** •  **[Getting Started](#getting-started)** • **[Roadmap](#roadmap)**
 
 ![CircleCI](https://img.shields.io/circleci/build/github/appvia/kore/master?style=for-the-badge)
