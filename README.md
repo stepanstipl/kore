@@ -11,7 +11,6 @@
 - **Managed Access Controls** Provides a central means to manage and configure roles, policies and permissions across the estate.
 
 ## Contents
-- [Kubernetes for Teams via Appvia Kore](#kubernetes-for-teams-via-appvia-kore)
 - [Why Appvia Kore?](#why-appvia-kore)
 - [The Developer](#the-developer)
 - [The DevOps](#the-devops)
