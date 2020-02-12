@@ -9,7 +9,7 @@
   - [Running the Demo](#running-the-demo)
   - [Provisioning Credentials](#provisioning-credentials)
 
-![Demo Video](doc/images/demo.gif)
+![Demo Video](images/demo.gif)
 
 The following provides a quick start guide for rolling out and playing with the product locally; please ensure you have the following installed on your machine
 
