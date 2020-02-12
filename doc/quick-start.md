@@ -1,15 +1,15 @@
-
-## **Getting Started**
+- [**Getting Started**](#getting-started)
 
 ## Contents
-- [Supported Cloud Providers](#supported-cloud-providers)
-- [What is required?](#what-is-required)
-- [Identity Broker](#identity-broker)
-- [Configuring Auth0](#configuring-auth0)
-- [Running the demo](#running-the-demo)
-- [Provisioning Credentials](#provisioning-credentials)
+- [Contents](#contents)
+  - [Supported Cloud Providers](#supported-cloud-providers)
+  - [What is required?](#what-is-required)
+  - [Identity Broker](#identity-broker)
+  - [Configuring Auth0](#configuring-auth0)
+  - [Running the Demo](#running-the-demo)
+  - [Provisioning Credentials](#provisioning-credentials)
 
-![Demo Video](https://appvia-hub-olm-artifiacts-eu-west-2.s3.eu-west-2.amazonaws.com/demo.gif)
+![Demo Video](doc/images/demo.gif)
 
 The following provides a quick start guide for rolling out and playing with the product locally; please ensure you have the following installed on your machine
 
@@ -45,7 +45,7 @@ Appvia Kore is designed to use an external identity provider for user management
 
 Auth0, found [here](https://auth0.com/), provides an enterprise SAAS identity provider
 
-- Sign up for an account from the [home page](https://auth0.com)re
+- Sign up for an account from the [home page](https://auth0.com)
 - From the dashboard side menu choose 'Applications' and then 'Create Application'
 - Given the application a name and choose 'Regular Web Applications'
 - Once provisioned click on the 'Settings' tab and scroll down to 'Allowed Callback URLs'. These are the permitted redirects for the applications. Since we are running the application locally off the laptop are and add `http://localhost:3000/callback` and `http://127.0.0.1:10080/oauth/callback` (Note the comma separation in the Auth0 UI.
