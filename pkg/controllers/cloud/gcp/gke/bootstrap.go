@@ -24,6 +24,7 @@ import (
 	"time"
 
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 	kube "github.com/appvia/kore/pkg/utils/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -106,6 +107,9 @@ func (p *bootImpl) Bootstrap(ctx context.Context, client client.Client) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      p.cluster.Name,
 			Namespace: p.cluster.Namespace,
+			Labels: map[string]string{
+				kore.Label("kind"): "kubernetescredential",
+			},
 		},
 		Data: map[string][]byte{
 			"ca.crt":   secret.Data["ca.crt"],
