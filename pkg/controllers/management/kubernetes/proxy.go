@@ -275,14 +275,14 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 							ReadinessProbe: &v1.Probe{
 								Handler: v1.Handler{
 									HTTPGet: &v1.HTTPGetAction{
-										Path: "/ready",
-										Port: intstr.FromInt(10443),
+										Path:   "/ready",
+										Port:   intstr.FromInt(10443),
+										Scheme: "HTTPS",
 									},
 								},
 								InitialDelaySeconds: 5,
 								PeriodSeconds:       10,
 							},
-							Command: []string{"kube-oidc-proxy"},
 							Args: []string{
 								"--client-id=" + a.Config().ClientID,
 								"--discovery-url=" + a.Config().DiscoveryURL,
