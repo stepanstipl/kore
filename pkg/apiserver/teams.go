@@ -267,6 +267,44 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
 	)
 
+	// Kubernetes Credentials
+
+	ws.Route(
+		ws.GET("/{team}/kubernetescredentials").To(u.findKubernetesCredentials).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Doc("Used to return all team resources under the team").
+			Returns(http.StatusOK, "Contains the former definition from the kore", clustersv1.KubernetesCredentialsList{}).
+			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.GET("/{team}/kubernetescredentials/{name}").To(u.findKubernetesCredential).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the kubernetes credentials you are acting upon")).
+			Doc("Used to return the cluster definition from the kore").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", clustersv1.KubernetesCredentials{}).
+			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.PUT("/{team}/kubernetescredentials/{name}").To(u.updateKubernetesCredential).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the kubernetes credentials you are acting upon")).
+			Doc("Used to return all team resources under the team").
+			Reads(clustersv1.KubernetesCredentials{}, "The definition for kubernetes credentials").
+			Returns(http.StatusOK, "Contains the definition from the kore", clustersv1.KubernetesCredentials{}).
+			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.DELETE("/{team}/kubernetescredentials/{name}").To(u.deleteKubernetesCredential).
+			Param(ws.PathParameter("name", "Is name the of the kubernetes credentials you are acting upon")).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Doc("Used to return the cluster definition from the kore").
+			Returns(http.StatusOK, "Contains the former definition from the kore", clustersv1.KubernetesCredentials{}).
+			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+	)
+
 	// Team Clusters
 
 	ws.Route(
