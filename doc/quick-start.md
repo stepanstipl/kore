@@ -1,14 +1,15 @@
 
 ## **Getting Started**
----
 
 ## Contents
 - [Supported Cloud Providers](#supported-cloud-providers)
-    - [What is required?](#what-is-required)
-    - [Identity Broker](#identity-broker)
-    - [Configuring Auth0](#configuring-auth0)
-    - [Running the demo](#running-the-demo)
-    - [Provisioning Credentials](#provisioning-credentials)
+- [What is required?](#what-is-required)
+- [Identity Broker](#identity-broker)
+- [Configuring Auth0](#configuring-auth0)
+- [Running the demo](#running-the-demo)
+- [Provisioning Credentials](#provisioning-credentials)
+
+![Demo Video](https://appvia-hub-olm-artifiacts-eu-west-2.s3.eu-west-2.amazonaws.com/demo.gif)
 
 The following provides a quick start guide for rolling out and playing with the product locally; please ensure you have the following installed on your machine
 
@@ -22,8 +23,8 @@ While Kore are be run locally off a laptop for testing there are components whic
 The aim of Kore is to enable teams to provision clusters. The supported cloud providers are:
 
 + Google Cloud Provider (GCP)
-+ Azure - `Coming soon`
-+ AWS - `Coming soon`
++ Azure - `Coming Soon`
++ AWS - `Coming Soon`
 
 There is automated account provisioning for AWS and Google, where an isolated user account can be created that maps to a specific team. The Account or Project account provisioning uses least-privilege and will create a project or AWS Account service account, that gives it enough permissions to create other accounts or projects. From that point on, it will create another service account inside the child account or project, for just managing Kubernetes and the related resources, (GKE or EKS). It is this account that is then used by Kore to provision the Kubernetes services, of which, options are controlled by the plans defined by the administrators.
 
@@ -57,7 +58,7 @@ Once you have the three pieces of the information *(ClientID, Client Secret and 
 
 The next logical step would be to return to the dashboard of Auth0 and create one or more test users under the 'Users & Roles' settig
 
-### Running the demo
+### Running the Demo
 
 Once you have the above configured you
 
@@ -69,7 +70,7 @@ KORE_CLIENT_SECRET: <YOUR_CLIENT_SECRET>
 DISCOVERY_URL: <OPENID_ENDPOINT>
 ```
 
-You can then run the `make demo` command from the root directory; which will bring up the dependencies within docker-compose. From here you can open up the browser and point it at http://localhost:3000; the password defaults for 'password' and can found on the KORE_ADMIN_PASS environment variable. You can then configure specific cloud providers, for GCP, this will be a project credential for GKE that should be a service account credential with privileges for GKE.
+You can then run the `make demo` command from the root directory; which will bring up the dependencies within docker-compose. From here you can open up the browser and point it at http://localhost:3000; the password defaults for 'password' but can be found on the KORE_ADMIN_PASS environment variable. You can then configure specific cloud providers, for GCP, this will be a project credential for GKE that should be a service account credential with privileges for GKE.
 
 Once this is configured, all teams can use these downstream to provision clusters using the defined plans.
 
@@ -77,4 +78,3 @@ Once this is configured, all teams can use these downstream to provision cluster
 
 The self-service nature in Kore is provided via the use of allocations (`kubectl get crd allocations.config.kore.appvia.io` api group). Adminstrator create shared credentials which are then allocated out to one or more teams to self-serve; at present the alpha release reuses the credentials across the teams, though we are currently integrating the provisioning of cloud account management into the product.
 
-![Demo Video](https://appvia-hub-olm-artifiacts-eu-west-2.s3.eu-west-2.amazonaws.com/demo.gif)
