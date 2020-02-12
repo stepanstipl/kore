@@ -1,43 +1,26 @@
 
 <h1><img src="https://www.appvia.io/hubfs/APPVIA_November2019/Images/appvia_logo.svg" alt="Appvia Kore" width="200"></h1><em>
 
-### **[Getting Started](#getting-started)** • **[Architecture](#architecture)** • **[Contributing](#contributing)** • **[Roadmap](#roadmap)**
+### **[Architecture](#architecture)** •  **[Getting Started](#getting-started)** • **[Roadmap](#roadmap)**
 
-![Latest Release](https://img.shields.io/github/v/release/appvia/kore?style=for-the-badge&label=Latest%20Release&color=%23D1374D)
+![CircleCI](https://img.shields.io/circleci/build/github/appvia/kore/master?style=for-the-badge)
+![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/appvia/kore?style=for-the-badge)
 ![License: Apache-2.0](https://img.shields.io/github/license/appvia/kore?style=for-the-badge&color=%23D1374D)
 
 ## Kubernetes for Teams via Appvia Kore
-- **Cluster provisioning** provides secure and consistent provisioning of environments for teams.
-- **Accounts & Account Users** provides a single source to access and control across the estate
-- **Single Sign On**
-- **Account Limits** to ensure quality of service and fairness when sharing a cluster
-- **Namespace Templates** for secure tenant isolation and self-service namespace initialization
-- **Multi-Cluster And Single Tenant Management** for sharing a pool of clusters ([coming soon](#roadmap))
-
-<br>
-
-![kore Demo Video](docs/website/images/demo.gif)
-
-<br>
+- **Cluster provisioning** provides secure and consistent provisioning of kubernetes environments for teams.
+- **Accounts & Account Users** provides a single source to access and control across the estate.
+- **Plans and Templates** provides the adminstrators to define the type and shapre of resources for teams to consume.
+- **Managed Access Controls** Provides a central means to managed and configure roles, policies and permissions across the estate.
 
 ## Contents
+- [Kubernetes for Teams via Appvia Kore](#kubernetes-for-teams-via-appvia-kore)
+- [Contents](#contents)
 - [Why Appvia Kore?](#why-appvia-kore)
-  - [Developer](#the-developer)
-  - [Devops](#the-devops)
-- [Workflow & Interactions](#workflow--interactions)
+- [The Developer](#the-developer)
+- [The DevOps](#the-devops)
 - [Architecture](#architecture)
-  - [Workflow & Interactions](#workflow--interactions)
-  - [Custom Resources & Resource Groups](#custom-resources--resource-groups)
-- [Getting Started](#getting-started)
-  - [0. Requirements](#0-requirements)
-  - [1. Install Kore](#1-install-kiosk)
-  - [2. Configure Accounts](#2-configure-accounts)
-  - [3. Working with Spaces](#3-working-with-spaces)
-  - [4. Setting Account limits](#4-setting-account-limits)
-  - [5. Working with Templates](#5-working-with-templates)
-- [Uninstall Kore](#uninstall-kiosk)
-- [Roadmap](#roadmap)
-- [Contributing](#contributing)
+- [Getting Started](doc/quick-start.md)
 
 ## Why Appvia Kore?
 
@@ -85,29 +68,11 @@ All of the components run as a set of containers, so as long as there is Docker,
 
 Note Appvia Kore is deemed an early release, the project is not regarded as production ready and is under rapid development; thus expect new features to rollout.
 
-## Getting Started
+## Roadmap
 
-The following provides a quick start guide for rolling out and playing with the product locally; please ensure you have the following installed on your machine
+Currently on the roadmap the following is either near completion and merge or currently in the works.
 
-- Docker: install instructions can be found [here]([https://docs.docker.com/install/](https://docs.docker.com/install/))</em>
-- Docker Compose: installation instructions can found [here](https://docs.docker.com/compose/install/)
-
-
-### Configuring Auth0 as an Identity provider
-
-Auth0, found [here](https://auth0.com/), provides an enterprise SAAS identity provider
-
-- Sign up for an account from the [home page](https://auth0.com)
-- From the dashboard side menu choose 'Applications' and then 'Create Application'
-- Given the application a name and choose 'Regular Web Applications'
-- Once provisioned click on the 'Settings' tab and scroll down to 'Allowed Callback URLs'. These are the permitted redirects for the applications. Since we are running the application locally off the laptop are and add `http://localhost:3000/callback` and `http://127.0.0.1:10080/oauth/callback` (Note the comma separation in the Auth0 UI.
-- Scroll to the bottom of the settings and click the 'Show Advanced Settings'
-- Choose the 'OAuth' tab from the advanced settings and ensure that the 'JsonWebToken Signature Algorithm' is set to RS256 and 'OIDC Conformant' is toggled on.
-- Select the 'Endpoints' tab and note down the 'OpenID Configuration'.
-- You can then scroll back to the top and note down the 'ClientID' and 'Client Secret'
-
-Once you have the three pieces of the information *(ClientID, Client Secret and the OpenID endpoint)* you can substitute these settings on the [demo.yml](https://github.com/appvia/kore/blob/master/hack/compose/demo.yml); mapping to to ClientID, Client Secret and Discovery URL.
-
-The next logical step would be to return to the dashboard of Auth0 and create one or more test users under the 'Users & Roles' settig
-
-You can then run the `make demo` command from the root directory; which will bring up the dependencies within docker-compose. From here the UI will be available on http://localhost:3000
+- Cloud account management; provision of account management with the cloud provider.
+- Security compliance of cloud account and settings.
+- Operational review of deployments, versions, image vulnerabilities.
+- Extension of resource plans and allocations for teams.
