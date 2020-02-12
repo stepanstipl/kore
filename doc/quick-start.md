@@ -1,6 +1,6 @@
 ## **Getting Started**
 
-## Contents
+### Contents
 - [Supported Cloud Providers](#supported-cloud-providers)
 - [What is required?](#what-is-required)
 - [Identity Broker](#identity-broker)
