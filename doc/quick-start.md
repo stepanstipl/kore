@@ -1,3 +1,4 @@
+
 ## **Getting Started**
 ---
 
@@ -8,10 +9,6 @@
     - [Configuring Auth0](#configuring-auth0)
     - [Running the demo](#running-the-demo)
     - [Provisioning Credentials](#provisioning-credentials)
-    - [User Management](#user-management)
-  - [Creating Teams](#creating-teams)
-  - [Adding Users](#adding-users)
-  - [Cluster and User Roles](#cluster-and-user-roles)
 
 The following provides a quick start guide for rolling out and playing with the product locally; please ensure you have the following installed on your machine
 
@@ -20,7 +17,7 @@ The following provides a quick start guide for rolling out and playing with the 
 
 While Kore are be run locally off a laptop for testing there are components which need to externally accessible; namely the identity provider due to the requirement for the clusters to access the endpoints.
 
-# Supported Cloud Providers
+### Supported Cloud Providers
 
 The aim of Kore is to enable teams to provision clusters. The supported cloud providers are:
 
@@ -78,5 +75,4 @@ You can then run the `make demo` command from the root directory; which will bri
 
 The self-service nature in Kore is provided via the use of allocations (`kubectl get crd allocations.config.kore.appvia.io` api group). Adminstrator create shared credentials which are then allocated out to one or more teams to self-serve; at present the alpha release reuses the credentials across the teams, though we are currently integrating the provisioning of cloud account management into the product.
 
-![Demo Video](doc/website/images/demo.gif)
-
+![Demo Video](https://appvia-hub-olm-artifiacts-eu-west-2.s3.eu-west-2.amazonaws.com/demo.gif)
