@@ -10,17 +10,17 @@ metadata:
 spec:
   group: org.kore.appvia.io
   names:
-    kind: User
-    listKind: UserList
+    kind: AuditEvent
+    listKind: AuditEventList
     plural: users
-    singular: user
+    singular: auditevent
   preserveUnknownFields: false
   scope: Namespaced
   subresources:
     status: {}
   validation:
     openAPIV3Schema:
-      description: User is the Schema for the users API
+      description: AuditEvent is the Schema for the users API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -35,47 +35,30 @@ spec:
         metadata:
           type: object
         spec:
-          description: UserSpec defines the desired state of User
+          description: AuditEventSpec defines the desired state of User
           properties:
-            disabled:
-              description: Disabled indicates if the user is disabled
-              type: boolean
-            email:
-              description: Email is the email for the user
-              minLength: 1
+            createdAt:
+              description: CreatedAt is the timestamp of record creation
+              format: date-time
               type: string
-            username:
-              description: Username is the userame or identity for this user
-              minLength: 1
+            message:
+              description: Message is event message itself
               type: string
-          required:
-          - username
-          type: object
-        status:
-          description: UserStatus defines the observed state of User
-          properties:
-            conditions:
-              description: Conditions is collection of potentials error causes
-              items:
-                description: Condition is a reason why something failed
-                properties:
-                  detail:
-                    description: Detail is a actual error which might contain technical
-                      reference
-                    type: string
-                  message:
-                    description: Message is a human readable message
-                    type: string
-                required:
-                - detail
-                - message
-                type: object
-              type: array
-            status:
-              description: Status provides an overview of the user status
+            resource:
+              description: Resource is the name of the resource in question namespace/name
               type: string
-          required:
-          - status
+            resourceUID:
+              description: ResourceUID is a unique id for the resource
+              type: string
+            team:
+              description: Team is the team whom event may be associated to
+              type: string
+            type:
+              description: Type is the type of event
+              type: string
+            user:
+              description: User is the user which the event is related
+              type: string
           type: object
       type: object
   version: v1
