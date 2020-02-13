@@ -20,6 +20,7 @@
 package server
 
 import (
+	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/appvia/kore/pkg/register"
 	"github.com/appvia/kore/pkg/utils/crds"
@@ -31,6 +32,11 @@ import (
 
 var (
 	filtered = []schema.GroupVersionKind{
+		{
+			Group:   clustersv1.GroupVersion.Group,
+			Version: clustersv1.GroupVersion.Version,
+			Kind:    "KubernetesCredentials",
+		},
 		{
 			Group:   orgv1.GroupVersion.Group,
 			Version: orgv1.GroupVersion.Version,
