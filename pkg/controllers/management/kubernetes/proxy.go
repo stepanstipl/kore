@@ -285,8 +285,7 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 										Scheme: "HTTPS",
 									},
 								},
-								InitialDelaySeconds: 5,
-								PeriodSeconds:       10,
+								PeriodSeconds: 10,
 							},
 							Args: append([]string{
 								"--client-id=" + a.Config().ClientID,
