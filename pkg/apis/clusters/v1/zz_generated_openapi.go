@@ -191,12 +191,6 @@ func schema_pkg_apis_clusters_v1_KubernetesStatus(ref common.ReferenceCallback) 
 				Description: "KubernetesStatus defines the observed state of Cluster",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"adminToken": {
-						SchemaProps: spec.SchemaProps{
-							Description: "AdminToken is the kore-admin service account token which is bound to cluster-admin",
-							Ref:         ref("k8s.io/api/core/v1.Secret"),
-						},
-					},
 					"caCertificate": {
 						SchemaProps: spec.SchemaProps{
 							Description: "CaCertificate is the base64 encoded cluster certificate",
@@ -239,11 +233,10 @@ func schema_pkg_apis_clusters_v1_KubernetesStatus(ref common.ReferenceCallback) 
 						},
 					},
 				},
-				Required: []string{"status"},
 			},
 		},
 		Dependencies: []string{
-			"github.com/appvia/kore/pkg/apis/core/v1.Component", "k8s.io/api/core/v1.Secret"},
+			"github.com/appvia/kore/pkg/apis/core/v1.Component"},
 	}
 }
 
