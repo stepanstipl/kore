@@ -240,6 +240,11 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 
 	replicas := int32(2)
 
+	claims := []string{}
+	for _, x := range a.Config().UserClaims {
+		claims = append(claims, fmt.Sprintf("--user-claims=%s", x))
+	}
+
 	// @step: ensure the deployment is there
 	if _, err := kubernetes.CreateOrUpdate(ctx, cc, &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -283,15 +288,12 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 								InitialDelaySeconds: 5,
 								PeriodSeconds:       10,
 							},
-							Args: []string{
+							Args: append([]string{
 								"--client-id=" + a.Config().ClientID,
 								"--discovery-url=" + a.Config().DiscoveryURL,
-								"--user-claims=preferred_username",
-								"--user-claims=email",
-								"--user-claims=name",
 								"--tls-cert=/tls/tls.crt",
 								"--tls-key=/tls/tls.key",
-							},
+							}, claims...),
 							VolumeMounts: []v1.VolumeMount{
 								{
 									Name:      "tls",
