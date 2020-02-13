@@ -43,9 +43,6 @@ func NewClaimsFromToken(token *oidc.IDToken) (*Claims, error) {
 
 // GetUserClaim returns the username claim - defaults to 'name'
 func (c *Claims) GetUserClaim(claims ...string) (string, bool) {
-	if len(claims) <= 0 {
-		return c.GetString("name")
-	}
 	for _, x := range claims {
 		if name, found := c.GetString(x); found {
 			return name, true
