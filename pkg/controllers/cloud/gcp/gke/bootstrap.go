@@ -108,7 +108,7 @@ func (p *bootImpl) Bootstrap(ctx context.Context, client client.Client) error {
 			Name:      p.cluster.Name,
 			Namespace: p.cluster.Namespace,
 			Labels: map[string]string{
-				kore.Label("kind"): "kubernetescredential",
+				kore.Label("type"): "kubernetescredentials",
 			},
 		},
 		Data: map[string][]byte{
