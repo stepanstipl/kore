@@ -24,9 +24,6 @@ import (
 	"net/http"
 )
 
-// Key is the id token context key
-type Key struct{}
-
 // Config is the configuration for the service
 type Config struct {
 	// ClientID is the client issuer

@@ -88,6 +88,20 @@ func (c *Claims) GetStringClaims(keys ...string) (string, bool) {
 	return "", false
 }
 
+// GetStringSlice returns a slice of string if found
+func (c *Claims) GetStringSlice(key string) ([]string, bool) {
+	v, found := c.claims[key]
+	if !found {
+		return []string{}, false
+	}
+	values, ok := v.([]string)
+	if !ok {
+		return []string{}, false
+	}
+
+	return values, true
+}
+
 // GetString returns the string from the claims
 func (c *Claims) GetString(key string) (string, bool) {
 	v, found := c.claims[key]

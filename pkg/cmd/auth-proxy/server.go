@@ -121,12 +121,10 @@ func (a *authImpl) Run(ctx context.Context) error {
 	reverseProxy := httputil.NewSingleHostReverseProxy(origin)
 
 	reverseProxy.Director = func(req *http.Request) {
-		user := req.Context().Value(Key{}).(string)
-
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.token))
-		req.Header.Add("Impersonate-User", user)
-		req.Header.Add("X-Forwarded-Host", req.Host)
-		req.Header.Add("X-Origin-Host", origin.Host)
+		req.Header.Set("Host", origin.Host)
+		req.Header.Set("X-Forwarded-Host", req.Host)
+		req.Header.Set("X-Origin-Host", origin.Host)
 
 		req.URL.Scheme = origin.Scheme
 		req.URL.Host = origin.Host
@@ -143,8 +141,6 @@ func (a *authImpl) Run(ctx context.Context) error {
 
 	for _, method := range AllMethods {
 		router.Handle(method, "/*catchall", func(resp http.ResponseWriter, req *http.Request, p httprouter.Params) {
-			var username string
-
 			// @step: handle a simple health check
 			if req.URL.Path == "/ready" {
 				resp.WriteHeader(http.StatusOK)
@@ -159,6 +155,8 @@ func (a *authImpl) Run(ctx context.Context) error {
 				if !found {
 					return errors.New("no authorization token")
 				}
+				// @step: ensure no impersonation is passed through by clearing all headers
+				req.Header = http.Header{}
 
 				// @step: parse and extract the identity
 				raw, err := a.verifier.Verify(req.Context(), bearer)
@@ -176,7 +174,17 @@ func (a *authImpl) Run(ctx context.Context) error {
 				if !found {
 					return errors.New("no username found in the identity token")
 				}
-				username = user
+				req.Header.Set("Impersonate-User", user)
+
+				// @step: extract the group if requested
+				for _, x := range a.config.GroupClaims {
+					groups, found := claims.GetStringSlice(x)
+					if found {
+						for _, name := range groups {
+							req.Header.Set("Impersonate-Group", name)
+						}
+					}
+				}
 
 				return nil
 			}()
@@ -187,10 +195,7 @@ func (a *authImpl) Run(ctx context.Context) error {
 				return
 			}
 
-			// @step: add the username to the context
-			ctx := context.WithValue(req.Context(), Key{}, username)
-
-			reverseProxy.ServeHTTP(resp, req.WithContext(ctx))
+			reverseProxy.ServeHTTP(resp, req)
 		})
 	}
 
