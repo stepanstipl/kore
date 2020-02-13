@@ -113,7 +113,7 @@ func Options() []cli.Flag {
 			Name:   "user-claims",
 			Usage:  "a list of ordered JWT claims name used to extract the username `NAME`",
 			EnvVar: "KORE_USER_CLAIMS",
-			Value:  &cli.StringSlice{"preferred_username", "name", "username"},
+			Value:  &cli.StringSlice{"preferred_username", "email", "name", "username"},
 		},
 
 		//

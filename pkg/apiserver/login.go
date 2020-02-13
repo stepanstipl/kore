@@ -201,7 +201,7 @@ func (l *loginHandler) callbackHandler(req *restful.Request, resp *restful.Respo
 		}
 
 		// @step: extract the username and email address
-		username, found := claims.GetUserClaim("preferred_username", "username", "name")
+		username, found := claims.GetUserClaim(l.Config().UserClaims...)
 		if !found {
 			return http.StatusForbidden, errors.New("no user information found in token ")
 		}
