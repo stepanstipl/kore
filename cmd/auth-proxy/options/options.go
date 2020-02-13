@@ -64,7 +64,7 @@ func Options() []cli.Flag {
 			Name:   "user-claims",
 			Usage:  "an ordered collection of potential token claims to extract the identity `CLAIMS`",
 			EnvVar: "USER_CLAIMS",
-			Value:  &cli.StringSlice{"preferred_username", "name"},
+			Value:  &cli.StringSlice{"preferred_username", "email", "name"},
 		},
 		cli.StringSliceFlag{
 			Name:   "group-claims",
