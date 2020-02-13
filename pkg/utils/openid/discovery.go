@@ -48,6 +48,11 @@ func New(config Config) (Authenticator, error) {
 	return &authImpl{Config: config}, nil
 }
 
+// Provider returns the oidc provider
+func (a *authImpl) Provider() *oidc.Provider {
+	return a.provider
+}
+
 // Verify is called to verify the token
 func (a *authImpl) Verify(ctx context.Context, token string) (*oidc.IDToken, error) {
 	// @step: we lock the struct and check if the verifier has been configured yet
@@ -59,6 +64,30 @@ func (a *authImpl) Verify(ctx context.Context, token string) (*oidc.IDToken, err
 	}
 
 	return verifier.Verify(ctx, token)
+}
+
+// RunWithSync waits for the discovery process to occur
+func (a *authImpl) RunWithSync(ctx context.Context) error {
+	if err := a.Run(ctx); err != nil {
+		return err
+	}
+	time.Sleep(2 * time.Second)
+
+	nctx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+	defer cancel()
+
+	for {
+		if a.provider != nil && a.verifier != nil {
+			return nil
+		}
+		select {
+		case <-nctx.Done():
+			return errors.New("context has been cancelled")
+		default:
+		}
+
+		time.Sleep(5 * time.Second)
+	}
 }
 
 // Run starts the request to the discovery url

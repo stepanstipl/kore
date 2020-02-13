@@ -27,6 +27,10 @@ import (
 
 // Authenticator provides a openid if agent
 type Authenticator interface {
+	// Provider returns the oidc provider
+	Provider() *oidc.Provider
+	// RunWithSync start the discovery grab
+	RunWithSync(context.Context) error
 	// Run start the discovery grab
 	Run(context.Context) error
 	// Verify is called to verify a token

@@ -259,7 +259,9 @@ data:
           client_id : {{ .Grafana.ClientID }}
           client_secret: {{ .Grafana.ClientSecret }}
           scopes: email,profile
+          {{- if .Grafana.UserInfoURL }}
           api_url: {{ .Grafana.UserInfoURL }}
+          {{- end }}
           auth_url: {{ .Grafana.AuthURL }}
           token_url: {{ .Grafana.TokenURL }}
           #allowed_domains: {{ .Domain }}

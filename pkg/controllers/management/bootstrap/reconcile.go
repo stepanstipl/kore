@@ -29,6 +29,7 @@ import (
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
+	"github.com/appvia/kore/pkg/utils/openid"
 
 	log "github.com/sirupsen/logrus"
 	batch "k8s.io/api/batch/v1"
@@ -326,6 +327,29 @@ func (t bsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 
 // GetClusterConfiguration is responsible for generate the parameters for the cluster
 func (t bsCtrl) GetClusterConfiguration(ctx context.Context, cluster *clusterv1.Kubernetes, provider string) (Parameters, error) {
+	// @step: retrieve the authentication endpoints
+	var authURL, tokenURL string
+
+	if t.Config().DiscoveryURL != "" {
+		discovery, err := openid.New(openid.Config{
+			DiscoveryURL: t.Config().DiscoveryURL,
+			ClientID:     t.Config().ClientID,
+		})
+		if err != nil {
+			log.WithError(err).Error("trying to create discovery client")
+
+			return Parameters{}, err
+		}
+
+		if err := discovery.RunWithSync(ctx); err != nil {
+			log.WithError(err).Error("trying to retrieve the discovery details")
+
+			return Parameters{}, err
+		}
+		authURL = discovery.Provider().Endpoint().AuthURL
+		tokenURL = discovery.Provider().Endpoint().TokenURL
+	}
+
 	params := Parameters{
 		BootImage: "quay.io/appvia/hub-bootstrap:v0.2.0",
 		Catalog:   CatalogOptions{Image: "v0.0.2"},
@@ -334,13 +358,12 @@ func (t bsCtrl) GetClusterConfiguration(ctx context.Context, cluster *clusterv1.
 		},
 		Domain: cluster.Spec.Domain,
 		Grafana: GrafanaOptions{
-			AuthURL:      t.Config().DiscoveryURL + "/protocol/openid-connect/auth",
+			AuthURL:      authURL,
 			ClientID:     t.Config().ClientID,
 			ClientSecret: t.Config().ClientSecret,
 			Hostname:     "grafana." + cluster.Name + "." + cluster.Namespace + "." + cluster.Spec.Domain,
 			Password:     utils.Random(24),
-			TokenURL:     t.Config().DiscoveryURL + "/protocol/openid-connect/token",
-			UserInfoURL:  t.Config().DiscoveryURL + "/protocol/openid-connect/userinfo",
+			TokenURL:     tokenURL,
 			Database: DatabaseOptions{
 				Name:     "grafana",
 				Password: utils.Random(12),
@@ -357,9 +380,9 @@ func (t bsCtrl) GetClusterConfiguration(ctx context.Context, cluster *clusterv1.
 		StorageClass: "default",
 	}
 	if t.Config().DEX.EnabledDex {
-		params.Grafana.AuthURL = t.Config().DiscoveryURL + "/auth"
-		params.Grafana.TokenURL = t.Config().DiscoveryURL + "/token"
-		params.Grafana.UserInfoURL = t.Config().DiscoveryURL + "/userinfo"
+		params.Grafana.AuthURL = authURL
+		params.Grafana.TokenURL = tokenURL
+		//params.Grafana.UserInfoURL = t.Config().DiscoveryURL + "/userinfo"
 	}
 
 	switch provider {
