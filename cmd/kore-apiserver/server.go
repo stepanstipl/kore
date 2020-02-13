@@ -21,6 +21,7 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/appvia/kore/pkg/apiserver"
@@ -67,7 +68,7 @@ func invoke(ctx *cli.Context) error {
 			ClientScopes:            ctx.StringSlice("client-scopes"),
 			CertificateAuthority:    ctx.String("certificate-authority"),
 			CertificateAuthorityKey: ctx.String("certificate-authority-key"),
-			DiscoveryURL:            ctx.String("discovery-url"),
+			DiscoveryURL:            strings.TrimSuffix(ctx.String("discovery-url"), ".well-known/openid-configuration"),
 			HMAC:                    ctx.String("kore-hmac"),
 			PublicAPIURL:            ctx.String("api-public-url"),
 			PublicHubURL:            ctx.String("kore-public-url"),
