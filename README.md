@@ -7,7 +7,7 @@
 ## Kubernetes for Teams via Appvia Kore
 - **Cluster provisioning** provides secure and consistent provisioning of kubernetes environments for teams.
 - **Accounts & Account Users** provides a single source for access and control across the estate.
-- **Plans and Templates** provides the administrators to define the type and shape of resources for teams to consume.
+- **Plans and Templates** allows the administrators to define the type and shape of resources for teams to consume.
 - **Managed Access Controls** Provides a central means to manage and configure roles, policies and permissions across the estate.
 
 ## Contents
