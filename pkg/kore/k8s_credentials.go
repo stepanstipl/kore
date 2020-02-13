@@ -133,7 +133,7 @@ func (n *kcImpl) Update(ctx context.Context, credentials *clustersv1.KubernetesC
 				Name:      credentials.Name,
 				Namespace: n.team,
 				Labels: map[string]string{
-					Label("kind"): "kubernetescredentials",
+					Label("type"): "kubernetescredentials",
 				},
 			},
 			Data: map[string][]byte{
