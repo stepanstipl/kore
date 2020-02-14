@@ -59,14 +59,12 @@ The next logical step would be to return to the dashboard of Auth0 and create on
 
 ### Running the Demo
 
-Once you have the above configured you
+Once you have the above configured you can update the demo.env from within the root directory; these are loaded in on the docker-compose as a environment file.
 
 ```shell
-
-# change the following the hack/compose/demo.yml
 KORE_CLIENT_ID: <YOUR_CLIENT_ID>
 KORE_CLIENT_SECRET: <YOUR_CLIENT_SECRET>
-DISCOVERY_URL: <OPENID_ENDPOINT>
+KORE_DISCOVERY_URL: <OPENID_ENDPOINT>
 ```
 
 You can then run the `make demo` command from the root directory; which will bring up the dependencies within docker-compose. From here you can open up the browser and point it at http://localhost:3000; the password defaults for 'password' but can be found on the KORE_ADMIN_PASS environment variable. You can then configure specific cloud providers, for GCP, this will be a project credential for GKE that should be a service account credential with privileges for GKE.
