@@ -25,10 +25,37 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+// CreateOrUpdateService does what is says on the tin
+func CreateOrUpdateService(ctx context.Context, cc client.Client, s *corev1.Service) (*corev1.Service, error) {
+	if err := cc.Create(ctx, s); err != nil {
+		if !kerrors.IsAlreadyExists(err) {
+			return nil, err
+		}
+
+		key := types.NamespacedName{
+			Namespace: s.Namespace,
+			Name:      s.Name,
+		}
+		current := s.DeepCopy()
+		if err := cc.Get(ctx, key, current); err != nil {
+			return nil, err
+		}
+
+		s.SetResourceVersion(current.GetResourceVersion())
+		s.SetGeneration(current.GetGeneration())
+
+		return s, cc.Update(ctx, s)
+	}
+
+	return s, nil
+}
 
 // WaitForServiceEndpoint is used to wait for the service to generate an endpoint
 func WaitForServiceEndpoint(ctx context.Context, cc client.Client, namespace, name string) (string, error) {

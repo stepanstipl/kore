@@ -1,0 +1,20 @@
+apiVersion: app.k8s.io/v1beta1
+kind: Application
+metadata:
+  name: "captain"
+  labels:
+    kore-direct: "true"
+spec:
+  selector:
+    matchLabels:
+      app: captain
+  componentKinds:
+    - group: core
+      kind: Service
+    - group: apps
+      kind: Deployment
+  assemblyPhase: "Pending"
+  descriptor:
+    version: "v0.9.5"
+    description: "A controller for deploying helm3 charts"
+    type: "captain"

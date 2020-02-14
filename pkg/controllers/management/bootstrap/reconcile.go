@@ -25,17 +25,17 @@ import (
 	clusterv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
+	"github.com/appvia/kore/pkg/clusterman"
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 	"github.com/appvia/kore/pkg/utils/openid"
+	"github.com/appvia/kore/pkg/version"
 
 	log "github.com/sirupsen/logrus"
-	batch "k8s.io/api/batch/v1"
-	core "k8s.io/api/core/v1"
+	apps "k8s.io/api/apps/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -45,16 +45,20 @@ import (
 var (
 	// convertor is the unstructured converter client
 	converter = runtime.DefaultUnstructuredConverter
+	// KoreImage is the container image for Kore
+	KoreImage = "quay.io/appvia/kore-apiserver:" + version.Release
 )
 
 const (
 	finalizerName = "bootstrap.compute.kore.appvia.io"
-	// jobNamespace is the namespace the job runs in
-	jobNamespace = "kube-system"
-	// jobName is the name of the job
-	jobName = "bootstrap"
-	// jobOLMConfig is the configuration for the olm config
-	jobOLMConfig = "bootstrap-olm"
+	// clustermanNamespace is the namespace the clustermanager runs in
+	clustermanNamespace = clusterman.KoreNamespace
+	// clustermanConfig is the name of the ConfigMap configuration required for kore cluster manager
+	clustermanConfig = clusterman.ParamsConfigMap
+	// clustermanConfigKey is the configmap Key to store the cluster data
+	clustermanConfigKey = clusterman.ParamsConfigKey
+	// clustermanDeployment
+	clustermanDeployment = "kore-clusterman"
 )
 
 // Reconcile is the entrypoint for the reconcilation logic
@@ -112,6 +116,8 @@ func (t bsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	// - create a kubernetes client to the remote cluster
 	// - retrieve the credentials for the broker from the cluster provider
 	// - wait for kube api to be ready
+	// - deploy the kore-cluster-manager
+	// - wait for critical kore-cluster componets to be ready
 	result, err := func() (reconcile.Result, error) {
 		var credentials Credentials
 		var provider string
@@ -162,63 +168,6 @@ func (t bsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 			return reconcile.Result{}, err
 		}
 
-		// @step: ensure kube-dns
-		if err := kubernetes.EnsureNamespace(ctx, client, &core.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "kube-dns",
-			},
-		}); err != nil {
-			logger.WithError(err).Error("trying to create kube-dns namespace")
-
-			return reconcile.Result{}, err
-		}
-		if provider == "gke" {
-			if _, err := kubernetes.CreateOrUpdate(ctx, client, &core.Secret{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      "google",
-					Namespace: "kube-dns",
-				},
-				Data: map[string][]byte{
-					"credentials.json": []byte(credentials.GKE.Account),
-				},
-			}); err != nil {
-				logger.WithError(err).Error("trying to create gcp secret")
-
-				return reconcile.Result{}, err
-			}
-		}
-
-		// @step: check if the job configmap exists
-		found, err := JobConfigExists(ctx, client)
-		if err != nil {
-			logger.WithError(err).Error("failed to check for configuration configmap")
-
-			// @step: we need to fix this as its a loop
-			return reconcile.Result{RequeueAfter: 2 * time.Minute}, nil
-		}
-		if !found {
-			c, err := MakeTemplate(BootstrapJobConfigmap, map[string]string{})
-			if err != nil {
-				logger.WithError(err).Error("failed to generate bootstrap template")
-
-				return reconcile.Result{}, err
-			}
-
-			cm := &core.ConfigMap{}
-			if err := DecodeInTo(c, cm); err != nil {
-				logger.WithError(err).Error("failed to decode bootstrap configuration in configmap")
-
-				return reconcile.Result{}, err
-			}
-
-			if _, err := kubernetes.CreateOrUpdate(ctx, client, cm); err != nil {
-				logger.WithError(err).Error("failed to create the bootstrap configuration configmap")
-
-				return reconcile.Result{}, err
-			}
-		}
-
-		// @step: build the parameters for the job
 		params, err := t.GetClusterConfiguration(ctx, cluster, strings.ToLower(cluster.Spec.Provider.Kind))
 		if err != nil {
 			logger.WithError(err).Error("failed to generate the parameters")
@@ -227,71 +176,72 @@ func (t bsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 		}
 		params.Credentials = credentials
 
-		// @step: we check if the job configuration is there already and if not we make it
-		found, err = JobOLMConfigExists(ctx, client)
+		// @step: check if the cluster manager namespace exists and create it if not
+		if err := EnsureNamespace(ctx, client); err != nil {
+			logger.WithError(err).Errorf("trying to create the kore cluster-manager namespace %s", clustermanNamespace)
+
+			return reconcile.Result{}, err
+		}
+
+		// @step: check if the cluster config exists
+		found, err = ConfigExists(ctx, client)
 		if err != nil {
-			logger.WithError(err).Error("failed to check for olm job configuration")
+			logger.WithError(err).Error("failed to check for kore clusterman config")
 
 			return reconcile.Result{}, err
 
 		}
 		if !found {
-			c, err := MakeTemplate(BootstrapJobOLMConfig, params)
-			if err != nil {
-				logger.WithError(err).Error("failed to generate the bootstrap olm template")
-
-				return reconcile.Result{}, err
-			}
-			cm := &core.ConfigMap{}
-			if err := DecodeInTo(c, cm); err != nil {
-				logger.WithError(err).Error("trying to decode olm bootstrap configuration in configmap")
-
-				return reconcile.Result{}, err
-			}
-
-			if _, err := kubernetes.CreateOrUpdate(ctx, client, cm); err != nil {
-				logger.WithError(err).Error("trying to create the olm bootstrap configuration configmap")
+			if err := CreateConfig(ctx, client, params); err != nil {
+				logger.WithError(err).Error("trying to create the kore cluster-manager configuration configmap")
 
 				return reconcile.Result{}, err
 			}
 		}
 
-		// @step: ensure the bootstrap job is there
-		found, err = JobExists(ctx, client)
+		// @step setup correct permissions for deployment
+		if err := CreateClusterRoleBinding(ctx, client); err != nil {
+			logger.WithError(err).Error("can not create cluster-manager clusterrole")
+
+			return reconcile.Result{}, err
+		}
+
+		// @step: check if the kore cluster manager deployment exists
+		found, err = DeploymentExists(ctx, client)
 		if err != nil {
-			logger.WithError(err).Error("trying to check for bootstrap job")
+			logger.WithError(err).Error("trying to check for cluster-manager depoloyment")
 
 			return reconcile.Result{}, err
 		}
 		if !found {
-			c, err := MakeTemplate(BootstrapJobTemplate, params)
+			c, err := MakeTemplate(clustermanDeployment, params)
 			if err != nil {
-				logger.WithError(err).Error("trying to render the bootstrap job")
+				logger.WithError(err).Error("trying to render the cluster-manager deployment")
 
 				return reconcile.Result{}, err
 			}
-			job := &batch.Job{}
-			if err := DecodeInTo(c, job); err != nil {
-				logger.WithError(err).Error("trying to decode the job")
+			deployment := &apps.Deployment{}
+			if err := DecodeInTo(c, deployment); err != nil {
+				logger.WithError(err).Error("trying to decode the deployment")
 
 				return reconcile.Result{}, err
 			}
-			if _, err := kubernetes.CreateOrUpdate(ctx, client, job); err != nil {
-				logger.WithError(err).Error("trying to create the bootstrap job")
+			if _, err := kubernetes.CreateOrUpdate(ctx, client, deployment); err != nil {
+				logger.WithError(err).Error("trying to create the cluster manager deployment")
 
 				return reconcile.Result{}, err
 			}
 		}
-		logger.Debug("waiting for bootstrap job to finish")
+		logger.Debug("waiting for kore cluster manager deployment status to appear")
 
-		nctx, cancel := context.WithTimeout(ctx, 20*time.Minute)
+		nctx, cancel := context.WithTimeout(ctx, 4*time.Minute)
 		defer cancel()
 
-		logger.Info("waiting for bootstrap has completed")
+		logger.Info("waiting for kore cluster manager to complete")
 
 		// @step: wait for the bootstrap job to complete
-		if err := WaitOnJob(nctx, client); err != nil {
-			logger.WithError(err).Error("failed waiting for bootstrap to complete")
+		if err := WaitOnStatus(nctx, client); err != nil {
+			logger.WithError(err).Error("failed waiting for kore cluster manager status to complete")
 
 			return reconcile.Result{}, err
 		}
@@ -351,8 +301,7 @@ func (t bsCtrl) GetClusterConfiguration(ctx context.Context, cluster *clusterv1.
 	}
 
 	params := Parameters{
-		BootImage: "quay.io/appvia/hub-bootstrap:v0.2.0",
-		Catalog:   CatalogOptions{Image: "v0.0.2"},
+		KoreImage: KoreImage,
 		Kiali: KialiOptions{
 			Password: utils.Random(12),
 		},
@@ -369,14 +318,7 @@ func (t bsCtrl) GetClusterConfiguration(ctx context.Context, cluster *clusterv1.
 				Password: utils.Random(12),
 			},
 		},
-		Provider:   provider,
-		OLMVersion: "0.11.0",
-		Namespaces: []NamespaceOptions{
-			{Name: "kube-dns"},
-			{Name: "grafana"},
-			{Name: "logging"},
-			{Name: "prometheus"},
-		},
+		Provider:     provider,
 		StorageClass: "default",
 	}
 	if t.Config().DEX.EnabledDex {
@@ -389,46 +331,5 @@ func (t bsCtrl) GetClusterConfiguration(ctx context.Context, cluster *clusterv1.
 	case "gke":
 		params.StorageClass = "standard"
 	}
-
-	// @step: ensure we have the operators
-	params.Operators = []OperatorOptions{
-		{
-			Package:   "prometheus",
-			Channel:   "beta",
-			Label:     "k8s-app=prometheus-operator",
-			Namespace: "prometheus",
-		},
-		{
-			Package:   "grafana-operator",
-			Channel:   "alpha",
-			Label:     "app=grafana-operator",
-			Namespace: "grafana",
-		},
-		{
-			Package:   "loki-operator",
-			Channel:   "stable",
-			Label:     "name=loki-operator",
-			Namespace: "logging",
-		},
-		{
-			Package:   "metrics-operator",
-			Channel:   "stable",
-			Label:     "name=metrics-operator",
-			Namespace: "prometheus",
-		},
-		{
-			Package:   "mariadb-operator",
-			Channel:   "stable",
-			Label:     "name=mariadb-operator",
-			Namespace: "grafana",
-		},
-		{
-			Package:   "external-dns-operator",
-			Channel:   "stable",
-			Label:     "name=external-dns-operator",
-			Namespace: "kube-dns",
-		},
-	}
-
 	return params, nil
 }

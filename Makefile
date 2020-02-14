@@ -2,16 +2,15 @@ NAME=kore-apiserver
 AUTHOR ?= appvia
 AUTHOR_EMAIL=gambol99@gmail.com
 BUILD_TIME=$(shell date '+%s')
+CURRENT_TAG=$(shell git tag --points-at HEAD)
 DEPS=$(shell go list -f '{{range .TestImports}}{{.}} {{end}}' ./...)
 GIT_SHA=$(shell git --no-pager describe --always --dirty)
 HUB_APIS_SHA=$(shell cd ../kore-apis && git log | head -n 1 | cut -d' ' -f2)
 GOVERSION ?= 1.12.7
 HARDWARE=$(shell uname -m)
-LFLAGS ?= -X main.gitsha=${GIT_SHA} -X main.compiled=${BUILD_TIME}
 PACKAGES=$(shell go list ./...)
 REGISTRY=quay.io
 ROOT_DIR=${PWD}
-VERSION ?= $(shell awk '/Release.*=/ { print $$3 }' pkg/version/version.go | sed 's/"//g')
 VETARGS ?= -asmdecl -atomic -bool -buildtags -copylocks -methods -nilfunc -printf -rangeloops -unsafeptr
 APIS ?= $(shell find pkg/apis -name "v*" -type d | sed -e 's/pkg\/apis\///' | sort | tr '\n' ' ')
 UNAME := $(shell uname)
@@ -21,6 +20,12 @@ endif
 ifeq ($(UNAME), Linux)
 API_HOST_IN_DOCKER = 127.0.0.1
 endif
+ifeq ($(CURRENT_TAG),)
+VERSION=$(GIT_SHA)
+else
+VERSION=$(CURRENT_TAG)
+endif
+LFLAGS ?= -X github.com/appvia/kore/pkg/version.GitSHA=${GIT_SHA} -X github.com/appvia/kore/pkg/version.Compiled=${BUILD_TIME} -X github.com/appvia/kore/pkg/version.Release=${VERSION}
 
 .PHONY: test authors changelog build docker static release cover vet glide-install demo golangci-lint apis go-swagger swagger
 
@@ -30,18 +35,23 @@ golang:
 	@echo "--> Go Version"
 	@go version
 
-build: golang
-	@echo "--> Compiling the project"
+generate-clusterman-manifests:
+	@echo "--> Generating static manifests"
+	cp ./hack/generate/manifests_vfsdata.go ./pkg/clusterman/
+	go generate ./pkg/clusterman
+
+build: golang generate-clusterman-manifests
+	@echo "--> Compiling the project ($(VERSION))"
 	@mkdir -p bin
-	@for binary in kore-apiserver korectl auth-proxy; do \
+	@for binary in kore-apiserver korectl auth-proxy kore-clusterman; do \
 		echo "--> Building $${binary} binary" ; \
 		go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go ; \
 	done
 
-static: golang deps
-	@echo "--> Compiling the static binaries"
+static: golang generate-clusterman-manifests deps
+	@echo "--> Compiling the static binaries ($(VERSION))"
 	@mkdir -p bin
-	@for binary in kore-apiserver korectl auth-proxy; do \
+	@for binary in kore-apiserver korectl auth-proxy kore-clusterman; do \
 		echo "--> Building $${binary} binary" ; \
 		CGO_ENABLED=0 GOOS=linux go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go ; \
 	done
@@ -92,7 +102,7 @@ swagger: compose
 #@kill `cat $@ 2>/dev/null` 2>/dev/null && rm $@ 2>/dev/null
 
 swagger-json:
-	@curl --retry 10 --retry-delay 3 --retry-connrefused -sL http://127.0.0.1:10080/swagger.json | jq > swagger.json
+	@curl --retry 20 --retry-delay 5 --retry-connrefused -sSL http://127.0.0.1:10080/swagger.json | jq > swagger.json
 
 swagger-validate: go-swagger
 	@echo "--> Validating the swagger api"
@@ -275,7 +285,7 @@ golangci-lint:
 	fi
 	@golangci-lint run ./...
 
-test:
+test: generate-clusterman-manifests
 	@echo "--> Running the tests"
 	@if [ ! -d "vendor" ]; then \
 		make deps; \
@@ -295,7 +305,6 @@ all: test
 
 changelog: release
 	git log $(shell git tag | tail -n1)..HEAD --no-merges --format=%B >> changelog
-
 
 apis: golang
 	@echo "--> Generating Clientsets & Deepcopies"

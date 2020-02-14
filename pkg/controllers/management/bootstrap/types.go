@@ -79,30 +79,6 @@ type KialiOptions struct {
 	Username string `json:"username,omitempty"`
 }
 
-// OperatorOptions are the options for an operator
-type OperatorOptions struct {
-	// Catalog is an optional field for when we divert from the catalog
-	Catalog string `json:"catalog,omitempty"`
-	// Package is the operator package to install
-	Package string `json:"package,omitempty"`
-	// InstallPlan is the desired installplan
-	InstallPlan string `json:"install_plan,omitempty"`
-	// Channel is the channel to use
-	Channel string `json:"channel,omitempty"`
-	// Label is the selector label
-	Label string `json:"label,omitempty"`
-	// Namespace is the namespace to use
-	Namespace string `json:"namespace,omitempty"`
-}
-
-// CatalogOptions are the options for a catalog
-type CatalogOptions struct {
-	// Image is the image we should use
-	Image string `json:"image,omitempty"`
-	// GRPC is an hostname entry
-	GRPC string `json:"grpc,omitempty"`
-}
-
 // NamespaceOptions is a name to create
 type NamespaceOptions struct {
 	// Name is the name of the namespace
@@ -112,9 +88,7 @@ type NamespaceOptions struct {
 // Parameters provides the context for the job parameters
 type Parameters struct {
 	// BootImage is the image we are using to bootstrap
-	BootImage string `json:"boot_image,omitempty"`
-	// Catalog are parameters for OLM catalog
-	Catalog CatalogOptions `json:"catalog,omitempty"`
+	KoreImage string `json:"kore_image,omitempty"`
 	// Credentials are creds for the providers
 	Credentials Credentials `json:"credentials,omitempty"`
 	// Domain is the cluster domain
@@ -125,12 +99,6 @@ type Parameters struct {
 	Kiali KialiOptions `json:"kiali,omitempty"`
 	// Namespaces is a collection of namespaces to create
 	Namespaces []NamespaceOptions `json:"namespaces,omitempty"`
-	// Operators is a collection of operators to install
-	Operators []OperatorOptions `json:"operators,omitempty"`
-	// OperatorGroups is a collection of operatorgroups to create
-	OperatorGroups []string `json:"operator_groups,omitempty"`
-	// OLMVersion is the version of the OLM to install
-	OLMVersion string `json:"olm_version,omitempty"`
 	// Provider is the cloud provider
 	Provider string `json:"provider,omitempty"`
 	// StorageClass is the class to use when creating PVC's
