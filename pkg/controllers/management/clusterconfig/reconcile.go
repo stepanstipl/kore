@@ -98,7 +98,7 @@ func (t ccCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 		return reconcile.Result{RequeueAfter: 2 * time.Minute}, nil
 	}
 
-	logger.Debug("checking if the kore namespac:e exists in the remote cluster")
+	logger.Debug("checking if the kore namespace exists in the remote cluster")
 
 	// @step: ensure the namespace is there
 	for _, namespace := range []string{kore.HubNamespace, kore.HubOperatorsNamespace} {
