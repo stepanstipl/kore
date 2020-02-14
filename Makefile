@@ -37,8 +37,8 @@ golang:
 
 generate-clusterman-manifests:
 	@echo "--> Generating static manifests"
-	cp ./hack/generate/manifests_vfsdata.go ./pkg/clusterman/
-	go generate ./pkg/clusterman
+	@cp ./hack/generate/manifests_vfsdata.go ./pkg/clusterman/
+	@go generate ./pkg/clusterman >/dev/null
 
 build: golang generate-clusterman-manifests
 	@echo "--> Compiling the project ($(VERSION))"
@@ -80,7 +80,7 @@ docker-build:
 images: static
 	@$(MAKE) images-only
 
-images-only: 
+images-only:
 	@echo "--> Building docker images"
 	@for name in kore-apiserver auth-proxy; do \
 		echo "--> Building docker image $${name}" ; \
@@ -135,7 +135,7 @@ compose-up:
 		--file hack/compose/operators.yml pull
 	@docker-compose \
 		--file hack/compose/kube.yml \
-		--file hack/compose/operators.yml up -d 
+		--file hack/compose/operators.yml up -d
 
 compose: build compose-up
 	@echo "--> Building a test environment"
@@ -185,7 +185,7 @@ compose-logs:
 	@echo "--> Following logs for the test environment"
 	@docker-compose \
 		--file hack/compose/kube.yml \
-		--file hack/compose/operators.yml logs -f 
+		--file hack/compose/operators.yml logs -f
 
 demo:
 	@echo "--> Building the demo environment"
