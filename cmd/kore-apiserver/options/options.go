@@ -214,9 +214,7 @@ func Options() []cli.Flag {
 			EnvVar: "META_STORE_URL",
 		},
 
-		//
 		// @related to logging
-		//
 		cli.BoolTFlag{
 			Name:   "enable-json-logging",
 			Usage:  "indicates we should disable json logging `BOOL`",
@@ -226,6 +224,13 @@ func Options() []cli.Flag {
 			Name:   "verbose",
 			Usage:  "indicates if we should enable verbose logging `BOOL`",
 			EnvVar: "VERBOSE",
+		},
+
+		// @controller flags
+		cli.BoolFlag{
+			Name:   "enable-bootstrap-feature",
+			Usage:  "Indicates if the bootstrap controller is to be enabled `BOOL`",
+			EnvVar: "ENABLE_BOOTSTRAP_FEATURE",
 		},
 	}
 }

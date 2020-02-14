@@ -113,6 +113,8 @@ type Config struct {
 	DEX DEX `json:"dex"`
 	// DiscoveryURL is the openid discovery url
 	DiscoveryURL string `json:"discovery-url,omitempty"`
+	// EnableBootstrapFeature indicates if the bootstrap controller should be enabled
+	EnableBootstrapFeature bool `json:"enable-bootstrap-feature,omitempty"`
 	// HMAC is the token used to sign things
 	HMAC string `json:"hmac"`
 	// PublicHubURL is the public url for the kore (the ui not the api)

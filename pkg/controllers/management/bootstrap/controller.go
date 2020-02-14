@@ -57,8 +57,13 @@ func (t *bsCtrl) Name() string {
 // Run starts the controller
 func (t *bsCtrl) Run(ctx context.Context, cfg *rest.Config, i kore.Interface) error {
 	t.Interface = i
-
 	logger := log.WithFields(log.Fields{"controller": t.Name()})
+
+	if !t.Config().EnableBootstrapFeature {
+		logger.Info("disabling the bootstrap controller has feature is disabled")
+
+		return nil
+	}
 
 	mgr, err := manager.New(cfg, controllers.DefaultManagerOptions(t))
 	if err != nil {
@@ -110,6 +115,11 @@ func (t *bsCtrl) Run(ctx context.Context, cfg *rest.Config, i kore.Interface) er
 // Stop is responsible for calling a halt on the controller
 func (t *bsCtrl) Stop(context.Context) error {
 	log.WithField("controller", t.Name()).Info("attempting to stop the controller")
+
+	// @note: adding just incase we do somthing here and forget
+	if !t.Config().EnableBootstrapFeature {
+		return nil
+	}
 
 	return nil
 }
