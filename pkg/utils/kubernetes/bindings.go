@@ -36,14 +36,19 @@ func CreateOrUpdateManagedClusterRoleBinding(ctx context.Context, cc client.Clie
 		if !kerrors.IsAlreadyExists(err) {
 			return nil, err
 		}
-		// @step: we need to retrieve the current one
-		original := binding.DeepCopy()
 
-		if err := cc.Get(ctx, types.NamespacedName{Name: binding.Name}, original); err != nil {
+		current := binding.DeepCopy()
+		if err := cc.Get(ctx, types.NamespacedName{Name: binding.Name}, current); err != nil {
 			return nil, err
 		}
 
-		binding.SetResourceVersion(original.GetResourceVersion())
+		if current.RoleRef.Name != binding.RoleRef.Name {
+			if err := cc.Delete(ctx, current); err != nil {
+				return nil, err
+			}
+
+			return CreateOrUpdateManagedClusterRoleBinding(ctx, cc, binding)
+		}
 
 		return binding, cc.Update(ctx, binding)
 	}
