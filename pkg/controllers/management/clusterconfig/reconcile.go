@@ -56,7 +56,7 @@ func (t ccCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	}
 
 	// @step: ensure the cluster has a configuration
-	logger.Debug("checking for the clutser credentials secret")
+	logger.Debug("checking for the cluster credentials secret")
 
 	credentials := &core.Secret{}
 	if err := t.mgr.GetClient().Get(context.Background(), types.NamespacedName{
@@ -98,7 +98,7 @@ func (t ccCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 		return reconcile.Result{RequeueAfter: 2 * time.Minute}, nil
 	}
 
-	logger.Debug("checking if the kore namespace exists in the remote cluster")
+	logger.Debug("checking if the kore namespac:e exists in the remote cluster")
 
 	// @step: ensure the namespace is there
 	for _, namespace := range []string{kore.HubNamespace, kore.HubOperatorsNamespace} {
