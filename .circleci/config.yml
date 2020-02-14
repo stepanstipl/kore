@@ -81,6 +81,7 @@ jobs:
           root: bin
           paths:
             - kore-apiserver
+            - kore-clusterman
 
   release:
     environment:
