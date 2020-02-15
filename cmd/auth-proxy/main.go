@@ -62,6 +62,7 @@ func main() {
 				DiscoveryURL:               ctx.String("discovery-url"),
 				GroupClaims:                ctx.StringSlice("group-claims"),
 				Listen:                     ctx.String("listen"),
+				MetricsListen:              ctx.String("metrics-listen"),
 				SigningCA:                  ctx.String("ca-authority"),
 				TLSCert:                    ctx.String("tls-cert"),
 				TLSKey:                     ctx.String("tls-key"),

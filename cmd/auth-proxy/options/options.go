@@ -73,6 +73,12 @@ func Options() []cli.Flag {
 			Value:  &cli.StringSlice{"groups"},
 		},
 		cli.StringFlag{
+			Name:   "metrics-listen",
+			Usage:  "the interface the prometheus metrics should listen on `INTERFACE`",
+			EnvVar: "METRICS_LISTEN",
+			Value:  ":8080",
+		},
+		cli.StringFlag{
 			Name:   "upstream-url",
 			Usage:  "is the upstream url to forward the requests onto `URL`",
 			EnvVar: "UPSTREAM_URL",

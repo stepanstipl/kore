@@ -44,6 +44,8 @@ type Config struct {
 	UserClaims []string `json:"user_claims,omitempty"`
 	// GroupClaims is a colletion of claims to extract the group
 	GroupClaims []string `json:"group_claims,omitempty"`
+	// MetricsListen is the interface for metrics to render
+	MetricsListen string `json:"metrics_listen,omitempty"`
 	// UpstreamAuthorizationToken is the upstream authentication token to use
 	UpstreamAuthorizationToken string `json:"upstream_authorization_token,omitempty"`
 	// UpstreamURL is the endpoint to forward requests
