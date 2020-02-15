@@ -34,9 +34,10 @@ import (
 	"time"
 
 	"github.com/appvia/kore/pkg/utils"
-	"github.com/coreos/go-oidc"
 
+	"github.com/coreos/go-oidc"
 	"github.com/julienschmidt/httprouter"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -128,7 +129,17 @@ func (a *authImpl) Run(ctx context.Context) error {
 
 		req.URL.Scheme = origin.Scheme
 		req.URL.Host = origin.Host
+
+		httpRequestCounter.Inc()
 	}
+	reverseProxy.ModifyResponse = func(resp *http.Response) error {
+		if resp.StatusCode < 200 || resp.StatusCode > 299 {
+			httpErrorCounter.Inc()
+		}
+
+		return nil
+	}
+
 	reverseProxy.Transport = &http.Transport{
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: true,
@@ -189,6 +200,8 @@ func (a *authImpl) Run(ctx context.Context) error {
 				return nil
 			}()
 			if err != nil {
+				authFailureCounter.Inc()
+
 				log.WithError(err).Error("trying to verify the inbound request")
 				resp.WriteHeader(http.StatusForbidden)
 
@@ -202,9 +215,9 @@ func (a *authImpl) Run(ctx context.Context) error {
 	hs := &http.Server{Addr: a.config.Listen, Handler: router}
 
 	go func() {
-		log.WithField(
-			"listen", a.config.Listen,
-		).Info("starting the auth proxy service")
+		log.WithFields(log.Fields{
+			"listen": a.config.Listen,
+		}).Info("starting the auth proxy service")
 
 		switch a.config.HasTLS() {
 		case true:
@@ -218,12 +231,25 @@ func (a *authImpl) Run(ctx context.Context) error {
 		}
 	}()
 
+	ms := &http.Server{Addr: a.config.MetricsListen, Handler: promhttp.Handler()}
+
+	go func() {
+		log.WithFields(log.Fields{
+			"metrics": a.config.MetricsListen,
+		}).Info("starting the auth proxy metrics http server")
+
+		if err := ms.ListenAndServe(); err != nil {
+			log.WithError(err).Fatal("trying to start the metrics http server")
+		}
+	}()
+
 	go func() {
 		<-a.stopCh
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
 		_ = hs.Shutdown(ctx)
+		_ = ms.Shutdown(ctx)
 	}()
 
 	return nil

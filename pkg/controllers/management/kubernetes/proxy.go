@@ -253,6 +253,10 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 			Labels: map[string]string{
 				"name": name,
 			},
+			Annotations: map[string]string{
+				"prometheus.io/port":   "8080",
+				"prometheus.io/scrape": "true",
+			},
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: &replicas,
