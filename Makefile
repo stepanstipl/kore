@@ -21,9 +21,9 @@ ifeq ($(UNAME), Linux)
 API_HOST_IN_DOCKER = 127.0.0.1
 endif
 ifeq ($(CURRENT_TAG),)
-VERSION=$(GIT_SHA)
+VERSION ?= $(GIT_SHA)
 else
-VERSION=$(CURRENT_TAG)
+VERSION ?= $(CURRENT_TAG)
 endif
 LFLAGS ?= -X github.com/appvia/kore/pkg/version.GitSHA=${GIT_SHA} -X github.com/appvia/kore/pkg/version.Compiled=${BUILD_TIME} -X github.com/appvia/kore/pkg/version.Release=${VERSION}
 
