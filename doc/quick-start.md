@@ -3,7 +3,7 @@
 ### Contents
 - [Supported Cloud Providers](#supported-cloud-providers)
 - [What is required?](#what-is-required)
-- [Configuring your cloud provider](#configuring-your-cloud-provider)
+- [Google Cloud account](#google-cloud-account)
 - [Identity Broker](#identity-broker)
 - [Configuring Auth0](#configuring-auth0)
 - [Configuring test users](#configuring-test-users)
@@ -30,16 +30,55 @@ Kore enables teams to provision clusters. Supported cloud providers include:
 
 ### What is required?
 
-First, you require permissions to create a service account [on GCP](https://cloud.google.com/iam/docs/service-accounts).
+- A GCP account with at least one Project and Service Account.
+- An external facing identity provider that supports OpenID (Keycloak, Auth0, ForgeRock etc).
 
-- Permissions to setup or acquire cloud credentials neccessary to provision infrastructure in the GCP and or AWS.
-- An external facing identity provider; anything that supports OpenID (Keycloak, Auth0, ForgeRock etc)
+### Google Cloud account
 
-### Configuring your cloud provider
+We assume you're already setup as a Google Cloud user.
 
-There is automated account provisioning for AWS and Google, where an isolated user account can be created that maps to a specific team. The Account or Project account provisioning uses least-privilege and will create a project or AWS Account service account, that gives it enough permissions to create other accounts or projects.
+If not, grab a credit card and go to https://cloud.google.com/. Then, click the “Get started for free” button. Finally, choose whether you want a business account or an individual one.
 
-From that point on, it will create another service account inside the child account or project, for just managing Kubernetes and the related resources, (GKE or EKS). It is this account that is then used by Kore to provision the Kubernetes services, of which, options are controlled by the plans defined by the administrators.
+#### Single cluster, multiple environments
+
+For the purpose of this quick start, we're going to create a single cluster.
+
+This cluster will use [Kubernetes Namespaces](https://kubernetes.io/docs/tasks/administer-cluster/namespaces/) to enable different environements for development, testing and production.
+
+Next step: On GCP, select or create your target project.
+
+#### Enabling the GKE API
+
+(You can skip this step if GKE API is already enabled for this project)
+
+With the a GCP Project selected or created,
+
+- Head to the [Google Developer Console](https://console.developers.google.com/apis/api/container.googleapis.com/overview).
+- Enable the GKE API.
+
+#### Create a Service Account
+
+(You can skip this step if you already have a Service Account setup)
+
+With the a GCP Project selected or created,
+
+- Head to the [IAM Console](https://console.cloud.google.com/iam-admin/serviceaccounts).
+- Click `Create service account`.
+- Fill in the form with details with your team's service account.
+
+#### Configure your Service Account permissions
+
+(You can skip this step if you're Service Account has the `Kubernetes Engine Admin` role)
+
+- Assign the `Kubernetes Engine Admin` role to your Service account.
+
+#### Create a key and download it (as JSON)
+
+(You can skip this step if you already have your Service Account key downloaded in JSON format)
+
+Kore will use this key to access the Service Account.
+
+This is the last step, create a key and download it in JSON format.
 
 ### Identity Broker
 
