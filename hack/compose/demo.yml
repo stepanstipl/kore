@@ -21,7 +21,7 @@ services:
       - ../:/hack
 
   kore-ui:
-    image: quay.io/appvia/kore-ui:latest
+    image: quay.io/appvia/kore-ui:v0.0.4
     env_file: dev.env
     environment:
       KORE_BASE_URL: http://localhost:3000
