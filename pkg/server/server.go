@@ -129,24 +129,28 @@ func New(config Config) (Interface, error) {
 }
 
 // Run is responsible for starting the services
+// @TODO due to the current model of controllers on the ops side, this is begining to
+// take longer and longer as more controllers get added
 func (s serverImpl) Run(ctx context.Context) error {
+
 	// @step: we need to start the controllers
 	for _, controller := range controllers.GetControllers() {
-		log.WithFields(log.Fields{
-			"name": controller.Name(),
-		}).Info("starting the controller reconcilation")
-
-		if err := controller.Run(ctx, s.cfg, s.hubcc); err != nil {
+		go func(x controllers.RegisterInterface) {
 			log.WithFields(log.Fields{
-				"name":  controller.Name(),
-				"error": err.Error(),
-			}).Info("failed to start the controller")
+				"name": x.Name(),
+			}).Info("starting the controller")
 
-			return err
-		}
+			if err := x.Run(ctx, s.cfg, s.hubcc); err != nil {
+				log.WithFields(log.Fields{
+					"error": err.Error(),
+					"name":  x.Name(),
+				}).Fatal("failed to start the controller")
+			}
+		}(controller)
 	}
 
-	// @step: start the apiserver
+	// @step: start the apiserver - @note this is not being started before
+	// the controllers are ready
 	if err := s.apicc.Run(ctx); err != nil {
 		return err
 	}
