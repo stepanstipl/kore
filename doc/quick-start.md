@@ -1,4 +1,4 @@
-## **Getting Started**
+## **Quick Start**
 
 ### Contents
 - [Supported Cloud Providers](#supported-cloud-providers)
@@ -8,12 +8,11 @@
 - [Configuring Auth0](#configuring-auth0)
 - [Configuring test users](#configuring-test-users)
 - [Running Kore](#running-kore)
-- [Provisioning Credentials](#provisioning-credentials)
 - [Provisioning a team cluster](#provisioning-a-team-cluster)
 
 The following is a quick start guide for running Kore locally to provision clusters on cloud platforms.
 
-However, you'll still need access to an online identity provider to manage cluster access endpoints. See [Identity Broker](#identity-broker).
+However, you'll still need access to an online identity provider to manage user authentication. See [Identity Broker](#identity-broker).
 
 Please ensure you have the following installed on your machine,
 
@@ -82,9 +81,9 @@ This is the last step, create a key and download it in JSON format.
 
 ### Identity Broker
 
-Kore is designed to use an external identity provider for user management. You can bring your own IDP, but for this quick start guide we're using Auth0.
+Kore ships with the [`Dex` identity provider](https://github.com/dexidp/dex) or it can use an external identity provider for user management.
 
-See below for how to setup and provision Auth0 for testing.
+For this quick start guide we're using Auth0. See below for how to set it up and provision it.
 
 #### Configuring Auth0
 
@@ -111,7 +110,7 @@ Return to the Auth0 dashboard. From the side menu select 'Users & Roles' setting
 
 ### Running Kore
 
-Once you have the above configured you
+Once you have the above configured update the `demo.yml`:
 
 ```shell
 
@@ -126,16 +125,6 @@ To launch the Kore server, from the root directory, run
 ```shell
 make demo
 ```
-
-Open up a web browser and point it at http://localhost:3000; the password defaults for 'password' but can be changed using the KORE_ADMIN_PASS environment variable.
-
-You can now configure specific cloud providers. For GCP, this will require a Project Id, that includes created a service account that has GKE privilages.
-
-Once this is configured, all teams can use these downstream to provision clusters using the defined plans.
-
-### Provisioning Credentials
-
-The self-service nature in Kore is provided via the use of allocations (`kubectl get crd allocations.config.kore.appvia.io` api group). An adminstrator creates shared credentials which are then allocated out to one or more teams to self-serve; at present the alpha release reuses the credentials across the teams, though we are currently integrating the provisioning of cloud account management into the product.
 
 ### Provisioning a team cluster
 
