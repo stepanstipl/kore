@@ -27,6 +27,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
@@ -140,7 +141,7 @@ func (l *loginHandler) authorizerHandler(req *restful.Request, resp *restful.Res
 	log.WithFields(log.Fields{
 		"client_ip":    req.Request.RemoteAddr,
 		"redirect_url": l.oidcConfig.RedirectURL,
-		"scopes":       l.Config().ClientScopes,
+		"scopes":       strings.Join(l.Config().ClientScopes, ","),
 	}).Info("providing authorization redirect to identity service")
 
 	http.Redirect(resp.ResponseWriter, req.Request, l.oidcConfig.AuthCodeURL(state), http.StatusTemporaryRedirect)
