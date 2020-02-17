@@ -138,7 +138,7 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 			resource.Status.Status = core.PendingStatus
 			resource.Status.Conditions = []core.Condition{{
-				Detail:  "cluster has failed to provision, will retry",
+				Detail:  "cluster has is still pending, will retry",
 				Message: "cluster " + resource.Spec.Cluster.Name + " is still pending",
 			}}
 
