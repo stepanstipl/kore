@@ -8,6 +8,7 @@ cmd/cluster-controller
 deploy/kube/ingress.yml
 deploy/kube/secrets.yml
 dev.env
+demo.env
 
 # Git meld
 *.orig

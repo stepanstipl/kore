@@ -113,11 +113,9 @@ Return to the Auth0 dashboard. From the side menu select 'Users & Roles' setting
 Once you have the above configured update the `demo.yml`:
 
 ```shell
-
-# change the following the hack/compose/demo.yml
 KORE_CLIENT_ID: <YOUR_CLIENT_ID>
 KORE_CLIENT_SECRET: <YOUR_CLIENT_SECRET>
-DISCOVERY_URL: <OPENID_ENDPOINT>
+KORE_DISCOVERY_URL: <OPENID_ENDPOINT>
 ```
 
 To launch the Kore server, from the root directory, run
