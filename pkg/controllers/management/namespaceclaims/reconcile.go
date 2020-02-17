@@ -112,7 +112,7 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			resource.Status.Status = core.PendingStatus
 			resource.Status.Conditions = []core.Condition{{
 				Detail:  "cluster does not exist",
-				Message: "no cluster: " + resource.Spec.Cluster.Name + " exist for this namespace",
+				Message: "no cluster: " + resource.Spec.Cluster.Name + " exists for this team",
 			}}
 
 			// @TODO we probably need a way of escaping this loop?
@@ -134,11 +134,11 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		}
 		switch status.Status {
 		case core.PendingStatus:
-			logger.Warn("cluster provision is not successfully yet, waiting")
+			logger.Warn("cluster provision is not successful yet, waiting")
 
 			resource.Status.Status = core.PendingStatus
 			resource.Status.Conditions = []core.Condition{{
-				Detail:  "cluster has is still pending, will retry",
+				Detail:  "cluster provisioning is still pending",
 				Message: "cluster " + resource.Spec.Cluster.Name + " is still pending",
 			}}
 
