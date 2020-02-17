@@ -3,7 +3,7 @@ version: '3'
 services:
   kore-apiserver:
     image: quay.io/appvia/kore-apiserver:latest
-    env_file: dev.env
+    env_file: ../../demo.env
     environment:
       KORE_ADMIN_PASS: password
       KORE_ADMIN_TOKEN: password
@@ -22,7 +22,7 @@ services:
 
   kore-ui:
     image: quay.io/appvia/kore-ui:v0.0.4
-    env_file: dev.env
+    env_file: ../../demo.env
     environment:
       KORE_BASE_URL: http://localhost:3000
       KORE_API_URL: http://kore-apiserver:10080/api/v1alpha1
