@@ -188,6 +188,13 @@ compose-logs:
 		--file hack/compose/operators.yml logs -f
 
 demo:
+	@if ! ls demo.env >/dev/null 2>&1 ; then \
+		echo "Demo details not set, please run:" ; \
+		echo "    cp ./hack/compose/demo.env.tmpl ./demo.env" ; \
+		echo "See docs for values then run:" ; \
+		echo "    vi ./demo.env" ; \
+		exit 1; \
+	fi
 	@echo "--> Building the demo environment"
 	@echo "--> Open a browser: http://localhost:3000"
 	@docker-compose \
