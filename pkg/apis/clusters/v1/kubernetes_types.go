@@ -52,9 +52,8 @@ type KubernetesSpec struct {
 	// +kubebuilder:validation:Optional
 	DefaultTeamRole string `json:"defaultTeamRole,omitempty"`
 	// Domain is the domain of the cluster
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinLength=1
-	Domain string `json:"domain"`
+	// +kubebuilder:validation:Optional
+	Domain string `json:"domain,omitempty"`
 	// Provider is the cloud cluster provider type for this kubernetes
 	// +kubebuilder:validation:Optional
 	Provider corev1.Ownership `json:"provider,omitempty"`
