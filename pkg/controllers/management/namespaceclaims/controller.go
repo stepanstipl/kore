@@ -84,13 +84,30 @@ func (a *nsCtrl) Run(ctx context.Context, cfg *rest.Config, hi kore.Interface) e
 		return err
 	}
 
+	// @clause: whenever a kubernetes cluster changes we should reconcile the resources
+	err = ctrl.Watch(&source.Kind{Type: &clustersv1.Kubernetes{}}, &handler.EnqueueRequestsFromMapFunc{
+		ToRequests: handler.ToRequestsFunc(func(o handler.MapObject) []reconcile.Request {
+			requests, err := ReconcileNamespaceClaims(ctx, mgr.GetClient(), o.Meta.GetName(), o.Meta.GetNamespace())
+			if err != nil {
+				log.WithError(err).Error("trying to force reconcilation of namespaceclaims from cluster trigger")
+
+				return []reconcile.Request{}
+			}
+
+			return requests
+		}),
+	})
+	if err != nil {
+		return err
+	}
+
 	// @clause: whenever a team is changed we need queue all namespaceclaims
 	// within the team namespace to be reconciled as well
 	err = ctrl.Watch(&source.Kind{Type: &orgv1.Team{}}, &handler.EnqueueRequestsFromMapFunc{
 		ToRequests: handler.ToRequestsFunc(func(o handler.MapObject) []reconcile.Request {
 			requests, err := ReconcileNamespaceClaims(ctx, mgr.GetClient(), o.Meta.GetName(), o.Meta.GetNamespace())
 			if err != nil {
-				log.WithError(err).Error("trying to force reconcilation of namespaceclaims from trigger")
+				log.WithError(err).Error("trying to force reconcilation of namespaceclaims from team trigger")
 
 				return []reconcile.Request{}
 			}
