@@ -119,7 +119,18 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			return reconcile.Result{RequeueAfter: 3 * time.Minute}, nil
 		}
 
-		// @step: ignore the resource if already bootstrapped
+		// @step: check the overall status of the cluster
+		if cluster.Status.Status == core.PendingStatus {
+			resource.Status.Status = core.PendingStatus
+			resource.Status.Conditions = []core.Condition{{
+				Detail:  "cluster provisioning is still pending",
+				Message: "cluster " + resource.Spec.Cluster.Name + " is still pending",
+			}}
+
+			return reconcile.Result{RequeueAfter: 3 * time.Minute}, nil
+		}
+
+		// @step: check the provisioning status
 		status, found := cluster.Status.Components.GetStatus("provision")
 		if !found {
 			logger.Warn("cluster does not have a status on the provisioning yet")
