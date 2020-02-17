@@ -19,6 +19,7 @@ package namespaceclaims
 
 import (
 	"context"
+	"time"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	core "github.com/appvia/kore/pkg/apis/core/v1"
@@ -31,6 +32,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -83,6 +85,75 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 	}
 
 	result, err := func() (reconcile.Result, error) {
+		// @step: ensure the namespace is for a cluster you own
+		if resource.Spec.Cluster.Namespace != resource.Namespace {
+			resource.Status.Status = core.FailureStatus
+			resource.Status.Conditions = []core.Condition{{
+				Detail:  "access denied",
+				Message: "cannot create namespace on cluster not owned by you",
+			}}
+
+			return reconcile.Result{}, nil
+		}
+
+		// @step: check the status of the cluster
+		cluster := &clustersv1.Kubernetes{}
+		if err := a.mgr.GetClient().Get(context.Background(), types.NamespacedName{
+			Name:      resource.Spec.Cluster.Name,
+			Namespace: resource.Spec.Cluster.Namespace,
+		}, cluster); err != nil {
+			if !kerrors.IsNotFound(err) {
+				logger.WithError(err).Error("trying to retrieve the cluster")
+
+				return reconcile.Result{}, err
+			}
+
+			// @checkpoint the cluster is not available yet
+			resource.Status.Status = core.PendingStatus
+			resource.Status.Conditions = []core.Condition{{
+				Detail:  "cluster does not exist",
+				Message: "no cluster: " + resource.Spec.Cluster.Name + " exist for this namespace",
+			}}
+
+			// @TODO we probably need a way of escaping this loop?
+			return reconcile.Result{RequeueAfter: 3 * time.Minute}, nil
+		}
+
+		// @step: ignore the resource if already bootstrapped
+		status, found := cluster.Status.Components.GetStatus("provision")
+		if !found {
+			logger.Warn("cluster does not have a status on the provisioning yet")
+
+			resource.Status.Status = core.PendingStatus
+			resource.Status.Conditions = []core.Condition{{
+				Detail:  "cluster is pending, retrying later",
+				Message: "cluster: " + resource.Spec.Cluster.Name + " is still pending",
+			}}
+
+			return reconcile.Result{RequeueAfter: 3 * time.Minute}, nil
+		}
+		switch status.Status {
+		case core.PendingStatus:
+			logger.Warn("cluster provision is not successfully yet, waiting")
+
+			resource.Status.Status = core.PendingStatus
+			resource.Status.Conditions = []core.Condition{{
+				Detail:  "cluster has failed to provision, will retry",
+				Message: "cluster " + resource.Spec.Cluster.Name + " is still pending",
+			}}
+
+			return reconcile.Result{RequeueAfter: 3 * time.Minute}, nil
+		case core.SuccessStatus:
+		default:
+			resource.Status.Status = core.PendingStatus
+			resource.Status.Conditions = []core.Condition{{
+				Detail:  "cluster has failed to provision, will retry",
+				Message: "cluster " + resource.Spec.Cluster.Name + " is in a failed state",
+			}}
+
+			return reconcile.Result{RequeueAfter: 3 * time.Minute}, nil
+		}
+
 		// @step: create credentials for the cluster
 		client, err := controllers.CreateClientFromSecret(context.Background(), a.mgr.GetClient(),
 			resource.Spec.Cluster.Namespace, resource.Spec.Cluster.Name)
