@@ -31,11 +31,11 @@ type KubernetesCredentialsSpec struct {
 	CaCertificate string `json:"caCertificate,omitempty"`
 	// Endpoint is the kubernetes endpoint
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MinLength=1
 	Endpoint string `json:"endpoint,omitempty"`
 	// Token is a service account token bound to cluster-admin role
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MinLength=1
 	Token string `json:"token,omitempty"`
 }
 
