@@ -1,10 +1,10 @@
-# Clusterman
+# Clusterappman
 
-Clusterman is a binary built as part of Kore that provides:
+Clusterappman is a binary built as part of Kore that provides:
 1. Simple single deployment for bootstrapping Kore capabilities into kubernetes clusters
 1. A capability for reporting the status of all Kore provided components / **cluster apps** in a Kubernetes cluster (**coming soon** - see [appvia/kore/#89](https://github.com/appvia/kore/issues/89)
 
-`kore-clusterman` is deployed automatically by the Kore API server in a new Kubernetes cluster after it is created.
+`kore-clusterappman` is deployed automatically by the Kore API server in a new Kubernetes cluster after it is created.
 
 It is delivered as part of the Kore container.
 
@@ -34,9 +34,9 @@ Together these components will provide:
 #### Mainatining Embedded Kore Components
 
 To add or update an embedded Kore component:
-1. Update the files here: `pkg/clusterman/manifests/...`. To ease of maintenance, we generate static code from these manifest files.
+1. Update the files here: `pkg/clusterappman/manifests/...`. To ease of maintenance, we generate static code from these manifest files.
 1. Ensure a Kubernetes Application resource is created, see [Kubernetes Application](https://github.com/kubernetes-sigs/application#kubernetes-applications)
-1. Update the var (and array of manifest structures) called mm in `pkg/clusterman/clusterman.go`
+1. Update the var (and array of manifest structures) called mm in `pkg/clusterappman/clusterappman.go`
 
 These will be deployed automatically after any Kore kubernetes cluster is built.
 
@@ -72,7 +72,7 @@ A chart compiled into the [kore-helm-repo](https://github.com/appvia/kore-helm-r
 For any Clusterapp, the following simple steps add the capability:
 
 A chart for any required operator is added to the Helm Chart Repo
-A cluster app is defined in the clusterman with:
+A cluster app is defined in the clusterappman with:
 - A CRD is added to the embedded manifests, templated with the correct parameters from the params configmap
 - An application resource is included with manifests when in cluster resources are created by the relevant CRD operator
 - A jsonpath? or another way to monitor arbitrary CRD status when required

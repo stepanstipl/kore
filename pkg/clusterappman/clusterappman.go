@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package clusterman
+package clusterappman
 
 import (
 	"context"
@@ -34,8 +34,8 @@ import (
 )
 
 const (
-	// KoreNamespace is the namespace where the clustermanager and repo are deployed
-	KoreNamespace string = "kore-system"
+	// KoreNamespace is the namespace where the clusterappmanager and repo are deployed
+	KoreNamespace string = "kore"
 	// ParamsConfigMap provides the customisations for deplpoyments carried out from here
 	ParamsConfigMap string = "kore-cluster-config"
 	// ParamsConfigKey is the configmap key used to store the parameters
@@ -48,7 +48,7 @@ const (
 	captainNamespace             string = "captain-system"
 )
 
-type clustermanImpl struct {
+type clusterappmanImpl struct {
 	// client is the kubernetes client to use
 	Client        kubernetes.Interface
 	RuntimeClient rc.Client
@@ -70,7 +70,7 @@ var (
 	// cas is the map of clusterapp instances
 	cas map[string]*clusterapp.Instance = make(map[string]*clusterapp.Instance)
 
-	// mm defines all the embeded manifests and data required to initialise clusterman
+	// mm defines all the embeded manifests and data required to initialise clusterappman
 	mm []manifest = []manifest{
 		{
 			Name: "Application Controller",
@@ -104,7 +104,7 @@ var (
 	}
 )
 
-// New is responsible for creating the clusterman server
+// New is responsible for creating the clusterappman server
 func New(config Config) (Interface, error) {
 	if err := config.IsValid(); err != nil {
 		return nil, err
@@ -129,7 +129,7 @@ func New(config Config) (Interface, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed creating kubernetes client: %s", err)
 	}
-	return &clustermanImpl{
+	return &clusterappmanImpl{
 		Client:        client,
 		RuntimeClient: cc,
 	}, nil
@@ -138,7 +138,7 @@ func New(config Config) (Interface, error) {
 // Run is responsible for starting the services:
 // it should start threads for monitoring cluster apps
 // it should only return if "initial" kore deployments don't become ready
-func (s clustermanImpl) Run(ctx context.Context) error {
+func (s clusterappmanImpl) Run(ctx context.Context) error {
 	// Maybe this whole thing runs in a loop - ensuring no manual change?
 	// deploy / reconcile the Application kind controller
 	// deploy / reconcile the Helm operator
@@ -148,7 +148,7 @@ func (s clustermanImpl) Run(ctx context.Context) error {
 	// fail early if we can't even load the manifests
 	// we should add a test for this!
 	logger := log.WithFields(log.Fields{
-		"service": "clusterman",
+		"service": "clusterappman",
 	})
 	logger.Info("attempting to reconcile the applications incluster")
 
@@ -234,11 +234,11 @@ func (s clustermanImpl) Run(ctx context.Context) error {
 }
 
 // Stop is responsible for trying to stop services
-func (s clustermanImpl) Stop(context.Context) error {
+func (s clusterappmanImpl) Stop(context.Context) error {
 	return nil
 }
 
-func (s clustermanImpl) UpgradeClient(options rc.Options) (err error) {
+func (s clusterappmanImpl) UpgradeClient(options rc.Options) (err error) {
 	// TODO may need to make this thread safe!
 	s.RuntimeClient, err = rc.New(s.cfg, options)
 	if err != nil {

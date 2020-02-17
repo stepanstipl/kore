@@ -82,7 +82,7 @@ jobs:
           paths:
             - auth-proxy
             - kore-apiserver
-            - kore-clusterman
+            - kore-clusterappman
 
   release:
     environment:

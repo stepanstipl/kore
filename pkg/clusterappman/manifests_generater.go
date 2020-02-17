@@ -5,13 +5,13 @@ package main
 import (
 	"log"
 
-	"github.com/appvia/kore/pkg/clusterman"
+	"github.com/appvia/kore/pkg/clusterappman"
 	"github.com/shurcooL/vfsgen"
 )
 
 func main() {
-	err := vfsgen.Generate(clusterman.Manifests, vfsgen.Options{
-		PackageName:  "clusterman",
+	err := vfsgen.Generate(clusterappman.Manifests, vfsgen.Options{
+		PackageName:  "clusterappman",
 		VariableName: "Manifests",
 	})
 	if err != nil {

@@ -163,6 +163,26 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			return reconcile.Result{}, err
 		}
 
+		// @step: ensure all cluster compenents are deployed
+		if err := a.EnsureClusterman(context.Background(), client, object); err != nil {
+			logger.WithError(err).Error("trying to provision the clusterappman service")
+
+			object.Status.Status = corev1.FailureStatus
+			object.Status.Components.SetCondition(corev1.Component{
+				Name:    "clusterappman",
+				Message: "failed to deploy kore clusterappman component",
+				Detail:  err.Error(),
+				Status:  corev1.FailureStatus,
+			})
+
+			return reconcile.Result{RequeueAfter: 2 * time.Minute}, err
+		}
+		object.Status.Components.SetCondition(corev1.Component{
+			Name:    "clusterappman",
+			Message: "clusterappman component is running and available",
+			Status:  corev1.SuccessStatus,
+		})
+
 		// @step: ensure the kube-api proxy is deployed
 		// @TODO need to move this out into something else, but for now its cool
 		logger.Debug("ensure the api proxy service is provisioned")
