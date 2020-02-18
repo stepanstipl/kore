@@ -268,7 +268,7 @@ func (g *gkeClient) CreateDefinition() (*container.CreateClusterRequest, error) 
 
 		BinaryAuthorization:     &container.BinaryAuthorization{Enabled: false},
 		LegacyAbac:              &container.LegacyAbac{Enabled: false},
-		NetworkPolicy:           &container.NetworkPolicy{Enabled: false},
+		NetworkPolicy:           &container.NetworkPolicy{Enabled: true, Provider: "CALICO"},
 		PodSecurityPolicyConfig: &container.PodSecurityPolicyConfig{Enabled: true},
 		Locations:               locations,
 
