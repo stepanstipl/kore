@@ -209,9 +209,7 @@ docker-release:
 	@$(MAKE) docker
 	@docker push ${REGISTRY}/${AUTHOR}/${NAME}:${VERSION}
 
-docker: static
-	@echo "--> Building the docker image"
-	docker build -t ${REGISTRY}/${AUTHOR}/${NAME}:${VERSION} .
+docker: images
 
 # provides a consistent build environment with swagger, jq and curl
 docker-builder-release:

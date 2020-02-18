@@ -80,13 +80,15 @@ jobs:
       - persist_to_workspace:
           root: bin
           paths:
+            - auth-proxy
             - kore-apiserver
             - kore-clusterman
 
   release:
     environment:
-      DOCKER_IMAGE: quay.io/appvia/kore-apiserver
       GOPATH: /go
+      KORE_API_IMAGE: quay.io/appvia/kore-apiserver
+      KORE_PROXY_IMAGE: quay.io/appvia/auth-proxy
 
     docker:
       - image: circleci/golang:1.13
@@ -102,8 +104,10 @@ jobs:
       - deploy:
           command: |
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
-            docker build -t ${DOCKER_IMAGE}:${CIRCLE_TAG:-latest} .
-            docker push ${DOCKER_IMAGE}:${CIRCLE_TAG:-latest}
+            docker build -t ${KORE_API_IMAGE}:${CIRCLE_TAG:-latest}   -f Dockerfile.kore-apiserver .
+            docker build -t ${KORE_PROXY_IMAGE}:${CIRCLE_TAG:-latest} -f Dockerfile.auth-proxy .
+            docker push ${KORE_API_IMAGE}:${CIRCLE_TAG:-latest}
+            docker push ${KORE_PROXY_IMAGE}:${CIRCLE_TAG:-latest}
 
 workflows:
   version: 2
