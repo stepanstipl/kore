@@ -5,7 +5,6 @@ swagger-ui/
 hack/setup/instances/credentials.yml
 hack/setup/class.yml
 cmd/cluster-controller
-deploy/kube/ingress.yml
 deploy/kube/secrets.yml
 dev.env
 demo.env
