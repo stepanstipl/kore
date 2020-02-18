@@ -34,20 +34,3 @@ spec:
     kind: GKECredentials
     name: gke
     namespace: kore-admin
----
-# We create a
-apiVersion: clusters.compute.kore.appvia.io/v1
-kind: Kubernetes
-metadata:
-  name: dev
-spec:
-  domain: CHANGE_ME
-  inheritTeamMembers: true
-  defaultTeamRole: 'cluster-admin'
-  provider:
-    group: gke.compute.kore.appvia.io
-    version: v1alpha1
-    kind: GKE
-    namespace: kore-admin
-    name: dev
-  enableDefaultTrafficBlock: false

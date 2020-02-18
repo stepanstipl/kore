@@ -139,7 +139,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 				object.Status.Status = corev1.PendingStatus
 				object.Status.Components.SetCondition(corev1.Component{
 					Name:    "provision",
-					Message: "credentials are not available",
+					Message: "waiting for cluster be provision",
 					Status:  corev1.PendingStatus,
 				})
 
