@@ -151,12 +151,7 @@ run:
 
 run-api-only:
 	@echo "--> Starting api..."
-	bin/kore-apiserver \
-		--kube-api-server http://127.0.0.1:8080 \
-		--verbose \
-		--dex-public-url http://127.0.0.1:5556 \
-		--dex-grpc-server 127.0.0.1 \
-		--admin-pass Pa55w0rd
+	@hack/bin/run-api-with-env.sh
 
 kube-api-wait:
 	@echo "--> Waiting for Kube API..."
