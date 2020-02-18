@@ -118,7 +118,7 @@ func (t ccCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 		}
 	}
 
-	logger.Debug("creating the configuration secret in the remote clsuter")
+	logger.Debug("creating the configuration secret in the remote cluster")
 
 	// @step: ensure there is a client certificate for us
 	secretName := "kore-config"
