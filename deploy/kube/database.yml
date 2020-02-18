@@ -15,6 +15,19 @@ spec:
   selector:
     name: db
 ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: db
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  # Dependent on your setup here
+  storageClassName: default
+---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -42,5 +55,14 @@ spec:
           - name: MYSQL_DATABASE
             value: kore
         ports:
-        - name: mysql
-          containerPort: 3306
+          - name: mysql
+            containerPort: 3306
+        volumeMounts:
+          - name: data
+            mountPath: /var/lib/mysql
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: db
+
+

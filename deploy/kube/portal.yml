@@ -20,7 +20,7 @@ kind: Deployment
 metadata:
   name: portal
 spec:
-  replicas: 1
+  replicas: 2
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -36,11 +36,45 @@ spec:
       - name: portal
         image: quay.io/appvia/kore-ui:latest
         imagePullPolicy: Always
-        env:
-          - name: HUB_API_URL
-            value: http://api.demo.svc.cluster.local:10080/api/v1alpha1
-          - name: REDIS_URL
-            value: redis://redis:6379
         envFrom:
           - secretRef:
-              name: kore
+              name: auth 
+          - secretRef:
+              name: portal
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  labels:
+    name: redis
+spec:
+  type: ClusterIP
+  ports:
+  - name: redis
+    port: 6379
+    targetPort: 6379
+  sessionAffinity: ClientIP
+  selector:
+    name: redis
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        name: redis
+        service: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis
