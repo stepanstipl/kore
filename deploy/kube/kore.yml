@@ -42,19 +42,14 @@ spec:
         ports:
           - name: http
             containerPort: 10080
-        env:
-          - name: KUBE_API_SERVER
-            value: http://apiserver:8080
-          - name: DEX_GRPC_SERVER
-            value: dex.demo.svc.cluster.local
         envFrom:
           - secretRef:
               name: kore
         volumeMounts:
-          - name: certs
+          - name: ca
             readOnly: true
             mountPath: /ca
       volumes:
-      - name: certs
+      - name: ca
         secret:
-          secretName: certs
+          secretName: ca
