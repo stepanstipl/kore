@@ -1,53 +1,98 @@
-## **Getting Started**
+## **Quick Start**
 
 ### Contents
 - [Supported Cloud Providers](#supported-cloud-providers)
 - [What is required?](#what-is-required)
+- [Google Cloud account](#google-cloud-account)
 - [Identity Broker](#identity-broker)
 - [Configuring Auth0](#configuring-auth0)
-- [Running the Demo](#running-the-demo)
-- [Provisioning Credentials](#provisioning-credentials)
+- [Configuring test users](#configuring-test-users)
+- [Running Kore](#running-kore)
+- [Provisioning a team cluster](#provisioning-a-team-cluster)
 
-![Demo Video](images/demo.gif)
+The following is a quick start guide for running Kore locally to provision clusters on cloud platforms.
 
-The following provides a quick start guide for rolling out and playing with the product locally; please ensure you have the following installed on your machine
+However, you'll still need access to an online identity provider to manage user authentication. See [Identity Broker](#identity-broker).
 
-- Docker: install instructions can be found [here]([https://docs.docker.com/install/](https://docs.docker.com/install/))</em>
+Please ensure you have the following installed on your machine,
+
+- Docker: install instructions can be found [here]([https://docs.docker.com/install/](https://docs.docker.com/install/))
 - Docker Compose: installation instructions can found [here](https://docs.docker.com/compose/install/)
-
-While Kore are be run locally off a laptop for testing there are components which need to externally accessible; namely the identity provider due to the requirement for the clusters to access the endpoints.
 
 ### Supported Cloud Providers
 
-The aim of Kore is to enable teams to provision clusters. The supported cloud providers are:
+Kore enables teams to provision clusters. Supported cloud providers include:
 
 + Google Cloud Provider (GCP)
 + Azure - `Coming Soon`
 + AWS - `Coming Soon`
 
-There is automated account provisioning for AWS and Google, where an isolated user account can be created that maps to a specific team. The Account or Project account provisioning uses least-privilege and will create a project or AWS Account service account, that gives it enough permissions to create other accounts or projects. From that point on, it will create another service account inside the child account or project, for just managing Kubernetes and the related resources, (GKE or EKS). It is this account that is then used by Kore to provision the Kubernetes services, of which, options are controlled by the plans defined by the administrators.
-
-As of alpha release the only cloud provider support is Google Kubernete Engine (GKE), though we will roll out support for Amazon’s EKS, Azure AKS and Cluster API in the near future.
-
 ### What is required?
 
-Naturally given you are building in cloud you require the permissions to create a service account in the GCP or IAM permissions in the AWS.
+- A GCP account with at least one Project and Service Account.
+- An external facing identity provider that supports OpenID (Keycloak, Auth0, ForgeRock etc).
 
-- An external facing identity provider; anything that supports OpenID (Keycloak, Auth0, ForgeRock etc)
-- Permissions to setup or acquire cloud credentials neccessary to provision infrastructure in the GCP and or AWS.
+### Google Cloud account
+
+We assume you're already setup as a Google Cloud user.
+
+If not, grab a credit card and go to https://cloud.google.com/. Then, click the “Get started for free” button. Finally, choose whether you want a business account or an individual one.
+
+#### Single cluster, multiple environments
+
+For the purpose of this quick start, we're going to create a single cluster.
+
+This cluster will use [Kubernetes Namespaces](https://kubernetes.io/docs/tasks/administer-cluster/namespaces/) to enable different environements for development, testing and production.
+
+Next step: On GCP, select or create your target project.
+
+#### Enabling the GKE API
+
+(You can skip this step if GKE API is already enabled for this project)
+
+With the a GCP Project selected or created,
+
+- Head to the [Google Developer Console](https://console.developers.google.com/apis/api/container.googleapis.com/overview).
+- Enable the GKE API.
+
+#### Create a Service Account
+
+(You can skip this step if you already have a Service Account setup)
+
+With the a GCP Project selected or created,
+
+- Head to the [IAM Console](https://console.cloud.google.com/iam-admin/serviceaccounts).
+- Click `Create service account`.
+- Fill in the form with details with your team's service account.
+
+#### Configure your Service Account permissions
+
+(You can skip this step if you're Service Account has the `Kubernetes Engine Admin` role)
+
+- Assign the `Kubernetes Engine Admin` role to your Service account.
+
+#### Create a key and download it (as JSON)
+
+(You can skip this step if you already have your Service Account key downloaded in JSON format)
+
+Kore will use this key to access the Service Account.
+
+This is the last step, create a key and download it in JSON format.
 
 ### Identity Broker
 
-Appvia Kore is designed to use an external identity provider for user management. The product is feature flagged and bundled with Dex IDP but given the requirement for an IDP to be externally facing, unless your deploying the product in full you will need to use your current IDP or use a SAAS product for testing purposes. Below gives a quick how to setup an provision Auth0 for testing.
+Kore ships with the [`Dex` identity provider](https://github.com/dexidp/dex) or it can use an external identity provider for user management.
 
-### Configuring Auth0
+For this quick start guide we're using Auth0. See below for how to set it up and provision it.
 
-Auth0, found [here](https://auth0.com/), provides an enterprise SAAS identity provider
+#### Configuring Auth0
+
+Auth0, found [here](https://auth0.com/), provides an enterprise SAAS identity provider.
 
 - Sign up for an account from the [home page](https://auth0.com)
 - From the dashboard side menu choose 'Applications' and then 'Create Application'
 - Given the application a name and choose 'Regular Web Applications'
-- Once provisioned click on the 'Settings' tab and scroll down to 'Allowed Callback URLs'. These are the permitted redirects for the applications. Since we are running the application locally off the laptop are and add `http://localhost:3000/callback` and `http://127.0.0.1:10080/oauth/callback` (Note the comma separation in the Auth0 UI.
+- Once provisioned click on the 'Settings' tab and scroll down to 'Allowed Callback URLs'. These are the permitted redirects for the applications. Since we are running the application locally off the laptop add `http://localhost:3000/callback` and `http://127.0.0.1:10080/oauth/callback` (Note the comma separation in the Auth0 UI.
 - Scroll to the bottom of the settings and click the 'Show Advanced Settings'
 - Choose the 'OAuth' tab from the advanced settings and ensure that the 'JsonWebToken Signature Algorithm' is set to RS256 and 'OIDC Conformant' is toggled on.
 - Select the 'Endpoints' tab and note down the 'OpenID Configuration'.
@@ -55,11 +100,17 @@ Auth0, found [here](https://auth0.com/), provides an enterprise SAAS identity pr
 
 Once you have the three pieces of the information *(ClientID, Client Secret and the OpenID endpoint)* you can substitute these settings on the [demo.yml](https://github.com/appvia/kore/blob/master/hack/compose/demo.yml); mapping to to ClientID, Client Secret and Discovery URL.
 
-The next logical step would be to return to the dashboard of Auth0 and create one or more test users under the 'Users & Roles' settig
+#### Configuring test users
 
-### Running the Demo
+Return to the Auth0 dashboard. From the side menu select 'Users & Roles' setting.
 
-Once you have the above configured you can update the demo.env from within the root directory; these are loaded in on the docker-compose as a environment file.
+- Create a user by selecting 'Users'.
+- Create a role by selecting 'Roles'.
+- Add the role to the user.
+
+### Running Kore
+
+Once you have the above configured update the `demo.yml`:
 
 ```shell
 KORE_CLIENT_ID: <YOUR_CLIENT_ID>
@@ -67,11 +118,16 @@ KORE_CLIENT_SECRET: <YOUR_CLIENT_SECRET>
 KORE_DISCOVERY_URL: <OPENID_ENDPOINT>
 ```
 
-You can then run the `make demo` command from the root directory; which will bring up the dependencies within docker-compose. From here you can open up the browser and point it at http://localhost:3000; the password defaults for 'password' but can be found on the KORE_ADMIN_PASS environment variable. You can then configure specific cloud providers, for GCP, this will be a project credential for GKE that should be a service account credential with privileges for GKE.
+To launch the Kore server, from the root directory, run
 
-Once this is configured, all teams can use these downstream to provision clusters using the defined plans.
+```shell
+make demo
+```
 
-### Provisioning Credentials
+### Provisioning a team cluster
 
-The self-service nature in Kore is provided via the use of allocations (`kubectl get crd allocations.config.kore.appvia.io` api group). Adminstrator create shared credentials which are then allocated out to one or more teams to self-serve; at present the alpha release reuses the credentials across the teams, though we are currently integrating the provisioning of cloud account management into the product.
+It's time to setup a team and the provision a dedicated cluster on GCP.
 
+This video illustrates how to do using the Kore's CLI (korectl).
+
+![Demo Video](images/demo.gif)
