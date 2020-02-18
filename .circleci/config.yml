@@ -104,8 +104,8 @@ jobs:
       - deploy:
           command: |
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
-            docker build -t ${KORE_API_IMAGE}:${CIRCLE_TAG:-latest}   -f Dockerfile.kore-apiserver .
-            docker build -t ${KORE_PROXY_IMAGE}:${CIRCLE_TAG:-latest} -f Dockerfile.auth-proxy .
+            docker build -t ${KORE_API_IMAGE}:${CIRCLE_TAG:-latest}   -f images/Dockerfile.kore-apiserver .
+            docker build -t ${KORE_PROXY_IMAGE}:${CIRCLE_TAG:-latest} -f images/Dockerfile.auth-proxy .
             docker push ${KORE_API_IMAGE}:${CIRCLE_TAG:-latest}
             docker push ${KORE_PROXY_IMAGE}:${CIRCLE_TAG:-latest}
 
