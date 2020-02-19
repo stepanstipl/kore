@@ -39,7 +39,7 @@ func (h hubImpl) Setup(ctx context.Context) error {
 	log.Info("initializing the kore")
 
 	// @step: ensure the kore namespaces are there
-	for _, x := range []string{HubNamespace, HubAdminTeam, HubDefaultTeam, HubOperatorsNamespace} {
+	for _, x := range []string{HubNamespace, HubAdminTeam, HubDefaultTeam} {
 		if err := h.ensureNamespace(ctx, x); err != nil {
 			return err
 		}

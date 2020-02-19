@@ -101,7 +101,7 @@ func (t ccCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	logger.Debug("checking if the kore namespace exists in the remote cluster")
 
 	// @step: ensure the namespace is there
-	for _, namespace := range []string{kore.HubNamespace, kore.HubOperatorsNamespace} {
+	for _, namespace := range []string{kore.HubNamespace} {
 		if err := client.Create(context.Background(), &core.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: namespace,
