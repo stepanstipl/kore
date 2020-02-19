@@ -1,6 +1,6 @@
 // This file will be regenerated DO NOT EDIT
 
-package clusterman
+package clusterappman
 
 import "net/http"
 

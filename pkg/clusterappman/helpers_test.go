@@ -1,4 +1,4 @@
-package clusterman
+package clusterappman
 
 import (
 	"testing"

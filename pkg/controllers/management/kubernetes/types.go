@@ -15,35 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bootstrap
-
-// GrafanaOptions are the opts for grafana
-type GrafanaOptions struct {
-	// Password is the default pass for grafana
-	Password string
-	// ClientID is the password
-	ClientID string
-	// ClientSecret is the openid secret
-	ClientSecret string
-	// UserInfoURL is the useinfo url
-	UserInfoURL string
-	// AuthURL is the auth url
-	AuthURL string
-	// TokenURL is the sso token url
-	TokenURL string
-	// Hostname is the hostname for the instance
-	Hostname string
-	// Database
-	Database DatabaseOptions
-}
-
-// DatabaseOptions are the database options
-type DatabaseOptions struct {
-	// Name is the database name
-	Name string `json:"name,omitempty"`
-	// Password is the database password
-	Password string `json:"password,omitempty"`
-}
+package kubernetes
 
 // Credentials are creds for the cloud provider
 type Credentials struct {
@@ -71,32 +43,18 @@ type GKECredentials struct {
 	Account string `json:"account,omitempty"`
 }
 
-// KialiOptions are options for the kiali service
-type KialiOptions struct {
-	// Password is the password for the service
-	Password string `json:"password,omitempty"`
-	// Username is the username
-	Username string `json:"username,omitempty"`
-}
-
 // NamespaceOptions is a name to create
 type NamespaceOptions struct {
 	// Name is the name of the namespace
 	Name string `json:"name,omitempty"`
 }
 
-// Parameters provides the context for the job parameters
+// Parameters provides the context for clusterappman
 type Parameters struct {
-	// BootImage is the image we are using to bootstrap
-	KoreImage string `json:"kore_image,omitempty"`
 	// Credentials are creds for the providers
 	Credentials Credentials `json:"credentials,omitempty"`
 	// Domain is the cluster domain
 	Domain string `json:"domain,omitempty"`
-	// Grafana are the options for grafana
-	Grafana GrafanaOptions `json:"grafana,omitempty"`
-	// Kiali are options for the kiali service
-	Kiali KialiOptions `json:"kiali,omitempty"`
 	// Namespaces is a collection of namespaces to create
 	Namespaces []NamespaceOptions `json:"namespaces,omitempty"`
 	// Provider is the cloud provider

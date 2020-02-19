@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Appvia Ltd <info@appvia.io>
+ * Copyright (C) 2019  Appvia Ltd <info@appvia.io>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -15,5 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// Package bootstrap is responsible for bootstrapping a kubernetes cluster
-package bootstrap
+package clusterappman
+
+// IsValid checks the configuration is valid
+func (c Config) IsValid() error {
+	return nil
+}
+
+// IsValid checks the kubernetes configuration is valid
+func (k KubernetesAPI) IsValid() error {
+	return nil
+}

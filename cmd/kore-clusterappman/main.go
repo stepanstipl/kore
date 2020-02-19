@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/appvia/kore/cmd/kore-clusterman/options"
+	"github.com/appvia/kore/cmd/kore-clusterappman/options"
 	"github.com/appvia/kore/pkg/cmd"
 	"github.com/appvia/kore/pkg/version"
 
@@ -36,12 +36,12 @@ func init() {
 
 func main() {
 	app := &cli.App{
-		Name:                 "clusterman",
+		Name:                 "clusterappman",
 		Authors:              version.Authors,
 		Author:               version.Prog,
 		Email:                version.Email,
 		Flags:                options.Options(),
-		Usage:                "Kore clusterman provides bootstrap and cluster application management",
+		Usage:                "Kore clusterappman provides bootstrap and cluster application management",
 		Version:              version.Version(),
 		EnableBashCompletion: true,
 

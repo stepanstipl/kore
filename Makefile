@@ -35,23 +35,23 @@ golang:
 	@echo "--> Go Version"
 	@go version
 
-generate-clusterman-manifests:
+generate-clusterappman-manifests:
 	@echo "--> Generating static manifests"
-	@cp ./hack/generate/manifests_vfsdata.go ./pkg/clusterman/
-	@go generate ./pkg/clusterman >/dev/null
+	@cp ./hack/generate/manifests_vfsdata.go ./pkg/clusterappman/
+	@go generate ./pkg/clusterappman >/dev/null
 
-build: golang generate-clusterman-manifests
+build: golang generate-clusterappman-manifests
 	@echo "--> Compiling the project ($(VERSION))"
 	@mkdir -p bin
-	@for binary in kore-apiserver korectl auth-proxy kore-clusterman; do \
+	@for binary in kore-apiserver korectl auth-proxy kore-clusterappman; do \
 		echo "--> Building $${binary} binary" ; \
 		go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go ; \
 	done
 
-static: golang generate-clusterman-manifests deps
+static: golang generate-clusterappman-manifests deps
 	@echo "--> Compiling the static binaries ($(VERSION))"
 	@mkdir -p bin
-	@for binary in kore-apiserver korectl auth-proxy kore-clusterman; do \
+	@for binary in kore-apiserver korectl auth-proxy kore-clusterappman; do \
 		echo "--> Building $${binary} binary" ; \
 		CGO_ENABLED=0 GOOS=linux go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go ; \
 	done
@@ -285,7 +285,7 @@ golangci-lint:
 	fi
 	@golangci-lint run ./...
 
-test: generate-clusterman-manifests
+test: generate-clusterappman-manifests
 	@echo "--> Running the tests"
 	@if [ ! -d "vendor" ]; then \
 		make deps; \

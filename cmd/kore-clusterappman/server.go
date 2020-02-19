@@ -23,12 +23,12 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/appvia/kore/pkg/clusterman"
+	clusterappman "github.com/appvia/kore/pkg/clusterappman"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
-// invoke is responsible for invoking clusterman
+// invoke is responsible for invoking clusterappman
 func invoke(ctx *cli.Context) error {
 	// @step: are we enabling verbose logging?
 	if ctx.Bool("verbose") {
@@ -41,8 +41,8 @@ func invoke(ctx *cli.Context) error {
 	}
 
 	// @step: construct the server config
-	config := clusterman.Config{
-		Kubernetes: clusterman.KubernetesAPI{
+	config := clusterappman.Config{
+		Kubernetes: clusterappman.KubernetesAPI{
 			InCluster:    ctx.Bool("in-cluster"),
 			KubeConfig:   ctx.String("kubeconfig"),
 			MasterAPIURL: ctx.String("kube-api-server"),
@@ -50,7 +50,7 @@ func invoke(ctx *cli.Context) error {
 		},
 	}
 
-	s, err := clusterman.New(config)
+	s, err := clusterappman.New(config)
 	if err != nil {
 		return err
 	}
