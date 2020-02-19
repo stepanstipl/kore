@@ -30,8 +30,6 @@ import (
 const (
 	// HubNamespace is the default namespace for the kore
 	HubNamespace = "kore"
-	// HubOperatorsNamespace is the namespace where operators live
-	HubOperatorsNamespace = "kore-operators"
 	// HubDefaultTeam is the default team
 	HubDefaultTeam = "kore-default"
 	// HubAdminTeam is the default kore admin team
