@@ -140,25 +140,6 @@ func (g *gkeClient) Create(ctx context.Context) (*container.Cluster, error) {
 	})
 	logger.Info("attempting to create the gke cluster")
 
-	// @step: if we have enabled private networking we need to provision a nat device
-	if g.cluster.Spec.EnablePrivateNetwork {
-		log.Info("cluster has private networking enabled; checking we have a cloud-nat device enabled")
-
-		if err := g.EnableCloudNAT(); err != nil {
-			logger.WithError(err).Error("creating cloud nat device for private networking")
-
-			return nil, err
-		}
-
-		logger.Info("attempting to enabled firewall rules for apiservices access from controlplane")
-
-		if err := g.EnableFirewallAPIServices(); err != nil {
-			logger.WithError(err).Error("creating firewall rules for api extensions")
-
-			return nil, err
-		}
-	}
-
 	// @step: we create the definitions
 	def, err := g.CreateDefinition()
 	if err != nil {
@@ -192,6 +173,25 @@ func (g *gkeClient) Create(ctx context.Context) (*container.Cluster, error) {
 		logger.WithError(err).Error("attempting to wait for operation to complete")
 
 		return nil, err
+	}
+
+	// @step: if we have enabled private networking we need to provision a nat device
+	if g.cluster.Spec.EnablePrivateNetwork {
+		log.Info("cluster has private networking enabled; checking we have a cloud-nat device enabled")
+
+		if err := g.EnableCloudNAT(); err != nil {
+			logger.WithError(err).Error("creating cloud nat device for private networking")
+
+			return nil, err
+		}
+
+		logger.Info("attempting to enabled firewall rules for apiservices access from controlplane")
+
+		if err := g.EnableFirewallAPIServices(); err != nil {
+			logger.WithError(err).Error("creating firewall rules for api extensions")
+
+			return nil, err
+		}
 	}
 
 	// @step: retrieve the state of the cluster via api
