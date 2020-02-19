@@ -56,14 +56,14 @@ func GetDefaultPlans() []*configv1.Plan {
 									"name": "default",
 									"cidr": "0.0.0.0/0"
 								}
-                            ],       
+                            ],
 							"diskSize":               100,
 							"enableAutorepair":       true,
 							"enableAutoscaler":       true,
 							"enableHTTPLoadBalancer": true,
 							"enableHorizontalPodAutoscaler": true,
 							"enableIstio": false,
-							"enablePrivateNetwork":   false,
+							"enablePrivateNetwork":   true,
 							"enableStackDriverLogging": true,
 							"enableStackDriverMetrics": true,
 							"imageType":              "COS",
@@ -100,14 +100,14 @@ func GetDefaultPlans() []*configv1.Plan {
 									"name": "default",
 									"cidr": "0.0.0.0/0"
 								}
-                            ],       
+                            ],
 							"diskSize":               100,
 							"enableAutorepair":       true,
 							"enableAutoscaler":       true,
 							"enableHTTPLoadBalancer": true,
 							"enableHorizontalPodAutoscaler": true,
 							"enableIstio": false,
-							"enablePrivateNetwork":   false,
+							"enablePrivateNetwork":   true,
 							"enableStackDriverLogging": true,
 							"enableStackDriverMetrics": true,
 							"imageType":              "COS",
