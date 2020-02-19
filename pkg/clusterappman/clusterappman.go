@@ -192,7 +192,7 @@ func (s clusterappmanImpl) Run(ctx context.Context) error {
 	// now gather up all the component slices as they complete...
 	logger.Infof("waiting for %d cluster apps", len(mm))
 	var cs = make([]*kcore.Component, len(mm))
-	for range cs {
+	for i := range cs {
 		// get the first component "reason"
 		c := <-ch
 		// get the corresponding app
@@ -212,7 +212,7 @@ func (s clusterappmanImpl) Run(ctx context.Context) error {
 				ca.Component.Detail,
 			)
 		}
-		cs = append(cs, ca.Component)
+		cs[i] = ca.Component
 	}
 	var components kcore.Components = cs
 	logger.Logger.Infof("saving status")
