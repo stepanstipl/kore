@@ -142,10 +142,10 @@ func (t ccCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 			Namespace: kore.HubNamespace,
 		},
 		Data: map[string][]byte{
-			"api_url":       []byte(t.Config().PublicAPIURL),
-			"discovery_url": []byte(t.Config().DiscoveryURL),
+			"api-url":       []byte(t.Config().PublicAPIURL),
+			"discovery-url": []byte(t.Config().DiscoveryURL),
 			"domain":        []byte(cluster.Spec.Domain),
-			"hub_url":       []byte(t.Config().PublicHubURL),
+			"hub-url":       []byte(t.Config().PublicHubURL),
 		},
 	}
 	logger.Debug("adding the client configuration to the cluster")
