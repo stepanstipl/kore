@@ -63,9 +63,9 @@ func GetDefaultPlans() []*configv1.Plan {
 							"enableHTTPLoadBalancer": true,
 							"enableHorizontalPodAutoscaler": true,
 							"enableIstio": false,
-							"enablePrivateNetwork":   false,
-							"enableStackDriverLogging": false,
-							"enableStackDriverMetrics": false,
+							"enablePrivateNetwork":   true,
+							"enableStackDriverLogging": true,
+							"enableStackDriverMetrics": true,
 							"imageType":              "COS",
 							"machineType":            "n1-standard-2",
 							"maintenanceWindow":      "03:00",
@@ -73,7 +73,7 @@ func GetDefaultPlans() []*configv1.Plan {
 							"network":                "default",
 							"size":                   1,
 							"subnetwork":             "default",
-							"version":                "1.14.8-gke.33"
+							"version":                "1.14.9-gke.23"
 						}`,
 					),
 				},
@@ -108,8 +108,8 @@ func GetDefaultPlans() []*configv1.Plan {
 							"enableHorizontalPodAutoscaler": true,
 							"enableIstio": false,
 							"enablePrivateNetwork":   true,
-							"enableStackDriverLogging": false,
-							"enableStackDriverMetrics": false,
+							"enableStackDriverLogging": true,
+							"enableStackDriverMetrics": true,
 							"imageType":              "COS",
 							"machineType":            "n1-standard-2",
 							"maintenanceWindow":      "03:00",
@@ -118,7 +118,7 @@ func GetDefaultPlans() []*configv1.Plan {
 							"network":                "default",
 							"size":                   2,
 							"subnetwork":             "default",
-							"version":                "1.14.8-gke.33"
+							"version":                "1.14.9-gke.23"
 						}`,
 					),
 				},
