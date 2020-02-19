@@ -88,7 +88,6 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 
 			return false, err
 		}
-
 		logger.Info("checking if the cluster already exists")
 
 		found, err := client.Exists()
@@ -131,6 +130,24 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 			// else we are updating it
 			if err := client.Update(ctx); err != nil {
 				logger.WithError(err).Error("attempting to update cluster")
+
+				return false, err
+			}
+		}
+
+		// @step: enable the cloud-nat is required
+		if resource.Spec.EnablePrivateNetwork {
+			logger.Info("cluster has private networking enabled, ensuring a cloud-nat")
+			if err := client.EnableCloudNAT(); err != nil {
+				logger.WithError(err).Error("trying to ensure the cloud-nat device")
+
+				return false, err
+			}
+
+			logger.Info("cluster has private networking enabled, ensuring a api firewall rules")
+
+			if err := client.EnableFirewallAPIServices(); err != nil {
+				logger.WithError(err).Error("creating firewall rules for api extensions")
 
 				return false, err
 			}
