@@ -44,16 +44,16 @@ type KubernetesSpec struct {
 	// EnabledDefaultTrafficBlock indicates the cluster shoukd default to
 	// enabling blocking network policies on all namespaces
 	EnabledDefaultTrafficBlock *bool `json:"enabledDefaultTrafficBlock,omitempty"`
-	// InheritTeamMembers inherits indicates all team members are inherited
-	// as having access to cluster by default.
-	// +kubebuilder:validation:Optional
-	InheritTeamMembers bool `json:"inheritTeamMembers,omitempty"`
 	// DefaultTeamRole is role inherited by all team members
 	// +kubebuilder:validation:Optional
 	DefaultTeamRole string `json:"defaultTeamRole,omitempty"`
 	// Domain is the domain of the cluster
 	// +kubebuilder:validation:Optional
 	Domain string `json:"domain,omitempty"`
+	// InheritTeamMembers inherits indicates all team members are inherited
+	// as having access to cluster by default.
+	// +kubebuilder:validation:Optional
+	InheritTeamMembers bool `json:"inheritTeamMembers,omitempty"`
 	// Provider is the cloud cluster provider type for this kubernetes
 	// +kubebuilder:validation:Optional
 	Provider corev1.Ownership `json:"provider,omitempty"`
@@ -71,22 +71,28 @@ type ClusterUser struct {
 	// Roles is the roles the user is permitted access to
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=1
+	// +listType
 	Roles []string `json:"roles"`
 }
 
 // KubernetesStatus defines the observed state of Cluster
 // +k8s:openapi-gen=true
 type KubernetesStatus struct {
+	// Endpoint is the kubernetes endpoint url
+	// +kubebuilder:validation:Optional
+	APIEndpoint string `json:"apiEndpoint,omitempty"`
 	// CaCertificate is the base64 encoded cluster certificate
+	// +kubebuilder:validation:Optional
 	CaCertificate string `json:"caCertificate,omitempty"`
 	// Components is a collection of component statuses
+	// +kubebuilder:validation:Optional
 	Components corev1.Components `json:"components,omitempty"`
 	// APIEndpoint is the endpoint of client proxy for this cluster
+	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:MinLength=1
 	Endpoint string `json:"endpoint,omitempty"`
-	// Endpoint is the kubernetes endpoint url
-	APIEndpoint string `json:"apiEndpoint,omitempty"`
 	// Status is overall status of the workspace
+	// +kubebuilder:validation:Optional
 	Status corev1.Status `json:"status,omitempty"`
 }
 

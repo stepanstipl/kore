@@ -141,13 +141,6 @@ func schema_pkg_apis_clusters_v1_KubernetesSpec(ref common.ReferenceCallback) co
 							Format:      "",
 						},
 					},
-					"inheritTeamMembers": {
-						SchemaProps: spec.SchemaProps{
-							Description: "InheritTeamMembers inherits indicates all team members are inherited as having access to cluster by default.",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
 					"defaultTeamRole": {
 						SchemaProps: spec.SchemaProps{
 							Description: "DefaultTeamRole is role inherited by all team members",
@@ -159,6 +152,13 @@ func schema_pkg_apis_clusters_v1_KubernetesSpec(ref common.ReferenceCallback) co
 						SchemaProps: spec.SchemaProps{
 							Description: "Domain is the domain of the cluster",
 							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"inheritTeamMembers": {
+						SchemaProps: spec.SchemaProps{
+							Description: "InheritTeamMembers inherits indicates all team members are inherited as having access to cluster by default.",
+							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
@@ -190,6 +190,13 @@ func schema_pkg_apis_clusters_v1_KubernetesStatus(ref common.ReferenceCallback) 
 				Description: "KubernetesStatus defines the observed state of Cluster",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"apiEndpoint": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Endpoint is the kubernetes endpoint url",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"caCertificate": {
 						SchemaProps: spec.SchemaProps{
 							Description: "CaCertificate is the base64 encoded cluster certificate",
@@ -213,13 +220,6 @@ func schema_pkg_apis_clusters_v1_KubernetesStatus(ref common.ReferenceCallback) 
 					"endpoint": {
 						SchemaProps: spec.SchemaProps{
 							Description: "APIEndpoint is the endpoint of client proxy for this cluster",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiEndpoint": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Endpoint is the kubernetes endpoint url",
 							Type:        []string{"string"},
 							Format:      "",
 						},
