@@ -140,6 +140,25 @@ func (g *gkeClient) Create(ctx context.Context) (*container.Cluster, error) {
 	})
 	logger.Info("attempting to create the gke cluster")
 
+	// @step: if we have enabled private networking we need to provision a nat device
+	if g.cluster.Spec.EnablePrivateNetwork {
+		log.Info("cluster has private networking enabled; checking we have a cloud-nat device enabled")
+
+		if err := g.EnableCloudNAT(); err != nil {
+			logger.WithError(err).Error("creating cloud nat device for private networking")
+
+			return nil, err
+		}
+
+		logger.Info("attempting to enabled firewall rules for apiservices access from controlplane")
+
+		if err := g.EnableFirewallAPIServices(); err != nil {
+			logger.WithError(err).Error("creating firewall rules for api extensions")
+
+			return nil, err
+		}
+	}
+
 	// @step: we create the definitions
 	def, err := g.CreateDefinition()
 	if err != nil {
@@ -173,25 +192,6 @@ func (g *gkeClient) Create(ctx context.Context) (*container.Cluster, error) {
 		logger.WithError(err).Error("attempting to wait for operation to complete")
 
 		return nil, err
-	}
-
-	// @step: if we have enabled private networking we need to provision a nat device
-	if g.cluster.Spec.EnablePrivateNetwork {
-		log.Info("cluster has private networking enabled; checking we have a cloud-nat device enabled")
-
-		if err := g.EnableCloudNAT(); err != nil {
-			logger.WithError(err).Error("creating cloud nat device for private networking")
-
-			return nil, err
-		}
-
-		logger.Info("attempting to enabled firewall rules for apiservices access from controlplane")
-
-		if err := g.EnableFirewallAPIServices(); err != nil {
-			logger.WithError(err).Error("creating firewall rules for api extensions")
-
-			return nil, err
-		}
 	}
 
 	// @step: retrieve the state of the cluster via api
@@ -447,8 +447,45 @@ func (g *gkeClient) CreateCluster(ctx context.Context, request *container.Create
 }
 
 // EnableCloudNAT is responsible for enabling the cloud nat device
-func (c *gkeClient) EnableCloudNAT() error {
+func (g *gkeClient) EnableCloudNAT() error {
+	name := "router"
+
+	if _, found, err := g.GetRouter(name); err != nil {
+		return err
+	} else if !found {
+		return g.EnableRouter(name, g.cluster.Spec.Network)
+	}
+
 	return nil
+}
+
+// EnableRouter is responisble for create the default router in the account
+func (g *gkeClient) EnableRouter(name, network string) error {
+	// @step: retrieve the network
+	net, err := g.GetNetwork(network)
+	if err != nil {
+		return err
+	}
+
+	_, err = g.cm.Routers.Insert(
+		g.credentials.Spec.Project,
+		g.credentials.Spec.Region,
+		&compute.Router{
+			Name:        name,
+			Description: "Default router created by Appvia Kore",
+			Network:     net.SelfLink,
+			Nats: []*compute.RouterNat{
+				{
+					LogConfig:                     &compute.RouterNatLogConfig{Enable: false, Filter: "ALL"},
+					Name:                          "cloud-nat",
+					NatIpAllocateOption:           "AUTO_ONLY",
+					SourceSubnetworkIpRangesToNat: "ALL_SUBNETWORKS_ALL_IP_RANGES",
+				},
+			},
+		},
+	).Do()
+
+	return err
 }
 
 // EnableFirewallAPIServices is responsible for creating the firewall rules
@@ -470,6 +507,31 @@ func (g *gkeClient) EnableFirewallAPIServices() error {
 // GetNetwork returns the network
 func (g *gkeClient) GetNetwork(name string) (*compute.Network, error) {
 	return g.cm.Networks.Get(g.credentials.Spec.Project, name).Do()
+}
+
+// GetRouter returns a specific router if it exists
+func (g *gkeClient) GetRouter(name string) (*compute.Router, bool, error) {
+	list, err := g.GetRouters()
+	if err != nil {
+		return nil, false, err
+	}
+	for _, x := range list {
+		if x.Name == name {
+			return x, true, nil
+		}
+	}
+
+	return nil, false, nil
+}
+
+// GetRouters returns all the routers in the account
+func (g *gkeClient) GetRouters() ([]*compute.Router, error) {
+	resp, err := g.cm.Routers.List(g.credentials.Spec.Project, g.credentials.Spec.Region).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Items, nil
 }
 
 // Locations returns a list of compute locations of for particular region
