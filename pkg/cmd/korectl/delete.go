@@ -31,6 +31,7 @@ import (
 func GetDeleteCommand(config *Config) cli.Command {
 	return cli.Command{
 		Name:      "delete",
+		Aliases:   []string{"rm", "del"},
 		Usage:     "Used to delete one of more resources from the kore",
 		ArgsUsage: "-f <file> | <kind> <name>",
 		Flags: []cli.Flag{
