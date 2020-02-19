@@ -34,14 +34,54 @@ var (
 
 // Config is the configuration for the api
 type Config struct {
-	// Server is the api server url
-	Server string `json:"server,omitempty" yaml:"server"`
-	// Credentials are the credentials for the api server
-	Credentials Identity `json:"credentials,omitempty" yaml:"credentials"`
+	// CurrentContext is the context in use at the moment
+	CurrentContext string `json:"current-context,omitempty" yaml:"current-context"`
+	// Contexts is a collection of contexts
+	Contexts map[string]*Context `json:"contexts,omitempty" yaml:"contexts"`
+	// Servers is a collection of api endpoints
+	Servers map[string]*Server `json:"servers,omitempty" yaml:"servers"`
+	// AuthInfos is a collection of credentials
+	AuthInfos map[string]*AuthInfo `json:"users,omitempty" yaml:"users"`
+}
+
+// AuthInfo defines a credential to the api endpoint
+type AuthInfo struct {
+	// Token is a static token to use
+	Token *string `json:"token,omitempty" yaml:"token"`
+	// OIDC is credentials from an oauth2 provider
+	OIDC *OIDC `json:"oidc,omitempty" yaml:"oidc"`
+}
+
+// OIDC is the identity within the kore
+type OIDC struct {
+	// AccessToken is the access token retrieved from kore
+	AccessToken string `json:"access-token,omitempty" yaml:"access_token"`
+	// ClientID is the client id for the user
+	ClientID string `json:"client-id,omitempty" yaml:"client_id"`
+	// ClientSecret is the client secret used for authentication
+	ClientSecret string `json:"client-secret,omitempty" yaml:"client_secret"`
+	// IDToken the identity token
+	IDToken string `json:"id_token,omitempty" yaml:"id_token"`
+	// RefreshToken is refresh token for the user
+	RefreshToken string `json:"refresh-token,omitempty" yaml:"refresh_token"`
 	// TokenURL is the endpoint for tokens
 	TokenURL string `json:"token-url,omitempty" yaml:"token_url"`
 	// AuthorizeURL is the endpoint for the authorize
 	AuthorizeURL string `json:"authorize-url,omitempty" yaml:"authorize_url"`
+}
+
+// Context links endpoint and a credential together
+type Context struct {
+	// Server is a reference to the server config
+	Server string `json:"server,omitempty" yaml:"server"`
+	// AuthInfo is the crdentials to use
+	AuthInfo string `json:"user,omitempty" yaml:"user"`
+}
+
+// Server defines an endpoint for the api servr
+type Server struct {
+	// Endpoint is the server url
+	Endpoint string `json:"server,omitempty" yaml:"server"`
 }
 
 type AuthorizationResponse struct {
@@ -59,18 +99,4 @@ type AuthorizationResponse struct {
 	IDToken string `json:"id_token,omitempty" yaml:"id_token"`
 	// TokenEndpointURL is the token endpoint
 	TokenEndpointURL string `json:"token_endpoint_url,omitempty" yaml:"token_endpoint_url"`
-}
-
-// Identity is the identity within the kore
-type Identity struct {
-	// AccessToken is the access token retrieved from kore
-	AccessToken string `json:"access-token,omitempty" yaml:"access_token"`
-	// ClientID is the client id for the user
-	ClientID string `json:"client-id,omitempty" yaml:"client_id"`
-	// ClientSecret is the client secret used for authentication
-	ClientSecret string `json:"client-secret,omitempty" yaml:"client_secret"`
-	// IDToken the identity token
-	IDToken string `json:"id_token,omitempty" yaml:"id_token"`
-	// RefreshToken is refresh token for the user
-	RefreshToken string `json:"refresh-token,omitempty" yaml:"refresh_token"`
 }
