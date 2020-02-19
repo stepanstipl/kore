@@ -161,28 +161,24 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 		})
 
 		// @step: set the bootstrap as pending if required
-		status, found := resource.Status.Conditions.HasComponent("bootstrap")
-		if !found || status != core.SuccessStatus {
+		resource.Status.Conditions.SetCondition(core.Component{
+			Name:    "bootstrap",
+			Message: "bootstrapping the gke cluster",
+			Status:  core.PendingStatus,
+		})
 
-			resource.Status.Conditions.SetCondition(core.Component{
-				Name:    "bootstrap",
-				Message: "bootstrapping the gke cluster",
-				Status:  core.PendingStatus,
-			})
+		logger.Info("attempting to bootstrap the gke cluster")
 
-			logger.Info("attempting to bootstrap the gke cluster")
+		boot, err := NewBootstrapClient(resource, creds)
+		if err != nil {
+			logger.WithError(err).Error("trying to create bootstrap client")
 
-			boot, err := NewBootstrapClient(resource, creds)
-			if err != nil {
-				logger.WithError(err).Error("trying to create bootstrap client")
+			return false, err
+		}
+		if err := boot.Bootstrap(ctx, t.mgr.GetClient()); err != nil {
+			logger.WithError(err).Error("trying to bootstrap gke cluster")
 
-				return false, err
-			}
-			if err := boot.Bootstrap(ctx, t.mgr.GetClient()); err != nil {
-				logger.WithError(err).Error("trying to bootstrap gke cluster")
-
-				return false, err
-			}
+			return false, err
 		}
 
 		resource.Status.Conditions.SetCondition(core.Component{
