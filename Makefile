@@ -5,6 +5,8 @@ BUILD_TIME=$(shell date '+%s')
 CURRENT_TAG=$(shell git tag --points-at HEAD)
 DEPS=$(shell go list -f '{{range .TestImports}}{{.}} {{end}}' ./...)
 GIT_SHA=$(shell git --no-pager describe --always --dirty)
+GIT_LAST_TAG_SHA=$(shell git rev-list --tags --max-count=1)
+GIT_LAST_TAG=$(shell git describe --tags $(GIT_LAST_TAG_SHA))
 HUB_APIS_SHA=$(shell cd ../kore-apis && git log | head -n 1 | cut -d' ' -f2)
 GOVERSION ?= 1.12.7
 HARDWARE=$(shell uname -m)
@@ -20,10 +22,17 @@ endif
 ifeq ($(UNAME), Linux)
 API_HOST_IN_DOCKER = 127.0.0.1
 endif
-ifeq ($(CURRENT_TAG),)
-VERSION ?= $(GIT_SHA)
+ifeq ($(USE_GIT_VERSION),true)
+	# in CI or if we're pushing images for test
+	ifeq ($(CURRENT_TAG),)
+	VERSION ?= $(GIT_LAST_TAG)-$(GIT_SHA)
+	else
+	VERSION ?= $(CURRENT_TAG)
+	endif
 else
-VERSION ?= $(CURRENT_TAG)
+	# case of local build - must find upstream images
+	# - note the version reported by --version always includes the git SHA
+	VERSION ?= $(GIT_LAST_TAG)
 endif
 LFLAGS ?= -X github.com/appvia/kore/pkg/version.GitSHA=${GIT_SHA} -X github.com/appvia/kore/pkg/version.Compiled=${BUILD_TIME} -X github.com/appvia/kore/pkg/version.Release=${VERSION}
 
