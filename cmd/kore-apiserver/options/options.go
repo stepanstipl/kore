@@ -215,10 +215,10 @@ func Options() []cli.Flag {
 		},
 
 		// @related to logging
-		cli.BoolTFlag{
-			Name:   "enable-json-logging",
+		cli.BoolFlag{
+			Name:   "disable-json-logging",
 			Usage:  "indicates we should disable json logging `BOOL`",
-			EnvVar: "ENABLE_JSON_LOGGING",
+			EnvVar: "DISABLE_JSON_LOGGING",
 		},
 		cli.BoolFlag{
 			Name:   "verbose",
