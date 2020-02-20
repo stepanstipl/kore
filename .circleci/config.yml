@@ -5,6 +5,7 @@ jobs:
   build:
     environment:
       GOPATH: /go
+      USE_GIT_VERSION: "true"
 
     working_directory: /go/src/github.com/appvia/kore
 
