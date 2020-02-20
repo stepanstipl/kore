@@ -122,6 +122,8 @@ func (i *ivImpl) List(ctx context.Context, opts ...ListFunc) ([]*model.Invitatio
 	terms := ApplyListOptions(opts...)
 
 	q := Preload(i.load, i.conn).
+		Preload("User").
+		Preload("Team").
 		Select("i.*").
 		Table("invitations i").
 		Joins("JOIN teams t ON t.id = i.team_id").
