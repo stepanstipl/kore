@@ -25,7 +25,7 @@ import (
 
 // DefaultLogging applys the default logging options
 func DefaultLogging() {
-	//log.SetFormatter(&log.JSONFormatter{})
+	log.SetFormatter(&log.JSONFormatter{})
 	log.SetLevel(log.InfoLevel)
 	log.SetReportCaller(true)
 }
