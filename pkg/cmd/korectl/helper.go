@@ -56,7 +56,7 @@ func ParseDocument(src io.Reader, namespace string) ([]*Document, error) {
 		return nil, err
 	}
 	// @step: split the yaml documents up
-	splitter := regexp.MustCompile("^---$")
+	splitter := regexp.MustCompile("(?m)^---\n")
 	documents := splitter.Split(string(content), -1)
 
 	for _, x := range documents {
