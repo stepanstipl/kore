@@ -32,6 +32,7 @@ import (
 func init() {
 	cmd.DefaultLogging()
 	log.SetReportCaller(true)
+	log.SetFormatter(&log.JSONFormatter{})
 }
 
 func main() {
