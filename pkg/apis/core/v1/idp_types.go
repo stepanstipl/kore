@@ -111,6 +111,8 @@ type OIDCIDP struct {
 	DiscoveryURL string `json:"discoveryUrl"`
 	// ClientScopes provides the OIDC client scopes
 	ClientScopes []string `json:"clientScopes"`
+	// UserClaims to track the identity field to use
+	UserClaims []string `json:"userClaims"`
 }
 
 // StaticOIDCIDP provides a means to detect when there is no IDP broker

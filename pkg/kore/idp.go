@@ -193,6 +193,7 @@ func (a idpImpl) getDirectIDP() (*corev1.IDP, error) {
 	d.DiscoveryURL = a.Config().DiscoveryURL
 	d.Issuer = a.Config().DiscoveryURL
 	d.ClientScopes = a.Config().ClientScopes
+	d.UserClaims = a.Config().UserClaims
 
 	return &corev1.IDP{
 		ObjectMeta: metav1.ObjectMeta{
