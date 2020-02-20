@@ -20,6 +20,7 @@
 package apiserver
 
 import (
+	"errors"
 	"io"
 	"net/http"
 	"strings"
@@ -73,6 +74,7 @@ func handleErrors(req *restful.Request, resp *restful.Response, handler func() e
 		}
 		if strings.Contains(err.Error(), "record not found") {
 			code = http.StatusNotFound
+			err = errors.New("resource not found")
 		}
 		if kerrors.IsNotFound(err) {
 			code = http.StatusNotFound

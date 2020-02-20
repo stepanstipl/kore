@@ -161,7 +161,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "The name of the team you are creating an invition")).
 			Param(ws.PathParameter("user", "The name of the username of the user the invitation is for")).
 			Param(ws.QueryParameter("expire", "The expiration of the generated link").DefaultValue("1h")).
-			Returns(http.StatusOK, "Indicates the team invitation for the user has been successful", orgv1.TeamInvitation{}).
+			Returns(http.StatusOK, "Indicates the team invitation for the user has been successful", nil).
 			DefaultReturns("An generic API error containing the cause of the error", Error{}),
 	)
 

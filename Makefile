@@ -40,7 +40,7 @@ generate-clusterappman-manifests:
 	@cp ./hack/generate/manifests_vfsdata.go ./pkg/clusterappman/
 	@go generate ./pkg/clusterappman >/dev/null
 
-build: golang generate-clusterappman-manifests
+build: golang generate-clusterappman-manifests spelling
 	@echo "--> Compiling the project ($(VERSION))"
 	@mkdir -p bin
 	@for binary in kore-apiserver korectl auth-proxy kore-clusterappman; do \
@@ -48,7 +48,7 @@ build: golang generate-clusterappman-manifests
 		go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go ; \
 	done
 
-static: golang generate-clusterappman-manifests deps
+static: golang generate-clusterappman-manifests deps spelling
 	@echo "--> Compiling the static binaries ($(VERSION))"
 	@mkdir -p bin
 	@for binary in kore-apiserver korectl auth-proxy kore-clusterappman; do \
@@ -56,12 +56,12 @@ static: golang generate-clusterappman-manifests deps
 		CGO_ENABLED=0 GOOS=linux go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go ; \
 	done
 
-korectl: golang deps
+korectl: golang deps spelling
 	@echo "--> Compiling the korectl binary"
 	@mkdir -p bin
 	GOOS=linux go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/korectl cmd/korectl/*.go
 
-auth-proxy: golang deps
+auth-proxy: golang deps spelling
 	@echo "--> Compiling the auth-proxy binary"
 	@mkdir -p bin
 	GOOS=linux go build -ldflags "${LFLAGS}" -o bin/auth-proxy cmd/auth-proxy/*.go

@@ -30,7 +30,6 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	log "github.com/sirupsen/logrus"
-	kerrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 // TeamMembers returns the members interface for a team
@@ -69,8 +68,6 @@ type InvitationOptions struct {
 
 type tmsImpl struct {
 	*hubImpl
-	// namespace is the team namespace
-	namespace string
 	// team is the team name
 	team string
 }
@@ -216,17 +213,23 @@ func (t tmsImpl) Invite(ctx context.Context, name string, options InvitationOpti
 		"team":     t.team,
 		"username": name,
 	})
-	logger.Info("adding team invitation to the team")
+	logger.Info("adding user invitation to the team")
 
 	// @step: check the user and team
 	user, err := t.usermgr.Users().Get(ctx, name)
 	if err != nil {
+		if users.IsNotFound(err) {
+			return ErrNotAllowed{message: "user does not exist in the appvia kore"}
+		}
 		logger.WithError(err).Error("trying to retrieve user")
 
 		return err
 	}
 	team, err := t.usermgr.Teams().Get(ctx, t.team)
 	if err != nil {
+		if users.IsNotFound(err) {
+			return ErrNotAllowed{message: "team does not exist in the appvia kore"}
+		}
 		logger.WithError(err).Error("trying to retrieve team from user service")
 
 		return err
@@ -303,20 +306,16 @@ func (t tmsImpl) List(ctx context.Context) (*orgv1.UserList, error) {
 
 // ListInvitations returns a list of invitations for the team
 func (t tmsImpl) ListInvitations(ctx context.Context) (*orgv1.TeamInvitationList, error) {
-	list := &orgv1.TeamInvitationList{}
-	err := t.Store().Client().List(ctx,
-		store.ListOptions.InNamespace(t.namespace),
-		store.ListOptions.InTo(list),
+	list, err := t.usermgr.Invitations().List(ctx,
+		users.Filter.WithTeam(t.team),
 	)
 	if err != nil {
-		if kerrors.IsNotFound(err) {
-			return nil, ErrNotFound
-		}
+		log.WithError(err).Error("trying to retrieve the users invitations for team")
 
 		return nil, err
 	}
 
-	return list, err
+	return DefaultConvertor.FromUserInvitationModelList(list), nil
 }
 
 func (t tmsImpl) UpdateTeam(ctx context.Context) error {
