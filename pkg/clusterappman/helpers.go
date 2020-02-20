@@ -29,6 +29,7 @@ import (
 	yaml "github.com/ghodss/yaml"
 	log "github.com/sirupsen/logrus"
 	core "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -89,6 +90,45 @@ func ensureNamespace(ctx context.Context, cc client.Client, name string) error {
 			Name: name,
 		},
 	})
+}
+
+// GetStatus returns the status of all compoents deployed by ClusterAppMan
+func GetStatus(ctx context.Context, cc client.Client) (components *kcore.Components, err error) {
+	cm := &v1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      StatusCongigMap,
+			Namespace: KoreNamespace,
+		},
+	}
+	exists, err := kubernetes.GetIfExists(ctx, cc, cm)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"error obtaining config for %s/%s - %s",
+			KoreNamespace,
+			StatusCongigMap,
+			err,
+		)
+	}
+	if exists {
+		components := &kcore.Components{}
+		// get the data from the configmap data key
+		b := []byte(cm.Data[StatusConfigMapComponentsKey])
+		if err := yaml.Unmarshal(b, components); err != nil {
+			return nil, fmt.Errorf(
+				"unable to deserialize yaml data from config map: %s/%s, key: %s - %s",
+				KoreNamespace,
+				StatusCongigMap,
+				StatusConfigMapComponentsKey,
+				err,
+			)
+		}
+		return components, nil
+	}
+	return nil, fmt.Errorf(
+		"missing configmap %s in namespace %s",
+		StatusCongigMap,
+		KoreNamespace,
+	)
 }
 
 // createStatusConfig creates a configmap for configuring the kore cluster manager
