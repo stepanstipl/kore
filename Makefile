@@ -131,11 +131,9 @@ docker-swagger-validate:
 
 compose-up:
 	@docker-compose \
-		--file hack/compose/kube.yml \
-		--file hack/compose/operators.yml pull
+		--file hack/compose/kube.yml pull
 	@docker-compose \
-		--file hack/compose/kube.yml \
-		--file hack/compose/operators.yml up -d
+		--file hack/compose/kube.yml up -d
 
 compose: build compose-up
 	@echo "--> Building a test environment"
