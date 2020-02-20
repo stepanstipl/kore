@@ -42,7 +42,7 @@ func (c Convertor) ToUserModel(user *orgv1.User) *model.User {
 	}
 }
 
-// FromAuditModel convets the model
+// FromAuditModel converts the model
 func (c Convertor) FromAuditModel(i *model.AuditEvent) *orgv1.AuditEvent {
 	return &orgv1.AuditEvent{
 		TypeMeta: metav1.TypeMeta{
@@ -63,6 +63,41 @@ func (c Convertor) FromAuditModel(i *model.AuditEvent) *orgv1.AuditEvent {
 			ResourceUID: i.ResourceUID,
 		},
 	}
+}
+
+// FromUserInvitationModel converts the model to a thing
+func (c Convertor) FromUserInvitationModel(i *model.Invitation) *orgv1.TeamInvitation {
+	return &orgv1.TeamInvitation{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: orgv1.SchemeGroupVersion.String(),
+			Kind:       "TeamInvitation",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:              i.User.Username,
+			CreationTimestamp: metav1.NewTime(i.CreatedAt),
+		},
+		Spec: orgv1.TeamInvitationSpec{
+			Username: i.User.Username,
+			Team:     i.Team.Name,
+		},
+	}
+}
+
+// FromUserInvitationModelList convert the list of invitations
+func (c Convertor) FromUserInvitationModelList(list []*model.Invitation) *orgv1.TeamInvitationList {
+	l := &orgv1.TeamInvitationList{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "TeamInvitationList",
+		},
+		Items: make([]orgv1.TeamInvitation, len(list)),
+	}
+	length := len(list)
+	for i := 0; i < length; i++ {
+		l.Items[i] = *c.FromInvitationModel(list[i])
+	}
+
+	return l
 }
 
 // FromAuditModelList returns a list of
