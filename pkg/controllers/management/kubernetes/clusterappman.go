@@ -25,6 +25,7 @@ import (
 	"time"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	clusterappman "github.com/appvia/kore/pkg/clusterappman"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
@@ -53,7 +54,7 @@ const (
 )
 
 // EnsureClusterman will ensure clusterappman is deployed
-func (a k8sCtrl) EnsureClusterman(ctx context.Context, cc client.Client, cluster *clustersv1.Kubernetes) error {
+func (a k8sCtrl) EnsureClusterman(ctx context.Context, cc client.Client, cluster *clustersv1.Kubernetes) (*corev1.Components, error) {
 	logger := log.WithFields(log.Fields{"controller": a.Name()})
 
 	provider := strings.ToLower(cluster.Spec.Provider.Kind)
@@ -61,14 +62,14 @@ func (a k8sCtrl) EnsureClusterman(ctx context.Context, cc client.Client, cluster
 	params, err := a.GetClusterConfiguration(ctx, cluster, provider)
 	if err != nil {
 
-		return err
+		return nil, err
 	}
 
 	// @step: check if the cluster manager namespace exists and create it if not
 	if err := EnsureNamespace(ctx, cc, clusterappmanNamespace); err != nil {
 		logger.WithError(err).Errorf("trying to create the kore cluster-manager namespace %s", clusterappmanNamespace)
 
-		return err
+		return nil, err
 	}
 
 	// @step: check if the cluster config exists
@@ -76,14 +77,14 @@ func (a k8sCtrl) EnsureClusterman(ctx context.Context, cc client.Client, cluster
 	if err != nil {
 		logger.WithError(err).Error("failed to check for kore clusterappman config")
 
-		return err
+		return nil, err
 
 	}
 	if !found {
 		if err := CreateConfig(ctx, cc, params); err != nil {
 			logger.WithError(err).Error("trying to create the kore cluster-manager configuration configmap")
 
-			return err
+			return nil, err
 		}
 	}
 
@@ -99,13 +100,13 @@ func (a k8sCtrl) EnsureClusterman(ctx context.Context, cc client.Client, cluster
 	}); err != nil {
 		logger.WithError(err).Error("trying to create the clusterappman service account")
 
-		return err
+		return nil, err
 	}
 	// @step setup correct permissions for deployment
 	if err := CreateClusterManClusterRoleBinding(ctx, cc); err != nil {
 		logger.WithError(err).Error("can not create cluster-manager clusterrole")
 
-		return err
+		return nil, err
 	}
 
 	// @step: check if the kore cluster manager deployment exists
@@ -113,7 +114,7 @@ func (a k8sCtrl) EnsureClusterman(ctx context.Context, cc client.Client, cluster
 	if err := CreateOrUpdateClusterAppManDeployment(ctx, cc); err != nil {
 		logger.WithError(err).Error("trying to create the cluster manager deployment")
 
-		return err
+		return nil, err
 	}
 	logger.Debug("waiting for kore cluster manager deployment status to appear")
 
@@ -126,12 +127,12 @@ func (a k8sCtrl) EnsureClusterman(ctx context.Context, cc client.Client, cluster
 	if err := WaitOnStatus(nctx, cc); err != nil {
 		logger.WithError(err).Error("failed waiting for kore cluster manager status to complete")
 
-		return err
+		return nil, err
 	}
 
-	logger.Info("kube clusterappman ready for new cluster")
+	logger.Info("kube clusterappman running, status available")
 
-	return nil
+	return clusterappman.GetStatus(ctx, cc)
 }
 
 // GetClusterConfiguration is responsible for generate the parameters for the cluster

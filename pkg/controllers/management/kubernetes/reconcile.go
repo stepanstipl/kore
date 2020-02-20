@@ -164,7 +164,8 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		}
 
 		// @step: ensure all cluster compenents are deployed
-		if err := a.EnsureClusterman(context.Background(), client, object); err != nil {
+		components, err := a.EnsureClusterman(context.Background(), client, object)
+		if err != nil {
 			logger.WithError(err).Error("trying to provision the clusterappman service")
 
 			object.Status.Status = corev1.FailureStatus
@@ -182,6 +183,10 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			Message: "clusterappman component is running and available",
 			Status:  corev1.SuccessStatus,
 		})
+		// Provide visibility of remote cluster apps
+		for _, component := range *components {
+			object.Status.Components.SetCondition(*component)
+		}
 
 		// @step: ensure the kube-api proxy is deployed
 		// @TODO need to move this out into something else, but for now its cool
