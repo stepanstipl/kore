@@ -41,7 +41,7 @@ import (
 
 const (
 	// KubeProxyNamespace is the namespace the proxy
-	KubeProxyNamespace = "kube-proxy"
+	KubeProxyNamespace = "kore"
 	// KubeProxySecret is the secret for the proxy config
 	KubeProxySecret = "config"
 	// KubeProxyTLSSecret is the secret containing the tls
