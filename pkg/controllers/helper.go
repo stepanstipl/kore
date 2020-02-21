@@ -41,7 +41,7 @@ import (
 
 // ReconcileHandler is a wrapper the a controller handler
 type ReconcileHandler struct {
-	// HandlerFunc handles the reconcilation request
+	// HandlerFunc handles the reconciliation request
 	HandlerFunc func(reconcile.Request) (reconcile.Result, error)
 }
 

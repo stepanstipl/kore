@@ -56,7 +56,7 @@ type AppDeploymentSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinLength=1
 	Package string `json:"package"`
-	// Version is the verison of the package to install
+	// Version is the version of the package to install
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinLength=1
 	Version string `json:"version"`
@@ -78,7 +78,7 @@ type AppDeploymentSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinLength=1
 	Vendor string `json:"vendor"`
-	// Offical indicates if the applcation is offically published by Appvia
+	// Official indicates if the applcation is officially published by Appvia
 	// +kubebuilder:validation:Required
 	Official bool `json:"official"`
 	// Replaces indicates the version this replaces

@@ -39,7 +39,7 @@ import (
 
 const finalizerName = "kubernetes.clusters.kore.appvia.io"
 
-// Reconcile is the entrypoint for the reconcilation logic
+// Reconcile is the entrypoint for the reconciliation logic
 func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	logger := log.WithFields(log.Fields{
 		"name":      request.NamespacedName.Name,
@@ -163,7 +163,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			return reconcile.Result{}, err
 		}
 
-		// @step: ensure all cluster compenents are deployed
+		// @step: ensure all cluster components are deployed
 		components, err := a.EnsureClusterman(context.Background(), client, object)
 		if err != nil {
 			logger.WithError(err).Error("trying to provision the clusterappman service")

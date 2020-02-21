@@ -72,7 +72,7 @@ func LoadAllManifests(cc client.Client) error {
 }
 
 func getClusterAppFromEmbeddedManifests(m manifest, cc client.Client) (clusterapp.Instance, error) {
-	// for all the embeded paths specified...
+	// for all the embedded paths specified...
 	resfiles := make([]http.File, 0)
 	for _, manifestFile := range m.EmededManifests {
 		file, err := Manifests.Open(manifestFile)

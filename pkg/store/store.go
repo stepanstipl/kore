@@ -56,7 +56,7 @@ type storeImpl struct {
 	watching map[string]informer.Informer
 }
 
-// New creates and returns a resource store: we recieve a kubernete clients and a list
+// New creates and returns a resource store: we receive a kubernete clients and a list
 // of resource type to watch and add into the store
 func New(client kubernetes.Interface, cc client.Client) (Store, error) {
 	log.Info("initializing the store data access layer")

@@ -30,7 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-// Reconcile is the entrypoint for the reconcilation logic
+// Reconcile is the entrypoint for the reconciliation logic
 func (t gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	ctx := context.Background()
 

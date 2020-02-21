@@ -99,7 +99,7 @@ func (a *authImpl) Run(ctx context.Context) error {
 					"discovery-url": a.DiscoveryURL,
 				}).Info("attempting to retrieve provider details via discovery url")
 
-				// @step: attempt to retreive the details for the discovery url
+				// @step: attempt to retrieve the details for the discovery url
 				provider, err := oidc.NewProvider(ctx, a.DiscoveryURL)
 				if err != nil {
 					return err

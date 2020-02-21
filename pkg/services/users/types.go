@@ -34,7 +34,7 @@ const (
 	AuditUpdate = "update"
 )
 
-// Config is the configuratin for the store
+// Config is the configurations for the store
 type Config struct {
 	// Driver is the database driver to use
 	Driver string `json:"driver,omitempty"`

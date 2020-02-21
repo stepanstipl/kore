@@ -54,7 +54,7 @@ type membersImpl struct {
 	conn *gorm.DB
 }
 
-// AddUser is responisble for adding a user to a team
+// AddUser is responsible for adding a user to a team
 func (m *membersImpl) AddUser(ctx context.Context, user, team string, roles []string) error {
 	timed := prometheus.NewTimer(setLatency)
 	defer timed.ObserveDuration()

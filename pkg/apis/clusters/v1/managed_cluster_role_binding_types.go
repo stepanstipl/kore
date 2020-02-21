@@ -29,7 +29,7 @@ import (
 // ManagedClusterRoleBindingSpec defines the desired state of Cluster role
 // +k8s:openapi-gen=true
 type ManagedClusterRoleBindingSpec struct {
-	// Binding is the cluster role binding you wish to propogate to the clusters
+	// Binding is the cluster role binding you wish to propagate to the clusters
 	// +kubebuilder:validation:Required
 	Binding rbacv1.ClusterRoleBinding `json:"binding"`
 	// Clusters is used to apply the cluster role to a specific cluster

@@ -36,7 +36,7 @@ const (
 	finalizerName = "gke.compute.kore.appvia.io"
 )
 
-// Reconcile is the entrypoint for the reconcilation logic
+// Reconcile is the entrypoint for the reconciliation logic
 func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	ctx := context.Background()
 	logger := log.WithFields(log.Fields{

@@ -81,7 +81,7 @@ type Listener struct {
 	Resources []string `json:"resources"`
 }
 
-// EventHandlers is contract to recieve change notify
+// EventHandlers is contract to receive change notify
 type EventHandlers interface {
 	// Created is called when a object is created / added
 	Created(metav1.Object)

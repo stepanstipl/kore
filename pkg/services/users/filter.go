@@ -59,7 +59,7 @@ func (q ListFuncs) WithProviderToken(v string) ListFunc {
 	}
 }
 
-// WithDuration searchs for a duration
+// WithDuration searches for a duration
 func (q ListFuncs) WithDuration(since time.Duration) ListFunc {
 	return func(o *ListOptions) {
 		o.Fields["duration"] = since

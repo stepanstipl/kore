@@ -36,7 +36,7 @@ type hubImpl struct {
 	config *Config
 	// store is the access layer / kubernetes api
 	store store.Store
-	// idp is the idp implimentation
+	// idp is the idp implementation
 	idp *idpImpl
 	// invitations handles generated links
 	invitations Invitations

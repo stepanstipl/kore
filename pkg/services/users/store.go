@@ -67,7 +67,7 @@ func New(config Config) (Interface, error) {
 	return &storeImpl{dbc: db, config: config}, nil
 }
 
-// Audit retuns the audit interface
+// Audit returns the audit interface
 func (a *storeImpl) Audit() Audit {
 	return a
 }

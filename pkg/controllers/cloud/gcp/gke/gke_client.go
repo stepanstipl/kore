@@ -440,7 +440,7 @@ func (g *gkeClient) EnableCloudNAT() error {
 	return nil
 }
 
-// EnableRouter is responisble for create the default router in the account
+// EnableRouter is responsible for create the default router in the account
 func (g *gkeClient) EnableRouter(name, network string) error {
 	// @step: retrieve the network
 	net, err := g.GetNetwork(network)

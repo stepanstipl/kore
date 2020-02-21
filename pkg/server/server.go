@@ -129,7 +129,7 @@ func New(config Config) (Interface, error) {
 }
 
 // Run is responsible for starting the services
-// @TODO due to the current model of controllers on the ops side, this is begining to
+// @TODO due to the current model of controllers on the ops side, this is beginning to
 // take longer and longer as more controllers get added
 func (s serverImpl) Run(ctx context.Context) error {
 
