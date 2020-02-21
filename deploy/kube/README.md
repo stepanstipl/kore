@@ -14,7 +14,7 @@ kubectl -n kore create secret generic auth --from-env-file=deploy/kube/secrets/o
 kubectl -n kore create secret generic kore --from-env-file=deploy/kube/secrets/kore.example.env
 kubectl -n kore create secret generic portal --from-env-file=deploy/kube/secrets/portal.example.env
 
-# Create the certificate authority which is consumed by the API - naturely you should
+# Create the certificate authority which is consumed by the API - naturally you should
 # generat your own self-signed ca's for this.
 kubectl -n kore create secret tls ca --cert=hack/ca/ca.pem --key=hack/ca/ca-key.pem
 
