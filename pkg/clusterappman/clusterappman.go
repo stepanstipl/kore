@@ -70,7 +70,7 @@ var (
 	// cas is the map of clusterapp instances
 	cas map[string]*clusterapp.Instance = make(map[string]*clusterapp.Instance)
 
-	// mm defines all the embeded manifests and data required to initialise clusterappman
+	// mm defines all the embedded manifests and data required to initialise clusterappman
 	mm []manifest = []manifest{
 		{
 			Name: "Application Controller",
@@ -153,7 +153,7 @@ func (s clusterappmanImpl) Run(ctx context.Context) error {
 	logger.Info("attempting to reconcile the applications incluster")
 
 	var wg sync.WaitGroup
-	// componant updates channel
+	// component updates channel
 	ch := make(chan *kcore.Component, len(mm))
 
 	// make this tesable
@@ -173,7 +173,7 @@ func (s clusterappmanImpl) Run(ctx context.Context) error {
 				return fmt.Errorf("failed creating namespace %s: %s", m.Namespace, err)
 			}
 		}
-		// Write all objects to the API on a seperate thread...
+		// Write all objects to the API on a separate thread...
 		if err := ca.CreateOrUpdate(ctx, m.Namespace); err != nil {
 			return fmt.Errorf("failed to create or update '%s' deployment: %s", m.Name, err)
 		}
@@ -197,7 +197,7 @@ func (s clusterappmanImpl) Run(ctx context.Context) error {
 		c := <-ch
 		// get the corresponding app
 		ca, ok := cas[c.Name]
-		// overwrite the component with the recieved updated "reason"
+		// overwrite the component with the received updated "reason"
 		ca.Component = c
 		if !ok {
 			return fmt.Errorf("missing application from component -  %s", c.Name)

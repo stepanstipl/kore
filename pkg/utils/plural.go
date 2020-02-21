@@ -24,7 +24,7 @@ import (
 	"strings"
 )
 
-// ToPlural convers the type to a plural
+// ToPlural converts the type to a plural
 func ToPlural(name string) string {
 	if strings.HasSuffix(name, "ss") {
 		return fmt.Sprintf("%ses", name)

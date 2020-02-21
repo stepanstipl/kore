@@ -134,7 +134,7 @@ func (a *crCtrl) FilterClustersBySource(ctx context.Context,
 
 	list := &clustersv1.KubernetesList{}
 
-	// @step: is the role targetting a specific cluster
+	// @step: is the role targeting a specific cluster
 	if len(clusters) > 0 {
 		item := &clustersv1.Kubernetes{}
 		for _, x := range clusters {

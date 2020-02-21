@@ -283,7 +283,7 @@ spelling:
 		GO111MODULE=off go get -u github.com/client9/misspell/cmd/misspell; \
 	fi
 	@find . -name "*.go" -type f -not -path "vendor/*" | xargs misspell -error -source=go *.go
-	@find . -name "*.md" -type f -not -path "vendor/*" | misspell -error -source=text *.md
+	@find . -name "*.md" -type f -not -path "vendor/*" | xargs misspell -error -source=text *.md
 
 golangci-lint:
 	@echo "--> Checking against the golangci-lint"

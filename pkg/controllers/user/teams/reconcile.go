@@ -38,7 +38,7 @@ const (
 	finalizerName = "teams"
 )
 
-// Reconcile is the entrypoint for the reconcilation logic
+// Reconcile is the entrypoint for the reconciliation logic
 func (t teamController) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	ctx := context.Background()
 

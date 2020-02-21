@@ -86,13 +86,13 @@ func waitOnApplicationStatus(ctx context.Context, ca *Instance) error {
 
 //getStatus will update the ca.component.status from the ca.ApplicationObject conditions
 func getStatus(ctx context.Context, ca *Instance) (err error) {
-	//TODO - impliment watcher
-	// 1. watcher (seperate thread) will watch the kube api for changes to specific "Application" CRD instance
-	// update channel with nil (if status sucess) or with error (including timeout)
+	//TODO - implement watcher
+	// 1. watcher (separate thread) will watch the kube api for changes to specific "Application" CRD instance
+	// update channel with nil (if status success) or with error (including timeout)
 
 	if ca.ApplicationObject == nil {
 		// TODO - have to support the application operator itself so need to do something here
-		// we have to check the existance of something other...
+		// we have to check the existence of something other...
 		// maybe we just have to look for presence of the statefulset???
 		ca.Component.Detail = "We have to assume ok as we do not have an application to track"
 		ca.Component.Message = "System component not checked"

@@ -37,7 +37,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-// @TODO Change everthing here and polish it up
+// @TODO Change everything here and polish it up
 
 func GetLoginCommand(config *Config) cli.Command {
 	return cli.Command{

@@ -33,7 +33,7 @@ const (
 	finalizerName = "deployments.apps.kore.appvia.io"
 )
 
-// Reconcile is the entrypoint for the reconcilation logic
+// Reconcile is the entrypoint for the reconciliation logic
 func (a dpCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	logger := log.WithFields(log.Fields{
 		"name":      request.NamespacedName.Name,

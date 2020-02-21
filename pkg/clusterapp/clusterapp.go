@@ -60,7 +60,7 @@ func NewAppFromManifestFiles(client client.Client, name string, manifestfiles []
 			Message: "Not yet deplopyed",
 		},
 	}
-	// for all the embeded paths specified...
+	// for all the embedded paths specified...
 	for _, file := range manifestfiles {
 		fileBytes, err := ioutil.ReadAll(file)
 		if err != nil {

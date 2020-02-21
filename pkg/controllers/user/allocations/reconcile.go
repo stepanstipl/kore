@@ -32,7 +32,7 @@ import (
 
 const finalizerName = "allocations"
 
-// Reconcile is the entrypoint for the reconcilation logic
+// Reconcile is the entrypoint for the reconciliation logic
 func (a acCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	logger := log.WithFields(log.Fields{
 		"resource.name":      request.NamespacedName.Name,
