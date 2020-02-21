@@ -253,16 +253,16 @@ vet:
 
 gofmt:
 	@echo "--> Running gofmt check"
-	@gofmt -s -l . \
+	@gofmt -s -l $$(go list -f '{{.Dir}}' ./...) \
 	    | grep -q \.go ; if [ $$? -eq 0 ]; then \
-            echo "You need to runn the make format, we have file unformatted"; \
+            echo "You need to run the make format, we have file unformatted"; \
             gofmt -s -l .; \
             exit 1; \
 	    fi
 
 format:
 	@echo "--> Running go fmt"
-	@gofmt -s -w .
+	@gofmt -s -w $$(go list -f '{{.Dir}}' ./...)
 
 bench:
 	@echo "--> Running go bench"
