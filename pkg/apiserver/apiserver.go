@@ -66,21 +66,19 @@ func New(kore kore.Interface, config Config) (Interface, error) {
 	}
 
 	// @step: register the resource handlers
-	dexHandler := (&idpHandler{}).Name()
-
 	for _, x := range GetRegisteredHandlers() {
 		ws, err := x.Register(kore, utils.NewPathBuilder(APIVersion))
 		if err != nil {
 			return nil, err
-		}
-		if !config.EnableDex && x.Name() == dexHandler {
-			ws = ws.Filter(filters.DefaultNotImplementedHandler.Filter)
 		}
 		if x.EnableAuthentication() {
 			ws = ws.Filter(authFilter.Filter).Filter(filters.DefaultMembersHandler.Filter)
 		}
 		if x.EnableLogging() {
 			ws = ws.Filter(filters.DefaultLogging.Filter)
+		}
+		if !x.Enabled() {
+			ws = ws.Filter(filters.DefaultNotImplementedHandler.Filter)
 		}
 		c.Add(ws)
 	}
