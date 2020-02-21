@@ -232,21 +232,31 @@ func GetFileChecksum(path string) (string, error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
-// GetClientConfiguration is responsible for retrieving the client configuration
-func GetClientConfiguration() (*Config, error) {
+// GetOrCreateClientConfiguration is responsible for retrieving the client configuration
+func GetOrCreateClientConfiguration() (*Config, error) {
 	config := &Config{}
+	var content []byte
 
 	resolved := os.ExpandEnv(HubConfig)
 
 	if err := os.MkdirAll(filepath.Dir(resolved), os.FileMode(0760)); err != nil {
 		return config, err
 	}
-
-	// @step: read in the configuration
-	content, err := ioutil.ReadFile(resolved)
-	if err != nil {
+	if _, err := os.Stat(resolved); err == nil {
+		content, err = ioutil.ReadFile(resolved)
+		if err != nil {
+			return config, err
+		}
+	} else if os.IsNotExist(err) {
+		_, err = os.Create(resolved)
+		if err != nil {
+			return config, err
+		}
+	} else {
 		return config, err
 	}
+
+	// @step: read in the configuration
 	if string(content) == "" {
 		content = []byte("server: ''")
 	}

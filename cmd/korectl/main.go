@@ -43,7 +43,7 @@ func main() {
 	})
 
 	// @step: load the api config
-	config, err := korectl.GetClientConfiguration()
+	config, err := korectl.GetOrCreateClientConfiguration()
 	if err != nil {
 		logger.WithError(err).Warn("failed to load the kore api configuration")
 		logger.Warn("please check the documentation for how to configure the cli")
