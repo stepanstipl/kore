@@ -30,6 +30,7 @@ import (
 	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/store"
+	"github.com/appvia/kore/pkg/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	log "github.com/sirupsen/logrus"
@@ -149,58 +150,87 @@ func (t *teamsImpl) Exists(ctx context.Context, name string) (bool, error) {
 
 // Update is responsible for updating the team
 func (t *teamsImpl) Update(ctx context.Context, team *orgv1.Team) (*orgv1.Team, error) {
-	team.Namespace = HubNamespace
-	team.Annotations = map[string]string{
-		Label("changed"): fmt.Sprintf("%d", time.Now().Unix()),
-	}
-
 	// @step: check the team is ok
 	if team.Name == "" {
 		return nil, errors.New("no name for team defined")
 	}
+	team.Namespace = HubNamespace
 
 	// @step: retrieve the user from context
 	user := authentication.MustGetIdentity(ctx)
-	if !user.IsGlobalAdmin() {
-		log.Warn("non admin user attempting to create a team")
-
-		return nil, ErrUnauthorized
-	}
-
-	if !user.IsGlobalAdmin() && !t.IsValidTeamName(team.Name) {
-		return nil, ErrNotAllowed{message: "name: " + team.Name + " cannot be used in the kore"}
-	}
 
 	logger := log.WithFields(log.Fields{
-		"team": team.Name,
-		"user": user.Username,
+		"team":  team.Name,
+		"teams": strings.Join(user.Teams(), ","),
+		"user":  user.Username(),
 	})
 	logger.Info("attempting to update or create team in kore")
 
+	// @logic
+	// - bypass the check if the user is a admin
+	// - check if the team already exists
+	// - if they exist then only a member of that team can update it
+	// - if the team does not exist then any user can claim the team and added as member
+	// - ensure the namespace name is valid
+
+	found, err := t.usermgr.Teams().Exists(ctx, team.Name)
+	if err != nil {
+		logger.WithError(err).Error("trying to check if the team exists")
+
+		return nil, err
+	}
+
+	if !user.IsGlobalAdmin() {
+		if found {
+			// ensure the user is a member of the team
+			if !utils.Contains(team.Name, user.Teams()) {
+				logger.Warn("trying to update a team they do not belong to")
+
+				return nil, ErrUnauthorized
+			}
+		}
+
+		if !t.IsValidTeamName(team.Name) {
+			return nil, ErrNotAllowed{message: "name: " + team.Name + " cannot be used in the kore"}
+		}
+	}
+
+	// @step: ensure the default and apply a timestamp for triggers
+	team.Annotations = map[string]string{
+		Label("changed"): fmt.Sprintf("%d", time.Now().Unix()),
+	}
+
+	// @step: convert the team to a team model
 	model := DefaultConvertor.ToTeamModel(team)
 
-	// @step: update or create in the kore
+	// @step: update the team in the users store
 	if err := t.usermgr.Teams().Update(ctx, model); err != nil {
 		log.WithError(err).Error("trying to update a team in user management")
 
 		return nil, err
 	}
 
-	// @step: add the user whom created is a admin member
-	if err := t.usermgr.Members().AddUser(ctx,
-		user.Username(), team.Name, []string{"members", "admin"}); err != nil {
+	// @step: add the user whom created is a admin member if the team never existed
+	if !found {
+		roles := []string{"admin", "member"}
 
-		logger.WithError(err).Error("trying to add the user a admin user on the team")
+		logger.Info("adding the user as the admin of team")
 
-		return nil, err
+		if err := t.usermgr.Members().AddUser(ctx, user.Username(), team.Name, roles); err != nil {
+			logger.WithError(err).Error("trying to add the user a admin user on the team")
+
+			return nil, err
+		}
 	}
 
-	// @step: check if the team is in the api
-	if found, err := t.Store().Client().Has(ctx, store.HasOptions.From(team)); err != nil {
+	// @step: check if the team is in the kube api
+	found, err = t.Store().Client().Has(ctx, store.HasOptions.From(team))
+	if err != nil {
 		log.WithError(err).Error("trying to check for team in the api")
 
 		return nil, err
-	} else if !found {
+	}
+	if !found {
 		if err := t.Store().Client().Update(ctx,
 			store.UpdateOptions.To(team),
 			store.UpdateOptions.WithCreate(true),

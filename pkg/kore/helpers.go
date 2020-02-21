@@ -25,6 +25,8 @@ import (
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
+	"github.com/appvia/kore/pkg/kore/authentication"
+	"github.com/appvia/kore/pkg/utils"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -43,6 +45,17 @@ func TeamsToList(list *orgv1.TeamList) []string {
 	}
 
 	return items
+}
+
+// HasAccessToTeam checks if the user has access to the team
+func HasAccessToTeam(ctx context.Context, team string) bool {
+	user := authentication.MustGetIdentity(ctx)
+
+	if user.IsGlobalAdmin() {
+		return true
+	}
+
+	return utils.Contains(team, user.Teams())
 }
 
 // IsGlobalTeam checks if the namespace is global

@@ -20,7 +20,9 @@
 package filters
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/utils"
@@ -50,10 +52,14 @@ func (a *MembersHandler) Filter(req *restful.Request, resp *restful.Response, ch
 	// @step: ensure the user is a member of the team
 	user := authentication.MustGetIdentity(req.Request.Context())
 	if !user.IsGlobalAdmin() {
-		if !utils.Contains(team, user.Teams()) {
-			resp.WriteHeader(http.StatusForbidden)
+		// @TODO this needs to be removed - its VERY HACKY - but we will keep until
+		// we have a proper review of the API
+		if !strings.HasSuffix(req.Request.RequestURI, fmt.Sprintf("teams/%s", team)) {
+			if !utils.Contains(team, user.Teams()) {
+				resp.WriteHeader(http.StatusForbidden)
 
-			return
+				return
+			}
 		}
 	}
 
