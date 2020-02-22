@@ -54,7 +54,7 @@ build: golang generate-clusterappman-manifests spelling
 	@mkdir -p bin
 	@for binary in kore-apiserver korectl auth-proxy kore-clusterappman; do \
 		echo "--> Building $${binary} binary" ; \
-		go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go ; \
+		go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go || exit 1; \
 	done
 
 static: golang generate-clusterappman-manifests deps spelling
@@ -62,7 +62,7 @@ static: golang generate-clusterappman-manifests deps spelling
 	@mkdir -p bin
 	@for binary in kore-apiserver korectl auth-proxy kore-clusterappman; do \
 		echo "--> Building $${binary} binary" ; \
-		CGO_ENABLED=0 GOOS=linux go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go ; \
+		CGO_ENABLED=0 GOOS=linux go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go || exit 1; \
 	done
 
 korectl: golang deps spelling
