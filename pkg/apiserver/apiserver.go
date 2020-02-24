@@ -114,16 +114,21 @@ func (h *server) Run(ctx context.Context) error {
 	log.WithFields(log.Fields{
 		"listen":      h.Listen,
 		"tls_enabled": h.UseTLS(),
-	}).Info("starting the kore-api")
+	}).Info("starting the kore-apiserver")
 
 	// @step: setup the http handler
-	s := &http.Server{
-		Addr:    h.Listen,
-		Handler: h.container,
-	}
+	s := &http.Server{Addr: h.Listen, Handler: h.container}
 
 	go func() {
-		if err := s.ListenAndServe(); err != nil {
+		var err error
+
+		switch h.UseTLS() {
+		case true:
+			err = s.ListenAndServeTLS(h.TLSCert, h.TLSKey)
+		default:
+			err = s.ListenAndServe()
+		}
+		if err != nil {
 			log.WithFields(log.Fields{
 				"error": err.Error(),
 			}).Fatal("failed to start the http server")
@@ -135,6 +140,7 @@ func (h *server) Run(ctx context.Context) error {
 
 // Stop indicates to want to stop the api
 func (h *server) Stop(ctx context.Context) error {
+	log.Info("attempting to stop the kore-apiserver")
 
 	return nil
 }
