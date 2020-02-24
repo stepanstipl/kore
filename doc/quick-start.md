@@ -92,7 +92,7 @@ Auth0, found [here](https://auth0.com/), provides an enterprise SAAS identity pr
 - Sign up for an account from the [home page](https://auth0.com)
 - From the dashboard side menu choose 'Applications' and then 'Create Application'
 - Given the application a name and choose 'Regular Web Applications'
-- Once provisioned click on the 'Settings' tab and scroll down to 'Allowed Callback URLs'. These are the permitted redirects for the applications. Since we are running the application locally off the laptop add `http://localhost:3000/callback` and `http://127.0.0.1:10080/oauth/callback` (Note the comma separation in the Auth0 UI.
+- Once provisioned click on the 'Settings' tab and scroll down to 'Allowed Callback URLs'. These are the permitted redirects for the applications. Since we are running the application locally off the laptop add `http://localhost:3000/callback` and `http://localhost:10080/oauth/callback` (Note the comma separation in the Auth0 UI.
 - Scroll to the bottom of the settings and click the 'Show Advanced Settings'
 - Choose the 'OAuth' tab from the advanced settings and ensure that the 'JsonWebToken Signature Algorithm' is set to RS256 and 'OIDC Conformant' is toggled on.
 - Select the 'Endpoints' tab and note down the 'OpenID Configuration'.
