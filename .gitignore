@@ -1,13 +1,13 @@
-secret.yml
-/bin/
-vendor/
-swagger-ui/
-hack/setup/instances/credentials.yml
-hack/setup/class.yml
+bin/
 cmd/cluster-controller
+demo.env
+deploy/crds
 deploy/kube/secrets.yml
 dev.env
-demo.env
+hack/setup/instances/credentials.yml
+secret.yml
+swagger-ui/
+vendor/
 
 # Git meld
 *.orig
