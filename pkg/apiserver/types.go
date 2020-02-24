@@ -66,6 +66,11 @@ type Config struct {
 // DefaultHandler implements a default handler
 type DefaultHandler struct{}
 
+// Enabled returns if the handler is enabled
+func (d DefaultHandler) Enabled() bool {
+	return true
+}
+
 // EnableAuthentication defaults to yes we do
 func (d DefaultHandler) EnableAuthentication() bool {
 	return true
@@ -101,6 +106,8 @@ type AuthorizationResponse struct {
 
 // Handler is the contract to a resource handler
 type Handler interface {
+	// Enabled checks if the handler is enabled
+	Enabled() bool
 	// EnableAdminsOnly requires the user is a member of the admin group
 	EnableAdminsOnly() bool
 	// EnableAuthentication indicates if the webservice requires authentication
