@@ -47,12 +47,15 @@ spec:
   inheritTeamMembers: true
   # The role to use for the above if enabled
   defaultTeamRole: 'cluster-admin'
-  # If backed by a cloud provider, this provides a reference back to the resource
+  # If backed by a cloud provider, this provides a reference back to the resource above
   provider:
     group: gke.compute.kore.appvia.io
     version: v1alpha1
     kind: GKE
+    # This must map to the namespace the above cluster was built in i.e.
+    # if you create the gke cluster in team 'devs' it must be say namespace 'devs'
     namespace: kore-admin
+    # The name of the gke cluster above
     name: dev
-  # Not used at the moment  
+  # Not used at the moment
   enableDefaultTrafficBlock: false
