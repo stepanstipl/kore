@@ -68,6 +68,7 @@ func GetDefaultPlans() []*configv1.Plan {
 							"enableStackDriverMetrics": true,
 							"imageType":              "COS",
 							"machineType":            "n1-standard-2",
+							"masterIPV4Cidr": "172.16.0.0/28",
 							"maintenanceWindow":      "03:00",
 							"maxSize":                10,
 							"network":                "default",
