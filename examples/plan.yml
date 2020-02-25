@@ -1,0 +1,34 @@
+apiVersion: config.kore.appvia.io/v1
+kind: Plan
+metadata:
+  name: gke-development
+  namespace: kore
+spec:
+  description: GKE Development Cluster
+  kind: GKE
+  labels:
+    kore.appvia.io/environment: dev
+    kore.appvia.io/kind: GKE
+    kore.appvia.io/plural: gkes
+  summary: Provides a development cluster within GKE
+  values:
+    authorizedMasterNetworks:
+    - cidr: 0.0.0.0/0
+      name: default
+    diskSize: 100
+    enableAutorepair: true
+    enableAutoscaler: true
+    enableHTTPLoadBalancer: true
+    enableHorizontalPodAutoscaler: true
+    enableIstio: false
+    enablePrivateNetwork: false
+    enableStackDriverLogging: true
+    enableStackDriverMetrics: true
+    imageType: COS
+    machineType: n1-standard-2
+    maintenanceWindow: "03:00"
+    maxSize: 10
+    network: default
+    size: 1
+    subnetwork: default
+    version: 1.14.9-gke.23
