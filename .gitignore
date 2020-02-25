@@ -1,3 +1,6 @@
+# IDEs
+.idea
+
 bin/
 cmd/cluster-controller
 demo.env
