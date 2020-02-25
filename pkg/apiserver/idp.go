@@ -47,11 +47,16 @@ func (id idpHandler) Name() string {
 func (id *idpHandler) Register(i kore.Interface, builder utils.PathBuilder) (*restful.WebService, error) {
 	log.Info("registering the idp webservice")
 	id.Interface = i
+	path := builder.Add("idp")
 
 	ws := &restful.WebService{}
 	ws.Consumes(restful.MIME_JSON)
 	ws.Produces(restful.MIME_JSON)
-	ws.Path(builder.Path("idp"))
+	ws.Path(path.Base())
+
+	log.WithFields(log.Fields{
+		"path": path.Base(),
+	}).Info("registering the idp webservice")
 
 	// Types of IDP providers that can be configured
 	ws.Route(
@@ -112,11 +117,7 @@ func (id *idpHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 // getTypes
 func (id idpHandler) getTypes(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
-		c, err := id.IDP().ConfigTypes(req.Request.Context())
-		if err != nil {
-			return err
-		}
-
+		c := id.IDP().ConfigTypes(req.Request.Context())
 		return resp.WriteHeaderAndEntity(http.StatusOK, c)
 	})
 }
