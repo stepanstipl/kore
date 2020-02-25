@@ -21,6 +21,7 @@ package korectl
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -46,60 +47,15 @@ func (c *Config) GetDirectory() string {
 
 // IsValid checks if the configuration is valid
 func (c *Config) IsValid() error {
+	if c.Server == "" {
+		return errors.New("no api server hostname defined")
+	}
+
 	return nil
 }
 
-// GetCurrentServer returns the server in the context
-func (c *Config) GetCurrentServer() *Server {
-	ct := c.Contexts[c.CurrentContext]
-	if ct == nil {
-		return &Server{}
-	}
-	s := c.Servers[ct.Server]
-	if s == nil {
-		return &Server{}
-	}
-
-	return s
-}
-
-// GetCurrentAuthInfo returns the current auth
-func (c *Config) GetCurrentAuthInfo() *AuthInfo {
-	ct := c.Contexts[c.CurrentContext]
-	if ct == nil {
-		return &AuthInfo{}
-	}
-	a := c.AuthInfos[ct.AuthInfo]
-	if a == nil {
-		return &AuthInfo{}
-	}
-
-	return a
-}
-
-// HasContext checks if the context exists in the config
-func (c *Config) HasContext(name string) bool {
-	_, found := c.Contexts[name]
-
-	return found
-}
-
-// HasServer checks if the context exists in the config
-func (c *Config) HasServer(name string) bool {
-	_, found := c.Servers[name]
-
-	return found
-}
-
-// HasAuthInfo checks if the context exists in the config
-func (c *Config) HasAuthInfo(name string) bool {
-	_, found := c.AuthInfos[name]
-
-	return found
-}
-
 // HasSwagger checks if the swagger exists
-func (c *Config) HasSwagger() (bool, error) {
+func (c Config) HasSwagger() (bool, error) {
 	if _, err := os.Stat(c.GetSwaggerCachedFile()); err != nil {
 		if os.IsNotExist(err) {
 			return false, nil
@@ -160,12 +116,12 @@ func (c *Config) GetResourceSumAPI() string {
 
 // GetSwaggerSumAPI returns the location of the cached swagger checksum
 func (c *Config) GetSwaggerSumAPI() string {
-	return fmt.Sprintf("%s/%s", c.GetCurrentServer().Endpoint, "swagger.json?checksum=sha256")
+	return fmt.Sprintf("%s/%s", c.Server, "swagger.json?checksum=sha256")
 }
 
 // GetSwaggerAPI returns the api cache url
 func (c *Config) GetSwaggerAPI() string {
-	return fmt.Sprintf("%s/swagger.json", c.GetCurrentServer().Endpoint)
+	return fmt.Sprintf("%s/swagger.json", c.Server)
 }
 
 // GetResourcesAPI returns the api cache url
@@ -175,7 +131,7 @@ func (c *Config) GetResourcesAPI() string {
 
 // GetAPI returns the api server url
 func (c *Config) GetAPI() string {
-	return fmt.Sprintf("%s%s", c.GetCurrentServer().Endpoint, "/api/v1alpha1")
+	return fmt.Sprintf("%s%s", c.Server, "/api/v1alpha1")
 }
 
 func (c *Config) Update() error {
