@@ -91,7 +91,7 @@ func main() {
 				}
 			}
 
-			if config.Server == "" {
+			if len(config.Contexts) <= 0 {
 				log.Warn("no server endpoint has been configured, please check documentation")
 				os.Exit(0)
 			}

@@ -24,10 +24,11 @@ import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 type IDPConfig struct {
 	// Google represents a Google IDP config
 	// +optional
-	Github *GithubIDP `json:"github,omitempty"`
-	Google *GoogleIDP `json:"google,omitempty"`
-	SAML   *SAMLIDP   `json:"saml,omitempty"`
-	OIDC   *OIDCIDP   `json:"oidc,omitempty"`
+	Github     *GithubIDP     `json:"github,omitempty"`
+	Google     *GoogleIDP     `json:"google,omitempty"`
+	SAML       *SAMLIDP       `json:"saml,omitempty"`
+	OIDC       *OIDCIDP       `json:"oidc,omitempty"`
+	OIDCDirect *StaticOIDCIDP `json:"oidcdirect,omitempty"`
 }
 
 // IDPSpec defines the spec for a configured instance of an IDP
@@ -104,6 +105,20 @@ type OIDCIDP struct {
 	ClientSecret string `json:"clientSecret"`
 	// Issuer provides the IDP URL
 	Issuer string `json:"issuer"`
+	// DiscoveryURL The OIDC Discovery URL to use
+	// - when using the DEX broker this will differ from the issuer
+	// - when using an IDP directly this will be the same as the Issuer
+	DiscoveryURL string `json:"discoveryUrl"`
+	// ClientScopes provides the OIDC client scopes
+	ClientScopes []string `json:"clientScopes"`
+	// UserClaims to track the identity field to use
+	UserClaims []string `json:"userClaims"`
+}
+
+// StaticOIDCIDP provides a means to detect when there is no IDP broker
+// It is essetially the same as a generic OIDC type
+type StaticOIDCIDP struct {
+	OIDCIDP `json:",inline"`
 }
 
 // SAMLIDP provides configuration for a generic SAML Identity provider

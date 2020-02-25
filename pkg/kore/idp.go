@@ -19,6 +19,7 @@ package kore
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -47,7 +48,7 @@ type IDP interface {
 	// List returns a list of configured idps
 	List(context.Context) (*corev1.IDPList, error)
 	// ConfigTypes returns the idp config types available
-	ConfigTypes(context.Context) ([]*corev1.IDPConfig, error)
+	ConfigTypes(context.Context) []*corev1.IDPConfig
 	// Update is responsible for updating / creating a confgured IDP
 	Update(context.Context, *corev1.IDP) error
 	// UpdateClient is responsible for updating / creating an idp client
@@ -77,19 +78,35 @@ func (a idpImpl) Exists(ctx context.Context, name string) (bool, error) {
 
 // Get returns the identity configurations in the kore
 func (a idpImpl) Get(ctx context.Context, name string) (*corev1.IDP, error) {
-	// Get from DEX...
-	idp, err := getDEXConnector(a.Config().DEX, name)
-	if err != nil {
-		return nil, err
+	// Is DEX enabled?
+	if a.Config().DEX.EnabledDex {
+		// Get from DEX...
+		idp, err := getDEXConnector(a.Config().DEX, name)
+		if err != nil {
+			return nil, err
+		}
+		return idp, nil
 	}
-	return idp, nil
+	// DEX not enabled - there is only a default configured
+	if name == DefaultIDP {
+		return a.getDirectIDP()
+	}
+	return nil, ErrNotFound
 }
 
 // List returns a list of identity providers
 func (a idpImpl) List(ctx context.Context) (*corev1.IDPList, error) {
-	items, err := getDEXConnectors(a.Config().DEX)
-	if err != nil {
-		return nil, err
+	var err error
+	var items []corev1.IDP
+	if a.Config().DEX.EnabledDex {
+		items, err = getDEXConnectors(a.Config().DEX)
+	} else {
+		// No DEX
+		var d *corev1.IDP
+		d, err = a.getDirectIDP()
+		items = []corev1.IDP{
+			*d,
+		}
 	}
 	return &corev1.IDPList{
 		TypeMeta: metav1.TypeMeta{
@@ -97,39 +114,41 @@ func (a idpImpl) List(ctx context.Context) (*corev1.IDPList, error) {
 			Kind:       "IDPList",
 		},
 		Items: items,
-	}, nil
+	}, err
 }
 
 // ConfigTypes provides sample identity configurations
 // should swagger be used by UX to know this?
-func (a idpImpl) ConfigTypes(ctx context.Context) ([]*corev1.IDPConfig, error) {
-	ci := []*corev1.IDPConfig{
+func (a idpImpl) ConfigTypes(ctx context.Context) []*corev1.IDPConfig {
+	if a.Config().DEX.EnabledDex {
+		return []*corev1.IDPConfig{
+			{
+				Google: &corev1.GoogleIDP{},
+			},
+			{
+				SAML: &corev1.SAMLIDP{},
+			},
+			{
+				OIDC: &corev1.OIDCIDP{},
+			},
+			{
+				Github: &corev1.GithubIDP{},
+			},
+		}
+	}
+	// DEX disabled:
+	return []*corev1.IDPConfig{
 		{
-			Google: &corev1.GoogleIDP{},
-		},
-		{
-			SAML: &corev1.SAMLIDP{},
-		},
-		{
-			OIDC: &corev1.OIDCIDP{},
-		},
-		{
-			Github: &corev1.GithubIDP{},
+			OIDCDirect: &corev1.StaticOIDCIDP{},
 		},
 	}
-	return ci, nil
-
-	// TODO: reflect the different types of configuration with sample values
-	//v := reflect.ValueOf(corev1.IDPConfig{}).Elem()
-	//for i := 0; i < v.NumField(); i++ {
-	// Get an empty instance of the config
-	//	c := reflect.Zero(v)
-	// now assign an empty copy of the config to it:
-	//}
 }
 
 // Update is responsible for updating / creating a identity providers
 func (a idpImpl) Update(ctx context.Context, idp *corev1.IDP) error {
+	if !a.Config().DEX.EnabledDex {
+		return NewErrNotAllowed("a static IDP is configured so no change possible")
+	}
 	// Update DEX
 	err := updateDEXConector(a.Config().DEX, idp)
 	if err != nil {
@@ -140,6 +159,9 @@ func (a idpImpl) Update(ctx context.Context, idp *corev1.IDP) error {
 
 // UpdateClient is responsible for updating / creating a idp clients
 func (a idpImpl) UpdateClient(ctx context.Context, c *corev1.IDPClient) error {
+	if !a.Config().DEX.EnabledDex {
+		return NewErrNotAllowed("a static IDP is configured so no change possible")
+	}
 	// Update DEX
 	if err := updateDEXClient(a.Config().DEX, c); err != nil {
 		return err
@@ -149,6 +171,9 @@ func (a idpImpl) UpdateClient(ctx context.Context, c *corev1.IDPClient) error {
 
 // UpdateUser will create / update a static user in IDP
 func (a idpImpl) UpdateUser(ctx context.Context, username string, password string) error {
+	if !a.Config().DEX.EnabledDex {
+		return NewErrNotAllowed("a static IDP is configured so no change possible")
+	}
 	if len(password) <= 0 {
 		return fmt.Errorf("must set a non 0 length password for user %s", username)
 	}
@@ -156,4 +181,30 @@ func (a idpImpl) UpdateUser(ctx context.Context, username string, password strin
 		return err
 	}
 	return nil
+}
+
+func (a idpImpl) getDirectIDP() (*corev1.IDP, error) {
+	if !a.Config().HasOpenID() {
+		return nil, errors.New("Only OIDC providers supported without IDP broker")
+	}
+	d := corev1.StaticOIDCIDP{}
+	d.ClientID = a.Config().ClientID
+	d.ClientSecret = a.Config().ClientSecret
+	d.DiscoveryURL = a.Config().DiscoveryURL
+	d.Issuer = a.Config().DiscoveryURL
+	d.ClientScopes = a.Config().ClientScopes
+	d.UserClaims = a.Config().UserClaims
+
+	return &corev1.IDP{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      DefaultIDP,
+			Namespace: HubNamespace,
+		},
+		Spec: corev1.IDPSpec{
+			DisplayName: "Kore configured IDP",
+			Config: corev1.IDPConfig{
+				OIDCDirect: &d,
+			},
+		},
+	}, nil
 }
