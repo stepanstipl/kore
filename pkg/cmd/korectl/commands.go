@@ -27,7 +27,6 @@ import (
 func GetCommands(config *Config) []cli.Command {
 	return []cli.Command{
 		GetAutoCompleteCommand(config),
-		GetContextCommand(config),
 		GetApplyCommand(config),
 		GetDeleteCommand(config),
 		GetClustersCommand(config),

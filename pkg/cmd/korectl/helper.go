@@ -248,7 +248,7 @@ func GetClientConfiguration() (*Config, error) {
 		return config, err
 	}
 	if string(content) == "" {
-		return config, nil
+		content = []byte("server: ''")
 	}
 
 	// @step: parse the configuration
