@@ -20,14 +20,13 @@
 package korectl
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
 
-	yaml "gopkg.in/yaml.v2"
+	"github.com/ghodss/yaml"
 )
 
 // GetSwaggerCachedFile returns the location of the swagger cache
@@ -181,10 +180,9 @@ func (c *Config) GetAPI() string {
 }
 
 func (c *Config) Update() error {
-	encoded := &bytes.Buffer{}
-	if err := yaml.NewEncoder(encoded).Encode(c); err != nil {
+	data, err := yaml.Marshal(c)
+	if err != nil {
 		return err
 	}
-
-	return ioutil.WriteFile(os.ExpandEnv(HubConfig), encoded.Bytes(), os.FileMode(0740))
+	return ioutil.WriteFile(os.ExpandEnv(HubConfig), data, os.FileMode(0740))
 }

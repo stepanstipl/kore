@@ -26,6 +26,7 @@ import (
 // GetCommands returns all the commands
 func GetCommands(config *Config) []cli.Command {
 	return []cli.Command{
+		GetLocalCommand(config),
 		GetAutoCompleteCommand(config),
 		GetContextCommand(config),
 		GetApplyCommand(config),

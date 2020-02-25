@@ -248,7 +248,7 @@ func GetOrCreateClientConfiguration() (*Config, error) {
 			return config, err
 		}
 	} else if os.IsNotExist(err) {
-		_, err = os.Create(resolved)
+		err := config.Update()
 		if err != nil {
 			return config, err
 		}
@@ -263,4 +263,5 @@ func GetOrCreateClientConfiguration() (*Config, error) {
 
 	// @step: parse the configuration
 	return config, yaml.NewDecoder(bytes.NewReader(content)).Decode(config)
+
 }

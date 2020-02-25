@@ -74,7 +74,7 @@ type OIDC struct {
 type Context struct {
 	// Server is a reference to the server config
 	Server string `json:"server,omitempty" yaml:"server"`
-	// AuthInfo is the crdentials to use
+	// AuthInfo is the credentials to use
 	AuthInfo string `json:"user,omitempty" yaml:"user"`
 }
 

@@ -91,11 +91,14 @@ func main() {
 				}
 			}
 
-			if len(config.Contexts) <= 0 {
-				log.Warn("no server endpoint has been configured, please check documentation")
+			command := ctx.Args().Get(0)
+			switch {
+			case command == "local":
+				// no contexts required yet.
+			case len(config.Contexts) <= 0:
+				log.Warnln("No korectl context configured.")
 				os.Exit(0)
 			}
-
 			return nil
 		},
 	}
