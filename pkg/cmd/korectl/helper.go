@@ -28,7 +28,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -237,13 +236,10 @@ func GetOrCreateClientConfiguration() (*Config, error) {
 	config := &Config{}
 	var content []byte
 
-	resolved := os.ExpandEnv(HubConfig)
+	configPath := os.ExpandEnv(HubConfig)
 
-	if err := os.MkdirAll(filepath.Dir(resolved), os.FileMode(0760)); err != nil {
-		return config, err
-	}
-	if _, err := os.Stat(resolved); err == nil {
-		content, err = ioutil.ReadFile(resolved)
+	if _, err := os.Stat(configPath); err == nil {
+		content, err = ioutil.ReadFile(configPath)
 		if err != nil {
 			return config, err
 		}
@@ -256,9 +252,8 @@ func GetOrCreateClientConfiguration() (*Config, error) {
 		return config, err
 	}
 
-	// @step: read in the configuration
-	if string(content) == "" {
-		content = []byte("server: ''")
+	if strings.TrimSpace(string(content)) == "" {
+		return config, nil
 	}
 
 	// @step: parse the configuration
