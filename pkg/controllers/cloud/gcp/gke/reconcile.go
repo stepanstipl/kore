@@ -34,6 +34,10 @@ import (
 
 const (
 	finalizerName = "gke.compute.kore.appvia.io"
+	// ComponentClusterCreator is the name of the component for the UI
+	ComponentClusterCreator = "Cluster Creator"
+	// ComponentClusterBootstrap is the component name for seting up cloud credentials
+	ComponentClusterBootstrap = "Cluster Initialise Access"
 )
 
 // Reconcile is the entrypoint for the reconciliation logic
@@ -74,8 +78,8 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 			logger.WithError(err).Error("trying to retrieve cloud credentials")
 
 			resource.Status.Conditions.SetCondition(core.Component{
-				Name:    "provision",
-				Message: "you do not have permission to the credentials",
+				Name:    ComponentClusterCreator,
+				Message: "You do not have permission to the credentials",
 				Status:  core.SuccessStatus,
 			})
 
@@ -101,11 +105,11 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 				resource.Status.Conditions = &core.Components{}
 			}
 
-			status, found := resource.Status.Conditions.HasComponent("provision")
+			status, found := resource.Status.Conditions.HasComponent(ComponentClusterCreator)
 			if !found || status != core.PendingStatus {
 				resource.Status.Conditions.SetCondition(core.Component{
-					Name:    "provision",
-					Message: "provisioning the cluster in google compute",
+					Name:    ComponentClusterCreator,
+					Message: "Provisioning the cluster in google compute",
 					Status:  core.PendingStatus,
 				})
 				resource.Status.Status = core.PendingStatus
@@ -118,8 +122,8 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 				logger.WithError(err).Error("attempting to create cluster")
 
 				resource.Status.Conditions.SetCondition(core.Component{
-					Name:    "provision",
-					Message: "failed trying to provision the cluster",
+					Name:    ComponentClusterCreator,
+					Message: "Failed trying to provision the cluster",
 					Detail:  err.Error(),
 				})
 				resource.Status.Status = core.FailureStatus
@@ -172,15 +176,15 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 
 		// @step: update the state as provisioned
 		resource.Status.Conditions.SetCondition(core.Component{
-			Name:    "provision",
-			Message: "cluster has been provisioned",
+			Name:    ComponentClusterCreator,
+			Message: "Cluster has been provisioned",
 			Status:  core.SuccessStatus,
 		})
 
 		// @step: set the bootstrap as pending if required
 		resource.Status.Conditions.SetCondition(core.Component{
-			Name:    "bootstrap",
-			Message: "bootstrapping the gke cluster",
+			Name:    ComponentClusterBootstrap,
+			Message: "Accessing the gke cluster",
 			Status:  core.PendingStatus,
 		})
 
@@ -199,8 +203,8 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 		}
 
 		resource.Status.Conditions.SetCondition(core.Component{
-			Name:    "bootstrap",
-			Message: "successfully bootstrapped the cluster",
+			Name:    ComponentClusterBootstrap,
+			Message: "Successfully initialised the cluster",
 			Status:  core.SuccessStatus,
 		})
 

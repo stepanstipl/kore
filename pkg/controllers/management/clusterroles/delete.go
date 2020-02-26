@@ -68,7 +68,7 @@ func (a crCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 		role.Status.Status = corev1.FailureStatus
 		role.Status.Conditions = []corev1.Condition{{
 			Detail:  err.Error(),
-			Message: "failed trying to retrieve list of clusters to apply",
+			Message: "Failed trying to retrieve list of clusters to apply",
 		}}
 
 		if err := a.mgr.GetClient().Status().Patch(context.Background(), role, client.MergeFrom(original)); err != nil {
@@ -126,7 +126,7 @@ func (a crCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 		role.Status.Status = corev1.FailureStatus
 		role.Status.Conditions = []corev1.Condition{{
 			Detail:  err.Error(),
-			Message: "failed trying to remove managed role from one of more clusters",
+			Message: "Failed trying to remove managed role from one of more clusters",
 		}}
 
 		return reconcile.Result{}, err

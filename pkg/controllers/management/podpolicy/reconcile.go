@@ -80,7 +80,7 @@ func (a pspCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		policy.Status.Status = corev1.FailureStatus
 		policy.Status.Conditions = []corev1.Condition{{
 			Detail:  err.Error(),
-			Message: "failed trying to retrieve list of clusters to apply",
+			Message: "Failed trying to retrieve list of clusters to apply",
 		}}
 
 		if err := a.mgr.GetClient().Status().Patch(ctx, policy, client.MergeFrom(original)); err != nil {
@@ -138,7 +138,7 @@ func (a pspCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			if failed > 0 {
 				policy.Status.Status = corev1.FailureStatus
 				policy.Status.Conditions = []corev1.Condition{{
-					Message: fmt.Sprintf("failed to apply managed pod on %d of %d clusters", failed, len(list.Items)),
+					Message: fmt.Sprintf("Failed to apply managed pod on %d of %d clusters", failed, len(list.Items)),
 				}}
 			}
 		}

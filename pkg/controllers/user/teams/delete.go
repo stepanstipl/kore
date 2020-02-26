@@ -73,7 +73,7 @@ func (t teamController) Delete(ctx context.Context, request reconcile.Request, t
 		team.Status.Status = core.FailureStatus
 		team.Status.Conditions = []core.Condition{{
 			Detail:  err.Error(),
-			Message: fmt.Sprintf("failed to remove finalizer"),
+			Message: fmt.Sprintf("Failed to remove the team due as all resources not removed"),
 		}}
 
 		return reconcile.Result{}, t.mgr.GetClient().Status().Update(ctx, team)

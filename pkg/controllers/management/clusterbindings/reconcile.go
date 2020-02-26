@@ -124,7 +124,7 @@ func (a crCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	if err != nil {
 		binding.Status.Status = corev1.FailureStatus
 		binding.Status.Conditions = []corev1.Condition{{
-			Message: "failed trying to reconcile the managed binding",
+			Message: "Failed trying to reconcile the managed binding",
 			Detail:  err.Error(),
 		}}
 	} else {

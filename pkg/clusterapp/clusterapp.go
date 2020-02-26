@@ -56,8 +56,7 @@ func NewAppFromManifestFiles(client client.Client, name string, manifestfiles []
 		Component: &kcore.Component{
 			Name:    name,
 			Status:  kcore.Unknown,
-			Detail:  "Deployment is defined but not started",
-			Message: "Not yet deplopyed",
+			Message: "Component is not yet deployed",
 		},
 	}
 	// for all the embedded paths specified...
@@ -106,7 +105,6 @@ func (ca Instance) CreateOrUpdate(ctx context.Context, defaultNamepsace string) 
 		}
 	}
 	ca.Component.Status = kcore.PendingStatus
-	ca.Component.Detail = "The deployment of all manifests have been accepted by the API"
 	ca.Component.Message = "Deployment started"
 
 	return nil

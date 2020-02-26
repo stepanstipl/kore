@@ -37,7 +37,21 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-const finalizerName = "kubernetes.clusters.kore.appvia.io"
+const (
+	finalizerName = "kubernetes.clusters.kore.appvia.io"
+	// ComponentClusterCreate is the component name
+	ComponentClusterCreate = "Cluster Creator"
+	// ComponentAPIAuthProxy is the component name
+	ComponentAPIAuthProxy = "SSO Auth for Cluster"
+	// ComponentClusterAppMan is the component name for the Kore Cluster application manager
+	ComponentClusterAppMan = "Kore Cluster Manager"
+	// ComponentClusterUsers is the component name for Kore team users of this cluster
+	ComponentClusterUsers = "Kore Cluster Users"
+	// ComponentClusterRoles is the component name for inherited RBAC team roles
+	ComponentClusterRoles = "Kore Cluster Roles"
+	// ComponentClusterNetworkPolicy is the component name for Kubernetes network policy
+	ComponentClusterNetworkPolicy = "Kubernetes Network Policy"
+)
 
 // Reconcile is the entrypoint for the reconciliation logic
 func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
@@ -92,8 +106,8 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			if !kore.IsProviderBacked(object) {
 				object.Status.Status = corev1.WarningStatus
 				object.Status.Components.SetCondition(corev1.Component{
-					Name:    "provision",
-					Message: "credentials for cluster not available yet",
+					Name:    ComponentClusterCreate,
+					Message: "Credentials for cluster not available yet",
 					Status:  corev1.WarningStatus,
 				})
 
@@ -111,8 +125,8 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 					object.Status.Status = corev1.FailureStatus
 					object.Status.Components.SetCondition(corev1.Component{
-						Name:    "provision",
-						Message: "invalid provider cloud provider reference",
+						Name:    ComponentClusterCreate,
+						Message: "Invalid cloud provider reference",
 						Status:  corev1.FailureStatus,
 					})
 
@@ -128,8 +142,8 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 					object.Status.Status = corev1.FailureStatus
 					object.Status.Components.SetCondition(corev1.Component{
-						Name:    "provision",
-						Message: "cloud provider resource does not exist",
+						Name:    ComponentClusterCreate,
+						Message: "Cloud provider resource does not exist",
 						Status:  corev1.FailureStatus,
 					})
 
@@ -138,8 +152,8 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 				object.Status.Status = corev1.PendingStatus
 				object.Status.Components.SetCondition(corev1.Component{
-					Name:    "provision",
-					Message: "waiting for cluster to be provisioned",
+					Name:    ComponentClusterCreate,
+					Message: "Waiting for cluster to be provisioned",
 					Status:  corev1.PendingStatus,
 				})
 
@@ -154,8 +168,8 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 			object.Status.Status = corev1.FailureStatus
 			object.Status.Components.SetCondition(corev1.Component{
-				Name:    "provision",
-				Message: "unable to create client from cluster credentials",
+				Name:    ComponentClusterCreate,
+				Message: "Unable to access cluster using provided cluster credentials",
 				Detail:  err.Error(),
 				Status:  corev1.FailureStatus,
 			})
@@ -172,8 +186,8 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 			object.Status.Status = corev1.FailureStatus
 			object.Status.Components.SetCondition(corev1.Component{
-				Name:    "api",
-				Message: "unable to create client from cluster credentials",
+				Name:    ComponentAPIAuthProxy,
+				Message: "Unable to create client from cluster credentials",
 				Detail:  err.Error(),
 				Status:  corev1.FailureStatus,
 			})
@@ -183,8 +197,8 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 		object.Status.Status = corev1.FailureStatus
 		object.Status.Components.SetCondition(corev1.Component{
-			Name:    "api",
-			Message: "api service proxy is running and available",
+			Name:    ComponentAPIAuthProxy,
+			Message: "Service proxy is running and available",
 			Status:  corev1.SuccessStatus,
 		})
 
@@ -195,8 +209,8 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 			object.Status.Status = corev1.FailureStatus
 			object.Status.Components.SetCondition(corev1.Component{
-				Name:    "clusterappman",
-				Message: "failed to deploy kore clusterappman component",
+				Name:    ComponentClusterAppMan,
+				Message: "Kore failed to deploy kore Cluster Manasger component",
 				Detail:  err.Error(),
 				Status:  corev1.FailureStatus,
 			})
@@ -204,8 +218,8 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			return reconcile.Result{RequeueAfter: 2 * time.Minute}, err
 		}
 		object.Status.Components.SetCondition(corev1.Component{
-			Name:    "clusterappman",
-			Message: "clusterappman component is running and available",
+			Name:    ComponentClusterAppMan,
+			Message: "Cluster manager component is running and available",
 			Status:  corev1.SuccessStatus,
 		})
 		// Provide visibility of remote cluster apps
@@ -250,8 +264,8 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 					object.Status.Status = corev1.FailureStatus
 					object.Status.Components.SetCondition(corev1.Component{
-						Name:    "cluster_users",
-						Message: "failed to provision one of more cluster user roles",
+						Name:    ComponentClusterUsers,
+						Message: "Failed to provision one of more cluster user roles",
 						Status:  corev1.FailureStatus,
 						Detail:  err.Error(),
 					})
@@ -262,8 +276,8 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 			object.Status.Status = corev1.SuccessStatus
 			object.Status.Components.SetCondition(corev1.Component{
-				Name:    "cluster_users",
-				Message: "cluster users have been provisioned",
+				Name:    ComponentClusterUsers,
+				Message: "Cluster users have been provisioned",
 				Status:  corev1.SuccessStatus,
 			})
 		} else {
@@ -281,8 +295,8 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 			if object.Spec.DefaultTeamRole == "" {
 				object.Status.Components.SetCondition(corev1.Component{
-					Name:    "inherited_roles",
-					Message: "team inheritence enabled but no default team role defined",
+					Name:    ComponentClusterRoles,
+					Message: "Team inheritence enabled but no default team role defined",
 					Status:  corev1.WarningStatus,
 				})
 				object.Status.Status = corev1.WarningStatus
@@ -308,8 +322,8 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 					logger.WithError(err).Error("trying to retrieve members of team")
 
 					object.Status.Components.SetCondition(corev1.Component{
-						Name:    "inherited_roles",
-						Message: "failed to apply all team members to inherited role",
+						Name:    ComponentClusterRoles,
+						Message: "Failed to apply all team members to inherited role",
 						Detail:  err.Error(),
 						Status:  corev1.WarningStatus,
 					})
@@ -337,8 +351,8 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 					object.Status.Status = corev1.FailureStatus
 					object.Status.Components.SetCondition(corev1.Component{
-						Name:    "inherited_roles",
-						Message: "failed to provision one of more inherited user roles",
+						Name:    ComponentClusterRoles,
+						Message: "Failed to provision one of more inherited user roles",
 						Status:  corev1.FailureStatus,
 						Detail:  err.Error(),
 					})
@@ -347,8 +361,8 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 				}
 
 				object.Status.Components.SetCondition(corev1.Component{
-					Name:    "inherited_roles",
-					Message: "provision one of more inherited users on cluster",
+					Name:    ComponentClusterRoles,
+					Message: "Provision one of more inherited users on cluster",
 					Status:  corev1.SuccessStatus,
 				})
 			}
@@ -372,8 +386,8 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			logger.Debug("ensuring that network policies are enabled by default on all namespaces")
 
 			object.Status.Components.SetCondition(corev1.Component{
-				Name:    "network_policy",
-				Message: "network policy has been provisioned",
+				Name:    ComponentClusterNetworkPolicy,
+				Message: "Network policy has been provisioned",
 				Status:  corev1.SuccessStatus,
 			})
 		} else {
@@ -386,8 +400,8 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		object.Status.Status = corev1.SuccessStatus
 
 		object.Status.Components.SetCondition(corev1.Component{
-			Name:    "provision",
-			Message: "cluster has been successfully provisioned",
+			Name:    ComponentClusterCreate,
+			Message: "Cluster has been successfully provisioned",
 			Status:  corev1.SuccessStatus,
 		})
 

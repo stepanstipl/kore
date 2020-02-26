@@ -90,7 +90,7 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			resource.Status.Status = core.FailureStatus
 			resource.Status.Conditions = []core.Condition{{
 				Detail:  "access denied",
-				Message: "cannot create namespace on cluster not owned by you",
+				Message: "Cannot create namespace on cluster not owned by you",
 			}}
 
 			return reconcile.Result{}, nil
@@ -103,7 +103,7 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			Namespace: resource.Spec.Cluster.Namespace,
 		}, cluster); err != nil {
 			if !kerrors.IsNotFound(err) {
-				logger.WithError(err).Error("trying to retrieve the cluster")
+				logger.WithError(err).Error("Trying to retrieve the cluster")
 
 				return reconcile.Result{}, err
 			}
@@ -112,7 +112,7 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			resource.Status.Status = core.PendingStatus
 			resource.Status.Conditions = []core.Condition{{
 				Detail:  "cluster does not exist",
-				Message: "no cluster: " + resource.Spec.Cluster.Name + " exists for this team",
+				Message: "No cluster: " + resource.Spec.Cluster.Name + " exists for this team",
 			}}
 
 			// @TODO we probably need a way of escaping this loop?
@@ -124,7 +124,7 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			resource.Status.Status = core.PendingStatus
 			resource.Status.Conditions = []core.Condition{{
 				Detail:  "cluster provisioning is still pending",
-				Message: "cluster " + resource.Spec.Cluster.Name + " is still pending",
+				Message: "Cluster " + resource.Spec.Cluster.Name + " is still pending",
 			}}
 
 			return reconcile.Result{RequeueAfter: 3 * time.Minute}, nil
@@ -138,7 +138,7 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			resource.Status.Status = core.PendingStatus
 			resource.Status.Conditions = []core.Condition{{
 				Detail:  "cluster is pending, retrying later",
-				Message: "cluster: " + resource.Spec.Cluster.Name + " is still pending",
+				Message: "Cluster: " + resource.Spec.Cluster.Name + " is still pending",
 			}}
 
 			return reconcile.Result{RequeueAfter: 3 * time.Minute}, nil
@@ -150,7 +150,7 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			resource.Status.Status = core.PendingStatus
 			resource.Status.Conditions = []core.Condition{{
 				Detail:  "cluster provisioning is still pending",
-				Message: "cluster " + resource.Spec.Cluster.Name + " is still pending",
+				Message: "Cluster " + resource.Spec.Cluster.Name + " is still pending",
 			}}
 
 			return reconcile.Result{RequeueAfter: 3 * time.Minute}, nil
@@ -159,7 +159,7 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			resource.Status.Status = core.PendingStatus
 			resource.Status.Conditions = []core.Condition{{
 				Detail:  "cluster has failed to provision, will retry",
-				Message: "cluster " + resource.Spec.Cluster.Name + " is in a failed state",
+				Message: "Cluster " + resource.Spec.Cluster.Name + " is in a failed state",
 			}}
 
 			return reconcile.Result{RequeueAfter: 3 * time.Minute}, nil
@@ -242,7 +242,7 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 		resource.Status.Status = core.FailureStatus
 		resource.Status.Conditions = []core.Condition{{
-			Message: "failed trying to reconcile the nameresource claim",
+			Message: "Failed trying to reconcile the nameresource claim",
 			Detail:  err.Error(),
 		}}
 	} else {

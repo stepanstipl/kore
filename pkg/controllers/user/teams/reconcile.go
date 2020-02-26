@@ -71,7 +71,7 @@ func (t teamController) Reconcile(request reconcile.Request) (reconcile.Result, 
 
 			team.Status.Status = core.FailureStatus
 			team.Status.Conditions = []core.Condition{{
-				Message: "team name is protected, you must rename the team",
+				Message: "Team name is protected, you must rename the team",
 			}}
 
 			return errors.New("team name is protected, must change the name")
