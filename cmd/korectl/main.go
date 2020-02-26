@@ -38,23 +38,16 @@ func init() {
 }
 
 func main() {
-	logger := log.WithFields(log.Fields{
-		"config": korectl.HubConfig,
-	})
-
 	// @step: load the api config
 	config, err := korectl.GetOrCreateClientConfiguration()
 	if err != nil {
-		logger.WithError(err).Warn("failed to load the kore api configuration")
-		logger.Warn("please check the documentation for how to configure the cli")
-
+		fmt.Fprintf(os.Stderr, "Error: failed to read configuration file. Reason: %s\n", err)
 		os.Exit(1)
 	}
 
 	// @step: we need to pull down the swagger and resource cache if required
 	if err := korectl.GetCaches(config); err != nil {
-		logger.WithError(err).Error("failed to load the cache, try refreshing the cache")
-
+		fmt.Fprintf(os.Stderr, "Error: failed to load the cache")
 		os.Exit(1)
 	}
 
@@ -69,16 +62,12 @@ func main() {
 		EnableBashCompletion: true,
 
 		OnUsageError: func(context *cli.Context, err error, _ bool) error {
-			fmt.Fprintf(os.Stderr, "[error] invalid options %s\n", err)
 			return err
 		},
 
-		Action: func(ctx *cli.Context) error {
-			return nil
-		},
-
 		CommandNotFound: func(ctx *cli.Context, name string) {
-			fmt.Fprintf(os.Stderr, "[error] command not found %s\n", name)
+			fmt.Fprintf(os.Stderr, "Error: unknown command %q\n\n", name)
+			fmt.Fprintf(os.Stderr, "Please run `%s help` to see all available commands.\n", ctx.App.Name)
 			os.Exit(1)
 		},
 
@@ -92,19 +81,24 @@ func main() {
 			}
 
 			command := ctx.Args().Get(0)
+			if command == "" || ctx.App.Command(command) == nil { // We don't have a valid command
+				return nil
+			}
+
 			switch {
-			case command == "local":
+			case command == "local", command == "help", command == "autocomplete":
 				// no contexts required yet.
 			case len(config.Contexts) <= 0:
-				log.Warnln("No korectl context configured.")
-				os.Exit(0)
+				fmt.Fprintf(os.Stderr, "Error: no %s context configured.\n\n", ctx.App.Name)
+				fmt.Fprintf(os.Stderr, "Please check the documentation about how to set up %s.\n", ctx.App.Name)
+				os.Exit(1)
 			}
 			return nil
 		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
-		fmt.Fprintf(os.Stderr, "[error] %s\n", err)
+		fmt.Fprintf(os.Stderr, "Error: %s\n\n", err)
 		os.Exit(1)
 	}
 }

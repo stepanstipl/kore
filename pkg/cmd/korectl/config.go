@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/ghodss/yaml"
 )
@@ -184,5 +185,12 @@ func (c *Config) Update() error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(os.ExpandEnv(HubConfig), data, os.FileMode(0740))
+
+	configPath := os.ExpandEnv(HubConfig)
+
+	if err := os.MkdirAll(filepath.Dir(configPath), os.FileMode(0750)); err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(configPath, data, os.FileMode(0640))
 }
