@@ -89,19 +89,19 @@ func (d DefaultHandler) EnableAdminsOnly() bool {
 // AuthorizationResponse contains the result of a authorization request
 type AuthorizationResponse struct {
 	// AuthorizationURL is the endpoint for identity provider
-	AuthorizationURL string `json:"authorization_url,omitempty"`
+	AuthorizationURL string `json:"authorization-url,omitempty"`
 	// ClientID is the client id of the login
-	ClientID string `json:"client_id,omitempty"`
+	ClientID string `json:"client-id,omitempty"`
 	// ClientSecret is used for refreshing
-	ClientSecret string `json:"client_secret,omitempty"`
+	ClientSecret string `json:"client-secret,omitempty"`
 	// AccessToken is the access token provided
-	AccessToken string `json:"access_token,omitempty"`
+	AccessToken string `json:"access-token,omitempty"`
 	// RefreshToken is a potential refresh token
-	RefreshToken string `json:"refresh_token,omitempty"`
+	RefreshToken string `json:"refresh-token,omitempty"`
 	// IDToken string is the identity token
-	IDToken string `json:"id_token,omitempty"`
+	IDToken string `json:"id-token,omitempty"`
 	// TokenEndpointURL is the token endpoint
-	TokenEndpointURL string `json:"token_endpoint_url,omitempty"`
+	TokenEndpointURL string `json:"token-endpoint-url,omitempty"`
 }
 
 // Handler is the contract to a resource handler
