@@ -43,7 +43,7 @@ func main() {
 	})
 
 	// @step: load the api config
-	config, err := korectl.GetClientConfiguration()
+	config, err := korectl.GetOrCreateClientConfiguration()
 	if err != nil {
 		logger.WithError(err).Warn("failed to load the kore api configuration")
 		logger.Warn("please check the documentation for how to configure the cli")
@@ -91,11 +91,14 @@ func main() {
 				}
 			}
 
-			if config.Server == "" {
-				log.Warn("no server endpoint has been configured, please check documentation")
+			command := ctx.Args().Get(0)
+			switch {
+			case command == "local":
+				// no contexts required yet.
+			case len(config.Contexts) <= 0:
+				log.Warnln("No korectl context configured.")
 				os.Exit(0)
 			}
-
 			return nil
 		},
 	}
