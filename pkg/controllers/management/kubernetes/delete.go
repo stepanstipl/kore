@@ -60,6 +60,8 @@ func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (rec
 		u.SetName(object.Spec.Provider.Name)
 		u.SetNamespace(object.Spec.Provider.Namespace)
 
+		object.Status.Status = corev1.DeleteStatus
+
 		// @check if a we are backed by a cloud provider
 		if kore.IsProviderBacked(object) {
 			logger := logger.WithFields(log.Fields{
@@ -77,38 +79,38 @@ func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (rec
 
 					return reconcile.Result{}, err
 				}
+			} else {
+				object.Status.Components.SetCondition(corev1.Component{
+					Name:    "deletion",
+					Message: "Waiting for cloud provider to be deleted",
+				})
 
-				// cool we are return and delete the finalizer
-				return reconcile.Result{}, nil
-			}
+				// @step: should we delete the cloud provider if there is one
+				if a.Config().EnableClusterDeletion && u.GetDeletionTimestamp() == nil {
+					logger.Info("attempting to delete the cloud provider from the api")
 
-			object.Status.Components.SetCondition(corev1.Component{
-				Name:    "deletion",
-				Message: "Waiting for cloud provider to be deleted",
-			})
+					// @step: we should attempt to delete the cloud provider
+					if err := a.mgr.GetClient().Delete(ctx, u); err != nil {
+						logger.WithError(err).Error("trying delete the cloud cluster")
 
-			// @step: should we delete the cloud provider if there is one
-			if a.Config().EnableClusterDeletion && u.GetDeletionTimestamp() == nil {
-				logger.Info("attempting to delete the cloud provider from the api")
+						object.Status.Components.SetCondition(corev1.Component{
+							Name:    "deletion",
+							Message: "Failed trying to delete the cloud provider",
+							Detail:  err.Error(),
+						})
 
-				// @step: we should attempt to delete the cloud provider
-				if err := a.mgr.GetClient().Delete(ctx, u); err != nil {
-					logger.WithError(err).Error("trying delete the cloud cluster")
+						return reconcile.Result{}, err
+					}
 
-					object.Status.Components.SetCondition(corev1.Component{
-						Name:    "deletion",
-						Message: "Failed trying to delete the cloud provider",
-						Detail:  err.Error(),
-					})
-
-					return reconcile.Result{}, err
+					return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
 				}
 
-				return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+				if a.Config().EnableClusterDeletionBlock {
+					// @check if cloud provider is still being deleted we wait
+					return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+				}
 			}
-
-			// @check if cloud provider is still being deleted
-			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+			logger.Debug("attempting to delete the kubernetes credential")
 		}
 
 		// @step: we should delete the secert from api
@@ -122,7 +124,6 @@ func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (rec
 
 			return reconcile.Result{}, err
 		}
-		object.Status.Status = corev1.DeleteStatus
 
 		return reconcile.Result{}, nil
 	}()

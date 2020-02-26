@@ -227,15 +227,15 @@ func Options() []cli.Flag {
 		},
 
 		// @controller flags
-		cli.BoolFlag{
-			Name:   "enable-bootstrap-feature",
-			Usage:  "Indicates if the bootstrap controller is to be enabled `BOOL`",
-			EnvVar: "ENABLE_BOOTSTRAP_FEATURE",
+		cli.BoolTFlag{
+			Name:   "enable-cluster-deletion",
+			Usage:  "Indicates you want the controller delete the cloud resource when deleting the cluster `BOOL`",
+			EnvVar: "ENABLE_CLOUD_DELETION",
 		},
 		cli.BoolTFlag{
-			Name:   "enable-cluster-deletion-feature",
-			Usage:  "Indicates you want the controller delete the cloud resource when deleting the cluster `BOOL`",
-			EnvVar: "ENABLE_CLOUD_DELETEION_FEATURE",
+			Name:   "enable-cluster-deletion-block",
+			Usage:  "Indicates when deleting the kubernetes cluster we should wait for the provider to delete first `BOOL`",
+			EnvVar: "ENABLE_CLOUD_DELETION_BLOCK",
 		},
 	}
 }
