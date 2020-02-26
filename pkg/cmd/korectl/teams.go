@@ -132,7 +132,7 @@ func GetTeamsCommands(config *Config) cli.Command {
 					},
 					{
 						Name:  "remove",
-						Usage: "Used to remove a member from a team in th kore",
+						Usage: "Used to remove a member from a team in the kore",
 						Flags: []cli.Flag{
 							cli.StringFlag{
 								Name:     "team,t",

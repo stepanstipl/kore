@@ -165,7 +165,7 @@ func (c *Requestor) parseResponse() error {
 			fmt.Fprintf(os.Stdout, "%s", out)
 			return err
 		default:
-			return errors.New("unsupport output type")
+			return errors.New("unsupported output type")
 		}
 	}
 	w := new(tabwriter.Writer)

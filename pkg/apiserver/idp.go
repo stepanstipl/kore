@@ -62,8 +62,8 @@ func (id *idpHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	ws.Route(
 		ws.GET("/types").To(id.getTypes).
 			Doc("Returns a list of all the possible identity providers supported in the kore").
-			Returns(http.StatusOK, "A list of all the possible identity providers types", []corev1.IDPConfig{}).
-			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusOK, "A list of all the possible identity provider types", []corev1.IDPConfig{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
 	// The default IDP provider for identity in the kore
@@ -72,7 +72,7 @@ func (id *idpHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Doc("Returns the default identity provider configured in the kore").
 			Returns(http.StatusOK, "The default configured identity provider", corev1.IDP{}).
 			Returns(http.StatusNotFound, "Indicate the class was not found in the kore", nil).
-			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
 	// All configured IDP providers
@@ -80,7 +80,7 @@ func (id *idpHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 		ws.GET("/configured/").To(id.findIDPs).
 			Doc("Returns a list of all the configured identity providers in the kore").
 			Returns(http.StatusOK, "A list of all the configured identity providers", []corev1.IDP{}).
-			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
@@ -89,7 +89,7 @@ func (id *idpHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("name", "The name of the configured IDP provider to retrieve")).
 			Returns(http.StatusOK, "the specified identity provider", corev1.IDP{}).
 			Returns(http.StatusNotFound, "Indicate the class was not found in the kore", nil).
-			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
@@ -98,7 +98,7 @@ func (id *idpHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("name", "The name of the configured IDP provider to update")).
 			Reads(corev1.IDP{}, "The definition for the ID provider").
 			Returns(http.StatusOK, "A list of all the IDPs in the kore", corev1.IDP{}).
-			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
 	// CLients confgured by name in the kore
@@ -108,7 +108,7 @@ func (id *idpHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("name", "The name of the IDP client provider to update")).
 			Reads(corev1.IDPClient{}, "The definition for the idp client").
 			Returns(http.StatusOK, "The configured client in the kore", corev1.IDPClient{}).
-			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
 	return ws, nil

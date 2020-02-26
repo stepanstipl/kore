@@ -39,7 +39,7 @@ type healthHandler struct {
 
 // Register is responsible for handling the registration
 func (l *healthHandler) Register(i kore.Interface, builder utils.PathBuilder) (*restful.WebService, error) {
-	log.Info("registering the healt webservice with container")
+	log.Info("registering the health webservice with container")
 
 	l.Interface = i
 
@@ -48,7 +48,7 @@ func (l *healthHandler) Register(i kore.Interface, builder utils.PathBuilder) (*
 	ws.Route(
 		ws.GET("/healthz").To(l.healthHandler).
 			Doc("Used to start the authorization flow for user authentication").
-			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
 	return ws, nil

@@ -62,7 +62,7 @@ func (p *plansHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 			Doc("Returns all the classes available to initialized in the kore").
 			Param(ws.QueryParameter("kind", "Returns all plans for a specific resource type")).
 			Returns(http.StatusOK, "A list of all the classes in the kore", configv1.PlanList{}).
-			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
@@ -70,7 +70,7 @@ func (p *plansHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 			Doc("Returns a specific class plan from the kore").
 			Param(ws.PathParameter("name", "The name of the plan you wish to retrieve")).
 			Returns(http.StatusOK, "Contains the class definintion from the kore", configv1.Plan{}).
-			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
@@ -79,7 +79,7 @@ func (p *plansHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 			Param(ws.PathParameter("name", "The name of the plan you wish to act upon")).
 			Reads(configv1.Plan{}, "The specification for the plan you are updating").
 			Returns(http.StatusOK, "Contains the class definintion from the kore", configv1.Plan{}).
-			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
@@ -87,7 +87,7 @@ func (p *plansHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 			Doc("Used to delete a plan from the kore").
 			Param(ws.PathParameter("name", "The name of the plan you wish to act upon")).
 			Returns(http.StatusOK, "Contains the class definintion from the kore", configv1.Plan{}).
-			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
 	return ws, nil
