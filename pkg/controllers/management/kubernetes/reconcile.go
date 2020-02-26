@@ -188,11 +188,6 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			Status:  corev1.SuccessStatus,
 		})
 
-		// @step: lets update the endpoint early
-		if original.Status.Endpoint == "" {
-			return reconcile.Result{Requeue: true}, nil
-		}
-
 		// @step: ensure all cluster components are deployed
 		components, err := a.EnsureClusterman(context.Background(), client, object)
 		if err != nil {
