@@ -54,7 +54,7 @@ func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (rec
 		u := &unstructured.Unstructured{}
 		u.SetGroupVersionKind(schema.GroupVersionKind{
 			Group:   object.Spec.Provider.Group,
-			Kind:    object.Spec.Provider.Kind,
+			Kind:    "GKE",
 			Version: object.Spec.Provider.Version,
 		})
 		u.SetName(object.Spec.Provider.Name)
