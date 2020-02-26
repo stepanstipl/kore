@@ -85,7 +85,7 @@ type DEX struct {
 	GRPCCaCrt string `json:"grpcCaCrt"`
 	// GRPCClientCrt is the client cert to use when accessing the DEX grpc server
 	GRPCClientCrt string `json:"grpcClientCrt"`
-	// GRPCClientKey is the client key to use when acceccing the DEX grpc server
+	// GRPCClientKey is the client key to use when accessing the DEX grpc server
 	GRPCClientKey string `json:"grpcClientKey"`
 }
 
@@ -111,8 +111,11 @@ type Config struct {
 	DEX DEX `json:"dex"`
 	// DiscoveryURL is the openid discovery url
 	DiscoveryURL string `json:"discovery-url,omitempty"`
-	// EnableBootstrapFeature indicates if the bootstrap controller should be enabled
-	EnableBootstrapFeature bool `json:"enable-bootstrap-feature,omitempty"`
+	// EnabledClusterDeletion indicates we should delete cloud providers
+	EnableClusterDeletion bool `json:"enable-cluster-deletion,omitempty"`
+	// EnableClusterDeletionBlock indicates we should only delete the cluster if the cloud
+	// provider is deleted
+	EnableClusterDeletionBlock bool `json:"enable-cluster-deletion-block,omitempty"`
 	// HMAC is the token used to sign things
 	HMAC string `json:"hmac"`
 	// PublicHubURL is the public url for the kore (the ui not the api)

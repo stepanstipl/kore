@@ -21,6 +21,8 @@ package v1
 type Status string
 
 const (
+	// DeleteStatus indicates we ar deleting the resource
+	DeleteStatus Status = "Deleting"
 	// PendingStatus indicate we are waiting
 	PendingStatus Status = "Pending"
 	// SuccessStatus is a successful resource
