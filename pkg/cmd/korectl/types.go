@@ -55,19 +55,19 @@ type AuthInfo struct {
 // OIDC is the identity within the kore
 type OIDC struct {
 	// AccessToken is the access token retrieved from kore
-	AccessToken string `json:"access-token,omitempty" yaml:"access_token"`
+	AccessToken string `json:"access-token,omitempty" yaml:"access-token"`
 	// ClientID is the client id for the user
-	ClientID string `json:"client-id,omitempty" yaml:"client_id"`
+	ClientID string `json:"client-id,omitempty" yaml:"client-id"`
 	// ClientSecret is the client secret used for authentication
-	ClientSecret string `json:"client-secret,omitempty" yaml:"client_secret"`
+	ClientSecret string `json:"client-secret,omitempty" yaml:"client-secret"`
 	// IDToken the identity token
-	IDToken string `json:"id_token,omitempty" yaml:"id_token"`
+	IDToken string `json:"id-token,omitempty" yaml:"id-token"`
 	// RefreshToken is refresh token for the user
-	RefreshToken string `json:"refresh-token,omitempty" yaml:"refresh_token"`
+	RefreshToken string `json:"refresh-token,omitempty" yaml:"refresh-token"`
 	// TokenURL is the endpoint for tokens
-	TokenURL string `json:"token-url,omitempty" yaml:"token_url"`
+	TokenURL string `json:"token-url,omitempty" yaml:"token-url"`
 	// AuthorizeURL is the endpoint for the authorize
-	AuthorizeURL string `json:"authorize-url,omitempty" yaml:"authorize_url"`
+	AuthorizeURL string `json:"authorize-url,omitempty" yaml:"authorize-url"`
 }
 
 // Context links endpoint and a credential together
@@ -86,17 +86,17 @@ type Server struct {
 
 type AuthorizationResponse struct {
 	// AuthorizationURL is the endpoint for identity provider
-	AuthorizationURL string `json:"authorization_url,omitempty" yaml:"authorization_url"`
+	AuthorizationURL string `json:"authorization-url,omitempty" yaml:"authorization-url"`
 	// ClientID is the client id of the login
-	ClientID string `json:"client_id,omitempty" yaml:"client_id"`
+	ClientID string `json:"client-id,omitempty" yaml:"client-id"`
 	// ClientSecret is used for refreshing
-	ClientSecret string `json:"client_secret,omitempty" yaml:"client_secret"`
+	ClientSecret string `json:"client-secret,omitempty" yaml:"client-secret"`
 	// AccessToken is the access token provided
-	AccessToken string `json:"access_token,omitempty" yaml:"access_token"`
+	AccessToken string `json:"access-token,omitempty" yaml:"access-token"`
 	// RefreshToken is a potential refresh token
-	RefreshToken string `json:"refresh_token,omitempty" yaml:"refresh_token"`
+	RefreshToken string `json:"refresh-token,omitempty" yaml:"refresh-token"`
 	// IDToken string is the identity token
-	IDToken string `json:"id_token,omitempty" yaml:"id_token"`
+	IDToken string `json:"id-token,omitempty" yaml:"id-token"`
 	// TokenEndpointURL is the token endpoint
-	TokenEndpointURL string `json:"token_endpoint_url,omitempty" yaml:"token_endpoint_url"`
+	TokenEndpointURL string `json:"token-endpoint-url,omitempty" yaml:"token-endpoint-url"`
 }
