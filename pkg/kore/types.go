@@ -113,6 +113,8 @@ type Config struct {
 	DiscoveryURL string `json:"discovery-url,omitempty"`
 	// EnableBootstrapFeature indicates if the bootstrap controller should be enabled
 	EnableBootstrapFeature bool `json:"enable-bootstrap-feature,omitempty"`
+	// EnabledClusterDeletion indicates we should delete cloud providers
+	EnableClusterDeletion bool `json:"enable-cluster-deletion,omitempty"`
 	// HMAC is the token used to sign things
 	HMAC string `json:"hmac"`
 	// PublicHubURL is the public url for the kore (the ui not the api)

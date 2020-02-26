@@ -198,7 +198,7 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 
 	name := "oidc-proxy"
 
-	// @step: ensure the kubernete service
+	// @step: ensure the kubernetes service
 	if err := cc.Get(context.Background(), types.NamespacedName{
 		Namespace: KubeProxyNamespace,
 		Name:      "proxy",

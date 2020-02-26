@@ -232,5 +232,10 @@ func Options() []cli.Flag {
 			Usage:  "Indicates if the bootstrap controller is to be enabled `BOOL`",
 			EnvVar: "ENABLE_BOOTSTRAP_FEATURE",
 		},
+		cli.BoolTFlag{
+			Name:   "enable-cluster-deletion-feature",
+			Usage:  "Indicates you want the controller delete the cloud resource when deleting the cluster `BOOL`",
+			EnvVar: "ENABLE_CLOUD_DELETEION_FEATURE",
+		},
 	}
 }
