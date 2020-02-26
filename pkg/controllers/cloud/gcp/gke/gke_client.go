@@ -383,18 +383,27 @@ func (g *gkeClient) GetClusters() ([]*container.Cluster, error) {
 
 	path := fmt.Sprintf("projects/%s/locations/%s", g.credentials.Spec.Project, g.credentials.Spec.Region)
 
-	_ = wait.ExponentialBackoff(retry.DefaultRetry, func() (done bool, err error) {
+	err := wait.ExponentialBackoff(retry.DefaultRetry, func() (done bool, err error) {
 		resp, err := g.ce.Projects.Locations.Clusters.List(path).Do()
 		if err != nil {
 			log.Error(err, "failed to retrieve clusters")
 
+			switch err := err.(type) {
+			case *googleapi.Error:
+				if err.Code == http.StatusForbidden {
+					return false, err
+				}
+			default:
+				return false, nil
+			}
 		}
+
 		list = resp.Clusters
 
 		return true, nil
 	})
 
-	return list, nil
+	return list, err
 }
 
 // CreateCluster is responsible for posting the cluster configuration
