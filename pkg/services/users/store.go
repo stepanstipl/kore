@@ -59,7 +59,7 @@ func New(config Config) (Interface, error) {
 	db.DB().SetMaxOpenConns(0)
 
 	// @step: perform migrations on the models
-	log.Info("perform database migrations")
+	log.Info("performing database migrations")
 	if err := model.Migrations(db); err != nil {
 		return nil, err
 	}

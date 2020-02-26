@@ -58,7 +58,7 @@ func (a *authImpl) Verify(ctx context.Context, token string) (*oidc.IDToken, err
 	// @step: we lock the struct and check if the verifier has been configured yet
 	verifier := a.GetVerifier()
 	if verifier == nil {
-		log.Info("openid configuration has not been configured yet")
+		log.Info("openid has not been configured yet")
 
 		return nil, errors.New("unable to verify token")
 	}

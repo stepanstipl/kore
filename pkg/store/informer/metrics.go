@@ -36,7 +36,7 @@ var (
 	errorCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "informer_error_total",
-			Help: "The number of error which the informer has seen per resource",
+			Help: "The number of errors which the informer has seen per resource",
 		},
 		[]string{"resource"},
 	)

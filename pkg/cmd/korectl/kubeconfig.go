@@ -37,7 +37,7 @@ func PopulateKubeconfig(clusters *clustersv1.KubernetesList, kubeconfig string, 
 	}
 	auth := config.GetCurrentAuthInfo()
 	if auth.OIDC == nil {
-		return errors.New("you must be using a context backed by a idp")
+		return errors.New("you must be using a context backed by an idp")
 	}
 
 	cfg.AuthInfos["kore"] = &api.AuthInfo{

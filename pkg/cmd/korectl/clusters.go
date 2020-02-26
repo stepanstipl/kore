@@ -64,7 +64,7 @@ func GetClustersCommand(config *Config) cli.Command {
 						return err
 					}
 					if len(clusters.Items) <= 0 {
-						fmt.Println("no clusters found in this teams namespace")
+						fmt.Println("no clusters found in this team's namespace")
 
 						return nil
 					}
@@ -77,14 +77,14 @@ func GetClustersCommand(config *Config) cli.Command {
 					if err := PopulateKubeconfig(clusters, kubeconfig, config); err != nil {
 						return err
 					}
-					fmt.Println("Successfull updated you kubeconfig with credentuals")
+					fmt.Println("Successfully updated your kubeconfig with credentials")
 
 					return nil
 				},
 			},
 			{
 				Name:  "get",
-				Usage: "Used to retrieve one of all cluster from the kore",
+				Usage: "Used to retrieve one or all clusters from the kore",
 				Flags: append([]cli.Flag{
 					cli.StringFlag{
 						Name:  "name,n",

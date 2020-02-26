@@ -79,7 +79,7 @@ func ParseDocument(src io.Reader, namespace string) ([]*Document, error) {
 		// - ensure we have a name
 		// - ensure we have a api kind
 		if u.GetName() == "" {
-			return nil, errors.New("resource must have names")
+			return nil, errors.New("resource must have a name")
 		}
 		if u.GetKind() == "" {
 			return nil, errors.New("resource must have an api kind")
@@ -100,7 +100,7 @@ func ParseDocument(src io.Reader, namespace string) ([]*Document, error) {
 				team = namespace
 			}
 			if team == "" {
-				return nil, errors.New("all resource must have a team namespace")
+				return nil, errors.New("all resources must have a team namespace")
 			}
 		}
 		u.SetNamespace(team)

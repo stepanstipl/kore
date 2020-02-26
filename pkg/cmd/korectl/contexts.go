@@ -60,7 +60,7 @@ func GetContextCommand(config *Config) cli.Command {
 			},
 			{
 				Name:  "use",
-				Usage: "Used to select the current context for the korectl to operate",
+				Usage: "Used to select the current context for korectl to operate",
 				Action: func(ctx *cli.Context) error {
 					if !ctx.Args().Present() {
 						return errors.New("you need to specify a context to use")
@@ -71,9 +71,9 @@ func GetContextCommand(config *Config) cli.Command {
 					config.CurrentContext = ctx.Args().First()
 
 					if err := config.Update(); err != nil {
-						return fmt.Errorf("trying to update your locak korectl config: %s", err)
+						return fmt.Errorf("trying to update your local korectl config: %s", err)
 					}
-					fmt.Println("successfully switch the context to: ", ctx.Args().First())
+					fmt.Println("successfully switched the context to: ", ctx.Args().First())
 
 					return nil
 				},

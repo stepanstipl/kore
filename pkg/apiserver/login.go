@@ -95,7 +95,7 @@ func (l *loginHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 		ws.GET("/authorize").To(l.authorizerHandler).
 			Param(ws.QueryParameter("redirect_url", "The rediection url, i.e. the location to redirect post").Required(true)).
 			Doc("Used to start the authorization flow for user authentication").
-			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
@@ -103,7 +103,7 @@ func (l *loginHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 			Doc("Used to handle the authorization callback from the identity provider").
 			Param(ws.QueryParameter("code", "The authorization code returned from the identity provider").Required(true)).
 			Param(ws.QueryParameter("state", "The state parameter which was passed on authorization request").Required(true)).
-			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
 	return ws, nil

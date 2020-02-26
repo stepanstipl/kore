@@ -78,7 +78,7 @@ func New(config Config) (Interface, error) {
 	if config.SigningCA != "" {
 		log.WithField(
 			"signing_ca", config.SigningCA,
-		).Info("using the signing certificate to verifier the requests")
+		).Info("using the signing certificate to verify the requests")
 
 		keyset, err := newStaticKeySet(config.SigningCA)
 		if err != nil {
@@ -90,7 +90,7 @@ func New(config Config) (Interface, error) {
 	if config.DiscoveryURL != "" {
 		log.WithField(
 			"discovery-url", config.DiscoveryURL,
-		).Info("using the discovery endpoint to verifier the requests")
+		).Info("using the discovery endpoint to verify the requests")
 
 		provider, err := oidc.NewProvider(context.Background(), config.DiscoveryURL)
 		if err != nil {

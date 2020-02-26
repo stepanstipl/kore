@@ -46,7 +46,7 @@ type ccCtrl struct {
 
 func init() {
 	if err := controllers.Register(&ccCtrl{}); err != nil {
-		log.WithError(err).Fatal("failed to register the cluster controller controller")
+		log.WithError(err).Fatal("failed to register the cluster config controller")
 	}
 }
 

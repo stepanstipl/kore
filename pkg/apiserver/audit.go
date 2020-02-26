@@ -60,7 +60,7 @@ func (a *auditHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 			Doc("Used to return all the audit event across all the teams").
 			Param(ws.QueryParameter("since", "The time duration to return the events within").DefaultValue("60m")).
 			Returns(http.StatusOK, "A collection of events from the team", orgv1.AuditEventList{}).
-			DefaultReturns("An generic API error containing the cause of the error", Error{}),
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
 	return ws, nil
