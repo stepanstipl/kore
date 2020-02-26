@@ -13,6 +13,7 @@ services:
       KORE_CERTIFICATE_AUTHORITY_KEY: hack/ca/ca-key.pem
       KUBE_API_SERVER: http://kube-apiserver:8080
       USERS_DB_URL: root:pass@tcp(database:3306)/kore?parseTime=true
+      VERBOSE: true
     ports:
       - 10080:10080
     restart: always
