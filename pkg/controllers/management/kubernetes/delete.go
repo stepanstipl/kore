@@ -37,6 +37,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
+const (
+	// ComponentClusterDelete is the name of the cluster deltion component
+	ComponentClusterDelete = "Cluster Deletor"
+)
+
 // Delete is responsible for deleting any bindings which were created
 func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (reconcile.Result, error) {
 	logger := log.WithFields(log.Fields{
@@ -81,7 +86,7 @@ func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (rec
 				}
 			} else {
 				object.Status.Components.SetCondition(corev1.Component{
-					Name:    "deletion",
+					Name:    ComponentClusterDelete,
 					Message: "Waiting for cloud provider to be deleted",
 				})
 
@@ -94,7 +99,7 @@ func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (rec
 						logger.WithError(err).Error("trying delete the cloud cluster")
 
 						object.Status.Components.SetCondition(corev1.Component{
-							Name:    "deletion",
+							Name:    ComponentClusterDelete,
 							Message: "Failed trying to delete the cloud provider",
 							Detail:  err.Error(),
 						})

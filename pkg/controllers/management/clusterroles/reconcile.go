@@ -86,7 +86,7 @@ func (a crCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 		role.Status.Status = corev1.FailureStatus
 		role.Status.Conditions = []corev1.Condition{{
 			Detail:  err.Error(),
-			Message: "failed trying to retrieve list of clusters to apply",
+			Message: "Failed trying to retrieve list of clusters to apply",
 		}}
 
 		if err := a.mgr.GetClient().Status().Patch(ctx, role, client.MergeFrom(original)); err != nil {
@@ -153,7 +153,7 @@ func (a crCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 
 			role.Status.Status = corev1.WarningStatus
 			role.Status.Conditions = []corev1.Condition{{
-				Message: fmt.Sprintf("failed to provision on all clusters, %d out of %d failed", len(failed.Items), len(list.Items)),
+				Message: fmt.Sprintf("Failed to provision on all clusters, %d out of %d failed", len(failed.Items), len(list.Items)),
 			}}
 
 			return errors.New("provisioning managed cluster roles")

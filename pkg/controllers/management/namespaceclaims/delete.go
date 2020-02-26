@@ -82,7 +82,7 @@ func (a *nsCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 		resource.Status.Status = corev1.FailureStatus
 		resource.Status.Conditions = []corev1.Condition{{
 			Detail:  err.Error(),
-			Message: "failed to delete namespaceclaim",
+			Message: "Failed to delete namespaceclaim",
 		}}
 
 		return reconcile.Result{}, err
@@ -93,7 +93,7 @@ func (a *nsCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 		resource.Status.Status = corev1.FailureStatus
 		resource.Status.Conditions = []corev1.Condition{{
 			Detail:  err.Error(),
-			Message: "failed to remove the finalizer",
+			Message: "Failed to remove the finalizer",
 		}}
 
 		return reconcile.Result{}, err

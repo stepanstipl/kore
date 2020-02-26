@@ -82,7 +82,7 @@ func (a acCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 				object.Status.Status = corev1.WarningStatus
 				object.Status.Conditions = append(object.Status.Conditions, corev1.Condition{
 					Detail:  "resource not found",
-					Message: "the team " + x + " does not exist",
+					Message: "The team " + x + " does not exist",
 				})
 			}
 		}
@@ -94,7 +94,7 @@ func (a acCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 		object.Status.Conditions = []corev1.Condition{
 			{
 				Detail:  err.Error(),
-				Message: "failed to provision the allocation",
+				Message: "Failed to provision the allocation",
 			},
 		}
 	}
