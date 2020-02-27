@@ -38,7 +38,7 @@ import (
 )
 
 const (
-	// ComponentClusterDelete is the name of the cluster deltion component
+	// ComponentClusterDelete is the name of the cluster deletion component
 	ComponentClusterDelete = "Cluster Deletor"
 )
 
@@ -57,22 +57,26 @@ func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (rec
 	result, err := func() (reconcile.Result, error) {
 		// @step: we need to grab the cloud provider and check if it's deletion
 		u := &unstructured.Unstructured{}
+
+		// @TODO this needs to be reverted once the fix in placed UI
 		u.SetGroupVersionKind(schema.GroupVersionKind{
 			Group:   object.Spec.Provider.Group,
 			Kind:    "GKE",
 			Version: object.Spec.Provider.Version,
 		})
-		u.SetName(object.Spec.Provider.Name)
-		u.SetNamespace(object.Spec.Provider.Namespace)
+		u.SetName(object.Name)
+		u.SetNamespace(object.Namespace)
 
 		object.Status.Status = corev1.DeleteStatus
 
 		// @check if a we are backed by a cloud provider
 		if kore.IsProviderBacked(object) {
 			logger := logger.WithFields(log.Fields{
-				"kind":    object.Spec.Provider.Kind,
-				"group":   object.Spec.Provider.Group,
-				"version": object.Spec.Provider.Version,
+				"group":     object.Spec.Provider.Group,
+				"kind":      u.GetKind(),
+				"name":      u.GetName(),
+				"namespace": u.GetNamespace(),
+				"version":   object.Spec.Provider.Version,
 			})
 
 			// @step: retrieve the cloud provider resource from the api

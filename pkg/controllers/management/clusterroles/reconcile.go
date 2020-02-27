@@ -133,7 +133,7 @@ func (a crCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 					},
 					Rules: rules,
 				}); err != nil {
-					logger.WithError(err).Error("trying to update or crreate the managed role")
+					logger.WithError(err).Error("trying to update or create the managed role")
 
 					return err
 				}
