@@ -39,7 +39,7 @@ LFLAGS ?= -X github.com/appvia/kore/pkg/version.GitSHA=${GIT_SHA} -X github.com/
 
 export GOFLAGS = -mod=vendor
 
-.PHONY: test authors changelog build docker static release cover vet glide-install demo golangci-lint apis swagger images
+.PHONY: test authors changelog build docker release cover vet glide-install demo golangci-lint apis swagger images
 
 default: build
 
@@ -59,14 +59,6 @@ build: golang generate-clusterappman-manifests spelling
 	@for binary in kore-apiserver korectl auth-proxy kore-clusterappman; do \
 		echo "--> Building $${binary} binary" ; \
 		go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go || exit 1; \
-	done
-
-static: golang generate-clusterappman-manifests deps spelling
-	@echo "--> Compiling the static binaries ($(VERSION))"
-	@mkdir -p bin
-	@for binary in kore-apiserver korectl auth-proxy kore-clusterappman; do \
-		echo "--> Building $${binary} binary" ; \
-		GOOS=linux CGO_ENABLED=0 go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go || exit 1; \
 	done
 
 korectl: golang deps spelling
@@ -111,7 +103,7 @@ in-docker-build:
 	@echo "--> Building in Docker"
 	@git config --global url.git@github.com:.insteadOf https://github.com/
 	@$(MAKE) test
-	@$(MAKE) static
+	@$(MAKE) build
 
 swagger: compose
 	@echo "--> Retrieving the swagger api"
@@ -226,7 +218,7 @@ docker-builder-build:
 	@echo "--> Building the docker image"
 	docker build --build-arg GOVERSION=${GOVERSION} -f ./hack/build/Dockerfile -t ${REGISTRY}/${AUTHOR}/${NAME}-build:${VERSION} .
 
-release: static
+release: build
 	mkdir -p release
 	gzip -c bin/${NAME} > release/${NAME}_${VERSION}_linux_${HARDWARE}.gz
 	rm -f release/${NAME}

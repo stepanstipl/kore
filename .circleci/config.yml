@@ -58,7 +58,7 @@ jobs:
             TEST_USERS_DATABASE_URL: "root:pass@tcp(database:3306)/kore?parseTime=true"
           command: |
             make test
-            make static
+            make build
       - run:
           command: |
             bin/kore-apiserver --verbose
