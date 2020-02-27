@@ -24,6 +24,7 @@ import (
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	core "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/controllers"
+	ctrl "github.com/appvia/kore/pkg/controllers/management/kubernetes"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 	log "github.com/sirupsen/logrus"
@@ -131,7 +132,7 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		}
 
 		// @step: check the provisioning status
-		status, found := cluster.Status.Components.GetStatus("provision")
+		status, found := cluster.Status.Components.GetStatus(ctrl.ComponentClusterCreate)
 		if !found {
 			logger.Warn("cluster does not have a status on the provisioning yet")
 
