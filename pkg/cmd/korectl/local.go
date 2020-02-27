@@ -2,62 +2,22 @@ package korectl
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path"
+	"path/filepath"
+	"time"
 
-	"github.com/manifoldco/promptui"
+	"github.com/ghodss/yaml"
 	"github.com/urfave/cli"
+
+	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
+	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const localEndpoint string = "http://127.0.0.1:10080"
-
-type prompt struct {
-	id     string
-	label  string
-	errMsg string
-	value  string
-}
-
-func (p *prompt) do() error {
-	runner := promptui.Prompt{
-		Label: p.id + " " + p.label,
-		//Label: "A label",
-		Validate: func(in string) error {
-			if len(in) == 0 {
-				return fmt.Errorf(p.errMsg, p.id)
-			}
-			return nil
-		},
-	}
-
-	gathered, err := runner.Run()
-	if err != nil {
-		return err
-	}
-
-	p.value = gathered
-	return nil
-}
-
-type prompts struct {
-	prompts []*prompt
-}
-
-func (p *prompts) collect() error {
-	for _, p := range p.prompts {
-		if err := p.do(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (p *prompts) getValue(id string) string {
-	for _, p := range p.prompts {
-		if p.id == id {
-			return p.value
-		}
-	}
-	return ""
-}
+const localInfraDir string = "./_kore_infra"
 
 func updateAuthInfo(config *Config, clientId, clientSecret, openIdEndpoint string) error {
 	config.AuthInfos = map[string]*AuthInfo{
@@ -71,10 +31,48 @@ func updateAuthInfo(config *Config, clientId, clientSecret, openIdEndpoint strin
 		},
 	}
 
-	return config.Update()
+	return nil
 }
 
-func createLocalConfig(config *Config) error {
+func generateGcpInfo(region, projectId, keyPath string) error {
+	keyData, err := ioutil.ReadFile(filepath.Clean(keyPath))
+	if err != nil {
+		return err
+	}
+
+	cred := gke.GKECredentials{
+		TypeMeta: v1.TypeMeta{
+			Kind:       "GKECredentials",
+			APIVersion: "gke.compute.kore.appvia.io/v1alpha1",
+		},
+		ObjectMeta: v1.ObjectMeta{
+			Name:              "gke",
+			CreationTimestamp: v1.NewTime(time.Now().UTC()),
+		},
+		Spec: gke.GKECredentialsSpec{
+			Region:  region,
+			Project: projectId,
+			Account: string(keyData),
+		},
+		Status: gke.GKECredentialsStatus{
+			Status:   corev1.SuccessStatus,
+			Verified: true,
+		},
+	}
+
+	data, err := yaml.Marshal(cred)
+	if err != nil {
+		return err
+	}
+
+	if err := os.MkdirAll(localInfraDir, os.FileMode(0750)); err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(path.Join(localInfraDir, "gke-credentials.yml"), data, os.FileMode(0640))
+}
+
+func createLocalConfig(config *Config) {
 	config.CurrentContext = "local"
 
 	config.Contexts = map[string]*Context{
@@ -91,26 +89,13 @@ func createLocalConfig(config *Config) error {
 	config.AuthInfos = map[string]*AuthInfo{
 		"local": {},
 	}
-	return config.Update()
 }
 
 func collectAndUpdateAuthInfo(config *Config) error {
 	prompts := &prompts{prompts: []*prompt{
-		&prompt{
-			id:     "Client ID",
-			label:  "%s (for your Identity Broker)",
-			errMsg: "%s cannot be blank",
-		},
-		&prompt{
-			id:     "Client Secret",
-			label:  "%s (for your Identity Broker)",
-			errMsg: "%s cannot be blank",
-		},
-		&prompt{
-			id:     "OpenID endpoint",
-			label:  "%s (for your Identity Broker)",
-			errMsg: "%s cannot be blank",
-		},
+		{id: "Client ID", errMsg: "%s cannot be blank"},
+		{id: "Client Secret", errMsg: "%s cannot be blank"},
+		{id: "OpenID endpoint", errMsg: "%s cannot be blank"},
 	}}
 
 	if err := prompts.collect(); err != nil {
@@ -128,24 +113,51 @@ func collectAndUpdateAuthInfo(config *Config) error {
 	return nil
 }
 
+func collectAndGenerateGcpInfo() error {
+	prompts := &prompts{prompts: []*prompt{
+		{id: "GKE Region", labelSuffix: "(e.g. europe-west2)", errMsg: "%s cannot be blank"},
+		{id: "GKE Project ID", errMsg: "%s cannot be blank"},
+		{
+			id:          "GKE Service Account Key file",
+			labelSuffix: "(full path to the file)",
+			errMsg:      "%s cannot be blank",
+		},
+	}}
+
+	if err := prompts.collect(); err != nil {
+		return err
+	}
+
+	if err := generateGcpInfo(
+		prompts.getValue("GKE Region"),
+		prompts.getValue("GKE Project ID"),
+		prompts.getValue("GKE Service Account Key file"),
+	); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func GetLocalCommand(config *Config) cli.Command {
 	return cli.Command{
 		Name:  "local",
 		Usage: "Used to configure and run a local instance of Kore.",
 		Action: func(c *cli.Context) error {
-			fmt.Printf("config: [%+v]", config)
-			fmt.Println("Let's setup Kore to run locally.")
+			fmt.Println("Let's setup Kore to run locally:")
+			createLocalConfig(config)
 
-			if err := createLocalConfig(config); err != nil {
-				return err
-			}
-
-			fmt.Println("We'll start by gathering your Identity Broker details...")
+			fmt.Println("What are your Identity Broker details?")
 			if err := collectAndUpdateAuthInfo(config); err != nil {
 				return err
 			}
 
-			return nil
+			fmt.Println("What are your Google Cloud Platform details?")
+			if err := collectAndGenerateGcpInfo(); err != nil {
+				return err
+			}
+
+			return config.Update()
 		},
 	}
 }
