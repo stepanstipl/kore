@@ -250,9 +250,6 @@ deps:
 
 vet:
 	@echo "--> Running go vet $(VETARGS) $(PACKAGES)"
-	@go tool vet 2>/dev/null ; if [ $$? -eq 3 ]; then \
-		GO111MODULE=off go get golang.org/x/tools/cmd/vet; \
-	fi
 	@go vet $(VETARGS) $(PACKAGES)
 
 gofmt:
