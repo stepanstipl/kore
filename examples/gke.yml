@@ -3,6 +3,7 @@ apiVersion: gke.compute.kore.appvia.io/v1alpha1
 kind: GKE
 metadata:
   name: dev
+  namespace: devs
 spec:
   description: Dev Cluster
   version: 1.14.10-gke.17
@@ -24,8 +25,6 @@ spec:
   enableIstio: false
   enableStackDriverLogging: false
   enableStackDriverMetrics: false
-  enablePrivateNetwork: true
-  masterIPV4Cidr: 172.16.0.0/28
   maintenanceWindow: '03:00'
   # Were reference to the credentials we wish to use
   credentials:
@@ -35,7 +34,6 @@ spec:
     name: gke
     namespace: kore-admin
 ---
-# We create a
 apiVersion: clusters.compute.kore.appvia.io/v1
 kind: Kubernetes
 metadata:
@@ -57,5 +55,5 @@ spec:
     namespace: kore-admin
     # The name of the gke cluster above
     name: gke
-  # Not used at the moment
   enableDefaultTrafficBlock: false
+  clusterUsers: []
