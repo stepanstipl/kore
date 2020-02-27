@@ -167,7 +167,11 @@ func (a *authImpl) Run(ctx context.Context) error {
 					return errors.New("no authorization token")
 				}
 				// @step: ensure no impersonation is passed through by clearing all headers
-				req.Header = http.Header{}
+				for name := range req.Header {
+					if strings.HasPrefix(name, "Impersonate") {
+						req.Header.Del(name)
+					}
+				}
 
 				// @step: parse and extract the identity
 				raw, err := a.verifier.Verify(req.Context(), bearer)
