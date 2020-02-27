@@ -9,6 +9,71 @@ import (
 
 const localEndpoint string = "http://127.0.0.1:10080"
 
+type prompt struct {
+	id     string
+	label  string
+	errMsg string
+	value  string
+}
+
+func (p *prompt) do() error {
+	runner := promptui.Prompt{
+		Label: p.id + " " + p.label,
+		//Label: "A label",
+		Validate: func(in string) error {
+			if len(in) == 0 {
+				return fmt.Errorf(p.errMsg, p.id)
+			}
+			return nil
+		},
+	}
+
+	gathered, err := runner.Run()
+	if err != nil {
+		return err
+	}
+
+	p.value = gathered
+	return nil
+}
+
+type prompts struct {
+	prompts []*prompt
+}
+
+func (p *prompts) collect() error {
+	for _, p := range p.prompts {
+		if err := p.do(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (p *prompts) getValue(id string) string {
+	for _, p := range p.prompts {
+		if p.id == id {
+			return p.value
+		}
+	}
+	return ""
+}
+
+func updateAuthInfo(config *Config, clientId, clientSecret, openIdEndpoint string) error {
+	config.AuthInfos = map[string]*AuthInfo{
+		"local": {
+			Token: nil,
+			OIDC: &OIDC{
+				ClientID:     clientId,
+				ClientSecret: clientSecret,
+				AuthorizeURL: openIdEndpoint,
+			},
+		},
+	}
+
+	return config.Update()
+}
+
 func createLocalConfig(config *Config) error {
 	config.CurrentContext = "local"
 
@@ -29,81 +94,38 @@ func createLocalConfig(config *Config) error {
 	return config.Update()
 }
 
-type authInfo struct {
-	clientId       string
-	clientSecret   string
-	openIdEndpoint string
-}
-
-func (a *authInfo) getClientId() error {
-	id, err := a.prompt("ClientID")
-	if err != nil {
-		return err
-	}
-	a.clientId = id
-	return nil
-}
-
-func (a *authInfo) getClientSecret() error {
-	secret, err := a.prompt("Client Secret")
-	if err != nil {
-		return err
-	}
-	a.clientSecret = secret
-	return nil
-}
-
-func (a *authInfo) getOpenIdEndpoint() error {
-	endpoint, err := a.prompt("OpenID endpoint")
-	if err != nil {
-		return err
-	}
-	a.openIdEndpoint = endpoint
-	return nil
-}
-
-func (a *authInfo) prompt(target string) (string, error) {
-	prompt := promptui.Prompt{
-		Label: fmt.Sprintf("%s (for your Identity Broker)", target),
-		Validate: func(in string) error {
-			if len(in) == 0 {
-				return fmt.Errorf("%s cannot be blank", target)
-			}
-			return nil
+func collectAndUpdateAuthInfo(config *Config) error {
+	prompts := &prompts{prompts: []*prompt{
+		&prompt{
+			id:     "Client ID",
+			label:  "%s (for your Identity Broker)",
+			errMsg: "%s cannot be blank",
 		},
-	}
-	return prompt.Run()
-}
+		&prompt{
+			id:     "Client Secret",
+			label:  "%s (for your Identity Broker)",
+			errMsg: "%s cannot be blank",
+		},
+		&prompt{
+			id:     "OpenID endpoint",
+			label:  "%s (for your Identity Broker)",
+			errMsg: "%s cannot be blank",
+		},
+	}}
 
-func (a *authInfo) collect() error {
-	if err := a.getClientId(); err != nil {
+	if err := prompts.collect(); err != nil {
 		return err
 	}
 
-	if err := a.getClientSecret(); err != nil {
-		return err
-	}
-
-	if err := a.getOpenIdEndpoint(); err != nil {
+	if err := updateAuthInfo(config,
+		prompts.getValue("Client ID"),
+		prompts.getValue("Client Secret"),
+		prompts.getValue("OpenID endpoint"),
+	); err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func (a *authInfo) update(config *Config) error {
-	config.AuthInfos = map[string]*AuthInfo{
-		"local": {
-			Token: nil,
-			OIDC: &OIDC{
-				ClientID:     a.clientId,
-				ClientSecret: a.clientSecret,
-				AuthorizeURL: a.openIdEndpoint,
-			},
-		},
-	}
-
-	return config.Update()
 }
 
 func GetLocalCommand(config *Config) cli.Command {
@@ -111,22 +133,15 @@ func GetLocalCommand(config *Config) cli.Command {
 		Name:  "local",
 		Usage: "Used to configure and run a local instance of Kore.",
 		Action: func(c *cli.Context) error {
+			fmt.Printf("config: [%+v]", config)
 			fmt.Println("Let's setup Kore to run locally.")
-			fmt.Println("First, we need your Identity Broker details...")
-			config, err := GetOrCreateClientConfiguration()
-			if err != nil {
-				return err
-			}
 
 			if err := createLocalConfig(config); err != nil {
 				return err
 			}
 
-			authInfo := &authInfo{}
-			if err := authInfo.collect(); err != nil {
-				return err
-			}
-			if err := authInfo.update(config); err != nil {
+			fmt.Println("We'll start by gathering your Identity Broker details...")
+			if err := collectAndUpdateAuthInfo(config); err != nil {
 				return err
 			}
 
