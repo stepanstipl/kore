@@ -167,7 +167,7 @@ func (a *authImpl) Run(ctx context.Context) error {
 					return errors.New("no authorization token")
 				}
 				// @step: ensure no impersonation is passed through by clearing all headers
-				for name, _ := range req.Header {
+				for name := range req.Header {
 					if strings.HasPrefix(name, "Impersonate") {
 						req.Header.Del(name)
 					}
