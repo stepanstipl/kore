@@ -39,7 +39,7 @@ LFLAGS ?= -X github.com/appvia/kore/pkg/version.GitSHA=${GIT_SHA} -X github.com/
 
 export GOFLAGS = -mod=vendor
 
-.PHONY: test authors changelog build docker static release cover vet glide-install demo golangci-lint apis swagger
+.PHONY: test authors changelog build docker static release cover vet glide-install demo golangci-lint apis swagger images
 
 default: build
 
@@ -90,10 +90,7 @@ docker-build:
 		golang:${GOVERSION} \
 		make in-docker-build
 
-images: static
-	@$(MAKE) images-only
-
-images-only:
+images:
 	@echo "--> Building docker images"
 	@for name in kore-apiserver auth-proxy; do \
 		echo "--> Building docker image $${name}" ; \
