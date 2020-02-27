@@ -90,7 +90,7 @@ var (
 			},
 			Namespace:       captainNamespace,
 			EnsureNamespace: true,
-			DeployTimeOut:   3 * time.Minute,
+			DeployTimeOut:   10 * time.Minute,
 		},
 		{
 			Name: "Kore Helm Repository",
@@ -99,7 +99,7 @@ var (
 			},
 			Namespace:       KoreNamespace,
 			EnsureNamespace: false,
-			DeployTimeOut:   3 * time.Minute,
+			DeployTimeOut:   10 * time.Minute,
 		},
 	}
 )
