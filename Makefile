@@ -211,7 +211,6 @@ demo:
 
 docker-release:
 	@echo "--> Building a release image"
-	@$(MAKE) static
 	@$(MAKE) docker
 	@docker push ${REGISTRY}/${AUTHOR}/${NAME}:${VERSION}
 
