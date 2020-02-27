@@ -305,7 +305,7 @@ func CreateOrUpdateClusterAppManDeployment(ctx context.Context, cc client.Client
 								},
 							},
 							Command: []string{
-								"/kore-clusterappman",
+								"/bin/kore-clusterappman",
 							},
 						},
 					},
