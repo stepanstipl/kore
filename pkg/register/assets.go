@@ -19,6 +19,7 @@
 // deploy/crds/core.kore.appvia.io_oidclient.yaml
 // deploy/crds/gke.compute.kore.appvia.io_gkecredentials.yaml
 // deploy/crds/gke.compute.kore.appvia.io_gkes.yaml
+// deploy/crds/org.kore.appvia.io_auditevents.yaml
 // deploy/crds/org.kore.appvia.io_members.yaml
 // deploy/crds/org.kore.appvia.io_teaminvitations.yaml
 // deploy/crds/org.kore.appvia.io_teams.yaml
@@ -3819,6 +3820,97 @@ func crdsGkeComputeKoreAppviaIo_gkesYaml() (*asset, error) {
 	return a, nil
 }
 
+var _crdsOrgKoreAppviaIo_auditeventsYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: (devel)
+  creationTimestamp: null
+  name: auditevents.org.kore.appvia.io
+spec:
+  group: org.kore.appvia.io
+  names:
+    kind: AuditEvent
+    listKind: AuditEventList
+    plural: auditevents
+    singular: auditevent
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: AuditEvent is the Schema for the audit API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: AuditEventSpec defines the desired state of User
+          properties:
+            createdAt:
+              description: CreatedAt is the timestamp of record creation
+              format: date-time
+              type: string
+            message:
+              description: Message is event message itself
+              type: string
+            resource:
+              description: Resource is the name of the resource in question namespace/name
+              type: string
+            resourceUID:
+              description: ResourceUID is a unique id for the resource
+              type: string
+            team:
+              description: Team is the team whom event may be associated to
+              type: string
+            type:
+              description: Type is the type of event
+              type: string
+            user:
+              description: User is the user which the event is related
+              type: string
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsOrgKoreAppviaIo_auditeventsYamlBytes() ([]byte, error) {
+	return _crdsOrgKoreAppviaIo_auditeventsYaml, nil
+}
+
+func crdsOrgKoreAppviaIo_auditeventsYaml() (*asset, error) {
+	bytes, err := crdsOrgKoreAppviaIo_auditeventsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/org.kore.appvia.io_auditevents.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _crdsOrgKoreAppviaIo_membersYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -4316,6 +4408,7 @@ var _bindata = map[string]func() (*asset, error){
 	"crds/core.kore.appvia.io_oidclient.yaml":                             crdsCoreKoreAppviaIo_oidclientYaml,
 	"crds/gke.compute.kore.appvia.io_gkecredentials.yaml":                 crdsGkeComputeKoreAppviaIo_gkecredentialsYaml,
 	"crds/gke.compute.kore.appvia.io_gkes.yaml":                           crdsGkeComputeKoreAppviaIo_gkesYaml,
+	"crds/org.kore.appvia.io_auditevents.yaml":                            crdsOrgKoreAppviaIo_auditeventsYaml,
 	"crds/org.kore.appvia.io_members.yaml":                                crdsOrgKoreAppviaIo_membersYaml,
 	"crds/org.kore.appvia.io_teaminvitations.yaml":                        crdsOrgKoreAppviaIo_teaminvitationsYaml,
 	"crds/org.kore.appvia.io_teams.yaml":                                  crdsOrgKoreAppviaIo_teamsYaml,
@@ -4383,6 +4476,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"core.kore.appvia.io_oidclient.yaml":                             {crdsCoreKoreAppviaIo_oidclientYaml, map[string]*bintree{}},
 		"gke.compute.kore.appvia.io_gkecredentials.yaml":                 {crdsGkeComputeKoreAppviaIo_gkecredentialsYaml, map[string]*bintree{}},
 		"gke.compute.kore.appvia.io_gkes.yaml":                           {crdsGkeComputeKoreAppviaIo_gkesYaml, map[string]*bintree{}},
+		"org.kore.appvia.io_auditevents.yaml":                            {crdsOrgKoreAppviaIo_auditeventsYaml, map[string]*bintree{}},
 		"org.kore.appvia.io_members.yaml":                                {crdsOrgKoreAppviaIo_membersYaml, map[string]*bintree{}},
 		"org.kore.appvia.io_teaminvitations.yaml":                        {crdsOrgKoreAppviaIo_teaminvitationsYaml, map[string]*bintree{}},
 		"org.kore.appvia.io_teams.yaml":                                  {crdsOrgKoreAppviaIo_teamsYaml, map[string]*bintree{}},

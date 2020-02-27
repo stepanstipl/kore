@@ -44,10 +44,10 @@ type AuditEventSpec struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// AuditEvent is the Schema for the users API
+// AuditEvent is the Schema for the audit API
 // +k8s:openapi-gen=false
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:path=users
+// +kubebuilder:resource:path=auditevents
 type AuditEvent struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -57,7 +57,7 @@ type AuditEvent struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// AuditEventList contains a list of User
+// AuditEventList contains a list of audit event
 type AuditEventList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
