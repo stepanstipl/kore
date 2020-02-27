@@ -132,9 +132,8 @@ func (a crCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 		binding.Status.Conditions = []corev1.Condition{}
 	}
 
-	if err := a.mgr.GetClient().Status().
-		Patch(context.Background(), original, client.MergeFrom(binding)); err != nil {
-		logger.WithError(err).Error("tryin to update the resource status")
+	if err := a.mgr.GetClient().Status().Patch(context.Background(), original, client.MergeFrom(binding)); err != nil {
+		logger.WithError(err).Error("trying to update the resource status")
 
 		return reconcile.Result{}, err
 	}
