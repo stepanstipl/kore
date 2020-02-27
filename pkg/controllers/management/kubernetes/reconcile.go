@@ -210,7 +210,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			object.Status.Status = corev1.FailureStatus
 			object.Status.Components.SetCondition(corev1.Component{
 				Name:    ComponentClusterAppMan,
-				Message: "Kore failed to deploy kore Cluster Manasger component",
+				Message: "Kore failed to deploy kore Cluster Manager component",
 				Detail:  err.Error(),
 				Status:  corev1.FailureStatus,
 			})
