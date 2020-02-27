@@ -79,6 +79,16 @@ auth-proxy: golang deps spelling
 	@mkdir -p bin
 	go build -ldflags "${LFLAGS}" -o bin/auth-proxy cmd/auth-proxy/*.go
 
+kore-apiserver: golang deps
+	@echo "--> Compiling the kore-apiserver binary"
+	@mkdir -p bin
+	go build -ldflags "${LFLAGS}" -o bin/kore-apiserver cmd/kore-apiserver/*.go
+
+kore-clusterappman: golang generate-clusterappman-manifests deps
+	@echo "--> Compiling the kore-clusterappman binary"
+	@mkdir -p bin
+	go build -ldflags "${LFLAGS}" -o bin/kore-clusterappman cmd/kore-clusterappman/*.go
+
 docker-build:
 	@echo "--> Running docker"
 	docker run --rm \
