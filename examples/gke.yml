@@ -24,8 +24,7 @@ spec:
   enableIstio: false
   enableStackDriverLogging: false
   enableStackDriverMetrics: false
-  enablePrivateNetwork: true
-  masterIPV4Cidr: 172.16.0.0/28
+  enablePrivateNetwork: false
   maintenanceWindow: '03:00'
   # Were reference to the credentials we wish to use
   credentials:
