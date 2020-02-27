@@ -92,7 +92,7 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 	parameters.Name = cluster.Name
 	parameters.Domain = cluster.Spec.Domain
 	parameters.Hostname = a.APIHostname(cluster)
-	parameters.Image = "quay.io/appvia/auth-proxy:v0.0.3"
+	parameters.Image = "quay.io/appvia/auth-proxy:v0.0.4"
 	if cluster.Spec.ProxyImage != "" {
 		parameters.Image = cluster.Spec.ProxyImage
 	}
