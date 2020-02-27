@@ -120,7 +120,7 @@ func schema_pkg_apis_apps_v1_AppDeploymentSpec(ref common.ReferenceCallback) com
 					},
 					"version": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Version is the verison of the package to install",
+							Description: "Version is the version of the package to install",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -179,7 +179,7 @@ func schema_pkg_apis_apps_v1_AppDeploymentSpec(ref common.ReferenceCallback) com
 					},
 					"official": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Offical indicates if the applcation is offically published by Appvia",
+							Description: "Official indicates if the applcation is officially published by Appvia",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
