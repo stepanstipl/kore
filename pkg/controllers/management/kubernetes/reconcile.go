@@ -202,6 +202,12 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			Status:  corev1.SuccessStatus,
 		})
 
+		/*
+			if original.Status.Endpoint == "" {
+				return reconcile.Result{Requeue: true}, nil
+			}
+		*/
+
 		// @step: ensure all cluster components are deployed
 		components, err := a.EnsureClusterman(context.Background(), client, object)
 		if err != nil {
@@ -296,7 +302,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			if object.Spec.DefaultTeamRole == "" {
 				object.Status.Components.SetCondition(corev1.Component{
 					Name:    ComponentClusterRoles,
-					Message: "Team inheritence enabled but no default team role defined",
+					Message: "Team inheritance enabled but no default team role defined",
 					Status:  corev1.WarningStatus,
 				})
 				object.Status.Status = corev1.WarningStatus
