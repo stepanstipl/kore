@@ -15,6 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//go:generate go run manifests_generater.go -source="github.com/appvia/kore/pkg/clusterappman".Manifests
+//go:generate go run github.com/shurcooL/vfsgen/cmd/vfsgendev -source="github.com/appvia/kore/pkg/clusterappman".Manifests
 
 package clusterappman
