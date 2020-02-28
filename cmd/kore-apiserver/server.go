@@ -74,6 +74,8 @@ func invoke(ctx *cli.Context) error {
 			HMAC:                       ctx.String("kore-hmac"),
 			PublicAPIURL:               ctx.String("api-public-url"),
 			PublicHubURL:               ctx.String("kore-public-url"),
+			AuthProxyImage:             ctx.String("auth-proxy-image"),
+			ClusterAppManImage:         ctx.String("clusterappman-image"),
 			UserClaims:                 ctx.StringSlice("user-claims"),
 			DEX: kore.DEX{
 				EnabledDex:    ctx.Bool("enable-dex"),
