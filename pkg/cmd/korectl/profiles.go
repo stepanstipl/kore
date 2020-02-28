@@ -51,7 +51,7 @@ $ korectl profile configure <name>  # allows you to configure a profile
 func GetProfilesCommand(config *Config) cli.Command {
 	return cli.Command{
 		Name:        "profile",
-		Usage:       "Used to interact, use, list and show the current profiles available",
+		Usage:       "Interact, use, list and show the current profiles available",
 		Description: longProfileDescription,
 
 		Subcommands: []cli.Command{
@@ -154,17 +154,8 @@ func GetProfilesCommand(config *Config) cli.Command {
 					}
 
 					// @step: create an empty endpoint for then
-					config.AddProfile(name, &Profile{
-						Server:   name,
-						AuthInfo: name,
-					})
-					if !config.HasServer(name) {
-						config.AddServer(name, &Server{Endpoint: endpoint})
-					}
-					if !config.HasAuthInfo(name) {
-						config.AddAuthInfo(name, &AuthInfo{OIDC: &OIDC{}})
-					}
-					config.CurrentProfile = name
+					config.CreateProfile(name, endpoint)
+					config.SetCurrentProfile(name)
 
 					// @step: attempt to update the configuration
 					if err := config.Update(); err != nil {
