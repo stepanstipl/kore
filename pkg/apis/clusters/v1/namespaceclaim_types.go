@@ -33,7 +33,7 @@ type NamespaceClaimSpec struct {
 	Cluster corev1.Ownership `json:"cluster"`
 	// Name is the name of the namespace to create
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinLength=3
+	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name"`
 	// Annotations is a series of annotations on the namespace
 	// +kubebuilder:validation:Optional
@@ -47,10 +47,10 @@ type NamespaceClaimSpec struct {
 // +k8s:openapi-gen=true
 type NamespaceClaimStatus struct {
 	// Status is the status of the namespace
-	Status corev1.Status `json:"status"`
+	Status corev1.Status `json:"status,omitempty"`
 	// Conditions is a series of things that caused the failure if any
 	// +listType
-	Conditions []corev1.Condition `json:"conditions"`
+	Conditions []corev1.Condition `json:"conditions,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

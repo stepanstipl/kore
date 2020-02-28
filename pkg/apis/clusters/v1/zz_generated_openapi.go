@@ -336,7 +336,7 @@ func schema_pkg_apis_clusters_v1_ManagedClusterRoleBindingSpec(ref common.Refere
 				Properties: map[string]spec.Schema{
 					"binding": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Binding is the cluster role binding you wish to propogate to the clusters",
+							Description: "Binding is the cluster role binding you wish to propagate to the clusters",
 							Ref:         ref("k8s.io/api/rbac/v1.ClusterRoleBinding"),
 						},
 					},
@@ -1232,7 +1232,6 @@ func schema_pkg_apis_clusters_v1_NamespaceClaimStatus(ref common.ReferenceCallba
 						},
 					},
 				},
-				Required: []string{"status", "conditions"},
 			},
 		},
 		Dependencies: []string{

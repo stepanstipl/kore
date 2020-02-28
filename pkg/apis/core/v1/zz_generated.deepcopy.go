@@ -377,6 +377,11 @@ func (in *OIDCIDP) DeepCopyInto(out *OIDCIDP) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.UserClaims != nil {
+		in, out := &in.UserClaims, &out.UserClaims
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 
