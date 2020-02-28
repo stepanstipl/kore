@@ -17,7 +17,7 @@ import (
 )
 
 const localEndpoint string = "http://127.0.0.1:10080"
-const localInfraDir string = "./_kore_infra"
+const localManifests string = "./manifests/local"
 
 func updateAuthInfo(config *Config, clientId, clientSecret, openIdEndpoint string) error {
 	config.AuthInfos = map[string]*AuthInfo{
@@ -65,11 +65,11 @@ func generateGcpInfo(region, projectId, keyPath string) error {
 		return err
 	}
 
-	if err := os.MkdirAll(localInfraDir, os.FileMode(0750)); err != nil {
+	if err := os.MkdirAll(localManifests, os.FileMode(0750)); err != nil {
 		return err
 	}
 
-	return ioutil.WriteFile(path.Join(localInfraDir, "gke-credentials.yml"), data, os.FileMode(0640))
+	return ioutil.WriteFile(path.Join(localManifests, "gke-credentials.yml"), data, os.FileMode(0640))
 }
 
 func createLocalConfig(config *Config) {
@@ -92,11 +92,11 @@ func createLocalConfig(config *Config) {
 }
 
 func collectAndUpdateAuthInfo(config *Config) error {
-	prompts := &prompts{prompts: []*prompt{
-		{id: "Client ID", errMsg: "%s cannot be blank"},
-		{id: "Client Secret", errMsg: "%s cannot be blank"},
-		{id: "OpenID endpoint", errMsg: "%s cannot be blank"},
-	}}
+	prompts := prompts{
+		&prompt{id: "Client ID", errMsg: "%s cannot be blank"},
+		&prompt{id: "Client Secret", errMsg: "%s cannot be blank"},
+		&prompt{id: "OpenID endpoint", errMsg: "%s cannot be blank"},
+	}
 
 	if err := prompts.collect(); err != nil {
 		return err
@@ -114,15 +114,15 @@ func collectAndUpdateAuthInfo(config *Config) error {
 }
 
 func collectAndGenerateGcpInfo() error {
-	prompts := &prompts{prompts: []*prompt{
-		{id: "GKE Region", labelSuffix: "(e.g. europe-west2)", errMsg: "%s cannot be blank"},
-		{id: "GKE Project ID", errMsg: "%s cannot be blank"},
-		{
+	prompts := prompts{
+		&prompt{id: "GKE Region", labelSuffix: "(e.g. europe-west2)", errMsg: "%s cannot be blank"},
+		&prompt{id: "GKE Project ID", errMsg: "%s cannot be blank"},
+		&prompt{
 			id:          "GKE Service Account Key file",
 			labelSuffix: "(full path to the file)",
 			errMsg:      "%s cannot be blank",
 		},
-	}}
+	}
 
 	if err := prompts.collect(); err != nil {
 		return err
@@ -143,21 +143,31 @@ func GetLocalCommand(config *Config) cli.Command {
 	return cli.Command{
 		Name:  "local",
 		Usage: "Used to configure and run a local instance of Kore.",
-		Action: func(c *cli.Context) error {
-			fmt.Println("Let's setup Kore to run locally:")
-			createLocalConfig(config)
+		Subcommands: []cli.Command{
+			{
+				Name:  "configure",
+				Usage: "Used to configure a local instance of Kore.",
+				Action: func(c *cli.Context) error {
+					createLocalConfig(config)
 
-			fmt.Println("What are your Identity Broker details?")
-			if err := collectAndUpdateAuthInfo(config); err != nil {
-				return err
-			}
+					fmt.Println("What are your Identity Broker details?")
+					if err := collectAndUpdateAuthInfo(config); err != nil {
+						return err
+					}
 
-			fmt.Println("What are your Google Cloud Platform details?")
-			if err := collectAndGenerateGcpInfo(); err != nil {
-				return err
-			}
-
-			return config.Update()
+					fmt.Println("What are your Google Cloud Platform details?")
+					if err := collectAndGenerateGcpInfo(); err != nil {
+						return err
+					}
+					if err := config.Update(); err != nil {
+						return err
+					}
+					fmt.Println("...Kore is now set up to run locally,")
+					fmt.Println("✅ A 'local' context has been configured in ~/.korectl/config")
+					fmt.Println("✅ Generated Kubernetes extensions are now stored in <project root>/manifests/local directory. ")
+					return nil
+				},
+			},
 		},
 	}
 }

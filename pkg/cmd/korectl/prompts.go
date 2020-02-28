@@ -33,12 +33,10 @@ func (p *prompt) do() error {
 	return nil
 }
 
-type prompts struct {
-	prompts []*prompt
-}
+type prompts []*prompt
 
-func (p *prompts) collect() error {
-	for _, p := range p.prompts {
+func (p prompts) collect() error {
+	for _, p := range p {
 		if err := p.do(); err != nil {
 			return err
 		}
@@ -46,8 +44,8 @@ func (p *prompts) collect() error {
 	return nil
 }
 
-func (p *prompts) getValue(id string) string {
-	for _, p := range p.prompts {
+func (p prompts) getValue(id string) string {
+	for _, p := range p {
 		if p.id == id {
 			return p.value
 		}

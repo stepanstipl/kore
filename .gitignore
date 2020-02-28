@@ -11,7 +11,7 @@ hack/setup/instances/credentials.yml
 secret.yml
 swagger-ui/
 vendor/
-_kore_infra/
+manifests/local
 
 # Git meld
 *.orig
