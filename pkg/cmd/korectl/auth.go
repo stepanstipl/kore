@@ -103,7 +103,12 @@ func GetLoginCommand(config *Config) cli.Command {
 				}
 			}()
 
-			fmt.Printf("authenticating to kore api: %s\n", config.GetCurrentServer())
+			endpoint := config.GetCurrentServer().Endpoint
+			if endpoint == "" {
+				return errors.New("current context server has not been set")
+			}
+
+			fmt.Printf("Attempting to authenticate to Appvia Kore: %s [%s]\n", endpoint, config.CurrentContext)
 
 			// @step: open a brower to the to the api server
 			url := fmt.Sprintf("%s/oauth/authorize?redirect_url=http://localhost:3001", config.GetCurrentServer().Endpoint)
@@ -118,7 +123,7 @@ func GetLoginCommand(config *Config) cli.Command {
 			case err := <-errCh:
 				fmt.Fprintf(os.Stderr, "[error] unable to authorize the client: %s", err)
 				os.Exit(1)
-			case <-time.After(60 * time.Second):
+			case <-time.After(20 * time.Second):
 				fmt.Fprint(os.Stderr, "[error] authorization request has timed out")
 				os.Exit(1)
 			}
@@ -137,7 +142,7 @@ func GetLoginCommand(config *Config) cli.Command {
 			if err := config.Update(); err != nil {
 				return fmt.Errorf("trying to update the client configuration: %s", err)
 			}
-			fmt.Println("successfully authenticated")
+			fmt.Println("Successfully authenticated")
 
 			return nil
 		},
