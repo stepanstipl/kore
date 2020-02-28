@@ -49,7 +49,7 @@ type AuthInfo struct {
 	// Token is a static token to use
 	Token *string `json:"token,omitempty" yaml:"token"`
 	// OIDC is credentials from an oauth2 provider
-	OIDC *OIDC `json:"oidc,omitempty" yaml:"oidc"`
+	OIDC *OIDC `json:"oidc" yaml:"oidc"`
 }
 
 // OIDC is the identity within the kore

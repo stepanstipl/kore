@@ -88,6 +88,8 @@ func main() {
 			switch {
 			case command == "local", command == "help", command == "autocomplete":
 				// no contexts required yet.
+			case command == "profile" && ctx.Args().Get(1) == "configure":
+				// no contexts required yet.
 			case len(config.Contexts) <= 0:
 				fmt.Fprintf(os.Stderr, "Error: no %s context configured.\n\n", ctx.App.Name)
 				fmt.Fprintf(os.Stderr, "Please check the documentation about how to set up %s.\n", ctx.App.Name)
