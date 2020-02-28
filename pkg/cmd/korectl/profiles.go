@@ -57,10 +57,10 @@ func GetProfilesCommand(config *Config) cli.Command {
 		Subcommands: []cli.Command{
 			{
 				Name:  "show",
-				Usage: "Used to show the current profile in use",
+				Usage: "used to show the current profile in use",
 				Action: func(ctx *cli.Context) error {
 					if config.CurrentContext == "" {
-						return errors.New("no profiles have create, please you $ korectl login -a <API> or korectl profile configure")
+						return errors.New("no profiles have create, please you $ korectl login -a <API> or korectl profile configure --help")
 					}
 					fmt.Println("Profile:  ", config.CurrentContext)
 					fmt.Println("Endpoint: ", config.GetCurrentServer().Endpoint)
@@ -71,7 +71,7 @@ func GetProfilesCommand(config *Config) cli.Command {
 			{
 				Name:    "list",
 				Aliases: []string{"ls"},
-				Usage:   "Used to list all the profiles which has been configured thus far",
+				Usage:   "used to list all the profiles which has been configured thus far",
 				Action: func(ctx *cli.Context) error {
 					// @step: create a tab writer for output
 					w := new(tabwriter.Writer)
@@ -95,8 +95,9 @@ func GetProfilesCommand(config *Config) cli.Command {
 				},
 			},
 			{
-				Name:  "use",
-				Usage: "Used to switch to another profile",
+				Name:      "use",
+				Usage:     "used to switch to another profile",
+				UsageText: "korectl profile use <name>",
 				Action: func(ctx *cli.Context) error {
 					if !ctx.Args().Present() {
 						return errors.New("you need to specify a profile to use")
@@ -118,12 +119,13 @@ func GetProfilesCommand(config *Config) cli.Command {
 				},
 			},
 			{
-				Name:  "configure",
-				Usage: "Used to walk through and configure a new profile for you",
+				Name:      "configure",
+				Usage:     "used to walk through and configure a new profile for you",
+				UsageText: "korectl profile configure <name>",
 				Flags: []cli.Flag{
 					cli.BoolFlag{
 						Name:  "force",
-						Usage: "Force the creation of the profile regardless if one exists",
+						Usage: "force the creation of the profile regardless if one exists",
 					},
 				},
 				Action: func(ctx *cli.Context) error {
