@@ -1,0 +1,52 @@
+# Default values for kore.
+
+nameOverride: ""
+ca:
+  generate: true
+  secretName: kore-ca
+redis:
+  version: 5.0
+mysql:
+  image: mariadb
+  version: bionic
+  pvc:
+    create: true
+    storageClass: ""
+    size: 10Gi
+idp:
+  client_id: ""
+  client_secret: ""
+  discovery_url: ""
+  user_claims:
+    - preferred_username
+    - email
+    - name
+    - username
+  client_scopes:
+    - email
+    - profile
+    - offline_access
+api:
+  endpoint:
+    url: http://localhost:10080
+    detect: false
+  port: 10080
+  serviceType: ClusterIP
+  image: quay.io/appvia/kore-apiserver
+  version: v0.0.11
+  auth_plugins:
+    - basicauth
+    - admintoken
+    - openid
+  replicas: 1
+ui:
+  endpoint:
+    url: http://localhost:3000
+    detect: false
+  port: 3000
+  serviceType: ClusterIP
+  image: quay.io/appvia/kore-ui
+  version: v0.0.5
+  replicas: 1
+kubectl:
+  version: 1.16

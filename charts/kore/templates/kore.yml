@@ -1,0 +1,111 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kore.name" . }}-apiserver
+  {{if .Values.api.endpoint.detect}}
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "0"
+  {{end}}
+  labels:
+    name: {{ include "kore.name" . }}-apiserver
+{{ include "kore.labels" . | indent 4}}
+spec:
+  type: {{ .Values.api.serviceType }}
+  ports:
+  - name: http
+    port: {{ .Values.api.port }}
+    targetPort: 10080
+  selector:
+    name: {{ include "kore.name" . }}-apiserver
+
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ include "kore.name" . }}-apiserver
+  labels:
+{{ include "kore.labels" . | indent 4}}
+spec:
+  replicas: {{ .Values.api.replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        name: {{ include "kore.name" . }}-apiserver
+        service: {{ include "kore.name" . }}-apiserver
+{{ include "kore.labels" . | indent 8}}
+      annotations:
+        prometheus.io/port: {{ .Values.api.port | quote }}
+        prometheus.io/scheme: "http"
+        prometheus.io/scrape: "true"
+    spec:
+      serviceAccountName: {{ include "kore.name" . }}-admin
+      containers:
+      - name: {{ include "kore.name" . }}-apiserver
+        image: {{ .Values.api.image }}:{{ .Values.api.version }}
+        ports:
+          - name: http
+            containerPort: 10080
+        envFrom:
+          - secretRef:
+              name: {{ include "kore.name" . }}-mysql
+          - secretRef:
+              name: {{ include "kore.name" . }}-idp
+          - secretRef:
+              name: {{ include "kore.name" . }}-api
+        env:
+          - name: KUBE_IN_CLUSTER
+            value: "true"
+          - name: KORE_CERTIFICATE_AUTHORITY
+            value: /ca/ca.pem
+          - name: KORE_CERTIFICATE_AUTHORITY_KEY
+            value: /ca/ca-key.pem
+          - name: KORE_API_PUBLIC_URL
+            {{ if and (eq .Values.api.serviceType "LoadBalancer") .Values.api.endpoint.detect}}
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "kore.name" . }}-discovered-endpoints
+                key: {{ include "kore.name" . }}-apiserver
+            {{ else }}
+            value: {{ .Values.api.endpoint.url }}
+            {{ end }}
+          - name: KORE_AUTHENTICATION_PLUGINS
+            value: {{ .Values.api.auth_plugins | join "," }}
+        volumeMounts:
+        - name: ca
+          readOnly: true
+          mountPath: /ca
+      volumes:
+      - name: ca
+        secret:
+          secretName: {{ .Values.ca.secretName }}
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "kore.name" . }}-admin
+  labels:
+{{ include "kore.labels" . | indent 4}}
+
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: {{ include "kore.name" . }}-admin
+  labels:
+{{ include "kore.labels" . | indent 4}}
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- kind: ServiceAccount
+  name: {{ include "kore.name" . }}-admin
+  namespace: {{ .Release.Namespace }}

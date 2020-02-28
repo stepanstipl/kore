@@ -11,6 +11,7 @@ hack/setup/instances/credentials.yml
 secret.yml
 swagger-ui/
 manifests/local
+charts/my_values.yaml
 
 # Git meld
 *.orig

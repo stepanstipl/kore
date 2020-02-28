@@ -1,0 +1,17 @@
+Thank you for installing {{ .Chart.Name }}.
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }}
+  $ helm get all {{ .Release.Name }}
+
+{{ if or (eq .Values.api.serviceType "LoadBalancer") (eq .Values.ui.serviceType "LoadBalancer") }}
+One or more of your services are of type loadbalancer, get their addresses with:
+
+  $ kubectl --namespace {{ .Release.Namespace }} get services
+
+{{ if not ( or .Values.api.endpoint.detect .Values.ui.endpoint.detect ) }}
+You will need to configure .Values.api.endpoint.url and .Values.ui.endpoint.url with the new endpoints and run a helm upgrade
+
+{{ end }}
+{{ end }}

@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kore.name" . }}-mysql
+  labels:
+    name: {{ include "kore.name" . }}-mysql
+{{ include "kore.labels" . | indent 4}}
+spec:
+  type: ClusterIP
+  ports:
+  - name: mysql
+    port: 3306
+    targetPort: 3306
+  sessionAffinity: ClientIP
+  selector:
+    name: {{ include "kore.name" . }}-mysql
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "kore.name" . }}-mysql-disk
+  labels:
+{{ include "kore.labels" . | indent 4}}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.mysql.pvc.size }}
+  {{ if ne .Values.mysql.pvc.storageClass "" }}
+  storageClassName: {{ .Values.mysql.pvc.storageClass }}
+  {{ end }}
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ include "kore.name" . }}-mysql
+  labels:
+{{ include "kore.labels" . | indent 4}}
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        name: {{ include "kore.name" . }}-mysql
+        service: {{ include "kore.name" . }}-mysql
+{{ include "kore.labels" . | indent 8}}
+    spec:
+      containers:
+      - name: mariadb
+        image: {{ .Values.mysql.image }}:{{ .Values.mysql.version }}
+        envFrom:
+          - secretRef:
+              name: {{ include "kore.name" . }}-mysql
+        env:
+          - name: MYSQL_DATABASE
+            value: kore
+        ports:
+          - name: {{ include "kore.name" . }}-mysql
+            containerPort: 3306
+        volumeMounts:
+          - name: data
+            mountPath: /var/lib/mysql
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "kore.name" . }}-mysql-disk
