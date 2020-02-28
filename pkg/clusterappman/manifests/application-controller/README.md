@@ -1,14 +1,29 @@
-See issue https://github.com/kubernetes-sigs/application/issues/141
+## Updating application controller
 
-The manifests were taken from here:
+The project only maintain a dev image at this time.
+
+### Build the conatainer
+The image referred to was generated from the source e.g.:
 ```
-git clone git@github.com:appvia/application.git
-git checkout v0.8.1-patched-image-version
-kubectl kustomize ./config/ > application-all.yaml
+APP_VERSION=v0.8.2
+
+mkdir -p ${GOPATH}/src/github.com/kubernetes-sigs
+cd ${GOPATH}/src/github.com/kubernetes-sigs
+git clone git@github.com:kubernetes-sigs/application.git
+cd application
+
+git checkout ${APP_VERSION}
+
+docker build -t quay.io/appvia/application-controller:${APP_VERSION} .
+docker push quay.io/appvia/application-controller:${APP_VERSION}
 ```
 
-The image referred to was generated from the source above with:
+### Update Manifests
+The manifests were taken from here (with the image updated as below):
 ```
-docker build -t quay.io/appvia/application-controller:v0.8.1 .
-docker push quay.io/appvia/application-controller:v0.8.1
+APP_VERSION=v0.8.2
+curl -sSL https://raw.githubusercontent.com/kubernetes-sigs/application/${APP_VERSION}/deploy/kube-app-manager-aio.yaml > ./pkg/clusterappman/manifests/application-controller/application-all.yaml
+
+// edit the image to match our container:
+vi ./pkg/clusterappman/manifests/application-controller/application-all.yaml
 ```
