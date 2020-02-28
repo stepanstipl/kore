@@ -161,7 +161,9 @@ func (s clusterappmanImpl) Run(ctx context.Context) error {
 	if err := LoadAllManifests(s.RuntimeClient); err != nil {
 		return fmt.Errorf("failed loading manifests - %s", err)
 	}
-	for _, m := range mm {
+	var cs = make([]*kcore.Component, len(mm))
+	var components kcore.Components = cs
+	for i, m := range mm {
 		// Get the pre-loaded cluster application
 		ca, ok := cas[m.Name]
 		if !ok {
@@ -185,13 +187,20 @@ func (s clusterappmanImpl) Run(ctx context.Context) error {
 		// start a deployment thread:
 		logger.Infof("starting to wait for '%s' to become ready", ca.Component.Name)
 		go ca.WaitForReadyOrTimeout(deployCtx, ch, &wg)
+		// Ensure we capture initial status
+		components[i] = ca.Component
 	}
+	// report initial component status' ahead of https://github.com/appvia/kore/issues/89
+	logger.Logger.Infof("saving initial status")
+	if err := createStatusConfig(ctx, s.RuntimeClient, components); err != nil {
+		return fmt.Errorf("error reporting status: %s", err)
+	}
+
 	wg.Wait()
 	close(ch)
 
 	// now gather up all the component slices as they complete...
 	logger.Infof("waiting for %d cluster apps", len(mm))
-	var cs = make([]*kcore.Component, len(mm))
 	for i := range cs {
 		// get the first component "reason"
 		c := <-ch
@@ -214,7 +223,6 @@ func (s clusterappmanImpl) Run(ctx context.Context) error {
 		}
 		cs[i] = ca.Component
 	}
-	var components kcore.Components = cs
 	logger.Logger.Infof("saving status")
 	if err := createStatusConfig(ctx, s.RuntimeClient, components); err != nil {
 		return fmt.Errorf("error reporting status: %s", err)
