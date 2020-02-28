@@ -46,7 +46,7 @@ type Document struct {
 }
 
 var (
-	hostnameRegex = regexp.MustCompile(`https?://([0-9a-zA-Z\.]+)|([0-9]{1,3}\.){3,3}[0-9]{1,3}(:[0-9]+)?`)
+	hostnameRegex = regexp.MustCompile(`^https?://([0-9a-zA-Z\.]+)|([0-9]{1,3}\.){3,3}[0-9]{1,3}(:[0-9]+)?$`)
 )
 
 // IsValidHostname checks the endpoint is valid

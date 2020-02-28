@@ -105,7 +105,7 @@ func GetProfilesCommand(config *Config) cli.Command {
 					name := ctx.Args().First()
 
 					if !config.HasProfile(name) {
-						return errors.New("the profile does not exists")
+						return errors.New("the profile does not exist")
 					}
 					config.CurrentProfile = name
 
