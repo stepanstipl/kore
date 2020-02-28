@@ -10,9 +10,9 @@ import (
 const localEndpoint string = "http://127.0.0.1:10080"
 
 func createLocalConfig(config *Config) error {
-	config.CurrentContext = "local"
+	config.CurrentProfile = "local"
 
-	config.Contexts = map[string]*Context{
+	config.Profiles = map[string]*Profile{
 		"local": {
 			Server:   "local",
 			AuthInfo: "local",

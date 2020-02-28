@@ -59,10 +59,10 @@ func GetProfilesCommand(config *Config) cli.Command {
 				Name:  "show",
 				Usage: "shows the current profile in use",
 				Action: func(ctx *cli.Context) error {
-					if config.CurrentContext == "" {
+					if config.CurrentProfile == "" {
 						return errors.New("no profiles have been created, please use $ korectl login -a <API> or korectl profile configure --help")
 					}
-					fmt.Println("Profile:  ", config.CurrentContext)
+					fmt.Println("Profile:  ", config.CurrentProfile)
 					fmt.Println("Endpoint: ", config.GetCurrentServer().Endpoint)
 
 					return nil
@@ -81,7 +81,7 @@ func GetProfilesCommand(config *Config) cli.Command {
 					// @step: write out the columns
 					_, _ = w.Write([]byte("Name\tServer\n"))
 
-					for _, x := range config.Contexts {
+					for _, x := range config.Profiles {
 						// @step: ensure the profile has a server and authentication method
 						if !config.HasServer(x.Server) || !config.HasAuthInfo(x.AuthInfo) {
 							continue
@@ -104,10 +104,10 @@ func GetProfilesCommand(config *Config) cli.Command {
 					}
 					name := ctx.Args().First()
 
-					if !config.HasContext(name) {
+					if !config.HasProfile(name) {
 						return errors.New("the profile does not exists")
 					}
-					config.CurrentContext = name
+					config.CurrentProfile = name
 
 					if err := config.Update(); err != nil {
 						return fmt.Errorf("trying to update your local korectl config: %s", err)
@@ -136,7 +136,7 @@ func GetProfilesCommand(config *Config) cli.Command {
 					name := ctx.Args().First()
 
 					// @check the profile does not conflict
-					if !ctx.Bool("force") && config.HasContext(name) {
+					if !ctx.Bool("force") && config.HasProfile(name) {
 						return errors.New("profile name is already taken, please choose another name")
 					}
 
@@ -154,7 +154,7 @@ func GetProfilesCommand(config *Config) cli.Command {
 					}
 
 					// @step: create an empty endpoint for then
-					config.AddContext(name, &Context{
+					config.AddProfile(name, &Profile{
 						Server:   name,
 						AuthInfo: name,
 					})
@@ -164,7 +164,7 @@ func GetProfilesCommand(config *Config) cli.Command {
 					if !config.HasAuthInfo(name) {
 						config.AddAuthInfo(name, &AuthInfo{OIDC: &OIDC{}})
 					}
-					config.CurrentContext = name
+					config.CurrentProfile = name
 
 					// @step: attempt to update the configuration
 					if err := config.Update(); err != nil {

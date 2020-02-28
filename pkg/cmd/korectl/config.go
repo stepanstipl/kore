@@ -51,7 +51,7 @@ func (c *Config) IsValid() error {
 
 // GetCurrentServer returns the server in the context
 func (c *Config) GetCurrentServer() *Server {
-	ct := c.Contexts[c.CurrentContext]
+	ct := c.Profiles[c.CurrentProfile]
 	if ct == nil {
 		return &Server{}
 	}
@@ -65,7 +65,7 @@ func (c *Config) GetCurrentServer() *Server {
 
 // GetCurrentAuthInfo returns the current auth
 func (c *Config) GetCurrentAuthInfo() *AuthInfo {
-	ct := c.Contexts[c.CurrentContext]
+	ct := c.Profiles[c.CurrentProfile]
 	if ct == nil {
 		return &AuthInfo{}
 	}
@@ -80,11 +80,11 @@ func (c *Config) GetCurrentAuthInfo() *AuthInfo {
 }
 
 // AddContext adds a context
-func (c *Config) AddContext(name string, ctx *Context) {
-	if c.Contexts == nil {
-		c.Contexts = make(map[string]*Context)
+func (c *Config) AddProfile(name string, ctx *Profile) {
+	if c.Profiles == nil {
+		c.Profiles = make(map[string]*Profile)
 	}
-	c.Contexts[name] = ctx
+	c.Profiles[name] = ctx
 }
 
 // AddServer adds a server
@@ -103,9 +103,9 @@ func (c *Config) AddAuthInfo(name string, auth *AuthInfo) {
 	c.AuthInfos[name] = auth
 }
 
-// HasContext checks if the context exists in the config
-func (c *Config) HasContext(name string) bool {
-	_, found := c.Contexts[name]
+// HasProfile checks if the context exists in the config
+func (c *Config) HasProfile(name string) bool {
+	_, found := c.Profiles[name]
 
 	return found
 }
