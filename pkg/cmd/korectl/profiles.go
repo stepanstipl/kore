@@ -33,9 +33,9 @@ import (
 var longProfileDescription = `
 
 Profiles provide a means to store, configure and switch between multiple
-Appvia Kore instances from a single configuration. Alternative, you might 
-used profiles to use different profile (i.e. admin / user) to a single 
-instance.These are automatically created for you via the $ korectl login 
+Appvia Kore instances from a single configuration. Alternatively, you might 
+use profiles to use different identities (i.e. admin / user) to a single 
+instance. These are automatically created for you via the $ korectl login 
 command or you can manually configure them via the $ korectl profile configure.
 
 Examples: 
@@ -60,7 +60,7 @@ func GetProfilesCommand(config *Config) cli.Command {
 				Usage: "shows the current profile in use",
 				Action: func(ctx *cli.Context) error {
 					if config.CurrentContext == "" {
-						return errors.New("no profiles have create, please you $ korectl login -a <API> or korectl profile configure --help")
+						return errors.New("no profiles have been created, please use $ korectl login -a <API> or korectl profile configure --help")
 					}
 					fmt.Println("Profile:  ", config.CurrentContext)
 					fmt.Println("Endpoint: ", config.GetCurrentServer().Endpoint)
@@ -105,7 +105,7 @@ func GetProfilesCommand(config *Config) cli.Command {
 					name := ctx.Args().First()
 
 					if !config.HasContext(name) {
-						return errors.New("the profile does not exist in your configure")
+						return errors.New("the profile does not exists")
 					}
 					config.CurrentContext = name
 
@@ -168,7 +168,7 @@ func GetProfilesCommand(config *Config) cli.Command {
 
 					// @step: attempt to update the configuration
 					if err := config.Update(); err != nil {
-						return fmt.Errorf("update your local korectl config: %s", err)
+						return fmt.Errorf("trying to update your local korectl config: %s", err)
 					}
 
 					fmt.Println("Successfully configured the profile to: ", name)
