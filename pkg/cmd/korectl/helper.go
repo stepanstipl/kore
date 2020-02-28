@@ -27,7 +27,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -46,20 +45,13 @@ type Document struct {
 	Object *unstructured.Unstructured
 }
 
-// IsValidHostname checks the endpoint is valid
-func IsValidHostname(endpoint string) error {
-	u, err := url.ParseRequestURI(endpoint)
-	if err != nil {
-		return err
-	}
-	if u.Scheme == "" {
-		return fmt.Errorf("url must have a scheme")
-	}
-	if u.Path != "" {
-		return errors.New("endpoint should not have a path")
-	}
+var (
+	hostnameRegex = regexp.MustCompile(`https?://([0-9a-zA-Z\.]+)|([0-9]{1,3}\.){3,3}[0-9]{1,3}(:[0-9]+)?`)
+)
 
-	return nil
+// IsValidHostname checks the endpoint is valid
+func IsValidHostname(endpoint string) bool {
+	return hostnameRegex.MatchString(endpoint)
 }
 
 // ParseDocument returns a collection of parsed documents and the api endpoints

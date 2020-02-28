@@ -40,10 +40,10 @@ command or you can manually configure them via the $ korectl profile configure.
 
 Examples: 
 
-$ korectl profile 				    # will show this help menu
-$ korectl profile show  		    # will show the profile in use
-$ korectl profile list			    # will show all the profiles available to you
-$ korectl profile use <name>        # switches the Appvia Kore you 
+$ korectl profile                   # will show this help menu
+$ korectl profile show              # will show the profile in use
+$ korectl profile list              # will show all the profiles available to you
+$ korectl profile use <name>        # switches to another profile
 $ korectl profile configure <name>  # allows you to configure a profile 
 `
 
@@ -57,7 +57,7 @@ func GetProfilesCommand(config *Config) cli.Command {
 		Subcommands: []cli.Command{
 			{
 				Name:  "show",
-				Usage: "used to show the current profile in use",
+				Usage: "shows the current profile in use",
 				Action: func(ctx *cli.Context) error {
 					if config.CurrentContext == "" {
 						return errors.New("no profiles have create, please you $ korectl login -a <API> or korectl profile configure --help")
@@ -71,7 +71,7 @@ func GetProfilesCommand(config *Config) cli.Command {
 			{
 				Name:    "list",
 				Aliases: []string{"ls"},
-				Usage:   "used to list all the profiles which has been configured thus far",
+				Usage:   "lists all the profiles which has been configured thus far",
 				Action: func(ctx *cli.Context) error {
 					// @step: create a tab writer for output
 					w := new(tabwriter.Writer)
@@ -96,7 +96,7 @@ func GetProfilesCommand(config *Config) cli.Command {
 			},
 			{
 				Name:      "use",
-				Usage:     "used to switch to another profile",
+				Usage:     "switches to another profile",
 				UsageText: "korectl profile use <name>",
 				Action: func(ctx *cli.Context) error {
 					if !ctx.Args().Present() {
@@ -120,7 +120,7 @@ func GetProfilesCommand(config *Config) cli.Command {
 			},
 			{
 				Name:      "configure",
-				Usage:     "used to walk through and configure a new profile for you",
+				Usage:     "walk through and configure a new profile for you",
 				UsageText: "korectl profile configure <name>",
 				Flags: []cli.Flag{
 					cli.BoolFlag{
@@ -149,8 +149,8 @@ func GetProfilesCommand(config *Config) cli.Command {
 					endpoint = strings.TrimSuffix(endpoint, "\n")
 
 					// @check this is a valid url
-					if err := IsValidHostname(endpoint); err != nil {
-						return fmt.Errorf("invalid endpoint: %s", err)
+					if !IsValidHostname(endpoint) {
+						return fmt.Errorf("invalid endpoint: %s", endpoint)
 					}
 
 					// @step: create an empty endpoint for then
