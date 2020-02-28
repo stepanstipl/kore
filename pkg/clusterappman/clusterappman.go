@@ -90,7 +90,8 @@ var (
 			},
 			Namespace:       captainNamespace,
 			EnsureNamespace: true,
-			DeployTimeOut:   10 * time.Minute,
+			// Not sure why this takes so long (may be application controller related)
+			DeployTimeOut: 30 * time.Minute,
 		},
 		{
 			Name: "Kore Helm Repository",
