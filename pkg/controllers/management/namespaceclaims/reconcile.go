@@ -19,6 +19,8 @@ package namespaceclaims
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
@@ -43,7 +45,7 @@ const (
 	finalizerName = "namespaceclaims.kore.appvia.io"
 )
 
-// Reconcile is resposible for reconciling the resource
+// Reconcile is responsible for reconciling the resource
 func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	ctx := context.Background()
 
@@ -167,7 +169,7 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		}
 
 		// @step: create credentials for the cluster
-		client, err := controllers.CreateClientFromSecret(context.Background(), a.mgr.GetClient(),
+		cc, err := controllers.CreateClientFromSecret(context.Background(), a.mgr.GetClient(),
 			resource.Spec.Cluster.Namespace, resource.Spec.Cluster.Name)
 		if err != nil {
 			logger.WithError(err).Error("trying to create client from cluster secret")
@@ -176,7 +178,7 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		}
 
 		// @step: ensure the namespace claim exists
-		if err := kubernetes.EnsureNamespace(ctx, client, &corev1.Namespace{
+		if err := kubernetes.EnsureNamespace(ctx, cc, &corev1.Namespace{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:        resource.Spec.Name,
 				Labels:      resource.Spec.Labels,
@@ -191,46 +193,125 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		// @step we need to check the rolebinding exists and if not create it
 		logger.Debug("ensuring the binding to the namespace admin exists")
 
-		binding := &rbacv1.RoleBinding{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      RoleBindingName,
-				Namespace: resource.Spec.Name,
-				Labels: map[string]string{
-					kore.Label("owned"): "true",
+		// @logic we use either the default namespace admin or the role specified in the spec
+		roleName := ClusterRoleName
+		if resource.Spec.DefaultTeamRole != "" {
+			roleName = resource.Spec.DefaultTeamRole
+		}
+
+		if !resource.Spec.DisableTeamMemberInheritance {
+			binding := &rbacv1.RoleBinding{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      RoleBindingName,
+					Namespace: resource.Spec.Name,
+					Labels:    map[string]string{kore.Label("owned"): "true"},
 				},
-			},
-			RoleRef: rbacv1.RoleRef{
-				APIGroup: rbacv1.GroupName,
-				Kind:     "ClusterRole",
-				Name:     ClusterRoleName,
-			},
+				RoleRef: rbacv1.RoleRef{
+					APIGroup: rbacv1.GroupName,
+					Kind:     "ClusterRole",
+					Name:     roleName,
+				},
+			}
+
+			// @step: retrieve all the users in the team
+			users, err := a.Teams().Team(request.Namespace).Members().List(ctx)
+			if err != nil {
+				logger.WithError(err).Error("trying to retrieve a list of members in the team")
+
+				return reconcile.Result{}, err
+			}
+
+			logger.WithField(
+				"users", len(users.Items),
+			).Debug("found the x members in the team")
+
+			for _, x := range users.Items {
+				binding.Subjects = append(binding.Subjects, rbacv1.Subject{
+					APIGroup: rbacv1.GroupName,
+					Kind:     rbacv1.UserKind,
+					Name:     x.Spec.Username,
+				})
+			}
+
+			// @step: ensuring the binding exists
+			if _, err := kubernetes.CreateOrUpdate(ctx, cc, binding); err != nil {
+				logger.WithError(err).Error("trying to ensure the namespace team binding")
+
+				return reconcile.Result{}, err
+			}
 		}
 
-		// @step: retrieve all the users in the team
-		users, err := a.Teams().Team(request.Namespace).Members().List(ctx)
-		if err != nil {
-			logger.WithError(err).Error("trying to retrieve a list of members in the team")
+		if len(resource.Spec.UsersRoles) > 0 {
+			logger.WithField(
+				"users", len(resource.Spec.UsersRoles),
+			).Debug("found the x members in user roles")
 
-			return reconcile.Result{}, err
-		}
+			// @step: we need to build up a bunch of bindings to roles
+			bindings := make(map[string]*rbacv1.RoleBinding)
 
-		logger.WithField(
-			"users", len(users.Items),
-		).Debug("found the x members in the team")
+			for _, user := range resource.Spec.UsersRoles {
+				for _, x := range user.Roles {
+					binding, found := bindings[x]
+					if !found {
+						bindings[x] = &rbacv1.RoleBinding{
+							ObjectMeta: metav1.ObjectMeta{
+								Name:      fmt.Sprintf("kore:userroles:%s", x),
+								Namespace: resource.Spec.Name,
+								Labels:    map[string]string{kore.Label("owned"): "true"},
+							},
+							RoleRef: rbacv1.RoleRef{
+								APIGroup: rbacv1.GroupName,
+								Kind:     "ClusterRole",
+								Name:     x,
+							},
+							Subjects: []rbacv1.Subject{{
+								APIGroup: rbacv1.GroupName,
+								Kind:     rbacv1.UserKind,
+								Name:     user.Username,
+							}},
+						}
+					} else {
+						binding.Subjects = append(binding.Subjects, rbacv1.Subject{
+							APIGroup: rbacv1.GroupName,
+							Kind:     rbacv1.UserKind,
+							Name:     user.Username,
+						})
+					}
+				}
+			}
 
-		for _, x := range users.Items {
-			binding.Subjects = append(binding.Subjects, rbacv1.Subject{
-				APIGroup: rbacv1.GroupName,
-				Kind:     rbacv1.UserKind,
-				Name:     x.Spec.Username,
-			})
-		}
+			// @step: iterate the above and apply them
+			for _, binding := range bindings {
+				if _, err := kubernetes.CreateOrUpdate(ctx, cc, binding); err != nil {
+					logger.WithError(err).Error("trying to ensure the binding")
 
-		// @step: ensuring the binding exists
-		if _, err := kubernetes.CreateOrUpdate(ctx, client, binding); err != nil {
-			logger.WithError(err).Error("trying to ensure the namespace team binding")
+					return reconcile.Result{}, err
+				}
+			}
 
-			return reconcile.Result{}, err
+			// @step: we need to remove any bindings which are not longer valid
+			list := &rbacv1.RoleBindingList{}
+			if err := cc.List(ctx, list, client.InNamespace(resource.Spec.Name)); err != nil {
+				logger.WithError(err).Error("trying to list current role bindings")
+
+				return reconcile.Result{}, err
+			}
+
+			for _, x := range list.Items {
+				if strings.HasPrefix(x.Name, "kore:userroles:") {
+					if _, found := bindings[x.Name]; !found {
+						logger.WithField(
+							"binding", x.Name,
+						).Debug("attempting to delete the role binding as no longer referenced")
+
+						if err := kubernetes.DeleteIfExists(ctx, cc, &x); err != nil {
+							logger.WithError(err).Error("trying to delete the role binding")
+
+							return reconcile.Result{}, err
+						}
+					}
+				}
+			}
 		}
 
 		resource.Status.Status = core.SuccessStatus

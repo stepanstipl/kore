@@ -48,7 +48,7 @@ import (
 )
 
 // ClusterUserRolesToMap iterates the clusters users and dedups them
-func ClusterUserRolesToMap(users []clustersv1.ClusterUser) map[string][]string {
+func ClusterUserRolesToMap(users []clustersv1.UserRole) map[string][]string {
 	roles := make(map[string][]string)
 
 	for _, user := range users {

@@ -128,7 +128,7 @@ func schema_pkg_apis_clusters_v1_KubernetesSpec(ref common.ReferenceCallback) co
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
 									SchemaProps: spec.SchemaProps{
-										Ref: ref("github.com/appvia/kore/pkg/apis/clusters/v1.ClusterUser"),
+										Ref: ref("github.com/appvia/kore/pkg/apis/clusters/v1.UserRole"),
 									},
 								},
 							},
@@ -179,7 +179,7 @@ func schema_pkg_apis_clusters_v1_KubernetesSpec(ref common.ReferenceCallback) co
 			},
 		},
 		Dependencies: []string{
-			"github.com/appvia/kore/pkg/apis/clusters/v1.ClusterUser", "github.com/appvia/kore/pkg/apis/core/v1.Ownership"},
+			"github.com/appvia/kore/pkg/apis/clusters/v1.UserRole", "github.com/appvia/kore/pkg/apis/core/v1.Ownership"},
 	}
 }
 
@@ -1147,19 +1147,6 @@ func schema_pkg_apis_clusters_v1_NamespaceClaimSpec(ref common.ReferenceCallback
 				Description: "NamespaceClaimSpec defines the desired state of NamespaceClaim",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"cluster": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Cluster is the cluster the namespace resides",
-							Ref:         ref("github.com/appvia/kore/pkg/apis/core/v1.Ownership"),
-						},
-					},
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Name is the name of the namespace to create",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
 					"annotations": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Annotations is a series of annotations on the namespace",
@@ -1173,6 +1160,33 @@ func schema_pkg_apis_clusters_v1_NamespaceClaimSpec(ref common.ReferenceCallback
 									},
 								},
 							},
+						},
+					},
+					"cluster": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Cluster is the cluster the namespace resides",
+							Ref:         ref("github.com/appvia/kore/pkg/apis/core/v1.Ownership"),
+						},
+					},
+					"defaultTeamRole": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DefaultTeamRole overrides the default team role and gives all users in the team this role within the namespace",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"disableTeamMemberInheritance": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DisableTeamMemberInheritance indicates that team members do not automatically get provisioned on this namespace",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name is the name of the namespace to create",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"labels": {
@@ -1190,12 +1204,30 @@ func schema_pkg_apis_clusters_v1_NamespaceClaimSpec(ref common.ReferenceCallback
 							},
 						},
 					},
+					"usersRoles": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "UserRoles allows you to set the permissions on a team user level",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/appvia/kore/pkg/apis/clusters/v1.UserRole"),
+									},
+								},
+							},
+						},
+					},
 				},
 				Required: []string{"cluster", "name"},
 			},
 		},
 		Dependencies: []string{
-			"github.com/appvia/kore/pkg/apis/core/v1.Ownership"},
+			"github.com/appvia/kore/pkg/apis/clusters/v1.UserRole", "github.com/appvia/kore/pkg/apis/core/v1.Ownership"},
 	}
 }
 

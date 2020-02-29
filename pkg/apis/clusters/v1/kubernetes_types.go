@@ -40,7 +40,7 @@ type KubernetesSpec struct {
 	// permissions across the cluster
 	// +kubebuilder:validation:Optional
 	// +listType
-	ClusterUsers []ClusterUser `json:"clusterUsers,omitempty"`
+	ClusterUsers []UserRole `json:"clusterUsers,omitempty"`
 	// EnabledDefaultTrafficBlock indicates the cluster shoukd default to
 	// enabling blocking network policies on all namespaces
 	EnabledDefaultTrafficBlock *bool `json:"enabledDefaultTrafficBlock,omitempty"`
@@ -62,8 +62,8 @@ type KubernetesSpec struct {
 	ProxyImage string `json:"proxyImage,omitempty"`
 }
 
-// ClusterUser defines a user and their role in the cluster
-type ClusterUser struct {
+// UserRole defines a user and their role in the resource (cluster, namespace)
+type UserRole struct {
 	// Username is the team member the role is being applied to
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinLength=1

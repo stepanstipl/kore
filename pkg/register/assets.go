@@ -965,7 +965,8 @@ spec:
               description: ClusterUsers is a collection of users from the team whom
                 have permissions across the cluster
               items:
-                description: ClusterUser defines a user and their role in the cluster
+                description: UserRole defines a user and their role in the resource
+                  (cluster, namespace)
                 properties:
                   roles:
                     description: Roles is the roles the user is permitted access to
@@ -2507,6 +2508,14 @@ spec:
               - namespace
               - version
               type: object
+            defaultTeamRole:
+              description: DefaultTeamRole overrides the default team role and gives
+                all users in the team this role within the namespace
+              type: string
+            disableTeamMemberInheritance:
+              description: DisableTeamMemberInheritance indicates that team members
+                do not automatically get provisioned on this namespace
+              type: boolean
             labels:
               additionalProperties:
                 type: string
@@ -2516,6 +2525,29 @@ spec:
               description: Name is the name of the namespace to create
               minLength: 1
               type: string
+            usersRoles:
+              description: UserRoles allows you to set the permissions on a team user
+                level
+              items:
+                description: UserRole defines a user and their role in the resource
+                  (cluster, namespace)
+                properties:
+                  roles:
+                    description: Roles is the roles the user is permitted access to
+                    items:
+                      type: string
+                    minItems: 1
+                    type: array
+                  username:
+                    description: Username is the team member the role is being applied
+                      to
+                    minLength: 1
+                    type: string
+                required:
+                - roles
+                - username
+                type: object
+              type: array
           required:
           - cluster
           - name

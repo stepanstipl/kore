@@ -28,19 +28,29 @@ import (
 // NamespaceClaimSpec defines the desired state of NamespaceClaim
 // +k8s:openapi-gen=true
 type NamespaceClaimSpec struct {
+	// Annotations is a series of annotations on the namespace
+	// +kubebuilder:validation:Optional
+	Annotations map[string]string `json:"annotations,omitempty"`
 	// Cluster is the cluster the namespace resides
 	// +kubebuilder:validation:Required
 	Cluster corev1.Ownership `json:"cluster"`
+	// DefaultTeamRole overrides the default team role and gives all users in the
+	// team this role within the namespace
+	DefaultTeamRole string `json:"defaultTeamRole,omitempty"`
+	// DisableTeamMemberInheritance indicates that team members do not automatically
+	// get provisioned on this namespace
+	DisableTeamMemberInheritance bool `json:"disableTeamMemberInheritance,omitempty"`
 	// Name is the name of the namespace to create
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name"`
-	// Annotations is a series of annotations on the namespace
-	// +kubebuilder:validation:Optional
-	Annotations map[string]string `json:"annotations,omitempty"`
 	// Labels is a series of labels for the namespace
 	// +kubebuilder:validation:Optional
 	Labels map[string]string `json:"labels,omitempty"`
+	// UserRoles allows you to set the permissions on a team user level
+	// +kubebuilder:validation:Optional
+	// +listType
+	UsersRoles []UserRole `json:"usersRoles,omitempty"`
 }
 
 // NamespaceClaimStatus defines the observed state of NamespaceClaim
