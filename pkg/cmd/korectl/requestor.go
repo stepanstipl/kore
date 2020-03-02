@@ -33,6 +33,8 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"k8s.io/apimachinery/pkg/runtime"
+
 	"github.com/ghodss/yaml"
 	"github.com/savaki/jq"
 	log "github.com/sirupsen/logrus"
@@ -76,6 +78,8 @@ type Requestor struct {
 	payload *bytes.Buffer
 	// injections - oh my god - this is what happens when you write things fast
 	injections map[string]string
+	// if set it will be encoded as JSON as the payload
+	runtimeObj runtime.Object
 }
 
 // NewRequest creates and returns a requestor
@@ -263,6 +267,15 @@ func (c Requestor) handleResponse(resp *http.Response) error {
 func (c *Requestor) makeRequest(method, url string) (*http.Response, error) {
 	var req *http.Request
 	var err error
+
+	if c.runtimeObj != nil {
+		encoded, err := json.Marshal(c.runtimeObj)
+		if err != nil {
+			return nil, err
+		}
+		c.payload = bytes.NewBuffer(encoded)
+	}
+
 	if c.payload == nil {
 		req, err = http.NewRequest(method, url, nil)
 	} else {
@@ -396,14 +409,8 @@ func (c *Requestor) WithContext(ctx *cli.Context) *Requestor {
 	return c
 }
 
-func (c *Requestor) WithRuntimeObject(obj *unstructured.Unstructured) *Requestor {
-	encoded, err := obj.MarshalJSON()
-	if err != nil {
-		panic(fmt.Sprintf("failed to marshal the resource: %s", err))
-	}
-
-	c.payload = bytes.NewBuffer(encoded)
-
+func (c *Requestor) WithRuntimeObject(obj runtime.Object) *Requestor {
+	c.runtimeObj = obj
 	return c
 }
 
