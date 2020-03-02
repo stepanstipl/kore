@@ -198,7 +198,7 @@ func handleLoginCallback(req *http.Request, resp http.ResponseWriter) (*Authoriz
 	}
 
 	// @step: send back the html
-	shutdown := `<html><body><script>window.close()</script></body></html>`
+	shutdown := `<html><body><script>window.close();</script></body></html>`
 	if _, err := resp.Write([]byte(shutdown)); err != nil {
 		return nil, err
 	}
