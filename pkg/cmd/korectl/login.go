@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2020 Rohith Jayawardene <info@appvia.io>
+ * Copyright (C) 2020 Appvia Ltd <info@appvia.io>
  *
  * This file is part of kore-apiserver.
  *
@@ -61,7 +61,7 @@ func GetLoginCommand(config *Config) cli.Command {
 			},
 			cli.BoolFlag{
 				Name:  "force,f",
-				Usage: "indicate when using the api-server the profile is force updated `BOOL`",
+				Usage: "must be set when you want to override the api-server on an existing profile `BOOL`",
 			},
 		},
 
@@ -77,7 +77,7 @@ func GetLoginCommand(config *Config) cli.Command {
 					return fmt.Errorf("you must specify a profile name when logging in")
 
 				case config.HasProfile(ctx.Args().First()) && !ctx.Bool("force"):
-					return fmt.Errorf("profile name is already in use")
+					return fmt.Errorf("profile name already used (note: you can use the --force option to force the update)")
 
 				case !IsValidHostname(endpoint):
 					return fmt.Errorf("invalid api server: %s", endpoint)
@@ -90,7 +90,7 @@ func GetLoginCommand(config *Config) cli.Command {
 
 			// @check we have the minimum required for authentication
 			if err := config.HasValidProfile(); err != nil {
-				fmt.Println("Unable to authenticated:", err.Error())
+				fmt.Println("Unable to authenticate:", err.Error())
 				fmt.Println("You may need to reconfigure your profile via $ korectl profile configure")
 
 				os.Exit(1)
@@ -137,7 +137,7 @@ func GetLoginCommand(config *Config) cli.Command {
 			case <-doneCh:
 			case err := <-errCh:
 				return fmt.Errorf("trying to authorize the client: %s", err)
-			case <-time.After(15 * time.Second):
+			case <-time.After(30 * time.Second):
 				return errors.New("authorization request timed out waiting to complete")
 			}
 

@@ -33,25 +33,25 @@ import (
 var longProfileDescription = `
 
 Profiles provide a means to store, configure and switch between multiple
-Appvia Kore instances from a single configuration. Alternatively, you might 
-use profiles to use different identities (i.e. admin / user) to a single 
-instance. These are automatically created for you via the $ korectl login 
+Appvia Kore instances from a single configuration. Alternatively, you might
+use profiles to use different identities (i.e. admin / user) to a single
+instance. These are automatically created for you via the $ korectl login
 command or you can manually configure them via the $ korectl profile configure.
 
-Examples: 
+Examples:
 
 $ korectl profile                   # will show this help menu
 $ korectl profile show              # will show the profile in use
 $ korectl profile list              # will show all the profiles available to you
 $ korectl profile use <name>        # switches to another profile
-$ korectl profile configure <name>  # allows you to configure a profile 
+$ korectl profile configure <name>  # allows you to configure a profile
 `
 
 // GetProfilesCommand creates and returns a profiles command
 func GetProfilesCommand(config *Config) cli.Command {
 	return cli.Command{
 		Name:        "profile",
-		Usage:       "Interact, use, list and show the current profiles available",
+		Usage:       "Manage profiles, allowing you switch, list and show profiles",
 		Description: longProfileDescription,
 
 		Subcommands: []cli.Command{

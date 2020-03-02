@@ -136,7 +136,7 @@ func (c *Config) AddAuthInfo(name string, auth *AuthInfo) {
 // HasValidProfile checks we have a current context
 func (c *Config) HasValidProfile() error {
 	if c.CurrentProfile == "" {
-		return errors.New("no profile selected")
+		return errors.New("no profile selected, please run korectl profile use <name>")
 	}
 	if !c.HasServer(c.GetCurrentProfile().Server) {
 		return errors.New("profile does not have a server endpoint")
