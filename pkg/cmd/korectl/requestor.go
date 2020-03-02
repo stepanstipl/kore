@@ -70,10 +70,8 @@ type Requestor struct {
 	render []string
 	// paths are the paths for render
 	paths []string
-	// response is the decoded json
-	response map[string]interface{}
 	// body is the content read bac
-	body *bytes.Buffer
+	body *bytes.Reader
 	// payload
 	payload *bytes.Buffer
 	// injections - oh my god - this is what happens when you write things fast
@@ -89,7 +87,6 @@ func NewRequest() *Requestor {
 	return &Requestor{
 		params:      make(map[string]bool),
 		queryParams: make(map[string]string),
-		response:    make(map[string]interface{}),
 		injections:  make(map[string]string),
 		payload:     nil,
 	}
@@ -117,6 +114,31 @@ func (c *Requestor) Get() error {
 	}
 
 	return c.parseResponse()
+}
+
+// GetObject is responsible for performing the request and unmarshalling into the given object
+func (c *Requestor) GetObject(object runtime.Object) error {
+	url, err := c.makeURI()
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.makeRequest(http.MethodGet, url)
+	if err != nil {
+		return err
+	}
+
+	if err := c.handleResponse(resp); err != nil {
+		return err
+	}
+
+	if c.body.Len() > 0 {
+		if err := json.NewDecoder(c.body).Decode(object); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // Exists will perform a GET request and will return
@@ -180,13 +202,20 @@ func (c *Requestor) Delete() error {
 
 // parseResponse
 func (c *Requestor) parseResponse() error {
+	var response map[string]interface{}
+	if c.body.Len() > 0 {
+		if err := json.NewDecoder(c.body).Decode(&response); err != nil {
+			return err
+		}
+	}
+
 	if c.cliCtx.IsSet("output") {
 		format := c.cliCtx.String("output")
 		switch format {
 		case "json":
-			return json.NewEncoder(os.Stdout).Encode(c.response)
+			return json.NewEncoder(os.Stdout).Encode(response)
 		case "yaml":
-			out, err := yaml.Marshal(c.response)
+			out, err := yaml.Marshal(response)
 			fmt.Fprintf(os.Stdout, "%s", out)
 			return err
 		default:
@@ -199,10 +228,9 @@ func (c *Requestor) parseResponse() error {
 	columns := strings.Join(c.render, "\t")
 	fmt.Fprintf(w, "%s\n", columns)
 
-	islist := c.response["items"] != nil
-	switch islist {
-	case true:
-		items, found := c.response["items"].([]interface{})
+	isList := response["items"] != nil
+	if isList {
+		items, found := response["items"].([]interface{})
 		if !found {
 			return errors.New("invalid response list, no items found")
 		}
@@ -217,8 +245,9 @@ func (c *Requestor) parseResponse() error {
 			}
 			fmt.Fprintf(w, "%s\n", strings.Join(values, "\t"))
 		}
-	default:
-		values, err := c.makeValues(c.Body(), c.paths)
+	} else {
+		_, _ = c.body.Seek(0, io.SeekStart)
+		values, err := c.makeValues(c.body, c.paths)
 		if err != nil {
 			return err
 
@@ -269,9 +298,16 @@ func (c Requestor) handleResponse(resp *http.Response) error {
 		return nil
 	}
 
+	var response map[string]interface{}
+	if c.body.Len() > 0 {
+		if err := json.NewDecoder(c.body).Decode(&response); err != nil {
+			return err
+		}
+	}
+
 	// @step: does the error contain custom error?
-	if c.response["code"] != nil && c.response["message"] != "" {
-		fmt.Printf("[error] [%d] %s\n", int(c.response["code"].(float64)), c.response["message"])
+	if response["code"] != nil && response["message"] != "" {
+		fmt.Printf("[error] [%d] %s\n", int(response["code"].(float64)), response["message"])
 		os.Exit(1)
 	}
 
@@ -332,12 +368,7 @@ func (c *Requestor) makeRequest(method, url string) (*http.Response, error) {
 		if err != nil {
 			return nil, err
 		}
-		if len(content) > 0 {
-			if err := json.NewDecoder(bytes.NewReader(content)).Decode(&c.response); err != nil {
-				return nil, err
-			}
-		}
-		c.body = bytes.NewBuffer(content)
+		c.body = bytes.NewReader(content)
 	}
 
 	return resp, nil
@@ -478,8 +509,4 @@ func (c *Requestor) WithConfig(config *Config) *Requestor {
 	c.config = config
 
 	return c
-}
-
-func (c *Requestor) Body() io.Reader {
-	return c.body
 }
