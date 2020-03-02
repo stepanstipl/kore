@@ -74,8 +74,11 @@ func GetDeleteCommand(config *Config) cli.Command {
 			}
 			if len(ctx.StringSlice("file")) <= 0 {
 				if ctx.NArg() != 2 {
-					return errors.New("you need to specify a resource type and ")
+					return errors.New("you need to specify a resource type and name")
 				}
+
+				resourceConfig := resourceConfigs.Get(ctx.Args().First())
+
 				req := NewRequest().
 					WithConfig(config).
 					WithContext(ctx).
@@ -84,14 +87,14 @@ func GetDeleteCommand(config *Config) cli.Command {
 
 				endpoint := "/teams/{team}/{resource}/{name}"
 
-				if IsGlobalResource(ctx.Args().First()) {
+				if IsGlobalResource(resourceConfig.APIResourceName) {
 					endpoint = "/{resource}/{name}"
 				} else {
 					req.PathParameter("team", true)
 				}
 				req.WithEndpoint(endpoint).
-					WithInject("resource", ctx.Args().First()).
-					WithInject("name", ctx.Args().Tail()[0])
+					WithInject("resource", resourceConfig.APIResourceName).
+					WithInject("name", ctx.Args()[1])
 
 				if err := req.Delete(); err != nil {
 					return err
