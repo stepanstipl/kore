@@ -27,6 +27,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/appvia/kore/pkg/kore"
@@ -173,6 +174,17 @@ func (l *loginHandler) callbackHandler(req *restful.Request, resp *restful.Respo
 		return
 	}
 
+	valid, err := validateRedirectUrl(string(redirect))
+	if err != nil {
+		resp.WriteHeader(http.StatusBadRequest)
+
+		return
+	} else if !valid {
+		resp.WriteHeader(http.StatusForbidden)
+
+		return
+	}
+
 	hcode, err := func() (int, error) {
 		// @step: exchange the authorization code with the identity provider
 		otoken, err := l.oidcConfig.Exchange(req.Request.Context(), code)
@@ -266,4 +278,23 @@ func (l *loginHandler) EnableAuthentication() bool {
 // Name returns the name of the handler
 func (l *loginHandler) Name() string {
 	return "login"
+}
+
+// validateRedirectUrl ensures that a given redirect_url points to localhost
+func validateRedirectUrl(redirect_url string) (bool, error) {
+	validRedirectHosts := [...]string{"127.0.0.1", "localhost"}
+
+	redirectURL, err := url.Parse(redirect_url)
+
+	if err != nil {
+		return false, err
+	}
+
+	for _, host := range validRedirectHosts {
+		if redirectURL.Hostname() == host {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }
