@@ -20,6 +20,7 @@
 package korectl
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -47,6 +48,35 @@ func (c *Config) GetDirectory() string {
 // IsValid checks if the configuration is valid
 func (c *Config) IsValid() error {
 	return nil
+}
+
+// SetCurrentProfile is used to set the current profile
+func (c *Config) SetCurrentProfile(name string) {
+	c.CurrentProfile = name
+}
+
+// CreateProfile is used to create a profile
+func (c *Config) CreateProfile(name, endpoint string) {
+	c.AddProfile(name, &Profile{
+		Server:   name,
+		AuthInfo: name,
+	})
+	if !c.HasServer(name) {
+		c.AddServer(name, &Server{Endpoint: endpoint})
+	}
+	if !c.HasAuthInfo(name) {
+		c.AddAuthInfo(name, &AuthInfo{OIDC: &OIDC{}})
+	}
+}
+
+// GetCurrentProfile returns the current profile
+func (c *Config) GetCurrentProfile() *Profile {
+	profile, found := c.Profiles[c.CurrentProfile]
+	if !found {
+		return &Profile{}
+	}
+
+	return profile
 }
 
 // GetCurrentServer returns the server in the context
@@ -101,6 +131,18 @@ func (c *Config) AddAuthInfo(name string, auth *AuthInfo) {
 		c.AuthInfos = make(map[string]*AuthInfo)
 	}
 	c.AuthInfos[name] = auth
+}
+
+// HasValidProfile checks we have a current context
+func (c *Config) HasValidProfile() error {
+	if c.CurrentProfile == "" {
+		return errors.New("no profile selected, please run korectl profile use <name>")
+	}
+	if !c.HasServer(c.GetCurrentProfile().Server) {
+		return errors.New("profile does not have a server endpoint")
+	}
+
+	return nil
 }
 
 // HasProfile checks if the context exists in the config

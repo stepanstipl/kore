@@ -33,25 +33,25 @@ import (
 var longProfileDescription = `
 
 Profiles provide a means to store, configure and switch between multiple
-Appvia Kore instances from a single configuration. Alternatively, you might 
-use profiles to use different identities (i.e. admin / user) to a single 
-instance. These are automatically created for you via the $ korectl login 
+Appvia Kore instances from a single configuration. Alternatively, you might
+use profiles to use different identities (i.e. admin / user) to a single
+instance. These are automatically created for you via the $ korectl login
 command or you can manually configure them via the $ korectl profile configure.
 
-Examples: 
+Examples:
 
 $ korectl profile                   # will show this help menu
 $ korectl profile show              # will show the profile in use
 $ korectl profile list              # will show all the profiles available to you
 $ korectl profile use <name>        # switches to another profile
-$ korectl profile configure <name>  # allows you to configure a profile 
+$ korectl profile configure <name>  # allows you to configure a profile
 `
 
 // GetProfilesCommand creates and returns a profiles command
 func GetProfilesCommand(config *Config) cli.Command {
 	return cli.Command{
 		Name:        "profile",
-		Usage:       "Used to interact, use, list and show the current profiles available",
+		Usage:       "Manage profiles, allowing you switch, list and show profiles",
 		Description: longProfileDescription,
 
 		Subcommands: []cli.Command{
@@ -105,7 +105,7 @@ func GetProfilesCommand(config *Config) cli.Command {
 					name := ctx.Args().First()
 
 					if !config.HasProfile(name) {
-						return errors.New("the profile does not exists")
+						return errors.New("the profile does not exist")
 					}
 					config.CurrentProfile = name
 
@@ -154,17 +154,8 @@ func GetProfilesCommand(config *Config) cli.Command {
 					}
 
 					// @step: create an empty endpoint for then
-					config.AddProfile(name, &Profile{
-						Server:   name,
-						AuthInfo: name,
-					})
-					if !config.HasServer(name) {
-						config.AddServer(name, &Server{Endpoint: endpoint})
-					}
-					if !config.HasAuthInfo(name) {
-						config.AddAuthInfo(name, &AuthInfo{OIDC: &OIDC{}})
-					}
-					config.CurrentProfile = name
+					config.CreateProfile(name, endpoint)
+					config.SetCurrentProfile(name)
 
 					// @step: attempt to update the configuration
 					if err := config.Update(); err != nil {

@@ -23,14 +23,5 @@ import "github.com/urfave/cli"
 
 var (
 	// Authors is a collection of authors - should probably generate from git
-	Authors = []cli.Author{
-		{
-			Name:  "Rohith Jayawardene",
-			Email: "rohith.jayawardene@appvia.io",
-		},
-		{
-			Name:  "Lewis Marshal",
-			Email: "lewis.marshal@appvia.io",
-		},
-	}
+	Authors = []cli.Author{}
 )

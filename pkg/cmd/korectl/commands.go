@@ -26,14 +26,14 @@ import (
 // GetCommands returns all the commands
 func GetCommands(config *Config) []cli.Command {
 	return []cli.Command{
+		GetLoginCommand(config),
+		GetProfilesCommand(config),
 		GetLocalCommand(config),
 		GetAutoCompleteCommand(config),
-		GetProfilesCommand(config),
 		GetApplyCommand(config),
 		GetDeleteCommand(config),
 		GetClustersCommand(config),
 		GetGetCommand(config),
-		GetLoginCommand(config),
 		GetTeamsCommands(config),
 		GetUsersCommands(config),
 		GetWhoamiCommand(config),

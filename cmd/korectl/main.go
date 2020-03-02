@@ -90,6 +90,8 @@ func main() {
 				// no contexts required yet.
 			case command == "profile" && ctx.Args().Get(1) == "configure":
 				// no contexts required yet.
+			case command == "login":
+				// no contexts required yet.
 			case len(config.Profiles) <= 0:
 				fmt.Fprintf(os.Stderr, "Error: no %s profiles configured.\n", ctx.App.Name)
 				fmt.Fprintf(os.Stderr, "Please check the documentation about how to set up %s.\n", ctx.App.Name)
