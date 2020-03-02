@@ -175,6 +175,7 @@ kind: Service
 metadata:
   name: captain-webhook
   labels:
+    app: captain
     service_name: captain
 spec:
   ports:
