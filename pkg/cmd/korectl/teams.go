@@ -187,6 +187,21 @@ func GetCreateTeamCommand(config *Config) cli.Command {
 		Action: func(ctx *cli.Context) error {
 			teamID := ctx.Args().First()
 
+			exists, err := NewRequest().
+				WithConfig(config).
+				WithContext(ctx).
+				PathParameter("id", true).
+				WithInject("id", teamID).
+				WithEndpoint("/teams/{id}").
+				Exists()
+			if err != nil {
+				return err
+			}
+
+			if exists {
+				return fmt.Errorf("%q already exists", teamID)
+			}
+
 			team := &orgv1.Team{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "Team",
@@ -203,7 +218,7 @@ func GetCreateTeamCommand(config *Config) cli.Command {
 				},
 			}
 
-			err := NewRequest().
+			err = NewRequest().
 				WithConfig(config).
 				WithContext(ctx).
 				PathParameter("id", true).
