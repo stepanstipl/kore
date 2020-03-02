@@ -79,6 +79,30 @@ func (c *Config) GetCurrentAuthInfo() *AuthInfo {
 	return a
 }
 
+// AddContext adds a context
+func (c *Config) AddContext(name string, ctx *Context) {
+	if c.Contexts == nil {
+		c.Contexts = make(map[string]*Context)
+	}
+	c.Contexts[name] = ctx
+}
+
+// AddServer adds a server
+func (c *Config) AddServer(name string, server *Server) {
+	if c.Servers == nil {
+		c.Servers = make(map[string]*Server)
+	}
+	c.Servers[name] = server
+}
+
+// AddAuthInfo adds a authentication
+func (c *Config) AddAuthInfo(name string, auth *AuthInfo) {
+	if c.AuthInfos == nil {
+		c.AuthInfos = make(map[string]*AuthInfo)
+	}
+	c.AuthInfos[name] = auth
+}
+
 // HasContext checks if the context exists in the config
 func (c *Config) HasContext(name string) bool {
 	_, found := c.Contexts[name]

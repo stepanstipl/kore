@@ -45,6 +45,15 @@ type Document struct {
 	Object *unstructured.Unstructured
 }
 
+var (
+	hostnameRegex = regexp.MustCompile(`https?://([0-9a-zA-Z\.]+)|([0-9]{1,3}\.){3,3}[0-9]{1,3}(:[0-9]+)?`)
+)
+
+// IsValidHostname checks the endpoint is valid
+func IsValidHostname(endpoint string) bool {
+	return hostnameRegex.MatchString(endpoint)
+}
+
 // ParseDocument returns a collection of parsed documents and the api endpoints
 func ParseDocument(src io.Reader, namespace string) ([]*Document, error) {
 	var list []*Document
