@@ -47,11 +47,12 @@ func GetGetCommand(config *Config) cli.Command {
 				PathParameter("resource", true).
 				PathParameter("name", false)
 
+			resourceConfig := resourceConfigs.Get(ctx.Args().First())
 			endpoint := "/teams/{team}/{resource}/{name}"
 
-			if IsGlobalResource(ctx.Args().First()) {
+			if IsGlobalResource(resourceConfig.APIResourceName) {
 				endpoint = "/{resource}/{name}"
-			} else if IsGlobalResourceOptional(ctx.Args().First()) {
+			} else if IsGlobalResourceOptional(resourceConfig.APIResourceName) {
 				if !ctx.IsSet("team") {
 					endpoint = "/{resource}/{name}"
 				} else {
@@ -62,10 +63,8 @@ func GetGetCommand(config *Config) cli.Command {
 			}
 
 			req.WithEndpoint(endpoint).
-				WithInject("resource", ctx.Args().First()).
-				Render(
-					Column("Name", ".metadata.name"),
-				)
+				WithInject("resource", resourceConfig.APIResourceName).
+				Render(resourceConfig.Columns...)
 
 			if ctx.NArg() == 2 {
 				req.WithInject("name", ctx.Args().Get(1))

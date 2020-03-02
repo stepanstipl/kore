@@ -33,6 +33,8 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"k8s.io/apimachinery/pkg/runtime"
+
 	"github.com/ghodss/yaml"
 	"github.com/savaki/jq"
 	log "github.com/sirupsen/logrus"
@@ -76,6 +78,10 @@ type Requestor struct {
 	payload *bytes.Buffer
 	// injections - oh my god - this is what happens when you write things fast
 	injections map[string]string
+	// if set it will be encoded as JSON as the payload
+	runtimeObj runtime.Object
+	// responseHandler can be used to register a response handler
+	responseHandler func(resp *http.Response) error
 }
 
 // NewRequest creates and returns a requestor
@@ -106,11 +112,36 @@ func (c *Requestor) Get() error {
 		return err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return c.handleResponse(resp)
+	if err := c.handleResponse(resp); err != nil {
+		return err
 	}
 
 	return c.parseResponse()
+}
+
+// Exists will perform a GET request and will return
+//  * true on 200 response
+//  * false on 404 response
+//  * error on any other response
+func (c *Requestor) Exists() (bool, error) {
+	url, err := c.makeURI()
+	if err != nil {
+		return false, err
+	}
+
+	resp, err := c.makeRequest(http.MethodGet, url)
+	if err != nil {
+		return false, err
+	}
+
+	switch resp.StatusCode {
+	case http.StatusOK:
+		return true, nil
+	case http.StatusNotFound:
+		return false, nil
+	default:
+		return false, c.handleResponse(resp)
+	}
 }
 
 // Edit is responsible for performing the request
@@ -128,11 +159,8 @@ func (c *Requestor) Update() error {
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return c.handleResponse(resp)
-	}
 
-	return nil
+	return c.handleResponse(resp)
 }
 
 // Delete is responsible for performing the request
@@ -146,11 +174,8 @@ func (c *Requestor) Delete() error {
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return c.handleResponse(resp)
-	}
 
-	return nil
+	return c.handleResponse(resp)
 }
 
 // parseResponse
@@ -236,6 +261,14 @@ func (c *Requestor) makeValues(in io.Reader, paths []string) ([]string, error) {
 
 // handleResponse is used to wrap common errors
 func (c Requestor) handleResponse(resp *http.Response) error {
+	if c.responseHandler != nil {
+		return c.responseHandler(resp)
+	}
+
+	if resp.StatusCode == http.StatusOK {
+		return nil
+	}
+
 	// @step: does the error contain custom error?
 	if c.response["code"] != nil && c.response["message"] != "" {
 		fmt.Printf("[error] [%d] %s\n", int(c.response["code"].(float64)), c.response["message"])
@@ -246,7 +279,7 @@ func (c Requestor) handleResponse(resp *http.Response) error {
 	case http.StatusUnauthorized:
 		fmt.Println("[error] authorization required, please use the 'authorize' command")
 	case http.StatusNotFound:
-		fmt.Println("[error] from server (notfound): resource not found")
+		fmt.Println("[error] kind or resource does not exist")
 	case http.StatusForbidden:
 		fmt.Println("[error] request has been denied, check credentials")
 	case http.StatusBadRequest:
@@ -263,6 +296,15 @@ func (c Requestor) handleResponse(resp *http.Response) error {
 func (c *Requestor) makeRequest(method, url string) (*http.Response, error) {
 	var req *http.Request
 	var err error
+
+	if c.runtimeObj != nil {
+		encoded, err := json.Marshal(c.runtimeObj)
+		if err != nil {
+			return nil, err
+		}
+		c.payload = bytes.NewBuffer(encoded)
+	}
+
 	if c.payload == nil {
 		req, err = http.NewRequest(method, url, nil)
 	} else {
@@ -283,9 +325,6 @@ func (c *Requestor) makeRequest(method, url string) (*http.Response, error) {
 	resp, err := hc.Do(req)
 	if err != nil {
 		return nil, err
-	}
-	if resp.StatusCode == http.StatusNotFound {
-		return nil, errors.New("kind or resource does not exist")
 	}
 
 	if resp.Body != nil {
@@ -396,14 +435,8 @@ func (c *Requestor) WithContext(ctx *cli.Context) *Requestor {
 	return c
 }
 
-func (c *Requestor) WithRuntimeObject(obj *unstructured.Unstructured) *Requestor {
-	encoded, err := obj.MarshalJSON()
-	if err != nil {
-		panic(fmt.Sprintf("failed to marshal the resource: %s", err))
-	}
-
-	c.payload = bytes.NewBuffer(encoded)
-
+func (c *Requestor) WithRuntimeObject(obj runtime.Object) *Requestor {
+	c.runtimeObj = obj
 	return c
 }
 
@@ -432,6 +465,11 @@ func (c *Requestor) WithPayload(name string) *Requestor {
 	c.injections["name"] = u.GetName()
 	c.payload = bytes.NewBuffer(encoded)
 
+	return c
+}
+
+func (c *Requestor) WithResponseHandler(f func(resp *http.Response) error) *Requestor {
+	c.responseHandler = f
 	return c
 }
 
