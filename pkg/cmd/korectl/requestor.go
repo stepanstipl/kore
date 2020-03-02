@@ -119,6 +119,31 @@ func (c *Requestor) Get() error {
 	return c.parseResponse()
 }
 
+// Exists will perform a GET request and will return
+//  * true on 200 response
+//  * false on 404 response
+//  * error on any other response
+func (c *Requestor) Exists() (bool, error) {
+	url, err := c.makeURI()
+	if err != nil {
+		return false, err
+	}
+
+	resp, err := c.makeRequest(http.MethodGet, url)
+	if err != nil {
+		return false, err
+	}
+
+	switch resp.StatusCode {
+	case http.StatusOK:
+		return true, nil
+	case http.StatusNotFound:
+		return false, nil
+	default:
+		return false, c.handleResponse(resp)
+	}
+}
+
 // Edit is responsible for performing the request
 func (c *Requestor) Edit() error {
 	return nil
