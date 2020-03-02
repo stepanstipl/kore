@@ -241,3 +241,57 @@ func GetCreateTeamCommand(config *Config) cli.Command {
 		},
 	}
 }
+
+func GetEditTeamCommand(config *Config) cli.Command {
+	return cli.Command{
+		Name:      "team",
+		Aliases:   []string{"teams"},
+		Usage:     "modifies a team",
+		ArgsUsage: "TEAM",
+		Action: func(ctx *cli.Context) error {
+			teamID := ctx.Args().First()
+
+			team := &orgv1.Team{}
+
+			err := NewRequest().
+				WithConfig(config).
+				WithContext(ctx).
+				PathParameter("id", true).
+				WithInject("id", teamID).
+				WithEndpoint("/teams/{id}").
+				GetObject(team)
+			if err != nil {
+				return err
+			}
+
+			prompts := prompts{
+				&prompt{id: "Description", value: &team.Spec.Description},
+			}
+
+			if err := prompts.collect(); err != nil {
+				return err
+			}
+
+			err = NewRequest().
+				WithConfig(config).
+				WithContext(ctx).
+				PathParameter("id", true).
+				WithInject("id", teamID).
+				WithEndpoint("/teams/{id}").
+				WithRuntimeObject(team).
+				Update()
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("%q was successfully saved\n", teamID)
+			return nil
+		},
+		Before: func(ctx *cli.Context) error {
+			if !ctx.Args().Present() {
+				return fmt.Errorf("team identifier must be set as an argument")
+			}
+			return nil
+		},
+	}
+}
