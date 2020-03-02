@@ -65,7 +65,6 @@ func createLocalConfig(config *Config) {
 type authInfoConfig struct {
 	ClientID, ClientSecret string
 	AuthorizeURL           string
-	prompts                prompts
 }
 
 func newAuthInfoConfig(config *Config) *authInfoConfig {
@@ -80,23 +79,12 @@ func newAuthInfoConfig(config *Config) *authInfoConfig {
 	return result
 }
 
-func (a *authInfoConfig) createPrompts() *authInfoConfig {
-	a.prompts = prompts{
-		&prompt{id: "Client ID", errMsg: "%s cannot be blank", value: a.ClientID},
-		&prompt{id: "Client Secret", errMsg: "%s cannot be blank", value: a.ClientSecret},
-		&prompt{id: "OpenID endpoint", errMsg: "%s cannot be blank", value: a.AuthorizeURL},
+func (a *authInfoConfig) createPrompts() prompts {
+	return prompts{
+		&prompt{id: "Client ID", errMsg: "%s cannot be blank", value: &a.ClientID},
+		&prompt{id: "Client Secret", errMsg: "%s cannot be blank", value: &a.ClientSecret},
+		&prompt{id: "OpenID endpoint", errMsg: "%s cannot be blank", value: &a.AuthorizeURL},
 	}
-	return a
-}
-
-func (a *authInfoConfig) collectPrompts() (*authInfoConfig, error) {
-	if err := a.prompts.collect(); err != nil {
-		return nil, err
-	}
-	a.ClientID = a.prompts.getValue("Client ID")
-	a.ClientSecret = a.prompts.getValue("Client Secret")
-	a.AuthorizeURL = a.prompts.getValue("OpenID endpoint")
-	return a, nil
 }
 
 func (a *authInfoConfig) update(config *Config) {
@@ -116,7 +104,6 @@ type gcpInfoConfig struct {
 	Region  string
 	Project string
 	KeyPath string
-	prompts prompts
 }
 
 func newGcpInfoConfig() *gcpInfoConfig {
@@ -146,30 +133,17 @@ func (g *gcpInfoConfig) load(src string) (*gcpInfoConfig, error) {
 	return g, nil
 }
 
-func (g *gcpInfoConfig) createPrompts() *gcpInfoConfig {
-	g.prompts = prompts{
-		&prompt{id: "GKE Region", labelSuffix: "(e.g. europe-west2)", errMsg: "%s cannot be blank", value: g.Region},
-		&prompt{id: "GKE Project ID", errMsg: "%s cannot be blank", value: g.Project},
+func (g *gcpInfoConfig) createPrompts() prompts {
+	return prompts{
+		&prompt{id: "GKE Region", labelSuffix: "(e.g. europe-west2)", errMsg: "%s cannot be blank", value: &g.Region},
+		&prompt{id: "GKE Project ID", errMsg: "%s cannot be blank", value: &g.Project},
 		&prompt{
 			id:          "GKE Service Account Key file",
 			labelSuffix: "full path to service key file (will use cached if any)",
 			errMsg:      "%s cannot be blank",
-			value:       g.KeyPath,
+			value:       &g.KeyPath,
 		},
 	}
-	return g
-}
-
-func (g *gcpInfoConfig) collectPrompts() (*gcpInfoConfig, error) {
-	if err := g.prompts.collect(); err != nil {
-		return nil, err
-	}
-
-	g.Region = g.prompts.getValue("GKE Region")
-	g.Project = g.prompts.getValue("GKE Project ID")
-	g.KeyPath = g.prompts.getValue("GKE Service Account Key file")
-
-	return g, nil
 }
 
 func (g *gcpInfoConfig) generateGcpInfo() error {
@@ -222,8 +196,8 @@ func GetLocalConfigureSubCommand(config *Config) cli.Command {
 			createLocalConfig(config)
 
 			fmt.Println("What are your Identity Broker details?")
-			authInfo, err := newAuthInfoConfig(config).createPrompts().collectPrompts()
-			if err != nil {
+			authInfo := newAuthInfoConfig(config)
+			if err := authInfo.createPrompts().collect(); err != nil {
 				return err
 			}
 			authInfo.update(config)
@@ -233,7 +207,7 @@ func GetLocalConfigureSubCommand(config *Config) cli.Command {
 			if err != nil {
 				return err
 			}
-			if _, err := info.createPrompts().collectPrompts(); err != nil {
+			if err := info.createPrompts().collect(); err != nil {
 				return err
 			}
 			if err := info.generateGcpInfo(); err != nil {
