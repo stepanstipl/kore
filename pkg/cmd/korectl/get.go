@@ -37,6 +37,10 @@ func GetGetCommand(config *Config) cli.Command {
 			},
 		}, DefaultOptions...),
 
+		Subcommands: []cli.Command{
+			GetGetTeamCommand(config),
+		},
+
 		Action: func(ctx *cli.Context) error {
 			if !ctx.Args().Present() {
 				return errors.New("you need to specify a resource type")
