@@ -1,5 +1,5 @@
 /*
-Copyright 2019 Rohith Jayawardene <info@appvia.io>
+Copyright 2019 Appvia Ltd <info@appvia.io>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

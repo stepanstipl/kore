@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2020 Rohith Jayawardene <info@appvia.io>
+ * Copyright (C) 2020 Appvia Ltd <info@appvia.io>
  *
  * This file is part of kore-apiserver.
  *
