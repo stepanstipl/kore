@@ -253,14 +253,14 @@ func GetEditTeamCommand(config *Config) cli.Command {
 
 			team := &orgv1.Team{}
 
-			err := NewRequest().
+			req := NewRequest().
 				WithConfig(config).
 				WithContext(ctx).
 				PathParameter("id", true).
 				WithInject("id", teamID).
 				WithEndpoint("/teams/{id}").
-				GetObject(team)
-			if err != nil {
+				WithRuntimeObject(team)
+			if err := req.Get(); err != nil {
 				return err
 			}
 
@@ -272,15 +272,7 @@ func GetEditTeamCommand(config *Config) cli.Command {
 				return err
 			}
 
-			err = NewRequest().
-				WithConfig(config).
-				WithContext(ctx).
-				PathParameter("id", true).
-				WithInject("id", teamID).
-				WithEndpoint("/teams/{id}").
-				WithRuntimeObject(team).
-				Update()
-			if err != nil {
+			if err := req.Update(); err != nil {
 				return err
 			}
 

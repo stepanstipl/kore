@@ -52,7 +52,8 @@ func GetClustersCommand(config *Config) cli.Command {
 						WithContext(ctx).
 						WithEndpoint("/teams/{team}/clusters").
 						PathParameter("team", true).
-						GetObject(clusters)
+						WithRuntimeObject(clusters).
+						Get()
 					if err != nil {
 						return err
 					}

@@ -116,31 +116,6 @@ func (c *Requestor) Get() error {
 	return c.parseResponse()
 }
 
-// GetObject is responsible for performing the request and unmarshalling into the given object
-func (c *Requestor) GetObject(object runtime.Object) error {
-	url, err := c.makeURI()
-	if err != nil {
-		return err
-	}
-
-	resp, err := c.makeRequest(http.MethodGet, url)
-	if err != nil {
-		return err
-	}
-
-	if err := c.handleResponse(resp); err != nil {
-		return err
-	}
-
-	if c.body.Len() > 0 {
-		if err := json.NewDecoder(c.body).Decode(object); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // Exists will perform a GET request and will return
 //  * true on 200 response
 //  * false on 404 response
@@ -202,6 +177,15 @@ func (c *Requestor) Delete() error {
 
 // parseResponse
 func (c *Requestor) parseResponse() error {
+	if c.runtimeObj != nil {
+		if c.body.Len() > 0 {
+			if err := json.NewDecoder(c.body).Decode(c.runtimeObj); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
 	var response map[string]interface{}
 	if c.body.Len() > 0 {
 		if err := json.NewDecoder(c.body).Decode(&response); err != nil {
@@ -330,6 +314,8 @@ func (c Requestor) handleResponse(resp *http.Response) error {
 
 // makeRequest creates and returns a http request
 func (c *Requestor) makeRequest(method, url string) (*http.Response, error) {
+	c.body = nil
+
 	var req *http.Request
 	var err error
 
