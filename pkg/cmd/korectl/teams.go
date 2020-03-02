@@ -226,39 +226,3 @@ func GetCreateTeamCommand(config *Config) cli.Command {
 		},
 	}
 }
-
-func GetGetTeamCommand(config *Config) cli.Command {
-	return cli.Command{
-		Name:      "team",
-		Aliases:   []string{"teams"},
-		Usage:     "get a team",
-		ArgsUsage: "TEAM",
-		Flags:     nil,
-		Action: func(ctx *cli.Context) error {
-			req := NewRequest().
-				WithConfig(config).
-				WithContext(ctx).
-				Render(
-					Column("Name", ".metadata.name"),
-					Column("Description", ".spec.description"),
-				)
-
-			if ctx.Args().Present() {
-				req = req.PathParameter("id", true).
-					WithInject("id", ctx.Args().First()).
-					WithEndpoint("/teams/{id}")
-			} else {
-				req.WithEndpoint("/teams")
-			}
-
-			if err := req.Get(); err != nil {
-				return err
-			}
-
-			return nil
-		},
-		Before: func(ctx *cli.Context) error {
-			return nil
-		},
-	}
-}
