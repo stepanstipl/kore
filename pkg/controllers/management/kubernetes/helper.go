@@ -267,7 +267,7 @@ func GetDeployment(ctx context.Context, cc client.Client, name, namespace string
 }
 
 // CreateOrUpdateClusterAppManDeployment will reconcile the clusterappman deployment
-func CreateOrUpdateClusterAppManDeployment(ctx context.Context, cc client.Client) error {
+func CreateOrUpdateClusterAppManDeployment(ctx context.Context, cc client.Client, image string) error {
 	name := clusterappmanDeployment
 	if _, err := kubernetes.CreateOrUpdate(ctx, cc, &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -297,7 +297,7 @@ func CreateOrUpdateClusterAppManDeployment(ctx context.Context, cc client.Client
 					Containers: []v1.Container{
 						{
 							Name:  name,
-							Image: KoreImage,
+							Image: image,
 							Env: []v1.EnvVar{
 								{
 									Name:  "IN_CLUSTER",

@@ -17,7 +17,10 @@
 
 package options
 
-import "github.com/urfave/cli"
+import (
+	"github.com/appvia/kore/pkg/version"
+	"github.com/urfave/cli"
+)
 
 // Options returns the command line options
 func Options() []cli.Flag {
@@ -224,6 +227,20 @@ func Options() []cli.Flag {
 			Name:   "verbose",
 			Usage:  "indicates if we should enable verbose logging `BOOL`",
 			EnvVar: "VERBOSE",
+		},
+
+		// @related to images
+		cli.StringFlag{
+			Name:   "auth-proxy-image",
+			Usage:  "is the authentication proxy image deployed to the clusters `IMAGE`",
+			EnvVar: "AUTH_PROXY_IMAGE",
+			Value:  "quay.io/appvia/auth-proxy:" + version.Release,
+		},
+		cli.StringFlag{
+			Name:   "clusterappman-image",
+			Usage:  "is the container image used for cluster application management `IMAGE`",
+			EnvVar: "CLUSTERAPPMAN_IMAGE",
+			Value:  "quay.io/appvia/kore-apiserver:" + version.Release,
 		},
 
 		// @controller flags

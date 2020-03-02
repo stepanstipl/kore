@@ -97,6 +97,8 @@ type Config struct {
 	AdminToken string `json:"admin-token,omitempty"`
 	// Authenticators is a collection of authentication plugins to enable
 	Authenticators []string `json:"authenticators,omitempty"`
+	// AuthProxyImage is the image to use for oidc proxy
+	AuthProxyImage string `json:"auth-proxy-image,omitempty"`
 	// ClientID is the client id for the openid authenticator
 	ClientID string `json:"client-id,omitempty"`
 	// ClientSecret is the client secret to use
@@ -107,8 +109,10 @@ type Config struct {
 	CertificateAuthority string `json:"certificate-authority,omitempty"`
 	// CertificateAuthorityKey is the path to the private key
 	CertificateAuthorityKey string `json:"certificate-authority-key,omitempty"`
+	// ClusterAppManImage is the image to use for cluster application management
+	ClusterAppManImage string `json:"cluster-app-man-image,omitempty"`
 	// DEX is the config required to configure dex
-	DEX DEX `json:"dex"`
+	DEX DEX `json:"dex,omitempty"`
 	// DiscoveryURL is the openid discovery url
 	DiscoveryURL string `json:"discovery-url,omitempty"`
 	// EnabledClusterDeletion indicates we should delete cloud providers

@@ -29,17 +29,11 @@ import (
 	clusterappman "github.com/appvia/kore/pkg/clusterappman"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
-	"github.com/appvia/kore/pkg/version"
 
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-)
-
-var (
-	// KoreImage is the container image for Kore
-	KoreImage = "quay.io/appvia/kore-apiserver:" + version.Release
 )
 
 const (
@@ -110,8 +104,8 @@ func (a k8sCtrl) EnsureClusterman(ctx context.Context, cc client.Client, cluster
 	}
 
 	// @step: check if the kore cluster manager deployment exists
-	logger.Debugf("deploying clusterappman using image %s", KoreImage)
-	if err := CreateOrUpdateClusterAppManDeployment(ctx, cc); err != nil {
+	logger.Debugf("deploying clusterappman using image %s", a.Config().ClusterAppManImage)
+	if err := CreateOrUpdateClusterAppManDeployment(ctx, cc, a.Config().ClusterAppManImage); err != nil {
 		logger.WithError(err).Error("trying to create the cluster manager deployment")
 
 		return nil, err
