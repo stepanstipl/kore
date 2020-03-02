@@ -85,9 +85,9 @@ func generateGcpInfo(region, projectId, keyPath string) error {
 }
 
 func createLocalConfig(config *Config) {
-	if config.CurrentContext != "local" {
-		config.CurrentContext = "local"
-		config.Contexts = map[string]*Context{
+	if config.CurrentProfile != "local" {
+		config.CurrentProfile = "local"
+		config.Profiles = map[string]*Profile{
 			"local": {
 				Server:   "local",
 				AuthInfo: "local",
@@ -198,7 +198,7 @@ func GetLocalCommand(config *Config) cli.Command {
 			{
 				Name:  "configure",
 				Usage: "Used to configure a local instance of Kore.",
-				Action: func(c *cli.Context) error {
+				Action: func(c *cli.Profile) error {
 					createLocalConfig(config)
 
 					fmt.Println("What are your Identity Broker details?")
@@ -216,7 +216,7 @@ func GetLocalCommand(config *Config) cli.Command {
 					}
 
 					fmt.Println("...Kore is now set up to run locally,")
-					fmt.Println("✅ A 'local' context has been configured in ~/.korectl/config")
+					fmt.Println("✅ A 'local' profile has been configured in ~/.korectl/config")
 					fmt.Println("✅ Generated Kubernetes CRDs are now stored in <project root>/manifests/local directory. ")
 					return nil
 				},
