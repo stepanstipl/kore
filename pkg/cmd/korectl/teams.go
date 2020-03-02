@@ -21,7 +21,10 @@ package korectl
 
 import (
 	"fmt"
+
+	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/urfave/cli"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // GetTeamsCommand returns the teams command
@@ -164,6 +167,62 @@ func GetTeamsCommands(config *Config) cli.Command {
 					},
 				},
 			},
+		},
+	}
+}
+
+func GetCreateTeamCommand(config *Config) cli.Command {
+	return cli.Command{
+		Name:      "team",
+		Aliases:   []string{"teams"},
+		Usage:     "creates a team",
+		ArgsUsage: "TEAM",
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:     "description",
+				Usage:    "The description of the team",
+				Required: false,
+			},
+		},
+		Action: func(ctx *cli.Context) error {
+			teamID := ctx.Args().First()
+
+			team := &orgv1.Team{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "Team",
+					APIVersion: orgv1.GroupVersion.String(),
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      teamID,
+					Namespace: "",
+					Labels:    nil,
+				},
+				Spec: orgv1.TeamSpec{
+					Summary:     teamID,
+					Description: ctx.String("description"),
+				},
+			}
+
+			err := NewRequest().
+				WithConfig(config).
+				WithContext(ctx).
+				PathParameter("id", true).
+				WithInject("id", teamID).
+				WithEndpoint("/teams/{id}").
+				WithRuntimeObject(team).
+				Update()
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("%q team was successfully created\n", teamID)
+			return nil
+		},
+		Before: func(ctx *cli.Context) error {
+			if !ctx.Args().Present() {
+				return fmt.Errorf("team identifier must be set as an argument")
+			}
+			return nil
 		},
 	}
 }

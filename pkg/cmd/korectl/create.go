@@ -23,20 +23,13 @@ import (
 	"github.com/urfave/cli"
 )
 
-// GetCommands returns all the commands
-func GetCommands(config *Config) []cli.Command {
-	return []cli.Command{
-		GetLoginCommand(config),
-		GetProfilesCommand(config),
-		GetLocalCommand(config),
-		GetAutoCompleteCommand(config),
-		GetApplyCommand(config),
-		GetDeleteCommand(config),
-		GetClustersCommand(config),
-		GetGetCommand(config),
-		GetCreateCommand(config),
-		GetTeamsCommands(config),
-		GetUsersCommands(config),
-		GetWhoamiCommand(config),
+func GetCreateCommand(config *Config) cli.Command {
+	return cli.Command{
+		Name:  "create",
+		Usage: "creates various objects",
+
+		Subcommands: []cli.Command{
+			GetCreateTeamCommand(config),
+		},
 	}
 }
