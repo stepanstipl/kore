@@ -15,7 +15,9 @@ type prompt struct {
 
 func (p *prompt) do() error {
 	runner := promptui.Prompt{
-		Label: p.id + " " + p.labelSuffix,
+		Label:     p.id + " " + p.labelSuffix,
+		AllowEdit: true,
+		Default:   p.value,
 		Validate: func(in string) error {
 			if len(in) == 0 {
 				return fmt.Errorf(p.errMsg, p.id)
