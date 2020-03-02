@@ -80,6 +80,8 @@ type Requestor struct {
 	injections map[string]string
 	// if set it will be encoded as JSON as the payload
 	runtimeObj runtime.Object
+	// responseHandler can be used to register a response handler
+	responseHandler func(resp *http.Response) error
 }
 
 // NewRequest creates and returns a requestor
@@ -110,8 +112,8 @@ func (c *Requestor) Get() error {
 		return err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return c.handleResponse(resp)
+	if err := c.handleResponse(resp); err != nil {
+		return err
 	}
 
 	return c.parseResponse()
@@ -132,11 +134,8 @@ func (c *Requestor) Update() error {
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return c.handleResponse(resp)
-	}
 
-	return nil
+	return c.handleResponse(resp)
 }
 
 // Delete is responsible for performing the request
@@ -150,11 +149,8 @@ func (c *Requestor) Delete() error {
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return c.handleResponse(resp)
-	}
 
-	return nil
+	return c.handleResponse(resp)
 }
 
 // parseResponse
@@ -240,6 +236,14 @@ func (c *Requestor) makeValues(in io.Reader, paths []string) ([]string, error) {
 
 // handleResponse is used to wrap common errors
 func (c Requestor) handleResponse(resp *http.Response) error {
+	if c.responseHandler != nil {
+		return c.responseHandler(resp)
+	}
+
+	if resp.StatusCode == http.StatusOK {
+		return nil
+	}
+
 	// @step: does the error contain custom error?
 	if c.response["code"] != nil && c.response["message"] != "" {
 		fmt.Printf("[error] [%d] %s\n", int(c.response["code"].(float64)), c.response["message"])
@@ -439,6 +443,11 @@ func (c *Requestor) WithPayload(name string) *Requestor {
 	c.injections["name"] = u.GetName()
 	c.payload = bytes.NewBuffer(encoded)
 
+	return c
+}
+
+func (c *Requestor) WithResponseHandler(f func(resp *http.Response) error) *Requestor {
+	c.responseHandler = f
 	return c
 }
 
