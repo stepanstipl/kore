@@ -279,7 +279,7 @@ func (c Requestor) handleResponse(resp *http.Response) error {
 	case http.StatusUnauthorized:
 		fmt.Println("[error] authorization required, please use the 'authorize' command")
 	case http.StatusNotFound:
-		fmt.Println("[error] from server (notfound): resource not found")
+		fmt.Println("[error] kind or resource does not exist")
 	case http.StatusForbidden:
 		fmt.Println("[error] request has been denied, check credentials")
 	case http.StatusBadRequest:
@@ -325,9 +325,6 @@ func (c *Requestor) makeRequest(method, url string) (*http.Response, error) {
 	resp, err := hc.Do(req)
 	if err != nil {
 		return nil, err
-	}
-	if resp.StatusCode == http.StatusNotFound {
-		return nil, errors.New("kind or resource does not exist")
 	}
 
 	if resp.Body != nil {
