@@ -63,6 +63,11 @@ func GetLoginCommand(config *Config) cli.Command {
 				Name:  "force,f",
 				Usage: "must be set when you want to override the api-server on an existing profile `BOOL`",
 			},
+			cli.IntFlag{
+				Name:  "port,p",
+				Usage: "sets the local port used for redirection when authenticating",
+				Value: 3001,
+			},
 		},
 
 		Action: func(ctx *cli.Context) error {
@@ -112,9 +117,12 @@ func GetLoginCommand(config *Config) cli.Command {
 				doneCh <- struct{}{}
 			})
 
+			serverPort := ctx.Int("port")
+
 			// @step: we need to start the http server in the background
 			go func() {
-				if err := http.ListenAndServe(":3001", nil); err != nil {
+				listenAddress := fmt.Sprintf(":%d", serverPort)
+				if err := http.ListenAndServe(listenAddress, nil); err != nil {
 					errCh <- fmt.Errorf("trying to start local http server: %s", err)
 				}
 			}()
@@ -125,8 +133,8 @@ func GetLoginCommand(config *Config) cli.Command {
 			)
 
 			// @step: open a browser to the to the api server
-			redirectURL := fmt.Sprintf("%s/oauth/authorize?redirect_url=http://localhost:3001",
-				config.GetCurrentServer().Endpoint)
+			redirectURL := fmt.Sprintf("%s/oauth/authorize?redirect_url=http://localhost:%d",
+				config.GetCurrentServer().Endpoint, serverPort)
 
 			if err := open.Run(redirectURL); err != nil {
 				return fmt.Errorf("trying to open web browser, error: %s", err)
