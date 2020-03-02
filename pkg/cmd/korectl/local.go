@@ -198,7 +198,7 @@ func GetLocalCommand(config *Config) cli.Command {
 			{
 				Name:  "configure",
 				Usage: "Used to configure a local instance of Kore.",
-				Action: func(c *cli.Profile) error {
+				Action: func(c *cli.Context) error {
 					createLocalConfig(config)
 
 					fmt.Println("What are your Identity Broker details?")

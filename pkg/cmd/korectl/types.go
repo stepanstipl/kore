@@ -34,10 +34,10 @@ var (
 
 // Config is the configuration for the api
 type Config struct {
-	// CurrentContext is the context in use at the moment
-	CurrentContext string `json:"current-context,omitempty" yaml:"current-context"`
-	// Contexts is a collection of contexts
-	Contexts map[string]*Context `json:"contexts,omitempty" yaml:"contexts"`
+	// CurrentProfile is the profile in use at the moment
+	CurrentProfile string `json:"current-profile,omitempty" yaml:"current-profile"`
+	// Profiles is a collection of profiles
+	Profiles map[string]*Profile `json:"profiles,omitempty" yaml:"profiles"`
 	// Servers is a collection of api endpoints
 	Servers map[string]*Server `json:"servers,omitempty" yaml:"servers"`
 	// AuthInfos is a collection of credentials
@@ -49,7 +49,7 @@ type AuthInfo struct {
 	// Token is a static token to use
 	Token *string `json:"token,omitempty" yaml:"token"`
 	// OIDC is credentials from an oauth2 provider
-	OIDC *OIDC `json:"oidc,omitempty" yaml:"oidc"`
+	OIDC *OIDC `json:"oidc" yaml:"oidc"`
 }
 
 // OIDC is the identity within the kore
@@ -70,8 +70,8 @@ type OIDC struct {
 	AuthorizeURL string `json:"authorize-url,omitempty" yaml:"authorize-url"`
 }
 
-// Context links endpoint and a credential together
-type Context struct {
+// Profile links endpoint and a credential together
+type Profile struct {
 	// Server is a reference to the server config
 	Server string `json:"server,omitempty" yaml:"server"`
 	// AuthInfo is the credentials to use

@@ -108,7 +108,7 @@ func GetLoginCommand(config *Config) cli.Command {
 				return errors.New("current context server has not been set")
 			}
 
-			fmt.Printf("Attempting to authenticate to Appvia Kore: %s [%s]\n", endpoint, config.CurrentContext)
+			fmt.Printf("Attempting to authenticate to Appvia Kore: %s [%s]\n", endpoint, config.CurrentProfile)
 
 			// @step: open a brower to the to the api server
 			url := fmt.Sprintf("%s/oauth/authorize?redirect_url=http://localhost:3001", config.GetCurrentServer().Endpoint)

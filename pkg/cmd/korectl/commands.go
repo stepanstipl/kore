@@ -28,7 +28,7 @@ func GetCommands(config *Config) []cli.Command {
 	return []cli.Command{
 		GetLocalCommand(config),
 		GetAutoCompleteCommand(config),
-		GetContextCommand(config),
+		GetProfilesCommand(config),
 		GetApplyCommand(config),
 		GetDeleteCommand(config),
 		GetClustersCommand(config),
