@@ -25,6 +25,7 @@ require (
 	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
 	github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870 // indirect
 	github.com/ghodss/yaml v1.0.0
+	github.com/go-bindata/go-bindata v3.1.2+incompatible
 	github.com/go-logr/zapr v0.1.1 // indirect
 	github.com/go-openapi/spec v0.19.6
 	github.com/go-swagger/go-swagger v0.22.0

@@ -315,10 +315,7 @@ deepcopy-gen:
 
 schema-gen:
 	@echo "--> Generating the CRD definitions"
-	@which go-bindata  2>/dev/null ; if [ $$? -eq 1 ]; then \
-		go get -u github.com/go-bindata/go-bindata/...; \
-	fi
-	@go-bindata \
+	@go run github.com/go-bindata/go-bindata/go-bindata \
 		-nocompress \
 		-pkg register \
 	    -nometadata \
