@@ -277,7 +277,7 @@ func (c Requestor) handleResponse(resp *http.Response) error {
 
 	switch resp.StatusCode {
 	case http.StatusUnauthorized:
-		fmt.Println("[error] authorization required, please use the 'authorize' command")
+		fmt.Println("[error] authorization required, please use the 'login' command")
 	case http.StatusNotFound:
 		fmt.Println("[error] kind or resource does not exist")
 	case http.StatusForbidden:
