@@ -10,7 +10,6 @@ dev.env
 hack/setup/instances/credentials.yml
 secret.yml
 swagger-ui/
-vendor/
 manifests/local
 
 # Git meld
