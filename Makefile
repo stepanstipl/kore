@@ -36,6 +36,8 @@ else
 endif
 LFLAGS ?= -X github.com/appvia/kore/pkg/version.GitSHA=${GIT_SHA} -X github.com/appvia/kore/pkg/version.Compiled=${BUILD_TIME} -X github.com/appvia/kore/pkg/version.Release=${VERSION}
 
+export GOFLAGS = -mod=vendor
+
 .PHONY: test authors changelog build docker static release cover vet glide-install demo golangci-lint apis swagger
 
 default: build
@@ -43,6 +45,7 @@ default: build
 golang:
 	@echo "--> Go Version"
 	@go version
+	@echo "GOFLAGS: $$GOFLAGS"
 
 generate-clusterappman-manifests:
 	@echo "--> Generating static manifests"
@@ -54,7 +57,7 @@ build: golang generate-clusterappman-manifests spelling
 	@mkdir -p bin
 	@for binary in kore-apiserver korectl auth-proxy kore-clusterappman; do \
 		echo "--> Building $${binary} binary" ; \
-		go build -mod vendor -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go || exit 1; \
+		go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go || exit 1; \
 	done
 
 static: golang generate-clusterappman-manifests deps spelling
@@ -62,18 +65,18 @@ static: golang generate-clusterappman-manifests deps spelling
 	@mkdir -p bin
 	@for binary in kore-apiserver korectl auth-proxy kore-clusterappman; do \
 		echo "--> Building $${binary} binary" ; \
-		GOOS=linux CGO_ENABLED=0 go build -mod vendor -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go || exit 1; \
+		GOOS=linux CGO_ENABLED=0 go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go || exit 1; \
 	done
 
 korectl: golang deps spelling
 	@echo "--> Compiling the korectl binary"
 	@mkdir -p bin
-	go build -mod vendor -ldflags "${LFLAGS}" -tags=jsoniter -o bin/korectl cmd/korectl/*.go
+	go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/korectl cmd/korectl/*.go
 
 auth-proxy: golang deps spelling
 	@echo "--> Compiling the auth-proxy binary"
 	@mkdir -p bin
-	go build -mod vendor -ldflags "${LFLAGS}" -o bin/auth-proxy cmd/auth-proxy/*.go
+	go build -ldflags "${LFLAGS}" -o bin/auth-proxy cmd/auth-proxy/*.go
 
 docker-build:
 	@echo "--> Running docker"

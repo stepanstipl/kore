@@ -4,10 +4,8 @@ version: 2
 jobs:
   build:
     environment:
-      GOPATH: /go
       USE_GIT_VERSION: "true"
-
-    working_directory: /go/src/github.com/appvia/kore
+      GOFLAGS: "-mod=vendor"
 
     docker:
       - image: circleci/golang:1.13
@@ -87,14 +85,12 @@ jobs:
 
   release:
     environment:
-      GOPATH: /go
+      GOFLAGS: "-mod=vendor"
       KORE_API_IMAGE: quay.io/appvia/kore-apiserver
       KORE_PROXY_IMAGE: quay.io/appvia/auth-proxy
 
     docker:
       - image: circleci/golang:1.13
-
-    working_directory: /go/src/github.com/appvia/kore
 
     steps:
       - checkout
