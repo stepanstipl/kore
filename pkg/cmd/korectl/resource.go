@@ -26,14 +26,14 @@ type resourceConfig struct {
 	Columns         []string
 }
 
-type resourceConfigMap map[string]resourceConfig
+type resourceConfigMap map[string]*resourceConfig
 
-func (r resourceConfigMap) Get(name string) resourceConfig {
+func (r resourceConfigMap) Get(name string) *resourceConfig {
 	if config, ok := r[name]; ok {
 		return config
 	}
 
-	return resourceConfig{
+	return &resourceConfig{
 		Name:            name,
 		APIResourceName: name,
 		Columns: []string{
@@ -44,7 +44,7 @@ func (r resourceConfigMap) Get(name string) resourceConfig {
 
 // @question: we might wanna consider renaming these to printers
 var (
-	teamResourceConfig = resourceConfig{
+	teamResourceConfig = &resourceConfig{
 		Name:            "team",
 		APIResourceName: "teams",
 		Columns: []string{
@@ -53,7 +53,17 @@ var (
 		},
 	}
 
-	allocationResourceConfig = resourceConfig{
+	userResourceConfig = &resourceConfig{
+		Name:            "user",
+		APIResourceName: "users",
+		Columns: []string{
+			Column("Name", ".metadata.name"),
+			Column("Email", ".spec.email"),
+			Column("Disabled", ".spec.disabled"),
+		},
+	}
+
+	allocationResourceConfig = &resourceConfig{
 		Name:            "allocation",
 		APIResourceName: "allocations",
 		Columns: []string{
@@ -62,7 +72,7 @@ var (
 			Column("Resource", ".spec.resource.kind"),
 		},
 	}
-	clusterResourceConfig = resourceConfig{
+	clusterResourceConfig = &resourceConfig{
 		Name:            "cluster",
 		APIResourceName: "clusters",
 		Columns: []string{
@@ -72,7 +82,7 @@ var (
 			Column("Status", ".status.status"),
 		},
 	}
-	namespaceResourceConfig = resourceConfig{
+	namespaceResourceConfig = &resourceConfig{
 		Name:            "namespaceclaim",
 		APIResourceName: "namespaceclaims",
 		Columns: []string{
@@ -82,7 +92,7 @@ var (
 			Column("Status", ".status.status"),
 		},
 	}
-	planResourceConfig = resourceConfig{
+	planResourceConfig = &resourceConfig{
 		Name:            "plan",
 		APIResourceName: "plans",
 		Columns: []string{
@@ -104,4 +114,6 @@ var resourceConfigs = resourceConfigMap{
 	"plans":           planResourceConfig,
 	"team":            teamResourceConfig,
 	"teams":           teamResourceConfig,
+	"user":            userResourceConfig,
+	"users":           userResourceConfig,
 }
