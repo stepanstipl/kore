@@ -54,7 +54,7 @@ build: golang generate-clusterappman-manifests spelling
 	@mkdir -p bin
 	@for binary in kore-apiserver korectl auth-proxy kore-clusterappman; do \
 		echo "--> Building $${binary} binary" ; \
-		go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go || exit 1; \
+		go build -mod vendor -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go || exit 1; \
 	done
 
 static: golang generate-clusterappman-manifests deps spelling
@@ -62,18 +62,18 @@ static: golang generate-clusterappman-manifests deps spelling
 	@mkdir -p bin
 	@for binary in kore-apiserver korectl auth-proxy kore-clusterappman; do \
 		echo "--> Building $${binary} binary" ; \
-		GOOS=linux CGO_ENABLED=0 go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go || exit 1; \
+		GOOS=linux CGO_ENABLED=0 go build -mod vendor -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go || exit 1; \
 	done
 
 korectl: golang deps spelling
 	@echo "--> Compiling the korectl binary"
 	@mkdir -p bin
-	go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/korectl cmd/korectl/*.go
+	go build -mod vendor -ldflags "${LFLAGS}" -tags=jsoniter -o bin/korectl cmd/korectl/*.go
 
 auth-proxy: golang deps spelling
 	@echo "--> Compiling the auth-proxy binary"
 	@mkdir -p bin
-	go build -ldflags "${LFLAGS}" -o bin/auth-proxy cmd/auth-proxy/*.go
+	go build -mod vendor -ldflags "${LFLAGS}" -o bin/auth-proxy cmd/auth-proxy/*.go
 
 docker-build:
 	@echo "--> Running docker"
