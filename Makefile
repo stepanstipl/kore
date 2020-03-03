@@ -36,7 +36,7 @@ else
 endif
 LFLAGS ?= -X github.com/appvia/kore/pkg/version.GitSHA=${GIT_SHA} -X github.com/appvia/kore/pkg/version.Compiled=${BUILD_TIME} -X github.com/appvia/kore/pkg/version.Release=${VERSION}
 
-.PHONY: test authors changelog build docker static release cover vet glide-install demo golangci-lint apis go-swagger swagger
+.PHONY: test authors changelog build docker static release cover vet glide-install demo golangci-lint apis swagger
 
 default: build
 
@@ -113,16 +113,9 @@ swagger: compose
 swagger-json:
 	@curl --retry 20 --retry-delay 5 --retry-connrefused -sSL http://127.0.0.1:10080/swagger.json | jq > swagger.json
 
-swagger-validate: go-swagger
+swagger-validate:
 	@echo "--> Validating the swagger api"
-	@swagger validate swagger.json --skip-warnings
-
-go-swagger:
-	@echo "--> Installing go-swagger tools"
-	@swagger version >/dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		echo "--> Installing the go-swagger tools"; \
-		GO111MODULE=off go get -u github.com/go-swagger/go-swagger/cmd/swagger; \
-	fi
+	@go run github.com/go-swagger/go-swagger/cmd/swagger validate swagger.json --skip-warnings
 
 in-docker-swagger:
 	@echo "--> Swagger in Docker"
