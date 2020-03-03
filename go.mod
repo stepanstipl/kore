@@ -29,6 +29,7 @@ require (
 	github.com/go-openapi/spec v0.19.6
 	github.com/go-swagger/go-swagger v0.22.0
 	github.com/gogo/protobuf v1.3.1 // indirect
+	github.com/golangci/golangci-lint v1.23.7
 	github.com/google/uuid v1.1.1
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/huandu/xstrings v1.2.1 // indirect
@@ -38,7 +39,6 @@ require (
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/manifoldco/promptui v0.7.0
 	github.com/mitchellh/copystructure v1.0.0 // indirect
-	github.com/onsi/ginkgo v1.10.2 // indirect
 	github.com/prometheus/client_golang v1.0.0
 	github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4
 	github.com/romanyx/polluter v1.2.2

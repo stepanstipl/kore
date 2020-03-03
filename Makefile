@@ -277,10 +277,7 @@ spelling:
 
 golangci-lint:
 	@echo "--> Checking against the golangci-lint"
-	@which golangci-lint 2>/dev/null ; if [ $$? -eq 1 ]; then \
-		GO111MODULE=off go get -u github.com/golangci/golangci-lint/cmd/golangci-lint; \
-	fi
-	@golangci-lint run ./...
+	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run ./...
 
 test: generate-clusterappman-manifests
 	@echo "--> Running the tests"
