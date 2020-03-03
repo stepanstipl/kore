@@ -272,11 +272,8 @@ cover:
 
 spelling:
 	@echo "--> Checking the spelling"
-	@which misspell 2>/dev/null ; if [ $$? -eq 1 ]; then \
-		GO111MODULE=off go get -u github.com/client9/misspell/cmd/misspell; \
-	fi
-	@find . -name "*.go" -type f -not -path "./vendor/*" | xargs misspell -error -source=go *.go
-	@find . -name "*.md" -type f -not -path "./vendor/*" | xargs misspell -error -source=text *.md
+	@find . -name "*.go" -type f -not -path "./vendor/*" | xargs go run github.com/client9/misspell/cmd/misspell -error -source=go *.go
+	@find . -name "*.md" -type f -not -path "./vendor/*" | xargs go run github.com/client9/misspell/cmd/misspell -error -source=text *.md
 
 golangci-lint:
 	@echo "--> Checking against the golangci-lint"
