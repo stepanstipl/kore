@@ -35,48 +35,6 @@ func GetTeamsCommands(config *Config) cli.Command {
 		Usage:   "Used to interact, get, list and update teams in the kore",
 		Subcommands: []cli.Command{
 			{
-				Name:  "get",
-				Usage: "Used to retrieve the details of a team in the kore",
-				Flags: append([]cli.Flag{
-					cli.StringFlag{
-						Name:     "name,n",
-						Usage:    "The name of the team to retrieve (assumes all if not defined)",
-						Required: false,
-					},
-				}, DefaultOptions...),
-				Action: func(c *cli.Context) error {
-					return NewRequest().
-						WithConfig(config).
-						WithContext(c).
-						WithEndpoint("/teams/{name}").
-						PathParameter("name", false).
-						Render(
-							Column("Name", ".metadata.name"),
-							Column("Description", ".spec.description"),
-						).
-						Get()
-				},
-			},
-			{
-				Name:    "delete",
-				Aliases: []string{"rm"},
-				Usage:   "Used to delete a team from the kore",
-				Flags: []cli.Flag{
-					cli.StringFlag{
-						Name:  "name,n",
-						Usage: "The name of the team to remove",
-					},
-				},
-				Action: func(ctx *cli.Context) error {
-					return NewRequest().
-						WithConfig(config).
-						WithContext(ctx).
-						WithEndpoint("/teams/{name}").
-						PathParameter("name", true).
-						Delete()
-				},
-			},
-			{
 				Name:    "members",
 				Aliases: []string{"mb"},
 				Usage:   "Used to get, list, add and remove users to the team",
