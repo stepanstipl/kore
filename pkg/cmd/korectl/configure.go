@@ -195,14 +195,6 @@ func (g *gcpInfoConfig) generateGcpInfo() error {
 	return ioutil.WriteFile(cachedAccountKeyPath, keyData, os.FileMode(0640))
 }
 
-func collectAndGenerateGcpInfo() error {
-	info, err := newGcpInfoConfig().load(gkeCredPath).createPrompts().collectPrompts()
-	if err != nil {
-		return err
-	}
-	return info.generateGcpInfo()
-}
-
 func GetLocalConfigureSubCommand(config *Config) cli.Command {
 	return cli.Command{
 		Name:  "configure",
