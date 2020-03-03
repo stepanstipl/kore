@@ -342,9 +342,6 @@ register-gen:
 
 crd-gen:
 	@echo "--> Generating CRD deployment files"
-	@which controller-gen  2>/dev/null ; if [ $$? -eq 1 ]; then \
-		GO111MODULE=off go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.4; \
-	fi
 	@mkdir -p deploy
 	@rm -f deploy/crds/* 2>/dev/null || true
-	@controller-gen crd:trivialVersions=true,preserveUnknownFields=false paths=./pkg/apis/...  output:dir=deploy/crds
+	@go run sigs.k8s.io/controller-tools/cmd/controller-gen crd:trivialVersions=true,preserveUnknownFields=false paths=./pkg/apis/...  output:dir=deploy/crds
