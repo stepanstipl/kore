@@ -325,11 +325,8 @@ schema-gen:
 openapi-gen:
 	@echo "--> Generating OpenAPI files"
 	@echo "--> packages $(APIS)"
-	@which openapi-gen  2>/dev/null ; if [ $$? -eq 1 ]; then \
-		go get -u k8s.io/kube-openapi/cmd/openapi-gen; \
-	fi
 	@$(foreach api,$(APIS), \
-		openapi-gen -h hack/boilerplate.go.txt \
+		go run k8s.io/kube-openapi/cmd/openapi-gen -h hack/boilerplate.go.txt \
 			--output-file-base zz_generated_openapi \
 			-i github.com/appvia/kore/pkg/apis/$(api) \
 			-p github.com/appvia/kore/pkg/apis/$(api); )
