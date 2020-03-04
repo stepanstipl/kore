@@ -113,7 +113,11 @@ func (c *Requestor) Get() error {
 		return err
 	}
 
-	return c.parseResponse()
+	if c.runtimeObj != nil {
+		return c.parseObjectResponse()
+	} else {
+		return c.parseResponse()
+	}
 }
 
 // Exists will perform a GET request and will return
@@ -175,17 +179,16 @@ func (c *Requestor) Delete() error {
 	return c.handleResponse(resp)
 }
 
-// parseResponse
-func (c *Requestor) parseResponse() error {
-	if c.runtimeObj != nil {
-		if c.body.Len() > 0 {
-			if err := json.NewDecoder(c.body).Decode(c.runtimeObj); err != nil {
-				return err
-			}
+func (c *Requestor) parseObjectResponse() error {
+	if c.body.Len() > 0 {
+		if err := json.NewDecoder(c.body).Decode(c.runtimeObj); err != nil {
+			return err
 		}
-		return nil
 	}
+	return nil
+}
 
+func (c *Requestor) parseResponse() error {
 	var response map[string]interface{}
 	if c.body.Len() > 0 {
 		if err := json.NewDecoder(c.body).Decode(&response); err != nil {
