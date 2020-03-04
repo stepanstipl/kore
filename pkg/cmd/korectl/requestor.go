@@ -91,21 +91,24 @@ func NewRequest() *Requestor {
 	}
 }
 
-func NewRequestForResource(config *Config, ctx *cli.Context) (*Requestor, *resourceConfig, error) {
-	resourceConfig := resourceConfigs.Get(ctx.Args().First())
+func NewRequestForResource(config *Config, ctx *cli.Context) (*Requestor, resourceConfig, error) {
+	resConfig, err := getResourceConfig(ctx.Args().First(), ctx.String("team"))
+	if err != nil {
+		return nil, resourceConfig{}, err
+	}
 
 	req := NewRequest().
 		WithConfig(config).
 		WithContext(ctx)
 
-	for _, requiredParam := range resourceConfig.RequiredParams {
+	for _, requiredParam := range resConfig.RequiredParams {
 		if !ctx.IsSet(requiredParam) {
-			return nil, nil, fmt.Errorf("--%s parameter must be set", requiredParam)
+			return nil, resourceConfig{}, fmt.Errorf("--%s parameter must be set", requiredParam)
 		}
 		req.PathParameter(requiredParam, true)
 	}
 
-	endpoint := resourceConfig.APIEndpoint
+	endpoint := resConfig.APIEndpoint
 	if ctx.NArg() == 2 {
 		endpoint = endpoint + "/{name}"
 		req.PathParameter("name", true)
@@ -114,7 +117,7 @@ func NewRequestForResource(config *Config, ctx *cli.Context) (*Requestor, *resou
 
 	req.WithEndpoint(endpoint)
 
-	return req, resourceConfig, nil
+	return req, resConfig, nil
 }
 
 // Column sets a column option

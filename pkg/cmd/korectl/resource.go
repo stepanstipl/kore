@@ -30,31 +30,35 @@ type resourceConfig struct {
 	Columns        []string
 }
 
-type resourceConfigMap map[string]*resourceConfig
-
-func (r resourceConfigMap) Get(name string) *resourceConfig {
-	if config, ok := r[inflect.Singularize(name)]; ok {
-		return config
+func getResourceConfig(name string, team string) (resourceConfig, error) {
+	if team == "" {
+		if config, ok := globalResourceConfigs[inflect.Singularize(name)]; ok {
+			return config, nil
+		}
 	}
 
-	return &resourceConfig{
+	if config, ok := teamResourceConfigs[inflect.Singularize(name)]; ok {
+		return config, nil
+	}
+
+	return resourceConfig{
 		APIEndpoint:    "/teams/{team}/" + name,
 		RequiredParams: []string{"team"},
 		Columns: []string{
 			Column("Name", ".metadata.name"),
 		},
-	}
+	}, nil
 }
 
-var resourceConfigs = resourceConfigMap{
-	"team": &resourceConfig{
+var globalResourceConfigs = map[string]resourceConfig{
+	"team": {
 		APIEndpoint: "/teams",
 		Columns: []string{
 			Column("Name", ".metadata.name"),
 			Column("Description", ".spec.description"),
 		},
 	},
-	"user": &resourceConfig{
+	"user": {
 		APIEndpoint: "/users",
 		Columns: []string{
 			Column("Username", ".metadata.name"),
@@ -62,7 +66,7 @@ var resourceConfigs = resourceConfigMap{
 			Column("Disabled", ".spec.disabled"),
 		},
 	},
-	"plan": &resourceConfig{
+	"plan": {
 		APIEndpoint: "/plans",
 		Columns: []string{
 			Column("Resource", ".metadata.name"),
@@ -70,15 +74,23 @@ var resourceConfigs = resourceConfigMap{
 			Column("Summary", ".spec.summary"),
 		},
 	},
-	"team-member": &resourceConfig{
+	"audit-event": {
+		APIEndpoint: "/audit",
+		Columns: []string{
+			Column("Name", ".metadata.name"),
+		},
+	},
+}
+
+var teamResourceConfigs = map[string]resourceConfig{
+	"team-member": {
 		APIEndpoint:    "/teams/{team}/members",
 		RequiredParams: []string{"team"},
 		Columns: []string{
 			Column("Username", "."),
 		},
 	},
-
-	"allocation": &resourceConfig{
+	"allocation": {
 		APIEndpoint:    "/teams/{team}/allocations",
 		RequiredParams: []string{"team"},
 		Columns: []string{
@@ -87,8 +99,7 @@ var resourceConfigs = resourceConfigMap{
 			Column("Resource", ".spec.resource.kind"),
 		},
 	},
-
-	"cluster": &resourceConfig{
+	"cluster": {
 		APIEndpoint:    "/teams/{team}/clusters",
 		RequiredParams: []string{"team"},
 		Columns: []string{
@@ -96,6 +107,23 @@ var resourceConfigs = resourceConfigMap{
 			Column("Provider", ".spec.provider.group"),
 			Column("Endpoint", ".status.endpoint"),
 			Column("Status", ".status.status"),
+		},
+	},
+	"namespaceclaim": {
+		APIEndpoint:    "/teams/{team}/namespaceclaims",
+		RequiredParams: []string{"team"},
+		Columns: []string{
+			Column("Resource", ".metadata.name"),
+			Column("Namespace", ".spec.name"),
+			Column("Cluster", ".spec.cluster.name"),
+			Column("Status", ".status.status"),
+		},
+	},
+	"audit-event": {
+		APIEndpoint:    "/teams/{team}/audit",
+		RequiredParams: []string{"team"},
+		Columns: []string{
+			Column("Name", ".metadata.name"),
 		},
 	},
 }
