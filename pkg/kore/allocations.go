@@ -144,6 +144,24 @@ func (a acaImpl) Get(ctx context.Context, name string) (*configv1.Allocation, er
 	return object, nil
 }
 
+// GetAssigned returns an assigned allocation
+func (a acaImpl) GetAssigned(ctx context.Context, name string) (*configv1.Allocation, error) {
+	list, err := a.ListAllocationsAssigned(ctx)
+	if err != nil {
+		log.WithError(err).Error("trying to retrieve list of assigned allocations")
+
+		return nil, err
+	}
+
+	for _, x := range list.Items {
+		if x.Name == name {
+			return &x, nil
+		}
+	}
+
+	return nil, ErrNotFound
+}
+
 // ListAllocationsAssigned returns a list of all allocations which you have access to
 func (a acaImpl) ListAllocationsAssigned(ctx context.Context) (*configv1.AllocationList, error) {
 	// @step: find all in the kore
