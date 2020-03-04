@@ -217,7 +217,7 @@ func (g *gcpInfoConfig) generateGcpInfo() error {
 func GetLocalConfigureSubCommand(config *Config) cli.Command {
 	return cli.Command{
 		Name:  "configure",
-		Usage: "Configures Kore to use locally.",
+		Usage: "Configures a profile to connect to a local Kore installation.",
 		Action: func(c *cli.Context) error {
 			createLocalConfig(config)
 
