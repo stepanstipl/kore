@@ -26,7 +26,7 @@ import (
 func GetEditCommand(config *Config) cli.Command {
 	return cli.Command{
 		Name:  "edit",
-		Usage: "modifies various objects",
+		Usage: "Modifies various objects",
 
 		Subcommands: []cli.Command{
 			GetEditTeamCommand(config),

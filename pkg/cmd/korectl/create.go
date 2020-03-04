@@ -26,7 +26,7 @@ import (
 func GetCreateCommand(config *Config) cli.Command {
 	return cli.Command{
 		Name:  "create",
-		Usage: "creates various objects",
+		Usage: "Creates various objects",
 
 		Subcommands: []cli.Command{
 			GetCreateTeamCommand(config),

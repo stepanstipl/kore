@@ -133,7 +133,7 @@ func GetCreateTeamCommand(config *Config) cli.Command {
 	return cli.Command{
 		Name:      "team",
 		Aliases:   []string{"teams"},
-		Usage:     "creates a team",
+		Usage:     "Creates a team",
 		ArgsUsage: "TEAM",
 		Flags: []cli.Flag{
 			cli.StringFlag{
@@ -204,7 +204,7 @@ func GetEditTeamCommand(config *Config) cli.Command {
 	return cli.Command{
 		Name:      "team",
 		Aliases:   []string{"teams"},
-		Usage:     "modifies a team",
+		Usage:     "Modifies a team",
 		ArgsUsage: "TEAM",
 		Action: func(ctx *cli.Context) error {
 			teamID := ctx.Args().First()
