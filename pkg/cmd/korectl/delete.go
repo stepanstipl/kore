@@ -48,6 +48,9 @@ func GetDeleteCommand(config *Config) cli.Command {
 			GetDeleteTeamMemberCommand(config),
 		},
 		Action: func(ctx *cli.Context) error {
+			if !ctx.IsSet("file") && !ctx.Args().Present() {
+				return cli.ShowSubcommandHelp(ctx)
+			}
 			for _, file := range ctx.StringSlice("file") {
 				// @step: read in the content of the file
 				content, err := ioutil.ReadFile(file)
