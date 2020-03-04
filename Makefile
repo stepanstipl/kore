@@ -71,7 +71,7 @@ auth-proxy: golang deps spelling
 	@mkdir -p bin
 	go build -ldflags "${LFLAGS}" -o bin/auth-proxy cmd/auth-proxy/*.go
 
-kore-apiserver: golang deps
+kore-apiserver: golang deps generate-clusterappman-manifests
 	@echo "--> Compiling the kore-apiserver binary"
 	@mkdir -p bin
 	go build -ldflags "${LFLAGS}" -o bin/kore-apiserver cmd/kore-apiserver/*.go
