@@ -166,6 +166,18 @@ func (c *Config) HasAuthInfo(name string) bool {
 	return found
 }
 
+// IsOIDCProviderConfigured checks if an OIDC provider is available
+func (c *Config) IsOIDCProviderConfigured(name string) bool {
+	info, found := c.AuthInfos[name]
+	if !found {
+		return false
+	}
+
+	return len(info.OIDC.ClientID) > 0 &&
+		len(info.OIDC.ClientSecret) > 0 &&
+		len(info.OIDC.AuthorizeURL) > 0
+}
+
 // HasSwagger checks if the swagger exists
 func (c *Config) HasSwagger() (bool, error) {
 	if _, err := os.Stat(c.GetSwaggerCachedFile()); err != nil {
