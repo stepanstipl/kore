@@ -26,8 +26,9 @@ import (
 // GetCreateCommand creates and returns the create command
 func GetCreateCommand(config *Config) cli.Command {
 	return cli.Command{
-		Name:  "create",
-		Usage: "Used to create resources under the Appvia Kore",
+		Name:    "create",
+		Aliases: []string{"add"},
+		Usage:   "Used to create resources under the Appvia Kore",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "team,t",
@@ -36,6 +37,7 @@ func GetCreateCommand(config *Config) cli.Command {
 		},
 		Subcommands: []cli.Command{
 			GetCreateTeamCommand(config),
+			GetCreateTeamMemberCommand(config),
 			GetCreateClusterCommand(config),
 			GetCreateNamespaceCommand(config),
 		},

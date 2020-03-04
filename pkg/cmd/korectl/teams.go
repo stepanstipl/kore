@@ -27,108 +27,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// GetTeamsCommand returns the teams command
-func GetTeamsCommands(config *Config) cli.Command {
-	return cli.Command{
-		Name:    "teams",
-		Aliases: []string{"tm"},
-		Usage:   "Used to interact, get, list and update teams in the kore",
-		Subcommands: []cli.Command{
-			{
-				Name:    "members",
-				Aliases: []string{"mb"},
-				Usage:   "Used to get, list, add and remove users to the team",
-				Subcommands: []cli.Command{
-					{
-						Name:  "get",
-						Usage: "Used to list all the users in the team",
-						Flags: append([]cli.Flag{
-							cli.StringFlag{
-								Name:  "team,t",
-								Usage: "The name of the team you wish to list the users",
-							},
-						}, DefaultOptions...),
-						Action: func(ctx *cli.Context) error {
-							return NewRequest().
-								WithConfig(config).
-								WithContext(ctx).
-								WithEndpoint("/teams/{team}/members").
-								PathParameter("team", true).
-								Render(
-									Column("Username", "."),
-								).
-								Get()
-						},
-					},
-					{
-						Name:  "add",
-						Usage: "Used to add a kore member into the team",
-						Flags: []cli.Flag{
-							cli.StringFlag{
-								Name:     "team,t",
-								Usage:    "The name of the team you wish to list the users",
-								Required: true,
-							},
-							cli.StringFlag{
-								Name:     "user,u",
-								Usage:    "The name of the user you wish to add to the team",
-								Required: true,
-							},
-						},
-						Action: func(ctx *cli.Context) error {
-							err := NewRequest().
-								WithConfig(config).
-								WithContext(ctx).
-								WithEndpoint("/teams/{team}/members/{user}").
-								PathParameter("team", true).
-								PathParameter("user", true).
-								Update()
-							if err != nil {
-								return err
-							}
-							fmt.Printf("[status] user %s has been added to team: %s\n", ctx.String("user"), ctx.String("team"))
-
-							return nil
-						},
-					},
-					{
-						Name:  "remove",
-						Usage: "Used to remove a member from a team in the kore",
-						Flags: []cli.Flag{
-							cli.StringFlag{
-								Name:     "team,t",
-								Usage:    "The name of the team you wish to remove the user from `TEAM`",
-								Required: true,
-							},
-							cli.StringFlag{
-								Name:     "user,u",
-								Usage:    "The name of the user you wish to remove from the team `USERNAME`",
-								Required: true,
-							},
-						},
-						Action: func(ctx *cli.Context) error {
-							err := NewRequest().
-								WithConfig(config).
-								WithContext(ctx).
-								WithEndpoint("/teams/{team}/members/{user}").
-								PathParameter("team", true).
-								PathParameter("user", true).
-								Delete()
-							if err != nil {
-								return err
-							}
-							fmt.Printf("[status] user %s has been remove to team: %s\n",
-								ctx.String("user"), ctx.String("team"))
-
-							return nil
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
 func GetCreateTeamCommand(config *Config) cli.Command {
 	return cli.Command{
 		Name:      "team",
@@ -241,6 +139,77 @@ func GetEditTeamCommand(config *Config) cli.Command {
 			if !ctx.Args().Present() {
 				return fmt.Errorf("team identifier must be set as an argument")
 			}
+			return nil
+		},
+	}
+}
+
+func GetCreateTeamMemberCommand(config *Config) cli.Command {
+	return cli.Command{
+		Name:    "team-member",
+		Aliases: []string{"team-members"},
+		Usage:   "Creates a new team member",
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:     "team,t",
+				Usage:    "The name of the team you wish to add the user to",
+				Required: true,
+			},
+			cli.StringFlag{
+				Name:     "user,u",
+				Usage:    "The username of the user you wish to add to the team",
+				Required: true,
+			},
+		},
+		Action: func(ctx *cli.Context) error {
+			err := NewRequest().
+				WithConfig(config).
+				WithContext(ctx).
+				WithEndpoint("/teams/{team}/members/{user}").
+				PathParameter("team", true).
+				PathParameter("user", true).
+				Update()
+			if err != nil {
+				return err
+			}
+			fmt.Printf("%q has been successfully added to team %q\n", ctx.String("user"), ctx.String("team"))
+
+			return nil
+		},
+	}
+}
+
+func GetDeleteTeamMemberCommand(config *Config) cli.Command {
+	return cli.Command{
+		Name:    "team-member",
+		Aliases: []string{"team-members"},
+		Usage:   "Removes a member from the given team",
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:     "team,t",
+				Usage:    "The name of the team you wish to remove the user from",
+				Required: true,
+			},
+			cli.StringFlag{
+				Name:     "user,u",
+				Usage:    "The username of the user you wish to remove from the team",
+				Required: true,
+			},
+		},
+		Action: func(ctx *cli.Context) error {
+			err := NewRequest().
+				WithConfig(config).
+				WithContext(ctx).
+				WithEndpoint("/teams/{team}/members/{user}").
+				PathParameter("team", true).
+				PathParameter("user", true).
+				Delete()
+			if err != nil {
+				return err
+			}
+			fmt.Printf("%q has been successfully removed from team %q\n",
+				ctx.String("user"), ctx.String("team"))
+
 			return nil
 		},
 	}

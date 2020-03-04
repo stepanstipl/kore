@@ -33,7 +33,7 @@ func GetGetCommand(config *Config) cli.Command {
 		Flags: append([]cli.Flag{
 			cli.StringFlag{
 				Name:  "team,t",
-				Usage: "Used to filter the results by team `TEAM`",
+				Usage: "Used to filter the results by team",
 			},
 		}, DefaultOptions...),
 

@@ -67,7 +67,7 @@ var resourceConfigs = resourceConfigMap{
 			Column("Summary", ".spec.summary"),
 		},
 	},
-	"team-member": &resourceConfig{
+	"team-members": &resourceConfig{
 		APIEndpoint:    "/teams/{team}/members",
 		RequiredParams: []string{"team"},
 		Columns: []string{

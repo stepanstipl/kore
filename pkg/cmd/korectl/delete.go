@@ -44,6 +44,9 @@ func GetDeleteCommand(config *Config) cli.Command {
 				Usage: "Used to filter the results by team `TEAM`",
 			},
 		},
+		Subcommands: []cli.Command{
+			GetDeleteTeamMemberCommand(config),
+		},
 		Action: func(ctx *cli.Context) error {
 			for _, file := range ctx.StringSlice("file") {
 				// @step: read in the content of the file
