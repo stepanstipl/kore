@@ -36,13 +36,16 @@ else
 endif
 LFLAGS ?= -X github.com/appvia/kore/pkg/version.GitSHA=${GIT_SHA} -X github.com/appvia/kore/pkg/version.Compiled=${BUILD_TIME} -X github.com/appvia/kore/pkg/version.Release=${VERSION}
 
-.PHONY: test authors changelog build docker static release cover vet glide-install demo golangci-lint apis go-swagger swagger
+export GOFLAGS = -mod=vendor
+
+.PHONY: test authors changelog build docker static release cover vet glide-install demo golangci-lint apis swagger
 
 default: build
 
 golang:
 	@echo "--> Go Version"
 	@go version
+	@echo "GOFLAGS: $$GOFLAGS"
 
 generate-clusterappman-manifests:
 	@echo "--> Generating static manifests"
@@ -113,16 +116,9 @@ swagger: compose
 swagger-json:
 	@curl --retry 20 --retry-delay 5 --retry-connrefused -sSL http://127.0.0.1:10080/swagger.json | jq > swagger.json
 
-swagger-validate: go-swagger
+swagger-validate:
 	@echo "--> Validating the swagger api"
-	@swagger validate swagger.json --skip-warnings
-
-go-swagger:
-	@echo "--> Installing go-swagger tools"
-	@swagger version >/dev/null 2>&1; if [ $$? -ne 0 ]; then \
-		echo "--> Installing the go-swagger tools"; \
-		GO111MODULE=off go get -u github.com/go-swagger/go-swagger/cmd/swagger; \
-	fi
+	@go run github.com/go-swagger/go-swagger/cmd/swagger validate swagger.json --skip-warnings
 
 in-docker-swagger:
 	@echo "--> Swagger in Docker"
@@ -253,16 +249,16 @@ vet:
 
 gofmt:
 	@echo "--> Running gofmt check"
-	@gofmt -s -l . \
+	@gofmt -s -l $$(go list -f '{{.Dir}}' ./...) \
 	    | grep -q \.go ; if [ $$? -eq 0 ]; then \
-            echo "You need to runn the make format, we have file unformatted"; \
+            echo "You need to run the make format, we have file unformatted"; \
             gofmt -s -l .; \
             exit 1; \
 	    fi
 
 format:
 	@echo "--> Running go fmt"
-	@gofmt -s -w .
+	@gofmt -s -w $$(go list -f '{{.Dir}}' ./...)
 
 bench:
 	@echo "--> Running go bench"
@@ -279,18 +275,12 @@ cover:
 
 spelling:
 	@echo "--> Checking the spelling"
-	@which misspell 2>/dev/null ; if [ $$? -eq 1 ]; then \
-		GO111MODULE=off go get -u github.com/client9/misspell/cmd/misspell; \
-	fi
-	@find . -name "*.go" -type f -not -path "vendor/*" | xargs misspell -error -source=go *.go
-	@find . -name "*.md" -type f -not -path "vendor/*" | xargs misspell -error -source=text *.md
+	@find . -name "*.go" -type f -not -path "./vendor/*" | xargs go run github.com/client9/misspell/cmd/misspell -error -source=go *.go
+	@find . -name "*.md" -type f -not -path "./vendor/*" | xargs go run github.com/client9/misspell/cmd/misspell -error -source=text *.md
 
 golangci-lint:
 	@echo "--> Checking against the golangci-lint"
-	@which golangci-lint 2>/dev/null ; if [ $$? -eq 1 ]; then \
-		GO111MODULE=off go get -u github.com/golangci/golangci-lint/cmd/golangci-lint; \
-	fi
-	@golangci-lint run ./...
+	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run ./...
 
 test: generate-clusterappman-manifests
 	@echo "--> Running the tests"
@@ -328,10 +318,7 @@ deepcopy-gen:
 
 schema-gen:
 	@echo "--> Generating the CRD definitions"
-	@which go-bindata  2>/dev/null ; if [ $$? -eq 1 ]; then \
-		go get -u github.com/go-bindata/go-bindata/...; \
-	fi
-	@go-bindata \
+	@go run github.com/go-bindata/go-bindata/go-bindata \
 		-nocompress \
 		-pkg register \
 	    -nometadata \
@@ -341,11 +328,8 @@ schema-gen:
 openapi-gen:
 	@echo "--> Generating OpenAPI files"
 	@echo "--> packages $(APIS)"
-	@which openapi-gen  2>/dev/null ; if [ $$? -eq 1 ]; then \
-		go get -u k8s.io/kube-openapi/cmd/openapi-gen; \
-	fi
 	@$(foreach api,$(APIS), \
-		openapi-gen -h hack/boilerplate.go.txt \
+		go run k8s.io/kube-openapi/cmd/openapi-gen -h hack/boilerplate.go.txt \
 			--output-file-base zz_generated_openapi \
 			-i github.com/appvia/kore/pkg/apis/$(api) \
 			-p github.com/appvia/kore/pkg/apis/$(api); )
@@ -361,9 +345,6 @@ register-gen:
 
 crd-gen:
 	@echo "--> Generating CRD deployment files"
-	@which controller-gen  2>/dev/null ; if [ $$? -eq 1 ]; then \
-		GO111MODULE=off go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.4; \
-	fi
 	@mkdir -p deploy
 	@rm -f deploy/crds/* 2>/dev/null || true
-	@controller-gen crd:trivialVersions=true,preserveUnknownFields=false paths=./pkg/apis/...  output:dir=deploy/crds
+	@go run sigs.k8s.io/controller-tools/cmd/controller-gen crd:trivialVersions=true,preserveUnknownFields=false paths=./pkg/apis/...  output:dir=deploy/crds
