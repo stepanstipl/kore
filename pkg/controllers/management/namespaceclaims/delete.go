@@ -31,6 +31,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -51,11 +52,12 @@ func (a *nsCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 
 		return reconcile.Result{}, nil
 	}
+	original := resource.DeepCopy()
 
 	// @step: check if we are the current finalizer
 	finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
 
-	err := func() error {
+	result, err := func() (reconcile.Result, error) {
 		logger.Debug("deleting the namespaceclaim from the cluster")
 
 		// @step: create a client from the cluster secret
@@ -64,7 +66,14 @@ func (a *nsCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 		if err != nil {
 			logger.WithError(err).Error("trying to create kubernetes client from secret")
 
-			return err
+			return reconcile.Result{}, err
+		}
+
+		// @step: update the status of the resource
+		if resource.Status.Status != corev1.DeleteStatus {
+			resource.Status.Status = corev1.DeleteStatus
+
+			return reconcile.Result{Requeue: true}, nil
 		}
 
 		// @step: delete the namespace
@@ -73,10 +82,10 @@ func (a *nsCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 		}); err != nil {
 			logger.WithError(err).Error("trying to delete the namespace contained in the claim")
 
-			return err
+			return reconcile.Result{}, err
 		}
 
-		return nil
+		return reconcile.Result{}, nil
 	}()
 	if err != nil {
 		resource.Status.Status = corev1.FailureStatus
@@ -86,6 +95,17 @@ func (a *nsCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 		}}
 
 		return reconcile.Result{}, err
+	}
+
+	if result.Requeue || result.RequeueAfter > 0 {
+		// @step: update the status of the resource
+		if err := a.mgr.GetClient().Status().Patch(context.Background(), resource, client.MergeFrom(original)); err != nil {
+			logger.WithError(err).Error("trying to update the resource status")
+
+			return reconcile.Result{}, err
+		}
+
+		return result, nil
 	}
 
 	// @step: remove the finalizer if one and allow the resource it be deleted

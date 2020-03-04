@@ -21,11 +21,13 @@ import (
 	"context"
 	"fmt"
 
+	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -49,6 +51,7 @@ func (t *gkeCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 
 		return reconcile.Result{}, err
 	}
+	original := resource.DeepCopy()
 
 	finalizer := kubernetes.NewFinalizer(t.mgr.GetClient(), finalizerName)
 
@@ -69,6 +72,14 @@ func (t *gkeCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 		if err != nil {
 			return false, fmt.Errorf("checking if cluster exists: %s", err)
 		}
+
+		// @step: lets update the status of the resource to deleting
+		if resource.Status.Status != corev1.DeleteStatus {
+			resource.Status.Status = corev1.DeleteStatus
+
+			return true, nil
+		}
+
 		if found {
 			return false, client.Delete(ctx)
 		}
@@ -81,8 +92,15 @@ func (t *gkeCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 	if requeue {
+		if err := t.mgr.GetClient().Status().Patch(ctx, resource, client.MergeFrom(original)); err != nil {
+			logger.WithError(err).Error("trying to update the resource status")
+
+			return reconcile.Result{}, err
+		}
+
 		return reconcile.Result{Requeue: true}, nil
 	}
+
 	if err := finalizer.Remove(resource); err != nil {
 		logger.WithError(err).Error("removing the finalizer")
 
