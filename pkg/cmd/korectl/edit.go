@@ -23,13 +23,13 @@ import (
 	"github.com/urfave/cli"
 )
 
-func GetCreateCommand(config *Config) cli.Command {
+func GetEditCommand(config *Config) cli.Command {
 	return cli.Command{
-		Name:  "create",
-		Usage: "Creates various objects",
+		Name:  "edit",
+		Usage: "Modifies various objects",
 
 		Subcommands: []cli.Command{
-			GetCreateTeamCommand(config),
+			GetEditTeamCommand(config),
 		},
 	}
 }

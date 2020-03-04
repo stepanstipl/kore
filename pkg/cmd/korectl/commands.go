@@ -35,6 +35,7 @@ func GetCommands(config *Config) []cli.Command {
 		GetClustersCommand(config),
 		GetGetCommand(config),
 		GetCreateCommand(config),
+		GetEditCommand(config),
 		GetTeamsCommands(config),
 		GetUsersCommands(config),
 		GetWhoamiCommand(config),

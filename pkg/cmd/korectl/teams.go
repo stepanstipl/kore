@@ -35,48 +35,6 @@ func GetTeamsCommands(config *Config) cli.Command {
 		Usage:   "Used to interact, get, list and update teams in the kore",
 		Subcommands: []cli.Command{
 			{
-				Name:  "get",
-				Usage: "Used to retrieve the details of a team in the kore",
-				Flags: append([]cli.Flag{
-					cli.StringFlag{
-						Name:     "name,n",
-						Usage:    "The name of the team to retrieve (assumes all if not defined)",
-						Required: false,
-					},
-				}, DefaultOptions...),
-				Action: func(c *cli.Context) error {
-					return NewRequest().
-						WithConfig(config).
-						WithContext(c).
-						WithEndpoint("/teams/{name}").
-						PathParameter("name", false).
-						Render(
-							Column("Name", ".metadata.name"),
-							Column("Description", ".spec.description"),
-						).
-						Get()
-				},
-			},
-			{
-				Name:    "delete",
-				Aliases: []string{"rm"},
-				Usage:   "Used to delete a team from the kore",
-				Flags: []cli.Flag{
-					cli.StringFlag{
-						Name:  "name,n",
-						Usage: "The name of the team to remove",
-					},
-				},
-				Action: func(ctx *cli.Context) error {
-					return NewRequest().
-						WithConfig(config).
-						WithContext(ctx).
-						WithEndpoint("/teams/{name}").
-						PathParameter("name", true).
-						Delete()
-				},
-			},
-			{
 				Name:    "members",
 				Aliases: []string{"mb"},
 				Usage:   "Used to get, list, add and remove users to the team",
@@ -175,7 +133,7 @@ func GetCreateTeamCommand(config *Config) cli.Command {
 	return cli.Command{
 		Name:      "team",
 		Aliases:   []string{"teams"},
-		Usage:     "creates a team",
+		Usage:     "Creates a team",
 		ArgsUsage: "TEAM",
 		Flags: []cli.Flag{
 			cli.StringFlag{
@@ -231,6 +189,52 @@ func GetCreateTeamCommand(config *Config) cli.Command {
 			}
 
 			fmt.Printf("%q team was successfully created\n", teamID)
+			return nil
+		},
+		Before: func(ctx *cli.Context) error {
+			if !ctx.Args().Present() {
+				return fmt.Errorf("team identifier must be set as an argument")
+			}
+			return nil
+		},
+	}
+}
+
+func GetEditTeamCommand(config *Config) cli.Command {
+	return cli.Command{
+		Name:      "team",
+		Aliases:   []string{"teams"},
+		Usage:     "Modifies a team",
+		ArgsUsage: "TEAM",
+		Action: func(ctx *cli.Context) error {
+			teamID := ctx.Args().First()
+
+			team := &orgv1.Team{}
+
+			req := NewRequest().
+				WithConfig(config).
+				WithContext(ctx).
+				PathParameter("id", true).
+				WithInject("id", teamID).
+				WithEndpoint("/teams/{id}").
+				WithRuntimeObject(team)
+			if err := req.Get(); err != nil {
+				return err
+			}
+
+			prompts := prompts{
+				&prompt{id: "Description", value: &team.Spec.Description},
+			}
+
+			if err := prompts.collect(); err != nil {
+				return err
+			}
+
+			if err := req.Update(); err != nil {
+				return err
+			}
+
+			fmt.Printf("%q was successfully saved\n", teamID)
 			return nil
 		},
 		Before: func(ctx *cli.Context) error {

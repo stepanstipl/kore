@@ -10,14 +10,18 @@ type prompt struct {
 	id          string
 	labelSuffix string
 	errMsg      string
-	value       string
+	value       *string
 }
 
 func (p *prompt) do() error {
+	var value string
+	if p.value != nil {
+		value = *p.value
+	}
 	runner := promptui.Prompt{
 		Label:     p.id + " " + p.labelSuffix,
 		AllowEdit: true,
-		Default:   p.value,
+		Default:   value,
 		Validate: func(in string) error {
 			if len(in) == 0 {
 				return fmt.Errorf(p.errMsg, p.id)
@@ -31,7 +35,7 @@ func (p *prompt) do() error {
 		return err
 	}
 
-	p.value = gathered
+	*p.value = gathered
 	return nil
 }
 
@@ -44,13 +48,4 @@ func (p prompts) collect() error {
 		}
 	}
 	return nil
-}
-
-func (p prompts) getValue(id string) string {
-	for _, p := range p {
-		if p.id == id {
-			return p.value
-		}
-	}
-	return ""
 }

@@ -23,8 +23,6 @@ import (
 	"fmt"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
-	"github.com/appvia/kore/pkg/utils"
-
 	"github.com/urfave/cli"
 )
 
@@ -48,21 +46,18 @@ func GetClustersCommand(config *Config) cli.Command {
 					},
 				},
 				Action: func(ctx *cli.Context) error {
-					resp := NewRequest()
-					err := resp.
+					clusters := &clustersv1.KubernetesList{}
+					err := NewRequest().
 						WithConfig(config).
 						WithContext(ctx).
 						WithEndpoint("/teams/{team}/clusters").
 						PathParameter("team", true).
+						WithRuntimeObject(clusters).
 						Get()
 					if err != nil {
 						return err
 					}
-					// else we need to provision the kubeconfig
-					clusters := &clustersv1.KubernetesList{}
-					if err := utils.DecodeToJSON(resp.Body(), clusters); err != nil {
-						return err
-					}
+
 					if len(clusters.Items) <= 0 {
 						fmt.Println("no clusters found in this team's namespace")
 
