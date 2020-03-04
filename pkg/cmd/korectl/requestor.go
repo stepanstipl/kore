@@ -318,15 +318,13 @@ func (c Requestor) handleResponse(resp *http.Response) error {
 
 	var response map[string]interface{}
 	if c.body.Len() > 0 {
-		if err := json.NewDecoder(c.body).Decode(&response); err != nil {
-			return err
+		if err := json.NewDecoder(c.body).Decode(&response); err == nil {
+			// @step: does the error contain custom error?
+			if response["code"] != nil && response["message"] != "" {
+				fmt.Printf("[error] [%d] %s\n", int(response["code"].(float64)), response["message"])
+				os.Exit(1)
+			}
 		}
-	}
-
-	// @step: does the error contain custom error?
-	if response["code"] != nil && response["message"] != "" {
-		fmt.Printf("[error] [%d] %s\n", int(response["code"].(float64)), response["message"])
-		os.Exit(1)
 	}
 
 	switch resp.StatusCode {
