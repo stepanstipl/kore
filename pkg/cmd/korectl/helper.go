@@ -31,11 +31,17 @@ import (
 	"regexp"
 	"strings"
 
+	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
+	"github.com/appvia/kore/pkg/apiserver/types"
 	"github.com/appvia/kore/pkg/utils"
+
 	yml "github.com/ghodss/yaml"
 	log "github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
 	yaml "gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type Document struct {
@@ -52,6 +58,168 @@ var (
 // IsValidHostname checks the endpoint is valid
 func IsValidHostname(endpoint string) bool {
 	return hostnameRegex.MatchString(endpoint)
+}
+
+// GetWhoAmI returns an whoami
+func GetWhoAmI(config *Config) (*types.WhoAmI, error) {
+	who := &types.WhoAmI{}
+
+	return who, NewRequest().
+		DisableResponse(true).
+		WithConfig(config).
+		WithEndpoint("/whoami").
+		WithResponseObject(who).
+		Get()
+}
+
+// GetCluster returns the cluster object
+func GetCluster(config *Config, team, name string) (*clustersv1.Kubernetes, error) {
+	cluster := &clustersv1.Kubernetes{}
+
+	return cluster, GetTeamResource(config, team, "clusters", name, cluster)
+}
+
+// CreateTeamResource checks if a resources exists in the team
+func CreateTeamResource(config *Config, team, kind, name string, object runtime.Object) error {
+	kind = strings.ToLower(utils.ToPlural(kind))
+
+	return NewRequest().
+		DisableResponse(true).
+		WithConfig(config).
+		PathParameter("team", true).
+		PathParameter("kind", true).
+		PathParameter("name", true).
+		WithInject("team", team).
+		WithInject("kind", kind).
+		WithInject("name", name).
+		WithEndpoint("/teams/{team}/{kind}/{name}").
+		WithRuntimeObject(object).
+		Update()
+}
+
+// ResourceExists checks if a resources exists in the team
+func ResourceExists(config *Config, team, kind, name string) (bool, error) {
+	kind = strings.ToLower(utils.ToPlural(kind))
+
+	return NewRequest().
+		DisableResponse(true).
+		WithConfig(config).
+		PathParameter("team", true).
+		PathParameter("kind", true).
+		PathParameter("name", true).
+		WithInject("team", team).
+		WithInject("kind", kind).
+		WithInject("name", name).
+		WithEndpoint("/teams/{team}/{kind}/{name}").
+		Exists()
+}
+
+// GetTeamResources returns a collection of resources - essentially minus the name
+func GetTeamResources(config *Config, team, kind string, object runtime.Object) error {
+	kind = strings.ToLower(utils.ToPlural(kind))
+
+	return NewRequest().
+		DisableResponse(true).
+		WithConfig(config).
+		PathParameter("team", true).
+		PathParameter("kind", true).
+		WithInject("team", team).
+		WithInject("kind", kind).
+		WithEndpoint("/teams/{team}/{kind}").
+		WithResponseObject(object).
+		Get()
+}
+
+// GetTeamResource returns a team object
+func GetTeamResource(config *Config, team, kind, name string, object runtime.Object) error {
+	kind = strings.ToLower(utils.ToPlural(kind))
+
+	return NewRequest().
+		DisableResponse(true).
+		WithConfig(config).
+		PathParameter("team", true).
+		PathParameter("kind", true).
+		PathParameter("name", true).
+		WithInject("team", team).
+		WithInject("kind", kind).
+		WithInject("name", name).
+		WithEndpoint("/teams/{team}/{kind}/{name}").
+		WithResponseObject(object).
+		Get()
+}
+
+// PlanExists checks if the plans exists
+func PlanExists(config *Config, plan string) (bool, error) {
+	return NewRequest().
+		DisableResponse(true).
+		WithConfig(config).
+		PathParameter("plan", true).
+		WithInject("plan", plan).
+		WithEndpoint("/plans/{plan}").
+		Exists()
+}
+
+// GetPlan returns the plan
+func GetPlan(config *Config, name string) (*configv1.Plan, bool, error) {
+	found, err := PlanExists(config, name)
+	if err != nil {
+		return nil, false, err
+	}
+	if !found {
+		return nil, false, nil
+	}
+
+	// @step: we need to retrieve the plan via the api
+	plan := &configv1.Plan{}
+
+	err = NewRequest().
+		DisableResponse(true).
+		WithConfig(config).
+		PathParameter("plan", true).
+		WithInject("plan", name).
+		WithEndpoint("/plans/{plan}").
+		WithResponseObject(plan).
+		Get()
+	if err != nil {
+		return nil, false, err
+	}
+
+	return plan, true, nil
+}
+
+// GetAllocation returns the allocation in the team
+func GetAllocation(config *Config, team, name string) (*configv1.Allocation, bool, error) {
+	found, err := ResourceExists(config, team, "allocation", name)
+	if err != nil {
+		return nil, false, err
+	}
+	if !found {
+		return nil, false, nil
+	}
+	allocation := &configv1.Allocation{}
+
+	if err := GetTeamResource(config, team, "allocation", name, allocation); err != nil {
+		return allocation, false, err
+	}
+
+	return allocation, true, nil
+}
+
+// GlobalStringFlag
+func GlobalStringFlag(ctx *cli.Context, name string) string {
+	if ctx.IsSet(name) {
+		return ctx.String(name)
+	}
+	if ctx.Parent() == nil {
+		return ""
+	}
+	for parent := ctx.Parent(); parent != nil; parent = parent.Parent() {
+		if parent.IsSet(name) {
+			return parent.String(name)
+		}
+	}
+
+	return ""
 }
 
 // ParseDocument returns a collection of parsed documents and the api endpoints
@@ -267,5 +435,4 @@ func GetOrCreateClientConfiguration() (*Config, error) {
 
 	// @step: parse the configuration
 	return config, yaml.NewDecoder(bytes.NewReader(content)).Decode(config)
-
 }

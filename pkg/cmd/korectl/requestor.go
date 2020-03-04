@@ -80,6 +80,8 @@ type Requestor struct {
 	runtimeObj runtime.Object
 	// responseHandler can be used to register a response handler
 	responseHandler func(resp *http.Response) error
+	// responeObject is a decoded object
+	responseObject interface{}
 }
 
 // NewRequest creates and returns a requestor
@@ -195,7 +197,9 @@ func (c *Requestor) parseResponse() error {
 			return err
 		}
 	}
-
+        if c.cliCtx == nil {
+		return nil
+	}
 	if c.cliCtx.IsSet("output") {
 		format := c.cliCtx.String("output")
 		switch format {
@@ -210,13 +214,14 @@ func (c *Requestor) parseResponse() error {
 		}
 	}
 	w := new(tabwriter.Writer)
-	w.Init(os.Stdout, 20, 20, 0, ' ', 10)
+	w.Init(os.Stdout, 0, 10, 4, ' ', 0)
 
 	columns := strings.Join(c.render, "\t")
 	fmt.Fprintf(w, "%s\n", columns)
 
-	isList := response["items"] != nil
-	if isList {
+	islist := response["items"] != nil
+	switch islist {
+	case true:
 		items, found := response["items"].([]interface{})
 		if !found {
 			return errors.New("invalid response list, no items found")
@@ -232,7 +237,7 @@ func (c *Requestor) parseResponse() error {
 			}
 			fmt.Fprintf(w, "%s\n", strings.Join(values, "\t"))
 		}
-	} else {
+	default:
 		_, _ = c.body.Seek(0, io.SeekStart)
 		values, err := c.makeValues(c.body, c.paths)
 		if err != nil {
@@ -441,6 +446,13 @@ func (c *Requestor) WithInject(name, value string) *Requestor {
 	return c
 }
 
+// WithResponseObject sets the response object to decode into
+func (c *Requestor) WithResponseObject(object interface{}) *Requestor {
+	c.responseObject = object
+
+	return c
+}
+
 // WithEndpoint sets the endpoint
 func (c *Requestor) WithEndpoint(uri string) *Requestor {
 	c.endpoint = uri
@@ -460,6 +472,7 @@ func (c *Requestor) WithRuntimeObject(obj runtime.Object) *Requestor {
 	return c
 }
 
+// WithPayload sets the payload from a file
 func (c *Requestor) WithPayload(name string) *Requestor {
 	path := c.cliCtx.String(name)
 	if path == "" {

@@ -87,8 +87,6 @@ func (u teamHandler) updateAllocation(req *restful.Request, resp *restful.Respon
 	})
 }
 
-//fu
-
 // deleteAllocation removes any allocations from the team
 func (u teamHandler) deleteAllocation(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {

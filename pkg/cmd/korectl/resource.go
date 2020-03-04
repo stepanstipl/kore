@@ -42,16 +42,66 @@ func (r resourceConfigMap) Get(name string) resourceConfig {
 	}
 }
 
-var teamResourceConfig = resourceConfig{
-	Name:            "team",
-	APIResourceName: "teams",
-	Columns: []string{
-		Column("Name", ".metadata.name"),
-		Column("Description", ".spec.description"),
-	},
-}
+// @question: we might wanna consider renaming these to printers
+var (
+	teamResourceConfig = resourceConfig{
+		Name:            "team",
+		APIResourceName: "teams",
+		Columns: []string{
+			Column("Name", ".metadata.name"),
+			Column("Description", ".spec.description"),
+		},
+	}
 
-var resourceConfigs = resourceConfigMap{
-	"team":  teamResourceConfig,
-	"teams": teamResourceConfig,
+	allocationResourceConfig = resourceConfig{
+		Name:            "allocation",
+		APIResourceName: "allocations",
+		Columns: []string{
+			Column("Name", ".metadata.name"),
+			Column("Description", ".spec.summary"),
+			Column("Resource", ".spec.resource.kind"),
+		},
+	}
+	clusterResourceConfig = resourceConfig{
+		Name:            "cluster",
+		APIResourceName: "clusters",
+		Columns: []string{
+			Column("Name", ".metadata.name"),
+			Column("Provider", ".spec.provider.group"),
+			Column("Endpoint", ".status.endpoint"),
+			Column("Status", ".status.status"),
+		},
+	}
+	namespaceResourceConfig = resourceConfig{
+		Name:            "namespaceclaim",
+		APIResourceName: "namespaceclaims",
+		Columns: []string{
+			Column("Resource", ".metadata.name"),
+			Column("Namespace", ".spec.name"),
+			Column("Cluster", ".spec.cluster.name"),
+			Column("Status", ".status.status"),
+		},
+	}
+	planResourceConfig = resourceConfig{
+		Name:            "plan",
+		APIResourceName: "plans",
+		Columns: []string{
+			Column("Resource", ".metadata.name"),
+			Column("Description", ".spec.description"),
+			Column("Summary", ".spec.summary"),
+		},
+	}
+)
+
+var resourcePrinters = resourceConfigMap{
+	"allocation":      allocationResourceConfig,
+	"allocations":     allocationResourceConfig,
+	"cluster":         clusterResourceConfig,
+	"clusters":        clusterResourceConfig,
+	"namespaceclaim":  namespaceResourceConfig,
+	"namespaceclaims": namespaceResourceConfig,
+	"plan":            planResourceConfig,
+	"plans":           planResourceConfig,
+	"team":            teamResourceConfig,
+	"teams":           teamResourceConfig,
 }
