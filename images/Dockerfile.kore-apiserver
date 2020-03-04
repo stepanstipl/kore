@@ -1,4 +1,15 @@
+FROM golang:1.13-alpine3.11
+
+ENV CGO_ENABLED=0
+
+RUN apk add --no-cache ca-certificates git make
+
+COPY . /go/src/github.com/appvia/kore
+
+RUN cd /go/src/github.com/appvia/kore && make kore-apiserver kore-clusterappman
+
 FROM alpine:3.11
+
 LABEL Name=kore-apiserver \
       Release=https://github.com/appvia/kore \
       Maintainer=gambol99@gmail.com \
@@ -7,14 +18,13 @@ LABEL Name=kore-apiserver \
 
 ENV SWAGGER_UI_VERSION=v3.24.2
 
-RUN apk add curl --no-cache
+RUN apk --no-cache add ca-certificates curl
 
 RUN curl -sL -o /tmp/swagger-ui.zip https://github.com/swagger-api/swagger-ui/archive/${SWAGGER_UI_VERSION}.tar.gz && \
     tar -zxf /tmp/swagger-ui.zip -C /opt
 
-COPY bin/kore-apiserver /kore-apiserver
-COPY bin/kore-clusterappman /kore-clusterappman
+COPY --from=0 /go/src/github.com/appvia/kore/bin/* /bin/
 
 USER 65534
 
-ENTRYPOINT [ "/kore-apiserver" ]
+ENTRYPOINT [ "/bin/kore-apiserver" ]

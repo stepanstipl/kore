@@ -1,3 +1,4 @@
+SHELL = /bin/sh -e
 NAME=kore-apiserver
 AUTHOR ?= appvia
 AUTHOR_EMAIL=gambol99@gmail.com
@@ -38,7 +39,7 @@ LFLAGS ?= -X github.com/appvia/kore/pkg/version.GitSHA=${GIT_SHA} -X github.com/
 
 export GOFLAGS = -mod=vendor
 
-.PHONY: test authors changelog build docker static release cover vet glide-install demo golangci-lint apis swagger
+.PHONY: test authors changelog build docker release cover vet glide-install demo golangci-lint apis swagger images
 
 default: build
 
@@ -60,14 +61,6 @@ build: golang generate-clusterappman-manifests spelling
 		go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go || exit 1; \
 	done
 
-static: golang generate-clusterappman-manifests deps spelling
-	@echo "--> Compiling the static binaries ($(VERSION))"
-	@mkdir -p bin
-	@for binary in kore-apiserver korectl auth-proxy kore-clusterappman; do \
-		echo "--> Building $${binary} binary" ; \
-		GOOS=linux CGO_ENABLED=0 go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go || exit 1; \
-	done
-
 korectl: golang deps spelling
 	@echo "--> Compiling the korectl binary"
 	@mkdir -p bin
@@ -77,6 +70,16 @@ auth-proxy: golang deps spelling
 	@echo "--> Compiling the auth-proxy binary"
 	@mkdir -p bin
 	go build -ldflags "${LFLAGS}" -o bin/auth-proxy cmd/auth-proxy/*.go
+
+kore-apiserver: golang deps
+	@echo "--> Compiling the kore-apiserver binary"
+	@mkdir -p bin
+	go build -ldflags "${LFLAGS}" -o bin/kore-apiserver cmd/kore-apiserver/*.go
+
+kore-clusterappman: golang generate-clusterappman-manifests deps
+	@echo "--> Compiling the kore-clusterappman binary"
+	@mkdir -p bin
+	go build -ldflags "${LFLAGS}" -o bin/kore-clusterappman cmd/kore-clusterappman/*.go
 
 docker-build:
 	@echo "--> Running docker"
@@ -89,10 +92,7 @@ docker-build:
 		golang:${GOVERSION} \
 		make in-docker-build
 
-images: static
-	@$(MAKE) images-only
-
-images-only:
+images:
 	@echo "--> Building docker images"
 	@for name in kore-apiserver auth-proxy; do \
 		echo "--> Building docker image $${name}" ; \
@@ -103,7 +103,7 @@ in-docker-build:
 	@echo "--> Building in Docker"
 	@git config --global url.git@github.com:.insteadOf https://github.com/
 	@$(MAKE) test
-	@$(MAKE) static
+	@$(MAKE) build
 
 swagger: compose
 	@echo "--> Retrieving the swagger api"
@@ -203,7 +203,6 @@ demo:
 
 docker-release:
 	@echo "--> Building a release image"
-	@$(MAKE) static
 	@$(MAKE) docker
 	@docker push ${REGISTRY}/${AUTHOR}/${NAME}:${VERSION}
 
@@ -219,7 +218,7 @@ docker-builder-build:
 	@echo "--> Building the docker image"
 	docker build --build-arg GOVERSION=${GOVERSION} -f ./hack/build/Dockerfile -t ${REGISTRY}/${AUTHOR}/${NAME}-build:${VERSION} .
 
-release: static
+release: build
 	mkdir -p release
 	gzip -c bin/${NAME} > release/${NAME}_${VERSION}_linux_${HARDWARE}.gz
 	rm -f release/${NAME}
@@ -242,19 +241,15 @@ deps:
 
 vet:
 	@echo "--> Running go vet $(VETARGS) $(PACKAGES)"
-	@go tool vet 2>/dev/null ; if [ $$? -eq 3 ]; then \
-		GO111MODULE=off go get golang.org/x/tools/cmd/vet; \
-	fi
 	@go vet $(VETARGS) $(PACKAGES)
 
 gofmt:
 	@echo "--> Running gofmt check"
-	@gofmt -s -l $$(go list -f '{{.Dir}}' ./...) \
-	    | grep -q \.go ; if [ $$? -eq 0 ]; then \
-            echo "You need to run the make format, we have file unformatted"; \
-            gofmt -s -l .; \
-            exit 1; \
-	    fi
+	@if gofmt -s -l $$(go list -f '{{.Dir}}' ./...) | grep -q \.go ; then \
+		echo "You need to run the make format, we have file unformatted"; \
+		gofmt -s -l .; \
+		exit 1; \
+	fi
 
 format:
 	@echo "--> Running go fmt"
