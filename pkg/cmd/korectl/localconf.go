@@ -123,15 +123,15 @@ func newGcpInfoConfig() *gcpInfoConfig {
 	return &gcpInfoConfig{}
 }
 
-func (g *gcpInfoConfig) load(src string) *gcpInfoConfig {
+func (g *gcpInfoConfig) load(src string) (*gcpInfoConfig, error) {
 	content, err := ioutil.ReadFile(src)
 	if err != nil {
-		return g
+		return g, err
 	}
 
 	var cred gke.GKECredentials
 	if err := yaml.NewDecoder(bytes.NewReader(content)).Decode(&cred); err != nil {
-		return g
+		return g, err
 	}
 
 	g.Region = cred.Spec.Region
@@ -143,7 +143,7 @@ func (g *gcpInfoConfig) load(src string) *gcpInfoConfig {
 		}
 	}
 
-	return g
+	return g, nil
 }
 
 func (g *gcpInfoConfig) createPrompts() *gcpInfoConfig {
@@ -229,8 +229,11 @@ func GetLocalConfigureSubCommand(config *Config) cli.Command {
 			authInfo.update(config)
 
 			fmt.Println("What are your Google Cloud Platform details?")
-			info, err := newGcpInfoConfig().load(gkeCredPath).createPrompts().collectPrompts()
+			info, err := newGcpInfoConfig().load(gkeCredPath)
 			if err != nil {
+				return err
+			}
+			if _, err := info.createPrompts().collectPrompts(); err != nil {
 				return err
 			}
 			if err := info.generateGcpInfo(); err != nil {
