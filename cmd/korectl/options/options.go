@@ -29,7 +29,6 @@ func Options() []cli.Flag {
 		cli.StringFlag{
 			Name:  "team,t",
 			Usage: "Used to select the team context you are operating in",
-			Value: "default",
 		},
 	}
 }
