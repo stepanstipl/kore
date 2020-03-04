@@ -217,7 +217,7 @@ func (g *gcpInfoConfig) generateGcpInfo() error {
 func GetLocalConfigureSubCommand(config *Config) cli.Command {
 	return cli.Command{
 		Name:  "configure",
-		Usage: "Used to configure a local instance of Kore.",
+		Usage: "Configures Kore to use locally.",
 		Action: func(c *cli.Context) error {
 			createLocalConfig(config)
 
@@ -243,7 +243,7 @@ func GetLocalConfigureSubCommand(config *Config) cli.Command {
 
 			fmt.Println("...Kore is now set up to run locally,")
 			fmt.Println("✅ A 'local' profile has been configured in ~/.korectl/config")
-			fmt.Println("✅ Generated Kubernetes CRDs are now stored in <project root>/manifests/local directory. ")
+			fmt.Println("✅ Generated Kubernetes CRDs are now stored in <project root>/manifests/local directory.")
 			return nil
 		},
 	}
