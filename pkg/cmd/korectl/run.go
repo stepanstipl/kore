@@ -87,9 +87,12 @@ func GetLocalRunSubCommands(config *Config) []cli.Command {
 				)
 				fmt.Println("...Starting Kore.")
 
-				if err := cmd.Run(); err != nil {
+				stdoutStderr, err := cmd.CombinedOutput()
+				if err != nil {
+					fmt.Printf("%s\n", stdoutStderr)
 					return err
 				}
+
 				fmt.Printf("...Kore is now started locally and is ready on %s\n", localEndpoint)
 
 				return nil
@@ -105,11 +108,14 @@ func GetLocalRunSubCommands(config *Config) []cli.Command {
 					"--file", "hack/compose/operators.yml",
 					"down",
 				)
-
 				fmt.Println("...Stopping Kore.")
-				if err := cmd.Run(); err != nil {
+
+				stdoutStderr, err := cmd.CombinedOutput()
+				if err != nil {
+					fmt.Printf("%s\n", stdoutStderr)
 					return err
 				}
+
 				fmt.Println("...Kore is now stopped.")
 
 				return nil
