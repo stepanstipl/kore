@@ -37,6 +37,7 @@ func GetCreateCommand(config *Config) cli.Command {
 		Subcommands: []cli.Command{
 			GetCreateTeamCommand(config),
 			GetCreateClusterCommand(config),
+			GetCreateNamespaceCommand(config),
 		},
 	}
 }
