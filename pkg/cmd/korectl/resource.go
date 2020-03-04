@@ -21,9 +21,9 @@ package korectl
 
 // resourceConfig stores custom resource CLI configurations
 type resourceConfig struct {
-	Name            string
-	APIResourceName string
-	Columns         []string
+	APIEndpoint    string
+	RequiredParams []string
+	Columns        []string
 }
 
 type resourceConfigMap map[string]*resourceConfig
@@ -34,86 +34,65 @@ func (r resourceConfigMap) Get(name string) *resourceConfig {
 	}
 
 	return &resourceConfig{
-		Name:            name,
-		APIResourceName: name,
+		APIEndpoint:    "/teams/{team}/" + name,
+		RequiredParams: []string{"team"},
 		Columns: []string{
 			Column("Name", ".metadata.name"),
 		},
 	}
 }
 
-// @question: we might wanna consider renaming these to printers
-var (
-	teamResourceConfig = &resourceConfig{
-		Name:            "team",
-		APIResourceName: "teams",
+var resourceConfigs = resourceConfigMap{
+	"teams": &resourceConfig{
+		APIEndpoint: "/teams",
 		Columns: []string{
 			Column("Name", ".metadata.name"),
 			Column("Description", ".spec.description"),
 		},
-	}
+	},
 
-	userResourceConfig = &resourceConfig{
-		Name:            "user",
-		APIResourceName: "users",
+	"users": &resourceConfig{
+		APIEndpoint: "/users",
 		Columns: []string{
-			Column("Name", ".metadata.name"),
+			Column("Username", ".metadata.name"),
 			Column("Email", ".spec.email"),
 			Column("Disabled", ".spec.disabled"),
 		},
-	}
+	},
+	"plan": &resourceConfig{
+		APIEndpoint: "/plans",
+		Columns: []string{
+			Column("Resource", ".metadata.name"),
+			Column("Description", ".spec.description"),
+			Column("Summary", ".spec.summary"),
+		},
+	},
+	"team-member": &resourceConfig{
+		APIEndpoint:    "/teams/{team}/members",
+		RequiredParams: []string{"team"},
+		Columns: []string{
+			Column("Username", "."),
+		},
+	},
 
-	allocationResourceConfig = &resourceConfig{
-		Name:            "allocation",
-		APIResourceName: "allocations",
+	"allocation": &resourceConfig{
+		APIEndpoint:    "/teams/{team}/allocations",
+		RequiredParams: []string{"team"},
 		Columns: []string{
 			Column("Name", ".metadata.name"),
 			Column("Description", ".spec.summary"),
 			Column("Resource", ".spec.resource.kind"),
 		},
-	}
-	clusterResourceConfig = &resourceConfig{
-		Name:            "cluster",
-		APIResourceName: "clusters",
+	},
+
+	"cluster": &resourceConfig{
+		APIEndpoint:    "/teams/{team}/clusters",
+		RequiredParams: []string{"team"},
 		Columns: []string{
 			Column("Name", ".metadata.name"),
 			Column("Provider", ".spec.provider.group"),
 			Column("Endpoint", ".status.endpoint"),
 			Column("Status", ".status.status"),
 		},
-	}
-	namespaceResourceConfig = &resourceConfig{
-		Name:            "namespaceclaim",
-		APIResourceName: "namespaceclaims",
-		Columns: []string{
-			Column("Resource", ".metadata.name"),
-			Column("Namespace", ".spec.name"),
-			Column("Cluster", ".spec.cluster.name"),
-			Column("Status", ".status.status"),
-		},
-	}
-	planResourceConfig = &resourceConfig{
-		Name:            "plan",
-		APIResourceName: "plans",
-		Columns: []string{
-			Column("Resource", ".metadata.name"),
-			Column("Description", ".spec.description"),
-			Column("Summary", ".spec.summary"),
-		},
-	}
-)
-
-var resourceConfigs = resourceConfigMap{
-	"allocation":      allocationResourceConfig,
-	"allocations":     allocationResourceConfig,
-	"cluster":         clusterResourceConfig,
-	"clusters":        clusterResourceConfig,
-	"namespaceclaim":  namespaceResourceConfig,
-	"namespaceclaims": namespaceResourceConfig,
-	"plan":            planResourceConfig,
-	"plans":           planResourceConfig,
-	"team":            teamResourceConfig,
-	"teams":           teamResourceConfig,
-	"user":            userResourceConfig,
-	"users":           userResourceConfig,
+	},
 }

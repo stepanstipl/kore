@@ -38,6 +38,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 var (
@@ -88,6 +89,32 @@ func NewRequest() *Requestor {
 		injections:  make(map[string]string),
 		payload:     nil,
 	}
+}
+
+func NewRequestForResource(config *Config, ctx *cli.Context) (*Requestor, *resourceConfig, error) {
+	resourceConfig := resourceConfigs.Get(ctx.Args().First())
+
+	req := NewRequest().
+		WithConfig(config).
+		WithContext(ctx)
+
+	for _, requiredParam := range resourceConfig.RequiredParams {
+		if !ctx.IsSet(requiredParam) {
+			return nil, nil, fmt.Errorf("--%s parameter must be set", requiredParam)
+		}
+		req.PathParameter(requiredParam, true)
+	}
+
+	endpoint := resourceConfig.APIEndpoint
+	if ctx.NArg() == 2 {
+		endpoint = endpoint + "/{name}"
+		req.PathParameter("name", true)
+		req.WithInject("name", ctx.Args().Get(1))
+	}
+
+	req.WithEndpoint(endpoint)
+
+	return req, resourceConfig, nil
 }
 
 // Column sets a column option
