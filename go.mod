@@ -30,6 +30,7 @@ require (
 	github.com/go-logr/zapr v0.1.1 // indirect
 	github.com/go-openapi/analysis v0.19.7 // indirect
 	github.com/go-openapi/errors v0.19.3 // indirect
+	github.com/go-openapi/inflect v0.19.0
 	github.com/go-openapi/runtime v0.19.11 // indirect
 	github.com/go-openapi/spec v0.19.4
 	github.com/go-openapi/strfmt v0.19.4 // indirect

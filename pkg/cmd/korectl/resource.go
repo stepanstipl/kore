@@ -19,6 +19,10 @@
 
 package korectl
 
+import (
+	"github.com/go-openapi/inflect"
+)
+
 // resourceConfig stores custom resource CLI configurations
 type resourceConfig struct {
 	APIEndpoint    string
@@ -29,7 +33,7 @@ type resourceConfig struct {
 type resourceConfigMap map[string]*resourceConfig
 
 func (r resourceConfigMap) Get(name string) *resourceConfig {
-	if config, ok := r[name]; ok {
+	if config, ok := r[inflect.Singularize(name)]; ok {
 		return config
 	}
 
@@ -43,15 +47,14 @@ func (r resourceConfigMap) Get(name string) *resourceConfig {
 }
 
 var resourceConfigs = resourceConfigMap{
-	"teams": &resourceConfig{
+	"team": &resourceConfig{
 		APIEndpoint: "/teams",
 		Columns: []string{
 			Column("Name", ".metadata.name"),
 			Column("Description", ".spec.description"),
 		},
 	},
-
-	"users": &resourceConfig{
+	"user": &resourceConfig{
 		APIEndpoint: "/users",
 		Columns: []string{
 			Column("Username", ".metadata.name"),
@@ -67,7 +70,7 @@ var resourceConfigs = resourceConfigMap{
 			Column("Summary", ".spec.summary"),
 		},
 	},
-	"team-members": &resourceConfig{
+	"team-member": &resourceConfig{
 		APIEndpoint:    "/teams/{team}/members",
 		RequiredParams: []string{"team"},
 		Columns: []string{
