@@ -111,6 +111,10 @@ func newGcpInfoConfig() *gcpInfoConfig {
 }
 
 func (g *gcpInfoConfig) load(src string) (*gcpInfoConfig, error) {
+	if _, err := os.Stat(src); os.IsNotExist(err) {
+		return g, nil
+	}
+
 	content, err := ioutil.ReadFile(src)
 	if err != nil {
 		return g, err
