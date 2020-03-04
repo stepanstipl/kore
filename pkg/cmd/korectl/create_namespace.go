@@ -84,6 +84,7 @@ func GetCreateNamespaceCommand(config *Config) cli.Command {
 			name := ctx.Args().First()
 			cluster := ctx.String("cluster")
 			team := GlobalStringFlag(ctx, "team")
+			dry := ctx.Bool("dry-run")
 
 			// @step: evaluate the options
 			if team == "" {
@@ -108,7 +109,7 @@ func GetCreateNamespaceCommand(config *Config) cli.Command {
 				Name:      cluster,
 			}
 
-			if err := CreateClusterNamespace(config, owner, team, name); err != nil {
+			if err := CreateClusterNamespace(config, owner, team, name, dry); err != nil {
 				return fmt.Errorf("trying to provision namespace on cluster: %s", err)
 			}
 			fmt.Println("Namespace provisioning on the cluster, you can check via: $ korectl get namespaceclaims -t ", team)

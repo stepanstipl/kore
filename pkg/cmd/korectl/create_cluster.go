@@ -36,6 +36,7 @@ import (
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	"github.com/appvia/kore/pkg/utils"
+	"gopkg.in/yaml.v2"
 
 	"github.com/urfave/cli"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -133,7 +134,10 @@ func GetCreateClusterCommand(config *Config) cli.Command {
 			name := ctx.Args().First()
 			plan := ctx.String("plan")
 			allocation := ctx.String("allocation")
+			namespaces := ctx.StringSlice("namespace")
 			team := GlobalStringFlag(ctx, "team")
+			role := ctx.String("team-role")
+			dry := ctx.Bool("dry-run")
 
 			if team == "" {
 				return errors.New("you must specify the team you wish to create in")
@@ -148,12 +152,12 @@ func GetCreateClusterCommand(config *Config) cli.Command {
 			}
 
 			// @step: create the cloud provider
-			provider, err := CreateClusterProviderFromPlan(config, team, name, plan, allocation)
+			provider, err := CreateClusterProviderFromPlan(config, team, name, plan, allocation, dry)
 			if err != nil {
 				return err
 			}
 
-			cluster, err := CreateKubernetesClusterFromProvider(config, provider, team, name, ctx.String("team-role"))
+			cluster, err := CreateKubernetesClusterFromProvider(config, provider, team, name, role, dry)
 			if err != nil {
 				return err
 			}
@@ -225,10 +229,13 @@ func GetCreateClusterCommand(config *Config) cli.Command {
 
 			// @step: do we need to provision any namespaces? - note the split and joining
 			// allows for --namespace a,b,c
-			namespaces := strings.Split(strings.Join(ctx.StringSlice("namespace"), ","), ",")
-
+			var list []string
 			for _, x := range namespaces {
-				if err := CreateClusterNamespace(config, ownership, team, x); err != nil {
+				list = append(list, strings.Split(x, ",")...)
+			}
+
+			for _, x := range list {
+				if err := CreateClusterNamespace(config, ownership, team, x, dry); err != nil {
 					return fmt.Errorf("trying to provision namespace claim: %s on cluster: %s", x, err)
 				}
 			}
@@ -242,7 +249,7 @@ func GetCreateClusterCommand(config *Config) cli.Command {
 }
 
 // CreateKubernetesClusterFromProvider is used to provision a k8s cluster from a provider
-func CreateKubernetesClusterFromProvider(config *Config, provider *unstructured.Unstructured, team, name, role string) (*clustersv1.Kubernetes, error) {
+func CreateKubernetesClusterFromProvider(config *Config, provider *unstructured.Unstructured, team, name, role string, dry bool) (*clustersv1.Kubernetes, error) {
 	whoami, err := GetWhoAmI(config)
 	if err != nil {
 		return nil, err
@@ -271,6 +278,9 @@ func CreateKubernetesClusterFromProvider(config *Config, provider *unstructured.
 			},
 		},
 	}
+	if dry {
+		return object, yaml.NewEncoder(os.Stdout).Encode(object)
+	}
 
 	found, err := ResourceExists(config, team, "clusters", name)
 	if err != nil {
@@ -284,7 +294,7 @@ func CreateKubernetesClusterFromProvider(config *Config, provider *unstructured.
 }
 
 // CreateClusterNamespace is called to provision a namespace on the cluster
-func CreateClusterNamespace(config *Config, cluster corev1.Ownership, team, name string) error {
+func CreateClusterNamespace(config *Config, cluster corev1.Ownership, team, name string, dry bool) error {
 	resourceName := fmt.Sprintf("%s-%s", cluster.Name, name)
 	kind := "namespaceclaims"
 
@@ -301,6 +311,10 @@ func CreateClusterNamespace(config *Config, cluster corev1.Ownership, team, name
 			Cluster: cluster,
 		},
 	}
+	if dry {
+		return yaml.NewEncoder(os.Stdout).Encode(object)
+	}
+
 	found, err := ResourceExists(config, team, kind, resourceName)
 	if err != nil {
 		return err
@@ -310,14 +324,14 @@ func CreateClusterNamespace(config *Config, cluster corev1.Ownership, team, name
 
 		return nil
 	}
-	fmt.Printf("Attempting to create namespace: %s\n", name)
+	fmt.Printf("--> Attempting to create namespace: %s\n", name)
 
 	return CreateTeamResource(config, team, kind, name, object)
 }
 
 // CreateClusterProviderFromPlan is used to provision a cluster in kore
 // @TODO need to be revisited once we have autogeneration of resources
-func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation string) (*unstructured.Unstructured, error) {
+func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation string, dry bool) (*unstructured.Unstructured, error) {
 	// @step: we need to check if the plan exists in the kore
 	template, found, err := GetPlan(config, plan)
 	if err != nil {
@@ -345,7 +359,7 @@ func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation 
 	})
 	object.SetName(name)
 	object.SetNamespace(team)
-	// @note: we need to fix this up later
+	// @TODO: we need to fix this up later, much like above
 	object.SetAPIVersion(gke.GroupVersion.String())
 
 	utils.InjectValuesIntoUnstructured(kv, object)
@@ -362,6 +376,10 @@ func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation 
 	}
 
 	utils.InjectOwnershipIntoUnstructured("credentials", permit.Spec.Resource, object)
+
+	if dry {
+		return object, yaml.NewEncoder(os.Stdout).Encode(object)
+	}
 
 	// @step: check the cluster already exists
 	found, err = ResourceExists(config, team, kind, name)
