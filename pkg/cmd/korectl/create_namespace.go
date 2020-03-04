@@ -95,7 +95,7 @@ func GetCreateNamespaceCommand(config *Config) cli.Command {
 			}
 
 			// @step: check the kubernetes cluster exists
-			if found, err := ResourceExists(config, team, "cluster", cluster); err != nil {
+			if found, err := TeamResourceExists(config, team, "cluster", cluster); err != nil {
 				return err
 			} else if !found {
 				return fmt.Errorf("cluster: %s does not exist", cluster)

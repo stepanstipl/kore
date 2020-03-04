@@ -50,7 +50,7 @@ func GetClustersCommand(config *Config) cli.Command {
 					clusters := &clustersv1.KubernetesList{}
 					team := GlobalStringFlag(ctx, "team")
 
-					if err := GetTeamResources(config, team, "clusters", clusters); err != nil {
+					if err := GetTeamResourceList(config, team, "clusters", clusters); err != nil {
 						return err
 					}
 
@@ -87,18 +87,15 @@ func GetClustersCommand(config *Config) cli.Command {
 					},
 				}, DefaultOptions...),
 				Action: func(ctx *cli.Context) error {
+					team := GlobalStringFlag(ctx, "team")
+
 					return NewRequest().
 						WithConfig(config).
 						WithContext(ctx).
 						WithEndpoint("/teams/{team}/clusters").
+						WithInject("team", team).
 						PathParameter("team", true).
 						PathParameter("name", false).
-						Render(
-							Column("Name", ".metadata.name"),
-							Column("Domain", ".spec.domain"),
-							Column("Endpoint", ".status.endpoint"),
-							Column("Status", ".status.status"),
-						).
 						Get()
 				},
 			},

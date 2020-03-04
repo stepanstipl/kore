@@ -33,8 +33,6 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"k8s.io/apimachinery/pkg/runtime"
-
 	"github.com/ghodss/yaml"
 	"github.com/savaki/jq"
 	log "github.com/sirupsen/logrus"
@@ -77,11 +75,9 @@ type Requestor struct {
 	// injections - oh my god - this is what happens when you write things fast
 	injections map[string]string
 	// if set it will be encoded as JSON as the payload
-	runtimeObj runtime.Object
+	runtimeObj interface{}
 	// responseHandler can be used to register a response handler
 	responseHandler func(resp *http.Response) error
-	// responeObject is a decoded object
-	responseObject interface{}
 }
 
 // NewRequest creates and returns a requestor
@@ -197,7 +193,7 @@ func (c *Requestor) parseResponse() error {
 			return err
 		}
 	}
-        if c.cliCtx == nil {
+	if c.cliCtx == nil {
 		return nil
 	}
 	if c.cliCtx.IsSet("output") {
@@ -446,13 +442,6 @@ func (c *Requestor) WithInject(name, value string) *Requestor {
 	return c
 }
 
-// WithResponseObject sets the response object to decode into
-func (c *Requestor) WithResponseObject(object interface{}) *Requestor {
-	c.responseObject = object
-
-	return c
-}
-
 // WithEndpoint sets the endpoint
 func (c *Requestor) WithEndpoint(uri string) *Requestor {
 	c.endpoint = uri
@@ -467,8 +456,9 @@ func (c *Requestor) WithContext(ctx *cli.Context) *Requestor {
 	return c
 }
 
-func (c *Requestor) WithRuntimeObject(obj runtime.Object) *Requestor {
+func (c *Requestor) WithRuntimeObject(obj interface{}) *Requestor {
 	c.runtimeObj = obj
+
 	return c
 }
 

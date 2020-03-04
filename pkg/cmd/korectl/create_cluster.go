@@ -282,7 +282,7 @@ func CreateKubernetesClusterFromProvider(config *Config, provider *unstructured.
 		return object, yaml.NewEncoder(os.Stdout).Encode(object)
 	}
 
-	found, err := ResourceExists(config, team, "clusters", name)
+	found, err := TeamResourceExists(config, team, "clusters", name)
 	if err != nil {
 		return nil, fmt.Errorf("trying to check if cluster exists: %s", err)
 	}
@@ -315,7 +315,7 @@ func CreateClusterNamespace(config *Config, cluster corev1.Ownership, team, name
 		return yaml.NewEncoder(os.Stdout).Encode(object)
 	}
 
-	found, err := ResourceExists(config, team, kind, resourceName)
+	found, err := TeamResourceExists(config, team, kind, resourceName)
 	if err != nil {
 		return err
 	}
@@ -333,14 +333,17 @@ func CreateClusterNamespace(config *Config, cluster corev1.Ownership, team, name
 // @TODO need to be revisited once we have autogeneration of resources
 func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation string, dry bool) (*unstructured.Unstructured, error) {
 	// @step: we need to check if the plan exists in the kore
-	template, found, err := GetPlan(config, plan)
-	if err != nil {
+	if found, err := ResourceExists(config, "plan", plan); err != nil {
 		return nil, fmt.Errorf("trying to retrieve plan from api: %s", err)
-	}
-	if !found {
+	} else if !found {
 		return nil, fmt.Errorf("plan %q does not exist, you can view plans via $ korectl get plans", plan)
 	}
+	template := &configv1.Plan{}
+	if err := GetResource(config, "plan", plan, template); err != nil {
+		return nil, fmt.Errorf("trying to retrieve plan from api: %s", err)
+	}
 
+	// @step: decode the plan values into a map
 	kv := make(map[string]interface{})
 	if err := json.NewDecoder(bytes.NewReader(template.Spec.Values.Raw)).Decode(&kv); err != nil {
 		return nil, fmt.Errorf("trying to decode plan values: %s", err)
@@ -364,13 +367,13 @@ func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation 
 
 	utils.InjectValuesIntoUnstructured(kv, object)
 
-	// @step: ensure the allocation exists
-	permit := &configv1.Allocation{}
-	if found, err := ResourceExists(config, team, "allocation", allocation); err != nil {
+	// @step: ensure the allocation exists and retrieve it
+	if found, err := TeamResourceExists(config, team, "allocation", allocation); err != nil {
 		return nil, fmt.Errorf("retrieving the allocation from api: %s", err)
 	} else if !found {
 		return nil, fmt.Errorf("allocation: %s has not been assigned to team", allocation)
 	}
+	permit := &configv1.Allocation{}
 	if err := GetTeamResource(config, team, "allocation", allocation, permit); err != nil {
 		return nil, fmt.Errorf("retrieving the allocation from api: %s", err)
 	}
@@ -382,17 +385,15 @@ func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation 
 	}
 
 	// @step: check the cluster already exists
-	found, err = ResourceExists(config, team, kind, name)
-	if err != nil {
+	if found, err := TeamResourceExists(config, team, kind, name); err != nil {
 		return nil, fmt.Errorf("trying to check if cluster exists: %s", err)
-	}
-	if found {
+	} else if found {
 		fmt.Printf("Cluster: %q already exists, skipping the creation\n", name)
 
 		return object, nil
 	}
 
-	fmt.Printf("Attempting to create cluster: %q, from plan: %s\n", name, plan)
+	fmt.Printf("Attempting to create cluster: %q, plan: %s\n", name, plan)
 
 	return object, CreateTeamResource(config, team, kind, name, object)
 }

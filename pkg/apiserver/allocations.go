@@ -33,7 +33,6 @@ func (u teamHandler) findAllocations(req *restful.Request, resp *restful.Respons
 		team := req.PathParameter("team")
 		assigned := req.QueryParameter("assigned")
 
-		// @NOTE: this will do for now
 		if assigned == "false" {
 			list, err := u.Teams().Team(team).Allocations().List(req.Request.Context())
 			if err != nil {
