@@ -112,7 +112,7 @@ func GetCreateNamespaceCommand(config *Config) cli.Command {
 			if err := CreateClusterNamespace(config, owner, team, name, dry); err != nil {
 				return fmt.Errorf("trying to provision namespace on cluster: %s", err)
 			}
-			fmt.Println("Namespace provisioning on the cluster, you can check via: $ korectl get namespaceclaims -t ", team)
+			fmt.Println("Namespace provisioning on the cluster, you can check via: $ korectl get namespaceclaims -t", team)
 
 			return nil
 		},

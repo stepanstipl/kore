@@ -112,9 +112,9 @@ func GetCreateClusterCommand(config *Config) cli.Command {
 				Name:  "show-time",
 				Usage: "shows the time it took to successfully provision a new cluster `BOOL`",
 			},
-			cli.BoolFlag{
-				Name:  "no-block,N",
-				Usage: "indicates if we should wait for the cluster to be built `BOOL`",
+			cli.BoolTFlag{
+				Name:  "wait",
+				Usage: "indicates we should wait for the cluster to be build (defaults: true) `BOOL`",
 			},
 			cli.BoolFlag{
 				Name:  "dry-run",
@@ -137,6 +137,7 @@ func GetCreateClusterCommand(config *Config) cli.Command {
 			namespaces := ctx.StringSlice("namespace")
 			team := GlobalStringFlag(ctx, "team")
 			role := ctx.String("team-role")
+			waitfor := ctx.Bool("wait")
 			dry := ctx.Bool("dry-run")
 
 			if team == "" {
@@ -163,7 +164,7 @@ func GetCreateClusterCommand(config *Config) cli.Command {
 			}
 
 			// @step: we need to construct the provider type
-			if !ctx.Bool("no-block") {
+			if waitfor {
 				now := time.Now()
 
 				err := func() error {
@@ -175,8 +176,7 @@ func GetCreateClusterCommand(config *Config) cli.Command {
 						}
 					}
 
-					fmt.Printf("Waiting for cluster: %q to provision (usually takes around 5 minutes)\n", name)
-					fmt.Printf("Note: you can ctrl-c to background the task\n")
+					fmt.Printf("Waiting for %q to provision (usually takes around 5 minutes, ctrl-c to background)\n", name)
 
 					// @step: allow for cancellation of the block - and probably wrap this up into a common framework
 					sig := make(chan os.Signal, 1)
