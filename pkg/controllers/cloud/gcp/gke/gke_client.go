@@ -252,6 +252,7 @@ func (g *gkeClient) CreateDefinition() (*container.CreateClusterRequest, error) 
 		NetworkPolicy:           &container.NetworkPolicy{Enabled: true, Provider: "CALICO"},
 		PodSecurityPolicyConfig: &container.PodSecurityPolicyConfig{Enabled: true},
 		Locations:               locations,
+		ShieldedNodes:           &container.ShieldedNodes{Enabled: cluster.Spec.EnableShieldedNodes},
 
 		MaintenancePolicy: &container.MaintenancePolicy{
 			Window: &container.MaintenanceWindow{

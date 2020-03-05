@@ -110,6 +110,10 @@ type GKESpec struct {
 	// cluster; this provides a more feature rich routing and instrumentation.
 	// +kubebuilder:validation:Optional
 	EnableIstio bool `json:"enableIstio"`
+	// EnableSheildedNodes indicates we should enable the sheilds nodes options in GKE.
+	// This protects against a variety of attacks by hardening the underlying GKE node
+	// against rootkits and bootkits.
+	EnableShieldedNodes bool `json:"enableShieldedNodes"`
 	// EnableStackDriverLogging indicates if Stackdriver logging should be enabled
 	// for the cluster
 	// +kubebuilder:validation:Optional
