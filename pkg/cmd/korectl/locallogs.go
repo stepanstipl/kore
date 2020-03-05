@@ -30,6 +30,12 @@ import (
 
 const koreApiServer = "/kore-apiserver"
 
+var dcomposeArgs = []string{
+	"--file", "hack/compose/kube.yml",
+	"--file", "hack/compose/demo.yml",
+	"--file", "hack/compose/operators.yml",
+}
+
 func GetLocalLogsSubCommand(_ *Config) cli.Command {
 	return cli.Command{
 		Name:  "logs",
@@ -60,12 +66,8 @@ func GetLocalLogsSubCommand(_ *Config) cli.Command {
 }
 
 func isKoreStarted() (bool, error) {
-	cmd := exec.Command("docker-compose",
-		"--file", "hack/compose/kube.yml",
-		"--file", "hack/compose/demo.yml",
-		"--file", "hack/compose/operators.yml",
-		"ps",
-	)
+	ps := append(dcomposeArgs, "ps")
+	cmd := exec.Command("docker-compose", ps...)
 
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
@@ -77,26 +79,13 @@ func isKoreStarted() (bool, error) {
 }
 
 func runLogs(c *cli.Context) error {
-	var cmd *exec.Cmd
+	logs := append(dcomposeArgs, "logs")
 
-	switch c.Bool("follow") {
-	case true:
-		cmd = exec.Command("docker-compose",
-			"--file", "hack/compose/kube.yml",
-			"--file", "hack/compose/demo.yml",
-			"--file", "hack/compose/operators.yml",
-			"logs", "--follow",
-		)
-
-	case false:
-		cmd = exec.Command("docker-compose",
-			"--file", "hack/compose/kube.yml",
-			"--file", "hack/compose/demo.yml",
-			"--file", "hack/compose/operators.yml",
-			"logs",
-		)
+	if c.Bool("follow") {
+		logs = append(logs, "--follow")
 	}
 
+	cmd := exec.Command("docker-compose", logs...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
