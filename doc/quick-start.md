@@ -67,9 +67,9 @@ With the a GCP Project selected or created,
 
 #### Configure your Service Account permissions
 
-(You can skip this step if you're Service Account has the `Kubernetes Engine Admin` role)
+(You can skip this step if you're Service Account has the `Owner` role)
 
-- Assign the `Kubernetes Engine Admin` role to your Service account.
+- Assign the `Owner` role to your Service account.
 
 #### Create a key and download it (as JSON)
 
