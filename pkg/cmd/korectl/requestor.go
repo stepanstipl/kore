@@ -52,6 +52,19 @@ var (
 	}
 )
 
+type RequestError struct {
+	err        error
+	statusCode int
+}
+
+func (r *RequestError) Error() string {
+	return fmt.Sprintf("[%d] %s", r.statusCode, r.err.Error())
+}
+
+func (r *RequestError) StatusCode() int {
+	return r.statusCode
+}
+
 // Requestor is responsible for calling out to the API
 type Requestor struct {
 	// config is the cli configuration
@@ -68,16 +81,12 @@ type Requestor struct {
 	render []string
 	// paths are the paths for render
 	paths []string
-	// body is the content read bac
-	body *bytes.Reader
 	// payload
 	payload *bytes.Buffer
 	// injections - oh my god - this is what happens when you write things fast
 	injections map[string]string
 	// if set it will be encoded as JSON as the payload
 	runtimeObj interface{}
-	// responseHandler can be used to register a response handler
-	responseHandler func(resp *http.Response) error
 }
 
 // NewRequest creates and returns a requestor
@@ -137,20 +146,12 @@ func (c *Requestor) Get() error {
 		return err
 	}
 
-	resp, err := c.makeRequest(http.MethodGet, url)
-	if err != nil {
-		return err
-	}
-
-	if err := c.handleResponse(resp); err != nil {
-		return err
-	}
-
+	responseHandler := c.parseResponse
 	if c.runtimeObj != nil {
-		return c.parseObjectResponse()
-	} else {
-		return c.parseResponse()
+		responseHandler = c.parseObjectResponse
 	}
+
+	return c.doRequest(http.MethodGet, url, responseHandler)
 }
 
 // Exists will perform a GET request and will return
@@ -163,24 +164,16 @@ func (c *Requestor) Exists() (bool, error) {
 		return false, err
 	}
 
-	resp, err := c.makeRequest(http.MethodGet, url)
-	if err != nil {
+	if err := c.doRequest(http.MethodGet, url, nil); err != nil {
+		if reqErr, ok := err.(*RequestError); ok {
+			if reqErr.statusCode == http.StatusNotFound {
+				return false, nil
+			}
+		}
 		return false, err
 	}
 
-	switch resp.StatusCode {
-	case http.StatusOK:
-		return true, nil
-	case http.StatusNotFound:
-		return false, nil
-	default:
-		return false, c.handleResponse(resp)
-	}
-}
-
-// Edit is responsible for performing the request
-func (c *Requestor) Edit() error {
-	return nil
+	return true, nil
 }
 
 // Update is responsible for performing the request
@@ -189,12 +182,7 @@ func (c *Requestor) Update() error {
 	if err != nil {
 		return err
 	}
-	resp, err := c.makeRequest(http.MethodPut, url)
-	if err != nil {
-		return err
-	}
-
-	return c.handleResponse(resp)
+	return c.doRequest(http.MethodPut, url, nil)
 }
 
 // Delete is responsible for performing the request
@@ -204,27 +192,26 @@ func (c *Requestor) Delete() error {
 		return err
 	}
 
-	resp, err := c.makeRequest(http.MethodDelete, url)
-	if err != nil {
-		return err
-	}
-
-	return c.handleResponse(resp)
+	return c.doRequest(http.MethodDelete, url, nil)
 }
 
-func (c *Requestor) parseObjectResponse() error {
-	if c.body.Len() > 0 {
-		if err := json.NewDecoder(c.body).Decode(c.runtimeObj); err != nil {
-			return err
-		}
+func (c *Requestor) parseObjectResponse(resp *http.Response) error {
+	if err := json.NewDecoder(resp.Body).Decode(c.runtimeObj); err != nil {
+		return err
 	}
 	return nil
 }
 
-func (c *Requestor) parseResponse() error {
+func (c *Requestor) parseResponse(resp *http.Response) error {
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	content := bytes.NewReader(body)
+
 	var response map[string]interface{}
-	if c.body.Len() > 0 {
-		if err := json.NewDecoder(c.body).Decode(&response); err != nil {
+	if content.Len() > 0 {
+		if err := json.NewDecoder(content).Decode(&response); err != nil {
 			return err
 		}
 	}
@@ -266,8 +253,8 @@ func (c *Requestor) parseResponse() error {
 			}
 		}
 	} else {
-		_, _ = c.body.Seek(0, io.SeekStart)
-		values, err := c.makeValues(c.body, c.paths)
+		_, _ = content.Seek(0, io.SeekStart)
+		values, err := c.makeValues(content, c.paths)
 		if err != nil {
 			return err
 
@@ -309,55 +296,52 @@ func (c *Requestor) makeValues(in io.Reader, paths []string) ([]string, error) {
 	return list, nil
 }
 
-// handleResponse is used to wrap common errors
-func (c Requestor) handleResponse(resp *http.Response) error {
-	if c.responseHandler != nil {
-		return c.responseHandler(resp)
-	}
-
+// checkResponse is used to check whether the request was successful
+func (c Requestor) checkResponse(resp *http.Response) *RequestError {
 	if resp.StatusCode == http.StatusOK {
 		return nil
 	}
 
 	var response map[string]interface{}
-	if c.body.Len() > 0 {
-		if err := json.NewDecoder(c.body).Decode(&response); err == nil {
-			// @step: does the error contain custom error?
-			if response["code"] != nil && response["message"] != "" {
-				fmt.Printf("[error] [%d] %s\n", int(response["code"].(float64)), response["message"])
-				os.Exit(1)
+	if err := json.NewDecoder(resp.Body).Decode(&response); err == nil {
+		// @step: does the error contain custom error?
+		if response["code"] != nil && response["message"] != "" {
+			return &RequestError{
+				statusCode: int(response["code"].(float64)),
+				err:        fmt.Errorf("%s", response["message"]),
 			}
 		}
 	}
 
+	var err error
 	switch resp.StatusCode {
 	case http.StatusUnauthorized:
-		fmt.Println("[error] authorization required, please use the 'login' command")
+		err = errors.New("authorization required, please use the 'login' command")
 	case http.StatusNotFound:
-		fmt.Println("[error] kind or resource does not exist")
+		err = errors.New("kind or resource does not exist")
 	case http.StatusForbidden:
-		fmt.Println("[error] request has been denied, check credentials")
+		err = errors.New("request has been denied, check credentials")
 	case http.StatusBadRequest:
-		fmt.Println("[error] api responded with invalid request")
+		err = errors.New("api responded with invalid request")
 	default:
-		fmt.Printf("invalid response: %d from api server", resp.StatusCode)
+		err = fmt.Errorf("invalid response: %d from api server", resp.StatusCode)
 	}
-	os.Exit(1)
 
-	return nil
+	return &RequestError{
+		statusCode: resp.StatusCode,
+		err:        err,
+	}
 }
 
-// makeRequest creates and returns a http request
-func (c *Requestor) makeRequest(method, url string) (*http.Response, error) {
-	c.body = nil
-
+// doRequest makes and handles an HTTP request
+func (c *Requestor) doRequest(method, url string, handler func(*http.Response) error) error {
 	var req *http.Request
 	var err error
 
 	if c.runtimeObj != nil {
 		encoded, err := json.Marshal(c.runtimeObj)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		c.payload = bytes.NewBuffer(encoded)
 	}
@@ -368,7 +352,7 @@ func (c *Requestor) makeRequest(method, url string) (*http.Response, error) {
 		req, err = http.NewRequest(method, url, c.payload)
 	}
 	if err != nil {
-		return nil, err
+		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	auth := c.config.GetCurrentAuthInfo()
@@ -381,18 +365,27 @@ func (c *Requestor) makeRequest(method, url string) (*http.Response, error) {
 
 	resp, err := hc.Do(req)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	if resp.Body != nil {
-		content, err := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
+
+	if err := c.checkResponse(resp); err != nil {
+		return err
+	}
+
+	if handler != nil {
+		err := handler(resp)
 		if err != nil {
-			return nil, err
+			return &RequestError{statusCode: resp.StatusCode, err: err}
 		}
-		c.body = bytes.NewReader(content)
-	}
+		return nil
+	} else {
+		// Read the response body and discard it - to avoid any surprises
+		_, _ = ioutil.ReadAll(resp.Body)
 
-	return resp, nil
+		return nil
+	}
 }
 
 // makeURI is responsible for generating the uri for the requestor
@@ -519,11 +512,6 @@ func (c *Requestor) WithPayload(name string) *Requestor {
 	c.injections["name"] = u.GetName()
 	c.payload = bytes.NewBuffer(encoded)
 
-	return c
-}
-
-func (c *Requestor) WithResponseHandler(f func(resp *http.Response) error) *Requestor {
-	c.responseHandler = f
 	return c
 }
 
