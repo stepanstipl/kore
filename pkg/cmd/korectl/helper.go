@@ -186,7 +186,14 @@ func GetResourceList(config *Config, team, kind, name string, object runtime.Obj
 		Get()
 }
 
-// GlobalStringFlag
+// GetGlobalTeamFlag searches the contexts for the flag
+func GetGlobalTeamFlag(ctx *cli.Context) string {
+	return GlobalStringFlag(ctx, "team")
+}
+
+// GlobalStringFlag is used to iterate the contexts to find the flag - I can't
+// see any other way of doing this as the global flag don't appear to be global.
+// @note: this could be due to the fact we are using the v1 branch.
 func GlobalStringFlag(ctx *cli.Context, name string) string {
 	if ctx.IsSet(name) {
 		return ctx.String(name)

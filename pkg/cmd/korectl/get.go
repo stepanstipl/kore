@@ -48,6 +48,7 @@ func GetGetCommand(config *Config) cli.Command {
 		Action: func(ctx *cli.Context) error {
 			// @step: setup the printer for the resource type
 			resourceCfg := resourceConfigs.Get(ctx.Args().First())
+			team := GetGlobalTeamFlag(ctx)
 
 			req := NewRequest().
 				WithConfig(config).
@@ -67,7 +68,7 @@ func GetGetCommand(config *Config) cli.Command {
 			case IsGlobalResourceOptional(resourceCfg.APIResourceName):
 				switch ctx.IsSet("team") {
 				case true:
-					req.WithInject("team", GlobalStringFlag(ctx, "team"))
+					req.WithInject("team", team)
 					req.PathParameter("team", true)
 				default:
 					endpoint = "/{resource}/{name}"

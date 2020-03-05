@@ -28,6 +28,13 @@ func GetEditCommand(config *Config) cli.Command {
 		Name:  "edit",
 		Usage: "Modifies various objects",
 
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:  "team,t",
+				Usage: "Used to select the team context you are operating in",
+			},
+		},
+
 		Subcommands: []cli.Command{
 			GetEditTeamCommand(config),
 		},
