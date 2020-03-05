@@ -19,47 +19,42 @@
 
 package korectl
 
-import (
-	"github.com/go-openapi/inflect"
-)
+import "github.com/go-openapi/inflect"
 
-// resourceConfig stores custom resource CLI configurations
 type resourceConfig struct {
-	APIEndpoint    string
-	RequiredParams []string
-	Columns        []string
+	Name     string
+	IsGlobal bool
+	IsTeam   bool
+	Columns  []string
 }
 
-func getResourceConfig(name string, team string) (resourceConfig, error) {
-	if team == "" {
-		if config, ok := globalResourceConfigs[inflect.Singularize(name)]; ok {
-			return config, nil
+func getResourceConfig(name string) resourceConfig {
+	if config, ok := resourceConfigs[inflect.Singularize(name)]; ok {
+		return config
+	} else {
+		// TODO: we don't have a way to validate whether a resource exists yet, so we generate a team resource configuration dynamically
+		return resourceConfig{
+			Name:   name,
+			IsTeam: true,
+			Columns: []string{
+				Column("Name", ".metadata.name"),
+			},
 		}
 	}
-
-	if config, ok := teamResourceConfigs[inflect.Singularize(name)]; ok {
-		return config, nil
-	}
-
-	return resourceConfig{
-		APIEndpoint:    "/teams/{team}/" + name,
-		RequiredParams: []string{"team"},
-		Columns: []string{
-			Column("Name", ".metadata.name"),
-		},
-	}, nil
 }
 
-var globalResourceConfigs = map[string]resourceConfig{
+var resourceConfigs = map[string]resourceConfig{
 	"team": {
-		APIEndpoint: "/teams",
+		Name:     "teams",
+		IsGlobal: true,
 		Columns: []string{
 			Column("Name", ".metadata.name"),
 			Column("Description", ".spec.description"),
 		},
 	},
 	"user": {
-		APIEndpoint: "/users",
+		Name:     "users",
+		IsGlobal: true,
 		Columns: []string{
 			Column("Username", ".metadata.name"),
 			Column("Email", ".spec.email"),
@@ -67,7 +62,8 @@ var globalResourceConfigs = map[string]resourceConfig{
 		},
 	},
 	"plan": {
-		APIEndpoint: "/plans",
+		Name:     "plans",
+		IsGlobal: true,
 		Columns: []string{
 			Column("Resource", ".metadata.name"),
 			Column("Description", ".spec.description"),
@@ -75,24 +71,23 @@ var globalResourceConfigs = map[string]resourceConfig{
 		},
 	},
 	"audit-event": {
-		APIEndpoint: "/audit",
+		Name:     "audit",
+		IsGlobal: true,
+		IsTeam:   true,
 		Columns: []string{
 			Column("Name", ".metadata.name"),
 		},
 	},
-}
-
-var teamResourceConfigs = map[string]resourceConfig{
 	"team-member": {
-		APIEndpoint:    "/teams/{team}/members",
-		RequiredParams: []string{"team"},
+		Name:   "members",
+		IsTeam: true,
 		Columns: []string{
 			Column("Username", "."),
 		},
 	},
 	"allocation": {
-		APIEndpoint:    "/teams/{team}/allocations",
-		RequiredParams: []string{"team"},
+		Name:   "allocations",
+		IsTeam: true,
 		Columns: []string{
 			Column("Name", ".metadata.name"),
 			Column("Description", ".spec.summary"),
@@ -100,8 +95,8 @@ var teamResourceConfigs = map[string]resourceConfig{
 		},
 	},
 	"cluster": {
-		APIEndpoint:    "/teams/{team}/clusters",
-		RequiredParams: []string{"team"},
+		Name:   "clusters",
+		IsTeam: true,
 		Columns: []string{
 			Column("Name", ".metadata.name"),
 			Column("Provider", ".spec.provider.group"),
@@ -110,20 +105,13 @@ var teamResourceConfigs = map[string]resourceConfig{
 		},
 	},
 	"namespaceclaim": {
-		APIEndpoint:    "/teams/{team}/namespaceclaims",
-		RequiredParams: []string{"team"},
+		Name:   "namespaceclaims",
+		IsTeam: true,
 		Columns: []string{
 			Column("Resource", ".metadata.name"),
 			Column("Namespace", ".spec.name"),
 			Column("Cluster", ".spec.cluster.name"),
 			Column("Status", ".status.status"),
-		},
-	},
-	"audit-event": {
-		APIEndpoint:    "/teams/{team}/audit",
-		RequiredParams: []string{"team"},
-		Columns: []string{
-			Column("Name", ".metadata.name"),
 		},
 	},
 }

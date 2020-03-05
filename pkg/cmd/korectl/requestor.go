@@ -91,23 +91,29 @@ func NewRequest() *Requestor {
 }
 
 func NewRequestForResource(config *Config, ctx *cli.Context) (*Requestor, resourceConfig, error) {
-	resConfig, err := getResourceConfig(ctx.Args().First(), ctx.String("team"))
-	if err != nil {
-		return nil, resourceConfig{}, err
-	}
+	resConfig := getResourceConfig(ctx.Args().First())
 
 	req := NewRequest().
 		WithConfig(config).
-		WithContext(ctx)
+		WithContext(ctx).
+		PathParameter("resource", true).
+		WithInject("resource", resConfig.Name)
 
-	for _, requiredParam := range resConfig.RequiredParams {
-		if !ctx.IsSet(requiredParam) {
-			return nil, resourceConfig{}, fmt.Errorf("--%s parameter must be set", requiredParam)
+	var endpoint string
+
+	if ctx.IsSet("team") {
+		endpoint = "/teams/{team}/{resource}"
+		if !resConfig.IsTeam {
+			return nil, resourceConfig{}, errors.New("--team parameter is not allowed for this resource")
 		}
-		req.PathParameter(requiredParam, true)
+		req.PathParameter("team", true)
+	} else {
+		endpoint = "/{resource}"
+		if !resConfig.IsGlobal {
+			return nil, resourceConfig{}, errors.New("--team parameter must be set")
+		}
 	}
 
-	endpoint := resConfig.APIEndpoint
 	if ctx.NArg() == 2 {
 		endpoint = endpoint + "/{name}"
 		req.PathParameter("name", true)
