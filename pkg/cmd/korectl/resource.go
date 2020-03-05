@@ -93,7 +93,7 @@ var (
 	}
 )
 
-var resourcePrinters = resourceConfigMap{
+var resourceConfigs = resourceConfigMap{
 	"allocation":      allocationResourceConfig,
 	"allocations":     allocationResourceConfig,
 	"cluster":         clusterResourceConfig,

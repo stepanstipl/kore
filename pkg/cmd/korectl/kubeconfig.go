@@ -56,7 +56,7 @@ func PopulateKubeconfig(clusters *clustersv1.KubernetesList, kubeconfig string, 
 
 	for _, x := range clusters.Items {
 		if x.Status.Endpoint == "" {
-			fmt.Printf("skipping cluster: %s as it does not have an endpoint yet", x.Name)
+			fmt.Printf("skipping cluster: %s as it does not have an endpoint yet\n", x.Name)
 		}
 		// @step: add the endpoint
 		cfg.Clusters[x.Name] = &api.Cluster{

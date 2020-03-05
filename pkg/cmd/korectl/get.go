@@ -47,24 +47,24 @@ func GetGetCommand(config *Config) cli.Command {
 
 		Action: func(ctx *cli.Context) error {
 			// @step: setup the printer for the resource type
-			printer := resourcePrinters.Get(ctx.Args().First())
+			resourceCfg := resourceConfigs.Get(ctx.Args().First())
 
 			req := NewRequest().
 				WithConfig(config).
 				WithContext(ctx).
 				PathParameter("resource", true).
 				PathParameter("name", false).
-				Render(printer.Columns...).
-				WithInject("resource", printer.APIResourceName)
+				Render(resourceCfg.Columns...).
+				WithInject("resource", resourceCfg.APIResourceName)
 
 			endpoint := "/teams/{team}/{resource}/{name}"
 
 			// @check if the resource is a global resource i.e plans, teams, users etc
 			switch {
-			case IsGlobalResource(printer.APIResourceName):
+			case IsGlobalResource(resourceCfg.APIResourceName):
 				endpoint = "/{resource}/{name}"
 
-			case IsGlobalResourceOptional(printer.APIResourceName):
+			case IsGlobalResourceOptional(resourceCfg.APIResourceName):
 				switch ctx.IsSet("team") {
 				case true:
 					req.WithInject("team", GlobalStringFlag(ctx, "team"))

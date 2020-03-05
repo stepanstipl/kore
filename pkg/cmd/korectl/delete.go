@@ -77,7 +77,7 @@ func GetDeleteCommand(config *Config) cli.Command {
 					return errors.New("you need to specify a resource type and name")
 				}
 
-				resourceConfig := resourcePrinters.Get(ctx.Args().First())
+				resourceConfig := resourceConfigs.Get(ctx.Args().First())
 
 				req := NewRequest().
 					WithConfig(config).
