@@ -26,19 +26,23 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"time"
+
+	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
+	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
+	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
+	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/utils"
 
 	"github.com/urfave/cli"
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 var (
-	gkeCredPath          = path.Join(localManifests, "gke-credentials.yml")
-	cachedAccountKeyPath = path.Join(localManifests, "service-account-key.json")
+	gkeCredPath           = path.Join(localManifests, "gke-credentials.yml")
+	gkeCredAllocationPath = path.Join(localManifests, "gke-allocation.yml")
+	cachedAccountKeyPath  = path.Join(localManifests, "service-account-key.json")
 )
 
 func createLocalConfig(config *Config) {
@@ -151,42 +155,73 @@ func (g *gcpInfoConfig) createPrompts() prompts {
 }
 
 func (g *gcpInfoConfig) generateGcpInfo() error {
+	// @step: ensure the directory
+	if err := os.MkdirAll(localManifests, os.FileMode(0750)); err != nil {
+		return err
+	}
+
+	// @step: read in the gke credentials json
 	keyData, err := ioutil.ReadFile(filepath.Clean(g.KeyPath))
 	if err != nil {
 		return err
 	}
 
-	cred := gke.GKECredentials{
+	name := "gke"
+
+	// @step: we need to render the credentials and the allocations for all teams
+	creds := &gke.GKECredentials{
 		TypeMeta: v1.TypeMeta{
 			Kind:       "GKECredentials",
-			APIVersion: "gke.compute.kore.appvia.io/v1alpha1",
+			APIVersion: gke.GroupVersion.String(),
 		},
 		ObjectMeta: v1.ObjectMeta{
-			Name:              "gke",
-			CreationTimestamp: v1.NewTime(time.Now().UTC()),
+			Name:      name,
+			Namespace: kore.HubAdminTeam,
 		},
 		Spec: gke.GKECredentialsSpec{
 			Region:  g.Region,
 			Project: g.Project,
 			Account: string(keyData),
 		},
-		Status: gke.GKECredentialsStatus{
-			Status:   corev1.SuccessStatus,
-			Verified: true,
+	}
+
+	allocation := &configv1.Allocation{
+		TypeMeta: v1.TypeMeta{
+			Kind:       "Allocation",
+			APIVersion: configv1.GroupVersion.String(),
+		},
+		ObjectMeta: v1.ObjectMeta{
+			Name:      name,
+			Namespace: kore.HubAdminTeam,
+		},
+		Spec: configv1.AllocationSpec{
+			Name:    name,
+			Summary: "Default Credentials for building a GKE Cluster",
+			Resource: corev1.Ownership{
+				Group:     gke.SchemeGroupVersion.Group,
+				Version:   gke.SchemeGroupVersion.Version,
+				Kind:      "GKECredentials",
+				Namespace: kore.HubAdminTeam,
+				Name:      name,
+			},
+			Teams: []string{"*"},
 		},
 	}
 
-	data, err := yaml.Marshal(cred)
-	if err != nil {
-		return err
+	// @step: write the files to the local manifests directory
+	manifests := map[string]runtime.Object{
+		gkeCredPath:           creds,
+		gkeCredAllocationPath: allocation,
 	}
 
-	if err := os.MkdirAll(localManifests, os.FileMode(0750)); err != nil {
-		return err
-	}
-
-	if err := ioutil.WriteFile(gkeCredPath, data, os.FileMode(0640)); err != nil {
-		return err
+	for path, object := range manifests {
+		doc, err := utils.EncodeRuntimeObjectToYAML(object)
+		if err != nil {
+			return err
+		}
+		if err := ioutil.WriteFile(path, doc, os.FileMode(0640)); err != nil {
+			return err
+		}
 	}
 
 	return ioutil.WriteFile(cachedAccountKeyPath, keyData, os.FileMode(0640))
