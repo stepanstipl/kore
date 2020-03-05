@@ -34,5 +34,6 @@ func GetLocalCommand(config *Config) cli.Command {
 	}
 	cmd.Subcommands = append(cmd.Subcommands, GetLocalConfigureSubCommand(config))
 	cmd.Subcommands = append(cmd.Subcommands, GetLocalRunSubCommands(config)...)
+	cmd.Subcommands = append(cmd.Subcommands, GetLocalLogsSubCommand(config))
 	return cmd
 }
