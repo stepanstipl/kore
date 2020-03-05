@@ -146,8 +146,8 @@ func GetEditTeamCommand(config *Config) cli.Command {
 
 func GetCreateTeamMemberCommand(config *Config) cli.Command {
 	return cli.Command{
-		Name:    "team-member",
-		Aliases: []string{"team-members"},
+		Name:    "member",
+		Aliases: []string{"members"},
 		Usage:   "Creates a new team member",
 		Flags: []cli.Flag{
 			cli.StringFlag{
@@ -181,8 +181,8 @@ func GetCreateTeamMemberCommand(config *Config) cli.Command {
 
 func GetDeleteTeamMemberCommand(config *Config) cli.Command {
 	return cli.Command{
-		Name:    "team-member",
-		Aliases: []string{"team-members"},
+		Name:    "member",
+		Aliases: []string{"members"},
 		Usage:   "Removes a member from the given team",
 		Flags: []cli.Flag{
 			cli.StringFlag{

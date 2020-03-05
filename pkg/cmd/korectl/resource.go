@@ -78,7 +78,7 @@ var resourceConfigs = map[string]resourceConfig{
 			Column("Name", ".metadata.name"),
 		},
 	},
-	"team-member": {
+	"member": {
 		Name:   "members",
 		IsTeam: true,
 		Columns: []string{
