@@ -62,7 +62,7 @@ type GKESpec struct {
 	// AuthorizedMasterNetworks is a collection of authorized networks which is
 	// permitted to speak to the kubernetes API, default to all if not provided.
 	// +kubebuilder:validation:Optional
-	// +listType
+	// +listType=set
 	AuthorizedMasterNetworks []*AuthorizedNetwork `json:"authorizedMasterNetworks"`
 	// Network is the GCP network the cluster reside on, which have
 	// to be unique within the GCP project and created beforehand.
@@ -94,7 +94,7 @@ type GKESpec struct {
 	// autograding enabled; meaning both nodes are masters are autoscated scheduled
 	// to upgrade during your maintenance window.
 	// +kubebuilder:validation:Optional
-	EnableAutoUpgrade bool `json:"enableAutoUpgrade"`
+	EnableAutoupgrade bool `json:"enableAutoupgrade"`
 	// EnableHorizontalPodAutoscaler indicates if the cluster is configured with
 	// the horizontal pod autoscaler addon. This automatically adjusts the cpu and
 	// memory resources of pods in accordances with their demand. You should ensure

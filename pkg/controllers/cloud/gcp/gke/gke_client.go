@@ -315,7 +315,7 @@ func (g *gkeClient) CreateDefinition() (*container.CreateClusterRequest, error) 
 				Locations:        locations,
 				Management: &container.NodeManagement{
 					AutoRepair:  cluster.Spec.EnableAutorepair,
-					AutoUpgrade: cluster.Spec.EnableAutoUpgrade,
+					AutoUpgrade: cluster.Spec.EnableAutoupgrade,
 				},
 				MaxPodsConstraint: &container.MaxPodsConstraint{
 					MaxPodsPerNode: 110,
