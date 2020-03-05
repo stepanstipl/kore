@@ -217,7 +217,7 @@ func (g *gcpInfoConfig) generateGcpInfo() error {
 	for path, object := range manifests {
 		doc, err := utils.EncodeRuntimeObjectToYAML(object)
 		if err != nil {
-
+			return err
 		}
 		if err := ioutil.WriteFile(path, doc, os.FileMode(0640)); err != nil {
 			return err

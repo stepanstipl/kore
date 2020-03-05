@@ -33,7 +33,7 @@ func EncodeRuntimeObjectToYAML(object runtime.Object) ([]byte, error) {
 
 	// @step: encode to json first of all
 	if err := json.NewEncoder(b).Encode(object); err != nil {
-		return []byte{}, err
+		return nil, err
 	}
 
 	return yaml.JSONToYAML(b.Bytes())
