@@ -43,12 +43,12 @@ type EKSClusterSpec struct {
 	// SubnetID is a collection of subnet id's which the EKS cluster should
 	// be attached to - if not defined we will provision on behalf of
 	// +kubebuilder:validation:Optional
-	// +listType
+	// +listType=set
 	SubnetID []string `json:"subnetID,omitempty"`
 	// SecurityGroupID is a list of security group IDs which the EKS cluster
 	// should be attached to - If not defined we will provision on behalf of
 	// +kubebuilder:validation:Optional
-	// +listType
+	// +listType=set
 	SecurityGroupID []string `json:"securityGroupID,omitempty"`
 	// VPC is the AWS VPC Id which the EKS cluster should reside. If not defined
 	// we will provision on your behalf.

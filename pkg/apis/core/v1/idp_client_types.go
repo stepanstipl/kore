@@ -33,7 +33,7 @@ type IDPClientSpec struct {
 	ID string `json:"id"`
 	// RedirectURIs where to send client after IDP auth
 	// +kubebuilder:validation:Required
-	// +listType
+	// +listType=set
 	RedirectURIs []string `json:"redirectURIs"`
 }
 
@@ -42,7 +42,7 @@ type IDPClientSpec struct {
 type IDPClientStatus struct {
 	// Conditions is a set of condition which has caused an error
 	// +kubebuilder:validation:Optional
-	// +listType
+	// +listType=set
 	Conditions []Condition `json:"conditions"`
 	// Status is overall status of the IDP configuration
 	Status Status `json:"status"`

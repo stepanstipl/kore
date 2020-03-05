@@ -172,7 +172,7 @@ func schema_pkg_apis_org_v1_TeamInvitationStatus(ref common.ReferenceCallback) c
 					"conditions": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -257,7 +257,7 @@ func schema_pkg_apis_org_v1_TeamMemberSpec(ref common.ReferenceCallback) common.
 					"roles": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -304,7 +304,7 @@ func schema_pkg_apis_org_v1_TeamMemberStatus(ref common.ReferenceCallback) commo
 					"conditions": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -373,7 +373,7 @@ func schema_pkg_apis_org_v1_TeamStatus(ref common.ReferenceCallback) common.Open
 					"conditions": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -493,7 +493,7 @@ func schema_pkg_apis_org_v1_UserStatus(ref common.ReferenceCallback) common.Open
 					"conditions": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{

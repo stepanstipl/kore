@@ -189,7 +189,7 @@ func schema_pkg_apis_core_v1_IDPClientSpec(ref common.ReferenceCallback) common.
 					"redirectURIs": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -222,7 +222,7 @@ func schema_pkg_apis_core_v1_IDPClientStatus(ref common.ReferenceCallback) commo
 					"conditions": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -292,7 +292,7 @@ func schema_pkg_apis_core_v1_IDPStatus(ref common.ReferenceCallback) common.Open
 					"conditions": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{

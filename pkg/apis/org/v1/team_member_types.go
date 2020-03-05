@@ -28,7 +28,7 @@ import (
 type TeamMemberSpec struct {
 	// Role is the role of the user in the team
 	// +kubebuilder:validation:Required
-	// +listType
+	// +listType=set
 	Roles []string `json:"roles"`
 	// Team is the name of the team
 	// +kubebuilder:validation:Required
@@ -43,7 +43,7 @@ type TeamMemberSpec struct {
 type TeamMemberStatus struct {
 	// Conditions is a collection of possible errors
 	// +kubebuilder:validation:Optional
-	// +listType
+	// +listType=set
 	Conditions []corev1.Condition `json:"conditions"`
 	// Status is the status of the resource
 	Status corev1.Status `json:"status"`

@@ -31,11 +31,11 @@ import (
 type ManagedPodSecurityPolicySpec struct {
 	// Clusters is used to apply the cluster role to a specific cluster
 	// +kubebuilder:validation:Optional
-	// +listType
+	// +listType=set
 	Clusters []corev1.Ownership `json:"clusters,omitempty"`
 	// Teams is a filter on the teams
 	// +kubebuilder:validation:Optional
-	// +listType
+	// +listType=set
 	Teams []string `json:"teams,omitempty"`
 	// Description describes the nature of this pod security policy
 	// +kubebuilder:validation:Required
@@ -50,7 +50,7 @@ type ManagedPodSecurityPolicySpec struct {
 // +k8s:openapi-gen=true
 type ManagedPodSecurityPolicyStatus struct {
 	// Conditions is a set of condition which has caused an error
-	// +listType
+	// +listType=set
 	Conditions []corev1.Condition `json:"conditions"`
 	// Status is overall status of the workspace
 	Status corev1.Status `json:"status"`

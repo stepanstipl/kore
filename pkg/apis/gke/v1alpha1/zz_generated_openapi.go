@@ -173,7 +173,7 @@ func schema_pkg_apis_gke_v1alpha1_GKECredentialsStatus(ref common.ReferenceCallb
 					"conditions": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -270,7 +270,7 @@ func schema_pkg_apis_gke_v1alpha1_GKESpec(ref common.ReferenceCallback) common.O
 					"authorizedMasterNetworks": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -327,7 +327,7 @@ func schema_pkg_apis_gke_v1alpha1_GKESpec(ref common.ReferenceCallback) common.O
 							Format:      "",
 						},
 					},
-					"enableAutoUpgrade": {
+					"enableAutoupgrade": {
 						SchemaProps: spec.SchemaProps{
 							Description: "EnableAutoUpgrade indicates if the cluster should be configured with autograding enabled; meaning both nodes are masters are autoscated scheduled to upgrade during your maintenance window.",
 							Type:        []string{"boolean"},
@@ -351,6 +351,13 @@ func schema_pkg_apis_gke_v1alpha1_GKESpec(ref common.ReferenceCallback) common.O
 					"enableIstio": {
 						SchemaProps: spec.SchemaProps{
 							Description: "EnableIstio indicates if the GKE Istio service mesh is deployed to the cluster; this provides a more feature rich routing and instrumentation.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"enableShieldedNodes": {
+						SchemaProps: spec.SchemaProps{
+							Description: "EnableSheildedNodes indicates we should enable the sheilds nodes options in GKE. This protects against a variety of attacks by hardening the underlying GKE node against rootkits and bootkits.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -406,7 +413,7 @@ func schema_pkg_apis_gke_v1alpha1_GKESpec(ref common.ReferenceCallback) common.O
 						},
 					},
 				},
-				Required: []string{"description", "version", "size", "maxSize", "diskSize", "imageType", "machineType", "authorizedMasterNetworks", "network", "subnetwork", "servicesIPV4Cidr", "clusterIPV4Cidr", "enableAutorepair", "enableAutoscaler", "enableAutoUpgrade", "enableHorizontalPodAutoscaler", "enableHTTPLoadBalancer", "enableIstio", "enableStackDriverLogging", "enableStackDriverMetrics", "enablePrivateNetwork", "masterIPV4Cidr", "maintenanceWindow"},
+				Required: []string{"description", "version", "size", "maxSize", "diskSize", "imageType", "machineType", "authorizedMasterNetworks", "network", "subnetwork", "servicesIPV4Cidr", "clusterIPV4Cidr", "enableAutorepair", "enableAutoscaler", "enableAutoupgrade", "enableHorizontalPodAutoscaler", "enableHTTPLoadBalancer", "enableIstio", "enableShieldedNodes", "enableStackDriverLogging", "enableStackDriverMetrics", "enablePrivateNetwork", "masterIPV4Cidr", "maintenanceWindow"},
 			},
 		},
 		Dependencies: []string{

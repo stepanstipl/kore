@@ -52,7 +52,7 @@ type PlanSpec struct {
 type PlanStatus struct {
 	// Conditions is a set of condition which has caused an error
 	// +kubebuilder:validation:Optional
-	// +listType
+	// +listType=set
 	Conditions []corev1.Condition `json:"conditions"`
 	// Status is overall status of the workspace
 	Status corev1.Status `json:"status"`

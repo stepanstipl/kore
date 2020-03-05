@@ -43,7 +43,7 @@ type UserSpec struct {
 type UserStatus struct {
 	// Conditions is collection of potentials error causes
 	// +kubebuilder:validation:Optional
-	// +listType
+	// +listType=set
 	Conditions []corev1.Condition `json:"conditions"`
 	// Status provides an overview of the user status
 	Status corev1.Status `json:"status"`

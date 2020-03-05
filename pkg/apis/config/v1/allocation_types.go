@@ -43,8 +43,8 @@ type AllocationSpec struct {
 	// Teams is a collection of teams the allocation is permitted to use
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:Required
-	// +listType
-	Teams []string `json:"teams,omitempty"`
+	// +listType=set
+	Teams []string `json:"teams"`
 }
 
 // AllocationStatus defines the observed state of Allocation
@@ -54,7 +54,7 @@ type AllocationStatus struct {
 	Status corev1.Status `json:"status,omitempty"`
 	// Conditions is a collection of potential issues
 	// +kubebuilder:validation:Optional
-	// +listType
+	// +listType=set
 	Conditions []corev1.Condition `json:"conditions,omitempty"`
 }
 

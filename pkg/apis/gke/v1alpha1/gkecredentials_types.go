@@ -46,7 +46,7 @@ type GKECredentialsSpec struct {
 // +k8s:openapi-gen=true
 type GKECredentialsStatus struct {
 	// Conditions is a collection of potential issues
-	// +listType
+	// +listType=set
 	Conditions []corev1.Condition `json:"conditions,omitempty"`
 	// Verified checks that the credentials are ok and valid
 	Verified bool `json:"verified"`

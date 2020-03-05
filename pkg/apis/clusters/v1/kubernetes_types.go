@@ -39,7 +39,7 @@ type KubernetesSpec struct {
 	// ClusterUsers is a collection of users from the team whom have
 	// permissions across the cluster
 	// +kubebuilder:validation:Optional
-	// +listType
+	// +listType=set
 	ClusterUsers []ClusterUser `json:"clusterUsers,omitempty"`
 	// EnabledDefaultTrafficBlock indicates the cluster shoukd default to
 	// enabling blocking network policies on all namespaces
@@ -71,7 +71,7 @@ type ClusterUser struct {
 	// Roles is the roles the user is permitted access to
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=1
-	// +listType
+	// +listType=set
 	Roles []string `json:"roles"`
 }
 
