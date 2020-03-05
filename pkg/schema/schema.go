@@ -37,8 +37,6 @@ var (
 )
 
 func init() {
-	log.Info("registering the schema with kube-apiserver")
-
 	// @step: we start by registering the default core apigroups
 	hs = scheme.Scheme
 
