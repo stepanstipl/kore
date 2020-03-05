@@ -33,8 +33,6 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"k8s.io/apimachinery/pkg/runtime"
-
 	"github.com/ghodss/yaml"
 	"github.com/savaki/jq"
 	log "github.com/sirupsen/logrus"
@@ -77,7 +75,7 @@ type Requestor struct {
 	// injections - oh my god - this is what happens when you write things fast
 	injections map[string]string
 	// if set it will be encoded as JSON as the payload
-	runtimeObj runtime.Object
+	runtimeObj interface{}
 	// responseHandler can be used to register a response handler
 	responseHandler func(resp *http.Response) error
 }
@@ -195,7 +193,9 @@ func (c *Requestor) parseResponse() error {
 			return err
 		}
 	}
-
+	if c.cliCtx == nil {
+		return nil
+	}
 	if c.cliCtx.IsSet("output") {
 		format := c.cliCtx.String("output")
 		switch format {
@@ -210,13 +210,14 @@ func (c *Requestor) parseResponse() error {
 		}
 	}
 	w := new(tabwriter.Writer)
-	w.Init(os.Stdout, 20, 20, 0, ' ', 10)
+	w.Init(os.Stdout, 0, 10, 4, ' ', 0)
 
 	columns := strings.Join(c.render, "\t")
 	fmt.Fprintf(w, "%s\n", columns)
 
-	isList := response["items"] != nil
-	if isList {
+	islist := response["items"] != nil
+	switch islist {
+	case true:
 		items, found := response["items"].([]interface{})
 		if !found {
 			return errors.New("invalid response list, no items found")
@@ -232,7 +233,7 @@ func (c *Requestor) parseResponse() error {
 			}
 			fmt.Fprintf(w, "%s\n", strings.Join(values, "\t"))
 		}
-	} else {
+	default:
 		_, _ = c.body.Seek(0, io.SeekStart)
 		values, err := c.makeValues(c.body, c.paths)
 		if err != nil {
@@ -455,11 +456,13 @@ func (c *Requestor) WithContext(ctx *cli.Context) *Requestor {
 	return c
 }
 
-func (c *Requestor) WithRuntimeObject(obj runtime.Object) *Requestor {
+func (c *Requestor) WithRuntimeObject(obj interface{}) *Requestor {
 	c.runtimeObj = obj
+
 	return c
 }
 
+// WithPayload sets the payload from a file
 func (c *Requestor) WithPayload(name string) *Requestor {
 	path := c.cliCtx.String(name)
 	if path == "" {

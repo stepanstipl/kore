@@ -39,6 +39,8 @@ type Allocations interface {
 	IsPermitted(context.Context, corev1.Ownership) (bool, error)
 	// Get retrieves an allocation the kore
 	Get(context.Context, string) (*configv1.Allocation, error)
+	// GetAssigned returns an assigned allocation
+	GetAssigned(context.Context, string) (*configv1.Allocation, error)
 	// List returns a list of all the allocations
 	List(context.Context) (*configv1.AllocationList, error)
 	// ListAllocationsAssigned returns a list of all allocations shared to me
@@ -140,6 +142,24 @@ func (a acaImpl) Get(ctx context.Context, name string) (*configv1.Allocation, er
 	}
 
 	return object, nil
+}
+
+// GetAssigned returns an assigned allocation
+func (a acaImpl) GetAssigned(ctx context.Context, name string) (*configv1.Allocation, error) {
+	list, err := a.ListAllocationsAssigned(ctx)
+	if err != nil {
+		log.WithError(err).Error("trying to retrieve list of assigned allocations")
+
+		return nil, err
+	}
+
+	for _, x := range list.Items {
+		if x.Name == name {
+			return &x, nil
+		}
+	}
+
+	return nil, ErrNotFound
 }
 
 // ListAllocationsAssigned returns a list of all allocations which you have access to

@@ -33,9 +33,8 @@ func (u teamHandler) findAllocations(req *restful.Request, resp *restful.Respons
 		team := req.PathParameter("team")
 		assigned := req.QueryParameter("assigned")
 
-		// @NOTE: this will do for now
-		if assigned != "" {
-			list, err := u.Teams().Team(team).Allocations().ListAllocationsAssigned(req.Request.Context())
+		if assigned == "false" {
+			list, err := u.Teams().Team(team).Allocations().List(req.Request.Context())
 			if err != nil {
 				return err
 			}
@@ -43,7 +42,7 @@ func (u teamHandler) findAllocations(req *restful.Request, resp *restful.Respons
 			return resp.WriteHeaderAndEntity(http.StatusOK, list)
 		}
 
-		list, err := u.Teams().Team(team).Allocations().List(req.Request.Context())
+		list, err := u.Teams().Team(team).Allocations().ListAllocationsAssigned(req.Request.Context())
 		if err != nil {
 			return err
 		}
@@ -57,8 +56,18 @@ func (u teamHandler) findAllocation(req *restful.Request, resp *restful.Response
 	handleErrors(req, resp, func() error {
 		team := req.PathParameter("team")
 		name := req.PathParameter("name")
+		assigned := req.QueryParameter("assigned")
 
-		obj, err := u.Teams().Team(team).Allocations().Get(req.Request.Context(), name)
+		if assigned == "false" {
+			obj, err := u.Teams().Team(team).Allocations().Get(req.Request.Context(), name)
+			if err != nil {
+				return err
+			}
+
+			return resp.WriteHeaderAndEntity(http.StatusOK, obj)
+		}
+
+		obj, err := u.Teams().Team(team).Allocations().GetAssigned(req.Request.Context(), name)
 		if err != nil {
 			return err
 		}
@@ -86,8 +95,6 @@ func (u teamHandler) updateAllocation(req *restful.Request, resp *restful.Respon
 		return resp.WriteHeaderAndEntity(http.StatusOK, obj)
 	})
 }
-
-//fu
 
 // deleteAllocation removes any allocations from the team
 func (u teamHandler) deleteAllocation(req *restful.Request, resp *restful.Response) {

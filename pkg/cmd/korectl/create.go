@@ -23,13 +23,21 @@ import (
 	"github.com/urfave/cli"
 )
 
+// GetCreateCommand creates and returns the create command
 func GetCreateCommand(config *Config) cli.Command {
 	return cli.Command{
 		Name:  "create",
-		Usage: "Creates various objects",
-
+		Usage: "Used to create resources under the Appvia Kore",
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:  "team,t",
+				Usage: "Used to select the team context you are operating in",
+			},
+		},
 		Subcommands: []cli.Command{
 			GetCreateTeamCommand(config),
+			GetCreateClusterCommand(config),
+			GetCreateNamespaceCommand(config),
 		},
 	}
 }

@@ -17,27 +17,20 @@
  * along with kore.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package korectl
+package utils
 
 import (
-	"github.com/urfave/cli"
+	"context"
+	"time"
 )
 
-// GetCommands returns all the commands
-func GetCommands(config *Config) []cli.Command {
-	return []cli.Command{
-		GetLoginCommand(config),
-		GetProfilesCommand(config),
-		GetLocalCommand(config),
-		GetAutoCompleteCommand(config),
-		GetCreateCommand(config),
-		GetEditCommand(config),
-		GetApplyCommand(config),
-		GetDeleteCommand(config),
-		GetClustersCommand(config),
-		GetGetCommand(config),
-		GetTeamsCommands(config),
-		GetUsersCommands(config),
-		GetWhoamiCommand(config),
+// Sleep provides a default sleep but with a cancellable context
+func Sleep(ctx context.Context, sleep time.Duration) bool {
+	select {
+	case <-ctx.Done():
+		return true
+	case <-time.After(sleep):
 	}
+
+	return false
 }

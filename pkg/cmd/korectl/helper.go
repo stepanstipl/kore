@@ -31,11 +31,16 @@ import (
 	"regexp"
 	"strings"
 
+	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	"github.com/appvia/kore/pkg/apiserver/types"
 	"github.com/appvia/kore/pkg/utils"
+
 	yml "github.com/ghodss/yaml"
 	log "github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
 	yaml "gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type Document struct {
@@ -52,6 +57,150 @@ var (
 // IsValidHostname checks the endpoint is valid
 func IsValidHostname(endpoint string) bool {
 	return hostnameRegex.MatchString(endpoint)
+}
+
+// GetWhoAmI returns an whoami
+func GetWhoAmI(config *Config) (*types.WhoAmI, error) {
+	who := &types.WhoAmI{}
+
+	return who, NewRequest().
+		WithConfig(config).
+		WithEndpoint("/whoami").
+		WithRuntimeObject(who).
+		Get()
+}
+
+// GetCluster returns the cluster object
+func GetCluster(config *Config, team, name string) (*clustersv1.Kubernetes, error) {
+	cluster := &clustersv1.Kubernetes{}
+
+	return cluster, GetTeamResource(config, team, "clusters", name, cluster)
+}
+
+// CreateTeamResource checks if a resources exists in the team
+func CreateTeamResource(config *Config, team, kind, name string, object runtime.Object) error {
+	kind = strings.ToLower(utils.ToPlural(kind))
+
+	return NewRequest().
+		WithConfig(config).
+		PathParameter("team", true).
+		PathParameter("kind", true).
+		PathParameter("name", true).
+		WithInject("team", team).
+		WithInject("kind", kind).
+		WithInject("name", name).
+		WithEndpoint("/teams/{team}/{kind}/{name}").
+		WithRuntimeObject(object).
+		Update()
+}
+
+// ResourceExists checks if a team resource exists
+func ResourceExists(config *Config, kind, name string) (bool, error) {
+	kind = strings.ToLower(utils.ToPlural(kind))
+
+	return NewRequest().
+		WithConfig(config).
+		PathParameter("kind", true).
+		PathParameter("name", true).
+		WithInject("kind", kind).
+		WithInject("name", name).
+		WithEndpoint("{kind}/{name}").
+		Exists()
+}
+
+// TeamResourceExists checks if a resources exists in the team
+func TeamResourceExists(config *Config, team, kind, name string) (bool, error) {
+	kind = strings.ToLower(utils.ToPlural(kind))
+
+	return NewRequest().
+		WithConfig(config).
+		PathParameter("team", true).
+		PathParameter("kind", true).
+		PathParameter("name", true).
+		WithInject("team", team).
+		WithInject("kind", kind).
+		WithInject("name", name).
+		WithEndpoint("/teams/{team}/{kind}/{name}").
+		Exists()
+}
+
+// GetTeamResourceList returns a collection of resources - essentially minus the name
+func GetTeamResourceList(config *Config, team, kind string, object runtime.Object) error {
+	kind = strings.ToLower(utils.ToPlural(kind))
+
+	return NewRequest().
+		WithConfig(config).
+		PathParameter("team", true).
+		PathParameter("kind", true).
+		WithInject("team", team).
+		WithInject("kind", kind).
+		WithEndpoint("/teams/{team}/{kind}").
+		WithRuntimeObject(object).
+		Get()
+}
+
+// GetTeamResource returns a team object
+func GetTeamResource(config *Config, team, kind, name string, object runtime.Object) error {
+	kind = strings.ToLower(utils.ToPlural(kind))
+
+	return NewRequest().
+		WithConfig(config).
+		PathParameter("team", true).
+		PathParameter("kind", true).
+		PathParameter("name", true).
+		WithInject("team", team).
+		WithInject("kind", kind).
+		WithInject("name", name).
+		WithEndpoint("/teams/{team}/{kind}/{name}").
+		WithRuntimeObject(object).
+		Get()
+}
+
+// GetResource returns a global resource object
+func GetResource(config *Config, kind, name string, object runtime.Object) error {
+	kind = strings.ToLower(utils.ToPlural(kind))
+
+	return NewRequest().
+		WithConfig(config).
+		PathParameter("kind", true).
+		PathParameter("name", true).
+		WithInject("kind", kind).
+		WithInject("name", name).
+		WithEndpoint("/{kind}/{name}").
+		WithRuntimeObject(object).
+		Get()
+}
+
+// GetResourceList returns a list of global resource types
+func GetResourceList(config *Config, team, kind, name string, object runtime.Object) error {
+	kind = strings.ToLower(utils.ToPlural(kind))
+
+	return NewRequest().
+		WithConfig(config).
+		PathParameter("kind", true).
+		PathParameter("name", true).
+		WithInject("kind", kind).
+		WithInject("name", name).
+		WithEndpoint("/{kind}/{name}").
+		WithRuntimeObject(object).
+		Get()
+}
+
+// GlobalStringFlag
+func GlobalStringFlag(ctx *cli.Context, name string) string {
+	if ctx.IsSet(name) {
+		return ctx.String(name)
+	}
+	if ctx.Parent() == nil {
+		return ""
+	}
+	for parent := ctx.Parent(); parent != nil; parent = parent.Parent() {
+		if parent.IsSet(name) {
+			return parent.String(name)
+		}
+	}
+
+	return ""
 }
 
 // ParseDocument returns a collection of parsed documents and the api endpoints
@@ -267,5 +416,4 @@ func GetOrCreateClientConfiguration() (*Config, error) {
 
 	// @step: parse the configuration
 	return config, yaml.NewDecoder(bytes.NewReader(content)).Decode(config)
-
 }

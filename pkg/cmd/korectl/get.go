@@ -37,39 +37,53 @@ func GetGetCommand(config *Config) cli.Command {
 			},
 		}, DefaultOptions...),
 
-		Action: func(ctx *cli.Context) error {
+		Before: func(ctx *cli.Context) error {
 			if !ctx.Args().Present() {
 				return errors.New("you need to specify a resource type")
 			}
+
+			return nil
+		},
+
+		Action: func(ctx *cli.Context) error {
+			// @step: setup the printer for the resource type
+			resourceCfg := resourceConfigs.Get(ctx.Args().First())
+
 			req := NewRequest().
 				WithConfig(config).
 				WithContext(ctx).
 				PathParameter("resource", true).
-				PathParameter("name", false)
+				PathParameter("name", false).
+				Render(resourceCfg.Columns...).
+				WithInject("resource", resourceCfg.APIResourceName)
 
-			resourceConfig := resourceConfigs.Get(ctx.Args().First())
 			endpoint := "/teams/{team}/{resource}/{name}"
 
-			if IsGlobalResource(resourceConfig.APIResourceName) {
+			// @check if the resource is a global resource i.e plans, teams, users etc
+			switch {
+			case IsGlobalResource(resourceCfg.APIResourceName):
 				endpoint = "/{resource}/{name}"
-			} else if IsGlobalResourceOptional(resourceConfig.APIResourceName) {
-				if !ctx.IsSet("team") {
-					endpoint = "/{resource}/{name}"
-				} else {
+
+			case IsGlobalResourceOptional(resourceCfg.APIResourceName):
+				switch ctx.IsSet("team") {
+				case true:
+					req.WithInject("team", GlobalStringFlag(ctx, "team"))
 					req.PathParameter("team", true)
+				default:
+					endpoint = "/{resource}/{name}"
 				}
-			} else {
+
+			default:
 				req.PathParameter("team", true)
 			}
 
-			req.WithEndpoint(endpoint).
-				WithInject("resource", resourceConfig.APIResourceName).
-				Render(resourceConfig.Columns...)
-
+			// @step: check if we are getting a specific resource by name
 			if ctx.NArg() == 2 {
 				req.WithInject("name", ctx.Args().Get(1))
 			}
-			if err := req.Get(); err != nil {
+
+			// @step: retrieve the resource or resources from the api
+			if err := req.WithEndpoint(endpoint).Get(); err != nil {
 				return err
 			}
 			fmt.Println("")

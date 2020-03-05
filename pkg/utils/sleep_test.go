@@ -17,4 +17,23 @@
  * along with kore.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package korectl
+package utils
+
+import (
+	"context"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestSleep(t *testing.T) {
+	assert.False(t, Sleep(context.Background(), 1*time.Millisecond))
+}
+
+func TestSleepWithCancel(t *testing.T) {
+	c, cancel := context.WithTimeout(context.Background(), 1*time.Millisecond)
+	defer cancel()
+
+	assert.True(t, Sleep(c, 10*time.Second))
+}

@@ -45,8 +45,8 @@ spec:
   provider:
     group: gke.compute.kore.appvia.io
     version: v1alpha1
-    kind: GKE
-    namespace: devs
-    name: dev
+    kind: GKECredentials
+    name: gke
+    namespace: kore-admin
   enableDefaultTrafficBlock: false
   clusterUsers: []

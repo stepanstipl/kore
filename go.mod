@@ -53,6 +53,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.0.0
 	github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4
+	github.com/prometheus/procfs v0.0.8 // indirect
 	github.com/romanyx/polluter v1.2.2
 	github.com/savaki/jq v0.0.0-20161209013833-0e6baecebbf8
 	github.com/shurcooL/httpfs v0.0.0-20190707220628-8d4bc4ba7749 // indirect

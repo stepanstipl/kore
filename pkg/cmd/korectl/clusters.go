@@ -23,6 +23,7 @@ import (
 	"fmt"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+
 	"github.com/urfave/cli"
 )
 
@@ -47,14 +48,9 @@ func GetClustersCommand(config *Config) cli.Command {
 				},
 				Action: func(ctx *cli.Context) error {
 					clusters := &clustersv1.KubernetesList{}
-					err := NewRequest().
-						WithConfig(config).
-						WithContext(ctx).
-						WithEndpoint("/teams/{team}/clusters").
-						PathParameter("team", true).
-						WithRuntimeObject(clusters).
-						Get()
-					if err != nil {
+					team := GlobalStringFlag(ctx, "team")
+
+					if err := GetTeamResourceList(config, team, "clusters", clusters); err != nil {
 						return err
 					}
 
@@ -91,15 +87,17 @@ func GetClustersCommand(config *Config) cli.Command {
 					},
 				}, DefaultOptions...),
 				Action: func(ctx *cli.Context) error {
+					team := GlobalStringFlag(ctx, "team")
+
 					return NewRequest().
 						WithConfig(config).
 						WithContext(ctx).
 						WithEndpoint("/teams/{team}/clusters").
+						WithInject("team", team).
 						PathParameter("team", true).
 						PathParameter("name", false).
 						Render(
 							Column("Name", ".metadata.name"),
-							Column("Domain", ".spec.domain"),
 							Column("Endpoint", ".status.endpoint"),
 							Column("Status", ".status.status"),
 						).
