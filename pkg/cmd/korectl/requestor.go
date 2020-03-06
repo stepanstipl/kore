@@ -215,25 +215,22 @@ func (c *Requestor) parseResponse() error {
 	columns := strings.Join(c.render, "\t")
 	fmt.Fprintf(w, "%s\n", columns)
 
-	islist := response["items"] != nil
-	switch islist {
-	case true:
+	if _, found := response["items"]; found {
 		items, found := response["items"].([]interface{})
-		if !found {
-			return errors.New("invalid response list, no items found")
-		}
-		for _, x := range items {
-			decoded := &bytes.Buffer{}
-			if err := json.NewEncoder(decoded).Encode(x); err != nil {
-				return err
+		if found {
+			for _, x := range items {
+				decoded := &bytes.Buffer{}
+				if err := json.NewEncoder(decoded).Encode(x); err != nil {
+					return err
+				}
+				values, err := c.makeValues(decoded, c.paths)
+				if err != nil {
+					return err
+				}
+				fmt.Fprintf(w, "%s\n", strings.Join(values, "\t"))
 			}
-			values, err := c.makeValues(decoded, c.paths)
-			if err != nil {
-				return err
-			}
-			fmt.Fprintf(w, "%s\n", strings.Join(values, "\t"))
 		}
-	default:
+	} else {
 		_, _ = c.body.Seek(0, io.SeekStart)
 		values, err := c.makeValues(c.body, c.paths)
 		if err != nil {
@@ -242,6 +239,7 @@ func (c *Requestor) parseResponse() error {
 		}
 		fmt.Fprintf(w, "%s", strings.Join(values, "\t"))
 	}
+
 	return w.Flush()
 }
 
