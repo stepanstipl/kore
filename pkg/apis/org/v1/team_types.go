@@ -37,7 +37,7 @@ type TeamSpec struct {
 type TeamStatus struct {
 	// Conditions is a collection of possible errors
 	// +kubebuilder:validation:Optional
-	// +listType
+	// +listType=set
 	Conditions []corev1.Condition `json:"conditions"`
 	// Status is the status of the resource
 	Status corev1.Status `json:"status"`

@@ -226,7 +226,7 @@ func schema_pkg_apis_aws_v1alpha1_EKSClusterSpec(ref common.ReferenceCallback) c
 					"subnetID": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -245,7 +245,7 @@ func schema_pkg_apis_aws_v1alpha1_EKSClusterSpec(ref common.ReferenceCallback) c
 					"securityGroupID": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{

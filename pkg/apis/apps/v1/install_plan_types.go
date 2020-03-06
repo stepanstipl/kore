@@ -36,7 +36,7 @@ type InstallPlanSpec struct {
 // +k8s:openapi-gen=true
 type InstallPlanStatus struct {
 	// Conditions is a collection of potential issues
-	// +listType
+	// +listType=set
 	Conditions []corev1.Condition `json:"conditions,omitempty"`
 	// Deployed is the applciation deployment parameters
 	Deployed AppDeployment `json:"deployed"`

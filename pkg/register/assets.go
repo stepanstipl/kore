@@ -83,7 +83,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: (devel)
+    controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
   name: appdeployments.apps.kore.appvia.io
 spec:
@@ -122,6 +122,7 @@ spec:
                 type: string
               minItems: 1
               type: array
+              x-kubernetes-list-type: set
             cluster:
               description: Cluster is the cluster the application should be deployed
                 on
@@ -159,6 +160,7 @@ spec:
                 type: string
               minItems: 1
               type: array
+              x-kubernetes-list-type: set
             official:
               description: Official indicates if the applcation is officially published
                 by Appvia
@@ -229,6 +231,7 @@ spec:
                 - message
                 type: object
               type: array
+              x-kubernetes-list-type: set
             installPlan:
               description: InstallPlan in the name of the installplan which this deployment
                 has deployed from
@@ -272,7 +275,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: (devel)
+    controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
   name: installplans.apps.kore.appvia.io
 spec:
@@ -329,6 +332,7 @@ spec:
                 - message
                 type: object
               type: array
+              x-kubernetes-list-type: set
             deployed:
               description: Deployed is the applciation deployment parameters
               properties:
@@ -356,6 +360,7 @@ spec:
                         type: string
                       minItems: 1
                       type: array
+                      x-kubernetes-list-type: set
                     cluster:
                       description: Cluster is the cluster the application should be
                         deployed on
@@ -394,6 +399,7 @@ spec:
                         type: string
                       minItems: 1
                       type: array
+                      x-kubernetes-list-type: set
                     official:
                       description: Official indicates if the applcation is officially
                         published by Appvia
@@ -465,6 +471,7 @@ spec:
                         - message
                         type: object
                       type: array
+                      x-kubernetes-list-type: set
                     installPlan:
                       description: InstallPlan in the name of the installplan which
                         this deployment has deployed from
@@ -504,6 +511,7 @@ spec:
                         type: string
                       minItems: 1
                       type: array
+                      x-kubernetes-list-type: set
                     cluster:
                       description: Cluster is the cluster the application should be
                         deployed on
@@ -542,6 +550,7 @@ spec:
                         type: string
                       minItems: 1
                       type: array
+                      x-kubernetes-list-type: set
                     official:
                       description: Official indicates if the applcation is officially
                         published by Appvia
@@ -613,6 +622,7 @@ spec:
                         - message
                         type: object
                       type: array
+                      x-kubernetes-list-type: set
                     installPlan:
                       description: InstallPlan in the name of the installplan which
                         this deployment has deployed from
@@ -660,7 +670,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: (devel)
+    controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
   name: awscredentials.aws.compute.kore.appvia.io
 spec:
@@ -768,7 +778,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: (devel)
+    controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
   name: eksclusters.aws.compute.kore.appvia.io
 spec:
@@ -841,6 +851,7 @@ spec:
               items:
                 type: string
               type: array
+              x-kubernetes-list-type: set
             subnetID:
               description: SubnetID is a collection of subnet id's which the EKS cluster
                 should be attached to - if not defined we will provision on behalf
@@ -848,6 +859,7 @@ spec:
               items:
                 type: string
               type: array
+              x-kubernetes-list-type: set
             version:
               type: string
             vpc:
@@ -925,7 +937,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: (devel)
+    controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
   name: kubernetes.clusters.compute.kore.appvia.io
 spec:
@@ -973,6 +985,7 @@ spec:
                       type: string
                     minItems: 1
                     type: array
+                    x-kubernetes-list-type: set
                   username:
                     description: Username is the team member the role is being applied
                       to
@@ -983,6 +996,7 @@ spec:
                 - username
                 type: object
               type: array
+              x-kubernetes-list-type: set
             defaultTeamRole:
               description: DefaultTeamRole is role inherited by all team members
               type: string
@@ -1099,7 +1113,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: (devel)
+    controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
   name: kubernetescredentials.clusters.compute.kore.appvia.io
 spec:
@@ -1181,7 +1195,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: (devel)
+    controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
   name: managedclusterrole.clusters.compute.kore.appvia.io
 spec:
@@ -1244,6 +1258,7 @@ spec:
                 - version
                 type: object
               type: array
+              x-kubernetes-list-type: set
             description:
               description: Description provides a short summary of the nature of the
                 role
@@ -1302,11 +1317,13 @@ spec:
                 - verbs
                 type: object
               type: array
+              x-kubernetes-list-type: set
             teams:
               description: Teams is used to filter the clusters to apply by team references
               items:
                 type: string
               type: array
+              x-kubernetes-list-type: set
           type: object
         status:
           description: ManagedClusterRoleStatus defines the observed state of Cluster
@@ -1328,6 +1345,7 @@ spec:
                 - message
                 type: object
               type: array
+              x-kubernetes-list-type: set
             status:
               description: Status is overall status of the workspace
               type: string
@@ -1370,7 +1388,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: (devel)
+    controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
   name: managedclusterrolebinding.clusters.compute.kore.appvia.io
 spec:
@@ -1507,11 +1525,13 @@ spec:
                 - version
                 type: object
               type: array
+              x-kubernetes-list-type: set
             teams:
               description: Teams is a filter on the teams
               items:
                 type: string
               type: array
+              x-kubernetes-list-type: set
           required:
           - binding
           type: object
@@ -1536,6 +1556,7 @@ spec:
                 - message
                 type: object
               type: array
+              x-kubernetes-list-type: set
             status:
               description: Status is overall status of the workspace
               type: string
@@ -1578,7 +1599,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: (devel)
+    controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
   name: managedconfig.clusters.compute.kore.appvia.io
 spec:
@@ -1722,6 +1743,7 @@ spec:
                 - message
                 type: object
               type: array
+              x-kubernetes-list-type: set
             phase:
               description: Phase indicates the phase of the cluster
               type: string
@@ -1767,7 +1789,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: (devel)
+    controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
   name: managedpodsecuritypoliies.clusters.compute.kore.appvia.io
 spec:
@@ -1830,6 +1852,7 @@ spec:
                 - version
                 type: object
               type: array
+              x-kubernetes-list-type: set
             description:
               description: Description describes the nature of this pod security policy
               minLength: 1
@@ -2203,6 +2226,7 @@ spec:
               items:
                 type: string
               type: array
+              x-kubernetes-list-type: set
           type: object
         status:
           description: ManagedPodSecurityPolicyStatus defines the observed state of
@@ -2225,6 +2249,7 @@ spec:
                 - message
                 type: object
               type: array
+              x-kubernetes-list-type: set
             status:
               description: Status is overall status of the workspace
               type: string
@@ -2267,7 +2292,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: (devel)
+    controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
   name: managedrole.clusters.compute.kore.appvia.io
 spec:
@@ -2379,6 +2404,7 @@ spec:
                 - verbs
                 type: object
               type: array
+              x-kubernetes-list-type: set
           required:
           - description
           type: object
@@ -2402,6 +2428,7 @@ spec:
                 - message
                 type: object
               type: array
+              x-kubernetes-list-type: set
             status:
               description: Status is overall status of the workspace
               type: string
@@ -2444,7 +2471,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: (devel)
+    controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
   name: namespaceclaims.clusters.compute.kore.appvia.io
 spec:
@@ -2541,6 +2568,7 @@ spec:
                 - message
                 type: object
               type: array
+              x-kubernetes-list-type: set
             status:
               description: Status is the status of the namespace
               type: string
@@ -2580,7 +2608,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: (devel)
+    controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
   name: namespacepolicy.clusters.compute.kore.appvia.io
 spec:
@@ -2655,26 +2683,42 @@ spec:
                         properties:
                           default:
                             additionalProperties:
-                              type: string
+                              anyOf:
+                              - type: integer
+                              - type: string
+                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                              x-kubernetes-int-or-string: true
                             description: Default resource requirement limit value
                               by resource name if resource limit is omitted.
                             type: object
                           defaultRequest:
                             additionalProperties:
-                              type: string
+                              anyOf:
+                              - type: integer
+                              - type: string
+                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                              x-kubernetes-int-or-string: true
                             description: DefaultRequest is the default resource requirement
                               request value by resource name if resource request is
                               omitted.
                             type: object
                           max:
                             additionalProperties:
-                              type: string
+                              anyOf:
+                              - type: integer
+                              - type: string
+                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                              x-kubernetes-int-or-string: true
                             description: Max usage constraints on this kind by resource
                               name.
                             type: object
                           maxLimitRequestRatio:
                             additionalProperties:
-                              type: string
+                              anyOf:
+                              - type: integer
+                              - type: string
+                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                              x-kubernetes-int-or-string: true
                             description: MaxLimitRequestRatio if specified, the named
                               resource must have a request and limit that are both
                               non-zero where limit divided by request is less than
@@ -2683,7 +2727,11 @@ spec:
                             type: object
                           min:
                             additionalProperties:
-                              type: string
+                              anyOf:
+                              - type: integer
+                              - type: string
+                              pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                              x-kubernetes-int-or-string: true
                             description: Min usage constraints on this kind by resource
                               name.
                             type: object
@@ -2718,6 +2766,7 @@ spec:
                 - message
                 type: object
               type: array
+              x-kubernetes-list-type: set
             status:
               description: Status is overall status of the workspace
               type: string
@@ -2760,7 +2809,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: (devel)
+    controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
   name: allocations.config.kore.appvia.io
 spec:
@@ -2849,10 +2898,12 @@ spec:
                 type: string
               minItems: 1
               type: array
+              x-kubernetes-list-type: set
           required:
           - name
           - resource
           - summary
+          - teams
           type: object
         status:
           description: AllocationStatus defines the observed state of Allocation
@@ -2874,6 +2925,7 @@ spec:
                 - message
                 type: object
               type: array
+              x-kubernetes-list-type: set
             status:
               description: Status is the general status of the resource
               type: string
@@ -2913,7 +2965,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: (devel)
+    controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
   name: plans.config.kore.appvia.io
 spec:
@@ -2994,6 +3046,7 @@ spec:
                 - message
                 type: object
               type: array
+              x-kubernetes-list-type: set
             status:
               description: Status is overall status of the workspace
               type: string
@@ -3035,7 +3088,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: (devel)
+    controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
   name: idp.core.kore.appvia.io
 spec:
@@ -3252,6 +3305,7 @@ spec:
                 - message
                 type: object
               type: array
+              x-kubernetes-list-type: set
             status:
               description: Status is overall status of the IDP configuration
               type: string
@@ -3293,7 +3347,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: (devel)
+    controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
   name: oidclient.core.kore.appvia.io
 spec:
@@ -3337,6 +3391,7 @@ spec:
               items:
                 type: string
               type: array
+              x-kubernetes-list-type: set
             secret:
               description: Secret for OIDC client
               type: string
@@ -3366,6 +3421,7 @@ spec:
                 - message
                 type: object
               type: array
+              x-kubernetes-list-type: set
             status:
               description: Status is overall status of the IDP configuration
               type: string
@@ -3407,7 +3463,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: (devel)
+    controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
   name: gkecredentials.gke.compute.kore.appvia.io
 spec:
@@ -3495,6 +3551,7 @@ spec:
                 - message
                 type: object
               type: array
+              x-kubernetes-list-type: set
             status:
               description: Status provides a overall status
               type: string
@@ -3540,7 +3597,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: (devel)
+    controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
   name: gkes.gke.compute.kore.appvia.io
 spec:
@@ -3605,6 +3662,7 @@ spec:
                 - name
                 type: object
               type: array
+              x-kubernetes-list-type: set
             clusterIPV4Cidr:
               description: ClusterIPV4Cidr is an optional network CIDR which is used
                 to place the pod network on
@@ -3645,11 +3703,6 @@ spec:
               format: int64
               minimum: 100
               type: integer
-            enableAutoUpgrade:
-              description: EnableAutoUpgrade indicates if the cluster should be configured
-                with autograding enabled; meaning both nodes are masters are autoscated
-                scheduled to upgrade during your maintenance window.
-              type: boolean
             enableAutorepair:
               description: EnableAutorepair indicates if the cluster should be configured
                 with auto repair is enabled
@@ -3657,6 +3710,11 @@ spec:
             enableAutoscaler:
               description: EnableAutoscaler indicates if the cluster should be configured
                 with cluster autoscaling turned on
+              type: boolean
+            enableAutoupgrade:
+              description: EnableAutoUpgrade indicates if the cluster should be configured
+                with autograding enabled; meaning both nodes are masters are autoscated
+                scheduled to upgrade during your maintenance window.
               type: boolean
             enableHTTPLoadBalancer:
               description: EnableHTTPLoadBalancer indicates if the cluster should
@@ -3680,6 +3738,11 @@ spec:
               description: EnablePrivateNetwork indicates if compute nodes should
                 have external ip addresses or use private networking and a cloud-nat
                 device.
+              type: boolean
+            enableShieldedNodes:
+              description: EnableSheildedNodes indicates we should enable the sheilds
+                nodes options in GKE. This protects against a variety of attacks by
+                hardening the underlying GKE node against rootkits and bootkits.
               type: boolean
             enableStackDriverLogging:
               description: EnableStackDriverLogging indicates if Stackdriver logging
@@ -3749,6 +3812,7 @@ spec:
           - credentials
           - description
           - diskSize
+          - enableShieldedNodes
           - imageType
           - machineType
           - maintenanceWindow
@@ -3826,7 +3890,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: (devel)
+    controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
   name: auditevents.org.kore.appvia.io
 spec:
@@ -3917,7 +3981,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: (devel)
+    controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
   name: members.org.kore.appvia.io
 spec:
@@ -3955,6 +4019,7 @@ spec:
               items:
                 type: string
               type: array
+              x-kubernetes-list-type: set
             team:
               description: Team is the name of the team
               type: string
@@ -3986,6 +4051,7 @@ spec:
                 - message
                 type: object
               type: array
+              x-kubernetes-list-type: set
             status:
               description: Status is the status of the resource
               type: string
@@ -4027,7 +4093,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: (devel)
+    controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
   name: teaminvitations.org.kore.appvia.io
 spec:
@@ -4090,6 +4156,7 @@ spec:
                 - message
                 type: object
               type: array
+              x-kubernetes-list-type: set
             status:
               description: Status is the status of the resource
               type: string
@@ -4131,7 +4198,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: (devel)
+    controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
   name: teams.org.kore.appvia.io
 spec:
@@ -4194,6 +4261,7 @@ spec:
                 - message
                 type: object
               type: array
+              x-kubernetes-list-type: set
             status:
               description: Status is the status of the resource
               type: string
@@ -4235,7 +4303,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: (devel)
+    controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
   name: users.org.kore.appvia.io
 spec:
@@ -4302,6 +4370,7 @@ spec:
                 - message
                 type: object
               type: array
+              x-kubernetes-list-type: set
             status:
               description: Status provides an overview of the user status
               type: string

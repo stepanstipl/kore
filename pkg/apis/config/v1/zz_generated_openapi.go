@@ -114,7 +114,7 @@ func schema_pkg_apis_config_v1_AllocationSpec(ref common.ReferenceCallback) comm
 					"teams": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -131,7 +131,7 @@ func schema_pkg_apis_config_v1_AllocationSpec(ref common.ReferenceCallback) comm
 						},
 					},
 				},
-				Required: []string{"name", "summary", "resource"},
+				Required: []string{"name", "summary", "resource", "teams"},
 			},
 		},
 		Dependencies: []string{
@@ -156,7 +156,7 @@ func schema_pkg_apis_config_v1_AllocationStatus(ref common.ReferenceCallback) co
 					"conditions": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -291,7 +291,7 @@ func schema_pkg_apis_config_v1_PlanStatus(ref common.ReferenceCallback) common.O
 					"conditions": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{

@@ -119,7 +119,7 @@ func schema_pkg_apis_clusters_v1_KubernetesSpec(ref common.ReferenceCallback) co
 					"clusterUsers": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -343,7 +343,7 @@ func schema_pkg_apis_clusters_v1_ManagedClusterRoleBindingSpec(ref common.Refere
 					"clusters": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -361,7 +361,7 @@ func schema_pkg_apis_clusters_v1_ManagedClusterRoleBindingSpec(ref common.Refere
 					"teams": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -396,7 +396,7 @@ func schema_pkg_apis_clusters_v1_ManagedClusterRoleBindingStatus(ref common.Refe
 					"conditions": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -437,7 +437,7 @@ func schema_pkg_apis_clusters_v1_ManagedClusterRoleSpec(ref common.ReferenceCall
 					"clusters": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -469,7 +469,7 @@ func schema_pkg_apis_clusters_v1_ManagedClusterRoleSpec(ref common.ReferenceCall
 					"rules": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -487,7 +487,7 @@ func schema_pkg_apis_clusters_v1_ManagedClusterRoleSpec(ref common.ReferenceCall
 					"teams": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -521,7 +521,7 @@ func schema_pkg_apis_clusters_v1_ManagedClusterRoleStatus(ref common.ReferenceCa
 					"conditions": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -640,7 +640,7 @@ func schema_pkg_apis_clusters_v1_ManagedConfigStatus(ref common.ReferenceCallbac
 					"conditions": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -732,7 +732,7 @@ func schema_pkg_apis_clusters_v1_ManagedPodSecurityPolicySpec(ref common.Referen
 					"clusters": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -750,7 +750,7 @@ func schema_pkg_apis_clusters_v1_ManagedPodSecurityPolicySpec(ref common.Referen
 					"teams": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -797,7 +797,7 @@ func schema_pkg_apis_clusters_v1_ManagedPodSecurityPolicyStatus(ref common.Refer
 					"conditions": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -895,7 +895,7 @@ func schema_pkg_apis_clusters_v1_ManagedRoleSpec(ref common.ReferenceCallback) c
 					"role": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -929,7 +929,7 @@ func schema_pkg_apis_clusters_v1_ManagedRoleStatus(ref common.ReferenceCallback)
 					"conditions": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -1065,7 +1065,7 @@ func schema_pkg_apis_clusters_v1_NamepacePolicyStatus(ref common.ReferenceCallba
 					"conditions": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -1216,7 +1216,7 @@ func schema_pkg_apis_clusters_v1_NamespaceClaimStatus(ref common.ReferenceCallba
 					"conditions": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{

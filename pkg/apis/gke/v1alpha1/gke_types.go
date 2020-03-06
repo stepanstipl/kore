@@ -62,7 +62,7 @@ type GKESpec struct {
 	// AuthorizedMasterNetworks is a collection of authorized networks which is
 	// permitted to speak to the kubernetes API, default to all if not provided.
 	// +kubebuilder:validation:Optional
-	// +listType
+	// +listType=set
 	AuthorizedMasterNetworks []*AuthorizedNetwork `json:"authorizedMasterNetworks"`
 	// Network is the GCP network the cluster reside on, which have
 	// to be unique within the GCP project and created beforehand.
@@ -94,7 +94,7 @@ type GKESpec struct {
 	// autograding enabled; meaning both nodes are masters are autoscated scheduled
 	// to upgrade during your maintenance window.
 	// +kubebuilder:validation:Optional
-	EnableAutoUpgrade bool `json:"enableAutoUpgrade"`
+	EnableAutoupgrade bool `json:"enableAutoupgrade"`
 	// EnableHorizontalPodAutoscaler indicates if the cluster is configured with
 	// the horizontal pod autoscaler addon. This automatically adjusts the cpu and
 	// memory resources of pods in accordances with their demand. You should ensure
@@ -110,6 +110,10 @@ type GKESpec struct {
 	// cluster; this provides a more feature rich routing and instrumentation.
 	// +kubebuilder:validation:Optional
 	EnableIstio bool `json:"enableIstio"`
+	// EnableSheildedNodes indicates we should enable the sheilds nodes options in GKE.
+	// This protects against a variety of attacks by hardening the underlying GKE node
+	// against rootkits and bootkits.
+	EnableShieldedNodes bool `json:"enableShieldedNodes"`
 	// EnableStackDriverLogging indicates if Stackdriver logging should be enabled
 	// for the cluster
 	// +kubebuilder:validation:Optional

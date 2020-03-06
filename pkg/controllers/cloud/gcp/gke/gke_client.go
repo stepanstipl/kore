@@ -252,6 +252,7 @@ func (g *gkeClient) CreateDefinition() (*container.CreateClusterRequest, error) 
 		NetworkPolicy:           &container.NetworkPolicy{Enabled: true, Provider: "CALICO"},
 		PodSecurityPolicyConfig: &container.PodSecurityPolicyConfig{Enabled: true},
 		Locations:               locations,
+		ShieldedNodes:           &container.ShieldedNodes{Enabled: cluster.Spec.EnableShieldedNodes},
 
 		MaintenancePolicy: &container.MaintenancePolicy{
 			Window: &container.MaintenanceWindow{
@@ -314,7 +315,7 @@ func (g *gkeClient) CreateDefinition() (*container.CreateClusterRequest, error) 
 				Locations:        locations,
 				Management: &container.NodeManagement{
 					AutoRepair:  cluster.Spec.EnableAutorepair,
-					AutoUpgrade: cluster.Spec.EnableAutoUpgrade,
+					AutoUpgrade: cluster.Spec.EnableAutoupgrade,
 				},
 				MaxPodsConstraint: &container.MaxPodsConstraint{
 					MaxPodsPerNode: 110,

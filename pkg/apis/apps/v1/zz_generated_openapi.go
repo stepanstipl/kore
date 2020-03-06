@@ -135,7 +135,7 @@ func schema_pkg_apis_apps_v1_AppDeploymentSpec(ref common.ReferenceCallback) com
 					"capabilities": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -154,7 +154,7 @@ func schema_pkg_apis_apps_v1_AppDeploymentSpec(ref common.ReferenceCallback) com
 					"keywords": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -230,7 +230,7 @@ func schema_pkg_apis_apps_v1_AppDeploymentStatus(ref common.ReferenceCallback) c
 					"conditions": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
@@ -334,7 +334,7 @@ func schema_pkg_apis_apps_v1_InstallPlanStatus(ref common.ReferenceCallback) com
 					"conditions": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "",
+								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{

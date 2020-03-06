@@ -67,12 +67,12 @@ type AppDeploymentSpec struct {
 	// Capabilities defines the features supported by the package
 	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:MinItems=1
-	// +listType
+	// +listType=set
 	Capabilities []string `json:"capabilities,omitempty"`
 	// Keywords keywords whuch describe the application
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=1
-	// +listType
+	// +listType=set
 	Keywords []string `json:"keywords"`
 	// Vendor is the entity whom published the package
 	// +kubebuilder:validation:Required
@@ -100,7 +100,7 @@ type AppDeploymentStatus struct {
 	// +kubebuilder:validation:Required
 	Status corev1.Status `json:"status,omitempty"`
 	// Conditions is a collection of potential issues
-	// +listType
+	// +listType=set
 	Conditions []corev1.Condition `json:"conditions,omitempty"`
 	// InstallPlan in the name of the installplan which this deployment has deployed from
 	InstallPlan string `json:"installPlan,omitempty"`

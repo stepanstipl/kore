@@ -47,7 +47,7 @@ type ManagedConfigSpec struct {
 type ManagedConfigStatus struct {
 	// Conditions is a set of condition which has caused an error
 	// +kubebuilder:validation:Optional
-	// +listType
+	// +listType=set
 	Conditions []corev1.Condition `json:"conditions"`
 	// Phase indicates the phase of the cluster
 	Phase string `json:"phase"`
