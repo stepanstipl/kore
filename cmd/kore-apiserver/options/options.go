@@ -254,5 +254,10 @@ func Options() []cli.Flag {
 			Usage:  "Indicates when deleting the kubernetes cluster we should wait for the provider to delete first `BOOL`",
 			EnvVar: "ENABLE_CLOUD_DELETION_BLOCK",
 		},
+		cli.BoolTFlag{
+			Name:   "enable-cluster-provider-check",
+			Usage:  "Indicates the kubernetes controller should check the underlying provider status `BOOL`",
+			EnvVar: "ENABLE_CLUSTER_PROVIDER_CHECK",
+		},
 	}
 }

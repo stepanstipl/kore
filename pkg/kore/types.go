@@ -120,6 +120,9 @@ type Config struct {
 	// EnableClusterDeletionBlock indicates we should only delete the cluster if the cloud
 	// provider is deleted
 	EnableClusterDeletionBlock bool `json:"enable-cluster-deletion-block,omitempty"`
+	// EnableClusterProviderCheck indicate the k8s controller should check the status of the
+	// cloud provider as well
+	EnableClusterProviderCheck bool `json:"enable-cluster-provider-check,omitempty"`
 	// HMAC is the token used to sign things
 	HMAC string `json:"hmac"`
 	// PublicHubURL is the public url for the kore (the ui not the api)

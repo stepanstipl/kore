@@ -208,7 +208,7 @@ func GetCreateClusterCommand(config *Config) cli.Command {
 					}
 				}()
 				if err != nil {
-					return fmt.Errorf("has failed to provision, use: $ korectl get clusters %s -t %s to view status", name, team)
+					return fmt.Errorf("has failed to provision, use: $ korectl get clusters %s -t %s -o yaml to view status", name, team)
 				}
 				if ctx.Bool("show-time") {
 					fmt.Printf("Provisioning took: %s\n", time.Since(now))
