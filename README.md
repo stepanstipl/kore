@@ -1,4 +1,4 @@
-### **[Architecture](#architecture)** •  **[Getting Started](doc/quick-start.md)** • **[Roadmap](#roadmap)**
+### **[Architecture](#architecture)** •  **[Getting Started](doc/getting-started.md)** • **[Roadmap](#roadmap)**
 
 ![CircleCI](https://img.shields.io/circleci/build/github/appvia/kore/master?style=for-the-badge)
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/appvia/kore?style=for-the-badge)
@@ -15,7 +15,7 @@
 - [The Developer](#the-developer)
 - [The DevOps](#the-devops)
 - [Architecture](#architecture)
-- [Getting Started](doc/quick-start.md)
+- [Getting Started](doc/getting-started.md)
 
 ## Why Appvia Kore?
 
