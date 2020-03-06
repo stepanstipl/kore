@@ -612,6 +612,7 @@ golang.org/x/xerrors/internal
 # gomodules.xyz/jsonpatch/v2 v2.0.1
 gomodules.xyz/jsonpatch/v2
 # google.golang.org/api v0.10.0
+google.golang.org/api/cloudresourcemanager/v1beta1
 google.golang.org/api/compute/v0.beta
 google.golang.org/api/container/v1beta1
 google.golang.org/api/gensupport

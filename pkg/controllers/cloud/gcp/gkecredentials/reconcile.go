@@ -27,6 +27,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -39,7 +40,7 @@ func (t gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		"namespace": request.NamespacedName.Namespace,
 		"team":      request.NamespacedName.Name,
 	})
-	logger.Info("attempting to reconcile gke credentials")
+	logger.Debug("attempting to reconcile gke credentials")
 
 	resource := &gke.GKECredentials{}
 	if err := t.mgr.GetClient().Get(ctx, request.NamespacedName, resource); err != nil {
@@ -49,16 +50,55 @@ func (t gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 		return reconcile.Result{}, err
 	}
+	original := resource.DeepCopy()
 
-	resource.Status.Conditions = []corev1.Condition{}
-	resource.Status.Status = corev1.SuccessStatus
-	resource.Status.Verified = true
+	result, err := func() (reconcile.Result, error) {
+		resource.Status.Conditions = []corev1.Condition{}
+		resource.Status.Verified = false
 
-	if err := t.mgr.GetClient().Status().Update(ctx, resource); err != nil {
-		logger.WithError(err).Error("updating the resource status")
+		// @step: set the status to pending if none set
+		if resource.Status.Status == "" {
+			resource.Status.Status = corev1.PendingStatus
 
-		return reconcile.Result{}, nil
+			return reconcile.Result{Requeue: true}, nil
+		}
+
+		// @step: create the client to verify the permissions
+		client, err := NewClient(resource)
+		if err != nil {
+			logger.WithError(err).Error("trying to create gcp permissions client")
+
+			return reconcile.Result{}, err
+		}
+
+		// @step: verify the credentials
+		resource.Status.Verified, err = client.HasRequiredPermissions()
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+
+		if !resource.Status.Verified {
+			logger.Warn("gke credentials not verified")
+		}
+
+		return reconcile.Result{}, err
+	}()
+	if err != nil {
+		logger.WithError(err).Error("trying to reconcile the gke credentials")
+
+		resource.Status.Status = corev1.FailureStatus
+		resource.Status.Conditions = []corev1.Condition{{
+			Detail:  err.Error(),
+			Message: "Either the credentials are invalid or we've encountered an error verifying",
+		}}
 	}
 
-	return reconcile.Result{}, nil
+	// @step: update the status of the resource
+	if err := t.mgr.GetClient().Status().Patch(ctx, resource, client.MergeFrom(original)); err != nil {
+		logger.WithError(err).Error("trying to update the gke credentials resource status")
+
+		return reconcile.Result{}, err
+	}
+
+	return result, err
 }

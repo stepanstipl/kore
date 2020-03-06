@@ -36,6 +36,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
+// SyncPeriod is the time between resyncs of gkecredentials resources
+const SyncPeriod = 3 * time.Hour
+
 type gkeCtrl struct {
 	kore.Interface
 	// mgr is the controller manager
@@ -61,7 +64,11 @@ func (t *gkeCtrl) Run(ctx context.Context, cfg *rest.Config, hubi kore.Interface
 		"controller": t.Name(),
 	})
 
-	mgr, err := manager.New(cfg, controllers.DefaultManagerOptions(t))
+	options := controllers.DefaultManagerOptions(t)
+	resync := SyncPeriod
+	options.SyncPeriod = &resync
+
+	mgr, err := manager.New(cfg, options)
 	if err != nil {
 		logger.WithError(err).Error("trying to create the manager")
 
