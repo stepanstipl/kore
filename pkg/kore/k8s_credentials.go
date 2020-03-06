@@ -90,7 +90,7 @@ func (n *kcImpl) List(ctx context.Context) (*clustersv1.KubernetesCredentialsLis
 	if err := n.Store().Client().List(ctx,
 		store.ListOptions.InNamespace(n.team),
 		store.ListOptions.InTo(list),
-		store.ListOptions.WithLabel(Label("kind"), "kubernetescredentials"),
+		store.ListOptions.WithLabel(Label("type"), "kubernetescredentials"),
 	); err != nil {
 		log.WithError(err).Error("trying to retrieve the list of credentials")
 
