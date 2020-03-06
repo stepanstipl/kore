@@ -20,16 +20,36 @@
 package korectl
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/urfave/cli"
 )
 
+var editLongDescription = `
+The object type accepts both singular and plural nouns (e.g. "user" and "users").
+
+Example to edit a team:
+  $ korectl edit team a-team
+`
+
 func GetEditCommand(config *Config) cli.Command {
 	return cli.Command{
-		Name:  "edit",
-		Usage: "Modifies various objects",
+		Name:        "edit",
+		Usage:       "Modifies various objects",
+		Description: formatLongDescription(editLongDescription),
+		ArgsUsage:   "[TYPE] [NAME]",
 
 		Subcommands: []cli.Command{
 			GetEditTeamCommand(config),
+		},
+		Before: func(ctx *cli.Context) error {
+			if !ctx.Args().Present() {
+				_ = cli.ShowCommandHelp(ctx.Parent(), "edit")
+				fmt.Println()
+				return errors.New("[TYPE] [NAME] is required")
+			}
+			return nil
 		},
 	}
 }
