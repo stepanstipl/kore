@@ -22,6 +22,7 @@ package korectl
 import (
 	"errors"
 	"fmt"
+	"net/http"
 
 	"github.com/manifoldco/promptui"
 
@@ -120,6 +121,11 @@ func GetEditTeamCommand(config *Config) cli.Command {
 				WithEndpoint("/teams/{id}").
 				WithRuntimeObject(team)
 			if err := req.Get(); err != nil {
+				if reqErr, ok := err.(*RequestError); ok {
+					if reqErr.statusCode == http.StatusNotFound {
+						return fmt.Errorf("%q does not exist", teamID)
+					}
+				}
 				return err
 			}
 
