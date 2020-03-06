@@ -44,6 +44,68 @@ func getResourceConfig(name string) resourceConfig {
 }
 
 var resourceConfigs = map[string]resourceConfig{
+	"allocation": {
+		Name:   "allocations",
+		IsTeam: true,
+		Columns: []string{
+			Column("Name", ".metadata.name"),
+			Column("Description", ".spec.summary"),
+			Column("Resource", ".spec.resource.kind"),
+		},
+	},
+	"audit-event": {
+		Name:     "audit",
+		IsGlobal: true,
+		IsTeam:   true,
+		Columns: []string{
+			Column("Name", ".metadata.name"),
+		},
+	},
+	"cluster": {
+		Name:   "clusters",
+		IsTeam: true,
+		Columns: []string{
+			Column("Name", ".metadata.name"),
+			Column("Provider", ".spec.provider.group"),
+			Column("Endpoint", ".status.endpoint"),
+			Column("Status", ".status.status"),
+		},
+	},
+	"gke": {
+		Name:   "gkes",
+		IsTeam: true,
+		Columns: []string{
+			Column("Name", ".metadata.name"),
+			Column("Endpoint", ".status.endpoint"),
+			Column("Status", ".status.status"),
+		},
+	},
+	"member": {
+		Name:   "members",
+		IsTeam: true,
+		Columns: []string{
+			Column("Username", "."),
+		},
+	},
+	"namespaceclaim": {
+		Name:   "namespaceclaims",
+		IsTeam: true,
+		Columns: []string{
+			Column("Resource", ".metadata.name"),
+			Column("Namespace", ".spec.name"),
+			Column("Cluster", ".spec.cluster.name"),
+			Column("Status", ".status.status"),
+		},
+	},
+	"plan": {
+		Name:     "plans",
+		IsGlobal: true,
+		Columns: []string{
+			Column("Resource", ".metadata.name"),
+			Column("Description", ".spec.description"),
+			Column("Summary", ".spec.summary"),
+		},
+	},
 	"team": {
 		Name:     "teams",
 		IsGlobal: true,
@@ -59,59 +121,6 @@ var resourceConfigs = map[string]resourceConfig{
 			Column("Username", ".metadata.name"),
 			Column("Email", ".spec.email"),
 			Column("Disabled", ".spec.disabled"),
-		},
-	},
-	"plan": {
-		Name:     "plans",
-		IsGlobal: true,
-		Columns: []string{
-			Column("Resource", ".metadata.name"),
-			Column("Description", ".spec.description"),
-			Column("Summary", ".spec.summary"),
-		},
-	},
-	"audit-event": {
-		Name:     "audit",
-		IsGlobal: true,
-		IsTeam:   true,
-		Columns: []string{
-			Column("Name", ".metadata.name"),
-		},
-	},
-	"member": {
-		Name:   "members",
-		IsTeam: true,
-		Columns: []string{
-			Column("Username", "."),
-		},
-	},
-	"allocation": {
-		Name:   "allocations",
-		IsTeam: true,
-		Columns: []string{
-			Column("Name", ".metadata.name"),
-			Column("Description", ".spec.summary"),
-			Column("Resource", ".spec.resource.kind"),
-		},
-	},
-	"cluster": {
-		Name:   "clusters",
-		IsTeam: true,
-		Columns: []string{
-			Column("Name", ".metadata.name"),
-			Column("Provider", ".spec.provider.group"),
-			Column("Endpoint", ".status.endpoint"),
-			Column("Status", ".status.status"),
-		},
-	},
-	"namespaceclaim": {
-		Name:   "namespaceclaims",
-		IsTeam: true,
-		Columns: []string{
-			Column("Resource", ".metadata.name"),
-			Column("Namespace", ".spec.name"),
-			Column("Cluster", ".spec.cluster.name"),
-			Column("Status", ".status.status"),
 		},
 	},
 }
