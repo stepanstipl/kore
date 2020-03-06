@@ -70,7 +70,7 @@ func (u teamHandler) inviteLink(req *restful.Request, resp *restful.Response) {
 		if err != nil {
 			return err
 		}
-		uri := fmt.Sprintf("%s/teams/invitation/%s", u.BaseURI(), token)
+		uri := fmt.Sprintf("%s/process/teams/invitation/%s", u.Config().PublicHubURL, token)
 
 		return resp.WriteHeaderAndEntity(http.StatusOK, uri)
 	})

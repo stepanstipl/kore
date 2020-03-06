@@ -42,12 +42,6 @@ type teamHandler struct {
 	kore.Interface
 	// DefaultHandlder implements default features
 	DefaultHandler
-
-	base string
-}
-
-func (u teamHandler) BaseURI() string {
-	return u.base
 }
 
 // Register is called by the api server to register the service
