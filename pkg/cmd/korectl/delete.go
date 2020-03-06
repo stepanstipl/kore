@@ -28,12 +28,23 @@ import (
 	"github.com/urfave/cli"
 )
 
+var deleteLongDescription = `
+The object type accepts both singular and plural nouns (e.g. "user" and "users").
+
+Example to delete a user:
+  $ korectl delete user joe@example.com
+
+Example to delete multiple resources from a file:
+  $ korectl delete --file resources.yaml
+`
+
 func GetDeleteCommand(config *Config) cli.Command {
 	return cli.Command{
-		Name:      "delete",
-		Aliases:   []string{"rm", "del"},
-		Usage:     "Used to delete one or more resources from the kore",
-		ArgsUsage: "-f <file> | <kind> <name>",
+		Name:        "delete",
+		Aliases:     []string{"rm", "del"},
+		Usage:       "Deletes one or more resources",
+		Description: formatLongDescription(deleteLongDescription),
+		ArgsUsage:   "-f <file> | [TYPE] [NAME]",
 		Flags: []cli.Flag{
 			cli.StringSliceFlag{
 				Name:  "file,f",
@@ -47,10 +58,13 @@ func GetDeleteCommand(config *Config) cli.Command {
 		Subcommands: []cli.Command{
 			GetDeleteTeamMemberCommand(config),
 		},
-		Action: func(ctx *cli.Context) error {
+		Before: func(ctx *cli.Context) error {
 			if !ctx.IsSet("file") && !ctx.Args().Present() {
-				return cli.ShowSubcommandHelp(ctx)
+				return cli.ShowCommandHelp(ctx.Parent(), "delete")
 			}
+			return nil
+		},
+		Action: func(ctx *cli.Context) error {
 			for _, file := range ctx.StringSlice("file") {
 				// @step: read in the content of the file
 				content, err := ioutil.ReadFile(file)
@@ -79,7 +93,7 @@ func GetDeleteCommand(config *Config) cli.Command {
 				}
 			}
 			if len(ctx.StringSlice("file")) <= 0 {
-				if ctx.NArg() != 2 {
+				if ctx.NArg() < 2 {
 					return errors.New("you need to specify a resource type and name")
 				}
 
@@ -88,9 +102,20 @@ func GetDeleteCommand(config *Config) cli.Command {
 					return err
 				}
 
+				exists, err := req.Exists()
+				if err != nil {
+					return err
+				}
+
+				if !exists {
+					return fmt.Errorf("%q does not exist", ctx.Args().Get(1))
+				}
+
 				if err := req.Delete(); err != nil {
 					return err
 				}
+
+				fmt.Printf("%q was successfully deleted\n", ctx.Args().Get(1))
 			}
 
 			return nil
