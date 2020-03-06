@@ -22,14 +22,28 @@ package korectl
 import (
 	"errors"
 	"fmt"
+	"net/http"
 
 	"github.com/urfave/cli"
 )
 
+var getLongDescription = `
+The object type accepts both singular and plural nouns (e.g. "user" and "users").
+
+Examples:
+  List users:
+  $ korectl get users
+
+  Get information about a specific user:
+  $ korectl get user admin -o yaml
+`
+
 func GetGetCommand(config *Config) cli.Command {
 	return cli.Command{
-		Name:  "get",
-		Usage: "Used to retrieve a resource from the api",
+		Name:        "get",
+		Usage:       "Retrieves one or more resources from the api",
+		Description: formatLongDescription(getLongDescription),
+		ArgsUsage:   "[TYPE] [NAME]",
 		Flags: append([]cli.Flag{
 			cli.StringFlag{
 				Name:  "team,t",
@@ -54,6 +68,15 @@ func GetGetCommand(config *Config) cli.Command {
 			req.Render(resourceConfig.Columns...)
 
 			if err := req.Get(); err != nil {
+				if reqErr, ok := err.(*RequestError); ok {
+					if reqErr.statusCode == http.StatusNotFound {
+						if ctx.NArg() == 1 {
+							return fmt.Errorf("%q is not a valid resource type", ctx.Args().Get(0))
+						} else {
+							return fmt.Errorf("%q does not exist", ctx.Args().Get(1))
+						}
+					}
+				}
 				return err
 			}
 			fmt.Println("")
