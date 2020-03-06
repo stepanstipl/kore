@@ -76,7 +76,7 @@ func invoke(ctx *cli.Context) error {
 			EnableClusterProviderCheck: ctx.Bool("enable-cluster-provider-check"),
 			HMAC:                       ctx.String("kore-hmac"),
 			PublicAPIURL:               ctx.String("api-public-url"),
-			PublicHubURL:               ctx.String("kore-public-url"),
+			PublicHubURL:               strings.TrimRight(ctx.String("ui-public-url"), "/"),
 			UserClaims:                 ctx.StringSlice("user-claims"),
 			DEX: kore.DEX{
 				EnabledDex:    ctx.Bool("enable-dex"),

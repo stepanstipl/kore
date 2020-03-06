@@ -86,7 +86,7 @@ func Options() []cli.Flag {
 			EnvVar: "KORE_API_PUBLIC_URL",
 		},
 		cli.StringFlag{
-			Name:   "kore-public-url",
+			Name:   "ui-public-url",
 			Usage:  "the public url of the kore service user interface `URL`",
 			EnvVar: "KORE_UI_PUBLIC_URL",
 		},

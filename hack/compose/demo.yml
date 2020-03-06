@@ -8,6 +8,7 @@ services:
       KORE_ADMIN_PASS: password
       KORE_ADMIN_TOKEN: password
       KORE_API_PUBLIC_URL: http://localhost:10080
+      KORE_UI_PUBLIC_URL: http://localhost:3000
       KORE_AUTHENTICATION_PLUGINS: basicauth,admintoken,openid
       KORE_CERTIFICATE_AUTHORITY: hack/ca/ca.pem
       KORE_CERTIFICATE_AUTHORITY_KEY: hack/ca/ca-key.pem
