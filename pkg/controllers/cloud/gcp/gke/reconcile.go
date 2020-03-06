@@ -37,7 +37,7 @@ const (
 	// ComponentClusterCreator is the name of the component for the UI
 	ComponentClusterCreator = "Cluster Creator"
 	// ComponentClusterBootstrap is the component name for seting up cloud credentials
-	ComponentClusterBootstrap = "Cluster Initialise Access"
+	ComponentClusterBootstrap = "Cluster Initialize Access"
 )
 
 // Reconcile is the entrypoint for the reconciliation logic
@@ -90,21 +90,30 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 		if err != nil {
 			logger.WithError(err).Error("attempting to create the cluster client")
 
+			resource.Status.Conditions.SetCondition(core.Component{
+				Detail:  err.Error(),
+				Name:    ComponentClusterCreator,
+				Message: "Failed to create GKE client, please check credentials",
+				Status:  core.FailureStatus,
+			})
+
 			return false, err
 		}
 		logger.Info("checking if the cluster already exists")
 
 		found, err := client.Exists()
 		if err != nil {
+			resource.Status.Conditions.SetCondition(core.Component{
+				Detail:  err.Error(),
+				Name:    ComponentClusterCreator,
+				Message: "Failed to check for cluster existence",
+				Status:  core.FailureStatus,
+			})
+
 			return false, err
 		}
 
 		if !found {
-			// @step: we need to mark the cluster as pending
-			if resource.Status.Conditions == nil {
-				resource.Status.Conditions = &core.Components{}
-			}
-
 			status, found := resource.Status.Conditions.HasComponent(ComponentClusterCreator)
 			if !found || status != core.PendingStatus {
 				resource.Status.Conditions.SetCondition(core.Component{
