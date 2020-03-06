@@ -70,6 +70,7 @@ jobs:
             KORE_CERTIFICATE_AUTHORITY_KEY: "hack/ca/ca-key.pem"
             KORE_HMAC: "bdT2Qg6DybsLIwc0TbYWrkGC4auovscg"
             KUBE_API_SERVER: "http://kube-apiserver:8080"
+            KORE_UI_PUBLIC_URL: http://localhost:3000
             USERS_DB_URL: "root:pass@tcp(database:3306)/kore?parseTime=true"
       - run:
           name: Checking swagger
