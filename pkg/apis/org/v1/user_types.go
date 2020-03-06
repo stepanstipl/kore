@@ -27,11 +27,11 @@ import (
 // +k8s:openapi-gen=true
 type UserSpec struct {
 	// Disabled indicates if the user is disabled
-	Disabled bool `json:"disabled,omitempty"`
+	Disabled bool `json:"disabled"`
 	// Email is the email for the user
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
-	Email string `json:"email,omitempty"`
+	Email string `json:"email"`
 	// Username is the userame or identity for this user
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required

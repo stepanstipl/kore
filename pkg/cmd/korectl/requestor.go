@@ -90,6 +90,41 @@ func NewRequest() *Requestor {
 	}
 }
 
+func NewRequestForResource(config *Config, ctx *cli.Context) (*Requestor, resourceConfig, error) {
+	resConfig := getResourceConfig(ctx.Args().First())
+
+	req := NewRequest().
+		WithConfig(config).
+		WithContext(ctx).
+		PathParameter("resource", true).
+		WithInject("resource", resConfig.Name)
+
+	var endpoint string
+
+	if ctx.IsSet("team") {
+		endpoint = "/teams/{team}/{resource}"
+		if !resConfig.IsTeam {
+			return nil, resourceConfig{}, errors.New("--team parameter is not allowed for this resource")
+		}
+		req.PathParameter("team", true)
+	} else {
+		endpoint = "/{resource}"
+		if !resConfig.IsGlobal {
+			return nil, resourceConfig{}, errors.New("--team parameter must be set")
+		}
+	}
+
+	if ctx.NArg() == 2 {
+		endpoint = endpoint + "/{name}"
+		req.PathParameter("name", true)
+		req.WithInject("name", ctx.Args().Get(1))
+	}
+
+	req.WithEndpoint(endpoint)
+
+	return req, resConfig, nil
+}
+
 // Column sets a column option
 func Column(name, path string) string {
 	return fmt.Sprintf("%s/%s", name, path)
@@ -286,15 +321,13 @@ func (c Requestor) handleResponse(resp *http.Response) error {
 
 	var response map[string]interface{}
 	if c.body.Len() > 0 {
-		if err := json.NewDecoder(c.body).Decode(&response); err != nil {
-			return err
+		if err := json.NewDecoder(c.body).Decode(&response); err == nil {
+			// @step: does the error contain custom error?
+			if response["code"] != nil && response["message"] != "" {
+				fmt.Printf("[error] [%d] %s\n", int(response["code"].(float64)), response["message"])
+				os.Exit(1)
+			}
 		}
-	}
-
-	// @step: does the error contain custom error?
-	if response["code"] != nil && response["message"] != "" {
-		fmt.Printf("[error] [%d] %s\n", int(response["code"].(float64)), response["message"])
-		os.Exit(1)
 	}
 
 	switch resp.StatusCode {

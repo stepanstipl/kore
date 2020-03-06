@@ -33,7 +33,7 @@ func GetGetCommand(config *Config) cli.Command {
 		Flags: append([]cli.Flag{
 			cli.StringFlag{
 				Name:  "team,t",
-				Usage: "Used to filter the results by team `TEAM`",
+				Usage: "Used to filter the results by team",
 			},
 		}, DefaultOptions...),
 
@@ -46,44 +46,14 @@ func GetGetCommand(config *Config) cli.Command {
 		},
 
 		Action: func(ctx *cli.Context) error {
-			// @step: setup the printer for the resource type
-			resourceCfg := resourceConfigs.Get(ctx.Args().First())
-
-			req := NewRequest().
-				WithConfig(config).
-				WithContext(ctx).
-				PathParameter("resource", true).
-				PathParameter("name", false).
-				Render(resourceCfg.Columns...).
-				WithInject("resource", resourceCfg.APIResourceName)
-
-			endpoint := "/teams/{team}/{resource}/{name}"
-
-			// @check if the resource is a global resource i.e plans, teams, users etc
-			switch {
-			case IsGlobalResource(resourceCfg.APIResourceName):
-				endpoint = "/{resource}/{name}"
-
-			case IsGlobalResourceOptional(resourceCfg.APIResourceName):
-				switch ctx.IsSet("team") {
-				case true:
-					req.WithInject("team", GlobalStringFlag(ctx, "team"))
-					req.PathParameter("team", true)
-				default:
-					endpoint = "/{resource}/{name}"
-				}
-
-			default:
-				req.PathParameter("team", true)
+			req, resourceConfig, err := NewRequestForResource(config, ctx)
+			if err != nil {
+				return err
 			}
 
-			// @step: check if we are getting a specific resource by name
-			if ctx.NArg() == 2 {
-				req.WithInject("name", ctx.Args().Get(1))
-			}
+			req.Render(resourceConfig.Columns...)
 
-			// @step: retrieve the resource or resources from the api
-			if err := req.WithEndpoint(endpoint).Get(); err != nil {
+			if err := req.Get(); err != nil {
 				return err
 			}
 			fmt.Println("")

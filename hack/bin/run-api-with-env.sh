@@ -10,7 +10,7 @@ if [ ! -f ./demo.env ] ; then
     exit 1
 fi
 source ./demo.env
-bin/kore-apiserver \
+go run cmd/kore-apiserver/*.go \
     --kube-api-server http://127.0.0.1:8080 \
     --verbose \
     --admin-pass password \

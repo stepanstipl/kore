@@ -53,7 +53,7 @@ generate-clusterappman-manifests:
 	@cp ./hack/generate/manifests_vfsdata.go ./pkg/clusterappman/
 	@go generate ./pkg/clusterappman >/dev/null
 
-build: golang generate-clusterappman-manifests spelling
+build: golang generate-clusterappman-manifests
 	@echo "--> Compiling the project ($(VERSION))"
 	@mkdir -p bin
 	@for binary in kore-apiserver korectl auth-proxy kore-clusterappman; do \
@@ -61,12 +61,12 @@ build: golang generate-clusterappman-manifests spelling
 		go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go || exit 1; \
 	done
 
-korectl: golang deps spelling
+korectl: golang deps
 	@echo "--> Compiling the korectl binary"
 	@mkdir -p bin
 	go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/korectl cmd/korectl/*.go
 
-auth-proxy: golang deps spelling
+auth-proxy: golang deps
 	@echo "--> Compiling the auth-proxy binary"
 	@mkdir -p bin
 	go build -ldflags "${LFLAGS}" -o bin/auth-proxy cmd/auth-proxy/*.go

@@ -477,7 +477,7 @@ func schema_pkg_apis_org_v1_UserSpec(ref common.ReferenceCallback) common.OpenAP
 						},
 					},
 				},
-				Required: []string{"username"},
+				Required: []string{"disabled", "email", "username"},
 			},
 		},
 	}

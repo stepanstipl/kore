@@ -19,89 +19,99 @@
 
 package korectl
 
-// resourceConfig stores custom resource CLI configurations
+import "github.com/go-openapi/inflect"
+
 type resourceConfig struct {
-	Name            string
-	APIResourceName string
-	Columns         []string
+	Name     string
+	IsGlobal bool
+	IsTeam   bool
+	Columns  []string
 }
 
-type resourceConfigMap map[string]resourceConfig
-
-func (r resourceConfigMap) Get(name string) resourceConfig {
-	if config, ok := r[name]; ok {
+func getResourceConfig(name string) resourceConfig {
+	if config, ok := resourceConfigs[inflect.Singularize(name)]; ok {
 		return config
-	}
-
-	return resourceConfig{
-		Name:            name,
-		APIResourceName: name,
-		Columns: []string{
-			Column("Name", ".metadata.name"),
-		},
+	} else {
+		// TODO: we don't have a way to validate whether a resource exists yet, so we generate a team resource configuration dynamically
+		return resourceConfig{
+			Name:   name,
+			IsTeam: true,
+			Columns: []string{
+				Column("Name", ".metadata.name"),
+			},
+		}
 	}
 }
 
-// @question: we might wanna consider renaming these to printers
-var (
-	teamResourceConfig = resourceConfig{
-		Name:            "team",
-		APIResourceName: "teams",
+var resourceConfigs = map[string]resourceConfig{
+	"team": {
+		Name:     "teams",
+		IsGlobal: true,
 		Columns: []string{
 			Column("Name", ".metadata.name"),
 			Column("Description", ".spec.description"),
 		},
-	}
-
-	allocationResourceConfig = resourceConfig{
-		Name:            "allocation",
-		APIResourceName: "allocations",
+	},
+	"user": {
+		Name:     "users",
+		IsGlobal: true,
+		Columns: []string{
+			Column("Username", ".metadata.name"),
+			Column("Email", ".spec.email"),
+			Column("Disabled", ".spec.disabled"),
+		},
+	},
+	"plan": {
+		Name:     "plans",
+		IsGlobal: true,
+		Columns: []string{
+			Column("Resource", ".metadata.name"),
+			Column("Description", ".spec.description"),
+			Column("Summary", ".spec.summary"),
+		},
+	},
+	"audit-event": {
+		Name:     "audit",
+		IsGlobal: true,
+		IsTeam:   true,
+		Columns: []string{
+			Column("Name", ".metadata.name"),
+		},
+	},
+	"member": {
+		Name:   "members",
+		IsTeam: true,
+		Columns: []string{
+			Column("Username", "."),
+		},
+	},
+	"allocation": {
+		Name:   "allocations",
+		IsTeam: true,
 		Columns: []string{
 			Column("Name", ".metadata.name"),
 			Column("Description", ".spec.summary"),
 			Column("Resource", ".spec.resource.kind"),
 		},
-	}
-	clusterResourceConfig = resourceConfig{
-		Name:            "cluster",
-		APIResourceName: "clusters",
+	},
+	"cluster": {
+		Name:   "clusters",
+		IsTeam: true,
 		Columns: []string{
 			Column("Name", ".metadata.name"),
 			Column("Provider", ".spec.provider.group"),
 			Column("Endpoint", ".status.endpoint"),
 			Column("Status", ".status.status"),
 		},
-	}
-	namespaceResourceConfig = resourceConfig{
-		Name:            "namespaceclaim",
-		APIResourceName: "namespaceclaims",
+	},
+	"namespaceclaim": {
+		Name:   "namespaceclaims",
+		IsTeam: true,
 		Columns: []string{
 			Column("Resource", ".metadata.name"),
 			Column("Namespace", ".spec.name"),
 			Column("Cluster", ".spec.cluster.name"),
 			Column("Status", ".status.status"),
 		},
-	}
-	planResourceConfig = resourceConfig{
-		Name:            "plan",
-		APIResourceName: "plans",
-		Columns: []string{
-			Column("Resource", ".metadata.name"),
-			Column("Description", ".spec.description"),
-			Column("Summary", ".spec.summary"),
-		},
-	}
-)
-
-var resourceConfigs = resourceConfigMap{
-	"allocation":      allocationResourceConfig,
-	"allocations":     allocationResourceConfig,
-	"cluster":         clusterResourceConfig,
-	"clusters":        clusterResourceConfig,
-	"namespaceclaim":  namespaceResourceConfig,
-	"namespaceclaims": namespaceResourceConfig,
-	"plan":            planResourceConfig,
-	"plans":           planResourceConfig,
-	"team":            teamResourceConfig,
-	"teams":           teamResourceConfig,
+	},
 }
