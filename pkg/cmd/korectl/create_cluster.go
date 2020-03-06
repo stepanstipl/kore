@@ -23,7 +23,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -141,7 +140,7 @@ func GetCreateClusterCommand(config *Config) cli.Command {
 			dry := ctx.Bool("dry-run")
 
 			if team == "" {
-				return errors.New("you must specify the team you wish to create in")
+				return errTeamParameterMissing
 			}
 
 			// @step: check for an allocation

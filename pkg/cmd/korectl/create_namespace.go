@@ -20,7 +20,6 @@
 package korectl
 
 import (
-	"errors"
 	"fmt"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
@@ -88,7 +87,7 @@ func GetCreateNamespaceCommand(config *Config) cli.Command {
 
 			// @step: evaluate the options
 			if team == "" {
-				return errors.New("you must specify the team you wish to create in")
+				return errTeamParameterMissing
 			}
 			if cluster == "" {
 				return fmt.Errorf("you must specify a cluster: $ korectl get clusters -t %s", team)

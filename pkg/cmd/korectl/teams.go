@@ -20,7 +20,6 @@
 package korectl
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -177,32 +176,18 @@ func GetCreateTeamMemberCommand(config *Config) cli.Command {
 		Action: func(ctx *cli.Context) error {
 			team := GlobalStringFlag(ctx, "team")
 			if team == "" {
-				return errors.New("Required flag \"team\" not set")
+				return errTeamParameterMissing
 			}
 
-			teamExists, err := NewRequest().
-				WithConfig(config).
-				WithContext(ctx).
-				WithEndpoint("/teams/{team}").
-				PathParameter("team", true).
-				WithInject("team", team).
-				Exists()
-
+			teamExists, err := ResourceExists(config, "team", team)
 			if err != nil {
 				return err
 			}
-
 			if !teamExists {
 				return fmt.Errorf("team %q does not exist", team)
 			}
 
-			userExists, err := NewRequest().
-				WithConfig(config).
-				WithContext(ctx).
-				WithEndpoint("/users/{user}").
-				PathParameter("user", true).
-				Exists()
-
+			userExists, err := ResourceExists(config, "user", ctx.String("user"))
 			if err != nil {
 				return err
 			}
@@ -262,9 +247,8 @@ func GetDeleteTeamMemberCommand(config *Config) cli.Command {
 		Usage:   "Removes a member from the given team",
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:     "team,t",
-				Usage:    "The name of the team you wish to remove the user from",
-				Required: true,
+				Name:  "team,t",
+				Usage: "The name of the team you wish to remove the user from",
 			},
 			cli.StringFlag{
 				Name:     "user,u",
@@ -273,7 +257,21 @@ func GetDeleteTeamMemberCommand(config *Config) cli.Command {
 			},
 		},
 		Action: func(ctx *cli.Context) error {
-			err := NewRequest().
+			team := GlobalStringFlag(ctx, "team")
+			if team == "" {
+				return errTeamParameterMissing
+			}
+
+			exists, err := ResourceExists(config, "team", team)
+			if err != nil {
+				return err
+			}
+
+			if !exists {
+				return fmt.Errorf("%q does not exist", team)
+			}
+
+			err = NewRequest().
 				WithConfig(config).
 				WithContext(ctx).
 				WithEndpoint("/teams/{team}/members/{user}").
