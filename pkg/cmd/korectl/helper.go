@@ -412,3 +412,17 @@ func GetOrCreateClientConfiguration() (*Config, error) {
 	// @step: parse the configuration
 	return config, yaml.NewDecoder(bytes.NewReader(content)).Decode(config)
 }
+
+func formatLongDescription(desc string) string {
+	var res strings.Builder
+	for n, line := range strings.Split(strings.Trim(desc, " \n\t"), "\n") {
+		if n == 0 {
+			res.WriteString(strings.TrimSpace(line))
+		} else {
+			res.WriteRune('\n')
+			res.WriteString("   ")
+			res.WriteString(line)
+		}
+	}
+	return res.String()
+}
