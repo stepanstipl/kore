@@ -73,6 +73,7 @@ func invoke(ctx *cli.Context) error {
 			DiscoveryURL:               strings.TrimSuffix(ctx.String("discovery-url"), ".well-known/openid-configuration"),
 			EnableClusterDeletion:      ctx.Bool("enable-cluster-deletion"),
 			EnableClusterDeletionBlock: ctx.Bool("enable-cluster-deletion-block"),
+			EnableClusterProviderCheck: ctx.Bool("enable-cluster-provider-check"),
 			HMAC:                       ctx.String("kore-hmac"),
 			PublicAPIURL:               ctx.String("api-public-url"),
 			PublicHubURL:               ctx.String("kore-public-url"),
