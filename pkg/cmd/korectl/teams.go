@@ -20,7 +20,10 @@
 package korectl
 
 import (
+	"errors"
 	"fmt"
+
+	"github.com/manifoldco/promptui"
 
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/urfave/cli"
@@ -151,18 +154,85 @@ func GetCreateTeamMemberCommand(config *Config) cli.Command {
 		Usage:   "Creates a new team member",
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:     "team,t",
-				Usage:    "The name of the team you wish to add the user to",
-				Required: true,
+				Name:  "team,t",
+				Usage: "The name of the team you wish to add the user to",
 			},
 			cli.StringFlag{
 				Name:     "user,u",
 				Usage:    "The username of the user you wish to add to the team",
 				Required: true,
 			},
+			cli.BoolFlag{
+				Name:     "invite,i",
+				Usage:    "If the user doesn't exist and the invite flag is set, the invite url will be automatically generated.",
+				Required: false,
+			},
 		},
 		Action: func(ctx *cli.Context) error {
-			err := NewRequest().
+			team := GlobalStringFlag(ctx, "team")
+			if team == "" {
+				return errors.New("Required flag \"team\" not set")
+			}
+
+			teamExists, err := NewRequest().
+				WithConfig(config).
+				WithContext(ctx).
+				WithEndpoint("/teams/{team}").
+				PathParameter("team", true).
+				WithInject("team", team).
+				Exists()
+
+			if err != nil {
+				return err
+			}
+
+			if !teamExists {
+				return fmt.Errorf("team %q does not exist", team)
+			}
+
+			userExists, err := NewRequest().
+				WithConfig(config).
+				WithContext(ctx).
+				WithEndpoint("/users/{user}").
+				PathParameter("user", true).
+				Exists()
+
+			if err != nil {
+				return err
+			}
+
+			if !userExists {
+				if !ctx.Bool("invite") {
+					prompt := promptui.Prompt{
+						Label:     "The user does not exist. Do you want to create an invite link",
+						IsConfirm: true,
+						Default:   "Y",
+					}
+
+					// Prompt will return an error if the input is not y/Y
+					if _, err := prompt.Run(); err != nil {
+						return nil
+					}
+				}
+
+				var inviteUrl string
+				err := NewRequest().
+					WithConfig(config).
+					WithContext(ctx).
+					WithEndpoint("/teams/{team}/invites/generate/{user}").
+					PathParameter("team", true).
+					WithInject("team", team).
+					PathParameter("user", true).
+					WithRuntimeObject(&inviteUrl).
+					Get()
+				if err != nil {
+					return err
+				}
+				fmt.Printf("Invite URL: %s\n", inviteUrl)
+				return nil
+			}
+
+			err = NewRequest().
 				WithConfig(config).
 				WithContext(ctx).
 				WithEndpoint("/teams/{team}/members/{user}").

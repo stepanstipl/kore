@@ -20,6 +20,7 @@
 package apiserver
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -60,6 +61,10 @@ func (u teamHandler) inviteLink(req *restful.Request, resp *restful.Response) {
 			return err
 		}
 		options := kore.GenerateLinkOptions{Duration: duration, User: user}
+
+		if u.Config().PublicHubURL == "" {
+			return errors.New("An invitation URL can not be generated, as the Kore UI public URL is not set (ui-public-url)")
+		}
 
 		token, err := u.Teams().Team(team).Members().GenerateLink(ctx, options)
 		if err != nil {
