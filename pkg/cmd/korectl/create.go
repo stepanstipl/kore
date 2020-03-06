@@ -20,15 +20,26 @@
 package korectl
 
 import (
+	"errors"
+
 	"github.com/urfave/cli"
 )
+
+var createLongDescription = `
+The object type accepts both singular and plural nouns (e.g. "user" and "users").
+
+Example to create a team:
+  $ korectl create team a-team
+`
 
 // GetCreateCommand creates and returns the create command
 func GetCreateCommand(config *Config) cli.Command {
 	return cli.Command{
-		Name:    "create",
-		Aliases: []string{"add"},
-		Usage:   "Used to create resources under the Appvia Kore",
+		Name:        "create",
+		Aliases:     []string{"add"},
+		Usage:       "Creates various objects",
+		Description: formatLongDescription(createLongDescription),
+		ArgsUsage:   "[TYPE] [NAME]",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:  "team,t",
@@ -40,6 +51,13 @@ func GetCreateCommand(config *Config) cli.Command {
 			GetCreateTeamMemberCommand(config),
 			GetCreateClusterCommand(config),
 			GetCreateNamespaceCommand(config),
+		},
+		Before: func(ctx *cli.Context) error {
+			if !ctx.Args().Present() {
+				_ = cli.ShowCommandHelp(ctx.Parent(), "create")
+				return errors.New("[TYPE] [NAME] is required")
+			}
+			return nil
 		},
 	}
 }
