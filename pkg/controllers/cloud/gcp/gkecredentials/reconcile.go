@@ -31,10 +31,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-var (
-	verified bool
-)
-
 // Reconcile is the entrypoint for the reconciliation logic
 func (t gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	ctx := context.Background()
@@ -57,6 +53,7 @@ func (t gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 	original := resource.DeepCopy()
 
 	result, err := func() (reconcile.Result, error) {
+		var verified bool
 		resource.Status.Conditions = []corev1.Condition{}
 		resource.Status.Verified = &verified
 
