@@ -4,18 +4,30 @@
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/appvia/kore?style=for-the-badge)
 ![License: Apache-2.0](https://img.shields.io/github/license/appvia/kore?style=for-the-badge&color=%23D1374D)
 
-## Kubernetes for Teams via Appvia Kore
+## Kubernetes for Teams via Appvia Kore (Alpha)
 - **Cluster provisioning** provides secure and consistent provisioning of kubernetes environments for teams.
 - **Accounts & Account Users** provides a single source for access and control across the estate.
 - **Plans and Templates** allows the administrators to define the type and shape of resources for teams to consume.
 - **Managed Access Controls** Provides a central means to manage and configure roles, policies and permissions across the estate.
 
 ## Contents
+- [Local Quick Start](#local-quick-start)
 - [Why Appvia Kore?](#why-appvia-kore)
 - [The Developer](#the-developer)
 - [The DevOps](#the-devops)
 - [Architecture](#architecture)
-- [Getting Started](doc/getting-started.md)
+
+## Local Quick Start
+
+The fastest way to try out Appvia Kore (Alpha) is locally.
+
+This simulates what it feels like to provision teams on Kubernetes. For this to work, we'll need a Kubernetes instance. We simplify this by helping you set up a project on GKE.
+
+You'll be using this project locally from the CLI to work through setting up a team and provisioning a sandbox environment.
+
+**Please Note**: Created GKE clusters are for demo purposes only. They're tied to a local environment and will be orphaned once its stopped.
+
+See our [Local Quick Start Guide (Alpha)](doc/alpha-local-quick-start.md). 
 
 ## Why Appvia Kore?
 
