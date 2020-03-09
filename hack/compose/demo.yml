@@ -2,7 +2,7 @@
 version: '3'
 services:
   kore-apiserver:
-    image: quay.io/appvia/kore-apiserver:v0.0.12
+    image: quay.io/appvia/kore-apiserver:v0.0.13
     env_file: ../../demo.env
     environment:
       KORE_ADMIN_PASS: password
