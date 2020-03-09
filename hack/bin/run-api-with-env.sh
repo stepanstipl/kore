@@ -10,6 +10,13 @@ if [ ! -f ./demo.env ] ; then
     exit 1
 fi
 source ./demo.env
+export \
+    KORE_CLIENT_ID \
+    KORE_CLIENT_SECRET \
+    KORE_DISCOVERY_URL \
+    KORE_USER_CLAIMS \
+    KORE_CLIENT_SCOPES
+
 go run cmd/kore-apiserver/*.go \
     --kube-api-server http://127.0.0.1:8080 \
     --verbose \
