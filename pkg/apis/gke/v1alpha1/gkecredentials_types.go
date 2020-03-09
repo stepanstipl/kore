@@ -49,9 +49,9 @@ type GKECredentialsStatus struct {
 	// +listType=set
 	Conditions []corev1.Condition `json:"conditions,omitempty"`
 	// Verified checks that the credentials are ok and valid
-	Verified bool `json:"verified"`
+	Verified *bool `json:"verified,omitempty"`
 	// Status provides a overall status
-	Status corev1.Status `json:"status"`
+	Status corev1.Status `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

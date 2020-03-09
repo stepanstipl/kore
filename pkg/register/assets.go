@@ -3558,9 +3558,6 @@ spec:
             verified:
               description: Verified checks that the credentials are ok and valid
               type: boolean
-          required:
-          - status
-          - verified
           type: object
       type: object
   version: v1alpha1
@@ -4348,6 +4345,8 @@ spec:
               minLength: 1
               type: string
           required:
+          - disabled
+          - email
           - username
           type: object
         status:

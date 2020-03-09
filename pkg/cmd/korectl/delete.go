@@ -65,13 +65,15 @@ func GetDeleteCommand(config *Config) cli.Command {
 			return nil
 		},
 		Action: func(ctx *cli.Context) error {
+			team := GlobalStringFlag(ctx, "team")
+
 			for _, file := range ctx.StringSlice("file") {
 				// @step: read in the content of the file
 				content, err := ioutil.ReadFile(file)
 				if err != nil {
 					return err
 				}
-				documents, err := ParseDocument(bytes.NewReader(content), ctx.String("team"))
+				documents, err := ParseDocument(bytes.NewReader(content), team)
 				if err != nil {
 					return err
 				}
