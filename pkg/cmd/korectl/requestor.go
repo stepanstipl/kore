@@ -119,7 +119,7 @@ func NewRequestForResource(config *Config, ctx *cli.Context) (*Requestor, resour
 	} else {
 		endpoint = "/{resource}"
 		if !resConfig.IsGlobal {
-			return nil, resourceConfig{}, errors.New("--team parameter must be set")
+			return nil, resourceConfig{}, errTeamParameterMissing
 		}
 	}
 
