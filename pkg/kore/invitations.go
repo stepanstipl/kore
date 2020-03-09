@@ -33,7 +33,7 @@ import (
 // Invitations is the contract for the invitation
 type Invitations interface {
 	// HandleGenerateLink is responsible for handling the link
-	HandleGenerateLink(context.Context, string) error
+	HandleGenerateLink(context.Context, string) (string, error)
 	// VerifyGenerateLink checks the token is valid
 	VerifyGenerateLink(context.Context, string) (bool, error)
 }
@@ -44,7 +44,7 @@ type ivImpl struct {
 }
 
 // HandleGenerateLink is responsible for handling the link
-func (t ivImpl) HandleGenerateLink(ctx context.Context, encoded string) error {
+func (t ivImpl) HandleGenerateLink(ctx context.Context, encoded string) (string, error) {
 	// @step: extract the user from the context
 	u, found := authentication.GetIdentity(ctx)
 	if !found {
@@ -54,14 +54,14 @@ func (t ivImpl) HandleGenerateLink(ctx context.Context, encoded string) error {
 	// @step: we parse the token and grab the claims
 	c, err := t.ParseToken(ctx, encoded)
 	if err != nil {
-		return err
+		return "", err
 	}
 	claims := utils.NewClaims(c)
 
 	// @step: extract claims from the token
 	team, found := claims.GetString("team")
 	if !found {
-		return ErrNotAllowed{message: "no team found in the invitation claim"}
+		return "", ErrNotAllowed{message: "no team found in the invitation claim"}
 	}
 
 	// @step: check if the claims content a user
@@ -70,11 +70,11 @@ func (t ivImpl) HandleGenerateLink(ctx context.Context, encoded string) error {
 		// @check if user found in context and user found in the token - we need
 		// to ensure they are the same
 		if user != u.Username() {
-			return ErrNotAllowed{message: "invitition link is for another user"}
+			return "", ErrNotAllowed{message: "invitition link is for another user"}
 		}
 	} else if !found && u == nil {
 		// @check no user in the token and no user in the context
-		return ErrNotAllowed{message: "no user found in the request context"}
+		return "", ErrNotAllowed{message: "no user found in the request context"}
 	} else if !found {
 		// @check no user in the token but we have a context
 		user = u.Username()
@@ -95,7 +95,11 @@ func (t ivImpl) HandleGenerateLink(ctx context.Context, encoded string) error {
 		}
 	*/
 
-	return t.Teams().Team(team).Members().Add(ctx, user)
+	if err := t.Teams().Team(team).Members().Add(ctx, user); err != nil {
+		return "", err
+	}
+
+	return team, nil
 }
 
 // VerifyGenerateLink is responsible for checking the link is valid

@@ -35,12 +35,14 @@ func (u teamHandler) invitationSubmit(req *restful.Request, resp *restful.Respon
 		ctx := req.Request.Context()
 		token := req.PathParameter("token")
 
-		if err := u.Invitations().HandleGenerateLink(ctx, token); err != nil {
+		team, err := u.Invitations().HandleGenerateLink(ctx, token)
+		if err != nil {
 			return err
 		}
-		resp.WriteHeader(http.StatusOK)
-
-		return nil
+		result := map[string]interface{}{
+			"team": team,
+		}
+		return resp.WriteHeaderAndEntity(http.StatusOK, result)
 	})
 }
 
