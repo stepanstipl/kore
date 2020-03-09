@@ -25,6 +25,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/appvia/kore/pkg/apiserver/types"
+
 	"github.com/appvia/kore/pkg/kore"
 	restful "github.com/emicklei/go-restful"
 )
@@ -39,8 +41,8 @@ func (u teamHandler) invitationSubmit(req *restful.Request, resp *restful.Respon
 		if err != nil {
 			return err
 		}
-		result := map[string]interface{}{
-			"team": team,
+		result := &types.TeamInvitationResponse{
+			Team: team,
 		}
 		return resp.WriteHeaderAndEntity(http.StatusOK, result)
 	})
