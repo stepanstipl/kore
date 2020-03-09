@@ -2,6 +2,7 @@ package korectl
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/manifoldco/promptui"
 )
@@ -35,7 +36,7 @@ func (p *prompt) do() error {
 		return err
 	}
 
-	*p.value = gathered
+	*p.value = strings.TrimSpace(gathered)
 	return nil
 }
 
