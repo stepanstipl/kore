@@ -38,6 +38,7 @@ Example to delete multiple resources from a file:
   $ korectl delete --file resources.yaml
 `
 
+// GetDeleteCommand creates and returns the delete command
 func GetDeleteCommand(config *Config) cli.Command {
 	return cli.Command{
 		Name:        "delete",
@@ -56,7 +57,8 @@ func GetDeleteCommand(config *Config) cli.Command {
 			},
 		},
 		Subcommands: []cli.Command{
-			GetDeleteTeamMemberCommand(config),
+			// @note once we figure out the global flag issue we will place this back in
+			//GetDeleteTeamMemberCommand(config),
 		},
 		Before: func(ctx *cli.Context) error {
 			if !ctx.IsSet("file") && !ctx.Args().Present() {

@@ -163,7 +163,7 @@ func GetProfilesCommand(config *Config) cli.Command {
 					}
 
 					fmt.Println("Successfully configured the profile to: ", name)
-					fmt.Println("In order to authenticate please run: $ korectl auth")
+					fmt.Println("In order to authenticate please run: $ korectl login")
 
 					return nil
 				},
