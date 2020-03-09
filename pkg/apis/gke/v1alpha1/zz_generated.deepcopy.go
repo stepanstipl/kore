@@ -156,6 +156,11 @@ func (in *GKECredentialsStatus) DeepCopyInto(out *GKECredentialsStatus) {
 		*out = make([]v1.Condition, len(*in))
 		copy(*out, *in)
 	}
+	if in.Verified != nil {
+		in, out := &in.Verified, &out.Verified
+		*out = new(bool)
+		**out = **in
+	}
 	return
 }
 

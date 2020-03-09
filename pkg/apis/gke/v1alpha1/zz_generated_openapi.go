@@ -203,7 +203,6 @@ func schema_pkg_apis_gke_v1alpha1_GKECredentialsStatus(ref common.ReferenceCallb
 						},
 					},
 				},
-				Required: []string{"verified", "status"},
 			},
 		},
 		Dependencies: []string{

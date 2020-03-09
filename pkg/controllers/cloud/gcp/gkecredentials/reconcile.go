@@ -31,6 +31,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
+var (
+	verified bool
+)
+
 // Reconcile is the entrypoint for the reconciliation logic
 func (t gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	ctx := context.Background()
@@ -54,7 +58,7 @@ func (t gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 	result, err := func() (reconcile.Result, error) {
 		resource.Status.Conditions = []corev1.Condition{}
-		resource.Status.Verified = false
+		resource.Status.Verified = &verified
 
 		// @step: set the status to pending if none set
 		if resource.Status.Status == "" {
@@ -72,12 +76,14 @@ func (t gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		}
 
 		// @step: verify the credentials
-		resource.Status.Verified, err = client.HasRequiredPermissions()
+		verified, err = client.HasRequiredPermissions()
 		if err != nil {
 			return reconcile.Result{}, err
 		}
+		resource.Status.Verified = &verified
+		resource.Status.Status = corev1.SuccessStatus
 
-		if !resource.Status.Verified {
+		if resource.Status.Verified == nil || !*resource.Status.Verified {
 			logger.Warn("gke credentials not verified")
 		}
 
