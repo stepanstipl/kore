@@ -27,6 +27,7 @@ import (
 func GetCommands(config *Config) []cli.Command {
 	return []cli.Command{
 		GetLoginCommand(config),
+		GetLogoutCommand(config),
 		GetProfilesCommand(config),
 		GetLocalCommand(config),
 		GetAutoCompleteCommand(config),
