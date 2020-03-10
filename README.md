@@ -25,7 +25,7 @@ See our [Local Quick Start Guide (Alpha)](doc/alpha-local-quick-start.md).
 
 ### Appvia Kore / Kubernetes API / GKE
 
-In local mode, Appvia Kore will start the Kubernetes API locally. But, will still need access to a Kubernetes instance to create clusters.
+In local mode, Appvia Kore will start the Kubernetes API locally. But, will still need access to a Kubernetes provider to create clusters.
 
 We'll utilise [GKE](https://cloud.google.com/kubernetes-engine) for this. And, we'll help you set it up to work with Appvia Kore. 
 
@@ -33,7 +33,7 @@ We'll utilise [GKE](https://cloud.google.com/kubernetes-engine) for this. And, w
 
 ### Appvia Kore CLI
 
-The Quick Start guide will walk you through using the CLI to set up a team and provision a sandbox environment.
+The Quick Start guide will walk you through using the CLI to set up a team, provision a sandbox environment and deploy a sample application.
 
 ## Why Appvia Kore?
 

@@ -1,20 +1,20 @@
 # Local Quick Start Guide (Alpha )
 
-In this guide, we'll walk you through how to use the Appvia Kore CLI to set up a sandbox team environment locally.
+In this guide, we'll walk you through how to use the Appvia Kore CLI to set up a sandbox team environment locally and deploy a sample application.
 
-We'll showcase how Appvia Kore can give you a head start with setting up clusters, team members and environments.
+We'll showcase how Appvia Kore can give you a head start with setting up [clusters](https://www.redhat.com/en/topics/containers/what-is-a-kubernetes-cluster), team members and environments.
 
 ## Kubernetes
 
-You'll need a Kubernetes instance to work through this guide. We simplify this by helping you set up a project on GKE.
+You'll need a Kubernetes provider to work through this guide. We simplify this by helping you set up a project on [GKE](https://cloud.google.com/kubernetes-engine).
 
 **Please Note**: Created GKE clusters are for demo purposes only. They're tied to a local environment and will be orphaned once the local Kore instance is stopped.
 
 ## Team Access
 
-Appvia Kore uses an external identity provider, like Auth0, to manage team member identity and authenticate members.
+Appvia Kore uses an external identity provider to manage team member identity and authenticate members.
 
-To keep things simple, we'll help you get set up on Auth0 to configure team access.
+For this guide, we'll help you to get set up on Auth0 to configure team access.
 
 ## Getting Started
 
@@ -22,6 +22,11 @@ To keep things simple, we'll help you get set up on Auth0 to configure team acce
 - [Google Cloud account](#google-cloud-account)
 - [Configure Team Access](#configure-team-access)
 - [Start Kore Locally with CLI](#use-cli-to-start-kore-locally)
+- [Login as Admin with CLI](#login-as-admin-with-cli)
+- [Create a Team with CLI](#create-a-team-with-cli)
+- [Enable Kore to Set up Team Environments on GKE](enable-kore-to-set-up-team-environments-on-gke)
+- [Provision a Sandbox Env with CLI](#provision-a-sandbox-env-with-cli)
+- [Deploy An App to the Sandbox](#deploy-an-app-to-the-sandbox)
 
 ### Docker
 
@@ -89,8 +94,9 @@ Give the application a name and choose `Regular Web Applications`
 
 Once provisioned click on the `Settings` tab and scroll down to `Allowed Callback URLs`.
 These are the permitted redirects for the applications. Since we are running the application locally off the laptop set
-- `http://localhost:3000/auth/callback` and 
-- `http://localhost:10080/oauth/callback` (Note the comma separation in the Auth0 UI).
+```
+http://localhost:10080/oauth/callback,http://localhost:3000/auth/callback 
+```
 
 Scroll to the bottom of the settings and click the `Show Advanced Settings`
 
@@ -165,3 +171,132 @@ bin/korectl local start
 - Stop: To stop, run `bin/korectl local stop`
 
 - Logs: To view local logs, run `bin/korectl local logs`
+
+### Login as Admin with CLI
+
+You now have to login to be able to create teams and provision environments.
+
+This will use our Auth0 set up for IDP. As you're the only user, you'll be assigned Admin privileges.  
+
+```shell script
+bin/korectl login
+# Attempting to authenticate to Appvia Kore: http://127.0.0.1:10080 [local]
+# Successfully authenticated
+```
+
+### Create a Team with CLI
+
+Let's create a team with the CLI. In local mode, you'll be assigned as team member to this team.
+
+As a team member, you'll be able to provision environments on behalf of team.
+
+```shell script
+bin/korectl create team --description 'The Appvia product team, working on project Q.' team-appvia
+# "team-appvia" team was successfully created
+```
+
+To ensure the team was created,
+
+```shell script
+bin/korectl get teams team-appvia
+#Name            Description
+#team-appvia     The Appvia product team, working on project Q.
+```
+
+### Enable Kore to Set up Team Environments on GKE
+
+This command applies a set of manifests created when configuring Kore to run locally.
+
+When applied, these manifests give Kore the credentials necessary to build a GKE cluster on behalf of our team. 
+
+This cluster will in turn host our sandbox environment.
+
+```shell script
+bin/korectl apply -f manifests/local/gke-credentials.yml -f manifests/local/gke-allocation.yml
+# gke.compute.kore.appvia.io/teams/kore-admin/gkecredentials/gke configured
+# config.kore.appvia.io/teams/kore-admin/allocations/gke configured
+```
+
+### Provision a Sandbox Env with CLI
+
+Its time to use the Kore CLI To provision our Sandbox environment,
+
+```shell script
+bin/korectl create cluster appvia-trial -t team-appvia --plan gke-development -a gke --namespace sandbox
+# Attempting to create cluster: "appvia-trial", plan: gke-development
+# Waiting for "appvia-trial" to provision (usually takes around 5 minutes, ctrl-c to background)
+# Cluster appvia-sdbox has been successfully provisioned
+# --> Attempting to create namespace: sandbox
+
+# You can retrieve your kubeconfig via: $ korectl clusters auth -t team-appvia
+```
+
+There's a lot to unpack here. So, lets walk through it,
+
+- `create cluster`, we create a [cluster](https://www.redhat.com/en/topics/containers/what-is-a-kubernetes-cluster) to host our sandbox environment.
+
+- `appvia-trial`, the name of the cluster.
+
+- `-t team-appvia`, the team for which we are creating the sandbox environment.
+
+- `--plan gke-development`, a Kore predefined plan called `gke-development`. This creates a cluster ideal for non-prod use.
+
+- `-a gke`, the `gke` allocated credential to use for creating this cluster.
+ 
+- `--namespace sandbox`, creates an environment called `sandbox` in the `appvia-trial` where we can deploy our apps, servers, etc..
+
+You now have a sandbox environment locally provisioned for your team. 🎉  
+
+### Deploy An App to the Sandbox
+
+We'll be using `kubectl`, the Kubernetes CLI, to make the deployment.
+
+First we have to set up our kubeconfig in `~/.kube/config` with our new GKE cluster.
+
+```shell script
+bin/korectl clusters auth -t team-appvia
+# Successfully updated your kubeconfig with credentials
+```
+
+Ensure the current `kubectl` context is correct
+
+```shell script
+kubectl config set-context appvia-trial
+# + kubectl config set-context appvia-trial --namespace=sandbox
+# Context "appvia-trial" modified.
+```
+
+Deploy the GKE example web application container available from the Google Cloud Repository
+
+```shell script
+kubectl create deployment hello-server --image=gcr.io/google-samples/hello-app:1.0
+# + kubectl create deployment hello-server --image=gcr.io/google-samples/hello-app:1.0
+# deployment.apps/hello-server created
+
+kubectl expose deployment hello-server --type LoadBalancer --port 80 --target-port 8080
+# + kubectl expose deployment hello-server --type LoadBalancer --port 80 --target-port 8080
+# service/hello-server exposed
+```
+
+Get the `EXTERNAL-IP` for `hello-server` service
+
+```shell script
+kubectl get service hello-server
+# + kubectl get services
+# NAME           TYPE           CLUSTER-IP     EXTERNAL-IP          PORT(S)        AGE
+# hello-server   LoadBalancer   10.70.10.119   <35.242.154.199>     80:31319/TCP   23s
+```
+
+Now navigate to the `EXTERNAL-IP` as a url
+
+```shell script
+open http://35.242.154.199
+```
+
+You should see this on the webpage
+
+```text
+Hello, world!
+Version: 1.0.0
+Hostname: hello-server-7f8fd4d44b-hpxls
+```
