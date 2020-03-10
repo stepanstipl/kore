@@ -21,7 +21,7 @@ For this guide, we'll help you to get set up on Auth0 to configure team access.
 - [Docker](#docker)
 - [Google Cloud account](#google-cloud-account)
 - [Configure Team Access](#configure-team-access)
-- [Start Kore Locally with CLI](#use-cli-to-start-kore-locally)
+- [Start Kore Locally with CLI](#start-kore-locally-with-cli)
 - [Login as Admin with CLI](#login-as-admin-with-cli)
 - [Create a Team with CLI](#create-a-team-with-cli)
 - [Enable Kore to Set up Team Environments on GKE](enable-kore-to-set-up-team-environments-on-gke)
