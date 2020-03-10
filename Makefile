@@ -99,6 +99,14 @@ images:
 		docker build -t ${REGISTRY}/${AUTHOR}/$${name}:${VERSION} -f images/Dockerfile.$${name} . ; \
 	done
 
+push-images:
+	@echo "--> Pushing docker images"
+	@for name in kore-apiserver auth-proxy; do \
+		echo "--> Pushing docker image $${name}" ; \
+		docker push ${REGISTRY}/${AUTHOR}/$${name}:${VERSION} ; \
+	done
+
+
 in-docker-build:
 	@echo "--> Building in Docker"
 	@git config --global url.git@github.com:.insteadOf https://github.com/
@@ -201,10 +209,7 @@ demo:
 		--file hack/compose/operators.yml \
 		up --force-recreate --renew-anon-volumes
 
-docker-release:
-	@echo "--> Building a release image"
-	@$(MAKE) docker
-	@docker push ${REGISTRY}/${AUTHOR}/${NAME}:${VERSION}
+docker-release: images push-images
 
 docker: images
 
