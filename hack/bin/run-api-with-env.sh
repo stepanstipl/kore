@@ -17,7 +17,7 @@ export \
     KORE_USER_CLAIMS \
     KORE_CLIENT_SCOPES
 
-go run cmd/kore-apiserver/*.go \
+./bin/kore-apiserver \
     --kube-api-server http://127.0.0.1:8080 \
     --verbose \
     --admin-pass password \
