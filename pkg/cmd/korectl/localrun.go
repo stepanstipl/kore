@@ -26,6 +26,7 @@ import (
 	"os/exec"
 	"path"
 	"text/template"
+	"time"
 
 	"github.com/urfave/cli"
 )
@@ -92,6 +93,9 @@ func GetLocalRunSubCommands(config *Config) []cli.Command {
 					fmt.Printf("%s\n", stdoutStderr)
 					return err
 				}
+
+				// We pause here to give the services time to initialise
+				time.Sleep(time.Second * 35)
 
 				fmt.Printf("...Kore is now started locally and is ready on %s\n", localEndpoint)
 
