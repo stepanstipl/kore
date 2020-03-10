@@ -258,7 +258,7 @@ bin/korectl clusters auth -t team-appvia
 # Successfully updated your kubeconfig with credentials
 ```
 
-Ensure the current `kubectl` context is correct
+Switch the current `kubectl` context to `appvia-trial`,
 
 ```shell script
 kubectl config set-context appvia-trial
