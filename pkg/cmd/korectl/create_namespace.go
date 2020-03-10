@@ -25,7 +25,7 @@ import (
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 var (
@@ -49,23 +49,19 @@ $ korectl get namespaceclaims -t <team>
 )
 
 // GetCreateNamespaceCommand creates and returns the create namespace command
-func GetCreateNamespaceCommand(config *Config) cli.Command {
-	return cli.Command{
+func GetCreateNamespaceCommand(config *Config) *cli.Command {
+	return &cli.Command{
 		Name:        "namespace",
 		Description: createNamespaceLongDescription,
 		Usage:       "Create a namespace on the cluster",
 		ArgsUsage:   "<name> [options]",
 
 		Flags: []cli.Flag{
-			cli.StringFlag{
-				Name:  "team,t",
-				Usage: "Used to select the team context you are operating in `NAME`",
-			},
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:  "cluster,c",
 				Usage: "the name of the cluster you want the namespace to reside `NAME`",
 			},
-			cli.BoolFlag{
+			&cli.BoolFlag{
 				Name:  "dry-run",
 				Usage: "generate the cluster specification but does not apply `BOOL`",
 			},
@@ -82,7 +78,7 @@ func GetCreateNamespaceCommand(config *Config) cli.Command {
 		Action: func(ctx *cli.Context) error {
 			name := ctx.Args().First()
 			cluster := ctx.String("cluster")
-			team := GlobalStringFlag(ctx, "team")
+			team := ctx.String("team")
 			dry := ctx.Bool("dry-run")
 
 			// @step: evaluate the options

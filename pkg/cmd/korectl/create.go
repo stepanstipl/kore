@@ -22,7 +22,7 @@ package korectl
 import (
 	"errors"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 var createLongDescription = `
@@ -33,30 +33,28 @@ Example to create a team:
 `
 
 // GetCreateCommand creates and returns the create command
-func GetCreateCommand(config *Config) cli.Command {
-	return cli.Command{
+func GetCreateCommand(config *Config) *cli.Command {
+	return &cli.Command{
 		Name:        "create",
 		Aliases:     []string{"add"},
 		Usage:       "Creates various objects",
 		Description: formatLongDescription(createLongDescription),
 		ArgsUsage:   "[TYPE] [NAME]",
-		Flags: []cli.Flag{
-			cli.StringFlag{
-				Name:  "team,t",
-				Usage: "Used to select the team context you are operating in",
-			},
-		},
-		Subcommands: []cli.Command{
+
+		Subcommands: []*cli.Command{
 			GetCreateTeamCommand(config),
 			GetCreateTeamMemberCommand(config),
 			GetCreateClusterCommand(config),
 			GetCreateNamespaceCommand(config),
 		},
+
 		Before: func(ctx *cli.Context) error {
 			if !ctx.Args().Present() {
-				_ = cli.ShowCommandHelp(ctx.Parent(), "create")
+				_ = cli.ShowCommandHelp(ctx, "create")
+
 				return errors.New("[TYPE] [NAME] is required")
 			}
+
 			return nil
 		},
 	}

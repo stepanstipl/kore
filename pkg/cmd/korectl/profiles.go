@@ -27,7 +27,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 var longProfileDescription = `
@@ -48,13 +48,13 @@ $ korectl profile configure <name>  # allows you to configure a profile
 `
 
 // GetProfilesCommand creates and returns a profiles command
-func GetProfilesCommand(config *Config) cli.Command {
-	return cli.Command{
+func GetProfilesCommand(config *Config) *cli.Command {
+	return &cli.Command{
 		Name:        "profile",
 		Usage:       "Manage profiles, allowing you switch, list and show profiles",
 		Description: longProfileDescription,
 
-		Subcommands: []cli.Command{
+		Subcommands: []*cli.Command{
 			{
 				Name:  "show",
 				Usage: "shows the current profile in use",
@@ -123,7 +123,7 @@ func GetProfilesCommand(config *Config) cli.Command {
 				Usage:     "walk through and configure a new profile for you",
 				UsageText: "korectl profile configure <name>",
 				Flags: []cli.Flag{
-					cli.BoolFlag{
+					&cli.BoolFlag{
 						Name:  "force",
 						Usage: "force the creation of the profile regardless if one exists",
 					},

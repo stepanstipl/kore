@@ -24,31 +24,28 @@ import (
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
-func GetClustersCommand(config *Config) cli.Command {
-	return cli.Command{
+func GetClustersCommand(config *Config) *cli.Command {
+	return &cli.Command{
 		Name:    "clusters",
 		Aliases: []string{"cls"},
 		Usage:   "Used to manage and interact with clusters provisioned by the kore",
-		Subcommands: []cli.Command{
+
+		Subcommands: []*cli.Command{
 			{
 				Name:  "auth",
 				Usage: "Used to retrieve the API endpoints of the clusters and provision your kubeconfig",
 				Flags: []cli.Flag{
-					cli.StringFlag{
+					&cli.StringFlag{
 						Name:  "name,n",
 						Usage: "The name of the integration to retrieve `NAME`",
-					},
-					cli.StringFlag{
-						Name:  "team,t",
-						Usage: "Used to filter the results by team `TEAM`",
 					},
 				},
 				Action: func(ctx *cli.Context) error {
 					clusters := &clustersv1.KubernetesList{}
-					team := GlobalStringFlag(ctx, "team")
+					team := ctx.String("team")
 
 					if err := GetTeamResourceList(config, team, "clusters", clusters); err != nil {
 						return err
@@ -77,17 +74,17 @@ func GetClustersCommand(config *Config) cli.Command {
 				Name:  "get",
 				Usage: "Used to retrieve one or all clusters from the kore",
 				Flags: append([]cli.Flag{
-					cli.StringFlag{
+					&cli.StringFlag{
 						Name:  "name,n",
 						Usage: "The name of the integration to retrieve `NAME`",
 					},
-					cli.StringFlag{
+					&cli.StringFlag{
 						Name:  "team,t",
 						Usage: "Used to filter the results by team `TEAM`",
 					},
 				}, DefaultOptions...),
 				Action: func(ctx *cli.Context) error {
-					team := GlobalStringFlag(ctx, "team")
+					team := ctx.String("team")
 
 					return NewRequest().
 						WithConfig(config).

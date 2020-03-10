@@ -23,7 +23,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 var editLongDescription = `
@@ -33,22 +33,23 @@ Example to edit a team:
   $ korectl edit team a-team
 `
 
-func GetEditCommand(config *Config) cli.Command {
-	return cli.Command{
+func GetEditCommand(config *Config) *cli.Command {
+	return &cli.Command{
 		Name:        "edit",
 		Usage:       "Modifies various objects",
 		Description: formatLongDescription(editLongDescription),
 		ArgsUsage:   "[TYPE] [NAME]",
 
-		Subcommands: []cli.Command{
+		Subcommands: []*cli.Command{
 			GetEditTeamCommand(config),
 		},
 		Before: func(ctx *cli.Context) error {
 			if !ctx.Args().Present() {
-				_ = cli.ShowCommandHelp(ctx.Parent(), "edit")
+				_ = cli.ShowCommandHelp(ctx, "edit")
 				fmt.Println()
 				return errors.New("[TYPE] [NAME] is required")
 			}
+
 			return nil
 		},
 	}

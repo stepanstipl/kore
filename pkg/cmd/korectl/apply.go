@@ -24,24 +24,22 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
-func GetApplyCommand(config *Config) cli.Command {
-	return cli.Command{
+func GetApplyCommand(config *Config) *cli.Command {
+	return &cli.Command{
 		Name:  "apply",
 		Usage: "Used to apply one of more resources to the API",
+
 		Flags: []cli.Flag{
-			cli.StringSliceFlag{
+			&cli.StringSliceFlag{
 				Name:     "file,f",
 				Usage:    "The path to the file containing the resources definitions `PATH`",
 				Required: true,
 			},
-			cli.StringFlag{
-				Name:  "team,t",
-				Usage: "Used to filter the results by team `TEAM`",
-			},
 		},
+
 		Action: func(ctx *cli.Context) error {
 			for _, file := range ctx.StringSlice("file") {
 				// @step: read in the content of the file

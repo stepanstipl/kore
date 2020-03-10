@@ -19,10 +19,10 @@
 
 package korectl
 
-import "github.com/urfave/cli"
+import "github.com/urfave/cli/v2"
 
-func GetWhoamiCommand(config *Config) cli.Command {
-	return cli.Command{
+func GetWhoamiCommand(config *Config) *cli.Command {
+	return &cli.Command{
 		Name:    "whoami",
 		Aliases: []string{"who"},
 		Usage:   "Used to retrieve details on your identity within the kore",

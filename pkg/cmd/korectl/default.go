@@ -19,16 +19,21 @@
 
 package korectl
 
-import "github.com/urfave/cli"
+import "github.com/urfave/cli/v2"
 
 // DefaultsOptions are options for all commands
 var DefaultOptions = []cli.Flag{
-	cli.StringFlag{
+	&cli.StringFlag{
+		Name:    "team",
+		Aliases: []string{"t"},
+		Usage:   "Used to select the team context you are operating in",
+	},
+	&cli.StringFlag{
 		Name:  "output,o",
 		Usage: "The output format of the resource `FORMAT`",
 		Value: "yaml",
 	},
-	cli.BoolFlag{
+	&cli.BoolFlag{
 		Name:  "debug,D",
 		Usage: "Indicates for verbose logging `BOOL`",
 	},

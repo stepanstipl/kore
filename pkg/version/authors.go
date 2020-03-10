@@ -19,7 +19,7 @@
 
 package version
 
-import "github.com/urfave/cli"
+import "github.com/urfave/cli/v2"
 
 var (
 	// Authors is a collection of authors - should probably generate from git

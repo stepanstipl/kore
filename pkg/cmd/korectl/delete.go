@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 var deleteLongDescription = `
@@ -39,35 +39,34 @@ Example to delete multiple resources from a file:
 `
 
 // GetDeleteCommand creates and returns the delete command
-func GetDeleteCommand(config *Config) cli.Command {
-	return cli.Command{
+func GetDeleteCommand(config *Config) *cli.Command {
+	return &cli.Command{
 		Name:        "delete",
 		Aliases:     []string{"rm", "del"},
 		Usage:       "Deletes one or more resources",
 		Description: formatLongDescription(deleteLongDescription),
 		ArgsUsage:   "-f <file> | [TYPE] [NAME]",
-		Flags: []cli.Flag{
-			cli.StringSliceFlag{
+
+		Flags: append([]cli.Flag{
+			&cli.StringSliceFlag{
 				Name:  "file,f",
 				Usage: "The path to the file containing the resources definitions `PATH`",
 			},
-			cli.StringFlag{
-				Name:  "team,t",
-				Usage: "Used to filter the results by team `TEAM`",
-			},
+		}, DefaultOptions...),
+
+		Subcommands: []*cli.Command{
+			GetDeleteTeamMemberCommand(config),
 		},
-		Subcommands: []cli.Command{
-			// @note once we figure out the global flag issue we will place this back in
-			//GetDeleteTeamMemberCommand(config),
-		},
+
 		Before: func(ctx *cli.Context) error {
 			if !ctx.IsSet("file") && !ctx.Args().Present() {
-				return cli.ShowCommandHelp(ctx.Parent(), "delete")
+				return cli.ShowCommandHelp(ctx, "delete")
 			}
 			return nil
 		},
+
 		Action: func(ctx *cli.Context) error {
-			team := GlobalStringFlag(ctx, "team")
+			team := ctx.String("team")
 
 			for _, file := range ctx.StringSlice("file") {
 				// @step: read in the content of the file
