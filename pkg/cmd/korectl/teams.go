@@ -159,10 +159,6 @@ func GetCreateTeamMemberCommand(config *Config) *cli.Command {
 		Usage:   "Creates a new team member",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:  "team,t",
-				Usage: "The name of the team you wish to add the user to",
-			},
-			&cli.StringFlag{
 				Name:     "user,u",
 				Usage:    "The username of the user you wish to add to the team",
 				Required: true,

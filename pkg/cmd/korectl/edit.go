@@ -20,7 +20,6 @@
 package korectl
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/urfave/cli/v2"
@@ -43,11 +42,11 @@ func GetEditCommand(config *Config) *cli.Command {
 		Subcommands: []*cli.Command{
 			GetEditTeamCommand(config),
 		},
+
 		Before: func(ctx *cli.Context) error {
 			if !ctx.Args().Present() {
-				_ = cli.ShowCommandHelp(ctx.Lineage()[1], "edit")
-				fmt.Println()
-				return errors.New("[TYPE] [NAME] is required")
+				_ = cli.ShowSubcommandHelp(ctx)
+				return fmt.Errorf("[TYPE] [NAME] ")
 			}
 			return nil
 		},

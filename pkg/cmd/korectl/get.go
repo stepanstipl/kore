@@ -20,7 +20,6 @@
 package korectl
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -44,22 +43,13 @@ func GetGetCommand(config *Config) *cli.Command {
 		Usage:       "Retrieves one or more resources from the api",
 		Description: formatLongDescription(getLongDescription),
 		ArgsUsage:   "[TYPE] [NAME]",
-		Flags: append([]cli.Flag{
-			&cli.StringFlag{
-				Name:  "team,t",
-				Usage: "Used to filter the results by team",
-			},
-		}, DefaultOptions...),
-
-		Before: func(ctx *cli.Context) error {
-			if !ctx.Args().Present() {
-				return errors.New("you need to specify a resource type")
-			}
-
-			return nil
-		},
+		Flags:       DefaultOptions,
 
 		Action: func(ctx *cli.Context) error {
+			if !ctx.Args().Present() {
+				_ = cli.ShowSubcommandHelp(ctx)
+				return fmt.Errorf("[TYPE] or [TYPE] [NAME] is required")
+			}
 			req, resourceConfig, err := NewRequestForResource(config, ctx)
 			if err != nil {
 				return err

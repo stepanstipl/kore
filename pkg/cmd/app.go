@@ -2,20 +2,75 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/urfave/cli/v2"
 )
 
+func init() {
+	cli.SubcommandHelpTemplate = `NAME:
+   {{.HelpName}} - {{.Usage}}
+
+USAGE:
+   {{if .UsageText}}{{.UsageText}}{{else}}{{.HelpName}}{{if .VisibleFlags}} [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}{{end}}
+
+DESCRIPTION:
+   {{if .Description}}{{.Description}}{{else}}{{.Usage}}{{end}}{{if len .VisibleCategories}}
+
+COMMANDS:{{range .VisibleCategories}}{{if .Name}}
+   {{.Name}}:{{range .VisibleCommands}}
+     {{join .Names ", "}}{{"\t"}}{{.Usage}}{{end}}{{else}}{{range .VisibleCommands}}
+   {{join .Names ", "}}{{"\t"}}{{.Usage}}{{end}}{{end}}{{end}}{{end}}{{if .VisibleFlags}}
+
+OPTIONS:
+   {{range .VisibleFlags}}{{.}}
+   {{end}}{{end}}
+`
+
+	cli.CommandHelpTemplate = `NAME:
+   {{.HelpName}} - {{.Usage}}
+
+USAGE:
+   {{if .UsageText}}{{.UsageText}}{{else}}{{.HelpName}}{{if .VisibleFlags}} [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}{{end}}{{if .Category}}
+
+CATEGORY:
+   {{.Category}}{{end}}{{if .Description}}
+
+DESCRIPTION:
+   {{.Description}}{{end}}{{if .VisibleFlags}}
+
+OPTIONS:
+   {{range .VisibleFlags}}{{.}}
+   {{end}}{{else}}
+{{end}}
+`
+}
+
+var globalOptionsTemplate = `{{if .VisibleFlags}}GLOBAL OPTIONS:
+   {{range $index, $option := .VisibleFlags}}{{if $index}}
+   {{end}}{{$option}}{{end}}
+{{end}}
+`
+
 type App struct {
-	app *cli.App
+	app                   *cli.App
+	origHelpPrinterCustom func(io.Writer, string, interface{}, map[string]interface{})
 }
 
 func NewApp(app *cli.App) *App {
-	return &App{app: app}
+	return &App{
+		app: app,
+	}
 }
 
 func (a *App) Run(args []string) error {
+	a.origHelpPrinterCustom = cli.HelpPrinterCustom
+	cli.HelpPrinterCustom = a.helpPrinterCustom
+	defer func() {
+		cli.HelpPrinterCustom = a.origHelpPrinterCustom
+	}()
+
 	orderedArgs, err := a.orderArgs(args)
 	if err != nil {
 		return err
@@ -77,4 +132,11 @@ func (a *App) parseFlagFromArgs(args []string, name string) ([]string, error) {
 		}
 	}
 	return nil, nil
+}
+
+func (a *App) helpPrinterCustom(out io.Writer, templ string, data interface{}, customFuncs map[string]interface{}) {
+	a.origHelpPrinterCustom(out, templ, data, customFuncs)
+	if data != a.app {
+		a.origHelpPrinterCustom(a.app.Writer, globalOptionsTemplate, a.app, nil)
+	}
 }
