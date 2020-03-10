@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 var getLongDescription = `
@@ -38,14 +38,14 @@ Examples:
   $ korectl get user admin -o yaml
 `
 
-func GetGetCommand(config *Config) cli.Command {
-	return cli.Command{
+func GetGetCommand(config *Config) *cli.Command {
+	return &cli.Command{
 		Name:        "get",
 		Usage:       "Retrieves one or more resources from the api",
 		Description: formatLongDescription(getLongDescription),
 		ArgsUsage:   "[TYPE] [NAME]",
 		Flags: append([]cli.Flag{
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:  "team,t",
 				Usage: "Used to filter the results by team",
 			},

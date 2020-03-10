@@ -26,7 +26,7 @@ import (
 	"github.com/appvia/kore/pkg/version"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 func init() {
@@ -36,10 +36,13 @@ func init() {
 
 func main() {
 	app := &cli.App{
-		Name:                 "kore-apiserver",
-		Authors:              version.Authors,
-		Author:               version.Prog,
-		Email:                version.Email,
+		Name: "kore-apiserver",
+		Authors: []*cli.Author{
+			{
+				Name:  version.Author,
+				Email: version.Email,
+			},
+		},
 		Flags:                options.Options(),
 		Usage:                "Kore API provides the frontend api services for the Appvia Kore",
 		Version:              version.Version(),

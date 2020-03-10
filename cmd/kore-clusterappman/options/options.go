@@ -17,7 +17,7 @@
 
 package options
 
-import "github.com/urfave/cli"
+import "github.com/urfave/cli/v2"
 
 // Options returns the command line options
 func Options() []cli.Flag {
@@ -25,38 +25,39 @@ func Options() []cli.Flag {
 		//
 		// @related to the kubernetes api
 		//
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "kubeconfig",
 			Usage: "the path to a kubeconfig containing kubernetes config (optional) `PATH`",
 		},
-		cli.StringFlag{
-			Name:   "kube-api-server",
-			Usage:  "the url to the hub operations kubernetes api `URL`",
-			EnvVar: "KUBE_API_SERVER",
+		&cli.StringFlag{
+			Name:    "kube-api-server",
+			Usage:   "the url to the hub operations kubernetes api `URL`",
+			EnvVars: []string{"KUBE_API_SERVER"},
 		},
-		cli.StringFlag{
-			Name:   "kube-api-token",
-			Usage:  "an optional authorization token for the kube-api `TOKEN`",
-			EnvVar: "KUBE_TOKEN",
+		&cli.StringFlag{
+			Name:    "kube-api-token",
+			Usage:   "an optional authorization token for the kube-api `TOKEN`",
+			EnvVars: []string{"KUBE_TOKEN"},
 		},
-		cli.BoolFlag{
-			Name:   "in-cluster",
-			Usage:  "indicates the client is running in a cluster `BOOL`",
-			EnvVar: "IN_CLUSTER",
+		&cli.BoolFlag{
+			Name:    "in-cluster",
+			Usage:   "indicates the client is running in a cluster `BOOL`",
+			EnvVars: []string{"IN_CLUSTER"},
 		},
 
 		//
 		// @related to logging
 		//
-		cli.BoolTFlag{
-			Name:   "enable-json-logging",
-			Usage:  "indicates we should disable json logging `BOOL`",
-			EnvVar: "ENABLE_JSON_LOGGING",
+		&cli.BoolFlag{
+			Name:    "enable-json-logging",
+			Value:   true,
+			Usage:   "indicates we should disable json logging `BOOL`",
+			EnvVars: []string{"ENABLE_JSON_LOGGING"},
 		},
-		cli.BoolFlag{
-			Name:   "verbose",
-			Usage:  "indicates if we should enable verbose logging `BOOL`",
-			EnvVar: "VERBOSE",
+		&cli.BoolFlag{
+			Name:    "verbose",
+			Usage:   "indicates if we should enable verbose logging `BOOL`",
+			EnvVars: []string{"VERBOSE"},
 		},
 	}
 }

@@ -36,7 +36,7 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/savaki/jq"
 	log "github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 

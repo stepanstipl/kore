@@ -67,7 +67,7 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191019123150-400c56251341 // indirect
-	github.com/urfave/cli v1.22.1
+	github.com/urfave/cli/v2 v2.1.1
 	go.mongodb.org/mongo-driver v1.2.1 // indirect
 	golang.org/x/crypto v0.0.0-20200128174031-69ecbb4d6d5d
 	golang.org/x/net v0.0.0-20200114155413-6afb5195e5aa // indirect
@@ -85,7 +85,6 @@ require (
 	k8s.io/apiextensions-apiserver v0.17.0
 	k8s.io/apimachinery v0.17.0
 	k8s.io/client-go v0.17.0
-	k8s.io/code-generator v0.17.3 // indirect
 	k8s.io/kube-openapi v0.0.0-20191107075043-30be4d16710a
 	k8s.io/utils v0.0.0-20191218082557-f07c713de883 // indirect
 	sigs.k8s.io/application v0.8.2-0.20200209202752-a485a03cdc47

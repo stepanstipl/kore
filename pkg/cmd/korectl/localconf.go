@@ -33,7 +33,7 @@ import (
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 	"gopkg.in/yaml.v2"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -227,8 +227,8 @@ func (g *gcpInfoConfig) generateGcpInfo() error {
 	return ioutil.WriteFile(cachedAccountKeyPath, keyData, os.FileMode(0640))
 }
 
-func GetLocalConfigureSubCommand(config *Config) cli.Command {
-	return cli.Command{
+func GetLocalConfigureSubCommand(config *Config) *cli.Command {
+	return &cli.Command{
 		Name:  "configure",
 		Usage: "Configures a profile to connect to a local Kore installation.",
 		Action: func(c *cli.Context) error {

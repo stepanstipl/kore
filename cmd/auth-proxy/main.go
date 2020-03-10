@@ -32,7 +32,7 @@ import (
 	"github.com/appvia/kore/pkg/version"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 func init() {
@@ -42,10 +42,13 @@ func init() {
 
 func main() {
 	app := &cli.App{
-		Name:                 "auth-proxy",
-		Authors:              version.Authors,
-		Author:               version.Prog,
-		Email:                version.Email,
+		Name: "auth-proxy",
+		Authors: []*cli.Author{
+			{
+				Name:  version.Author,
+				Email: version.Email,
+			},
+		},
 		Flags:                options.Options(),
 		Usage:                "Kore Authentication Proxy provides a means proxy inbound request to the kube-apiserver",
 		Version:              version.Version(),

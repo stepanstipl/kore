@@ -29,7 +29,7 @@ import (
 	"github.com/appvia/kore/pkg/version"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 func init() {
@@ -52,10 +52,13 @@ func main() {
 	}
 
 	app := &cli.App{
-		Name:                 "korectl",
-		Authors:              version.Authors,
-		Author:               version.Prog,
-		Email:                version.Email,
+		Name: "korectl",
+		Authors: []*cli.Author{
+			{
+				Name:  version.Author,
+				Email: version.Email,
+			},
+		},
 		Flags:                options.Options(),
 		Usage:                "korectl provides a CLI for the " + version.Prog,
 		Version:              version.Version(),
@@ -74,7 +77,7 @@ func main() {
 		Commands: korectl.GetCommands(config),
 
 		Before: func(ctx *cli.Context) error {
-			for _, x := range ctx.Args() {
+			for _, x := range ctx.Args().Slice() {
 				for x == "--debug" {
 					log.SetLevel(log.DebugLevel)
 				}

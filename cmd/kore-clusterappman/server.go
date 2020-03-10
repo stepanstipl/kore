@@ -25,7 +25,7 @@ import (
 
 	clusterappman "github.com/appvia/kore/pkg/clusterappman"
 	log "github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 // invoke is responsible for invoking clusterappman

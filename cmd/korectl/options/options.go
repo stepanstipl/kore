@@ -20,13 +20,13 @@
 package options
 
 import (
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 // Options returns the command line options
 func Options() []cli.Flag {
 	return []cli.Flag{
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "team,t",
 			Usage: "Used to select the team context you are operating in",
 		},
