@@ -23,6 +23,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/appvia/kore/pkg/apiserver/types"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
@@ -61,7 +63,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 		ws.PUT("/invitation/{token}").To(u.invitationSubmit).
 			Doc("Used to verify and handle the team invitation generated links").
 			Param(ws.PathParameter("token", "The generated base64 invitation token which was provided from the team")).
-			Returns(http.StatusOK, "Indicates the generated link is valid and the user has been granted access", nil).
+			Returns(http.StatusOK, "Indicates the generated link is valid and the user has been granted access", types.TeamInvitationResponse{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 

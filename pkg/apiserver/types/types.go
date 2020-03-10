@@ -28,3 +28,8 @@ type WhoAmI struct {
 	// Teams is a collection of teams your in
 	Teams []string `json:"teams,omitempty"`
 }
+
+type TeamInvitationResponse struct {
+	// Team is the name of team which the user just has been been added to
+	Team string `json:"team"`
+}
