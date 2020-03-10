@@ -6,13 +6,13 @@ We'll showcase how Appvia Kore can give you a head start with setting up cluster
 
 ## Kubernetes
 
-You'll need a Kubernetes instance to work through this guide.
+You'll need a Kubernetes instance to work through this guide. We simplify this by helping you set up a project on GKE.
 
-We simplify this by helping you set up a project on GKE. **Note**: Created GKE clusters are for demo purposes only. They're tied to a local environment and will be orphaned once its stopped.
+**Please Note**: Created GKE clusters are for demo purposes only. They're tied to a local environment and will be orphaned once the local Kore instance is stopped.
 
-## Team Identity
+## Team Access
 
-Appvia Kore uses an external identity provider, like Auth0, to map team member access to a team's provisioned environment.
+Appvia Kore uses an external identity provider, like Auth0, to manage team member identity and authenticate members.
 
 To keep things simple, we'll help you get set up on Auth0 to configure team access.
 
@@ -21,22 +21,18 @@ To keep things simple, we'll help you get set up on Auth0 to configure team acce
 - [Docker](#docker)
 - [Google Cloud account](#google-cloud-account)
 - [Configure Team Access](#configure-team-access)
-- [Use CLI to Start Kore Locally](#use-cli-to-start-kore-locally)
+- [Start Kore Locally with CLI](#use-cli-to-start-kore-locally)
 
 ### Docker
 
 Please ensure you have the following installed on your machine,
 
-- Docker: install instructions can be found [here]([https://docs.docker.com/install/](https://docs.docker.com/install/))
+- Docker: installation instructions can be found [here]([https://docs.docker.com/install/](https://docs.docker.com/install/))
 - Docker Compose: installation instructions can found [here](https://docs.docker.com/compose/install/)
-
-Aside from Docker, please follow the steps below.
 
 ### Google Cloud account
 
-We assume you're already setup as a Google Cloud user.
-
-If not, grab a credit card and go to https://cloud.google.com/. Then, click the “Get started for free” button. Finally, choose whether you want a business account or an individual one.
+If you don't have a Google Cloud account, grab a credit card and go to https://cloud.google.com/. Then, click the “Get started for free” button. Finally, choose whether you want a business account or an individual one.
 
 Next step: On GCP, select an existing project or create a new one.
 
@@ -75,24 +71,32 @@ This is the last step, create a key and download it in JSON format.
 
 ### Configure Team Access
 
-Using Kore, team IAM (Identity and Access management) is simplified.
+Using Appvia Kore, team IAM (Identity and Access management) [is greatly simplified](security-gke.md#rbac).
 
-Rather than spend hours manually managing a team's Google Cloud project access and then map that access to GKE. Kore uses an external identity provider, like Auth0 or an enterprise's existing SSO system, to directly map team member access to the team's provisioned environment. 
+Kore uses an external identity provider, like Auth0 or an enterprise's existing SSO system, to directly manage team member access to the team's provisioned environment. 
 
 For this guide, we'll be using Auth0 to configure team access. 
 
 #### Configure Auth0
 
-Auth0, found [here](https://auth0.com/), provides an enterprise SAAS identity provider.
+[Auth0](https://auth0.com/), provides an enterprise SAAS identity provider.
 
-- Sign up for an account from the [home page](https://auth0.com)
-- From the dashboard side menu choose 'Applications' and then 'Create Application'
-- Given the application a name and choose 'Regular Web Applications'
-- Once provisioned click on the 'Settings' tab and scroll down to 'Allowed Callback URLs'. These are the permitted redirects for the applications. Since we are running the application locally off the laptop add `http://localhost:3000/auth/callback` and `http://localhost:10080/oauth/callback` (Note the comma separation in the Auth0 UI.
-- Scroll to the bottom of the settings and click the 'Show Advanced Settings'
-- Choose the 'OAuth' tab from the advanced settings and ensure that the 'JsonWebToken Signature Algorithm' is set to RS256 and 'OIDC Conformant' is toggled on.
-- Select the 'Endpoints' tab and note down the 'OpenID Configuration'.
-- You can then scroll back to the top and note down the 'ClientID' and 'Client Secret'
+Sign up for an account from the [home page](https://auth0.com).
+
+From the dashboard side menu choose `Applications` and then `Create Application`
+
+Give the application a name and choose `Regular Web Applications`
+
+Once provisioned click on the `Settings` tab and scroll down to `Allowed Callback URLs`.
+These are the permitted redirects for the applications. Since we are running the application locally off the laptop set
+- `http://localhost:3000/auth/callback` and 
+- `http://localhost:10080/oauth/callback` (Note the comma separation in the Auth0 UI).
+
+Scroll to the bottom of the settings and click the `Show Advanced Settings`
+
+Choose the `OAuth` tab from the advanced settings and ensure that the `JsonWebToken Signature Algorithm` is set to RS256 and `OIDC Conformant` is toggled on.
+
+Select the `Endpoints` tab and note down the `OpenID Configuration`.
 
 Please make a note of the [__*ClientID, Client Secret and the OpenID endpoint*__].
 
@@ -104,7 +108,7 @@ Return to the Auth0 dashboard. From the side menu select 'Users & Roles' setting
 - Create a role by selecting 'Roles'.
 - Add the role to the user.
 
-### Use CLI to Start Kore Locally
+### Start Kore Locally with CLI
 
 We'll be using our CLI, `korectl`, to help us set up Kore locally. 
 
@@ -134,7 +138,7 @@ You'll need access to the following details created earlier:
 - GKE Region.
 - Path to the service account key JSON file.
 
-Once you have everything, run below and follow the instructions
+Once you have everything, run,
 
 ```shell script
 bin/korectl local configure
@@ -161,5 +165,3 @@ bin/korectl local start
 - Stop: To stop, run `bin/korectl local stop`
 
 - Logs: To view local logs, run `bin/korectl local logs`
-
-### Cleanup
