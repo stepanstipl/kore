@@ -70,7 +70,7 @@ func main() {
 
 		CommandNotFound: func(ctx *cli.Context, name string) {
 			fmt.Fprintf(os.Stderr, "Error: unknown command %q\n\n", name)
-			fmt.Fprintf(os.Stderr, "Please run `%s help` to see all available commands.\n", ctx.App.Name)
+			fmt.Fprintf(os.Stderr, "Please run `%s --help` to see all available commands.\n", ctx.App.Name)
 			os.Exit(1)
 		},
 
