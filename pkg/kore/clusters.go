@@ -18,6 +18,7 @@ package kore
 
 import (
 	"context"
+	"errors"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	"github.com/appvia/kore/pkg/kore/authentication"
@@ -121,6 +122,11 @@ func (c *clsImpl) Update(ctx context.Context, cluster *clustersv1.Kubernetes) er
 	user := authentication.MustGetIdentity(ctx)
 
 	cluster.Namespace = c.team
+
+	// Validate the name - feels like there's probably a better place for this
+	if len(cluster.Name) > 40 {
+		return errors.New("Invalid cluster name")
+	}
 
 	// @TODO add an entity into the audit log
 	c.Audit().Record(ctx,
