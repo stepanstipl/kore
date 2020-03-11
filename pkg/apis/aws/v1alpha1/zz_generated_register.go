@@ -58,10 +58,14 @@ func init() {
 // Adds the list of known types to Scheme.
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
-		&AWSCredentials{},
-		&AWSCredentialsList{},
+		&AWSCredential{},
+		&AWSCredentialList{},
+		&AWSToken{},
+		&AWSTokenList{},
 		&EKSCluster{},
 		&EKSClusterList{},
+		&EKSNodeGroup{},
+		&EKSNodeGroupList{},
 	)
 	// AddToGroupVersion allows the serialization of client types like ListOptions.
 	v1.AddToGroupVersion(scheme, SchemeGroupVersion)

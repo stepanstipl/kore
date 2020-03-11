@@ -3,7 +3,9 @@
 // deploy/crds/apps.kore.appvia.io_appdeployments.yaml
 // deploy/crds/apps.kore.appvia.io_installplans.yaml
 // deploy/crds/aws.compute.kore.appvia.io_awscredentials.yaml
+// deploy/crds/aws.compute.kore.appvia.io_awstokens.yaml
 // deploy/crds/aws.compute.kore.appvia.io_eksclusters.yaml
+// deploy/crds/aws.compute.kore.appvia.io_eksnodegroups.yaml
 // deploy/crds/clusters.compute.kore.appvia.io_kubernetes.yaml
 // deploy/crds/clusters.compute.kore.appvia.io_kubernetescredentials.yaml
 // deploy/crds/clusters.compute.kore.appvia.io_managedclusterrole.yaml
@@ -34,7 +36,6 @@ import (
 	"strings"
 	"time"
 )
-
 type asset struct {
 	bytes []byte
 	info  os.FileInfo
@@ -674,25 +675,12 @@ metadata:
   creationTimestamp: null
   name: awscredentials.aws.compute.kore.appvia.io
 spec:
-  additionalPrinterColumns:
-  - JSONPath: .spec.accountId
-    description: The AWS account ID for the credentials
-    name: AccountID
-    type: string
-  - JSONPath: .spec.accessKeyId
-    description: The AWS access key we are using
-    name: AccessKeyID
-    type: string
-  - JSONPath: .status.verified
-    description: Indicates if the credentials have been verified
-    name: Verified
-    type: string
   group: aws.compute.kore.appvia.io
   names:
-    kind: AWSCredentials
-    listKind: AWSCredentialsList
+    kind: AWSCredential
+    listKind: AWSCredentialList
     plural: awscredentials
-    singular: awscredentials
+    singular: awscredential
   preserveUnknownFields: false
   scope: Namespaced
   subresources:
@@ -714,34 +702,52 @@ spec:
         metadata:
           type: object
         spec:
-          description: AWSCredentialsSpec defines the desired state of AWSCredential
+          description: AWSCredentialSpec defines the desired state of AWSCredential
           properties:
             accessKeyID:
-              description: AccessKeyID is the AWS access key credentials
-              minLength: 1
+              description: AccessKeyID is the AWS Access Key ID
+              minLength: 3
               type: string
             accountID:
-              description: AccountID is the AWS account these credentials reside
-              minLength: 1
+              description: AccountID is the AWS account these credentials reside within
+              minLength: 3
               type: string
             secretAccessKey:
-              description: SecretAccessKey is the AWS secret key credentials containing
-                the permissions to provision EKS
-              minLength: 1
+              description: SecretAccessKey is the AWS Secret Access Key
+              minLength: 3
               type: string
+          required:
+          - accessKeyID
+          - accountID
+          - secretAccessKey
           type: object
         status:
-          description: AWSCredentialsStatus defines the observed state of AWSCredential
+          description: AWSCredentialStatus defines the observed state of AWSCredential
           properties:
+            conditions:
+              description: Conditions is a collection of potential issues
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+              x-kubernetes-list-type: set
             status:
               description: Status provides a overall status
               type: string
             verified:
               description: Verified checks that the credentials are ok and valid
               type: boolean
-          required:
-          - status
-          - verified
           type: object
       type: object
   version: v1alpha1
@@ -768,6 +774,116 @@ func crdsAwsComputeKoreAppviaIo_awscredentialsYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "crds/aws.compute.kore.appvia.io_awscredentials.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsAwsComputeKoreAppviaIo_awstokensYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: awstokens.aws.compute.kore.appvia.io
+spec:
+  group: aws.compute.kore.appvia.io
+  names:
+    kind: AWSToken
+    listKind: AWSTokenList
+    plural: awstokens
+    singular: awstoken
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: AWSToken is the Schema for the awstokens API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: AWSTokenSpec defines the desired state of AWSToken
+          properties:
+            accessKeyID:
+              description: AccessKeyID is the AWS Access Key ID
+              maxLength: 12
+              minLength: 12
+              type: string
+            accountID:
+              description: AccountID is the IS for the AWS account these credentials
+                reside within
+              maxLength: 12
+              minLength: 12
+              type: string
+            expiration:
+              description: Expiration is the expiry date time of this token
+              type: string
+            secretAccessKey:
+              description: SecretAccessKey AWS Secret Access Key
+              minLength: 3
+              type: string
+            sessionToken:
+              description: SessionToken is the AWS Session Token
+              minLength: 3
+              type: string
+          required:
+          - accessKeyID
+          - accountID
+          - expiration
+          - secretAccessKey
+          - sessionToken
+          type: object
+        status:
+          description: AWSTokenStatus defines the observed state of AWSToken
+          properties:
+            status:
+              description: Status provides a overall status
+              type: string
+            verified:
+              description: Verified checks that the credentials are ok and valid
+              type: boolean
+          required:
+          - status
+          - verified
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsAwsComputeKoreAppviaIo_awstokensYamlBytes() ([]byte, error) {
+	return _crdsAwsComputeKoreAppviaIo_awstokensYaml, nil
+}
+
+func crdsAwsComputeKoreAppviaIo_awstokensYaml() (*asset, error) {
+	bytes, err := crdsAwsComputeKoreAppviaIo_awstokensYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/aws.compute.kore.appvia.io_awstokens.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -811,9 +927,32 @@ spec:
         spec:
           description: EKSClusterSpec defines the desired state of EKSCluster
           properties:
-            credentials:
-              description: Credentials is a reference to an AWSCredentials object
-                to use for authentication
+            name:
+              description: Name the name of the EKS cluster
+              minLength: 3
+              type: string
+            region:
+              description: SubnetIds is a list of subnet IDs
+              type: string
+            roleARN:
+              description: RoleARN is the role ARN which provides permissions to EKS
+              minLength: 10
+              type: string
+            securityGroupIDs:
+              description: SecurityGroupIds is a list of security group IDs
+              items:
+                type: string
+              type: array
+              x-kubernetes-list-type: set
+            subnetIDs:
+              description: AWS region to launch this cluster within
+              items:
+                type: string
+              type: array
+              x-kubernetes-list-type: set
+            use:
+              description: Use is a reference to an AWSCredentials object to use for
+                authentication
               properties:
                 group:
                   description: Group is the api group
@@ -837,70 +976,25 @@ spec:
               - namespace
               - version
               type: object
-            region:
-              description: Region is the AWS region which the EKS cluster should be
-                provisioned.
-              type: string
-            roleARN:
-              description: RoleARN is the role arn which provides permissions to EKS.
-              type: string
-            securityGroupID:
-              description: SecurityGroupID is a list of security group IDs which the
-                EKS cluster should be attached to - If not defined we will provision
-                on behalf of
-              items:
-                type: string
-              type: array
-              x-kubernetes-list-type: set
-            subnetID:
-              description: SubnetID is a collection of subnet id's which the EKS cluster
-                should be attached to - if not defined we will provision on behalf
-                of
-              items:
-                type: string
-              type: array
-              x-kubernetes-list-type: set
             version:
-              type: string
-            vpc:
-              description: VPC is the AWS VPC Id which the EKS cluster should reside.
-                If not defined we will provision on your behalf.
+              description: Version is the Kubernetes version to use
+              minLength: 3
               type: string
           required:
+          - name
           - region
+          - roleARN
+          - subnetIDs
+          - use
           type: object
         status:
           description: EKSClusterStatus defines the observed state of EKSCluster
           properties:
-            caCertificate:
-              description: CACertificate is the certificate for this cluster
-              type: string
-            conditions:
-              description: Conditions is the status of the components
-              items:
-                description: Component the state of a component of the resource
-                properties:
-                  detail:
-                    description: Detail is additional details on the error is any
-                    type: string
-                  message:
-                    description: Message is a human readable message on the status
-                      of the component
-                    type: string
-                  name:
-                    description: Name is the name of the component
-                    type: string
-                  status:
-                    description: Status is the status of the component
-                    type: string
-                type: object
-              type: array
-            endpoint:
-              description: Endpoint is the endpoint of the cluster
-              type: string
             status:
               description: Status provides a overall status
               type: string
+          required:
+          - status
           type: object
       type: object
   version: v1alpha1
@@ -927,6 +1021,180 @@ func crdsAwsComputeKoreAppviaIo_eksclustersYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "crds/aws.compute.kore.appvia.io_eksclusters.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsAwsComputeKoreAppviaIo_eksnodegroupsYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: eksnodegroups.aws.compute.kore.appvia.io
+spec:
+  group: aws.compute.kore.appvia.io
+  names:
+    kind: EKSNodeGroup
+    listKind: EKSNodeGroupList
+    plural: eksnodegroups
+    singular: eksnodegroup
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: EKSNodeGroup is the Schema for the eksnodegroups API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: EKSNodeGroupSpec defines the desired state of EKSNodeGroup
+          properties:
+            aMIType:
+              type: string
+            clusterName:
+              type: string
+            desiredSize:
+              format: int64
+              type: integer
+            diskSize:
+              format: int64
+              type: integer
+            eC2SSHKey:
+              description: The security groups that are allowed SSH access (port 22)
+                to the worker nodes
+              type: string
+            instanceTypes:
+              items:
+                type: string
+              type: array
+              x-kubernetes-list-type: set
+            labels:
+              additionalProperties:
+                type: string
+              type: object
+            maxSize:
+              format: int64
+              minimum: 100
+              type: integer
+            minSize:
+              format: int64
+              minimum: 0
+              type: integer
+            nodeGroupName:
+              type: string
+            nodeRole:
+              type: string
+            region:
+              description: AWS region to launch node group within, must match the
+                region of the cluster
+              type: string
+            releaseVersion:
+              type: string
+            remoteAccess:
+              type: string
+            sourceSecurityGroups:
+              description: The Amazon EC2 SSH key that provides access for SSH communication
+                with the worker nodes in the managed node group https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html
+              items:
+                type: string
+              type: array
+              x-kubernetes-list-type: set
+            subnets:
+              items:
+                type: string
+              type: array
+              x-kubernetes-list-type: set
+            tags:
+              additionalProperties:
+                type: string
+              description: The metadata to apply to the node group
+              type: object
+            use:
+              description: Use is a reference to an AWSCredentials object to use for
+                authentication
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
+            version:
+              description: The Kubernetes version to use for your managed nodes
+              type: string
+          required:
+          - clusterName
+          - nodeGroupName
+          - nodeRole
+          - region
+          - subnets
+          - use
+          type: object
+        status:
+          description: EKSNodeGroupStatus defines the observed state of EKSNodeGroup
+          properties:
+            status:
+              description: Status provides a overall status
+              type: string
+          required:
+          - status
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsAwsComputeKoreAppviaIo_eksnodegroupsYamlBytes() ([]byte, error) {
+	return _crdsAwsComputeKoreAppviaIo_eksnodegroupsYaml, nil
+}
+
+func crdsAwsComputeKoreAppviaIo_eksnodegroupsYaml() (*asset, error) {
+	bytes, err := crdsAwsComputeKoreAppviaIo_eksnodegroupsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/aws.compute.kore.appvia.io_eksnodegroups.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -1917,10 +2185,10 @@ spec:
                     properties:
                       pathPrefix:
                         description: "pathPrefix is the path prefix that the host
-                          volume must match. It does not support ` + "`" + `*` + "`" + `. Trailing slashes
+                          volume must match. It does not support `+"`"+`*`+"`"+`. Trailing slashes
                           are trimmed when validating the path prefix with a host
-                          path. \n Examples: ` + "`" + `/foo` + "`" + ` would allow ` + "`" + `/foo` + "`" + `, ` + "`" + `/foo/` + "`" + ` and
-                          ` + "`" + `/foo/bar` + "`" + ` ` + "`" + `/foo` + "`" + ` would not allow ` + "`" + `/food` + "`" + ` or ` + "`" + `/etc/foo` + "`" + `"
+                          path. \n Examples: `+"`"+`/foo`+"`"+` would allow `+"`"+`/foo`+"`"+`, `+"`"+`/foo/`+"`"+` and
+                          `+"`"+`/foo/bar`+"`"+` `+"`"+`/foo`+"`"+` would not allow `+"`"+`/food`+"`"+` or `+"`"+`/etc/foo`+"`"+`"
                         type: string
                       readOnly:
                         description: when set to true, will allow host volumes matching
@@ -4448,7 +4716,9 @@ var _bindata = map[string]func() (*asset, error){
 	"crds/apps.kore.appvia.io_appdeployments.yaml":                        crdsAppsKoreAppviaIo_appdeploymentsYaml,
 	"crds/apps.kore.appvia.io_installplans.yaml":                          crdsAppsKoreAppviaIo_installplansYaml,
 	"crds/aws.compute.kore.appvia.io_awscredentials.yaml":                 crdsAwsComputeKoreAppviaIo_awscredentialsYaml,
+	"crds/aws.compute.kore.appvia.io_awstokens.yaml":                      crdsAwsComputeKoreAppviaIo_awstokensYaml,
 	"crds/aws.compute.kore.appvia.io_eksclusters.yaml":                    crdsAwsComputeKoreAppviaIo_eksclustersYaml,
+	"crds/aws.compute.kore.appvia.io_eksnodegroups.yaml":                  crdsAwsComputeKoreAppviaIo_eksnodegroupsYaml,
 	"crds/clusters.compute.kore.appvia.io_kubernetes.yaml":                crdsClustersComputeKoreAppviaIo_kubernetesYaml,
 	"crds/clusters.compute.kore.appvia.io_kubernetescredentials.yaml":     crdsClustersComputeKoreAppviaIo_kubernetescredentialsYaml,
 	"crds/clusters.compute.kore.appvia.io_managedclusterrole.yaml":        crdsClustersComputeKoreAppviaIo_managedclusterroleYaml,
@@ -4512,31 +4782,33 @@ type bintree struct {
 }
 
 var _bintree = &bintree{nil, map[string]*bintree{
-	"crds": {nil, map[string]*bintree{
-		"apps.kore.appvia.io_appdeployments.yaml":                        {crdsAppsKoreAppviaIo_appdeploymentsYaml, map[string]*bintree{}},
-		"apps.kore.appvia.io_installplans.yaml":                          {crdsAppsKoreAppviaIo_installplansYaml, map[string]*bintree{}},
-		"aws.compute.kore.appvia.io_awscredentials.yaml":                 {crdsAwsComputeKoreAppviaIo_awscredentialsYaml, map[string]*bintree{}},
-		"aws.compute.kore.appvia.io_eksclusters.yaml":                    {crdsAwsComputeKoreAppviaIo_eksclustersYaml, map[string]*bintree{}},
-		"clusters.compute.kore.appvia.io_kubernetes.yaml":                {crdsClustersComputeKoreAppviaIo_kubernetesYaml, map[string]*bintree{}},
-		"clusters.compute.kore.appvia.io_kubernetescredentials.yaml":     {crdsClustersComputeKoreAppviaIo_kubernetescredentialsYaml, map[string]*bintree{}},
-		"clusters.compute.kore.appvia.io_managedclusterrole.yaml":        {crdsClustersComputeKoreAppviaIo_managedclusterroleYaml, map[string]*bintree{}},
-		"clusters.compute.kore.appvia.io_managedclusterrolebinding.yaml": {crdsClustersComputeKoreAppviaIo_managedclusterrolebindingYaml, map[string]*bintree{}},
-		"clusters.compute.kore.appvia.io_managedconfig.yaml":             {crdsClustersComputeKoreAppviaIo_managedconfigYaml, map[string]*bintree{}},
-		"clusters.compute.kore.appvia.io_managedpodsecuritypoliies.yaml": {crdsClustersComputeKoreAppviaIo_managedpodsecuritypoliiesYaml, map[string]*bintree{}},
-		"clusters.compute.kore.appvia.io_managedrole.yaml":               {crdsClustersComputeKoreAppviaIo_managedroleYaml, map[string]*bintree{}},
-		"clusters.compute.kore.appvia.io_namespaceclaims.yaml":           {crdsClustersComputeKoreAppviaIo_namespaceclaimsYaml, map[string]*bintree{}},
-		"clusters.compute.kore.appvia.io_namespacepolicy.yaml":           {crdsClustersComputeKoreAppviaIo_namespacepolicyYaml, map[string]*bintree{}},
-		"config.kore.appvia.io_allocations.yaml":                         {crdsConfigKoreAppviaIo_allocationsYaml, map[string]*bintree{}},
-		"config.kore.appvia.io_plans.yaml":                               {crdsConfigKoreAppviaIo_plansYaml, map[string]*bintree{}},
-		"core.kore.appvia.io_idp.yaml":                                   {crdsCoreKoreAppviaIo_idpYaml, map[string]*bintree{}},
-		"core.kore.appvia.io_oidclient.yaml":                             {crdsCoreKoreAppviaIo_oidclientYaml, map[string]*bintree{}},
-		"gke.compute.kore.appvia.io_gkecredentials.yaml":                 {crdsGkeComputeKoreAppviaIo_gkecredentialsYaml, map[string]*bintree{}},
-		"gke.compute.kore.appvia.io_gkes.yaml":                           {crdsGkeComputeKoreAppviaIo_gkesYaml, map[string]*bintree{}},
-		"org.kore.appvia.io_auditevents.yaml":                            {crdsOrgKoreAppviaIo_auditeventsYaml, map[string]*bintree{}},
-		"org.kore.appvia.io_members.yaml":                                {crdsOrgKoreAppviaIo_membersYaml, map[string]*bintree{}},
-		"org.kore.appvia.io_teaminvitations.yaml":                        {crdsOrgKoreAppviaIo_teaminvitationsYaml, map[string]*bintree{}},
-		"org.kore.appvia.io_teams.yaml":                                  {crdsOrgKoreAppviaIo_teamsYaml, map[string]*bintree{}},
-		"org.kore.appvia.io_users.yaml":                                  {crdsOrgKoreAppviaIo_usersYaml, map[string]*bintree{}},
+	"crds": &bintree{nil, map[string]*bintree{
+		"apps.kore.appvia.io_appdeployments.yaml":                        &bintree{crdsAppsKoreAppviaIo_appdeploymentsYaml, map[string]*bintree{}},
+		"apps.kore.appvia.io_installplans.yaml":                          &bintree{crdsAppsKoreAppviaIo_installplansYaml, map[string]*bintree{}},
+		"aws.compute.kore.appvia.io_awscredentials.yaml":                 &bintree{crdsAwsComputeKoreAppviaIo_awscredentialsYaml, map[string]*bintree{}},
+		"aws.compute.kore.appvia.io_awstokens.yaml":                      &bintree{crdsAwsComputeKoreAppviaIo_awstokensYaml, map[string]*bintree{}},
+		"aws.compute.kore.appvia.io_eksclusters.yaml":                    &bintree{crdsAwsComputeKoreAppviaIo_eksclustersYaml, map[string]*bintree{}},
+		"aws.compute.kore.appvia.io_eksnodegroups.yaml":                  &bintree{crdsAwsComputeKoreAppviaIo_eksnodegroupsYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_kubernetes.yaml":                &bintree{crdsClustersComputeKoreAppviaIo_kubernetesYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_kubernetescredentials.yaml":     &bintree{crdsClustersComputeKoreAppviaIo_kubernetescredentialsYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_managedclusterrole.yaml":        &bintree{crdsClustersComputeKoreAppviaIo_managedclusterroleYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_managedclusterrolebinding.yaml": &bintree{crdsClustersComputeKoreAppviaIo_managedclusterrolebindingYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_managedconfig.yaml":             &bintree{crdsClustersComputeKoreAppviaIo_managedconfigYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_managedpodsecuritypoliies.yaml": &bintree{crdsClustersComputeKoreAppviaIo_managedpodsecuritypoliiesYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_managedrole.yaml":               &bintree{crdsClustersComputeKoreAppviaIo_managedroleYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_namespaceclaims.yaml":           &bintree{crdsClustersComputeKoreAppviaIo_namespaceclaimsYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_namespacepolicy.yaml":           &bintree{crdsClustersComputeKoreAppviaIo_namespacepolicyYaml, map[string]*bintree{}},
+		"config.kore.appvia.io_allocations.yaml":                         &bintree{crdsConfigKoreAppviaIo_allocationsYaml, map[string]*bintree{}},
+		"config.kore.appvia.io_plans.yaml":                               &bintree{crdsConfigKoreAppviaIo_plansYaml, map[string]*bintree{}},
+		"core.kore.appvia.io_idp.yaml":                                   &bintree{crdsCoreKoreAppviaIo_idpYaml, map[string]*bintree{}},
+		"core.kore.appvia.io_oidclient.yaml":                             &bintree{crdsCoreKoreAppviaIo_oidclientYaml, map[string]*bintree{}},
+		"gke.compute.kore.appvia.io_gkecredentials.yaml":                 &bintree{crdsGkeComputeKoreAppviaIo_gkecredentialsYaml, map[string]*bintree{}},
+		"gke.compute.kore.appvia.io_gkes.yaml":                           &bintree{crdsGkeComputeKoreAppviaIo_gkesYaml, map[string]*bintree{}},
+		"org.kore.appvia.io_auditevents.yaml":                            &bintree{crdsOrgKoreAppviaIo_auditeventsYaml, map[string]*bintree{}},
+		"org.kore.appvia.io_members.yaml":                                &bintree{crdsOrgKoreAppviaIo_membersYaml, map[string]*bintree{}},
+		"org.kore.appvia.io_teaminvitations.yaml":                        &bintree{crdsOrgKoreAppviaIo_teaminvitationsYaml, map[string]*bintree{}},
+		"org.kore.appvia.io_teams.yaml":                                  &bintree{crdsOrgKoreAppviaIo_teamsYaml, map[string]*bintree{}},
+		"org.kore.appvia.io_users.yaml":                                  &bintree{crdsOrgKoreAppviaIo_usersYaml, map[string]*bintree{}},
 	}},
 }}
 
