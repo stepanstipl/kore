@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-// Package v1alpha1 contains the type definitions for the AWS resources
+// Package v1alpha1 contains API Schema definitions for the aws v1alpha1 API group
 // +k8s:deepcopy-gen=package,register
-// +kubebuilder:object:generate
 // +groupName=aws.compute.kore.appvia.io
 package v1alpha1

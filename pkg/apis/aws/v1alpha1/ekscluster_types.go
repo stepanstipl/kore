@@ -25,44 +25,39 @@ import (
 // EKSClusterSpec defines the desired state of EKSCluster
 // +k8s:openapi-gen=true
 type EKSClusterSpec struct {
-	// Credentials is a reference to an AWSCredentials object to use
-	// for authentication
+	// Name the name of the EKS cluster
+	// +kubebuilder:validation:MinLength=3
 	// +kubebuilder:validation:Required
-	Credentials core.Ownership `json:"credentials,omitempty"`
-	// RoleARN is the role arn which provides permissions to EKS.
-	// +kubebuilder:validation:Optional
-	RoleARN string `json:"roleARN,omitempty"`
-	// +kubebuilder:validation:Optional
+	Name string `json:"name"`
+	// RoleARN is the role ARN which provides permissions to EKS
+	// +kubebuilder:validation:MinLength=10
+	// +kubebuilder:validation:Required
+	RoleARN string `json:"roleARN"`
+	// Version is the Kubernetes version to use
+	// +kubebuilder:validation:MinLength=3
+	// +kubebuilder:validation:Required
 	Version string `json:"version,omitempty"`
-	// Region is the AWS region which the EKS cluster should be provisioned.
+	// SubnetIds is a list of subnet IDs
 	// +kubebuilder:validation:Required
 	Region string `json:"region"`
-	// SubnetID is a collection of subnet id's which the EKS cluster should
-	// be attached to - if not defined we will provision on behalf of
-	// +kubebuilder:validation:Optional
+	// AWS region to launch this cluster within
+	// +kubebuilder:validation:Required
 	// +listType=set
-	SubnetID []string `json:"subnetID,omitempty"`
-	// SecurityGroupID is a list of security group IDs which the EKS cluster
-	// should be attached to - If not defined we will provision on behalf of
-	// +kubebuilder:validation:Optional
+	SubnetIDs []string `json:"subnetIDs"`
+	// SecurityGroupIds is a list of security group IDs
+	// +kubebuilder:validation:Required
 	// +listType=set
-	SecurityGroupID []string `json:"securityGroupID,omitempty"`
-	// VPC is the AWS VPC Id which the EKS cluster should reside. If not defined
-	// we will provision on your behalf.
-	VPC string `json:"vpc,omitempty"`
+	SecurityGroupIDs []string `json:"securityGroupIDs,omitempty"`
+	// Use is a reference to an AWSCredentials object to use for authentication
+	// +k8s:openapi-gen=false
+	Use core.Ownership `json:"use"`
 }
 
 // EKSClusterStatus defines the observed state of EKSCluster
 // +k8s:openapi-gen=true
 type EKSClusterStatus struct {
-	// Conditions is the status of the components
-	Conditions *core.Components `json:"conditions,omitempty"`
-	// CACertificate is the certificate for this cluster
-	CACertificate string `json:"caCertificate,omitempty"`
-	// Endpoint is the endpoint of the cluster
-	Endpoint string `json:"endpoint,omitempty"`
 	// Status provides a overall status
-	Status core.Status `json:"status,omitempty"`
+	Status core.Status `json:"status"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
