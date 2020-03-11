@@ -74,10 +74,6 @@ func GetClustersCommand(config *Config) *cli.Command {
 						Name:  "name,n",
 						Usage: "The name of the integration to retrieve `NAME`",
 					},
-					&cli.StringFlag{
-						Name:  "team,t",
-						Usage: "Used to filter the results by team `TEAM`",
-					},
 				}, DefaultOptions...),
 				Action: func(ctx *cli.Context) error {
 					team := ctx.String("team")
