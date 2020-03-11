@@ -110,6 +110,23 @@ var resourceConfigs = map[string]resourceConfig{
 			Column("Verified", "status.verified"),
 		},
 	},
+	"eks": {
+		Name:   "ekss",
+		IsTeam: true,
+		Columns: []string{
+			Column("Name", ".metadata.name"),
+			Column("Region", "spec.region"),
+			Column("Endpoint", ".status.endpoint"),
+			Column("Status", ".status.status"),
+		},
+	},
+	"ekscredential": {
+		Name:   "ekscredentials",
+		IsTeam: true,
+		Columns: []string{
+			Column("Name", "metadata.name"),
+		},
+	},
 	"member": {
 		Name:   "members",
 		IsTeam: true,

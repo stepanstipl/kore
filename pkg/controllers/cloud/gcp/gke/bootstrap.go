@@ -20,7 +20,6 @@ import (
 	"context"
 	"time"
 
-	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
 	kube "github.com/appvia/kore/pkg/utils/kubernetes"
@@ -32,6 +31,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	k8s "k8s.io/client-go/kubernetes"
 )
 
@@ -64,25 +64,29 @@ func newBootstrapClient(cluster *gke.GKE, credentials *credentials) (*bootImpl, 
 	}, nil
 }
 
-// Bootstrap is responsible for bootstraping the gke cluster for us
-func (p *bootImpl) Bootstrap(ctx context.Context, client client.Client) error {
-	logger := log.WithFields(log.Fields{
-		"endpoint":  p.cluster.Status.Endpoint,
-		"name":      p.cluster.Name,
-		"namespace": p.cluster.Namespace,
-	})
-	logger.Info("waiting for the kube-apiserver to become available")
-
-	// @step: wait for the kubernetes api to become available
-	timeout := 5 * time.Minute
-
-	if err := kube.WaitOnKubeAPI(ctx, p.client, time.Duration(10)*time.Second, timeout); err != nil {
-		logger.WithError(err).Error("timeout waiting for kube-apiserver to become available")
-
-		return err
+func (p *bootImpl) GetCluster() *controllers.BootCluster {
+	return &controllers.BootCluster{
+		Endpoint:  p.cluster.Status.Endpoint,
+		Name:      p.cluster.Name,
+		Namespace: p.cluster.Namespace,
+		Client:    p.client,
 	}
-	logger.Debug("gke cluster kubeapi is available now, continuing bootstrapping")
+}
 
+func (p *bootImpl) GetLogger() *log.Entry {
+	cluster := p.GetCluster()
+	logger := log.WithFields(log.Fields{
+		"endpoint":  cluster.Endpoint,
+		"name":      cluster.Name,
+		"namespace": cluster.Namespace,
+		"bootstrap": "gke",
+	})
+	return logger
+}
+
+// Cloud specific bootstrap for gke cluster
+func (p *bootImpl) Run(ctx context.Context, client client.Client) error {
+	logger := p.GetLogger()
 	logger.Info("creating the pod security policies")
 
 	if err := p.DeployPodSecurityPolicies(ctx, p.client); err != nil {
@@ -90,36 +94,11 @@ func (p *bootImpl) Bootstrap(ctx context.Context, client client.Client) error {
 
 		return err
 	}
-
-	logger.Info("creating the kore-admin service account for cluster")
-
-	// @step: create or retrieve the kore-sysadmin secret token
-	creds, err := p.CreateSysadminCredential()
-	if err != nil {
-		logger.WithError(err).Error("creating kore admin service account")
-
-		return err
-	}
-
-	secret := controllers.NewEmptySecret().
-		Description("Kubernetes Cluster credentials for " + p.cluster.Name).
-		Name(p.cluster.Name).
-		Namespace(p.cluster.Namespace).
-		Type(configv1.KubernetesSecret).
-		Values(map[string]string{
-			"ca.crt":   string(creds.Data["ca.crt"]),
-			"endpoint": p.cluster.Status.Endpoint,
-			"token":    string(creds.Data["token"]),
-		}).Secret()
-
-	if err := controllers.CreateManagedSecret(ctx, p.cluster, client, secret.Encode()); err != nil {
-		logger.WithError(err).Error("trying to create sysadmin secret")
-
-		return err
-	}
-	logger.Info("successfully bootstrapped the cluster")
-
 	return nil
+}
+
+func (p *bootImpl) GetClusterObj() runtime.Object {
+	return p.cluster
 }
 
 // DeployPodSecurityPolicies is responsible deploying the PSP to te gke cluster

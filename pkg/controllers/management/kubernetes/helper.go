@@ -339,6 +339,59 @@ func CreateClusterManClusterRoleBinding(ctx context.Context, cc client.Client) e
 	return nil
 }
 
+// CleanupKoreCluster deletes all resources that may prevent a cloud provider deletion
+func CleanupKoreCluster(ctx context.Context, cc client.Client) error {
+	nl := &core.NamespaceList{}
+	err := cc.List(ctx, nl)
+	if err != nil {
+		return err
+	}
+	// First delete all namespaces we can
+	for _, n := range nl.Items {
+		d := func(name string) bool {
+			for _, ns := range []string{
+				"default",
+				"kube-system",
+				"kube-public",
+				"kube-node-lease",
+			} {
+				if name == ns {
+					// do not delete
+					return false
+				}
+			}
+			// delete ns
+			return true
+		}(n.Name)
+
+		if d {
+			// delete this namespace
+			if err != nil {
+				return err
+			}
+			err := cc.Delete(ctx, n.DeepCopy())
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Now delete any services in the default namespace:
+	sl := &core.ServiceList{}
+	if err := cc.List(ctx, sl, &client.ListOptions{
+		Namespace: "default",
+	}); err != nil {
+		return err
+	}
+	for _, s := range sl.Items {
+		err := cc.Delete(ctx, s.DeepCopy())
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // DecodeInTo decodes the template into the thing
 func DecodeInTo(in string, out interface{}) error {
 	return yaml.Unmarshal([]byte(in), out)
