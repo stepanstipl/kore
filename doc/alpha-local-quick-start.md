@@ -1,4 +1,4 @@
-# Local Quick Start Guide (Alpha )
+# Local Quick Start Guide (Alpha)
 
 In this guide, we'll walk you through how to use the Appvia Kore CLI to set up a sandbox team environment locally and deploy a sample application.
 
@@ -27,6 +27,7 @@ For this guide, we'll help you to get set up on Auth0 to configure team access.
 - [Enable Kore to Set up Team Environments on GKE](enable-kore-to-set-up-team-environments-on-gke)
 - [Provision a Sandbox Env with CLI](#provision-a-sandbox-env-with-cli)
 - [Deploy An App to the Sandbox](#deploy-an-app-to-the-sandbox)
+- [Cleaning Up](#cleaning-up)
 
 ### Docker
 
@@ -299,4 +300,38 @@ You should see this on the webpage
 Hello, world!
 Version: 1.0.0
 Hostname: hello-server-7f8fd4d44b-hpxls
+```
+
+### Cleaning Up
+
+To avoid incurring charges to your Google Cloud account for the resources used in this quickstart, follow these steps.
+
+#### Delete the app from the sandbox environment
+
+```shell script
+kubectl delete service hello-server
+```
+
+#### Delete the sandbox environment
+
+List the namespace claims for our sandbox environment
+
+```shell script
+bin/korectl get namespaceclaims -t team-appvia
+# Resource                Namespace    Cluster         Status
+# appvia-trial-sandbox    sandbox      appvia-trial    Success
+```
+
+Use the resource name to delete the sandbox namespace
+
+```shell script
+bin/korectl delete --team team-appvia namespaceclaim appvia-trial-sandbox
+# "appvia-trial-sandbox" was successfully deleted
+```
+
+Finally delete the related cluster
+
+```shell script
+bin/korectl delete --team team-appvia cluster appvia-trial
+# "appvia-trial" was successfully deleted
 ```
