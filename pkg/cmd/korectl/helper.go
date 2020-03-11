@@ -287,7 +287,7 @@ func GetCaches(config *Config) error {
 }
 
 //
-func GetKubeConfig() (string, error) {
+func GetOrCreateKubeConfig() (string, error) {
 	path := func() string {
 		p := os.ExpandEnv(os.Getenv("$KUBECONFIG"))
 		if p != "" {
@@ -297,12 +297,9 @@ func GetKubeConfig() (string, error) {
 		return os.ExpandEnv("${HOME}/.kube/config")
 	}()
 
-	found, err := utils.FileExists(path)
+	_, err := utils.EnsureFileExists(path)
 	if err != nil {
 		return "", err
-	}
-	if !found {
-		return "", errors.New("no kubeconfig found")
 	}
 
 	return path, nil

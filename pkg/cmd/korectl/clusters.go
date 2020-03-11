@@ -54,7 +54,7 @@ func GetClustersCommand(config *Config) *cli.Command {
 						return nil
 					}
 
-					kubeconfig, err := GetKubeConfig()
+					kubeconfig, err := GetOrCreateKubeConfig()
 					if err != nil {
 						return err
 					}
