@@ -264,6 +264,10 @@ bench:
 	@echo "--> Running go bench"
 	@go test -bench=. -benchmem
 
+verify-licences:
+	@echo "--> Verifiying the licence headers"
+	@hack/verify-licence.sh
+
 coverage:
 	@echo "--> Running go coverage"
 	@go test -coverprofile cover.out
@@ -294,6 +298,7 @@ test: generate-clusterappman-manifests
 	@$(MAKE) spelling
 	@$(MAKE) vet
 	@$(MAKE) cover
+	@$(MAKE) verify-licences
 
 all: test
 	@echo "--> Performing all tests"
