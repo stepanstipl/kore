@@ -20,13 +20,16 @@ import (
 	"context"
 	"time"
 
-	aws "github.com/appvia/kore/pkg/apis/aws/v1alpha1"
+	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
 
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/rest"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
@@ -46,7 +49,7 @@ func init() {
 
 // Name returns the name of the controller
 func (t *eksCtrl) Name() string {
-	return "gke.compute.kore.appvia.io"
+	return "eks.compute.kore.appvia.io"
 }
 
 // Run starts the controller
@@ -65,15 +68,20 @@ func (t *eksCtrl) Run(ctx context.Context, cfg *rest.Config, hubi kore.Interface
 	t.Interface = hubi
 
 	// @step: create the controller
-	_, err = controllers.NewController(
-		"eks-credentials.kore.appvia.io", t.mgr,
-		&source.Kind{Type: &aws.AWSCredentials{}},
-		&controllers.ReconcileHandler{
-			HandlerFunc: t.ReconcileCredentials,
-		},
-	)
+	ctrl, err := controller.New(t.Name(), mgr, controllers.DefaultControllerOptions(t))
 	if err != nil {
-		logger.WithError(err).Error("trying to create the aws credentials controller")
+		log.WithError(err).Error("failed to create the controller")
+
+		return err
+	}
+
+	// @step: setup watches for the resources
+	if err := ctrl.Watch(&source.Kind{Type: &eks.EKS{}},
+		&handler.EnqueueRequestForObject{},
+		&predicate.GenerationChangedPredicate{},
+	); err != nil {
+
+		log.WithError(err).Error("failed to create watcher on resource")
 
 		return err
 	}
@@ -94,7 +102,7 @@ func (t *eksCtrl) Run(ctx context.Context, cfg *rest.Config, hubi kore.Interface
 	// @step: use a routine to catch the stop channel
 	go func() {
 		<-ctx.Done()
-		logger.Info("stopping the teams controller")
+		logger.Info("stopping the controller")
 
 		close(t.stopCh)
 	}()

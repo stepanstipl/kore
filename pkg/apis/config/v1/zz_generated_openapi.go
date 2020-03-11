@@ -417,6 +417,13 @@ func schema_pkg_apis_config_v1_SecretStatus(ref common.ReferenceCallback) common
 				Description: "SecretStatus defines the observed state of Plan",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"systemManaged": {
+						SchemaProps: spec.SchemaProps{
+							Description: "SystemManaged indicates the secret is managed by kore and cannot be changed",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
 					"conditions": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{

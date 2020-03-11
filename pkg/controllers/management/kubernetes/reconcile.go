@@ -26,8 +26,10 @@ import (
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
+	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
+	ekscc "github.com/appvia/kore/pkg/controllers/cloud/aws/eks"
 	gkecc "github.com/appvia/kore/pkg/controllers/cloud/gcp/gke"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
@@ -89,7 +91,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 	result, err := func() (reconcile.Result, error) {
 		object.Status.Status = corev1.PendingStatus
 
-		logger.Debug("retrieving the cluster credentials from secret")
+		logger.Debugf("retrieving the cluster credentials from secret %s/%s", object.Namespace, object.Name)
 
 		// @step: retrieve the provider credentials secret
 		account, err := controllers.GetConfigSecret(context.Background(),
@@ -104,7 +106,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 				return reconcile.Result{RequeueAfter: 5 * time.Minute}, nil
 			}
 
-			logger.Debug("no credentials found from cluster")
+			logger.Debugf("no credentials found from cluster %s", err)
 
 			// it wasn't found - is the cluster provider backed?
 			if !kore.IsProviderBacked(object) {
@@ -157,6 +159,8 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 				// @check if the cloud provider has failed
 				if a.Config().EnableClusterProviderCheck {
 					if err := a.CheckProviderStatus(context.Background(), object); err != nil {
+						logger.Warn("error getting cluster provider status")
+
 						return reconcile.Result{RequeueAfter: 2 * time.Minute}, nil
 					}
 				}
@@ -463,8 +467,43 @@ func (a k8sCtrl) CheckProviderStatus(ctx context.Context, resource *clustersv1.K
 		Namespace: resource.Spec.Provider.Namespace,
 		Name:      resource.Spec.Provider.Name,
 	}
-
 	switch resource.Spec.Provider.Kind {
+	case "EKS":
+		p := &eks.EKS{}
+
+		if err := a.mgr.GetClient().Get(ctx, key, p); err != nil {
+			logger.WithError(err).Error("trying to retrieve the eks cluster from api")
+		}
+
+		if p.Status.Conditions == nil {
+			err := fmt.Errorf("Cluster %s does not have a status yet", resource.Name)
+			logger.WithError(err).Error("trying to check the cluster status")
+			return err
+		}
+
+		// @check if we have a provider status for provisioning yet
+		status, found := p.Status.Conditions.GetStatus(ekscc.ComponentClusterCreator)
+		if !found {
+			logger.Debug("returning not found...!")
+			return nil
+		}
+
+		if status.Status == corev1.FailureStatus {
+			message := status.Message
+			if message == "" {
+				message = "EKS Cluster has failed to provision correctly"
+			}
+
+			resource.Status.Components.SetCondition(corev1.Component{
+				Detail:  status.Detail,
+				Name:    ComponentClusterCreate,
+				Message: message,
+				Status:  corev1.FailureStatus,
+			})
+			resource.Status.Status = corev1.FailureStatus
+
+			return errors.New("cloud provider is in a failed state")
+		}
 	case "GKE":
 		p := &gke.GKE{}
 

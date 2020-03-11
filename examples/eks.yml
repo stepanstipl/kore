@@ -1,0 +1,43 @@
+---
+apiVersion: aws.compute.kore.appvia.io/v1alpha1
+kind: EKS
+metadata:
+  name: dev
+  namespace: devs
+spec:
+  name: dev
+  roleARN: MOVE TO CREDENTIALS
+  region: eu-west-2
+  subnetIDs:
+  - subnet-xyz-az1
+  - subnet-xyz-az2
+  credentials:
+    group: aws.compute.kore.appvia.io
+    version: v1alpha1
+    kind: EKSCredentials
+    name: aws
+    namespace: kore-admin
+---
+apiVersion: clusters.compute.kore.appvia.io/v1
+kind: Kubernetes
+metadata:
+  name: dev
+spec:
+  # A domain within the account to provision services within
+  domain: CHANGE_ME
+  # Indicates if team members are automatically provide access to the cluster
+  inheritTeamMembers: true
+  # The role to use for the above if enabled
+  defaultTeamRole: 'cluster-admin'
+  # If backed by a cloud provider, this provides a reference back to the resource above
+  provider:
+    group: aws.compute.kore.appvia.io
+    version: v1alpha1
+    kind: EKS
+    # This must map to the namespace the above cluster was built in i.e.
+    # if you create the gke cluster in team 'devs' it must be say namespace 'devs'
+    namespace: devs
+    # The name of the gke cluster above
+    name: dev
+  enableDefaultTrafficBlock: false
+  clusterUsers: []
