@@ -24,8 +24,9 @@ import (
 func Options() []cli.Flag {
 	return []cli.Flag{
 		&cli.StringFlag{
-			Name:  "team,t",
-			Usage: "Used to select the team context you are operating in",
+			Name:    "team",
+			Aliases: []string{"t"},
+			Usage:   "Used to select the team context you are operating in",
 		},
 	}
 }

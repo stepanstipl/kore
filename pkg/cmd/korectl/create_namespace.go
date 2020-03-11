@@ -55,8 +55,9 @@ func GetCreateNamespaceCommand(config *Config) *cli.Command {
 
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:  "cluster,c",
-				Usage: "the name of the cluster you want the namespace to reside `NAME`",
+				Name:    "cluster",
+				Aliases: []string{"c"},
+				Usage:   "the name of the cluster you want the namespace to reside `NAME`",
 			},
 			&cli.BoolFlag{
 				Name:  "dry-run",

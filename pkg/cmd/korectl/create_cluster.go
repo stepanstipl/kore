@@ -80,8 +80,9 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:  "plan,p",
-				Usage: "the plan which this cluster will be templated from `NAME`",
+				Name:    "plan",
+				Aliases: []string{"p"},
+				Usage:   "the plan which this cluster will be templated from `NAME`",
 			},
 			&cli.StringFlag{
 				Name:  "description",
@@ -97,8 +98,9 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 				Usage: "you can preprovision a collection namespaces on this cluster as well `NAMES`",
 			},
 			&cli.StringFlag{
-				Name:  "allocation,a",
-				Usage: "the name of the allocated credentials to use for this cluster `NAME`",
+				Name:    "allocation",
+				Aliases: []string{"a"},
+				Usage:   "the name of the allocated credentials to use for this cluster `NAME`",
 			},
 			&cli.BoolFlag{
 				Name:  "show-time",
