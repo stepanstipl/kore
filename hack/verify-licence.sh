@@ -4,7 +4,7 @@
 #
 
 BOILERPLATE=${BOILERPLATE:-"hack/boilerplate.go.txt"}
-BOILERPLATE_LENGTH=$(wc -l ${BOILERPLATE} | cut -d' ' -f1)
+BOILERPLATE_LENGTH=$(cat ${BOILERPLATE}| wc -l | xargs)
 EXCLUDE_FILES=(
   ./hack/generate/manifests_vfsdata.go
   ./pkg/clusterappman/manifests_tools.go
