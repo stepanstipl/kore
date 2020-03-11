@@ -252,7 +252,7 @@ gofmt:
 	@echo "--> Running gofmt check"
 	@if gofmt -s -l $$(go list -f '{{.Dir}}' ./...) | grep -q \.go ; then \
 		echo "You need to run the make format, we have file unformatted"; \
-		gofmt -s -l .; \
+		gofmt -s -l $$(go list -f '{{.Dir}}' ./...); \
 		exit 1; \
 	fi
 
