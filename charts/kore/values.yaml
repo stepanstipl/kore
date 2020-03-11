@@ -16,7 +16,7 @@ mysql:
 idp:
   client_id: ""
   client_secret: ""
-  discovery_url: ""
+  server_url: ""
   user_claims:
     - preferred_username
     - email

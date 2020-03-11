@@ -59,7 +59,7 @@ func main() {
 		Action: func(ctx *cli.Context) error {
 			config := authproxy.Config{
 				ClientID:                   ctx.String("client-id"),
-				DiscoveryURL:               ctx.String("discovery-url"),
+				IDPServerURL:               ctx.String("idp-server-url"),
 				GroupClaims:                ctx.StringSlice("group-claims"),
 				Listen:                     ctx.String("listen"),
 				MetricsListen:              ctx.String("metrics-listen"),

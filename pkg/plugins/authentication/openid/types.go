@@ -20,8 +20,8 @@ package openid
 type Config struct {
 	// ClientID is the openid client id
 	ClientID string
-	// DiscoveryURL is the discovery URL
-	DiscoveryURL string `json:"discovery-url,omitempty"`
+	// ServerURL is the openid server URL
+	ServerURL string `json:"server-url,omitempty"`
 	// SkipTLSVerify skips the TLS for the IDP
 	SkipTLSVerify bool `json:"skip-tls-verify,omitempty"`
 	// UserClaims is the claim fields which specifies the username

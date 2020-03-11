@@ -13,7 +13,7 @@ source ./demo.env
 export \
     KORE_CLIENT_ID \
     KORE_CLIENT_SECRET \
-    KORE_DISCOVERY_URL \
+    KORE_IDP_SERVER_URL \
     KORE_USER_CLAIMS \
     KORE_CLIENT_SCOPES
 

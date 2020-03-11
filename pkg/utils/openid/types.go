@@ -38,8 +38,8 @@ type Authenticator interface {
 type Config struct {
 	// ClientID is the client id
 	ClientID string
-	// DiscoveryURL is the openid discovery url
-	DiscoveryURL string
+	// ServerURL is the openid server url
+	ServerURL string
 	// SkipIDCheck indicates we skip checking the issuer
 	SkipClientIDCheck bool
 }

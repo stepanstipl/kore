@@ -67,8 +67,8 @@ func (l *loginHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 	ws.Produces(restful.MIME_JSON)
 	ws.Path("oauth")
 
-	if l.Config().DiscoveryURL != "" {
-		provider, err := oidc.NewProvider(context.Background(), l.Config().DiscoveryURL)
+	if l.Config().IDPServerURL != "" {
+		provider, err := oidc.NewProvider(context.Background(), l.Config().IDPServerURL)
 		if err != nil {
 			log.WithError(err).Error("failed to create the openid provider")
 
@@ -229,7 +229,7 @@ func (l *loginHandler) callbackHandler(req *restful.Request, resp *restful.Respo
 		// @step: build an authorization response and hold in the cache
 		res := &AuthorizationResponse{
 			AccessToken:      otoken.AccessToken,
-			AuthorizationURL: l.Config().DiscoveryURL,
+			AuthorizationURL: l.Config().IDPServerURL,
 			ClientID:         l.Config().ClientID,
 			ClientSecret:     l.Config().ClientSecret,
 			IDToken:          rawToken,

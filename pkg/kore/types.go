@@ -112,8 +112,8 @@ type Config struct {
 	ClusterAppManImage string `json:"cluster-app-man-image,omitempty"`
 	// DEX is the config required to configure dex
 	DEX DEX `json:"dex,omitempty"`
-	// DiscoveryURL is the openid discovery url
-	DiscoveryURL string `json:"discovery-url,omitempty"`
+	// IDPServerURL is the openid server url
+	IDPServerURL string `json:"idp-server-url,omitempty"`
 	// EnabledClusterDeletion indicates we should delete cloud providers
 	EnableClusterDeletion bool `json:"enable-cluster-deletion,omitempty"`
 	// EnableClusterDeletionBlock indicates we should only delete the cluster if the cloud

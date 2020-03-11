@@ -290,7 +290,7 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 							},
 							Args: append([]string{
 								"--client-id=" + a.Config().ClientID,
-								"--discovery-url=" + a.Config().DiscoveryURL,
+								"--idp-server-url=" + a.Config().IDPServerURL,
 								"--tls-cert=/tls/tls.crt",
 								"--tls-key=/tls/tls.key",
 							}, claims...),

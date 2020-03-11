@@ -84,12 +84,12 @@ func New(config Config) (Interface, error) {
 
 		verifier = oidc.NewVerifier(config.ClientID, keyset, options)
 	}
-	if config.DiscoveryURL != "" {
+	if config.IDPServerURL != "" {
 		log.WithField(
-			"discovery-url", config.DiscoveryURL,
-		).Info("using the discovery endpoint to verify the requests")
+			"idp-server-url", config.IDPServerURL,
+		).Info("using the IDP server to verify the requests")
 
-		provider, err := oidc.NewProvider(context.Background(), config.DiscoveryURL)
+		provider, err := oidc.NewProvider(context.Background(), config.IDPServerURL)
 		if err != nil {
 			log.WithError(err).Error("trying to retrieve provider details")
 

@@ -189,8 +189,8 @@ func (a idpImpl) getDirectIDP() (*corev1.IDP, error) {
 	d := corev1.StaticOIDCIDP{}
 	d.ClientID = a.Config().ClientID
 	d.ClientSecret = a.Config().ClientSecret
-	d.DiscoveryURL = a.Config().DiscoveryURL
-	d.Issuer = a.Config().DiscoveryURL
+	d.DiscoveryURL = a.Config().IDPServerURL
+	d.Issuer = a.Config().IDPServerURL
 	d.ClientScopes = a.Config().ClientScopes
 	d.UserClaims = a.Config().UserClaims
 

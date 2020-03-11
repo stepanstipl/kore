@@ -58,9 +58,9 @@ func makeAuthenticators(hubcc kore.Interface, config Config) error {
 				return headers.New(hubcc)
 			case "openid":
 				return openid.New(hubcc, openid.Config{
-					ClientID:     config.Kore.ClientID,
-					DiscoveryURL: config.Kore.DiscoveryURL,
-					UserClaims:   config.Kore.UserClaims,
+					ClientID:   config.Kore.ClientID,
+					ServerURL:  config.Kore.IDPServerURL,
+					UserClaims: config.Kore.UserClaims,
 				})
 			default:
 				return nil, errors.New("unknown plugin")

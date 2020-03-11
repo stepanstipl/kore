@@ -44,14 +44,14 @@ func New(h kore.Interface, config Config) (identity.Plugin, error) {
 		return nil, err
 	}
 	log.WithFields(log.Fields{
-		"discovery-url": config.DiscoveryURL,
-		"user-claim":    config.UserClaims,
+		"server-url": config.ServerURL,
+		"user-claim": config.UserClaims,
 	}).Info("initializing the openid authentication plugin")
 
 	// @step: grab an openid verifier
 	discovery, err := openid.New(openid.Config{
-		ClientID:     config.ClientID,
-		DiscoveryURL: config.DiscoveryURL,
+		ClientID:  config.ClientID,
+		ServerURL: config.ServerURL,
 	})
 	if err != nil {
 		return nil, err
