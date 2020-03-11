@@ -19,6 +19,7 @@ package kubernetes
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sort"
 	"time"
 
@@ -465,6 +466,12 @@ func (a k8sCtrl) CheckProviderStatus(ctx context.Context, resource *clustersv1.K
 
 		if err := a.mgr.GetClient().Get(ctx, key, p); err != nil {
 			logger.WithError(err).Error("trying to retrieve the gke cluster from api")
+		}
+
+		if p.Status.Conditions == nil {
+			err := fmt.Errorf("Cluster %s does not have a status yet", resource.Name)
+			logger.WithError(err).Error("trying to check the cluster status")
+			return err
 		}
 
 		// @check if we have a provider status for provisioning yet
