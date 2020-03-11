@@ -160,7 +160,7 @@ run:
 	@$(MAKE) kube-api-wait
 	@$(MAKE) run-api-only
 
-run-api-only:
+run-api-only: kore-apiserver
 	@echo "--> Starting api..."
 	@hack/bin/run-api-with-env.sh
 
