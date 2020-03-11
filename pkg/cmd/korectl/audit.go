@@ -19,14 +19,14 @@
 
 package korectl
 
-import "github.com/urfave/cli"
+import "github.com/urfave/cli/v2"
 
-func GetAuditCommand(config *Config) cli.Command {
-	return cli.Command{
+func GetAuditCommand(config *Config) *cli.Command {
+	return &cli.Command{
 		Name:  "audit",
 		Usage: "Used to list and query the audit trail",
 		Flags: []cli.Flag{
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:  "team,t",
 				Usage: "Used to filter the results by team `TEAM`",
 			},

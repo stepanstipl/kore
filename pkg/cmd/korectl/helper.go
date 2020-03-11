@@ -34,10 +34,8 @@ import (
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	"github.com/appvia/kore/pkg/apiserver/types"
 	"github.com/appvia/kore/pkg/utils"
-
 	yml "github.com/ghodss/yaml"
 	log "github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
 	yaml "gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -184,23 +182,6 @@ func GetResourceList(config *Config, team, kind, name string, object runtime.Obj
 		WithEndpoint("/{kind}/{name}").
 		WithRuntimeObject(object).
 		Get()
-}
-
-// GlobalStringFlag
-func GlobalStringFlag(ctx *cli.Context, name string) string {
-	if ctx.IsSet(name) {
-		return ctx.String(name)
-	}
-	if ctx.Parent() == nil {
-		return ""
-	}
-	for parent := ctx.Parent(); parent != nil; parent = parent.Parent() {
-		if parent.IsSet(name) {
-			return parent.String(name)
-		}
-	}
-
-	return ""
 }
 
 // ParseDocument returns a collection of parsed documents and the api endpoints

@@ -26,7 +26,7 @@ import (
 	"github.com/appvia/kore/pkg/version"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 func init() {
@@ -36,10 +36,13 @@ func init() {
 
 func main() {
 	app := &cli.App{
-		Name:                 "clusterappman",
-		Authors:              version.Authors,
-		Author:               version.Prog,
-		Email:                version.Email,
+		Name: "clusterappman",
+		Authors: []*cli.Author{
+			{
+				Name:  version.Author,
+				Email: version.Email,
+			},
+		},
 		Flags:                options.Options(),
 		Usage:                "Kore clusterappman provides bootstrap and cluster application management",
 		Version:              version.Version(),

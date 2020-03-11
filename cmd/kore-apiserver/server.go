@@ -30,7 +30,7 @@ import (
 	"github.com/appvia/kore/pkg/services/users"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 // invoke is responsible for invoking the api

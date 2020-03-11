@@ -20,12 +20,12 @@
 package korectl
 
 import (
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 // GetCommands returns all the commands
-func GetCommands(config *Config) []cli.Command {
-	return []cli.Command{
+func GetCommands(config *Config) []*cli.Command {
+	return []*cli.Command{
 		GetLoginCommand(config),
 		GetLogoutCommand(config),
 		GetProfilesCommand(config),

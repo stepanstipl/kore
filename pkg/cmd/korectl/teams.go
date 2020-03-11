@@ -26,18 +26,18 @@ import (
 	"github.com/manifoldco/promptui"
 
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func GetCreateTeamCommand(config *Config) cli.Command {
-	return cli.Command{
+func GetCreateTeamCommand(config *Config) *cli.Command {
+	return &cli.Command{
 		Name:      "team",
 		Aliases:   []string{"teams"},
 		Usage:     "Creates a team",
 		ArgsUsage: "TEAM",
 		Flags: []cli.Flag{
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:     "description",
 				Usage:    "The description of the team",
 				Required: false,
@@ -101,8 +101,8 @@ func GetCreateTeamCommand(config *Config) cli.Command {
 	}
 }
 
-func GetEditTeamCommand(config *Config) cli.Command {
-	return cli.Command{
+func GetEditTeamCommand(config *Config) *cli.Command {
+	return &cli.Command{
 		Name:      "team",
 		Aliases:   []string{"teams"},
 		Usage:     "Modifies a team",
@@ -152,29 +152,29 @@ func GetEditTeamCommand(config *Config) cli.Command {
 	}
 }
 
-func GetCreateTeamMemberCommand(config *Config) cli.Command {
-	return cli.Command{
+func GetCreateTeamMemberCommand(config *Config) *cli.Command {
+	return &cli.Command{
 		Name:    "member",
 		Aliases: []string{"members"},
 		Usage:   "Creates a new team member",
 		Flags: []cli.Flag{
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:  "team,t",
 				Usage: "The name of the team you wish to add the user to",
 			},
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:     "user,u",
 				Usage:    "The username of the user you wish to add to the team",
 				Required: true,
 			},
-			cli.BoolFlag{
+			&cli.BoolFlag{
 				Name:     "invite,i",
 				Usage:    "If the user doesn't exist and the invite flag is set, the invite url will be automatically generated.",
 				Required: false,
 			},
 		},
 		Action: func(ctx *cli.Context) error {
-			team := GlobalStringFlag(ctx, "team")
+			team := ctx.String("team")
 			if team == "" {
 				return errTeamParameterMissing
 			}
@@ -240,24 +240,24 @@ func GetCreateTeamMemberCommand(config *Config) cli.Command {
 	}
 }
 
-func GetDeleteTeamMemberCommand(config *Config) cli.Command {
-	return cli.Command{
+func GetDeleteTeamMemberCommand(config *Config) *cli.Command {
+	return &cli.Command{
 		Name:    "member",
 		Aliases: []string{"members"},
 		Usage:   "Removes a member from the given team",
 		Flags: []cli.Flag{
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:  "team,t",
 				Usage: "The name of the team you wish to remove the user from",
 			},
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:     "user,u",
 				Usage:    "The username of the user you wish to remove from the team",
 				Required: true,
 			},
 		},
 		Action: func(ctx *cli.Context) error {
-			team := GlobalStringFlag(ctx, "team")
+			team := ctx.String("team")
 			if team == "" {
 				return errTeamParameterMissing
 			}

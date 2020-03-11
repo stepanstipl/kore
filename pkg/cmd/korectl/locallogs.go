@@ -25,7 +25,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 const koreApiServer = "/kore-apiserver"
@@ -36,12 +36,12 @@ var dcomposeArgs = []string{
 	"--file", "hack/compose/operators.yml",
 }
 
-func GetLocalLogsSubCommand(_ *Config) cli.Command {
-	return cli.Command{
+func GetLocalLogsSubCommand(_ *Config) *cli.Command {
+	return &cli.Command{
 		Name:  "logs",
 		Usage: "View logs from local Kore.",
 		Flags: []cli.Flag{
-			cli.BoolFlag{
+			&cli.BoolFlag{
 				Name:     "follow, f",
 				Usage:    "Follow log output.",
 				Required: false,

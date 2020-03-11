@@ -22,12 +22,12 @@ package korectl
 import (
 	"fmt"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 // GetLogoutCommand is used to login to the api server
-func GetLogoutCommand(config *Config) cli.Command {
-	return cli.Command{
+func GetLogoutCommand(config *Config) *cli.Command {
+	return &cli.Command{
 		Name:      "logout",
 		Usage:     "Deletes the login credentials from the current or selected profile",
 		ArgsUsage: "[PROFILE]",

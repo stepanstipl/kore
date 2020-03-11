@@ -27,7 +27,7 @@ import (
 	"path"
 	"text/template"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 var (
@@ -61,8 +61,8 @@ func startChecks(config *Config) error {
 	return nil
 }
 
-func GetLocalRunSubCommands(config *Config) []cli.Command {
-	return []cli.Command{
+func GetLocalRunSubCommands(config *Config) []*cli.Command {
+	return []*cli.Command{
 		{
 			Name:  "start",
 			Usage: "Starts a local instance of Kore.",

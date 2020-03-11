@@ -37,7 +37,7 @@ import (
 	"github.com/appvia/kore/pkg/utils"
 	"gopkg.in/yaml.v2"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -73,8 +73,8 @@ This will generate your ${HOME}/.kube/config for you with the clusters from team
 // GetCreateClusterCommand returns the command to create clusters
 // @Note: we probably need to move this cluster provisioning off a plan into the API itself
 // and offload it from the CLI - but needs discussion first.
-func GetCreateClusterCommand(config *Config) cli.Command {
-	return cli.Command{
+func GetCreateClusterCommand(config *Config) *cli.Command {
+	return &cli.Command{
 		Name:        "clusters",
 		Aliases:     []string{"cluster"},
 		Description: createClusterLongDescription,
@@ -82,40 +82,41 @@ func GetCreateClusterCommand(config *Config) cli.Command {
 		ArgsUsage:   "<name> [options]",
 
 		Flags: []cli.Flag{
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:  "team,t",
 				Usage: "Used to select the team context you are operating in `NAME`",
 			},
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:  "plan,p",
 				Usage: "the plan which this cluster will be templated from `NAME`",
 			},
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:  "description",
 				Usage: "provides a short description for the cluster `DESCRIPTION`",
 			},
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:  "team-role",
 				Usage: "the default role inherited by all members in the team on the cluster `NAME`",
 				Value: "viewer",
 			},
-			cli.StringSliceFlag{
+			&cli.StringSliceFlag{
 				Name:  "namespace",
 				Usage: "you can preprovision a collection namespaces on this cluster as well `NAMES`",
 			},
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:  "allocation,a",
 				Usage: "the name of the allocated credentials to use for this cluster `NAME`",
 			},
-			cli.BoolFlag{
+			&cli.BoolFlag{
 				Name:  "show-time",
 				Usage: "shows the time it took to successfully provision a new cluster `BOOL`",
 			},
-			cli.BoolTFlag{
+			&cli.BoolFlag{
 				Name:  "wait",
+				Value: true,
 				Usage: "indicates we should wait for the cluster to be build (defaults: true) `BOOL`",
 			},
-			cli.BoolFlag{
+			&cli.BoolFlag{
 				Name:  "dry-run",
 				Usage: "generate the cluster specification but does not apply `BOOL`",
 			},
@@ -134,7 +135,7 @@ func GetCreateClusterCommand(config *Config) cli.Command {
 			plan := ctx.String("plan")
 			allocation := ctx.String("allocation")
 			namespaces := ctx.StringSlice("namespace")
-			team := GlobalStringFlag(ctx, "team")
+			team := ctx.String("team")
 			role := ctx.String("team-role")
 			waitfor := ctx.Bool("wait")
 			dry := ctx.Bool("dry-run")

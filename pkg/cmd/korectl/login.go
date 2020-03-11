@@ -33,7 +33,7 @@ import (
 	"time"
 
 	"github.com/skratchdot/open-golang/open"
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 var (
@@ -48,22 +48,22 @@ $ korectl login local -a http://127.0.0.1:8080  # create a profile and login
 )
 
 // GetLoginCommand is used to login to the api server
-func GetLoginCommand(config *Config) cli.Command {
-	return cli.Command{
+func GetLoginCommand(config *Config) *cli.Command {
+	return &cli.Command{
 		Name:        "login",
 		Description: loginLongDescription,
 		Usage:       "Authenticate yourself and retrieve a token for Appvia Kore",
 
 		Flags: []cli.Flag{
-			cli.StringFlag{
+			&cli.StringFlag{
 				Name:  "api-server,a",
 				Usage: "allows you to specify the kore api server to login as `URL`",
 			},
-			cli.BoolFlag{
+			&cli.BoolFlag{
 				Name:  "force,f",
 				Usage: "must be set when you want to override the api-server on an existing profile `BOOL`",
 			},
-			cli.IntFlag{
+			&cli.IntFlag{
 				Name:  "port,p",
 				Usage: "sets the local port used for redirection when authenticating",
 				Value: 3001,

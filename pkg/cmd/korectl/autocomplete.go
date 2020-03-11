@@ -22,7 +22,7 @@ package korectl
 import (
 	"fmt"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 )
 
 const (
@@ -51,8 +51,8 @@ unset PROG
 `
 )
 
-func GetAutoCompleteCommand(config *Config) cli.Command {
-	return cli.Command{
+func GetAutoCompleteCommand(config *Config) *cli.Command {
+	return &cli.Command{
 		Name:  "autocomplete",
 		Usage: "Provides the autocomplete output so you can source into your shell",
 		Action: func(ctx *cli.Context) error {
