@@ -75,7 +75,7 @@ func GetDefaultPlans() []*configv1.Plan {
 							"network":                "default",
 							"size":                   1,
 							"subnetwork":             "default",
-							"version":                "1.14.9-gke.23"
+							"version":                "1.14.10-gke.24"
 						}`,
 					),
 				},
@@ -121,7 +121,7 @@ func GetDefaultPlans() []*configv1.Plan {
 							"network":                "default",
 							"size":                   2,
 							"subnetwork":             "default",
-							"version":                "1.14.9-gke.23"
+							"version":                "1.14.10-gke.24"
 						}`,
 					),
 				},
