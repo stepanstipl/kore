@@ -324,6 +324,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Doc("Used to return all team resources under the team").
 			Reads(clustersv1.Kubernetes{}, "The definition for kubernetes cluster").
 			Returns(http.StatusOK, "Contains the former team definition from the kore", clustersv1.Kubernetes{}).
+			Returns(http.StatusBadRequest, "Validation error of the provided details", kore.ErrValidation{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 

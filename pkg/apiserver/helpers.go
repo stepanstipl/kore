@@ -57,11 +57,11 @@ func makeListWithSize(size int) *List {
 func handleErrors(req *restful.Request, resp *restful.Response, handler func() error) {
 	if err := handler(); err != nil {
 		code := http.StatusInternalServerError
+		var errResponse interface{}
+		// Simple errors have fixed values:
 		switch err {
 		case kore.ErrNotFound:
 			code = http.StatusNotFound
-		case kore.ErrNotAllowed{}:
-			code = http.StatusNotAcceptable
 		case kore.ErrUnauthorized:
 			code = http.StatusForbidden
 		case kore.ErrRequestInvalid:
@@ -69,6 +69,19 @@ func handleErrors(req *restful.Request, resp *restful.Response, handler func() e
 		case io.EOF:
 			code = http.StatusBadRequest
 		}
+
+		// Couple of errors have their own types, treat differently:
+		switch err := err.(type) {
+		case kore.ErrNotAllowed:
+		case *kore.ErrNotAllowed:
+			code = http.StatusNotAcceptable
+		case kore.ErrValidation:
+		case *kore.ErrValidation:
+			code = http.StatusBadRequest
+			// ErrValidation can be directly serialized to json so just return that.
+			errResponse = err
+		}
+
 		if strings.Contains(err.Error(), "record not found") {
 			code = http.StatusNotFound
 			err = errors.New("resource not found")
@@ -77,12 +90,14 @@ func handleErrors(req *restful.Request, resp *restful.Response, handler func() e
 			code = http.StatusNotFound
 		}
 
-		e := newError(err.Error()).
-			WithCode(code).
-			WithVerb(req.Request.Method).
-			WithURI(req.Request.RequestURI)
+		if errResponse == nil {
+			errResponse = newError(err.Error()).
+				WithCode(code).
+				WithVerb(req.Request.Method).
+				WithURI(req.Request.RequestURI)
+		}
 
-		if err := resp.WriteHeaderAndEntity(code, e); err != nil {
+		if err := resp.WriteHeaderAndEntity(code, errResponse); err != nil {
 			log.WithError(err).Error("failed to respond to request")
 		}
 	}

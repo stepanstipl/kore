@@ -18,7 +18,6 @@ package kore
 
 import (
 	"context"
-	"errors"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	"github.com/appvia/kore/pkg/kore/authentication"
@@ -123,9 +122,10 @@ func (c *clsImpl) Update(ctx context.Context, cluster *clustersv1.Kubernetes) er
 
 	cluster.Namespace = c.team
 
-	// Validate the name - feels like there's probably a better place for this
+	// @TODO wider validation of the supplied details.
 	if len(cluster.Name) > 40 {
-		return errors.New("Invalid cluster name")
+		return newErrValidation().
+			WithFieldError("cluster.name", MaxLength, "Cluster name must be 40 characters or less")
 	}
 
 	// @TODO add an entity into the audit log
