@@ -240,10 +240,6 @@ func GetDeleteTeamMemberCommand(config *Config) *cli.Command {
 		Usage:   "Removes a member from the given team",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:  "team,t",
-				Usage: "The name of the team you wish to remove the user from",
-			},
-			&cli.StringFlag{
 				Name:     "user,u",
 				Usage:    "The username of the user you wish to remove from the team",
 				Required: true,
