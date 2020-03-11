@@ -42,13 +42,13 @@ import (
 
 var (
 	createClusterLongDescription = `
-Provides the ability to provision a kubernetes cluster in the team. The cluster 
+Provides the ability to provision a kubernetes cluster in the team. The cluster
 itself is provisioned from a predefined plan (a template). You can view the plans
-available to you via $ korectl get plans. Once the cluster has been built the 
-members of your team can gain access via running $ korectl login. 
+available to you via $ korectl get plans. Once the cluster has been built the
+members of your team can gain access via running $ korectl login.
 
 Note: you retrieve a list of all the plans available to you via:
-$ korectl get plans 
+$ korectl get plans
 $ korectl get plans <name> -o yaml
 
 Examples:
@@ -60,7 +60,7 @@ $ korectl -t <myteam> create cluster dev --plan gke-development -a <name> --name
 # Check the status of the cluster
 $ korectl -t <myteam> get cluster dev -o yaml
 
-Once you have created the cluster you can login via 
+Once you have created the cluster you can login via
 $ korectl clusters auth -t <myteam>
 
 This will generate your ${HOME}/.kube/config for you with the clusters from team.
@@ -72,8 +72,8 @@ This will generate your ${HOME}/.kube/config for you with the clusters from team
 // and offload it from the CLI - but needs discussion first.
 func GetCreateClusterCommand(config *Config) *cli.Command {
 	return &cli.Command{
-		Name:        "clusters",
-		Aliases:     []string{"cluster"},
+		Name:        "cluster",
+		Aliases:     []string{"clusters"},
 		Description: createClusterLongDescription,
 		Usage:       "Create a kubernetes cluster within the team",
 		ArgsUsage:   "<name> [options]",

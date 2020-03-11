@@ -74,6 +74,10 @@ func main() {
 		Commands: korectl.GetCommands(config),
 
 		Before: func(ctx *cli.Context) error {
+			if ctx.Bool("show-flags") {
+				fmt.Println("flags:", ctx.Args())
+			}
+
 			for _, x := range ctx.Args().Slice() {
 				for x == "--debug" {
 					log.SetLevel(log.DebugLevel)

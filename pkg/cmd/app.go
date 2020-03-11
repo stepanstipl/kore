@@ -5,6 +5,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/appvia/kore/pkg/utils"
 	"github.com/urfave/cli/v2"
 )
 
@@ -71,7 +72,7 @@ func (a *App) Run(args []string) error {
 		cli.HelpPrinterCustom = a.origHelpPrinterCustom
 	}()
 
-	orderedArgs, err := a.orderArgs(args)
+	orderedArgs, err := a.Reorder(args)
 	if err != nil {
 		return err
 	}
@@ -79,59 +80,152 @@ func (a *App) Run(args []string) error {
 	return a.app.Run(orderedArgs)
 }
 
-func (a *App) orderArgs(args []string) ([]string, error) {
-	flagArgs := []string{args[0]}
-	var valueArgs []string
+// Reorder is responsible for ordering the argus
+func (a *App) Reorder(args []string) ([]string, error) {
+	var parent *cli.Command
+	ordered := []string{}
 
+	// @step: create three arrays used to hold the global flags
+	// and the head and tail of a command
+	var head, tail, global []string
+
+	var found bool
+
+	// @step: we iterate the arguments in the os.Args
 	for i := 1; i < len(args); i++ {
 		arg := args[i]
 
+		// @step: if this a break
 		if arg == "--" {
-			valueArgs = append(valueArgs, args[i:]...)
+			tail = append(tail, args[i:]...)
+
 			break
 		}
 
-		if isFlag := strings.HasPrefix(arg, "-"); isFlag {
-			flagName := strings.TrimLeft(arg, "-")
-			res, err := a.parseFlagFromArgs(args[i:], flagName)
-			if err != nil {
-				return nil, err
-			}
-			if len(res) > 0 {
-				flagArgs = append(flagArgs, res...)
-				i += len(res) - 1
+		// @step: is this a flag argument?
+		if strings.HasPrefix(arg, "-") {
+			parsed := strings.TrimLeft(arg, "-")
+
+			// @step: we check if the flag is global for related to the command
+			flag, found := a.isGlobalFlag(parsed)
+			if found {
+				// we are dealing with a command flag - we need to know if it has args though
+				values, err := a.getFlagValues(parsed, args[i:], flag)
+				if err != nil {
+					return nil, err
+				}
+				// add the arguments to the global
+				global = append(global, values...)
+				// remove the values from the index
+				i += len(values) - 1
 			} else {
-				valueArgs = append(valueArgs, arg)
+				// we have a command flag, lets see if we can find it
+				if parent == nil {
+					tail = append(tail, arg)
+				} else {
+					found, err := func() (bool, error) {
+						for _, flag := range parent.Flags {
+							if utils.Contains(parsed, flag.Names()) {
+								values, err := a.getFlagValues(parsed, args[i:], flag)
+								if err != nil {
+									return false, err
+								}
+								head = append(head, values...)
+								i += len(values) - 1
+
+								return true, nil
+							}
+						}
+
+						return false, nil
+					}()
+					if err != nil {
+						return nil, err
+					}
+					if !found {
+						tail = append(tail, arg)
+					}
+				}
 			}
 		} else {
-			valueArgs = append(valueArgs, arg)
-		}
-	}
-
-	return append(flagArgs, valueArgs...), nil
-}
-
-func (a *App) parseFlagFromArgs(args []string, name string) ([]string, error) {
-	for i := 0; i < len(a.app.Flags); i++ {
-		flag := a.app.Flags[i]
-		for _, flagName := range flag.Names() {
-			if name == flagName {
-				if f, ok := flag.(cli.DocGenerationFlag); ok {
-					if f.TakesValue() {
-						if len(args) == 1 {
-							return nil, fmt.Errorf("%q parameter expects a value", flagName)
-						}
-						return []string{args[0], args[1]}, nil
-					} else {
-						return []string{args[0]}, nil
-					}
+			// @step: the argument is not a flag, is it a command?
+			if parent == nil {
+				parent, found = a.isAppCommand(arg)
+				if !found {
+					tail = append(tail, arg)
 				} else {
-					panic(fmt.Errorf("%T global flag type is not supported yet, please add it to cli.App", flag))
+					head = append(head, arg)
+				}
+			} else {
+				command, found := a.isSubCommand(arg, parent)
+				if found {
+					parent = command
+					head = append(head, arg)
+					ordered = append(ordered, head...)
+					ordered = append(ordered, tail...)
+					head = []string{}
+					tail = []string{}
+				} else {
+					tail = append(tail, arg)
 				}
 			}
 		}
 	}
-	return nil, nil
+
+	ordered = append(ordered, head...)
+	ordered = append(ordered, tail...)
+	var full []string
+	full = append(global, ordered...)
+
+	return append([]string{args[0]}, full...), nil
+}
+
+func (a *App) isAppCommand(name string) (*cli.Command, bool) {
+	for _, x := range a.app.Commands {
+		if utils.Contains(name, x.Names()) {
+			return x, true
+		}
+	}
+
+	return nil, false
+}
+
+func (a *App) isSubCommand(name string, parent *cli.Command) (*cli.Command, bool) {
+	for _, x := range parent.Subcommands {
+		if utils.Contains(name, x.Names()) {
+			return x, true
+		}
+	}
+
+	return nil, false
+}
+
+func (a *App) isGlobalFlag(name string) (cli.Flag, bool) {
+	for _, flag := range a.app.Flags {
+		if utils.Contains(name, flag.Names()) {
+			return flag, true
+		}
+	}
+
+	return nil, false
+}
+
+// getFlagValues returns the flag and if it requires a parameter, the param
+func (a *App) getFlagValues(name string, args []string, flag cli.Flag) ([]string, error) {
+	// @step: we check if the flag requires a value
+	if f, ok := flag.(cli.DocGenerationFlag); ok {
+		if f.TakesValue() {
+			if len(args) == 1 {
+				return nil, fmt.Errorf("%q parameter expects a value", name)
+			}
+
+			return []string{args[0], args[1]}, nil
+		}
+
+		return []string{args[0]}, nil
+	}
+
+	panic(fmt.Errorf("%T global flag type is not supported yet, please add it to cli.App", flag))
 }
 
 func (a *App) helpPrinterCustom(out io.Writer, templ string, data interface{}, customFuncs map[string]interface{}) {

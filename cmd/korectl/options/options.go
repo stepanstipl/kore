@@ -28,5 +28,17 @@ func Options() []cli.Flag {
 			Aliases: []string{"t"},
 			Usage:   "Used to select the team context you are operating in",
 		},
+		&cli.BoolFlag{
+			Name:    "show-flags",
+			Usage:   "Used to debugging the flags on the command line `BOOL`",
+			Hidden:  true,
+			EnvVars: []string{"SHOW_FLAGS"},
+		},
+		&cli.StringFlag{
+			Name:    "output",
+			Aliases: []string{"o"},
+			Usage:   "The output format of the resource `FORMAT`",
+			Value:   "yaml",
+		},
 	}
 }
