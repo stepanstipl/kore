@@ -30,7 +30,8 @@ func GetApplyCommand(config *Config) *cli.Command {
 		Usage: "Used to apply one of more resources to the API",
 		Flags: []cli.Flag{
 			&cli.StringSliceFlag{
-				Name:     "file,f",
+				Name:     "file",
+				Aliases:  []string{"f"},
 				Usage:    "The path to the file containing the resources definitions `PATH`",
 				Required: true,
 			},

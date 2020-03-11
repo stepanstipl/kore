@@ -35,8 +35,9 @@ func GetClustersCommand(config *Config) *cli.Command {
 				Usage: "Used to retrieve the API endpoints of the clusters and provision your kubeconfig",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:  "name,n",
-						Usage: "The name of the integration to retrieve `NAME`",
+						Name:    "name",
+						Aliases: []string{"n"},
+						Usage:   "The name of the integration to retrieve `NAME`",
 					},
 				},
 				Action: func(ctx *cli.Context) error {
@@ -71,12 +72,9 @@ func GetClustersCommand(config *Config) *cli.Command {
 				Usage: "Used to retrieve one or all clusters from the kore",
 				Flags: append([]cli.Flag{
 					&cli.StringFlag{
-						Name:  "name,n",
-						Usage: "The name of the integration to retrieve `NAME`",
-					},
-					&cli.StringFlag{
-						Name:  "team,t",
-						Usage: "Used to filter the results by team `TEAM`",
+						Name:    "name",
+						Aliases: []string{"n"},
+						Usage:   "The name of the integration to retrieve `NAME`",
 					},
 				}, DefaultOptions...),
 				Action: func(ctx *cli.Context) error {

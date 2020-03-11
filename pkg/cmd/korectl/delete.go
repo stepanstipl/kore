@@ -45,8 +45,9 @@ func GetDeleteCommand(config *Config) *cli.Command {
 		ArgsUsage:   "-f <file> | [TYPE] [NAME]",
 		Flags: []cli.Flag{
 			&cli.StringSliceFlag{
-				Name:  "file,f",
-				Usage: "The path to the file containing the resources definitions `PATH`",
+				Name:    "file",
+				Aliases: []string{"f"},
+				Usage:   "The path to the file containing the resources definitions `PATH`",
 			},
 		},
 		Subcommands: []*cli.Command{

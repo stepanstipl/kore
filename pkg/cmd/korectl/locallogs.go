@@ -39,7 +39,8 @@ func GetLocalLogsSubCommand(_ *Config) *cli.Command {
 		Usage: "View logs from local Kore.",
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
-				Name:     "follow, f",
+				Name:     "follow",
+				Aliases:  []string{"f"},
 				Usage:    "Follow log output.",
 				Required: false,
 			},

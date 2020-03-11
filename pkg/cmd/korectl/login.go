@@ -53,17 +53,20 @@ func GetLoginCommand(config *Config) *cli.Command {
 
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:  "api-server,a",
-				Usage: "allows you to specify the kore api server to login as `URL`",
+				Name:    "api-server",
+				Aliases: []string{"a"},
+				Usage:   "allows you to specify the kore api server to login as `URL`",
 			},
 			&cli.BoolFlag{
-				Name:  "force,f",
-				Usage: "must be set when you want to override the api-server on an existing profile `BOOL`",
+				Name:    "force",
+				Aliases: []string{"f"},
+				Usage:   "must be set when you want to override the api-server on an existing profile `BOOL`",
 			},
 			&cli.IntFlag{
-				Name:  "port,p",
-				Usage: "sets the local port used for redirection when authenticating",
-				Value: 3001,
+				Name:    "port",
+				Aliases: []string{"p"},
+				Usage:   "sets the local port used for redirection when authenticating",
+				Value:   3001,
 			},
 		},
 
