@@ -80,10 +80,6 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:  "team,t",
-				Usage: "Used to select the team context you are operating in `NAME`",
-			},
-			&cli.StringFlag{
 				Name:  "plan,p",
 				Usage: "the plan which this cluster will be templated from `NAME`",
 			},

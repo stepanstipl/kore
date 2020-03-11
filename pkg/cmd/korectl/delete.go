@@ -48,17 +48,15 @@ func GetDeleteCommand(config *Config) *cli.Command {
 				Name:  "file,f",
 				Usage: "The path to the file containing the resources definitions `PATH`",
 			},
-			&cli.StringFlag{
-				Name:  "team,t",
-				Usage: "Used to filter the results by team `TEAM`",
-			},
 		},
 		Subcommands: []*cli.Command{
 			GetDeleteTeamMemberCommand(config),
 		},
+
 		Before: func(ctx *cli.Context) error {
 			if !ctx.IsSet("file") && !ctx.Args().Present() {
-				return cli.ShowCommandHelp(ctx.Lineage()[1], "delete")
+				_ = cli.ShowSubcommandHelp(ctx)
+				return fmt.Errorf("-f <file> or [TYPE] [NAME] is required")
 			}
 			return nil
 		},

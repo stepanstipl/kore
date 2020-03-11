@@ -22,12 +22,6 @@ func GetAuditCommand(config *Config) *cli.Command {
 	return &cli.Command{
 		Name:  "audit",
 		Usage: "Used to list and query the audit trail",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:  "team,t",
-				Usage: "Used to filter the results by team `TEAM`",
-			},
-		},
 		Action: func(ctx *cli.Context) error {
 
 			return nil

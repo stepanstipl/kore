@@ -34,10 +34,6 @@ func GetApplyCommand(config *Config) *cli.Command {
 				Usage:    "The path to the file containing the resources definitions `PATH`",
 				Required: true,
 			},
-			&cli.StringFlag{
-				Name:  "team,t",
-				Usage: "Used to filter the results by team `TEAM`",
-			},
 		},
 		Action: func(ctx *cli.Context) error {
 			for _, file := range ctx.StringSlice("file") {

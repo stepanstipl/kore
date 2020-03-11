@@ -17,7 +17,7 @@
 package korectl
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/urfave/cli/v2"
 )
@@ -37,12 +37,6 @@ func GetCreateCommand(config *Config) *cli.Command {
 		Usage:       "Creates various objects",
 		Description: formatLongDescription(createLongDescription),
 		ArgsUsage:   "[TYPE] [NAME]",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:  "team,t",
-				Usage: "Used to select the team context you are operating in",
-			},
-		},
 		Subcommands: []*cli.Command{
 			GetCreateTeamCommand(config),
 			GetCreateTeamMemberCommand(config),
@@ -51,8 +45,8 @@ func GetCreateCommand(config *Config) *cli.Command {
 		},
 		Before: func(ctx *cli.Context) error {
 			if !ctx.Args().Present() {
-				_ = cli.ShowCommandHelp(ctx.Lineage()[1], "create")
-				return errors.New("[TYPE] [NAME] is required")
+				_ = cli.ShowSubcommandHelp(ctx)
+				return fmt.Errorf("[TYPE] [NAME] is required")
 			}
 			return nil
 		},

@@ -67,7 +67,7 @@ func main() {
 
 		CommandNotFound: func(ctx *cli.Context, name string) {
 			fmt.Fprintf(os.Stderr, "Error: unknown command %q\n\n", name)
-			fmt.Fprintf(os.Stderr, "Please run `%s help` to see all available commands.\n", ctx.App.Name)
+			fmt.Fprintf(os.Stderr, "Please run `%s --help` to see all available commands.\n", ctx.App.Name)
 			os.Exit(1)
 		},
 
@@ -101,7 +101,8 @@ func main() {
 		},
 	}
 
-	if err := app.Run(os.Args); err != nil {
+	koreCliApp := cmd.NewApp(app)
+	if err := koreCliApp.Run(os.Args); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n\n", err)
 		os.Exit(1)
 	}
