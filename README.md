@@ -1,21 +1,39 @@
-### **[Architecture](#architecture)** •  **[Getting Started](doc/quick-start.md)** • **[Roadmap](#roadmap)**
+### **[Architecture](#architecture)** •  **[Getting Started](doc/getting-started.md)** • **[Roadmap](#roadmap)**
 
 ![CircleCI](https://img.shields.io/circleci/build/github/appvia/kore/master?style=for-the-badge)
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/appvia/kore?style=for-the-badge)
 ![License: Apache-2.0](https://img.shields.io/github/license/appvia/kore?style=for-the-badge&color=%23D1374D)
 
-## Kubernetes for Teams via Appvia Kore
+## Kubernetes for Teams via Appvia Kore (Alpha)
 - **Cluster provisioning** provides secure and consistent provisioning of kubernetes environments for teams.
 - **Accounts & Account Users** provides a single source for access and control across the estate.
 - **Plans and Templates** allows the administrators to define the type and shape of resources for teams to consume.
 - **Managed Access Controls** Provides a central means to manage and configure roles, policies and permissions across the estate.
 
 ## Contents
+- [Local Quick Start](#local-quick-start)
 - [Why Appvia Kore?](#why-appvia-kore)
 - [The Developer](#the-developer)
 - [The DevOps](#the-devops)
 - [Architecture](#architecture)
-- [Getting Started](doc/quick-start.md)
+
+## Local Quick Start
+
+The fastest way to provision teams on Appvia Kore (Alpha) is try it out locally.
+
+See our [Local Quick Start Guide (Alpha)](doc/alpha-local-quick-start.md).
+
+### Appvia Kore / Kubernetes API / GKE
+
+In local mode, Appvia Kore will start the Kubernetes API locally. But, will still need access to a Kubernetes provider to create clusters.
+
+We'll utilise [GKE](https://cloud.google.com/kubernetes-engine) for this. And, we'll help you set it up to work with Appvia Kore. 
+
+**Please Note**: Created GKE clusters are for demo purposes only. They're tied to a local environment and will be orphaned once the local Kore instance is stopped.
+
+### Appvia Kore CLI
+
+The Quick Start guide will walk you through using the CLI to set up a team, provision a sandbox environment and deploy a sample application.
 
 ## Why Appvia Kore?
 

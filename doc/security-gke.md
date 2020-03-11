@@ -30,7 +30,7 @@ GKE enables Role Bases Access Control (RBAC) as default in GKE, see Google docum
 ### With Kore
 
 1. &#x2611; RBAC authorization is integrated with Kore Users and Teams and the configured [IDP](./idp.md).
-1. &#x2611; No Goolge project access required with Kore.
+1. &#x2611; No Google project access required with Kore.
 1. &#x2611; Access controls are provided natively by Kubernetes subjects we manage through Teams.
 
 ## Audit
