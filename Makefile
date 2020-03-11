@@ -343,7 +343,7 @@ register-gen:
 	@echo "--> Generating Schema register.go"
 	@echo "--> packages $(APIS)"
 	@$(foreach api,$(APIS), \
-		register-gen -h hack/boilerplate.go.txt \
+		go run k8s.io/code-generator/cmd/register-gen -h hack/boilerplate.go.txt \
 			--output-file-base zz_generated_register \
 			-i github.com/appvia/kore/pkg/apis/$(api) \
 			-p github.com/appvia/kore/pkg/apis/$(api); )
