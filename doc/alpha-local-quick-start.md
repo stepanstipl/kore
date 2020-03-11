@@ -269,9 +269,9 @@ bin/korectl clusters auth -t team-appvia
 Switch the current `kubectl` context to `appvia-trial`,
 
 ```shell script
-kubectl config set-context appvia-trial
-# + kubectl config set-context appvia-trial --namespace=sandbox
-# Context "appvia-trial" modified.
+kubectl config use-context appvia-trial --namespace=sandbox
+# + kubectl config use-context appvia-trial --namespace=sandbox
+# Switched to context "appvia-trial".
 ```
 
 Deploy the GKE example web application container available from the Google Cloud Repository
