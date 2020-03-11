@@ -329,6 +329,7 @@ schema-gen:
 	    -nometadata \
 		-o pkg/register/assets.go \
 		-prefix deploy deploy/crds
+	@gofmt -s -w pkg/register/assets.go
 
 openapi-gen:
 	@echo "--> Generating OpenAPI files"
