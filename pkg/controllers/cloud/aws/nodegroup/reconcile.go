@@ -25,7 +25,7 @@ import (
 
 	awsv1alpha1 "github.com/appvia/kore/pkg/apis/aws/v1alpha1"
 	core "github.com/appvia/kore/pkg/apis/core/v1"
-	eksctl "github.com/appvia/kore/pkg/controllers/eks"
+	eksctl "github.com/appvia/kore/pkg/controllers/cloud/aws/eks"
 	"github.com/aws/aws-sdk-go/aws"
 	eks "github.com/aws/aws-sdk-go/service/eks"
 	log "github.com/sirupsen/logrus"
