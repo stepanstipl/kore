@@ -74,6 +74,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sys v0.0.0-20200124204421-9fbb57f87de9 // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
+	gonum.org/v1/gonum v0.7.0 // indirect
 	google.golang.org/api v0.10.0
 	google.golang.org/appengine v1.6.5 // indirect
 	google.golang.org/grpc v1.25.1
@@ -85,6 +86,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.17.0
 	k8s.io/apimachinery v0.17.0
 	k8s.io/client-go v0.17.0
+	k8s.io/code-generator v0.17.3
 	k8s.io/kube-openapi v0.0.0-20191107075043-30be4d16710a
 	k8s.io/utils v0.0.0-20191218082557-f07c713de883 // indirect
 	sigs.k8s.io/application v0.8.2-0.20200209202752-a485a03cdc47
@@ -115,5 +117,8 @@ replace github.com/operator-framework/operator-sdk => github.com/operator-framew
 //replace github.com/dexidp/dex => github.com/appvia/dex v0.0.0-20191216122359-b147340
 // TODO: use github hosted dex
 replace github.com/dexidp/dex => github.com/appvia/dex v0.0.0-20191213161401-b147340b9bc0
+
+// This is the kubernetes-1.14.1-tools tag (which is the same as upstream kubernetes-1.14.1)
+replace k8s.io/code-generator => github.com/appvia/kubernetes-code-generator v0.0.0-20200311145355-28f8f0159a26
 
 go 1.13
