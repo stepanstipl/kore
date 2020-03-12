@@ -35,8 +35,8 @@ func FileExists(filename string) (bool, error) {
 	return !info.IsDir(), nil
 }
 
-// Creates an (empty) file if filename does not exist (returning true) or does
-// nothing if it already exists (returning false). Will create missing directories.
+// EnsureFileExists creates an (empty) file if filename does not exist (returning true)
+// or does nothing if it already exists (returning false). Will create missing directories.
 func EnsureFileExists(filename string) (bool, error) {
 	exists, err := FileExists(filename)
 	if err != nil {
@@ -45,7 +45,6 @@ func EnsureFileExists(filename string) (bool, error) {
 	if exists {
 		return false, nil
 	}
-	// Create directory (will no-op if it already exists)
 	if err := os.MkdirAll(filepath.Dir(filename), os.ModePerm); err != nil {
 		return false, err
 	}
