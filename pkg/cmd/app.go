@@ -123,7 +123,7 @@ func (a *App) Reorder(args []string) ([]string, error) {
 			parsed := strings.TrimLeft(arg, "-")
 
 			// @step: we check if the flag is global for related to the command
-			flag, found := a.isGlobalFlag(parsed)
+			flag, found := a.getGlobalFlag(parsed)
 			if found {
 				// we are dealing with a command flag - we need to know if it has args though
 				values, err := a.getFlagValues(parsed, args[i:], flag)
@@ -166,14 +166,14 @@ func (a *App) Reorder(args []string) ([]string, error) {
 		} else {
 			// @step: the argument is not a flag, is it a command?
 			if parent == nil {
-				parent, found = a.isAppCommand(arg)
+				parent, found = a.getAppCommand(arg)
 				if !found {
 					tail = append(tail, arg)
 				} else {
 					head = append(head, arg)
 				}
 			} else {
-				command, found := a.isSubCommand(arg, parent)
+				command, found := a.getSubCommand(arg, parent)
 				if found {
 					parent = command
 					head = append(head, arg)
@@ -195,7 +195,7 @@ func (a *App) Reorder(args []string) ([]string, error) {
 	return append([]string{args[0]}, full...), nil
 }
 
-func (a *App) isAppCommand(name string) (*cli.Command, bool) {
+func (a *App) getAppCommand(name string) (*cli.Command, bool) {
 	for _, x := range a.app.Commands {
 		if utils.Contains(name, x.Names()) {
 			return x, true
@@ -205,7 +205,7 @@ func (a *App) isAppCommand(name string) (*cli.Command, bool) {
 	return nil, false
 }
 
-func (a *App) isSubCommand(name string, parent *cli.Command) (*cli.Command, bool) {
+func (a *App) getSubCommand(name string, parent *cli.Command) (*cli.Command, bool) {
 	for _, x := range parent.Subcommands {
 		if utils.Contains(name, x.Names()) {
 			return x, true
@@ -215,7 +215,7 @@ func (a *App) isSubCommand(name string, parent *cli.Command) (*cli.Command, bool
 	return nil, false
 }
 
-func (a *App) isGlobalFlag(name string) (cli.Flag, bool) {
+func (a *App) getGlobalFlag(name string) (cli.Flag, bool) {
 	for _, flag := range a.app.Flags {
 		if utils.Contains(name, flag.Names()) {
 			return flag, true
