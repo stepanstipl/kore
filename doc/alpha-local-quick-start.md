@@ -252,14 +252,7 @@ You now have a sandbox environment locally provisioned for your team. 🎉
 
 We'll be using `kubectl`, the Kubernetes CLI, to make the deployment. If you don't have it already, [please install and setup kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-kubectl-on-macos).
 
-Ensure kubeconfig is available.
-
-```shell script
-ls -alh ~/.kube/config
-# ...
-```
-
-Then set up our kubeconfig in `~/.kube/config` with our newly minted sandbox environment.
+Now we have to configure our `kubectl` kubeconfig in ~/.kube/config with our new GKE cluster.
 
 ```shell script
 bin/korectl clusters auth -t team-appvia

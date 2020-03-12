@@ -16,7 +16,10 @@
 
 package utils
 
-import "os"
+import (
+	"os"
+	"path/filepath"
+)
 
 // FileExists checks if a file exists
 func FileExists(filename string) (bool, error) {
@@ -30,4 +33,23 @@ func FileExists(filename string) (bool, error) {
 	}
 
 	return !info.IsDir(), nil
+}
+
+// EnsureFileExists creates an (empty) file if filename does not exist (returning true)
+// or does nothing if it already exists (returning false). Will create missing directories.
+func EnsureFileExists(filename string) (bool, error) {
+	exists, err := FileExists(filename)
+	if err != nil {
+		return false, err
+	}
+	if exists {
+		return false, nil
+	}
+	if err := os.MkdirAll(filepath.Dir(filename), os.ModePerm); err != nil {
+		return false, err
+	}
+	if _, err := os.Create(filename); err != nil {
+		return false, err
+	}
+	return true, nil
 }
