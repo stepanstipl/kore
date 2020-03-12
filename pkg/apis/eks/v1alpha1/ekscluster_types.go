@@ -22,9 +22,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EKSClusterSpec defines the desired state of EKSCluster
+// EKSSpec defines the desired state of EKSCluster
 // +k8s:openapi-gen=true
-type EKSClusterSpec struct {
+type EKSSpec struct {
 	// Name the name of the EKS cluster
 	// +kubebuilder:validation:MinLength=3
 	// +kubebuilder:validation:Required
@@ -53,25 +53,25 @@ type EKSClusterSpec struct {
 	Use core.Ownership `json:"use"`
 }
 
-// EKSClusterStatus defines the observed state of EKSCluster
+// EKSStatus defines the observed state of EKSCluster
 // +k8s:openapi-gen=true
-type EKSClusterStatus struct {
+type EKSStatus struct {
 	// Status provides a overall status
 	Status core.Status `json:"status"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// EKSCluster is the Schema for the eksclusters API
+// EKS is the Schema for the eksclusters API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=eksclusters,scope=Namespaced
-type EKSCluster struct {
+type EKS struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   EKSClusterSpec   `json:"spec,omitempty"`
-	Status EKSClusterStatus `json:"status,omitempty"`
+	Spec   EKSSpec   `json:"spec,omitempty"`
+	Status EKSStatus `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -80,5 +80,5 @@ type EKSCluster struct {
 type EKSClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []EKSCluster `json:"items"`
+	Items           []EKS `json:"items"`
 }

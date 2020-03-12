@@ -29,148 +29,22 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/appvia/kore/pkg/apis/aws/v1alpha1.AWSCredential":       schema_pkg_apis_aws_v1alpha1_AWSCredential(ref),
-		"github.com/appvia/kore/pkg/apis/aws/v1alpha1.AWSCredentialSpec":   schema_pkg_apis_aws_v1alpha1_AWSCredentialSpec(ref),
-		"github.com/appvia/kore/pkg/apis/aws/v1alpha1.AWSCredentialStatus": schema_pkg_apis_aws_v1alpha1_AWSCredentialStatus(ref),
-		"github.com/appvia/kore/pkg/apis/aws/v1alpha1.AWSToken":            schema_pkg_apis_aws_v1alpha1_AWSToken(ref),
-		"github.com/appvia/kore/pkg/apis/aws/v1alpha1.AWSTokenSpec":        schema_pkg_apis_aws_v1alpha1_AWSTokenSpec(ref),
-		"github.com/appvia/kore/pkg/apis/aws/v1alpha1.AWSTokenStatus":      schema_pkg_apis_aws_v1alpha1_AWSTokenStatus(ref),
-		"github.com/appvia/kore/pkg/apis/aws/v1alpha1.EKSCluster":          schema_pkg_apis_aws_v1alpha1_EKSCluster(ref),
-		"github.com/appvia/kore/pkg/apis/aws/v1alpha1.EKSClusterSpec":      schema_pkg_apis_aws_v1alpha1_EKSClusterSpec(ref),
-		"github.com/appvia/kore/pkg/apis/aws/v1alpha1.EKSClusterStatus":    schema_pkg_apis_aws_v1alpha1_EKSClusterStatus(ref),
-		"github.com/appvia/kore/pkg/apis/aws/v1alpha1.EKSNodeGroup":        schema_pkg_apis_aws_v1alpha1_EKSNodeGroup(ref),
-		"github.com/appvia/kore/pkg/apis/aws/v1alpha1.EKSNodeGroupSpec":    schema_pkg_apis_aws_v1alpha1_EKSNodeGroupSpec(ref),
-		"github.com/appvia/kore/pkg/apis/aws/v1alpha1.EKSNodeGroupStatus":  schema_pkg_apis_aws_v1alpha1_EKSNodeGroupStatus(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.AWSToken":            schema_pkg_apis_eks_v1alpha1_AWSToken(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.AWSTokenSpec":        schema_pkg_apis_eks_v1alpha1_AWSTokenSpec(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.AWSTokenStatus":      schema_pkg_apis_eks_v1alpha1_AWSTokenStatus(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKS":                 schema_pkg_apis_eks_v1alpha1_EKS(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSCredential":       schema_pkg_apis_eks_v1alpha1_EKSCredential(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSCredentialSpec":   schema_pkg_apis_eks_v1alpha1_EKSCredentialSpec(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSCredentialStatus": schema_pkg_apis_eks_v1alpha1_EKSCredentialStatus(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSNodeGroup":        schema_pkg_apis_eks_v1alpha1_EKSNodeGroup(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSNodeGroupSpec":    schema_pkg_apis_eks_v1alpha1_EKSNodeGroupSpec(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSNodeGroupStatus":  schema_pkg_apis_eks_v1alpha1_EKSNodeGroupStatus(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSSpec":             schema_pkg_apis_eks_v1alpha1_EKSSpec(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSStatus":           schema_pkg_apis_eks_v1alpha1_EKSStatus(ref),
 	}
 }
 
-func schema_pkg_apis_aws_v1alpha1_AWSCredential(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "AWSCredential is the Schema for the awscredentials API",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"apiVersion": {
-						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
-						},
-					},
-					"spec": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/appvia/kore/pkg/apis/aws/v1alpha1.AWSCredentialSpec"),
-						},
-					},
-					"status": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/appvia/kore/pkg/apis/aws/v1alpha1.AWSCredentialStatus"),
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"github.com/appvia/kore/pkg/apis/aws/v1alpha1.AWSCredentialSpec", "github.com/appvia/kore/pkg/apis/aws/v1alpha1.AWSCredentialStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
-	}
-}
-
-func schema_pkg_apis_aws_v1alpha1_AWSCredentialSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "AWSCredentialSpec defines the desired state of AWSCredential",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"secretAccessKey": {
-						SchemaProps: spec.SchemaProps{
-							Description: "SecretAccessKey is the AWS Secret Access Key",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"accessKeyID": {
-						SchemaProps: spec.SchemaProps{
-							Description: "AccessKeyID is the AWS Access Key ID",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"accountID": {
-						SchemaProps: spec.SchemaProps{
-							Description: "AccountID is the AWS account these credentials reside within",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-				},
-				Required: []string{"secretAccessKey", "accessKeyID", "accountID"},
-			},
-		},
-	}
-}
-
-func schema_pkg_apis_aws_v1alpha1_AWSCredentialStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "AWSCredentialStatus defines the observed state of AWSCredential",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"conditions": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "Conditions is a collection of potential issues",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Ref: ref("github.com/appvia/kore/pkg/apis/core/v1.Condition"),
-									},
-								},
-							},
-						},
-					},
-					"verified": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Verified checks that the credentials are ok and valid",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"status": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Status provides a overall status",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-				},
-			},
-		},
-		Dependencies: []string{
-			"github.com/appvia/kore/pkg/apis/core/v1.Condition"},
-	}
-}
-
-func schema_pkg_apis_aws_v1alpha1_AWSToken(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_eks_v1alpha1_AWSToken(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -198,23 +72,23 @@ func schema_pkg_apis_aws_v1alpha1_AWSToken(ref common.ReferenceCallback) common.
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/appvia/kore/pkg/apis/aws/v1alpha1.AWSTokenSpec"),
+							Ref: ref("github.com/appvia/kore/pkg/apis/eks/v1alpha1.AWSTokenSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/appvia/kore/pkg/apis/aws/v1alpha1.AWSTokenStatus"),
+							Ref: ref("github.com/appvia/kore/pkg/apis/eks/v1alpha1.AWSTokenStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/appvia/kore/pkg/apis/aws/v1alpha1.AWSTokenSpec", "github.com/appvia/kore/pkg/apis/aws/v1alpha1.AWSTokenStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/appvia/kore/pkg/apis/eks/v1alpha1.AWSTokenSpec", "github.com/appvia/kore/pkg/apis/eks/v1alpha1.AWSTokenStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
-func schema_pkg_apis_aws_v1alpha1_AWSTokenSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_eks_v1alpha1_AWSTokenSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -263,7 +137,7 @@ func schema_pkg_apis_aws_v1alpha1_AWSTokenSpec(ref common.ReferenceCallback) com
 	}
 }
 
-func schema_pkg_apis_aws_v1alpha1_AWSTokenStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_eks_v1alpha1_AWSTokenStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -291,11 +165,11 @@ func schema_pkg_apis_aws_v1alpha1_AWSTokenStatus(ref common.ReferenceCallback) c
 	}
 }
 
-func schema_pkg_apis_aws_v1alpha1_EKSCluster(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_eks_v1alpha1_EKS(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "EKSCluster is the Schema for the eksclusters API",
+				Description: "EKS is the Schema for the eksclusters API",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -319,109 +193,133 @@ func schema_pkg_apis_aws_v1alpha1_EKSCluster(ref common.ReferenceCallback) commo
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/appvia/kore/pkg/apis/aws/v1alpha1.EKSClusterSpec"),
+							Ref: ref("github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/appvia/kore/pkg/apis/aws/v1alpha1.EKSClusterStatus"),
+							Ref: ref("github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/appvia/kore/pkg/apis/aws/v1alpha1.EKSClusterSpec", "github.com/appvia/kore/pkg/apis/aws/v1alpha1.EKSClusterStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSSpec", "github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
-func schema_pkg_apis_aws_v1alpha1_EKSClusterSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_eks_v1alpha1_EKSCredential(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "EKSClusterSpec defines the desired state of EKSCluster",
+				Description: "EKSCredential is the Schema for the ekscredentials API",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"name": {
+					"kind": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Name the name of the EKS cluster",
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
-					"roleARN": {
+					"apiVersion": {
 						SchemaProps: spec.SchemaProps{
-							Description: "RoleARN is the role ARN which provides permissions to EKS",
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
-					"version": {
+					"metadata": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Version is the Kubernetes version to use",
-							Type:        []string{"string"},
-							Format:      "",
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
 						},
 					},
-					"region": {
+					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Description: "SubnetIds is a list of subnet IDs",
-							Type:        []string{"string"},
-							Format:      "",
+							Ref: ref("github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSCredentialSpec"),
 						},
 					},
-					"subnetIDs": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
-							},
-						},
+					"status": {
 						SchemaProps: spec.SchemaProps{
-							Description: "AWS region to launch this cluster within",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Type:   []string{"string"},
-										Format: "",
-									},
-								},
-							},
-						},
-					},
-					"securityGroupIDs": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "SecurityGroupIds is a list of security group IDs",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Type:   []string{"string"},
-										Format: "",
-									},
-								},
-							},
+							Ref: ref("github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSCredentialStatus"),
 						},
 					},
 				},
-				Required: []string{"name", "roleARN", "region", "subnetIDs"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSCredentialSpec", "github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSCredentialStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_eks_v1alpha1_EKSCredentialSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "EKSCredentialSpec defines the desired state of EKSCredential",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"secretAccessKey": {
+						SchemaProps: spec.SchemaProps{
+							Description: "SecretAccessKey is the AWS Secret Access Key",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"accessKeyID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "AccessKeyID is the AWS Access Key ID",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"accountID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "AccountID is the AWS account these credentials reside within",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"secretAccessKey", "accessKeyID", "accountID"},
 			},
 		},
 	}
 }
 
-func schema_pkg_apis_aws_v1alpha1_EKSClusterStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_eks_v1alpha1_EKSCredentialStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "EKSClusterStatus defines the observed state of EKSCluster",
+				Description: "EKSCredentialStatus defines the observed state of EKSCredential",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"conditions": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Conditions is a collection of potential issues",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/appvia/kore/pkg/apis/core/v1.Condition"),
+									},
+								},
+							},
+						},
+					},
+					"verified": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Verified checks that the credentials are ok and valid",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Status provides a overall status",
@@ -430,13 +328,14 @@ func schema_pkg_apis_aws_v1alpha1_EKSClusterStatus(ref common.ReferenceCallback)
 						},
 					},
 				},
-				Required: []string{"status"},
 			},
 		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/core/v1.Condition"},
 	}
 }
 
-func schema_pkg_apis_aws_v1alpha1_EKSNodeGroup(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_eks_v1alpha1_EKSNodeGroup(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -464,23 +363,23 @@ func schema_pkg_apis_aws_v1alpha1_EKSNodeGroup(ref common.ReferenceCallback) com
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/appvia/kore/pkg/apis/aws/v1alpha1.EKSNodeGroupSpec"),
+							Ref: ref("github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSNodeGroupSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/appvia/kore/pkg/apis/aws/v1alpha1.EKSNodeGroupStatus"),
+							Ref: ref("github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSNodeGroupStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/appvia/kore/pkg/apis/aws/v1alpha1.EKSNodeGroupSpec", "github.com/appvia/kore/pkg/apis/aws/v1alpha1.EKSNodeGroupStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSNodeGroupSpec", "github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSNodeGroupStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
-func schema_pkg_apis_aws_v1alpha1_EKSNodeGroupSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_eks_v1alpha1_EKSNodeGroupSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -659,11 +558,112 @@ func schema_pkg_apis_aws_v1alpha1_EKSNodeGroupSpec(ref common.ReferenceCallback)
 	}
 }
 
-func schema_pkg_apis_aws_v1alpha1_EKSNodeGroupStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_eks_v1alpha1_EKSNodeGroupStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
 				Description: "EKSNodeGroupStatus defines the observed state of EKSNodeGroup",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Status provides a overall status",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"status"},
+			},
+		},
+	}
+}
+
+func schema_pkg_apis_eks_v1alpha1_EKSSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "EKSSpec defines the desired state of EKSCluster",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name the name of the EKS cluster",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"roleARN": {
+						SchemaProps: spec.SchemaProps{
+							Description: "RoleARN is the role ARN which provides permissions to EKS",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"version": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Version is the Kubernetes version to use",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"region": {
+						SchemaProps: spec.SchemaProps{
+							Description: "SubnetIds is a list of subnet IDs",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"subnetIDs": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "AWS region to launch this cluster within",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
+					"securityGroupIDs": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "SecurityGroupIds is a list of security group IDs",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"name", "roleARN", "region", "subnetIDs"},
+			},
+		},
+	}
+}
+
+func schema_pkg_apis_eks_v1alpha1_EKSStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "EKSStatus defines the observed state of EKSCluster",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"status": {

@@ -14,5 +14,5 @@
  * limitations under the License.
  */
 
-// Package aws contains aws API versions.
-package aws
+// Package eks contains aws API versions.
+package eks

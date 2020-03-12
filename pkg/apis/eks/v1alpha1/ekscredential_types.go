@@ -21,9 +21,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// AWSCredentialSpec defines the desired state of AWSCredential
+// EKSCredentialSpec defines the desired state of EKSCredential
 // +k8s:openapi-gen=true
-type AWSCredentialSpec struct {
+type EKSCredentialSpec struct {
 	// SecretAccessKey is the AWS Secret Access Key
 	// +kubebuilder:validation:MinLength=3
 	// +kubebuilder:validation:Required
@@ -38,9 +38,9 @@ type AWSCredentialSpec struct {
 	AccountID string `json:"accountID"`
 }
 
-// AWSCredentialStatus defines the observed state of AWSCredential
+// EKSCredentialStatus defines the observed state of EKSCredential
 // +k8s:openapi-gen=true
-type AWSCredentialStatus struct {
+type EKSCredentialStatus struct {
 	// Conditions is a collection of potential issues
 	// +listType=set
 	Conditions []corev1.Condition `json:"conditions,omitempty"`
@@ -52,23 +52,23 @@ type AWSCredentialStatus struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// AWSCredential is the Schema for the awscredentials API
+// EKSCredential is the Schema for the ekscredentials API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:path=awscredentials,scope=Namespaced
-type AWSCredential struct {
+// +kubebuilder:resource:path=ekscredentials,scope=Namespaced
+type EKSCredential struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   AWSCredentialSpec   `json:"spec,omitempty"`
-	Status AWSCredentialStatus `json:"status,omitempty"`
+	Spec   EKSCredentialSpec   `json:"spec,omitempty"`
+	Status EKSCredentialStatus `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// AWSCredentialList contains a list of AWSCredential
-type AWSCredentialList struct {
+// EKSCredentialList contains a list of EKSCredential
+type EKSCredentialList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []AWSCredential `json:"items"`
+	Items           []EKSCredential `json:"items"`
 }
