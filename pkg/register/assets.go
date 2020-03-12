@@ -1,19 +1,3 @@
-/**
- * Copyright 2020 Appvia Ltd <info@appvia.io>
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 // Code generated for package register by go-bindata DO NOT EDIT. (@generated)
 // sources:
 // deploy/crds/apps.kore.appvia.io_appdeployments.yaml
@@ -3196,11 +3180,6 @@ spec:
                     clientSecret:
                       description: ClientSecret provides the OIDC client secret string
                       type: string
-                    discoveryUrl:
-                      description: DiscoveryURL The OIDC Discovery URL to use - when
-                        using the DEX broker this will differ from the issuer - when
-                        using an IDP directly this will be the same as the Issuer
-                      type: string
                     issuer:
                       description: Issuer provides the IDP URL
                       type: string
@@ -3213,7 +3192,6 @@ spec:
                   - clientID
                   - clientScopes
                   - clientSecret
-                  - discoveryUrl
                   - issuer
                   - userClaims
                   type: object
@@ -3232,11 +3210,6 @@ spec:
                     clientSecret:
                       description: ClientSecret provides the OIDC client secret string
                       type: string
-                    discoveryUrl:
-                      description: DiscoveryURL The OIDC Discovery URL to use - when
-                        using the DEX broker this will differ from the issuer - when
-                        using an IDP directly this will be the same as the Issuer
-                      type: string
                     issuer:
                       description: Issuer provides the IDP URL
                       type: string
@@ -3249,7 +3222,6 @@ spec:
                   - clientID
                   - clientScopes
                   - clientSecret
-                  - discoveryUrl
                   - issuer
                   - userClaims
                   type: object
