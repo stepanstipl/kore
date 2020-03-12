@@ -20,12 +20,6 @@ import "github.com/urfave/cli/v2"
 
 // DefaultsOptions are options for all commands
 var DefaultOptions = []cli.Flag{
-	&cli.StringFlag{
-		Name:    "output",
-		Aliases: []string{"o"},
-		Usage:   "The output format of the resource `FORMAT`",
-		Value:   "yaml",
-	},
 	&cli.BoolFlag{
 		Name:    "debug",
 		Aliases: []string{"D"},
