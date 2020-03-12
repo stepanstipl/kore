@@ -10,6 +10,7 @@ EXCLUDE_FILES=(
   ./pkg/clusterappman/manifests_tools.go
   ./pkg/clusterappman/manifests_vfsdata.go
   ./pkg/tools/tools.go
+  ./pkg/register/assets.go
 )
 
 if [[ -z "${BOILERPLATE_LENGTH}" ]]; then

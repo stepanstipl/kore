@@ -252,7 +252,7 @@ gofmt:
 	@echo "--> Running gofmt check"
 	@if gofmt -s -l $$(go list -f '{{.Dir}}' ./...) | grep -q \.go ; then \
 		echo "You need to run the make format, we have file unformatted"; \
-		gofmt -s -l .; \
+		gofmt -s -l $$(go list -f '{{.Dir}}' ./...); \
 		exit 1; \
 	fi
 
@@ -329,6 +329,7 @@ schema-gen:
 	    -nometadata \
 		-o pkg/register/assets.go \
 		-prefix deploy deploy/crds
+	@gofmt -s -w pkg/register/assets.go
 
 openapi-gen:
 	@echo "--> Generating OpenAPI files"
@@ -343,7 +344,7 @@ register-gen:
 	@echo "--> Generating Schema register.go"
 	@echo "--> packages $(APIS)"
 	@$(foreach api,$(APIS), \
-		register-gen -h hack/boilerplate.go.txt \
+		go run k8s.io/code-generator/cmd/register-gen -h hack/boilerplate.go.txt \
 			--output-file-base zz_generated_register \
 			-i github.com/appvia/kore/pkg/apis/$(api) \
 			-p github.com/appvia/kore/pkg/apis/$(api); )
