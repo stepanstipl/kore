@@ -245,3 +245,40 @@ func TestAppShouldIgnoreFlagsAfterDoubleDash(t *testing.T) {
 	require.Equal(t, []string{"arg1", "arg2", "--", "--global-flag", "foo"}, appArgs)
 	require.Equal(t, "", globalFlag)
 }
+
+func TestAppShouldReorderSubCommandFlags(t *testing.T) {
+	var appArgs []string
+	var globalFlag string
+	var cmdFlag string
+
+	app := &cli.App{
+		Name: "test",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name: "global-flag",
+			},
+		},
+		Commands: []*cli.Command{
+			{
+				Name: "cmd",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name: "cmd-flag",
+					},
+				},
+				Action: func(ctx *cli.Context) error {
+					appArgs = ctx.Args().Slice()
+					globalFlag = ctx.String("global-flag")
+					cmdFlag = ctx.String("cmd-flag")
+					return nil
+				},
+			},
+		},
+	}
+	err := cmd.NewApp(app).Run([]string{"test", "cmd", "--global-flag", "foo", "arg1", "--cmd-flag", "bar"})
+	require.NoError(t, err)
+
+	require.Equal(t, []string{"arg1"}, appArgs)
+	require.Equal(t, "foo", globalFlag)
+	require.Equal(t, "bar", cmdFlag)
+}

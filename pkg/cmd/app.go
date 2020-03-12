@@ -71,7 +71,7 @@ func (a *App) Run(args []string) error {
 		cli.HelpPrinterCustom = a.origHelpPrinterCustom
 	}()
 
-	orderedArgs, err := a.orderArgs(args)
+	orderedArgs, err := orderArgs(appWrapper{app: a.app}, args)
 	if err != nil {
 		return err
 	}
@@ -79,41 +79,59 @@ func (a *App) Run(args []string) error {
 	return a.app.Run(orderedArgs)
 }
 
-func (a *App) orderArgs(args []string) ([]string, error) {
-	flagArgs := []string{args[0]}
-	var valueArgs []string
+func (a *App) helpPrinterCustom(out io.Writer, templ string, data interface{}, customFuncs map[string]interface{}) {
+	a.origHelpPrinterCustom(out, templ, data, customFuncs)
+	if data != a.app {
+		a.origHelpPrinterCustom(a.app.Writer, globalOptionsTemplate, a.app, nil)
+	}
+}
+
+func orderArgs(target wrapper, args []string) ([]string, error) {
+	head := []string{args[0]}
+	var tail []string
 
 	for i := 1; i < len(args); i++ {
 		arg := args[i]
 
 		if arg == "--" {
-			valueArgs = append(valueArgs, args[i:]...)
+			tail = append(tail, args[i:]...)
 			break
 		}
 
 		if isFlag := strings.HasPrefix(arg, "-"); isFlag {
 			flagName := strings.TrimLeft(arg, "-")
-			res, err := a.parseFlagFromArgs(args[i:], flagName)
+			res, err := parseFlagFromArgs(target, args[i:], flagName)
 			if err != nil {
 				return nil, err
 			}
 			if len(res) > 0 {
-				flagArgs = append(flagArgs, res...)
+				head = append(head, res...)
 				i += len(res) - 1
 			} else {
-				valueArgs = append(valueArgs, arg)
+				tail = append(tail, arg)
 			}
 		} else {
-			valueArgs = append(valueArgs, arg)
+			tail = append(tail, arg)
 		}
 	}
 
-	return append(flagArgs, valueArgs...), nil
+	if len(tail) > 0 {
+		if cmd := target.Command(tail[0]); cmd != nil {
+			var err error
+			tail, err = orderArgs(commandWrapper{cmd: cmd}, tail)
+			if err != nil {
+				return nil, err
+			}
+
+		}
+	}
+
+	return append(head, tail...), nil
 }
 
-func (a *App) parseFlagFromArgs(args []string, name string) ([]string, error) {
-	for i := 0; i < len(a.app.Flags); i++ {
-		flag := a.app.Flags[i]
+func parseFlagFromArgs(target wrapper, args []string, name string) ([]string, error) {
+	for i := 0; i < len(target.Flags()); i++ {
+		flag := target.Flags()[i]
 		for _, flagName := range flag.Names() {
 			if name == flagName {
 				if f, ok := flag.(cli.DocGenerationFlag); ok {
@@ -134,9 +152,38 @@ func (a *App) parseFlagFromArgs(args []string, name string) ([]string, error) {
 	return nil, nil
 }
 
-func (a *App) helpPrinterCustom(out io.Writer, templ string, data interface{}, customFuncs map[string]interface{}) {
-	a.origHelpPrinterCustom(out, templ, data, customFuncs)
-	if data != a.app {
-		a.origHelpPrinterCustom(a.app.Writer, globalOptionsTemplate, a.app, nil)
+type wrapper interface {
+	Command(name string) *cli.Command
+	Flags() []cli.Flag
+}
+
+type appWrapper struct {
+	app *cli.App
+}
+
+func (a appWrapper) Command(name string) *cli.Command {
+	return a.app.Command(name)
+}
+
+func (a appWrapper) Flags() []cli.Flag {
+	return a.app.Flags
+}
+
+type commandWrapper struct {
+	cmd *cli.Command
+}
+
+func (c commandWrapper) Command(name string) *cli.Command {
+	for _, cmd := range c.cmd.Subcommands {
+		for _, cmdName := range cmd.Names() {
+			if cmdName == name {
+				return cmd
+			}
+		}
 	}
+	return nil
+}
+
+func (c commandWrapper) Flags() []cli.Flag {
+	return c.cmd.Flags
 }
