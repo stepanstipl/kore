@@ -21,9 +21,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EKSCredentialSpec defines the desired state of EKSCredential
+// EKSCredentialsSpec defines the desired state of EKSCredential
 // +k8s:openapi-gen=true
-type EKSCredentialSpec struct {
+type EKSCredentialsSpec struct {
 	// SecretAccessKey is the AWS Secret Access Key
 	// +kubebuilder:validation:MinLength=3
 	// +kubebuilder:validation:Required
@@ -38,9 +38,9 @@ type EKSCredentialSpec struct {
 	AccountID string `json:"accountID"`
 }
 
-// EKSCredentialStatus defines the observed state of EKSCredential
+// EKSCredentialsStatus defines the observed state of EKSCredential
 // +k8s:openapi-gen=true
-type EKSCredentialStatus struct {
+type EKSCredentialsStatus struct {
 	// Conditions is a collection of potential issues
 	// +listType=set
 	Conditions []corev1.Condition `json:"conditions,omitempty"`
@@ -52,23 +52,23 @@ type EKSCredentialStatus struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// EKSCredential is the Schema for the ekscredentials API
+// EKSCredentials is the Schema for the ekscredentials API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=ekscredentials,scope=Namespaced
-type EKSCredential struct {
+type EKSCredentials struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   EKSCredentialSpec   `json:"spec,omitempty"`
-	Status EKSCredentialStatus `json:"status,omitempty"`
+	Spec   EKSCredentialsSpec   `json:"spec,omitempty"`
+	Status EKSCredentialsStatus `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// EKSCredentialList contains a list of EKSCredential
-type EKSCredentialList struct {
+// EKSCredentialsList contains a list of EKSCredential
+type EKSCredentialsList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []EKSCredential `json:"items"`
+	Items           []EKSCredentials `json:"items"`
 }

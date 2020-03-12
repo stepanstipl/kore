@@ -29,18 +29,18 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.AWSToken":            schema_pkg_apis_eks_v1alpha1_AWSToken(ref),
-		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.AWSTokenSpec":        schema_pkg_apis_eks_v1alpha1_AWSTokenSpec(ref),
-		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.AWSTokenStatus":      schema_pkg_apis_eks_v1alpha1_AWSTokenStatus(ref),
-		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKS":                 schema_pkg_apis_eks_v1alpha1_EKS(ref),
-		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSCredential":       schema_pkg_apis_eks_v1alpha1_EKSCredential(ref),
-		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSCredentialSpec":   schema_pkg_apis_eks_v1alpha1_EKSCredentialSpec(ref),
-		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSCredentialStatus": schema_pkg_apis_eks_v1alpha1_EKSCredentialStatus(ref),
-		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSNodeGroup":        schema_pkg_apis_eks_v1alpha1_EKSNodeGroup(ref),
-		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSNodeGroupSpec":    schema_pkg_apis_eks_v1alpha1_EKSNodeGroupSpec(ref),
-		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSNodeGroupStatus":  schema_pkg_apis_eks_v1alpha1_EKSNodeGroupStatus(ref),
-		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSSpec":             schema_pkg_apis_eks_v1alpha1_EKSSpec(ref),
-		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSStatus":           schema_pkg_apis_eks_v1alpha1_EKSStatus(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.AWSToken":             schema_pkg_apis_eks_v1alpha1_AWSToken(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.AWSTokenSpec":         schema_pkg_apis_eks_v1alpha1_AWSTokenSpec(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.AWSTokenStatus":       schema_pkg_apis_eks_v1alpha1_AWSTokenStatus(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKS":                  schema_pkg_apis_eks_v1alpha1_EKS(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSCredentials":       schema_pkg_apis_eks_v1alpha1_EKSCredentials(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSCredentialsSpec":   schema_pkg_apis_eks_v1alpha1_EKSCredentialsSpec(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSCredentialsStatus": schema_pkg_apis_eks_v1alpha1_EKSCredentialsStatus(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSNodeGroup":         schema_pkg_apis_eks_v1alpha1_EKSNodeGroup(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSNodeGroupSpec":     schema_pkg_apis_eks_v1alpha1_EKSNodeGroupSpec(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSNodeGroupStatus":   schema_pkg_apis_eks_v1alpha1_EKSNodeGroupStatus(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSSpec":              schema_pkg_apis_eks_v1alpha1_EKSSpec(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSStatus":            schema_pkg_apis_eks_v1alpha1_EKSStatus(ref),
 	}
 }
 
@@ -209,11 +209,11 @@ func schema_pkg_apis_eks_v1alpha1_EKS(ref common.ReferenceCallback) common.OpenA
 	}
 }
 
-func schema_pkg_apis_eks_v1alpha1_EKSCredential(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_eks_v1alpha1_EKSCredentials(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "EKSCredential is the Schema for the ekscredentials API",
+				Description: "EKSCredentials is the Schema for the ekscredentials API",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -237,27 +237,27 @@ func schema_pkg_apis_eks_v1alpha1_EKSCredential(ref common.ReferenceCallback) co
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSCredentialSpec"),
+							Ref: ref("github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSCredentialsSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSCredentialStatus"),
+							Ref: ref("github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSCredentialsStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSCredentialSpec", "github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSCredentialStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSCredentialsSpec", "github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSCredentialsStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
-func schema_pkg_apis_eks_v1alpha1_EKSCredentialSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_eks_v1alpha1_EKSCredentialsSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "EKSCredentialSpec defines the desired state of EKSCredential",
+				Description: "EKSCredentialsSpec defines the desired state of EKSCredential",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"secretAccessKey": {
@@ -288,11 +288,11 @@ func schema_pkg_apis_eks_v1alpha1_EKSCredentialSpec(ref common.ReferenceCallback
 	}
 }
 
-func schema_pkg_apis_eks_v1alpha1_EKSCredentialStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_eks_v1alpha1_EKSCredentialsStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "EKSCredentialStatus defines the observed state of EKSCredential",
+				Description: "EKSCredentialsStatus defines the observed state of EKSCredential",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"conditions": {
@@ -663,9 +663,36 @@ func schema_pkg_apis_eks_v1alpha1_EKSStatus(ref common.ReferenceCallback) common
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "EKSStatus defines the observed state of EKSCluster",
+				Description: "EKSStatus defines the observed state of EKS cluster",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"conditions": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Conditions is the status of the components",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/appvia/kore/pkg/apis/core/v1.Component"),
+									},
+								},
+							},
+						},
+					},
+					"caCertificate": {
+						SchemaProps: spec.SchemaProps{
+							Description: "CACertificate is the certificate for this cluster",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"endpoint": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Endpoint is the endpoint of the cluster",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Status provides a overall status",
@@ -674,8 +701,9 @@ func schema_pkg_apis_eks_v1alpha1_EKSStatus(ref common.ReferenceCallback) common
 						},
 					},
 				},
-				Required: []string{"status"},
 			},
 		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/core/v1.Component"},
 	}
 }

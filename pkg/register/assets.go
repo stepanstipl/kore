@@ -814,32 +814,9 @@ spec:
         spec:
           description: EKSSpec defines the desired state of EKSCluster
           properties:
-            name:
-              description: Name the name of the EKS cluster
-              minLength: 3
-              type: string
-            region:
-              description: SubnetIds is a list of subnet IDs
-              type: string
-            roleARN:
-              description: RoleARN is the role ARN which provides permissions to EKS
-              minLength: 10
-              type: string
-            securityGroupIDs:
-              description: SecurityGroupIds is a list of security group IDs
-              items:
-                type: string
-              type: array
-              x-kubernetes-list-type: set
-            subnetIDs:
-              description: AWS region to launch this cluster within
-              items:
-                type: string
-              type: array
-              x-kubernetes-list-type: set
-            use:
-              description: Use is a reference to an AWSCredentials object to use for
-                authentication
+            credentials:
+              description: Credentials is a reference to an EKSCredentials object
+                to use for authentication
               properties:
                 group:
                   description: Group is the api group
@@ -863,25 +840,72 @@ spec:
               - namespace
               - version
               type: object
+            name:
+              description: Name the name of the EKS cluster
+              minLength: 3
+              type: string
+            region:
+              description: SubnetIds is a list of subnet IDs
+              type: string
+            roleARN:
+              description: RoleARN is the role ARN which provides permissions to EKS
+              minLength: 10
+              type: string
+            securityGroupIDs:
+              description: SecurityGroupIds is a list of security group IDs
+              items:
+                type: string
+              type: array
+              x-kubernetes-list-type: set
+            subnetIDs:
+              description: AWS region to launch this cluster within
+              items:
+                type: string
+              type: array
+              x-kubernetes-list-type: set
             version:
               description: Version is the Kubernetes version to use
               minLength: 3
               type: string
           required:
+          - credentials
           - name
           - region
           - roleARN
           - subnetIDs
-          - use
           type: object
         status:
-          description: EKSStatus defines the observed state of EKSCluster
+          description: EKSStatus defines the observed state of EKS cluster
           properties:
+            caCertificate:
+              description: CACertificate is the certificate for this cluster
+              type: string
+            conditions:
+              description: Conditions is the status of the components
+              items:
+                description: Component the state of a component of the resource
+                properties:
+                  detail:
+                    description: Detail is additional details on the error is any
+                    type: string
+                  message:
+                    description: Message is a human readable message on the status
+                      of the component
+                    type: string
+                  name:
+                    description: Name is the name of the component
+                    type: string
+                  status:
+                    description: Status is the status of the component
+                    type: string
+                type: object
+              type: array
+            endpoint:
+              description: Endpoint is the endpoint of the cluster
+              type: string
             status:
               description: Status provides a overall status
               type: string
-          required:
-          - status
           type: object
       type: object
   version: v1alpha1
@@ -924,17 +948,17 @@ metadata:
 spec:
   group: aws.compute.kore.appvia.io
   names:
-    kind: EKSCredential
-    listKind: EKSCredentialList
+    kind: EKSCredentials
+    listKind: EKSCredentialsList
     plural: ekscredentials
-    singular: ekscredential
+    singular: ekscredentials
   preserveUnknownFields: false
   scope: Namespaced
   subresources:
     status: {}
   validation:
     openAPIV3Schema:
-      description: EKSCredential is the Schema for the ekscredentials API
+      description: EKSCredentials is the Schema for the ekscredentials API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -949,7 +973,7 @@ spec:
         metadata:
           type: object
         spec:
-          description: EKSCredentialSpec defines the desired state of EKSCredential
+          description: EKSCredentialsSpec defines the desired state of EKSCredential
           properties:
             accessKeyID:
               description: AccessKeyID is the AWS Access Key ID
@@ -969,7 +993,7 @@ spec:
           - secretAccessKey
           type: object
         status:
-          description: EKSCredentialStatus defines the observed state of EKSCredential
+          description: EKSCredentialsStatus defines the observed state of EKSCredential
           properties:
             conditions:
               description: Conditions is a collection of potential issues

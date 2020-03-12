@@ -61,9 +61,9 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&AWSToken{},
 		&AWSTokenList{},
 		&EKS{},
-		&EKSClusterList{},
-		&EKSCredential{},
-		&EKSCredentialList{},
+		&EKSCredentials{},
+		&EKSCredentialsList{},
+		&EKSList{},
 		&EKSNodeGroup{},
 		&EKSNodeGroupList{},
 	)

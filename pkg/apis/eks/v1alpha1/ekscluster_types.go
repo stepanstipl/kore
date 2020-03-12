@@ -48,16 +48,22 @@ type EKSSpec struct {
 	// +kubebuilder:validation:Required
 	// +listType=set
 	SecurityGroupIDs []string `json:"securityGroupIDs,omitempty"`
-	// Use is a reference to an AWSCredentials object to use for authentication
+	// Credentials is a reference to an EKSCredentials object to use for authentication
 	// +k8s:openapi-gen=false
-	Use core.Ownership `json:"use"`
+	Credentials core.Ownership `json:"credentials"`
 }
 
-// EKSStatus defines the observed state of EKSCluster
+// EKSStatus defines the observed state of EKS cluster
 // +k8s:openapi-gen=true
 type EKSStatus struct {
+	// Conditions is the status of the components
+	Conditions *core.Components `json:"conditions,omitempty"`
+	// CACertificate is the certificate for this cluster
+	CACertificate string `json:"caCertificate,omitempty"`
+	// Endpoint is the endpoint of the cluster
+	Endpoint string `json:"endpoint,omitempty"`
 	// Status provides a overall status
-	Status core.Status `json:"status"`
+	Status core.Status `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -76,8 +82,8 @@ type EKS struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// EKSClusterList contains a list of EKSCluster
-type EKSClusterList struct {
+// EKSList contains a list of EKS clusters
+type EKSList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []EKS `json:"items"`
