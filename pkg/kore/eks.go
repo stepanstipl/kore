@@ -34,14 +34,16 @@ import (
 
 // EKS is the eks interface
 type EKS interface {
-	// Delete is responsible for deleting a gke environment
+	// Delete is responsible for deleting a eks environment
 	Delete(context.Context, string) error
 	// Get return the definition from the api
 	Get(context.Context, string) (*eks.EKS, error)
-	// List returns all the gke cluster in the team
+	// List returns all the eks cluster in the team
 	List(context.Context) (*eks.EKSList, error)
-	// Update is used to update the gke cluster definition
+	// Update is used to update the eks cluster definition
 	Update(context.Context, *eks.EKS) (*eks.EKS, error)
+	// NodeGroup is used to get any eks nodegroup by cluster and nodegroup name
+	NodeGroup(*eks.EKS, string) (*eks.EKSNodeGroup, error)
 }
 
 type eksImpl struct {

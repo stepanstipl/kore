@@ -47,7 +47,7 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 	})
 	logger.Debug("attempting to reconcile aws eks cluster")
 
-	resource := &eksv1alpha1.EKS{}
+	resource := &eksv1alpha1.EKSNodeGroup{}
 	if err := t.mgr.GetClient().Get(ctx, request.NamespacedName, resource); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
@@ -81,7 +81,7 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 		}
 		logger.Info("Found AWSCredential CR")
 
-		client, err := NewClient(credentials, resource)
+		client, err := NewClient(credentials, resource.ClusterName, resource.Spec.Region)
 		if err != nil {
 			return false, err
 		}
@@ -100,7 +100,7 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 		logger.Info("Creating cluster:" + resource.Spec.Name)
 
 		// Cluster doesnt exist, create it
-		_, err = client.Create()
+		err = client.CreateNodeGroup(resource)
 		if err != nil {
 			return false, err
 		}

@@ -8,11 +8,11 @@ import (
 const MaxChunkSize = 100
 
 type awsClient struct {
-	credentials *eks.EKSCredential
+	credentials *eks.EKSCredentials
 }
 
 // NewClient creates and returns a permissions verifier
-func NewClient(credentials *eks.EKSCredential) (*awsClient, error) {
+func NewClient(credentials *eks.EKSCredentials) (*awsClient, error) {
 	awsClient := &awsClient{}
 
 	// Example from GKE credentials...

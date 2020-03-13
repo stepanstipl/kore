@@ -25,9 +25,7 @@ import (
 
 	core "github.com/appvia/kore/pkg/apis/core/v1"
 	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
-	eksctl "github.com/appvia/kore/pkg/controllers/cloud/eks"
-	"github.com/aws/aws-sdk-go/aws"
-	eks "github.com/aws/aws-sdk-go/service/eks"
+	eksctl "github.com/appvia/kore/pkg/controllers/cloud/aws/eks"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
@@ -47,15 +45,16 @@ func (t *eksNodeGroupCtrl) Reconcile(request reconcile.Request) (reconcile.Resul
 
 	if err := t.mgr.GetClient().Get(context.TODO(), request.NamespacedName, nodegroup); err != nil {
 		if errors.IsNotFound(err) {
+
 			return reconcile.Result{}, nil
 		}
+
 		return reconcile.Result{}, err
 	}
 
 	logger.Info("Found AWSNodeGroup CR")
 
 	credentials := &eksv1alpha1.EKSCredentials{}
-
 	reference := types.NamespacedName{
 		Namespace: nodegroup.Spec.Use.Namespace,
 		Name:      nodegroup.Spec.Use.Name,
@@ -64,34 +63,27 @@ func (t *eksNodeGroupCtrl) Reconcile(request reconcile.Request) (reconcile.Resul
 	ctx := context.Background()
 
 	err := t.mgr.GetClient().Get(ctx, reference, credentials)
-
 	if err != nil {
+
 		return reconcile.Result{}, err
 	}
 
 	logger.Info("Found AWSCredential CR")
-
-	sesh, err := eksctl.GetAWSSession(credentials, nodegroup.Spec.Region)
-
-	svc, err := eksctl.GetEKSService(sesh)
-
-	nodeGroupExists, err := eksctl.CheckEKSNodeGroupExists(svc, &eks.DescribeNodegroupInput{
-		ClusterName:   aws.String(nodegroup.Spec.ClusterName),
-		NodegroupName: aws.String(nodegroup.Spec.NodeGroupName),
-	})
-
+	client, err := eksctl.NewClient(credentials, nodegroup.ClusterName, nodegroup.Spec.Region)
+	nodeGroupExists, err := client.NodeGroupExists(nodegroup.Name)
 	if err != nil {
+
 		return reconcile.Result{}, err
 	}
 
 	if nodeGroupExists {
 		logger.Info("Nodegroup exists")
+
 		return reconcile.Result{}, nil
 	}
 
 	// Set status to pending
 	nodegroup.Status.Status = core.PendingStatus
-
 	if err := t.mgr.GetClient().Status().Update(ctx, nodegroup); err != nil {
 		logger.Error(err, "failed to update the resource status")
 		return reconcile.Result{}, err
@@ -99,42 +91,18 @@ func (t *eksNodeGroupCtrl) Reconcile(request reconcile.Request) (reconcile.Resul
 
 	// Create node group
 	logger.Info("Creating nodegroup")
-	_, err = eksctl.CreateEKSNodeGroup(svc, &eks.CreateNodegroupInput{
-		AmiType:        aws.String(nodegroup.Spec.AMIType),
-		ClusterName:    aws.String(nodegroup.Spec.ClusterName),
-		NodeRole:       aws.String(nodegroup.Spec.NodeRole),
-		ReleaseVersion: aws.String(nodegroup.Spec.ReleaseVersion),
-		DiskSize:       aws.Int64(nodegroup.Spec.DiskSize),
-		InstanceTypes:  aws.StringSlice(nodegroup.Spec.InstanceTypes),
-		NodegroupName:  aws.String(nodegroup.Spec.NodeGroupName),
-		Subnets:        aws.StringSlice(nodegroup.Spec.Subnets),
-		RemoteAccess: &eks.RemoteAccessConfig{
-			Ec2SshKey:            aws.String(nodegroup.Spec.EC2SSHKey),
-			SourceSecurityGroups: aws.StringSlice(nodegroup.Spec.SourceSecurityGroups),
-		},
-		ScalingConfig: &eks.NodegroupScalingConfig{
-			DesiredSize: aws.Int64(nodegroup.Spec.DesiredSize),
-			MaxSize:     aws.Int64(nodegroup.Spec.MaxSize),
-			MinSize:     aws.Int64(nodegroup.Spec.MinSize),
-		},
-		Tags:   aws.StringMap(nodegroup.Spec.Tags),
-		Labels: aws.StringMap(nodegroup.Spec.Labels),
-	})
-
+	err = client.CreateNodeGroup(nodegroup)
 	if err != nil {
 		logger.Error(err, "create nodegroup error")
 		return reconcile.Result{}, err
 	}
 
+	// TODO - doesn't look right
 	// Wait for node group to become ACTIVE
 	for {
 		logger.Info("Checking the status of the node group: " + nodegroup.Spec.NodeGroupName)
 
-		nodestatus, err := eksctl.GetEKSNodeGroupStatus(svc, &eks.DescribeNodegroupInput{
-			ClusterName:   aws.String(nodegroup.Spec.ClusterName),
-			NodegroupName: aws.String(nodegroup.Spec.NodeGroupName),
-		})
-
+		nodestatus, err := client.GetEKSNodeGroupStatus(nodegroup)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
