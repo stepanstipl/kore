@@ -17,6 +17,9 @@
 package utils
 
 import (
+	"math"
+	"time"
+
 	"github.com/coreos/go-oidc"
 	jwt "github.com/dgrijalva/jwt-go"
 )
@@ -40,6 +43,17 @@ func NewClaimsFromToken(token *oidc.IDToken) (*Claims, error) {
 	return NewClaims(c), nil
 }
 
+// NewClaims returns a claims by parsing a raw token
+func NewClaimsFromRawToken(tokenString string) (*Claims, error) {
+	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return NewClaims(token.Claims.(jwt.MapClaims)), nil
+}
+
 // GetUserClaim returns the username claim - defaults to 'name'
 func (c *Claims) GetUserClaim(claims ...string) (string, bool) {
 	for _, x := range claims {
@@ -61,6 +75,17 @@ func (c *Claims) GetEmailVerified() (bool, bool) {
 	return c.GetBool("email_verified")
 }
 
+// GetExpiry returns the expiry of the jwt
+func (c *Claims) GetExpiry() (time.Time, bool) {
+	expiry, found := c.GetFloat64("exp")
+	if !found {
+		return time.Time{}, false
+	}
+
+	sec, dec := math.Modf(expiry)
+	return time.Unix(int64(sec), int64(dec*(1e9))), true
+}
+
 // GetBool returns the boolean
 func (c *Claims) GetBool(key string) (bool, bool) {
 	v, found := c.claims[key]
@@ -71,6 +96,22 @@ func (c *Claims) GetBool(key string) (bool, bool) {
 	value, ok := v.(bool)
 	if !ok {
 		return false, false
+	}
+
+	return value, true
+}
+
+// GetBool returns the float64 if found in the claims
+func (c *Claims) GetFloat64(key string) (float64, bool) {
+	v, found := c.claims[key]
+	if !found {
+		return 0, false
+	}
+
+	value, ok := v.(float64)
+
+	if !ok {
+		return 0, false
 	}
 
 	return value, true

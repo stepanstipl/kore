@@ -97,3 +97,11 @@ type AuthorizationResponse struct {
 	// TokenEndpointURL is the token endpoint
 	TokenEndpointURL string `json:"token-endpoint-url,omitempty" yaml:"token-endpoint-url"`
 }
+
+// RefreshResponse is the response returned when a token is refreshed
+type RefreshResponse struct {
+	// AccessToken is the access token provided
+	AccessToken string `json:"access_token,omitempty" yaml:"access_token"`
+	// IDToken string is the identity token
+	IDToken string `json:"id_token,omitempty" yaml:"id_token"`
+}

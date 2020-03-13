@@ -31,6 +31,8 @@ import (
 	"time"
 
 	"github.com/appvia/kore/pkg/kore/validation"
+	"github.com/appvia/kore/pkg/utils"
+
 	"github.com/ghodss/yaml"
 	"github.com/savaki/jq"
 	log "github.com/sirupsen/logrus"
@@ -67,6 +69,8 @@ func (r *RequestError) StatusCode() int {
 type Requestor struct {
 	// config is the cli configuration
 	config *Config
+	// configError tracks errors during the configuration process
+	configError error
 	// cliCtx is the cli context
 	cliCtx *cli.Context
 	// endpoint is the uri endpoint to call
@@ -345,6 +349,10 @@ func (c Requestor) checkResponse(resp *http.Response) *RequestError {
 
 // doRequest makes and handles an HTTP request
 func (c *Requestor) doRequest(method, url string, handler func(*http.Response) error) error {
+	if c.configError != nil {
+		return c.configError
+	}
+
 	var req *http.Request
 	var err error
 
@@ -525,9 +533,35 @@ func (c *Requestor) WithPayload(name string) *Requestor {
 	return c
 }
 
+// HasExpiredToken checks if the token in an oidc config is invalid
+func (o *OIDC) HasExpiredToken() bool {
+	claims, _ := utils.NewClaimsFromRawToken(o.IDToken)
+	exp, found := claims.GetExpiry()
+	// The token has no exp claim and is therefore invalid
+	if !found {
+		panic("trying to validate the openid token: exp claim is not set")
+	}
+	return exp.Before(time.Now().UTC())
+}
+
 // WithConfig adds the configuration
 func (c *Requestor) WithConfig(config *Config) *Requestor {
-	c.config = config
+	auth := config.GetCurrentAuthInfo()
 
+	if auth.OIDC != nil {
+		if auth.OIDC.HasExpiredToken() {
+			log.Debug("token has expired, requesting a new one")
+
+			if err := auth.OIDC.Refresh(); err != nil {
+				c.configError = err
+			}
+
+			if err := config.Update(); err != nil {
+				panic("trying to update the config file")
+			}
+		}
+	}
+
+	c.config = config
 	return c
 }
