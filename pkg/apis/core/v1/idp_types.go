@@ -104,10 +104,6 @@ type OIDCIDP struct {
 	ClientSecret string `json:"clientSecret"`
 	// Issuer provides the IDP URL
 	Issuer string `json:"issuer"`
-	// DiscoveryURL The OIDC Discovery URL to use
-	// - when using the DEX broker this will differ from the issuer
-	// - when using an IDP directly this will be the same as the Issuer
-	DiscoveryURL string `json:"discoveryUrl"`
 	// ClientScopes provides the OIDC client scopes
 	ClientScopes []string `json:"clientScopes"`
 	// UserClaims to track the identity field to use

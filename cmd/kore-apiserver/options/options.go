@@ -75,9 +75,9 @@ func Options() []cli.Flag {
 			Value:   cli.NewStringSlice("profile", "email", "offline"),
 		},
 		&cli.StringFlag{
-			Name:    "discovery-url",
-			Usage:   "the openid discovery url to use for the openid authenticator `URL`",
-			EnvVars: []string{"KORE_DISCOVERY_URL"},
+			Name:    "idp-server-url",
+			Usage:   "the openid server url to use for the openid authenticator `URL`",
+			EnvVars: []string{"KORE_IDP_SERVER_URL"},
 		},
 		&cli.StringFlag{
 			Name:    "api-public-url",

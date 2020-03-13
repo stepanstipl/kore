@@ -38,9 +38,9 @@ func Options() []cli.Flag {
 			EnvVars: []string{"TLS_KEY"},
 		},
 		&cli.StringFlag{
-			Name:    "discovery-url",
-			Usage:   "the openid discovery url used to pull down idp details `URL`",
-			EnvVars: []string{"DISCOVERY_URL"},
+			Name:    "idp-server-url",
+			Usage:   "the openid server url `URL`",
+			EnvVars: []string{"IDP_SERVER_URL"},
 		},
 		&cli.StringFlag{
 			Name:    "client-id",
@@ -49,7 +49,7 @@ func Options() []cli.Flag {
 		},
 		&cli.StringFlag{
 			Name:    "ca-authority",
-			Usage:   "when not using the discovery url we can use this certificate to verity the token `PATH`",
+			Usage:   "when not using the IDP server url we can use this certificate to verity the token `PATH`",
 			EnvVars: []string{"CA_AUTHORITY"},
 		},
 		&cli.StringFlag{

@@ -69,7 +69,7 @@ func invoke(ctx *cli.Context) error {
 			ClientScopes:               ctx.StringSlice("client-scopes"),
 			ClientSecret:               ctx.String("client-secret"),
 			ClusterAppManImage:         ctx.String("clusterappman-image"),
-			DiscoveryURL:               strings.TrimSuffix(ctx.String("discovery-url"), ".well-known/openid-configuration"),
+			IDPServerURL:               ctx.String("idp-server-url"),
 			EnableClusterDeletion:      ctx.Bool("enable-cluster-deletion"),
 			EnableClusterDeletionBlock: ctx.Bool("enable-cluster-deletion-block"),
 			EnableClusterProviderCheck: ctx.Bool("enable-cluster-provider-check"),

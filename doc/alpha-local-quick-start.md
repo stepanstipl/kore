@@ -99,13 +99,11 @@ These are the permitted redirects for the applications. Since we are running the
 http://localhost:10080/oauth/callback,http://localhost:3000/auth/callback 
 ```
 
+Please make a note of the [__*Domain, Client ID, and Client Secret*__].
+
 Scroll to the bottom of the settings and click the `Show Advanced Settings`
 
 Choose the `OAuth` tab from the advanced settings and ensure that the `JsonWebToken Signature Algorithm` is set to RS256 and `OIDC Conformant` is toggled on.
-
-Select the `Endpoints` tab and note down the `OpenID Configuration`.
-
-Please make a note of the [__*ClientID, Client Secret and the OpenID endpoint*__].
 
 #### Configuring test users
 
@@ -140,10 +138,12 @@ You'll need access to the following details created earlier:
 
 - Auth0 ClientID.
 - Auth0 Client Secret.
-- Auth0 OpenID endpoint.
+- Auth0 domain.
 - GKE Project ID.
 - GKE Region.
 - Path to the service account key JSON file.
+
+Make sure you fill in the OpenID endpoint as `https://[Auth0 domain]/`, including the trailing `/`.
 
 Once you have everything, run,
 

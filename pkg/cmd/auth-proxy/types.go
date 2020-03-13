@@ -25,8 +25,8 @@ import (
 type Config struct {
 	// ClientID is the client issuer
 	ClientID string `json:"client_id,omitempty"`
-	// DiscoveryURL is the openid discovery url
-	DiscoveryURL string `json:"discovery_url,omitempty"`
+	// IDPServerURL is the openid server url
+	IDPServerURL string `json:"idp_server_url,omitempty"`
 	// Listen is the interface to listen on
 	Listen string `json:"listen,omitempty"`
 	// TLSCaAuthority is a caroot used when verifying the upstream idp
@@ -35,7 +35,7 @@ type Config struct {
 	TLSCert string `json:"tls_cert,omitempty"`
 	// TLSKey is the private key for the above
 	TLSKey string `json:"tls_key,omitempty"`
-	// SigningCA is used when not using the discovery url
+	// SigningCA is used when not using the IDP server url
 	SigningCA string `json:"signing_ca,omitempty"`
 	// UserClaims is a collection of claims to extract the user idenity
 	UserClaims []string `json:"user_claims,omitempty"`

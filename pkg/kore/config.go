@@ -44,7 +44,7 @@ func (c Config) IsValid() error {
 
 // HasOpenID checks if openid is setup
 func (c Config) HasOpenID() bool {
-	return c.DiscoveryURL != ""
+	return c.IDPServerURL != ""
 }
 
 // HasCertificateAuthorityKey check if we have a key

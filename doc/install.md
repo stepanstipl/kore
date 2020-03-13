@@ -12,7 +12,7 @@ Configure Auth0 by following the docs [here](alpha-local-quick-start.md#configur
 ```
 export CLIENT_ID=<your client id>
 export CLIENT_SECRET=<your client secret>
-export DISCOVERY_URL=<your discovery url>
+export IDP_SERVER_URL=<your openid server url>
 ```
 
 ### 3. Create helm configuration values
@@ -23,7 +23,7 @@ cat >> ./charts/my_values.yaml << EOF
 idp:
   client_id: $CLIENT_ID
   client_secret: $CLIENT_SECRET
-  discovery_url: $DISCOVERY_URL
+  server_url: $IDP_SERVER_URL
 api:
   endpoint:
     detect: true

@@ -25,8 +25,8 @@ func (c Config) IsValid() error {
 	if c.ClientID == "" {
 		return errors.New("no client id")
 	}
-	if c.DiscoveryURL == "" && c.SigningCA == "" {
-		return errors.New("neither disovery-url or signing ca are not defined")
+	if c.IDPServerURL == "" && c.SigningCA == "" {
+		return errors.New("neither IDP server url or signing ca are defined")
 	}
 	if len(c.UserClaims) <= 0 {
 		return errors.New("user claims are empty")

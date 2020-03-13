@@ -24,14 +24,14 @@ import (
 
 // IsValid checks the configuration is valid
 func (c Config) IsValid() error {
-	if c.DiscoveryURL == "" {
-		return errors.New("no discovery url configured")
+	if c.ServerURL == "" {
+		return errors.New("no server url configured")
 	}
 	if c.ClientID == "" {
 		return errors.New("no client id configured")
 	}
-	if _, err := url.Parse(c.DiscoveryURL); err != nil {
-		return fmt.Errorf("invalid discovery url: %s", err)
+	if _, err := url.Parse(c.ServerURL); err != nil {
+		return fmt.Errorf("invalid server url: %s", err)
 	}
 	if len(c.UserClaims) <= 0 {
 		c.UserClaims = append(c.UserClaims, []string{"preferred_username"}...)

@@ -3180,11 +3180,6 @@ spec:
                     clientSecret:
                       description: ClientSecret provides the OIDC client secret string
                       type: string
-                    discoveryUrl:
-                      description: DiscoveryURL The OIDC Discovery URL to use - when
-                        using the DEX broker this will differ from the issuer - when
-                        using an IDP directly this will be the same as the Issuer
-                      type: string
                     issuer:
                       description: Issuer provides the IDP URL
                       type: string
@@ -3197,7 +3192,6 @@ spec:
                   - clientID
                   - clientScopes
                   - clientSecret
-                  - discoveryUrl
                   - issuer
                   - userClaims
                   type: object
@@ -3216,11 +3210,6 @@ spec:
                     clientSecret:
                       description: ClientSecret provides the OIDC client secret string
                       type: string
-                    discoveryUrl:
-                      description: DiscoveryURL The OIDC Discovery URL to use - when
-                        using the DEX broker this will differ from the issuer - when
-                        using an IDP directly this will be the same as the Issuer
-                      type: string
                     issuer:
                       description: Issuer provides the IDP URL
                       type: string
@@ -3233,7 +3222,6 @@ spec:
                   - clientID
                   - clientScopes
                   - clientSecret
-                  - discoveryUrl
                   - issuer
                   - userClaims
                   type: object

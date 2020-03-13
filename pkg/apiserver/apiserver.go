@@ -59,7 +59,7 @@ func New(kore kore.Interface, config Config) (Interface, error) {
 	c.Filter(cors.Filter)
 
 	authFilter := filters.AuthenticationHandler{
-		Realm: kore.Config().DiscoveryURL,
+		Realm: kore.Config().IDPServerURL,
 	}
 
 	// @step: register the resource handlers

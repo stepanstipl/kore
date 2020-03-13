@@ -22,8 +22,8 @@ func (c Config) IsValid() error {
 	if c.ClientID == "" {
 		return errors.New("no client id")
 	}
-	if c.DiscoveryURL == "" {
-		return errors.New("no discovery url")
+	if c.ServerURL == "" {
+		return errors.New("no server url")
 	}
 
 	return nil
