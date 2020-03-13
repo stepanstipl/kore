@@ -3135,8 +3135,8 @@ spec:
                         app
                       type: string
                     orgs:
-                      description: ClientSecret is the list of possible Organisations
-                        in Github the user must be part of
+                      description: Orgs is the list of possible Organisations in Github
+                        the user must be part of
                       items:
                         type: string
                       type: array

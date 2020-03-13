@@ -10,9 +10,9 @@ You can find instructions for this [here](https://cloud.google.com/kubernetes-en
 Configure Auth0 by following the docs [here](alpha-local-quick-start.md#configure-auth0) and export the obtained values. You do not need to configure 'Allowed Callback URLs' at this stage
 
 ```
-export CLIENT_ID=<your client id>
-export CLIENT_SECRET=<your client secret>
-export IDP_SERVER_URL=<your openid server url>
+export KORE_IDP_CLIENT_ID=<your client id>
+export KORE_IDP_CLIENT_SECRET=<your client secret>
+export KORE_IDP_SERVER_URL=<your openid server url>
 ```
 
 ### 3. Create helm configuration values
@@ -21,9 +21,9 @@ Create a file with the correct values
 # Create a localy ignored file:
 cat >> ./charts/my_values.yaml << EOF
 idp:
-  client_id: $CLIENT_ID
-  client_secret: $CLIENT_SECRET
-  server_url: $IDP_SERVER_URL
+  client_id: $KORE_IDP_CLIENT_ID
+  client_secret: $KORE_IDP_CLIENT_SECRET
+  server_url: $KORE_IDP_SERVER_URL
 api:
   endpoint:
     detect: true

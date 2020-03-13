@@ -98,12 +98,6 @@ type Config struct {
 	Authenticators []string `json:"authenticators,omitempty"`
 	// AuthProxyImage is the image to use for oidc proxy
 	AuthProxyImage string `json:"auth-proxy-image,omitempty"`
-	// ClientID is the client id for the openid authenticator
-	ClientID string `json:"client-id,omitempty"`
-	// ClientSecret is the client secret to use
-	ClientSecret string `json:"client-secret,omitempty"`
-	// ClientScopes are additional scopes to add to the request
-	ClientScopes []string `json:"client-scopes,omitempty"`
 	// CertificateAuthority is the path to a CA
 	CertificateAuthority string `json:"certificate-authority,omitempty"`
 	// CertificateAuthorityKey is the path to the private key
@@ -112,8 +106,6 @@ type Config struct {
 	ClusterAppManImage string `json:"cluster-app-man-image,omitempty"`
 	// DEX is the config required to configure dex
 	DEX DEX `json:"dex,omitempty"`
-	// IDPServerURL is the openid server url
-	IDPServerURL string `json:"idp-server-url,omitempty"`
 	// EnabledClusterDeletion indicates we should delete cloud providers
 	EnableClusterDeletion bool `json:"enable-cluster-deletion,omitempty"`
 	// EnableClusterDeletionBlock indicates we should only delete the cluster if the cloud
@@ -124,10 +116,18 @@ type Config struct {
 	EnableClusterProviderCheck bool `json:"enable-cluster-provider-check,omitempty"`
 	// HMAC is the token used to sign things
 	HMAC string `json:"hmac"`
+	// IDPClientID is the client id for the openid authenticator
+	IDPClientID string `json:"idp-client-id,omitempty"`
+	// IDPClientScopes are additional scopes to add to the request
+	IDPClientScopes []string `json:"idp-client-scopes,omitempty"`
+	// IDPClientSecret is the client secret to use
+	IDPClientSecret string `json:"idp-client-secret,omitempty"`
+	// IDPServerURL is the openid server url
+	IDPServerURL string `json:"idp-server-url,omitempty"`
+	// IDPUserClaims is collection of claims to identify the username
+	IDPUserClaims []string `json:"idp-user-claims,omitempty"`
 	// PublicHubURL is the public url for the kore (the ui not the api)
 	PublicHubURL string `json:"public-kore-url,omitempty"`
 	// PublicAPIURL is the public url for the api
 	PublicAPIURL string `json:"public-api-url,omitempty"`
-	// UserClaims is collection of claims to identify the username
-	UserClaims []string `json:"user-claims,omitempty"`
 }

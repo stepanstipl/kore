@@ -11,11 +11,11 @@ if [ ! -f ./demo.env ] ; then
 fi
 source ./demo.env
 export \
-    KORE_CLIENT_ID \
-    KORE_CLIENT_SECRET \
+    KORE_IDP_CLIENT_ID \
+    KORE_IDP_CLIENT_SECRET \
     KORE_IDP_SERVER_URL \
-    KORE_USER_CLAIMS \
-    KORE_CLIENT_SCOPES
+    KORE_IDP_USER_CLAIMS \
+    KORE_IDP_CLIENT_SCOPES
 
 ./bin/kore-apiserver \
     --kube-api-server http://127.0.0.1:8080 \

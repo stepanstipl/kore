@@ -82,7 +82,7 @@ type GithubIDP struct {
 	ClientID string `json:"clientID"`
 	// ClientSecret is the field name in a Github OAuth app
 	ClientSecret string `json:"clientSecret"`
-	// ClientSecret is the list of possible Organisations in Github the user must be part of
+	// Orgs is the list of possible Organisations in Github the user must be part of
 	Orgs []string `json:"orgs"`
 }
 

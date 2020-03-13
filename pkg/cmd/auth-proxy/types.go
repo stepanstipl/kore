@@ -23,8 +23,8 @@ import (
 
 // Config is the configuration for the service
 type Config struct {
-	// ClientID is the client issuer
-	ClientID string `json:"client_id,omitempty"`
+	// IDPClientID is the client issuer
+	IDPClientID string `json:"idp_client_id,omitempty"`
 	// IDPServerURL is the openid server url
 	IDPServerURL string `json:"idp_server_url,omitempty"`
 	// Listen is the interface to listen on
@@ -37,10 +37,10 @@ type Config struct {
 	TLSKey string `json:"tls_key,omitempty"`
 	// SigningCA is used when not using the IDP server url
 	SigningCA string `json:"signing_ca,omitempty"`
-	// UserClaims is a collection of claims to extract the user idenity
-	UserClaims []string `json:"user_claims,omitempty"`
-	// GroupClaims is a colletion of claims to extract the group
-	GroupClaims []string `json:"group_claims,omitempty"`
+	// IDPUserClaims is a collection of claims to extract the user idenity
+	IDPUserClaims []string `json:"idp_user_claims,omitempty"`
+	// IDPGroupClaims is a colletion of claims to extract the group
+	IDPGroupClaims []string `json:"idp_group_claims,omitempty"`
 	// MetricsListen is the interface for metrics to render
 	MetricsListen string `json:"metrics_listen,omitempty"`
 	// UpstreamAuthorizationToken is the upstream authentication token to use

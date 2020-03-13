@@ -60,7 +60,7 @@ func New(config Config) (Interface, error) {
 	var verifier *oidc.IDTokenVerifier
 
 	options := &oidc.Config{
-		ClientID:          config.ClientID,
+		ClientID:          config.IDPClientID,
 		SkipClientIDCheck: true,
 		SkipExpiryCheck:   false,
 	}
@@ -82,7 +82,7 @@ func New(config Config) (Interface, error) {
 			return nil, err
 		}
 
-		verifier = oidc.NewVerifier(config.ClientID, keyset, options)
+		verifier = oidc.NewVerifier(config.IDPClientID, keyset, options)
 	}
 	if config.IDPServerURL != "" {
 		log.WithField(
@@ -182,14 +182,14 @@ func (a *authImpl) Run(ctx context.Context) error {
 					return err
 				}
 
-				user, found := claims.GetUserClaim(a.config.UserClaims...)
+				user, found := claims.GetUserClaim(a.config.IDPUserClaims...)
 				if !found {
 					return errors.New("no username found in the identity token")
 				}
 				req.Header.Set("Impersonate-User", user)
 
 				// @step: extract the group if requested
-				for _, x := range a.config.GroupClaims {
+				for _, x := range a.config.IDPGroupClaims {
 					groups, found := claims.GetStringSlice(x)
 					if found {
 						for _, name := range groups {

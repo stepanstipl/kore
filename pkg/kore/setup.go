@@ -204,8 +204,8 @@ func (h hubImpl) ensureHubIDPClientExists(ctx context.Context) error {
 		err := h.idp.UpdateClient(ctx, &core.IDPClient{
 			Spec: core.IDPClientSpec{
 				DisplayName: "The API server OIDC client",
-				ID:          h.Config().ClientID,
-				Secret:      h.Config().ClientSecret,
+				ID:          h.Config().IDPClientID,
+				Secret:      h.Config().IDPClientSecret,
 				RedirectURIs: []string{
 					h.Config().PublicAPIURL + "/oauth/callback",
 				},
