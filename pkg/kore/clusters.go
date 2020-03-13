@@ -78,9 +78,9 @@ func (c *clsImpl) Delete(ctx context.Context, name string) (*clustersv1.Kubernet
 
 	c.Audit().Record(ctx,
 		users.Resource(name),
-		users.ResourceUID(string(original.GetUID())),
+		users.ResourceURI(string(original.GetUID())),
 		users.Team(c.team),
-		users.Type(users.AuditDelete),
+		users.Verb(users.AuditDelete),
 		users.User(user.Username()),
 	).Event("user has deleted the cluster from the team")
 
@@ -132,9 +132,9 @@ func (c *clsImpl) Update(ctx context.Context, cluster *clustersv1.Kubernetes) er
 	// @TODO add an entity into the audit log
 	c.Audit().Record(ctx,
 		users.Resource(c.team+"/"+cluster.Name),
-		users.ResourceUID(string(cluster.UID)),
+		users.ResourceURI(string(cluster.UID)),
 		users.Team(c.team),
-		users.Type(users.AuditUpdate),
+		users.Verb(users.AuditUpdate),
 		users.User(user.Username()),
 	).Event("user has updated the kubernetes cluster")
 

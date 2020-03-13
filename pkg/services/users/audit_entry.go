@@ -88,7 +88,7 @@ func (e *entryImpl) Do() ([]*model.AuditEvent, error) {
 
 // Event records the entry into the audit log
 func (e *entryImpl) Event(message string) {
-	if e.event.Type == "" || message == "" {
+	if e.event.Verb == "" || message == "" {
 		return
 	}
 	e.event.Message = message

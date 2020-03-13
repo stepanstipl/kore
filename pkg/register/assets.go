@@ -3908,6 +3908,10 @@ spec:
         spec:
           description: AuditEventSpec defines the desired state of User
           properties:
+            completedAt:
+              description: CompletedAt is the timestamp the operation completed
+              format: date-time
+              type: string
             createdAt:
               description: CreatedAt is the timestamp of record creation
               format: date-time
@@ -3915,20 +3919,32 @@ spec:
             message:
               description: Message is event message itself
               type: string
+            operation:
+              description: Operation is the operation performed (e.g. UpdateCluster,
+                CreateCluster, etc).
+              type: string
             resource:
-              description: Resource is the name of the resource in question namespace/name
+              description: Resource is the area of the API accessed in this audit
+                operation (e.g. teams, ).
               type: string
-            resourceUID:
-              description: ResourceUID is a unique id for the resource
+            resourceURI:
+              description: ResourceURI is the identifier of the resource in question.
               type: string
+            startedAt:
+              description: StartedAt is the timestamp the operation was initiated
+              format: date-time
+              type: string
+            success:
+              description: Success indicates whether this operation was successful
+              type: boolean
             team:
               description: Team is the team whom event may be associated to
               type: string
-            type:
-              description: Type is the type of event
-              type: string
             user:
               description: User is the user which the event is related
+              type: string
+            verb:
+              description: Verb is the type of action performed (e.g. PUT, GET, etc)
               type: string
           type: object
       type: object

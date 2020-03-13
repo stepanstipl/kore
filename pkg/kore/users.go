@@ -100,7 +100,7 @@ func (h *usersImpl) EnableUser(ctx context.Context, username, email string) erro
 			logger.Info("enabling the first user in the kore and providing admin access")
 
 			h.Audit().Record(ctx,
-				users.Type(users.AuditUpdate),
+				users.Verb(users.AuditUpdate),
 				users.User(username),
 			).Event("adding first user as administrator")
 
@@ -113,7 +113,7 @@ func (h *usersImpl) EnableUser(ctx context.Context, username, email string) erro
 			logger.Info("adding the user into the kore")
 
 			h.Audit().Record(ctx,
-				users.Type(users.AuditUpdate),
+				users.Verb(users.AuditUpdate),
 				users.User(username),
 			).Event("adding a user to the kore")
 

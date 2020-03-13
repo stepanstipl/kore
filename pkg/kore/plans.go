@@ -71,8 +71,8 @@ func (p plansImpl) Update(ctx context.Context, plan *configv1.Plan) error {
 
 	p.Audit().Record(ctx,
 		users.Resource(plan.Name),
-		users.ResourceUID(string(plan.UID)),
-		users.Type(users.AuditUpdate),
+		users.ResourceURI(string(plan.UID)),
+		users.Verb(users.AuditUpdate),
 		users.User(user.Username()),
 		users.Team(HubAdminTeam),
 	).Event("the plan has been update in the kore")
@@ -112,8 +112,8 @@ func (p plansImpl) Delete(ctx context.Context, name string) (*configv1.Plan, err
 	// @TODO add an audit event about the deletion
 	p.Audit().Record(ctx,
 		users.Resource(plan.Name),
-		users.ResourceUID(string(plan.UID)),
-		users.Type(users.AuditUpdate),
+		users.ResourceURI(string(plan.UID)),
+		users.Verb(users.AuditUpdate),
 		users.User(user.Username()),
 		users.Team(HubAdminTeam),
 	).Event("the plan has been removed from the kore")

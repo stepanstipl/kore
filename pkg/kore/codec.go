@@ -52,12 +52,16 @@ func (c Convertor) FromAuditModel(i *model.AuditEvent) *orgv1.AuditEvent {
 		},
 		Spec: orgv1.AuditEventSpec{
 			CreatedAt:   metav1.NewTime(i.CreatedAt),
-			Type:        i.Type,
+			Verb:        i.Verb,
 			Team:        i.Team,
 			User:        i.User,
 			Message:     i.Message,
 			Resource:    i.Resource,
-			ResourceUID: i.ResourceUID,
+			ResourceURI: i.ResourceURI,
+			Operation:   i.Operation,
+			StartedAt:   metav1.NewTime(i.StartedAt),
+			CompletedAt: metav1.NewTime(i.CompletedAt),
+			Result:      i.Result,
 		},
 	}
 }

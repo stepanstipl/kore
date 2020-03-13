@@ -87,7 +87,7 @@ func (h *gkeImpl) Delete(ctx context.Context, name string) error {
 	h.Audit().Record(ctx,
 		users.Resource("GKE"),
 		users.Team(h.team),
-		users.Type(users.AuditDelete),
+		users.Verb(users.AuditDelete),
 		users.User(user.Username()),
 	).Event("user has deleted the cluster from kore")
 
