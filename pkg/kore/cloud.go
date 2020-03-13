@@ -26,6 +26,9 @@ type Cloud interface {
 	EKS() EKS
 	// EKSCredentials provides acces to the eks's credentials
 	EKSCredentials() EKSCredentials
+	// EKSNodeGroup provides access to an eks nodegroup
+	// TODO make this part of a cluser?
+	EKSNodeGroup() EKSNodeGroup
 }
 
 type cloudImpl struct {
@@ -52,4 +55,8 @@ func (c *cloudImpl) EKS() EKS {
 // EKSCredentials returns a eks interface
 func (c *cloudImpl) EKSCredentials() EKSCredentials {
 	return &eksCredsImpl{cloudImpl: c, team: c.team}
+}
+
+func (c *cloudImpl) EKSNodeGroup() EKSNodeGroup {
+	return &eksNGImpl{cloudImpl: c, team: c.team}
 }

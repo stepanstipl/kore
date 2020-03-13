@@ -287,7 +287,7 @@ func (c *eksClient) NodeGroupExists(nodegroup *eksv1alpha1.EKSNodeGroup) (exists
 
 // Get the status of an existing node group
 func (c *eksClient) GetEKSNodeGroupStatus(nodegroup *eksv1alpha1.EKSNodeGroup) (status string, err error) {
-	out, err = c.svc.DescribeNodegroup(&eks.DescribeNodegroupInput{
+	out, err := c.svc.DescribeNodegroup(&eks.DescribeNodegroupInput{
 		ClusterName:   &c.clusterName,
 		NodegroupName: &nodegroup.Spec.NodeGroupName,
 	})

@@ -17,6 +17,7 @@
 package apiserver
 
 import (
+	"errors"
 	"net/http"
 
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
@@ -27,30 +28,43 @@ import (
 // findEKSNodegroups returns all the nodegroups for a EKS cluster for a team
 func (u teamHandler) findEKSNodeGroups(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
-		name := req.PathParameter("name")
 		team := req.PathParameter("team")
+		cluster := req.PathParameter("cluster")
 
-		cluster, err := u.Teams().Team(team).Cloud().EKS().Get(ctx, name)
+		list, err := u.Teams().Team(team).Cloud().EKSNodeGroup().List(req.Request.Context())
 		if err != nil {
 			return err
 		}
+		// filter list by just the relevant cluster
+		newList := list.DeepCopy()
+		newItems := make([]eks.EKSNodeGroup, 0)
+		for _, ng := range list.Items {
+			if ng.Spec.ClusterName == cluster {
+				newItems = append(newItems, ng)
+			}
+		}
+		newList.Items = newItems
 
-		return resp.WriteHeaderAndEntity(http.StatusOK, list)
+		return resp.WriteHeaderAndEntity(http.StatusOK, newList)
 	})
 }
 
-// findEKS returns a cluster under the team
+// findEKS returns a specific nodegroup for a cluster under the team
 func (u teamHandler) findEKSNodeGroup(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
-		name := req.PathParameter("name")
+		name := req.PathParameter("nodegroup")
 		team := req.PathParameter("team")
+		cluster := req.PathParameter("cluster")
 
-		list, err := u.Teams().Team(team).Cloud().EKS().Get(req.Request.Context(), name)
+		ng, err := u.Teams().Team(team).Cloud().EKSNodeGroup().Get(req.Request.Context(), name)
 		if err != nil {
 			return err
 		}
+		if ng.Spec.ClusterName != cluster {
+			return resp.WriteError(http.StatusNotFound, errors.New("nodegroup not found for the cluster"))
+		}
 
-		return resp.WriteHeaderAndEntity(http.StatusOK, list)
+		return resp.WriteHeaderAndEntity(http.StatusOK, ng)
 	})
 }
 

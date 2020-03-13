@@ -21,6 +21,7 @@ import (
 
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/kore/authentication"
+	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/store"
 
 	log "github.com/sirupsen/logrus"
@@ -45,75 +46,84 @@ type EKSNodeGroup interface {
 
 type eksNGImpl struct {
 	*cloudImpl
-	//cluster is the request cluster
-	cluster string
 	// team is the request team
 	team string
 }
 
 // Delete is responsible for deleting a eks nodegroup
-func (h *eksNGImpl) Delete(ctx context.Context, name string) error {
+func (n *eksNGImpl) Delete(ctx context.Context, name string) error {
 	logger := log.WithFields(log.Fields{
-		"name":    name,
-		"team":    h.team,
-		"cluster": h.cluster,
+		"cluster": name,
+		"team":    n.team,
 	})
 	user := authentication.MustGetIdentity(ctx)
-	if !user.IsGlobalAdmin() {
-		return ErrUnauthorized
-	}
 
-	creds := &eks.EKSCredentials{}
-	if err := h.Store().Client().Get(ctx,
-		store.GetOptions.InNamespace(h.team),
-		store.GetOptions.InTo(creds),
+	nodegroup := &eks.EKSNodeGroup{}
+	if err := n.Store().Client().Get(ctx,
+		store.GetOptions.InNamespace(n.team),
+		store.GetOptions.InTo(nodegroup),
 	); err != nil {
-		logger.WithError(err).Error("trying to retrieve the credentials")
+		logger.WithError(err).Error("trying to retrieve the nodegroup")
 
 		return err
 	}
+	if nodegroup.Namespace != n.team {
+		n.Audit().Record(ctx,
+			users.Resource("EKSNodeGroup"),
+			users.Team(n.team),
+			users.User(user.Username()),
+		).Event("user attempting to delete the nodegroup from kore")
 
+		logger.Warn("attempting to delete a nodegroup from another team")
+
+		return NewErrNotAllowed("you cannot delete a nodegroup from another team")
+	}
 	// @TODO check the user us an admin in the team
-
-	// @step: check if we have any namespaces allocated to teams
 
 	// @TODO add an audit entry indicating the request to remove the option
 
 	// @step: issue the request to remove the cluster
-	return h.Store().Client().Delete(ctx, store.DeleteOptions.From(creds))
+	return n.Store().Client().Delete(ctx, store.DeleteOptions.From(nodegroup))
 }
 
 // Get return the definition from the api
-func (h *eksCredsImpl) Get(ctx context.Context, name string) (*eks.EKSCredentials, error) {
-	cluster := &eks.EKSCredentials{}
+func (n *eksNGImpl) Get(ctx context.Context, name string) (*eks.EKSNodeGroup, error) {
+	nodegroup := &eks.EKSNodeGroup{}
 
-	return cluster, h.Store().Client().Get(ctx,
-		store.GetOptions.InNamespace(h.team),
-		store.GetOptions.InTo(cluster),
+	err := n.Store().Client().Get(ctx,
+		store.GetOptions.InNamespace(n.team),
+		store.GetOptions.InTo(nodegroup),
 		store.GetOptions.WithName(name),
 	)
+	if err != nil {
+		log.WithError(err).Error("trying to retrieve the nodegroup")
+
+		return nil, err
+	}
+
+	return nodegroup, nil
 }
 
 // List returns all the gke cluster in the team
-func (h *eksCredsImpl) List(ctx context.Context) (*eks.EKSCredentialsList, error) {
-	list := &eks.EKSCredentialsList{}
+func (n *eksNGImpl) List(ctx context.Context) (*eks.EKSNodeGroupList, error) {
+	list := &eks.EKSNodeGroupList{}
 
-	return list, h.Store().Client().List(ctx,
-		store.ListOptions.InNamespace(h.team),
+	return list, n.Store().Client().List(ctx,
+		store.ListOptions.InNamespace(n.team),
 		store.ListOptions.InTo(list),
 	)
 }
 
 // Update is called to update or create a gke instance
-func (h *eksCredsImpl) Update(ctx context.Context, cluster *eks.EKSCredentials) (*eks.EKSCredentials, error) {
+func (n *eksNGImpl) Update(ctx context.Context, nodegroup *eks.EKSNodeGroup) (*eks.EKSNodeGroup, error) {
 	logger := log.WithFields(log.Fields{
-		"name": cluster.Name,
-		"team": h.team,
+		"name": nodegroup.Name,
+		"team": n.team,
 	})
 
 	// @step: update the resource in the api
-	if err := h.Store().Client().Update(ctx,
-		store.UpdateOptions.To(cluster),
+	if err := n.Store().Client().Update(ctx,
+		store.UpdateOptions.To(nodegroup),
 		store.UpdateOptions.WithCreate(true),
 		store.UpdateOptions.WithForce(true),
 		store.UpdateOptions.WithPatch(true),
@@ -125,5 +135,5 @@ func (h *eksCredsImpl) Update(ctx context.Context, cluster *eks.EKSCredentials) 
 		return nil, err
 	}
 
-	return cluster, nil
+	return nodegroup, nil
 }

@@ -70,8 +70,10 @@ type EKSNodeGroupSpec struct {
 // EKSNodeGroupStatus defines the observed state of EKSNodeGroup
 // +k8s:openapi-gen=true
 type EKSNodeGroupStatus struct {
+	// Conditions is the status of the components
+	Conditions *core.Components `json:"conditions,omitempty"`
 	// Status provides a overall status
-	Status core.Status `json:"status"`
+	Status core.Status `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

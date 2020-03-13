@@ -42,8 +42,6 @@ type EKS interface {
 	List(context.Context) (*eks.EKSList, error)
 	// Update is used to update the eks cluster definition
 	Update(context.Context, *eks.EKS) (*eks.EKS, error)
-	// NodeGroup is used to get any eks nodegroup by cluster and nodegroup name
-	NodeGroup(*eks.EKS, string) (*eks.EKSNodeGroup, error)
 }
 
 type eksImpl struct {
