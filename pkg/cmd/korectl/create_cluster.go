@@ -264,7 +264,13 @@ func CreateKubernetesClusterFromProvider(config *Config, provider *unstructured.
 		Spec: clustersv1.KubernetesSpec{
 			InheritTeamMembers: true,
 			DefaultTeamRole:    role,
-			Provider:           utils.GetOwnership(provider, "credentials"),
+			Provider: corev1.Ownership{
+				Group:     provider.GetObjectKind().GroupVersionKind().Group,
+				Kind:      provider.GetObjectKind().GroupVersionKind().Kind,
+				Name:      provider.GetName(),
+				Namespace: provider.GetNamespace(),
+				Version:   provider.GetObjectKind().GroupVersionKind().Version,
+			},
 			ClusterUsers: []clustersv1.ClusterUser{
 				{
 					Username: whoami.Username,

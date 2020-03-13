@@ -50,11 +50,11 @@ spec:
   provider:
     group: gke.compute.kore.appvia.io
     version: v1alpha1
-    kind: GKECredentials
+    kind: GKE
     # This must map to the namespace the above cluster was built in i.e.
     # if you create the gke cluster in team 'devs' it must be say namespace 'devs'
-    namespace: kore-admin
+    namespace: devs
     # The name of the gke cluster above
-    name: gke
+    name: dev
   enableDefaultTrafficBlock: false
   clusterUsers: []
