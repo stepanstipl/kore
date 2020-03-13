@@ -58,20 +58,20 @@ func Options() []cli.Flag {
 			EnvVars: []string{"KORE_ADMIN_TOKEN"},
 		},
 		&cli.StringFlag{
-			Name:    "client-id",
+			Name:    "idp-client-id",
 			Usage:   "the client id of the openid application `ID`",
-			EnvVars: []string{"KORE_CLIENT_ID"},
+			EnvVars: []string{"KORE_IDP_CLIENT_ID"},
 		},
 		&cli.StringFlag{
-			Name:    "client-secret",
+			Name:    "idp-client-secret",
 			Usage:   "the client secret used to setup and oauth2 with dex `SECRET`",
-			EnvVars: []string{"KORE_CLIENT_SECRET"},
+			EnvVars: []string{"KORE_IDP_CLIENT_SECRET"},
 			Value:   "this-should-be-changed",
 		},
 		&cli.StringSliceFlag{
-			Name:    "client-scopes",
+			Name:    "idp-client-scopes",
 			Usage:   "additional scopes to add the login request `SCOPE`",
-			EnvVars: []string{"KORE_CLIENT_SCOPES"},
+			EnvVars: []string{"KORE_IDP_CLIENT_SCOPES"},
 			Value:   cli.NewStringSlice("profile", "email", "offline"),
 		},
 		&cli.StringFlag{
@@ -112,9 +112,9 @@ func Options() []cli.Flag {
 			EnvVars: []string{"KORE_AUTHENTICATION_PLUGINS"},
 		},
 		&cli.StringSliceFlag{
-			Name:    "user-claims",
+			Name:    "idp-user-claims",
 			Usage:   "a list of ordered JWT claims name used to extract the username `NAME`",
-			EnvVars: []string{"KORE_USER_CLAIMS"},
+			EnvVars: []string{"KORE_IDP_USER_CLAIMS"},
 			Value:   cli.NewStringSlice("preferred_username", "email", "name", "username"),
 		},
 

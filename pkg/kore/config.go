@@ -28,7 +28,7 @@ func (c Config) IsValid() error {
 		if c.AdminPass == "" {
 			return errors.New("you must set the admin password for dex")
 		}
-		if utils.Contains("offline", c.ClientScopes) {
+		if utils.Contains("offline", c.IDPClientScopes) {
 			return errors.New("'offline' scope when using dex should be 'offline_access'")
 		}
 	}

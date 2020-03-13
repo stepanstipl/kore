@@ -58,15 +58,15 @@ func main() {
 
 		Action: func(ctx *cli.Context) error {
 			config := authproxy.Config{
-				ClientID:                   ctx.String("client-id"),
+				IDPClientID:                ctx.String("idp-client-id"),
 				IDPServerURL:               ctx.String("idp-server-url"),
-				GroupClaims:                ctx.StringSlice("group-claims"),
+				IDPGroupClaims:             ctx.StringSlice("idp-group-claims"),
+				IDPUserClaims:              ctx.StringSlice("idp-user-claims"),
 				Listen:                     ctx.String("listen"),
 				MetricsListen:              ctx.String("metrics-listen"),
 				SigningCA:                  ctx.String("ca-authority"),
 				TLSCert:                    ctx.String("tls-cert"),
 				TLSKey:                     ctx.String("tls-key"),
-				UserClaims:                 ctx.StringSlice("user-claims"),
 				UpstreamURL:                ctx.String("upstream-url"),
 				UpstreamAuthorizationToken: ctx.String("upstream-authentication-token"),
 			}

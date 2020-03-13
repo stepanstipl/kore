@@ -43,9 +43,9 @@ func Options() []cli.Flag {
 			EnvVars: []string{"IDP_SERVER_URL"},
 		},
 		&cli.StringFlag{
-			Name:    "client-id",
-			Usage:   "the identity provider client id used to verify the token `CLIENT_ID`",
-			EnvVars: []string{"CLIENT_ID"},
+			Name:    "idp-client-id",
+			Usage:   "the identity provider client id used to verify the token `IDP_CLIENT_ID`",
+			EnvVars: []string{"IDP_CLIENT_ID"},
 		},
 		&cli.StringFlag{
 			Name:    "ca-authority",
@@ -58,15 +58,15 @@ func Options() []cli.Flag {
 			EnvVars: []string{"CA_AUTHORITY_SECRET"},
 		},
 		&cli.StringSliceFlag{
-			Name:    "user-claims",
+			Name:    "idp-user-claims",
 			Usage:   "an ordered collection of potential token claims to extract the identity `CLAIMS`",
-			EnvVars: []string{"USER_CLAIMS"},
+			EnvVars: []string{"IDP_USER_CLAIMS"},
 			Value:   cli.NewStringSlice("preferred_username", "email", "name"),
 		},
 		&cli.StringSliceFlag{
-			Name:    "group-claims",
+			Name:    "idp-group-claims",
 			Usage:   "an ordered collection of potential token claims to extract the groups `CLAIMS`",
-			EnvVars: []string{"GROUP_CLAIMS"},
+			EnvVars: []string{"IDP_GROUP_CLAIMS"},
 			Value:   cli.NewStringSlice("groups"),
 		},
 		&cli.StringFlag{

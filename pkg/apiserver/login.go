@@ -78,13 +78,13 @@ func (l *loginHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 
 		// Configure an OpenID Connect aware OAuth2 client.
 		l.oidcConfig = &oauth2.Config{
-			ClientID:     l.Config().ClientID,
-			ClientSecret: l.Config().ClientSecret,
+			ClientID:     l.Config().IDPClientID,
+			ClientSecret: l.Config().IDPClientSecret,
 			Endpoint:     provider.Endpoint(),
-			Scopes:       append([]string{oidc.ScopeOpenID}, l.Config().ClientScopes...),
+			Scopes:       append([]string{oidc.ScopeOpenID}, l.Config().IDPClientScopes...),
 		}
 
-		l.verifier = provider.Verifier(&oidc.Config{ClientID: l.Config().ClientID})
+		l.verifier = provider.Verifier(&oidc.Config{ClientID: l.Config().IDPClientID})
 	} else {
 		log.Warn("no identity provider configuration has been provided")
 	}
@@ -139,7 +139,7 @@ func (l *loginHandler) authorizerHandler(req *restful.Request, resp *restful.Res
 	log.WithFields(log.Fields{
 		"client_ip":    req.Request.RemoteAddr,
 		"redirect_url": l.oidcConfig.RedirectURL,
-		"scopes":       strings.Join(l.Config().ClientScopes, ","),
+		"scopes":       strings.Join(l.Config().IDPClientScopes, ","),
 	}).Info("providing authorization redirect to identity service")
 
 	http.Redirect(resp.ResponseWriter, req.Request, l.oidcConfig.AuthCodeURL(state), http.StatusTemporaryRedirect)
@@ -211,7 +211,7 @@ func (l *loginHandler) callbackHandler(req *restful.Request, resp *restful.Respo
 		}
 
 		// @step: extract the username and email address
-		username, found := claims.GetUserClaim(l.Config().UserClaims...)
+		username, found := claims.GetUserClaim(l.Config().IDPUserClaims...)
 		if !found {
 			return http.StatusForbidden, errors.New("no user information found in token ")
 		}
@@ -230,8 +230,8 @@ func (l *loginHandler) callbackHandler(req *restful.Request, resp *restful.Respo
 		res := &AuthorizationResponse{
 			AccessToken:      otoken.AccessToken,
 			AuthorizationURL: l.Config().IDPServerURL,
-			ClientID:         l.Config().ClientID,
-			ClientSecret:     l.Config().ClientSecret,
+			ClientID:         l.Config().IDPClientID,
+			ClientSecret:     l.Config().IDPClientSecret,
 			IDToken:          rawToken,
 			RefreshToken:     otoken.RefreshToken,
 			TokenEndpointURL: l.provider.Endpoint().TokenURL,

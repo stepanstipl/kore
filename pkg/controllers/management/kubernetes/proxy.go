@@ -238,8 +238,8 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 	replicas := int32(2)
 
 	claims := []string{}
-	for _, x := range a.Config().UserClaims {
-		claims = append(claims, fmt.Sprintf("--user-claims=%s", x))
+	for _, x := range a.Config().IDPUserClaims {
+		claims = append(claims, fmt.Sprintf("--idp-user-claims=%s", x))
 	}
 
 	// @step: ensure the deployment is there
@@ -289,7 +289,7 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 								PeriodSeconds: 10,
 							},
 							Args: append([]string{
-								"--client-id=" + a.Config().ClientID,
+								"--idp-client-id=" + a.Config().IDPClientID,
 								"--idp-server-url=" + a.Config().IDPServerURL,
 								"--tls-cert=/tls/tls.crt",
 								"--tls-key=/tls/tls.key",

@@ -22,13 +22,13 @@ import (
 
 // IsValid checks the configuation of the proxy
 func (c Config) IsValid() error {
-	if c.ClientID == "" {
+	if c.IDPClientID == "" {
 		return errors.New("no client id")
 	}
 	if c.IDPServerURL == "" && c.SigningCA == "" {
 		return errors.New("neither IDP server url or signing ca are defined")
 	}
-	if len(c.UserClaims) <= 0 {
+	if len(c.IDPUserClaims) <= 0 {
 		return errors.New("user claims are empty")
 	}
 	if c.TLSCert != "" && c.TLSKey == "" {

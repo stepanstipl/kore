@@ -187,11 +187,11 @@ func (a idpImpl) getDirectIDP() (*corev1.IDP, error) {
 		return nil, errors.New("Only OIDC providers supported without IDP broker")
 	}
 	d := corev1.StaticOIDCIDP{}
-	d.ClientID = a.Config().ClientID
-	d.ClientSecret = a.Config().ClientSecret
+	d.ClientID = a.Config().IDPClientID
+	d.ClientSecret = a.Config().IDPClientSecret
 	d.Issuer = a.Config().IDPServerURL
-	d.ClientScopes = a.Config().ClientScopes
-	d.UserClaims = a.Config().UserClaims
+	d.ClientScopes = a.Config().IDPClientScopes
+	d.UserClaims = a.Config().IDPUserClaims
 
 	return &corev1.IDP{
 		ObjectMeta: metav1.ObjectMeta{
