@@ -24,7 +24,7 @@ import (
 	restful "github.com/emicklei/go-restful"
 )
 
-// findEKSCredientalss returns all the clusters under the team
+// findEKSCredientalss returns all the credentials under the team
 func (u teamHandler) findEKSCredientalss(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		team := req.PathParameter("team")
