@@ -1,7 +1,7 @@
 # IDEs
 .idea
 
-bin/
+/bin/
 cmd/cluster-controller
 demo.env
 deploy/crds

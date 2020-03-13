@@ -121,7 +121,7 @@ swagger: compose
 	@$(MAKE) swagger-validate
 #@kill `cat $@ 2>/dev/null` 2>/dev/null && rm $@ 2>/dev/null
 
-swagger-json:
+swagger-json: api-wait
 	@curl --retry 20 --retry-delay 5 --retry-connrefused -sSL http://127.0.0.1:10080/swagger.json | jq > swagger.json
 
 swagger-validate:
@@ -166,20 +166,11 @@ run-api-only: kore-apiserver
 
 kube-api-wait:
 	@echo "--> Waiting for Kube API..."
-	@curl \
-		--retry 50 \
-		--retry-delay 3 \
-		--retry-connrefused \
-		-sSL http://127.0.0.1:8080 >/dev/null 2>&1
+	@hack/bin/http_test.sh http://127.0.0.1:8080
 
 api-wait:
 	@echo "--> Waiting for API..."
-	@which curl
-	@curl \
-		--retry 50 \
-		--retry-delay 3 \
-		--retry-connrefused \
-		-sSL http://127.0.0.1:10080 >/dev/null 2>&1
+	@hack/bin/http_test.sh http://127.0.0.1:10080
 
 compose-down:
 	@echo "--> Removing the test environment"
