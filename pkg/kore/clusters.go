@@ -21,6 +21,7 @@ import (
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	"github.com/appvia/kore/pkg/kore/authentication"
+	"github.com/appvia/kore/pkg/kore/validation"
 	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/store"
 
@@ -121,6 +122,12 @@ func (c *clsImpl) Update(ctx context.Context, cluster *clustersv1.Kubernetes) er
 	user := authentication.MustGetIdentity(ctx)
 
 	cluster.Namespace = c.team
+
+	// @TODO wider validation of the supplied details.
+	if len(cluster.Name) > 40 {
+		return validation.NewErrValidation().
+			WithFieldError("cluster.name", validation.MaxLength, "Cluster name must be 40 characters or less")
+	}
 
 	// @TODO add an entity into the audit log
 	c.Audit().Record(ctx,

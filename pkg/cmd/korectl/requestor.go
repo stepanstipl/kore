@@ -30,6 +30,7 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/appvia/kore/pkg/kore/validation"
 	"github.com/ghodss/yaml"
 	"github.com/savaki/jq"
 	log "github.com/sirupsen/logrus"
@@ -297,6 +298,18 @@ func (c *Requestor) makeValues(in io.Reader, paths []string) ([]string, error) {
 func (c Requestor) checkResponse(resp *http.Response) *RequestError {
 	if resp.StatusCode == http.StatusOK {
 		return nil
+	}
+
+	if resp.StatusCode == http.StatusBadRequest {
+		// This is a validation error, check if we have a validation error body. If so,
+		// that implements Error so we can use it directly.
+		var valResponse validation.ErrValidation
+		if err := json.NewDecoder(resp.Body).Decode(&valResponse); err == nil {
+			return &RequestError{
+				statusCode: resp.StatusCode,
+				err:        valResponse,
+			}
+		}
 	}
 
 	var response map[string]interface{}
