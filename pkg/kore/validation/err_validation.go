@@ -14,19 +14,27 @@
  * limitations under the License.
  */
 
-package kore
+package validation
 
 import "fmt"
 
 // ErrValidation is a specific error returned when the input provided by
 // the user has failed validation somehow.
 type ErrValidation struct {
-	FieldErrors []ValidationFieldError `json:"fieldErrors"`
+	// Code is an optional machine readable code used to describe the code
+	Code int `json:"code"`
+	// Message is a human readable message related to the error
+	Message string `json:"message"`
+	// FieldErrors are the individual validation errors found against the submitted data.
+	FieldErrors []FieldError `json:"fieldErrors"`
 }
 
-// newErrValidation returns a new api validation error
-func newErrValidation() *ErrValidation {
-	return &ErrValidation{}
+// NewErrValidation returns a new api validation error
+func NewErrValidation() *ErrValidation {
+	return &ErrValidation{
+		Code:    400,
+		Message: "Validation error - see FieldErrors for details.",
+	}
 }
 
 // Error returns the details of the validation error.
@@ -42,35 +50,25 @@ func (e ErrValidation) Error() string {
 }
 
 // WithFieldError adds an error for a specific field to a validation error.
-func (e *ErrValidation) WithFieldError(field string, errCode ValidationErrorCode, message string) *ErrValidation {
-	e.FieldErrors = append(e.FieldErrors, ValidationFieldError{Field: field, ErrCode: errCode, Message: message})
+func (e *ErrValidation) WithFieldError(field string, errCode ErrorCode, message string) *ErrValidation {
+	e.FieldErrors = append(e.FieldErrors, FieldError{Field: field, ErrCode: errCode, Message: message})
 	return e
 }
 
-// ValidationFieldError provides information about a validation error on a specific field.
-type ValidationFieldError struct {
+// FieldError provides information about a validation error on a specific field.
+type FieldError struct {
 	// Field causing the error, in format x.y.z
 	Field string `json:"field"`
 	// ErrCode is the type of constraint which has been broken.
-	ErrCode ValidationErrorCode `json:"errCode"`
+	ErrCode ErrorCode `json:"errCode"`
 	// Message is a human-readable description of the validation error.
 	Message string `json:"message"`
 }
 
-// ValidationErrorCode is the type of validation error detected.
-type ValidationErrorCode int
+// ErrorCode is the type of validation error detected.
+type ErrorCode string
 
 const (
 	// MaxLength error indicates the supplied value is longer than the allowed maximum.
-	MaxLength ValidationErrorCode = iota
+	MaxLength ErrorCode = "maxLength"
 )
-
-func (v ValidationErrorCode) String() string {
-	names := [...]string{
-		"maxLength",
-	}
-	if v < MaxLength || v > MaxLength {
-		return "Unknown"
-	}
-	return names[v]
-}

@@ -30,7 +30,7 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/kore/validation"
 	"github.com/ghodss/yaml"
 	"github.com/savaki/jq"
 	log "github.com/sirupsen/logrus"
@@ -301,10 +301,9 @@ func (c Requestor) checkResponse(resp *http.Response) *RequestError {
 	}
 
 	if resp.StatusCode == http.StatusBadRequest {
-		// This is a validation error, check if we have a validation error body. If so, by
-		// parsing it as a kore.ErrValidation it directly implements Error() so can be passed
-		// directly into RequestError:
-		var valResponse kore.ErrValidation
+		// This is a validation error, check if we have a validation error body. If so,
+		// that implements Error so we can use it directly.
+		var valResponse validation.ErrValidation
 		if err := json.NewDecoder(resp.Body).Decode(&valResponse); err == nil {
 			return &RequestError{
 				statusCode: resp.StatusCode,

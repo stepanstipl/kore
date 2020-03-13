@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/kore/validation"
 
 	restful "github.com/emicklei/go-restful"
 	log "github.com/sirupsen/logrus"
@@ -72,11 +73,9 @@ func handleErrors(req *restful.Request, resp *restful.Response, handler func() e
 
 		// Couple of errors have their own types, treat differently:
 		switch err := err.(type) {
-		case kore.ErrNotAllowed:
-		case *kore.ErrNotAllowed:
+		case kore.ErrNotAllowed, *kore.ErrNotAllowed:
 			code = http.StatusNotAcceptable
-		case kore.ErrValidation:
-		case *kore.ErrValidation:
+		case validation.ErrValidation, *validation.ErrValidation:
 			code = http.StatusBadRequest
 			// ErrValidation can be directly serialized to json so just return that.
 			errResponse = err
