@@ -485,7 +485,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the EKS cluster you are acting upon")).
 			Doc("Is used to delete a managed EKS cluster from the kore").
-			Returns(http.StatusOK, "Contains the former team definition from the kore", gke.EKSCredentials{}).
+			Returns(http.StatusOK, "Contains the former team definition from the kore", eks.EKSCredentials{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
