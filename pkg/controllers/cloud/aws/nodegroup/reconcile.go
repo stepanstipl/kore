@@ -54,7 +54,7 @@ func (t *eksNodeGroupCtrl) Reconcile(request reconcile.Request) (reconcile.Resul
 
 	logger.Info("Found AWSNodeGroup CR")
 
-	credentials := &eksv1alpha1.AWSCredential{}
+	credentials := &eksv1alpha1.EKSCredentials{}
 
 	reference := types.NamespacedName{
 		Namespace: nodegroup.Spec.Use.Namespace,
