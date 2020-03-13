@@ -22,8 +22,8 @@ package credentials
 import (
 	"context"
 
-	aws "github.com/appvia/kore/pkg/apis/aws/v1alpha1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
+	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -42,7 +42,7 @@ func (t awsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 	})
 	logger.Debug("attempting to reconcile aws credentials")
 
-	resource := &aws.AWSCredential{}
+	resource := &eks.EKSCredentials{}
 	if err := t.mgr.GetClient().Get(ctx, request.NamespacedName, resource); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
@@ -87,7 +87,7 @@ func (t awsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		return reconcile.Result{}, err
 	}()
 	if err != nil {
-		logger.WithError(err).Error("trying to reconcile the gke credentials")
+		logger.WithError(err).Error("trying to reconcile the aws credentials")
 
 		resource.Status.Status = corev1.FailureStatus
 		resource.Status.Conditions = []corev1.Condition{{

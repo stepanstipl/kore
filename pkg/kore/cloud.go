@@ -22,6 +22,10 @@ type Cloud interface {
 	GKE() GKE
 	// GKECredentials provides access to the gkes credentials
 	GKECredentials() GKECredentials
+	// EKS returns the EKS interface
+	EKS() EKS
+	// EKSCredentials provides acces to the eks's credentials
+	EKSCredentials() EKSCredentials
 }
 
 type cloudImpl struct {
@@ -38,4 +42,14 @@ func (c *cloudImpl) GKE() GKE {
 // GKECredentials returns a gke interface
 func (c *cloudImpl) GKECredentials() GKECredentials {
 	return &gkeCredsImpl{cloudImpl: c, team: c.team}
+}
+
+// EKS retuens a eks interface
+func (c *cloudImpl) EKS() EKS {
+	return &eksImpl{cloudImpl: c, team: c.team}
+}
+
+// EKSCredentials returns a eks interface
+func (c *cloudImpl) EKSCredentials() EKSCredentials {
+	return &eksCredsImpl{cloudImpl: c, team: c.team}
 }

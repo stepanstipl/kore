@@ -23,9 +23,9 @@ import (
 	"context"
 	"time"
 
-	awsv1alpha1 "github.com/appvia/kore/pkg/apis/aws/v1alpha1"
 	core "github.com/appvia/kore/pkg/apis/core/v1"
-	eksctl "github.com/appvia/kore/pkg/controllers/cloud/aws/eks"
+	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
+	eksctl "github.com/appvia/kore/pkg/controllers/cloud/eks"
 	"github.com/aws/aws-sdk-go/aws"
 	eks "github.com/aws/aws-sdk-go/service/eks"
 	log "github.com/sirupsen/logrus"
@@ -43,7 +43,7 @@ func (t *eksNodeGroupCtrl) Reconcile(request reconcile.Request) (reconcile.Resul
 	logger.Info("Reconciling EKSNodeGroup")
 
 	// Fetch the EKSNodeGroup instance
-	nodegroup := &awsv1alpha1.EKSNodeGroup{}
+	nodegroup := &eksv1alpha1.EKSNodeGroup{}
 
 	if err := t.mgr.GetClient().Get(context.TODO(), request.NamespacedName, nodegroup); err != nil {
 		if errors.IsNotFound(err) {
@@ -54,7 +54,7 @@ func (t *eksNodeGroupCtrl) Reconcile(request reconcile.Request) (reconcile.Resul
 
 	logger.Info("Found AWSNodeGroup CR")
 
-	credentials := &awsv1alpha1.AWSCredential{}
+	credentials := &eksv1alpha1.AWSCredential{}
 
 	reference := types.NamespacedName{
 		Namespace: nodegroup.Spec.Use.Namespace,

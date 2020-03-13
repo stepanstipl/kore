@@ -18,13 +18,12 @@ package eks
 
 import (
 	"context"
-	"time"
+	"errors"
+	"fmt"
 
-	awsv1alpha1 "github.com/appvia/kore/pkg/apis/aws/v1alpha1"
 	core "github.com/appvia/kore/pkg/apis/core/v1"
+	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
-	"github.com/aws/aws-sdk-go/aws"
-	awseks "github.com/aws/aws-sdk-go/service/eks"
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 
@@ -48,8 +47,8 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 	})
 	logger.Debug("attempting to reconcile aws eks cluster")
 
-	cluster := &awsv1alpha1.EKSCluster{}
-	if err := t.mgr.GetClient().Get(ctx, request.NamespacedName, cluster); err != nil {
+	resource := &eksv1alpha1.EKS{}
+	if err := t.mgr.GetClient().Get(ctx, request.NamespacedName, resource); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
@@ -60,95 +59,133 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 	finalizer := kubernetes.NewFinalizer(t.mgr.GetClient(), finalizerName)
 
 	// @step: are we deleting the resource
-	if finalizer.IsDeletionCandidate(cluster) {
+	if finalizer.IsDeletionCandidate(resource) {
 		return t.Delete(request)
 	}
-	credentials := &awsv1alpha1.AWSCredential{}
 
-	reference := types.NamespacedName{
-		Namespace: cluster.Spec.Use.Namespace,
-		Name:      cluster.Spec.Use.Name,
-	}
+	requeue, err := func() (bool, error) {
 
-	err := t.mgr.GetClient().Get(ctx, reference, credentials)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	logger.Info("Found AWSCredential CR")
-
-	sesh, err := GetAWSSession(credentials, cluster.Spec.Region)
-
-	svc, err := GetEKSService(sesh)
-
-	logger.Info("Checking cluster existence")
-
-	clusterExists, err := CheckEKSClusterExists(svc, &awseks.DescribeClusterInput{
-		Name: aws.String(cluster.Spec.Name),
-	})
-
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	if clusterExists {
-		logger.Info("Cluster exists: " + cluster.Spec.Name)
-		return reconcile.Result{}, nil
-	}
-
-	logger.Info("Creating cluster:" + cluster.Spec.Name)
-
-	// Cluster doesnt exist, create it
-	_, err = CreateEKSCluster(svc, &awseks.CreateClusterInput{
-		Name:    aws.String(cluster.Spec.Name),
-		RoleArn: aws.String(cluster.Spec.RoleARN),
-		Version: aws.String(cluster.Spec.Version),
-		ResourcesVpcConfig: &awseks.VpcConfigRequest{
-			SecurityGroupIds: aws.StringSlice(cluster.Spec.SecurityGroupIDs),
-			SubnetIds:        aws.StringSlice(cluster.Spec.SubnetIDs),
-		},
-	})
-
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// Set status to pending
-	cluster.Status.Status = core.PendingStatus
-
-	if err := t.mgr.GetClient().Status().Update(ctx, cluster); err != nil {
-		logger.Error(err, "failed to update the resource status")
-		return reconcile.Result{}, err
-	}
-
-	// Wait for it to become ACTIVE
-	for {
-		log.Println("Checking the status of cluster:", cluster.Spec.Name)
-
-		status, err := GetEKSClusterStatus(svc, &awseks.DescribeClusterInput{
-			Name: aws.String(cluster.Spec.Name),
-		})
-
+		logger.Debug("retrieving the gke cluster credential")
+		// @step: first we need to check if we have access to the credentials
+		credentials, err := t.GetCredentials(ctx, resource, resource.Namespace)
 		if err != nil {
-			return reconcile.Result{}, err
+			logger.WithError(err).Error("trying to retrieve cloud credentials")
+
+			resource.Status.Conditions.SetCondition(core.Component{
+				Name:    ComponentClusterCreator,
+				Message: "You do not have permission to the credentials",
+				Status:  core.SuccessStatus,
+			})
+
+			return false, err
+		}
+		logger.Info("Found AWSCredential CR")
+
+		client, err := NewClient(credentials, resource)
+		if err != nil {
+			return false, err
+		}
+		logger.Info("Checking cluster existence")
+
+		clusterExists, err := client.Exists()
+		if err != nil {
+			return false, err
 		}
 
-		if status == "ACTIVE" {
-			log.Println("Cluster active:", cluster.Spec.Name)
-			// Set status to success
-			cluster.Status.Status = core.SuccessStatus
+		if clusterExists {
+			logger.Info("Cluster exists: " + resource.Spec.Name)
+			return false, nil
+		}
 
-			if err := t.mgr.GetClient().Status().Update(ctx, cluster); err != nil {
-				logger.Error(err, "failed to update the resource status")
-				return reconcile.Result{}, err
-			}
-			break
+		logger.Info("Creating cluster:" + resource.Spec.Name)
+
+		// Cluster doesnt exist, create it
+		_, err = client.Create()
+		if err != nil {
+			return false, err
+		}
+
+		// Set status to pending
+		resource.Status.Status = core.PendingStatus
+
+		if err := t.mgr.GetClient().Status().Update(ctx, resource); err != nil {
+			logger.Error(err, "failed to update the resource status")
+			return false, err
+		}
+		log.Println("Checking the status of cluster:", resource.Spec.Name)
+
+		status, err := client.GetEKSClusterStatus()
+		if err != nil {
+			return false, err
 		}
 		if status == "ERROR" {
-			log.Println("Cluster has ERROR status:", cluster.Spec.Name)
-			break
+			return false, fmt.Errorf("Cluster has ERROR status:%s", resource.Spec.Name)
 		}
-		time.Sleep(5000 * time.Millisecond)
+		if status != "ACTIVE" {
+			// not ready, reque no errors
+			return true, nil
+		}
+		// Active cluster
+		resource.Status.Conditions.SetCondition(core.Component{
+			Name:    ComponentClusterBootstrap,
+			Message: "Successfully initialised the cluster",
+			Status:  core.SuccessStatus,
+		})
+
+		return false, nil
+	}()
+	if err != nil {
+		resource.Status.Status = core.FailureStatus
 	}
+
+	if err := t.mgr.GetClient().Status().Update(ctx, resource); err != nil {
+		logger.WithError(err).Error("updating the status of eks cluster")
+
+		return reconcile.Result{}, err
+	}
+
+	if err == nil {
+		if finalizer.NeedToAdd(resource) {
+			logger.Info("adding our finalizer to the team resource")
+
+			if err := finalizer.Add(resource); err != nil {
+				return reconcile.Result{}, err
+			}
+
+			return reconcile.Result{Requeue: true}, nil
+		}
+	}
+
+	if requeue {
+		return reconcile.Result{Requeue: true}, nil
+	}
+
 	return reconcile.Result{}, nil
+}
+
+// GetCredentials returns the cloud credential
+func (t *eksCtrl) GetCredentials(ctx context.Context, cluster *eksv1alpha1.EKS, team string) (*eksv1alpha1.EKSCredentials, error) {
+	// @step: is the team permitted access to this credentials
+	permitted, err := t.Teams().Team(team).Allocations().IsPermitted(ctx, cluster.Spec.Credentials)
+	if err != nil {
+		log.WithError(err).Error("attempting to check for permission on credentials")
+
+		return nil, fmt.Errorf("attempting to check for permission on credentials")
+	}
+
+	if !permitted {
+		log.Warn("trying to build gke cluster unallocated permissions")
+
+		return nil, errors.New("you do not have permissions to the gke credentials")
+	}
+
+	// @step: retrieve the credentials
+	creds := &eksv1alpha1.EKSCredentials{}
+
+	return creds, t.mgr.GetClient().Get(ctx,
+		types.NamespacedName{
+			Namespace: cluster.Spec.Credentials.Namespace,
+			Name:      cluster.Spec.Credentials.Name,
+		}, creds,
+	)
 }

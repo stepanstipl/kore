@@ -20,7 +20,7 @@ import (
 	"context"
 	"time"
 
-	aws "github.com/appvia/kore/pkg/apis/aws/v1alpha1"
+	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
 
@@ -76,7 +76,7 @@ func (t *eksCtrl) Run(ctx context.Context, cfg *rest.Config, hubi kore.Interface
 	}
 
 	// @step: setup watches for the resources
-	if err := ctrl.Watch(&source.Kind{Type: &aws.EKSCluster{}},
+	if err := ctrl.Watch(&source.Kind{Type: &eks.EKS{}},
 		&handler.EnqueueRequestForObject{},
 		&predicate.GenerationChangedPredicate{},
 	); err != nil {

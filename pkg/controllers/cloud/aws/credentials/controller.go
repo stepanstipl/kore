@@ -23,7 +23,7 @@ import (
 	"context"
 	"time"
 
-	aws "github.com/appvia/kore/pkg/apis/aws/v1alpha1"
+	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
 
@@ -84,7 +84,7 @@ func (t *awsCtrl) Run(ctx context.Context, cfg *rest.Config, hubi kore.Interface
 		return err
 	}
 
-	if err := ctrl.Watch(&source.Kind{Type: &aws.AWSCredential{}},
+	if err := ctrl.Watch(&source.Kind{Type: &eks.AWSCredentials{}},
 		&handler.EnqueueRequestForObject{},
 		&predicate.GenerationChangedPredicate{}); err != nil {
 

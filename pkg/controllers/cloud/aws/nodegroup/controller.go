@@ -23,7 +23,7 @@ import (
 	"context"
 	"time"
 
-	aws "github.com/appvia/kore/pkg/apis/aws/v1alpha1"
+	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
 
@@ -79,7 +79,7 @@ func (t *eksNodeGroupCtrl) Run(ctx context.Context, cfg *rest.Config, hubi kore.
 	}
 
 	// @step: setup watches for the resources
-	if err := ctrl.Watch(&source.Kind{Type: &aws.EKSNodeGroup{}},
+	if err := ctrl.Watch(&source.Kind{Type: &eks.EKSNodeGroup{}},
 		&handler.EnqueueRequestForObject{},
 		&predicate.GenerationChangedPredicate{},
 	); err != nil {
@@ -114,7 +114,7 @@ func (t *eksNodeGroupCtrl) Run(ctx context.Context, cfg *rest.Config, hubi kore.
 }
 
 // Stop is responsible for calling a halt on the controller
-func (t *eksCtrl) Stop(_ context.Context) error {
+func (t *eksNodeGroupCtrl) Stop(_ context.Context) error {
 	log.WithFields(log.Fields{
 		"controller": t.Name(),
 	}).Info("attempting to stop the controller")

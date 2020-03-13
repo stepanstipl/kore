@@ -19,7 +19,7 @@ package kore
 import (
 	"context"
 
-	aws "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
+	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/store"
@@ -37,11 +37,11 @@ type EKS interface {
 	// Delete is responsible for deleting a gke environment
 	Delete(context.Context, string) error
 	// Get return the definition from the api
-	Get(context.Context, string) (*aws.EKS, error)
+	Get(context.Context, string) (*eks.EKS, error)
 	// List returns all the gke cluster in the team
-	List(context.Context) (*aws.EKSList, error)
+	List(context.Context) (*eks.EKSList, error)
 	// Update is used to update the gke cluster definition
-	Update(context.Context, *aws.EKS) (*aws.EKS, error)
+	Update(context.Context, *eks.EKS) (*eks.EKS, error)
 }
 
 type eksImpl struct {
@@ -59,7 +59,7 @@ func (h *eksImpl) Delete(ctx context.Context, name string) error {
 	user := authentication.MustGetIdentity(ctx)
 
 	// @step: retrieve the cluster
-	cluster := &aws.EKS{}
+	cluster := &eks.EKS{}
 	err := h.Store().Client().Get(ctx,
 		store.GetOptions.InNamespace(h.team),
 		store.GetOptions.InTo(cluster),
@@ -100,8 +100,8 @@ func (h *eksImpl) Delete(ctx context.Context, name string) error {
 }
 
 // Get return the definition from the api
-func (h *eksImpl) Get(ctx context.Context, name string) (*aws.EKS, error) {
-	cluster := &aws.EKS{}
+func (h *eksImpl) Get(ctx context.Context, name string) (*eks.EKS, error) {
+	cluster := &eks.EKS{}
 
 	err := h.Store().Client().Get(ctx,
 		store.GetOptions.InNamespace(h.team),
@@ -118,8 +118,8 @@ func (h *eksImpl) Get(ctx context.Context, name string) (*aws.EKS, error) {
 }
 
 // List returns all the gke cluster in the team
-func (h *eksImpl) List(ctx context.Context) (*aws.EKSList, error) {
-	list := &aws.AWSList{}
+func (h *eksImpl) List(ctx context.Context) (*eks.EKSList, error) {
+	list := &eks.EKSList{}
 
 	return list, h.Store().Client().List(ctx,
 		store.ListOptions.InNamespace(h.team),
@@ -128,7 +128,7 @@ func (h *eksImpl) List(ctx context.Context) (*aws.EKSList, error) {
 }
 
 // Update is called to update or create a gke instance
-func (h *eksImpl) Update(ctx context.Context, cluster *aws.EKS) (*aws.EKS, error) {
+func (h *eksImpl) Update(ctx context.Context, cluster *eks.EKS) (*eks.EKS, error) {
 	logger := log.WithFields(log.Fields{
 		"name": cluster.Name,
 		"team": h.team,

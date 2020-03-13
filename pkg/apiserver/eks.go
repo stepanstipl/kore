@@ -19,17 +19,17 @@ package apiserver
 import (
 	"net/http"
 
-	aws "github.com/appvia/kore/pkg/apis/aws/v1alpha1"
+	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 
 	restful "github.com/emicklei/go-restful"
 )
 
-// findAWSCredientalss returns all the clusters under the team
-func (u teamHandler) findAWSCredientalss(req *restful.Request, resp *restful.Response) {
+// findEKSs returns all the clusters under the team
+func (u teamHandler) findEKSs(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		team := req.PathParameter("team")
 
-		list, err := u.Teams().Team(team).Cloud().GKECredentials().List(req.Request.Context())
+		list, err := u.Teams().Team(team).Cloud().EKS().List(req.Request.Context())
 		if err != nil {
 			return err
 		}
@@ -38,13 +38,13 @@ func (u teamHandler) findAWSCredientalss(req *restful.Request, resp *restful.Res
 	})
 }
 
-// findAWSCredientals returns a cluster under the team
-func (u teamHandler) findAWSCredientals(req *restful.Request, resp *restful.Response) {
+// findEKS returns a cluster under the team
+func (u teamHandler) findEKS(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		name := req.PathParameter("name")
 		team := req.PathParameter("team")
 
-		list, err := u.Teams().Team(team).Cloud().AWSCredentials().Get(req.Request.Context(), name)
+		list, err := u.Teams().Team(team).Cloud().EKS().Get(req.Request.Context(), name)
 		if err != nil {
 			return err
 		}
@@ -53,19 +53,19 @@ func (u teamHandler) findAWSCredientals(req *restful.Request, resp *restful.Resp
 	})
 }
 
-// deleteAWSCredientals is responsible for deleting a team resource
-func (u teamHandler) deleteAWSCredientals(req *restful.Request, resp *restful.Response) {
+// deleteEKS is responsible for deleting a team resource
+func (u teamHandler) deleteEKS(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		ctx := req.Request.Context()
 		name := req.PathParameter("name")
 		team := req.PathParameter("team")
 
-		object, err := u.Teams().Team(team).Cloud().AWSCredentials().Get(ctx, name)
+		object, err := u.Teams().Team(team).Cloud().EKS().Get(ctx, name)
 		if err != nil {
 			return err
 		}
 
-		err = u.Teams().Team(team).Cloud().AWSCredentials().Delete(ctx, name)
+		err = u.Teams().Team(team).Cloud().EKS().Delete(ctx, name)
 		if err != nil {
 			return err
 		}
@@ -74,17 +74,17 @@ func (u teamHandler) deleteAWSCredientals(req *restful.Request, resp *restful.Re
 	})
 }
 
-// updateAWSCredientals is responsible for putting an resource into a team
-func (u teamHandler) updateAWSCredientals(req *restful.Request, resp *restful.Response) {
+// updateEKS is responsible for putting an resource into a team
+func (u teamHandler) updateEKS(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		team := req.PathParameter("team")
 
-		object := &aws.AWSCredentials{}
+		object := &eks.EKS{}
 		if err := req.ReadEntity(object); err != nil {
 			return err
 		}
 
-		if _, err := u.Teams().Team(team).Cloud().AWSCredentials().Update(req.Request.Context(), object); err != nil {
+		if _, err := u.Teams().Team(team).Cloud().EKS().Update(req.Request.Context(), object); err != nil {
 			return err
 		}
 

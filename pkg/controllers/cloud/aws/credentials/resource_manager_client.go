@@ -1,18 +1,18 @@
 package credentials
 
 import (
-	aws "github.com/appvia/kore/pkg/apis/aws/v1alpha1"
+	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 )
 
 // MaxChunkSize is the largest number of permissions that can be checked in one request
 const MaxChunkSize = 100
 
 type awsClient struct {
-	credentials *aws.AWSCredential
+	credentials *eks.EKSCredential
 }
 
 // NewClient creates and returns a permissions verifier
-func NewClient(credentials *aws.AWSCredential) (*awsClient, error) {
+func NewClient(credentials *eks.EKSCredential) (*awsClient, error) {
 	awsClient := &awsClient{}
 
 	// Example from GKE credentials...
