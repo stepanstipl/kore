@@ -43,6 +43,12 @@ spec:
       containers:
       - name: {{ include "kore.name" . }}-portal
         image: {{ .Values.ui.image }}:{{ .Values.ui.version }}
+        ports:
+        - name: http
+          containerPort: 3000
+          {{ if .Values.ui.hostPort }}
+          hostPort: {{ .Values.ui.hostPort }}
+          {{ end }}
         env:
         - name: REDIS_URL
           value: redis://{{ include "kore.name" . }}-redis:6379
