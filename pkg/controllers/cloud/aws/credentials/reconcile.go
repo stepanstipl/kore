@@ -67,7 +67,7 @@ func (t awsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		// @step: create the client to verify the permissions
 		client, err := NewClient(resource)
 		if err != nil {
-			logger.WithError(err).Error("trying to create gcp permissions client")
+			logger.WithError(err).Error("trying to create aws permissions client")
 
 			return reconcile.Result{}, err
 		}

@@ -70,6 +70,10 @@ func (t *eksNodeGroupCtrl) Reconcile(request reconcile.Request) (reconcile.Resul
 
 	logger.Info("Found AWSCredential CR")
 	client, err := eksctl.NewClient(credentials, nodegroup.ClusterName, nodegroup.Spec.Region)
+	if err != nil {
+
+		return reconcile.Result{}, err
+	}
 	nodeGroupExists, err := client.NodeGroupExists(nodegroup)
 	if err != nil {
 

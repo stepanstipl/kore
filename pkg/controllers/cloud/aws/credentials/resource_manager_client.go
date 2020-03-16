@@ -13,7 +13,9 @@ type awsClient struct {
 
 // NewClient creates and returns a permissions verifier
 func NewClient(credentials *eks.EKSCredentials) (*awsClient, error) {
-	awsClient := &awsClient{}
+	awsClient := &awsClient{
+		credentials: credentials,
+	}
 
 	// Example from GKE credentials...
 	/*
