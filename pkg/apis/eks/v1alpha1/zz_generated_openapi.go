@@ -386,7 +386,7 @@ func schema_pkg_apis_eks_v1alpha1_EKSNodeGroupSpec(ref common.ReferenceCallback)
 				Description: "EKSNodeGroupSpec defines the desired state of EKSNodeGroup",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"aMIType": {
+					"amiType": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",
@@ -404,22 +404,10 @@ func schema_pkg_apis_eks_v1alpha1_EKSNodeGroupSpec(ref common.ReferenceCallback)
 							Format: "int64",
 						},
 					},
-					"instanceTypes": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
-							},
-						},
+					"instanceType": {
 						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Type:   []string{"string"},
-										Format: "",
-									},
-								},
-							},
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 					"labels": {
@@ -442,7 +430,7 @@ func schema_pkg_apis_eks_v1alpha1_EKSNodeGroupSpec(ref common.ReferenceCallback)
 							Format: "",
 						},
 					},
-					"nodeRole": {
+					"iamNodeRole": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"string"},
 							Format: "",
@@ -525,14 +513,14 @@ func schema_pkg_apis_eks_v1alpha1_EKSNodeGroupSpec(ref common.ReferenceCallback)
 							Format:      "",
 						},
 					},
-					"sourceSecurityGroups": {
+					"sshSourceSecurityGroups": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
 								"x-kubernetes-list-type": "set",
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "The Amazon EC2 SSH key that provides access for SSH communication with the worker nodes in the managed node group https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html",
+							Description: "The security groups that are allowed SSH access (port 22) to the worker nodes",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -546,13 +534,13 @@ func schema_pkg_apis_eks_v1alpha1_EKSNodeGroupSpec(ref common.ReferenceCallback)
 					},
 					"eC2SSHKey": {
 						SchemaProps: spec.SchemaProps{
-							Description: "The security groups that are allowed SSH access (port 22) to the worker nodes",
+							Description: "The Amazon EC2 SSH key that provides access for SSH communication with the worker nodes in the managed node group https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 				},
-				Required: []string{"clusterName", "nodeGroupName", "nodeRole", "subnets", "region"},
+				Required: []string{"amiType", "clusterName", "nodeGroupName", "iamNodeRole", "subnets", "region"},
 			},
 		},
 	}
@@ -565,6 +553,19 @@ func schema_pkg_apis_eks_v1alpha1_EKSNodeGroupStatus(ref common.ReferenceCallbac
 				Description: "EKSNodeGroupStatus defines the observed state of EKSNodeGroup",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"conditions": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Conditions is the status of the components",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/appvia/kore/pkg/apis/core/v1.Component"),
+									},
+								},
+							},
+						},
+					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Status provides a overall status",
@@ -573,9 +574,10 @@ func schema_pkg_apis_eks_v1alpha1_EKSNodeGroupStatus(ref common.ReferenceCallbac
 						},
 					},
 				},
-				Required: []string{"status"},
 			},
 		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/core/v1.Component"},
 	}
 }
 

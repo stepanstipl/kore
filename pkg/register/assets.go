@@ -1089,7 +1089,7 @@ spec:
         spec:
           description: EKSNodeGroupSpec defines the desired state of EKSNodeGroup
           properties:
-            aMIType:
+            amiType:
               type: string
             clusterName:
               type: string
@@ -1100,29 +1100,26 @@ spec:
               format: int64
               type: integer
             eC2SSHKey:
-              description: The security groups that are allowed SSH access (port 22)
-                to the worker nodes
+              description: The Amazon EC2 SSH key that provides access for SSH communication
+                with the worker nodes in the managed node group https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html
               type: string
-            instanceTypes:
-              items:
-                type: string
-              type: array
-              x-kubernetes-list-type: set
+            iamNodeRole:
+              type: string
+            instanceType:
+              type: string
             labels:
               additionalProperties:
                 type: string
               type: object
             maxSize:
               format: int64
-              minimum: 100
+              maximum: 100
               type: integer
             minSize:
               format: int64
               minimum: 0
               type: integer
             nodeGroupName:
-              type: string
-            nodeRole:
               type: string
             region:
               description: AWS region to launch node group within, must match the
@@ -1132,9 +1129,9 @@ spec:
               type: string
             remoteAccess:
               type: string
-            sourceSecurityGroups:
-              description: The Amazon EC2 SSH key that provides access for SSH communication
-                with the worker nodes in the managed node group https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html
+            sshSourceSecurityGroups:
+              description: The security groups that are allowed SSH access (port 22)
+                to the worker nodes
               items:
                 type: string
               type: array
@@ -1179,9 +1176,10 @@ spec:
               description: The Kubernetes version to use for your managed nodes
               type: string
           required:
+          - amiType
           - clusterName
+          - iamNodeRole
           - nodeGroupName
-          - nodeRole
           - region
           - subnets
           - use
@@ -1189,11 +1187,29 @@ spec:
         status:
           description: EKSNodeGroupStatus defines the observed state of EKSNodeGroup
           properties:
+            conditions:
+              description: Conditions is the status of the components
+              items:
+                description: Component the state of a component of the resource
+                properties:
+                  detail:
+                    description: Detail is additional details on the error is any
+                    type: string
+                  message:
+                    description: Message is a human readable message on the status
+                      of the component
+                    type: string
+                  name:
+                    description: Name is the name of the component
+                    type: string
+                  status:
+                    description: Status is the status of the component
+                    type: string
+                type: object
+              type: array
             status:
               description: Status provides a overall status
               type: string
-          required:
-          - status
           type: object
       type: object
   version: v1alpha1
