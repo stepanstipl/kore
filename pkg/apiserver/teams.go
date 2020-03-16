@@ -99,7 +99,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	ws.Route(
 		ws.DELETE("/{team}").To(u.deleteTeam).
 			Doc("Used to delete a team from the kore").
-			Filter(filters.NewAuditingFilter(i.Audit, path, "DeleteTeam")).
+			Filter(filters.NewAuditingFilter(i.Audit, path, "RemoveTeam")).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", orgv1.Team{}).
 			Returns(http.StatusNotAcceptable, "Indicates you cannot delete the team for one or more reasons", Error{}).

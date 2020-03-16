@@ -62,8 +62,8 @@ func (e *entryImpl) Do() ([]*model.AuditEvent, error) {
 		Select("q.*").
 		Table("audit_events q")
 
-	if e.filter.HasType() {
-		q = q.Where("q.type = ?", e.filter.GetType())
+	if e.filter.HasVerb() {
+		q = q.Where("q.type = ?", e.filter.GetVerb())
 	}
 	if e.filter.HasTeam() {
 		q = q.Where("q.team = ?", e.filter.GetTeam())

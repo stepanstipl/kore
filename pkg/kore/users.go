@@ -99,10 +99,12 @@ func (h *usersImpl) EnableUser(ctx context.Context, username, email string) erro
 		if isAdmin {
 			logger.Info("enabling the first user in the kore and providing admin access")
 
+			// Add a custom audit for this special operation:
 			h.Audit().Record(ctx,
-				users.Verb(users.AuditUpdate),
+				users.Verb("PUT"),
+				users.Operation("InitialiseFirstUserAsAdmin"),
 				users.User(username),
-			).Event("adding first user as administrator")
+			).Event("InitialiseFirstUserAsAdmin: Adding first user as administrator")
 
 			if err := h.usermgr.Members().AddUser(ctx, username, HubAdminTeam, roles); err != nil {
 				logger.WithError(err).Error("trying to add user to admin team")
@@ -112,10 +114,11 @@ func (h *usersImpl) EnableUser(ctx context.Context, username, email string) erro
 		} else {
 			logger.Info("adding the user into the kore")
 
-			h.Audit().Record(ctx,
-				users.Verb(users.AuditUpdate),
-				users.User(username),
-			).Event("adding a user to the kore")
+			// Moved to generalised auditing filter:
+			// h.Audit().Record(ctx,
+			// 	users.Verb(users.AuditUpdate),
+			// 	users.User(username),
+			// ).Event("adding a user to the kore")
 
 			if err := h.usermgr.Teams().AddUser(ctx, username, HubDefaultTeam, roles); err != nil {
 				logger.WithError(err).Error("trying to add user to default team")

@@ -19,6 +19,7 @@ package apiserver
 import (
 	"net/http"
 
+	"github.com/appvia/kore/pkg/apiserver/filters"
 	"github.com/appvia/kore/pkg/apiserver/types"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/kore/authentication"
@@ -45,8 +46,10 @@ func (u whoImpl) Name() string {
 
 // Register is responsible for registering the webserver
 func (u *whoImpl) Register(i kore.Interface, builder utils.PathBuilder) (*restful.WebService, error) {
+	path := builder.Path("whoami")
+
 	log.WithFields(log.Fields{
-		"path": builder.Path("whoami"),
+		"path": path,
 	}).Info("registering the user webservice with container")
 
 	u.Interface = i
@@ -54,11 +57,12 @@ func (u *whoImpl) Register(i kore.Interface, builder utils.PathBuilder) (*restfu
 	ws := &restful.WebService{}
 	ws.Consumes(restful.MIME_JSON)
 	ws.Produces(restful.MIME_JSON)
-	ws.Path(builder.Path("whoami"))
+	ws.Path(path)
 
 	ws.Route(
 		ws.GET("").To(u.findWho).
 			Doc("Returns information about who the user is and what teams they are a member").
+			Filter(filters.NewAuditingFilter(i.Audit, path, "WhoAmI")).
 			Returns(http.StatusOK, "A list of all the users in the kore", types.WhoAmI{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)

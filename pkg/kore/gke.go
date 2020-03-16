@@ -21,7 +21,6 @@ import (
 
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	"github.com/appvia/kore/pkg/kore/authentication"
-	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/store"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 
@@ -52,7 +51,7 @@ func (h *gkeImpl) Delete(ctx context.Context, name string) error {
 		"name": name,
 		"team": h.team,
 	})
-	user := authentication.MustGetIdentity(ctx)
+	authentication.MustGetIdentity(ctx)
 
 	// @step: retrieve the cluster
 	cluster := &gke.GKE{}
@@ -68,11 +67,12 @@ func (h *gkeImpl) Delete(ctx context.Context, name string) error {
 	}
 
 	if cluster.Namespace != h.team {
-		h.Audit().Record(ctx,
-			users.Resource("GKE"),
-			users.Team(h.team),
-			users.User(user.Username()),
-		).Event("user attempting to delete the cluster from kore")
+		// Moved to generalised auditing filter:
+		// h.Audit().Record(ctx,
+		// 	users.Resource("GKE"),
+		// 	users.Team(h.team),
+		// 	users.User(user.Username()),
+		// ).Event("user attempting to delete the cluster from kore")
 
 		logger.Warn("attempting to delete a cluster from another team")
 
@@ -83,13 +83,14 @@ func (h *gkeImpl) Delete(ctx context.Context, name string) error {
 
 	// @step: check if we have any namespaces allocated to teams
 
-	// @TODO add an audit entry indicating the request to remove the option
-	h.Audit().Record(ctx,
-		users.Resource("GKE"),
-		users.Team(h.team),
-		users.Verb(users.AuditDelete),
-		users.User(user.Username()),
-	).Event("user has deleted the cluster from kore")
+	// Moved to generalised auditing filter
+	// @step add an audit entry indicating the request to remove the option
+	// h.Audit().Record(ctx,
+	// 	users.Resource("GKE"),
+	// 	users.Team(h.team),
+	// 	users.Verb(users.AuditDelete),
+	// 	users.User(user.Username()),
+	// ).Event("user has deleted the cluster from kore")
 
 	// @step: issue the request to remove the cluster
 	return h.Store().Client().Delete(ctx, store.DeleteOptions.From(cluster))
