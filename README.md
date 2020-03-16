@@ -1,4 +1,4 @@
-### **[Architecture](#architecture)** •  **[Getting Started](doc/getting-started.md)** • **[Roadmap](#roadmap)**
+### **[Architecture](#architecture)** •  **[Getting Started](doc/alpha-local-quick-start.md)** • **[Roadmap](#roadmap)**
 
 ![CircleCI](https://img.shields.io/circleci/build/github/appvia/kore/master?style=for-the-badge)
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/appvia/kore?style=for-the-badge)
@@ -27,7 +27,7 @@ See our [Local Quick Start Guide (Alpha)](doc/alpha-local-quick-start.md).
 
 In local mode, Appvia Kore will start the Kubernetes API locally. But, will still need access to a Kubernetes provider to create clusters.
 
-We'll utilise [GKE](https://cloud.google.com/kubernetes-engine) for this. And, we'll help you set it up to work with Appvia Kore. 
+We'll utilise [GKE](https://cloud.google.com/kubernetes-engine) for this. And, we'll help you set it up to work with Appvia Kore.
 
 **Please Note**: Created GKE clusters are for demo purposes only. They're tied to a local environment and will be orphaned once the local Kore instance is stopped.
 
