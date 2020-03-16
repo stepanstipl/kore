@@ -216,7 +216,7 @@ func (c *eksClient) CreateNodeGroup(nodegroup *eksv1alpha1.EKSNodeGroup) (err er
 		Subnets:        aws.StringSlice(nodegroup.Spec.Subnets),
 		RemoteAccess: &eks.RemoteAccessConfig{
 			Ec2SshKey:            aws.String(nodegroup.Spec.EC2SSHKey),
-			SourceSecurityGroups: aws.StringSlice(nodegroup.Spec.SourceSecurityGroups),
+			SourceSecurityGroups: aws.StringSlice(nodegroup.Spec.SSHSourceSecurityGroups),
 		},
 		ScalingConfig: &eks.NodegroupScalingConfig{
 			DesiredSize: aws.Int64(nodegroup.Spec.DesiredSize),
