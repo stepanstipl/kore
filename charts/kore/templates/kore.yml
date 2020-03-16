@@ -52,6 +52,9 @@ spec:
         ports:
           - name: http
             containerPort: 10080
+            {{ if .Values.api.hostPort }}
+            hostPort: {{ .Values.api.hostPort }}
+            {{ end }}
         envFrom:
           - secretRef:
               name: {{ include "kore.name" . }}-mysql
