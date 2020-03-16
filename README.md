@@ -1,4 +1,4 @@
-### **[Architecture](#architecture)** •  **[Getting Started](doc/alpha-local-quick-start.md)** • **[Roadmap](#roadmap)**
+### **[Architecture](#architecture)** •  **[Getting Started](#local-quick-start)** • **[Roadmap](#roadmap)**
 
 ![CircleCI](https://img.shields.io/circleci/build/github/appvia/kore/master?style=for-the-badge)
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/appvia/kore?style=for-the-badge)
