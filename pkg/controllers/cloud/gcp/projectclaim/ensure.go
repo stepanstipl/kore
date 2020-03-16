@@ -913,7 +913,7 @@ func (t ctrl) EnsureDeleteOldestKey(
 		if err != nil {
 			return err
 		}
-		// @note: this is the only way i can see to distingush between user created keys
+		// @note: this is the only way i can see to distinguish between user created keys
 		// the system managed one by gcp
 		if tm.Year() != 9999 {
 			continue
@@ -1012,11 +1012,24 @@ func (t ctrl) EnsureProjectDeleted(
 
 	// @step: we check if the project exists and if not create it
 	resource, found, err := IsProject(ctx, client, project.Name)
+	if err != nil {
+		logger.WithError(err).Error("trying to check for project existence")
+
+		project.Status.Conditions.SetCondition(corev1.Component{
+			Name:    stage,
+			Detail:  err.Error(),
+			Message: "Failed to check for project existence",
+			Status:  corev1.FailureStatus,
+		})
+
+		return err
+	}
 	if !found {
 		logger.Debug("gcp project does not exist, we can skip the rest")
 
 		return nil
 	}
+
 	logger.Info("gcp project exists, deleting it now")
 
 	// @step: create the project in gcp

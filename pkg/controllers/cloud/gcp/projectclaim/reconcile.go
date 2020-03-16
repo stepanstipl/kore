@@ -133,7 +133,7 @@ func (t ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 
 			return reconcile.Result{}, err
 		}
-		// @gaurd check to ensure nothing untowards happens
+		// @guard check to ensure nothing untowards happens
 		if sa == nil {
 			logger.Error("the service account returned was nil")
 

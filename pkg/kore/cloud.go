@@ -18,9 +18,9 @@ package kore
 
 // Cloud returns a collection of cloud providers
 type Cloud interface {
-	// GCP retuns the gcp interface
+	// GCP returns the gcp interface
 	GCP() GCP
-	// GKE returms the GKE interface
+	// GKE returns the GKE interface
 	GKE() GKE
 	// GKECredentials provides access to the gkes credentials
 	GKECredentials() GKECredentials

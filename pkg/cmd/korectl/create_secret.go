@@ -154,9 +154,7 @@ func GetCreateSecretCommand(config *Config) *cli.Command {
 // createSecretFromLiterals creates some secret from a collection of literals
 func createSecretFromLiterals(keypairs []string) (*configv1.Secret, error) {
 	secret := &configv1.Secret{
-		Spec: configv1.SecretSpec{
-			Data: make(map[string]string, 0),
-		},
+		Spec: configv1.SecretSpec{Data: make(map[string]string)},
 	}
 
 	filter := regexp.MustCompile("^[a-zA-Z0-9_]*=.*$")

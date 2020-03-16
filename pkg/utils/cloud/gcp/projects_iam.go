@@ -21,7 +21,6 @@ package gcp
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/appvia/kore/pkg/utils"
 
@@ -35,10 +34,8 @@ func AddBindingsToProjectIAM(
 	bindings []*cloudresourcemanager.Binding,
 	project string) error {
 
-	path := fmt.Sprintf("%s", project)
-
 	// @step: first we have to retrieve the policy
-	policy, err := client.Projects.GetIamPolicy(path, &cloudresourcemanager.GetIamPolicyRequest{}).Context(ctx).Do()
+	policy, err := client.Projects.GetIamPolicy(project, &cloudresourcemanager.GetIamPolicyRequest{}).Context(ctx).Do()
 	if err != nil {
 		return err
 	}
@@ -49,7 +46,7 @@ func AddBindingsToProjectIAM(
 	}
 
 	// @step: update the policy
-	if _, err := client.Projects.SetIamPolicy(path, &cloudresourcemanager.SetIamPolicyRequest{
+	if _, err := client.Projects.SetIamPolicy(project, &cloudresourcemanager.SetIamPolicyRequest{
 		Policy: policy,
 	}).Context(ctx).Do(); err != nil {
 		return err
