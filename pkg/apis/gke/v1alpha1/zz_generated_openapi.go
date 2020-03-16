@@ -155,7 +155,7 @@ func schema_pkg_apis_gke_v1alpha1_GKECredentialsSpec(ref common.ReferenceCallbac
 						},
 					},
 				},
-				Required: []string{"account", "project", "region"},
+				Required: []string{"account", "project"},
 			},
 		},
 	}
@@ -303,6 +303,13 @@ func schema_pkg_apis_gke_v1alpha1_GKESpec(ref common.ReferenceCallback) common.O
 							Format:      "",
 						},
 					},
+					"region": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Region is the gcp region you want the cluster to reside",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"clusterIPV4Cidr": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ClusterIPV4Cidr is an optional network CIDR which is used to place the pod network on",
@@ -326,14 +333,14 @@ func schema_pkg_apis_gke_v1alpha1_GKESpec(ref common.ReferenceCallback) common.O
 					},
 					"enableAutoupgrade": {
 						SchemaProps: spec.SchemaProps{
-							Description: "EnableAutoUpgrade indicates if the cluster should be configured with autograding enabled; meaning both nodes are masters are autoscated scheduled to upgrade during your maintenance window.",
+							Description: "EnableAutoUpgrade indicates if the cluster should be configured with autograding enabled; meaning both nodes are masters are autoscaled scheduled to upgrade during your maintenance window.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
 					"enableHorizontalPodAutoscaler": {
 						SchemaProps: spec.SchemaProps{
-							Description: "EnableHorizontalPodAutoscaler indicates if the cluster is configured with the horizontal pod autoscaler addon. This automatically adjusts the cpu and memory resources of pods in accordances with their demand. You should ensure you use PodDisruptionBudgets if this is enabled.",
+							Description: "EnableHorizontalPodAutoscaler indicates if the cluster is configured with the horizontal pod autoscaler addon. This automatically adjusts the cpu and memory resources of pods in accordance with their demand. You should ensure you use PodDisruptionBudgets if this is enabled.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
@@ -354,7 +361,7 @@ func schema_pkg_apis_gke_v1alpha1_GKESpec(ref common.ReferenceCallback) common.O
 					},
 					"enableShieldedNodes": {
 						SchemaProps: spec.SchemaProps{
-							Description: "EnableSheildedNodes indicates we should enable the sheilds nodes options in GKE. This protects against a variety of attacks by hardening the underlying GKE node against rootkits and bootkits.",
+							Description: "EnableShieldedNodes indicates we should enable the shielded nodes options in GKE. This protects against a variety of attacks by hardening the underlying GKE node against rootkits and bootkits.",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},
