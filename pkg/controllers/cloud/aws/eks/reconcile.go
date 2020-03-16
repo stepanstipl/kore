@@ -28,7 +28,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-// ReconcileCredentials ensure the cluste has it's configuration
+// ReconcileCredentials ensure the cluster has it's configuration
 func (t eksCtrl) ReconcileCredentials(request reconcile.Request) (reconcile.Result, error) {
 	logger := log.WithFields(log.Fields{
 		"name":      request.NamespacedName.Name,

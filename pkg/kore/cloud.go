@@ -18,6 +18,8 @@ package kore
 
 // Cloud returns a collection of cloud providers
 type Cloud interface {
+	// GCP retuns the gcp interface
+	GCP() GCP
 	// GKE returms the GKE interface
 	GKE() GKE
 	// GKECredentials provides access to the gkes credentials
@@ -28,6 +30,11 @@ type cloudImpl struct {
 	*hubImpl
 	// team is the requesting team
 	team string
+}
+
+// GCP returns the gcp interface
+func (c *cloudImpl) GCP() GCP {
+	return &gcpImpl{cloudImpl: c, team: c.team}
 }
 
 // GKE returns a gke interface
