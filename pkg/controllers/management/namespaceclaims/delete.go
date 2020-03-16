@@ -57,6 +57,13 @@ func (a *nsCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 	result, err := func() (reconcile.Result, error) {
 		logger.Debug("deleting the namespaceclaim from the cluster")
 
+		// @step: update the status of the resource
+		if resource.Status.Status != corev1.DeleteStatus {
+			resource.Status.Status = corev1.DeleteStatus
+
+			return reconcile.Result{Requeue: true}, nil
+		}
+
 		// @step: create a client from the cluster secret
 		client, err := controllers.CreateClientFromSecret(context.Background(), a.mgr.GetClient(),
 			resource.Spec.Cluster.Namespace, resource.Spec.Cluster.Name)
@@ -64,13 +71,6 @@ func (a *nsCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 			logger.WithError(err).Error("trying to create kubernetes client from secret")
 
 			return reconcile.Result{}, err
-		}
-
-		// @step: update the status of the resource
-		if resource.Status.Status != corev1.DeleteStatus {
-			resource.Status.Status = corev1.DeleteStatus
-
-			return reconcile.Result{Requeue: true}, nil
 		}
 
 		// @step: delete the namespace
@@ -116,5 +116,5 @@ func (a *nsCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	return reconcile.Result{}, nil
+	return result, err
 }

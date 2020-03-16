@@ -154,7 +154,8 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			}}
 
 			return reconcile.Result{RequeueAfter: 3 * time.Minute}, nil
-		case core.SuccessStatus:
+
+		case core.SuccessStatus, core.DeleteStatus:
 		default:
 			resource.Status.Status = core.PendingStatus
 			resource.Status.Conditions = []core.Condition{{
@@ -162,7 +163,7 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 				Message: "Cluster " + resource.Spec.Cluster.Name + " is in a failed state",
 			}}
 
-			return reconcile.Result{RequeueAfter: 3 * time.Minute}, nil
+			return reconcile.Result{RequeueAfter: 2 * time.Minute}, nil
 		}
 
 		// @step: create credentials for the cluster
