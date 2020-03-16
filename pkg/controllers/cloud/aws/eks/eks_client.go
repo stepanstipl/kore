@@ -208,10 +208,10 @@ func (c *eksClient) CreateNodeGroup(nodegroup *eksv1alpha1.EKSNodeGroup) (err er
 	_, err = c.svc.CreateNodegroup(&eks.CreateNodegroupInput{
 		AmiType:        aws.String(nodegroup.Spec.AMIType),
 		ClusterName:    aws.String(nodegroup.Spec.ClusterName),
-		NodeRole:       aws.String(nodegroup.Spec.NodeRole),
+		NodeRole:       aws.String(nodegroup.Spec.IamNodeRole),
 		ReleaseVersion: aws.String(nodegroup.Spec.ReleaseVersion),
 		DiskSize:       aws.Int64(nodegroup.Spec.DiskSize),
-		InstanceTypes:  aws.StringSlice(nodegroup.Spec.InstanceTypes),
+		InstanceTypes:  aws.StringSlice([]string{nodegroup.Spec.InstanceType}),
 		NodegroupName:  aws.String(nodegroup.Spec.NodeGroupName),
 		Subnets:        aws.StringSlice(nodegroup.Spec.Subnets),
 		RemoteAccess: &eks.RemoteAccessConfig{

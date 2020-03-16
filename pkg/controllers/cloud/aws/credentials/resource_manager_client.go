@@ -33,19 +33,10 @@ func NewClient(credentials *eks.EKSCredentials) (*awsClient, error) {
 		credentials: credentials,
 	}
 
-	// Example from GKE credentials...
-	/*
-		options := []option.ClientOption{option.WithCredentialsJSON([]byte(credentials.Spec.Account))}
-
-		crm, err := resourcemanager.NewService(context.Background(), options...)
-		if err != nil {
-			return nil, err
-		}
-	*/
 	return awsClient, nil
 }
 
-// HasRequiredPermissions tests whether a serviceaccount has the required permissions for cluster manager
+// HasRequiredPermissions tests whether the IAM roles are correct for creating a cluster
 func (c *awsClient) HasRequiredPermissions() (bool, error) {
 	// TODO work out AWS equivalent of IAM API verification
 	return true, nil

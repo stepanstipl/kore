@@ -33,7 +33,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-// SyncPeriod is the time between resyncs of gkecredentials resources
+// SyncPeriod is the time between resyncs of aws credentials resources
 const SyncPeriod = 3 * time.Hour
 
 type awsCtrl struct {

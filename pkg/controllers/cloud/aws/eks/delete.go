@@ -30,7 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-// Delete is responsible for deleting the gke cluster
+// Delete is responsible for deleting the aws eks cluster
 func (t *eksCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 	ctx := context.Background()
 
