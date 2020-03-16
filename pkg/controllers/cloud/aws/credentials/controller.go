@@ -84,7 +84,7 @@ func (t *awsCtrl) Run(ctx context.Context, cfg *rest.Config, hubi kore.Interface
 		return err
 	}
 
-	if err := ctrl.Watch(&source.Kind{Type: &eks.AWSCredentials{}},
+	if err := ctrl.Watch(&source.Kind{Type: &eks.EKSCredentials{}},
 		&handler.EnqueueRequestForObject{},
 		&predicate.GenerationChangedPredicate{}); err != nil {
 
