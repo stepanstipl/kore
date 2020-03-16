@@ -51,12 +51,12 @@ type EKSNodeGroupSpec struct {
 	// AWS region to launch node group within, must match the region of the cluster
 	Region string `json:"region"`
 	// The security groups that are allowed SSH access (port 22) to the worker nodes
+	// +listType=set
 	SSHSourceSecurityGroups []string `json:"sshSourceSecurityGroups,omitempty"`
 	// The Amazon EC2 SSH key that provides access for SSH communication with
 	// the worker nodes in the managed node group
 	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html
-	// +listType=set
-	EC2SSHKey string `json:"ec2SSHKey,omitempty"`
+	EC2SSHKey string `json:"eC2SSHKey,omitempty"`
 	// Use is a reference to an AWSCredentials object to use for authentication
 	// +kubebuilder:validation:Required
 	// +k8s:openapi-gen=false
