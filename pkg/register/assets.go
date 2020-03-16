@@ -4043,6 +4043,10 @@ spec:
                 deployed to the cluster; this provides a more feature rich routing
                 and instrumentation.
               type: boolean
+            enablePrivateEndpoint:
+              description: EnablePrivateEndpoint indicates whether the Kubernetes
+                API should only be accessible from internal IP addresses
+              type: boolean
             enablePrivateNetwork:
               description: EnablePrivateNetwork indicates if compute nodes should
                 have external ip addresses or use private networking and a cloud-nat
