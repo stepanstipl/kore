@@ -1,0 +1,34 @@
+---
+apiVersion: gcp.compute.kore.appvia.io/v1alpha1
+kind: GCPAdminProject
+metadata:
+  name: gcp
+spec:
+  parentType: organization
+  parentID: "1029156349491"
+  billingAccount: 018ACC-AD48A4-263E6C
+  serviceAccount: kore
+  credentialsRef:
+    name: gcp
+    namespace: kore-admin
+---
+# We then allocate the resource to all users in kore
+apiVersion: config.kore.appvia.io/v1
+kind: Allocation
+metadata:
+  name: gcp
+spec:
+  # The name of the allocation
+  name: GCP Credentials
+  # A short description provided for the UI
+  summary: Provide GKE credentials for the GCP projects
+  # We reference the above resource when allocating to one
+  # or more teams
+  resource:
+    group: gcp.compute.kore.appvia.io
+    version: v1alpha1
+    kind: GCPAdminProject
+    namespace: kore-admin
+    name: gcp
+  teams:
+    - "*"

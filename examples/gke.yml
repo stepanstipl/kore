@@ -17,6 +17,7 @@ spec:
       cidr: 0.0.0.0/0
   network: default
   subnetwork: default
+  region: europe-west2
   enableAutorepair: true
   enableAutoscaler: true
   enableAutoUpgrade: false
