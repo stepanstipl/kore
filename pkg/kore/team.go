@@ -41,6 +41,8 @@ type Team interface {
 	Members() TeamMembers
 	// NamespaceClaims returns the the interface
 	NamespaceClaims() NamespaceClaims
+	// Secrets returns the secret interface
+	Secrets() Secrets
 }
 
 // tmImpl is a team interface
@@ -83,6 +85,14 @@ func (t *tmImpl) Members() TeamMembers {
 // NamespaceClaims returns a namespace claim interface
 func (t *tmImpl) NamespaceClaims() NamespaceClaims {
 	return &nsImpl{
+		hubImpl: t.hubImpl,
+		team:    t.team,
+	}
+}
+
+// Secrets returns a secrets interface
+func (t *tmImpl) Secrets() Secrets {
+	return &secretImpl{
 		hubImpl: t.hubImpl,
 		team:    t.team,
 	}

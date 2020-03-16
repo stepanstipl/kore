@@ -284,6 +284,44 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
+	// Secrets is used to provision a secret in the team
+
+	ws.Route(
+		ws.GET("/{team}/secrets").To(u.findTeamSecrets).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Doc("Used to return all the secrets within the team").
+			Returns(http.StatusOK, "Contains the definition for the resource", configv1.Secret{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.GET("/{team}/secrets/{name}").To(u.findTeamSecret).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the secert in the name")).
+			Doc("Used to retrieve the secret from the team").
+			Returns(http.StatusOK, "Contains the definition for the resource", configv1.Secret{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.PUT("/{team}/secrets/{name}").To(u.updateTeamSecret).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of secret you are creating / updating")).
+			Doc("Used to update the secret in the team").
+			Reads(configv1.Secret{}, "The definition for the secret you are creating or updating").
+			Returns(http.StatusOK, "Contains updated definition of the secret", configv1.Secret{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.DELETE("/{team}/secrets/{name}").To(u.deleteTeamSecret).
+			Param(ws.PathParameter("name", "Is name the of the secret you are acting upon")).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Doc("Used to delete the secret from team").
+			Returns(http.StatusOK, "Contains the former definition of the secret", configv1.Secret{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
 	// Kubernetes Credentials
 
 	ws.Route(
