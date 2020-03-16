@@ -37,7 +37,7 @@ import (
 
 type bootImpl struct {
 	// credentials are the gke credentials
-	credentials *gke.GKECredentials
+	credentials *credentials
 	// cluster is the gke cluster
 	cluster *gke.GKE
 	// client is the k8s client
@@ -45,10 +45,10 @@ type bootImpl struct {
 }
 
 // NewBootstrapClient returns a bootstrap client
-func NewBootstrapClient(cluster *gke.GKE, credentials *gke.GKECredentials) (*bootImpl, error) {
+func NewBootstrapClient(cluster *gke.GKE, credentials *credentials) (*bootImpl, error) {
 	// @step: retrieve the credentials for the cluster
 	client, err := kube.NewGKEClient(
-		credentials.Spec.Account,
+		credentials.key,
 		cluster.Status.Endpoint,
 	)
 	if err != nil {

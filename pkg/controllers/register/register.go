@@ -19,8 +19,11 @@ package register
 import (
 	// importing the cloud providers
 	_ "github.com/appvia/kore/pkg/controllers/cloud/aws/eks"
+	_ "github.com/appvia/kore/pkg/controllers/cloud/gcp/gcpadminproject"
+
 	_ "github.com/appvia/kore/pkg/controllers/cloud/gcp/gke"
 	_ "github.com/appvia/kore/pkg/controllers/cloud/gcp/gkecredentials"
+	_ "github.com/appvia/kore/pkg/controllers/cloud/gcp/projectclaim"
 
 	// importing the management controller
 	_ "github.com/appvia/kore/pkg/controllers/management/clusterbindings"
@@ -29,6 +32,9 @@ import (
 	_ "github.com/appvia/kore/pkg/controllers/management/kubernetes"
 	_ "github.com/appvia/kore/pkg/controllers/management/namespaceclaims"
 	_ "github.com/appvia/kore/pkg/controllers/management/podpolicy"
+
+	// import secret controllers
+	_ "github.com/appvia/kore/pkg/controllers/secrets/generic"
 
 	// importing the user controllers
 	_ "github.com/appvia/kore/pkg/controllers/user/allocations"
