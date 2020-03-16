@@ -38,6 +38,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
+// Document defines a rest endpoint
 type Document struct {
 	// Endpoint is the rest storage endpoint
 	Endpoint string
@@ -286,7 +287,7 @@ func GetCaches(config *Config) error {
 	return nil
 }
 
-//
+// GetOrCreateKubeConfig is used to retrieve the kubeconfig path
 func GetOrCreateKubeConfig() (string, error) {
 	path := func() string {
 		p := os.ExpandEnv(os.Getenv("$KUBECONFIG"))

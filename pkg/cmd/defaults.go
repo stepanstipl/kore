@@ -24,5 +24,5 @@ import (
 func DefaultLogging() {
 	log.SetFormatter(&log.JSONFormatter{})
 	log.SetLevel(log.InfoLevel)
-	log.SetReportCaller(true)
+	log.SetReportCaller(false)
 }

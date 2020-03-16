@@ -28,15 +28,15 @@ type resourceConfig struct {
 func getResourceConfig(name string) resourceConfig {
 	if config, ok := resourceConfigs[inflect.Singularize(name)]; ok {
 		return config
-	} else {
-		// TODO: we don't have a way to validate whether a resource exists yet, so we generate a team resource configuration dynamically
-		return resourceConfig{
-			Name:   name,
-			IsTeam: true,
-			Columns: []string{
-				Column("Name", ".metadata.name"),
-			},
-		}
+	}
+
+	// TODO: we don't have a way to validate whether a resource exists yet, so we generate a team resource configuration dynamically
+	return resourceConfig{
+		Name:   name,
+		IsTeam: true,
+		Columns: []string{
+			Column("Name", ".metadata.name"),
+		},
 	}
 }
 
@@ -47,6 +47,7 @@ var resourceConfigs = map[string]resourceConfig{
 		Columns: []string{
 			Column("Name", ".metadata.name"),
 			Column("Description", ".spec.summary"),
+			Column("Owned By", ".metadata.namespace"),
 			Column("Resource", ".spec.resource.kind"),
 		},
 	},
@@ -101,6 +102,16 @@ var resourceConfigs = map[string]resourceConfig{
 			Column("Resource", ".metadata.name"),
 			Column("Description", ".spec.description"),
 			Column("Summary", ".spec.summary"),
+		},
+	},
+	"secret": {
+		Name:   "secrets",
+		IsTeam: true,
+		Columns: []string{
+			Column("Name", ".metadata.name"),
+			Column("Type", ".spec.type"),
+			Column("Description", ".spec.description"),
+			Column("Verified", ".status.verified"),
 		},
 	},
 	"team": {
