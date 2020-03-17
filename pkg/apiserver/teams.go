@@ -512,7 +512,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	)
 
 	ws.Route(
-		ws.PUT("/{team}/gekscredentials/{name}").To(u.updateEKSCredentails).
+		ws.PUT("/{team}/ekscredentials/{name}").To(u.updateEKSCredentails).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the EKS cluster you are acting upon")).
 			Doc("Is used to provision or update a EKS cluster in the kore").

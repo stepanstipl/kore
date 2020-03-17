@@ -37,12 +37,12 @@ type EKSSpec struct {
 	// +kubebuilder:validation:MinLength=3
 	// +kubebuilder:validation:Required
 	Version string `json:"version,omitempty"`
-	// SubnetIds is a list of subnet IDs
-	// +kubebuilder:validation:Required
-	Region string `json:"region"`
-	// AWS region to launch this cluster within
+	// Region is the AWS region to launch this cluster within
 	// +kubebuilder:validation:Required
 	// +listType=set
+	Region string `json:"region"`
+	// SubnetIds is a list of subnet IDs
+	// +kubebuilder:validation:Required
 	SubnetIDs []string `json:"subnetIDs"`
 	// SecurityGroupIds is a list of security group IDs
 	// +kubebuilder:validation:Required
