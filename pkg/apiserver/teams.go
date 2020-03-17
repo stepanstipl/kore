@@ -507,7 +507,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
 			Doc("Is the used tor return a list of Google Container Engine clusters which thhe team has access").
-			Returns(http.StatusOK, "Contains the former team definition from the kore", gke.GKECredentials{}).
+			Returns(http.StatusOK, "Contains the former team definition from the kore", eks.EKSCredentials{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
