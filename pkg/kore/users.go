@@ -114,12 +114,6 @@ func (h *usersImpl) EnableUser(ctx context.Context, username, email string) erro
 		} else {
 			logger.Info("adding the user into the kore")
 
-			// Moved to generalised auditing filter:
-			// h.Audit().Record(ctx,
-			// 	users.Verb(users.AuditUpdate),
-			// 	users.User(username),
-			// ).Event("adding a user to the kore")
-
 			if err := h.usermgr.Teams().AddUser(ctx, username, HubDefaultTeam, roles); err != nil {
 				logger.WithError(err).Error("trying to add user to default team")
 

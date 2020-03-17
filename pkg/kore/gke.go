@@ -67,13 +67,6 @@ func (h *gkeImpl) Delete(ctx context.Context, name string) error {
 	}
 
 	if cluster.Namespace != h.team {
-		// Moved to generalised auditing filter:
-		// h.Audit().Record(ctx,
-		// 	users.Resource("GKE"),
-		// 	users.Team(h.team),
-		// 	users.User(user.Username()),
-		// ).Event("user attempting to delete the cluster from kore")
-
 		logger.Warn("attempting to delete a cluster from another team")
 
 		return NewErrNotAllowed("you cannot delete a cluster from another team")
@@ -82,15 +75,6 @@ func (h *gkeImpl) Delete(ctx context.Context, name string) error {
 	// @TODO check the user us an admin in the team
 
 	// @step: check if we have any namespaces allocated to teams
-
-	// Moved to generalised auditing filter
-	// @step add an audit entry indicating the request to remove the option
-	// h.Audit().Record(ctx,
-	// 	users.Resource("GKE"),
-	// 	users.Team(h.team),
-	// 	users.Verb(users.AuditDelete),
-	// 	users.User(user.Username()),
-	// ).Event("user has deleted the cluster from kore")
 
 	// @step: issue the request to remove the cluster
 	return h.Store().Client().Delete(ctx, store.DeleteOptions.From(cluster))

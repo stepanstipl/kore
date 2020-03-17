@@ -209,15 +209,6 @@ func (t *teamsImpl) Update(ctx context.Context, team *orgv1.Team) (*orgv1.Team, 
 		}
 	}
 
-	// Moved to generalised auditing filter:
-	// @step: add the entry into the audit
-	// t.Audit().Record(ctx,
-	// 	users.Resource(team.Name),
-	// 	users.ResourceURI(string(team.UID)),
-	// 	users.Verb(users.AuditUpdate),
-	// 	users.User(user.Username()),
-	// ).Event("team has been update or created in the kore")
-
 	return DefaultConvertor.FromTeamModel(model), nil
 }
 

@@ -75,15 +75,6 @@ func (c *clsImpl) Delete(ctx context.Context, name string) (*clustersv1.Kubernet
 		}
 	}
 
-	// Moved to generalised audit filter:
-	// c.Audit().Record(ctx,
-	// 	users.Resource(name),
-	// 	users.ResourceURI(string(original.GetUID())),
-	// 	users.Team(c.team),
-	// 	users.Verb(users.AuditDelete),
-	// 	users.User(user.Username()),
-	// ).Event("user has deleted the cluster from the team")
-
 	return original, c.Store().Client().Delete(ctx, store.DeleteOptions.From(original))
 }
 
@@ -128,16 +119,6 @@ func (c *clsImpl) Update(ctx context.Context, cluster *clustersv1.Kubernetes) er
 		return validation.NewErrValidation().
 			WithFieldError("cluster.name", validation.MaxLength, "Cluster name must be 40 characters or less")
 	}
-
-	// Moved to generalised auditing filter.
-	// @step add an entity into the audit log
-	// c.Audit().Record(ctx,
-	// 	users.Resource(c.team+"/"+cluster.Name),
-	// 	users.ResourceURI(string(cluster.UID)),
-	// 	users.Team(c.team),
-	// 	users.Verb(users.AuditUpdate),
-	// 	users.User(user.Username()),
-	// ).Event("user has updated the kubernetes cluster")
 
 	return c.Store().Client().Update(ctx,
 		store.UpdateOptions.To(cluster),
