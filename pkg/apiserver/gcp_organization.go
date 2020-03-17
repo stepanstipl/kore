@@ -19,17 +19,19 @@ package apiserver
 import (
 	"net/http"
 
-	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	gcp "github.com/appvia/kore/pkg/apis/gcp/v1alpha1"
 
 	restful "github.com/emicklei/go-restful"
 )
 
-// findKubernetesCredentials returns a list of credential claims
-func (u teamHandler) findKubernetesCredentials(req *restful.Request, resp *restful.Response) {
+// findOrganizations returns a list of credential claims
+func (u teamHandler) findOrganizations(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		team := req.PathParameter("team")
 
-		list, err := u.Teams().Team(team).KubernetesCredentials().List(req.Request.Context())
+		list, err := u.Teams().Team(team).
+			Cloud().GCP().Organizations().
+			List(req.Request.Context())
 		if err != nil {
 			return err
 		}
@@ -38,13 +40,15 @@ func (u teamHandler) findKubernetesCredentials(req *restful.Request, resp *restf
 	})
 }
 
-// findKubernetesCredentials returns a specific credential
-func (u teamHandler) findKubernetesCredential(req *restful.Request, resp *restful.Response) {
+// findOrganizations returns a specific credential
+func (u teamHandler) findOrganization(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		team := req.PathParameter("team")
 		name := req.PathParameter("name")
 
-		n, err := u.Teams().Team(team).KubernetesCredentials().Get(req.Request.Context(), name)
+		n, err := u.Teams().Team(team).
+			Cloud().GCP().Organizations().
+			Get(req.Request.Context(), name)
 		if err != nil {
 			return err
 		}
@@ -53,17 +57,20 @@ func (u teamHandler) findKubernetesCredential(req *restful.Request, resp *restfu
 	})
 }
 
-// updateKubernetesCredential is used to update an credential claim for a team
-func (u teamHandler) updateKubernetesCredential(req *restful.Request, resp *restful.Response) {
+// updateOrganization is used to update an credential claim for a team
+func (u teamHandler) updateOrganization(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		team := req.PathParameter("team")
 
-		claim := &clustersv1.KubernetesCredentials{}
+		claim := &gcp.Organization{}
 		if err := req.ReadEntity(claim); err != nil {
 			return err
 		}
 
-		n, err := u.Teams().Team(team).KubernetesCredentials().Update(req.Request.Context(), claim)
+		n, err := u.Teams().Team(team).
+			Cloud().GCP().Organizations().
+			Update(req.Request.Context(), claim)
+
 		if err != nil {
 			return err
 		}
@@ -72,13 +79,16 @@ func (u teamHandler) updateKubernetesCredential(req *restful.Request, resp *rest
 	})
 }
 
-// deleteKubernetesCredential is used to remove a credential from a team cluster
-func (u teamHandler) deleteKubernetesCredential(req *restful.Request, resp *restful.Response) {
+// deleteOrganization is used to remove a credential from a team cluster
+func (u teamHandler) deleteOrganization(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		team := req.PathParameter("team")
 		name := req.PathParameter("name")
 
-		original, err := u.Teams().Team(team).KubernetesCredentials().Delete(req.Request.Context(), name)
+		original, err := u.Teams().Team(team).
+			Cloud().GCP().Organizations().
+			Delete(req.Request.Context(), name)
+
 		if err != nil {
 			return err
 		}

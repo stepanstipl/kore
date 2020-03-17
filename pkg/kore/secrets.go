@@ -131,6 +131,14 @@ func (h *secretImpl) Delete(ctx context.Context, name string) (*configv1.Secret,
 
 // Get return the definition from the api
 func (h *secretImpl) Get(ctx context.Context, name string) (*configv1.Secret, error) {
+	user := authentication.MustGetIdentity(ctx)
+	logger := log.WithFields(log.Fields{
+		"name": name,
+		"team": h.team,
+		"user": user.Username(),
+	})
+	logger.Info("attempting to retrieve the secret from team")
+
 	secret := &configv1.Secret{}
 
 	err := h.Store().Client().Get(ctx,
@@ -142,6 +150,14 @@ func (h *secretImpl) Get(ctx context.Context, name string) (*configv1.Secret, er
 		log.WithError(err).Error("trying to retrieve secret from api")
 
 		return nil, err
+	}
+
+	// @step: check the user have the permissions to retrieve the secret
+	switch secret.Spec.Type {
+	case configv1.KubernetesSecret:
+		if !user.IsGlobalAdmin() {
+			return nil, ErrNotAllowed{message: "permission denied, only global admin are retrieve these secrets"}
+		}
 	}
 
 	return secret, nil

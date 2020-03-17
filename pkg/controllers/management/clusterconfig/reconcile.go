@@ -21,6 +21,7 @@ import (
 	"time"
 
 	clusterv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
@@ -28,7 +29,6 @@ import (
 	core "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -55,11 +55,12 @@ func (t ccCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	// @step: ensure the cluster has a configuration
 	logger.Debug("checking for the cluster credentials secret")
 
-	credentials := &core.Secret{}
-	if err := t.mgr.GetClient().Get(context.Background(), types.NamespacedName{
-		Namespace: cluster.Namespace,
-		Name:      cluster.Name,
-	}, credentials); err != nil {
+	credentials, err := controllers.GetClusterCredentialsSecret(ctx,
+		t.mgr.GetClient(),
+		cluster.Namespace,
+		cluster.Name)
+
+	if err != nil {
 		if !kerrors.IsNotFound(err) {
 			logger.WithError(err).Error("trying retrieve the cluster credentials")
 
@@ -71,7 +72,7 @@ func (t ccCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	}
 
 	// @step: create a kubernetes client for the cluster
-	client, err := kubernetes.NewRuntimeClientFromSecret(credentials)
+	client, err := kubernetes.NewRuntimeClientFromConfigSecret(credentials)
 	if err != nil {
 		logger.WithError(err).Error("trying to create a cluster client")
 
@@ -79,7 +80,7 @@ func (t ccCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	}
 
 	// @step: check if the api is available
-	kc, err := kubernetes.NewClientFromSecret(credentials)
+	kc, err := kubernetes.NewClientFromConfigSecret(credentials)
 	if err != nil {
 		logger.WithError(err).Error("trying to create kubernetes client for cluster")
 

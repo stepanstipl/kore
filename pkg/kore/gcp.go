@@ -19,8 +19,9 @@ package kore
 // GCP is the gke interface
 type GCP interface {
 	// ProjectClaims returns the claims interface
-
+	ProjectClaims() ProjectClaims
 	// Organizations return the organizations interface
+	Organizations() Organizations
 }
 
 type gcpImpl struct {
@@ -29,15 +30,12 @@ type gcpImpl struct {
 	team string
 }
 
-/*
-
 // ProjectClaims is responsible for deleting a gke environment
 func (h *gcpImpl) ProjectClaims() ProjectClaims {
-	return nil
+	return &gcppc{Interface: h.cloudImpl.hubImpl, team: h.team}
 }
 
 // Organizations return the organizations interface
 func (h *gcpImpl) Organizations() Organizations {
-	return nil
+	return &gcppcl{Interface: h.cloudImpl.hubImpl, team: h.team}
 }
-*/

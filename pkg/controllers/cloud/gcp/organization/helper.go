@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package adminproject
+package organization
 
 import (
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"

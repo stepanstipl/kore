@@ -116,8 +116,8 @@ func (t ctrl) EnsureUnclaimed(ctx context.Context, project *gcp.ProjectClaim) er
 }
 
 // EnsureOrganization is responsible for checking and retrieving the gcp org
-func (t ctrl) EnsureOrganization(ctx context.Context, project *gcp.ProjectClaim) (*gcp.GCPAdminProject, error) {
-	org := &gcp.GCPAdminProject{}
+func (t ctrl) EnsureOrganization(ctx context.Context, project *gcp.ProjectClaim) (*gcp.Organization, error) {
+	org := &gcp.Organization{}
 
 	key := types.NamespacedName{
 		Namespace: project.Spec.Organization.Namespace,
@@ -151,7 +151,7 @@ func (t ctrl) EnsureOrganization(ctx context.Context, project *gcp.ProjectClaim)
 }
 
 // EnsureOrganizationCredentials is responsible for retrieving the credentials
-func (t ctrl) EnsureOrganizationCredentials(ctx context.Context, org *gcp.GCPAdminProject, project *gcp.ProjectClaim) (*configv1.Secret, error) {
+func (t ctrl) EnsureOrganizationCredentials(ctx context.Context, org *gcp.Organization, project *gcp.ProjectClaim) (*configv1.Secret, error) {
 	// @TODO we probably shouldn't rely on the parent name here
 	secret := &configv1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -216,7 +216,7 @@ func (t ctrl) EnsureOrganizationCredentials(ctx context.Context, org *gcp.GCPAdm
 // EnsureProject is responsible for ensuring the project is there
 func (t ctrl) EnsureProject(ctx context.Context,
 	credentials *configv1.Secret,
-	org *gcp.GCPAdminProject,
+	org *gcp.Organization,
 	project *gcp.ProjectClaim) error {
 
 	logger := log.WithFields(log.Fields{
@@ -364,7 +364,7 @@ func (t ctrl) EnsureProject(ctx context.Context,
 func (t ctrl) EnsureBilling(
 	ctx context.Context,
 	credentials *configv1.Secret,
-	organization *gcp.GCPAdminProject,
+	organization *gcp.Organization,
 	project *gcp.ProjectClaim) error {
 
 	logger := log.WithFields(log.Fields{
@@ -648,7 +648,7 @@ func (t ctrl) EnsureServiceAccount(ctx context.Context, credentials *configv1.Se
 func (t ctrl) EnsureServiceAccountKey(
 	ctx context.Context,
 	credentials *configv1.Secret,
-	organization *gcp.GCPAdminProject,
+	organization *gcp.Organization,
 	account *iam.ServiceAccount,
 	project *gcp.ProjectClaim) error {
 
@@ -985,7 +985,7 @@ func (t ctrl) EnsureCredentialsDeleted(
 func (t ctrl) EnsureProjectDeleted(
 	ctx context.Context,
 	credentials *configv1.Secret,
-	org *gcp.GCPAdminProject,
+	org *gcp.Organization,
 	project *gcp.ProjectClaim) error {
 
 	logger := log.WithFields(log.Fields{

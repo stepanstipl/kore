@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package adminproject
+package organization
 
 import (
 	"context"
@@ -31,7 +31,7 @@ import (
 // EnsureProject is responsible for ensuring the project exists or is created from the oauth token
 func (t *gcpCtrl) EnsureProject(
 	ctx context.Context,
-	project *gcp.GCPAdminProject) error {
+	project *gcp.Organization) error {
 
 	logger := log.WithFields(log.Fields{
 		"name":      project.Name,
@@ -71,7 +71,7 @@ func (t *gcpCtrl) EnsureProject(
 }
 
 // EnsureCredentials is responsible for checking, creating the credentials
-func (t *gcpCtrl) EnsureCredentials(ctx context.Context, project *gcp.GCPAdminProject) (*configv1.Secret, error) {
+func (t *gcpCtrl) EnsureCredentials(ctx context.Context, project *gcp.Organization) (*configv1.Secret, error) {
 	logger := log.WithFields(log.Fields{
 		"name":      project.Name,
 		"namespace": project.Namespace,
@@ -151,7 +151,7 @@ func (t *gcpCtrl) EnsureCredentials(ctx context.Context, project *gcp.GCPAdminPr
 // EnsureCredentialPermissions is responsible for checking the permissions are correct
 func (t gcpCtrl) EnsureCredentialPermissions(
 	ctx context.Context,
-	project *gcp.GCPAdminProject,
+	project *gcp.Organization,
 	credentials *configv1.Secret) error {
 
 	logger := log.WithFields(log.Fields{

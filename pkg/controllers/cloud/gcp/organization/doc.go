@@ -17,5 +17,5 @@
  * along with kore.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// Package adminproject is used reconcile the admin project
-package adminproject
+// Package organization is used reconcile the admin project
+package organization

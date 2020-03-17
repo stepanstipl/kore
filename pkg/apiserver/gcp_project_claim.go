@@ -16,13 +16,20 @@
 
 package apiserver
 
-/*
+import (
+	"net/http"
+
+	gcp "github.com/appvia/kore/pkg/apis/gcp/v1alpha1"
+
+	restful "github.com/emicklei/go-restful"
+)
+
 // findProjectClaims returns a list of credential claims
 func (u teamHandler) findProjectClaims(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		team := req.PathParameter("team")
 
-		list, err := u.Teams().Team(team).Cloud().GCP().Projects().List(req.Request.Context())
+		list, err := u.Teams().Team(team).Cloud().GCP().ProjectClaims().List(req.Request.Context())
 		if err != nil {
 			return err
 		}
@@ -37,7 +44,7 @@ func (u teamHandler) findProjectClaim(req *restful.Request, resp *restful.Respon
 		team := req.PathParameter("team")
 		name := req.PathParameter("name")
 
-		n, err := u.Teams().Team(team).Cloud().GCP().Projects().Get(req.Request.Context(), name)
+		n, err := u.Teams().Team(team).Cloud().GCP().ProjectClaims().Get(req.Request.Context(), name)
 		if err != nil {
 			return err
 		}
@@ -51,12 +58,12 @@ func (u teamHandler) updateProjectClaim(req *restful.Request, resp *restful.Resp
 	handleErrors(req, resp, func() error {
 		team := req.PathParameter("team")
 
-		claim := &gcp.ProjectClaims{}
+		claim := &gcp.ProjectClaim{}
 		if err := req.ReadEntity(claim); err != nil {
 			return err
 		}
 
-		n, err := u.Teams().Team(team).Cloud().GCP().Projects().Update(req.Request.Context(), claim)
+		n, err := u.Teams().Team(team).Cloud().GCP().ProjectClaims().Update(req.Request.Context(), claim)
 		if err != nil {
 			return err
 		}
@@ -71,7 +78,7 @@ func (u teamHandler) deleteProjectClaim(req *restful.Request, resp *restful.Resp
 		team := req.PathParameter("team")
 		name := req.PathParameter("name")
 
-		original, err := u.Teams().Team(team).ProjectClaims().Delete(req.Request.Context(), name)
+		original, err := u.Teams().Team(team).Cloud().GCP().ProjectClaims().Delete(req.Request.Context(), name)
 		if err != nil {
 			return err
 		}
@@ -79,4 +86,3 @@ func (u teamHandler) deleteProjectClaim(req *restful.Request, resp *restful.Resp
 		return resp.WriteHeaderAndEntity(http.StatusOK, original)
 	})
 }
-*/

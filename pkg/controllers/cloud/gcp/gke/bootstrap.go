@@ -20,8 +20,8 @@ import (
 	"context"
 	"time"
 
+	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
-	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 	kube "github.com/appvia/kore/pkg/utils/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -44,8 +44,8 @@ type bootImpl struct {
 	client k8s.Interface
 }
 
-// NewBootstrapClient returns a bootstrap client
-func NewBootstrapClient(cluster *gke.GKE, credentials *credentials) (*bootImpl, error) {
+// newBootstrapClient returns a bootstrap client
+func newBootstrapClient(cluster *gke.GKE, credentials *credentials) (*bootImpl, error) {
 	// @step: retrieve the credentials for the cluster
 	client, err := kube.NewGKEClient(
 		credentials.key,
@@ -92,28 +92,36 @@ func (p *bootImpl) Bootstrap(ctx context.Context, client client.Client) error {
 	}
 
 	logger.Info("creating the kore-admin service account for cluster")
+
 	// @step: create or retrieve the kore-sysadmin secret token
-	secret, err := p.CreateSysadminCredential()
+	creds, err := p.CreateSysadminCredential()
 	if err != nil {
 		logger.WithError(err).Error("creating kore admin service account")
 
 		return err
 	}
 
-	_, err = kubernetes.CreateOrUpdateSecret(ctx, client, &corev1.Secret{
+	secret := &configv1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: configv1.GroupVersion.String(),
+			Kind:       "Secret",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      p.cluster.Name,
 			Namespace: p.cluster.Namespace,
-			Labels: map[string]string{
-				kore.Label("type"): "kubernetescredentials",
+		},
+		Spec: configv1.SecretSpec{
+			Type:        configv1.KubernetesSecret,
+			Description: "Kubernetes Cluster credentials for " + p.cluster.Name,
+			Data: map[string]string{
+				"ca.crt":   string(creds.Data["ca.crt"]),
+				"endpoint": p.cluster.Status.Endpoint,
+				"token":    string(creds.Data["token"]),
 			},
 		},
-		Data: map[string][]byte{
-			"ca.crt":   secret.Data["ca.crt"],
-			"endpoint": []byte(p.cluster.Status.Endpoint),
-			"token":    secret.Data["token"],
-		},
-	})
+	}
+
+	_, err = kubernetes.CreateOrUpdate(ctx, client, secret.Encode())
 	if err != nil {
 		logger.WithError(err).Error("trying to create sysadmin token")
 

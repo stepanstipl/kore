@@ -29,20 +29,20 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/appvia/kore/pkg/apis/gcp/v1alpha1.GCPAdminProject":       schema_pkg_apis_gcp_v1alpha1_GCPAdminProject(ref),
-		"github.com/appvia/kore/pkg/apis/gcp/v1alpha1.GCPAdminProjectSpec":   schema_pkg_apis_gcp_v1alpha1_GCPAdminProjectSpec(ref),
-		"github.com/appvia/kore/pkg/apis/gcp/v1alpha1.GCPAdminProjectStatus": schema_pkg_apis_gcp_v1alpha1_GCPAdminProjectStatus(ref),
-		"github.com/appvia/kore/pkg/apis/gcp/v1alpha1.ProjectClaim":          schema_pkg_apis_gcp_v1alpha1_ProjectClaim(ref),
-		"github.com/appvia/kore/pkg/apis/gcp/v1alpha1.ProjectClaimSpec":      schema_pkg_apis_gcp_v1alpha1_ProjectClaimSpec(ref),
-		"github.com/appvia/kore/pkg/apis/gcp/v1alpha1.ProjectClaimStatus":    schema_pkg_apis_gcp_v1alpha1_ProjectClaimStatus(ref),
+		"github.com/appvia/kore/pkg/apis/gcp/v1alpha1.Organization":       schema_pkg_apis_gcp_v1alpha1_Organization(ref),
+		"github.com/appvia/kore/pkg/apis/gcp/v1alpha1.OrganizationSpec":   schema_pkg_apis_gcp_v1alpha1_OrganizationSpec(ref),
+		"github.com/appvia/kore/pkg/apis/gcp/v1alpha1.OrganizationStatus": schema_pkg_apis_gcp_v1alpha1_OrganizationStatus(ref),
+		"github.com/appvia/kore/pkg/apis/gcp/v1alpha1.ProjectClaim":       schema_pkg_apis_gcp_v1alpha1_ProjectClaim(ref),
+		"github.com/appvia/kore/pkg/apis/gcp/v1alpha1.ProjectClaimSpec":   schema_pkg_apis_gcp_v1alpha1_ProjectClaimSpec(ref),
+		"github.com/appvia/kore/pkg/apis/gcp/v1alpha1.ProjectClaimStatus": schema_pkg_apis_gcp_v1alpha1_ProjectClaimStatus(ref),
 	}
 }
 
-func schema_pkg_apis_gcp_v1alpha1_GCPAdminProject(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_gcp_v1alpha1_Organization(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "GCPAdminProject is the Schema for the gcpadminprojects API",
+				Description: "Organization is the Schema for the organization API",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -66,27 +66,27 @@ func schema_pkg_apis_gcp_v1alpha1_GCPAdminProject(ref common.ReferenceCallback) 
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/appvia/kore/pkg/apis/gcp/v1alpha1.GCPAdminProjectSpec"),
+							Ref: ref("github.com/appvia/kore/pkg/apis/gcp/v1alpha1.OrganizationSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/appvia/kore/pkg/apis/gcp/v1alpha1.GCPAdminProjectStatus"),
+							Ref: ref("github.com/appvia/kore/pkg/apis/gcp/v1alpha1.OrganizationStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/appvia/kore/pkg/apis/gcp/v1alpha1.GCPAdminProjectSpec", "github.com/appvia/kore/pkg/apis/gcp/v1alpha1.GCPAdminProjectStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/appvia/kore/pkg/apis/gcp/v1alpha1.OrganizationSpec", "github.com/appvia/kore/pkg/apis/gcp/v1alpha1.OrganizationStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
-func schema_pkg_apis_gcp_v1alpha1_GCPAdminProjectSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_gcp_v1alpha1_OrganizationSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "GCPAdminProjectSpec defines the desired state of GCPAdminProject",
+				Description: "OrganizationSpec defines the desired state of Organization",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"parentType": {
@@ -138,11 +138,11 @@ func schema_pkg_apis_gcp_v1alpha1_GCPAdminProjectSpec(ref common.ReferenceCallba
 	}
 }
 
-func schema_pkg_apis_gcp_v1alpha1_GCPAdminProjectStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_gcp_v1alpha1_OrganizationStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "GCPAdminProjectStatus defines the observed state of GCPAdminProject",
+				Description: "OrganizationStatus defines the observed state of Organization",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"conditions": {

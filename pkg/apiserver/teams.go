@@ -24,6 +24,7 @@ import (
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
+	gcp "github.com/appvia/kore/pkg/apis/gcp/v1alpha1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/appvia/kore/pkg/kore"
@@ -322,49 +323,6 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
-	// Kubernetes Credentials
-
-	ws.Route(
-		ws.GET("/{team}/kubernetescredentials").To(u.findKubernetesCredentials).
-			Doc("Used to retrieve all kubernetes credentials for a team").
-			Operation("ListKubernetesCredentials").
-			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
-			Returns(http.StatusOK, "Contains the former definition from the kore", clustersv1.KubernetesCredentialsList{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
-	)
-
-	ws.Route(
-		ws.GET("/{team}/kubernetescredentials/{name}").To(u.findKubernetesCredential).
-			Doc("Used to retrieve specific kubernetes credentials within a team").
-			Operation("GetKubernetesCredential").
-			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
-			Param(ws.PathParameter("name", "Is name the of the kubernetes credentials you are acting upon")).
-			Returns(http.StatusOK, "Contains the former team definition from the kore", clustersv1.KubernetesCredentials{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
-	)
-
-	ws.Route(
-		ws.PUT("/{team}/kubernetescredentials/{name}").To(u.updateKubernetesCredential).
-			Doc("Used to create/update specific kubernetes credentials within a team").
-			Operation("UpdateKubernetesCredential").
-			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
-			Param(ws.PathParameter("name", "Is name the of the kubernetes credentials you are acting upon")).
-			Reads(clustersv1.KubernetesCredentials{}, "The definition for kubernetes credentials").
-			Returns(http.StatusOK, "Contains the definition from the kore", clustersv1.KubernetesCredentials{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
-	)
-
-	ws.Route(
-		ws.DELETE("/{team}/kubernetescredentials/{name}").To(u.deleteKubernetesCredential).
-			Doc("Used to remove specific kubernetes credentials from a team").
-			Operation("RemoveKubernetesCredential").
-			Param(ws.PathParameter("name", "Is name the of the kubernetes credentials you are acting upon")).
-			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
-			Doc("Used to return the cluster definition from the kore").
-			Returns(http.StatusOK, "Contains the former definition from the kore", clustersv1.KubernetesCredentials{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
-	)
-
 	// Team Clusters
 
 	ws.Route(
@@ -487,6 +445,80 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", gke.GKECredentials{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	// GCP Project Claims
+
+	ws.Route(
+		ws.GET("/{team}/projectclaims").To(u.findProjectClaims).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Doc("Is the used tor return a list of Google Container Engine clusters which thhe team has access").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", gcp.ProjectClaimList{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.GET("/{team}/projectclaims/{name}").To(u.findProjectClaim).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the resource you are acting on")).
+			Doc("Is the used tor return a list of Google Container Engine clusters which thhe team has access").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", gcp.ProjectClaim{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.PUT("/{team}/projectclaims/{name}").To(u.updateProjectClaim).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the resource you are acting on")).
+			Doc("Is used to provision or update a gcp project claim").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", gcp.ProjectClaim{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.DELETE("/{team}/projectclaims/{name}").To(u.deleteProjectClaim).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the resource you are acting on")).
+			Doc("Is used to delete a managed gcp project claim").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", gcp.ProjectClaim{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	// GCP Organization
+
+	ws.Route(
+		ws.GET("/{team}/organizations").To(u.findOrganizations).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Doc("Is the used tor return a list of gcp organizations").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", gcp.OrganizationList{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.GET("/{team}/organizations/{name}").To(u.findOrganization).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the resource you are acting on")).
+			Doc("Is the used tor return a specific gcp organization").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", gcp.Organization{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.PUT("/{team}/organizations/{name}").To(u.updateOrganization).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the resource you are acting on")).
+			Doc("Is used to provision or update a gcp organization").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", gcp.Organization{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.DELETE("/{team}/organizations/{name}").To(u.deleteOrganization).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the resource you are acting on")).
+			Doc("Is used to delete a managed gcp organization").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", gcp.Organization{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 

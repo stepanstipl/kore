@@ -74,8 +74,6 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 	}
 
 	requeue, err := func() (bool, error) {
-		fmt.Println("TEAM:", resource.Namespace)
-
 		logger.Debug("retrieving the gke cluster credential")
 		// @step: first we need to check if we have access to the credentials
 		creds, err := t.GetCredentials(ctx, resource, resource.Namespace)
@@ -204,7 +202,7 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 
 		logger.Info("attempting to bootstrap the gke cluster")
 
-		boot, err := NewBootstrapClient(resource, creds)
+		boot, err := newBootstrapClient(resource, creds)
 		if err != nil {
 			logger.WithError(err).Error("trying to create bootstrap client")
 

@@ -2,11 +2,11 @@
 apiVersion: gcp.compute.kore.appvia.io/v1alpha1
 kind: ProjectClaim
 metadata:
-  name: kore-demo-1
+  name: kore-demo-2
 spec:
   organization:
     namespace: kore-admin
     name: gcp
-    kind: GCPAdminProject
+    kind: Organization
     group: gcp.compute.kore.appvia.io
     version: v1alpha1

@@ -28,6 +28,8 @@ import (
 const (
 	// GenericSecret indicates a generic secret
 	GenericSecret = "generic"
+	// KubernetesSecret indicates the secrets required to speak to the api
+	KubernetesSecret = "kubernetes"
 )
 
 // SecretSpec defines the desired state of Plan

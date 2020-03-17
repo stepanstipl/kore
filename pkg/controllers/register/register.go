@@ -17,12 +17,13 @@
 package register
 
 import (
-	// importing the cloud providers
+	// importing the aws controllers
 	_ "github.com/appvia/kore/pkg/controllers/cloud/aws/eks"
-	_ "github.com/appvia/kore/pkg/controllers/cloud/gcp/gcpadminproject"
 
+	// import the gcp controllers
 	_ "github.com/appvia/kore/pkg/controllers/cloud/gcp/gke"
 	_ "github.com/appvia/kore/pkg/controllers/cloud/gcp/gkecredentials"
+	_ "github.com/appvia/kore/pkg/controllers/cloud/gcp/organization"
 	_ "github.com/appvia/kore/pkg/controllers/cloud/gcp/projectclaim"
 
 	// importing the management controller

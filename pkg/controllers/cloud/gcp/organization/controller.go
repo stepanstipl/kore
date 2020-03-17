@@ -17,7 +17,7 @@
  * along with kore.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package adminproject
+package organization
 
 import (
 	"context"
@@ -77,7 +77,7 @@ func (t *gcpCtrl) Run(ctx context.Context, cfg *rest.Config, hubi kore.Interface
 		return err
 	}
 
-	if err := ctrl.Watch(&source.Kind{Type: &gcp.GCPAdminProject{}},
+	if err := ctrl.Watch(&source.Kind{Type: &gcp.Organization{}},
 		&handler.EnqueueRequestForObject{},
 		&predicate.GenerationChangedPredicate{}); err != nil {
 

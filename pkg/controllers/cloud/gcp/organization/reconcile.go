@@ -17,7 +17,7 @@
  * along with kore.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package adminproject
+package organization
 
 import (
 	"context"
@@ -47,7 +47,7 @@ func (t gcpCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 	})
 	logger.Debug("attempting to reconcile gcp admin project")
 
-	project := &gcp.GCPAdminProject{}
+	project := &gcp.Organization{}
 	if err := t.mgr.GetClient().Get(ctx, request.NamespacedName, project); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil

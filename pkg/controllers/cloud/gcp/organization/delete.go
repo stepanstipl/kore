@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package adminproject
+package organization
 
 import (
 	"context"
@@ -38,7 +38,7 @@ func (t *gcpCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 	logger.Debug("attempting to delete the gcp admin project")
 
 	// @step: first we need grab the resource from the api
-	project := &gcp.GCPAdminProject{}
+	project := &gcp.Organization{}
 	if err := t.mgr.GetClient().Get(ctx, request.NamespacedName, project); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
