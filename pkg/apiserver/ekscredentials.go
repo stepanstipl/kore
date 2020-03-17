@@ -24,8 +24,8 @@ import (
 	restful "github.com/emicklei/go-restful"
 )
 
-// findEKSCredientalss returns all the credentials under the team
-func (u teamHandler) findEKSCredientalss(req *restful.Request, resp *restful.Response) {
+// findEKSCredentialss returns all the credentials under the team
+func (u teamHandler) findEKSCredentialss(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		team := req.PathParameter("team")
 
@@ -38,8 +38,8 @@ func (u teamHandler) findEKSCredientalss(req *restful.Request, resp *restful.Res
 	})
 }
 
-// findEKSCredientals returns a cluster under the team
-func (u teamHandler) findEKSCredientals(req *restful.Request, resp *restful.Response) {
+// findEKSCredentails returns a cluster under the team
+func (u teamHandler) findEKSCredentails(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		name := req.PathParameter("name")
 		team := req.PathParameter("team")
@@ -53,8 +53,8 @@ func (u teamHandler) findEKSCredientals(req *restful.Request, resp *restful.Resp
 	})
 }
 
-// deleteEKSCredientals is responsible for deleting a team resource
-func (u teamHandler) deleteEKSCredientals(req *restful.Request, resp *restful.Response) {
+// deleteEKSCredentails is responsible for deleting a team resource
+func (u teamHandler) deleteEKSCredentails(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		ctx := req.Request.Context()
 		name := req.PathParameter("name")
@@ -74,8 +74,8 @@ func (u teamHandler) deleteEKSCredientals(req *restful.Request, resp *restful.Re
 	})
 }
 
-// updateEKSCredientals is responsible for putting an resource into a team
-func (u teamHandler) updateEKSCredientals(req *restful.Request, resp *restful.Response) {
+// updateEKSCredentails is responsible for putting an resource into a team
+func (u teamHandler) updateEKSCredentails(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		team := req.PathParameter("team")
 
