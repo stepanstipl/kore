@@ -80,6 +80,15 @@ var resourceConfigs = map[string]resourceConfig{
 			Column("Status", ".status.status"),
 		},
 	},
+	"eks": {
+		Name:   "ekss",
+		IsTeam: true,
+		Columns: []string{
+			Column("Name", ".metadata.name"),
+			Column("Endpoint", ".status.endpoint"),
+			Column("Status", ".status.status"),
+		},
+	},
 	"member": {
 		Name:   "members",
 		IsTeam: true,
