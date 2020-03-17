@@ -18,6 +18,7 @@ package filters
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/appvia/kore/pkg/kore/authentication"
@@ -26,56 +27,46 @@ import (
 	restful "github.com/emicklei/go-restful"
 )
 
-// Audit represents a function to retrieve an implementation of the Audit API.
-type Audit func() users.Audit
-
-// Auditing provides auditing facilities for callers of the API.
-type Auditing struct {
-	Audit     Audit
-	Resource  string
-	Operation string
-}
-
 // NewAuditingFilter creates a new Auditing for a route and returns the filter function.
-func NewAuditingFilter(audit Audit, resource string, operation string) restful.FilterFunction {
-	a := Auditing{
-		Audit:     audit,
-		Resource:  resource,
-		Operation: operation,
+func NewAuditingFilter(audit func() users.Audit, apiVersion string, resource string, operation string) restful.FilterFunction {
+	return func(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
+		user := req.Request.Context().Value(authentication.ContextKey{})
+
+		var username string
+		if user != nil {
+			username = user.(authentication.Identity).Username()
+		}
+
+		// Normalise resource URI to strip the version - it may or may not have
+		// a trailing slash so trim a possible trailing slash off for consistency.
+		uri := strings.TrimSuffix(strings.TrimPrefix(req.Request.URL.EscapedPath(), apiVersion), "/")
+		// Remove the API version prefix from the resource if present.
+		resource := strings.TrimPrefix(resource, apiVersion)
+
+		// Default to internal error - any non-internal-error case will change this
+		// after running the chain.
+		responseCode := 500
+		start := time.Now()
+
+		defer func() {
+			finish := time.Now()
+
+			// @TODO: Refine what is audited with a policy in future, for now, just audit everything.
+			audit().Record(req.Request.Context(),
+				users.Resource(resource),
+				users.ResourceURI(uri),
+				users.APIVersion(apiVersion),
+				users.Verb(req.Request.Method),
+				users.Operation(operation),
+				users.Team(req.PathParameter("team")), // Might be nil for some paths, but that's OK.
+				users.User(username),
+				users.StartedAt(start),
+				users.CompletedAt(finish),
+				users.ResponseCode(responseCode),
+			).Event(fmt.Sprintf("%s: %s %s", operation, req.Request.Method, req.Request.URL.EscapedPath()))
+		}()
+
+		chain.ProcessFilter(req, resp)
+		responseCode = resp.StatusCode()
 	}
-	return a.Filter
-}
-
-// Filter implements the auditing filter for the api server
-func (a *Auditing) Filter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
-	user := req.Request.Context().Value(authentication.ContextKey{})
-
-	var username string
-	if user != nil {
-		username = user.(authentication.Identity).Username()
-	}
-
-	// Default to internal error - any non-internal-error case will change this
-	// after running the chain.
-	result := 500
-	start := time.Now()
-
-	defer func() {
-		finish := time.Now()
-
-		a.Audit().Record(req.Request.Context(),
-			users.Resource(a.Resource),
-			users.ResourceURI(req.Request.URL.EscapedPath()),
-			users.Verb(req.Request.Method),
-			users.Operation(a.Operation),
-			users.Team(req.PathParameter("team")), // Might be nil for some paths, but that's OK.
-			users.User(username),
-			users.StartedAt(start),
-			users.CompletedAt(finish),
-			users.Result(result),
-		).Event(fmt.Sprintf("%s: %s %s", a.Operation, req.Request.Method, req.Request.URL.EscapedPath()))
-	}()
-
-	chain.ProcessFilter(req, resp)
-	result = resp.StatusCode()
 }

@@ -39,6 +39,13 @@ func ResourceURI(v string) AuditFunc {
 	}
 }
 
+// APIVersion sets the API version for the operation which caused the audit.
+func APIVersion(v string) AuditFunc {
+	return func(m *model.AuditEvent) {
+		m.APIVersion = v
+	}
+}
+
 // Verb sets the verb (e.g. GET/POST/PUT etc) of the event
 func Verb(v string) AuditFunc {
 	return func(m *model.AuditEvent) {
@@ -81,9 +88,9 @@ func CompletedAt(v time.Time) AuditFunc {
 	}
 }
 
-// Result sets whether this operation completed successfully.
-func Result(v int) AuditFunc {
+// ResponseCode sets the resulting HTTP status code of this operation.
+func ResponseCode(v int) AuditFunc {
 	return func(m *model.AuditEvent) {
-		m.Result = v
+		m.ResponseCode = v
 	}
 }

@@ -21,7 +21,6 @@ import (
 	"time"
 
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
-	"github.com/appvia/kore/pkg/apiserver/filters"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 	restful "github.com/emicklei/go-restful"
@@ -56,7 +55,7 @@ func (a *auditHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 	ws.Route(
 		ws.GET("").To(a.findTeamsAudit).
 			Doc("Used to return all the audit event across all the teams").
-			Filter(filters.NewAuditingFilter(i.Audit, path.Base(), "ListAuditEvents")).
+			Operation("ListAuditEvents").
 			Param(ws.QueryParameter("since", "The time duration to return the events within").DefaultValue("60m")).
 			Returns(http.StatusOK, "A collection of events from the team", orgv1.AuditEventList{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),

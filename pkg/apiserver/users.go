@@ -20,7 +20,6 @@ import (
 	"net/http"
 
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
-	"github.com/appvia/kore/pkg/apiserver/filters"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 
@@ -61,7 +60,7 @@ func (u *usersHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 	ws.Route(
 		ws.GET("").To(u.findUsers).
 			Doc("Returns all the users in the kore").
-			Filter(filters.NewAuditingFilter(i.Audit, path, "ListUsers")).
+			Operation("ListUsers").
 			Returns(http.StatusOK, "A list of all the users in the kore", orgv1.UserList{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
@@ -69,7 +68,7 @@ func (u *usersHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 	ws.Route(
 		ws.GET("/{user}").To(u.findUser).
 			Doc("Return information related to the specific user in the kore").
-			Filter(filters.NewAuditingFilter(i.Audit, path, "GetUser")).
+			Operation("GetUser").
 			Param(ws.PathParameter("user", "The name of the user you wish to retrieve")).
 			Returns(http.StatusOK, "Contains the user definintion from the kore", orgv1.User{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
@@ -78,7 +77,7 @@ func (u *usersHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 	ws.Route(
 		ws.PUT("/{user}").To(u.updateUser).
 			Doc("Used to create or update a user in the kore").
-			Filter(filters.NewAuditingFilter(i.Audit, path, "UpdateUser")).
+			Operation("UpdateUser").
 			Param(ws.PathParameter("user", "The name of the user you are updating or creating in the kore")).
 			Reads(orgv1.User{}, "The specification for a user in the kore").
 			Returns(http.StatusOK, "Contains the user definintion from the kore", orgv1.User{}).
@@ -88,7 +87,7 @@ func (u *usersHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 	ws.Route(
 		ws.DELETE("/{user}").To(u.deleteUser).
 			Doc("Used to delete a user from the kore").
-			Filter(filters.NewAuditingFilter(i.Audit, path, "RemoveUser")).
+			Operation("RemoveUser").
 			Param(ws.PathParameter("user", "The name of the user you are deleting from the kore")).
 			Returns(http.StatusOK, "Contains the former user definition from the kore", orgv1.User{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
@@ -97,7 +96,7 @@ func (u *usersHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 	ws.Route(
 		ws.GET("/{user}/teams").To(u.findUserTeams).
 			Doc("Returns a list of teams the user is a member of").
-			Filter(filters.NewAuditingFilter(i.Audit, path, "ListUserTeams")).
+			Operation("ListUserTeams").
 			Param(ws.PathParameter("user", "The name of the user whos team membership you wish to see")).
 			Returns(http.StatusOK, "Response is a team list containing the teams the user is a member of", orgv1.UserList{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),

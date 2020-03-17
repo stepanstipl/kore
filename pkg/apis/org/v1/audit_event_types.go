@@ -29,6 +29,8 @@ type AuditEventSpec struct {
 	Resource string `json:"resource,omitempty"`
 	// ResourceURI is the identifier of the resource in question.
 	ResourceURI string `json:"resourceURI,omitempty"`
+	// APIVersion is the version of the API used for this operation.
+	APIVersion string `json:"apiVersion,omitempty"`
 	// Verb is the type of action performed (e.g. PUT, GET, etc)
 	Verb string `json:"verb,omitempty"`
 	// Operation is the operation performed (e.g. UpdateCluster, CreateCluster, etc).
@@ -41,8 +43,8 @@ type AuditEventSpec struct {
 	StartedAt metav1.Time `json:"startedAt,omitempty"`
 	// CompletedAt is the timestamp the operation completed
 	CompletedAt metav1.Time `json:"completedAt,omitempty"`
-	// Result indicates the HTTP status code of the operation (e.g. 200, 404, etc).
-	Result int `json:"result,omitempty"`
+	// ResponseCode indicates the HTTP status code of the operation (e.g. 200, 404, etc).
+	ResponseCode int `json:"responseCode,omitempty"`
 	// Message is event message itself
 	Message string `json:"message,omitempty"`
 }

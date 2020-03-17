@@ -27,7 +27,6 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/appvia/kore/pkg/apiserver/filters"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 
@@ -93,7 +92,7 @@ func (l *loginHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 	ws.Route(
 		ws.GET("/authorize").To(l.authorizerHandler).
 			Doc("Used to start the authorization flow for user authentication").
-			Filter(filters.NewAuditingFilter(i.Audit, "login", "LoginAttempted")).
+			Operation("LoginAttempted").
 			Param(ws.QueryParameter("redirect_url", "The rediection url, i.e. the location to redirect post").Required(true)).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
@@ -101,7 +100,7 @@ func (l *loginHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 	ws.Route(
 		ws.GET("/callback").To(l.callbackHandler).
 			Doc("Used to handle the authorization callback from the identity provider").
-			Filter(filters.NewAuditingFilter(i.Audit, "login", "LoginCallback")).
+			Operation("LoginCallback").
 			Param(ws.QueryParameter("code", "The authorization code returned from the identity provider").Required(true)).
 			Param(ws.QueryParameter("state", "The state parameter which was passed on authorization request").Required(true)).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),

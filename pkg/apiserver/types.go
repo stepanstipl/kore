@@ -73,6 +73,11 @@ func (d DefaultHandler) EnableAuthentication() bool {
 	return true
 }
 
+// EnableAudit defaults to audit everything.
+func (d DefaultHandler) EnableAudit() bool {
+	return true
+}
+
 // EnableLogging defaults to true
 func (d DefaultHandler) EnableLogging() bool {
 	return true
@@ -109,6 +114,8 @@ type Handler interface {
 	EnableAdminsOnly() bool
 	// EnableAuthentication indicates if the webservice requires authentication
 	EnableAuthentication() bool
+	// EnableAudit indicates if actions on this API should be
+	EnableAudit() bool
 	// EnableLogging switches of logging for the service
 	EnableLogging() bool
 	// Name returns the name of the api handler

@@ -19,7 +19,6 @@ package apiserver
 import (
 	"net/http"
 
-	"github.com/appvia/kore/pkg/apiserver/filters"
 	"github.com/appvia/kore/pkg/apiserver/types"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/kore/authentication"
@@ -62,7 +61,7 @@ func (u *whoImpl) Register(i kore.Interface, builder utils.PathBuilder) (*restfu
 	ws.Route(
 		ws.GET("").To(u.findWho).
 			Doc("Returns information about who the user is and what teams they are a member").
-			Filter(filters.NewAuditingFilter(i.Audit, path, "WhoAmI")).
+			Operation("WhoAmI").
 			Returns(http.StatusOK, "A list of all the users in the kore", types.WhoAmI{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)

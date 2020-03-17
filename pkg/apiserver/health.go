@@ -61,6 +61,11 @@ func (l *healthHandler) EnableAuthentication() bool {
 	return false
 }
 
+// EnableAudit for health is false - don't want to audit healthchecks.
+func (l *healthHandler) EnableAudit() bool {
+	return false
+}
+
 // EnableLogging indicates if logging is one
 func (l *healthHandler) EnableLogging() bool {
 	return false

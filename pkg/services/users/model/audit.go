@@ -30,6 +30,8 @@ type AuditEvent struct {
 	Resource string
 	// ResourceURI is the identifier of the resource in question.
 	ResourceURI string
+	// APIVersion is the version of the API in use for this operation.
+	APIVersion string
 	// Verb is the type of action performed (e.g. PUT, GET, etc)
 	Verb string `gorm:"not null"`
 	// Operation is the operation performed (e.g. UpdateCluster, CreateCluster, etc).
@@ -42,8 +44,8 @@ type AuditEvent struct {
 	StartedAt time.Time
 	// CompletedAt is the timestamp the operation completed
 	CompletedAt time.Time
-	// Result indicates the HTTP status code of the operation (e.g. 200, 404, etc).
-	Result int
+	// ResponseCode indicates the HTTP status code of the operation (e.g. 200, 404, etc).
+	ResponseCode int
 	// Message is event message itself
 	Message string `gorm:"not null"`
 }

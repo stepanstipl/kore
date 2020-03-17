@@ -3908,6 +3908,9 @@ spec:
         spec:
           description: AuditEventSpec defines the desired state of User
           properties:
+            apiVersion:
+              description: APIVersion is the version of the API used for this operation.
+              type: string
             completedAt:
               description: CompletedAt is the timestamp the operation completed
               format: date-time
@@ -3930,13 +3933,14 @@ spec:
             resourceURI:
               description: ResourceURI is the identifier of the resource in question.
               type: string
+            responseCode:
+              description: ResponseCode indicates the HTTP status code of the operation
+                (e.g. 200, 404, etc).
+              type: integer
             startedAt:
               description: StartedAt is the timestamp the operation was initiated
               format: date-time
               type: string
-            success:
-              description: Success indicates whether this operation was successful
-              type: boolean
             team:
               description: Team is the team whom event may be associated to
               type: string
