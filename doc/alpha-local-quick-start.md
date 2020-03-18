@@ -58,7 +58,7 @@ Alternatively you can enable these from the [gcloud](https://cloud.google.com/sd
 
 ```shell
 # Setup if required
-gcloud auth (assuming you've not authenticated)
+gcloud auth login (assuming you've not authenticated)
 gcloud config set project <project_id>
 
 # Enable the APIs
