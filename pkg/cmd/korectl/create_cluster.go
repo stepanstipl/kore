@@ -169,6 +169,10 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 				return err
 			}
 
+			if dry {
+				return nil
+			}
+
 			// @step: we need to construct the provider type
 			if waitfor {
 				now := time.Now()
