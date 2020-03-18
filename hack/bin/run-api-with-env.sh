@@ -23,6 +23,7 @@ export \
     --admin-pass password \
     --admin-token password \
     --api-public-url http://localhost:10080 \
+    --ui-public-url http://localhost:3000 \
     --kore-authentication-plugin basicauth \
     --kore-authentication-plugin admintoken \
     --kore-authentication-plugin openid \
