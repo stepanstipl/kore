@@ -40,6 +40,8 @@ func GetCreateCommand(config *Config) *cli.Command {
 		Subcommands: []*cli.Command{
 			GetCreateTeamCommand(config),
 			GetCreateTeamMemberCommand(config),
+			GetCreateAllocation(config),
+			GetCreateGCPCommand(config),
 			GetCreateSecretCommand(config),
 			GetCreateClusterCommand(config),
 			GetCreateNamespaceCommand(config),

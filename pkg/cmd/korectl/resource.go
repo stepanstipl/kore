@@ -104,6 +104,14 @@ var resourceConfigs = map[string]resourceConfig{
 			Column("Summary", ".spec.summary"),
 		},
 	},
+	"organization": {
+		Name:   "organizations",
+		IsTeam: true,
+		Columns: []string{
+			Column("Name", ".metadata.name"),
+			Column("Status", ".status.status"),
+		},
+	},
 	"projectclaim": {
 		Name:   "projectclaims",
 		IsTeam: true,

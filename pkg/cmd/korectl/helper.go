@@ -18,6 +18,7 @@ package korectl
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -27,8 +28,10 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	"github.com/appvia/kore/pkg/apiserver/types"
 	"github.com/appvia/kore/pkg/utils"
 	yml "github.com/ghodss/yaml"
@@ -135,6 +138,13 @@ func GetTeamResourceList(config *Config, team, kind string, object runtime.Objec
 		Get()
 }
 
+// GetTeamAllocation returns an allocation for a team
+func GetTeamAllocation(config *Config, team, name string) (*configv1.Allocation, error) {
+	o := &configv1.Allocation{}
+
+	return o, GetTeamResource(config, team, "allocation", name, o)
+}
+
 // GetTeamResource returns a team object
 func GetTeamResource(config *Config, team, kind, name string, object runtime.Object) error {
 	kind = strings.ToLower(utils.ToPlural(kind))
@@ -180,6 +190,13 @@ func GetResourceList(config *Config, team, kind, name string, object runtime.Obj
 		WithEndpoint("/{kind}/{name}").
 		WithRuntimeObject(object).
 		Get()
+}
+
+// WaitOnResource indicates we should wait for the resource to transition to fail or success
+func WaitOnResource(ctx context.Context, config *Config, team, kind, name, interval time.Duration) (bool, error) {
+	for {
+
+	}
 }
 
 // ParseDocument returns a collection of parsed documents and the api endpoints

@@ -52,7 +52,7 @@ $ korectl get plans
 $ korectl get plans <name> -o yaml
 
 Examples:
-$ korectl -t <myteam> create cluster dev --plan gke-development --allocation <name>
+$ korectl -t <myteam> create cluster dev --plan gke-development --allocation <allocation_name>
 
 # Create a cluster and provision some namespaces on there as well
 $ korectl -t <myteam> create cluster dev --plan gke-development -a <name> --namespace=app1,app2
@@ -75,7 +75,7 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 		Name:        "cluster",
 		Aliases:     []string{"clusters"},
 		Description: createClusterLongDescription,
-		Usage:       "Create a kubernetes cluster within the team",
+		Usage:       "create a kubernetes cluster within the team",
 		ArgsUsage:   "<name> [options]",
 
 		Flags: []cli.Flag{
