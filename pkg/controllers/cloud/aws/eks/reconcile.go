@@ -79,53 +79,113 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 
 			return false, err
 		}
-		logger.Info("Found AWSCredential CR")
+		logger.Info("Found EKSCredential")
 
-		client, err := NewClient(credentials, resource.ClusterName, resource.Spec.Region)
+		client, err := NewClient(credentials, resource)
 		if err != nil {
+			logger.WithError(err).Error("attempting to create the cluster client")
+
+			resource.Status.Conditions.SetCondition(core.Component{
+				Detail:  err.Error(),
+				Name:    ComponentClusterCreator,
+				Message: "Failed to create EKS client, please check credentials",
+				Status:  core.FailureStatus,
+			})
+
 			return false, err
 		}
 		logger.Info("Checking cluster existence")
 
-		clusterExists, err := client.Exists()
+		found, err := client.Exists()
+		if err != nil {
+			resource.Status.Conditions.SetCondition(core.Component{
+				Detail:  err.Error(),
+				Name:    ComponentClusterCreator,
+				Message: "Failed to check for cluster existence",
+				Status:  core.FailureStatus,
+			})
+
+			return false, err
+		}
+
+		if !found {
+			status, found := resource.Status.Conditions.HasComponent(ComponentClusterCreator)
+			if !found || status != core.PendingStatus {
+				resource.Status.Conditions.SetCondition(core.Component{
+					Name:    ComponentClusterCreator,
+					Message: "Provisioning the EKS cluster in AWS",
+					Status:  core.PendingStatus,
+				})
+				resource.Status.Status = core.PendingStatus
+
+				return true, nil
+			}
+
+			logger.Debug("creating a new gke cluster in gcp")
+			if _, err = client.Create(); err != nil {
+				logger.WithError(err).Error("attempting to create cluster")
+
+				resource.Status.Conditions.SetCondition(core.Component{
+					Name:    ComponentClusterCreator,
+					Message: "Failed trying to provision the cluster",
+					Detail:  err.Error(),
+				})
+				resource.Status.Status = core.FailureStatus
+
+				return false, err
+			}
+		} else {
+			// TODO - client needs to manage migrations
+		}
+
+		// Get cluster status
+		cluster, err := client.DescribeEKS()
 		if err != nil {
 			return false, err
 		}
-
-		if clusterExists {
-			logger.Info("Cluster exists: " + resource.Spec.Name)
-			return false, nil
-		}
-
-		logger.Info("Creating cluster:" + resource.Spec.Name)
-
-		// Cluster doesnt exist, create it
-		_, err = client.Create(resource)
-		if err != nil {
-			return false, err
-		}
-
-		// Set status to pending
-		resource.Status.Status = core.PendingStatus
-
-		if err := t.mgr.GetClient().Status().Update(ctx, resource); err != nil {
-			logger.Error(err, "failed to update the resource status")
-			return false, err
-		}
-		log.Println("Checking the status of cluster:", resource.Spec.Name)
-
-		status, err := client.GetEKSClusterStatus()
-		if err != nil {
-			return false, err
-		}
-		if status == "ERROR" {
+		// TODO: use strong type status check
+		if *cluster.Status == "ERROR" {
 			return false, fmt.Errorf("Cluster has ERROR status:%s", resource.Spec.Name)
 		}
-		if status != "ACTIVE" {
+		if *cluster.Status != "ACTIVE" {
 			// not ready, reque no errors
 			return true, nil
 		}
 		// Active cluster
+		resource.Status.CACertificate = cluster.CertificateAuthority.String()
+		resource.Status.Endpoint = fmt.Sprintf("https://%s", cluster.Endpoint)
+		resource.Status.Status = core.SuccessStatus
+
+		// @step: update the state as provisioned
+		resource.Status.Conditions.SetCondition(core.Component{
+			Name:    ComponentClusterCreator,
+			Message: "Cluster has been provisioned",
+			Status:  core.SuccessStatus,
+		})
+
+		// @step: set the bootstrap as pending if required
+		resource.Status.Conditions.SetCondition(core.Component{
+			Name:    ComponentClusterBootstrap,
+			Message: "Accessing the eks cluster",
+			Status:  core.PendingStatus,
+		})
+
+		logger.Info("attempting to bootstrap the gke cluster")
+
+		/*
+
+			boot, err := NewBootstrapClient(resource, client.)
+			if err != nil {
+				logger.WithError(err).Error("trying to create bootstrap client")
+
+				return false, err
+			}
+			if err := boot.Bootstrap(ctx, t.mgr.GetClient()); err != nil {
+				logger.WithError(err).Error("trying to bootstrap gke cluster")
+
+				return false, err
+			}
+		*/
 		resource.Status.Conditions.SetCondition(core.Component{
 			Name:    ComponentClusterBootstrap,
 			Message: "Successfully initialised the cluster",

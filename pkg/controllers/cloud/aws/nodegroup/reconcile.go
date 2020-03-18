@@ -49,7 +49,7 @@ func (t *eksNodeGroupCtrl) Reconcile(request reconcile.Request) (reconcile.Resul
 		return reconcile.Result{}, err
 	}
 
-	logger.Info("Found AWSNodeGroup CR")
+	logger.Info("Found AWSNodeGroup")
 
 	credentials := &eksv1alpha1.EKSCredentials{}
 	reference := types.NamespacedName{
@@ -65,8 +65,8 @@ func (t *eksNodeGroupCtrl) Reconcile(request reconcile.Request) (reconcile.Resul
 		return reconcile.Result{}, err
 	}
 
-	logger.Info("Found AWSCredential CR")
-	client, err := eksctl.NewClient(credentials, nodegroup.ClusterName, nodegroup.Spec.Region)
+	logger.Info("Found EKSCredential")
+	client, err := eksctl.NewBasicClient(credentials, nodegroup.ClusterName, nodegroup.Spec.Region)
 	if err != nil {
 
 		return reconcile.Result{}, err

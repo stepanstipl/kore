@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	awssess "github.com/aws/aws-sdk-go/aws/session"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	core "k8s.io/api/core/v1"
@@ -31,6 +32,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	k8s "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	awsauth "sigs.k8s.io/aws-iam-authenticator/pkg/token"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -75,6 +78,20 @@ func NewFromToken(endpoint, token, ca string) (k8s.Interface, error) {
 			Insecure: true,
 		},
 	})
+}
+
+// NewEKSClient returns a kube api client for eks clusters
+func NewEKSClient(clusterID, endpoint, roleARN, region, ca string, sess *awssess.Session) (k8s.Interface, error) {
+	g, err := awsauth.NewGenerator(false, false)
+	if err != nil {
+		return nil, err
+	}
+
+	t, err := g.GetWithRoleForSession(clusterID, roleARN, sess)
+	if err != nil {
+		return nil, err
+	}
+	return NewFromToken(endpoint, t.Token, ca)
 }
 
 // NewGKEClient returns a kube api client for gke clusters

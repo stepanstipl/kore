@@ -8,7 +8,6 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20200108200545-475eaeb16496 // indirect
 	github.com/aws/aws-sdk-go v1.29.21
 	github.com/aws/aws-sdk-go-v2 v0.19.0 // indirect
-	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blevesearch/bleve v0.8.1
 	github.com/blevesearch/blevex v0.0.0-20190916190636-152f0fe5c040 // indirect
 	github.com/blevesearch/go-porterstemmer v1.0.2 // indirect
@@ -21,6 +20,7 @@ require (
 	github.com/cznic/strutil v0.0.0-20181122101858-275e90344537 // indirect
 	github.com/dexidp/dex v0.0.0-00010101000000-000000000000
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/docker/swarmkit v1.12.0 // indirect
 	github.com/emicklei/go-restful v2.11.1+incompatible
 	github.com/emicklei/go-restful-openapi v1.2.0
 	github.com/etcd-io/bbolt v1.3.3 // indirect
@@ -53,7 +53,7 @@ require (
 	github.com/manifoldco/promptui v0.7.0
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/pelletier/go-toml v1.6.0 // indirect
-	github.com/prometheus/client_golang v1.0.0
+	github.com/prometheus/client_golang v1.1.0
 	github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4
 	github.com/prometheus/procfs v0.0.8 // indirect
 	github.com/romanyx/polluter v1.2.2
@@ -88,8 +88,10 @@ require (
 	k8s.io/client-go v0.17.0
 	k8s.io/code-generator v0.17.3
 	k8s.io/kube-openapi v0.0.0-20191107075043-30be4d16710a
+	k8s.io/kubernetes v1.13.0
 	k8s.io/utils v0.0.0-20191218082557-f07c713de883 // indirect
 	sigs.k8s.io/application v0.8.2-0.20200209202752-a485a03cdc47
+	sigs.k8s.io/aws-iam-authenticator v0.5.0
 	sigs.k8s.io/controller-runtime v0.4.0
 	sigs.k8s.io/controller-tools v0.2.5
 )

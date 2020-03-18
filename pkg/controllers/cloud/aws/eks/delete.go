@@ -70,7 +70,7 @@ func (t *eksCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 		}
 
 		// @step: create a cloud client for us
-		client, err := NewClient(creds, resource.ClusterName, resource.Spec.Region)
+		client, err := NewClient(creds, resource)
 		if err != nil {
 			return false, err
 		}

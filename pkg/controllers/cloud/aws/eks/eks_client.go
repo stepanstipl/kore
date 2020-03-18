@@ -17,6 +17,7 @@
 package eks
 
 import (
+	"errors"
 	"fmt"
 
 	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
@@ -32,6 +33,8 @@ import (
 type eksClient struct {
 	// credentials are the eks credentials
 	credentials *eksv1alpha1.EKSCredentials
+	// cluster is the API object used
+	cluster *eksv1alpha1.EKS
 	// clusterName is the eks cluster name
 	clusterName string
 	// sesh is the AWS session
@@ -40,8 +43,9 @@ type eksClient struct {
 	svc *eks.EKS
 }
 
-// NewClient gets an AWS session
-func NewClient(cred *eksv1alpha1.EKSCredentials, clusterName, region string) (*eksClient, error) {
+// NewBasicClient gets an AWS session relating to a cluster
+// TODO: maybe remove after refactor of nodegroup to use clusterref?
+func NewBasicClient(cred *eksv1alpha1.EKSCredentials, clusterName, region string) (*eksClient, error) {
 	sesh, err := session.NewSession(&aws.Config{
 		Region:      aws.String(region),
 		Credentials: credentials.NewStaticCredentials(cred.Spec.AccessKeyID, cred.Spec.SecretAccessKey, ""),
@@ -52,6 +56,24 @@ func NewClient(cred *eksv1alpha1.EKSCredentials, clusterName, region string) (*e
 	return &eksClient{
 		credentials: cred,
 		clusterName: clusterName,
+		sesh:        sesh,
+		svc:         eks.New(sesh),
+	}, err
+}
+
+// NewClient gets an AWS and cluster session with a reference to our API object
+func NewClient(cred *eksv1alpha1.EKSCredentials, cluster *eksv1alpha1.EKS) (*eksClient, error) {
+	sesh, err := session.NewSession(&aws.Config{
+		Region:      aws.String(cluster.Spec.Region),
+		Credentials: credentials.NewStaticCredentials(cred.Spec.AccessKeyID, cred.Spec.SecretAccessKey, ""),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &eksClient{
+		credentials: cred,
+		clusterName: cluster.Name,
+		cluster:     cluster,
 		sesh:        sesh,
 		svc:         eks.New(sesh),
 	}, err
@@ -100,8 +122,8 @@ func EKSClusterExists(svc *eks.EKS, clusterName string) (exists bool, err error)
 */
 
 // Create creates an EKS cluster
-func (c *eksClient) Create(cluster *eksv1alpha1.EKS) (output *eks.CreateClusterOutput, err error) {
-	output, err = c.svc.CreateCluster(c.createDefinition(cluster))
+func (c *eksClient) Create() (output *eks.CreateClusterOutput, err error) {
+	output, err = c.svc.CreateCluster(c.createDefinition())
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 
@@ -166,35 +188,36 @@ func (c *eksClient) Delete() (output *eks.DeleteClusterOutput, err error) {
 	return
 }
 
+func (c *eksClient) Update() error {
+	return errors.New("not yet implimented")
+}
+
 // VerifyCredentials is responsible for verifying AWS creds
 func (c *eksClient) VerifyCredentials() error {
 	return nil
 }
 
-func (c *eksClient) createDefinition(cluster *eksv1alpha1.EKS) *awseks.CreateClusterInput {
+func (c *eksClient) createDefinition() *awseks.CreateClusterInput {
 	return &awseks.CreateClusterInput{
-		Name:    aws.String(cluster.Spec.Name),
-		RoleArn: aws.String(cluster.Spec.RoleARN),
-		Version: aws.String(cluster.Spec.Version),
+		Name:    aws.String(c.cluster.Spec.Name),
+		RoleArn: aws.String(c.cluster.Spec.RoleARN),
+		Version: aws.String(c.cluster.Spec.Version),
 		ResourcesVpcConfig: &awseks.VpcConfigRequest{
-			SecurityGroupIds: aws.StringSlice(cluster.Spec.SecurityGroupIDs),
-			SubnetIds:        aws.StringSlice(cluster.Spec.SubnetIDs),
+			SecurityGroupIds: aws.StringSlice(c.cluster.Spec.SecurityGroupIDs),
+			SubnetIds:        aws.StringSlice(c.cluster.Spec.SubnetIDs),
 		},
 	}
 }
 
 // Describe returns the AWS EKS output
-func (c *eksClient) describeEKS() (output *eks.DescribeClusterOutput, err error) {
-	return c.svc.DescribeCluster(&awseks.DescribeClusterInput{
+func (c *eksClient) DescribeEKS() (output *eks.Cluster, err error) {
+	d, err := c.svc.DescribeCluster(&awseks.DescribeClusterInput{
 		Name: aws.String(c.clusterName),
 	})
-}
-
-// GetEKSClusterStatus gest a cluster status
-// TODO - shouldn't be public should return apis types...
-func (c *eksClient) GetEKSClusterStatus() (status string, err error) {
-	cluster, err := c.describeEKS()
-	return *cluster.Cluster.Status, err
+	if err != nil {
+		return nil, err
+	}
+	return d.Cluster, nil
 }
 
 // ListEKSClusters lists all EKS clusters

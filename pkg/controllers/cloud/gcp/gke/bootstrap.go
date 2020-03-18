@@ -81,7 +81,7 @@ func (p *bootImpl) Bootstrap(ctx context.Context, client client.Client) error {
 
 		return err
 	}
-	logger.Debug("gke cluster kubeapi is available now, continuing bootstrapping")
+	logger.Debug("cluster kubeapi is available now, continuing bootstrapping")
 
 	logger.Info("creating the pod security policies")
 
