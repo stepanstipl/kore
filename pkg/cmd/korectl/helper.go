@@ -32,8 +32,10 @@ import (
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
+	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/apiserver/types"
 	"github.com/appvia/kore/pkg/utils"
+
 	yml "github.com/ghodss/yaml"
 	log "github.com/sirupsen/logrus"
 	yaml "gopkg.in/yaml.v2"
@@ -193,10 +195,37 @@ func GetResourceList(config *Config, team, kind, name string, object runtime.Obj
 }
 
 // WaitOnResource indicates we should wait for the resource to transition to fail or success
-func WaitOnResource(ctx context.Context, config *Config, team, kind, name, interval time.Duration) (bool, error) {
-	for {
+func WaitOnResource(ctx context.Context, config *Config, team, kind, name string, interval, timeout time.Duration) (bool, error) {
+	var success bool
 
-	}
+	u := &unstructured.Unstructured{}
+
+	err := utils.WaitUntilComplete(ctx, timeout, interval, func() (bool, error) {
+		err := GetTeamResource(config, team, kind, name, u)
+		if err != nil {
+			return false, nil
+		}
+
+		status, ok := u.Object["status"].(map[string]interface{})
+		if !ok {
+			return false, nil
+		}
+		state, ok := status["status"].(string)
+		if !ok {
+			return false, nil
+		}
+
+		if state == string(corev1.FailureStatus) {
+			return false, errors.New("resource has failed to provision")
+		}
+		if state == string(corev1.SuccessStatus) {
+			return true, nil
+		}
+
+		return false, nil
+	})
+
+	return success, err
 }
 
 // ParseDocument returns a collection of parsed documents and the api endpoints

@@ -79,6 +79,12 @@ func (h *secretImpl) Update(ctx context.Context, secret *configv1.Secret) error 
 		return ErrNotAllowed{message: "secret type is unsupported"}
 	}
 
+	if !user.IsGlobalAdmin() {
+		if secret.Status.SystemManaged != nil && *secret.Status.SystemManaged {
+			return ErrNotAllowed{message: "managed secrets can only be changed by global admins"}
+		}
+	}
+
 	h.Audit().Record(ctx,
 		users.Resource("secrets/"+secret.Name),
 		users.Team(h.team),
@@ -113,6 +119,12 @@ func (h *secretImpl) Delete(ctx context.Context, name string) (*configv1.Secret,
 		logger.WithError(err).Error("trying to check for secret in team")
 
 		return nil, err
+	}
+
+	if !user.IsGlobalAdmin() {
+		if secret.Status.SystemManaged != nil && *secret.Status.SystemManaged {
+			return nil, ErrNotAllowed{message: "managed secrets can only be deleted by global admins"}
+		}
 	}
 
 	h.Audit().Record(ctx,

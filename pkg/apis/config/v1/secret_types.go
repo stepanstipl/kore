@@ -48,6 +48,8 @@ type SecretSpec struct {
 // SecretStatus defines the observed state of Plan
 // +k8s:openapi-gen=true
 type SecretStatus struct {
+	// SystemManaged indicates the secret is managed by kore and cannot be changed
+	SystemManaged *bool `json:"systemManaged,omitempty"`
 	// Conditions is a set of condition which has caused an error
 	// +listType=set
 	Conditions []corev1.Condition `json:"conditions,omitempty"`

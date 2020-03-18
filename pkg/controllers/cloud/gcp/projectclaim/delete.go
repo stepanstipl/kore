@@ -91,6 +91,13 @@ func (t ctrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 			return reconcile.Result{}, err
 		}
 
+		// @step: ensure the allocation has been removed
+		if err := t.EnsureCredentialsAllocationDeleted(ctx, project); err != nil {
+			logger.WithError(err).Error("trying to ensure the project credentials are deleted")
+
+			return reconcile.Result{}, err
+		}
+
 		return reconcile.Result{}, nil
 	}()
 	if err != nil {

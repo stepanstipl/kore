@@ -23,6 +23,7 @@ import (
 )
 
 var (
+	// ErrTimeout indicates the operation has been timed out
 	ErrTimeout = errors.New("operation has timed out")
 )
 
@@ -51,6 +52,8 @@ func WaitUntilComplete(ctx context.Context, timeout time.Duration, interval time
 			return nil
 		}
 
-		time.Sleep(interval)
+		if Sleep(ctx, interval) {
+			return ErrTimeout
+		}
 	}
 }
