@@ -221,6 +221,7 @@ func (t ctrl) EnsureProject(ctx context.Context,
 		"team":    project.Namespace,
 	})
 	stage := "provision"
+	success := "GCP Project successfully provisioned"
 
 	// @step: create the client
 	client, err := cloudresourcemanager.NewService(ctx, option.WithCredentialsJSON([]byte(credentials.Spec.Data["key"])))
@@ -268,6 +269,13 @@ func (t ctrl) EnsureProject(ctx context.Context,
 
 			return errors.New("project conflict")
 		}
+
+		// @step set the status as successful
+		project.Status.Conditions.SetCondition(corev1.Component{
+			Name:    stage,
+			Message: success,
+			Status:  corev1.SuccessStatus,
+		})
 
 		return nil
 	}
@@ -353,6 +361,13 @@ func (t ctrl) EnsureProject(ctx context.Context,
 			Status:  corev1.FailureStatus,
 		})
 	}
+
+	// @step set the status as successful
+	project.Status.Conditions.SetCondition(corev1.Component{
+		Name:    stage,
+		Message: success,
+		Status:  corev1.SuccessStatus,
+	})
 
 	return nil
 }
@@ -463,17 +478,18 @@ func (t ctrl) EnsureAPIs(ctx context.Context, credentials *configv1.Secret, proj
 		return err
 	}
 
+	// @step: set the project id
+	id := project.Status.ProjectID
+	if id == "" {
+		id = project.Name
+	}
+
 	for _, name := range t.GetRequiredAPI() {
 		logger.WithField(
 			"api", name,
 		).Debug("attempting to enable the api in the project")
 
-		request := &servicemanagement.EnableServiceRequest{
-			ConsumerId: "project:" + project.Name,
-		}
-
-		resp, err := client.Services.Enable(name, request).Context(ctx).Do()
-		if err != nil {
+		if err := gcputils.EnableAPI(ctx, client, id, name); err != nil {
 			logger.WithError(err).Error("trying to enable the api")
 
 			project.Status.Conditions.SetCondition(corev1.Component{
@@ -486,34 +502,6 @@ func (t ctrl) EnsureAPIs(ctx context.Context, credentials *configv1.Secret, proj
 			return err
 		}
 		logger.Debug("successfully enabled the api in the project")
-
-		if err := utils.WaitUntilComplete(ctx, 3*time.Minute, 5*time.Second, func() (bool, error) {
-			status, err := client.Operations.Get(resp.Name).Context(ctx).Do()
-			if err != nil {
-				logger.WithError(err).Error("trying to retrieve status of operation")
-
-				return false, nil
-			}
-			if !status.Done {
-				return false, nil
-			}
-			if status.Error != nil {
-				return false, errors.New(status.Error.Message)
-			}
-
-			return true, nil
-		}); err != nil {
-			logger.WithError(err).Error("waiting on the api enabling operation")
-
-			project.Status.Conditions.SetCondition(corev1.Component{
-				Name:    stage,
-				Detail:  err.Error(),
-				Message: "Failed to enable " + name + " api in the project",
-				Status:  corev1.FailureStatus,
-			})
-
-			return err
-		}
 	}
 
 	project.Status.Conditions.SetCondition(corev1.Component{
@@ -829,7 +817,7 @@ func (t ctrl) EnsureCredentialsAllocation(
 	})
 	logger.Debug("attempting to create the allocation for the gcp project")
 
-	name := "gcp-" + project.Name
+	name := t.GetAllocationName(project)
 
 	allocation := &configv1.Allocation{
 		TypeMeta: metav1.TypeMeta{
@@ -936,6 +924,39 @@ func (t ctrl) EnsureDeleteOldestKey(
 
 	if _, err := client.Projects.ServiceAccounts.Keys.Delete(path).Context(ctx).Do(); err != nil {
 		logger.WithError(err).Error("trying to delete the service account key")
+
+		return err
+	}
+
+	return nil
+}
+
+// EnsureCredentialsAllocationDeleted is responsible for removing the allocation
+func (t ctrl) EnsureCredentialsAllocationDeleted(
+	ctx context.Context,
+	project *gcp.ProjectClaim) error {
+
+	logger := log.WithFields(log.Fields{
+		"project": project.Name,
+		"team":    project.Namespace,
+	})
+	logger.Debug("ensuring the allocation has been removed")
+
+	name := t.GetAllocationName(project)
+
+	allocation := &configv1.Allocation{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: configv1.GroupVersion.String(),
+			Kind:       "Allocation",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: project.Namespace,
+		},
+	}
+
+	if err := kubernetes.DeleteIfExists(ctx, t.mgr.GetClient(), allocation); err != nil {
+		logger.WithError(err).Error("trying to delete the project claim allocation")
 
 		return err
 	}
@@ -1094,4 +1115,9 @@ func (t ctrl) IsProjectClaimed(ctx context.Context, project *gcp.ProjectClaim) (
 	}
 
 	return false, nil
+}
+
+// GetAllocationName returns the name we should use for the project allocation
+func (t ctrl) GetAllocationName(project *gcp.ProjectClaim) string {
+	return fmt.Sprintf("gcp-%s", project.Name)
 }

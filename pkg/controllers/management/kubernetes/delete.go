@@ -21,12 +21,12 @@ import (
 	"time"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
-	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -122,7 +122,7 @@ func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (rec
 		}
 
 		// @step: we should delete the secert from api
-		if err := kubernetes.DeleteIfExists(ctx, a.mgr.GetClient(), &v1.Secret{
+		if err := kubernetes.DeleteIfExists(ctx, a.mgr.GetClient(), &configv1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      object.Name,
 				Namespace: object.Namespace,
