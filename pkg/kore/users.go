@@ -23,6 +23,7 @@ import (
 
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/appvia/kore/pkg/kore/authentication"
+	"github.com/appvia/kore/pkg/kore/validation"
 	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/services/users/model"
 
@@ -234,14 +235,19 @@ func (h *usersImpl) Update(ctx context.Context, user *orgv1.User) (*orgv1.User, 
 	user.Namespace = HubNamespace
 
 	// @step: we need to validate the user
-	if user.Spec.Username == "" || user.Name == "" {
-		return nil, NewErrNotAllowed("user must have a username")
+	valErr := validation.NewErrValidation()
+	if user.Name == "" {
+		valErr.AddFieldError("Name", validation.Required, "User must have Name property set.")
+	}
+	if user.Spec.Username == "" {
+		valErr.AddFieldError("Spec.Username", validation.Required, "User must have a username.")
 	}
 	if user.Spec.Email == "" {
-		return nil, NewErrNotAllowed("user must have a email address")
+		valErr.AddFieldError("Spec.Email", validation.Required, "User must have an email address.")
 	}
-
-	// @TODO add an entry into the audit
+	if valErr.HasErrors() {
+		return nil, valErr
+	}
 
 	// @step: update the user in the user management service
 	if err := h.usermgr.Users().Update(ctx, DefaultConvertor.ToUserModel(user)); err != nil {

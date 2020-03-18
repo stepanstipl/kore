@@ -49,20 +49,26 @@ func (e ErrValidation) Error() string {
 	return msg
 }
 
-// WithFieldError adds an error for a specific field to a validation error.
+// HasErrors returns true if any field errors have been added to this validation error.
+func (e *ErrValidation) HasErrors() bool {
+	return len(e.FieldErrors) > 0
+}
+
+// WithFieldError adds a field error to the validation error and returns it for fluent loveliness.
 func (e *ErrValidation) WithFieldError(field string, errCode ErrorCode, message string) *ErrValidation {
-	e.FieldErrors = append(e.FieldErrors, FieldError{Field: field, ErrCode: errCode, Message: message})
+	e.AddFieldError(field, errCode, message)
 	return e
 }
 
 // WithFieldErrorf adds an error for a specific field to a validation error.
 func (e *ErrValidation) WithFieldErrorf(field string, errCode ErrorCode, format string, args ...interface{}) *ErrValidation {
-	e.FieldErrors = append(e.FieldErrors, FieldError{
-		Field:   field,
-		ErrCode: errCode,
-		Message: fmt.Sprintf(format, args...),
-	})
+	e.AddFieldError(field, errCode, fmt.Sprintf(format, args...))
 	return e
+}
+
+// AddFieldError adds an error for a specific field to a validation error.
+func (e *ErrValidation) AddFieldError(field string, errCode ErrorCode, message string) {
+	e.FieldErrors = append(e.FieldErrors, FieldError{Field: field, ErrCode: errCode, Message: message})
 }
 
 // FieldError provides information about a validation error on a specific field.
@@ -84,6 +90,8 @@ const (
 	MinLength ErrorCode = "minLength"
 	// MaxLength error indicates the supplied value is longer than the allowed maximum.
 	MaxLength ErrorCode = "maxLength"
+	// Required error indicates that a field must be specified.
+	Required ErrorCode = "required"
 	// Pattern error indicates the input doesn't match the required regex pattern
 	Pattern ErrorCode = "pattern"
 )

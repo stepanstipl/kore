@@ -14,25 +14,19 @@
  * limitations under the License.
  */
 
-package types
+package localjwt
 
-// WhoAmI provides a description to who you are
-type WhoAmI struct {
-	// Email is the user email
-	Email string `json:"email,omitempty"`
-	// Username is your username
-	Username string `json:"username,omitempty"`
-	// Teams is a collection of teams your in
-	Teams []string `json:"teams,omitempty"`
-}
+import (
+	"errors"
+)
 
-type TeamInvitationResponse struct {
-	// Team is the name of team which the user just has been been added to
-	Team string `json:"team"`
-}
-
-// Health provides an indication of the health of the API.
-type Health struct {
-	// Healthy is true if the service is healthy.
-	Healthy bool `json:"healthy"`
+// IsValid checks the configuration is valid
+func (c Config) IsValid() error {
+	if c.PublicKey == "" {
+		return errors.New("no public key configured")
+	}
+	if len(c.UserClaims) <= 0 {
+		c.UserClaims = append(c.UserClaims, []string{"preferred_username"}...)
+	}
+	return nil
 }

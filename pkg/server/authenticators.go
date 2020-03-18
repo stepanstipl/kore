@@ -25,6 +25,7 @@ import (
 	"github.com/appvia/kore/pkg/plugins/authentication/admintoken"
 	"github.com/appvia/kore/pkg/plugins/authentication/basicauth"
 	"github.com/appvia/kore/pkg/plugins/authentication/headers"
+	"github.com/appvia/kore/pkg/plugins/authentication/localjwt"
 	"github.com/appvia/kore/pkg/plugins/authentication/openid"
 
 	log "github.com/sirupsen/logrus"
@@ -60,6 +61,11 @@ func makeAuthenticators(hubcc kore.Interface, config Config) error {
 				return openid.New(hubcc, openid.Config{
 					ClientID:   config.Kore.IDPClientID,
 					ServerURL:  config.Kore.IDPServerURL,
+					UserClaims: config.Kore.IDPUserClaims,
+				})
+			case "localjwt":
+				return localjwt.New(hubcc, localjwt.Config{
+					PublicKey:  config.Kore.LocalJWTPublicKey,
 					UserClaims: config.Kore.IDPUserClaims,
 				})
 			default:

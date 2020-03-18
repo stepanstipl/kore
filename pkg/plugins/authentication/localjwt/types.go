@@ -14,25 +14,12 @@
  * limitations under the License.
  */
 
-package types
+package localjwt
 
-// WhoAmI provides a description to who you are
-type WhoAmI struct {
-	// Email is the user email
-	Email string `json:"email,omitempty"`
-	// Username is your username
-	Username string `json:"username,omitempty"`
-	// Teams is a collection of teams your in
-	Teams []string `json:"teams,omitempty"`
-}
-
-type TeamInvitationResponse struct {
-	// Team is the name of team which the user just has been been added to
-	Team string `json:"team"`
-}
-
-// Health provides an indication of the health of the API.
-type Health struct {
-	// Healthy is true if the service is healthy.
-	Healthy bool `json:"healthy"`
+// Config is the configuration for the openid provider
+type Config struct {
+	// PublicKey is the key used to verify JWTs.
+	PublicKey string
+	// UserClaims is the claim fields which specifies the username
+	UserClaims []string `json:"user-claim,omitempty"`
 }

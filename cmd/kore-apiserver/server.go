@@ -75,6 +75,7 @@ func invoke(ctx *cli.Context) error {
 			IDPClientSecret:            ctx.String("idp-client-secret"),
 			IDPServerURL:               ctx.String("idp-server-url"),
 			IDPUserClaims:              ctx.StringSlice("idp-user-claims"),
+			LocalJWTPublicKey:          ctx.String("local-jwt-public-key"),
 			PublicAPIURL:               ctx.String("api-public-url"),
 			PublicHubURL:               strings.TrimRight(ctx.String("ui-public-url"), "/"),
 			DEX: kore.DEX{

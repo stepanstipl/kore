@@ -23,6 +23,7 @@ import (
 
 	"github.com/appvia/kore/pkg/apiserver/filters"
 	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/kore/validation"
 	"github.com/appvia/kore/pkg/utils"
 
 	restful "github.com/emicklei/go-restful"
@@ -37,6 +38,20 @@ type server struct {
 	container *restful.Container
 	// store is the kore bridge interface
 	store kore.Interface
+}
+
+// withKoreErrorsGet adds the standard return types / codes for an operation which does not change state (does not include validation errors).
+func withKoreErrorsGet(rb *restful.RouteBuilder) *restful.RouteBuilder {
+	return rb.
+		Returns(http.StatusUnauthorized, "If not authenticated", nil).
+		Returns(http.StatusForbidden, "If authenticated but not authorized", nil).
+		Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{})
+}
+
+// withKoreErrors adds the standard return types / codes for an operation which may modify state (includes validaiton errors)
+func withKoreErrors(rb *restful.RouteBuilder) *restful.RouteBuilder {
+	return withKoreErrorsGet(rb).
+		Returns(http.StatusBadRequest, "Validation error of supplied parameters/body", validation.ErrValidation{})
 }
 
 // New returns a new api server for the kore

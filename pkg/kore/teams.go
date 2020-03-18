@@ -158,8 +158,9 @@ func (t *teamsImpl) Update(ctx context.Context, team *orgv1.Team) (*orgv1.Team, 
 	user := authentication.MustGetIdentity(ctx)
 
 	logger := log.WithFields(log.Fields{
-		"team": team.Name,
-		"user": user.Username(),
+		"team":  team.Name,
+		"teams": strings.Join(user.Teams(), ","),
+		"user":  user.Username(),
 	})
 	logger.Info("attempting to update or create team in kore")
 
@@ -266,7 +267,7 @@ func (t *teamsImpl) AuditEvents(ctx context.Context, since time.Duration) (*orgv
 			"username", user.Username(),
 		).Warn("user trying to access the audit logs")
 
-		return nil, ErrUnauthorized
+		return nil, NewErrNotAllowed("Must be global admin")
 	}
 
 	// @step: retrieve a list of audit events across all teams

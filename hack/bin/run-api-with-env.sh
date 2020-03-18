@@ -27,6 +27,8 @@ export \
     --kore-authentication-plugin basicauth \
     --kore-authentication-plugin admintoken \
     --kore-authentication-plugin openid \
+    --kore-authentication-plugin localjwt \
+    --local-jwt-public-key MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAIG6XiNhkwDETU2zk0tGlI0DKlbEJcN4jxwJBqhd3neReLDnqg9SBgKepdy9Nxw5LAd1gNoBkLvdFJg9SbHlM0sCAwEAAQ== \
     --certificate-authority	hack/ca/ca.pem \
     --certificate-authority-key hack/ca/ca-key.pem \
     --users-db-url 'root:pass@tcp(localhost:3306)/kore?parseTime=true'

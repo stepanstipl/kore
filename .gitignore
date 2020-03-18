@@ -13,6 +13,9 @@ swagger-ui/
 manifests/local
 charts/my_values.yaml
 
+pkg/api_test_client
+pkg/api_test_models
+
 # Git meld
 *.orig
 

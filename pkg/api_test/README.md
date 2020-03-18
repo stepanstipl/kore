@@ -1,0 +1,1 @@
+This package defines the external specifications that the API should meet. Each API endpoint should have a file in this directory

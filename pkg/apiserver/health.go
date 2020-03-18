@@ -17,6 +17,9 @@
 package apiserver
 
 import (
+	"net/http"
+
+	"github.com/appvia/kore/pkg/apiserver/types"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 
@@ -41,10 +44,14 @@ func (l *healthHandler) Register(i kore.Interface, builder utils.PathBuilder) (*
 	l.Interface = i
 
 	ws := &restful.WebService{}
+	ws.Consumes(restful.MIME_JSON)
+	ws.Produces(restful.MIME_JSON)
 
 	ws.Route(
 		ws.GET("/healthz").To(l.healthHandler).
 			Doc("Used to start the authorization flow for user authentication").
+			Operation("GetHealth").
+			Returns(http.StatusOK, "Health check response", types.Health{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
@@ -53,7 +60,7 @@ func (l *healthHandler) Register(i kore.Interface, builder utils.PathBuilder) (*
 
 // healthHandler is responsible for authorizing a client
 func (l *healthHandler) healthHandler(req *restful.Request, resp *restful.Response) {
-	_, _ = resp.Write([]byte("OK"))
+	_ = resp.WriteAsJson(types.Health{Healthy: true})
 }
 
 // EnableAuthentication indicates if this service needs auth

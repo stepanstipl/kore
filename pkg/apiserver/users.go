@@ -62,27 +62,27 @@ func (u *usersHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 			Doc("Returns all the users in the kore").
 			Operation("ListUsers").
 			Returns(http.StatusOK, "A list of all the users in the kore", orgv1.UserList{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
-		ws.GET("/{user}").To(u.findUser).
+		withKoreErrorsGet(ws.GET("/{user}").To(u.findUser).
 			Doc("Return information related to the specific user in the kore").
 			Operation("GetUser").
 			Param(ws.PathParameter("user", "The name of the user you wish to retrieve")).
 			Returns(http.StatusOK, "Contains the user definintion from the kore", orgv1.User{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
-	)
+			Returns(http.StatusNotFound, "User does not exist", nil),
+		))
 
 	ws.Route(
-		ws.PUT("/{user}").To(u.updateUser).
+		withKoreErrors(ws.PUT("/{user}").To(u.updateUser).
 			Doc("Used to create or update a user in the kore").
 			Operation("UpdateUser").
 			Param(ws.PathParameter("user", "The name of the user you are updating or creating in the kore")).
 			Reads(orgv1.User{}, "The specification for a user in the kore").
 			Returns(http.StatusOK, "Contains the user definintion from the kore", orgv1.User{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
-	)
+			Returns(http.StatusNotFound, "User does not exist", nil),
+		))
 
 	ws.Route(
 		ws.DELETE("/{user}").To(u.deleteUser).
@@ -90,7 +90,7 @@ func (u *usersHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 			Operation("RemoveUser").
 			Param(ws.PathParameter("user", "The name of the user you are deleting from the kore")).
 			Returns(http.StatusOK, "Contains the former user definition from the kore", orgv1.User{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
@@ -98,8 +98,9 @@ func (u *usersHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 			Doc("Returns a list of teams the user is a member of").
 			Operation("ListUserTeams").
 			Param(ws.PathParameter("user", "The name of the user whos team membership you wish to see")).
-			Returns(http.StatusOK, "Response is a team list containing the teams the user is a member of", orgv1.UserList{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusOK, "Response is a team list containing the teams the user is a member of", orgv1.TeamList{}).
+			Returns(http.StatusNotFound, "User does not exist", nil).
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	return ws, nil

@@ -14,25 +14,5 @@
  * limitations under the License.
  */
 
-package types
-
-// WhoAmI provides a description to who you are
-type WhoAmI struct {
-	// Email is the user email
-	Email string `json:"email,omitempty"`
-	// Username is your username
-	Username string `json:"username,omitempty"`
-	// Teams is a collection of teams your in
-	Teams []string `json:"teams,omitempty"`
-}
-
-type TeamInvitationResponse struct {
-	// Team is the name of team which the user just has been been added to
-	Team string `json:"team"`
-}
-
-// Health provides an indication of the health of the API.
-type Health struct {
-	// Healthy is true if the service is healthy.
-	Healthy bool `json:"healthy"`
-}
+// Package localjwt provides an JWT authentication plugin for the kore using a fixed public key.
+package localjwt

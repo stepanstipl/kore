@@ -134,4 +134,6 @@ type Config struct {
 	PublicHubURL string `json:"public-kore-url,omitempty"`
 	// PublicAPIURL is the public url for the api
 	PublicAPIURL string `json:"public-api-url,omitempty"`
+	// LocalJWTPublicKey is the public key to use to verify JWTs if using the localjwt auth plugin
+	LocalJWTPublicKey string `json:"local-jwt-public-key,omitempty"`
 }

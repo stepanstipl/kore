@@ -22,6 +22,7 @@ import (
 
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/kore/validation"
 	"github.com/appvia/kore/pkg/utils"
 	restful "github.com/emicklei/go-restful"
 	log "github.com/sirupsen/logrus"
@@ -58,7 +59,9 @@ func (a *auditHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 			Operation("ListAuditEvents").
 			Param(ws.QueryParameter("since", "The time duration to return the events within").DefaultValue("60m")).
 			Returns(http.StatusOK, "A collection of events from the team", orgv1.AuditEventList{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusUnauthorized, "If not authenticated", nil).
+			Returns(http.StatusForbidden, "If authenticated but not authorized", nil).
+			Returns(http.StatusBadRequest, "Validation error of supplied parameters/body", validation.ErrValidation{}),
 	)
 
 	return ws, nil
