@@ -25,18 +25,28 @@ import (
 type AuditEventSpec struct {
 	// CreatedAt is the timestamp of record creation
 	CreatedAt metav1.Time `json:"createdAt,omitempty"`
-	// Type is the type of event
-	Type string `json:"type,omitempty"`
+	// Resource is the area of the API accessed in this audit operation (e.g. teams, ).
+	Resource string `json:"resource,omitempty"`
+	// ResourceURI is the identifier of the resource in question.
+	ResourceURI string `json:"resourceURI,omitempty"`
+	// APIVersion is the version of the API used for this operation.
+	APIVersion string `json:"apiVersion,omitempty"`
+	// Verb is the type of action performed (e.g. PUT, GET, etc)
+	Verb string `json:"verb,omitempty"`
+	// Operation is the operation performed (e.g. UpdateCluster, CreateCluster, etc).
+	Operation string `json:"operation,omitempty"`
 	// Team is the team whom event may be associated to
 	Team string `json:"team,omitempty"`
 	// User is the user which the event is related
 	User string `json:"user,omitempty"`
+	// StartedAt is the timestamp the operation was initiated
+	StartedAt metav1.Time `json:"startedAt,omitempty"`
+	// CompletedAt is the timestamp the operation completed
+	CompletedAt metav1.Time `json:"completedAt,omitempty"`
+	// ResponseCode indicates the HTTP status code of the operation (e.g. 200, 404, etc).
+	ResponseCode int `json:"responseCode,omitempty"`
 	// Message is event message itself
 	Message string `json:"message,omitempty"`
-	// Resource is the name of the resource in question namespace/name
-	Resource string `json:"resource,omitempty"`
-	// ResourceUID is a unique id for the resource
-	ResourceUID string `json:"resourceUID,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

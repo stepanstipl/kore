@@ -16,15 +16,47 @@
 
 package users
 
-import "github.com/appvia/kore/pkg/services/users/model"
+import (
+	"time"
+
+	"github.com/appvia/kore/pkg/services/users/model"
+)
 
 // AuditFunc sets an option in the record
 type AuditFunc func(m *model.AuditEvent)
 
-// Type sets the type of the event
-func Type(v string) AuditFunc {
+// Resource sets the area of the API accessed in this audit operation (e.g. teams, plans, etc).
+func Resource(v string) AuditFunc {
 	return func(m *model.AuditEvent) {
-		m.Type = v
+		m.Resource = v
+	}
+}
+
+// ResourceURI sets the URI of the resource being operated on.
+func ResourceURI(v string) AuditFunc {
+	return func(m *model.AuditEvent) {
+		m.ResourceURI = v
+	}
+}
+
+// APIVersion sets the API version for the operation which caused the audit.
+func APIVersion(v string) AuditFunc {
+	return func(m *model.AuditEvent) {
+		m.APIVersion = v
+	}
+}
+
+// Verb sets the verb (e.g. GET/POST/PUT etc) of the event
+func Verb(v string) AuditFunc {
+	return func(m *model.AuditEvent) {
+		m.Verb = v
+	}
+}
+
+// Operation sets the operation (e.g. CreateCluster, GetTeams etc) of the event
+func Operation(v string) AuditFunc {
+	return func(m *model.AuditEvent) {
+		m.Operation = v
 	}
 }
 
@@ -42,16 +74,23 @@ func User(v string) AuditFunc {
 	}
 }
 
-// Resource sets the resource
-func Resource(v string) AuditFunc {
+// StartedAt sets the time the event started
+func StartedAt(v time.Time) AuditFunc {
 	return func(m *model.AuditEvent) {
-		m.Resource = v
+		m.StartedAt = v
 	}
 }
 
-// Resource sets the resource uid
-func ResourceUID(v string) AuditFunc {
+// CompletedAt sets the time the event completed
+func CompletedAt(v time.Time) AuditFunc {
 	return func(m *model.AuditEvent) {
-		m.ResourceUID = v
+		m.CompletedAt = v
+	}
+}
+
+// ResponseCode sets the resulting HTTP status code of this operation.
+func ResponseCode(v int) AuditFunc {
+	return func(m *model.AuditEvent) {
+		m.ResponseCode = v
 	}
 }

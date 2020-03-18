@@ -16,7 +16,9 @@
 
 package model
 
-import "time"
+import (
+	"time"
+)
 
 // AuditEvent defines an audit event in the kore
 type AuditEvent struct {
@@ -24,16 +26,26 @@ type AuditEvent struct {
 	ID int `gorm:"primary_key"`
 	// CreatedAt is the timestamp of record creation
 	CreatedAt time.Time `sql:"DEFAULT:current_timestamp"`
-	// Type is the type of event
-	Type string `gorm:"not null"`
+	// Resource is the area of the API accessed in this audit operation (e.g. teams, ).
+	Resource string
+	// ResourceURI is the identifier of the resource in question.
+	ResourceURI string
+	// APIVersion is the version of the API in use for this operation.
+	APIVersion string
+	// Verb is the type of action performed (e.g. PUT, GET, etc)
+	Verb string `gorm:"not null"`
+	// Operation is the operation performed (e.g. UpdateCluster, CreateCluster, etc).
+	Operation string
 	// Team is the team whom event may be associated to
 	Team string
 	// User is the user which the event is related
 	User string
+	// StartedAt is the timestamp the operation was initiated
+	StartedAt time.Time
+	// CompletedAt is the timestamp the operation completed
+	CompletedAt time.Time
+	// ResponseCode indicates the HTTP status code of the operation (e.g. 200, 404, etc).
+	ResponseCode int
 	// Message is event message itself
 	Message string `gorm:"not null"`
-	// Resource is the name of the resource in question namespace/name
-	Resource string
-	// ResourceUID is a unique id for the resource
-	ResourceUID string
 }

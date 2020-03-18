@@ -71,6 +71,19 @@ func New(kore kore.Interface, config Config) (Interface, error) {
 		if x.EnableAuthentication() {
 			ws = ws.Filter(authFilter.Filter).Filter(filters.DefaultMembersHandler.Filter)
 		}
+		if x.EnableAudit() {
+			// Register the auditing filter on a per-route basis so we can audit the
+			// operation name.
+			routes := ws.Routes()
+			for idx := range routes {
+				routes[idx].Filters = append(routes[idx].Filters,
+					filters.NewAuditingFilter(
+						kore.Audit,
+						APIVersion,
+						ws.RootPath(),
+						routes[idx].Operation))
+			}
+		}
 		if x.EnableLogging() {
 			ws = ws.Filter(filters.DefaultLogging.Filter)
 		}

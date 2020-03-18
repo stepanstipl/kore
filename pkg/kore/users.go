@@ -19,6 +19,7 @@ package kore
 import (
 	"context"
 	"fmt"
+	"time"
 
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/appvia/kore/pkg/services/users"
@@ -99,23 +100,31 @@ func (h *usersImpl) EnableUser(ctx context.Context, username, email string) erro
 		if isAdmin {
 			logger.Info("enabling the first user in the kore and providing admin access")
 
-			h.Audit().Record(ctx,
-				users.Type(users.AuditUpdate),
-				users.User(username),
-			).Event("adding first user as administrator")
+			// Add a custom audit for this special operation:
+			start := time.Now()
+			responseCode := 500
+			defer func() {
+				finish := time.Now()
+				h.Audit().Record(ctx,
+					users.Resource("/users"),
+					users.ResourceURI("/users/"+username),
+					users.Verb("PUT"),
+					users.Operation("InitialiseFirstUserAsAdmin"),
+					users.User(username),
+					users.StartedAt(start),
+					users.CompletedAt(finish),
+					users.ResponseCode(responseCode),
+				).Event("InitialiseFirstUserAsAdmin: Adding first user as administrator")
+			}()
 
 			if err := h.usermgr.Members().AddUser(ctx, username, HubAdminTeam, roles); err != nil {
 				logger.WithError(err).Error("trying to add user to admin team")
 
 				return err
 			}
+			responseCode = 200
 		} else {
 			logger.Info("adding the user into the kore")
-
-			h.Audit().Record(ctx,
-				users.Type(users.AuditUpdate),
-				users.User(username),
-			).Event("adding a user to the kore")
 
 			if err := h.usermgr.Teams().AddUser(ctx, username, HubDefaultTeam, roles); err != nil {
 				logger.WithError(err).Error("trying to add user to default team")
