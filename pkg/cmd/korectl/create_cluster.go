@@ -23,6 +23,8 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"reflect"
+	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -115,6 +117,10 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 				Name:  "dry-run",
 				Usage: "generate the cluster specification but does not apply `BOOL`",
 			},
+			&cli.StringSliceFlag{
+				Name:  "plan-param",
+				Usage: "used to override the plan parameters",
+			},
 		},
 
 		Before: func(ctx *cli.Context) error {
@@ -147,8 +153,13 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 				return fmt.Errorf("no plan defined, please use: $ korectl get plans")
 			}
 
+			planParams, err := parsePlanParams(ctx.StringSlice("plan-param"))
+			if err != nil {
+				return err
+			}
+
 			// @step: create the cloud provider
-			provider, err := CreateClusterProviderFromPlan(config, team, name, plan, allocation, dry)
+			provider, err := CreateClusterProviderFromPlan(config, team, name, plan, allocation, dry, planParams)
 			if err != nil {
 				return err
 			}
@@ -332,7 +343,7 @@ func CreateClusterNamespace(config *Config, cluster corev1.Ownership, team, name
 
 // CreateClusterProviderFromPlan is used to provision a cluster in kore
 // @TODO need to be revisited once we have autogeneration of resources
-func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation string, dry bool) (*unstructured.Unstructured, error) {
+func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation string, dry bool, overrides map[string]interface{}) (*unstructured.Unstructured, error) {
 	// @step: we need to check if the plan exists in the kore
 	if found, err := ResourceExists(config, "plan", plan); err != nil {
 		return nil, fmt.Errorf("trying to retrieve plan from api: %s", err)
@@ -350,6 +361,16 @@ func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation 
 		return nil, fmt.Errorf("trying to decode plan values: %s", err)
 	}
 	kv["description"] = fmt.Sprintf("%s cluster", plan)
+
+	for paramName, overrideValue := range overrides {
+		if _, valid := kv[paramName]; !valid {
+			return nil, fmt.Errorf("plan doesn't have %q parameter", paramName)
+		}
+		if reflect.TypeOf(kv[paramName]) != reflect.TypeOf(overrideValue) {
+			return nil, fmt.Errorf("plan parameter %q has an invalid value (expected type: %T)", paramName, kv[paramName])
+		}
+		kv[paramName] = overrideValue
+	}
 
 	kind := strings.ToLower(utils.ToPlural(template.Spec.Kind))
 
@@ -397,4 +418,22 @@ func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation 
 	fmt.Printf("Attempting to create cluster: %q, plan: %s\n", name, plan)
 
 	return object, CreateTeamResource(config, team, kind, name, object)
+}
+
+func parsePlanParams(params []string) (map[string]interface{}, error) {
+	res := map[string]interface{}{}
+	for _, param := range params {
+		parts := regexp.MustCompile(`\s*=\s*`).Split(strings.TrimSpace(param), 2)
+		if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+			return nil, fmt.Errorf("invalid plan-param value %q, you must use param=<JSON value> format", param)
+		}
+		name := parts[0]
+		jsonValue := parts[1]
+		var parsed interface{}
+		if err := json.Unmarshal([]byte(jsonValue), &parsed); err != nil {
+			return nil, err
+		}
+		res[name] = parsed
+	}
+	return res, nil
 }
