@@ -17,7 +17,9 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/appvia/kore/cmd/korectl/options"
@@ -34,18 +36,16 @@ func init() {
 	log.SetReportCaller(true)
 }
 
-func main() {
+func Main(args []string, writer, errWriter io.Writer) (int, error) {
 	// @step: load the api config
 	config, err := korectl.GetOrCreateClientConfiguration()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: failed to read configuration file. Reason: %s\n", err)
-		os.Exit(1)
+		return 1, fmt.Errorf("failed to read configuration file. Reason: %s\n", err)
 	}
 
 	// @step: we need to pull down the swagger and resource cache if required
 	if err := korectl.GetCaches(config); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: failed to load the cache")
-		os.Exit(1)
+		return 1, errors.New("failed to load the cache")
 	}
 
 	app := &cli.App{
@@ -65,13 +65,21 @@ func main() {
 			return err
 		},
 
-		CommandNotFound: func(ctx *cli.Context, name string) {
-			fmt.Fprintf(os.Stderr, "Error: unknown command %q\n\n", name)
-			fmt.Fprintf(os.Stderr, "Please run `%s --help` to see all available commands.\n", ctx.App.Name)
-			os.Exit(1)
-		},
-
 		Commands: korectl.GetCommands(config),
+
+		Action: func(ctx *cli.Context) error {
+			if !ctx.Args().Present() {
+				if err := cli.ShowAppHelp(ctx); err != nil {
+					return err
+				}
+				return cli.Exit("", 1)
+			}
+			return fmt.Errorf(
+				"unknown command %q\n\nPlease run `%s --help` to see all available commands.",
+				ctx.Args().First(),
+				ctx.App.Name,
+			)
+		},
 
 		Before: func(ctx *cli.Context) error {
 			if ctx.Bool("show-flags") {
@@ -97,17 +105,42 @@ func main() {
 			case command == "login":
 				// no contexts required yet.
 			case len(config.Profiles) <= 0:
-				fmt.Fprintf(os.Stderr, "Error: no %s profiles configured.\n", ctx.App.Name)
-				fmt.Fprintf(os.Stderr, "Please check the documentation about how to set up %s.\n", ctx.App.Name)
-				os.Exit(1)
+				return fmt.Errorf(
+					"no profiles configured.\nPlease check the documentation about how to set up %s.",
+					ctx.App.Name,
+				)
 			}
 			return nil
 		},
+
+		Writer:    writer,
+		ErrWriter: errWriter,
 	}
 
 	koreCliApp := cmd.NewApp(app)
-	if err := koreCliApp.Run(os.Args); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %s\n\n", err)
-		os.Exit(1)
+	if err := koreCliApp.Run(args); err != nil {
+		switch e := err.(type) {
+		case cli.ExitCoder:
+			if e.Error() != "" {
+				return e.ExitCode(), e
+			} else {
+				return e.ExitCode(), nil
+			}
+
+		default:
+			return 1, err
+		}
+	}
+
+	return 0, nil
+}
+
+func main() {
+	exitCode, err := Main(os.Args, os.Stdout, os.Stderr)
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "Error: %s\n\n", err)
+	}
+	if exitCode != 0 {
+		os.Exit(exitCode)
 	}
 }
