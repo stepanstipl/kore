@@ -13,7 +13,7 @@ for i in {1..10} ; do
         --retry-connrefused \
         -sSL ${address} >/dev/null 2>&1 || ret=$?
     if [ ${ret} -eq 52 ]; then
-        echo "empty resposne with:$1, trying again..."
+        echo "empty response with:$1, trying again..."
         sleep 5
         continue
     fi
