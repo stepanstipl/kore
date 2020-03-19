@@ -5,6 +5,7 @@ AUTHOR_EMAIL=gambol99@gmail.com
 BUILD_TIME=$(shell date '+%s')
 CURRENT_TAG=$(shell git tag --points-at HEAD)
 DEPS=$(shell go list -f '{{range .TestImports}}{{.}} {{end}}' ./...)
+DOCKER_IMAGES ?= kore-apiserver auth-proxy
 GIT_SHA=$(shell git --no-pager describe --always --dirty)
 GIT_LAST_TAG_SHA=$(shell git rev-list --tags --max-count=1)
 GIT_LAST_TAG=$(shell git describe --tags $(GIT_LAST_TAG_SHA))
@@ -94,14 +95,14 @@ docker-build:
 
 images:
 	@echo "--> Building docker images"
-	@for name in kore-apiserver auth-proxy; do \
+	@for name in $${DOCKER_IMAGES}; do \
 		echo "--> Building docker image $${name}" ; \
 		docker build -t ${REGISTRY}/${AUTHOR}/$${name}:${VERSION} -f images/Dockerfile.$${name} . ; \
 	done
 
 push-images:
 	@echo "--> Pushing docker images"
-	@for name in kore-apiserver auth-proxy; do \
+	@for name in $${DOCKER_IMAGES}; do \
 		echo "--> Pushing docker image $${name}" ; \
 		docker push ${REGISTRY}/${AUTHOR}/$${name}:${VERSION} ; \
 	done
