@@ -50,6 +50,7 @@ require (
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/manifoldco/promptui v0.7.0
+	github.com/maxbrunsfeld/counterfeiter/v6 v6.2.2
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.9.0
