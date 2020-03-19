@@ -20,7 +20,7 @@ import (
 	"errors"
 )
 
-// IsValid checks the configuation of the proxy
+// IsValid checks the configuration of the proxy
 func (c Config) IsValid() error {
 	if c.IDPClientID == "" {
 		return errors.New("no client id")

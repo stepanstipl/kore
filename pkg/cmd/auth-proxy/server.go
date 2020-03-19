@@ -41,20 +41,26 @@ import (
 // authImpl implements the authentication proxy
 type authImpl struct {
 	sync.RWMutex
-	// config is the configuration for the service
-	config Config
-	// verifier is the rsa
-	verifier *oidc.IDTokenVerifier
-	// stopCh is the stop channel
-	stopCh chan struct{}
-	// token is the upstream token
-	token string
+	config          Config
+	verifier        *oidc.IDTokenVerifier
+	stopCh          chan struct{}
+	token           string
+	allowedNetworks []*net.IPNet
 }
 
 // New creates and returns a new authentication proxy
 func New(config Config) (Interface, error) {
 	if err := config.IsValid(); err != nil {
 		return nil, err
+	}
+
+	var allowedNetworks []*net.IPNet
+	for _, cidr := range config.AllowedIPs {
+		_, network, err := net.ParseCIDR(cidr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid CIDR notation: %q", cidr)
+		}
+		allowedNetworks = append(allowedNetworks, network)
 	}
 
 	var verifier *oidc.IDTokenVerifier
@@ -100,10 +106,11 @@ func New(config Config) (Interface, error) {
 	}
 
 	return &authImpl{
-		config:   config,
-		stopCh:   make(chan struct{}),
-		token:    string(token),
-		verifier: verifier,
+		config:          config,
+		stopCh:          make(chan struct{}),
+		token:           token,
+		verifier:        verifier,
+		allowedNetworks: allowedNetworks,
 	}, nil
 }
 
@@ -154,6 +161,25 @@ func (a *authImpl) Run(ctx context.Context) error {
 				resp.WriteHeader(http.StatusOK)
 				_, _ = resp.Write([]byte("OK\n"))
 
+				return
+			}
+
+			var remoteIP net.IP
+			if host, _, err := net.SplitHostPort(req.RemoteAddr); err == nil {
+				remoteIP = net.ParseIP(host)
+			}
+			if remoteIP == nil {
+				log.WithField("remote_address", req.RemoteAddr).
+					Warnf("invalid remote address, access forbidden")
+				resp.WriteHeader(http.StatusForbidden)
+				_, _ = resp.Write([]byte("Forbidden\n"))
+				return
+			}
+			if !a.isIPAllowed(remoteIP) {
+				log.WithField("remote_address", req.RemoteAddr).
+					Warnf("access forbidden")
+				resp.WriteHeader(http.StatusForbidden)
+				_, _ = resp.Write([]byte("Forbidden\n"))
 				return
 			}
 
@@ -262,4 +288,16 @@ func (a *authImpl) Stop() error {
 	a.stopCh <- struct{}{}
 
 	return nil
+}
+
+func (a *authImpl) isIPAllowed(ip net.IP) bool {
+	if ip == nil {
+		return false
+	}
+	for _, network := range a.allowedNetworks {
+		if network.Contains(ip) {
+			return true
+		}
+	}
+	return false
 }

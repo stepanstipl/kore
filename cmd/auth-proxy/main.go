@@ -69,6 +69,7 @@ func main() {
 				TLSKey:                     ctx.String("tls-key"),
 				UpstreamURL:                ctx.String("upstream-url"),
 				UpstreamAuthorizationToken: ctx.String("upstream-authentication-token"),
+				AllowedIPs:                 ctx.StringSlice("allowed-ips"),
 			}
 			svc, err := authproxy.New(config)
 			if err != nil {

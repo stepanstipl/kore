@@ -92,5 +92,11 @@ func Options() []cli.Flag {
 			Usage:   "switches on verbose logging for debugging purposes `BOOL`",
 			EnvVars: []string{"VERBOSE"},
 		},
+		&cli.StringSliceFlag{
+			Name:    "allowed-ips",
+			Usage:   "traffic will be allowed from the given IP ranges if set. Requires CIDR notation. `CIDR`",
+			EnvVars: []string{"ALLOWED_IPS"},
+			Value:   cli.NewStringSlice("0.0.0.0/0"),
+		},
 	}
 }
