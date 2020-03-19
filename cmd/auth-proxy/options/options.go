@@ -43,9 +43,10 @@ func Options() []cli.Flag {
 			EnvVars: []string{"IDP_SERVER_URL"},
 		},
 		&cli.StringFlag{
-			Name:    "idp-client-id",
-			Usage:   "the identity provider client id used to verify the token `IDP_CLIENT_ID`",
-			EnvVars: []string{"IDP_CLIENT_ID"},
+			Name:     "idp-client-id",
+			Usage:    "the identity provider client id used to verify the token `IDP_CLIENT_ID`",
+			EnvVars:  []string{"IDP_CLIENT_ID"},
+			Required: true,
 		},
 		&cli.StringFlag{
 			Name:    "ca-authority",
