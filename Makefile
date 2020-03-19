@@ -66,6 +66,11 @@ korectl: golang deps
 	@mkdir -p bin
 	go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/korectl cmd/korectl/*.go
 
+cobractl: golang deps
+	@echo "--> Compiling the cobractl binary"
+	@mkdir -p bin
+	go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/cobractl cmd/cobractl/*.go
+
 auth-proxy: golang deps
 	@echo "--> Compiling the auth-proxy binary"
 	@mkdir -p bin
