@@ -1038,6 +1038,14 @@ spec:
               - namespace
               - version
               type: object
+            proxyAllowedIPs:
+              description: ProxyAllowedIPs is a list of IP address ranges (using CIDR
+                format), which will be allowed to access the proxy
+              items:
+                type: string
+              minItems: 1
+              type: array
+              x-kubernetes-list-type: set
             proxyImage:
               description: ProxyImage is the kube api proxy used to sso into the cluster
                 post provision

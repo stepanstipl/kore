@@ -54,6 +54,7 @@ func GetDefaultPlans() []*configv1.Plan {
 									"cidr": "0.0.0.0/0"
 								}
                             ],
+							"authProxyAllowedIPs":           ["0.0.0.0/0"],
 							"diskSize":                      100,
 							"enableAutoupgrade":             true,
 							"enableAutorepair":              true,
@@ -102,6 +103,7 @@ func GetDefaultPlans() []*configv1.Plan {
 									"cidr": "0.0.0.0/0"
 								}
                             ],
+							"authProxyAllowedIPs":           ["0.0.0.0/0"],
 							"diskSize":                      100,
 							"enableAutoupgrade":             true,
 							"enableAutorepair":              true,

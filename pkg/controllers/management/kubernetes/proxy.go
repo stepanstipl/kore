@@ -237,9 +237,19 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 
 	replicas := int32(2)
 
-	claims := []string{}
+	args := []string{
+		"--idp-client-id=" + a.Config().IDPClientID,
+		"--idp-server-url=" + a.Config().IDPServerURL,
+		"--tls-cert=/tls/tls.crt",
+		"--tls-key=/tls/tls.key",
+	}
+
 	for _, x := range a.Config().IDPUserClaims {
-		claims = append(claims, fmt.Sprintf("--idp-user-claims=%s", x))
+		args = append(args, fmt.Sprintf("--idp-user-claims=%s", x))
+	}
+
+	for _, allowedIP := range cluster.Spec.ProxyAllowedIPs {
+		args = append(args, fmt.Sprintf("--allowed-ips=%s", allowedIP))
 	}
 
 	// @step: ensure the deployment is there
@@ -288,12 +298,7 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 								},
 								PeriodSeconds: 10,
 							},
-							Args: append([]string{
-								"--idp-client-id=" + a.Config().IDPClientID,
-								"--idp-server-url=" + a.Config().IDPServerURL,
-								"--tls-cert=/tls/tls.crt",
-								"--tls-key=/tls/tls.key",
-							}, claims...),
+							Args: args,
 							VolumeMounts: []v1.VolumeMount{
 								{
 									Name:      "tls",

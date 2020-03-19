@@ -266,6 +266,12 @@ func CreateKubernetesClusterFromProvider(config *Config, provider *unstructured.
 	}
 	kind := "Kubernetes"
 
+	providerSpec := provider.Object["spec"].(map[string]interface{})
+	authProxyAllowedIPs, ok := convertToStringList(providerSpec["authProxyAllowedIPs"])
+	if !ok {
+		return nil, fmt.Errorf("authProxyAllowedIPs is invalid: %q", authProxyAllowedIPs)
+	}
+
 	// @step: create the cluster on top of
 	object := &clustersv1.Kubernetes{
 		TypeMeta: metav1.TypeMeta{
@@ -292,6 +298,7 @@ func CreateKubernetesClusterFromProvider(config *Config, provider *unstructured.
 					Roles:    []string{"cluster-admin"},
 				},
 			},
+			ProxyAllowedIPs: authProxyAllowedIPs,
 		},
 	}
 	if dry {
@@ -440,4 +447,23 @@ func parsePlanParams(params []string) (map[string]interface{}, error) {
 		res[name] = parsed
 	}
 	return res, nil
+}
+
+func convertToStringList(obj interface{}) ([]string, bool) {
+	switch list := obj.(type) {
+	case []string:
+		return list, true
+	case []interface{}:
+		res := make([]string, 0, len(list))
+		for _, elem := range list {
+			if val, ok := elem.(string); ok {
+				res = append(res, val)
+			} else {
+				return nil, false
+			}
+		}
+		return res, true
+	default:
+		return nil, false
+	}
 }
