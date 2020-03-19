@@ -20,6 +20,7 @@ github.com/RoaringBitmap/roaring
 github.com/asaskevich/govalidator
 # github.com/aws/aws-sdk-go v1.29.21
 github.com/aws/aws-sdk-go/aws
+github.com/aws/aws-sdk-go/aws/arn
 github.com/aws/aws-sdk-go/aws/awserr
 github.com/aws/aws-sdk-go/aws/awsutil
 github.com/aws/aws-sdk-go/aws/client
@@ -236,7 +237,7 @@ github.com/gobwas/glob/syntax/ast
 github.com/gobwas/glob/syntax/lexer
 github.com/gobwas/glob/util/runes
 github.com/gobwas/glob/util/strings
-# github.com/gofrs/flock v0.0.0-20190320160742-5135e617513b
+# github.com/gofrs/flock v0.7.0
 github.com/gofrs/flock
 # github.com/gogo/protobuf v1.3.1
 github.com/gogo/protobuf/proto
@@ -488,7 +489,7 @@ github.com/pmezard/go-difflib/difflib
 # github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35
 github.com/pquerna/cachecontrol
 github.com/pquerna/cachecontrol/cacheobject
-# github.com/prometheus/client_golang v1.0.0
+# github.com/prometheus/client_golang v1.1.0
 github.com/prometheus/client_golang/prometheus
 github.com/prometheus/client_golang/prometheus/internal
 github.com/prometheus/client_golang/prometheus/promhttp
@@ -1223,6 +1224,9 @@ mvdan.cc/lint
 mvdan.cc/unparam/check
 # sigs.k8s.io/application v0.8.2-0.20200209202752-a485a03cdc47
 sigs.k8s.io/application/api/v1beta1
+# sigs.k8s.io/aws-iam-authenticator v0.5.0
+sigs.k8s.io/aws-iam-authenticator/pkg/arn
+sigs.k8s.io/aws-iam-authenticator/pkg/token
 # sigs.k8s.io/controller-runtime v0.4.0
 sigs.k8s.io/controller-runtime/pkg/cache
 sigs.k8s.io/controller-runtime/pkg/cache/internal
