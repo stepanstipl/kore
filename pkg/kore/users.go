@@ -22,6 +22,7 @@ import (
 	"time"
 
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
+	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/services/users/model"
 
@@ -187,6 +188,10 @@ func (h *usersImpl) ListInvitations(ctx context.Context, username string) (*orgv
 
 // Delete removes the user from the kore
 func (h *usersImpl) Delete(ctx context.Context, username string) (*orgv1.User, error) {
+	if !authentication.MustGetIdentity(ctx).IsGlobalAdmin() {
+		return nil, ErrUnauthorized
+	}
+
 	// @step: check the user exists
 	u, err := h.usermgr.Users().Get(ctx, username)
 	if err != nil {
@@ -222,6 +227,10 @@ func (h *usersImpl) Delete(ctx context.Context, username string) (*orgv1.User, e
 
 // Update is responsible for updating the user
 func (h *usersImpl) Update(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
+	if !authentication.MustGetIdentity(ctx).IsGlobalAdmin() {
+		return nil, ErrUnauthorized
+	}
+
 	user.Namespace = HubNamespace
 
 	// @step: we need to validate the user
