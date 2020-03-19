@@ -64,7 +64,10 @@ func init() {
 		viper.GetBool("SHOW_FLAGS"),
 		"Used to debugging the flags on the command line `BOOL`",
 	)
-	rootCmd.PersistentFlags().MarkHidden("show-flags")
+	if err := rootCmd.PersistentFlags().MarkHidden("show-flags"); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: could not configure show-flags on CLI.")
+		os.Exit(1)
+	}
 
 	rootCmd.PersistentFlags().StringP(
 		"output",
