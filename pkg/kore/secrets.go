@@ -127,13 +127,6 @@ func (h *secretImpl) Delete(ctx context.Context, name string) (*configv1.Secret,
 		}
 	}
 
-	h.Audit().Record(ctx,
-		users.Resource("secrets/"+name),
-		users.ResourceUID(string(secret.UID)),
-		users.Team(h.team),
-		users.User(user.Username()),
-	).Event("user deleting the secret from team")
-
 	// @TODO should this check if the secret is being used?
 	return secret, h.Store().Client().Delete(ctx, store.DeleteOptions.From(secret))
 }
