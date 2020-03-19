@@ -215,7 +215,8 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 				},
 			},
 			Spec: v1.ServiceSpec{
-				Type: v1.ServiceTypeLoadBalancer,
+				Type:                  v1.ServiceTypeLoadBalancer,
+				ExternalTrafficPolicy: v1.ServiceExternalTrafficPolicyTypeLocal,
 				Ports: []v1.ServicePort{
 					{
 						Port:       443,
