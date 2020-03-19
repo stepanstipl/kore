@@ -26,8 +26,10 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"os/signal"
 	"regexp"
 	"strings"
+	"syscall"
 	"time"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
@@ -148,7 +150,7 @@ func GetTeamAllocation(config *Config, team, name string) (*configv1.Allocation,
 }
 
 // GetTeamResource returns a team object
-func GetTeamResource(config *Config, team, kind, name string, object runtime.Object) error {
+func GetTeamResource(config *Config, team, kind, name string, object interface{}) error {
 	kind = strings.ToLower(utils.ToPlural(kind))
 
 	return NewRequest().
@@ -198,15 +200,27 @@ func GetResourceList(config *Config, team, kind, name string, object runtime.Obj
 func WaitOnResource(ctx context.Context, config *Config, team, kind, name string, interval, timeout time.Duration) (bool, error) {
 	var success bool
 
-	u := &unstructured.Unstructured{}
+	u := make(map[string]interface{})
+	var max int
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	go func() {
+		<-sig
+		cancel()
+	}()
 
 	err := utils.WaitUntilComplete(ctx, timeout, interval, func() (bool, error) {
-		err := GetTeamResource(config, team, kind, name, u)
+		err := GetTeamResource(config, team, kind, name, &u)
 		if err != nil {
 			return false, nil
 		}
 
-		status, ok := u.Object["status"].(map[string]interface{})
+		status, ok := u["status"].(map[string]interface{})
 		if !ok {
 			return false, nil
 		}
@@ -216,9 +230,14 @@ func WaitOnResource(ctx context.Context, config *Config, team, kind, name string
 		}
 
 		if state == string(corev1.FailureStatus) {
-			return false, errors.New("resource has failed to provision")
+			if max > 3 {
+				return false, errors.New("resource has failed to provision")
+			}
+			max++
 		}
 		if state == string(corev1.SuccessStatus) {
+			success = true
+
 			return true, nil
 		}
 

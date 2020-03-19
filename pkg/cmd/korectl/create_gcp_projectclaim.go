@@ -17,10 +17,13 @@
 package korectl
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	gcp "github.com/appvia/kore/pkg/apis/gcp/v1alpha1"
+	"github.com/appvia/kore/pkg/utils"
 
 	"github.com/urfave/cli/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -61,6 +64,11 @@ func GetCreateGCPProject(config *Config) *cli.Command {
 				Aliases:  []string{"org"},
 				Required: true,
 			},
+			&cli.BoolFlag{
+				Name:  "wait",
+				Value: true,
+				Usage: "indicates we should wait for resource to provision (defaults: true) `BOOL`",
+			},
 		},
 
 		Before: func(ctx *cli.Context) error {
@@ -76,17 +84,20 @@ func GetCreateGCPProject(config *Config) *cli.Command {
 			name := ctx.Args().First()
 			kind := "projectclaim"
 			org := ctx.String("organization")
+			wait := ctx.Bool("wait")
 
-			found, err := TeamResourceExists(config, team, kind, name)
-			if err != nil {
-				return err
-			}
-			if found {
-				return fmt.Errorf("%q already exists, please edit instead", name)
-			}
+			/*
+				found, err := TeamResourceExists(config, team, kind, name)
+				if err != nil {
+					return err
+				}
+				if found {
+					return fmt.Errorf("%q already exists, please edit instead", name)
+				}
+			*/
 
 			// @step: we retrieve the allocation
-			found, err = TeamResourceExists(config, team, "allocation", org)
+			found, err := TeamResourceExists(config, team, "allocation", org)
 			if err != nil {
 				return err
 			}
@@ -123,7 +134,33 @@ func GetCreateGCPProject(config *Config) *cli.Command {
 			if err := CreateTeamResource(config, team, kind, name, o); err != nil {
 				return err
 			}
-			fmt.Printf("%q has been successfully created\n", name)
+			if !wait {
+				fmt.Printf("%q has been successfully requested\n", name)
+			}
+
+			timeout := 5 * time.Minute
+			interval := 10 * time.Second
+
+			if wait {
+				fmt.Printf("%q waiting for resource to provision ...\n", name)
+
+				success, err := WaitOnResource(context.Background(), config, team, kind, name, interval, timeout)
+				if err != nil {
+					if err == utils.ErrCancelled {
+						fmt.Printf("\nresource will be provisioned in the background\n")
+
+						return err
+					}
+
+					return nil
+				}
+				if success {
+					fmt.Printf("%q has been successfully created\n", name)
+				} else {
+					fmt.Printf("%q has failed to provision\n", name)
+				}
+			} else {
+			}
 
 			return nil
 		},

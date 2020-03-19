@@ -25,6 +25,8 @@ import (
 var (
 	// ErrTimeout indicates the operation has been timed out
 	ErrTimeout = errors.New("operation has timed out")
+	// ErrCancelled indicates the operaton was cancelled
+	ErrCancelled = errors.New("operation has been cancelled")
 )
 
 // WaitUntilComplete calls the condition on every interval and check for true, nil. An error indicates a hard error and exits
@@ -42,7 +44,7 @@ func WaitUntilComplete(ctx context.Context, timeout time.Duration, interval time
 	for {
 		select {
 		case <-nc.Done():
-			return ErrTimeout
+			return ErrCancelled
 		default:
 		}
 
@@ -53,7 +55,7 @@ func WaitUntilComplete(ctx context.Context, timeout time.Duration, interval time
 		}
 
 		if Sleep(ctx, interval) {
-			return ErrTimeout
+			return ErrCancelled
 		}
 	}
 }

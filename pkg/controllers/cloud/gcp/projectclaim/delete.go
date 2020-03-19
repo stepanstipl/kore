@@ -66,6 +66,11 @@ func (t ctrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 		if err != nil {
 			logger.WithError(err).Error("trying to retrieve the gcp organization")
 
+			// @choice: can we assume it was never built?
+			if kerrors.IsNotFound(err) {
+				return reconcile.Result{}, nil
+			}
+
 			return reconcile.Result{RequeueAfter: 2 * time.Minute}, err
 		}
 
@@ -73,6 +78,15 @@ func (t ctrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 		secret, err := t.EnsureOrganizationCredentials(ctx, org, project)
 		if err != nil {
 			logger.WithError(err).Error("trying to retrieve the gcp organization")
+
+			// @choice: can we assume it was never built?
+			if kerrors.IsNotFound(err) {
+				if project.Status.Status == corev1.FailureStatus {
+					return reconcile.Result{}, nil
+				}
+
+				return reconcile.Result{}, nil
+			}
 
 			return reconcile.Result{}, err
 		}

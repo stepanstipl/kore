@@ -152,8 +152,8 @@ func (t ctrl) EnsureOrganizationCredentials(ctx context.Context, org *gcp.Organi
 	// @TODO we probably shouldn't rely on the parent name here
 	secret := &configv1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      org.Name,
-			Namespace: org.Namespace,
+			Name:      org.Spec.CredentialsRef.Name,
+			Namespace: org.Spec.CredentialsRef.Namespace,
 		},
 	}
 
