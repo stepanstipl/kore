@@ -88,6 +88,11 @@ func Options() []cli.Flag {
 			Value:   "/var/run/secrets/kubernetes.io/serviceaccount/token",
 		},
 		&cli.BoolFlag{
+			Name:    "enable-proxy-protocol",
+			Usage:   "indicates the proxy should enable a proxy protocol listener `BOOL`",
+			EnvVars: []string{"ENABLE_PROXY_PROTOCOL"},
+		},
+		&cli.BoolFlag{
 			Name:    "verbose",
 			Usage:   "switches on verbose logging for debugging purposes `BOOL`",
 			EnvVars: []string{"VERBOSE"},

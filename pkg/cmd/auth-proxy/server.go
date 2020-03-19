@@ -32,6 +32,7 @@ import (
 
 	"github.com/appvia/kore/pkg/utils"
 
+	proxyproto "github.com/armon/go-proxyproto"
 	"github.com/coreos/go-oidc"
 	"github.com/julienschmidt/httprouter"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -213,6 +214,15 @@ func (a *authImpl) Run(ctx context.Context) error {
 		})
 	}
 
+	listener, err := net.Listen("tcp", a.config.Listen)
+	if err != nil {
+		return err
+	}
+	// @note: by enabling proxy protocol we wil have to change the health checks to tcp
+	if a.config.EnableProxyProtocol {
+		listener = &proxyproto.Listener{Listener: listener}
+	}
+
 	hs := &http.Server{Addr: a.config.Listen, Handler: router}
 
 	go func() {
@@ -222,11 +232,11 @@ func (a *authImpl) Run(ctx context.Context) error {
 
 		switch a.config.HasTLS() {
 		case true:
-			if err := hs.ListenAndServeTLS(a.config.TLSCert, a.config.TLSKey); err != nil {
+			if err := hs.ServeTLS(listener, a.config.TLSCert, a.config.TLSKey); err != nil {
 				log.WithError(err).Fatal("trying to start the http server")
 			}
 		default:
-			if err := hs.ListenAndServe(); err != nil {
+			if err := hs.Serve(listener); err != nil {
 				log.WithError(err).Fatal("trying to start the http server")
 			}
 		}

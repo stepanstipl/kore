@@ -23,6 +23,8 @@ import (
 
 // Config is the configuration for the service
 type Config struct {
+	// EnableProxyProtocol indicates proxy protocol is enabled
+	EnableProxyProtocol bool `json:"enable_proxy_protocol,omitempty"`
 	// IDPClientID is the client issuer
 	IDPClientID string `json:"idp_client_id,omitempty"`
 	// IDPServerURL is the openid server url
@@ -58,6 +60,7 @@ type Interface interface {
 }
 
 var (
+	// AllMethods contains all http methods
 	AllMethods = []string{
 		http.MethodDelete,
 		http.MethodGet,

@@ -79,11 +79,12 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 
 	// @step: build the parameters
 	var parameters struct {
-		Hostname string
-		Domain   string
-		Image    string
-		Name     string
-		Team     string
+		Domain     string
+		Hostname   string
+		Image      string
+		Name       string
+		ProxyProto bool
+		Team       string
 	}
 	parameters.Team = cluster.Namespace
 	parameters.Name = cluster.Name
@@ -242,6 +243,43 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 		claims = append(claims, fmt.Sprintf("--idp-user-claims=%s", x))
 	}
 
+	// @step: create the readiness probe for the proxy - this has to change to
+	// tcp if we are using proxy protocol
+	readiness := &v1.Probe{
+		Handler: v1.Handler{
+			HTTPGet: &v1.HTTPGetAction{
+				Path:   "/ready",
+				Port:   intstr.FromInt(10443),
+				Scheme: "HTTPS",
+			},
+		},
+		PeriodSeconds: 10,
+	}
+	if parameters.ProxyProto {
+		logger.Debug("enabling proxy protocol readiness check for auth-proxy")
+
+		readiness = &v1.Probe{
+			Handler: v1.Handler{
+				TCPSocket: &v1.TCPSocketAction{Port: intstr.FromInt(10443)},
+			},
+			PeriodSeconds: 10,
+		}
+	}
+
+	// @step: create the command line arguments for the proxy
+	// @note: doing this here allows are to merge easier and old version of the image
+	// will still work
+	args := append([]string{
+		"--idp-client-id=" + a.Config().IDPClientID,
+		"--idp-server-url=" + a.Config().IDPServerURL,
+		"--tls-cert=/tls/tls.crt",
+		"--tls-key=/tls/tls.key",
+	}, claims...)
+
+	if parameters.ProxyProto {
+		args = append(args, "--enable-proxy-protocol="+fmt.Sprintf("%t", parameters.ProxyProto))
+	}
+
 	// @step: ensure the deployment is there
 	if _, err := kubernetes.CreateOrUpdate(ctx, cc, &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -258,15 +296,11 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 		Spec: appsv1.DeploymentSpec{
 			Replicas: &replicas,
 			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"name": name,
-				},
+				MatchLabels: map[string]string{"name": name},
 			},
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						"name": name,
-					},
+					Labels: map[string]string{"name": name},
 				},
 				Spec: v1.PodSpec{
 					ServiceAccountName: "proxy",
@@ -278,22 +312,8 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 								{ContainerPort: 10443},
 								{ContainerPort: 8080},
 							},
-							ReadinessProbe: &v1.Probe{
-								Handler: v1.Handler{
-									HTTPGet: &v1.HTTPGetAction{
-										Path:   "/ready",
-										Port:   intstr.FromInt(10443),
-										Scheme: "HTTPS",
-									},
-								},
-								PeriodSeconds: 10,
-							},
-							Args: append([]string{
-								"--idp-client-id=" + a.Config().IDPClientID,
-								"--idp-server-url=" + a.Config().IDPServerURL,
-								"--tls-cert=/tls/tls.crt",
-								"--tls-key=/tls/tls.key",
-							}, claims...),
+							ReadinessProbe: readiness,
+							Args:           args,
 							VolumeMounts: []v1.VolumeMount{
 								{
 									Name:      "tls",
