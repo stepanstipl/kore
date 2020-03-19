@@ -20,7 +20,8 @@ import (
 	"math"
 	"time"
 
-	"github.com/coreos/go-oidc"
+	"github.com/appvia/kore/pkg/utils/openid"
+
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
@@ -34,7 +35,7 @@ func NewClaims(claims jwt.MapClaims) *Claims {
 	return &Claims{claims: claims}
 }
 
-func NewClaimsFromToken(token *oidc.IDToken) (*Claims, error) {
+func NewClaimsFromToken(token openid.IDToken) (*Claims, error) {
 	c := jwt.MapClaims{}
 	if err := token.Claims(&c); err != nil {
 		return nil, err
