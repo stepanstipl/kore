@@ -57,6 +57,8 @@ type Interface interface {
 	Run(context.Context) error
 	// Stop calls a halt to the proxy
 	Stop() error
+	// Addr returns with the server address
+	Addr() string
 }
 
 var (
