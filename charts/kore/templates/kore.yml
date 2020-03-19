@@ -78,6 +78,15 @@ spec:
             {{ else }}
             value: {{ .Values.api.endpoint.url }}
             {{ end }}
+          - name: KORE_UI_PUBLIC_URL
+            {{ if and (eq .Values.ui.serviceType "LoadBalancer") .Values.ui.endpoint.detect}}
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "kore.name" . }}-discovered-endpoints
+                key: {{ include "kore.name" . }}-portal
+            {{ else }}
+            value: {{ .Values.ui.endpoint.url }}
+            {{ end }}
           - name: KORE_AUTHENTICATION_PLUGINS
             value: {{ .Values.api.auth_plugins | join "," }}
         volumeMounts:
