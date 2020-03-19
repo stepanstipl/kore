@@ -129,7 +129,7 @@ func GetCreateSecretCommand(config *Config) *cli.Command {
 				return yaml.NewEncoder(os.Stdout).Encode(secret)
 			}
 
-			if force {
+			if !force {
 				if found, err := TeamResourceExists(config, team, "secret", name); err != nil {
 					return err
 				} else if found {
