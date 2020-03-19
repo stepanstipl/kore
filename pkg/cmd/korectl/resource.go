@@ -49,6 +49,7 @@ var resourceConfigs = map[string]resourceConfig{
 			Column("Description", ".spec.summary"),
 			Column("Owned By", ".metadata.namespace"),
 			Column("Resource", ".spec.resource.kind"),
+			Column("Status", ".status.status"),
 		},
 	},
 	"audit-event": {
