@@ -54,5 +54,5 @@ func TestWaitUntilCompleteTimeout(t *testing.T) {
 		return false, nil
 	})
 	require.Error(t, err)
-	assert.Equal(t, ErrTimeout, err)
+	assert.Equal(t, ErrCancelled, err)
 }

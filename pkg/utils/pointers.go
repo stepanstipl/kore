@@ -27,3 +27,10 @@ func DurationPtr(value time.Duration) *time.Duration {
 func StringPtr(value string) *string {
 	return &value
 }
+
+// TruePtr return a pointer to a true boolean
+func TruePtr() *bool {
+	yes := true
+
+	return &yes
+}
