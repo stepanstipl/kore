@@ -33,9 +33,8 @@ func ReconcileNamespaceClaims(ctx context.Context, c client.Client, name, namesp
 		"name":      name,
 		"namespace": namespace,
 	})
-	logger.Info("triggering a namespaceclaim reconcilation based on upstream trigger")
 
-	list, err := ListTeamNamespaceClaims(ctx, c, namespace)
+	list, err := ListTeamNamespaceClaims(ctx, c, name)
 	if err != nil {
 		logger.WithError(err).Error("trying to retrieve a list of namespaceclaims in team namespace")
 
@@ -43,11 +42,15 @@ func ReconcileNamespaceClaims(ctx context.Context, c client.Client, name, namesp
 		return []reconcile.Request{}, err
 	}
 
-	return NamespaceClaimsToRequests(list), nil
+	logger.WithField(
+		"namespaceclaims", len(list),
+	).Debug("triggering a namespaceclaim reconcilation based on upstream trigger")
+
+	return ToRequests(list), nil
 }
 
-// NamespaceClaimsToRequests converts a collection of claims to requests
-func NamespaceClaimsToRequests(items []clustersv1.NamespaceClaim) []reconcile.Request {
+// ToRequests converts a collection of claims to requests
+func ToRequests(items []clustersv1.NamespaceClaim) []reconcile.Request {
 	requests := make([]reconcile.Request, len(items))
 
 	// @step: trigger the namespaceclaims to reconcile

@@ -18,6 +18,7 @@ package namespaceclaims
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
@@ -26,6 +27,7 @@ import (
 	ctrl "github.com/appvia/kore/pkg/controllers/management/kubernetes"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
+	"github.com/davecgh/go-spew/spew"
 	log "github.com/sirupsen/logrus"
 
 	corev1 "k8s.io/api/core/v1"
@@ -225,6 +227,7 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 				Name:     x.Spec.Username,
 			})
 		}
+		fmt.Printf("USER: %s", spew.Sdump(binding))
 
 		// @step: ensuring the binding exists
 		if _, err := kubernetes.CreateOrUpdate(ctx, client, binding); err != nil {

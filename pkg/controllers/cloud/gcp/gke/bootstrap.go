@@ -22,7 +22,7 @@ import (
 
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
-	"github.com/appvia/kore/pkg/utils/kubernetes"
+	"github.com/appvia/kore/pkg/controllers"
 	kube "github.com/appvia/kore/pkg/utils/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -101,29 +101,19 @@ func (p *bootImpl) Bootstrap(ctx context.Context, client client.Client) error {
 		return err
 	}
 
-	secret := &configv1.Secret{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: configv1.GroupVersion.String(),
-			Kind:       "Secret",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      p.cluster.Name,
-			Namespace: p.cluster.Namespace,
-		},
-		Spec: configv1.SecretSpec{
-			Type:        configv1.KubernetesSecret,
-			Description: "Kubernetes Cluster credentials for " + p.cluster.Name,
-			Data: map[string]string{
-				"ca.crt":   string(creds.Data["ca.crt"]),
-				"endpoint": p.cluster.Status.Endpoint,
-				"token":    string(creds.Data["token"]),
-			},
-		},
-	}
+	secret := controllers.NewEmptySecret().
+		Description("Kubernetes Cluster credentials for " + p.cluster.Name).
+		Name(p.cluster.Name).
+		Namespace(p.cluster.Namespace).
+		Type(configv1.KubernetesSecret).
+		Values(map[string]string{
+			"ca.crt":   string(creds.Data["ca.crt"]),
+			"endpoint": p.cluster.Status.Endpoint,
+			"token":    string(creds.Data["token"]),
+		}).Secret()
 
-	_, err = kubernetes.CreateOrUpdate(ctx, client, secret.Encode())
-	if err != nil {
-		logger.WithError(err).Error("trying to create sysadmin token")
+	if err := controllers.CreateManagedSecret(ctx, p.cluster, client, secret.Encode()); err != nil {
+		logger.WithError(err).Error("trying to create sysadmin secret")
 
 		return err
 	}
