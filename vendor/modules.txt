@@ -16,6 +16,8 @@ github.com/PuerkitoBio/purell
 github.com/PuerkitoBio/urlesc
 # github.com/RoaringBitmap/roaring v0.4.21
 github.com/RoaringBitmap/roaring
+# github.com/armon/go-proxyproto v0.0.0-20200108142055-f0b8253b1507
+github.com/armon/go-proxyproto
 # github.com/asaskevich/govalidator v0.0.0-20200108200545-475eaeb16496
 github.com/asaskevich/govalidator
 # github.com/beevik/etree v1.1.0
@@ -420,8 +422,6 @@ github.com/onsi/ginkgo/types
 # github.com/onsi/gomega v1.9.0
 github.com/onsi/gomega
 github.com/onsi/gomega/format
-github.com/onsi/gomega/gbytes
-github.com/onsi/gomega/gexec
 github.com/onsi/gomega/internal/assertion
 github.com/onsi/gomega/internal/asyncassertion
 github.com/onsi/gomega/internal/oraclematcher
