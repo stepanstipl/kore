@@ -171,7 +171,7 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 						}
 					}
 
-					fmt.Printf("Waiting for %q to provision (usually takes around 5 minutes, ctrl-c to background)\n", name)
+					fmt.Printf("waiting for %q to provision (usually takes around 5 minutes, ctrl-c to background)\n", name)
 
 					// @step: allow for cancellation of the block - and probably wrap this up into a common framework
 					sig := make(chan os.Signal, 1)
@@ -190,14 +190,14 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 						if err == nil {
 							switch cluster.Status.Status {
 							case corev1.SuccessStatus:
-								fmt.Println("Cluster", cluster.Name, "has been successfully provisioned")
+								fmt.Println("cluster", cluster.Name, "has been successfully provisioned")
 								return nil
 							case corev1.FailureStatus:
 								return fmt.Errorf("failed to provision cluster: %q, please check via $ korectl get clusters -o yaml", name)
 							}
 						}
 						if utils.Sleep(c, 5*time.Second) {
-							fmt.Printf("\nProvisioning has been backgrounded, you can check the status via: $ korectl get clusters -t %s\n", team)
+							fmt.Printf("\nprovisioning has been backgrounded, you can check the status via: $ korectl get clusters -t %s\n", team)
 							return nil
 						}
 					}
@@ -206,11 +206,11 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 					return fmt.Errorf("has failed to provision, use: $ korectl get clusters %s -t %s -o yaml to view status", name, team)
 				}
 				if ctx.Bool("show-time") {
-					fmt.Printf("Provisioning took: %s\n", time.Since(now))
+					fmt.Printf("provisioning took: %s\n", time.Since(now))
 				}
 
 			} else {
-				fmt.Printf("Cluster provisioning in background: you can check the status via: $ korectl get clusters %s -t %s\n", name, team)
+				fmt.Printf("cluster provisioning in background: you can check the status via: $ korectl get clusters %s -t %s\n", name, team)
 			}
 
 			// @step: create the cluster ownership

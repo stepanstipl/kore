@@ -51,8 +51,8 @@ $ korectl get projectclaims -t devs
 // GetCreateGCPProject provides the action to create team projects
 func GetCreateGCPProject(config *Config) *cli.Command {
 	return &cli.Command{
-		Name:        "project",
-		Aliases:     []string{"projects"},
+		Name:        "projectclaim",
+		Aliases:     []string{"projectclaims"},
 		Usage:       "provisions teams a gcp project to contain the resources",
 		Description: formatLongDescription(gcpProjectLongDescription),
 		ArgsUsage:   "<name> [options]",
@@ -142,12 +142,12 @@ func GetCreateGCPProject(config *Config) *cli.Command {
 			interval := 10 * time.Second
 
 			if wait {
-				fmt.Printf("%q waiting for resource to provision ...\n", name)
+				fmt.Printf("waiting for %q to provision ... (ctrl-c to background)\n", name)
 
 				success, err := WaitOnResource(context.Background(), config, team, kind, name, interval, timeout)
 				if err != nil {
 					if err == utils.ErrCancelled {
-						fmt.Printf("\nresource will be provisioned in the background\n")
+						fmt.Printf("\nResource will be provisioned in the background\n")
 
 						return err
 					}
