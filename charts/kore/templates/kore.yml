@@ -79,7 +79,7 @@ spec:
             value: {{ .Values.api.endpoint.url }}
             {{ end }}
           - name: KORE_UI_PUBLIC_URL
-            {{ if and (eq .Values.api.serviceType "LoadBalancer") .Values.api.endpoint.detect}}
+            {{ if and (eq .Values.ui.serviceType "LoadBalancer") .Values.ui.endpoint.detect}}
             valueFrom:
               secretKeyRef:
                 name: {{ include "kore.name" . }}-discovered-endpoints
