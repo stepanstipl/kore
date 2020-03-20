@@ -159,7 +159,6 @@ func GetCreateGCPProject(config *Config) *cli.Command {
 				} else {
 					fmt.Printf("%q has failed to provision\n", name)
 				}
-			} else {
 			}
 
 			return nil
