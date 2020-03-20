@@ -8,9 +8,7 @@ BOILERPLATE_LENGTH=$(cat ${BOILERPLATE}| wc -l | xargs)
 EXCLUDE_FILES=(
   ./hack/generate/manifests_vfsdata.go
   ./pkg/clusterappman/manifests_tools.go
-  ./pkg/clusterappman/manifests_vfsdata.go
   ./pkg/tools/tools.go
-  ./pkg/register/assets.go
 )
 
 if [[ -z "${BOILERPLATE_LENGTH}" ]]; then
@@ -18,14 +16,31 @@ if [[ -z "${BOILERPLATE_LENGTH}" ]]; then
   exit 1
 fi
 
+failed=0
 while read name; do
   # ignore excluded files
   [[ " ${EXCLUDE_FILES[*]} " == *" ${name} "* ]] && continue
   # ignore auto generated ones
   [[ "${name}" =~ ^.*zz_generated.*$ ]] && continue
+  # ignore test suite files
+  [[ "${name}" =~ ^.*_suite_test.go$ ]] && continue
+  # ignore generated files
+  if head -n 1 "${name}" | grep -qE "^// Code generated"; then
+    continue
+  fi
 
   if ! head -n ${BOILERPLATE_LENGTH} ${name} | diff - ${BOILERPLATE} >/dev/null; then
-    echo "Please check the licence header on ${name}"
-    echo "Ensure its the same as ${BOILERPLATE}"
+    echo "Missing licence header: ${name}"
+    failed=1
   fi
 done < <(find . -type f -name "*.go" | grep -v vendor)
+
+if [ "$failed" = 1 ]; then
+  echo
+  echo "Make sure all listed files have a licence header. The licence can be found in ${BOILERPLATE}".
+  echo
+  echo "# Copy to clipboard:"
+  echo "cat ${BOILERPLATE} | pbcopy"
+  echo
+  exit 1
+fi
