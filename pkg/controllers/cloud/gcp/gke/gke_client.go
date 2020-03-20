@@ -401,7 +401,7 @@ func (g *gkeClient) GetClusters() ([]*container.Cluster, error) {
 					return false, err
 				}
 
-				// @step: in absense of knowing the error, we will retry and use
+				// @step: in absence of knowing the error, we will retry and use
 				// the backoff and retry to handle this
 				return false, nil
 			default:
