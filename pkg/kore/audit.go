@@ -15,3 +15,74 @@
  */
 
 package kore
+
+import (
+	"context"
+	"time"
+
+	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
+	"github.com/appvia/kore/pkg/kore/authentication"
+	"github.com/appvia/kore/pkg/services/users"
+	log "github.com/sirupsen/logrus"
+)
+
+// Audit represents the interface to the top-level Kore Audit service.
+type Audit interface {
+	// AuditEvents returns a stream of events across teams since x
+	AuditEvents(context.Context, time.Duration) (*orgv1.AuditEventList, error)
+	// AuditEventsTeam returns a stream of events in relation to a specific team
+	AuditEventsTeam(ctx context.Context, team string, since time.Duration) (*orgv1.AuditEventList, error)
+	// Record stores an event in the underlying audit service.
+	Record(ctx context.Context, fields ...users.AuditFunc) users.Log
+}
+
+type auditImpl struct {
+	*hubImpl
+}
+
+func (a *auditImpl) Record(ctx context.Context, fields ...users.AuditFunc) users.Log {
+	return a.usermgr.Audit().Record(ctx, fields[:]...)
+}
+
+// AuditEvents returns a stream of events in relation to the teams since x
+func (a *auditImpl) AuditEvents(ctx context.Context, since time.Duration) (*orgv1.AuditEventList, error) {
+	// @step: must be a admin user
+	user := authentication.MustGetIdentity(ctx)
+	if !user.IsGlobalAdmin() {
+		log.WithField(
+			"username", user.Username(),
+		).Warn("user trying to access the audit logs")
+
+		return nil, NewErrNotAllowed("Must be global admin")
+	}
+
+	// @step: retrieve a list of audit events across all teams
+	list, err := a.usermgr.Audit().Find(ctx,
+		users.Filter.WithDuration(since),
+		//users.Filter.WithTeamNotNull(),
+	).Do()
+	if err != nil {
+		log.WithError(err).Error("trying to retrieve audit logs for teams")
+
+		return nil, err
+	}
+
+	return DefaultConvertor.FromAuditModelList(list), nil
+}
+
+// AuditEventsTeam returns a stream of events in relation to a specific team
+func (a *auditImpl) AuditEventsTeam(ctx context.Context, team string, since time.Duration) (*orgv1.AuditEventList, error) {
+	// @TODO: Check user is in team
+
+	list, err := a.usermgr.Audit().Find(ctx,
+		users.Filter.WithTeam(team),
+		users.Filter.WithDuration(since),
+	).Do()
+	if err != nil {
+		log.WithError(err).Error("trying to retrieve audit logs for team")
+
+		return nil, err
+	}
+
+	return DefaultConvertor.FromAuditModelList(list), nil
+}

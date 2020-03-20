@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/appvia/kore/pkg/kore/authentication"
-	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/services/users/model"
 	"github.com/appvia/kore/pkg/store"
 )
@@ -49,7 +48,7 @@ var (
 // Interface is the contrat between the api and store
 type Interface interface {
 	// Audit returns the audit interface
-	Audit() users.Audit
+	Audit() Audit
 	// Config returns the kore configure
 	Config() *Config
 	// Invitations returns the invitations interface

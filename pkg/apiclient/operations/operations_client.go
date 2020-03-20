@@ -55,10 +55,6 @@ type ClientService interface {
 
 	GetTeam(params *GetTeamParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamOK, error)
 
-	GetTeamAudit(params *GetTeamAuditParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamAuditOK, error)
-
-	GetTeamMembers(params *GetTeamMembersParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamMembersOK, error)
-
 	GetTeamSecret(params *GetTeamSecretParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamSecretOK, error)
 
 	GetUser(params *GetUserParams, authInfo runtime.ClientAuthInfoWriter) (*GetUserOK, error)
@@ -86,6 +82,10 @@ type ClientService interface {
 	ListNamespaces(params *ListNamespacesParams, authInfo runtime.ClientAuthInfoWriter) (*ListNamespacesOK, error)
 
 	ListPlans(params *ListPlansParams, authInfo runtime.ClientAuthInfoWriter) (*ListPlansOK, error)
+
+	ListTeamAudit(params *ListTeamAuditParams, authInfo runtime.ClientAuthInfoWriter) (*ListTeamAuditOK, error)
+
+	ListTeamMembers(params *ListTeamMembersParams, authInfo runtime.ClientAuthInfoWriter) (*ListTeamMembersOK, error)
 
 	ListTeamSecrets(params *ListTeamSecretsParams, authInfo runtime.ClientAuthInfoWriter) (*ListTeamSecretsOK, error)
 
@@ -650,76 +650,6 @@ func (a *Client) GetTeam(params *GetTeamParams, authInfo runtime.ClientAuthInfoW
 }
 
 /*
-  GetTeamAudit useds to return a collection of events against the team
-*/
-func (a *Client) GetTeamAudit(params *GetTeamAuditParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamAuditOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewGetTeamAuditParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "GetTeamAudit",
-		Method:             "GET",
-		PathPattern:        "/api/v1alpha1/teams/{team}/audit",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &GetTeamAuditReader{formats: a.formats},
-		AuthInfo:           authInfo,
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*GetTeamAuditOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetTeamAudit: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
-  GetTeamMembers returns a list of user memberships in the team
-*/
-func (a *Client) GetTeamMembers(params *GetTeamMembersParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamMembersOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewGetTeamMembersParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "GetTeamMembers",
-		Method:             "GET",
-		PathPattern:        "/api/v1alpha1/teams/{team}/members",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &GetTeamMembersReader{formats: a.formats},
-		AuthInfo:           authInfo,
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*GetTeamMembersOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetTeamMembers: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
   GetTeamSecret useds to retrieve the secret from the team
 */
 func (a *Client) GetTeamSecret(params *GetTeamSecretParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamSecretOK, error) {
@@ -1204,6 +1134,76 @@ func (a *Client) ListPlans(params *ListPlansParams, authInfo runtime.ClientAuthI
 	// unexpected success response
 	unexpectedSuccess := result.(*ListPlansDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  ListTeamAudit useds to return a collection of events against the team
+*/
+func (a *Client) ListTeamAudit(params *ListTeamAuditParams, authInfo runtime.ClientAuthInfoWriter) (*ListTeamAuditOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewListTeamAuditParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "ListTeamAudit",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/audit",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &ListTeamAuditReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*ListTeamAuditOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for ListTeamAudit: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  ListTeamMembers returns a list of user memberships in the team
+*/
+func (a *Client) ListTeamMembers(params *ListTeamMembersParams, authInfo runtime.ClientAuthInfoWriter) (*ListTeamMembersOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewListTeamMembersParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "ListTeamMembers",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/members",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &ListTeamMembersReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*ListTeamMembersOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for ListTeamMembers: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*

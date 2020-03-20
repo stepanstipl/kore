@@ -101,6 +101,14 @@ func getAuth(user testUsers) runtime.ClientAuthInfoWriter {
 	return httptransport.BearerToken(getJWT(intTestData.Users[string(user)]))
 }
 
+func getTestUser(user testUsers) *testUser {
+	return intTestData.Users[string(user)]
+}
+
+func getTestTeam(team testTeams) *testTeam {
+	return intTestData.Teams[string(team)]
+}
+
 type testData struct {
 	Auth struct {
 		PubKey  string `json:"pubKey"`

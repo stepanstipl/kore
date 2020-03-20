@@ -49,6 +49,8 @@ type hubImpl struct {
 	usermgr users.Interface
 	// signer is used to sign off client certs
 	signer certificates.Signer
+	// audit is the audit implementation
+	audit Audit
 }
 
 // New returns a new instance of the kore bridge
@@ -90,6 +92,7 @@ func New(sc store.Store, usermgr users.Interface, config Config) (Interface, err
 	h.teams = &teamsImpl{hubImpl: h}
 	h.usermgr = usermgr
 	h.users = &usersImpl{hubImpl: h}
+	h.audit = &auditImpl{hubImpl: h}
 
 	// @step: call the setup code for the kore
 	if err := h.Setup(context.Background()); err != nil {
@@ -136,8 +139,8 @@ func (h hubImpl) SignedServerCertificate(hosts []string, duration time.Duration)
 }
 
 // Audit returns the auditor
-func (h *hubImpl) Audit() users.Audit {
-	return h.usermgr.Audit()
+func (h *hubImpl) Audit() Audit {
+	return h.audit
 }
 
 // Users returns the user implementation

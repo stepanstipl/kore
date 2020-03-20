@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/services/users"
 
@@ -28,7 +29,7 @@ import (
 )
 
 // NewAuditingFilter creates a new Auditing for a route and returns the filter function.
-func NewAuditingFilter(audit func() users.Audit, apiVersion string, resource string, operation string) restful.FilterFunction {
+func NewAuditingFilter(audit func() kore.Audit, apiVersion string, resource string, operation string) restful.FilterFunction {
 	return func(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
 		user := req.Request.Context().Value(authentication.ContextKey{})
 

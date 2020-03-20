@@ -57,7 +57,13 @@ var resourceConfigs = map[string]resourceConfig{
 		IsGlobal: true,
 		IsTeam:   true,
 		Columns: []string{
-			Column("Name", "metadata.name"),
+			Column("Time", "spec.createdAt"),
+			Column("Resource", "spec.resource"),
+			Column("URI", "spec.resourceURI"),
+			Column("Operation", "spec.operation"),
+			Column("User", "spec.user"),
+			Column("Team", "spec.team"),
+			Column("Result", "spec.responseCode"),
 		},
 	},
 	"cluster": {
