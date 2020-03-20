@@ -18,6 +18,7 @@ package gke
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -402,6 +403,9 @@ func (g *gkeClient) GetClusters() ([]*container.Cluster, error) {
 			default:
 				return false, nil
 			}
+		}
+		if resp == nil {
+			return false, errors.New("invalid response google api")
 		}
 
 		list = resp.Clusters
