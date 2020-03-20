@@ -24,13 +24,11 @@ import (
 	"github.com/appvia/kore/pkg/cmd"
 	"github.com/appvia/kore/pkg/version"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
 func init() {
 	cmd.DefaultLogging()
-	log.SetReportCaller(true)
 }
 
 func main() {

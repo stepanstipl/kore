@@ -32,7 +32,7 @@ func TestAuditRecord(t *testing.T) {
 	store.Audit().Record(context.Background(),
 		User("test"),
 		Team("test"),
-		Type(AuditUpdate),
+		Verb(AuditUpdate),
 	).Event("test message")
 }
 
@@ -43,7 +43,7 @@ func TestAuditFind(t *testing.T) {
 	store.Audit().Record(context.Background(),
 		User("no_one"),
 		Team("no_one"),
-		Type(AuditUpdate),
+		Verb(AuditUpdate),
 	).Event("test message")
 
 	list, err := store.Audit().Find(context.Background(),
@@ -62,7 +62,7 @@ func TestAuditFindByDuration(t *testing.T) {
 	store.Audit().Record(context.Background(),
 		User("no_one"),
 		Team("no_one"),
-		Type(AuditUpdate),
+		Verb(AuditUpdate),
 	).Event("test message")
 
 	list, err := store.Audit().Find(context.Background(),

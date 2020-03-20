@@ -23,6 +23,8 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"reflect"
+	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -52,7 +54,7 @@ $ korectl get plans
 $ korectl get plans <name> -o yaml
 
 Examples:
-$ korectl -t <myteam> create cluster dev --plan gke-development --allocation <name>
+$ korectl -t <myteam> create cluster dev --plan gke-development --allocation <allocation_name>
 
 # Create a cluster and provision some namespaces on there as well
 $ korectl -t <myteam> create cluster dev --plan gke-development -a <name> --namespace=app1,app2
@@ -75,7 +77,7 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 		Name:        "cluster",
 		Aliases:     []string{"clusters"},
 		Description: createClusterLongDescription,
-		Usage:       "Create a kubernetes cluster within the team",
+		Usage:       "create a kubernetes cluster within the team",
 		ArgsUsage:   "<name> [options]",
 
 		Flags: []cli.Flag{
@@ -115,6 +117,10 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 				Name:  "dry-run",
 				Usage: "generate the cluster specification but does not apply `BOOL`",
 			},
+			&cli.StringSliceFlag{
+				Name:  "plan-param",
+				Usage: "used to override the plan parameters",
+			},
 		},
 
 		Before: func(ctx *cli.Context) error {
@@ -147,8 +153,13 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 				return fmt.Errorf("no plan defined, please use: $ korectl get plans")
 			}
 
+			planParams, err := parsePlanParams(ctx.StringSlice("plan-param"))
+			if err != nil {
+				return err
+			}
+
 			// @step: create the cloud provider
-			provider, err := CreateClusterProviderFromPlan(config, team, name, plan, allocation, dry)
+			provider, err := CreateClusterProviderFromPlan(config, team, name, plan, allocation, dry, planParams)
 			if err != nil {
 				return err
 			}
@@ -171,7 +182,7 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 						}
 					}
 
-					fmt.Printf("Waiting for %q to provision (usually takes around 5 minutes, ctrl-c to background)\n", name)
+					fmt.Printf("waiting for %q to provision (usually takes around 5 minutes, ctrl-c to background)\n", name)
 
 					// @step: allow for cancellation of the block - and probably wrap this up into a common framework
 					sig := make(chan os.Signal, 1)
@@ -190,14 +201,14 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 						if err == nil {
 							switch cluster.Status.Status {
 							case corev1.SuccessStatus:
-								fmt.Println("Cluster", cluster.Name, "has been successfully provisioned")
+								fmt.Println("cluster", cluster.Name, "has been successfully provisioned")
 								return nil
 							case corev1.FailureStatus:
 								return fmt.Errorf("failed to provision cluster: %q, please check via $ korectl get clusters -o yaml", name)
 							}
 						}
 						if utils.Sleep(c, 5*time.Second) {
-							fmt.Printf("\nProvisioning has been backgrounded, you can check the status via: $ korectl get clusters -t %s\n", team)
+							fmt.Printf("\nprovisioning has been backgrounded, you can check the status via: $ korectl get clusters -t %s\n", team)
 							return nil
 						}
 					}
@@ -206,11 +217,11 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 					return fmt.Errorf("has failed to provision, use: $ korectl get clusters %s -t %s -o yaml to view status", name, team)
 				}
 				if ctx.Bool("show-time") {
-					fmt.Printf("Provisioning took: %s\n", time.Since(now))
+					fmt.Printf("provisioning took: %s\n", time.Since(now))
 				}
 
 			} else {
-				fmt.Printf("Cluster provisioning in background: you can check the status via: $ korectl get clusters %s -t %s\n", name, team)
+				fmt.Printf("cluster provisioning in background: you can check the status via: $ korectl get clusters %s -t %s\n", name, team)
 			}
 
 			// @step: create the cluster ownership
@@ -332,7 +343,7 @@ func CreateClusterNamespace(config *Config, cluster corev1.Ownership, team, name
 
 // CreateClusterProviderFromPlan is used to provision a cluster in kore
 // @TODO need to be revisited once we have autogeneration of resources
-func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation string, dry bool) (*unstructured.Unstructured, error) {
+func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation string, dry bool, overrides map[string]interface{}) (*unstructured.Unstructured, error) {
 	// @step: we need to check if the plan exists in the kore
 	if found, err := ResourceExists(config, "plan", plan); err != nil {
 		return nil, fmt.Errorf("trying to retrieve plan from api: %s", err)
@@ -350,6 +361,16 @@ func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation 
 		return nil, fmt.Errorf("trying to decode plan values: %s", err)
 	}
 	kv["description"] = fmt.Sprintf("%s cluster", plan)
+
+	for paramName, overrideValue := range overrides {
+		if _, valid := kv[paramName]; !valid {
+			return nil, fmt.Errorf("plan doesn't have %q parameter", paramName)
+		}
+		if reflect.TypeOf(kv[paramName]) != reflect.TypeOf(overrideValue) {
+			return nil, fmt.Errorf("plan parameter %q has an invalid value (expected type: %T)", paramName, kv[paramName])
+		}
+		kv[paramName] = overrideValue
+	}
 
 	kind := strings.ToLower(utils.ToPlural(template.Spec.Kind))
 
@@ -397,4 +418,22 @@ func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation 
 	fmt.Printf("Attempting to create cluster: %q, plan: %s\n", name, plan)
 
 	return object, CreateTeamResource(config, team, kind, name, object)
+}
+
+func parsePlanParams(params []string) (map[string]interface{}, error) {
+	res := map[string]interface{}{}
+	for _, param := range params {
+		parts := regexp.MustCompile(`\s*=\s*`).Split(strings.TrimSpace(param), 2)
+		if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+			return nil, fmt.Errorf("invalid plan-param value %q, you must use param=<JSON value> format", param)
+		}
+		name := parts[0]
+		jsonValue := parts[1]
+		var parsed interface{}
+		if err := json.Unmarshal([]byte(jsonValue), &parsed); err != nil {
+			return nil, err
+		}
+		res[name] = parsed
+	}
+	return res, nil
 }

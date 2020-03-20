@@ -62,8 +62,8 @@ func (e *entryImpl) Do() ([]*model.AuditEvent, error) {
 		Select("q.*").
 		Table("audit_events q")
 
-	if e.filter.HasType() {
-		q = q.Where("q.type = ?", e.filter.GetType())
+	if e.filter.HasVerb() {
+		q = q.Where("q.type = ?", e.filter.GetVerb())
 	}
 	if e.filter.HasTeam() {
 		q = q.Where("q.team = ?", e.filter.GetTeam())
@@ -88,7 +88,7 @@ func (e *entryImpl) Do() ([]*model.AuditEvent, error) {
 
 // Event records the entry into the audit log
 func (e *entryImpl) Event(message string) {
-	if e.event.Type == "" || message == "" {
+	if e.event.Verb == "" || message == "" {
 		return
 	}
 	e.event.Message = message

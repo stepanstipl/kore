@@ -55,7 +55,7 @@ func (t *gkeCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 	finalizer := kubernetes.NewFinalizer(t.mgr.GetClient(), finalizerName)
 
 	requeue, err := func() (bool, error) {
-		creds, err := t.GetCredentials(ctx, resource, request.NamespacedName.Name)
+		creds, err := t.GetCredentials(ctx, resource, request.Namespace)
 		if err != nil {
 			return false, err
 		}

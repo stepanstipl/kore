@@ -70,6 +70,7 @@ func GetDefaultPlans() []*configv1.Plan {
 							"maintenanceWindow":      "03:00",
 							"maxSize":                10,
 							"network":                "default",
+							"region":                 "europe-west2",
 							"size":                   1,
 							"subnetwork":             "default",
 							"version":                "1.14.10-gke.24"
@@ -116,6 +117,7 @@ func GetDefaultPlans() []*configv1.Plan {
 							"maintenanceWindow":      "03:00",
 							"maxSize":                10,
 							"network":                "default",
+							"region":                 "europe-west2",
 							"size":                   2,
 							"subnetwork":             "default",
 							"version":                "1.14.10-gke.24"

@@ -35,3 +35,9 @@ func TestStringPtr(t *testing.T) {
 	require.NotNil(t, s)
 	assert.Equal(t, "hello", *s)
 }
+
+func TestIsTruePtr(t *testing.T) {
+	s := TruePtr()
+	require.NotNil(t, s)
+	require.True(t, *s)
+}

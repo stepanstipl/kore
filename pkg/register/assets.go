@@ -5,7 +5,6 @@
 // deploy/crds/aws.compute.kore.appvia.io_awscredentials.yaml
 // deploy/crds/aws.compute.kore.appvia.io_eksclusters.yaml
 // deploy/crds/clusters.compute.kore.appvia.io_kubernetes.yaml
-// deploy/crds/clusters.compute.kore.appvia.io_kubernetescredentials.yaml
 // deploy/crds/clusters.compute.kore.appvia.io_managedclusterrole.yaml
 // deploy/crds/clusters.compute.kore.appvia.io_managedclusterrolebinding.yaml
 // deploy/crds/clusters.compute.kore.appvia.io_managedconfig.yaml
@@ -15,8 +14,11 @@
 // deploy/crds/clusters.compute.kore.appvia.io_namespacepolicy.yaml
 // deploy/crds/config.kore.appvia.io_allocations.yaml
 // deploy/crds/config.kore.appvia.io_plans.yaml
+// deploy/crds/config.kore.appvia.io_secrets.yaml
 // deploy/crds/core.kore.appvia.io_idp.yaml
 // deploy/crds/core.kore.appvia.io_oidclient.yaml
+// deploy/crds/gcp.compute.kore.appvia.io_organizations.yaml
+// deploy/crds/gcp.compute.kore.appvia.io_projectclaims.yaml
 // deploy/crds/gke.compute.kore.appvia.io_gkecredentials.yaml
 // deploy/crds/gke.compute.kore.appvia.io_gkes.yaml
 // deploy/crds/org.kore.appvia.io_auditevents.yaml
@@ -1103,88 +1105,6 @@ func crdsClustersComputeKoreAppviaIo_kubernetesYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "crds/clusters.compute.kore.appvia.io_kubernetes.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _crdsClustersComputeKoreAppviaIo_kubernetescredentialsYaml = []byte(`
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  annotations:
-    controller-gen.kubebuilder.io/version: v0.2.5
-  creationTimestamp: null
-  name: kubernetescredentials.clusters.compute.kore.appvia.io
-spec:
-  group: clusters.compute.kore.appvia.io
-  names:
-    kind: KubernetesCredentials
-    listKind: KubernetesCredentialsList
-    plural: kubernetescredentials
-    singular: kubernetescredentials
-  preserveUnknownFields: false
-  scope: Namespaced
-  subresources:
-    status: {}
-  validation:
-    openAPIV3Schema:
-      description: KubernetesCredentials is the Schema for the roles API
-      properties:
-        apiVersion:
-          description: 'APIVersion defines the versioned schema of this representation
-            of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-          type: string
-        kind:
-          description: 'Kind is a string value representing the REST resource this
-            object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-          type: string
-        metadata:
-          type: object
-        spec:
-          description: KubernetesCredentialsSpec defines the desired state of Cluster
-          properties:
-            caCertificate:
-              description: CaCertificate is the certificate authority used by the
-                cluster
-              type: string
-            endpoint:
-              description: Endpoint is the kubernetes endpoint
-              minLength: 1
-              type: string
-            token:
-              description: Token is a service account token bound to cluster-admin
-                role
-              minLength: 1
-              type: string
-          type: object
-      type: object
-  version: v1
-  versions:
-  - name: v1
-    served: true
-    storage: true
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
-`)
-
-func crdsClustersComputeKoreAppviaIo_kubernetescredentialsYamlBytes() ([]byte, error) {
-	return _crdsClustersComputeKoreAppviaIo_kubernetescredentialsYaml, nil
-}
-
-func crdsClustersComputeKoreAppviaIo_kubernetescredentialsYaml() (*asset, error) {
-	bytes, err := crdsClustersComputeKoreAppviaIo_kubernetescredentialsYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "crds/clusters.compute.kore.appvia.io_kubernetescredentials.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -3082,6 +3002,119 @@ func crdsConfigKoreAppviaIo_plansYaml() (*asset, error) {
 	return a, nil
 }
 
+var _crdsConfigKoreAppviaIo_secretsYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: secrets.config.kore.appvia.io
+spec:
+  group: config.kore.appvia.io
+  names:
+    kind: Secret
+    listKind: SecretList
+    plural: secrets
+    singular: secret
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: Secret is the Schema for the plans API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: SecretSpec defines the desired state of Plan
+          properties:
+            data:
+              additionalProperties:
+                type: string
+              description: Values are the key values to the plan
+              type: object
+            description:
+              description: Description provides a summary of the secret
+              minLength: 1
+              type: string
+            type:
+              description: Type refers to the secret type
+              minLength: 1
+              type: string
+          required:
+          - description
+          - type
+          type: object
+        status:
+          description: SecretStatus defines the observed state of Plan
+          properties:
+            conditions:
+              description: Conditions is a set of condition which has caused an error
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+              x-kubernetes-list-type: set
+            status:
+              description: Status is overall status of the workspace
+              type: string
+            verified:
+              description: Verified indicates if the secret has been verified as working
+              type: boolean
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsConfigKoreAppviaIo_secretsYamlBytes() ([]byte, error) {
+	return _crdsConfigKoreAppviaIo_secretsYaml, nil
+}
+
+func crdsConfigKoreAppviaIo_secretsYaml() (*asset, error) {
+	bytes, err := crdsConfigKoreAppviaIo_secretsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/config.kore.appvia.io_secrets.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _crdsCoreKoreAppviaIo_idpYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -3445,6 +3478,299 @@ func crdsCoreKoreAppviaIo_oidclientYaml() (*asset, error) {
 	return a, nil
 }
 
+var _crdsGcpComputeKoreAppviaIo_organizationsYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: organizations.gcp.compute.kore.appvia.io
+spec:
+  group: gcp.compute.kore.appvia.io
+  names:
+    kind: Organization
+    listKind: OrganizationList
+    plural: organizations
+    singular: organization
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: Organization is the Schema for the organization API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: OrganizationSpec defines the desired state of Organization
+          properties:
+            billingAccount:
+              description: BillingAccountName is the resource name of the billing
+                account associated with the project e.g. '012345-567890-ABCDEF'
+              minLength: 1
+              type: string
+            credentialsRef:
+              description: CredentialsRef is a reference to the credentials used to
+                provision provision the projects - this is either created by dynamically
+                from the oauth token or provided for us
+              properties:
+                name:
+                  description: Name is unique within a namespace to reference a secret
+                    resource.
+                  type: string
+                namespace:
+                  description: Namespace defines the space within which the secret
+                    name must be unique.
+                  type: string
+              type: object
+            parentID:
+              description: ParentID is the type specific ID of the parent this project
+                has
+              minLength: 1
+              type: string
+            parentType:
+              description: 'ParentType is the type of parent this project has Valid
+                types are: "organization", "folder", and "project"'
+              enum:
+              - organization
+              - folder
+              - project
+              type: string
+            serviceAccount:
+              description: ServiceAccount is the name used when creating the service
+                account e.g. 'hub-admin'
+              minLength: 1
+              type: string
+            tokenRef:
+              description: TokenRef is a reference to an ephemeral oauth token used
+                provision the admin project
+              properties:
+                name:
+                  description: Name is unique within a namespace to reference a secret
+                    resource.
+                  type: string
+                namespace:
+                  description: Namespace defines the space within which the secret
+                    name must be unique.
+                  type: string
+              type: object
+          required:
+          - billingAccount
+          - parentID
+          - parentType
+          - serviceAccount
+          type: object
+        status:
+          description: OrganizationStatus defines the observed state of Organization
+          properties:
+            conditions:
+              description: Conditions is a set of components conditions
+              items:
+                description: Component the state of a component of the resource
+                properties:
+                  detail:
+                    description: Detail is additional details on the error is any
+                    type: string
+                  message:
+                    description: Message is a human readable message on the status
+                      of the component
+                    type: string
+                  name:
+                    description: Name is the name of the component
+                    type: string
+                  status:
+                    description: Status is the status of the component
+                    type: string
+                type: object
+              type: array
+            projectID:
+              description: Project is the GCP project ID
+              type: string
+            status:
+              description: Status provides a overall status
+              type: string
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsGcpComputeKoreAppviaIo_organizationsYamlBytes() ([]byte, error) {
+	return _crdsGcpComputeKoreAppviaIo_organizationsYaml, nil
+}
+
+func crdsGcpComputeKoreAppviaIo_organizationsYaml() (*asset, error) {
+	bytes, err := crdsGcpComputeKoreAppviaIo_organizationsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/gcp.compute.kore.appvia.io_organizations.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsGcpComputeKoreAppviaIo_projectclaimsYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: projectclaims.gcp.compute.kore.appvia.io
+spec:
+  group: gcp.compute.kore.appvia.io
+  names:
+    kind: ProjectClaim
+    listKind: ProjectClaimList
+    plural: projectclaims
+    singular: projectclaim
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: ProjectClaim is the Schema for the gcpprojects API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: ProjectClaimSpec defines the desired state of ProjectClaim
+          properties:
+            organization:
+              description: Organization is a reference to the gcp admin project to
+                use
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
+          required:
+          - organization
+          type: object
+        status:
+          description: ProjectClaimStatus defines the observed state of GCP Project
+          properties:
+            conditions:
+              description: Conditions is a set of components conditions
+              items:
+                description: Component the state of a component of the resource
+                properties:
+                  detail:
+                    description: Detail is additional details on the error is any
+                    type: string
+                  message:
+                    description: Message is a human readable message on the status
+                      of the component
+                    type: string
+                  name:
+                    description: Name is the name of the component
+                    type: string
+                  status:
+                    description: Status is the status of the component
+                    type: string
+                type: object
+              type: array
+            credentialRef:
+              description: CredentialRef is the reference to the credentials secret
+              properties:
+                name:
+                  description: Name is unique within a namespace to reference a secret
+                    resource.
+                  type: string
+                namespace:
+                  description: Namespace defines the space within which the secret
+                    name must be unique.
+                  type: string
+              type: object
+            projectID:
+              description: ProjectID is the  project id
+              type: string
+            status:
+              description: Status provides a overall status
+              type: string
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsGcpComputeKoreAppviaIo_projectclaimsYamlBytes() ([]byte, error) {
+	return _crdsGcpComputeKoreAppviaIo_projectclaimsYaml, nil
+}
+
+func crdsGcpComputeKoreAppviaIo_projectclaimsYaml() (*asset, error) {
+	bytes, err := crdsGcpComputeKoreAppviaIo_projectclaimsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/gcp.compute.kore.appvia.io_projectclaims.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _crdsGkeComputeKoreAppviaIo_gkecredentialsYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -3512,12 +3838,10 @@ spec:
             region:
               description: Region is the GCP region you wish to the cluster to reside
                 within
-              minLength: 1
               type: string
           required:
           - account
           - project
-          - region
           type: object
         status:
           description: GKECredentialsStatus defines the observed state of GKECredentials
@@ -3698,7 +4022,7 @@ spec:
               type: boolean
             enableAutoupgrade:
               description: EnableAutoUpgrade indicates if the cluster should be configured
-                with autograding enabled; meaning both nodes are masters are autoscated
+                with autograding enabled; meaning both nodes are masters are autoscaled
                 scheduled to upgrade during your maintenance window.
               type: boolean
             enableHTTPLoadBalancer:
@@ -3710,7 +4034,7 @@ spec:
             enableHorizontalPodAutoscaler:
               description: EnableHorizontalPodAutoscaler indicates if the cluster
                 is configured with the horizontal pod autoscaler addon. This automatically
-                adjusts the cpu and memory resources of pods in accordances with their
+                adjusts the cpu and memory resources of pods in accordance with their
                 demand. You should ensure you use PodDisruptionBudgets if this is
                 enabled.
               type: boolean
@@ -3725,7 +4049,7 @@ spec:
                 device.
               type: boolean
             enableShieldedNodes:
-              description: EnableSheildedNodes indicates we should enable the sheilds
+              description: EnableShieldedNodes indicates we should enable the shielded
                 nodes options in GKE. This protects against a variety of attacks by
                 hardening the underlying GKE node against rootkits and bootkits.
               type: boolean
@@ -3766,6 +4090,10 @@ spec:
             network:
               description: Network is the GCP network the cluster reside on, which
                 have to be unique within the GCP project and created beforehand.
+              minLength: 1
+              type: string
+            region:
+              description: Region is the gcp region you want the cluster to reside
               minLength: 1
               type: string
             servicesIPV4Cidr:
@@ -3908,6 +4236,13 @@ spec:
         spec:
           description: AuditEventSpec defines the desired state of User
           properties:
+            apiVersion:
+              description: APIVersion is the version of the API used for this operation.
+              type: string
+            completedAt:
+              description: CompletedAt is the timestamp the operation completed
+              format: date-time
+              type: string
             createdAt:
               description: CreatedAt is the timestamp of record creation
               format: date-time
@@ -3915,20 +4250,33 @@ spec:
             message:
               description: Message is event message itself
               type: string
-            resource:
-              description: Resource is the name of the resource in question namespace/name
+            operation:
+              description: Operation is the operation performed (e.g. UpdateCluster,
+                CreateCluster, etc).
               type: string
-            resourceUID:
-              description: ResourceUID is a unique id for the resource
+            resource:
+              description: Resource is the area of the API accessed in this audit
+                operation (e.g. teams, ).
+              type: string
+            resourceURI:
+              description: ResourceURI is the identifier of the resource in question.
+              type: string
+            responseCode:
+              description: ResponseCode indicates the HTTP status code of the operation
+                (e.g. 200, 404, etc).
+              type: integer
+            startedAt:
+              description: StartedAt is the timestamp the operation was initiated
+              format: date-time
               type: string
             team:
               description: Team is the team whom event may be associated to
               type: string
-            type:
-              description: Type is the type of event
-              type: string
             user:
               description: User is the user which the event is related
+              type: string
+            verb:
+              description: Verb is the type of action performed (e.g. PUT, GET, etc)
               type: string
           type: object
       type: object
@@ -4450,7 +4798,6 @@ var _bindata = map[string]func() (*asset, error){
 	"crds/aws.compute.kore.appvia.io_awscredentials.yaml":                 crdsAwsComputeKoreAppviaIo_awscredentialsYaml,
 	"crds/aws.compute.kore.appvia.io_eksclusters.yaml":                    crdsAwsComputeKoreAppviaIo_eksclustersYaml,
 	"crds/clusters.compute.kore.appvia.io_kubernetes.yaml":                crdsClustersComputeKoreAppviaIo_kubernetesYaml,
-	"crds/clusters.compute.kore.appvia.io_kubernetescredentials.yaml":     crdsClustersComputeKoreAppviaIo_kubernetescredentialsYaml,
 	"crds/clusters.compute.kore.appvia.io_managedclusterrole.yaml":        crdsClustersComputeKoreAppviaIo_managedclusterroleYaml,
 	"crds/clusters.compute.kore.appvia.io_managedclusterrolebinding.yaml": crdsClustersComputeKoreAppviaIo_managedclusterrolebindingYaml,
 	"crds/clusters.compute.kore.appvia.io_managedconfig.yaml":             crdsClustersComputeKoreAppviaIo_managedconfigYaml,
@@ -4460,8 +4807,11 @@ var _bindata = map[string]func() (*asset, error){
 	"crds/clusters.compute.kore.appvia.io_namespacepolicy.yaml":           crdsClustersComputeKoreAppviaIo_namespacepolicyYaml,
 	"crds/config.kore.appvia.io_allocations.yaml":                         crdsConfigKoreAppviaIo_allocationsYaml,
 	"crds/config.kore.appvia.io_plans.yaml":                               crdsConfigKoreAppviaIo_plansYaml,
+	"crds/config.kore.appvia.io_secrets.yaml":                             crdsConfigKoreAppviaIo_secretsYaml,
 	"crds/core.kore.appvia.io_idp.yaml":                                   crdsCoreKoreAppviaIo_idpYaml,
 	"crds/core.kore.appvia.io_oidclient.yaml":                             crdsCoreKoreAppviaIo_oidclientYaml,
+	"crds/gcp.compute.kore.appvia.io_organizations.yaml":                  crdsGcpComputeKoreAppviaIo_organizationsYaml,
+	"crds/gcp.compute.kore.appvia.io_projectclaims.yaml":                  crdsGcpComputeKoreAppviaIo_projectclaimsYaml,
 	"crds/gke.compute.kore.appvia.io_gkecredentials.yaml":                 crdsGkeComputeKoreAppviaIo_gkecredentialsYaml,
 	"crds/gke.compute.kore.appvia.io_gkes.yaml":                           crdsGkeComputeKoreAppviaIo_gkesYaml,
 	"crds/org.kore.appvia.io_auditevents.yaml":                            crdsOrgKoreAppviaIo_auditeventsYaml,
@@ -4518,7 +4868,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"aws.compute.kore.appvia.io_awscredentials.yaml":                 {crdsAwsComputeKoreAppviaIo_awscredentialsYaml, map[string]*bintree{}},
 		"aws.compute.kore.appvia.io_eksclusters.yaml":                    {crdsAwsComputeKoreAppviaIo_eksclustersYaml, map[string]*bintree{}},
 		"clusters.compute.kore.appvia.io_kubernetes.yaml":                {crdsClustersComputeKoreAppviaIo_kubernetesYaml, map[string]*bintree{}},
-		"clusters.compute.kore.appvia.io_kubernetescredentials.yaml":     {crdsClustersComputeKoreAppviaIo_kubernetescredentialsYaml, map[string]*bintree{}},
 		"clusters.compute.kore.appvia.io_managedclusterrole.yaml":        {crdsClustersComputeKoreAppviaIo_managedclusterroleYaml, map[string]*bintree{}},
 		"clusters.compute.kore.appvia.io_managedclusterrolebinding.yaml": {crdsClustersComputeKoreAppviaIo_managedclusterrolebindingYaml, map[string]*bintree{}},
 		"clusters.compute.kore.appvia.io_managedconfig.yaml":             {crdsClustersComputeKoreAppviaIo_managedconfigYaml, map[string]*bintree{}},
@@ -4528,8 +4877,11 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"clusters.compute.kore.appvia.io_namespacepolicy.yaml":           {crdsClustersComputeKoreAppviaIo_namespacepolicyYaml, map[string]*bintree{}},
 		"config.kore.appvia.io_allocations.yaml":                         {crdsConfigKoreAppviaIo_allocationsYaml, map[string]*bintree{}},
 		"config.kore.appvia.io_plans.yaml":                               {crdsConfigKoreAppviaIo_plansYaml, map[string]*bintree{}},
+		"config.kore.appvia.io_secrets.yaml":                             {crdsConfigKoreAppviaIo_secretsYaml, map[string]*bintree{}},
 		"core.kore.appvia.io_idp.yaml":                                   {crdsCoreKoreAppviaIo_idpYaml, map[string]*bintree{}},
 		"core.kore.appvia.io_oidclient.yaml":                             {crdsCoreKoreAppviaIo_oidclientYaml, map[string]*bintree{}},
+		"gcp.compute.kore.appvia.io_organizations.yaml":                  {crdsGcpComputeKoreAppviaIo_organizationsYaml, map[string]*bintree{}},
+		"gcp.compute.kore.appvia.io_projectclaims.yaml":                  {crdsGcpComputeKoreAppviaIo_projectclaimsYaml, map[string]*bintree{}},
 		"gke.compute.kore.appvia.io_gkecredentials.yaml":                 {crdsGkeComputeKoreAppviaIo_gkecredentialsYaml, map[string]*bintree{}},
 		"gke.compute.kore.appvia.io_gkes.yaml":                           {crdsGkeComputeKoreAppviaIo_gkesYaml, map[string]*bintree{}},
 		"org.kore.appvia.io_auditevents.yaml":                            {crdsOrgKoreAppviaIo_auditeventsYaml, map[string]*bintree{}},

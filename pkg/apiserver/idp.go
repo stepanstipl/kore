@@ -61,6 +61,7 @@ func (id *idpHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	ws.Route(
 		ws.GET("/types").To(id.getTypes).
 			Doc("Returns a list of all the possible identity providers supported in the kore").
+			Operation("ListIDPTypes").
 			Returns(http.StatusOK, "A list of all the possible identity provider types", []corev1.IDPConfig{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
@@ -69,6 +70,7 @@ func (id *idpHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	ws.Route(
 		ws.GET("/default").To(id.getDefaultIDP).
 			Doc("Returns the default identity provider configured in the kore").
+			Operation("GetDefaultIDP").
 			Returns(http.StatusOK, "The default configured identity provider", corev1.IDP{}).
 			Returns(http.StatusNotFound, "Indicate the class was not found in the kore", nil).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
@@ -78,6 +80,7 @@ func (id *idpHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	ws.Route(
 		ws.GET("/configured/").To(id.findIDPs).
 			Doc("Returns a list of all the configured identity providers in the kore").
+			Operation("ListIDPs").
 			Returns(http.StatusOK, "A list of all the configured identity providers", []corev1.IDP{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
@@ -85,6 +88,7 @@ func (id *idpHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	ws.Route(
 		ws.GET("/configured/{name}").To(id.getIDP).
 			Doc("Returns the definition for a specific identity provider").
+			Operation("GetIDP").
 			Param(ws.PathParameter("name", "The name of the configured IDP provider to retrieve")).
 			Returns(http.StatusOK, "the specified identity provider", corev1.IDP{}).
 			Returns(http.StatusNotFound, "Indicate the class was not found in the kore", nil).
@@ -94,6 +98,7 @@ func (id *idpHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	ws.Route(
 		ws.PUT("/configured/{name}").To(id.putIDP).
 			Doc("Returns the definition for a specific ID provider").
+			Operation("UpdateIDP").
 			Param(ws.PathParameter("name", "The name of the configured IDP provider to update")).
 			Reads(corev1.IDP{}, "The definition for the ID provider").
 			Returns(http.StatusOK, "A list of all the IDPs in the kore", corev1.IDP{}).
@@ -103,7 +108,8 @@ func (id *idpHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	// CLients confgured by name in the kore
 	ws.Route(
 		ws.PUT("/clients/{name}").To(id.putIDPClient).
-			Doc("Returns the definition for a specific idp client").
+			Doc("Updates the definition for a specific idp client").
+			Operation("UpdateIDPClient").
 			Param(ws.PathParameter("name", "The name of the IDP client provider to update")).
 			Reads(corev1.IDPClient{}, "The definition for the idp client").
 			Returns(http.StatusOK, "The configured client in the kore", corev1.IDPClient{}).

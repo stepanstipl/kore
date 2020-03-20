@@ -40,23 +40,30 @@ type gkeClient struct {
 	// ce in the container engine client
 	ce *container.Service
 	// credentials are the gke credentials
-	credentials *gke.GKECredentials
+	credentials *credentials
 	// cluster is the gke cluster
 	cluster *gke.GKE
+	// @deprecated region
+	region string
 }
 
 // NewClient returns a gcp client for us
-func NewClient(credentials *gke.GKECredentials, cluster *gke.GKE) (*gkeClient, error) {
-	options := []option.ClientOption{option.WithCredentialsJSON([]byte(credentials.Spec.Account))}
+func NewClient(credentials *credentials, cluster *gke.GKE) (*gkeClient, error) {
+	options := option.WithCredentialsJSON([]byte(credentials.key))
 
-	cm, err := compute.NewService(context.Background(), options...)
+	cm, err := compute.NewService(context.Background(), options)
 	if err != nil {
 		return nil, err
 	}
 
-	ce, err := container.NewService(context.Background(), options...)
+	ce, err := container.NewService(context.Background(), options)
 	if err != nil {
 		return nil, err
+	}
+
+	region := credentials.region
+	if region == "" {
+		region = cluster.Spec.Region
 	}
 
 	return &gkeClient{
@@ -64,6 +71,7 @@ func NewClient(credentials *gke.GKECredentials, cluster *gke.GKE) (*gkeClient, e
 		ce:          ce,
 		credentials: credentials,
 		cluster:     cluster,
+		region:      region,
 	}, nil
 }
 
@@ -72,10 +80,10 @@ func (g *gkeClient) Delete(ctx context.Context) error {
 	logger := log.WithFields(log.Fields{
 		"cluster":   g.cluster.Name,
 		"namespace": g.cluster.Namespace,
-		"project":   g.credentials.Spec.Project,
-		"region":    g.credentials.Spec.Region,
+		"project":   g.credentials.project,
+		"region":    g.region,
 	})
-	logger.Info("attempting to delete the cluster fomr gcp")
+	logger.Info("attempting to delete the cluster from gcp")
 
 	found, err := g.Exists()
 	if err != nil {
@@ -94,8 +102,8 @@ func (g *gkeClient) Delete(ctx context.Context) error {
 		return err
 	}
 	path := fmt.Sprintf("projects/%s/locations/%s/clusters/%s",
-		g.credentials.Spec.Project,
-		g.credentials.Spec.Region,
+		g.credentials.project,
+		g.region,
 		cluster.Name)
 
 	// @step: check for any ongoing operation
@@ -132,8 +140,8 @@ func (g *gkeClient) Create(ctx context.Context) (*container.Cluster, error) {
 	logger := log.WithFields(log.Fields{
 		"cluster":   g.cluster.Name,
 		"namespace": g.cluster.Namespace,
-		"project":   g.credentials.Spec.Project,
-		"region":    g.credentials.Spec.Region,
+		"project":   g.credentials.project,
+		"region":    g.region,
 	})
 	logger.Info("attempting to create the gke cluster")
 
@@ -203,7 +211,7 @@ func (g *gkeClient) Update(ctx context.Context) error {
 // CreateUpdateDefinition returns a cluster update definition
 func (g *gkeClient) CreateUpdateDefinition() (*container.UpdateClusterRequest, error) {
 	return &container.UpdateClusterRequest{
-		ProjectId: g.credentials.Spec.Project,
+		ProjectId: g.credentials.project,
 	}, nil
 }
 
@@ -355,7 +363,7 @@ func (g *gkeClient) CreateDefinition() (*container.CreateClusterRequest, error) 
 	}
 
 	return &container.CreateClusterRequest{
-		ProjectId: g.credentials.Spec.Project,
+		ProjectId: g.credentials.project,
 		Cluster:   resource,
 	}, nil
 }
@@ -379,7 +387,7 @@ func (g *gkeClient) GetCluster() (*container.Cluster, bool, error) {
 func (g *gkeClient) GetClusters() ([]*container.Cluster, error) {
 	var list []*container.Cluster
 
-	path := fmt.Sprintf("projects/%s/locations/%s", g.credentials.Spec.Project, g.credentials.Spec.Region)
+	path := fmt.Sprintf("projects/%s/locations/%s", g.credentials.project, g.region)
 
 	err := wait.ExponentialBackoff(retry.DefaultRetry, func() (done bool, err error) {
 		resp, err := g.ce.Projects.Locations.Clusters.List(path).Do()
@@ -408,7 +416,7 @@ func (g *gkeClient) GetClusters() ([]*container.Cluster, error) {
 func (g *gkeClient) CreateCluster(ctx context.Context, request *container.CreateClusterRequest) (*container.Operation, error) {
 	var operation *container.Operation
 
-	path := fmt.Sprintf("projects/%s/locations/%s", g.credentials.Spec.Project, g.credentials.Spec.Region)
+	path := fmt.Sprintf("projects/%s/locations/%s", g.credentials.project, g.region)
 
 	if err := wait.ExponentialBackoff(retry.DefaultRetry, func() (done bool, err error) {
 		resp, err := g.ce.Projects.Locations.Clusters.Create(path, request).Do()
@@ -456,8 +464,8 @@ func (g *gkeClient) EnableRouter(name, network string) error {
 	}
 
 	_, err = g.cm.Routers.Insert(
-		g.credentials.Spec.Project,
-		g.credentials.Spec.Region,
+		g.credentials.project,
+		g.region,
 		&compute.Router{
 			Name:        name,
 			Description: "Default router created by Appvia Kore",
@@ -494,7 +502,7 @@ func (g *gkeClient) EnableFirewallAPIServices() error {
 
 // GetNetwork returns the network
 func (g *gkeClient) GetNetwork(name string) (*compute.Network, error) {
-	return g.cm.Networks.Get(g.credentials.Spec.Project, name).Do()
+	return g.cm.Networks.Get(g.credentials.project, name).Do()
 }
 
 // GetRouter returns a specific router if it exists
@@ -514,7 +522,7 @@ func (g *gkeClient) GetRouter(name string) (*compute.Router, bool, error) {
 
 // GetRouters returns all the routers in the account
 func (g *gkeClient) GetRouters() ([]*compute.Router, error) {
-	resp, err := g.cm.Routers.List(g.credentials.Spec.Project, g.credentials.Spec.Region).Do()
+	resp, err := g.cm.Routers.List(g.credentials.project, g.region).Do()
 	if err != nil {
 		return nil, err
 	}
@@ -524,13 +532,13 @@ func (g *gkeClient) GetRouters() ([]*compute.Router, error) {
 
 // Locations returns a list of compute locations of for particular region
 func (g *gkeClient) Locations() ([]string, error) {
-	resp, err := g.ce.Projects.Locations.List(fmt.Sprintf("projects/%s", g.credentials.Spec.Project)).Do()
+	resp, err := g.ce.Projects.Locations.List(fmt.Sprintf("projects/%s", g.credentials.project)).Do()
 	if err != nil {
 		return []string{}, err
 	}
 	var list []string
 
-	prefix := fmt.Sprintf("%s-", g.credentials.Spec.Region)
+	prefix := fmt.Sprintf("%s-", g.region)
 
 	for _, x := range resp.Locations {
 		if strings.HasPrefix(x.Name, prefix) {
@@ -571,7 +579,7 @@ func (g *gkeClient) AddFirewallRule(name, description, network, source, target s
 		})
 	}
 	// @step: check if the rule name already exists
-	resp, err := g.cm.Firewalls.List(g.credentials.Spec.Project).Do()
+	resp, err := g.cm.Firewalls.List(g.credentials.project).Do()
 	if err != nil {
 		return err
 	}
@@ -587,10 +595,10 @@ func (g *gkeClient) AddFirewallRule(name, description, network, source, target s
 	// @step: attempt to apply the firewall rule
 	err = func() error {
 		if found {
-			_, err := g.cm.Firewalls.Update(g.credentials.Spec.Project, name, rule).Do()
+			_, err := g.cm.Firewalls.Update(g.credentials.project, name, rule).Do()
 			return err
 		}
-		_, err := g.cm.Firewalls.Insert(g.credentials.Spec.Project, rule).Do()
+		_, err := g.cm.Firewalls.Insert(g.credentials.project, rule).Do()
 
 		return err
 	}()
@@ -611,8 +619,8 @@ func (g *gkeClient) GetOperation(id string) (*container.Operation, error) {
 
 	// projects/my-project/locations/my-location/operations/my-operation
 	path := fmt.Sprintf("projects/%s/locations/%s/operations/%s",
-		g.credentials.Spec.Project,
-		g.credentials.Spec.Region,
+		g.credentials.project,
+		g.region,
 		id)
 
 	var o *container.Operation
@@ -646,7 +654,7 @@ func (g *gkeClient) FindOperation(ctx context.Context, operationType, resource, 
 	logger.Debug("searching for any running operations")
 
 	resp, err := g.ce.Projects.Locations.Operations.List(fmt.Sprintf("projects/%s/locations/%s",
-		g.credentials.Spec.Project, g.credentials.Spec.Region)).Do()
+		g.credentials.project, g.region)).Do()
 	if err != nil {
 		logger.WithError(err).Error("trying to retrieve a list of operations")
 

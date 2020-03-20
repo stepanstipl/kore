@@ -24,14 +24,15 @@ import (
 	"time"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
+	"github.com/appvia/kore/pkg/controllers"
 	gkecc "github.com/appvia/kore/pkg/controllers/cloud/gcp/gke"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
-	core "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,9 +44,9 @@ import (
 const (
 	finalizerName = "kubernetes.clusters.kore.appvia.io"
 	// ComponentClusterCreate is the component name
-	ComponentClusterCreate = "Cluster Creator"
+	ComponentClusterCreate = "Cluster Provisioned"
 	// ComponentAPIAuthProxy is the component name
-	ComponentAPIAuthProxy = "SSO Auth for Cluster"
+	ComponentAPIAuthProxy = "SSO Authentication"
 	// ComponentClusterAppMan is the component name for the Kore Cluster application manager
 	ComponentClusterAppMan = "Kore Cluster Manager"
 	// ComponentClusterUsers is the component name for Kore team users of this cluster
@@ -83,26 +84,26 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 	}
 
 	team := object.Namespace
-	token := &core.Secret{}
+	token := &configv1.Secret{}
 
 	result, err := func() (reconcile.Result, error) {
 		object.Status.Status = corev1.PendingStatus
 
-		// @step: check for the kubernetes admin token
-		key := types.NamespacedName{
-			Name:      object.Name,
-			Namespace: object.Namespace,
-		}
-
 		logger.Debug("retrieving the cluster credentials from secret")
 
-		// @step: retrieve the admin token
-		if err := a.mgr.GetClient().Get(context.Background(), key, token); err != nil {
+		// @step: retrieve the provider credentials secret
+		account, err := controllers.GetConfigSecret(context.Background(),
+			a.mgr.GetClient(),
+			object.Namespace,
+			object.Name)
+
+		if err != nil {
 			if !kerrors.IsNotFound(err) {
 				logger.WithError(err).Error("trying to retrieve the admin token, will retry")
 
 				return reconcile.Result{RequeueAfter: 5 * time.Minute}, nil
 			}
+
 			logger.Debug("no credentials found from cluster")
 
 			// it wasn't found - is the cluster provider backed?
@@ -170,13 +171,13 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 				return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
 			}
 		}
+		token = account
 
 		// @step: create a client for the remote cluster
-		client, err := kubernetes.NewRuntimeClientFromSecret(token)
+		client, err := kubernetes.NewRuntimeClientFromConfigSecret(token)
 		if err != nil {
 			logger.WithError(err).Error("trying to create client from credentials secret")
 
-			object.Status.Status = corev1.FailureStatus
 			object.Status.Components.SetCondition(corev1.Component{
 				Name:    ComponentClusterCreate,
 				Message: "Unable to access cluster using provided cluster credentials",
@@ -410,8 +411,8 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			logger.Debug("skipping default network policy and feature is disabled")
 		}
 
-		object.Status.APIEndpoint = string(token.Data["endpoint"])
-		object.Status.CaCertificate = string(token.Data["ca.crt"])
+		object.Status.APIEndpoint = token.Spec.Data["endpoint"]
+		object.Status.CaCertificate = token.Spec.Data["ca.crt"]
 		//object.Status.Endpoint = a.APIHostname(object)
 		object.Status.Status = corev1.SuccessStatus
 
@@ -423,6 +424,9 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 		return reconcile.Result{RequeueAfter: 30 * time.Minute}, nil
 	}()
+	if err != nil {
+		object.Status.Status = corev1.FailureStatus
+	}
 	if err == nil {
 		// check if we need to add the finalizer
 		if finalizer.NeedToAdd(object) {

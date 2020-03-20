@@ -57,12 +57,22 @@ type acaImpl struct {
 
 // IsPermitted checks if a team is permitted access to a resource via an allocation
 func (a acaImpl) IsPermitted(ctx context.Context, resource corev1.Ownership) (bool, error) {
+	logger := log.WithFields(log.Fields{
+		"group":     resource.Group,
+		"kind":      resource.Kind,
+		"name":      resource.Name,
+		"namespace": resource.Namespace,
+		"team":      a.team,
+		"version":   resource.Version,
+	})
+	logger.Debug("checking if we have permissions to the resource")
+
 	// @step: we list all allocation in the remote team
 	list := &configv1.AllocationList{}
 
 	// @step: if the namespaces are the same we can continue
 	if resource.Namespace == a.team {
-		log.Info("skipping the permission check as team and resource are in the same team namespace")
+		logger.Info("skipping the permission check as team and resource are in the same team namespace")
 
 		return true, nil
 	}
@@ -72,7 +82,7 @@ func (a acaImpl) IsPermitted(ctx context.Context, resource corev1.Ownership) (bo
 		store.ListOptions.InNamespace(resource.Namespace),
 	)
 	if err != nil {
-		log.WithError(err).Error("attempting to list allocations from team")
+		logger.WithError(err).Error("attempting to list allocations from team")
 
 		return false, err
 	}
@@ -181,10 +191,11 @@ func (a acaImpl) ListAllocationsAssigned(ctx context.Context) (*configv1.Allocat
 	for _, x := range all.Items {
 		if utils.Contains("*", x.Spec.Teams) || utils.Contains(a.team, x.Spec.Teams) {
 			list.Items = append(list.Items, x)
-		}
-		// add anything owned by us
-		if x.Namespace == a.team {
-			list.Items = append(list.Items, x)
+		} else {
+			// add anything owned by us
+			if x.Namespace == a.team {
+				list.Items = append(list.Items, x)
+			}
 		}
 	}
 

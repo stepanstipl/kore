@@ -24,11 +24,14 @@ import (
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
+	"github.com/appvia/kore/pkg/kore/authentication"
+	"github.com/appvia/kore/pkg/utils"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 )
@@ -42,6 +45,17 @@ func TeamsToList(list *orgv1.TeamList) []string {
 	}
 
 	return items
+}
+
+// HasAccessToTeam checks if the user has access to the team
+func HasAccessToTeam(ctx context.Context, team string) bool {
+	user := authentication.MustGetIdentity(ctx)
+
+	if user.IsGlobalAdmin() {
+		return true
+	}
+
+	return utils.Contains(team, user.Teams())
 }
 
 // IsGlobalTeam checks if the namespace is global
@@ -108,7 +122,7 @@ func ToUnstructuredFromOwnership(resource corev1.Ownership) (*unstructured.Unstr
 	return u, nil
 }
 
-// IsProvider checks if the kubernetes cluster is back by the provider
+// IsProviderBacked checks if the kubernetes cluster is back by the provider
 func IsProviderBacked(cluster *clustersv1.Kubernetes) bool {
 	return HasOwnership(cluster.Spec.Provider)
 }
@@ -130,6 +144,31 @@ func HasOwnership(owner corev1.Ownership) bool {
 	}
 
 	return false
+}
+
+// IsOwner checks if the ownerships matches
+func IsOwner(obj runtime.Object, ownership corev1.Ownership) bool {
+	gvk := obj.GetObjectKind().GroupVersionKind()
+
+	mo, ok := obj.(metav1.Object)
+	if !ok {
+		return false
+	}
+
+	switch {
+	case gvk.Group != ownership.Group:
+		return false
+	case gvk.Version != ownership.Version:
+		return false
+	case gvk.Kind != ownership.Kind:
+		return false
+	case mo.GetNamespace() != ownership.Namespace:
+		return false
+	case mo.GetName() != ownership.Name:
+		return false
+	}
+
+	return true
 }
 
 // IsOwnershipValid checks the ownership is filled in

@@ -18,6 +18,7 @@ package gkecredentials
 
 import (
 	"context"
+	"errors"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
@@ -78,7 +79,7 @@ func (t gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		resource.Status.Status = corev1.SuccessStatus
 
 		if resource.Status.Verified == nil || !*resource.Status.Verified {
-			logger.Warn("gke credentials not verified")
+			return reconcile.Result{}, errors.New("invalid credentials or missing permissions")
 		}
 
 		return reconcile.Result{}, err

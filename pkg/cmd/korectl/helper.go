@@ -18,6 +18,7 @@ package korectl
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -25,12 +26,18 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"os/signal"
 	"regexp"
 	"strings"
+	"syscall"
+	"time"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
+	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/apiserver/types"
 	"github.com/appvia/kore/pkg/utils"
+
 	yml "github.com/ghodss/yaml"
 	log "github.com/sirupsen/logrus"
 	yaml "gopkg.in/yaml.v2"
@@ -38,6 +45,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
+// Document defines a rest endpoint
 type Document struct {
 	// Endpoint is the rest storage endpoint
 	Endpoint string
@@ -134,8 +142,15 @@ func GetTeamResourceList(config *Config, team, kind string, object runtime.Objec
 		Get()
 }
 
+// GetTeamAllocation returns an allocation for a team
+func GetTeamAllocation(config *Config, team, name string) (*configv1.Allocation, error) {
+	o := &configv1.Allocation{}
+
+	return o, GetTeamResource(config, team, "allocation", name, o)
+}
+
 // GetTeamResource returns a team object
-func GetTeamResource(config *Config, team, kind, name string, object runtime.Object) error {
+func GetTeamResource(config *Config, team, kind, name string, object interface{}) error {
 	kind = strings.ToLower(utils.ToPlural(kind))
 
 	return NewRequest().
@@ -179,6 +194,57 @@ func GetResourceList(config *Config, team, kind, name string, object runtime.Obj
 		WithEndpoint("/{kind}/{name}").
 		WithRuntimeObject(object).
 		Get()
+}
+
+// WaitOnResource indicates we should wait for the resource to transition to fail or success
+func WaitOnResource(ctx context.Context, config *Config, team, kind, name string, interval, timeout time.Duration) (bool, error) {
+	var success bool
+
+	u := make(map[string]interface{})
+	var max int
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	go func() {
+		<-sig
+		cancel()
+	}()
+
+	err := utils.WaitUntilComplete(ctx, timeout, interval, func() (bool, error) {
+		err := GetTeamResource(config, team, kind, name, &u)
+		if err != nil {
+			return false, nil
+		}
+
+		status, ok := u["status"].(map[string]interface{})
+		if !ok {
+			return false, nil
+		}
+		state, ok := status["status"].(string)
+		if !ok {
+			return false, nil
+		}
+
+		if state == string(corev1.FailureStatus) {
+			if max > 3 {
+				return false, errors.New("resource has failed to provision")
+			}
+			max++
+		}
+		if state == string(corev1.SuccessStatus) {
+			success = true
+
+			return true, nil
+		}
+
+		return false, nil
+	})
+
+	return success, err
 }
 
 // ParseDocument returns a collection of parsed documents and the api endpoints
@@ -286,7 +352,7 @@ func GetCaches(config *Config) error {
 	return nil
 }
 
-//
+// GetOrCreateKubeConfig is used to retrieve the kubeconfig path
 func GetOrCreateKubeConfig() (string, error) {
 	path := func() string {
 		p := os.ExpandEnv(os.Getenv("$KUBECONFIG"))

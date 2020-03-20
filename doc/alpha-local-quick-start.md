@@ -49,7 +49,24 @@ Next step: On GCP, select an existing project or create a new one.
 With a GCP Project selected or created,
 
 - Head to the [Google Developer Console](https://console.developers.google.com/apis/api/container.googleapis.com/overview).
-- Enable the GKE API.
+- Enable the 'Kubernetes Engine API'.
+- Enable the 'Cloud Resource Manager API'
+- Enable the 'Compute Engine API'
+- Enable the 'IAM Service Account Credentials API'
+
+Alternatively you can enable these from the [gcloud](https://cloud.google.com/sdk/gcloud) command line;
+
+```shell
+# Setup if required
+gcloud auth login (assuming you've not authenticated)
+gcloud config set project <project_id>
+
+# Enable the APIs
+gcloud services enable cloudresourcemanager.googleapis.com
+gcloud services enable iam.googleapis.com
+gcloud services enable compute.googleapis.com
+gcloud services enable container.googleapis.com
+```
 
 #### Create a Service Account
 
@@ -79,9 +96,9 @@ This is the last step, create a key and download it in JSON format.
 
 Using Appvia Kore, team IAM (Identity and Access management) [is greatly simplified](security-gke.md#rbac).
 
-Kore uses an external identity provider, like Auth0 or an enterprise's existing SSO system, to directly manage team member access to the team's provisioned environment. 
+Kore uses an external identity provider, like Auth0 or an enterprise's existing SSO system, to directly manage team member access to the team's provisioned environment.
 
-For this guide, we'll be using Auth0 to configure team access. 
+For this guide, we'll be using Auth0 to configure team access.
 
 #### Configure Auth0
 
@@ -96,7 +113,7 @@ Give the application a name and choose `Regular Web Applications`
 Once provisioned click on the `Settings` tab and scroll down to `Allowed Callback URLs`.
 These are the permitted redirects for the applications. Since we are running the application locally off the laptop set
 ```
-http://localhost:10080/oauth/callback,http://localhost:3000/auth/callback 
+http://localhost:10080/oauth/callback,http://localhost:3000/auth/callback
 ```
 
 Please make a note of the [__*Domain, Client ID, and Client Secret*__].
@@ -115,7 +132,7 @@ Return to the Auth0 dashboard. From the side menu select 'Users & Roles' setting
 
 ### Start Kore Locally with CLI
 
-We'll be using our CLI, `korectl`, to help us set up Kore locally. 
+We'll be using our CLI, `korectl`, to help us set up Kore locally.
 
 #### Install the korectl CLI
 
@@ -177,7 +194,7 @@ bin/korectl local start
 
 You now have to login to be able to create teams and provision environments.
 
-This will use our Auth0 set up for IDP. As you're the only user, you'll be assigned Admin privileges.  
+This will use our Auth0 set up for IDP. As you're the only user, you'll be assigned Admin privileges.
 
 ```shell script
 bin/korectl login
@@ -208,7 +225,7 @@ bin/korectl get teams team-appvia
 
 This command applies a set of manifests created when configuring Kore to run locally.
 
-When applied, these manifests give Kore the credentials necessary to build a GKE cluster on behalf of our team. 
+When applied, these manifests give Kore the credentials necessary to build a GKE cluster on behalf of our team.
 
 This cluster will in turn host our sandbox environment.
 
@@ -243,10 +260,10 @@ There's a lot to unpack here. So, lets walk through it,
 - `--plan gke-development`, a Kore predefined plan called `gke-development`. This creates a cluster ideal for non-prod use.
 
 - `-a gke`, the `gke` allocated credential to use for creating this cluster.
- 
+
 - `--namespace sandbox`, creates an environment called `sandbox` in the `appvia-trial` where we can deploy our apps, servers, etc..
 
-You now have a sandbox environment locally provisioned for your team. 🎉  
+You now have a sandbox environment locally provisioned for your team. 🎉
 
 ### Deploy An App to the Sandbox
 

@@ -19,8 +19,10 @@ package kore
 import (
 	"context"
 	"fmt"
+	"time"
 
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
+	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/services/users/model"
 
@@ -99,23 +101,31 @@ func (h *usersImpl) EnableUser(ctx context.Context, username, email string) erro
 		if isAdmin {
 			logger.Info("enabling the first user in the kore and providing admin access")
 
-			h.Audit().Record(ctx,
-				users.Type(users.AuditUpdate),
-				users.User(username),
-			).Event("adding first user as administrator")
+			// Add a custom audit for this special operation:
+			start := time.Now()
+			responseCode := 500
+			defer func() {
+				finish := time.Now()
+				h.Audit().Record(ctx,
+					users.Resource("/users"),
+					users.ResourceURI("/users/"+username),
+					users.Verb("PUT"),
+					users.Operation("InitialiseFirstUserAsAdmin"),
+					users.User(username),
+					users.StartedAt(start),
+					users.CompletedAt(finish),
+					users.ResponseCode(responseCode),
+				).Event("InitialiseFirstUserAsAdmin: Adding first user as administrator")
+			}()
 
 			if err := h.usermgr.Members().AddUser(ctx, username, HubAdminTeam, roles); err != nil {
 				logger.WithError(err).Error("trying to add user to admin team")
 
 				return err
 			}
+			responseCode = 200
 		} else {
 			logger.Info("adding the user into the kore")
-
-			h.Audit().Record(ctx,
-				users.Type(users.AuditUpdate),
-				users.User(username),
-			).Event("adding a user to the kore")
 
 			if err := h.usermgr.Teams().AddUser(ctx, username, HubDefaultTeam, roles); err != nil {
 				logger.WithError(err).Error("trying to add user to default team")
@@ -178,6 +188,10 @@ func (h *usersImpl) ListInvitations(ctx context.Context, username string) (*orgv
 
 // Delete removes the user from the kore
 func (h *usersImpl) Delete(ctx context.Context, username string) (*orgv1.User, error) {
+	if !authentication.MustGetIdentity(ctx).IsGlobalAdmin() {
+		return nil, ErrUnauthorized
+	}
+
 	// @step: check the user exists
 	u, err := h.usermgr.Users().Get(ctx, username)
 	if err != nil {
@@ -213,6 +227,10 @@ func (h *usersImpl) Delete(ctx context.Context, username string) (*orgv1.User, e
 
 // Update is responsible for updating the user
 func (h *usersImpl) Update(ctx context.Context, user *orgv1.User) (*orgv1.User, error) {
+	if !authentication.MustGetIdentity(ctx).IsGlobalAdmin() {
+		return nil, ErrUnauthorized
+	}
+
 	user.Namespace = HubNamespace
 
 	// @step: we need to validate the user

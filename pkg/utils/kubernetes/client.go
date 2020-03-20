@@ -24,6 +24,8 @@ import (
 	"strings"
 	"time"
 
+	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
+
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	core "k8s.io/api/core/v1"
@@ -53,6 +55,28 @@ func NewClientFromSecret(secret *core.Secret) (k8s.Interface, error) {
 	return NewFromToken(endpoint, token, ca)
 }
 
+// NewClientFromConfigSecret creates a client from the secret
+func NewClientFromConfigSecret(secret *configv1.Secret) (k8s.Interface, error) {
+	endpoint := secret.Spec.Data["endpoint"]
+	token := secret.Spec.Data["token"]
+	ca := secret.Spec.Data["ca.crt"]
+
+	return NewFromToken(endpoint, token, ca)
+}
+
+// NewRuntimeClientFromConfigSecret creates and returns a runtime client from configv1.Secret
+func NewRuntimeClientFromConfigSecret(secret *configv1.Secret) (client.Client, error) {
+	config := &rest.Config{
+		Host:        secret.Spec.Data["endpoint"],
+		BearerToken: secret.Spec.Data["token"],
+		TLSClientConfig: rest.TLSClientConfig{
+			CAData: []byte(secret.Spec.Data["ca.crt"]),
+		},
+	}
+
+	return client.New(config, client.Options{})
+}
+
 // NewRuntimeClientFromSecret creates and returns a runtime client
 func NewRuntimeClientFromSecret(secret *core.Secret) (client.Client, error) {
 	config := &rest.Config{
@@ -72,7 +96,8 @@ func NewFromToken(endpoint, token, ca string) (k8s.Interface, error) {
 		BearerToken: token,
 		Host:        endpoint,
 		TLSClientConfig: rest.TLSClientConfig{
-			Insecure: true,
+			CAData:   []byte(ca),
+			Insecure: (len(ca) <= 0),
 		},
 	})
 }

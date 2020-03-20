@@ -21,6 +21,7 @@ import (
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
+	gcpv1alpha1 "github.com/appvia/kore/pkg/apis/gcp/v1alpha1"
 	gkev1alpha1 "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 
@@ -45,6 +46,7 @@ func init() {
 		configv1.AddToScheme,
 		corev1.AddToScheme,
 		gkev1alpha1.AddToScheme,
+		gcpv1alpha1.AddToScheme,
 		orgv1.AddToScheme,
 	)
 	if err := builder.AddToScheme(hs); err != nil {

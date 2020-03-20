@@ -91,14 +91,16 @@ func (l *loginHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 
 	ws.Route(
 		ws.GET("/authorize").To(l.authorizerHandler).
-			Param(ws.QueryParameter("redirect_url", "The rediection url, i.e. the location to redirect post").Required(true)).
 			Doc("Used to start the authorization flow for user authentication").
+			Operation("LoginAttempted").
+			Param(ws.QueryParameter("redirect_url", "The rediection url, i.e. the location to redirect post").Required(true)).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
 		ws.GET("/callback").To(l.callbackHandler).
 			Doc("Used to handle the authorization callback from the identity provider").
+			Operation("LoginCallback").
 			Param(ws.QueryParameter("code", "The authorization code returned from the identity provider").Required(true)).
 			Param(ws.QueryParameter("state", "The state parameter which was passed on authorization request").Required(true)).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
