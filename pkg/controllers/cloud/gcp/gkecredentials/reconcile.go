@@ -81,12 +81,7 @@ func (t gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		if !permitted {
 			logger.Error("gke credentials has not passed validation")
 
-			// @Question, should we show everything? could get long
-			if len(missing) <= 5 {
-				return reconcile.Result{}, fmt.Errorf("service account is missing: %s permissions", strings.Join(missing, ","))
-			}
-
-			return reconcile.Result{}, fmt.Errorf("service account is missing %d permissions", len(missing))
+			return reconcile.Result{}, fmt.Errorf("service account is missing: %s permissions", strings.Join(missing, ","))
 		}
 
 		return reconcile.Result{}, err
