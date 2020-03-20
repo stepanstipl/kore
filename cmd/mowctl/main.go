@@ -23,17 +23,11 @@ import (
 	"fmt"
 	"os"
 
-	cli "github.com/jawher/mow.cli"
-
+	"github.com/appvia/kore/cmd/mowctl/cmd"
 	"github.com/appvia/kore/pkg/cmd/korectl"
+
+	cli "github.com/jawher/mow.cli"
 )
-
-type CmdGlobals struct {
-	Team, Output string
-	ShowFlags    bool
-}
-
-var cmdGlobals CmdGlobals
 
 func main() {
 	config, err := korectl.GetOrCreateClientConfiguration()
@@ -51,6 +45,8 @@ func main() {
 	app.LongDesc = `mowctl prototypes building cluster using the mow.cli lib.
 This will inform how we evolve Kore's korectl - CLI power 💪.`
 
+	cmdGlobals := &cmd.Globals{}
+
 	app.StringPtr(&cmdGlobals.Team, cli.StringOpt{
 		Name:      "t team",
 		Desc:      "Used to select the team context you are operating in",
@@ -65,6 +61,8 @@ This will inform how we evolve Kore's korectl - CLI power 💪.`
 		HideValue: false,
 		SetByUser: nil,
 	})
+
+	// No way of hiding this flag.
 	app.BoolPtr(&cmdGlobals.ShowFlags, cli.BoolOpt{
 		Name:      "show-flags",
 		Desc:      "Used to debugging the flags on the command line `BOOL`",
@@ -73,6 +71,8 @@ This will inform how we evolve Kore's korectl - CLI power 💪.`
 		HideValue: true,
 		SetByUser: nil,
 	})
+
+	app.Command("create", "Creates various Kore objects", cmd.MakeCreateCmd(config, cmdGlobals))
 
 	if err := app.Run(os.Args); err != nil {
 		cli.Exit(1)

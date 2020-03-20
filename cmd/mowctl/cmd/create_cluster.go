@@ -23,7 +23,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -31,8 +30,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/spf13/cobra"
+	cli "github.com/jawher/mow.cli"
 	"gopkg.in/yaml.v2"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
@@ -40,168 +42,73 @@ import (
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	"github.com/appvia/kore/pkg/cmd/korectl"
 	"github.com/appvia/kore/pkg/utils"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-var (
-	clusterLongDescription = `
-Provides the ability to provision a kubernetes cluster in the team. The cluster
-itself is provisioned from a predefined plan (a template). You can view the plans
-available to you via $ korectl get plans. Once the cluster has been built the
-members of your team can gain access via running $ korectl login.
-
-Note: you retrieve a list of all the plans available to you via:
-$ korectl get plans
-$ korectl get plans <name> -o yaml
-
-Examples:
-$ korectl create cluster dev -t <myteam> --plan gke-development --allocation <name>
-
-# Create a cluster and provision some namespaces on there as well
-$ korectl create cluster dev -t <myteam> --plan gke-development -a <name> --namespace=app1,app2
-
-# Check the status of the cluster
-$ korectl -t <myteam> get cluster dev -o yaml
-
-Once you have created the cluster you can login via
-$ korectl clusters auth -t <myteam>
-
-This will generate your ${HOME}/.kube/config for you with the clusters from team.
-`
-	createClusterCmd = &cobra.Command{
-		Use:     "cluster <name> [options]",
-		Aliases: []string{"clusters"},
-		Short:   "Create a kubernetes cluster within the team",
-		Long:    clusterLongDescription,
-		Args: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 1 {
-				return errors.New("the cluster should have a name")
-			}
-			return nil
-		},
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			// See, https://github.com/spf13/cobra/issues/206#issuecomment-471959800
-
-			pflags := rootCmd.PersistentFlags()
-			lflags := cmd.Flags()
-
-			if err := cobra.MarkFlagRequired(pflags, "team"); err != nil {
-				return err
-			}
-			if err := cobra.MarkFlagRequired(lflags, "allocation"); err != nil {
-				return err
-			}
-			if err := cobra.MarkFlagRequired(lflags, "plan"); err != nil {
-				return err
-			}
-
-			return nil
-		},
-		RunE: runCreateClusterCmd,
-	}
-)
-
-func init() {
-	flags := createClusterCmd.PersistentFlags()
-
-	flags.StringP(
-		"plan",
-		"p",
-		"",
-		"the plan which this cluster will be templated from `NAME`",
-	)
-	//createClusterCmd.MarkFlagRequired("plan")
-
-	flags.StringP(
-		"allocation",
-		"a",
-		"",
-		"the name of the allocated credentials to use for this cluster `NAME`",
-	)
-	//createClusterCmd.MarkFlagRequired("allocation")
-
-	flags.StringP(
-		"description",
-		"",
-		"",
-		"provides a short description for the cluster `DESCRIPTION`",
-	)
-
-	flags.StringP(
-		"team-role",
-		"",
-		"viewer",
-		"the default role inherited by all members in the team on the cluster `NAME`",
-	)
-
-	flags.StringSliceP(
-		"namespace",
-		"",
-		[]string{},
-		"you can pre-provision a collection namespaces on this cluster as well `NAMES`",
-	)
-
-	flags.BoolP(
-		"show-time",
-		"",
-		false,
-		"shows the time it took to successfully provision a new cluster `BOOL`",
-	)
-
-	flags.BoolP(
-		"wait",
-		"",
-		true,
-		"indicates we should wait for the cluster to be build (defaults: true) `BOOL`",
-	)
-
-	flags.BoolP(
-		"dry-run",
-		"",
-		false,
-		"generate the cluster specification but does not apply `BOOL`",
-	)
-
-	createCmd.AddCommand(createClusterCmd)
+type createClusterLine struct {
+	Name        string
+	Plan        string
+	Allocation  string
+	Description string
+	Role        string
+	Namespaces  []string
+	ShowTime    bool
+	WaitFor     bool
+	Dry         bool
 }
 
-func runCreateClusterCmd(cmd *cobra.Command, args []string) error {
-	name := args[0]
-	team, _ := cmd.PersistentFlags().GetString("team")
-	plan, _ := cmd.Flags().GetString("plan")
-	allocation, _ := cmd.Flags().GetString("allocation")
-	namespaces, _ := cmd.Flags().GetStringSlice("namespaces")
-	role, _ := cmd.Flags().GetString("team-role")
-	waitfor, _ := cmd.Flags().GetBool("wait")
-	showTime, _ := cmd.Flags().GetBool("show-time")
-	dry, _ := cmd.Flags().GetBool("dry-run")
+func MakeCreateClusterSubCmd(config *korectl.Config, globals *Globals) func(cmd *cli.Cmd) {
 
-	provider, err := CreateClusterProviderFromPlan(config, team, name, plan, allocation, dry)
+	// CON: No Position-independent options - so global flag re-ordering maybe required
+	// https://github.com/jawher/mow.cli/issues/64
+
+	return func(cmd *cli.Cmd) {
+		cmd.Spec = "CLUSTER_NAME -t -p -a [--description] [--team-role] [--namespace] [--show-time] [--wait] [--dry-run]"
+		line := &createClusterLine{}
+
+		cmd.StringArgPtr(&line.Name, "CLUSTER_NAME", "", "cluster name")
+
+		// Global ... but cannot be position independent
+		cmd.StringOptPtr(&globals.Team, "t team", globals.Team, "used to select the team context you are operating in")
+
+		cmd.StringOptPtr(&line.Plan, "p plan", "", "the plan which this cluster will be templated from `NAME`")
+		cmd.StringOptPtr(&line.Allocation, "a allocation", "", "the name of the allocated credentials to use for this cluster `NAME`")
+		cmd.StringOptPtr(&line.Description, "description", "", "provides a short description for the cluster `DESCRIPTION`")
+		cmd.StringOptPtr(&line.Role, "team-role", "", "provides a short description for the cluster `DESCRIPTION`")
+		cmd.StringsOptPtr(&line.Namespaces, "namespace", []string{}, "you can pre-provision a collection namespaces on this cluster as well `NAMES`")
+		cmd.BoolOptPtr(&line.ShowTime, "show-time", false, "shows the time it took to successfully provision a new cluster `BOOL`")
+		cmd.BoolOptPtr(&line.WaitFor, "wait", true, "indicates we should wait for the cluster to be build (defaults: true) `BOOL`")
+		cmd.BoolOptPtr(&line.Dry, "dry-run", false, "generate the cluster specification but does not apply `BOOL`")
+
+		cmd.Action = func() {
+			runCreateCluster(config, globals, line)
+		}
+	}
+}
+
+func runCreateCluster(config *korectl.Config, globals *Globals, line *createClusterLine) error {
+	provider, err := CreateClusterProviderFromPlan(config, globals.Team, line.Name, line.Plan, line.Allocation, line.Dry)
 	if err != nil {
 		return err
 	}
 
-	cluster, err := CreateKubernetesClusterFromProvider(config, provider, team, name, role, dry)
+	cluster, err := CreateKubernetesClusterFromProvider(config, provider, globals.Team, line.Name, line.Role, line.Dry)
 	if err != nil {
 		return err
 	}
 
-	if waitfor {
+	if line.WaitFor {
 		now := time.Now()
 
 		err := func() error {
 			// lets try and short cut the wait
-			cluster, err := korectl.GetCluster(config, team, name)
+			cluster, err := korectl.GetCluster(config, globals.Team, line.Name)
 			if err == nil {
 				if cluster.Status.Status == corev1.SuccessStatus {
 					return nil
 				}
 			}
 
-			fmt.Printf("Waiting for %q to provision (usually takes around 5 minutes, ctrl-c to background)\n", name)
+			fmt.Printf("Waiting for %q to provision (usually takes around 5 minutes, ctrl-c to background)\n", line.Name)
 
 			// allow for cancellation of the block - and probably wrap this up into a common framework
 			sig := make(chan os.Signal, 1)
@@ -216,31 +123,31 @@ func runCreateClusterCmd(cmd *cobra.Command, args []string) error {
 			}()
 
 			for {
-				cluster, err = korectl.GetCluster(config, team, name)
+				cluster, err = korectl.GetCluster(config, globals.Team, line.Name)
 				if err == nil {
 					switch cluster.Status.Status {
 					case corev1.SuccessStatus:
 						fmt.Println("Cluster", cluster.Name, "has been successfully provisioned")
 						return nil
 					case corev1.FailureStatus:
-						return fmt.Errorf("failed to provision cluster: %q, please check via $ korectl get clusters -o yaml", name)
+						return fmt.Errorf("failed to provision cluster: %q, please check via $ korectl get clusters -o yaml", line.Name)
 					}
 				}
 				if utils.Sleep(c, 5*time.Second) {
-					fmt.Printf("\nProvisioning has been backgrounded, you can check the status via: $ korectl get clusters -t %s\n", team)
+					fmt.Printf("\nProvisioning has been backgrounded, you can check the status via: $ korectl get clusters -t %s\n", globals.Team)
 					return nil
 				}
 			}
 		}()
 		if err != nil {
-			return fmt.Errorf("has failed to provision, use: $ korectl get clusters %s -t %s -o yaml to view status", name, team)
+			return fmt.Errorf("has failed to provision, use: $ korectl get clusters %s -t %s -o yaml to view status", line.Name, globals.Team)
 		}
-		if showTime {
+		if line.ShowTime {
 			fmt.Printf("Provisioning took: %s\n", time.Since(now))
 		}
 
 	} else {
-		fmt.Printf("Cluster provisioning in background: you can check the status via: $ korectl get clusters %s -t %s\n", name, team)
+		fmt.Printf("Cluster provisioning in background: you can check the status via: $ korectl get clusters %s -t %s\n", line.Name, globals.Team)
 	}
 
 	// @step: create the cluster ownership
@@ -255,18 +162,18 @@ func runCreateClusterCmd(cmd *cobra.Command, args []string) error {
 	// @step: do we need to provision any namespaces? - note the split and joining
 	// allows for --namespace a,b,c
 	var list []string
-	for _, x := range namespaces {
+	for _, x := range line.Namespaces {
 		list = append(list, strings.Split(x, ",")...)
 	}
 
 	for _, x := range list {
-		if err := CreateClusterNamespace(config, ownership, team, x, dry); err != nil {
+		if err := CreateClusterNamespace(config, ownership, globals.Team, x, line.Dry); err != nil {
 			return fmt.Errorf("trying to provision namespace claim: %s on cluster: %s", x, err)
 		}
 	}
 
 	// @step: print a the message
-	fmt.Printf("\nYou can retrieve your kubeconfig via: $ korectl clusters auth -t %s\n", team)
+	fmt.Printf("\nYou can retrieve your kubeconfig via: $ korectl clusters auth -t %s\n", globals.Team)
 
 	return nil
 }
