@@ -51,7 +51,7 @@ func GetProfilesCommand(config *Config) *cli.Command {
 		Name:        "profile",
 		Aliases:     []string{"profiles"},
 		Usage:       "Manage profiles, allowing you switch, list and show profiles",
-		Description: longProfileDescription,
+		Description: formatLongDescription(longProfileDescription),
 
 		Subcommands: []*cli.Command{
 			GetProfilesUseCommand(config),
