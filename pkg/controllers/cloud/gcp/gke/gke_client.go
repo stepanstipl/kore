@@ -43,6 +43,8 @@ type gkeClient struct {
 	credentials *credentials
 	// cluster is the gke cluster
 	cluster *gke.GKE
+	// @deprecated region
+	region string
 }
 
 // NewClient returns a gcp client for us
@@ -59,11 +61,17 @@ func NewClient(credentials *credentials, cluster *gke.GKE) (*gkeClient, error) {
 		return nil, err
 	}
 
+	region := credentials.region
+	if region == "" {
+		region = cluster.Spec.Region
+	}
+
 	return &gkeClient{
 		cm:          cm,
 		ce:          ce,
 		credentials: credentials,
 		cluster:     cluster,
+		region:      region,
 	}, nil
 }
 
@@ -73,7 +81,7 @@ func (g *gkeClient) Delete(ctx context.Context) error {
 		"cluster":   g.cluster.Name,
 		"namespace": g.cluster.Namespace,
 		"project":   g.credentials.project,
-		"region":    g.cluster.Spec.Region,
+		"region":    g.region,
 	})
 	logger.Info("attempting to delete the cluster from gcp")
 
@@ -95,7 +103,7 @@ func (g *gkeClient) Delete(ctx context.Context) error {
 	}
 	path := fmt.Sprintf("projects/%s/locations/%s/clusters/%s",
 		g.credentials.project,
-		g.cluster.Spec.Region,
+		g.region,
 		cluster.Name)
 
 	// @step: check for any ongoing operation
@@ -133,7 +141,7 @@ func (g *gkeClient) Create(ctx context.Context) (*container.Cluster, error) {
 		"cluster":   g.cluster.Name,
 		"namespace": g.cluster.Namespace,
 		"project":   g.credentials.project,
-		"region":    g.cluster.Spec.Region,
+		"region":    g.region,
 	})
 	logger.Info("attempting to create the gke cluster")
 
