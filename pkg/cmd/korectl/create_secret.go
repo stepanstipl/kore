@@ -35,8 +35,8 @@ import (
 
 var (
 	createSecretLongDescription = `
-Provides the ability to create secrets in the kore, from files, environments files and literals.
-The c
+Provides the ability to create secrets in the kore, from files, environments
+files and literals.
 
  $ korectl create secret <name> -t <team> [options]
 
