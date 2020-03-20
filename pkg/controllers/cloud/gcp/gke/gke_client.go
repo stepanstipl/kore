@@ -18,7 +18,6 @@ package gke
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -398,14 +397,16 @@ func (g *gkeClient) GetClusters() ([]*container.Cluster, error) {
 			switch err := err.(type) {
 			case *googleapi.Error:
 				if err.Code == http.StatusForbidden {
+					// we definitely need to quit here - no point in retrying
 					return false, err
 				}
+
+				// @step: in absense of knowing the error, we will retry and use
+				// the backoff and retry to handle this
+				return false, nil
 			default:
 				return false, nil
 			}
-		}
-		if resp == nil {
-			return false, errors.New("invalid response google api")
 		}
 
 		list = resp.Clusters
