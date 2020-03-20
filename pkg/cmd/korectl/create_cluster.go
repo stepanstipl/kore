@@ -76,7 +76,7 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 	return &cli.Command{
 		Name:        "cluster",
 		Aliases:     []string{"clusters"},
-		Description: createClusterLongDescription,
+		Description: formatLongDescription(createClusterLongDescription),
 		Usage:       "create a kubernetes cluster within the team",
 		ArgsUsage:   "<name> [options]",
 

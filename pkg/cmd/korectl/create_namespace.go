@@ -30,7 +30,7 @@ var (
 Provides the ability to create a namespace on a provisioned cluster. In order to
 retrieve the clusters you have available you can run:
 
-$ korectl get clusters -t <team> 
+$ korectl get clusters -t <team>
 
 Examples:
 # Create a namespace on cluster 'dev'
@@ -49,7 +49,7 @@ $ korectl get namespaceclaims -t <team>
 func GetCreateNamespaceCommand(config *Config) *cli.Command {
 	return &cli.Command{
 		Name:        "namespace",
-		Description: createNamespaceLongDescription,
+		Description: formatLongDescription(createNamespaceLongDescription),
 		Usage:       "Create a namespace on the cluster",
 		ArgsUsage:   "<name> [options]",
 
