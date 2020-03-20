@@ -37,9 +37,8 @@ type GKECredentialsSpec struct {
 	// +kubebuilder:validation:Required
 	Project string `json:"project"`
 	// Region is the GCP region you wish to the cluster to reside within
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Required
-	Region string `json:"region"`
+	// +kubebuilder:validation:Optional
+	Region string `json:"region,omitempty"`
 }
 
 // GKECredentialsStatus defines the observed state of GKECredentials

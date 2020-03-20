@@ -86,6 +86,9 @@ func (a acCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 			}
 		}
 
+		object.Status.Status = corev1.SuccessStatus
+		object.Status.Conditions = []corev1.Condition{}
+
 		return nil
 	}()
 	if err != nil {

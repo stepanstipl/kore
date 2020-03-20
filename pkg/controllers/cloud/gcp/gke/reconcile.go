@@ -21,12 +21,16 @@ import (
 	"errors"
 	"fmt"
 
+	config "github.com/appvia/kore/pkg/apis/config/v1"
 	core "github.com/appvia/kore/pkg/apis/core/v1"
+	gcp "github.com/appvia/kore/pkg/apis/gcp/v1alpha1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
+	gcpcc "github.com/appvia/kore/pkg/controllers/cloud/gcp/projectclaim"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -198,7 +202,7 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 
 		logger.Info("attempting to bootstrap the gke cluster")
 
-		boot, err := NewBootstrapClient(resource, creds)
+		boot, err := newBootstrapClient(resource, creds)
 		if err != nil {
 			logger.WithError(err).Error("trying to create bootstrap client")
 
@@ -212,7 +216,7 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 
 		resource.Status.Conditions.SetCondition(core.Component{
 			Name:    ComponentClusterBootstrap,
-			Message: "Successfully initialised the cluster",
+			Message: "Successfully initialized the cluster",
 			Status:  core.SuccessStatus,
 		})
 
@@ -248,7 +252,7 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 }
 
 // GetCredentials returns the cloud credential
-func (t *gkeCtrl) GetCredentials(ctx context.Context, cluster *gke.GKE, team string) (*gke.GKECredentials, error) {
+func (t *gkeCtrl) GetCredentials(ctx context.Context, cluster *gke.GKE, team string) (*credentials, error) {
 	// @step: is the team permitted access to this credentials
 	permitted, err := t.Teams().Team(team).Allocations().IsPermitted(ctx, cluster.Spec.Credentials)
 	if err != nil {
@@ -260,16 +264,116 @@ func (t *gkeCtrl) GetCredentials(ctx context.Context, cluster *gke.GKE, team str
 	if !permitted {
 		log.Warn("trying to build gke cluster unallocated permissions")
 
-		return nil, errors.New("you do not have permissions to the gke credentials")
+		return nil, errors.New("you do not have permissions to the credentials")
 	}
 
-	// @step: retrieve the credentials
-	creds := &gke.GKECredentials{}
+	key := types.NamespacedName{
+		Namespace: cluster.Spec.Credentials.Namespace,
+		Name:      cluster.Spec.Credentials.Name,
+	}
 
-	return creds, t.mgr.GetClient().Get(ctx,
-		types.NamespacedName{
-			Namespace: cluster.Spec.Credentials.Namespace,
-			Name:      cluster.Spec.Credentials.Name,
-		}, creds,
-	)
+	// @step: are we building the cluster off a project claim or static credentials
+	switch cluster.Spec.Credentials.Group {
+	case gke.SchemeGroupVersion.Group:
+		switch kind := cluster.Spec.Credentials.Kind; kind {
+		case "GKECredentials":
+			return t.GetGKECredentials(ctx, key)
+		default:
+			return nil, fmt.Errorf("unknown gke credential kind: %s", kind)
+		}
+
+	case gcp.SchemeGroupVersion.Group:
+		switch kind := cluster.Spec.Credentials.Kind; kind {
+		case "ProjectClaim":
+			return t.GetProjectClaimCredentials(ctx, key)
+		default:
+			return nil, fmt.Errorf("unknown gcp credential kind: %s", kind)
+		}
+	}
+
+	return nil, errors.New("unknown credentials api group specified")
+}
+
+// GetGKECredentials is responsible for pulling the gke credentias type
+func (t *gkeCtrl) GetGKECredentials(ctx context.Context, key types.NamespacedName) (*credentials, error) {
+	c := &gke.GKECredentials{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      key.Name,
+			Namespace: key.Namespace,
+		},
+	}
+	found, err := kubernetes.GetIfExists(ctx, t.mgr.GetClient(), c)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, fmt.Errorf("gke credentials: (%s/%s) not found", key.Namespace, key.Namespace)
+	}
+
+	if c.Status.Verified == nil || !*c.Status.Verified {
+		return nil, errors.New("gke credentials have failed validation, please check credentials")
+	}
+
+	return &credentials{
+		key:        c.Spec.Account,
+		project_id: c.Spec.Project,
+		project:    c.Spec.Project,
+	}, nil
+}
+
+// GetProjectClaimCredentials is responsible for retrieving the project claim secret
+// probably needs to be moved into a common lib
+func (t *gkeCtrl) GetProjectClaimCredentials(ctx context.Context, key types.NamespacedName) (*credentials, error) {
+	c := &gcp.ProjectClaim{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      key.Name,
+			Namespace: key.Namespace,
+		},
+	}
+
+	found, err := kubernetes.GetIfExists(ctx, t.mgr.GetClient(), c)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, fmt.Errorf("gcp project claim: (%s/%s) not found", key.Namespace, key.Namespace)
+	}
+
+	// @step: we need to check the status of the project
+	if c.Status.Status == core.FailureStatus {
+		return nil, errors.New("gcp project is in a failed state")
+	}
+	if c.Status.CredentialRef == nil {
+		return nil, errors.New("no gcp credentials reference on project claim")
+	}
+	if c.Status.CredentialRef.Name == "" || c.Status.CredentialRef.Namespace == "" {
+		return nil, errors.New("gcp project claims credentials reference is missing fields")
+	}
+
+	// @step: we need to grab the secret
+	secret := &config.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      c.Status.CredentialRef.Name,
+			Namespace: c.Status.CredentialRef.Namespace,
+		},
+	}
+
+	found, err = kubernetes.GetIfExists(ctx, t.mgr.GetClient(), secret)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, fmt.Errorf("gcp project secret is missing")
+	}
+
+	// @step: ensure the secret is decoded before using
+	if err := secret.Decode(); err != nil {
+		return nil, err
+	}
+
+	return &credentials{
+		key:        secret.Spec.Data[gcpcc.ServiceAccountKey],
+		project_id: secret.Spec.Data[gcpcc.ProjectIDKey],
+		project:    secret.Spec.Data[gcpcc.ProjectNameKey],
+	}, nil
 }

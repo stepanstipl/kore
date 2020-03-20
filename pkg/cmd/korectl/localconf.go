@@ -126,7 +126,6 @@ func (g *gcpInfoConfig) load(src string) (*gcpInfoConfig, error) {
 		return g, err
 	}
 
-	g.Region = cred.Spec.Region
 	g.Project = cred.Spec.Project
 
 	if len(cred.Spec.Account) > 0 {
@@ -176,7 +175,6 @@ func (g *gcpInfoConfig) generateGcpInfo() error {
 			Namespace: kore.HubAdminTeam,
 		},
 		Spec: gke.GKECredentialsSpec{
-			Region:  g.Region,
 			Project: g.Project,
 			Account: string(keyData),
 		},

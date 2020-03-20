@@ -29,14 +29,14 @@ import (
 // MaxChunkSize is the largest number of permissions that can be checked in one request
 const MaxChunkSize = 100
 
-type crmClient struct {
+// CrmClient is a permissions client
+type CrmClient struct {
 	crm         *resourcemanager.Service
 	credentials *gke.GKECredentials
 }
 
 // NewClient creates and returns a permissions verifier
-// @TODO move this to a common lib
-func NewClient(credentials *gke.GKECredentials) (*crmClient, error) {
+func NewClient(credentials *gke.GKECredentials) (*CrmClient, error) {
 	options := []option.ClientOption{option.WithCredentialsJSON([]byte(credentials.Spec.Account))}
 
 	crm, err := resourcemanager.NewService(context.Background(), options...)
@@ -44,11 +44,11 @@ func NewClient(credentials *gke.GKECredentials) (*crmClient, error) {
 		return nil, err
 	}
 
-	return &crmClient{crm: crm, credentials: credentials}, nil
+	return &CrmClient{crm: crm, credentials: credentials}, nil
 }
 
 // HasRequiredPermissions tests whether a serviceaccount has the required permissions for cluster manager
-func (c *crmClient) HasRequiredPermissions() (bool, error) {
+func (c *CrmClient) HasRequiredPermissions() (bool, error) {
 	permissions := utils.ChunkBy(requiredPermissions(), MaxChunkSize)
 	for _, chunk := range permissions {
 		allFound, err := c.hasPermissions(chunk)
@@ -59,21 +59,22 @@ func (c *crmClient) HasRequiredPermissions() (bool, error) {
 			return false, nil
 		}
 	}
+
 	return true, nil
 }
 
 // hadPermission checks if we have all the permissions passed
-func (c *crmClient) hasPermissions(permissions []string) (bool, error) {
+func (c *CrmClient) hasPermissions(permissions []string) (bool, error) {
 	request := &resourcemanager.TestIamPermissionsRequest{
 		Permissions: permissions,
 	}
 
-	response, err := c.crm.Projects.TestIamPermissions(c.credentials.Spec.Project, request).Do()
+	resp, err := c.crm.Projects.TestIamPermissions(c.credentials.Spec.Project, request).Do()
 	if err != nil {
 		return false, err
 	}
 
-	return len(response.Permissions) == len(permissions), nil
+	return len(resp.Permissions) == len(permissions), nil
 }
 
 func requiredPermissions() []string {

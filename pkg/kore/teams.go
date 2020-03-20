@@ -28,9 +28,9 @@ import (
 	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	log "github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Teams is the kore api teams interface

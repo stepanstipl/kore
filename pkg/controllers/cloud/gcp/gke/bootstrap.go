@@ -20,9 +20,9 @@ import (
 	"context"
 	"time"
 
+	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
-	"github.com/appvia/kore/pkg/kore"
-	"github.com/appvia/kore/pkg/utils/kubernetes"
+	"github.com/appvia/kore/pkg/controllers"
 	kube "github.com/appvia/kore/pkg/utils/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -37,18 +37,18 @@ import (
 
 type bootImpl struct {
 	// credentials are the gke credentials
-	credentials *gke.GKECredentials
+	credentials *credentials
 	// cluster is the gke cluster
 	cluster *gke.GKE
 	// client is the k8s client
 	client k8s.Interface
 }
 
-// NewBootstrapClient returns a bootstrap client
-func NewBootstrapClient(cluster *gke.GKE, credentials *gke.GKECredentials) (*bootImpl, error) {
+// newBootstrapClient returns a bootstrap client
+func newBootstrapClient(cluster *gke.GKE, credentials *credentials) (*bootImpl, error) {
 	// @step: retrieve the credentials for the cluster
 	client, err := kube.NewGKEClient(
-		credentials.Spec.Account,
+		credentials.key,
 		cluster.Status.Endpoint,
 	)
 	if err != nil {
@@ -92,30 +92,28 @@ func (p *bootImpl) Bootstrap(ctx context.Context, client client.Client) error {
 	}
 
 	logger.Info("creating the kore-admin service account for cluster")
+
 	// @step: create or retrieve the kore-sysadmin secret token
-	secret, err := p.CreateSysadminCredential()
+	creds, err := p.CreateSysadminCredential()
 	if err != nil {
 		logger.WithError(err).Error("creating kore admin service account")
 
 		return err
 	}
 
-	_, err = kubernetes.CreateOrUpdateSecret(ctx, client, &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      p.cluster.Name,
-			Namespace: p.cluster.Namespace,
-			Labels: map[string]string{
-				kore.Label("type"): "kubernetescredentials",
-			},
-		},
-		Data: map[string][]byte{
-			"ca.crt":   secret.Data["ca.crt"],
-			"endpoint": []byte(p.cluster.Status.Endpoint),
-			"token":    secret.Data["token"],
-		},
-	})
-	if err != nil {
-		logger.WithError(err).Error("trying to create sysadmin token")
+	secret := controllers.NewEmptySecret().
+		Description("Kubernetes Cluster credentials for " + p.cluster.Name).
+		Name(p.cluster.Name).
+		Namespace(p.cluster.Namespace).
+		Type(configv1.KubernetesSecret).
+		Values(map[string]string{
+			"ca.crt":   string(creds.Data["ca.crt"]),
+			"endpoint": p.cluster.Status.Endpoint,
+			"token":    string(creds.Data["token"]),
+		}).Secret()
+
+	if err := controllers.CreateManagedSecret(ctx, p.cluster, client, secret.Encode()); err != nil {
+		logger.WithError(err).Error("trying to create sysadmin secret")
 
 		return err
 	}

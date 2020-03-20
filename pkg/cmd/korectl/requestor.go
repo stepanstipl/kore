@@ -398,12 +398,12 @@ func (c *Requestor) doRequest(method, url string, handler func(*http.Response) e
 			return &RequestError{statusCode: resp.StatusCode, err: err}
 		}
 		return nil
-	} else {
-		// Read the response body and discard it - to avoid any surprises
-		_, _ = ioutil.ReadAll(resp.Body)
-
-		return nil
 	}
+
+	// Read the response body and discard it - to avoid any surprises
+	_, _ = ioutil.ReadAll(resp.Body)
+
+	return nil
 }
 
 // makeURI is responsible for generating the uri for the requestor
@@ -416,7 +416,7 @@ func (c *Requestor) makeURI() (string, error) {
 			found = c.cliCtx.IsSet(name)
 			value = fmt.Sprintf("%s", c.cliCtx.Generic(name))
 		}
-		if !found && required {
+		if (!found || value == "") && required {
 			return "", fmt.Errorf("invalid request, option: %s must be set", name)
 		}
 		token := fmt.Sprintf("{%s}", name)

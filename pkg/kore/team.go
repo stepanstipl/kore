@@ -35,12 +35,12 @@ type Team interface {
 	Cloud() Cloud
 	// Clusters returns the teams clusters
 	Clusters() Clusters
-	// KubernetesCredentials returns the k8s credentials
-	KubernetesCredentials() KubernetesCredentials
 	// Members returns the team members interface
 	Members() TeamMembers
 	// NamespaceClaims returns the the interface
 	NamespaceClaims() NamespaceClaims
+	// Secrets returns the secret interface
+	Secrets() Secrets
 }
 
 // tmImpl is a team interface
@@ -88,9 +88,9 @@ func (t *tmImpl) NamespaceClaims() NamespaceClaims {
 	}
 }
 
-// KubernetesCredentials returns the k8s credentials
-func (t *tmImpl) KubernetesCredentials() KubernetesCredentials {
-	return &kcImpl{
+// Secrets returns a secrets interface
+func (t *tmImpl) Secrets() Secrets {
+	return &secretImpl{
 		hubImpl: t.hubImpl,
 		team:    t.team,
 	}

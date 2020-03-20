@@ -78,6 +78,10 @@ type GKESpec struct {
 	// services
 	// +kubebuilder:validation:Optional
 	ServicesIPV4Cidr string `json:"servicesIPV4Cidr"`
+	// Region is the gcp region you want the cluster to reside
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Required
+	Region string `json:"region,omitempty"`
 	// ClusterIPV4Cidr is an optional network CIDR which is used to place the
 	// pod network on
 	// +kubebuilder:validation:Optional
@@ -91,13 +95,13 @@ type GKESpec struct {
 	// +kubebuilder:validation:Optional
 	EnableAutoscaler bool `json:"enableAutoscaler"`
 	// EnableAutoUpgrade indicates if the cluster should be configured with
-	// autograding enabled; meaning both nodes are masters are autoscated scheduled
+	// autograding enabled; meaning both nodes are masters are autoscaled scheduled
 	// to upgrade during your maintenance window.
 	// +kubebuilder:validation:Optional
 	EnableAutoupgrade bool `json:"enableAutoupgrade"`
 	// EnableHorizontalPodAutoscaler indicates if the cluster is configured with
 	// the horizontal pod autoscaler addon. This automatically adjusts the cpu and
-	// memory resources of pods in accordances with their demand. You should ensure
+	// memory resources of pods in accordance with their demand. You should ensure
 	// you use PodDisruptionBudgets if this is enabled.
 	// +kubebuilder:validation:Optional
 	EnableHorizontalPodAutoscaler bool `json:"enableHorizontalPodAutoscaler"`
@@ -110,7 +114,7 @@ type GKESpec struct {
 	// cluster; this provides a more feature rich routing and instrumentation.
 	// +kubebuilder:validation:Optional
 	EnableIstio bool `json:"enableIstio"`
-	// EnableSheildedNodes indicates we should enable the sheilds nodes options in GKE.
+	// EnableShieldedNodes indicates we should enable the shielded nodes options in GKE.
 	// This protects against a variety of attacks by hardening the underlying GKE node
 	// against rootkits and bootkits.
 	EnableShieldedNodes bool `json:"enableShieldedNodes"`
