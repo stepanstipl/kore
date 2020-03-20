@@ -8,9 +8,7 @@ BOILERPLATE_LENGTH=$(cat ${BOILERPLATE}| wc -l | xargs)
 EXCLUDE_FILES=(
   ./hack/generate/manifests_vfsdata.go
   ./pkg/clusterappman/manifests_tools.go
-  ./pkg/clusterappman/manifests_vfsdata.go
   ./pkg/tools/tools.go
-  ./pkg/register/assets.go
 )
 
 if [[ -z "${BOILERPLATE_LENGTH}" ]]; then
@@ -23,6 +21,12 @@ while read name; do
   [[ " ${EXCLUDE_FILES[*]} " == *" ${name} "* ]] && continue
   # ignore auto generated ones
   [[ "${name}" =~ ^.*zz_generated.*$ ]] && continue
+  # ignore test suite files
+  [[ "${name}" =~ ^.*_suite_test.go$ ]] && continue
+  # ignore generated files
+  if head -n 1 "${name}" | grep -qE "^// Code generated"; then
+    continue
+  fi
 
   if ! head -n ${BOILERPLATE_LENGTH} ${name} | diff - ${BOILERPLATE} >/dev/null; then
     echo "Please check the licence header on ${name}"
