@@ -71,6 +71,11 @@ cobractl: golang deps
 	@mkdir -p bin
 	go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/cobractl cmd/cobractl/*.go
 
+mowctl: golang deps
+	@echo "--> Compiling the mowctl binary"
+	@mkdir -p bin
+	go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/mowctl cmd/mowctl/*.go
+
 auth-proxy: golang deps
 	@echo "--> Compiling the auth-proxy binary"
 	@mkdir -p bin

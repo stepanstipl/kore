@@ -45,6 +45,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/huandu/xstrings v1.2.1 // indirect
 	github.com/imdario/mergo v0.3.8 // indirect
+	github.com/jawher/mow.cli v1.1.0
 	github.com/jinzhu/gorm v1.9.12
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/julienschmidt/httprouter v1.2.0
@@ -56,6 +57,7 @@ require (
 	github.com/prometheus/client_golang v1.0.0
 	github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4
 	github.com/prometheus/procfs v0.0.8 // indirect
+	github.com/remyoudompheng/bigfft v0.0.0-20190728182440-6a916e37a237 // indirect
 	github.com/romanyx/polluter v1.2.2
 	github.com/savaki/jq v0.0.0-20161209013833-0e6baecebbf8
 	github.com/shurcooL/httpfs v0.0.0-20190707220628-8d4bc4ba7749 // indirect
@@ -64,7 +66,7 @@ require (
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/cobra v0.0.6
-	github.com/spf13/viper v1.6.2 // indirect
+	github.com/spf13/viper v1.6.2
 	github.com/steveyen/gtreap v0.0.0-20150807155958-0abe01ef9be2 // indirect
 	github.com/stretchr/testify v1.4.0
 	github.com/syndtr/goleveldb v1.0.0 // indirect
