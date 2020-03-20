@@ -16,6 +16,7 @@ if [[ -z "${BOILERPLATE_LENGTH}" ]]; then
   exit 1
 fi
 
+failed=0
 while read name; do
   # ignore excluded files
   [[ " ${EXCLUDE_FILES[*]} " == *" ${name} "* ]] && continue
@@ -29,7 +30,17 @@ while read name; do
   fi
 
   if ! head -n ${BOILERPLATE_LENGTH} ${name} | diff - ${BOILERPLATE} >/dev/null; then
-    echo "Please check the licence header on ${name}"
-    echo "Ensure its the same as ${BOILERPLATE}"
+    echo "Missing licence header: ${name}"
+    failed=1
   fi
 done < <(find . -type f -name "*.go" | grep -v vendor)
+
+if [ "$failed" = 1 ]; then
+  echo
+  echo "Make sure all listed files have a licence header. The licence can be found in ${BOILERPLATE}".
+  echo
+  echo "# Copy to clipboard:"
+  echo "cat ${BOILERPLATE} | pbcopy"
+  echo
+  exit 1
+fi
