@@ -43,6 +43,8 @@ type gkeClient struct {
 	credentials *credentials
 	// cluster is the gke cluster
 	cluster *gke.GKE
+	// @deprecated region
+	region string
 }
 
 // NewClient returns a gcp client for us
@@ -59,11 +61,17 @@ func NewClient(credentials *credentials, cluster *gke.GKE) (*gkeClient, error) {
 		return nil, err
 	}
 
+	region := credentials.region
+	if region == "" {
+		region = cluster.Spec.Region
+	}
+
 	return &gkeClient{
 		cm:          cm,
 		ce:          ce,
 		credentials: credentials,
 		cluster:     cluster,
+		region:      region,
 	}, nil
 }
 
@@ -73,7 +81,7 @@ func (g *gkeClient) Delete(ctx context.Context) error {
 		"cluster":   g.cluster.Name,
 		"namespace": g.cluster.Namespace,
 		"project":   g.credentials.project,
-		"region":    g.cluster.Spec.Region,
+		"region":    g.region,
 	})
 	logger.Info("attempting to delete the cluster from gcp")
 
@@ -95,7 +103,7 @@ func (g *gkeClient) Delete(ctx context.Context) error {
 	}
 	path := fmt.Sprintf("projects/%s/locations/%s/clusters/%s",
 		g.credentials.project,
-		g.cluster.Spec.Region,
+		g.region,
 		cluster.Name)
 
 	// @step: check for any ongoing operation
@@ -133,7 +141,7 @@ func (g *gkeClient) Create(ctx context.Context) (*container.Cluster, error) {
 		"cluster":   g.cluster.Name,
 		"namespace": g.cluster.Namespace,
 		"project":   g.credentials.project,
-		"region":    g.cluster.Spec.Region,
+		"region":    g.region,
 	})
 	logger.Info("attempting to create the gke cluster")
 
@@ -379,7 +387,7 @@ func (g *gkeClient) GetCluster() (*container.Cluster, bool, error) {
 func (g *gkeClient) GetClusters() ([]*container.Cluster, error) {
 	var list []*container.Cluster
 
-	path := fmt.Sprintf("projects/%s/locations/%s", g.credentials.project, g.cluster.Spec.Region)
+	path := fmt.Sprintf("projects/%s/locations/%s", g.credentials.project, g.region)
 
 	err := wait.ExponentialBackoff(retry.DefaultRetry, func() (done bool, err error) {
 		resp, err := g.ce.Projects.Locations.Clusters.List(path).Do()
@@ -408,7 +416,7 @@ func (g *gkeClient) GetClusters() ([]*container.Cluster, error) {
 func (g *gkeClient) CreateCluster(ctx context.Context, request *container.CreateClusterRequest) (*container.Operation, error) {
 	var operation *container.Operation
 
-	path := fmt.Sprintf("projects/%s/locations/%s", g.credentials.project, g.cluster.Spec.Region)
+	path := fmt.Sprintf("projects/%s/locations/%s", g.credentials.project, g.region)
 
 	if err := wait.ExponentialBackoff(retry.DefaultRetry, func() (done bool, err error) {
 		resp, err := g.ce.Projects.Locations.Clusters.Create(path, request).Do()
@@ -457,7 +465,7 @@ func (g *gkeClient) EnableRouter(name, network string) error {
 
 	_, err = g.cm.Routers.Insert(
 		g.credentials.project,
-		g.cluster.Spec.Region,
+		g.region,
 		&compute.Router{
 			Name:        name,
 			Description: "Default router created by Appvia Kore",
@@ -514,7 +522,7 @@ func (g *gkeClient) GetRouter(name string) (*compute.Router, bool, error) {
 
 // GetRouters returns all the routers in the account
 func (g *gkeClient) GetRouters() ([]*compute.Router, error) {
-	resp, err := g.cm.Routers.List(g.credentials.project, g.cluster.Spec.Region).Do()
+	resp, err := g.cm.Routers.List(g.credentials.project, g.region).Do()
 	if err != nil {
 		return nil, err
 	}
@@ -530,7 +538,7 @@ func (g *gkeClient) Locations() ([]string, error) {
 	}
 	var list []string
 
-	prefix := fmt.Sprintf("%s-", g.cluster.Spec.Region)
+	prefix := fmt.Sprintf("%s-", g.region)
 
 	for _, x := range resp.Locations {
 		if strings.HasPrefix(x.Name, prefix) {
@@ -612,7 +620,7 @@ func (g *gkeClient) GetOperation(id string) (*container.Operation, error) {
 	// projects/my-project/locations/my-location/operations/my-operation
 	path := fmt.Sprintf("projects/%s/locations/%s/operations/%s",
 		g.credentials.project,
-		g.cluster.Spec.Region,
+		g.region,
 		id)
 
 	var o *container.Operation
@@ -646,7 +654,7 @@ func (g *gkeClient) FindOperation(ctx context.Context, operationType, resource, 
 	logger.Debug("searching for any running operations")
 
 	resp, err := g.ce.Projects.Locations.Operations.List(fmt.Sprintf("projects/%s/locations/%s",
-		g.credentials.project, g.cluster.Spec.Region)).Do()
+		g.credentials.project, g.region)).Do()
 	if err != nil {
 		logger.WithError(err).Error("trying to retrieve a list of operations")
 

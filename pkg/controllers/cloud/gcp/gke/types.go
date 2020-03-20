@@ -23,4 +23,6 @@ type credentials struct {
 	project_id string
 	// key is the service account key
 	key string
+	// @deprecated region is the old region
+	region string
 }

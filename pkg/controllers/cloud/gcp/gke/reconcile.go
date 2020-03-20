@@ -318,6 +318,7 @@ func (t *gkeCtrl) GetGKECredentials(ctx context.Context, key types.NamespacedNam
 		key:        c.Spec.Account,
 		project_id: c.Spec.Project,
 		project:    c.Spec.Project,
+		region:     c.Spec.Region,
 	}, nil
 }
 
