@@ -80,6 +80,7 @@ func MakeCreateClusterSubCmd(config *korectl.Config, globals *Globals) func(cmd 
 		cmd.BoolOptPtr(&line.Dry, "dry-run", false, "generate the cluster specification but does not apply `BOOL`")
 
 		cmd.Action = func() {
+			// CON: how to handle this. Breaks linting: "Error return value of `runCreateCluster` is not checked"
 			runCreateCluster(config, globals, line)
 		}
 	}
