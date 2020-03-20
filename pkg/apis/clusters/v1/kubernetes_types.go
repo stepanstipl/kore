@@ -59,6 +59,11 @@ type KubernetesSpec struct {
 	// ProxyImage is the kube api proxy used to sso into the cluster post provision
 	// +kubebuilder:validation:Optional
 	ProxyImage string `json:"proxyImage,omitempty"`
+	// ProxyAllowedIPs is a list of IP address ranges (using CIDR format), which will be allowed to access the proxy
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems=1
+	// +listType=set
+	ProxyAllowedIPs []string `json:"proxyAllowedIPs,omitempty"`
 }
 
 // ClusterUser defines a user and their role in the cluster

@@ -380,6 +380,13 @@ func schema_pkg_apis_gke_v1alpha1_GKESpec(ref common.ReferenceCallback) common.O
 							Format:      "",
 						},
 					},
+					"enablePrivateEndpoint": {
+						SchemaProps: spec.SchemaProps{
+							Description: "EnablePrivateEndpoint indicates whether the Kubernetes API should only be accessible from internal IP addresses",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
 					"enablePrivateNetwork": {
 						SchemaProps: spec.SchemaProps{
 							Description: "EnablePrivateNetwork indicates if compute nodes should have external ip addresses or use private networking and a cloud-nat device.",
@@ -417,7 +424,7 @@ func schema_pkg_apis_gke_v1alpha1_GKESpec(ref common.ReferenceCallback) common.O
 						},
 					},
 				},
-				Required: []string{"description", "version", "size", "maxSize", "diskSize", "imageType", "machineType", "authorizedMasterNetworks", "network", "subnetwork", "servicesIPV4Cidr", "clusterIPV4Cidr", "enableAutorepair", "enableAutoscaler", "enableAutoupgrade", "enableHorizontalPodAutoscaler", "enableHTTPLoadBalancer", "enableIstio", "enableShieldedNodes", "enableStackDriverLogging", "enableStackDriverMetrics", "enablePrivateNetwork", "masterIPV4Cidr", "maintenanceWindow"},
+				Required: []string{"description", "version", "size", "maxSize", "diskSize", "imageType", "machineType", "authorizedMasterNetworks", "network", "subnetwork", "servicesIPV4Cidr", "clusterIPV4Cidr", "enableAutorepair", "enableAutoscaler", "enableAutoupgrade", "enableHorizontalPodAutoscaler", "enableHTTPLoadBalancer", "enableIstio", "enableShieldedNodes", "enableStackDriverLogging", "enableStackDriverMetrics", "enablePrivateEndpoint", "enablePrivateNetwork", "masterIPV4Cidr", "maintenanceWindow"},
 			},
 		},
 		Dependencies: []string{

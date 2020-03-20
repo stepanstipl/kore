@@ -1038,6 +1038,14 @@ spec:
               - namespace
               - version
               type: object
+            proxyAllowedIPs:
+              description: ProxyAllowedIPs is a list of IP address ranges (using CIDR
+                format), which will be allowed to access the proxy
+              items:
+                type: string
+              minItems: 1
+              type: array
+              x-kubernetes-list-type: set
             proxyImage:
               description: ProxyImage is the kube api proxy used to sso into the cluster
                 post provision
@@ -4042,6 +4050,10 @@ spec:
               description: EnableIstio indicates if the GKE Istio service mesh is
                 deployed to the cluster; this provides a more feature rich routing
                 and instrumentation.
+              type: boolean
+            enablePrivateEndpoint:
+              description: EnablePrivateEndpoint indicates whether the Kubernetes
+                API should only be accessible from internal IP addresses
               type: boolean
             enablePrivateNetwork:
               description: EnablePrivateNetwork indicates if compute nodes should

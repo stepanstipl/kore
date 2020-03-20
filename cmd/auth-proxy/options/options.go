@@ -43,9 +43,10 @@ func Options() []cli.Flag {
 			EnvVars: []string{"IDP_SERVER_URL"},
 		},
 		&cli.StringFlag{
-			Name:    "idp-client-id",
-			Usage:   "the identity provider client id used to verify the token `IDP_CLIENT_ID`",
-			EnvVars: []string{"IDP_CLIENT_ID"},
+			Name:     "idp-client-id",
+			Usage:    "the identity provider client id used to verify the token `IDP_CLIENT_ID`",
+			EnvVars:  []string{"IDP_CLIENT_ID"},
+			Required: true,
 		},
 		&cli.StringFlag{
 			Name:    "ca-authority",
@@ -91,6 +92,12 @@ func Options() []cli.Flag {
 			Name:    "verbose",
 			Usage:   "switches on verbose logging for debugging purposes `BOOL`",
 			EnvVars: []string{"VERBOSE"},
+		},
+		&cli.StringSliceFlag{
+			Name:    "allowed-ips",
+			Usage:   "traffic will be allowed from the given IP ranges if set. Requires CIDR notation. `CIDR`",
+			EnvVars: []string{"ALLOWED_IPS"},
+			Value:   cli.NewStringSlice("0.0.0.0/0"),
 		},
 	}
 }

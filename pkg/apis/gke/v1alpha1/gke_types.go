@@ -126,6 +126,9 @@ type GKESpec struct {
 	// for the cluster
 	// +kubebuilder:validation:Optional
 	EnableStackDriverMetrics bool `json:"enableStackDriverMetrics"`
+	// EnablePrivateEndpoint indicates whether the Kubernetes API should only be accessible from internal IP addresses
+	// +kubebuilder:validation:Optional
+	EnablePrivateEndpoint bool `json:"enablePrivateEndpoint"`
 	// EnablePrivateNetwork indicates if compute nodes should have external ip
 	// addresses or use private networking and a cloud-nat device.
 	// +kubebuilder:validation:Optional

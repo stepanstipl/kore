@@ -43,3 +43,13 @@ type Config struct {
 	// SkipIDCheck indicates we skip checking the issuer
 	SkipClientIDCheck bool
 }
+
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Verifier
+type Verifier interface {
+	Verify(ctx context.Context, rawIDToken string) (IDToken, error)
+}
+
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . IDToken
+type IDToken interface {
+	Claims(v interface{}) error
+}

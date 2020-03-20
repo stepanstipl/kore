@@ -500,9 +500,9 @@ func (a k8sCtrl) CheckProviderStatus(ctx context.Context, resource *clustersv1.K
 
 			return errors.New("cloud provider is in a failed state")
 		}
+	default:
+		logger.Warn("unknown cloud provider, ignoring the check")
 	}
-
-	logger.Warn("unknown cloud provider, ignoring the check")
 
 	return nil
 }

@@ -30,9 +30,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/appvia/kore/pkg/utils/openid"
+
 	"github.com/appvia/kore/pkg/utils"
 
-	"github.com/coreos/go-oidc"
 	"github.com/julienschmidt/httprouter"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
@@ -41,28 +42,32 @@ import (
 // authImpl implements the authentication proxy
 type authImpl struct {
 	sync.RWMutex
-	// config is the configuration for the service
-	config Config
-	// verifier is the rsa
-	verifier *oidc.IDTokenVerifier
-	// stopCh is the stop channel
-	stopCh chan struct{}
-	// token is the upstream token
-	token string
+	logger          log.FieldLogger
+	config          Config
+	verifier        openid.Verifier
+	stopCh          chan struct{}
+	token           string
+	allowedNetworks []*net.IPNet
+	addr            string
 }
 
 // New creates and returns a new authentication proxy
-func New(config Config) (Interface, error) {
+func New(
+	logger log.FieldLogger,
+	config Config,
+	verifier openid.Verifier,
+) (Interface, error) {
 	if err := config.IsValid(); err != nil {
 		return nil, err
 	}
 
-	var verifier *oidc.IDTokenVerifier
-
-	options := &oidc.Config{
-		ClientID:          config.IDPClientID,
-		SkipClientIDCheck: true,
-		SkipExpiryCheck:   false,
+	var allowedNetworks []*net.IPNet
+	for _, cidr := range config.AllowedIPs {
+		_, network, err := net.ParseCIDR(cidr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid CIDR notation: %q", cidr)
+		}
+		allowedNetworks = append(allowedNetworks, network)
 	}
 
 	content, err := ioutil.ReadFile(config.UpstreamAuthorizationToken)
@@ -71,39 +76,13 @@ func New(config Config) (Interface, error) {
 	}
 	token := strings.TrimSuffix(string(content), "\n")
 
-	// @step: do we have a signing ca?
-	if config.SigningCA != "" {
-		log.WithField(
-			"signing_ca", config.SigningCA,
-		).Info("using the signing certificate to verify the requests")
-
-		keyset, err := newStaticKeySet(config.SigningCA)
-		if err != nil {
-			return nil, err
-		}
-
-		verifier = oidc.NewVerifier(config.IDPClientID, keyset, options)
-	}
-	if config.IDPServerURL != "" {
-		log.WithField(
-			"idp-server-url", config.IDPServerURL,
-		).Info("using the IDP server to verify the requests")
-
-		provider, err := oidc.NewProvider(context.Background(), config.IDPServerURL)
-		if err != nil {
-			log.WithError(err).Error("trying to retrieve provider details")
-
-			return nil, err
-		}
-
-		verifier = provider.Verifier(options)
-	}
-
 	return &authImpl{
-		config:   config,
-		stopCh:   make(chan struct{}),
-		token:    string(token),
-		verifier: verifier,
+		logger:          logger,
+		config:          config,
+		stopCh:          make(chan struct{}),
+		token:           token,
+		verifier:        verifier,
+		allowedNetworks: allowedNetworks,
 	}, nil
 }
 
@@ -157,6 +136,25 @@ func (a *authImpl) Run(ctx context.Context) error {
 				return
 			}
 
+			var remoteIP net.IP
+			if host, _, err := net.SplitHostPort(req.RemoteAddr); err == nil {
+				remoteIP = net.ParseIP(host)
+			}
+			if remoteIP == nil {
+				a.logger.WithField("remote_address", req.RemoteAddr).
+					Warnf("invalid remote address, access forbidden")
+				resp.WriteHeader(http.StatusForbidden)
+				_, _ = resp.Write([]byte("Forbidden\n"))
+				return
+			}
+			if !a.isIPAllowed(remoteIP) {
+				a.logger.WithField("remote_address", req.RemoteAddr).
+					Warnf("access forbidden")
+				resp.WriteHeader(http.StatusForbidden)
+				_, _ = resp.Write([]byte("Forbidden\n"))
+				return
+			}
+
 			err := func() error {
 				// @step: extract the token from the request
 				bearer, found := utils.GetBearerToken(req.Header.Get("Authorization"))
@@ -171,13 +169,13 @@ func (a *authImpl) Run(ctx context.Context) error {
 				}
 
 				// @step: parse and extract the identity
-				raw, err := a.verifier.Verify(req.Context(), bearer)
+				idToken, err := a.verifier.Verify(req.Context(), bearer)
 				if err != nil {
 					return err
 				}
 
 				// @step: extract the username if any
-				claims, err := utils.NewClaimsFromToken(raw)
+				claims, err := utils.NewClaimsFromToken(idToken)
 				if err != nil {
 					return err
 				}
@@ -203,7 +201,7 @@ func (a *authImpl) Run(ctx context.Context) error {
 			if err != nil {
 				authFailureCounter.Inc()
 
-				log.WithError(err).Error("trying to verify the inbound request")
+				a.logger.WithError(err).Error("trying to verify the inbound request")
 				resp.WriteHeader(http.StatusForbidden)
 
 				return
@@ -213,34 +211,45 @@ func (a *authImpl) Run(ctx context.Context) error {
 		})
 	}
 
-	hs := &http.Server{Addr: a.config.Listen, Handler: router}
+	hsl, err := net.Listen("tcp", a.config.Listen)
+	if err != nil {
+		return err
+	}
+	a.addr = hsl.Addr().String()
+	hs := &http.Server{Addr: hsl.Addr().String(), Handler: router}
 
 	go func() {
-		log.WithFields(log.Fields{
-			"listen": a.config.Listen,
+		a.logger.WithFields(log.Fields{
+			"addr": hs.Addr,
 		}).Info("starting the auth proxy service")
 
 		switch a.config.HasTLS() {
 		case true:
-			if err := hs.ListenAndServeTLS(a.config.TLSCert, a.config.TLSKey); err != nil {
-				log.WithError(err).Fatal("trying to start the http server")
+			if err := hs.ServeTLS(hsl, a.config.TLSCert, a.config.TLSKey); err != nil && err != http.ErrServerClosed {
+				a.logger.WithError(err).Fatal("trying to start the http server")
 			}
 		default:
-			if err := hs.ListenAndServe(); err != nil {
-				log.WithError(err).Fatal("trying to start the http server")
+			if err := hs.Serve(hsl); err != nil && err != http.ErrServerClosed {
+				a.logger.WithError(err).Fatal("trying to start the http server")
 			}
 		}
 	}()
 
-	ms := &http.Server{Addr: a.config.MetricsListen, Handler: promhttp.Handler()}
+	msl, err := net.Listen("tcp", a.config.MetricsListen)
+	if err != nil {
+		return err
+	}
+	ms := &http.Server{Addr: msl.Addr().String(), Handler: promhttp.Handler()}
 
 	go func() {
-		log.WithFields(log.Fields{
-			"metrics": a.config.MetricsListen,
+		a.logger.WithFields(log.Fields{
+			"addr": ms.Addr,
 		}).Info("starting the auth proxy metrics http server")
 
-		if err := ms.ListenAndServe(); err != nil {
-			log.WithError(err).Fatal("trying to start the metrics http server")
+		if err := ms.Serve(msl); err != nil && err != http.ErrServerClosed {
+			if err != http.ErrServerClosed {
+				a.logger.WithError(err).Fatal("trying to start the metrics http server")
+			}
 		}
 	}()
 
@@ -258,8 +267,24 @@ func (a *authImpl) Run(ctx context.Context) error {
 
 // Stop is called to halt the proxy
 func (a *authImpl) Stop() error {
-	log.Info("shutting down the http services")
+	a.logger.Info("shutting down the http services")
 	a.stopCh <- struct{}{}
 
 	return nil
+}
+
+func (a *authImpl) isIPAllowed(ip net.IP) bool {
+	if ip == nil {
+		return false
+	}
+	for _, network := range a.allowedNetworks {
+		if network.Contains(ip) {
+			return true
+		}
+	}
+	return false
+}
+
+func (a *authImpl) Addr() string {
+	return a.addr
 }

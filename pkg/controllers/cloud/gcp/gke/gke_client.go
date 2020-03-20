@@ -330,36 +330,33 @@ func (g *gkeClient) CreateDefinition() (*container.CreateClusterRequest, error) 
 		},
 	}
 
-	if cluster.Spec.EnablePrivateNetwork {
-		resource.PrivateCluster = true
-		resource.PrivateClusterConfig = &container.PrivateClusterConfig{
-			EnablePrivateEndpoint: false,
-			EnablePrivateNodes:    true,
-			MasterIpv4CidrBlock:   cluster.Spec.MasterIPV4Cidr,
-		}
+	resource.PrivateClusterConfig = &container.PrivateClusterConfig{}
 
-		if len(cluster.Spec.AuthorizedMasterNetworks) > 0 {
-			resource.MasterAuthorizedNetworksConfig = &container.MasterAuthorizedNetworksConfig{
-				CidrBlocks: []*container.CidrBlock{},
-				Enabled:    true,
-			}
-			for _, x := range cluster.Spec.AuthorizedMasterNetworks {
-				resource.MasterAuthorizedNetworksConfig.CidrBlocks = append(resource.MasterAuthorizedNetworksConfig.CidrBlocks, &container.CidrBlock{
-					CidrBlock:   x.CIDR,
-					DisplayName: x.Name,
-				})
-			}
-		} else {
-			resource.MasterAuthorizedNetworksConfig = &container.MasterAuthorizedNetworksConfig{
-				CidrBlocks: []*container.CidrBlock{},
-				Enabled:    false,
-			}
-		}
+	if cluster.Spec.EnablePrivateNetwork {
+		resource.PrivateClusterConfig.EnablePrivateNodes = true
 	}
 
-	// @step: fill in the master auth if required
-	if cluster.Spec.AuthorizedMasterNetworks == nil {
-		cluster.Spec.AuthorizedMasterNetworks = make([]*gke.AuthorizedNetwork, 0)
+	if cluster.Spec.EnablePrivateEndpoint {
+		resource.PrivateClusterConfig.EnablePrivateEndpoint = true
+		resource.PrivateClusterConfig.MasterIpv4CidrBlock = cluster.Spec.MasterIPV4Cidr
+	}
+
+	if len(cluster.Spec.AuthorizedMasterNetworks) > 0 {
+		var cidrBlocks []*container.CidrBlock
+		for _, an := range cluster.Spec.AuthorizedMasterNetworks {
+			cidrBlocks = append(cidrBlocks, &container.CidrBlock{
+				CidrBlock:   an.CIDR,
+				DisplayName: an.Name,
+			})
+		}
+		resource.MasterAuthorizedNetworksConfig = &container.MasterAuthorizedNetworksConfig{
+			CidrBlocks: cidrBlocks,
+			Enabled:    true,
+		}
+	} else {
+		resource.MasterAuthorizedNetworksConfig = &container.MasterAuthorizedNetworksConfig{
+			Enabled: false,
+		}
 	}
 
 	return &container.CreateClusterRequest{

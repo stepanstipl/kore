@@ -26,6 +26,7 @@ spec:
   enableIstio: false
   enableStackDriverLogging: false
   enableStackDriverMetrics: false
+  enablePrivateEndpoint: false
   enablePrivateNetwork: false
   maintenanceWindow: '03:00'
   # Were reference to the credentials we wish to use

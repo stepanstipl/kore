@@ -47,6 +47,8 @@ type Config struct {
 	UpstreamAuthorizationToken string `json:"upstream_authorization_token,omitempty"`
 	// UpstreamURL is the endpoint to forward requests
 	UpstreamURL string `json:"upstream_url,omitempty"`
+	// AllowedIPs contains the allowed IP address ranges which are allowed to connect to the proxy
+	AllowedIPs []string `json:"allowed_ips,omitempty"`
 }
 
 // Interface is the contract to the proxy
@@ -55,6 +57,8 @@ type Interface interface {
 	Run(context.Context) error
 	// Stop calls a halt to the proxy
 	Stop() error
+	// Addr returns with the server address
+	Addr() string
 }
 
 var (

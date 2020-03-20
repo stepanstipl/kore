@@ -173,6 +173,25 @@ func schema_pkg_apis_clusters_v1_KubernetesSpec(ref common.ReferenceCallback) co
 							Format:      "",
 						},
 					},
+					"proxyAllowedIPs": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "ProxyAllowedIPs is a list of IP address ranges (using CIDR format), which will be allowed to access the proxy",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},

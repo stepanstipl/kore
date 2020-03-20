@@ -25,6 +25,7 @@ spec:
   enableIstio: false
   enableStackDriverLogging: false
   enableStackDriverMetrics: false
+  enablePrivateEndpoint: true
   enablePrivateNetwork: true
   masterIPV4Cidr: 172.16.0.0/28
   maintenanceWindow: '03:00'
