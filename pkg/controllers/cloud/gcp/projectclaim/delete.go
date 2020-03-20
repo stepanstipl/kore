@@ -30,7 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-// Delete is the entrypoint for the reconciliation logic
+// Delete is the entrypoint for the deletion logic
 func (t ctrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 	ctx := context.Background()
 

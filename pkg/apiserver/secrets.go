@@ -24,7 +24,7 @@ import (
 	restful "github.com/emicklei/go-restful"
 )
 
-// updateTeamSecret is used to add a user to a team
+// updateTeamSecret is used to add a secret to the team
 func (u teamHandler) updateTeamSecret(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		team := req.PathParameter("team")

@@ -55,7 +55,7 @@ func (h *secretImpl) SupportedSecretTypes() []string {
 	return []string{"generic", "credentials"}
 }
 
-// Update is responsible for deleting a gke environment
+// Update is responsible for updating the resource
 func (h *secretImpl) Update(ctx context.Context, secret *configv1.Secret) error {
 	user := authentication.MustGetIdentity(ctx)
 	logger := log.WithFields(log.Fields{
@@ -174,7 +174,7 @@ func (h *secretImpl) Has(ctx context.Context, name string) (bool, error) {
 	)
 }
 
-// List returns all the gke cluster in the team
+// List returns all the secrets in the team
 func (h *secretImpl) List(ctx context.Context) (*configv1.SecretList, error) {
 	list := &configv1.SecretList{}
 

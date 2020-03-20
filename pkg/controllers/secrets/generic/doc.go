@@ -14,5 +14,5 @@
  * limitations under the License.
  */
 
-// Package generic provides the
+// Package generic provides a controller used to reconcile generic secrets
 package generic
