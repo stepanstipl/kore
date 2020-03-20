@@ -106,7 +106,7 @@ func (c *Config) GetCurrentAuthInfo() *AuthInfo {
 	return a
 }
 
-// AddContext adds a context
+// AddProfile adds a the profile to the config
 func (c *Config) AddProfile(name string, ctx *Profile) {
 	if c.Profiles == nil {
 		c.Profiles = make(map[string]*Profile)
@@ -188,30 +188,36 @@ func (c *Config) HasSwagger() (bool, error) {
 	return true, nil
 }
 
+// UpdateSwaggerCache updates the local swagger cache file
 func (c *Config) UpdateSwaggerCache(content []byte) error {
 	return ioutil.WriteFile(c.GetSwaggerCachedFile(), content, os.FileMode(0740))
 }
 
+// GetResourceChecksum requests the resource checksum
 func (c *Config) GetResourceChecksum() (string, error) {
 	v, err := c.request(c.GetResourceSumAPI())
 
 	return string(v), err
 }
 
+// GetSwaggerChecksum requests the swagger checksum
 func (c *Config) GetSwaggerChecksum() (string, error) {
 	v, err := c.request(c.GetSwaggerSumAPI())
 
 	return string(v), err
 }
 
+// GetSwagger returns the cached swagger
 func (c *Config) GetSwagger() ([]byte, error) {
 	return ioutil.ReadFile(c.GetSwaggerCachedFile())
 }
 
+// GetSwaggerFromAPI returns the swagger from api
 func (c *Config) GetSwaggerFromAPI() ([]byte, error) {
 	return c.request(c.GetSwaggerAPI())
 }
 
+// GetResourcesFromAPI returns the resource cache from api
 func (c *Config) GetResourcesFromAPI() ([]byte, error) {
 	return c.request(c.GetResourcesAPI())
 }
@@ -230,7 +236,7 @@ func (c *Config) request(url string) ([]byte, error) {
 	return resp.Body(), nil
 }
 
-// GetResourceCacheAPI returns the api cache url
+// GetResourceSumAPI returns the api cache url
 func (c *Config) GetResourceSumAPI() string {
 	return fmt.Sprintf("%s/%s", c.GetAPI(), "classes/checksum")
 }
@@ -255,6 +261,29 @@ func (c *Config) GetAPI() string {
 	return fmt.Sprintf("%s%s", c.GetCurrentServer().Endpoint, "/api/v1alpha1")
 }
 
+// RemoveServer removes a server instance
+func (c *Config) RemoveServer(name string) {
+	delete(c.Servers, name)
+}
+
+// RemoteUserInfo removes the user info
+func (c *Config) RemoteUserInfo(name string) {
+	delete(c.AuthInfos, name)
+}
+
+// RemoveProfile removes the profile
+func (c *Config) RemoveProfile(name string) {
+	p, found := c.Profiles[name]
+	if !found {
+		return
+	}
+	c.RemoveServer(p.Server)
+	c.RemoteUserInfo(p.AuthInfo)
+
+	delete(c.Profiles, name)
+}
+
+// Update writes the config to the korectl file
 func (c *Config) Update() error {
 	data, err := yaml.Marshal(c)
 	if err != nil {
