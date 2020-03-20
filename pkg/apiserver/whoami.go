@@ -59,11 +59,10 @@ func (u *whoImpl) Register(i kore.Interface, builder utils.PathBuilder) (*restfu
 	ws.Path(path)
 
 	ws.Route(
-		ws.GET("").To(u.findWho).
+		withStandardErrors(ws.GET("")).To(u.findWho).
 			Doc("Returns information about who the user is and what teams they are a member").
 			Operation("WhoAmI").
-			Returns(http.StatusOK, "A list of all the users in the kore", types.WhoAmI{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusOK, "A list of all the users in the kore", types.WhoAmI{}),
 	)
 
 	return ws, nil

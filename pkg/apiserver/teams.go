@@ -87,7 +87,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	)
 
 	ws.Route(
-		withKoreErrors(ws.PUT("/{team}").To(u.updateTeam).
+		withAllErrors(ws.PUT("/{team}")).To(u.updateTeam).
 			Doc("Used to create or update a team in the kore").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Operation("UpdateTeam").
@@ -95,7 +95,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Returns(http.StatusOK, "Contains the team definintion from the kore", orgv1.Team{}).
 			Returns(http.StatusNotFound, "Team does not exist", nil).
 			Returns(http.StatusNotModified, "Indicates the request was processed but no changes applied", orgv1.Team{}),
-		))
+	)
 
 	ws.Route(
 		ws.DELETE("/{team}").To(u.deleteTeam).
@@ -134,7 +134,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	)
 
 	ws.Route(
-		withKoreErrors(ws.PUT("/{team}/members/{user}").To(u.addTeamMember).
+		withAllErrors(ws.PUT("/{team}/members/{user}")).To(u.addTeamMember).
 			Doc("Used to add a user to the team via membership").
 			Operation("AddTeamMember").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
@@ -142,7 +142,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Reads(orgv1.TeamMember{}, "The definition for the user in the team").
 			Returns(http.StatusOK, "The user has been successfully added to the team", orgv1.TeamMember{}).
 			Returns(http.StatusNotFound, "Team does not exist", nil),
-		))
+	)
 
 	ws.Route(
 		ws.DELETE("/{team}/members/{user}").To(u.removeTeamMember).

@@ -12,7 +12,7 @@ GIT_LAST_TAG=$(shell git describe --tags $(GIT_LAST_TAG_SHA))
 HUB_APIS_SHA=$(shell cd ../kore-apis && git log | head -n 1 | cut -d' ' -f2)
 GOVERSION ?= 1.12.7
 HARDWARE=$(shell uname -m)
-PACKAGES=$(shell go list ./... | grep -v /pkg/api_test)
+PACKAGES=$(shell go list ./...)
 REGISTRY=quay.io
 ROOT_DIR=${PWD}
 VETARGS ?= -asmdecl -atomic -bool -buildtags -copylocks -methods -nilfunc -printf -rangeloops -unsafeptr
@@ -132,7 +132,7 @@ swagger-validate:
 swagger-apitestclient:
 	@$(MAKE) swagger-json
 	@echo "--> Creating test client for the API defined in swagger"
-	@go run github.com/go-swagger/go-swagger/cmd/swagger generate client -q -f swagger.json -c pkg/api_test_client -m pkg/api_test_models 
+	@go run github.com/go-swagger/go-swagger/cmd/swagger generate client -q -f swagger.json -c pkg/testing/apiclient -m pkg/testing/apimodels 
 
 in-docker-swagger:
 	@echo "--> Swagger in Docker"
@@ -297,9 +297,12 @@ test: generate-clusterappman-manifests
 	@$(MAKE) cover
 	@$(MAKE) verify-licences
 
+run-api-test:
+	(cd ${ROOT_DIR}/pkg/testing/apitest; export RUN_INTEGRATION=true; go test -ginkgo.v)
+
 api-test:
 	@$(MAKE) swagger-apitestclient
-	(cd ${ROOT_DIR}/pkg/api_test; export RUN_INTEGRATION=true; go test -ginkgo.v)
+	@$(MAKE) run-api-test
 
 all: test
 	@echo "--> Performing all tests"

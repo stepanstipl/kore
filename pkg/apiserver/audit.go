@@ -22,7 +22,6 @@ import (
 
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/appvia/kore/pkg/kore"
-	"github.com/appvia/kore/pkg/kore/validation"
 	"github.com/appvia/kore/pkg/utils"
 	restful "github.com/emicklei/go-restful"
 	log "github.com/sirupsen/logrus"
@@ -54,14 +53,11 @@ func (a *auditHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 	ws.Path(path.Base())
 
 	ws.Route(
-		ws.GET("").To(a.findTeamsAudit).
+		withAllErrors(ws.GET("")).To(a.findTeamsAudit).
 			Doc("Used to return all the audit event across all the teams").
 			Operation("ListAuditEvents").
 			Param(ws.QueryParameter("since", "The time duration to return the events within").DefaultValue("60m")).
-			Returns(http.StatusOK, "A collection of events from the team", orgv1.AuditEventList{}).
-			Returns(http.StatusUnauthorized, "If not authenticated", nil).
-			Returns(http.StatusForbidden, "If authenticated but not authorized", nil).
-			Returns(http.StatusBadRequest, "Validation error of supplied parameters/body", validation.ErrValidation{}),
+			Returns(http.StatusOK, "A collection of events from the team", orgv1.AuditEventList{}),
 	)
 
 	return ws, nil

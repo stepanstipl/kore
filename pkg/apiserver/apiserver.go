@@ -40,18 +40,33 @@ type server struct {
 	store kore.Interface
 }
 
-// withKoreErrorsGet adds the standard return types / codes for an operation which does not change state (does not include validation errors).
-func withKoreErrorsGet(rb *restful.RouteBuilder) *restful.RouteBuilder {
+// withStandardErrors adds the standard internal server error (500) result to the route.
+func withStandardErrors(rb *restful.RouteBuilder) *restful.RouteBuilder {
 	return rb.
-		Returns(http.StatusUnauthorized, "If not authenticated", nil).
-		Returns(http.StatusForbidden, "If authenticated but not authorized", nil).
 		Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{})
 }
 
-// withKoreErrors adds the standard return types / codes for an operation which may modify state (includes validaiton errors)
-func withKoreErrors(rb *restful.RouteBuilder) *restful.RouteBuilder {
-	return withKoreErrorsGet(rb).
+// withValidationErrors adds the standard bad request (400) validation error result to the route.
+func withValidationErrors(rb *restful.RouteBuilder) *restful.RouteBuilder {
+	return rb.
 		Returns(http.StatusBadRequest, "Validation error of supplied parameters/body", validation.ErrValidation{})
+}
+
+// withAuthErrors adds the standard unauthenticated (401) and forbidden (403) results to the route.
+func withAuthErrors(rb *restful.RouteBuilder) *restful.RouteBuilder {
+	return rb.
+		Returns(http.StatusUnauthorized, "If not authenticated", nil).
+		Returns(http.StatusForbidden, "If authenticated but not authorized", nil)
+}
+
+// withAllErrors is a shorthand to add all standard, validation, and auth results to the route.
+func withAllErrors(rb *restful.RouteBuilder) *restful.RouteBuilder {
+	return withValidationErrors(withAuthErrors(withStandardErrors(rb)))
+}
+
+// withAllNonValidationErrors is a shorthand to add all standard and auth results to the route but not validation.
+func withAllNonValidationErrors(rb *restful.RouteBuilder) *restful.RouteBuilder {
+	return withAuthErrors(withStandardErrors(rb))
 }
 
 // New returns a new api server for the kore
