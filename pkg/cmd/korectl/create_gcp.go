@@ -26,6 +26,7 @@ func GetCreateGCPCommand(config *Config) *cli.Command {
 		Name:    "gcp",
 		Aliases: []string{"google"},
 		Usage:   "Provides the ability to create GCP related cloud resources",
+		Hidden:  true,
 		Subcommands: []*cli.Command{
 			GetCreateGCPOrganization(config),
 			GetCreateGCPProject(config),

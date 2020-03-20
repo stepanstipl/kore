@@ -1,3 +1,4 @@
+# The feature is currently experimental and not complete
 ---
 apiVersion: gcp.compute.kore.appvia.io/v1alpha1
 kind: Organization
@@ -5,8 +6,8 @@ metadata:
   name: gcp
 spec:
   parentType: organization
-  parentID: "1029156349491"
-  billingAccount: 018ACC-AD48A4-263E6C
+  parentID: ""
+  billingAccount:
   serviceAccount: kore
   credentialsRef:
     name: gcp
