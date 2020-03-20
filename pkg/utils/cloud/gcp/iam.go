@@ -43,11 +43,26 @@ func CheckServiceAccountPermissions(
 		return false, nil, err
 	}
 
-	return HasPermissions(ctx, project, client, list)
+	return CheckPermissions(ctx, project, client, list)
 }
 
 // HasPermissions checks if we have the correct permissions
 func HasPermissions(
+	ctx context.Context,
+	project string,
+	client *resourcemanager.Service,
+	list []string) (bool, error) {
+
+	success, _, err := CheckPermissions(ctx, project, client, list)
+	if err != nil {
+		return false, err
+	}
+
+	return success, err
+}
+
+// CheckPermissions checks if we have the correct and which ones are missing
+func CheckPermissions(
 	ctx context.Context,
 	project string,
 	client *resourcemanager.Service,
