@@ -73,7 +73,7 @@ func GetProfilesDeleteCommand(config *Config) *cli.Command {
 
 		Before: func(ctx *cli.Context) error {
 			if !ctx.Args().Present() {
-				return errors.New("you need to specify a profile to use")
+				return errors.New("you need to specify a profile to delete")
 			}
 
 			return nil
@@ -107,6 +107,9 @@ func GetProfilesShowCommand(config *Config) *cli.Command {
 		Name:  "show",
 		Usage: "shows the current profile in use",
 		Action: func(ctx *cli.Context) error {
+			if config.CurrentProfile == "" {
+				return fmt.Errorf("no profile selected, please run: $ korectl profile use <name>")
+			}
 			if !config.HasProfile(config.CurrentProfile) {
 				return fmt.Errorf("current profile: %s does not exist, please switch: $ korectl profile use <name>", config.CurrentProfile)
 			}

@@ -104,7 +104,7 @@ func Main(args []string, writer, errWriter io.Writer) (int, error) {
 			switch {
 			case command == "local", command == "help", command == "autocomplete":
 				// no contexts required yet.
-			case utils.Contains(command, []string{"profile", "profiles"}) && utils.Contains(ctx.Args().Get(1), []string{"configure", "use"}):
+			case utils.Contains(command, []string{"profile", "profiles"}):
 				return nil
 			case command == "login":
 				// no contexts required yet.
