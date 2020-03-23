@@ -18,10 +18,12 @@ package gkecredentials
 
 import (
 	"context"
-	"errors"
+	"fmt"
+	"strings"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
+	gcputils "github.com/appvia/kore/pkg/utils/cloud/gcp"
 
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -63,23 +65,23 @@ func (t gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		}
 
 		// @step: create the client to verify the permissions
-		client, err := NewClient(resource)
+		permitted, missing, err := gcputils.CheckServiceAccountPermissions(ctx,
+			resource.Spec.Project,
+			resource.Spec.Account,
+			requiredPermissions(),
+		)
 		if err != nil {
-			logger.WithError(err).Error("trying to create gcp permissions client")
+			logger.WithError(err).Error("trying to verify the gke credentials")
 
 			return reconcile.Result{}, err
 		}
-
-		// @step: verify the credentials
-		verified, err = client.HasRequiredPermissions()
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		resource.Status.Verified = &verified
+		resource.Status.Verified = &permitted
 		resource.Status.Status = corev1.SuccessStatus
 
-		if resource.Status.Verified == nil || !*resource.Status.Verified {
-			return reconcile.Result{}, errors.New("invalid credentials or missing permissions")
+		if !permitted {
+			logger.Error("gke credentials has not passed validation")
+
+			return reconcile.Result{}, fmt.Errorf("service account is missing: %s permissions", strings.Join(missing, ","))
 		}
 
 		return reconcile.Result{}, err
@@ -102,4 +104,28 @@ func (t gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 	}
 
 	return result, err
+}
+
+// requirePermissions is a list of permissions required for gke credentials
+func requiredPermissions() []string {
+	return []string{
+		"container.clusterRoleBindings.create",
+		"container.clusterRoleBindings.get",
+		"container.clusterRoles.bind",
+		"container.clusterRoles.create",
+		"container.clusters.create",
+		"container.clusters.delete",
+		"container.clusters.getCredentials",
+		"container.clusters.list",
+		"container.operations.get",
+		"container.operations.list",
+		"container.podSecurityPolicies.create",
+		"container.secrets.get",
+		"container.serviceAccounts.create",
+		"container.serviceAccounts.get",
+		"iam.serviceAccounts.actAs",
+		"iam.serviceAccounts.get",
+		"iam.serviceAccounts.list",
+		"resourcemanager.projects.get",
+	}
 }
