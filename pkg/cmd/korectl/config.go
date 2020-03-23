@@ -106,7 +106,7 @@ func (c *Config) GetCurrentAuthInfo() *AuthInfo {
 	return a
 }
 
-// AddProfile adds a the profile to the config
+// AddProfile adds a profile to the config
 func (c *Config) AddProfile(name string, ctx *Profile) {
 	if c.Profiles == nil {
 		c.Profiles = make(map[string]*Profile)
@@ -266,8 +266,8 @@ func (c *Config) RemoveServer(name string) {
 	delete(c.Servers, name)
 }
 
-// RemoteUserInfo removes the user info
-func (c *Config) RemoteUserInfo(name string) {
+// RemoveUserInfo removes the user info
+func (c *Config) RemoveUserInfo(name string) {
 	delete(c.AuthInfos, name)
 }
 
@@ -278,7 +278,7 @@ func (c *Config) RemoveProfile(name string) {
 		return
 	}
 	c.RemoveServer(p.Server)
-	c.RemoteUserInfo(p.AuthInfo)
+	c.RemoveUserInfo(p.AuthInfo)
 
 	delete(c.Profiles, name)
 }

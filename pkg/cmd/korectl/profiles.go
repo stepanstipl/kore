@@ -42,7 +42,7 @@ $ korectl profile show              # will show the profile in use
 $ korectl profile list              # will show all the profiles available to you
 $ korectl profile use <name>        # switches to another profile
 $ korectl profile configure <name>  # allows you to configure a profile
-$ korectl profile rm <name>         # used to delete a profile
+$ korectl profile rm <name>         # removes a profile
 `
 
 // GetProfilesCommand creates and returns a profiles command
@@ -108,7 +108,7 @@ func GetProfilesShowCommand(config *Config) *cli.Command {
 		Usage: "shows the current profile in use",
 		Action: func(ctx *cli.Context) error {
 			if config.CurrentProfile == "" {
-				return errors.New("no profiles have been created, please use $ korectl login -a <API> or korectl profile configure --help")
+				return errors.New("no profile selected, please use $ korectl profile use <name>")
 			}
 
 			if !config.HasProfile(config.CurrentProfile) {
@@ -193,13 +193,13 @@ func GetProfilesConfigureCommand(config *Config) *cli.Command {
 		Name:    "configure",
 		Aliases: []string{"config"},
 
-		Usage:     "walk through and configure a new profile for you",
+		Usage:     "configure a new profile for you",
 		UsageText: "korectl profile configure <name>",
 
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
 				Name:  "force",
-				Usage: "force the creation of the profile regardless if one exists",
+				Usage: "if true it overrides an existing profile with the same name",
 			},
 		},
 
