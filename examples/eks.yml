@@ -18,6 +18,19 @@ spec:
     name: aws
     namespace: kore-admin
 ---
+apiVersion: aws.compute.kore.appvia.io/v1alpha1
+kind: EKSNodeGroup
+metadata:
+  name: dev-ng1
+  namespace: devs
+spec:
+  nodeGroupName: dev-ng1
+  clusterName: dev
+  iamNodeRole: MOVE TO CREDENTIALS
+  subnets:
+    - subnet-xyz-az1
+    - subnet-xyz-az2
+---
 apiVersion: clusters.compute.kore.appvia.io/v1
 kind: Kubernetes
 metadata:
