@@ -292,6 +292,15 @@ func (c *Requestor) makeValues(in io.Reader, paths []string) ([]string, error) {
 			v = []byte("Unknown")
 		}
 
+		// @step: if this is an array, lets try and decode it
+		if strings.HasPrefix(string(v), "[") && strings.HasSuffix(string(v), "]") {
+			var values []string
+			if err := yaml.Unmarshal(v, &values); err == nil {
+				v = []byte(strings.Join(values, ","))
+			}
+		}
+
+		// @step: we need to remove the double quotes
 		list = append(list, strings.ReplaceAll(string(v), "\"", ""))
 	}
 
