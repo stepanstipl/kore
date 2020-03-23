@@ -16,8 +16,13 @@
 
 package korectl
 
-import "github.com/urfave/cli/v2"
+import (
+	"fmt"
 
+	"github.com/urfave/cli/v2"
+)
+
+// GetWhoamiCommand returns the whoami command
 func GetWhoamiCommand(config *Config) *cli.Command {
 	return &cli.Command{
 		Name:    "whoami",
@@ -25,7 +30,7 @@ func GetWhoamiCommand(config *Config) *cli.Command {
 		Usage:   "Used to retrieve details on your identity within the kore",
 
 		Action: func(ctx *cli.Context) error {
-			return NewRequest().
+			err := NewRequest().
 				WithConfig(config).
 				WithContext(ctx).
 				WithEndpoint("/whoami").
@@ -35,6 +40,12 @@ func GetWhoamiCommand(config *Config) *cli.Command {
 					Column("Teams", ".teams"),
 				).
 				Get()
+			if err != nil {
+				return err
+			}
+			fmt.Println("")
+
+			return nil
 		},
 	}
 }
