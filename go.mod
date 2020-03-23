@@ -5,7 +5,6 @@ require (
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/RoaringBitmap/roaring v0.4.21 // indirect
-	github.com/asaskevich/govalidator v0.0.0-20200108200545-475eaeb16496 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blevesearch/bleve v0.8.1
 	github.com/blevesearch/blevex v0.0.0-20190916190636-152f0fe5c040 // indirect
@@ -45,42 +44,36 @@ require (
 	github.com/imdario/mergo v0.3.8 // indirect
 	github.com/jinzhu/gorm v1.9.12
 	github.com/jmhodges/levigo v1.0.0 // indirect
+	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a
 	github.com/julienschmidt/httprouter v1.2.0
-	github.com/kr/pretty v0.2.0 // indirect
 	github.com/manifoldco/promptui v0.7.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.2.2
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.9.0
-	github.com/pelletier/go-toml v1.6.0 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.0.0
 	github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4
 	github.com/prometheus/procfs v0.0.8 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20190728182440-6a916e37a237 // indirect
 	github.com/romanyx/polluter v1.2.2
-	github.com/savaki/jq v0.0.0-20161209013833-0e6baecebbf8 // indirect
 	github.com/shurcooL/httpfs v0.0.0-20190707220628-8d4bc4ba7749 // indirect
 	github.com/shurcooL/vfsgen v0.0.0-20181202132449-6a9ea43bcacd
 	github.com/sirupsen/logrus v1.4.2
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
-	github.com/spf13/cast v1.3.1 // indirect
-	github.com/spf13/viper v1.6.2 // indirect
 	github.com/steveyen/gtreap v0.0.0-20150807155958-0abe01ef9be2 // indirect
 	github.com/stretchr/testify v1.4.0
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191019123150-400c56251341 // indirect
 	github.com/tidwall/gjson v1.6.0
 	github.com/urfave/cli/v2 v2.1.1
+	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/crypto v0.0.0-20200311171314-f7b00557c8c4
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	gonum.org/v1/gonum v0.7.0 // indirect
 	google.golang.org/api v0.20.0
-	google.golang.org/appengine v1.6.5 // indirect
 	google.golang.org/grpc v1.27.0
 	gopkg.in/resty.v1 v1.12.0
-	gopkg.in/square/go-jose.v2 v2.4.1 // indirect
 	gopkg.in/yaml.v2 v2.2.8
 	k8s.io/api v0.17.0
 	k8s.io/apiextensions-apiserver v0.17.0
