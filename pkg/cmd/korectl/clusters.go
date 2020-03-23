@@ -88,9 +88,9 @@ func GetClustersCommand(config *Config) *cli.Command {
 						PathParameter("team", true).
 						PathParameter("name", false).
 						Render(
-							Column("Name", ".metadata.name"),
-							Column("Endpoint", ".status.endpoint"),
-							Column("Status", ".status.status"),
+							Column("Name", "metadata.name"),
+							Column("Endpoint", "status.endpoint"),
+							Column("Status", "status.status"),
 						).
 						Get()
 				},

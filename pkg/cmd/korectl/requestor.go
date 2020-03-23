@@ -34,8 +34,8 @@ import (
 	"github.com/appvia/kore/pkg/utils"
 
 	"github.com/ghodss/yaml"
-	"github.com/savaki/jq"
 	log "github.com/sirupsen/logrus"
+	"github.com/tidwall/gjson"
 	"github.com/urfave/cli/v2"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
@@ -51,6 +51,10 @@ var (
 		},
 	}
 )
+
+func init() {
+	RegisterModifiers()
+}
 
 type RequestError struct {
 	err        error
@@ -101,6 +105,7 @@ func NewRequest() *Requestor {
 	}
 }
 
+// NewRequestForResource returns a request for a resource
 func NewRequestForResource(config *Config, ctx *cli.Context) (*Requestor, resourceConfig, error) {
 	resConfig := getResourceConfig(ctx.Args().First())
 
@@ -274,34 +279,37 @@ func (c *Requestor) makeValues(in io.Reader, paths []string) ([]string, error) {
 	if in == nil {
 		return []string{}, errors.New("no request body")
 	}
+
+	// @step: read in the json document
 	data, err := ioutil.ReadAll(in)
 	if err != nil {
 		return []string{}, err
 	}
 
-	for _, x := range paths {
-		op, err := jq.Parse(x)
-		if err != nil {
-			return list, fmt.Errorf("invalid jsonpath expression: %s, error: %s", x, err)
-		}
-		v, err := op.Apply(data)
-		if err != nil {
-			if !strings.Contains(err.Error(), "key not found") {
-				return list, fmt.Errorf("failed to apply jsonpath to response body: %s", err)
-			}
-			v = []byte("Unknown")
+	// @step: validate the document
+	if !gjson.Valid(string(data)) {
+		return list, err
+	}
+
+	for _, path := range paths {
+		// @step: return the raw value if no jsonpath
+		if path == "" {
+			list = append(list, RemoveDoubleQuote(string(data)))
+
+			continue
 		}
 
-		// @step: if this is an array, lets try and decode it
-		if strings.HasPrefix(string(v), "[") && strings.HasSuffix(string(v), "]") {
-			var values []string
-			if err := yaml.Unmarshal(v, &values); err == nil {
-				v = []byte(strings.Join(values, ","))
-			}
+		// @step: extract the value and process
+		value := gjson.Get(string(data), path)
+
+		// @step: does the value exist?
+		if !value.Exists() {
+			list = append(list, "Unknown")
+
+			continue
 		}
 
-		// @step: we need to remove the double quotes
-		list = append(list, strings.ReplaceAll(string(v), "\"", ""))
+		list = append(list, value.String())
 	}
 
 	return list, nil

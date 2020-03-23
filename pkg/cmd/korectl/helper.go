@@ -62,6 +62,11 @@ func IsValidHostname(endpoint string) bool {
 	return hostnameRegex.MatchString(endpoint)
 }
 
+// RemoveDoubleQuote removes all double quotes from string
+func RemoveDoubleQuote(v string) string {
+	return strings.ReplaceAll(v, "\"", "")
+}
+
 // GetWhoAmI returns an whoami
 func GetWhoAmI(config *Config) (*types.WhoAmI, error) {
 	who := &types.WhoAmI{}
