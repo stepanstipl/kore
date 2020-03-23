@@ -17,6 +17,7 @@
 package controllers
 
 import (
+	"log"
 	"sync"
 )
 
@@ -32,6 +33,7 @@ func Register(handler RegisterInterface) error {
 	controllerLock.Lock()
 	defer controllerLock.Unlock()
 
+	log.Printf("adding controller %s", handler.Name())
 	controllerList = append(controllerList, handler)
 
 	return nil

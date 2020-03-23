@@ -134,6 +134,7 @@ func (s serverImpl) Run(ctx context.Context) error {
 
 	// @step: we need to start the controllers
 	for _, controller := range controllers.GetControllers() {
+		log.Printf("got controller %s", controller.Name())
 		go func(x controllers.RegisterInterface) {
 			log.WithFields(log.Fields{
 				"name": x.Name(),

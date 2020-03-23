@@ -49,7 +49,7 @@ func init() {
 
 // Name returns the name of the controller
 func (t *eksCtrl) Name() string {
-	return "eks.compute.kore.appvia.io"
+	return "eks"
 }
 
 // Run starts the controller

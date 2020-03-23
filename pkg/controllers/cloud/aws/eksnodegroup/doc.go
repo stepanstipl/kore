@@ -15,5 +15,5 @@
  */
 
 // Package eksnodegroup provides the controller logic for provisioning and managing
-// a EKS cluster in Amazon
+// a EKS cluster nodegoup in Amazon
 package eksnodegroup
