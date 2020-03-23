@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"reflect"
 	"regexp"
 	"strings"
 	"syscall"
@@ -33,7 +32,9 @@ import (
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
+	"github.com/appvia/kore/pkg/kore/assets"
 	"github.com/appvia/kore/pkg/utils"
+	"github.com/appvia/kore/pkg/utils/jsonschema"
 	"gopkg.in/yaml.v2"
 
 	"github.com/urfave/cli/v2"
@@ -374,13 +375,11 @@ func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation 
 	kv["description"] = fmt.Sprintf("%s cluster", plan)
 
 	for paramName, overrideValue := range overrides {
-		if _, valid := kv[paramName]; !valid {
-			return nil, fmt.Errorf("plan doesn't have %q parameter", paramName)
-		}
-		if reflect.TypeOf(kv[paramName]) != reflect.TypeOf(overrideValue) {
-			return nil, fmt.Errorf("plan parameter %q has an invalid value (expected type: %T)", paramName, kv[paramName])
-		}
 		kv[paramName] = overrideValue
+	}
+
+	if err := jsonschema.Validate(assets.GKEPlanSchema, "plan", kv); err != nil {
+		return nil, err
 	}
 
 	kind := strings.ToLower(utils.ToPlural(template.Spec.Kind))
