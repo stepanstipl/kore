@@ -17,6 +17,7 @@
 package korectl
 
 import (
+	"context"
 	"fmt"
 
 	gcp "github.com/appvia/kore/pkg/apis/gcp/v1alpha1"
@@ -124,6 +125,7 @@ func GetCreateGCPOrganization(config *Config) *cli.Command {
 			kind := "organization"
 			cname := ctx.String("credentials")
 			cnamespace := ctx.String("credentials-team")
+			wait := ctx.Bool("wait")
 
 			found, err := TeamResourceExists(config, team, kind, name)
 			if err != nil {
@@ -139,9 +141,9 @@ func GetCreateGCPOrganization(config *Config) *cli.Command {
 					Namespace: team,
 				},
 				Spec: gcp.OrganizationSpec{
-					ParentType:     ctx.String("parent-type"),
-					ParentID:       ctx.String("parent-id"),
 					BillingAccount: ctx.String("billing-account-id"),
+					ParentID:       ctx.String("parent-id"),
+					ParentType:     ctx.String("parent-type"),
 					ServiceAccount: ctx.String("service-account-name"),
 					CredentialsRef: &v1.SecretReference{
 						Name:      cname,
@@ -153,9 +155,8 @@ func GetCreateGCPOrganization(config *Config) *cli.Command {
 			if err := CreateTeamResource(config, team, kind, name, o); err != nil {
 				return err
 			}
-			fmt.Printf("%q has been successfully created\n", name)
 
-			return nil
+			return WaitForResourceCheck(context.Background(), config, team, kind, name, wait)
 		},
 	}
 }

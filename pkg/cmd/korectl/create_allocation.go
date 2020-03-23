@@ -17,6 +17,7 @@
 package korectl
 
 import (
+	"context"
 	"fmt"
 
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
@@ -107,6 +108,7 @@ func GetCreateAllocation(config *Config) *cli.Command {
 			resource := ctx.String("resource")
 			teams := ctx.StringSlice("to")
 			version := ctx.String("version")
+			wait := ctx.Bool("wait")
 
 			found, err := TeamResourceExists(config, team, "allocation", name)
 			if err != nil {
@@ -138,9 +140,8 @@ func GetCreateAllocation(config *Config) *cli.Command {
 			if err := CreateTeamResource(config, team, "allocation", name, o); err != nil {
 				return err
 			}
-			fmt.Printf("%q has been successfully created\n", name)
 
-			return nil
+			return WaitForResourceCheck(context.Background(), config, team, kind, name, wait)
 		},
 	}
 }

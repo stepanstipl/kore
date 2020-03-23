@@ -22,13 +22,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/signal"
 	"regexp"
 	"strings"
-	"syscall"
 	"time"
-
-	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
@@ -42,6 +38,7 @@ import (
 	"github.com/urfave/cli/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 var (
@@ -64,8 +61,8 @@ $ korectl -t <myteam> create cluster dev --plan gke-development -a <name> --name
 # Check the status of the cluster
 $ korectl -t <myteam> get cluster dev -o yaml
 
-	Now update your kubeconfig to use your team's provisioned cluster.
-	$ korectl kubeconfig -t <myteam>
+Now update your kubeconfig to use your team's provisioned cluster.
+$ korectl kubeconfig -t <myteam>
 
 This will modify your ${HOME}/.kube/config. Now you can use 'kubectl' to interact with your team's cluster.
 `
@@ -106,22 +103,18 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 				Aliases: []string{"a"},
 				Usage:   "the name of the allocated credentials to use for this cluster `NAME`",
 			},
+			&cli.StringSliceFlag{
+				Name:    "plan-param",
+				Aliases: []string{"param"},
+				Usage:   "used to override the plan parameters",
+			},
 			&cli.BoolFlag{
 				Name:  "show-time",
 				Usage: "shows the time it took to successfully provision a new cluster `BOOL`",
 			},
 			&cli.BoolFlag{
-				Name:  "wait",
-				Value: true,
-				Usage: "indicates we should wait for the cluster to be build (defaults: true) `BOOL`",
-			},
-			&cli.BoolFlag{
 				Name:  "dry-run",
 				Usage: "generate the cluster specification but does not apply `BOOL`",
-			},
-			&cli.StringSliceFlag{
-				Name:  "plan-param",
-				Usage: "used to override the plan parameters",
 			},
 		},
 
@@ -135,13 +128,14 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 
 		Action: func(ctx *cli.Context) error {
 			name := ctx.Args().First()
-			plan := ctx.String("plan")
 			allocation := ctx.String("allocation")
-			namespaces := ctx.StringSlice("namespace")
-			team := ctx.String("team")
-			role := ctx.String("team-role")
-			waitfor := ctx.Bool("wait")
 			dry := ctx.Bool("dry-run")
+			kind := "cluster"
+			namespaces := ctx.StringSlice("namespace")
+			plan := ctx.String("plan")
+			role := ctx.String("team-role")
+			team := ctx.String("team")
+			wait := ctx.Bool("wait")
 
 			if team == "" {
 				return errTeamParameterMissing
@@ -175,59 +169,15 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 				return nil
 			}
 
+			// @step: create a start time
+			now := time.Now()
+
 			// @step: we need to construct the provider type
-			if waitfor {
-				now := time.Now()
-
-				err := func() error {
-					// @step: lets try and short cut the wait
-					cluster, err := GetCluster(config, team, name)
-					if err == nil {
-						if cluster.Status.Status == corev1.SuccessStatus {
-							return nil
-						}
-					}
-
-					fmt.Printf("waiting for %q to provision (usually takes around 5 minutes, ctrl-c to background)\n", name)
-
-					// @step: allow for cancellation of the block - and probably wrap this up into a common framework
-					sig := make(chan os.Signal, 1)
-					signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
-
-					c, cancel := context.WithCancel(context.Background())
-					defer cancel()
-
-					go func() {
-						<-sig
-						cancel()
-					}()
-
-					for {
-						cluster, err = GetCluster(config, team, name)
-						if err == nil {
-							switch cluster.Status.Status {
-							case corev1.SuccessStatus:
-								fmt.Println("cluster", cluster.Name, "has been successfully provisioned")
-								return nil
-							case corev1.FailureStatus:
-								return fmt.Errorf("failed to provision cluster: %q, please check via $ korectl get clusters -o yaml", name)
-							}
-						}
-						if utils.Sleep(c, 5*time.Second) {
-							fmt.Printf("\nprovisioning has been backgrounded, you can check the status via: $ korectl get clusters -t %s\n", team)
-							return nil
-						}
-					}
-				}()
-				if err != nil {
-					return fmt.Errorf("has failed to provision, use: $ korectl get clusters %s -t %s -o yaml to view status", name, team)
-				}
-				if ctx.Bool("show-time") {
-					fmt.Printf("provisioning took: %s\n", time.Since(now))
-				}
-
-			} else {
-				fmt.Printf("cluster provisioning in background: you can check the status via: $ korectl get clusters %s -t %s\n", name, team)
+			if err := WaitForResourceCheck(context.Background(), config, team, kind, name, wait); err != nil {
+				return err
+			}
+			if ctx.Bool("show-time") {
+				fmt.Printf("Provisioning took: %s\n", time.Since(now))
 			}
 
 			// @step: create the cluster ownership
