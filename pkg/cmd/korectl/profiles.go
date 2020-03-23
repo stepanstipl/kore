@@ -107,10 +107,6 @@ func GetProfilesShowCommand(config *Config) *cli.Command {
 		Name:  "show",
 		Usage: "shows the current profile in use",
 		Action: func(ctx *cli.Context) error {
-			if config.CurrentProfile == "" {
-				return errors.New("no profile selected, please use $ korectl profile use <name>")
-			}
-
 			if !config.HasProfile(config.CurrentProfile) {
 				return fmt.Errorf("current profile: %s does not exist, please switch: $ korectl profile use <name>", config.CurrentProfile)
 			}
@@ -170,7 +166,7 @@ func GetProfilesListCommand(config *Config) *cli.Command {
 			defer w.Flush()
 
 			// @step: write out the columns
-			_, _ = w.Write([]byte("Name\tServer\n"))
+			_, _ = w.Write([]byte("Profile\tEndpoint\n"))
 
 			for _, x := range config.Profiles {
 				// @step: ensure the profile has a server and authentication method
