@@ -35,9 +35,9 @@ func GetWhoamiCommand(config *Config) *cli.Command {
 				WithContext(ctx).
 				WithEndpoint("/whoami").
 				Render(
-					Column("Username", ".username"),
-					Column("Email", ".email"),
-					Column("Teams", ".teams"),
+					Column("Username", "username"),
+					Column("Email", "email"),
+					Column("Teams", "teams|@sjoin"),
 				).
 				Get()
 			if err != nil {

@@ -61,7 +61,7 @@ require (
 	github.com/prometheus/procfs v0.0.8 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20190728182440-6a916e37a237 // indirect
 	github.com/romanyx/polluter v1.2.2
-	github.com/savaki/jq v0.0.0-20161209013833-0e6baecebbf8
+	github.com/savaki/jq v0.0.0-20161209013833-0e6baecebbf8 // indirect
 	github.com/shurcooL/httpfs v0.0.0-20190707220628-8d4bc4ba7749 // indirect
 	github.com/shurcooL/vfsgen v0.0.0-20181202132449-6a9ea43bcacd
 	github.com/sirupsen/logrus v1.4.2
@@ -72,6 +72,7 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191019123150-400c56251341 // indirect
+	github.com/tidwall/gjson v1.6.0
 	github.com/urfave/cli/v2 v2.1.1
 	go.mongodb.org/mongo-driver v1.2.1 // indirect
 	golang.org/x/crypto v0.0.0-20200128174031-69ecbb4d6d5d
