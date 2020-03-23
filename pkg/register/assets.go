@@ -901,6 +901,15 @@ metadata:
   creationTimestamp: null
   name: eksnodegroups.aws.compute.kore.appvia.io
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.description
+    description: A description of the EKS cluster nodegroup
+    name: Description
+    type: string
+  - JSONPath: .status.status
+    description: The overall status of the cluster nodegroup
+    name: Status
+    type: string
   group: aws.compute.kore.appvia.io
   names:
     kind: EKSNodeGroup
