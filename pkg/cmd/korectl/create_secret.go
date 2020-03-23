@@ -51,7 +51,7 @@ func GetCreateSecretCommand(config *Config) *cli.Command {
 	return &cli.Command{
 		Name:        "secret",
 		Aliases:     []string{"secrets"},
-		Description: createSecretLongDescription,
+		Description: formatLongDescription(createSecretLongDescription),
 		Usage:       "Creates a secret in kore",
 		ArgsUsage:   "<name> [options]",
 
