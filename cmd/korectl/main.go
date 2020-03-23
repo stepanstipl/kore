@@ -25,6 +25,7 @@ import (
 	"github.com/appvia/kore/cmd/korectl/options"
 	"github.com/appvia/kore/pkg/cmd"
 	"github.com/appvia/kore/pkg/cmd/korectl"
+	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/version"
 
 	log "github.com/sirupsen/logrus"
@@ -36,11 +37,12 @@ func init() {
 	log.SetReportCaller(true)
 }
 
+// Main is acting as wrapper to the main entrypoint
 func Main(args []string, writer, errWriter io.Writer) (int, error) {
 	// @step: load the api config
 	config, err := korectl.GetOrCreateClientConfiguration()
 	if err != nil {
-		return 1, fmt.Errorf("failed to read configuration file. Reason: %s\n", err)
+		return 1, fmt.Errorf("failed to read configuration file. reason: %s", err)
 	}
 
 	// @step: we need to pull down the swagger and resource cache if required
@@ -57,7 +59,7 @@ func Main(args []string, writer, errWriter io.Writer) (int, error) {
 			},
 		},
 		Flags:                options.Options(),
-		Usage:                "korectl provides a CLI for the " + version.Prog,
+		Usage:                "korectl provides a cli for the " + version.Prog,
 		Version:              version.Version(),
 		EnableBashCompletion: true,
 
@@ -72,8 +74,10 @@ func Main(args []string, writer, errWriter io.Writer) (int, error) {
 				if err := cli.ShowAppHelp(ctx); err != nil {
 					return err
 				}
+
 				return cli.Exit("", 1)
 			}
+
 			return fmt.Errorf(
 				"unknown command %q\n\nPlease run `%s --help` to see all available commands.",
 				ctx.Args().First(),
@@ -100,16 +104,16 @@ func Main(args []string, writer, errWriter io.Writer) (int, error) {
 			switch {
 			case command == "local", command == "help", command == "autocomplete":
 				// no contexts required yet.
-			case command == "profile" && ctx.Args().Get(1) == "configure":
-				// no contexts required yet.
+			case utils.Contains(command, []string{"profile", "profiles"}):
+				return nil
 			case command == "login":
 				// no contexts required yet.
 			case len(config.Profiles) <= 0:
-				return fmt.Errorf(
-					"no profiles configured.\nPlease check the documentation about how to set up %s.",
-					ctx.App.Name,
-				)
+				return fmt.Errorf("no profiles configured.\nPlease check the documentation about how to set up %s.", ctx.App.Name)
+			case config.CurrentProfile == "":
+				return errors.New("no profile selected.\nPlease use $ korectl profiles --help to select a profile")
 			}
+
 			return nil
 		},
 
@@ -119,13 +123,14 @@ func Main(args []string, writer, errWriter io.Writer) (int, error) {
 
 	koreCliApp := cmd.NewApp(app)
 	if err := koreCliApp.Run(args); err != nil {
+
 		switch e := err.(type) {
 		case cli.ExitCoder:
 			if e.Error() != "" {
 				return e.ExitCode(), e
-			} else {
-				return e.ExitCode(), nil
 			}
+
+			return e.ExitCode(), nil
 
 		default:
 			return 1, err
