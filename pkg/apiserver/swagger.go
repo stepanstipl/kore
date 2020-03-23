@@ -26,15 +26,15 @@ func EnrichSwagger(swo *spec.Swagger) {
 			Description: "Kore API provides the frontend API for the Appvia Kore (kore.appvia.io)",
 			Contact: &spec.ContactInfo{
 				ContactInfoProps: spec.ContactInfoProps{
-					Name:  "Rohith Jayawardene",
+					Name:  "Appvia Ltd",
 					Email: "info@appvia.io",
 					URL:   "https://appvia.io",
 				},
 			},
 			License: &spec.License{
 				LicenseProps: spec.LicenseProps{
-					Name: "GPLV2",
-					URL:  "http://mit.org",
+					Name: "Apache 2.0",
+					URL:  "http://www.apache.org/licenses/LICENSE-2.0",
 				},
 			},
 			Version: "0.0.1",

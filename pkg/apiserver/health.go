@@ -48,11 +48,10 @@ func (l *healthHandler) Register(i kore.Interface, builder utils.PathBuilder) (*
 	ws.Produces(restful.MIME_JSON)
 
 	ws.Route(
-		ws.GET("/healthz").To(l.healthHandler).
+		withStandardErrors(ws.GET("/healthz")).To(l.healthHandler).
 			Doc("Used to start the authorization flow for user authentication").
 			Operation("GetHealth").
-			Returns(http.StatusOK, "Health check response", types.Health{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusOK, "Health check response", types.Health{}),
 	)
 
 	return ws, nil

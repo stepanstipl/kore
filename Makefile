@@ -129,10 +129,10 @@ swagger-validate:
 	@echo "--> Validating the swagger api"
 	@go run github.com/go-swagger/go-swagger/cmd/swagger validate swagger.json --skip-warnings
 
-swagger-apitestclient:
+swagger-apiclient:
 	@$(MAKE) swagger-json
-	@echo "--> Creating test client for the API defined in swagger"
-	@go run github.com/go-swagger/go-swagger/cmd/swagger generate client -q -f swagger.json -c pkg/testing/apiclient -m pkg/testing/apimodels 
+	@echo "--> Creating API client based on the swagger definition"
+	@go run github.com/go-swagger/go-swagger/cmd/swagger generate client -q -f swagger.json -c pkg/apiclient -m pkg/apiclient/models 
 
 in-docker-swagger:
 	@echo "--> Swagger in Docker"
@@ -298,10 +298,10 @@ test: generate-clusterappman-manifests
 	@$(MAKE) verify-licences
 
 run-api-test:
-	(cd ${ROOT_DIR}/pkg/testing/apitest; export RUN_INTEGRATION=true; go test -ginkgo.v)
+	(cd ${ROOT_DIR}/pkg/apiserver; go test -tags=integration -ginkgo.v)
 
 api-test:
-	@$(MAKE) swagger-apitestclient
+	@$(MAKE) swagger-apiclient
 	@$(MAKE) run-api-test
 
 all: test
