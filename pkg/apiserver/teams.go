@@ -563,39 +563,35 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 
 	// EKS Nodegroups
 	ws.Route(
-		ws.GET("/{team}/ekss/{name}/nodegroups").To(u.findEKSNodeGroups).
+		ws.GET("/{team}/eksnodegroups").To(u.findEKSNodeGroups).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
-			Param(ws.PathParameter("name", "Is name the of the EKS cluster you are acting upon")).
 			Doc("Is the used tor return a list of Amazon EKS clusters which thhe team has access").
 			Returns(http.StatusOK, "Contains the former team definition from the kore", eks.EKSNodeGroupList{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
-		ws.GET("/{team}/ekss/{name}/nodegroups/{nodegroup}").To(u.findEKSNodeGroup).
+		ws.GET("/{team}/eksnodegroups/{name}").To(u.findEKSNodeGroup).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
-			Param(ws.PathParameter("name", "Is name the of the EKS cluster you are acting upon")).
-			Param(ws.PathParameter("nodegroup", "Is the name of the EKS nodegroup")).
+			Param(ws.PathParameter("name", "Is the name of the EKS nodegroup")).
 			Doc("Is the used to return a EKS cluster which the team has access").
 			Returns(http.StatusOK, "Contains the former team definition from the kore", eks.EKSNodeGroup{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
-		ws.PUT("/{team}/ekss/{name}/nodegroups/{nodegroup}").To(u.updateEKSNodeGroups).
+		ws.PUT("/{team}/eksnodegroups/{name}").To(u.updateEKSNodeGroups).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
-			Param(ws.PathParameter("name", "Is name the of the EKS cluster you are acting upon")).
-			Param(ws.PathParameter("nodegroup", "Is the name of the EKS nodegroup")).
+			Param(ws.PathParameter("name", "Is the name of the EKS nodegroup")).
 			Doc("Is used to provision or update a EKS cluster in the kore").
 			Returns(http.StatusOK, "Contains the former team definition from the kore", eks.EKSNodeGroup{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
-		ws.DELETE("/{team}/ekss/{name}/nodegroups/{nodegroup}").To(u.deleteEKSNodeGroups).
+		ws.DELETE("/{team}/eksnodegroups/{nodegroup}").To(u.deleteEKSNodeGroups).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
-			Param(ws.PathParameter("name", "Is name the of the EKS cluster you are acting upon")).
-			Param(ws.PathParameter("nodegroup", "Is the name of the EKS nodegroup")).
+			Param(ws.PathParameter("name", "Is the name of the EKS nodegroup")).
 			Doc("Is used to delete a managed EKS cluster from the kore").
 			Returns(http.StatusOK, "Contains the former team definition from the kore", eks.EKSNodeGroup{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),

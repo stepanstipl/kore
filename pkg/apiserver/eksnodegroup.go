@@ -17,7 +17,6 @@
 package apiserver
 
 import (
-	"errors"
 	"net/http"
 
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
@@ -29,7 +28,7 @@ import (
 func (u teamHandler) findEKSNodeGroups(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		team := req.PathParameter("team")
-		cluster := req.PathParameter("cluster")
+		name := req.PathParameter("name")
 
 		list, err := u.Teams().Team(team).Cloud().EKSNodeGroup().List(req.Request.Context())
 		if err != nil {
@@ -39,7 +38,7 @@ func (u teamHandler) findEKSNodeGroups(req *restful.Request, resp *restful.Respo
 		newList := list.DeepCopy()
 		newItems := make([]eks.EKSNodeGroup, 0)
 		for _, ng := range list.Items {
-			if ng.Spec.ClusterName == cluster {
+			if ng.Name == name {
 				newItems = append(newItems, ng)
 			}
 		}
@@ -52,35 +51,31 @@ func (u teamHandler) findEKSNodeGroups(req *restful.Request, resp *restful.Respo
 // findEKS returns a specific nodegroup for a cluster under the team
 func (u teamHandler) findEKSNodeGroup(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
-		name := req.PathParameter("nodegroup")
 		team := req.PathParameter("team")
-		cluster := req.PathParameter("cluster")
+		name := req.PathParameter("name")
 
 		ng, err := u.Teams().Team(team).Cloud().EKSNodeGroup().Get(req.Request.Context(), name)
 		if err != nil {
 			return err
-		}
-		if ng.Spec.ClusterName != cluster {
-			return resp.WriteError(http.StatusNotFound, errors.New("nodegroup not found for the cluster"))
 		}
 
 		return resp.WriteHeaderAndEntity(http.StatusOK, ng)
 	})
 }
 
-// deleteEKS is responsible for deleting a team resource
+// deleteEKS is responsible for deleting an eksnodegroup resource
 func (u teamHandler) deleteEKSNodeGroups(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		ctx := req.Request.Context()
 		name := req.PathParameter("name")
 		team := req.PathParameter("team")
 
-		object, err := u.Teams().Team(team).Cloud().EKS().Get(ctx, name)
+		object, err := u.Teams().Team(team).Cloud().EKSNodeGroup().Get(ctx, name)
 		if err != nil {
 			return err
 		}
 
-		err = u.Teams().Team(team).Cloud().EKS().Delete(ctx, name)
+		err = u.Teams().Team(team).Cloud().EKSNodeGroup().Delete(ctx, name)
 		if err != nil {
 			return err
 		}
@@ -94,12 +89,12 @@ func (u teamHandler) updateEKSNodeGroups(req *restful.Request, resp *restful.Res
 	handleErrors(req, resp, func() error {
 		team := req.PathParameter("team")
 
-		object := &eks.EKS{}
+		object := &eks.EKSNodeGroup{}
 		if err := req.ReadEntity(object); err != nil {
 			return err
 		}
 
-		if _, err := u.Teams().Team(team).Cloud().EKS().Update(req.Request.Context(), object); err != nil {
+		if _, err := u.Teams().Team(team).Cloud().EKSNodeGroup().Update(req.Request.Context(), object); err != nil {
 			return err
 		}
 

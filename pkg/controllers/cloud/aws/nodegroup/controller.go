@@ -48,27 +48,27 @@ func init() {
 }
 
 // Name returns the name of the controller
-func (t *eksNodeGroupCtrl) Name() string {
-	return "eks.compute.kore.appvia.io"
+func (n *eksNodeGroupCtrl) Name() string {
+	return "eksnodegroup"
 }
 
 // Run starts the controller
-func (t *eksNodeGroupCtrl) Run(ctx context.Context, cfg *rest.Config, hubi kore.Interface) error {
+func (n *eksNodeGroupCtrl) Run(ctx context.Context, cfg *rest.Config, hubi kore.Interface) error {
 	logger := log.WithFields(log.Fields{
-		"controller": t.Name(),
+		"controller": n.Name(),
 	})
 
-	mgr, err := manager.New(cfg, controllers.DefaultManagerOptions(t))
+	mgr, err := manager.New(cfg, controllers.DefaultManagerOptions(n))
 	if err != nil {
 		logger.WithError(err).Error("trying to create the manager")
 
 		return err
 	}
-	t.mgr = mgr
-	t.Interface = hubi
+	n.mgr = mgr
+	n.Interface = hubi
 
 	// @step: create the controller
-	ctrl, err := controller.New(t.Name(), mgr, controllers.DefaultControllerOptions(t))
+	ctrl, err := controller.New(n.Name(), mgr, controllers.DefaultControllerOptions(n))
 	if err != nil {
 		log.WithError(err).Error("failed to create the controller")
 
@@ -90,9 +90,9 @@ func (t *eksNodeGroupCtrl) Run(ctx context.Context, cfg *rest.Config, hubi kore.
 		logger.Info("starting the controller loop")
 
 		for {
-			t.stopCh = make(chan struct{})
+			n.stopCh = make(chan struct{})
 
-			if err := mgr.Start(t.stopCh); err != nil {
+			if err := mgr.Start(n.stopCh); err != nil {
 				logger.WithError(err).Error("failed to start the controller")
 			}
 			time.Sleep(5 * time.Second)
@@ -104,16 +104,16 @@ func (t *eksNodeGroupCtrl) Run(ctx context.Context, cfg *rest.Config, hubi kore.
 		<-ctx.Done()
 		logger.Info("stopping the controller")
 
-		close(t.stopCh)
+		close(n.stopCh)
 	}()
 
 	return nil
 }
 
 // Stop is responsible for calling a halt on the controller
-func (t *eksNodeGroupCtrl) Stop(_ context.Context) error {
+func (n *eksNodeGroupCtrl) Stop(_ context.Context) error {
 	log.WithFields(log.Fields{
-		"controller": t.Name(),
+		"controller": n.Name(),
 	}).Info("attempting to stop the controller")
 
 	return nil
