@@ -277,18 +277,18 @@ func (c *Requestor) makeValues(in io.Reader, paths []string) ([]string, error) {
 	var list []string
 
 	if in == nil {
-		return []string{}, errors.New("no request body")
+		return nil, errors.New("no request body")
 	}
 
 	// @step: read in the json document
 	data, err := ioutil.ReadAll(in)
 	if err != nil {
-		return []string{}, err
+		return nil, err
 	}
 
 	// @step: validate the document
 	if !gjson.Valid(string(data)) {
-		return list, err
+		return nil, err
 	}
 
 	for _, path := range paths {
