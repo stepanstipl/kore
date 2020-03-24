@@ -48,7 +48,7 @@ ui:
   hostPort: ""
   serviceType: ClusterIP
   image: quay.io/appvia/kore-ui
-  version: v0.0.5
+  version: v0.0.6
   replicas: 1
 kubectl:
   version: 1.16
