@@ -216,10 +216,7 @@ func (c *Requestor) Delete() error {
 }
 
 func (c *Requestor) parseObjectResponse(resp *http.Response) error {
-	if err := json.NewDecoder(resp.Body).Decode(c.runtimeObj); err != nil {
-		return err
-	}
-	return nil
+	return json.NewDecoder(resp.Body).Decode(c.runtimeObj)
 }
 
 func (c *Requestor) parseResponse(resp *http.Response) error {
@@ -387,6 +384,7 @@ func (c *Requestor) doRequest(method, url string, handler func(*http.Response) e
 	var err error
 
 	if c.runtimeObj != nil {
+		fmt.Println("DECODING")
 		encoded, err := json.Marshal(c.runtimeObj)
 		if err != nil {
 			return err
@@ -474,8 +472,6 @@ func (c *Requestor) makeURI() (string, error) {
 		list = append(list, fmt.Sprintf("%s=%v", k, v))
 	}
 	url := fmt.Sprintf("%s/%s?%s", c.config.GetAPI(), uri, strings.Join(list, "&"))
-
-	log.WithField("url", url).Debug("making request to kore apiserver")
 
 	return url, nil
 }
