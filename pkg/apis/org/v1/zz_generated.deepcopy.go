@@ -89,6 +89,8 @@ func (in *AuditEventList) DeepCopyObject() runtime.Object {
 func (in *AuditEventSpec) DeepCopyInto(out *AuditEventSpec) {
 	*out = *in
 	in.CreatedAt.DeepCopyInto(&out.CreatedAt)
+	in.StartedAt.DeepCopyInto(&out.StartedAt)
+	in.CompletedAt.DeepCopyInto(&out.CompletedAt)
 	return
 }
 

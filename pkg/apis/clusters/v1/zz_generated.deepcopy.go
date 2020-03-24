@@ -130,6 +130,11 @@ func (in *KubernetesSpec) DeepCopyInto(out *KubernetesSpec) {
 		**out = **in
 	}
 	out.Provider = in.Provider
+	if in.ProxyAllowedIPs != nil {
+		in, out := &in.ProxyAllowedIPs, &out.ProxyAllowedIPs
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 
