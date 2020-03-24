@@ -136,6 +136,37 @@ jobs:
             docker push ${KORE_API_IMAGE}:${CIRCLE_TAG:-latest}
             docker push ${KORE_PROXY_IMAGE}:${CIRCLE_TAG:-latest}
 
+  build-ui:
+    docker:
+      - image: node:12
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - deploy:
+          name: Building and testing UI
+          working_directory: ~/project/ui
+          command: |
+            npm install
+            npm run lint
+            npm test
+            npm run build
+
+  release-ui:
+    docker:
+      - image: docker:19.03-dind
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - deploy:
+          name: Publishing UI to quay.io
+          working_directory: ~/project/ui
+          command: |
+              docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
+              docker build -t quay.io/appvia/kore-ui:${CIRCLE_TAG:-latest} .
+              docker push quay.io/appvia/kore-ui:${CIRCLE_TAG:-latest}
+
 workflows:
   version: 2
   workflow:
@@ -157,3 +188,15 @@ workflows:
               only: master
             tags:
               only: /^v.*$/
+      - build-ui:
+          filters:
+            tags:
+              only: /^v.*$/
+      - release-ui:
+          filters:
+            branches:
+              only: master
+            tags:
+              only: /^v.*$/
+          requires:
+            - build-ui
