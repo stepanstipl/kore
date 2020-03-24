@@ -45,6 +45,8 @@ type hubImpl struct {
 	users Users
 	// plans
 	plans Plans
+	// plan policies
+	planPolicies PlanPolicies
 	// usermgr is the user manager
 	usermgr users.Interface
 	// signer is used to sign off client certs
@@ -87,6 +89,7 @@ func New(sc store.Store, usermgr users.Interface, config Config) (Interface, err
 	h.idp = &idpImpl{Interface: h}
 	h.invitations = &ivImpl{Interface: h}
 	h.plans = &plansImpl{Interface: h}
+	h.planPolicies = &planPoliciesImpl{Interface: h}
 	h.teams = &teamsImpl{hubImpl: h}
 	h.usermgr = usermgr
 	h.users = &usersImpl{hubImpl: h}
@@ -148,6 +151,11 @@ func (h hubImpl) Users() Users {
 // Plans returns a plans interface
 func (h hubImpl) Plans() Plans {
 	return h.plans
+}
+
+// PlanPolicies returns a plan policies interface
+func (h hubImpl) PlanPolicies() PlanPolicies {
+	return h.planPolicies
 }
 
 // Invitations returns the invitations implementation

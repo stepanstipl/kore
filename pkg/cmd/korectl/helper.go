@@ -32,6 +32,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/appvia/kore/pkg/kore"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -152,6 +154,27 @@ func GetTeamAllocation(config *Config, team, name string) (*configv1.Allocation,
 	o := &configv1.Allocation{}
 
 	return o, GetTeamResource(config, team, "allocation", name, o)
+}
+
+func GetTeamAllocationsByType(config *Config, team, group, version, kind string) ([]configv1.Allocation, error) {
+	var allocations configv1.AllocationList
+	var res []configv1.Allocation
+	err := GetTeamResourceList(config, team, "allocation", &allocations)
+	if err != nil {
+		return res, err
+	}
+	target := corev1.Ownership{
+		Group:     group,
+		Version:   version,
+		Kind:      kind,
+		Namespace: kore.HubAdminTeam,
+	}
+	for _, allocation := range allocations.Items {
+		if allocation.Spec.Resource.IsSameType(target) {
+			res = append(res, allocation)
+		}
+	}
+	return res, nil
 }
 
 // GetTeamResource returns a team object
