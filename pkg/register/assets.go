@@ -3090,6 +3090,10 @@ spec:
             status:
               description: Status is overall status of the workspace
               type: string
+            systemManaged:
+              description: SystemManaged indicates the secret is managed by kore and
+                cannot be changed
+              type: boolean
             verified:
               description: Verified indicates if the secret has been verified as working
               type: boolean
