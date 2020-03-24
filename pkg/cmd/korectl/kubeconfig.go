@@ -19,6 +19,7 @@ package korectl
 import (
 	"errors"
 	"fmt"
+	"os"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 
@@ -27,6 +28,8 @@ import (
 
 	"github.com/urfave/cli/v2"
 )
+
+var kubeconfigUser = "kore"
 
 func GetKubeconfigCommand(config *Config) *cli.Command {
 	return &cli.Command{
@@ -54,7 +57,7 @@ func DoKubeconfig(config *Config, team string) error {
 	}
 
 	if len(clusters.Items) <= 0 {
-		fmt.Println("no clusters found in this team's namespace")
+		fmt.Println("No clusters found in this team's namespace")
 		return nil
 	}
 
@@ -63,17 +66,15 @@ func DoKubeconfig(config *Config, team string) error {
 		return err
 	}
 
-	if err := PopulateKubeconfig(clusters, kubeconfig, config); err != nil {
+	if err := WriteKubeconfig(clusters, kubeconfig, config); err != nil {
 		return err
 	}
 
-	fmt.Println("Successfully updated your kubeconfig with credentials")
-
-	return nil
+	return newKubeconfigResultPrinter(team, clusters).Print(os.Stdout)
 }
 
-// Populate kubeconfig is used to populate the users kubeconfig
-func PopulateKubeconfig(clusters *clustersv1.KubernetesList, kubeconfig string, config *Config) error {
+// WriteKubeconfig writes kubeconfig to the user's kubeconfig
+func WriteKubeconfig(clusters *clustersv1.KubernetesList, kubeconfig string, config *Config) error {
 	cfg, err := clientcmd.LoadFromFile(kubeconfig)
 	if err != nil {
 		return err
@@ -83,7 +84,7 @@ func PopulateKubeconfig(clusters *clustersv1.KubernetesList, kubeconfig string, 
 		return errors.New("you must be using a context backed by an idp")
 	}
 
-	cfg.AuthInfos["kore"] = &api.AuthInfo{
+	cfg.AuthInfos[kubeconfigUser] = &api.AuthInfo{
 		AuthProvider: &api.AuthProviderConfig{
 			Name: "oidc",
 			Config: map[string]string{
@@ -99,7 +100,8 @@ func PopulateKubeconfig(clusters *clustersv1.KubernetesList, kubeconfig string, 
 
 	for _, x := range clusters.Items {
 		if x.Status.Endpoint == "" {
-			fmt.Printf("skipping cluster: %s as it does not have an endpoint yet\n", x.Name)
+			fmt.Printf("SKIPPING CLUSTER: %s as it does not have an endpoint yet\n", x.Name)
+			continue
 		}
 		// @step: add the endpoint
 		cfg.Clusters[x.Name] = &api.Cluster{
@@ -110,11 +112,38 @@ func PopulateKubeconfig(clusters *clustersv1.KubernetesList, kubeconfig string, 
 		// @step: add the context
 		if _, found := cfg.Contexts[x.Name]; !found {
 			cfg.Contexts[x.Name] = &api.Context{
-				AuthInfo: "kore",
+				AuthInfo: kubeconfigUser,
 				Cluster:  x.Name,
 			}
 		}
 	}
 
 	return clientcmd.WriteToFile(*cfg, kubeconfig)
+}
+
+func newKubeconfigResultPrinter(team string, clusters *clustersv1.KubernetesList) printer {
+	var (
+		header  string
+		columns = []string{"Context", "Cluster"}
+		lines   [][]string
+	)
+
+	for _, item := range clusters.Items {
+		if len(item.Status.Endpoint) < 1 {
+			continue
+		}
+		lines = append(lines, []string{item.Name, item.Name})
+	}
+
+	if len(lines) < 1 {
+		header = fmt.Sprintf("Successfully added the [%s] user to your kubeconfig", kubeconfigUser)
+	} else {
+		header = fmt.Sprintf("Successfully added team [%s] provisioned clusters to your kubeconfig", team)
+	}
+
+	return table{
+		header,
+		columns,
+		lines,
+	}
 }

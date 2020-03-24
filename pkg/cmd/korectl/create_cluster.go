@@ -62,10 +62,10 @@ $ korectl -t <myteam> create cluster dev --plan gke-development -a <name> --name
 # Check the status of the cluster
 $ korectl -t <myteam> get cluster dev -o yaml
 
-Once you have created the cluster you can login via
-$ korectl clusters auth -t <myteam>
+	Now update your kubeconfig to use your team's provisioned cluster.
+	$ korectl kubeconfig -t <myteam>
 
-This will generate your ${HOME}/.kube/config for you with the clusters from team.
+This will modify your ${HOME}/.kube/config. Now you can use 'kubectl' to interact with your team's cluster.
 `
 )
 
@@ -251,7 +251,7 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 			}
 
 			// @step: print a the message
-			fmt.Printf("\nYou can retrieve your kubeconfig via: $ korectl clusters auth -t %s\n", team)
+			fmt.Printf("\nYou can retrieve your kubeconfig via: $ korectl kubeconfig -t %s\n", team)
 
 			return nil
 		},
