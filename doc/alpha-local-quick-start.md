@@ -246,7 +246,8 @@ bin/korectl create cluster appvia-trial -t team-appvia --plan gke-development -a
 # Cluster appvia-sdbox has been successfully provisioned
 # --> Attempting to create namespace: sandbox
 
-# You can retrieve your kubeconfig via: $ korectl clusters auth -t team-appvia
+# You can update your kubeconfig via: $ korectl kubeconfig -t team-appvia 
+# Then use 'kubectl' to interact with your team's cluster
 ```
 
 There's a lot to unpack here. So, lets walk through it,
@@ -272,8 +273,10 @@ We'll be using `kubectl`, the Kubernetes CLI, to make the deployment. If you don
 Now we have to configure our `kubectl` kubeconfig in ~/.kube/config with our new GKE cluster.
 
 ```shell script
-bin/korectl clusters auth -t team-appvia
-# Successfully updated your kubeconfig with credentials
+bin/korectl kubeconfig -t team-appvia
+# Successfully added team [team-appvia] provisioned clusters to your kubeconfig
+# Context        Cluster              
+# appvia-trial   appvia-trial
 ```
 
 Switch the current `kubectl` context to `appvia-trial`,

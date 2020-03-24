@@ -17,24 +17,40 @@
 package korectl
 
 import (
-	"github.com/urfave/cli/v2"
+	"fmt"
+	"io"
+	"strings"
+
+	"github.com/juju/ansiterm/tabwriter"
 )
 
-// GetCommands returns all the commands
-func GetCommands(config *Config) []*cli.Command {
-	return []*cli.Command{
-		GetLoginCommand(config),
-		GetLogoutCommand(config),
-		GetProfilesCommand(config),
-		GetLocalCommand(config),
-		GetAutoCompleteCommand(config),
-		GetCreateCommand(config),
-		GetEditCommand(config),
-		GetApplyCommand(config),
-		GetDeleteCommand(config),
-		GetClustersCommand(config),
-		GetGetCommand(config),
-		GetWhoamiCommand(config),
-		GetKubeconfigCommand(config),
+type printer interface {
+	Print(output io.Writer) error
+}
+
+type table struct {
+	header  string
+	columns []string
+	lines   [][]string
+}
+
+func (t table) Print(output io.Writer) error {
+	if _, err := fmt.Printf("%s\n", t.header); err != nil {
+		return err
 	}
+
+	w := new(tabwriter.Writer)
+	w.Init(output, 0, 10, 4, ' ', 0)
+
+	if _, err := fmt.Fprintf(w, "%s\n", strings.Join(t.columns, "\t")); err != nil {
+		return err
+	}
+
+	for _, line := range t.lines {
+		if _, err := fmt.Fprintf(w, "%s\n", strings.Join(line, "\t")); err != nil {
+			return err
+		}
+	}
+
+	return w.Flush()
 }
