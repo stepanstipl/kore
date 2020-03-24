@@ -24,7 +24,53 @@ import (
 
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
+
+	"github.com/urfave/cli/v2"
 )
+
+func GetKubeconfigCommand(config *Config) *cli.Command {
+	return &cli.Command{
+		Name:    "kubeconfig",
+		Aliases: []string{"kconfig"},
+		Usage:   "Adds your team provisioned clusters to your kubeconfig",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "name",
+				Aliases: []string{"n"},
+				Usage:   "The name of the integration to retrieve `NAME`",
+			},
+		},
+		Action: func(ctx *cli.Context) error {
+			return DoKubeconfig(config, ctx.String("team"))
+		},
+	}
+}
+
+func DoKubeconfig(config *Config, team string) error {
+	clusters := &clustersv1.KubernetesList{}
+
+	if err := GetTeamResourceList(config, team, "clusters", clusters); err != nil {
+		return err
+	}
+
+	if len(clusters.Items) <= 0 {
+		fmt.Println("no clusters found in this team's namespace")
+		return nil
+	}
+
+	kubeconfig, err := GetOrCreateKubeConfig()
+	if err != nil {
+		return err
+	}
+
+	if err := PopulateKubeconfig(clusters, kubeconfig, config); err != nil {
+		return err
+	}
+
+	fmt.Println("Successfully updated your kubeconfig with credentials")
+
+	return nil
+}
 
 // Populate kubeconfig is used to populate the users kubeconfig
 func PopulateKubeconfig(clusters *clustersv1.KubernetesList, kubeconfig string, config *Config) error {

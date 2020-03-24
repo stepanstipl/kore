@@ -35,5 +35,6 @@ func GetCommands(config *Config) []*cli.Command {
 		GetClustersCommand(config),
 		GetGetCommand(config),
 		GetWhoamiCommand(config),
+		GetKubeconfigCommand(config),
 	}
 }
