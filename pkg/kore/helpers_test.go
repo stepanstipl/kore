@@ -46,8 +46,8 @@ func TestIsValidResourceName(t *testing.T) {
 		{Name: "kore-admin-ok1", Expect: true},
 		{Name: "1kore-admin-ok1", Expect: false},
 		{Name: "kore-admin-ok1111", Expect: true},
-		{Name: strings.ToLower(utils.Random(63)), Expect: true},
-		{Name: strings.ToLower(utils.Random(64)), Expect: false},
+		{Name: "a" + strings.ToLower(utils.Random(62)), Expect: true},  // 63 characters
+		{Name: "a" + strings.ToLower(utils.Random(63)), Expect: false}, // 64 characters
 	}
 	for i, c := range cases {
 		switch c.Expect {
