@@ -382,8 +382,6 @@ func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation 
 		return nil, err
 	}
 
-	kind := strings.ToLower(utils.ToPlural(template.Spec.Kind))
-
 	object := &unstructured.Unstructured{}
 	object.SetGroupVersionKind(schema.GroupVersionKind{
 		Kind: template.Spec.Kind,
@@ -417,7 +415,7 @@ func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation 
 	}
 
 	// @step: check the cluster already exists
-	if found, err := TeamResourceExists(config, team, kind, name); err != nil {
+	if found, err := TeamResourceExists(config, team, template.Spec.Kind, name); err != nil {
 		return nil, fmt.Errorf("trying to check if cluster exists: %s", err)
 	} else if found {
 		fmt.Printf("Cluster: %q already exists, skipping the creation\n", name)
@@ -427,7 +425,7 @@ func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation 
 
 	fmt.Printf("Attempting to create cluster: %q, plan: %s\n", name, plan)
 
-	return object, CreateTeamResource(config, team, kind, name, object)
+	return object, CreateTeamResource(config, team, template.Spec.Kind, name, object)
 }
 
 func parsePlanParams(params []string) (map[string]interface{}, error) {
