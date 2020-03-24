@@ -44,7 +44,7 @@ func GetGetCommand(config *Config) *cli.Command {
 	var commands []*cli.Command
 
 	for k, v := range resourceConfigs {
-		usage := "retrieve the " + k + "resource from kore"
+		usage := "retrieve the " + k + " resource from kore"
 		if v.IsGlobal {
 			usage = "retrieve the global resource " + k + " from kore"
 		}
