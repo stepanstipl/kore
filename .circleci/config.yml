@@ -9,6 +9,43 @@ jobs:
 
     docker:
       - image: circleci/golang:1.13
+
+      - name: database
+        image: mariadb:bionic
+        environment:
+          MYSQL_ROOT_PASSWORD: pass
+        command:
+          sh -c "
+            echo 'CREATE DATABASE IF NOT EXISTS kore;' > /docker-entrypoint-initdb.d/init.sql;
+            /usr/local/bin/docker-entrypoint.sh --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
+
+    steps:
+      - checkout
+      - run:
+          name: Test
+          environment:
+            TEST_USERS_DATABASE_URL: "root:pass@tcp(database:3306)/kore?parseTime=true"
+          command: |
+            make test
+      - run:
+          name: Build
+          command: |
+            make build
+      - persist_to_workspace:
+          root: bin
+          paths:
+            - auth-proxy
+            - kore-apiserver
+            - kore-clusterappman
+
+  check-apis:
+    environment:
+      USE_GIT_VERSION: "true"
+      GOFLAGS: "-mod=vendor"
+
+    docker:
+      - image: circleci/golang:1.13
+
       - name: etcd
         image: bitnami/etcd:latest
         environment:
@@ -53,14 +90,12 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Test & Build
-          environment:
-            TEST_USERS_DATABASE_URL: "root:pass@tcp(database:3306)/kore?parseTime=true"
+          name: Checking generated API resources
           command: |
-            make test
-            make build
+            make check-apis
       - run:
           command: |
+            make kore-apiserver
             bin/kore-apiserver --verbose
           background: true
           environment:
@@ -73,20 +108,10 @@ jobs:
             KORE_UI_PUBLIC_URL: "http://localhost:3000"
             USERS_DB_URL: "root:pass@tcp(database:3306)/kore?parseTime=true"
       - run:
-          name: Checking generated API resources
-          command: |
-            make check-apis
-      - run:
           name: Checking swagger
           command: |
             make swagger-json
             make swagger-validate
-      - persist_to_workspace:
-          root: bin
-          paths:
-            - auth-proxy
-            - kore-apiserver
-            - kore-clusterappman
 
   release:
     environment:
@@ -119,9 +144,14 @@ workflows:
           filters:
             tags:
               only: /^v.*$/
+      - check-apis:
+          filters:
+            tags:
+              only: /^v.*$/
       - release:
           requires:
             - build
+            - check-apis
           filters:
             branches:
               only: master
