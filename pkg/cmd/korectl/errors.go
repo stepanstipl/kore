@@ -19,5 +19,6 @@ package korectl
 import "errors"
 
 var (
-	errTeamParameterMissing = errors.New("team parameter must be set")
+	errTeamParameterNotAllowed = errors.New("--team parameter is not allowed for this resource")
+	errTeamParameterMissing    = errors.New("team parameter must be set")
 )
