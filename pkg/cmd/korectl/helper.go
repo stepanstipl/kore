@@ -317,11 +317,20 @@ func ParseDocument(src io.Reader, namespace string) ([]*Document, error) {
 			return nil, errors.New("resource requires an api group")
 		}
 
-		// @step: we pluralize the kind and use that route the resource
-		kind := strings.ToLower(utils.ToPlural(u.GetKind()))
+		kind := u.GetKind()
+		remapping := map[string]string{
+			"kubernetes": "clusters",
+		}
+		for k, v := range remapping {
+			if k == kind {
+				kind = v
+			}
+		}
+
+		resourceConfig := getResourceConfig(kind)
 
 		team := u.GetNamespace()
-		if !IsGlobalResource(kind) {
+		if !resourceConfig.IsGlobal {
 			if namespace != "" {
 				if team != "" && team != namespace {
 					return nil, errors.New("resource name and team selected are different")
@@ -336,32 +345,17 @@ func ParseDocument(src io.Reader, namespace string) ([]*Document, error) {
 		team = strings.ToLower(team)
 		name := strings.ToLower(u.GetName())
 
-		remapping := map[string]string{
-			"kubernetes": "clusters",
-		}
-		for k, v := range remapping {
-			if k == kind {
-				kind = v
-			}
-		}
-
 		item := &Document{Object: u}
-		switch IsGlobalResource(kind) {
-		case true:
-			item.Endpoint = fmt.Sprintf("%s/%s", kind, name)
-		default:
-			item.Endpoint = fmt.Sprintf("teams/%s/%s/%s", team, kind, name)
+		if resourceConfig.IsGlobal {
+			item.Endpoint = fmt.Sprintf("%s/%s", resourceConfig.Name, name)
+		} else {
+			item.Endpoint = fmt.Sprintf("teams/%s/%s/%s", team, resourceConfig.Name, name)
 		}
 
 		list = append(list, item)
 	}
 
 	return list, nil
-}
-
-// IsGlobalResource is a global resource
-func IsGlobalResource(name string) bool {
-	return utils.Contains(name, []string{"teams", "users", "plans"})
 }
 
 // GetCaches is responsible for checking if are caches are up to date
