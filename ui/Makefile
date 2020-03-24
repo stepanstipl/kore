@@ -31,3 +31,9 @@ compose-down:
 compose-logs:
 	@echo "--> Stopping dependencies"
 	@docker-compose logs -f
+
+run:
+	@echo "--> Starting dependancies..."
+	@$(MAKE) compose
+	./run-local.sh
+
