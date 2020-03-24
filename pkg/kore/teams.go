@@ -149,7 +149,7 @@ func (t *teamsImpl) Update(ctx context.Context, team *orgv1.Team) (*orgv1.Team, 
 	// @step: teams are slightly different as they are being placed in both a database
 	// and a kubernetes. In order to ensure both instances comply with the naming conver
 	if err := IsValidResourceName(team.Name); err != nil {
-		return nil, fmt.Errorf("invalid team name, %s", err)
+		return nil, err
 	}
 
 	team.Namespace = HubNamespace

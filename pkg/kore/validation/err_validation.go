@@ -55,6 +55,16 @@ func (e *ErrValidation) WithFieldError(field string, errCode ErrorCode, message 
 	return e
 }
 
+// WithFieldErrorf adds an error for a specific field to a validation error.
+func (e *ErrValidation) WithFieldErrorf(field string, errCode ErrorCode, format string, args ...interface{}) *ErrValidation {
+	e.FieldErrors = append(e.FieldErrors, FieldError{
+		Field:   field,
+		ErrCode: errCode,
+		Message: fmt.Sprintf(format, args...),
+	})
+	return e
+}
+
 // FieldError provides information about a validation error on a specific field.
 type FieldError struct {
 	// Field causing the error, in format x.y.z
@@ -68,7 +78,12 @@ type FieldError struct {
 // ErrorCode is the type of validation error detected.
 type ErrorCode string
 
+// The error codes should match the validator names from JSON Schema
 const (
+	// MinLength error indicates the supplied value is shorted than the allowed minimum.
+	MinLength ErrorCode = "minLength"
 	// MaxLength error indicates the supplied value is longer than the allowed maximum.
 	MaxLength ErrorCode = "maxLength"
+	// Pattern error indicates the input doesn't match the required regex pattern
+	Pattern ErrorCode = "pattern"
 )

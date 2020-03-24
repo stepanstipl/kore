@@ -21,6 +21,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/appvia/kore/pkg/kore/validation"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
@@ -40,14 +42,20 @@ import (
 // https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 func IsValidResourceName(name string) error {
 	if !ResourceNameFilter.MatchString(name) {
-		return fmt.Errorf("name must comply with %s", ResourceNameFilter.String())
-	}
-	if name == "" {
-		return errors.New("name cannot be empty")
+		return validation.NewErrValidation().WithFieldErrorf(
+			"name",
+			validation.Pattern,
+			"must comply with %s",
+			ResourceNameFilter.String(),
+		)
 	}
 
 	if len(name) > 63 {
-		return errors.New("name length must be less than 64 characters")
+		return validation.NewErrValidation().WithFieldError(
+			"name",
+			validation.MaxLength,
+			"length must be less than 64 characters",
+		)
 	}
 
 	return nil
