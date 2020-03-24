@@ -17,12 +17,47 @@
 package kore
 
 import (
+	"strings"
 	"testing"
 
+	"github.com/appvia/kore/pkg/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
+
+func TestIsValidResourceName(t *testing.T) {
+	cases := []struct {
+		Name   string
+		Expect bool
+	}{
+		{Name: "", Expect: false},
+		{Name: "kore", Expect: true},
+		{Name: "kore-admin", Expect: true},
+		{Name: "1kore", Expect: false},
+		{Name: "kore1", Expect: true},
+		{Name: "kore_admin", Expect: false},
+		{Name: "-kore", Expect: false},
+		{Name: "kore-", Expect: false},
+		{Name: ".kore", Expect: false},
+		{Name: ".kore.", Expect: false},
+		{Name: "kore--admin", Expect: false},
+		{Name: "kore-admin-ok", Expect: true},
+		{Name: "kore-admin-ok1", Expect: true},
+		{Name: "1kore-admin-ok1", Expect: false},
+		{Name: "kore-admin-ok1111", Expect: true},
+		{Name: strings.ToLower(utils.Random(63)), Expect: true},
+		{Name: strings.ToLower(utils.Random(64)), Expect: false},
+	}
+	for i, c := range cases {
+		switch c.Expect {
+		case true:
+			assert.NoError(t, IsValidResourceName(c.Name), "case %d, value: %s should have passed", i, c.Name)
+		default:
+			assert.Error(t, IsValidResourceName(c.Name), "case %d, value: %s should have failed", i, c.Name)
+		}
+	}
+}
 
 func TestEmptyUser(t *testing.T) {
 	u := EmptyUser("test")

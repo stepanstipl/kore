@@ -21,12 +21,13 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/appvia/kore/pkg/kore/validation"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/utils"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,7 +35,31 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+// IsValidResourceName checks the resource name is valid
+// https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+func IsValidResourceName(name string) error {
+	if !ResourceNameFilter.MatchString(name) {
+		return validation.NewErrValidation().WithFieldErrorf(
+			"name",
+			validation.Pattern,
+			"must comply with %s",
+			ResourceNameFilter.String(),
+		)
+	}
+
+	if len(name) > 63 {
+		return validation.NewErrValidation().WithFieldError(
+			"name",
+			validation.MaxLength,
+			"length must be less than 64 characters",
+		)
+	}
+
+	return nil
+}
 
 // TeamsToList returns an array of teams
 func TeamsToList(list *orgv1.TeamList) []string {

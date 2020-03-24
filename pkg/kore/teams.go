@@ -18,7 +18,6 @@ package kore
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -147,19 +146,20 @@ func (t *teamsImpl) Exists(ctx context.Context, name string) (bool, error) {
 
 // Update is responsible for updating the team
 func (t *teamsImpl) Update(ctx context.Context, team *orgv1.Team) (*orgv1.Team, error) {
-	// @step: check the team is ok
-	if team.Name == "" {
-		return nil, errors.New("no name for team defined")
+	// @step: teams are slightly different as they are being placed in both a database
+	// and a kubernetes. In order to ensure both instances comply with the naming conver
+	if err := IsValidResourceName(team.Name); err != nil {
+		return nil, err
 	}
+
 	team.Namespace = HubNamespace
 
 	// @step: retrieve the user from context
 	user := authentication.MustGetIdentity(ctx)
 
 	logger := log.WithFields(log.Fields{
-		"team":  team.Name,
-		"teams": strings.Join(user.Teams(), ","),
-		"user":  user.Username(),
+		"team": team.Name,
+		"user": user.Username(),
 	})
 	logger.Info("attempting to update or create team in kore")
 
