@@ -13,6 +13,7 @@
 // deploy/crds/clusters.compute.kore.appvia.io_namespaceclaims.yaml
 // deploy/crds/clusters.compute.kore.appvia.io_namespacepolicy.yaml
 // deploy/crds/config.kore.appvia.io_allocations.yaml
+// deploy/crds/config.kore.appvia.io_planpolicies.yaml
 // deploy/crds/config.kore.appvia.io_plans.yaml
 // deploy/crds/config.kore.appvia.io_secrets.yaml
 // deploy/crds/core.kore.appvia.io_idp.yaml
@@ -2887,6 +2888,146 @@ func crdsConfigKoreAppviaIo_allocationsYaml() (*asset, error) {
 	return a, nil
 }
 
+var _crdsConfigKoreAppviaIo_planpoliciesYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: planpolicies.config.kore.appvia.io
+spec:
+  group: config.kore.appvia.io
+  names:
+    kind: PlanPolicy
+    listKind: PlanPolicyList
+    plural: planpolicies
+    singular: planpolicy
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: PlanPolicy is the Schema for the plan policies API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: PlanPolicySpec defines Plan JSON Schema extensions
+          properties:
+            description:
+              description: Description provides a detailed description of the plan
+                policy
+              type: string
+            kind:
+              description: Kind refers to the cluster type this is a plan policy for
+              minLength: 1
+              type: string
+            labels:
+              additionalProperties:
+                type: string
+              description: Labels is a collection of labels for this plan policy
+              type: object
+            properties:
+              description: Properties are the
+              items:
+                description: PlanPolicyProperty defines a JSON schema for a given
+                  property
+                properties:
+                  name:
+                    description: Name is the name of the property
+                    minLength: 1
+                    type: string
+                  schema:
+                    description: Schema is the JSON Schema definition for the given
+                      property
+                    type: object
+                    x-kubernetes-preserve-unknown-fields: true
+                required:
+                - name
+                type: object
+              minItems: 1
+              type: array
+              x-kubernetes-list-map-keys:
+              - name
+              x-kubernetes-list-type: map
+            summary:
+              description: Summary provides a short title summary for the plan policy
+              minLength: 1
+              type: string
+          required:
+          - kind
+          - properties
+          - summary
+          type: object
+        status:
+          description: PlanPolicyStatus defines the observed state of Plan Policy
+          properties:
+            conditions:
+              description: Conditions is a set of condition which has caused an error
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+              x-kubernetes-list-type: set
+            status:
+              description: Status is overall status of the plan policy
+              type: string
+          required:
+          - status
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsConfigKoreAppviaIo_planpoliciesYamlBytes() ([]byte, error) {
+	return _crdsConfigKoreAppviaIo_planpoliciesYaml, nil
+}
+
+func crdsConfigKoreAppviaIo_planpoliciesYaml() (*asset, error) {
+	bytes, err := crdsConfigKoreAppviaIo_planpoliciesYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/config.kore.appvia.io_planpolicies.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _crdsConfigKoreAppviaIo_plansYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -4822,6 +4963,7 @@ var _bindata = map[string]func() (*asset, error){
 	"crds/clusters.compute.kore.appvia.io_namespaceclaims.yaml":           crdsClustersComputeKoreAppviaIo_namespaceclaimsYaml,
 	"crds/clusters.compute.kore.appvia.io_namespacepolicy.yaml":           crdsClustersComputeKoreAppviaIo_namespacepolicyYaml,
 	"crds/config.kore.appvia.io_allocations.yaml":                         crdsConfigKoreAppviaIo_allocationsYaml,
+	"crds/config.kore.appvia.io_planpolicies.yaml":                        crdsConfigKoreAppviaIo_planpoliciesYaml,
 	"crds/config.kore.appvia.io_plans.yaml":                               crdsConfigKoreAppviaIo_plansYaml,
 	"crds/config.kore.appvia.io_secrets.yaml":                             crdsConfigKoreAppviaIo_secretsYaml,
 	"crds/core.kore.appvia.io_idp.yaml":                                   crdsCoreKoreAppviaIo_idpYaml,
@@ -4892,6 +5034,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"clusters.compute.kore.appvia.io_namespaceclaims.yaml":           {crdsClustersComputeKoreAppviaIo_namespaceclaimsYaml, map[string]*bintree{}},
 		"clusters.compute.kore.appvia.io_namespacepolicy.yaml":           {crdsClustersComputeKoreAppviaIo_namespacepolicyYaml, map[string]*bintree{}},
 		"config.kore.appvia.io_allocations.yaml":                         {crdsConfigKoreAppviaIo_allocationsYaml, map[string]*bintree{}},
+		"config.kore.appvia.io_planpolicies.yaml":                        {crdsConfigKoreAppviaIo_planpoliciesYaml, map[string]*bintree{}},
 		"config.kore.appvia.io_plans.yaml":                               {crdsConfigKoreAppviaIo_plansYaml, map[string]*bintree{}},
 		"config.kore.appvia.io_secrets.yaml":                             {crdsConfigKoreAppviaIo_secretsYaml, map[string]*bintree{}},
 		"core.kore.appvia.io_idp.yaml":                                   {crdsCoreKoreAppviaIo_idpYaml, map[string]*bintree{}},

@@ -29,15 +29,19 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/appvia/kore/pkg/apis/config/v1.Allocation":       schema_pkg_apis_config_v1_Allocation(ref),
-		"github.com/appvia/kore/pkg/apis/config/v1.AllocationSpec":   schema_pkg_apis_config_v1_AllocationSpec(ref),
-		"github.com/appvia/kore/pkg/apis/config/v1.AllocationStatus": schema_pkg_apis_config_v1_AllocationStatus(ref),
-		"github.com/appvia/kore/pkg/apis/config/v1.Plan":             schema_pkg_apis_config_v1_Plan(ref),
-		"github.com/appvia/kore/pkg/apis/config/v1.PlanSpec":         schema_pkg_apis_config_v1_PlanSpec(ref),
-		"github.com/appvia/kore/pkg/apis/config/v1.PlanStatus":       schema_pkg_apis_config_v1_PlanStatus(ref),
-		"github.com/appvia/kore/pkg/apis/config/v1.Secret":           schema_pkg_apis_config_v1_Secret(ref),
-		"github.com/appvia/kore/pkg/apis/config/v1.SecretSpec":       schema_pkg_apis_config_v1_SecretSpec(ref),
-		"github.com/appvia/kore/pkg/apis/config/v1.SecretStatus":     schema_pkg_apis_config_v1_SecretStatus(ref),
+		"github.com/appvia/kore/pkg/apis/config/v1.Allocation":         schema_pkg_apis_config_v1_Allocation(ref),
+		"github.com/appvia/kore/pkg/apis/config/v1.AllocationSpec":     schema_pkg_apis_config_v1_AllocationSpec(ref),
+		"github.com/appvia/kore/pkg/apis/config/v1.AllocationStatus":   schema_pkg_apis_config_v1_AllocationStatus(ref),
+		"github.com/appvia/kore/pkg/apis/config/v1.Plan":               schema_pkg_apis_config_v1_Plan(ref),
+		"github.com/appvia/kore/pkg/apis/config/v1.PlanPolicy":         schema_pkg_apis_config_v1_PlanPolicy(ref),
+		"github.com/appvia/kore/pkg/apis/config/v1.PlanPolicyProperty": schema_pkg_apis_config_v1_PlanPolicyProperty(ref),
+		"github.com/appvia/kore/pkg/apis/config/v1.PlanPolicySpec":     schema_pkg_apis_config_v1_PlanPolicySpec(ref),
+		"github.com/appvia/kore/pkg/apis/config/v1.PlanPolicyStatus":   schema_pkg_apis_config_v1_PlanPolicyStatus(ref),
+		"github.com/appvia/kore/pkg/apis/config/v1.PlanSpec":           schema_pkg_apis_config_v1_PlanSpec(ref),
+		"github.com/appvia/kore/pkg/apis/config/v1.PlanStatus":         schema_pkg_apis_config_v1_PlanStatus(ref),
+		"github.com/appvia/kore/pkg/apis/config/v1.Secret":             schema_pkg_apis_config_v1_Secret(ref),
+		"github.com/appvia/kore/pkg/apis/config/v1.SecretSpec":         schema_pkg_apis_config_v1_SecretSpec(ref),
+		"github.com/appvia/kore/pkg/apis/config/v1.SecretStatus":       schema_pkg_apis_config_v1_SecretStatus(ref),
 	}
 }
 
@@ -221,6 +225,193 @@ func schema_pkg_apis_config_v1_Plan(ref common.ReferenceCallback) common.OpenAPI
 		},
 		Dependencies: []string{
 			"github.com/appvia/kore/pkg/apis/config/v1.PlanSpec", "github.com/appvia/kore/pkg/apis/config/v1.PlanStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_config_v1_PlanPolicy(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "PlanPolicy is the Schema for the plan policies API",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/appvia/kore/pkg/apis/config/v1.PlanPolicySpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/appvia/kore/pkg/apis/config/v1.PlanPolicyStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/config/v1.PlanPolicySpec", "github.com/appvia/kore/pkg/apis/config/v1.PlanPolicyStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_config_v1_PlanPolicyProperty(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "PlanPolicyProperty defines a JSON schema for a given property",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"name": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Name is the name of the property",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"schema": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Schema is the JSON Schema definition for the given property",
+							Ref:         ref("k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"),
+						},
+					},
+				},
+				Required: []string{"name", "schema"},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"},
+	}
+}
+
+func schema_pkg_apis_config_v1_PlanPolicySpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "PlanPolicySpec defines Plan JSON Schema extensions",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind refers to the cluster type this is a plan policy for",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"labels": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Labels is a collection of labels for this plan policy",
+							Type:        []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
+					"summary": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Summary provides a short title summary for the plan policy",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Description provides a detailed description of the plan policy",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"properties": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-map-keys": []interface{}{
+									"name",
+								},
+								"x-kubernetes-list-type": "map",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Properties are the",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/appvia/kore/pkg/apis/config/v1.PlanPolicyProperty"),
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"kind", "summary", "description", "properties"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/config/v1.PlanPolicyProperty"},
+	}
+}
+
+func schema_pkg_apis_config_v1_PlanPolicyStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "PlanPolicyStatus defines the observed state of Plan Policy",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"conditions": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "Conditions is a set of condition which has caused an error",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/appvia/kore/pkg/apis/core/v1.Condition"),
+									},
+								},
+							},
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Status is overall status of the plan policy",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"conditions", "status"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/core/v1.Condition"},
 	}
 }
 

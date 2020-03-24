@@ -102,8 +102,17 @@ var resourceConfigs = map[string]resourceConfig{
 		IsGlobal: true,
 		Columns: []string{
 			Column("Resource", "metadata.name"),
-			Column("Description", "spec.description"),
 			Column("Summary", "spec.summary"),
+			Column("Description", "spec.description"),
+		},
+	},
+	"planpolicy": {
+		Name:     "planpolicies",
+		IsGlobal: true,
+		Columns: []string{
+			Column("Resource", "metadata.name"),
+			Column("Summary", "spec.summary"),
+			Column("Description", "spec.description"),
 		},
 	},
 	"organization": {

@@ -46,7 +46,7 @@ var (
 	ResourceNameFilter = regexp.MustCompile(`^[a-z][a-z0-9]*(-[a-z0-9]+)*$`)
 )
 
-// Interface is the contrat between the api and store
+// Interface is the contract between the api and store
 type Interface interface {
 	// Audit returns the audit interface
 	Audit() users.Audit
@@ -60,6 +60,8 @@ type Interface interface {
 	GetUserIdentityByProvider(context.Context, string, string) (*model.Identity, bool, error)
 	// Plans returns the plans interface
 	Plans() Plans
+	// Plans returns the plans interface
+	PlanPolicies() PlanPolicies
 	// IDP returns the IDP interface
 	IDP() IDP
 	// Users returns the users interface
