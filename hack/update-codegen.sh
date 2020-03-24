@@ -10,7 +10,7 @@ if [[ -z "${HUB_APIS}" ]]; then
   exit 1
 fi
 
-/usr/bin/env bash vendor/k8s.io/code-generator/generate-groups.sh -- deepcopy  \
+/usr/bin/env bash vendor/k8s.io/code-generator/generate-groups.sh deepcopy  \
   github.com/appvia/kore/pkg/client \
   github.com/appvia/kore/pkg/apis \
   "${HUB_APIS}" \
