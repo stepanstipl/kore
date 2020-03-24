@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package apiserver
+package apiserver_test
 
 import (
 	"github.com/appvia/kore/pkg/apiclient"

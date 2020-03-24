@@ -29,15 +29,15 @@ func (o *GetHealthReader) ReadResponse(response runtime.ClientResponse, consumer
 			return nil, err
 		}
 		return result, nil
-	default:
-		result := NewGetHealthDefault(response.Code())
+	case 500:
+		result := NewGetHealthInternalServerError()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
-		if response.Code()/100 == 2 {
-			return result, nil
-		}
 		return nil, result
+
+	default:
+		return nil, runtime.NewAPIError("unknown error", response, response.Code())
 	}
 }
 
@@ -74,37 +74,28 @@ func (o *GetHealthOK) readResponse(response runtime.ClientResponse, consumer run
 	return nil
 }
 
-// NewGetHealthDefault creates a GetHealthDefault with default headers values
-func NewGetHealthDefault(code int) *GetHealthDefault {
-	return &GetHealthDefault{
-		_statusCode: code,
-	}
+// NewGetHealthInternalServerError creates a GetHealthInternalServerError with default headers values
+func NewGetHealthInternalServerError() *GetHealthInternalServerError {
+	return &GetHealthInternalServerError{}
 }
 
-/*GetHealthDefault handles this case with default header values.
+/*GetHealthInternalServerError handles this case with default header values.
 
 A generic API error containing the cause of the error
 */
-type GetHealthDefault struct {
-	_statusCode int
-
+type GetHealthInternalServerError struct {
 	Payload *models.ApiserverError
 }
 
-// Code gets the status code for the get health default response
-func (o *GetHealthDefault) Code() int {
-	return o._statusCode
+func (o *GetHealthInternalServerError) Error() string {
+	return fmt.Sprintf("[GET /healthz][%d] getHealthInternalServerError  %+v", 500, o.Payload)
 }
 
-func (o *GetHealthDefault) Error() string {
-	return fmt.Sprintf("[GET /healthz][%d] GetHealth default  %+v", o._statusCode, o.Payload)
-}
-
-func (o *GetHealthDefault) GetPayload() *models.ApiserverError {
+func (o *GetHealthInternalServerError) GetPayload() *models.ApiserverError {
 	return o.Payload
 }
 
-func (o *GetHealthDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+func (o *GetHealthInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ApiserverError)
 

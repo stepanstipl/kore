@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package apiserver
+package apiserver_test
 
 import (
 	"github.com/appvia/kore/pkg/apiclient"
@@ -42,13 +42,13 @@ var _ = Describe("/audit", func() {
 		})
 
 		It("should return 403 if not authorised", func() {
-			_, err := api.Operations.ListAuditEvents(operations.NewListAuditEventsParams(), getAuthTeam1Member())
+			_, err := api.Operations.ListAuditEvents(operations.NewListAuditEventsParams(), getAuth(TestUserTeam1))
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(BeAssignableToTypeOf(&operations.ListAuditEventsForbidden{}))
 		})
 
 		It("should return a list of all audit events from the last 60 minutes by default", func() {
-			resp, err := api.Operations.ListAuditEvents(operations.NewListAuditEventsParams(), getAuthAdmin())
+			resp, err := api.Operations.ListAuditEvents(operations.NewListAuditEventsParams(), getAuth(TestUserAdmin))
 			if err != nil {
 				Expect(err).ToNot(HaveOccurred())
 			}
@@ -57,7 +57,7 @@ var _ = Describe("/audit", func() {
 
 		It("should return a list of all audit events from a period specified by the since parameter", func() {
 			since := "1s"
-			resp, err := api.Operations.ListAuditEvents(operations.NewListAuditEventsParams().WithSince(&since), getAuthAdmin())
+			resp, err := api.Operations.ListAuditEvents(operations.NewListAuditEventsParams().WithSince(&since), getAuth(TestUserAdmin))
 			if err != nil {
 				Expect(err).ToNot(HaveOccurred())
 			}
