@@ -16,7 +16,11 @@
 
 package korectl
 
-import "github.com/go-openapi/inflect"
+import (
+	"strings"
+
+	"github.com/go-openapi/inflect"
+)
 
 type resourceConfig struct {
 	Name     string
@@ -26,7 +30,8 @@ type resourceConfig struct {
 }
 
 func getResourceConfig(name string) resourceConfig {
-	if config, ok := resourceConfigs[inflect.Singularize(name)]; ok {
+	name = inflect.Singularize(strings.ToLower(name))
+	if config, ok := resourceConfigs[name]; ok {
 		return config
 	}
 
