@@ -89,64 +89,42 @@ func GetCluster(config *Config, team, name string) (*clustersv1.Kubernetes, erro
 
 // CreateTeamResource checks if a resources exists in the team
 func CreateTeamResource(config *Config, team, kind, name string, object runtime.Object) error {
-	kind = strings.ToLower(utils.ToPlural(kind))
+	req, _, err := NewRequestForResource(config, team, kind, name)
+	if err != nil {
+		return err
+	}
 
-	return NewRequest().
-		WithConfig(config).
-		PathParameter("team", true).
-		PathParameter("kind", true).
-		PathParameter("name", true).
-		WithInject("team", team).
-		WithInject("kind", kind).
-		WithInject("name", name).
-		WithEndpoint("/teams/{team}/{kind}/{name}").
-		WithRuntimeObject(object).
-		Update()
+	return req.WithRuntimeObject(object).Update()
 }
 
 // ResourceExists checks if a team resource exists
 func ResourceExists(config *Config, kind, name string) (bool, error) {
-	kind = strings.ToLower(utils.ToPlural(kind))
+	req, _, err := NewRequestForResource(config, "", kind, name)
+	if err != nil {
+		return false, err
+	}
 
-	return NewRequest().
-		WithConfig(config).
-		PathParameter("kind", true).
-		PathParameter("name", true).
-		WithInject("kind", kind).
-		WithInject("name", name).
-		WithEndpoint("{kind}/{name}").
-		Exists()
+	return req.Exists()
 }
 
 // TeamResourceExists checks if a resources exists in the team
 func TeamResourceExists(config *Config, team, kind, name string) (bool, error) {
-	kind = strings.ToLower(utils.ToPlural(kind))
+	req, _, err := NewRequestForResource(config, team, kind, name)
+	if err != nil {
+		return false, err
+	}
 
-	return NewRequest().
-		WithConfig(config).
-		PathParameter("team", true).
-		PathParameter("kind", true).
-		PathParameter("name", true).
-		WithInject("team", team).
-		WithInject("kind", kind).
-		WithInject("name", name).
-		WithEndpoint("/teams/{team}/{kind}/{name}").
-		Exists()
+	return req.Exists()
 }
 
 // GetTeamResourceList returns a collection of resources - essentially minus the name
 func GetTeamResourceList(config *Config, team, kind string, object runtime.Object) error {
-	kind = strings.ToLower(utils.ToPlural(kind))
+	req, _, err := NewRequestForResource(config, team, kind, "")
+	if err != nil {
+		return err
+	}
 
-	return NewRequest().
-		WithConfig(config).
-		PathParameter("team", true).
-		PathParameter("kind", true).
-		WithInject("team", team).
-		WithInject("kind", kind).
-		WithEndpoint("/teams/{team}/{kind}").
-		WithRuntimeObject(object).
-		Get()
+	return req.WithRuntimeObject(object).Get()
 }
 
 // GetTeamAllocation returns an allocation for a team
@@ -179,49 +157,22 @@ func GetTeamAllocationsByType(config *Config, team, group, version, kind string)
 
 // GetTeamResource returns a team object
 func GetTeamResource(config *Config, team, kind, name string, object interface{}) error {
-	kind = strings.ToLower(utils.ToPlural(kind))
+	req, _, err := NewRequestForResource(config, team, kind, name)
+	if err != nil {
+		return err
+	}
 
-	return NewRequest().
-		WithConfig(config).
-		PathParameter("team", true).
-		PathParameter("kind", true).
-		PathParameter("name", true).
-		WithInject("team", team).
-		WithInject("kind", kind).
-		WithInject("name", name).
-		WithEndpoint("/teams/{team}/{kind}/{name}").
-		WithRuntimeObject(object).
-		Get()
+	return req.WithRuntimeObject(object).Get()
 }
 
 // GetResource returns a global resource object
 func GetResource(config *Config, kind, name string, object runtime.Object) error {
-	kind = strings.ToLower(utils.ToPlural(kind))
+	req, _, err := NewRequestForResource(config, "", kind, name)
+	if err != nil {
+		return err
+	}
 
-	return NewRequest().
-		WithConfig(config).
-		PathParameter("kind", true).
-		PathParameter("name", true).
-		WithInject("kind", kind).
-		WithInject("name", name).
-		WithEndpoint("/{kind}/{name}").
-		WithRuntimeObject(object).
-		Get()
-}
-
-// GetResourceList returns a list of global resource types
-func GetResourceList(config *Config, team, kind, name string, object runtime.Object) error {
-	kind = strings.ToLower(utils.ToPlural(kind))
-
-	return NewRequest().
-		WithConfig(config).
-		PathParameter("kind", true).
-		PathParameter("name", true).
-		WithInject("kind", kind).
-		WithInject("name", name).
-		WithEndpoint("/{kind}/{name}").
-		WithRuntimeObject(object).
-		Get()
+	return req.WithRuntimeObject(object).Get()
 }
 
 // WaitOnResource indicates we should wait for the resource to transition to fail or success
