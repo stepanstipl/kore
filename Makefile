@@ -309,6 +309,13 @@ apis: golang
 	@${MAKE} crd-gen
 	@${MAKE} schema-gen
 
+check-apis: apis
+	@if [ $$(git status --porcelain | wc -l) -gt 0 ]; then \
+		echo "There are local changes after running 'make apis'. Did you forget to run it?"; \
+		git status --porcelain; \
+		exit 1; \
+	fi
+
 deepcopy-gen:
 	@echo "--> Generating the deepcopies"
 	@hack/update-codegen.sh
