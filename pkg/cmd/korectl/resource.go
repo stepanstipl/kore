@@ -37,7 +37,7 @@ func getResourceConfig(name string) resourceConfig {
 
 	// TODO: we don't have a way to validate whether a resource exists yet, so we generate a team resource configuration dynamically
 	return resourceConfig{
-		Name:   name,
+		Name:   inflect.Pluralize(name),
 		IsTeam: true,
 		Columns: []string{
 			Column("Name", "metadata.name"),
