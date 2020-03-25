@@ -81,7 +81,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Doc("Return information related to the specific team in the kore").
 			Operation("GetTeam").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
-			Returns(http.StatusOK, "Contains the team definintion from the kore", orgv1.Team{}).
+			Returns(http.StatusOK, "Contains the team definition from the kore", orgv1.Team{}).
 			Returns(http.StatusNotFound, "Team does not exist", nil).
 			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
@@ -92,7 +92,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Operation("UpdateTeam").
 			Reads(orgv1.Team{}, "Contains the definition for a team in the kore").
-			Returns(http.StatusOK, "Contains the team definintion from the kore", orgv1.Team{}).
+			Returns(http.StatusOK, "Contains the team definition from the kore", orgv1.Team{}).
 			Returns(http.StatusNotFound, "Team does not exist", nil).
 			Returns(http.StatusNotModified, "Indicates the request was processed but no changes applied", orgv1.Team{}),
 	)

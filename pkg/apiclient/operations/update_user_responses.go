@@ -72,7 +72,7 @@ func NewUpdateUserOK() *UpdateUserOK {
 
 /*UpdateUserOK handles this case with default header values.
 
-Contains the user definintion from the kore
+Contains the user definition from the kore
 */
 type UpdateUserOK struct {
 	Payload *models.V1User

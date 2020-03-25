@@ -54,7 +54,7 @@ func NewGetTeamOK() *GetTeamOK {
 
 /*GetTeamOK handles this case with default header values.
 
-Contains the team definintion from the kore
+Contains the team definition from the kore
 */
 type GetTeamOK struct {
 	Payload *models.V1Team

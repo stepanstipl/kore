@@ -48,7 +48,7 @@ func NewRemovePlanOK() *RemovePlanOK {
 
 /*RemovePlanOK handles this case with default header values.
 
-Contains the class definintion from the kore
+Contains the class definition from the kore
 */
 type RemovePlanOK struct {
 	Payload *models.V1Plan

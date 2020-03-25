@@ -78,7 +78,7 @@ func NewUpdateTeamOK() *UpdateTeamOK {
 
 /*UpdateTeamOK handles this case with default header values.
 
-Contains the team definintion from the kore
+Contains the team definition from the kore
 */
 type UpdateTeamOK struct {
 	Payload *models.V1Team

@@ -68,7 +68,7 @@ func (p *plansHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 			Doc("Returns a specific class plan from the kore").
 			Operation("GetPlan").
 			Param(ws.PathParameter("name", "The name of the plan you wish to retrieve")).
-			Returns(http.StatusOK, "Contains the class definintion from the kore", configv1.Plan{}).
+			Returns(http.StatusOK, "Contains the class definition from the kore", configv1.Plan{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
@@ -78,7 +78,7 @@ func (p *plansHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 			Operation("UpdatePlan").
 			Param(ws.PathParameter("name", "The name of the plan you wish to act upon")).
 			Reads(configv1.Plan{}, "The specification for the plan you are updating").
-			Returns(http.StatusOK, "Contains the class definintion from the kore", configv1.Plan{}).
+			Returns(http.StatusOK, "Contains the class definition from the kore", configv1.Plan{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
@@ -87,7 +87,7 @@ func (p *plansHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 			Doc("Used to delete a plan from the kore").
 			Operation("RemovePlan").
 			Param(ws.PathParameter("name", "The name of the plan you wish to act upon")).
-			Returns(http.StatusOK, "Contains the class definintion from the kore", configv1.Plan{}).
+			Returns(http.StatusOK, "Contains the class definition from the kore", configv1.Plan{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 

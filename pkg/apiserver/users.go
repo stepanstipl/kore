@@ -70,7 +70,7 @@ func (u *usersHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 			Doc("Return information related to the specific user in the kore").
 			Operation("GetUser").
 			Param(ws.PathParameter("user", "The name of the user you wish to retrieve")).
-			Returns(http.StatusOK, "Contains the user definintion from the kore", orgv1.User{}).
+			Returns(http.StatusOK, "Contains the user definition from the kore", orgv1.User{}).
 			Returns(http.StatusNotFound, "User does not exist", nil),
 	)
 
@@ -80,7 +80,7 @@ func (u *usersHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 			Operation("UpdateUser").
 			Param(ws.PathParameter("user", "The name of the user you are updating or creating in the kore")).
 			Reads(orgv1.User{}, "The specification for a user in the kore").
-			Returns(http.StatusOK, "Contains the user definintion from the kore", orgv1.User{}).
+			Returns(http.StatusOK, "Contains the user definition from the kore", orgv1.User{}).
 			Returns(http.StatusNotFound, "User does not exist", nil),
 	)
 
