@@ -21,7 +21,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/appvia/kore/pkg/kore/validation"
+	"github.com/appvia/kore/pkg/utils/validation"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"

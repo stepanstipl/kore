@@ -30,8 +30,8 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/appvia/kore/pkg/kore/validation"
 	"github.com/appvia/kore/pkg/utils"
+	"github.com/appvia/kore/pkg/utils/validation"
 
 	"github.com/ghodss/yaml"
 	log "github.com/sirupsen/logrus"

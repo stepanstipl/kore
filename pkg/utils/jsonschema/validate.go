@@ -19,7 +19,7 @@ package jsonschema
 import (
 	"fmt"
 
-	"github.com/appvia/kore/pkg/kore/validation"
+	"github.com/appvia/kore/pkg/utils/validation"
 
 	"github.com/xeipuuv/gojsonschema"
 )

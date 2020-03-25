@@ -23,9 +23,9 @@ import (
 
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/appvia/kore/pkg/kore/authentication"
-	"github.com/appvia/kore/pkg/kore/validation"
 	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/services/users/model"
+	"github.com/appvia/kore/pkg/utils/validation"
 
 	log "github.com/sirupsen/logrus"
 )

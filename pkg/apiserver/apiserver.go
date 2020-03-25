@@ -23,8 +23,8 @@ import (
 
 	"github.com/appvia/kore/pkg/apiserver/filters"
 	"github.com/appvia/kore/pkg/kore"
-	"github.com/appvia/kore/pkg/kore/validation"
 	"github.com/appvia/kore/pkg/utils"
+	"github.com/appvia/kore/pkg/utils/validation"
 
 	restful "github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"

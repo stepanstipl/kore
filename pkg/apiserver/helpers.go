@@ -23,7 +23,7 @@ import (
 	"strings"
 
 	"github.com/appvia/kore/pkg/kore"
-	"github.com/appvia/kore/pkg/kore/validation"
+	"github.com/appvia/kore/pkg/utils/validation"
 
 	restful "github.com/emicklei/go-restful"
 	log "github.com/sirupsen/logrus"
