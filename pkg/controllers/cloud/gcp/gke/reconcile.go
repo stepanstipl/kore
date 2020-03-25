@@ -137,6 +137,7 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 					Name:    ComponentClusterCreator,
 					Message: "Failed trying to provision the cluster",
 					Detail:  err.Error(),
+					Status:  core.FailureStatus,
 				})
 				resource.Status.Status = core.FailureStatus
 
