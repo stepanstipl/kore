@@ -65,7 +65,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Operation("InvitationSubmit").
 			Param(ws.PathParameter("token", "The generated base64 invitation token which was provided from the team")).
 			Returns(http.StatusOK, "Indicates the generated link is valid and the user has been granted access", types.TeamInvitationResponse{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
@@ -73,7 +73,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Doc("Returns all the teams in the kore").
 			Operation("ListTeams").
 			Returns(http.StatusOK, "A list of all the teams in the kore", orgv1.TeamList{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
@@ -82,18 +82,19 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Operation("GetTeam").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Returns(http.StatusOK, "Contains the team definintion from the kore", orgv1.Team{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusNotFound, "Team does not exist", nil).
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
-		ws.PUT("/{team}").To(u.updateTeam).
+		withAllErrors(ws.PUT("/{team}")).To(u.updateTeam).
 			Doc("Used to create or update a team in the kore").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Operation("UpdateTeam").
 			Reads(orgv1.Team{}, "Contains the definition for a team in the kore").
 			Returns(http.StatusOK, "Contains the team definintion from the kore", orgv1.Team{}).
-			Returns(http.StatusNotModified, "Indicates the request was processed but no changes applied", orgv1.Team{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusNotFound, "Team does not exist", nil).
+			Returns(http.StatusNotModified, "Indicates the request was processed but no changes applied", orgv1.Team{}),
 	)
 
 	ws.Route(
@@ -102,8 +103,9 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Operation("RemoveTeam").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", orgv1.Team{}).
+			Returns(http.StatusNotFound, "Team does not exist", nil).
 			Returns(http.StatusNotAcceptable, "Indicates you cannot delete the team for one or more reasons", Error{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	// Team Audit Events
@@ -115,7 +117,8 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.QueryParameter("since", "The duration to retrieve from the audit log").DefaultValue("60m")).
 			Returns(http.StatusOK, "A collection of audit events against the team", orgv1.AuditEventList{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusNotFound, "Team does not exist", nil).
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	// Team Members
@@ -126,18 +129,19 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Operation("GetTeamMembers").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Returns(http.StatusOK, "Contains a collection of team memberships for this team", orgv1.TeamMemberList{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusNotFound, "Team does not exist", nil).
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
-		ws.PUT("/{team}/members/{user}").To(u.addTeamMember).
+		withAllErrors(ws.PUT("/{team}/members/{user}")).To(u.addTeamMember).
 			Doc("Used to add a user to the team via membership").
 			Operation("AddTeamMember").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("user", "Is the user you are adding to the team")).
 			Reads(orgv1.TeamMember{}, "The definition for the user in the team").
 			Returns(http.StatusOK, "The user has been successfully added to the team", orgv1.TeamMember{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusNotFound, "Team does not exist", nil),
 	)
 
 	ws.Route(
@@ -147,7 +151,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("user", "Is the user you are removing from the team")).
 			Returns(http.StatusOK, "The user has been successfully removed from the team", orgv1.TeamMember{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	// Team Invitations
@@ -158,7 +162,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Operation("ListInvites").
 			Param(ws.PathParameter("team", "The name of the team you are pulling the invitations for")).
 			Returns(http.StatusOK, "A list of users whom have an invitation for the team", orgv1.TeamInvitationList{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
@@ -169,7 +173,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("user", "The name of the username of the user the invitation is for")).
 			Param(ws.QueryParameter("expire", "The expiration of the generated link").DefaultValue("1h")).
 			Returns(http.StatusOK, "Indicates the team invitation for the user has been successful", nil).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
@@ -179,7 +183,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "The name of the team you are deleting the invitation")).
 			Param(ws.PathParameter("user", "The username of the user whos invitation you are removing")).
 			Returns(http.StatusOK, "Indicates the team invitation has been successful removed", nil).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	// Invitation Links
@@ -191,7 +195,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "The name of the team you are creating an invition link")).
 			Param(ws.QueryParameter("expire", "The expiration of the generated link").DefaultValue("1h")).
 			Returns(http.StatusOK, "A generated URI which can be used to join a team", "").
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
@@ -201,7 +205,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "The name of the team you are creating an invition link")).
 			Param(ws.PathParameter("user", "The username of the user the link should be limited for")).
 			Returns(http.StatusOK, "A generated URI which users can use to join the team", "").
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	// Team Allocations
@@ -213,7 +217,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.QueryParameter("assigned", "Retrieves all allocations which have been assigned to you")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", configv1.AllocationList{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 	ws.Route(
 		ws.GET("/{team}/allocations/{name}").To(u.findAllocation).
@@ -222,7 +226,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is the name of the allocation you wish to return")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", configv1.Allocation{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 	ws.Route(
 		ws.PUT("/{team}/allocations/{name}").To(u.updateAllocation).
@@ -231,7 +235,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is the name of the allocation you wish to update")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", configv1.Allocation{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 	ws.Route(
 		ws.DELETE("/{team}/allocations/{name}").To(u.deleteAllocation).
@@ -240,7 +244,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is the name of the allocation you wish to delete")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", configv1.Allocation{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	// Team Namespaces
@@ -251,7 +255,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Operation("ListNamespaces").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Returns(http.StatusOK, "Contains the former definition from the kore", clustersv1.NamespaceClaimList{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
@@ -261,7 +265,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the namespace claim you are acting upon")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", clustersv1.NamespaceClaim{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
@@ -272,7 +276,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("name", "Is name the of the namespace claim you are acting upon")).
 			Reads(clustersv1.NamespaceClaim{}, "The definition for namespace claim").
 			Returns(http.StatusOK, "Contains the definition from the kore", clustersv1.NamespaceClaim{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
@@ -282,45 +286,49 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("name", "Is name the of the namespace claim you are acting upon")).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Returns(http.StatusOK, "Contains the former definition from the kore", clustersv1.NamespaceClaim{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	// Secrets is used to provision a secret in the team
 
 	ws.Route(
 		ws.GET("/{team}/secrets").To(u.findTeamSecrets).
+			Operation("ListTeamSecrets").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Doc("Used to return all the secrets within the team").
 			Returns(http.StatusOK, "Contains the definition for the resource", configv1.Secret{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
 		ws.GET("/{team}/secrets/{name}").To(u.findTeamSecret).
+			Operation("GetTeamSecret").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the secert in the name")).
 			Doc("Used to retrieve the secret from the team").
 			Returns(http.StatusOK, "Contains the definition for the resource", configv1.Secret{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
 		ws.PUT("/{team}/secrets/{name}").To(u.updateTeamSecret).
+			Operation("UpdateTeamSecret").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of secret you are creating / updating")).
 			Doc("Used to update the secret in the team").
 			Reads(configv1.Secret{}, "The definition for the secret you are creating or updating").
 			Returns(http.StatusOK, "Contains updated definition of the secret", configv1.Secret{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
 		ws.DELETE("/{team}/secrets/{name}").To(u.deleteTeamSecret).
+			Operation("DeleteTeamSecret").
 			Param(ws.PathParameter("name", "Is name the of the secret you are acting upon")).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Doc("Used to delete the secret from team").
 			Returns(http.StatusOK, "Contains the former definition of the secret", configv1.Secret{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	// Team Clusters
@@ -331,7 +339,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Operation("ListClusters").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", clustersv1.KubernetesList{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
@@ -341,7 +349,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the kubernetes cluster you are acting upon")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", clustersv1.Kubernetes{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
@@ -353,7 +361,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Reads(clustersv1.Kubernetes{}, "The definition for kubernetes cluster").
 			Returns(http.StatusOK, "Contains the former team definition from the kore", clustersv1.Kubernetes{}).
 			Returns(http.StatusBadRequest, "Validation error of the provided details", validation.ErrValidation{}). // @TODO: Change this to be a class in the orgv1 space
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
@@ -363,7 +371,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", clustersv1.Kubernetes{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	// Team Cloud Providers
@@ -374,7 +382,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Operation("ListGKEs").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", gke.GKEList{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
@@ -384,7 +392,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", gke.GKE{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
@@ -394,7 +402,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", gke.GKE{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
@@ -404,7 +412,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", gke.GKE{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	// GKE Credentials - @TODO these all need to be autogenerated
@@ -415,7 +423,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Operation("ListGKECredentials").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", gke.GKECredentialsList{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
@@ -425,7 +433,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", gke.GKECredentials{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
@@ -435,7 +443,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", gke.GKECredentials{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
@@ -445,7 +453,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", gke.GKECredentials{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	// GCP Project Claims

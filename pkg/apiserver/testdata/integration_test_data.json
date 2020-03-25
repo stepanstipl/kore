@@ -1,0 +1,17 @@
+{
+    "auth": {
+        "_README": "The pubkey MUST match the local-jwt-public-key used to start the API else we can't impersonate users in the test and everything will fail",
+        "privKey": "MIIBOgIBAAJBAIG6XiNhkwDETU2zk0tGlI0DKlbEJcN4jxwJBqhd3neReLDnqg9SBgKepdy9Nxw5LAd1gNoBkLvdFJg9SbHlM0sCAwEAAQJAZ/KOdek8YlPo4Ubv0lRmuar8pPOckskqWrt8wzIcDU+rcenXZ4hnlJBUXuvKiixd29yFX0xoYPPcq/ootJQcCQIhAO5hhYf3dwwFRr2Eif8OJRC0Q5Z9qPcTfCOGCAmIML9NAiEAi1D9nUW+mUPmQyZNx88FZhTsyrzStduVlqVV+Rs/IPcCIQCkUEhwvl0qxgBK5i8Qxjk6WGc2NovfM2kgO2US3PNtCQIgd0oeHvB9R1bwb0b5CsGk6ce5Cc+szLL830Uq3GYMI/kCIAKAGmltwHk/3QvtXwFu6ecDn1cL3WuZatM/U9gcTFFI",
+        "pubKey": "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAIG6XiNhkwDETU2zk0tGlI0DKlbEJcN4jxwJBqhd3neReLDnqg9SBgKepdy9Nxw5LAd1gNoBkLvdFJg9SbHlM0sCAwEAAQ=="
+    },
+    "teams": {
+        "team1": { "name": "api-test-team-1", "description": "Test team 1 for API testing", "summary": "API Test Team 1" },
+        "team2": { "name": "api-test-team-2", "description": "Test team 2 for API testing", "summary": "API Test Team 2" }
+    },
+    "users": {
+        "admin": { "username": "user-admin", "email": "user-admin@example.com", "teams": [ "kore-admin" ]},
+        "team1user": { "username": "user-team-1", "email": "user-team-1@example.com", "teams": [ "api-test-team-1" ]},
+        "team2user": { "username": "user-team-2", "email": "user-team-2@example.com", "teams": [ "api-test-team-2" ]},
+        "multiTeamUser": { "username": "user-team-1-2", "email": "user-team-1-2@example.com", "teams": [ "api-test-team-1", "api-test-team-2" ]}
+    }
+}

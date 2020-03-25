@@ -129,6 +129,11 @@ swagger-validate:
 	@echo "--> Validating the swagger api"
 	@go run github.com/go-swagger/go-swagger/cmd/swagger validate swagger.json --skip-warnings
 
+swagger-apiclient:
+	@$(MAKE) swagger-json
+	@echo "--> Creating API client based on the swagger definition"
+	@go run github.com/go-swagger/go-swagger/cmd/swagger generate client -q -f swagger.json -c pkg/apiclient -m pkg/apiclient/models 
+
 in-docker-swagger:
 	@echo "--> Swagger in Docker"
 	curl --retry 50 --retry-delay 3 --retry-connrefused -sSL http://${API_HOST}:10080/swagger.json | jq . > swagger.json
@@ -291,6 +296,13 @@ test: generate-clusterappman-manifests
 	@$(MAKE) vet
 	@$(MAKE) cover
 	@$(MAKE) verify-licences
+
+run-api-test:
+	(cd ${ROOT_DIR}/pkg/apiserver; go test -tags=integration -ginkgo.v)
+
+api-test:
+	@$(MAKE) swagger-apiclient
+	@$(MAKE) run-api-test
 
 all: test
 	@echo "--> Performing all tests"

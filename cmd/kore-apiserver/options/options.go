@@ -80,6 +80,12 @@ func Options() []cli.Flag {
 			EnvVars: []string{"KORE_IDP_SERVER_URL"},
 		},
 		&cli.StringFlag{
+			Name:    "local-jwt-public-key",
+			Usage:   "the local public key to verify JWTs for localjwt auth plugin",
+			EnvVars: []string{"KORE_LOCAL_JWT_PUBLIC_KEY"},
+			Value:   "this-should-be-changed",
+		},
+		&cli.StringFlag{
 			Name:    "api-public-url",
 			Usage:   "the public url of the api service `URL`",
 			EnvVars: []string{"KORE_API_PUBLIC_URL"},

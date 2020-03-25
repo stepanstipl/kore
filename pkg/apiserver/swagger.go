@@ -25,15 +25,39 @@ func EnrichSwagger(swo *spec.Swagger) {
 			Title:       "Appvia Kore API",
 			Description: "Kore API provides the frontend API for the Appvia Kore (kore.appvia.io)",
 			Contact: &spec.ContactInfo{
-				Name:  "Rohith Jayawardene",
-				Email: "info@appvia.io",
-				URL:   "https://appvia.io",
+				ContactInfoProps: spec.ContactInfoProps{
+					Name:  "Appvia Ltd",
+					Email: "info@appvia.io",
+					URL:   "https://appvia.io",
+				},
 			},
 			License: &spec.License{
-				Name: "GPLV2",
-				URL:  "http://mit.org",
+				LicenseProps: spec.LicenseProps{
+					Name: "Apache 2.0",
+					URL:  "http://www.apache.org/licenses/LICENSE-2.0",
+				},
 			},
 			Version: "0.0.1",
+		},
+	}
+	swo.SecurityDefinitions = spec.SecurityDefinitions{
+		"OAuth2": &spec.SecurityScheme{
+			// @TODO: Set these correctly for the currently-running system:
+			SecuritySchemeProps: spec.SecuritySchemeProps{
+				Type:             "oauth2",
+				Flow:             "accessCode",
+				AuthorizationURL: "http://localhost:10080/auth",
+				TokenURL:         "http://localhost:10080/token",
+				Scopes: map[string]string{
+					"admin": "Admin scope",
+					"team":  "Team scope",
+				},
+			},
+		},
+	}
+	swo.Security = []map[string][]string{
+		{
+			"OAuth2": {"admin", "team"},
 		},
 	}
 }

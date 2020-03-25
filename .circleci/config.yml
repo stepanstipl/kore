@@ -100,10 +100,12 @@ jobs:
           background: true
           environment:
             KORE_ADMIN_TOKEN: "password"
-            KORE_AUTHENTICATION_PLUGINS: "admintoken"
+            KORE_AUTHENTICATION_PLUGINS: "admintoken,localjwt"
             KORE_CERTIFICATE_AUTHORITY: "hack/ca/ca.pem"
             KORE_CERTIFICATE_AUTHORITY_KEY: "hack/ca/ca-key.pem"
             KORE_HMAC: "bdT2Qg6DybsLIwc0TbYWrkGC4auovscg"
+            # The below must be matched with the private key in the API test project:
+            KORE_LOCAL_JWT_PUBLIC_KEY: "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAIG6XiNhkwDETU2zk0tGlI0DKlbEJcN4jxwJBqhd3neReLDnqg9SBgKepdy9Nxw5LAd1gNoBkLvdFJg9SbHlM0sCAwEAAQ=="
             KUBE_API_SERVER: "http://kube-apiserver:8080"
             KORE_UI_PUBLIC_URL: "http://localhost:3000"
             USERS_DB_URL: "root:pass@tcp(database:3306)/kore?parseTime=true"
@@ -112,6 +114,10 @@ jobs:
           command: |
             make swagger-json
             make swagger-validate
+      - run:
+          name: Integration testing API
+          command: |
+            make api-test
 
   release:
     environment:

@@ -30,3 +30,9 @@ type TeamInvitationResponse struct {
 	// Team is the name of team which the user just has been been added to
 	Team string `json:"team"`
 }
+
+// Health provides an indication of the health of the API.
+type Health struct {
+	// Healthy is true if the service is healthy.
+	Healthy bool `json:"healthy"`
+}

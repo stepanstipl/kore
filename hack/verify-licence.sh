@@ -28,8 +28,13 @@ while read name; do
   if head -n 1 "${name}" | grep -qE "^// Code generated"; then
     continue
   fi
+  # skip build tags when checking
+  skipLines=0
+  if head -n 1 "${name}" | grep -qE "^// \+build"; then
+    skipLines=3
+  fi
 
-  if ! head -n ${BOILERPLATE_LENGTH} ${name} | diff - ${BOILERPLATE} >/dev/null; then
+  if ! tail -n "+$skipLines" ${name} | head -n ${BOILERPLATE_LENGTH} | diff - ${BOILERPLATE} >/dev/null; then
     echo "Missing licence header: ${name}"
     failed=1
   fi
