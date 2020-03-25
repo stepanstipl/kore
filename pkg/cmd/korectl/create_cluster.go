@@ -28,6 +28,8 @@ import (
 	"syscall"
 	"time"
 
+	"k8s.io/apimachinery/pkg/runtime/schema"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -40,7 +42,6 @@ import (
 	"github.com/urfave/cli/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 var (
@@ -378,8 +379,26 @@ func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation 
 		kv[paramName] = overrideValue
 	}
 
-	if err := jsonschema.Validate(assets.GKEPlanSchema, "plan", kv); err != nil {
+	jsonSchema, err := jsonschema.NewSchemaFromString(assets.GKEPlanSchema)
+	if err != nil {
+		panic("GKE Plan schema is invalid")
+	}
+
+	if err := jsonSchema.Validate("plan", kv); err != nil {
 		return nil, err
+	}
+
+	planPolicyAllocations, err := GetTeamAllocationsByType(
+		config, team, "config.kore.appvia.io", "v1", "PlanPolicy",
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load plan policies assigned to the team: %s", err)
+	}
+
+	for _, alloc := range planPolicyAllocations {
+		if err := validatePlanPolicy(config, alloc.Spec.Resource.Name, kv); err != nil {
+			return nil, fmt.Errorf("%q policy failed: %s", alloc.Spec.Resource.Name, err)
+		}
 	}
 
 	object := &unstructured.Unstructured{}
@@ -426,6 +445,30 @@ func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation 
 	fmt.Printf("Attempting to create cluster: %q, plan: %s\n", name, plan)
 
 	return object, CreateTeamResource(config, team, template.Spec.Kind, name, object)
+}
+
+func validatePlanPolicy(config *Config, name string, data interface{}) error {
+	var planPolicy configv1.PlanPolicy
+	err := GetResource(config, "PlanPolicy", name, &planPolicy)
+	if err != nil {
+		return fmt.Errorf("failed to load plan policy: %s", name)
+	}
+
+	jsonSchema, err := jsonschema.NewSchemaFromString(assets.GKEPlanSchema)
+	if err != nil {
+		panic("GKE Plan schema is invalid")
+	}
+
+	for _, property := range planPolicy.Spec.Properties {
+		if err := jsonSchema.UpdateProperty(property.Name, string(property.Schema.Raw)); err != nil {
+			return err
+		}
+	}
+	if err := jsonSchema.Validate("plan", data); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func parsePlanParams(params []string) (map[string]interface{}, error) {
