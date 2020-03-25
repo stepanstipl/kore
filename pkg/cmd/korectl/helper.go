@@ -67,6 +67,15 @@ func RemoveDoubleQuote(v string) string {
 	return strings.ReplaceAll(v, "\"", "")
 }
 
+// ReadInContent reads from a file or stdin
+func ReadInContent(path string) ([]byte, error) {
+	if path == "-" {
+		return ioutil.ReadAll(os.Stdin)
+	}
+
+	return ioutil.ReadFile(path)
+}
+
 // GetWhoAmI returns an whoami
 func GetWhoAmI(config *Config) (*types.WhoAmI, error) {
 	who := &types.WhoAmI{}

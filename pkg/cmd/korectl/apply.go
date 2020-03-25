@@ -19,11 +19,11 @@ package korectl
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 
 	"github.com/urfave/cli/v2"
 )
 
+// GetApplyCommand returns the resource apply command
 func GetApplyCommand(config *Config) *cli.Command {
 	return &cli.Command{
 		Name:  "apply",
@@ -39,7 +39,7 @@ func GetApplyCommand(config *Config) *cli.Command {
 		Action: func(ctx *cli.Context) error {
 			for _, file := range ctx.StringSlice("file") {
 				// @step: read in the content of the file
-				content, err := ioutil.ReadFile(file)
+				content, err := ReadInContent(file)
 				if err != nil {
 					return err
 				}
