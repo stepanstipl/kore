@@ -105,24 +105,37 @@ func NewRequest() *Requestor {
 	}
 }
 
+// NewCLIRequestForResource returns a CLI request for a resource
+func NewCLIRequestForResource(config *Config, ctx *cli.Context) (*Requestor, resourceConfig, error) {
+	requestor, resConfig, err := NewRequestForResource(
+		config, ctx.String("team"), ctx.Args().Get(0), ctx.Args().Get(1),
+	)
+	if err != nil {
+		return nil, resourceConfig{}, err
+	}
+	return requestor.WithContext(ctx), resConfig, err
+}
+
 // NewRequestForResource returns a request for a resource
-func NewRequestForResource(config *Config, ctx *cli.Context) (*Requestor, resourceConfig, error) {
-	resConfig := getResourceConfig(ctx.Args().First())
+func NewRequestForResource(config *Config, team, resource, name string) (*Requestor, resourceConfig, error) {
+	resConfig := getResourceConfig(resource)
 
 	req := NewRequest().
 		WithConfig(config).
-		WithContext(ctx).
 		PathParameter("resource", true).
 		WithInject("resource", resConfig.Name)
 
 	var endpoint string
 
-	if ctx.IsSet("team") {
+	if team != "" {
 		endpoint = "/teams/{team}/{resource}"
 		if !resConfig.IsTeam {
-			return nil, resourceConfig{}, errors.New("--team parameter is not allowed for this resource")
+			return nil, resourceConfig{}, errTeamParameterNotAllowed
 		}
-		req.PathParameter("team", true)
+		req.
+			PathParameter("team", true).
+			WithInject("team", team)
+
 	} else {
 		endpoint = "/{resource}"
 		if !resConfig.IsGlobal {
@@ -130,10 +143,10 @@ func NewRequestForResource(config *Config, ctx *cli.Context) (*Requestor, resour
 		}
 	}
 
-	if ctx.NArg() == 2 {
+	if name != "" {
 		endpoint = endpoint + "/{name}"
 		req.PathParameter("name", true)
-		req.WithInject("name", ctx.Args().Get(1))
+		req.WithInject("name", name)
 	}
 
 	req.WithEndpoint(endpoint)

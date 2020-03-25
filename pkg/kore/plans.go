@@ -83,6 +83,7 @@ func (p plansImpl) Delete(ctx context.Context, name string) (*configv1.Plan, err
 	plan := &configv1.Plan{}
 	err := p.Store().Client().Get(ctx,
 		store.GetOptions.InNamespace(HubNamespace),
+		store.GetOptions.InTo(plan),
 		store.GetOptions.WithName(name),
 	)
 	if err != nil {

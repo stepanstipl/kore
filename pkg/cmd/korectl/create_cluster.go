@@ -28,6 +28,8 @@ import (
 	"syscall"
 	"time"
 
+	"k8s.io/apimachinery/pkg/runtime/schema"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -40,7 +42,6 @@ import (
 	"github.com/urfave/cli/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 var (
@@ -374,7 +375,15 @@ func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation 
 	}
 	kv["description"] = fmt.Sprintf("%s cluster", plan)
 
+	editableParams, err := getEditablePlanParams(config, team)
+	if err != nil {
+		return nil, err
+	}
+
 	for paramName, overrideValue := range overrides {
+		if !editableParams[paramName] {
+			return nil, fmt.Errorf("%q parameter can not be modified", paramName)
+		}
 		kv[paramName] = overrideValue
 	}
 
@@ -386,8 +395,6 @@ func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation 
 	case "EKS":
 		// TODO: add the EKS Plan schema and validate the plan parameters
 	}
-
-	kind := strings.ToLower(utils.ToPlural(template.Spec.Kind))
 
 	object := &unstructured.Unstructured{}
 	object.SetGroupVersionKind(schema.GroupVersionKind{
@@ -422,7 +429,7 @@ func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation 
 	}
 
 	// @step: check the cluster already exists
-	if found, err := TeamResourceExists(config, team, kind, name); err != nil {
+	if found, err := TeamResourceExists(config, team, template.Spec.Kind, name); err != nil {
 		return nil, fmt.Errorf("trying to check if cluster exists: %s", err)
 	} else if found {
 		fmt.Printf("Cluster: %q already exists, skipping the creation\n", name)
@@ -432,7 +439,37 @@ func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation 
 
 	fmt.Printf("Attempting to create cluster: %q, plan: %s\n", name, plan)
 
-	return object, CreateTeamResource(config, team, kind, name, object)
+	return object, CreateTeamResource(config, team, template.Spec.Kind, name, object)
+}
+
+func getEditablePlanParams(config *Config, team string) (map[string]bool, error) {
+	editableParams := map[string]bool{}
+	planPolicyAllocations, err := GetTeamAllocationsByType(
+		config, team, "config.kore.appvia.io", "v1", "PlanPolicy",
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load plan policies assigned to the team: %s", err)
+	}
+
+	for _, alloc := range planPolicyAllocations {
+		var planPolicy configv1.PlanPolicy
+		err := GetResource(config, "PlanPolicy", alloc.Spec.Resource.Name, &planPolicy)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load plan policy: %s", alloc.Spec.Resource.Name)
+		}
+		for _, property := range planPolicy.Spec.Properties {
+			switch {
+			case property.DisallowUpdate:
+				editableParams[property.Name] = false
+			case property.AllowUpdate:
+				if _, isSet := editableParams[property.Name]; !isSet {
+					editableParams[property.Name] = true
+				}
+			}
+		}
+	}
+
+	return editableParams, nil
 }
 
 func parsePlanParams(params []string) (map[string]interface{}, error) {

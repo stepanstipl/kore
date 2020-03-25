@@ -96,7 +96,7 @@ func GetDeleteCommand(config *Config) *cli.Command {
 					return errors.New("you need to specify a resource type and name")
 				}
 
-				req, _, err := NewRequestForResource(config, ctx)
+				req, _, err := NewCLIRequestForResource(config, ctx)
 				if err != nil {
 					return err
 				}

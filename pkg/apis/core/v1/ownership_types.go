@@ -30,3 +30,10 @@ type Ownership struct {
 	// Name is name of the resource
 	Name string `json:"name"`
 }
+
+func (o Ownership) IsSameType(o2 Ownership) bool {
+	return o.Group == o2.Group &&
+		o.Version == o2.Version &&
+		o.Kind == o2.Kind &&
+		o.Namespace == o2.Namespace
+}

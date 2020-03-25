@@ -32,6 +32,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/appvia/kore/pkg/kore"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -87,64 +89,42 @@ func GetCluster(config *Config, team, name string) (*clustersv1.Kubernetes, erro
 
 // CreateTeamResource checks if a resources exists in the team
 func CreateTeamResource(config *Config, team, kind, name string, object runtime.Object) error {
-	kind = strings.ToLower(utils.ToPlural(kind))
+	req, _, err := NewRequestForResource(config, team, kind, name)
+	if err != nil {
+		return err
+	}
 
-	return NewRequest().
-		WithConfig(config).
-		PathParameter("team", true).
-		PathParameter("kind", true).
-		PathParameter("name", true).
-		WithInject("team", team).
-		WithInject("kind", kind).
-		WithInject("name", name).
-		WithEndpoint("/teams/{team}/{kind}/{name}").
-		WithRuntimeObject(object).
-		Update()
+	return req.WithRuntimeObject(object).Update()
 }
 
 // ResourceExists checks if a team resource exists
 func ResourceExists(config *Config, kind, name string) (bool, error) {
-	kind = strings.ToLower(utils.ToPlural(kind))
+	req, _, err := NewRequestForResource(config, "", kind, name)
+	if err != nil {
+		return false, err
+	}
 
-	return NewRequest().
-		WithConfig(config).
-		PathParameter("kind", true).
-		PathParameter("name", true).
-		WithInject("kind", kind).
-		WithInject("name", name).
-		WithEndpoint("{kind}/{name}").
-		Exists()
+	return req.Exists()
 }
 
 // TeamResourceExists checks if a resources exists in the team
 func TeamResourceExists(config *Config, team, kind, name string) (bool, error) {
-	kind = strings.ToLower(utils.ToPlural(kind))
+	req, _, err := NewRequestForResource(config, team, kind, name)
+	if err != nil {
+		return false, err
+	}
 
-	return NewRequest().
-		WithConfig(config).
-		PathParameter("team", true).
-		PathParameter("kind", true).
-		PathParameter("name", true).
-		WithInject("team", team).
-		WithInject("kind", kind).
-		WithInject("name", name).
-		WithEndpoint("/teams/{team}/{kind}/{name}").
-		Exists()
+	return req.Exists()
 }
 
 // GetTeamResourceList returns a collection of resources - essentially minus the name
 func GetTeamResourceList(config *Config, team, kind string, object runtime.Object) error {
-	kind = strings.ToLower(utils.ToPlural(kind))
+	req, _, err := NewRequestForResource(config, team, kind, "")
+	if err != nil {
+		return err
+	}
 
-	return NewRequest().
-		WithConfig(config).
-		PathParameter("team", true).
-		PathParameter("kind", true).
-		WithInject("team", team).
-		WithInject("kind", kind).
-		WithEndpoint("/teams/{team}/{kind}").
-		WithRuntimeObject(object).
-		Get()
+	return req.WithRuntimeObject(object).Get()
 }
 
 // GetTeamAllocation returns an allocation for a team
@@ -154,51 +134,45 @@ func GetTeamAllocation(config *Config, team, name string) (*configv1.Allocation,
 	return o, GetTeamResource(config, team, "allocation", name, o)
 }
 
+func GetTeamAllocationsByType(config *Config, team, group, version, kind string) ([]configv1.Allocation, error) {
+	var allocations configv1.AllocationList
+	var res []configv1.Allocation
+	err := GetTeamResourceList(config, team, "allocation", &allocations)
+	if err != nil {
+		return res, err
+	}
+	target := corev1.Ownership{
+		Group:     group,
+		Version:   version,
+		Kind:      kind,
+		Namespace: kore.HubAdminTeam,
+	}
+	for _, allocation := range allocations.Items {
+		if allocation.Spec.Resource.IsSameType(target) {
+			res = append(res, allocation)
+		}
+	}
+	return res, nil
+}
+
 // GetTeamResource returns a team object
 func GetTeamResource(config *Config, team, kind, name string, object interface{}) error {
-	kind = strings.ToLower(utils.ToPlural(kind))
+	req, _, err := NewRequestForResource(config, team, kind, name)
+	if err != nil {
+		return err
+	}
 
-	return NewRequest().
-		WithConfig(config).
-		PathParameter("team", true).
-		PathParameter("kind", true).
-		PathParameter("name", true).
-		WithInject("team", team).
-		WithInject("kind", kind).
-		WithInject("name", name).
-		WithEndpoint("/teams/{team}/{kind}/{name}").
-		WithRuntimeObject(object).
-		Get()
+	return req.WithRuntimeObject(object).Get()
 }
 
 // GetResource returns a global resource object
 func GetResource(config *Config, kind, name string, object runtime.Object) error {
-	kind = strings.ToLower(utils.ToPlural(kind))
+	req, _, err := NewRequestForResource(config, "", kind, name)
+	if err != nil {
+		return err
+	}
 
-	return NewRequest().
-		WithConfig(config).
-		PathParameter("kind", true).
-		PathParameter("name", true).
-		WithInject("kind", kind).
-		WithInject("name", name).
-		WithEndpoint("/{kind}/{name}").
-		WithRuntimeObject(object).
-		Get()
-}
-
-// GetResourceList returns a list of global resource types
-func GetResourceList(config *Config, team, kind, name string, object runtime.Object) error {
-	kind = strings.ToLower(utils.ToPlural(kind))
-
-	return NewRequest().
-		WithConfig(config).
-		PathParameter("kind", true).
-		PathParameter("name", true).
-		WithInject("kind", kind).
-		WithInject("name", name).
-		WithEndpoint("/{kind}/{name}").
-		WithRuntimeObject(object).
-		Get()
+	return req.WithRuntimeObject(object).Get()
 }
 
 // WaitOnResource indicates we should wait for the resource to transition to fail or success
@@ -294,11 +268,20 @@ func ParseDocument(src io.Reader, namespace string) ([]*Document, error) {
 			return nil, errors.New("resource requires an api group")
 		}
 
-		// @step: we pluralize the kind and use that route the resource
-		kind := strings.ToLower(utils.ToPlural(u.GetKind()))
+		kind := u.GetKind()
+		remapping := map[string]string{
+			"kubernetes": "clusters",
+		}
+		for k, v := range remapping {
+			if k == kind {
+				kind = v
+			}
+		}
+
+		resourceConfig := getResourceConfig(kind)
 
 		team := u.GetNamespace()
-		if !IsGlobalResource(kind) {
+		if !resourceConfig.IsGlobal {
 			if namespace != "" {
 				if team != "" && team != namespace {
 					return nil, errors.New("resource name and team selected are different")
@@ -313,32 +296,17 @@ func ParseDocument(src io.Reader, namespace string) ([]*Document, error) {
 		team = strings.ToLower(team)
 		name := strings.ToLower(u.GetName())
 
-		remapping := map[string]string{
-			"kubernetes": "clusters",
-		}
-		for k, v := range remapping {
-			if k == kind {
-				kind = v
-			}
-		}
-
 		item := &Document{Object: u}
-		switch IsGlobalResource(kind) {
-		case true:
-			item.Endpoint = fmt.Sprintf("%s/%s", kind, name)
-		default:
-			item.Endpoint = fmt.Sprintf("teams/%s/%s/%s", team, kind, name)
+		if resourceConfig.IsGlobal {
+			item.Endpoint = fmt.Sprintf("%s/%s", resourceConfig.Name, name)
+		} else {
+			item.Endpoint = fmt.Sprintf("teams/%s/%s/%s", team, resourceConfig.Name, name)
 		}
 
 		list = append(list, item)
 	}
 
 	return list, nil
-}
-
-// IsGlobalResource is a global resource
-func IsGlobalResource(name string) bool {
-	return utils.Contains(name, []string{"teams", "users", "plans"})
 }
 
 // GetCaches is responsible for checking if are caches are up to date

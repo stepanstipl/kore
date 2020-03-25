@@ -47,7 +47,7 @@ func GetGetCommand(config *Config) *cli.Command {
 				_ = cli.ShowSubcommandHelp(ctx)
 				return fmt.Errorf("[TYPE] or [TYPE] [NAME] is required")
 			}
-			req, resourceConfig, err := NewRequestForResource(config, ctx)
+			req, resourceConfig, err := NewCLIRequestForResource(config, ctx)
 			if err != nil {
 				return err
 			}

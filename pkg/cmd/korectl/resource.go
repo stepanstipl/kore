@@ -16,7 +16,11 @@
 
 package korectl
 
-import "github.com/go-openapi/inflect"
+import (
+	"strings"
+
+	"github.com/go-openapi/inflect"
+)
 
 type resourceConfig struct {
 	Name     string
@@ -26,13 +30,14 @@ type resourceConfig struct {
 }
 
 func getResourceConfig(name string) resourceConfig {
-	if config, ok := resourceConfigs[inflect.Singularize(name)]; ok {
+	name = inflect.Singularize(strings.ToLower(name))
+	if config, ok := resourceConfigs[name]; ok {
 		return config
 	}
 
 	// TODO: we don't have a way to validate whether a resource exists yet, so we generate a team resource configuration dynamically
 	return resourceConfig{
-		Name:   name,
+		Name:   inflect.Pluralize(name),
 		IsTeam: true,
 		Columns: []string{
 			Column("Name", "metadata.name"),
@@ -102,8 +107,17 @@ var resourceConfigs = map[string]resourceConfig{
 		IsGlobal: true,
 		Columns: []string{
 			Column("Resource", "metadata.name"),
-			Column("Description", "spec.description"),
 			Column("Summary", "spec.summary"),
+			Column("Description", "spec.description"),
+		},
+	},
+	"planpolicy": {
+		Name:     "planpolicies",
+		IsGlobal: true,
+		Columns: []string{
+			Column("Resource", "metadata.name"),
+			Column("Summary", "spec.summary"),
+			Column("Description", "spec.description"),
 		},
 	},
 	"organization": {
