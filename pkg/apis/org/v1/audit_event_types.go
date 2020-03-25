@@ -23,6 +23,8 @@ import (
 // AuditEventSpec defines the desired state of User
 // +k8s:openapi-gen=false
 type AuditEventSpec struct {
+	// ID is the unique identifier of this audit event.
+	ID int `json:"id,omitempty"`
 	// CreatedAt is the timestamp of record creation
 	CreatedAt metav1.Time `json:"createdAt,omitempty"`
 	// Resource is the area of the API accessed in this audit operation (e.g. teams, ).

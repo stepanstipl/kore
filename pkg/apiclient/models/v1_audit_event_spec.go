@@ -24,6 +24,9 @@ type V1AuditEventSpec struct {
 	// created at
 	CreatedAt string `json:"createdAt,omitempty"`
 
+	// id
+	ID int32 `json:"id,omitempty"`
+
 	// message
 	Message string `json:"message,omitempty"`
 

@@ -48,6 +48,19 @@ class SiderMenu extends React.Component {
       </SubMenu>
     ) : null
 
+    const AuditMenu = () => this.props.isAdmin ? (
+      <SubMenu key="audit"
+        title={
+          <span>
+            <Icon type="file-protect" theme="outlined" />
+            <span>Audit</span>
+          </span>
+        }
+      >
+        {menuItem({ key: 'audit_log', text: 'View Audit', link: '/audit', icon: 'table' })}
+      </SubMenu>
+    ) : null
+
     return (
       <Sider
         collapsible
@@ -70,6 +83,7 @@ class SiderMenu extends React.Component {
             ))}
           </SubMenu>
           {AdminMenu()}
+          {AuditMenu()}
         </Menu>
       </Sider>
     )

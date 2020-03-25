@@ -51,6 +51,7 @@ func (c Convertor) FromAuditModel(i *model.AuditEvent) *orgv1.AuditEvent {
 			CreationTimestamp: metav1.NewTime(i.CreatedAt),
 		},
 		Spec: orgv1.AuditEventSpec{
+			ID:           i.ID,
 			CreatedAt:    metav1.NewTime(i.CreatedAt),
 			Verb:         i.Verb,
 			Team:         i.Team,
