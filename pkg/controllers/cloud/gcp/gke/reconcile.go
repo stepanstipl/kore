@@ -83,7 +83,7 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 			resource.Status.Conditions.SetCondition(core.Component{
 				Name:    ComponentClusterCreator,
 				Message: "You do not have permission to the credentials",
-				Status:  core.SuccessStatus,
+				Status:  core.FailureStatus,
 			})
 
 			return false, err
