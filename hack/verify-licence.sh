@@ -9,6 +9,7 @@ EXCLUDE_FILES=(
   ./hack/generate/manifests_vfsdata.go
   ./pkg/clusterappman/manifests_tools.go
   ./pkg/tools/tools.go
+  ./pkg/kore/assets/json_meta_schemas.go
 )
 
 if [[ -z "${BOILERPLATE_LENGTH}" ]]; then

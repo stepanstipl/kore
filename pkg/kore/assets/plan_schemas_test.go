@@ -17,18 +17,27 @@
 package assets_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/appvia/kore/pkg/kore/assets"
 	"github.com/appvia/kore/pkg/utils/jsonschema"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGKESchemaCompiles(t *testing.T) {
-	defer func() {
-		if r := recover(); r != nil {
-			t.Fatal(r)
-		}
-	}()
+	require.NotPanics(t, func() {
+		_ = jsonschema.Validate(assets.GKEPlanSchema, "test", nil)
+	})
+}
 
-	_ = jsonschema.Validate(assets.GKEPlanSchema, "test", nil)
+func TestGKESchemaIsValidDraft07Schema(t *testing.T) {
+	var schema map[string]interface{}
+	err := json.Unmarshal([]byte(assets.GKEPlanSchema), &schema)
+	require.NoError(t, err)
+
+	err = jsonschema.Validate(assets.JSONSchemaDraft07, "test", schema)
+	assert.NoError(t, err, "GKEPlanSchema is not a valid")
 }
