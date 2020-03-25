@@ -65,6 +65,11 @@ func (t *teamsImpl) Delete(ctx context.Context, name string) error {
 		return ErrUnauthorized
 	}
 
+	// @step: ensure the admin team can never be delete - oh my gosh
+	if name == HubAdminTeam {
+		return ErrNotAllowed{message: HubAdminTeam + " team cannot be deleted"}
+	}
+
 	// @step: retrieve the team
 	team, err := t.usermgr.Teams().Get(ctx, name)
 	if err != nil {
