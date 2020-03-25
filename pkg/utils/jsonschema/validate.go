@@ -30,7 +30,17 @@ func Validate(schemaJSON string, subject string, data interface{}) error {
 		panic(fmt.Errorf("failed to compile gkePlanSchema: %v", err))
 	}
 
-	res, err := schema.Validate(gojsonschema.NewGoLoader(data))
+	var loader gojsonschema.JSONLoader
+	switch d := data.(type) {
+	case []byte:
+		loader = gojsonschema.NewBytesLoader(d)
+	case string:
+		loader = gojsonschema.NewStringLoader(d)
+	default:
+		loader = gojsonschema.NewGoLoader(d)
+	}
+
+	res, err := schema.Validate(loader)
 	if err != nil {
 		return fmt.Errorf("failed to parse data for validation: %s", err)
 	}
