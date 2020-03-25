@@ -95,14 +95,14 @@ docker-build:
 
 images:
 	@echo "--> Building docker images"
-	@for name in $${DOCKER_IMAGES}; do \
+	@for name in ${DOCKER_IMAGES}; do \
 		echo "--> Building docker image $${name}" ; \
 		docker build -t ${REGISTRY}/${AUTHOR}/$${name}:${VERSION} -f images/Dockerfile.$${name} . ; \
 	done
 
 push-images:
 	@echo "--> Pushing docker images"
-	@for name in $${DOCKER_IMAGES}; do \
+	@for name in ${DOCKER_IMAGES}; do \
 		echo "--> Pushing docker image $${name}" ; \
 		docker push ${REGISTRY}/${AUTHOR}/$${name}:${VERSION} ; \
 	done
@@ -132,7 +132,7 @@ swagger-validate:
 swagger-apiclient:
 	@$(MAKE) swagger-json
 	@echo "--> Creating API client based on the swagger definition"
-	@go run github.com/go-swagger/go-swagger/cmd/swagger generate client -q -f swagger.json -c pkg/apiclient -m pkg/apiclient/models 
+	@go run github.com/go-swagger/go-swagger/cmd/swagger generate client -q -f swagger.json -c pkg/apiclient -m pkg/apiclient/models
 
 in-docker-swagger:
 	@echo "--> Swagger in Docker"
