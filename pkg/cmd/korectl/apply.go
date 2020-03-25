@@ -58,9 +58,7 @@ func GetApplyCommand(config *Config) *cli.Command {
 						WithRuntimeObject(x.Object).
 						Update()
 					if err != nil {
-						fmt.Printf("%s/%s failed with error: %s\n", gvk.Group, x.Endpoint, err)
-
-						return err
+						return fmt.Errorf("applying %s/%s failed\n%s", gvk.Group, x.Endpoint, err)
 					}
 
 					fmt.Printf("%s/%s configured\n", gvk.Group, x.Endpoint)
