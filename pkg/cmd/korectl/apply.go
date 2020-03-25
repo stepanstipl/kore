@@ -32,7 +32,7 @@ func GetApplyCommand(config *Config) *cli.Command {
 			&cli.StringSliceFlag{
 				Name:     "file",
 				Aliases:  []string{"f"},
-				Usage:    "The path to the file containing the resources definitions `PATH`",
+				Usage:    "path to the file with resources definition/s (use '-' for stdin) `PATH`",
 				Required: true,
 			},
 		},
