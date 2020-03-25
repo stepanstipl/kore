@@ -515,9 +515,21 @@ func (a k8sCtrl) CheckProviderStatus(ctx context.Context, resource *clustersv1.K
 			return errors.New("cloud provider is in a failed state")
 
 		case corev1.PendingStatus:
+			resource.Status.Components.SetCondition(corev1.Component{
+				Name:    ComponentClusterCreate,
+				Message: "GKE Cluster is a pending state",
+				Status:  corev1.PendingStatus,
+			})
+
 			return errors.New("cloud provider is in pending state")
 
 		default:
+			resource.Status.Components.SetCondition(corev1.Component{
+				Name:    ComponentClusterCreate,
+				Message: "GKE Cluster is an unknown state",
+				Status:  corev1.PendingStatus,
+			})
+
 			return errors.New("cloud provider is in unknown state")
 		}
 	default:
