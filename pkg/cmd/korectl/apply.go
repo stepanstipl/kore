@@ -19,11 +19,13 @@ package korectl
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+
+	"github.com/appvia/kore/pkg/utils"
 
 	"github.com/urfave/cli/v2"
 )
 
+// GetApplyCommand returns the resource apply command
 func GetApplyCommand(config *Config) *cli.Command {
 	return &cli.Command{
 		Name:  "apply",
@@ -32,14 +34,14 @@ func GetApplyCommand(config *Config) *cli.Command {
 			&cli.StringSliceFlag{
 				Name:     "file",
 				Aliases:  []string{"f"},
-				Usage:    "The path to the file containing the resources definitions `PATH`",
+				Usage:    "path to the file containing resource definition/s (use '-' for stdin) `PATH`",
 				Required: true,
 			},
 		},
 		Action: func(ctx *cli.Context) error {
 			for _, file := range ctx.StringSlice("file") {
 				// @step: read in the content of the file
-				content, err := ioutil.ReadFile(file)
+				content, err := utils.ReadFileOrStdin(file)
 				if err != nil {
 					return err
 				}

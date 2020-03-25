@@ -17,9 +17,19 @@
 package utils
 
 import (
+	"io/ioutil"
 	"os"
 	"path/filepath"
 )
+
+// ReadFileOrStdin is responsible for reading from the file or stdin
+func ReadFileOrStdin(path string) ([]byte, error) {
+	if path == "-" {
+		return ioutil.ReadAll(os.Stdin)
+	}
+
+	return ioutil.ReadFile(path)
+}
 
 // FileExists checks if a file exists
 func FileExists(filename string) (bool, error) {
