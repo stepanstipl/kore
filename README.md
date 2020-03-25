@@ -16,6 +16,7 @@
 - [The Developer](#the-developer)
 - [The DevOps](#the-devops)
 - [Architecture](#architecture)
+- [Cloud Providers](doc/cloud-providers.md)
 
 ## Local Quick Start
 
