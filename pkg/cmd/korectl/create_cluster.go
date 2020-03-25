@@ -325,15 +325,7 @@ func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation 
 	}
 	kv["description"] = fmt.Sprintf("%s cluster", plan)
 
-	editableParams, err := getEditablePlanParams(config, team)
-	if err != nil {
-		return nil, err
-	}
-
 	for paramName, overrideValue := range overrides {
-		if !editableParams[paramName] {
-			return nil, fmt.Errorf("%q parameter can not be modified", paramName)
-		}
 		kv[paramName] = overrideValue
 	}
 
@@ -344,6 +336,18 @@ func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation 
 		}
 	case "EKS":
 		// TODO: add the EKS Plan schema and validate the plan parameters
+	}
+
+	// @step: we check permissions after the JSON schema validation to produce better error messages
+	// E.g. we should return with "unknown" property is invalid instead of "unknown" can not be modified
+	editableParams, err := getEditablePlanParams(config, team)
+	if err != nil {
+		return nil, err
+	}
+	for paramName := range overrides {
+		if !editableParams[paramName] {
+			return nil, fmt.Errorf("%q parameter can not be modified", paramName)
+		}
 	}
 
 	object := &unstructured.Unstructured{}
