@@ -334,7 +334,7 @@ func (c Requestor) checkResponse(resp *http.Response) *RequestError {
 	if resp.StatusCode == http.StatusBadRequest {
 		// This is a validation error, check if we have a validation error body. If so,
 		// that implements Error so we can use it directly.
-		var valResponse validation.ErrValidation
+		var valResponse validation.Error
 		if err := json.NewDecoder(resp.Body).Decode(&valResponse); err == nil {
 			return &RequestError{
 				statusCode: resp.StatusCode,

@@ -16,11 +16,17 @@
 
 package validation
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
-// ErrValidation is a specific error returned when the input provided by
+// FieldRoot is used to reference the root object
+const FieldRoot = "(root)"
+
+// Error is a specific error returned when the input provided by
 // the user has failed validation somehow.
-type ErrValidation struct {
+type Error struct {
 	// Code is an optional machine readable code used to describe the code
 	Code int `json:"code"`
 	// Message is a human readable message related to the error
@@ -29,46 +35,65 @@ type ErrValidation struct {
 	FieldErrors []FieldError `json:"fieldErrors"`
 }
 
-// NewErrValidation returns a new api validation error
-func NewErrValidation() *ErrValidation {
-	return &ErrValidation{
+// NewError returns a new validation error
+func NewError(format string, args ...interface{}) *Error {
+	return &Error{
 		Code:    400,
-		Message: "Validation error - see FieldErrors for details.",
+		Message: fmt.Sprintf(strings.TrimRight(format, ":\n"), args...),
 	}
 }
 
 // Error returns the details of the validation error.
-func (e ErrValidation) Error() string {
-	msg := ""
-	for ind, fe := range e.FieldErrors {
-		if ind > 0 {
-			msg += "\n"
-		}
-		msg += fmt.Sprintf("Validation error - field: %s error: %s message: %s", fe.Field, fe.ErrCode, fe.Message)
+func (e Error) Error() string {
+	if len(e.FieldErrors) == 0 {
+		return ""
 	}
-	return msg
+	sb := strings.Builder{}
+	sb.WriteString(e.Message)
+	sb.WriteString(":\n")
+	for _, fe := range e.FieldErrors {
+		if fe.Field == FieldRoot {
+			sb.WriteString(fmt.Sprintf(" * %s\n", fe.Message))
+		} else {
+			sb.WriteString(fmt.Sprintf(" * %s: %s\n", fe.Field, fe.Message))
+		}
+	}
+	return sb.String()
 }
 
 // HasErrors returns true if any field errors have been added to this validation error.
-func (e *ErrValidation) HasErrors() bool {
+func (e *Error) HasErrors() bool {
 	return len(e.FieldErrors) > 0
 }
 
 // WithFieldError adds a field error to the validation error and returns it for fluent loveliness.
-func (e *ErrValidation) WithFieldError(field string, errCode ErrorCode, message string) *ErrValidation {
+func (e *Error) WithFieldError(field string, errCode ErrorCode, message string) *Error {
 	e.AddFieldError(field, errCode, message)
 	return e
 }
 
 // WithFieldErrorf adds an error for a specific field to a validation error.
-func (e *ErrValidation) WithFieldErrorf(field string, errCode ErrorCode, format string, args ...interface{}) *ErrValidation {
-	e.AddFieldError(field, errCode, fmt.Sprintf(format, args...))
+func (e *Error) WithFieldErrorf(field string, errCode ErrorCode, format string, args ...interface{}) *Error {
+	e.AddFieldErrorf(field, errCode, format, args...)
 	return e
 }
 
 // AddFieldError adds an error for a specific field to a validation error.
-func (e *ErrValidation) AddFieldError(field string, errCode ErrorCode, message string) {
-	e.FieldErrors = append(e.FieldErrors, FieldError{Field: field, ErrCode: errCode, Message: message})
+func (e *Error) AddFieldError(field string, errCode ErrorCode, message string) {
+	e.FieldErrors = append(e.FieldErrors, FieldError{
+		Field:   field,
+		ErrCode: errCode,
+		Message: message,
+	})
+}
+
+// AddFieldErrorf adds an error for a specific field to a validation error.
+func (e *Error) AddFieldErrorf(field string, errCode ErrorCode, format string, args ...interface{}) {
+	e.FieldErrors = append(e.FieldErrors, FieldError{
+		Field:   field,
+		ErrCode: errCode,
+		Message: fmt.Sprintf(format, args...),
+	})
 }
 
 // FieldError provides information about a validation error on a specific field.

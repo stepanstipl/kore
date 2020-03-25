@@ -75,9 +75,9 @@ func handleErrors(req *restful.Request, resp *restful.Response, handler func() e
 		switch err := err.(type) {
 		case kore.ErrNotAllowed, *kore.ErrNotAllowed:
 			code = http.StatusForbidden
-		case validation.ErrValidation, *validation.ErrValidation:
+		case validation.Error, *validation.Error:
 			code = http.StatusBadRequest
-			// ErrValidation can be directly serialized to json so just return that.
+			// Error can be directly serialized to json so just return that.
 			errResponse = err
 		}
 

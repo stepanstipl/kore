@@ -358,7 +358,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("name", "Is name the of the kubernetes cluster you are acting upon")).
 			Reads(clustersv1.Kubernetes{}, "The definition for kubernetes cluster").
 			Returns(http.StatusOK, "Contains the former team definition from the kore", clustersv1.Kubernetes{}).
-			Returns(http.StatusBadRequest, "Validation error of the provided details", validation.ErrValidation{}). // @TODO: Change this to be a class in the orgv1 space
+			Returns(http.StatusBadRequest, "Validation error of the provided details", validation.Error{}). // @TODO: Change this to be a class in the orgv1 space
 			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 

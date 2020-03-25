@@ -116,8 +116,8 @@ func (c *clsImpl) Update(ctx context.Context, cluster *clustersv1.Kubernetes) er
 
 	// @TODO wider validation of the supplied details.
 	if len(cluster.Name) > 40 {
-		return validation.NewErrValidation().
-			WithFieldError("cluster.name", validation.MaxLength, "Cluster name must be 40 characters or less")
+		return validation.NewError("cluster has failed validation").
+			WithFieldError("cluster.name", validation.MaxLength, "name must be 40 characters or less")
 	}
 
 	return c.Store().Client().Update(ctx,
