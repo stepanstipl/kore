@@ -49,8 +49,8 @@ class NewTeamForm extends React.Component {
       if (!err) {
         const canonicalTeamName = canonical(values.teamName)
         const spec = {
-          summary: values.teamName,
-          description: values.teamDescription
+          summary: values.teamName.trim(),
+          description: values.teamDescription.trim()
         }
         try {
           const checkTeam = await apiRequest(null, 'get', apiPaths.team(canonicalTeamName).self)
