@@ -52,15 +52,14 @@ var resourceConfigs = map[string]resourceConfig{
 			Column("Status", "status.status"),
 		},
 	},
-	"audit-event": {
+	"audit": {
 		Name:     "audit",
 		IsGlobal: true,
 		IsTeam:   true,
 		Columns: []string{
 			Column("Time", "spec.createdAt"),
-			Column("Resource", "spec.resource"),
-			Column("URI", "spec.resourceURI"),
 			Column("Operation", "spec.operation"),
+			Column("URI", "spec.resourceURI"),
 			Column("User", "spec.user"),
 			Column("Team", "spec.team"),
 			Column("Result", "spec.responseCode"),

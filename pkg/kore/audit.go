@@ -44,7 +44,7 @@ func (a *auditImpl) Record(ctx context.Context, fields ...users.AuditFunc) users
 	return a.usermgr.Audit().Record(ctx, fields[:]...)
 }
 
-// AuditEvents returns a stream of events in relation to the teams since x
+// AuditEvents returns all events since the specified duration before the current time
 func (a *auditImpl) AuditEvents(ctx context.Context, since time.Duration) (*orgv1.AuditEventList, error) {
 	// @step: must be a admin user
 	user := authentication.MustGetIdentity(ctx)
@@ -59,7 +59,6 @@ func (a *auditImpl) AuditEvents(ctx context.Context, since time.Duration) (*orgv
 	// @step: retrieve a list of audit events across all teams
 	list, err := a.usermgr.Audit().Find(ctx,
 		users.Filter.WithDuration(since),
-		//users.Filter.WithTeamNotNull(),
 	).Do()
 	if err != nil {
 		log.WithError(err).Error("trying to retrieve audit logs for teams")
@@ -70,9 +69,24 @@ func (a *auditImpl) AuditEvents(ctx context.Context, since time.Duration) (*orgv
 	return DefaultConvertor.FromAuditModelList(list), nil
 }
 
-// AuditEventsTeam returns a stream of events in relation to a specific team
+// AuditEventsTeam returns events in relation to a specific team since the specified duration before the current time
 func (a *auditImpl) AuditEventsTeam(ctx context.Context, team string, since time.Duration) (*orgv1.AuditEventList, error) {
-	// @TODO: Check user is in team
+	// @step: Check user in the team requested or a global admin
+	user := authentication.MustGetIdentity(ctx)
+	userInTeam := false
+	for _, t := range user.Teams() {
+		if t == team {
+			userInTeam = true
+		}
+	}
+	if !userInTeam && !user.IsGlobalAdmin() {
+		log.WithFields(log.Fields{
+			"username": user.Username(),
+			"team":     team,
+		}).Warn("user trying to access the audit logs for team they're not a member of")
+
+		return nil, NewErrNotAllowed("Must be global admin or a team member")
+	}
 
 	list, err := a.usermgr.Audit().Find(ctx,
 		users.Filter.WithTeam(team),

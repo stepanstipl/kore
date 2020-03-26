@@ -40,10 +40,9 @@ Login using the default admin user credentials: admin / password or your configu
 
 **Production**
 
-To run in production mode, do the following
+To build and run in production mode, from the ui directory, do the following:
 
 ```bash
 npm install
-npm run build
-npm start
+make run-prod
 ```

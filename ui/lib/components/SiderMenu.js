@@ -57,7 +57,7 @@ class SiderMenu extends React.Component {
           </span>
         }
       >
-        {menuItem({ key: 'audit_log', text: 'View Audit', link: '/audit', icon: 'table' })}
+        {menuItem({ key: 'audit_log', text: 'Events', link: '/audit', icon: 'table' })}
       </SubMenu>
     ) : null
 

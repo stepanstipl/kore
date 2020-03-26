@@ -16,20 +16,20 @@ class AuditViewer extends React.Component {
       sorter: (a, b) => { return a.spec.createdAt.localeCompare(b.spec.createdAt)},
     },
     {
-      title: 'Resource',
-      dataIndex: 'spec.resource'
+      title: 'Operation',
+      dataIndex: 'spec.operation'
     },
     {
       title: 'URI',
       dataIndex: 'spec.resourceURI'
     },
     {
-      title: 'Operation',
-      dataIndex: 'spec.operation'
-    },
-    {
       title: 'User',
       dataIndex: 'spec.user'
+    },
+    {
+      title: 'Team',
+      dataIndex: 'spec.team'
     },
     {
       title: 'Result',
