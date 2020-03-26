@@ -78,7 +78,7 @@ func GetCreateGCPProject(config *Config) *cli.Command {
 			name := ctx.Args().First()
 			kind := "projectclaim"
 			org := ctx.String("organization")
-			wait := ctx.Bool("wait")
+			wait := ctx.Bool("no-wait")
 
 			found, err := TeamResourceExists(config, team, kind, name)
 			if err != nil {

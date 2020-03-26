@@ -178,9 +178,11 @@ func GetResourceList(config *Config, team, kind, name string, object runtime.Obj
 }
 
 // WaitForResourceCheck is just a wrap to check if we are waiting
-func WaitForResourceCheck(ctx context.Context, config *Config, team, kind, name string, wait bool) error {
-	if !wait {
+func WaitForResourceCheck(ctx context.Context, config *Config, team, kind, name string, nowait bool) error {
+	if nowait {
 		fmt.Printf("Resource %q has been successfully requested\n", name)
+
+		return nil
 	}
 
 	return WaitForResource(ctx, config, team, kind, name)

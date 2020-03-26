@@ -125,7 +125,7 @@ func GetCreateGCPOrganization(config *Config) *cli.Command {
 			kind := "organization"
 			cname := ctx.String("credentials")
 			cnamespace := ctx.String("credentials-team")
-			wait := ctx.Bool("wait")
+			nowait := ctx.Bool("no-wait")
 
 			found, err := TeamResourceExists(config, team, kind, name)
 			if err != nil {
@@ -156,7 +156,7 @@ func GetCreateGCPOrganization(config *Config) *cli.Command {
 				return err
 			}
 
-			return WaitForResourceCheck(context.Background(), config, team, kind, name, wait)
+			return WaitForResourceCheck(context.Background(), config, team, kind, name, nowait)
 		},
 	}
 }

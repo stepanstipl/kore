@@ -135,7 +135,7 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 			plan := ctx.String("plan")
 			role := ctx.String("team-role")
 			team := ctx.String("team")
-			wait := ctx.Bool("wait")
+			wait := ctx.Bool("no-wait")
 
 			if team == "" {
 				return errTeamParameterMissing

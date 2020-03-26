@@ -108,7 +108,7 @@ func GetCreateAllocation(config *Config) *cli.Command {
 			resource := ctx.String("resource")
 			teams := ctx.StringSlice("to")
 			version := ctx.String("version")
-			wait := ctx.Bool("wait")
+			nowait := ctx.Bool("no-wait")
 
 			found, err := TeamResourceExists(config, team, "allocation", name)
 			if err != nil {
@@ -141,7 +141,7 @@ func GetCreateAllocation(config *Config) *cli.Command {
 				return err
 			}
 
-			return WaitForResourceCheck(context.Background(), config, team, kind, name, wait)
+			return WaitForResourceCheck(context.Background(), config, team, kind, name, nowait)
 		},
 	}
 }

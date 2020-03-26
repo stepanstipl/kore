@@ -53,7 +53,7 @@ func GetCreateTeamCommand(config *Config) *cli.Command {
 			name := ctx.Args().First()
 			description := ctx.String("description")
 			kind := "team"
-			wait := ctx.Bool("wait")
+			nowait := ctx.Bool("no-wait")
 
 			// @step: check if the resource exist already
 			if found, err := ResourceExists(config, kind, name); err != nil {
@@ -87,7 +87,7 @@ func GetCreateTeamCommand(config *Config) *cli.Command {
 				return err
 			}
 
-			return WaitForResourceCheck(ctx.Context, config, "", kind, name, wait)
+			return WaitForResourceCheck(ctx.Context, config, "", kind, name, nowait)
 		},
 	}
 }

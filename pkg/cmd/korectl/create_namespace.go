@@ -80,7 +80,7 @@ func GetCreateNamespaceCommand(config *Config) *cli.Command {
 			dry := ctx.Bool("dry-run")
 			kind := "namespaceclaim"
 			team := ctx.String("team")
-			wait := ctx.Bool("wait")
+			nowait := ctx.Bool("no-wait")
 
 			// @step: evaluate the options
 			if team == "" {
@@ -109,7 +109,7 @@ func GetCreateNamespaceCommand(config *Config) *cli.Command {
 				return fmt.Errorf("trying to provision namespace on cluster: %s", err)
 			}
 
-			return WaitForResourceCheck(context.Background(), config, team, kind, name, wait)
+			return WaitForResourceCheck(context.Background(), config, team, kind, name, nowait)
 		},
 	}
 }
