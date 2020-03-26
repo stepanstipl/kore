@@ -165,4 +165,10 @@ var resourceConfigs = map[string]resourceConfig{
 			Column("Disabled", "spec.disabled"),
 		},
 	},
+	"kubernetes": {
+		Name: "kubernetes",
+		Columns: []string{
+			Column("Name", "metadata.name"),
+		},
+	},
 }
