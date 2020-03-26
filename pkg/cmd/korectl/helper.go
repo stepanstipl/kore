@@ -268,17 +268,7 @@ func ParseDocument(src io.Reader, namespace string) ([]*Document, error) {
 			return nil, errors.New("resource requires an api group")
 		}
 
-		kind := u.GetKind()
-		remapping := map[string]string{
-			"kubernetes": "clusters",
-		}
-		for k, v := range remapping {
-			if k == kind {
-				kind = v
-			}
-		}
-
-		resourceConfig := getResourceConfig(kind)
+		resourceConfig := getResourceConfig(u.GetKind())
 
 		team := u.GetNamespace()
 		if !resourceConfig.IsGlobal {

@@ -19,7 +19,7 @@ package korectl
 import (
 	"strings"
 
-	"github.com/go-openapi/inflect"
+	"github.com/appvia/kore/pkg/utils"
 )
 
 type resourceConfig struct {
@@ -30,19 +30,37 @@ type resourceConfig struct {
 }
 
 func getResourceConfig(name string) resourceConfig {
-	name = inflect.Singularize(strings.ToLower(name))
+	name = strings.ToLower(name)
+	switch name {
+	case "eks", "ekss":
+		name = "eks"
+	default:
+		name = utils.Singularize(name)
+	}
+
 	if config, ok := resourceConfigs[name]; ok {
 		return config
 	}
 
 	// TODO: we don't have a way to validate whether a resource exists yet, so we generate a team resource configuration dynamically
 	return resourceConfig{
-		Name:   inflect.Pluralize(name),
+		Name:   utils.Pluralize(name),
 		IsTeam: true,
 		Columns: []string{
 			Column("Name", "metadata.name"),
 		},
 	}
+}
+
+var clusterResourceConfig = resourceConfig{
+	Name:   "clusters",
+	IsTeam: true,
+	Columns: []string{
+		Column("Name", "metadata.name"),
+		Column("Provider", "spec.provider.group"),
+		Column("Endpoint", "status.endpoint"),
+		Column("Status", "status.status"),
+	},
 }
 
 var resourceConfigs = map[string]resourceConfig{
@@ -65,16 +83,8 @@ var resourceConfigs = map[string]resourceConfig{
 			Column("Name", "metadata.name"),
 		},
 	},
-	"cluster": {
-		Name:   "clusters",
-		IsTeam: true,
-		Columns: []string{
-			Column("Name", "metadata.name"),
-			Column("Provider", "spec.provider.group"),
-			Column("Endpoint", "status.endpoint"),
-			Column("Status", "status.status"),
-		},
-	},
+	"cluster":    clusterResourceConfig,
+	"kubernetes": clusterResourceConfig,
 	"gke": {
 		Name:   "gkes",
 		IsTeam: true,
