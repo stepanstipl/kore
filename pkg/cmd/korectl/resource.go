@@ -100,6 +100,16 @@ var resourceConfigs = map[string]resourceConfig{
 			Column("Status", "status.status"),
 		},
 	},
+	"gkecredential": {
+		Name:   "gkecredentials",
+		IsTeam: true,
+		Columns: []string{
+			Column("Name", "metadata.name"),
+			Column("Project", "spec.project"),
+			Column("Status", "status.status"),
+			Column("Verified", "status.verified"),
+		},
+	},
 	"member": {
 		Name:   "members",
 		IsTeam: true,
