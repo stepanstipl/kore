@@ -384,7 +384,6 @@ func (c *Requestor) doRequest(method, url string, handler func(*http.Response) e
 	var err error
 
 	if c.runtimeObj != nil {
-		fmt.Println("DECODING")
 		encoded, err := json.Marshal(c.runtimeObj)
 		if err != nil {
 			return err
