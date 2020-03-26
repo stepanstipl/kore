@@ -40,5 +40,10 @@ func Options() []cli.Flag {
 			Usage:   "The output format of the resource `FORMAT`",
 			Value:   "yaml",
 		},
+		&cli.BoolFlag{
+			Name:  "no-wait",
+			Usage: "if we should wait for the resource to provision (default: false) `BOOL`",
+			Value: false,
+		},
 	}
 }

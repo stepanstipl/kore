@@ -19,6 +19,7 @@ package korectl
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -99,8 +100,10 @@ func GetCreateSecretCommand(config *Config) *cli.Command {
 
 		Action: func(ctx *cli.Context) error {
 			name := ctx.Args().First()
+			kind := "secert"
 			team := ctx.String("team")
 			force := ctx.Bool("force")
+			nowait := ctx.Bool("no-wait")
 			dryrun := ctx.Bool("dry-run")
 
 			var secret *configv1.Secret
@@ -130,20 +133,18 @@ func GetCreateSecretCommand(config *Config) *cli.Command {
 			}
 
 			if !force {
-				if found, err := TeamResourceExists(config, team, "secret", name); err != nil {
+				if found, err := TeamResourceExists(config, team, kind, name); err != nil {
 					return err
 				} else if found {
 					return fmt.Errorf("%q already exists, please use --force if your sure you want to update", name)
 				}
 			}
 
-			if err := CreateTeamResource(config, team, "secret", name, secret); err != nil {
+			if err := CreateTeamResource(config, team, kind, name, secret); err != nil {
 				return err
 			}
 
-			fmt.Printf("%q was successfully saved\n", name)
-
-			return nil
+			return WaitForResourceCheck(context.Background(), config, team, kind, name, nowait)
 		},
 	}
 }

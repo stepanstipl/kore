@@ -20,84 +20,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/manifoldco/promptui"
-
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/urfave/cli/v2"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func GetCreateTeamCommand(config *Config) *cli.Command {
-	return &cli.Command{
-		Name:      "team",
-		Aliases:   []string{"teams"},
-		Usage:     "Creates a team",
-		ArgsUsage: "TEAM",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:     "description",
-				Usage:    "The description of the team",
-				Required: false,
-			},
-		},
-		Action: func(ctx *cli.Context) error {
-			teamID := ctx.Args().First()
-
-			exists, err := NewRequest().
-				WithConfig(config).
-				WithContext(ctx).
-				PathParameter("id", true).
-				WithInject("id", teamID).
-				WithEndpoint("/teams/{id}").
-				Exists()
-			if err != nil {
-				return err
-			}
-
-			if exists {
-				return fmt.Errorf("%q already exists", teamID)
-			}
-
-			team := &orgv1.Team{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       "Team",
-					APIVersion: orgv1.GroupVersion.String(),
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      teamID,
-					Namespace: "",
-					Labels:    nil,
-				},
-				Spec: orgv1.TeamSpec{
-					Summary:     teamID,
-					Description: ctx.String("description"),
-				},
-			}
-
-			err = NewRequest().
-				WithConfig(config).
-				WithContext(ctx).
-				PathParameter("id", true).
-				WithInject("id", teamID).
-				WithEndpoint("/teams/{id}").
-				WithRuntimeObject(team).
-				Update()
-			if err != nil {
-				return err
-			}
-
-			fmt.Printf("%q team was successfully created\n", teamID)
-			return nil
-		},
-		Before: func(ctx *cli.Context) error {
-			if !ctx.Args().Present() {
-				return fmt.Errorf("team identifier must be set as an argument")
-			}
-			return nil
-		},
-	}
-}
-
+// GetEditTeamCommand returns the edit team command
 func GetEditTeamCommand(config *Config) *cli.Command {
 	return &cli.Command{
 		Name:      "team",
@@ -149,97 +76,13 @@ func GetEditTeamCommand(config *Config) *cli.Command {
 	}
 }
 
-func GetCreateTeamMemberCommand(config *Config) *cli.Command {
-	return &cli.Command{
-		Name:    "member",
-		Aliases: []string{"members"},
-		Usage:   "Creates a new team member",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:     "user",
-				Aliases:  []string{"u"},
-				Usage:    "The username of the user you wish to add to the team",
-				Required: true,
-			},
-			&cli.BoolFlag{
-				Name:     "invite",
-				Aliases:  []string{"i"},
-				Usage:    "If the user doesn't exist and the invite flag is set, the invite url will be automatically generated.",
-				Required: false,
-			},
-		},
-		Action: func(ctx *cli.Context) error {
-			team := ctx.String("team")
-			if team == "" {
-				return errTeamParameterMissing
-			}
-
-			teamExists, err := ResourceExists(config, "team", team)
-			if err != nil {
-				return err
-			}
-			if !teamExists {
-				return fmt.Errorf("team %q does not exist", team)
-			}
-
-			userExists, err := ResourceExists(config, "user", ctx.String("user"))
-			if err != nil {
-				return err
-			}
-
-			if !userExists {
-				if !ctx.Bool("invite") {
-					prompt := promptui.Prompt{
-						Label:     "The user does not exist. Do you want to create an invite link",
-						IsConfirm: true,
-						Default:   "Y",
-					}
-
-					// Prompt will return an error if the input is not y/Y
-					if _, err := prompt.Run(); err != nil {
-						return nil
-					}
-				}
-
-				var inviteUrl string
-				err := NewRequest().
-					WithConfig(config).
-					WithContext(ctx).
-					WithEndpoint("/teams/{team}/invites/generate/{user}").
-					PathParameter("team", true).
-					WithInject("team", team).
-					PathParameter("user", true).
-					WithRuntimeObject(&inviteUrl).
-					Get()
-				if err != nil {
-					return err
-				}
-				fmt.Printf("Invite URL: %s\n", inviteUrl)
-				return nil
-			}
-
-			err = NewRequest().
-				WithConfig(config).
-				WithContext(ctx).
-				WithEndpoint("/teams/{team}/members/{user}").
-				PathParameter("team", true).
-				PathParameter("user", true).
-				Update()
-			if err != nil {
-				return err
-			}
-			fmt.Printf("%q has been successfully added to team %q\n", ctx.String("user"), ctx.String("team"))
-
-			return nil
-		},
-	}
-}
-
+// GetDeleteTeamMemberCommand returns the delete team member command
 func GetDeleteTeamMemberCommand(config *Config) *cli.Command {
 	return &cli.Command{
 		Name:    "member",
 		Aliases: []string{"members"},
 		Usage:   "Removes a member from the given team",
+
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:     "user",
@@ -248,6 +91,7 @@ func GetDeleteTeamMemberCommand(config *Config) *cli.Command {
 				Required: true,
 			},
 		},
+
 		Action: func(ctx *cli.Context) error {
 			team := ctx.String("team")
 			if team == "" {

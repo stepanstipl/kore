@@ -17,6 +17,7 @@
 package korectl
 
 import (
+	"context"
 	"fmt"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
@@ -76,8 +77,10 @@ func GetCreateNamespaceCommand(config *Config) *cli.Command {
 		Action: func(ctx *cli.Context) error {
 			name := ctx.Args().First()
 			cluster := ctx.String("cluster")
-			team := ctx.String("team")
 			dry := ctx.Bool("dry-run")
+			kind := "namespaceclaim"
+			team := ctx.String("team")
+			nowait := ctx.Bool("no-wait")
 
 			// @step: evaluate the options
 			if team == "" {
@@ -105,9 +108,8 @@ func GetCreateNamespaceCommand(config *Config) *cli.Command {
 			if err := CreateClusterNamespace(config, owner, team, name, dry); err != nil {
 				return fmt.Errorf("trying to provision namespace on cluster: %s", err)
 			}
-			fmt.Println("Namespace provisioning on the cluster, you can check via: $ korectl get namespaceclaims -t", team)
 
-			return nil
+			return WaitForResourceCheck(context.Background(), config, team, kind, name, nowait)
 		},
 	}
 }

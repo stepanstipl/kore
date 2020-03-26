@@ -32,12 +32,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/appvia/kore/pkg/kore"
-
-	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/apiserver/types"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 
 	yml "github.com/ghodss/yaml"
@@ -78,13 +76,6 @@ func GetWhoAmI(config *Config) (*types.WhoAmI, error) {
 		WithEndpoint("/whoami").
 		WithRuntimeObject(who).
 		Get()
-}
-
-// GetCluster returns the cluster object
-func GetCluster(config *Config, team, name string) (*clustersv1.Kubernetes, error) {
-	cluster := &clustersv1.Kubernetes{}
-
-	return cluster, GetTeamResource(config, team, "clusters", name, cluster)
 }
 
 // CreateTeamResource checks if a resources exists in the team
@@ -134,6 +125,7 @@ func GetTeamAllocation(config *Config, team, name string) (*configv1.Allocation,
 	return o, GetTeamResource(config, team, "allocation", name, o)
 }
 
+// GetTeamAllocationsByType returns the allocations in a team filtered by type
 func GetTeamAllocationsByType(config *Config, team, group, version, kind string) ([]configv1.Allocation, error) {
 	var allocations configv1.AllocationList
 	var res []configv1.Allocation
@@ -175,31 +167,74 @@ func GetResource(config *Config, kind, name string, object runtime.Object) error
 	return req.WithRuntimeObject(object).Get()
 }
 
-// WaitOnResource indicates we should wait for the resource to transition to fail or success
-func WaitOnResource(ctx context.Context, config *Config, team, kind, name string, interval, timeout time.Duration) (bool, error) {
-	var success bool
+// GetResourceList returns a list of global resource types
+func GetResourceList(config *Config, team, kind, name string, object runtime.Object) error {
+	req, _, err := NewRequestForResource(config, team, kind, "")
+	if err != nil {
+		return err
+	}
 
-	u := make(map[string]interface{})
-	var max int
+	return req.WithRuntimeObject(object).Get()
+}
 
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
+// WaitForResourceCheck is just a wrap to check if we are waiting
+func WaitForResourceCheck(ctx context.Context, config *Config, team, kind, name string, nowait bool) error {
+	if nowait {
+		fmt.Printf("Resource %q has been successfully requested\n", name)
 
+		return nil
+	}
+
+	return WaitForResource(ctx, config, team, kind, name)
+}
+
+// WaitForResource is used to wait on a resource to succeed, fail or timeout
+func WaitForResource(ctx context.Context, config *Config, team, kind, name string) error {
+	// maxFailure is the max number of requests where the status
+	// is failed we are willing to accept
+	maxAttempts := 5
+	// attempts is the above we have reached
+	var attempts int
+
+	// @step: setup the signalling
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
+
+	// @step: create a cancellable context to operate within
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
+	// @step: we need to handle the user cancelling the blocking
 	go func() {
-		<-sig
+		<-interrupt
 		cancel()
 	}()
 
-	err := utils.WaitUntilComplete(ctx, timeout, interval, func() (bool, error) {
-		err := GetTeamResource(config, team, kind, name, &u)
+	fmt.Printf("Waiting for resource %q to provision (you can background with ctrl-c)\n", name)
+
+	u := &unstructured.Unstructured{}
+
+	// @step: craft the status from the resource type - used later
+	status := fmt.Sprintf("korectl get %s", strings.ToLower(kind))
+	if team != "" {
+		status = fmt.Sprintf("%s -t %s", status, team)
+	}
+
+	err := utils.WaitUntilComplete(ctx, 20*time.Minute, 5*time.Second, func() (bool, error) {
+		var request *Requestor
+
+		request, _, err := NewRequestForResource(config, team, kind, name)
 		if err != nil {
+			return false, err
+		}
+		request.WithRuntimeObject(u)
+
+		if err := request.Get(); err != nil {
 			return false, nil
 		}
 
-		status, ok := u["status"].(map[string]interface{})
+		// @step: check the status of the resource
+		status, ok := u.Object["status"].(map[string]interface{})
 		if !ok {
 			return false, nil
 		}
@@ -208,22 +243,31 @@ func WaitOnResource(ctx context.Context, config *Config, team, kind, name string
 			return false, nil
 		}
 
-		if state == string(corev1.FailureStatus) {
-			if max > 3 {
+		switch state {
+		case string(corev1.FailureStatus):
+			if attempts > maxAttempts {
 				return false, errors.New("resource has failed to provision")
 			}
-			max++
-		}
-		if state == string(corev1.SuccessStatus) {
-			success = true
-
+		case string(corev1.SuccessStatus):
 			return true, nil
 		}
 
 		return false, nil
 	})
 
-	return success, err
+	if err != nil {
+		if err == utils.ErrCancelled {
+			fmt.Printf("\nOperation will background, get status via $ %s\n", status)
+
+			return nil
+		}
+
+		return fmt.Errorf("Unable to provision resource: %q, check status via: %s", name, status)
+	}
+
+	fmt.Printf("Successfully provisioned the resource: %q\n", name)
+
+	return nil
 }
 
 // ParseDocument returns a collection of parsed documents and the api endpoints

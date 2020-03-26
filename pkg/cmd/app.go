@@ -217,6 +217,8 @@ func (a *App) getSubCommand(name string, parent *cli.Command) (*cli.Command, boo
 }
 
 func (a *App) getGlobalFlag(name string) (cli.Flag, bool) {
+	name = strings.Split(name, "=")[0]
+
 	for _, flag := range a.app.Flags {
 		if utils.Contains(name, flag.Names()) {
 			return flag, true
