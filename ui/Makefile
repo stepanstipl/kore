@@ -33,12 +33,12 @@ compose-logs:
 	@docker-compose logs -f
 
 run:
-	./prep-env-local.sh
+	./scripts/prep-env-local.sh
 	@$(MAKE) compose
 	@npm run dev
 
 run-prod:
-	./prep-env-local.sh
+	./scripts/prep-env-local.sh
 	@$(MAKE) build
 	@$(MAKE) compose
 	@npm start
