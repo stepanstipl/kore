@@ -27,11 +27,11 @@ var getLongDescription = `
 The object type accepts both singular and plural nouns (e.g. "user" and "users").
 
 Examples:
-  List users:
-  $ korectl get users
+List users:
+$ korectl get users
 
-  Get information about a specific user:
-  $ korectl get user admin -o yaml
+Get information about a specific user:
+$ korectl get user admin -o yaml
 `
 
 // GetGetCommand returns the auto-generated resources
@@ -44,9 +44,9 @@ func GetGetCommand(config *Config) *cli.Command {
 	var commands []*cli.Command
 
 	for k, v := range resourceConfigs {
-		usage := "retrieve the " + k + " resource from kore"
+		usage := "retrieve the " + k + " resource"
 		if v.IsGlobal {
-			usage = "retrieve the global resource " + k + " from kore"
+			usage = "retrieve the global resource " + k
 		}
 
 		command := &cli.Command{
@@ -60,12 +60,9 @@ func GetGetCommand(config *Config) *cli.Command {
 				resource := getResourceConfig(ctx.Command.Name)
 
 				// @step: determine the resource request type
-				var request *Requestor
-
-				if resource.IsGlobal {
-					request = NewGlobalRequest(config, resource.Name, name)
-				} else {
-					request = NewTeamRequest(config, team, resource.Name, name)
+				request, _, err := NewRequestForResource(config, team, resource.Name, name)
+				if err != nil {
+					return err
 				}
 				request = request.Render(resource.Columns...).WithContext(ctx)
 
