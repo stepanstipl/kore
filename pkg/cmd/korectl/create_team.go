@@ -77,7 +77,13 @@ func GetCreateTeamCommand(config *Config) *cli.Command {
 				},
 			}
 
-			if err := CreateResource(config, kind, name, team); err != nil {
+			req, _, err := NewRequestForResource(config, "", kind, name)
+			if err != nil {
+				return err
+			}
+			req.WithRuntimeObject(team)
+
+			if err := req.Update(); err != nil {
 				return err
 			}
 

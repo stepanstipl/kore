@@ -146,6 +146,7 @@ var resourceConfigs = map[string]resourceConfig{
 			Column("Type", "spec.type"),
 			Column("Description", "spec.description"),
 			Column("Verified", "status.verified"),
+			Column("Status", "status.status"),
 		},
 	},
 	"team": {
@@ -154,6 +155,7 @@ var resourceConfigs = map[string]resourceConfig{
 		Columns: []string{
 			Column("Name", "metadata.name"),
 			Column("Description", "spec.description"),
+			Column("Status", "status.status"),
 		},
 	},
 	"user": {

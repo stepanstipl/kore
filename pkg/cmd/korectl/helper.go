@@ -32,11 +32,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/appvia/kore/pkg/kore"
-	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/apiserver/types"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 
 	yml "github.com/ghodss/yaml"
@@ -126,6 +125,7 @@ func GetTeamAllocation(config *Config, team, name string) (*configv1.Allocation,
 	return o, GetTeamResource(config, team, "allocation", name, o)
 }
 
+// GetTeamAllocationsByType returns the allocations in a team filtered by type
 func GetTeamAllocationsByType(config *Config, team, group, version, kind string) ([]configv1.Allocation, error) {
 	var allocations configv1.AllocationList
 	var res []configv1.Allocation
@@ -169,17 +169,12 @@ func GetResource(config *Config, kind, name string, object runtime.Object) error
 
 // GetResourceList returns a list of global resource types
 func GetResourceList(config *Config, team, kind, name string, object runtime.Object) error {
-	kind = strings.ToLower(utils.ToPlural(kind))
+	req, _, err := NewRequestForResource(config, team, kind, "")
+	if err != nil {
+		return err
+	}
 
-	return NewRequest().
-		WithConfig(config).
-		PathParameter("kind", true).
-		PathParameter("name", true).
-		WithInject("kind", kind).
-		WithInject("name", name).
-		WithEndpoint("/{kind}/{name}").
-		WithRuntimeObject(object).
-		Get()
+	return req.WithRuntimeObject(object).Get()
 }
 
 // WaitForResourceCheck is just a wrap to check if we are waiting
@@ -213,7 +208,7 @@ func WaitForResource(ctx context.Context, config *Config, team, kind, name strin
 		cancel()
 	}()
 
-	fmt.Printf("Waiting for resource %q to provision (you background with ctrl-c)\n", name)
+	fmt.Printf("Waiting for resource %q to provision (you can background with ctrl-c)\n", name)
 
 	u := &unstructured.Unstructured{}
 
@@ -226,11 +221,11 @@ func WaitForResource(ctx context.Context, config *Config, team, kind, name strin
 	err := utils.WaitUntilComplete(ctx, 20*time.Minute, 5*time.Second, func() (bool, error) {
 		var request *Requestor
 
-		if team != "" {
-			request = NewTeamRequest(config, team, kind, name).WithRuntimeObject(u)
-		} else {
-			request = NewGlobalRequest(config, kind, name).WithRuntimeObject(u)
+		request, _, err := NewRequestForResource(config, team, kind, name)
+		if err != nil {
+			return false, err
 		}
+		request.WithRuntimeObject(u)
 
 		if err := request.Get(); err != nil {
 			return false, nil
