@@ -53,10 +53,10 @@ func (a *auditHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 	ws.Path(path.Base())
 
 	ws.Route(
-		withAllErrors(ws.GET("")).To(a.findTeamsAudit).
+		withAllErrors(ws.GET("")).To(a.findAudit).
 			Doc("Used to return all the audit event across all the teams").
 			Operation("ListAuditEvents").
-			Param(ws.QueryParameter("since", "The time duration to return the events within").DefaultValue("60m")).
+			Param(ws.QueryParameter("since", "The time duration to return the events within, to a resolution of minutes").DefaultValue("60m")).
 			Returns(http.StatusOK, "A collection of events from the team", orgv1.AuditEventList{}),
 	)
 
@@ -64,7 +64,7 @@ func (a *auditHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 }
 
 // findTeamsAudit returns all the audit events across all the teams
-func (a *auditHandler) findTeamsAudit(req *restful.Request, resp *restful.Response) {
+func (a *auditHandler) findAudit(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		since := req.QueryParameter("since")
 		if since == "" {
@@ -75,7 +75,7 @@ func (a *auditHandler) findTeamsAudit(req *restful.Request, resp *restful.Respon
 			return err
 		}
 
-		list, err := a.Teams().AuditEvents(req.Request.Context(), tm)
+		list, err := a.Audit().AuditEvents(req.Request.Context(), tm)
 		if err != nil {
 			return err
 		}

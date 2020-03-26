@@ -73,7 +73,7 @@ for the list audit events operation typically these are written to a http.Reques
 type ListAuditEventsParams struct {
 
 	/*Since
-	  The time duration to return the events within
+	  The time duration to return the events within, to a resolution of minutes
 
 	*/
 	Since *string

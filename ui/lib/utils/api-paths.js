@@ -15,12 +15,14 @@ module.exports = {
     namespaceClaims: `/teams/${id}/namespaceclaims`,
     gkeCredentials: `/teams/${id}/gkecredentials`,
     allocations: `/teams/${id}/allocations`,
-    generateInviteLink: `/teams/${id}/invites/generate`
+    generateInviteLink: `/teams/${id}/invites/generate`,
+    audit: `/teams/${id}/audit`
   }),
   idp: {
     default: '/idp/default',
     clients: '/idp/clients',
     configured: '/idp/configured'
   },
+  audit: '/audit',
   whoAmI: '/whoami'
 }

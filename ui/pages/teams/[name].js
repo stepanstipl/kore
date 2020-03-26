@@ -381,6 +381,12 @@ class TeamDashboard extends React.Component {
           <NamespaceClaimForm team={team.metadata.name} clusters={clusters} handleSubmit={this.handleNamespaceCreated} handleCancel={this.createNamespace(false)}/>
         </Drawer>
 
+        <Button>
+          <Link href="/teams/[name]/audit" as={`/teams/${team.metadata.name}/audit`}>
+            <a>Team Audit Viewer</a>
+          </Link>
+        </Button>
+
       </div>
     )
   }

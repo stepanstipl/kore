@@ -111,26 +111,24 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	// Team Audit Events
 
 	ws.Route(
-		ws.GET("/{team}/audit").To(u.findTeamAudit).
+		withAllNonValidationErrors(ws.GET("/{team}/audit")).To(u.findTeamAudit).
 			Doc("Used to return a collection of events against the team").
-			Operation("GetTeamAudit").
+			Operation("ListTeamAudit").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.QueryParameter("since", "The duration to retrieve from the audit log").DefaultValue("60m")).
 			Returns(http.StatusOK, "A collection of audit events against the team", orgv1.AuditEventList{}).
-			Returns(http.StatusNotFound, "Team does not exist", nil).
-			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusNotFound, "Team does not exist", nil),
 	)
 
 	// Team Members
 
 	ws.Route(
-		ws.GET("/{team}/members").To(u.findTeamMembers).
+		withAllNonValidationErrors(ws.GET("/{team}/members")).To(u.findTeamMembers).
 			Doc("Returns a list of user memberships in the team").
-			Operation("GetTeamMembers").
+			Operation("ListTeamMembers").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
-			Returns(http.StatusOK, "Contains a collection of team memberships for this team", orgv1.TeamMemberList{}).
-			Returns(http.StatusNotFound, "Team does not exist", nil).
-			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusOK, "Contains a collection of team memberships for this team", List{}).
+			Returns(http.StatusNotFound, "Team does not exist", nil),
 	)
 
 	ws.Route(
@@ -552,7 +550,7 @@ func (u teamHandler) findTeamAudit(req *restful.Request, resp *restful.Response)
 			return err
 		}
 
-		list, err := u.Teams().Team(team).AuditEvents(req.Request.Context(), tm)
+		list, err := u.Audit().AuditEventsTeam(req.Request.Context(), team, tm)
 		if err != nil {
 			return err
 		}

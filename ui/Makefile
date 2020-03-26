@@ -33,7 +33,12 @@ compose-logs:
 	@docker-compose logs -f
 
 run:
-	@echo "--> Starting dependancies..."
+	./scripts/prep-env-local.sh
 	@$(MAKE) compose
-	./run-local.sh
+	@npm run dev
 
+run-prod:
+	./scripts/prep-env-local.sh
+	@$(MAKE) build
+	@$(MAKE) compose
+	@npm start

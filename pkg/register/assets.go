@@ -4409,6 +4409,9 @@ spec:
               description: CreatedAt is the timestamp of record creation
               format: date-time
               type: string
+            id:
+              description: ID is the unique identifier of this audit event.
+              type: integer
             message:
               description: Message is event message itself
               type: string

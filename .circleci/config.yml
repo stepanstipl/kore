@@ -159,6 +159,8 @@ jobs:
             npm run build
 
   release-ui:
+    environment:
+      KORE_UI_IMAGE: quay.io/appvia/kore-ui
     docker:
       - image: docker:19.03-dind
     steps:
@@ -170,8 +172,8 @@ jobs:
           working_directory: ~/project/ui
           command: |
               docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
-              docker build -t quay.io/appvia/kore-ui:${CIRCLE_TAG:-latest} .
-              docker push quay.io/appvia/kore-ui:${CIRCLE_TAG:-latest}
+              docker build -t ${KORE_UI_IMAGE}:${CIRCLE_TAG:-latest} .
+              docker push ${KORE_UI_IMAGE}:${CIRCLE_TAG:-latest}
 
 workflows:
   version: 2

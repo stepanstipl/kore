@@ -29,6 +29,18 @@ func (o *GetTeamMembersReader) ReadResponse(response runtime.ClientResponse, con
 			return nil, err
 		}
 		return result, nil
+	case 401:
+		result := NewGetTeamMembersUnauthorized()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 403:
+		result := NewGetTeamMembersForbidden()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	case 404:
 		result := NewGetTeamMembersNotFound()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
@@ -57,25 +69,67 @@ func NewGetTeamMembersOK() *GetTeamMembersOK {
 Contains a collection of team memberships for this team
 */
 type GetTeamMembersOK struct {
-	Payload *models.V1TeamMemberList
+	Payload *models.ApiserverList
 }
 
 func (o *GetTeamMembersOK) Error() string {
 	return fmt.Sprintf("[GET /api/v1alpha1/teams/{team}/members][%d] getTeamMembersOK  %+v", 200, o.Payload)
 }
 
-func (o *GetTeamMembersOK) GetPayload() *models.V1TeamMemberList {
+func (o *GetTeamMembersOK) GetPayload() *models.ApiserverList {
 	return o.Payload
 }
 
 func (o *GetTeamMembersOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1TeamMemberList)
+	o.Payload = new(models.ApiserverList)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
 		return err
 	}
+
+	return nil
+}
+
+// NewGetTeamMembersUnauthorized creates a GetTeamMembersUnauthorized with default headers values
+func NewGetTeamMembersUnauthorized() *GetTeamMembersUnauthorized {
+	return &GetTeamMembersUnauthorized{}
+}
+
+/*GetTeamMembersUnauthorized handles this case with default header values.
+
+If not authenticated
+*/
+type GetTeamMembersUnauthorized struct {
+}
+
+func (o *GetTeamMembersUnauthorized) Error() string {
+	return fmt.Sprintf("[GET /api/v1alpha1/teams/{team}/members][%d] getTeamMembersUnauthorized ", 401)
+}
+
+func (o *GetTeamMembersUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
+// NewGetTeamMembersForbidden creates a GetTeamMembersForbidden with default headers values
+func NewGetTeamMembersForbidden() *GetTeamMembersForbidden {
+	return &GetTeamMembersForbidden{}
+}
+
+/*GetTeamMembersForbidden handles this case with default header values.
+
+If authenticated but not authorized
+*/
+type GetTeamMembersForbidden struct {
+}
+
+func (o *GetTeamMembersForbidden) Error() string {
+	return fmt.Sprintf("[GET /api/v1alpha1/teams/{team}/members][%d] getTeamMembersForbidden ", 403)
+}
+
+func (o *GetTeamMembersForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	return nil
 }
