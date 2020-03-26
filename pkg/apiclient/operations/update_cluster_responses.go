@@ -90,20 +90,20 @@ func NewUpdateClusterBadRequest() *UpdateClusterBadRequest {
 Validation error of the provided details
 */
 type UpdateClusterBadRequest struct {
-	Payload *models.ValidationErrValidation
+	Payload *models.ValidationError
 }
 
 func (o *UpdateClusterBadRequest) Error() string {
 	return fmt.Sprintf("[PUT /api/v1alpha1/teams/{team}/clusters/{name}][%d] updateClusterBadRequest  %+v", 400, o.Payload)
 }
 
-func (o *UpdateClusterBadRequest) GetPayload() *models.ValidationErrValidation {
+func (o *UpdateClusterBadRequest) GetPayload() *models.ValidationError {
 	return o.Payload
 }
 
 func (o *UpdateClusterBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.ValidationErrValidation)
+	o.Payload = new(models.ValidationError)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

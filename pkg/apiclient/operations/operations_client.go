@@ -53,6 +53,8 @@ type ClientService interface {
 
 	GetPlan(params *GetPlanParams, authInfo runtime.ClientAuthInfoWriter) (*GetPlanOK, error)
 
+	GetPlanPolicy(params *GetPlanPolicyParams, authInfo runtime.ClientAuthInfoWriter) (*GetPlanPolicyOK, error)
+
 	GetTeam(params *GetTeamParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamOK, error)
 
 	GetTeamSecret(params *GetTeamSecretParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamSecretOK, error)
@@ -80,6 +82,8 @@ type ClientService interface {
 	ListInvites(params *ListInvitesParams, authInfo runtime.ClientAuthInfoWriter) (*ListInvitesOK, error)
 
 	ListNamespaces(params *ListNamespacesParams, authInfo runtime.ClientAuthInfoWriter) (*ListNamespacesOK, error)
+
+	ListPlanPolicies(params *ListPlanPoliciesParams, authInfo runtime.ClientAuthInfoWriter) (*ListPlanPoliciesOK, error)
 
 	ListPlans(params *ListPlansParams, authInfo runtime.ClientAuthInfoWriter) (*ListPlansOK, error)
 
@@ -113,6 +117,8 @@ type ClientService interface {
 
 	RemovePlan(params *RemovePlanParams, authInfo runtime.ClientAuthInfoWriter) (*RemovePlanOK, error)
 
+	RemovePlanPolicy(params *RemovePlanPolicyParams, authInfo runtime.ClientAuthInfoWriter) (*RemovePlanPolicyOK, error)
+
 	RemoveTeam(params *RemoveTeamParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveTeamOK, error)
 
 	RemoveTeamMember(params *RemoveTeamMemberParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveTeamMemberOK, error)
@@ -134,6 +140,8 @@ type ClientService interface {
 	UpdateNamespace(params *UpdateNamespaceParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateNamespaceOK, error)
 
 	UpdatePlan(params *UpdatePlanParams, authInfo runtime.ClientAuthInfoWriter) (*UpdatePlanOK, error)
+
+	UpdatePlanPolicy(params *UpdatePlanPolicyParams, authInfo runtime.ClientAuthInfoWriter) (*UpdatePlanPolicyOK, error)
 
 	UpdateTeam(params *UpdateTeamParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateTeamOK, error)
 
@@ -611,6 +619,40 @@ func (a *Client) GetPlan(params *GetPlanParams, authInfo runtime.ClientAuthInfoW
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*GetPlanDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  GetPlanPolicy returns a specific plan policy from the kore
+*/
+func (a *Client) GetPlanPolicy(params *GetPlanPolicyParams, authInfo runtime.ClientAuthInfoWriter) (*GetPlanPolicyOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetPlanPolicyParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "GetPlanPolicy",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/planpolicies/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetPlanPolicyReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetPlanPolicyOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*GetPlanPolicyDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
@@ -1100,6 +1142,40 @@ func (a *Client) ListNamespaces(params *ListNamespacesParams, authInfo runtime.C
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for ListNamespaces: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
+}
+
+/*
+  ListPlanPolicies returns all the plan policies
+*/
+func (a *Client) ListPlanPolicies(params *ListPlanPoliciesParams, authInfo runtime.ClientAuthInfoWriter) (*ListPlanPoliciesOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewListPlanPoliciesParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "ListPlanPolicies",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/planpolicies",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &ListPlanPoliciesReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*ListPlanPoliciesOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*ListPlanPoliciesDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
 /*
@@ -1659,6 +1735,40 @@ func (a *Client) RemovePlan(params *RemovePlanParams, authInfo runtime.ClientAut
 }
 
 /*
+  RemovePlanPolicy useds to delete a plan policy from the kore
+*/
+func (a *Client) RemovePlanPolicy(params *RemovePlanPolicyParams, authInfo runtime.ClientAuthInfoWriter) (*RemovePlanPolicyOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewRemovePlanPolicyParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "RemovePlanPolicy",
+		Method:             "DELETE",
+		PathPattern:        "/api/v1alpha1/planpolicies/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &RemovePlanPolicyReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*RemovePlanPolicyOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*RemovePlanPolicyDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
   RemoveTeam useds to delete a team from the kore
 */
 func (a *Client) RemoveTeam(params *RemoveTeamParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveTeamOK, error) {
@@ -2037,6 +2147,40 @@ func (a *Client) UpdatePlan(params *UpdatePlanParams, authInfo runtime.ClientAut
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*UpdatePlanDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  UpdatePlanPolicy useds to create or update a plan policy in the kore
+*/
+func (a *Client) UpdatePlanPolicy(params *UpdatePlanPolicyParams, authInfo runtime.ClientAuthInfoWriter) (*UpdatePlanPolicyOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewUpdatePlanPolicyParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "UpdatePlanPolicy",
+		Method:             "PUT",
+		PathPattern:        "/api/v1alpha1/planpolicies/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &UpdatePlanPolicyReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*UpdatePlanPolicyOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*UpdatePlanPolicyDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

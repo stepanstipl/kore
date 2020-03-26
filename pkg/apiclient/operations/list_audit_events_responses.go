@@ -102,20 +102,20 @@ func NewListAuditEventsBadRequest() *ListAuditEventsBadRequest {
 Validation error of supplied parameters/body
 */
 type ListAuditEventsBadRequest struct {
-	Payload *models.ValidationErrValidation
+	Payload *models.ValidationError
 }
 
 func (o *ListAuditEventsBadRequest) Error() string {
 	return fmt.Sprintf("[GET /api/v1alpha1/audit][%d] listAuditEventsBadRequest  %+v", 400, o.Payload)
 }
 
-func (o *ListAuditEventsBadRequest) GetPayload() *models.ValidationErrValidation {
+func (o *ListAuditEventsBadRequest) GetPayload() *models.ValidationError {
 	return o.Payload
 }
 
 func (o *ListAuditEventsBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.ValidationErrValidation)
+	o.Payload = new(models.ValidationError)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

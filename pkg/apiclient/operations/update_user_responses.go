@@ -108,20 +108,20 @@ func NewUpdateUserBadRequest() *UpdateUserBadRequest {
 Validation error of supplied parameters/body
 */
 type UpdateUserBadRequest struct {
-	Payload *models.ValidationErrValidation
+	Payload *models.ValidationError
 }
 
 func (o *UpdateUserBadRequest) Error() string {
 	return fmt.Sprintf("[PUT /api/v1alpha1/users/{user}][%d] updateUserBadRequest  %+v", 400, o.Payload)
 }
 
-func (o *UpdateUserBadRequest) GetPayload() *models.ValidationErrValidation {
+func (o *UpdateUserBadRequest) GetPayload() *models.ValidationError {
 	return o.Payload
 }
 
 func (o *UpdateUserBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.ValidationErrValidation)
+	o.Payload = new(models.ValidationError)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
