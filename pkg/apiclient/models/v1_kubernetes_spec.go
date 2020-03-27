@@ -30,8 +30,8 @@ type V1KubernetesSpec struct {
 	// domain
 	Domain string `json:"domain,omitempty"`
 
-	// enabled default traffic block
-	EnabledDefaultTrafficBlock bool `json:"enabledDefaultTrafficBlock,omitempty"`
+	// enable default traffic block
+	EnableDefaultTrafficBlock bool `json:"enableDefaultTrafficBlock,omitempty"`
 
 	// inherit team members
 	InheritTeamMembers bool `json:"inheritTeamMembers,omitempty"`
