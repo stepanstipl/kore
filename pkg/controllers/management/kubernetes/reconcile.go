@@ -157,7 +157,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 				// @check if the cloud provider has failed
 				if a.Config().EnableClusterProviderCheck {
 					if err := a.CheckProviderStatus(context.Background(), object); err != nil {
-						return reconcile.Result{RequeueAfter: 2 * time.Minute}, nil
+						return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
 					}
 				}
 
@@ -467,24 +467,38 @@ func (a k8sCtrl) CheckProviderStatus(ctx context.Context, resource *clustersv1.K
 	switch resource.Spec.Provider.Kind {
 	case "GKE":
 		p := &gke.GKE{}
-
 		if err := a.mgr.GetClient().Get(ctx, key, p); err != nil {
 			logger.WithError(err).Error("trying to retrieve the gke cluster from api")
+		}
+
+		if p.Status.Status == corev1.FailureStatus {
+			resource.Status.Components.SetCondition(corev1.Component{
+				Name:    ComponentClusterCreate,
+				Message: "GKE Cluster is in a failing state",
+				Status:  corev1.FailureStatus,
+			})
+			resource.Status.Status = corev1.FailureStatus
+
+			return fmt.Errorf("gke cluster is in a failing state")
 		}
 
 		if p.Status.Conditions == nil {
 			err := fmt.Errorf("Cluster %s does not have a status yet", resource.Name)
 			logger.WithError(err).Error("trying to check the cluster status")
+
 			return err
 		}
 
 		// @check if we have a provider status for provisioning yet
 		status, found := p.Status.Conditions.GetStatus(gkecc.ComponentClusterCreator)
 		if !found {
-			return nil
+			logger.Warn("gke cluster has no status, throwing an error until we know")
+
+			return fmt.Errorf("gke cluster has no status")
 		}
 
-		if status.Status == corev1.FailureStatus {
+		switch status.Status {
+		case corev1.FailureStatus:
 			message := status.Message
 			if message == "" {
 				message = "GKE Cluster has failed to provision correctly"
@@ -499,6 +513,24 @@ func (a k8sCtrl) CheckProviderStatus(ctx context.Context, resource *clustersv1.K
 			resource.Status.Status = corev1.FailureStatus
 
 			return errors.New("cloud provider is in a failed state")
+
+		case corev1.PendingStatus:
+			resource.Status.Components.SetCondition(corev1.Component{
+				Name:    ComponentClusterCreate,
+				Message: "GKE Cluster is a pending state",
+				Status:  corev1.PendingStatus,
+			})
+
+			return errors.New("cloud provider is in pending state")
+
+		default:
+			resource.Status.Components.SetCondition(corev1.Component{
+				Name:    ComponentClusterCreate,
+				Message: "GKE Cluster is an unknown state",
+				Status:  corev1.PendingStatus,
+			})
+
+			return errors.New("cloud provider is in unknown state")
 		}
 	default:
 		logger.Warn("unknown cloud provider, ignoring the check")
