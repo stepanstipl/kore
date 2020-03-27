@@ -1,21 +1,26 @@
 /**
- * Source: https://github.com/jgonzalezdr/json-schema-spec/blob/draft-07-strict/strict-schema.json
- * Upstream source: http://json-schema.org/draft-07/strict-schema
+ * Copyright 2020 Appvia Ltd <info@appvia.io>
  *
- * License note from project's README:
- *  > The source material in this repository is licensed under the AFL or BSD license.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * No license text is included in the repository.
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package assets
 
 // JSONSchemaDraft07 is the meta schema for the JSON Schema Draft 07 definition
-// We use a strict schema definition instead of the default one.
 const JSONSchemaDraft07 = `
 {
-    "$schema": "http://json-schema.org/draft-07/strict-schema#",
-    "$id": "http://json-schema.org/draft-07/strict-schema#",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://json-schema.org/draft-07/schema#",
     "title": "Core schema meta-schema",
     "definitions": {
         "schemaArray": {
@@ -49,70 +54,6 @@ const JSONSchemaDraft07 = `
             "items": { "type": "string" },
             "uniqueItems": true,
             "default": []
-        },
-        "requiresArrayType": {
-            "type": "object",
-            "properties": {
-                "type": {
-                    "anyOf": [ {
-                        "const": "array"
-                    }, {
-                        "type": "array",
-                        "minItems": 1,
-                        "contains": {
-                            "const": "array"
-                        }
-                    } ]
-                }
-            }
-        },
-        "requiresObjectType": {
-            "type": "object",
-            "properties": {
-                "type": {
-                    "anyOf": [ {
-                        "const": "object"
-                    }, {
-                        "type": "array",
-                        "minItems": 1,
-                        "contains": {
-                            "const": "object"
-                        }
-                    } ]
-                }
-            }
-        },
-        "requiresStringType": {
-            "type": "object",
-            "properties": {
-                "type": {
-                    "anyOf": [ {
-                        "const": "string"
-                    }, {
-                        "type": "array",
-                        "minItems": 1,
-                        "contains": {
-                            "const": "string"
-                        }
-                    } ]
-                }
-            }
-        },
-        "requiresNumberType": {
-            "type": "object",
-            "properties": {
-                "type": {
-                    "anyOf": [ {
-                        "enum": ["number", "integer"]
-                    }, {
-                        "type": "array",
-                        "minItems": 1,
-                        "contains": {
-                            "enum": ["number", "integer"]
-                        }
-                    } ]
-                }
-            }
         }
     },
     "type": ["object", "boolean"],
@@ -140,6 +81,10 @@ const JSONSchemaDraft07 = `
         },
         "default": true,
         "readOnly": {
+            "type": "boolean",
+            "default": false
+        },
+        "writeOnly": {
             "type": "boolean",
             "default": false
         },
@@ -242,32 +187,6 @@ const JSONSchemaDraft07 = `
         "anyOf": { "$ref": "#/definitions/schemaArray" },
         "oneOf": { "$ref": "#/definitions/schemaArray" },
         "not": { "$ref": "#" }
-    },
-    "required": ["type"],
-    "additionalProperties": false,
-    "dependencies": {
-        "multipleOf": { "$ref": "#/definitions/requiresNumberType" },
-        "maximum": { "$ref": "#/definitions/requiresNumberType" },
-        "minimum": { "$ref": "#/definitions/requiresNumberType" },
-        "exclusiveMaximum": { "$ref": "#/definitions/requiresNumberType" },
-        "exclusiveMinimum": { "$ref": "#/definitions/requiresNumberType" },
-        "maxLength": { "$ref": "#/definitions/requiresStringType" },
-        "minLength": { "$ref": "#/definitions/requiresStringType" },
-        "pattern": { "$ref": "#/definitions/requiresStringType" },
-        "additionalItems": { "$ref": "#/definitions/requiresArrayType" },
-        "items": { "$ref": "#/definitions/requiresArrayType" },
-        "maxItems": { "$ref": "#/definitions/requiresArrayType" },
-        "minItems": { "$ref": "#/definitions/requiresArrayType" },
-        "uniqueItems": { "$ref": "#/definitions/requiresArrayType" },
-        "contains": { "$ref": "#/definitions/requiresArrayType" },
-        "maxProperties": { "$ref": "#/definitions/requiresObjectType" },
-        "minProperties": { "$ref": "#/definitions/requiresObjectType" },
-        "required": { "$ref": "#/definitions/requiresObjectType" },
-        "additionalProperties": { "$ref": "#/definitions/requiresObjectType" },
-        "properties": { "$ref": "#/definitions/requiresObjectType" },
-        "patternProperties": { "$ref": "#/definitions/requiresObjectType" },
-        "dependencies": { "$ref": "#/definitions/requiresObjectType" },
-        "propertiesNames": { "$ref": "#/definitions/requiresObjectType" }
     },
     "default": true
 }
