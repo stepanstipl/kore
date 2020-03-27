@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 import { Typography, Card, List, Button, Drawer, message, Icon } from 'antd'
 const { Text, Title } = Typography
 
@@ -10,6 +11,10 @@ import apiPaths from '../../utils/api-paths'
 import copy from '../../utils/object-copy'
 
 class GKECredentialsList extends React.Component {
+
+  static propTypes = {
+    style: PropTypes.object
+  }
 
   constructor(props) {
     super(props)
@@ -92,7 +97,7 @@ class GKECredentialsList extends React.Component {
     const { gkeCredentials, allTeams, editCredential, addCredential } = this.state
 
     return (
-      <Card title="GKE credentials" extra={<Button type="primary" onClick={this.addCredential(true)}>+ New</Button>}>
+      <Card style={this.props.style} title="GKE credentials" extra={<Button type="primary" onClick={this.addCredential(true)}>+ New</Button>}>
         {!gkeCredentials ? <Icon type="loading" /> : (
           <>
             <List
