@@ -78,7 +78,7 @@ func NewUpdateTeamOK() *UpdateTeamOK {
 
 /*UpdateTeamOK handles this case with default header values.
 
-Contains the team definintion from the kore
+Contains the team definition from the kore
 */
 type UpdateTeamOK struct {
 	Payload *models.V1Team
@@ -147,20 +147,20 @@ func NewUpdateTeamBadRequest() *UpdateTeamBadRequest {
 Validation error of supplied parameters/body
 */
 type UpdateTeamBadRequest struct {
-	Payload *models.ValidationErrValidation
+	Payload *models.ValidationError
 }
 
 func (o *UpdateTeamBadRequest) Error() string {
 	return fmt.Sprintf("[PUT /api/v1alpha1/teams/{team}][%d] updateTeamBadRequest  %+v", 400, o.Payload)
 }
 
-func (o *UpdateTeamBadRequest) GetPayload() *models.ValidationErrValidation {
+func (o *UpdateTeamBadRequest) GetPayload() *models.ValidationError {
 	return o.Payload
 }
 
 func (o *UpdateTeamBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.ValidationErrValidation)
+	o.Payload = new(models.ValidationError)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

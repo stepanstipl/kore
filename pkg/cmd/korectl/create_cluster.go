@@ -128,6 +128,7 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 
 		Action: func(ctx *cli.Context) error {
 			name := ctx.Args().First()
+			description := ctx.String("description")
 			allocation := ctx.String("allocation")
 			dry := ctx.Bool("dry-run")
 			kind := "cluster"
@@ -155,7 +156,9 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 			}
 
 			// @step: create the cloud provider
-			provider, err := CreateClusterProviderFromPlan(config, team, name, plan, allocation, dry, planParams)
+			provider, err := CreateClusterProviderFromPlan(
+				config, team, name, description, plan, allocation, dry, planParams,
+			)
 			if err != nil {
 				return err
 			}
@@ -306,7 +309,16 @@ func CreateClusterNamespace(config *Config, cluster corev1.Ownership, team, name
 
 // CreateClusterProviderFromPlan is used to provision a cluster in kore
 // @TODO need to be revisited once we have autogeneration of resources
-func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation string, dry bool, overrides map[string]interface{}) (*unstructured.Unstructured, error) {
+func CreateClusterProviderFromPlan(
+	config *Config,
+	team string,
+	name string,
+	description string,
+	plan string,
+	allocation string,
+	dry bool,
+	overrides map[string]interface{},
+) (*unstructured.Unstructured, error) {
 	// @step: we need to check if the plan exists in the kore
 	if found, err := ResourceExists(config, "plan", plan); err != nil {
 		return nil, fmt.Errorf("trying to retrieve plan from api: %s", err)
@@ -323,18 +335,13 @@ func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation 
 	if err := json.NewDecoder(bytes.NewReader(template.Spec.Values.Raw)).Decode(&kv); err != nil {
 		return nil, fmt.Errorf("trying to decode plan values: %s", err)
 	}
-	kv["description"] = fmt.Sprintf("%s cluster", plan)
-
-	editableParams, err := getEditablePlanParams(config, team)
-	if err != nil {
-		return nil, err
-	}
 
 	for paramName, overrideValue := range overrides {
-		if !editableParams[paramName] {
-			return nil, fmt.Errorf("%q parameter can not be modified", paramName)
-		}
 		kv[paramName] = overrideValue
+	}
+
+	if description != "" {
+		kv["description"] = description
 	}
 
 	switch template.Spec.Kind {
@@ -344,6 +351,18 @@ func CreateClusterProviderFromPlan(config *Config, team, name, plan, allocation 
 		}
 	case "EKS":
 		// TODO: add the EKS Plan schema and validate the plan parameters
+	}
+
+	// @step: we check permissions after the JSON schema validation to produce better error messages
+	// E.g. we should return with "unknown" property is invalid instead of "unknown" can not be modified
+	editableParams, err := getEditablePlanParams(config, team)
+	if err != nil {
+		return nil, err
+	}
+	for paramName := range overrides {
+		if !editableParams[paramName] {
+			return nil, fmt.Errorf("%q parameter can not be modified", paramName)
+		}
 	}
 
 	object := &unstructured.Unstructured{}

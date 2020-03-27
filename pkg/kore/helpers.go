@@ -21,7 +21,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/appvia/kore/pkg/kore/validation"
+	"github.com/appvia/kore/pkg/utils/validation"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -40,9 +40,9 @@ import (
 
 // IsValidResourceName checks the resource name is valid
 // https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-func IsValidResourceName(name string) error {
+func IsValidResourceName(subject, name string) error {
 	if !ResourceNameFilter.MatchString(name) {
-		return validation.NewErrValidation().WithFieldErrorf(
+		return validation.NewError("%s has failed validation", subject).WithFieldErrorf(
 			"name",
 			validation.Pattern,
 			"must comply with %s",
@@ -51,7 +51,7 @@ func IsValidResourceName(name string) error {
 	}
 
 	if len(name) > 63 {
-		return validation.NewErrValidation().WithFieldError(
+		return validation.NewError("%s has failed validation", subject).WithFieldError(
 			"name",
 			validation.MaxLength,
 			"length must be less than 64 characters",

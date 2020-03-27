@@ -61,7 +61,7 @@ for the remove plan operation typically these are written to a http.Request
 type RemovePlanParams struct {
 
 	/*Name
-	  The name of the plan you wish to act upon
+	  The name of the plan you wish to delete
 
 	*/
 	Name string

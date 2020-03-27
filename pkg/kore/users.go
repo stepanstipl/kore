@@ -23,9 +23,9 @@ import (
 
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/appvia/kore/pkg/kore/authentication"
-	"github.com/appvia/kore/pkg/kore/validation"
 	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/services/users/model"
+	"github.com/appvia/kore/pkg/utils/validation"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -235,15 +235,15 @@ func (h *usersImpl) Update(ctx context.Context, user *orgv1.User) (*orgv1.User, 
 	user.Namespace = HubNamespace
 
 	// @step: we need to validate the user
-	valErr := validation.NewErrValidation()
+	valErr := validation.NewError("user has failed validation")
 	if user.Name == "" {
-		valErr.AddFieldError("Name", validation.Required, "User must have Name property set.")
+		valErr.AddFieldError("Name", validation.Required, "can not be empty")
 	}
 	if user.Spec.Username == "" {
-		valErr.AddFieldError("Spec.Username", validation.Required, "User must have a username.")
+		valErr.AddFieldError("Spec.Username", validation.Required, "can not be empty")
 	}
 	if user.Spec.Email == "" {
-		valErr.AddFieldError("Spec.Email", validation.Required, "User must have an email address.")
+		valErr.AddFieldError("Spec.Email", validation.Required, "can not be empty")
 	}
 	if valErr.HasErrors() {
 		return nil, valErr

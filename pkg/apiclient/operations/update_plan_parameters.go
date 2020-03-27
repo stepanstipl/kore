@@ -63,12 +63,12 @@ for the update plan operation typically these are written to a http.Request
 type UpdatePlanParams struct {
 
 	/*Body
-	  The specification for the plan you are updating
+	  The specification for the plan you are creating or updating
 
 	*/
 	Body *models.V1Plan
 	/*Name
-	  The name of the plan you wish to act upon
+	  The name of the plan you wish to create or update
 
 	*/
 	Name string

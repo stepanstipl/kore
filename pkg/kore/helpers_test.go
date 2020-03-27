@@ -52,9 +52,9 @@ func TestIsValidResourceName(t *testing.T) {
 	for i, c := range cases {
 		switch c.Expect {
 		case true:
-			assert.NoError(t, IsValidResourceName(c.Name), "case %d, value: %s should have passed", i, c.Name)
+			assert.NoError(t, IsValidResourceName("test", c.Name), "case %d, value: %s should have passed", i, c.Name)
 		default:
-			assert.Error(t, IsValidResourceName(c.Name), "case %d, value: %s should have failed", i, c.Name)
+			assert.Error(t, IsValidResourceName("test", c.Name), "case %d, value: %s should have failed", i, c.Name)
 		}
 	}
 }

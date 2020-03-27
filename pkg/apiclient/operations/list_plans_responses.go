@@ -29,15 +29,27 @@ func (o *ListPlansReader) ReadResponse(response runtime.ClientResponse, consumer
 			return nil, err
 		}
 		return result, nil
-	default:
-		result := NewListPlansDefault(response.Code())
+	case 401:
+		result := NewListPlansUnauthorized()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
-		if response.Code()/100 == 2 {
-			return result, nil
+		return nil, result
+	case 403:
+		result := NewListPlansForbidden()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
 		}
 		return nil, result
+	case 500:
+		result := NewListPlansInternalServerError()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+
+	default:
+		return nil, runtime.NewAPIError("unknown error", response, response.Code())
 	}
 }
 
@@ -48,7 +60,7 @@ func NewListPlansOK() *ListPlansOK {
 
 /*ListPlansOK handles this case with default header values.
 
-A list of all the classes in the kore
+A list of all the plans
 */
 type ListPlansOK struct {
 	Payload *models.V1PlanList
@@ -74,37 +86,70 @@ func (o *ListPlansOK) readResponse(response runtime.ClientResponse, consumer run
 	return nil
 }
 
-// NewListPlansDefault creates a ListPlansDefault with default headers values
-func NewListPlansDefault(code int) *ListPlansDefault {
-	return &ListPlansDefault{
-		_statusCode: code,
-	}
+// NewListPlansUnauthorized creates a ListPlansUnauthorized with default headers values
+func NewListPlansUnauthorized() *ListPlansUnauthorized {
+	return &ListPlansUnauthorized{}
 }
 
-/*ListPlansDefault handles this case with default header values.
+/*ListPlansUnauthorized handles this case with default header values.
+
+If not authenticated
+*/
+type ListPlansUnauthorized struct {
+}
+
+func (o *ListPlansUnauthorized) Error() string {
+	return fmt.Sprintf("[GET /api/v1alpha1/plans][%d] listPlansUnauthorized ", 401)
+}
+
+func (o *ListPlansUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
+// NewListPlansForbidden creates a ListPlansForbidden with default headers values
+func NewListPlansForbidden() *ListPlansForbidden {
+	return &ListPlansForbidden{}
+}
+
+/*ListPlansForbidden handles this case with default header values.
+
+If authenticated but not authorized
+*/
+type ListPlansForbidden struct {
+}
+
+func (o *ListPlansForbidden) Error() string {
+	return fmt.Sprintf("[GET /api/v1alpha1/plans][%d] listPlansForbidden ", 403)
+}
+
+func (o *ListPlansForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
+// NewListPlansInternalServerError creates a ListPlansInternalServerError with default headers values
+func NewListPlansInternalServerError() *ListPlansInternalServerError {
+	return &ListPlansInternalServerError{}
+}
+
+/*ListPlansInternalServerError handles this case with default header values.
 
 A generic API error containing the cause of the error
 */
-type ListPlansDefault struct {
-	_statusCode int
-
+type ListPlansInternalServerError struct {
 	Payload *models.ApiserverError
 }
 
-// Code gets the status code for the list plans default response
-func (o *ListPlansDefault) Code() int {
-	return o._statusCode
+func (o *ListPlansInternalServerError) Error() string {
+	return fmt.Sprintf("[GET /api/v1alpha1/plans][%d] listPlansInternalServerError  %+v", 500, o.Payload)
 }
 
-func (o *ListPlansDefault) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/plans][%d] ListPlans default  %+v", o._statusCode, o.Payload)
-}
-
-func (o *ListPlansDefault) GetPayload() *models.ApiserverError {
+func (o *ListPlansInternalServerError) GetPayload() *models.ApiserverError {
 	return o.Payload
 }
 
-func (o *ListPlansDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+func (o *ListPlansInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ApiserverError)
 

@@ -23,8 +23,8 @@ import (
 
 	"github.com/appvia/kore/pkg/apiserver/filters"
 	"github.com/appvia/kore/pkg/kore"
-	"github.com/appvia/kore/pkg/kore/validation"
 	"github.com/appvia/kore/pkg/utils"
+	"github.com/appvia/kore/pkg/utils/validation"
 
 	restful "github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
@@ -49,7 +49,7 @@ func withStandardErrors(rb *restful.RouteBuilder) *restful.RouteBuilder {
 // withValidationErrors adds the standard bad request (400) validation error result to the route.
 func withValidationErrors(rb *restful.RouteBuilder) *restful.RouteBuilder {
 	return rb.
-		Returns(http.StatusBadRequest, "Validation error of supplied parameters/body", validation.ErrValidation{})
+		Returns(http.StatusBadRequest, "Validation error of supplied parameters/body", validation.Error{})
 }
 
 // withAuthErrors adds the standard unauthenticated (401) and forbidden (403) results to the route.

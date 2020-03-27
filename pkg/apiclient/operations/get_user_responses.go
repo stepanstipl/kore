@@ -66,7 +66,7 @@ func NewGetUserOK() *GetUserOK {
 
 /*GetUserOK handles this case with default header values.
 
-Contains the user definintion from the kore
+Contains the user definition from the kore
 */
 type GetUserOK struct {
 	Payload *models.V1User

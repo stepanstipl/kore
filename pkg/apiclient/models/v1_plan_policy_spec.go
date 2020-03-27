@@ -6,16 +6,18 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"strconv"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
-// V1PlanSpec v1 plan spec
+// V1PlanPolicySpec v1 plan policy spec
 //
-// swagger:model v1.PlanSpec
-type V1PlanSpec struct {
+// swagger:model v1.PlanPolicySpec
+type V1PlanPolicySpec struct {
 
 	// description
 	// Required: true
@@ -28,17 +30,17 @@ type V1PlanSpec struct {
 	// labels
 	Labels map[string]string `json:"labels,omitempty"`
 
+	// properties
+	// Required: true
+	Properties []*V1PlanPolicyProperty `json:"properties"`
+
 	// summary
 	// Required: true
 	Summary *string `json:"summary"`
-
-	// values
-	// Required: true
-	Values interface{} `json:"values"`
 }
 
-// Validate validates this v1 plan spec
-func (m *V1PlanSpec) Validate(formats strfmt.Registry) error {
+// Validate validates this v1 plan policy spec
+func (m *V1PlanPolicySpec) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateDescription(formats); err != nil {
@@ -49,11 +51,11 @@ func (m *V1PlanSpec) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
-	if err := m.validateSummary(formats); err != nil {
+	if err := m.validateProperties(formats); err != nil {
 		res = append(res, err)
 	}
 
-	if err := m.validateValues(formats); err != nil {
+	if err := m.validateSummary(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -63,7 +65,7 @@ func (m *V1PlanSpec) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1PlanSpec) validateDescription(formats strfmt.Registry) error {
+func (m *V1PlanPolicySpec) validateDescription(formats strfmt.Registry) error {
 
 	if err := validate.Required("description", "body", m.Description); err != nil {
 		return err
@@ -72,7 +74,7 @@ func (m *V1PlanSpec) validateDescription(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1PlanSpec) validateKind(formats strfmt.Registry) error {
+func (m *V1PlanPolicySpec) validateKind(formats strfmt.Registry) error {
 
 	if err := validate.Required("kind", "body", m.Kind); err != nil {
 		return err
@@ -81,7 +83,32 @@ func (m *V1PlanSpec) validateKind(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1PlanSpec) validateSummary(formats strfmt.Registry) error {
+func (m *V1PlanPolicySpec) validateProperties(formats strfmt.Registry) error {
+
+	if err := validate.Required("properties", "body", m.Properties); err != nil {
+		return err
+	}
+
+	for i := 0; i < len(m.Properties); i++ {
+		if swag.IsZero(m.Properties[i]) { // not required
+			continue
+		}
+
+		if m.Properties[i] != nil {
+			if err := m.Properties[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("properties" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *V1PlanPolicySpec) validateSummary(formats strfmt.Registry) error {
 
 	if err := validate.Required("summary", "body", m.Summary); err != nil {
 		return err
@@ -90,17 +117,8 @@ func (m *V1PlanSpec) validateSummary(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1PlanSpec) validateValues(formats strfmt.Registry) error {
-
-	if err := validate.Required("values", "body", m.Values); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // MarshalBinary interface implementation
-func (m *V1PlanSpec) MarshalBinary() ([]byte, error) {
+func (m *V1PlanPolicySpec) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -108,8 +126,8 @@ func (m *V1PlanSpec) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *V1PlanSpec) UnmarshalBinary(b []byte) error {
-	var res V1PlanSpec
+func (m *V1PlanPolicySpec) UnmarshalBinary(b []byte) error {
+	var res V1PlanPolicySpec
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

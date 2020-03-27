@@ -150,7 +150,7 @@ func (t *teamsImpl) Exists(ctx context.Context, name string) (bool, error) {
 func (t *teamsImpl) Update(ctx context.Context, team *orgv1.Team) (*orgv1.Team, error) {
 	// @step: teams are slightly different as they are being placed in both a database
 	// and a kubernetes. In order to ensure both instances comply with the naming conver
-	if err := IsValidResourceName(team.Name); err != nil {
+	if err := IsValidResourceName("team", team.Name); err != nil {
 		return nil, err
 	}
 

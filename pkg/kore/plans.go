@@ -19,6 +19,9 @@ package kore
 import (
 	"context"
 
+	"github.com/appvia/kore/pkg/kore/assets"
+	"github.com/appvia/kore/pkg/utils/jsonschema"
+
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/store"
@@ -49,12 +52,20 @@ type plansImpl struct {
 func (p plansImpl) Update(ctx context.Context, plan *configv1.Plan) error {
 	plan.Namespace = HubNamespace
 
-	// @TODO: check the user is admin or has kore permissions
 	user := authentication.MustGetIdentity(ctx)
 	if !user.IsGlobalAdmin() {
 		log.WithField("user", user.Username()).Warn("trying to update a plan without permissions")
 
 		return ErrUnauthorized
+	}
+
+	switch plan.Spec.Kind {
+	case "GKE":
+		if err := jsonschema.Validate(assets.GKEPlanSchema, "plan", plan.Spec.Values.Raw); err != nil {
+			return err
+		}
+	case "EKS":
+		// TODO: add the EKS Plan schema and validate the plan parameters
 	}
 
 	err := p.Store().Client().Update(ctx,

@@ -28,8 +28,8 @@ import (
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/appvia/kore/pkg/kore"
-	"github.com/appvia/kore/pkg/kore/validation"
 	"github.com/appvia/kore/pkg/utils"
+	"github.com/appvia/kore/pkg/utils/validation"
 
 	restful "github.com/emicklei/go-restful"
 	log "github.com/sirupsen/logrus"
@@ -81,7 +81,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Doc("Return information related to the specific team in the kore").
 			Operation("GetTeam").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
-			Returns(http.StatusOK, "Contains the team definintion from the kore", orgv1.Team{}).
+			Returns(http.StatusOK, "Contains the team definition from the kore", orgv1.Team{}).
 			Returns(http.StatusNotFound, "Team does not exist", nil).
 			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
@@ -92,7 +92,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Operation("UpdateTeam").
 			Reads(orgv1.Team{}, "Contains the definition for a team in the kore").
-			Returns(http.StatusOK, "Contains the team definintion from the kore", orgv1.Team{}).
+			Returns(http.StatusOK, "Contains the team definition from the kore", orgv1.Team{}).
 			Returns(http.StatusNotFound, "Team does not exist", nil).
 			Returns(http.StatusNotModified, "Indicates the request was processed but no changes applied", orgv1.Team{}),
 	)
@@ -358,7 +358,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("name", "Is name the of the kubernetes cluster you are acting upon")).
 			Reads(clustersv1.Kubernetes{}, "The definition for kubernetes cluster").
 			Returns(http.StatusOK, "Contains the former team definition from the kore", clustersv1.Kubernetes{}).
-			Returns(http.StatusBadRequest, "Validation error of the provided details", validation.ErrValidation{}). // @TODO: Change this to be a class in the orgv1 space
+			Returns(http.StatusBadRequest, "Validation error of the provided details", validation.Error{}). // @TODO: Change this to be a class in the orgv1 space
 			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 

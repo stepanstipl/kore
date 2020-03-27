@@ -17,8 +17,9 @@
 package jsonschema
 
 import (
-	"errors"
 	"fmt"
+
+	"github.com/appvia/kore/pkg/utils/validation"
 
 	"github.com/xeipuuv/gojsonschema"
 )
@@ -30,16 +31,26 @@ func Validate(schemaJSON string, subject string, data interface{}) error {
 		panic(fmt.Errorf("failed to compile gkePlanSchema: %v", err))
 	}
 
-	res, err := schema.Validate(gojsonschema.NewGoLoader(data))
+	var loader gojsonschema.JSONLoader
+	switch d := data.(type) {
+	case []byte:
+		loader = gojsonschema.NewBytesLoader(d)
+	case string:
+		loader = gojsonschema.NewStringLoader(d)
+	default:
+		loader = gojsonschema.NewGoLoader(d)
+	}
+
+	res, err := schema.Validate(loader)
 	if err != nil {
 		return fmt.Errorf("failed to parse data for validation: %s", err)
 	}
 	if !res.Valid() {
-		errStr := fmt.Sprintf("%s has failed validation:\n", subject)
+		ve := validation.NewError("%s has failed validation", subject)
 		for _, err := range res.Errors() {
-			errStr += fmt.Sprintf(" * %s: %s\n", err.Field(), err.Description())
+			ve.AddFieldError(err.Field(), validation.ErrorCode(err.Type()), err.Description())
 		}
-		return errors.New(errStr)
+		return ve
 	}
 
 	return nil
