@@ -42,7 +42,7 @@ func Options() []cli.Flag {
 		},
 		&cli.BoolFlag{
 			Name:  "no-wait",
-			Usage: "if we should wait for the resource to provision (default: false) `BOOL`",
+			Usage: "if we should wait for the resource to provision `BOOL`",
 			Value: false,
 		},
 	}
