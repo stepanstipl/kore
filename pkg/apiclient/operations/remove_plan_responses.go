@@ -29,15 +29,39 @@ func (o *RemovePlanReader) ReadResponse(response runtime.ClientResponse, consume
 			return nil, err
 		}
 		return result, nil
-	default:
-		result := NewRemovePlanDefault(response.Code())
+	case 400:
+		result := NewRemovePlanBadRequest()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
-		if response.Code()/100 == 2 {
-			return result, nil
+		return nil, result
+	case 401:
+		result := NewRemovePlanUnauthorized()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
 		}
 		return nil, result
+	case 403:
+		result := NewRemovePlanForbidden()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 404:
+		result := NewRemovePlanNotFound()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 500:
+		result := NewRemovePlanInternalServerError()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+
+	default:
+		return nil, runtime.NewAPIError("unknown error", response, response.Code())
 	}
 }
 
@@ -48,7 +72,7 @@ func NewRemovePlanOK() *RemovePlanOK {
 
 /*RemovePlanOK handles this case with default header values.
 
-Contains the class definition from the kore
+Contains the plan definition
 */
 type RemovePlanOK struct {
 	Payload *models.V1Plan
@@ -74,37 +98,124 @@ func (o *RemovePlanOK) readResponse(response runtime.ClientResponse, consumer ru
 	return nil
 }
 
-// NewRemovePlanDefault creates a RemovePlanDefault with default headers values
-func NewRemovePlanDefault(code int) *RemovePlanDefault {
-	return &RemovePlanDefault{
-		_statusCode: code,
-	}
+// NewRemovePlanBadRequest creates a RemovePlanBadRequest with default headers values
+func NewRemovePlanBadRequest() *RemovePlanBadRequest {
+	return &RemovePlanBadRequest{}
 }
 
-/*RemovePlanDefault handles this case with default header values.
+/*RemovePlanBadRequest handles this case with default header values.
 
-A generic API error containing the cause of the error
+Validation error of supplied parameters/body
 */
-type RemovePlanDefault struct {
-	_statusCode int
-
-	Payload *models.ApiserverError
+type RemovePlanBadRequest struct {
+	Payload *models.ValidationError
 }
 
-// Code gets the status code for the remove plan default response
-func (o *RemovePlanDefault) Code() int {
-	return o._statusCode
+func (o *RemovePlanBadRequest) Error() string {
+	return fmt.Sprintf("[DELETE /api/v1alpha1/plans/{name}][%d] removePlanBadRequest  %+v", 400, o.Payload)
 }
 
-func (o *RemovePlanDefault) Error() string {
-	return fmt.Sprintf("[DELETE /api/v1alpha1/plans/{name}][%d] RemovePlan default  %+v", o._statusCode, o.Payload)
-}
-
-func (o *RemovePlanDefault) GetPayload() *models.ApiserverError {
+func (o *RemovePlanBadRequest) GetPayload() *models.ValidationError {
 	return o.Payload
 }
 
-func (o *RemovePlanDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+func (o *RemovePlanBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.ValidationError)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+		return err
+	}
+
+	return nil
+}
+
+// NewRemovePlanUnauthorized creates a RemovePlanUnauthorized with default headers values
+func NewRemovePlanUnauthorized() *RemovePlanUnauthorized {
+	return &RemovePlanUnauthorized{}
+}
+
+/*RemovePlanUnauthorized handles this case with default header values.
+
+If not authenticated
+*/
+type RemovePlanUnauthorized struct {
+}
+
+func (o *RemovePlanUnauthorized) Error() string {
+	return fmt.Sprintf("[DELETE /api/v1alpha1/plans/{name}][%d] removePlanUnauthorized ", 401)
+}
+
+func (o *RemovePlanUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
+// NewRemovePlanForbidden creates a RemovePlanForbidden with default headers values
+func NewRemovePlanForbidden() *RemovePlanForbidden {
+	return &RemovePlanForbidden{}
+}
+
+/*RemovePlanForbidden handles this case with default header values.
+
+If authenticated but not authorized
+*/
+type RemovePlanForbidden struct {
+}
+
+func (o *RemovePlanForbidden) Error() string {
+	return fmt.Sprintf("[DELETE /api/v1alpha1/plans/{name}][%d] removePlanForbidden ", 403)
+}
+
+func (o *RemovePlanForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
+// NewRemovePlanNotFound creates a RemovePlanNotFound with default headers values
+func NewRemovePlanNotFound() *RemovePlanNotFound {
+	return &RemovePlanNotFound{}
+}
+
+/*RemovePlanNotFound handles this case with default header values.
+
+the plan with the given name doesn't exist
+*/
+type RemovePlanNotFound struct {
+}
+
+func (o *RemovePlanNotFound) Error() string {
+	return fmt.Sprintf("[DELETE /api/v1alpha1/plans/{name}][%d] removePlanNotFound ", 404)
+}
+
+func (o *RemovePlanNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
+// NewRemovePlanInternalServerError creates a RemovePlanInternalServerError with default headers values
+func NewRemovePlanInternalServerError() *RemovePlanInternalServerError {
+	return &RemovePlanInternalServerError{}
+}
+
+/*RemovePlanInternalServerError handles this case with default header values.
+
+A generic API error containing the cause of the error
+*/
+type RemovePlanInternalServerError struct {
+	Payload *models.ApiserverError
+}
+
+func (o *RemovePlanInternalServerError) Error() string {
+	return fmt.Sprintf("[DELETE /api/v1alpha1/plans/{name}][%d] removePlanInternalServerError  %+v", 500, o.Payload)
+}
+
+func (o *RemovePlanInternalServerError) GetPayload() *models.ApiserverError {
+	return o.Payload
+}
+
+func (o *RemovePlanInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ApiserverError)
 

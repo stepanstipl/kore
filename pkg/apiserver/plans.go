@@ -55,40 +55,38 @@ func (p *plansHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 	ws.Path(path.Base())
 
 	ws.Route(
-		ws.GET("").To(p.findPlans).
+		withAllNonValidationErrors(ws.GET("")).To(p.findPlans).
 			Doc("Returns all the classes available to initialized in the kore").
 			Operation("ListPlans").
 			Param(ws.QueryParameter("kind", "Returns all plans for a specific resource type")).
-			Returns(http.StatusOK, "A list of all the classes in the kore", configv1.PlanList{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusOK, "A list of all the plans", configv1.PlanList{}),
 	)
 
 	ws.Route(
-		ws.GET("/{name}").To(p.findPlan).
+		withAllNonValidationErrors(ws.GET("/{name}")).To(p.findPlan).
 			Doc("Returns a specific class plan from the kore").
 			Operation("GetPlan").
 			Param(ws.PathParameter("name", "The name of the plan you wish to retrieve")).
-			Returns(http.StatusOK, "Contains the class definition from the kore", configv1.Plan{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusNotFound, "the plan with the given name doesn't exist", nil).
+			Returns(http.StatusOK, "Contains the plan definition", configv1.Plan{}),
 	)
 
 	ws.Route(
-		ws.PUT("/{name}").To(p.updatePlan).
+		withAllErrors(ws.PUT("/{name}")).To(p.updatePlan).
 			Doc("Used to create or update a plan in the kore").
 			Operation("UpdatePlan").
-			Param(ws.PathParameter("name", "The name of the plan you wish to act upon")).
-			Reads(configv1.Plan{}, "The specification for the plan you are updating").
-			Returns(http.StatusOK, "Contains the class definition from the kore", configv1.Plan{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Param(ws.PathParameter("name", "The name of the plan you wish to create or update")).
+			Reads(configv1.Plan{}, "The specification for the plan you are creating or updating").
+			Returns(http.StatusOK, "Contains the plan definition", configv1.Plan{}),
 	)
 
 	ws.Route(
-		ws.DELETE("/{name}").To(p.deletePlan).
+		withAllErrors(ws.DELETE("/{name}")).To(p.deletePlan).
 			Doc("Used to delete a plan from the kore").
 			Operation("RemovePlan").
-			Param(ws.PathParameter("name", "The name of the plan you wish to act upon")).
-			Returns(http.StatusOK, "Contains the class definition from the kore", configv1.Plan{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+			Param(ws.PathParameter("name", "The name of the plan you wish to delete")).
+			Returns(http.StatusNotFound, "the plan with the given name doesn't exist", nil).
+			Returns(http.StatusOK, "Contains the plan definition", configv1.Plan{}),
 	)
 
 	return ws, nil

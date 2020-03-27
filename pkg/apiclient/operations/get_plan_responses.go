@@ -29,15 +29,33 @@ func (o *GetPlanReader) ReadResponse(response runtime.ClientResponse, consumer r
 			return nil, err
 		}
 		return result, nil
-	default:
-		result := NewGetPlanDefault(response.Code())
+	case 401:
+		result := NewGetPlanUnauthorized()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
-		if response.Code()/100 == 2 {
-			return result, nil
+		return nil, result
+	case 403:
+		result := NewGetPlanForbidden()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
 		}
 		return nil, result
+	case 404:
+		result := NewGetPlanNotFound()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 500:
+		result := NewGetPlanInternalServerError()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+
+	default:
+		return nil, runtime.NewAPIError("unknown error", response, response.Code())
 	}
 }
 
@@ -48,7 +66,7 @@ func NewGetPlanOK() *GetPlanOK {
 
 /*GetPlanOK handles this case with default header values.
 
-Contains the class definition from the kore
+Contains the plan definition
 */
 type GetPlanOK struct {
 	Payload *models.V1Plan
@@ -74,37 +92,91 @@ func (o *GetPlanOK) readResponse(response runtime.ClientResponse, consumer runti
 	return nil
 }
 
-// NewGetPlanDefault creates a GetPlanDefault with default headers values
-func NewGetPlanDefault(code int) *GetPlanDefault {
-	return &GetPlanDefault{
-		_statusCode: code,
-	}
+// NewGetPlanUnauthorized creates a GetPlanUnauthorized with default headers values
+func NewGetPlanUnauthorized() *GetPlanUnauthorized {
+	return &GetPlanUnauthorized{}
 }
 
-/*GetPlanDefault handles this case with default header values.
+/*GetPlanUnauthorized handles this case with default header values.
+
+If not authenticated
+*/
+type GetPlanUnauthorized struct {
+}
+
+func (o *GetPlanUnauthorized) Error() string {
+	return fmt.Sprintf("[GET /api/v1alpha1/plans/{name}][%d] getPlanUnauthorized ", 401)
+}
+
+func (o *GetPlanUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
+// NewGetPlanForbidden creates a GetPlanForbidden with default headers values
+func NewGetPlanForbidden() *GetPlanForbidden {
+	return &GetPlanForbidden{}
+}
+
+/*GetPlanForbidden handles this case with default header values.
+
+If authenticated but not authorized
+*/
+type GetPlanForbidden struct {
+}
+
+func (o *GetPlanForbidden) Error() string {
+	return fmt.Sprintf("[GET /api/v1alpha1/plans/{name}][%d] getPlanForbidden ", 403)
+}
+
+func (o *GetPlanForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
+// NewGetPlanNotFound creates a GetPlanNotFound with default headers values
+func NewGetPlanNotFound() *GetPlanNotFound {
+	return &GetPlanNotFound{}
+}
+
+/*GetPlanNotFound handles this case with default header values.
+
+the plan with the given name doesn't exist
+*/
+type GetPlanNotFound struct {
+}
+
+func (o *GetPlanNotFound) Error() string {
+	return fmt.Sprintf("[GET /api/v1alpha1/plans/{name}][%d] getPlanNotFound ", 404)
+}
+
+func (o *GetPlanNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
+// NewGetPlanInternalServerError creates a GetPlanInternalServerError with default headers values
+func NewGetPlanInternalServerError() *GetPlanInternalServerError {
+	return &GetPlanInternalServerError{}
+}
+
+/*GetPlanInternalServerError handles this case with default header values.
 
 A generic API error containing the cause of the error
 */
-type GetPlanDefault struct {
-	_statusCode int
-
+type GetPlanInternalServerError struct {
 	Payload *models.ApiserverError
 }
 
-// Code gets the status code for the get plan default response
-func (o *GetPlanDefault) Code() int {
-	return o._statusCode
+func (o *GetPlanInternalServerError) Error() string {
+	return fmt.Sprintf("[GET /api/v1alpha1/plans/{name}][%d] getPlanInternalServerError  %+v", 500, o.Payload)
 }
 
-func (o *GetPlanDefault) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/plans/{name}][%d] GetPlan default  %+v", o._statusCode, o.Payload)
-}
-
-func (o *GetPlanDefault) GetPayload() *models.ApiserverError {
+func (o *GetPlanInternalServerError) GetPayload() *models.ApiserverError {
 	return o.Payload
 }
 
-func (o *GetPlanDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+func (o *GetPlanInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ApiserverError)
 

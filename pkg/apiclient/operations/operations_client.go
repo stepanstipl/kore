@@ -618,8 +618,9 @@ func (a *Client) GetPlan(params *GetPlanParams, authInfo runtime.ClientAuthInfoW
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*GetPlanDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetPlan: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -1208,8 +1209,9 @@ func (a *Client) ListPlans(params *ListPlansParams, authInfo runtime.ClientAuthI
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*ListPlansDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for ListPlans: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -1730,8 +1732,9 @@ func (a *Client) RemovePlan(params *RemovePlanParams, authInfo runtime.ClientAut
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*RemovePlanDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for RemovePlan: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -2146,8 +2149,9 @@ func (a *Client) UpdatePlan(params *UpdatePlanParams, authInfo runtime.ClientAut
 		return success, nil
 	}
 	// unexpected success response
-	unexpectedSuccess := result.(*UpdatePlanDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for UpdatePlan: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*

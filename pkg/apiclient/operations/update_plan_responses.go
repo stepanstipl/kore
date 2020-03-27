@@ -29,15 +29,33 @@ func (o *UpdatePlanReader) ReadResponse(response runtime.ClientResponse, consume
 			return nil, err
 		}
 		return result, nil
-	default:
-		result := NewUpdatePlanDefault(response.Code())
+	case 400:
+		result := NewUpdatePlanBadRequest()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
-		if response.Code()/100 == 2 {
-			return result, nil
+		return nil, result
+	case 401:
+		result := NewUpdatePlanUnauthorized()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
 		}
 		return nil, result
+	case 403:
+		result := NewUpdatePlanForbidden()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 500:
+		result := NewUpdatePlanInternalServerError()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+
+	default:
+		return nil, runtime.NewAPIError("unknown error", response, response.Code())
 	}
 }
 
@@ -48,7 +66,7 @@ func NewUpdatePlanOK() *UpdatePlanOK {
 
 /*UpdatePlanOK handles this case with default header values.
 
-Contains the class definition from the kore
+Contains the plan definition
 */
 type UpdatePlanOK struct {
 	Payload *models.V1Plan
@@ -74,37 +92,103 @@ func (o *UpdatePlanOK) readResponse(response runtime.ClientResponse, consumer ru
 	return nil
 }
 
-// NewUpdatePlanDefault creates a UpdatePlanDefault with default headers values
-func NewUpdatePlanDefault(code int) *UpdatePlanDefault {
-	return &UpdatePlanDefault{
-		_statusCode: code,
-	}
+// NewUpdatePlanBadRequest creates a UpdatePlanBadRequest with default headers values
+func NewUpdatePlanBadRequest() *UpdatePlanBadRequest {
+	return &UpdatePlanBadRequest{}
 }
 
-/*UpdatePlanDefault handles this case with default header values.
+/*UpdatePlanBadRequest handles this case with default header values.
 
-A generic API error containing the cause of the error
+Validation error of supplied parameters/body
 */
-type UpdatePlanDefault struct {
-	_statusCode int
-
-	Payload *models.ApiserverError
+type UpdatePlanBadRequest struct {
+	Payload *models.ValidationError
 }
 
-// Code gets the status code for the update plan default response
-func (o *UpdatePlanDefault) Code() int {
-	return o._statusCode
+func (o *UpdatePlanBadRequest) Error() string {
+	return fmt.Sprintf("[PUT /api/v1alpha1/plans/{name}][%d] updatePlanBadRequest  %+v", 400, o.Payload)
 }
 
-func (o *UpdatePlanDefault) Error() string {
-	return fmt.Sprintf("[PUT /api/v1alpha1/plans/{name}][%d] UpdatePlan default  %+v", o._statusCode, o.Payload)
-}
-
-func (o *UpdatePlanDefault) GetPayload() *models.ApiserverError {
+func (o *UpdatePlanBadRequest) GetPayload() *models.ValidationError {
 	return o.Payload
 }
 
-func (o *UpdatePlanDefault) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+func (o *UpdatePlanBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.ValidationError)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+		return err
+	}
+
+	return nil
+}
+
+// NewUpdatePlanUnauthorized creates a UpdatePlanUnauthorized with default headers values
+func NewUpdatePlanUnauthorized() *UpdatePlanUnauthorized {
+	return &UpdatePlanUnauthorized{}
+}
+
+/*UpdatePlanUnauthorized handles this case with default header values.
+
+If not authenticated
+*/
+type UpdatePlanUnauthorized struct {
+}
+
+func (o *UpdatePlanUnauthorized) Error() string {
+	return fmt.Sprintf("[PUT /api/v1alpha1/plans/{name}][%d] updatePlanUnauthorized ", 401)
+}
+
+func (o *UpdatePlanUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
+// NewUpdatePlanForbidden creates a UpdatePlanForbidden with default headers values
+func NewUpdatePlanForbidden() *UpdatePlanForbidden {
+	return &UpdatePlanForbidden{}
+}
+
+/*UpdatePlanForbidden handles this case with default header values.
+
+If authenticated but not authorized
+*/
+type UpdatePlanForbidden struct {
+}
+
+func (o *UpdatePlanForbidden) Error() string {
+	return fmt.Sprintf("[PUT /api/v1alpha1/plans/{name}][%d] updatePlanForbidden ", 403)
+}
+
+func (o *UpdatePlanForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
+// NewUpdatePlanInternalServerError creates a UpdatePlanInternalServerError with default headers values
+func NewUpdatePlanInternalServerError() *UpdatePlanInternalServerError {
+	return &UpdatePlanInternalServerError{}
+}
+
+/*UpdatePlanInternalServerError handles this case with default header values.
+
+A generic API error containing the cause of the error
+*/
+type UpdatePlanInternalServerError struct {
+	Payload *models.ApiserverError
+}
+
+func (o *UpdatePlanInternalServerError) Error() string {
+	return fmt.Sprintf("[PUT /api/v1alpha1/plans/{name}][%d] updatePlanInternalServerError  %+v", 500, o.Payload)
+}
+
+func (o *UpdatePlanInternalServerError) GetPayload() *models.ApiserverError {
+	return o.Payload
+}
+
+func (o *UpdatePlanInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ApiserverError)
 
