@@ -41,9 +41,10 @@ func Options() []cli.Flag {
 			Value:   "yaml",
 		},
 		&cli.BoolFlag{
-			Name:  "no-wait",
-			Usage: "if we should wait for the resource to provision `BOOL`",
-			Value: false,
+			Name:    "no-wait",
+			Usage:   "if we should wait for the resource to provision `BOOL`",
+			Value:   false,
+			EnvVars: []string{"NO_WAIT"},
 		},
 	}
 }
