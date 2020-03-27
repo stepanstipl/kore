@@ -55,6 +55,7 @@ func GetDefaultPlans() []*configv1.Plan {
 								}
                             ],
 							"authProxyAllowedIPs":           ["0.0.0.0/0"],
+							"description":                   "gke-development cluster",
 							"diskSize":                      100,
 							"enableAutoupgrade":             true,
 							"enableAutorepair":              true,
@@ -104,6 +105,7 @@ func GetDefaultPlans() []*configv1.Plan {
 								}
                             ],
 							"authProxyAllowedIPs":           ["0.0.0.0/0"],
+							"description":                   "gke-production cluster",
 							"diskSize":                      100,
 							"enableAutoupgrade":             true,
 							"enableAutorepair":              true,
