@@ -34,7 +34,7 @@ type V1PlanSpec struct {
 
 	// values
 	// Required: true
-	Values *string `json:"values"`
+	Values interface{} `json:"values"`
 }
 
 // Validate validates this v1 plan spec

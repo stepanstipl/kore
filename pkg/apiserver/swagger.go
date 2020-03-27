@@ -60,4 +60,20 @@ func EnrichSwagger(swo *spec.Swagger) {
 			"OAuth2": {"admin", "team"},
 		},
 	}
+
+	// This is a horrible hack to override the type for v1.PlanSpec.Values, as apiextv1.JSON is handled as "string",
+	// but it should be an "object". ModelTypeNameHandler didn't work in restfulspec.Config.
+	ps, ok := swo.Definitions["v1.PlanSpec"]
+	if !ok {
+		panic("v1.PlanSpec doesn't exist, you may have to amend apiserver.EnrichSwagger")
+	}
+
+	ppt, ok := ps.Properties["values"]
+	if !ok {
+		panic("values property doesn't exist in v1.PlanSpec, you may have to amend apiserver.EnrichSwagger")
+	}
+
+	ppt.Type = []string{"object"}
+	ps.Properties["values"] = ppt
+	swo.Definitions["v1.PlanSpec"] = ps
 }
