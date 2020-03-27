@@ -132,9 +132,9 @@ func schema_pkg_apis_clusters_v1_KubernetesSpec(ref common.ReferenceCallback) co
 							},
 						},
 					},
-					"enabledDefaultTrafficBlock": {
+					"enableDefaultTrafficBlock": {
 						SchemaProps: spec.SchemaProps{
-							Description: "EnabledDefaultTrafficBlock indicates the cluster shoukd default to enabling blocking network policies on all namespaces",
+							Description: "EnableDefaultTrafficBlock indicates the cluster should default to enabling blocking network policies on all namespaces",
 							Type:        []string{"boolean"},
 							Format:      "",
 						},

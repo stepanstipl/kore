@@ -124,8 +124,8 @@ func (in *KubernetesSpec) DeepCopyInto(out *KubernetesSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-	if in.EnabledDefaultTrafficBlock != nil {
-		in, out := &in.EnabledDefaultTrafficBlock, &out.EnabledDefaultTrafficBlock
+	if in.EnableDefaultTrafficBlock != nil {
+		in, out := &in.EnableDefaultTrafficBlock, &out.EnableDefaultTrafficBlock
 		*out = new(bool)
 		**out = **in
 	}
