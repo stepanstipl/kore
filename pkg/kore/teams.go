@@ -57,12 +57,12 @@ func (t *teamsImpl) Delete(ctx context.Context, name string) error {
 	// @step: retrieve the user from context
 	user := authentication.MustGetIdentity(ctx)
 
-	// @step: one has to be a member of the team to delete it
+	// @step: one has to be a team member or the global admin
 	if !user.IsMember(name) && !user.IsGlobalAdmin() {
 		log.WithFields(log.Fields{
 			"team": name,
 			"user": user.Username(),
-		}).Warn("user attempting to delete a delete not a member of")
+		}).Warn("user attempting to delete a team not a member of")
 
 		return ErrUnauthorized
 	}
