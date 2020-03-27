@@ -23,6 +23,8 @@ type ContextKey struct{}
 type Identity interface {
 	// IsGlobalAdmin checks if the user is a global admin
 	IsGlobalAdmin() bool
+	// IsMember checks if the user is a member of a team
+	IsMember(string) bool
 	// Email returns the user email
 	Email() string
 	// Disabled checks if the user is disabled
