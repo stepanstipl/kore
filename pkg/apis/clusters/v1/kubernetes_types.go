@@ -40,9 +40,9 @@ type KubernetesSpec struct {
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	ClusterUsers []ClusterUser `json:"clusterUsers,omitempty"`
-	// EnabledDefaultTrafficBlock indicates the cluster shoukd default to
+	// EnableDefaultTrafficBlock indicates the cluster should default to
 	// enabling blocking network policies on all namespaces
-	EnabledDefaultTrafficBlock *bool `json:"enabledDefaultTrafficBlock,omitempty"`
+	EnableDefaultTrafficBlock *bool `json:"enableDefaultTrafficBlock,omitempty"`
 	// DefaultTeamRole is role inherited by all team members
 	// +kubebuilder:validation:Optional
 	DefaultTeamRole string `json:"defaultTeamRole,omitempty"`

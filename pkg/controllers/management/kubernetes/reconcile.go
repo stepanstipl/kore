@@ -401,7 +401,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		}
 
 		// @step: is default network block enabled?
-		if object.Spec.EnabledDefaultTrafficBlock != nil && *object.Spec.EnabledDefaultTrafficBlock {
+		if object.Spec.EnableDefaultTrafficBlock != nil && *object.Spec.EnableDefaultTrafficBlock {
 			// @step: ensure the remote cluster has the traffic blocked
 			logger.Debug("ensuring that network policies are enabled by default on all namespaces")
 

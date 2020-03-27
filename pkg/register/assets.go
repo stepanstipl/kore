@@ -1240,8 +1240,8 @@ spec:
             domain:
               description: Domain is the domain of the cluster
               type: string
-            enabledDefaultTrafficBlock:
-              description: EnabledDefaultTrafficBlock indicates the cluster shoukd
+            enableDefaultTrafficBlock:
+              description: EnableDefaultTrafficBlock indicates the cluster should
                 default to enabling blocking network policies on all namespaces
               type: boolean
             inheritTeamMembers:
