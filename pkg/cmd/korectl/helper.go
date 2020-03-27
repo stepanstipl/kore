@@ -230,7 +230,11 @@ func WaitForResource(ctx context.Context, config *Config, team, kind, name strin
 		request.WithRuntimeObject(u)
 
 		if err := request.Get(); err != nil {
-			return false, nil
+			// @note: this has been added because the runtime.Client doesn't always return
+			// the api type
+			if !utils.IsMissingKind(err) {
+				return false, nil
+			}
 		}
 
 		// @step: check the status of the resource

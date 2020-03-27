@@ -17,10 +17,21 @@
 package utils
 
 import (
+	"strings"
+
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
+
+// IsMissingKind checks if a runtime kind error
+func IsMissingKind(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	return strings.Contains(err.Error(), "Object 'Kind' is missing in")
+}
 
 // GetOwnership returns an ownership from a object
 func GetOwnership(object *unstructured.Unstructured, name string) corev1.Ownership {

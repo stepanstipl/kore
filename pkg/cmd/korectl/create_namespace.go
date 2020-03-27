@@ -105,11 +105,12 @@ func GetCreateNamespaceCommand(config *Config) *cli.Command {
 				Name:      cluster,
 			}
 
-			if err := CreateClusterNamespace(config, owner, team, name, dry); err != nil {
+			claim, err := CreateClusterNamespace(config, owner, team, name, dry)
+			if err != nil {
 				return fmt.Errorf("trying to provision namespace on cluster: %s", err)
 			}
 
-			return WaitForResourceCheck(context.Background(), config, team, kind, name, nowait)
+			return WaitForResourceCheck(context.Background(), config, team, kind, claim.Name, nowait)
 		},
 	}
 }
