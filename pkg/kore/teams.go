@@ -91,7 +91,7 @@ func (t *teamsImpl) Delete(ctx context.Context, name string) error {
 			"team": name,
 		}).Warn("attempting to delete a team whom has cluster")
 
-		return ErrNotAllowed{}
+		return ErrNotAllowed{message: "all team clusters must be deleted before team can be removed"}
 	}
 
 	// @step: check if the team has any allocations to other teams
