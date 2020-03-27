@@ -29,9 +29,11 @@ const GKEPlanSchema = `
 		"authProxyAllowedIPs",
 		"description",
 		"diskSize",
+		"domain",
 		"enableAutoupgrade",
 		"enableAutorepair",
 		"enableAutoscaler",
+		"enableDefaultTrafficBlock",
 		"enableHTTPLoadBalancer",
 		"enableHorizontalPodAutoscaler",
 		"enableIstio",
@@ -41,6 +43,7 @@ const GKEPlanSchema = `
 		"enableStackDriverLogging",
 		"enableStackDriverMetrics",
 		"imageType",
+		"inheritTeamMembers",
 		"machineType",
 		"maintenanceWindow",
 		"maxSize",
@@ -81,13 +84,23 @@ const GKEPlanSchema = `
 			},
 			"minItems": 1
 		},
+		"authProxyImage": {
+			"type": "string"
+		},
+		"defaultTeamRole": {
+			"type": "string"
+		},
+		"description": {
+			"type": "string",
+			"minLength": 1
+		},
 		"diskSize": {
 			"type": "number",
 			"multipleOf": 1,
 			"minimum": 10,
 			"maximum": 65536
 		},
-		"description": {
+		"domain": {
 			"type": "string",
 			"minLength": 1
 		},
@@ -98,6 +111,9 @@ const GKEPlanSchema = `
 			"type": "boolean"
 		},
 		"enableAutoscaler": {
+			"type": "boolean"
+		},
+		"enableDefaultTrafficBlock": {
 			"type": "boolean"
 		},
 		"enableHTTPLoadBalancer": {
@@ -127,6 +143,9 @@ const GKEPlanSchema = `
 		"imageType": {
 			"type": "string",
 			"minLength": 1
+		},
+		"inheritTeamMembers": {
+			"type": "boolean"
 		},
 		"machineType": {
 			"type": "string",
@@ -162,6 +181,24 @@ const GKEPlanSchema = `
 			"type": "string",
 			"minLength": 1
 		}
+	},
+	"if": {
+		"properties": {
+			"inheritTeamMembers": {
+				"const": true
+			}
+		},
+		"required": ["inheritTeamMembers"]
+	},
+	"then": {
+		"properties": {
+			"defaultTeamRole": {
+				"minLength": 1
+			}
+		},
+		"required": ["defaultTeamRole"]
+	},
+	"else": {
 	}
 }
 `
