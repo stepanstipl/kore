@@ -200,7 +200,7 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 			}
 
 			for _, x := range list {
-				if err := CreateClusterNamespace(config, ownership, team, x, dry); err != nil {
+				if _, err := CreateClusterNamespace(config, ownership, team, x, dry); err != nil {
 					return fmt.Errorf("trying to provision namespace claim: %s on cluster: %s", x, err)
 				}
 			}
@@ -272,7 +272,7 @@ func CreateKubernetesClusterFromProvider(config *Config, provider *unstructured.
 }
 
 // CreateClusterNamespace is called to provision a namespace on the cluster
-func CreateClusterNamespace(config *Config, cluster corev1.Ownership, team, name string, dry bool) error {
+func CreateClusterNamespace(config *Config, cluster corev1.Ownership, team, name string, dry bool) (*clustersv1.NamespaceClaim, error) {
 	resourceName := fmt.Sprintf("%s-%s", cluster.Name, name)
 	kind := "namespaceclaims"
 
@@ -290,21 +290,21 @@ func CreateClusterNamespace(config *Config, cluster corev1.Ownership, team, name
 		},
 	}
 	if dry {
-		return yaml.NewEncoder(os.Stdout).Encode(object)
+		return nil, yaml.NewEncoder(os.Stdout).Encode(object)
 	}
 
 	found, err := TeamResourceExists(config, team, kind, resourceName)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if found {
 		fmt.Printf("--> Namespace: %s already exists, skipping creation\n", name)
 
-		return nil
+		return object, nil
 	}
 	fmt.Printf("--> Attempting to create namespace: %s\n", name)
 
-	return CreateTeamResource(config, team, kind, name, object)
+	return object, CreateTeamResource(config, team, kind, name, object)
 }
 
 // CreateClusterProviderFromPlan is used to provision a cluster in kore
