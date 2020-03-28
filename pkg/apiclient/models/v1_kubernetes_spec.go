@@ -18,6 +18,12 @@ import (
 // swagger:model v1.KubernetesSpec
 type V1KubernetesSpec struct {
 
+	// auth proxy allowed i ps
+	AuthProxyAllowedIPs []string `json:"authProxyAllowedIPs"`
+
+	// auth proxy image
+	AuthProxyImage string `json:"authProxyImage,omitempty"`
+
 	// cluster users
 	ClusterUsers []*V1ClusterUser `json:"clusterUsers"`
 
@@ -35,12 +41,6 @@ type V1KubernetesSpec struct {
 
 	// provider
 	Provider *V1Ownership `json:"provider,omitempty"`
-
-	// proxy allowed i ps
-	ProxyAllowedIPs []string `json:"proxyAllowedIPs"`
-
-	// proxy image
-	ProxyImage string `json:"proxyImage,omitempty"`
 }
 
 // Validate validates this v1 kubernetes spec
