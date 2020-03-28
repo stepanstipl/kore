@@ -107,6 +107,32 @@ func schema_pkg_apis_clusters_v1_KubernetesSpec(ref common.ReferenceCallback) co
 				Description: "KubernetesSpec defines the desired state of Cluster",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"authProxyImage": {
+						SchemaProps: spec.SchemaProps{
+							Description: "AuthProxyImage is the kube api proxy used to sso into the cluster post provision",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"authProxyAllowedIPs": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "AuthProxyAllowedIPs is a list of IP address ranges (using CIDR format), which will be allowed to access the proxy",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
 					"clusterUsers": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
@@ -157,32 +183,6 @@ func schema_pkg_apis_clusters_v1_KubernetesSpec(ref common.ReferenceCallback) co
 						SchemaProps: spec.SchemaProps{
 							Description: "Provider is the cloud cluster provider type for this kubernetes",
 							Ref:         ref("github.com/appvia/kore/pkg/apis/core/v1.Ownership"),
-						},
-					},
-					"proxyImage": {
-						SchemaProps: spec.SchemaProps{
-							Description: "ProxyImage is the kube api proxy used to sso into the cluster post provision",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"proxyAllowedIPs": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "ProxyAllowedIPs is a list of IP address ranges (using CIDR format), which will be allowed to access the proxy",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Type:   []string{"string"},
-										Format: "",
-									},
-								},
-							},
 						},
 					},
 				},

@@ -253,7 +253,7 @@ func CreateKubernetesClusterFromProvider(config *Config, provider *unstructured.
 					Roles:    []string{"cluster-admin"},
 				},
 			},
-			ProxyAllowedIPs: authProxyAllowedIPs,
+			AuthProxyAllowedIPs: authProxyAllowedIPs,
 		},
 	}
 	if dry {
