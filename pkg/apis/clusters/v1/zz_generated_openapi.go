@@ -107,13 +107,6 @@ func schema_pkg_apis_clusters_v1_KubernetesSpec(ref common.ReferenceCallback) co
 				Description: "KubernetesSpec defines the desired state of Cluster",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"authentication": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Authentication indicates a mode of user authentication",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
 					"clusterUsers": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{

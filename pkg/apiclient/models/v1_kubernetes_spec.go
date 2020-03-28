@@ -18,9 +18,6 @@ import (
 // swagger:model v1.KubernetesSpec
 type V1KubernetesSpec struct {
 
-	// authentication
-	Authentication V1AuthenticationMode `json:"authentication,omitempty"`
-
 	// cluster users
 	ClusterUsers []*V1ClusterUser `json:"clusterUsers"`
 
