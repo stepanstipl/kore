@@ -1207,9 +1207,6 @@ spec:
         spec:
           description: KubernetesSpec defines the desired state of Cluster
           properties:
-            authentication:
-              description: Authentication indicates a mode of user authentication
-              type: string
             clusterUsers:
               description: ClusterUsers is a collection of users from the team whom
                 have permissions across the cluster
