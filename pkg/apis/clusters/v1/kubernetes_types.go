@@ -25,6 +25,14 @@ import (
 // KubernetesSpec defines the desired state of Cluster
 // +k8s:openapi-gen=true
 type KubernetesSpec struct {
+	// AuthProxyImage is the kube api proxy used to sso into the cluster post provision
+	// +kubebuilder:validation:Optional
+	AuthProxyImage string `json:"authProxyImage,omitempty"`
+	// AuthProxyAllowedIPs is a list of IP address ranges (using CIDR format), which will be allowed to access the proxy
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems=1
+	// +listType=set
+	AuthProxyAllowedIPs []string `json:"authProxyAllowedIPs,omitempty"`
 	// ClusterUsers is a collection of users from the team whom have
 	// permissions across the cluster
 	// +kubebuilder:validation:Optional
@@ -46,14 +54,6 @@ type KubernetesSpec struct {
 	// Provider is the cloud cluster provider type for this kubernetes
 	// +kubebuilder:validation:Optional
 	Provider corev1.Ownership `json:"provider,omitempty"`
-	// ProxyImage is the kube api proxy used to sso into the cluster post provision
-	// +kubebuilder:validation:Optional
-	ProxyImage string `json:"proxyImage,omitempty"`
-	// ProxyAllowedIPs is a list of IP address ranges (using CIDR format), which will be allowed to access the proxy
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinItems=1
-	// +listType=set
-	ProxyAllowedIPs []string `json:"proxyAllowedIPs,omitempty"`
 }
 
 // ClusterUser defines a user and their role in the cluster

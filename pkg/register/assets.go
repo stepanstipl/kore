@@ -1207,6 +1207,18 @@ spec:
         spec:
           description: KubernetesSpec defines the desired state of Cluster
           properties:
+            authProxyAllowedIPs:
+              description: AuthProxyAllowedIPs is a list of IP address ranges (using
+                CIDR format), which will be allowed to access the proxy
+              items:
+                type: string
+              minItems: 1
+              type: array
+              x-kubernetes-list-type: set
+            authProxyImage:
+              description: AuthProxyImage is the kube api proxy used to sso into the
+                cluster post provision
+              type: string
             clusterUsers:
               description: ClusterUsers is a collection of users from the team whom
                 have permissions across the cluster
@@ -1270,18 +1282,6 @@ spec:
               - namespace
               - version
               type: object
-            proxyAllowedIPs:
-              description: ProxyAllowedIPs is a list of IP address ranges (using CIDR
-                format), which will be allowed to access the proxy
-              items:
-                type: string
-              minItems: 1
-              type: array
-              x-kubernetes-list-type: set
-            proxyImage:
-              description: ProxyImage is the kube api proxy used to sso into the cluster
-                post provision
-              type: string
           type: object
         status:
           description: KubernetesStatus defines the observed state of Cluster
