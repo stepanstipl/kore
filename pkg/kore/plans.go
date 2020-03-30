@@ -18,6 +18,7 @@ package kore
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/appvia/kore/pkg/kore/assets"
 	"github.com/appvia/kore/pkg/utils/jsonschema"
@@ -42,6 +43,8 @@ type Plans interface {
 	Has(context.Context, string) (bool, error)
 	// Update is responsible for update a plan in the kore
 	Update(context.Context, *configv1.Plan) error
+	// GetEditablePlanParams returns with the editable plan parameters for a specific team
+	GetEditablePlanParams(ctx context.Context, team string) (map[string]bool, error)
 }
 
 type plansImpl struct {
@@ -149,4 +152,33 @@ func (p plansImpl) Has(ctx context.Context, name string) (bool, error) {
 		store.HasOptions.From(&configv1.Plan{}),
 		store.HasOptions.WithName(name),
 	)
+}
+
+func (p plansImpl) GetEditablePlanParams(ctx context.Context, team string) (map[string]bool, error) {
+	editableParams := map[string]bool{}
+	planPolicyAllocations, err := p.Teams().Team(team).Allocations().ListAllocationsByType(
+		ctx, "config.kore.appvia.io", "v1", "PlanPolicy",
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load plan policies assigned to the team: %s", err)
+	}
+
+	for _, alloc := range planPolicyAllocations.Items {
+		planPolicy, err := p.PlanPolicies().Get(ctx, alloc.Spec.Resource.Name)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load plan policy: %s", alloc.Spec.Resource.Name)
+		}
+		for _, property := range planPolicy.Spec.Properties {
+			switch {
+			case property.DisallowUpdate:
+				editableParams[property.Name] = false
+			case property.AllowUpdate:
+				if _, isSet := editableParams[property.Name]; !isSet {
+					editableParams[property.Name] = true
+				}
+			}
+		}
+	}
+
+	return editableParams, nil
 }

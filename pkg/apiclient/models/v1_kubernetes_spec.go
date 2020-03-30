@@ -24,6 +24,9 @@ type V1KubernetesSpec struct {
 	// auth proxy image
 	AuthProxyImage string `json:"authProxyImage,omitempty"`
 
+	// cluster
+	Cluster *V1Ownership `json:"cluster,omitempty"`
+
 	// cluster users
 	ClusterUsers []*V1ClusterUser `json:"clusterUsers"`
 
@@ -47,6 +50,10 @@ type V1KubernetesSpec struct {
 func (m *V1KubernetesSpec) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateCluster(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateClusterUsers(formats); err != nil {
 		res = append(res, err)
 	}
@@ -58,6 +65,24 @@ func (m *V1KubernetesSpec) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *V1KubernetesSpec) validateCluster(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Cluster) { // not required
+		return nil
+	}
+
+	if m.Cluster != nil {
+		if err := m.Cluster.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("cluster")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 

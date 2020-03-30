@@ -29,6 +29,24 @@ func (o *RemoveClusterReader) ReadResponse(response runtime.ClientResponse, cons
 			return nil, err
 		}
 		return result, nil
+	case 401:
+		result := NewRemoveClusterUnauthorized()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 403:
+		result := NewRemoveClusterForbidden()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 404:
+		result := NewRemoveClusterNotFound()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	case 500:
 		result := NewRemoveClusterInternalServerError()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
@@ -51,25 +69,88 @@ func NewRemoveClusterOK() *RemoveClusterOK {
 Contains the former team definition from the kore
 */
 type RemoveClusterOK struct {
-	Payload *models.V1Kubernetes
+	Payload *models.V1Cluster
 }
 
 func (o *RemoveClusterOK) Error() string {
 	return fmt.Sprintf("[DELETE /api/v1alpha1/teams/{team}/clusters/{name}][%d] removeClusterOK  %+v", 200, o.Payload)
 }
 
-func (o *RemoveClusterOK) GetPayload() *models.V1Kubernetes {
+func (o *RemoveClusterOK) GetPayload() *models.V1Cluster {
 	return o.Payload
 }
 
 func (o *RemoveClusterOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1Kubernetes)
+	o.Payload = new(models.V1Cluster)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
 		return err
 	}
+
+	return nil
+}
+
+// NewRemoveClusterUnauthorized creates a RemoveClusterUnauthorized with default headers values
+func NewRemoveClusterUnauthorized() *RemoveClusterUnauthorized {
+	return &RemoveClusterUnauthorized{}
+}
+
+/*RemoveClusterUnauthorized handles this case with default header values.
+
+If not authenticated
+*/
+type RemoveClusterUnauthorized struct {
+}
+
+func (o *RemoveClusterUnauthorized) Error() string {
+	return fmt.Sprintf("[DELETE /api/v1alpha1/teams/{team}/clusters/{name}][%d] removeClusterUnauthorized ", 401)
+}
+
+func (o *RemoveClusterUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
+// NewRemoveClusterForbidden creates a RemoveClusterForbidden with default headers values
+func NewRemoveClusterForbidden() *RemoveClusterForbidden {
+	return &RemoveClusterForbidden{}
+}
+
+/*RemoveClusterForbidden handles this case with default header values.
+
+If authenticated but not authorized
+*/
+type RemoveClusterForbidden struct {
+}
+
+func (o *RemoveClusterForbidden) Error() string {
+	return fmt.Sprintf("[DELETE /api/v1alpha1/teams/{team}/clusters/{name}][%d] removeClusterForbidden ", 403)
+}
+
+func (o *RemoveClusterForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
+// NewRemoveClusterNotFound creates a RemoveClusterNotFound with default headers values
+func NewRemoveClusterNotFound() *RemoveClusterNotFound {
+	return &RemoveClusterNotFound{}
+}
+
+/*RemoveClusterNotFound handles this case with default header values.
+
+the cluster with the given name doesn't exist
+*/
+type RemoveClusterNotFound struct {
+}
+
+func (o *RemoveClusterNotFound) Error() string {
+	return fmt.Sprintf("[DELETE /api/v1alpha1/teams/{team}/clusters/{name}][%d] removeClusterNotFound ", 404)
+}
+
+func (o *RemoveClusterNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	return nil
 }

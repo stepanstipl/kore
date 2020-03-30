@@ -44,6 +44,8 @@ type Allocations interface {
 	List(context.Context) (*configv1.AllocationList, error)
 	// ListAllocationsAssigned returns a list of all allocations shared to me
 	ListAllocationsAssigned(context.Context) (*configv1.AllocationList, error)
+	// ListAllocationsByType returns a list of all allocations shared to me, filtered by type
+	ListAllocationsByType(ctx context.Context, group, version, kind string) (*configv1.AllocationList, error)
 	// Update is responsible for updating / creating an allocation
 	Update(context.Context, *configv1.Allocation) error
 }
@@ -245,4 +247,28 @@ func (a acaImpl) Update(ctx context.Context, allocation *configv1.Allocation) er
 		store.UpdateOptions.WithCreate(true),
 		store.UpdateOptions.WithForce(true),
 	)
+}
+
+func (a acaImpl) ListAllocationsByType(ctx context.Context, group, version, kind string) (*configv1.AllocationList, error) {
+	allocations, err := a.ListAllocationsAssigned(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	target := corev1.Ownership{
+		Group:     group,
+		Version:   version,
+		Kind:      kind,
+		Namespace: HubAdminTeam,
+	}
+
+	var res []configv1.Allocation
+	for _, allocation := range allocations.Items {
+		if allocation.Spec.Resource.IsSameType(target) {
+			res = append(res, allocation)
+		}
+	}
+	allocations.Items = res
+
+	return allocations, nil
 }

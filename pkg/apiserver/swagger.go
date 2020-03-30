@@ -16,7 +16,11 @@
 
 package apiserver
 
-import "github.com/go-openapi/spec"
+import (
+	"fmt"
+
+	"github.com/go-openapi/spec"
+)
 
 // EnrichSwagger provides the swagger config
 func EnrichSwagger(swo *spec.Swagger) {
@@ -61,19 +65,25 @@ func EnrichSwagger(swo *spec.Swagger) {
 		},
 	}
 
-	// This is a horrible hack to override the type for v1.PlanSpec.Values, as apiextv1.JSON is handled as "string",
+	// These are horrible hacks to override the type for apiextv1.JSON properties, which is handled as "string",
 	// but it should be an "object". ModelTypeNameHandler didn't work in restfulspec.Config.
-	ps, ok := swo.Definitions["v1.PlanSpec"]
+	enrichSwaggerFixRawJSON(swo, "v1.PlanSpec", "values")
+	enrichSwaggerFixRawJSON(swo, "v1.ClusterSpec", "configuration")
+
+}
+
+func enrichSwaggerFixRawJSON(swo *spec.Swagger, typeName, propertyName string) {
+	def, ok := swo.Definitions[typeName]
 	if !ok {
-		panic("v1.PlanSpec doesn't exist, you may have to amend apiserver.EnrichSwagger")
+		panic(fmt.Errorf("%q doesn't exist, you may have to amend apiserver.EnrichSwagger", typeName))
 	}
 
-	ppt, ok := ps.Properties["values"]
+	property, ok := def.Properties[propertyName]
 	if !ok {
-		panic("values property doesn't exist in v1.PlanSpec, you may have to amend apiserver.EnrichSwagger")
+		panic(fmt.Errorf("%q property doesn't exist in %q, you may have to amend apiserver.EnrichSwagger", propertyName, typeName))
 	}
 
-	ppt.Type = []string{"object"}
-	ps.Properties["values"] = ppt
-	swo.Definitions["v1.PlanSpec"] = ps
+	property.Type = []string{"object"}
+	def.Properties[propertyName] = property
+	swo.Definitions[typeName] = def
 }
