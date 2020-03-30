@@ -101,8 +101,6 @@ func (c *clsImpl) Get(ctx context.Context, name string) (*clustersv1.Kubernetes,
 
 		return nil, err
 	}
-	cluster.APIVersion = clustersv1.GroupVersion.String()
-	cluster.Kind = "Kubernetes"
 
 	return cluster, nil
 }
