@@ -106,12 +106,17 @@ func (r *rclient) Get(ctx context.Context, options ...GetOptionFunc) error {
 		Name:      r.index.query.Name,
 	}
 
+	// @step: retrieve the object the kube-api
 	if err := r.client.Get(ctx, reference, r.value); err != nil {
 		return err
 	}
 
-	// @step: retrieve the object the kube-api
-	return r.client.Get(ctx, reference, r.value)
+	// @step: if possible we try and inject the gvk from the schema
+	if gvk, found, _ := hubschema.GetGroupKindVersion(r.value); found {
+		r.value.GetObjectKind().SetGroupVersionKind(gvk)
+	}
+
+	return nil
 }
 
 // Create is responsible for creating an object in the api - enuring it doesn't exist already
