@@ -35,6 +35,18 @@ func (o *UpdateClusterReader) ReadResponse(response runtime.ClientResponse, cons
 			return nil, err
 		}
 		return nil, result
+	case 401:
+		result := NewUpdateClusterUnauthorized()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 403:
+		result := NewUpdateClusterForbidden()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	case 500:
 		result := NewUpdateClusterInternalServerError()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
@@ -54,23 +66,23 @@ func NewUpdateClusterOK() *UpdateClusterOK {
 
 /*UpdateClusterOK handles this case with default header values.
 
-Contains the former team definition from the kore
+The cluster details
 */
 type UpdateClusterOK struct {
-	Payload *models.V1Kubernetes
+	Payload *models.V1Cluster
 }
 
 func (o *UpdateClusterOK) Error() string {
 	return fmt.Sprintf("[PUT /api/v1alpha1/teams/{team}/clusters/{name}][%d] updateClusterOK  %+v", 200, o.Payload)
 }
 
-func (o *UpdateClusterOK) GetPayload() *models.V1Kubernetes {
+func (o *UpdateClusterOK) GetPayload() *models.V1Cluster {
 	return o.Payload
 }
 
 func (o *UpdateClusterOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1Kubernetes)
+	o.Payload = new(models.V1Cluster)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
@@ -87,7 +99,7 @@ func NewUpdateClusterBadRequest() *UpdateClusterBadRequest {
 
 /*UpdateClusterBadRequest handles this case with default header values.
 
-Validation error of the provided details
+Validation error of supplied parameters/body
 */
 type UpdateClusterBadRequest struct {
 	Payload *models.ValidationError
@@ -109,6 +121,48 @@ func (o *UpdateClusterBadRequest) readResponse(response runtime.ClientResponse, 
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
 		return err
 	}
+
+	return nil
+}
+
+// NewUpdateClusterUnauthorized creates a UpdateClusterUnauthorized with default headers values
+func NewUpdateClusterUnauthorized() *UpdateClusterUnauthorized {
+	return &UpdateClusterUnauthorized{}
+}
+
+/*UpdateClusterUnauthorized handles this case with default header values.
+
+If not authenticated
+*/
+type UpdateClusterUnauthorized struct {
+}
+
+func (o *UpdateClusterUnauthorized) Error() string {
+	return fmt.Sprintf("[PUT /api/v1alpha1/teams/{team}/clusters/{name}][%d] updateClusterUnauthorized ", 401)
+}
+
+func (o *UpdateClusterUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
+// NewUpdateClusterForbidden creates a UpdateClusterForbidden with default headers values
+func NewUpdateClusterForbidden() *UpdateClusterForbidden {
+	return &UpdateClusterForbidden{}
+}
+
+/*UpdateClusterForbidden handles this case with default header values.
+
+If authenticated but not authorized
+*/
+type UpdateClusterForbidden struct {
+}
+
+func (o *UpdateClusterForbidden) Error() string {
+	return fmt.Sprintf("[PUT /api/v1alpha1/teams/{team}/clusters/{name}][%d] updateClusterForbidden ", 403)
+}
+
+func (o *UpdateClusterForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	return nil
 }

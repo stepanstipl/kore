@@ -23,6 +23,9 @@ type V1alpha1GKESpec struct {
 	// Required: true
 	AuthorizedMasterNetworks []*V1alpha1AuthorizedNetwork `json:"authorizedMasterNetworks"`
 
+	// cluster
+	Cluster *V1Ownership `json:"cluster,omitempty"`
+
 	// cluster IP v4 cidr
 	// Required: true
 	ClusterIPV4Cidr *string `json:"clusterIPV4Cidr"`
@@ -135,6 +138,10 @@ func (m *V1alpha1GKESpec) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateAuthorizedMasterNetworks(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateCluster(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -264,6 +271,24 @@ func (m *V1alpha1GKESpec) validateAuthorizedMasterNetworks(formats strfmt.Regist
 			}
 		}
 
+	}
+
+	return nil
+}
+
+func (m *V1alpha1GKESpec) validateCluster(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Cluster) { // not required
+		return nil
+	}
+
+	if m.Cluster != nil {
+		if err := m.Cluster.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("cluster")
+			}
+			return err
+		}
 	}
 
 	return nil

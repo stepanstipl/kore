@@ -33,6 +33,9 @@ type KubernetesSpec struct {
 	// +kubebuilder:validation:MinItems=1
 	// +listType=set
 	AuthProxyAllowedIPs []string `json:"authProxyAllowedIPs,omitempty"`
+	// Cluster refers to the cluster this object belongs to
+	// +kubebuilder:validation:Required
+	Cluster corev1.Ownership `json:"cluster,omitempty"`
 	// ClusterUsers is a collection of users from the team whom have
 	// permissions across the cluster
 	// +kubebuilder:validation:Optional

@@ -61,7 +61,7 @@ for the remove cluster operation typically these are written to a http.Request
 type RemoveClusterParams struct {
 
 	/*Name
-	  Is name the of the GKE cluster you are acting upon
+	  Is the name of the cluster
 
 	*/
 	Name string

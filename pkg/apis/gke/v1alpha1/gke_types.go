@@ -17,7 +17,7 @@
 package v1alpha1
 
 import (
-	core "github.com/appvia/kore/pkg/apis/core/v1"
+	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -25,10 +25,13 @@ import (
 // GKESpec defines the desired state of GKE
 // +k8s:openapi-gen=true
 type GKESpec struct {
-	// GKECredentials is a reference to the gke credentials object to use
+	// Cluster refers to the cluster this object belongs to
+	// +kubebuilder:validation:Required
+	Cluster corev1.Ownership `json:"cluster,omitempty"`
+	// Credentials is a reference to the gke credentials object to use
 	// +kubebuilder:validation:Required
 	// +k8s:openapi-gen=false
-	Credentials core.Ownership `json:"credentials"`
+	Credentials corev1.Ownership `json:"credentials"`
 	// Description provides a short summary / description of the cluster.
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
@@ -160,13 +163,13 @@ type AuthorizedNetwork struct {
 // +k8s:openapi-gen=true
 type GKEStatus struct {
 	// Conditions is the status of the components
-	Conditions *core.Components `json:"conditions,omitempty"`
+	Conditions *corev1.Components `json:"conditions,omitempty"`
 	// CACertificate is the certificate for this cluster
 	CACertificate string `json:"caCertificate,omitempty"`
 	// Endpoint is the endpoint of the cluster
 	Endpoint string `json:"endpoint,omitempty"`
 	// Status provides a overall status
-	Status core.Status `json:"status,omitempty"`
+	Status corev1.Status `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

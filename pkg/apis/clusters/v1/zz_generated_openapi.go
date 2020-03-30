@@ -29,6 +29,9 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
+		"github.com/appvia/kore/pkg/apis/clusters/v1.Cluster":                         schema_pkg_apis_clusters_v1_Cluster(ref),
+		"github.com/appvia/kore/pkg/apis/clusters/v1.ClusterSpec":                     schema_pkg_apis_clusters_v1_ClusterSpec(ref),
+		"github.com/appvia/kore/pkg/apis/clusters/v1.ClusterStatus":                   schema_pkg_apis_clusters_v1_ClusterStatus(ref),
 		"github.com/appvia/kore/pkg/apis/clusters/v1.Kubernetes":                      schema_pkg_apis_clusters_v1_Kubernetes(ref),
 		"github.com/appvia/kore/pkg/apis/clusters/v1.KubernetesSpec":                  schema_pkg_apis_clusters_v1_KubernetesSpec(ref),
 		"github.com/appvia/kore/pkg/apis/clusters/v1.KubernetesStatus":                schema_pkg_apis_clusters_v1_KubernetesStatus(ref),
@@ -53,6 +56,148 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/appvia/kore/pkg/apis/clusters/v1.NamespaceClaim":                  schema_pkg_apis_clusters_v1_NamespaceClaim(ref),
 		"github.com/appvia/kore/pkg/apis/clusters/v1.NamespaceClaimSpec":              schema_pkg_apis_clusters_v1_NamespaceClaimSpec(ref),
 		"github.com/appvia/kore/pkg/apis/clusters/v1.NamespaceClaimStatus":            schema_pkg_apis_clusters_v1_NamespaceClaimStatus(ref),
+	}
+}
+
+func schema_pkg_apis_clusters_v1_Cluster(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "Cluster is the Schema for the plans API",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/appvia/kore/pkg/apis/clusters/v1.ClusterSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/appvia/kore/pkg/apis/clusters/v1.ClusterStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/clusters/v1.ClusterSpec", "github.com/appvia/kore/pkg/apis/clusters/v1.ClusterStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_clusters_v1_ClusterSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ClusterSpec defines the desired state of a cluster",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind refers to the cluster type (e.g. GKE, EKS)",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"plan": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Plan is the name of the cluster plan which was used to create this cluster",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"configuration": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Configuration are the configuration values for this cluster It will contain values from the plan + overrides by the user This will provide a simple interface to calculate diffs between plan and cluster configuration",
+							Ref:         ref("k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"),
+						},
+					},
+					"credentials": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Credentials is a reference to the credentials object to use",
+							Ref:         ref("github.com/appvia/kore/pkg/apis/core/v1.Ownership"),
+						},
+					},
+				},
+				Required: []string{"kind", "plan", "configuration", "credentials"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/core/v1.Ownership", "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"},
+	}
+}
+
+func schema_pkg_apis_clusters_v1_ClusterStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ClusterStatus defines the observed state of a cluster",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"apiEndpoint": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIEndpoint is the kubernetes API endpoint url",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"caCertificate": {
+						SchemaProps: spec.SchemaProps{
+							Description: "CaCertificate is the base64 encoded cluster certificate",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"components": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Components is a collection of component statuses",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/appvia/kore/pkg/apis/core/v1.Component"),
+									},
+								},
+							},
+						},
+					},
+					"authProxyEndpoint": {
+						SchemaProps: spec.SchemaProps{
+							Description: "AuthProxyEndpoint is the endpoint of the authentication proxy for this cluster",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Status is the overall status of the cluster",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/core/v1.Component"},
 	}
 }
 
@@ -131,6 +276,12 @@ func schema_pkg_apis_clusters_v1_KubernetesSpec(ref common.ReferenceCallback) co
 									},
 								},
 							},
+						},
+					},
+					"cluster": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Cluster refers to the cluster this object belongs to",
+							Ref:         ref("github.com/appvia/kore/pkg/apis/core/v1.Ownership"),
 						},
 					},
 					"clusterUsers": {

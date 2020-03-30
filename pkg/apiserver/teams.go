@@ -374,6 +374,45 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
+	// Team Clusters
+
+	ws.Route(
+		withAllNonValidationErrors(ws.GET("/{team}/clusters")).To(u.listClusters).
+			Doc("Lists all clusters for a team").
+			Operation("ListClusters").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Returns(http.StatusOK, "List of all clusters for a team", clustersv1.ClusterList{}),
+	)
+
+	ws.Route(
+		withAllNonValidationErrors(ws.GET("/{team}/clusters/{name}")).To(u.getCluster).
+			Doc("Returns a cluster").
+			Operation("GetCluster").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the kubernetes cluster you are acting upon")).
+			Returns(http.StatusNotFound, "the cluster with the given name doesn't exist", nil).
+			Returns(http.StatusOK, "The requested cluster details", clustersv1.Cluster{}),
+	)
+	ws.Route(
+		withAllErrors(ws.PUT("/{team}/clusters/{name}")).To(u.updateCluster).
+			Doc("Creates or updates a cluster").
+			Operation("UpdateCluster").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the cluster")).
+			Reads(clustersv1.Cluster{}, "The definition for kubernetes cluster").
+			Returns(http.StatusOK, "The cluster details", clustersv1.Cluster{}),
+	)
+
+	ws.Route(
+		withAllNonValidationErrors(ws.DELETE("/{team}/clusters/{name}")).To(u.deleteCluster).
+			Doc("Deletes a cluster").
+			Operation("RemoveCluster").
+			Param(ws.PathParameter("name", "Is the name of the cluster")).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Returns(http.StatusNotFound, "the cluster with the given name doesn't exist", nil).
+			Returns(http.StatusOK, "Contains the former cluster definition from the kore", clustersv1.Cluster{}),
+	)
+
 	// Team Cloud Providers
 
 	// GKE Clusters

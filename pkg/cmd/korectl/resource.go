@@ -87,6 +87,17 @@ var resourceConfigs = map[string]resourceConfig{
 			Column("Status", "status.status"),
 		},
 	},
+	"cluster": {
+		Name:   "clusters",
+		IsTeam: true,
+		Columns: []string{
+			Column("Name", "metadata.name"),
+			Column("Kind", "spec.kind"),
+			Column("API Endpoint", "status.apiEndpoint"),
+			Column("Auth Proxy Endpoint", "status.authProxyEndpoint"),
+			Column("Status", "status.status"),
+		},
+	},
 	"gke": {
 		Name:   "gkes",
 		IsTeam: true,
