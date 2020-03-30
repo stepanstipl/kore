@@ -13,3 +13,5 @@ export \
     KORE_IDP_SERVER_URL \
     KORE_IDP_USER_CLAIMS \
     KORE_IDP_CLIENT_SCOPES
+
+npm run dev
