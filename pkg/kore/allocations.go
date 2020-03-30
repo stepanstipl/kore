@@ -224,6 +224,11 @@ func (a acaImpl) Update(ctx context.Context, allocation *configv1.Allocation) er
 	})
 	logger.Info("attempting to create allocation for resource")
 
+	// @step: pick up the team if not set
+	if allocation.Namespace == "" {
+		allocation.Namespace = a.team
+	}
+
 	// @step: ensure our namespace
 	if allocation.Namespace != a.team {
 		return ErrNotAllowed{message: "allocation must be within your team"}
