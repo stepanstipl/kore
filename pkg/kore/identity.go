@@ -55,6 +55,11 @@ func (i identImpl) IsGlobalAdmin() bool {
 	return utils.Contains(HubAdminTeam, i.teamNames)
 }
 
+// IsMember checks if the user is a member of the team
+func (i identImpl) IsMember(name string) bool {
+	return utils.Contains(name, i.Teams())
+}
+
 // GetUserIdentity queries the user services for the identity
 func (h *hubImpl) GetUserIdentity(ctx context.Context, username string) (authentication.Identity, bool, error) {
 	// @step: retrieve the user from the service

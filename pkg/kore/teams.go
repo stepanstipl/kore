@@ -56,8 +56,13 @@ type teamsImpl struct {
 func (t *teamsImpl) Delete(ctx context.Context, name string) error {
 	// @step: retrieve the user from context
 	user := authentication.MustGetIdentity(ctx)
-	if !user.IsGlobalAdmin() {
-		log.Warn("non admin user attempting to delete a team")
+
+	// @step: one has to be a team member or the global admin
+	if !user.IsMember(name) && !user.IsGlobalAdmin() {
+		log.WithFields(log.Fields{
+			"team": name,
+			"user": user.Username(),
+		}).Warn("user attempting to delete a team not a member of")
 
 		return ErrUnauthorized
 	}
@@ -91,7 +96,7 @@ func (t *teamsImpl) Delete(ctx context.Context, name string) error {
 			"team": name,
 		}).Warn("attempting to delete a team whom has cluster")
 
-		return ErrNotAllowed{message: "all team clusters must be deleted before team can be removed"}
+		return ErrNotAllowed{message: "all team resources must be deleted before team can be removed"}
 	}
 
 	// @step: check if the team has any allocations to other teams
