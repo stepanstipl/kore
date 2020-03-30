@@ -19,6 +19,7 @@ package kore
 import (
 	"context"
 
+	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/store"
@@ -47,11 +48,16 @@ type gkeImpl struct {
 
 // Delete is responsible for deleting a gke environment
 func (h *gkeImpl) Delete(ctx context.Context, name string) error {
+	user := authentication.MustGetIdentity(ctx)
+
 	logger := log.WithFields(log.Fields{
 		"name": name,
 		"team": h.team,
+		"user": user.Username(),
 	})
-	authentication.MustGetIdentity(ctx)
+	logger.Debug("attempting to delete the gke resource")
+
+	// @TODO check the user us an admin in the team
 
 	// @step: retrieve the cluster
 	cluster := &gke.GKE{}
@@ -72,11 +78,26 @@ func (h *gkeImpl) Delete(ctx context.Context, name string) error {
 		return NewErrNotAllowed("you cannot delete a cluster from another team")
 	}
 
-	// @TODO check the user us an admin in the team
+	// @step: check if we have any clusters backing on to this
+	list := &clustersv1.KubernetesList{}
+	if err := h.Store().Client().List(ctx,
+		store.ListOptions.InAllNamespaces(),
+		store.ListOptions.InTo(list),
+	); err != nil {
+		logger.WithError(err).Error("trying to check for clusters using this gke resource")
 
-	// @step: check if we have any namespaces allocated to teams
+		return err
+	}
+	for _, x := range list.Items {
+		if matched, err := IsResourceOwner(cluster, x.Spec.Provider); err != nil {
+			logger.WithError(err).Error("trying to check ownership")
 
-	// @step: issue the request to remove the cluster
+			return err
+		} else if matched {
+			return NewErrNotAllowed("cluster must be deleted before removing cloud resource")
+		}
+	}
+
 	return h.Store().Client().Delete(ctx, store.DeleteOptions.From(cluster))
 }
 
