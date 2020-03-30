@@ -1,29 +1,22 @@
-import React from 'react'
 import PropTypes from 'prop-types'
 import { Typography, Card, List, Button, Drawer, message, Icon } from 'antd'
 const { Text, Title } = Typography
 
 import { kore } from '../../../config'
 import Credentials from '../team/Credentials'
+import ResourceList from '../configure/ResourceList'
 import GKECredentialsForm from '../forms/GKECredentialsForm'
 import apiRequest from '../../utils/api-request'
 import apiPaths from '../../utils/api-paths'
-import copy from '../../utils/object-copy'
 
-class GKECredentialsList extends React.Component {
+class GKECredentialsList extends ResourceList {
 
   static propTypes = {
     style: PropTypes.object
   }
 
-  constructor(props) {
-    super(props)
-    this.state = {
-      dataLoading: true,
-      editCredential: false,
-      addCredential: false
-    }
-  }
+  createdMessage = 'GKE credentials created successfully'
+  updatedMessage = 'GKE credentials updated successfully'
 
   async fetchComponentData() {
     const [ allTeams, gkeCredentials, allAllocations ] = await Promise.all([
@@ -35,78 +28,23 @@ class GKECredentialsList extends React.Component {
     gkeCredentials.items.forEach(gke => {
       gke.allocation = (allAllocations.items || []).find(alloc => alloc.metadata.name === gke.metadata.name)
     })
-    return { gkeCredentials, allTeams }
-  }
-
-  componentDidMount() {
-    return this.fetchComponentData()
-      .then(({ gkeCredentials, allTeams }) => {
-        const state = copy(this.state)
-        state.gkeCredentials = gkeCredentials
-        state.allTeams = allTeams
-        state.dataLoading = false
-        this.setState(state)
-      })
-  }
-
-  handleStatusUpdated = (updatedResource, done) => {
-    const state = copy(this.state)
-    const resource = state.gkeCredentials.items.find(r => r.metadata.name === updatedResource.metadata.name)
-    resource.status = updatedResource.status
-    this.setState(state, done)
-  }
-
-  editCredential = cred => {
-    return async () => {
-      const state = copy(this.state)
-      state.editCredential = cred ? cred : false
-      this.setState(state)
-    }
-  }
-
-  handleEditCredentialSave = updatedCred => {
-    const state = copy(this.state)
-
-    const editedIntegration = state.gkeCredentials.items.find(c => c.metadata.name === state.editCredential.metadata.name)
-    editedIntegration.spec = updatedCred.spec
-    editedIntegration.allocation = updatedCred.allocation
-    editedIntegration.status.status = 'Pending'
-
-    state.editCredential = false
-    this.setState(state)
-    message.success('GKE credentials updated successfully')
-  }
-
-  addCredential = enabled => {
-    return () => {
-      const state = copy(this.state)
-      state.addCredential = enabled
-      this.setState(state)
-    }
-  }
-
-  handleAddCredentialSave = async createdCred => {
-    const state = copy(this.state)
-    state.gkeCredentials.items.push(createdCred)
-    state.addCredential = false
-    this.setState(state)
-    message.success('GKE credentials created successfully')
+    return { resources: gkeCredentials, allTeams }
   }
 
   render() {
-    const { gkeCredentials, allTeams, editCredential, addCredential } = this.state
+    const { resources, allTeams, edit, add } = this.state
 
     return (
-      <Card style={this.props.style} title="GKE credentials" extra={<Button type="primary" onClick={this.addCredential(true)}>+ New</Button>}>
-        {!gkeCredentials ? <Icon type="loading" /> : (
+      <Card style={this.props.style} title="GKE credentials" extra={<Button type="primary" onClick={this.add(true)}>+ New</Button>}>
+        {!resources ? <Icon type="loading" /> : (
           <>
             <List
-              dataSource={gkeCredentials.items}
+              dataSource={resources.items}
               renderItem={gke =>
                 <Credentials
                   gke={gke}
                   allTeams={allTeams.items}
-                  editGKECredential={this.editCredential}
+                  editGKECredential={this.edit}
                   handleUpdate={this.handleStatusUpdated}
                   refreshMs={2000}
                   stateResourceDataKey="gke"
@@ -115,41 +53,41 @@ class GKECredentialsList extends React.Component {
               }
             >
             </List>
-            {editCredential ? (
+            {edit ? (
               <Drawer
                 title={
-                  editCredential.allocation ? (
+                  edit.allocation ? (
                     <div>
-                      <Title level={4}>{editCredential.allocation.spec.name}</Title>
-                      <Text>{editCredential.allocation.spec.summary}</Text>
+                      <Title level={4}>{edit.allocation.spec.name}</Title>
+                      <Text>{edit.allocation.spec.summary}</Text>
                     </div>
                   ) : (
-                    <Title level={4}>{editCredential.metadata.name}</Title>
+                    <Title level={4}>{edit.metadata.name}</Title>
                   )
                 }
-                visible={!!editCredential}
-                onClose={this.editCredential(false)}
+                visible={!!edit}
+                onClose={this.edit(false)}
                 width={700}
               >
                 <GKECredentialsForm
                   team={kore.koreAdminTeamName}
                   allTeams={allTeams}
-                  data={editCredential}
-                  handleSubmit={this.handleEditCredentialSave}
+                  data={edit}
+                  handleSubmit={this.handleEditSave}
                 />
               </Drawer>
             ) : null}
-            {addCredential ? (
+            {add ? (
               <Drawer
                 title={<Title level={4}>New GKE credentials</Title>}
-                visible={addCredential}
-                onClose={this.addCredential(false)}
+                visible={add}
+                onClose={this.add(false)}
                 width={700}
               >
                 <GKECredentialsForm
                   team={kore.koreAdminTeamName}
                   allTeams={allTeams}
-                  handleSubmit={this.handleAddCredentialSave}
+                  handleSubmit={this.handleAddSave}
                 />
               </Drawer>
             ) : null}

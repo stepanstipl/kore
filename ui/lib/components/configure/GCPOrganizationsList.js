@@ -1,29 +1,22 @@
-import React from 'react'
 import PropTypes from 'prop-types'
-import { Typography, Card, List, Button, Drawer, message, Icon } from 'antd'
+import { Typography, Card, List, Button, Drawer, Icon } from 'antd'
 const { Text, Title } = Typography
 
 import { kore } from '../../../config'
 import GCPOrganization from '../team/GCPOrganization'
+import ResourceList from '../configure/ResourceList'
 import GCPOrganizationForm from '../forms/GCPOrganizationForm'
 import apiRequest from '../../utils/api-request'
 import apiPaths from '../../utils/api-paths'
-import copy from '../../utils/object-copy'
 
-class GCPOrganizationsList extends React.Component {
+class GCPOrganizationsList extends ResourceList {
 
   static propTypes = {
     style: PropTypes.object
   }
 
-  constructor(props) {
-    super(props)
-    this.state = {
-      dataLoading: true,
-      editOrganization: false,
-      addOrganization: false
-    }
-  }
+  createdMessage = 'GCP organization created successfully'
+  updatedMessage = 'GCP organization updated successfully'
 
   async fetchComponentData() {
     const [ allTeams, gcpOrganizations, allAllocations ] = await Promise.all([
@@ -35,78 +28,23 @@ class GCPOrganizationsList extends React.Component {
     gcpOrganizations.items.forEach(org => {
       org.allocation = (allAllocations.items || []).find(alloc => alloc.metadata.name === org.metadata.name)
     })
-    return { gcpOrganizations, allTeams }
-  }
-
-  componentDidMount() {
-    return this.fetchComponentData()
-      .then(({ gcpOrganizations, allTeams }) => {
-        const state = copy(this.state)
-        state.gcpOrganizations = gcpOrganizations
-        state.allTeams = allTeams
-        state.dataLoading = false
-        this.setState(state)
-      })
-  }
-
-  handleStatusUpdated = (updatedResource, done) => {
-    const state = copy(this.state)
-    const resource = state.gcpOrganizations.items.find(r => r.metadata.name === updatedResource.metadata.name)
-    resource.status = updatedResource.status
-    this.setState(state, done)
-  }
-
-  editOrganization = org => {
-    return async () => {
-      const state = copy(this.state)
-      state.editOrganization = org ? org : false
-      this.setState(state)
-    }
-  }
-
-  handleEditOrganizationSave = updatedOrg => {
-    const state = copy(this.state)
-
-    const editedIntegration = state.gcpOrganizations.items.find(c => c.metadata.name === state.editOrganization.metadata.name)
-    editedIntegration.spec = updatedOrg.spec
-    editedIntegration.allocation = updatedOrg.allocation
-    editedIntegration.status.status = 'Pending'
-
-    state.editOrganization = false
-    this.setState(state)
-    message.success('GCP organization updated successfully')
-  }
-
-  addOrganization = enabled => {
-    return () => {
-      const state = copy(this.state)
-      state.addOrganization = enabled
-      this.setState(state)
-    }
-  }
-
-  handleAddOrganizationSave = async createdOrg => {
-    const state = copy(this.state)
-    state.gcpOrganizations.items.push(createdOrg)
-    state.addOrganization = false
-    this.setState(state)
-    message.success('GCP organization created successfully')
+    return { resources: gcpOrganizations, allTeams }
   }
 
   render() {
-    const { gcpOrganizations, allTeams, editOrganization, addOrganization } = this.state
+    const { resources, allTeams, edit, add } = this.state
 
     return (
-      <Card style={this.props.style} title="GCP organizations" extra={<Button type="primary" onClick={this.addOrganization(true)}>+ New</Button>}>
-        {!gcpOrganizations ? <Icon type="loading" /> : (
+      <Card style={this.props.style} title="GCP organizations" extra={<Button type="primary" onClick={this.add(true)}>+ New</Button>}>
+        {!resources ? <Icon type="loading" /> : (
           <>
             <List
-              dataSource={gcpOrganizations.items}
+              dataSource={resources.items}
               renderItem={org =>
                 <GCPOrganization
                   organization={org}
                   allTeams={allTeams.items}
-                  editOrganization={this.editOrganization}
+                  editOrganization={this.edit}
                   handleUpdate={this.handleStatusUpdated}
                   refreshMs={2000}
                   stateResourceDataKey="organization"
@@ -115,41 +53,41 @@ class GCPOrganizationsList extends React.Component {
               }
             >
             </List>
-            {editOrganization ? (
+            {edit ? (
               <Drawer
                 title={
-                  editOrganization.allocation ? (
+                  edit.allocation ? (
                     <div>
-                      <Title level={4}>{editOrganization.allocation.spec.name}</Title>
-                      <Text>{editOrganization.allocation.spec.summary}</Text>
+                      <Title level={4}>{edit.allocation.spec.name}</Title>
+                      <Text>{edit.allocation.spec.summary}</Text>
                     </div>
                   ) : (
-                    <Title level={4}>{editOrganization.metadata.name}</Title>
+                    <Title level={4}>{edit.metadata.name}</Title>
                   )
                 }
-                visible={!!editOrganization}
-                onClose={this.editOrganization(false)}
+                visible={!!edit}
+                onClose={this.edit(false)}
                 width={700}
               >
                 <GCPOrganizationForm
                   team={kore.koreAdminTeamName}
                   allTeams={allTeams}
-                  data={editOrganization}
-                  handleSubmit={this.handleEditOrganizationSave}
+                  data={edit}
+                  handleSubmit={this.handleEditSave}
                 />
               </Drawer>
             ) : null}
-            {addOrganization ? (
+            {add ? (
               <Drawer
                 title={<Title level={4}>New GCP organization</Title>}
-                visible={addOrganization}
-                onClose={this.addOrganization(false)}
+                visible={add}
+                onClose={this.add(false)}
                 width={700}
               >
                 <GCPOrganizationForm
                   team={kore.koreAdminTeamName}
                   allTeams={allTeams}
-                  handleSubmit={this.handleAddOrganizationSave}
+                  handleSubmit={this.handleAddSave}
                 />
               </Drawer>
             ) : null}
