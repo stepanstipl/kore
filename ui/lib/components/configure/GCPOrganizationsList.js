@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { Typography, Card, List, Button, Drawer, Icon } from 'antd'
+import { Typography, Card, List, Button, Drawer, Icon, Alert } from 'antd'
 const { Text, Title } = Typography
 
 import { kore } from '../../../config'
@@ -35,7 +35,18 @@ class GCPOrganizationsList extends ResourceList {
     const { resources, allTeams, edit, add } = this.state
 
     return (
-      <Card style={this.props.style} title="GCP organizations" extra={<Button type="primary" onClick={this.add(true)}>+ New</Button>}>
+      <Card
+        title="Organizations"
+        extra={<Button type="primary" onClick={this.add(true)}>+ New</Button>}
+        style={this.props.style}
+      >
+        <Alert
+          message="Give Kore access to your Google Cloud Platform organization"
+          description="This will allow Kore to fully manage your cloud accounts for you."
+          type="info"
+          showIcon
+          style={{ marginBottom: '20px' }}
+        />
         {!resources ? <Icon type="loading" /> : (
           <>
             <List
@@ -55,17 +66,8 @@ class GCPOrganizationsList extends ResourceList {
             </List>
             {edit ? (
               <Drawer
-                title={
-                  edit.allocation ? (
-                    <div>
-                      <Title level={4}>{edit.allocation.spec.name}</Title>
-                      <Text>{edit.allocation.spec.summary}</Text>
-                    </div>
-                  ) : (
-                    <Title level={4}>{edit.metadata.name}</Title>
-                  )
-                }
-                visible={!!edit}
+                title={<Title level={4}>GCP Organization: {edit.spec.parentID}</Title>}
+                visible={Boolean(edit)}
                 onClose={this.edit(false)}
                 width={700}
               >

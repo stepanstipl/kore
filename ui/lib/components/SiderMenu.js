@@ -43,8 +43,8 @@ class SiderMenu extends React.Component {
           </span>
         }
       >
-        {menuItem({ key: 'configure_integrations', text: 'Integrations', link: '/configure/integrations', icon: 'api' })}
-        {menuItem({ key: 'users', text: 'Users', link: '/configure/users', icon: 'user' })}
+        {menuItem({ key: 'configure_cloud', text: 'Cloud', link: '/configure/cloud', icon: 'cloud' })}
+        {menuItem({ key: 'configure_users', text: 'Users', link: '/configure/users', icon: 'user' })}
       </SubMenu>
     ) : null
 

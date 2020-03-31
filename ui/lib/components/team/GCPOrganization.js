@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 import moment from 'moment'
 import { List, Avatar, Icon, Typography, message, Tooltip } from 'antd'
-const { Text } = Typography
+const { Text, Title } = Typography
 
 import ResourceStatusTag from '../ResourceStatusTag'
 import AutoRefreshComponent from './AutoRefreshComponent'
@@ -45,10 +45,6 @@ class GCPOrganization extends AutoRefreshComponent {
       return allocatedTeams.length > 0 ? allocatedTeams.join(', ') : 'All teams'
     }
 
-    const displayName = organization.allocation ?
-      <Text>{organization.allocation.spec.name} ({organization.spec.parentID}) <Text type="secondary">{organization.allocation.spec.summary}</Text></Text> :
-      <Text>{organization.metadata.name} ({organization.spec.parentID})</Text>
-
     return (
       <List.Item key={organization.metadata.name} actions={[
         <ResourceStatusTag key="status" resourceStatus={organization.status} />,
@@ -56,15 +52,20 @@ class GCPOrganization extends AutoRefreshComponent {
       ]}>
         <List.Item.Meta
           avatar={<Avatar icon="cloud" />}
-          title={displayName}
+          title={
+            <>
+              <Title level={4} style={{ display: 'inline', marginRight: '15px' }}>{organization.spec.parentID}</Title>
+              <Text style={{ marginRight: '5px' }}>{organization.allocation.spec.name}</Text>
+              <Tooltip title={organization.allocation.spec.summary}>
+                <Icon type="info-circle" theme="twoTone" />
+              </Tooltip>
+            </>
+          }
           description={
-            <div>
-              <Text>Allocated to: {getOrganizationAllocations(organization.allocation)}</Text>
-              <br/>
-              <Text type='secondary'>Created {created}</Text>
-            </div>
+            <Text>Allocated to: {getOrganizationAllocations(organization.allocation)}</Text>
           }
         />
+        <Text type='secondary'>Created {created}</Text>
       </List.Item>
     )
   }

@@ -223,9 +223,9 @@ class GCPOrganizationForm extends React.Component {
               <Input placeholder="Description" />,
             )}
           </Form.Item>
-          <Form.Item label="Parent ID" validateStatus={fieldError('parentID') ? 'error' : ''} help={fieldError('parentID') || 'The GCP organization ID'}>
+          <Form.Item label="Organization ID" validateStatus={fieldError('parentID') ? 'error' : ''} help={fieldError('parentID') || 'The GCP organization ID'}>
             {getFieldDecorator('parentID', {
-              rules: [{ required: true, message: 'Please enter the parent ID!' }],
+              rules: [{ required: true, message: 'Please enter the organization ID!' }],
               initialValue: data && data.spec.parentID
             })(
               <Input placeholder="Parent ID" />,

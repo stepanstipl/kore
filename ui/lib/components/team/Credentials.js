@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 import moment from 'moment'
 import { List, Avatar, Icon, Typography, message, Tooltip } from 'antd'
-const { Text } = Typography
+const { Text, Title } = Typography
 
 import ResourceVerificationStatus from '../ResourceVerificationStatus'
 import AutoRefreshComponent from './AutoRefreshComponent'
@@ -56,16 +56,21 @@ class Credentials extends AutoRefreshComponent {
         <Text key="show_creds"><a onClick={editGKECredential(gke)}><Icon type="eye" theme="filled"/> Edit</a></Text>
       ]}>
         <List.Item.Meta
-          avatar={<Avatar icon="cloud" />}
-          title={displayName}
+          avatar={<Avatar icon="project" />}
+          title={
+            <>
+              <Title level={4} style={{ display: 'inline', marginRight: '15px' }}>{gke.spec.project}</Title>
+              <Text style={{ marginRight: '5px' }}>{gke.allocation.spec.name}</Text>
+              <Tooltip title={gke.allocation.spec.summary}>
+                <Icon type="info-circle" theme="twoTone" />
+              </Tooltip>
+            </>
+          }
           description={
-            <div>
-              <Text>Allocated to: {getCredentialsAllocations(gke.allocation)}</Text>
-              <br/>
-              <Text type='secondary'>Created {created}</Text>
-            </div>
+            <Text>Allocated to: {getCredentialsAllocations(gke.allocation)}</Text>
           }
         />
+        <Text type='secondary'>Created {created}</Text>
       </List.Item>
     )
   }

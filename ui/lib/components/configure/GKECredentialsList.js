@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { Typography, Card, List, Button, Drawer, message, Icon } from 'antd'
+import { Typography, Card, List, Button, Drawer, Alert, Icon } from 'antd'
 const { Text, Title } = Typography
 
 import { kore } from '../../../config'
@@ -35,7 +35,18 @@ class GKECredentialsList extends ResourceList {
     const { resources, allTeams, edit, add } = this.state
 
     return (
-      <Card style={this.props.style} title="GKE credentials" extra={<Button type="primary" onClick={this.add(true)}>+ New</Button>}>
+      <Card
+        title="Projects"
+        extra={<Button type="primary" onClick={this.add(true)}>+ New</Button>}
+        style={this.props.style}
+      >
+        <Alert
+          message="Give Kore access to your existing Google Cloud Platform projects"
+          description="This will enable Kore to build clusters inside an existing project. You must create a Service Account inside your project and add that as a credential here."
+          type="info"
+          showIcon
+          style={{ marginBottom: '20px' }}
+        />
         {!resources ? <Icon type="loading" /> : (
           <>
             <List
@@ -55,17 +66,8 @@ class GKECredentialsList extends ResourceList {
             </List>
             {edit ? (
               <Drawer
-                title={
-                  edit.allocation ? (
-                    <div>
-                      <Title level={4}>{edit.allocation.spec.name}</Title>
-                      <Text>{edit.allocation.spec.summary}</Text>
-                    </div>
-                  ) : (
-                    <Title level={4}>{edit.metadata.name}</Title>
-                  )
-                }
-                visible={!!edit}
+                title={<Title level={4}>GCP project: {edit.spec.project}</Title>}
+                visible={Boolean(edit)}
                 onClose={this.edit(false)}
                 width={700}
               >
@@ -79,7 +81,7 @@ class GKECredentialsList extends ResourceList {
             ) : null}
             {add ? (
               <Drawer
-                title={<Title level={4}>New GKE credentials</Title>}
+                title={<Title level={4}>New GCP project</Title>}
                 visible={add}
                 onClose={this.add(false)}
                 width={700}
