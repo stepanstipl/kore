@@ -195,15 +195,6 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 				fmt.Printf("Provisioning took: %s\n", time.Since(now))
 			}
 
-			// @step: create the cluster ownership
-			ownership := corev1.Ownership{
-				Group:     clustersv1.GroupVersion.Group,
-				Version:   clustersv1.GroupVersion.Version,
-				Kind:      "Kubernetes",
-				Namespace: cluster.Namespace,
-				Name:      cluster.Name,
-			}
-
 			// @step: do we need to provision any namespaces? - note the split and joining
 			// allows for --namespace a,b,c
 			var list []string
@@ -212,7 +203,7 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 			}
 
 			for _, x := range list {
-				if _, err := CreateClusterNamespace(config, ownership, team, x, dry); err != nil {
+				if _, err := CreateClusterNamespace(config, name, team, x, dry); err != nil {
 					return fmt.Errorf("trying to provision namespace claim: %s on cluster: %s", x, err)
 				}
 			}
@@ -275,8 +266,8 @@ func createClusterObject(ctx *cli.Context, name, team string, whoAmI *types.WhoA
 }
 
 // CreateClusterNamespace is called to provision a namespace on the cluster
-func CreateClusterNamespace(config *Config, cluster corev1.Ownership, team, name string, dry bool) (*clustersv1.NamespaceClaim, error) {
-	resourceName := fmt.Sprintf("%s-%s", cluster.Name, name)
+func CreateClusterNamespace(config *Config, clusterName, team, name string, dry bool) (*clustersv1.NamespaceClaim, error) {
+	resourceName := fmt.Sprintf("%s-%s", clusterName, name)
 	kind := "namespaceclaims"
 
 	object := &clustersv1.NamespaceClaim{
@@ -288,8 +279,14 @@ func CreateClusterNamespace(config *Config, cluster corev1.Ownership, team, name
 			Name: resourceName,
 		},
 		Spec: clustersv1.NamespaceClaimSpec{
-			Name:    name,
-			Cluster: cluster,
+			Name: name,
+			Cluster: corev1.Ownership{
+				Group:     clustersv1.GroupVersion.Group,
+				Version:   clustersv1.GroupVersion.Version,
+				Kind:      "Kubernetes",
+				Namespace: team,
+				Name:      clusterName,
+			},
 		},
 	}
 	if dry {

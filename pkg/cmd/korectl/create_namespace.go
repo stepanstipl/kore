@@ -20,9 +20,6 @@ import (
 	"context"
 	"fmt"
 
-	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
-	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-
 	"github.com/urfave/cli/v2"
 )
 
@@ -97,15 +94,7 @@ func GetCreateNamespaceCommand(config *Config) *cli.Command {
 				return fmt.Errorf("cluster: %s does not exist", cluster)
 			}
 
-			owner := corev1.Ownership{
-				Group:     clustersv1.GroupVersion.Group,
-				Version:   clustersv1.GroupVersion.Version,
-				Kind:      "Kubernetes",
-				Namespace: team,
-				Name:      cluster,
-			}
-
-			claim, err := CreateClusterNamespace(config, owner, team, name, dry)
+			claim, err := CreateClusterNamespace(config, cluster, team, name, dry)
 			if err != nil {
 				return fmt.Errorf("trying to provision namespace on cluster: %s", err)
 			}
