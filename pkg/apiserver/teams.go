@@ -605,6 +605,44 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
+	// EKSVPC EKS dependencies
+
+	ws.Route(
+		withAllNonValidationErrors(ws.GET("/{team}/eksvpcs").To(u.findEKSVPCs).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Doc("Is the used to return a list of Amazon EKS VPC which thhe team has access").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", eks.EKSVPCList{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+		),
+	)
+
+	ws.Route(
+		ws.GET("/{team}/eksvpcs/{name}").To(u.findEKSVPC).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the EKS VPC you are acting upon")).
+			Doc("Is the used to return a EKS VPC which the team has access").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", eks.EKSVPC{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.PUT("/{team}/eksvpcs/{name}").To(u.updateEKSVPC).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the EKS VPC you are acting upon")).
+			Doc("Is used to provision or update a EKS VPC in the kore").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", eks.EKSVPC{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.DELETE("/{team}/eksvpcs/{name}").To(u.deleteEKSVPC).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the EKS VPC you are acting upon")).
+			Doc("Is used to delete a EKS VPC from the kore").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", eks.EKSVPC{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
 	return ws, nil
 }
 

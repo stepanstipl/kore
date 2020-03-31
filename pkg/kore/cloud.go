@@ -26,6 +26,8 @@ type Cloud interface {
 	GKECredentials() GKECredentials
 	// EKS returns the EKS interface
 	EKS() EKS
+	// EKSVPC provides acces to the eks's VPC dependencies
+	EKSVPC() EKSVPC
 	// EKSCredentials provides acces to the eks's credentials
 	EKSCredentials() EKSCredentials
 	// EKSNodeGroup provides access to an eks nodegroup
@@ -57,6 +59,11 @@ func (c *cloudImpl) GKECredentials() GKECredentials {
 // EKS retuens a eks interface
 func (c *cloudImpl) EKS() EKS {
 	return &eksImpl{cloudImpl: c, team: c.team}
+}
+
+// EKSVPC returns a eksvpc interface
+func (c *cloudImpl) EKSVPC() EKSVPC {
+	return &eksVPCImpl{cloudImpl: c, team: c.team}
 }
 
 // EKSCredentials returns a eks interface

@@ -1,0 +1,17 @@
+apiVersion: aws.compute.kore.appvia.io/v1alpha1
+kind: EKSVPC
+metadata:
+  creationTimestamp: null
+  name: kore-vpc-dev
+  namespace: devs
+spec:
+  privateIPV4Cidr: 10.0.0.0/16
+  region: eu-west-2
+  clusterName: dev
+  credentials:
+    group: aws.compute.kore.appvia.io
+    version: v1alpha1
+    kind: EKSCredentials
+    name: aws
+    namespace: kore-admin
+status: {}

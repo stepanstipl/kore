@@ -1534,6 +1534,175 @@
         }
       }
     },
+    "/api/v1alpha1/teams/{team}/eksvpcs": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Is the used to return a list of Amazon EKS VPC which thhe team has access",
+        "operationId": "findEKSVPCs",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former team definition from the kore",
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.EKSVPCList"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          },
+          "default": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/teams/{team}/eksvpcs/{name}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Is the used to return a EKS VPC which the team has access",
+        "operationId": "findEKSVPC",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name the of the EKS VPC you are acting upon",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former team definition from the kore",
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.EKSVPC"
+            }
+          },
+          "default": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Is used to provision or update a EKS VPC in the kore",
+        "operationId": "updateEKSVPC",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name the of the EKS VPC you are acting upon",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former team definition from the kore",
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.EKSVPC"
+            }
+          },
+          "default": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Is used to delete a EKS VPC from the kore",
+        "operationId": "deleteEKSVPC",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name the of the EKS VPC you are acting upon",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former team definition from the kore",
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.EKSVPC"
+            }
+          },
+          "default": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
     "/api/v1alpha1/teams/{team}/gkecredentials": {
       "get": {
         "consumes": [
@@ -5111,6 +5280,89 @@
         }
       }
     },
+    "v1alpha1.EKSVPC": {
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1alpha1.EKSVPCSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/v1alpha1.EKSVPCStatus"
+        }
+      }
+    },
+    "v1alpha1.EKSVPCList": {
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1alpha1.EKSVPC"
+          }
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ListMeta"
+        }
+      }
+    },
+    "v1alpha1.EKSVPCSpec": {
+      "required": [
+        "privateIPV4Cidr",
+        "credentials",
+        "clusterName",
+        "region"
+      ],
+      "properties": {
+        "clusterName": {
+          "type": "string"
+        },
+        "credentials": {
+          "$ref": "#/definitions/v1.Ownership"
+        },
+        "privateIPV4Cidr": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        }
+      }
+    },
+    "v1alpha1.EKSVPCStatus": {
+      "properties": {
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.Component"
+          }
+        },
+        "infra": {
+          "$ref": "#/definitions/v1alpha1.Infra"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
     "v1alpha1.GKE": {
       "properties": {
         "apiVersion": {
@@ -5378,6 +5630,28 @@
         },
         "status": {
           "type": "string"
+        }
+      }
+    },
+    "v1alpha1.Infra": {
+      "properties": {
+        "clusterIAMRoleARN": {
+          "type": "string"
+        },
+        "nodeIAMRole": {
+          "type": "string"
+        },
+        "securityGroupIDs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "subnetIDs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
