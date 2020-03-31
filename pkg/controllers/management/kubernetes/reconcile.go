@@ -537,6 +537,8 @@ func (a k8sCtrl) CheckProviderStatus(ctx context.Context, resource *clustersv1.K
 		}
 
 		switch status.Status {
+		case corev1.SuccessStatus:
+			return nil
 		case corev1.FailureStatus:
 			message := status.Message
 			if message == "" {
