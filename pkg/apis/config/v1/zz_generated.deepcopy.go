@@ -326,7 +326,7 @@ func (in *PlanSpec) DeepCopyInto(out *PlanSpec) {
 			(*out)[key] = val
 		}
 	}
-	in.Values.DeepCopyInto(&out.Values)
+	in.Configuration.DeepCopyInto(&out.Configuration)
 	return
 }
 

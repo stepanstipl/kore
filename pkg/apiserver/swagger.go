@@ -67,7 +67,7 @@ func EnrichSwagger(swo *spec.Swagger) {
 
 	// These are horrible hacks to override the type for apiextv1.JSON properties, which is handled as "string",
 	// but it should be an "object". ModelTypeNameHandler didn't work in restfulspec.Config.
-	enrichSwaggerFixRawJSON(swo, "v1.PlanSpec", "values")
+	enrichSwaggerFixRawJSON(swo, "v1.PlanSpec", "configuration")
 	enrichSwaggerFixRawJSON(swo, "v1.ClusterSpec", "configuration")
 
 }

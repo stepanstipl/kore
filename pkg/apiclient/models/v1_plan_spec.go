@@ -17,6 +17,10 @@ import (
 // swagger:model v1.PlanSpec
 type V1PlanSpec struct {
 
+	// configuration
+	// Required: true
+	Configuration interface{} `json:"configuration"`
+
 	// description
 	// Required: true
 	Description *string `json:"description"`
@@ -31,15 +35,15 @@ type V1PlanSpec struct {
 	// summary
 	// Required: true
 	Summary *string `json:"summary"`
-
-	// values
-	// Required: true
-	Values interface{} `json:"values"`
 }
 
 // Validate validates this v1 plan spec
 func (m *V1PlanSpec) Validate(formats strfmt.Registry) error {
 	var res []error
+
+	if err := m.validateConfiguration(formats); err != nil {
+		res = append(res, err)
+	}
 
 	if err := m.validateDescription(formats); err != nil {
 		res = append(res, err)
@@ -53,13 +57,18 @@ func (m *V1PlanSpec) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
-	if err := m.validateValues(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *V1PlanSpec) validateConfiguration(formats strfmt.Registry) error {
+
+	if err := validate.Required("configuration", "body", m.Configuration); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -84,15 +93,6 @@ func (m *V1PlanSpec) validateKind(formats strfmt.Registry) error {
 func (m *V1PlanSpec) validateSummary(formats strfmt.Registry) error {
 
 	if err := validate.Required("summary", "body", m.Summary); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *V1PlanSpec) validateValues(formats strfmt.Registry) error {
-
-	if err := validate.Required("values", "body", m.Values); err != nil {
 		return err
 	}
 

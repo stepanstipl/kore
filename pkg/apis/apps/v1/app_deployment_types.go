@@ -85,7 +85,7 @@ type AppDeploymentSpec struct {
 	// Subscription is the nature of upgrades i.e manual or automatic
 	// +kubebuilder:validation:Required
 	Subscription Subscription `json:"subscription"`
-	// Values are optional values suppilied to the application deployment
+	// Configuration are optional values suppilied to the application deployment
 	// +kubebuilder:validation:Optional
 	Values apiextv1.JSON `json:"values,omitempty"`
 }

@@ -198,7 +198,7 @@ func schema_pkg_apis_apps_v1_AppDeploymentSpec(ref common.ReferenceCallback) com
 					},
 					"values": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Values are optional values suppilied to the application deployment",
+							Description: "Configuration are optional values suppilied to the application deployment",
 							Ref:         ref("k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"),
 						},
 					},

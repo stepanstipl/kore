@@ -42,10 +42,10 @@ class ClusterOptionsForm extends React.Component {
         key: 'value',
       }]
       const planValues = selectedPlan ?
-        Object.keys(selectedPlan.spec.values).map(key => {
-          let value = selectedPlan.spec.values[key]
+        Object.keys(selectedPlan.spec.configuration).map(key => {
+          let value = selectedPlan.spec.configuration[key]
           if (key === 'authorizedMasterNetworks') {
-            const complexValue = selectedPlan.spec.values[key]
+            const complexValue = selectedPlan.spec.configuration[key]
             value = `${complexValue[0].name}: ${complexValue[0].cidr}`
           }
           return {

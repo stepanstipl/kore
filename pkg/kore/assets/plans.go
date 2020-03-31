@@ -45,7 +45,7 @@ func GetDefaultPlans() []*configv1.Plan {
 					Label("kind"):        "GKE",
 					Label("plural"):      "gkes",
 				},
-				Values: apiextv1.JSON{
+				Configuration: apiextv1.JSON{
 					Raw: []byte(`
 						{
 							"authorizedMasterNetworks": [
@@ -99,7 +99,7 @@ func GetDefaultPlans() []*configv1.Plan {
 					Label("kind"):        "GKE",
 					Label("plural"):      "gkes",
 				},
-				Values: apiextv1.JSON{
+				Configuration: apiextv1.JSON{
 					Raw: []byte(`
 						{
 							"authorizedMasterNetworks": [

@@ -222,7 +222,7 @@ func (c *clustersImpl) validateConfiguration(ctx context.Context, cluster *clust
 	}
 
 	planConfiguration := make(map[string]interface{})
-	if err := json.NewDecoder(bytes.NewReader(plan.Spec.Values.Raw)).Decode(&planConfiguration); err != nil {
+	if err := json.NewDecoder(bytes.NewReader(plan.Spec.Configuration.Raw)).Decode(&planConfiguration); err != nil {
 		return fmt.Errorf("failed to parse plan configuration values: %s", err)
 	}
 

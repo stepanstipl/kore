@@ -332,7 +332,7 @@ func CreateClusterProviderFromPlan(
 
 	// @step: decode the plan values into a map
 	kv := make(map[string]interface{})
-	if err := json.NewDecoder(bytes.NewReader(template.Spec.Values.Raw)).Decode(&kv); err != nil {
+	if err := json.NewDecoder(bytes.NewReader(template.Spec.Configuration.Raw)).Decode(&kv); err != nil {
 		return nil, fmt.Errorf("trying to decode plan values: %s", err)
 	}
 
