@@ -107,7 +107,7 @@ func IsOwn(a, b corev1.Ownership) bool {
 	return true
 }
 
-// IsResourceOwner checks if the resource is pointed to
+// IsResourceOwner checks if the object is pointed to by the ownership reference
 func IsResourceOwner(o runtime.Object, ownership corev1.Ownership) (bool, error) {
 	if o == nil {
 		return false, errors.New("no object defined")
