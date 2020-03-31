@@ -27,6 +27,7 @@ import (
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/appvia/kore/pkg/kore/authentication"
+	koreschema "github.com/appvia/kore/pkg/schema"
 	"github.com/appvia/kore/pkg/utils"
 
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -104,6 +105,40 @@ func IsOwn(a, b corev1.Ownership) bool {
 	}
 
 	return true
+}
+
+// IsResourceOwner checks if the object is pointed to by the ownership reference
+func IsResourceOwner(o runtime.Object, ownership corev1.Ownership) (bool, error) {
+	if o == nil {
+		return false, errors.New("no object defined")
+	}
+	mo, ok := o.(metav1.Object)
+	if !ok {
+		return false, errors.New("object does not implement metav1.Object")
+	}
+
+	gvk, found, err := koreschema.GetGroupKindVersion(o)
+	if err != nil {
+		return false, err
+	}
+	if !found {
+		return false, errors.New("resource not found in registered schema")
+	}
+
+	switch {
+	case mo.GetName() != ownership.Name:
+		return false, nil
+	case mo.GetNamespace() != ownership.Namespace:
+		return false, nil
+	case gvk.Group != ownership.Group:
+		return false, nil
+	case gvk.Version != ownership.Version:
+		return false, nil
+	case gvk.Kind != ownership.Kind:
+		return false, nil
+	}
+
+	return true, nil
 }
 
 // ResourceExists checks if some resource exists
