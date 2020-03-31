@@ -22,8 +22,8 @@ type Team interface {
 	Allocations() Allocations
 	// Cloud returns the cloud providers
 	Cloud() Cloud
-	// Clusters returns the teams clusters
-	Clusters() Clusters
+	// Kubernetes returns the teams Kubernetes object manager
+	Kubernetes() Kubernetes
 	// Members returns the team members interface
 	Members() TeamMembers
 	// NamespaceClaims returns the the interface
@@ -54,8 +54,8 @@ func (t *tmImpl) Cloud() Cloud {
 	}
 }
 
-func (t *tmImpl) Clusters() Clusters {
-	return &clsImpl{
+func (t *tmImpl) Kubernetes() Kubernetes {
+	return &kubernetesImpl{
 		hubImpl: t.hubImpl,
 		team:    t.team,
 	}

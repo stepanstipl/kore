@@ -39,8 +39,6 @@ type ClientService interface {
 
 	GetAllocation(params *GetAllocationParams, authInfo runtime.ClientAuthInfoWriter) (*GetAllocationOK, error)
 
-	GetCluster(params *GetClusterParams, authInfo runtime.ClientAuthInfoWriter) (*GetClusterOK, error)
-
 	GetDefaultIDP(params *GetDefaultIDPParams, authInfo runtime.ClientAuthInfoWriter) (*GetDefaultIDPOK, error)
 
 	GetEKSCredentials(params *GetEKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*GetEKSCredentialsOK, error)
@@ -52,6 +50,8 @@ type ClientService interface {
 	GetHealth(params *GetHealthParams, authInfo runtime.ClientAuthInfoWriter) (*GetHealthOK, error)
 
 	GetIDP(params *GetIDPParams, authInfo runtime.ClientAuthInfoWriter) (*GetIDPOK, error)
+
+	GetKubernetes(params *GetKubernetesParams, authInfo runtime.ClientAuthInfoWriter) (*GetKubernetesOK, error)
 
 	GetNamespace(params *GetNamespaceParams, authInfo runtime.ClientAuthInfoWriter) (*GetNamespaceOK, error)
 
@@ -73,8 +73,6 @@ type ClientService interface {
 
 	ListAuditEvents(params *ListAuditEventsParams, authInfo runtime.ClientAuthInfoWriter) (*ListAuditEventsOK, error)
 
-	ListClusters(params *ListClustersParams, authInfo runtime.ClientAuthInfoWriter) (*ListClustersOK, error)
-
 	ListEKSCredentials(params *ListEKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*ListEKSCredentialsOK, error)
 
 	ListGKECredentials(params *ListGKECredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*ListGKECredentialsOK, error)
@@ -86,6 +84,8 @@ type ClientService interface {
 	ListIDPs(params *ListIDPsParams, authInfo runtime.ClientAuthInfoWriter) (*ListIDPsOK, error)
 
 	ListInvites(params *ListInvitesParams, authInfo runtime.ClientAuthInfoWriter) (*ListInvitesOK, error)
+
+	ListKubernetes(params *ListKubernetesParams, authInfo runtime.ClientAuthInfoWriter) (*ListKubernetesOK, error)
 
 	ListNamespaces(params *ListNamespacesParams, authInfo runtime.ClientAuthInfoWriter) (*ListNamespacesOK, error)
 
@@ -111,13 +111,13 @@ type ClientService interface {
 
 	RemoveAllocation(params *RemoveAllocationParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveAllocationOK, error)
 
-	RemoveCluster(params *RemoveClusterParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveClusterOK, error)
-
 	RemoveGKE(params *RemoveGKEParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveGKEOK, error)
 
 	RemoveGKECredential(params *RemoveGKECredentialParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveGKECredentialOK, error)
 
 	RemoveInvite(params *RemoveInviteParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveInviteOK, error)
+
+	RemoveKubernetes(params *RemoveKubernetesParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveKubernetesOK, error)
 
 	RemoveNamespace(params *RemoveNamespaceParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveNamespaceOK, error)
 
@@ -133,8 +133,6 @@ type ClientService interface {
 
 	UpdateAllocation(params *UpdateAllocationParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateAllocationOK, error)
 
-	UpdateCluster(params *UpdateClusterParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateClusterOK, error)
-
 	UpdateEKSCredentials(params *UpdateEKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateEKSCredentialsOK, error)
 
 	UpdateGKE(params *UpdateGKEParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateGKEOK, error)
@@ -144,6 +142,8 @@ type ClientService interface {
 	UpdateIDP(params *UpdateIDPParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateIDPOK, error)
 
 	UpdateIDPClient(params *UpdateIDPClientParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateIDPClientOK, error)
+
+	UpdateKubernetes(params *UpdateKubernetesParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateKubernetesOK, error)
 
 	UpdateNamespace(params *UpdateNamespaceParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateNamespaceOK, error)
 
@@ -404,41 +404,6 @@ func (a *Client) GetAllocation(params *GetAllocationParams, authInfo runtime.Cli
 }
 
 /*
-  GetCluster useds to return the cluster definition from the kore
-*/
-func (a *Client) GetCluster(params *GetClusterParams, authInfo runtime.ClientAuthInfoWriter) (*GetClusterOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewGetClusterParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "GetCluster",
-		Method:             "GET",
-		PathPattern:        "/api/v1alpha1/teams/{team}/clusters/{name}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &GetClusterReader{formats: a.formats},
-		AuthInfo:           authInfo,
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*GetClusterOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetCluster: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
   GetDefaultIDP returns the default identity provider configured in the kore
 */
 func (a *Client) GetDefaultIDP(params *GetDefaultIDPParams, authInfo runtime.ClientAuthInfoWriter) (*GetDefaultIDPOK, error) {
@@ -643,6 +608,41 @@ func (a *Client) GetIDP(params *GetIDPParams, authInfo runtime.ClientAuthInfoWri
 	// unexpected success response
 	unexpectedSuccess := result.(*GetIDPDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  GetKubernetes returns a specific kubernetes object
+*/
+func (a *Client) GetKubernetes(params *GetKubernetesParams, authInfo runtime.ClientAuthInfoWriter) (*GetKubernetesOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetKubernetesParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "GetKubernetes",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/kubernetes/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetKubernetesReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetKubernetesOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetKubernetes: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -995,41 +995,6 @@ func (a *Client) ListAuditEvents(params *ListAuditEventsParams, authInfo runtime
 }
 
 /*
-  ListClusters lists all clusters available for a team
-*/
-func (a *Client) ListClusters(params *ListClustersParams, authInfo runtime.ClientAuthInfoWriter) (*ListClustersOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewListClustersParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "ListClusters",
-		Method:             "GET",
-		PathPattern:        "/api/v1alpha1/teams/{team}/clusters",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &ListClustersReader{formats: a.formats},
-		AuthInfo:           authInfo,
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*ListClustersOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for ListClusters: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
   ListEKSCredentials is the used tor return a list of amazon e k s credentials which thhe team has access
 */
 func (a *Client) ListEKSCredentials(params *ListEKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*ListEKSCredentialsOK, error) {
@@ -1233,6 +1198,41 @@ func (a *Client) ListInvites(params *ListInvitesParams, authInfo runtime.ClientA
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for ListInvites: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  ListKubernetes lists all kubernetes objects available for a team
+*/
+func (a *Client) ListKubernetes(params *ListKubernetesParams, authInfo runtime.ClientAuthInfoWriter) (*ListKubernetesOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewListKubernetesParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "ListKubernetes",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/kubernetes",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &ListKubernetesReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*ListKubernetesOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for ListKubernetes: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1654,41 +1654,6 @@ func (a *Client) RemoveAllocation(params *RemoveAllocationParams, authInfo runti
 }
 
 /*
-  RemoveCluster useds to remove a cluster from a team
-*/
-func (a *Client) RemoveCluster(params *RemoveClusterParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveClusterOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewRemoveClusterParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "RemoveCluster",
-		Method:             "DELETE",
-		PathPattern:        "/api/v1alpha1/teams/{team}/clusters/{name}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &RemoveClusterReader{formats: a.formats},
-		AuthInfo:           authInfo,
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*RemoveClusterOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for RemoveCluster: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
   RemoveGKE is used to delete a managed g k e cluster from the kore
 */
 func (a *Client) RemoveGKE(params *RemoveGKEParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveGKEOK, error) {
@@ -1790,6 +1755,41 @@ func (a *Client) RemoveInvite(params *RemoveInviteParams, authInfo runtime.Clien
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for RemoveInvite: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  RemoveKubernetes useds to remove a kubernetes cluster
+*/
+func (a *Client) RemoveKubernetes(params *RemoveKubernetesParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveKubernetesOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewRemoveKubernetesParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "RemoveKubernetes",
+		Method:             "DELETE",
+		PathPattern:        "/api/v1alpha1/teams/{team}/kubernetes/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &RemoveKubernetesReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*RemoveKubernetesOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for RemoveKubernetes: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -2038,41 +2038,6 @@ func (a *Client) UpdateAllocation(params *UpdateAllocationParams, authInfo runti
 }
 
 /*
-  UpdateCluster useds to create update a cluster definition for a team
-*/
-func (a *Client) UpdateCluster(params *UpdateClusterParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateClusterOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewUpdateClusterParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "UpdateCluster",
-		Method:             "PUT",
-		PathPattern:        "/api/v1alpha1/teams/{team}/clusters/{name}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &UpdateClusterReader{formats: a.formats},
-		AuthInfo:           authInfo,
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*UpdateClusterOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for UpdateCluster: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
   UpdateEKSCredentials is used to provision or update a e k s credentials in the kore
 */
 func (a *Client) UpdateEKSCredentials(params *UpdateEKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateEKSCredentialsOK, error) {
@@ -2242,6 +2207,41 @@ func (a *Client) UpdateIDPClient(params *UpdateIDPClientParams, authInfo runtime
 	// unexpected success response
 	unexpectedSuccess := result.(*UpdateIDPClientDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  UpdateKubernetes useds to create update a kubernetes cluster definition for a team
+*/
+func (a *Client) UpdateKubernetes(params *UpdateKubernetesParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateKubernetesOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewUpdateKubernetesParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "UpdateKubernetes",
+		Method:             "PUT",
+		PathPattern:        "/api/v1alpha1/teams/{team}/kubernetes/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &UpdateKubernetesReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*UpdateKubernetesOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for UpdateKubernetes: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*

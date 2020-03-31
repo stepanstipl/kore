@@ -329,31 +329,31 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
-	// Team Clusters
+	// Team Kubernetes clusters
 
 	ws.Route(
-		ws.GET("/{team}/clusters").To(u.findClusters).
-			Doc("Lists all clusters available for a team").
-			Operation("ListClusters").
+		ws.GET("/{team}/kubernetes").To(u.listKubernetes).
+			Doc("Lists all Kubernetes objects available for a team").
+			Operation("ListKubernetes").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", clustersv1.KubernetesList{}).
 			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
-		ws.GET("/{team}/clusters/{name}").To(u.findCluster).
-			Doc("Used to return the cluster definition from the kore").
-			Operation("GetCluster").
+		ws.GET("/{team}/kubernetes/{name}").To(u.getKubernetes).
+			Doc("returns a specific Kubernetes object").
+			Operation("GetKubernetes").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
-			Param(ws.PathParameter("name", "Is name the of the kubernetes cluster you are acting upon")).
+			Param(ws.PathParameter("name", "Is name the of the kubernetes object you are acting upon")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", clustersv1.Kubernetes{}).
 			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
 	ws.Route(
-		ws.PUT("/{team}/clusters/{name}").To(u.updateCluster).
-			Doc("Used to create/update a cluster definition for a team").
-			Operation("UpdateCluster").
+		ws.PUT("/{team}/kubernetes/{name}").To(u.updateKubernetes).
+			Doc("Used to create/update a Kubernetes cluster definition for a team").
+			Operation("UpdateKubernetes").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the kubernetes cluster you are acting upon")).
 			Reads(clustersv1.Kubernetes{}, "The definition for kubernetes cluster").
@@ -363,9 +363,9 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	)
 
 	ws.Route(
-		ws.DELETE("/{team}/clusters/{name}").To(u.deleteCluster).
-			Doc("Used to remove a cluster from a team").
-			Operation("RemoveCluster").
+		ws.DELETE("/{team}/kubernetes/{name}").To(u.deleteKubernetes).
+			Doc("Used to remove a Kubernetes cluster").
+			Operation("RemoveKubernetes").
 			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", clustersv1.Kubernetes{}).
