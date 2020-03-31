@@ -35,7 +35,7 @@ func (s *Secret) Decode() error {
 	for k, v := range s.Spec.Data {
 		decoded, err := base64.RawStdEncoding.DecodeString(v)
 		if err != nil {
-			return fmt.Errorf("key: %s, value: %s is not base64 encoded", k, v)
+			return fmt.Errorf("key: %q is not base64 encoded", k)
 		}
 		s.Spec.Data[k] = string(decoded)
 	}
