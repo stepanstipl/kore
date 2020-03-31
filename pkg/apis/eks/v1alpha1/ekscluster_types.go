@@ -29,10 +29,6 @@ type EKSSpec struct {
 	// +kubebuilder:validation:MinLength=3
 	// +kubebuilder:validation:Required
 	Name string `json:"name"`
-	// RoleARN is the role ARN which provides permissions to EKS
-	// +kubebuilder:validation:MinLength=10
-	// +kubebuilder:validation:Required
-	RoleARN string `json:"roleARN"`
 	// Version is the Kubernetes version to use
 	// +kubebuilder:validation:MinLength=3
 	// +kubebuilder:validation:Required
@@ -40,17 +36,13 @@ type EKSSpec struct {
 	// Region is the AWS region to launch this cluster within
 	// +kubebuilder:validation:Required
 	Region string `json:"region"`
-	// SubnetIds is a list of subnet IDs
-	// +kubebuilder:validation:Required
-	// +listType=set
-	SubnetIDs []string `json:"subnetIDs"`
-	// SecurityGroupIds is a list of security group IDs
-	// +kubebuilder:validation:Required
-	// +listType=set
-	SecurityGroupIDs []string `json:"securityGroupIDs,omitempty"`
 	// Credentials is a reference to an EKSCredentials object to use for authentication
 	// +k8s:openapi-gen=false
 	Credentials core.Ownership `json:"credentials"`
+	// VPC is a reference to an EKSVPC object to use for the cluster
+	// It will be created automatically or discovered as appriopriate
+	// +k8s:openapi-gen=false
+	VPC core.Ownership `json:"vpc,omitempty"`
 }
 
 // EKSStatus defines the observed state of EKS cluster

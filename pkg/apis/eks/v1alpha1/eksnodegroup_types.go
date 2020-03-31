@@ -38,9 +38,6 @@ type EKSNodeGroupSpec struct {
 	InstanceType string `json:"instanceType,omitempty"`
 	// Labels are any custom kubernetes labels to apply to nodes
 	Labels map[string]string `json:"labels,omitempty"`
-	// NodeIAMROle is the IAM role assumed by the worker nodes themselves
-	// +kubebuilder:validation:Required
-	NodeIAMRole string `json:"nodeIAMRole"`
 	// ReleaseVersion is the Kubernetes version to run for the kubelet
 	ReleaseVersion string `json:"releaseVersion,omitempty"`
 	// DesiredSize is the number of nodes to attempt to use
@@ -55,24 +52,12 @@ type EKSNodeGroupSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:Minimum=1
 	MinSize int64 `json:"minSize"`
-	// Subnets is the VPC networks to use for the nodes
-	// +kubebuilder:validation:Required
-	// +listType=set
-	Subnets []string `json:"subnets"`
 	// Tags are the AWS metadata to apply to the node group
 	// +kubebuilder:validation:Required
 	Tags map[string]string `json:"tags,omitempty"`
 	// Region is the AWS location to launch node group within, must match the region of the cluster
 	// +kubebuilder:validation:Required
 	Region string `json:"region"`
-	// SSHSourceSecurityGroups is the security groups that are allowed SSH access (port 22) to the worker nodes
-	// +listType=set
-	SSHSourceSecurityGroups []string `json:"sshSourceSecurityGroups,omitempty"`
-	// EC2SSHKey is the Amazon EC2 SSH key that provides access for SSH communication with
-	// the worker nodes in the managed node group
-	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html
-	// +kubebuilder:validation:Required
-	EC2SSHKey string `json:"eC2SSHKey"`
 	// Credentials is a reference to an AWSCredentials object to use for authentication
 	// +kubebuilder:validation:Required
 	// +k8s:openapi-gen=false
@@ -86,6 +71,9 @@ type EKSNodeGroupStatus struct {
 	Conditions *core.Components `json:"conditions,omitempty"`
 	// Status provides a overall status
 	Status core.Status `json:"status,omitempty"`
+	// Subnets are the VPC networks to use for the nodes
+	// +listType=set
+	Subnets []string `json:"subnets"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
