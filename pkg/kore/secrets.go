@@ -20,6 +20,7 @@ import (
 	"context"
 
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
+	"github.com/appvia/kore/pkg/kore/assets"
 	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/store"
@@ -52,7 +53,7 @@ type secretImpl struct {
 
 // SupportedSecretTypes returns a list of supported types
 func (h *secretImpl) SupportedSecretTypes() []string {
-	return []string{"generic", "credentials"}
+	return assets.SupportedSecretTypesNames()
 }
 
 // Update is responsible for updating the resource
