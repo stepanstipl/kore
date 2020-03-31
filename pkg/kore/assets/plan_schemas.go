@@ -87,6 +87,31 @@ const GKEPlanSchema = `
 		"authProxyImage": {
 			"type": "string"
 		},
+		"clusterUsers": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": [
+					"username",
+					"roles"
+				],
+				"properties": {
+					"username": {
+						"type": "string",
+						"minLength": 1
+					},
+					"roles": {
+						"type": "array",
+						"items": {
+							"type": "string",
+							"minLength": 1
+						},
+						"minItems": 1
+					}
+				}
+			}
+		},
 		"defaultTeamRole": {
 			"type": "string"
 		},
