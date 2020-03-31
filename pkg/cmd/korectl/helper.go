@@ -252,6 +252,7 @@ func WaitForResource(ctx context.Context, config *Config, team, kind, name strin
 			if attempts > maxAttempts {
 				return false, errors.New("resource has failed to provision")
 			}
+			attempts++
 		case string(corev1.SuccessStatus):
 			return true, nil
 		}
