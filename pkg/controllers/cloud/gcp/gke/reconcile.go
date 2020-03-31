@@ -25,6 +25,7 @@ import (
 	core "github.com/appvia/kore/pkg/apis/core/v1"
 	gcp "github.com/appvia/kore/pkg/apis/gcp/v1alpha1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
+	"github.com/appvia/kore/pkg/controllers"
 	gcpcc "github.com/appvia/kore/pkg/controllers/cloud/gcp/projectclaim"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
@@ -203,13 +204,14 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 
 		logger.Info("attempting to bootstrap the gke cluster")
 
-		boot, err := newBootstrapClient(resource, creds)
+		bc, err := newBootstrapClient(resource, creds)
 		if err != nil {
 			logger.WithError(err).Error("trying to create bootstrap client")
 
 			return false, err
 		}
-		if err := boot.Run(ctx, t.mgr.GetClient()); err != nil {
+
+		if err := controllers.NewBootstrap(bc).Run(ctx, t.mgr.GetClient()); err != nil {
 			logger.WithError(err).Error("trying to bootstrap gke cluster")
 
 			return false, err
