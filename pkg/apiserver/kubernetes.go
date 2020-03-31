@@ -24,12 +24,12 @@ import (
 	restful "github.com/emicklei/go-restful"
 )
 
-// findClusters returns all the clusters under the team
-func (u teamHandler) findClusters(req *restful.Request, resp *restful.Response) {
+// listKubernetes returns all the Kubernetes clusters under the team
+func (u teamHandler) listKubernetes(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		team := req.PathParameter("team")
 
-		list, err := u.Teams().Team(team).Clusters().List(req.Request.Context())
+		list, err := u.Teams().Team(team).Kubernetes().List(req.Request.Context())
 		if err != nil {
 			return err
 		}
@@ -38,13 +38,13 @@ func (u teamHandler) findClusters(req *restful.Request, resp *restful.Response) 
 	})
 }
 
-// findCluster returns a cluster under the team
-func (u teamHandler) findCluster(req *restful.Request, resp *restful.Response) {
+// getKubernetes returns a Kubernetes cluster under the team
+func (u teamHandler) getKubernetes(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		name := req.PathParameter("name")
 		team := req.PathParameter("team")
 
-		list, err := u.Teams().Team(team).Clusters().Get(req.Request.Context(), name)
+		list, err := u.Teams().Team(team).Kubernetes().Get(req.Request.Context(), name)
 		if err != nil {
 			return err
 		}
@@ -53,14 +53,14 @@ func (u teamHandler) findCluster(req *restful.Request, resp *restful.Response) {
 	})
 }
 
-// deleteCluster is responsible for deleting a team resource
-func (u teamHandler) deleteCluster(req *restful.Request, resp *restful.Response) {
+// deleteKubernetes is responsible for deleting a kubernetes resource
+func (u teamHandler) deleteKubernetes(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		ctx := req.Request.Context()
 		name := req.PathParameter("name")
 		team := req.PathParameter("team")
 
-		object, err := u.Teams().Team(team).Clusters().Delete(ctx, name)
+		object, err := u.Teams().Team(team).Kubernetes().Delete(ctx, name)
 		if err != nil {
 			return err
 		}
@@ -69,8 +69,8 @@ func (u teamHandler) deleteCluster(req *restful.Request, resp *restful.Response)
 	})
 }
 
-// updateCluster is responsible for putting an resource into a team
-func (u teamHandler) updateCluster(req *restful.Request, resp *restful.Response) {
+// updateKubernetes is responsible for putting an resource into a team
+func (u teamHandler) updateKubernetes(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		team := req.PathParameter("team")
 
@@ -79,7 +79,7 @@ func (u teamHandler) updateCluster(req *restful.Request, resp *restful.Response)
 			return err
 		}
 
-		if err := u.Teams().Team(team).Clusters().Update(req.Request.Context(), object); err != nil {
+		if err := u.Teams().Team(team).Kubernetes().Update(req.Request.Context(), object); err != nil {
 			return err
 		}
 

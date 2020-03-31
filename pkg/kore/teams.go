@@ -82,7 +82,7 @@ func (t *teamsImpl) Delete(ctx context.Context, name string) error {
 	// else we can go ahead and remove the team
 
 	// @step: check if the team has any resources
-	resources, err := t.Team(name).Clusters().List(ctx)
+	resources, err := t.Team(name).Kubernetes().List(ctx)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"team": name,
