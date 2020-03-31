@@ -27,8 +27,7 @@ spec:
 apiVersion: config.kore.appvia.io/v1
 kind: Allocation
 metadata:
-  name: gcp,
-  namespace: kore-admin
+  name: gcp
 spec:
   # The name of the allocation
   name: GCP Credentials

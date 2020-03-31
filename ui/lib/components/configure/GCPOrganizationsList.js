@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types'
 import { Typography, Card, List, Button, Drawer, Icon, Alert } from 'antd'
-const { Text, Title } = Typography
+const { Title } = Typography
 
 import { kore } from '../../../config'
 import GCPOrganization from '../team/GCPOrganization'
@@ -42,7 +42,7 @@ class GCPOrganizationsList extends ResourceList {
       >
         <Alert
           message="Give Kore access to your Google Cloud Platform organization"
-          description="This will allow Kore to fully manage your cloud accounts for you."
+          description="This will allow Kore to manage the organization for you. This includes managing the creation of projects and Service Accounts giving Kore teams the ability to create clusters with ease."
           type="info"
           showIcon
           style={{ marginBottom: '20px' }}

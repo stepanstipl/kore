@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types'
 import { Typography, Card, List, Button, Drawer, Alert, Icon } from 'antd'
-const { Text, Title } = Typography
+const { Title } = Typography
 
 import { kore } from '../../../config'
 import Credentials from '../team/Credentials'

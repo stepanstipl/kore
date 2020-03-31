@@ -34,14 +34,13 @@ class GCPOrganization extends AutoRefreshComponent {
 
   render() {
     const { organization, editOrganization, allTeams } = this.props
-
     const created = moment(organization.metadata.creationTimestamp).fromNow()
 
-    const getOrganizationAllocations = allocation => {
-      if (!allocation) {
+    const displayAllocations = () => {
+      if (!organization.allocation) {
         return <Text>No teams <Tooltip title="This organization is not allocated to any teams, click edit to fix this."><Icon type="warning" theme="twoTone" twoToneColor="orange" /></Tooltip> </Text>
       }
-      const allocatedTeams = allTeams.filter(team => allocation.spec.teams.includes(team.metadata.name)).map(team => team.spec.summary)
+      const allocatedTeams = allTeams.filter(team => organization.allocation.spec.teams.includes(team.metadata.name)).map(team => team.spec.summary)
       return allocatedTeams.length > 0 ? allocatedTeams.join(', ') : 'All teams'
     }
 
@@ -62,7 +61,7 @@ class GCPOrganization extends AutoRefreshComponent {
             </>
           }
           description={
-            <Text>Allocated to: {getOrganizationAllocations(organization.allocation)}</Text>
+            <Text>Allocated to: {displayAllocations()}</Text>
           }
         />
         <Text type='secondary'>Created {created}</Text>
