@@ -94,6 +94,7 @@ func (p *bootImpl) Run(ctx context.Context, client client.Client) error {
 
 		return err
 	}
+
 	return nil
 }
 
