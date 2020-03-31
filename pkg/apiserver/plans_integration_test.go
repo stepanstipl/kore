@@ -82,7 +82,7 @@ var _ = Describe("/plans", func() {
 	})
 
 	JustBeforeEach(func() {
-		rawValues, _ := json.Marshal(params)
+		rawConfig, _ := json.Marshal(params)
 
 		plan = &models.V1Plan{
 			Metadata: &models.V1ObjectMeta{
@@ -97,8 +97,8 @@ var _ = Describe("/plans", func() {
 					"kore.appvia.io/kind":        "GKE",
 					"kore.appvia.io/plural":      "gkes",
 				},
-				Values: apiextv1.JSON{
-					Raw: rawValues,
+				Configuration: apiextv1.JSON{
+					Raw: rawConfig,
 				},
 			},
 		}

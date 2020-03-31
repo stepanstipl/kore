@@ -98,7 +98,7 @@ class ClusterBuildForm extends React.Component {
         try {
           const gkeSpec = {
             description: selectedPlan.spec.description,
-            ...selectedPlan.spec.values,
+            ...selectedPlan.spec.configuration,
             credentials: selectedProvider.spec.resource
           }
           const apiVersion = `${selectedProvider.spec.resource.group}/${selectedProvider.spec.resource.version}`

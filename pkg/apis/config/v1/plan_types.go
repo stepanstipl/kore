@@ -41,9 +41,9 @@ type PlanSpec struct {
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
 	Summary string `json:"summary"`
-	// Values are the key values to the plan
+	// Configuration are the key+value pairs describing a cluster configuration
 	// +kubebuilder:validation:Type=object
-	Values apiextv1.JSON `json:"values"`
+	Configuration apiextv1.JSON `json:"configuration"`
 }
 
 // PlanStatus defines the observed state of Plan

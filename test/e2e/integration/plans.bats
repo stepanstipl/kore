@@ -38,7 +38,7 @@ load helper
 }
 
 @test "We should see a valid version in the gke plan" {
-  runit "${KORE} get plans gke-development -o json | jq '.spec.values.version' | grep gke"
+  runit "${KORE} get plans gke-development -o json | jq '.spec.configuration.version' | grep gke"
   [[ "$status" -eq 0 ]]
 }
 

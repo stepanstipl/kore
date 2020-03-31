@@ -28,7 +28,7 @@ var _ = Describe("Plans", func() {
 		plans := assets.GetDefaultPlans()
 
 		for _, plan := range plans {
-			err := jsonschema.Validate(assets.GKEPlanSchema, plan.Name, plan.Spec.Values.Raw)
+			err := jsonschema.Validate(assets.GKEPlanSchema, plan.Name, plan.Spec.Configuration.Raw)
 			Expect(err).ToNot(HaveOccurred(), "%s plan is not valid: %s", plan.Name, err)
 		}
 	})

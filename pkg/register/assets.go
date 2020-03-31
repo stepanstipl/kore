@@ -3483,6 +3483,11 @@ spec:
         spec:
           description: PlanSpec defines the desired state of Plan
           properties:
+            configuration:
+              description: Configuration are the key+value pairs describing a cluster
+                configuration
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
             description:
               description: Description provides a summary of the configuration provided
                 by this plan
@@ -3501,15 +3506,11 @@ spec:
               description: Summary provides a short title summary for the plan
               minLength: 1
               type: string
-            values:
-              description: Values are the key values to the plan
-              type: object
-              x-kubernetes-preserve-unknown-fields: true
           required:
+          - configuration
           - description
           - kind
           - summary
-          - values
           type: object
         status:
           description: PlanStatus defines the observed state of Plan
