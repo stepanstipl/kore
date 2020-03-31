@@ -209,7 +209,7 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 
 			return false, err
 		}
-		if err := boot.Bootstrap(ctx, t.mgr.GetClient()); err != nil {
+		if err := boot.Run(ctx, t.mgr.GetClient()); err != nil {
 			logger.WithError(err).Error("trying to bootstrap gke cluster")
 
 			return false, err

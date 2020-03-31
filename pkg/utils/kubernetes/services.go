@@ -81,8 +81,13 @@ func WaitForServiceEndpoint(ctx context.Context, cc client.Client, namespace, na
 			if len(service.Status.LoadBalancer.Ingress) <= 0 {
 				logger.Debug("loadbalancer does not have a status yet")
 			} else {
+				if service.Status.LoadBalancer.Ingress[0].Hostname != "" {
+					logger.Debugf("found a hostname address for the service %s", service.Status.LoadBalancer.Ingress[0].Hostname)
+
+					return service.Status.LoadBalancer.Ingress[0].Hostname, nil
+				}
 				if service.Status.LoadBalancer.Ingress[0].IP != "" {
-					logger.Debug("found an ip address for the service")
+					logger.Debugf("found an ip address for the service %s", service.Status.LoadBalancer.Ingress[0].IP)
 
 					return service.Status.LoadBalancer.Ingress[0].IP, nil
 				}
