@@ -63,6 +63,7 @@ func (a ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 
 	secret.Status.Conditions = []corev1.Condition{}
 	secret.Status.Verified = &verified
+	secret.Status.Status = corev1.SuccessStatus
 
 	if err := a.mgr.GetClient().Status().Patch(ctx, secret, client.MergeFrom(original)); err != nil {
 		logger.WithError(err).Error("trying to update generic secret resource status")
