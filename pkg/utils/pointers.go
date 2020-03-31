@@ -34,3 +34,8 @@ func TruePtr() *bool {
 
 	return &yes
 }
+
+// BoolPtr returns the a pointer to the boolean
+func BoolPtr(v bool) *bool {
+	return &v
+}
