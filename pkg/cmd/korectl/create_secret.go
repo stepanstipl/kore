@@ -100,10 +100,9 @@ func GetCreateSecretCommand(config *Config) *cli.Command {
 
 		Action: func(ctx *cli.Context) error {
 			name := ctx.Args().First()
-			kind := "secert"
+			kind := "secret"
 			team := ctx.String("team")
 			force := ctx.Bool("force")
-			nowait := ctx.Bool("no-wait")
 			dryrun := ctx.Bool("dry-run")
 
 			var secret *configv1.Secret
@@ -144,7 +143,7 @@ func GetCreateSecretCommand(config *Config) *cli.Command {
 				return err
 			}
 
-			return WaitForResourceCheck(context.Background(), config, team, kind, name, nowait)
+			return WaitForResourceCheck(context.Background(), config, team, kind, name, true)
 		},
 	}
 }
