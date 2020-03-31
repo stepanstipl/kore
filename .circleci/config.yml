@@ -8,7 +8,7 @@ jobs:
       GOFLAGS: "-mod=vendor"
 
     docker:
-      - image: circleci/golang:1.13
+      - image: circleci/golang:1.14
 
       - name: database
         image: mariadb:bionic
@@ -44,7 +44,7 @@ jobs:
       GOFLAGS: "-mod=vendor"
 
     docker:
-      - image: circleci/golang:1.13
+      - image: circleci/golang:1.14
 
       - name: etcd
         image: bitnami/etcd:latest
@@ -126,7 +126,7 @@ jobs:
       KORE_PROXY_IMAGE: quay.io/appvia/auth-proxy
 
     docker:
-      - image: circleci/golang:1.13
+      - image: circleci/golang:1.14
 
     steps:
       - checkout
