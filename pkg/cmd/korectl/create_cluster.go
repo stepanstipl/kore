@@ -17,28 +17,28 @@
 package korectl
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"regexp"
 	"strings"
 	"time"
 
+	"github.com/appvia/kore/pkg/apiserver/types"
+
+	"github.com/appvia/kore/pkg/utils"
+
+	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
-	"github.com/appvia/kore/pkg/kore/assets"
-	"github.com/appvia/kore/pkg/utils"
-	"github.com/appvia/kore/pkg/utils/jsonschema"
 	"gopkg.in/yaml.v2"
 
 	"github.com/urfave/cli/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 var (
@@ -85,15 +85,6 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 				Aliases: []string{"p"},
 				Usage:   "the plan which this cluster will be templated from `NAME`",
 			},
-			&cli.StringFlag{
-				Name:  "description",
-				Usage: "provides a short description for the cluster `DESCRIPTION`",
-			},
-			&cli.StringFlag{
-				Name:  "team-role",
-				Usage: "the default role inherited by all members in the team on the cluster `NAME`",
-				Value: "viewer",
-			},
 			&cli.StringSliceFlag{
 				Name:  "namespace",
 				Usage: "you can preprovision a collection namespaces on this cluster as well `NAMES`",
@@ -128,13 +119,10 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 
 		Action: func(ctx *cli.Context) error {
 			name := ctx.Args().First()
-			description := ctx.String("description")
 			allocation := ctx.String("allocation")
 			dry := ctx.Bool("dry-run")
-			kind := "cluster"
 			namespaces := ctx.StringSlice("namespace")
 			plan := ctx.String("plan")
-			role := ctx.String("team-role")
 			team := ctx.String("team")
 			wait := ctx.Bool("no-wait")
 
@@ -142,7 +130,6 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 				return errTeamParameterMissing
 			}
 
-			// @step: check for an allocation
 			if allocation == "" {
 				return fmt.Errorf("no allocation defined, please use $ korectl get allocations -t %s", team)
 			}
@@ -150,33 +137,58 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 				return fmt.Errorf("no plan defined, please use: $ korectl get plans")
 			}
 
-			planParams, err := parsePlanParams(ctx.StringSlice("plan-param"))
+			found, err := TeamResourceExists(config, team, "clusters", name)
+			if err != nil {
+				return err
+			}
+			if found {
+				return fmt.Errorf("cluster %q already exists", name)
+			}
+
+			whoami, err := GetWhoAmI(config)
 			if err != nil {
 				return err
 			}
 
-			// @step: create the cloud provider
-			provider, err := CreateClusterProviderFromPlan(
-				config, team, name, description, plan, allocation, dry, planParams,
-			)
-			if err != nil {
-				return err
+			planObj := &configv1.Plan{}
+			if err := GetResource(config, "plan", plan, planObj); err != nil {
+				return fmt.Errorf("plan %q does not exist", plan)
 			}
 
-			cluster, err := CreateKubernetesClusterFromProvider(config, provider, team, name, role, dry)
+			credsAlloc := &configv1.Allocation{}
+			if err := GetTeamResource(config, team, "allocation", allocation, credsAlloc); err != nil {
+				if reqErr, ok := err.(*RequestError); ok {
+					if reqErr.statusCode == http.StatusNotFound {
+						return fmt.Errorf("allocation %q does not exist", allocation)
+					}
+				} else {
+					return fmt.Errorf("failed to retrieve the allocation from api: %s", err)
+				}
+			}
+
+			cluster, err := createClusterObject(ctx, name, team, whoami, planObj, credsAlloc)
 			if err != nil {
 				return err
 			}
 
 			if dry {
+				out, err := utils.EncodeRuntimeObjectToYAML(cluster)
+				if err != nil {
+					return fmt.Errorf("failed to parse cluster object: %s", err)
+				}
+				fmt.Println(string(out))
 				return nil
+			}
+
+			if err := CreateTeamResource(config, team, "Cluster", name, cluster); err != nil {
+				return err
 			}
 
 			// @step: create a start time
 			now := time.Now()
 
 			// @step: we need to construct the provider type
-			if err := WaitForResourceCheck(context.Background(), config, team, kind, name, wait); err != nil {
+			if err := WaitForResourceCheck(context.Background(), config, team, "Cluster", name, wait); err != nil {
 				return err
 			}
 			if ctx.Bool("show-time") {
@@ -213,62 +225,53 @@ func GetCreateClusterCommand(config *Config) *cli.Command {
 	}
 }
 
-// CreateKubernetesClusterFromProvider is used to provision a k8s cluster from a provider
-func CreateKubernetesClusterFromProvider(config *Config, provider *unstructured.Unstructured, team, name, role string, dry bool) (*clustersv1.Kubernetes, error) {
-	whoami, err := GetWhoAmI(config)
+func createClusterObject(ctx *cli.Context, name, team string, whoAmI *types.WhoAmI, plan *configv1.Plan, credsAlloc *configv1.Allocation) (*clustersv1.Cluster, error) {
+	var configuration map[string]interface{}
+	if err := json.Unmarshal(plan.Spec.Configuration.Raw, &configuration); err != nil {
+		return nil, fmt.Errorf("failed to parse plan configuration: %s", err)
+	}
+
+	planParams, err := parsePlanParams(ctx.StringSlice("plan-param"))
 	if err != nil {
 		return nil, err
 	}
-	kind := "Kubernetes"
 
-	providerSpec := provider.Object["spec"].(map[string]interface{})
-	authProxyAllowedIPs, ok := convertToStringList(providerSpec["authProxyAllowedIPs"])
-	if !ok {
-		return nil, fmt.Errorf("authProxyAllowedIPs is invalid: %q", authProxyAllowedIPs)
+	if _, ok := planParams["clusterUsers"]; !ok {
+		planParams["clusterUsers"] = []map[string]interface{}{
+			{
+				"username": whoAmI.Username,
+				"roles":    []string{"cluster-admin"},
+			},
+		}
 	}
 
-	// @step: create the cluster on top of
-	object := &clustersv1.Kubernetes{
+	for k, v := range planParams {
+		configuration[k] = v
+	}
+
+	configurationRaw, err := json.Marshal(configuration)
+	if err != nil {
+		return nil, fmt.Errorf("failed to process cluster configuration: %s", err)
+	}
+
+	cluster := &clustersv1.Cluster{
 		TypeMeta: metav1.TypeMeta{
+			Kind:       "Cluster",
 			APIVersion: clustersv1.GroupVersion.String(),
-			Kind:       kind,
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: team,
 		},
-		Spec: clustersv1.KubernetesSpec{
-			InheritTeamMembers: true,
-			DefaultTeamRole:    role,
-			Provider: corev1.Ownership{
-				Group:     provider.GetObjectKind().GroupVersionKind().Group,
-				Kind:      provider.GetObjectKind().GroupVersionKind().Kind,
-				Name:      provider.GetName(),
-				Namespace: provider.GetNamespace(),
-				Version:   provider.GetObjectKind().GroupVersionKind().Version,
-			},
-			ClusterUsers: []clustersv1.ClusterUser{
-				{
-					Username: whoami.Username,
-					Roles:    []string{"cluster-admin"},
-				},
-			},
-			AuthProxyAllowedIPs: authProxyAllowedIPs,
+		Spec: clustersv1.ClusterSpec{
+			Kind:          plan.Spec.Kind,
+			Plan:          plan.Name,
+			Configuration: v1beta1.JSON{Raw: configurationRaw},
+			Credentials:   credsAlloc.Spec.Resource,
 		},
 	}
-	if dry {
-		return object, yaml.NewEncoder(os.Stdout).Encode(object)
-	}
 
-	found, err := TeamResourceExists(config, team, "clusters", name)
-	if err != nil {
-		return nil, fmt.Errorf("trying to check if cluster exists: %s", err)
-	}
-	if found {
-		return object, nil
-	}
-
-	return object, CreateTeamResource(config, team, "clusters", name, object)
+	return cluster, nil
 }
 
 // CreateClusterNamespace is called to provision a namespace on the cluster
@@ -307,140 +310,6 @@ func CreateClusterNamespace(config *Config, cluster corev1.Ownership, team, name
 	return object, CreateTeamResource(config, team, kind, name, object)
 }
 
-// CreateClusterProviderFromPlan is used to provision a cluster in kore
-// @TODO need to be revisited once we have autogeneration of resources
-func CreateClusterProviderFromPlan(
-	config *Config,
-	team string,
-	name string,
-	description string,
-	plan string,
-	allocation string,
-	dry bool,
-	overrides map[string]interface{},
-) (*unstructured.Unstructured, error) {
-	// @step: we need to check if the plan exists in the kore
-	if found, err := ResourceExists(config, "plan", plan); err != nil {
-		return nil, fmt.Errorf("trying to retrieve plan from api: %s", err)
-	} else if !found {
-		return nil, fmt.Errorf("plan %q does not exist, you can view plans via $ korectl get plans", plan)
-	}
-	template := &configv1.Plan{}
-	if err := GetResource(config, "plan", plan, template); err != nil {
-		return nil, fmt.Errorf("trying to retrieve plan from api: %s", err)
-	}
-
-	// @step: decode the plan values into a map
-	kv := make(map[string]interface{})
-	if err := json.NewDecoder(bytes.NewReader(template.Spec.Configuration.Raw)).Decode(&kv); err != nil {
-		return nil, fmt.Errorf("trying to decode plan values: %s", err)
-	}
-
-	for paramName, overrideValue := range overrides {
-		kv[paramName] = overrideValue
-	}
-
-	if description != "" {
-		kv["description"] = description
-	}
-
-	switch template.Spec.Kind {
-	case "GKE":
-		if err := jsonschema.Validate(assets.GKEPlanSchema, "plan", kv); err != nil {
-			return nil, err
-		}
-	case "EKS":
-		// TODO: add the EKS Plan schema and validate the plan parameters
-	}
-
-	// @step: we check permissions after the JSON schema validation to produce better error messages
-	// E.g. we should return with "unknown" property is invalid instead of "unknown" can not be modified
-	editableParams, err := getEditablePlanParams(config, team)
-	if err != nil {
-		return nil, err
-	}
-	for paramName := range overrides {
-		if !editableParams[paramName] {
-			return nil, fmt.Errorf("%q parameter can not be modified", paramName)
-		}
-	}
-
-	object := &unstructured.Unstructured{}
-	object.SetGroupVersionKind(schema.GroupVersionKind{
-		Kind: template.Spec.Kind,
-		// needs to be change by added by expanding to the plans to apply to a specific resource
-		// @TODO in another pull_request
-		Group:   gke.GroupVersion.Group,
-		Version: gke.GroupVersion.Version,
-	})
-	object.SetName(name)
-	object.SetNamespace(team)
-	// @TODO: we need to fix this up later, much like above
-	object.SetAPIVersion(gke.GroupVersion.String())
-
-	utils.InjectValuesIntoUnstructured(kv, object)
-
-	// @step: ensure the allocation exists and retrieve it
-	if found, err := TeamResourceExists(config, team, "allocation", allocation); err != nil {
-		return nil, fmt.Errorf("retrieving the allocation from api: %s", err)
-	} else if !found {
-		return nil, fmt.Errorf("allocation: %s has not been assigned to team", allocation)
-	}
-	permit := &configv1.Allocation{}
-	if err := GetTeamResource(config, team, "allocation", allocation, permit); err != nil {
-		return nil, fmt.Errorf("retrieving the allocation from api: %s", err)
-	}
-
-	utils.InjectOwnershipIntoUnstructured("credentials", permit.Spec.Resource, object)
-
-	if dry {
-		return object, yaml.NewEncoder(os.Stdout).Encode(object)
-	}
-
-	// @step: check the cluster already exists
-	if found, err := TeamResourceExists(config, team, template.Spec.Kind, name); err != nil {
-		return nil, fmt.Errorf("trying to check if cluster exists: %s", err)
-	} else if found {
-		fmt.Printf("Cluster: %q already exists, skipping the creation\n", name)
-
-		return object, nil
-	}
-
-	fmt.Printf("Attempting to create cluster: %q, plan: %s\n", name, plan)
-
-	return object, CreateTeamResource(config, team, template.Spec.Kind, name, object)
-}
-
-func getEditablePlanParams(config *Config, team string) (map[string]bool, error) {
-	editableParams := map[string]bool{}
-	planPolicyAllocations, err := GetTeamAllocationsByType(
-		config, team, "config.kore.appvia.io", "v1", "PlanPolicy",
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load plan policies assigned to the team: %s", err)
-	}
-
-	for _, alloc := range planPolicyAllocations {
-		var planPolicy configv1.PlanPolicy
-		err := GetResource(config, "PlanPolicy", alloc.Spec.Resource.Name, &planPolicy)
-		if err != nil {
-			return nil, fmt.Errorf("failed to load plan policy: %s", alloc.Spec.Resource.Name)
-		}
-		for _, property := range planPolicy.Spec.Properties {
-			switch {
-			case property.DisallowUpdate:
-				editableParams[property.Name] = false
-			case property.AllowUpdate:
-				if _, isSet := editableParams[property.Name]; !isSet {
-					editableParams[property.Name] = true
-				}
-			}
-		}
-	}
-
-	return editableParams, nil
-}
-
 func parsePlanParams(params []string) (map[string]interface{}, error) {
 	res := map[string]interface{}{}
 	for _, param := range params {
@@ -457,23 +326,4 @@ func parsePlanParams(params []string) (map[string]interface{}, error) {
 		res[name] = parsed
 	}
 	return res, nil
-}
-
-func convertToStringList(obj interface{}) ([]string, bool) {
-	switch list := obj.(type) {
-	case []string:
-		return list, true
-	case []interface{}:
-		res := make([]string, 0, len(list))
-		for _, elem := range list {
-			if val, ok := elem.(string); ok {
-				res = append(res, val)
-			} else {
-				return nil, false
-			}
-		}
-		return res, true
-	default:
-		return nil, false
-	}
 }
