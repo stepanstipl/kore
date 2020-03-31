@@ -28,7 +28,7 @@ import (
 )
 
 // Cluster returns the clusters interface
-type Clusters interface {
+type Kubernetes interface {
 	// Delete is used to delete a cluster from the kore
 	Delete(context.Context, string) (*clustersv1.Kubernetes, error)
 	// Get returns a specific kubernetes cluster
@@ -39,25 +39,25 @@ type Clusters interface {
 	Update(context.Context, *clustersv1.Kubernetes) error
 }
 
-type clsImpl struct {
+type kubernetesImpl struct {
 	*hubImpl
 	// team is the name
 	team string
 }
 
-// Delete is used to delete a cluster from the kore
-func (c *clsImpl) Delete(ctx context.Context, name string) (*clustersv1.Kubernetes, error) {
+// Delete is used to delete a Kubernetes object
+func (c *kubernetesImpl) Delete(ctx context.Context, name string) (*clustersv1.Kubernetes, error) {
 	user := authentication.MustGetIdentity(ctx)
 	logger := log.WithFields(log.Fields{
 		"cluster": name,
 		"team":    c.team,
 		"user":    user.Username(),
 	})
-	logger.Info("attempting to delete the cluster")
+	logger.Info("attempting to delete the Kubernetes object")
 
 	original, err := c.Get(ctx, name)
 	if err != nil {
-		logger.WithError(err).Error("trying to retrieve the cluster")
+		logger.WithError(err).Error("trying to retrieve the Kubernetes object")
 
 		return nil, err
 	}
@@ -78,8 +78,8 @@ func (c *clsImpl) Delete(ctx context.Context, name string) (*clustersv1.Kubernet
 	return original, c.Store().Client().Delete(ctx, store.DeleteOptions.From(original))
 }
 
-// List returns a list of cluster we have access to
-func (c *clsImpl) List(ctx context.Context) (*clustersv1.KubernetesList, error) {
+// List returns a list of Kubernetes objects we have access to
+func (c *kubernetesImpl) List(ctx context.Context) (*clustersv1.KubernetesList, error) {
 	list := &clustersv1.KubernetesList{}
 
 	return list, c.Store().Client().List(ctx,
@@ -88,38 +88,38 @@ func (c *clsImpl) List(ctx context.Context) (*clustersv1.KubernetesList, error) 
 	)
 }
 
-// Get returns a specific kubernetes cluster
-func (c *clsImpl) Get(ctx context.Context, name string) (*clustersv1.Kubernetes, error) {
-	cluster := &clustersv1.Kubernetes{}
+// Get returns a specific Kubernetes object
+func (c *kubernetesImpl) Get(ctx context.Context, name string) (*clustersv1.Kubernetes, error) {
+	kubernetes := &clustersv1.Kubernetes{}
 
 	if err := c.Store().Client().Get(ctx,
 		store.GetOptions.InNamespace(c.team),
-		store.GetOptions.InTo(cluster),
+		store.GetOptions.InTo(kubernetes),
 		store.GetOptions.WithName(name),
 	); err != nil {
-		log.WithError(err).Error("trying to retrieve the cluster")
+		log.WithError(err).Error("failed to retrieve the Kubernetes object")
 
 		return nil, err
 	}
 
-	return cluster, nil
+	return kubernetes, nil
 }
 
-// Update is used to update the kubernetes object
-func (c *clsImpl) Update(ctx context.Context, cluster *clustersv1.Kubernetes) error {
+// Update is used to update the Kubernetes object
+func (c *kubernetesImpl) Update(ctx context.Context, kubernetes *clustersv1.Kubernetes) error {
 	// @TODO check the user is an admin in the team
 	authentication.MustGetIdentity(ctx)
 
-	cluster.Namespace = c.team
+	kubernetes.Namespace = c.team
 
 	// @TODO wider validation of the supplied details.
-	if len(cluster.Name) > 40 {
-		return validation.NewError("cluster has failed validation").
-			WithFieldError("cluster.name", validation.MaxLength, "name must be 40 characters or less")
+	if len(kubernetes.Name) > 40 {
+		return validation.NewError("Kubernetes object has failed validation").
+			WithFieldError("name", validation.MaxLength, "must be 40 characters or less")
 	}
 
 	return c.Store().Client().Update(ctx,
-		store.UpdateOptions.To(cluster),
+		store.UpdateOptions.To(kubernetes),
 		store.UpdateOptions.WithCreate(true),
 	)
 }

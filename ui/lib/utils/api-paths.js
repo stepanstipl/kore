@@ -11,7 +11,7 @@ module.exports = {
     self: `/teams/${id}`,
     members: `/teams/${id}/members`,
     gkes: `/teams/${id}/gkes`,
-    clusters: `/teams/${id}/clusters`,
+    clusters: `/teams/${id}/kubernetes`,
     namespaceClaims: `/teams/${id}/namespaceclaims`,
     secrets: `/teams/${id}/secrets`,
     gcpOrganizations: `/teams/${id}/organizations`,

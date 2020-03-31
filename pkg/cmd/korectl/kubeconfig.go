@@ -50,13 +50,13 @@ func GetKubeconfigCommand(config *Config) *cli.Command {
 }
 
 func DoKubeconfig(config *Config, team string) error {
-	clusters := &clustersv1.KubernetesList{}
+	list := &clustersv1.KubernetesList{}
 
-	if err := GetTeamResourceList(config, team, "clusters", clusters); err != nil {
+	if err := GetTeamResourceList(config, team, "kubernetes", list); err != nil {
 		return err
 	}
 
-	if len(clusters.Items) <= 0 {
+	if len(list.Items) <= 0 {
 		fmt.Println("No clusters found in this team's namespace")
 		return nil
 	}
@@ -66,11 +66,11 @@ func DoKubeconfig(config *Config, team string) error {
 		return err
 	}
 
-	if err := WriteKubeconfig(clusters, kubeconfig, config); err != nil {
+	if err := WriteKubeconfig(list, kubeconfig, config); err != nil {
 		return err
 	}
 
-	return newKubeconfigResultPrinter(team, clusters).Print(os.Stdout)
+	return newKubeconfigResultPrinter(team, list).Print(os.Stdout)
 }
 
 // WriteKubeconfig writes kubeconfig to the user's kubeconfig

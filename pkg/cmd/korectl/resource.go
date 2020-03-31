@@ -52,17 +52,6 @@ func getResourceConfig(name string) resourceConfig {
 	}
 }
 
-var clusterResourceConfig = resourceConfig{
-	Name:   "clusters",
-	IsTeam: true,
-	Columns: []string{
-		Column("Name", "metadata.name"),
-		Column("Provider", "spec.provider.group"),
-		Column("Endpoint", "status.endpoint"),
-		Column("Status", "status.status"),
-	},
-}
-
 var resourceConfigs = map[string]resourceConfig{
 	"allocation": {
 		Name:   "allocations",
@@ -88,8 +77,26 @@ var resourceConfigs = map[string]resourceConfig{
 			Column("Result", "spec.responseCode"),
 		},
 	},
-	"cluster":    clusterResourceConfig,
-	"kubernetes": clusterResourceConfig,
+	"cluster": {
+		Name:   "kubernetes",
+		IsTeam: true,
+		Columns: []string{
+			Column("Name", "metadata.name"),
+			Column("Provider", "spec.provider.group"),
+			Column("Endpoint", "status.endpoint"),
+			Column("Status", "status.status"),
+		},
+	},
+	"kubernetes": {
+		Name:   "kubernetes",
+		IsTeam: true,
+		Columns: []string{
+			Column("Name", "metadata.name"),
+			Column("Provider", "spec.provider.group"),
+			Column("Endpoint", "status.endpoint"),
+			Column("Status", "status.status"),
+		},
+	},
 	"gke": {
 		Name:   "gkes",
 		IsTeam: true,
