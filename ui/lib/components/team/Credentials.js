@@ -23,33 +23,27 @@ class Credentials extends AutoRefreshComponent {
 
   finalStateReached() {
     const { gke } = this.props
-    const { allocation, status } = gke
+    const { status } = gke
     if (status.status === 'Success') {
-      return message.success(`GKE credentials "${allocation.spec.name}" verified successfully`)
+      return message.success(`GCP Service Account for project "${gke.spec.project}" verified successfully`)
     }
     if (status.status === 'Failure') {
-      return message.error(`GKE credentials "${allocation.spec.name}" could not be verified`)
+      return message.error(`GCP Service Account for project "${gke.spec.project}" could not be verified`)
     }
   }
 
   render() {
     const { gke, editGKECredential, allTeams } = this.props
-
     const created = moment(gke.metadata.creationTimestamp).fromNow()
 
-    const getCredentialsAllocations = allocation => {
-      if (!allocation) {
-        return <Text>No teams <Tooltip title="These credentials are not allocated to any teams, click edit to fix this."><Icon type="warning" theme="twoTone" twoToneColor="orange" /></Tooltip> </Text>
+    const displayAllocations = () => {
+      if (!gke.allocation) {
+        return <Text>No teams <Tooltip title="This project is not allocated to any teams, click edit to fix this."><Icon type="warning" theme="twoTone" twoToneColor="orange" /></Tooltip> </Text>
       }
-      const allocatedTeams = allTeams.filter(team => allocation.spec.teams.includes(team.metadata.name)).map(team => team.spec.summary)
+      const allocatedTeams = allTeams.filter(team => gke.allocation.spec.teams.includes(team.metadata.name)).map(team => team.spec.summary)
       return allocatedTeams.length > 0 ? allocatedTeams.join(', ') : 'All teams'
     }
 
-    const displayName = gke.allocation ? (
-      <Text>{gke.allocation.spec.name} <Text type="secondary">{gke.allocation.spec.summary}</Text></Text>
-    ): (
-      <Text>{gke.metadata.name}</Text>
-    )
     return (
       <List.Item key={gke.metadata.name} actions={[
         <ResourceVerificationStatus key="verification_status" resourceStatus={gke.status} />,
@@ -67,7 +61,7 @@ class Credentials extends AutoRefreshComponent {
             </>
           }
           description={
-            <Text>Allocated to: {getCredentialsAllocations(gke.allocation)}</Text>
+            <Text>Allocated to: {displayAllocations()}</Text>
           }
         />
         <Text type='secondary'>Created {created}</Text>

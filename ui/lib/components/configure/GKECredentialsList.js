@@ -15,8 +15,8 @@ class GKECredentialsList extends ResourceList {
     style: PropTypes.object
   }
 
-  createdMessage = 'GKE credentials created successfully'
-  updatedMessage = 'GKE credentials updated successfully'
+  createdMessage = 'GCP project created successfully'
+  updatedMessage = 'GCP project updated successfully'
 
   async fetchComponentData() {
     const [ allTeams, gkeCredentials, allAllocations ] = await Promise.all([
@@ -42,7 +42,7 @@ class GKECredentialsList extends ResourceList {
       >
         <Alert
           message="Give Kore access to your existing Google Cloud Platform projects"
-          description="This will enable Kore to build clusters inside an existing project. You must create a Service Account inside your project and add that as a credential here."
+          description="This will enable Kore to build clusters inside a GCP project that you already manage outside of Kore. You must create a Service Account inside your project and add the key in JSON format here."
           type="info"
           showIcon
           style={{ marginBottom: '20px' }}
