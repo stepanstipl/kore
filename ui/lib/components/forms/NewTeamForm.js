@@ -52,10 +52,9 @@ class NewTeamForm extends React.Component {
           description: values.teamDescription.trim()
         }
         try {
-          let api = await KoreApi.client()
+          const api = await KoreApi.client()
           const checkTeam = await api.GetTeam({team: canonicalTeamName})
-          const teamExists = Object.keys(checkTeam).length !== 0
-          if (!teamExists) {
+          if (!checkTeam) {
             const team = await api.UpdateTeam({team: canonicalTeamName, body: Team(canonicalTeamName, spec)})
             await this.props.handleTeamCreated(team)
             const state = copy(this.state)

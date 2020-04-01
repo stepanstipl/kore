@@ -23,7 +23,7 @@ class IndexPage extends React.Component {
 
   static async getPageData(ctx) {
     const { user } = ctx
-    let api = await KoreApi.client(ctx)
+    const api = await KoreApi.client(ctx)
 
     let allTeams
     let allUsers

@@ -7,7 +7,7 @@ function swagger(koreApi) {
     const u = url.parse(koreApi.url)
     const swaggerUrl = `${u.protocol}//${u.host}/swagger.json`
     try {
-      const result = await axios["get"](swaggerUrl)
+      const result = await axios['get'](swaggerUrl)
       return res.json(result.data)
     } catch (err) {
       const status = (err.response && err.response.status) || 500
