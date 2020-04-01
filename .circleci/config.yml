@@ -117,7 +117,7 @@ jobs:
       - run:
           name: Integration testing API
           command: |
-            make api-test
+            make check-swagger-apiclient api-test
 
   release:
     environment:

@@ -134,6 +134,13 @@ swagger-apiclient:
 	@echo "--> Creating API client based on the swagger definition"
 	@go run github.com/go-swagger/go-swagger/cmd/swagger generate client -q -f swagger.json -c pkg/apiclient -m pkg/apiclient/models
 
+check-swagger-apiclient: swagger-apiclient
+	@if [ $$(git status --porcelain | wc -l) -gt 0 ]; then \
+		echo "There are local changes after running 'make swagger-apiclient'. Did you forget to run it?"; \
+		git status --porcelain; \
+		exit 1; \
+	fi
+
 in-docker-swagger:
 	@echo "--> Swagger in Docker"
 	curl --retry 50 --retry-delay 3 --retry-connrefused -sSL http://${API_HOST}:10080/swagger.json | jq . > swagger.json
