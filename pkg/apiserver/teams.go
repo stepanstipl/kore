@@ -614,7 +614,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	)
 
 	ws.Route(
-		ws.GET("/{team}/ekscredentials/{name}").To(u.findEKSCredentails).
+		ws.GET("/{team}/ekscredentials/{name}").To(u.findEKSCredentials).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the EKS Credentials you are acting upon")).
 			Doc("Is the used tor return a list of EKS Credentials which the team has access").
@@ -623,7 +623,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	)
 
 	ws.Route(
-		ws.PUT("/{team}/ekscredentials/{name}").To(u.updateEKSCredentails).
+		ws.PUT("/{team}/ekscredentials/{name}").To(u.updateEKSCredentials).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the EKS credentials you are acting upon")).
 			Doc("Is used to provision or update a EKS credentials in the kore").
@@ -632,7 +632,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	)
 
 	ws.Route(
-		ws.DELETE("/{team}/ekscredentials/{name}").To(u.deleteEKSCredentails).
+		ws.DELETE("/{team}/ekscredentials/{name}").To(u.deleteEKSCredentials).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the EKS credentials you are acting upon")).
 			Doc("Is used to delete a EKS credentials from the kore").
