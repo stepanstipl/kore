@@ -183,7 +183,7 @@ func (n *eksNodeGroupCtrl) Reconcile(request reconcile.Request) (reconcile.Resul
 				return false, errors.New(em)
 			}
 
-			status, found := resource.Status.Conditions.HasComponent(ComponentClusterNodegroupCreator)
+			status, found := resource.Status.Conditions.GetStatus(ComponentClusterNodegroupCreator)
 			if !found || status != core.PendingStatus {
 				resource.Status.Conditions.SetCondition(core.Component{
 					Name:    ComponentClusterNodegroupCreator,
