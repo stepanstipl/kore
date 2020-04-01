@@ -3,11 +3,11 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "kore.name" . }}-apiserver
-  {{if .Values.api.endpoint.detect}}
+  {{- if .Values.api.endpoint.detect }}
   annotations:
     "helm.sh/hook": pre-install
     "helm.sh/hook-weight": "0"
-  {{end}}
+  {{- end }}
   labels:
     name: {{ include "kore.name" . }}-apiserver
 {{ include "kore.labels" . | indent 4}}
@@ -52,9 +52,9 @@ spec:
         ports:
           - name: http
             containerPort: 10080
-            {{ if .Values.api.hostPort }}
+            {{- if .Values.api.hostPort }}
             hostPort: {{ .Values.api.hostPort }}
-            {{ end }}
+            {{- end }}
         envFrom:
           - secretRef:
               name: {{ include "kore.name" . }}-mysql
@@ -63,6 +63,10 @@ spec:
           - secretRef:
               name: {{ include "kore.name" . }}-api
         env:
+          {{- if .Values.api.build }}
+          - name: BUILD_ID
+            value: {{ .Values.api.build }}
+          {{- end }}
           - name: KUBE_IN_CLUSTER
             value: "true"
           - name: KORE_CERTIFICATE_AUTHORITY
@@ -70,23 +74,23 @@ spec:
           - name: KORE_CERTIFICATE_AUTHORITY_KEY
             value: /ca/ca-key.pem
           - name: KORE_API_PUBLIC_URL
-            {{ if and (eq .Values.api.serviceType "LoadBalancer") .Values.api.endpoint.detect}}
+            {{- if and (eq .Values.api.serviceType "LoadBalancer") .Values.api.endpoint.detect}}
             valueFrom:
               secretKeyRef:
                 name: {{ include "kore.name" . }}-discovered-endpoints
                 key: {{ include "kore.name" . }}-apiserver
-            {{ else }}
+            {{- else }}
             value: {{ .Values.api.endpoint.url }}
-            {{ end }}
+            {{- end }}
           - name: KORE_UI_PUBLIC_URL
-            {{ if and (eq .Values.ui.serviceType "LoadBalancer") .Values.ui.endpoint.detect}}
+            {{- if and (eq .Values.ui.serviceType "LoadBalancer") .Values.ui.endpoint.detect}}
             valueFrom:
               secretKeyRef:
                 name: {{ include "kore.name" . }}-discovered-endpoints
                 key: {{ include "kore.name" . }}-portal
-            {{ else }}
+            {{- else }}
             value: {{ .Values.ui.endpoint.url }}
-            {{ end }}
+            {{- end }}
           - name: KORE_AUTHENTICATION_PLUGINS
             value: {{ .Values.api.auth_plugins | join "," }}
         volumeMounts:
@@ -97,7 +101,6 @@ spec:
       - name: ca
         secret:
           secretName: {{ .Values.ca.secretName }}
-
 ---
 apiVersion: v1
 kind: ServiceAccount

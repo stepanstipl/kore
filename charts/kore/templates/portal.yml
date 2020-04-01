@@ -1,12 +1,13 @@
+---
 apiVersion: v1
 kind: Service
 metadata:
   name: {{ include "kore.name" . }}-portal
-  {{if .Values.ui.endpoint.detect}}
+  {{- if .Values.ui.endpoint.detect}}
   annotations:
     "helm.sh/hook": pre-install
     "helm.sh/hook-weight": "0"
-  {{end}}
+  {{- end }}
   labels:
     name: {{ include "kore.name" . }}-portal
 {{ include "kore.labels" . | indent 4}}
@@ -46,21 +47,25 @@ spec:
         ports:
         - name: http
           containerPort: 3000
-          {{ if .Values.ui.hostPort }}
+          {{- if .Values.ui.hostPort }}
           hostPort: {{ .Values.ui.hostPort }}
-          {{ end }}
+          {{- end }}
         env:
+        {{- if .Values.ui.build }}
+        - name: BUILD_ID
+          value: {{ .Values.ui.build }}
+        {{- end }}
         - name: REDIS_URL
           value: redis://{{ include "kore.name" . }}-redis:6379
         - name: KORE_BASE_URL
-          {{ if and (eq .Values.api.serviceType "LoadBalancer") .Values.api.endpoint.detect}}
+          {{- if and (eq .Values.api.serviceType "LoadBalancer") .Values.api.endpoint.detect}}
           valueFrom:
             secretKeyRef:
               name: {{ include "kore.name" . }}-discovered-endpoints
               key: {{ include "kore.name" . }}-portal
-          {{ else }}
+          {{- else }}
           value: {{ .Values.ui.endpoint.url }}
-          {{ end }}
+          {{- end }}
         - name: KORE_API_URL
           value: http://{{ include "kore.name" . }}-apiserver:10080/api/v1alpha1
         - name: KORE_API_TOKEN
