@@ -45,5 +45,6 @@ module.exports = {
     url: process.env.KORE_API_URL || 'http://localhost:10080/api/v1alpha1',
     publicUrl: process.env.KORE_API_PUBLIC_URL || 'http://localhost:10080',
     token: process.env.KORE_API_TOKEN || 'password'
-  }
+  },
+  showPrototypes: process.env.NODE_ENV === 'development' || process.env.KORE_UI_SHOW_PROTOTYPES === 'true'
 }
