@@ -53,14 +53,6 @@ func (t *eksCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 
 		return reconcile.Result{}, err
 	}
-
-	if err := t.mgr.GetClient().Get(ctx, request.NamespacedName, resource); err != nil {
-		if kerrors.IsNotFound(err) {
-			return reconcile.Result{}, nil
-		}
-
-		return reconcile.Result{}, err
-	}
 	original := resource.DeepCopy()
 
 	finalizer := kubernetes.NewFinalizer(t.mgr.GetClient(), finalizerName)
