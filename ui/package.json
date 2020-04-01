@@ -32,7 +32,8 @@
     "prop-types": "^15.7.2",
     "react": "^16.10.1",
     "react-dom": "^16.10.1",
-    "redis": "^2.8.0"
+    "redis": "^2.8.0",
+    "swagger-client": "^3.10.0"
   },
   "devDependencies": {
     "babel-eslint": "^10.0.3",

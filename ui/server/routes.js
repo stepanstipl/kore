@@ -30,6 +30,8 @@ const ensureAuthenticated401 = ensureAuthenticated({ redirect: false })
 router.use(require('./controllers/auth-local').initRouter({ authService, ensureAuthenticated: ensureAuthenticatedRedirect, authCallback }))
 router.use(require('./controllers/auth-openid').initRouter({ authService, ensureOpenIdClient, persistRequestedPath, embeddedAuth, authCallback }))
 
+router.use(require('./controllers/swagger').initRouter({ koreApi }))
+
 // other routes must have an authenticated user
 router.use(require('./controllers/session').initRouter({ ensureAuthenticated: ensureAuthenticated401, ensureUserCurrent, persistRequestedPath, orgService }))
 router.use(require('./controllers/apiproxy').initRouter({ ensureAuthenticated: ensureAuthenticatedRedirect, ensureUserCurrent, koreApi }))

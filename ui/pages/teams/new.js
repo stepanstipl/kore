@@ -9,9 +9,8 @@ import ClusterBuildForm from '../../lib/components/forms/ClusterBuildForm'
 import InviteLink from '../../lib/components/team/InviteLink'
 import Breadcrumb from '../../lib/components/Breadcrumb'
 import copy from '../../lib/utils/object-copy'
-import apiRequest from '../../lib/utils/api-request'
-import apiPaths from '../../lib/utils/api-paths'
 import asyncForEach from '../../lib/utils/async-foreach'
+import KoreApi from '../../lib/utils/kore-api'
 
 class NewTeamPage extends React.Component {
   static propTypes = {
@@ -32,7 +31,8 @@ class NewTeamPage extends React.Component {
   }
 
   getAllUsers = async () => {
-    const users = await apiRequest(null, 'get', apiPaths.users)
+    let api = await KoreApi.client()
+    const users = await api.ListUsers()
     if (users.items) {
       return users.items.map(user => user.spec.username).filter(user => user !== 'admin')
     }
@@ -60,9 +60,10 @@ class NewTeamPage extends React.Component {
     const team = this.state.team.metadata.name
     const members = state.members
     const state = copy(this.state)
+    let api = await KoreApi.client()
 
     await asyncForEach(this.state.membersToAdd, async member => {
-      await apiRequest(null, 'put', `${apiPaths.team(team).members}/${member}`)
+      await api.AddTeamMember({team: team, user: member})
       message.success(`Team member added: ${member}`)
       members.push(member)
     })
@@ -81,7 +82,7 @@ class NewTeamPage extends React.Component {
     return async () => {
       const team = this.state.team.metadata.name
       try {
-        await apiRequest(null, 'delete', `${apiPaths.team(team).members}/${member}`)
+        await (await KoreApi.client()).RemoveTeamMember({team: team, user: member})
         const state = copy(this.state)
         state.members = state.members.filter(m => m !== member)
         this.setState(state)

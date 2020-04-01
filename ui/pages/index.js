@@ -4,8 +4,7 @@ import Link from 'next/link'
 import { Typography, Statistic, Icon, Row, Col, Card, Alert, Button } from 'antd'
 const { Title, Paragraph, Text } = Typography
 
-import apiRequest from '../lib/utils/api-request'
-import apiPaths from '../lib/utils/api-paths'
+import KoreApi from '../lib/utils/kore-api'
 import { kore } from '../config'
 
 class IndexPage extends React.Component {
@@ -24,24 +23,26 @@ class IndexPage extends React.Component {
 
   static async getPageData(ctx) {
     const { user } = ctx
+    let api = await KoreApi.client(ctx)
+
     let allTeams
     let allUsers
     let adminMembers
     let gkeCredentials
     let gcpOrganizations
-
+ 
     if (user.isAdmin) {
       [ allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations ] = await Promise.all([
-        apiRequest(ctx, 'get', apiPaths.teams),
-        apiRequest(ctx, 'get', apiPaths.users),
-        apiRequest(ctx, 'get', apiPaths.team(kore.koreAdminTeamName).members),
-        apiRequest(ctx, 'get', apiPaths.team(kore.koreAdminTeamName).gkeCredentials),
-        apiRequest(ctx, 'get', apiPaths.team(kore.koreAdminTeamName).gcpOrganizations)
+        api.ListTeams(),
+        api.ListUsers(),
+        api.ListTeamMembers({team: kore.koreAdminTeamName}),
+        api.ListGKECredentials({team: kore.koreAdminTeamName}),
+        api.findOrganizations({team: kore.koreAdminTeamName}),
       ])
     } else {
       [ allTeams, allUsers ] = await Promise.all([
-        apiRequest(ctx, 'get', apiPaths.teams),
-        apiRequest(ctx, 'get', apiPaths.users)
+        api.ListTeams(),
+        api.ListUsers(),
       ])
     }
 
