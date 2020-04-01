@@ -97,7 +97,7 @@ func (o *DeleteEKSCredentialsDefault) Code() int {
 }
 
 func (o *DeleteEKSCredentialsDefault) Error() string {
-	return fmt.Sprintf("[DELETE /api/v1alpha1/teams/{team}/ekscredentials/{name}][%d] deleteEKSCredentials default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[DELETE /api/v1alpha1/teams/{team}/ekscredentials/{name}][%d] DeleteEKSCredentials default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *DeleteEKSCredentialsDefault) GetPayload() *models.ApiserverError {
