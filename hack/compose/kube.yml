@@ -9,13 +9,13 @@ services:
       - 2379:2379
 
   kube-controller-manager:
-    image: mirrorgooglecontainers/kube-controller-manager-amd64:v1.14.8
+    image: gcr.io/google-containers/kube-controller-manager-amd64:v1.15.11
     command:
       - /usr/local/bin/kube-controller-manager
       - --master=http://kube-apiserver:8080
 
   kube-apiserver:
-    image: mirrorgooglecontainers/kube-apiserver-amd64:v1.14.8
+    image: gcr.io/google-containers/kube-apiserver-amd64:v1.15.11
     command:
       - /usr/local/bin/kube-apiserver
       - --address=0.0.0.0
