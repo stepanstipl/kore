@@ -58,9 +58,9 @@ type Component struct {
 	Detail string `json:"detail,omitempty"`
 }
 
-// HasComponent returns the status of a component
-func (c *Components) HasComponent(name string) (Status, bool) {
-	comp, found := c.GetStatus(name)
+// GetStatus returns the status of a component
+func (c *Components) GetStatus(name string) (Status, bool) {
+	comp, found := c.GetComponent(name)
 	if !found {
 		return Unknown, false
 	}
@@ -82,7 +82,7 @@ func (c *Components) IsHealthy() bool {
 
 // SetStatus sets the status of a component
 func (c *Components) SetStatus(name string, status Status) {
-	comp, found := c.GetStatus(name)
+	comp, found := c.GetComponent(name)
 	if found {
 		comp.Status = status
 	}
@@ -90,7 +90,7 @@ func (c *Components) SetStatus(name string, status Status) {
 
 // SetCondition sets the state of a component
 func (c *Components) SetCondition(component Component) {
-	item, found := c.GetStatus(component.Name)
+	item, found := c.GetComponent(component.Name)
 	if !found {
 		*c = append(*c, &component)
 
@@ -101,8 +101,8 @@ func (c *Components) SetCondition(component Component) {
 	item.Detail = component.Detail
 }
 
-// GetStatus checks if the status of a component exists
-func (c *Components) GetStatus(name string) (*Component, bool) {
+// GetComponent checks if the status of a component exists
+func (c *Components) GetComponent(name string) (*Component, bool) {
 	for _, x := range *c {
 		if x.Name == name {
 			return x, true

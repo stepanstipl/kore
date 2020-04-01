@@ -118,7 +118,7 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 		}
 
 		if !found {
-			status, found := resource.Status.Conditions.HasComponent(ComponentClusterCreator)
+			status, found := resource.Status.Conditions.GetStatus(ComponentClusterCreator)
 			if !found || status != core.PendingStatus {
 				resource.Status.Conditions.SetCondition(core.Component{
 					Name:    ComponentClusterCreator,

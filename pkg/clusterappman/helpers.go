@@ -91,7 +91,7 @@ func ensureNamespace(ctx context.Context, cc client.Client, name string) error {
 	})
 }
 
-// GetStatus returns the status of all compoents deployed by ClusterAppMan
+// GetComponent returns the status of all compoents deployed by ClusterAppMan
 func GetStatus(ctx context.Context, cc client.Client) (components *kcore.Components, err error) {
 	cm := &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{

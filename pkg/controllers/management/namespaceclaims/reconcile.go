@@ -131,7 +131,7 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		}
 
 		// @step: check the provisioning status
-		status, found := cluster.Status.Components.GetStatus(ctrl.ComponentClusterCreate)
+		status, found := cluster.Status.Components.GetComponent(ctrl.ComponentClusterCreate)
 		if !found {
 			logger.Warn("cluster does not have a status on the provisioning yet")
 
