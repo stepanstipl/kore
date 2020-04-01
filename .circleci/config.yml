@@ -61,13 +61,13 @@ jobs:
             /usr/local/bin/docker-entrypoint.sh --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
 
       - name: kube-controller-manager
-        image: mirrorgooglecontainers/kube-controller-manager-amd64:v1.14.8
+        image: gcr.io/google-containers/kube-controller-manager-amd64:v1.15.11
         command:
           - /usr/local/bin/kube-controller-manager
           - --master=http://kube-apiserver:8080
 
       - name: kube-apiserver
-        image: mirrorgooglecontainers/kube-apiserver-amd64:v1.14.8
+        image: gcr.io/google-containers/kube-apiserver-amd64:v1.15.11
         command:
           - /usr/local/bin/kube-apiserver
           - --address=0.0.0.0
