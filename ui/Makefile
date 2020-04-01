@@ -7,7 +7,14 @@ default: build
 
 build:
 	@echo "--> Building"
+	npm install
 	npm run build
+
+test:
+	@echo "--> Testing"
+	npm install
+	npm run lint
+	npm test
 
 docker-release:
 	@echo "--> Building a release image"
