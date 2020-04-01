@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 import moment from 'moment'
 import { List, Avatar, Icon, Typography, message, Tooltip } from 'antd'
-const { Text } = Typography
+const { Text, Title } = Typography
 
 import ResourceVerificationStatus from '../ResourceVerificationStatus'
 import AutoRefreshComponent from './AutoRefreshComponent'
@@ -23,49 +23,48 @@ class Credentials extends AutoRefreshComponent {
 
   finalStateReached() {
     const { gke } = this.props
-    const { allocation, status } = gke
+    const { status } = gke
     if (status.status === 'Success') {
-      return message.success(`GKE credentials "${allocation.spec.name}" verified successfully`)
+      return message.success(`GCP Service Account for project "${gke.spec.project}" verified successfully`)
     }
     if (status.status === 'Failure') {
-      return message.error(`GKE credentials "${allocation.spec.name}" could not be verified`)
+      return message.error(`GCP Service Account for project "${gke.spec.project}" could not be verified`)
     }
   }
 
   render() {
     const { gke, editGKECredential, allTeams } = this.props
-
     const created = moment(gke.metadata.creationTimestamp).fromNow()
 
-    const getCredentialsAllocations = allocation => {
-      if (!allocation) {
-        return <Text>No teams <Tooltip title="These credentials are not allocated to any teams, click edit to fix this."><Icon type="warning" theme="twoTone" twoToneColor="orange" /></Tooltip> </Text>
+    const displayAllocations = () => {
+      if (!gke.allocation) {
+        return <Text>No teams <Tooltip title="This project is not allocated to any teams, click edit to fix this."><Icon type="warning" theme="twoTone" twoToneColor="orange" /></Tooltip> </Text>
       }
-      const allocatedTeams = allTeams.filter(team => allocation.spec.teams.includes(team.metadata.name)).map(team => team.spec.summary)
+      const allocatedTeams = allTeams.filter(team => gke.allocation.spec.teams.includes(team.metadata.name)).map(team => team.spec.summary)
       return allocatedTeams.length > 0 ? allocatedTeams.join(', ') : 'All teams'
     }
 
-    const displayName = gke.allocation ? (
-      <Text>{gke.allocation.spec.name} <Text type="secondary">{gke.allocation.spec.summary}</Text></Text>
-    ): (
-      <Text>{gke.metadata.name}</Text>
-    )
     return (
       <List.Item key={gke.metadata.name} actions={[
         <ResourceVerificationStatus key="verification_status" resourceStatus={gke.status} />,
         <Text key="show_creds"><a onClick={editGKECredential(gke)}><Icon type="eye" theme="filled"/> Edit</a></Text>
       ]}>
         <List.Item.Meta
-          avatar={<Avatar icon="cloud" />}
-          title={displayName}
+          avatar={<Avatar icon="project" />}
+          title={
+            <>
+              <Title level={4} style={{ display: 'inline', marginRight: '15px' }}>{gke.spec.project}</Title>
+              <Text style={{ marginRight: '5px' }}>{gke.allocation.spec.name}</Text>
+              <Tooltip title={gke.allocation.spec.summary}>
+                <Icon type="info-circle" theme="twoTone" />
+              </Tooltip>
+            </>
+          }
           description={
-            <div>
-              <Text>Allocated to: {getCredentialsAllocations(gke.allocation)}</Text>
-              <br/>
-              <Text type='secondary'>Created {created}</Text>
-            </div>
+            <Text>Allocated to: {displayAllocations()}</Text>
           }
         />
+        <Text type='secondary'>Created {created}</Text>
       </List.Item>
     )
   }

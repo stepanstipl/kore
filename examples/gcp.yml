@@ -1,5 +1,15 @@
 # The feature is currently experimental and not complete
 ---
+apiVersion: config.kore.appvia.io/v1
+kind: Secret
+metadata:
+  name: gcp
+spec:
+  data:
+    key: <credentials>
+  description: your description
+  type: credentials
+---
 apiVersion: gcp.compute.kore.appvia.io/v1alpha1
 kind: Organization
 metadata:

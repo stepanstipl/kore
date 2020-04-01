@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import Link from 'next/link'
 import { Typography, Statistic, Icon, Row, Col, Card, Alert, Button } from 'antd'
-const { Title, Paragraph } = Typography
+const { Title, Paragraph, Text } = Typography
 
 import apiRequest from '../lib/utils/api-request'
 import apiPaths from '../lib/utils/api-paths'
@@ -14,7 +14,8 @@ class IndexPage extends React.Component {
     allUsers: PropTypes.object.isRequired,
     allTeams: PropTypes.object.isRequired,
     adminMembers: PropTypes.object,
-    gkeCredentials: PropTypes.object
+    gkeCredentials: PropTypes.object,
+    gcpOrganizations: PropTypes.object
   }
 
   static staticProps = {
@@ -27,13 +28,15 @@ class IndexPage extends React.Component {
     let allUsers
     let adminMembers
     let gkeCredentials
+    let gcpOrganizations
 
     if (user.isAdmin) {
-      [ allTeams, allUsers, adminMembers, gkeCredentials ] = await Promise.all([
+      [ allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations ] = await Promise.all([
         apiRequest(ctx, 'get', apiPaths.teams),
         apiRequest(ctx, 'get', apiPaths.users),
         apiRequest(ctx, 'get', apiPaths.team(kore.koreAdminTeamName).members),
-        apiRequest(ctx, 'get', apiPaths.team(kore.koreAdminTeamName).gkeCredentials)
+        apiRequest(ctx, 'get', apiPaths.team(kore.koreAdminTeamName).gkeCredentials),
+        apiRequest(ctx, 'get', apiPaths.team(kore.koreAdminTeamName).gcpOrganizations)
       ])
     } else {
       [ allTeams, allUsers ] = await Promise.all([
@@ -43,7 +46,7 @@ class IndexPage extends React.Component {
     }
 
     allTeams.items = (allTeams.items || []).filter(t => !kore.ignoreTeams.includes(t.metadata.name))
-    return { allTeams, allUsers, adminMembers, gkeCredentials }
+    return { allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations }
   }
 
   static getInitialProps = async (ctx) => {
@@ -52,10 +55,10 @@ class IndexPage extends React.Component {
   }
 
   render() {
-    const { user, allTeams, allUsers, adminMembers, gkeCredentials } = this.props
+    const { user, allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations } = this.props
     const userTeams = (user.teams || []).filter(t => !kore.ignoreTeams.includes(t.metadata.name))
     const noUserTeamsExist = userTeams.length === 0
-    const integrationMissing = gkeCredentials && gkeCredentials.items.length === 0
+    const cloudIntegrationMissing = (gkeCredentials && gkeCredentials.items.length === 0) && (gcpOrganizations && gcpOrganizations.items.length === 0)
 
     const NoTeamInfoAlert = () => noUserTeamsExist ? (
       <Alert
@@ -76,15 +79,15 @@ class IndexPage extends React.Component {
       />
     ) : null
 
-    const IntegrationWarning = () => integrationMissing ? (
+    const CloudIntegrationWarning = () => cloudIntegrationMissing ? (
       <Alert
-        message="No integrations configured"
+        message="No cloud providers configured"
         description={
           <div>
-            <Paragraph style={{ marginTop: '10px' }}>Without integrations Kore will be unable to create clusters for teams.</Paragraph>
+            <Paragraph style={{ marginTop: '10px' }}>Without Cloud provider integrations Kore will be unable to create clusters for teams.</Paragraph>
             <Button type="secondary">
-              <Link href="/configure/integrations">
-                <a>Go to integration settings</a>
+              <Link href="/configure/cloud">
+                <a>Go to cloud settings</a>
               </Link>
             </Button>
           </div>
@@ -96,7 +99,7 @@ class IndexPage extends React.Component {
     ) : null
 
     const TeamStats = () => (
-      <Card title="Teams" extra={<Icon type="team" />}>
+      <Card title="Teams" extra={<Icon type="team" />} bordered={false}>
         <Row gutter={16}>
           <Col span={12}>
             <Statistic style={{ textAlign: 'center' }} title="Yours" value={userTeams.length} valueStyle={{ color: noUserTeamsExist ? 'orange' : '' }} />
@@ -109,7 +112,7 @@ class IndexPage extends React.Component {
     )
 
     const UserStats = () => (
-      <Card title="Users" extra={<Icon type="user" />}>
+      <Card title="Users" extra={<Icon type="user" />} bordered={false}>
         <Row gutter={16}>
           {user.isAdmin ? (
             <div>
@@ -131,23 +134,50 @@ class IndexPage extends React.Component {
 
     const AdminView = () => (
       <div>
-        <IntegrationWarning/>
+        <CloudIntegrationWarning/>
         <NoTeamInfoAlert />
         <Row gutter={16} type="flex" style={{ marginTop: '40px', marginBottom: '40px' }}>
-          <Col span={8}>
+          <Col span={6}>
             <TeamStats />
           </Col>
-          <Col span={8}>
+          <Col span={6}>
             <UserStats />
           </Col>
-          <Col span={8}>
-            <Card title="Integrations" extra={<Icon type="api" />}>
+          <Col span={12}>
+            <Card title="Cloud provider integrations" extra={<Icon type="cloud" />} bordered={false}>
               <Row gutter={16}>
                 <Col span={12}>
-                  <Statistic style={{ textAlign: 'center' }} title="GKE" value={gkeCredentials.items.length} valueStyle={{ color: integrationMissing ? 'orange' : '' }} />
+                  <Statistic
+                    title={
+                      <>
+                        <span>
+                          <img src="/static/images/GCP.png" height="25px" style={{ marginRight: '5px' }}/>
+                          <Text strong>Google Cloud Platform</Text>
+                        </span>
+                        <br/>
+                        <Text style={{ display: 'inline-block', marginTop: '10px' }}>Organizations / Projects</Text>
+                      </>
+                    }
+                    value={gcpOrganizations.items.length + ' / ' + gkeCredentials.items.length}
+                    style={{ textAlign: 'center' }}
+                    valueStyle={{ color: cloudIntegrationMissing ? 'orange' : '' }}
+                  />
                 </Col>
                 <Col span={12}>
-                  <Statistic style={{ textAlign: 'center' }} title="EKS" value="0" />
+                  <Statistic
+                    title={
+                      <>
+                        <span>
+                          <img src="/static/images/AWS.png" height="25px" style={{ marginRight: '5px' }}/>
+                          <Text strong>Amazon Web Services</Text>
+                        </span>
+                        <br/>
+                        <Text style={{ display: 'inline-block', marginTop: '10px' }}>Organizations / Projects</Text>
+                      </>
+                    }
+                    value="0 / 0"
+                    style={{ textAlign: 'center' }}
+                  />
                 </Col>
               </Row>
             </Card>

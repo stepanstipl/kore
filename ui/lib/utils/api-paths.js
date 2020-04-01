@@ -13,6 +13,8 @@ module.exports = {
     gkes: `/teams/${id}/gkes`,
     clusters: `/teams/${id}/clusters`,
     namespaceClaims: `/teams/${id}/namespaceclaims`,
+    secrets: `/teams/${id}/secrets`,
+    gcpOrganizations: `/teams/${id}/organizations`,
     gkeCredentials: `/teams/${id}/gkecredentials`,
     allocations: `/teams/${id}/allocations`,
     generateInviteLink: `/teams/${id}/invites/generate`,
