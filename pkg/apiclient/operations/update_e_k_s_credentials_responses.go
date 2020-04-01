@@ -97,7 +97,7 @@ func (o *UpdateEKSCredentialsDefault) Code() int {
 }
 
 func (o *UpdateEKSCredentialsDefault) Error() string {
-	return fmt.Sprintf("[PUT /api/v1alpha1/teams/{team}/ekscredentials/{name}][%d] updateEKSCredentials default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[PUT /api/v1alpha1/teams/{team}/ekscredentials/{name}][%d] UpdateEKSCredentials default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *UpdateEKSCredentialsDefault) GetPayload() *models.ApiserverError {
