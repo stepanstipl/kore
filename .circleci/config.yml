@@ -149,14 +149,16 @@ jobs:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
-      - deploy:
-          name: Building and testing UI
+      - run:
+          name: Testing UI
           working_directory: ~/project/ui
           command: |
-            npm install
-            npm run lint
-            npm test
-            npm run build
+            make test
+      - run:
+          name: Building UI
+          working_directory: ~/project/ui
+          command: |
+            make build
 
   release-ui:
     environment:
