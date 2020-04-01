@@ -25,10 +25,6 @@ import (
 // EKSSpec defines the desired state of EKSCluster
 // +k8s:openapi-gen=true
 type EKSSpec struct {
-	// Name the name of the EKS cluster
-	// +kubebuilder:validation:MinLength=3
-	// +kubebuilder:validation:Required
-	Name string `json:"name"`
 	// Version is the Kubernetes version to use
 	// +kubebuilder:validation:MinLength=3
 	// +kubebuilder:validation:Required
