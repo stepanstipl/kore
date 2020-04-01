@@ -87,7 +87,6 @@ func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (rec
 					return reconcile.Result{}, err
 				}
 			} else {
-
 				object.Status.Components.SetCondition(corev1.Component{
 					Name:    ComponentClusterDelete,
 					Message: "attempting to clean up in-cluster kubernetes resources",
@@ -102,44 +101,48 @@ func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (rec
 					object.Namespace,
 					object.Name)
 				if err != nil {
-					logger.WithError(err).Error("unable to obtain credentials secret")
+					if !kerrors.IsNotFound(err) {
+						logger.WithError(err).Error("unable to obtain credentials secret")
 
-					object.Status.Components.SetCondition(corev1.Component{
-						Name:    ComponentClusterDelete,
-						Message: "Unable obtain cluster access cluster credentials",
-						Detail:  err.Error(),
-						Status:  corev1.FailureStatus,
-					})
+						object.Status.Components.SetCondition(corev1.Component{
+							Name:    ComponentClusterDelete,
+							Message: "Unable obtain cluster access cluster credentials",
+							Detail:  err.Error(),
+							Status:  corev1.FailureStatus,
+						})
 
-					return reconcile.Result{}, err
+						return reconcile.Result{}, err
+					}
 				}
 
-				// @step: create a client for the remote cluster
-				client, err := kubernetes.NewRuntimeClientFromConfigSecret(token)
-				if err != nil {
-					logger.WithError(err).Error("trying to create client from credentials secret")
+				if token != nil {
+					// @step: create a client for the remote cluster
+					client, err := kubernetes.NewRuntimeClientFromConfigSecret(token)
+					if err != nil {
+						logger.WithError(err).Error("trying to create client from credentials secret")
 
-					object.Status.Components.SetCondition(corev1.Component{
-						Name:    ComponentClusterDelete,
-						Message: "Unable to access cluster using provided cluster credentials",
-						Detail:  err.Error(),
-						Status:  corev1.FailureStatus,
-					})
+						object.Status.Components.SetCondition(corev1.Component{
+							Name:    ComponentClusterDelete,
+							Message: "Unable to access cluster using provided cluster credentials",
+							Detail:  err.Error(),
+							Status:  corev1.FailureStatus,
+						})
 
-					return reconcile.Result{}, err
-				}
-				err = CleanupKoreCluster(ctx, client)
-				if err != nil {
-					logger.WithError(err).Error("trying to clean up cluster resources")
+						return reconcile.Result{}, err
+					}
+					err = CleanupKoreCluster(ctx, client)
+					if err != nil {
+						logger.WithError(err).Error("trying to clean up cluster resources")
 
-					object.Status.Components.SetCondition(corev1.Component{
-						Name:    ComponentClusterDelete,
-						Message: "Unable to delete all cluster namespaces",
-						Detail:  err.Error(),
-						Status:  corev1.FailureStatus,
-					})
+						object.Status.Components.SetCondition(corev1.Component{
+							Name:    ComponentClusterDelete,
+							Message: "Unable to delete all cluster namespaces",
+							Detail:  err.Error(),
+							Status:  corev1.FailureStatus,
+						})
 
-					return reconcile.Result{}, err
+						return reconcile.Result{}, err
+					}
 				}
 
 				object.Status.Components.SetCondition(corev1.Component{
