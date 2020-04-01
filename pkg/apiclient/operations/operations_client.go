@@ -151,9 +151,27 @@ type ClientService interface {
 
 	WhoAmI(params *WhoAmIParams, authInfo runtime.ClientAuthInfoWriter) (*WhoAmIOK, error)
 
+	DeleteEKS(params *DeleteEKSParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteEKSOK, error)
+
+	DeleteEKSCredentials(params *DeleteEKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteEKSCredentialsOK, error)
+
+	DeleteEKSNodeGroups(params *DeleteEKSNodeGroupsParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteEKSNodeGroupsOK, error)
+
 	DeleteOrganization(params *DeleteOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteOrganizationOK, error)
 
 	DeleteProjectClaim(params *DeleteProjectClaimParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteProjectClaimOK, error)
+
+	FindEKS(params *FindEKSParams, authInfo runtime.ClientAuthInfoWriter) (*FindEKSOK, error)
+
+	FindEKSCredentials(params *FindEKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*FindEKSCredentialsOK, error)
+
+	FindEKSCredentialss(params *FindEKSCredentialssParams, authInfo runtime.ClientAuthInfoWriter) (*FindEKSCredentialssOK, error)
+
+	FindEKSNodeGroup(params *FindEKSNodeGroupParams, authInfo runtime.ClientAuthInfoWriter) (*FindEKSNodeGroupOK, error)
+
+	FindEKSNodeGroups(params *FindEKSNodeGroupsParams, authInfo runtime.ClientAuthInfoWriter) (*FindEKSNodeGroupsOK, error)
+
+	FindEKSs(params *FindEKSsParams, authInfo runtime.ClientAuthInfoWriter) (*FindEKSsOK, error)
 
 	FindOrganization(params *FindOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*FindOrganizationOK, error)
 
@@ -162,6 +180,12 @@ type ClientService interface {
 	FindProjectClaim(params *FindProjectClaimParams, authInfo runtime.ClientAuthInfoWriter) (*FindProjectClaimOK, error)
 
 	FindProjectClaims(params *FindProjectClaimsParams, authInfo runtime.ClientAuthInfoWriter) (*FindProjectClaimsOK, error)
+
+	UpdateEKS(params *UpdateEKSParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateEKSOK, error)
+
+	UpdateEKSCredentials(params *UpdateEKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateEKSCredentialsOK, error)
+
+	UpdateEKSNodeGroups(params *UpdateEKSNodeGroupsParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateEKSNodeGroupsOK, error)
 
 	UpdateOrganization(params *UpdateOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateOrganizationOK, error)
 
@@ -2329,6 +2353,108 @@ func (a *Client) WhoAmI(params *WhoAmIParams, authInfo runtime.ClientAuthInfoWri
 }
 
 /*
+  DeleteEKS is used to delete a managed e k s cluster from the kore
+*/
+func (a *Client) DeleteEKS(params *DeleteEKSParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteEKSOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewDeleteEKSParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "deleteEKS",
+		Method:             "DELETE",
+		PathPattern:        "/api/v1alpha1/teams/{team}/ekss/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &DeleteEKSReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*DeleteEKSOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*DeleteEKSDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  DeleteEKSCredentials is used to delete a e k s credentials from the kore
+*/
+func (a *Client) DeleteEKSCredentials(params *DeleteEKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteEKSCredentialsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewDeleteEKSCredentialsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "deleteEKSCredentials",
+		Method:             "DELETE",
+		PathPattern:        "/api/v1alpha1/teams/{team}/ekscredentials/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &DeleteEKSCredentialsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*DeleteEKSCredentialsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*DeleteEKSCredentialsDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  DeleteEKSNodeGroups is used to delete a managed e k s cluster nodegroup from the kore
+*/
+func (a *Client) DeleteEKSNodeGroups(params *DeleteEKSNodeGroupsParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteEKSNodeGroupsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewDeleteEKSNodeGroupsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "deleteEKSNodeGroups",
+		Method:             "DELETE",
+		PathPattern:        "/api/v1alpha1/teams/{team}/eksnodegroups/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &DeleteEKSNodeGroupsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*DeleteEKSNodeGroupsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*DeleteEKSNodeGroupsDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
   DeleteOrganization is used to delete a managed gcp organization
 */
 func (a *Client) DeleteOrganization(params *DeleteOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteOrganizationOK, error) {
@@ -2393,6 +2519,210 @@ func (a *Client) DeleteProjectClaim(params *DeleteProjectClaimParams, authInfo r
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*DeleteProjectClaimDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  FindEKS is the used to return a e k s cluster which the team has access
+*/
+func (a *Client) FindEKS(params *FindEKSParams, authInfo runtime.ClientAuthInfoWriter) (*FindEKSOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewFindEKSParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "findEKS",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/ekss/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &FindEKSReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*FindEKSOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*FindEKSDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  FindEKSCredentials is the used tor return a list of e k s credentials which the team has access
+*/
+func (a *Client) FindEKSCredentials(params *FindEKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*FindEKSCredentialsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewFindEKSCredentialsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "findEKSCredentials",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/ekscredentials/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &FindEKSCredentialsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*FindEKSCredentialsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*FindEKSCredentialsDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  FindEKSCredentialss is the used tor return a list of amazon e k s credentials which thhe team has access
+*/
+func (a *Client) FindEKSCredentialss(params *FindEKSCredentialssParams, authInfo runtime.ClientAuthInfoWriter) (*FindEKSCredentialssOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewFindEKSCredentialssParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "findEKSCredentialss",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/ekscredentials",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &FindEKSCredentialssReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*FindEKSCredentialssOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*FindEKSCredentialssDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  FindEKSNodeGroup is the used to return a e k s cluster which the team has access
+*/
+func (a *Client) FindEKSNodeGroup(params *FindEKSNodeGroupParams, authInfo runtime.ClientAuthInfoWriter) (*FindEKSNodeGroupOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewFindEKSNodeGroupParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "findEKSNodeGroup",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/eksnodegroups/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &FindEKSNodeGroupReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*FindEKSNodeGroupOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*FindEKSNodeGroupDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  FindEKSNodeGroups is the used tor return a list of amazon e k s clusters which the team has access
+*/
+func (a *Client) FindEKSNodeGroups(params *FindEKSNodeGroupsParams, authInfo runtime.ClientAuthInfoWriter) (*FindEKSNodeGroupsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewFindEKSNodeGroupsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "findEKSNodeGroups",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/eksnodegroups",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &FindEKSNodeGroupsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*FindEKSNodeGroupsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*FindEKSNodeGroupsDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  FindEKSs is the used to return a list of amazon e k s clusters which thhe team has access
+*/
+func (a *Client) FindEKSs(params *FindEKSsParams, authInfo runtime.ClientAuthInfoWriter) (*FindEKSsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewFindEKSsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "findEKSs",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/ekss",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &FindEKSsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*FindEKSsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*FindEKSsDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
@@ -2529,6 +2859,108 @@ func (a *Client) FindProjectClaims(params *FindProjectClaimsParams, authInfo run
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*FindProjectClaimsDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  UpdateEKS is used to provision or update a e k s cluster in the kore
+*/
+func (a *Client) UpdateEKS(params *UpdateEKSParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateEKSOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewUpdateEKSParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "updateEKS",
+		Method:             "PUT",
+		PathPattern:        "/api/v1alpha1/teams/{team}/ekss/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &UpdateEKSReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*UpdateEKSOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*UpdateEKSDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  UpdateEKSCredentials is used to provision or update a e k s credentials in the kore
+*/
+func (a *Client) UpdateEKSCredentials(params *UpdateEKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateEKSCredentialsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewUpdateEKSCredentialsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "updateEKSCredentials",
+		Method:             "PUT",
+		PathPattern:        "/api/v1alpha1/teams/{team}/ekscredentials/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &UpdateEKSCredentialsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*UpdateEKSCredentialsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*UpdateEKSCredentialsDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  UpdateEKSNodeGroups is used to provision or update a e k s cluster nodegroup in the kore
+*/
+func (a *Client) UpdateEKSNodeGroups(params *UpdateEKSNodeGroupsParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateEKSNodeGroupsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewUpdateEKSNodeGroupsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "updateEKSNodeGroups",
+		Method:             "PUT",
+		PathPattern:        "/api/v1alpha1/teams/{team}/eksnodegroups/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &UpdateEKSNodeGroupsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*UpdateEKSNodeGroupsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*UpdateEKSNodeGroupsDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
