@@ -37,6 +37,23 @@ helm repo update >/dev/null || error "failed to update the helm repos"
 
 info "deploying the ingress controller to qa environment"
 
+cat <<EOF > values.yaml
+api:
+  ingress:
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      nginx.ingress.kubernetes.io/backend-protocol: HTTP
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+ui:
+  ingress:
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      nginx.ingress.kubernetes.io/backend-protocol: HTTP
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+EOF
+
+trap "rm -f values.yaml >/dev/null 2>&1" EXIT
+
 if ! helm upgrade ingress stable/nginx-ingress \
   --install \
   --namespace=ingress \
@@ -82,11 +99,11 @@ fi
 info "kore has been upgraded in the qa environment"
 
 info "checking the api is running "
-if ! curl \
+if ! curl -sL \
   --retry-connrefused \
   --retry 20 \
   --retry-delay 5 \
-  ${KORE_API_PUBLIC_URL}/healthz; then
+  ${KORE_API_PUBLIC_URL}/healthz >/dev/null; then
 
   error "kore api does not appear to be running"
 fi
