@@ -16,6 +16,10 @@ test:
 	npm run lint
 	npm test
 
+update-test-swagger:
+	@echo "--> Updating unit test swagger (requires API to be running locally)"
+	@curl --retry 5 --retry-delay 5 --retry-connrefused -sSL http://127.0.0.1:10080/swagger.json | jq > ./__tests__/kore-api-swagger.json
+
 docker-release:
 	@echo "--> Building a release image"
 	@$(MAKE) docker

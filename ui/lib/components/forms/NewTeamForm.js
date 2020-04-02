@@ -1,11 +1,10 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
 import canonical from '../../utils/canonical'
-import apiRequest from '../../utils/api-request'
-import apiPaths from '../../utils/api-paths'
 import copy from '../../utils/object-copy'
 import Team from '../../crd/Team'
 import { Button, Form, Input, Alert, message, Typography } from 'antd'
+import KoreApi from '../../utils/kore-api'
 
 const { Paragraph, Text } = Typography
 
@@ -53,10 +52,10 @@ class NewTeamForm extends React.Component {
           description: values.teamDescription.trim()
         }
         try {
-          const checkTeam = await apiRequest(null, 'get', apiPaths.team(canonicalTeamName).self)
-          const teamExists = Object.keys(checkTeam).length !== 0
-          if (!teamExists) {
-            const team = await apiRequest(null, 'put', apiPaths.team(canonicalTeamName).self, Team(canonicalTeamName, spec))
+          const api = await KoreApi.client()
+          const checkTeam = await api.GetTeam({team: canonicalTeamName})
+          if (!checkTeam) {
+            const team = await api.UpdateTeam({team: canonicalTeamName, body: Team(canonicalTeamName, spec)})
             await this.props.handleTeamCreated(team)
             const state = copy(this.state)
             state.submitting = false
