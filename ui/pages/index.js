@@ -57,7 +57,7 @@ class IndexPage extends React.Component {
 
   render() {
     const { user, allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations } = this.props
-    const userTeams = (user.teams || []).filter(t => !kore.ignoreTeams.includes(t.metadata.name))
+    const userTeams = (user.teams.userTeams || []).filter(t => !kore.ignoreTeams.includes(t.metadata.name))
     const noUserTeamsExist = userTeams.length === 0
     const cloudIntegrationMissing = (gkeCredentials && gkeCredentials.items.length === 0) && (gcpOrganizations && gcpOrganizations.items.length === 0)
 

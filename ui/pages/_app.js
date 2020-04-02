@@ -59,7 +59,8 @@ class MyApp extends App {
     if (!user) {
       return redirect(ctx.res, `/login/refresh?requestedPath=${ctx.asPath}`, true)
     }
-    const userTeams = (user.teams || []).filter(t => !kore.ignoreTeams.includes(t.metadata.name))
+    const userTeams = (user.teams.userTeams || []).filter(t => !kore.ignoreTeams.includes(t.metadata.name))
+    const otherTeams = (user.teams.otherTeams || []).filter(t => !kore.ignoreTeams.includes(t.metadata.name))
     if (pageProps.adminOnly && !user.isAdmin) {
       return redirect(ctx.res, '/')
     }
@@ -67,7 +68,7 @@ class MyApp extends App {
       const initialProps = await Component.getInitialProps({ ...ctx, user })
       pageProps = { ...pageProps, ...initialProps }
     }
-    return { pageProps, user, userTeams }
+    return { pageProps, user, userTeams, otherTeams }
   }
 
   state = {
@@ -148,7 +149,7 @@ class MyApp extends App {
             <User user={props.user}/>
           </Header>
           <Layout hasSider="true" style={{minHeight:'100vh'}}>
-            <SiderMenu hide={hideSider} isAdmin={isAdmin} userTeams={this.state.userTeams || []}/>
+            <SiderMenu hide={hideSider} isAdmin={isAdmin} userTeams={this.state.userTeams} otherTeams={props.otherTeams}/>
             <Content style={{background: '#fff', padding: 24, minHeight: 280}}>
               <Component {...this.props.pageProps} user={this.props.user} teamAdded={this.teamAdded} />
             </Content>

@@ -24,8 +24,8 @@ class OrgService {
         await this.addUserToTeam(kore.koreAdminTeamName, user.id, this.koreApi.token)
       }
       const userToReturn = userResult.data
-      userToReturn.teams = await this.getUserTeams(user.id, user.id_token)
-      userToReturn.isAdmin = this.isAdmin(userToReturn)
+      userToReturn.teams = await this.getUserTeams(user)
+      userToReturn.isAdmin = this.isAdmin(userToReturn.teams.userTeams)
       return userToReturn
     } catch (err) {
       console.error('Error in getOrCreateUser from API', err)
@@ -35,13 +35,13 @@ class OrgService {
 
   /* eslint-disable require-atomic-updates */
   async refreshUser(user) {
-    user.teams = await this.getUserTeams(user.id, user.id_token)
-    user.isAdmin = this.isAdmin(user)
+    user.teams = await this.getUserTeams(user)
+    user.isAdmin = this.isAdmin(user.teams.userTeams)
   }
   /* eslint-enable require-atomic-updates */
 
-  isAdmin(user) {
-    return (user.teams || []).filter(t => t.metadata && t.metadata.name === kore.koreAdminTeamName).length > 0
+  isAdmin(userTeams) {
+    return (userTeams || []).filter(t => t.metadata && t.metadata.name === kore.koreAdminTeamName).length > 0
   }
 
   async getTeamMembers(team, requestingIdToken) {
@@ -66,10 +66,19 @@ class OrgService {
     }
   }
 
-  async getUserTeams(username, requestingIdToken) {
+  async getUserTeams(user) {
     try {
-      const result = await axios.get(this.koreApi.url + apiPaths.user(username).teams, { headers: this.getHeaders(requestingIdToken) })
-      return result.data.items
+      const userTeamsResult = await axios.get(this.koreApi.url + apiPaths.user(user.id).teams, { headers: this.getHeaders(user.id_token) })
+      const userTeams = userTeamsResult.data.items
+      if (this.isAdmin(userTeams)) {
+        const allTeamsResult = await axios.get(this.koreApi.url + apiPaths.teams, { headers: this.getHeaders(user.id_token) })
+        const userTeamIdList = userTeams.map(t => t.metadata.name)
+        return {
+          userTeams,
+          otherTeams: allTeamsResult.data.items.filter(at => !userTeamIdList.includes(at.metadata.name))
+        }
+      }
+      return { userTeams }
     } catch (err) {
       console.error('Error getting teams for user', err)
       return Promise.reject(err)
