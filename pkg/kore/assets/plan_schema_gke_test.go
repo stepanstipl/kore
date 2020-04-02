@@ -28,7 +28,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func sampleData() map[string]interface{} {
+func gkeSampleData() map[string]interface{} {
 	return map[string]interface{}{
 		"authorizedMasterNetworks": []map[string]interface{}{
 			{
@@ -65,10 +65,6 @@ func sampleData() map[string]interface{} {
 	}
 }
 
-var nonEmptyFields = []string{
-	"description", "domain", "imageType", "machineType", "network", "region", "subnetwork", "version",
-}
-
 var _ = Describe("GKEPlanSchema", func() {
 
 	Context("The schema document", func() {
@@ -101,14 +97,14 @@ var _ = Describe("GKEPlanSchema", func() {
 	})
 
 	It("should validate the test data successfully by default", func() {
-		data := sampleData()
+		data := gkeSampleData()
 		err := jsonschema.Validate(assets.GKEPlanSchema, "test", data)
 		Expect(err).ToNot(HaveOccurred())
 	})
 
 	DescribeTable("Validating individual parameters",
 		func(field string, value interface{}, expectError bool) {
-			data := sampleData()
+			data := gkeSampleData()
 			data[field] = value
 			err := jsonschema.Validate(assets.GKEPlanSchema, "test", data)
 			if expectError {
@@ -150,7 +146,7 @@ var _ = Describe("GKEPlanSchema", func() {
 		var validationErr error
 
 		BeforeEach(func() {
-			data = sampleData()
+			data = gkeSampleData()
 		})
 
 		JustBeforeEach(func() {
