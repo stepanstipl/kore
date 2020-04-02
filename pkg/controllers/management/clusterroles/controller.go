@@ -24,6 +24,7 @@ import (
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/store"
 
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -34,6 +35,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
@@ -86,6 +88,36 @@ func (a *crCtrl) Run(ctx context.Context, cfg *rest.Config, hi kore.Interface) e
 
 		log.WithError(err).Error("failed to create watcher on resource")
 
+		return err
+	}
+
+	// @step: watch for changes to kubernetes clusters
+	err = ctrl.Watch(&source.Kind{Type: &clustersv1.Kubernetes{}}, &handler.EnqueueRequestsFromMapFunc{
+		ToRequests: handler.ToRequestsFunc(func(o handler.MapObject) []reconcile.Request {
+			list := &clustersv1.ManagedClusterRoleList{}
+
+			if err := a.Store().Client().List(context.Background(),
+				store.ListOptions.InAllNamespaces(),
+				store.ListOptions.InTo(list),
+			); err != nil {
+				log.WithError(err).Error("trying to retrieve a list of managed cluster roles")
+
+				return []reconcile.Request{}
+			}
+
+			var items []reconcile.Request
+			for _, x := range list.Items {
+				items = append(items, reconcile.Request{
+					NamespacedName: types.NamespacedName{
+						Name:      x.Name,
+						Namespace: x.Namespace,
+					},
+				})
+			}
+
+			return items
+		})})
+	if err != nil {
 		return err
 	}
 
