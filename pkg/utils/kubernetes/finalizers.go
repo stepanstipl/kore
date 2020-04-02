@@ -26,7 +26,7 @@ import (
 
 // Finalizable is an kubernetes resource api object that supports finalizers
 type Finalizable interface {
-	DeepCopyObject() runtime.Object
+	runtime.Object
 	GetFinalizers() []string
 	SetFinalizers(finalizers []string)
 	GetDeletionTimestamp() *metav1.Time
@@ -46,16 +46,12 @@ func NewFinalizer(driver client.Client, finalizerValue string) *Finalizer {
 	}
 }
 
-// Add adds a finalizer to an object
-func (c *Finalizer) Add(resource Finalizable) error {
+func (c *Finalizer) set(resource Finalizable) {
 	finalizers := append(resource.GetFinalizers(), c.value)
 	resource.SetFinalizers(finalizers)
-
-	return c.driver.Update(context.Background(), resource.DeepCopyObject())
 }
 
-// Remove removes a finalizer from an object
-func (c *Finalizer) Remove(resource Finalizable) error {
+func (c *Finalizer) unset(resource Finalizable) {
 	finalizers := resource.GetFinalizers()
 	for idx, finalizer := range finalizers {
 		if finalizer == c.value {
@@ -64,8 +60,36 @@ func (c *Finalizer) Remove(resource Finalizable) error {
 		}
 	}
 	resource.SetFinalizers(finalizers)
+}
 
+// Add adds a finalizer to an object
+func (c *Finalizer) Add(resource Finalizable) error {
+	c.set(resource)
 	return c.driver.Update(context.Background(), resource.DeepCopyObject())
+}
+
+func (c *Finalizer) AddIfNotSet(ctx context.Context, resource Finalizable) (bool, error) {
+	if c.NeedToAdd(resource) {
+		c.set(resource)
+		original := resource.DeepCopyObject()
+		return true, c.driver.Patch(ctx, resource, client.MergeFrom(original))
+	}
+	return false, nil
+}
+
+// Remove removes a finalizer from an object
+func (c *Finalizer) Remove(resource Finalizable) error {
+	c.unset(resource)
+	return c.driver.Update(context.Background(), resource.DeepCopyObject())
+}
+
+func (c *Finalizer) RemovePatch(ctx context.Context, resource Finalizable) (bool, error) {
+	if c.IsDeletionCandidate(resource) {
+		c.unset(resource)
+		original := resource.DeepCopyObject()
+		return true, c.driver.Patch(ctx, resource, client.MergeFrom(original))
+	}
+	return false, nil
 }
 
 // IsDeletionCandidate checks if the resource is a candidate for deletion

@@ -455,6 +455,12 @@ func schema_pkg_apis_eks_v1alpha1_EKSSpec(ref common.ReferenceCallback) common.O
 				Description: "EKSSpec defines the desired state of EKSCluster",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"cluster": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Cluster refers to the cluster this object belongs to",
+							Ref:         ref("github.com/appvia/kore/pkg/apis/core/v1.Ownership"),
+						},
+					},
 					"name": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Name the name of the EKS cluster",
@@ -525,6 +531,8 @@ func schema_pkg_apis_eks_v1alpha1_EKSSpec(ref common.ReferenceCallback) common.O
 				Required: []string{"name", "roleARN", "region", "subnetIDs"},
 			},
 		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/core/v1.Ownership"},
 	}
 }
 

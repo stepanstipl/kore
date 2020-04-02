@@ -17,6 +17,9 @@ import (
 // swagger:model v1alpha1.EKSSpec
 type V1alpha1EKSSpec struct {
 
+	// cluster
+	Cluster *V1Ownership `json:"cluster,omitempty"`
+
 	// credentials
 	// Required: true
 	Credentials *V1Ownership `json:"credentials"`
@@ -48,6 +51,10 @@ type V1alpha1EKSSpec struct {
 func (m *V1alpha1EKSSpec) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateCluster(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateCredentials(formats); err != nil {
 		res = append(res, err)
 	}
@@ -71,6 +78,24 @@ func (m *V1alpha1EKSSpec) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *V1alpha1EKSSpec) validateCluster(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Cluster) { // not required
+		return nil
+	}
+
+	if m.Cluster != nil {
+		if err := m.Cluster.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("cluster")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 

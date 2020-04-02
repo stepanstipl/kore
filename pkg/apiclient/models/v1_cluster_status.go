@@ -30,6 +30,9 @@ type V1ClusterStatus struct {
 	// components
 	Components []*V1Component `json:"components"`
 
+	// message
+	Message string `json:"message,omitempty"`
+
 	// status
 	Status string `json:"status,omitempty"`
 }

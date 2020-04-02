@@ -1047,6 +1047,31 @@ spec:
         spec:
           description: EKSSpec defines the desired state of EKSCluster
           properties:
+            cluster:
+              description: Cluster refers to the cluster this object belongs to
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
             credentials:
               description: Credentials is a reference to an EKSCredentials object
                 to use for authentication
@@ -1290,6 +1315,9 @@ spec:
                     type: string
                 type: object
               type: array
+            message:
+              description: Message is the description of the current status
+              type: string
             status:
               description: Status is the overall status of the cluster
               type: string

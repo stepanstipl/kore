@@ -193,6 +193,13 @@ func schema_pkg_apis_clusters_v1_ClusterStatus(ref common.ReferenceCallback) com
 							Format:      "",
 						},
 					},
+					"message": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Message is the description of the current status",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 				},
 			},
 		},
