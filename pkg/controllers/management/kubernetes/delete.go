@@ -23,7 +23,6 @@ import (
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
@@ -87,59 +86,11 @@ func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (rec
 					return reconcile.Result{}, err
 				}
 			} else {
-
-				object.Status.Components.SetCondition(corev1.Component{
-					Name:    ComponentClusterDelete,
-					Message: "attempting to clean up in-cluster kubernetes resources",
-				})
-
 				// Assumption: we only clean up everything if we own the provider
-
-				// First delete all namespaces to ensure this will work
-				// @step: retrieve the provider credentials secret
-				token, err := controllers.GetConfigSecret(context.Background(),
-					a.mgr.GetClient(),
-					object.Namespace,
-					object.Name)
-				if err != nil {
-					logger.WithError(err).Error("unable to obtain credentials secret")
-
-					object.Status.Components.SetCondition(corev1.Component{
-						Name:    ComponentClusterDelete,
-						Message: "Unable obtain cluster access cluster credentials",
-						Detail:  err.Error(),
-						Status:  corev1.FailureStatus,
-					})
-
-					return reconcile.Result{}, err
-				}
-
-				// @step: create a client for the remote cluster
-				client, err := kubernetes.NewRuntimeClientFromConfigSecret(token)
-				if err != nil {
-					logger.WithError(err).Error("trying to create client from credentials secret")
-
-					object.Status.Components.SetCondition(corev1.Component{
-						Name:    ComponentClusterDelete,
-						Message: "Unable to access cluster using provided cluster credentials",
-						Detail:  err.Error(),
-						Status:  corev1.FailureStatus,
-					})
-
-					return reconcile.Result{}, err
-				}
-				err = CleanupKoreCluster(ctx, client)
-				if err != nil {
-					logger.WithError(err).Error("trying to clean up cluster resources")
-
-					object.Status.Components.SetCondition(corev1.Component{
-						Name:    ComponentClusterDelete,
-						Message: "Unable to delete all cluster namespaces",
-						Detail:  err.Error(),
-						Status:  corev1.FailureStatus,
-					})
-
-					return reconcile.Result{}, err
+				if object.Spec.Provider.Kind == "EKS" {
+					if err := a.EnsureResourceDeletion(context.Background(), object); err != nil {
+						return reconcile.Result{}, err
+					}
 				}
 
 				object.Status.Components.SetCondition(corev1.Component{
