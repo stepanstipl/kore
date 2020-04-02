@@ -155,7 +155,7 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 			return reconcile.Result{RequeueAfter: 3 * time.Minute}, nil
 
-		case core.SuccessStatus, core.DeleteStatus:
+		case core.SuccessStatus, core.DeletingStatus:
 		default:
 			resource.Status.Status = core.PendingStatus
 			resource.Status.Conditions = []core.Condition{{

@@ -55,8 +55,8 @@ func (t ctrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 	// @step: we need to check if the project exists and delete it
 	result, err := func() (reconcile.Result, error) {
 		// @step: update the resource at deleting if not done already
-		if project.Status.Status != corev1.DeleteStatus {
-			project.Status.Status = corev1.DeleteStatus
+		if project.Status.Status != corev1.DeletingStatus {
+			project.Status.Status = corev1.DeletingStatus
 
 			return reconcile.Result{Requeue: true}, nil
 		}

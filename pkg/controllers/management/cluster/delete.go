@@ -52,7 +52,7 @@ func (a Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (re
 	}
 
 	err := func() *controllers.ReconcileError {
-		cluster.Status.Status = corev1.DeleteStatus
+		cluster.Status.Status = corev1.DeletingStatus
 
 		components, err := createClusterComponents(cluster)
 		if err != nil {

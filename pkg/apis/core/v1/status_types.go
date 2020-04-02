@@ -26,8 +26,8 @@ import (
 type Status string
 
 const (
-	// DeleteStatus indicates we ar deleting the resource
-	DeleteStatus Status = "Deleting"
+	// DeletingStatus indicates we ar deleting the resource
+	DeletingStatus Status = "Deleting"
 	// DeletedStatus indicates a deleted entity
 	DeletedStatus Status = "Deleted"
 	// DeleteFailedStatus indicates that deleting the entity failed
