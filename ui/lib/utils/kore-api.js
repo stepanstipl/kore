@@ -1,7 +1,8 @@
 import Swagger from 'swagger-client'
 import url from 'url'
+
 import config from '../../config'
-import redirect from './redirect'
+import KoreApiClient from './kore-api-client'
 
 class KoreApi {
   static spec = null
@@ -31,9 +32,8 @@ class KoreApi {
         }
       }
     )
-    
-    // At the moment, all API operations are untagged so sit in the 'default' space:
-    return KoreApi._decorateFunctions(api).default
+
+    return new KoreApiClient(api)
   }
 
   /**
@@ -59,35 +59,6 @@ class KoreApi {
     // seem to matter how it's changed, it's still considered non-atomic, incorrectly:
     KoreApi.spec = (await Swagger(KoreApi.swaggerUrl)).spec // eslint-disable-line require-atomic-updates
     return KoreApi.spec
-  }
-
-  /**
-   * This decorates every operation returned from the swagger with a function which unwraps the
-   * returned object, making the usage of the api much cleaner in the rest of the code.
-   * 
-   * Also doing some global error handling too.
-   */
-  static _decorateFunctions = (api) => {
-    let apis = api.apis
-    Object.keys(apis).forEach(tagName =>
-      Object.entries(apis[tagName]).forEach(([functionName, fnc]) =>
-        apis[tagName][functionName] = (...args) => fnc(...args).then(
-          (res) => res.body,
-          (err) => {
-            // Handle not found as a null
-            if (err.response && err.response.status === 404) {
-              return null
-            }
-            // Handle 401 unauth:
-            if (err.response && err.response.status === 401) {
-              redirect(null, '/login/refresh', true)
-            }
-
-            throw err
-          })
-      )
-    )
-    return apis
   }
 }
 

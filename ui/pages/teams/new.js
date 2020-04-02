@@ -63,7 +63,7 @@ class NewTeamPage extends React.Component {
     let api = await KoreApi.client()
 
     await asyncForEach(this.state.membersToAdd, async member => {
-      await api.AddTeamMember({team: team, user: member})
+      await api.AddTeamMember(team, member)
       message.success(`Team member added: ${member}`)
       members.push(member)
     })
@@ -82,7 +82,7 @@ class NewTeamPage extends React.Component {
     return async () => {
       const team = this.state.team.metadata.name
       try {
-        await (await KoreApi.client()).RemoveTeamMember({team: team, user: member})
+        await (await KoreApi.client()).RemoveTeamMember(team, member)
         const state = copy(this.state)
         state.members = state.members.filter(m => m !== member)
         this.setState(state)

@@ -53,9 +53,9 @@ class NewTeamForm extends React.Component {
         }
         try {
           const api = await KoreApi.client()
-          const checkTeam = await api.GetTeam({team: canonicalTeamName})
+          const checkTeam = await api.GetTeam(canonicalTeamName)
           if (!checkTeam) {
-            const team = await api.UpdateTeam({team: canonicalTeamName, body: Team(canonicalTeamName, spec)})
+            const team = await api.UpdateTeam(canonicalTeamName, Team(canonicalTeamName, spec))
             await this.props.handleTeamCreated(team)
             const state = copy(this.state)
             state.submitting = false

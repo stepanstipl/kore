@@ -35,9 +35,9 @@ class IndexPage extends React.Component {
       [ allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations ] = await Promise.all([
         api.ListTeams(),
         api.ListUsers(),
-        api.ListTeamMembers({team: kore.koreAdminTeamName}),
-        api.ListGKECredentials({team: kore.koreAdminTeamName}),
-        api.findOrganizations({team: kore.koreAdminTeamName}),
+        api.ListTeamMembers(kore.koreAdminTeamName),
+        api.ListGKECredentials(kore.koreAdminTeamName),
+        api.ListGCPOrganizations(kore.koreAdminTeamName),
       ])
     } else {
       [ allTeams, allUsers ] = await Promise.all([
