@@ -246,16 +246,12 @@ func (in *GKEStatus) DeepCopyInto(out *GKEStatus) {
 	*out = *in
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
-		*out = new(v1.Components)
-		if **in != nil {
-			in, out := *in, *out
-			*out = make([]*v1.Component, len(*in))
-			for i := range *in {
-				if (*in)[i] != nil {
-					in, out := &(*in)[i], &(*out)[i]
-					*out = new(v1.Component)
-					**out = **in
-				}
+		*out = make(v1.Components, len(*in))
+		for i := range *in {
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(v1.Component)
+				**out = **in
 			}
 		}
 	}

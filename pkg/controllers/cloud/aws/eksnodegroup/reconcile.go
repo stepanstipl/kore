@@ -68,7 +68,7 @@ func (n *eksNodeGroupCtrl) Reconcile(request reconcile.Request) (reconcile.Resul
 	}
 	// @step: we need to mark the cluster as pending
 	if resource.Status.Conditions == nil {
-		resource.Status.Conditions = &core.Components{}
+		resource.Status.Conditions = core.Components{}
 	}
 
 	requeue, err := func() (bool, error) {
@@ -237,6 +237,9 @@ func (n *eksNodeGroupCtrl) Reconcile(request reconcile.Request) (reconcile.Resul
 			Message: "Cluster nodegroup has been provisioned",
 			Status:  core.SuccessStatus,
 		})
+
+		resource.Status.Status = core.SuccessStatus
+
 		return false, nil
 	}()
 	if err != nil {

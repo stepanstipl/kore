@@ -16,12 +16,22 @@
 
 package v1
 
+import (
+	"errors"
+	"fmt"
+	"strings"
+)
+
 // Status is the status of a thing
 type Status string
 
 const (
 	// DeleteStatus indicates we ar deleting the resource
 	DeleteStatus Status = "Deleting"
+	// DeletedStatus indicates a deleted entity
+	DeletedStatus Status = "Deleted"
+	// DeleteFailedStatus indicates that deleting the entity failed
+	DeleteFailedStatus Status = "DeleteFailed"
 	// PendingStatus indicate we are waiting
 	PendingStatus Status = "Pending"
 	// SuccessStatus is a successful resource
@@ -33,6 +43,17 @@ const (
 	// Unknown is an unknown status
 	Unknown Status = "Unknown"
 )
+
+func (s Status) IsFailed() bool {
+	return s == FailureStatus || s == DeleteFailedStatus
+}
+
+// StatusAware is an interface for objects which have a status and zero or more components
+type StatusAware interface {
+	GetStatus() (status Status, message string)
+	SetStatus(status Status)
+	GetComponents() Components
+}
 
 // Condition is a reason why something failed
 // +k8s:openapi-gen=true
@@ -58,8 +79,24 @@ type Component struct {
 	Detail string `json:"detail,omitempty"`
 }
 
+func (c Component) IsFailed() bool {
+	return c.Status.IsFailed()
+}
+
+func (c Component) String() string {
+	if c.Message != "" && c.Detail != "" {
+		return fmt.Sprintf("[%s] %s - %s: %s", c.Status, c.Name, c.Message, c.Detail)
+	}
+
+	if c.Message != "" {
+		return fmt.Sprintf("[%s] %s - %s", c.Status, c.Name, c.Message)
+	}
+
+	return fmt.Sprintf("[%s] %s", c.Status, c.Name)
+}
+
 // GetStatus returns the status of a component
-func (c *Components) GetStatus(name string) (Status, bool) {
+func (c Components) GetStatus(name string) (Status, bool) {
 	comp, found := c.GetComponent(name)
 	if !found {
 		return Unknown, false
@@ -68,20 +105,28 @@ func (c *Components) GetStatus(name string) (Status, bool) {
 	return comp.Status, true
 }
 
-// IsHealthy checks all the conditions
-func (c *Components) IsHealthy() bool {
-	for _, x := range *c {
-		switch x.Status {
-		case FailureStatus, WarningStatus:
+// HasStatus returns true if any of the components has the given status
+func (c Components) HasStatus(status Status) bool {
+	for _, component := range c {
+		if component.Status == status {
+			return true
+		}
+	}
+	return false
+}
+
+// HasStatusForAll returns true if all the components has the given status
+func (c Components) HasStatusForAll(status Status) bool {
+	for _, component := range c {
+		if component.Status != status {
 			return false
 		}
 	}
-
 	return true
 }
 
 // SetStatus sets the status of a component
-func (c *Components) SetStatus(name string, status Status) {
+func (c Components) SetStatus(name string, status Status) {
 	comp, found := c.GetComponent(name)
 	if found {
 		comp.Status = status
@@ -102,12 +147,26 @@ func (c *Components) SetCondition(component Component) {
 }
 
 // GetComponent checks if the status of a component exists
-func (c *Components) GetComponent(name string) (*Component, bool) {
-	for _, x := range *c {
+func (c Components) GetComponent(name string) (*Component, bool) {
+	for _, x := range c {
 		if x.Name == name {
 			return x, true
 		}
 	}
 
 	return nil, false
+}
+
+func (c Components) Error() error {
+	var messages []string
+	for _, c := range c {
+		if c.IsFailed() {
+			messages = append(messages, c.String())
+		}
+	}
+	if len(messages) > 0 {
+		return errors.New(strings.Join(messages, ", "))
+	}
+
+	return nil
 }

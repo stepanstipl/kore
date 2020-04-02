@@ -17,8 +17,9 @@
 package v1
 
 import (
-	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
+	"encoding/json"
 
+	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -106,6 +107,41 @@ type Kubernetes struct {
 
 	Spec   KubernetesSpec   `json:"spec,omitempty"`
 	Status KubernetesStatus `json:"status,omitempty"`
+}
+
+func NewKubernetes(name, namespace string) *Kubernetes {
+	return &Kubernetes{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Kubernetes",
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+	}
+}
+
+func (k *Kubernetes) GetStatus() (corev1.Status, string) {
+	return k.Status.Status, ""
+}
+
+func (k *Kubernetes) SetStatus(status corev1.Status) {
+	k.Status.Status = status
+}
+
+func (k *Kubernetes) GetComponents() corev1.Components {
+	return k.Status.Components
+}
+
+func (k *Kubernetes) ApplyClusterConfiguration(cluster *Cluster) error {
+	if err := json.Unmarshal(cluster.Spec.Configuration.Raw, &k.Spec); err != nil {
+		return err
+	}
+
+	k.Spec.Cluster = cluster.Ownership()
+
+	return nil
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

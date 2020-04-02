@@ -71,7 +71,7 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 
 	// @step: we need to mark the cluster as pending
 	if resource.Status.Conditions == nil {
-		resource.Status.Conditions = &core.Components{}
+		resource.Status.Conditions = core.Components{}
 	}
 
 	requeue, err := func() (bool, error) {

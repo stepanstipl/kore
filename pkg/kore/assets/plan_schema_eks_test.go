@@ -47,6 +47,7 @@ func eksSampleData() map[string]interface{} {
 				"eC2SSHKey":    "kore",
 				"region":       "eu-west-2",
 				"diskSize":     10,
+				"name":         "group1",
 				"nodeIAMRole":  "fooo",
 				"desiredSize":  1,
 				"minSize":      1,

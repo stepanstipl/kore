@@ -17,6 +17,10 @@
 package v1alpha1
 
 import (
+	"encoding/json"
+
+	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -163,7 +167,7 @@ type AuthorizedNetwork struct {
 // +k8s:openapi-gen=true
 type GKEStatus struct {
 	// Conditions is the status of the components
-	Conditions *corev1.Components `json:"conditions,omitempty"`
+	Conditions corev1.Components `json:"conditions,omitempty"`
 	// CACertificate is the certificate for this cluster
 	CACertificate string `json:"caCertificate,omitempty"`
 	// Endpoint is the endpoint of the cluster
@@ -187,6 +191,42 @@ type GKE struct {
 
 	Spec   GKESpec   `json:"spec,omitempty"`
 	Status GKEStatus `json:"status,omitempty"`
+}
+
+func NewGKE(name, namespace string) *GKE {
+	return &GKE{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "GKE",
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+	}
+}
+
+func (g *GKE) GetStatus() (corev1.Status, string) {
+	return g.Status.Status, ""
+}
+
+func (g *GKE) SetStatus(status corev1.Status) {
+	g.Status.Status = status
+}
+
+func (g *GKE) GetComponents() corev1.Components {
+	return g.Status.Conditions
+}
+
+func (g *GKE) ApplyClusterConfiguration(cluster *clustersv1.Cluster) error {
+	if err := json.Unmarshal(cluster.Spec.Configuration.Raw, &g.Spec); err != nil {
+		return err
+	}
+
+	g.Spec.Cluster = cluster.Ownership()
+	g.Spec.Credentials = cluster.Spec.Credentials
+
+	return nil
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -17,15 +17,17 @@
 package v1
 
 import (
-	"encoding/json"
-	"strings"
-
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-	gkev1alpha1 "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
+
+type ClusterComponent interface {
+	runtime.Object
+	corev1.StatusAware
+	ApplyClusterConfiguration(cluster *Cluster) error
+}
 
 // ClusterSpec defines the desired state of a cluster
 // +k8s:openapi-gen=true
@@ -67,6 +69,9 @@ type ClusterStatus struct {
 	// Status is the overall status of the cluster
 	// +kubebuilder:validation:Optional
 	Status corev1.Status `json:"status,omitempty"`
+	// Message is the description of the current status
+	// +kubebuilder:validation:Optional
+	Message string `json:"message,omitempty"`
 }
 
 // +genclient:nonNamespaced
@@ -84,6 +89,16 @@ type Cluster struct {
 	Status ClusterStatus `json:"status,omitempty"`
 }
 
+func (c *Cluster) Ownership() corev1.Ownership {
+	return corev1.Ownership{
+		Group:     GroupVersion.Group,
+		Version:   GroupVersion.Version,
+		Kind:      "Cluster",
+		Namespace: c.Namespace,
+		Name:      c.Name,
+	}
+}
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // ClusterList contains a list of clusters
@@ -91,58 +106,4 @@ type ClusterList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Cluster `json:"items"`
-}
-
-func (c *Cluster) CreateResources(clusterUsers []ClusterUser) ([]runtime.Object, error) {
-	var res []runtime.Object
-	var provider runtime.Object
-
-	switch strings.ToLower(c.Kind) {
-	case "gke":
-		gkeProvider := &gkev1alpha1.GKE{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       gkev1alpha1.GroupName,
-				APIVersion: gkev1alpha1.GroupVersion.String(),
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      c.Name,
-				Namespace: c.Namespace,
-			},
-			Spec:   gkev1alpha1.GKESpec{},
-			Status: gkev1alpha1.GKEStatus{},
-		}
-		if err := json.Unmarshal(c.Spec.Configuration.Raw, &gkeProvider.Spec); err != nil {
-			return nil, err
-		}
-		provider = gkeProvider
-	}
-
-	res = append(res, provider)
-
-	kubernetes := &Kubernetes{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: GroupVersion.String(),
-			Kind:       c.Kind,
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      c.Name,
-			Namespace: c.Namespace,
-		},
-		Spec: KubernetesSpec{
-			Provider: corev1.Ownership{
-				Group:     provider.GetObjectKind().GroupVersionKind().Group,
-				Kind:      provider.GetObjectKind().GroupVersionKind().Kind,
-				Name:      c.Name,
-				Namespace: c.Namespace,
-				Version:   provider.GetObjectKind().GroupVersionKind().Version,
-			},
-			ClusterUsers: clusterUsers,
-		},
-	}
-	if err := json.Unmarshal(c.Spec.Configuration.Raw, kubernetes); err != nil {
-		return nil, err
-	}
-	res = append(res, kubernetes)
-
-	return res, nil
 }

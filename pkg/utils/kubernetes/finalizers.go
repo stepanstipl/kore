@@ -26,7 +26,7 @@ import (
 
 // Finalizable is an kubernetes resource api object that supports finalizers
 type Finalizable interface {
-	DeepCopyObject() runtime.Object
+	runtime.Object
 	GetFinalizers() []string
 	SetFinalizers(finalizers []string)
 	GetDeletionTimestamp() *metav1.Time
