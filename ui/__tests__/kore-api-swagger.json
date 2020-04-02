@@ -4508,11 +4508,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
-        "clientID",
         "clientSecret",
         "issuer",
         "clientScopes",
-        "userClaims"
+        "userClaims",
+        "clientID"
       ],
       "properties": {
         "clientID": {

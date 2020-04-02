@@ -24,7 +24,7 @@ class KoreApi {
         requestInterceptor: (req) => {
           if (process.browser) {
             req.url = req.url.replace(KoreApi.basePath, '/apiproxy')
-          } else {
+          } else if (ctx && ctx.req) {
             req.headers['Authorization'] = `Bearer ${ctx.req.session.passport.user.id_token}`
           }
           return req
@@ -44,7 +44,9 @@ class KoreApi {
     // Check if we need to download the swagger, caching it in a static if we do so we 
     // can re-use rather than downloading the swagger for every API call:
     // @TODO: Expire the cache after a while on the server.
-    if (KoreApi.spec) return KoreApi.spec
+    if (KoreApi.spec) { 
+      return KoreApi.spec 
+    }
     const u = url.parse(config.koreApi.url)
     KoreApi.basePath = u.path
     if (process.browser) {
@@ -73,10 +75,13 @@ class KoreApi {
           (res) => res.body,
           (err) => {
             // Handle not found as a null
-            if (err.response && err.response.status === 404) return null
+            if (err.response && err.response.status === 404) {
+              return null
+            }
             // Handle 401 unauth:
-            if (err.response && err.response.status === 401)
+            if (err.response && err.response.status === 401) {
               redirect(null, '/login/refresh', true)
+            }
 
             throw err
           })

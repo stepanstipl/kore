@@ -2,16 +2,17 @@ import { mount } from 'enzyme'
 import NewTeamForm from '../../../../lib/components/forms/NewTeamForm'
 import copy from '../../../../lib/utils/object-copy'
 import Team from '../../../../lib/crd/Team'
-
-jest.mock('../../../../lib/utils/api-request')
-import KoreApiMock from '../../../../__mocks__/kore-api-mock'
+import ApiTestHelpers from '../../../api-test-helpers'
 
 describe('NewTeamForm', () => {
   let props
   let newTeamForm
   let wrapper
-
+  let apiScope
+  
   beforeEach(() => {
+    // In case any tests leak to the API, mock out the API at this stage:
+    apiScope = ApiTestHelpers.getScope()
     props = {
       form: {
         isFieldTouched: () => {},
@@ -26,6 +27,11 @@ describe('NewTeamForm', () => {
       team: false
     }
     wrapper = mount(<NewTeamForm wrappedComponentRef={component => newTeamForm = component} {...props} />)
+  })
+
+  afterEach(() => {
+    // This will check that no calls were made against the API, unless the test registered them:
+    apiScope.done()
   })
 
   describe('instance methods', () => {
@@ -72,7 +78,6 @@ describe('NewTeamForm', () => {
     let event
 
     beforeEach(() => {
-      KoreApiMock.reset()
       props.form.validateFields.mockClear()
       event = {
         preventDefault: jest.fn()
@@ -92,7 +97,8 @@ describe('NewTeamForm', () => {
     it('does not submit when the form it is not valid', () => {
       props.form.validateFields = jest.fn(cb => cb(true, {}))
       newTeamForm.handleSubmit(event)
-      expect(KoreApiMock.allCallCount).toEqual(0)
+      // have the API scope validate no calls were made:
+      apiScope.done()
     })
 
     it('submits when the form is valid', async () => {
@@ -100,16 +106,17 @@ describe('NewTeamForm', () => {
         summary: 'ABC',
         description: 'ABC team'
       })
-      KoreApiMock.registerMock('default','GetTeam', () => Promise.resolve(null))
-      KoreApiMock.registerMock('default','UpdateTeam', ({body}) => {
-        return Promise.resolve(body)
-      })
+
+      apiScope = (ApiTestHelpers.getScope())
+        .get(`${ApiTestHelpers.basePath}/teams/abc`).reply(404)
+        .put(`${ApiTestHelpers.basePath}/teams/abc`, team).reply(200, team)
+
       props.form.validateFields = jest.fn(cb => cb(null, { teamName: 'ABC', teamDescription: 'ABC team' }))
       await newTeamForm.handleSubmit(event)
-      expect(KoreApiMock.calls['default']['GetTeam'].length).toEqual(1)
-      expect(KoreApiMock.calls['default']['UpdateTeam'].length).toEqual(1)
-      expect(KoreApiMock.calls['default']['UpdateTeam'][0].team).toEqual('abc')
-      expect(KoreApiMock.calls['default']['UpdateTeam'][0].body).toEqual(team)
+
+      // Check expected API calls made:
+      apiScope.done()
+
       expect(newTeamForm.state).toEqual({
         submitting: false,
         formErrorMessage: false
@@ -119,10 +126,15 @@ describe('NewTeamForm', () => {
     })
 
     it('sets error message if api requests fail', async () => {
-      KoreApiMock.registerMock('default','GetTeam', () => Promise.reject('Failed'))
+      apiScope = (ApiTestHelpers.getScope())
+        .get(`${ApiTestHelpers.basePath}/teams/abc`).reply(500)
+
       props.form.validateFields = jest.fn(cb => cb(null, { teamName: 'ABC', teamDescription: 'ABC team' }))
       await newTeamForm.handleSubmit(event)
-      expect(KoreApiMock.calls['default']['GetTeam'].length).toEqual(1)
+
+      // Check expected API calls made:
+      apiScope.done()
+
       expect(props.handleTeamCreated).toHaveBeenCalledTimes(0)
       expect(newTeamForm.state).toEqual({
         submitting: false,
