@@ -22,11 +22,11 @@ load helper.sh
   [[ "$status" -eq 0 ]]
 }
 
-#@test "Ensuring you cannot delete the admin user" {
-#  retry 1 ${KORE} delete user admin
-#  [[ "$status" -eq 1 ]]
-#}
-#
+@test "Ensuring you cannot delete the admin user" {
+  retry 1 ${KORE} delete user admin
+  [[ "$status" -eq 1 ]]
+}
+
 @test "Ensuring I show up in the admin group of whoami" {
   retry 2 "${KORE} whoami | grep kore-admin"
   [[ "$status" -eq 0 ]]

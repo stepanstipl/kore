@@ -193,6 +193,11 @@ func (h *usersImpl) Delete(ctx context.Context, username string) (*orgv1.User, e
 		return nil, ErrUnauthorized
 	}
 
+	// @step: you should be permitted to delete the admin user
+	if username == "admin" {
+		return nil, NewErrNotAllowed("you are not permitted to delete the admin user")
+	}
+
 	// @step: check the user exists
 	u, err := h.usermgr.Users().Get(ctx, username)
 	if err != nil {
