@@ -47,7 +47,7 @@ func (a Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (re
 	finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
 
 	result, err := func() (reconcile.Result, error) {
-		cluster.Status.Status = corev1.DeleteStatus
+		cluster.Status.Status = corev1.DeletingStatus
 
 		components, err := createClusterComponents(cluster)
 		if err != nil {

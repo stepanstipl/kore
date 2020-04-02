@@ -65,7 +65,7 @@ func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (rec
 		u.SetName(object.Name)
 		u.SetNamespace(object.Namespace)
 
-		object.Status.Status = corev1.DeleteStatus
+		object.Status.Status = corev1.DeletingStatus
 
 		// @check if a we are backed by a cloud provider
 		if kore.IsProviderBacked(object) {

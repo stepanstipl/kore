@@ -76,8 +76,8 @@ func (n *eksNodeGroupCtrl) Delete(request reconcile.Request) (reconcile.Result, 
 		}
 
 		// @step: lets update the status of the resource to deleting
-		if resource.Status.Status != corev1.DeleteStatus {
-			resource.Status.Status = corev1.DeleteStatus
+		if resource.Status.Status != corev1.DeletingStatus {
+			resource.Status.Status = corev1.DeletingStatus
 
 			return true, nil
 		}
