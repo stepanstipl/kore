@@ -93,7 +93,7 @@ func (t ccCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	if err := kubernetes.WaitOnKubeAPI(ctx, kc, 5*time.Second, 20*time.Second); err != nil {
 		logger.Debug("kubernetes api for cluster have't come up yet, forging into background")
 
-		return reconcile.Result{RequeueAfter: 2 * time.Minute}, nil
+		return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
 	}
 
 	logger.Debug("checking if the kore namespace exists in the remote cluster")
