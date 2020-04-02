@@ -68,7 +68,11 @@ func (p plansImpl) Update(ctx context.Context, plan *configv1.Plan) error {
 			return err
 		}
 	case "EKS":
-		// TODO: add the EKS Plan schema and validate the plan parameters
+		if err := jsonschema.Validate(assets.EKSPlanSchema, "plan", plan.Spec.Configuration.Raw); err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("invalid cluster kind: %q", plan.Spec.Kind)
 	}
 
 	err := p.Store().Client().Update(ctx,

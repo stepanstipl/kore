@@ -233,11 +233,15 @@ func (c *clustersImpl) validateConfiguration(ctx context.Context, cluster *clust
 
 	switch cluster.Spec.Kind {
 	case "GKE":
-		if err := jsonschema.Validate(assets.GKEPlanSchema, "plan", clusterConfig); err != nil {
+		if err := jsonschema.Validate(assets.GKEPlanSchema, cluster.Name, clusterConfig); err != nil {
 			return err
 		}
 	case "EKS":
-		// TODO: add the EKS Plan schema and validate the plan parameters
+		if err := jsonschema.Validate(assets.EKSPlanSchema, cluster.Name, clusterConfig); err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("invalid cluster kind: %q", cluster.Spec.Kind)
 	}
 
 	editableParams, err := c.plans.GetEditablePlanParams(ctx, c.team)

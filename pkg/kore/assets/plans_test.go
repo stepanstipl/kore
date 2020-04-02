@@ -17,6 +17,9 @@
 package assets_test
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/appvia/kore/pkg/kore/assets"
 	"github.com/appvia/kore/pkg/utils/jsonschema"
 	. "github.com/onsi/ginkgo"
@@ -28,8 +31,18 @@ var _ = Describe("Plans", func() {
 		plans := assets.GetDefaultPlans()
 
 		for _, plan := range plans {
-			err := jsonschema.Validate(assets.GKEPlanSchema, plan.Name, plan.Spec.Configuration.Raw)
+			var schema string
+			switch strings.ToLower(plan.Spec.Kind) {
+			case "gke":
+				schema = assets.GKEPlanSchema
+			case "eks":
+				schema = assets.EKSPlanSchema
+			default:
+				Fail(fmt.Sprintf("unknown plan kind: %q", plan.Spec.Kind))
+			}
+			err := jsonschema.Validate(schema, plan.Name, plan.Spec.Configuration.Raw)
 			Expect(err).ToNot(HaveOccurred(), "%s plan is not valid: %s", plan.Name, err)
+
 		}
 	})
 
