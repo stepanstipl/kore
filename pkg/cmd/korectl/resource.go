@@ -122,10 +122,19 @@ var resourceConfigs = map[string]resourceConfig{
 		Name:   "ekss",
 		IsTeam: true,
 		Columns: []string{
-			Column("Name", ".metadata.name"),
+			Column("Name", "metadata.name"),
 			Column("Region", "spec.region"),
-			Column("Endpoint", ".status.endpoint"),
-			Column("Status", ".status.status"),
+			Column("Endpoint", "status.endpoint"),
+			Column("Status", "status.status"),
+		},
+	},
+	"eksnodegroup": {
+		Name:   "eksnodegroups",
+		IsTeam: true,
+		Columns: []string{
+			Column("Name", "metadata.name"),
+			Column("Cluster", "spec.cluster.name"),
+			Column("Status", "status.status"),
 		},
 	},
 	"ekscredential": {
