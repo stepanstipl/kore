@@ -78,6 +78,16 @@ func (h hubImpl) Setup(ctx context.Context) error {
 			return err
 		}
 	}
+	for _, x := range assets.GetDefaultPlanPolicies() {
+		if err := h.PlanPolicies().Update(getAdminContext(ctx), x, true); err != nil {
+			return err
+		}
+		allocation := x.CreateAllocation([]string{"*"})
+		if err := h.Teams().Team(HubAdminTeam).Allocations().Update(getAdminContext(ctx), allocation, true); err != nil {
+			return err
+		}
+
+	}
 	for _, x := range assets.GetDefaultClusterRoles() {
 		x.Namespace = HubAdminTeam
 

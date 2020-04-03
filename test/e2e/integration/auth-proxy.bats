@@ -24,7 +24,7 @@ load helper
     [[ "$status" -eq 0 ]]
     runit "${KORE} get clusters ${CLUSTER} -t e2e -o yaml > ${tempfile}"
     [[ "$status" -eq 0 ]]
-    runit "sed -i -e 's/0.0.0.0\/0/1.1.1.1\/32/' ${tempfile}"
+    runit "sed -i -e 's/\[\"0.0.0.0\/0\"\]/[\"1.1.1.1\/32\"]/' ${tempfile}"
     [[ "$status" -eq 0 ]]
     runit "${KORE} apply -f ${tempfile} -t e2e"
     [[ "$status" -eq 0 ]]
@@ -38,7 +38,7 @@ load helper
 
   runit "${KORE} get clusters ${CLUSTER} -t e2e -o yaml > ${tempfile}"
   [[ "$status" -eq 0 ]]
-  runit "sed -i -e 's/1.1.1.1\/32/0.0.0.0\/0/' ${tempfile}"
+  runit "sed -i -e 's/\[\"1.1.1.1\/32\"\]/[\"0.0.0.0\/0\"]/' ${tempfile}"
   [[ "$status" -eq 0 ]]
   runit "${KORE} apply -f ${tempfile} -t e2e"
   [[ "$status" -eq 0 ]]
