@@ -2,13 +2,15 @@
 
 ### **Prerequisites**
 
-- kubectl
-- korectl
 - bats (bash tests)
+- jq
+- korectl
+- kubectl
 
-You must have some validate credentials in the e2e folder
+You must have some valid credentials in the e2e folder
 
-- e2e/gke-credentials (containing a gkecredentials{} and allocation called gke for all teams)
+- e2eci/gke-credentials.yml (containing a gkecredentials{} and allocation called gke for all teams).
+  A example can be found in the examples/gcp-credentials.yml
 
 ##  **Running the suite locally**
 
@@ -16,18 +18,11 @@ You must have some validate credentials in the e2e folder
 - If your not using the `make demo` bring up the kore-apiserver locally via `bin/kore-apiserver --verbose`; sourcing
   in any environment variables you usually do.
 - Login via the `korectl login` command which will provision your user locally
-
-```shell
-korectl 
-
-```
-
 - Ensure if you using multiple profiles your pointing to the local instance `korectl profiles ls`
 
 You can then run the checks via:
 
 ```shell
-# The prefix
 $ hack/e2e/check-suite.sh
 ```
 
