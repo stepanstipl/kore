@@ -1,8 +1,8 @@
-import Swagger from 'swagger-client'
-import url from 'url'
+const Swagger = require('swagger-client')
+const url = require('url')
 
-import config from '../../config'
-import KoreApiClient from './kore-api-client'
+const config = require('../../config')
+const KoreApiClient = require('./kore-api-client')
 
 class KoreApi {
   static spec = null
@@ -25,8 +25,8 @@ class KoreApi {
         requestInterceptor: (req) => {
           if (process.browser) {
             req.url = req.url.replace(KoreApi.basePath, '/apiproxy')
-          } else if (ctx && ctx.req) {
-            req.headers['Authorization'] = `Bearer ${ctx.req.session.passport.user.id_token}`
+          } else if (ctx && (ctx.id_token || ctx.req)) {
+            req.headers['Authorization'] = `Bearer ${ctx.id_token || ctx.req.session.passport.user.id_token}`
           }
           return req
         }
@@ -62,4 +62,4 @@ class KoreApi {
   }
 }
 
-export default KoreApi
+module.exports = KoreApi

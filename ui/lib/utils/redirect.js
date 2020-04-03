@@ -1,4 +1,4 @@
-import Router from 'next/router'
+const Router = require('next/router')
 
 const redirect = (res, path, forceSSR = false) => {
   if (res) {
@@ -14,4 +14,4 @@ const redirect = (res, path, forceSSR = false) => {
   return {}
 }
 
-export default redirect
+module.exports = redirect

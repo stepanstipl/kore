@@ -1,32 +1,29 @@
-const axios = require('axios')
 const User = require('../../lib/crd/User')
-const apiPaths = require('../../lib/utils/api-paths')
-const { kore } = require('../../config')
+const { kore, koreApi } = require('../../config')
 
 class OrgService {
-  constructor(koreApi) {
-    this.koreApi = koreApi
+  constructor(KoreApi) {
+    this.KoreApi = KoreApi
   }
 
-  getHeaders(token) {
-    return {
-      'Authorization': `Bearer ${token}`
-    }
+  async getApiClient(id_token) {
+    const api = await this.KoreApi.client({ id_token })
+    return api
   }
 
   async getOrCreateUser(user) {
     try {
       const userResource = await User(user)
       console.log(`*** putting user ${user.id}`, userResource)
-      const userResult = await axios.put(`${this.koreApi.url}${apiPaths.users}/${user.id}`, userResource, { headers: this.getHeaders(this.koreApi.token) })
-      const adminTeamMembers = await this.getTeamMembers(kore.koreAdminTeamName, this.koreApi.token)
+      const api = await this.getApiClient(koreApi.token)
+      const userResult = await api.UpdateUser(user.id, userResource)
+      const adminTeamMembers = await this.getTeamMembers(kore.koreAdminTeamName, koreApi.token)
       if (adminTeamMembers.length === 1) {
-        await this.addUserToTeam(kore.koreAdminTeamName, user.id, this.koreApi.token)
+        await this.addUserToTeam(kore.koreAdminTeamName, user.id, koreApi.token)
       }
-      const userToReturn = userResult.data
-      userToReturn.teams = await this.getUserTeams(user)
-      userToReturn.isAdmin = this.isAdmin(userToReturn.teams.userTeams)
-      return userToReturn
+      userResult.teams = await this.getUserTeams(user)
+      userResult.isAdmin = this.isAdmin(userResult.teams.userTeams)
+      return userResult
     } catch (err) {
       console.error('Error in getOrCreateUser from API', err)
       return Promise.reject(err)
@@ -46,9 +43,10 @@ class OrgService {
 
   async getTeamMembers(team, requestingIdToken) {
     try {
-      const result = await axios.get(this.koreApi.url + apiPaths.team(team).members, { headers: this.getHeaders(requestingIdToken) })
-      console.log(`*** found team members for team: ${team}`, result.data.items)
-      return result.data.items
+      const api = await this.getApiClient(requestingIdToken)
+      const result = await api.ListTeamMembers(team)
+      console.log(`*** found team members for team: ${team}`, result.items)
+      return result.items
     } catch (err) {
       console.error('Error getting team members from API', err)
       return Promise.reject(err)
@@ -57,9 +55,9 @@ class OrgService {
 
   async addUserToTeam(team, username, requestingIdToken) {
     console.log(`*** adding user ${username} to team ${team}`)
-    const headers = { ...this.getHeaders(requestingIdToken), 'Content-Type': 'application/json' }
     try {
-      await axios.put(`${this.koreApi.url}${apiPaths.team(team).members}/${username}`, undefined, { headers })
+      const api = await this.getApiClient(requestingIdToken)
+      await api.AddTeamMember(team, username)
     } catch (err) {
       console.error('Error adding user to team', err)
       return Promise.reject(err)
@@ -68,14 +66,17 @@ class OrgService {
 
   async getUserTeams(user) {
     try {
-      const userTeamsResult = await axios.get(this.koreApi.url + apiPaths.user(user.id).teams, { headers: this.getHeaders(user.id_token) })
-      const userTeams = userTeamsResult.data.items
+      const api = await this.getApiClient(user.id_token)
+
+      const userTeamsList = await api.ListUserTeams(user.id)
+      const userTeams = userTeamsList.items
+
       if (this.isAdmin(userTeams)) {
-        const allTeamsResult = await axios.get(this.koreApi.url + apiPaths.teams, { headers: this.getHeaders(user.id_token) })
+        const allTeamsList = await api.ListTeams()
         const userTeamIdList = userTeams.map(t => t.metadata.name)
         return {
           userTeams,
-          otherTeams: allTeamsResult.data.items.filter(at => !userTeamIdList.includes(at.metadata.name))
+          otherTeams: allTeamsList.items.filter(at => !userTeamIdList.includes(at.metadata.name))
         }
       }
       return { userTeams }
@@ -87,8 +88,9 @@ class OrgService {
 
   async getTeamGkeCredentials(team, requestingIdToken) {
     try {
-      const result = await axios.get(this.koreApi.url + apiPaths.team(team).gkeCredentials, { headers: this.getHeaders(requestingIdToken) })
-      return result.data
+      const api = await this.getApiClient(requestingIdToken)
+      const result = await api.ListGKECredentials(team)
+      return result
     } catch (err) {
       if (err.response && err.response.status === 404) {
         return null

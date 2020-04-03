@@ -3,8 +3,13 @@ const Router = require('express').Router
 function getSessionUser(orgService) {
   return async(req, res) => {
     const user = req.session.passport.user
-    await orgService.refreshUser(user)
-    return res.json(user)
+    try {
+      await orgService.refreshUser(user)
+      return res.json(user)
+    } catch (err) {
+      console.log('Failed to refresh user in /session/user', err)
+      return res.status(err.statusCode || 500).send()
+    }
   }
 }
 

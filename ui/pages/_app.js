@@ -10,8 +10,9 @@ const { Header, Content } = Layout
 import User from '../lib/components/User'
 import SiderMenu from '../lib/components/SiderMenu'
 import redirect from '../lib/utils/redirect'
+import KoreApi from '../lib/utils/kore-api'
 import copy from '../lib/utils/object-copy'
-import { kore, koreApi, server } from '../config'
+import { kore, server } from '../config'
 import OrgService from '../server/services/org'
 import userExpired from '../server/lib/user-expired'
 import gtag from '../lib/utils/gtag'
@@ -36,9 +37,14 @@ class MyApp extends App {
           return res.redirect('/login/refresh')
         }
 
-        const orgService = new OrgService(koreApi)
-        await orgService.refreshUser(user)
-        return user
+        const orgService = new OrgService(KoreApi)
+        try {
+          await orgService.refreshUser(user)
+          return user
+        } catch (err) {
+          console.log('Failed to refresh user in _app.js', err)
+          return false
+        }
       }
       return false
     }
