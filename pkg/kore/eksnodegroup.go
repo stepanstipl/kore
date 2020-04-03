@@ -19,6 +19,8 @@ package kore
 import (
 	"context"
 
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
+
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/store"
@@ -90,6 +92,9 @@ func (n *eksNGImpl) Get(ctx context.Context, name string) (*eks.EKSNodeGroup, er
 		store.GetOptions.WithName(name),
 	)
 	if err != nil {
+		if kerrors.IsNotFound(err) {
+			return nil, ErrNotFound
+		}
 		log.WithError(err).Error("trying to retrieve the nodegroup")
 
 		return nil, err
