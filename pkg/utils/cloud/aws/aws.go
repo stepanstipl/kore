@@ -181,7 +181,7 @@ func (c *Client) DeleteNodeGroup(nodegroup *eksv1alpha1.EKSNodeGroup) error {
 
 // CreateNodeGroup will create a node group for the EKS cluster
 func (c *Client) CreateNodeGroup(nodegroup *eksv1alpha1.EKSNodeGroup) (err error) {
-	_, err = c.svc.CreateNodegroup(&eks.CreateNodegroupInput{
+	input := &eks.CreateNodegroupInput{
 		AmiType:        aws.String(nodegroup.Spec.AMIType),
 		ClusterName:    aws.String(nodegroup.Spec.Cluster.Name),
 		NodeRole:       aws.String(nodegroup.Spec.NodeIAMRole),
@@ -199,9 +199,14 @@ func (c *Client) CreateNodeGroup(nodegroup *eksv1alpha1.EKSNodeGroup) (err error
 			MaxSize:     aws.Int64(nodegroup.Spec.MaxSize),
 			MinSize:     aws.Int64(nodegroup.Spec.MinSize),
 		},
-		Tags:   aws.StringMap(nodegroup.Spec.Tags),
-		Labels: aws.StringMap(nodegroup.Spec.Labels),
-	})
+	}
+	if len(nodegroup.Spec.Tags) > 0 {
+		input.Tags = aws.StringMap(nodegroup.Spec.Tags)
+	}
+	if len(nodegroup.Spec.Labels) > 0 {
+		input.Labels = aws.StringMap(nodegroup.Spec.Labels)
+	}
+	_, err = c.svc.CreateNodegroup(input)
 	if err != nil {
 		// TODO - oh my, more from appvia/eks-operator
 		if aerr, ok := err.(awserr.Error); ok {
