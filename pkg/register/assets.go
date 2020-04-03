@@ -834,10 +834,31 @@ spec:
               description: AMIType is the AWS Machine Image type. We use a sensible
                 default.
               type: string
-            clusterName:
-              description: ClusterName keeps track of the cluster this nodegroup belowngs
-                to.
-              type: string
+            cluster:
+              description: Cluster refers to the cluster this object belongs to
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
             credentials:
               description: Credentials is a reference to an AWSCredentials object
                 to use for authentication
@@ -928,7 +949,6 @@ spec:
               type: object
           required:
           - amiType
-          - clusterName
           - credentials
           - desiredSize
           - diskSize

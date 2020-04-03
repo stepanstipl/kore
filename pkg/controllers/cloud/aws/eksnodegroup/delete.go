@@ -64,7 +64,7 @@ func (n *eksNodeGroupCtrl) Delete(request reconcile.Request) (reconcile.Result, 
 		}
 
 		// @step: create a cloud client for us
-		client, err := aws.NewBasicClient(creds, resource.Spec.ClusterName, resource.Spec.Region)
+		client, err := aws.NewBasicClient(creds, resource.Spec.Cluster.Name, resource.Spec.Region)
 		if err != nil {
 			return false, err
 		}

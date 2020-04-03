@@ -269,11 +269,10 @@ func schema_pkg_apis_eks_v1alpha1_EKSNodeGroupSpec(ref common.ReferenceCallback)
 							Format:      "",
 						},
 					},
-					"clusterName": {
+					"cluster": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ClusterName keeps track of the cluster this nodegroup belowngs to.",
-							Type:        []string{"string"},
-							Format:      "",
+							Description: "Cluster refers to the cluster this object belongs to",
+							Ref:         ref("github.com/appvia/kore/pkg/apis/core/v1.Ownership"),
 						},
 					},
 					"diskSize": {
@@ -407,9 +406,11 @@ func schema_pkg_apis_eks_v1alpha1_EKSNodeGroupSpec(ref common.ReferenceCallback)
 						},
 					},
 				},
-				Required: []string{"amiType", "clusterName", "diskSize", "nodeIAMRole", "desiredSize", "maxSize", "minSize", "subnets", "region", "eC2SSHKey"},
+				Required: []string{"amiType", "diskSize", "nodeIAMRole", "desiredSize", "maxSize", "minSize", "subnets", "region", "eC2SSHKey"},
 			},
 		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/core/v1.Ownership"},
 	}
 }
 
