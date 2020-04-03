@@ -33,10 +33,6 @@ type EKSSpec struct {
 	// Cluster refers to the cluster this object belongs to
 	// +kubebuilder:validation:Required
 	Cluster corev1.Ownership `json:"cluster,omitempty"`
-	// Name the name of the EKS cluster
-	// +kubebuilder:validation:MinLength=3
-	// +kubebuilder:validation:Required
-	Name string `json:"name"`
 	// RoleARN is the role ARN which provides permissions to EKS
 	// +kubebuilder:validation:MinLength=10
 	// +kubebuilder:validation:Required

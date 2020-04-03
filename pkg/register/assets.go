@@ -1118,10 +1118,6 @@ spec:
               - namespace
               - version
               type: object
-            name:
-              description: Name the name of the EKS cluster
-              minLength: 3
-              type: string
             region:
               description: Region is the AWS region to launch this cluster within
               type: string
@@ -1147,7 +1143,6 @@ spec:
               type: string
           required:
           - credentials
-          - name
           - region
           - roleARN
           - subnetIDs
