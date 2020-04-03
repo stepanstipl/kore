@@ -183,7 +183,7 @@ func (c *Client) DeleteNodeGroup(nodegroup *eksv1alpha1.EKSNodeGroup) error {
 func (c *Client) CreateNodeGroup(nodegroup *eksv1alpha1.EKSNodeGroup) (err error) {
 	_, err = c.svc.CreateNodegroup(&eks.CreateNodegroupInput{
 		AmiType:        aws.String(nodegroup.Spec.AMIType),
-		ClusterName:    aws.String(nodegroup.Spec.ClusterName),
+		ClusterName:    aws.String(nodegroup.Spec.Cluster.Name),
 		NodeRole:       aws.String(nodegroup.Spec.NodeIAMRole),
 		ReleaseVersion: aws.String(nodegroup.Spec.ReleaseVersion),
 		DiskSize:       aws.Int64(nodegroup.Spec.DiskSize),

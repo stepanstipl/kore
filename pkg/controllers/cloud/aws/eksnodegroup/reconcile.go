@@ -90,7 +90,7 @@ func (n *eksNodeGroupCtrl) Reconcile(request reconcile.Request) (reconcile.Resul
 
 		client, err := aws.NewBasicClient(
 			credentials,
-			resource.Spec.ClusterName,
+			resource.Spec.Cluster.Name,
 			resource.Spec.Region,
 		)
 		if err != nil {
@@ -125,22 +125,22 @@ func (n *eksNodeGroupCtrl) Reconcile(request reconcile.Request) (reconcile.Resul
 			// first check if CLUSTER exists
 			clusterFound, err := client.Exists()
 			if err != nil {
-				logger.Debugf("error trying to check cluster exists %s for nodegroup %s", resource.Spec.ClusterName, resource.Name)
+				logger.Debugf("error trying to check cluster exists %s for nodegroup %s", resource.Spec.Cluster.Name, resource.Name)
 
 				resource.Status.Conditions.SetCondition(core.Component{
 					Name:    ComponentClusterNodegroupCreator,
-					Message: fmt.Sprintf("Waiting for cluster %s to exist in aws", resource.Spec.ClusterName),
+					Message: fmt.Sprintf("Waiting for cluster %s to exist in aws", resource.Spec.Cluster.Name),
 					Status:  core.FailureStatus,
 				})
 
 				return false, err
 			}
 			if !clusterFound {
-				logger.Debugf("waiting for cluster %s to exist", resource.Spec.ClusterName)
+				logger.Debugf("waiting for cluster %s to exist", resource.Spec.Cluster.Name)
 
 				resource.Status.Conditions.SetCondition(core.Component{
 					Name:    ComponentClusterNodegroupCreator,
-					Message: fmt.Sprintf("Waiting for cluster %s to exist in aws", resource.Spec.ClusterName),
+					Message: fmt.Sprintf("Waiting for cluster %s to exist in aws", resource.Spec.Cluster.Name),
 					Status:  core.PendingStatus,
 				})
 
@@ -148,11 +148,11 @@ func (n *eksNodeGroupCtrl) Reconcile(request reconcile.Request) (reconcile.Resul
 			}
 			eksCluster, err := client.DescribeEKS()
 			if err != nil {
-				logger.Debugf("error trying to check status of cluster %s for nodegroup %s", resource.Spec.ClusterName, resource.Name)
+				logger.Debugf("error trying to check status of cluster %s for nodegroup %s", resource.Spec.Cluster.Name, resource.Name)
 
 				resource.Status.Conditions.SetCondition(core.Component{
 					Name:    ComponentClusterNodegroupCreator,
-					Message: fmt.Sprintf("Error checking for status of cluster %s", resource.Spec.ClusterName),
+					Message: fmt.Sprintf("Error checking for status of cluster %s", resource.Spec.Cluster.Name),
 					Status:  core.FailureStatus,
 				})
 
@@ -173,7 +173,7 @@ func (n *eksNodeGroupCtrl) Reconcile(request reconcile.Request) (reconcile.Resul
 				}
 
 				// Not active or creating problem
-				em := fmt.Sprintf("bad status for cluster %s: %s", resource.Spec.ClusterName, *eksCluster.Status)
+				em := fmt.Sprintf("bad status for cluster %s: %s", resource.Spec.Cluster.Name, *eksCluster.Status)
 				resource.Status.Conditions.SetCondition(core.Component{
 					Name:    ComponentClusterNodegroupCreator,
 					Message: em,

@@ -33,9 +33,9 @@ import (
 type EKSNodeGroupSpec struct {
 	// AMIType is the AWS Machine Image type. We use a sensible default.
 	AMIType string `json:"amiType"`
-	// ClusterName keeps track of the cluster this nodegroup belowngs to.
+	// Cluster refers to the cluster this object belongs to
 	// +kubebuilder:validation:Required
-	ClusterName string `json:"clusterName"`
+	Cluster corev1.Ownership `json:"cluster,omitempty"`
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Required
 	DiskSize int64 `json:"diskSize"`
