@@ -46,6 +46,7 @@ class KoreApiClient {
   ListTeamMembers = (team) => this.apis.default.ListTeamMembers({team})
   ListGKECredentials = (team) => this.apis.default.ListGKECredentials({team})
   ListGCPOrganizations = (team) => this.apis.default.findOrganizations({team})
+  ListAllocations = (team) => this.apis.default.ListAllocations({team})
   UpdateTeam = (team, teamSpec) => this.apis.default.UpdateTeam({team, body: teamSpec})
   AddTeamMember = (team, user) => this.apis.default.AddTeamMember({team, user, body: {}})
   RemoveTeamMember = (team, user) => this.apis.default.RemoveTeamMember({team, user})

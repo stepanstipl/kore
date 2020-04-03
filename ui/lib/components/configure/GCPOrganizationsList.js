@@ -1,13 +1,12 @@
 import PropTypes from 'prop-types'
-import { Typography, Card, List, Button, Drawer, Icon, Alert } from 'antd'
+import { Typography, List, Button, Drawer, Icon, Alert } from 'antd'
 const { Title } = Typography
 
 import { kore } from '../../../config'
 import GCPOrganization from '../team/GCPOrganization'
 import ResourceList from '../configure/ResourceList'
 import GCPOrganizationForm from '../forms/GCPOrganizationForm'
-import apiRequest from '../../utils/api-request'
-import apiPaths from '../../utils/api-paths'
+import KoreApi from '../../utils/kore-api'
 
 class GCPOrganizationsList extends ResourceList {
 
@@ -19,10 +18,11 @@ class GCPOrganizationsList extends ResourceList {
   updatedMessage = 'GCP organization updated successfully'
 
   async fetchComponentData() {
+    const api = await KoreApi.client()
     const [ allTeams, gcpOrganizations, allAllocations ] = await Promise.all([
-      apiRequest(null, 'get', apiPaths.teams),
-      apiRequest(null, 'get', apiPaths.team(kore.koreAdminTeamName).gcpOrganizations),
-      apiRequest(null, 'get', apiPaths.team(kore.koreAdminTeamName).allocations)
+      api.ListTeams(),
+      api.ListGCPOrganizations(kore.koreAdminTeamName),
+      api.ListAllocations(kore.koreAdminTeamName)
     ])
     allTeams.items = allTeams.items.filter(t => !kore.ignoreTeams.includes(t.metadata.name))
     gcpOrganizations.items.forEach(org => {

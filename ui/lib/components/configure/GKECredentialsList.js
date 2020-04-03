@@ -1,13 +1,12 @@
 import PropTypes from 'prop-types'
-import { Typography, Card, List, Button, Drawer, Alert, Icon } from 'antd'
+import { Typography, List, Button, Drawer, Alert, Icon } from 'antd'
 const { Title } = Typography
 
 import { kore } from '../../../config'
 import Credentials from '../team/Credentials'
 import ResourceList from '../configure/ResourceList'
 import GKECredentialsForm from '../forms/GKECredentialsForm'
-import apiRequest from '../../utils/api-request'
-import apiPaths from '../../utils/api-paths'
+import KoreApi from '../../utils/kore-api'
 
 class GKECredentialsList extends ResourceList {
 
@@ -19,10 +18,11 @@ class GKECredentialsList extends ResourceList {
   updatedMessage = 'GCP project updated successfully'
 
   async fetchComponentData() {
+    const api = await KoreApi.client()
     const [ allTeams, gkeCredentials, allAllocations ] = await Promise.all([
-      apiRequest(null, 'get', apiPaths.teams),
-      apiRequest(null, 'get', apiPaths.team(kore.koreAdminTeamName).gkeCredentials),
-      apiRequest(null, 'get', apiPaths.team(kore.koreAdminTeamName).allocations)
+      api.ListTeams(),
+      api.ListGKECredentials(kore.koreAdminTeamName),
+      api.ListAllocations(kore.koreAdminTeamName)
     ])
     allTeams.items = allTeams.items.filter(t => !kore.ignoreTeams.includes(t.metadata.name))
     gkeCredentials.items.forEach(gke => {
