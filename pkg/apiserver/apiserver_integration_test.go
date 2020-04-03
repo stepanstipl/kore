@@ -260,14 +260,7 @@ func ensureUserInTeam(team string, username string) error {
 	}
 	addTeamMemberParams := operations.NewAddTeamMemberParams().
 		WithTeam(team).
-		WithUser(username).
-		WithBody(&models.V1TeamMember{
-			Spec: &models.V1TeamMemberSpec{
-				Team:     &team,
-				Username: &username,
-				Roles:    []string{},
-			},
-		})
+		WithUser(username)
 
 	if _, err := a.Operations.AddTeamMember(addTeamMemberParams, getAuthBuiltInAdmin()); err != nil {
 		return err
