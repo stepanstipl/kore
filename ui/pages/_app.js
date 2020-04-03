@@ -10,7 +10,7 @@ const { Header, Content } = Layout
 import User from '../lib/components/User'
 import SiderMenu from '../lib/components/SiderMenu'
 import redirect from '../lib/utils/redirect'
-import KoreApi from '../lib/utils/kore-api'
+import KoreApi from '../lib/kore-api'
 import copy from '../lib/utils/object-copy'
 import { kore, server } from '../config'
 import OrgService from '../server/services/org'

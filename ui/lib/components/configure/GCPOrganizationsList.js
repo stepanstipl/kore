@@ -6,7 +6,7 @@ import { kore } from '../../../config'
 import GCPOrganization from '../team/GCPOrganization'
 import ResourceList from '../configure/ResourceList'
 import GCPOrganizationForm from '../forms/GCPOrganizationForm'
-import KoreApi from '../../utils/kore-api'
+import KoreApi from '../../kore-api'
 
 class GCPOrganizationsList extends ResourceList {
 

@@ -1029,7 +1029,7 @@
         "produces": [
           "application/json"
         ],
-        "summary": "Lists all clusters available for a team",
+        "summary": "Lists all clusters for a team",
         "operationId": "ListClusters",
         "parameters": [
           {
@@ -1042,10 +1042,16 @@
         ],
         "responses": {
           "200": {
-            "description": "Contains the former team definition from the kore",
+            "description": "List of all clusters for a team",
             "schema": {
-              "$ref": "#/definitions/v1.KubernetesList"
+              "$ref": "#/definitions/v1.ClusterList"
             }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
           },
           "500": {
             "description": "A generic API error containing the cause of the error",
@@ -1064,7 +1070,7 @@
         "produces": [
           "application/json"
         ],
-        "summary": "Used to return the cluster definition from the kore",
+        "summary": "Returns a cluster",
         "operationId": "GetCluster",
         "parameters": [
           {
@@ -1084,10 +1090,19 @@
         ],
         "responses": {
           "200": {
-            "description": "Contains the former team definition from the kore",
+            "description": "The requested cluster details",
             "schema": {
-              "$ref": "#/definitions/v1.Kubernetes"
+              "$ref": "#/definitions/v1.Cluster"
             }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "the cluster with the given name doesn't exist"
           },
           "500": {
             "description": "A generic API error containing the cause of the error",
@@ -1104,7 +1119,7 @@
         "produces": [
           "application/json"
         ],
-        "summary": "Used to create/update a cluster definition for a team",
+        "summary": "Creates or updates a cluster",
         "operationId": "UpdateCluster",
         "parameters": [
           {
@@ -1116,7 +1131,7 @@
           },
           {
             "type": "string",
-            "description": "Is name the of the kubernetes cluster you are acting upon",
+            "description": "Is name the of the cluster",
             "name": "name",
             "in": "path",
             "required": true
@@ -1127,22 +1142,28 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1.Kubernetes"
+              "$ref": "#/definitions/v1.Cluster"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Contains the former team definition from the kore",
+            "description": "The cluster details",
             "schema": {
-              "$ref": "#/definitions/v1.Kubernetes"
+              "$ref": "#/definitions/v1.Cluster"
             }
           },
           "400": {
-            "description": "Validation error of the provided details",
+            "description": "Validation error of supplied parameters/body",
             "schema": {
               "$ref": "#/definitions/validation.Error"
             }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
           },
           "500": {
             "description": "A generic API error containing the cause of the error",
@@ -1159,12 +1180,12 @@
         "produces": [
           "application/json"
         ],
-        "summary": "Used to remove a cluster from a team",
+        "summary": "Deletes a cluster",
         "operationId": "RemoveCluster",
         "parameters": [
           {
             "type": "string",
-            "description": "Is name the of the GKE cluster you are acting upon",
+            "description": "Is the name of the cluster",
             "name": "name",
             "in": "path",
             "required": true
@@ -1179,10 +1200,19 @@
         ],
         "responses": {
           "200": {
-            "description": "Contains the former team definition from the kore",
+            "description": "Contains the former cluster definition from the kore",
             "schema": {
-              "$ref": "#/definitions/v1.Kubernetes"
+              "$ref": "#/definitions/v1.Cluster"
             }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "the cluster with the given name doesn't exist"
           },
           "500": {
             "description": "A generic API error containing the cause of the error",
@@ -1425,86 +1455,6 @@
             }
           }
         }
-      },
-      "put": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "summary": "Is used to provision or update a EKS cluster nodegroup in the kore",
-        "operationId": "updateEKSNodeGroups",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "Is the name of the team you are acting within",
-            "name": "team",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "Is the name of the EKS nodegroup",
-            "name": "name",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Contains the former team definition from the kore",
-            "schema": {
-              "$ref": "#/definitions/v1alpha1.EKSNodeGroup"
-            }
-          },
-          "default": {
-            "description": "A generic API error containing the cause of the error",
-            "schema": {
-              "$ref": "#/definitions/apiserver.Error"
-            }
-          }
-        }
-      },
-      "delete": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "summary": "Is used to delete a managed EKS cluster nodegroup from the kore",
-        "operationId": "deleteEKSNodeGroups",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "Is the name of the team you are acting within",
-            "name": "team",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "Is the name of the EKS nodegroup",
-            "name": "name",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Contains the former team definition from the kore",
-            "schema": {
-              "$ref": "#/definitions/v1alpha1.EKSNodeGroup"
-            }
-          },
-          "default": {
-            "description": "A generic API error containing the cause of the error",
-            "schema": {
-              "$ref": "#/definitions/apiserver.Error"
-            }
-          }
-        }
       }
     },
     "/api/v1alpha1/teams/{team}/ekss": {
@@ -1552,86 +1502,6 @@
         ],
         "summary": "Is the used to return a EKS cluster which the team has access",
         "operationId": "findEKS",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "Is the name of the team you are acting within",
-            "name": "team",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "Is name the of the EKS cluster you are acting upon",
-            "name": "name",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Contains the former team definition from the kore",
-            "schema": {
-              "$ref": "#/definitions/v1alpha1.EKS"
-            }
-          },
-          "default": {
-            "description": "A generic API error containing the cause of the error",
-            "schema": {
-              "$ref": "#/definitions/apiserver.Error"
-            }
-          }
-        }
-      },
-      "put": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "summary": "Is used to provision or update a EKS cluster in the kore",
-        "operationId": "updateEKS",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "Is the name of the team you are acting within",
-            "name": "team",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "Is name the of the EKS cluster you are acting upon",
-            "name": "name",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Contains the former team definition from the kore",
-            "schema": {
-              "$ref": "#/definitions/v1alpha1.EKS"
-            }
-          },
-          "default": {
-            "description": "A generic API error containing the cause of the error",
-            "schema": {
-              "$ref": "#/definitions/apiserver.Error"
-            }
-          }
-        }
-      },
-      "delete": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "summary": "Is used to delete a managed EKS cluster from the kore",
-        "operationId": "deleteEKS",
         "parameters": [
           {
             "type": "string",
@@ -1896,86 +1766,6 @@
             }
           }
         }
-      },
-      "put": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "summary": "Is used to provision or update a GKE cluster in the kore",
-        "operationId": "UpdateGKE",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "Is the name of the team you are acting within",
-            "name": "team",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "Is name the of the GKE cluster you are acting upon",
-            "name": "name",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Contains the former team definition from the kore",
-            "schema": {
-              "$ref": "#/definitions/v1alpha1.GKE"
-            }
-          },
-          "500": {
-            "description": "A generic API error containing the cause of the error",
-            "schema": {
-              "$ref": "#/definitions/apiserver.Error"
-            }
-          }
-        }
-      },
-      "delete": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "summary": "Is used to delete a managed GKE cluster from the kore",
-        "operationId": "RemoveGKE",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "Is the name of the team you are acting within",
-            "name": "team",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "Is name the of the GKE cluster you are acting upon",
-            "name": "name",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Contains the former team definition from the kore",
-            "schema": {
-              "$ref": "#/definitions/v1alpha1.GKE"
-            }
-          },
-          "500": {
-            "description": "A generic API error containing the cause of the error",
-            "schema": {
-              "$ref": "#/definitions/apiserver.Error"
-            }
-          }
-        }
       }
     },
     "/api/v1alpha1/teams/{team}/invites/generate": {
@@ -2180,6 +1970,83 @@
         }
       }
     },
+    "/api/v1alpha1/teams/{team}/kubernetes": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Lists all Kubernetes objects available for a team",
+        "operationId": "ListKubernetes",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former team definition from the kore",
+            "schema": {
+              "$ref": "#/definitions/v1.KubernetesList"
+            }
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/teams/{team}/kubernetes/{name}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "returns a specific Kubernetes object",
+        "operationId": "GetKubernetes",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name the of the kubernetes object you are acting upon",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former team definition from the kore",
+            "schema": {
+              "$ref": "#/definitions/v1.Kubernetes"
+            }
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
     "/api/v1alpha1/teams/{team}/members": {
       "get": {
         "consumes": [
@@ -2227,7 +2094,8 @@
     "/api/v1alpha1/teams/{team}/members/{user}": {
       "put": {
         "consumes": [
-          "application/json"
+          "application/json",
+          "*/*"
         ],
         "produces": [
           "application/json"
@@ -2248,15 +2116,6 @@
             "name": "user",
             "in": "path",
             "required": true
-          },
-          {
-            "description": "The definition for the user in the team",
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/v1.TeamMember"
-            }
           }
         ],
         "responses": {
@@ -3556,7 +3415,98 @@
         }
       }
     },
-    "v1.AuthenticationMode": {},
+    "v1.Cluster": {
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1.ClusterSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/v1.ClusterStatus"
+        }
+      }
+    },
+    "v1.ClusterList": {
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.Cluster"
+          }
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ListMeta"
+        }
+      }
+    },
+    "v1.ClusterSpec": {
+      "required": [
+        "kind",
+        "plan",
+        "configuration",
+        "credentials"
+      ],
+      "properties": {
+        "configuration": {
+          "type": "object"
+        },
+        "credentials": {
+          "$ref": "#/definitions/v1.Ownership"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "plan": {
+          "type": "string"
+        }
+      }
+    },
+    "v1.ClusterStatus": {
+      "properties": {
+        "apiEndpoint": {
+          "type": "string"
+        },
+        "authProxyEndpoint": {
+          "type": "string"
+        },
+        "caCertificate": {
+          "type": "string"
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.Component"
+          }
+        },
+        "message": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
     "v1.ClusterUser": {
       "required": [
         "username",
@@ -3827,8 +3777,17 @@
     },
     "v1.KubernetesSpec": {
       "properties": {
-        "authentication": {
-          "$ref": "#/definitions/v1.AuthenticationMode"
+        "authProxyAllowedIPs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "authProxyImage": {
+          "type": "string"
+        },
+        "cluster": {
+          "$ref": "#/definitions/v1.Ownership"
         },
         "clusterUsers": {
           "type": "array",
@@ -3842,7 +3801,7 @@
         "domain": {
           "type": "string"
         },
-        "enabledDefaultTrafficBlock": {
+        "enableDefaultTrafficBlock": {
           "type": "boolean"
         },
         "inheritTeamMembers": {
@@ -3850,15 +3809,6 @@
         },
         "provider": {
           "$ref": "#/definitions/v1.Ownership"
-        },
-        "proxyAllowedIPs": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "proxyImage": {
-          "type": "string"
         }
       }
     },
@@ -4359,9 +4309,12 @@
         "kind",
         "description",
         "summary",
-        "values"
+        "configuration"
       ],
       "properties": {
+        "configuration": {
+          "type": "object"
+        },
         "description": {
           "type": "string"
         },
@@ -4376,9 +4329,6 @@
         },
         "summary": {
           "type": "string"
-        },
-        "values": {
-          "type": "object"
         }
       }
     },
@@ -4508,11 +4458,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
+        "clientID",
         "clientSecret",
         "issuer",
         "clientScopes",
-        "userClaims",
-        "clientID"
+        "userClaims"
       ],
       "properties": {
         "clientID": {
@@ -5015,7 +4965,6 @@
     "v1alpha1.EKSNodeGroupSpec": {
       "required": [
         "amiType",
-        "clusterName",
         "diskSize",
         "nodeIAMRole",
         "desiredSize",
@@ -5030,8 +4979,8 @@
         "amiType": {
           "type": "string"
         },
-        "clusterName": {
-          "type": "string"
+        "cluster": {
+          "$ref": "#/definitions/v1.Ownership"
         },
         "credentials": {
           "$ref": "#/definitions/v1.Ownership"
@@ -5108,18 +5057,17 @@
     },
     "v1alpha1.EKSSpec": {
       "required": [
-        "name",
         "roleARN",
         "region",
         "subnetIDs",
         "credentials"
       ],
       "properties": {
-        "credentials": {
+        "cluster": {
           "$ref": "#/definitions/v1.Ownership"
         },
-        "name": {
-          "type": "string"
+        "credentials": {
+          "$ref": "#/definitions/v1.Ownership"
         },
         "region": {
           "type": "string"
@@ -5321,6 +5269,9 @@
           "items": {
             "$ref": "#/definitions/v1alpha1.AuthorizedNetwork"
           }
+        },
+        "cluster": {
+          "$ref": "#/definitions/v1.Ownership"
         },
         "clusterIPV4Cidr": {
           "type": "string"

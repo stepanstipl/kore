@@ -10,7 +10,7 @@ import InviteLink from '../../lib/components/team/InviteLink'
 import Breadcrumb from '../../lib/components/Breadcrumb'
 import copy from '../../lib/utils/object-copy'
 import asyncForEach from '../../lib/utils/async-foreach'
-import KoreApi from '../../lib/utils/kore-api'
+import KoreApi from '../../lib/kore-api'
 
 class NewTeamPage extends React.Component {
   static propTypes = {

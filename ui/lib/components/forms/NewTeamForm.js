@@ -4,7 +4,7 @@ import canonical from '../../utils/canonical'
 import copy from '../../utils/object-copy'
 import Team from '../../crd/Team'
 import { Button, Form, Input, Alert, message, Typography } from 'antd'
-import KoreApi from '../../utils/kore-api'
+import KoreApi from '../../kore-api'
 
 const { Paragraph, Text } = Typography
 
@@ -39,41 +39,48 @@ class NewTeamForm extends React.Component {
   handleSubmit = e => {
     e.preventDefault()
 
-    const state = copy(this.state)
-    state.submitting = true
-    state.formErrorMessage = false
-    this.setState(state)
+    this.setState({
+      ...this.state,
+      submitting: true,
+      formErrorMessage: false
+    })
 
     return this.props.form.validateFields(async (err, values) => {
-      if (!err) {
-        const canonicalTeamName = canonical(values.teamName)
-        const spec = {
-          summary: values.teamName.trim(),
-          description: values.teamDescription.trim()
-        }
-        try {
-          const api = await KoreApi.client()
-          const checkTeam = await api.GetTeam(canonicalTeamName)
-          if (!checkTeam) {
-            const team = await api.UpdateTeam(canonicalTeamName, Team(canonicalTeamName, spec))
-            await this.props.handleTeamCreated(team)
-            const state = copy(this.state)
-            state.submitting = false
-            this.setState(state)
-            message.success('Team created')
-          } else {
-            const state = copy(this.state)
-            state.submitting = false
-            state.formErrorMessage = `A team with the name "${values.teamName}" already exists`
-            this.setState(state)
-          }
-        } catch (err) {
-          console.error('Error submitting form', err)
+      if (err) {
+        this.setState({
+          ...this.state,
+          submitting: false,
+          formErrorMessage: 'Validation failed'
+        })
+        return
+      }
+      const canonicalTeamName = canonical(values.teamName)
+      const spec = {
+        summary: values.teamName.trim(),
+        description: values.teamDescription.trim()
+      }
+      try {
+        const api = await KoreApi.client()
+        const checkTeam = await api.GetTeam(canonicalTeamName)
+        if (!checkTeam) {
+          const team = await api.UpdateTeam(canonicalTeamName, Team(canonicalTeamName, spec))
+          await this.props.handleTeamCreated(team)
           const state = copy(this.state)
           state.submitting = false
-          state.formErrorMessage = 'An error occurred creating the team, please try again'
+          this.setState(state)
+          message.success('Team created')
+        } else {
+          const state = copy(this.state)
+          state.submitting = false
+          state.formErrorMessage = `A team with the name "${values.teamName}" already exists`
           this.setState(state)
         }
+      } catch (err) {
+        //console.error('Error submitting form', err)
+        const state = copy(this.state)
+        state.submitting = false
+        state.formErrorMessage = 'An error occurred creating the team, please try again'
+        this.setState(state)
       }
     })
   }

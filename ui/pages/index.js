@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { Typography, Statistic, Icon, Row, Col, Card, Alert, Button } from 'antd'
 const { Title, Paragraph, Text } = Typography
 
-import KoreApi from '../lib/utils/kore-api'
+import KoreApi from '../lib/kore-api'
 import { kore } from '../config'
 
 class IndexPage extends React.Component {
