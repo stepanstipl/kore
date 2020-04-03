@@ -1,74 +1,55 @@
 ---
-apiVersion: aws.compute.kore.appvia.io/v1alpha1
-kind: EKS
-metadata:
-  name: dev
-  namespace: devs
-spec:
-  name: dev
-  # See IAM role for cluster
-  # https://docs.aws.amazon.com/eks/latest/userguide/getting-started-console.html#eks-prereqs
-  roleARN: CHANGE_ME
-  region: eu-west-2
-  subnetIDs:
-  - subnet-xyz-az1
-  - subnet-xyz-az2
-  securityGroups:
-  # Security group for the cluster control plane communication with worker nodes
-  - sg-xyz
-  credentials:
-    group: aws.compute.kore.appvia.io
-    version: v1alpha1
-    kind: EKSCredentials
-    name: aws
-    namespace: kore-admin
----
-apiVersion: aws.compute.kore.appvia.io/v1alpha1
-kind: EKSNodeGroup
-metadata:
-  name: dev-ng1
-  namespace: devs
-spec:
-  clusterName: dev
-  instanceType: t3.medium
-  eC2SSHKey: kore
-  region: eu-west-2
-  diskSize: 10
-  # See IAM role for nodegroup
-  # https://docs.aws.amazon.com/eks/latest/userguide/worker_node_IAM_role.html
-  nodeIAMRole: CHANGE_ME
-  maxSize: 10
-  subnets:
-  # must be tagged with kubernetes.io/cluster/dev=shared
-  - subnet-xyz-az1
-  - subnet-xyz-az2
-  credentials:
-    group: aws.compute.kore.appvia.io
-    version: v1alpha1
-    kind: EKSCredentials
-    name: aws
-    namespace: kore-admin
----
 apiVersion: clusters.compute.kore.appvia.io/v1
-kind: Kubernetes
+kind: Cluster
 metadata:
-  name: dev
+  name: test-eks-dev
+  namespace: a-team
 spec:
-  # A domain within the account to provision services within
-  domain: CHANGE_ME
-  # Indicates if team members are automatically provide access to the cluster
-  inheritTeamMembers: true
-  # The role to use for the above if enabled
-  defaultTeamRole: 'cluster-admin'
-  # If backed by a cloud provider, this provides a reference back to the resource above
-  provider:
+  description: Test EKS Plan
+  kind: EKS
+  plan: test-eks-plan
+  credentials:
     group: aws.compute.kore.appvia.io
     version: v1alpha1
-    kind: EKS
-    # This must map to the namespace the above cluster was built in i.e.
-    # if you create the gke cluster in team 'devs' it must be say namespace 'devs'
-    namespace: devs
-    # The name of the gke cluster above
-    name: dev
-  enableDefaultTrafficBlock: false
-  clusterUsers: []
+    kind: EKSCredentials
+    name: aws
+    namespace: kore-admin
+  configuration:
+    # Which IP address range can connect to the authentication proxy running in the cluster
+    authProxyAllowedIPs:
+      - 0.0.0.0/0
+    # The role to use for the above if inheritTeamMembers is true
+    defaultTeamRole: "cluster-admin"
+    description: "This is my test cluster"
+    # A domain within the account to provision services within
+    domain: example.appvia.io
+    enableDefaultTrafficBlock: false
+    # Indicates if team members are automatically given access to the cluster
+    inheritTeamMembers: true
+    # See IAM role for cluster
+    # https://docs.aws.amazon.com/eks/latest/userguide/getting-started-console.html#eks-prereqs
+    roleARN: CHANGE_ME
+    region: eu-west-2
+    subnetIDs:
+      - subnet-xyz-az1
+      - subnet-xyz-az2
+    securityGroupIDs:
+      # Security group for the cluster control plane communication with worker nodes
+      - sg-xyz
+    version: "1.15"
+    nodeGroups:
+      - name: eks1
+        instanceType: t3.medium
+        eC2SSHKey: kore
+        region: eu-west-2
+        diskSize: 10
+        # See IAM role for nodegroup
+        # https://docs.aws.amazon.com/eks/latest/userguide/worker_node_IAM_role.html
+        nodeIAMRole: CHANGE_ME
+        minSize: 1
+        desiredSize: 1
+        maxSize: 10
+        subnets:
+          # must be tagged with kubernetes.io/cluster/dev=shared
+          - subnet-xyz-az1
+          - subnet-xyz-az2

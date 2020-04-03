@@ -1,62 +1,48 @@
 ---
-apiVersion: gke.compute.kore.appvia.io/v1alpha1
-kind: GKE
+apiVersion: clusters.compute.kore.appvia.io/v1
+kind: Cluster
 metadata:
-  name: dev
-  namespace: devs
+  name: test-gke-dev
+  namespace: a-team
 spec:
-  description: Dev Cluster
-  version: 1.14.10-gke.17
-  size: 1
-  maxSize: 10
-  diskSize: 100
-  imageType: COS
-  machineType: n1-standard-2
-  authorizedMasterNetworks:
-    - name: default
-      cidr: 0.0.0.0/0
-  network: default
-  subnetwork: default
-  region: europe-west2
-  enableAutorepair: true
-  enableAutoscaler: true
-  enableAutoUpgrade: false
-  enableHorizontalPodAutoscaler: false
-  enableHTTPLoadBalancer: true
-  enableIstio: false
-  enableStackDriverLogging: false
-  enableStackDriverMetrics: false
-  enablePrivateEndpoint: false
-  enablePrivateNetwork: false
-  maintenanceWindow: '03:00'
-  # Were reference to the credentials we wish to use
+  description: Test GKE Plan
+  kind: GKE
+  plan: gke-development
   credentials:
     group: gke.compute.kore.appvia.io
     version: v1alpha1
     kind: GKECredentials
     name: gke
     namespace: kore-admin
----
-apiVersion: clusters.compute.kore.appvia.io/v1
-kind: Kubernetes
-metadata:
-  name: dev
-spec:
-  # A domain within the account to provision services within
-  domain: CHANGE_ME
-  # Indicates if team members are automatically provide access to the cluster
-  inheritTeamMembers: true
-  # The role to use for the above if enabled
-  defaultTeamRole: 'cluster-admin'
-  # If backed by a cloud provider, this provides a reference back to the resource above
-  provider:
-    group: gke.compute.kore.appvia.io
-    version: v1alpha1
-    kind: GKE
-    # This must map to the namespace the above cluster was built in i.e.
-    # if you create the gke cluster in team 'devs' it must be say namespace 'devs'
-    namespace: devs
-    # The name of the gke cluster above
-    name: dev
-  enableDefaultTrafficBlock: false
-  clusterUsers: []
+  configuration:
+    authProxyAllowedIPs:
+      - 0.0.0.0/0
+    authorizedMasterNetworks:
+      - cidr: 0.0.0.0/0
+        name: default
+    defaultTeamRole: "cluster-admin"
+    description: "This is my test cluster"
+    diskSize: 100
+    domain: example.appvia.io
+    enableAutorepair: true
+    enableAutoscaler: true
+    enableAutoupgrade: true
+    enableHTTPLoadBalancer: true
+    enableHorizontalPodAutoscaler: true
+    enableIstio: false
+    enablePrivateEndpoint: false
+    enablePrivateNetwork: false
+    enableShieldedNodes: true
+    enableStackDriverLogging: true
+    enableStackDriverMetrics: true
+    enableDefaultTrafficBlock: false
+    imageType: COS
+    inheritTeamMembers: true
+    machineType: n1-standard-2
+    maintenanceWindow: "03:00"
+    maxSize: 10
+    network: default
+    region: europe-west2
+    size: 1
+    subnetwork: default
+    version: 1.14.10-gke.27
