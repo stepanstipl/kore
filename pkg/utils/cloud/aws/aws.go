@@ -148,7 +148,7 @@ func (c *Client) VerifyCredentials() error {
 
 func (c *Client) createClusterInput() *awseks.CreateClusterInput {
 	return &awseks.CreateClusterInput{
-		Name:    aws.String(c.cluster.Spec.Name),
+		Name:    aws.String(c.cluster.Name),
 		RoleArn: aws.String(c.cluster.Spec.RoleARN),
 		Version: aws.String(c.cluster.Spec.Version),
 		ResourcesVpcConfig: &awseks.VpcConfigRequest{

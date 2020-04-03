@@ -155,7 +155,7 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 		}
 		if *cluster.Status == eks.ClusterStatusFailed {
 
-			return false, fmt.Errorf("Cluster has failed status:%s", resource.Spec.Name)
+			return false, fmt.Errorf("Cluster has failed status:%s", resource.Name)
 		}
 		if *cluster.Status != eks.ClusterStatusActive {
 			logger.Debugf("cluster %s not ready requeing", *cluster.Name)

@@ -24,10 +24,6 @@ type V1alpha1EKSSpec struct {
 	// Required: true
 	Credentials *V1Ownership `json:"credentials"`
 
-	// name
-	// Required: true
-	Name *string `json:"name"`
-
 	// region
 	// Required: true
 	Region *string `json:"region"`
@@ -56,10 +52,6 @@ func (m *V1alpha1EKSSpec) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateCredentials(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateName(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -112,15 +104,6 @@ func (m *V1alpha1EKSSpec) validateCredentials(formats strfmt.Registry) error {
 			}
 			return err
 		}
-	}
-
-	return nil
-}
-
-func (m *V1alpha1EKSSpec) validateName(formats strfmt.Registry) error {
-
-	if err := validate.Required("name", "body", m.Name); err != nil {
-		return err
 	}
 
 	return nil

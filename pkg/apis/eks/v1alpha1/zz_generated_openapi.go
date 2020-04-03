@@ -462,13 +462,6 @@ func schema_pkg_apis_eks_v1alpha1_EKSSpec(ref common.ReferenceCallback) common.O
 							Ref:         ref("github.com/appvia/kore/pkg/apis/core/v1.Ownership"),
 						},
 					},
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Name the name of the EKS cluster",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
 					"roleARN": {
 						SchemaProps: spec.SchemaProps{
 							Description: "RoleARN is the role ARN which provides permissions to EKS",
@@ -529,7 +522,7 @@ func schema_pkg_apis_eks_v1alpha1_EKSSpec(ref common.ReferenceCallback) common.O
 						},
 					},
 				},
-				Required: []string{"name", "roleARN", "region", "subnetIDs"},
+				Required: []string{"roleARN", "region", "subnetIDs"},
 			},
 		},
 		Dependencies: []string{
