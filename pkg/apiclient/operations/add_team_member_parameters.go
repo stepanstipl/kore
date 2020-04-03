@@ -14,8 +14,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
-	"github.com/appvia/kore/pkg/apiclient/models"
 )
 
 // NewAddTeamMemberParams creates a new AddTeamMemberParams object
@@ -62,11 +60,6 @@ for the add team member operation typically these are written to a http.Request
 */
 type AddTeamMemberParams struct {
 
-	/*Body
-	  The definition for the user in the team
-
-	*/
-	Body *models.V1TeamMember
 	/*Team
 	  Is the name of the team you are acting within
 
@@ -116,17 +109,6 @@ func (o *AddTeamMemberParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithBody adds the body to the add team member params
-func (o *AddTeamMemberParams) WithBody(body *models.V1TeamMember) *AddTeamMemberParams {
-	o.SetBody(body)
-	return o
-}
-
-// SetBody adds the body to the add team member params
-func (o *AddTeamMemberParams) SetBody(body *models.V1TeamMember) {
-	o.Body = body
-}
-
 // WithTeam adds the team to the add team member params
 func (o *AddTeamMemberParams) WithTeam(team string) *AddTeamMemberParams {
 	o.SetTeam(team)
@@ -156,12 +138,6 @@ func (o *AddTeamMemberParams) WriteToRequest(r runtime.ClientRequest, reg strfmt
 		return err
 	}
 	var res []error
-
-	if o.Body != nil {
-		if err := r.SetBodyParam(o.Body); err != nil {
-			return err
-		}
-	}
 
 	// path param team
 	if err := r.SetPathParam("team", o.Team); err != nil {
