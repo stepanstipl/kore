@@ -1,4 +1,4 @@
-import redirect from './redirect'
+const redirect = require('./redirect')
 
 class KoreApiClient {
   spec = null
@@ -26,7 +26,9 @@ class KoreApiClient {
       }
       // Handle 401 unauth:
       if (err.response && err.response.status === 401) {
-        redirect(null, '/login/refresh', true)
+        if (process.browser) {
+          redirect(null, '/login/refresh', true)
+        }
       }
 
       throw err
@@ -37,14 +39,16 @@ class KoreApiClient {
   ListAllocations = (team, assigned = undefined) => this.apis.default.ListAllocations({team, assigned: assigned})
   ListPlans = () => this.apis.default.ListPlans()
   ListUsers = () => this.apis.default.ListUsers()
+  ListUserTeams = (user) => this.apis.default.ListUserTeams({user})
+  UpdateUser = (user, userSpec) => this.apis.default.UpdateUser({user, body: userSpec})
   GetTeam = (team) => this.apis.default.GetTeam({team})
   ListTeams = () => this.apis.default.ListTeams()
   ListTeamMembers = (team) => this.apis.default.ListTeamMembers({team})
   ListGKECredentials = (team) => this.apis.default.ListGKECredentials({team})
   ListGCPOrganizations = (team) => this.apis.default.findOrganizations({team})
   UpdateTeam = (team, teamSpec) => this.apis.default.UpdateTeam({team, body: teamSpec})
-  AddTeamMember = (team, user) => this.apis.default.AddTeamMember({team, user})
+  AddTeamMember = (team, user) => this.apis.default.AddTeamMember({team, user, body: {}})
   RemoveTeamMember = (team, user) => this.apis.default.RemoveTeamMember({team, user})
 }
 
-export default KoreApiClient
+module.exports = KoreApiClient

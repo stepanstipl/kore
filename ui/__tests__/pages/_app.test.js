@@ -75,19 +75,22 @@ describe('App', () => {
         unrestrictedPage: true,
         otherProp: 'value'
       }
-      const user = { username: 'bob' }
-      const userTeams = []
+      const teamObj = name => ({ metadata: { name } })
+      const user = {
+        username: 'bob',
+        teams: {
+          userTeams: [teamObj('team1'), teamObj('team2'), teamObj('kore-default')],
+          otherTeams: [teamObj('team3'), teamObj('kore-admin')]
+        }
+      }
       const getUserSessionOriginal = App.getUserSession
-      const getUserTeamsDetailsOriginal = App.getUserTeamsDetails
 
       beforeEach(() => {
         App.getUserSession = jest.fn().mockResolvedValue(user)
-        App.getUserTeamsDetails = jest.fn().mockResolvedValue(userTeams)
       })
 
       afterEach(() => {
         App.getUserSession = getUserSessionOriginal
-        App.getUserTeamsDetails = getUserTeamsDetailsOriginal
       })
 
       it('return props early if unrestrictedPage set as a staticProp as object', async () => {
@@ -117,7 +120,7 @@ describe('App', () => {
         expect(redirect).toHaveBeenCalledWith(undefined, '/login/refresh?requestedPath=/requested/path', true)
       })
 
-      it('returns props, including pageProps, user and userTeams', async () => {
+      it('returns props, including pageProps and user', async () => {
         const params = {
           Component: { staticProps: { myProp: 'myValue' }},
           ctx: {}
@@ -126,11 +129,12 @@ describe('App', () => {
         expect(props).toEqual({
           pageProps: { myProp: 'myValue' },
           user,
-          userTeams
+          userTeams: [teamObj('team1'), teamObj('team2')],
+          otherTeams: [teamObj('team3')]
         })
       })
 
-      it('calls Component.getIntialProps and merges into pageProps', async () => {
+      it('calls Component.getInitialProps and merges into pageProps', async () => {
         const initialProps = { prop1: 'hello', prop2: 'world' }
         const params = {
           Component: {
@@ -147,7 +151,8 @@ describe('App', () => {
         expect(props).toEqual({
           pageProps: { myProp: 'myValue', ...initialProps },
           user,
-          userTeams
+          userTeams: [teamObj('team1'), teamObj('team2')],
+          otherTeams: [teamObj('team3')]
         })
       })
     })

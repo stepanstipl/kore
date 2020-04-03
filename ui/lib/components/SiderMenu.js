@@ -8,7 +8,8 @@ class SiderMenu extends React.Component {
   static propTypes = {
     hide: PropTypes.bool.isRequired,
     isAdmin: PropTypes.bool.isRequired,
-    userTeams: PropTypes.array.isRequired
+    userTeams: PropTypes.array,
+    otherTeams: PropTypes.array
   }
 
   state = {
@@ -22,7 +23,10 @@ class SiderMenu extends React.Component {
   }
 
   render() {
-    if (this.props.hide) {
+    const { hide, isAdmin, userTeams, otherTeams } = this.props
+    const { siderCollapsed } = this.state
+
+    if (hide) {
       return null
     }
 
@@ -34,7 +38,7 @@ class SiderMenu extends React.Component {
       </Menu.Item>
     )
 
-    const AdminMenu = () => this.props.isAdmin ? (
+    const AdminMenu = () => isAdmin ? (
       <SubMenu key="configure"
         title={
           <span>
@@ -48,7 +52,7 @@ class SiderMenu extends React.Component {
       </SubMenu>
     ) : null
 
-    const AuditMenu = () => this.props.isAdmin ? (
+    const AuditMenu = () => isAdmin ? (
       <SubMenu key="audit"
         title={
           <span>
@@ -64,7 +68,7 @@ class SiderMenu extends React.Component {
     return (
       <Sider
         collapsible
-        collapsed={this.state.siderCollapsed}
+        collapsed={siderCollapsed}
         onCollapse={this.onSiderCollapse}
         width="235"
       >
@@ -78,7 +82,7 @@ class SiderMenu extends React.Component {
             }
           >
             {menuItem({ key: 'new_team', text: 'New team', link: '/teams/new', icon: 'plus-circle' })}
-            {(this.props.userTeams || []).map(t => (
+            {(userTeams).concat(otherTeams).map(t => (
               menuItem({ key: t.metadata.name, text: t.spec.summary, href: '/teams/[name]', link: `/teams/${t.metadata.name}`, icon: 'team' })
             ))}
           </SubMenu>

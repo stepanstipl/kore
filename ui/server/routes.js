@@ -1,6 +1,7 @@
 const Router = require('express').Router
 const router = Router()
 const config = require('../config')
+const KoreApi = require('../lib/utils/kore-api')
 const AuthService = require('./services/auth')
 const OrgService = require('./services/org')
 const OpenIdClient = require('./lib/openid-client')
@@ -14,7 +15,7 @@ const embeddedAuth = config.auth.embedded
 const userClaimsOrder = config.auth.openid.userClaimsOrder.split(',')
 
 const authService = new AuthService(config.koreApi, config.kore.baseUrl)
-const orgService = new OrgService(config.koreApi)
+const orgService = new OrgService(KoreApi)
 const authCallback = require('./middleware/auth-callback')(orgService, authService, koreConfig, userClaimsOrder, embeddedAuth)
 
 const openIdClient = new OpenIdClient(config.kore.baseUrl, config.auth.openid, embeddedAuth, authService)
