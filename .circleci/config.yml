@@ -227,7 +227,7 @@ workflows:
       - release-qa:
           filters:
             branches:
-              only: master
+              only: qa_release
           requires:
             - build
             - build-ui
