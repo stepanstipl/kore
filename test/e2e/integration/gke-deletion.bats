@@ -41,14 +41,14 @@ load helper
 @test "We should see the gkes resource be deleted" {
   ${KORE} get cluster ${CLUSTER} -t e2e || skip
 
-  retry 120 "${KORE} get gkes ${CLUSTER} -t e2e 2>&1 | grep 'not a valid resource type'"
+  retry 120 "${KORE} get gkes ${CLUSTER} -t e2e 2>&1 | grep 'does not exist'"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should see the cluster resource be deleted" {
   ${KORE} get cluster ${CLUSTER} -t e2e || skip
 
-  retry 120 "${KORE} get clusters ${CLUSTER} -t e2e 2>&1 | grep 'not a valid resource type'"
+  retry 120 "${KORE} get clusters ${CLUSTER} -t e2e 2>&1 | grep 'does not exist'"
   [[ "$status" -eq 0 ]]
 }
 
