@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { Alert } from 'antd'
+import { Alert, Tabs } from 'antd'
 
 import Breadcrumb from '../../lib/components/Breadcrumb'
 import GKECredentialsList from '../../lib/components/configure/GKECredentialsList'
@@ -35,10 +35,14 @@ class ConfigureCloudPage extends React.Component {
         />
         <CloudTabs defaultSelectedKey={selectedCloud} handleSelectCloud={this.handleSelectCloud}/>
         {selectedCloud === 'GCP' ? (
-          <>
-            <GCPOrganizationsList style={{ marginBottom: '20px' }} />
-            <GKECredentialsList />
-          </>
+          <Tabs defaultActiveKey={'teams'} tabPosition="left" style={{ marginTop: '20px' }}>
+            <Tabs.TabPane tab="Organizations" key="orgs">
+              <GCPOrganizationsList />
+            </Tabs.TabPane>
+            <Tabs.TabPane tab="Projects" key="projects">
+              <GKECredentialsList />
+            </Tabs.TabPane>
+          </Tabs>
         ) : null}
       </>
     )

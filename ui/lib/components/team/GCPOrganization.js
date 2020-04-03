@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 import moment from 'moment'
 import { List, Avatar, Icon, Typography, message, Tooltip } from 'antd'
-const { Text, Title } = Typography
+const { Text } = Typography
 
 import ResourceStatusTag from '../ResourceStatusTag'
 import AutoRefreshComponent from './AutoRefreshComponent'
@@ -53,7 +53,7 @@ class GCPOrganization extends AutoRefreshComponent {
           avatar={<Avatar icon="cloud" />}
           title={
             <>
-              <Title level={4} style={{ display: 'inline', marginRight: '15px' }}>{organization.spec.parentID}</Title>
+              <Text style={{ display: 'inline', marginRight: '15px', fontSize: '20px', fontWeight: '600' }}>{organization.spec.parentID}</Text>
               <Text style={{ marginRight: '5px' }}>{organization.allocation.spec.name}</Text>
               <Tooltip title={organization.allocation.spec.summary}>
                 <Icon type="info-circle" theme="twoTone" />

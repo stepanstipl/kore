@@ -35,11 +35,7 @@ class GCPOrganizationsList extends ResourceList {
     const { resources, allTeams, edit, add } = this.state
 
     return (
-      <Card
-        title="Organizations"
-        extra={<Button type="primary" onClick={this.add(true)}>+ New</Button>}
-        style={this.props.style}
-      >
+      <>
         <Alert
           message="Give Kore access to your Google Cloud Platform organization"
           description="This will allow Kore to manage the organization for you. This includes managing the creation of projects and Service Accounts giving Kore teams the ability to create clusters with ease."
@@ -47,6 +43,7 @@ class GCPOrganizationsList extends ResourceList {
           showIcon
           style={{ marginBottom: '20px' }}
         />
+        <Button type="primary" onClick={this.add(true)} style={{ display: 'block', marginBottom: '20px' }}>+ New</Button>
         {!resources ? <Icon type="loading" /> : (
           <>
             <List
@@ -95,7 +92,7 @@ class GCPOrganizationsList extends ResourceList {
             ) : null}
           </>
         )}
-      </Card>
+      </>
     )
   }
 }

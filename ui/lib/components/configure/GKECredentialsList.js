@@ -35,11 +35,7 @@ class GKECredentialsList extends ResourceList {
     const { resources, allTeams, edit, add } = this.state
 
     return (
-      <Card
-        title="Projects"
-        extra={<Button type="primary" onClick={this.add(true)}>+ New</Button>}
-        style={this.props.style}
-      >
+      <>
         <Alert
           message="Give Kore access to your existing Google Cloud Platform projects"
           description="This will enable Kore to build clusters inside a GCP project that you already manage outside of Kore. You must create a Service Account inside your project and add the key in JSON format here."
@@ -47,6 +43,7 @@ class GKECredentialsList extends ResourceList {
           showIcon
           style={{ marginBottom: '20px' }}
         />
+        <Button type="primary" onClick={this.add(true)} style={{ display: 'block', marginBottom: '20px' }}>+ New</Button>
         {!resources ? <Icon type="loading" /> : (
           <>
             <List
@@ -95,7 +92,7 @@ class GKECredentialsList extends ResourceList {
             ) : null}
           </>
         )}
-      </Card>
+      </>
     )
   }
 }

@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 import moment from 'moment'
 import { List, Avatar, Icon, Typography, message, Tooltip } from 'antd'
-const { Text, Title } = Typography
+const { Text } = Typography
 
 import ResourceVerificationStatus from '../ResourceVerificationStatus'
 import AutoRefreshComponent from './AutoRefreshComponent'
@@ -53,7 +53,7 @@ class Credentials extends AutoRefreshComponent {
           avatar={<Avatar icon="project" />}
           title={
             <>
-              <Title level={4} style={{ display: 'inline', marginRight: '15px' }}>{gke.spec.project}</Title>
+              <Text style={{ display: 'inline', marginRight: '15px', fontSize: '20px', fontWeight: '600' }}>{gke.spec.project}</Text>
               <Text style={{ marginRight: '5px' }}>{gke.allocation.spec.name}</Text>
               <Tooltip title={gke.allocation.spec.summary}>
                 <Icon type="info-circle" theme="twoTone" />
