@@ -16,7 +16,7 @@
 #
 load helper
 
-@test "If we any the auth-proxy allowed CIDR we should lose access to the cluster" {
+@test "If we change the auth-proxy allowed range we should lose access to the cluster" {
   tempfile="${BASE_DIR}/${E2E_DIR}/gke.auth"
 
   if ! ${KORE} get clusters ${CLUSTER} -t e2e -o yaml | grep 1.1.1.1; then
