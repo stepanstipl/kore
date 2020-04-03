@@ -229,9 +229,9 @@ workflows:
       - release-qa:
           filters:
             branches:
-              only: qa_release
-#          requires:
-#            - build
-#            - build-ui
-#            - check-apis
-#            - release
+              only: master
+          requires:
+            - build
+            - build-ui
+            - check-apis
+            - release
