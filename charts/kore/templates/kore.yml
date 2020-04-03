@@ -93,6 +93,14 @@ spec:
             {{- end }}
           - name: KORE_AUTHENTICATION_PLUGINS
             value: {{ .Values.api.auth_plugins | join "," }}
+          {{- if .Values.api.images.auth_proxy }}
+          - name: AUTH_PROXY_IMAGE
+            value: {{ .Values.api.images.auth_proxy }}
+          {{- end }}
+          {{- if .Values.api.images.clusterappman }}
+          - name: CLUSTERAPPMAN_IMAGE
+            value: {{ .Values.api.images.clusterappman }}
+          {{- end }}
         volumeMounts:
         - name: ca
           readOnly: true

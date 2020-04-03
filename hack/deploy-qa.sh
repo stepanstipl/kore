@@ -44,6 +44,9 @@ api:
       kubernetes.io/ingress.class: nginx
       nginx.ingress.kubernetes.io/backend-protocol: HTTP
       nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+  images:
+    auth_proxy: quay.io/appvia/auth-proxy:latest
+    clusterappman: quay.io/appvia/kore-apiserver:latest
 ui:
   ingress:
     annotations:
