@@ -126,8 +126,6 @@ jobs:
   release:
     environment:
       GOFLAGS: "-mod=vendor"
-      KORE_API_IMAGE: quay.io/appvia/kore-apiserver
-      KORE_PROXY_IMAGE: quay.io/appvia/auth-proxy
 
     docker:
       - image: circleci/golang:1.14
@@ -184,9 +182,13 @@ jobs:
       - image: alpine/helm:3.1.2
     steps:
       - checkout
+      - run:
+          name: Installing GNU
+          command: |
+            apk add bash coreutils curl --update
       - kube-orb/install-kubeconfig:
         kubeconfig: KUBECONFIG_DATA
-      - deploy:
+      - run:
           name: Deploying to QA
           command: |
             hack/deploy-qa.sh
@@ -228,6 +230,8 @@ workflows:
           filters:
             branches:
               only: qa_release
-          requires:
-            - build
-            - build-ui
+#          requires:
+#            - build
+#            - build-ui
+#            - check-apis
+#            - release
