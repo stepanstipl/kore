@@ -72,6 +72,31 @@ type PlanPolicy struct {
 	Status PlanPolicyStatus `json:"status,omitempty"`
 }
 
+func (p PlanPolicy) CreateAllocation(teams []string) *Allocation {
+	labels := map[string]string{}
+	if p.Labels[corev1.LabelReadonly] == "true" {
+		labels[corev1.LabelReadonly] = "true"
+	}
+	return &Allocation{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   p.Name,
+			Labels: labels,
+		},
+		Spec: AllocationSpec{
+			Name:    p.Name,
+			Summary: p.Spec.Description,
+			Resource: corev1.Ownership{
+				Group:     GroupVersion.Group,
+				Version:   GroupVersion.Version,
+				Kind:      "PlanPolicy",
+				Namespace: p.Namespace,
+				Name:      p.Name,
+			},
+			Teams: teams,
+		},
+	}
+}
+
 // PlanPolicyProperty defines a JSON schema for a given property
 // +k8s:openapi-gen=true
 type PlanPolicyProperty struct {
