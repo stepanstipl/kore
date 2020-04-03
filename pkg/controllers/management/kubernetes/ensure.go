@@ -27,7 +27,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// EnsureResourceDeletion is reponsible for cleanup the resources in the cluster
+// EnsureResourceDeletion is responsible for cleanup the resources in the cluster
 // @note: at present this is only done for EKS as GKE performs it's own cleanup
 func (a k8sCtrl) EnsureResourceDeletion(ctx context.Context, object *clustersv1.Kubernetes) error {
 	logger := log.WithFields(log.Fields{
