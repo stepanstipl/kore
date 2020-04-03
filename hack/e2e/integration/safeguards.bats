@@ -14,20 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 load helper
 
-@test "We should find the cluster config in the kore namespace" {
-  runit "${KUBECTL} --context=${CLUSTER} get namespace kore"
-  [[ "$status" -eq 0 ]]
-  runit "${KUBECTL} --context=${CLUSTER} -n kore get secret kore-config"
+@test "We should not be able to delete the team if clusters exist" {
+  runit "${KORE} delete teams e2e || true"
   [[ "$status" -eq 0 ]]
 }
 
-@test "We should find the client certificate in the cluster config secret" {
-  for key in api-url hub-url idp-server-url tls.crt tls.key; do
-    runit "${KUBECTL} --context=${CLUSTER} -n kore get secret -o json | jq -r \".data.${key}\" | grep null || true"
-    [[ "$status" -eq 0 ]]
-  done
+@test "We should not be able to delete the cluster if a namespace exists" {
+  runit "${KORE} create namespace -c ${CLUSTER} ingress -t e2e"
+  [[ "$status" -eq 0 ]]
+  runit "${KORE} delete teams e2e 2>&1 | grep 'all team resources must be deleted'"
+  [[ "$status" -eq 0 ]]
+  runit "${KORE} delete namespaceclaims ${CLUSTER}-ingress -t e2e"
+  [[ "$status" -eq 0 ]]
+  retry 4 "${KORE} get namespaceclaims ${CLUSTER}-ingress -t e2e || true"
+  [[ "$status" -eq 0 ]]
 }
-

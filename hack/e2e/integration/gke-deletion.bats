@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-load helper.sh
+load helper
 
 @test "We should be able to delete the gke cluster" {
   ${KORE} get cluster ${CLUSTER} -t e2e || skip

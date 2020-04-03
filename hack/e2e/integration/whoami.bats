@@ -14,15 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-load helper.sh
+load helper
 
 @test "We should be able to show which teams are in" {
-  ${KORE} whoami |
+  runit "${KORE} whoami"
   [[ "$status" -eq 0 ]]
 }
 
 @test "The whoami command should show we are in the kore-admin group" {
-  ${KORE} whoami | grep kore-admin
+  runit "${KORE} whoami | grep kore-admin"
   [[ "$status" -eq 0 ]]
 }

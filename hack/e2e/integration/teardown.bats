@@ -14,20 +14,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 load helper
 
-@test "We should find the cluster config in the kore namespace" {
-  runit "${KUBECTL} --context=${CLUSTER} get namespace kore"
+@test "We should able to delete the e2e team now" {
+  runit "${KORE} delete team e2e"
   [[ "$status" -eq 0 ]]
-  runit "${KUBECTL} --context=${CLUSTER} -n kore get secret kore-config"
+  runit "${KORE} get teams | grep ^e2e || true"
   [[ "$status" -eq 0 ]]
 }
 
-@test "We should find the client certificate in the cluster config secret" {
-  for key in api-url hub-url idp-server-url tls.crt tls.key; do
-    runit "${KUBECTL} --context=${CLUSTER} -n kore get secret -o json | jq -r \".data.${key}\" | grep null || true"
-    [[ "$status" -eq 0 ]]
-  done
-}
+#@test "We should able to delete the e2e gke credentials" {
+#  runit "${KORE} delete -f ${BASE_DIR}/${E2E_DIR}/gke-credentials.yml -t kore-admin"
+#  [[ "$status" -eq 0 ]]
+#}
 
+@test "We should be able to delete the user from kore" {
+  runit "${KORE} delete user test"
+  [[ "$status" -eq 0 ]]
+  runit "${KORE} get users | grep ^test || true"
+  [[ "$status" -eq 0 ]]
+}

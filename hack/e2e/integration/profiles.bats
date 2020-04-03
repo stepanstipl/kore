@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bats
 #
 # Copyright 2020 Appvia Ltd <info@appvia.io>
 #
@@ -14,34 +14,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-load helper.sh
+load helper
 
 @test "We should be able to list our profiles" {
-  run bash -c "${KORE} profiles ls | grep local"
+  runit "${KORE} profiles ls | grep ${KORE_PROFILE}"
   [[ "$status" -eq 0 ]]
-  run bash -c "${KORE} profiles list | grep local"
+  runit "${KORE} profiles list | grep ${KORE_PROFILE}"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should be able to show the current profile" {
-  run bash -c "${KORE} profiles show | grep 127.0.0.1:10080"
+  runit "${KORE} profiles show"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should be able to use a profile" {
-  run bash -c "${KORE} profiles use local"
+  runit "${KORE} profiles use ${KORE_PROFILE}"
   [[ "$status" -eq 0 ]]
-  run bash -c "${KORE} profiles show | grep 127.0.0.1:10080"
+  runit "${KORE} profiles show | grep ${KORE_PROFILE}"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should fail if the profile does not exist" {
-  run bash -c "${KORE} profiles use not_there || true"
+  runit "${KORE} profiles use not_there || true"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should fail trying to delete a profile that doesn't exist" {
-  run bash -c "${KORE} profiles delete not_there || true"
+  runit "${KORE} profiles delete not_there || true"
+  [[ "$status" -eq 0 ]]
+}
+
+@test "We should be able to switch to the ${KORE_PROFILE} profile" {
+  runit "${KORE} profiles use ${KORE_PROFILE}"
   [[ "$status" -eq 0 ]]
 }
 

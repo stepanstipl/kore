@@ -1,6 +1,6 @@
-#!/usr/bin/env bats
+#!/bin/bash
 #
-# Copyright 2020 Appvia Ltd <info@appvia.io>
+# Copyright 2020 Appvia Ltf <info@appvia.io>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,12 +15,12 @@
 # limitations under the License.
 #
 
-load helper
+source hack/e2e/environment.sh || exit 1
 
-@test "We should ensure the kore-nsadmin role has been provisioned by clusterroles" {
-  role="kore-nsadmin"
+announce "checking if we should run the e2e"
 
-  retry 10 "${KUBECTL} --context=${CLUSTER} get clusterrole ${role}"
-  [[ "$status" -eq 0 ]]
-}
-
+announce "running the e2e checks against the qa environment"
+if ! hack/e2e/check-suite.sh; then
+  error "one or more checks have failed"
+  exit 1
+fi

@@ -14,19 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-load helper.sh
+load helper
 
 @test "We should find the clusterappman configmaps in kore namespace" {
-  retry 2 "${KUBECTL} --context=${CLUSTER} get namespace kore"
+  runit "${KUBECTL} --context=${CLUSTER} get namespace kore"
   [[ "$status" -eq 0 ]]
-  retry 2 "${KUBECTL} --context=${CLUSTER} -n kore get configmap kore-cluster-config"
+  runit "${KUBECTL} --context=${CLUSTER} -n kore get configmap kore-cluster-config"
   [[ "$status" -eq 0 ]]
-  retry 2 "${KUBECTL} --context=${CLUSTER} -n kore get configmap kore-cluster-status"
+  runit "${KUBECTL} --context=${CLUSTER} -n kore get configmap kore-cluster-status"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should find the clusterappman running in the kore namespace" {
-  retry 2 "${KUBECTL} --context=${CLUSTER} -n kore get po "
+  runit "${KUBECTL} --context=${CLUSTER} -n kore get po "
   [[ "$status" -eq 0 ]]
 }

@@ -15,20 +15,20 @@
 # limitations under the License.
 #
 
-load helper.sh
+load helper
 
 @test "We should not have any GKE credentials existing" {
-  retry 10 "${KORE} delete gkecredentials gke -t kore-admin || true"
+  runit "${KORE} delete gkecredentials gke -t kore-admin || true"
   [[ "$status" -eq 0 ]]
 }
 
-@test "We should not beable to list any gke credentials" {
-  run ${KORE} get gkecredentials gke -t kore-admin
-  [[ "$status" -eq 1 ]]
+@test "We should not be able to list any gke credentials" {
+  runit "${KORE} get gkecredentials gke -t kore-admin || true"
+  [[ "$status" -eq 0 ]]
 }
 
 @test "We should be able to apply the gke credentials" {
-  run ${KORE} apply -f ${BASE_DIR}/e2e/gke-credentials.yml -t kore-admin
+  run ${KORE} apply -f ${BASE_DIR}/e2eci/gke-credentials.yml -t kore-admin
   [[ "$status" -eq 0 ]]
 }
 
@@ -57,7 +57,7 @@ load helper.sh
 }
 
 @test "We should be able to reapply the valid credentials and be ok" {
-  run ${KORE} apply -f ${BASE_DIR}/e2e/gke-credentials.yml -t kore-admin
+  run ${KORE} apply -f ${BASE_DIR}/e2eci/gke-credentials.yml -t kore-admin
   [[ "$status" -eq 0 ]]
   retry 5 "${KORE} get gkecredentials gke -t kore-admin -o json | jq '.status.verified' | grep -i true"
   [[ "$status" -eq 0 ]]
@@ -66,23 +66,23 @@ load helper.sh
 }
 
 @test "We should be able to see the gke allocations in the e2e team" {
-  retry 2 "${KORE} get allocations gke -t e2e"
+  runit "${KORE} get allocations gke -t e2e"
   [[ "$status" -eq 0 ]]
-  retry 2 "${KORE} get allocations gke -o json -t e2e | jq '.status.status' | grep -i success"
+  runit "${KORE} get allocations gke -o json -t e2e | jq '.status.status' | grep -i success"
   [[ "$status" -eq 0 ]]
 }
 
 @test "If we delete the allocation, the e2e should no longer see the gke credentials" {
-  retry 2 "${KORE} get allocations gke -t kore-admin"
+  runit "${KORE} get allocations gke -t kore-admin"
   [[ "$status" -eq 0 ]]
-  retry 2 "${KORE} delete allocations gke -t kore-admin"
+  runit "${KORE} delete allocations gke -t kore-admin"
   [[ "$status" -eq 0 ]]
   retry 5 "${KORE} get allocations -t e2e | grep ^gke || true"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should reapply the credentials and get back the allocation in the e2e team" {
-  retry 2 "${KORE} apply -f ${BASE_DIR}/e2e/gke-credentials.yml -t kore-admin"
+  runit "${KORE} apply -f ${BASE_DIR}/e2eci/gke-credentials.yml -t kore-admin"
   [[ "$status" -eq 0 ]]
   retry 5 "${KORE} get gkecredentials gke -t kore-admin -o json | jq '.status.verified' | grep -i true"
   [[ "$status" -eq 0 ]]

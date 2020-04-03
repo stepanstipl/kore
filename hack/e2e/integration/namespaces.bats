@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-load helper.sh
+load helper
 
 @test "We should fail to provision a namespace if the cluster does not exist" {
   run bash -c "${KORE} create namespace nothing -c does_not_exist -t e2e"
@@ -27,7 +27,7 @@ load helper.sh
   fullname="${CLUSTER}-${namespace}"
 
   if ! ${KORE} get namespaceclaims ${fullname} -t e2e 2>/dev/null; then
-    retry 1 "${KORE} create namespace -c ${CLUSTER} ${namespace} -t e2e"
+    runit "${KORE} create namespace -c ${CLUSTER} ${namespace} -t e2e"
     [[ "$status" -eq 0 ]]
   fi
 
@@ -38,35 +38,37 @@ load helper.sh
 @test "We should have a namespace which is tagged by owned" {
   namespace="ingress"
 
-  retry 2 "${KUBECTL} --context=${CLUSTER} get namespace ${namespace} -o json | jq -r '.metadata.label[\"kore.appvia.io/owned\"]' | grep null || true"
+  runit "${KUBECTL} --context=${CLUSTER} get namespace ${namespace} -o json | jq -r '.metadata.label[\"kore.appvia.io/owned\"]' | grep null || true"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We need to ensure the rbac rolebinding kore:team has been provision in the namespace" {
   name="ingress"
 
-  retry 2 "${KUBECTL} --context=${CLUSTER} -n ${name} get rolebinding kore:team"
+  runit "${KUBECTL} --context=${CLUSTER} -n ${name} get rolebinding kore:team"
   [[ "$status" -eq 0 ]]
 }
 
 @test "Ensure the role binding is mapped to kore-nsadmin" {
   name="ingress"
 
-  retry 2 "${KUBECTL} --context=${CLUSTER} -n ${name} get rolebinding kore:team -o json | jq '.roleRef.name' | grep kore-nsadmin"
+  runit "${KUBECTL} --context=${CLUSTER} -n ${name} get rolebinding kore:team -o json | jq '.roleRef.name' | grep kore-nsadmin"
   [[ "$status" -eq 0 ]]
 }
 
 @test "Ensure the role binding has the team member" {
   name="ingress"
+  username=$(${KORE} whoami | tail -n1 | awk '{ print $1 }')
+  [[ "$status" -eq 0 ]]
 
-  retry 2 "${KUBECTL} --context=${CLUSTER} -n ${name} get rolebinding kore:team -o yaml | grep 'name: ${KORE_USERNAME}'"
+  runit "${KUBECTL} --context=${CLUSTER} -n ${name} get rolebinding kore:team -o yaml | grep 'name: ${username}'"
   [[ "$status" -eq 0 ]]
 }
 
 @test "Ensure when adding a member to the team the rbac is updated" {
-  retry 1 "${KORE} create member -u test -t e2e"
+  runit "${KORE} create member -u test -t e2e"
   [[ "$status" -eq 0 ]]
-  retry 1 "${KORE} get member -t e2e | grep ^test"
+  runit "${KORE} get member -t e2e | grep ^test"
   [[ "$status" -eq 0 ]]
 
   name="ingress"
@@ -76,7 +78,7 @@ load helper.sh
 }
 
 @test "Ensure when the user is deleted from the group the rbac rule is ammended" {
-  retry 1 "${KORE} delete member -u test -t e2e"
+  runit "${KORE} delete member -u test -t e2e"
   [[ "$status" -eq 0 ]]
 
   name="ingress"
@@ -89,8 +91,8 @@ load helper.sh
   namespace="ingress"
   fullname="${CLUSTER}-${namespace}"
 
-  retry 1 "${KORE} delete namespaceclaims ${fullname} -t e2e"
+  runit "${KORE} delete namespaceclaims ${fullname} -t e2e"
   [[ "$status" -eq 0 ]]
-  retry 4 "${KORE} get namespaceclaims ${fullname} -t e2e 2>&1 | grep 'is not a valid resource type'"
+  retry 10 "${KORE} get namespaceclaims ${fullname} -t e2e 2>&1 | grep 'is not a valid resource type'"
   [[ "$status" -eq 0 ]]
 }

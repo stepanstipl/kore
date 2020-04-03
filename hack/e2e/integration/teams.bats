@@ -14,22 +14,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-load helper.sh
+load helper
 
 @test "Ensure the test team does not exist" {
-  retry 3 "${KORE} delete team test || true"
+  runit "${KORE} delete team test || true"
   [[ "$status" -eq 0 ]]
-  retry 3 "${KORE} get team | grep test || true"
+  runit "${KORE} get team | grep ^test || true"
   [[ "$status" -eq 0 ]]
 }
 
 @test "Checking we have the kore-admin team" {
-  retry 2 "${KORE} get teams kore-admin"
+  runit "${KORE} get teams kore-admin"
   [[ "$status" -eq 0 ]]
 }
 
 @test "Checking we have the kore-default team" {
-  retry 2 "${KORE} get teams kore-default"
+  runit "${KORE} get teams kore-default"
   [[ "$status" -eq 0 ]]
 }
 
@@ -39,37 +39,30 @@ load helper.sh
 }
 
 @test "We should be able to create a e2e team to run test" {
-  if retry 2 "${KORE} get team | grep ^e2e"; then
+  if runit "${KORE} get team | grep ^e2e"; then
     skip
   fi
-  retry 2 "${KORE} create team e2e"
+  runit "${KORE} create team e2e"
+  [[ "$status" -eq 0 ]]
+}
+
+@test "We should not be able to delete the kore-admin team" {
+  runit  "${KORE} delete team kore-admin || true"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should see the status on the e2e team is successful " {
-  retry 2 "${KORE} get teams e2e -o json | jq '.status.status' | grep -i success"
+  runit "${KORE} get teams e2e -o json | jq '.status.status' | grep -i success"
   [[ "$status" -eq 0 ]]
 }
 
-@test "We should see a namespace created in kore for new team" {
-  retry 2 "${KUBECTL} get namespace e2e >/dev/null"
+@test "We should be able to create and delete a team and see all resource disappeared" {
+  runit "${KORE} create team test"
   [[ "$status" -eq 0 ]]
-}
-
-@test "We should be able to create and delete a team and see all resource dissappeared" {
-  retry 2 "${KORE} create team test"
+  runit "${KORE} get team test"
   [[ "$status" -eq 0 ]]
-  retry 2 "${KORE} get team test"
+  runit "${KORE} delete team test"
   [[ "$status" -eq 0 ]]
-  retry 2 "${KUBECTL} get namespace test"
-  [[ "$status" -eq 0 ]]
-  retry 2 "${KORE} delete team test"
-  [[ "$status" -eq 0 ]]
-  retry 2 "${KORE} get team 2>&1 | grep ^test || true"
-  [[ "$status" -eq 0 ]]
-}
-
-@test "We should see the namespace for the test team in kore has disappeared" {
-  retry 2 "${KUBECTL} get namespace test 2>&1 | egrep -i '(not found|the server doesn|terminating)'"
+  runit "${KORE} get team 2>&1 | grep ^test || true"
   [[ "$status" -eq 0 ]]
 }

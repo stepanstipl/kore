@@ -16,9 +16,9 @@
 #
 source hack/e2e/environment.sh || exit 1
 
-announce "running the integretion suite"
+announce "running the integretion suite, cluster name: ${CLUSTER}"
 
-RET=0
+# options for the bats command
 BATS_OPTIONS=""
 
 cd ${PLATFORM_DIR}/integration
@@ -46,7 +46,13 @@ announce "performing checks on clusterconfig"
 bats ${BATS_OPTIONS} clusterconfig.bats || exit 1
 announce "performing checks on namespaces"
 bats ${BATS_OPTIONS} namespaces.bats || exit 1
+announce "performing checks on safeguards"
+bats ${BATS_OPTIONS} safeguards.bats || exit 1
+announce "performing checks on authentication proxy"
+bats ${BATS_OPTIONS} auth-proxy.bats || exit 1
 announce "performing checks on cluster delete"
 bats ${BATS_OPTIONS} gke-deletion.bats || exit 1
+announce "performing checks on teardown"
+bats ${BATS_OPTIONS} teardown.bats || exit 1
 
-exit $RET
+exit 0

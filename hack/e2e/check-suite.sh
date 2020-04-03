@@ -18,10 +18,15 @@
 source hack/e2e/environment.sh || exit 1
 
 # These's are using across the checks
-export KORE_USERNAME="${KORE_USERNAME:-"admin"}"
-export CLUSTER="ci-${BUILD_ID:-unknown}"
+export CLUSTER="ci-${CIRCLE_BUILD_NUM:-$USER}"
+export E2E_DIR="e2eci"
+export KORE_IDP_SERVER_URL=${KORE_IDP_SERVER_URL:-"unknown"}
+export KORE_IDP_CLIENT_ID=${KORE_IDP_CLIENT_ID:-"unknown"}
+export KORE_API_URL=${KORE_API_URL_QA:-"http://127.0.0.1:10080"}
+export KORE_ID_TOKEN=${KORE_ID_TOKEN_QA:-"unknown"}
+export KORE_PROFILE="local"
+#export KORE_USERNAME="${KORE_USERNAME:-"kore-ci@appvia.io"}"
 
-E2E_DIR="e2eci"
 ENABLE_CONFORMANCE=${ENABLE_CONFORMANCE:-false}
 ENABLE_UNIT_TESTS=${ENABLE_UNIT_TESTS:-true}
 MAX_RETRIES=${1:-60}
@@ -58,10 +63,13 @@ profiles:
     user: local
 servers:
   local:
-    server: http://127.0.0.1:10080
+    server: ${KORE_API_URL}
 users:
   local:
-    token: password
+    oidc:
+      client-id: ${KORE_IDP_CLIENT_ID}
+      id-token: ${KORE_ID_TOKEN}
+      idp-issuer-url: ${KORE_IDP_SERVER_URL}
 EOF
 }
 
@@ -98,11 +106,11 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# @step: check the api server is running and available
-if ! wait-kubeapi-readiness; then
-  error "kube apiserver is not available after multiple attempts"
-  exit 1
-fi
+## @step: check the api server is running and available
+#if ! wait-kubeapi-readiness; then
+#  error "kube apiserver is not available after multiple attempts"
+#  exit 1
+#fi
 
 if [[ "${ENABLE_UNIT_TESTS}" == "true" ]]; then
   if [[ ! -f "${E2E_DIR}/gke-credentials.yml" ]]; then
@@ -126,4 +134,3 @@ if [[ "${ENABLE_CONFORMANCE}" == "true" ]]; then
 else
   announce "skipping the kubernetes e2e conformance suite"
 fi
-

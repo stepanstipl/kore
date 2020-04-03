@@ -29,11 +29,14 @@ retry() {
         return 0
       fi
       sleep $delay
-      echo "$@ ${i}" >> out.log
   done
 
   echo "Command \"$@\" failed $attempts times. Status: $status. Output: $output" >&2
   false
+}
+
+runit() {
+  retry 3 "$@"
 }
 
 # wait-on-deployment is responsible for waiting for a deployment to deploy

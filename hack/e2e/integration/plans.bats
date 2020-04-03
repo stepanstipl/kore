@@ -15,30 +15,30 @@
 # limitations under the License.
 #
 
-load helper.sh
+load helper
 
 @test "We should be able to list the embedded plans" {
-  run ${KORE} get plans
+  runit "${KORE} get plans"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should have a gke-development plan" {
-  run ${KORE} get plans gke-development
+  runit "${KORE} get plans gke-development"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should have a gke production plan" {
-  run ${KORE} get plans gke-production
+  runit "${KORE} get plans gke-production"
   [[ "$status" -eq 0 ]]
 }
 
 @test "The plans should include valid json data" {
-  run ${KORE} get plans gke-development -o json | jq
+  runit "${KORE} get plans gke-development -o json | jq"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should see a valid version in the gke plan" {
-  retry 2 "${KORE} get plans gke-development -o json | jq '.spec.values.version' | grep gke"
+  runit "${KORE} get plans gke-development -o json | jq '.spec.values.version' | grep gke"
   [[ "$status" -eq 0 ]]
 }
 

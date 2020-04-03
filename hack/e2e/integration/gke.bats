@@ -15,10 +15,10 @@
 # limitations under the License.
 #
 
-load helper.sh
+load helper
 
 @test "Ensuring we have an allocation to build a cluster in GKE" {
-  retry 2 "${KORE} get allocations -t e2e | grep ^gke"
+  runit "${KORE} get allocations -t e2e | grep ^gke"
   [[ "$status" -eq 0 ]]
 }
 
@@ -26,41 +26,41 @@ load helper.sh
   if "${KORE} get clusters ${CLUSTER} -t e2e"; then
     skip
   fi
-  retry 1 "${KORE} create cluster -p gke-development -a gke ${CLUSTER} --show-time -t e2e"
+  runit "${KORE} create cluster -p gke-development -a gke ${CLUSTER} --show-time -t e2e"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should be able to see the cluster in the team" {
-  retry 2 "${KORE} get clusters ${CLUSTER} -t e2e | grep -i success"
+  runit "${KORE} get clusters ${CLUSTER} -t e2e | grep -i success"
   [[ "$status" -eq 0 ]]
 }
 
 @test "The user should be able to see the endpoint" {
-  retry 2 "${KORE} get clusters ${CLUSTER} -t e2e -o json | jq '.status.endpoint' | grep null || true"
+  runit "${KORE} get clusters ${CLUSTER} -t e2e -o json | jq '.status.endpoint' | grep null || true"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should be able to see the gkes cloud provider in the team" {
-  retry 2 "${KORE} get gkes ${CLUSTER} -t e2e"
+  runit "${KORE} get gkes ${CLUSTER} -t e2e"
   [[ "$status" -eq 0 ]]
-  retry 2 "${KORE} get gkes ${CLUSTER} -t e2e | grep -i success"
+  runit "${KORE} get gkes ${CLUSTER} -t e2e | grep -i success"
   [[ "$status" -eq 0 ]]
 }
 
 @test "The cluster should have a secret related to the cluster in the team" {
-  retry 2 "${KORE} get secrets ${CLUSTER} -t e2e"
+  runit "${KORE} get secrets ${CLUSTER} -t e2e"
   [[ "$status" -eq 0 ]]
 }
 
 @test "The cluster secret should contain a number of fields (token endpoint ca.crt)"  {
   for key in token endpoint ca.crt; do
-    retry 2 "${KORE} get secrets ${CLUSTER} -t e2e -o json | jq \".spec.data.${key}\" | grep null || true"
+    runit "${KORE} get secrets ${CLUSTER} -t e2e -o json | jq \".spec.data.${key}\" | grep null || true"
     [[ "$status" -eq 0 ]]
   done
 }
 
 @test "We should be able to generate the kubeconfig for the cluster" {
-  retry 2 "${KORE} kubeconfig -t e2e"
+  runit "${KORE} kubeconfig -t e2e"
   [[ "$status" -eq 0 ]]
 }
 
@@ -75,17 +75,17 @@ load helper.sh
 }
 
 @test "You should be able to retrieve the nodes of the cluster" {
-  retry 2 "${KUBECTL} --context=${CLUSTER} get nodes"
+  runit "${KUBECTL} --context=${CLUSTER} get nodes"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We need to ensure the default psp has been created" {
-  retry 2 "${KUBECTL} --context=${CLUSTER} get psp kore.default"
+  runit "${KUBECTL} --context=${CLUSTER} get psp kore.default"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should have a namespace called kore" {
-  retry 2 "${KUBECTL} --context=${CLUSTER} get namespace kore"
+  runit "${KUBECTL} --context=${CLUSTER} get namespace kore"
   [[ "$status" -eq 0 ]]
 }
 
