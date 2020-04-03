@@ -1,11 +1,14 @@
 ---
-version: 2
+version: 2.1
+
+orbs:
+  kube-orb: circleci/kubernetes@0.11.0
 
 jobs:
   build:
     environment:
-      USE_GIT_VERSION: "true"
       GOFLAGS: "-mod=vendor"
+      USE_GIT_VERSION: "true"
 
     docker:
       - image: circleci/golang:1.14
@@ -37,11 +40,12 @@ jobs:
             - auth-proxy
             - kore-apiserver
             - kore-clusterappman
+            - korectl
 
   check-apis:
     environment:
-      USE_GIT_VERSION: "true"
       GOFLAGS: "-mod=vendor"
+      USE_GIT_VERSION: "true"
 
     docker:
       - image: circleci/golang:1.14
@@ -106,8 +110,8 @@ jobs:
             KORE_HMAC: "bdT2Qg6DybsLIwc0TbYWrkGC4auovscg"
             # The below must be matched with the private key in the API test project:
             KORE_LOCAL_JWT_PUBLIC_KEY: "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAIG6XiNhkwDETU2zk0tGlI0DKlbEJcN4jxwJBqhd3neReLDnqg9SBgKepdy9Nxw5LAd1gNoBkLvdFJg9SbHlM0sCAwEAAQ=="
-            KUBE_API_SERVER: "http://kube-apiserver:8080"
             KORE_UI_PUBLIC_URL: "http://localhost:3000"
+            KUBE_API_SERVER: "http://kube-apiserver:8080"
             USERS_DB_URL: "root:pass@tcp(database:3306)/kore?parseTime=true"
       - run:
           name: Checking swagger
@@ -122,8 +126,6 @@ jobs:
   release:
     environment:
       GOFLAGS: "-mod=vendor"
-      KORE_API_IMAGE: quay.io/appvia/kore-apiserver
-      KORE_PROXY_IMAGE: quay.io/appvia/auth-proxy
 
     docker:
       - image: circleci/golang:1.14
@@ -137,10 +139,8 @@ jobs:
       - deploy:
           command: |
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
-            docker build -t ${KORE_API_IMAGE}:${CIRCLE_TAG:-latest}   -f images/Dockerfile.kore-apiserver .
-            docker build -t ${KORE_PROXY_IMAGE}:${CIRCLE_TAG:-latest} -f images/Dockerfile.auth-proxy .
-            docker push ${KORE_API_IMAGE}:${CIRCLE_TAG:-latest}
-            docker push ${KORE_PROXY_IMAGE}:${CIRCLE_TAG:-latest}
+            VERSION=${CIRCLE_TAG:-latest} make images
+            VERSION=${CIRCLE_TAG:-latest} make push-images
 
   build-ui:
     docker:
@@ -173,9 +173,25 @@ jobs:
           name: Publishing UI to quay.io
           working_directory: ~/project/ui
           command: |
-              docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
-              docker build -t ${KORE_UI_IMAGE}:${CIRCLE_TAG:-latest} .
-              docker push ${KORE_UI_IMAGE}:${CIRCLE_TAG:-latest}
+            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
+            docker build -t ${KORE_UI_IMAGE}:${CIRCLE_TAG:-latest} .
+            docker push ${KORE_UI_IMAGE}:${CIRCLE_TAG:-latest}
+
+  release-qa:
+    docker:
+      - image: alpine/helm:3.1.2
+    steps:
+      - checkout
+      - run:
+          name: Installing GNU
+          command: |
+            apk add bash coreutils curl --update
+      - kube-orb/install-kubeconfig:
+        kubeconfig: KUBECONFIG_DATA
+      - run:
+          name: Deploying to QA
+          command: |
+            hack/deploy-qa.sh
 
 workflows:
   version: 2
@@ -210,3 +226,12 @@ workflows:
               only: /^v.*$/
           requires:
             - build-ui
+      - release-qa:
+          filters:
+            branches:
+              only: master
+          requires:
+            - build
+            - build-ui
+            - check-apis
+            - release

@@ -1,0 +1,52 @@
+{{- if .Values.api.ingress.enabled }}
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ include "kore.name" . }}-api
+  {{- with .Values.api.ingress.annotations }}
+  annotations:
+{{ toYaml . | indent 4 }}
+  {{- end }}
+spec:
+  rules:
+  - host: {{ .Values.api.ingress.hostname }}
+    http:
+      paths:
+      - backend:
+          serviceName: {{ include "kore.name" . }}-apiserver
+          servicePort: 10080
+        path: /
+  {{- if .Values.api.ingress.tls_secret }}
+  tls:
+  - hosts:
+    - {{ .Values.api.ingress.hostname }}
+    secretName: {{ .Values.api.ingress.tls_secret }}
+  {{- end }}
+{{- end }}
+{{- if .Values.ui.ingress.enabled }}
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ include "kore.name" . }}-portal
+  {{- with .Values.ui.ingress.annotations }}
+  annotations:
+{{ toYaml . | indent 4 }}
+  {{- end }}
+spec:
+  rules:
+  - host: {{ .Values.ui.ingress.hostname }}
+    http:
+      paths:
+      - backend:
+          serviceName: {{ include "kore.name" . }}-portal
+          servicePort: 3000
+        path: /
+  {{- if .Values.ui.ingress.tls_secret }}
+  tls:
+  - hosts:
+    - {{ .Values.ui.ingress.hostname }}
+    secretName: {{ .Values.ui.ingress.tls_secret }}
+  {{- end }}
+{{- end }}

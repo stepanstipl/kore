@@ -12,6 +12,7 @@ secret.yml
 swagger-ui/
 manifests/local
 charts/my_values.yaml
+values.yaml
 
 # This is pulled down by the makefile:
 /swagger.json

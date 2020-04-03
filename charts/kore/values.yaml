@@ -1,5 +1,5 @@
+---
 # Default values for kore.
-
 nameOverride: ""
 ca:
   generate: true
@@ -30,6 +30,11 @@ api:
   endpoint:
     url: http://localhost:10080
     detect: false
+  ingress:
+    enabled: false
+    hostname: localhost:10080
+    tls_secret: ""
+    annotations: {}
   port: 10080
   hostPort: ""
   serviceType: ClusterIP
@@ -44,6 +49,11 @@ ui:
   endpoint:
     url: http://localhost:3000
     detect: false
+  ingress:
+    enabled: false
+    hostname: localhost:3000
+    tls_secret: ""
+    annotations: {}
   port: 3000
   hostPort: ""
   serviceType: ClusterIP
