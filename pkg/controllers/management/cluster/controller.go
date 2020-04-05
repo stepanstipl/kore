@@ -25,6 +25,7 @@ import (
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -33,18 +34,16 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-type clusterController struct {
+type Controller struct {
 	kore.Interface
 	name   string
 	logger log.FieldLogger
-	// mgr is the manager
-	mgr manager.Manager
-	// stopCh is the stop channel
-	stopCh chan struct{}
+	mgr    manager.Manager
+	ctrl   controller.Controller
 }
 
 func init() {
-	ctrl := newClusterController()
+	ctrl := NewController(logrus.StandardLogger())
 	if err := controllers.Register(ctrl); err != nil {
 		log.WithFields(log.Fields{
 			"error": err.Error(),
@@ -52,65 +51,55 @@ func init() {
 	}
 }
 
-func newClusterController() *clusterController {
+func NewController(logger logrus.FieldLogger) *Controller {
 	name := "cluster"
-	return &clusterController{
+	return &Controller{
 		name: name,
-		logger: log.WithFields(log.Fields{
+		logger: logger.WithFields(log.Fields{
 			"controller": name,
 		}),
 	}
 }
 
 // Name returns the name of the controller
-func (a clusterController) Name() string {
+func (a Controller) Name() string {
 	return a.name
 }
 
-// Run is called when the controller is started
-func (a *clusterController) Run(ctx context.Context, cfg *rest.Config, hi kore.Interface) error {
+func (a Controller) ManagerOptions() manager.Options {
+	return controllers.DefaultManagerOptions(a)
+}
+
+func (a Controller) ControllerOptions() controller.Options {
+	return controllers.DefaultControllerOptions(a)
+}
+
+func (a *Controller) RunWithDependencies(ctx context.Context, mgr manager.Manager, ctrl controller.Controller, hi kore.Interface) error {
+	a.mgr = mgr
+	a.ctrl = ctrl
 	a.Interface = hi
 
 	a.logger.Debug("controller has been started")
 
-	// @step: create the manager for the controller
-	mgr, err := manager.New(cfg, controllers.DefaultManagerOptions(a))
-	if err != nil {
-		a.logger.WithError(err).Error("failed to create manager")
-
-		return err
-	}
-
-	// @step: set the controller manager
-	a.mgr = mgr
-
-	// @step: create the controller
-	ctrl, err := controller.New(a.Name(), mgr, controllers.DefaultControllerOptions(a))
-	if err != nil {
-		a.logger.WithError(err).Error("failed to create the controller")
-
-		return err
-	}
-
 	// @step: setup watches for the resources
-	if err := ctrl.Watch(&source.Kind{Type: &clustersv1.Cluster{}},
+	if err := a.ctrl.Watch(&source.Kind{Type: &clustersv1.Cluster{}},
 		&handler.EnqueueRequestForObject{}); err != nil {
 
-		log.WithField("error", err.Error()).Error("failed to create watcher on Cluster resource")
+		a.logger.WithError(err).Error("failed to create watcher on Cluster resource")
 
 		return err
 	}
+
+	var stopCh chan struct{}
 
 	go func() {
 		a.logger.Info("starting the controller loop")
 
 		for {
-			a.stopCh = make(chan struct{})
+			stopCh = make(chan struct{})
 
-			if err := mgr.Start(a.stopCh); err != nil {
-				log.WithField(
-					"error", err.Error(),
-				).Error("failed to start the controller")
+			if err := a.mgr.Start(stopCh); err != nil {
+				a.logger.WithError(err).Error("failed to start the controller")
 			}
 			time.Sleep(5 * time.Second)
 		}
@@ -122,14 +111,21 @@ func (a *clusterController) Run(ctx context.Context, cfg *rest.Config, hi kore.I
 
 		a.logger.Info("stopping the controller")
 
-		close(a.stopCh)
+		if stopCh != nil {
+			close(stopCh)
+		}
 	}()
 
 	return nil
 }
 
+// Run is called when the controller is started
+func (a *Controller) Run(ctx context.Context, cfg *rest.Config, hi kore.Interface) error {
+	panic("this controller implements controllers.Interface2 and only RunWithDependencies should be called")
+}
+
 // Stop is responsible for calling a halt on the controller
-func (a clusterController) Stop(context.Context) error {
+func (a Controller) Stop(context.Context) error {
 	a.logger.Info("attempting to stop the controller")
 
 	return nil
