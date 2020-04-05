@@ -20,6 +20,9 @@ import (
 	"context"
 	"fmt"
 
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+
 	// controller imports
 	_ "github.com/appvia/kore/pkg/controllers/register"
 
@@ -133,20 +136,36 @@ func New(config Config) (Interface, error) {
 func (s serverImpl) Run(ctx context.Context) error {
 
 	// @step: we need to start the controllers
-	for _, controller := range controllers.GetControllers() {
-		log.Printf("got controller %s", controller.Name())
-		go func(x controllers.RegisterInterface) {
+	for _, ctrl := range controllers.GetControllers() {
+		log.Printf("got controller %s", ctrl.Name())
+		go func(c controllers.RegisterInterface) {
 			log.WithFields(log.Fields{
-				"name": x.Name(),
+				"name": c.Name(),
 			}).Info("starting the controller")
 
-			if err := x.Run(ctx, s.cfg, s.hubcc); err != nil {
+			err := func() error {
+				if c2, ok := c.(controllers.Interface2); ok {
+					mgr, err := manager.New(s.cfg, c2.ManagerOptions())
+					if err != nil {
+						return err
+					}
+
+					ctrl, err := controller.New(c2.Name(), mgr, c2.ControllerOptions())
+					if err != nil {
+						return err
+					}
+					return c2.RunWithDependencies(ctx, mgr, ctrl, s.hubcc)
+				}
+
+				return c.Run(ctx, s.cfg, s.hubcc)
+			}()
+			if err != nil {
 				log.WithFields(log.Fields{
 					"error": err.Error(),
-					"name":  x.Name(),
+					"name":  c.Name(),
 				}).Fatal("failed to start the controller")
 			}
-		}(controller)
+		}(ctrl)
 	}
 
 	// @step: start the apiserver - @note this is not being started before

@@ -19,6 +19,8 @@ package controllers
 import (
 	"time"
 
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/schema"
 
@@ -26,19 +28,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-// SingletontControllerOptions provides a single runner
-func SingletontControllerOptions(handler Interface) controller.Options {
-	return controller.Options{
-		MaxConcurrentReconciles: 1,
-		Reconciler:              handler,
-	}
-}
-
 // DefaultControllerOptions returns default options
-func DefaultControllerOptions(handler Interface) controller.Options {
+func DefaultControllerOptions(reconciler reconcile.Reconciler) controller.Options {
 	return controller.Options{
 		MaxConcurrentReconciles: 10,
-		Reconciler:              handler,
+		Reconciler:              reconciler,
 	}
 }
 

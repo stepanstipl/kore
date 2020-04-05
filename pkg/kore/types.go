@@ -46,6 +46,7 @@ var (
 )
 
 // Interface is the contract between the api and store
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Interface
 type Interface interface {
 	// Audit returns the audit interface
 	Audit() Audit
