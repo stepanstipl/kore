@@ -19,6 +19,10 @@ package controllers
 import (
 	"context"
 
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+
 	"github.com/appvia/kore/pkg/kore"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -42,6 +46,34 @@ type RegisterInterface interface {
 // Interface is the contract for a controller
 type Interface interface {
 	RegisterInterface
-	// Reconcile is the reconcile method
-	Reconcile(reconcile.Request) (reconcile.Result, error)
+	reconcile.Reconciler
+}
+
+// Interface2 is a temporary interface to introduce a new run function where the dependencies will be injected
+// TODO: migrate all controllers to the new interface
+type Interface2 interface {
+	Interface
+	ManagerOptions() manager.Options
+	ControllerOptions() controller.Options
+	RunWithDependencies(context.Context, manager.Manager, controller.Controller, kore.Interface) error
+}
+
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Client
+type Client interface {
+	client.Client
+}
+
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Manager
+type Manager interface {
+	manager.Manager
+}
+
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Controller
+type Controller interface {
+	controller.Controller
+}
+
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . StatusWriter
+type StatusWriter interface {
+	client.StatusWriter
 }
