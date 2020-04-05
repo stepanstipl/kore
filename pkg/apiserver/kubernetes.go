@@ -19,8 +19,6 @@ package apiserver
 import (
 	"net/http"
 
-	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
-
 	restful "github.com/emicklei/go-restful"
 )
 
@@ -50,39 +48,5 @@ func (u teamHandler) getKubernetes(req *restful.Request, resp *restful.Response)
 		}
 
 		return resp.WriteHeaderAndEntity(http.StatusOK, list)
-	})
-}
-
-// deleteKubernetes is responsible for deleting a kubernetes resource
-func (u teamHandler) deleteKubernetes(req *restful.Request, resp *restful.Response) {
-	handleErrors(req, resp, func() error {
-		ctx := req.Request.Context()
-		name := req.PathParameter("name")
-		team := req.PathParameter("team")
-
-		object, err := u.Teams().Team(team).Kubernetes().Delete(ctx, name)
-		if err != nil {
-			return err
-		}
-
-		return resp.WriteHeaderAndEntity(http.StatusOK, object)
-	})
-}
-
-// updateKubernetes is responsible for putting an resource into a team
-func (u teamHandler) updateKubernetes(req *restful.Request, resp *restful.Response) {
-	handleErrors(req, resp, func() error {
-		team := req.PathParameter("team")
-
-		object := &clustersv1.Kubernetes{}
-		if err := req.ReadEntity(object); err != nil {
-			return err
-		}
-
-		if err := u.Teams().Team(team).Kubernetes().Update(req.Request.Context(), object); err != nil {
-			return err
-		}
-
-		return resp.WriteHeaderAndEntity(http.StatusOK, object)
 	})
 }

@@ -19,8 +19,6 @@ package apiserver
 import (
 	"net/http"
 
-	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
-
 	restful "github.com/emicklei/go-restful"
 )
 
@@ -49,43 +47,5 @@ func (u teamHandler) findEKSNodeGroup(req *restful.Request, resp *restful.Respon
 		}
 
 		return resp.WriteHeaderAndEntity(http.StatusOK, ng)
-	})
-}
-
-// deleteEKS is responsible for deleting an eksnodegroup resource
-func (u teamHandler) deleteEKSNodeGroups(req *restful.Request, resp *restful.Response) {
-	handleErrors(req, resp, func() error {
-		ctx := req.Request.Context()
-		name := req.PathParameter("name")
-		team := req.PathParameter("team")
-
-		object, err := u.Teams().Team(team).Cloud().EKSNodeGroup().Get(ctx, name)
-		if err != nil {
-			return err
-		}
-
-		err = u.Teams().Team(team).Cloud().EKSNodeGroup().Delete(ctx, name)
-		if err != nil {
-			return err
-		}
-
-		return resp.WriteHeaderAndEntity(http.StatusOK, object)
-	})
-}
-
-// updateEKS is responsible for putting an resource into a team
-func (u teamHandler) updateEKSNodeGroups(req *restful.Request, resp *restful.Response) {
-	handleErrors(req, resp, func() error {
-		team := req.PathParameter("team")
-
-		object := &eks.EKSNodeGroup{}
-		if err := req.ReadEntity(object); err != nil {
-			return err
-		}
-		if _, err := u.Teams().Team(team).Cloud().EKSNodeGroup().Update(req.Request.Context(), object); err != nil {
-			return err
-		}
-
-		return resp.WriteHeaderAndEntity(http.StatusOK, object)
 	})
 }

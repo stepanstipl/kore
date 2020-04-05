@@ -30,7 +30,6 @@ import (
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
-	"github.com/appvia/kore/pkg/utils/validation"
 
 	restful "github.com/emicklei/go-restful"
 	log "github.com/sirupsen/logrus"
@@ -352,28 +351,6 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
 
-	ws.Route(
-		ws.PUT("/{team}/kubernetes/{name}").To(u.updateKubernetes).
-			Doc("Used to create/update a Kubernetes cluster definition for a team").
-			Operation("UpdateKubernetes").
-			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
-			Param(ws.PathParameter("name", "Is name the of the kubernetes cluster you are acting upon")).
-			Reads(clustersv1.Kubernetes{}, "The definition for kubernetes cluster").
-			Returns(http.StatusOK, "Contains the former team definition from the kore", clustersv1.Kubernetes{}).
-			Returns(http.StatusBadRequest, "Validation error of the provided details", validation.Error{}). // @TODO: Change this to be a class in the orgv1 space
-			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
-	)
-
-	ws.Route(
-		ws.DELETE("/{team}/kubernetes/{name}").To(u.deleteKubernetes).
-			Doc("Used to remove a Kubernetes cluster").
-			Operation("RemoveKubernetes").
-			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
-			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
-			Returns(http.StatusOK, "Contains the former team definition from the kore", clustersv1.Kubernetes{}).
-			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
-	)
-
 	// Team Clusters
 
 	ws.Route(
@@ -430,26 +407,6 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 		ws.GET("/{team}/gkes/{name}").To(u.findGKE).
 			Doc("Returns a specific Google Container Engine cluster to which the team has access").
 			Operation("GetGKE").
-			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
-			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
-			Returns(http.StatusOK, "Contains the former team definition from the kore", gke.GKE{}).
-			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
-	)
-
-	ws.Route(
-		ws.PUT("/{team}/gkes/{name}").To(u.updateGKE).
-			Doc("Is used to provision or update a GKE cluster in the kore").
-			Operation("UpdateGKE").
-			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
-			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
-			Returns(http.StatusOK, "Contains the former team definition from the kore", gke.GKE{}).
-			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
-	)
-
-	ws.Route(
-		ws.DELETE("/{team}/gkes/{name}").To(u.deleteGKE).
-			Doc("Is used to delete a managed GKE cluster from the kore").
-			Operation("RemoveGKE").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", gke.GKE{}).
@@ -589,24 +546,6 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
-	ws.Route(
-		ws.PUT("/{team}/ekss/{name}").To(u.updateEKS).
-			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
-			Param(ws.PathParameter("name", "Is name the of the EKS cluster you are acting upon")).
-			Doc("Is used to provision or update a EKS cluster in the kore").
-			Returns(http.StatusOK, "Contains the former team definition from the kore", eks.EKS{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
-	)
-
-	ws.Route(
-		ws.DELETE("/{team}/ekss/{name}").To(u.deleteEKS).
-			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
-			Param(ws.PathParameter("name", "Is name the of the EKS cluster you are acting upon")).
-			Doc("Is used to delete a managed EKS cluster from the kore").
-			Returns(http.StatusOK, "Contains the former team definition from the kore", eks.EKS{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
-	)
-
 	// EKS Nodegroups
 	ws.Route(
 		ws.GET("/{team}/eksnodegroups").To(u.findEKSNodeGroups).
@@ -621,24 +560,6 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is the name of the EKS nodegroup")).
 			Doc("Is the used to return a EKS cluster which the team has access").
-			Returns(http.StatusOK, "Contains the former team definition from the kore", eks.EKSNodeGroup{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
-	)
-
-	ws.Route(
-		ws.PUT("/{team}/eksnodegroups/{name}").To(u.updateEKSNodeGroups).
-			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
-			Param(ws.PathParameter("name", "Is the name of the EKS nodegroup")).
-			Doc("Is used to provision or update a EKS cluster nodegroup in the kore").
-			Returns(http.StatusOK, "Contains the former team definition from the kore", eks.EKSNodeGroup{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
-	)
-
-	ws.Route(
-		ws.DELETE("/{team}/eksnodegroups/{name}").To(u.deleteEKSNodeGroups).
-			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
-			Param(ws.PathParameter("name", "Is the name of the EKS nodegroup")).
-			Doc("Is used to delete a managed EKS cluster nodegroup from the kore").
 			Returns(http.StatusOK, "Contains the former team definition from the kore", eks.EKSNodeGroup{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
