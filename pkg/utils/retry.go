@@ -55,7 +55,7 @@ func Retry(ctx context.Context, attempts int, jitter bool, minInterval time.Dura
 	backoff := &backoff.Backoff{
 		Min:    minInterval,
 		Max:    minInterval * 2,
-		Factor: 1,
+		Factor: 1.5,
 		Jitter: jitter,
 	}
 

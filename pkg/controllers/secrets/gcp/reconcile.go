@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -71,7 +70,6 @@ func (a ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 		return reconcile.Result{}, nil
 	}
 
-	// @step: we need to get if the roles exists in the service account
 	result, err := func() (reconcile.Result, error) {
 		// @step: set the resource to pending
 		if secret.Status.Status != corev1.PendingStatus {
@@ -86,8 +84,6 @@ func (a ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 		if err := copied.Decode(); err != nil {
 			return reconcile.Result{}, err
 		}
-
-		// @step: set the default and false
 		secret.Status.Verified = utils.BoolPtr(false)
 
 		// @step: check the key is set
@@ -106,7 +102,7 @@ func (a ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 		}
 
 		// @step: create a resource manager client
-		client, err := gcputils.CreateResourceManagerClientFromServiceAccount(sa)
+		client, err := gcputils.CreateResourceManagerClientFromServiceAccount(ctx, sa)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -114,43 +110,36 @@ func (a ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 		// a list of missing roles
 		var missing []string
 
-		err = utils.Retry(ctx, 3, true, 5*time.Second, func() (bool, error) {
-			list, err := gcputils.GetServiceAccountOrganizationsIDs(ctx, sa)
-			if err != nil {
-				logger.WithError(err).Error("trying to retrieve service account organization")
-
-				return false, nil
-			}
-			if len(list) <= 0 {
-				return false, ErrMissingOrganization
-			}
-			if len(list) > 1 {
-				return false, ErrMultipleOrganizations
-			}
-			id := list[0]
-
-			roles, err := gcputils.CheckOrganizationRoles(ctx, id, account, client)
-			if err != nil {
-				logger.WithError(err).Error("trying to check service account roles for gcp credentials")
-
-				return false, nil
-			}
-
-			// @step: check which if any roles are missing
-			for _, x := range a.RequiredRoles() {
-				if !utils.Contains(x, roles) {
-					missing = append(missing, x)
-				}
-			}
-
-			if len(missing) > 0 {
-				return false, fmt.Errorf("missing the follings: %s", strings.Join(missing, ","))
-			}
-
-			return true, nil
-		})
+		list, err := gcputils.GetServiceAccountOrganizationsIDs(ctx, sa)
 		if err != nil {
+			logger.WithError(err).Error("trying to retrieve service account organization")
+
 			return reconcile.Result{}, err
+		}
+		if len(list) <= 0 {
+			return reconcile.Result{}, ErrMissingOrganization
+		}
+		if len(list) > 1 {
+			return reconcile.Result{}, ErrMultipleOrganizations
+		}
+		id := list[0]
+
+		roles, err := gcputils.CheckOrganizationRoles(ctx, id, account, client)
+		if err != nil {
+			logger.WithError(err).Error("trying to check service account roles for gcp credentials")
+
+			return reconcile.Result{}, nil
+		}
+
+		// @step: check which if any roles are missing
+		for _, x := range a.RequiredRoles() {
+			if !utils.Contains(x, roles) {
+				missing = append(missing, x)
+			}
+		}
+
+		if len(missing) > 0 {
+			return reconcile.Result{}, fmt.Errorf("missing the following: %s", strings.Join(missing, ","))
 		}
 
 		secret.Status.Status = corev1.SuccessStatus
@@ -172,7 +161,7 @@ func (a ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	if err := a.mgr.GetClient().Status().Patch(ctx, secret, client.MergeFrom(original)); err != nil {
 		logger.WithError(err).Error("trying to update generic secret resource status")
 
-		return reconcile.Result{}, err
+		return reconcile.Result{Requeue: true}, err
 	}
 
 	return result, nil

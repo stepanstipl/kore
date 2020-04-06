@@ -37,7 +37,7 @@ var (
 const MaxChunkSize = 100
 
 // CreateResourceManagerClientFromServiceAccount creates a resource manager client
-func CreateResourceManagerClientFromServiceAccount(sa string) (*resourcemanager.Service, error) {
+func CreateResourceManagerClientFromServiceAccount(ctx context.Context, sa string) (*resourcemanager.Service, error) {
 	options := option.WithCredentialsJSON([]byte(sa))
 
 	return resourcemanager.NewService(context.Background(), options)
@@ -68,7 +68,7 @@ func GetServiceAccountKeyAttribute(sa, attribute string) (string, error) {
 
 // GetServiceAccountOrganizationsIDs retrieve the organizations for a service account
 func GetServiceAccountOrganizationsIDs(ctx context.Context, sa string) ([]string, error) {
-	client, err := CreateResourceManagerClientFromServiceAccount(sa)
+	client, err := CreateResourceManagerClientFromServiceAccount(ctx, sa)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +122,7 @@ func CheckServiceAccountPermissions(
 ) (bool, []string, error) {
 
 	// @step: we create a client from the service account first
-	client, err := CreateResourceManagerClientFromServiceAccount(serviceAccountKey)
+	client, err := CreateResourceManagerClientFromServiceAccount(ctx, serviceAccountKey)
 	if err != nil {
 		return false, nil, err
 	}
