@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-source hack/e2e/environment.sh || exit 1
+source test/e2e/environment.sh || exit 1
 
-announce "running the integretion suite, cluster name: ${CLUSTER}"
+announce "running the integration suite, cluster name: ${CLUSTER}"
 
 # options for the bats command
 BATS_OPTIONS=""
@@ -24,7 +24,7 @@ BATS_OPTIONS=""
 cd ${PLATFORM_DIR}/integration
 announce "performing the setup for unit test "
 bats ${BATS_OPTIONS} setup.bats || exit 1
-announce "performing the checks for proiles"
+announce "performing the checks for profiles"
 bats ${BATS_OPTIONS} profiles.bats || exit 1
 announce "performing the checks for users"
 bats ${BATS_OPTIONS} users.bats || exit 1

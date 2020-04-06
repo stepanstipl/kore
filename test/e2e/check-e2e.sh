@@ -15,12 +15,12 @@
 # limitations under the License.
 #
 
-source hack/e2e/environment.sh || exit 1
+source test/e2e/environment.sh || exit 1
 
 announce "checking if we should run the e2e"
 
 announce "running the e2e checks against the qa environment"
-if ! hack/e2e/check-suite.sh; then
+if ! test/e2e/check-suite.sh; then
   error "one or more checks have failed"
   exit 1
 fi

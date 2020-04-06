@@ -25,6 +25,7 @@ import (
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 // EnsureResourceDeletion is responsible for cleanup the resources in the cluster
@@ -45,6 +46,19 @@ func (a k8sCtrl) EnsureResourceDeletion(ctx context.Context, object *clustersv1.
 	// @step: retrieve the provider credentials secret
 	token, err := controllers.GetConfigSecret(ctx, a.mgr.GetClient(), object.Namespace, object.Name)
 	if err != nil {
+		if kerrors.IsNotFound(err) {
+			logger.WithError(err).Warn("kubernetes secret was not found")
+
+			object.Status.Components.SetCondition(corev1.Component{
+				Name:    ComponentClusterDelete,
+				Message: "Unable obtain cluster access cluster credentials",
+				Detail:  err.Error(),
+				Status:  corev1.FailureStatus,
+			})
+
+			return err
+		}
+
 		logger.WithError(err).Error("unable to obtain credentials secret")
 
 		object.Status.Components.SetCondition(corev1.Component{

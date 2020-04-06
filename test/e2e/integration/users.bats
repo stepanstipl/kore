@@ -32,7 +32,7 @@ load helper
   [[ "$status" -eq 0 ]]
 }
 
-@test "Ensuring I show you do not show up in kore-default anymore" {
+@test "Ensuring I show I don't show up in kore-default" {
   runit "${KORE} whoami | grep kore-default || true"
   [[ "$status" -eq 0 ]]
 }

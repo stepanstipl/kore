@@ -15,9 +15,9 @@
 # limitations under the License.
 #
 
-source hack/e2e/environment.sh || exit 1
+source test/e2e/environment.sh || exit 1
 
-# These's are using across the checks
+# These are being used across the checks
 export CLUSTER="ci-${CIRCLE_BUILD_NUM:-$USER}"
 export E2E_DIR="e2eci"
 export KORE_IDP_SERVER_URL=${KORE_IDP_SERVER_URL:-"unknown"}
@@ -129,13 +129,13 @@ if [[ "${ENABLE_UNIT_TESTS}" == "true" ]]; then
     exit 1
   fi
 
-  hack/e2e/check-suite-units.sh || exit 1
+  test/e2e/check-suite-units.sh || exit 1
 else
   announce "skipping the unit tests suite"
 fi
 
 if [[ "${ENABLE_CONFORMANCE}" == "true" ]]; then
-  hack/e2e/check-suite-conformance.sh || exit 1
+  test/e2e/check-suite-conformance.sh || exit 1
 else
   announce "skipping the kubernetes e2e conformance suite"
 fi

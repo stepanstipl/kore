@@ -18,12 +18,12 @@ You must have some valid credentials in the e2e folder
 - If your not using the `make demo` bring up the kore-apiserver locally via `bin/kore-apiserver --verbose`; sourcing
   in any environment variables you usually do.
 - Login via the `korectl login` command which will provision your user locally
-- Ensure if you using multiple profiles your pointing to the local instance `korectl profiles ls`
+- Ensure if you are using multiple profiles your pointing to the local instance `korectl profiles ls`
 
 You can then run the checks via:
 
 ```shell
-$ hack/e2e/check-suite.sh
+$ test/e2e/check-suite.sh
 ```
 
-Note: any clusters it will create are being the environment definition; `CLUSTER="ci-${CIRCLE_BUILD_NUM:-$USER}"`.
+Note: any clusters created will use the environment definition; `export CLUSTER="ci-${CIRCLE_BUILD_NUM:-$USER}"`.
