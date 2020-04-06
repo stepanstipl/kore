@@ -14,6 +14,7 @@ manifests/local
 charts/my_values.yaml
 e2eci/
 values.yaml
+/cli-release
 
 # This is pulled down by the makefile:
 /swagger.json

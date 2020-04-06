@@ -142,6 +142,24 @@ jobs:
             VERSION=${CIRCLE_TAG:-latest} make images
             VERSION=${CIRCLE_TAG:-latest} make push-images
 
+  release-cli:
+    environment:
+      GOFLAGS: "-mod=vendor"
+
+    docker:
+      - image: circleci/golang:1.14
+
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - attach_workspace:
+          at: bin
+      - deploy:
+          command: |
+            VERSION=${CIRCLE_TAG} make release-cli
+            VERSION=${CIRCLE_TAG} make push-cli
+
   build-ui:
     docker:
       - image: node:12
@@ -212,6 +230,15 @@ workflows:
           filters:
             branches:
               only: master
+            tags:
+              only: /^v.*$/
+      - release-cli:
+          requires:
+            - build
+            - check-apis
+          filters:
+            branches:
+              ignore: /.*/
             tags:
               only: /^v.*$/
       - build-ui:

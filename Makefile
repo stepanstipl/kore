@@ -37,7 +37,8 @@ else
 	VERSION ?= $(GIT_LAST_TAG)
 endif
 LFLAGS ?= -X github.com/appvia/kore/pkg/version.GitSHA=${GIT_SHA} -X github.com/appvia/kore/pkg/version.Compiled=${BUILD_TIME} -X github.com/appvia/kore/pkg/version.Release=${VERSION}
-
+CLI_PLATFORMS=darwin linux windows
+CLI_ARCHITECTURES=386 amd64
 export GOFLAGS = -mod=vendor
 
 .PHONY: test authors changelog build docker release cover vet glide-install demo golangci-lint apis swagger images
@@ -107,6 +108,17 @@ push-images:
 		docker push ${REGISTRY}/${AUTHOR}/$${name}:${VERSION} ; \
 	done
 
+release-cli:
+	@echo "--> Compiling CLI static binaries"
+	rm -rf ./cli-release
+	CGO_ENABLED=0 go run github.com/mitchellh/gox -arch="${CLI_ARCHITECTURES}" -os="${CLI_PLATFORMS}" -ldflags "-w ${LFLAGS}" -output=./cli-release/arch/{{.OS}}_{{.Arch}}_${VERSION}/{{.Dir}} ./cmd/korectl/
+	mkdir ./cli-release/output/
+	cd ./cli-release && for f in `ls -1 ./arch/`; do zip -j -m output/korectl_$$f.zip arch/$$f/*; done
+	cd ./cli-release/output && sha256sum *.zip > korectl.sha256sums
+
+push-cli:
+	@echo "--> Pushing compiled CLI binaries to release (requires github token set in .gitconfig or GITHUB_TOKEN env variable)"
+	go run github.com/tcnksm/ghr "${VERSION}" ./cli-release/output
 
 in-docker-build:
 	@echo "--> Building in Docker"
