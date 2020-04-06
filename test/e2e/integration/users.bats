@@ -21,11 +21,10 @@ load helper
   [[ "$status" -eq 0 ]]
 }
 
-# @TODO enable this when merged into master
-#@test "Ensuring you cannot delete the admin user" {
-#  runit "${KORE} delete user admin || true"
-#  [[ "$status" -eq 0 ]]
-#}
+@test "Ensuring you cannot delete the admin user" {
+  runit "${KORE} delete user admin || true"
+  [[ "$status" -eq 0 ]]
+}
 
 @test "Ensuring I show up in the admin group of whoami" {
   runit "${KORE} whoami | grep kore-admin"
