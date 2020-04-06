@@ -18,35 +18,35 @@
 load helper
 
 @test "We should be able to delete the gke cluster" {
-  ${KORE} get cluster ${CLUSTER} -t e2e || skip
+  ${KORE} get cluster ${CLUSTER} -t ${TEAM} || skip
 
-  retry 10 "${KORE} delete cluster ${CLUSTER} -t e2e"
+  retry 10 "${KORE} delete cluster ${CLUSTER} -t ${TEAM}"
   [[ "$status" -eq 0 ]]
 }
 
 @test "The status of the cluster should change to deleting" {
-  ${KORE} get cluster ${CLUSTER} -t e2e || skip
+  ${KORE} get cluster ${CLUSTER} -t ${TEAM} || skip
 
-  retry 4 "${KORE} get cluster ${CLUSTER} -t e2e -o json | jq '.status.status' | grep -i deleting"
+  retry 4 "${KORE} get cluster ${CLUSTER} -t ${TEAM} -o json | jq '.status.status' | grep -i deleting"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should see the status of the gke cluster change to deleting" {
-  ${KORE} get cluster ${CLUSTER} -t e2e || skip
+  ${KORE} get cluster ${CLUSTER} -t ${TEAM} || skip
 
   retry 10 "${KORE} get gkes ${CLUSTER} -t e2e -o json | jq '.status.status' | grep -i deleting"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should see the gkes resource be deleted" {
-  ${KORE} get cluster ${CLUSTER} -t e2e || skip
+  ${KORE} get cluster ${CLUSTER} -t ${TEAM} || skip
 
   retry 120 "${KORE} get gkes ${CLUSTER} -t e2e 2>&1 | grep 'does not exist'"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should see the cluster resource be deleted" {
-  ${KORE} get cluster ${CLUSTER} -t e2e || skip
+  ${KORE} get cluster ${CLUSTER} -t ${TEAM} || skip
 
   retry 120 "${KORE} get clusters ${CLUSTER} -t e2e 2>&1 | grep 'does not exist'"
   [[ "$status" -eq 0 ]]

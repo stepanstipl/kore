@@ -20,12 +20,12 @@ source test/e2e/environment.sh || exit 1
 # These are being used across the checks
 export CLUSTER="ci-${CIRCLE_BUILD_NUM:-$USER}"
 export E2E_DIR="e2eci"
-export KORE_IDP_SERVER_URL=${KORE_IDP_SERVER_URL:-"unknown"}
-export KORE_IDP_CLIENT_ID=${KORE_IDP_CLIENT_ID:-"unknown"}
 export KORE_API_URL=${KORE_API_PUBLIC_URL_QA:-"http://127.0.0.1:10080"}
+export KORE_IDP_CLIENT_ID=${KORE_IDP_CLIENT_ID:-"unknown"}
+export KORE_IDP_SERVER_URL=${KORE_IDP_SERVER_URL:-"unknown"}
 export KORE_ID_TOKEN=${KORE_ID_TOKEN_QA:-"unknown"}
 export KORE_PROFILE="local"
-#export KORE_USERNAME="${KORE_USERNAME:-"kore-ci@appvia.io"}"
+export TEAM="e2e"
 
 ENABLE_CONFORMANCE=${ENABLE_CONFORMANCE:-false}
 ENABLE_UNIT_TESTS=${ENABLE_UNIT_TESTS:-true}
@@ -53,6 +53,11 @@ EOF
 
 create-korectl-config() {
   [[ -f ${KORE_CONFIG} ]] && return
+
+  mkdir -p $(dirname ${KORE_CONFIG}) || {
+    error "unable to create the client configuration directory";
+    exit 1;
+  }
 
   announce "Generating a korectl configuration: ${KORE_CONFIG}"
   cat << EOF > ${KORE_CONFIG}

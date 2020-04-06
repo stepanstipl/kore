@@ -17,17 +17,17 @@
 load helper
 
 @test "We should not be able to delete the team if clusters exist" {
-  runit "${KORE} delete teams e2e || true"
+  runit "${KORE} delete teams ${TEAM} || true"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should not be able to delete the cluster if a namespace exists" {
-  runit "${KORE} create namespace -c ${CLUSTER} ingress -t e2e"
+  runit "${KORE} create namespace -c ${CLUSTER} ingress -t ${TEAM}"
   [[ "$status" -eq 0 ]]
-  runit "${KORE} delete teams e2e 2>&1 | grep 'all team resources must be deleted'"
+  runit "${KORE} delete teams ${TEAM} 2>&1 | grep 'all team resources must be deleted'"
   [[ "$status" -eq 0 ]]
-  runit "${KORE} delete namespaceclaims ${CLUSTER}-ingress -t e2e"
+  runit "${KORE} delete namespaceclaims ${CLUSTER}-ingress -t ${TEAM}"
   [[ "$status" -eq 0 ]]
-  retry 4 "${KORE} get namespaceclaims ${CLUSTER}-ingress -t e2e || true"
+  retry 4 "${KORE} get namespaceclaims ${CLUSTER}-ingress -t ${TEAM} || true"
   [[ "$status" -eq 0 ]]
 }

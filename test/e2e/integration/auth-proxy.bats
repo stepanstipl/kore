@@ -19,14 +19,14 @@ load helper
 @test "If we change the auth-proxy allowed range we should lose access to the cluster" {
   tempfile="${BASE_DIR}/${E2E_DIR}/gke.auth"
 
-  if ! ${KORE} get clusters ${CLUSTER} -t e2e -o yaml | grep 1.1.1.1; then
+  if ! ${KORE} get clusters ${CLUSTER} -t ${TEAM} -o yaml | grep 1.1.1.1; then
     runit "${KUBECTL} --context=${CLUSTER} get nodes"
     [[ "$status" -eq 0 ]]
-    runit "${KORE} get clusters ${CLUSTER} -t e2e -o yaml > ${tempfile}"
+    runit "${KORE} get clusters ${CLUSTER} -t ${TEAM} -o yaml > ${tempfile}"
     [[ "$status" -eq 0 ]]
     runit "sed -i -e 's/\[\"0.0.0.0\/0\"\]/[\"1.1.1.1\/32\"]/' ${tempfile}"
     [[ "$status" -eq 0 ]]
-    runit "${KORE} apply -f ${tempfile} -t e2e"
+    runit "${KORE} apply -f ${tempfile} -t ${TEAM}"
     [[ "$status" -eq 0 ]]
   fi
   retry 10 "${KUBECTL} --context=${CLUSTER} get nodes || true"
@@ -36,11 +36,11 @@ load helper
 @test "If we revert the allowed network range back, we should see the cluster again" {
   tempfile=${BASE_DIR}/${E2E_DIR}/gke.auth
 
-  runit "${KORE} get clusters ${CLUSTER} -t e2e -o yaml > ${tempfile}"
+  runit "${KORE} get clusters ${CLUSTER} -t ${TEAM} -o yaml > ${tempfile}"
   [[ "$status" -eq 0 ]]
   runit "sed -i -e 's/\[\"1.1.1.1\/32\"\]/[\"0.0.0.0\/0\"]/' ${tempfile}"
   [[ "$status" -eq 0 ]]
-  runit "${KORE} apply -f ${tempfile} -t e2e"
+  runit "${KORE} apply -f ${tempfile} -t ${TEAM}"
   [[ "$status" -eq 0 ]]
   retry 20 "${KUBECTL} --context=${CLUSTER} get nodes"
   [[ "$status" -eq 0 ]]

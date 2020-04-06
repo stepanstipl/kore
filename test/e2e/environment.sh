@@ -19,8 +19,8 @@
 
 export PLATFORM_DIR="test/e2e"
 export BASE_DIR="../../.."
-export KUBECTL=`which kubectl`
-export KORE=`which korectl`
+export KUBECTL="kubectl"
+export KORE="korectl"
 export NC='\e[0m'
 export GREEN='\e[0;32m'
 export YELLOW='\e[0;33m'

@@ -4,6 +4,11 @@ version: 2.1
 orbs:
   kube-orb: circleci/kubernetes@0.11.0
 
+parameters:
+  enable_e2e:
+    type: boolean
+    default: false
+
 jobs:
   build:
     environment:
@@ -114,6 +119,7 @@ jobs:
             KORE_UI_PUBLIC_URL: "http://localhost:3000"
             KUBE_API_SERVER: "http://kube-apiserver:8080"
             USERS_DB_URL: "root:pass@tcp(database:3306)/kore?parseTime=true"
+
       - run:
           name: Checking swagger
           command: |
@@ -195,7 +201,58 @@ jobs:
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
             docker build -t ${KORE_UI_IMAGE}:${CIRCLE_TAG:-latest} --build-arg version=${CIRCLE_TAG:-latest} .
             docker push ${KORE_UI_IMAGE}:${CIRCLE_TAG:-latest}
-  
+
+  # This releases the local images for kore-apiserver and the auth-proxy; to
+  # ensure we have a complete e2e
+  e2e-images:
+    docker:
+      - image: docker:19.03-dind
+    steps:
+      - when:
+          condition: << pipeline.parameters.enable_e2e >>
+          steps:
+            - checkout
+            - setup_remote_docker:
+                docker_layer_caching: true
+            - attach_workspace:
+                at: bin
+            - run:
+                name: Releasing QA Images
+                command: |
+                  docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
+                  VERSION=${CIRCLE_SHA1} make images
+                  VERSION=${CIRCLE_SHA1} make push-images
+
+  e2e:
+    environment:
+      GOFLAGS: "-mod=vendor"
+      KORE: "bin/korectl"
+      KUBECTL_URL: "https://storage.googleapis.com/kubernetes-release/release/v1.15.0/bin/linux/amd64/kubectl"
+      KORE_API_PUBLIC_URL_QA: "http://127.0.0.1:10080"
+      KORE_UI_PUBLIC_URL_QA: "http://localhost:3000"
+    docker:
+      - image: alpine:3.11
+    steps:
+      - when:
+          condition: << pipeline.parameters.enable_e2e >>
+          steps:
+            - checkout
+            - attach_workspace:
+                at: bin
+            - run:
+                name: Installed Tools
+                command: |
+                  apk add bash bats curl jq
+            - run:
+                name: Installing kubectl
+                command: |
+                  curl -sL ${KUBECTL_URL} -o /bin/kubectl
+                  chmod +x /bin/kubectl
+            - run:
+                name: Running E2E Suite
+                command: |
+                  test/e2e/check-suite.sh
+
   release-qa:
     docker:
       - image: alpine/helm:3.1.2
@@ -268,7 +325,7 @@ workflows:
       - release-qa:
           filters:
             branches:
-              only: ci_master
+              only: master
           requires:
             - release
             - release-ui
