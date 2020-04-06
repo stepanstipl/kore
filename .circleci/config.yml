@@ -210,7 +210,18 @@ jobs:
       - run:
           name: Deploying to QA
           command: |
-            hack/deploy-qa.sh
+            echo "Deploying to QA"
+            # hack/deploy-qa.sh
+
+  e2e:
+    docker:
+      - image: circleci/golang:1.14
+    steps:
+      - checkout
+      - run:
+          name: Running E2E Suite
+          command: |
+            test/e2e/check-suite.sh
 
 workflows:
   version: 2
@@ -257,7 +268,13 @@ workflows:
       - release-qa:
           filters:
             branches:
-              only: master
+              only: ci_master
           requires:
             - release
             - release-ui
+      - e2e:
+          filters:
+            branches:
+              only: ci_master
+          requires:
+            - release-qa
