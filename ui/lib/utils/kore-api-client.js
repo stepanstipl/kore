@@ -37,7 +37,7 @@ class KoreApiClient {
 
   // @TODO: Auto-generate these?
   ListAllocations = (team, assigned = undefined) => this.apis.default.ListAllocations({team, assigned: assigned})
-  ListPlans = () => this.apis.default.ListPlans()
+  ListPlans = (kind) => this.apis.default.ListPlans({ kind })
   ListUsers = () => this.apis.default.ListUsers()
   ListUserTeams = (user) => this.apis.default.ListUserTeams({user})
   UpdateUser = (user, userSpec) => this.apis.default.UpdateUser({user, body: userSpec})

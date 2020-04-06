@@ -1,9 +1,11 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
 
-import { Typography, Form, Select, Card, Radio, Table, Modal, Input } from 'antd'
+import { Typography, Form, Select, Card, Radio, Modal, Input } from 'antd'
 const { Text, Title } = Typography
 const { Option } = Select
+
+import Plan from '../configure/Plan'
 
 class ClusterOptionsForm extends React.Component {
   static propTypes = {
@@ -32,39 +34,9 @@ class ClusterOptionsForm extends React.Component {
   showPlanDetails = planName => {
     return () => {
       const selectedPlan = this.props.plans.find(p => p.metadata.name === planName)
-      const planColumns = [{
-        title: 'Property',
-        dataIndex: 'property',
-        key: 'property',
-      }, {
-        title: 'Value',
-        dataIndex: 'value',
-        key: 'value',
-      }]
-      const planValues = selectedPlan ?
-        Object.keys(selectedPlan.spec.values).map(key => {
-          let value = selectedPlan.spec.values[key]
-          if (key === 'authorizedMasterNetworks') {
-            const complexValue = selectedPlan.spec.values[key]
-            value = `${complexValue[0].name}: ${complexValue[0].cidr}`
-          }
-          return {
-            key,
-            property: key,
-            value: `${value}`
-          }
-        }) :
-        null
       Modal.info({
-        title: (<div><Title level={4}>{selectedPlan.spec.description}</Title><Text>{selectedPlan.spec.summary}</Text></div>),
-        content: (
-          <Table
-            size="small"
-            pagination={false}
-            columns={planColumns}
-            dataSource={planValues}
-          />
-        ),
+        title: (<><Title level={4}>{selectedPlan.spec.description}</Title><Text>{selectedPlan.spec.summary}</Text></>),
+        content: <Plan plan={selectedPlan} />,
         width: 700,
         onOk() {}
       })

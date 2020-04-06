@@ -15,7 +15,8 @@ class ResourceList extends React.Component {
     this.state = {
       dataLoading: true,
       edit: false,
-      add: false
+      add: false,
+      view: false
     }
   }
 
@@ -40,6 +41,14 @@ class ResourceList extends React.Component {
     return async () => {
       const state = copy(this.state)
       state.edit = resource ? resource : false
+      this.setState(state)
+    }
+  }
+
+  view = resource => {
+    return async () => {
+      const state = copy(this.state)
+      state.view = resource ? resource : false
       this.setState(state)
     }
   }
