@@ -1,7 +1,7 @@
 apiVersion: org.kore.appvia.io/v1
 kind: User
 metadata:
-  name: rohith
+  name: test
 spec:
-  username: rohith
-  email: rohith@appvia.io
+  username: test
+  email: test@appvia.io
