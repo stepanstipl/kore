@@ -15,17 +15,19 @@ class ResourceList extends React.Component {
     this.state = {
       dataLoading: true,
       edit: false,
-      add: false
+      add: false,
+      view: false
     }
   }
 
   componentDidMount() {
     return this.fetchComponentData()
       .then(data => {
-        let state = copy(this.state)
-        state = { ...state, ...data }
-        state.dataLoading = false
-        this.setState(state)
+        this.setState({
+          ...this.state,
+          ...data,
+          dataLoading: false
+        })
       })
   }
 
@@ -36,40 +38,48 @@ class ResourceList extends React.Component {
     this.setState(state, done)
   }
 
-  edit = resource => {
-    return async () => {
-      const state = copy(this.state)
-      state.edit = resource ? resource : false
-      this.setState(state)
-    }
+  _setStateKey = (key, data) => {
+    const state = copy(this.state)
+    state[key] = data ? data : false
+    this.setState(state)
   }
 
+  view = resource => async () => this._setStateKey('view', resource)
+  edit = resource => async () => this._setStateKey('edit', resource)
+  add = enabled => async () => this._setStateKey('add', enabled)
+
   handleEditSave = updated => {
-    const state = copy(this.state)
-
-    const edited = state.resources.items.find(c => c.metadata.name === state.edit.metadata.name)
-    edited.spec = updated.spec
-    edited.allocation = updated.allocation
-    edited.status.status = 'Pending'
-
-    state.edit = false
-    this.setState(state)
+    const editedName = this.state.edit.metadata.name
+    this.setState({
+      ...this.state,
+      edit: false,
+      resources: {
+        items: this.state.resources.items.map(resource => {
+          if (resource.metadata.name === editedName) {
+            return {
+              ...resource,
+              spec: updated.spec,
+              allocation: updated.allocation,
+              status: {
+                ...resource.status, status: 'Pending'
+              }
+            }
+          }
+          return resource
+        })
+      }
+    })
     message.success(this.updatedMessage)
   }
 
-  add = enabled => {
-    return () => {
-      const state = copy(this.state)
-      state.add = enabled
-      this.setState(state)
-    }
-  }
-
   handleAddSave = async created => {
-    const state = copy(this.state)
-    state.resources.items.push(created)
-    state.add = false
-    this.setState(state)
+    this.setState({
+      ...this.state,
+      add: false,
+      resources: {
+        items: this.state.resources.items.concat([ created ])
+      }
+    })
     message.success(this.createdMessage)
   }
 }

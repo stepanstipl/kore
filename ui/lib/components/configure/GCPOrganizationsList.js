@@ -1,13 +1,12 @@
 import PropTypes from 'prop-types'
-import { Typography, Card, List, Button, Drawer, Icon, Alert } from 'antd'
+import { Typography, List, Button, Drawer, Icon, Alert } from 'antd'
 const { Title } = Typography
 
 import { kore } from '../../../config'
 import GCPOrganization from '../team/GCPOrganization'
 import ResourceList from '../configure/ResourceList'
 import GCPOrganizationForm from '../forms/GCPOrganizationForm'
-import apiRequest from '../../utils/api-request'
-import apiPaths from '../../utils/api-paths'
+import KoreApi from '../../utils/kore-api'
 
 class GCPOrganizationsList extends ResourceList {
 
@@ -19,10 +18,11 @@ class GCPOrganizationsList extends ResourceList {
   updatedMessage = 'GCP organization updated successfully'
 
   async fetchComponentData() {
+    const api = await KoreApi.client()
     const [ allTeams, gcpOrganizations, allAllocations ] = await Promise.all([
-      apiRequest(null, 'get', apiPaths.teams),
-      apiRequest(null, 'get', apiPaths.team(kore.koreAdminTeamName).gcpOrganizations),
-      apiRequest(null, 'get', apiPaths.team(kore.koreAdminTeamName).allocations)
+      api.ListTeams(),
+      api.ListGCPOrganizations(kore.koreAdminTeamName),
+      api.ListAllocations(kore.koreAdminTeamName)
     ])
     allTeams.items = allTeams.items.filter(t => !kore.ignoreTeams.includes(t.metadata.name))
     gcpOrganizations.items.forEach(org => {
@@ -35,11 +35,7 @@ class GCPOrganizationsList extends ResourceList {
     const { resources, allTeams, edit, add } = this.state
 
     return (
-      <Card
-        title="Organizations"
-        extra={<Button type="primary" onClick={this.add(true)}>+ New</Button>}
-        style={this.props.style}
-      >
+      <>
         <Alert
           message="Give Kore access to your Google Cloud Platform organization"
           description="This will allow Kore to manage the organization for you. This includes managing the creation of projects and Service Accounts giving Kore teams the ability to create clusters with ease."
@@ -47,6 +43,7 @@ class GCPOrganizationsList extends ResourceList {
           showIcon
           style={{ marginBottom: '20px' }}
         />
+        <Button type="primary" onClick={this.add(true)} style={{ display: 'block', marginBottom: '20px' }}>+ New</Button>
         {!resources ? <Icon type="loading" /> : (
           <>
             <List
@@ -95,7 +92,7 @@ class GCPOrganizationsList extends ResourceList {
             ) : null}
           </>
         )}
-      </Card>
+      </>
     )
   }
 }

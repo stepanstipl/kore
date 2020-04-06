@@ -37,7 +37,7 @@ class KoreApiClient {
 
   // @TODO: Auto-generate these?
   ListAllocations = (team, assigned = undefined) => this.apis.default.ListAllocations({team, assigned: assigned})
-  ListPlans = () => this.apis.default.ListPlans()
+  ListPlans = (kind) => this.apis.default.ListPlans({ kind })
   ListUsers = () => this.apis.default.ListUsers()
   ListUserTeams = (user) => this.apis.default.ListUserTeams({user})
   UpdateUser = (user, userSpec) => this.apis.default.UpdateUser({user, body: userSpec})
@@ -46,8 +46,9 @@ class KoreApiClient {
   ListTeamMembers = (team) => this.apis.default.ListTeamMembers({team})
   ListGKECredentials = (team) => this.apis.default.ListGKECredentials({team})
   ListGCPOrganizations = (team) => this.apis.default.findOrganizations({team})
+  ListAllocations = (team) => this.apis.default.ListAllocations({team})
   UpdateTeam = (team, teamSpec) => this.apis.default.UpdateTeam({team, body: teamSpec})
-  AddTeamMember = (team, user) => this.apis.default.AddTeamMember({team, user, body: {}})
+  AddTeamMember = (team, user) => this.apis.default.AddTeamMember({team, user})
   RemoveTeamMember = (team, user) => this.apis.default.RemoveTeamMember({team, user})
 }
 
