@@ -83,6 +83,7 @@ func getApi() *apiclient.AppviaKore {
 		uri = "localhost"
 	}
 	transport := httptransport.New(uri+":10080", "", nil)
+	transport.Producers["*/*"] = runtime.JSONProducer()
 	return apiclient.New(transport, strfmt.Default)
 }
 

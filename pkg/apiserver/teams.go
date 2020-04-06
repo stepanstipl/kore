@@ -138,6 +138,8 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Operation("AddTeamMember").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("user", "Is the user you are adding to the team")).
+			// As there's no body, need to explicitly say we consume any MIME type. Arguably a go-restful bug:
+			Consumes(restful.MIME_JSON, "*/*").
 			Returns(http.StatusOK, "The user has been successfully added to the team", orgv1.TeamMember{}).
 			Returns(http.StatusNotFound, "Team does not exist", nil),
 	)

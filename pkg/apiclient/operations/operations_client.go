@@ -208,7 +208,7 @@ func (a *Client) AddTeamMember(params *AddTeamMemberParams, authInfo runtime.Cli
 		Method:             "PUT",
 		PathPattern:        "/api/v1alpha1/teams/{team}/members/{user}",
 		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"*/*", "application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &AddTeamMemberReader{formats: a.formats},
