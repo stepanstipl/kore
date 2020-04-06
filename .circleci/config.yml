@@ -231,7 +231,5 @@ workflows:
             branches:
               only: master
           requires:
-            - build
-            - build-ui
-            - check-apis
             - release
+            - release-ui
