@@ -121,7 +121,7 @@ func GetLoginCommand(config *Config) *cli.Command {
 
 			// @step: we need to start the http server in the background
 			go func() {
-				listenAddress := fmt.Sprintf(":%d", serverPort)
+				listenAddress := fmt.Sprintf("127.0.0.1:%d", serverPort)
 				if err := http.ListenAndServe(listenAddress, nil); err != nil {
 					errCh <- fmt.Errorf("trying to start local http server: %s", err)
 				}
