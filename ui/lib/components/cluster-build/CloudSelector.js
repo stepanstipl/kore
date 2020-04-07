@@ -80,16 +80,15 @@ class CloudSelector extends React.Component {
         <Col span={6}>
           <Card
             style={getCardStyle('EKS')}
+            onClick={this.selectCloud('EKS')}
             bodyStyle={getCardBodyStyle('EKS')}
-            hoverable={false}
+            hoverable={true}
           >
-            <ComingSoon />
-            <div style={{ textAlign: 'center', opacity: '0.3' }}>
-              <Paragraph>
-                <img src="/static/images/EKS.png" height="80px" />
-              </Paragraph>
-              <Paragraph strong style={{ marginTop: '20px' }}>Elastic Kubernetes Service</Paragraph>
-            </div>
+            <Paragraph style={{ textAlign: 'center' }}>
+              <img src="/static/images/EKS.png" height="80px" />
+            </Paragraph>
+            <Paragraph strong style={{ marginTop: '20px' }}>Elastic Kubernetes Service</Paragraph>
+            <Providers cloud="EKS" />
           </Card>
         </Col>
         <Col span={6}>
