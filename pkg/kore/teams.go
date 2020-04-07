@@ -130,6 +130,11 @@ func (t *teamsImpl) Get(ctx context.Context, name string) (*orgv1.Team, error) {
 		return nil, err
 	}
 
+	user := authentication.MustGetIdentity(ctx)
+	if !user.IsMember(name) && !user.IsGlobalAdmin() {
+		return nil, ErrUnauthorized
+	}
+
 	return DefaultConvertor.FromTeamModel(model), err
 }
 
