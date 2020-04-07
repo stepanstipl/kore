@@ -45,6 +45,7 @@ func GetCreateCommand(config *Config) *cli.Command {
 			GetCreateSecretCommand(config),
 			GetCreateClusterCommand(config),
 			GetCreateNamespaceCommand(config),
+			GetCreateAdminCommand(config),
 		},
 		Before: func(ctx *cli.Context) error {
 			if !ctx.Args().Present() {

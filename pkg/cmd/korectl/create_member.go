@@ -50,68 +50,76 @@ func GetCreateTeamMemberCommand(config *Config) *cli.Command {
 			team := ctx.String("team")
 			username := ctx.String("user")
 
-			if team == "" {
-				return errTeamParameterMissing
-			}
-
-			// @step: check the team exist
-			found, err := ResourceExists(config, "team", team)
-			if err != nil {
-				return err
-			}
-			if !found {
-				return fmt.Errorf("team %q does not exist", team)
-			}
-
-			// @step: check the user exist
-			found, err = ResourceExists(config, "user", username)
-			if err != nil {
-				return err
-			}
-			if !found {
-				if !invite {
-					prompt := promptui.Prompt{
-						Label:     "The user does not exist. Do you want to create an invite link",
-						IsConfirm: true,
-						Default:   "Y",
-					}
-
-					// Prompt will return an error if the input is not y/Y
-					if _, err := prompt.Run(); err != nil {
-						return nil
-					}
-				}
-
-				var inviteURL string
-				err := NewRequest().
-					WithConfig(config).
-					WithContext(ctx).
-					WithEndpoint("/teams/{team}/invites/generate/{user}").
-					PathParameter("team", true).
-					WithInject("team", team).
-					PathParameter("user", true).
-					WithRuntimeObject(&inviteURL).
-					Get()
-				if err != nil {
-					return err
-				}
-				fmt.Printf("Invite URL: %s\n", inviteURL)
-				return nil
-			}
-
-			err = NewRequest().
-				WithConfig(config).
-				WithContext(ctx).
-				WithEndpoint("/teams/{team}/members/{user}").
-				PathParameter("team", true).
-				PathParameter("user", true).
-				Update()
-			if err != nil {
-				return err
-			}
-			fmt.Printf("%q has been successfully added to team %q\n", ctx.String("user"), ctx.String("team"))
-
-			return nil
+			return CreateMember(config, team, username, invite)
 		},
 	}
+}
+
+// CreateMember is used to create an member in kore
+func CreateMember(config *Config, team, username string, invite bool) error {
+	if team == "" {
+		return errTeamParameterMissing
+	}
+
+	// @step: check the team exist
+	found, err := ResourceExists(config, "team", team)
+	if err != nil {
+		return err
+	}
+	if !found {
+		return fmt.Errorf("team %q does not exist", team)
+	}
+
+	// @step: check the user exist
+	found, err = ResourceExists(config, "user", username)
+	if err != nil {
+		return err
+	}
+
+	if !found {
+		if !invite {
+			prompt := promptui.Prompt{
+				Label:     "The user does not exist. Do you want to create an invite link",
+				IsConfirm: true,
+				Default:   "Y",
+			}
+
+			// Prompt will return an error if the input is not y/Y
+			if _, err := prompt.Run(); err != nil {
+				return nil
+			}
+		}
+
+		var inviteURL string
+		err := NewRequest().
+			WithConfig(config).
+			WithEndpoint("/teams/{team}/invites/generate/{user}").
+			PathParameter("team", true).
+			PathParameter("user", true).
+			WithInject("team", team).
+			WithInject("user", username).
+			PathParameter("user", true).
+			WithRuntimeObject(&inviteURL).
+			Get()
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Invite URL: %s\n", inviteURL)
+		return nil
+	}
+
+	err = NewRequest().
+		WithConfig(config).
+		WithEndpoint("/teams/{team}/members/{user}").
+		PathParameter("team", true).
+		PathParameter("user", true).
+		WithInject("team", team).
+		WithInject("user", username).
+		Update()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("%q has been successfully added to team %q\n", username, team)
+
+	return nil
 }
