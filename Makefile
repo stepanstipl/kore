@@ -131,13 +131,15 @@ swagger-validate:
 
 swagger-apiclient:
 	@$(MAKE) swagger-json
+	@echo "--> Copy swagger JSON for UI to use for its auto-gen"
+	@cp swagger.json ui/kore-api-swagger.json
 	@echo "--> Creating API client based on the swagger definition"
 	@go run github.com/go-swagger/go-swagger/cmd/swagger generate client -q -f swagger.json -c pkg/apiclient -m pkg/apiclient/models
 
 check-swagger-apiclient: swagger-apiclient
-	@if [ $$(git status --porcelain | wc -l) -gt 0 ]; then \
+	@if [ $$(git status --porcelain pkg/apiclient | wc -l) -gt 0 ]; then \
 		echo "There are local changes after running 'make swagger-apiclient'. Did you forget to run it?"; \
-		git status --porcelain; \
+		git status --porcelain pkg/apiclient; \
 		exit 1; \
 	fi
 

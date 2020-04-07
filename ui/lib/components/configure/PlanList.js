@@ -6,7 +6,7 @@ const { Title, Text } = Typography
 import PlanItem from '../team/PlanItem'
 import ResourceList from '../configure/ResourceList'
 import Plan from '../configure/Plan'
-import KoreApi from '../../utils/kore-api'
+import KoreApi from '../../kore-api'
 
 class PlanList extends ResourceList {
 

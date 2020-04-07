@@ -21,6 +21,10 @@ function apiProxy(koreApi) {
       return res.json(result.data)
     } catch (err) {
       const status = (err.response && err.response.status) || 500
+      if (status == 400) {
+        console.log(`Validation error for ${apiUrlPath}`, err.response.data)
+        res.status(400).json(err.response.data).send()
+      }
       const message = (err.response && err.response.data && err.response.data.message) || err.message
       console.error(`Error making request to API with path ${apiUrlPath}`, status, message)
       return res.status(status).send()

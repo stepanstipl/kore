@@ -89,8 +89,8 @@ class Cluster extends AutoRefreshComponent {
     return (
       <List.Item actions={actions()}>
         <List.Item.Meta
-          avatar={<img src={clusterProviderIconSrcMap[cluster.spec.provider.kind]} height="32px" />}
-          title={<Text>{cluster.spec.provider.kind} <Text style={{ fontFamily: 'monospace', marginLeft: '15px' }}>{cluster.metadata.name}</Text></Text>}
+          avatar={<img src={clusterProviderIconSrcMap[cluster.spec.kind]} height="32px" />}
+          title={<Text>{cluster.spec.kind} <Text style={{ fontFamily: 'monospace', marginLeft: '15px' }}>{cluster.metadata.name}</Text></Text>}
           description={
             <div>
               <Text type='secondary'>Created {created}</Text>
