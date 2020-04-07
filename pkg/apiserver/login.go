@@ -76,10 +76,16 @@ func (l *loginHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 		}
 		l.provider = provider
 
+		redirect := ""
+		if l.Config().PublicAPIURL != "" {
+			redirect = fmt.Sprintf("%s/oauth/callback", l.Config().PublicAPIURL)
+		}
+
 		// Configure an OpenID Connect aware OAuth2 client.
 		l.oidcConfig = &oauth2.Config{
 			ClientID:     l.Config().IDPClientID,
 			ClientSecret: l.Config().IDPClientSecret,
+			RedirectURL:  redirect,
 			Endpoint:     provider.Endpoint(),
 			Scopes:       append([]string{oidc.ScopeOpenID}, l.Config().IDPClientScopes...),
 		}
@@ -109,6 +115,16 @@ func (l *loginHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 	return ws, nil
 }
 
+// makeHostURL is used to retrieve the host url from the host headers
+func (l *loginHandler) makeHostURL(req *restful.Request) string {
+	scheme := "http"
+	if req.Request.TLS != nil || req.Request.Header.Get("X-Forward-Proto") == "https" {
+		scheme = "https"
+	}
+
+	return fmt.Sprintf("%s://%s", scheme, req.Request.Host)
+}
+
 // authorizerHandler is responsible for authorizing a client
 func (l *loginHandler) authorizerHandler(req *restful.Request, resp *restful.Response) {
 	// @step: check if the handler has been configured
@@ -127,15 +143,9 @@ func (l *loginHandler) authorizerHandler(req *restful.Request, resp *restful.Res
 	state := base64.StdEncoding.EncodeToString([]byte(req.QueryParameter("redirect_url")))
 
 	// @step: we either taken the public url or the host header
-	redirectURL := l.Config().PublicAPIURL
-	if redirectURL == "" {
-		scheme := "http"
-		if req.Request.TLS != nil || req.Request.Header.Get("X-Forward-Proto") == "https" {
-			scheme = "https"
-		}
-		redirectURL = fmt.Sprintf("%s://%s", scheme, req.Request.Host)
+	if l.Config().PublicAPIURL == "" {
+		l.oidcConfig.RedirectURL = fmt.Sprintf("%s/oauth/callback", l.makeHostURL(req))
 	}
-	l.oidcConfig.RedirectURL = fmt.Sprintf("%s/oauth/callback", redirectURL)
 
 	// @step: redirect the user to perform the login flow
 	log.WithFields(log.Fields{
@@ -173,7 +183,7 @@ func (l *loginHandler) callbackHandler(req *restful.Request, resp *restful.Respo
 		return
 	}
 
-	valid, err := validateRedirectUrl(string(redirect))
+	valid, err := validateRedirectURL(string(redirect))
 	if err != nil {
 		resp.WriteHeader(http.StatusBadRequest)
 
@@ -182,6 +192,11 @@ func (l *loginHandler) callbackHandler(req *restful.Request, resp *restful.Respo
 		resp.WriteHeader(http.StatusForbidden)
 
 		return
+	}
+
+	// @step: we either taken the public url or the host header
+	if l.Config().PublicAPIURL == "" {
+		l.oidcConfig.RedirectURL = fmt.Sprintf("%s/oauth/callback", l.makeHostURL(req))
 	}
 
 	hcode, err := func() (int, error) {
@@ -279,18 +294,17 @@ func (l *loginHandler) Name() string {
 	return "login"
 }
 
-// validateRedirectUrl ensures that a given redirect_url points to localhost
-func validateRedirectUrl(redirect_url string) (bool, error) {
+// validateRedirectURL ensures that a given redirect_url points to localhost
+func validateRedirectURL(redirectURL string) (bool, error) {
 	validRedirectHosts := [...]string{"127.0.0.1", "localhost"}
 
-	redirectURL, err := url.Parse(redirect_url)
-
+	u, err := url.Parse(redirectURL)
 	if err != nil {
 		return false, err
 	}
 
 	for _, host := range validRedirectHosts {
-		if redirectURL.Hostname() == host {
+		if u.Hostname() == host {
 			return true, nil
 		}
 	}
