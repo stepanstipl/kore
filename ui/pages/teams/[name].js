@@ -229,25 +229,25 @@ class TeamDashboard extends React.Component {
       Modal.info({
         title: 'Cluster access',
         content: (
-          <div style={{marginTop: '20px'}}>
+          <div style={{ marginTop: '20px' }}>
             <InfoItem num="1" title="Download" />
             <Paragraph>If you haven&apos;t already, download the CLI from <a href="https://github.com/appvia/kore/releases">https://github.com/appvia/kore/releases</a></Paragraph>
 
             <InfoItem num="2" title="Setup profile" />
             <Paragraph>Create a profile</Paragraph>
-            <Paragraph className="copy-command" style={{marginRight: '40px'}} copyable>{profileConfigureCommand}</Paragraph>
+            <Paragraph className="copy-command" style={{ marginRight: '40px' }} copyable>{profileConfigureCommand}</Paragraph>
             <Paragraph>Enter the Kore API as follows</Paragraph>
-            <Paragraph className="copy-command" style={{marginRight: '40px'}} copyable>{apiUrl.origin}</Paragraph>
+            <Paragraph className="copy-command" style={{ marginRight: '40px' }} copyable>{apiUrl.origin}</Paragraph>
 
             <InfoItem num="3" title="Login" />
             <Paragraph>Login to the CLI</Paragraph>
-            <Paragraph className="copy-command" style={{marginRight: '40px'}} copyable>{loginCommand}</Paragraph>
+            <Paragraph className="copy-command" style={{ marginRight: '40px' }} copyable>{loginCommand}</Paragraph>
 
             <InfoItem num="4" title="Setup access" />
             <Paragraph>Then, you can use the Kore CLI to setup access to your team&apos;s clusters</Paragraph>
-            <Paragraph className="copy-command" style={{marginRight: '40px'}} copyable>{kubeconfigCommand}</Paragraph>
+            <Paragraph className="copy-command" style={{ marginRight: '40px' }} copyable>{kubeconfigCommand}</Paragraph>
             <Paragraph>This will add local kubernetes configuration to allow you to use <Text
-              style={{fontFamily: 'monospace'}}>kubectl</Text> to talk to the provisioned cluster(s).</Paragraph>
+              style={{ fontFamily: 'monospace' }}>kubectl</Text> to talk to the provisioned cluster(s).</Paragraph>
             <Paragraph>See examples: <a href="https://kubernetes.io/docs/reference/kubectl/overview/" target="_blank" rel="noopener noreferrer">https://kubernetes.io/docs/reference/kubectl/overview/</a></Paragraph>
           </div>
         ),
@@ -297,7 +297,7 @@ class TeamDashboard extends React.Component {
 
     return (
       <div>
-        <Breadcrumb items={[{text: team.spec.summary}]} />
+        <Breadcrumb items={[{ text: team.spec.summary }]} />
         <Paragraph>
           <Text strong>{team.spec.description}</Text>
           <Text style={{ float: 'right' }}><Text strong>Team ID: </Text>{team.metadata.name}</Text>

@@ -86,9 +86,9 @@ class ClusterBuildForm extends React.Component {
     if (this.state.planOverride) {
       clusterSpec.setConfiguration(this.state.planOverride)
     } else {
-      clusterSpec.setConfiguration({...selectedPlan.spec.configuration})
+      clusterSpec.setConfiguration({ ...selectedPlan.spec.configuration })
     }
-    clusterSpec.setCredentials({...selectedProvider.spec.resource})
+    clusterSpec.setCredentials({ ...selectedProvider.spec.resource })
 
     // Add current user as cluster admin to plan config, if no cluster users specified:
     if (!(clusterSpec.configuration['clusterUsers'])) {
@@ -123,8 +123,8 @@ class ClusterBuildForm extends React.Component {
       })
       try {
         await (await KoreApi.client()).UpdateCluster(
-          this.props.team.metadata.name, 
-          values.clusterName, 
+          this.props.team.metadata.name,
+          values.clusterName,
           this.getClusterResource(values))
         message.loading('Cluster build requested...')
         return redirect({
@@ -157,7 +157,7 @@ class ClusterBuildForm extends React.Component {
       planOverride: planOverrides
     })
   }
-  
+
   formErrorMessage = () => {
     if (this.state.formErrorMessage) {
       return (
@@ -166,7 +166,7 @@ class ClusterBuildForm extends React.Component {
           type="error"
           showIcon
           closable
-          style={{ marginBottom: '20px'}}
+          style={{ marginBottom: '20px' }}
         />
       )
     }
@@ -192,7 +192,7 @@ class ClusterBuildForm extends React.Component {
         lg: { span: 18 }
       }
     }
-  
+
     return (
       <Form {...formConfig} onSubmit={this.handleSubmit}>
         <div>{this.formErrorMessage()}</div>
@@ -205,7 +205,7 @@ class ClusterBuildForm extends React.Component {
           validationErrors={this.state.validationErrors}
           wrappedComponentRef={inst => this.clusterOptionsForm = inst}
         />
-        <Form.Item style={{ marginTop: '20px'}}>
+        <Form.Item style={{ marginTop: '20px' }}>
           <Button type="primary" htmlType="submit" loading={submitting}>
             {this.state.submitButtonText}
           </Button>

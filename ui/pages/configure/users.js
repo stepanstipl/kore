@@ -69,7 +69,7 @@ class ConfigureUsersPage extends React.Component {
   render() {
     return (
       <div>
-        <Breadcrumb items={[{text: 'Configure'}, {text: 'Users'}]} />
+        <Breadcrumb items={[{ text: 'Configure' }, { text: 'Users' }]} />
         <List
           dataSource={this.state.users}
           renderItem={user => {

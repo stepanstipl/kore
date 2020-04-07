@@ -37,21 +37,13 @@ module.exports = {
     'no-invalid-this': 0,
     'babel/no-invalid-this': 1,
     'react/react-in-jsx-scope': 'off',
-    'indent': [
-      'error',
-      2
-    ],
-    'linebreak-style': [
-      'error',
-      'unix'
-    ],
-    'quotes': [
-      'error',
-      'single'
-    ],
-    'semi': [
-      'error',
-      'never'
-    ]
+    'indent': ['error', 2],
+    'linebreak-style': ['error', 'unix'],
+    'quotes': ['error', 'single'],
+    'semi': ['error', 'never'],
+    'curly': ['error', 'all'],
+    'object-curly-spacing': ['error', 'always'],
+    'brace-style': ['error', '1tbs'],
+    'eqeqeq': ['error', 'always']
   }
 }

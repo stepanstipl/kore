@@ -13,7 +13,9 @@ class AuditViewer extends React.Component {
       dataIndex: 'spec.createdAt',
       defaultSortOrder: 'descend',
       sortDirections: ['descend','ascend'],
-      sorter: (a, b) => { return a.spec.createdAt.localeCompare(b.spec.createdAt)},
+      sorter: (a, b) => {
+        return a.spec.createdAt.localeCompare(b.spec.createdAt)
+      },
     },
     {
       title: 'Operation',

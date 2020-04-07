@@ -9,7 +9,7 @@ const MissingProvider = ({ team }) => (
       description="No providers could be found allocated to this team, therefore you cannot request a cluster build at this time. Please continue to the team dashboard."
       type="info"
       showIcon
-      style={{ marginBottom: '20px'}}
+      style={{ marginBottom: '20px' }}
     />
     <Button type="primary">
       <Link href="/teams/[name]" as={`/teams/${team}`}>

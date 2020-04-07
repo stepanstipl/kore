@@ -102,7 +102,7 @@ class NewTeamPage extends React.Component {
 
     return (
       <div>
-        <Breadcrumb items={[{text: 'New team'}]} />
+        <Breadcrumb items={[{ text: 'New team' }]} />
         <Title>New Team</Title>
         <NewTeamForm
           user={user}

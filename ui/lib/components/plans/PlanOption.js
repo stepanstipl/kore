@@ -59,14 +59,14 @@ class PlanOption extends React.Component {
     return (
       <>
         {valErrors.map((ve, i) => 
-          <Alert key={`${name}.valError.${i}`} type="error" message={ve.message} style={{marginTop: '10px'}} />
+          <Alert key={`${name}.valError.${i}`} type="error" message={ve.message} style={{ marginTop: '10px' }} />
         )}
       </>
     )
   }
 
   render() {
-    const {name, property, value, editable, hideNonEditable, onChange} = this.props
+    const { name, property, value, editable, hideNonEditable, onChange } = this.props
     if (!editable && hideNonEditable) {
       return null
     }
@@ -109,7 +109,7 @@ class PlanOption extends React.Component {
             return <InputNumber value={value} readOnly={!editable} disabled={!editable} onChange={(v) => onChange(name, v)} />
           }
           case 'array': {
-            const values = value != null ? value : []
+            const values = value !== null ? value : []
             if (property.items.type !== 'array' && property.items.type !== 'object') {
               return <Select mode="tags" tokenSeparators={[',']} value={values} readOnly={!editable} disabled={!editable} onChange={(v) => onChange(name, v)} />
             } else {
