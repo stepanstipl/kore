@@ -35,7 +35,7 @@ func GetDeleteAdminCommand(config *Config) *cli.Command {
 			&cli.StringFlag{
 				Name:     "user",
 				Aliases:  []string{"u"},
-				Usage:    "The username of the user you wish to add to the team",
+				Usage:    "the user you wish to remove from being admin",
 				Required: true,
 			},
 		},
