@@ -27,7 +27,10 @@ class KoreApiClient {
       // Handle 401 unauth:
       if (err.response && err.response.status === 401) {
         if (process.browser) {
-          redirect(null, '/login/refresh', true)
+          redirect({
+            path: '/login/refresh',
+            forceSSR: true
+          })
         }
       }
 

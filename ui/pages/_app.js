@@ -63,12 +63,20 @@ class MyApp extends App {
     }
     const user = await MyApp.getUserSession(ctx)
     if (!user) {
-      return redirect(ctx.res, `/login/refresh?requestedPath=${ctx.asPath}`, true)
+      return redirect({
+        res: ctx.res,
+        path: `/login/refresh?requestedPath=${ctx.asPath}`,
+        forceSSR: true
+      })
     }
     const userTeams = (user.teams.userTeams || []).filter(t => !kore.ignoreTeams.includes(t.metadata.name))
     const otherTeams = (user.teams.otherTeams || []).filter(t => !kore.ignoreTeams.includes(t.metadata.name))
     if (pageProps.adminOnly && !user.isAdmin) {
-      return redirect(ctx.res, '/')
+      return redirect({
+        res: ctx.res,
+        router: Router,
+        path: '/'
+      })
     }
     if (Component.getInitialProps) {
       const initialProps = await Component.getInitialProps({ ...ctx, user })
@@ -89,7 +97,10 @@ class MyApp extends App {
       this.interval = setInterval(async () => {
         const user = await MyApp.getUserSession()
         if (!user) {
-          redirect(null, '/login', true)
+          redirect({
+            path: '/login',
+            forceSSR: true
+          })
         }
       }, intervalMs)
     }

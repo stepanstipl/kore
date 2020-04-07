@@ -1,5 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
+import Router from 'next/router'
 import { Typography, Card } from 'antd'
 const { Title, Paragraph } = Typography
 
@@ -41,7 +42,10 @@ class ConfigureCloudProvidersPage extends React.Component {
   }
 
   handleFormSubmit = () => {
-    redirect(null, '/setup/kore/complete')
+    redirect({
+      router: Router,
+      path: '/setup/kore/complete'
+    })
   }
 
   render() {

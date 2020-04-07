@@ -1,5 +1,6 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
+import Router from 'next/router'
 import copy from '../../utils/object-copy'
 import redirect from '../../utils/redirect'
 import apiRequest from '../../utils/api-request'
@@ -132,7 +133,10 @@ class ClusterBuildForm extends React.Component {
 
           await apiRequest(null, 'put', `${apiPaths.team(canonicalTeamName).clusters}/${clusterName}`, k8sResource)
           message.loading('Cluster build requested...')
-          return redirect(null, `/teams/${canonicalTeamName}`)
+          return redirect({
+            router: Router,
+            path: `/teams/${canonicalTeamName}`
+          })
         } catch (err) {
           console.error('Error submitting form', err)
           const state = copy(this.state)

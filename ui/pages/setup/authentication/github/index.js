@@ -1,6 +1,7 @@
 import * as React from 'react'
 import axios from 'axios'
 import PropTypes from 'prop-types'
+import Router from 'next/router'
 import { Typography, Steps, Button, Alert, Form, Input, Card } from 'antd'
 import { auth } from '../../../../config'
 import CopyTextWithLabel from '../../../../lib/components/CopyTextWithLabel'
@@ -87,7 +88,10 @@ class GithubSetupPage extends React.Component {
         }
       }
       await axios.post(`${window.location.origin}/login/auth/configure`, body)
-      return redirect(null, '/setup/authentication/github/complete')
+      return redirect({
+        router: Router,
+        path: '/setup/authentication/github/complete'
+      })
     } catch (err) {
       console.error('Error submitting form', err)
       const state = copy(this.state)

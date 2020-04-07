@@ -1,6 +1,7 @@
 import * as React from 'react'
 import axios from 'axios'
 import PropTypes from 'prop-types'
+import Router from 'next/router'
 import { kore, auth } from '../../../../config'
 import { Typography, Steps, Button, Alert, Row, Col, Form, Input, Card, List, Icon } from 'antd'
 import CopyTextWithLabel from '../../../../lib/components/CopyTextWithLabel'
@@ -166,7 +167,10 @@ class GoogleSetupPage extends React.Component {
         }
       }
       await axios.post(`${window.location.origin}/login/auth/configure`, body)
-      return redirect(null, '/setup/authentication/google/complete')
+      return redirect({
+        router: Router,
+        path: '/setup/authentication/google/complete'
+      })
     } catch (err) {
       console.error('Error submitting form', err)
       const state = copy(this.state)

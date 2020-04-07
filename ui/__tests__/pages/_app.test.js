@@ -117,7 +117,10 @@ describe('App', () => {
         }
         await App.getInitialProps(params)
         expect(redirect).toHaveBeenCalledTimes(1)
-        expect(redirect).toHaveBeenCalledWith(undefined, '/login/refresh?requestedPath=/requested/path', true)
+        expect(redirect).toHaveBeenCalledWith({
+          forceSSR: true,
+          path: '/login/refresh?requestedPath=/requested/path'
+        })
       })
 
       it('returns props, including pageProps and user', async () => {
