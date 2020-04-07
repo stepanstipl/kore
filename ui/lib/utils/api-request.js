@@ -28,7 +28,7 @@ export default async (reqRes, method, apiPath, body, options) => {
     if (err.response && err.response.status === 401) {
       redirect({
         path: '/login/refresh',
-        forceSSR: true
+        ensureRefreshFromServer: true
       })
       return Promise.reject(err)
     }

@@ -64,7 +64,7 @@ class LoginPage extends React.Component {
           await axios.post(`${window.location.origin}/login`, values)
           return redirect({
             path: '/login/process',
-            forceSSR: true
+            ensureRefreshFromServer: true
           })
         } catch (err) {
           const state = copy(this.state)

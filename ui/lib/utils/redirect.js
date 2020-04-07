@@ -1,10 +1,10 @@
-const redirect = ({ res, router, forceSSR = false, path }) => {
+const redirect = ({ res, router, ensureRefreshFromServer = false, path }) => {
   if (res) {
     res.redirect(path)
     res.end()
     return
   }
-  if (forceSSR) {
+  if (ensureRefreshFromServer) {
     window.location.href = path
     return
   }

@@ -66,7 +66,7 @@ class MyApp extends App {
       return redirect({
         res: ctx.res,
         path: `/login/refresh?requestedPath=${ctx.asPath}`,
-        forceSSR: true
+        ensureRefreshFromServer: true
       })
     }
     const userTeams = (user.teams.userTeams || []).filter(t => !kore.ignoreTeams.includes(t.metadata.name))
@@ -99,7 +99,7 @@ class MyApp extends App {
         if (!user) {
           redirect({
             path: '/login',
-            forceSSR: true
+            ensureRefreshFromServer: true
           })
         }
       }, intervalMs)

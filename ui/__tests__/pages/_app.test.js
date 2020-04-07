@@ -118,7 +118,7 @@ describe('App', () => {
         await App.getInitialProps(params)
         expect(redirect).toHaveBeenCalledTimes(1)
         expect(redirect).toHaveBeenCalledWith({
-          forceSSR: true,
+          ensureRefreshFromServer: true,
           path: '/login/refresh?requestedPath=/requested/path'
         })
       })

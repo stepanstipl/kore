@@ -29,7 +29,7 @@ class KoreApiClient {
         if (process.browser) {
           redirect({
             path: '/login/refresh',
-            forceSSR: true
+            ensureRefreshFromServer: true
           })
         }
       }
