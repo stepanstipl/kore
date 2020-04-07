@@ -14,31 +14,5 @@
  * limitations under the License.
  */
 
-package v1
-
-import (
-	"encoding/base64"
-	"fmt"
-)
-
-// Encode is responsible for ensuring the secret is encoded
-func (s *Secret) Encode() *Secret {
-	for k, v := range s.Spec.Data {
-		s.Spec.Data[k] = base64.RawStdEncoding.EncodeToString([]byte(v))
-	}
-
-	return s
-}
-
-// Decode is responsible for decoding the secret
-func (s *Secret) Decode() error {
-	for k, v := range s.Spec.Data {
-		decoded, err := base64.RawStdEncoding.DecodeString(v)
-		if err != nil {
-			return fmt.Errorf("key: %q is not base64 encoded", k)
-		}
-		s.Spec.Data[k] = string(decoded)
-	}
-
-	return nil
-}
+// Package gcp provides a controller used to reconcile gcp organization secrets
+package gcp

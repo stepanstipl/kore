@@ -18,6 +18,9 @@ package gcp
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"strings"
 
 	"github.com/appvia/kore/pkg/utils"
 
@@ -25,8 +28,90 @@ import (
 	"google.golang.org/api/option"
 )
 
+var (
+	// ErrClientEmailMissing indicates the client email is missing in service account
+	ErrClientEmailMissing = errors.New("client email missing in service account json")
+)
+
 // MaxChunkSize is the largest number of permissions that can be checked in one request
 const MaxChunkSize = 100
+
+// CreateResourceManagerClientFromServiceAccount creates a resource manager client
+func CreateResourceManagerClientFromServiceAccount(ctx context.Context, sa string) (*resourcemanager.Service, error) {
+	options := option.WithCredentialsJSON([]byte(sa))
+
+	return resourcemanager.NewService(context.Background(), options)
+}
+
+// GetServiceAccountFromKeyFile extract the service account name from the service account key
+func GetServiceAccountFromKeyFile(sa string) (string, bool, error) {
+	value, err := GetServiceAccountKeyAttribute(sa, "client_email")
+
+	return value, len(value) > 0, err
+}
+
+// GetServiceAccountKeyAttribute decodes the service account key and extract a value
+func GetServiceAccountKeyAttribute(sa, attribute string) (string, error) {
+	values := make(map[string]interface{})
+
+	if err := json.NewDecoder(strings.NewReader(sa)).Decode(&values); err != nil {
+		return "", err
+	}
+
+	value, ok := values[attribute].(string)
+	if !ok {
+		return "", nil
+	}
+
+	return value, nil
+}
+
+// GetServiceAccountOrganizationsIDs retrieve the organizations for a service account
+func GetServiceAccountOrganizationsIDs(ctx context.Context, sa string) ([]string, error) {
+	client, err := CreateResourceManagerClientFromServiceAccount(ctx, sa)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.Organizations.List().Context(ctx).Do()
+	if err != nil {
+		return nil, err
+	}
+
+	var list []string
+
+	for _, x := range resp.Organizations {
+		list = append(list, x.OrganizationId)
+	}
+
+	return list, nil
+}
+
+// CheckOrganizationRoles checks the role the service account has
+func CheckOrganizationRoles(ctx context.Context, id, email string, client *resourcemanager.Service) ([]string, error) {
+	resp, err := client.
+		Organizations.
+		GetIamPolicy("organizations/"+id, &resourcemanager.GetIamPolicyRequest{}).
+		Context(ctx).
+		Do()
+	if err != nil {
+		return nil, err
+	}
+
+	member := email
+	if strings.Contains(email, "gserviceaccount.com") {
+		member = "serviceAccount:" + email
+	}
+
+	var list []string
+	for _, x := range resp.Bindings {
+		if utils.Contains(member, x.Members) {
+			list = append(list, x.Role)
+		}
+	}
+
+	return list, nil
+}
 
 // CheckServiceAccountPermissions is responsible for checking the service account the permissions
 func CheckServiceAccountPermissions(
@@ -35,10 +120,9 @@ func CheckServiceAccountPermissions(
 	serviceAccountKey string,
 	list []string,
 ) (bool, []string, error) {
-	options := option.WithCredentialsJSON([]byte(serviceAccountKey))
 
 	// @step: we create a client from the service account first
-	client, err := resourcemanager.NewService(context.Background(), options)
+	client, err := CreateResourceManagerClientFromServiceAccount(ctx, serviceAccountKey)
 	if err != nil {
 		return false, nil, err
 	}

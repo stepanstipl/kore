@@ -37,6 +37,7 @@ import (
 	_ "github.com/appvia/kore/pkg/controllers/management/podpolicy"
 
 	// import secret controllers
+	_ "github.com/appvia/kore/pkg/controllers/secrets/gcp"
 	_ "github.com/appvia/kore/pkg/controllers/secrets/generic"
 
 	// importing the user controllers
