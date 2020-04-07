@@ -1,17 +1,14 @@
-const Router = require('next/router')
-
-const redirect = (res, path, forceSSR = false) => {
+const redirect = ({ res, router, ensureRefreshFromServer = false, path }) => {
   if (res) {
     res.redirect(path)
     res.end()
-    return {}
+    return
   }
-  if (forceSSR) {
+  if (ensureRefreshFromServer) {
     window.location.href = path
-  } else {
-    Router.push(path)
+    return
   }
-  return {}
+  router.push(path)
 }
 
 module.exports = redirect

@@ -26,7 +26,10 @@ export default async (reqRes, method, apiPath, body, options) => {
     return result.data
   } catch (err) {
     if (err.response && err.response.status === 401) {
-      redirect(null, '/login/refresh', true)
+      redirect({
+        path: '/login/refresh',
+        ensureRefreshFromServer: true
+      })
       return Promise.reject(err)
     }
     console.error(`Error making api request, method: "${method}", url: "${url}"`, err.message)

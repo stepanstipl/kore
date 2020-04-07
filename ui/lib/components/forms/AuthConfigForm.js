@@ -1,6 +1,7 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
 import axios from 'axios'
+import Router from 'next/router'
 import redirect from '../../utils/redirect'
 import { Button, Form, Input, Alert } from 'antd'
 
@@ -48,7 +49,10 @@ class AuthConfigForm extends React.Component {
         axios.post(`${window.location.origin}/auth/configure`, body)
           .then(function (res) {
             if (res.status === 200) {
-              return redirect(null, '/setup/auth/complete')
+              return redirect({
+                router: Router,
+                path: '/setup/auth/complete'
+              })
             }
           })
           .catch(function (error) {
