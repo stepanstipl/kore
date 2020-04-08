@@ -3,7 +3,7 @@ import { Typography, List, Button, Drawer, Alert, Icon } from 'antd'
 const { Title } = Typography
 
 import { kore } from '../../../config'
-import Credentials from '../team/Credentials'
+import GKECredentials from '../team/GKECredentials'
 import ResourceList from '../configure/ResourceList'
 import GKECredentialsForm from '../forms/GKECredentialsForm'
 import KoreApi from '../../kore-api'
@@ -14,8 +14,8 @@ class GKECredentialsList extends ResourceList {
     style: PropTypes.object
   }
 
-  createdMessage = 'GCP project created successfully'
-  updatedMessage = 'GCP project updated successfully'
+  createdMessage = 'GCP project credentials created successfully'
+  updatedMessage = 'GCP project credentials updated successfully'
 
   async fetchComponentData() {
     const api = await KoreApi.client()
@@ -49,13 +49,13 @@ class GKECredentialsList extends ResourceList {
             <List
               dataSource={resources.items}
               renderItem={gke =>
-                <Credentials
-                  gke={gke}
+                <GKECredentials
+                  gkeCredentials={gke}
                   allTeams={allTeams.items}
                   editGKECredential={this.edit}
                   handleUpdate={this.handleStatusUpdated}
                   refreshMs={2000}
-                  stateResourceDataKey="gke"
+                  propsResourceDataKey="gkeCredentials"
                   resourceApiPath={`/teams/${kore.koreAdminTeamName}/gkecredentials/${gke.metadata.name}`}
                 />
               }

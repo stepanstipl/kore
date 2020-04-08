@@ -376,7 +376,7 @@ class TeamDashboard extends React.Component {
                   handleUpdate={this.handleResourceUpdated('clusters')}
                   handleDelete={this.handleResourceDeleted('clusters')}
                   refreshMs={10000}
-                  stateResourceDataKey="cluster"
+                  propsResourceDataKey="cluster"
                   resourceApiPath={`${apiPaths.team(team.metadata.name).clusters}/${cluster.metadata.name}`}
                 />
               )
@@ -400,7 +400,7 @@ class TeamDashboard extends React.Component {
                 handleUpdate={this.handleResourceUpdated('namespaceClaims')}
                 handleDelete={this.handleResourceDeleted('namespaceClaims')}
                 refreshMs={15000}
-                stateResourceDataKey="namespaceClaim"
+                propsResourceDataKey="namespaceClaim"
                 resourceApiPath={`${apiPaths.team(team.metadata.name).namespaceClaims}/${namespaceClaim.metadata.name}`}
               />
             }

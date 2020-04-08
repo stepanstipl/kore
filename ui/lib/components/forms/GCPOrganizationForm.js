@@ -256,7 +256,7 @@ class GCPOrganizationForm extends React.Component {
                 showIcon
               />
             ) : (
-              <Form.Item label="Allocate team(s)" extra="If nothing selected then this integration will be available to ALL teams">
+              <Form.Item label="Allocate team(s)" extra="If nothing selected then this organization will be available to ALL teams">
                 {getFieldDecorator('allocations', { initialValue: allocations })(
                   <Select
                     mode="multiple"

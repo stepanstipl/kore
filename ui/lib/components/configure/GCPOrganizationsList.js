@@ -55,7 +55,7 @@ class GCPOrganizationsList extends ResourceList {
                   editOrganization={this.edit}
                   handleUpdate={this.handleStatusUpdated}
                   refreshMs={2000}
-                  stateResourceDataKey="organization"
+                  propsResourceDataKey="organization"
                   resourceApiPath={`/teams/${kore.koreAdminTeamName}/organizations/${org.metadata.name}`}
                 />
               }
