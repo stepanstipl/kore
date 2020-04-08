@@ -8,6 +8,15 @@ parameters:
   enable_e2e:
     type: boolean
     default: false
+  enable_e2e_master:
+    type: boolean
+    default: false
+  enable_gke_e2e:
+    type: boolean
+    default: true
+  enable_eks_e2e:
+    type: boolean
+    default: true
 
 jobs:
   build:
@@ -17,7 +26,6 @@ jobs:
 
     docker:
       - image: circleci/golang:1.14
-
       - name: database
         image: mariadb:bionic
         environment:
@@ -141,12 +149,12 @@ jobs:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
-      - attach_workspace:
-          at: bin
       - deploy:
           command: |
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
+            VERSION=${CIRCLE_SHA1} make images
             VERSION=${CIRCLE_TAG:-latest} make images
+            VERSION=${CIRCLE_SHA1:-latest} make push-images
             VERSION=${CIRCLE_TAG:-latest} make push-images
 
   release-cli:
@@ -200,58 +208,9 @@ jobs:
           command: |
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
             docker build -t ${KORE_UI_IMAGE}:${CIRCLE_TAG:-latest} --build-arg version=${CIRCLE_TAG:-latest} .
+            docker build -t ${KORE_UI_IMAGE}:${CIRCLE_SHA1} --build-arg version=${CIRCLE_SHA1} .
+            docker push ${KORE_UI_IMAGE}:${CIRCLE_SHA1}
             docker push ${KORE_UI_IMAGE}:${CIRCLE_TAG:-latest}
-
-  # This releases the local images for kore-apiserver and the auth-proxy; to
-  # ensure we have a complete e2e
-  e2e-images:
-    docker:
-      - image: docker:19.03-dind
-    steps:
-      - when:
-          condition: << pipeline.parameters.enable_e2e >>
-          steps:
-            - checkout
-            - setup_remote_docker:
-                docker_layer_caching: true
-            - attach_workspace:
-                at: bin
-            - run:
-                name: Releasing QA Images
-                command: |
-                  docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
-                  VERSION=${CIRCLE_SHA1} make images
-                  VERSION=${CIRCLE_SHA1} make push-images
-
-  e2e:
-    environment:
-      GOFLAGS: "-mod=vendor"
-      KORE: "bin/korectl"
-      KUBECTL_URL: "https://storage.googleapis.com/kubernetes-release/release/v1.15.0/bin/linux/amd64/kubectl"
-      KORE_API_PUBLIC_URL_QA: "http://127.0.0.1:10080"
-      KORE_UI_PUBLIC_URL_QA: "http://localhost:3000"
-    docker:
-      - image: alpine:3.11
-    steps:
-      - when:
-          condition: << pipeline.parameters.enable_e2e >>
-          steps:
-            - checkout
-            - attach_workspace:
-                at: bin
-            - run:
-                name: Installed Tools
-                command: |
-                  apk add bash bats curl jq
-            - run:
-                name: Installing kubectl
-                command: |
-                  curl -sL ${KUBECTL_URL} -o /bin/kubectl
-                  chmod +x /bin/kubectl
-            - run:
-                name: Running E2E Suite
-                command: |
-                  test/e2e/check-suite.sh
 
   release-qa:
     docker:
@@ -268,21 +227,130 @@ jobs:
           name: Deploying to QA
           command: |
             echo "Deploying to QA"
-            # hack/deploy-qa.sh
+            hack/deploy-qa.sh
 
-  e2e:
+  # This releases the local images for kore-apiserver and the auth-proxy; to
+  # ensure we have a complete e2e
+  e2e-images:
     docker:
       - image: circleci/golang:1.14
     steps:
       - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Releasing E2E Images
+          command: |
+            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
+            VERSION=${CIRCLE_SHA1} make images
+            VERSION=${CIRCLE_SHA1} make push-images
+
+  e2e:
+    parameters:
+      host:
+        type: string
+        default: http://127.0.0.1:10080
+
+    environment:
+      GOFLAGS: "-mod=vendor"
+      KORE_API_PUBLIC_URL_QA: << parameters.host >>
+
+    docker:
+      - image: circleci/golang:1.14
+
+      - name: etcd
+        image: bitnami/etcd:latest
+        environment:
+          ALLOW_NONE_AUTHENTICATION: "yes"
+
+      - name: database
+        image: mariadb:bionic
+        environment:
+          MYSQL_ROOT_PASSWORD: pass
+        command:
+          sh -c "
+            echo 'CREATE DATABASE IF NOT EXISTS kore;' > /docker-entrypoint-initdb.d/init.sql;
+            /usr/local/bin/docker-entrypoint.sh --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
+
+      - name: kube-controller-manager
+        image: gcr.io/google-containers/kube-controller-manager-amd64:v1.15.11
+        command:
+          - /usr/local/bin/kube-controller-manager
+          - --master=http://kube-apiserver:8080
+
+      - name: kube-apiserver
+        image: gcr.io/google-containers/kube-apiserver-amd64:v1.15.11
+        command:
+          - /usr/local/bin/kube-apiserver
+          - --address=0.0.0.0
+          - --alsologtostderr
+          - --authorization-mode=RBAC
+          - --bind-address=0.0.0.0
+          - --default-watch-cache-size=200
+          - --delete-collection-workers=10
+          - --etcd-servers=http://etcd:2379
+          - --log-flush-frequency=10s
+          - --runtime-config=autoscaling/v1=false
+          - --runtime-config=autoscaling/v2beta1=false
+          - --runtime-config=autoscaling/v2beta2=false
+          - --runtime-config=batch/v1=false
+          - --runtime-config=batch/v1beta1=false
+          - --runtime-config=networking.k8s.io/v1=false
+          - --runtime-config=networking.k8s.io/v1beta1=false
+          - --runtime-config=node.k8s.io/v1beta1=false
+
+    steps:
+      - checkout
+      - run:
+          name: Building binaries
+          command: |
+            make kore-apiserver
+            make korectl
+            sudo mv bin/korectl /bin
+      - run:
+          name: Running the Kore API
+          command: |
+            bin/kore-apiserver --disable-json-logging --verbose
+          background: true
+          environment:
+            AUTH_PROXY_IMAGE: "quay.io/appvia/auth-proxy:${CIRCLE_SHA1}"
+            CLUSTERAPPMAN_IMAGE: "quay.io/appvia/kore-apiserver:${CIRCLE_SHA1}"
+            KORE_ADMIN_TOKEN: "password"
+            KORE_AUTHENTICATION_PLUGINS: "admintoken,openid"
+            KORE_CERTIFICATE_AUTHORITY: "hack/ca/ca.pem"
+            KORE_CERTIFICATE_AUTHORITY_KEY: "hack/ca/ca-key.pem"
+            KORE_HMAC: "bdT2Qg6DybsLIwc0TbYWrkGC4auovscg"
+            KORE_UI_PUBLIC_URL: "http://localhost:3000"
+            KUBE_API_SERVER: "http://kube-apiserver:8080"
+            USERS_DB_URL: "root:pass@tcp(database:3306)/kore?parseTime=true"
+      - run:
+          name: Installing tools
+          command: |
+            sudo apt install -y bash bats curl jq
+      - run:
+          name: Installing kubectl
+          command: |
+            sudo curl -sL https://storage.googleapis.com/kubernetes-release/release/v1.15.11/bin/linux/amd64/kubectl -o /bin/kubectl
+            sudo chmod +x /bin/kubectl
+      - run:
+          name: Waiting for API
+          command: |
+            curl -s \
+              --retry 10 \
+              --retry-connrefused \
+              --retry-delay 5 \
+              ${KORE_API_PUBLIC_URL_QA}/healthz
       - run:
           name: Running E2E Suite
+          environment:
+            KORE_ADMIN_TOKEN: "password"
           command: |
-            test/e2e/check-suite.sh
+            test/e2e/check-suite.sh --enable-e2e-user ${KORE_E2E_USER}
 
 workflows:
-  version: 2
+  version: 2.1
   workflow:
+    unless: << pipeline.parameters.enable_e2e >>
     jobs:
       - build:
           filters:
@@ -329,9 +397,26 @@ workflows:
           requires:
             - release
             - release-ui
+
+  e2e:
+    when: << pipeline.parameters.enable_e2e >>
+    jobs:
+      - e2e-images:
+          filters:
+            branches:
+              ignore: master
+
       - e2e:
           filters:
             branches:
-              only: ci_master
+              ignore: master
           requires:
-            - release-qa
+            - e2e-images
+
+  e2e_master:
+    when: << pipeline.parameters.enable_e2e_master >>
+    jobs:
+      - e2e:
+          filters:
+            branches:
+              only: master
