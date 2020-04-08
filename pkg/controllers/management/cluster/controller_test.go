@@ -197,6 +197,10 @@ var _ = Describe("Cluster Controller", func() {
 					Expect(kubernetes.Spec.Cluster).To(Equal(cluster.Ownership()))
 				})
 
+				It("should requeue and not error", func() {
+					test.ExpectRequeue(reconcileResult, reconcileErr)
+				})
+
 				When("the components can not be created", func() {
 					BeforeEach(func() {
 						cluster.Spec.Configuration = v1beta1.JSON{}
@@ -426,6 +430,10 @@ var _ = Describe("Cluster Controller", func() {
 					Expect(test.Client.DeleteCallCount()).To(Equal(1))
 					deletedObj := &clustersv1.Kubernetes{}
 					test.ExpectDelete(0, deletedObj)
+				})
+
+				It("should requeue and not error", func() {
+					test.ExpectRequeue(reconcileResult, reconcileErr)
 				})
 
 				When("deleting the Kubernetes component fails", func() {

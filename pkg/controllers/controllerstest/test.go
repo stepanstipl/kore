@@ -154,7 +154,10 @@ func (t *Test) checkCallCount(i, callCount int, method string) {
 }
 
 func (t *Test) ExpectRequeue(res reconcile.Result, err error) {
-	Expect(err).ToNot(HaveOccurred())
+	// We shouldn't use the HaveOccurred() matcher because it returns true if the value is a nil concrete value as an interface
+	if err != nil {
+		Fail(fmt.Sprintf("reconcile error is not nil: (%T) %v", err, err))
+	}
 	if !res.Requeue && res.RequeueAfter == 0 {
 		Fail("was expecting Requeue = true or RequeueAfter > 0")
 	}
