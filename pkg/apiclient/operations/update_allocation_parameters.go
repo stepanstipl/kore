@@ -14,6 +14,8 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+
+	"github.com/appvia/kore/pkg/apiclient/models"
 )
 
 // NewUpdateAllocationParams creates a new UpdateAllocationParams object
@@ -60,6 +62,11 @@ for the update allocation operation typically these are written to a http.Reques
 */
 type UpdateAllocationParams struct {
 
+	/*Body
+	  The definition of the Allocation
+
+	*/
+	Body *models.V1Allocation
 	/*Name
 	  Is the name of the allocation you wish to update
 
@@ -109,6 +116,17 @@ func (o *UpdateAllocationParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithBody adds the body to the update allocation params
+func (o *UpdateAllocationParams) WithBody(body *models.V1Allocation) *UpdateAllocationParams {
+	o.SetBody(body)
+	return o
+}
+
+// SetBody adds the body to the update allocation params
+func (o *UpdateAllocationParams) SetBody(body *models.V1Allocation) {
+	o.Body = body
+}
+
 // WithName adds the name to the update allocation params
 func (o *UpdateAllocationParams) WithName(name string) *UpdateAllocationParams {
 	o.SetName(name)
@@ -138,6 +156,12 @@ func (o *UpdateAllocationParams) WriteToRequest(r runtime.ClientRequest, reg str
 		return err
 	}
 	var res []error
+
+	if o.Body != nil {
+		if err := r.SetBodyParam(o.Body); err != nil {
+			return err
+		}
+	}
 
 	// path param name
 	if err := r.SetPathParam("name", o.Name); err != nil {

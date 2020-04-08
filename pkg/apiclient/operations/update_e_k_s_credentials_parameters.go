@@ -14,6 +14,8 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+
+	"github.com/appvia/kore/pkg/apiclient/models"
 )
 
 // NewUpdateEKSCredentialsParams creates a new UpdateEKSCredentialsParams object
@@ -60,6 +62,11 @@ for the update e k s credentials operation typically these are written to a http
 */
 type UpdateEKSCredentialsParams struct {
 
+	/*Body
+	  The definition for EKS Credentials
+
+	*/
+	Body *models.V1alpha1EKSCredentials
 	/*Name
 	  Is name the of the EKS credentials you are acting upon
 
@@ -109,6 +116,17 @@ func (o *UpdateEKSCredentialsParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithBody adds the body to the update e k s credentials params
+func (o *UpdateEKSCredentialsParams) WithBody(body *models.V1alpha1EKSCredentials) *UpdateEKSCredentialsParams {
+	o.SetBody(body)
+	return o
+}
+
+// SetBody adds the body to the update e k s credentials params
+func (o *UpdateEKSCredentialsParams) SetBody(body *models.V1alpha1EKSCredentials) {
+	o.Body = body
+}
+
 // WithName adds the name to the update e k s credentials params
 func (o *UpdateEKSCredentialsParams) WithName(name string) *UpdateEKSCredentialsParams {
 	o.SetName(name)
@@ -138,6 +156,12 @@ func (o *UpdateEKSCredentialsParams) WriteToRequest(r runtime.ClientRequest, reg
 		return err
 	}
 	var res []error
+
+	if o.Body != nil {
+		if err := r.SetBodyParam(o.Body); err != nil {
+			return err
+		}
+	}
 
 	// path param name
 	if err := r.SetPathParam("name", o.Name); err != nil {
