@@ -52,6 +52,7 @@ func GetDeleteCommand(config *Config) *cli.Command {
 		},
 		Subcommands: []*cli.Command{
 			GetDeleteTeamMemberCommand(config),
+			GetDeleteAdminCommand(config),
 		},
 
 		Before: func(ctx *cli.Context) error {

@@ -147,6 +147,16 @@ func (t tmsImpl) Delete(ctx context.Context, name string) error {
 		return nil
 	}
 
+	// @check: is this the admin team?
+	if t.team == HubAdminTeam {
+		if name == HubAdminUser {
+			return ErrNotAllowed{message: "you cannot remove " + HubAdminUser + " user from this team"}
+		}
+		if len(list) == 1 {
+			return ErrNotAllowed{message: "you cannot remove all administrators from kore"}
+		}
+	}
+
 	// @step: we can delete all the membership
 	if err := t.usermgr.Members().DeleteBy(ctx,
 		users.Filter.WithUser(name),
