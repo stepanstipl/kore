@@ -17,6 +17,7 @@
 package apiserver
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -645,6 +646,17 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
+	// Plan reference
+	ws.Route(
+		withAllNonValidationErrors(ws.GET("/{team}/plans/{plan}")).To(u.getTeamPlanDetails).
+			Operation("GetTeamPlanDetails").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("plan", "Is name the of the plan you're interested in")).
+			Doc("Returns the plan, the JSON schema of the plan, and what what parameters are allowed to be edited by this team when using the plan").
+			Returns(http.StatusOK, "Contains details of the plan", TeamPlan{}).
+			Returns(http.StatusNotFound, "Team or plan doesn't exist", nil),
+	)
+
 	return ws, nil
 }
 
@@ -728,5 +740,11 @@ func (u teamHandler) updateTeam(req *restful.Request, resp *restful.Response) {
 		}
 
 		return resp.WriteHeaderAndEntity(http.StatusOK, team)
+	})
+}
+
+func (u teamHandler) getTeamPlanDetails(req *restful.Request, resp *restful.Response) {
+	handleErrors(req, resp, func() error {
+		return fmt.Errorf("Not implemented")
 	})
 }
