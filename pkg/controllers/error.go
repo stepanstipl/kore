@@ -16,36 +16,23 @@
 
 package controllers
 
-import (
-	"fmt"
-)
-
-type ReconcileError struct {
-	Err      error
-	Critical bool
+type criticalError struct {
+	err error
 }
 
-func NewReconcileError(err error, critical bool) *ReconcileError {
-	return &ReconcileError{
-		Err:      err,
-		Critical: critical,
+func NewCriticalError(err error) error {
+	return criticalError{
+		err: err,
 	}
 }
 
-func (r *ReconcileError) Error() string {
-	return r.Err.Error()
+func (r criticalError) Error() string {
+	return r.err.Error()
 }
 
-func (r *ReconcileError) Wrap(message string) *ReconcileError {
-	if r != nil && r.Err != nil {
-		r.Err = fmt.Errorf("%s: %w", message, r.Err)
+func IsCriticalError(err error) bool {
+	if _, ok := err.(criticalError); ok {
+		return true
 	}
-	return r
-}
-
-func (r *ReconcileError) Wrapf(format string, args ...interface{}) *ReconcileError {
-	if r != nil && r.Err != nil {
-		r.Err = fmt.Errorf(format, append(args, r.Err)...)
-	}
-	return r
+	return false
 }

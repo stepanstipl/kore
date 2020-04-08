@@ -19,6 +19,7 @@ package cluster
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/appvia/kore/pkg/controllers"
@@ -70,7 +71,7 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		return a.Delete(ctx, cluster)
 	}
 
-	err := func() *controllers.ReconcileError {
+	err := func() error {
 		cluster.Status.Status = corev1.PendingStatus
 		if cluster.Status.Components == nil {
 			cluster.Status.Components = corev1.Components{}
@@ -78,13 +79,13 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 		components, err := createClusterComponents(cluster)
 		if err != nil {
-			return controllers.NewReconcileError(err, true)
+			return controllers.NewCriticalError(err)
 		}
 
 		for _, c := range components {
 			componentName := a.getComponentName(c)
 			if err := a.createOrUpdateComponent(ctx, cluster, c); err != nil {
-				return err.Wrapf("failed to create or update %s component: %w", componentName)
+				return fmt.Errorf("failed to create or update %s component: %w", componentName, err)
 			}
 
 			switch r := c.(type) {
@@ -119,7 +120,7 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 			cluster.Status.Message = "The cluster has been created successfully"
 			return nil
 		} else if cluster.Status.Components.HasStatus(corev1.FailureStatus) {
-			return controllers.NewReconcileError(errors.New("one or more components failed"), true)
+			return controllers.NewCriticalError(errors.New("one or more components failed"))
 		}
 
 		return nil
@@ -127,7 +128,7 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 	if err != nil {
 		logger.WithError(err).Error("failed to reconcile the cluster")
-		if err.Critical {
+		if controllers.IsCriticalError(err) {
 			cluster.Status.Status = corev1.FailureStatus
 			cluster.Status.Message = err.Error()
 		}
@@ -150,27 +151,27 @@ func (a *Controller) getComponentName(c clustersv1.ClusterComponent) string {
 	return c.GetObjectKind().GroupVersionKind().Kind + "/" + meta.Name
 }
 
-func (a *Controller) createOrUpdateComponent(ctx context.Context, cluster *clustersv1.Cluster, res clustersv1.ClusterComponent) *controllers.ReconcileError {
+func (a *Controller) createOrUpdateComponent(ctx context.Context, cluster *clustersv1.Cluster, res clustersv1.ClusterComponent) error {
 	exists, err := kubernetes.GetIfExists(ctx, a.mgr.GetClient(), res)
 	if err != nil {
-		return controllers.NewReconcileError(err, false)
+		return err
 	}
 
 	if err := res.ApplyClusterConfiguration(cluster); err != nil {
-		return controllers.NewReconcileError(err, true)
+		return controllers.NewCriticalError(err)
 	}
 
 	if !exists {
 		setClusterResourceVersion(res, cluster.ResourceVersion)
 		if err := a.mgr.GetClient().Create(ctx, res); err != nil {
-			return controllers.NewReconcileError(err, false)
+			return err
 		}
 	} else {
 		if getClusterResourceVersion(res) != cluster.ResourceVersion {
 			setClusterResourceVersion(res, cluster.ResourceVersion)
 			res.SetStatus(corev1.PendingStatus)
 			if err := a.mgr.GetClient().Update(ctx, res); err != nil {
-				return controllers.NewReconcileError(err, false)
+				return err
 			}
 		}
 	}

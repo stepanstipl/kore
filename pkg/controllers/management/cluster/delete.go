@@ -18,6 +18,7 @@ package cluster
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/appvia/kore/pkg/controllers"
@@ -51,12 +52,12 @@ func (a Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (re
 		return reconcile.Result{}, err
 	}
 
-	err := func() *controllers.ReconcileError {
+	err := func() error {
 		cluster.Status.Status = corev1.DeletingStatus
 
 		components, err := createClusterComponents(cluster)
 		if err != nil {
-			return controllers.NewReconcileError(err, true)
+			return controllers.NewCriticalError(err)
 		}
 
 		for _, c := range components {
@@ -64,7 +65,7 @@ func (a Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (re
 			var err error
 			var exists bool
 			if exists, err = kubernetes.GetIfExists(ctx, a.mgr.GetClient(), c); err != nil {
-				return controllers.NewReconcileError(err, false).Wrapf("failed to load %s component: %w")
+				return fmt.Errorf("failed to load %s component: %w", componentName, err)
 			}
 
 			var status corev1.Status
@@ -74,7 +75,7 @@ func (a Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (re
 				case *clustersv1.Kubernetes:
 					if r.GetDeletionTimestamp() == nil {
 						if err := a.mgr.GetClient().Delete(ctx, c); err != nil {
-							return controllers.NewReconcileError(err, false).Wrapf("failed to delete %s component: %w")
+							return fmt.Errorf("failed to delete %s component: %w", componentName, err)
 						}
 					}
 				}
@@ -102,7 +103,7 @@ func (a Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (re
 			cluster.Status.Message = "The cluster has been deleted successfully"
 			return nil
 		} else if cluster.Status.Components.HasStatus(corev1.DeleteFailedStatus) {
-			return controllers.NewReconcileError(cluster.Status.Components.Error(), true)
+			return controllers.NewCriticalError(cluster.Status.Components.Error())
 		}
 
 		return nil
@@ -110,7 +111,7 @@ func (a Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (re
 
 	if err != nil {
 		logger.WithError(err).Error("failed to reconcile the cluster")
-		if err.Critical {
+		if controllers.IsCriticalError(err) {
 			cluster.Status.Status = corev1.DeleteFailedStatus
 			cluster.Status.Message = err.Error()
 		}
