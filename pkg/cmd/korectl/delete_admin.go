@@ -18,6 +18,7 @@ package korectl
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/appvia/kore/pkg/kore"
 
@@ -52,6 +53,11 @@ func GetDeleteAdminCommand(config *Config) *cli.Command {
 				WithInject("user", username).
 				Delete()
 			if err != nil {
+				if rerr, ok := err.(*RequestError); ok {
+					if rerr.StatusCode() == http.StatusNotFound {
+						return fmt.Errorf("%q is not an admin", ctx.String("user"))
+					}
+				}
 				return err
 			}
 

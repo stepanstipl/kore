@@ -143,8 +143,8 @@ func (t tmsImpl) Delete(ctx context.Context, name string) error {
 
 		return err
 	}
-	if len(list) <= 0 {
-		return nil
+	if len(list) == 0 {
+		return ErrNotFound
 	}
 
 	// @check: is this the admin team?
