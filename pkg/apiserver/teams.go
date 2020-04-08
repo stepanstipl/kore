@@ -765,7 +765,7 @@ func (u teamHandler) getTeamPlanDetails(req *restful.Request, resp *restful.Resp
 			return fmt.Errorf("Cannot find schema for cluster type %v", plan.Spec.Kind)
 		}
 
-		paramsMap, err := u.Plans().GetEditablePlanParams(req.Request.Context(), req.PathParameter("team"))
+		paramsMap, err := u.Plans().GetEditablePlanParams(req.Request.Context(), req.PathParameter("team"), plan.Spec.Kind)
 		if err != nil {
 			return err
 		}

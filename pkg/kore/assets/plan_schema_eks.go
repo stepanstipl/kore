@@ -40,6 +40,7 @@ const EKSPlanSchema = `
 	"properties": {
 		"authProxyAllowedIPs": {
 			"type": "array",
+			"description": "The networks which are allowed to connect to this cluster (e.g. via kubectl).",
 			"items": {
 				"type": "string",
 				"format": "1.2.3.4/16"
@@ -47,10 +48,12 @@ const EKSPlanSchema = `
 			"minItems": 1
 		},
 		"authProxyImage": {
-			"type": "string"
+			"type": "string",
+			"description": "TBC"
 		},
 		"clusterUsers": {
 			"type": "array",
+			"description": "Users who should be allowed to access this cluster.",
 			"items": {
 				"type": "object",
 				"additionalProperties": false,
@@ -75,14 +78,17 @@ const EKSPlanSchema = `
 			}
 		},
 		"defaultTeamRole": {
-			"type": "string"
+			"type": "string",
+			"description": "The default role that team members have on this cluster. Must be viewer or admin."
 		},
 		"description": {
 			"type": "string",
+			"description": "Meaningful description of this cluster.",
 			"minLength": 1
 		},
 		"domain": {
 			"type": "string",
+			"description": "The domain for this cluster.",
 			"minLength": 1
 		},
 		"enableDefaultTrafficBlock": {
@@ -193,14 +199,17 @@ const EKSPlanSchema = `
 		},
 		"region": {
 			"type": "string",
+			"description": "The AWS region in which this cluster will reside (e.g. eu-west-2).",
 			"minLength": 1
 		},
 		"roleARN": {
 			"type": "string",
+			"description": "The IAM role for the cluster itself",
 			"minLength": 1
 		},
 		"securityGroupIDs": {
 			"type": "array",
+			"description": "The security group IDs to use for the cluster?? TBC",
 			"items": {
 				"type": "string",
 				"minLength": 1
@@ -209,6 +218,7 @@ const EKSPlanSchema = `
 		},
 		"subnetIDs": {
 			"type": "array",
+			"description": "The AWS Subnet IDs for all private and public subnets this cluster will use.",
 			"items": {
 				"type": "string",
 				"minLength": 1
@@ -217,6 +227,7 @@ const EKSPlanSchema = `
 		},
 		"version": {
 			"type": "string",
+			"description": "The Kubernetes version to deploy.",
 			"minLength": 1
 		}
 	},

@@ -18,7 +18,7 @@ test:
 
 update-swagger:
 	@echo "--> Updating unit test / auto-gen swagger (requires API to be running locally)"
-	@curl --retry 5 --retry-delay 5 --retry-connrefused -sSL http://127.0.0.1:10080/swagger.json | jq > ./kore-api-swagger.json
+	@curl --retry 5 --retry-delay 5 --retry-connrefused -sSL http://127.0.0.1:10080/swagger.json > ./kore-api-swagger.json
 	@if [ $$(git status --porcelain ./kore-api-swagger.json  | wc -l) -gt 0 ]; then \
 		echo "There are local changes after running 'make update-swagger'. BE SURE TO COMMIT THESE CHANGES."; \
 		git status --porcelain ./kore-api-swagger.json; \

@@ -44,8 +44,8 @@ type Plans interface {
 	Has(context.Context, string) (bool, error)
 	// Update is responsible for update a plan in the kore
 	Update(context.Context, *configv1.Plan) error
-	// GetEditablePlanParams returns with the editable plan parameters for a specific team
-	GetEditablePlanParams(ctx context.Context, team string) (map[string]bool, error)
+	// GetEditablePlanParams returns with the editable plan parameters for a specific team and cluster kind
+	GetEditablePlanParams(ctx context.Context, team string, clusterKind string) (map[string]bool, error)
 }
 
 type plansImpl struct {
@@ -177,7 +177,7 @@ func (p plansImpl) Has(ctx context.Context, name string) (bool, error) {
 	)
 }
 
-func (p plansImpl) GetEditablePlanParams(ctx context.Context, team string) (map[string]bool, error) {
+func (p plansImpl) GetEditablePlanParams(ctx context.Context, team string, clusterKind string) (map[string]bool, error) {
 	editableParams := map[string]bool{}
 	planPolicyAllocations, err := p.Teams().Team(team).Allocations().ListAllocationsByType(
 		ctx, "config.kore.appvia.io", "v1", "PlanPolicy",
@@ -190,6 +190,9 @@ func (p plansImpl) GetEditablePlanParams(ctx context.Context, team string) (map[
 		planPolicy, err := p.PlanPolicies().Get(ctx, alloc.Spec.Resource.Name)
 		if err != nil {
 			return nil, fmt.Errorf("failed to load plan policy: %s", alloc.Spec.Resource.Name)
+		}
+		if planPolicy.Spec.Kind != clusterKind {
+			continue
 		}
 		for _, property := range planPolicy.Spec.Properties {
 			switch {

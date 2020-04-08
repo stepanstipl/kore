@@ -56,6 +56,7 @@ const GKEPlanSchema = `
 	"properties": {
 		"authorizedMasterNetworks": {
 			"type": "array",
+			"description": "The networks which are allowed to access the master control plane.",
 			"items": {
 				"type": "object",
 				"additionalProperties": false,
@@ -78,6 +79,7 @@ const GKEPlanSchema = `
 		},
 		"authProxyAllowedIPs": {
 			"type": "array",
+			"description": "The networks which are allowed to connect to this cluster (e.g. via kubectl).",
 			"items": {
 				"type": "string",
 				"format": "1.2.3.4/16"
@@ -85,10 +87,12 @@ const GKEPlanSchema = `
 			"minItems": 1
 		},
 		"authProxyImage": {
-			"type": "string"
+			"type": "string",
+			"description": "TBC"
 		},
 		"clusterUsers": {
 			"type": "array",
+			"description": "Users who should be allowed to access this cluster.",
 			"items": {
 				"type": "object",
 				"additionalProperties": false,
@@ -113,24 +117,29 @@ const GKEPlanSchema = `
 			}
 		},
 		"defaultTeamRole": {
-			"type": "string"
+			"type": "string",
+			"description": "The default role that team members have on this cluster. Must be viewer or admin."
 		},
 		"description": {
 			"type": "string",
+			"description": "Meaningful description of this cluster.",
 			"minLength": 1
 		},
 		"diskSize": {
 			"type": "number",
+			"description": "The amount of storage provisioned on this cluster? Or on its nodes?",
 			"multipleOf": 1,
 			"minimum": 10,
 			"maximum": 65536
 		},
 		"domain": {
 			"type": "string",
+			"description": "The domain for this cluster.",
 			"minLength": 1
 		},
 		"enableAutoupgrade": {
-			"type": "boolean"
+			"type": "boolean",
+			"description": "Enable to keep this cluster updated whenever new versions of Kubernetes are made available by GCP."
 		},
 		"enableAutorepair": {
 			"type": "boolean"
@@ -174,14 +183,17 @@ const GKEPlanSchema = `
 		},
 		"machineType": {
 			"type": "string",
+			"description": "The type of nodes used for this cluster's node pool.",
 			"minLength": 1
 		},
 		"maintenanceWindow": {
 			"type": "string",
+			"description": "Time of day to allow maintenance operations to be performed by the cloud provider on this cluster.",
 			"format": "hh:mm"
 		},
 		"maxSize": {
 			"type": "number",
+			"description": "Maximum number of nodes? to allow for this cluster if auto-scaling enabled.",
 			"multipleOf": 1,
 			"minimum": 0
 		},
@@ -204,6 +216,7 @@ const GKEPlanSchema = `
 		},
 		"version": {
 			"type": "string",
+			"description": "The Kubernetes version to deploy.",
 			"minLength": 1
 		}
 	},

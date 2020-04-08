@@ -6,6 +6,7 @@ const { Text, Title } = Typography
 const { Option } = Select
 
 import Plan from '../configure/Plan'
+import PlanOptionsForm from '../plans/PlanOptionsForm'
 
 class ClusterOptionsForm extends React.Component {
   static propTypes = {
@@ -13,7 +14,16 @@ class ClusterOptionsForm extends React.Component {
     team: PropTypes.object.isRequired,
     providers: PropTypes.array.isRequired,
     plans: PropTypes.array.isRequired,
-    teamClusters: PropTypes.array.isRequired
+    teamClusters: PropTypes.array.isRequired,
+    onPlanOverridden: PropTypes.func,
+    validationErrors: PropTypes.array
+  }
+
+  componentDidUpdate(prevProps) {
+    // Reset the selected plan if the provider changes:
+    if (this.props.providers != prevProps.providers) {
+      this.props.form.setFieldsValue({ 'plan': null })
+    }
   }
 
   onPlanChange = e => {
@@ -40,6 +50,12 @@ class ClusterOptionsForm extends React.Component {
         width: 700,
         onOk() {}
       })
+    }
+  }
+
+  onPlanOverridden = paramValues => {
+    if (this.props.onPlanOverridden) {
+      this.props.onPlanOverridden(paramValues)
     }
   }
 
@@ -96,6 +112,14 @@ class ClusterOptionsForm extends React.Component {
               <Input />
             )}
           </Form.Item>
+        ) : null}
+        {selectedPlan ? (
+          <PlanOptionsForm
+            team={this.props.team}
+            plan={selectedPlan}
+            validationErrors={this.props.validationErrors}
+            onPlanChange={this.onPlanOverridden}
+          />
         ) : null}
       </Card>
     )
