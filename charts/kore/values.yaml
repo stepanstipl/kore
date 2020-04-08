@@ -30,6 +30,7 @@ api:
   endpoint:
     url: http://localhost:10080
     detect: false
+  images: {}
   ingress:
     enabled: false
     hostname: localhost:10080
