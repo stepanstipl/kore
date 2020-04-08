@@ -67,7 +67,7 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 	}
 	// @step: we need to mark the cluster as pending
 	if resource.Status.Conditions == nil {
-		resource.Status.Conditions = &core.Components{}
+		resource.Status.Conditions = core.Components{}
 	}
 
 	requeue, err := func() (bool, error) {
@@ -116,7 +116,7 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 		}
 
 		if !found {
-			status, found := resource.Status.Conditions.HasComponent(ComponentClusterCreator)
+			status, found := resource.Status.Conditions.GetStatus(ComponentClusterCreator)
 			if !found || status != core.PendingStatus {
 				resource.Status.Conditions.SetCondition(core.Component{
 					Name:    ComponentClusterCreator,
@@ -155,7 +155,7 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 		}
 		if *cluster.Status == eks.ClusterStatusFailed {
 
-			return false, fmt.Errorf("Cluster has failed status:%s", resource.Spec.Name)
+			return false, fmt.Errorf("Cluster has failed status:%s", resource.Name)
 		}
 		if *cluster.Status != eks.ClusterStatusActive {
 			logger.Debugf("cluster %s not ready requeing", *cluster.Name)

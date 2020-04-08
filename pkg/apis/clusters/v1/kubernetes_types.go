@@ -17,32 +17,34 @@
 package v1
 
 import (
+	"encoding/json"
+
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-)
-
-// AuthenticationMode indicates the authentication modes for the remote cluster
-type AuthenticationMode string
-
-const (
-	// OIDCMode indicates using a oidc model
-	OIDCMode = "oidc"
 )
 
 // KubernetesSpec defines the desired state of Cluster
 // +k8s:openapi-gen=true
 type KubernetesSpec struct {
-	// Authentication indicates a mode of user authentication
-	Authentication *AuthenticationMode `json:"authentication,omitempty"`
+	// AuthProxyImage is the kube api proxy used to sso into the cluster post provision
+	// +kubebuilder:validation:Optional
+	AuthProxyImage string `json:"authProxyImage,omitempty"`
+	// AuthProxyAllowedIPs is a list of IP address ranges (using CIDR format), which will be allowed to access the proxy
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinItems=1
+	// +listType=set
+	AuthProxyAllowedIPs []string `json:"authProxyAllowedIPs,omitempty"`
+	// Cluster refers to the cluster this object belongs to
+	// +kubebuilder:validation:Required
+	Cluster corev1.Ownership `json:"cluster,omitempty"`
 	// ClusterUsers is a collection of users from the team whom have
 	// permissions across the cluster
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	ClusterUsers []ClusterUser `json:"clusterUsers,omitempty"`
-	// EnabledDefaultTrafficBlock indicates the cluster shoukd default to
+	// EnableDefaultTrafficBlock indicates the cluster should default to
 	// enabling blocking network policies on all namespaces
-	EnabledDefaultTrafficBlock *bool `json:"enabledDefaultTrafficBlock,omitempty"`
+	EnableDefaultTrafficBlock *bool `json:"enableDefaultTrafficBlock,omitempty"`
 	// DefaultTeamRole is role inherited by all team members
 	// +kubebuilder:validation:Optional
 	DefaultTeamRole string `json:"defaultTeamRole,omitempty"`
@@ -56,14 +58,6 @@ type KubernetesSpec struct {
 	// Provider is the cloud cluster provider type for this kubernetes
 	// +kubebuilder:validation:Optional
 	Provider corev1.Ownership `json:"provider,omitempty"`
-	// ProxyImage is the kube api proxy used to sso into the cluster post provision
-	// +kubebuilder:validation:Optional
-	ProxyImage string `json:"proxyImage,omitempty"`
-	// ProxyAllowedIPs is a list of IP address ranges (using CIDR format), which will be allowed to access the proxy
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinItems=1
-	// +listType=set
-	ProxyAllowedIPs []string `json:"proxyAllowedIPs,omitempty"`
 }
 
 // ClusterUser defines a user and their role in the cluster
@@ -113,6 +107,41 @@ type Kubernetes struct {
 
 	Spec   KubernetesSpec   `json:"spec,omitempty"`
 	Status KubernetesStatus `json:"status,omitempty"`
+}
+
+func NewKubernetes(name, namespace string) *Kubernetes {
+	return &Kubernetes{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Kubernetes",
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+	}
+}
+
+func (k *Kubernetes) GetStatus() (corev1.Status, string) {
+	return k.Status.Status, ""
+}
+
+func (k *Kubernetes) SetStatus(status corev1.Status) {
+	k.Status.Status = status
+}
+
+func (k *Kubernetes) GetComponents() corev1.Components {
+	return k.Status.Components
+}
+
+func (k *Kubernetes) ApplyClusterConfiguration(cluster *Cluster) error {
+	if err := json.Unmarshal(cluster.Spec.Configuration.Raw, &k.Spec); err != nil {
+		return err
+	}
+
+	k.Spec.Cluster = cluster.Ownership()
+
+	return nil
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

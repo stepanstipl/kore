@@ -19,8 +19,6 @@ package apiserver
 import (
 	"net/http"
 
-	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
-
 	restful "github.com/emicklei/go-restful"
 )
 
@@ -50,44 +48,5 @@ func (u teamHandler) findEKS(req *restful.Request, resp *restful.Response) {
 		}
 
 		return resp.WriteHeaderAndEntity(http.StatusOK, list)
-	})
-}
-
-// deleteEKS is responsible for deleting a team resource
-func (u teamHandler) deleteEKS(req *restful.Request, resp *restful.Response) {
-	handleErrors(req, resp, func() error {
-		ctx := req.Request.Context()
-		name := req.PathParameter("name")
-		team := req.PathParameter("team")
-
-		object, err := u.Teams().Team(team).Cloud().EKS().Get(ctx, name)
-		if err != nil {
-			return err
-		}
-
-		err = u.Teams().Team(team).Cloud().EKS().Delete(ctx, name)
-		if err != nil {
-			return err
-		}
-
-		return resp.WriteHeaderAndEntity(http.StatusOK, object)
-	})
-}
-
-// updateEKS is responsible for putting an resource into a team
-func (u teamHandler) updateEKS(req *restful.Request, resp *restful.Response) {
-	handleErrors(req, resp, func() error {
-		team := req.PathParameter("team")
-
-		object := &eks.EKS{}
-		if err := req.ReadEntity(object); err != nil {
-			return err
-		}
-
-		if _, err := u.Teams().Team(team).Cloud().EKS().Update(req.Request.Context(), object); err != nil {
-			return err
-		}
-
-		return resp.WriteHeaderAndEntity(http.StatusOK, object)
 	})
 }

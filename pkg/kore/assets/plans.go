@@ -45,7 +45,7 @@ func GetDefaultPlans() []*configv1.Plan {
 					Label("kind"):        "GKE",
 					Label("plural"):      "gkes",
 				},
-				Values: apiextv1.JSON{
+				Configuration: apiextv1.JSON{
 					Raw: []byte(`
 						{
 							"authorizedMasterNetworks": [
@@ -55,11 +55,14 @@ func GetDefaultPlans() []*configv1.Plan {
 								}
                             ],
 							"authProxyAllowedIPs":           ["0.0.0.0/0"],
+							"defaultTeamRole":               "viewer",
 							"description":                   "gke-development cluster",
 							"diskSize":                      100,
+							"domain":                        "example.appvia.io",
 							"enableAutoupgrade":             true,
 							"enableAutorepair":              true,
 							"enableAutoscaler":              true,
+							"enableDefaultTrafficBlock":     false,
 							"enableHTTPLoadBalancer":        true,
 							"enableHorizontalPodAutoscaler": true,
 							"enableIstio":                   false,
@@ -69,6 +72,7 @@ func GetDefaultPlans() []*configv1.Plan {
 							"enableStackDriverLogging":      true,
 							"enableStackDriverMetrics":      true,
 							"imageType":                     "COS",
+							"inheritTeamMembers":            true,
 							"machineType":                   "n1-standard-2",
 							"maintenanceWindow":             "03:00",
 							"maxSize":                       10,
@@ -95,7 +99,7 @@ func GetDefaultPlans() []*configv1.Plan {
 					Label("kind"):        "GKE",
 					Label("plural"):      "gkes",
 				},
-				Values: apiextv1.JSON{
+				Configuration: apiextv1.JSON{
 					Raw: []byte(`
 						{
 							"authorizedMasterNetworks": [
@@ -105,11 +109,14 @@ func GetDefaultPlans() []*configv1.Plan {
 								}
                             ],
 							"authProxyAllowedIPs":           ["0.0.0.0/0"],
+							"defaultTeamRole":               "viewer",
 							"description":                   "gke-production cluster",
 							"diskSize":                      100,
+							"domain":                        "example.appvia.io",
 							"enableAutoupgrade":             true,
 							"enableAutorepair":              true,
 							"enableAutoscaler":              true,
+							"enableDefaultTrafficBlock":     false,
 							"enableHTTPLoadBalancer":        true,
 							"enableHorizontalPodAutoscaler": true,
 							"enableIstio":                   false,
@@ -119,6 +126,7 @@ func GetDefaultPlans() []*configv1.Plan {
 							"enableStackDriverLogging":      true,
 							"enableStackDriverMetrics":      true,
 							"imageType":                     "COS",
+							"inheritTeamMembers":            true,
 							"machineType":                   "n1-standard-2",
 							"maintenanceWindow":             "03:00",
 							"maxSize":                       10,

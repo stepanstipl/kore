@@ -215,6 +215,12 @@ func schema_pkg_apis_gke_v1alpha1_GKESpec(ref common.ReferenceCallback) common.O
 				Description: "GKESpec defines the desired state of GKE",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"cluster": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Cluster refers to the cluster this object belongs to",
+							Ref:         ref("github.com/appvia/kore/pkg/apis/core/v1.Ownership"),
+						},
+					},
 					"description": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Description provides a short summary / description of the cluster.",
@@ -428,7 +434,7 @@ func schema_pkg_apis_gke_v1alpha1_GKESpec(ref common.ReferenceCallback) common.O
 			},
 		},
 		Dependencies: []string{
-			"github.com/appvia/kore/pkg/apis/gke/v1alpha1.AuthorizedNetwork"},
+			"github.com/appvia/kore/pkg/apis/core/v1.Ownership", "github.com/appvia/kore/pkg/apis/gke/v1alpha1.AuthorizedNetwork"},
 	}
 }
 

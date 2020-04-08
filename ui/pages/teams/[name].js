@@ -16,6 +16,7 @@ import apiRequest from '../../lib/utils/api-request'
 import copy from '../../lib/utils/object-copy'
 import asyncForEach from '../../lib/utils/async-foreach'
 import apiPaths from '../../lib/utils/api-paths'
+import KoreApi from '../../lib/kore-api'
 
 class TeamDashboard extends React.Component {
   static propTypes = {
@@ -44,13 +45,14 @@ class TeamDashboard extends React.Component {
     }
   }
 
-  static async getTeamDetails({ req, res, query }) {
-    const name = query.name
-    const getTeam = () => apiRequest({ req, res }, 'get', apiPaths.team(name).self)
-    const getTeamMembers = () => apiRequest({ req, res }, 'get', apiPaths.team(name).members)
-    const getTeamClusters = () => apiRequest({ req, res }, 'get', apiPaths.team(name).clusters)
-    const getNamespaceClaims = () => apiRequest({ req, res }, 'get', apiPaths.team(name).namespaceClaims)
-    const getAvailable = () => apiRequest({ req, res }, 'get', `${apiPaths.team(name).allocations}?assigned=true`)
+  static async getTeamDetails(ctx) {
+    const name = ctx.query.name
+    const api = await KoreApi.client(ctx)
+    const getTeam = () => api.GetTeam(name)
+    const getTeamMembers = () => api.ListTeamMembers(name)
+    const getTeamClusters = () => api.ListClusters(name)
+    const getNamespaceClaims = () => api.ListNamespaces(name)
+    const getAvailable = () => api.ListAllocations(name, true)
 
     return axios.all([getTeam(), getTeamMembers(), getTeamClusters(), getNamespaceClaims(), getAvailable()])
       .then(axios.spread(function (team, members, clusters, namespaceClaims, available) {

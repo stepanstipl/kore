@@ -47,18 +47,8 @@ func (a k8sCtrl) EnsureResourceDeletion(ctx context.Context, object *clustersv1.
 	token, err := controllers.GetConfigSecret(ctx, a.mgr.GetClient(), object.Namespace, object.Name)
 	if err != nil {
 		if kerrors.IsNotFound(err) {
-			logger.WithError(err).Warn("kubernetes secret was not found")
-
-			object.Status.Components.SetCondition(corev1.Component{
-				Name:    ComponentClusterDelete,
-				Message: "Unable obtain cluster access cluster credentials",
-				Detail:  err.Error(),
-				Status:  corev1.FailureStatus,
-			})
-
-			return err
+			return nil
 		}
-
 		logger.WithError(err).Error("unable to obtain credentials secret")
 
 		object.Status.Components.SetCondition(corev1.Component{

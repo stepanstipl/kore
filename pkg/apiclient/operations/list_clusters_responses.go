@@ -29,6 +29,18 @@ func (o *ListClustersReader) ReadResponse(response runtime.ClientResponse, consu
 			return nil, err
 		}
 		return result, nil
+	case 401:
+		result := NewListClustersUnauthorized()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 403:
+		result := NewListClustersForbidden()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	case 500:
 		result := NewListClustersInternalServerError()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
@@ -48,28 +60,70 @@ func NewListClustersOK() *ListClustersOK {
 
 /*ListClustersOK handles this case with default header values.
 
-Contains the former team definition from the kore
+List of all clusters for a team
 */
 type ListClustersOK struct {
-	Payload *models.V1KubernetesList
+	Payload *models.V1ClusterList
 }
 
 func (o *ListClustersOK) Error() string {
 	return fmt.Sprintf("[GET /api/v1alpha1/teams/{team}/clusters][%d] listClustersOK  %+v", 200, o.Payload)
 }
 
-func (o *ListClustersOK) GetPayload() *models.V1KubernetesList {
+func (o *ListClustersOK) GetPayload() *models.V1ClusterList {
 	return o.Payload
 }
 
 func (o *ListClustersOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1KubernetesList)
+	o.Payload = new(models.V1ClusterList)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
 		return err
 	}
+
+	return nil
+}
+
+// NewListClustersUnauthorized creates a ListClustersUnauthorized with default headers values
+func NewListClustersUnauthorized() *ListClustersUnauthorized {
+	return &ListClustersUnauthorized{}
+}
+
+/*ListClustersUnauthorized handles this case with default header values.
+
+If not authenticated
+*/
+type ListClustersUnauthorized struct {
+}
+
+func (o *ListClustersUnauthorized) Error() string {
+	return fmt.Sprintf("[GET /api/v1alpha1/teams/{team}/clusters][%d] listClustersUnauthorized ", 401)
+}
+
+func (o *ListClustersUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
+// NewListClustersForbidden creates a ListClustersForbidden with default headers values
+func NewListClustersForbidden() *ListClustersForbidden {
+	return &ListClustersForbidden{}
+}
+
+/*ListClustersForbidden handles this case with default header values.
+
+If authenticated but not authorized
+*/
+type ListClustersForbidden struct {
+}
+
+func (o *ListClustersForbidden) Error() string {
+	return fmt.Sprintf("[GET /api/v1alpha1/teams/{team}/clusters][%d] listClustersForbidden ", 403)
+}
+
+func (o *ListClustersForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	return nil
 }

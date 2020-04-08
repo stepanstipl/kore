@@ -17,7 +17,12 @@
 package v1alpha1
 
 import (
+	"encoding/json"
+
+	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+
 	core "github.com/appvia/kore/pkg/apis/core/v1"
+	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -25,10 +30,9 @@ import (
 // EKSSpec defines the desired state of EKSCluster
 // +k8s:openapi-gen=true
 type EKSSpec struct {
-	// Name the name of the EKS cluster
-	// +kubebuilder:validation:MinLength=3
+	// Cluster refers to the cluster this object belongs to
 	// +kubebuilder:validation:Required
-	Name string `json:"name"`
+	Cluster corev1.Ownership `json:"cluster,omitempty"`
 	// RoleARN is the role ARN which provides permissions to EKS
 	// +kubebuilder:validation:MinLength=10
 	// +kubebuilder:validation:Required
@@ -57,7 +61,7 @@ type EKSSpec struct {
 // +k8s:openapi-gen=true
 type EKSStatus struct {
 	// Conditions is the status of the components
-	Conditions *core.Components `json:"conditions,omitempty"`
+	Conditions core.Components `json:"conditions,omitempty"`
 	// CACertificate is the certificate for this cluster
 	CACertificate string `json:"caCertificate,omitempty"`
 	// Endpoint is the endpoint of the cluster
@@ -81,6 +85,42 @@ type EKS struct {
 
 	Spec   EKSSpec   `json:"spec,omitempty"`
 	Status EKSStatus `json:"status,omitempty"`
+}
+
+func NewEKS(name, namespace string) *EKS {
+	return &EKS{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "EKS",
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+	}
+}
+
+func (e *EKS) GetStatus() (corev1.Status, string) {
+	return e.Status.Status, ""
+}
+
+func (e *EKS) SetStatus(status corev1.Status) {
+	e.Status.Status = status
+}
+
+func (e *EKS) GetComponents() corev1.Components {
+	return e.Status.Conditions
+}
+
+func (e *EKS) ApplyClusterConfiguration(cluster *clustersv1.Cluster) error {
+	if err := json.Unmarshal(cluster.Spec.Configuration.Raw, &e.Spec); err != nil {
+		return err
+	}
+
+	e.Spec.Cluster = cluster.Ownership()
+	e.Spec.Credentials = cluster.Spec.Credentials
+
+	return nil
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -29,6 +29,7 @@ import (
 	_ "github.com/appvia/kore/pkg/controllers/cloud/gcp/projectclaim"
 
 	// importing the management controller
+	_ "github.com/appvia/kore/pkg/controllers/management/cluster"
 	_ "github.com/appvia/kore/pkg/controllers/management/clusterbindings"
 	_ "github.com/appvia/kore/pkg/controllers/management/clusterconfig"
 	_ "github.com/appvia/kore/pkg/controllers/management/clusterroles"

@@ -119,4 +119,10 @@ const (
 	Required ErrorCode = "required"
 	// Pattern error indicates the input doesn't match the required regex pattern
 	Pattern ErrorCode = "pattern"
+	// MustExist error indicates that the named reference must exist
+	MustExist ErrorCode = "mustExist"
+	// ReadOnly error indicates that the given value can not be changed from a pre-defined value
+	ReadOnly ErrorCode = "readOnly"
+	// InvalidType error indicates that we've expected a different type
+	InvalidType ErrorCode = "invalidType"
 )

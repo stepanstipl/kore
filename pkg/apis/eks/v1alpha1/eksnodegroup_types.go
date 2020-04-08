@@ -17,8 +17,14 @@
 package v1alpha1
 
 import (
-	core "github.com/appvia/kore/pkg/apis/core/v1"
+	"encoding/json"
+	"fmt"
+	"strings"
 
+	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+
+	core "github.com/appvia/kore/pkg/apis/core/v1"
+	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -27,9 +33,9 @@ import (
 type EKSNodeGroupSpec struct {
 	// AMIType is the AWS Machine Image type. We use a sensible default.
 	AMIType string `json:"amiType"`
-	// ClusterName keeps track of the cluster this nodegroup belowngs to.
+	// Cluster refers to the cluster this object belongs to
 	// +kubebuilder:validation:Required
-	ClusterName string `json:"clusterName"`
+	Cluster corev1.Ownership `json:"cluster,omitempty"`
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Required
 	DiskSize int64 `json:"diskSize"`
@@ -83,7 +89,7 @@ type EKSNodeGroupSpec struct {
 // +k8s:openapi-gen=true
 type EKSNodeGroupStatus struct {
 	// Conditions is the status of the components
-	Conditions *core.Components `json:"conditions,omitempty"`
+	Conditions core.Components `json:"conditions,omitempty"`
 	// Status provides a overall status
 	Status core.Status `json:"status,omitempty"`
 }
@@ -102,6 +108,63 @@ type EKSNodeGroup struct {
 
 	Spec   EKSNodeGroupSpec   `json:"spec,omitempty"`
 	Status EKSNodeGroupStatus `json:"status,omitempty"`
+}
+
+// NewEKSNodeGroup creates a new EKSNodeGroup instance
+func NewEKSNodeGroup(name, namespace string) *EKSNodeGroup {
+	return &EKSNodeGroup{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "EKSNodeGroup",
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+	}
+}
+
+func (e *EKSNodeGroup) GetStatus() (corev1.Status, string) {
+	return e.Status.Status, ""
+}
+
+func (e *EKSNodeGroup) SetStatus(status corev1.Status) {
+	e.Status.Status = status
+}
+
+func (e *EKSNodeGroup) GetComponents() corev1.Components {
+	return e.Status.Conditions
+}
+
+func (e *EKSNodeGroup) ApplyClusterConfiguration(cluster *clustersv1.Cluster) error {
+	var config map[string]interface{}
+	if err := json.Unmarshal(cluster.Spec.Configuration.Raw, &config); err != nil {
+		return err
+	}
+
+	nodeGroupName := strings.TrimPrefix(e.Name, cluster.Name+"-")
+
+	var found bool
+	for _, ng := range config["nodeGroups"].([]interface{}) {
+		nodeGroup := ng.(map[string]interface{})
+		if nodeGroup["name"].(string) == nodeGroupName {
+			nodeGroupJson, _ := json.Marshal(nodeGroup)
+			if err := json.Unmarshal(nodeGroupJson, &e.Spec); err != nil {
+				return err
+			}
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		panic(fmt.Errorf("nodeGroup.[name=%q] can not be found in the cluster configuration", nodeGroupName))
+	}
+
+	e.Spec.Cluster = cluster.Ownership()
+	e.Spec.Credentials = cluster.Spec.Credentials
+
+	return nil
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

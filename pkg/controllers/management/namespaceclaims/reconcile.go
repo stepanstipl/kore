@@ -131,7 +131,7 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		}
 
 		// @step: check the provisioning status
-		status, found := cluster.Status.Components.GetStatus(ctrl.ComponentClusterCreate)
+		status, found := cluster.Status.Components.GetComponent(ctrl.ComponentClusterCreate)
 		if !found {
 			logger.Warn("cluster does not have a status on the provisioning yet")
 
@@ -155,7 +155,7 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 			return reconcile.Result{RequeueAfter: 3 * time.Minute}, nil
 
-		case core.SuccessStatus, core.DeleteStatus:
+		case core.SuccessStatus, core.DeletingStatus:
 		default:
 			resource.Status.Status = core.PendingStatus
 			resource.Status.Conditions = []core.Condition{{

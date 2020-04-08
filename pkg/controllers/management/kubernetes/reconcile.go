@@ -401,7 +401,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		}
 
 		// @step: is default network block enabled?
-		if object.Spec.EnabledDefaultTrafficBlock != nil && *object.Spec.EnabledDefaultTrafficBlock {
+		if object.Spec.EnableDefaultTrafficBlock != nil && *object.Spec.EnableDefaultTrafficBlock {
 			// @step: ensure the remote cluster has the traffic blocked
 			logger.Debug("ensuring that network policies are enabled by default on all namespaces")
 
@@ -481,7 +481,7 @@ func (a k8sCtrl) CheckProviderStatus(ctx context.Context, resource *clustersv1.K
 		}
 
 		// @check if we have a provider status for provisioning yet
-		status, found := p.Status.Conditions.GetStatus(ekscc.ComponentClusterCreator)
+		status, found := p.Status.Conditions.GetComponent(ekscc.ComponentClusterCreator)
 		if !found {
 			logger.Warn("eks cluster has no status, throwing an error until we know")
 
@@ -529,7 +529,7 @@ func (a k8sCtrl) CheckProviderStatus(ctx context.Context, resource *clustersv1.K
 		}
 
 		// @check if we have a provider status for provisioning yet
-		status, found := p.Status.Conditions.GetStatus(gkecc.ComponentClusterCreator)
+		status, found := p.Status.Conditions.GetComponent(gkecc.ComponentClusterCreator)
 		if !found {
 			logger.Warn("gke cluster has no status, throwing an error until we know")
 

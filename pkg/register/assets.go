@@ -5,6 +5,7 @@
 // deploy/crds/aws.compute.kore.appvia.io_ekscredentials.yaml
 // deploy/crds/aws.compute.kore.appvia.io_eksnodegroups.yaml
 // deploy/crds/aws.compute.kore.appvia.io_ekss.yaml
+// deploy/crds/clusters.compute.kore.appvia.io_clusters.yaml
 // deploy/crds/clusters.compute.kore.appvia.io_kubernetes.yaml
 // deploy/crds/clusters.compute.kore.appvia.io_managedclusterrole.yaml
 // deploy/crds/clusters.compute.kore.appvia.io_managedclusterrolebinding.yaml
@@ -833,10 +834,31 @@ spec:
               description: AMIType is the AWS Machine Image type. We use a sensible
                 default.
               type: string
-            clusterName:
-              description: ClusterName keeps track of the cluster this nodegroup belowngs
-                to.
-              type: string
+            cluster:
+              description: Cluster refers to the cluster this object belongs to
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
             credentials:
               description: Credentials is a reference to an AWSCredentials object
                 to use for authentication
@@ -927,7 +949,6 @@ spec:
               type: object
           required:
           - amiType
-          - clusterName
           - credentials
           - desiredSize
           - diskSize
@@ -1046,6 +1067,31 @@ spec:
         spec:
           description: EKSSpec defines the desired state of EKSCluster
           properties:
+            cluster:
+              description: Cluster refers to the cluster this object belongs to
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
             credentials:
               description: Credentials is a reference to an EKSCredentials object
                 to use for authentication
@@ -1072,10 +1118,6 @@ spec:
               - namespace
               - version
               type: object
-            name:
-              description: Name the name of the EKS cluster
-              minLength: 3
-              type: string
             region:
               description: Region is the AWS region to launch this cluster within
               type: string
@@ -1101,7 +1143,6 @@ spec:
               type: string
           required:
           - credentials
-          - name
           - region
           - roleARN
           - subnetIDs
@@ -1168,6 +1209,163 @@ func crdsAwsComputeKoreAppviaIo_ekssYaml() (*asset, error) {
 	return a, nil
 }
 
+var _crdsClustersComputeKoreAppviaIo_clustersYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: clusters.clusters.compute.kore.appvia.io
+spec:
+  group: clusters.compute.kore.appvia.io
+  names:
+    kind: Cluster
+    listKind: ClusterList
+    plural: clusters
+    singular: cluster
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: Cluster is the Schema for the plans API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: ClusterSpec defines the desired state of a cluster
+          properties:
+            configuration:
+              description: Configuration are the configuration values for this cluster
+                It will contain values from the plan + overrides by the user This
+                will provide a simple interface to calculate diffs between plan and
+                cluster configuration
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+            credentials:
+              description: Credentials is a reference to the credentials object to
+                use
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
+            kind:
+              description: Kind refers to the cluster type (e.g. GKE, EKS)
+              minLength: 1
+              type: string
+            plan:
+              description: Plan is the name of the cluster plan which was used to
+                create this cluster
+              minLength: 1
+              type: string
+          required:
+          - configuration
+          - credentials
+          - kind
+          - plan
+          type: object
+        status:
+          description: ClusterStatus defines the observed state of a cluster
+          properties:
+            apiEndpoint:
+              description: APIEndpoint is the kubernetes API endpoint url
+              type: string
+            authProxyEndpoint:
+              description: AuthProxyEndpoint is the endpoint of the authentication
+                proxy for this cluster
+              minLength: 1
+              type: string
+            caCertificate:
+              description: CaCertificate is the base64 encoded cluster certificate
+              type: string
+            components:
+              description: Components is a collection of component statuses
+              items:
+                description: Component the state of a component of the resource
+                properties:
+                  detail:
+                    description: Detail is additional details on the error is any
+                    type: string
+                  message:
+                    description: Message is a human readable message on the status
+                      of the component
+                    type: string
+                  name:
+                    description: Name is the name of the component
+                    type: string
+                  status:
+                    description: Status is the status of the component
+                    type: string
+                type: object
+              type: array
+            message:
+              description: Message is the description of the current status
+              type: string
+            status:
+              description: Status is the overall status of the cluster
+              type: string
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsClustersComputeKoreAppviaIo_clustersYamlBytes() ([]byte, error) {
+	return _crdsClustersComputeKoreAppviaIo_clustersYaml, nil
+}
+
+func crdsClustersComputeKoreAppviaIo_clustersYaml() (*asset, error) {
+	bytes, err := crdsClustersComputeKoreAppviaIo_clustersYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/clusters.compute.kore.appvia.io_clusters.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _crdsClustersComputeKoreAppviaIo_kubernetesYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -1207,9 +1405,43 @@ spec:
         spec:
           description: KubernetesSpec defines the desired state of Cluster
           properties:
-            authentication:
-              description: Authentication indicates a mode of user authentication
+            authProxyAllowedIPs:
+              description: AuthProxyAllowedIPs is a list of IP address ranges (using
+                CIDR format), which will be allowed to access the proxy
+              items:
+                type: string
+              minItems: 1
+              type: array
+              x-kubernetes-list-type: set
+            authProxyImage:
+              description: AuthProxyImage is the kube api proxy used to sso into the
+                cluster post provision
               type: string
+            cluster:
+              description: Cluster refers to the cluster this object belongs to
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
             clusterUsers:
               description: ClusterUsers is a collection of users from the team whom
                 have permissions across the cluster
@@ -1240,8 +1472,8 @@ spec:
             domain:
               description: Domain is the domain of the cluster
               type: string
-            enabledDefaultTrafficBlock:
-              description: EnabledDefaultTrafficBlock indicates the cluster shoukd
+            enableDefaultTrafficBlock:
+              description: EnableDefaultTrafficBlock indicates the cluster should
                 default to enabling blocking network policies on all namespaces
               type: boolean
             inheritTeamMembers:
@@ -1273,18 +1505,6 @@ spec:
               - namespace
               - version
               type: object
-            proxyAllowedIPs:
-              description: ProxyAllowedIPs is a list of IP address ranges (using CIDR
-                format), which will be allowed to access the proxy
-              items:
-                type: string
-              minItems: 1
-              type: array
-              x-kubernetes-list-type: set
-            proxyImage:
-              description: ProxyImage is the kube api proxy used to sso into the cluster
-                post provision
-              type: string
           type: object
         status:
           description: KubernetesStatus defines the observed state of Cluster
@@ -3306,6 +3526,11 @@ spec:
         spec:
           description: PlanSpec defines the desired state of Plan
           properties:
+            configuration:
+              description: Configuration are the key+value pairs describing a cluster
+                configuration
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
             description:
               description: Description provides a summary of the configuration provided
                 by this plan
@@ -3324,15 +3549,11 @@ spec:
               description: Summary provides a short title summary for the plan
               minLength: 1
               type: string
-            values:
-              description: Values are the key values to the plan
-              type: object
-              x-kubernetes-preserve-unknown-fields: true
           required:
+          - configuration
           - description
           - kind
           - summary
-          - values
           type: object
         status:
           description: PlanStatus defines the observed state of Plan
@@ -4364,12 +4585,37 @@ spec:
                 type: object
               type: array
               x-kubernetes-list-type: set
+            cluster:
+              description: Cluster refers to the cluster this object belongs to
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
             clusterIPV4Cidr:
               description: ClusterIPV4Cidr is an optional network CIDR which is used
                 to place the pod network on
               type: string
             credentials:
-              description: GKECredentials is a reference to the gke credentials object
+              description: Credentials is a reference to the gke credentials object
                 to use
               properties:
                 group:
@@ -5197,6 +5443,7 @@ var _bindata = map[string]func() (*asset, error){
 	"crds/aws.compute.kore.appvia.io_ekscredentials.yaml":                 crdsAwsComputeKoreAppviaIo_ekscredentialsYaml,
 	"crds/aws.compute.kore.appvia.io_eksnodegroups.yaml":                  crdsAwsComputeKoreAppviaIo_eksnodegroupsYaml,
 	"crds/aws.compute.kore.appvia.io_ekss.yaml":                           crdsAwsComputeKoreAppviaIo_ekssYaml,
+	"crds/clusters.compute.kore.appvia.io_clusters.yaml":                  crdsClustersComputeKoreAppviaIo_clustersYaml,
 	"crds/clusters.compute.kore.appvia.io_kubernetes.yaml":                crdsClustersComputeKoreAppviaIo_kubernetesYaml,
 	"crds/clusters.compute.kore.appvia.io_managedclusterrole.yaml":        crdsClustersComputeKoreAppviaIo_managedclusterroleYaml,
 	"crds/clusters.compute.kore.appvia.io_managedclusterrolebinding.yaml": crdsClustersComputeKoreAppviaIo_managedclusterrolebindingYaml,
@@ -5269,6 +5516,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"aws.compute.kore.appvia.io_ekscredentials.yaml":                 {crdsAwsComputeKoreAppviaIo_ekscredentialsYaml, map[string]*bintree{}},
 		"aws.compute.kore.appvia.io_eksnodegroups.yaml":                  {crdsAwsComputeKoreAppviaIo_eksnodegroupsYaml, map[string]*bintree{}},
 		"aws.compute.kore.appvia.io_ekss.yaml":                           {crdsAwsComputeKoreAppviaIo_ekssYaml, map[string]*bintree{}},
+		"clusters.compute.kore.appvia.io_clusters.yaml":                  {crdsClustersComputeKoreAppviaIo_clustersYaml, map[string]*bintree{}},
 		"clusters.compute.kore.appvia.io_kubernetes.yaml":                {crdsClustersComputeKoreAppviaIo_kubernetesYaml, map[string]*bintree{}},
 		"clusters.compute.kore.appvia.io_managedclusterrole.yaml":        {crdsClustersComputeKoreAppviaIo_managedclusterroleYaml, map[string]*bintree{}},
 		"clusters.compute.kore.appvia.io_managedclusterrolebinding.yaml": {crdsClustersComputeKoreAppviaIo_managedclusterrolebindingYaml, map[string]*bintree{}},

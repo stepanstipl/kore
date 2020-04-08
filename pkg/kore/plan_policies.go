@@ -19,12 +19,15 @@ package kore
 import (
 	"context"
 
+	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
+
+	"github.com/appvia/kore/pkg/utils/validation"
+
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/store"
 
 	log "github.com/sirupsen/logrus"
-	kerrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 // PlanPolicies is the interface to the plan policies
@@ -38,7 +41,7 @@ type PlanPolicies interface {
 	// Has checks if a plan policy
 	Has(context.Context, string) (bool, error)
 	// Update is responsible for updating a plan policy
-	Update(context.Context, *configv1.PlanPolicy) error
+	Update(ctx context.Context, planPolicy *configv1.PlanPolicy, allowReadonly bool) error
 }
 
 type planPoliciesImpl struct {
@@ -46,7 +49,7 @@ type planPoliciesImpl struct {
 }
 
 // Update is responsible for updating a plan policy
-func (p planPoliciesImpl) Update(ctx context.Context, planPolicy *configv1.PlanPolicy) error {
+func (p planPoliciesImpl) Update(ctx context.Context, planPolicy *configv1.PlanPolicy, allowReadonly bool) error {
 	planPolicy.Namespace = HubAdminTeam
 
 	// @TODO: check the user is admin or has kore permissions
@@ -55,6 +58,20 @@ func (p planPoliciesImpl) Update(ctx context.Context, planPolicy *configv1.PlanP
 		log.WithField("user", user.Username()).Warn("failed to update the plan policy policy without permissions")
 
 		return ErrUnauthorized
+	}
+
+	if !allowReadonly {
+		original, err := p.Get(ctx, planPolicy.Name)
+		if err != nil && err != ErrNotFound {
+			return err
+		}
+
+		if original != nil && original.Labels[corev1.LabelReadonly] == "true" {
+			return validation.NewError("the plan policy can not be updated").WithFieldError(validation.FieldRoot, validation.ReadOnly, "policy is read-only")
+		}
+		if planPolicy.Labels[corev1.LabelReadonly] == "true" {
+			return validation.NewError("the plan policy can not be updated").WithFieldError(validation.FieldRoot, validation.ReadOnly, "read-only flag can not be set")
+		}
 	}
 
 	err := p.Store().Client().Update(ctx,
@@ -80,19 +97,13 @@ func (p planPoliciesImpl) Delete(ctx context.Context, name string) (*configv1.Pl
 		return nil, ErrUnauthorized
 	}
 
-	planPolicy := &configv1.PlanPolicy{}
-	err := p.Store().Client().Get(ctx,
-		store.GetOptions.InNamespace(HubAdminTeam),
-		store.GetOptions.InTo(planPolicy),
-		store.GetOptions.WithName(name),
-	)
+	planPolicy, err := p.Get(ctx, name)
 	if err != nil {
-		if kerrors.IsNotFound(err) {
-			return nil, ErrNotFound
-		}
-		log.WithError(err).Error("failed to retrieve plan policy")
-
 		return nil, err
+	}
+
+	if planPolicy.Labels[corev1.LabelReadonly] == "true" {
+		return nil, validation.NewError("the plan policy can not be deleted").WithFieldError(validation.FieldRoot, validation.ReadOnly, "policy is read-only")
 	}
 
 	if err := p.Store().Client().Delete(ctx, store.DeleteOptions.From(planPolicy)); err != nil {

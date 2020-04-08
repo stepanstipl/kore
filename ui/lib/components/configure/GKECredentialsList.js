@@ -6,7 +6,7 @@ import { kore } from '../../../config'
 import Credentials from '../team/Credentials'
 import ResourceList from '../configure/ResourceList'
 import GKECredentialsForm from '../forms/GKECredentialsForm'
-import KoreApi from '../../utils/kore-api'
+import KoreApi from '../../kore-api'
 
 class GKECredentialsList extends ResourceList {
 

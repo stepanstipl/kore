@@ -107,7 +107,7 @@ func (g *gkeClient) Delete(ctx context.Context) error {
 		cluster.Name)
 
 	// @step: check for any ongoing operation
-	id, found, err := g.FindOperation(ctx, "DELETE_CLUSTER", "clusters", cluster.Name)
+	id, found, err := g.FindOperation(ctx, "DELETE_CLUSTER", "kubernetes", cluster.Name)
 	if err != nil {
 		logger.WithError(err).Error("trying to check for current operations")
 
@@ -154,7 +154,7 @@ func (g *gkeClient) Create(ctx context.Context) (*container.Cluster, error) {
 	}
 
 	// @step: looking for any ongoing operation
-	id, found, err := g.FindOperation(ctx, "CREATE_CLUSTER", "clusters", g.cluster.Name)
+	id, found, err := g.FindOperation(ctx, "CREATE_CLUSTER", "kubernetes", g.cluster.Name)
 	if err != nil {
 		return nil, err
 	}

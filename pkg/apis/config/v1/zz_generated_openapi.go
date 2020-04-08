@@ -464,14 +464,14 @@ func schema_pkg_apis_config_v1_PlanSpec(ref common.ReferenceCallback) common.Ope
 							Format:      "",
 						},
 					},
-					"values": {
+					"configuration": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Values are the key values to the plan",
+							Description: "Configuration are the key+value pairs describing a cluster configuration",
 							Ref:         ref("k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"),
 						},
 					},
 				},
-				Required: []string{"kind", "description", "summary", "values"},
+				Required: []string{"kind", "description", "summary", "configuration"},
 			},
 		},
 		Dependencies: []string{

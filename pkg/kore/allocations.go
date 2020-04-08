@@ -19,6 +19,8 @@ package kore
 import (
 	"context"
 
+	"github.com/appvia/kore/pkg/utils/validation"
+
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/store"
@@ -44,8 +46,10 @@ type Allocations interface {
 	List(context.Context) (*configv1.AllocationList, error)
 	// ListAllocationsAssigned returns a list of all allocations shared to me
 	ListAllocationsAssigned(context.Context) (*configv1.AllocationList, error)
+	// ListAllocationsByType returns a list of all allocations shared to me, filtered by type
+	ListAllocationsByType(ctx context.Context, group, version, kind string) (*configv1.AllocationList, error)
 	// Update is responsible for updating / creating an allocation
-	Update(context.Context, *configv1.Allocation) error
+	Update(ctx context.Context, allocation *configv1.Allocation, allowReadonly bool) error
 }
 
 // acaImpl is the allocations interface
@@ -131,6 +135,10 @@ func (a acaImpl) Delete(ctx context.Context, name string) (*configv1.Allocation,
 		return nil, err
 	}
 
+	if object.Labels[corev1.LabelReadonly] == "true" {
+		return nil, validation.NewError("the allocation can not be deleted").WithFieldError(validation.FieldRoot, validation.ReadOnly, "allocation is read-only")
+	}
+
 	return object, a.Store().Client().Delete(ctx, store.DeleteOptions.From(object))
 }
 
@@ -157,7 +165,7 @@ func (a acaImpl) Get(ctx context.Context, name string) (*configv1.Allocation, er
 func (a acaImpl) GetAssigned(ctx context.Context, name string) (*configv1.Allocation, error) {
 	list, err := a.ListAllocationsAssigned(ctx)
 	if err != nil {
-		log.WithError(err).Error("trying to retrieve list of assigned allocations")
+		log.WithError(err).Error("failed to retrieve list of assigned allocations")
 
 		return nil, err
 	}
@@ -180,7 +188,7 @@ func (a acaImpl) ListAllocationsAssigned(ctx context.Context) (*configv1.Allocat
 		store.ListOptions.InAllNamespaces(),
 		store.ListOptions.InTo(all),
 	); err != nil {
-		log.WithError(err).Error("trying to retrieve a list of all allocations")
+		log.WithError(err).Error("failed to retrieve a list of all allocations")
 
 		return nil, err
 	}
@@ -213,7 +221,7 @@ func (a acaImpl) List(ctx context.Context) (*configv1.AllocationList, error) {
 }
 
 // Update is responsible for updating / creating an allocation
-func (a acaImpl) Update(ctx context.Context, allocation *configv1.Allocation) error {
+func (a acaImpl) Update(ctx context.Context, allocation *configv1.Allocation, allowReadonly bool) error {
 	logger := log.WithFields(log.Fields{
 		"group":              allocation.Spec.Resource.Group,
 		"kind":               allocation.Spec.Resource.Kind,
@@ -240,9 +248,47 @@ func (a acaImpl) Update(ctx context.Context, allocation *configv1.Allocation) er
 		return ErrNotAllowed{message: "you cannot allocate a resource which you do not own"}
 	}
 
+	if !allowReadonly {
+		original, err := a.Get(ctx, allocation.Name)
+		if err != nil && err != ErrNotFound {
+			return err
+		}
+
+		if original != nil && original.Labels[corev1.LabelReadonly] == "true" {
+			return validation.NewError("the allocation can not be updated").WithFieldError(validation.FieldRoot, validation.ReadOnly, "allocation is read-only")
+		}
+		if allocation.Labels[corev1.LabelReadonly] == "true" {
+			return validation.NewError("the allocation can not be updated").WithFieldError(validation.FieldRoot, validation.ReadOnly, "read-only flag can not be set")
+		}
+	}
+
 	return a.Store().Client().Update(ctx,
 		store.UpdateOptions.To(allocation),
 		store.UpdateOptions.WithCreate(true),
 		store.UpdateOptions.WithForce(true),
 	)
+}
+
+func (a acaImpl) ListAllocationsByType(ctx context.Context, group, version, kind string) (*configv1.AllocationList, error) {
+	allocations, err := a.ListAllocationsAssigned(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	target := corev1.Ownership{
+		Group:     group,
+		Version:   version,
+		Kind:      kind,
+		Namespace: HubAdminTeam,
+	}
+
+	var res []configv1.Allocation
+	for _, allocation := range allocations.Items {
+		if allocation.Spec.Resource.IsSameType(target) {
+			res = append(res, allocation)
+		}
+	}
+	allocations.Items = res
+
+	return allocations, nil
 }

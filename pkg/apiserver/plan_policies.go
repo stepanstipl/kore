@@ -142,7 +142,7 @@ func (p planPoliciesHandler) updatePlanPolicy(req *restful.Request, resp *restfu
 		}
 		planPolicy.Name = name
 
-		if err := p.PlanPolicies().Update(req.Request.Context(), planPolicy); err != nil {
+		if err := p.PlanPolicies().Update(req.Request.Context(), planPolicy, false); err != nil {
 			return err
 		}
 

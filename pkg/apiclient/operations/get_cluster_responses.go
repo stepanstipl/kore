@@ -29,6 +29,24 @@ func (o *GetClusterReader) ReadResponse(response runtime.ClientResponse, consume
 			return nil, err
 		}
 		return result, nil
+	case 401:
+		result := NewGetClusterUnauthorized()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 403:
+		result := NewGetClusterForbidden()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 404:
+		result := NewGetClusterNotFound()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	case 500:
 		result := NewGetClusterInternalServerError()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
@@ -48,28 +66,91 @@ func NewGetClusterOK() *GetClusterOK {
 
 /*GetClusterOK handles this case with default header values.
 
-Contains the former team definition from the kore
+The requested cluster details
 */
 type GetClusterOK struct {
-	Payload *models.V1Kubernetes
+	Payload *models.V1Cluster
 }
 
 func (o *GetClusterOK) Error() string {
 	return fmt.Sprintf("[GET /api/v1alpha1/teams/{team}/clusters/{name}][%d] getClusterOK  %+v", 200, o.Payload)
 }
 
-func (o *GetClusterOK) GetPayload() *models.V1Kubernetes {
+func (o *GetClusterOK) GetPayload() *models.V1Cluster {
 	return o.Payload
 }
 
 func (o *GetClusterOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1Kubernetes)
+	o.Payload = new(models.V1Cluster)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
 		return err
 	}
+
+	return nil
+}
+
+// NewGetClusterUnauthorized creates a GetClusterUnauthorized with default headers values
+func NewGetClusterUnauthorized() *GetClusterUnauthorized {
+	return &GetClusterUnauthorized{}
+}
+
+/*GetClusterUnauthorized handles this case with default header values.
+
+If not authenticated
+*/
+type GetClusterUnauthorized struct {
+}
+
+func (o *GetClusterUnauthorized) Error() string {
+	return fmt.Sprintf("[GET /api/v1alpha1/teams/{team}/clusters/{name}][%d] getClusterUnauthorized ", 401)
+}
+
+func (o *GetClusterUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
+// NewGetClusterForbidden creates a GetClusterForbidden with default headers values
+func NewGetClusterForbidden() *GetClusterForbidden {
+	return &GetClusterForbidden{}
+}
+
+/*GetClusterForbidden handles this case with default header values.
+
+If authenticated but not authorized
+*/
+type GetClusterForbidden struct {
+}
+
+func (o *GetClusterForbidden) Error() string {
+	return fmt.Sprintf("[GET /api/v1alpha1/teams/{team}/clusters/{name}][%d] getClusterForbidden ", 403)
+}
+
+func (o *GetClusterForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
+// NewGetClusterNotFound creates a GetClusterNotFound with default headers values
+func NewGetClusterNotFound() *GetClusterNotFound {
+	return &GetClusterNotFound{}
+}
+
+/*GetClusterNotFound handles this case with default header values.
+
+the cluster with the given name doesn't exist
+*/
+type GetClusterNotFound struct {
+}
+
+func (o *GetClusterNotFound) Error() string {
+	return fmt.Sprintf("[GET /api/v1alpha1/teams/{team}/clusters/{name}][%d] getClusterNotFound ", 404)
+}
+
+func (o *GetClusterNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	return nil
 }

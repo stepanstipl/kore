@@ -24,8 +24,8 @@ import (
 	restful "github.com/emicklei/go-restful"
 )
 
-// findClusters returns all the clusters under the team
-func (u teamHandler) findClusters(req *restful.Request, resp *restful.Response) {
+// listClusters returns all the clusters from a team
+func (u teamHandler) listClusters(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		team := req.PathParameter("team")
 
@@ -38,8 +38,8 @@ func (u teamHandler) findClusters(req *restful.Request, resp *restful.Response) 
 	})
 }
 
-// findCluster returns a cluster under the team
-func (u teamHandler) findCluster(req *restful.Request, resp *restful.Response) {
+// getCluster returns a cluster from a team
+func (u teamHandler) getCluster(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		name := req.PathParameter("name")
 		team := req.PathParameter("team")
@@ -53,7 +53,25 @@ func (u teamHandler) findCluster(req *restful.Request, resp *restful.Response) {
 	})
 }
 
-// deleteCluster is responsible for deleting a team resource
+// updateCluster is responsible for creating or updating a cluster
+func (u teamHandler) updateCluster(req *restful.Request, resp *restful.Response) {
+	handleErrors(req, resp, func() error {
+		team := req.PathParameter("team")
+
+		cluster := &clustersv1.Cluster{}
+		if err := req.ReadEntity(cluster); err != nil {
+			return err
+		}
+
+		if err := u.Teams().Team(team).Clusters().Update(req.Request.Context(), cluster); err != nil {
+			return err
+		}
+
+		return resp.WriteHeaderAndEntity(http.StatusOK, cluster)
+	})
+}
+
+// deleteCluster is responsible for deleting a cluster from a team
 func (u teamHandler) deleteCluster(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		ctx := req.Request.Context()
@@ -62,24 +80,6 @@ func (u teamHandler) deleteCluster(req *restful.Request, resp *restful.Response)
 
 		object, err := u.Teams().Team(team).Clusters().Delete(ctx, name)
 		if err != nil {
-			return err
-		}
-
-		return resp.WriteHeaderAndEntity(http.StatusOK, object)
-	})
-}
-
-// updateCluster is responsible for putting an resource into a team
-func (u teamHandler) updateCluster(req *restful.Request, resp *restful.Response) {
-	handleErrors(req, resp, func() error {
-		team := req.PathParameter("team")
-
-		object := &clustersv1.Kubernetes{}
-		if err := req.ReadEntity(object); err != nil {
-			return err
-		}
-
-		if err := u.Teams().Team(team).Clusters().Update(req.Request.Context(), object); err != nil {
 			return err
 		}
 

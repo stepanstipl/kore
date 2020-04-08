@@ -18,8 +18,14 @@ import (
 // swagger:model v1.KubernetesSpec
 type V1KubernetesSpec struct {
 
-	// authentication
-	Authentication V1AuthenticationMode `json:"authentication,omitempty"`
+	// auth proxy allowed i ps
+	AuthProxyAllowedIPs []string `json:"authProxyAllowedIPs"`
+
+	// auth proxy image
+	AuthProxyImage string `json:"authProxyImage,omitempty"`
+
+	// cluster
+	Cluster *V1Ownership `json:"cluster,omitempty"`
 
 	// cluster users
 	ClusterUsers []*V1ClusterUser `json:"clusterUsers"`
@@ -30,25 +36,23 @@ type V1KubernetesSpec struct {
 	// domain
 	Domain string `json:"domain,omitempty"`
 
-	// enabled default traffic block
-	EnabledDefaultTrafficBlock bool `json:"enabledDefaultTrafficBlock,omitempty"`
+	// enable default traffic block
+	EnableDefaultTrafficBlock bool `json:"enableDefaultTrafficBlock,omitempty"`
 
 	// inherit team members
 	InheritTeamMembers bool `json:"inheritTeamMembers,omitempty"`
 
 	// provider
 	Provider *V1Ownership `json:"provider,omitempty"`
-
-	// proxy allowed i ps
-	ProxyAllowedIPs []string `json:"proxyAllowedIPs"`
-
-	// proxy image
-	ProxyImage string `json:"proxyImage,omitempty"`
 }
 
 // Validate validates this v1 kubernetes spec
 func (m *V1KubernetesSpec) Validate(formats strfmt.Registry) error {
 	var res []error
+
+	if err := m.validateCluster(formats); err != nil {
+		res = append(res, err)
+	}
 
 	if err := m.validateClusterUsers(formats); err != nil {
 		res = append(res, err)
@@ -61,6 +65,24 @@ func (m *V1KubernetesSpec) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *V1KubernetesSpec) validateCluster(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Cluster) { // not required
+		return nil
+	}
+
+	if m.Cluster != nil {
+		if err := m.Cluster.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("cluster")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 

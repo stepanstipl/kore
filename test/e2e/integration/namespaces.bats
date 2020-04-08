@@ -93,6 +93,6 @@ load helper
 
   runit "${KORE} delete namespaceclaims ${fullname} -t e2e"
   [[ "$status" -eq 0 ]]
-  retry 10 "${KORE} get namespaceclaims ${fullname} -t e2e 2>&1 | grep 'is not a valid resource type'"
+  retry 10 "${KORE} get namespaceclaims ${fullname} -t e2e 2>&1 | grep 'does not exist'"
   [[ "$status" -eq 0 ]]
 }

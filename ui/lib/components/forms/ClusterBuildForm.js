@@ -1,17 +1,17 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
 import Router from 'next/router'
+import { Button, Form, Alert, message } from 'antd'
+
 import copy from '../../utils/object-copy'
 import redirect from '../../utils/redirect'
-import apiRequest from '../../utils/api-request'
-import apiPaths from '../../utils/api-paths'
-import Generic from '../../crd/Generic'
 import CloudSelector from '../cluster-build/CloudSelector'
 import MissingProvider from '../cluster-build/MissingProvider'
 import ClusterOptionsForm from '../cluster-build/ClusterOptionsForm'
-import KubernetesOptionsForm from '../cluster-build/KubernetesOptionsForm'
-
-import { Button, Form, Alert, message } from 'antd'
+import KoreApi from '../../kore-api'
+import V1ClusterSpec from '../../kore-api/model/V1ClusterSpec'
+import V1Cluster from '../../kore-api/model/V1Cluster'
+import V1ObjectMeta from '../../kore-api/model/V1ObjectMeta'
 
 class ClusterBuildForm extends React.Component {
   static propTypes = {
@@ -31,119 +31,108 @@ class ClusterBuildForm extends React.Component {
       formErrorMessage: false,
       selectedCloud: '',
       dataLoading: true,
-      providers: {},
-      showKubernetesOptions: false
+      providers: {}
     }
   }
 
   async fetchComponentData() {
     const team = this.props.team.metadata.name
+    const api = await KoreApi.client()
     const [ allocations, plans ] = await Promise.all([
-      apiRequest(null, 'get', `${apiPaths.team(team).allocations}?assigned=true`),
-      apiRequest(null, 'get', apiPaths.plans)
+      api.ListAllocations(team, true),
+      api.ListPlans()
     ])
     return { allocations, plans }
   }
 
+  componentDidMountComplete = null
   componentDidMount() {
-    return this.fetchComponentData()
-      .then(({ allocations, plans }) => {
-        const gkeCredentials = (allocations.items || []).filter(a => a.spec.resource.kind === 'GKECredentials')
-        const eksCredentials = (allocations.items || []).filter(a => a.spec.resource.kind === 'EKSCredentials')
-        const state = copy(this.state)
-        state.providers.GKE = gkeCredentials
-        state.providers.EKS = eksCredentials
-        state.plans = plans
-        state.dataLoading = false
-        this.setState(state)
+    // Assign the promise chain to a variable so tests can wait for it to complete.
+    this.componentDidMountComplete = Promise.resolve().then(async () => {
+      const { allocations, plans } = await this.fetchComponentData()
+      const gkeCredentials = (allocations.items || []).filter(a => a.spec.resource.kind === 'GKECredentials')
+      const eksCredentials = (allocations.items || []).filter(a => a.spec.resource.kind === 'EKSCredentials')
+      this.setState({
+        ...this.state,
+        providers: {
+          ...this.state.providers,
+          GKE: gkeCredentials,
+          EKS: eksCredentials
+        },
+        plans: plans,
+        dataLoading: false
       })
+    })
   }
 
-  validateForms(callback) {
-    this.clusterOptionsForm.props.form.validateFields((clusterFormErr, clusterFormValues) => {
-      if (this.state.showKubernetesOptions) {
-        this.kubernetesOptionsForm.props.form.validateFields((k8sFormErr, k8sFormValues) => {
-          const err = { ...clusterFormErr, ...k8sFormErr }
-          const values = { ...clusterFormValues, ...k8sFormValues }
-          callback(Object.keys(err).length > 0 ? err : false, values)
-        })
-      } else {
-        callback(clusterFormErr, clusterFormValues)
-      }
-    })
+  getClusterResource = (values) => {
+    const selectedProvider = this.state.providers[this.state.selectedCloud].find(p => p.metadata.name === values.provider)
+    const selectedPlan = this.state.plans.items.find(p => p.metadata.name === values.plan)
+
+    const clusterResource = new V1Cluster()
+    clusterResource.setApiVersion('clusters.compute.kore.appvia.io/v1')
+    clusterResource.setKind('Cluster')
+
+    const meta = new V1ObjectMeta()
+    meta.setName(values.clusterName)
+    meta.setNamespace(this.props.team.metadata.name)
+    clusterResource.setMetadata(meta)
+
+    const clusterSpec = new V1ClusterSpec()
+    clusterSpec.setKind(selectedPlan.spec.kind)
+    clusterSpec.setPlan(selectedPlan.metadata.name)
+    // @TODO: Make the configuration updateable. For now, just copy it over:
+    clusterSpec.setConfiguration({...selectedPlan.spec.configuration})
+    clusterSpec.setCredentials({...selectedProvider.spec.resource})
+    // Add current user as cluster admin to plan config, if no cluster users specified from plan:
+    if (!(clusterSpec.configuration['clusterUsers'])) {
+      clusterSpec.configuration['clusterUsers'] = [
+        {
+          username: this.props.user.id,
+          roles: ['cluster-admin']
+        }
+      ]
+    }
+    clusterResource.setSpec(clusterSpec)
+
+    return clusterResource
   }
 
   handleSubmit = e => {
     e.preventDefault()
 
-    this.validateForms(async (err, values) => {
-      if (!err) {
-        const state = copy(this.state)
-        state.submitting = true
-        state.formErrorMessage = false
-        this.setState(state)
-
-        const canonicalTeamName = this.props.team.metadata.name
-        const selectedCloud = this.state.selectedCloud
-        const selectedProvider = this.state.providers[selectedCloud].find(p => p.metadata.name === values.provider)
-        const selectedPlan = this.state.plans.items.find(p => p.metadata.name === values.plan)
-        const clusterName = values.clusterName
-        const showKubernetesOptions = this.state.showKubernetesOptions
-
-        const providerPath = {
-          'GKE': 'gkes',
-          'EKS': 'ekss'
-        }[selectedCloud]
-
-        try {
-          const gkeSpec = {
-            description: selectedPlan.spec.description,
-            ...selectedPlan.spec.values,
-            credentials: selectedProvider.spec.resource
-          }
-          const apiVersion = `${selectedProvider.spec.resource.group}/${selectedProvider.spec.resource.version}`
-          const clusterResource = Generic({
-            apiVersion,
-            kind: selectedCloud,
-            name: clusterName,
-            spec: gkeSpec
-          })
-          const providerResult = await apiRequest(null, 'put', `${apiPaths.team(canonicalTeamName)[providerPath]}/${clusterName}`, clusterResource)
-          const k8sSpec = {
-            inheritTeamMembers: true,
-            defaultTeamRole: 'cluster-admin',
-            provider: {
-              group: selectedProvider.spec.resource.group,
-              version: selectedProvider.spec.resource.version,
-              kind: selectedCloud,
-              name: providerResult.metadata.name,
-              namespace: providerResult.metadata.namespace
-            },
-            enableDefaultTrafficBlock: false
-          }
-          if (showKubernetesOptions) {
-            showKubernetesOptions.domain = values.domain
-          }
-          const k8sResource = Generic({
-            apiVersion: 'clusters.compute.kore.appvia.io/v1alpha1',
-            kind: 'Kubernetes',
-            name: clusterName,
-            spec: k8sSpec
-          })
-
-          await apiRequest(null, 'put', `${apiPaths.team(canonicalTeamName).clusters}/${clusterName}`, k8sResource)
-          message.loading('Cluster build requested...')
-          return redirect({
-            router: Router,
-            path: `/teams/${canonicalTeamName}`
-          })
-        } catch (err) {
-          console.error('Error submitting form', err)
-          const state = copy(this.state)
-          state.submitting = false
-          state.formErrorMessage = 'An error occurred requesting the cluster, please try again'
-          this.setState(state)
-        }
+    this.clusterOptionsForm.props.form.validateFields(async (err, values) => {
+      if (err) {
+        console.log(err)
+        this.setState({
+          ...this.state,
+          formErrorMessage: 'Validation failed'
+        })
+        return
+      }
+      this.setState({
+        ...this.state,
+        submitting: true,
+        formErrorMessage: false
+      })
+      try {
+        await (await KoreApi.client()).UpdateCluster(
+          this.props.team.metadata.name, 
+          values.clusterName, 
+          this.getClusterResource(values))
+        message.loading('Cluster build requested...')
+        return redirect({
+          router: Router,
+          path: `/teams/${this.props.team.metadata.name}`
+        })
+      } catch (err) {
+        // @TODO: Handle validation errors.
+        //console.error('Error submitting form', err)
+        this.setState({
+          ...this.state,
+          submitting: false,
+          formErrorMessage: 'An error occurred requesting the cluster, please try again'
+        })
       }
     })
   }
@@ -192,7 +181,7 @@ class ClusterBuildForm extends React.Component {
       return null
     }
 
-    const { submitting, providers, selectedCloud, showKubernetesOptions } = this.state
+    const { submitting, providers, selectedCloud } = this.state
     const filteredPlans = this.state.plans.items.filter(p => p.spec.kind === selectedCloud)
     const filteredProviders = this.state.providers[selectedCloud]
 
@@ -206,11 +195,6 @@ class ClusterBuildForm extends React.Component {
           teamClusters={this.props.teamClusters}
           wrappedComponentRef={inst => this.clusterOptionsForm = inst}
         />
-        {showKubernetesOptions ? (
-          <KubernetesOptionsForm
-            wrappedComponentRef={inst => this.kubernetesOptionsForm = inst}
-          />
-        ) :null}
         <Form.Item style={{ marginTop: '20px'}}>
           <Button type="primary" htmlType="submit" loading={submitting}>
             {this.state.submitButtonText}

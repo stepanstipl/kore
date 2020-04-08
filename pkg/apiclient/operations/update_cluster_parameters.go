@@ -66,9 +66,9 @@ type UpdateClusterParams struct {
 	  The definition for kubernetes cluster
 
 	*/
-	Body *models.V1Kubernetes
+	Body *models.V1Cluster
 	/*Name
-	  Is name the of the kubernetes cluster you are acting upon
+	  Is name the of the cluster
 
 	*/
 	Name string
@@ -117,13 +117,13 @@ func (o *UpdateClusterParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithBody adds the body to the update cluster params
-func (o *UpdateClusterParams) WithBody(body *models.V1Kubernetes) *UpdateClusterParams {
+func (o *UpdateClusterParams) WithBody(body *models.V1Cluster) *UpdateClusterParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the update cluster params
-func (o *UpdateClusterParams) SetBody(body *models.V1Kubernetes) {
+func (o *UpdateClusterParams) SetBody(body *models.V1Cluster) {
 	o.Body = body
 }
 

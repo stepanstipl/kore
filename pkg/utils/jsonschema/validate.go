@@ -28,7 +28,7 @@ import (
 func Validate(schemaJSON string, subject string, data interface{}) error {
 	schema, err := gojsonschema.NewSchema(gojsonschema.NewStringLoader(schemaJSON))
 	if err != nil {
-		panic(fmt.Errorf("failed to compile gkePlanSchema: %v", err))
+		panic(fmt.Errorf("failed to compile plan schema: %v", err))
 	}
 
 	var loader gojsonschema.JSONLoader
@@ -48,7 +48,12 @@ func Validate(schemaJSON string, subject string, data interface{}) error {
 	if !res.Valid() {
 		ve := validation.NewError("%s has failed validation", subject)
 		for _, err := range res.Errors() {
-			ve.AddFieldError(err.Field(), validation.ErrorCode(err.Type()), err.Description())
+			switch err.(type) {
+			case *gojsonschema.ConditionElseError, *gojsonschema.ConditionThenError:
+				// Ignore these errors
+			default:
+				ve.AddFieldError(err.Field(), validation.ErrorCode(err.Type()), err.Description())
+			}
 		}
 		return ve
 	}

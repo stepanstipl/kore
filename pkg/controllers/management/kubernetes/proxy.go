@@ -90,8 +90,8 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 	parameters.Domain = cluster.Spec.Domain
 	parameters.Hostname = a.APIHostname(cluster)
 	parameters.Image = a.Config().AuthProxyImage
-	if cluster.Spec.ProxyImage != "" {
-		parameters.Image = cluster.Spec.ProxyImage
+	if cluster.Spec.AuthProxyImage != "" {
+		parameters.Image = cluster.Spec.AuthProxyImage
 	}
 
 	// @step: ensure the tls secret is provisioned and configured
@@ -249,7 +249,7 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 		args = append(args, fmt.Sprintf("--idp-user-claims=%s", x))
 	}
 
-	for _, allowedIP := range cluster.Spec.ProxyAllowedIPs {
+	for _, allowedIP := range cluster.Spec.AuthProxyAllowedIPs {
 		args = append(args, fmt.Sprintf("--allowed-ips=%s", allowedIP))
 	}
 

@@ -70,11 +70,7 @@ func GetGetCommand(config *Config) *cli.Command {
 				if err := request.Get(); err != nil {
 					if reqErr, ok := err.(*RequestError); ok {
 						if reqErr.statusCode == http.StatusNotFound {
-							if ctx.NArg() == 1 {
-								return fmt.Errorf("%q is not a valid resource type", ctx.Args().Get(0))
-							}
-
-							return fmt.Errorf("%q does not exist", ctx.Args().Get(1))
+							return fmt.Errorf("%q does not exist", ctx.Args().Get(0))
 						}
 					}
 

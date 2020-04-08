@@ -52,17 +52,6 @@ func getResourceConfig(name string) resourceConfig {
 	}
 }
 
-var clusterResourceConfig = resourceConfig{
-	Name:   "clusters",
-	IsTeam: true,
-	Columns: []string{
-		Column("Name", "metadata.name"),
-		Column("Provider", "spec.provider.group"),
-		Column("Endpoint", "status.endpoint"),
-		Column("Status", "status.status"),
-	},
-}
-
 var resourceConfigs = map[string]resourceConfig{
 	"allocation": {
 		Name:   "allocations",
@@ -88,8 +77,27 @@ var resourceConfigs = map[string]resourceConfig{
 			Column("Result", "spec.responseCode"),
 		},
 	},
-	"cluster":    clusterResourceConfig,
-	"kubernetes": clusterResourceConfig,
+	"kubernetes": {
+		Name:   "kubernetes",
+		IsTeam: true,
+		Columns: []string{
+			Column("Name", "metadata.name"),
+			Column("Provider", "spec.provider.group"),
+			Column("Endpoint", "status.endpoint"),
+			Column("Status", "status.status"),
+		},
+	},
+	"cluster": {
+		Name:   "clusters",
+		IsTeam: true,
+		Columns: []string{
+			Column("Name", "metadata.name"),
+			Column("Kind", "spec.kind"),
+			Column("API Endpoint", "status.apiEndpoint"),
+			Column("Auth Proxy Endpoint", "status.authProxyEndpoint"),
+			Column("Status", "status.status"),
+		},
+	},
 	"gke": {
 		Name:   "gkes",
 		IsTeam: true,
@@ -114,10 +122,19 @@ var resourceConfigs = map[string]resourceConfig{
 		Name:   "ekss",
 		IsTeam: true,
 		Columns: []string{
-			Column("Name", ".metadata.name"),
+			Column("Name", "metadata.name"),
 			Column("Region", "spec.region"),
-			Column("Endpoint", ".status.endpoint"),
-			Column("Status", ".status.status"),
+			Column("Endpoint", "status.endpoint"),
+			Column("Status", "status.status"),
+		},
+	},
+	"eksnodegroup": {
+		Name:   "eksnodegroups",
+		IsTeam: true,
+		Columns: []string{
+			Column("Name", "metadata.name"),
+			Column("Cluster", "spec.cluster.name"),
+			Column("Status", "status.status"),
 		},
 	},
 	"ekscredential": {

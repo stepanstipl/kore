@@ -13,10 +13,10 @@ const Plan = ({ plan }) => {
   }]
 
   const planValues = plan ?
-    Object.keys(plan.spec.values).map(key => {
-      let value = plan.spec.values[key]
+    Object.keys(plan.spec.configuration).map(key => {
+      let value = plan.spec.configuration[key]
       if (key === 'authorizedMasterNetworks') {
-        const complexValue = plan.spec.values[key]
+        const complexValue = plan.spec.configuration[key]
         value = `${complexValue[0].name}: ${complexValue[0].cidr}`
       }
       return {

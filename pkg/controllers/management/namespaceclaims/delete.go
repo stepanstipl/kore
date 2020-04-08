@@ -58,8 +58,8 @@ func (a *nsCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 		logger.Debug("deleting the namespaceclaim from the cluster")
 
 		// @step: update the status of the resource
-		if resource.Status.Status != corev1.DeleteStatus {
-			resource.Status.Status = corev1.DeleteStatus
+		if resource.Status.Status != corev1.DeletingStatus {
+			resource.Status.Status = corev1.DeletingStatus
 
 			return reconcile.Result{Requeue: true}, nil
 		}

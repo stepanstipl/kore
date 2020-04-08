@@ -85,7 +85,7 @@ func (u teamHandler) updateAllocation(req *restful.Request, resp *restful.Respon
 		}
 		obj.Name = name
 
-		if err := u.Teams().Team(team).Allocations().Update(req.Request.Context(), obj); err != nil {
+		if err := u.Teams().Team(team).Allocations().Update(req.Request.Context(), obj, false); err != nil {
 			return err
 		}
 

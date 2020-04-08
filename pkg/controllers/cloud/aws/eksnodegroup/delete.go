@@ -64,7 +64,7 @@ func (n *eksNodeGroupCtrl) Delete(request reconcile.Request) (reconcile.Result, 
 		}
 
 		// @step: create a cloud client for us
-		client, err := aws.NewBasicClient(creds, resource.Spec.ClusterName, resource.Spec.Region)
+		client, err := aws.NewBasicClient(creds, resource.Spec.Cluster.Name, resource.Spec.Region)
 		if err != nil {
 			return false, err
 		}
@@ -76,8 +76,8 @@ func (n *eksNodeGroupCtrl) Delete(request reconcile.Request) (reconcile.Result, 
 		}
 
 		// @step: lets update the status of the resource to deleting
-		if resource.Status.Status != corev1.DeleteStatus {
-			resource.Status.Status = corev1.DeleteStatus
+		if resource.Status.Status != corev1.DeletingStatus {
+			resource.Status.Status = corev1.DeletingStatus
 
 			return true, nil
 		}
