@@ -233,6 +233,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Operation("UpdateAllocation").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is the name of the allocation you wish to update")).
+			Reads(configv1.Allocation{}, "The definition of the Allocation").
 			Returns(http.StatusOK, "Contains the former team definition from the kore", configv1.Allocation{}).
 			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
@@ -590,6 +591,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Operation("UpdateEKSCredentials").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the EKS credentials you are acting upon")).
+			Reads(eks.EKSCredentials{}, "The definition for EKS Credentials").
 			Doc("Is used to provision or update a EKS credentials in the kore").
 			Returns(http.StatusOK, "Contains the former team definition from the kore", eks.EKSCredentials{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
