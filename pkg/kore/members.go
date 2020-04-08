@@ -143,8 +143,8 @@ func (t tmsImpl) Delete(ctx context.Context, name string) error {
 
 		return err
 	}
-	if len(list) <= 0 {
-		return nil
+	if len(list) == 0 {
+		return ErrNotFound
 	}
 
 	// @check: is this the admin team?
@@ -152,8 +152,15 @@ func (t tmsImpl) Delete(ctx context.Context, name string) error {
 		if name == HubAdminUser {
 			return ErrNotAllowed{message: "you cannot remove " + HubAdminUser + " user from this team"}
 		}
-		if len(list) == 1 {
-			return ErrNotAllowed{message: "you cannot remove all administrators from kore"}
+
+		admins, err := t.usermgr.Members().List(ctx, users.Filter.WithTeam(t.team))
+		if err != nil {
+			logger.WithError(err).Error("failed to list the admin users")
+			return err
+		}
+
+		if len(admins) <= 2 {
+			return ErrNotAllowed{message: fmt.Sprintf("there must be at least one administrator other than %q", HubAdminUser)}
 		}
 	}
 

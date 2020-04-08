@@ -115,6 +115,11 @@ func GetDeleteTeamMemberCommand(config *Config) *cli.Command {
 				PathParameter("user", true).
 				Delete()
 			if err != nil {
+				if rerr, ok := err.(*RequestError); ok {
+					if rerr.StatusCode() == http.StatusNotFound {
+						return fmt.Errorf("%q is not a member of %q", ctx.String("user"), team)
+					}
+				}
 				return err
 			}
 			fmt.Printf("%q has been successfully removed from team %q\n",
