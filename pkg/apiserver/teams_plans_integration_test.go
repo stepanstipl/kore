@@ -27,7 +27,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = FDescribe("GET /teams/{team}/plans/{plan} (GetTeamPlanDetails)", func() {
+var _ = Describe("GET /teams/{team}/plans/{plan} (GetTeamPlanDetails)", func() {
 	var api *apiclient.AppviaKore
 	var testTeam1 string
 
@@ -55,7 +55,7 @@ var _ = FDescribe("GET /teams/{team}/plans/{plan} (GetTeamPlanDetails)", func() 
 			if err != nil {
 				Expect(err).ToNot(HaveOccurred())
 			}
-			Expect(*&resp.Payload).To(BeAssignableToTypeOf([]*models.ApiserverTeamPlan{}))
+			Expect(*&resp.Payload).To(BeAssignableToTypeOf(&models.ApiserverTeamPlan{}))
 		})
 	})
 
@@ -65,7 +65,7 @@ var _ = FDescribe("GET /teams/{team}/plans/{plan} (GetTeamPlanDetails)", func() 
 			if err != nil {
 				Expect(err).ToNot(HaveOccurred())
 			}
-			Expect(*&resp.Payload).To(BeAssignableToTypeOf([]*models.ApiserverTeamPlan{}))
+			Expect(*&resp.Payload).To(BeAssignableToTypeOf(&models.ApiserverTeamPlan{}))
 		})
 	})
 
@@ -77,13 +77,13 @@ var _ = FDescribe("GET /teams/{team}/plans/{plan} (GetTeamPlanDetails)", func() 
 		})
 	})
 
-	When("a plan and policy exist", func() {
+	When("a plan and team exist", func() {
 		It("should return the spec of the plan", func() {
 			resp, err := api.Operations.GetTeamPlanDetails(operations.NewGetTeamPlanDetailsParams().WithTeam(testTeam1).WithPlan("gke-development"), getAuth(TestUserAdmin))
 			if err != nil {
 				Expect(err).ToNot(HaveOccurred())
 			}
-			Expect(*&resp.Payload.Plan).To(BeAssignableToTypeOf([]*models.V1PlanSpec{}))
+			Expect(*&resp.Payload.Plan).To(BeAssignableToTypeOf(&models.V1PlanSpec{}))
 			Expect(*&resp.Payload.Plan.Configuration).ToNot(BeNil())
 		})
 
@@ -92,7 +92,6 @@ var _ = FDescribe("GET /teams/{team}/plans/{plan} (GetTeamPlanDetails)", func() 
 			if err != nil {
 				Expect(err).ToNot(HaveOccurred())
 			}
-			Expect(*&resp.Payload.Schema).To(BeAssignableToTypeOf(""))
 			Expect(*&resp.Payload.Schema).ToNot(Equal(""))
 		})
 
@@ -101,8 +100,8 @@ var _ = FDescribe("GET /teams/{team}/plans/{plan} (GetTeamPlanDetails)", func() 
 			if err != nil {
 				Expect(err).ToNot(HaveOccurred())
 			}
-			Expect(*&resp.Payload.EditableParameters).To(BeAssignableToTypeOf([]string{}))
-			Expect(*&resp.Payload.EditableParameters).ToNot(Equal([]string{}))
+			Expect(*&resp.Payload.ParameterEditable).To(BeAssignableToTypeOf(map[string]bool{}))
+			Expect(*&resp.Payload.ParameterEditable).ToNot(Equal(map[string]bool{}))
 		})
 	})
 })

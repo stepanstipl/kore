@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/appvia/kore/pkg/apiserver/types"
+	"github.com/appvia/kore/pkg/kore/assets"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
@@ -745,6 +746,31 @@ func (u teamHandler) updateTeam(req *restful.Request, resp *restful.Response) {
 
 func (u teamHandler) getTeamPlanDetails(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
-		return fmt.Errorf("Not implemented")
+		plan, err := u.Plans().Get(req.Request.Context(), req.PathParameter("plan"))
+		if err != nil {
+			return err
+		}
+
+		planDetails := TeamPlan{
+			Plan: plan.Spec,
+		}
+
+		// Get relevant schema:
+		switch plan.Spec.Kind {
+		case "GKE":
+			planDetails.Schema = assets.GKEPlanSchema
+		case "EKS":
+			planDetails.Schema = assets.EKSPlanSchema
+		default:
+			return fmt.Errorf("Cannot find schema for cluster type %v", plan.Spec.Kind)
+		}
+
+		paramsMap, err := u.Plans().GetEditablePlanParams(req.Request.Context(), req.PathParameter("team"))
+		if err != nil {
+			return err
+		}
+
+		planDetails.ParameterEditable = paramsMap
+		return resp.WriteHeaderAndEntity(http.StatusOK, planDetails)
 	})
 }

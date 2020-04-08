@@ -70,10 +70,8 @@ func (p planSchemasHandler) getPlanSchema(req *restful.Request, resp *restful.Re
 		switch req.PathParameter("name") {
 		case "GKE":
 			schema = assets.GKEPlanSchema
-			break
 		case "EKS":
 			schema = assets.EKSPlanSchema
-			break
 		default:
 			return resp.WriteHeaderAndEntity(http.StatusNotFound, nil)
 		}

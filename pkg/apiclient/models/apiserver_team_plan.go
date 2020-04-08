@@ -17,9 +17,9 @@ import (
 // swagger:model apiserver.TeamPlan
 type ApiserverTeamPlan struct {
 
-	// editable parameters
+	// parameter editable
 	// Required: true
-	EditableParameters []string `json:"editableParameters"`
+	ParameterEditable map[string]bool `json:"parameterEditable"`
 
 	// plan
 	Plan *V1PlanSpec `json:"plan,omitempty"`
@@ -33,7 +33,7 @@ type ApiserverTeamPlan struct {
 func (m *ApiserverTeamPlan) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateEditableParameters(formats); err != nil {
+	if err := m.validateParameterEditable(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -51,11 +51,7 @@ func (m *ApiserverTeamPlan) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *ApiserverTeamPlan) validateEditableParameters(formats strfmt.Registry) error {
-
-	if err := validate.Required("editableParameters", "body", m.EditableParameters); err != nil {
-		return err
-	}
+func (m *ApiserverTeamPlan) validateParameterEditable(formats strfmt.Registry) error {
 
 	return nil
 }

@@ -62,7 +62,7 @@ type List struct {
 // in the context of a team so the UI doesn't have to make about ten API calls and
 // work it all out itself.
 type TeamPlan struct {
-	Plan               configv1.PlanSpec `json:"plan,omitempty"`
-	EditableParameters []string          `json:"editableParameters"`
-	Schema             string            `json:"schema"`
+	Schema            string            `json:"schema"`
+	ParameterEditable map[string]bool   `json:"parameterEditable"`
+	Plan              configv1.PlanSpec `json:"plan,omitempty"`
 }
