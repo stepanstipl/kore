@@ -123,12 +123,6 @@ func (c *Client) Exists() (exists bool, err error) {
 func (c *Client) Create() (*eks.CreateClusterOutput, error) {
 	output, err := c.svc.CreateCluster(c.createClusterInput())
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			log.Debugf("unhandled aws api error %s", aerr.Error())
-		} else {
-			log.WithError(err).Debug("generic error")
-		}
-
 		return nil, err
 	}
 
@@ -225,15 +219,17 @@ func (c *Client) CreateNodeGroup(nodegroup *eksv1alpha1.EKSNodeGroup) error {
 		InstanceTypes:  aws.StringSlice([]string{nodegroup.Spec.InstanceType}),
 		NodegroupName:  aws.String(nodegroup.Name),
 		Subnets:        aws.StringSlice(nodegroup.Spec.Subnets),
-		RemoteAccess: &eks.RemoteAccessConfig{
-			Ec2SshKey:            aws.String(nodegroup.Spec.EC2SSHKey),
-			SourceSecurityGroups: aws.StringSlice(nodegroup.Spec.SSHSourceSecurityGroups),
-		},
 		ScalingConfig: &eks.NodegroupScalingConfig{
 			DesiredSize: aws.Int64(nodegroup.Spec.DesiredSize),
 			MaxSize:     aws.Int64(nodegroup.Spec.MaxSize),
 			MinSize:     aws.Int64(nodegroup.Spec.MinSize),
 		},
+	}
+	if nodegroup.Spec.EC2SSHKey != "" {
+		input.RemoteAccess = &eks.RemoteAccessConfig{
+			Ec2SshKey:            aws.String(nodegroup.Spec.EC2SSHKey),
+			SourceSecurityGroups: aws.StringSlice(nodegroup.Spec.SSHSourceSecurityGroups),
+		}
 	}
 	if len(nodegroup.Spec.Tags) > 0 {
 		input.Tags = aws.StringMap(nodegroup.Spec.Tags)

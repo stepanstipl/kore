@@ -654,6 +654,12 @@ func schema_pkg_apis_eks_v1alpha1_EKSVPCSpec(ref common.ReferenceCallback) commo
 				Description: "EKSVPCSpec defines the desired state of EKSVPC",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"cluster": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Cluster refers to the cluster this object belongs to",
+							Ref:         ref("github.com/appvia/kore/pkg/apis/core/v1.Ownership"),
+						},
+					},
 					"privateIPV4Cidr": {
 						SchemaProps: spec.SchemaProps{
 							Description: "PrivateIPV4Cidr is the private range used for the VPC",
@@ -672,6 +678,8 @@ func schema_pkg_apis_eks_v1alpha1_EKSVPCSpec(ref common.ReferenceCallback) commo
 				Required: []string{"privateIPV4Cidr", "region"},
 			},
 		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/core/v1.Ownership"},
 	}
 }
 

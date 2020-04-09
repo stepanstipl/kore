@@ -21,6 +21,9 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"strings"
+
+	"github.com/aws/aws-sdk-go/aws/awserr"
 
 	core "github.com/appvia/kore/pkg/apis/core/v1"
 	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
@@ -148,7 +151,16 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 
 			logger.Debug("creating a new eks cluster in aws")
 			if _, err = client.Create(); err != nil {
-				logger.WithError(err).Error("trying to provision a eks cluster for team")
+				logger.WithError(err).Error("failed to create cluster")
+
+				// The IAM role is not always available right away after creation and the API might return with the following error:
+				// InvalidParameterException: Role with arn: <ARN> could not be assumed because it does not exist or the trusted entity is not correct
+				// In this case we are going to retry and not throw an error
+				if aerr, ok := err.(awserr.Error); ok {
+					if aerr.Code() == eks.ErrCodeInvalidParameterException && strings.Contains(aerr.Message(), "does not exist") {
+						return true, nil
+					}
+				}
 
 				resource.Status.Conditions.SetCondition(core.Component{
 					Name:    ComponentClusterCreator,

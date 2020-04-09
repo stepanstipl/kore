@@ -149,10 +149,8 @@ func (t *eksvpcCtrl) Reconcile(request reconcile.Request) (reconcile.Result, err
 			return false, err
 		}
 		resource.Status.Infra.SecurityGroupIDs = []string{client.VPC.ControlPlaneSecurityGroupID}
-		subnets := []string{}
-		subnets = append(subnets, client.VPC.PublicSubnetIDs...)
-		subnets = append(subnets, client.VPC.PrivateSubnetIDs...)
-		resource.Status.Infra.SubnetIDs = subnets
+		resource.Status.Infra.PublicSubnetIDs = client.VPC.PublicSubnetIDs
+		resource.Status.Infra.PrivateSubnetIDs = client.VPC.PrivateSubnetIDs
 		resource.Status.Infra.PublicIPV4EgressAddresses = client.VPC.PublicIPV4EgressAddresses
 
 		// @step: update the state as provisioned

@@ -27,6 +27,7 @@ type ClusterComponent interface {
 	runtime.Object
 	corev1.StatusAware
 	ApplyClusterConfiguration(cluster *Cluster) error
+	ComponentDependencies() []string
 }
 
 // ClusterSpec defines the desired state of a cluster

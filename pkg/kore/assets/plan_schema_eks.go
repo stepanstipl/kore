@@ -31,10 +31,8 @@ const EKSPlanSchema = `
 		"enableDefaultTrafficBlock",
 		"inheritTeamMembers",
 		"nodeGroups",
+		"privateIPV4Cidr",
 		"region",
-		"roleARN",
-		"securityGroupIDs",
-		"subnetIDs",
 		"version"
 	],
 	"properties": {
@@ -113,14 +111,10 @@ const EKSPlanSchema = `
 				"required": [
 					"desiredSize",
 					"diskSize",
-					"eC2SSHKey",
 					"instanceType",
 					"maxSize",
 					"minSize",
-					"name",
-					"nodeIAMRole",
-					"region",
-					"subnets"
+					"name"
 				],
 				"properties": {
 					"amiType": {
@@ -166,14 +160,6 @@ const EKSPlanSchema = `
 						"type": "string",
 						"minLength": 1
 					},
-					"nodeIAMRole": {
-						"type": "string",
-						"minLength": 1
-					},
-					"region": {
-						"type": "string",
-						"minLength": 1
-					},
 					"releaseVersion": {
 						"type": "string",
 						"minLength": 1
@@ -184,14 +170,6 @@ const EKSPlanSchema = `
 							"type": "string",
 							"minLength": 1
 						}
-					},
-					"subnets": {
-						"type": "array",
-						"items": {
-							"type": "string",
-							"minLength": 1
-						},
-						"minItems": 1
 					},
 					"tags": {
 						"type": "object",
@@ -205,33 +183,15 @@ const EKSPlanSchema = `
 			},
 			"minItems": 1
 		},
+		"privateIPV4Cidr": {
+			"type": "string",
+			"description": "The range of IPv4 addresses for your EKS cluster in CIDR block format",
+			"format": "1.2.3.4/16"
+		},
 		"region": {
 			"type": "string",
 			"description": "The AWS region in which this cluster will reside (e.g. eu-west-2).",
 			"minLength": 1
-		},
-		"roleARN": {
-			"type": "string",
-			"description": "The IAM role for the cluster itself",
-			"minLength": 1
-		},
-		"securityGroupIDs": {
-			"type": "array",
-			"description": "The security group IDs to use for the cluster?? TBC",
-			"items": {
-				"type": "string",
-				"minLength": 1
-			},
-			"minItems": 1
-		},
-		"subnetIDs": {
-			"type": "array",
-			"description": "The AWS Subnet IDs for all private and public subnets this cluster will use.",
-			"items": {
-				"type": "string",
-				"minLength": 1
-			},
-			"minItems": 1
 		},
 		"version": {
 			"type": "string",

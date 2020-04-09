@@ -18,11 +18,14 @@ type V1alpha1Infra struct {
 	// ipv4 egress addresses
 	IPV4EgressAddresses []string `json:"ipv4EgressAddresses"`
 
+	// private subnet i ds
+	PrivateSubnetIDs []string `json:"privateSubnetIDs"`
+
+	// public subnet i ds
+	PublicSubnetIDs []string `json:"publicSubnetIDs"`
+
 	// security group i ds
 	SecurityGroupIDs []string `json:"securityGroupIDs"`
-
-	// subnet i ds
-	SubnetIDs []string `json:"subnetIDs"`
 }
 
 // Validate validates this v1alpha1 infra

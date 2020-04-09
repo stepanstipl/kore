@@ -166,6 +166,15 @@ func (e *EKSNodeGroup) ApplyClusterConfiguration(cluster *clustersv1.Cluster) er
 	return nil
 }
 
+func (e *EKSNodeGroup) ComponentDependencies() []string {
+	return []string{"EKS/"}
+}
+
+func (e *EKSNodeGroup) ApplyEKSVPC(eksvpc *EKSVPC) {
+	e.Spec.Region = eksvpc.Spec.Region
+	e.Spec.Subnets = eksvpc.Status.Infra.PrivateSubnetIDs
+}
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // EKSNodeGroupList contains a list of EKSNodeGroup

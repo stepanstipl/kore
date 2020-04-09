@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/appvia/kore/pkg/utils/kubernetes"
+
 	"k8s.io/apimachinery/pkg/api/meta"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -30,17 +32,19 @@ import (
 	gkev1alpha1 "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 )
 
-func createClusterComponents(c *clustersv1.Cluster) ([]clustersv1.ClusterComponent, error) {
-	var components []clustersv1.ClusterComponent
+func createClusterComponents(c *clustersv1.Cluster) (map[string]clustersv1.ClusterComponent, error) {
+	components := map[string]clustersv1.ClusterComponent{}
 
 	provider := createProvider(c)
-	components = append(components, provider)
+	components[getComponentName(provider)] = provider
 
-	createProviderComponents, err := createProviderComponents(c)
+	providerComponents, err := createProviderComponents(c)
 	if err != nil {
 		return nil, err
 	}
-	components = append(components, createProviderComponents...)
+	for _, pc := range providerComponents {
+		components[getComponentName(pc)] = pc
+	}
 
 	kubernetes := clustersv1.NewKubernetes(c.Name, c.Namespace)
 	kubernetes.Spec.Provider = corev1.Ownership{
@@ -50,7 +54,7 @@ func createClusterComponents(c *clustersv1.Cluster) ([]clustersv1.ClusterCompone
 		Namespace: c.Namespace,
 		Version:   provider.GetObjectKind().GroupVersionKind().Version,
 	}
-	components = append(components, kubernetes)
+	components[getComponentName(kubernetes)] = kubernetes
 
 	return components, nil
 }
@@ -72,6 +76,9 @@ func createProviderComponents(c *clustersv1.Cluster) ([]clustersv1.ClusterCompon
 		return nil, nil
 	case "eks":
 		var components []clustersv1.ClusterComponent
+
+		components = append(components, eksv1alpha1.NewEKSVPC(c.Name, c.Namespace))
+
 		var config map[string]interface{}
 		if err := json.Unmarshal(c.Spec.Configuration.Raw, &config); err != nil {
 			return nil, err
@@ -98,4 +105,53 @@ func setClusterResourceVersion(c clustersv1.ClusterComponent, resourceVersion st
 		metaAccessor.SetLabels(map[string]string{})
 	}
 	metaAccessor.GetLabels()[labelClusterResourceVersion] = resourceVersion
+}
+
+func getComponentName(c clustersv1.ClusterComponent) string {
+	meta, _ := kubernetes.GetMeta(c)
+	return c.GetObjectKind().GroupVersionKind().Kind + "/" + meta.Name
+}
+
+func readyForReconcile(c clustersv1.ClusterComponent, components map[string]clustersv1.ClusterComponent) bool {
+	for _, dep := range c.ComponentDependencies() {
+		for _, depc := range components {
+			if strings.HasPrefix(getComponentName(depc), dep) {
+				status, _ := depc.GetStatus()
+				if status != corev1.SuccessStatus {
+					return false
+				}
+			}
+		}
+	}
+
+	return true
+}
+
+func readyForDelete(c clustersv1.ClusterComponent, components map[string]clustersv1.ClusterComponent) bool {
+	for _, comp := range components {
+		if hasDependency(comp, getComponentName(c)) {
+			status, _ := comp.GetStatus()
+			if status != corev1.DeletedStatus {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func hasDependency(c clustersv1.ClusterComponent, name string) bool {
+	for _, dep := range c.ComponentDependencies() {
+		if strings.HasPrefix(name, dep) {
+			return true
+		}
+	}
+	return false
+}
+
+func applyEKSVPC(eksvpc *eksv1alpha1.EKSVPC, components map[string]clustersv1.ClusterComponent) {
+	for _, c := range components {
+		if applier, ok := c.(eksv1alpha1.EKSVPCApplier); ok {
+			applier.ApplyEKSVPC(eksvpc)
+		}
+	}
 }

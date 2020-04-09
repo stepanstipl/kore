@@ -17,9 +17,8 @@ import (
 // swagger:model v1alpha1.EKSVPCSpec
 type V1alpha1EKSVPCSpec struct {
 
-	// cluster name
-	// Required: true
-	ClusterName *string `json:"clusterName"`
+	// cluster
+	Cluster *V1Ownership `json:"cluster,omitempty"`
 
 	// credentials
 	// Required: true
@@ -38,7 +37,7 @@ type V1alpha1EKSVPCSpec struct {
 func (m *V1alpha1EKSVPCSpec) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateClusterName(formats); err != nil {
+	if err := m.validateCluster(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -60,10 +59,19 @@ func (m *V1alpha1EKSVPCSpec) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1alpha1EKSVPCSpec) validateClusterName(formats strfmt.Registry) error {
+func (m *V1alpha1EKSVPCSpec) validateCluster(formats strfmt.Registry) error {
 
-	if err := validate.Required("clusterName", "body", m.ClusterName); err != nil {
-		return err
+	if swag.IsZero(m.Cluster) { // not required
+		return nil
+	}
+
+	if m.Cluster != nil {
+		if err := m.Cluster.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("cluster")
+			}
+			return err
+		}
 	}
 
 	return nil

@@ -126,6 +126,18 @@ func (e *EKS) ApplyClusterConfiguration(cluster *clustersv1.Cluster) error {
 	return nil
 }
 
+func (e *EKS) ComponentDependencies() []string {
+	return []string{"EKSVPC/"}
+}
+
+func (e *EKS) ApplyEKSVPC(eksvpc *EKSVPC) {
+	e.Spec.Region = eksvpc.Spec.Region
+	e.Spec.SecurityGroupIDs = eksvpc.Status.Infra.SecurityGroupIDs
+	e.Spec.SubnetIDs = nil
+	e.Spec.SubnetIDs = append(e.Spec.SubnetIDs, eksvpc.Status.Infra.PrivateSubnetIDs...)
+	e.Spec.SubnetIDs = append(e.Spec.SubnetIDs, eksvpc.Status.Infra.PublicSubnetIDs...)
+}
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // EKSList contains a list of EKS clusters

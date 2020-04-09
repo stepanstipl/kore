@@ -4757,11 +4757,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
-        "clientScopes",
-        "userClaims",
         "clientID",
         "clientSecret",
-        "issuer"
+        "issuer",
+        "clientScopes",
+        "userClaims"
       ],
       "properties": {
         "clientID": {
@@ -5467,14 +5467,13 @@
     },
     "v1alpha1.EKSVPCSpec": {
       "required": [
-        "privateIPV4Cidr",
         "credentials",
-        "clusterName",
+        "privateIPV4Cidr",
         "region"
       ],
       "properties": {
-        "clusterName": {
-          "type": "string"
+        "cluster": {
+          "$ref": "#/definitions/v1.Ownership"
         },
         "credentials": {
           "$ref": "#/definitions/v1.Ownership"
@@ -5781,13 +5780,19 @@
             "type": "string"
           }
         },
-        "securityGroupIDs": {
+        "privateSubnetIDs": {
           "type": "array",
           "items": {
             "type": "string"
           }
         },
-        "subnetIDs": {
+        "publicSubnetIDs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "securityGroupIDs": {
           "type": "array",
           "items": {
             "type": "string"

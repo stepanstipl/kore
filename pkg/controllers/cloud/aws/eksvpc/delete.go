@@ -83,7 +83,7 @@ func (t *eksvpcCtrl) Delete(request reconcile.Request) (reconcile.Result, error)
 		}
 
 		if found {
-			eksClient := aws.NewEKSClientFromVPC(client, resource.Spec.ClusterName)
+			eksClient := aws.NewEKSClientFromVPC(client, resource.Spec.Cluster.Name)
 
 			// @step: check if the referenced CLUSTER exists and if so we wait...
 			eksfound, err := eksClient.Exists()

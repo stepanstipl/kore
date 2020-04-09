@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"time"
 
+	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
+
 	"github.com/appvia/kore/pkg/controllers"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
@@ -82,10 +84,24 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 			return controllers.NewCriticalError(err)
 		}
 
+		for componentName, c := range components {
+			if err := a.loadComponent(ctx, cluster, c); err != nil {
+				return fmt.Errorf("failed to load %s component: %w", componentName, err)
+			}
+		}
+
 		for _, c := range components {
-			componentName := a.getComponentName(c)
-			if err := a.createOrUpdateComponent(ctx, cluster, c); err != nil {
-				return fmt.Errorf("failed to create or update %s component: %w", componentName, err)
+			switch r := c.(type) {
+			case *eksv1alpha1.EKSVPC:
+				applyEKSVPC(r, components)
+			}
+		}
+
+		for componentName, c := range components {
+			if readyForReconcile(c, components) {
+				if err := a.createOrUpdateComponent(ctx, cluster, c); err != nil {
+					return fmt.Errorf("failed to create or update %s component: %w", componentName, err)
+				}
 			}
 
 			switch r := c.(type) {
@@ -98,6 +114,9 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 			}
 
 			status, message := c.GetStatus()
+			if status == "" {
+				status = corev1.PendingStatus
+			}
 			if status.IsFailed() && message == "" {
 				if err := c.GetComponents().Error(); err != nil {
 					message = err.Error()
@@ -107,9 +126,6 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 				Name:    componentName,
 				Status:  status,
 				Message: message,
-			}
-			if component.Status == "" {
-				component.Status = corev1.PendingStatus
 			}
 			cluster.Status.Components.SetCondition(component)
 		}
@@ -146,13 +162,8 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 	return reconcile.Result{RequeueAfter: 5 * time.Second}, err
 }
 
-func (a *Controller) getComponentName(c clustersv1.ClusterComponent) string {
-	meta, _ := kubernetes.GetMeta(c)
-	return c.GetObjectKind().GroupVersionKind().Kind + "/" + meta.Name
-}
-
-func (a *Controller) createOrUpdateComponent(ctx context.Context, cluster *clustersv1.Cluster, res clustersv1.ClusterComponent) error {
-	exists, err := kubernetes.GetIfExists(ctx, a.mgr.GetClient(), res)
+func (a *Controller) loadComponent(ctx context.Context, cluster *clustersv1.Cluster, res clustersv1.ClusterComponent) error {
+	_, err := kubernetes.GetIfExists(ctx, a.mgr.GetClient(), res)
 	if err != nil {
 		return err
 	}
@@ -161,8 +172,15 @@ func (a *Controller) createOrUpdateComponent(ctx context.Context, cluster *clust
 		return controllers.NewCriticalError(err)
 	}
 
-	if !exists {
+	return nil
+}
+
+func (a *Controller) createOrUpdateComponent(ctx context.Context, cluster *clustersv1.Cluster, res clustersv1.ClusterComponent) error {
+	status, _ := res.GetStatus()
+
+	if status == "" {
 		setClusterResourceVersion(res, cluster.ResourceVersion)
+		res.SetStatus(corev1.PendingStatus)
 		if err := a.mgr.GetClient().Create(ctx, res); err != nil {
 			return err
 		}

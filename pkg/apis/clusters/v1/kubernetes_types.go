@@ -144,6 +144,15 @@ func (k *Kubernetes) ApplyClusterConfiguration(cluster *Cluster) error {
 	return nil
 }
 
+func (k *Kubernetes) ComponentDependencies() []string {
+	return []string{
+		"EKSVPC/",
+		"EKS/",
+		"EKSNodeGroup/",
+		"GKE/",
+	}
+}
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // KubernetesList contains a list of Cluster

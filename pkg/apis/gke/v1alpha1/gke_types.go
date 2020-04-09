@@ -229,6 +229,10 @@ func (g *GKE) ApplyClusterConfiguration(cluster *clustersv1.Cluster) error {
 	return nil
 }
 
+func (g *GKE) ComponentDependencies() []string {
+	return nil
+}
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // GKEList contains a list of GKE
