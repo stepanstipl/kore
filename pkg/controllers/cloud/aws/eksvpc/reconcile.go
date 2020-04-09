@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	core "github.com/appvia/kore/pkg/apis/core/v1"
 	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
@@ -61,12 +62,23 @@ func (t *eksvpcCtrl) Reconcile(request reconcile.Request) (reconcile.Result, err
 	if finalizer.IsDeletionCandidate(resource) {
 		return t.Delete(request)
 	}
+
+	if finalizer.NeedToAdd(resource) {
+		logger.Info("adding our finalizer to the team resource")
+
+		if err := finalizer.Add(resource); err != nil {
+			return reconcile.Result{}, err
+		}
+
+		return reconcile.Result{Requeue: true}, nil
+	}
+
 	// @step: we need to mark the cluster as pending
 	if resource.Status.Conditions == nil {
 		resource.Status.Conditions = core.Components{}
 	}
 
-	requeue, err := func() (bool, error) {
+	result, err := func() (reconcile.Result, error) {
 		logger.Debug("retrieving the vpc credentials")
 		// @step: first we need to check if we have access to the credentials
 		credentials, err := t.GetCredentials(ctx, resource, resource.Namespace)
@@ -79,7 +91,7 @@ func (t *eksvpcCtrl) Reconcile(request reconcile.Request) (reconcile.Result, err
 				Status:  core.FailureStatus,
 			})
 
-			return false, err
+			return reconcile.Result{}, err
 		}
 		logger.Info("Found EKSCredential")
 
@@ -102,7 +114,7 @@ func (t *eksvpcCtrl) Reconcile(request reconcile.Request) (reconcile.Result, err
 				Status:  core.FailureStatus,
 			})
 
-			return false, err
+			return reconcile.Result{}, err
 		}
 		logger.Infof("Checking vpc existence %s", resource.Name)
 
@@ -115,7 +127,7 @@ func (t *eksvpcCtrl) Reconcile(request reconcile.Request) (reconcile.Result, err
 				Status:  core.FailureStatus,
 			})
 
-			return false, err
+			return reconcile.Result{}, err
 		}
 
 		if !found {
@@ -128,25 +140,27 @@ func (t *eksvpcCtrl) Reconcile(request reconcile.Request) (reconcile.Result, err
 				})
 				resource.Status.Status = core.PendingStatus
 
-				return true, nil
+				return reconcile.Result{Requeue: true}, nil
 			}
 
 			logger.Debug("creating or discovering a vpc in aws")
 		}
 		// Ensure this only reports if it exists when all resources exist or ensure update works
-		// TODO: probably need a signal to only verify this every x...
-		if err = client.Ensure(); err != nil {
-			logger.WithError(err).Error("attempting to create or discover vpc")
+		ready, err := client.Ensure()
+		if err != nil {
+			logger.WithError(err).Error("failed to create or update the EKS VPC")
 
 			resource.Status.Conditions.SetCondition(core.Component{
 				Name:    ComponentVPCCreator,
-				Message: "Failed trying to provision the cluster",
+				Message: "Failed trying to provision the EKS VPC",
 				Detail:  err.Error(),
 			})
-			resource.Status.Status = core.FailureStatus
-
-			return false, err
 		}
+
+		if err != nil || !ready {
+			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+		}
+
 		resource.Status.Infra.SecurityGroupIDs = []string{client.VPC.ControlPlaneSecurityGroupID}
 		resource.Status.Infra.PublicSubnetIDs = client.VPC.PublicSubnetIDs
 		resource.Status.Infra.PrivateSubnetIDs = client.VPC.PrivateSubnetIDs
@@ -160,7 +174,7 @@ func (t *eksvpcCtrl) Reconcile(request reconcile.Request) (reconcile.Result, err
 		})
 		resource.Status.Status = core.SuccessStatus
 
-		return false, nil
+		return reconcile.Result{}, nil
 	}()
 	if err != nil {
 		resource.Status.Status = core.FailureStatus
@@ -172,23 +186,7 @@ func (t *eksvpcCtrl) Reconcile(request reconcile.Request) (reconcile.Result, err
 		return reconcile.Result{}, err
 	}
 
-	if err == nil {
-		if finalizer.NeedToAdd(resource) {
-			logger.Info("adding our finalizer to the team resource")
-
-			if err := finalizer.Add(resource); err != nil {
-				return reconcile.Result{}, err
-			}
-
-			return reconcile.Result{Requeue: true}, nil
-		}
-	}
-
-	if requeue {
-		return reconcile.Result{Requeue: true}, nil
-	}
-
-	return reconcile.Result{}, nil
+	return result, err
 }
 
 // GetCredentials returns the cloud credential

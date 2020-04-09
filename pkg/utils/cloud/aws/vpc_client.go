@@ -19,6 +19,7 @@ package aws
 import (
 	"fmt"
 	"net"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -26,6 +27,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
+)
+
+const (
+	AZLimit = 3
 )
 
 // VPCClient for aws VPC
@@ -66,29 +71,27 @@ func NewVPCClient(creds Credentials, vpc VPC) (*VPCClient, error) {
 }
 
 // Ensure will create or update a VPC with ALL required global resources
-func (c *VPCClient) Ensure() error {
+func (c *VPCClient) Ensure() (ready bool, _ error) {
 	// Check if the VPC exists
 	found, err := c.Exists()
 	if err != nil {
-
-		return err
+		return false, err
 	}
 	// Now check it's resources global resources exist
 	if !found {
 		// time to create
 		o, err := c.svc.CreateVpc(&ec2.CreateVpcInput{CidrBlock: aws.String(c.VPC.CidrBlock)})
 		if err != nil {
-
-			return fmt.Errorf("error creating a new aws vpc %s - %s", c.VPC.Name, err)
+			return false, fmt.Errorf("error creating a new aws vpc %s - %s", c.VPC.Name, err)
 		}
-		err = tagFromIDNameAndTags(
+		err = createTags(
 			*c.svc,
 			c.VPC.Name,
 			*o.Vpc.VpcId,
 			c.VPC.Tags,
 		)
 		if err != nil {
-			return fmt.Errorf("error tagging new aws vpc %s, id %s - %s", c.VPC.Name, *o.Vpc.VpcId, err)
+			return false, fmt.Errorf("error tagging new aws vpc %s, id %s - %s", c.VPC.Name, *o.Vpc.VpcId, err)
 		}
 		c.VPC.awsObj = o.Vpc
 	}
@@ -101,8 +104,7 @@ func (c *VPCClient) Ensure() error {
 		VpcId: c.VPC.awsObj.VpcId,
 	})
 	if err != nil {
-
-		return err
+		return false, err
 	}
 	// Next ensure VPC params set - EnableDnsHostnames
 	// Only one at a time, see https://github.com/aws/aws-sdk-go/issues/415
@@ -113,62 +115,41 @@ func (c *VPCClient) Ensure() error {
 		VpcId: c.VPC.awsObj.VpcId,
 	})
 	if err != nil {
-
-		return err
+		return false, err
 	}
 
 	// ensure we have an internet gateway and attach
-	ig, err := EnsureInternetGateway(*c.svc, c.VPC)
+	igw, err := EnsureInternetGateway(*c.svc, c.VPC)
 	if err != nil {
-
-		return err
+		return false, err
 	}
 
-	publicRt, err := EnsurePublicRoutes(*c.svc, c.VPC, ig)
+	azs, err := c.getAZs(AZLimit)
 	if err != nil {
-
-		return err
+		return false, err
 	}
-
-	// find out the number of az's for this zone
-	ao, err := c.svc.DescribeAvailabilityZones(nil)
-	if err != nil {
-		return err
-	}
-	azs := ao.AvailabilityZones
 
 	// First discover any public subnets or create
 	// The public networks will use the very first subnets from the VPC
 	vpcStartIP, _, err := net.ParseCIDR(c.VPC.CidrBlock)
 	if err != nil {
-		return err
+		return false, err
 	}
 	publicSubnets, err := EnsurePublicSubnets(
 		*c.svc,
+		c.VPC,
 		azs,
 		vpcStartIP,
-		c.VPC,
-		publicRt,
+		*igw.InternetGatewayId,
 	)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	// Public done, save the subnet ID's
-	c.VPC.PublicSubnetIDs = []string{}
+	c.VPC.PublicSubnetIDs = nil
 	for _, s := range publicSubnets {
 		c.VPC.PublicSubnetIDs = append(c.VPC.PublicSubnetIDs, *s.SubnetId)
-	}
-
-	// Create NAT Gateways
-	natGws, err := EnsureNATGateways(*c.svc, publicSubnets, c.VPC)
-	if err != nil {
-		return fmt.Errorf("error trying to ensure nat gateways created for %s - %s", *c.VPC.awsObj.VpcId, err)
-	}
-	for _, n := range natGws {
-		for _, gwa := range n.NatGatewayAddresses {
-			c.VPC.PublicIPV4EgressAddresses = append(c.VPC.PublicIPV4EgressAddresses, aws.StringValue(gwa.PublicIp))
-		}
 	}
 
 	// Get next network address for the internal subnets from the last of the public addresses
@@ -176,29 +157,39 @@ func (c *VPCClient) Ensure() error {
 	lastPublicSubnet := publicSubnets[len(publicSubnets)-1]
 	_, lastPublicNet, err := net.ParseCIDR(*lastPublicSubnet.CidrBlock)
 	if err != nil {
-		return fmt.Errorf("bad ciddr on last aws public subnet %s - %s", *lastPublicSubnet.CidrBlock, err)
+		return false, fmt.Errorf("bad ciddr on last aws public subnet %s - %s", *lastPublicSubnet.CidrBlock, err)
 	}
 	// Get next network of the private size from the last public network
-	priavteNet, err := utils.GetSubnetFromLast(lastPublicNet, PrivateNetworkMaskSize)
+	privateNet, err := utils.GetSubnetFromLast(lastPublicNet, PrivateNetworkMaskSize)
 	if err != nil {
-		return fmt.Errorf("error trying to work next subnet of size %d from %s - %s", PrivateNetworkMaskSize, *lastPublicSubnet.CidrBlock, err)
+		return false, fmt.Errorf("error trying to work next subnet of size %d from %s - %s", PrivateNetworkMaskSize, *lastPublicSubnet.CidrBlock, err)
 	}
 
-	privateSubnets, err := EnsurePrivateSubnets(*c.svc, azs, priavteNet.IP, c.VPC, natGws)
-	if err != nil {
-		return fmt.Errorf("error trying to ensure private subnets - %s", err)
+	privateSubnets, natGateways, ready, err := EnsurePrivateSubnets(*c.svc, c.VPC, azs, privateNet.IP, publicSubnets)
+	if err != nil || !ready {
+		return ready, err
 	}
-	c.VPC.PrivateSubnetIDs = []string{}
+	c.VPC.PrivateSubnetIDs = nil
 	for _, s := range privateSubnets {
 		c.VPC.PrivateSubnetIDs = append(c.VPC.PrivateSubnetIDs, *s.SubnetId)
 	}
 
-	// create security group for master control plane...
-	c.VPC.ControlPlaneSecurityGroupID, err = EnsureSecurityGroupAndGetID(*c.svc, c.VPC, fmt.Sprintf("%s-", c.VPC.Name), "eks required group for allowing communication with master nodes")
-	if err != nil {
-		return fmt.Errorf("error finding or creating secruity group for eks master comms - %s", err)
+	c.VPC.PublicIPV4EgressAddresses = nil
+	for _, n := range natGateways {
+		for _, gwa := range n.NatGatewayAddresses {
+			c.VPC.PublicIPV4EgressAddresses = append(c.VPC.PublicIPV4EgressAddresses, aws.StringValue(gwa.PublicIp))
+		}
 	}
-	return nil
+
+	// create security group for master control plane...
+	securityGroup, err := EnsureSecurityGroup(*c.svc, c.VPC, SecurityGroupTypeEKSCluster, "eks required group for allowing communication with master nodes")
+	if err != nil {
+		return false, fmt.Errorf("error finding or creating security group for eks master comms - %s", err)
+	}
+
+	c.VPC.ControlPlaneSecurityGroupID = *securityGroup.GroupId
+
+	return true, nil
 }
 
 // Exists checks if a vpc exists
@@ -208,11 +199,7 @@ func (c *VPCClient) Exists() (bool, error) {
 		return true, nil
 	}
 	o, err := c.svc.DescribeVpcs(&ec2.DescribeVpcsInput{
-		Filters: getEc2TagFiltersFromNameTagsAndParams(
-			c.VPC.Name,
-			c.VPC.Tags,
-			c.getVPCParams(),
-		),
+		Filters: []*ec2.Filter{getEc2TagNameFilter(c.VPC.Name)},
 	})
 	if err != nil {
 
@@ -234,16 +221,52 @@ func (c *VPCClient) Exists() (bool, error) {
 
 // Delete will clear up all VPC resources
 // Currently noop
-func (c *VPCClient) Delete() error {
-	// TODO:
-	// delete NAT gateways
-	// delete VPC
-	// Ensure we stop if anyrthing else detected?
-	return nil
+func (c *VPCClient) Delete() (ready bool, _ error) {
+	azs, err := c.getAZs(AZLimit)
+	if err != nil {
+		return false, err
+	}
+
+	ready, err = DeletePrivateSubnets(*c.svc, c.VPC, azs)
+	if err != nil || !ready {
+		return ready, err
+	}
+
+	if err := DeletePublicSubnets(*c.svc, c.VPC, azs); err != nil {
+		return false, err
+	}
+
+	if err := DeleteInternetGateway(*c.svc, c.VPC); err != nil {
+		return false, err
+	}
+
+	if err := DeleteSecurityGroup(*c.svc, c.VPC, SecurityGroupTypeEKSCluster); err != nil {
+		return false, err
+	}
+
+	_, err = c.svc.DeleteVpc(&ec2.DeleteVpcInput{
+		VpcId: c.VPC.awsObj.VpcId,
+	})
+	if err != nil {
+		return false, fmt.Errorf("failed to delete VPC %s: %w", c.VPC.Name, err)
+	}
+
+	return true, nil
 }
 
-func (c *VPCClient) getVPCParams() map[string]string {
-	return map[string]string{
-		"cidr": c.VPC.CidrBlock,
+func (c *VPCClient) getAZs(limit int) ([]string, error) {
+	res, err := c.svc.DescribeAvailabilityZones(&ec2.DescribeAvailabilityZonesInput{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get availability zones: %w", err)
 	}
+
+	var azs []string
+	for _, az := range res.AvailabilityZones {
+		azs = append(azs, *az.ZoneId)
+	}
+
+	sort.Strings(azs)
+
+	return azs[0:limit], nil
+
 }
