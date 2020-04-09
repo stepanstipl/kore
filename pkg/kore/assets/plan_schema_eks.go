@@ -38,6 +38,14 @@ const EKSPlanSchema = `
 		"version"
 	],
 	"properties": {
+		"authorizedMasterNetworks": {
+			"type": "array",
+			"description": "A collection of network cidr allowed to speak the EKS control plan",
+			"items": {
+				"type": "string",
+				"format": "1.2.3.4/16"
+			}
+		},
 		"authProxyAllowedIPs": {
 			"type": "array",
 			"description": "The networks which are allowed to connect to this cluster (e.g. via kubectl).",

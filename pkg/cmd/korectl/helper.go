@@ -220,7 +220,7 @@ func WaitForResource(ctx context.Context, config *Config, team, kind, name strin
 		status = fmt.Sprintf("%s -t %s", status, team)
 	}
 
-	err := utils.WaitUntilComplete(ctx, 20*time.Minute, 5*time.Second, func() (bool, error) {
+	err := utils.WaitUntilComplete(ctx, 30*time.Minute, 5*time.Second, func() (bool, error) {
 		var request *Requestor
 
 		request, _, err := NewRequestForResource(config, team, kind, name)

@@ -20,6 +20,7 @@ import (
 	"errors"
 
 	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
+	"github.com/appvia/kore/pkg/kore"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -111,7 +112,6 @@ func (c *Client) Exists() (exists bool, err error) {
 				return false, err
 			}
 		} else {
-
 			return false, err
 		}
 	}
@@ -166,17 +166,29 @@ func (c *Client) VerifyCredentials() error {
 	return nil
 }
 
+// createClusterInput is used to generate the EKS cluster definition
 func (c *Client) createClusterInput() *awseks.CreateClusterInput {
-
-	return &awseks.CreateClusterInput{
+	d := &awseks.CreateClusterInput{
 		Name:    aws.String(c.cluster.Name),
 		RoleArn: aws.String(c.cluster.Status.RoleARN),
 		Version: aws.String(c.cluster.Spec.Version),
 		ResourcesVpcConfig: &awseks.VpcConfigRequest{
-			SecurityGroupIds: aws.StringSlice(c.cluster.Spec.SecurityGroupIDs),
-			SubnetIds:        aws.StringSlice(c.cluster.Spec.SubnetIDs),
+			SecurityGroupIds:      aws.StringSlice(c.cluster.Spec.SecurityGroupIDs),
+			SubnetIds:             aws.StringSlice(c.cluster.Spec.SubnetIDs),
+			EndpointPublicAccess:  aws.Bool(true),
+			EndpointPrivateAccess: aws.Bool(true),
+		},
+		Tags: map[string]*string{
+			kore.Label("name"):  aws.String(c.cluster.Name),
+			kore.Label("owned"): aws.String("true"),
 		},
 	}
+
+	for _, x := range c.cluster.Spec.AuthorizedMasterNetworks {
+		d.ResourcesVpcConfig.PublicAccessCidrs = append(d.ResourcesVpcConfig.PublicAccessCidrs, aws.String(x))
+	}
+
+	return d
 }
 
 // DescribeEKS returns the AWS EKS output

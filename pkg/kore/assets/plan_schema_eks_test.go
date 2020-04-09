@@ -19,18 +19,18 @@ package assets_test
 import (
 	"encoding/json"
 
-	"github.com/appvia/kore/pkg/utils/validation"
-
 	"github.com/appvia/kore/pkg/kore/assets"
 	"github.com/appvia/kore/pkg/utils/jsonschema"
-	. "github.com/onsi/ginkgo"
+	"github.com/appvia/kore/pkg/utils/validation"
 
+	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
 func eksSampleData() map[string]interface{} {
 	return map[string]interface{}{
+		"authorizedMasterNetworks":  []string{"0.0.0.0/0"},
 		"authProxyAllowedIPs":       []string{"0.0.0.0/0"},
 		"description":               "This is a test cluster",
 		"domain":                    "testdomain",

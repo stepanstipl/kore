@@ -17,6 +17,9 @@ import (
 // swagger:model v1alpha1.EKSSpec
 type V1alpha1EKSSpec struct {
 
+	// authorized master networks
+	AuthorizedMasterNetworks []string `json:"authorizedMasterNetworks"`
+
 	// cluster
 	Cluster *V1Ownership `json:"cluster,omitempty"`
 
