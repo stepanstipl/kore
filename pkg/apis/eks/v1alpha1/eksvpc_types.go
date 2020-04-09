@@ -46,16 +46,6 @@ type EKSVPCSpec struct {
 // These values are discovered from infrastructure AFTER a create
 // It is provided as a convienece for caching values
 type Infra struct {
-	// NodeIAMROle is the IAM role assumed by the worker nodes themselves
-	// not directly a VPC object is is easiest to track here first
-	// If we need to support segregation of nodegroups for a single cluster, move to EKSNodegroup.Status object
-	NodeIAMRole string `json:"nodeIAMRole,omitempty"`
-	// ClusterIAMRoleARN is the role ARN which provides permissions to create and admister an EKS cluster
-	// Although not part of a VPC it is a direct pre-requisite
-	// If we need to support multiple clusters in a VPC, move to EKS.Status object
-	ClusterIAMRoleARN string `json:"clusterIAMRoleARN,omitempty"`
-	// SubnetIds is a list of subnet IDs to use for all nodes
-	// +listType=set
 	SubnetIDs []string `json:"subnetIDs,omitempty"`
 	// SecurityGroupIds is a list of security group IDs to use for a cluster
 	// +listType=set

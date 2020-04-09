@@ -101,11 +101,11 @@ func (i *IamClient) getMyARN() (*string, error) {
 	return i.myARN, nil
 }
 
-// EnsureEksRoles will return the cluster role and the nodepool role
-func (i *IamClient) EnsureEksRoles() (*iam.Role, *iam.Role, error) {
+// EnsureEksClusterRole will return the cluster role and the nodepool role
+func (i *IamClient) EnsureEksClusterRole() (*iam.Role, error) {
 	arn, err := i.getMyARN()
 	if err != nil {
-		return nil, nil, fmt.Errorf("cannot create eks roles as error obtaining my arn - %s", err)
+		return nil, fmt.Errorf("cannot create eks roles as error obtaining my arn - %s", err)
 	}
 	clusterSts := fmt.Sprintf(clusterStsTrustPolicy, *arn)
 	cr, err := i.ensureRole("eks-cluster", []string{
@@ -113,17 +113,22 @@ func (i *IamClient) EnsureEksRoles() (*iam.Role, *iam.Role, error) {
 		amazonEKSServicePolicy,
 	}, clusterSts)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
+	return cr, nil
+}
+
+// EnsureEksNodePoolRole will create a nodepool eks role
+func (i *IamClient) EnsureEksNodePoolRole() (*iam.Role, error) {
 	npr, err := i.ensureRole("eks-nodepool", []string{
 		amazonEKSWorkerNodePolicy,
 		amazonEC2ContainerRegistryReadOnly,
 		amazonEKSCNIPolicy,
 	}, nodeStsTrustPolicy)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return cr, npr, nil
+	return npr, nil
 }
 
 func (i *IamClient) ensureRole(name string, policyARNs []string, stsPolicy string) (*iam.Role, error) {

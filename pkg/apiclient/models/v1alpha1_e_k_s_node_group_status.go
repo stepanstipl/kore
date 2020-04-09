@@ -11,6 +11,7 @@ import (
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // V1alpha1EKSNodeGroupStatus v1alpha1 e k s node group status
@@ -21,6 +22,10 @@ type V1alpha1EKSNodeGroupStatus struct {
 	// conditions
 	Conditions []*V1Component `json:"conditions"`
 
+	// node i a m role
+	// Required: true
+	NodeIAMRole *string `json:"nodeIAMRole"`
+
 	// status
 	Status string `json:"status,omitempty"`
 }
@@ -30,6 +35,10 @@ func (m *V1alpha1EKSNodeGroupStatus) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateConditions(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateNodeIAMRole(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -59,6 +68,15 @@ func (m *V1alpha1EKSNodeGroupStatus) validateConditions(formats strfmt.Registry)
 			}
 		}
 
+	}
+
+	return nil
+}
+
+func (m *V1alpha1EKSNodeGroupStatus) validateNodeIAMRole(formats strfmt.Registry) error {
+
+	if err := validate.Required("nodeIAMRole", "body", m.NodeIAMRole); err != nil {
+		return err
 	}
 
 	return nil

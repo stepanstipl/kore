@@ -128,6 +128,24 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 				return true, nil
 			}
 
+			// Ensure the IAM role exists...
+			iamClient := aws.NewIamClient(client.Sess, resource.Name)
+			cr, err := iamClient.EnsureEksClusterRole()
+			if err != nil {
+				logger.WithError(err).Errorf("attempting to create iam roles for eks - %s", err)
+
+				resource.Status.Conditions.SetCondition(core.Component{
+					Name:    ComponentClusterCreator,
+					Message: "Failed trying to provision the eks iam roles",
+					Detail:  err.Error(),
+				})
+				resource.Status.Status = core.FailureStatus
+
+				return false, err
+			}
+			// Save the role used for this cluster
+			resource.Status.RoleARN = *cr.Arn
+
 			logger.Debug("creating a new eks cluster in aws")
 			if _, err = client.Create(); err != nil {
 				logger.WithError(err).Error("attempting to create cluster")

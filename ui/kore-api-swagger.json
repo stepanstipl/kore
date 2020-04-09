@@ -5153,7 +5153,6 @@
       "required": [
         "amiType",
         "diskSize",
-        "nodeIAMRole",
         "desiredSize",
         "maxSize",
         "minSize",
@@ -5200,9 +5199,6 @@
           "type": "integer",
           "format": "int64"
         },
-        "nodeIAMRole": {
-          "type": "string"
-        },
         "region": {
           "type": "string"
         },
@@ -5230,12 +5226,18 @@
       }
     },
     "v1alpha1.EKSNodeGroupStatus": {
+      "required": [
+        "nodeIAMRole"
+      ],
       "properties": {
         "conditions": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/v1.Component"
           }
+        },
+        "nodeIAMRole": {
+          "type": "string"
         },
         "status": {
           "type": "string"
@@ -5244,7 +5246,6 @@
     },
     "v1alpha1.EKSSpec": {
       "required": [
-        "roleARN",
         "region",
         "subnetIDs",
         "credentials"
@@ -5257,9 +5258,6 @@
           "$ref": "#/definitions/v1.Ownership"
         },
         "region": {
-          "type": "string"
-        },
-        "roleARN": {
           "type": "string"
         },
         "securityGroupIDs": {
@@ -5280,6 +5278,9 @@
       }
     },
     "v1alpha1.EKSStatus": {
+      "required": [
+        "roleARN"
+      ],
       "properties": {
         "caCertificate": {
           "type": "string"
@@ -5291,6 +5292,9 @@
           }
         },
         "endpoint": {
+          "type": "string"
+        },
+        "roleARN": {
           "type": "string"
         },
         "status": {
@@ -5653,12 +5657,6 @@
     },
     "v1alpha1.Infra": {
       "properties": {
-        "clusterIAMRoleARN": {
-          "type": "string"
-        },
-        "nodeIAMRole": {
-          "type": "string"
-        },
         "securityGroupIDs": {
           "type": "array",
           "items": {

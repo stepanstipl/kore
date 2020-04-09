@@ -11,6 +11,7 @@ import (
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // V1alpha1EKSStatus v1alpha1 e k s status
@@ -27,6 +28,10 @@ type V1alpha1EKSStatus struct {
 	// endpoint
 	Endpoint string `json:"endpoint,omitempty"`
 
+	// role a r n
+	// Required: true
+	RoleARN *string `json:"roleARN"`
+
 	// status
 	Status string `json:"status,omitempty"`
 }
@@ -36,6 +41,10 @@ func (m *V1alpha1EKSStatus) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateConditions(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateRoleARN(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -65,6 +74,15 @@ func (m *V1alpha1EKSStatus) validateConditions(formats strfmt.Registry) error {
 			}
 		}
 
+	}
+
+	return nil
+}
+
+func (m *V1alpha1EKSStatus) validateRoleARN(formats strfmt.Registry) error {
+
+	if err := validate.Required("roleARN", "body", m.RoleARN); err != nil {
+		return err
 	}
 
 	return nil

@@ -170,7 +170,7 @@ func (c *Client) createClusterInput() *awseks.CreateClusterInput {
 
 	return &awseks.CreateClusterInput{
 		Name:    aws.String(c.cluster.Name),
-		RoleArn: aws.String(c.cluster.Spec.RoleARN),
+		RoleArn: aws.String(c.cluster.Status.RoleARN),
 		Version: aws.String(c.cluster.Spec.Version),
 		ResourcesVpcConfig: &awseks.VpcConfigRequest{
 			SecurityGroupIds: aws.StringSlice(c.cluster.Spec.SecurityGroupIDs),
@@ -207,7 +207,7 @@ func (c *Client) CreateNodeGroup(nodegroup *eksv1alpha1.EKSNodeGroup) error {
 	input := &eks.CreateNodegroupInput{
 		AmiType:        aws.String(nodegroup.Spec.AMIType),
 		ClusterName:    aws.String(nodegroup.Spec.Cluster.Name),
-		NodeRole:       aws.String(nodegroup.Spec.NodeIAMRole),
+		NodeRole:       aws.String(nodegroup.Status.NodeIAMRole),
 		ReleaseVersion: aws.String(nodegroup.Spec.ReleaseVersion),
 		DiskSize:       aws.Int64(nodegroup.Spec.DiskSize),
 		InstanceTypes:  aws.StringSlice([]string{nodegroup.Spec.InstanceType}),
