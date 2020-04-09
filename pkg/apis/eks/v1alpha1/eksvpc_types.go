@@ -18,25 +18,23 @@ package v1alpha1
 
 import (
 	core "github.com/appvia/kore/pkg/apis/core/v1"
+	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // EKSVPCSpec defines the desired state of EKSVPC
 // +k8s:openapi-gen=true
 type EKSVPCSpec struct {
-	// PrivateIPV4Cidr is the private range used for the VPC
-	// +kubebuilder:validation:Required
-	PrivateIPV4Cidr string `json:"privateIPV4Cidr"`
 	// Credentials is a reference to an AWSCredentials object to use for authentication
 	// +kubebuilder:validation:Required
 	// +k8s:openapi-gen=false
-	Credentials core.Ownership `json:"credentials"`
-	// ClusterName is used to indicate a cluster to create resources for
-	// - it is used to tag cluster specific resources e.g. subnet resources are tagged unique to a cluster (for ELB's)
-	// - this may become an array but keeping it simple in the first iteration
+	Credentials corev1.Ownership `json:"credentials"`
+	// Cluster refers to the cluster this object belongs to
 	// +kubebuilder:validation:Required
-	// +k8s:openapi-gen=false
-	ClusterName string `json:"clusterName"`
+	Cluster corev1.Ownership `json:"cluster,omitempty"`
+	// PrivateIPV4Cidr is the private range used for the VPC
+	// +kubebuilder:validation:Required
+	PrivateIPV4Cidr string `json:"privateIPV4Cidr"`
 	// Region is the AWS region of the VPC and any resources created
 	// +kubebuilder:validation:Required
 	Region string `json:"region"`

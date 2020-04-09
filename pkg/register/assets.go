@@ -1263,12 +1263,31 @@ spec:
         spec:
           description: EKSVPCSpec defines the desired state of EKSVPC
           properties:
-            clusterName:
-              description: ClusterName is used to indicate a cluster to create resources
-                for - it is used to tag cluster specific resources e.g. subnet resources
-                are tagged unique to a cluster (for ELB's) - this may become an array
-                but keeping it simple in the first iteration
-              type: string
+            cluster:
+              description: Cluster refers to the cluster this object belongs to
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
             credentials:
               description: Credentials is a reference to an AWSCredentials object
                 to use for authentication
@@ -1302,7 +1321,6 @@ spec:
               description: Region is the AWS region of the VPC and any resources created
               type: string
           required:
-          - clusterName
           - credentials
           - privateIPV4Cidr
           - region

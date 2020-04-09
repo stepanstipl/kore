@@ -5467,14 +5467,13 @@
     },
     "v1alpha1.EKSVPCSpec": {
       "required": [
-        "privateIPV4Cidr",
         "credentials",
-        "clusterName",
+        "privateIPV4Cidr",
         "region"
       ],
       "properties": {
-        "clusterName": {
-          "type": "string"
+        "cluster": {
+          "$ref": "#/definitions/v1.Ownership"
         },
         "credentials": {
           "$ref": "#/definitions/v1.Ownership"

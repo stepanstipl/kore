@@ -444,6 +444,7 @@ func (in *EKSVPCList) DeepCopyObject() runtime.Object {
 func (in *EKSVPCSpec) DeepCopyInto(out *EKSVPCSpec) {
 	*out = *in
 	out.Credentials = in.Credentials
+	out.Cluster = in.Cluster
 	return
 }
 
