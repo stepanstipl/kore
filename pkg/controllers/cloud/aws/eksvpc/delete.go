@@ -19,6 +19,7 @@ package eksvpc
 import (
 	"context"
 	"fmt"
+	"time"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
@@ -54,12 +55,12 @@ func (t *eksvpcCtrl) Delete(request reconcile.Request) (reconcile.Result, error)
 
 	finalizer := kubernetes.NewFinalizer(t.mgr.GetClient(), finalizerName)
 
-	requeue, err := func() (bool, error) {
+	result, err := func() (reconcile.Result, error) {
 		creds, err := t.GetCredentials(ctx, resource, request.NamespacedName.Name)
 		if err != nil {
 			logger.WithError(err).Error("trying to retrieve the credentials")
 
-			return false, err
+			return reconcile.Result{}, err
 		}
 
 		// @step: TODO: first we need to check if there are any EKS clusters present
@@ -74,12 +75,12 @@ func (t *eksvpcCtrl) Delete(request reconcile.Request) (reconcile.Result, error)
 			Region:    resource.Spec.Region,
 		})
 		if err != nil {
-			return false, fmt.Errorf("invalid input details for vpc - %s", err)
+			return reconcile.Result{}, fmt.Errorf("invalid input details for vpc - %s", err)
 		}
 
 		found, err := client.Exists()
 		if err != nil {
-			return false, fmt.Errorf("checking if vpc exists - %s", err)
+			return reconcile.Result{}, fmt.Errorf("checking if vpc exists - %s", err)
 		}
 
 		if found {
@@ -88,43 +89,48 @@ func (t *eksvpcCtrl) Delete(request reconcile.Request) (reconcile.Result, error)
 			// @step: check if the referenced CLUSTER exists and if so we wait...
 			eksfound, err := eksClient.Exists(ctx)
 			if err != nil {
-				return false, fmt.Errorf("error checking if cluster exists: %s", err)
+				return reconcile.Result{}, fmt.Errorf("error checking if cluster exists: %s", err)
 			}
 			if eksfound {
 				// We still have a CLUSTER so we can't delete this VPC yet
 				// - reque
 
-				return true, nil
+				return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 			}
 
 			// @step: lets update the status of the resource to deleting
 			if resource.Status.Status != corev1.DeletingStatus {
 				resource.Status.Status = corev1.DeletingStatus
 
-				return true, nil
+				return reconcile.Result{Requeue: true}, nil
 			}
 			// We can now delete the VPC
-			err = client.Delete()
+			ready, err := client.Delete()
 			if err != nil {
-				return false, err
+				log.WithError(err).Errorf("failed to delete the EKS VPC")
+			}
+			if err != nil || !ready {
+				return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 			}
 		}
-		// no vpc - no reque
-		return false, nil
+		// no vpc - no requeue
+		return reconcile.Result{}, nil
 	}()
+
+	if err := t.mgr.GetClient().Status().Patch(ctx, resource, client.MergeFrom(original)); err != nil {
+		logger.WithError(err).Error("trying to update the resource status")
+
+		return reconcile.Result{}, err
+	}
+
 	if err != nil {
 		logger.WithError(err).Error("attempting to delete the vpc")
 
 		return reconcile.Result{}, err
 	}
-	if requeue {
-		if err := t.mgr.GetClient().Status().Patch(ctx, resource, client.MergeFrom(original)); err != nil {
-			logger.WithError(err).Error("trying to update the resource status")
 
-			return reconcile.Result{}, err
-		}
-
-		return reconcile.Result{Requeue: true}, nil
+	if result.Requeue || result.RequeueAfter > 0 {
+		return result, nil
 	}
 
 	if err := finalizer.Remove(resource); err != nil {

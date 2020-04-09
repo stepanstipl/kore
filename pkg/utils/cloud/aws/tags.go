@@ -28,53 +28,21 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 )
 
-func getEc2TagFiltersFromNameAndTags(name string, tags map[string]string) []*ec2.Filter {
-	return getEc2TagFiltersFromNameTagsAndParams(name, tags, map[string]string{})
+func getEc2TagNameFilter(name string) *ec2.Filter {
+	return &ec2.Filter{
+		Name: aws.String("tag:Name"),
+		Values: []*string{
+			aws.String(name),
+		},
+	}
 }
 
-func getEc2TagFiltersFromNameTagsAndParams(name string, inTags, params map[string]string) []*ec2.Filter {
-	// Add name
-	// don't pollute the original map
-	tags := copyTagsWithName(name, inTags)
-	filters := []*ec2.Filter{}
-
-	for key, value := range params {
-		filters = append(filters, &ec2.Filter{
-			Name: aws.String(key),
-			Values: []*string{
-				aws.String(value),
-			},
-		})
-	}
-	for key, value := range tags {
-		filters = append(filters, &ec2.Filter{
-			Name: aws.String("tag:" + key),
-			Values: []*string{
-				aws.String(value),
-			},
-		})
-	}
-	return filters
-}
-
-func tagFromIDNameAndTags(svc ec2.EC2, name, id string, inTags map[string]string) error {
-	ec2tags := []*ec2.Tag{}
-
-	// don't pollute the original map
-	tags := copyTagsWithName(name, inTags)
-
-	for key, value := range tags {
-		ec2tags = append(ec2tags, &ec2.Tag{
-			Key:   aws.String(key),
-			Value: aws.String(value),
-		})
-	}
-
+func createTags(svc ec2.EC2, name, id string, tags map[string]string) error {
 	input := &ec2.CreateTagsInput{
 		Resources: []*string{
 			aws.String(id),
 		},
-		Tags: ec2tags,
+		Tags: createEC2TagsWithName(name, tags),
 	}
 
 	timeout := 5 * time.Minute
@@ -102,12 +70,51 @@ func tagFromIDNameAndTags(svc ec2.EC2, name, id string, inTags map[string]string
 	return nil
 }
 
-func copyTagsWithName(name string, inTags map[string]string) map[string]string {
-	tags := map[string]string{
-		"Name": name,
+func deleteTags(svc ec2.EC2, name, id string, tags map[string]string) error {
+	input := &ec2.DeleteTagsInput{
+		Resources: []*string{
+			aws.String(id),
+		},
+		Tags: createEC2TagsWithName(name, tags),
 	}
-	for k, v := range inTags {
-		tags[k] = v
+
+	timeout := 5 * time.Minute
+	err := utils.RetryWithTimeout(context.Background(), timeout, 2*time.Second, func() (finished bool, _ error) {
+		_, err := svc.DeleteTags(input)
+		if err != nil {
+			if awserr, ok := err.(awserr.Error); ok {
+				if strings.Contains(awserr.Code(), ".NotFound") {
+					return true, nil
+				}
+			}
+			return false, err
+		}
+		return true, nil
+	})
+
+	if err != nil {
+		if err == utils.ErrCancelled {
+			// try one last time to return a real API error
+			_, err = svc.DeleteTags(input)
+		}
+		return err
 	}
-	return tags
+
+	return nil
+}
+
+func createEC2TagsWithName(name string, tags map[string]string) []*ec2.Tag {
+	res := []*ec2.Tag{
+		{
+			Key:   aws.String("Name"),
+			Value: aws.String(name),
+		},
+	}
+	for key, value := range tags {
+		res = append(res, &ec2.Tag{
+			Key:   aws.String(key),
+			Value: aws.String(value),
+		})
+	}
+	return res
 }
