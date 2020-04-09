@@ -1,114 +1,15 @@
-import * as React from 'react'
-import PropTypes from 'prop-types'
-import copy from '../../utils/object-copy'
-import canonical from '../../utils/canonical'
 import V1alpha1EKSCredentials from '../../kore-api/model/V1alpha1EKSCredentials'
 import V1alpha1EKSCredentialsSpec from '../../kore-api/model/V1alpha1EKSCredentialsSpec'
-import V1Allocation from '../../kore-api/model/V1Allocation'
-import V1AllocationSpec from '../../kore-api/model/V1AllocationSpec'
 import V1ObjectMeta from '../../kore-api/model/V1ObjectMeta'
-import V1Ownership from '../../kore-api/model/V1Ownership'
+import VerifiedAllocatedResourceForm from '../../components/forms/VerifiedAllocatedResourceForm'
 import ResourceVerificationStatus from '../../components/ResourceVerificationStatus'
+import FormErrorMessage from '../../components/forms/FormErrorMessage'
 import KoreApi from '../../kore-api'
-import { Button, Form, Input, Alert, Select, message, Typography, Card } from 'antd'
-const { Paragraph, Text } = Typography
+import { Button, Form, Input, Alert, Select, Card } from 'antd'
 
-class EKSCredentialsForm extends React.Component {
-  static propTypes = {
-    form: PropTypes.any.isRequired,
-    team: PropTypes.string.isRequired,
-    allTeams: PropTypes.object,
-    data: PropTypes.object,
-    handleSubmit: PropTypes.func.isRequired,
-    saveButtonText: PropTypes.string,
-    inlineVerification: PropTypes.bool
-  }
+class EKSCredentialsForm extends VerifiedAllocatedResourceForm {
 
-  constructor(props) {
-    super(props)
-    let allocations = []
-    if (props.data && props.data.allocation) {
-      allocations = props.data.allocation.spec.teams.filter(a => a !== '*')
-    }
-    this.state = {
-      submitting: false,
-      formErrorMessage: false,
-      allocations,
-      inlineVerificationFailed: false
-    }
-  }
-
-  componentDidMount() {
-    // To disabled submit button at the beginning.
-    this.props.form.validateFields()
-  }
-
-  disableButton = fieldsError => {
-    if (this.state.submitting) {
-      return true
-    }
-    return Object.keys(fieldsError).some(field => fieldsError[field])
-  }
-
-  onAllocationsChange = value => {
-    const state = copy(this.state)
-    state.allocations = value
-    this.setState(state)
-  }
-
-  async verify(eksCredentials, tryCount) {
-    const messageKey = 'verify'
-    tryCount = tryCount || 0
-    if (tryCount === 0) {
-      message.loading({ content: 'Verifying AWS account credentials', key: messageKey, duration: 0 })
-    }
-    if (tryCount === 3) {
-      message.error({ content: 'AWS account credentials verification failed', key: messageKey })
-      const state = copy(this.state)
-      state.inlineVerificationFailed = true
-      state.submitting = false
-      state.formErrorMessage = (
-        <div>
-          <Paragraph>The credentials have been saved but could not be verified, see the error below. Please try again or click &quot;Continue without verification&quot;.</Paragraph>
-          {(eksCredentials.status.conditions || []).map((c, idx) =>
-            <Paragraph key={idx} style={{ marginBottom: '0' }}>
-              <Text strong>{c.message}</Text>
-              <br/>
-              <Text>{c.detail}</Text>
-            </Paragraph>
-          )}
-        </div>
-      )
-      this.setState(state)
-    } else {
-      setTimeout(async () => {
-        const api = await KoreApi.client()
-        const eksCredentialsResult = await api.GetEKSCredentials(this.props.team, eksCredentials.metadata.name)
-        eksCredentialsResult.allocation = eksCredentials.allocation
-        if (eksCredentialsResult.status.status === 'Success') {
-          message.success({ content: 'AWS account credentials verification successful', key: messageKey })
-          return await this.props.handleSubmit(eksCredentialsResult)
-        } else {
-          return await this.verify(eksCredentialsResult, tryCount + 1)
-        }
-      }, 2000)
-    }
-  }
-
-  setFormSubmitting = (submitting, formErrorMessage = false) => {
-    this.setState({
-      ...this.state,
-      submitting,
-      formErrorMessage
-    })
-  }
-
-  getMetadataName = values => {
-    const data = this.props.data
-    return (data && data.metadata && data.metadata.name) || canonical(values.name)
-  }
-
-  getEKSCredentialsResource = values => {
+  generateEKSCredentialsResource = values => {
     const resource = new V1alpha1EKSCredentials()
     resource.setApiVersion('aws.compute.kore.appvia.io/v1alpha1')
     resource.setKind('EKSCredentials')
@@ -128,78 +29,20 @@ class EKSCredentialsForm extends React.Component {
     return resource
   }
 
-  getAllocationResource = values => {
+  getResource = async metadataName => {
+    const api = await KoreApi.client()
+    const eksCredentialsResult = await api.GetEKSCredentials(this.props.team, metadataName)
+    eksCredentialsResult.allocation = await api.GetAllocation(this.props.team, metadataName)
+    return eksCredentialsResult
+  }
+
+  putResource = async values => {
+    const api = await KoreApi.client()
     const metadataName = this.getMetadataName(values)
-
-    const resource = new V1Allocation()
-    resource.setApiVersion('config.kore.appvia.io/v1')
-    resource.setKind('Allocation')
-
-    const meta = new V1ObjectMeta()
-    meta.setName(metadataName)
-    meta.setNamespace(this.props.team)
-    resource.setMetadata(meta)
-
-    const spec = new V1AllocationSpec()
-    spec.setName(values.name)
-    spec.setSummary(values.summary)
-    spec.setTeams(this.state.allocations.length > 0 ? this.state.allocations : ['*'])
-    const owner = new V1Ownership()
-    owner.setGroup('aws.compute.kore.appvia.io')
-    owner.setVersion('v1alpha1')
-    owner.setKind('EKSCredentials')
-    owner.setName(metadataName)
-    owner.setNamespace(this.props.team)
-    spec.setResource(owner)
-
-    resource.setSpec(spec)
-
-    return resource
-  }
-
-  handleSubmit = e => {
-    e.preventDefault()
-
-    this.setFormSubmitting(true)
-
-    return this.props.form.validateFields(async (err, values) => {
-      if (err) {
-        this.setFormSubmitting(false, 'Validation failed')
-        return
-      }
-
-      const metadataName = this.getMetadataName(values)
-      const eksCredentialsResource = this.getEKSCredentialsResource(values)
-      const allocationResource = this.getAllocationResource(values)
-
-      try {
-        const api = await KoreApi.client()
-        const eksResult = await api.UpdateEKSCredentials(this.props.team, metadataName, eksCredentialsResource)
-        eksResult.allocation = await api.UpdateAllocation(this.props.team, metadataName, allocationResource)
-
-        if (this.props.inlineVerification) {
-          await this.verify(eksResult)
-        } else {
-          await this.props.handleSubmit(eksResult)
-        }
-      } catch (err) {
-        console.error('Error submitting form', err)
-        this.setFormSubmitting(false, 'An error occurred saving the account, please try again')
-      }
-    })
-  }
-
-  continueWithoutVerification = async () => {
-    try {
-      const metadataName = this.getMetadataName(this.props.form.getFieldsValue())
-      const api = await KoreApi.client()
-      const eksCredentialsResult = await api.GetEKSCredentials(this.props.team, metadataName)
-      eksCredentialsResult.allocation = await api.GetAllocation(this.props.team, metadataName)
-      await this.props.handleSubmit(eksCredentialsResult)
-    } catch (err) {
-      console.error('Error getting data', err)
-      this.setFormSubmitting(false, 'An error occurred saving the account, please try again')
-    }
+    const eksResult = await api.UpdateEKSCredentials(this.props.team, metadataName, this.generateEKSCredentialsResource(values))
+    const allocationResource = this.generateAllocationResource({ group: 'aws.compute.kore.appvia.io', version: 'v1alpha1', kind: 'EKSCredentials' }, values)
+    eksResult.allocation = await api.UpdateAllocation(this.props.team, metadataName, allocationResource)
+    return eksResult
   }
 
   render() {
@@ -226,21 +69,6 @@ class EKSCredentialsForm extends React.Component {
     const fieldError = fieldKey => isFieldTouched(fieldKey) && getFieldError(fieldKey)
     const allocationMissing = Boolean(data && !data.allocation)
 
-    const FormErrorMessage = () => {
-      if (formErrorMessage) {
-        return (
-          <Alert
-            message={formErrorMessage}
-            type="error"
-            showIcon
-            closable
-            style={{ marginBottom: '20px' }}
-          />
-        )
-      }
-      return null
-    }
-
     return (
       <div>
 
@@ -257,7 +85,7 @@ class EKSCredentialsForm extends React.Component {
         ) : null}
 
         <Form {...formConfig} onSubmit={this.handleSubmit}>
-          <FormErrorMessage />
+          <FormErrorMessage message={formErrorMessage} />
           <Card style={{ marginBottom: '20px' }}>
             <Alert
               message="Account and access key"
