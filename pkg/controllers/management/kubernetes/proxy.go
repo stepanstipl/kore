@@ -54,6 +54,11 @@ func (a k8sCtrl) APIHostname(cluster *clustersv1.Kubernetes) string {
 	)
 }
 
+// IsProxyProtocolRequired checks if we should enabled proxy protocol
+func IsProxyProtocolRequired(cluster *clustersv1.Kubernetes) bool {
+	return cluster.Spec.Provider.Kind == "EKS"
+}
+
 // EnsureAPIService is responsible for ensuring the api proxy is provisioned
 func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster *clustersv1.Kubernetes) error {
 	logger := log.WithFields(log.Fields{
@@ -79,17 +84,19 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 
 	// @step: build the parameters
 	var parameters struct {
-		Hostname string
-		Domain   string
-		Image    string
-		Name     string
-		Team     string
+		Domain        string
+		Hostname      string
+		Image         string
+		Name          string
+		ProxyProtocol bool
+		Team          string
 	}
 	parameters.Team = cluster.Namespace
 	parameters.Name = cluster.Name
 	parameters.Domain = cluster.Spec.Domain
 	parameters.Hostname = a.APIHostname(cluster)
 	parameters.Image = a.Config().AuthProxyImage
+	parameters.ProxyProtocol = IsProxyProtocolRequired(cluster)
 	if cluster.Spec.AuthProxyImage != "" {
 		parameters.Image = cluster.Spec.AuthProxyImage
 	}
@@ -101,17 +108,11 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 
 		return err
 	}
+
 	// @TODO need to add a check for expiration?
 	if !found {
 		// @step: we need to generate a server certificate for the api
-		cert, key, err := a.SignedServerCertificate(
-			[]string{
-				parameters.Hostname,
-				"localhost",
-				"127.0.0.1",
-			},
-			24*365*time.Hour,
-		)
+		cert, key, err := a.SignedServerCertificate([]string{parameters.Hostname, "localhost", "127.0.0.1"}, 24*365*time.Hour)
 		if err != nil {
 			logger.WithError(err).Error("generate the server certificate")
 
@@ -123,10 +124,7 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 				Name:      KubeProxyTLSSecret,
 				Namespace: KubeProxyNamespace,
 			},
-			Data: map[string][]byte{
-				"tls.crt": cert,
-				"tls.key": key,
-			},
+			Data: map[string][]byte{"tls.crt": cert, "tls.key": key},
 		}); err != nil {
 			logger.WithError(err).Error("trying to create the tls secret")
 
@@ -206,13 +204,18 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 			return err
 		}
 
+		annotations := map[string]string{
+			"external-dns.alpha.kubernetes.io/hostname": parameters.Hostname,
+		}
+		if parameters.ProxyProtocol {
+			annotations["service.beta.kubernetes.io/aws-load-balancer-proxy-protocol"] = "*"
+		}
+
 		if _, err := kubernetes.CreateOrUpdate(ctx, cc, &v1.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "proxy",
-				Namespace: KubeProxyNamespace,
-				Annotations: map[string]string{
-					"external-dns.alpha.kubernetes.io/hostname": parameters.Hostname,
-				},
+				Name:        "proxy",
+				Namespace:   KubeProxyNamespace,
+				Annotations: annotations,
 			},
 			Spec: v1.ServiceSpec{
 				Type:                  v1.ServiceTypeLoadBalancer,
@@ -245,6 +248,18 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 		"--tls-key=/tls/tls.key",
 	}
 
+	// @step: construct the readiness probe
+	readiness := &v1.Probe{
+		Handler: v1.Handler{
+			HTTPGet: &v1.HTTPGetAction{
+				Path:   "/ready",
+				Port:   intstr.FromInt(10443),
+				Scheme: "HTTPS",
+			},
+		},
+		PeriodSeconds: 10,
+	}
+
 	for _, x := range a.Config().IDPUserClaims {
 		args = append(args, fmt.Sprintf("--idp-user-claims=%s", x))
 	}
@@ -252,6 +267,20 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 	for _, allowedIP := range cluster.Spec.AuthProxyAllowedIPs {
 		args = append(args, fmt.Sprintf("--allowed-ips=%s", allowedIP))
 	}
+
+	if parameters.ProxyProtocol {
+		logger.Debug("enabling proxy protocol readiness check for auth-proxy")
+		readiness = &v1.Probe{
+			Handler: v1.Handler{
+				TCPSocket: &v1.TCPSocketAction{Port: intstr.FromInt(10443)},
+			},
+			PeriodSeconds: 10,
+		}
+		args = append(args, "--enable-proxy-protocol="+fmt.Sprintf("%t", parameters.ProxyProtocol))
+	}
+
+	// @step: create the readiness probe for the proxy - this has to change to
+	// tcp if we are using proxy protocol
 
 	// @step: ensure the deployment is there
 	if _, err := kubernetes.CreateOrUpdate(ctx, cc, &appsv1.Deployment{
@@ -289,17 +318,8 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 								{ContainerPort: 10443},
 								{ContainerPort: 8080},
 							},
-							ReadinessProbe: &v1.Probe{
-								Handler: v1.Handler{
-									HTTPGet: &v1.HTTPGetAction{
-										Path:   "/ready",
-										Port:   intstr.FromInt(10443),
-										Scheme: "HTTPS",
-									},
-								},
-								PeriodSeconds: 10,
-							},
-							Args: args,
+							ReadinessProbe: readiness,
+							Args:           args,
 							VolumeMounts: []v1.VolumeMount{
 								{
 									Name:      "tls",
