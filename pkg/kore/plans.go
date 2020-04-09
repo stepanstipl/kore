@@ -19,6 +19,7 @@ package kore
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/appvia/kore/pkg/kore/assets"
 	"github.com/appvia/kore/pkg/utils/jsonschema"
@@ -113,6 +114,24 @@ func (p plansImpl) Delete(ctx context.Context, name string) (*configv1.Plan, err
 		return nil, err
 	}
 
+	clustersWithPlan, err := p.getClustersWithPlan(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+	if len(clustersWithPlan) > 0 {
+		if len(clustersWithPlan) <= 5 {
+			return nil, fmt.Errorf(
+				"the plan can not be deleted as there are %d clusters using it: %s",
+				len(clustersWithPlan),
+				strings.Join(clustersWithPlan, ", "),
+			)
+		}
+		return nil, fmt.Errorf(
+			"the plan can not be deleted as there are %d clusters using it",
+			len(clustersWithPlan),
+		)
+	}
+
 	if err := p.Store().Client().Delete(ctx, store.DeleteOptions.From(plan)); err != nil {
 		log.WithError(err).Error("trying to delete the plan from kore")
 
@@ -185,4 +204,27 @@ func (p plansImpl) GetEditablePlanParams(ctx context.Context, team string) (map[
 	}
 
 	return editableParams, nil
+}
+
+func (p plansImpl) getClustersWithPlan(ctx context.Context, clusterName string) ([]string, error) {
+	var res []string
+
+	teamList, err := p.Teams().List(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, team := range teamList.Items {
+		clusterList, err := p.Teams().Team(team.Name).Clusters().List(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, cluster := range clusterList.Items {
+			if cluster.Spec.Plan == clusterName {
+				res = append(res, fmt.Sprintf("%s/%s", team.Name, cluster.Name))
+			}
+		}
+	}
+
+	return res, nil
 }
