@@ -18,7 +18,6 @@ package kubernetes
 
 import (
 	"context"
-	"time"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
@@ -27,18 +26,15 @@ import (
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
-	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 const (
-	// ComponentClusterDelete is the name of the cluster deletion component
-	ComponentClusterDelete = "Cluster Deletor"
+	ComponentKubernetesCleanup = "Kubernetes Clean-up"
 )
 
 // Delete is responsible for deleting any bindings which were created
@@ -68,62 +64,13 @@ func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (rec
 
 		// @check if a we are backed by a cloud provider
 		if kore.IsProviderBacked(object) {
-			logger := logger.WithFields(log.Fields{
-				"group":     object.Spec.Provider.Group,
-				"kind":      u.GetKind(),
-				"name":      u.GetName(),
-				"namespace": u.GetNamespace(),
-				"version":   object.Spec.Provider.Version,
-			})
-
-			// @step: retrieve the cloud provider resource from the api
-			ref := types.NamespacedName{Namespace: u.GetNamespace(), Name: u.GetName()}
-
-			if err := a.mgr.GetClient().Get(ctx, ref, u); err != nil {
-				if !kerrors.IsNotFound(err) {
-					logger.WithError(err).Error("trying to retrieve the cluster resource from the api")
-
+			// Assumption: we only clean up everything if we own the provider
+			if object.Spec.Provider.Kind == "EKS" {
+				if err := a.EnsureResourceDeletion(context.Background(), object); err != nil {
 					return reconcile.Result{}, err
 				}
-			} else {
-				// Assumption: we only clean up everything if we own the provider
-				if object.Spec.Provider.Kind == "EKS" {
-					if err := a.EnsureResourceDeletion(context.Background(), object); err != nil {
-						return reconcile.Result{}, err
-					}
-				}
-
-				object.Status.Components.SetCondition(corev1.Component{
-					Name:    ComponentClusterDelete,
-					Message: "Waiting for cloud provider to be deleted",
-				})
-
-				// @step: should we delete the cloud provider if there is one
-				if a.Config().EnableClusterDeletion && u.GetDeletionTimestamp() == nil {
-					logger.Info("attempting to delete the cloud provider from the api")
-
-					// @step: we should attempt to delete the cloud provider
-					if err := a.mgr.GetClient().Delete(ctx, u); err != nil {
-						logger.WithError(err).Error("trying delete the cloud cluster")
-
-						object.Status.Components.SetCondition(corev1.Component{
-							Name:    ComponentClusterDelete,
-							Message: "Failed trying to delete the cloud provider",
-							Detail:  err.Error(),
-						})
-
-						return reconcile.Result{}, err
-					}
-
-					return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
-				}
-
-				if a.Config().EnableClusterDeletionBlock {
-					// @check if cloud provider is still being deleted we wait
-					return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
-				}
 			}
-			logger.Debug("attempting to delete the kubernetes credential")
+
 		}
 
 		// @step: we should delete the secert from api

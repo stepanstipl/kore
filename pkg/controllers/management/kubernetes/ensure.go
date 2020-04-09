@@ -38,7 +38,7 @@ func (a k8sCtrl) EnsureResourceDeletion(ctx context.Context, object *clustersv1.
 
 	// @note: it debatable if this should be includes as the user wont see it anyhow
 	object.Status.Components.SetCondition(corev1.Component{
-		Name:    ComponentClusterDelete,
+		Name:    ComponentKubernetesCleanup,
 		Message: "attempting to clean up in-cluster kubernetes resources",
 	})
 
@@ -52,7 +52,7 @@ func (a k8sCtrl) EnsureResourceDeletion(ctx context.Context, object *clustersv1.
 		logger.WithError(err).Error("unable to obtain credentials secret")
 
 		object.Status.Components.SetCondition(corev1.Component{
-			Name:    ComponentClusterDelete,
+			Name:    ComponentKubernetesCleanup,
 			Message: "Unable obtain cluster access cluster credentials",
 			Detail:  err.Error(),
 			Status:  corev1.FailureStatus,
@@ -67,7 +67,7 @@ func (a k8sCtrl) EnsureResourceDeletion(ctx context.Context, object *clustersv1.
 		logger.WithError(err).Error("trying to create client from credentials secret")
 
 		object.Status.Components.SetCondition(corev1.Component{
-			Name:    ComponentClusterDelete,
+			Name:    ComponentKubernetesCleanup,
 			Message: "Unable to access cluster using provided cluster credentials",
 			Detail:  err.Error(),
 			Status:  corev1.FailureStatus,
@@ -80,7 +80,7 @@ func (a k8sCtrl) EnsureResourceDeletion(ctx context.Context, object *clustersv1.
 		logger.WithError(err).Error("trying to clean up cluster resources")
 
 		object.Status.Components.SetCondition(corev1.Component{
-			Name:    ComponentClusterDelete,
+			Name:    ComponentKubernetesCleanup,
 			Message: "Unable to delete all cluster namespaces",
 			Detail:  err.Error(),
 			Status:  corev1.FailureStatus,
