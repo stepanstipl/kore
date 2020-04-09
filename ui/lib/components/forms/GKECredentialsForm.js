@@ -1,14 +1,15 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
-import copy from '../../utils/object-copy'
 import canonical from '../../utils/canonical'
-import GKECredentials from '../../crd/GKECredentials'
+import V1alpha1GKECredentials from '../../kore-api/model/V1alpha1GKECredentials'
+import V1alpha1GKECredentialsSpec from '../../kore-api/model/V1alpha1GKECredentialsSpec'
+import V1Allocation from '../../kore-api/model/V1Allocation'
+import V1AllocationSpec from '../../kore-api/model/V1AllocationSpec'
+import V1ObjectMeta from '../../kore-api/model/V1ObjectMeta'
+import V1Ownership from '../../kore-api/model/V1Ownership'
 import ResourceVerificationStatus from '../../components/ResourceVerificationStatus'
-import Allocation from '../../crd/Allocation'
-import apiRequest from '../../utils/api-request'
-import apiPaths from '../../utils/api-paths'
+import KoreApi from '../../kore-api'
 import { Button, Form, Input, Alert, Select, message, Typography, Card } from 'antd'
-
 const { Paragraph, Text } = Typography
 
 class GKECredentialsForm extends React.Component {
@@ -49,98 +50,152 @@ class GKECredentialsForm extends React.Component {
   }
 
   onAllocationsChange = value => {
-    const state = copy(this.state)
-    state.allocations = value
-    this.setState(state)
+    this.setState({
+      ...this.state,
+      allocations: value
+    })
   }
 
-  async verify(gke, tryCount) {
+  async verify(gkeCredentials, tryCount) {
     const messageKey = 'verify'
     tryCount = tryCount || 0
     if (tryCount === 0) {
-      message.loading({ content: 'Verifying GCP project Service Account', key: messageKey, duration: 0 })
+      message.loading({ content: 'Verifying GCP project credentials', key: messageKey, duration: 0 })
     }
     if (tryCount === 3) {
-      message.error({ content: 'GCP project Service Account verification failed', key: messageKey })
-      const state = copy(this.state)
-      state.inlineVerificationFailed = true
-      state.submitting = false
-      state.formErrorMessage = (
-        <div>
-          <Paragraph>The credentials have been saved but could not be verified, see the error below. Please try again or click &quot;Continue without verification&quot;.</Paragraph>
-          {(gke.status.conditions || []).map((c, idx) =>
-            <Paragraph key={idx} style={{ marginBottom: '0' }}>
-              <Text strong>{c.message}</Text>
-              <br/>
-              <Text>{c.detail}</Text>
-            </Paragraph>
-          )}
-        </div>
-      )
-      this.setState(state)
+      message.error({ content: 'GCP project credentials verification failed', key: messageKey })
+      this.setState({
+        ...this.state,
+        inlineVerificationFailed: true,
+        submitting: false,
+        formErrorMessage: (
+          <>
+            <Paragraph>The credentials have been saved but could not be verified, see the error below. Please try again or click &quot;Continue without verification&quot;.</Paragraph>
+            {(gkeCredentials.status.conditions || []).map((c, idx) =>
+              <Paragraph key={idx} style={{ marginBottom: '0' }}>
+                <Text strong>{c.message}</Text>
+                <br/>
+                <Text>{c.detail}</Text>
+              </Paragraph>
+            )}
+          </>
+        )
+      })
     } else {
       setTimeout(async () => {
-        const gkeResult = await apiRequest(null, 'get', `${apiPaths.team(this.props.team).gkeCredentials}/${gke.metadata.name}`)
-        if (gkeResult.status.status === 'Success') {
-          message.success({ content: 'GCP project Service Account verification successful', key: messageKey })
-          return await this.props.handleSubmit(gkeResult)
-        } else {
-          return await this.verify(gkeResult, tryCount + 1)
+        const api = await KoreApi.client()
+        const gkeCredentialsResult = await api.GetGKECredential(this.props.team, gkeCredentials.metadata.name)
+        gkeCredentialsResult.allocation = gkeCredentials.allocation
+        if (gkeCredentialsResult.status.status === 'Success') {
+          message.success({ content: 'GCP project credentials verification successful', key: messageKey })
+          return await this.props.handleSubmit(gkeCredentialsResult)
         }
+        return await this.verify(gkeCredentialsResult, tryCount + 1)
       }, 2000)
     }
   }
 
-  continueWithoutVerification = async () => {
-    await this.props.handleSubmit()
+  setFormSubmitting = (submitting = true, formErrorMessage = false) => {
+    this.setState({
+      ...this.state,
+      submitting,
+      formErrorMessage
+    })
+  }
+
+  getMetadataName = values => {
+    const data = this.props.data
+    return (data && data.metadata && data.metadata.name) || canonical(values.name)
+  }
+
+  getGKECredentialsResource = values => {
+    const resource = new V1alpha1GKECredentials()
+    resource.setApiVersion('gke.compute.kore.appvia.io/v1alpha1')
+    resource.setKind('GKECredentials')
+
+    const meta = new V1ObjectMeta()
+    meta.setName(this.getMetadataName(values))
+    meta.setNamespace(this.props.team)
+    resource.setMetadata(meta)
+
+    const spec = new V1alpha1GKECredentialsSpec()
+    spec.setProject(values.project)
+    spec.setAccount(values.account)
+
+    resource.setSpec(spec)
+
+    return resource
+  }
+
+  getAllocationResource = values => {
+    const metadataName = this.getMetadataName(values)
+
+    const resource = new V1Allocation()
+    resource.setApiVersion('config.kore.appvia.io/v1')
+    resource.setKind('Allocation')
+
+    const meta = new V1ObjectMeta()
+    meta.setName(metadataName)
+    meta.setNamespace(this.props.team)
+    resource.setMetadata(meta)
+
+    const spec = new V1AllocationSpec()
+    spec.setName(values.name)
+    spec.setSummary(values.summary)
+    spec.setTeams(this.state.allocations.length > 0 ? this.state.allocations : ['*'])
+    const owner = new V1Ownership()
+    owner.setGroup('config.kore.appvia.io')
+    owner.setVersion('v1')
+    owner.setKind('GKECredentials')
+    owner.setName(metadataName)
+    owner.setNamespace(this.props.team)
+    spec.setResource(owner)
+
+    resource.setSpec(spec)
+
+    return resource
   }
 
   handleSubmit = e => {
     e.preventDefault()
 
-    const state = copy(this.state)
-    state.submitting = true
-    state.formErrorMessage = false
-    this.setState(state)
+    this.setFormSubmitting()
 
     return this.props.form.validateFields(async (err, values) => {
-      if (!err) {
-        try {
-          const data = this.props.data
-          const canonicalName = (data && data.metadata && data.metadata.name) || canonical(values.name)
-          const gkeCredsResource = GKECredentials(canonicalName, values)
-          const gkeResult = await apiRequest(null, 'put', `${apiPaths.team(this.props.team).gkeCredentials}/${canonicalName}`, gkeCredsResource)
-          const [ group, version ] = gkeCredsResource.apiVersion.split('/')
-          const allocationSpec = {
-            name: values.name,
-            summary: values.summary,
-            resource: {
-              group,
-              version,
-              kind: gkeCredsResource.kind,
-              namespace: this.props.team,
-              name: canonicalName
-            },
-            teams: this.state.allocations.length > 0 ? this.state.allocations : ['*']
-          }
-          const allocationResult = await apiRequest(null, 'put', `${apiPaths.team(this.props.team).allocations}/${canonicalName}`, Allocation(canonicalName, allocationSpec))
-          gkeResult.allocation = allocationResult
+      if (err) {
+        this.setFormSubmitting(false, 'Validation failed')
+        return
+      }
 
-          if (this.props.inlineVerification) {
-            await this.verify(gkeResult)
-          } else {
-            await this.props.handleSubmit(gkeResult)
-          }
+      const metadataName = this.getMetadataName(values)
+      try {
+        const api = await KoreApi.client()
+        const gkeResult = await api.UpdateGKECredential(this.props.team, metadataName, this.getGKECredentialsResource(values))
+        gkeResult.allocation = await api.UpdateAllocation(this.props.team, metadataName, this.getAllocationResource(values))
 
-        } catch (err) {
-          console.error('Error submitting form', err)
-          const state = copy(this.state)
-          state.submitting = false
-          state.formErrorMessage = 'An error occurred saving the project, please try again'
-          this.setState(state)
+        if (this.props.inlineVerification) {
+          await this.verify(gkeResult)
+        } else {
+          await this.props.handleSubmit(gkeResult)
         }
+      } catch (err) {
+        console.error('Error submitting form', err)
+        this.setFormSubmitting(false, 'An error occurred saving the project credentials, please try again')
       }
     })
+  }
+
+  continueWithoutVerification = async () => {
+    try {
+      const metadataName = this.getMetadataName(this.props.form.getFieldsValue())
+      const api = await KoreApi.client()
+      const gkeCredentialsResult = await api.GetGKECredential(this.props.team, metadataName)
+      gkeCredentialsResult.allocation = await api.GetAllocation(this.props.team, metadataName)
+      await this.props.handleSubmit(gkeCredentialsResult)
+    } catch (err) {
+      console.error('Error getting data', err)
+      this.setFormSubmitting(false, 'An error occurred saving the project credentials, please try again')
+    }
   }
 
   render() {

@@ -443,6 +443,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Operation("UpdateGKECredential").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
+			Reads(gke.GKECredentials{}, "The definition for GKE Credentials").
 			Returns(http.StatusOK, "Contains the former team definition from the kore", gke.GKECredentials{}).
 			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
