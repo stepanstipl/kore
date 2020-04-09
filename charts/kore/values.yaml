@@ -40,12 +40,12 @@ api:
   hostPort: ""
   serviceType: ClusterIP
   image: quay.io/appvia/kore-apiserver
-  version: v0.0.20
+  version: v0.0.22
   auth_plugins:
     - basicauth
     - admintoken
     - openid
-  replicas: 1
+  replicas: 2
 ui:
   endpoint:
     url: http://localhost:3000
@@ -59,7 +59,7 @@ ui:
   hostPort: ""
   serviceType: ClusterIP
   image: quay.io/appvia/kore-ui
-  version: v0.0.6
-  replicas: 1
+  version: v0.0.22
+  replicas: 2
 kubectl:
   version: 1.16
