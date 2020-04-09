@@ -285,8 +285,8 @@ cover:
 
 spelling:
 	@echo "--> Checking the spelling"
-	@find . -name "*.go" -type f -not -path "./vendor/*" | xargs go run github.com/client9/misspell/cmd/misspell -error -source=go *.go
-	@find . -name "*.md" -type f -not -path "./vendor/*" | xargs go run github.com/client9/misspell/cmd/misspell -error -source=text *.md
+	@find . -name "*.go" -type f -not -path "./vendor/*" -not -path "./ui/node_modules/*" | xargs go run github.com/client9/misspell/cmd/misspell -error -source=go *.go
+	@find . -name "*.md" -type f -not -path "./vendor/*" -not -path "./ui/node_modules/*" | xargs go run github.com/client9/misspell/cmd/misspell -error -source=text *.md
 
 golangci-lint:
 	@echo "--> Checking against the golangci-lint"

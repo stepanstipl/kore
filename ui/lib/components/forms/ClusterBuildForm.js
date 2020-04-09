@@ -31,7 +31,9 @@ class ClusterBuildForm extends React.Component {
       formErrorMessage: false,
       selectedCloud: '',
       dataLoading: true,
-      providers: {}
+      providers: {},
+      planOverride: null,
+      validationErrors: null
     }
   }
 
@@ -81,10 +83,14 @@ class ClusterBuildForm extends React.Component {
     const clusterSpec = new V1ClusterSpec()
     clusterSpec.setKind(selectedPlan.spec.kind)
     clusterSpec.setPlan(selectedPlan.metadata.name)
-    // @TODO: Make the configuration updateable. For now, just copy it over:
-    clusterSpec.setConfiguration({...selectedPlan.spec.configuration})
+    if (this.state.planOverride) {
+      clusterSpec.setConfiguration(this.state.planOverride)
+    } else {
+      clusterSpec.setConfiguration({...selectedPlan.spec.configuration})
+    }
     clusterSpec.setCredentials({...selectedProvider.spec.resource})
-    // Add current user as cluster admin to plan config, if no cluster users specified from plan:
+
+    // Add current user as cluster admin to plan config, if no cluster users specified:
     if (!(clusterSpec.configuration['clusterUsers'])) {
       clusterSpec.configuration['clusterUsers'] = [
         {
@@ -93,8 +99,8 @@ class ClusterBuildForm extends React.Component {
         }
       ]
     }
-    clusterResource.setSpec(clusterSpec)
 
+    clusterResource.setSpec(clusterSpec)
     return clusterResource
   }
 
@@ -126,12 +132,11 @@ class ClusterBuildForm extends React.Component {
           path: `/teams/${this.props.team.metadata.name}`
         })
       } catch (err) {
-        // @TODO: Handle validation errors.
-        //console.error('Error submitting form', err)
         this.setState({
           ...this.state,
           submitting: false,
-          formErrorMessage: 'An error occurred requesting the cluster, please try again'
+          formErrorMessage: (err.fieldErrors && err.message) ? err.message : 'An error occurred requesting the cluster, please try again',
+          validationErrors: err.fieldErrors // This will be undefined on non-validation errors, which is fine.
         })
       }
     })
@@ -141,15 +146,37 @@ class ClusterBuildForm extends React.Component {
     if (this.state.selectedCloud !== cloud) {
       const state = copy(this.state)
       state.selectedCloud = cloud
+      state.planOverride = null
+      state.validationErrors = null
       this.setState(state)
     }
   }
 
-  render() {
-    if (this.state.dataLoading || !this.props.team) {
-      return null
+  handlePlanOverride = planOverrides => {
+    this.setState({
+      planOverride: planOverrides
+    })
+  }
+  
+  formErrorMessage = () => {
+    if (this.state.formErrorMessage) {
+      return (
+        <Alert
+          message={this.state.formErrorMessage}
+          type="error"
+          showIcon
+          closable
+          style={{ marginBottom: '20px'}}
+        />
+      )
     }
+    return null
+  }
 
+  clusterBuildForm = () => {
+    const { submitting, selectedCloud } = this.state
+    const filteredPlans = this.state.plans.items.filter(p => p.spec.kind === selectedCloud)
+    const filteredProviders = this.state.providers[selectedCloud]
     const formConfig = {
       layout: 'horizontal',
       labelAlign: 'left',
@@ -165,34 +192,17 @@ class ClusterBuildForm extends React.Component {
         lg: { span: 18 }
       }
     }
-
-    const formErrorMessage = () => {
-      if (this.state.formErrorMessage) {
-        return (
-          <Alert
-            message={this.state.formErrorMessage}
-            type="error"
-            showIcon
-            closable
-            style={{ marginBottom: '20px'}}
-          />
-        )
-      }
-      return null
-    }
-
-    const { submitting, providers, selectedCloud } = this.state
-    const filteredPlans = this.state.plans.items.filter(p => p.spec.kind === selectedCloud)
-    const filteredProviders = this.state.providers[selectedCloud]
-
-    const ClusterBuildForm = () => (
+  
+    return (
       <Form {...formConfig} onSubmit={this.handleSubmit}>
-        <div>{formErrorMessage()}</div>
+        <div>{this.formErrorMessage()}</div>
         <ClusterOptionsForm
           team={this.props.team}
           providers={filteredProviders}
           plans={filteredPlans}
           teamClusters={this.props.teamClusters}
+          onPlanOverridden={this.handlePlanOverride}
+          validationErrors={this.state.validationErrors}
           wrappedComponentRef={inst => this.clusterOptionsForm = inst}
         />
         <Form.Item style={{ marginTop: '20px'}}>
@@ -202,13 +212,22 @@ class ClusterBuildForm extends React.Component {
         </Form.Item>
       </Form>
     )
+  }
+
+  render() {
+    if (this.state.dataLoading || !this.props.team) {
+      return null
+    }
+
+    const { providers, selectedCloud } = this.state
+    const filteredProviders = this.state.providers[selectedCloud]
 
     return (
       <div>
         <CloudSelector showCustom={true} providers={providers} selectedCloud={selectedCloud} handleSelectCloud={this.handleSelectCloud} />
         {selectedCloud ? (
           filteredProviders.length > 0 ?
-            <ClusterBuildForm /> :
+            <this.clusterBuildForm /> :
             <MissingProvider team={this.props.team.metadata.name}/>
         ) : null}
       </div>

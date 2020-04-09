@@ -61,7 +61,11 @@ type ClientService interface {
 
 	GetPlanPolicy(params *GetPlanPolicyParams, authInfo runtime.ClientAuthInfoWriter) (*GetPlanPolicyOK, error)
 
+	GetPlanSchema(params *GetPlanSchemaParams, authInfo runtime.ClientAuthInfoWriter) (*GetPlanSchemaOK, error)
+
 	GetTeam(params *GetTeamParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamOK, error)
+
+	GetTeamPlanDetails(params *GetTeamPlanDetailsParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamPlanDetailsOK, error)
 
 	GetTeamSecret(params *GetTeamSecretParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamSecretOK, error)
 
@@ -785,6 +789,41 @@ func (a *Client) GetPlanPolicy(params *GetPlanPolicyParams, authInfo runtime.Cli
 }
 
 /*
+  GetPlanSchema returns a specific plan schema from the kore
+*/
+func (a *Client) GetPlanSchema(params *GetPlanSchemaParams, authInfo runtime.ClientAuthInfoWriter) (*GetPlanSchemaOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetPlanSchemaParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "GetPlanSchema",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/planschemas/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetPlanSchemaReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetPlanSchemaOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetPlanSchema: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
   GetTeam returns information related to the specific team in the kore
 */
 func (a *Client) GetTeam(params *GetTeamParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamOK, error) {
@@ -816,6 +855,41 @@ func (a *Client) GetTeam(params *GetTeamParams, authInfo runtime.ClientAuthInfoW
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for GetTeam: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  GetTeamPlanDetails returns the plan the JSON schema of the plan and what what parameters are allowed to be edited by this team when using the plan
+*/
+func (a *Client) GetTeamPlanDetails(params *GetTeamPlanDetailsParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamPlanDetailsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetTeamPlanDetailsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "GetTeamPlanDetails",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/plans/{plan}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetTeamPlanDetailsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetTeamPlanDetailsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetTeamPlanDetails: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

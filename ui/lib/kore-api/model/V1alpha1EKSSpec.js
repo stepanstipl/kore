@@ -25,12 +25,11 @@ class V1alpha1EKSSpec {
      * @alias module:model/V1alpha1EKSSpec
      * @param credentials {module:model/V1Ownership} 
      * @param region {String} 
-     * @param roleARN {String} 
      * @param subnetIDs {Array.<String>} 
      */
-    constructor(credentials, region, roleARN, subnetIDs) { 
+    constructor(credentials, region, subnetIDs) { 
         
-        V1alpha1EKSSpec.initialize(this, credentials, region, roleARN, subnetIDs);
+        V1alpha1EKSSpec.initialize(this, credentials, region, subnetIDs);
     }
 
     /**
@@ -38,10 +37,9 @@ class V1alpha1EKSSpec {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, credentials, region, roleARN, subnetIDs) { 
+    static initialize(obj, credentials, region, subnetIDs) { 
         obj['credentials'] = credentials;
         obj['region'] = region;
-        obj['roleARN'] = roleARN;
         obj['subnetIDs'] = subnetIDs;
     }
 
@@ -64,9 +62,6 @@ class V1alpha1EKSSpec {
             }
             if (data.hasOwnProperty('region')) {
                 obj['region'] = ApiClient.convertToType(data['region'], 'String');
-            }
-            if (data.hasOwnProperty('roleARN')) {
-                obj['roleARN'] = ApiClient.convertToType(data['roleARN'], 'String');
             }
             if (data.hasOwnProperty('securityGroupIDs')) {
                 obj['securityGroupIDs'] = ApiClient.convertToType(data['securityGroupIDs'], ['String']);
@@ -119,19 +114,6 @@ class V1alpha1EKSSpec {
      */
     setRegion(region) {
         this['region'] = region;
-    }
-/**
-     * @return {String}
-     */
-    getRoleARN() {
-        return this.roleARN;
-    }
-
-    /**
-     * @param {String} roleARN
-     */
-    setRoleARN(roleARN) {
-        this['roleARN'] = roleARN;
     }
 /**
      * @return {Array.<String>}
@@ -189,11 +171,6 @@ V1alpha1EKSSpec.prototype['credentials'] = undefined;
  * @member {String} region
  */
 V1alpha1EKSSpec.prototype['region'] = undefined;
-
-/**
- * @member {String} roleARN
- */
-V1alpha1EKSSpec.prototype['roleARN'] = undefined;
 
 /**
  * @member {Array.<String>} securityGroupIDs

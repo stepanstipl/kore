@@ -262,7 +262,7 @@ func (c *clustersImpl) validateConfiguration(ctx context.Context, cluster *clust
 		return fmt.Errorf("invalid cluster kind: %q", cluster.Spec.Kind)
 	}
 
-	editableParams, err := c.plans.GetEditablePlanParams(ctx, c.team)
+	editableParams, err := c.plans.GetEditablePlanParams(ctx, c.team, cluster.Spec.Kind)
 	if err != nil {
 		return err
 	}

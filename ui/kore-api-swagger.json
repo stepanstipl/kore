@@ -603,6 +603,47 @@
         }
       }
     },
+    "/api/v1alpha1/planschemas/{name}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Returns a specific plan schema from the kore",
+        "operationId": "GetPlanSchema",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of the plan schema you wish to retrieve",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the plan schema definition from the kore",
+            "schema": {
+              "$ref": "#/definitions/v1.PlanPolicy"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
     "/api/v1alpha1/teams": {
       "get": {
         "consumes": [
@@ -2699,6 +2740,57 @@
         }
       }
     },
+    "/api/v1alpha1/teams/{team}/plans/{plan}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Returns the plan, the JSON schema of the plan, and what what parameters are allowed to be edited by this team when using the plan",
+        "operationId": "GetTeamPlanDetails",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name the of the plan you're interested in",
+            "name": "plan",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains details of the plan",
+            "schema": {
+              "$ref": "#/definitions/apiserver.TeamPlan"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "Team or plan doesn't exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
     "/api/v1alpha1/teams/{team}/projectclaims": {
       "get": {
         "consumes": [
@@ -3393,6 +3485,26 @@
         },
         "metadata": {
           "$ref": "#/definitions/v1.ListMeta"
+        }
+      }
+    },
+    "apiserver.TeamPlan": {
+      "required": [
+        "schema",
+        "parameterEditable"
+      ],
+      "properties": {
+        "parameterEditable": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        },
+        "plan": {
+          "$ref": "#/definitions/v1.PlanSpec"
+        },
+        "schema": {
+          "type": "string"
         }
       }
     },
@@ -4645,11 +4757,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
-        "clientID",
-        "clientSecret",
         "issuer",
         "clientScopes",
-        "userClaims"
+        "userClaims",
+        "clientID",
+        "clientSecret"
       ],
       "properties": {
         "clientID": {

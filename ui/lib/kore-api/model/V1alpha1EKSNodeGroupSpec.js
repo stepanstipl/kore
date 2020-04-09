@@ -30,13 +30,12 @@ class V1alpha1EKSNodeGroupSpec {
      * @param eC2SSHKey {String} 
      * @param maxSize {Number} 
      * @param minSize {Number} 
-     * @param nodeIAMRole {String} 
      * @param region {String} 
      * @param subnets {Array.<String>} 
      */
-    constructor(amiType, credentials, desiredSize, diskSize, eC2SSHKey, maxSize, minSize, nodeIAMRole, region, subnets) { 
+    constructor(amiType, credentials, desiredSize, diskSize, eC2SSHKey, maxSize, minSize, region, subnets) { 
         
-        V1alpha1EKSNodeGroupSpec.initialize(this, amiType, credentials, desiredSize, diskSize, eC2SSHKey, maxSize, minSize, nodeIAMRole, region, subnets);
+        V1alpha1EKSNodeGroupSpec.initialize(this, amiType, credentials, desiredSize, diskSize, eC2SSHKey, maxSize, minSize, region, subnets);
     }
 
     /**
@@ -44,7 +43,7 @@ class V1alpha1EKSNodeGroupSpec {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, amiType, credentials, desiredSize, diskSize, eC2SSHKey, maxSize, minSize, nodeIAMRole, region, subnets) { 
+    static initialize(obj, amiType, credentials, desiredSize, diskSize, eC2SSHKey, maxSize, minSize, region, subnets) { 
         obj['amiType'] = amiType;
         obj['credentials'] = credentials;
         obj['desiredSize'] = desiredSize;
@@ -52,7 +51,6 @@ class V1alpha1EKSNodeGroupSpec {
         obj['eC2SSHKey'] = eC2SSHKey;
         obj['maxSize'] = maxSize;
         obj['minSize'] = minSize;
-        obj['nodeIAMRole'] = nodeIAMRole;
         obj['region'] = region;
         obj['subnets'] = subnets;
     }
@@ -97,9 +95,6 @@ class V1alpha1EKSNodeGroupSpec {
             }
             if (data.hasOwnProperty('minSize')) {
                 obj['minSize'] = ApiClient.convertToType(data['minSize'], 'Number');
-            }
-            if (data.hasOwnProperty('nodeIAMRole')) {
-                obj['nodeIAMRole'] = ApiClient.convertToType(data['nodeIAMRole'], 'String');
             }
             if (data.hasOwnProperty('region')) {
                 obj['region'] = ApiClient.convertToType(data['region'], 'String');
@@ -253,19 +248,6 @@ class V1alpha1EKSNodeGroupSpec {
 /**
      * @return {String}
      */
-    getNodeIAMRole() {
-        return this.nodeIAMRole;
-    }
-
-    /**
-     * @param {String} nodeIAMRole
-     */
-    setNodeIAMRole(nodeIAMRole) {
-        this['nodeIAMRole'] = nodeIAMRole;
-    }
-/**
-     * @return {String}
-     */
     getRegion() {
         return this.region;
     }
@@ -380,11 +362,6 @@ V1alpha1EKSNodeGroupSpec.prototype['maxSize'] = undefined;
  * @member {Number} minSize
  */
 V1alpha1EKSNodeGroupSpec.prototype['minSize'] = undefined;
-
-/**
- * @member {String} nodeIAMRole
- */
-V1alpha1EKSNodeGroupSpec.prototype['nodeIAMRole'] = undefined;
 
 /**
  * @member {String} region

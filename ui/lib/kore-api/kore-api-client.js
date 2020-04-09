@@ -33,6 +33,9 @@ class KoreApiClient {
           ensureRefreshFromServer: true
         })
       }
+      if (err.response && err.response.status === 400 && err.response.body) {
+        throw err.response.body
+      }
       // @TODO: Handle validation errors (400) and forbidden (403)
       throw err
     }
@@ -66,6 +69,7 @@ class KoreApiClient {
   ListClusters = (team) => this.apis.default.ListClusters({ team })
   UpdateCluster = (team, name, cluster) => this.apis.default.UpdateCluster({ team, name, body: JSON.stringify(cluster) })
   ListNamespaces = (team) => this.apis.default.ListNamespaces({ team })
+  GetTeamPlanDetails = (team, plan) => this.apis.default.GetTeamPlanDetails({ team, plan })
 }
 
 module.exports = KoreApiClient
