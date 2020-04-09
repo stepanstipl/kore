@@ -493,6 +493,11 @@ func (in *Infra) DeepCopyInto(out *Infra) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.PublicIPV4EgressAddresses != nil {
+		in, out := &in.PublicIPV4EgressAddresses, &out.PublicIPV4EgressAddresses
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 
