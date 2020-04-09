@@ -46,7 +46,7 @@ class EKSCredentialsForm extends VerifiedAllocatedResourceForm {
   allocationFormFieldsInfo = {
     allocationMissing: {
       infoMessage: 'This account credential is not allocated to any teams',
-      infoDescription: "Give the account credential a Name and Description below and enter Allocated team(s) as appropriate. Once complete, click Save to allocate this account."
+      infoDescription: 'Give the account credential a Name and Description below and enter Allocated team(s) as appropriate. Once complete, click Save to allocate it.'
     },
     nameSection: {
       infoMessage: 'Help Kore teams understand this account credential',

@@ -45,7 +45,7 @@ class GKECredentialsForm extends VerifiedAllocatedResourceForm {
   allocationFormFieldsInfo = {
     allocationMissing: {
       infoMessage: 'This project credential is not allocated to any teams',
-      infoDescription: "Give the project credential a Name and Description below and enter Allocated team(s) as appropriate. Once complete, click Save to allocate it."
+      infoDescription: 'Give the project credential a Name and Description below and enter Allocated team(s) as appropriate. Once complete, click Save to allocate it."'
     },
     nameSection: {
       infoMessage: 'Help Kore teams understand this project credential',

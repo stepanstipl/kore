@@ -36,10 +36,10 @@ class ConfigureCloudPage extends React.Component {
         <CloudTabs defaultSelectedKey={selectedCloud} handleSelectCloud={this.handleSelectCloud}/>
         {selectedCloud === 'GCP' ? (
           <Tabs defaultActiveKey={'orgs'} tabPosition="left" style={{ marginTop: '20px' }}>
-            <Tabs.TabPane tab="Organizations" key="orgs">
+            <Tabs.TabPane tab="Organization credentials" key="orgs">
               <GCPOrganizationsList />
             </Tabs.TabPane>
-            <Tabs.TabPane tab="Projects" key="projects">
+            <Tabs.TabPane tab="Project credentials" key="projects">
               <GKECredentialsList />
             </Tabs.TabPane>
             <Tabs.TabPane tab="Plans" key="plans">
@@ -49,7 +49,7 @@ class ConfigureCloudPage extends React.Component {
         ) : null}
         {selectedCloud === 'AWS' ? (
           <Tabs defaultActiveKey={'accounts'} tabPosition="left" style={{ marginTop: '20px' }}>
-            <Tabs.TabPane tab="Accounts" key="accounts">
+            <Tabs.TabPane tab="Account credentials" key="accounts">
               <EKSCredentialsList />
             </Tabs.TabPane>
             <Tabs.TabPane tab="Plans" key="plans">

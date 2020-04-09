@@ -283,7 +283,7 @@ class VerifiedAllocatedResourceForm extends React.Component {
             )}
 
           </Card>
-          <Form.Item style={{ marginBottom: '0'}}>
+          <Form.Item style={{ marginBottom: '0' }}>
             <Button type="primary" htmlType="submit" loading={submitting} disabled={this.disableButton(getFieldsError())}>{saveButtonText || 'Save'}</Button>
             {inlineVerificationFailed ? (
               <Button onClick={this.continueWithoutVerification} disabled={this.disableButton(getFieldsError())} style={{ marginLeft: '10px' }}>Continue without verification</Button>

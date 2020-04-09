@@ -501,6 +501,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 		ws.GET("/{team}/organizations").To(u.findOrganizations).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Doc("Is the used tor return a list of gcp organizations").
+			Operation("ListGCPOrganizations").
 			Returns(http.StatusOK, "Contains the former team definition from the kore", gcp.OrganizationList{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
@@ -510,6 +511,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the resource you are acting on")).
 			Doc("Is the used tor return a specific gcp organization").
+			Operation("GetGCPOrganization").
 			Returns(http.StatusOK, "Contains the former team definition from the kore", gcp.Organization{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
@@ -517,6 +519,8 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 		ws.PUT("/{team}/organizations/{name}").To(u.updateOrganization).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the resource you are acting on")).
+			Operation("UpdateGCPOrganization").
+			Reads(gcp.Organization{}, "The definition for GCP organization").
 			Doc("Is used to provision or update a gcp organization").
 			Returns(http.StatusOK, "Contains the former team definition from the kore", gcp.Organization{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
@@ -527,6 +531,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the resource you are acting on")).
 			Doc("Is used to delete a managed gcp organization").
+			Operation("DeleteGCPOrganization").
 			Returns(http.StatusOK, "Contains the former team definition from the kore", gcp.Organization{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)

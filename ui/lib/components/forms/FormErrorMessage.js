@@ -11,7 +11,7 @@ const FormErrorMessage = ({ message }) => {
       type="error"
       showIcon
       closable
-      style={{ marginBottom: '20px'}}
+      style={{ marginBottom: '20px' }}
     />
   )
 }
