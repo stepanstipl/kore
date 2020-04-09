@@ -23,11 +23,12 @@ load helper
 }
 
 @test "We should be able to build a cluster in GKE" {
-  if "${KORE} get clusters ${CLUSTER} -t e2e"; then
+  if runit "${KORE} get clusters ${CLUSTER} -t e2e"; then
     skip
+  else
+    runit "${KORE} create cluster -p gke-development -a gke ${CLUSTER} --show-time -t e2e"
+    [[ "$status" -eq 0 ]]
   fi
-  runit "${KORE} create cluster -p gke-development -a gke ${CLUSTER} --show-time -t e2e"
-  [[ "$status" -eq 0 ]]
 }
 
 @test "We should be able to see the cluster in the team" {

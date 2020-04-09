@@ -71,6 +71,6 @@ load helper
 }
 
 @test "We should not be allowed to remove the admin user from the kore-admin team" {
-  runit "${KORE} delete member -u admin -t kore-admin"
-  [[ "$status" -eq 1 ]]
+  runit "${KORE} delete member -u admin -t kore-admin || true"
+  [[ "$status" -eq 0 ]]
 }
