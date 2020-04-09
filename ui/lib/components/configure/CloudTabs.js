@@ -22,9 +22,9 @@ class CloudTabs extends React.Component {
         <Tabs.TabPane tab={
           <span>
             <img src="/static/images/AWS.png" height="40px" style={{ marginRight: '15px' }} />
-            Amazon Web Services (coming soon)
+            Amazon Web Services
           </span>
-        } disabled key="AWS" />
+        } key="AWS" />
         <Tabs.TabPane tab={
           <span>
             <img src="/static/images/Azure.svg" height="25px" style={{ marginRight: '15px' }} />

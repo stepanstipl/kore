@@ -5,9 +5,9 @@ import { Alert, Tabs } from 'antd'
 import Breadcrumb from '../../lib/components/Breadcrumb'
 import GKECredentialsList from '../../lib/components/configure/GKECredentialsList'
 import GCPOrganizationsList from '../../lib/components/configure/GCPOrganizationsList'
+import EKSCredentialsList from '../../lib/components/configure/EKSCredentialsList'
 import PlanList from '../../lib/components/configure/PlanList'
 import CloudTabs from '../../lib/components/configure/CloudTabs'
-import copy from '../../lib/utils/object-copy'
 
 class ConfigureCloudPage extends React.Component {
 
@@ -16,11 +16,10 @@ class ConfigureCloudPage extends React.Component {
   }
 
   handleSelectCloud = cloud => {
-    if (this.state.selectedCloud !== cloud) {
-      const state = copy(this.state)
-      state.selectedCloud = cloud
-      this.setState(state)
-    }
+    this.setState({
+      ...this.state,
+      selectedCloud: cloud
+    })
   }
 
   render() {
@@ -45,6 +44,16 @@ class ConfigureCloudPage extends React.Component {
             </Tabs.TabPane>
             <Tabs.TabPane tab="Plans" key="plans">
               <PlanList kind="GKE" />
+            </Tabs.TabPane>
+          </Tabs>
+        ) : null}
+        {selectedCloud === 'AWS' ? (
+          <Tabs defaultActiveKey={'accounts'} tabPosition="left" style={{ marginTop: '20px' }}>
+            <Tabs.TabPane tab="Accounts" key="accounts">
+              <EKSCredentialsList />
+            </Tabs.TabPane>
+            <Tabs.TabPane tab="Plans" key="plans">
+              <PlanList kind="EKS" />
             </Tabs.TabPane>
           </Tabs>
         ) : null}

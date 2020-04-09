@@ -912,6 +912,15 @@
             "name": "name",
             "in": "path",
             "required": true
+          },
+          {
+            "description": "The definition of the Allocation",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.Allocation"
+            }
           }
         ],
         "responses": {
@@ -1322,6 +1331,15 @@
             "name": "name",
             "in": "path",
             "required": true
+          },
+          {
+            "description": "The definition for EKS Credentials",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.EKSCredentials"
+            }
           }
         ],
         "responses": {

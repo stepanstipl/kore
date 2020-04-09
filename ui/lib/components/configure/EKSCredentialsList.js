@@ -3,32 +3,32 @@ import { Typography, List, Button, Drawer, Alert, Icon } from 'antd'
 const { Title } = Typography
 
 import { kore } from '../../../config'
-import GKECredentials from '../team/GKECredentials'
 import ResourceList from '../configure/ResourceList'
-import GKECredentialsForm from '../forms/GKECredentialsForm'
+import EKSCredentialsForm from '../forms/EKSCredentialsForm'
+import EKSCredentials from '../team/EKSCredentials'
 import KoreApi from '../../kore-api'
 
-class GKECredentialsList extends ResourceList {
+class EKSCredentialsList extends ResourceList {
 
   static propTypes = {
     style: PropTypes.object
   }
 
-  createdMessage = 'GCP project credentials created successfully'
-  updatedMessage = 'GCP project credentials updated successfully'
+  createdMessage = 'AWS account credentials created successfully'
+  updatedMessage = 'AWS account credentials updated successfully'
 
   async fetchComponentData() {
     const api = await KoreApi.client()
-    const [ allTeams, gkeCredentials, allAllocations ] = await Promise.all([
+    const [ allTeams, eksCredentials, allAllocations ] = await Promise.all([
       api.ListTeams(),
-      api.ListGKECredentials(kore.koreAdminTeamName),
+      api.ListEKSCredentials(kore.koreAdminTeamName),
       api.ListAllocations(kore.koreAdminTeamName)
     ])
     allTeams.items = allTeams.items.filter(t => !kore.ignoreTeams.includes(t.metadata.name))
-    gkeCredentials.items.forEach(gke => {
-      gke.allocation = (allAllocations.items || []).find(alloc => alloc.metadata.name === gke.metadata.name)
+    eksCredentials.items.forEach(eks => {
+      eks.allocation = (allAllocations.items || []).find(alloc => alloc.metadata.name === eks.metadata.name)
     })
-    return { resources: gkeCredentials, allTeams }
+    return { resources: eksCredentials, allTeams }
   }
 
   render() {
@@ -37,8 +37,8 @@ class GKECredentialsList extends ResourceList {
     return (
       <>
         <Alert
-          message="Give Kore access to your existing Google Cloud Platform projects"
-          description="This will enable Kore to build clusters inside a GCP project that you already manage outside of Kore. You must create a Service Account inside your project and add the key in JSON format here."
+          message="Give Kore access to your existing AWS accounts"
+          description="This will enable Kore to build clusters inside an AWS account that you already manage outside of Kore. You must create an access key in the account and provide the details here."
           type="info"
           showIcon
           style={{ marginBottom: '20px' }}
@@ -48,27 +48,28 @@ class GKECredentialsList extends ResourceList {
           <>
             <List
               dataSource={resources.items}
-              renderItem={gke =>
-                <GKECredentials
-                  gkeCredentials={gke}
+              renderItem={eks =>
+                <EKSCredentials
+                  eksCredentials={eks}
                   allTeams={allTeams.items}
-                  editGKECredential={this.edit}
+                  editEKSCredentials={this.edit}
                   handleUpdate={this.handleStatusUpdated}
                   refreshMs={2000}
-                  propsResourceDataKey="gkeCredentials"
-                  resourceApiPath={`/teams/${kore.koreAdminTeamName}/gkecredentials/${gke.metadata.name}`}
+                  propsResourceDataKey="eksCredentials"
+                  resourceApiPath={`/teams/${kore.koreAdminTeamName}/ekscredentials/${eks.metadata.name}`}
                 />
               }
             >
             </List>
+
             {edit ? (
               <Drawer
-                title={<Title level={4}>GCP project: {edit.spec.project}</Title>}
+                title={<Title level={4}>AWS account: {edit.spec.accountID}</Title>}
                 visible={Boolean(edit)}
                 onClose={this.edit(false)}
                 width={700}
               >
-                <GKECredentialsForm
+                <EKSCredentialsForm
                   team={kore.koreAdminTeamName}
                   allTeams={allTeams}
                   data={edit}
@@ -78,18 +79,19 @@ class GKECredentialsList extends ResourceList {
             ) : null}
             {add ? (
               <Drawer
-                title={<Title level={4}>New GCP project</Title>}
+                title={<Title level={4}>New AWS account</Title>}
                 visible={add}
                 onClose={this.add(false)}
                 width={700}
               >
-                <GKECredentialsForm
+                <EKSCredentialsForm
                   team={kore.koreAdminTeamName}
                   allTeams={allTeams}
                   handleSubmit={this.handleAddSave}
                 />
               </Drawer>
             ) : null}
+
           </>
         )}
       </>
@@ -97,4 +99,4 @@ class GKECredentialsList extends ResourceList {
   }
 }
 
-export default GKECredentialsList
+export default EKSCredentialsList
