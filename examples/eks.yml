@@ -43,6 +43,8 @@ spec:
         eC2SSHKey: kore
         region: eu-west-2
         diskSize: 10
+        tags:
+          kore: managed
         # See IAM role for nodegroup
         # https://docs.aws.amazon.com/eks/latest/userguide/worker_node_IAM_role.html
         nodeIAMRole: CHANGE_ME
@@ -50,6 +52,5 @@ spec:
         desiredSize: 1
         maxSize: 10
         subnets:
-          # must be tagged with kubernetes.io/cluster/dev=shared
           - subnet-xyz-az1
           - subnet-xyz-az2

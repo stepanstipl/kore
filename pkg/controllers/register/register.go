@@ -21,6 +21,7 @@ import (
 	_ "github.com/appvia/kore/pkg/controllers/cloud/aws/credentials"
 	_ "github.com/appvia/kore/pkg/controllers/cloud/aws/eks"
 	_ "github.com/appvia/kore/pkg/controllers/cloud/aws/eksnodegroup"
+	_ "github.com/appvia/kore/pkg/controllers/cloud/aws/eksvpc"
 
 	// import the gcp controllers
 	_ "github.com/appvia/kore/pkg/controllers/cloud/gcp/gke"

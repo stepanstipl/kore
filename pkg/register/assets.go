@@ -5,6 +5,7 @@
 // deploy/crds/aws.compute.kore.appvia.io_ekscredentials.yaml
 // deploy/crds/aws.compute.kore.appvia.io_eksnodegroups.yaml
 // deploy/crds/aws.compute.kore.appvia.io_ekss.yaml
+// deploy/crds/aws.compute.kore.appvia.io_eksvpcs.yaml
 // deploy/crds/clusters.compute.kore.appvia.io_clusters.yaml
 // deploy/crds/clusters.compute.kore.appvia.io_kubernetes.yaml
 // deploy/crds/clusters.compute.kore.appvia.io_managedclusterrole.yaml
@@ -1205,6 +1206,180 @@ func crdsAwsComputeKoreAppviaIo_ekssYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "crds/aws.compute.kore.appvia.io_ekss.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsAwsComputeKoreAppviaIo_eksvpcsYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: eksvpcs.aws.compute.kore.appvia.io
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.status
+    description: The overall status of the vpc
+    name: Status
+    type: string
+  group: aws.compute.kore.appvia.io
+  names:
+    kind: EKSVPC
+    listKind: EKSVPCList
+    plural: eksvpcs
+    singular: eksvpc
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: EKSVPC is the Schema for the eksvpc API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: EKSVPCSpec defines the desired state of EKSVPC
+          properties:
+            clusterName:
+              description: ClusterName is used to indicate a cluster to create resources
+                for - it is used to tag cluster specific resources e.g. subnet resources
+                are tagged unique to a cluster (for ELB's) - this may become an array
+                but keeping it simple in the first iteration
+              type: string
+            credentials:
+              description: Credentials is a reference to an AWSCredentials object
+                to use for authentication
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
+            privateIPV4Cidr:
+              description: PrivateIPV4Cidr is the private range used for the VPC
+              type: string
+            region:
+              description: Region is the AWS region of the VPC and any resources created
+              type: string
+          required:
+          - clusterName
+          - credentials
+          - privateIPV4Cidr
+          - region
+          type: object
+        status:
+          description: EKSVPCStatus defines the observed state of a VPC
+          properties:
+            conditions:
+              description: Conditions is the status of the components
+              items:
+                description: Component the state of a component of the resource
+                properties:
+                  detail:
+                    description: Detail is additional details on the error is any
+                    type: string
+                  message:
+                    description: Message is a human readable message on the status
+                      of the component
+                    type: string
+                  name:
+                    description: Name is the name of the component
+                    type: string
+                  status:
+                    description: Status is the status of the component
+                    type: string
+                type: object
+              type: array
+            infra:
+              description: Infra provides a cache of values discovered from infrastructure
+                k8s:openapi-gen=false
+              properties:
+                clusterIAMRoleARN:
+                  description: ClusterIAMRoleARN is the role ARN which provides permissions
+                    to create and admister an EKS cluster Although not part of a VPC
+                    it is a direct pre-requisite If we need to support multiple clusters
+                    in a VPC, move to EKS.Status object
+                  type: string
+                nodeIAMRole:
+                  description: NodeIAMROle is the IAM role assumed by the worker nodes
+                    themselves not directly a VPC object is is easiest to track here
+                    first If we need to support segregation of nodegroups for a single
+                    cluster, move to EKSNodegroup.Status object
+                  type: string
+                securityGroupIDs:
+                  description: SecurityGroupIds is a list of security group IDs to
+                    use for a cluster
+                  items:
+                    type: string
+                  type: array
+                  x-kubernetes-list-type: set
+                subnetIDs:
+                  description: SubnetIds is a list of subnet IDs to use for all nodes
+                  items:
+                    type: string
+                  type: array
+                  x-kubernetes-list-type: set
+              type: object
+            status:
+              description: Status provides a overall status
+              type: string
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsAwsComputeKoreAppviaIo_eksvpcsYamlBytes() ([]byte, error) {
+	return _crdsAwsComputeKoreAppviaIo_eksvpcsYaml, nil
+}
+
+func crdsAwsComputeKoreAppviaIo_eksvpcsYaml() (*asset, error) {
+	bytes, err := crdsAwsComputeKoreAppviaIo_eksvpcsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/aws.compute.kore.appvia.io_eksvpcs.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -5443,6 +5618,7 @@ var _bindata = map[string]func() (*asset, error){
 	"crds/aws.compute.kore.appvia.io_ekscredentials.yaml":                 crdsAwsComputeKoreAppviaIo_ekscredentialsYaml,
 	"crds/aws.compute.kore.appvia.io_eksnodegroups.yaml":                  crdsAwsComputeKoreAppviaIo_eksnodegroupsYaml,
 	"crds/aws.compute.kore.appvia.io_ekss.yaml":                           crdsAwsComputeKoreAppviaIo_ekssYaml,
+	"crds/aws.compute.kore.appvia.io_eksvpcs.yaml":                        crdsAwsComputeKoreAppviaIo_eksvpcsYaml,
 	"crds/clusters.compute.kore.appvia.io_clusters.yaml":                  crdsClustersComputeKoreAppviaIo_clustersYaml,
 	"crds/clusters.compute.kore.appvia.io_kubernetes.yaml":                crdsClustersComputeKoreAppviaIo_kubernetesYaml,
 	"crds/clusters.compute.kore.appvia.io_managedclusterrole.yaml":        crdsClustersComputeKoreAppviaIo_managedclusterroleYaml,
@@ -5516,6 +5692,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"aws.compute.kore.appvia.io_ekscredentials.yaml":                 {crdsAwsComputeKoreAppviaIo_ekscredentialsYaml, map[string]*bintree{}},
 		"aws.compute.kore.appvia.io_eksnodegroups.yaml":                  {crdsAwsComputeKoreAppviaIo_eksnodegroupsYaml, map[string]*bintree{}},
 		"aws.compute.kore.appvia.io_ekss.yaml":                           {crdsAwsComputeKoreAppviaIo_ekssYaml, map[string]*bintree{}},
+		"aws.compute.kore.appvia.io_eksvpcs.yaml":                        {crdsAwsComputeKoreAppviaIo_eksvpcsYaml, map[string]*bintree{}},
 		"clusters.compute.kore.appvia.io_clusters.yaml":                  {crdsClustersComputeKoreAppviaIo_clustersYaml, map[string]*bintree{}},
 		"clusters.compute.kore.appvia.io_kubernetes.yaml":                {crdsClustersComputeKoreAppviaIo_kubernetesYaml, map[string]*bintree{}},
 		"clusters.compute.kore.appvia.io_managedclusterrole.yaml":        {crdsClustersComputeKoreAppviaIo_managedclusterroleYaml, map[string]*bintree{}},

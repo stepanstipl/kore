@@ -38,6 +38,9 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSNodeGroupStatus":   schema_pkg_apis_eks_v1alpha1_EKSNodeGroupStatus(ref),
 		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSSpec":              schema_pkg_apis_eks_v1alpha1_EKSSpec(ref),
 		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSStatus":            schema_pkg_apis_eks_v1alpha1_EKSStatus(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSVPC":               schema_pkg_apis_eks_v1alpha1_EKSVPC(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSVPCSpec":           schema_pkg_apis_eks_v1alpha1_EKSVPCSpec(ref),
+		"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSVPCStatus":         schema_pkg_apis_eks_v1alpha1_EKSVPCStatus(ref),
 	}
 }
 
@@ -576,5 +579,118 @@ func schema_pkg_apis_eks_v1alpha1_EKSStatus(ref common.ReferenceCallback) common
 		},
 		Dependencies: []string{
 			"github.com/appvia/kore/pkg/apis/core/v1.Component"},
+	}
+}
+
+func schema_pkg_apis_eks_v1alpha1_EKSVPC(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "EKSVPC is the Schema for the eksvpc API",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSVPCSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSVPCStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSVPCSpec", "github.com/appvia/kore/pkg/apis/eks/v1alpha1.EKSVPCStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_eks_v1alpha1_EKSVPCSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "EKSVPCSpec defines the desired state of EKSVPC",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"privateIPV4Cidr": {
+						SchemaProps: spec.SchemaProps{
+							Description: "PrivateIPV4Cidr is the private range used for the VPC",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"region": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Region is the AWS region of the VPC and any resources created",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"privateIPV4Cidr", "region"},
+			},
+		},
+	}
+}
+
+func schema_pkg_apis_eks_v1alpha1_EKSVPCStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "EKSVPCStatus defines the observed state of a VPC",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"conditions": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Conditions is the status of the components",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/appvia/kore/pkg/apis/core/v1.Component"),
+									},
+								},
+							},
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Status provides a overall status",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"infra": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Infra provides a cache of values discovered from infrastructure k8s:openapi-gen=false",
+							Ref:         ref("github.com/appvia/kore/pkg/apis/eks/v1alpha1.Infra"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/core/v1.Component", "github.com/appvia/kore/pkg/apis/eks/v1alpha1.Infra"},
 	}
 }

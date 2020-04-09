@@ -144,6 +144,16 @@ var resourceConfigs = map[string]resourceConfig{
 			Column("Name", "metadata.name"),
 		},
 	},
+	"eksvpc": {
+		Name:   "eksvpcs",
+		IsTeam: true,
+		Columns: []string{
+			Column("Name", "metadata.name"),
+			Column("Region", "spec.region"),
+			Column("Cluster", "spec.clusterName"),
+			Column("Status", ".status.status"),
+		},
+	},
 	"member": {
 		Name:   "members",
 		IsTeam: true,

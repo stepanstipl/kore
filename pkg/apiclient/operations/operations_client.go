@@ -159,6 +159,8 @@ type ClientService interface {
 
 	WhoAmI(params *WhoAmIParams, authInfo runtime.ClientAuthInfoWriter) (*WhoAmIOK, error)
 
+	DeleteEKSVPC(params *DeleteEKSVPCParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteEKSVPCOK, error)
+
 	DeleteOrganization(params *DeleteOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteOrganizationOK, error)
 
 	DeleteProjectClaim(params *DeleteProjectClaimParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteProjectClaimOK, error)
@@ -169,6 +171,10 @@ type ClientService interface {
 
 	FindEKSNodeGroups(params *FindEKSNodeGroupsParams, authInfo runtime.ClientAuthInfoWriter) (*FindEKSNodeGroupsOK, error)
 
+	FindEKSVPC(params *FindEKSVPCParams, authInfo runtime.ClientAuthInfoWriter) (*FindEKSVPCOK, error)
+
+	FindEKSVPCs(params *FindEKSVPCsParams, authInfo runtime.ClientAuthInfoWriter) (*FindEKSVPCsOK, error)
+
 	FindEKSs(params *FindEKSsParams, authInfo runtime.ClientAuthInfoWriter) (*FindEKSsOK, error)
 
 	FindOrganization(params *FindOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*FindOrganizationOK, error)
@@ -178,6 +184,8 @@ type ClientService interface {
 	FindProjectClaim(params *FindProjectClaimParams, authInfo runtime.ClientAuthInfoWriter) (*FindProjectClaimOK, error)
 
 	FindProjectClaims(params *FindProjectClaimsParams, authInfo runtime.ClientAuthInfoWriter) (*FindProjectClaimsOK, error)
+
+	UpdateEKSVPC(params *UpdateEKSVPCParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateEKSVPCOK, error)
 
 	UpdateOrganization(params *UpdateOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateOrganizationOK, error)
 
@@ -2481,6 +2489,40 @@ func (a *Client) WhoAmI(params *WhoAmIParams, authInfo runtime.ClientAuthInfoWri
 }
 
 /*
+  DeleteEKSVPC is used to delete a e k s v p c from the kore
+*/
+func (a *Client) DeleteEKSVPC(params *DeleteEKSVPCParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteEKSVPCOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewDeleteEKSVPCParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "deleteEKSVPC",
+		Method:             "DELETE",
+		PathPattern:        "/api/v1alpha1/teams/{team}/eksvpcs/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &DeleteEKSVPCReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*DeleteEKSVPCOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*DeleteEKSVPCDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
   DeleteOrganization is used to delete a managed gcp organization
 */
 func (a *Client) DeleteOrganization(params *DeleteOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteOrganizationOK, error) {
@@ -2651,6 +2693,74 @@ func (a *Client) FindEKSNodeGroups(params *FindEKSNodeGroupsParams, authInfo run
 }
 
 /*
+  FindEKSVPC is the used to return a e k s v p c which the team has access
+*/
+func (a *Client) FindEKSVPC(params *FindEKSVPCParams, authInfo runtime.ClientAuthInfoWriter) (*FindEKSVPCOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewFindEKSVPCParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "findEKSVPC",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/eksvpcs/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &FindEKSVPCReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*FindEKSVPCOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*FindEKSVPCDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  FindEKSVPCs is the used to return a list of amazon e k s v p c which thhe team has access
+*/
+func (a *Client) FindEKSVPCs(params *FindEKSVPCsParams, authInfo runtime.ClientAuthInfoWriter) (*FindEKSVPCsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewFindEKSVPCsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "findEKSVPCs",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/eksvpcs",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &FindEKSVPCsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*FindEKSVPCsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*FindEKSVPCsDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
   FindEKSs is the used to return a list of amazon e k s clusters which thhe team has access
 */
 func (a *Client) FindEKSs(params *FindEKSsParams, authInfo runtime.ClientAuthInfoWriter) (*FindEKSsOK, error) {
@@ -2817,6 +2927,40 @@ func (a *Client) FindProjectClaims(params *FindProjectClaimsParams, authInfo run
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*FindProjectClaimsDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  UpdateEKSVPC is used to provision or update a e k s v p c in the kore
+*/
+func (a *Client) UpdateEKSVPC(params *UpdateEKSVPCParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateEKSVPCOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewUpdateEKSVPCParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "updateEKSVPC",
+		Method:             "PUT",
+		PathPattern:        "/api/v1alpha1/teams/{team}/eksvpcs/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &UpdateEKSVPCReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*UpdateEKSVPCOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*UpdateEKSVPCDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

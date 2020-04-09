@@ -5,6 +5,7 @@ require (
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/RoaringBitmap/roaring v0.4.21 // indirect
+	github.com/apparentlymart/go-cidr v1.0.1
 	github.com/aws/aws-sdk-go v1.29.31
 	github.com/blevesearch/bleve v0.8.1
 	github.com/blevesearch/blevex v0.0.0-20190916190636-152f0fe5c040 // indirect
@@ -47,6 +48,8 @@ require (
 	github.com/jpillora/backoff v1.0.0
 	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a
 	github.com/julienschmidt/httprouter v1.2.0
+	github.com/kris-nova/logger v0.0.0-20181127235838-fd0d87064b06 // indirect
+	github.com/kris-nova/lolgopher v0.0.0-20180921204813-313b3abb0d9b // indirect
 	github.com/manifoldco/promptui v0.7.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.2.2
 	github.com/mitchellh/copystructure v1.0.0 // indirect
@@ -67,6 +70,7 @@ require (
 	github.com/tecbot/gorocksdb v0.0.0-20191019123150-400c56251341 // indirect
 	github.com/tidwall/gjson v1.6.0
 	github.com/urfave/cli/v2 v2.1.1
+	github.com/vmware/govmomi v0.22.2
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/crypto v0.0.0-20200311171314-f7b00557c8c4
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
