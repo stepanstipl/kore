@@ -136,6 +136,24 @@ func (c *clustersImpl) Update(ctx context.Context, cluster *clustersv1.Cluster) 
 		return NewErrNotAllowed("must be global admin or a team member")
 	}
 
+	existing, err := c.Get(ctx, cluster.Name)
+	if err != nil && err != ErrNotFound {
+		return err
+	}
+
+	if existing != nil {
+		verr := validation.NewError("cluster has failed validation")
+		if existing.Spec.Kind != cluster.Spec.Kind {
+			verr.AddFieldErrorf("kind", validation.ReadOnly, "can not be changed after a cluster was created")
+		}
+		if existing.Spec.Plan != cluster.Spec.Plan {
+			verr.AddFieldErrorf("plan", validation.ReadOnly, "can not be changed after a cluster was created")
+		}
+		if verr.HasErrors() {
+			return verr
+		}
+	}
+
 	if cluster.Namespace == "" {
 		cluster.Namespace = c.team
 	}
