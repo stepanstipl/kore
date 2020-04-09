@@ -110,7 +110,7 @@ class EKSCredentialsForm extends React.Component {
 
   getEKSCredentialsResource = values => {
     const resource = new V1alpha1EKSCredentials()
-    resource.setApiVersion('eks.compute.kore.appvia.io/v1alpha1')
+    resource.setApiVersion('aws.compute.kore.appvia.io/v1alpha1')
     resource.setKind('EKSCredentials')
 
     const meta = new V1ObjectMeta()
@@ -145,8 +145,8 @@ class EKSCredentialsForm extends React.Component {
     spec.setSummary(values.summary)
     spec.setTeams(this.state.allocations.length > 0 ? this.state.allocations : ['*'])
     const owner = new V1Ownership()
-    owner.setGroup('config.kore.appvia.io')
-    owner.setVersion('v1')
+    owner.setGroup('aws.compute.kore.appvia.io')
+    owner.setVersion('v1alpha1')
     owner.setKind('EKSCredentials')
     owner.setName(metadataName)
     owner.setNamespace(this.props.team)
