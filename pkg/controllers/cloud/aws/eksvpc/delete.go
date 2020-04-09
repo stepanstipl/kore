@@ -57,6 +57,8 @@ func (t *eksvpcCtrl) Delete(request reconcile.Request) (reconcile.Result, error)
 	requeue, err := func() (bool, error) {
 		creds, err := t.GetCredentials(ctx, resource, request.NamespacedName.Name)
 		if err != nil {
+			logger.WithError(err).Error("trying to retrieve the credentials")
+
 			return false, err
 		}
 
@@ -81,7 +83,7 @@ func (t *eksvpcCtrl) Delete(request reconcile.Request) (reconcile.Result, error)
 		}
 
 		if found {
-			eksClient := aws.NewEKSClientFromVPC(client, resource.ClusterName)
+			eksClient := aws.NewEKSClientFromVPC(client, resource.Spec.ClusterName)
 
 			// @step: check if the referenced CLUSTER exists and if so we wait...
 			eksfound, err := eksClient.Exists()

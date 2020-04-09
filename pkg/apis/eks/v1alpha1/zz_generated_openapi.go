@@ -460,6 +460,25 @@ func schema_pkg_apis_eks_v1alpha1_EKSSpec(ref common.ReferenceCallback) common.O
 				Description: "EKSSpec defines the desired state of EKSCluster",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"authorizedMasterNetworks": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "AuthorizedMasterNetworks is the network ranges which are permitted to access the EKS control plane endpoint i.e the managed one (not the authentication proxy)",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
 					"cluster": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Cluster refers to the cluster this object belongs to",

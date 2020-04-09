@@ -71,8 +71,8 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 	}
 
 	requeue, err := func() (bool, error) {
-
 		logger.Debug("retrieving the eks cluster credential")
+
 		// @step: first we need to check if we have access to the credentials
 		credentials, err := t.GetCredentials(ctx, resource, resource.Namespace)
 		if err != nil {
@@ -86,7 +86,7 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 
 			return false, err
 		}
-		logger.Info("Found EKSCredential")
+		logger.Debug("found credentials for aws provider")
 
 		client, err := aws.NewClient(credentials, resource)
 		if err != nil {
@@ -101,7 +101,7 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 
 			return false, err
 		}
-		logger.Info("Checking cluster existence")
+		logger.Debug("created a client for the aws provider")
 
 		found, err := client.Exists()
 		if err != nil {
@@ -148,7 +148,7 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 
 			logger.Debug("creating a new eks cluster in aws")
 			if _, err = client.Create(); err != nil {
-				logger.WithError(err).Error("attempting to create cluster")
+				logger.WithError(err).Error("trying to provision a eks cluster for team")
 
 				resource.Status.Conditions.SetCondition(core.Component{
 					Name:    ComponentClusterCreator,

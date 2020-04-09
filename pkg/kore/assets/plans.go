@@ -26,7 +26,6 @@ import (
 // Label returns a kore label
 func Label(name string) string {
 	return "kore.appvia.io/" + name
-
 }
 
 // GetDefaultPlans returns a collection of plans for the resources

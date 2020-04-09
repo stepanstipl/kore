@@ -4757,11 +4757,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
+        "clientScopes",
+        "userClaims",
         "clientID",
         "clientSecret",
-        "issuer",
-        "clientScopes",
-        "userClaims"
+        "issuer"
       ],
       "properties": {
         "clientID": {
@@ -5363,6 +5363,12 @@
         "credentials"
       ],
       "properties": {
+        "authorizedMasterNetworks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "cluster": {
           "$ref": "#/definitions/v1.Ownership"
         },

@@ -1069,6 +1069,14 @@ spec:
         spec:
           description: EKSSpec defines the desired state of EKSCluster
           properties:
+            authorizedMasterNetworks:
+              description: AuthorizedMasterNetworks is the network ranges which are
+                permitted to access the EKS control plane endpoint i.e the managed
+                one (not the authentication proxy)
+              items:
+                type: string
+              type: array
+              x-kubernetes-list-type: set
             cluster:
               description: Cluster refers to the cluster this object belongs to
               properties:
