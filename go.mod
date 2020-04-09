@@ -53,6 +53,7 @@ require (
 	github.com/manifoldco/promptui v0.7.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.2.2
 	github.com/mitchellh/copystructure v1.0.0 // indirect
+	github.com/mitchellh/gox v1.0.1
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.9.0
 	github.com/prometheus/client_golang v1.1.0
@@ -67,6 +68,7 @@ require (
 	github.com/steveyen/gtreap v0.0.0-20150807155958-0abe01ef9be2 // indirect
 	github.com/stretchr/testify v1.4.0
 	github.com/syndtr/goleveldb v1.0.0 // indirect
+	github.com/tcnksm/ghr v0.13.0
 	github.com/tecbot/gorocksdb v0.0.0-20191019123150-400c56251341 // indirect
 	github.com/tidwall/gjson v1.6.0
 	github.com/urfave/cli/v2 v2.1.1
