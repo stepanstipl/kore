@@ -27,7 +27,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -91,45 +90,14 @@ func (t *eksCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 		}
 
 		if found {
-			// Find any nodegroups first:
-			ngs, err := client.ListNodeGroups()
-			if err != nil {
-				logger.WithError(err).Error("attempting to list nodegroups first")
-
-				return false, err
-			}
-			for _, ng := range ngs {
-				// Get the Kore nodegroup object
-				eksng := &eksv1alpha1.EKSNodeGroup{}
-				key := types.NamespacedName{
-					Namespace: request.Namespace,
-					Name:      ng,
-				}
-				// Get the ng object
-				if err := t.mgr.GetClient().Get(ctx, key, eksng); err != nil {
-					if kerrors.IsNotFound(err) {
-						// Unmanaged nodepool - time to error
-						logger.WithError(err).Errorf("nodegroup %s not defined in kore cowardly not deleteing", ng)
-					}
-					logger.WithError(err).Errorf("error getting nodegroup %s", ng)
-
-					return false, err
-				}
-				// We need to delete the nodepool first so lets do that:
-				if err := t.mgr.GetClient().Delete(ctx, eksng.DeepCopy()); err != nil {
-					logger.Debugf("initiated deltion of resource %s, requeing cluster deletion until gone", ng)
-					return true, nil
-				}
-			}
-			// We can now delete the cluster
 			_, err = client.Delete()
 			if err != nil {
 				return false, err
 			}
-			// Reque until this is finished
+			// Requeue until this is finished
 			return true, nil
 		}
-		// no cluster - no reque
+		// no cluster - no requeue
 		return false, nil
 	}()
 	if err != nil {
