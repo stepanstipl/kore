@@ -918,10 +918,6 @@ spec:
               format: int64
               minimum: 1
               type: integer
-            nodeIAMRole:
-              description: NodeIAMROle is the IAM role assumed by the worker nodes
-                themselves
-              type: string
             region:
               description: Region is the AWS location to launch node group within,
                 must match the region of the cluster
@@ -956,7 +952,6 @@ spec:
           - eC2SSHKey
           - maxSize
           - minSize
-          - nodeIAMRole
           - region
           - subnets
           type: object
@@ -983,9 +978,15 @@ spec:
                     type: string
                 type: object
               type: array
+            nodeIAMRole:
+              description: NodeIAMRole is the IAM role assumed by the worker nodes
+                themselves
+              type: string
             status:
               description: Status provides a overall status
               type: string
+          required:
+          - nodeIAMRole
           type: object
       type: object
   version: v1alpha1
@@ -1122,10 +1123,6 @@ spec:
             region:
               description: Region is the AWS region to launch this cluster within
               type: string
-            roleARN:
-              description: RoleARN is the role ARN which provides permissions to EKS
-              minLength: 10
-              type: string
             securityGroupIDs:
               description: SecurityGroupIds is a list of security group IDs
               items:
@@ -1145,7 +1142,6 @@ spec:
           required:
           - credentials
           - region
-          - roleARN
           - subnetIDs
           type: object
         status:
@@ -1177,9 +1173,14 @@ spec:
             endpoint:
               description: Endpoint is the endpoint of the cluster
               type: string
+            roleARN:
+              description: RoleARN is the role ARN which provides permissions to EKS
+              type: string
             status:
               description: Status provides a overall status
               type: string
+          required:
+          - roleARN
           type: object
       type: object
   version: v1alpha1
@@ -1325,18 +1326,6 @@ spec:
               description: Infra provides a cache of values discovered from infrastructure
                 k8s:openapi-gen=false
               properties:
-                clusterIAMRoleARN:
-                  description: ClusterIAMRoleARN is the role ARN which provides permissions
-                    to create and admister an EKS cluster Although not part of a VPC
-                    it is a direct pre-requisite If we need to support multiple clusters
-                    in a VPC, move to EKS.Status object
-                  type: string
-                nodeIAMRole:
-                  description: NodeIAMROle is the IAM role assumed by the worker nodes
-                    themselves not directly a VPC object is is easiest to track here
-                    first If we need to support segregation of nodegroups for a single
-                    cluster, move to EKSNodegroup.Status object
-                  type: string
                 securityGroupIDs:
                   description: SecurityGroupIds is a list of security group IDs to
                     use for a cluster
@@ -1345,11 +1334,9 @@ spec:
                   type: array
                   x-kubernetes-list-type: set
                 subnetIDs:
-                  description: SubnetIds is a list of subnet IDs to use for all nodes
                   items:
                     type: string
                   type: array
-                  x-kubernetes-list-type: set
               type: object
             status:
               description: Status provides a overall status

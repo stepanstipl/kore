@@ -154,24 +154,6 @@ func (t *eksvpcCtrl) Reconcile(request reconcile.Request) (reconcile.Result, err
 		subnets = append(subnets, client.VPC.PrivateSubnetIDs...)
 		resource.Status.Infra.SubnetIDs = subnets
 
-		// lastly update the IAM...
-		iamClient := aws.NewIamClient(client.Sess, resource.Name)
-		cr, npr, err := iamClient.EnsureEksRoles()
-		if err != nil {
-			logger.WithError(err).Errorf("attempting to create iam roles for eks - %s", err)
-
-			resource.Status.Conditions.SetCondition(core.Component{
-				Name:    ComponentVPCCreator,
-				Message: "Failed trying to provision the eks iam roles",
-				Detail:  err.Error(),
-			})
-			resource.Status.Status = core.FailureStatus
-
-			return false, err
-		}
-		resource.Status.Infra.ClusterIAMRoleARN = *cr.Arn
-		resource.Status.Infra.NodeIAMRole = *npr.Arn
-
 		// @step: update the state as provisioned
 		resource.Status.Conditions.SetCondition(core.Component{
 			Name:    ComponentVPCCreator,

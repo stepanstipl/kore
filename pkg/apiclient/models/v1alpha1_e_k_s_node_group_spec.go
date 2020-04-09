@@ -54,10 +54,6 @@ type V1alpha1EKSNodeGroupSpec struct {
 	// Required: true
 	MinSize *int64 `json:"minSize"`
 
-	// node i a m role
-	// Required: true
-	NodeIAMRole *string `json:"nodeIAMRole"`
-
 	// region
 	// Required: true
 	Region *string `json:"region"`
@@ -109,10 +105,6 @@ func (m *V1alpha1EKSNodeGroupSpec) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateMinSize(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateNodeIAMRole(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -214,15 +206,6 @@ func (m *V1alpha1EKSNodeGroupSpec) validateMaxSize(formats strfmt.Registry) erro
 func (m *V1alpha1EKSNodeGroupSpec) validateMinSize(formats strfmt.Registry) error {
 
 	if err := validate.Required("minSize", "body", m.MinSize); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *V1alpha1EKSNodeGroupSpec) validateNodeIAMRole(formats strfmt.Registry) error {
-
-	if err := validate.Required("nodeIAMRole", "body", m.NodeIAMRole); err != nil {
 		return err
 	}
 

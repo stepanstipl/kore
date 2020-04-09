@@ -306,13 +306,6 @@ func schema_pkg_apis_eks_v1alpha1_EKSNodeGroupSpec(ref common.ReferenceCallback)
 							},
 						},
 					},
-					"nodeIAMRole": {
-						SchemaProps: spec.SchemaProps{
-							Description: "NodeIAMROle is the IAM role assumed by the worker nodes themselves",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
 					"releaseVersion": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ReleaseVersion is the Kubernetes version to run for the kubelet",
@@ -409,7 +402,7 @@ func schema_pkg_apis_eks_v1alpha1_EKSNodeGroupSpec(ref common.ReferenceCallback)
 						},
 					},
 				},
-				Required: []string{"amiType", "diskSize", "nodeIAMRole", "desiredSize", "maxSize", "minSize", "subnets", "region", "eC2SSHKey"},
+				Required: []string{"amiType", "diskSize", "desiredSize", "maxSize", "minSize", "subnets", "region", "eC2SSHKey"},
 			},
 		},
 		Dependencies: []string{
@@ -437,6 +430,13 @@ func schema_pkg_apis_eks_v1alpha1_EKSNodeGroupStatus(ref common.ReferenceCallbac
 							},
 						},
 					},
+					"nodeIAMRole": {
+						SchemaProps: spec.SchemaProps{
+							Description: "NodeIAMRole is the IAM role assumed by the worker nodes themselves",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Status provides a overall status",
@@ -445,6 +445,7 @@ func schema_pkg_apis_eks_v1alpha1_EKSNodeGroupStatus(ref common.ReferenceCallbac
 						},
 					},
 				},
+				Required: []string{"nodeIAMRole"},
 			},
 		},
 		Dependencies: []string{
@@ -463,13 +464,6 @@ func schema_pkg_apis_eks_v1alpha1_EKSSpec(ref common.ReferenceCallback) common.O
 						SchemaProps: spec.SchemaProps{
 							Description: "Cluster refers to the cluster this object belongs to",
 							Ref:         ref("github.com/appvia/kore/pkg/apis/core/v1.Ownership"),
-						},
-					},
-					"roleARN": {
-						SchemaProps: spec.SchemaProps{
-							Description: "RoleARN is the role ARN which provides permissions to EKS",
-							Type:        []string{"string"},
-							Format:      "",
 						},
 					},
 					"version": {
@@ -525,7 +519,7 @@ func schema_pkg_apis_eks_v1alpha1_EKSSpec(ref common.ReferenceCallback) common.O
 						},
 					},
 				},
-				Required: []string{"roleARN", "region", "subnetIDs"},
+				Required: []string{"region", "subnetIDs"},
 			},
 		},
 		Dependencies: []string{
@@ -567,6 +561,13 @@ func schema_pkg_apis_eks_v1alpha1_EKSStatus(ref common.ReferenceCallback) common
 							Format:      "",
 						},
 					},
+					"roleARN": {
+						SchemaProps: spec.SchemaProps{
+							Description: "RoleARN is the role ARN which provides permissions to EKS",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Status provides a overall status",
@@ -575,6 +576,7 @@ func schema_pkg_apis_eks_v1alpha1_EKSStatus(ref common.ReferenceCallback) common
 						},
 					},
 				},
+				Required: []string{"roleARN"},
 			},
 		},
 		Dependencies: []string{

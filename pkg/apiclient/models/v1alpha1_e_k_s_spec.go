@@ -28,10 +28,6 @@ type V1alpha1EKSSpec struct {
 	// Required: true
 	Region *string `json:"region"`
 
-	// role a r n
-	// Required: true
-	RoleARN *string `json:"roleARN"`
-
 	// security group i ds
 	SecurityGroupIDs []string `json:"securityGroupIDs"`
 
@@ -56,10 +52,6 @@ func (m *V1alpha1EKSSpec) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateRegion(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateRoleARN(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -112,15 +104,6 @@ func (m *V1alpha1EKSSpec) validateCredentials(formats strfmt.Registry) error {
 func (m *V1alpha1EKSSpec) validateRegion(formats strfmt.Registry) error {
 
 	if err := validate.Required("region", "body", m.Region); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *V1alpha1EKSSpec) validateRoleARN(formats strfmt.Registry) error {
-
-	if err := validate.Required("roleARN", "body", m.RoleARN); err != nil {
 		return err
 	}
 

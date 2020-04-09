@@ -33,10 +33,6 @@ type EKSSpec struct {
 	// Cluster refers to the cluster this object belongs to
 	// +kubebuilder:validation:Required
 	Cluster corev1.Ownership `json:"cluster,omitempty"`
-	// RoleARN is the role ARN which provides permissions to EKS
-	// +kubebuilder:validation:MinLength=10
-	// +kubebuilder:validation:Required
-	RoleARN string `json:"roleARN"`
 	// Version is the Kubernetes version to use
 	// +kubebuilder:validation:MinLength=3
 	// +kubebuilder:validation:Required
@@ -66,6 +62,8 @@ type EKSStatus struct {
 	CACertificate string `json:"caCertificate,omitempty"`
 	// Endpoint is the endpoint of the cluster
 	Endpoint string `json:"endpoint,omitempty"`
+	// RoleARN is the role ARN which provides permissions to EKS
+	RoleARN string `json:"roleARN"`
 	// Status provides a overall status
 	Status core.Status `json:"status,omitempty"`
 }

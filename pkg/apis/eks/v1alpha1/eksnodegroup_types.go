@@ -44,9 +44,6 @@ type EKSNodeGroupSpec struct {
 	InstanceType string `json:"instanceType,omitempty"`
 	// Labels are any custom kubernetes labels to apply to nodes
 	Labels map[string]string `json:"labels,omitempty"`
-	// NodeIAMROle is the IAM role assumed by the worker nodes themselves
-	// +kubebuilder:validation:Required
-	NodeIAMRole string `json:"nodeIAMRole"`
 	// ReleaseVersion is the Kubernetes version to run for the kubelet
 	ReleaseVersion string `json:"releaseVersion,omitempty"`
 	// DesiredSize is the number of nodes to attempt to use
@@ -90,6 +87,8 @@ type EKSNodeGroupSpec struct {
 type EKSNodeGroupStatus struct {
 	// Conditions is the status of the components
 	Conditions core.Components `json:"conditions,omitempty"`
+	// NodeIAMRole is the IAM role assumed by the worker nodes themselves
+	NodeIAMRole string `json:"nodeIAMRole"`
 	// Status provides a overall status
 	Status core.Status `json:"status,omitempty"`
 }

@@ -195,6 +195,24 @@ func (n *eksNodeGroupCtrl) Reconcile(request reconcile.Request) (reconcile.Resul
 				return true, nil
 			}
 
+			// Ensure the IAM role exists...
+			iamClient := aws.NewIamClient(client.Sess, resource.Name)
+			cr, err := iamClient.EnsureEksNodePoolRole()
+			if err != nil {
+				logger.WithError(err).Errorf("attempting to create iam roles for eks nodepool - %s", err)
+
+				resource.Status.Conditions.SetCondition(core.Component{
+					Name:    ComponentClusterNodegroupCreator,
+					Message: "Failed trying to provision the eks nodepool iam roles",
+					Detail:  err.Error(),
+				})
+				resource.Status.Status = core.FailureStatus
+
+				return false, err
+			}
+			// Save the role used for this cluster
+			resource.Status.NodeIAMRole = *cr.Arn
+
 			logger.Debug("creating a new eks cluster nodegroup in aws")
 			if err := client.CreateNodeGroup(resource); err != nil {
 				logger.WithError(err).Error("attempting to create cluster nodegroup")

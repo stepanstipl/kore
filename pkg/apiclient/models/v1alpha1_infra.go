@@ -15,12 +15,6 @@ import (
 // swagger:model v1alpha1.Infra
 type V1alpha1Infra struct {
 
-	// cluster i a m role a r n
-	ClusterIAMRoleARN string `json:"clusterIAMRoleARN,omitempty"`
-
-	// node i a m role
-	NodeIAMRole string `json:"nodeIAMRole,omitempty"`
-
 	// security group i ds
 	SecurityGroupIDs []string `json:"securityGroupIDs"`
 
