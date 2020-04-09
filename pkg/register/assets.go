@@ -1326,6 +1326,13 @@ spec:
               description: Infra provides a cache of values discovered from infrastructure
                 k8s:openapi-gen=false
               properties:
+                ipv4EgressAddresses:
+                  description: PublicIPV4EgressAddresses provides the source addresses
+                    for traffic coming from the cluster - can provide input for securing
+                    Kube API endpoints in managed clusters
+                  items:
+                    type: string
+                  type: array
                 securityGroupIDs:
                   description: SecurityGroupIds is a list of security group IDs to
                     use for a cluster

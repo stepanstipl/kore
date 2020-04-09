@@ -4757,11 +4757,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
+        "clientID",
+        "clientSecret",
         "issuer",
         "clientScopes",
-        "userClaims",
-        "clientID",
-        "clientSecret"
+        "userClaims"
       ],
       "properties": {
         "clientID": {
@@ -5769,6 +5769,12 @@
     },
     "v1alpha1.Infra": {
       "properties": {
+        "ipv4EgressAddresses": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "securityGroupIDs": {
           "type": "array",
           "items": {

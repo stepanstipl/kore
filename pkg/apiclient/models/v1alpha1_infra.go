@@ -15,6 +15,9 @@ import (
 // swagger:model v1alpha1.Infra
 type V1alpha1Infra struct {
 
+	// ipv4 egress addresses
+	IPV4EgressAddresses []string `json:"ipv4EgressAddresses"`
+
 	// security group i ds
 	SecurityGroupIDs []string `json:"securityGroupIDs"`
 

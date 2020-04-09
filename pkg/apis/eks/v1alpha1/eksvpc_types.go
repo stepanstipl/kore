@@ -50,6 +50,9 @@ type Infra struct {
 	// SecurityGroupIds is a list of security group IDs to use for a cluster
 	// +listType=set
 	SecurityGroupIDs []string `json:"securityGroupIDs,omitempty"`
+	// PublicIPV4EgressAddresses provides the source addresses for traffic coming from the cluster
+	// - can provide input for securing Kube API endpoints in managed clusters
+	PublicIPV4EgressAddresses []string `json:"ipv4EgressAddresses,omitempty"`
 }
 
 // EKSVPCStatus defines the observed state of a VPC

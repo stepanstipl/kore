@@ -153,6 +153,7 @@ func (t *eksvpcCtrl) Reconcile(request reconcile.Request) (reconcile.Result, err
 		subnets = append(subnets, client.VPC.PublicSubnetIDs...)
 		subnets = append(subnets, client.VPC.PrivateSubnetIDs...)
 		resource.Status.Infra.SubnetIDs = subnets
+		resource.Status.Infra.PublicIPV4EgressAddresses = client.VPC.PublicIPV4EgressAddresses
 
 		// @step: update the state as provisioned
 		resource.Status.Conditions.SetCondition(core.Component{

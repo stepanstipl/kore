@@ -168,6 +168,11 @@ func (c *VPCClient) Ensure() error {
 	if err != nil {
 		return fmt.Errorf("error trying to ensure nat gateways created for %s - %s", *c.VPC.awsObj.VpcId, err)
 	}
+	for _, n := range natGws {
+		for _, gwa := range n.NatGatewayAddresses {
+			c.VPC.PublicIPV4EgressAddresses = append(c.VPC.PublicIPV4EgressAddresses, aws.StringValue(gwa.PublicIp))
+		}
+	}
 
 	// Get next network address for the internal subnets from the last of the public addresses
 	// Get last networ address from public addresses:

@@ -46,6 +46,8 @@ type VPC struct {
 	ControlPlaneSecurityGroupID string
 	// Tags - how to find resources
 	Tags map[string]string
+	// PublicIPV4EgressAddresses provides the source addresses for traffic coming from the cluster
+	PublicIPV4EgressAddresses []string
 	// Cache of aws VPC
 	awsObj *ec2.Vpc
 }
