@@ -4757,11 +4757,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
-        "clientScopes",
-        "userClaims",
         "clientID",
         "clientSecret",
-        "issuer"
+        "issuer",
+        "clientScopes",
+        "userClaims"
       ],
       "properties": {
         "clientID": {
@@ -5780,13 +5780,19 @@
             "type": "string"
           }
         },
-        "securityGroupIDs": {
+        "privateSubnetIDs": {
           "type": "array",
           "items": {
             "type": "string"
           }
         },
-        "subnetIDs": {
+        "publicSubnetIDs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "securityGroupIDs": {
           "type": "array",
           "items": {
             "type": "string"

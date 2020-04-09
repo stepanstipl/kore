@@ -166,35 +166,16 @@ var _ = Describe("Cluster Controller", func() {
 					Expect(updatedCluster.Status.Status).To(Equal(corev1.PendingStatus), updatedCluster.Status.Message)
 				})
 
-				It("should set the components with pending status", func() {
-					Expect(updatedCluster.Status.Components).To(Equal(corev1.Components{
-						{Name: "EKS/testName", Status: corev1.PendingStatus},
-						{Name: "EKSNodeGroup/testName-ng1", Status: corev1.PendingStatus},
-						{Name: "EKSNodeGroup/testName-ng2", Status: corev1.PendingStatus},
-						{Name: "Kubernetes/testName", Status: corev1.PendingStatus},
-					}))
-				})
-
 				It("should set the status to pending", func() {
 					Expect(updatedCluster.Status.Status).To(Equal(corev1.PendingStatus), updatedCluster.Status.Message)
 				})
 
 				It("should create the component resources", func() {
-					eksCluster := &eksv1alpha1.EKS{}
-					test.ExpectCreate(0, eksCluster)
-					Expect(eksCluster.Spec.Cluster).To(Equal(cluster.Ownership()))
+					eksVPC := &eksv1alpha1.EKSVPC{}
+					test.ExpectCreate(0, eksVPC)
+					Expect(eksVPC.Spec.Cluster).To(Equal(cluster.Ownership()))
 
-					ng1 := &eksv1alpha1.EKSNodeGroup{}
-					test.ExpectCreate(1, ng1)
-					Expect(ng1.Spec.Cluster).To(Equal(cluster.Ownership()))
-
-					ng2 := &eksv1alpha1.EKSNodeGroup{}
-					test.ExpectCreate(2, ng2)
-					Expect(ng1.Spec.Cluster).To(Equal(cluster.Ownership()))
-
-					kubernetes := &clustersv1.Kubernetes{}
-					test.ExpectCreate(3, kubernetes)
-					Expect(kubernetes.Spec.Cluster).To(Equal(cluster.Ownership()))
+					Expect(test.Client.CreateCallCount()).To(Equal(1))
 				})
 
 				It("should requeue and not error", func() {
@@ -223,7 +204,7 @@ var _ = Describe("Cluster Controller", func() {
 					It("should requeue", func() {
 						Expect(test.Client.CreateCallCount()).To(Equal(1))
 						_, obj, _ := test.Client.CreateArgsForCall(0)
-						Expect(obj).To(BeAssignableToTypeOf(&eksv1alpha1.EKS{}))
+						Expect(obj).To(BeAssignableToTypeOf(&eksv1alpha1.EKSVPC{}))
 
 						Expect(reconcileErr).To(HaveOccurred())
 					})
@@ -231,9 +212,9 @@ var _ = Describe("Cluster Controller", func() {
 
 				When("getting a component fails", func() {
 					BeforeEach(func() {
-						eks := eksv1alpha1.NewEKS(name.Name, name.Namespace)
-						eks.Labels = map[string]string{controllerstest.LabelGetError: "some error"}
-						test.Objects = append(test.Objects, eks)
+						eksVPC := eksv1alpha1.NewEKSVPC(name.Name, name.Namespace)
+						eksVPC.Labels = map[string]string{controllerstest.LabelGetError: "some error"}
+						test.Objects = append(test.Objects, eksVPC)
 					})
 
 					It("should requeue", func() {
@@ -243,13 +224,15 @@ var _ = Describe("Cluster Controller", func() {
 
 				When("updating an existing component fails", func() {
 					BeforeEach(func() {
+						eksvpc := eksv1alpha1.NewEKSVPC(name.Name, name.Namespace)
+						eksvpc.Status.Status = corev1.PendingStatus
 						test.Client.UpdateReturnsOnCall(0, errors.New("some random error"))
-						test.Objects = append(test.Objects, eksv1alpha1.NewEKS(name.Name, name.Namespace))
+						test.Objects = append(test.Objects, eksvpc)
 					})
 
 					It("should requeue", func() {
-						updatedEKS := &eksv1alpha1.EKS{}
-						test.ExpectUpdate(0, updatedEKS)
+						updatedEKSVPC := &eksv1alpha1.EKSVPC{}
+						test.ExpectUpdate(0, updatedEKSVPC)
 						Expect(test.Client.UpdateCallCount()).To(Equal(1))
 
 						Expect(reconcileErr).To(HaveOccurred())
@@ -259,7 +242,7 @@ var _ = Describe("Cluster Controller", func() {
 				When("applying the cluster configuration on an existing component fails", func() {
 					BeforeEach(func() {
 						cluster.Spec.Configuration = v1beta1.JSON{}
-						test.Objects = append(test.Objects, eksv1alpha1.NewEKS(name.Name, name.Namespace))
+						test.Objects = append(test.Objects, eksv1alpha1.NewEKSVPC(name.Name, name.Namespace))
 					})
 
 					It("should fail and not requeue", func() {
@@ -271,82 +254,123 @@ var _ = Describe("Cluster Controller", func() {
 					})
 				})
 
-				When("a component is complete", func() {
+				When("the EKSVPC component is complete", func() {
 					BeforeEach(func() {
-						eks := eksv1alpha1.NewEKS(name.Name, name.Namespace)
-						eks.Labels = map[string]string{"cluster.clusters.kore.appvia.io/ResourceVersion": cluster.ResourceVersion}
-						eks.Status.Status = corev1.SuccessStatus
-						test.Objects = append(test.Objects, eks)
+						eksVPC := eksv1alpha1.NewEKSVPC(name.Name, name.Namespace)
+						eksVPC.Labels = map[string]string{"cluster.clusters.kore.appvia.io/ResourceVersion": cluster.ResourceVersion}
+						eksVPC.Status.Status = corev1.SuccessStatus
+						test.Objects = append(test.Objects, eksVPC)
 					})
 
 					It("should update the component status on the cluster", func() {
 						updatedCluster := &clustersv1.Cluster{}
 						test.ExpectStatusUpdate(0, updatedCluster)
 
-						component, _ := updatedCluster.Status.Components.GetComponent("EKS/testName")
+						component, _ := updatedCluster.Status.Components.GetComponent("EKSVPC/testName")
 						Expect(component.Status).To(Equal(corev1.SuccessStatus))
 					})
-				})
 
-				When("the kubernetes object is complete", func() {
-					var kubernetes *clustersv1.Kubernetes
-					var updatedCluster *clustersv1.Cluster
+					It("should create the EKS resources", func() {
+						eks := &eksv1alpha1.EKS{}
+						test.ExpectCreate(0, eks)
+						Expect(eks.Spec.Cluster).To(Equal(cluster.Ownership()))
 
-					BeforeEach(func() {
-						kubernetes = clustersv1.NewKubernetes(name.Name, name.Namespace)
-						kubernetes.Status.Status = corev1.SuccessStatus
-						kubernetes.Status.CaCertificate = "testCaCert"
-						kubernetes.Status.Endpoint = "testEndpoint"
-						kubernetes.Status.APIEndpoint = "testAPIEndpoint"
-						kubernetes.Labels = map[string]string{"cluster.clusters.kore.appvia.io/ResourceVersion": cluster.ResourceVersion}
-						test.Objects = append(test.Objects, kubernetes)
+						Expect(test.Client.CreateCallCount()).To(Equal(1))
 					})
 
-					JustBeforeEach(func() {
-						updatedCluster = &clustersv1.Cluster{}
-						test.ExpectStatusUpdate(0, updatedCluster)
-					})
+					When("the EKS component is complete", func() {
+						BeforeEach(func() {
+							eks := eksv1alpha1.NewEKS(name.Name, name.Namespace)
+							eks.Labels = map[string]string{"cluster.clusters.kore.appvia.io/ResourceVersion": cluster.ResourceVersion}
+							eks.Status.Status = corev1.SuccessStatus
+							test.Objects = append(test.Objects, eks)
+						})
 
-					It("should set the CA certificate on the cluster", func() {
-						Expect(updatedCluster.Status.CaCertificate).To(Equal(kubernetes.Status.CaCertificate))
-					})
+						It("should update the component status on the cluster", func() {
+							updatedCluster := &clustersv1.Cluster{}
+							test.ExpectStatusUpdate(0, updatedCluster)
 
-					It("should set the API endpoint on the cluster", func() {
-						Expect(updatedCluster.Status.APIEndpoint).To(Equal(kubernetes.Status.APIEndpoint))
-					})
+							component, _ := updatedCluster.Status.Components.GetComponent("EKS/testName")
+							Expect(component.Status).To(Equal(corev1.SuccessStatus))
+						})
 
-					It("should set the Auth proxy endpoint on the cluster", func() {
-						Expect(updatedCluster.Status.AuthProxyEndpoint).To(Equal(kubernetes.Status.Endpoint))
-					})
-				})
+						It("should create the EKS nodegroups", func() {
+							eksNodeGroup1 := &eksv1alpha1.EKSNodeGroup{}
+							test.ExpectCreate(0, eksNodeGroup1)
+							Expect(eksNodeGroup1.Spec.Cluster).To(Equal(cluster.Ownership()))
 
-				When("all components are complete", func() {
-					BeforeEach(func() {
-						eks := eksv1alpha1.NewEKS(name.Name, name.Namespace)
-						eks.Status.Status = corev1.SuccessStatus
-						eks.Labels = map[string]string{"cluster.clusters.kore.appvia.io/ResourceVersion": cluster.ResourceVersion}
-						ng1 := eksv1alpha1.NewEKSNodeGroup(name.Name+"-ng1", name.Namespace)
-						ng1.Status.Status = corev1.SuccessStatus
-						ng1.Labels = map[string]string{"cluster.clusters.kore.appvia.io/ResourceVersion": cluster.ResourceVersion}
-						ng2 := eksv1alpha1.NewEKSNodeGroup(name.Name+"-ng2", name.Namespace)
-						ng2.Status.Status = corev1.SuccessStatus
-						ng2.Labels = map[string]string{"cluster.clusters.kore.appvia.io/ResourceVersion": cluster.ResourceVersion}
-						kubernetes := clustersv1.NewKubernetes(name.Name, name.Namespace)
-						kubernetes.Status.Status = corev1.SuccessStatus
-						kubernetes.Labels = map[string]string{"cluster.clusters.kore.appvia.io/ResourceVersion": cluster.ResourceVersion}
-						test.Objects = append(test.Objects, eks, ng1, ng2, kubernetes)
-					})
+							eksNodeGroup2 := &eksv1alpha1.EKSNodeGroup{}
+							test.ExpectCreate(1, eksNodeGroup2)
+							Expect(eksNodeGroup2.Spec.Cluster).To(Equal(cluster.Ownership()))
 
-					It("should update the status on the cluster", func() {
-						updatedCluster := &clustersv1.Cluster{}
-						test.ExpectStatusUpdate(0, updatedCluster)
+							Expect(test.Client.CreateCallCount()).To(Equal(2))
+						})
 
-						Expect(updatedCluster.Status.Status).To(Equal(corev1.SuccessStatus))
-					})
+						When("the EKS Node groups are complete", func() {
+							BeforeEach(func() {
+								eksNodeGroup1 := eksv1alpha1.NewEKSNodeGroup(name.Name+"-ng1", name.Namespace)
+								eksNodeGroup1.Labels = map[string]string{"cluster.clusters.kore.appvia.io/ResourceVersion": cluster.ResourceVersion}
+								eksNodeGroup1.Status.Status = corev1.SuccessStatus
 
-					It("should finish the reconciliation", func() {
-						Expect(reconcileErr).ToNot(HaveOccurred())
-						Expect(reconcileResult).To(Equal(reconcile.Result{}))
+								eksNodeGroup2 := eksv1alpha1.NewEKSNodeGroup(name.Name+"-ng2", name.Namespace)
+								eksNodeGroup2.Labels = map[string]string{"cluster.clusters.kore.appvia.io/ResourceVersion": cluster.ResourceVersion}
+								eksNodeGroup2.Status.Status = corev1.SuccessStatus
+								test.Objects = append(test.Objects, eksNodeGroup1, eksNodeGroup2)
+							})
+
+							It("should update the component statuses on the cluster", func() {
+								updatedCluster := &clustersv1.Cluster{}
+								test.ExpectStatusUpdate(0, updatedCluster)
+
+								component1, _ := updatedCluster.Status.Components.GetComponent("EKSNodeGroup/testName-ng1")
+								Expect(component1.Status).To(Equal(corev1.SuccessStatus))
+								component2, _ := updatedCluster.Status.Components.GetComponent("EKSNodeGroup/testName-ng2")
+								Expect(component2.Status).To(Equal(corev1.SuccessStatus))
+							})
+
+							It("should create the Kubernetes resource", func() {
+								kubernetes := &clustersv1.Kubernetes{}
+								test.ExpectCreate(0, kubernetes)
+								Expect(kubernetes.Spec.Cluster).To(Equal(cluster.Ownership()))
+
+								Expect(test.Client.CreateCallCount()).To(Equal(1))
+							})
+
+							When("Kubernetes is complete", func() {
+								var kubernetes *clustersv1.Kubernetes
+
+								BeforeEach(func() {
+									kubernetes = clustersv1.NewKubernetes(name.Name, name.Namespace)
+									kubernetes.Status.Status = corev1.SuccessStatus
+									kubernetes.Labels = map[string]string{"cluster.clusters.kore.appvia.io/ResourceVersion": cluster.ResourceVersion}
+									test.Objects = append(test.Objects, kubernetes)
+								})
+
+								It("should update the status on the cluster", func() {
+									updatedCluster := &clustersv1.Cluster{}
+									test.ExpectStatusUpdate(0, updatedCluster)
+
+									Expect(updatedCluster.Status.Status).To(Equal(corev1.SuccessStatus))
+								})
+
+								It("should set the CA certificate on the cluster", func() {
+									Expect(updatedCluster.Status.CaCertificate).To(Equal(kubernetes.Status.CaCertificate))
+								})
+
+								It("should set the API endpoint on the cluster", func() {
+									Expect(updatedCluster.Status.APIEndpoint).To(Equal(kubernetes.Status.APIEndpoint))
+								})
+
+								It("should set the Auth proxy endpoint on the cluster", func() {
+									Expect(updatedCluster.Status.AuthProxyEndpoint).To(Equal(kubernetes.Status.Endpoint))
+								})
+
+								It("should finish the reconciliation", func() {
+									Expect(reconcileErr).ToNot(HaveOccurred())
+									Expect(reconcileResult).To(Equal(reconcile.Result{}))
+								})
+							})
+						})
 					})
 				})
 
@@ -392,41 +416,36 @@ var _ = Describe("Cluster Controller", func() {
 			})
 
 			When("the cluster has a deletion timestamp", func() {
+				var kubernetes *clustersv1.Kubernetes
+				var eks *eksv1alpha1.EKS
+				var ng1, ng2 *eksv1alpha1.EKSNodeGroup
+				var eksvpc *eksv1alpha1.EKSVPC
+
 				BeforeEach(func() {
 					cluster.Finalizers = []string{"cluster.clusters.kore.appvia.io"}
 					cluster.DeletionTimestamp = &metav1.Time{Time: time.Now()}
 					cluster.Status.Components = corev1.Components{
 						{Name: "EKS/testName", Status: corev1.SuccessStatus},
+						{Name: "EKSVPC/testName", Status: corev1.SuccessStatus},
 						{Name: "EKSNodeGroup/testName-ng1", Status: corev1.SuccessStatus},
 						{Name: "EKSNodeGroup/testName-ng2", Status: corev1.SuccessStatus},
 						{Name: "Kubernetes/testName", Status: corev1.SuccessStatus},
 					}
 
-					kubernetes := clustersv1.NewKubernetes(name.Name, name.Namespace)
+					kubernetes = clustersv1.NewKubernetes(name.Name, name.Namespace)
 					kubernetes.Status.Status = corev1.SuccessStatus
-					eks := eksv1alpha1.NewEKS(name.Name, name.Namespace)
-					eks.Status.Status = corev1.DeletedStatus
-					test.Objects = append(test.Objects, kubernetes, eks)
+					eks = eksv1alpha1.NewEKS(name.Name, name.Namespace)
+					eks.Status.Status = corev1.SuccessStatus
+					eksvpc = eksv1alpha1.NewEKSVPC(name.Name, name.Namespace)
+					eksvpc.Status.Status = corev1.SuccessStatus
+					ng1 = eksv1alpha1.NewEKSNodeGroup(name.Name+"-ng1", name.Namespace)
+					ng1.Status.Status = corev1.SuccessStatus
+					ng2 = eksv1alpha1.NewEKSNodeGroup(name.Name+"-ng2", name.Namespace)
+					ng2.Status.Status = corev1.SuccessStatus
+					test.Objects = append(test.Objects, kubernetes, eks, eksvpc, ng1, ng2)
 				})
 
-				It("should set the status to deleting", func() {
-					updatedCluster := &clustersv1.Cluster{}
-					test.ExpectStatusUpdate(0, updatedCluster)
-					Expect(updatedCluster.Status.Status).To(Equal(corev1.DeletingStatus))
-				})
-
-				It("should set the status for the deleted components", func() {
-					updatedCluster := &clustersv1.Cluster{}
-					test.ExpectStatusUpdate(0, updatedCluster)
-					Expect(updatedCluster.Status.Components).To(Equal(corev1.Components{
-						{Name: "EKS/testName", Status: corev1.DeletedStatus},
-						{Name: "EKSNodeGroup/testName-ng1", Status: corev1.DeletedStatus},
-						{Name: "EKSNodeGroup/testName-ng2", Status: corev1.DeletedStatus},
-						{Name: "Kubernetes/testName", Status: corev1.SuccessStatus},
-					}))
-				})
-
-				It("should delete the Kubernetes component", func() {
+				It("should delete the Kubernetes component first", func() {
 					Expect(test.Client.DeleteCallCount()).To(Equal(1))
 					deletedObj := &clustersv1.Kubernetes{}
 					test.ExpectDelete(0, deletedObj)

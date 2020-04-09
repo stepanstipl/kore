@@ -26,31 +26,16 @@ spec:
     enableDefaultTrafficBlock: false
     # Indicates if team members are automatically given access to the cluster
     inheritTeamMembers: true
-    # See IAM role for cluster
-    # https://docs.aws.amazon.com/eks/latest/userguide/getting-started-console.html#eks-prereqs
-    roleARN: CHANGE_ME
+    # The VPC CIDR block
+    privateIPV4Cidr: 10.0.0.0/16
     region: eu-west-2
-    subnetIDs:
-      - subnet-xyz-az1
-      - subnet-xyz-az2
-    securityGroupIDs:
-      # Security group for the cluster control plane communication with worker nodes
-      - sg-xyz
     version: "1.15"
     nodeGroups:
       - name: eks1
         instanceType: t3.medium
-        eC2SSHKey: kore
-        region: eu-west-2
         diskSize: 10
         tags:
           kore: managed
-        # See IAM role for nodegroup
-        # https://docs.aws.amazon.com/eks/latest/userguide/worker_node_IAM_role.html
-        nodeIAMRole: CHANGE_ME
         minSize: 1
         desiredSize: 1
         maxSize: 10
-        subnets:
-          - subnet-xyz-az1
-          - subnet-xyz-az2

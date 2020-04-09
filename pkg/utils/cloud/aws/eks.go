@@ -123,12 +123,6 @@ func (c *Client) Exists() (exists bool, err error) {
 func (c *Client) Create() (*eks.CreateClusterOutput, error) {
 	output, err := c.svc.CreateCluster(c.createClusterInput())
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			log.Debugf("unhandled aws api error %s", aerr.Error())
-		} else {
-			log.WithError(err).Debug("generic error")
-		}
-
 		return nil, err
 	}
 

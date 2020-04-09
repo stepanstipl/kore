@@ -57,7 +57,7 @@ func GetDefaultPlans() []*configv1.Plan {
 							"defaultTeamRole":               "viewer",
 							"description":                   "gke-development cluster",
 							"diskSize":                      100,
-							"domain":                        "example.appvia.io",
+							"domain":                        "default",
 							"enableAutoupgrade":             true,
 							"enableAutorepair":              true,
 							"enableAutoscaler":              true,
@@ -111,7 +111,7 @@ func GetDefaultPlans() []*configv1.Plan {
 							"defaultTeamRole":               "viewer",
 							"description":                   "gke-production cluster",
 							"diskSize":                      100,
-							"domain":                        "example.appvia.io",
+							"domain":                        "default",
 							"enableAutoupgrade":             true,
 							"enableAutorepair":              true,
 							"enableAutoscaler":              true,
@@ -136,6 +136,86 @@ func GetDefaultPlans() []*configv1.Plan {
 							"version":                       "1.15.11-gke.1"
 						}`,
 					),
+				},
+			},
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "eks-development",
+			},
+			Spec: configv1.PlanSpec{
+				Kind:        "EKS",
+				Summary:     "Provides a development cluster within EKS",
+				Description: "EKS Development Cluster",
+				Labels: map[string]string{
+					Label("environment"): "development",
+					Label("kind"):        "EKS",
+					Label("plural"):      "ekss",
+				},
+				Configuration: apiextv1.JSON{
+					Raw: []byte(`{
+						"authProxyAllowedIPs": [
+							"0.0.0.0/0"
+						],
+						"defaultTeamRole": "viewer",
+						"description": "eks-development cluster",
+						"domain": "default",
+						"enableDefaultTrafficBlock": false,
+						"inheritTeamMembers": true,
+						"privateIPV4Cidr": "10.0.0.0/16",
+						"region": "eu-west-2",
+						"version": "1.15",
+						"nodeGroups": [
+							{
+								"name": "default",
+								"instanceType": "t3.medium",
+								"diskSize": 10,
+								"minSize": 1,
+								"desiredSize": 1,
+								"maxSize": 10
+							}
+						]
+					}`),
+				},
+			},
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "eks-production",
+			},
+			Spec: configv1.PlanSpec{
+				Kind:        "EKS",
+				Summary:     "Provides a production cluster within EKS",
+				Description: "EKS Production Cluster",
+				Labels: map[string]string{
+					Label("environment"): "production",
+					Label("kind"):        "EKS",
+					Label("plural"):      "ekss",
+				},
+				Configuration: apiextv1.JSON{
+					Raw: []byte(`{
+						"authProxyAllowedIPs": [
+							"0.0.0.0/0"
+						],
+						"defaultTeamRole": "viewer",
+						"description": "eks-production cluster",
+						"domain": "default",
+						"enableDefaultTrafficBlock": false,
+						"inheritTeamMembers": true,
+						"privateIPV4Cidr": "10.0.0.0/16",
+						"region": "eu-west-2",
+						"version": "1.15",
+						"nodeGroups": [
+							{
+								"name": "default",
+								"instanceType": "c4.xlarge",
+								"diskSize": 10,
+								"minSize": 3,
+								"desiredSize": 3,
+								"maxSize": 12
+							}
+						]
+					}`),
 				},
 			},
 		},

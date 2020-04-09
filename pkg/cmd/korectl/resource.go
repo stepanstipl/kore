@@ -150,7 +150,7 @@ var resourceConfigs = map[string]resourceConfig{
 		Columns: []string{
 			Column("Name", "metadata.name"),
 			Column("Region", "spec.region"),
-			Column("Cluster", "spec.clusterName"),
+			Column("Cluster", "spec.cluster.name"),
 			Column("Status", "status.status"),
 		},
 	},

@@ -1359,6 +1359,20 @@ spec:
                   items:
                     type: string
                   type: array
+                privateSubnetIDs:
+                  description: PrivateSubnetIds is a list of subnet IDs to use for
+                    the worker nodes
+                  items:
+                    type: string
+                  type: array
+                  x-kubernetes-list-type: set
+                publicSubnetIDs:
+                  description: PublicSubnetIDs is a list of subnet IDs to use for
+                    resources that need a public IP (e.g. load balancers)
+                  items:
+                    type: string
+                  type: array
+                  x-kubernetes-list-type: set
                 securityGroupIDs:
                   description: SecurityGroupIds is a list of security group IDs to
                     use for a cluster
@@ -1366,10 +1380,6 @@ spec:
                     type: string
                   type: array
                   x-kubernetes-list-type: set
-                subnetIDs:
-                  items:
-                    type: string
-                  type: array
               type: object
             status:
               description: Status provides a overall status

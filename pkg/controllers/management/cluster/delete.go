@@ -60,28 +60,28 @@ func (a Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (re
 			return controllers.NewCriticalError(err)
 		}
 
-		for _, c := range components {
-			componentName := a.getComponentName(c)
-			var err error
-			var exists bool
-			if exists, err = kubernetes.GetIfExists(ctx, a.mgr.GetClient(), c); err != nil {
+		for componentName, c := range components {
+			if err := a.loadComponent(ctx, cluster, c); err != nil {
 				return fmt.Errorf("failed to load %s component: %w", componentName, err)
 			}
+			status, _ := c.GetStatus()
+			if status == "" {
+				c.SetStatus(corev1.DeletedStatus)
+			}
+		}
 
-			var status corev1.Status
-			var message string
-			if exists {
-				switch r := c.(type) {
-				case *clustersv1.Kubernetes:
-					if r.GetDeletionTimestamp() == nil {
+		for componentName, c := range components {
+			status, message := c.GetStatus()
+
+			if readyForDelete(c, components) {
+				if status != corev1.DeletedStatus {
+					m, _ := kubernetes.GetMeta(c)
+					if m.GetDeletionTimestamp() == nil {
 						if err := a.mgr.GetClient().Delete(ctx, c); err != nil {
 							return fmt.Errorf("failed to delete %s component: %w", componentName, err)
 						}
 					}
 				}
-				status, message = c.GetStatus()
-			} else {
-				status = corev1.DeletedStatus
 			}
 
 			if status == corev1.DeleteFailedStatus && message == "" {
