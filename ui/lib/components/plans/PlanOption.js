@@ -25,14 +25,14 @@ class PlanOption extends React.Component {
     } else if (property.items && property.items.format) {
       description += ` Format: ${property.items.format}`
     }
-    if (description.length == 0) {
+    if (description.length === 0) {
       return null
     }
     return description
   }
 
   addComplexItemToArray = (property, values) => {
-    if (property.items.type == 'array') {
+    if (property.items.type === 'array') {
       values.push([])
       return values
     }
@@ -52,14 +52,14 @@ class PlanOption extends React.Component {
       return null
     }
     const dotName = name.replace(/\[([0-9+])\]/g,'.$1')
-    const valErrors = this.props.validationErrors.filter((v) => v.field.indexOf(dotName)==0)
-    if (valErrors.length == 0) {
+    const valErrors = this.props.validationErrors.filter((v) => v.field.indexOf(dotName)===0)
+    if (valErrors.length === 0) {
       return null
     }
     return (
       <>
         {valErrors.map((ve, i) => 
-          <Alert key={`${name}.valError.${i}`} type="error" message={ve.message} />
+          <Alert key={`${name}.valError.${i}`} type="error" message={ve.message} style={{marginTop: '10px'}} />
         )}
       </>
     )
@@ -71,18 +71,12 @@ class PlanOption extends React.Component {
       return null
     }
 
-    let displayName = this.props.displayName
-    if (!displayName) {
-      displayName = name
-    }
-    let locked = null
-    if (!editable) locked = (
-      <Icon type="lock"/>
-    )
+    const displayName = this.props.displayName || name
+    const locked = !editable ? <Icon type="lock" /> : null
 
     // Special handling for object types - represent as a card with a plan option for each property:
-    if (property.type == 'object') {
-      const keys = property.properties != null ? Object.keys(property.properties) : []
+    if (property.type === 'object') {
+      const keys = property.properties ? Object.keys(property.properties) : []
       return (
         <Card size="small" title={startCase(displayName)}>
           {keys.map((key) =>
@@ -116,7 +110,7 @@ class PlanOption extends React.Component {
           }
           case 'array': {
             const values = value != null ? value : []
-            if (property.items.type != 'array' && property.items.type != 'object') {
+            if (property.items.type !== 'array' && property.items.type !== 'object') {
               return <Select mode="tags" tokenSeparators={[',']} value={values} readOnly={!editable} disabled={!editable} onChange={(v) => onChange(name, v)} />
             } else {
               return (
@@ -135,7 +129,7 @@ class PlanOption extends React.Component {
                       </Button>
                     </React.Fragment>
                   )}
-                  {(values.length == 0) ?
+                  {(values.length === 0) ?
                     <Alert type="info" message={`No ${startCase(displayName)} currently defined.`}/>
                     : null}
                   <Button disabled={!editable} icon="plus" title={`Add new ${startCase(displayName)}`} onClick={() => onChange(name, this.addComplexItemToArray(property, values))}>

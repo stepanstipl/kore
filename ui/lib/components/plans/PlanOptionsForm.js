@@ -59,7 +59,9 @@ class PlanOptionsForm extends React.Component {
     this.setState({
       planValues: newPlanValues
     })
-    if (this.props.onPlanChange) this.props.onPlanChange(newPlanValues)
+    if (this.props.onPlanChange) {
+      this.props.onPlanChange(newPlanValues)
+    }
   }
 
   handleShowReadOnlyChange = (e) => {

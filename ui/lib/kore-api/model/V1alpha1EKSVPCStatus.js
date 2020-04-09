@@ -13,21 +13,21 @@
 
 import ApiClient from '../ApiClient';
 import V1Component from './V1Component';
+import V1alpha1Infra from './V1alpha1Infra';
 
 /**
- * The V1alpha1EKSNodeGroupStatus model module.
- * @module model/V1alpha1EKSNodeGroupStatus
+ * The V1alpha1EKSVPCStatus model module.
+ * @module model/V1alpha1EKSVPCStatus
  * @version 0.0.1
  */
-class V1alpha1EKSNodeGroupStatus {
+class V1alpha1EKSVPCStatus {
     /**
-     * Constructs a new <code>V1alpha1EKSNodeGroupStatus</code>.
-     * @alias module:model/V1alpha1EKSNodeGroupStatus
-     * @param nodeIAMRole {String} 
+     * Constructs a new <code>V1alpha1EKSVPCStatus</code>.
+     * @alias module:model/V1alpha1EKSVPCStatus
      */
-    constructor(nodeIAMRole) { 
+    constructor() { 
         
-        V1alpha1EKSNodeGroupStatus.initialize(this, nodeIAMRole);
+        V1alpha1EKSVPCStatus.initialize(this);
     }
 
     /**
@@ -35,26 +35,25 @@ class V1alpha1EKSNodeGroupStatus {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, nodeIAMRole) { 
-        obj['nodeIAMRole'] = nodeIAMRole;
+    static initialize(obj) { 
     }
 
     /**
-     * Constructs a <code>V1alpha1EKSNodeGroupStatus</code> from a plain JavaScript object, optionally creating a new instance.
+     * Constructs a <code>V1alpha1EKSVPCStatus</code> from a plain JavaScript object, optionally creating a new instance.
      * Copies all relevant properties from <code>data</code> to <code>obj</code> if supplied or a new instance if not.
      * @param {Object} data The plain JavaScript object bearing properties of interest.
-     * @param {module:model/V1alpha1EKSNodeGroupStatus} obj Optional instance to populate.
-     * @return {module:model/V1alpha1EKSNodeGroupStatus} The populated <code>V1alpha1EKSNodeGroupStatus</code> instance.
+     * @param {module:model/V1alpha1EKSVPCStatus} obj Optional instance to populate.
+     * @return {module:model/V1alpha1EKSVPCStatus} The populated <code>V1alpha1EKSVPCStatus</code> instance.
      */
     static constructFromObject(data, obj) {
         if (data) {
-            obj = obj || new V1alpha1EKSNodeGroupStatus();
+            obj = obj || new V1alpha1EKSVPCStatus();
 
             if (data.hasOwnProperty('conditions')) {
                 obj['conditions'] = ApiClient.convertToType(data['conditions'], [V1Component]);
             }
-            if (data.hasOwnProperty('nodeIAMRole')) {
-                obj['nodeIAMRole'] = ApiClient.convertToType(data['nodeIAMRole'], 'String');
+            if (data.hasOwnProperty('infra')) {
+                obj['infra'] = V1alpha1Infra.constructFromObject(data['infra']);
             }
             if (data.hasOwnProperty('status')) {
                 obj['status'] = ApiClient.convertToType(data['status'], 'String');
@@ -77,17 +76,17 @@ class V1alpha1EKSNodeGroupStatus {
         this['conditions'] = conditions;
     }
 /**
-     * @return {String}
+     * @return {module:model/V1alpha1Infra}
      */
-    getNodeIAMRole() {
-        return this.nodeIAMRole;
+    getInfra() {
+        return this.infra;
     }
 
     /**
-     * @param {String} nodeIAMRole
+     * @param {module:model/V1alpha1Infra} infra
      */
-    setNodeIAMRole(nodeIAMRole) {
-        this['nodeIAMRole'] = nodeIAMRole;
+    setInfra(infra) {
+        this['infra'] = infra;
     }
 /**
      * @return {String}
@@ -108,22 +107,22 @@ class V1alpha1EKSNodeGroupStatus {
 /**
  * @member {Array.<module:model/V1Component>} conditions
  */
-V1alpha1EKSNodeGroupStatus.prototype['conditions'] = undefined;
+V1alpha1EKSVPCStatus.prototype['conditions'] = undefined;
 
 /**
- * @member {String} nodeIAMRole
+ * @member {module:model/V1alpha1Infra} infra
  */
-V1alpha1EKSNodeGroupStatus.prototype['nodeIAMRole'] = undefined;
+V1alpha1EKSVPCStatus.prototype['infra'] = undefined;
 
 /**
  * @member {String} status
  */
-V1alpha1EKSNodeGroupStatus.prototype['status'] = undefined;
+V1alpha1EKSVPCStatus.prototype['status'] = undefined;
 
 
 
 
 
 
-export default V1alpha1EKSNodeGroupStatus;
+export default V1alpha1EKSVPCStatus;
 

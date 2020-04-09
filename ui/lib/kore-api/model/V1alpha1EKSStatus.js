@@ -23,10 +23,11 @@ class V1alpha1EKSStatus {
     /**
      * Constructs a new <code>V1alpha1EKSStatus</code>.
      * @alias module:model/V1alpha1EKSStatus
+     * @param roleARN {String} 
      */
-    constructor() { 
+    constructor(roleARN) { 
         
-        V1alpha1EKSStatus.initialize(this);
+        V1alpha1EKSStatus.initialize(this, roleARN);
     }
 
     /**
@@ -34,7 +35,8 @@ class V1alpha1EKSStatus {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj) { 
+    static initialize(obj, roleARN) { 
+        obj['roleARN'] = roleARN;
     }
 
     /**
@@ -56,6 +58,9 @@ class V1alpha1EKSStatus {
             }
             if (data.hasOwnProperty('endpoint')) {
                 obj['endpoint'] = ApiClient.convertToType(data['endpoint'], 'String');
+            }
+            if (data.hasOwnProperty('roleARN')) {
+                obj['roleARN'] = ApiClient.convertToType(data['roleARN'], 'String');
             }
             if (data.hasOwnProperty('status')) {
                 obj['status'] = ApiClient.convertToType(data['status'], 'String');
@@ -106,6 +111,19 @@ class V1alpha1EKSStatus {
 /**
      * @return {String}
      */
+    getRoleARN() {
+        return this.roleARN;
+    }
+
+    /**
+     * @param {String} roleARN
+     */
+    setRoleARN(roleARN) {
+        this['roleARN'] = roleARN;
+    }
+/**
+     * @return {String}
+     */
     getStatus() {
         return this.status;
     }
@@ -133,6 +151,11 @@ V1alpha1EKSStatus.prototype['conditions'] = undefined;
  * @member {String} endpoint
  */
 V1alpha1EKSStatus.prototype['endpoint'] = undefined;
+
+/**
+ * @member {String} roleARN
+ */
+V1alpha1EKSStatus.prototype['roleARN'] = undefined;
 
 /**
  * @member {String} status
