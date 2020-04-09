@@ -1076,6 +1076,7 @@ spec:
               items:
                 type: string
               type: array
+              x-kubernetes-list-type: set
             cluster:
               description: Cluster refers to the cluster this object belongs to
               properties:

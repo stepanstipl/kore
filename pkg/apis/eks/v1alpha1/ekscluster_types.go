@@ -33,6 +33,7 @@ type EKSSpec struct {
 	// AuthorizedMasterNetworks is the network ranges which are permitted
 	// to access the EKS control plane endpoint i.e the managed one (not the
 	// authentication proxy)
+	// +listType=set
 	AuthorizedMasterNetworks []string `json:"authorizedMasterNetworks,omitempty"`
 	// Cluster refers to the cluster this object belongs to
 	// +kubebuilder:validation:Required
