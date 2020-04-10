@@ -22,12 +22,10 @@ import (
 	"fmt"
 	"time"
 
-	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
-
-	"github.com/appvia/kore/pkg/controllers"
-
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
+	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
+	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
@@ -66,6 +64,7 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		if err != nil {
 			logger.WithError(err).Error("failed to set the finalizer")
 		}
+
 		return reconcile.Result{Requeue: true}, err
 	}
 
@@ -79,6 +78,8 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 			cluster.Status.Components = corev1.Components{}
 		}
 
+		// @step: we generate a collection of resources based on the cluster type
+		// GKE -> K8S, EKS -> VPC -> K8S etc.
 		components, err := createClusterComponents(cluster)
 		if err != nil {
 			return controllers.NewCriticalError(err)

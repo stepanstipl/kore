@@ -21,17 +21,17 @@ import (
 	"fmt"
 	"strings"
 
+	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
+	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
+	gkev1alpha1 "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	"k8s.io/apimachinery/pkg/api/meta"
-
-	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-
-	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
-	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
-	gkev1alpha1 "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 )
 
+// createClusterComponents is responsible for generating the various components required
+// by the cluster - i.e. the cloud provider, perhaps a VPC for EKS etc.
 func createClusterComponents(c *clustersv1.Cluster) (map[string]clustersv1.ClusterComponent, error) {
 	components := map[string]clustersv1.ClusterComponent{}
 
@@ -59,6 +59,8 @@ func createClusterComponents(c *clustersv1.Cluster) (map[string]clustersv1.Clust
 	return components, nil
 }
 
+// createProvider is responsible for create the cloud provider object based on the
+// kubernetes backing provider
 func createProvider(c *clustersv1.Cluster) clustersv1.ClusterComponent {
 	switch strings.ToLower(c.Spec.Kind) {
 	case "gke":
@@ -70,6 +72,8 @@ func createProvider(c *clustersv1.Cluster) clustersv1.ClusterComponent {
 	}
 }
 
+// createProviderComponents generates any additionals components required by the provider -
+// such as a VPC for EKS
 func createProviderComponents(c *clustersv1.Cluster) ([]clustersv1.ClusterComponent, error) {
 	switch strings.ToLower(c.Spec.Kind) {
 	case "gke":
@@ -88,6 +92,7 @@ func createProviderComponents(c *clustersv1.Cluster) ([]clustersv1.ClusterCompon
 			name := c.Name + "-" + nodeGroup["name"].(string)
 			components = append(components, eksv1alpha1.NewEKSNodeGroup(name, c.Namespace))
 		}
+
 		return components, nil
 	default:
 		panic(fmt.Errorf("unknown provider type: %q", c.Spec.Kind))

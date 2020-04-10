@@ -25,7 +25,6 @@ import (
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -45,7 +44,7 @@ type Controller struct {
 }
 
 func init() {
-	ctrl := NewController(logrus.StandardLogger())
+	ctrl := NewController(log.StandardLogger())
 	if err := controllers.Register(ctrl); err != nil {
 		log.WithFields(log.Fields{
 			"error": err.Error(),
@@ -53,7 +52,8 @@ func init() {
 	}
 }
 
-func NewController(logger logrus.FieldLogger) *Controller {
+// NewController creaes and returns a clusters controller
+func NewController(logger log.FieldLogger) *Controller {
 	name := "cluster"
 	return &Controller{
 		name: name,
@@ -68,10 +68,12 @@ func (a *Controller) Name() string {
 	return a.name
 }
 
+// ManagerOptions returns the manageer options for the controller
 func (a *Controller) ManagerOptions() manager.Options {
 	return controllers.DefaultManagerOptions(a)
 }
 
+// ControllerOptions returns the controllers options
 func (a *Controller) ControllerOptions() controller.Options {
 	return controllers.DefaultControllerOptions(a)
 }
