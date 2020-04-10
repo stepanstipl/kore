@@ -21,16 +21,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/appvia/kore/pkg/controllers"
-
+	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-
+	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
-
-	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
-
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -49,6 +45,7 @@ func (a Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (re
 		if err != nil {
 			logger.WithError(err).Error("failed to remove the finalizer from the cluster")
 		}
+
 		return reconcile.Result{}, err
 	}
 

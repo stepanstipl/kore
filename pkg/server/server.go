@@ -131,13 +131,10 @@ func New(config Config) (Interface, error) {
 }
 
 // Run is responsible for starting the services
-// @TODO due to the current model of controllers on the ops side, this is beginning to
-// take longer and longer as more controllers get added
 func (s serverImpl) Run(ctx context.Context) error {
 
 	// @step: we need to start the controllers
 	for _, ctrl := range controllers.GetControllers() {
-		log.Printf("got controller %s", ctrl.Name())
 		go func(c controllers.RegisterInterface) {
 			log.WithFields(log.Fields{
 				"name": c.Name(),
@@ -154,6 +151,7 @@ func (s serverImpl) Run(ctx context.Context) error {
 					if err != nil {
 						return err
 					}
+
 					return c2.RunWithDependencies(ctx, mgr, ctrl, s.hubcc)
 				}
 
