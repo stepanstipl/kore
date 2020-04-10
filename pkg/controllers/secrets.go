@@ -24,10 +24,9 @@ import (
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // CreateManagedSecret returns a managed secret
@@ -36,46 +35,29 @@ func CreateManagedSecret(ctx context.Context, owner runtime.Object, cc client.Cl
 		return errors.New("no secret defined")
 	}
 
-	mo, ok := owner.(metav1.Object)
-	if !ok {
-		return errors.New("object does not implement the metav1.Object")
-	}
-
-	secret.ObjectMeta.OwnerReferences = []metav1.OwnerReference{
-		{
-			APIVersion: owner.GetObjectKind().GroupVersionKind().GroupVersion().String(),
-			Kind:       owner.GetObjectKind().GroupVersionKind().Kind,
-			Controller: utils.TruePtr(),
-			UID:        mo.GetUID(),
-			Name:       mo.GetName(),
-		},
-	}
-
-	// @step: update the secret
+	// @step: create the object in the api
 	if _, err := kubernetes.CreateOrUpdate(ctx, cc, secret); err != nil {
 		return err
 	}
+	original := secret.DeepCopy()
 
-	// @step: update the secret to be managed
-	for i := 0; i < 3; i++ {
-		if found, err := kubernetes.GetIfExists(ctx, cc, secret); err != nil {
-			continue
-		} else if !found {
-			return nil
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	return utils.Retry(ctx, 5, true, 1000*time.Millisecond, func() (bool, error) {
+		found, err := kubernetes.GetIfExists(ctx, cc, secret)
+		if err != nil || !found {
+			return false, nil
 		}
-		original := secret.DeepCopy()
-
 		if secret.Status.SystemManaged != nil {
-			return nil
+			return true, nil
 		}
 		secret.Status.SystemManaged = utils.TruePtr()
 
 		if err := cc.Status().Patch(ctx, secret, client.MergeFrom(original)); err == nil {
-			return nil
+			return false, nil
 		}
 
-		time.Sleep(100 * time.Millisecond)
-	}
-
-	return errors.New("trying to update the system managed status")
+		return true, nil
+	})
 }
