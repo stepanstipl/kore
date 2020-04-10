@@ -25,6 +25,7 @@ import (
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -71,6 +72,18 @@ func GetConfigSecret(ctx context.Context, cc client.Client, namespace, name stri
 // GetClusterCredentialsSecret is used to retrieve the cluster secret
 func GetClusterCredentialsSecret(ctx context.Context, cc client.Client, namespace, name string) (*configv1.Secret, error) {
 	return GetConfigSecret(ctx, cc, namespace, name)
+}
+
+// DeleteClusterCredentialsSecret removes the secret containing the sysadmin token
+func DeleteClusterCredentialsSecret(ctx context.Context, cc client.Client, namespace, name string) error {
+	secret := &configv1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+	}
+
+	return kubernetes.DeleteIfExists(ctx, cc, secret)
 }
 
 // CreateClientFromSecret is used to retrieve the secret and create a runtime client
