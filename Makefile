@@ -224,7 +224,10 @@ demo:
 	@docker-compose \
 		--file hack/compose/kube.yml \
 		--file hack/compose/demo.yml \
-		--file hack/compose/operators.yml \
+		pull
+	@docker-compose \
+		--file hack/compose/kube.yml \
+		--file hack/compose/demo.yml \
 		up --force-recreate --renew-anon-volumes
 
 docker-release: images push-images
