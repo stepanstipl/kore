@@ -35,13 +35,13 @@ import (
 // invoke is responsible for invoking the api
 func invoke(ctx *cli.Context) error {
 	// @step: are we enabling verbose logging?
+	if ctx.Bool("disable-json-logging") {
+		log.SetFormatter(&log.TextFormatter{})
+	}
 	if ctx.Bool("verbose") {
 		log.SetOutput(os.Stdout)
 		log.SetLevel(log.DebugLevel)
 		log.Debug("enabling verbose logging for debug")
-	}
-	if ctx.Bool("disable-json-logging") {
-		log.SetFormatter(&log.TextFormatter{})
 	}
 
 	// @step: construct the server config
