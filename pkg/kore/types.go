@@ -112,11 +112,6 @@ type Config struct {
 	ClusterAppManImage string `json:"cluster-app-man-image,omitempty"`
 	// DEX is the config required to configure dex
 	DEX DEX `json:"dex,omitempty"`
-	// EnabledClusterDeletion indicates we should delete cloud providers
-	EnableClusterDeletion bool `json:"enable-cluster-deletion,omitempty"`
-	// EnableClusterDeletionBlock indicates we should only delete the cluster if the cloud
-	// provider is deleted
-	EnableClusterDeletionBlock bool `json:"enable-cluster-deletion-block,omitempty"`
 	// EnableClusterProviderCheck indicate the k8s controller should check the status of the
 	// cloud provider as well
 	EnableClusterProviderCheck bool `json:"enable-cluster-provider-check,omitempty"`

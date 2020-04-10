@@ -66,8 +66,6 @@ func invoke(ctx *cli.Context) error {
 			CertificateAuthority:       ctx.String("certificate-authority"),
 			CertificateAuthorityKey:    ctx.String("certificate-authority-key"),
 			ClusterAppManImage:         ctx.String("clusterappman-image"),
-			EnableClusterDeletion:      ctx.Bool("enable-cluster-deletion"),
-			EnableClusterDeletionBlock: ctx.Bool("enable-cluster-deletion-block"),
 			EnableClusterProviderCheck: ctx.Bool("enable-cluster-provider-check"),
 			HMAC:                       ctx.String("kore-hmac"),
 			IDPClientID:                ctx.String("idp-client-id"),

@@ -250,18 +250,6 @@ func Options() []cli.Flag {
 
 		// @controller flags
 		&cli.BoolFlag{
-			Name:    "enable-cluster-deletion",
-			Value:   true,
-			Usage:   "Indicates you want the controller delete the cloud resource when deleting the cluster `BOOL`",
-			EnvVars: []string{"ENABLE_CLOUD_DELETION"},
-		},
-		&cli.BoolFlag{
-			Name:    "enable-cluster-deletion-block",
-			Value:   true,
-			Usage:   "Indicates when deleting the kubernetes cluster we should wait for the provider to delete first `BOOL`",
-			EnvVars: []string{"ENABLE_CLOUD_DELETION_BLOCK"},
-		},
-		&cli.BoolFlag{
 			Name:    "enable-cluster-provider-check",
 			Value:   true,
 			Usage:   "Indicates the kubernetes controller should check the underlying provider status `BOOL`",
