@@ -70,7 +70,6 @@ func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (rec
 					return reconcile.Result{}, err
 				}
 			}
-
 		}
 
 		// @step: we should delete the secert from api
