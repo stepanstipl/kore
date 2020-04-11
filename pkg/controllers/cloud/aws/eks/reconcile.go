@@ -18,21 +18,17 @@ package eks
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 	"fmt"
-	"strings"
 
-	"github.com/aws/aws-sdk-go/aws/awserr"
-
-	core "github.com/appvia/kore/pkg/apis/core/v1"
+	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
+	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/utils/cloud/aws"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
-	"github.com/aws/aws-sdk-go/service/eks"
+
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
-
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -45,6 +41,7 @@ const (
 	ComponentClusterBootstrap = "Cluster Initialize Access"
 )
 
+// Reconcile is responsible for handling the EKS cluster
 func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	ctx := context.Background()
 	logger := log.WithFields(log.Fields{
@@ -68,177 +65,53 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 	if finalizer.IsDeletionCandidate(resource) {
 		return t.Delete(request)
 	}
-	// @step: we need to mark the cluster as pending
+
 	if resource.Status.Conditions == nil {
-		resource.Status.Conditions = core.Components{}
+		resource.Status.Conditions = corev1.Components{}
 	}
 
-	requeue, err := func() (bool, error) {
-		logger.Debug("retrieving the eks cluster credential")
+	result, err := func() (reconcile.Result, error) {
+		// @step: add the finalizer if require
+		if finalizer.NeedToAdd(resource) {
+			if err := finalizer.Add(resource); err != nil {
+				logger.WithError(err).Error("trying to add finalizer from eks resource")
 
-		// @step: first we need to check if we have access to the credentials
-		credentials, err := t.GetCredentials(ctx, resource, resource.Namespace)
-		if err != nil {
-			logger.WithError(err).Error("trying to retrieve cloud credentials")
-
-			resource.Status.Conditions.SetCondition(core.Component{
-				Name:    ComponentClusterCreator,
-				Message: "You do not have permission to the credentials",
-				Status:  core.FailureStatus,
-			})
-
-			return false, err
-		}
-		logger.Debug("found credentials for aws provider")
-
-		client, err := aws.NewClient(credentials, resource)
-		if err != nil {
-			logger.WithError(err).Error("attempting to create the cluster client")
-
-			resource.Status.Conditions.SetCondition(core.Component{
-				Detail:  err.Error(),
-				Name:    ComponentClusterCreator,
-				Message: "Failed to create EKS client, please check credentials",
-				Status:  core.FailureStatus,
-			})
-
-			return false, err
-		}
-		logger.Debug("created a client for the aws provider")
-
-		found, err := client.Exists()
-		if err != nil {
-			resource.Status.Conditions.SetCondition(core.Component{
-				Detail:  err.Error(),
-				Name:    ComponentClusterCreator,
-				Message: "Failed to check for cluster existence",
-				Status:  core.FailureStatus,
-			})
-
-			return false, err
-		}
-
-		if !found {
-			status, found := resource.Status.Conditions.GetStatus(ComponentClusterCreator)
-			if !found || status != core.PendingStatus {
-				resource.Status.Conditions.SetCondition(core.Component{
-					Name:    ComponentClusterCreator,
-					Message: "Provisioning the EKS cluster in AWS",
-					Status:  core.PendingStatus,
-				})
-				resource.Status.Status = core.PendingStatus
-
-				return true, nil
+				return reconcile.Result{}, err
 			}
 
-			// Ensure the IAM role exists...
-			iamClient := aws.NewIamClient(client.Sess, resource.Name)
-			cr, err := iamClient.EnsureEksClusterRole()
+			return reconcile.Result{Requeue: true}, nil
+		}
+
+		client, err := t.GetClusterClient(ctx, resource)
+		if err != nil {
+			logger.WithError(err).Error("trying to create eks cluster client")
+
+			return reconcile.Result{}, err
+		}
+
+		ensure := []controllers.EnsureFunc{
+			t.EnsureResourcePending,
+			t.EnsureClusterRoles,
+			t.EnsureCluster(client),
+			t.EnsureClusterBootstrap(client),
+		}
+
+		for _, handler := range ensure {
+			result, err := handler(ctx, resource)
 			if err != nil {
-				logger.WithError(err).Errorf("attempting to create iam roles for eks - %s", err)
-
-				resource.Status.Conditions.SetCondition(core.Component{
-					Name:    ComponentClusterCreator,
-					Message: "Failed trying to provision the eks iam roles",
-					Detail:  err.Error(),
-				})
-				resource.Status.Status = core.FailureStatus
-
-				return false, err
+				return reconcile.Result{}, err
 			}
-			// Save the role used for this cluster
-			resource.Status.RoleARN = *cr.Arn
-
-			logger.Debug("creating a new eks cluster in aws")
-			if _, err = client.Create(); err != nil {
-				logger.WithError(err).Error("failed to create cluster")
-
-				// The IAM role is not always available right away after creation and the API might return with the following error:
-				// InvalidParameterException: Role with arn: <ARN> could not be assumed because it does not exist or the trusted entity is not correct
-				// In this case we are going to retry and not throw an error
-				if aerr, ok := err.(awserr.Error); ok {
-					if aerr.Code() == eks.ErrCodeInvalidParameterException && strings.Contains(aerr.Message(), "does not exist") {
-						return true, nil
-					}
-				}
-
-				resource.Status.Conditions.SetCondition(core.Component{
-					Name:    ComponentClusterCreator,
-					Message: "Failed trying to provision the cluster",
-					Detail:  err.Error(),
-				})
-				resource.Status.Status = core.FailureStatus
-
-				return false, err
+			if result.Requeue || result.RequeueAfter > 0 {
+				return result, nil
 			}
-		} else {
-			// TODO - client needs to manage migrations
-			logger.Warn("reconcile clusters with migration not yet supported")
 		}
 
-		// Get cluster status
-		cluster, err := client.DescribeEKS()
-		if err != nil {
-			logger.WithError(err).Error("trying to retrieve the eks cluster")
-
-			return false, err
-		}
-		if *cluster.Status == eks.ClusterStatusFailed {
-
-			return false, fmt.Errorf("Cluster has failed status:%s", resource.Name)
-		}
-		if *cluster.Status != eks.ClusterStatusActive {
-			logger.Debugf("cluster %s not ready requeing", *cluster.Name)
-
-			// not ready, reque no errors
-			return true, nil
-		}
-		// Active cluster
-		ca, err := base64.StdEncoding.DecodeString(*cluster.CertificateAuthority.Data)
-		if err != nil {
-			return false, fmt.Errorf("invalid base64 ca data from aws for eks endpoint %s,%v", *cluster.Endpoint, cluster.CertificateAuthority.Data)
-		}
-		resource.Status.CACertificate = string(ca)
-		resource.Status.Endpoint = *cluster.Endpoint
-		resource.Status.Status = core.SuccessStatus
-
-		// @step: update the state as provisioned
-		resource.Status.Conditions.SetCondition(core.Component{
-			Name:    ComponentClusterCreator,
-			Message: "Cluster has been provisioned",
-			Status:  core.SuccessStatus,
-		})
-
-		// @step: set the bootstrap as pending if required
-		resource.Status.Conditions.SetCondition(core.Component{
-			Name:    ComponentClusterBootstrap,
-			Message: "Accessing the eks cluster",
-			Status:  core.PendingStatus,
-		})
-
-		logger.Info("attempting to bootstrap the eks cluster")
-
-		boot, err := NewBootstrapClient(resource, client.Sess)
-		if err != nil {
-			logger.WithError(err).Error("trying to create bootstrap client")
-
-			return false, err
-		}
-		if err := boot.Run(ctx, t.mgr.GetClient()); err != nil {
-			logger.WithError(err).Error("trying to bootstrap eks cluster")
-
-			return false, err
-		}
-		resource.Status.Conditions.SetCondition(core.Component{
-			Name:    ComponentClusterBootstrap,
-			Message: "Successfully initialised the cluster",
-			Status:  core.SuccessStatus,
-		})
-
-		return false, nil
+		return reconcile.Result{}, nil
 	}()
 	if err != nil {
-		resource.Status.Status = core.FailureStatus
+		logger.WithError(err).Error("trying to reconcile the eks cluster")
+
+		resource.Status.Status = corev1.FailureStatus
 	}
 
 	if err := t.mgr.GetClient().Status().Update(ctx, resource); err != nil {
@@ -247,23 +120,36 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 		return reconcile.Result{}, err
 	}
 
-	if err == nil {
-		if finalizer.NeedToAdd(resource) {
-			logger.Info("adding our finalizer to the team resource")
+	return result, nil
+}
 
-			if err := finalizer.Add(resource); err != nil {
-				return reconcile.Result{}, err
-			}
+// GetClusterClient returns a EKS cluster client
+func (t *eksCtrl) GetClusterClient(ctx context.Context, resource *eksv1alpha1.EKS) (*aws.Client, error) {
+	// @step: first we need to check if we have access to the credentials
+	credentials, err := t.GetCredentials(ctx, resource, resource.Namespace)
+	if err != nil {
+		resource.Status.Conditions.SetCondition(corev1.Component{
+			Name:    ComponentClusterCreator,
+			Message: "You do not have permission to the credentials",
+			Status:  corev1.FailureStatus,
+		})
 
-			return reconcile.Result{Requeue: true}, nil
-		}
+		return nil, err
 	}
 
-	if requeue {
-		return reconcile.Result{Requeue: true}, nil
+	client, err := aws.NewEKSClient(credentials, resource)
+	if err != nil {
+		resource.Status.Conditions.SetCondition(corev1.Component{
+			Detail:  err.Error(),
+			Name:    ComponentClusterCreator,
+			Message: "Failed to create EKS client, please check credentials",
+			Status:  corev1.FailureStatus,
+		})
+
+		return nil, err
 	}
 
-	return reconcile.Result{}, nil
+	return client, nil
 }
 
 // GetCredentials returns the cloud credential

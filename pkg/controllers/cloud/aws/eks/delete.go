@@ -18,12 +18,10 @@ package eks
 
 import (
 	"context"
-	"fmt"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
+	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
-	"github.com/appvia/kore/pkg/utils/cloud/aws"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
@@ -40,19 +38,10 @@ func (t *eksCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 		"name":      request.NamespacedName.Name,
 		"namespace": request.NamespacedName.Namespace,
 	})
-	logger.Info("attempting to delete eks cluster")
+	logger.Debug("attempting to delete eks cluster")
 
 	// @step: first we need to check if we have access to the credentials
-
-	resource := &eksv1alpha1.EKS{}
-	if err := t.mgr.GetClient().Get(ctx, request.NamespacedName, resource); err != nil {
-		if kerrors.IsNotFound(err) {
-			return reconcile.Result{}, nil
-		}
-
-		return reconcile.Result{}, err
-	}
-
+	resource := &eks.EKS{}
 	if err := t.mgr.GetClient().Get(ctx, request.NamespacedName, resource); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
@@ -62,43 +51,28 @@ func (t *eksCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 	}
 	original := resource.DeepCopy()
 
-	finalizer := kubernetes.NewFinalizer(t.mgr.GetClient(), finalizerName)
-
 	result, err := func() (reconcile.Result, error) {
-		// @step: retrieve the cloud credentials
-		creds, err := t.GetCredentials(ctx, resource, request.NamespacedName.Name)
-		if err != nil {
-			return reconcile.Result{}, err
+		operations := []controllers.EnsureFunc{
+			t.EnsureDeletionStatus,
+			t.EnsureNodeGroupsDeleted,
+			t.EnsureDeletion,
+			t.EnsureSecretDeletion,
 		}
 
-		// @step: create a cloud client for us
-		client, err := aws.NewClient(creds, resource)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-
-		// @step: check if the cluster exists and if so we wait or the operation or the exit
-		found, err := client.Exists()
-		if err != nil {
-			return reconcile.Result{}, fmt.Errorf("checking if cluster exists: %s", err)
-		}
-
-		// @step: lets update the status of the resource to deleting
-		if resource.Status.Status != corev1.DeletingStatus {
-			resource.Status.Status = corev1.DeletingStatus
-
-			return reconcile.Result{Requeue: true}, nil
-		}
-
-		if found {
-			if _, err = client.Delete(); err != nil {
+		for _, handler := range operations {
+			result, err := handler(ctx, resource)
+			if err != nil {
 				return reconcile.Result{}, err
+			}
+			if result.Requeue || result.RequeueAfter > 0 {
+				return result, nil
 			}
 		}
 
-		// @step: we can now delete the sysadmin token now
-		if err := controllers.DeleteClusterCredentialsSecret(ctx,
-			t.mgr.GetClient(), resource.Namespace, resource.Name); err != nil {
+		// @cool we can remove the finalizer now
+		finalizer := kubernetes.NewFinalizer(t.mgr.GetClient(), finalizerName)
+		if err := finalizer.Remove(resource); err != nil {
+			logger.WithError(err).Error("removing the finalizer from eks resource")
 
 			return reconcile.Result{}, err
 		}
@@ -106,7 +80,8 @@ func (t *eksCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 		return reconcile.Result{}, nil
 	}()
 	if err != nil {
-		logger.WithError(err).Error("attempting to delete the cluster")
+		logger.WithError(err).Error("attempting to delete the eks cluster")
+		resource.Status.Status = corev1.FailureStatus
 	}
 
 	if err := t.mgr.GetClient().Status().Patch(ctx, resource, client.MergeFrom(original)); err != nil {
@@ -114,16 +89,6 @@ func (t *eksCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 
 		return reconcile.Result{}, err
 	}
-	if err != nil {
-		return result, err
-	}
 
-	if err := finalizer.Remove(resource); err != nil {
-		logger.WithError(err).Error("removing the finalizer from eks resource")
-
-		return reconcile.Result{}, err
-	}
-	logger.Debug("successfully deleted the cluster")
-
-	return reconcile.Result{}, nil
+	return result, nil
 }

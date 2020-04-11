@@ -47,11 +47,6 @@ func init() {
 	}
 }
 
-// Name returns the name of the controller
-func (t *eksCtrl) Name() string {
-	return "eks"
-}
-
 // Run starts the controller
 func (t *eksCtrl) Run(ctx context.Context, cfg *rest.Config, hubi kore.Interface) error {
 	logger := log.WithFields(log.Fields{
@@ -116,5 +111,12 @@ func (t *eksCtrl) Stop(_ context.Context) error {
 		"controller": t.Name(),
 	}).Info("attempting to stop the controller")
 
+	close(t.stopCh)
+
 	return nil
+}
+
+// Name returns the name of the controller
+func (t *eksCtrl) Name() string {
+	return "eks"
 }
