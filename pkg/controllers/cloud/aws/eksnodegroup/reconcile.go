@@ -31,7 +31,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
-
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -106,7 +105,7 @@ func (n *eksNodeGroupCtrl) Reconcile(request reconcile.Request) (reconcile.Resul
 			return false, err
 		}
 		logger.Info("Checking cluster nodegroup existence")
-		found, err := client.NodeGroupExists(resource)
+		found, err := client.NodeGroupExists(ctx, resource)
 		if err != nil {
 			resource.Status.Conditions.SetCondition(core.Component{
 				Detail:  err.Error(),
@@ -123,7 +122,7 @@ func (n *eksNodeGroupCtrl) Reconcile(request reconcile.Request) (reconcile.Resul
 
 			// An ACTIVE cluster is a prerequisite for creating node groups
 			// first check if CLUSTER exists
-			clusterFound, err := client.Exists()
+			clusterFound, err := client.Exists(ctx)
 			if err != nil {
 				logger.Debugf("error trying to check cluster exists %s for nodegroup %s", resource.Spec.Cluster.Name, resource.Name)
 
@@ -146,7 +145,7 @@ func (n *eksNodeGroupCtrl) Reconcile(request reconcile.Request) (reconcile.Resul
 
 				return true, nil
 			}
-			eksCluster, err := client.DescribeEKS()
+			eksCluster, err := client.Describe(ctx)
 			if err != nil {
 				logger.Debugf("error trying to check status of cluster %s for nodegroup %s", resource.Spec.Cluster.Name, resource.Name)
 
@@ -196,11 +195,13 @@ func (n *eksNodeGroupCtrl) Reconcile(request reconcile.Request) (reconcile.Resul
 			}
 
 			// Ensure the IAM role exists...
-			iamClient := aws.NewIamClient(client.Sess, resource.Name)
-			cr, err := iamClient.EnsureEksNodePoolRole()
-			if err != nil {
-				logger.WithError(err).Errorf("attempting to create iam roles for eks nodepool - %s", err)
+			ic := aws.NewIamClient(aws.Credentials{
+				AccessKeyID:     credentials.Spec.AccessKeyID,
+				SecretAccessKey: credentials.Spec.SecretAccessKey,
+			})
 
+			role, err := ic.EnsureEKSNodePoolRole(ctx, resource.Name)
+			if err != nil {
 				resource.Status.Conditions.SetCondition(core.Component{
 					Name:    ComponentClusterNodegroupCreator,
 					Message: "Failed trying to provision the eks nodepool iam roles",
@@ -210,11 +211,12 @@ func (n *eksNodeGroupCtrl) Reconcile(request reconcile.Request) (reconcile.Resul
 
 				return false, err
 			}
+
 			// Save the role used for this cluster
-			resource.Status.NodeIAMRole = *cr.Arn
+			resource.Status.NodeIAMRole = *role.Arn
 
 			logger.Debug("creating a new eks cluster nodegroup in aws")
-			if err := client.CreateNodeGroup(resource); err != nil {
+			if err := client.CreateNodeGroup(ctx, resource); err != nil {
 				logger.WithError(err).Error("attempting to create cluster nodegroup")
 
 				resource.Status.Conditions.SetCondition(core.Component{
