@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	version "github.com/appvia/kore/pkg/version"
+
 	"github.com/aws/aws-sdk-go/aws"
 	awscreds "github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/request"
