@@ -65,7 +65,7 @@ func (c *Finalizer) Remove(resource Finalizable) error {
 	}
 	resource.SetFinalizers(finalizers)
 
-	return c.driver.Update(context.Background(), resource.DeepCopyObject())
+	return c.driver.Update(context.Background(), resource)
 }
 
 // IsDeletionCandidate checks if the resource is a candidate for deletion
