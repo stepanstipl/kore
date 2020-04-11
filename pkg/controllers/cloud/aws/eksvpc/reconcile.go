@@ -67,7 +67,6 @@ func (t *eksvpcCtrl) Reconcile(request reconcile.Request) (reconcile.Result, err
 	}
 
 	requeue, err := func() (bool, error) {
-
 		logger.Debug("retrieving the vpc credentials")
 		// @step: first we need to check if we have access to the credentials
 		credentials, err := t.GetCredentials(ctx, resource, resource.Namespace)
