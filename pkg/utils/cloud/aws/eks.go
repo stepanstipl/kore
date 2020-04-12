@@ -38,6 +38,8 @@ import (
 var (
 	// ErrClusterNotFound indicates the cluster does not exist
 	ErrClusterNotFound = errors.New("eks cluster not found")
+	// ErrNodeGroupNotFound indicates the nodegroup does not exist
+	ErrNodeGroupNotFound = errors.New("eks nodegroup not found")
 	// ErrResourceBusy indicate the resource is currently busy performing an operation
 	ErrResourceBusy = errors.New("resource is busy performing an operation (upgrade, creating)")
 )
@@ -162,7 +164,7 @@ func (c *Client) WaitForClusterReady(ctx context.Context) error {
 	})
 	logger.Debug("attempting to wait for eks cluster to be ready")
 
-	// @step: check we are waiting for something that actaully exist
+	// @step: check we are waiting for something that actually exist
 	existing, err := c.Exists(ctx)
 	if err != nil {
 		logger.WithError(err).Error("trying to check if cluster exists to wait for")
@@ -365,40 +367,108 @@ func (c *Client) DeleteNodeGroup(ctx context.Context, group *eksv1alpha1.EKSNode
 }
 
 // CreateNodeGroup will create a node group for the EKS cluster
-func (c *Client) CreateNodeGroup(ctx context.Context, nodegroup *eksv1alpha1.EKSNodeGroup) error {
-	input := &eks.CreateNodegroupInput{
-		AmiType:        aws.String(nodegroup.Spec.AMIType),
-		ClusterName:    aws.String(nodegroup.Spec.Cluster.Name),
-		NodeRole:       aws.String(nodegroup.Status.NodeIAMRole),
-		ReleaseVersion: aws.String(nodegroup.Spec.ReleaseVersion),
-		DiskSize:       aws.Int64(nodegroup.Spec.DiskSize),
-		InstanceTypes:  aws.StringSlice([]string{nodegroup.Spec.InstanceType}),
-		NodegroupName:  aws.String(nodegroup.Name),
-		Subnets:        aws.StringSlice(nodegroup.Spec.Subnets),
-		ScalingConfig: &eks.NodegroupScalingConfig{
-			DesiredSize: aws.Int64(nodegroup.Spec.DesiredSize),
-			MaxSize:     aws.Int64(nodegroup.Spec.MaxSize),
-			MinSize:     aws.Int64(nodegroup.Spec.MinSize),
-		},
-	}
-	if nodegroup.Spec.EC2SSHKey != "" {
-		input.RemoteAccess = &eks.RemoteAccessConfig{
-			Ec2SshKey:            aws.String(nodegroup.Spec.EC2SSHKey),
-			SourceSecurityGroups: aws.StringSlice(nodegroup.Spec.SSHSourceSecurityGroups),
-		}
-	}
-	if len(nodegroup.Spec.Tags) > 0 {
-		input.Tags = aws.StringMap(nodegroup.Spec.Tags)
-	}
-	if len(nodegroup.Spec.Labels) > 0 {
-		input.Labels = aws.StringMap(nodegroup.Spec.Labels)
-	}
-
-	if _, err := c.svc.CreateNodegroup(input); err != nil {
+func (c *Client) CreateNodeGroup(ctx context.Context, group *eksv1alpha1.EKSNodeGroup) error {
+	// @step: check if the nodegroup exists already
+	existing, err := c.NodeGroupExists(ctx, group)
+	if err != nil {
 		return err
 	}
+	if !existing {
+		input := &eks.CreateNodegroupInput{
+			AmiType:        aws.String(group.Spec.AMIType),
+			ClusterName:    aws.String(group.Spec.Cluster.Name),
+			NodeRole:       aws.String(group.Status.NodeIAMRole),
+			ReleaseVersion: aws.String(group.Spec.ReleaseVersion),
+			DiskSize:       aws.Int64(group.Spec.DiskSize),
+			InstanceTypes:  aws.StringSlice([]string{group.Spec.InstanceType}),
+			NodegroupName:  aws.String(group.Name),
+			Subnets:        aws.StringSlice(group.Spec.Subnets),
+			ScalingConfig: &eks.NodegroupScalingConfig{
+				DesiredSize: aws.Int64(group.Spec.DesiredSize),
+				MaxSize:     aws.Int64(group.Spec.MaxSize),
+				MinSize:     aws.Int64(group.Spec.MinSize),
+			},
+		}
+		if group.Spec.EC2SSHKey != "" {
+			input.RemoteAccess = &eks.RemoteAccessConfig{
+				Ec2SshKey:            aws.String(group.Spec.EC2SSHKey),
+				SourceSecurityGroups: aws.StringSlice(group.Spec.SSHSourceSecurityGroups),
+			}
+		}
+		if len(group.Spec.Tags) > 0 {
+			input.Tags = aws.StringMap(group.Spec.Tags)
+		}
+		if len(group.Spec.Labels) > 0 {
+			input.Labels = aws.StringMap(group.Spec.Labels)
+		}
 
-	return nil
+		if _, err := c.svc.CreateNodegroup(input); err != nil {
+			return err
+		}
+	}
+
+	return c.WaitForNodeGroupReady(ctx, group)
+}
+
+// WaitForNodeGroupReady is responsible for waiting for the nodegroup to provision or fail
+func (c *Client) WaitForNodeGroupReady(ctx context.Context, group *eksv1alpha1.EKSNodeGroup) error {
+	logger := log.WithFields(log.Fields{
+		"name":      group.Name,
+		"namespace": group.Namespace,
+	})
+	logger.Debug("attempting to wait for eks node group to be ready")
+
+	// @step: check we are waiting for something that actually exist
+	existing, err := c.NodeGroupExists(ctx, group)
+	if err != nil {
+		logger.WithError(err).Error("trying to check if nodegroup exists")
+
+		return err
+	}
+	if !existing {
+		logger.Warn("no nodegroup to wait for, something went wrong here")
+
+		return ErrNodeGroupNotFound
+	}
+
+	// @step: wait for the nodegroup to be created
+	return utils.WaitUntilComplete(ctx, 1*time.Hour, 30*time.Second, func() (bool, error) {
+		resp, err := c.svc.DescribeNodegroupWithContext(ctx, &eks.DescribeNodegroupInput{
+			ClusterName:   aws.String(group.Spec.Cluster.Name),
+			NodegroupName: aws.String(group.Name),
+		})
+		if err != nil {
+			if c.IsNotFound(err) {
+				logger.Warn("eks nodegroup does not exist")
+
+				return true, ErrNodeGroupNotFound
+			}
+			logger.WithError(err).Error("trying to check for eks nodegroup status")
+
+			return false, nil
+		}
+
+		if resp.Nodegroup == nil {
+			logger.Warn("no nodegroup found in the describe response")
+
+			return false, nil
+		}
+
+		switch aws.StringValue(resp.Nodegroup.Status) {
+		case eks.NodegroupStatusActive, eks.NodegroupStatusDegraded:
+			logger.Debug("eks nodegroup is active and ready")
+			return true, nil
+		case eks.NodegroupStatusCreateFailed:
+			return false, errors.New("nodegroup failed to provision")
+		case eks.NodegroupStatusCreating, eks.NodegroupStatusUpdating:
+			logger.Debug("nodegroup is still pending in provisioning")
+		default:
+			logger.Debugf("nodegroup status: %s returned", aws.StringValue(resp.Nodegroup.Status))
+		}
+
+		return false, nil
+	})
+
 }
 
 // NodeGroupExists is responsible for checking if the nodegroup exists
@@ -416,6 +486,12 @@ func (c *Client) NodeGroupExists(ctx context.Context, nodegroup *eksv1alpha1.EKS
 	}
 
 	return true, nil
+}
+
+// UpdateNodeGroup is responsible for checking for a drift and applying an update if required
+func (c *Client) UpdateNodeGroup(ctx context.Context, group *eksv1alpha1.EKSNodeGroup) error {
+
+	return nil
 }
 
 // ListNodeGroups get a list of the nodegroups
