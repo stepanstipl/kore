@@ -18,18 +18,179 @@ package eksnodegroup
 
 import (
 	"context"
+	"time"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
+	ekscc "github.com/appvia/kore/pkg/controllers/cloud/aws/eks"
+
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
+	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/utils/cloud/aws"
 
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
+// EnsureNodeGroupIsPending is responsible for setting the resource to a pending state
+func (n *ctrl) EnsureNodeGroupIsPending(ctx context.Context, resource runtime.Object) (reconcile.Result, error) {
+	group := resource.(*eks.EKSNodeGroup)
+
+	if group.Status.Status != corev1.PendingStatus {
+		group.Status.Status = corev1.PendingStatus
+
+		return reconcile.Result{Requeue: true}, nil
+	}
+
+	return reconcile.Result{}, nil
+}
+
+// EnsureClusterReady is responsible for checking the EKS cluster is ready
+func (n *ctrl) EnsureClusterReady(ctx context.Context, resource runtime.Object) (reconcile.Result, error) {
+	group := resource.(*eks.EKSNodeGroup)
+	cluster := &eks.EKS{}
+
+	logger := log.WithFields(log.Fields{
+		"name":      group.Name,
+		"namespace": group.Namespace,
+	})
+	logger.Debug("attempting to ensure the eks cluster is ready")
+
+	key := types.NamespacedName{
+		Name:      group.Spec.Cluster.Name,
+		Namespace: group.Spec.Cluster.Namespace,
+	}
+
+	if err := n.mgr.GetClient().Get(ctx, key, cluster); err != nil {
+		logger.WithError(err).Error("trying to retrieve the cluster status")
+
+		return reconcile.Result{}, err
+	}
+
+	status, found := cluster.Status.Conditions.GetStatus(ekscc.ComponentClusterCreator)
+	if !found || status != corev1.SuccessStatus {
+		logger.Warn("eks cluster not ready yet, we will wait")
+
+		return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+	}
+
+	return reconcile.Result{}, nil
+}
+
+// EnsureNodeRole is responsible for ensuring the IAM role is there
+func (n *ctrl) EnsureNodeRole(credentials *eks.EKSCredentials) controllers.EnsureFunc {
+	return func(ctx context.Context, resource runtime.Object) (reconcile.Result, error) {
+		group := resource.(*eks.EKSNodeGroup)
+
+		logger := log.WithFields(log.Fields{
+			"name":      group.Name,
+			"namespace": group.Namespace,
+		})
+		logger.Debug("attempting to ensure the node iam role")
+
+		client := aws.NewIamClient(aws.Credentials{
+			AccessKeyID:     credentials.Spec.AccessKeyID,
+			SecretAccessKey: credentials.Spec.SecretAccessKey,
+		})
+
+		role, err := client.EnsureEKSNodePoolRole(ctx, group.Name)
+		if err != nil {
+			group.Status.Conditions.SetCondition(corev1.Component{
+				Name:    ComponentClusterNodegroupCreator,
+				Message: "Failed trying to provision the eks nodepool iam roles",
+				Detail:  err.Error(),
+			})
+
+			return reconcile.Result{}, err
+		}
+
+		// Save the role used for this cluster
+		group.Status.NodeIAMRole = *role.Arn
+
+		return reconcile.Result{}, nil
+	}
+}
+
+// EnsureNodeGroup is responsible for making sure the nodegroup is provisioned
+func (n *ctrl) EnsureNodeGroup(client *aws.Client) controllers.EnsureFunc {
+	return func(ctx context.Context, resource runtime.Object) (reconcile.Result, error) {
+		group := resource.(*eks.EKSNodeGroup)
+		logger := log.WithFields(log.Fields{
+			"name":      group.Name,
+			"namespace": group.Namespace,
+		})
+		logger.Debug("attempting to ensure the eks nodegroup")
+
+		found, err := client.NodeGroupExists(ctx, group)
+		if err != nil {
+			group.Status.Conditions.SetCondition(corev1.Component{
+				Detail:  err.Error(),
+				Name:    ComponentClusterNodegroupCreator,
+				Message: "Failed to check for cluster nodegroup existence",
+				Status:  corev1.FailureStatus,
+			})
+
+			return reconcile.Result{}, err
+		}
+		if !found {
+			logger.Debug("eks nodegroup does not exist, attempting to create now")
+
+			// @step: set the component status to pending
+			status, found := group.Status.Conditions.GetStatus(ComponentClusterNodegroupCreator)
+			if !found || status != corev1.PendingStatus {
+				group.Status.Conditions.SetCondition(corev1.Component{
+					Name:    ComponentClusterNodegroupCreator,
+					Message: "Provisioning the EKS cluster nodegroup in AWS",
+					Status:  corev1.PendingStatus,
+				})
+
+				return reconcile.Result{Requeue: true}, nil
+			}
+
+			// @step: attempt to ensure create the eks nodegroup
+			if err := client.CreateNodeGroup(ctx, group); err != nil {
+				logger.WithError(err).Error("attempting to create cluster nodegroup")
+
+				group.Status.Conditions.SetCondition(corev1.Component{
+					Name:    ComponentClusterNodegroupCreator,
+					Message: "Failed trying to provision the cluster nodegroup",
+					Detail:  err.Error(),
+				})
+
+				return reconcile.Result{}, err
+			}
+		} else {
+			// @TODO performing an update on the nodegroup
+			if err := client.WaitForNodeGroupReady(ctx, group); err != nil {
+				logger.WithError(err).Error("trying to ensure the nodegroup is ready")
+
+				return reconcile.Result{}, err
+			}
+
+			// @TODO update the nodegroup
+			if err := client.UpdateNodeGroup(ctx, group); err != nil {
+				logger.WithError(err).Error("trying to update the eks nodegroup")
+
+				return reconcile.Result{}, err
+			}
+		}
+
+		// @step: update the state as provisioned
+		group.Status.Conditions.SetCondition(corev1.Component{
+			Name:    ComponentClusterNodegroupCreator,
+			Message: "Cluster nodegroup has been provisioned",
+			Status:  corev1.SuccessStatus,
+		})
+
+		group.Status.Status = corev1.SuccessStatus
+
+		return reconcile.Result{}, nil
+	}
+}
+
 // EnsureDeletionStatus makes sure the resource is set to deleting
-func (n *eksNodeGroupCtrl) EnsureDeletionStatus(ctx context.Context, resource runtime.Object) (reconcile.Result, error) {
+func (n *ctrl) EnsureDeletionStatus(ctx context.Context, resource runtime.Object) (reconcile.Result, error) {
 	group := resource.(*eks.EKSNodeGroup)
 
 	if group.Status.Status != corev1.DeletingStatus {
@@ -42,7 +203,7 @@ func (n *eksNodeGroupCtrl) EnsureDeletionStatus(ctx context.Context, resource ru
 }
 
 // EnsureDeletion ensures the nodegroup is deleting
-func (n *eksNodeGroupCtrl) EnsureDeletion(ctx context.Context, resource runtime.Object) (reconcile.Result, error) {
+func (n *ctrl) EnsureDeletion(ctx context.Context, resource runtime.Object) (reconcile.Result, error) {
 	group := resource.(*eks.EKSNodeGroup)
 
 	logger := log.WithFields(log.Fields{

@@ -31,7 +31,7 @@ import (
 )
 
 // Delete is responsible for deleting the aws eks nodegroup
-func (n *eksNodeGroupCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
+func (n *ctrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 	ctx := context.Background()
 	logger := log.WithFields(log.Fields{
 		"name":      request.NamespacedName.Name,
