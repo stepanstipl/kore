@@ -26,6 +26,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -34,8 +35,8 @@ const finalizerName = "allocations"
 // Reconcile is the entrypoint for the reconciliation logic
 func (a acCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	logger := log.WithFields(log.Fields{
-		"resource.name":      request.NamespacedName.Name,
-		"resource.namespace": request.NamespacedName.Namespace,
+		"name":      request.NamespacedName.Name,
+		"namespace": request.NamespacedName.Namespace,
 	})
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
@@ -53,6 +54,7 @@ func (a acCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 
 		return reconcile.Result{}, err
 	}
+	original := object.DeepCopyObject()
 
 	finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
 
@@ -102,7 +104,7 @@ func (a acCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	}
 
 	// @step we update the status of the resource
-	if err := a.mgr.GetClient().Status().Update(ctx, object); err != nil {
+	if err := a.mgr.GetClient().Status().Patch(ctx, object, client.MergeFrom(original)); err != nil {
 		logger.WithError(err).Error("failed to update the resource status")
 
 		return reconcile.Result{}, err
