@@ -49,6 +49,8 @@ func (t *eksCtrl) EnsureResourcePending(ctx context.Context, resource runtime.Ob
 }
 
 // EnsureCluster is responsible for creating the cluster
+// @TODO we should consider introducing a Phase into the statue (PROVISIONING, CREATED etc) to
+// as to member for the next iteration; that way we can bypass a number of the checks
 func (t *eksCtrl) EnsureCluster(client *aws.Client) controllers.EnsureFunc {
 
 	return func(ctx context.Context, resource runtime.Object) (reconcile.Result, error) {

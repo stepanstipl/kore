@@ -30,6 +30,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -58,7 +59,7 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 
 		return reconcile.Result{}, err
 	}
-
+	original := resource.DeepCopyObject()
 	finalizer := kubernetes.NewFinalizer(t.mgr.GetClient(), finalizerName)
 
 	// @step: are we deleting the resource
@@ -114,7 +115,7 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 		resource.Status.Status = corev1.FailureStatus
 	}
 
-	if err := t.mgr.GetClient().Status().Update(ctx, resource); err != nil {
+	if err := t.mgr.GetClient().Status().Patch(ctx, resource, client.MergeFrom(original)); err != nil {
 		logger.WithError(err).Error("updating the status of eks cluster")
 
 		return reconcile.Result{}, err
