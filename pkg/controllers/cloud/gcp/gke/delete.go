@@ -56,13 +56,6 @@ func (t *gkeCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 	finalizer := kubernetes.NewFinalizer(t.mgr.GetClient(), finalizerName)
 
 	result, err := func() (reconcile.Result, error) {
-		// @step: lets update the status of the resource to deleting
-		if resource.Status.Status != corev1.DeletingStatus {
-			resource.Status.Status = corev1.DeletingStatus
-
-			return reconcile.Result{Requeue: true}, nil
-		}
-
 		creds, err := t.GetCredentials(ctx, resource, request.Namespace)
 		if err != nil {
 			return reconcile.Result{}, err
@@ -87,16 +80,23 @@ func (t *gkeCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 			case "PROVISIONING", "RECONCILING":
 				return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
 			case "ERROR", "RUNNING":
+				// @step: lets update the status of the resource to deleting
+				if resource.Status.Status != corev1.DeletingStatus {
+					resource.Status.Status = corev1.DeletingStatus
+
+					return reconcile.Result{Requeue: true}, nil
+				}
+
 				if err := client.Delete(ctx); err != nil {
 					logger.WithError(err).Error("trying to delete the cluster")
-					resource.Status.Status = core.FailureStatus
+					resource.Status.Status = corev1.DeleteFailedStatus
 
 					return reconcile.Result{}, err
 				}
 
 				return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
 			case "STOPPING":
-				resource.Status.Status = core.DeletingStatus
+				resource.Status.Status = corev1.DeletingStatus
 
 				return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
 			default:

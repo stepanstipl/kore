@@ -167,12 +167,13 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 		case "RECONCILING":
 			resource.Status.Status = core.PendingStatus
 			return reconcile.Result{RequeueAfter: 60 * time.Second}, nil
-		case "ERROR":
-			resource.Status.Status = core.FailureStatus
-			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
 		case "STOPPING":
 			resource.Status.Status = core.DeletingStatus
 			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+		case "ERROR":
+			resource.Status.Status = core.FailureStatus
+			// @choice .. allowing it to run though here as it's in error but might require
+			// an update to fix
 		case "RUNNING":
 		default:
 			logger.Warn("cluster is in an unknown state, choosing to requeue instead")
