@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
@@ -67,7 +68,14 @@ func DeleteIfExists(ctx context.Context, cc client.Client, object runtime.Object
 	return nil
 }
 
-// CreateOrUpdate is responsible for updating a resouce
+// CreateOrUpdateObject is shorthand for the below object we dont return the object though
+func CreateOrUpdateObject(ctx context.Context, cc client.Client, object runtime.Object) error {
+	_, err := CreateOrUpdate(ctx, cc, object)
+
+	return err
+}
+
+// CreateOrUpdate is responsible for updating a resource
 // extended to carry out updates on specific types when patching is not suitable
 func CreateOrUpdate(ctx context.Context, cc client.Client, object runtime.Object) (runtime.Object, error) {
 	supported, object, err := TypeSpecificUpdate(ctx, cc, object)
@@ -75,24 +83,14 @@ func CreateOrUpdate(ctx context.Context, cc client.Client, object runtime.Object
 		return object, err
 	}
 
-	// default case
-	key, err := client.ObjectKeyFromObject(object)
+	original := object.DeepCopyObject()
+
+	existing, err := GetIfExists(ctx, cc, original)
 	if err != nil {
 		return nil, err
 	}
 
-	// @step: we first try and create the resource
-	if err := cc.Create(ctx, object); err != nil {
-		if !kerrors.IsAlreadyExists(err) {
-			return nil, err
-		}
-		// @step: we need to retrieve the current one
-		original := object.DeepCopyObject()
-
-		if err := cc.Get(ctx, key, original); err != nil {
-			return nil, err
-		}
-
+	if existing {
 		nobj, ok := object.(metav1.Object)
 		if !ok {
 			return nil, errors.New("object does not implement the metav1.Object")
@@ -106,7 +104,8 @@ func CreateOrUpdate(ctx context.Context, cc client.Client, object runtime.Object
 		return object, cc.Patch(ctx, object, client.MergeFrom(original))
 	}
 
-	return object, nil
+	// @step: we first try and create the resource
+	return object, cc.Create(ctx, object)
 }
 
 // PatchOrReplace is responsible for updating a resouce and optionally updating if patching fails
@@ -186,4 +185,13 @@ func TypeSpecificUpdate(ctx context.Context, cc client.Client, object runtime.Ob
 	default:
 		return false, object, nil
 	}
+}
+
+// IsRevisionError checks if a revision issue
+func IsRevisionError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	return strings.Contains(err.Error(), "resourceVersion should not be set on objects to be created")
 }
