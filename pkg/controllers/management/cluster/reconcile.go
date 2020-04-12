@@ -30,12 +30,12 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 const (
-	finalizerName               = "cluster.clusters.kore.appvia.io"
-	labelClusterResourceVersion = "cluster.clusters.kore.appvia.io/ResourceVersion"
+	finalizerName = "cluster.clusters.kore.appvia.io"
 )
 
 // Reconcile is the entrypoint for the reconciliation logic
@@ -54,9 +54,11 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
-		logger.WithError(err).Error("failed to get cluster")
+		logger.WithError(err).Error("trying to retrieve cluster from api")
+
 		return reconcile.Result{}, err
 	}
+	original := cluster.DeepCopy()
 
 	finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
 	if finalizer.NeedToAdd(cluster) {
@@ -82,12 +84,16 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		// GKE -> K8S, EKS -> VPC -> K8S etc.
 		components, err := createClusterComponents(cluster)
 		if err != nil {
+			logger.WithError(err).Error("trying to create the cluster components")
+
 			return controllers.NewCriticalError(err)
 		}
 
 		for componentName, c := range components {
 			if err := a.loadComponent(ctx, cluster, c); err != nil {
-				return fmt.Errorf("failed to load %s component: %w", componentName, err)
+				logger.WithError(err).Error("trying to load the cluster components")
+
+				return fmt.Errorf("trying to load %s component: %w", componentName, err)
 			}
 		}
 
@@ -101,10 +107,11 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		for componentName, c := range components {
 			if readyForReconcile(c, components) {
 				if err := a.createOrUpdateComponent(ctx, cluster, c); err != nil {
-					return fmt.Errorf("failed to create or update %s component: %w", componentName, err)
+					logger.WithError(err).Error("trying create or update the cluster components")
+
+					return fmt.Errorf("trying to create or update %s component: %w", componentName, err)
 				}
 			}
-
 			switch r := c.(type) {
 			case *clustersv1.Kubernetes:
 				if r.Status.Status == corev1.SuccessStatus {
@@ -120,6 +127,8 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 			}
 			if status.IsFailed() && message == "" {
 				if err := c.GetComponents().Error(); err != nil {
+					logger.WithError(err).Error("trying to retrieve the components")
+
 					message = err.Error()
 				}
 			}
@@ -135,32 +144,36 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		if ready {
 			cluster.Status.Status = corev1.SuccessStatus
 			cluster.Status.Message = "The cluster has been created successfully"
+
 			return nil
-		} else if cluster.Status.Components.HasStatus(corev1.FailureStatus) {
+		}
+
+		if cluster.Status.Components.HasStatus(corev1.FailureStatus) {
 			return controllers.NewCriticalError(errors.New("one or more components failed"))
 		}
 
 		return nil
 	}()
-
 	if err != nil {
 		logger.WithError(err).Error("failed to reconcile the cluster")
+
 		if controllers.IsCriticalError(err) {
 			cluster.Status.Status = corev1.FailureStatus
 			cluster.Status.Message = err.Error()
 		}
 	}
 
-	if err := a.mgr.GetClient().Status().Update(ctx, cluster); err != nil {
+	if err := a.mgr.GetClient().Status().Patch(ctx, cluster, client.MergeFrom(original)); err != nil {
 		logger.WithError(err).Error("failed to update the cluster status")
+
 		return reconcile.Result{}, err
 	}
 
 	if cluster.Status.Status == corev1.SuccessStatus || cluster.Status.Status == corev1.FailureStatus {
-		return reconcile.Result{}, nil
+		return reconcile.Result{RequeueAfter: 5 * time.Minute}, nil
 	}
 
-	return reconcile.Result{RequeueAfter: 5 * time.Second}, err
+	return reconcile.Result{RequeueAfter: 30 * time.Second}, err
 }
 
 func (a *Controller) loadComponent(ctx context.Context, cluster *clustersv1.Cluster, res clustersv1.ClusterComponent) error {
@@ -176,23 +189,24 @@ func (a *Controller) loadComponent(ctx context.Context, cluster *clustersv1.Clus
 	return nil
 }
 
-func (a *Controller) createOrUpdateComponent(ctx context.Context, cluster *clustersv1.Cluster, res clustersv1.ClusterComponent) error {
-	status, _ := res.GetStatus()
+// createOrUpdateComponent is responsible for maintaining the components
+func (a *Controller) createOrUpdateComponent(ctx context.Context, cluster *clustersv1.Cluster, resource clustersv1.ClusterComponent) error {
+	found, err := kubernetes.CheckIfExists(ctx, a.mgr.GetClient(), resource)
+	if err != nil {
+		return err
+	}
+	if !found {
+		setClusterResourceVersion(resource, cluster.ResourceVersion)
 
-	if status == "" {
-		setClusterResourceVersion(res, cluster.ResourceVersion)
-		res.SetStatus(corev1.PendingStatus)
-		if err := a.mgr.GetClient().Create(ctx, res); err != nil {
-			return err
-		}
-	} else {
-		if getClusterResourceVersion(res) != cluster.ResourceVersion {
-			setClusterResourceVersion(res, cluster.ResourceVersion)
-			res.SetStatus(corev1.PendingStatus)
-			if err := a.mgr.GetClient().Update(ctx, res); err != nil {
-				return err
-			}
-		}
+		return kubernetes.CreateOrUpdateObject(ctx, a.mgr.GetClient(), resource)
+	}
+
+	// @step: get the revision of the component
+	revision := getClusterResourceVersion(resource)
+	if revision != cluster.ResourceVersion {
+		setClusterResourceVersion(resource, cluster.ResourceVersion)
+
+		return kubernetes.CreateOrUpdateObject(ctx, a.mgr.GetClient(), resource)
 	}
 
 	return nil
