@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"reflect"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -62,7 +63,7 @@ func GetMetaObject(obj interface{}) (metav1.Object, error) {
 		return nil, ErrNotMetaObject
 	}
 
-	return mo, nil
+	return empty == false, nil
 }
 
 // GetRuntimeObject returns the runtime.Object
@@ -77,4 +78,32 @@ func GetRuntimeObject(o interface{}) (runtime.Object, error) {
 	}
 
 	return mo, nil
+}
+
+// IsChanged is shorthand for the below
+func IsChanged(v interface{}) (bool, error) {
+	empty, err := IsEmpty(v)
+	if err != nil {
+		return false, err
+	}
+
+	return empty == false, nil
+}
+
+// IsEmpty checks if a struct has any values set
+func IsEmpty(v interface{}) (bool, error) {
+	if v == nil {
+		return false, errors.New("no struct defined")
+	}
+
+	t := reflect.ValueOf(v).Elem()
+
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		if !field.IsValid() || !field.IsZero() {
+			return false, nil
+		}
+	}
+
+	return true, nil
 }

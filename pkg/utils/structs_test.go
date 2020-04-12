@@ -24,8 +24,10 @@ import (
 )
 
 type testStruct struct {
-	Name string `json:"name"`
-	Age  int    `json:"age"`
+	Name   string   `json:"name"`
+	Age    int      `json:"age"`
+	Things []string `json:"things"`
+	Ref    *string  `json:"things"`
 }
 
 func TestConvertToMapOK(t *testing.T) {
@@ -42,4 +44,28 @@ func TestConvertToMapOK(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, values)
 	assert.Equal(t, expected, values)
+}
+
+func TestIsStructEmpty(t *testing.T) {
+	message := "hello world"
+
+	cases := []struct {
+		Item     testStruct
+		Expected bool
+	}{
+		{Expected: true, Item: testStruct{}},
+		{Expected: false, Item: testStruct{Name: "hello"}},
+		{Expected: false, Item: testStruct{Age: 32}},
+		{Expected: false, Item: testStruct{Age: 32, Name: "hello"}},
+		{Expected: true, Item: testStruct{Things: nil}},
+		{Expected: false, Item: testStruct{Things: []string{"hello"}}},
+		{Expected: true, Item: testStruct{Ref: nil}},
+		{Expected: false, Item: testStruct{Ref: &message}},
+	}
+	for _, c := range cases {
+		empty, err := IsEmpty(&c.Item)
+		require.NoError(t, err)
+		assert.Equal(t, c.Expected, empty)
+	}
+
 }
