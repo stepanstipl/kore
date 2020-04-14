@@ -4775,11 +4775,11 @@
   },
   "v1.StaticOIDCIDP": {
    "required": [
+    "issuer",
+    "clientScopes",
     "userClaims",
     "clientID",
-    "clientSecret",
-    "issuer",
-    "clientScopes"
+    "clientSecret"
    ],
    "properties": {
     "clientID": {
@@ -5356,9 +5356,6 @@
    }
   },
   "v1alpha1.EKSNodeGroupStatus": {
-   "required": [
-    "nodeIAMRole"
-   ],
    "properties": {
     "conditions": {
      "type": "array",
@@ -5414,9 +5411,6 @@
    }
   },
   "v1alpha1.EKSStatus": {
-   "required": [
-    "roleARN"
-   ],
    "properties": {
     "caCertificate": {
      "type": "string"

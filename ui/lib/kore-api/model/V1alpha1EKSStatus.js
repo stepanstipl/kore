@@ -23,11 +23,10 @@ class V1alpha1EKSStatus {
     /**
      * Constructs a new <code>V1alpha1EKSStatus</code>.
      * @alias module:model/V1alpha1EKSStatus
-     * @param roleARN {String} 
      */
-    constructor(roleARN) { 
+    constructor() { 
         
-        V1alpha1EKSStatus.initialize(this, roleARN);
+        V1alpha1EKSStatus.initialize(this);
     }
 
     /**
@@ -35,8 +34,7 @@ class V1alpha1EKSStatus {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, roleARN) { 
-        obj['roleARN'] = roleARN;
+    static initialize(obj) { 
     }
 
     /**
