@@ -306,9 +306,16 @@ func schema_pkg_apis_eks_v1alpha1_EKSNodeGroupSpec(ref common.ReferenceCallback)
 							},
 						},
 					},
+					"version": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Version is the Kubernetes version to run for the kubelet",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"releaseVersion": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ReleaseVersion is the Kubernetes version to run for the kubelet",
+							Description: "ReleaseVersion is release version of the managed node ami",
 							Type:        []string{"string"},
 							Format:      "",
 						},
