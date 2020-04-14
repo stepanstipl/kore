@@ -157,11 +157,20 @@ class MyApp extends App {
           <meta name="viewport" content="initial-scale=1.0, width=device-width"/>
         </Head>
         <Layout style={{ minHeight:'100vh' }}>
-          <Header style={{ backgroundColor: '#002140' }}>
-            <div style={{ color: '#FFF', float: 'left', fontSize: '18px', marginLeft: '-25px' }}>
-              <Link href="/">
-                <a style={{ color: '#FFF' }}>Kore</a>
-              </Link>
+          <Header className='top-header'>
+            <div style={{ color: '#FFFFFF', float: 'left', marginLeft: '-25px' }}>
+              <div style={{ float: 'left' }}>
+                <Link href="/">
+                  <a style={{ color: '#FFFFFF' }}>
+                    <img src="/static/images/appvia-white.svg" height="28px" />
+                  </a>
+                </Link>
+              </div>
+              <div style={{ float: 'left', paddingLeft: '15px', paddingTop: '1px', fontSize: '20px' }}>
+                <Link href="/">
+                  <a style={{ color: '#FFFFFF' }}>Appvia Kore</a>
+                </Link>
+              </div>
             </div>
             <User user={props.user}/>
           </Header>

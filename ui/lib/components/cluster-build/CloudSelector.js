@@ -87,7 +87,7 @@ class CloudSelector extends React.Component {
             <Paragraph style={{ textAlign: 'center' }}>
               <img src="/static/images/EKS.png" height="80px" />
             </Paragraph>
-            <Paragraph strong style={{ marginTop: '20px' }}>Elastic Kubernetes Service</Paragraph>
+            <Paragraph strong style={{ textAlign: 'center', marginTop: '20px', marginBottom: '0' }}>Elastic Kubernetes Service</Paragraph>
             <Providers cloud="EKS" />
           </Card>
         </Col>
@@ -98,11 +98,11 @@ class CloudSelector extends React.Component {
             hoverable={false}
           >
             <ComingSoon />
-            <div style={{ textAlign: 'center', opacity: '0.3' }}>
-              <Paragraph>
+            <div style={{ opacity: '0.3' }}>
+              <Paragraph style={{ textAlign: 'center' }}>
                 <img src="/static/images/AKS.svg" height="80px" />
               </Paragraph>
-              <Paragraph strong style={{ marginTop: '20px' }}>Azure Kubernetes Service</Paragraph>
+              <Paragraph strong style={{ textAlign: 'center', marginTop: '20px', marginBottom: '0' }}>Azure Kubernetes Service</Paragraph>
             </div>
           </Card>
         </Col>
