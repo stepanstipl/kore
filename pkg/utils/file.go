@@ -17,15 +17,16 @@
 package utils
 
 import (
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 )
 
 // ReadFileOrStdin is responsible for reading from the file or stdin
-func ReadFileOrStdin(path string) ([]byte, error) {
+func ReadFileOrStdin(stdin io.Reader, path string) ([]byte, error) {
 	if path == "-" {
-		return ioutil.ReadAll(os.Stdin)
+		return ioutil.ReadAll(stdin)
 	}
 
 	return ioutil.ReadFile(path)
@@ -55,11 +56,13 @@ func EnsureFileExists(filename string) (bool, error) {
 	if exists {
 		return false, nil
 	}
+
 	if err := os.MkdirAll(filepath.Dir(filename), os.ModePerm); err != nil {
 		return false, err
 	}
 	if _, err := os.Create(filename); err != nil {
 		return false, err
 	}
+
 	return true, nil
 }
