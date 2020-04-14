@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/urfave/cli/v2"
 )
 
@@ -90,6 +91,26 @@ func GetGetCommand(config *Config) *cli.Command {
 		Usage:       "Retrieves one or more resources from the api",
 		Description: formatLongDescription(getLongDescription),
 		ArgsUsage:   "[TYPE] [NAME]",
-		Subcommands: commands,
+		Subcommands: append([]*cli.Command{
+			GetAdminsCommand(config),
+		}, commands...),
+	}
+}
+
+// GetAdminsCommand returns the get admins command
+func GetAdminsCommand(config *Config) *cli.Command {
+	return &cli.Command{
+		Name:  "admins",
+		Usage: "returns a list of administrators in kore",
+
+		Action: func(ctx *cli.Context) error {
+			req, rc, err := NewRequestForResource(config, kore.HubAdminTeam, "member", "")
+			if err != nil {
+				return err
+			}
+			req.Render(rc.Columns...).WithContext(ctx)
+
+			return req.Get()
+		},
 	}
 }
