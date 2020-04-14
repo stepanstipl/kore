@@ -17,6 +17,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -35,5 +36,5 @@ func main() {
 		os.Exit(1)
 	}
 
-	cmd.Execute()
+	_ = cmd.ExecuteContext(context.Background())
 }
