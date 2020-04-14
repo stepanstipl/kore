@@ -141,28 +141,27 @@ class VerifiedAllocatedResourceForm extends React.Component {
     return resource
   }
 
+  _process = async (err, values) => {
+    if (err) {
+      this.setFormSubmitting(false, 'Validation failed')
+      return
+    }
+    try {
+      const resourceResult = await this.putResource(values)
+      if (this.props.inlineVerification) {
+        return await this.verify(resourceResult)
+      }
+      return await this.props.handleSubmit(resourceResult)
+    } catch (err) {
+      console.error('Error submitting form', err)
+      this.setFormSubmitting(false, 'An error occurred saving the form, please try again')
+    }
+  }
+
   handleSubmit = e => {
     e.preventDefault()
-
     this.setFormSubmitting()
-
-    return this.props.form.validateFields(async (err, values) => {
-      if (err) {
-        this.setFormSubmitting(false, 'Validation failed')
-        return
-      }
-
-      try {
-        const resourceResult = await this.putResource(values)
-        if (this.props.inlineVerification) {
-          return await this.verify(resourceResult)
-        }
-        return await this.props.handleSubmit(resourceResult)
-      } catch (err) {
-        console.error('Error submitting form', err)
-        this.setFormSubmitting(false, 'An error occurred saving the form, please try again')
-      }
-    })
+    this.props.form.validateFields(this._process)
   }
 
   continueWithoutVerification = async () => {
