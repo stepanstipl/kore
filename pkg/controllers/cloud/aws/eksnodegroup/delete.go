@@ -51,10 +51,12 @@ func (n *ctrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 	original := resource.DeepCopy()
 
 	result, err := func() (reconcile.Result, error) {
+		// @step: we perform the following operations
 		ensure := []controllers.EnsureFunc{
 			n.EnsureDeletionStatus(resource),
 			n.EnsureDeletion(resource),
 		}
+
 		// @step: we iterate the handler operations, implement and act on result
 		for _, handler := range ensure {
 			result, err := handler(ctx)
@@ -72,6 +74,7 @@ func (n *ctrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 		logger.WithError(err).Error("attempting to delete the eks cluster")
 		resource.Status.Status = corev1.FailureStatus
 	}
+
 	// @step: we update always update the status before throwing any error
 	if err := n.mgr.GetClient().Status().Patch(ctx, resource, client.MergeFrom(original)); err != nil {
 		logger.WithError(err).Error("trying to update the resource status")
