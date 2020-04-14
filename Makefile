@@ -135,7 +135,8 @@ swagger: compose
 #@kill `cat $@ 2>/dev/null` 2>/dev/null && rm $@ 2>/dev/null
 
 swagger-json: api-wait
-	@curl --retry 20 --retry-delay 5 --retry-connrefused -sSL http://127.0.0.1:10080/swagger.json | jq > swagger.json
+	@curl --retry 20 --retry-delay 5 --retry-connrefused -sSL http://127.0.0.1:10080/swagger.json > swagger-raw.json
+	@cat swagger-raw.json | jq > swagger.json
 
 swagger-validate:
 	@echo "--> Validating the swagger api"
@@ -144,7 +145,7 @@ swagger-validate:
 swagger-apiclient:
 	@$(MAKE) swagger-json
 	@echo "--> Copy swagger JSON for UI to use for its auto-gen"
-	@cp swagger.json ui/kore-api-swagger.json
+	@cp swagger-raw.json ui/kore-api-swagger.json
 	@echo "--> Creating API client based on the swagger definition"
 	@go run github.com/go-swagger/go-swagger/cmd/swagger generate client -q -f swagger.json -c pkg/apiclient -m pkg/apiclient/models
 

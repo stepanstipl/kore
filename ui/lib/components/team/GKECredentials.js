@@ -25,10 +25,10 @@ class GKECredentials extends AutoRefreshComponent {
     const { gkeCredentials } = this.props
     const { status } = gkeCredentials
     if (status.status === 'Success') {
-      return message.success(`GCP Service Account for project "${gkeCredentials.spec.project}" verified successfully`)
+      return message.success(`GCP credentials for project "${gkeCredentials.spec.project}" verified successfully`)
     }
     if (status.status === 'Failure') {
-      return message.error(`GCP Service Account for project "${gkeCredentials.spec.project}" could not be verified`)
+      return message.error(`GCP credentials for project "${gkeCredentials.spec.project}" could not be verified`)
     }
   }
 

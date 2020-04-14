@@ -18,6 +18,7 @@ values.yaml
 
 # This is pulled down by the makefile:
 /swagger.json
+/swagger-raw.json
 
 # Git meld
 *.orig

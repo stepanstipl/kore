@@ -3,7 +3,7 @@ import moment from 'moment'
 import { List, Avatar, Icon, Typography, message, Tooltip } from 'antd'
 const { Text } = Typography
 
-import ResourceStatusTag from '../ResourceStatusTag'
+import ResourceVerificationStatus from '../ResourceVerificationStatus'
 import AutoRefreshComponent from './AutoRefreshComponent'
 
 class GCPOrganization extends AutoRefreshComponent {
@@ -46,7 +46,7 @@ class GCPOrganization extends AutoRefreshComponent {
 
     return (
       <List.Item key={organization.metadata.name} actions={[
-        <ResourceStatusTag key="status" resourceStatus={organization.status} />,
+        <ResourceVerificationStatus key="verification_status" resourceStatus={organization.status} />,
         <Text key="edit"><a onClick={editOrganization(organization)}><Icon type="eye" theme="filled"/> Edit</a></Text>
       ]}>
         <List.Item.Meta
