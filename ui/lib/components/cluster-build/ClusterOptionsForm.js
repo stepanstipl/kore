@@ -21,7 +21,7 @@ class ClusterOptionsForm extends React.Component {
 
   componentDidUpdate(prevProps) {
     // Reset the selected plan if the provider changes:
-    if (this.props.providers != prevProps.providers) {
+    if (this.props.providers !== prevProps.providers) {
       this.props.form.setFieldsValue({ 'plan': null })
     }
   }
@@ -95,7 +95,7 @@ class ClusterOptionsForm extends React.Component {
             </Radio.Group>
           )}
           {selectedPlan ?
-            <a style={{marginLeft: '20px'}} onClick={this.showPlanDetails(selectedPlan)}>View plan details</a> :
+            <a style={{ marginLeft: '20px' }} onClick={this.showPlanDetails(selectedPlan)}>View plan details</a> :
             null
           }
         </Form.Item>

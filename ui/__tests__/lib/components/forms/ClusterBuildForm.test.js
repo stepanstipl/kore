@@ -10,8 +10,8 @@ describe('ClusterBuildForm', () => {
 
   let plans = { 
     items: [
-      { spec: { kind: 'GKE' }, metadata: { name: 'GKE Development' }},
-      { spec: { kind: 'GKE' }, metadata: { name: 'GKE Production' }}
+      { spec: { kind: 'GKE' }, metadata: { name: 'GKE Development' } },
+      { spec: { kind: 'GKE' }, metadata: { name: 'GKE Production' } }
     ] 
   }
   let allocations = [
@@ -53,8 +53,8 @@ describe('ClusterBuildForm', () => {
       // Check API has been accessed as expected.
       apiScope.done()
       expect(form.state.plans).toEqual(plans)
-      expect(form.state.providers.GKE).toEqual([{...allocations[0]}])
-      expect(form.state.providers.EKS).toEqual([{...allocations[1]}])
+      expect(form.state.providers.GKE).toEqual([{ ...allocations[0] }])
+      expect(form.state.providers.EKS).toEqual([{ ...allocations[1] }])
     })
   })
 

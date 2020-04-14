@@ -113,7 +113,7 @@ class NewTeamForm extends React.Component {
             type="error"
             showIcon
             closable
-            style={{ marginBottom: '20px'}}
+            style={{ marginBottom: '20px' }}
           />
         )
       }
@@ -148,7 +148,7 @@ class NewTeamForm extends React.Component {
           type="info"
         />
         {!this.props.team ? (
-          <Form.Item style={{ marginTop: '20px'}}>
+          <Form.Item style={{ marginTop: '20px' }}>
             <Button type="primary" htmlType="submit" loading={this.state.submitting} disabled={this.disableButton(getFieldsError())}>Save</Button>
           </Form.Item>
         ) : null}

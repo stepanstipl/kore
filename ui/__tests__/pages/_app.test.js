@@ -125,7 +125,7 @@ describe('App', () => {
 
       it('returns props, including pageProps and user', async () => {
         const params = {
-          Component: { staticProps: { myProp: 'myValue' }},
+          Component: { staticProps: { myProp: 'myValue' } },
           ctx: {}
         }
         const props = await App.getInitialProps(params)

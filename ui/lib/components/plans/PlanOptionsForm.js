@@ -24,7 +24,7 @@ class PlanOptionsForm extends React.Component {
 
   constructor(props) {
     super(props)
-    this.state = {...PlanOptionsForm.initialState}
+    this.state = { ...PlanOptionsForm.initialState }
   }
 
   componentDidMountComplete = null
@@ -34,8 +34,8 @@ class PlanOptionsForm extends React.Component {
 
   componentDidUpdateComplete = null
   componentDidUpdate(prevProps) {
-    if (this.props.plan != prevProps.plan || this.props.team != prevProps.team) {
-      this.setState({...PlanOptionsForm.initialState})
+    if (this.props.plan !== prevProps.plan || this.props.team !== prevProps.team) {
+      this.setState({ ...PlanOptionsForm.initialState })
       this.componentDidUpdateComplete = this.fetchComponentData()
     }
   }
@@ -55,7 +55,7 @@ class PlanOptionsForm extends React.Component {
 
   onValueChange(name, value) {
     // Texture this back into a state update using the nifty lodash set function:
-    const newPlanValues = set({...this.state.planValues}, name, value)
+    const newPlanValues = set({ ...this.state.planValues }, name, value)
     this.setState({
       planValues: newPlanValues
     })

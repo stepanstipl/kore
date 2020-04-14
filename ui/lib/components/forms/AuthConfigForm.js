@@ -95,7 +95,7 @@ class AuthConfigForm extends React.Component {
             type="error"
             showIcon
             closable
-            style={{ marginBottom: '20px'}}
+            style={{ marginBottom: '20px' }}
           />
         )
       }
@@ -119,7 +119,7 @@ class AuthConfigForm extends React.Component {
             <Input placeholder="Client secret" type="password"/>,
           )}
         </Form.Item>
-        <Form.Item style={{ marginBottom: '0'}}>
+        <Form.Item style={{ marginBottom: '0' }}>
           <Button type="primary" htmlType="submit" disabled={this.disableButton(getFieldsError())}>{this.state.buttonText}</Button>
         </Form.Item>
       </Form>

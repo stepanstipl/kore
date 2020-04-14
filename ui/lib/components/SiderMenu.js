@@ -31,7 +31,7 @@ class SiderMenu extends React.Component {
     }
 
     const menuItem = ({ key, text, href, link, icon }) => (
-      <Menu.Item key={key} style={{margin: '0'}}>
+      <Menu.Item key={key} style={{ margin: '0' }}>
         <Link href={href || link} as={link}>
           <a className="collapsed"><Icon type={icon} />{text}</a>
         </Link>

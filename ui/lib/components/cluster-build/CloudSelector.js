@@ -46,7 +46,7 @@ class CloudSelector extends React.Component {
       }
       const cloudProviderCount = providers[cloud].length
       return (
-        <Paragraph style={{textAlign: 'center', marginTop: '20px', marginBottom: '0'}}>
+        <Paragraph style={{ textAlign: 'center', marginTop: '20px', marginBottom: '0' }}>
           {cloudProviderCount > 0 ?
             <Tag color="#87d068">{cloudProviderCount} providers</Tag> :
             <Text type="warning">No providers</Text>

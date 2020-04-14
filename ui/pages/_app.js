@@ -156,18 +156,18 @@ class MyApp extends App {
           <meta charSet="utf-8"/>
           <meta name="viewport" content="initial-scale=1.0, width=device-width"/>
         </Head>
-        <Layout style={{minHeight:'100vh'}}>
-          <Header style={{backgroundColor: '#002140'}}>
-            <div style={{color: '#FFF', float: 'left', fontSize: '18px', marginLeft: '-25px'}}>
+        <Layout style={{ minHeight:'100vh' }}>
+          <Header style={{ backgroundColor: '#002140' }}>
+            <div style={{ color: '#FFF', float: 'left', fontSize: '18px', marginLeft: '-25px' }}>
               <Link href="/">
                 <a style={{ color: '#FFF' }}>Kore</a>
               </Link>
             </div>
             <User user={props.user}/>
           </Header>
-          <Layout hasSider="true" style={{minHeight:'100vh'}}>
+          <Layout hasSider="true" style={{ minHeight:'100vh' }}>
             <SiderMenu hide={hideSider} isAdmin={isAdmin} userTeams={this.state.userTeams} otherTeams={props.otherTeams}/>
-            <Content style={{background: '#fff', padding: 24, minHeight: 280}}>
+            <Content style={{ background: '#fff', padding: 24, minHeight: 280 }}>
               <Component {...this.props.pageProps} user={this.props.user} teamAdded={this.teamAdded} />
             </Content>
           </Layout>

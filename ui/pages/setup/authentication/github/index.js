@@ -152,7 +152,7 @@ class GithubSetupPage extends React.Component {
                 type="error"
                 showIcon
                 closable
-                style={{ marginBottom: '20px'}}
+                style={{ marginBottom: '20px' }}
               />
             ) : null}
             <WrappedConfigureKoreForm wrappedComponentRef={(inst) => this.configureKoreFormRef = inst} />

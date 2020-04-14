@@ -234,7 +234,7 @@ class EKSCredentialsForm extends React.Component {
             type="error"
             showIcon
             closable
-            style={{ marginBottom: '20px'}}
+            style={{ marginBottom: '20px' }}
           />
         )
       }
@@ -349,7 +349,7 @@ class EKSCredentialsForm extends React.Component {
             )}
 
           </Card>
-          <Form.Item style={{ marginBottom: '0'}}>
+          <Form.Item style={{ marginBottom: '0' }}>
             <Button type="primary" htmlType="submit" loading={submitting} disabled={this.disableButton(getFieldsError())}>{saveButtonText || 'Save'}</Button>
             {inlineVerificationFailed ? (
               <Button onClick={this.continueWithoutVerification} disabled={this.disableButton(getFieldsError())} style={{ marginLeft: '10px' }}>Continue without verification</Button>

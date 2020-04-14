@@ -46,7 +46,7 @@ class AuditPage extends React.Component {
   render() {
     return (
       <div>
-        <Breadcrumb items={[{text: 'Audit'}, {text: 'Audit Viewer'}]} />
+        <Breadcrumb items={[{ text: 'Audit' }, { text: 'Audit Viewer' }]} />
         <AuditViewer items={this.state.events} />
       </div>
     )
