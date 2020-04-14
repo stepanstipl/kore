@@ -47,16 +47,61 @@ class V1alpha1Infra {
         if (data) {
             obj = obj || new V1alpha1Infra();
 
+            if (data.hasOwnProperty('ipv4EgressAddresses')) {
+                obj['ipv4EgressAddresses'] = ApiClient.convertToType(data['ipv4EgressAddresses'], ['String']);
+            }
+            if (data.hasOwnProperty('privateSubnetIDs')) {
+                obj['privateSubnetIDs'] = ApiClient.convertToType(data['privateSubnetIDs'], ['String']);
+            }
+            if (data.hasOwnProperty('publicSubnetIDs')) {
+                obj['publicSubnetIDs'] = ApiClient.convertToType(data['publicSubnetIDs'], ['String']);
+            }
             if (data.hasOwnProperty('securityGroupIDs')) {
                 obj['securityGroupIDs'] = ApiClient.convertToType(data['securityGroupIDs'], ['String']);
-            }
-            if (data.hasOwnProperty('subnetIDs')) {
-                obj['subnetIDs'] = ApiClient.convertToType(data['subnetIDs'], ['String']);
             }
         }
         return obj;
     }
 
+/**
+     * @return {Array.<String>}
+     */
+    getIpv4EgressAddresses() {
+        return this.ipv4EgressAddresses;
+    }
+
+    /**
+     * @param {Array.<String>} ipv4EgressAddresses
+     */
+    setIpv4EgressAddresses(ipv4EgressAddresses) {
+        this['ipv4EgressAddresses'] = ipv4EgressAddresses;
+    }
+/**
+     * @return {Array.<String>}
+     */
+    getPrivateSubnetIDs() {
+        return this.privateSubnetIDs;
+    }
+
+    /**
+     * @param {Array.<String>} privateSubnetIDs
+     */
+    setPrivateSubnetIDs(privateSubnetIDs) {
+        this['privateSubnetIDs'] = privateSubnetIDs;
+    }
+/**
+     * @return {Array.<String>}
+     */
+    getPublicSubnetIDs() {
+        return this.publicSubnetIDs;
+    }
+
+    /**
+     * @param {Array.<String>} publicSubnetIDs
+     */
+    setPublicSubnetIDs(publicSubnetIDs) {
+        this['publicSubnetIDs'] = publicSubnetIDs;
+    }
 /**
      * @return {Array.<String>}
      */
@@ -70,31 +115,28 @@ class V1alpha1Infra {
     setSecurityGroupIDs(securityGroupIDs) {
         this['securityGroupIDs'] = securityGroupIDs;
     }
-/**
-     * @return {Array.<String>}
-     */
-    getSubnetIDs() {
-        return this.subnetIDs;
-    }
-
-    /**
-     * @param {Array.<String>} subnetIDs
-     */
-    setSubnetIDs(subnetIDs) {
-        this['subnetIDs'] = subnetIDs;
-    }
 
 }
+
+/**
+ * @member {Array.<String>} ipv4EgressAddresses
+ */
+V1alpha1Infra.prototype['ipv4EgressAddresses'] = undefined;
+
+/**
+ * @member {Array.<String>} privateSubnetIDs
+ */
+V1alpha1Infra.prototype['privateSubnetIDs'] = undefined;
+
+/**
+ * @member {Array.<String>} publicSubnetIDs
+ */
+V1alpha1Infra.prototype['publicSubnetIDs'] = undefined;
 
 /**
  * @member {Array.<String>} securityGroupIDs
  */
 V1alpha1Infra.prototype['securityGroupIDs'] = undefined;
-
-/**
- * @member {Array.<String>} subnetIDs
- */
-V1alpha1Infra.prototype['subnetIDs'] = undefined;
 
 
 

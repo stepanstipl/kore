@@ -109,7 +109,7 @@ class PlanOption extends React.Component {
             return <InputNumber value={value} readOnly={!editable} disabled={!editable} onChange={(v) => onChange(name, v)} />
           }
           case 'array': {
-            const values = value !== null ? value : []
+            const values = value ? value : []
             if (property.items.type !== 'array' && property.items.type !== 'object') {
               return <Select mode="tags" tokenSeparators={[',']} value={values} readOnly={!editable} disabled={!editable} onChange={(v) => onChange(name, v)} />
             } else {
