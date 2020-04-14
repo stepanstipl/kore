@@ -70,6 +70,9 @@ type V1alpha1EKSNodeGroupSpec struct {
 
 	// tags
 	Tags map[string]string `json:"tags,omitempty"`
+
+	// version
+	Version string `json:"version,omitempty"`
 }
 
 // Validate validates this v1alpha1 e k s node group spec
