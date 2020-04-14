@@ -1861,6 +1861,15 @@
       "name": "name",
       "in": "path",
       "required": true
+     },
+     {
+      "description": "The definition for GKE Credentials",
+      "name": "body",
+      "in": "body",
+      "required": true,
+      "schema": {
+       "$ref": "#/definitions/v1alpha1.GKECredentials"
+      }
      }
     ],
     "responses": {
@@ -2592,7 +2601,7 @@
      "application/json"
     ],
     "summary": "Is the used tor return a list of gcp organizations",
-    "operationId": "findOrganizations",
+    "operationId": "ListGCPOrganizations",
     "parameters": [
      {
       "type": "string",
@@ -2627,7 +2636,7 @@
      "application/json"
     ],
     "summary": "Is the used tor return a specific gcp organization",
-    "operationId": "findOrganization",
+    "operationId": "GetGCPOrganization",
     "parameters": [
      {
       "type": "string",
@@ -2667,7 +2676,7 @@
      "application/json"
     ],
     "summary": "Is used to provision or update a gcp organization",
-    "operationId": "updateOrganization",
+    "operationId": "UpdateGCPOrganization",
     "parameters": [
      {
       "type": "string",
@@ -2682,6 +2691,15 @@
       "name": "name",
       "in": "path",
       "required": true
+     },
+     {
+      "description": "The definition for GCP organization",
+      "name": "body",
+      "in": "body",
+      "required": true,
+      "schema": {
+       "$ref": "#/definitions/v1alpha1.Organization"
+      }
      }
     ],
     "responses": {
@@ -2707,7 +2725,7 @@
      "application/json"
     ],
     "summary": "Is used to delete a managed gcp organization",
-    "operationId": "deleteOrganization",
+    "operationId": "DeleteGCPOrganization",
     "parameters": [
      {
       "type": "string",
