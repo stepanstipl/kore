@@ -19,6 +19,7 @@ package korectl
 import (
 	"bytes"
 	"fmt"
+	"os"
 
 	"github.com/appvia/kore/pkg/utils"
 
@@ -41,7 +42,7 @@ func GetApplyCommand(config *Config) *cli.Command {
 		Action: func(ctx *cli.Context) error {
 			for _, file := range ctx.StringSlice("file") {
 				// @step: read in the content of the file
-				content, err := utils.ReadFileOrStdin(file)
+				content, err := utils.ReadFileOrStdin(os.Stdin, file)
 				if err != nil {
 					return err
 				}
