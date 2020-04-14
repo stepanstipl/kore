@@ -68,7 +68,7 @@ type EKSStatus struct {
 	// Endpoint is the endpoint of the cluster
 	Endpoint string `json:"endpoint,omitempty"`
 	// RoleARN is the role ARN which provides permissions to EKS
-	RoleARN string `json:"roleARN"`
+	RoleARN string `json:"roleARN,omitempty"`
 	// Status provides a overall status
 	Status core.Status `json:"status,omitempty"`
 }

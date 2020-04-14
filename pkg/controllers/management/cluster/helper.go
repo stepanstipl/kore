@@ -25,6 +25,7 @@ import (
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	gkev1alpha1 "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -101,19 +102,22 @@ func createProviderComponents(c *clustersv1.Cluster) ([]clustersv1.ClusterCompon
 
 func getClusterResourceVersion(c clustersv1.ClusterComponent) string {
 	metaAccessor, _ := meta.Accessor(c)
-	return metaAccessor.GetLabels()[labelClusterResourceVersion]
+
+	return metaAccessor.GetAnnotations()[kore.Label("clusterRevision")]
 }
 
 func setClusterResourceVersion(c clustersv1.ClusterComponent, resourceVersion string) {
 	metaAccessor, _ := meta.Accessor(c)
-	if metaAccessor.GetLabels() == nil {
-		metaAccessor.SetLabels(map[string]string{})
+	if metaAccessor.GetAnnotations() == nil {
+		metaAccessor.SetAnnotations(map[string]string{})
 	}
-	metaAccessor.GetLabels()[labelClusterResourceVersion] = resourceVersion
+
+	metaAccessor.GetAnnotations()[kore.Label("clusterRevision")] = resourceVersion
 }
 
 func getComponentName(c clustersv1.ClusterComponent) string {
 	meta, _ := kubernetes.GetMeta(c)
+
 	return c.GetObjectKind().GroupVersionKind().Kind + "/" + meta.Name
 }
 

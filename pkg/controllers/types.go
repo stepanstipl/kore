@@ -19,14 +19,13 @@ package controllers
 import (
 	"context"
 
+	"github.com/appvia/kore/pkg/kore"
+
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-
-	"github.com/appvia/kore/pkg/kore"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	"k8s.io/client-go/rest"
 )
 
 // NameInterface defines a requirement to implement it's name
@@ -77,3 +76,6 @@ type Controller interface {
 type StatusWriter interface {
 	client.StatusWriter
 }
+
+// EnsureFunc defines a method to ensure a state
+type EnsureFunc func(context.Context) (reconcile.Result, error)

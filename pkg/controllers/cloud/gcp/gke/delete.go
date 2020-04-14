@@ -22,6 +22,7 @@ import (
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
+	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
@@ -81,6 +82,13 @@ func (t *gkeCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 
 		if found {
 			return false, client.Delete(ctx)
+		}
+
+		// @step: we can now delete the sysadmin token
+		if err := controllers.DeleteClusterCredentialsSecret(ctx,
+			t.mgr.GetClient(), resource.Namespace, resource.Name); err != nil {
+
+			return false, err
 		}
 
 		return false, nil

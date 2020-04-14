@@ -88,7 +88,7 @@ type EKSNodeGroupStatus struct {
 	// Conditions is the status of the components
 	Conditions core.Components `json:"conditions,omitempty"`
 	// NodeIAMRole is the IAM role assumed by the worker nodes themselves
-	NodeIAMRole string `json:"nodeIAMRole"`
+	NodeIAMRole string `json:"nodeIAMRole,omitempty"`
 	// Status provides a overall status
 	Status core.Status `json:"status,omitempty"`
 }

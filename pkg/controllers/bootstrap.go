@@ -102,15 +102,13 @@ func (b *bootstrapImpl) Run(ctx context.Context, cc client.Client) error {
 	}
 	logger.Debug("cluster kubeapi is available now, continuing bootstrapping")
 
-	logger.Info("creating cloud specifics...")
-
 	if err := b.provider.Run(ctx, cc); err != nil {
 		logger.WithError(err).Error("failed to create the cloud spcific entries")
 
 		return err
 	}
+	logger.Debug("creating the kore-admin service account for cluster")
 
-	logger.Info("creating the kore-admin service account for cluster")
 	// @step: create or retrieve the kore-sysadmin secret token
 	creds, err := CreateSysadminCredential(cluster.Client)
 	if err != nil {
@@ -134,8 +132,9 @@ func (b *bootstrapImpl) Run(ctx context.Context, cc client.Client) error {
 
 		return err
 	}
+	logger.Debug("successfully created the kubernetes managed secret")
 
-	logger.Info("successfully bootstrapped the cluster")
+	logger.Debug("successfully bootstrapped the cluster")
 
 	return nil
 }

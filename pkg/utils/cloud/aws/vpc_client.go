@@ -76,9 +76,7 @@ func (c *VPCClient) Ensure() error {
 	// Now check it's resources global resources exist
 	if !found {
 		// time to create
-		o, err := c.svc.CreateVpc(&ec2.CreateVpcInput{
-			CidrBlock: aws.String(c.VPC.CidrBlock),
-		})
+		o, err := c.svc.CreateVpc(&ec2.CreateVpcInput{CidrBlock: aws.String(c.VPC.CidrBlock)})
 		if err != nil {
 
 			return fmt.Errorf("error creating a new aws vpc %s - %s", c.VPC.Name, err)
@@ -90,7 +88,6 @@ func (c *VPCClient) Ensure() error {
 			c.VPC.Tags,
 		)
 		if err != nil {
-
 			return fmt.Errorf("error tagging new aws vpc %s, id %s - %s", c.VPC.Name, *o.Vpc.VpcId, err)
 		}
 		c.VPC.awsObj = o.Vpc

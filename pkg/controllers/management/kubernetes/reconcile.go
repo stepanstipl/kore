@@ -158,8 +158,15 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 				// @check if the cloud provider has failed
 				if a.Config().EnableClusterProviderCheck {
-					if err := a.CheckProviderStatus(context.Background(), object); err != nil {
+					ready, err := a.CheckProviderStatus(context.Background(), object)
+					if err != nil {
 						logger.WithError(err).Warn("error getting cluster provider status")
+
+						return reconcile.Result{}, err
+					}
+					if !ready {
+						logger.Debug("cloud provider is not ready yet, waiting")
+
 						return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
 					}
 				}
@@ -454,7 +461,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 }
 
 // CheckProviderStatus checks the status of the provider behind the cluster
-func (a k8sCtrl) CheckProviderStatus(ctx context.Context, resource *clustersv1.Kubernetes) error {
+func (a k8sCtrl) CheckProviderStatus(ctx context.Context, resource *clustersv1.Kubernetes) (bool, error) {
 	logger := log.WithFields(log.Fields{
 		"name":      resource.Name,
 		"namespace": resource.Namespace,
@@ -476,8 +483,9 @@ func (a k8sCtrl) CheckProviderStatus(ctx context.Context, resource *clustersv1.K
 
 		if p.Status.Conditions == nil {
 			err := fmt.Errorf("Cluster %s does not have a status yet", resource.Name)
-			logger.WithError(err).Error("trying to check the cluster status")
-			return err
+			logger.WithError(err).Warn("trying to check the cluster status")
+
+			return false, nil
 		}
 
 		// @check if we have a provider status for provisioning yet
@@ -485,7 +493,7 @@ func (a k8sCtrl) CheckProviderStatus(ctx context.Context, resource *clustersv1.K
 		if !found {
 			logger.Warn("eks cluster has no status, throwing an error until we know")
 
-			return fmt.Errorf("eks cluster has no status")
+			return false, nil
 		}
 
 		if status.Status == corev1.FailureStatus {
@@ -502,8 +510,10 @@ func (a k8sCtrl) CheckProviderStatus(ctx context.Context, resource *clustersv1.K
 			})
 			resource.Status.Status = corev1.FailureStatus
 
-			return errors.New("cloud provider is in a failed state")
+			return false, errors.New("cloud provider is in a failed state")
 		}
+
+		return true, nil
 	case "GKE":
 		p := &gke.GKE{}
 		if err := a.mgr.GetClient().Get(ctx, key, p); err != nil {
@@ -518,14 +528,14 @@ func (a k8sCtrl) CheckProviderStatus(ctx context.Context, resource *clustersv1.K
 			})
 			resource.Status.Status = corev1.FailureStatus
 
-			return fmt.Errorf("gke cluster is in a failing state")
+			return false, fmt.Errorf("gke cluster is in a failing state")
 		}
 
 		if p.Status.Conditions == nil {
 			err := fmt.Errorf("Cluster %s does not have a status yet", resource.Name)
 			logger.WithError(err).Error("trying to check the cluster status")
 
-			return err
+			return false, nil
 		}
 
 		// @check if we have a provider status for provisioning yet
@@ -533,12 +543,12 @@ func (a k8sCtrl) CheckProviderStatus(ctx context.Context, resource *clustersv1.K
 		if !found {
 			logger.Warn("gke cluster has no status, throwing an error until we know")
 
-			return fmt.Errorf("gke cluster has no status")
+			return false, nil
 		}
 
 		switch status.Status {
 		case corev1.SuccessStatus:
-			return nil
+			return true, nil
 		case corev1.FailureStatus:
 			message := status.Message
 			if message == "" {
@@ -553,7 +563,7 @@ func (a k8sCtrl) CheckProviderStatus(ctx context.Context, resource *clustersv1.K
 			})
 			resource.Status.Status = corev1.FailureStatus
 
-			return errors.New("cloud provider is in a failed state")
+			return false, errors.New("cloud provider is in a failed state")
 
 		case corev1.PendingStatus:
 			resource.Status.Components.SetCondition(corev1.Component{
@@ -561,8 +571,9 @@ func (a k8sCtrl) CheckProviderStatus(ctx context.Context, resource *clustersv1.K
 				Message: "GKE Cluster is a pending state",
 				Status:  corev1.PendingStatus,
 			})
+			logger.Debug("cloud provider is in a pending state")
 
-			return errors.New("cloud provider is in pending state")
+			return false, nil
 
 		default:
 			resource.Status.Components.SetCondition(corev1.Component{
@@ -570,12 +581,11 @@ func (a k8sCtrl) CheckProviderStatus(ctx context.Context, resource *clustersv1.K
 				Message: "GKE Cluster is an unknown state",
 				Status:  corev1.PendingStatus,
 			})
+			logger.Debug("cloud provider is in a unknown state")
 
-			return errors.New("cloud provider is in unknown state")
+			return false, nil
 		}
-	default:
-		logger.Warn("unknown cloud provider, ignoring the check")
 	}
 
-	return nil
+	return false, fmt.Errorf("cluster built with an unknown provider: %s", resource.Spec.Provider.Kind)
 }

@@ -18,11 +18,10 @@ package eksnodegroup
 
 import (
 	"context"
-	"fmt"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
-	"github.com/appvia/kore/pkg/utils/cloud/aws"
+	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
+	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
@@ -31,20 +30,17 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-// Delete is responsible for deleting the aws eks cluster
-func (n *eksNodeGroupCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
+// Delete is responsible for deleting the aws eks nodegroup
+func (n *ctrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 	ctx := context.Background()
-
 	logger := log.WithFields(log.Fields{
 		"name":      request.NamespacedName.Name,
 		"namespace": request.NamespacedName.Namespace,
-		"team":      request.NamespacedName.Name,
 	})
 	logger.Info("attempting to delete eks cluster nodegroup")
 
-	// @step: first we need to check if we have access to the credentials
-
-	resource := &eksv1alpha1.EKSNodeGroup{}
+	// @step: retrieve the resource from the api
+	resource := &eks.EKSNodeGroup{}
 	if err := n.mgr.GetClient().Get(ctx, request.NamespacedName, resource); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
@@ -52,66 +48,52 @@ func (n *eksNodeGroupCtrl) Delete(request reconcile.Request) (reconcile.Result, 
 
 		return reconcile.Result{}, err
 	}
-
 	original := resource.DeepCopy()
 
-	finalizer := kubernetes.NewFinalizer(n.mgr.GetClient(), finalizerName)
-
-	requeue, err := func() (bool, error) {
-		creds, err := n.GetCredentials(ctx, resource, request.NamespacedName.Name)
-		if err != nil {
-			return false, err
+	result, err := func() (reconcile.Result, error) {
+		ensure := []controllers.EnsureFunc{
+			n.EnsureDeletionStatus(resource),
+			n.EnsureDeletion(resource),
+		}
+		// @step: we iterate the handler operations, implement and act on result
+		for _, handler := range ensure {
+			result, err := handler(ctx)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+			if result.Requeue || result.RequeueAfter > 0 {
+				return result, nil
+			}
 		}
 
-		// @step: create a cloud client for us
-		client, err := aws.NewBasicClient(creds, resource.Spec.Cluster.Name, resource.Spec.Region)
-		if err != nil {
-			return false, err
-		}
-
-		// @step: check if the cluster exists and if so we wait or the operation or the exit
-		found, err := client.NodeGroupExists(resource)
-		if err != nil {
-			return false, fmt.Errorf("checking if cluster nodegroup exists: %s", err)
-		}
-
-		// @step: lets update the status of the resource to deleting
-		if resource.Status.Status != corev1.DeletingStatus {
-			resource.Status.Status = corev1.DeletingStatus
-
-			return true, nil
-		}
-
-		if found {
-			err := client.DeleteNodeGroup(resource)
-			// TODO know which errors re should retry / reque
-			return false, err
-		}
-
-		return false, nil
+		return reconcile.Result{}, nil
 	}()
 	if err != nil {
-		logger.WithError(err).Error("attempting to delete the cluster nodegroup")
+		logger.WithError(err).Error("attempting to delete the eks cluster")
+		resource.Status.Status = corev1.FailureStatus
+	}
+	// @step: we update always update the status before throwing any error
+	if err := n.mgr.GetClient().Status().Patch(ctx, resource, client.MergeFrom(original)); err != nil {
+		logger.WithError(err).Error("trying to update the resource status")
 
 		return reconcile.Result{}, err
 	}
-	if requeue {
-		if err := n.mgr.GetClient().Status().Patch(ctx, resource, client.MergeFrom(original)); err != nil {
-			logger.WithError(err).Error("trying to update the resource status")
 
-			return reconcile.Result{}, err
-		}
-
-		return reconcile.Result{Requeue: true}, nil
+	if err != nil {
+		return reconcile.Result{}, err
 	}
 
+	if result.Requeue || result.RequeueAfter > 0 {
+		return result, nil
+	}
+
+	// @cool we can remove the finalizer now
+	finalizer := kubernetes.NewFinalizer(n.mgr.GetClient(), finalizerName)
 	if err := finalizer.Remove(resource); err != nil {
-		logger.WithError(err).Error("removing the finalizer")
+		logger.WithError(err).Error("removing the finalizer from eks resource")
 
 		return reconcile.Result{}, err
 	}
 
-	logger.Info("successfully deleted the cluster nodegroup")
-
-	return reconcile.Result{}, nil
+	return result, nil
 }

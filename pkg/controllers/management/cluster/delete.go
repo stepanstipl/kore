@@ -27,6 +27,7 @@ import (
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -44,10 +45,13 @@ func (a Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (re
 		err := finalizer.Remove(cluster)
 		if err != nil {
 			logger.WithError(err).Error("failed to remove the finalizer from the cluster")
+
+			return reconcile.Result{}, err
 		}
 
-		return reconcile.Result{}, err
+		return reconcile.Result{}, nil
 	}
+	original := cluster.DeepCopyObject()
 
 	err := func() error {
 		cluster.Status.Status = corev1.DeletingStatus
@@ -114,7 +118,7 @@ func (a Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (re
 		}
 	}
 
-	if err := a.mgr.GetClient().Status().Update(ctx, cluster); err != nil {
+	if err := a.mgr.GetClient().Status().Patch(ctx, cluster, client.MergeFrom(original)); err != nil {
 		logger.WithError(err).Error("failed to update the cluster status")
 		return reconcile.Result{}, err
 	}
@@ -128,5 +132,5 @@ func (a Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (re
 		return reconcile.Result{}, nil
 	}
 
-	return reconcile.Result{RequeueAfter: 5 * time.Second}, err
+	return reconcile.Result{RequeueAfter: 30 * time.Second}, err
 }

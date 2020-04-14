@@ -17,6 +17,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -27,13 +28,10 @@ import (
 
 // IamClient describes a aws session and Iam service
 type IamClient struct {
-	// sess is the AWS session
-	sess *session.Session
+	// session is the AWS session
+	session *session.Session
 	// svc is the iam service
 	svc *iam.IAM
-	// namePrefix is the common name of the objects managed
-	namePrefix string
-	myARN      *string
 }
 
 const (
@@ -41,7 +39,8 @@ const (
 	amazonEKSClusterPolicy = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
 	amazonEKSServicePolicy = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
 
-	clusterStsTrustPolicy = `{
+	// ClusterStsTrustPolicy provides the trust policy for the EKS cluster Role
+	ClusterStsTrustPolicy = `{
 		"Version": "2012-10-17",
 		"Statement": [
 		{
@@ -81,114 +80,116 @@ const (
 )
 
 // NewIamClient will create a new IamClient
-func NewIamClient(sess *session.Session, namePrefix string) *IamClient {
-	return &IamClient{
-		sess:       sess,
-		svc:        iam.New(sess),
-		namePrefix: namePrefix,
-	}
+func NewIamClient(credentials Credentials) *IamClient {
+	session := getNewSession(credentials, "")
+
+	return &IamClient{session: session, svc: iam.New(session)}
 }
 
-func (i *IamClient) getMyARN() (*string, error) {
-	if i.myARN == nil {
-		// Get currewnt user
-		guo, err := i.svc.GetUser(&iam.GetUserInput{})
-		if err != nil {
-			return nil, err
-		}
-		i.myARN = guo.User.Arn
-	}
-	return i.myARN, nil
-}
-
-// EnsureEksClusterRole will return the cluster role and the nodepool role
-func (i *IamClient) EnsureEksClusterRole() (*iam.Role, error) {
-	arn, err := i.getMyARN()
+// GetARN returns the ARN from the client
+func (i *IamClient) GetARN() (string, error) {
+	resp, err := i.svc.GetUser(&iam.GetUserInput{})
 	if err != nil {
-		return nil, fmt.Errorf("cannot create eks roles as error obtaining my arn - %s", err)
+		return "", err
 	}
-	clusterSts := fmt.Sprintf(clusterStsTrustPolicy, *arn)
-	cr, err := i.ensureRole("eks-cluster", []string{
-		amazonEKSClusterPolicy,
-		amazonEKSServicePolicy,
-	}, clusterSts)
+
+	return aws.StringValue(resp.User.Arn), nil
+}
+
+// EnsureEKSClusterRole will return the cluster role and the nodepool role
+func (i *IamClient) EnsureEKSClusterRole(ctx context.Context, prefix string) (*iam.Role, error) {
+	arn, err := i.GetARN()
 	if err != nil {
 		return nil, err
 	}
-	return cr, nil
+	policy := fmt.Sprintf(ClusterStsTrustPolicy, arn)
+	policies := []string{
+		amazonEKSClusterPolicy,
+		amazonEKSServicePolicy,
+	}
+
+	return i.EnsureRole(ctx, prefix+"-eks-cluster", policies, policy)
 }
 
-// EnsureEksNodePoolRole will create a nodepool eks role
-func (i *IamClient) EnsureEksNodePoolRole() (*iam.Role, error) {
-	npr, err := i.ensureRole("eks-nodepool", []string{
+// EnsureEKSNodePoolRole will create a nodepool eks role
+func (i *IamClient) EnsureEKSNodePoolRole(ctx context.Context, prefix string) (*iam.Role, error) {
+	policies := []string{
 		amazonEKSWorkerNodePolicy,
 		amazonEC2ContainerRegistryReadOnly,
 		amazonEKSCNIPolicy,
-	}, nodeStsTrustPolicy)
+	}
+
+	return i.EnsureRole(ctx, prefix+"-eks-nodepool", policies, nodeStsTrustPolicy)
+}
+
+// EnsureRole is responsible for creating a role
+func (i *IamClient) EnsureRole(ctx context.Context, name string, policies []string, stsPolicy string) (*iam.Role, error) {
+	role, err := i.RoleExists(ctx, name)
 	if err != nil {
 		return nil, err
 	}
-	return npr, nil
-}
+	if role != nil {
+		return role, nil
+	}
 
-func (i *IamClient) ensureRole(name string, policyARNs []string, stsPolicy string) (*iam.Role, error) {
-	var r *iam.Role
-	rn := fmt.Sprintf("%s-%s", i.namePrefix, name)
-	r, err := func(rn string) (*iam.Role, error) {
-		gr, err := i.svc.GetRole(&iam.GetRoleInput{
-			RoleName: &rn,
-		})
-		if err != nil {
-			if aerr, ok := err.(awserr.Error); ok {
-				switch aerr.Code() {
-				case iam.ErrCodeNoSuchEntityException:
-					// OK not found
-					return nil, nil
-				}
-			}
-			return nil, err
-		}
-		return gr.Role, nil
-	}(rn)
-	if err != nil {
-		return nil, fmt.Errorf("error looking up aws iam role %s - %s", rn, err)
-	}
-	if r == nil {
-		// create the role
-		cro, err := i.svc.CreateRole(&iam.CreateRoleInput{
-			AssumeRolePolicyDocument: aws.String(stsPolicy),
-			Path:                     aws.String("/"),
-			RoleName:                 aws.String(rn),
-		})
-		if err != nil {
-			return nil, fmt.Errorf("error creating role %s - %s", rn, err)
-		}
-		r = cro.Role
-	}
-	// Ensure the policies are correct for the role
-	lpo, err := i.svc.ListAttachedRolePolicies(&iam.ListAttachedRolePoliciesInput{
-		RoleName: r.RoleName,
+	// @step: the role does not exist, so we must create it
+	resp, err := i.svc.CreateRoleWithContext(ctx, &iam.CreateRoleInput{
+		AssumeRolePolicyDocument: aws.String(stsPolicy),
+		Path:                     aws.String("/"),
+		RoleName:                 aws.String(name),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error listing attached policies for role [%s] - %s", *r.RoleName, err)
+		return nil, err
 	}
-	for _, pa := range policyARNs {
-		found := false
-		for _, fp := range lpo.AttachedPolicies {
-			if *fp.PolicyArn == pa {
-				found = true
-				break
+
+	// @step: ensure the policies are correct for the role
+	lresp, err := i.svc.ListAttachedRolePoliciesWithContext(ctx, &iam.ListAttachedRolePoliciesInput{
+		RoleName: resp.Role.RoleName,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, x := range policies {
+		found := func() bool {
+			for _, j := range lresp.AttachedPolicies {
+				if aws.StringValue(j.PolicyArn) == x {
+					return true
+				}
 			}
-		}
+
+			return false
+		}()
+
 		if !found {
-			_, err := i.svc.AttachRolePolicy(&iam.AttachRolePolicyInput{
-				PolicyArn: &pa,
-				RoleName:  r.RoleName,
+			_, err := i.svc.AttachRolePolicyWithContext(ctx, &iam.AttachRolePolicyInput{
+				PolicyArn: aws.String(x),
+				RoleName:  resp.Role.RoleName,
 			})
 			if err != nil {
-				return nil, fmt.Errorf("error attaching policy %s to role %s - %s", pa, *r.RoleName, err)
+				return nil, err
 			}
 		}
 	}
-	return r, nil
+
+	return resp.Role, nil
+}
+
+// RoleExists checks if a IAM role exists
+func (i *IamClient) RoleExists(ctx context.Context, name string) (*iam.Role, error) {
+	resp, err := i.svc.GetRoleWithContext(ctx, &iam.GetRoleInput{
+		RoleName: aws.String(name),
+	})
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case iam.ErrCodeNoSuchEntityException:
+				return nil, nil
+			}
+		}
+
+		return nil, err
+	}
+
+	return resp.Role, nil
 }

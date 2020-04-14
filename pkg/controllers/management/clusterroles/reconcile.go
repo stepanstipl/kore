@@ -73,10 +73,7 @@ func (a crCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	logger.Debug("attempting to retrieve a list of cluster applicable")
 
 	// @step: retrieve a list of cluster which this role applies
-	list, err = a.FilterClustersBySource(ctx,
-		role.Spec.Clusters,
-		role.Spec.Teams,
-		role.Namespace)
+	list, err = a.FilterClustersBySource(ctx, role.Spec.Clusters, role.Spec.Teams, role.Namespace)
 	if err != nil {
 		logger.WithError(err).Error("trying to retrieve a list of clusters")
 
@@ -109,6 +106,15 @@ func (a crCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 			err := func() error {
 				client, err := controllers.CreateClientFromSecret(ctx, a.mgr.GetClient(), cluster.Namespace, cluster.Name)
 				if err != nil {
+					if kerrors.IsNotFound(err) {
+						logger.WithFields(log.Fields{
+							"cluster": cluster.Name,
+							"team":    cluster.Namespace,
+						}).Warn("system admin token for cluster not available yet, lets requeue")
+
+						return nil
+					}
+
 					logger.WithError(err).Error("trying to create kubernetes client")
 
 					return err

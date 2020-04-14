@@ -22,16 +22,16 @@ import (
 	"fmt"
 
 	core "github.com/appvia/kore/pkg/apis/core/v1"
-	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
+	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
+	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
+	"github.com/appvia/kore/pkg/controllers"
 	aws "github.com/appvia/kore/pkg/utils/cloud/aws"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
-	"github.com/aws/aws-sdk-go/service/eks"
-	awseks "github.com/aws/aws-sdk-go/service/eks"
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
-
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -41,17 +41,16 @@ const (
 	ComponentClusterNodegroupCreator = "Cluster Nodegroup Creator"
 )
 
-// Reconcile controller will requeue the Request to be processed again if the returned error is non-nil or
-// Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
-func (n *eksNodeGroupCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+// Reconcile is responsible for reconciling the eks nodegroup
+func (n *ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	ctx := context.Background()
 	logger := log.WithFields(log.Fields{
 		"name":      request.NamespacedName.Name,
 		"namespace": request.NamespacedName.Namespace,
 	})
-	logger.Debug("attempting to reconcile aws eks cluster node group")
+	logger.Debug("attempting to reconcile aws eks cluster nodegroup")
 
-	resource := &eksv1alpha1.EKSNodeGroup{}
+	resource := &eks.EKSNodeGroup{}
 	if err := n.mgr.GetClient().Get(ctx, request.NamespacedName, resource); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
@@ -59,7 +58,7 @@ func (n *eksNodeGroupCtrl) Reconcile(request reconcile.Request) (reconcile.Resul
 
 		return reconcile.Result{}, err
 	}
-
+	original := resource.DeepCopyObject()
 	finalizer := kubernetes.NewFinalizer(n.mgr.GetClient(), finalizerName)
 
 	// @step: are we deleting the resource
@@ -71,226 +70,105 @@ func (n *eksNodeGroupCtrl) Reconcile(request reconcile.Request) (reconcile.Resul
 		resource.Status.Conditions = core.Components{}
 	}
 
-	requeue, err := func() (bool, error) {
-		logger.Debug("retrieving the eks cluster credential")
-		// @step: first we need to check if we have access to the credentials
-		credentials, err := n.GetCredentials(ctx, resource, resource.Namespace)
-		if err != nil {
-			logger.WithError(err).Error("trying to retrieve cloud credentials")
-
-			resource.Status.Conditions.SetCondition(core.Component{
-				Name:    ComponentClusterNodegroupCreator,
-				Message: "You do not have permission to the credentials",
-				Status:  core.FailureStatus,
-			})
-
-			return false, err
-		}
-		logger.Info("Found EKSCredentials")
-
-		client, err := aws.NewBasicClient(
-			credentials,
-			resource.Spec.Cluster.Name,
-			resource.Spec.Region,
-		)
-		if err != nil {
-			logger.WithError(err).Error("attempting to create the cluster client")
-
-			resource.Status.Conditions.SetCondition(core.Component{
-				Detail:  err.Error(),
-				Name:    ComponentClusterNodegroupCreator,
-				Message: "Failed to create EKS client, please check credentials",
-				Status:  core.FailureStatus,
-			})
-
-			return false, err
-		}
-		logger.Info("Checking cluster nodegroup existence")
-		found, err := client.NodeGroupExists(resource)
-		if err != nil {
-			resource.Status.Conditions.SetCondition(core.Component{
-				Detail:  err.Error(),
-				Name:    ComponentClusterNodegroupCreator,
-				Message: "Failed to check for cluster nodegroup existence",
-				Status:  core.FailureStatus,
-			})
-
-			return false, err
-		}
-
-		if !found {
-			logger.Debug("Cheking cluster exists for nodegroup")
-
-			// An ACTIVE cluster is a prerequisite for creating node groups
-			// first check if CLUSTER exists
-			clusterFound, err := client.Exists()
-			if err != nil {
-				logger.Debugf("error trying to check cluster exists %s for nodegroup %s", resource.Spec.Cluster.Name, resource.Name)
-
-				resource.Status.Conditions.SetCondition(core.Component{
-					Name:    ComponentClusterNodegroupCreator,
-					Message: fmt.Sprintf("Waiting for cluster %s to exist in aws", resource.Spec.Cluster.Name),
-					Status:  core.FailureStatus,
-				})
-
-				return false, err
-			}
-			if !clusterFound {
-				logger.Debugf("waiting for cluster %s to exist", resource.Spec.Cluster.Name)
-
-				resource.Status.Conditions.SetCondition(core.Component{
-					Name:    ComponentClusterNodegroupCreator,
-					Message: fmt.Sprintf("Waiting for cluster %s to exist in aws", resource.Spec.Cluster.Name),
-					Status:  core.PendingStatus,
-				})
-
-				return true, nil
-			}
-			eksCluster, err := client.DescribeEKS()
-			if err != nil {
-				logger.Debugf("error trying to check status of cluster %s for nodegroup %s", resource.Spec.Cluster.Name, resource.Name)
-
-				resource.Status.Conditions.SetCondition(core.Component{
-					Name:    ComponentClusterNodegroupCreator,
-					Message: fmt.Sprintf("Error checking for status of cluster %s", resource.Spec.Cluster.Name),
-					Status:  core.FailureStatus,
-				})
-
-				return false, err
-			}
-			if *eksCluster.Status != eks.ClusterStatusActive {
-
-				logger.Debugf("cluster status is %s", *eksCluster.Status)
-				if *eksCluster.Status == eks.ClusterStatusCreating {
-					resource.Status.Conditions.SetCondition(core.Component{
-						Name:    ComponentClusterNodegroupCreator,
-						Message: "Waiting for cluster to provision the EKS cluster nodegroup in AWS",
-						Status:  core.PendingStatus,
-					})
-					resource.Status.Status = core.PendingStatus
-
-					return true, nil
-				}
-
-				// Not active or creating problem
-				em := fmt.Sprintf("bad status for cluster %s: %s", resource.Spec.Cluster.Name, *eksCluster.Status)
-				resource.Status.Conditions.SetCondition(core.Component{
-					Name:    ComponentClusterNodegroupCreator,
-					Message: em,
-					Status:  core.FailureStatus,
-				})
-
-				return false, errors.New(em)
-			}
-
-			status, found := resource.Status.Conditions.GetStatus(ComponentClusterNodegroupCreator)
-			if !found || status != core.PendingStatus {
-				resource.Status.Conditions.SetCondition(core.Component{
-					Name:    ComponentClusterNodegroupCreator,
-					Message: "Provisioning the EKS cluster nodegroup in AWS",
-					Status:  core.PendingStatus,
-				})
-				resource.Status.Status = core.PendingStatus
-
-				return true, nil
-			}
-
-			// Ensure the IAM role exists...
-			iamClient := aws.NewIamClient(client.Sess, resource.Name)
-			cr, err := iamClient.EnsureEksNodePoolRole()
-			if err != nil {
-				logger.WithError(err).Errorf("attempting to create iam roles for eks nodepool - %s", err)
-
-				resource.Status.Conditions.SetCondition(core.Component{
-					Name:    ComponentClusterNodegroupCreator,
-					Message: "Failed trying to provision the eks nodepool iam roles",
-					Detail:  err.Error(),
-				})
-				resource.Status.Status = core.FailureStatus
-
-				return false, err
-			}
-			// Save the role used for this cluster
-			resource.Status.NodeIAMRole = *cr.Arn
-
-			logger.Debug("creating a new eks cluster nodegroup in aws")
-			if err := client.CreateNodeGroup(resource); err != nil {
-				logger.WithError(err).Error("attempting to create cluster nodegroup")
-
-				resource.Status.Conditions.SetCondition(core.Component{
-					Name:    ComponentClusterNodegroupCreator,
-					Message: "Failed trying to provision the cluster nodegroup",
-					Detail:  err.Error(),
-				})
-				resource.Status.Status = core.FailureStatus
-
-				return false, err
-			}
-		}
-
-		// Get nodegroup status
-		logger.Info("Checking the status of the node group: " + resource.Name)
-
-		nodestatus, err := client.GetEKSNodeGroupStatus(resource)
-		if err != nil {
-			logger.WithError(err).Error("trying to retrieve the eks cluster nodegroup")
-
-			return false, err
-		}
-
-		if nodestatus == awseks.NodegroupStatusCreateFailed {
-			return false, fmt.Errorf("Cluster nodegroup has failed status:%s", resource.Name)
-		}
-		if nodestatus != awseks.NodegroupStatusActive {
-			logger.Debugf("cluster nodegroup %s not ready requeing", resource.Name)
-
-			// not ready, reque no errors
-			return true, nil
-		}
-		logger.Info("Nodegroup active:" + resource.Name)
-		// Set status to success
-		// @step: update the state as provisioned
-		resource.Status.Conditions.SetCondition(core.Component{
-			Name:    ComponentClusterNodegroupCreator,
-			Message: "Cluster nodegroup has been provisioned",
-			Status:  core.SuccessStatus,
-		})
-
-		resource.Status.Status = core.SuccessStatus
-
-		return false, nil
-	}()
-	if err != nil {
-		resource.Status.Status = core.FailureStatus
-	}
-
-	if err := n.mgr.GetClient().Status().Update(ctx, resource); err != nil {
-		logger.WithError(err).Error("updating the status of eks cluster nodegroup")
-
-		return reconcile.Result{}, err
-	}
-
-	if err == nil {
+	result, err := func() (reconcile.Result, error) {
+		// @step: add the finalizer if required
 		if finalizer.NeedToAdd(resource) {
-			logger.Info("adding our finalizer to the team resource")
-
 			if err := finalizer.Add(resource); err != nil {
+				logger.WithError(err).Error("trying to add finalizer from eks resource")
+
 				return reconcile.Result{}, err
 			}
 
 			return reconcile.Result{Requeue: true}, nil
 		}
+
+		// @step: retrieve the cloud credentials for the aws account
+		credentials, err := n.GetCredentials(ctx, resource, resource.Namespace)
+		if err != nil {
+			resource.Status.Conditions.SetCondition(corev1.Component{
+				Name:    ComponentClusterNodegroupCreator,
+				Message: "You do not have permission to the credentials",
+				Status:  corev1.FailureStatus,
+			})
+
+			return reconcile.Result{}, err
+		}
+
+		// @step: retrieve the eke client for us
+		client, err := n.GetClusterClient(ctx, resource)
+		if err != nil {
+			logger.WithError(err).Error("trying to create eks cluster client")
+
+			return reconcile.Result{}, err
+		}
+
+		ensure := []controllers.EnsureFunc{
+			n.EnsureNodeGroupIsPending(resource),
+			n.EnsureClusterReady(resource),
+			n.EnsureNodeRole(resource, credentials),
+			n.EnsureNodeGroup(client, resource),
+		}
+
+		for _, handler := range ensure {
+			result, err := handler(ctx)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+			if result.Requeue || result.RequeueAfter > 0 {
+				return result, nil
+			}
+		}
+
+		return reconcile.Result{}, nil
+	}()
+	if err != nil {
+		logger.WithError(err).Error("trying to reconcile the eks cluster")
+
+		resource.Status.Status = corev1.FailureStatus
+	}
+	// @step: we update always update the status before throwing any error
+	if err := n.mgr.GetClient().Status().Patch(ctx, resource, client.MergeFrom(original)); err != nil {
+		logger.WithError(err).Error("updating the status of eks nodegroup")
+
+		return reconcile.Result{}, err
+	}
+	if err != nil {
+		return reconcile.Result{}, err
 	}
 
-	if requeue {
-		return reconcile.Result{Requeue: true}, nil
+	return result, nil
+}
+
+// GetClusterClient returns a EKS cluster client
+func (n *ctrl) GetClusterClient(ctx context.Context, resource *eks.EKSNodeGroup) (*aws.Client, error) {
+	credentials, err := n.GetCredentials(ctx, resource, resource.Namespace)
+	if err != nil {
+		resource.Status.Conditions.SetCondition(corev1.Component{
+			Name:    ComponentClusterNodegroupCreator,
+			Message: "You do not have permission to the credentials",
+			Status:  corev1.FailureStatus,
+		})
+
+		return nil, err
 	}
 
-	return reconcile.Result{}, nil
+	client, err := aws.NewBasicClient(credentials, resource.Spec.Cluster.Name, resource.Spec.Region)
+	if err != nil {
+		resource.Status.Conditions.SetCondition(corev1.Component{
+			Detail:  err.Error(),
+			Name:    ComponentClusterNodegroupCreator,
+			Message: "Failed to create EKS client, please check credentials",
+			Status:  corev1.FailureStatus,
+		})
+
+		return nil, err
+	}
+
+	return client, nil
 }
 
 // GetCredentials returns the cloud credential
-func (n *eksNodeGroupCtrl) GetCredentials(ctx context.Context, ng *eksv1alpha1.EKSNodeGroup, team string) (*eksv1alpha1.EKSCredentials, error) {
+func (n *ctrl) GetCredentials(ctx context.Context, ng *eks.EKSNodeGroup, team string) (*eks.EKSCredentials, error) {
 	// @step: is the team permitted access to this credentials
 	permitted, err := n.Teams().Team(team).Allocations().IsPermitted(ctx, ng.Spec.Credentials)
 	if err != nil {
@@ -306,7 +184,7 @@ func (n *eksNodeGroupCtrl) GetCredentials(ctx context.Context, ng *eksv1alpha1.E
 	}
 
 	// @step: retrieve the credentials
-	creds := &eksv1alpha1.EKSCredentials{}
+	creds := &eks.EKSCredentials{}
 
 	return creds, n.mgr.GetClient().Get(
 		ctx,

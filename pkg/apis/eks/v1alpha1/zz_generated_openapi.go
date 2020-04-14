@@ -445,7 +445,6 @@ func schema_pkg_apis_eks_v1alpha1_EKSNodeGroupStatus(ref common.ReferenceCallbac
 						},
 					},
 				},
-				Required: []string{"nodeIAMRole"},
 			},
 		},
 		Dependencies: []string{
@@ -595,7 +594,6 @@ func schema_pkg_apis_eks_v1alpha1_EKSStatus(ref common.ReferenceCallback) common
 						},
 					},
 				},
-				Required: []string{"roleARN"},
 			},
 		},
 		Dependencies: []string{

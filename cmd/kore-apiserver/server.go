@@ -35,13 +35,13 @@ import (
 // invoke is responsible for invoking the api
 func invoke(ctx *cli.Context) error {
 	// @step: are we enabling verbose logging?
+	if ctx.Bool("disable-json-logging") {
+		log.SetFormatter(&log.TextFormatter{})
+	}
 	if ctx.Bool("verbose") {
 		log.SetOutput(os.Stdout)
 		log.SetLevel(log.DebugLevel)
 		log.Debug("enabling verbose logging for debug")
-	}
-	if ctx.Bool("disable-json-logging") {
-		log.SetFormatter(&log.TextFormatter{})
 	}
 
 	// @step: construct the server config
@@ -66,8 +66,6 @@ func invoke(ctx *cli.Context) error {
 			CertificateAuthority:       ctx.String("certificate-authority"),
 			CertificateAuthorityKey:    ctx.String("certificate-authority-key"),
 			ClusterAppManImage:         ctx.String("clusterappman-image"),
-			EnableClusterDeletion:      ctx.Bool("enable-cluster-deletion"),
-			EnableClusterDeletionBlock: ctx.Bool("enable-cluster-deletion-block"),
 			EnableClusterProviderCheck: ctx.Bool("enable-cluster-provider-check"),
 			HMAC:                       ctx.String("kore-hmac"),
 			IDPClientID:                ctx.String("idp-client-id"),

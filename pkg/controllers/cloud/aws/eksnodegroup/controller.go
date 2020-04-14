@@ -33,7 +33,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-type eksNodeGroupCtrl struct {
+type ctrl struct {
 	kore.Interface
 	// mgr is the controller manager
 	mgr manager.Manager
@@ -42,18 +42,18 @@ type eksNodeGroupCtrl struct {
 }
 
 func init() {
-	if err := controllers.Register(&eksNodeGroupCtrl{}); err != nil {
+	if err := controllers.Register(&ctrl{}); err != nil {
 		log.WithError(err).Fatal("failed to register controller")
 	}
 }
 
 // Name returns the name of the controller
-func (n *eksNodeGroupCtrl) Name() string {
+func (n *ctrl) Name() string {
 	return "eksnodegroup"
 }
 
 // Run starts the controller
-func (n *eksNodeGroupCtrl) Run(ctx context.Context, cfg *rest.Config, hubi kore.Interface) error {
+func (n *ctrl) Run(ctx context.Context, cfg *rest.Config, hubi kore.Interface) error {
 	logger := log.WithFields(log.Fields{
 		"controller": n.Name(),
 	})
@@ -111,7 +111,7 @@ func (n *eksNodeGroupCtrl) Run(ctx context.Context, cfg *rest.Config, hubi kore.
 }
 
 // Stop is responsible for calling a halt on the controller
-func (n *eksNodeGroupCtrl) Stop(_ context.Context) error {
+func (n *ctrl) Stop(_ context.Context) error {
 	log.WithFields(log.Fields{
 		"controller": n.Name(),
 	}).Info("attempting to stop the controller")

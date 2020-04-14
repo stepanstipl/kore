@@ -985,8 +985,6 @@ spec:
             status:
               description: Status provides a overall status
               type: string
-          required:
-          - nodeIAMRole
           type: object
       type: object
   version: v1alpha1
@@ -1187,8 +1185,6 @@ spec:
             status:
               description: Status provides a overall status
               type: string
-          required:
-          - roleARN
           type: object
       type: object
   version: v1alpha1
