@@ -95,4 +95,6 @@ load helper
   [[ "$status" -eq 0 ]]
   retry 10 "${KORE} get namespaceclaims ${fullname} -t e2e 2>&1 | grep 'does not exist'"
   [[ "$status" -eq 0 ]]
+  retry 10 "${KORECTL} --context=${CLUSTER} get namespace ${namespace} 2>&1 | grep -q 'not found$'"
+  [[ "$status" -eq 0 ]]
 }
