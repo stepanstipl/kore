@@ -54,6 +54,9 @@ class V1alpha1EKSSpec {
         if (data) {
             obj = obj || new V1alpha1EKSSpec();
 
+            if (data.hasOwnProperty('authorizedMasterNetworks')) {
+                obj['authorizedMasterNetworks'] = ApiClient.convertToType(data['authorizedMasterNetworks'], ['String']);
+            }
             if (data.hasOwnProperty('cluster')) {
                 obj['cluster'] = V1Ownership.constructFromObject(data['cluster']);
             }
@@ -76,6 +79,19 @@ class V1alpha1EKSSpec {
         return obj;
     }
 
+/**
+     * @return {Array.<String>}
+     */
+    getAuthorizedMasterNetworks() {
+        return this.authorizedMasterNetworks;
+    }
+
+    /**
+     * @param {Array.<String>} authorizedMasterNetworks
+     */
+    setAuthorizedMasterNetworks(authorizedMasterNetworks) {
+        this['authorizedMasterNetworks'] = authorizedMasterNetworks;
+    }
 /**
      * @return {module:model/V1Ownership}
      */
@@ -156,6 +172,11 @@ class V1alpha1EKSSpec {
     }
 
 }
+
+/**
+ * @member {Array.<String>} authorizedMasterNetworks
+ */
+V1alpha1EKSSpec.prototype['authorizedMasterNetworks'] = undefined;
 
 /**
  * @member {module:model/V1Ownership} cluster

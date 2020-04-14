@@ -23,14 +23,13 @@ class V1alpha1EKSVPCSpec {
     /**
      * Constructs a new <code>V1alpha1EKSVPCSpec</code>.
      * @alias module:model/V1alpha1EKSVPCSpec
-     * @param clusterName {String} 
      * @param credentials {module:model/V1Ownership} 
      * @param privateIPV4Cidr {String} 
      * @param region {String} 
      */
-    constructor(clusterName, credentials, privateIPV4Cidr, region) { 
+    constructor(credentials, privateIPV4Cidr, region) { 
         
-        V1alpha1EKSVPCSpec.initialize(this, clusterName, credentials, privateIPV4Cidr, region);
+        V1alpha1EKSVPCSpec.initialize(this, credentials, privateIPV4Cidr, region);
     }
 
     /**
@@ -38,8 +37,7 @@ class V1alpha1EKSVPCSpec {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, clusterName, credentials, privateIPV4Cidr, region) { 
-        obj['clusterName'] = clusterName;
+    static initialize(obj, credentials, privateIPV4Cidr, region) { 
         obj['credentials'] = credentials;
         obj['privateIPV4Cidr'] = privateIPV4Cidr;
         obj['region'] = region;
@@ -56,8 +54,8 @@ class V1alpha1EKSVPCSpec {
         if (data) {
             obj = obj || new V1alpha1EKSVPCSpec();
 
-            if (data.hasOwnProperty('clusterName')) {
-                obj['clusterName'] = ApiClient.convertToType(data['clusterName'], 'String');
+            if (data.hasOwnProperty('cluster')) {
+                obj['cluster'] = V1Ownership.constructFromObject(data['cluster']);
             }
             if (data.hasOwnProperty('credentials')) {
                 obj['credentials'] = V1Ownership.constructFromObject(data['credentials']);
@@ -73,17 +71,17 @@ class V1alpha1EKSVPCSpec {
     }
 
 /**
-     * @return {String}
+     * @return {module:model/V1Ownership}
      */
-    getClusterName() {
-        return this.clusterName;
+    getCluster() {
+        return this.cluster;
     }
 
     /**
-     * @param {String} clusterName
+     * @param {module:model/V1Ownership} cluster
      */
-    setClusterName(clusterName) {
-        this['clusterName'] = clusterName;
+    setCluster(cluster) {
+        this['cluster'] = cluster;
     }
 /**
      * @return {module:model/V1Ownership}
@@ -128,9 +126,9 @@ class V1alpha1EKSVPCSpec {
 }
 
 /**
- * @member {String} clusterName
+ * @member {module:model/V1Ownership} cluster
  */
-V1alpha1EKSVPCSpec.prototype['clusterName'] = undefined;
+V1alpha1EKSVPCSpec.prototype['cluster'] = undefined;
 
 /**
  * @member {module:model/V1Ownership} credentials
