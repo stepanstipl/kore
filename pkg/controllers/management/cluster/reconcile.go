@@ -169,8 +169,11 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		return reconcile.Result{}, err
 	}
 
-	if cluster.Status.Status == corev1.SuccessStatus || cluster.Status.Status == corev1.FailureStatus {
-		return reconcile.Result{RequeueAfter: 5 * time.Minute}, nil
+	if cluster.Status.Status == corev1.SuccessStatus {
+		return reconcile.Result{}, nil
+	}
+	if cluster.Status.Status == corev1.FailureStatus {
+		return reconcile.Result{RequeueAfter: 2 * time.Minute}, nil
 	}
 
 	return reconcile.Result{RequeueAfter: 30 * time.Second}, err
