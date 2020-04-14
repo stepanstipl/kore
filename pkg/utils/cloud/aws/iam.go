@@ -124,11 +124,11 @@ func (i *IamClient) EnsureEKSNodePoolRole(ctx context.Context, prefix string) (*
 
 // EnsureRole is responsible for creating a role
 func (i *IamClient) EnsureRole(ctx context.Context, name string, policies []string, stsPolicy string) (*iam.Role, error) {
-	role, existing, err := i.RoleExists(ctx, name)
+	role, err := i.RoleExists(ctx, name)
 	if err != nil {
 		return nil, err
 	}
-	if existing {
+	if role != nil {
 		return role, nil
 	}
 
@@ -176,7 +176,7 @@ func (i *IamClient) EnsureRole(ctx context.Context, name string, policies []stri
 }
 
 // RoleExists checks if a IAM role exists
-func (i *IamClient) RoleExists(ctx context.Context, name string) (*iam.Role, bool, error) {
+func (i *IamClient) RoleExists(ctx context.Context, name string) (*iam.Role, error) {
 	resp, err := i.svc.GetRoleWithContext(ctx, &iam.GetRoleInput{
 		RoleName: aws.String(name),
 	})
@@ -184,12 +184,12 @@ func (i *IamClient) RoleExists(ctx context.Context, name string) (*iam.Role, boo
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case iam.ErrCodeNoSuchEntityException:
-				return nil, false, nil
+				return nil, nil
 			}
 		}
 
-		return nil, false, err
+		return nil, err
 	}
 
-	return resp.Role, true, nil
+	return resp.Role, nil
 }
