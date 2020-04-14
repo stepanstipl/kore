@@ -99,7 +99,7 @@ func (f *fake) Get() client.RestInterface {
 
 // GetPayload returns the payload for inspection
 func (f *fake) GetPayload() interface{} {
-	return nil
+	return f.payload
 }
 
 // HasParamater checks if the parameter is set

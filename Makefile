@@ -343,7 +343,6 @@ changelog: release
 
 apis: golang
 	@echo "--> Generating Clientsets & Deepcopies"
-	@rm -rf pkg/client 2>/dev/null
 	@${MAKE} deepcopy-gen
 	@${MAKE} openapi-gen
 	@${MAKE} register-gen
