@@ -44,7 +44,9 @@ type EKSNodeGroupSpec struct {
 	InstanceType string `json:"instanceType,omitempty"`
 	// Labels are any custom kubernetes labels to apply to nodes
 	Labels map[string]string `json:"labels,omitempty"`
-	// ReleaseVersion is the Kubernetes version to run for the kubelet
+	// Version is the Kubernetes version to run for the kubelet
+	Version string `json:"version,omitempty"`
+	// ReleaseVersion is release version of the managed node ami
 	ReleaseVersion string `json:"releaseVersion,omitempty"`
 	// DesiredSize is the number of nodes to attempt to use
 	// +kubebuilder:validation:Minimum=1

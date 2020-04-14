@@ -31,8 +31,6 @@ type ClientService interface {
 
 	DeleteEKSCredentials(params *DeleteEKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteEKSCredentialsOK, error)
 
-	DeleteGCPOrganization(params *DeleteGCPOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteGCPOrganizationOK, error)
-
 	DeleteTeamSecret(params *DeleteTeamSecretParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteTeamSecretOK, error)
 
 	GenerateInviteLink(params *GenerateInviteLinkParams, authInfo runtime.ClientAuthInfoWriter) (*GenerateInviteLinkOK, error)
@@ -46,8 +44,6 @@ type ClientService interface {
 	GetDefaultIDP(params *GetDefaultIDPParams, authInfo runtime.ClientAuthInfoWriter) (*GetDefaultIDPOK, error)
 
 	GetEKSCredentials(params *GetEKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*GetEKSCredentialsOK, error)
-
-	GetGCPOrganization(params *GetGCPOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*GetGCPOrganizationOK, error)
 
 	GetGKE(params *GetGKEParams, authInfo runtime.ClientAuthInfoWriter) (*GetGKEOK, error)
 
@@ -86,8 +82,6 @@ type ClientService interface {
 	ListClusters(params *ListClustersParams, authInfo runtime.ClientAuthInfoWriter) (*ListClustersOK, error)
 
 	ListEKSCredentials(params *ListEKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*ListEKSCredentialsOK, error)
-
-	ListGCPOrganizations(params *ListGCPOrganizationsParams, authInfo runtime.ClientAuthInfoWriter) (*ListGCPOrganizationsOK, error)
 
 	ListGKECredentials(params *ListGKECredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*ListGKECredentialsOK, error)
 
@@ -149,8 +143,6 @@ type ClientService interface {
 
 	UpdateEKSCredentials(params *UpdateEKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateEKSCredentialsOK, error)
 
-	UpdateGCPOrganization(params *UpdateGCPOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateGCPOrganizationOK, error)
-
 	UpdateGKECredential(params *UpdateGKECredentialParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateGKECredentialOK, error)
 
 	UpdateIDP(params *UpdateIDPParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateIDPOK, error)
@@ -173,6 +165,8 @@ type ClientService interface {
 
 	DeleteEKSVPC(params *DeleteEKSVPCParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteEKSVPCOK, error)
 
+	DeleteOrganization(params *DeleteOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteOrganizationOK, error)
+
 	DeleteProjectClaim(params *DeleteProjectClaimParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteProjectClaimOK, error)
 
 	FindEKS(params *FindEKSParams, authInfo runtime.ClientAuthInfoWriter) (*FindEKSOK, error)
@@ -187,11 +181,17 @@ type ClientService interface {
 
 	FindEKSs(params *FindEKSsParams, authInfo runtime.ClientAuthInfoWriter) (*FindEKSsOK, error)
 
+	FindOrganization(params *FindOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*FindOrganizationOK, error)
+
+	FindOrganizations(params *FindOrganizationsParams, authInfo runtime.ClientAuthInfoWriter) (*FindOrganizationsOK, error)
+
 	FindProjectClaim(params *FindProjectClaimParams, authInfo runtime.ClientAuthInfoWriter) (*FindProjectClaimOK, error)
 
 	FindProjectClaims(params *FindProjectClaimsParams, authInfo runtime.ClientAuthInfoWriter) (*FindProjectClaimsOK, error)
 
 	UpdateEKSVPC(params *UpdateEKSVPCParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateEKSVPCOK, error)
+
+	UpdateOrganization(params *UpdateOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateOrganizationOK, error)
 
 	UpdateProjectClaim(params *UpdateProjectClaimParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateProjectClaimOK, error)
 
@@ -264,40 +264,6 @@ func (a *Client) DeleteEKSCredentials(params *DeleteEKSCredentialsParams, authIn
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*DeleteEKSCredentialsDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
-}
-
-/*
-  DeleteGCPOrganization is used to delete a managed gcp organization
-*/
-func (a *Client) DeleteGCPOrganization(params *DeleteGCPOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteGCPOrganizationOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewDeleteGCPOrganizationParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "DeleteGCPOrganization",
-		Method:             "DELETE",
-		PathPattern:        "/api/v1alpha1/teams/{team}/organizations/{name}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &DeleteGCPOrganizationReader{formats: a.formats},
-		AuthInfo:           authInfo,
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*DeleteGCPOrganizationOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	unexpectedSuccess := result.(*DeleteGCPOrganizationDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
@@ -541,40 +507,6 @@ func (a *Client) GetEKSCredentials(params *GetEKSCredentialsParams, authInfo run
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*GetEKSCredentialsDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
-}
-
-/*
-  GetGCPOrganization is the used tor return a specific gcp organization
-*/
-func (a *Client) GetGCPOrganization(params *GetGCPOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*GetGCPOrganizationOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewGetGCPOrganizationParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "GetGCPOrganization",
-		Method:             "GET",
-		PathPattern:        "/api/v1alpha1/teams/{team}/organizations/{name}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &GetGCPOrganizationReader{formats: a.formats},
-		AuthInfo:           authInfo,
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*GetGCPOrganizationOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	unexpectedSuccess := result.(*GetGCPOrganizationDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
@@ -1237,40 +1169,6 @@ func (a *Client) ListEKSCredentials(params *ListEKSCredentialsParams, authInfo r
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*ListEKSCredentialsDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
-}
-
-/*
-  ListGCPOrganizations is the used tor return a list of gcp organizations
-*/
-func (a *Client) ListGCPOrganizations(params *ListGCPOrganizationsParams, authInfo runtime.ClientAuthInfoWriter) (*ListGCPOrganizationsOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewListGCPOrganizationsParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "ListGCPOrganizations",
-		Method:             "GET",
-		PathPattern:        "/api/v1alpha1/teams/{team}/organizations",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &ListGCPOrganizationsReader{formats: a.formats},
-		AuthInfo:           authInfo,
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*ListGCPOrganizationsOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	unexpectedSuccess := result.(*ListGCPOrganizationsDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
@@ -2318,40 +2216,6 @@ func (a *Client) UpdateEKSCredentials(params *UpdateEKSCredentialsParams, authIn
 }
 
 /*
-  UpdateGCPOrganization is used to provision or update a gcp organization
-*/
-func (a *Client) UpdateGCPOrganization(params *UpdateGCPOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateGCPOrganizationOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewUpdateGCPOrganizationParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "UpdateGCPOrganization",
-		Method:             "PUT",
-		PathPattern:        "/api/v1alpha1/teams/{team}/organizations/{name}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &UpdateGCPOrganizationReader{formats: a.formats},
-		AuthInfo:           authInfo,
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*UpdateGCPOrganizationOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	unexpectedSuccess := result.(*UpdateGCPOrganizationDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
-}
-
-/*
   UpdateGKECredential creates or updates a specific g k e credential to which the team has access
 */
 func (a *Client) UpdateGKECredential(params *UpdateGKECredentialParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateGKECredentialOK, error) {
@@ -2733,6 +2597,40 @@ func (a *Client) DeleteEKSVPC(params *DeleteEKSVPCParams, authInfo runtime.Clien
 }
 
 /*
+  DeleteOrganization is used to delete a managed gcp organization
+*/
+func (a *Client) DeleteOrganization(params *DeleteOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteOrganizationOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewDeleteOrganizationParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "deleteOrganization",
+		Method:             "DELETE",
+		PathPattern:        "/api/v1alpha1/teams/{team}/organizations/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &DeleteOrganizationReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*DeleteOrganizationOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*DeleteOrganizationDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
   DeleteProjectClaim is used to delete a managed gcp project claim
 */
 func (a *Client) DeleteProjectClaim(params *DeleteProjectClaimParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteProjectClaimOK, error) {
@@ -2971,6 +2869,74 @@ func (a *Client) FindEKSs(params *FindEKSsParams, authInfo runtime.ClientAuthInf
 }
 
 /*
+  FindOrganization is the used tor return a specific gcp organization
+*/
+func (a *Client) FindOrganization(params *FindOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*FindOrganizationOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewFindOrganizationParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "findOrganization",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/organizations/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &FindOrganizationReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*FindOrganizationOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*FindOrganizationDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  FindOrganizations is the used tor return a list of gcp organizations
+*/
+func (a *Client) FindOrganizations(params *FindOrganizationsParams, authInfo runtime.ClientAuthInfoWriter) (*FindOrganizationsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewFindOrganizationsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "findOrganizations",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/organizations",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &FindOrganizationsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*FindOrganizationsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*FindOrganizationsDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
   FindProjectClaim is the used tor return a list of google container engine clusters which thhe team has access
 */
 func (a *Client) FindProjectClaim(params *FindProjectClaimParams, authInfo runtime.ClientAuthInfoWriter) (*FindProjectClaimOK, error) {
@@ -3069,6 +3035,40 @@ func (a *Client) UpdateEKSVPC(params *UpdateEKSVPCParams, authInfo runtime.Clien
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*UpdateEKSVPCDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  UpdateOrganization is used to provision or update a gcp organization
+*/
+func (a *Client) UpdateOrganization(params *UpdateOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateOrganizationOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewUpdateOrganizationParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "updateOrganization",
+		Method:             "PUT",
+		PathPattern:        "/api/v1alpha1/teams/{team}/organizations/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &UpdateOrganizationReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*UpdateOrganizationOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*UpdateOrganizationDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

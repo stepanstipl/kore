@@ -1861,15 +1861,6 @@
       "name": "name",
       "in": "path",
       "required": true
-     },
-     {
-      "description": "The definition for GKE Credentials",
-      "name": "body",
-      "in": "body",
-      "required": true,
-      "schema": {
-       "$ref": "#/definitions/v1alpha1.GKECredentials"
-      }
      }
     ],
     "responses": {
@@ -2601,7 +2592,7 @@
      "application/json"
     ],
     "summary": "Is the used tor return a list of gcp organizations",
-    "operationId": "ListGCPOrganizations",
+    "operationId": "findOrganizations",
     "parameters": [
      {
       "type": "string",
@@ -2636,7 +2627,7 @@
      "application/json"
     ],
     "summary": "Is the used tor return a specific gcp organization",
-    "operationId": "GetGCPOrganization",
+    "operationId": "findOrganization",
     "parameters": [
      {
       "type": "string",
@@ -2676,7 +2667,7 @@
      "application/json"
     ],
     "summary": "Is used to provision or update a gcp organization",
-    "operationId": "UpdateGCPOrganization",
+    "operationId": "updateOrganization",
     "parameters": [
      {
       "type": "string",
@@ -2691,15 +2682,6 @@
       "name": "name",
       "in": "path",
       "required": true
-     },
-     {
-      "description": "The definition for GCP organization",
-      "name": "body",
-      "in": "body",
-      "required": true,
-      "schema": {
-       "$ref": "#/definitions/v1alpha1.Organization"
-      }
      }
     ],
     "responses": {
@@ -2725,7 +2707,7 @@
      "application/json"
     ],
     "summary": "Is used to delete a managed gcp organization",
-    "operationId": "DeleteGCPOrganization",
+    "operationId": "deleteOrganization",
     "parameters": [
      {
       "type": "string",
@@ -4775,11 +4757,11 @@
   },
   "v1.StaticOIDCIDP": {
    "required": [
-    "userClaims",
     "clientID",
     "clientSecret",
     "issuer",
-    "clientScopes"
+    "clientScopes",
+    "userClaims"
    ],
    "properties": {
     "clientID": {
@@ -5352,13 +5334,13 @@
      "additionalProperties": {
       "type": "string"
      }
+    },
+    "version": {
+     "type": "string"
     }
    }
   },
   "v1alpha1.EKSNodeGroupStatus": {
-   "required": [
-    "nodeIAMRole"
-   ],
    "properties": {
     "conditions": {
      "type": "array",
@@ -5414,9 +5396,6 @@
    }
   },
   "v1alpha1.EKSStatus": {
-   "required": [
-    "roleARN"
-   ],
    "properties": {
     "caCertificate": {
      "type": "string"
