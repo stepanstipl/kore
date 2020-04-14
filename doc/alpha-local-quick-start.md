@@ -136,17 +136,19 @@ We'll be using our CLI, `korectl`, to help us set up Kore locally.
 
 #### Install the korectl CLI
 
-For the time being, we have to clone this repo to install the CLI.
+Find the latest korectl release from https://github.com/appvia/kore/releases for your machine architecture and unzip it in a suitable location.
+
+For example:
 
 ```shell script
-git clone git@github.com:appvia/kore.git kore-test
+mkdir ~/kore
+cd ~/kore
+curl -L https://github.com/appvia/kore/releases/download/v0.0.23/korectl_darwin_amd64_v0.0.23.zip --output korectl.zip
+unzip korectl.zip
 
-cd kore-test
-
-make korectl
-
-bin/korectl -v
-# korectl version v0.0.12 (git+sha: cef3143, built: 06-03-2020)
+# Confirm you have a working CLI:
+./korectl -v
+# korectl version v0.0.23 (git+sha: aaaaaaa, built: 01-01-2020)
 ```
 
 #### Configure Appvia Kore
@@ -165,7 +167,7 @@ Make sure you fill in the OpenID endpoint as `https://[Auth0 domain]/`, includin
 Once you have everything, run,
 
 ```shell script
-bin/korectl local configure
+./korectl local configure
 # What are your Identity Broker details?
 # ✗ Client ID :
 # ...
@@ -181,14 +183,16 @@ When configured correctly, you should see
 #### Start locally
 
 ```shell script
-bin/korectl local start
+./korectl local start
 # ...Starting Kore.
 # ...Kore is now started locally and is ready on http://127.0.0.1:10080
 ```
 
-- Stop: To stop, run `bin/korectl local stop`
+- Stop: To stop, run `./korectl local stop`
 
-- Logs: To view local logs, run `bin/korectl local logs`
+- Logs: To view local logs, run `./korectl local logs`
+
+At this point, you can use the CLI as detailed below, and also browse to the Kore UI at http://127.0.0.1:3000/
 
 ### Login as Admin with CLI
 
@@ -197,7 +201,7 @@ You now have to login to be able to create teams and provision environments.
 This will use our Auth0 set up for IDP. As you're the only user, you'll be assigned Admin privileges.
 
 ```shell script
-bin/korectl login
+./korectl login
 # Attempting to authenticate to Appvia Kore: http://127.0.0.1:10080 [local]
 # Successfully authenticated
 ```
@@ -209,16 +213,16 @@ Let's create a team with the CLI. In local mode, you'll be assigned as team memb
 As a team member, you'll be able to provision environments on behalf of team.
 
 ```shell script
-bin/korectl create team --description 'The Appvia product team, working on project Q.' team-appvia
+./korectl create team --description 'The Appvia product team, working on project Q.' team-appvia
 # "team-appvia" team was successfully created
 ```
 
 To ensure the team was created,
 
 ```shell script
-bin/korectl get teams team-appvia
-#Name            Description
-#team-appvia     The Appvia product team, working on project Q.
+./korectl get teams team-appvia
+# Name            Description
+# team-appvia     The Appvia product team, working on project Q.
 ```
 
 ### Enable Kore to Set up Team Environments on GKE
@@ -230,7 +234,7 @@ When applied, these manifests give Kore the credentials necessary to build a GKE
 This cluster will in turn host our sandbox environment.
 
 ```shell script
-bin/korectl apply -f manifests/local/gke-credentials.yml -f manifests/local/gke-allocation.yml
+./korectl apply -f manifests/local/gke-credentials.yml -f manifests/local/gke-allocation.yml
 # gke.compute.kore.appvia.io/teams/kore-admin/gkecredentials/gke configured
 # config.kore.appvia.io/teams/kore-admin/allocations/gke configured
 ```
@@ -240,7 +244,7 @@ bin/korectl apply -f manifests/local/gke-credentials.yml -f manifests/local/gke-
 Its time to use the Kore CLI To provision our Sandbox environment,
 
 ```shell script
-bin/korectl create cluster appvia-trial -t team-appvia --plan gke-development -a gke --namespace sandbox
+./korectl create cluster appvia-trial -t team-appvia --plan gke-development -a gke --namespace sandbox
 # Attempting to create cluster: "appvia-trial", plan: gke-development
 # Waiting for "appvia-trial" to provision (usually takes around 5 minutes, ctrl-c to background)
 # Cluster appvia-sdbox has been successfully provisioned
@@ -273,7 +277,7 @@ We'll be using `kubectl`, the Kubernetes CLI, to make the deployment. If you don
 Now we have to configure our `kubectl` kubeconfig in ~/.kube/config with our new GKE cluster.
 
 ```shell script
-bin/korectl kubeconfig -t team-appvia
+./korectl kubeconfig -t team-appvia
 # Successfully added team [team-appvia] provisioned clusters to your kubeconfig
 # Context        Cluster              
 # appvia-trial   appvia-trial
@@ -334,24 +338,32 @@ kubectl delete service hello-server
 
 #### Delete the sandbox environment
 
-List the namespace claims for our sandbox environment
+You can now use kore to destroy the cluster:
 
 ```shell script
-bin/korectl get namespaceclaims -t team-appvia
-# Resource                Namespace    Cluster         Status
-# appvia-trial-sandbox    sandbox      appvia-trial    Success
-```
-
-Use the resource name to delete the sandbox namespace
-
-```shell script
-bin/korectl delete --team team-appvia namespaceclaim appvia-trial-sandbox
-# "appvia-trial-sandbox" was successfully deleted
-```
-
-Finally delete the related cluster
-
-```shell script
-bin/korectl delete --team team-appvia cluster appvia-trial
+./korectl delete --team team-appvia cluster appvia-trial
 # "appvia-trial" was successfully deleted
+```
+
+You can check for the cluster deletion completing by retrieving the cluster:
+
+```shell script
+./korectl get cluster appvia-trial --team team-appvia
+# Name            Kind    API Endpoint           Auth Proxy Endpoint    Status
+# appvia-trial    GKE     https://1.2.3.4        5.6.7.8                Deleting
+```
+
+Once the deletion is complete, the cluster will disappear from Kore:
+
+```shell script
+./korectl get cluster appvia-trial --team team-appvia
+# Error: "appvia-trial" does not exist
+```
+
+Finally, after waiting for your cluster to delete, you may stop your local kore environment:
+
+```shell script
+./korectl local stop
+# ...Stopping Kore.
+# ...Kore is now stopped.
 ```
