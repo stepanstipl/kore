@@ -224,6 +224,8 @@ func (g *gkeClient) Update(ctx context.Context) (bool, error) {
 }
 
 // CreateUpdateDefinition returns a cluster update definition
+// @notes: so GKE will only handle one update at a time, so if the user makes a bunch of changes to the
+// spec we need to return the first change, update, requeue and do the next i guess.
 func (g *gkeClient) CreateUpdateDefinition(state *container.Cluster) (*container.UpdateClusterRequest, error) {
 	request := &container.UpdateClusterRequest{
 		ProjectId: g.credentials.project,
@@ -233,7 +235,17 @@ func (g *gkeClient) CreateUpdateDefinition(state *container.Cluster) (*container
 
 	if state.CurrentMasterVersion != g.cluster.Spec.Version {
 		u.DesiredMasterVersion = g.cluster.Spec.Version
+
+		return request, nil
 	}
+	if state.CurrentNodeVersion != g.cluster.Spec.Version {
+		u.DesiredNodeVersion = g.cluster.Spec.Version
+		// @TODO needs to be revisted if we support multiple nodepools in the future
+		u.DesiredNodePoolId = "compute"
+
+		return request, nil
+	}
+
 	/*
 		if g.cluster.Spec.EnableShieldedNodes &&
 			(state.ShieldedNodes == nil || state.ShieldedNodes.Enabled != false) {
