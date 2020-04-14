@@ -275,7 +275,7 @@ func (n *ctrl) EnsureDeletion(group *eks.EKSNodeGroup) controllers.EnsureFunc {
 				return reconcile.Result{}, err
 			}
 
-		case awseks.NodegroupStatusCreating, awseks.NodegroupStatusUpdating:
+		case awseks.NodegroupStatusCreating, awseks.NodegroupStatusUpdating, awseks.NodegroupStatusDeleting:
 			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
 
 		case awseks.NodegroupStatusDeleteFailed:
