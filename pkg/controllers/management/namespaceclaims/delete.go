@@ -75,7 +75,7 @@ func (a *nsCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 
 		// @step: delete the namespace
 		if err := kubernetes.DeleteIfExists(context.Background(), client, &v1.Namespace{
-			ObjectMeta: metav1.ObjectMeta{Name: resource.Name},
+			ObjectMeta: metav1.ObjectMeta{Name: resource.Spec.Name},
 		}); err != nil {
 			logger.WithError(err).Error("trying to delete the namespace contained in the claim")
 
