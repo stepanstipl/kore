@@ -39,3 +39,12 @@ func TruePtr() *bool {
 func BoolPtr(v bool) *bool {
 	return &v
 }
+
+// StringValue return the string or empty
+func StringValue(v *string) string {
+	if v == nil {
+		return ""
+	}
+
+	return *v
+}

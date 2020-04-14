@@ -18,14 +18,17 @@ package eksnodegroup
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
 	ekscc "github.com/appvia/kore/pkg/controllers/cloud/aws/eks"
+	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/cloud/aws"
 
+	awseks "github.com/aws/aws-sdk-go/service/eks"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -120,19 +123,15 @@ func (n *ctrl) EnsureNodeGroup(client *aws.Client, group *eks.EKSNodeGroup) cont
 
 		found, err := client.NodeGroupExists(ctx, group)
 		if err != nil {
-			group.Status.Conditions.SetCondition(corev1.Component{
-				Detail:  err.Error(),
-				Name:    ComponentClusterNodegroupCreator,
-				Message: "Failed to check for cluster nodegroup existence",
-				Status:  corev1.FailureStatus,
-			})
+			logger.WithError(err).Error("trying to describe the nodegroup")
 
 			return reconcile.Result{}, err
 		}
+
 		if !found {
 			logger.Debug("eks nodegroup does not exist, attempting to create now")
 
-			// @step: set the component status to pending
+			// @step: we set the provisioning state to pending
 			status, found := group.Status.Conditions.GetStatus(ComponentClusterNodegroupCreator)
 			if !found || status != corev1.PendingStatus {
 				group.Status.Conditions.SetCondition(corev1.Component{
@@ -146,40 +145,68 @@ func (n *ctrl) EnsureNodeGroup(client *aws.Client, group *eks.EKSNodeGroup) cont
 
 			// @step: attempt to ensure create the eks nodegroup
 			if err := client.CreateNodeGroup(ctx, group); err != nil {
-				logger.WithError(err).Error("attempting to create cluster nodegroup")
-
-				group.Status.Conditions.SetCondition(corev1.Component{
-					Name:    ComponentClusterNodegroupCreator,
-					Message: "Failed trying to provision the cluster nodegroup",
-					Detail:  err.Error(),
-				})
-
-				return reconcile.Result{}, err
-			}
-		} else {
-			// @TODO performing an update on the nodegroup
-			if err := client.WaitForNodeGroupReady(ctx, group); err != nil {
-				logger.WithError(err).Error("trying to ensure the nodegroup is ready")
+				logger.WithError(err).Error("trying to create the eks nodegroup")
 
 				return reconcile.Result{}, err
 			}
 
-			// @TODO update the nodegroup
-			if err := client.UpdateNodeGroup(ctx, group); err != nil {
-				logger.WithError(err).Error("trying to update the eks nodegroup")
-
-				return reconcile.Result{}, err
-			}
+			return reconcile.Result{RequeueAfter: 60 * time.Second}, nil
 		}
 
-		// @step: update the state as provisioned
-		group.Status.Conditions.SetCondition(corev1.Component{
-			Name:    ComponentClusterNodegroupCreator,
-			Message: "Cluster nodegroup has been provisioned",
-			Status:  corev1.SuccessStatus,
-		})
+		// @step: get the current state of the nodegroup
+		state, err := client.DescribeNodeGroup(ctx, group)
+		if err != nil {
+			log.WithError(err).Error("trying to describe the nodegroup")
 
-		group.Status.Status = corev1.SuccessStatus
+			return reconcile.Result{}, err
+		}
+
+		logger.WithField("status", utils.StringValue(state.Status)).Debug("state of the eks nodegroup at the moment")
+
+		switch utils.StringValue(state.Status) {
+		case awseks.NodegroupStatusCreateFailed:
+			group.Status.Status = corev1.FailureStatus
+
+			group.Status.Conditions.SetCondition(corev1.Component{
+				Name:    ComponentClusterNodegroupCreator,
+				Message: "EKS Nodegroup has failed to create",
+				Status:  corev1.FailureStatus,
+			})
+
+		case awseks.NodegroupStatusCreating, awseks.NodegroupStatusUpdating:
+			group.Status.Status = corev1.PendingStatus
+
+			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+
+		case awseks.NodegroupStatusDeleting:
+			logger.Warn("nodegroup is defined as deleting, someone has removed outside of kore")
+			// not sure what to do here?? - we should probaby way and recreate it HAHAHA :-)
+
+			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+
+		case awseks.NodegroupStatusActive, awseks.NodegroupStatusDegraded:
+			group.Status.Status = corev1.SuccessStatus
+
+			group.Status.Conditions.SetCondition(corev1.Component{
+				Name:    ComponentClusterNodegroupCreator,
+				Message: "EKS Nodegroup has been provisioned",
+				Status:  corev1.SuccessStatus,
+			})
+		}
+
+		// @step: we need to check the current state against the
+		updating, err := client.UpdateNodeGroup(ctx, group)
+		if err != nil {
+			logger.WithError(err).Error("trying to update the eks nodegroup")
+
+			return reconcile.Result{}, err
+		}
+		if updating {
+			logger.Debug("performing an update on the eks nodegroup")
+			group.Status.Status = corev1.PendingStatus
+
+			return reconcile.Result{RequeueAfter: 30 * time.Second}, err
+		}
 
 		return reconcile.Result{}, nil
 	}
@@ -227,8 +254,35 @@ func (n *ctrl) EnsureDeletion(group *eks.EKSNodeGroup) controllers.EnsureFunc {
 
 			return reconcile.Result{}, err
 		}
-		if found {
-			return reconcile.Result{}, client.DeleteNodeGroup(ctx, group)
+		if !found {
+			return reconcile.Result{}, nil
+		}
+
+		state, err := client.DescribeNodeGroup(ctx, group)
+		if err != nil {
+			logger.WithError(err).Error("trying to describe the nodegroup state")
+
+			return reconcile.Result{}, err
+		}
+
+		status := utils.StringValue(state.Status)
+
+		switch status {
+		case awseks.NodegroupStatusActive, awseks.NodegroupStatusCreateFailed, awseks.NodegroupStatusDegraded:
+			if err := client.DeleteNodeGroup(ctx, group); err != nil {
+				logger.WithError(err).Error("trying to delete the nodegroup")
+
+				return reconcile.Result{}, err
+			}
+
+		case awseks.NodegroupStatusCreating, awseks.NodegroupStatusUpdating:
+			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+
+		case awseks.NodegroupStatusDeleteFailed:
+			return reconcile.Result{}, errors.New("nodegroup has failed to delete, please check console")
+
+		default:
+			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
 		}
 
 		return reconcile.Result{}, nil
