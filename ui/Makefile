@@ -52,7 +52,7 @@ docker-release:
 
 docker:
 	@echo "--> Building the docker image"
-	docker build -t ${REGISTRY}/${AUTHOR}/${NAME}:${VERSION} .
+	docker build -t ${REGISTRY}/${AUTHOR}/${NAME}:${VERSION} --build-arg version=${VERSION} .
 
 compose:
 	@echo "--> Pulling images"

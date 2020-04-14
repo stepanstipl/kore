@@ -1,7 +1,7 @@
 // override antd less vars here
 
 @hub-sider-color: #efefef;
-@kore-primary-color: #3d5b58;
+@kore-primary-color: rgb(61, 91, 88);
 
 @menu-bg: @hub-sider-color;
 @layout-sider-background: @hub-sider-color;
@@ -10,9 +10,10 @@
 // Theme overrides:
 @primary-color: @kore-primary-color; // primary color for all components
 @link-color: @primary-color; // link color
-@success-color: #ffbe9f; // success state color
+@menu-item-active-bg: rgba(61, 91, 88, 0.2); // primary at 20%; default is primary at 90% opacity which results in too-dark-to-read menu item.
 // Non-overridden:
 //@info-color: #b9d9eb; // info state color
+//@success-color: #52c41a; // success state color
 //@warning-color: #faad14; // warning state color
 //@error-color: #f5222d; // error state color
 //@font-size-base: 14px; // major text font size

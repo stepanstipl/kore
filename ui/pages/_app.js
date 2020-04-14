@@ -17,6 +17,7 @@ import OrgService from '../server/services/org'
 import userExpired from '../server/lib/user-expired'
 import gtag from '../lib/utils/gtag'
 import '../assets/styles.less'
+import Paragraph from 'antd/lib/typography/Paragraph'
 
 Router.events.on('routeChangeComplete', url => {
   gtag.pageView(url)
@@ -86,7 +87,8 @@ class MyApp extends App {
   }
 
   state = {
-    userTeams: this.props.userTeams
+    userTeams: this.props.userTeams,
+    version: null
   }
 
   setSessionTimeout() {
@@ -108,6 +110,9 @@ class MyApp extends App {
 
   componentDidMount() {
     this.setSessionTimeout()
+    axios.get(`${window.location.origin}/version`).then((v) => {
+      this.setState({ version: v.data.version })
+    })
   }
 
   componentDidUpdate() {
@@ -130,6 +135,7 @@ class MyApp extends App {
     const isAdmin = Boolean(props.user && props.user.isAdmin)
     const hideSider = Boolean(props.hideSider || props.unrestrictedPage)
     const hidePage = Boolean(!props.unrestrictedPage && !props.user)
+    const { version } = this.state
 
     if (hidePage) {
       return null
@@ -174,10 +180,11 @@ class MyApp extends App {
             </div>
             <User user={props.user}/>
           </Header>
-          <Layout hasSider="true" style={{ minHeight:'100vh' }}>
+          <Layout hasSider="true">
             <SiderMenu hide={hideSider} isAdmin={isAdmin} userTeams={this.state.userTeams} otherTeams={props.otherTeams}/>
             <Content style={{ background: '#fff', padding: 24, minHeight: 280 }}>
-              <Component {...this.props.pageProps} user={this.props.user} teamAdded={this.teamAdded} />
+              <Component {...this.props.pageProps} user={this.props.user} teamAdded={this.teamAdded} version={version} />
+              <Paragraph style={{ textAlign: 'right', fontSize: '0.8em', padding: 0, margin: 0 }}>Appvia Kore {version}</Paragraph>
             </Content>
           </Layout>
         </Layout>

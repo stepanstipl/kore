@@ -14,4 +14,6 @@ export \
     KORE_IDP_USER_CLAIMS \
     KORE_IDP_CLIENT_SCOPES
 
+export UI_VERSION=v0.0.0-dev
+
 npm run dev

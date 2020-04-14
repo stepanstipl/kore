@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import Link from 'next/link'
-import { Typography, Statistic, Icon, Row, Col, Card, Alert, Button } from 'antd'
+import { Typography, Statistic, Icon, Row, Col, Card, Alert, Button, Tag } from 'antd'
 const { Title, Paragraph, Text } = Typography
 
 import KoreApi from '../lib/kore-api'
@@ -14,7 +14,8 @@ class IndexPage extends React.Component {
     allTeams: PropTypes.object.isRequired,
     adminMembers: PropTypes.object,
     gkeCredentials: PropTypes.object,
-    gcpOrganizations: PropTypes.object
+    gcpOrganizations: PropTypes.object,
+    version: PropTypes.string
   }
 
   static staticProps = {
@@ -56,7 +57,7 @@ class IndexPage extends React.Component {
   }
 
   render() {
-    const { user, allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations } = this.props
+    const { user, allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations, version } = this.props
     const userTeams = (user.teams.userTeams || []).filter(t => !kore.ignoreTeams.includes(t.metadata.name))
     const noUserTeamsExist = userTeams.length === 0
     const cloudIntegrationMissing = (gkeCredentials && gkeCredentials.items.length === 0) && (gcpOrganizations && gcpOrganizations.items.length === 0)
@@ -203,6 +204,7 @@ class IndexPage extends React.Component {
 
     return (
       <div>
+        <Tag style={{ float: 'right' }}>{version}</Tag>
         <Title level={1} style={{ marginBottom: '0' }}>Appvia Kore</Title>
         <Title level={4} type="secondary" style={{ marginTop: '10px' }}>Kubernetes for Teams, Making Cloud Simple for Developers and DevOps</Title>
         {user.isAdmin ? <AdminView /> : <UserView />}
