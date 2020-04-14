@@ -199,7 +199,7 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 			}
 		}
 
-		// @step: we check the current state against the desired and see if we need to ammend
+		// @step: we check the current state against the desired and see if we need to amend
 		updating, err := client.Update(ctx)
 		if err != nil {
 			logger.WithError(err).Error("attempting to update cluster")

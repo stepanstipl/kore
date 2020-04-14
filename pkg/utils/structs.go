@@ -87,7 +87,7 @@ func IsChanged(v interface{}) (bool, error) {
 		return false, err
 	}
 
-	return empty == false, nil
+	return !empty, nil
 }
 
 // IsEmpty checks if a struct has any values set

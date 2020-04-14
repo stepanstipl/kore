@@ -690,8 +690,6 @@ func (g *gkeClient) FindOperation(ctx context.Context, operationType, resource, 
 	})
 	logger.Debug("searching for any running operations")
 
-	g.ce.Projects.Locations.Clusters.Get("me").Do()
-
 	resp, err := g.ce.Projects.Locations.Operations.List(fmt.Sprintf("projects/%s/locations/%s",
 		g.credentials.project, g.region)).Do()
 	if err != nil {
