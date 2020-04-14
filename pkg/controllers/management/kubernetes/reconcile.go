@@ -512,6 +512,8 @@ func (a k8sCtrl) CheckProviderStatus(ctx context.Context, resource *clustersv1.K
 
 			return false, errors.New("cloud provider is in a failed state")
 		}
+
+		return true, nil
 	case "GKE":
 		p := &gke.GKE{}
 		if err := a.mgr.GetClient().Get(ctx, key, p); err != nil {
@@ -583,9 +585,7 @@ func (a k8sCtrl) CheckProviderStatus(ctx context.Context, resource *clustersv1.K
 
 			return false, nil
 		}
-	default:
-		logger.Warn("unknown cloud provider, ignoring the check")
 	}
 
-	return true, nil
+	return false, fmt.Errorf("cluster built with an unknown provider: %s", resource.Spec.Provider.Kind)
 }
