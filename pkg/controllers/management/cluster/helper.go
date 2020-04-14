@@ -103,7 +103,7 @@ func createProviderComponents(c *clustersv1.Cluster) ([]clustersv1.ClusterCompon
 func getClusterResourceVersion(c clustersv1.ClusterComponent) string {
 	metaAccessor, _ := meta.Accessor(c)
 
-	return metaAccessor.GetAnnotations()[kore.Label("revision")]
+	return metaAccessor.GetAnnotations()[kore.Label("clusterRevision")]
 }
 
 func setClusterResourceVersion(c clustersv1.ClusterComponent, resourceVersion string) {
@@ -112,7 +112,7 @@ func setClusterResourceVersion(c clustersv1.ClusterComponent, resourceVersion st
 		metaAccessor.SetAnnotations(map[string]string{})
 	}
 
-	metaAccessor.GetAnnotations()[kore.Label("revision")] = resourceVersion
+	metaAccessor.GetAnnotations()[kore.Label("clusterRevision")] = resourceVersion
 }
 
 func getComponentName(c clustersv1.ClusterComponent) string {
