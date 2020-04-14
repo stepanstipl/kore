@@ -159,7 +159,7 @@ var _ = Describe("Cluster Controller", func() {
 
 				JustBeforeEach(func() {
 					updatedCluster = &clustersv1.Cluster{}
-					test.ExpectStatusUpdate(0, updatedCluster)
+					test.ExpectStatusPatch(0, updatedCluster)
 				})
 
 				It("should set the status to pending", func() {
@@ -189,7 +189,7 @@ var _ = Describe("Cluster Controller", func() {
 
 					It("should fail and not requeue", func() {
 						updatedCluster := &clustersv1.Cluster{}
-						test.ExpectStatusUpdate(0, updatedCluster)
+						test.ExpectStatusPatch(0, updatedCluster)
 						Expect(updatedCluster.Status.Status).To(Equal(corev1.FailureStatus))
 
 						Expect(reconcileErr).ToNot(HaveOccurred())
@@ -226,14 +226,14 @@ var _ = Describe("Cluster Controller", func() {
 					BeforeEach(func() {
 						eksvpc := eksv1alpha1.NewEKSVPC(name.Name, name.Namespace)
 						eksvpc.Status.Status = corev1.PendingStatus
-						test.Client.UpdateReturnsOnCall(0, errors.New("some random error"))
+						test.Client.PatchReturnsOnCall(0, errors.New("some random error"))
 						test.Objects = append(test.Objects, eksvpc)
 					})
 
 					It("should requeue", func() {
 						updatedEKSVPC := &eksv1alpha1.EKSVPC{}
-						test.ExpectUpdate(0, updatedEKSVPC)
-						Expect(test.Client.UpdateCallCount()).To(Equal(1))
+						test.ExpectPatch(0, updatedEKSVPC)
+						Expect(test.Client.PatchCallCount()).To(Equal(1))
 
 						Expect(reconcileErr).To(HaveOccurred())
 					})
@@ -247,7 +247,7 @@ var _ = Describe("Cluster Controller", func() {
 
 					It("should fail and not requeue", func() {
 						updatedCluster := &clustersv1.Cluster{}
-						test.ExpectStatusUpdate(0, updatedCluster)
+						test.ExpectStatusPatch(0, updatedCluster)
 						Expect(updatedCluster.Status.Status).To(Equal(corev1.FailureStatus))
 
 						Expect(reconcileErr).ToNot(HaveOccurred())
@@ -264,7 +264,7 @@ var _ = Describe("Cluster Controller", func() {
 
 					It("should update the component status on the cluster", func() {
 						updatedCluster := &clustersv1.Cluster{}
-						test.ExpectStatusUpdate(0, updatedCluster)
+						test.ExpectStatusPatch(0, updatedCluster)
 
 						component, _ := updatedCluster.Status.Components.GetComponent("EKSVPC/testName")
 						Expect(component.Status).To(Equal(corev1.SuccessStatus))
@@ -288,7 +288,7 @@ var _ = Describe("Cluster Controller", func() {
 
 						It("should update the component status on the cluster", func() {
 							updatedCluster := &clustersv1.Cluster{}
-							test.ExpectStatusUpdate(0, updatedCluster)
+							test.ExpectStatusPatch(0, updatedCluster)
 
 							component, _ := updatedCluster.Status.Components.GetComponent("EKS/testName")
 							Expect(component.Status).To(Equal(corev1.SuccessStatus))
@@ -320,7 +320,7 @@ var _ = Describe("Cluster Controller", func() {
 
 							It("should update the component statuses on the cluster", func() {
 								updatedCluster := &clustersv1.Cluster{}
-								test.ExpectStatusUpdate(0, updatedCluster)
+								test.ExpectStatusPatch(0, updatedCluster)
 
 								component1, _ := updatedCluster.Status.Components.GetComponent("EKSNodeGroup/testName-ng1")
 								Expect(component1.Status).To(Equal(corev1.SuccessStatus))
@@ -348,7 +348,7 @@ var _ = Describe("Cluster Controller", func() {
 
 								It("should update the status on the cluster", func() {
 									updatedCluster := &clustersv1.Cluster{}
-									test.ExpectStatusUpdate(0, updatedCluster)
+									test.ExpectStatusPatch(0, updatedCluster)
 
 									Expect(updatedCluster.Status.Status).To(Equal(corev1.SuccessStatus))
 								})
@@ -392,7 +392,7 @@ var _ = Describe("Cluster Controller", func() {
 
 					It("should update the status", func() {
 						updatedCluster := &clustersv1.Cluster{}
-						test.ExpectStatusUpdate(0, updatedCluster)
+						test.ExpectStatusPatch(0, updatedCluster)
 						Expect(updatedCluster.Status.Status).To(Equal(corev1.FailureStatus))
 						component, _ := updatedCluster.Status.Components.GetComponent("EKS/testName")
 						Expect(component.Status).To(Equal(corev1.FailureStatus))
@@ -406,10 +406,10 @@ var _ = Describe("Cluster Controller", func() {
 
 				When("updating the status fails", func() {
 					BeforeEach(func() {
-						test.StatusClient.UpdateReturnsOnCall(0, fmt.Errorf("some error"))
+						test.StatusClient.PatchReturnsOnCall(0, fmt.Errorf("some error"))
 					})
 					It("should retry", func() {
-						Expect(test.StatusClient.UpdateCallCount()).To(Equal(1))
+						Expect(test.StatusClient.PatchCallCount()).To(Equal(1))
 						Expect(reconcileErr).To(HaveOccurred())
 					})
 				})
@@ -490,7 +490,7 @@ var _ = Describe("Cluster Controller", func() {
 
 					It("should set the status to delete failed", func() {
 						updatedCluster := &clustersv1.Cluster{}
-						test.ExpectStatusUpdate(0, updatedCluster)
+						test.ExpectStatusPatch(0, updatedCluster)
 						Expect(updatedCluster.Status.Status).To(Equal(corev1.DeleteFailedStatus))
 					})
 
@@ -506,7 +506,7 @@ var _ = Describe("Cluster Controller", func() {
 
 					It("should set the status to deleted", func() {
 						updatedCluster := &clustersv1.Cluster{}
-						test.ExpectStatusUpdate(0, updatedCluster)
+						test.ExpectStatusPatch(0, updatedCluster)
 						Expect(updatedCluster.Status.Status).To(Equal(corev1.DeletedStatus))
 					})
 
