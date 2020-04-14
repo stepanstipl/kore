@@ -158,6 +158,11 @@ func (r *rclient) Create(ctx context.Context, options ...CreateOptionFunc) error
 		}).Error("failed to update internal cache on create")
 	}
 
+	// @step: if possible we try and inject the gvk from the schema
+	if gvk, found, _ := hubschema.GetGroupKindVersion(r.value); found {
+		r.value.GetObjectKind().SetGroupVersionKind(gvk)
+	}
+
 	return nil
 }
 
@@ -304,36 +309,43 @@ func (r *rclient) Update(ctx context.Context, options ...UpdateOptionFunc) error
 		return err
 	}
 
-	if !found && r.withCreate {
-		return r.client.Create(ctx, r.value)
-	}
-	if r.withForceApply {
-		r.value.(metav1.Object).SetGeneration(original.(metav1.Object).GetGeneration())
-		r.value.(metav1.Object).SetResourceVersion(original.(metav1.Object).GetResourceVersion())
-
-		return r.client.Update(ctx, r.value)
-	}
-
-	if err := r.client.Patch(ctx, r.value, client.MergeFrom(original)); err != nil {
-		return err
-	}
-
-	// @step: attempt to inject the resource direct
 	err = func() error {
-		object, err := r.updateQueryFromObject(r.value)
-		if err != nil {
-			return err
-		}
-		if err := r.index.Set(object.GetName(), object); err != nil {
-			return err
+		if !found && r.withCreate {
+			return r.client.Create(ctx, r.value)
 		}
 
-		return nil
+		if r.withForceApply {
+			r.value.(metav1.Object).SetGeneration(original.(metav1.Object).GetGeneration())
+			r.value.(metav1.Object).SetResourceVersion(original.(metav1.Object).GetResourceVersion())
+
+			return r.client.Update(ctx, r.value)
+		}
+
+		return r.client.Patch(ctx, r.value, client.MergeFrom(original))
 	}()
-	if err != nil {
-		log.WithFields(log.Fields{
-			"error": err.Error(),
-		}).Error("failed to update internal cache on create")
+	if err == nil {
+		// @step: attempt to inject the resource direct
+		err = func() error {
+			object, err := r.updateQueryFromObject(r.value)
+			if err != nil {
+				return err
+			}
+			if err := r.index.Set(object.GetName(), object); err != nil {
+				return err
+			}
+
+			return nil
+		}()
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err.Error(),
+			}).Error("failed to update internal cache on create")
+		}
+	}
+
+	// @step: if possible we try and inject the gvk from the schema
+	if gvk, found, _ := hubschema.GetGroupKindVersion(r.value); found {
+		r.value.GetObjectKind().SetGroupVersionKind(gvk)
 	}
 
 	return nil
