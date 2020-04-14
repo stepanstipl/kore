@@ -334,14 +334,14 @@ func (c *Client) CreateNodeGroup(ctx context.Context, group *eksv1alpha1.EKSNode
 	}
 	if !existing {
 		input := &eks.CreateNodegroupInput{
-			AmiType:        aws.String(group.Spec.AMIType),
-			ClusterName:    aws.String(group.Spec.Cluster.Name),
-			NodeRole:       aws.String(group.Status.NodeIAMRole),
-			ReleaseVersion: aws.String(group.Spec.ReleaseVersion),
-			DiskSize:       aws.Int64(group.Spec.DiskSize),
-			InstanceTypes:  aws.StringSlice([]string{group.Spec.InstanceType}),
-			NodegroupName:  aws.String(group.Name),
-			Subnets:        aws.StringSlice(group.Spec.Subnets),
+			AmiType:       aws.String(group.Spec.AMIType),
+			ClusterName:   aws.String(group.Spec.Cluster.Name),
+			DiskSize:      aws.Int64(group.Spec.DiskSize),
+			InstanceTypes: aws.StringSlice([]string{group.Spec.InstanceType}),
+			NodeRole:      aws.String(group.Status.NodeIAMRole),
+			NodegroupName: aws.String(group.Name),
+			Subnets:       aws.StringSlice(group.Spec.Subnets),
+			Version:       aws.String(group.Spec.Version),
 			ScalingConfig: &eks.NodegroupScalingConfig{
 				DesiredSize: aws.Int64(group.Spec.DesiredSize),
 				MaxSize:     aws.Int64(group.Spec.MaxSize),
@@ -415,15 +415,20 @@ func (c *Client) UpdateNodeGroup(ctx context.Context, group *eksv1alpha1.EKSNode
 		return false, err
 	}
 
-	if aws.StringValue(state.ReleaseVersion) != group.Spec.ReleaseVersion {
-		logger.Debug("attempting to update the nodegroup node version")
+	if group.Spec.Version != "" && group.Spec.Version != aws.StringValue(state.Version) {
+		logger.WithFields(log.Fields{
+			"current":  aws.StringValue(state.Version),
+			"expected": group.Spec.Version,
+		}).Debug("attempting to update the nodegroup node version")
 
 		if _, err := c.svc.UpdateNodegroupVersionWithContext(ctx, &awseks.UpdateNodegroupVersionInput{
-			ClusterName:    aws.String(group.Spec.Cluster.Name),
-			Force:          aws.Bool(true),
-			NodegroupName:  aws.String(group.Name),
-			ReleaseVersion: aws.String(group.Spec.ReleaseVersion),
+			ClusterName:   aws.String(group.Spec.Cluster.Name),
+			Force:         aws.Bool(true),
+			NodegroupName: aws.String(group.Name),
+			Version:       aws.String(group.Spec.Version),
 		}); err != nil {
+			logger.WithError(err).Error("trying to updade the node version")
+
 			return false, err
 		}
 
@@ -432,15 +437,16 @@ func (c *Client) UpdateNodeGroup(ctx context.Context, group *eksv1alpha1.EKSNode
 
 	// @TODO we need to investigate autoscale and see if setting the desired size effects this
 	if aws.Int64Value(state.ScalingConfig.MinSize) != group.Spec.MinSize ||
-		aws.Int64Value(state.ScalingConfig.MaxSize) != group.Spec.MaxSize {
-		//aws.Int64Value(state.ScalingConfig.DesiredSize) != group.Spec.DesiredSize {
+		aws.Int64Value(state.ScalingConfig.MaxSize) != group.Spec.MaxSize ||
+		aws.Int64Value(state.ScalingConfig.DesiredSize) != group.Spec.DesiredSize {
+
 		if _, err := c.svc.UpdateNodegroupConfigWithContext(ctx, &awseks.UpdateNodegroupConfigInput{
 			ClusterName:   aws.String(group.Spec.Cluster.Name),
 			NodegroupName: aws.String(group.Name),
 			ScalingConfig: &awseks.NodegroupScalingConfig{
-				//DesiredSize: aws.Int64(group.Spec.DesiredSize),
-				MinSize: aws.Int64(group.Spec.MaxSize),
-				MaxSize: aws.Int64(group.Spec.MaxSize),
+				DesiredSize: aws.Int64(group.Spec.DesiredSize),
+				MinSize:     aws.Int64(group.Spec.MinSize),
+				MaxSize:     aws.Int64(group.Spec.MaxSize),
 			},
 		}); err != nil {
 			return false, err

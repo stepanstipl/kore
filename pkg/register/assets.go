@@ -923,8 +923,7 @@ spec:
                 must match the region of the cluster
               type: string
             releaseVersion:
-              description: ReleaseVersion is the Kubernetes version to run for the
-                kubelet
+              description: ReleaseVersion is release version of the managed node ami
               type: string
             sshSourceSecurityGroups:
               description: SSHSourceSecurityGroups is the security groups that are
@@ -944,6 +943,9 @@ spec:
                 type: string
               description: Tags are the AWS metadata to apply to the node group
               type: object
+            version:
+              description: Version is the Kubernetes version to run for the kubelet
+              type: string
           required:
           - amiType
           - credentials

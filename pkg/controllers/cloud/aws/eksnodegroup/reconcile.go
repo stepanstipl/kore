@@ -132,11 +132,8 @@ func (n *ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 
 		return reconcile.Result{}, err
 	}
-	if err != nil {
-		return reconcile.Result{}, err
-	}
 
-	return result, nil
+	return result, err
 }
 
 // GetClusterClient returns a EKS cluster client
