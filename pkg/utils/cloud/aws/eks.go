@@ -254,7 +254,7 @@ func (c *Client) Delete(ctx context.Context) error {
 	}
 
 	// @step: we need to wait for the cluster to be remove
-	utils.WaitUntilComplete(context.Background(), 1*time.Hour, 30*time.Second, func() (bool, error) {
+	return utils.WaitUntilComplete(context.Background(), 1*time.Hour, 30*time.Second, func() (bool, error) {
 		logger.Debug("checking if the eks cluster has been deleted")
 
 		if found, err := c.Exists(ctx); err != nil {
@@ -269,8 +269,6 @@ func (c *Client) Delete(ctx context.Context) error {
 
 		return false, nil
 	})
-
-	return nil
 }
 
 // Update should migrate changes to a cluster object
@@ -347,7 +345,7 @@ func (c *Client) DeleteNodeGroup(ctx context.Context, group *eksv1alpha1.EKSNode
 	}
 
 	// @step: we need to wait for the nodegroup to be removed
-	utils.WaitUntilComplete(context.Background(), 30*time.Minute, 30*time.Second, func() (bool, error) {
+	return utils.WaitUntilComplete(context.Background(), 30*time.Minute, 30*time.Second, func() (bool, error) {
 		logger.Debug("checking if the eks nodegroup has been deleted")
 
 		if found, err := c.NodeGroupExists(ctx, group); err != nil {
@@ -362,8 +360,6 @@ func (c *Client) DeleteNodeGroup(ctx context.Context, group *eksv1alpha1.EKSNode
 
 		return false, nil
 	})
-
-	return err
 }
 
 // CreateNodeGroup will create a node group for the EKS cluster
