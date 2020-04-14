@@ -91,14 +91,14 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 		}
 
 		ensure := []controllers.EnsureFunc{
-			t.EnsureResourcePending,
-			t.EnsureClusterRoles,
-			t.EnsureCluster(client),
-			t.EnsureClusterBootstrap(client),
+			t.EnsureResourcePending(resource),
+			t.EnsureClusterRoles(resource),
+			t.EnsureCluster(client, resource),
+			t.EnsureClusterBootstrap(client, resource),
 		}
 
 		for _, handler := range ensure {
-			result, err := handler(ctx, resource)
+			result, err := handler(ctx)
 			if err != nil {
 				return reconcile.Result{}, err
 			}

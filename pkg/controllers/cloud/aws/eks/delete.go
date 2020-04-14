@@ -53,14 +53,14 @@ func (t *eksCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 
 	result, err := func() (reconcile.Result, error) {
 		operations := []controllers.EnsureFunc{
-			t.EnsureDeletionStatus,
-			t.EnsureNodeGroupsDeleted,
-			t.EnsureDeletion,
-			t.EnsureSecretDeletion,
+			t.EnsureDeletionStatus(resource),
+			t.EnsureNodeGroupsDeleted(resource),
+			t.EnsureDeletion(resource),
+			t.EnsureSecretDeletion(resource),
 		}
 
 		for _, handler := range operations {
-			result, err := handler(ctx, resource)
+			result, err := handler(ctx)
 			if err != nil {
 				return reconcile.Result{}, err
 			}

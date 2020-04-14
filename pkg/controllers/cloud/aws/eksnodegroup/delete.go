@@ -52,12 +52,12 @@ func (n *ctrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 
 	result, err := func() (reconcile.Result, error) {
 		ensure := []controllers.EnsureFunc{
-			n.EnsureDeletionStatus,
-			n.EnsureDeletion,
+			n.EnsureDeletionStatus(resource),
+			n.EnsureDeletion(resource),
 		}
 		// @step: we iterate the handler operations, implement and act on result
 		for _, handler := range ensure {
-			result, err := handler(ctx, resource)
+			result, err := handler(ctx)
 			if err != nil {
 				return reconcile.Result{}, err
 			}

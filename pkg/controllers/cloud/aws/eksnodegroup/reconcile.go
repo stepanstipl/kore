@@ -103,14 +103,14 @@ func (n *ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 		}
 
 		ensure := []controllers.EnsureFunc{
-			n.EnsureNodeGroupIsPending,
-			n.EnsureClusterReady,
-			n.EnsureNodeRole(credentials),
-			n.EnsureNodeGroup(client),
+			n.EnsureNodeGroupIsPending(resource),
+			n.EnsureClusterReady(resource),
+			n.EnsureNodeRole(resource, credentials),
+			n.EnsureNodeGroup(client, resource),
 		}
 
 		for _, handler := range ensure {
-			result, err := handler(ctx, resource)
+			result, err := handler(ctx)
 			if err != nil {
 				return reconcile.Result{}, err
 			}

@@ -21,7 +21,6 @@ import (
 
 	"github.com/appvia/kore/pkg/kore"
 
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -79,4 +78,4 @@ type StatusWriter interface {
 }
 
 // EnsureFunc defines a method to ensure a state
-type EnsureFunc func(context.Context, runtime.Object) (reconcile.Result, error)
+type EnsureFunc func(context.Context) (reconcile.Result, error)

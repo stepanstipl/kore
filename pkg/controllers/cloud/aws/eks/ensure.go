@@ -27,35 +27,28 @@ import (
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/cloud/aws"
-	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
-	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 // EnsureResourcePending ensures the resource is pending
-func (t *eksCtrl) EnsureResourcePending(ctx context.Context, resource runtime.Object) (reconcile.Result, error) {
-	cluster := resource.(*eks.EKS)
+func (t *eksCtrl) EnsureResourcePending(cluster *eks.EKS) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		if cluster.Status.Status != corev1.PendingStatus {
+			cluster.Status.Status = corev1.PendingStatus
 
-	if cluster.Status.Status != corev1.PendingStatus {
-		cluster.Status.Status = corev1.PendingStatus
+			return reconcile.Result{Requeue: true}, nil
+		}
 
-		return reconcile.Result{Requeue: true}, nil
+		return reconcile.Result{}, nil
 	}
-
-	return reconcile.Result{}, nil
 }
 
 // EnsureCluster is responsible for creating the cluster
-// @TODO we should consider introducing a Phase into the statue (PROVISIONING, CREATED etc) to
-// as to member for the next iteration; that way we can bypass a number of the checks
-func (t *eksCtrl) EnsureCluster(client *aws.Client) controllers.EnsureFunc {
-
-	return func(ctx context.Context, resource runtime.Object) (reconcile.Result, error) {
-		cluster := resource.(*eks.EKS)
-
+func (t *eksCtrl) EnsureCluster(client *aws.Client, cluster *eks.EKS) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
 		logger := log.WithFields(log.Fields{
 			"name":      cluster.Name,
 			"namespace": cluster.Namespace,
@@ -100,7 +93,7 @@ func (t *eksCtrl) EnsureCluster(client *aws.Client) controllers.EnsureFunc {
 
 				cluster.Status.Conditions.SetCondition(corev1.Component{
 					Name:    ComponentClusterCreator,
-					Message: "Failed trying to provision the cluster",
+					Message: "Failed trying to provision the cluster, will retry",
 					Detail:  err.Error(),
 				})
 
@@ -146,10 +139,8 @@ func (t *eksCtrl) EnsureCluster(client *aws.Client) controllers.EnsureFunc {
 }
 
 // EnsureClusterBootstrap ensures the cluster is correctly bootstrapped
-func (t *eksCtrl) EnsureClusterBootstrap(client *aws.Client) controllers.EnsureFunc {
-
-	return func(ctx context.Context, resource runtime.Object) (reconcile.Result, error) {
-		cluster := resource.(*eks.EKS)
+func (t *eksCtrl) EnsureClusterBootstrap(client *aws.Client, cluster *eks.EKS) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
 		logger := log.WithFields(log.Fields{
 			"name":      cluster.Name,
 			"namespace": cluster.Namespace,
@@ -187,158 +178,156 @@ func (t *eksCtrl) EnsureClusterBootstrap(client *aws.Client) controllers.EnsureF
 }
 
 // EnsureClusterRoles ensures we have the cluster IAM roles
-func (t *eksCtrl) EnsureClusterRoles(ctx context.Context, resource runtime.Object) (reconcile.Result, error) {
-	cluster := resource.(*eks.EKS)
-	logger := log.WithFields(log.Fields{
-		"name":      cluster.Name,
-		"namespace": cluster.Namespace,
-	})
-	logger.Debug("attempting to ensure the iam role for the eks cluster")
-
-	// @step: first we need to check if we have access to the credentials
-	credentials, err := t.GetCredentials(ctx, cluster, cluster.Namespace)
-	if err != nil {
-		logger.WithError(err).Error("trying to retrieve cloud credentials")
-
-		cluster.Status.Conditions.SetCondition(corev1.Component{
-			Name:    ComponentClusterCreator,
-			Message: "You do not have permission to the credentials",
-			Status:  corev1.FailureStatus,
+func (t *eksCtrl) EnsureClusterRoles(cluster *eks.EKS) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		logger := log.WithFields(log.Fields{
+			"name":      cluster.Name,
+			"namespace": cluster.Namespace,
 		})
+		logger.Debug("attempting to ensure the iam role for the eks cluster")
 
-		return reconcile.Result{}, err
-	}
+		// @step: first we need to check if we have access to the credentials
+		credentials, err := t.GetCredentials(ctx, cluster, cluster.Namespace)
+		if err != nil {
+			logger.WithError(err).Error("trying to retrieve cloud credentials")
 
-	// @step: we need to ensure the iam role for the cluster is there
-	client := aws.NewIamClient(aws.Credentials{
-		AccessKeyID:     credentials.Spec.AccessKeyID,
-		SecretAccessKey: credentials.Spec.SecretAccessKey,
-	})
-
-	role, err := client.EnsureEKSClusterRole(ctx, cluster.Name)
-	if err != nil {
-		logger.WithError(err).Error("trying to ensure the eks iam role")
-
-		cluster.Status.Conditions.SetCondition(corev1.Component{
-			Name:    ComponentClusterCreator,
-			Message: "Failed trying to provision the EKS Cluster Role",
-			Detail:  err.Error(),
-		})
-
-		return reconcile.Result{}, err
-	}
-
-	cluster.Status.RoleARN = *role.Arn
-
-	return reconcile.Result{}, nil
-}
-
-// EnsureDeletionStatus ensures the resource is in a deleting state
-func (t *eksCtrl) EnsureDeletionStatus(ctx context.Context, resource runtime.Object) (reconcile.Result, error) {
-	cluster := resource.(*eks.EKS)
-
-	// @step: lets update the status of the resource to deleting
-	if cluster.Status.Status != corev1.DeletingStatus {
-		cluster.Status.Status = corev1.DeletingStatus
-
-		return reconcile.Result{Requeue: true}, nil
-	}
-
-	return reconcile.Result{}, nil
-}
-
-// EnsureNodeGroupsDeleted ensures all nodegroup referencing me have been deleted
-func (t *eksCtrl) EnsureNodeGroupsDeleted(ctx context.Context, resource runtime.Object) (reconcile.Result, error) {
-	cluster := resource.(*eks.EKS)
-	logger := log.WithFields(log.Fields{
-		"name":      cluster.Name,
-		"namespace": cluster.Namespace,
-	})
-	logger.Debug("ensuring all the eks nodegroups have been deleted")
-
-	list := &eks.EKSNodeGroupList{}
-	if err := t.mgr.GetClient().List(ctx, list, client.InNamespace(cluster.Namespace)); err != nil {
-		logger.WithError(err).Error("trying to list the eks nodegroups")
-
-		return reconcile.Result{}, err
-	}
-
-	var found bool
-
-	for _, x := range list.Items {
-		if kore.IsOwner(cluster, x.Spec.Cluster) {
-			if x.DeletionTimestamp != nil {
-				logger.WithField("nodegroup", x.Name).Debug("eks nodegroup requires deletion")
-
-				if err := kubernetes.DeleteIfExists(ctx, t.mgr.GetClient(), x.DeepCopyObject()); err != nil {
-					logger.WithError(err).Error("trying to delete the nodegroup")
-				}
-			}
-		}
-	}
-
-	// @step: if we found nodegroup we should not delete, but requeue
-	if found {
-		return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
-	}
-
-	return reconcile.Result{}, nil
-}
-
-// EnsureDeletion is responsible for deleting the actual cluster
-func (t *eksCtrl) EnsureDeletion(ctx context.Context, resource runtime.Object) (reconcile.Result, error) {
-	cluster := resource.(*eks.EKS)
-
-	logger := log.WithFields(log.Fields{
-		"name":      cluster.Name,
-		"namespace": cluster.Namespace,
-	})
-	logger.Debug("attempting to delete the eks cluster")
-
-	// @step: retrieve the cloud credentials
-	creds, err := t.GetCredentials(ctx, cluster, cluster.Namespace)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// @step: create a cloud client for us
-	client, err := aws.NewEKSClient(creds, cluster)
-	if err != nil {
-		logger.WithError(err).Error("trying to create eks client")
-
-		return reconcile.Result{}, err
-	}
-
-	// @step: check if the cluster exists
-	found, err := client.Exists(ctx)
-	if err != nil {
-		logger.WithError(err).Error("trying to check if eks cluster exists")
-
-		return reconcile.Result{}, err
-	}
-	if found {
-		logger.Debug("eks cluster exists, attempting to delete now")
-
-		if err := client.Delete(ctx); err != nil {
-			logger.WithError(err).Error("trying to delete the eks cluster from team")
+			cluster.Status.Conditions.SetCondition(corev1.Component{
+				Name:    ComponentClusterCreator,
+				Message: "You do not have permission to the credentials",
+				Status:  corev1.FailureStatus,
+			})
 
 			return reconcile.Result{}, err
 		}
-	}
 
-	return reconcile.Result{}, nil
+		// @step: we need to ensure the iam role for the cluster is there
+		client := aws.NewIamClient(aws.Credentials{
+			AccessKeyID:     credentials.Spec.AccessKeyID,
+			SecretAccessKey: credentials.Spec.SecretAccessKey,
+		})
+
+		role, err := client.EnsureEKSClusterRole(ctx, cluster.Name)
+		if err != nil {
+			logger.WithError(err).Error("trying to ensure the eks iam role")
+
+			cluster.Status.Conditions.SetCondition(corev1.Component{
+				Name:    ComponentClusterCreator,
+				Message: "Failed trying to provision the EKS Cluster Role",
+				Detail:  err.Error(),
+			})
+
+			return reconcile.Result{}, err
+		}
+
+		cluster.Status.RoleARN = *role.Arn
+
+		return reconcile.Result{}, nil
+	}
+}
+
+// EnsureDeletionStatus ensures the resource is in a deleting state
+func (t *eksCtrl) EnsureDeletionStatus(cluster *eks.EKS) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		// @step: lets update the status of the resource to deleting
+		if cluster.Status.Status != corev1.DeletingStatus {
+			cluster.Status.Status = corev1.DeletingStatus
+
+			return reconcile.Result{Requeue: true}, nil
+		}
+
+		return reconcile.Result{}, nil
+	}
+}
+
+// EnsureNodeGroupsDeleted ensures all nodegroup referencing me have been deleted
+func (t *eksCtrl) EnsureNodeGroupsDeleted(cluster *eks.EKS) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		logger := log.WithFields(log.Fields{
+			"name":      cluster.Name,
+			"namespace": cluster.Namespace,
+		})
+		logger.Debug("ensuring all the eks nodegroups have been deleted")
+
+		list := &eks.EKSNodeGroupList{}
+		if err := t.mgr.GetClient().List(ctx, list, client.InNamespace(cluster.Namespace)); err != nil {
+			logger.WithError(err).Error("trying to list the eks nodegroups")
+
+			return reconcile.Result{}, err
+		}
+
+		found := func() bool {
+			for _, x := range list.Items {
+				if kore.IsOwner(cluster, x.Spec.Cluster) {
+					return true
+				}
+			}
+
+			return false
+		}()
+
+		// @step: if we found nodegroup we should not delete, but requeue
+		if found {
+			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+		}
+
+		return reconcile.Result{}, nil
+	}
+}
+
+// EnsureDeletion is responsible for deleting the actual cluster
+func (t *eksCtrl) EnsureDeletion(cluster *eks.EKS) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		logger := log.WithFields(log.Fields{
+			"name":      cluster.Name,
+			"namespace": cluster.Namespace,
+		})
+		logger.Debug("attempting to delete the eks cluster")
+
+		// @step: retrieve the cloud credentials
+		creds, err := t.GetCredentials(ctx, cluster, cluster.Namespace)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+
+		// @step: create a cloud client for us
+		client, err := aws.NewEKSClient(creds, cluster)
+		if err != nil {
+			logger.WithError(err).Error("trying to create eks client")
+
+			return reconcile.Result{}, err
+		}
+
+		// @step: check if the cluster exists
+		found, err := client.Exists(ctx)
+		if err != nil {
+			logger.WithError(err).Error("trying to check if eks cluster exists")
+
+			return reconcile.Result{}, err
+		}
+		if found {
+			logger.Debug("eks cluster exists, attempting to delete now")
+
+			if err := client.Delete(ctx); err != nil {
+				logger.WithError(err).Error("trying to delete the eks cluster from team")
+
+				return reconcile.Result{}, err
+			}
+		}
+
+		return reconcile.Result{}, nil
+	}
 }
 
 // EnsureSecretDeletion ensure the cluster secret is removed
-func (t *eksCtrl) EnsureSecretDeletion(ctx context.Context, resource runtime.Object) (reconcile.Result, error) {
-	cluster := resource.(*eks.EKS)
+func (t *eksCtrl) EnsureSecretDeletion(cluster *eks.EKS) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		// @step: we can now delete the sysadmin token now
+		if err := controllers.DeleteClusterCredentialsSecret(ctx,
+			t.mgr.GetClient(), cluster.Namespace, cluster.Name); err != nil {
 
-	// @step: we can now delete the sysadmin token now
-	if err := controllers.DeleteClusterCredentialsSecret(ctx,
-		t.mgr.GetClient(), cluster.Namespace, cluster.Name); err != nil {
+			return reconcile.Result{}, err
+		}
 
-		return reconcile.Result{}, err
+		return reconcile.Result{}, nil
 	}
-
-	return reconcile.Result{}, nil
 }

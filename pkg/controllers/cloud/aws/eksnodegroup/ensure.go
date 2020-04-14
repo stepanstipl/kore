@@ -21,68 +21,65 @@ import (
 	"time"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-	ekscc "github.com/appvia/kore/pkg/controllers/cloud/aws/eks"
-
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
+	ekscc "github.com/appvia/kore/pkg/controllers/cloud/aws/eks"
 	"github.com/appvia/kore/pkg/utils/cloud/aws"
 
 	log "github.com/sirupsen/logrus"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 // EnsureNodeGroupIsPending is responsible for setting the resource to a pending state
-func (n *ctrl) EnsureNodeGroupIsPending(ctx context.Context, resource runtime.Object) (reconcile.Result, error) {
-	group := resource.(*eks.EKSNodeGroup)
+func (n *ctrl) EnsureNodeGroupIsPending(group *eks.EKSNodeGroup) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		if group.Status.Status != corev1.PendingStatus {
+			group.Status.Status = corev1.PendingStatus
 
-	if group.Status.Status != corev1.PendingStatus {
-		group.Status.Status = corev1.PendingStatus
+			return reconcile.Result{Requeue: true}, nil
+		}
 
-		return reconcile.Result{Requeue: true}, nil
+		return reconcile.Result{}, nil
 	}
-
-	return reconcile.Result{}, nil
 }
 
 // EnsureClusterReady is responsible for checking the EKS cluster is ready
-func (n *ctrl) EnsureClusterReady(ctx context.Context, resource runtime.Object) (reconcile.Result, error) {
-	group := resource.(*eks.EKSNodeGroup)
-	cluster := &eks.EKS{}
+func (n *ctrl) EnsureClusterReady(group *eks.EKSNodeGroup) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
 
-	logger := log.WithFields(log.Fields{
-		"name":      group.Name,
-		"namespace": group.Namespace,
-	})
-	logger.Debug("attempting to ensure the eks cluster is ready")
+		logger := log.WithFields(log.Fields{
+			"name":      group.Name,
+			"namespace": group.Namespace,
+		})
+		logger.Debug("attempting to ensure the eks cluster is ready")
 
-	key := types.NamespacedName{
-		Name:      group.Spec.Cluster.Name,
-		Namespace: group.Spec.Cluster.Namespace,
+		key := types.NamespacedName{
+			Name:      group.Spec.Cluster.Name,
+			Namespace: group.Spec.Cluster.Namespace,
+		}
+
+		cluster := &eks.EKS{}
+		if err := n.mgr.GetClient().Get(ctx, key, cluster); err != nil {
+			logger.WithError(err).Error("trying to retrieve the cluster status")
+
+			return reconcile.Result{}, err
+		}
+
+		status, found := cluster.Status.Conditions.GetStatus(ekscc.ComponentClusterCreator)
+		if !found || status != corev1.SuccessStatus {
+			logger.Warn("eks cluster not ready yet, we will wait")
+
+			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+		}
+
+		return reconcile.Result{}, nil
 	}
-
-	if err := n.mgr.GetClient().Get(ctx, key, cluster); err != nil {
-		logger.WithError(err).Error("trying to retrieve the cluster status")
-
-		return reconcile.Result{}, err
-	}
-
-	status, found := cluster.Status.Conditions.GetStatus(ekscc.ComponentClusterCreator)
-	if !found || status != corev1.SuccessStatus {
-		logger.Warn("eks cluster not ready yet, we will wait")
-
-		return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
-	}
-
-	return reconcile.Result{}, nil
 }
 
 // EnsureNodeRole is responsible for ensuring the IAM role is there
-func (n *ctrl) EnsureNodeRole(credentials *eks.EKSCredentials) controllers.EnsureFunc {
-	return func(ctx context.Context, resource runtime.Object) (reconcile.Result, error) {
-		group := resource.(*eks.EKSNodeGroup)
-
+func (n *ctrl) EnsureNodeRole(group *eks.EKSNodeGroup, credentials *eks.EKSCredentials) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
 		logger := log.WithFields(log.Fields{
 			"name":      group.Name,
 			"namespace": group.Namespace,
@@ -113,9 +110,8 @@ func (n *ctrl) EnsureNodeRole(credentials *eks.EKSCredentials) controllers.Ensur
 }
 
 // EnsureNodeGroup is responsible for making sure the nodegroup is provisioned
-func (n *ctrl) EnsureNodeGroup(client *aws.Client) controllers.EnsureFunc {
-	return func(ctx context.Context, resource runtime.Object) (reconcile.Result, error) {
-		group := resource.(*eks.EKSNodeGroup)
+func (n *ctrl) EnsureNodeGroup(client *aws.Client, group *eks.EKSNodeGroup) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
 		logger := log.WithFields(log.Fields{
 			"name":      group.Name,
 			"namespace": group.Namespace,
@@ -190,51 +186,51 @@ func (n *ctrl) EnsureNodeGroup(client *aws.Client) controllers.EnsureFunc {
 }
 
 // EnsureDeletionStatus makes sure the resource is set to deleting
-func (n *ctrl) EnsureDeletionStatus(ctx context.Context, resource runtime.Object) (reconcile.Result, error) {
-	group := resource.(*eks.EKSNodeGroup)
+func (n *ctrl) EnsureDeletionStatus(group *eks.EKSNodeGroup) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		if group.Status.Status != corev1.DeletingStatus {
+			group.Status.Status = corev1.DeletingStatus
 
-	if group.Status.Status != corev1.DeletingStatus {
-		group.Status.Status = corev1.DeletingStatus
+			return reconcile.Result{Requeue: true}, nil
+		}
 
-		return reconcile.Result{Requeue: true}, nil
+		return reconcile.Result{}, nil
 	}
-
-	return reconcile.Result{}, nil
 }
 
 // EnsureDeletion ensures the nodegroup is deleting
-func (n *ctrl) EnsureDeletion(ctx context.Context, resource runtime.Object) (reconcile.Result, error) {
-	group := resource.(*eks.EKSNodeGroup)
+func (n *ctrl) EnsureDeletion(group *eks.EKSNodeGroup) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		logger := log.WithFields(log.Fields{
+			"name":      group.Name,
+			"namespace": group.Namespace,
+		})
+		logger.Debug("attempting to delete eks nodegroup")
 
-	logger := log.WithFields(log.Fields{
-		"name":      group.Name,
-		"namespace": group.Namespace,
-	})
-	logger.Debug("attempting to delete eks nodegroup")
+		creds, err := n.GetCredentials(ctx, group, group.Namespace)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
 
-	creds, err := n.GetCredentials(ctx, group, group.Namespace)
-	if err != nil {
-		return reconcile.Result{}, err
+		// @step: create a cloud client for us
+		client, err := aws.NewBasicClient(creds, group.Spec.Cluster.Name, group.Spec.Region)
+		if err != nil {
+			log.WithError(err).Error("trying to create a aws client for the nodegroup")
+
+			return reconcile.Result{}, err
+		}
+
+		// @step: check if the nodegroup exists and if so we wait or the operation or the exit
+		found, err := client.NodeGroupExists(ctx, group)
+		if err != nil {
+			log.WithError(err).Error("trying to check if nodegroup exists")
+
+			return reconcile.Result{}, err
+		}
+		if found {
+			return reconcile.Result{}, client.DeleteNodeGroup(ctx, group)
+		}
+
+		return reconcile.Result{}, nil
 	}
-
-	// @step: create a cloud client for us
-	client, err := aws.NewBasicClient(creds, group.Spec.Cluster.Name, group.Spec.Region)
-	if err != nil {
-		log.WithError(err).Error("trying to create a aws client for the nodegroup")
-
-		return reconcile.Result{}, err
-	}
-
-	// @step: check if the nodegroup exists and if so we wait or the operation or the exit
-	found, err := client.NodeGroupExists(ctx, group)
-	if err != nil {
-		log.WithError(err).Error("trying to check if nodegroup exists")
-
-		return reconcile.Result{}, err
-	}
-	if found {
-		return reconcile.Result{}, client.DeleteNodeGroup(ctx, group)
-	}
-
-	return reconcile.Result{}, nil
 }
