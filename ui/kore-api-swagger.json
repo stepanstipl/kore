@@ -4775,11 +4775,11 @@
   },
   "v1.StaticOIDCIDP": {
    "required": [
+    "clientID",
+    "clientSecret",
     "issuer",
     "clientScopes",
-    "userClaims",
-    "clientID",
-    "clientSecret"
+    "userClaims"
    ],
    "properties": {
     "clientID": {
@@ -5352,6 +5352,9 @@
      "additionalProperties": {
       "type": "string"
      }
+    },
+    "version": {
+     "type": "string"
     }
    }
   },
