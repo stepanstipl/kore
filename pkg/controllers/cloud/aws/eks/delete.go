@@ -83,10 +83,13 @@ func (t *eksCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 		logger.WithError(err).Error("attempting to delete the eks cluster")
 		resource.Status.Status = corev1.FailureStatus
 	}
-
+	// @step: we update always update the status before throwing any error
 	if err := t.mgr.GetClient().Status().Patch(ctx, resource, client.MergeFrom(original)); err != nil {
 		logger.WithError(err).Error("trying to update the resource status")
 
+		return reconcile.Result{}, err
+	}
+	if err != nil {
 		return reconcile.Result{}, err
 	}
 

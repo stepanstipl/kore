@@ -114,10 +114,13 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 
 		resource.Status.Status = corev1.FailureStatus
 	}
-
+	// @step: we update always update the status before throwing any error
 	if err := t.mgr.GetClient().Status().Patch(ctx, resource, client.MergeFrom(original)); err != nil {
 		logger.WithError(err).Error("updating the status of eks cluster")
 
+		return reconcile.Result{}, err
+	}
+	if err != nil {
 		return reconcile.Result{}, err
 	}
 
