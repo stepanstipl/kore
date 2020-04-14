@@ -15,6 +15,7 @@ class IndexPage extends React.Component {
     adminMembers: PropTypes.object,
     gkeCredentials: PropTypes.object,
     gcpOrganizations: PropTypes.object,
+    eksCredentials: PropTypes.object,
     version: PropTypes.string
   }
 
@@ -31,14 +32,16 @@ class IndexPage extends React.Component {
     let adminMembers
     let gkeCredentials
     let gcpOrganizations
- 
+    let eksCredentials
+
     if (user.isAdmin) {
-      [ allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations ] = await Promise.all([
+      [ allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations, eksCredentials ] = await Promise.all([
         api.ListTeams(),
         api.ListUsers(),
         api.ListTeamMembers(kore.koreAdminTeamName),
         api.ListGKECredentials(kore.koreAdminTeamName),
         api.ListGCPOrganizations(kore.koreAdminTeamName),
+        api.ListEKSCredentials(kore.koreAdminTeamName)
       ])
     } else {
       [ allTeams, allUsers ] = await Promise.all([
@@ -48,7 +51,7 @@ class IndexPage extends React.Component {
     }
 
     allTeams.items = (allTeams.items || []).filter(t => !kore.ignoreTeams.includes(t.metadata.name))
-    return { allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations }
+    return { allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations, eksCredentials }
   }
 
   static getInitialProps = async (ctx) => {
@@ -57,10 +60,12 @@ class IndexPage extends React.Component {
   }
 
   render() {
-    const { user, allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations, version } = this.props
+    const { user, allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations, eksCredentials, version } = this.props
     const userTeams = (user.teams.userTeams || []).filter(t => !kore.ignoreTeams.includes(t.metadata.name))
     const noUserTeamsExist = userTeams.length === 0
-    const cloudIntegrationMissing = (gkeCredentials && gkeCredentials.items.length === 0) && (gcpOrganizations && gcpOrganizations.items.length === 0)
+    const gcpCredsMissing = (gkeCredentials && gkeCredentials.items.length === 0) && (gcpOrganizations && gcpOrganizations.items.length === 0)
+    const awsCredsMissing = eksCredentials && eksCredentials.items.length === 0
+    const cloudIntegrationMissing = gcpCredsMissing && awsCredsMissing
 
     const NoTeamInfoAlert = () => noUserTeamsExist ? (
       <Alert
@@ -174,11 +179,12 @@ class IndexPage extends React.Component {
                           <Text strong>Amazon Web Services</Text>
                         </span>
                         <br/>
-                        <Text style={{ display: 'inline-block', marginTop: '10px' }}>Organizations / Projects</Text>
+                        <Text style={{ display: 'inline-block', marginTop: '10px' }}>Accounts</Text>
                       </>
                     }
-                    value="0 / 0"
+                    value={eksCredentials.items.length}
                     style={{ textAlign: 'center' }}
+                    valueStyle={{ color: cloudIntegrationMissing ? 'orange' : '' }}
                   />
                 </Col>
               </Row>
