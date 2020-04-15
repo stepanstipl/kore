@@ -80,11 +80,6 @@ func GetRuntimeObject(o interface{}) (runtime.Object, error) {
 	return mo, nil
 }
 
-// IsChanged is shorthand for the below
-func IsChanged(v interface{}) bool {
-	return IsEmpty(v)
-}
-
 // IsEmpty checks if a struct has any values set
 func IsEmpty(v interface{}) bool {
 	t := reflect.ValueOf(v).Elem()
