@@ -1,7 +1,7 @@
 import { mount } from 'enzyme'
 
-import PlanForm from '../../../../lib/components/plans/PlanForm'
-import ApiTestHelpers from '../../../api-test-helpers'
+import PlanForm from '../../../../../lib/components/plans/PlanForm'
+import ApiTestHelpers from '../../../../api-test-helpers'
 
 describe('PlanForm', () => {
   let props

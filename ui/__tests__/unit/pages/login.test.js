@@ -1,7 +1,7 @@
 import { mount } from 'enzyme'
 import renderer from 'react-test-renderer'
 
-import Login from '../../pages/login'
+import Login from '../../../pages/login'
 
 const authProvider = {
   metadata: {

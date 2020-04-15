@@ -1,7 +1,7 @@
 import { mount } from 'enzyme'
 
-import GCPOrganizationForm from '../../../../lib/components/forms/GCPOrganizationForm'
-import ApiTestHelpers from '../../../api-test-helpers'
+import GCPOrganizationForm from '../../../../../lib/components/forms/GCPOrganizationForm'
+import ApiTestHelpers from '../../../../api-test-helpers'
 
 describe('GCPOrganizationForm', () => {
   let props

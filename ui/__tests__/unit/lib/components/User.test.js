@@ -1,7 +1,7 @@
 import { mount } from 'enzyme'
 import renderer from 'react-test-renderer'
 
-import User from '../../../lib/components/User'
+import User from '../../../../lib/components/User'
 
 describe('User', () => {
   let user

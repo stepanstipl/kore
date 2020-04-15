@@ -27,6 +27,7 @@ module.exports = {
   auth: {
     embedded: process.env.KORE_UI_USE_EMBEDDED_AUTH === 'true' || false,
     openid: {
+      enabled: Boolean(process.env.KORE_IDP_SERVER_URL),
       url: getOpenidURL(),
       callbackURL: process.env.KORE_CALLBACK_URL || 'http://localhost:3000/auth/callback',
       clientID: process.env.KORE_IDP_CLIENT_ID || 'my-openid-client-id',
