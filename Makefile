@@ -115,10 +115,13 @@ push-images:
 
 release-cli:
 	@echo "--> Compiling CLI static binaries"
-	rm -rf ./cli-release
+	@rm -rf ./cli-release
 	CGO_ENABLED=0 go run github.com/mitchellh/gox -arch="${CLI_ARCHITECTURES}" -os="${CLI_PLATFORMS}" -ldflags "-w ${LFLAGS}" -output=./cli-release/arch/{{.OS}}_{{.Arch}}_${VERSION}/{{.Dir}} ./cmd/korectl/
-	mkdir ./cli-release/output/
-	cd ./cli-release && for f in `ls -1 ./arch/`; do zip -j -m output/korectl_$$f.zip arch/$$f/*; done
+	@mkdir ./cli-release/output/
+	@for f in `ls -1 ./cli-release/arch/`; do \
+		zip -j -m cli-release/output/korectl_$$f.zip cli-release/arch/$$f/*; \
+		zip -ur cli-release/output/korectl_$$f.zip hack/compose/* hack/ca/* hack/kubeconfig.local hack/setup/**/*; \
+	done
 	cd ./cli-release/output && sha256sum *.zip > korectl.sha256sums
 
 push-cli:
