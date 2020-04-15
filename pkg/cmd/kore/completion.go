@@ -46,7 +46,9 @@ func NewCmdCompletionsBash(factory cmdutil.Factory) *cobra.Command {
 		Example: "source <(kore completion bash)",
 
 		Run: func(cmd *cobra.Command, args []string) {
-			root.GenBashCompletion(factory.Writer())
+			if err := root.GenBashCompletion(factory.Writer()); err != nil {
+				panic(err)
+			}
 		},
 	}
 
@@ -61,7 +63,9 @@ func NewCmdCompletionsZsh(factory cmdutil.Factory) *cobra.Command {
 		Example: "source <(kore completion zsh)",
 
 		Run: func(cmd *cobra.Command, args []string) {
-			root.GenZshCompletion(factory.Writer())
+			if err := root.GenZshCompletion(factory.Writer()); err != nil {
+				panic(err)
+			}
 		},
 	}
 
