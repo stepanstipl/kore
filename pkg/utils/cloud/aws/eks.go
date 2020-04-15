@@ -20,7 +20,6 @@ import (
 	"context"
 	"errors"
 	"strings"
-	"time"
 
 	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/kore"
@@ -153,62 +152,7 @@ func (c *Client) Create(ctx context.Context) error {
 		}
 	}
 
-	return c.WaitForClusterReady(ctx)
-}
-
-// WaitForClusterReady waits for the eks cluster be go ready
-func (c *Client) WaitForClusterReady(ctx context.Context) error {
-	logger := log.WithFields(log.Fields{
-		"name":      c.cluster.Name,
-		"namespace": c.cluster.Namespace,
-	})
-	logger.Debug("attempting to wait for eks cluster to be ready")
-
-	// @step: check we are waiting for something that actually exist
-	existing, err := c.Exists(ctx)
-	if err != nil {
-		logger.WithError(err).Error("trying to check if cluster exists to wait for")
-
-		return err
-	}
-	if !existing {
-		logger.Warn("no eks cluster to wait for, something went wrong here")
-
-		return ErrClusterNotFound
-	}
-
-	// @step: wait for the cluster to be created
-	return utils.WaitUntilComplete(ctx, 1*time.Hour, 30*time.Second, func() (bool, error) {
-		resp, err := c.svc.DescribeClusterWithContext(ctx, &eks.DescribeClusterInput{
-			Name: aws.String(c.cluster.Name),
-		})
-		if err != nil {
-			logger.WithError(err).Error("trying to check for eks cluster status")
-
-			return false, nil
-		}
-
-		if resp.Cluster == nil {
-			logger.Warn("no cluster found in the describe response")
-
-			return false, nil
-		}
-
-		switch aws.StringValue(resp.Cluster.Status) {
-		case eks.ClusterStatusActive:
-			logger.Debug("eks cluster is active and ready")
-
-			return true, nil
-		case eks.ClusterStatusFailed:
-			return false, errors.New("cluster has failed to provision")
-		case eks.ClusterStatusCreating:
-			logger.Debug("cluster is still pending in provisioning")
-		default:
-			logger.Warnf("unknown cluster status: %s returned", aws.StringValue(resp.Cluster.Status))
-		}
-
-		return false, nil
-	})
+	return nil
 }
 
 // Delete is responsible for deleting the eks cluster
@@ -220,60 +164,93 @@ func (c *Client) Delete(ctx context.Context) error {
 	logger.Debug("attempting to delete the eks cluster")
 
 	// @step: get the state of the cluster
-	resp, err := c.svc.DescribeClusterWithContext(ctx, &eks.DescribeClusterInput{
+	_, err := c.svc.DescribeClusterWithContext(ctx, &eks.DescribeClusterInput{
 		Name: aws.String(c.cluster.Name),
 	})
 	if err != nil {
-		if !c.IsNotFound(err) {
-			logger.WithError(err).Error("truing to describe the eks cluster")
-
-			return err
+		if c.IsNotFound(err) {
+			return nil
 		}
+		logger.WithError(err).Error("trying to describe the eks cluster")
 
-		return nil
+		return err
 	}
 
-	// @step: if the cluster is not deleting, try and delete now
-	switch aws.StringValue(resp.Cluster.Status) {
-	case eks.ClusterStatusActive, eks.ClusterStatusFailed:
-		if _, err := c.svc.DeleteClusterWithContext(ctx, &eks.DeleteClusterInput{
-			Name: aws.String(c.clusterName),
-		}); err != nil {
-			log.WithError(err).Error("trying to delete eks cluster from aws")
-
-			return err
-		}
-	case eks.ClusterStatusCreating:
-		logger.Debug("eks cluster is still being created, cannot be deleted yet")
-
-		return errors.New("eks is still being created, cannot delete yet")
-	case eks.ClusterStatusUpdating:
-		logger.Debug("eks cluster is still being created, cannot be deleted yet")
-
-		return errors.New("eks is still being updated, cannot delete yet")
-	}
-
-	// @step: we need to wait for the cluster to be remove
-	return utils.WaitUntilComplete(context.Background(), 1*time.Hour, 30*time.Second, func() (bool, error) {
-		logger.Debug("checking if the eks cluster has been deleted")
-
-		if found, err := c.Exists(ctx); err != nil {
-			logger.WithError(err).Error("trying to check for eks cluster")
-
-			return false, nil
-		} else if !found {
-			logger.Debug("eks cluster has been successfully removed")
-
-			return true, nil
-		}
-
-		return false, nil
-	})
+	return nil
 }
 
 // Update should migrate changes to a cluster object
-func (c *Client) Update() error {
-	return errors.New("not yet implimented")
+func (c *Client) Update(ctx context.Context) (bool, error) {
+	logger := log.WithFields(log.Fields{
+		"name":      c.cluster.Name,
+		"namespace": c.cluster.Namespace,
+	})
+	logger.Debug("checking if the cluster requires an update")
+
+	// @step: retrieve the current state of the cluster
+	state, err := c.Describe(ctx)
+	if err != nil {
+		logger.WithError(err).Error("trying to describe the cluster")
+
+		return false, err
+	}
+
+	if c.cluster.Spec.Version != "" {
+		// @TODO we need to check the semvar and never try and downgrade??
+		if aws.StringValue(state.Version) != c.cluster.Spec.Version {
+			logger.Debug("cluster version is out of sync, attempting to update")
+
+			if _, err := c.svc.UpdateClusterVersionWithContext(ctx, &awseks.UpdateClusterVersionInput{
+				Name:    aws.String(c.cluster.Name),
+				Version: aws.String(c.cluster.Spec.Version),
+			}); err != nil {
+				logger.WithError(err).Error("trying to request a version update")
+
+				return false, err
+			}
+
+			return true, nil
+		}
+	}
+
+	// @step: have the public ranges changed for the endpoint?
+	accessCIDR := func() []*string {
+		for _, x := range state.ResourcesVpcConfig.PublicAccessCidrs {
+			if utils.Contains(aws.StringValue(x), c.cluster.Spec.AuthorizedMasterNetworks) {
+				return state.ResourcesVpcConfig.PublicAccessCidrs
+			}
+		}
+		return nil
+	}()
+
+	update := &awseks.UpdateClusterConfigInput{
+		ResourcesVpcConfig: &awseks.VpcConfigRequest{
+			PublicAccessCidrs: accessCIDR,
+		},
+	}
+
+	// @check if the public endpoint has changed
+	if !aws.BoolValue(state.ResourcesVpcConfig.EndpointPublicAccess) {
+		update.ResourcesVpcConfig.EndpointPublicAccess = aws.Bool(true)
+	}
+
+	// @check if the private endpoint has changed
+	if !aws.BoolValue(state.ResourcesVpcConfig.EndpointPrivateAccess) {
+		update.ResourcesVpcConfig.EndpointPrivateAccess = aws.Bool(true)
+	}
+
+	// @step: has the been any changes
+	if utils.IsEmpty(update.ResourcesVpcConfig) {
+		return false, nil
+	}
+
+	logger.Debug("eks cluster vpc configuration has drifted, attempting to sync")
+
+	if _, err := c.svc.UpdateClusterConfigWithContext(ctx, update); err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
 
 // VerifyCredentials is responsible for verifying AWS creds

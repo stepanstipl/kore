@@ -19,6 +19,7 @@ package eks
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"time"
 
@@ -26,8 +27,10 @@ import (
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/cloud/aws"
 
+	awseks "github.com/aws/aws-sdk-go/service/eks"
 	log "github.com/sirupsen/logrus"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -56,7 +59,7 @@ func (t *eksCtrl) EnsureCluster(client *aws.Client, cluster *eks.EKS) controller
 		logger.Debug("attempting to ensure the eks cluster")
 
 		// @step: check if the cluster already exists
-		existing, err := client.Exists(ctx)
+		found, err := client.Exists(ctx)
 		if err != nil {
 			cluster.Status.Conditions.SetCondition(corev1.Component{
 				Detail:  err.Error(),
@@ -67,7 +70,8 @@ func (t *eksCtrl) EnsureCluster(client *aws.Client, cluster *eks.EKS) controller
 
 			return reconcile.Result{}, err
 		}
-		if !existing {
+
+		if !found {
 			// @step: ensure we update the status and the component
 			status, found := cluster.Status.Conditions.GetStatus(ComponentClusterCreator)
 			if !found || status != corev1.PendingStatus {
@@ -88,7 +92,7 @@ func (t *eksCtrl) EnsureCluster(client *aws.Client, cluster *eks.EKS) controller
 				// InvalidParameterException: Role with arn: <ARN> could not be assumed because it does not exist or the trusted entity is not correct
 				// In this case we are going to retry and not throw an error
 				if client.IsInvalidParameterException(err) {
-					return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
+					return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 				}
 
 				cluster.Status.Conditions.SetCondition(corev1.Component{
@@ -99,39 +103,72 @@ func (t *eksCtrl) EnsureCluster(client *aws.Client, cluster *eks.EKS) controller
 
 				return reconcile.Result{}, err
 			}
-		} else {
-			// @step: we need to sure the cluster is active
-			if err := client.WaitForClusterReady(ctx); err != nil {
-				logger.WithError(err).Error("trying to ensure the cluster is active")
 
-				return reconcile.Result{}, err
-			}
-
-			// TODO - client needs to manage migrations
+			return reconcile.Result{RequeueAfter: 1 * time.Minute}, err
 		}
 
-		// @step: update the state as provisioned
-		cluster.Status.Conditions.SetCondition(corev1.Component{
-			Name:    ComponentClusterCreator,
-			Message: "Cluster has been provisioned",
-			Status:  corev1.SuccessStatus,
-		})
-
-		// @step: retrieve and check the status of the cluster
-		c, err := client.Describe(ctx)
+		// @step: we retrieve the current state
+		state, err := client.Describe(ctx)
 		if err != nil {
-			logger.WithError(err).Error("trying to retrieve the eks cluster")
+			logger.WithError(err).Error("trying to describe the cluster")
 
 			return reconcile.Result{}, err
 		}
 
-		// Active cluster
-		ca, err := base64.StdEncoding.DecodeString(*c.CertificateAuthority.Data)
+		status := utils.StringValue(state.Status)
+		logger.WithField("status", status).Debug("current state of the eks cluster")
+
+		switch status {
+		case awseks.ClusterStatusActive:
+			// @step: update the state as provisioned
+			cluster.Status.Conditions.SetCondition(corev1.Component{
+				Name:    ComponentClusterCreator,
+				Message: "Cluster has been provisioned",
+				Status:  corev1.SuccessStatus,
+			})
+			cluster.Status.Status = corev1.SuccessStatus
+
+		case awseks.ClusterStatusFailed:
+			cluster.Status.Conditions.SetCondition(corev1.Component{
+				Name:    ComponentClusterCreator,
+				Message: "EKS Cluster has failed provisioned",
+				Status:  corev1.FailureStatus,
+			})
+			cluster.Status.Status = corev1.FailureStatus
+
+			return reconcile.Result{}, errors.New("cluster has failed to provision")
+
+		case awseks.ClusterStatusCreating, awseks.ClusterStatusUpdating:
+			cluster.Status.Status = corev1.PendingStatus
+
+			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+
+		default:
+			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+		}
+
+		// @step: has the desired state drited from the current
+		needupdate, err := client.Update(ctx)
 		if err != nil {
-			return reconcile.Result{}, fmt.Errorf("invalid base64 ca data from aws for eks endpoint %s,%v", *c.Endpoint, c.CertificateAuthority.Data)
+			logger.WithError(err).Error("trying check or perform an update on the eks cluster")
+
+			return reconcile.Result{}, err
+		}
+		if needupdate {
+			// we requeue and wait for the state to settle
+			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+		}
+
+		// @step: ensure the status is correct
+		cadata := utils.StringValue(state.CertificateAuthority.Data)
+		endpoint := utils.StringValue(state.Endpoint)
+
+		ca, err := base64.StdEncoding.DecodeString(cadata)
+		if err != nil {
+			return reconcile.Result{}, fmt.Errorf("invalid base64 ca data from aws for eks endpoint %s,%v", endpoint, ca)
 		}
 		cluster.Status.CACertificate = string(ca)
-		cluster.Status.Endpoint = *c.Endpoint
+		cluster.Status.Endpoint = endpoint
 		cluster.Status.Status = corev1.SuccessStatus
 
 		return reconcile.Result{}, nil
@@ -304,17 +341,46 @@ func (t *eksCtrl) EnsureDeletion(cluster *eks.EKS) controllers.EnsureFunc {
 
 			return reconcile.Result{}, err
 		}
-		if found {
-			logger.Debug("eks cluster exists, attempting to delete now")
+		if !found {
+			// we can exis the loop here else we need to requeue or error
+			return reconcile.Result{}, nil
+		}
 
+		logger.Debug("eks cluster exists, attempting to delete now")
+
+		// @step: get the current state of the cluster
+		state, err := client.Describe(ctx)
+		if err != nil {
+			logger.WithError(err).Error("trying to describe the cluster")
+
+			return reconcile.Result{}, err
+		}
+
+		status := utils.StringValue(state.Status)
+		logger.WithField("status", status).Debug("current state of the eks cluster")
+
+		// @step: if the cluster is not deleting, try and delete now
+		switch status {
+		case awseks.ClusterStatusActive, awseks.ClusterStatusFailed:
 			if err := client.Delete(ctx); err != nil {
 				logger.WithError(err).Error("trying to delete the eks cluster from team")
 
 				return reconcile.Result{}, err
 			}
-		}
+			cluster.Status.Status = corev1.DeletingStatus
+			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
 
-		return reconcile.Result{}, nil
+		case awseks.ClusterStatusCreating, awseks.ClusterStatusUpdating:
+			cluster.Status.Status = corev1.PendingStatus
+			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+
+		case awseks.ClusterStatusDeleting:
+			cluster.Status.Status = corev1.DeletingStatus
+			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+
+		default:
+			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+		}
 	}
 }
 
