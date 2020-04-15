@@ -304,7 +304,7 @@ func (c *Requestor) makeValues(in io.Reader, paths []string) ([]string, error) {
 	for _, path := range paths {
 		// @step: return the raw value if no jsonpath
 		if path == "" {
-			list = append(list, RemoveDoubleQuote(string(data)))
+			list = append(list, strings.TrimSuffix(RemoveDoubleQuote(string(data)), "\n"))
 
 			continue
 		}

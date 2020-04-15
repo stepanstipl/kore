@@ -41,6 +41,7 @@ jobs:
             - kore-apiserver
             - kore-clusterappman
             - korectl
+            - kore
 
   check-apis:
     environment:

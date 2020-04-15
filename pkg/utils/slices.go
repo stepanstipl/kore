@@ -48,3 +48,18 @@ func ChunkBy(items []string, chunkSize int) (chunks [][]string) {
 
 	return append(chunks, items)
 }
+
+// Unique removes any duplicates from a slice
+func Unique(items []string) []string {
+	var list []string
+
+	found := make(map[string]bool)
+
+	for _, x := range items {
+		if ok := found[x]; !ok {
+			list = append(list, x)
+		}
+	}
+
+	return list
+}

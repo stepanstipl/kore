@@ -19,6 +19,19 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+)
+
+var (
+	// ErrMissingObject indicates no object defined
+	ErrMissingObject = errors.New("missing object")
+	// ErrNotRuntimeObject indicates the object is not a runtime.Object
+	ErrNotRuntimeObject = errors.New("object is not a runtime.Object")
+	// ErrNotMetaObject indicates the object does not implement metav1.Object
+	ErrNotMetaObject = errors.New("object does not implement metav1.Object")
 )
 
 // ConvertToMap converts a struct to a map - note the fields must be
@@ -36,4 +49,32 @@ func ConvertToMap(v interface{}) (map[string]interface{}, error) {
 	}
 
 	return values, json.NewDecoder(encoded).Decode(&values)
+}
+
+// GetMetaObject returns the metav1.Object interface
+func GetMetaObject(obj interface{}) (metav1.Object, error) {
+	// @step: retrieve the payload from the request
+	if obj == nil {
+		return nil, ErrMissingObject
+	}
+	mo, ok := obj.(metav1.Object)
+	if !ok {
+		return nil, ErrNotMetaObject
+	}
+
+	return mo, nil
+}
+
+// GetRuntimeObject returns the runtime.Object
+func GetRuntimeObject(o interface{}) (runtime.Object, error) {
+	if o == nil {
+		return nil, ErrMissingObject
+	}
+
+	mo, ok := o.(runtime.Object)
+	if !ok {
+		return nil, ErrNotRuntimeObject
+	}
+
+	return mo, nil
 }

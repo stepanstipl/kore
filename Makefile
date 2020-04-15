@@ -58,7 +58,7 @@ generate-clusterappman-manifests:
 build: golang generate-clusterappman-manifests
 	@echo "--> Compiling the project ($(VERSION))"
 	@mkdir -p bin
-	@for binary in kore-apiserver korectl auth-proxy kore-clusterappman; do \
+	@for binary in kore kore-apiserver korectl auth-proxy kore-clusterappman; do \
 		echo "--> Building $${binary} binary" ; \
 		go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go || exit 1; \
 	done
@@ -67,6 +67,11 @@ korectl: golang deps
 	@echo "--> Compiling the korectl binary"
 	@mkdir -p bin
 	go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/korectl cmd/korectl/*.go
+
+kore: golang deps
+	@echo "--> Compiling the kore binary"
+	@mkdir -p bin
+	go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/kore cmd/kore/*.go
 
 auth-proxy: golang deps
 	@echo "--> Compiling the auth-proxy binary"
@@ -339,7 +344,6 @@ changelog: release
 
 apis: golang
 	@echo "--> Generating Clientsets & Deepcopies"
-	@rm -rf pkg/client 2>/dev/null
 	@${MAKE} deepcopy-gen
 	@${MAKE} openapi-gen
 	@${MAKE} register-gen

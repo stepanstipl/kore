@@ -43,6 +43,7 @@ func GetDeleteCommand(config *Config) *cli.Command {
 		Usage:       "Deletes one or more resources",
 		Description: formatLongDescription(deleteLongDescription),
 		ArgsUsage:   "-f <file> | [TYPE] [NAME]",
+
 		Flags: []cli.Flag{
 			&cli.StringSliceFlag{
 				Name:    "file",
@@ -50,6 +51,7 @@ func GetDeleteCommand(config *Config) *cli.Command {
 				Usage:   "The path to the file containing the resources definitions `PATH`",
 			},
 		},
+
 		Subcommands: []*cli.Command{
 			GetDeleteTeamMemberCommand(config),
 			GetDeleteAdminCommand(config),
@@ -60,8 +62,10 @@ func GetDeleteCommand(config *Config) *cli.Command {
 				_ = cli.ShowSubcommandHelp(ctx)
 				return fmt.Errorf("-f <file> or [TYPE] [NAME] is required")
 			}
+
 			return nil
 		},
+
 		Action: func(ctx *cli.Context) error {
 			team := ctx.String("team")
 
@@ -92,6 +96,7 @@ func GetDeleteCommand(config *Config) *cli.Command {
 					fmt.Printf("%s/%s deleted\n", gvk.Group, x.Endpoint)
 				}
 			}
+
 			if len(ctx.StringSlice("file")) <= 0 {
 				if ctx.NArg() < 2 {
 					return errors.New("you need to specify a resource type and name")

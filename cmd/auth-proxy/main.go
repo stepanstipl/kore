@@ -23,13 +23,13 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/appvia/kore/cmd/auth-proxy/options"
 	"github.com/appvia/kore/pkg/cmd"
 	authproxy "github.com/appvia/kore/pkg/cmd/auth-proxy"
+	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/version"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
+	"github.com/spf13/cobra"
 )
 
 func init() {
@@ -38,44 +38,19 @@ func init() {
 }
 
 func main() {
-	app := &cli.App{
-		Name: "auth-proxy",
-		Authors: []*cli.Author{
-			{
-				Name:  version.Author,
-				Email: version.Email,
-			},
-		},
-		Flags:                options.Options(),
-		Usage:                "Kore Authentication Proxy provides a means proxy inbound request to the kube-apiserver",
-		Version:              version.Version(),
-		EnableBashCompletion: true,
+	o := authproxy.Config{}
 
-		OnUsageError: func(context *cli.Context, err error, _ bool) error {
-			fmt.Fprintf(os.Stderr, "[error] invalid options %s\n", err)
-			return err
-		},
+	command := &cobra.Command{
+		Use:     "auth-proxy",
+		Short:   "Kore Authentication Proxy provides a means proxy inbound request to the kube-apiserver",
+		Version: version.Version(),
 
-		Action: func(ctx *cli.Context) error {
-			config := authproxy.Config{
-				IDPClientID:                ctx.String("idp-client-id"),
-				IDPServerURL:               ctx.String("idp-server-url"),
-				IDPGroupClaims:             ctx.StringSlice("idp-group-claims"),
-				IDPUserClaims:              ctx.StringSlice("idp-user-claims"),
-				Listen:                     ctx.String("listen"),
-				MetricsListen:              ctx.String("metrics-listen"),
-				SigningCA:                  ctx.String("ca-authority"),
-				TLSCert:                    ctx.String("tls-cert"),
-				TLSKey:                     ctx.String("tls-key"),
-				UpstreamURL:                ctx.String("upstream-url"),
-				UpstreamAuthorizationToken: ctx.String("upstream-authentication-token"),
-				AllowedIPs:                 ctx.StringSlice("allowed-ips"),
-			}
-			verifier, err := authproxy.CreateVerifier(config)
+		RunE: func(cmd *cobra.Command, args []string) error {
+			verifier, err := authproxy.CreateVerifier(o)
 			if err != nil {
 				return err
 			}
-			svc, err := authproxy.New(log.StandardLogger(), config, verifier)
+			svc, err := authproxy.New(log.StandardLogger(), o, verifier)
 			if err != nil {
 				return err
 			}
@@ -99,7 +74,39 @@ func main() {
 		},
 	}
 
-	if err := app.Run(os.Args); err != nil {
+	flags := command.Flags()
+	flags.StringVar(&o.Listen, "listen", utils.GetEnvString("LISTEN", ":10443"), "the interface to bind the service to `INTERFACE`")
+	flags.StringVar(&o.TLSCert, "tls-cert", utils.GetEnvString("TLS_CERT", ""), "the path to the file containing the certificate pem `PATH`")
+	flags.StringVar(&o.TLSKey, "tls-key", utils.GetEnvString("TLS_KEY", ""), "the path to the file containing the private key pem `PATH`")
+	flags.StringVar(&o.IDPServerURL, "idp-server-url", utils.GetEnvString("IDP_SERVER_URL", ""), "the open-id server url `URL`")
+	flags.StringVar(&o.IDPClientID, "idp-client-id", utils.GetEnvString("IDP_CLIENT_ID", ""), "the identity provider client id used to verify the token `IDP_CLIENT_ID`")
+	flags.StringVar(&o.TLSCaAuthority, "ca-authority", utils.GetEnvString("CA_AUTHORITY", ""), "when not using the IDP server url we can use this certificate to verity the token `PATH`")
+
+	flags.StringSliceVar(&o.IDPUserClaims, "idp-user-claims",
+		utils.GetEnvStringSlice("IDP_USER_CLAIMS", []string{"preferred_username", "email", "name"}),
+		"an ordered collection of potential token claims to extract the identity `CLAIMS`")
+
+	flags.StringSliceVar(&o.IDPGroupClaims, "idp-group-claims",
+		utils.GetEnvStringSlice("IDP_GROUP_CLAIMS", []string{"groups"}),
+		"an ordered collection of potential token claims to extract the groups `CLAIMS`")
+
+	flags.StringVar(&o.MetricsListen, "metrics-listen",
+		utils.GetEnvString("METRIC_LISTEN", ":8080"), "the interface the prometheus metrics should listen on `INTERFACE`")
+
+	flags.StringVar(&o.UpstreamURL, "upstream-url",
+		utils.GetEnvString("UPSTREAM_URL", "https://kubernetes.default.svc.cluster.local"),
+		"is the upstream url to forward the requests onto `URL`")
+
+	flags.StringVar(&o.UpstreamAuthorizationToken, "upstream-authentication-token",
+		utils.GetEnvString("UPSTREAM_AUTHENTICATION_TOKEN", "/var/run/secrets/kubernetes.io/serviceaccount/token"),
+		"the path to the file containing the authentication token for upstream `PATH`")
+
+	flags.Bool("verbose", false, "switches on verbose logging for debugging purposes `BOOL`")
+	flags.StringSliceVar(&o.AllowedIPs, "allowed-ips",
+		utils.GetEnvStringSlice("ALLOWED_IPS", []string{"0.0.0.0/0"}),
+		"traffic will be allowed from the given IP ranges if set. Requires CIDR notation. `CIDR`")
+
+	if err := command.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "[error] %s\n", err)
 		os.Exit(1)
 	}

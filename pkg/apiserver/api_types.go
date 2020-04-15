@@ -37,6 +37,11 @@ type Error struct {
 	Verb string `json:"verb"`
 }
 
+// Error returns the error message
+func (e Error) Error() string {
+	return e.Message
+}
+
 // OwnershipList is an ownership list
 type OwnershipList struct {
 	metav1.TypeMeta `json:",inline"`
