@@ -15,3 +15,48 @@
 .top-header {
   background-color: @kore-primary-color;
 }
+
+.cloud-card {
+  height: 100%;
+
+  .ant-card-body {
+    height: inherit;
+
+    .unavailable {
+      text-align: center;
+      opacity: 0.3;
+    }
+
+    .logo {
+      text-align: center;
+    }
+
+    .name {
+      text-align: center;
+      margin-top: 20px;
+    }
+  }
+
+  &.selected {
+    border: 1px solid #999999;
+
+    .ant-card-body {
+      background-color: #f0f2f5
+    }
+  }
+}
+
+.coming-soon {
+  height: inherit;
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  width: 100%;
+  text-align: center;
+
+  .ant-tag {
+    font-size: 18px;
+    font-weight: bold;
+    padding: 5px;
+  }
+}
