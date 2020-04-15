@@ -83,7 +83,7 @@ func NewKoreCommand(streams cmdutil.Streams) (*cobra.Command, error) {
 
 	flags := root.PersistentFlags()
 	flags.Bool("force", false, "is used to force an operation to happen (defaults: false)")
-	flags.StringP("team", "t", "", "the team you are operating within")
+	flags.StringP("team", "t", config.GetCurrentProfile().Team, "the team you are operating within")
 	flags.StringP("output", "o", "table", "the output format of the resource ("+strings.Join(render.SupportedFormats(), ",")+")")
 	flags.BoolP("no-wait", "", false, "indicates if we should wait for resources to provision")
 	flags.BoolP("show-headers", "", true, "indicates we should display headers on table out (defaults: true)")
