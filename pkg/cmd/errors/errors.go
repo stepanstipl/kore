@@ -35,7 +35,7 @@ var (
 	// ErrTeamMissing indicates the resource requires a team selector
 	ErrTeamMissing = kerrors.New("resource is team scoped and requires a team name")
 	// ErrOperationNotPermitted indicates the operation is not permitted
-	ErrOperationNotPermitted = kerrors.New("this operation is not permitted on the resource")
+	ErrOperationNotPermitted = kerrors.New("operation not permitted on the resource")
 	// ErrMissingProfile indicate the profile does not exist
 	ErrMissingProfile = kerrors.New("profile does not exist")
 	// ErrNoFiles indicates no resources have been defined
