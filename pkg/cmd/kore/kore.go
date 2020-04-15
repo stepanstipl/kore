@@ -30,7 +30,7 @@ import (
 	"github.com/appvia/kore/pkg/cmd/kore/kubeconfig"
 	"github.com/appvia/kore/pkg/cmd/kore/login"
 	"github.com/appvia/kore/pkg/cmd/kore/profiles"
-	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
+	cmdutils "github.com/appvia/kore/pkg/cmd/utils"
 	"github.com/appvia/kore/pkg/utils/render"
 	"github.com/appvia/kore/pkg/version"
 
@@ -43,7 +43,7 @@ var (
 )
 
 // NewKoreCommand creates and returns the kore command
-func NewKoreCommand(streams cmdutil.Streams) (*cobra.Command, error) {
+func NewKoreCommand(streams cmdutils.Streams) (*cobra.Command, error) {
 	// @step: create or read in the client configuration
 	config, err := config.GetOrCreateClientConfiguration()
 	if err != nil {
@@ -56,7 +56,7 @@ func NewKoreCommand(streams cmdutil.Streams) (*cobra.Command, error) {
 	}
 
 	// @step: create a factory for the commands
-	factory, err := cmdutil.NewFactory(client, streams, *config)
+	factory, err := cmdutils.NewFactory(client, streams, *config)
 	if err != nil {
 		return nil, err
 	}
@@ -67,13 +67,13 @@ func NewKoreCommand(streams cmdutil.Streams) (*cobra.Command, error) {
 		Short:        "kore provides a cli for the " + version.Prog,
 		Example:      "kore command [options] [-t|--team]",
 		SilenceUsage: true,
-		Run:          cmdutil.RunHelp,
+		Run:          cmdutils.RunHelp,
 
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			if cmdutil.GetVerbose(cmd) {
+			if cmdutils.GetVerbose(cmd) {
 				log.SetLevel(log.DebugLevel)
 			}
-			if cmdutil.GetDebug(cmd) {
+			if cmdutils.GetDebug(cmd) {
 				log.SetLevel(log.TraceLevel)
 			}
 
@@ -108,7 +108,7 @@ func NewKoreCommand(streams cmdutil.Streams) (*cobra.Command, error) {
 	)
 
 	// @step: seriously cobra is pretty damn awesome
-	root.RegisterFlagCompletionFunc("team", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.BashCompDirective) {
+	cmdutils.MustRegisterFlagCompletionFunc(root, "team", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.BashCompDirective) {
 		list, err := factory.Resources().LookupResourceNames("team", "")
 		if err != nil {
 			return nil, cobra.BashCompDirectiveError
@@ -117,7 +117,7 @@ func NewKoreCommand(streams cmdutil.Streams) (*cobra.Command, error) {
 		return list, cobra.BashCompDirectiveDefault
 	})
 
-	root.RegisterFlagCompletionFunc("output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.BashCompDirective) {
+	cmdutils.MustRegisterFlagCompletionFunc(root, "output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.BashCompDirective) {
 		return render.SupportedFormats(), cobra.BashCompDirectiveDefault
 	})
 

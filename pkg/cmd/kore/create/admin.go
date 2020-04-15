@@ -47,7 +47,7 @@ func NewCmdCreateAdmin(factory cmdutils.Factory) *cobra.Command {
 
 	flags := command.Flags()
 	flags.StringVarP(&o.Username, "username", "u", "", "The username of the person being added to the team")
-	command.MarkFlagRequired("username")
+	cmdutils.MustMarkFlagRequired(command, "username")
 
 	return command
 }

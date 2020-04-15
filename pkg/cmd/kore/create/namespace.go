@@ -23,6 +23,7 @@ import (
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/cmd/errors"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
+	cmdutils "github.com/appvia/kore/pkg/cmd/utils"
 
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -76,10 +77,10 @@ func NewCmdCreateNamespace(factory cmdutil.Factory) *cobra.Command {
 	}
 
 	command.Flags().StringVarP(&o.Cluster, "cluster", "c", "", "the name of the cluster you are creating the namespace on `NAME`")
-	command.MarkFlagRequired("cluster")
+	cmdutils.MustMarkFlagRequired(command, "cluster")
 
 	// @step: add auto complete on the cluster name
-	command.RegisterFlagCompletionFunc("cluster", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.BashCompDirective) {
+	cmdutils.MustRegisterFlagCompletionFunc(command, "cluster", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.BashCompDirective) {
 		suggestions, err := o.Resources().LookupResourceNames("cluster", cmdutil.GetTeam(cmd))
 		if err != nil {
 			return nil, cobra.BashCompDirectiveError

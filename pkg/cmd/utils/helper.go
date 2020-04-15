@@ -30,12 +30,12 @@ import (
 
 // RunHelp is shorthand for displaying the usage
 func RunHelp(cmd *cobra.Command, args []string) {
-	cmd.Help()
+	_ = cmd.Help()
 }
 
 // RunHelpE is shorthand for display the usage but with error return
 func RunHelpE(cmd *cobra.Command, args []string) error {
-	cmd.Help()
+	_ = cmd.Help()
 
 	return nil
 }
@@ -84,12 +84,29 @@ func PreRunEFilters() func(*cobra.Command, []string) error {
 // RequireName ensures a name positional argument
 func RequireName(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
-		cmd.Help()
+		_ = cmd.Help()
 
 		return errors.ErrMissingResourceName
 	}
 
 	return nil
+}
+
+// MustMarkFlagRequired calls MarkFlagRequired and panics if it returns an error
+func MustMarkFlagRequired(cmd *cobra.Command, name string) {
+	if err := cmd.MarkFlagRequired(name); err != nil {
+		panic(err)
+	}
+}
+
+func MustRegisterFlagCompletionFunc(
+	cmd *cobra.Command,
+	flagName string,
+	f func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.BashCompDirective),
+) {
+	if err := cmd.RegisterFlagCompletionFunc(flagName, f); err != nil {
+		panic(err)
+	}
 }
 
 // ParseDocument returns a collection of parsed documents and the api endpoints
