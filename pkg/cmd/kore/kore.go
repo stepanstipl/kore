@@ -76,9 +76,6 @@ func NewKoreCommand(streams cmdutil.Streams) (*cobra.Command, error) {
 			if cmdutil.GetDebug(cmd) {
 				log.SetLevel(log.TraceLevel)
 			}
-			if config.GetCurrentProfile().Team != "" {
-				cmd.Flags().Set("team", config.GetCurrentProfile().Team)
-			}
 
 			log.WithField("profile", config.CurrentProfile).Debug("running with the selected profile")
 		},
