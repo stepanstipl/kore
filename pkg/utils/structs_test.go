@@ -63,9 +63,7 @@ func TestIsStructEmpty(t *testing.T) {
 		{Expected: false, Item: testStruct{Ref: &message}},
 	}
 	for _, c := range cases {
-		empty, err := IsEmpty(&c.Item)
-		require.NoError(t, err)
-		assert.Equal(t, c.Expected, empty)
+		assert.Equal(t, c.Expected, IsEmpty(&c.Item))
 	}
 
 }

@@ -106,6 +106,13 @@ func (t *gkeCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 			}
 		}
 
+		// @step: we can now delete the sysadmin token
+		if err := controllers.DeleteClusterCredentialsSecret(ctx,
+			t.mgr.GetClient(), resource.Namespace, resource.Name); err != nil {
+
+			return reconcile.Result{}, err
+		}
+
 		return reconcile.Result{}, nil
 	}()
 	if err != nil {

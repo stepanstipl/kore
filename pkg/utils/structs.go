@@ -63,7 +63,7 @@ func GetMetaObject(obj interface{}) (metav1.Object, error) {
 		return nil, ErrNotMetaObject
 	}
 
-	return empty == false, nil
+	return mo, nil
 }
 
 // GetRuntimeObject returns the runtime.Object
@@ -81,29 +81,20 @@ func GetRuntimeObject(o interface{}) (runtime.Object, error) {
 }
 
 // IsChanged is shorthand for the below
-func IsChanged(v interface{}) (bool, error) {
-	empty, err := IsEmpty(v)
-	if err != nil {
-		return false, err
-	}
-
-	return !empty, nil
+func IsChanged(v interface{}) bool {
+	return IsEmpty(v)
 }
 
 // IsEmpty checks if a struct has any values set
-func IsEmpty(v interface{}) (bool, error) {
-	if v == nil {
-		return false, errors.New("no struct defined")
-	}
-
+func IsEmpty(v interface{}) bool {
 	t := reflect.ValueOf(v).Elem()
 
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
 		if !field.IsValid() || !field.IsZero() {
-			return false, nil
+			return false
 		}
 	}
 
-	return true, nil
+	return true
 }

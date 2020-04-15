@@ -181,6 +181,21 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
 		}
 
+		// @step: we check the current state against the desired and see if we need to amend
+		updating, err := client.Update(ctx)
+		if err != nil {
+			logger.WithError(err).Error("attempting to update cluster")
+
+			return reconcile.Result{}, err
+		}
+		if updating {
+			logger.Debug("cluster is performing a update")
+
+			resource.Status.Status = core.PendingStatus
+
+			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+		}
+
 		// @step: enable the cloud-nat is required
 		if resource.Spec.EnablePrivateNetwork {
 			logger.Info("cluster has private networking enabled, ensuring a cloud-nat")
@@ -197,21 +212,6 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 
 				return reconcile.Result{}, err
 			}
-		}
-
-		// @step: we check the current state against the desired and see if we need to amend
-		updating, err := client.Update(ctx)
-		if err != nil {
-			logger.WithError(err).Error("attempting to update cluster")
-
-			return reconcile.Result{}, err
-		}
-		if updating {
-			logger.Debug("cluster is performing a update")
-
-			resource.Status.Status = core.PendingStatus
-
-			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
 		}
 
 		resource.Status.CACertificate = cluster.MasterAuth.ClusterCaCertificate
@@ -276,7 +276,7 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 		}
 	}
 
-	return result, nil
+	return result, err
 }
 
 // GetCredentials returns the cloud credential

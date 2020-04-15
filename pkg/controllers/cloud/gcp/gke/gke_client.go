@@ -116,15 +116,13 @@ func (g *gkeClient) Delete(ctx context.Context) error {
 		return err
 	}
 	if !found {
-		operation, err := g.ce.Projects.Locations.Clusters.Delete(path).Do()
-		if err != nil {
+		if _, err := g.ce.Projects.Locations.Clusters.Delete(path).Do(); err != nil {
 			logger.WithError(err).Error("trying to delete the cluster")
 
 			return err
 		}
-		_ = operation.Name
+		logger.Debug("requested the removal of the gke cluster")
 	}
-	logger.Debug("requested the removal of the gke cluster")
 
 	return nil
 }
@@ -154,13 +152,13 @@ func (g *gkeClient) Create(ctx context.Context) (*container.Cluster, error) {
 	}
 	if !found {
 		// @step: we request the cluster
-		ticket, err := g.CreateCluster(ctx, def)
-		if err != nil {
-			logger.WithError(err).Error("attempting to request the cluster")
+		if _, err := g.CreateCluster(ctx, def); err != nil {
+			if err != nil {
+				logger.WithError(err).Error("attempting to request the cluster")
 
-			return nil, err
+				return nil, err
+			}
 		}
-		_ = ticket.Name
 	}
 
 	// @step: retrieve the state of the cluster via api
@@ -199,12 +197,9 @@ func (g *gkeClient) Update(ctx context.Context) (bool, error) {
 	}
 
 	// @step: we check if the update request has been altered
-	if ok, err := utils.IsChanged(update.Update); err != nil {
-		return false, err
-	} else if !ok {
+	if utils.IsEmpty(update.Update) {
 		return false, nil
 	}
-
 	logger.Debug("desired state of the cluster has drifted, attempting to update")
 
 	path := fmt.Sprintf("projects/%s/locations/%s/clusters/%s",
@@ -245,19 +240,6 @@ func (g *gkeClient) CreateUpdateDefinition(state *container.Cluster) (*container
 
 		return request, nil
 	}
-
-	/*
-		if g.cluster.Spec.EnableShieldedNodes &&
-			(state.ShieldedNodes == nil || state.ShieldedNodes.Enabled != false) {
-
-			u.DesiredShieldedNodes = &container.ShieldedNodes{Enabled: true}
-		}
-		if !g.cluster.Spec.EnableShieldedNodes &&
-			(state.ShieldedNodes != nil || state.ShieldedNodes.Enabled != true) {
-
-			u.DesiredShieldedNodes = &container.ShieldedNodes{Enabled: false}
-		}
-	*/
 
 	return request, nil
 }
