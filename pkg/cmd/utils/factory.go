@@ -58,8 +58,10 @@ func (f *factory) Client() client.RestInterface {
 func (f *factory) CheckError(kerror error) {
 	err := func() error {
 		if client.IsNotAuthentication(kerror) {
-
 			return errors.ErrAuthentication
+		}
+		if client.IsMethodNotAllowed(kerror) {
+			return errors.ErrOperationNotPermitted
 		}
 
 		return kerror
