@@ -32,3 +32,36 @@ func Age() PrinterColumnFormatter {
 		return strings.Split(time.Since(created).String(), ".")[0] + "s"
 	}
 }
+
+// Default used the v if no value set
+func Default(v string) PrinterColumnFormatter {
+	return func(value string) string {
+		if value == "" {
+			return v
+		}
+
+		return value
+	}
+}
+
+// IfEqual checks if v is equal and if so returns x
+func IfEqual(v, x string) PrinterColumnFormatter {
+	return func(value string) string {
+		if value == x {
+			return x
+		}
+
+		return value
+	}
+}
+
+// IfEqualOr checks if v is equal and if so returns x
+func IfEqualOr(v, a, b string) PrinterColumnFormatter {
+	return func(value string) string {
+		if value == v {
+			return a
+		}
+
+		return b
+	}
+}
