@@ -194,10 +194,11 @@ func (a *Controller) loadComponent(ctx context.Context, cluster *clustersv1.Clus
 
 // createOrUpdateComponent is responsible for maintaining the components
 func (a *Controller) createOrUpdateComponent(ctx context.Context, cluster *clustersv1.Cluster, resource clustersv1.ClusterComponent) error {
-	found, err := kubernetes.CheckIfExists(ctx, a.mgr.GetClient(), resource)
+	found, err := kubernetes.CheckIfExists(ctx, a.mgr.GetClient(), resource.DeepCopyObject())
 	if err != nil {
 		return err
 	}
+
 	if !found {
 		setClusterResourceVersion(resource, cluster.ResourceVersion)
 
