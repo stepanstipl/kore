@@ -1,8 +1,11 @@
 const Router = require('express').Router
+const fs = require('fs')
+const path = require('path')
 
 function version() {
   return async (_, res) => {
-    return res.json({ version: process.env.UI_VERSION })
+    const v = await fs.promises.readFile(path.resolve(__dirname, '../../VERSION'), 'utf8')
+    return res.json({ version: v })
   }
 }
 
