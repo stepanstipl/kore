@@ -81,7 +81,7 @@ func main() {
 	flags.StringVar(&o.IDPServerURL, "idp-server-url", utils.GetEnvString("IDP_SERVER_URL", ""), "the open-id server url `URL`")
 	flags.StringVar(&o.IDPClientID, "idp-client-id", utils.GetEnvString("IDP_CLIENT_ID", ""), "the identity provider client id used to verify the token `IDP_CLIENT_ID`")
 	flags.StringVar(&o.TLSCaAuthority, "ca-authority", utils.GetEnvString("CA_AUTHORITY", ""), "when not using the IDP server url we can use this certificate to verity the token `PATH`")
-	flags.BoolVar(&o.EnableProxyProtocol, ""enable-proxy-protocol", utils.GetEnvString("ENABLE_PROXY_PROTOCOL", "indicates the proxy should enable proxy protocol support")
+	flags.BoolVar(&o.EnableProxyProtocol, "enable-proxy-protocol", utils.GetEnvBool("ENABLE_PROXY_PROTOCOL", false), "indicates the proxy should enable proxy protocol support")
 
 	flags.StringSliceVar(&o.IDPUserClaims, "idp-user-claims",
 		utils.GetEnvStringSlice("IDP_USER_CLAIMS", []string{"preferred_username", "email", "name"}),
