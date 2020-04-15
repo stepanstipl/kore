@@ -17,7 +17,14 @@
 package aws
 
 import (
+	"context"
+	"strings"
+	"time"
+
+	"github.com/appvia/kore/pkg/utils"
+
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 )
 
@@ -69,10 +76,29 @@ func tagFromIDNameAndTags(svc ec2.EC2, name, id string, inTags map[string]string
 		},
 		Tags: ec2tags,
 	}
-	_, err := svc.CreateTags(input)
+
+	timeout := 5 * time.Minute
+	err := utils.RetryWithTimeout(context.Background(), timeout, 2*time.Second, func() (finished bool, _ error) {
+		_, err := svc.CreateTags(input)
+		if err != nil {
+			if awserr, ok := err.(awserr.Error); ok {
+				if strings.Contains(awserr.Code(), ".NotFound") {
+					return false, nil
+				}
+			}
+			return false, err
+		}
+		return true, nil
+	})
+
 	if err != nil {
+		if err == utils.ErrCancelled {
+			// try one last time to return a real API error
+			_, err = svc.CreateTags(input)
+		}
 		return err
 	}
+
 	return nil
 }
 
