@@ -34,7 +34,7 @@ load helper
 @test "We should see the status of the gke cluster change to deleting" {
   ${KORE} get cluster ${CLUSTER} -t e2e || skip
 
-  retry 4 "${KORE} get gkes ${CLUSTER} -t e2e -o json | jq '.status.status' | grep -i deleting"
+  retry 10 "${KORE} get gkes ${CLUSTER} -t e2e -o json | jq '.status.status' | grep -i deleting"
   [[ "$status" -eq 0 ]]
 }
 
