@@ -37,5 +37,6 @@ router.use(require('./controllers/swagger').initRouter({ koreApi }))
 router.use(require('./controllers/session').initRouter({ ensureAuthenticated: ensureAuthenticated401, ensureUserCurrent, persistRequestedPath, orgService, koreApi }))
 router.use(require('./controllers/apiproxy').initRouter({ ensureAuthenticated: ensureAuthenticatedRedirect, ensureUserCurrent, koreApi }))
 router.use(require('./controllers/process').initRouter({ ensureAuthenticated: ensureAuthenticatedRedirect, ensureUserCurrent, koreApi }))
+router.use(require('./controllers/version').initRouter())
 
 module.exports = router

@@ -23,11 +23,10 @@ class V1alpha1EKSNodeGroupStatus {
     /**
      * Constructs a new <code>V1alpha1EKSNodeGroupStatus</code>.
      * @alias module:model/V1alpha1EKSNodeGroupStatus
-     * @param nodeIAMRole {String} 
      */
-    constructor(nodeIAMRole) { 
+    constructor() { 
         
-        V1alpha1EKSNodeGroupStatus.initialize(this, nodeIAMRole);
+        V1alpha1EKSNodeGroupStatus.initialize(this);
     }
 
     /**
@@ -35,8 +34,7 @@ class V1alpha1EKSNodeGroupStatus {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, nodeIAMRole) { 
-        obj['nodeIAMRole'] = nodeIAMRole;
+    static initialize(obj) { 
     }
 
     /**
