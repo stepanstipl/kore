@@ -76,3 +76,14 @@ run-prod:
 	@$(MAKE) build
 	@$(MAKE) compose
 	@./scripts/run-prod.sh
+
+run-docker:
+	@$(MAKE) docker
+	@$(MAKE) compose
+	docker run --env-file ../demo.env \
+		-e KORE_BASE_URL=http://localhost:3000 \
+		-e KORE_API_URL=http://host.docker.internal:10080/api/v1alpha1 \
+		-e KORE_API_TOKEN=password \
+		-e REDIS_URL=redis://host.docker.internal:6379 \
+		-p 3000:3000 \
+		"${REGISTRY}/${AUTHOR}/${NAME}:${VERSION}"
