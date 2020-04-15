@@ -62,6 +62,7 @@ func (o *ListOptions) Run() error {
 			})
 		}
 	}
+	current := o.Config().CurrentProfile
 
 	return render.Render().
 		Writer(o.Writer()).
@@ -71,12 +72,7 @@ func (o *ListOptions) Run() error {
 		Printer(
 			render.Column("Profile", "name"),
 			render.Column("Endpoint", "server"),
-			render.Column("Default Team", "team", func(v string) string {
-				if v == "" {
-					return "None"
-				}
-
-				return v
-			}),
+			render.Column("Default Team", "team", render.Default("None")),
+			render.Column("Active", "name", render.IfEqualOr(current, "yes", `-`)),
 		).Do()
 }
