@@ -54,10 +54,6 @@ func DefaultRunFunc(o RunHandler) func(*cobra.Command, []string) {
 		utils.SetReflectedField("Headers", GetFlagBool(cmd, "show-headers"), o)
 		utils.SetReflectedField("Team", GetFlagString(cmd, "team"), o)
 
-		if GetFlagString(cmd, "team") == "" && o.Config().GetCurrentProfile().Team != "" {
-			utils.SetReflectedField("Team", o.Config().GetCurrentProfile().Team, o)
-		}
-
 		// @step: we can help with resource and name as well
 		if utils.HasReflectField("Resource", o) && utils.HasReflectField("Name", o) {
 			utils.SetReflectedField("Resource", o.Resources().ResolveShorthand(cmd.Flags().Arg(0)), o)
