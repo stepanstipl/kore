@@ -53,15 +53,15 @@ describe('ClusterBuildForm', () => {
       // Check API has been accessed as expected.
       apiScope.done()
       expect(form.state.plans).toEqual(plans)
-      expect(form.state.providers.GKE).toEqual([{ ...allocations[0] }])
-      expect(form.state.providers.EKS).toEqual([{ ...allocations[1] }])
+      expect(form.state.credentials.GKE).toEqual([{ ...allocations[0] }])
+      expect(form.state.credentials.EKS).toEqual([{ ...allocations[1] }])
     })
   })
 
   describe('#getClusterResource', () => {
     it('should return a configured cluster object when given valid values', () => {
       form.handleSelectCloud('GKE')
-      const cluster = form.getClusterResource({ provider: 'GKE', plan: plans.items[0].metadata.name, clusterName: 'abc-test-cluster' })
+      const cluster = form.getClusterResource({ credential: 'GKE', plan: plans.items[0].metadata.name, clusterName: 'abc-test-cluster' })
       expect(cluster).toBeDefined()
     })
   })

@@ -1,13 +1,13 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
 import Router from 'next/router'
-import { Button, Form, Alert, message } from 'antd'
+import { Button, Form, message } from 'antd'
 
-import copy from '../../utils/object-copy'
 import redirect from '../../utils/redirect'
 import CloudSelector from '../cluster-build/CloudSelector'
-import MissingProvider from '../cluster-build/MissingProvider'
+import MissingCredential from '../cluster-build/MissingCredential'
 import ClusterOptionsForm from '../cluster-build/ClusterOptionsForm'
+import FormErrorMessage from '../forms/FormErrorMessage'
 import KoreApi from '../../kore-api'
 import V1ClusterSpec from '../../kore-api/model/V1ClusterSpec'
 import V1Cluster from '../../kore-api/model/V1Cluster'
@@ -31,7 +31,7 @@ class ClusterBuildForm extends React.Component {
       formErrorMessage: false,
       selectedCloud: '',
       dataLoading: true,
-      providers: {},
+      credentials: {},
       planOverride: null,
       validationErrors: null
     }
@@ -55,9 +55,7 @@ class ClusterBuildForm extends React.Component {
       const gkeCredentials = (allocations.items || []).filter(a => a.spec.resource.kind === 'GKECredentials')
       const eksCredentials = (allocations.items || []).filter(a => a.spec.resource.kind === 'EKSCredentials')
       this.setState({
-        ...this.state,
-        providers: {
-          ...this.state.providers,
+        credentials: {
           GKE: gkeCredentials,
           EKS: eksCredentials
         },
@@ -68,7 +66,7 @@ class ClusterBuildForm extends React.Component {
   }
 
   getClusterResource = (values) => {
-    const selectedProvider = this.state.providers[this.state.selectedCloud].find(p => p.metadata.name === values.provider)
+    const selectedCredential = this.state.credentials[this.state.selectedCloud].find(p => p.metadata.name === values.credential)
     const selectedPlan = this.state.plans.items.find(p => p.metadata.name === values.plan)
 
     const clusterResource = new V1Cluster()
@@ -88,7 +86,7 @@ class ClusterBuildForm extends React.Component {
     } else {
       clusterSpec.setConfiguration({ ...selectedPlan.spec.configuration })
     }
-    clusterSpec.setCredentials({ ...selectedProvider.spec.resource })
+    clusterSpec.setCredentials({ ...selectedCredential.spec.resource })
 
     // Add current user as cluster admin to plan config, if no cluster users specified:
     if (!(clusterSpec.configuration['clusterUsers'])) {
@@ -143,13 +141,11 @@ class ClusterBuildForm extends React.Component {
   }
 
   handleSelectCloud = cloud => {
-    if (this.state.selectedCloud !== cloud) {
-      const state = copy(this.state)
-      state.selectedCloud = cloud
-      state.planOverride = null
-      state.validationErrors = null
-      this.setState(state)
-    }
+    this.setState({
+      selectedCloud: cloud,
+      planOverride: null,
+      validationErrors: null
+    })
   }
 
   handlePlanOverride = planOverrides => {
@@ -158,25 +154,10 @@ class ClusterBuildForm extends React.Component {
     })
   }
 
-  formErrorMessage = () => {
-    if (this.state.formErrorMessage) {
-      return (
-        <Alert
-          message={this.state.formErrorMessage}
-          type="error"
-          showIcon
-          closable
-          style={{ marginBottom: '20px' }}
-        />
-      )
-    }
-    return null
-  }
-
   clusterBuildForm = () => {
-    const { submitting, selectedCloud } = this.state
+    const { submitting, selectedCloud, formErrorMessage } = this.state
     const filteredPlans = this.state.plans.items.filter(p => p.spec.kind === selectedCloud)
-    const filteredProviders = this.state.providers[selectedCloud]
+    const filteredCredentials = this.state.credentials[selectedCloud]
     const formConfig = {
       layout: 'horizontal',
       labelAlign: 'left',
@@ -195,10 +176,11 @@ class ClusterBuildForm extends React.Component {
 
     return (
       <Form {...formConfig} onSubmit={this.handleSubmit}>
-        <div>{this.formErrorMessage()}</div>
+        <FormErrorMessage message={formErrorMessage} />
         <ClusterOptionsForm
           team={this.props.team}
-          providers={filteredProviders}
+          selectedCloud={selectedCloud}
+          credentials={filteredCredentials}
           plans={filteredPlans}
           teamClusters={this.props.teamClusters}
           onPlanOverridden={this.handlePlanOverride}
@@ -219,16 +201,21 @@ class ClusterBuildForm extends React.Component {
       return null
     }
 
-    const { providers, selectedCloud } = this.state
-    const filteredProviders = this.state.providers[selectedCloud]
+    const { credentials, cloudConfig, selectedCloud } = this.state
+    const filteredCredentials = this.state.credentials[selectedCloud]
 
     return (
       <div>
-        <CloudSelector showCustom={true} providers={providers} selectedCloud={selectedCloud} handleSelectCloud={this.handleSelectCloud} />
+        <CloudSelector
+          showCustom={false}
+          credentials={credentials}
+          cloudConfig={cloudConfig}
+          selectedCloud={selectedCloud}
+          handleSelectCloud={this.handleSelectCloud} />
         {selectedCloud ? (
-          filteredProviders.length > 0 ?
+          filteredCredentials.length > 0 ?
             <this.clusterBuildForm /> :
-            <MissingProvider team={this.props.team.metadata.name}/>
+            <MissingCredential team={this.props.team.metadata.name}/>
         ) : null}
       </div>
     )

@@ -12,7 +12,8 @@ class ClusterOptionsForm extends React.Component {
   static propTypes = {
     form: PropTypes.any.isRequired,
     team: PropTypes.object.isRequired,
-    providers: PropTypes.array.isRequired,
+    selectedCloud: PropTypes.string.isRequired,
+    credentials: PropTypes.array.isRequired,
     plans: PropTypes.array.isRequired,
     teamClusters: PropTypes.array.isRequired,
     onPlanOverridden: PropTypes.func,
@@ -20,8 +21,8 @@ class ClusterOptionsForm extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    // Reset the selected plan if the provider changes:
-    if (this.props.providers !== prevProps.providers) {
+    // Reset the selected plan if the credential changes:
+    if (this.props.credentials !== prevProps.credentials) {
       this.props.form.setFieldsValue({ 'plan': null })
     }
   }
@@ -61,7 +62,7 @@ class ClusterOptionsForm extends React.Component {
 
   render() {
     const { getFieldDecorator, getFieldValue } = this.props.form
-    const { providers, plans } = this.props
+    const { credentials, plans } = this.props
     const selectedPlan = getFieldValue('plan')
 
     const checkForDuplicateName = (rule, value) => {
@@ -73,14 +74,14 @@ class ClusterOptionsForm extends React.Component {
     }
 
     return (
-      <Card title="Choose a provider and plan">
-        <Form.Item label="Provider">
-          {getFieldDecorator('provider', {
-            rules: [{ required: true, message: 'Please select your provider!' }],
-            initialValue: providers.length === 1 ? providers[0].metadata.name : undefined
+      <Card title="Cluster options">
+        <Form.Item label="Credential">
+          {getFieldDecorator('credential', {
+            rules: [{ required: true, message: 'Please select your credential!' }],
+            initialValue: credentials.length === 1 ? credentials[0].metadata.name : undefined
           })(
-            <Select placeholder="Provider">
-              {providers.map(provider => <Option key={provider.metadata.name} value={provider.metadata.name}>{provider.spec.name} - {provider.spec.summary}</Option>)}
+            <Select placeholder="Credential">
+              {credentials.map(c => <Option key={c.metadata.name} value={c.metadata.name}>{c.spec.name} - {c.spec.summary}</Option>)}
             </Select>
           )}
         </Form.Item>

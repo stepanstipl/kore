@@ -7,57 +7,34 @@ class CloudSelector extends React.Component {
   static propTypes = {
     selectedCloud: PropTypes.string.isRequired,
     handleSelectCloud: PropTypes.func.isRequired,
-    providers: PropTypes.object,
+    credentials: PropTypes.object,
     showCustom: PropTypes.bool
   }
 
-  selectCloud = (cloud) => {
-    return () => {
-      this.props.handleSelectCloud(cloud)
-    }
-  }
+  selectCloud = cloud => () => this.props.handleSelectCloud(cloud)
 
   render() {
-    const { selectedCloud, providers, showCustom } = this.props
+    const { selectedCloud, credentials, showCustom } = this.props
 
-    const getCardStyle = cloud => {
-      const style = {
-        height: '100%'
-      }
-      if (selectedCloud === cloud) {
-        style.border = '1px solid #999999'
-      }
-      return style
-    }
-
-    const getCardBodyStyle = cloud => {
-      const style = {
-        height: 'inherit'
-      }
-      if (selectedCloud === cloud) {
-        style.backgroundColor = '#f0f2f5'
-      }
-      return style
-    }
-
-    const Providers = ({ cloud }) => {
-      if (!providers) {
+    const Credentials = ({ cloud }) => {
+      if (!credentials) {
         return null
       }
-      const cloudProviderCount = providers[cloud].length
+      const credType = cloud === 'GKE' ? 'project' : 'account'
+      const cloudProviderCount = credentials[cloud].length
       return (
         <Paragraph style={{ textAlign: 'center', marginTop: '20px', marginBottom: '0' }}>
           {cloudProviderCount > 0 ?
-            <Tag color="#87d068">{cloudProviderCount} providers</Tag> :
-            <Text type="warning">No providers</Text>
+            <Tag color="#87d068">{cloudProviderCount} {credType} credential{cloudProviderCount > 1 ? 's' : ''}</Tag> :
+            <Text type="warning">No credentials</Text>
           }
         </Paragraph>
       )
     }
 
     const ComingSoon = () => (
-      <div style={{ height: 'inherit', position: 'absolute', zIndex: '1', top: '10px', left: '0', width: '100%', textAlign: 'center' }}>
-        <Tag style={{ fontSize: '18px', fontWeight: 'bold', padding: '5px' }} color="#2db7f5">Coming soon!</Tag>
+      <div className="coming-soon">
+        <Tag color="#2db7f5">Coming soon!</Tag>
       </div>
     )
 
@@ -65,59 +42,55 @@ class CloudSelector extends React.Component {
       <Row gutter={16} type="flex" justify="center" style={{ marginTop: '40px', marginBottom: '40px' }}>
         <Col span={6}>
           <Card
-            style={getCardStyle('GKE')}
             onClick={this.selectCloud('GKE')}
-            bodyStyle={getCardBodyStyle('GKE')}
             hoverable={true}
+            className={ selectedCloud === 'GKE' ? 'cloud-card selected' : 'cloud-card' }
           >
-            <Paragraph style={{ textAlign: 'center' }}>
-              <img src="/static/images/GKE.png" height="80px" />
+            <Paragraph className="logo">
+              <img src="/static/images/GCP.png" height="80px" />
             </Paragraph>
-            <Paragraph strong style={{ textAlign: 'center', marginTop: '20px', marginBottom: '0' }}>Google Kubernetes Engine</Paragraph>
-            <Providers cloud="GKE" />
+            <Paragraph className="name" strong>Google Cloud Platform</Paragraph>
+            <Credentials cloud="GKE" />
           </Card>
         </Col>
         <Col span={6}>
           <Card
-            style={getCardStyle('EKS')}
             onClick={this.selectCloud('EKS')}
-            bodyStyle={getCardBodyStyle('EKS')}
             hoverable={true}
+            className={ selectedCloud === 'EKS' ? 'cloud-card selected' : 'cloud-card' }
           >
-            <Paragraph style={{ textAlign: 'center' }}>
-              <img src="/static/images/EKS.png" height="80px" />
+            <Paragraph className="logo">
+              <img src="/static/images/AWS.png" height="80px" />
             </Paragraph>
-            <Paragraph strong style={{ textAlign: 'center', marginTop: '20px', marginBottom: '0' }}>Elastic Kubernetes Service</Paragraph>
-            <Providers cloud="EKS" />
+            <Paragraph className="name" strong>Amazon Web Services</Paragraph>
+            <Credentials cloud="EKS" />
           </Card>
         </Col>
         <Col span={6}>
           <Card
-            style={getCardStyle('AKS')}
-            bodyStyle={getCardBodyStyle('AKS')}
             hoverable={false}
+            className={ selectedCloud === 'AKS' ? 'cloud-card selected' : 'cloud-card' }
           >
-            <ComingSoon />
-            <div style={{ opacity: '0.3' }}>
-              <Paragraph style={{ textAlign: 'center' }}>
-                <img src="/static/images/AKS.svg" height="80px" />
+            <div className="unavailable">
+              <Paragraph style={{ paddingBottom: '15px', marginTop: '15px' }}>
+                <img src="/static/images/Azure.svg" height="50px" />
               </Paragraph>
-              <Paragraph strong style={{ textAlign: 'center', marginTop: '20px', marginBottom: '0' }}>Azure Kubernetes Service</Paragraph>
+              <Paragraph strong style={{ textAlign: 'center', marginTop: '20px', marginBottom: '0' }}>Microsoft Azure</Paragraph>
             </div>
+            <ComingSoon />
           </Card>
         </Col>
         {showCustom ? (
           <Col span={6}>
             <Card
-              style={getCardStyle('CUSTOM')}
-              bodyStyle={getCardBodyStyle('CUSTOM')}
               hoverable={false}
+              className={ selectedCloud === 'CUSTOM' ? 'cloud-card selected' : 'cloud-card' }
             >
-              <ComingSoon />
-              <div style={{ textAlign: 'center', opacity: '0.3' }}>
+              <div className="unavailable">
                 <Title level={3} style={{ paddingTop: '30px', height: '80px' }}>Custom</Title>
                 <Paragraph strong style={{ marginTop: '20px' }}>Bring your own cluster</Paragraph>
               </div>
+              <ComingSoon />
             </Card>
           </Col>
         ) : null}

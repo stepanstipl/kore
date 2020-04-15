@@ -2,11 +2,11 @@ import Link from 'next/link'
 import PropTypes from 'prop-types'
 import { Alert, Button } from 'antd'
 
-const MissingProvider = ({ team }) => (
+const MissingCredential = ({ team }) => (
   <div>
     <Alert
-      message="No providers found"
-      description="No providers could be found allocated to this team, therefore you cannot request a cluster build at this time. Please continue to the team dashboard."
+      message="No credentials found"
+      description="No credentials could be found allocated to this team, therefore you cannot request a cluster build at this time. Please continue to the team dashboard."
       type="info"
       showIcon
       style={{ marginBottom: '20px' }}
@@ -19,8 +19,8 @@ const MissingProvider = ({ team }) => (
   </div>
 )
 
-MissingProvider.propTypes = {
+MissingCredential.propTypes = {
   team: PropTypes.string.isRequired
 }
 
-export default MissingProvider
+export default MissingCredential
