@@ -220,7 +220,7 @@ func GetProfilesConfigureCommand(config *Config) *cli.Command {
 			}
 
 			// @step: ask for the endpoint
-			fmt.Printf("Please enter the Kore API: (e.g https://api.domain.com): ")
+			fmt.Printf("Please enter the Kore API URL: (e.g https://api.domain.com): ")
 			endpoint, err := bufio.NewReader(os.Stdin).ReadString('\n')
 			if err != nil {
 				return fmt.Errorf("failed to read input: %s", err)

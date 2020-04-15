@@ -236,7 +236,7 @@ class TeamDashboard extends React.Component {
             <InfoItem num="2" title="Setup profile" />
             <Paragraph>Create a profile</Paragraph>
             <Paragraph className="copy-command" style={{ marginRight: '40px' }} copyable>{profileConfigureCommand}</Paragraph>
-            <Paragraph>Enter the Kore API as follows</Paragraph>
+            <Paragraph>Enter the Kore API URL as follows</Paragraph>
             <Paragraph className="copy-command" style={{ marginRight: '40px' }} copyable>{apiUrl.origin}</Paragraph>
 
             <InfoItem num="3" title="Login" />
