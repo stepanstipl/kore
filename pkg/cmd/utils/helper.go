@@ -99,6 +99,16 @@ func MustMarkFlagRequired(cmd *cobra.Command, name string) {
 	}
 }
 
+func MustRegisterFlagCompletionFunc(
+	cmd *cobra.Command,
+	flagName string,
+	f func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.BashCompDirective),
+) {
+	if err := cmd.RegisterFlagCompletionFunc(flagName, f); err != nil {
+		panic(err)
+	}
+}
+
 // ParseDocument returns a collection of parsed documents and the api endpoints
 func ParseDocument(f Factory, src io.Reader) ([]*ResourceDocument, error) {
 	var list []*ResourceDocument

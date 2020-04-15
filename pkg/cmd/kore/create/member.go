@@ -52,7 +52,7 @@ func NewCmdCreateMember(factory cmdutils.Factory) *cobra.Command {
 
 	cmdutils.MustMarkFlagRequired(command, "username")
 
-	command.RegisterFlagCompletionFunc("username", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.BashCompDirective) {
+	cmdutils.MustRegisterFlagCompletionFunc(command, "username", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.BashCompDirective) {
 		if len(complete) < 3 {
 			return nil, cobra.BashCompDirectiveDefault
 		}

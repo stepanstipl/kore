@@ -116,7 +116,7 @@ func NewCmdCreateCluster(factory cmdutil.Factory) *cobra.Command {
 	cmdutils.MustMarkFlagRequired(command, "plan")
 
 	// @step: register the autocompletions
-	command.RegisterFlagCompletionFunc("allocation", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.BashCompDirective) {
+	cmdutils.MustRegisterFlagCompletionFunc(command, "allocation", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.BashCompDirective) {
 		list := &configv1.AllocationList{}
 		if err := o.Client().Team(cmdutil.GetTeam(cmd)).Resource("allocation").Result(list).Get().Error(); err != nil {
 			return nil, cobra.BashCompDirectiveError
@@ -133,7 +133,7 @@ func NewCmdCreateCluster(factory cmdutil.Factory) *cobra.Command {
 	})
 
 	// @TODO would be nice to filter on the allocation here as well - i.e. chosen GKE, only show GKE plans etc
-	command.RegisterFlagCompletionFunc("plan", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.BashCompDirective) {
+	cmdutils.MustRegisterFlagCompletionFunc(command, "plan", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.BashCompDirective) {
 		suggestions, err := o.Resources().LookupResourceNames("plan", "")
 		if err != nil {
 			return nil, cobra.BashCompDirectiveError

@@ -67,7 +67,7 @@ func NewCmdCreateUser(factory cmdutils.Factory) *cobra.Command {
 	cmdutils.MustMarkFlagRequired(command, "email")
 
 	// @step: register the autocompletions
-	command.RegisterFlagCompletionFunc("email", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.BashCompDirective) {
+	cmdutils.MustRegisterFlagCompletionFunc(command, "email", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.BashCompDirective) {
 		name := cmd.Flags().Arg(0)
 		if name == "" {
 			return []string{}, cobra.BashCompDirectiveNoFileComp

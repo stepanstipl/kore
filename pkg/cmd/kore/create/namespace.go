@@ -80,7 +80,7 @@ func NewCmdCreateNamespace(factory cmdutil.Factory) *cobra.Command {
 	cmdutils.MustMarkFlagRequired(command, "cluster")
 
 	// @step: add auto complete on the cluster name
-	command.RegisterFlagCompletionFunc("cluster", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.BashCompDirective) {
+	cmdutils.MustRegisterFlagCompletionFunc(command, "cluster", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.BashCompDirective) {
 		suggestions, err := o.Resources().LookupResourceNames("cluster", cmdutil.GetTeam(cmd))
 		if err != nil {
 			return nil, cobra.BashCompDirectiveError
