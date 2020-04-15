@@ -17,33 +17,33 @@
 package delete
 
 import (
-	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
+	cmdutils "github.com/appvia/kore/pkg/cmd/utils"
 
 	"github.com/spf13/cobra"
 )
 
 // DeleteAdminOptions the are the options for a delete command
 type DeleteAdminOptions struct {
-	cmdutil.Factory
-	cmdutil.DefaultHandler
+	cmdutils.Factory
+	cmdutils.DefaultHandler
 	// Username of the user you are removing as an admin
 	Username string
 }
 
 // NewCmdDeleteAdmin creates and returns the delete admin command
-func NewCmdDeleteAdmin(factory cmdutil.Factory) *cobra.Command {
+func NewCmdDeleteAdmin(factory cmdutils.Factory) *cobra.Command {
 	o := &DeleteAdminOptions{Factory: factory}
 
 	command := &cobra.Command{
 		Use:     "admin",
 		Short:   "Delete a user from being an admin in kore",
 		Example: "kore delete admin --username|-u <username>",
-		Run:     cmdutil.DefaultRunFunc(o),
+		Run:     cmdutils.DefaultRunFunc(o),
 	}
 
 	flags := command.Flags()
 	flags.StringVarP(&o.Username, "username", "u", "", "the user you wish to remove from being an admin `USERNAME`")
-	command.MarkFlagRequired("username")
+	cmdutils.MustMarkFlagRequired(command, "username")
 
 	return command
 }

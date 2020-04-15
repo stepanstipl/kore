@@ -50,7 +50,7 @@ func NewCmdCreateMember(factory cmdutils.Factory) *cobra.Command {
 	flags.StringVarP(&o.Username, "username", "u", "", "the username of the person being added to the team")
 	flags.BoolVarP(&o.Invite, "invite", "i", true, "if the user doesn't exist an invitation url will be automatically generated")
 
-	command.MarkFlagRequired("username")
+	cmdutils.MustMarkFlagRequired(command, "username")
 
 	command.RegisterFlagCompletionFunc("username", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.BashCompDirective) {
 		if len(complete) < 3 {

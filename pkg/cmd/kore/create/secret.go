@@ -28,6 +28,7 @@ import (
 
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
+	cmdutils "github.com/appvia/kore/pkg/cmd/utils"
 
 	"github.com/spf13/cobra"
 )
@@ -89,7 +90,7 @@ func NewCmdCreateSecret(factory cmdutil.Factory) *cobra.Command {
 	flags.StringVar(&o.File, "from-file", "", "builds a secret from the key reference `KEY=PATH`")
 	flags.StringVar(&o.File, "from-env-file", "", "builds a secret from the environment file, `KEY=PATH`")
 
-	command.MarkFlagRequired("description")
+	cmdutils.MustMarkFlagRequired(command, "description")
 
 	return command
 }

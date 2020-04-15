@@ -92,6 +92,13 @@ func RequireName(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// MustMarkFlagRequired calls MarkFlagRequired and panics if it returns an error
+func MustMarkFlagRequired(cmd *cobra.Command, name string) {
+	if err := cmd.MarkFlagRequired(name); err != nil {
+		panic(err)
+	}
+}
+
 // ParseDocument returns a collection of parsed documents and the api endpoints
 func ParseDocument(f Factory, src io.Reader) ([]*ResourceDocument, error) {
 	var list []*ResourceDocument

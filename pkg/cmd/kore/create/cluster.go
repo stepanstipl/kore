@@ -30,6 +30,7 @@ import (
 	"github.com/appvia/kore/pkg/apiserver/types"
 	"github.com/appvia/kore/pkg/cmd/errors"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
+	cmdutils "github.com/appvia/kore/pkg/cmd/utils"
 
 	"github.com/spf13/cobra"
 	apiexts "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
@@ -111,8 +112,8 @@ func NewCmdCreateCluster(factory cmdutil.Factory) *cobra.Command {
 	flags.StringSliceVar(&o.Namespaces, "namespaces", []string{}, "used to override the plan parameters `KEY=VALUE`")
 	flags.BoolVarP(&o.ShowTime, "show-time", "T", false, "shows the time it took to successfully provision a new cluster `BOOL`")
 
-	command.MarkFlagRequired("allocation")
-	command.MarkFlagRequired("plan")
+	cmdutils.MustMarkFlagRequired(command, "allocation")
+	cmdutils.MustMarkFlagRequired(command, "plan")
 
 	// @step: register the autocompletions
 	command.RegisterFlagCompletionFunc("allocation", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.BashCompDirective) {

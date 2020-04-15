@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
-	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
+	cmdutils "github.com/appvia/kore/pkg/cmd/utils"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 
@@ -40,8 +40,8 @@ $ kore create username test -e test@appiva.io
 
 // CreateUserOptions is used to provision a team
 type CreateUserOptions struct {
-	cmdutil.Factory
-	cmdutil.DefaultHandler
+	cmdutils.Factory
+	cmdutils.DefaultHandler
 	// Name is the username to add
 	Name string
 	// Email is the user email address
@@ -51,7 +51,7 @@ type CreateUserOptions struct {
 }
 
 // NewCmdCreateUser returns the create user command
-func NewCmdCreateUser(factory cmdutil.Factory) *cobra.Command {
+func NewCmdCreateUser(factory cmdutils.Factory) *cobra.Command {
 	o := &CreateUserOptions{Factory: factory}
 
 	command := &cobra.Command{
@@ -59,12 +59,12 @@ func NewCmdCreateUser(factory cmdutil.Factory) *cobra.Command {
 		Short:   "Adds to the user to kore",
 		Long:    userLongDesciption,
 		Example: "kore create user <username> -e <email> [-t team]",
-		PreRunE: cmdutil.RequireName,
-		Run:     cmdutil.DefaultRunFunc(o),
+		PreRunE: cmdutils.RequireName,
+		Run:     cmdutils.DefaultRunFunc(o),
 	}
 
 	command.Flags().StringVarP(&o.Email, "email", "e", "", "an email address for the user `EMAIL`")
-	command.MarkFlagRequired("email")
+	cmdutils.MustMarkFlagRequired(command, "email")
 
 	// @step: register the autocompletions
 	command.RegisterFlagCompletionFunc("email", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.BashCompDirective) {
