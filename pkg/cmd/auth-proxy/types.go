@@ -29,6 +29,8 @@ type Config struct {
 	IDPServerURL string `json:"idp_server_url,omitempty"`
 	// Listen is the interface to listen on
 	Listen string `json:"listen,omitempty"`
+	// EnableProxyProtocol indicates we should use proxy protocol
+	EnableProxyProtocol bool `json:"enable_proxy_protocol,omitempty"`
 	// TLSCaAuthority is a caroot used when verifying the upstream idp
 	TLSCaAuthority string `json:"tls_ca_authority,omitempty"`
 	// TLSCert is the certificate to serve
@@ -62,6 +64,7 @@ type Interface interface {
 }
 
 var (
+	// AllMethods contains all http methods
 	AllMethods = []string{
 		http.MethodDelete,
 		http.MethodGet,

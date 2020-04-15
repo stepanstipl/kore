@@ -20,6 +20,8 @@ github.com/RoaringBitmap/roaring
 github.com/Songmu/retry
 # github.com/apparentlymart/go-cidr v1.0.1
 github.com/apparentlymart/go-cidr/cidr
+# github.com/armon/go-proxyproto v0.0.0-20200108142055-f0b8253b1507
+github.com/armon/go-proxyproto
 # github.com/asaskevich/govalidator v0.0.0-20200108200545-475eaeb16496
 github.com/asaskevich/govalidator
 # github.com/aws/aws-sdk-go v1.29.31

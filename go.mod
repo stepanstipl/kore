@@ -6,6 +6,7 @@ require (
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/RoaringBitmap/roaring v0.4.21 // indirect
 	github.com/apparentlymart/go-cidr v1.0.1
+	github.com/armon/go-proxyproto v0.0.0-20200108142055-f0b8253b1507
 	github.com/aws/aws-sdk-go v1.29.31
 	github.com/blevesearch/bleve v0.8.1
 	github.com/blevesearch/blevex v0.0.0-20190916190636-152f0fe5c040 // indirect

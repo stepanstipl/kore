@@ -31,6 +31,7 @@ import (
 	"time"
 
 	"github.com/appvia/kore/pkg/utils/openid"
+	"github.com/armon/go-proxyproto"
 
 	"github.com/appvia/kore/pkg/utils"
 
@@ -88,7 +89,6 @@ func New(
 
 // Run is called to start the proxy up
 func (a *authImpl) Run(ctx context.Context) error {
-	// @step: start the http service
 	router := httprouter.New()
 	origin, err := url.Parse(a.config.UpstreamURL)
 	if err != nil {
@@ -141,17 +141,17 @@ func (a *authImpl) Run(ctx context.Context) error {
 				remoteIP = net.ParseIP(host)
 			}
 			if remoteIP == nil {
-				a.logger.WithField("remote_address", req.RemoteAddr).
-					Warnf("invalid remote address, access forbidden")
+				a.logger.WithField("remote_address", req.RemoteAddr).Warnf("invalid remote address, access forbidden")
 				resp.WriteHeader(http.StatusForbidden)
 				_, _ = resp.Write([]byte("Forbidden\n"))
+
 				return
 			}
 			if !a.isIPAllowed(remoteIP) {
-				a.logger.WithField("remote_address", req.RemoteAddr).
-					Warnf("access forbidden")
+				a.logger.WithField("remote_address", req.RemoteAddr).Warnf("access forbidden")
 				resp.WriteHeader(http.StatusForbidden)
 				_, _ = resp.Write([]byte("Forbidden\n"))
+
 				return
 			}
 
@@ -211,12 +211,17 @@ func (a *authImpl) Run(ctx context.Context) error {
 		})
 	}
 
-	hsl, err := net.Listen("tcp", a.config.Listen)
+	listener, err := net.Listen("tcp", a.config.Listen)
 	if err != nil {
 		return err
 	}
-	a.addr = hsl.Addr().String()
-	hs := &http.Server{Addr: hsl.Addr().String(), Handler: router}
+	// @note: by enabling proxy protocol we wil have to change the health checks to tcp
+	if a.config.EnableProxyProtocol {
+		listener = &proxyproto.Listener{Listener: listener}
+	}
+	a.addr = listener.Addr().String()
+
+	hs := &http.Server{Addr: listener.Addr().String(), Handler: router}
 
 	go func() {
 		a.logger.WithFields(log.Fields{
@@ -225,11 +230,11 @@ func (a *authImpl) Run(ctx context.Context) error {
 
 		switch a.config.HasTLS() {
 		case true:
-			if err := hs.ServeTLS(hsl, a.config.TLSCert, a.config.TLSKey); err != nil && err != http.ErrServerClosed {
+			if err := hs.ServeTLS(listener, a.config.TLSCert, a.config.TLSKey); err != nil && err != http.ErrServerClosed {
 				a.logger.WithError(err).Fatal("trying to start the http server")
 			}
 		default:
-			if err := hs.Serve(hsl); err != nil && err != http.ErrServerClosed {
+			if err := hs.Serve(listener); err != nil && err != http.ErrServerClosed {
 				a.logger.WithError(err).Fatal("trying to start the http server")
 			}
 		}

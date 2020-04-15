@@ -18,12 +18,26 @@ package utils
 
 import (
 	"os"
+	"strconv"
 	"strings"
 )
 
 func GetEnvString(key, v string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
+	}
+
+	return v
+}
+
+func GetEnvBool(key string, v bool) bool {
+	if value := os.Getenv(key); value != "" {
+		b, err := strconv.ParseBool(value)
+		if err != nil {
+			return v
+		}
+
+		return b
 	}
 
 	return v
