@@ -70,6 +70,7 @@ require (
 	github.com/tcnksm/ghr v0.13.0
 	github.com/tecbot/gorocksdb v0.0.0-20191019123150-400c56251341 // indirect
 	github.com/tidwall/gjson v1.6.0
+	github.com/tidwall/sjson v1.1.1
 	github.com/urfave/cli/v2 v2.1.1
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/crypto v0.0.0-20200311171314-f7b00557c8c4
@@ -80,7 +81,7 @@ require (
 	google.golang.org/grpc v1.27.0
 	gopkg.in/resty.v1 v1.12.0
 	gopkg.in/yaml.v2 v2.2.8
-	gotest.tools v2.2.0+incompatible
+	gotest.tools v2.2.0+incompatible // indirect
 	k8s.io/api v0.17.0
 	k8s.io/apiextensions-apiserver v0.17.0
 	k8s.io/apimachinery v0.17.0

@@ -49,12 +49,17 @@ func (o *ListOptions) Run() error {
 	type profile struct {
 		Name   string `json:"name"`
 		Server string `json:"server"`
+		Team   string `json:"team"`
 	}
 	var list []profile
 
 	for k, v := range o.Config().Profiles {
 		if o.Config().HasServer(v.Server) {
-			list = append(list, profile{Name: k, Server: o.Config().Servers[v.Server].Endpoint})
+			list = append(list, profile{
+				Name:   k,
+				Server: o.Config().Servers[v.Server].Endpoint,
+				Team:   v.Team,
+			})
 		}
 	}
 
@@ -66,5 +71,12 @@ func (o *ListOptions) Run() error {
 		Printer(
 			render.Column("Profile", "name"),
 			render.Column("Endpoint", "server"),
+			render.Column("Default Team", "team", func(v string) string {
+				if v == "" {
+					return "None"
+				}
+
+				return v
+			}),
 		).Do()
 }

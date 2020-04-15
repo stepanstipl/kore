@@ -31,12 +31,13 @@ command or you can manually configure them via the $ korectl profile configure.
 
 Examples:
 
-$ kore profile                   # will show this help menu
-$ kore profile show              # will show the profile in use
-$ kore profile list              # will show all the profiles available to you
-$ kore profile use <name>        # switches to another profile
-$ kore profile configure <name>  # allows you to configure a profile
-$ kore profile rm <name>         # removes a profile
+$ kore profile                     # will show this help menu
+$ kore profile show                # will show the profile in use
+$ kore profile list                # will show all the profiles available to you
+$ kore profile use <name>          # switches to another profile
+$ kore profile configure <name>    # allows you to configure a profile
+$ kore profile rm <name>           # removes a profile
+$ kore profile set <path> <value>  # set configuration values
 `
 
 // NewCmdProfiles creates and returns the profiles command
@@ -56,6 +57,7 @@ func NewCmdProfiles(factory cmdutil.Factory) *cobra.Command {
 		NewCmdProfilesShow(factory),
 		NewCmdProfilesDelete(factory),
 		NewCmdProfilesConfigure(factory),
+		NewCmdProfilesSet(factory),
 	)
 
 	return cmd
