@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"reflect"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -77,4 +78,18 @@ func GetRuntimeObject(o interface{}) (runtime.Object, error) {
 	}
 
 	return mo, nil
+}
+
+// IsEmpty checks if a struct has any values set
+func IsEmpty(v interface{}) bool {
+	t := reflect.ValueOf(v).Elem()
+
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		if !field.IsValid() || !field.IsZero() {
+			return false
+		}
+	}
+
+	return true
 }

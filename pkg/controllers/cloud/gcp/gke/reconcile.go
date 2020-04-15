@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	config "github.com/appvia/kore/pkg/apis/config/v1"
 	core "github.com/appvia/kore/pkg/apis/core/v1"
@@ -33,6 +34,7 @@ import (
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -61,6 +63,7 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 
 		return reconcile.Result{}, err
 	}
+	original := resource.DeepCopyObject()
 
 	finalizer := kubernetes.NewFinalizer(t.mgr.GetClient(), finalizerName)
 
@@ -74,7 +77,7 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 		resource.Status.Conditions = core.Components{}
 	}
 
-	requeue, err := func() (bool, error) {
+	result, err := func() (reconcile.Result, error) {
 		logger.Debug("retrieving the gke cluster credential")
 		// @step: first we need to check if we have access to the credentials
 		creds, err := t.GetCredentials(ctx, resource, resource.Namespace)
@@ -87,7 +90,7 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 				Status:  core.FailureStatus,
 			})
 
-			return false, err
+			return reconcile.Result{}, err
 		}
 
 		client, err := NewClient(creds, resource)
@@ -101,11 +104,11 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 				Status:  core.FailureStatus,
 			})
 
-			return false, err
+			return reconcile.Result{}, err
 		}
 		logger.Info("checking if the cluster already exists")
 
-		found, err := client.Exists()
+		found, err := client.Exists(ctx)
 		if err != nil {
 			resource.Status.Conditions.SetCondition(core.Component{
 				Detail:  err.Error(),
@@ -114,7 +117,7 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 				Status:  core.FailureStatus,
 			})
 
-			return false, err
+			return reconcile.Result{}, err
 		}
 
 		if !found {
@@ -127,10 +130,11 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 				})
 				resource.Status.Status = core.PendingStatus
 
-				return true, nil
+				return reconcile.Result{Requeue: true}, nil
 			}
 
 			logger.Debug("creating a new gke cluster in gcp")
+
 			if _, err = client.Create(ctx); err != nil {
 				logger.WithError(err).Error("attempting to create cluster")
 
@@ -142,15 +146,54 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 				})
 				resource.Status.Status = core.FailureStatus
 
-				return false, err
+				return reconcile.Result{}, err
 			}
-		} else {
-			// else we are updating it
-			if err := client.Update(ctx); err != nil {
-				logger.WithError(err).Error("attempting to update cluster")
 
-				return false, err
-			}
+			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+		}
+
+		cluster, _, err := client.GetCluster(ctx)
+		if err != nil {
+			logger.WithError(err).Error("trying to retrieve the cluster status")
+
+			return reconcile.Result{}, err
+		}
+		logger.WithField("status", cluster.Status).Debug("the current state of the gke cluster is")
+
+		switch cluster.Status {
+		case "PROVISIONING":
+			resource.Status.Status = core.PendingStatus
+			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+		case "RECONCILING":
+			resource.Status.Status = core.PendingStatus
+			return reconcile.Result{RequeueAfter: 60 * time.Second}, nil
+		case "STOPPING":
+			resource.Status.Status = core.DeletingStatus
+			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+		case "ERROR":
+			resource.Status.Status = core.FailureStatus
+			// @choice .. allowing it to run though here as it's in error but might require
+			// an update to fix
+		case "RUNNING":
+		default:
+			logger.Warn("cluster is in an unknown state, choosing to requeue instead")
+
+			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+		}
+
+		// @step: we check the current state against the desired and see if we need to amend
+		updating, err := client.Update(ctx)
+		if err != nil {
+			logger.WithError(err).Error("attempting to update cluster")
+
+			return reconcile.Result{}, err
+		}
+		if updating {
+			logger.Debug("cluster is performing a update")
+
+			resource.Status.Status = core.PendingStatus
+
+			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
 		}
 
 		// @step: enable the cloud-nat is required
@@ -159,7 +202,7 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 			if err := client.EnableCloudNAT(); err != nil {
 				logger.WithError(err).Error("trying to ensure the cloud-nat device")
 
-				return false, err
+				return reconcile.Result{}, err
 			}
 
 			logger.Info("cluster has private networking enabled, ensuring a api firewall rules")
@@ -167,21 +210,8 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 			if err := client.EnableFirewallAPIServices(); err != nil {
 				logger.WithError(err).Error("creating firewall rules for api extensions")
 
-				return false, err
+				return reconcile.Result{}, err
 			}
-		}
-
-		// @step: retrieve the cluster spec
-		cluster, found, err := client.GetCluster()
-		if err != nil {
-			logger.WithError(err).Error("trying to retrieve the gke cluster")
-
-			return false, err
-		}
-		if !found {
-			logger.Warn("gke cluster was not found")
-
-			return true, nil
 		}
 
 		resource.Status.CACertificate = cluster.MasterAuth.ClusterCaCertificate
@@ -208,13 +238,13 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 		if err != nil {
 			logger.WithError(err).Error("trying to create bootstrap client")
 
-			return false, err
+			return reconcile.Result{}, err
 		}
 
 		if err := controllers.NewBootstrap(bc).Run(ctx, t.mgr.GetClient()); err != nil {
 			logger.WithError(err).Error("trying to bootstrap gke cluster")
 
-			return false, err
+			return reconcile.Result{}, err
 		}
 
 		resource.Status.Conditions.SetCondition(core.Component{
@@ -223,18 +253,17 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 			Status:  core.SuccessStatus,
 		})
 
-		return false, nil
+		return reconcile.Result{}, nil
 	}()
 	if err != nil {
 		resource.Status.Status = core.FailureStatus
 	}
 
-	if err := t.mgr.GetClient().Status().Update(ctx, resource); err != nil {
+	if err := t.mgr.GetClient().Status().Patch(ctx, resource, client.MergeFrom(original)); err != nil {
 		logger.WithError(err).Error("updating the status of gke cluster")
 
 		return reconcile.Result{}, err
 	}
-
 	if err == nil {
 		if finalizer.NeedToAdd(resource) {
 			logger.Info("adding our finalizer to the team resource")
@@ -247,11 +276,7 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 		}
 	}
 
-	if requeue {
-		return reconcile.Result{Requeue: true}, nil
-	}
-
-	return reconcile.Result{}, nil
+	return result, err
 }
 
 // GetCredentials returns the cloud credential

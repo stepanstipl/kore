@@ -18,12 +18,14 @@ package gke
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
 
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
+	"github.com/appvia/kore/pkg/utils"
 
 	log "github.com/sirupsen/logrus"
 	compute "google.golang.org/api/compute/v0.beta"
@@ -85,7 +87,7 @@ func (g *gkeClient) Delete(ctx context.Context) error {
 	})
 	logger.Info("attempting to delete the cluster from gcp")
 
-	found, err := g.Exists()
+	found, err := g.Exists(ctx)
 	if err != nil {
 		logger.WithError(err).Error("trying to check for the cluster")
 
@@ -95,7 +97,7 @@ func (g *gkeClient) Delete(ctx context.Context) error {
 		return nil
 	}
 
-	cluster, _, err := g.GetCluster()
+	cluster, _, err := g.GetCluster(ctx)
 	if err != nil {
 		logger.WithError(err).Error("trying to retrieve the cluster")
 
@@ -107,30 +109,20 @@ func (g *gkeClient) Delete(ctx context.Context) error {
 		cluster.Name)
 
 	// @step: check for any ongoing operation
-	id, found, err := g.FindOperation(ctx, "DELETE_CLUSTER", "kubernetes", cluster.Name)
+	_, found, err = g.FindOperation(ctx, "DELETE_CLUSTER", "kubernetes", cluster.Name)
 	if err != nil {
 		logger.WithError(err).Error("trying to check for current operations")
 
 		return err
 	}
 	if !found {
-		operation, err := g.ce.Projects.Locations.Clusters.Delete(path).Do()
-		if err != nil {
+		if _, err := g.ce.Projects.Locations.Clusters.Delete(path).Do(); err != nil {
 			logger.WithError(err).Error("trying to delete the cluster")
 
 			return err
 		}
-		id = operation.Name
+		logger.Debug("requested the removal of the gke cluster")
 	}
-
-	logger.Info("waiting for the operation to complete or fail")
-
-	if err := g.WaitOnOperation(ctx, id, 30*time.Second, 10*time.Minute); err != nil {
-		logger.WithError(err).Error("trying to wait for operaion to complete")
-
-		return err
-	}
-	logger.Info("gke cluster has been deleted")
 
 	return nil
 }
@@ -154,34 +146,23 @@ func (g *gkeClient) Create(ctx context.Context) (*container.Cluster, error) {
 	}
 
 	// @step: looking for any ongoing operation
-	id, found, err := g.FindOperation(ctx, "CREATE_CLUSTER", "kubernetes", g.cluster.Name)
+	_, found, err := g.FindOperation(ctx, "CREATE_CLUSTER", "kubernetes", g.cluster.Name)
 	if err != nil {
 		return nil, err
 	}
 	if !found {
 		// @step: we request the cluster
-		ticket, err := g.CreateCluster(ctx, def)
-		if err != nil {
-			logger.WithError(err).Error("attempting to request the cluster")
+		if _, err := g.CreateCluster(ctx, def); err != nil {
+			if err != nil {
+				logger.WithError(err).Error("attempting to request the cluster")
 
-			return nil, err
+				return nil, err
+			}
 		}
-		id = ticket.Name
-	}
-
-	// @step: wait for the google to finish
-	interval := time.Duration(10) * time.Second
-	timeout := time.Duration(20) * time.Minute
-
-	// @step: we wait for it to finish
-	if err := g.WaitOnOperation(ctx, id, interval, timeout); err != nil {
-		logger.WithError(err).Error("attempting to wait for operation to complete")
-
-		return nil, err
 	}
 
 	// @step: retrieve the state of the cluster via api
-	gc, _, err := g.GetCluster()
+	gc, _, err := g.GetCluster(ctx)
 	if err != nil {
 		logger.WithError(err).Error("retrieving gke cluster details")
 
@@ -192,27 +173,75 @@ func (g *gkeClient) Create(ctx context.Context) (*container.Cluster, error) {
 }
 
 // Update is called to update the cluster
-func (g *gkeClient) Update(ctx context.Context) error {
+func (g *gkeClient) Update(ctx context.Context) (bool, error) {
 	logger := log.WithFields(log.Fields{
-		"name": g.cluster.Name,
+		"name":      g.cluster.Name,
+		"namespace": g.cluster.Namespace,
 	})
-	logger.Info("attempting to update the cluster")
+	logger.Info("checking if the cluster requires updating")
 
-	_, err := g.CreateUpdateDefinition()
+	// @step: get the current state of the cluster
+	state, found, err := g.GetCluster(ctx)
+	if !found {
+		return false, errors.New("cluster was not found")
+	}
+	if err != nil {
+		return false, err
+	}
+
+	update, err := g.CreateUpdateDefinition(state)
 	if err != nil {
 		log.WithError(err).Error("creating the update request")
 
-		return err
+		return false, err
 	}
 
-	return nil
+	// @step: we check if the update request has been altered
+	if utils.IsEmpty(update.Update) {
+		return false, nil
+	}
+	logger.Debug("desired state of the cluster has drifted, attempting to update")
+
+	path := fmt.Sprintf("projects/%s/locations/%s/clusters/%s",
+		g.credentials.project,
+		g.region,
+		g.cluster.Name)
+
+	_, err = g.ce.Projects.Locations.Clusters.Update(path, update).Context(ctx).Do()
+	if err != nil {
+		logger.WithError(err).Error("trying to update the cluster")
+
+		return false, err
+	}
+	logger.Debug("successfully requested the gke cluster to update")
+
+	return true, nil
 }
 
 // CreateUpdateDefinition returns a cluster update definition
-func (g *gkeClient) CreateUpdateDefinition() (*container.UpdateClusterRequest, error) {
-	return &container.UpdateClusterRequest{
+// @notes: so GKE will only handle one update at a time, so if the user makes a bunch of changes to the
+// spec we need to return the first change, update, requeue and do the next i guess.
+func (g *gkeClient) CreateUpdateDefinition(state *container.Cluster) (*container.UpdateClusterRequest, error) {
+	request := &container.UpdateClusterRequest{
 		ProjectId: g.credentials.project,
-	}, nil
+		Update:    &container.ClusterUpdate{},
+	}
+	u := request.Update
+
+	if state.CurrentMasterVersion != g.cluster.Spec.Version {
+		u.DesiredMasterVersion = g.cluster.Spec.Version
+
+		return request, nil
+	}
+	if state.CurrentNodeVersion != g.cluster.Spec.Version {
+		u.DesiredNodeVersion = g.cluster.Spec.Version
+		// @TODO needs to be revisted if we support multiple nodepools in the future
+		u.DesiredNodePoolId = "compute"
+
+		return request, nil
+	}
+
+	return request, nil
 }
 
 // CreateDefinition returns a cluster definition
@@ -366,8 +395,8 @@ func (g *gkeClient) CreateDefinition() (*container.CreateClusterRequest, error) 
 }
 
 // GetCluster returns a cluster config
-func (g *gkeClient) GetCluster() (*container.Cluster, bool, error) {
-	clusters, err := g.GetClusters()
+func (g *gkeClient) GetCluster(ctx context.Context) (*container.Cluster, bool, error) {
+	clusters, err := g.GetClusters(ctx)
 	if err != nil {
 		return nil, false, err
 	}
@@ -381,13 +410,13 @@ func (g *gkeClient) GetCluster() (*container.Cluster, bool, error) {
 }
 
 // GetClusters returns a list of clusters which are available
-func (g *gkeClient) GetClusters() ([]*container.Cluster, error) {
+func (g *gkeClient) GetClusters(ctx context.Context) ([]*container.Cluster, error) {
 	var list []*container.Cluster
 
 	path := fmt.Sprintf("projects/%s/locations/%s", g.credentials.project, g.region)
 
 	err := wait.ExponentialBackoff(retry.DefaultRetry, func() (done bool, err error) {
-		resp, err := g.ce.Projects.Locations.Clusters.List(path).Do()
+		resp, err := g.ce.Projects.Locations.Clusters.List(path).Context(ctx).Do()
 		if err != nil {
 			log.Error(err, "failed to retrieve clusters")
 
@@ -705,10 +734,10 @@ func (g *gkeClient) WaitOnOperation(ctx context.Context, id string, interval, ti
 }
 
 // Exists checks if the cluster exists
-func (g *gkeClient) Exists() (bool, error) {
+func (g *gkeClient) Exists(ctx context.Context) (bool, error) {
 	log.WithField("name", g.cluster.Name).Debug("checking for gke cluster existence")
 
-	_, found, err := g.GetCluster()
+	_, found, err := g.GetCluster(ctx)
 
 	return found, err
 }

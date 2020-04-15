@@ -18,7 +18,7 @@ package gke
 
 import (
 	"context"
-	"fmt"
+	"time"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
@@ -55,57 +55,80 @@ func (t *gkeCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 
 	finalizer := kubernetes.NewFinalizer(t.mgr.GetClient(), finalizerName)
 
-	requeue, err := func() (bool, error) {
+	result, err := func() (reconcile.Result, error) {
 		creds, err := t.GetCredentials(ctx, resource, request.Namespace)
 		if err != nil {
-			return false, err
+			return reconcile.Result{}, err
 		}
 
 		// @step: create a cloud client for us
 		client, err := NewClient(creds, resource)
 		if err != nil {
-			return false, err
+			return reconcile.Result{}, err
 		}
 
-		// @step: check if the cluster exists and if so we wait or the operation or the exit
-		found, err := client.Exists()
+		// @step: we need to retrieve the current state
+		cluster, found, err := client.GetCluster(ctx)
 		if err != nil {
-			return false, fmt.Errorf("checking if cluster exists: %s", err)
-		}
+			logger.WithError(err).Error("trying to retrieve the state of the cluster")
 
-		// @step: lets update the status of the resource to deleting
-		if resource.Status.Status != corev1.DeletingStatus {
-			resource.Status.Status = corev1.DeletingStatus
-
-			return true, nil
+			return reconcile.Result{}, err
 		}
 
 		if found {
-			return false, client.Delete(ctx)
+			switch cluster.Status {
+			case "PROVISIONING", "RECONCILING":
+				return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+			case "ERROR", "RUNNING":
+				// @step: lets update the status of the resource to deleting
+				if resource.Status.Status != corev1.DeletingStatus {
+					resource.Status.Status = corev1.DeletingStatus
+
+					return reconcile.Result{Requeue: true}, nil
+				}
+
+				if err := client.Delete(ctx); err != nil {
+					logger.WithError(err).Error("trying to delete the cluster")
+					resource.Status.Status = corev1.DeleteFailedStatus
+
+					return reconcile.Result{}, err
+				}
+
+				return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+			case "STOPPING":
+				resource.Status.Status = corev1.DeletingStatus
+
+				return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+			default:
+				logger.Warn("cluster is in an unknown state, choosing to requeue instead")
+
+				return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+			}
 		}
 
 		// @step: we can now delete the sysadmin token
 		if err := controllers.DeleteClusterCredentialsSecret(ctx,
 			t.mgr.GetClient(), resource.Namespace, resource.Name); err != nil {
 
-			return false, err
+			return reconcile.Result{}, err
 		}
 
-		return false, nil
+		return reconcile.Result{}, nil
 	}()
 	if err != nil {
 		logger.WithError(err).Error("attempting to delete the cluster")
 
 		return reconcile.Result{}, err
 	}
-	if requeue {
-		if err := t.mgr.GetClient().Status().Patch(ctx, resource, client.MergeFrom(original)); err != nil {
-			logger.WithError(err).Error("trying to update the resource status")
 
-			return reconcile.Result{}, err
-		}
+	if err := t.mgr.GetClient().Status().Patch(ctx, resource, client.MergeFrom(original)); err != nil {
+		logger.WithError(err).Error("trying to update the resource status")
 
-		return reconcile.Result{Requeue: true}, nil
+		return reconcile.Result{}, err
+	}
+
+	if result.Requeue || result.RequeueAfter > 0 {
+		return result, nil
 	}
 
 	if err := finalizer.Remove(resource); err != nil {
