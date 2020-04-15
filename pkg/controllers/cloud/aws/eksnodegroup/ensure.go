@@ -281,11 +281,8 @@ func (n *ctrl) EnsureDeletion(group *eks.EKSNodeGroup) controllers.EnsureFunc {
 
 		case awseks.NodegroupStatusDeleteFailed:
 			return reconcile.Result{}, errors.New("nodegroup has failed to delete, please check console")
-
-		default:
-			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
 		}
 
-		return reconcile.Result{}, nil
+		return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
 	}
 }

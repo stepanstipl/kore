@@ -304,7 +304,7 @@ func (c *Client) DeleteNodeGroup(ctx context.Context, group *eksv1alpha1.EKSNode
 	logger.Debug("attempting to delete the eks nodegroup")
 
 	// @step: check the status of the nodegroup
-	resp, err := c.svc.DescribeNodegroupWithContext(ctx, &eks.DescribeNodegroupInput{
+	state, err := c.svc.DescribeNodegroupWithContext(ctx, &eks.DescribeNodegroupInput{
 		ClusterName:   aws.String(group.Spec.Cluster.Name),
 		NodegroupName: aws.String(group.Name),
 	})
@@ -315,12 +315,28 @@ func (c *Client) DeleteNodeGroup(ctx context.Context, group *eksv1alpha1.EKSNode
 			return err
 		}
 
-		return nil
+		return err
 	}
 
-	logger.WithField("status", aws.StringValue(resp.Nodegroup.Status)).Debug("current state of the nodegroup")
+	status := aws.StringValue(state.Nodegroup.Status)
 
-	// @step: we check the status if see if its already deleting
+	switch status {
+	case awseks.NodegroupStatusActive, awseks.NodegroupStatusCreateFailed, awseks.NodegroupStatusDegraded:
+		if _, err := c.svc.DeleteNodegroupWithContext(ctx, &eks.DeleteNodegroupInput{
+			ClusterName:   aws.String(group.Spec.Cluster.Name),
+			NodegroupName: aws.String(group.Name),
+		}); err != nil {
+			return err
+		}
+
+		return nil
+
+	case awseks.NodegroupStatusDeleteFailed:
+		return errors.New("nodegroup has failed to delete, please check console")
+
+	case awseks.NodegroupStatusCreating, awseks.NodegroupStatusUpdating, awseks.NodegroupStatusDeleting:
+		return nil
+	}
 
 	return nil
 }
