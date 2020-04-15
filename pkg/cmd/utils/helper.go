@@ -30,12 +30,12 @@ import (
 
 // RunHelp is shorthand for displaying the usage
 func RunHelp(cmd *cobra.Command, args []string) {
-	cmd.Help()
+	_ = cmd.Help()
 }
 
 // RunHelpE is shorthand for display the usage but with error return
 func RunHelpE(cmd *cobra.Command, args []string) error {
-	cmd.Help()
+	_ = cmd.Help()
 
 	return nil
 }
@@ -84,7 +84,7 @@ func PreRunEFilters() func(*cobra.Command, []string) error {
 // RequireName ensures a name positional argument
 func RequireName(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
-		cmd.Help()
+		_ = cmd.Help()
 
 		return errors.ErrMissingResourceName
 	}
