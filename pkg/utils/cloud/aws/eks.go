@@ -309,11 +309,10 @@ func (c *Client) DeleteNodeGroup(ctx context.Context, group *eksv1alpha1.EKSNode
 		NodegroupName: aws.String(group.Name),
 	})
 	if err != nil {
-		if !c.IsNotFound(err) {
-			logger.WithError(err).Error("trying to describe the nodegroup")
-
-			return err
+		if c.IsNotFound(err) {
+			return nil
 		}
+		logger.WithError(err).Error("trying to describe the nodegroup")
 
 		return err
 	}
