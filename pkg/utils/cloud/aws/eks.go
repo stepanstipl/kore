@@ -78,7 +78,7 @@ func NewBasicClient(cred *eksv1alpha1.EKSCredentials, clusterName, region string
 	}, err
 }
 
-// NewClient gets an AWS and cluster session with a reference to our API object
+// NewEKSClient gets an AWS and cluster session with a reference to our API object
 func NewEKSClient(cred *eksv1alpha1.EKSCredentials, cluster *eksv1alpha1.EKS) (*Client, error) {
 	sesh, err := session.NewSession(&aws.Config{
 		Region: aws.String(cluster.Spec.Region),
@@ -304,62 +304,40 @@ func (c *Client) DeleteNodeGroup(ctx context.Context, group *eksv1alpha1.EKSNode
 	logger.Debug("attempting to delete the eks nodegroup")
 
 	// @step: check the status of the nodegroup
-	resp, err := c.svc.DescribeNodegroupWithContext(ctx, &eks.DescribeNodegroupInput{
+	state, err := c.svc.DescribeNodegroupWithContext(ctx, &eks.DescribeNodegroupInput{
 		ClusterName:   aws.String(group.Spec.Cluster.Name),
 		NodegroupName: aws.String(group.Name),
 	})
 	if err != nil {
-		if !c.IsNotFound(err) {
-			logger.WithError(err).Error("trying to describe the nodegroup")
+		if c.IsNotFound(err) {
+			return nil
+		}
+		logger.WithError(err).Error("trying to describe the nodegroup")
 
+		return err
+	}
+
+	status := aws.StringValue(state.Nodegroup.Status)
+
+	switch status {
+	case awseks.NodegroupStatusActive, awseks.NodegroupStatusCreateFailed, awseks.NodegroupStatusDegraded:
+		if _, err := c.svc.DeleteNodegroupWithContext(ctx, &eks.DeleteNodegroupInput{
+			ClusterName:   aws.String(group.Spec.Cluster.Name),
+			NodegroupName: aws.String(group.Name),
+		}); err != nil {
 			return err
 		}
 
 		return nil
-	}
 
-	// @step: we check the status if see if its already deleting
-	switch aws.StringValue(resp.Nodegroup.Status) {
-	case eks.NodegroupStatusActive, eks.NodegroupStatusCreateFailed, eks.NodegroupStatusDegraded:
-		_, err := c.svc.DeleteNodegroupWithContext(ctx, &eks.DeleteNodegroupInput{
-			ClusterName:   aws.String(group.Spec.Cluster.Name),
-			NodegroupName: aws.String(group.Name),
-		})
-
-		if err != nil {
-			if c.IsNotFound(err) {
-				return nil
-			}
-			logger.WithError(err).Error("trying to delete the nodegroup")
-
-			return err
-		}
-	case eks.NodegroupStatusCreating, eks.NodegroupStatusUpdating:
-		log.Warn("trying to delete nodegroup, resource operating pending")
-
-		return ErrResourceBusy
-	case eks.NodegroupStatusDeleteFailed:
-		log.Error("trying to delete the nodegroup")
-
+	case awseks.NodegroupStatusDeleteFailed:
 		return errors.New("nodegroup has failed to delete, please check console")
+
+	case awseks.NodegroupStatusCreating, awseks.NodegroupStatusUpdating, awseks.NodegroupStatusDeleting:
+		return nil
 	}
 
-	// @step: we need to wait for the nodegroup to be removed
-	return utils.WaitUntilComplete(context.Background(), 30*time.Minute, 30*time.Second, func() (bool, error) {
-		logger.Debug("checking if the eks nodegroup has been deleted")
-
-		if found, err := c.NodeGroupExists(ctx, group); err != nil {
-			logger.WithError(err).Error("trying to check for eks nodegroup")
-
-			return false, nil
-		} else if !found {
-			logger.Debug("eks nodegroup has been successfully removed")
-
-			return true, nil
-		}
-
-		return false, nil
-	})
+	return nil
 }
 
 // CreateNodeGroup will create a node group for the EKS cluster
@@ -371,14 +349,14 @@ func (c *Client) CreateNodeGroup(ctx context.Context, group *eksv1alpha1.EKSNode
 	}
 	if !existing {
 		input := &eks.CreateNodegroupInput{
-			AmiType:        aws.String(group.Spec.AMIType),
-			ClusterName:    aws.String(group.Spec.Cluster.Name),
-			NodeRole:       aws.String(group.Status.NodeIAMRole),
-			ReleaseVersion: aws.String(group.Spec.ReleaseVersion),
-			DiskSize:       aws.Int64(group.Spec.DiskSize),
-			InstanceTypes:  aws.StringSlice([]string{group.Spec.InstanceType}),
-			NodegroupName:  aws.String(group.Name),
-			Subnets:        aws.StringSlice(group.Spec.Subnets),
+			AmiType:       aws.String(group.Spec.AMIType),
+			ClusterName:   aws.String(group.Spec.Cluster.Name),
+			DiskSize:      aws.Int64(group.Spec.DiskSize),
+			InstanceTypes: aws.StringSlice([]string{group.Spec.InstanceType}),
+			NodeRole:      aws.String(group.Status.NodeIAMRole),
+			NodegroupName: aws.String(group.Name),
+			Subnets:       aws.StringSlice(group.Spec.Subnets),
+			Version:       aws.String(group.Spec.Version),
 			ScalingConfig: &eks.NodegroupScalingConfig{
 				DesiredSize: aws.Int64(group.Spec.DesiredSize),
 				MaxSize:     aws.Int64(group.Spec.MaxSize),
@@ -403,68 +381,7 @@ func (c *Client) CreateNodeGroup(ctx context.Context, group *eksv1alpha1.EKSNode
 		}
 	}
 
-	return c.WaitForNodeGroupReady(ctx, group)
-}
-
-// WaitForNodeGroupReady is responsible for waiting for the nodegroup to provision or fail
-func (c *Client) WaitForNodeGroupReady(ctx context.Context, group *eksv1alpha1.EKSNodeGroup) error {
-	logger := log.WithFields(log.Fields{
-		"name":      group.Name,
-		"namespace": group.Namespace,
-	})
-	logger.Debug("attempting to wait for eks node group to be ready")
-
-	// @step: check we are waiting for something that actually exist
-	existing, err := c.NodeGroupExists(ctx, group)
-	if err != nil {
-		logger.WithError(err).Error("trying to check if nodegroup exists")
-
-		return err
-	}
-	if !existing {
-		logger.Warn("no nodegroup to wait for, something went wrong here")
-
-		return ErrNodeGroupNotFound
-	}
-
-	// @step: wait for the nodegroup to be created
-	return utils.WaitUntilComplete(ctx, 1*time.Hour, 30*time.Second, func() (bool, error) {
-		resp, err := c.svc.DescribeNodegroupWithContext(ctx, &eks.DescribeNodegroupInput{
-			ClusterName:   aws.String(group.Spec.Cluster.Name),
-			NodegroupName: aws.String(group.Name),
-		})
-		if err != nil {
-			if c.IsNotFound(err) {
-				logger.Warn("eks nodegroup does not exist")
-
-				return true, ErrNodeGroupNotFound
-			}
-			logger.WithError(err).Error("trying to check for eks nodegroup status")
-
-			return false, nil
-		}
-
-		if resp.Nodegroup == nil {
-			logger.Warn("no nodegroup found in the describe response")
-
-			return false, nil
-		}
-
-		switch aws.StringValue(resp.Nodegroup.Status) {
-		case eks.NodegroupStatusActive, eks.NodegroupStatusDegraded:
-			logger.Debug("eks nodegroup is active and ready")
-			return true, nil
-		case eks.NodegroupStatusCreateFailed:
-			return false, errors.New("nodegroup failed to provision")
-		case eks.NodegroupStatusCreating, eks.NodegroupStatusUpdating:
-			logger.Debug("nodegroup is still pending in provisioning")
-		default:
-			logger.Debugf("nodegroup status: %s returned", aws.StringValue(resp.Nodegroup.Status))
-		}
-
-		return false, nil
-	})
-
+	return nil
 }
 
 // NodeGroupExists is responsible for checking if the nodegroup exists
@@ -484,10 +401,76 @@ func (c *Client) NodeGroupExists(ctx context.Context, nodegroup *eksv1alpha1.EKS
 	return true, nil
 }
 
-// UpdateNodeGroup is responsible for checking for a drift and applying an update if required
-func (c *Client) UpdateNodeGroup(ctx context.Context, group *eksv1alpha1.EKSNodeGroup) error {
+// DescribeNodeGroup retrieve the nodegroup
+func (c *Client) DescribeNodeGroup(ctx context.Context, group *eksv1alpha1.EKSNodeGroup) (*awseks.Nodegroup, error) {
+	req, err := c.svc.DescribeNodegroupWithContext(ctx, &eks.DescribeNodegroupInput{
+		ClusterName:   aws.String(group.Spec.Cluster.Name),
+		NodegroupName: aws.String(group.Name),
+	})
+	if err != nil {
+		return nil, err
+	}
+	if req.Nodegroup == nil {
+		return nil, ErrNodeGroupNotFound
+	}
 
-	return nil
+	return req.Nodegroup, nil
+}
+
+// UpdateNodeGroup is responsible for checking for a drift and applying an update if required
+func (c *Client) UpdateNodeGroup(ctx context.Context, group *eksv1alpha1.EKSNodeGroup) (bool, error) {
+	logger := log.WithFields(log.Fields{
+		"name":      group.Name,
+		"namespace": group.Namespace,
+	})
+	state, err := c.DescribeNodeGroup(ctx, group)
+	if err != nil {
+		logger.WithError(err).Error("trying to retrieve the eks nodegroup")
+
+		return false, err
+	}
+
+	if group.Spec.Version != "" && group.Spec.Version != aws.StringValue(state.Version) {
+		logger.WithFields(log.Fields{
+			"current":  aws.StringValue(state.Version),
+			"expected": group.Spec.Version,
+		}).Debug("attempting to update the nodegroup node version")
+
+		if _, err := c.svc.UpdateNodegroupVersionWithContext(ctx, &awseks.UpdateNodegroupVersionInput{
+			ClusterName:   aws.String(group.Spec.Cluster.Name),
+			Force:         aws.Bool(true),
+			NodegroupName: aws.String(group.Name),
+			Version:       aws.String(group.Spec.Version),
+		}); err != nil {
+			logger.WithError(err).Error("trying to updade the node version")
+
+			return false, err
+		}
+
+		return true, nil
+	}
+
+	// @TODO we need to investigate autoscale and see if setting the desired size effects this
+	if aws.Int64Value(state.ScalingConfig.MinSize) != group.Spec.MinSize ||
+		aws.Int64Value(state.ScalingConfig.MaxSize) != group.Spec.MaxSize ||
+		aws.Int64Value(state.ScalingConfig.DesiredSize) != group.Spec.DesiredSize {
+
+		if _, err := c.svc.UpdateNodegroupConfigWithContext(ctx, &awseks.UpdateNodegroupConfigInput{
+			ClusterName:   aws.String(group.Spec.Cluster.Name),
+			NodegroupName: aws.String(group.Name),
+			ScalingConfig: &awseks.NodegroupScalingConfig{
+				DesiredSize: aws.Int64(group.Spec.DesiredSize),
+				MinSize:     aws.Int64(group.Spec.MinSize),
+				MaxSize:     aws.Int64(group.Spec.MaxSize),
+			},
+		}); err != nil {
+			return false, err
+		}
+
+		return true, nil
+	}
+
+	return false, nil
 }
 
 // ListNodeGroups get a list of the nodegroups
@@ -543,6 +526,7 @@ func (c *Client) createClusterInput() *awseks.CreateClusterInput {
 	return d
 }
 
+// IsNotFound checks if the aws error was an not found resource
 func (c *Client) IsNotFound(err error) bool {
 	if aerr, ok := err.(awserr.Error); ok {
 		if aerr.Code() == eks.ErrCodeResourceNotFoundException {
@@ -553,6 +537,7 @@ func (c *Client) IsNotFound(err error) bool {
 	return false
 }
 
+// IsInvalidParameterException checks if the error was a invalid parameter
 func (c *Client) IsInvalidParameterException(err error) bool {
 	if aerr, ok := err.(awserr.Error); ok {
 		if aerr.Code() == eks.ErrCodeInvalidParameterException && strings.Contains(aerr.Message(), "does not exist") {
