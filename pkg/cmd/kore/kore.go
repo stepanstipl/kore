@@ -108,17 +108,17 @@ func NewKoreCommand(streams cmdutils.Streams) (*cobra.Command, error) {
 	)
 
 	// @step: seriously cobra is pretty damn awesome
-	cmdutils.MustRegisterFlagCompletionFunc(root, "team", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.BashCompDirective) {
+	cmdutils.MustRegisterFlagCompletionFunc(root, "team", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		list, err := factory.Resources().LookupResourceNames("team", "")
 		if err != nil {
-			return nil, cobra.BashCompDirectiveError
+			return nil, cobra.ShellCompDirectiveError
 		}
 
-		return list, cobra.BashCompDirectiveDefault
+		return list, cobra.ShellCompDirectiveDefault
 	})
 
-	cmdutils.MustRegisterFlagCompletionFunc(root, "output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.BashCompDirective) {
-		return render.SupportedFormats(), cobra.BashCompDirectiveDefault
+	cmdutils.MustRegisterFlagCompletionFunc(root, "output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return render.SupportedFormats(), cobra.ShellCompDirectiveDefault
 	})
 
 	return root, nil

@@ -70,12 +70,12 @@ func NewCmdProfilesSet(factory cmdutil.Factory) *cobra.Command {
 			o.CheckError(o.Run())
 		},
 
-		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.BashCompDirective) {
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			if cmd.Flags().NArg() == 0 {
-				return []string{"current.team"}, cobra.BashCompDirectiveNoFileComp
+				return []string{"current.team"}, cobra.ShellCompDirectiveNoFileComp
 			}
 
-			return nil, cobra.BashCompDirectiveNoFileComp
+			return nil, cobra.ShellCompDirectiveNoFileComp
 		},
 	}
 

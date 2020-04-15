@@ -115,6 +115,8 @@ in this example again instead of the replication controllers.
 
 In some cases it is not possible to provide a list of possible completions in advance.  Instead, the list of completions must be determined at execution-time.  Cobra provides two ways of defining such dynamic completion of nouns. Note that both these methods can be used along-side each other as long as they are not both used for the same command.
 
+**Note**: *Custom Completions written in Go* will automatically work for other shell-completion scripts (e.g., Fish shell), while *Custom Completions written in Bash* will only work for Bash shell-completion.  It is therefore recommended to use *Custom Completions written in Go*.
+
 #### 1. Custom completions of nouns written in Go
 
 In a similar fashion as for static completions, you can use the `ValidArgsFunction` field to provide a Go function that Cobra will execute when it needs the list of completion choices for the nouns of a command.  Note that either `ValidArgs` or `ValidArgsFunction` can be used for a single cobra command, but not both.
@@ -128,11 +130,11 @@ cmd := &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) {
 		RunGet(args[0])
 	},
-	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.BashCompDirective) {
+	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		if len(args) != 0 {
-			return nil, cobra.BashCompDirectiveNoFileComp
+			return nil, cobra.ShellCompDirectiveNoFileComp
 		}
-		return getReleasesFromCluster(toComplete), cobra.BashCompDirectiveNoFileComp
+		return getReleasesFromCluster(toComplete), cobra.ShellCompDirectiveNoFileComp
 	},
 }
 ```
@@ -143,20 +145,20 @@ Notice we put the `ValidArgsFunction` on the `status` subcommand. Let's assume t
 # helm status [tab][tab]
 harbor notary rook thanos
 ```
-You may have noticed the use of `cobra.BashCompDirective`.  These directives are bit fields allowing to control some shell completion behaviors for your particular completion.  You can combine them with the bit-or operator such as `cobra.BashCompDirectiveNoSpace | cobra.BashCompDirectiveNoFileComp`
+You may have noticed the use of `cobra.ShellCompDirective`.  These directives are bit fields allowing to control some shell completion behaviors for your particular completion.  You can combine them with the bit-or operator such as `cobra.ShellCompDirectiveNoSpace | cobra.ShellCompDirectiveNoFileComp`
 ```go
 // Indicates an error occurred and completions should be ignored.
-BashCompDirectiveError
+ShellCompDirectiveError
 // Indicates that the shell should not add a space after the completion,
 // even if there is a single completion provided.
-BashCompDirectiveNoSpace
+ShellCompDirectiveNoSpace
 // Indicates that the shell should not provide file completion even when
 // no completion is provided.
 // This currently does not work for zsh or bash < 4
-BashCompDirectiveNoFileComp
+ShellCompDirectiveNoFileComp
 // Indicates that the shell will perform its default behavior after completions
-// have been provided (this implies !BashCompDirectiveNoSpace && !BashCompDirectiveNoFileComp).
-BashCompDirectiveDefault
+// have been provided (this implies !ShellCompDirectiveNoSpace && !ShellCompDirectiveNoFileComp).
+ShellCompDirectiveDefault
 ```
 
 When using the `ValidArgsFunction`, Cobra will call your registered function after having parsed all flags and arguments provided in the command-line.  You therefore don't need to do this parsing yourself.  For example, when a user calls `helm status --namespace my-rook-ns [tab][tab]`, Cobra will call your registered `ValidArgsFunction` after having parsed the `--namespace` flag, as it would have done when calling the `RunE` function.
@@ -168,7 +170,7 @@ Cobra achieves dynamic completions written in Go through the use of a hidden com
 # helm __complete status har<ENTER>
 harbor
 :4
-Completion ended with directive: BashCompDirectiveNoFileComp # This is on stderr
+Completion ended with directive: ShellCompDirectiveNoFileComp # This is on stderr
 ```
 ***Important:*** If the noun to complete is empty, you must pass an empty parameter to the `__complete` command:
 ```bash
@@ -178,7 +180,7 @@ notary
 rook
 thanos
 :4
-Completion ended with directive: BashCompDirectiveNoFileComp # This is on stderr
+Completion ended with directive: ShellCompDirectiveNoFileComp # This is on stderr
 ```
 Calling the `__complete` command directly allows you to run the Go debugger to troubleshoot your code.  You can also add printouts to your code; Cobra provides the following functions to use for printouts in Go completion code:
 ```go
@@ -301,14 +303,16 @@ So while there are many other files in the CWD it only shows me subdirs and thos
 
 As for nouns, Cobra provides two ways of defining dynamic completion of flags.  Note that both these methods can be used along-side each other as long as they are not both used for the same flag.
 
+**Note**: *Custom Completions written in Go* will automatically work for other shell-completion scripts (e.g., Fish shell), while *Custom Completions written in Bash* will only work for Bash shell-completion.  It is therefore recommended to use *Custom Completions written in Go*.
+
 ## 1. Custom completions of flags written in Go
 
 To provide a Go function that Cobra will execute when it needs the list of completion choices for a flag, you must register the function in the following manner:
 
 ```go
 flagName := "output"
-cmd.RegisterFlagCompletionFunc(flagName, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.BashCompDirective) {
-	return []string{"json", "table", "yaml"}, cobra.BashCompDirectiveDefault
+cmd.RegisterFlagCompletionFunc(flagName, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	return []string{"json", "table", "yaml"}, cobra.ShellCompDirectiveDefault
 })
 ```
 Notice that calling `RegisterFlagCompletionFunc()` is done through the `command` with which the flag is associated.  In our example this dynamic completion will give results like so:
@@ -327,7 +331,7 @@ json
 table
 yaml
 :4
-Completion ended with directive: BashCompDirectiveNoFileComp # This is on stderr
+Completion ended with directive: ShellCompDirectiveNoFileComp # This is on stderr
 ```
 ***Important:*** You should **not** leave traces that print to stdout in your completion code as they will be interpreted as completion choices by the completion script.  Instead, use the cobra-provided debugging traces functions mentioned in the above section.
 

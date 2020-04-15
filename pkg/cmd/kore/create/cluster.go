@@ -116,10 +116,10 @@ func NewCmdCreateCluster(factory cmdutil.Factory) *cobra.Command {
 	cmdutils.MustMarkFlagRequired(command, "plan")
 
 	// @step: register the autocompletions
-	cmdutils.MustRegisterFlagCompletionFunc(command, "allocation", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.BashCompDirective) {
+	cmdutils.MustRegisterFlagCompletionFunc(command, "allocation", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.ShellCompDirective) {
 		list := &configv1.AllocationList{}
 		if err := o.Client().Team(cmdutil.GetTeam(cmd)).Resource("allocation").Result(list).Get().Error(); err != nil {
-			return nil, cobra.BashCompDirectiveError
+			return nil, cobra.ShellCompDirectiveError
 		}
 		var filtered []string
 		for _, x := range list.Items {
@@ -129,17 +129,17 @@ func NewCmdCreateCluster(factory cmdutil.Factory) *cobra.Command {
 			}
 		}
 
-		return filtered, cobra.BashCompDirectiveNoFileComp
+		return filtered, cobra.ShellCompDirectiveNoFileComp
 	})
 
 	// @TODO would be nice to filter on the allocation here as well - i.e. chosen GKE, only show GKE plans etc
-	cmdutils.MustRegisterFlagCompletionFunc(command, "plan", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.BashCompDirective) {
+	cmdutils.MustRegisterFlagCompletionFunc(command, "plan", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.ShellCompDirective) {
 		suggestions, err := o.Resources().LookupResourceNames("plan", "")
 		if err != nil {
-			return nil, cobra.BashCompDirectiveError
+			return nil, cobra.ShellCompDirectiveError
 		}
 
-		return suggestions, cobra.BashCompDirectiveNoFileComp
+		return suggestions, cobra.ShellCompDirectiveNoFileComp
 	})
 
 	// @TODO add a autogen for the plan parameters? - perhaps when we start doing local caching

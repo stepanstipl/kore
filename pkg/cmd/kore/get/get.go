@@ -75,26 +75,26 @@ func NewCmdGet(factory cmdutil.Factory) *cobra.Command {
 		Example: "kore get <resource> [name] [options]",
 		Run:     cmdutil.DefaultRunFunc(o),
 
-		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.BashCompDirective) {
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			switch len(args) {
 			case 0:
-				return append(possible, "admin"), cobra.BashCompDirectiveNoFileComp
+				return append(possible, "admin"), cobra.ShellCompDirectiveNoFileComp
 			case 1:
 				resource := o.Resources().ResolveShorthand(cmd.Flags().Arg(0))
 				suggestions, err := o.Resources().LookupResourceNames(resource, cmdutil.GetTeam(cmd))
 				if err != nil {
-					return nil, cobra.BashCompDirectiveError
+					return nil, cobra.ShellCompDirectiveError
 				}
 
 				// choice we don't wan't to show everything here
 				if len(suggestions) > 15 {
-					return suggestions[0:15], cobra.BashCompDirectiveNoFileComp
+					return suggestions[0:15], cobra.ShellCompDirectiveNoFileComp
 				}
 
-				return suggestions, cobra.BashCompDirectiveNoFileComp
+				return suggestions, cobra.ShellCompDirectiveNoFileComp
 			}
 
-			return nil, cobra.BashCompDirectiveNoFileComp
+			return nil, cobra.ShellCompDirectiveNoFileComp
 		},
 	}
 

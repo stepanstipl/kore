@@ -51,6 +51,7 @@ require (
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/manifoldco/promptui v0.7.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.2.2
+	github.com/mikefarah/yq/v3 v3.0.0-20200415014842-6f0a329331f9
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/mitchellh/gox v1.0.1
 	github.com/onsi/ginkgo v1.12.0
@@ -64,7 +65,7 @@ require (
 	github.com/shurcooL/vfsgen v0.0.0-20181202132449-6a9ea43bcacd
 	github.com/sirupsen/logrus v1.5.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
-	github.com/spf13/cobra v0.0.8-0.20200403194343-b80aeb17fc46
+	github.com/spf13/cobra v1.0.0
 	github.com/steveyen/gtreap v0.0.0-20150807155958-0abe01ef9be2 // indirect
 	github.com/stretchr/testify v1.4.0
 	github.com/syndtr/goleveldb v1.0.0 // indirect
