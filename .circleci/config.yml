@@ -193,8 +193,9 @@ jobs:
           working_directory: ~/project/ui
           command: |
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
-            VERSION=${CIRCLE_TAG:-latest} make docker-release
-
+            docker build -t ${KORE_UI_IMAGE}:${CIRCLE_TAG:-latest} --build-arg version=${CIRCLE_TAG:v0.0.0-dev} .
+            docker push ${KORE_UI_IMAGE}:${CIRCLE_TAG:-latest}
+  
   release-qa:
     docker:
       - image: alpine/helm:3.1.2
