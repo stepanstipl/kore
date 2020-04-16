@@ -482,8 +482,7 @@ func (a k8sCtrl) CheckProviderStatus(ctx context.Context, resource *clustersv1.K
 		}
 
 		if p.Status.Conditions == nil {
-			err := fmt.Errorf("Cluster %s does not have a status yet", resource.Name)
-			logger.WithError(err).Warn("trying to check the cluster status")
+			logger.Debugf("Cluster %s does not have a status yet", resource.Name)
 
 			return false, nil
 		}
@@ -532,9 +531,7 @@ func (a k8sCtrl) CheckProviderStatus(ctx context.Context, resource *clustersv1.K
 		}
 
 		if p.Status.Conditions == nil {
-			err := fmt.Errorf("Cluster %s does not have a status yet", resource.Name)
-			logger.WithError(err).Error("trying to check the cluster status")
-
+			logger.Debugf("Cluster %s does not have a status yet", resource.Name)
 			return false, nil
 		}
 
