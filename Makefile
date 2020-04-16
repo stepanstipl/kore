@@ -126,7 +126,7 @@ release-cli:
 	@$(MAKE) patch-images
 	@echo "--> Compiling CLI static binaries"
 	@rm -rf ./cli-release
-	CGO_ENABLED=0 go run github.com/mitchellh/gox -arch="${CLI_ARCHITECTURES}" -os="${CLI_PLATFORMS}" -ldflags "-w ${LFLAGS}" -output=./cli-release/arch/{{.OS}}_{{.Arch}}_${VERSION}/{{.Dir}} ./cmd/korectl/ ./cmd/kore/
+	CGO_ENABLED=0 go run github.com/mitchellh/gox -parallel=4 -arch="${CLI_ARCHITECTURES}" -os="${CLI_PLATFORMS}" -ldflags "-w ${LFLAGS}" -output=./cli-release/arch/{{.OS}}_{{.Arch}}_${VERSION}/{{.Dir}} ./cmd/korectl/ ./cmd/kore/
 	@mkdir ./cli-release/output/
 	@for f in `ls -1 ./cli-release/arch/`; do \
 		zip -j -m cli-release/output/korectl_$$f.zip cli-release/arch/$$f/korectl*; \
