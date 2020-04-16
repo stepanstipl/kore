@@ -15,7 +15,7 @@ function getSessionUser(orgService) {
 
 function getConfig(koreApi) {
   return (req, res) => {
-    res.json({ apiUrl: koreApi.url })
+    res.json({ apiUrl: koreApi.publicUrl })
   }
 }
 

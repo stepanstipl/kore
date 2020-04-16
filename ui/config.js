@@ -25,6 +25,7 @@ module.exports = {
   },
   koreApi: {
     url: process.env.KORE_API_URL || 'http://localhost:10080/api/v1alpha1',
+    publicUrl: process.env.KORE_API_PUBLIC_URL || 'http://localhost:10080',
     token: process.env.KORE_API_TOKEN || 'password'
   }
 }
