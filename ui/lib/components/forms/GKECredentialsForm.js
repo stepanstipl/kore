@@ -37,7 +37,7 @@ class GKECredentialsForm extends VerifiedAllocatedResourceForm {
     const api = await KoreApi.client()
     const metadataName = this.getMetadataName(values)
     const gkeResult = await api.UpdateGKECredential(this.props.team, metadataName, this.generateGKECredentialsResource(values))
-    const allocationResource = this.generateAllocationResource({ group: 'config.kore.appvia.io', version: 'v1', kind: 'GKECredentials' }, values)
+    const allocationResource = this.generateAllocationResource({ group: 'gke.compute.kore.appvia.io', version: 'v1alpha1', kind: 'GKECredentials' }, values)
     gkeResult.allocation = await api.UpdateAllocation(this.props.team, metadataName, allocationResource)
     return gkeResult
   }
