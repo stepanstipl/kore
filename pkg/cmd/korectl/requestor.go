@@ -573,17 +573,20 @@ func (o *OIDC) HasExpiredToken() bool {
 func (c *Requestor) WithConfig(config *Config) *Requestor {
 	auth := config.GetCurrentAuthInfo()
 
-	if auth.OIDC != nil {
+	if auth.OIDC != nil && auth.OIDC.IDToken != "" {
 		if auth.OIDC.HasExpiredToken() {
 			log.Debug("token has expired, requesting a new one")
 
-			if err := auth.OIDC.Refresh(); err != nil {
-				c.configError = err
-			}
+			c.configError = func() error {
+				if auth.OIDC.RefreshToken == "" {
+					return nil
+				}
+				if err := auth.OIDC.Refresh(); err != nil {
+					return err
+				}
 
-			if err := config.Update(); err != nil {
-				panic("trying to update the config file")
-			}
+				return config.Update()
+			}()
 		}
 	}
 
