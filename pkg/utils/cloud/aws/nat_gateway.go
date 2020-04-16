@@ -134,6 +134,10 @@ func DeleteNATGateway(svc ec2.EC2, vpc VPC, az string) (ready bool, _ error) {
 		return false, fmt.Errorf("error getting the NAT gateway %s: %w", name, err)
 	}
 
+	if natGateway != nil && !IsKoreManaged(natGateway.Tags) {
+		return true, nil
+	}
+
 	if natGateway != nil && *natGateway.State == ec2.NatGatewayStateDeleted {
 		// We delete the tags only on a best-effort basis, the NAT gateway will go away in a short time either way
 		_ = deleteTags(svc, name, *natGateway.NatGatewayId, vpc.Tags)

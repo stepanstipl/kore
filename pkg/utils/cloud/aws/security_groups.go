@@ -125,6 +125,10 @@ func DeleteSecurityGroup(svc ec2.EC2, vpc VPC, name string) error {
 		return nil
 	}
 
+	if !IsKoreManaged(sg.Tags) {
+		return nil
+	}
+
 	_, err = svc.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
 		GroupId: sg.GroupId,
 	})

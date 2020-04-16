@@ -72,6 +72,10 @@ func DeleteEIP(svc ec2.EC2, vpc VPC, target, az string) error {
 		return nil
 	}
 
+	if !IsKoreManaged(eip.Tags) {
+		return nil
+	}
+
 	_, err = svc.ReleaseAddress(&ec2.ReleaseAddressInput{
 		AllocationId: eip.AllocationId,
 	})

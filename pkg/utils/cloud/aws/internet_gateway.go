@@ -99,6 +99,10 @@ func DeleteInternetGateway(svc ec2.EC2, vpc VPC) error {
 		return nil
 	}
 
+	if !IsKoreManaged(ig.Tags) {
+		return nil
+	}
+
 	attached := false
 	for _, a := range ig.Attachments {
 		if *a.VpcId == *vpc.awsObj.VpcId {
