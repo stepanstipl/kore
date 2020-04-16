@@ -34,21 +34,21 @@ load helper
 @test "We should see the status of the gke cluster change to deleting" {
   ${KORE} get cluster ${CLUSTER} -t ${TEAM} || skip
 
-  retry 10 "${KORE} get gkes ${CLUSTER} -t e2e -o json | jq '.status.status' | grep -i deleting"
+  retry 10 "${KORE} get gkes ${CLUSTER} -t ${TEAM} -o json | jq '.status.status' | grep -i deleting"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should see the gkes resource be deleted" {
   ${KORE} get cluster ${CLUSTER} -t ${TEAM} || skip
 
-  retry 120 "${KORE} get gkes ${CLUSTER} -t e2e 2>&1 | grep 'does not exist'"
+  retry 120 "${KORE} get gkes ${CLUSTER} -t ${TEAM} 2>&1 | grep 'does not exist'"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should see the cluster resource be deleted" {
   ${KORE} get cluster ${CLUSTER} -t ${TEAM} || skip
 
-  retry 120 "${KORE} get clusters ${CLUSTER} -t e2e 2>&1 | grep 'does not exist'"
+  retry 120 "${KORE} get clusters ${CLUSTER} -t ${TEAM} 2>&1 | grep 'does not exist'"
   [[ "$status" -eq 0 ]]
 }
 
