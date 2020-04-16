@@ -140,6 +140,10 @@ func DeleteRouteTable(svc ec2.EC2, vpc VPC, rtType, az string) error {
 		return nil
 	}
 
+	if !IsKoreManaged(routeTable.Tags) {
+		return nil
+	}
+
 	_, err = svc.DeleteRouteTable(&ec2.DeleteRouteTableInput{
 		RouteTableId: routeTable.RouteTableId,
 	})

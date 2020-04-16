@@ -114,6 +114,10 @@ func DeleteSubnet(svc ec2.EC2, vpc VPC, subnetType, az string) error {
 		return nil
 	}
 
+	if !IsKoreManaged(subnet.Tags) {
+		return nil
+	}
+
 	_, err = svc.DeleteSubnet(&ec2.DeleteSubnetInput{
 		SubnetId: subnet.SubnetId,
 	})
