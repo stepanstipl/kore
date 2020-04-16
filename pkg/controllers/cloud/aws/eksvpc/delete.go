@@ -56,7 +56,7 @@ func (t *eksvpcCtrl) Delete(request reconcile.Request) (reconcile.Result, error)
 	finalizer := kubernetes.NewFinalizer(t.mgr.GetClient(), finalizerName)
 
 	result, err := func() (reconcile.Result, error) {
-		creds, err := t.GetCredentials(ctx, resource, request.NamespacedName.Name)
+		creds, err := t.GetCredentials(ctx, resource, request.NamespacedName.Namespace)
 		if err != nil {
 			logger.WithError(err).Error("trying to retrieve the credentials")
 
