@@ -113,14 +113,26 @@ push-images:
 		docker push ${REGISTRY}/${AUTHOR}/$${name}:${VERSION} ; \
 	done
 
+patch-images:
+	@echo "--> Patching version tag into demo compose files and helm charts"
+	go run github.com/mikefarah/yq/v3 w -i hack/compose/demo.yml services.kore-apiserver.image ${REGISTRY}/${AUTHOR}/kore-apiserver:${VERSION}
+	go run github.com/mikefarah/yq/v3 w -i hack/compose/demo.yml services.kore-ui.image ${REGISTRY}/${AUTHOR}/kore-ui:${VERSION}
+	go run github.com/mikefarah/yq/v3 w -i charts/kore/values.yaml api.image ${REGISTRY}/${AUTHOR}/kore-apiserver
+	go run github.com/mikefarah/yq/v3 w -i charts/kore/values.yaml api.version ${VERSION}
+	go run github.com/mikefarah/yq/v3 w -i charts/kore/values.yaml ui.image ${REGISTRY}/${AUTHOR}/kore-ui
+	go run github.com/mikefarah/yq/v3 w -i charts/kore/values.yaml ui.version ${VERSION}
+
 release-cli:
+	@$(MAKE) patch-images
 	@echo "--> Compiling CLI static binaries"
 	@rm -rf ./cli-release
-	CGO_ENABLED=0 go run github.com/mitchellh/gox -arch="${CLI_ARCHITECTURES}" -os="${CLI_PLATFORMS}" -ldflags "-w ${LFLAGS}" -output=./cli-release/arch/{{.OS}}_{{.Arch}}_${VERSION}/{{.Dir}} ./cmd/korectl/
+	CGO_ENABLED=0 go run github.com/mitchellh/gox -arch="${CLI_ARCHITECTURES}" -os="${CLI_PLATFORMS}" -ldflags "-w ${LFLAGS}" -output=./cli-release/arch/{{.OS}}_{{.Arch}}_${VERSION}/{{.Dir}} ./cmd/korectl/ ./cmd/kore/
 	@mkdir ./cli-release/output/
 	@for f in `ls -1 ./cli-release/arch/`; do \
-		zip -j -m cli-release/output/korectl_$$f.zip cli-release/arch/$$f/*; \
-		zip -ur cli-release/output/korectl_$$f.zip hack/compose/* hack/ca/* hack/kubeconfig.local hack/setup/**/*; \
+		zip -j -m cli-release/output/korectl_$$f.zip cli-release/arch/$$f/korectl*; \
+		zip -ur cli-release/output/korectl_$$f.zip hack/compose/* hack/ca/* hack/kubeconfig.local hack/setup/dex/* charts/**/*; \
+		zip -j -m cli-release/output/kore_$$f.zip cli-release/arch/$$f/kore*; \
+		zip -ur cli-release/output/kore_$$f.zip hack/compose/* hack/ca/* hack/kubeconfig.local hack/setup/dex/* charts/**/*; \
 	done
 	cd ./cli-release/output && sha256sum *.zip > korectl.sha256sums
 

@@ -56,20 +56,20 @@ func NewCmdDelete(factory cmdutil.Factory) *cobra.Command {
 		Short:                 "Allows you to delete one of more resources in kore",
 		Run:                   cmdutil.DefaultRunFunc(o),
 
-		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.BashCompDirective) {
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			switch len(args) {
 			case 0:
-				return append(possible, "admin"), cobra.BashCompDirectiveNoFileComp
+				return append(possible, "admin"), cobra.ShellCompDirectiveNoFileComp
 			case 1:
 				suggestions, err := o.Resources().LookupResourceNames(args[0], cmdutil.GetTeam(cmd))
 				if err != nil {
-					return nil, cobra.BashCompDirectiveError
+					return nil, cobra.ShellCompDirectiveError
 				}
 
-				return suggestions, cobra.BashCompDirectiveNoFileComp
+				return suggestions, cobra.ShellCompDirectiveNoFileComp
 			}
 
-			return nil, cobra.BashCompDirectiveNoFileComp
+			return nil, cobra.ShellCompDirectiveNoFileComp
 		},
 	}
 

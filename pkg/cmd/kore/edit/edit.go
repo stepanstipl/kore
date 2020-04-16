@@ -61,21 +61,21 @@ func NewCmdEdit(factory cmdutil.Factory) *cobra.Command {
 
 		Run: cmdutil.DefaultRunFunc(o),
 
-		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.BashCompDirective) {
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			switch len(args) {
 			case 0:
-				return possible, cobra.BashCompDirectiveNoFileComp
+				return possible, cobra.ShellCompDirectiveNoFileComp
 			case 1:
 				resource := o.Resources().ResolveShorthand(cmd.Flags().Arg(0))
 				suggestions, err := o.Resources().LookupResourceNames(resource, cmdutil.GetTeam(cmd))
 				if err != nil {
-					return nil, cobra.BashCompDirectiveError
+					return nil, cobra.ShellCompDirectiveError
 				}
 
-				return suggestions, cobra.BashCompDirectiveNoFileComp
+				return suggestions, cobra.ShellCompDirectiveNoFileComp
 			}
 
-			return nil, cobra.BashCompDirectiveNoFileComp
+			return nil, cobra.ShellCompDirectiveNoFileComp
 		},
 	}
 

@@ -42,8 +42,8 @@ func NewCmdLogout(factory cmdutil.Factory) *cobra.Command {
 		Example: "kore logout [name]",
 		Run:     cmdutil.DefaultRunFunc(o),
 
-		ValidArgsFunction: func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.BashCompDirective) {
-			return o.Config().ListProfiles(), cobra.BashCompDirectiveNoFileComp
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.ShellCompDirective) {
+			return o.Config().ListProfiles(), cobra.ShellCompDirectiveNoFileComp
 		},
 	}
 

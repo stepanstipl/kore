@@ -67,15 +67,15 @@ func NewCmdCreateUser(factory cmdutils.Factory) *cobra.Command {
 	cmdutils.MustMarkFlagRequired(command, "email")
 
 	// @step: register the autocompletions
-	cmdutils.MustRegisterFlagCompletionFunc(command, "email", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.BashCompDirective) {
+	cmdutils.MustRegisterFlagCompletionFunc(command, "email", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.ShellCompDirective) {
 		name := cmd.Flags().Arg(0)
 		if name == "" {
-			return []string{}, cobra.BashCompDirectiveNoFileComp
+			return []string{}, cobra.ShellCompDirectiveNoFileComp
 		}
 
 		list := &orgv1.UserList{}
 		if err := o.Client().Resource("user").Result(list).Get().Error(); err != nil {
-			return nil, cobra.BashCompDirectiveError
+			return nil, cobra.ShellCompDirectiveError
 		}
 
 		var domains []string
@@ -89,7 +89,7 @@ func NewCmdCreateUser(factory cmdutils.Factory) *cobra.Command {
 			suggestions = append(suggestions, fmt.Sprintf("%s@%s", name, x))
 		}
 
-		return suggestions, cobra.BashCompDirectiveNoFileComp
+		return suggestions, cobra.ShellCompDirectiveNoFileComp
 	})
 
 	return command

@@ -102,7 +102,7 @@ func MustMarkFlagRequired(cmd *cobra.Command, name string) {
 func MustRegisterFlagCompletionFunc(
 	cmd *cobra.Command,
 	flagName string,
-	f func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.BashCompDirective),
+	f func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective),
 ) {
 	if err := cmd.RegisterFlagCompletionFunc(flagName, f); err != nil {
 		panic(err)
