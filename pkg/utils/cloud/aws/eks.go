@@ -164,14 +164,14 @@ func (c *Client) Delete(ctx context.Context) error {
 	logger.Debug("attempting to delete the eks cluster")
 
 	// @step: get the state of the cluster
-	_, err := c.svc.DescribeClusterWithContext(ctx, &eks.DescribeClusterInput{
+	_, err := c.svc.DeleteClusterWithContext(ctx, &eks.DeleteClusterInput{
 		Name: aws.String(c.cluster.Name),
 	})
 	if err != nil {
 		if c.IsNotFound(err) {
 			return nil
 		}
-		logger.WithError(err).Error("trying to describe the eks cluster")
+		logger.WithError(err).Error("trying to delete the eks cluster")
 
 		return err
 	}
@@ -216,8 +216,8 @@ func (c *Client) Update(ctx context.Context) (bool, error) {
 	// @step: have the public ranges changed for the endpoint?
 	accessCIDR := func() []*string {
 		for _, x := range state.ResourcesVpcConfig.PublicAccessCidrs {
-			if utils.Contains(aws.StringValue(x), c.cluster.Spec.AuthorizedMasterNetworks) {
-				return state.ResourcesVpcConfig.PublicAccessCidrs
+			if !utils.Contains(aws.StringValue(x), c.cluster.Spec.AuthorizedMasterNetworks) {
+				return aws.StringSlice(c.cluster.Spec.AuthorizedMasterNetworks)
 			}
 		}
 		return nil
@@ -280,38 +280,11 @@ func (c *Client) DeleteNodeGroup(ctx context.Context, group *eksv1alpha1.EKSNode
 	})
 	logger.Debug("attempting to delete the eks nodegroup")
 
-	// @step: check the status of the nodegroup
-	state, err := c.svc.DescribeNodegroupWithContext(ctx, &eks.DescribeNodegroupInput{
+	if _, err := c.svc.DeleteNodegroupWithContext(ctx, &eks.DeleteNodegroupInput{
 		ClusterName:   aws.String(group.Spec.Cluster.Name),
 		NodegroupName: aws.String(group.Name),
-	})
-	if err != nil {
-		if c.IsNotFound(err) {
-			return nil
-		}
-		logger.WithError(err).Error("trying to describe the nodegroup")
-
+	}); err != nil {
 		return err
-	}
-
-	status := aws.StringValue(state.Nodegroup.Status)
-
-	switch status {
-	case awseks.NodegroupStatusActive, awseks.NodegroupStatusCreateFailed, awseks.NodegroupStatusDegraded:
-		if _, err := c.svc.DeleteNodegroupWithContext(ctx, &eks.DeleteNodegroupInput{
-			ClusterName:   aws.String(group.Spec.Cluster.Name),
-			NodegroupName: aws.String(group.Name),
-		}); err != nil {
-			return err
-		}
-
-		return nil
-
-	case awseks.NodegroupStatusDeleteFailed:
-		return errors.New("nodegroup has failed to delete, please check console")
-
-	case awseks.NodegroupStatusCreating, awseks.NodegroupStatusUpdating, awseks.NodegroupStatusDeleting:
-		return nil
 	}
 
 	return nil

@@ -19,7 +19,6 @@ package eks
 import (
 	"context"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"time"
 
@@ -136,7 +135,7 @@ func (t *eksCtrl) EnsureCluster(client *aws.Client, cluster *eks.EKS) controller
 			})
 			cluster.Status.Status = corev1.FailureStatus
 
-			return reconcile.Result{}, errors.New("cluster has failed to provision")
+			return reconcile.Result{}, nil
 
 		case awseks.ClusterStatusCreating, awseks.ClusterStatusUpdating:
 			cluster.Status.Status = corev1.PendingStatus
