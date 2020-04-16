@@ -27,7 +27,7 @@ load helper
 @test "The status of the cluster should change to deleting" {
   ${KORE} get cluster ${CLUSTER} -t ${TEAM} || skip
 
-  retry 4 "${KORE} get cluster ${CLUSTER} -t ${TEAM} -o json | jq '.status.status' | grep -i deleting"
+  retry 10 "${KORE} get cluster ${CLUSTER} -t ${TEAM} -o json | jq '.status.status' | grep -i deleting"
   [[ "$status" -eq 0 ]]
 }
 
