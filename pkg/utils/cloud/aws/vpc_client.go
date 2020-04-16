@@ -222,6 +222,19 @@ func (c *VPCClient) Exists() (bool, error) {
 // Delete will clear up all VPC resources
 // Currently noop
 func (c *VPCClient) Delete() (ready bool, _ error) {
+	exists, err := c.Exists()
+	if err != nil {
+		return false, err
+	}
+
+	if !exists {
+		return true, nil
+	}
+
+	if !IsKoreManaged(c.VPC.awsObj.Tags) {
+		return true, nil
+	}
+
 	azs, err := c.getAZs(AZLimit)
 	if err != nil {
 		return false, err

@@ -28,6 +28,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 )
 
+const (
+	// TagKoreManaged is used for tagging resources managed by Kore
+	TagKoreManaged = "kore.appvia.io/managed"
+)
+
 func getEc2TagNameFilter(name string) *ec2.Filter {
 	return &ec2.Filter{
 		Name: aws.String("tag:Name"),
@@ -117,4 +122,14 @@ func createEC2TagsWithName(name string, tags map[string]string) []*ec2.Tag {
 		})
 	}
 	return res
+}
+
+// IsKoreManaged will return true if a specific tag is present to signal the AWS resource is managed by Kore
+func IsKoreManaged(tags []*ec2.Tag) bool {
+	for _, tag := range tags {
+		if *tag.Key == TagKoreManaged && *tag.Value == "true" {
+			return true
+		}
+	}
+	return false
 }

@@ -103,7 +103,7 @@ func (t *eksvpcCtrl) Reconcile(request reconcile.Request) (reconcile.Result, err
 			Name:      resource.Name,
 			Region:    resource.Spec.Region,
 			Tags: map[string]string{
-				"Kore": "managed",
+				aws.TagKoreManaged: "true",
 			},
 		})
 		if err != nil {
