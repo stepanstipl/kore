@@ -157,6 +157,14 @@ func (c Components) GetComponent(name string) (*Component, bool) {
 	return nil, false
 }
 
+func (c *Components) RemoveComponent(name string) {
+	for i, x := range *c {
+		if x.Name == name {
+			*c = append((*c)[:i], (*c)[i+1:]...)
+		}
+	}
+}
+
 func (c Components) Error() error {
 	var messages []string
 	for _, c := range c {

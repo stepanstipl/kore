@@ -18,6 +18,7 @@ package cluster_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -60,8 +61,10 @@ var _ = Describe("Cluster Controller", func() {
 	Context("Reconcile", func() {
 		var reconcileResult reconcile.Result
 		var reconcileErr error
+		var kind string
 		var cluster *clustersv1.Cluster
 		var name = types.NamespacedName{Name: "testName", Namespace: "testNamespace"}
+		var clusterConfig map[string]interface{}
 
 		var createCluster = func(kind string, status clustersv1.ClusterStatus) *clustersv1.Cluster {
 			return &clustersv1.Cluster{
@@ -75,9 +78,8 @@ var _ = Describe("Cluster Controller", func() {
 					ResourceVersion: "1",
 				},
 				Spec: clustersv1.ClusterSpec{
-					Kind:          kind,
-					Plan:          "testPlan",
-					Configuration: v1beta1.JSON{Raw: []byte(`{"nodeGroups":[{"name":"ng1"}, {"name":"ng2"}]}`)},
+					Kind: kind,
+					Plan: "testPlan",
 					Credentials: corev1.Ownership{
 						Group:     "credsGroup",
 						Version:   "credsVersion",
@@ -90,7 +92,16 @@ var _ = Describe("Cluster Controller", func() {
 			}
 		}
 
+		BeforeEach(func() {
+			clusterConfig = map[string]interface{}{}
+			cluster = createCluster(kind, clustersv1.ClusterStatus{})
+		})
+
 		JustBeforeEach(func() {
+			if clusterConfig != nil {
+				configJson, _ := json.Marshal(clusterConfig)
+				cluster.Spec.Configuration = v1beta1.JSON{Raw: configJson}
+			}
 			reconcileResult, reconcileErr = controller.Reconcile(reconcile.Request{NamespacedName: name})
 		})
 
@@ -114,7 +125,13 @@ var _ = Describe("Cluster Controller", func() {
 			var creds *eksv1alpha1.EKSCredentials
 
 			BeforeEach(func() {
-				cluster = createCluster("EKS", clustersv1.ClusterStatus{})
+				kind = "EKS"
+				clusterConfig = map[string]interface{}{
+					"nodeGroups": []map[string]string{
+						{"name": "ng1"},
+						{"name": "ng2"},
+					},
+				}
 				creds = &eksv1alpha1.EKSCredentials{
 					TypeMeta: metav1.TypeMeta{
 						Kind:       "EKSCredentials",
@@ -160,6 +177,8 @@ var _ = Describe("Cluster Controller", func() {
 				JustBeforeEach(func() {
 					updatedCluster = &clustersv1.Cluster{}
 					test.ExpectStatusPatch(0, updatedCluster)
+
+					Expect(test.Client.DeleteCallCount()).To(Equal(0))
 				})
 
 				It("should set the status to pending", func() {
@@ -184,7 +203,7 @@ var _ = Describe("Cluster Controller", func() {
 
 				When("the components can not be created", func() {
 					BeforeEach(func() {
-						cluster.Spec.Configuration = v1beta1.JSON{}
+						clusterConfig = nil
 					})
 
 					It("should fail and not requeue", func() {
@@ -241,7 +260,7 @@ var _ = Describe("Cluster Controller", func() {
 
 				When("applying the cluster configuration on an existing component fails", func() {
 					BeforeEach(func() {
-						cluster.Spec.Configuration = v1beta1.JSON{}
+						clusterConfig = nil
 						test.Objects = append(test.Objects, eksv1alpha1.NewEKSVPC(name.Name, name.Namespace))
 					})
 
@@ -415,7 +434,7 @@ var _ = Describe("Cluster Controller", func() {
 				})
 			})
 
-			When("the cluster has a deletion timestamp", func() {
+			When("a cluster was successfully provisioned", func() {
 				var kubernetes *clustersv1.Kubernetes
 				var eks *eksv1alpha1.EKS
 				var ng1, ng2 *eksv1alpha1.EKSNodeGroup
@@ -423,7 +442,6 @@ var _ = Describe("Cluster Controller", func() {
 
 				BeforeEach(func() {
 					cluster.Finalizers = []string{"cluster.clusters.kore.appvia.io"}
-					cluster.DeletionTimestamp = &metav1.Time{Time: time.Now()}
 					cluster.Status.Components = corev1.Components{
 						{Name: "EKS/testName", Status: corev1.SuccessStatus},
 						{Name: "EKSVPC/testName", Status: corev1.SuccessStatus},
@@ -445,91 +463,140 @@ var _ = Describe("Cluster Controller", func() {
 					test.Objects = append(test.Objects, kubernetes, eks, eksvpc, ng1, ng2)
 				})
 
-				It("should delete the Kubernetes component first", func() {
-					Expect(test.Client.DeleteCallCount()).To(Equal(1))
-					deletedObj := &clustersv1.Kubernetes{}
-					test.ExpectDelete(0, deletedObj)
-				})
-
-				It("should requeue and not error", func() {
-					test.ExpectRequeue(reconcileResult, reconcileErr)
-				})
-
-				When("deleting the Kubernetes component fails", func() {
+				When("an EKS Node group was removed from the config", func() {
 					BeforeEach(func() {
-						test.Client.DeleteReturnsOnCall(0, errors.New("some error"))
-					})
-
-					It("should requeue", func() {
-						Expect(reconcileErr).To(HaveOccurred())
-					})
-				})
-
-				When("getting a component fails", func() {
-					BeforeEach(func() {
-						eks := eksv1alpha1.NewEKS(name.Name, name.Namespace)
-						eks.Labels = map[string]string{controllerstest.LabelGetError: "some error"}
-						test.Objects = []runtime.Object{cluster, eks}
-					})
-
-					It("should requeue", func() {
-						Expect(reconcileErr).To(HaveOccurred())
-					})
-				})
-
-				When("a component can not be deleted", func() {
-					BeforeEach(func() {
-						kubernetes := clustersv1.NewKubernetes(name.Name, name.Namespace)
-						kubernetes.Status.Status = corev1.DeleteFailedStatus
-						kubernetes.Status.Components = corev1.Components{
-							{Name: "testComponent", Status: corev1.DeleteFailedStatus, Message: "testMessage", Detail: "testDetail"},
+						cluster.Finalizers = []string{"cluster.clusters.kore.appvia.io"}
+						clusterConfig = map[string]interface{}{
+							"nodeGroups": []map[string]string{
+								{"name": "ng1"},
+							},
 						}
-						kubernetes.DeletionTimestamp = &metav1.Time{Time: time.Now()}
-						test.Objects = []runtime.Object{cluster, kubernetes}
 					})
 
-					It("should set the status to delete failed", func() {
-						updatedCluster := &clustersv1.Cluster{}
-						test.ExpectStatusPatch(0, updatedCluster)
-						Expect(updatedCluster.Status.Status).To(Equal(corev1.DeleteFailedStatus))
-					})
+					It("should delete the removed node group", func() {
+						deletedEKSNodeGroup := &eksv1alpha1.EKSNodeGroup{}
+						test.ExpectDelete(0, deletedEKSNodeGroup)
+						Expect(test.Client.DeleteCallCount()).To(Equal(1))
 
-					It("should not requeue", func() {
-						Expect(reconcileErr).ToNot(HaveOccurred())
-					})
-				})
-
-				When("all components were deleted", func() {
-					BeforeEach(func() {
-						test.Objects = []runtime.Object{cluster}
-					})
-
-					It("should set the status to deleted", func() {
-						updatedCluster := &clustersv1.Cluster{}
-						test.ExpectStatusPatch(0, updatedCluster)
-						Expect(updatedCluster.Status.Status).To(Equal(corev1.DeletedStatus))
+						Expect(deletedEKSNodeGroup.Name).To(Equal("testName-ng2"))
 					})
 
 					It("should requeue", func() {
 						test.ExpectRequeue(reconcileResult, reconcileErr)
 					})
+
+					When("the EKS node group was deleted", func() {
+						BeforeEach(func() {
+							test.Objects = []runtime.Object{cluster, kubernetes, eks, eksvpc, ng1}
+						})
+
+						It("should remove the component", func() {
+							updatedCluster := &clustersv1.Cluster{}
+							test.ExpectStatusPatch(0, updatedCluster)
+							_, exists := updatedCluster.Status.Components.GetComponent("EKSNodeGroup/testName-ng2")
+							Expect(exists).To(BeFalse())
+						})
+
+						It("should have a success status", func() {
+							updatedCluster := &clustersv1.Cluster{}
+							test.ExpectStatusPatch(0, updatedCluster)
+							Expect(updatedCluster.Status.Status).To(Equal(corev1.SuccessStatus))
+						})
+					})
 				})
 
-				When("the cluster has deleted status", func() {
+				When("the cluster has a deletion timestamp", func() {
 					BeforeEach(func() {
-						cluster.Status.Status = corev1.DeletedStatus
-						test.Objects = []runtime.Object{cluster}
+						cluster.Finalizers = []string{"cluster.clusters.kore.appvia.io"}
+						cluster.DeletionTimestamp = &metav1.Time{Time: time.Now()}
 					})
 
-					It("should remove the finalizer", func() {
-						updatedCluster := &clustersv1.Cluster{}
-						test.ExpectUpdate(0, updatedCluster)
-						Expect(updatedCluster.Finalizers).To(BeEmpty())
+					It("should delete the Kubernetes component first", func() {
+						Expect(test.Client.DeleteCallCount()).To(Equal(1))
+						deletedObj := &clustersv1.Kubernetes{}
+						test.ExpectDelete(0, deletedObj)
 					})
 
-					It("should not requeue", func() {
-						Expect(reconcileErr).ToNot(HaveOccurred())
-						Expect(reconcileResult).To(Equal(reconcile.Result{}))
+					It("should requeue and not error", func() {
+						test.ExpectRequeue(reconcileResult, reconcileErr)
+					})
+
+					When("deleting the Kubernetes component fails", func() {
+						BeforeEach(func() {
+							test.Client.DeleteReturnsOnCall(0, errors.New("some error"))
+						})
+
+						It("should requeue", func() {
+							Expect(reconcileErr).To(HaveOccurred())
+						})
+					})
+
+					When("getting a component fails", func() {
+						BeforeEach(func() {
+							eks := eksv1alpha1.NewEKS(name.Name, name.Namespace)
+							eks.Labels = map[string]string{controllerstest.LabelGetError: "some error"}
+							test.Objects = []runtime.Object{cluster, eks}
+						})
+
+						It("should requeue", func() {
+							Expect(reconcileErr).To(HaveOccurred())
+						})
+					})
+
+					When("a component can not be deleted", func() {
+						BeforeEach(func() {
+							kubernetes := clustersv1.NewKubernetes(name.Name, name.Namespace)
+							kubernetes.Status.Status = corev1.DeleteFailedStatus
+							kubernetes.Status.Components = corev1.Components{
+								{Name: "testComponent", Status: corev1.DeleteFailedStatus, Message: "testMessage", Detail: "testDetail"},
+							}
+							kubernetes.DeletionTimestamp = &metav1.Time{Time: time.Now()}
+							test.Objects = []runtime.Object{cluster, kubernetes}
+						})
+
+						It("should set the status to delete failed", func() {
+							updatedCluster := &clustersv1.Cluster{}
+							test.ExpectStatusPatch(0, updatedCluster)
+							Expect(updatedCluster.Status.Status).To(Equal(corev1.DeleteFailedStatus))
+						})
+
+						It("should not requeue", func() {
+							Expect(reconcileErr).ToNot(HaveOccurred())
+						})
+					})
+
+					When("all components were deleted", func() {
+						BeforeEach(func() {
+							test.Objects = []runtime.Object{cluster}
+						})
+
+						It("should set the status to deleted", func() {
+							updatedCluster := &clustersv1.Cluster{}
+							test.ExpectStatusPatch(0, updatedCluster)
+							Expect(updatedCluster.Status.Status).To(Equal(corev1.DeletedStatus))
+						})
+
+						It("should requeue", func() {
+							test.ExpectRequeue(reconcileResult, reconcileErr)
+						})
+					})
+
+					When("the cluster has deleted status", func() {
+						BeforeEach(func() {
+							cluster.Status.Status = corev1.DeletedStatus
+							test.Objects = []runtime.Object{cluster}
+						})
+
+						It("should remove the finalizer", func() {
+							updatedCluster := &clustersv1.Cluster{}
+							test.ExpectUpdate(0, updatedCluster)
+							Expect(updatedCluster.Finalizers).To(BeEmpty())
+						})
+
+						It("should not requeue", func() {
+							Expect(reconcileErr).ToNot(HaveOccurred())
+							Expect(reconcileResult).To(Equal(reconcile.Result{}))
+						})
 					})
 				})
 			})

@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
@@ -138,6 +139,34 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 				Message: message,
 			}
 			cluster.Status.Components.SetCondition(component)
+		}
+
+		// Check for deleted EKS node groups
+		for _, existing := range cluster.Status.Components {
+			if strings.HasPrefix(existing.Name, "EKSNodeGroup/") {
+				if components[existing.Name] == nil {
+					name := strings.TrimPrefix(existing.Name, "EKSNodeGroup/")
+					deleted, err := deleteEKSNodeGroup(ctx, a.mgr.GetClient(), cluster, name)
+					if err != nil {
+						cluster.Status.Components.SetCondition(corev1.Component{
+							Name:    existing.Name,
+							Status:  corev1.DeleteFailedStatus,
+							Message: err.Error(),
+						})
+						return err
+					}
+
+					cluster.Status.Components.SetCondition(corev1.Component{
+						Name:   existing.Name,
+						Status: corev1.DeletingStatus,
+					})
+
+					if deleted {
+						logger.Infof("%s EKS Node Group was deleted", name)
+						cluster.Status.Components.RemoveComponent(existing.Name)
+					}
+				}
+			}
 		}
 
 		ready := cluster.Status.Components.HasStatusForAll(corev1.SuccessStatus)
