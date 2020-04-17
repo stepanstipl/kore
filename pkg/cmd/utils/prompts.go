@@ -28,6 +28,7 @@ type Prompt struct {
 	LabelSuffix string
 	ErrMsg      string
 	Value       *string
+	AllowEdit   bool
 }
 
 func (p *Prompt) Do() error {
@@ -37,7 +38,7 @@ func (p *Prompt) Do() error {
 	}
 	runner := promptui.Prompt{
 		Label:     p.Id + " " + p.LabelSuffix,
-		AllowEdit: true,
+		AllowEdit: p.AllowEdit,
 		Default:   value,
 		Validate: func(in string) error {
 			if len(in) == 0 {

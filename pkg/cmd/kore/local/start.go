@@ -74,7 +74,7 @@ func (o *LocalStartOptions) Run() error {
 	}
 
 	// We pause here to give the services time to initialise
-	// @TODO: Ping for the API being available instead.
+	// @TODO: Perhaps ping for the API and UI for being available instead?
 	time.Sleep(time.Second * 35)
 
 	o.Println("...Kore is now started locally")

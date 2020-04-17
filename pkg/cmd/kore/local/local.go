@@ -86,7 +86,7 @@ func getComposeCmd(conf *config.Config, args ...string) (*exec.Cmd, error) {
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, fmt.Sprintf("KORE_TAG=%s", version.Release))
 	cmd.Env = append(cmd.Env, fmt.Sprintf("KORE_IDP_CLIENT_ID=%s", conf.AuthInfos[LocalProfileName].OIDC.ClientID))
-	cmd.Env = append(cmd.Env, fmt.Sprintf("KORE_IDP_CLIENT_SECRET=%s", conf.AuthInfos[LocalProfileName].OIDC.ClientID))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("KORE_IDP_CLIENT_SECRET=%s", conf.AuthInfos[LocalProfileName].OIDC.ClientSecret))
 	cmd.Env = append(cmd.Env, fmt.Sprintf("KORE_IDP_SERVER_URL=%s", conf.AuthInfos[LocalProfileName].OIDC.AuthorizeURL))
 	cmd.Env = append(cmd.Env, fmt.Sprintf("KORE_LOCAL_HOME=%s", localPath))
 	if err := pipeComposeToCmd(cmd); err != nil {
