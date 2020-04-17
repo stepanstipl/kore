@@ -16,17 +16,17 @@
 #
 load helper
 
-@test "We should able to delete the e2e team now" {
-  runit "${KORE} delete team e2e"
+@test "We should able to delete the ${TEAM} team now" {
+  runit "${KORE} delete team ${TEAM}"
   [[ "$status" -eq 0 ]]
-  runit "${KORE} get teams | grep ^e2e || true"
+  runit "${KORE} get teams | grep ^${TEAM} || true"
   [[ "$status" -eq 0 ]]
 }
 
-#@test "We should able to delete the e2e gke credentials" {
-#  runit "${KORE} delete -f ${BASE_DIR}/${E2E_DIR}/gke-credentials.yml -t kore-admin"
-#  [[ "$status" -eq 0 ]]
-#}
+@test "We should able to delete the ${TEAM} gke credentials" {
+  runit "${KORE} delete -f ${BASE_DIR}/${E2E_DIR}/gke-credentials.yml -t kore-admin"
+  [[ "$status" -eq 0 ]]
+}
 
 @test "We should be able to delete the user from kore" {
   runit "${KORE} delete user test"

@@ -99,6 +99,12 @@ docker-build:
 		golang:${GOVERSION} \
 		make in-docker-build
 
+verify-circleci:
+	@echo "--> Verifiying the circleci config"
+	@docker run -ti --rm -v ${PWD}:/workspace \
+		-w /workspace circleci/circleci-cli \
+		circleci config validate
+
 images:
 	@echo "--> Building docker images"
 	@for name in ${DOCKER_IMAGES}; do \

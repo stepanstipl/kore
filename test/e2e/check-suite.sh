@@ -20,12 +20,12 @@ source test/e2e/environment.sh || exit 1
 # These are being used across the checks
 export CLUSTER="ci-${CIRCLE_BUILD_NUM:-$USER}"
 export E2E_DIR="e2eci"
-export KORE_IDP_SERVER_URL=${KORE_IDP_SERVER_URL:-"unknown"}
-export KORE_IDP_CLIENT_ID=${KORE_IDP_CLIENT_ID:-"unknown"}
 export KORE_API_URL=${KORE_API_PUBLIC_URL_QA:-"http://127.0.0.1:10080"}
+export KORE_IDP_CLIENT_ID=${KORE_IDP_CLIENT_ID:-"unknown"}
+export KORE_IDP_SERVER_URL=${KORE_IDP_SERVER_URL:-"unknown"}
 export KORE_ID_TOKEN=${KORE_ID_TOKEN_QA:-"unknown"}
 export KORE_PROFILE="local"
-#export KORE_USERNAME="${KORE_USERNAME:-"kore-ci@appvia.io"}"
+export TEAM="e2e"
 
 ENABLE_CONFORMANCE=${ENABLE_CONFORMANCE:-false}
 ENABLE_UNIT_TESTS=${ENABLE_UNIT_TESTS:-true}
@@ -42,6 +42,7 @@ usage() {
   Usage: $(basename $0)
   --enable-conformance   : run the kubernetes conformance check suite
   --enable-unit-tests    : run the bats unit tests
+  --enable-e2e-user      : indicates we should provision a test user
   -h|--help              : display this usage menu
 EOF
   if [[ -n $@ ]]; then
@@ -53,6 +54,11 @@ EOF
 
 create-korectl-config() {
   [[ -f ${KORE_CONFIG} ]] && return
+
+  mkdir -p $(dirname ${KORE_CONFIG}) || {
+    error "unable to create the client configuration directory";
+    exit 1;
+  }
 
   announce "Generating a korectl configuration: ${KORE_CONFIG}"
   cat << EOF > ${KORE_CONFIG}
@@ -73,26 +79,39 @@ users:
 EOF
 }
 
-wait-kubeapi-readiness() {
-  announce "waiting for kube-apiserver readiness ..."
+enable-admin-user() {
+  announce "Provisioning a admin e2e user"
+  cat <<EOF >/tmp/e2e.user
+{
+  "apiVersion": "org.kore.appvia.io/v1",
+  "kind": "User",
+  "metadata": {
+    "name": "${ADMIN_USER}"
+  },
+  "spec": {
+    "username": "${ADMIN_USER}",
+    "email": "${ADMIN_USER}"
+  }
+}
+EOF
 
-  while true ; do
-    if kubectl version &> /dev/null; then
-      if kubectl get namespace >/dev/null; then
-        break
-      fi
-    fi
+  if ! curl -sL -X PUT \
+    --retry 3 \
+    --header "Content-Type: application/json" \
+    --header "Authorization: Bearer ${KORE_ADMIN_TOKEN}" \
+    ${KORE_API_URL}/api/v1alpha1/users/${ADMIN_USER} -d @/tmp/e2e.user; then
+    error "trying to provision admin user for e2e"
+    exit 1
+  fi
 
-    RETRIES=$((RETRIES + 1))
-    if [[ ${RETRIES} -eq ${MAX_RETRIES} ]]; then
-      error "max timeout reached. kube-apiserver not ready ..."
-      kubectl --namespace=kube-system get pods || true
-      exit 1
-    else
-      announce "attempt #${RETRIES} of #${MAX_RETRIES}: dns not yet available, sleeping for ${WAIT_TIME} seconds..."
-      sleep ${WAIT_TIME}
-    fi
-  done
+  if ! curl -sL -X PUT \
+    --retry 3 \
+    --header "Content-Type: application/json" \
+    --header "Authorization: Bearer ${KORE_ADMIN_TOKEN}" \
+    ${KORE_API_URL}/api/v1alpha1/teams/kore-admin/members/${ADMIN_USER}; then
+    error "trying to provision team membership"
+    exit 1
+  fi
 
   return 0
 }
@@ -101,16 +120,15 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
   --enable-conformance) ENABLE_CONFORMANCE="true"; shift 1; ;;
   --enable-unit-tests)  ENABLE_UNIT_TESTS="true";  shift 1; ;;
-  -h|--help)            usage;                            ;;
-  *)                                             shift 1; ;;
+  --enable-e2e-user)    ADMIN_USER=$2;             shift 2; ;;
+  -h|--help)            usage;                              ;;
+  *)                                               shift 1; ;;
   esac
 done
 
-## @step: check the api server is running and available
-#if ! wait-kubeapi-readiness; then
-#  error "kube apiserver is not available after multiple attempts"
-#  exit 1
-#fi
+if [[ -n "${ADMIN_USER}" ]]; then
+  enable-admin-user
+fi
 
 if [[ "${ENABLE_UNIT_TESTS}" == "true" ]]; then
   if [[ -n "${GKE_SA_QA}" ]]; then

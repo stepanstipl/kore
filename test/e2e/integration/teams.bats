@@ -38,11 +38,11 @@ load helper
   [[ "$status" -eq 1 ]]
 }
 
-@test "We should be able to create a e2e team to run test" {
-  if runit "${KORE} get team | grep ^e2e"; then
+@test "We should be able to create a ${TEAM} team to run test" {
+  if runit "${KORE} get team | grep ^${TEAM}"; then
     skip
   fi
-  runit "${KORE} create team e2e"
+  runit "${KORE} create team ${TEAM}"
   [[ "$status" -eq 0 ]]
 }
 
@@ -51,8 +51,8 @@ load helper
   [[ "$status" -eq 0 ]]
 }
 
-@test "We should see the status on the e2e team is successful " {
-  runit "${KORE} get teams e2e -o json | jq '.status.status' | grep -i success"
+@test "We should see the status on the ${TEAM} team is successful " {
+  runit "${KORE} get teams ${TEAM} -o json | jq '.status.status' | grep -i success"
   [[ "$status" -eq 0 ]]
 }
 

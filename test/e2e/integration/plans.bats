@@ -33,7 +33,7 @@ load helper
 }
 
 @test "The plans should include valid json data" {
-  runit "${KORE} get plans gke-development -o json | jq"
+  runit "${KORE} get plans gke-development -o json | jq '.'"
   [[ "$status" -eq 0 ]]
 }
 

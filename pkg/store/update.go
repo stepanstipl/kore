@@ -36,12 +36,6 @@ func (s *storeImpl) updateObjectStore(q *Query, o metav1.Object) error {
 		if err := s.search.Index(uid, q); err != nil {
 			return err
 		}
-		// @step: add the document to the local cache
-		log.WithFields(log.Fields{
-			"uid":    uid,
-			"object": o,
-		}).Debug("adding document to the cache")
-
 		s.cache.Store(uid, o)
 
 		return nil

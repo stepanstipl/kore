@@ -14,16 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 load helper
 
 @test "Ensuring we have an allocation to build a cluster in GKE" {
-  runit "${KORE} get allocations -t e2e | grep ^gke"
+  runit "${KORE} get allocations -t ${TEAM} | grep ^gke"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should be able to build a cluster in GKE" {
-  if runit "${KORE} get clusters ${CLUSTER} -t e2e"; then
+  if runit "${KORE} get clusters ${CLUSTER} -t ${TEAM}"; then
     skip
   else
     runit "${KORE} create cluster -p gke-development -a gke ${CLUSTER} --show-time -t e2e"
@@ -32,36 +31,36 @@ load helper
 }
 
 @test "We should be able to see the cluster in the team" {
-  runit "${KORE} get clusters ${CLUSTER} -t e2e | grep -i success"
+  runit "${KORE} get clusters ${CLUSTER} -t ${TEAM} | grep -i success"
   [[ "$status" -eq 0 ]]
 }
 
 @test "The user should be able to see the endpoint" {
-  runit "${KORE} get clusters ${CLUSTER} -t e2e -o json | jq '.status.endpoint' | grep null || true"
+  runit "${KORE} get clusters ${CLUSTER} -t ${TEAM} -o json | jq '.status.endpoint' | grep null || true"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should be able to see the gkes cloud provider in the team" {
-  runit "${KORE} get gkes ${CLUSTER} -t e2e"
+  runit "${KORE} get gkes ${CLUSTER} -t ${TEAM}"
   [[ "$status" -eq 0 ]]
-  runit "${KORE} get gkes ${CLUSTER} -t e2e | grep -i success"
+  runit "${KORE} get gkes ${CLUSTER} -t ${TEAM} | grep -i success"
   [[ "$status" -eq 0 ]]
 }
 
 @test "The cluster should have a secret related to the cluster in the team" {
-  runit "${KORE} get secrets ${CLUSTER} -t e2e"
+  runit "${KORE} get secrets ${CLUSTER} -t ${TEAM}"
   [[ "$status" -eq 0 ]]
 }
 
 @test "The cluster secret should contain a number of fields (token endpoint ca.crt)"  {
   for key in token endpoint ca.crt; do
-    runit "${KORE} get secrets ${CLUSTER} -t e2e -o json | jq \".spec.data.${key}\" | grep null || true"
+    runit "${KORE} get secrets ${CLUSTER} -t ${TEAM} -o json | jq \".spec.data.${key}\" | grep null || true"
     [[ "$status" -eq 0 ]]
   done
 }
 
 @test "We should be able to generate the kubeconfig for the cluster" {
-  runit "${KORE} kubeconfig -t e2e"
+  runit "${KORE} kubeconfig -t ${TEAM}"
   [[ "$status" -eq 0 ]]
 }
 

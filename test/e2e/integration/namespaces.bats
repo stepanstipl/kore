@@ -18,7 +18,7 @@
 load helper
 
 @test "We should fail to provision a namespace if the cluster does not exist" {
-  run bash -c "${KORE} create namespace nothing -c does_not_exist -t e2e"
+  run bash -c "${KORE} create namespace nothing -c does_not_exist -t ${TEAM}"
   [[ "$status" -eq 1 ]]
 }
 
@@ -26,12 +26,12 @@ load helper
   namespace="ingress"
   fullname="${CLUSTER}-${namespace}"
 
-  if ! ${KORE} get namespaceclaims ${fullname} -t e2e 2>/dev/null; then
-    runit "${KORE} create namespace -c ${CLUSTER} ${namespace} -t e2e"
+  if ! ${KORE} get namespaceclaims ${fullname} -t ${TEAM} 2>/dev/null; then
+    runit "${KORE} create namespace -c ${CLUSTER} ${namespace} -t ${TEAM}"
     [[ "$status" -eq 0 ]]
   fi
 
-  retry 4 "${KORE} get namespaceclaims ${fullname} -t e2e -o json | jq '.status.status' | grep -i success"
+  retry 4 "${KORE} get namespaceclaims ${fullname} -t ${TEAM} -o json | jq '.status.status' | grep -i success"
   [[ "$status" -eq 0 ]]
 }
 
@@ -66,9 +66,9 @@ load helper
 }
 
 @test "Ensure when adding a member to the team the rbac is updated" {
-  runit "${KORE} create member -u test -t e2e"
+  runit "${KORE} create member -u test -t ${TEAM}"
   [[ "$status" -eq 0 ]]
-  runit "${KORE} get member -t e2e | grep ^test"
+  runit "${KORE} get member -t ${TEAM} | grep ^test"
   [[ "$status" -eq 0 ]]
 
   name="ingress"
@@ -78,7 +78,7 @@ load helper
 }
 
 @test "Ensure when the user is deleted from the group the rbac rule is ammended" {
-  runit "${KORE} delete member -u test -t e2e"
+  runit "${KORE} delete member -u test -t ${TEAM}"
   [[ "$status" -eq 0 ]]
 
   name="ingress"
@@ -91,9 +91,9 @@ load helper
   namespace="ingress"
   fullname="${CLUSTER}-${namespace}"
 
-  runit "${KORE} delete namespaceclaims ${fullname} -t e2e"
+  runit "${KORE} delete namespaceclaims ${fullname} -t ${TEAM}"
   [[ "$status" -eq 0 ]]
-  retry 10 "${KORE} get namespaceclaims ${fullname} -t e2e 2>&1 | grep 'does not exist'"
+  retry 10 "${KORE} get namespaceclaims ${fullname} -t ${TEAM} 2>&1 | grep 'does not exist'"
   [[ "$status" -eq 0 ]]
   retry 10 "${KUBECTL} --context=${CLUSTER} get namespace ${namespace} 2>&1 | grep -q 'not found$'"
   [[ "$status" -eq 0 ]]
