@@ -18,6 +18,7 @@ export \
     KORE_IDP_CLIENT_SCOPES
 
 ./bin/kore-apiserver \
+    --listen localhost:10080 \
     --kube-api-server http://127.0.0.1:8080 \
     --verbose \
     --admin-pass password \
