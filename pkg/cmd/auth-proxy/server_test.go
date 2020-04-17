@@ -16,8 +16,6 @@
 
 package authproxy_test
 
-/*
-
 import (
 	"context"
 	"encoding/json"
@@ -90,7 +88,7 @@ var _ = Describe("Server", func() {
 			UpstreamAuthorizationToken: upstreamAuthTokenFile.Name(),
 		}
 
-		authProxy, createErr = authproxy.New(logger, config, verifier)
+		authProxy, createErr = authproxy.New(logger, config, nil)
 		if createErr == nil {
 			runErr = authProxy.Run(context.Background())
 		}
@@ -106,26 +104,26 @@ var _ = Describe("Server", func() {
 		_ = os.Remove(upstreamAuthTokenFile.Name())
 	})
 
-	Context("with invalid configuration", func() {
-		When("allowedIPs is empty", func() {
+	PContext("with invalid configuration", func() {
+		PWhen("allowedIPs is empty", func() {
 			BeforeEach(func() {
 				allowedIPs = []string{}
 			})
-			It("should return an error", func() {
+			PIt("should return an error", func() {
 				Expect(createErr).To(MatchError("allowed IPs must be set"))
 			})
 		})
-		When("allowedIPs contains an invalid value", func() {
+		PWhen("allowedIPs contains an invalid value", func() {
 			BeforeEach(func() {
 				allowedIPs = []string{"invalid value"}
 			})
-			It("should return an error", func() {
+			PIt("should return an error", func() {
 				Expect(createErr).To(MatchError("invalid CIDR notation: \"invalid value\""))
 			})
 		})
 	})
 
-	Context("with valid configuration", func() {
+	PContext("with valid configuration", func() {
 		JustBeforeEach(func() {
 			idToken := &openidfakes.FakeIDToken{}
 			idToken.ClaimsStub = func(v interface{}) error {
@@ -136,8 +134,8 @@ var _ = Describe("Server", func() {
 			Expect(runErr).ToNot(HaveOccurred())
 		})
 
-		When("the client IP is allowed", func() {
-			It("should allow it", func() {
+		PWhen("the client IP is allowed", func() {
+			PIt("should allow it", func() {
 				body, statusCode, err := makeGetRequest("http://" + authProxy.Addr() + "/hello")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(statusCode).To(Equal(http.StatusOK))
@@ -145,11 +143,11 @@ var _ = Describe("Server", func() {
 			})
 		})
 
-		When("the client IP is disallowed", func() {
+		PWhen("the client IP is disallowed", func() {
 			BeforeEach(func() {
 				allowedIPs = []string{"1.2.3.4/32"}
 			})
-			It("should return 403", func() {
+			PIt("should return 403", func() {
 				body, statusCode, err := makeGetRequest("http://" + authProxy.Addr() + "/hello")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(statusCode).To(Equal(http.StatusForbidden))
@@ -178,5 +176,3 @@ func makeGetRequest(url string) (string, int, error) {
 
 	return string(body), resp.StatusCode, nil
 }
-
-*/

@@ -1,6 +1,5 @@
 package authproxy_test
 
-/*
 import (
 	"testing"
 
@@ -12,4 +11,3 @@ func TestAuthProxy(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "AuthProxy Suite")
 }
-*/
