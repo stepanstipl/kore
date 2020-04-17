@@ -1,3 +1,20 @@
+const getOpenidURL = () => {
+  const envValue = process.env.KORE_IDP_SERVER_URL
+  if (!envValue) {
+    return 'https://my-openid-domain.com'
+  }
+  // the URL is already correct
+  if (envValue.indexOf('.well-known/openid-configuration') !== -1) {
+    return envValue
+  }
+  // check if we need to add trailing slash to the URL before adding the required path
+  let suffix = '.well-known/openid-configuration'
+  if (envValue.lastIndexOf('/') !== envValue.length - 1) {
+    suffix = `/${suffix}`
+  }
+  return `${envValue}${suffix}`
+}
+
 module.exports = {
   server: {
     port: process.env.PORT || '3000',
@@ -10,7 +27,7 @@ module.exports = {
   auth: {
     embedded: process.env.KORE_UI_USE_EMBEDDED_AUTH === 'true' || false,
     openid: {
-      url: process.env.KORE_IDP_SERVER_URL || 'https://my-openid-domain.com',
+      url: getOpenidURL(),
       callbackURL: process.env.KORE_CALLBACK_URL || 'http://localhost:3000/auth/callback',
       clientID: process.env.KORE_IDP_CLIENT_ID || 'my-openid-client-id',
       clientSecret: process.env.KORE_IDP_CLIENT_SECRET || 'my-openid-client-secret',
