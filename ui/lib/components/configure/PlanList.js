@@ -1,9 +1,9 @@
 import PropTypes from 'prop-types'
-import { List, Alert, Icon, Drawer, Typography } from 'antd'
-
+import { List, Alert, Icon, Drawer, Typography, Button } from 'antd'
 const { Title, Text } = Typography
 
 import PlanItem from '../team/PlanItem'
+import PlanForm from '../plans/PlanForm'
 import ResourceList from '../configure/ResourceList'
 import Plan from '../configure/Plan'
 import KoreApi from '../../kore-api'
@@ -12,8 +12,11 @@ class PlanList extends ResourceList {
 
   static propTypes = {
     kind: PropTypes.string,
-    style: PropTypes.object
+    style: PropTypes.object,
   }
+
+  createdMessage = 'GKE plan created successfully'
+  updatedMessage = 'GKE plan updated successfully'
 
   async fetchComponentData() {
     const api = await KoreApi.client()
@@ -21,8 +24,12 @@ class PlanList extends ResourceList {
     return { resources: planList }
   }
 
+  handleValidationErrors = validationErrors => {
+    this.setState({ validationErrors })
+  }
+
   render() {
-    const { resources, view } = this.state
+    const { resources, view, edit, add, validationErrors } = this.state
 
     return (
       <>
@@ -33,11 +40,12 @@ class PlanList extends ResourceList {
           showIcon
           style={{ marginBottom: '20px' }}
         />
+        <Button type="primary" onClick={this.add(true)} style={{ display: 'block', marginBottom: '20px' }}>+ New</Button>
         {!resources ? <Icon type="loading" /> : (
           <>
             <List
               dataSource={resources.items}
-              renderItem={plan => <PlanItem plan={plan} viewPlan={this.view} /> }
+              renderItem={plan => <PlanItem plan={plan} viewPlan={this.view} editPlan={this.edit} /> }
             >
             </List>
 
@@ -46,9 +54,42 @@ class PlanList extends ResourceList {
                 title={<><Title level={4}>{view.spec.description}</Title><Text>{view.spec.summary}</Text></>}
                 visible={Boolean(view)}
                 onClose={this.view(false)}
-                width={700}
+                width={900}
               >
                 <Plan plan={view} />
+              </Drawer>
+            ) : null}
+
+            {edit ? (
+              <Drawer
+                title={<><Title level={4}>{edit.spec.description}</Title><Text>{edit.spec.summary}</Text></>}
+                visible={Boolean(edit)}
+                onClose={this.edit(false)}
+                width={900}
+              >
+                <PlanForm
+                  kind={this.props.kind}
+                  data={edit}
+                  validationErrors={validationErrors}
+                  handleValidationErrors={this.handleValidationErrors}
+                  handleSubmit={this.handleEditSave}
+                />
+              </Drawer>
+            ) : null}
+
+            {add ? (
+              <Drawer
+                title={<Title level={4}>New {this.props.kind} plan</Title>}
+                visible={add}
+                onClose={this.add(false)}
+                width={900}
+              >
+                <PlanForm
+                  kind={this.props.kind}
+                  validationErrors={validationErrors}
+                  handleValidationErrors={this.handleValidationErrors}
+                  handleSubmit={this.handleAddSave}
+                />
               </Drawer>
             ) : null}
           </>

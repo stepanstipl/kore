@@ -59,9 +59,7 @@ class PlanOptionsForm extends React.Component {
     this.setState({
       planValues: newPlanValues
     })
-    if (this.props.onPlanChange) {
-      this.props.onPlanChange(newPlanValues)
-    }
+    this.props.onPlanChange && this.props.onPlanChange(newPlanValues)
   }
 
   handleShowReadOnlyChange = (e) => {
@@ -76,6 +74,7 @@ class PlanOptionsForm extends React.Component {
         <div>Loading plan details...</div>
       )
     }
+
     return (
       <Collapse>
         <Collapse.Panel header="Customize cluster parameters">

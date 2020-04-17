@@ -15,7 +15,7 @@ class PlanOption extends React.Component {
     validationErrors: PropTypes.array
   }
 
-  describe = (property) => {
+  describe = property => {
     let description = ''
     if (property.description) {
       description += property.description
@@ -47,29 +47,24 @@ class PlanOption extends React.Component {
     return values
   }
 
-  validationErrors = (name) => {
+  validationErrors = name => {
     if (!this.props.validationErrors) {
       return null
     }
-    const dotName = name.replace(/\[([0-9+])\]/g,'.$1')
-    const valErrors = this.props.validationErrors.filter((v) => v.field.indexOf(dotName)===0)
+    const dotName = name.replace(/\[([0-9+])\]/g, '.$1')
+    const valErrors = this.props.validationErrors.filter(v => v.field.indexOf(dotName) === 0)
     if (valErrors.length === 0) {
       return null
     }
-    return (
-      <>
-        {valErrors.map((ve, i) => 
-          <Alert key={`${name}.valError.${i}`} type="error" message={ve.message} style={{ marginTop: '10px' }} />
-        )}
-      </>
-    )
+    return valErrors.map((ve, i) => <Alert key={`${name}.valError.${i}`} type="error" message={ve.message} style={{ marginTop: '10px' }} />)
   }
 
   render() {
-    const { name, property, value, editable, hideNonEditable, onChange } = this.props
+    const { name, property, value, editable, hideNonEditable , form } = this.props
     if (!editable && hideNonEditable) {
       return null
     }
+    const onChange = this.props.onChange || (() => {})
 
     const displayName = this.props.displayName || name
     const locked = !editable ? <Icon type="lock" /> : null
@@ -88,7 +83,8 @@ class PlanOption extends React.Component {
               value={value[key]} 
               editable={editable} 
               onChange={onChange} 
-              validationErrors={this.props.validationErrors} />
+              validationErrors={this.props.validationErrors}
+            />
           )}
         </Card>
       )
@@ -103,7 +99,7 @@ class PlanOption extends React.Component {
             return <Input value={value} readOnly={!editable} disabled={!editable} addonAfter={locked} onChange={(e) => onChange(name, e.target.value)} />
           }
           case 'boolean': {
-            return <Checkbox checked={value} readOnly={!editable} disabled={!editable} onChange={(v) => onChange(name, v)} />
+            return <Checkbox checked={value} readOnly={!editable} disabled={!editable} onChange={(e) => onChange(name, e.target.checked)} />
           }
           case 'number': {
             return <InputNumber value={value} readOnly={!editable} disabled={!editable} onChange={(v) => onChange(name, v)} />
