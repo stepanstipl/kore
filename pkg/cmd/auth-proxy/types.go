@@ -72,10 +72,6 @@ type Config struct {
 	AllowedIPs []string `json:"allowed_ips,omitempty"`
 }
 
-func (c *Config) IsFiltering() bool {
-	return len(c.AllowedIPs) > 0
-}
-
 // Interface is the contract to the proxy
 type Interface interface {
 	// Run start the proxy up
@@ -84,9 +80,4 @@ type Interface interface {
 	Stop() error
 	// Addr returns with the server address
 	Addr() string
-}
-
-// AuthProvider provides an authentication interface
-type AuthProvider interface {
-	Admit(*http.Request) (bool, error)
 }

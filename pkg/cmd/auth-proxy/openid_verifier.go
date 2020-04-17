@@ -36,7 +36,7 @@ type openidImpl struct {
 }
 
 // NewOpenIDAuth creates an openid provider
-func NewOpenIDAuth(clientID, endpoint, token string, claims []string) (AuthProvider, error) {
+func NewOpenIDAuth(clientID, endpoint, token string, claims []string) (Verifier, error) {
 	options := &oidc.Config{
 		ClientID:          clientID,
 		SkipClientIDCheck: true,
