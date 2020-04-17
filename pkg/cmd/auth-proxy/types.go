@@ -35,6 +35,7 @@ var (
 )
 
 // Verifier is the interface to a verifier
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Verifier
 type Verifier interface {
 	// Admit is responsible for verifying the request and inject any
 	// additional options into the inbound request
