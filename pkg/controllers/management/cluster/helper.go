@@ -17,9 +17,12 @@
 package cluster
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -73,7 +76,7 @@ func createProvider(c *clustersv1.Cluster) clustersv1.ClusterComponent {
 	}
 }
 
-// createProviderComponents generates any additionals components required by the provider -
+// createProviderComponents generates any additional components required by the provider -
 // such as a VPC for EKS
 func createProviderComponents(c *clustersv1.Cluster) ([]clustersv1.ClusterComponent, error) {
 	switch strings.ToLower(c.Spec.Kind) {
@@ -163,4 +166,28 @@ func applyEKSVPC(eksvpc *eksv1alpha1.EKSVPC, components map[string]clustersv1.Cl
 			applier.ApplyEKSVPC(eksvpc)
 		}
 	}
+}
+
+func deleteEKSNodeGroup(ctx context.Context, cc client.Client, cluster *clustersv1.Cluster, name string) (ready bool, _ error) {
+	eksNodeGroup := eksv1alpha1.NewEKSNodeGroup(name, cluster.Namespace)
+	exists, err := kubernetes.GetIfExists(ctx, cc, eksNodeGroup)
+	if err != nil {
+		return false, fmt.Errorf("failed to get %s EKS Node group", name)
+	}
+
+	if !exists || eksNodeGroup.Status.Status == corev1.DeletedStatus {
+		return true, nil
+	}
+
+	if eksNodeGroup.Status.Status == corev1.DeleteFailedStatus {
+		return false, fmt.Errorf("failed to delete %s EKS Node group: %w", name, eksNodeGroup.GetComponents().Error())
+	}
+
+	if eksNodeGroup.GetDeletionTimestamp().IsZero() {
+		if err := cc.Delete(ctx, eksNodeGroup); err != nil {
+			return false, fmt.Errorf("failed to delete %s EKS Node group", name)
+		}
+	}
+
+	return false, nil
 }
