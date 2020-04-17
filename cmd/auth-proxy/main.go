@@ -126,7 +126,6 @@ func main() {
 
 	_ = command.MarkFlagRequired("idp-server-url")
 	_ = command.MarkFlagRequired("idp-client-id")
-	_ = command.MarkFlagRequired("ca-authority")
 
 	if err := command.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "[error] %s\n", err)
