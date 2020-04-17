@@ -16,6 +16,8 @@
 
 package authproxy_test
 
+/*
+
 import (
 	"context"
 	"encoding/json"
@@ -176,3 +178,5 @@ func makeGetRequest(url string) (string, int, error) {
 
 	return string(body), resp.StatusCode, nil
 }
+
+*/

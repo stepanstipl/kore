@@ -21,6 +21,25 @@ import (
 	"net/http"
 )
 
+var (
+	// AllMethods contains all http methods
+	AllMethods = []string{
+		http.MethodDelete,
+		http.MethodGet,
+		http.MethodHead,
+		http.MethodOptions,
+		http.MethodPatch,
+		http.MethodPost,
+		http.MethodPut,
+	}
+)
+
+// Verifier is the interface to a verifier
+type Verifier interface {
+	// Admit handles the inject anything in the request
+	Admit(*http.Request) (bool, error)
+}
+
 // Config is the configuration for the service
 type Config struct {
 	// IDPClientID is the client issuer
@@ -53,6 +72,10 @@ type Config struct {
 	AllowedIPs []string `json:"allowed_ips,omitempty"`
 }
 
+func (c *Config) IsFiltering() bool {
+	return len(c.AllowedIPs) > 0
+}
+
 // Interface is the contract to the proxy
 type Interface interface {
 	// Run start the proxy up
@@ -63,15 +86,7 @@ type Interface interface {
 	Addr() string
 }
 
-var (
-	// AllMethods contains all http methods
-	AllMethods = []string{
-		http.MethodDelete,
-		http.MethodGet,
-		http.MethodHead,
-		http.MethodOptions,
-		http.MethodPatch,
-		http.MethodPost,
-		http.MethodPut,
-	}
-)
+// AuthProvider provides an authentication interface
+type AuthProvider interface {
+	Admit(*http.Request) (bool, error)
+}

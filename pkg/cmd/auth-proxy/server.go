@@ -19,7 +19,6 @@ package authproxy
 import (
 	"context"
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -30,10 +29,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/appvia/kore/pkg/utils/openid"
 	"github.com/armon/go-proxyproto"
-
-	"github.com/appvia/kore/pkg/utils"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -45,7 +41,7 @@ type authImpl struct {
 	sync.RWMutex
 	logger          log.FieldLogger
 	config          Config
-	verifier        openid.Verifier
+	verifiers       []Verifier
 	stopCh          chan struct{}
 	token           string
 	allowedNetworks []*net.IPNet
@@ -56,7 +52,7 @@ type authImpl struct {
 func New(
 	logger log.FieldLogger,
 	config Config,
-	verifier openid.Verifier,
+	verifiers []Verifier,
 ) (Interface, error) {
 	if err := config.IsValid(); err != nil {
 		return nil, err
@@ -82,7 +78,7 @@ func New(
 		config:          config,
 		stopCh:          make(chan struct{}),
 		token:           token,
-		verifier:        verifier,
+		verifiers:       verifiers,
 		allowedNetworks: allowedNetworks,
 	}, nil
 }
@@ -98,7 +94,6 @@ func (a *authImpl) Run(ctx context.Context) error {
 	reverseProxy := httputil.NewSingleHostReverseProxy(origin)
 
 	reverseProxy.Director = func(req *http.Request) {
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", a.token))
 		req.Header.Set("Host", origin.Host)
 		req.Header.Set("X-Forwarded-Host", req.Host)
 		req.Header.Set("X-Origin-Host", origin.Host)
@@ -108,6 +103,7 @@ func (a *authImpl) Run(ctx context.Context) error {
 
 		httpRequestCounter.Inc()
 	}
+
 	reverseProxy.ModifyResponse = func(resp *http.Response) error {
 		if resp.StatusCode < 200 || resp.StatusCode > 299 {
 			httpErrorCounter.Inc()
@@ -136,14 +132,13 @@ func (a *authImpl) Run(ctx context.Context) error {
 				return
 			}
 
+			// @step: handle the ip filtering if required
 			var remoteIP net.IP
 			if host, _, err := net.SplitHostPort(req.RemoteAddr); err == nil {
 				remoteIP = net.ParseIP(host)
 			}
 			if remoteIP == nil {
 				a.logger.WithField("remote_address", req.RemoteAddr).Warnf("invalid remote address, access forbidden")
-				resp.WriteHeader(http.StatusForbidden)
-				_, _ = resp.Write([]byte("Forbidden\n"))
 
 				return
 			}
@@ -155,50 +150,23 @@ func (a *authImpl) Run(ctx context.Context) error {
 				return
 			}
 
-			err := func() error {
-				// @step: extract the token from the request
-				bearer, found := utils.GetBearerToken(req.Header.Get("Authorization"))
-				if !found {
-					return errors.New("no authorization token")
-				}
-				// @step: ensure no impersonation is passed through by clearing all headers
-				for name := range req.Header {
-					if strings.HasPrefix(name, "Impersonate") {
-						req.Header.Del(name)
+			// @step: attempt to verify the request against any of the verifiers
+			allowed := func() bool {
+				for _, x := range a.verifiers {
+					matched, err := x.Admit(req)
+					if err != nil {
+						a.logger.WithError(err).Error("trying to verifier the inbound request")
+
+						continue
+					}
+					if matched {
+						return true
 					}
 				}
 
-				// @step: parse and extract the identity
-				idToken, err := a.verifier.Verify(req.Context(), bearer)
-				if err != nil {
-					return err
-				}
-
-				// @step: extract the username if any
-				claims, err := utils.NewClaimsFromToken(idToken)
-				if err != nil {
-					return err
-				}
-
-				user, found := claims.GetUserClaim(a.config.IDPUserClaims...)
-				if !found {
-					return errors.New("no username found in the identity token")
-				}
-				req.Header.Set("Impersonate-User", user)
-
-				// @step: extract the group if requested
-				for _, x := range a.config.IDPGroupClaims {
-					groups, found := claims.GetStringSlice(x)
-					if found {
-						for _, name := range groups {
-							req.Header.Set("Impersonate-Group", name)
-						}
-					}
-				}
-
-				return nil
+				return false
 			}()
-			if err != nil {
+			if !allowed {
 				authFailureCounter.Inc()
 
 				a.logger.WithError(err).Error("trying to verify the inbound request")

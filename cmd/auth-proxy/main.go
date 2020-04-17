@@ -46,11 +46,24 @@ func main() {
 		Version: version.Version(),
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			verifier, err := authproxy.CreateVerifier(o)
+			// @step: create the open id provider
+			oidc, err := authproxy.NewOpenIDAuth(
+				o.IDPClientID,
+				o.IDPServerURL,
+				o.UpstreamAuthorizationToken,
+				o.IDPUserClaims,
+			)
 			if err != nil {
 				return err
 			}
-			svc, err := authproxy.New(log.StandardLogger(), o, verifier)
+
+			// @step: createthe k8s authorization
+			kube, err := authproxy.NewKubeVerifier(o.SigningCA)
+			if err != nil {
+				return err
+			}
+
+			svc, err := authproxy.New(log.StandardLogger(), o, []authproxy.Verifier{oidc, kube})
 			if err != nil {
 				return err
 			}
@@ -80,7 +93,7 @@ func main() {
 	flags.StringVar(&o.TLSKey, "tls-key", utils.GetEnvString("TLS_KEY", ""), "the path to the file containing the private key pem `PATH`")
 	flags.StringVar(&o.IDPServerURL, "idp-server-url", utils.GetEnvString("IDP_SERVER_URL", ""), "the open-id server url `URL`")
 	flags.StringVar(&o.IDPClientID, "idp-client-id", utils.GetEnvString("IDP_CLIENT_ID", ""), "the identity provider client id used to verify the token `IDP_CLIENT_ID`")
-	flags.StringVar(&o.TLSCaAuthority, "ca-authority", utils.GetEnvString("CA_AUTHORITY", ""), "when not using the IDP server url we can use this certificate to verity the token `PATH`")
+	flags.StringVar(&o.TLSCaAuthority, "ca-authority", utils.GetEnvString("CA_AUTHORITY", "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"), "when not using the IDP server url we can use this certificate to verity the token `PATH`")
 	flags.BoolVar(&o.EnableProxyProtocol, "enable-proxy-protocol", utils.GetEnvBool("ENABLE_PROXY_PROTOCOL", false), "indicates the proxy should enable proxy protocol support")
 
 	flags.StringSliceVar(&o.IDPUserClaims, "idp-user-claims",
