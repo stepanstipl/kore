@@ -36,7 +36,8 @@ var (
 
 // Verifier is the interface to a verifier
 type Verifier interface {
-	// Admit handles the inject anything in the request
+	// Admit is responsible for verifying the request and inject any
+	// additional options into the inbound request
 	Admit(*http.Request) (bool, error)
 }
 

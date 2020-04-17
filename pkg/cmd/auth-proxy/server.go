@@ -139,6 +139,7 @@ func (a *authImpl) Run(ctx context.Context) error {
 			}
 			if remoteIP == nil {
 				a.logger.WithField("remote_address", req.RemoteAddr).Warnf("invalid remote address, access forbidden")
+				_, _ = resp.Write([]byte("Forbidden\n"))
 
 				return
 			}
