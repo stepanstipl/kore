@@ -16,6 +16,41 @@
 #
 load helper
 
+@test "We should be able to retrieve the namespaces from the cluster" {
+  if ${KORE} get clusters ${CLUSTER} -t ${TEAM} -o yaml | grep 1.1.1.1; then
+    skip
+  fi
+  runit "${KUBECTL} --context=${CLUSTER} get ns"
+  [[ "$status" -eq 0 ]]
+}
+
+@test "We should not be about to access to the cluster with an invalid token" {
+  if ${KORE} get clusters ${CLUSTER} -t ${TEAM} -o yaml | grep 1.1.1.1; then
+    skip
+  fi
+  runit "${KUBECTL} --context=${CLUSTER} --token=invalid get no 2>&1 | grep '^Error from server (Forbidden)'"
+  [[ "$status" -eq 0 ]]
+}
+
+@test "We should be about to access the cluster via a valid kubrnetes token" {
+  if ${KORE} get clusters ${CLUSTER} -t ${TEAM} -o yaml | grep 1.1.1.1; then
+    skip
+  fi
+  SA="kube-test"
+  if ! ${KUBECTL} --context=${CLUSTER} get sa ${SA}; then
+    runit "${KUBECTL} --context=${CLUSTER} create sa ${SA}"
+    [[ "$status" -eq 0 ]]
+    runit "${KUBECTL} --context=${CLUSTER} create rolebinding --clusterrole=viewer --serviceaccount=default:${SA} ${SA}"
+    [[ "$status" -eq 0 ]]
+  fi
+  runit "${KUBECTL} --context=${CLUSTER} get sa ${SA} -o json | jq -r '.secrets[0].name' > /tmp/default.sa"
+  [[ "$status" -eq 0 ]]
+  runit "${KUBECTL} --context=${CLUSTER} get secret $(cat /tmp/default.sa) | jq -r '.data.token' | base64 -d > /tmp/default.token"
+  [[ "$status" -eq 0 ]]
+  runit "${KUBECTL} --context=${CLUSTER} --token=$(cat /tmp/default.token) get po"
+  [[ "$status" -eq 0 ]]
+}
+
 @test "If we change the auth-proxy allowed range we should lose access to the cluster" {
   tempfile="${BASE_DIR}/${E2E_DIR}/gke.auth"
 
@@ -24,12 +59,14 @@ load helper
     [[ "$status" -eq 0 ]]
     runit "${KORE} get clusters ${CLUSTER} -t ${TEAM} -o yaml > ${tempfile}"
     [[ "$status" -eq 0 ]]
-    runit "sed -i -e 's/\[\"0.0.0.0\/0\"\]/[\"1.1.1.1\/32\"]/' ${tempfile}"
+    runit "sed -i -e '0,/0.0.0.0/{s/0.0.0.0\/0/1.1.1.1\/32/}' ${tempfile}"
+    [[ "$status" -eq 0 ]]
+    runit "grep 1.1.1.1 ${tempfile}"
     [[ "$status" -eq 0 ]]
     runit "${KORE} apply -f ${tempfile} -t ${TEAM}"
     [[ "$status" -eq 0 ]]
   fi
-  retry 10 "${KUBECTL} --context=${CLUSTER} get nodes || true"
+  retry 10 "${KUBECTL} --context=${CLUSTER} get nodes 2>&1 | grep '^Error from server (Forbidden)'"
   [[ "$status" -eq 0 ]]
 }
 
@@ -38,12 +75,14 @@ load helper
 
   runit "${KORE} get clusters ${CLUSTER} -t ${TEAM} -o yaml > ${tempfile}"
   [[ "$status" -eq 0 ]]
-  runit "sed -i -e 's/\[\"1.1.1.1\/32\"\]/[\"0.0.0.0\/0\"]/' ${tempfile}"
+  runit "sed -i -e '0,/1.1.1.1/{s/1.1.1.1\/32/0.0.0.0\/0/}' ${tempfile}"
   [[ "$status" -eq 0 ]]
   runit "${KORE} apply -f ${tempfile} -t ${TEAM}"
   [[ "$status" -eq 0 ]]
   retry 20 "${KUBECTL} --context=${CLUSTER} get nodes"
   [[ "$status" -eq 0 ]]
   runit "rm -f ${tempfile} || false"
+  [[ "$status" -eq 0 ]]
+  retry 10 "${KUBECTL} --context=${CLUSTER} get nodes 2>&1"
   [[ "$status" -eq 0 ]]
 }
