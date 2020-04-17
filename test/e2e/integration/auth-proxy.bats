@@ -32,7 +32,7 @@ load helper
   [[ "$status" -eq 0 ]]
 }
 
-@test "We should be about to access the cluster via a valid kubrnetes token" {
+@test "We should be about to access the cluster via a valid kubernetes token" {
   if ${KORE} get clusters ${CLUSTER} -t ${TEAM} -o yaml | grep 1.1.1.1; then
     skip
   fi
