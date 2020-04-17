@@ -21,6 +21,27 @@ import (
 	"net/http"
 )
 
+var (
+	// AllMethods contains all http methods
+	AllMethods = []string{
+		http.MethodDelete,
+		http.MethodGet,
+		http.MethodHead,
+		http.MethodOptions,
+		http.MethodPatch,
+		http.MethodPost,
+		http.MethodPut,
+	}
+)
+
+// Verifier is the interface to a verifier
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Verifier
+type Verifier interface {
+	// Admit is responsible for verifying the request and inject any
+	// additional options into the inbound request
+	Admit(*http.Request) (bool, error)
+}
+
 // Config is the configuration for the service
 type Config struct {
 	// IDPClientID is the client issuer
@@ -62,16 +83,3 @@ type Interface interface {
 	// Addr returns with the server address
 	Addr() string
 }
-
-var (
-	// AllMethods contains all http methods
-	AllMethods = []string{
-		http.MethodDelete,
-		http.MethodGet,
-		http.MethodHead,
-		http.MethodOptions,
-		http.MethodPatch,
-		http.MethodPost,
-		http.MethodPut,
-	}
-)
