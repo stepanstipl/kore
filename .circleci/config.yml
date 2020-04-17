@@ -11,12 +11,6 @@ parameters:
   enable_e2e_master:
     type: boolean
     default: false
-  enable_gke_e2e:
-    type: boolean
-    default: true
-  enable_eks_e2e:
-    type: boolean
-    default: true
 
 jobs:
   build:
@@ -152,9 +146,7 @@ jobs:
       - deploy:
           command: |
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
-            VERSION=${CIRCLE_SHA1} make images
             VERSION=${CIRCLE_TAG:-latest} make images
-            VERSION=${CIRCLE_SHA1:-latest} make push-images
             VERSION=${CIRCLE_TAG:-latest} make push-images
 
   release-cli:
@@ -208,8 +200,6 @@ jobs:
           command: |
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
             docker build -t ${KORE_UI_IMAGE}:${CIRCLE_TAG:-latest} --build-arg version=${CIRCLE_TAG:-latest} .
-            docker build -t ${KORE_UI_IMAGE}:${CIRCLE_SHA1} --build-arg version=${CIRCLE_SHA1} .
-            docker push ${KORE_UI_IMAGE}:${CIRCLE_SHA1}
             docker push ${KORE_UI_IMAGE}:${CIRCLE_TAG:-latest}
 
   release-qa:
