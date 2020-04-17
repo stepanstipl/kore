@@ -88,22 +88,18 @@ func (o *DeleteOptions) Run() error {
 		return o.DeleteByPath()
 	}
 
-	o.Println("pluralise")
 	plural := utils.Pluralize(o.Resource)
-	o.Println("pluralised %s", plural)
 
 	// @step: we lookup the resource type
 	resource, err := o.Resources().Lookup(plural)
 	if err != nil {
 		return err
 	}
-	o.Println("res type %v", resource)
 
 	request := o.Client().Resource(plural).Name(o.Name)
 	if resource.IsTeamScoped() {
 		request.Team(o.Team)
 	}
-	o.Println("req %v", request)
 
 	return o.WaitForDeletion(request, o.Name, o.NoWait)
 }

@@ -63,9 +63,13 @@ func NewCmdCreateLocal(factory cmdutils.Factory) *cobra.Command {
 
 // Shared functions used by stop and start:
 
+func localPath() string {
+	return filepath.Dir(config.GetClientConfigurationPath()) + "/local"
+}
+
 // writeSupportFiles populates ~/.korectl/local/ with the supporting files to be mounted into containers used by kore local.
 func writeSupportFiles() error {
-	localPath := filepath.Dir(config.GetClientConfigurationPath()) + "/local/"
+	localPath := localPath()
 	for k, v := range assets.LocalSupport {
 		f := filepath.Join(localPath, k)
 		_ = os.MkdirAll(filepath.Dir(f), os.ModePerm)
@@ -82,13 +86,12 @@ func getComposeCmd(conf *config.Config, args ...string) (*exec.Cmd, error) {
 	cmd := exec.Command("docker-compose",
 		append(baseArgs, args...)...,
 	)
-	localPath := filepath.Dir(config.GetClientConfigurationPath()) + "/local"
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, fmt.Sprintf("KORE_TAG=%s", version.Release))
 	cmd.Env = append(cmd.Env, fmt.Sprintf("KORE_IDP_CLIENT_ID=%s", conf.AuthInfos[LocalProfileName].OIDC.ClientID))
 	cmd.Env = append(cmd.Env, fmt.Sprintf("KORE_IDP_CLIENT_SECRET=%s", conf.AuthInfos[LocalProfileName].OIDC.ClientSecret))
 	cmd.Env = append(cmd.Env, fmt.Sprintf("KORE_IDP_SERVER_URL=%s", conf.AuthInfos[LocalProfileName].OIDC.AuthorizeURL))
-	cmd.Env = append(cmd.Env, fmt.Sprintf("KORE_LOCAL_HOME=%s", localPath))
+	cmd.Env = append(cmd.Env, fmt.Sprintf("KORE_LOCAL_HOME=%s", localPath()))
 	if err := pipeComposeToCmd(cmd); err != nil {
 		return nil, err
 	}
@@ -100,10 +103,11 @@ func pipeComposeToCmd(cmd *exec.Cmd) error {
 	if err != nil {
 		return err
 	}
-	go func() {
-		defer stdin.Close()
-		io.WriteString(stdin, assets.LocalCompose)
-	}()
+	defer stdin.Close()
+	_, err = io.WriteString(stdin, assets.LocalCompose)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -125,7 +129,7 @@ func isKoreStarted(conf *config.Config) (bool, error) {
 	}
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
-		fmt.Println("%s", stdoutStderr)
+		fmt.Println(string(stdoutStderr))
 		return false, err
 	}
 
