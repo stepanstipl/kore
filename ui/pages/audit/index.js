@@ -1,10 +1,9 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
-import apiRequest from '../../lib/utils/api-request'
-import apiPaths from '../../lib/utils/api-paths'
 import Breadcrumb from '../../lib/components/Breadcrumb'
 import AuditViewer from '../../lib/components/AuditViewer'
+import KoreApi from '../../lib/kore-api'
 
 class AuditPage extends React.Component {
   static propTypes = {
@@ -20,17 +19,14 @@ class AuditPage extends React.Component {
     adminOnly: true
   }
 
-  static async getPageData({ req, res }) {
-    const getAuditEvents = () => apiRequest({ req, res }, 'get', apiPaths.audit)
-
-    return getAuditEvents()
-      .then((eventList) => {
-        var events = eventList.items
-        return { events }
-      })
-      .catch(err => {
-        throw new Error(err.message)
-      })
+  static async getPageData(ctx) {
+    try {
+      const eventList = await (await KoreApi.client(ctx)).ListAuditEvents()
+      const events = eventList.items
+      return { events }
+    } catch (err) {
+      throw new Error(err.message)
+    }
   }
 
   static getInitialProps = async ctx => {

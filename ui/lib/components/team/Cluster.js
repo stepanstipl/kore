@@ -1,11 +1,12 @@
 import PropTypes from 'prop-types'
 import moment from 'moment'
-import { List, Icon, Typography, Modal, Popconfirm, message } from 'antd'
+import { List, Icon, Typography, Modal, Popconfirm, message, Tooltip } from 'antd'
 const { Text, Paragraph } = Typography
 
-import { clusterProviderIconSrcMap } from '../../utils/ui-helpers'
+import { clusterProviderIconSrcMap, inProgressStatusList } from '../../utils/ui-helpers'
 import ResourceStatusTag from '../ResourceStatusTag'
 import AutoRefreshComponent from './AutoRefreshComponent'
+import Link from 'next/link'
 
 class Cluster extends AutoRefreshComponent {
   static propTypes = {
@@ -54,7 +55,7 @@ class Cluster extends AutoRefreshComponent {
   }
 
   render() {
-    const { cluster } = this.props
+    const { cluster, team } = this.props
 
     if (cluster.deleted) {
       return null
@@ -67,7 +68,11 @@ class Cluster extends AutoRefreshComponent {
       const actions = []
       const status = cluster.status.status || 'Pending'
 
-      if (status === 'Success') {
+      actions.push((
+        <Link key="view" href={`/teams/${team}/clusters/${cluster.metadata.name}`}><a><Tooltip title="Cluster status details"><Icon type="info-circle" /></Tooltip></a></Link>
+      ))
+
+      if (!inProgressStatusList.includes(status)) {
         const deleteAction = (
           <Popconfirm
             key="delete"
@@ -76,7 +81,7 @@ class Cluster extends AutoRefreshComponent {
             okText="Yes"
             cancelText="No"
           >
-            <a><Icon type="delete" /></a>
+            <a><Tooltip title="Delete this cluster"><Icon type="delete" /></Tooltip></a>
           </Popconfirm>
         )
         actions.push(deleteAction)
@@ -90,7 +95,7 @@ class Cluster extends AutoRefreshComponent {
       <List.Item actions={actions()}>
         <List.Item.Meta
           avatar={<img src={clusterProviderIconSrcMap[cluster.spec.kind]} height="32px" />}
-          title={<Text>{cluster.spec.kind} <Text style={{ fontFamily: 'monospace', marginLeft: '15px' }}>{cluster.metadata.name}</Text></Text>}
+          title={<Link href={`/teams/${team}/clusters/${cluster.metadata.name}`}><a><Text>{cluster.spec.kind} <Text style={{ fontFamily: 'monospace', marginLeft: '15px' }}>{cluster.metadata.name}</Text></Text></a></Link>}
           description={
             <div>
               <Text type='secondary'>Created {created}</Text>

@@ -111,6 +111,9 @@ class V1alpha1EKSNodeGroupSpec {
             if (data.hasOwnProperty('tags')) {
                 obj['tags'] = ApiClient.convertToType(data['tags'], {'String': 'String'});
             }
+            if (data.hasOwnProperty('version')) {
+                obj['version'] = ApiClient.convertToType(data['version'], 'String');
+            }
         }
         return obj;
     }
@@ -310,6 +313,19 @@ class V1alpha1EKSNodeGroupSpec {
     setTags(tags) {
         this['tags'] = tags;
     }
+/**
+     * @return {String}
+     */
+    getVersion() {
+        return this.version;
+    }
+
+    /**
+     * @param {String} version
+     */
+    setVersion(version) {
+        this['version'] = version;
+    }
 
 }
 
@@ -387,6 +403,11 @@ V1alpha1EKSNodeGroupSpec.prototype['subnets'] = undefined;
  * @member {Object.<String, String>} tags
  */
 V1alpha1EKSNodeGroupSpec.prototype['tags'] = undefined;
+
+/**
+ * @member {String} version
+ */
+V1alpha1EKSNodeGroupSpec.prototype['version'] = undefined;
 
 
 

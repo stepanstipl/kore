@@ -1,6 +1,6 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
-import { Form, Input, Icon, Checkbox, InputNumber, Select, Button, Card, Alert } from 'antd'
+import { Form, Input, Checkbox, InputNumber, Select, Button, Card, Alert } from 'antd'
 import { startCase } from 'lodash'
 
 class PlanOption extends React.Component {
@@ -15,20 +15,23 @@ class PlanOption extends React.Component {
     validationErrors: PropTypes.array
   }
 
-  describe = property => {
-    let description = ''
+  describe = (property) => {
+    let descriptionPieces = []
     if (property.description) {
-      description += property.description
+      descriptionPieces.push(property.description)
     }
     if (property.format) {
-      description += ` Format: ${property.format}`
+      descriptionPieces.push(`Format: ${property.format}`)
     } else if (property.items && property.items.format) {
-      description += ` Format: ${property.items.format}`
+      descriptionPieces.push(`Format: ${property.items.format}`)
     }
-    if (description.length === 0) {
+    if (property.immutable) {
+      descriptionPieces.push('Cannot be edited after cluster is created.')
+    }
+    if (descriptionPieces.length === 0) {
       return null
     }
-    return description
+    return descriptionPieces.join(' | ')
   }
 
   addComplexItemToArray = (property, values) => {
@@ -67,7 +70,6 @@ class PlanOption extends React.Component {
     const onChange = this.props.onChange || (() => {})
 
     const displayName = this.props.displayName || name
-    const locked = !editable ? <Icon type="lock" /> : null
 
     // Special handling for object types - represent as a card with a plan option for each property:
     if (property.type === 'object') {
@@ -96,18 +98,18 @@ class PlanOption extends React.Component {
         {(() => {
           switch(property.type) {
           case 'string': {
-            return <Input value={value} readOnly={!editable} disabled={!editable} addonAfter={locked} onChange={(e) => onChange(name, e.target.value)} />
+            return <Input value={value} readOnly={!editable} onChange={(e) => onChange(name, e.target.value)} />
           }
           case 'boolean': {
-            return <Checkbox checked={value} readOnly={!editable} disabled={!editable} onChange={(e) => onChange(name, e.target.checked)} />
+            return <Checkbox checked={value} disabled={!editable} onChange={(e) => onChange(name, e.target.checked)} />
           }
           case 'number': {
-            return <InputNumber value={value} readOnly={!editable} disabled={!editable} onChange={(v) => onChange(name, v)} />
+            return <InputNumber value={value} readOnly={!editable} onChange={(v) => onChange(name, v)} />
           }
           case 'array': {
             const values = value ? value : []
             if (property.items.type !== 'array' && property.items.type !== 'object') {
-              return <Select mode="tags" tokenSeparators={[',']} value={values} readOnly={!editable} disabled={!editable} onChange={(v) => onChange(name, v)} />
+              return <Select mode="tags" tokenSeparators={[',']} value={values} disabled={!editable} onChange={(v) => onChange(name, v)} />
             } else {
               return (
                 <>

@@ -1,6 +1,6 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
-import { Collapse, Checkbox } from 'antd'
+import { Form, Checkbox } from 'antd'
 import { set } from 'lodash'
 
 import KoreApi from '../../kore-api'
@@ -11,20 +11,27 @@ class PlanOptionsForm extends React.Component {
   static propTypes = {
     team: PropTypes.object.isRequired,
     plan: PropTypes.string.isRequired,
+    planValues: PropTypes.object,
     onPlanChange: PropTypes.func,
-    validationErrors: PropTypes.array
+    validationErrors: PropTypes.array,
+    mode: PropTypes.oneOf(['create','edit','view']).isRequired
   }
   static initialState = {
     dataLoading: true,
     schema: null,
     parameterEditable: {},
     planSpec: null,
-    planOverrides: {},
+    planValues: {},
   }
 
   constructor(props) {
     super(props)
-    this.state = { ...PlanOptionsForm.initialState }
+    // Use passed-in plan values if we have them.
+    const planValues = this.props.planValues ? this.props.planValues : PlanOptionsForm.initialState.planValues
+    this.state = { 
+      ...PlanOptionsForm.initialState,
+      planValues
+    }
   }
 
   componentDidMountComplete = null
@@ -38,6 +45,14 @@ class PlanOptionsForm extends React.Component {
       this.setState({ ...PlanOptionsForm.initialState })
       this.componentDidUpdateComplete = this.fetchComponentData()
     }
+    if (this.props.mode !== prevProps.mode) {
+      this.setState({ showReadOnly: this.props.mode === 'view' })
+    }
+    if (this.props.planValues !== prevProps.planValues) {
+      this.setState({
+        planValues: this.props.planValues
+      })
+    }
   }
 
   async fetchComponentData() {
@@ -47,8 +62,9 @@ class PlanOptionsForm extends React.Component {
       schema: JSON.parse(planDetails.schema),
       parameterEditable: planDetails.parameterEditable,
       planSpec: planDetails.plan,
-      planValues: copy(planDetails.plan.configuration),
-      showReadOnly: false,
+      // Overwrite plan values only if it's still set to the default value
+      planValues: this.state.planValues === PlanOptionsForm.initialState.planValues ? copy(planDetails.plan.configuration) : this.state.planValues,
+      showReadOnly: this.props.mode === 'view',
       dataLoading: false
     })
   }
@@ -62,9 +78,9 @@ class PlanOptionsForm extends React.Component {
     this.props.onPlanChange && this.props.onPlanChange(newPlanValues)
   }
 
-  handleShowReadOnlyChange = (e) => {
+  handleShowReadOnlyChange = (checked) => {
     this.setState({
-      showReadOnly: e.target.checked
+      showReadOnly: checked
     })
   }
 
@@ -76,22 +92,30 @@ class PlanOptionsForm extends React.Component {
     }
 
     return (
-      <Collapse>
-        <Collapse.Panel header="Customize cluster parameters">
-          <Checkbox onChange={this.handleShowReadOnlyChange} checked={this.state.showReadOnly}>Show read-only</Checkbox>
-          {Object.keys(this.state.schema.properties).map((name) => 
+      <>
+        {this.props.mode !== 'view' ? (
+          <Form.Item label="Show read-only parameters">
+            <Checkbox onChange={(v) => this.handleShowReadOnlyChange(v.target.checked)} checked={this.state.showReadOnly} />
+          </Form.Item>
+        ): null}
+        {Object.keys(this.state.schema.properties).map((name) => {
+          const editable = this.props.mode !== 'view' &&
+            this.state.parameterEditable[name] === true &&
+            (this.props.mode === 'create' || !this.state.schema.properties[name].immutable) // Disallow editing of params which can only be set at create time.
+
+          return (
             <PlanOption 
               key={name} 
               name={name} 
               property={this.state.schema.properties[name]} 
               value={this.state.planValues[name]} 
               hideNonEditable={!this.state.showReadOnly} 
-              editable={this.state.parameterEditable[name] === true} 
+              editable={editable} 
               onChange={(n, v) => this.onValueChange(n, v)}
               validationErrors={this.props.validationErrors} />
-          )}
-        </Collapse.Panel>
-      </Collapse>
+          )
+        })}
+      </>
     )
   }
 }
