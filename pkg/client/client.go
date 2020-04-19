@@ -107,9 +107,9 @@ func (a *apiClient) HandleRequest(method string) RestInterface {
 			return err
 		}
 		log.WithFields(log.Fields{
+			"endpoint": a.cfg.GetCurrentServer().Endpoint,
 			"method":   method,
 			"uri":      uri,
-			"endpoint": a.cfg.GetCurrentServer().Endpoint,
 		}).Debug("making request to kore api")
 
 		// @step: we generate the fully qualifies url
@@ -161,7 +161,7 @@ func (a *apiClient) MakeDefaultURL() (string, error) {
 	// @step: we add the path elements and the queries together
 	uri := strings.Join(append([]string{baseuri}, paths...), "/")
 	if len(a.queryparams) > 0 {
-		uri = fmt.Sprintf("?%s", strings.Join(a.queryparams, "&"))
+		uri = fmt.Sprintf("%s?%s", uri, strings.Join(a.queryparams, "&"))
 	}
 
 	return uri, nil
