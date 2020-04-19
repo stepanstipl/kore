@@ -100,6 +100,7 @@ func NewCmdGet(factory cmdutil.Factory) *cobra.Command {
 
 	command.AddCommand(
 		NewCmdGetAdmin(factory),
+		NewCmdGetAudit(factory),
 	)
 
 	return command
@@ -142,7 +143,11 @@ func (o *GetOptions) Run() error {
 
 	// @step: we need to construct the request
 	request := o.Client().Resource(plural)
-	if resource.IsTeamScoped() {
+
+	if resource.IsScoped(cmdutil.TeamScope) {
+		request.Team(o.Team)
+	}
+	if resource.IsScoped(cmdutil.DualScope) && o.Team != "" {
 		request.Team(o.Team)
 	}
 	if o.Name != "" {
