@@ -78,6 +78,10 @@ auth-proxy: golang deps
 	@mkdir -p bin
 	go build -ldflags "${LFLAGS}" -o bin/auth-proxy cmd/auth-proxy/*.go
 
+auth-proxy-image: golang
+	@echo "--> Build the auth-proxy docker image"
+	docker build -t ${REGISTRY}/${AUTHOR}/auth-proxy:${VERSION} -f images/Dockerfile.auth-proxy .
+
 kore-apiserver: golang deps generate-clusterappman-manifests
 	@echo "--> Compiling the kore-apiserver binary"
 	@mkdir -p bin
