@@ -1148,7 +1148,7 @@ func (a *Client) ListAuditEvents(params *ListAuditEventsParams, authInfo runtime
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "ListAuditEvents",
 		Method:             "GET",
-		PathPattern:        "/api/v1alpha1/audit",
+		PathPattern:        "/api/v1alpha1/audits",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -1598,7 +1598,7 @@ func (a *Client) ListTeamAudit(params *ListTeamAuditParams, authInfo runtime.Cli
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "ListTeamAudit",
 		Method:             "GET",
-		PathPattern:        "/api/v1alpha1/teams/{team}/audit",
+		PathPattern:        "/api/v1alpha1/teams/{team}/audits",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},

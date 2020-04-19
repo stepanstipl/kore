@@ -73,7 +73,7 @@ type ListTeamAuditOK struct {
 }
 
 func (o *ListTeamAuditOK) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/teams/{team}/audit][%d] listTeamAuditOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[GET /api/v1alpha1/teams/{team}/audits][%d] listTeamAuditOK  %+v", 200, o.Payload)
 }
 
 func (o *ListTeamAuditOK) GetPayload() *models.V1AuditEventList {
@@ -105,7 +105,7 @@ type ListTeamAuditUnauthorized struct {
 }
 
 func (o *ListTeamAuditUnauthorized) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/teams/{team}/audit][%d] listTeamAuditUnauthorized ", 401)
+	return fmt.Sprintf("[GET /api/v1alpha1/teams/{team}/audits][%d] listTeamAuditUnauthorized ", 401)
 }
 
 func (o *ListTeamAuditUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -126,7 +126,7 @@ type ListTeamAuditForbidden struct {
 }
 
 func (o *ListTeamAuditForbidden) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/teams/{team}/audit][%d] listTeamAuditForbidden ", 403)
+	return fmt.Sprintf("[GET /api/v1alpha1/teams/{team}/audits][%d] listTeamAuditForbidden ", 403)
 }
 
 func (o *ListTeamAuditForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -147,7 +147,7 @@ type ListTeamAuditNotFound struct {
 }
 
 func (o *ListTeamAuditNotFound) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/teams/{team}/audit][%d] listTeamAuditNotFound ", 404)
+	return fmt.Sprintf("[GET /api/v1alpha1/teams/{team}/audits][%d] listTeamAuditNotFound ", 404)
 }
 
 func (o *ListTeamAuditNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -169,7 +169,7 @@ type ListTeamAuditInternalServerError struct {
 }
 
 func (o *ListTeamAuditInternalServerError) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/teams/{team}/audit][%d] listTeamAuditInternalServerError  %+v", 500, o.Payload)
+	return fmt.Sprintf("[GET /api/v1alpha1/teams/{team}/audits][%d] listTeamAuditInternalServerError  %+v", 500, o.Payload)
 }
 
 func (o *ListTeamAuditInternalServerError) GetPayload() *models.ApiserverError {
