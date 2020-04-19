@@ -73,10 +73,10 @@ func (o *GetAuditOptions) Run() error {
 
 	// @step: we can build a request and execute
 	request := o.Client().
+		Resource("audit").
 		Parameters(
 			client.QueryParameter("since", o.Since.String()),
-		).
-		ResourceNoPlural("audit")
+		)
 
 	if !o.All {
 		request.Team(o.Team)

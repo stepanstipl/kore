@@ -41,7 +41,7 @@ func findTeamEvent(list []*models.V1AuditEvent, user string, operation string, a
 	return nil
 }
 
-var _ = Describe("GET /teams/{team}/audit (ListTeamAudit)", func() {
+var _ = Describe("GET /teams/{team}/audits (ListTeamAudit)", func() {
 	var api *apiclient.AppviaKore
 	var testTeam1 string
 

@@ -39,7 +39,7 @@ type auditHandler struct {
 
 // Register is called by the api server on registration
 func (a *auditHandler) Register(i kore.Interface, builder utils.PathBuilder) (*restful.WebService, error) {
-	path := builder.Add("audit")
+	path := builder.Add("audits")
 
 	log.WithFields(log.Fields{
 		"path": path.Base(),
