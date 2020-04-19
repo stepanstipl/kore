@@ -14,25 +14,23 @@
  * limitations under the License.
  */
 
-package authproxy
+package openid
 
 import (
 	"errors"
 )
 
-// IsValid checks the configuration of the proxy
-func (c Config) IsValid() error {
-	if c.TLSCert != "" && c.TLSKey == "" {
-		return errors.New("no tls private key")
+// IsValid checks the options are valid
+func (o *Options) IsValid() error {
+	if o.DiscoveryURL == "" {
+		return errors.New("no server url")
 	}
-	if c.TLSKey != "" && c.TLSCert == "" {
-		return errors.New("no tls certificate")
+	if o.ClientID == "" {
+		return errors.New("no client id")
+	}
+	if len(o.UserClaims) == 0 {
+		return errors.New("no user claims")
 	}
 
 	return nil
-}
-
-// HasTLS checks if we have tls
-func (c Config) HasTLS() bool {
-	return c.TLSCert != "" && c.TLSKey != ""
 }

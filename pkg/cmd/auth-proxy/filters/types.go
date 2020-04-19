@@ -14,25 +14,23 @@
  * limitations under the License.
  */
 
-package authproxy
+package filters
 
 import (
-	"errors"
+	"net/http"
+
+	"github.com/julienschmidt/httprouter"
 )
 
-// IsValid checks the configuration of the proxy
-func (c Config) IsValid() error {
-	if c.TLSCert != "" && c.TLSKey == "" {
-		return errors.New("no tls private key")
-	}
-	if c.TLSKey != "" && c.TLSCert == "" {
-		return errors.New("no tls certificate")
-	}
-
-	return nil
+// Middleware is used to define the middleware
+type Middleware interface {
+	Serve(http.Handler) http.Handler
 }
 
-// HasTLS checks if we have tls
-func (c Config) HasTLS() bool {
-	return c.TLSCert != "" && c.TLSKey != ""
+// Interface is the contract to the middleware filters
+type Interface interface {
+	// Wrap is used to call the chain and handler
+	Wrap(httprouter.Handle) httprouter.Handle
+	// Use appends a middleware to the chain
+	Use(...Middleware)
 }

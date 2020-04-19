@@ -34,44 +34,26 @@ var (
 	}
 )
 
-// Verifier is the interface to a verifier
-//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Verifier
-type Verifier interface {
-	// Admit is responsible for verifying the request and inject any
-	// additional options into the inbound request
-	Admit(*http.Request) (bool, error)
-}
-
 // Config is the configuration for the service
 type Config struct {
-	// IDPClientID is the client issuer
-	IDPClientID string `json:"idp_client_id,omitempty"`
-	// IDPServerURL is the openid server url
-	IDPServerURL string `json:"idp_server_url,omitempty"`
+	// AllowedIPs is the collection of networks permitted access
+	AllowedIPs []string `json:"allowed-ips,omitempty"`
+	// EnableProxyProtocol indicates we should use proxy protocol
+	EnableProxyProtocol bool `json:"enable-proxy-protocol,omitempty"`
+	// MetricsListen is the interface for metrics to render
+	MetricsListen string `json:"metrics-listen,omitempty"`
 	// Listen is the interface to listen on
 	Listen string `json:"listen,omitempty"`
-	// EnableProxyProtocol indicates we should use proxy protocol
-	EnableProxyProtocol bool `json:"enable_proxy_protocol,omitempty"`
-	// TLSCaAuthority is a caroot used when verifying the upstream idp
-	TLSCaAuthority string `json:"tls_ca_authority,omitempty"`
+	// TLSCaAuthority is a ca used when verifying the upstream idp
+	TLSCaAuthority string `json:"tls-ca-authority,omitempty"`
 	// TLSCert is the certificate to serve
-	TLSCert string `json:"tls_cert,omitempty"`
+	TLSCert string `json:"tls-cert,omitempty"`
 	// TLSKey is the private key for the above
-	TLSKey string `json:"tls_key,omitempty"`
-	// SigningCA is used when not using the IDP server url
-	SigningCA string `json:"signing_ca,omitempty"`
-	// IDPUserClaims is a collection of claims to extract the user idenity
-	IDPUserClaims []string `json:"idp_user_claims,omitempty"`
-	// IDPGroupClaims is a colletion of claims to extract the group
-	IDPGroupClaims []string `json:"idp_group_claims,omitempty"`
-	// MetricsListen is the interface for metrics to render
-	MetricsListen string `json:"metrics_listen,omitempty"`
-	// UpstreamAuthorizationToken is the upstream authentication token to use
-	UpstreamAuthorizationToken string `json:"upstream_authorization_token,omitempty"`
+	TLSKey string `json:"tls-key,omitempty"`
+	// Token is the kubernetes token
+	Token string `json:"token"`
 	// UpstreamURL is the endpoint to forward requests
-	UpstreamURL string `json:"upstream_url,omitempty"`
-	// AllowedIPs contains the allowed IP address ranges which are allowed to connect to the proxy
-	AllowedIPs []string `json:"allowed_ips,omitempty"`
+	UpstreamURL string `json:"upstream-url,omitempty"`
 }
 
 // Interface is the contract to the proxy
@@ -80,6 +62,4 @@ type Interface interface {
 	Run(context.Context) error
 	// Stop calls a halt to the proxy
 	Stop() error
-	// Addr returns with the server address
-	Addr() string
 }

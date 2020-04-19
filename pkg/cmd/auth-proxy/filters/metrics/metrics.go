@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-package authproxy
+package metrics
 
-import "github.com/prometheus/client_golang/prometheus"
+import (
+	"net/http"
+
+	"github.com/appvia/kore/pkg/cmd/auth-proxy/filters"
+	"github.com/prometheus/client_golang/prometheus"
+)
 
 var (
-	authFailureCounter = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "auth_failure_total",
-			Help: "The total number of authentiation failures",
-		},
-	)
 	httpRequestCounter = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: "http_request_total",
@@ -34,13 +33,29 @@ var (
 	httpErrorCounter = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: "http_error_total",
-			Help: "The total number of requests which have errored",
+			Help: "The total number of errors in requests",
 		},
 	)
 )
 
 func init() {
-	prometheus.MustRegister(authFailureCounter)
 	prometheus.MustRegister(httpRequestCounter)
 	prometheus.MustRegister(httpErrorCounter)
+}
+
+type metricsImpl struct{}
+
+// New creates and returns a metric middleware
+func New() filters.Middleware {
+	return &metricsImpl{}
+}
+
+func (m *metricsImpl) Serve(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		httpRequestCounter.Inc()
+		next.ServeHTTP(w, req)
+
+		// @TODO we need to wrap the response writer to get the code
+
+	})
 }

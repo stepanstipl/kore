@@ -14,25 +14,15 @@
  * limitations under the License.
  */
 
-package authproxy
+package verifiers
 
 import (
-	"errors"
+	"net/http"
 )
 
-// IsValid checks the configuration of the proxy
-func (c Config) IsValid() error {
-	if c.TLSCert != "" && c.TLSKey == "" {
-		return errors.New("no tls private key")
-	}
-	if c.TLSKey != "" && c.TLSCert == "" {
-		return errors.New("no tls certificate")
-	}
-
-	return nil
-}
-
-// HasTLS checks if we have tls
-func (c Config) HasTLS() bool {
-	return c.TLSCert != "" && c.TLSKey != ""
+// Interface is the interface to a verifier
+type Interface interface {
+	// Admit is responsible for verifying the request and inject any
+	// additional options into the inbound request
+	Admit(*http.Request) (bool, error)
 }

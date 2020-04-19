@@ -14,25 +14,19 @@
  * limitations under the License.
  */
 
-package authproxy
+package authenticate
 
-import (
-	"errors"
+import "github.com/prometheus/client_golang/prometheus"
+
+var (
+	authFailureCounter = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "auth_failure_total",
+			Help: "The total number of authentication failures",
+		},
+	)
 )
 
-// IsValid checks the configuration of the proxy
-func (c Config) IsValid() error {
-	if c.TLSCert != "" && c.TLSKey == "" {
-		return errors.New("no tls private key")
-	}
-	if c.TLSKey != "" && c.TLSCert == "" {
-		return errors.New("no tls certificate")
-	}
-
-	return nil
-}
-
-// HasTLS checks if we have tls
-func (c Config) HasTLS() bool {
-	return c.TLSCert != "" && c.TLSKey != ""
+func init() {
+	prometheus.MustRegister(authFailureCounter)
 }
