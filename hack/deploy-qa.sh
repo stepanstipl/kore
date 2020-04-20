@@ -22,10 +22,10 @@ set -o pipefail
 : ${KORE_API_PUBLIC_URL_QA?"The QA Kore API URL must be set"}
 : ${KORE_UI_PUBLIC_URL_QA?"The QA Kore UI URL must be set"}
 
-BUILD_ID=${CIRCLE_SHA1:-"unknown"}
-VERSION=${CIRCLE_TAG:-"latest"}
 ENVIRONMENT="qa"
-KORE_API_PUBLIC_URL=${KORE_API_PUBLIC_URL_QA}
-KORE_UI_PUBLIC_URL=${KORE_UI_PUBLIC_URL_QA}
+export BUILD_ID=${CIRCLE_SHA1:-"unknown"}
+export VERSION=${CIRCLE_TAG:-"latest"}
+export KORE_API_PUBLIC_URL=${KORE_API_PUBLIC_URL_QA}
+export KORE_UI_PUBLIC_URL=${KORE_UI_PUBLIC_URL_QA}
 
 hack/deploy.sh

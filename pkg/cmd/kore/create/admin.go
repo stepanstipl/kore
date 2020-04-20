@@ -17,8 +17,6 @@
 package create
 
 import (
-	"errors"
-
 	cmdutils "github.com/appvia/kore/pkg/cmd/utils"
 	"github.com/appvia/kore/pkg/kore"
 
@@ -28,8 +26,6 @@ import (
 // CreateAdminOptions is used to provision a team
 type CreateAdminOptions struct {
 	cmdutils.Factory
-	// Team is the team name
-	Team string
 	// Username is the username to add
 	Username string
 }
@@ -54,19 +50,14 @@ func NewCmdCreateAdmin(factory cmdutils.Factory) *cobra.Command {
 
 // Validate is called to validate the options
 func (o *CreateAdminOptions) Validate() error {
-	if o.Team == "" {
-		return errors.New("no team defined")
-	}
-
 	return nil
 }
 
 // Run implements the action
 func (o *CreateAdminOptions) Run() error {
 	if err := o.Client().
-		Resource("team").
+		Resource("members").
 		Team(kore.HubAdminTeam).
-		SubResource("members").
 		Name(o.Username).
 		Update().Error(); err != nil {
 
