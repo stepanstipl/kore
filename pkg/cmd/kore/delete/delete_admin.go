@@ -18,6 +18,7 @@ package delete
 
 import (
 	cmdutils "github.com/appvia/kore/pkg/cmd/utils"
+	"github.com/appvia/kore/pkg/kore"
 
 	"github.com/spf13/cobra"
 )
@@ -51,15 +52,15 @@ func NewCmdDeleteAdmin(factory cmdutils.Factory) *cobra.Command {
 // Run implements the action
 func (o *DeleteAdminOptions) Run() error {
 	err := o.Client().
-		Resource("team").
-		SubResource("members").
+		Resource("members").
+		Team(kore.HubAdminTeam).
 		Name(o.Username).
 		Delete().
 		Error()
 	if err != nil {
 		return err
 	}
-	o.Println("User %q has been successfully removed as an admin")
+	o.Println("User %q has been successfully removed as an admin", o.Username)
 
 	return nil
 }
