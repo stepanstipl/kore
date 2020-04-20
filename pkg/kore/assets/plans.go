@@ -54,7 +54,7 @@ func GetDefaultPlans() []*configv1.Plan {
 								}
                             ],
 							"authProxyAllowedIPs":           ["0.0.0.0/0"],
-							"defaultTeamRole":               "viewer",
+							"defaultTeamRole":               "view",
 							"description":                   "gke-development cluster",
 							"diskSize":                      100,
 							"domain":                        "default",
@@ -108,7 +108,7 @@ func GetDefaultPlans() []*configv1.Plan {
 								}
                             ],
 							"authProxyAllowedIPs":           ["0.0.0.0/0"],
-							"defaultTeamRole":               "viewer",
+							"defaultTeamRole":               "view",
 							"description":                   "gke-production cluster",
 							"diskSize":                      100,
 							"domain":                        "default",
@@ -157,7 +157,7 @@ func GetDefaultPlans() []*configv1.Plan {
 						"authProxyAllowedIPs": [
 							"0.0.0.0/0"
 						],
-						"defaultTeamRole": "viewer",
+						"defaultTeamRole": "view",
 						"description": "eks-development cluster",
 						"domain": "default",
 						"enableDefaultTrafficBlock": false,
@@ -197,7 +197,7 @@ func GetDefaultPlans() []*configv1.Plan {
 						"authProxyAllowedIPs": [
 							"0.0.0.0/0"
 						],
-						"defaultTeamRole": "viewer",
+						"defaultTeamRole": "view",
 						"description": "eks-production cluster",
 						"domain": "default",
 						"enableDefaultTrafficBlock": false,
