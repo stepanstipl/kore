@@ -91,13 +91,20 @@ func (o *ApplyOptions) Run() error {
 
 			// @step: check the resource scope
 			if x.Resource.IsTeamScoped() {
-				request.Team(o.Team)
+				// set the team to the resource namespace or the team selected
+				request.Team(func() string {
+					if x.Object.GetNamespace() != "" {
+						return x.Object.GetNamespace()
+					}
+
+					return o.Team
+				}())
 
 				switch {
 				case namespace == "" && o.Team == "":
 					return errors.ErrTeamMissing
 				case namespace != "" && o.Team != "" && o.Team != namespace:
-					return errors.NewConflictError("resource %s defines a different teams namespace", namespace)
+					return errors.NewConflictError("resource %s defines a different team's namespace", name)
 				case namespace == "" && o.Team != "":
 					x.Object.SetNamespace(o.Team)
 				}
