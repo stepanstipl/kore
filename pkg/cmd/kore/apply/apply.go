@@ -91,7 +91,7 @@ func (o *ApplyOptions) Run() error {
 
 			// @step: check the resource scope
 			if x.Resource.IsTeamScoped() {
-				// we set the team namespace to the resource namespace of team selected
+				// set the team to the resource namespace or the team selected
 				request.Team(func() string {
 					if x.Object.GetNamespace() != "" {
 						return x.Object.GetNamespace()
