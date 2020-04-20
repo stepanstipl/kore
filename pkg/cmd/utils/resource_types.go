@@ -68,9 +68,8 @@ var (
 			GroupVersion: orgv1.GroupVersion.String(),
 			Kind:         "AuditEvent",
 			Scope:        DualScope,
-			ShortName:    "aud",
 			Printer: []Column{
-				{"Time", "spec.creationTimestampAt", ""},
+				{"Time", "metadata.creationTimestamp", ""},
 				{"Operation", "spec.operation", ""},
 				{"URI", "spec.resourceURI", ""},
 				{"User", "spec.user", ""},

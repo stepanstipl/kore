@@ -22,6 +22,7 @@ import (
 	"regexp"
 
 	"github.com/appvia/kore/pkg/cmd/errors"
+	"github.com/appvia/kore/pkg/utils/render"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/yaml"
 
@@ -99,6 +100,7 @@ func MustMarkFlagRequired(cmd *cobra.Command, name string) {
 	}
 }
 
+// MustRegisterFlagCompletionFunc ensures we never require a missing flag
 func MustRegisterFlagCompletionFunc(
 	cmd *cobra.Command,
 	flagName string,
@@ -162,4 +164,20 @@ func ParseDocument(f Factory, src io.Reader) ([]*ResourceDocument, error) {
 	}
 
 	return list, nil
+}
+
+// ConvertColumnsToRender converts the resource columns to render columns
+func ConvertColumnsToRender(columns []Column) []render.PrinterColumnFunc {
+	list := make([]render.PrinterColumnFunc, len(columns))
+
+	for i, c := range columns {
+		switch c.Format {
+		case "age":
+			list[i] = render.Column(c.Name, c.Path, render.Age())
+		default:
+			list[i] = render.Column(c.Name, c.Path)
+		}
+	}
+
+	return list
 }

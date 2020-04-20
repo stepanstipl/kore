@@ -99,6 +99,7 @@ func NewCmdGet(factory cmdutil.Factory) *cobra.Command {
 
 	command.AddCommand(
 		NewCmdGetAdmin(factory),
+		NewCmdGetAudit(factory),
 	)
 
 	return command
@@ -141,7 +142,11 @@ func (o *GetOptions) Run() error {
 
 	// @step: we need to construct the request
 	request := o.Client().Resource(plural)
-	if resource.IsTeamScoped() {
+
+	if resource.IsScoped(cmdutil.TeamScope) {
+		request.Team(o.Team)
+	}
+	if resource.IsScoped(cmdutil.DualScope) && o.Team != "" {
 		request.Team(o.Team)
 	}
 	if o.Name != "" {
@@ -157,20 +162,12 @@ func (o *GetOptions) Run() error {
 	// cleaned up some how
 	display := render.Render().
 		Writer(o.Writer()).
-		Resource(render.FromReader(request.Body())).
 		ShowHeaders(o.Headers).
-		Format(o.Output)
-
-	columns := make([]render.PrinterColumnFunc, len(resource.Printer))
-	for i, c := range resource.Printer {
-		switch c.Format {
-		case "age":
-			columns[i] = render.Column(c.Name, c.Path, render.Age())
-		default:
-			columns[i] = render.Column(c.Name, c.Path)
-		}
-	}
-	display.Printer(columns...)
+		Format(o.Output).
+		Resource(
+			render.FromReader(request.Body()),
+		).
+		Printer(cmdutil.ConvertColumnsToRender(resource.Printer)...)
 
 	if o.Name == "" {
 		display.Foreach("items")

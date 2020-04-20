@@ -113,7 +113,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	// Team Audit Events
 
 	ws.Route(
-		withAllNonValidationErrors(ws.GET("/{team}/audit")).To(u.findTeamAudit).
+		withAllNonValidationErrors(ws.GET("/{team}/audits")).To(u.findTeamAudit).
 			Doc("Used to return a collection of events against the team").
 			Operation("ListTeamAudit").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).

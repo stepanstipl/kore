@@ -73,7 +73,7 @@ type ListAuditEventsOK struct {
 }
 
 func (o *ListAuditEventsOK) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/audit][%d] listAuditEventsOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[GET /api/v1alpha1/audits][%d] listAuditEventsOK  %+v", 200, o.Payload)
 }
 
 func (o *ListAuditEventsOK) GetPayload() *models.V1AuditEventList {
@@ -106,7 +106,7 @@ type ListAuditEventsBadRequest struct {
 }
 
 func (o *ListAuditEventsBadRequest) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/audit][%d] listAuditEventsBadRequest  %+v", 400, o.Payload)
+	return fmt.Sprintf("[GET /api/v1alpha1/audits][%d] listAuditEventsBadRequest  %+v", 400, o.Payload)
 }
 
 func (o *ListAuditEventsBadRequest) GetPayload() *models.ValidationError {
@@ -138,7 +138,7 @@ type ListAuditEventsUnauthorized struct {
 }
 
 func (o *ListAuditEventsUnauthorized) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/audit][%d] listAuditEventsUnauthorized ", 401)
+	return fmt.Sprintf("[GET /api/v1alpha1/audits][%d] listAuditEventsUnauthorized ", 401)
 }
 
 func (o *ListAuditEventsUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -159,7 +159,7 @@ type ListAuditEventsForbidden struct {
 }
 
 func (o *ListAuditEventsForbidden) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/audit][%d] listAuditEventsForbidden ", 403)
+	return fmt.Sprintf("[GET /api/v1alpha1/audits][%d] listAuditEventsForbidden ", 403)
 }
 
 func (o *ListAuditEventsForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -181,7 +181,7 @@ type ListAuditEventsInternalServerError struct {
 }
 
 func (o *ListAuditEventsInternalServerError) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/audit][%d] listAuditEventsInternalServerError  %+v", 500, o.Payload)
+	return fmt.Sprintf("[GET /api/v1alpha1/audits][%d] listAuditEventsInternalServerError  %+v", 500, o.Payload)
 }
 
 func (o *ListAuditEventsInternalServerError) GetPayload() *models.ApiserverError {

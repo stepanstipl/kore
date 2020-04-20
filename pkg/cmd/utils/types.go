@@ -129,11 +129,20 @@ type Resource struct {
 
 // IsTeamScoped checks if a team resource
 func (r *Resource) IsTeamScoped() bool {
-	return r.Scope == TeamScope
+	return r.IsScoped(TeamScope)
 }
 
+// IsScoped checks the scope of a resource
+func (r *Resource) IsScoped(scope ResourceScope) bool {
+	return r.Scope == scope
+}
+
+// Column is used to define column field for printing
 type Column struct {
-	Name   string `json:"name,omitempty"`
-	Path   string `json:"path,omitempty"`
+	// Name is the name of the column
+	Name string `json:"name,omitempty"`
+	// Path is the jsonpath of the field
+	Path string `json:"path,omitempty"`
+	// Format is optional formatter for the value
 	Format string `json:"format,omitempty"`
 }
