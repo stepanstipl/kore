@@ -17,6 +17,7 @@ class PlanForm extends React.Component {
     data: PropTypes.object,
     kind: PropTypes.string.isRequired,
     validationErrors: PropTypes.array,
+    handleSubmit: PropTypes.func.isRequired,
     handleValidationErrors: PropTypes.func.isRequired
   }
 
@@ -130,13 +131,11 @@ class PlanForm extends React.Component {
       labelAlign: 'left',
       labelCol: {
         sm: { span: 24 },
-        md: { span: 8 },
-        lg: { span: 8 }
+        md: { span: 8 }
       },
       wrapperCol: {
         sm: { span: 24 },
-        md: { span: 16 },
-        lg: { span: 16 }
+        md: { span: 16 }
       }
     }
 

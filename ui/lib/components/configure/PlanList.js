@@ -5,7 +5,7 @@ const { Title, Text } = Typography
 import PlanItem from '../team/PlanItem'
 import PlanForm from '../plans/PlanForm'
 import ResourceList from '../configure/ResourceList'
-import Plan from '../configure/Plan'
+import PlanViewer from './PlanViewer'
 import KoreApi from '../../kore-api'
 
 class PlanList extends ResourceList {
@@ -15,8 +15,8 @@ class PlanList extends ResourceList {
     style: PropTypes.object,
   }
 
-  createdMessage = 'GKE plan created successfully'
-  updatedMessage = 'GKE plan updated successfully'
+  createdMessage = `${this.props.kind} plan created successfull`
+  updatedMessage = `${this.props.kind}  plan updated successfully`
 
   async fetchComponentData() {
     const api = await KoreApi.client()
@@ -56,7 +56,7 @@ class PlanList extends ResourceList {
                 onClose={this.view(false)}
                 width={900}
               >
-                <Plan plan={view} />
+                <PlanViewer plan={view} />
               </Drawer>
             ) : null}
 

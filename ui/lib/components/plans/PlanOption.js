@@ -60,7 +60,7 @@ class PlanOption extends React.Component {
   }
 
   render() {
-    const { name, property, value, editable, hideNonEditable , form } = this.props
+    const { name, property, value, editable, hideNonEditable } = this.props
     if (!editable && hideNonEditable) {
       return null
     }
