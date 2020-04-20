@@ -74,3 +74,24 @@ load helper
   runit "${KORE} delete member -u admin -t kore-admin || true"
   [[ "$status" -eq 0 ]]
 }
+
+@test "We should to create a user called e2e" {
+  runit "${KORE} create user -u e2e@appvia.io"
+  [[ "$status" -eq 0 ]]
+}
+
+@test "We should be able to add the user to the admin group" {
+  runit "${KORE} create admin -u e2e@appvia.io"
+  [[ "$status" -eq 0 ]]
+  runit "${KORE} get admin | grep ^e2e@appvia.io"
+  [[ "$status" -eq 0 ]]
+}
+
+@test "We should be able to delete the user from admin group" {
+  runit "${KORE} delete admin -u e2e@appvia.io"
+  [[ "$status" -eq 0 ]]
+  runit "${KORE} get admin | grep ^e2e@appvia.io || true"
+  [[ "$status" -eq 0 ]]
+  runit "${KORE} delete user e2e@appvia.io"
+  [[ "$status" -eq 0 ]]
+}

@@ -295,8 +295,8 @@ jobs:
           name: Building binaries
           command: |
             make kore-apiserver
-            make korectl
-            sudo mv bin/korectl /bin
+            make kore
+            sudo mv bin/kore /bin
       - run:
           name: Running the Kore API
           command: |

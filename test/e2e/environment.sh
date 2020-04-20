@@ -20,7 +20,7 @@
 export PLATFORM_DIR="test/e2e"
 export BASE_DIR="../../.."
 export KUBECTL="kubectl"
-export KORE="korectl"
+export KORE="kore"
 export NC='\e[0m'
 export GREEN='\e[0;32m'
 export YELLOW='\e[0;33m'
