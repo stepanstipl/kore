@@ -40,8 +40,6 @@ type CreateGKECredentialsOptions struct {
 	Description string
 	// ProjectName is the name of the GCP project
 	ProjectName string
-	// Region is the GCP region for the account
-	Region string
 	// ServiceAccountJSON is a reference to a file containing the JSON service account details.
 	ServiceAccountJSON string
 	// AllocateToTeams allows the credential to be allocated to the specified list of teams.
@@ -67,13 +65,11 @@ func NewCmdGKECredentials(factory cmdutil.Factory) *cobra.Command {
 
 	command.Flags().StringVarP(&o.Description, "description", "d", "", "the description of the credential")
 	command.Flags().StringVarP(&o.ProjectName, "project", "p", "", "the GCP project for these credentials")
-	command.Flags().StringVarP(&o.Region, "region", "r", "europe-west2", "the GCP region for these credentials, e.g. europe-west2")
 	command.Flags().StringVarP(&o.ServiceAccountJSON, "cred-file", "c", "", "the service account JSON file containing the credentials to import")
 	command.Flags().StringArrayVarP(&o.AllocateToTeams, "allocate", "a", []string{}, "list of teams to allocate to, e.g. team1,team2")
 	command.Flags().BoolVar(&o.AllocateToAll, "all-teams", false, "make these credentials available to all teams in kore (if not set, you must create an allocation for these credentials for them to be usable)")
 
 	cmdutil.MustMarkFlagRequired(command, "project")
-	cmdutil.MustMarkFlagRequired(command, "region")
 	cmdutil.MustMarkFlagRequired(command, "cred-file")
 
 	return command
@@ -92,6 +88,7 @@ func (o CreateGKECredentialsOptions) Run() error {
 	json, err := ioutil.ReadFile(o.ServiceAccountJSON)
 	if err != nil {
 		o.Println("Error reading service account from %v", o.ServiceAccountJSON)
+
 		return err
 	}
 
@@ -105,8 +102,8 @@ func (o CreateGKECredentialsOptions) Run() error {
 			Namespace: kore.HubAdminTeam,
 		},
 		Spec: gke.GKECredentialsSpec{
-			Project: o.ProjectName,
 			Account: string(json),
+			Project: o.ProjectName,
 		},
 	}
 
@@ -121,8 +118,7 @@ func (o CreateGKECredentialsOptions) Run() error {
 		o.NoWait,
 	)
 	if err != nil {
-		o.Println("Error while creating credential")
-		return err
+		return fmt.Errorf("trying to create credential: %s", err)
 	}
 
 	if !o.AllocateToAll && len(o.AllocateToTeams) == 0 {
@@ -158,6 +154,7 @@ func (o CreateGKECredentialsOptions) Run() error {
 	}
 
 	o.Println("Storing credential allocation in Kore")
+
 	return o.WaitForCreation(
 		o.Client().
 			Team(kore.HubAdminTeam).

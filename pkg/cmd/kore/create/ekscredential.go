@@ -61,7 +61,7 @@ func NewCmdEKSCredentials(factory cmdutil.Factory) *cobra.Command {
 		Use:     "ekscredentials",
 		Aliases: []string{"ekscredential"},
 		Short:   "Creates a set of EKS / AWS credentials in Kore",
-		Example: "kore create gkecredentials <name> -d <description> -i <aws account id> -k <aws access key id> -s <aws secret key> --all-teams",
+		Example: "kore create ekscredentials <name> -d <description> -i <aws account id> -k <aws access key id> -s <aws secret key> --all-teams",
 		PreRunE: cmdutil.RequireName,
 		Run:     cmdutil.DefaultRunFunc(o),
 	}
@@ -135,8 +135,7 @@ func (o CreateEKSCredentialsOptions) Run() error {
 		o.NoWait,
 	)
 	if err != nil {
-		o.Println("Error while creating credential")
-		return err
+		return fmt.Errorf("Error while creating credential: %s", err)
 	}
 
 	if !o.AllocateToAll && len(o.AllocateToTeams) == 0 {
