@@ -22,7 +22,7 @@ set -o pipefail
 : ${KORE_API_PUBLIC_URL?"The Kore API URL must be set"}
 : ${KORE_UI_PUBLIC_URL?"The Kore UI URL must be set"}
 
-ENVIRONMENT=${ENVIRONMENT:-$(kubectl config current-context)}
+ENVIRONMENT=${ENVIRONMENT:-"qa"}
 VERSION=${VERSION:-"latest"}
 BUILD_ID=${BUILD_ID:-${VERSION}}
 CHART=${CHART:-"./charts/kore"}
