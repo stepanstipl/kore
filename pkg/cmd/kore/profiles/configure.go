@@ -72,7 +72,7 @@ func (o *ConfigureOptions) Run() error {
 	}
 
 	// @step: ask for the endpoint
-	o.Printf("Please enter the Kore API: (e.g https://api.domain.com): ")
+	o.Printf("Please enter the Kore API URL (e.g https://api.domain.com): ")
 
 	endpoint, err := bufio.NewReader(o.Stdin()).ReadString('\n')
 	if err != nil {

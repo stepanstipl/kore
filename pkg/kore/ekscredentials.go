@@ -64,6 +64,7 @@ func (h *eksCredsImpl) Delete(ctx context.Context, name string) error {
 	if err := h.Store().Client().Get(ctx,
 		store.GetOptions.InNamespace(h.team),
 		store.GetOptions.InTo(creds),
+		store.GetOptions.WithName(name),
 	); err != nil {
 		logger.WithError(err).Error("trying to retrieve the credentials")
 

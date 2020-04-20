@@ -39,6 +39,8 @@ func NewCmdCreate(factory cmdutil.Factory) *cobra.Command {
 		NewCmdCreateCluster(factory),
 		NewCmdCreateNamespace(factory),
 		NewCmdCreateUser(factory),
+		NewCmdGKECredentials(factory),
+		NewCmdEKSCredentials(factory),
 	)
 
 	return command

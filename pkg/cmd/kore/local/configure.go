@@ -17,6 +17,7 @@
 package local
 
 import (
+	"github.com/appvia/kore/pkg/client/config"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 
 	"github.com/spf13/cobra"
@@ -29,7 +30,7 @@ const (
 	LocalEndpoint = "http://127.0.0.1:10080"
 )
 
-// LocalConfigureOptions is used to provision a team
+// LocalConfigureOptions is used to configure the local environment.
 type LocalConfigureOptions struct {
 	cmdutil.Factory
 	cmdutil.DefaultHandler
@@ -42,7 +43,7 @@ func NewCmdLocalConfigure(factory cmdutil.Factory) *cobra.Command {
 	command := &cobra.Command{
 		Use:     "configure",
 		Aliases: []string{"config"},
-		Short:   "Configures a profile to connect to a local Kore installation",
+		Short:   "Configures a local Kore demonstration installation",
 		Example: "kore local configure",
 
 		Run: cmdutil.DefaultRunFunc(o),
@@ -54,19 +55,62 @@ func NewCmdLocalConfigure(factory cmdutil.Factory) *cobra.Command {
 // Run implements the command action
 func (o *LocalConfigureOptions) Run() error {
 	// @step: ensure we have a local profile
-	if err := o.MakeLocalClientConfig(); err != nil {
+	conf := o.Config()
+	conf.CreateProfile(LocalProfileName, LocalEndpoint)
+	conf.CurrentProfile = LocalProfileName
+
+	// @step: prompt for the identity provider settings
+	o.Println("What are your Identity Broker details?")
+	authInfo := newAuthInfoConfig(conf)
+	if err := authInfo.createPrompts().Collect(); err != nil {
+		return err
+	}
+	authInfo.update(conf)
+
+	// @step: write the config out after updating
+	if err := o.UpdateConfig(); err != nil {
 		return err
 	}
 
-	// @step: we should prompt for the identity provider settings
-	o.Println("What are your Identity Broker details?")
-
+	o.Println("...Kore is now set up to run locally,")
+	o.Println("✅ A '%s' profile has been configured in %s", LocalProfileName, config.GetClientConfigurationPath())
 	return nil
 }
 
-// MakeLocalClientConfig is used to inject a local profile
-func (o *LocalConfigureOptions) MakeLocalClientConfig() error {
-	o.Config().CreateProfile(LocalProfileName, LocalEndpoint)
+type authInfoConfig struct {
+	ClientID, ClientSecret string
+	AuthorizeURL           string
+}
 
-	return o.UpdateConfig()
+func newAuthInfoConfig(config *config.Config) *authInfoConfig {
+	result := &authInfoConfig{}
+
+	if config.AuthInfos["local"] != nil {
+		result.ClientID = config.GetCurrentAuthInfo().OIDC.ClientID
+		result.ClientSecret = config.GetCurrentAuthInfo().OIDC.ClientSecret
+		result.AuthorizeURL = config.GetCurrentAuthInfo().OIDC.AuthorizeURL
+	}
+
+	return result
+}
+
+func (a *authInfoConfig) createPrompts() cmdutil.Prompts {
+	return cmdutil.Prompts{
+		&cmdutil.Prompt{Id: "Client ID", ErrMsg: "%s cannot be blank", Value: &a.ClientID},
+		&cmdutil.Prompt{Id: "Client Secret", ErrMsg: "%s cannot be blank", Value: &a.ClientSecret},
+		&cmdutil.Prompt{Id: "OpenID endpoint", ErrMsg: "%s cannot be blank", Value: &a.AuthorizeURL},
+	}
+}
+
+func (a *authInfoConfig) update(c *config.Config) {
+	c.AuthInfos = map[string]*config.AuthInfo{
+		"local": {
+			Token: nil,
+			OIDC: &config.OIDC{
+				ClientID:     a.ClientID,
+				ClientSecret: a.ClientSecret,
+				AuthorizeURL: a.AuthorizeURL,
+			},
+		},
+	}
 }
