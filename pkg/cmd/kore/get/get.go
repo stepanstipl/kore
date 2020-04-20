@@ -163,20 +163,12 @@ func (o *GetOptions) Run() error {
 	// cleaned up some how
 	display := render.Render().
 		Writer(o.Writer()).
-		Resource(render.FromReader(request.Body())).
 		ShowHeaders(o.Headers).
-		Format(o.Output)
-
-	columns := make([]render.PrinterColumnFunc, len(resource.Printer))
-	for i, c := range resource.Printer {
-		switch c.Format {
-		case "age":
-			columns[i] = render.Column(c.Name, c.Path, render.Age())
-		default:
-			columns[i] = render.Column(c.Name, c.Path)
-		}
-	}
-	display.Printer(columns...)
+		Format(o.Output).
+		Resource(
+			render.FromReader(request.Body()),
+		).
+		Printer(cmdutil.ConvertColumnsToRender(resource.Printer)...)
 
 	if o.Name == "" {
 		display.Foreach("items")

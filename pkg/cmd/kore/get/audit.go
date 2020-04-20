@@ -70,7 +70,6 @@ func (o *GetAuditOptions) Validate() error {
 
 // Run implements the action
 func (o *GetAuditOptions) Run() error {
-
 	// @step: we can build a request and execute
 	request := o.Client().
 		Resource("audit").
@@ -85,18 +84,21 @@ func (o *GetAuditOptions) Run() error {
 		return err
 	}
 
+	// @step: get the resource printer
+	resource, err := o.Resources().Lookup("audit")
+	if err != nil {
+		return err
+	}
+	if resource == nil {
+		return errors.ErrUnknownResource
+	}
+
 	return render.Render().
 		Writer(o.Writer()).
 		Resource(render.FromReader(request.Body())).
 		ShowHeaders(o.Headers).
 		Format(o.Output).
 		Foreach("items").
-		Printer(
-			render.Column("Age", "metadata.creationTimestamp", render.Age()),
-			render.Column("Operation", "spec.operation"),
-			render.Column("User", "spec.user"),
-			render.Column("Uri", "spec.resourceURI"),
-			render.Column("Team", "spec.team"),
-			render.Column("Result", "spec.responseCode"),
-		).Do()
+		Printer(cmdutil.ConvertColumnsToRender(resource.Printer)...).
+		Do()
 }
