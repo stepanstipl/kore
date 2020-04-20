@@ -41,14 +41,14 @@ load helper
 @test "We should see the gkes resource be deleted" {
   ${KORE} get cluster ${CLUSTER} -t ${TEAM} || skip
 
-  retry 120 "${KORE} get gkes ${CLUSTER} -t ${TEAM} 2>&1 | grep 'does not exist'"
+  retry 120 "${KORE} get gkes ${CLUSTER} -t ${TEAM} 2>&1 | grep 'not found$'"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should see the cluster resource be deleted" {
   ${KORE} get cluster ${CLUSTER} -t ${TEAM} || skip
 
-  retry 120 "${KORE} get clusters ${CLUSTER} -t ${TEAM} 2>&1 | grep 'does not exist'"
+  retry 120 "${KORE} get clusters ${CLUSTER} -t ${TEAM} 2>&1 | grep 'not found$'"
   [[ "$status" -eq 0 ]]
 }
 

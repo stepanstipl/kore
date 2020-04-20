@@ -93,7 +93,7 @@ load helper
 
   runit "${KORE} delete namespaceclaims ${fullname} -t ${TEAM}"
   [[ "$status" -eq 0 ]]
-  retry 10 "${KORE} get namespaceclaims ${fullname} -t ${TEAM} 2>&1 | grep 'does not exist'"
+  retry 10 "${KORE} get namespaceclaims ${fullname} -t ${TEAM} 2>&1 | grep 'not found$'"
   [[ "$status" -eq 0 ]]
   retry 10 "${KUBECTL} --context=${CLUSTER} get namespace ${namespace} 2>&1 | grep -q 'not found$'"
   [[ "$status" -eq 0 ]]
