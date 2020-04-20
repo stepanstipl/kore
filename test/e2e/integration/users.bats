@@ -76,7 +76,7 @@ load helper
 }
 
 @test "We should to create a user called e2e" {
-  runit "${KORE} create user -u e2e@appvia.io"
+  runit "${KORE} create user --email e2e@appvia.io e2e@appvia.io"
   [[ "$status" -eq 0 ]]
 }
 
