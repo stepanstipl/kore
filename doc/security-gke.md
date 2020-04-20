@@ -3,7 +3,7 @@
 At the end of the cluster create, we should be able to say that we:
 
 + [RBAC](#rbac) - Enable RBAC inside the cluster
-+ [Audit](#audit) - Enable audit logging of the OS: SSH, kubectl exec's etc. 
++ [Audit](#audit) - Enable audit logging of the OS: SSH, kubectl exec's etc.
 + [PSP](#psp-pod-security-policy) - Enable pod security policies
 + [Disabled Legacy Authentication](#disabled-legacy-authentication) - Disable legacy authentication methods
 + [Shielded Node Image](#shielded-nodes) for authenticity validation and rootkit avoidance (beta)

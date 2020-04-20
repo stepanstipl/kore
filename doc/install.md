@@ -63,5 +63,5 @@ http://<portal external ip>:3000/auth/callback
 
 ### 6. Log In
 
-Visit the ui at `http://<portal ip>:3000` or configure korectl using `korectl login <new profile name> -a http://<portal ip>:10080`
+Visit the ui at `http://<portal ip>:3000` or configure kore using `kore login <new profile name> -a http://<portal ip>:10080`
 
