@@ -20,7 +20,7 @@ load helper
 @test "We should be able to delete the gke cluster" {
   ${KORE} get cluster ${CLUSTER} -t ${TEAM} || skip
 
-  retry 10 "${KORE} delete cluster ${CLUSTER} -t ${TEAM}"
+  retry 10 "${KORE} delete cluster ${CLUSTER} -t ${TEAM} --no-wait"
   [[ "$status" -eq 0 ]]
 }
 
@@ -48,7 +48,7 @@ load helper
 @test "We should see the cluster resource be deleted" {
   ${KORE} get cluster ${CLUSTER} -t ${TEAM} || skip
 
-  retry 120 "${KORE} get clusters ${CLUSTER} -t ${TEAM} 2>&1 | grep 'not found$'"
+  retry 120 "${KORE} get clusters ${CLUSTER} -t ${TEAM} 2>&1 | grep 'does not exist$'"
   [[ "$status" -eq 0 ]]
 }
 
