@@ -96,8 +96,6 @@ type Resources interface {
 	Names() ([]string, error)
 	// List returns all the resource available
 	List() ([]Resource, error)
-	// ResolveShorthand is used to resolve a shorthand option
-	ResolveShorthand(string) string
 }
 
 // ResourceDocument defines a read in resource

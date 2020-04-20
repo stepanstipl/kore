@@ -66,8 +66,7 @@ func NewCmdEdit(factory cmdutil.Factory) *cobra.Command {
 			case 0:
 				return possible, cobra.ShellCompDirectiveNoFileComp
 			case 1:
-				resource := o.Resources().ResolveShorthand(cmd.Flags().Arg(0))
-				suggestions, err := o.Resources().LookupResourceNames(resource, cmdutil.GetTeam(cmd))
+				suggestions, err := o.Resources().LookupResourceNames(cmd.Flags().Arg(0), cmdutil.GetTeam(cmd))
 				if err != nil {
 					return nil, cobra.ShellCompDirectiveError
 				}

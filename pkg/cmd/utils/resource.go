@@ -51,7 +51,7 @@ func (r *resourceImpl) Lookup(name string) (*Resource, error) {
 	}).Debug("resource lookup discovered the following")
 
 	for _, x := range ResourceList {
-		if singular == x.Name {
+		if singular == x.Name || name == x.ShortName {
 			log.WithFields(log.Fields{
 				"scope":    x.Scope,
 				"singular": singular,
@@ -73,34 +73,6 @@ func (r *resourceImpl) Names() ([]string, error) {
 // List return a full list of resources
 func (r *resourceImpl) List() ([]Resource, error) {
 	return ResourceList, nil
-}
-
-// ResolveShorthand is used to resolve any shorthands resource names
-func (r *resourceImpl) ResolveShorthand(name string) string {
-	log.WithField(name, name).Debug("attempting to resolve resource shortname")
-
-	v, found := func() (Resource, bool) {
-		for _, x := range ResourceList {
-			if x.ShortName == name {
-				return x, true
-			}
-		}
-
-		return Resource{}, false
-	}()
-
-	if !found {
-		log.WithField("name", name).Debug("no shorthand for resource found, using direct")
-
-		return name
-	}
-
-	log.WithFields(log.Fields{
-		"name":     name,
-		"resource": v.Name,
-	}).Debug("shortname for resource found")
-
-	return v.Name
 }
 
 // LookResourceNamesWithFilter returns a list of resource names against a regexp
