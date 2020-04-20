@@ -61,7 +61,7 @@ func NewCmdGetAudit(factory cmdutil.Factory) *cobra.Command {
 
 // Validate is responsible for checking the options
 func (o *GetAuditOptions) Validate() error {
-	if o.All && o.Team == "" {
+	if !o.All && o.Team == "" {
 		return errors.ErrTeamMissing
 	}
 
