@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package authproxy
+package openid
 
 import (
 	"context"
@@ -23,60 +23,60 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/appvia/kore/pkg/cmd/auth-proxy/verifiers"
 	"github.com/appvia/kore/pkg/utils"
+	"github.com/appvia/kore/pkg/utils/openid"
+	oidc "github.com/appvia/kore/pkg/utils/openid"
 
-	"github.com/coreos/go-oidc"
 	log "github.com/sirupsen/logrus"
 )
 
-type openidImpl struct {
-	token    string
-	claims   []string
-	verifier *oidc.IDTokenVerifier
+// Options are options for the provider
+type Options struct {
+	// ClientID is the audience
+	ClientID string
+	// DiscoveryURL is the openid endpoint
+	DiscoveryURL string
+	// Token is the impersonation token
+	Token string
+	// UserClaims are the provider claims to use
+	UserClaims []string
 }
 
-// NewOpenIDAuth creates an openid provider
-func NewOpenIDAuth(clientID, endpoint, token string, claims []string) (Verifier, error) {
-	options := &oidc.Config{
-		ClientID:          clientID,
+type provider struct {
+	Options
+	provider oidc.Authenticator
+}
+
+// New creates and returns an oidc provider
+func New(options Options) (verifiers.Interface, error) {
+	p, err := oidc.New(openid.Config{
+		ClientID:          options.ClientID,
+		ServerURL:         options.DiscoveryURL,
 		SkipClientIDCheck: true,
-		SkipExpiryCheck:   false,
-	}
-	log.WithField(
-		"idp-server-url", endpoint,
-	).Info("using the IDP server to verify the requests")
-
-	if endpoint == "" {
-		return nil, errors.New("no endpoint defined")
-	}
-	if token == "" {
-		return nil, errors.New("no token for impersonation")
-	}
-
-	provider, err := oidc.NewProvider(context.Background(), token)
+	})
 	if err != nil {
-		log.WithError(err).Error("trying to retrieve provider details")
-
 		return nil, err
 	}
 
-	return &openidImpl{
-		claims:   claims,
-		token:    token,
-		verifier: provider.Verifier(options),
-	}, nil
+	if err := p.Run(context.Background()); err != nil {
+		return nil, err
+	}
+
+	return &provider{Options: options, provider: p}, nil
 }
 
 // Admit checks the token is valid
-func (o *openidImpl) Admit(request *http.Request) (bool, error) {
+func (o *provider) Admit(request *http.Request) (bool, error) {
 	// @step: extract the token from the request
 	bearer, found := utils.GetBearerToken(request.Header.Get("Authorization"))
 	if !found {
 		return false, errors.New("no authorization token")
 	}
+	log.Debug("checking against the openid verifier")
 
 	// @step: parse and extract the identity
-	idToken, err := o.verifier.Verify(request.Context(), bearer)
+	id, err := o.provider.Verify(request.Context(), bearer)
 	if err != nil {
 		return false, err
 	}
@@ -89,19 +89,19 @@ func (o *openidImpl) Admit(request *http.Request) (bool, error) {
 	}
 
 	// @step: extract the username if any
-	claims, err := utils.NewClaimsFromToken(idToken)
+	claims, err := utils.NewClaimsFromToken(id)
 	if err != nil {
 		return false, err
 	}
 
-	user, found := claims.GetUserClaim(o.claims...)
+	user, found := claims.GetUserClaim(o.UserClaims...)
 	if !found {
 		return false, errors.New("no username found in the identity token")
 	}
 	request.Header.Set("Impersonate-User", user)
 
 	// @step: extract the group if request
-	for _, x := range o.claims {
+	for _, x := range o.UserClaims {
 		groups, found := claims.GetStringSlice(x)
 		if found {
 			for _, name := range groups {
@@ -109,7 +109,9 @@ func (o *openidImpl) Admit(request *http.Request) (bool, error) {
 			}
 		}
 	}
-	request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", o.token))
+	request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", o.Token))
+
+	log.WithField("user", user).Debug("successfully authenticated user")
 
 	return true, nil
 }

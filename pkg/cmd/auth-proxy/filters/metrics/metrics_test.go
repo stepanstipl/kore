@@ -14,25 +14,15 @@
  * limitations under the License.
  */
 
-package authproxy
+package metrics
 
 import (
-	"errors"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-// IsValid checks the configuration of the proxy
-func (c Config) IsValid() error {
-	if c.TLSCert != "" && c.TLSKey == "" {
-		return errors.New("no tls private key")
-	}
-	if c.TLSKey != "" && c.TLSCert == "" {
-		return errors.New("no tls certificate")
-	}
-
-	return nil
-}
-
-// HasTLS checks if we have tls
-func (c Config) HasTLS() bool {
-	return c.TLSCert != "" && c.TLSKey != ""
+func TestNew(t *testing.T) {
+	v := New()
+	assert.NotNil(t, v)
 }

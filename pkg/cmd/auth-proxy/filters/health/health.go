@@ -14,25 +14,31 @@
  * limitations under the License.
  */
 
-package authproxy
+package health
 
 import (
-	"errors"
+	"net/http"
+
+	"github.com/appvia/kore/pkg/cmd/auth-proxy/filters"
 )
 
-// IsValid checks the configuration of the proxy
-func (c Config) IsValid() error {
-	if c.TLSCert != "" && c.TLSKey == "" {
-		return errors.New("no tls private key")
-	}
-	if c.TLSKey != "" && c.TLSCert == "" {
-		return errors.New("no tls certificate")
-	}
+type healthImpl struct{}
 
-	return nil
+// New creates and returns a filter for network ranges
+func New() filters.Middleware {
+	return &healthImpl{}
 }
 
-// HasTLS checks if we have tls
-func (c Config) HasTLS() bool {
-	return c.TLSCert != "" && c.TLSKey != ""
+// Serve handles the incoming request
+func (f *healthImpl) Serve(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		if req.URL.Path == "/ready" {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte("OK\n"))
+
+			return
+		}
+
+		next.ServeHTTP(w, req)
+	})
 }
