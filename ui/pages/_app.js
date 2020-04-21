@@ -201,7 +201,7 @@ class MyApp extends App {
             <SiderMenu hide={hideSider} isAdmin={isAdmin} userTeams={this.state.userTeams} otherTeams={props.otherTeams}/>
             <Content style={{ background: '#fff', padding: 24, minHeight: 280 }}>
               <Component {...this.props.pageProps} user={this.props.user} teamAdded={this.teamAdded} teamRemoved={this.teamRemoved} version={version} />
-              <Paragraph style={{ textAlign: 'right', fontSize: '0.8em', padding: 0, margin: 0 }}>Appvia Kore {version}</Paragraph>
+              <Paragraph style={{ textAlign: 'center', fontSize: '0.8em', padding: '5px 0 0 0', margin: '15px 0 0 0', borderTop: '1px solid #efefef', color: 'darkgray' }}>Appvia Kore {version}</Paragraph>
             </Content>
           </Layout>
         </Layout>

@@ -4,6 +4,7 @@ import V1ObjectMeta from '../../kore-api/model/V1ObjectMeta'
 import VerifiedAllocatedResourceForm from '../../components/forms/VerifiedAllocatedResourceForm'
 import KoreApi from '../../kore-api'
 import { Form, Input, Alert, Card } from 'antd'
+import AllocationHelpers from '../../utils/allocation-helpers'
 
 class EKSCredentialsForm extends VerifiedAllocatedResourceForm {
 
@@ -30,16 +31,16 @@ class EKSCredentialsForm extends VerifiedAllocatedResourceForm {
   getResource = async metadataName => {
     const api = await KoreApi.client()
     const eksCredentialsResult = await api.GetEKSCredentials(this.props.team, metadataName)
-    eksCredentialsResult.allocation = await api.GetAllocation(this.props.team, metadataName)
+    eksCredentialsResult.allocation = await AllocationHelpers.getAllocationForResource(eksCredentialsResult)
     return eksCredentialsResult
   }
 
   putResource = async values => {
     const api = await KoreApi.client()
     const metadataName = this.getMetadataName(values)
-    const eksResult = await api.UpdateEKSCredentials(this.props.team, metadataName, this.generateEKSCredentialsResource(values))
-    const allocationResource = this.generateAllocationResource({ group: 'aws.compute.kore.appvia.io', version: 'v1alpha1', kind: 'EKSCredentials' }, values)
-    eksResult.allocation = await api.UpdateAllocation(this.props.team, metadataName, allocationResource)
+    const eksCredResource = this.generateEKSCredentialsResource(values)
+    const eksResult = await api.UpdateEKSCredentials(this.props.team, metadataName, eksCredResource)
+    eksResult.allocation = await this.storeAllocation(eksCredResource, values)
     return eksResult
   }
 

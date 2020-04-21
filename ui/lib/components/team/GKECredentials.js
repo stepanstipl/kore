@@ -54,10 +54,16 @@ class GKECredentials extends AutoRefreshComponent {
           title={
             <>
               <Text style={{ display: 'inline', marginRight: '15px', fontSize: '20px', fontWeight: '600' }}>{gkeCredentials.spec.project}</Text>
-              <Text style={{ marginRight: '5px' }}>{gkeCredentials.allocation.spec.name}</Text>
-              <Tooltip title={gkeCredentials.allocation.spec.summary}>
-                <Icon type="info-circle" theme="twoTone" />
-              </Tooltip>
+              {gkeCredentials.allocation ? (
+                <>
+                  <Text style={{ marginRight: '5px' }}>{gkeCredentials.allocation.spec.name}</Text>
+                  <Tooltip title={gkeCredentials.allocation.spec.summary}>
+                    <Icon type="info-circle" theme="twoTone" />
+                  </Tooltip>
+                </>
+              ) : (
+                <Text style={{ marginRight: '5px' }}>Not allocated</Text>
+              )}
             </>
           }
           description={

@@ -4,6 +4,7 @@ import V1ObjectMeta from '../../kore-api/model/V1ObjectMeta'
 import VerifiedAllocatedResourceForm from '../../components/forms/VerifiedAllocatedResourceForm'
 import KoreApi from '../../kore-api'
 import { Form, Input, Alert, Card } from 'antd'
+import AllocationHelpers from '../../utils/allocation-helpers'
 
 class GKECredentialsForm extends VerifiedAllocatedResourceForm {
 
@@ -29,16 +30,16 @@ class GKECredentialsForm extends VerifiedAllocatedResourceForm {
   getResource = async metadataName => {
     const api = await KoreApi.client()
     const gkeCredentialsResult = await api.GetGKECredential(this.props.team, metadataName)
-    gkeCredentialsResult.allocation = await api.GetAllocation(this.props.team, metadataName)
+    gkeCredentialsResult.allocation = await AllocationHelpers.getAllocationForResource(gkeCredentialsResult)
     return gkeCredentialsResult
   }
 
   putResource = async values => {
     const api = await KoreApi.client()
     const metadataName = this.getMetadataName(values)
-    const gkeResult = await api.UpdateGKECredential(this.props.team, metadataName, this.generateGKECredentialsResource(values))
-    const allocationResource = this.generateAllocationResource({ group: 'gke.compute.kore.appvia.io', version: 'v1alpha1', kind: 'GKECredentials' }, values)
-    gkeResult.allocation = await api.UpdateAllocation(this.props.team, metadataName, allocationResource)
+    const gkeCredRes = this.generateGKECredentialsResource(values)
+    const gkeResult = await api.UpdateGKECredential(this.props.team, metadataName, gkeCredRes)
+    gkeResult.allocation = await this.storeAllocation(gkeCredRes, values)
     return gkeResult
   }
 
