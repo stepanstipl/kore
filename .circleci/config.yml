@@ -148,6 +148,9 @@ jobs:
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
             VERSION=${CIRCLE_TAG:-latest} make images
             VERSION=${CIRCLE_TAG:-latest} make push-images
+            # These are used for QA
+            VERSION=${CIRCLE_SHA1} make images
+            VERSION=${CIRCLE_SHA1} make push-images
 
   release-cli:
     environment:
@@ -200,7 +203,9 @@ jobs:
           command: |
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
             docker build -t ${KORE_UI_IMAGE}:${CIRCLE_TAG:-latest} --build-arg version=${CIRCLE_TAG:-latest} .
+            docker build -t ${KORE_UI_IMAGE}:${CIRCLE_SHA1} --build-arg version=${CIRCLE_SHA1} .
             docker push ${KORE_UI_IMAGE}:${CIRCLE_TAG:-latest}
+            docker push ${KORE_UI_IMAGE}:${CIRCLE_SHA1}
 
   release-qa:
     docker:
@@ -216,7 +221,8 @@ jobs:
       - run:
           name: Deploying to QA
           command: |
-            echo "Deploying to QA"
+            export VERSION="${CIRCLE_SHA1}"
+            echo "Deploying to QA, version: ${VERSION}"
             hack/deploy-qa.sh
 
   # This releases the local images for kore-apiserver and the auth-proxy; to
