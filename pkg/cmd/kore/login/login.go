@@ -139,7 +139,7 @@ func (o *LoginOptions) Run() error {
 
 	// @step: we need to start the http server in the background
 	go func() {
-		listenAddress := fmt.Sprintf(":%d", o.Port)
+		listenAddress := fmt.Sprintf("127.0.0.1:%d", o.Port)
 		if err := http.ListenAndServe(listenAddress, nil); err != nil {
 			errCh <- fmt.Errorf("trying to start local http server: %s", err)
 		}
