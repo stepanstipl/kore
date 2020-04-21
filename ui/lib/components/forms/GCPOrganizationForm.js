@@ -8,6 +8,7 @@ import V1SecretReference from '../../kore-api/model/V1SecretReference'
 import V1alpha1OrganizationSpec from '../../kore-api/model/V1alpha1OrganizationSpec'
 import KoreApi from '../../kore-api'
 import { Form, Input, Alert, Card } from 'antd'
+import AllocationHelpers from '../../utils/allocation-helpers'
 
 class GCPOrganizationForm extends VerifiedAllocatedResourceForm {
 
@@ -60,7 +61,7 @@ class GCPOrganizationForm extends VerifiedAllocatedResourceForm {
   getResource = async metadataName => {
     const api = await KoreApi.client()
     const gcpOrgResult = await api.GetGCPOrganization(this.props.team, metadataName)
-    gcpOrgResult.allocation = await api.GetAllocation(this.props.team, metadataName)
+    gcpOrgResult.allocation = await AllocationHelpers.getAllocationForResource(gcpOrgResult)
     return gcpOrgResult
   }
 
@@ -68,9 +69,9 @@ class GCPOrganizationForm extends VerifiedAllocatedResourceForm {
     const api = await KoreApi.client()
     const metadataName = this.getMetadataName(values)
     await api.UpdateTeamSecret(this.props.team, metadataName, this.generateSecretResource(values))
-    const gcpOrgResult = await api.UpdateGCPOrganization(this.props.team, metadataName, this.generateGCPOrganizationResource(values))
-    const allocationResource = this.generateAllocationResource({ group: 'gcp.compute.kore.appvia.io', version: 'v1alpha1', kind: 'Organization' }, values)
-    gcpOrgResult.allocation = await api.UpdateAllocation(this.props.team, metadataName, allocationResource)
+    const gcpOrg = this.generateGCPOrganizationResource(values)
+    const gcpOrgResult = await api.UpdateGCPOrganization(this.props.team, metadataName, gcpOrg)
+    gcpOrgResult.allocation = await this.storeAllocation(gcpOrg, values)
     return gcpOrgResult
   }
 

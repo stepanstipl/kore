@@ -1,14 +1,12 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
-import canonical from '../../utils/canonical'
-import V1Allocation from '../../kore-api/model/V1Allocation'
-import V1AllocationSpec from '../../kore-api/model/V1AllocationSpec'
-import V1ObjectMeta from '../../kore-api/model/V1ObjectMeta'
-import V1Ownership from '../../kore-api/model/V1Ownership'
-import ResourceVerificationStatus from '../../components/ResourceVerificationStatus'
-import FormErrorMessage from '../../components/forms/FormErrorMessage'
 import { message, Typography, Form, Card, Alert, Button, Input, Select } from 'antd'
 const { Paragraph, Text } = Typography
+
+import canonical from '../../utils/canonical'
+import ResourceVerificationStatus from '../../components/ResourceVerificationStatus'
+import FormErrorMessage from '../../components/forms/FormErrorMessage'
+import AllocationHelpers from '../../utils/allocation-helpers'
 
 class VerifiedAllocatedResourceForm extends React.Component {
   static propTypes = {
@@ -112,33 +110,8 @@ class VerifiedAllocatedResourceForm extends React.Component {
     return (data && data.metadata && data.metadata.name) || canonical(values.name)
   }
 
-  generateAllocationResource = (ownership, values) => {
-    const metadataName = this.getMetadataName(values)
-
-    const resource = new V1Allocation()
-    resource.setApiVersion('config.kore.appvia.io/v1')
-    resource.setKind('Allocation')
-
-    const meta = new V1ObjectMeta()
-    meta.setName(metadataName)
-    meta.setNamespace(this.props.team)
-    resource.setMetadata(meta)
-
-    const spec = new V1AllocationSpec()
-    spec.setName(values.name)
-    spec.setSummary(values.summary)
-    spec.setTeams(this.state.allocations.length > 0 ? this.state.allocations : ['*'])
-    const owner = new V1Ownership()
-    owner.setGroup(ownership.group)
-    owner.setVersion(ownership.version)
-    owner.setKind(ownership.kind)
-    owner.setName(metadataName)
-    owner.setNamespace(this.props.team)
-    spec.setResource(owner)
-
-    resource.setSpec(spec)
-
-    return resource
+  storeAllocation = async (resource, values) => {
+    return await AllocationHelpers.storeAllocation({ resourceToAllocate: resource, teams: this.state.allocations, name: values.name, summary: values.summary })
   }
 
   _process = async (err, values) => {

@@ -29,7 +29,7 @@ describe('EKSCredentialsForm', () => {
         getFieldValue: () => {},
         validateFields: jest.fn()
       },
-      team: 'abc',
+      team: 'kore-admin',
       allTeams: { items: [] },
       handleSubmit: jest.fn()
     }
@@ -51,8 +51,8 @@ describe('EKSCredentialsForm', () => {
   describe('#getResource', () => {
     beforeEach(() => {
       apiScope
-        .get(`${ApiTestHelpers.basePath}/teams/abc/ekscredentials/eks`).reply(200, eksCredential)
-        .get(`${ApiTestHelpers.basePath}/teams/abc/allocations/eks`).reply(200, allocation)
+        .get(`${ApiTestHelpers.basePath}/teams/kore-admin/ekscredentials/eks`).reply(200, eksCredential)
+        .get(`${ApiTestHelpers.basePath}/teams/kore-admin/allocations/eks`).reply(200, allocation)
     })
 
     it('returns EKS credential and allocation from API', async () => {
@@ -66,8 +66,8 @@ describe('EKSCredentialsForm', () => {
   describe('#putResource', () => {
     beforeEach(() => {
       apiScope
-        .put(`${ApiTestHelpers.basePath}/teams/abc/ekscredentials/eks`).reply(200, eksCredential)
-        .put(`${ApiTestHelpers.basePath}/teams/abc/allocations/eks`).reply(200, allocation)
+        .put(`${ApiTestHelpers.basePath}/teams/kore-admin/ekscredentials/eks`).reply(200, eksCredential)
+        .put(`${ApiTestHelpers.basePath}/teams/kore-admin/allocations/eks`).reply(200, allocation)
     })
 
     it('creates/updates and returns EKS credential and allocation from API', async () => {

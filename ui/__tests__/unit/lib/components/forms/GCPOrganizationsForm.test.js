@@ -33,7 +33,7 @@ describe('GCPOrganizationForm', () => {
         getFieldValue: () => {},
         validateFields: jest.fn()
       },
-      team: 'abc',
+      team: 'kore-admin',
       allTeams: { items: [] },
       handleSubmit: jest.fn()
     }
@@ -62,8 +62,8 @@ describe('GCPOrganizationForm', () => {
   describe('#getResource', () => {
     beforeEach(() => {
       apiScope
-        .get(`${ApiTestHelpers.basePath}/teams/abc/organizations/gcp`).reply(200, gcpOrganization)
-        .get(`${ApiTestHelpers.basePath}/teams/abc/allocations/gcp`).reply(200, allocation)
+        .get(`${ApiTestHelpers.basePath}/teams/kore-admin/organizations/gcp`).reply(200, gcpOrganization)
+        .get(`${ApiTestHelpers.basePath}/teams/kore-admin/allocations/gcp`).reply(200, allocation)
     })
 
     it('returns Organization and allocation from API', async () => {
@@ -77,9 +77,9 @@ describe('GCPOrganizationForm', () => {
   describe('#putResource', () => {
     beforeEach(() => {
       apiScope
-        .put(`${ApiTestHelpers.basePath}/teams/abc/secrets/gcp`).reply(200, secret)
-        .put(`${ApiTestHelpers.basePath}/teams/abc/organizations/gcp`).reply(200, gcpOrganization)
-        .put(`${ApiTestHelpers.basePath}/teams/abc/allocations/gcp`).reply(200, allocation)
+        .put(`${ApiTestHelpers.basePath}/teams/kore-admin/secrets/gcp`).reply(200, secret)
+        .put(`${ApiTestHelpers.basePath}/teams/kore-admin/organizations/gcp`).reply(200, gcpOrganization)
+        .put(`${ApiTestHelpers.basePath}/teams/kore-admin/allocations/gcp`).reply(200, allocation)
     })
 
     it('creates/updates and returns Organization and allocation from API', async () => {

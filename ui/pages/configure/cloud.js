@@ -7,6 +7,7 @@ import GKECredentialsList from '../../lib/components/configure/GKECredentialsLis
 import GCPOrganizationsList from '../../lib/components/configure/GCPOrganizationsList'
 import EKSCredentialsList from '../../lib/components/configure/EKSCredentialsList'
 import PlanList from '../../lib/components/configure/PlanList'
+import PolicyList from '../../lib/components/policies/PolicyList'
 import CloudTabs from '../../lib/components/configure/CloudTabs'
 
 class ConfigureCloudPage extends React.Component {
@@ -45,6 +46,9 @@ class ConfigureCloudPage extends React.Component {
             <Tabs.TabPane tab="Plans" key="plans">
               <PlanList kind="GKE" />
             </Tabs.TabPane>
+            <Tabs.TabPane tab="Policies" key="policies">
+              <PolicyList kind="GKE" />
+            </Tabs.TabPane>
           </Tabs>
         ) : null}
         {selectedCloud === 'AWS' ? (
@@ -54,6 +58,9 @@ class ConfigureCloudPage extends React.Component {
             </Tabs.TabPane>
             <Tabs.TabPane tab="Plans" key="plans">
               <PlanList kind="EKS" />
+            </Tabs.TabPane>
+            <Tabs.TabPane tab="Policies" key="policies">
+              <PolicyList kind="EKS" />
             </Tabs.TabPane>
           </Tabs>
         ) : null}
