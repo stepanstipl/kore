@@ -176,7 +176,7 @@ Once you have everything, run,
 When configured correctly, you should see
 
 ```shell script
-# ✅ Generated Kubernetes CRDs are now stored in <project root>/manifests/local directory.
+# ✅ A 'local' profile has been configured in ~/.kore/config
 ```
 
 #### Start locally
@@ -233,7 +233,7 @@ When applied, these manifests give Kore the credentials necessary to build a GKE
 This cluster will in turn host our sandbox environment.
 
 ```shell script
-./kore apply -f manifests/local/gke-credentials.yml -f manifests/local/gke-allocation.yml
+./kore create gkecredentials gke -d "GKE Credentials" -p gcp-project-id --cred-file <path-to-json-service-account> --all-teams
 # gke.compute.kore.appvia.io/teams/kore-admin/gkecredentials/gke configured
 # config.kore.appvia.io/teams/kore-admin/allocations/gke configured
 ```
