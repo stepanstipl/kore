@@ -50,6 +50,8 @@ class KoreApiClient {
 
   // Plans
   ListPlans = (kind) => this.apis.default.ListPlans({ kind })
+  UpdatePlan = (name, plan) => this.apis.default.UpdatePlan({ name, body: JSON.stringify(plan) })
+  GetPlanSchema = (name) => this.apis.default.GetPlanSchema({ name })
 
   // Teams
   GetTeam = (team) => this.apis.default.GetTeam({ team })

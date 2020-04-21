@@ -7,16 +7,18 @@ const { Text } = Typography
 class PlanItem extends React.Component {
   static propTypes = {
     plan: PropTypes.object.isRequired,
-    viewPlan: PropTypes.func.isRequired
+    viewPlan: PropTypes.func.isRequired,
+    editPlan: PropTypes.func.isRequired
   }
 
   render() {
-    const { plan, viewPlan } = this.props
+    const { plan, viewPlan, editPlan } = this.props
     const created = moment(plan.metadata.creationTimestamp).fromNow()
 
     return (
       <List.Item key={plan.metadata.name} actions={[
-        <Text key="view_plan"><a onClick={viewPlan(plan)}><Icon type="eye" theme="filled"/> View</a></Text>
+        <Text key="view_plan"><a onClick={viewPlan(plan)}><Icon type="eye" theme="filled"/> View</a></Text>,
+        <Text key="edit_plan"><a onClick={editPlan(plan)}><Icon type="edit" theme="filled"/> Edit</a></Text>
       ]}>
         <List.Item.Meta
           avatar={<Avatar icon="build" />}

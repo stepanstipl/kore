@@ -5,7 +5,7 @@ import { Typography, Form, Select, Card, Radio, Modal, Input } from 'antd'
 const { Text, Title } = Typography
 const { Option } = Select
 
-import Plan from '../configure/Plan'
+import PlanViewer from '../configure/PlanViewer'
 import PlanOptionsForm from '../plans/PlanOptionsForm'
 
 class ClusterOptionsForm extends React.Component {
@@ -47,7 +47,7 @@ class ClusterOptionsForm extends React.Component {
       const selectedPlan = this.props.plans.find(p => p.metadata.name === planName)
       Modal.info({
         title: (<><Title level={4}>{selectedPlan.spec.description}</Title><Text>{selectedPlan.spec.summary}</Text></>),
-        content: <Plan plan={selectedPlan} />,
+        content: <PlanViewer plan={selectedPlan} />,
         width: 700,
         onOk() {}
       })

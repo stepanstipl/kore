@@ -43,7 +43,7 @@ describe('EKSCredentialsForm', () => {
 
   describe('#generateEKSCredentialsResource', () => {
     it('returns a configured EKSCredentials object when given valid values', () => {
-      const eksCredential = form.generateEKSCredentialsResource({ name: 'eks', accountID: '1234567890', AccessKeyID: '123', secretAccessKey: 'aws-account-cred' })
+      const eksCredential = form.generateEKSCredentialsResource({ name: 'eks', accountID: '1234567890', accessKeyID: '123', secretAccessKey: 'aws-account-cred' })
       expect(eksCredential).toBeDefined()
     })
   })
