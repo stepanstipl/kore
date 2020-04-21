@@ -32,25 +32,6 @@ load helper
   [[ "$status" -eq 0 ]]
 }
 
-@test "We should be about to access the cluster via a valid kubernetes token" {
-  if ${KORE} get clusters ${CLUSTER} -t ${TEAM} -o yaml | grep 1.1.1.1; then
-    skip
-  fi
-  SA="kube-test"
-  if ! ${KUBECTL} --context=${CLUSTER} get sa ${SA}; then
-    runit "${KUBECTL} --context=${CLUSTER} create sa ${SA}"
-    [[ "$status" -eq 0 ]]
-    runit "${KUBECTL} --context=${CLUSTER} create rolebinding --clusterrole=view --serviceaccount=default:${SA} ${SA}"
-    [[ "$status" -eq 0 ]]
-  fi
-  runit "${KUBECTL} --context=${CLUSTER} get sa ${SA} -o json | jq -r '.secrets[0].name' > /tmp/default.sa"
-  [[ "$status" -eq 0 ]]
-  runit "${KUBECTL} --context=${CLUSTER} get secret $(cat /tmp/default.sa) | jq -r '.data.token' | base64 -d > /tmp/default.token"
-  [[ "$status" -eq 0 ]]
-  runit "${KUBECTL} --context=${CLUSTER} --token=$(cat /tmp/default.token) get po"
-  [[ "$status" -eq 0 ]]
-}
-
 @test "If we change the auth-proxy allowed range we should lose access to the cluster" {
   tempfile="${BASE_DIR}/${E2E_DIR}/gke.auth"
 
@@ -67,6 +48,22 @@ load helper
     [[ "$status" -eq 0 ]]
   fi
   retry 10 "${KUBECTL} --context=${CLUSTER} get nodes 2>&1 | grep '^Error from server (Forbidden)'"
+  [[ "$status" -eq 0 ]]
+}
+
+@test "We should be about to access the cluster via a valid kubernetes token" {
+  SA="kube-test"
+  if ! ${KUBECTL} --context=${CLUSTER} get sa ${SA}; then
+    runit "${KUBECTL} --context=${CLUSTER} create sa ${SA}"
+    [[ "$status" -eq 0 ]]
+    runit "${KUBECTL} --context=${CLUSTER} create rolebinding --clusterrole=view --serviceaccount=default:${SA} ${SA}"
+    [[ "$status" -eq 0 ]]
+  fi
+  runit "${KUBECTL} --context=${CLUSTER} get sa ${SA} -o json | jq -r '.secrets[0].name' > /tmp/default.sa"
+  [[ "$status" -eq 0 ]]
+  runit "${KUBECTL} --context=${CLUSTER} get secret $(cat /tmp/default.sa) | jq -r '.data.token' | base64 -d > /tmp/default.token"
+  [[ "$status" -eq 0 ]]
+  runit "${KUBECTL} --context=${CLUSTER} --token=$(cat /tmp/default.token) get po"
   [[ "$status" -eq 0 ]]
 }
 
