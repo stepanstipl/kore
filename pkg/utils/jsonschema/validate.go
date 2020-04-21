@@ -18,6 +18,7 @@ package jsonschema
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/appvia/kore/pkg/utils/validation"
 
@@ -52,7 +53,13 @@ func Validate(schemaJSON string, subject string, data interface{}) error {
 			case *gojsonschema.ConditionElseError, *gojsonschema.ConditionThenError:
 				// Ignore these errors
 			default:
-				ve.AddFieldError(err.Field(), validation.ErrorCode(err.Type()), err.Description())
+				field := err.Field()
+				// in the case of required error type, get the field name from the message "fieldName is required"
+				// use this for "field" instead of "(root)"
+				if err.Type() == "required" && field == validation.FieldRoot {
+					field = strings.Fields(err.Description())[0]
+				}
+				ve.AddFieldError(field, validation.ErrorCode(err.Type()), err.Description())
 			}
 		}
 		return ve

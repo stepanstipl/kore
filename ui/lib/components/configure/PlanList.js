@@ -15,7 +15,7 @@ class PlanList extends ResourceList {
     style: PropTypes.object,
   }
 
-  createdMessage = `${this.props.kind} plan created successfull`
+  createdMessage = `${this.props.kind} plan created successfully`
   updatedMessage = `${this.props.kind}  plan updated successfully`
 
   async fetchComponentData() {
@@ -26,6 +26,13 @@ class PlanList extends ResourceList {
 
   handleValidationErrors = validationErrors => {
     this.setState({ validationErrors })
+  }
+
+  processAndClearValidationErrors = process => {
+    return args => {
+      process && process(args)
+      this.handleValidationErrors(null)
+    }
   }
 
   render() {
@@ -64,7 +71,7 @@ class PlanList extends ResourceList {
               <Drawer
                 title={<><Title level={4}>{edit.spec.description}</Title><Text>{edit.spec.summary}</Text></>}
                 visible={Boolean(edit)}
-                onClose={this.edit(false)}
+                onClose={this.processAndClearValidationErrors(this.edit(false))}
                 width={900}
               >
                 <PlanForm
@@ -72,7 +79,7 @@ class PlanList extends ResourceList {
                   data={edit}
                   validationErrors={validationErrors}
                   handleValidationErrors={this.handleValidationErrors}
-                  handleSubmit={this.handleEditSave}
+                  handleSubmit={this.processAndClearValidationErrors(this.handleEditSave)}
                 />
               </Drawer>
             ) : null}
@@ -81,14 +88,14 @@ class PlanList extends ResourceList {
               <Drawer
                 title={<Title level={4}>New {this.props.kind} plan</Title>}
                 visible={add}
-                onClose={this.add(false)}
+                onClose={this.processAndClearValidationErrors(this.add(false))}
                 width={900}
               >
                 <PlanForm
                   kind={this.props.kind}
                   validationErrors={validationErrors}
                   handleValidationErrors={this.handleValidationErrors}
-                  handleSubmit={this.handleAddSave}
+                  handleSubmit={this.processAndClearValidationErrors(this.handleAddSave)}
                 />
               </Drawer>
             ) : null}

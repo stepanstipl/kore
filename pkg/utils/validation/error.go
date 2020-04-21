@@ -80,14 +80,8 @@ func (e *Error) WithFieldErrorf(field string, errCode ErrorCode, format string, 
 
 // AddFieldError adds an error for a specific field to a validation error.
 func (e *Error) AddFieldError(field string, errCode ErrorCode, message string) {
-	f := field
-	// in the case of required error type, get the field name from the message "fieldName is required"
-	// use this for "field" instead of "(root)"
-	if errCode == "required" && field == FieldRoot {
-		f = strings.Fields(message)[0]
-	}
 	e.FieldErrors = append(e.FieldErrors, FieldError{
-		Field:   f,
+		Field:   field,
 		ErrCode: errCode,
 		Message: message,
 	})
