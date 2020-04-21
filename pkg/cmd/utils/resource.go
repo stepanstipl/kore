@@ -43,26 +43,39 @@ func newResourceManager(client client.Interface) (Resources, error) {
 }
 
 // Lookup is used to check if a resource is supported
-func (r *resourceImpl) Lookup(name string) (*Resource, error) {
-	singular := strings.ToLower(utils.Singularize(name))
-	log.WithFields(log.Fields{
-		"kind":     name,
-		"singular": singular,
-	}).Debug("resource lookup discovered the following")
+func (r *resourceImpl) Lookup(name string) (Resource, error) {
+	name = strings.ToLower(name)
+	var singular string
+	switch name {
+	case "eks", "ekss":
+		singular = "eks"
+	default:
+		singular = utils.Singularize(name)
+	}
 
 	for _, x := range ResourceList {
 		if singular == x.Name || name == x.ShortName {
 			log.WithFields(log.Fields{
-				"scope":    x.Scope,
-				"singular": singular,
+				"scope": x.Scope,
+				"name":  x.Name,
 			}).Debug("found a matching resource type")
 
-			return &x, nil
+			return x, nil
 		}
 	}
-	log.Debug("no resource type found, using default")
+	log.WithFields(log.Fields{
+		"name": name,
+	}).Debug("no resource type found, using default")
 
-	return &DefaultResource, nil
+	return DefaultResource, nil
+}
+
+func (r *resourceImpl) MustLookup(name string) Resource {
+	resource, err := r.Lookup(name)
+	if err != nil {
+		panic(err)
+	}
+	return resource
 }
 
 // Names returns all the names of the resource types
@@ -106,7 +119,7 @@ func (r *resourceImpl) LookupResourceNames(kind, team string) ([]string, error) 
 	}
 
 	// @step: we then construct a request for the list of that type
-	req := r.client.Request().Resource(utils.Pluralize(resource.Name))
+	req := r.client.Request().Resource(resource.Name)
 	if resource.IsTeamScoped() {
 		req.Team(team)
 	}

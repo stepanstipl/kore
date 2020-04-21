@@ -51,9 +51,7 @@ func NewCmdDeleteAdmin(factory cmdutils.Factory) *cobra.Command {
 
 // Run implements the action
 func (o *DeleteAdminOptions) Run() error {
-	err := o.Client().
-		Resource("members").
-		Team(kore.HubAdminTeam).
+	err := o.ClientWithTeamResource(kore.HubAdminTeam, o.Resources().MustLookup("member")).
 		Name(o.Username).
 		Delete().
 		Error()

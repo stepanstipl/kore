@@ -70,9 +70,8 @@ func (o *GetAuditOptions) Validate() error {
 
 // Run implements the action
 func (o *GetAuditOptions) Run() error {
-	// @step: we can build a request and execute
-	request := o.Client().
-		Resource("audit").
+	resource := o.Resources().MustLookup("audit")
+	request := o.ClientWithResource(resource).
 		Parameters(
 			client.QueryParameter("since", o.Since.String()),
 		)
@@ -82,15 +81,6 @@ func (o *GetAuditOptions) Run() error {
 	}
 	if err := request.Get().Error(); err != nil {
 		return err
-	}
-
-	// @step: get the resource printer
-	resource, err := o.Resources().Lookup("audit")
-	if err != nil {
-		return err
-	}
-	if resource == nil {
-		return errors.ErrUnknownResource
 	}
 
 	return render.Render().

@@ -81,8 +81,7 @@ func (o *CreateMemberOptions) Validate() error {
 func (o *CreateMemberOptions) Run() error {
 	// @step: if we are using invitations we check if the user exists
 	if o.Invite {
-		found, err := o.Client().
-			Resource("user").
+		found, err := o.ClientWithResource(o.Resources().MustLookup("user")).
 			Name(o.Username).
 			Exists()
 		if err != nil {
@@ -101,8 +100,7 @@ func (o *CreateMemberOptions) Run() error {
 
 			var inviteURL string
 
-			err := o.Client().
-				Endpoint("/teams/{team}/invites/generate/{user}").
+			err := o.ClientWithEndpoint("/teams/{team}/invites/generate/{user}").
 				Parameters(
 					client.PathParmeter("team", o.Team),
 					client.PathParmeter("user", o.Username),
@@ -120,9 +118,7 @@ func (o *CreateMemberOptions) Run() error {
 		}
 	}
 
-	if err := o.Client().
-		Team(o.Team).
-		Resource("members").
+	if err := o.ClientWithTeamResource(o.Team, o.Resources().MustLookup("member")).
 		Name(o.Username).
 		Update().Error(); err != nil {
 

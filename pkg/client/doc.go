@@ -16,39 +16,3 @@
 
 // Package client provides a client factory
 package client
-
-/*
-	client := New(config)
-
-	resp, err := client.Request().
-		Context(ctx).
-		Team(team).
-		Name(name).
-		Resource("team").
-		Payload(object).
-		Result(object).
-		Get()
-
-	// Raw query
-	resp, err := client.Request().Context(ctx).
-		Endpoint("/teams/{team}/{resource}/{name}").
-		Parameters(
-			QueryParameter("allocation", true),
-			PathParameter("team", team),
-			PathParameter("resource", resource),
-			PathParameter("name", team),
-		).
-		Result(object)
-		Get()
-
-	// Response handlers
-	resp, err := client.Request().
-		Context(ctx).
-		Team(team).
-		Resource(resource).
-		SubResource("member").
-		Name(name).
-		Result(object).
-		Get()
-
-*/

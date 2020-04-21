@@ -50,8 +50,8 @@ func NewCmdGetAdmin(factory cmdutil.Factory) *cobra.Command {
 
 // Run implements the action
 func (o *GetAdminOptions) Run() error {
-	client := o.Client()
-	if err := client.Resource("member").Team(kore.HubAdminTeam).Get().Error(); err != nil {
+	client := o.ClientWithTeamResource(kore.HubAdminTeam, o.Resources().MustLookup("member"))
+	if err := client.Get().Error(); err != nil {
 		return err
 	}
 

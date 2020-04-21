@@ -120,15 +120,14 @@ func (o *CreateSecretOptions) Run() error {
 	secret.Spec.Type = o.Type
 
 	if !o.Force {
-		if found, err := o.Client().Resource("secret").Team(o.Team).Name(o.Name).Exists(); err != nil {
+		if found, err := o.ClientWithTeamResource(o.Team, o.Resources().MustLookup("secret")).Name(o.Name).Exists(); err != nil {
 			return err
 		} else if found {
 			return fmt.Errorf("%q already exists, please use --force if your sure you want to update", o.Name)
 		}
 	}
 
-	return o.Client().Team(o.Team).
-		Resource("secret").
+	return o.ClientWithTeamResource(o.Team, o.Resources().MustLookup("secret")).
 		Payload(secret).
 		Update().
 		Error()

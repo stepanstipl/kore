@@ -74,7 +74,7 @@ func NewCmdCreateUser(factory cmdutils.Factory) *cobra.Command {
 		}
 
 		list := &orgv1.UserList{}
-		if err := o.Client().Resource("user").Result(list).Get().Error(); err != nil {
+		if err := o.ClientWithResource(o.Resources().MustLookup("user")).Result(list).Get().Error(); err != nil {
 			return nil, cobra.ShellCompDirectiveError
 		}
 
@@ -114,8 +114,7 @@ func (o *CreateUserOptions) Run() error {
 	}
 
 	return o.WaitForCreation(
-		o.Client().
-			Resource("user").
+		o.ClientWithResource(o.Resources().MustLookup("user")).
 			Name(o.Name).
 			Payload(user),
 		o.NoWait,

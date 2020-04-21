@@ -94,6 +94,7 @@ var (
 		},
 		{
 			Name:         "eks",
+			APIName:      "ekss",
 			GroupVersion: eks.GroupVersion.String(),
 			Kind:         "EKS",
 			Scope:        TeamScope,
@@ -176,30 +177,8 @@ var (
 			},
 		},
 		{
-			Name:         "eks",
-			GroupVersion: eks.GroupVersion.String(),
-			Kind:         "EKS",
-			Scope:        TeamScope,
-			Printer: []Column{
-				{"Name", ".metadata.name", ""},
-				{"Region", "spec.region", ""},
-				{"Endpoint", ".status.endpoint", ""},
-				{"Status", ".status.status", ""},
-				{"Age", "metadata.creationTimestamp", "age"},
-			},
-		},
-		{
-			Name:         "ekscredential",
-			GroupVersion: eks.GroupVersion.String(),
-			Kind:         "EKSCredentials",
-			Scope:        TeamScope,
-			Printer: []Column{
-				{"Name", "metadata.name", ""},
-				{"Age", "metadata.creationTimestamp", "age"},
-			},
-		},
-		{
 			Name:         "kubernetes",
+			APIName:      "kubernetes",
 			GroupVersion: clustersv1.GroupVersion.String(),
 			Kind:         "Kubernetes",
 			Scope:        TeamScope,

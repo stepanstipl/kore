@@ -55,9 +55,7 @@ func (o *CreateAdminOptions) Validate() error {
 
 // Run implements the action
 func (o *CreateAdminOptions) Run() error {
-	if err := o.Client().
-		Resource("members").
-		Team(kore.HubAdminTeam).
+	if err := o.ClientWithTeamResource(kore.HubAdminTeam, o.Resources().MustLookup("member")).
 		Name(o.Username).
 		Update().Error(); err != nil {
 

@@ -156,11 +156,8 @@ func ParseDocument(f Factory, src io.Reader) ([]*ResourceDocument, error) {
 		if err != nil {
 			return nil, err
 		}
-		if resource == nil {
-			return nil, errors.ErrUnknownResource
-		}
 
-		list = append(list, &ResourceDocument{Object: u, Resource: *resource})
+		list = append(list, &ResourceDocument{Object: u, Resource: resource})
 	}
 
 	return list, nil

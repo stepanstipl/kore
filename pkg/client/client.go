@@ -30,11 +30,9 @@ import (
 
 	"github.com/appvia/kore/pkg/apiserver"
 	"github.com/appvia/kore/pkg/client/config"
-	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/validation"
 	"github.com/appvia/kore/pkg/version"
 
-	"github.com/go-openapi/inflect"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -149,16 +147,16 @@ func (a *apiClient) MakeRequestURI() (string, error) {
 	return a.MakeEndpointURL()
 }
 
-// MakeDefaultURL generates a URL from the /teams/<name>/resource/<subresource>?/<name> format
+// MakeDefaultURL generates a URL from the /teams/<name>/resource/<name> format
 func (a *apiClient) MakeDefaultURL() (string, error) {
 	var paths []string
 	// @logic: we simply iterate in a known order of things i.e. team, resource
-	// name and subresource check if the parameter is there and if so append
+	// and name check if the parameter is there and if so append
 
 	if value, found := a.HasParameter("team"); found && value != "" {
 		paths = append(paths, []string{"teams", value}...)
 	}
-	for _, x := range []string{"resource", "name", "subresource"} {
+	for _, x := range []string{"resource", "name"} {
 		if value, found := a.HasParameter(x); found {
 			paths = append(paths, value)
 		}
@@ -404,21 +402,7 @@ func (a *apiClient) Name(v string) RestInterface {
 
 // Resource set the resource kind in the request
 func (a *apiClient) Resource(v string) RestInterface {
-	a.InjectParam("resource", strings.ToLower(utils.Pluralize(v)))
-
-	return a
-}
-
-// ResourceNoPlural set the resource name direct
-func (a *apiClient) ResourceNoPlural(v string) RestInterface {
 	a.InjectParam("resource", v)
-
-	return a
-}
-
-// SubResource is the subresource of the kind
-func (a *apiClient) SubResource(v string) RestInterface {
-	a.InjectParam("subresource", inflect.Pluralize(v))
 
 	return a
 }

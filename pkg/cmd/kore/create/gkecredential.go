@@ -77,7 +77,7 @@ func NewCmdGKECredentials(factory cmdutil.Factory) *cobra.Command {
 
 // Run is responsible for creating the credentials
 func (o CreateGKECredentialsOptions) Run() error {
-	found, err := o.Client().Team(kore.HubAdminTeam).Resource("gkecredential").Name(o.Name).Exists()
+	found, err := o.ClientWithTeamResource(kore.HubAdminTeam, o.Resources().MustLookup("gkecredential")).Name(o.Name).Exists()
 	if err != nil {
 		return err
 	}
@@ -109,9 +109,7 @@ func (o CreateGKECredentialsOptions) Run() error {
 
 	o.Println("Storing credentials in Kore")
 	err = o.WaitForCreation(
-		o.Client().
-			Team(kore.HubAdminTeam).
-			Resource("gkecredential").
+		o.ClientWithTeamResource(kore.HubAdminTeam, o.Resources().MustLookup("gkecredential")).
 			Name(o.Name).
 			Payload(cred).
 			Result(&gke.GKECredentials{}),
@@ -156,9 +154,7 @@ func (o CreateGKECredentialsOptions) Run() error {
 	o.Println("Storing credential allocation in Kore")
 
 	return o.WaitForCreation(
-		o.Client().
-			Team(kore.HubAdminTeam).
-			Resource("allocation").
+		o.ClientWithTeamResource(kore.HubAdminTeam, o.Resources().MustLookup("allocation")).
 			Name(o.Name).
 			Payload(alloc).
 			Result(&confv1.Allocation{}),
