@@ -3,7 +3,7 @@
 if [ ! -f ../demo.env ] ; then
     echo "You could copy and edit the file:"
     echo "    cp ../hack/compose/demo.env.tmpl ../demo.env"
-    echo "... or run bin/korectl local configure"
+    echo "... or run bin/kore local configure"
     exit 1
 fi
 source ../demo.env

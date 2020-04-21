@@ -216,9 +216,9 @@ class TeamDashboard extends React.Component {
       const configResult = await axios.get(`${window.location.origin}/session/config`)
       const apiUrl = new URL(configResult.data.apiUrl)
 
-      const profileConfigureCommand = `korectl profile configure ${apiUrl.hostname}`
-      const loginCommand = 'korectl login'
-      const kubeconfigCommand = `korectl kubeconfig -t ${this.props.team.metadata.name}`
+      const profileConfigureCommand = `kore profile configure ${apiUrl.hostname}`
+      const loginCommand = 'kore login'
+      const kubeconfigCommand = `kore kubeconfig -t ${this.props.team.metadata.name}`
 
       const InfoItem = ({ num, title }) => (
         <div style={{ marginBottom: '10px' }}>
