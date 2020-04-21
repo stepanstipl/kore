@@ -85,7 +85,7 @@ const EKSPlanSchema = `
 		},
 		"defaultTeamRole": {
 			"type": "string",
-			"description": "The default role that team members have on this cluster. Must be viewer or admin."
+			"description": "The default role that team members have on this cluster."
 		},
 		"description": {
 			"type": "string",

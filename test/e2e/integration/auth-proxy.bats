@@ -40,7 +40,7 @@ load helper
   if ! ${KUBECTL} --context=${CLUSTER} get sa ${SA}; then
     runit "${KUBECTL} --context=${CLUSTER} create sa ${SA}"
     [[ "$status" -eq 0 ]]
-    runit "${KUBECTL} --context=${CLUSTER} create rolebinding --clusterrole=viewer --serviceaccount=default:${SA} ${SA}"
+    runit "${KUBECTL} --context=${CLUSTER} create rolebinding --clusterrole=view --serviceaccount=default:${SA} ${SA}"
     [[ "$status" -eq 0 ]]
   fi
   runit "${KUBECTL} --context=${CLUSTER} get sa ${SA} -o json | jq -r '.secrets[0].name' > /tmp/default.sa"
