@@ -18,6 +18,11 @@ class PlanList extends ResourceList {
   createdMessage = `${this.props.kind} plan created successfully`
   updatedMessage = `${this.props.kind}  plan updated successfully`
 
+  infoDescription = {
+    GKE: 'These plans define the specification of the clusters that can be created using the Google Kubernetes Engine (GKE) on GCP. These help to give teams an easy way to provision clusters which match the requirements of the organization.',
+    EKS: 'These plans define the specification of the clusters that can be created using the Elastic Kubernetes Service (EKS) on AWS. These help to give teams an easy way to provision clusters which match the requirements of the organization.'
+  }
+
   async fetchComponentData() {
     const api = await KoreApi.client()
     const planList = await api.ListPlans(this.props.kind)
@@ -42,7 +47,7 @@ class PlanList extends ResourceList {
       <>
         <Alert
           message="Manage the cluster plans"
-          description="These plans define the specification of the clusters that can be created using the Google Kubernetes Engine on GCP. These help to give teams an easy way to provision clusters which match the requirements of the organization."
+          description={this.infoDescription[this.props.kind]}
           type="info"
           showIcon
           style={{ marginBottom: '20px' }}
