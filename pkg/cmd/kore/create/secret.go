@@ -38,11 +38,11 @@ var (
 Provides the ability to create secrets in the kore, from files, environments
 files and literals.
 
-$ korectl create secret <name> -t <team> [options]
+$ kore create secret <name> -t <team> [options]
 
 Examples:
 # Create a secret from a file
-$ korectl create secret gke --from-file=<key>=<filename>
+$ kore create secret gke --from-file=<key>=<filename>
 `
 )
 

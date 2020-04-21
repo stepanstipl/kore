@@ -60,7 +60,7 @@ func NewCmdProfilesSet(factory cmdutil.Factory) *cobra.Command {
 	command := &cobra.Command{
 		Use:     "set",
 		Short:   "allows you to set various options within the current selected profile",
-		Example: "korectl profile use <name>",
+		Example: "kore profile use <name>",
 		Long:    setLongDescription,
 		Run: func(cmd *cobra.Command, args []string) {
 			o.Path = cmd.Flags().Arg(0)

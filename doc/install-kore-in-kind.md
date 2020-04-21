@@ -25,7 +25,7 @@
     EOF
     ```
 
-1. Make sure to use the kind context for korectl:
+1. Make sure to use the kind context for kore:
 
     ```
     kubectl config use-context kind-kore
@@ -65,4 +65,4 @@
     helm install --namespace kore kore ./charts/kore --wait -f ./charts/my_values.yaml
     ```
 
-1. Navigate to http://localhost:3000 or run `korectl login`
+1. Navigate to http://localhost:3000 or run `kore login`

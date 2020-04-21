@@ -18,7 +18,7 @@ package config
 
 const (
 	// DefaultKoreConfigPath is the default path for the kore configuration file
-	DefaultKoreConfigPath = "${HOME}/.korectl/config"
+	DefaultKoreConfigPath = "${HOME}/.kore/config"
 	// DefaultKoreConfigPathEnv is the default name of the env variable for config
 	DefaultKoreConfigPathEnv = "KORE_CONFIG"
 )

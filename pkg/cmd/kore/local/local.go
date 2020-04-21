@@ -67,7 +67,7 @@ func localPath() string {
 	return filepath.Dir(config.GetClientConfigurationPath()) + "/local"
 }
 
-// writeSupportFiles populates ~/.korectl/local/ with the supporting files to be mounted into containers used by kore local.
+// writeSupportFiles populates ~/.kore/local/ with the supporting files to be mounted into containers used by kore local.
 func writeSupportFiles() error {
 	localPath := localPath()
 	for k, v := range assets.LocalSupport {
@@ -113,11 +113,11 @@ func pipeComposeToCmd(cmd *exec.Cmd) error {
 
 func startChecks(conf *config.Config) error {
 	if !conf.HasProfile(LocalProfileName) {
-		return errors.New("a 'local' profile has not been found in ~/.korectl/config - try running: kore local configure")
+		return errors.New("a 'local' profile has not been found in ~/.kore/config - try running: kore local configure")
 	}
 
 	if !conf.HasAuthInfo(LocalProfileName) || !conf.IsOIDCProviderConfigured(LocalProfileName) {
-		return errors.New("no OpenId provider was configured for your 'local' profile in ~/.korectl/config - try running: kore local configure")
+		return errors.New("no OpenId provider was configured for your 'local' profile in ~/.kore/config - try running: kore local configure")
 	}
 	return nil
 }

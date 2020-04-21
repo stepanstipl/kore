@@ -38,10 +38,10 @@ Take a look at $ kore completion for details
 
 Examples:
 List users:
-$ korectl get users
+$ kore get users
 
 Get information about a specific user:
-$ korectl get user admin [-o yaml]
+$ kore get user admin [-o yaml]
 `
 
 // GetOptions the are the options for a get command

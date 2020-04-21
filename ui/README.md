@@ -11,8 +11,8 @@ If you have not set up your local kore environment, run the following minimal st
 ```bash
 # Move to root of the kore git clone (i.e. cd ../ from this directory)
 cd ../
-make korectl
-bin/korectl local configure
+make kore
+bin/kore local configure
 ```
 
 For a full guide to configuring Kore, see [the kore quickstart guide](https://github.com/appvia/kore/blob/master/doc/alpha-local-quick-start.md).

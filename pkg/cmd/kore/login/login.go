@@ -41,8 +41,8 @@ var (
 Is used to authenticate yourself to the currently selected profile. Login
 performs an oauth2 authentication flow and retrieve your identity token.
 
-$ korectl login    # will login and update the current profile
-$ korectl login local -a http://127.0.0.1:8080  # create a profile and login
+$ kore login    # will login and update the current profile
+$ kore login local -a http://127.0.0.1:8080  # create a profile and login
 `
 )
 
@@ -116,7 +116,7 @@ func (o *LoginOptions) Run() error {
 	// @check we have the minimum required for authentication
 	if err := o.Config().HasValidProfile(); err != nil {
 		o.Println("Unable to authenticate: %s", err.Error())
-		o.Println("You may need to reconfigure your profile via $ korectl profile configure")
+		o.Println("You may need to reconfigure your profile via $ kore profile configure")
 
 		return errors.New("invalid profile")
 	}
