@@ -52,7 +52,7 @@ var _ = Describe("/plans", func() {
 				},
 			},
 			"authProxyAllowedIPs":           []string{"0.0.0.0/0"},
-			"defaultTeamRole":               "viewer",
+			"defaultTeamRole":               "view",
 			"description":                   "This is a test cluster",
 			"diskSize":                      100,
 			"domain":                        "testing.appvia.io",
