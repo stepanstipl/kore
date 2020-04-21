@@ -26,8 +26,8 @@ var longProfileDescription = `
 Profiles provide a means to store, configure and switch between multiple
 Appvia Kore instances from a single configuration. Alternatively, you might
 use profiles to use different identities (i.e. admin / user) to a single
-instance. These are automatically created for you via the $ korectl login
-command or you can manually configure them via the $ korectl profile configure.
+instance. These are automatically created for you via the $ kore login
+command or you can manually configure them via the $ kore profile configure.
 
 Examples:
 

@@ -59,7 +59,7 @@ func (o *LocalLogsOptions) Run() error {
 	}
 	conf.CurrentProfile = LocalProfileName
 
-	// @step: write out the support files to ~/.korectl/local/
+	// @step: write out the support files to ~/.kore/local/
 	if err := writeSupportFiles(); err != nil {
 		return err
 	}

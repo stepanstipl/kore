@@ -176,7 +176,6 @@ Once you have everything, run,
 When configured correctly, you should see
 
 ```shell script
-# ✅ A 'local' profile has been configured in ~/.kore/config
 # ✅ Generated Kubernetes CRDs are now stored in <project root>/manifests/local directory.
 ```
 

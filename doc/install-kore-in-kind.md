@@ -25,7 +25,7 @@
     EOF
     ```
 
-1. Make sure to use the kind context for korectl:
+1. Make sure to use the kind context for kore:
 
     ```
     kubectl config use-context kind-kore

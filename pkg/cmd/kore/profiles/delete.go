@@ -37,7 +37,7 @@ func NewCmdProfilesDelete(factory cmdutil.Factory) *cobra.Command {
 		Use:     "delete",
 		Aliases: []string{"rm"},
 		Short:   "removes a profile from configuration",
-		Example: "korectl profile delete <name>",
+		Example: "kore profile delete <name>",
 		Run:     cmdutil.DefaultRunFunc(o),
 
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.ShellCompDirective) {

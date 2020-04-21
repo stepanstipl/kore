@@ -39,7 +39,7 @@ func NewCmdProfilesUse(factory cmdutil.Factory) *cobra.Command {
 	command := &cobra.Command{
 		Use:     "use",
 		Short:   "switches to another profile",
-		Example: "korectl profile use <name>",
+		Example: "kore profile use <name>",
 
 		PreRunE: cmdutil.RequireName,
 		Run:     cmdutil.DefaultRunFunc(o),
@@ -61,7 +61,7 @@ func (o *UseOptions) Run() error {
 	config.CurrentProfile = o.Name
 
 	if err := o.UpdateConfig(); err != nil {
-		return fmt.Errorf("trying to update your local korectl config: %s", err)
+		return fmt.Errorf("trying to update your local kore config: %s", err)
 	}
 
 	o.Println("Successfully switched the profile to: %s", o.Name)
