@@ -390,7 +390,7 @@ workflows:
       - release-qa:
           filters:
             branches:
-              only: fix_qa_release
+              only: master
           requires:
             - release
             - release-ui

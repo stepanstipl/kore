@@ -22,7 +22,7 @@ set -o pipefail
 : ${KORE_API_PUBLIC_URL_QA?"The QA Kore API URL must be set"}
 : ${KORE_UI_PUBLIC_URL_QA?"The QA Kore UI URL must be set"}
 
-ENVIRONMENT="qa"
+export ENVIRONMENT="${ENVIRONMENT:-"qa"}"
 export BUILD_ID=${BUILD_ID:-${VERSION}}
 export VERSION=${VERSION:-"latest"}
 export KORE_API_PUBLIC_URL=${KORE_API_PUBLIC_URL_QA}
