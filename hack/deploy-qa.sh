@@ -24,7 +24,7 @@ set -o pipefail
 
 ENVIRONMENT="qa"
 export BUILD_ID=${CIRCLE_SHA1:-"unknown"}
-export VERSION=${CIRCLE_TAG:-"latest"}
+export VERSION=${VERSION:-"latest"}
 export KORE_API_PUBLIC_URL=${KORE_API_PUBLIC_URL_QA}
 export KORE_UI_PUBLIC_URL=${KORE_UI_PUBLIC_URL_QA}
 
