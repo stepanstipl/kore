@@ -129,6 +129,13 @@ class MyApp extends App {
     this.setState(state)
   }
 
+  teamRemoved = (team) => {
+    this.setState({
+      userTeams: this.state.userTeams.filter(t => t.metadata.name !== team),
+      otherTeams: (this.state.otherTeams || []).filter(t => t.metadata.name !== team)
+    })
+  }
+
   render() {
     const { Component } = this.props
     const props = { ...this.props, ...this.props.pageProps }
@@ -183,7 +190,7 @@ class MyApp extends App {
           <Layout hasSider="true">
             <SiderMenu hide={hideSider} isAdmin={isAdmin} userTeams={this.state.userTeams} otherTeams={props.otherTeams}/>
             <Content style={{ background: '#fff', padding: 24, minHeight: 280 }}>
-              <Component {...this.props.pageProps} user={this.props.user} teamAdded={this.teamAdded} version={version} />
+              <Component {...this.props.pageProps} user={this.props.user} teamAdded={this.teamAdded} teamRemoved={this.teamRemoved} version={version} />
               <Paragraph style={{ textAlign: 'right', fontSize: '0.8em', padding: 0, margin: 0 }}>Appvia Kore {version}</Paragraph>
             </Content>
           </Layout>

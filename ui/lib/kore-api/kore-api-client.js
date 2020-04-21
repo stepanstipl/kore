@@ -97,6 +97,7 @@ class KoreApiClient {
 
   // Teams
   GetTeam = (team) => this.apis.default.GetTeam({ team })
+  RemoveTeam = (team) => this.apis.default.RemoveTeam({ team })
   ListTeams = () => this.apis.default.ListTeams()
   UpdateTeam = (team, teamSpec) => this.apis.default.UpdateTeam({ team, body: JSON.stringify(teamSpec) })
   ListTeamMembers = (team) => this.apis.default.ListTeamMembers({ team })

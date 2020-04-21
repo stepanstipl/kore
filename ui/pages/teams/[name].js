@@ -2,8 +2,9 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import axios from 'axios'
 import Link from 'next/link'
+import Router from 'next/router'
 import Error from 'next/error'
-import { Typography, Card, List, Tag, Button, Avatar, Popconfirm, message, Select, Drawer, Badge, Alert, Icon, Modal } from 'antd'
+import { Typography, Card, List, Tag, Button, Avatar, Popconfirm, message, Select, Drawer, Badge, Alert, Icon, Modal, Dropdown, Menu } from 'antd'
 const { Paragraph, Text } = Typography
 const { Option } = Select
 
@@ -16,6 +17,7 @@ import apiRequest from '../../lib/utils/api-request'
 import copy from '../../lib/utils/object-copy'
 import asyncForEach from '../../lib/utils/async-foreach'
 import apiPaths from '../../lib/utils/api-paths'
+import redirect from '../../lib/utils/redirect'
 import KoreApi from '../../lib/kore-api'
 
 class TeamDashboard extends React.Component {
@@ -26,7 +28,8 @@ class TeamDashboard extends React.Component {
     user: PropTypes.object.isRequired,
     clusters: PropTypes.object.isRequired,
     namespaceClaims: PropTypes.object.isRequired,
-    available: PropTypes.object.isRequired
+    available: PropTypes.object.isRequired,
+    teamRemoved: PropTypes.func.isRequired
   }
 
   static staticProps = {
@@ -264,6 +267,76 @@ class TeamDashboard extends React.Component {
     }
   }
 
+  deleteTeam = async () => {
+    try {
+      const team = this.props.team.metadata.name
+      const api = await KoreApi.client()
+      await api.RemoveTeam(team)
+      this.props.teamRemoved(team)
+      message.success(`Team "${team}" deleted`)
+      return redirect({ router: Router, path: '/' })
+    } catch (err) {
+      console.log('Error deleting team', err)
+      message.error('Team could not be deleted, please try again later')
+    }
+  }
+
+  deleteTeamConfirm = () => {
+    const { clusters } = this.state
+    if (clusters.items.length > 0) {
+      return Modal.warning({
+        title: 'Warning: team cannot be deleted',
+        content: (
+          <>
+            <Paragraph strong>The clusters must be deleted first</Paragraph>
+            <List
+              size="small"
+              dataSource={clusters.items}
+              renderItem={c => <List.Item>{c.spec.kind} <Text style={{ fontFamily: 'monospace', marginLeft: '15px' }}>{c.metadata.name}</Text></List.Item>}
+            />
+          </>
+        ),
+        onOk() {}
+      })
+    }
+
+    Modal.confirm({
+      title: 'Are you sure you want to delete this team?',
+      content: 'This cannot be undone',
+      okText: 'Yes',
+      okType: 'danger',
+      cancelText: 'No',
+      onOk: this.deleteTeam
+    })
+  }
+
+  settingsMenu = ({ team }) => {
+    const menu = (
+      <Menu>
+        <Menu.Item key="audit">
+          <Link href="/teams/[name]/audit" as={`/teams/${team.metadata.name}/audit`}>
+            <a>
+              <Icon type="table" style={{ marginRight: '5px' }} />
+              Team audit viewer
+            </a>
+          </Link>
+        </Menu.Item>
+        <Menu.Item key="delete" className="ant-btn-danger" onClick={this.deleteTeamConfirm}>
+          <Icon type="delete" style={{ marginRight: '5px' }} />
+          Delete team
+        </Menu.Item>
+      </Menu>
+    )
+    return (
+      <Dropdown overlay={menu}>
+        <Button>
+          <Icon type="setting" style={{ marginRight: '10px' }} />
+          <Icon type="down" />
+        </Button>
+      </Dropdown>
+    )
+  }
+
   render() {
     const { team, user, invitation } = this.props
 
@@ -297,7 +370,14 @@ class TeamDashboard extends React.Component {
 
     return (
       <div>
-        <Breadcrumb items={[{ text: team.spec.summary }]} />
+        <div style={{ display: 'inline-block', width: '100%' }}>
+          <div style={{ float: 'left', marginTop: '8px' }}>
+            <Breadcrumb items={[{ text: team.spec.summary }]} />
+          </div>
+          <div style={{ float: 'right' }}>
+            <this.settingsMenu team={team} />
+          </div>
+        </div>
         <Paragraph>
           <Text strong>{team.spec.description}</Text>
           <Text style={{ float: 'right' }}><Text strong>Team ID: </Text>{team.metadata.name}</Text>
@@ -418,12 +498,6 @@ class TeamDashboard extends React.Component {
         >
           <NamespaceClaimForm team={team.metadata.name} clusters={clusters} handleSubmit={this.handleNamespaceCreated} handleCancel={this.createNamespace(false)}/>
         </Drawer>
-
-        <Button>
-          <Link href="/teams/[name]/audit" as={`/teams/${team.metadata.name}/audit`}>
-            <a>Team Audit Viewer</a>
-          </Link>
-        </Button>
 
       </div>
     )
