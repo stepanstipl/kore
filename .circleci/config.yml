@@ -221,7 +221,8 @@ jobs:
       - run:
           name: Deploying to QA
           command: |
-            export VERSION="${CIRCLE_SHA1}"
+            export BUILD_ID=${CIRCLE_SHA1}
+            export VERSION=${CIRCLE_SHA1}
             echo "Deploying to QA, version: ${VERSION}"
             hack/deploy-qa.sh
 
@@ -389,7 +390,7 @@ workflows:
       - release-qa:
           filters:
             branches:
-              only: master
+              only: fix_qa_release
           requires:
             - release
             - release-ui

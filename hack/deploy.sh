@@ -19,12 +19,12 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+: ${BUILD_ID?"The build id must be set"}
+: ${ENVIRONMENT?"The environment must be set"}
 : ${KORE_API_PUBLIC_URL?"The Kore API URL must be set"}
 : ${KORE_UI_PUBLIC_URL?"The Kore UI URL must be set"}
+: ${VERSION?"The image version must be set"}
 
-ENVIRONMENT=${ENVIRONMENT:-"qa"}
-VERSION=${VERSION:-"latest"}
-BUILD_ID=${BUILD_ID:-${VERSION}}
 CHART=${CHART:-"./charts/kore"}
 HELM_STABLE="https://kubernetes-charts.storage.googleapis.com"
 
