@@ -224,6 +224,7 @@ func (c *Client) Update(ctx context.Context) (bool, error) {
 	}()
 
 	update := &awseks.UpdateClusterConfigInput{
+		Name: aws.String(c.cluster.Name),
 		ResourcesVpcConfig: &awseks.VpcConfigRequest{
 			PublicAccessCidrs: accessCIDR,
 		},
