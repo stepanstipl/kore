@@ -281,6 +281,9 @@ func (o *CreateClusterOptions) CreateClusterConfiguration() (*clustersv1.Cluster
 			Roles:    []string{"cluster-admin"},
 		},
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	cluster := &clustersv1.Cluster{
 		TypeMeta: metav1.TypeMeta{
