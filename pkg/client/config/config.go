@@ -69,12 +69,8 @@ func (c *Config) CreateProfile(name, endpoint string) {
 		Server:   name,
 		AuthInfo: name,
 	})
-	if !c.HasServer(name) {
-		c.AddServer(name, &Server{Endpoint: endpoint})
-	}
-	if !c.HasAuthInfo(name) {
-		c.AddAuthInfo(name, &AuthInfo{OIDC: &OIDC{}})
-	}
+	c.AddServer(name, &Server{Endpoint: endpoint})
+	c.AddAuthInfo(name, &AuthInfo{OIDC: &OIDC{}})
 }
 
 // ListProfiles returns a list of profile names

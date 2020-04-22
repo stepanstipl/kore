@@ -19,12 +19,14 @@ package errors
 import (
 	kerrors "errors"
 	"fmt"
+
+	"github.com/appvia/kore/pkg/utils"
 )
 
 var (
 	// ErrAuthentication indicates we need to authenticate
 	ErrAuthentication = kerrors.New("authorization require, ensure you have $ kore login")
-	// ErrMissingResource indicates the resource is missing
+	// ErrMissingResource indicates the resource name is missing
 	ErrMissingResource = kerrors.New("resource is missing")
 	// ErrMissingResourceName indicates the resource name is missing
 	ErrMissingResourceName = kerrors.New("name is missing")
@@ -54,6 +56,11 @@ type ErrConflict struct {
 	message string
 }
 
+// ErrProfileInvalid indicates an issue with the profile
+type ErrProfileInvalid struct {
+	message string
+}
+
 // ErrInvalidParameter indicates an invalid param
 type ErrInvalidParameter struct {
 	field, value, message string
@@ -69,10 +76,24 @@ func (e *ErrResourceNotFound) Error() string {
 
 func (e *ErrInvalidParameter) Error() string {
 	if e.message == "" {
-		return fmt.Sprintf("invalid field %s, value: %s", e.field, e.value)
+		return fmt.Sprintf("invalid parameter: %q, value: %q", e.field, e.value)
 	}
 
-	return fmt.Sprintf("invalid field %s, value: %s, %s", e.field, e.value, e.message)
+	return fmt.Sprintf("%s, field: %q, value: %q", e.message, e.field, e.value)
+}
+
+func (e *ErrProfileInvalid) Error() string {
+	return e.message
+}
+
+// IsError checks the error type is eqaul
+func IsError(err error, t interface{}) bool {
+	return utils.IsEqualType(err, t)
+}
+
+// NewProfileInvalidError returns a profile invalid
+func NewProfileInvalidError(message string) error {
+	return &ErrProfileInvalid{message: message}
 }
 
 // NewResourceNotFound returns a error type

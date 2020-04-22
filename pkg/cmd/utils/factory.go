@@ -96,11 +96,13 @@ func (f *factory) ClientWithTeamResource(team string, resource Resource) client.
 // CheckError handles the cli errors for us
 func (f *factory) CheckError(kerror error) {
 	err := func() error {
-		if client.IsNotAuthentication(kerror) {
+		switch {
+		case client.IsNotAuthentication(kerror):
 			return errors.ErrAuthentication
-		}
-		if client.IsMethodNotAllowed(kerror) {
+		case client.IsMethodNotAllowed(kerror):
 			return errors.ErrOperationNotPermitted
+		case errors.IsError(kerror, errors.ErrProfileInvalid{}):
+			return fmt.Errorf("invalid profile (%s) use $ kore login / profiles configure to fix", kerror.Error())
 		}
 
 		return kerror

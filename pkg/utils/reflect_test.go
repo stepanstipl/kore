@@ -35,6 +35,15 @@ func setterFunc(field string, value interface{}) func() (string, interface{}) {
 	}
 }
 
+func TestIsEqual(t *testing.T) {
+	assert.False(t, IsEqualType(ReflectedItem{}, nil))
+	assert.False(t, IsEqualType(nil, &ReflectedItem{}))
+	assert.True(t, IsEqualType(&ReflectedItem{}, &ReflectedItem{}))
+	assert.True(t, IsEqualType(&ReflectedItem{}, ReflectedItem{}))
+	assert.True(t, IsEqualType(ReflectedItem{}, &ReflectedItem{}))
+	assert.True(t, IsEqualType(nil, nil))
+}
+
 func TestSetReflectedFieldOK(t *testing.T) {
 	message := "test"
 

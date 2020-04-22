@@ -30,6 +30,7 @@ import (
 
 	"github.com/appvia/kore/pkg/apiserver"
 	"github.com/appvia/kore/pkg/client/config"
+	cerrors "github.com/appvia/kore/pkg/cmd/errors"
 	"github.com/appvia/kore/pkg/utils/validation"
 	"github.com/appvia/kore/pkg/version"
 
@@ -105,6 +106,10 @@ func (a *apiClient) HandleRequest(method string) RestInterface {
 		// @step: check if we had any errors in the method chain
 		if a.ferror != nil {
 			return a.ferror
+		}
+
+		if a.cfg.GetCurrentServer().Endpoint == "" {
+			return cerrors.NewProfileInvalidError("missing endpoint")
 		}
 
 		// @step: we generate the uri from the parameter
