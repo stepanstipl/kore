@@ -323,24 +323,26 @@ func (r *rclient) Update(ctx context.Context, options ...UpdateOptionFunc) error
 
 		return r.client.Patch(ctx, r.value, client.MergeFrom(original))
 	}()
-	if err == nil {
-		// @step: attempt to inject the resource direct
-		err = func() error {
-			object, err := r.updateQueryFromObject(r.value)
-			if err != nil {
-				return err
-			}
-			if err := r.index.Set(object.GetName(), object); err != nil {
-				return err
-			}
+	if err != nil {
+		return err
+	}
 
-			return nil
-		}()
+	// @step: attempt to inject the resource direct
+	err = func() error {
+		object, err := r.updateQueryFromObject(r.value)
 		if err != nil {
-			log.WithFields(log.Fields{
-				"error": err.Error(),
-			}).Error("failed to update internal cache on create")
+			return err
 		}
+		if err := r.index.Set(object.GetName(), object); err != nil {
+			return err
+		}
+
+		return nil
+	}()
+	if err != nil {
+		log.WithFields(log.Fields{
+			"error": err.Error(),
+		}).Error("failed to update internal cache on create")
 	}
 
 	// @step: if possible we try and inject the gvk from the schema
