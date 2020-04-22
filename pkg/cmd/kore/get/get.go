@@ -84,7 +84,7 @@ func NewCmdGet(factory cmdutil.Factory) *cobra.Command {
 					return nil, cobra.ShellCompDirectiveError
 				}
 
-				// choice we don't wan't to show everything here
+				// choice we don't want to show everything here
 				if len(suggestions) > 15 {
 					return suggestions[0:15], cobra.ShellCompDirectiveNoFileComp
 				}
