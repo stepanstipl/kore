@@ -239,37 +239,47 @@ func (a *apiClient) HandleResponse(resp *http.Response) error {
 
 	// @step: we have encountered an error we need read in a APIError or create one
 	apiError := &apiserver.Error{}
-	if resp.Body != nil {
-		_ = a.MakeResult(resp, apiError)
-		if apiError.Message != "" {
-			return apiError
-		}
-	}
-
 	apiError.Code = resp.StatusCode
 	apiError.Verb = resp.Request.Method
 	apiError.URI = resp.Request.RequestURI
 
-	switch resp.StatusCode {
-	case http.StatusUnauthorized:
-		apiError.Message = "authorization required"
-	case http.StatusNotFound:
-		apiError.Message = "kind or resource does not exist"
-	case http.StatusForbidden:
-		apiError.Message = "request denied, check permissions"
-	case http.StatusBadRequest:
-		var e validation.Error
-		if err := json.NewDecoder(resp.Body).Decode(&e); err == nil {
-			apiError.Message = e.Error()
+	a.decodeError(resp, apiError)
 
-			return apiError
+	if apiError.Message == "" {
+		switch resp.StatusCode {
+		case http.StatusUnauthorized:
+			apiError.Message = "authorization required"
+		case http.StatusNotFound:
+			apiError.Message = "kind or resource does not exist"
+		case http.StatusForbidden:
+			apiError.Message = "request denied, check permissions"
+		case http.StatusBadRequest:
+			apiError.Message = "api responded with invalid request"
+		default:
+			apiError.Message = "invalid response from api server"
 		}
-		apiError.Message = "api responded with invalid request"
-	default:
-		apiError.Message = "invalid response from api server"
 	}
 
 	return apiError
+}
+
+func (a *apiClient) decodeError(resp *http.Response, apiError *apiserver.Error) {
+	if resp.Body != nil {
+		if resp.StatusCode == http.StatusBadRequest {
+			vError := &validation.Error{}
+			if err := a.MakeResult(resp, vError); err != nil {
+				log.WithError(err).Debug("response can not be decoded into a validation error")
+				return
+			}
+			apiError.Message = vError.Error()
+			return
+		}
+
+		err := a.MakeResult(resp, apiError)
+		if err != nil {
+			log.WithError(err).Debug("response can not be decoded")
+		}
+	}
 }
 
 // MakeResult is responsible for reading the resulting payload
