@@ -23,9 +23,10 @@ class KoreApi {
       {
         spec: spec,
         requestInterceptor: (req) => {
-          if (process.browser) {
-            req.url = req.url.replace(KoreApi.basePath, '/apiproxy')
-          } else if (ctx && (ctx.id_token || ctx.req)) {
+          // If we're running on the server, we need to layer in the user's identity to 
+          // the request. When running in the browser, this is handled by the cookie-based
+          // session.
+          if (!process.browser && ctx && (ctx.id_token || ctx.req)) {
             req.headers['Authorization'] = `Bearer ${ctx.id_token || ctx.req.session.passport.user.id_token}`
           }
           return req
@@ -33,7 +34,7 @@ class KoreApi {
       }
     )
 
-    return new KoreApiClient(api)
+    return new KoreApiClient(api, KoreApi.basePath)
   }
 
   /**

@@ -1,7 +1,7 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
 
-import { Typography, Form, Select, Card, Radio, Modal, Input } from 'antd'
+import { Typography, Form, Select, Card, Radio, Modal, Input, Collapse } from 'antd'
 const { Text, Title } = Typography
 const { Option } = Select
 
@@ -115,12 +115,17 @@ class ClusterOptionsForm extends React.Component {
           </Form.Item>
         ) : null}
         {selectedPlan ? (
-          <PlanOptionsForm
-            team={this.props.team}
-            plan={selectedPlan}
-            validationErrors={this.props.validationErrors}
-            onPlanChange={this.onPlanOverridden}
-          />
+          <Collapse>
+            <Collapse.Panel header="Customize cluster parameters">
+              <PlanOptionsForm
+                team={this.props.team}
+                plan={selectedPlan}
+                validationErrors={this.props.validationErrors}
+                onPlanChange={this.onPlanOverridden}
+                mode="create"
+              />
+            </Collapse.Panel>
+          </Collapse>
         ) : null}
       </Card>
     )

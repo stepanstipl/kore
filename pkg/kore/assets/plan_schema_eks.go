@@ -186,12 +186,14 @@ const EKSPlanSchema = `
 		"privateIPV4Cidr": {
 			"type": "string",
 			"description": "The range of IPv4 addresses for your EKS cluster in CIDR block format",
-			"format": "1.2.3.4/16"
+			"format": "1.2.3.4/16",
+			"immutable": true
 		},
 		"region": {
 			"type": "string",
 			"description": "The AWS region in which this cluster will reside (e.g. eu-west-2).",
-			"minLength": 1
+			"minLength": 1,
+			"immutable": true
 		},
 		"version": {
 			"type": "string",

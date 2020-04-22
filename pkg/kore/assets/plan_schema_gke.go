@@ -203,7 +203,8 @@ const GKEPlanSchema = `
 		},
 		"region": {
 			"type": "string",
-			"minLength": 1
+			"minLength": 1,
+			"immutable": true
 		},
 		"size": {
 			"type": "number",

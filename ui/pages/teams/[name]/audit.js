@@ -2,10 +2,9 @@ import React from 'react'
 import axios from 'axios'
 import PropTypes from 'prop-types'
 
-import apiRequest from '../../../lib/utils/api-request'
-import apiPaths from '../../../lib/utils/api-paths'
 import Breadcrumb from '../../../lib/components/Breadcrumb'
 import AuditViewer from '../../../lib/components/AuditViewer'
+import KoreApi from '../../../lib/kore-api'
 
 class TeamAuditPage extends React.Component {
   static propTypes = {
@@ -22,12 +21,11 @@ class TeamAuditPage extends React.Component {
     adminOnly: false
   }
 
-  static async getPageData({ req, res, query }) {
-    const name = query.name
-    const getTeam = () => apiRequest({ req, res }, 'get', apiPaths.team(name).self)
-    const getAuditEvents = () => apiRequest({ req, res }, 'get', apiPaths.team(name).audit)
+  static async getPageData(ctx) {
+    const name = ctx.query.name
+    const api = await KoreApi.client(ctx)
 
-    return axios.all([getTeam(), getAuditEvents()])
+    return axios.all([api.GetTeam(name), api.ListTeamAudit(name)])
       .then(axios.spread(function (team, eventList) {
         return { team, events: eventList.items }
       }))
