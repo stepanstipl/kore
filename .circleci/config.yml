@@ -188,6 +188,117 @@ jobs:
           command: |
             make build
 
+  test-ui:
+    environment:
+      GOFLAGS: "-mod=vendor"
+      USE_GIT_VERSION: "true"
+
+    docker:
+      - image: circleci/golang:1.14
+
+      - name: etcd
+        image: bitnami/etcd:latest
+        environment:
+          ALLOW_NONE_AUTHENTICATION: "yes"
+
+      - name: redis
+        image: redis:5
+
+      - name: database
+        image: mariadb:bionic
+        environment:
+          MYSQL_ROOT_PASSWORD: pass
+        command:
+          sh -c "
+            echo 'CREATE DATABASE IF NOT EXISTS kore;' > /docker-entrypoint-initdb.d/init.sql;
+            /usr/local/bin/docker-entrypoint.sh --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
+
+      - name: kube-controller-manager
+        image: gcr.io/google-containers/kube-controller-manager-amd64:v1.15.11
+        command:
+          - /usr/local/bin/kube-controller-manager
+          - --master=http://kube-apiserver:8080
+
+      - name: kube-apiserver
+        image: gcr.io/google-containers/kube-apiserver-amd64:v1.15.11
+        command:
+          - /usr/local/bin/kube-apiserver
+          - --address=0.0.0.0
+          - --alsologtostderr
+          - --authorization-mode=RBAC
+          - --bind-address=0.0.0.0
+          - --default-watch-cache-size=200
+          - --delete-collection-workers=10
+          - --etcd-servers=http://etcd:2379
+          - --log-flush-frequency=10s
+          - --runtime-config=autoscaling/v1=false
+          - --runtime-config=autoscaling/v2beta1=false
+          - --runtime-config=autoscaling/v2beta2=false
+          - --runtime-config=batch/v1=false
+          - --runtime-config=batch/v1beta1=false
+          - --runtime-config=networking.k8s.io/v1=false
+          - --runtime-config=networking.k8s.io/v1beta1=false
+          - --runtime-config=node.k8s.io/v1beta1=false
+
+    steps:
+      - checkout
+      - run:
+          name: Install Node.js and Headless Chrome dependencies
+          command: |
+            sudo apt-get update && sudo apt-get install -yq \
+              jq gconf-service libasound2 libatk1.0-0 libatk-bridge2.0-0 libc6 libcairo2 libcups2 libdbus-1-3 \
+              libexpat1 libfontconfig1 libgcc1 libgconf-2-4 libgdk-pixbuf2.0-0 libglib2.0-0 libgtk-3-0 libnspr4 \
+              libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 \
+              libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 ca-certificates \
+              fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils wget
+            curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+            sudo apt install nodejs
+            node --version
+            npm --version
+      - run:
+          name: Running kore-apiserver
+          command: |
+            make kore-apiserver
+            bin/kore-apiserver --verbose
+          background: true
+          environment:
+            KORE_ADMIN_PASS: "password"
+            KORE_ADMIN_TOKEN: "password"
+            KORE_AUTHENTICATION_PLUGINS: "basicauth,admintoken"
+            KORE_CERTIFICATE_AUTHORITY: "hack/ca/ca.pem"
+            KORE_CERTIFICATE_AUTHORITY_KEY: "hack/ca/ca-key.pem"
+            KORE_HMAC: "bdT2Qg6DybsLIwc0TbYWrkGC4auovscg"
+            # The below must be matched with the private key in the API test project:
+            KORE_LOCAL_JWT_PUBLIC_KEY: "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAIG6XiNhkwDETU2zk0tGlI0DKlbEJcN4jxwJBqhd3neReLDnqg9SBgKepdy9Nxw5LAd1gNoBkLvdFJg9SbHlM0sCAwEAAQ=="
+            KORE_UI_PUBLIC_URL: "http://localhost:3000"
+            KUBE_API_SERVER: "http://kube-apiserver:8080"
+            USERS_DB_URL: "root:pass@tcp(database:3306)/kore?parseTime=true"
+      - run:
+          name: Running kore-ui
+          working_directory: ~/project/ui
+          command: |
+            npm install
+            npm run build
+            npm start
+          background: true
+          environment:
+            KORE_BASE_URL: http://localhost:3000
+            KORE_API_URL: http://localhost:10080/api/v1alpha1
+            KORE_API_TOKEN: password
+            REDIS_URL: redis://redis:6379
+      - run:
+          name: Waiting for API and UI
+          command: |
+            make api-wait
+            make ui-wait
+      - run:
+          name: End-to-end testing UI
+          working_directory: ~/project/ui
+          environment:
+            NODE_ENV: development
+          command: |
+            npm run test-e2e
+
   release-ui:
     environment:
       KORE_UI_IMAGE: quay.io/appvia/kore-ui
@@ -379,6 +490,10 @@ workflows:
           filters:
             tags:
               only: /^v.*$/
+      - test-ui:
+          filters:
+            tags:
+              only: /^v.*$/
       - release-ui:
           filters:
             branches:
@@ -387,6 +502,7 @@ workflows:
               only: /^v.*$/
           requires:
             - build-ui
+            - test-ui
       - release-qa:
           filters:
             branches:

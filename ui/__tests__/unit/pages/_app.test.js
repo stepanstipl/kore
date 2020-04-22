@@ -1,12 +1,12 @@
 import axios from 'axios'
-import App from '../../pages/_app'
-import OrgService from '../../server/services/org'
-import apiRequest from '../../lib/utils/api-request'
-import redirect from '../../lib/utils/redirect'
+import App from '../../../pages/_app'
+import OrgService from '../../../server/services/org'
+import apiRequest from '../../../lib/utils/api-request'
+import redirect from '../../../lib/utils/redirect'
 
-jest.mock('../../server/services/org')
-jest.mock('../../lib/utils/api-request')
-jest.mock('../../lib/utils/redirect')
+jest.mock('../../../server/services/org')
+jest.mock('../../../lib/utils/api-request')
+jest.mock('../../../lib/utils/redirect')
 jest.mock('axios')
 
 describe('App', () => {

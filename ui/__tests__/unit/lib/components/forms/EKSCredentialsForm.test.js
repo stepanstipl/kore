@@ -1,7 +1,7 @@
 import { mount } from 'enzyme'
 
-import EKSCredentialsForm from '../../../../lib/components/forms/EKSCredentialsForm'
-import ApiTestHelpers from '../../../api-test-helpers'
+import EKSCredentialsForm from '../../../../../lib/components/forms/EKSCredentialsForm'
+import ApiTestHelpers from '../../../../api-test-helpers'
 
 describe('EKSCredentialsForm', () => {
   let props

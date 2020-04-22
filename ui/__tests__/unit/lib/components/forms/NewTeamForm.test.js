@@ -1,8 +1,8 @@
 import { mount } from 'enzyme'
-import NewTeamForm from '../../../../lib/components/forms/NewTeamForm'
-import copy from '../../../../lib/utils/object-copy'
-import Team from '../../../../lib/crd/Team'
-import ApiTestHelpers from '../../../api-test-helpers'
+import NewTeamForm from '../../../../../lib/components/forms/NewTeamForm'
+import copy from '../../../../../lib/utils/object-copy'
+import Team from '../../../../../lib/crd/Team'
+import ApiTestHelpers from '../../../../api-test-helpers'
 
 describe('NewTeamForm', () => {
   let props

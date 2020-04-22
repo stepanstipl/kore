@@ -42,6 +42,7 @@ class CloudSelector extends React.Component {
       <Row gutter={16} type="flex" justify="center" style={{ marginTop: '40px', marginBottom: '40px' }}>
         <Col span={6}>
           <Card
+            id="gcp"
             onClick={this.selectCloud('GKE')}
             hoverable={true}
             className={ selectedCloud === 'GKE' ? 'cloud-card selected' : 'cloud-card' }
@@ -55,6 +56,7 @@ class CloudSelector extends React.Component {
         </Col>
         <Col span={6}>
           <Card
+            id="aws"
             onClick={this.selectCloud('EKS')}
             hoverable={true}
             className={ selectedCloud === 'EKS' ? 'cloud-card selected' : 'cloud-card' }
@@ -68,6 +70,7 @@ class CloudSelector extends React.Component {
         </Col>
         <Col span={6}>
           <Card
+            id="azure"
             hoverable={false}
             className={ selectedCloud === 'AKS' ? 'cloud-card selected' : 'cloud-card' }
           >

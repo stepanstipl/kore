@@ -1,7 +1,7 @@
 import { mount } from 'enzyme'
 
-import ClusterBuildForm from '../../../../lib/components/forms/ClusterBuildForm'
-import ApiTestHelpers from '../../../api-test-helpers'
+import ClusterBuildForm from '../../../../../lib/components/forms/ClusterBuildForm'
+import ApiTestHelpers from '../../../../api-test-helpers'
 
 describe('ClusterBuildForm', () => {
   let props

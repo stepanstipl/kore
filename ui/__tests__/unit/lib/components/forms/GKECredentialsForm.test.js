@@ -1,7 +1,7 @@
 import { mount } from 'enzyme'
 
-import GKECredentialsForm from '../../../../lib/components/forms/GKECredentialsForm'
-import ApiTestHelpers from '../../../api-test-helpers'
+import GKECredentialsForm from '../../../../../lib/components/forms/GKECredentialsForm'
+import ApiTestHelpers from '../../../../api-test-helpers'
 
 describe('GKECredentialsForm', () => {
   let props

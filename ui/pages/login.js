@@ -111,11 +111,11 @@ class LoginPage extends React.Component {
                     {authProvider ? <a href={`/login/auth?provider=${connectorId}`}>Login with {authProvider.spec.displayName}</a> : null }
                     {!embeddedAuth ? <a href="/login/auth">Login with Identity Provider</a> : null }
                   </Button>
-                  <Button style={{ marginLeft: '10px' }} onClick={this.showLoginForm}>Local user login</Button>
+                  <Button id="local-user-login" style={{ marginLeft: '10px' }} onClick={this.showLoginForm}>Local user login</Button>
                 </div>
               ) : null}
               {showLoginForm ? (
-                <Form layout="inline" onSubmit={this.handleSubmit} style={{ marginTop: '20px' }}>
+                <Form id="login-form" layout="inline" onSubmit={this.handleSubmit} style={{ marginTop: '20px' }}>
                   <Form.Item validateStatus={usernameError ? 'error' : ''} help={usernameError || ''}>
                     {getFieldDecorator('login', {
                       rules: [{ required: true, message: 'Please input your username!' }],
@@ -138,7 +138,7 @@ class LoginPage extends React.Component {
                     )}
                   </Form.Item>
                   <Form.Item>
-                    <Button type="primary" htmlType="submit" loading={submitting} disabled={this.disableButton(getFieldsError())}>
+                    <Button id="submit" type="primary" htmlType="submit" loading={submitting} disabled={this.disableButton(getFieldsError())}>
                       Log in
                     </Button>
                   </Form.Item>

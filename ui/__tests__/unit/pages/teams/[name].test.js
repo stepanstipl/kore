@@ -1,11 +1,11 @@
 import { when } from 'jest-when'
 import { mount } from 'enzyme'
 
-import TeamPage from '../../../pages/teams/[name]'
-import apiRequest from '../../../lib/utils/api-request'
-import copy from '../../../lib/utils/object-copy'
+import TeamPage from '../../../../pages/teams/[name]'
+import apiRequest from '../../../../lib/utils/api-request'
+import copy from '../../../../lib/utils/object-copy'
 
-jest.mock('../../../lib/utils/api-request')
+jest.mock('../../../../lib/utils/api-request')
 
 const props = {
   user: { id: 'jbloggs' },

@@ -67,6 +67,7 @@ exports[`Snapshot testing shows login not using embedded auth 1`] = `
             </button>
             <button
               className="ant-btn"
+              id="local-user-login"
               onClick={[Function]}
               style={
                 Object {
@@ -155,6 +156,7 @@ exports[`Snapshot testing shows login using embedded auth 1`] = `
             </button>
             <button
               className="ant-btn"
+              id="local-user-login"
               onClick={[Function]}
               style={
                 Object {

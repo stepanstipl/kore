@@ -1,8 +1,8 @@
 import { Form } from 'antd'
 import { mount } from 'enzyme'
 
-import VerifiedAllocatedResourceForm from '../../../../lib/components/forms/VerifiedAllocatedResourceForm'
-import ApiTestHelpers from '../../../api-test-helpers'
+import VerifiedAllocatedResourceForm from '../../../../../lib/components/forms/VerifiedAllocatedResourceForm'
+import ApiTestHelpers from '../../../../api-test-helpers'
 
 const sampleResource = {
   metadata: { name: 'sample-resource' },

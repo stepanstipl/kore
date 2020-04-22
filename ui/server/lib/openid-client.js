@@ -5,6 +5,7 @@ class OpenIdClient {
 
   constructor(baseUrl, openidConfig, embeddedAuth, authService) {
     this.redirectUrl = `${baseUrl}/auth/callback`
+    this.enabled = openidConfig.enabled
     this.authUrl = openidConfig.url
     this.clientId = openidConfig.clientID
     this.clientSecret = openidConfig.clientSecret
@@ -14,6 +15,11 @@ class OpenIdClient {
   }
 
   async init() {
+    if (!this.enabled) {
+      // just setup passport so that the local user can be serialized/deserialized into session
+      this.setupPassport()
+      return
+    }
     try {
       await this.setupAuthClient()
     } catch (err) {
