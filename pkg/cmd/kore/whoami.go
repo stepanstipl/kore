@@ -44,7 +44,7 @@ func NewCmdWhoami(factory cmdutil.Factory) *cobra.Command {
 
 // Run implements the action
 func (o *WhoAmIOptions) Run() error {
-	resp := o.Client().ResourceNoPlural("whoami").Get()
+	resp := o.ClientWithEndpoint("/whoami").Get()
 	if resp.Error() != nil {
 		return resp.Error()
 	}

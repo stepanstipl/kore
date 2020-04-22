@@ -19,7 +19,6 @@ package get
 import (
 	"github.com/appvia/kore/pkg/cmd/errors"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
-	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/render"
 
 	"github.com/spf13/cobra"
@@ -111,28 +110,15 @@ func (o *GetOptions) Validate() error {
 		return errors.ErrMissingResource
 	}
 
-	resource, err := o.Resources().Lookup(utils.Pluralize(o.Resource))
-	if err != nil {
-		return err
-	}
-	if resource == nil {
-		return errors.ErrUnknownResource
-	}
-
 	return nil
 }
 
 // Run implements the action
 func (o *GetOptions) Run() error {
-	plural := utils.Pluralize(o.Resource)
-
 	// @step: lookup the resource from the cache
-	resource, err := o.Resources().Lookup(plural)
+	resource, err := o.Resources().Lookup(o.Resource)
 	if err != nil {
 		return err
-	}
-	if resource == nil {
-		return errors.ErrUnknownResource
 	}
 
 	// @step: if the resource if team space, lets ensure we have the team selector
@@ -141,7 +127,7 @@ func (o *GetOptions) Run() error {
 	}
 
 	// @step: we need to construct the request
-	request := o.Client().Resource(plural)
+	request := o.ClientWithResource(resource)
 
 	if resource.IsScoped(cmdutil.TeamScope) {
 		request.Team(o.Team)

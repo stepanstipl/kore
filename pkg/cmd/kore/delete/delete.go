@@ -88,15 +88,13 @@ func (o *DeleteOptions) Run() error {
 		return o.DeleteByPath()
 	}
 
-	plural := utils.Pluralize(o.Resource)
-
 	// @step: we lookup the resource type
-	resource, err := o.Resources().Lookup(plural)
+	resource, err := o.Resources().Lookup(o.Resource)
 	if err != nil {
 		return err
 	}
 
-	request := o.Client().Resource(plural).Name(o.Name)
+	request := o.ClientWithResource(resource).Name(o.Name)
 	if resource.IsTeamScoped() {
 		request.Team(o.Team)
 	}
@@ -116,7 +114,7 @@ func (o *DeleteOptions) Validate() error {
 		return errors.ErrMissingResourceName
 	}
 
-	resource, err := o.Resources().Lookup(utils.Pluralize(o.Resource))
+	resource, err := o.Resources().Lookup(o.Resource)
 	if err != nil {
 		return err
 	}
@@ -160,9 +158,12 @@ func (o *DeleteOptions) DeleteByPath() error {
 			name := x.Object.GetName()
 			kind := x.Object.GetObjectKind().GroupVersionKind().Kind
 			groupversion := x.Object.GetObjectKind().GroupVersionKind().GroupVersion()
-
+			resource, err := o.Resources().Lookup(kind)
+			if err != nil {
+				return err
+			}
 			// @step: construct a request for the resource
-			request := o.Client().Resource(kind).Name(name)
+			request := o.ClientWithResource(resource).Name(name)
 			if x.Resource.IsTeamScoped() {
 				request.Team(o.Team)
 			}

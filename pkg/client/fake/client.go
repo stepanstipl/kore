@@ -102,11 +102,6 @@ func (f *fake) Resource(string) client.RestInterface {
 	return f
 }
 
-// ResourceNoPlural set the resource name direct
-func (f *fake) ResourceNoPlural(string) client.RestInterface {
-	return f
-}
-
 // Parameters defines a list of parameters for the request
 func (f *fake) Parameters(...client.ParameterFunc) client.RestInterface {
 	return f
@@ -119,11 +114,6 @@ func (f *fake) Payload(interface{}) client.RestInterface {
 
 // Result set the object which we should decode into
 func (f *fake) Result(interface{}) client.RestInterface {
-	return f
-}
-
-// SubResource is the subresource of the kind
-func (f *fake) SubResource(string) client.RestInterface {
 	return f
 }
 

@@ -87,7 +87,11 @@ func (o *ApplyOptions) Run() error {
 			// @step: create a request to check the status
 			kind := x.Object.GetKind()
 			groupversion := x.Object.GetObjectKind().GroupVersionKind().GroupVersion()
-			request := o.Client().Resource(kind).Name(name)
+			resource, err := o.Resources().Lookup(kind)
+			if err != nil {
+				return err
+			}
+			request := o.ClientWithResource(resource).Name(name)
 
 			// @step: check the resource scope
 			if x.Resource.IsTeamScoped() {

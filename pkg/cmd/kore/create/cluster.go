@@ -115,7 +115,7 @@ func NewCmdCreateCluster(factory cmdutil.Factory) *cobra.Command {
 	// @step: register the autocompletions
 	cmdutils.MustRegisterFlagCompletionFunc(command, "allocation", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.ShellCompDirective) {
 		list := &configv1.AllocationList{}
-		if err := o.Client().Team(cmdutil.GetTeam(cmd)).Resource("allocation").Result(list).Get().Error(); err != nil {
+		if err := o.ClientWithTeamResource(cmdutil.GetTeam(cmd), o.Resources().MustLookup("allocation")).Result(list).Get().Error(); err != nil {
 			return nil, cobra.ShellCompDirectiveError
 		}
 		var filtered []string
@@ -153,7 +153,7 @@ func (o *CreateClusterOptions) Validate() error {
 		return errors.ErrMissingResourceName
 	}
 
-	found, err := o.Client().Resource("allocation").Name(o.Allocation).Team(o.Team).Exists()
+	found, err := o.ClientWithTeamResource(o.Team, o.Resources().MustLookup("allocation")).Name(o.Allocation).Exists()
 	if err != nil {
 		return err
 	}
@@ -161,7 +161,7 @@ func (o *CreateClusterOptions) Validate() error {
 		return errors.NewResourceNotFoundWithKind(o.Allocation, "allocation")
 	}
 
-	found, err = o.Client().Resource("plan").Name(o.Plan).Exists()
+	found, err = o.ClientWithResource(o.Resources().MustLookup("plan")).Name(o.Plan).Exists()
 	if err != nil {
 		return err
 	}
@@ -191,9 +191,7 @@ func (o *CreateClusterOptions) Run() error {
 	now := time.Now()
 	// @step: provision and wait if required
 	err = o.WaitForCreation(
-		o.Client().
-			Team(o.Team).
-			Resource("cluster").
+		o.ClientWithTeamResource(o.Team, o.Resources().MustLookup("cluster")).
 			Name(o.Name).
 			Payload(config),
 		o.NoWait,
@@ -315,7 +313,12 @@ func (o *CreateClusterOptions) CreateClusterNamespace(name string) error {
 		},
 	}
 
-	found, err := o.Client().Team(o.Team).Resource(kind).Name(rs).Exists()
+	resource, err := o.Resources().Lookup(kind)
+	if err != nil {
+		return err
+	}
+
+	found, err := o.ClientWithTeamResource(o.Team, resource).Name(rs).Exists()
 	if err != nil {
 		return err
 	}
@@ -327,9 +330,7 @@ func (o *CreateClusterOptions) CreateClusterNamespace(name string) error {
 	o.Println("--> Attempting to create namespace: %s", name)
 
 	return o.WaitForCreation(
-		o.Client().
-			Team(o.Team).
-			Resource(kind).
+		o.ClientWithTeamResource(o.Team, resource).
 			Name(o.Name).
 			Payload(object),
 		o.NoWait,
@@ -362,8 +363,7 @@ func (o *CreateClusterOptions) ParsePlanParams() (map[string]interface{}, error)
 func (o *CreateClusterOptions) GetPlan() (*configv1.Plan, error) {
 	plan := &configv1.Plan{}
 
-	return plan, o.Client().
-		Resource("plan").
+	return plan, o.ClientWithResource(o.Resources().MustLookup("plan")).
 		Name(o.Plan).
 		Result(plan).
 		Get().
@@ -374,9 +374,7 @@ func (o *CreateClusterOptions) GetPlan() (*configv1.Plan, error) {
 func (o *CreateClusterOptions) GetAllocation() (*configv1.Allocation, error) {
 	allocation := &configv1.Allocation{}
 
-	return allocation, o.Client().
-		Team(o.Team).
-		Resource("allocation").
+	return allocation, o.ClientWithTeamResource(o.Team, o.Resources().MustLookup("allocation")).
 		Name(o.Allocation).
 		Result(allocation).
 		Get().
@@ -387,5 +385,5 @@ func (o *CreateClusterOptions) GetAllocation() (*configv1.Allocation, error) {
 func (o *CreateClusterOptions) GetUserAuth() (*types.WhoAmI, error) {
 	who := &types.WhoAmI{}
 
-	return who, o.Client().ResourceNoPlural("whoami").Result(who).Get().Error()
+	return who, o.ClientWithEndpoint("/whoami").Result(who).Get().Error()
 }

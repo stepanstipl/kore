@@ -20,6 +20,8 @@ import (
 	"errors"
 	"io"
 
+	"github.com/appvia/kore/pkg/utils"
+
 	"github.com/appvia/kore/pkg/client"
 	"github.com/appvia/kore/pkg/client/config"
 
@@ -58,8 +60,12 @@ type Streams struct {
 type Factory interface {
 	// CheckError handles the cli errors for us
 	CheckError(error)
-	// Client returns a api client
-	Client() client.RestInterface
+	// ClientWithEndpoint returns the api client with a specific endpoint
+	ClientWithEndpoint(endpoint string) client.RestInterface
+	// ClientWithResource returns the api client with a specific resource
+	ClientWithResource(resource Resource) client.RestInterface
+	// ClientWithTeamResource returns the api client with a specific team resource
+	ClientWithTeamResource(team string, resource Resource) client.RestInterface
 	// Config returns the runtim configuration
 	Config() *config.Config
 	// Println writes a message to the io.Writer
@@ -91,7 +97,9 @@ type Resources interface {
 	// LookupResourceNames returns a list of resources of a specific kind
 	LookupResourceNames(string, string) ([]string, error)
 	// Lookup is used to check if a resource is supported
-	Lookup(string) (*Resource, error)
+	Lookup(string) (Resource, error)
+	// MustLookup is used to get a known resource
+	MustLookup(string) Resource
 	// Names returns all the names of the resource types
 	Names() ([]string, error)
 	// List returns all the resource available
@@ -113,6 +121,8 @@ type ResourceScope string
 type Resource struct {
 	// Name is the name of the resource
 	Name string `json:"name,omitempty"`
+	// APIName is the API resource name. If empty it defaults to the plural version of `Name`
+	APIName string `json:"apiName"`
 	// ShortName is the a short name of the resource (not used yet)
 	ShortName string `json:"shortName,omitempty"`
 	// GroupVersion is the api group version of the resource (not used yet)
@@ -121,20 +131,25 @@ type Resource struct {
 	Kind string `json:"kind,omitempty"`
 	// Scope is the resource scope
 	Scope ResourceScope `json:"scope,omitempty"`
-	// SubResources is a collection of subresources for this resource
-	SubResources []string `json:"subResources,omitempty"`
 	// Printer is printer columns for the resource
 	Printer []Column `json:"printer,omitempty"`
 }
 
 // IsTeamScoped checks if a team resource
-func (r *Resource) IsTeamScoped() bool {
+func (r Resource) IsTeamScoped() bool {
 	return r.IsScoped(TeamScope)
 }
 
 // IsScoped checks the scope of a resource
-func (r *Resource) IsScoped(scope ResourceScope) bool {
+func (r Resource) IsScoped(scope ResourceScope) bool {
 	return r.Scope == scope
+}
+
+func (r Resource) GetAPIName() string {
+	if r.APIName != "" {
+		return r.APIName
+	}
+	return utils.Pluralize(r.Name)
 }
 
 // Column is used to define column field for printing

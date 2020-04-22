@@ -58,7 +58,7 @@ func NewCmdCreateTeam(factory cmdutil.Factory) *cobra.Command {
 
 // Run is responsible for creating the team
 func (o CreateTeamOptions) Run() error {
-	found, err := o.Client().Resource("team").Name(o.Name).Exists()
+	found, err := o.ClientWithResource(o.Resources().MustLookup("team")).Name(o.Name).Exists()
 	if err != nil {
 		return err
 	}
@@ -82,8 +82,7 @@ func (o CreateTeamOptions) Run() error {
 	}
 
 	return o.WaitForCreation(
-		o.Client().
-			Resource("team").
+		o.ClientWithResource(o.Resources().MustLookup("team")).
 			Name(o.Name).
 			Payload(team).
 			Result(&orgv1.Team{}),

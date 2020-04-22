@@ -25,7 +25,6 @@ import (
 	"github.com/appvia/kore/pkg/cmd/errors"
 	"github.com/appvia/kore/pkg/cmd/kore/apply"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
-	"github.com/appvia/kore/pkg/utils"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
@@ -90,7 +89,7 @@ func (o *EditOptions) Validate() error {
 		return errors.ErrMissingResourceName
 	}
 	// @step: lookup the resource from the cache
-	resource, err := o.Resources().Lookup(utils.Pluralize(o.Resource))
+	resource, err := o.Resources().Lookup(o.Resource)
 	if err != nil {
 		return err
 	}
@@ -105,10 +104,8 @@ func (o *EditOptions) Validate() error {
 // Run implements the action
 // @TODO need to add a way to quit without changing
 func (o *EditOptions) Run() error {
-	plural := utils.Pluralize(o.Resource)
-
 	// @step: lookup the resource from the cache
-	resource, err := o.Resources().Lookup(plural)
+	resource, err := o.Resources().Lookup(o.Resource)
 	if err != nil {
 		return err
 	}
@@ -161,9 +158,10 @@ func (o *EditOptions) Run() error {
 }
 
 // GetResource retrieve the resource for us
-func (o *EditOptions) GetResource(resource *cmdutil.Resource) ([]byte, error) {
+func (o *EditOptions) GetResource(resource cmdutil.Resource) ([]byte, error) {
 	// @step: we need to construct the request
-	request := o.Client().Resource(utils.Pluralize(o.Resource)).Name(o.Name)
+
+	request := o.ClientWithResource(resource).Name(o.Name)
 	if resource.IsTeamScoped() {
 		request.Team(o.Team)
 	}

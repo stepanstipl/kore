@@ -98,9 +98,7 @@ func (o *NamespaceOptions) Validate() error {
 		return errors.ErrMissingResourceName
 	}
 
-	found, err := o.Client().
-		Team(o.Team).
-		Resource("cluster").
+	found, err := o.ClientWithTeamResource(o.Team, o.Resources().MustLookup("cluster")).
 		Name(o.Cluster).
 		Exists()
 	if err != nil {
@@ -140,9 +138,7 @@ func (o *NamespaceOptions) Run() error {
 	}
 
 	return o.WaitForCreation(
-		o.Client().
-			Team(o.Team).
-			Resource("namespaceclaim").
+		o.ClientWithTeamResource(o.Team, o.Resources().MustLookup("namespaceclaim")).
 			Payload(namespace).
 			Name(name),
 		o.NoWait,

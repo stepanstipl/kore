@@ -52,10 +52,8 @@ func NewFactory(client client.Interface, streams Streams, config *config.Config)
 	}, nil
 }
 
-// Client returns the api client
-func (f *factory) Client() client.RestInterface {
+func (f *factory) refreshToken() {
 	auth := f.cfg.GetCurrentAuthInfo()
-
 	if auth.OIDC != nil {
 		// @step: has the access token expired
 		token, err := utils.NewClaimsFromRawToken(auth.OIDC.IDToken)
@@ -75,8 +73,24 @@ func (f *factory) Client() client.RestInterface {
 			}
 		}
 	}
+}
 
-	return f.client.Request()
+// ClientWithEndpoint returns the api client with a specific endpoint
+func (f *factory) ClientWithEndpoint(endpoint string) client.RestInterface {
+	f.refreshToken()
+	return f.client.Request().Endpoint(endpoint)
+}
+
+// ClientWithResource returns the api client with a specific resource
+func (f *factory) ClientWithResource(resource Resource) client.RestInterface {
+	f.refreshToken()
+	return f.client.Request().Resource(resource.GetAPIName())
+}
+
+// ClientWithTeamResource returns the api client with a specific team resource
+func (f *factory) ClientWithTeamResource(team string, resource Resource) client.RestInterface {
+	f.refreshToken()
+	return f.client.Request().Team(team).Resource(resource.GetAPIName())
 }
 
 // CheckError handles the cli errors for us

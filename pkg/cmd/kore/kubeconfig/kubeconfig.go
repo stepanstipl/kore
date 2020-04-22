@@ -72,9 +72,7 @@ func (o *KubeConfigOptions) Validate() error {
 func (o *KubeConfigOptions) Run() error {
 	clusters := &clustersv1.ClusterList{}
 
-	resp, err := o.Client().
-		Resource("cluster").
-		Team(o.Team).
+	resp, err := o.ClientWithTeamResource(o.Team, o.Resources().MustLookup("cluster")).
 		Result(clusters).
 		Get().Do()
 	if err != nil {

@@ -62,16 +62,12 @@ type RestInterface interface {
 	Name(string) RestInterface
 	// Resource set the resource kind in the request
 	Resource(string) RestInterface
-	// ResourceNoPlural set the resource name direct
-	ResourceNoPlural(string) RestInterface
 	// Parameters defines a list of parameters for the request
 	Parameters(...ParameterFunc) RestInterface
 	// Payload set the payload of the request
 	Payload(interface{}) RestInterface
 	// Result set the object which we should decode into
 	Result(interface{}) RestInterface
-	// SubResource is the subresource of the kind
-	SubResource(string) RestInterface
 	// Team set the team
 	Team(string) RestInterface
 	// Update performs an put request
