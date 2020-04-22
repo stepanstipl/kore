@@ -17,6 +17,7 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -25,17 +26,19 @@ import (
 	"github.com/appvia/kore/pkg/client"
 	"github.com/appvia/kore/pkg/client/config"
 	"github.com/appvia/kore/pkg/cmd/errors"
+	"github.com/appvia/kore/pkg/utils"
+	"github.com/appvia/kore/pkg/utils/openid"
 )
 
 type factory struct {
 	client    client.Interface
 	streams   Streams
-	cfg       config.Config
+	cfg       *config.Config
 	resources Resources
 }
 
 // NewFactory returns a default factory
-func NewFactory(client client.Interface, streams Streams, config config.Config) (Factory, error) {
+func NewFactory(client client.Interface, streams Streams, config *config.Config) (Factory, error) {
 	resources, err := newResourceManager(client)
 	if err != nil {
 		return nil, err
@@ -51,6 +54,28 @@ func NewFactory(client client.Interface, streams Streams, config config.Config) 
 
 // Client returns the api client
 func (f *factory) Client() client.RestInterface {
+	auth := f.cfg.GetCurrentAuthInfo()
+
+	if auth.OIDC != nil {
+		// @step: has the access token expired
+		token, err := utils.NewClaimsFromRawToken(auth.OIDC.IDToken)
+		if err == nil {
+			if token.HasExpired() {
+				refresh, err := openid.DefaultTokenRefresher.RefreshToken(context.Background(),
+					auth.OIDC.RefreshToken,
+					auth.OIDC.TokenURL,
+					auth.OIDC.ClientID,
+					auth.OIDC.ClientSecret,
+				)
+				if err == nil {
+					auth.OIDC.AccessToken = refresh.AccessToken
+					auth.OIDC.IDToken = refresh.IDToken
+					_ = f.UpdateConfig()
+				}
+			}
+		}
+	}
+
 	return f.client.Request()
 }
 
@@ -75,12 +100,12 @@ func (f *factory) CheckError(kerror error) {
 
 // UpdateConfig is responsible for updating the configuration
 func (f *factory) UpdateConfig() error {
-	return config.UpdateConfig(&f.cfg, config.GetClientConfigurationPath())
+	return config.UpdateConfig(f.cfg, config.GetClientConfigurationPath())
 }
 
 // Config returns the factory client configuration
 func (f *factory) Config() *config.Config {
-	return &f.cfg
+	return f.cfg
 }
 
 // SetStdin allows you to set the stdin for the factory

@@ -24,22 +24,7 @@ import (
 	"net/http"
 
 	"github.com/appvia/kore/pkg/client"
-	"github.com/appvia/kore/pkg/client/config"
 )
-
-type fake struct {
-	cfg             *config.Config
-	payload, result interface{}
-}
-
-// NewFake returns a new fake client
-func NewFake(config *config.Config) Interface {
-	return &fake{cfg: config}
-}
-
-func (f *fake) SetResult(v interface{}) {
-	f.result = v
-}
 
 // Request creates a request instance
 func (f *fake) Request() client.RestInterface {

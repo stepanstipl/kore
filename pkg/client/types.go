@@ -22,14 +22,18 @@ import (
 	"net/http"
 )
 
-//
-
 // Interface is the api client interface
 type Interface interface {
-	// Request creates a request instance
-	Request() RestInterface
 	// HTTPClient sets the http client
 	HTTPClient(*http.Client) Interface
+	// Request creates a request instance
+	Request() RestInterface
+}
+
+// Plugin provides an interface for plugins
+type Plugin interface {
+	// WrapTransport provides the entrypoint for the authentication handle
+	WrapTransport(http.RoundTripper) http.RoundTripper
 }
 
 // RestInterface provides the rest interface

@@ -35,6 +35,7 @@ func NewClaims(claims jwt.MapClaims) *Claims {
 	return &Claims{claims: claims}
 }
 
+// NewClaimsFromToken creates a claims from a openid.IDToken
 func NewClaimsFromToken(token openid.IDToken) (*Claims, error) {
 	c := jwt.MapClaims{}
 	if err := token.Claims(&c); err != nil {
@@ -44,7 +45,7 @@ func NewClaimsFromToken(token openid.IDToken) (*Claims, error) {
 	return NewClaims(c), nil
 }
 
-// NewClaims returns a claims by parsing a raw token
+// NewClaimsFromRawToken returns a claims by parsing a raw token
 func NewClaimsFromRawToken(tokenString string) (*Claims, error) {
 	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
 
@@ -74,6 +75,16 @@ func (c *Claims) GetEmail() (string, bool) {
 // GetEmailVerified returns if the email is verified
 func (c *Claims) GetEmailVerified() (bool, bool) {
 	return c.GetBool("email_verified")
+}
+
+// HasExpired indicates the token has expired
+func (c *Claims) HasExpired() bool {
+	exp, found := c.GetExpiry()
+	if !found {
+		return false
+	}
+
+	return exp.Before(time.Now().UTC())
 }
 
 // GetExpiry returns the expiry of the jwt

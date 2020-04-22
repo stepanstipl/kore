@@ -62,9 +62,17 @@ type apiClient struct {
 	queryparams []string
 }
 
+var (
+	// ErrAuthenticationRequired requires authentication
+	ErrAuthenticationRequired = apiserver.Error{
+		Code:    http.StatusUnauthorized,
+		Message: "authentication required",
+	}
+)
+
 // cc provides a wrapper around th config
 type cc struct {
-	cfg config.Config
+	cfg *config.Config
 	hc  *http.Client
 }
 
@@ -74,7 +82,7 @@ func New(c *config.Config) (Interface, error) {
 		return nil, errors.New("no client configuration")
 	}
 
-	return &cc{cfg: *c, hc: DefaultHTTPClient}, nil
+	return &cc{cfg: c, hc: DefaultHTTPClient}, nil
 }
 
 // HTTPClient sets the http client
@@ -87,7 +95,7 @@ func (c *cc) HTTPClient(hc *http.Client) Interface {
 // Request creates a request instance
 func (c *cc) Request() RestInterface {
 	return &apiClient{
-		cfg:        &c.cfg,
+		cfg:        c.cfg,
 		hc:         c.hc,
 		parameters: make(map[string]string),
 	}
@@ -219,7 +227,7 @@ func (a *apiClient) HandleResponse(resp *http.Response) error {
 	// @step: if everything is ok, check for a response and return
 	code := resp.StatusCode
 
-	log.WithField("code", code).Debug("recieved the following http response code")
+	log.WithField("code", code).Debug("received the following http response code")
 
 	if code >= http.StatusOK && code <= 299 {
 		if err := a.MakeResult(resp, a.result); err != nil {

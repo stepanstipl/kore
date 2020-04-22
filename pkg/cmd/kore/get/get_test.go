@@ -60,7 +60,7 @@ func makeFakeFactory(t *testing.T, w io.Writer) (fake.Interface, cmdutil.Factory
 
 	streams := cmdutil.Streams{Stdout: w, Stderr: w}
 	client := fake.NewFake(&config.Config{})
-	factory, err := cmdutil.NewFactory(client, streams, config.Config{})
+	factory, err := cmdutil.NewFactory(client, streams, &config.Config{})
 	require.NoError(t, err)
 	require.NotNil(t, factory)
 
