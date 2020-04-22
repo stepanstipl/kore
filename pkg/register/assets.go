@@ -30,6 +30,8 @@
 // deploy/crds/org.kore.appvia.io_teaminvitations.yaml
 // deploy/crds/org.kore.appvia.io_teams.yaml
 // deploy/crds/org.kore.appvia.io_users.yaml
+// deploy/crds/services.kore.appvia.io_serviceplans.yaml
+// deploy/crds/services.kore.appvia.io_services.yaml
 package register
 
 import (
@@ -5589,6 +5591,220 @@ func crdsOrgKoreAppviaIo_usersYaml() (*asset, error) {
 	return a, nil
 }
 
+var _crdsServicesKoreAppviaIo_serviceplansYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: serviceplans.services.kore.appvia.io
+spec:
+  group: services.kore.appvia.io
+  names:
+    kind: ServicePlan
+    listKind: ServicePlanList
+    plural: serviceplans
+    singular: serviceplan
+  preserveUnknownFields: false
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      description: ServicePlan is a template for a service
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: ServicePlanSpec defines the desired state of Service plan
+          properties:
+            configuration:
+              description: Configuration are the key+value pairs describing a service
+                configuration
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+            description:
+              description: Description provides a summary of the configuration provided
+                by this plan
+              minLength: 1
+              type: string
+            kind:
+              description: Kind refers to the service type this is a plan for
+              minLength: 1
+              type: string
+            labels:
+              additionalProperties:
+                type: string
+              description: Labels is a collection of labels for this plan
+              type: object
+            summary:
+              description: Summary provides a short title summary for the plan
+              minLength: 1
+              type: string
+          required:
+          - configuration
+          - description
+          - kind
+          - summary
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsServicesKoreAppviaIo_serviceplansYamlBytes() ([]byte, error) {
+	return _crdsServicesKoreAppviaIo_serviceplansYaml, nil
+}
+
+func crdsServicesKoreAppviaIo_serviceplansYaml() (*asset, error) {
+	bytes, err := crdsServicesKoreAppviaIo_serviceplansYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/services.kore.appvia.io_serviceplans.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsServicesKoreAppviaIo_servicesYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: services.services.kore.appvia.io
+spec:
+  group: services.kore.appvia.io
+  names:
+    kind: Service
+    listKind: ServiceList
+    plural: services
+    singular: service
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: Service is a managed service instance
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: ServiceSpec defines the desired state of a service
+          properties:
+            configuration:
+              description: Configuration are the configuration values for this service
+                It will contain values from the plan + overrides by the user This
+                will provide a simple interface to calculate diffs between plan and
+                service configuration
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+            kind:
+              description: Kind refers to the service type
+              minLength: 1
+              type: string
+            plan:
+              description: Plan is the name of the service plan which was used to
+                create this service
+              minLength: 1
+              type: string
+          required:
+          - configuration
+          - kind
+          - plan
+          type: object
+        status:
+          description: ServiceStatus defines the observed state of a service
+          properties:
+            components:
+              description: Components is a collection of component statuses
+              items:
+                description: Component the state of a component of the resource
+                properties:
+                  detail:
+                    description: Detail is additional details on the error is any
+                    type: string
+                  message:
+                    description: Message is a human readable message on the status
+                      of the component
+                    type: string
+                  name:
+                    description: Name is the name of the component
+                    type: string
+                  status:
+                    description: Status is the status of the component
+                    type: string
+                type: object
+              type: array
+            message:
+              description: Message is the description of the current status
+              type: string
+            status:
+              description: Status is the overall status of the service
+              type: string
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsServicesKoreAppviaIo_servicesYamlBytes() ([]byte, error) {
+	return _crdsServicesKoreAppviaIo_servicesYaml, nil
+}
+
+func crdsServicesKoreAppviaIo_servicesYaml() (*asset, error) {
+	bytes, err := crdsServicesKoreAppviaIo_servicesYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/services.kore.appvia.io_services.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 // Asset loads and returns the asset for the given name.
 // It returns an error if the asset could not be found or
 // could not be loaded.
@@ -5671,6 +5887,8 @@ var _bindata = map[string]func() (*asset, error){
 	"crds/org.kore.appvia.io_teaminvitations.yaml":                        crdsOrgKoreAppviaIo_teaminvitationsYaml,
 	"crds/org.kore.appvia.io_teams.yaml":                                  crdsOrgKoreAppviaIo_teamsYaml,
 	"crds/org.kore.appvia.io_users.yaml":                                  crdsOrgKoreAppviaIo_usersYaml,
+	"crds/services.kore.appvia.io_serviceplans.yaml":                      crdsServicesKoreAppviaIo_serviceplansYaml,
+	"crds/services.kore.appvia.io_services.yaml":                          crdsServicesKoreAppviaIo_servicesYaml,
 }
 
 // AssetDir returns the file names below a certain
@@ -5745,6 +5963,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"org.kore.appvia.io_teaminvitations.yaml":                        {crdsOrgKoreAppviaIo_teaminvitationsYaml, map[string]*bintree{}},
 		"org.kore.appvia.io_teams.yaml":                                  {crdsOrgKoreAppviaIo_teamsYaml, map[string]*bintree{}},
 		"org.kore.appvia.io_users.yaml":                                  {crdsOrgKoreAppviaIo_usersYaml, map[string]*bintree{}},
+		"services.kore.appvia.io_serviceplans.yaml":                      {crdsServicesKoreAppviaIo_serviceplansYaml, map[string]*bintree{}},
+		"services.kore.appvia.io_services.yaml":                          {crdsServicesKoreAppviaIo_servicesYaml, map[string]*bintree{}},
 	}},
 }}
 

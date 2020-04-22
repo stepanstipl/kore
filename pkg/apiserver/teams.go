@@ -23,8 +23,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/appvia/kore/pkg/apiserver/types"
-	"github.com/appvia/kore/pkg/kore/assets"
+	"github.com/appvia/kore/pkg/apiserver/filters"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
@@ -32,7 +31,10 @@ import (
 	gcp "github.com/appvia/kore/pkg/apis/gcp/v1alpha1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
+	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
+	"github.com/appvia/kore/pkg/apiserver/types"
 	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/kore/assets"
 	"github.com/appvia/kore/pkg/utils"
 
 	restful "github.com/emicklei/go-restful"
@@ -681,7 +683,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
-	// Plan reference
+	// Team-specific plan details
 	ws.Route(
 		withAllNonValidationErrors(ws.GET("/{team}/plans/{plan}")).To(u.getTeamPlanDetails).
 			Operation("GetTeamPlanDetails").
@@ -690,6 +692,60 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Doc("Returns the plan, the JSON schema of the plan, and what what parameters are allowed to be edited by this team when using the plan").
 			Returns(http.StatusOK, "Contains details of the plan", TeamPlan{}).
 			Returns(http.StatusNotFound, "Team or plan doesn't exist", nil),
+	)
+
+	// Team-specific service plan details
+	ws.Route(
+		withAllNonValidationErrors(ws.GET("/{team}/serviceplans/{plan}")).To(u.getTeamServicePlanDetails).
+			Operation("GetTeamServicePlanDetails").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("plan", "Is name the of the service plan you're interested in")).
+			Doc("Returns the plan, the JSON schema of the plan, and what what parameters are allowed to be edited by this team when using the plan").
+			Returns(http.StatusOK, "Contains details of the plan", TeamServicePlan{}).
+			Returns(http.StatusNotFound, "Team or service plan doesn't exist", nil),
+	)
+
+	// Team services
+
+	ws.Route(
+		withAllNonValidationErrors(ws.GET("/{team}/services")).To(u.listServices).
+			Filter(filters.FeatureGateFilter(u.Config(), kore.FeatureGateServices)).
+			Doc("Lists all services for a team").
+			Operation("ListServices").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Returns(http.StatusOK, "List of all services for a team", servicesv1.ServiceList{}),
+	)
+
+	ws.Route(
+		withAllNonValidationErrors(ws.GET("/{team}/services/{name}")).To(u.getService).
+			Filter(filters.FeatureGateFilter(u.Config(), kore.FeatureGateServices)).
+			Doc("Returns a service").
+			Operation("GetService").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name of the service")).
+			Returns(http.StatusNotFound, "the service with the given name doesn't exist", nil).
+			Returns(http.StatusOK, "The requested service details", servicesv1.Service{}),
+	)
+	ws.Route(
+		withAllErrors(ws.PUT("/{team}/services/{name}")).To(u.updateService).
+			Filter(filters.FeatureGateFilter(u.Config(), kore.FeatureGateServices)).
+			Doc("Creates or updates a service").
+			Operation("UpdateService").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the service")).
+			Reads(servicesv1.Service{}, "The definition for the service").
+			Returns(http.StatusOK, "The service details", servicesv1.Service{}),
+	)
+
+	ws.Route(
+		withAllNonValidationErrors(ws.DELETE("/{team}/services/{name}")).To(u.deleteService).
+			Filter(filters.FeatureGateFilter(u.Config(), kore.FeatureGateServices)).
+			Doc("Deletes a service").
+			Operation("DeleteService").
+			Param(ws.PathParameter("name", "Is the name of the service")).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Returns(http.StatusNotFound, "the service with the given name doesn't exist", nil).
+			Returns(http.StatusOK, "Contains the former service definition from the kore", servicesv1.Service{}),
 	)
 
 	return ws, nil
@@ -806,5 +862,28 @@ func (u teamHandler) getTeamPlanDetails(req *restful.Request, resp *restful.Resp
 
 		planDetails.ParameterEditable = paramsMap
 		return resp.WriteHeaderAndEntity(http.StatusOK, planDetails)
+	})
+}
+
+func (u teamHandler) getTeamServicePlanDetails(req *restful.Request, resp *restful.Response) {
+	handleErrors(req, resp, func() error {
+		servicePlan, err := u.ServicePlans().Get(req.Request.Context(), req.PathParameter("plan"))
+		if err != nil {
+			return err
+		}
+
+		provider := u.ServiceProviders().GetProviderForKind(servicePlan.Spec.Kind)
+		if provider == nil {
+			return fmt.Errorf("provider not found for service kind %q", servicePlan.Spec.Kind)
+		}
+
+		servicePlanDetails := TeamServicePlan{
+			ServicePlan: servicePlan.Spec,
+			Schema:      provider.JSONSchema(servicePlan.Spec.Kind),
+		}
+
+		// TODO: set the editable parameters when we add service plan policies
+
+		return resp.WriteHeaderAndEntity(http.StatusOK, servicePlanDetails)
 	})
 }

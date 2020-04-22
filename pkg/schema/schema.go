@@ -24,6 +24,7 @@ import (
 	gcpv1alpha1 "github.com/appvia/kore/pkg/apis/gcp/v1alpha1"
 	gkev1alpha1 "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
+	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -48,6 +49,7 @@ func init() {
 		gkev1alpha1.AddToScheme,
 		gcpv1alpha1.AddToScheme,
 		orgv1.AddToScheme,
+		servicesv1.AddToScheme,
 	)
 	if err := builder.AddToScheme(hs); err != nil {
 		log.WithError(err).Fatal("failed to register the schema")

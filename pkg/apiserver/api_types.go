@@ -19,6 +19,7 @@ package apiserver
 import (
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
+	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -70,4 +71,13 @@ type TeamPlan struct {
 	Schema            string            `json:"schema"`
 	ParameterEditable map[string]bool   `json:"parameterEditable"`
 	Plan              configv1.PlanSpec `json:"plan,omitempty"`
+}
+
+// TeamServicePlan is an API-only struct used to represent a bunch of info about a service plan
+// in the context of a team so the UI doesn't have to make about ten API calls and
+// work it all out itself.
+type TeamServicePlan struct {
+	Schema            string                     `json:"schema"`
+	ParameterEditable map[string]bool            `json:"parameterEditable"`
+	ServicePlan       servicesv1.ServicePlanSpec `json:"servicePlan,omitempty"`
 }
