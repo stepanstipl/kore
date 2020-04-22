@@ -17,8 +17,10 @@
 package apiserver
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/appvia/kore/pkg/apiserver/types"
@@ -60,6 +62,32 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	ws.Consumes(restful.MIME_JSON)
 	ws.Produces(restful.MIME_JSON)
 	ws.Path(path)
+
+	ws.Filter(func(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
+		team := req.PathParameter("team")
+		if team == "" {
+			chain.ProcessFilter(req, resp)
+			return
+		}
+
+		// Team resource endpoints do this check themselves
+		if strings.HasSuffix(req.Request.RequestURI, fmt.Sprintf("teams/%s", team)) {
+			chain.ProcessFilter(req, resp)
+			return
+		}
+
+		exists, err := u.Teams().Exists(context.Background(), team)
+		if err != nil {
+			handleError(req, resp, err)
+			return
+		}
+		if !exists {
+			writeError(req, resp, fmt.Errorf("team %q does not exist", team), http.StatusNotFound)
+			return
+		}
+
+		chain.ProcessFilter(req, resp)
+	})
 
 	ws.Route(
 		ws.PUT("/invitation/{token}").To(u.invitationSubmit).

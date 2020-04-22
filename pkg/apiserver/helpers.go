@@ -24,7 +24,6 @@ import (
 
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/validation"
-
 	restful "github.com/emicklei/go-restful"
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -57,47 +56,55 @@ func makeListWithSize(size int) *List {
 // handleErrors is a generic wrapper for handling the error from downstream kore brigde
 func handleErrors(req *restful.Request, resp *restful.Response, handler func() error) {
 	if err := handler(); err != nil {
-		code := http.StatusInternalServerError
-		var errResponse interface{}
-		// Simple errors have fixed values:
-		switch err {
-		case kore.ErrNotFound:
-			code = http.StatusNotFound
-		case kore.ErrUnauthorized:
-			code = http.StatusForbidden
-		case kore.ErrRequestInvalid:
-			code = http.StatusBadRequest
-		case io.EOF:
-			code = http.StatusBadRequest
-		}
+		handleError(req, resp, err)
+	}
+}
 
-		// Couple of errors have their own types, treat differently:
-		switch err := err.(type) {
-		case kore.ErrNotAllowed, *kore.ErrNotAllowed:
-			code = http.StatusForbidden
-		case validation.Error, *validation.Error:
-			code = http.StatusBadRequest
-			// Error can be directly serialized to json so just return that.
-			errResponse = err
-		}
+func handleError(req *restful.Request, resp *restful.Response, err error) {
+	code := http.StatusInternalServerError
+	// Simple errors have fixed values:
+	switch err {
+	case kore.ErrNotFound:
+		code = http.StatusNotFound
+	case kore.ErrUnauthorized:
+		code = http.StatusForbidden
+	case kore.ErrRequestInvalid:
+		code = http.StatusBadRequest
+	case io.EOF:
+		code = http.StatusBadRequest
+	}
 
-		if strings.Contains(err.Error(), "record not found") {
-			code = http.StatusNotFound
-			err = errors.New("resource not found")
-		}
-		if kerrors.IsNotFound(err) {
-			code = http.StatusNotFound
-		}
+	// Couple of errors have their own types, treat differently:
+	switch err.(type) {
+	case kore.ErrNotAllowed, *kore.ErrNotAllowed:
+		code = http.StatusForbidden
+	case validation.Error, *validation.Error:
+		code = http.StatusBadRequest
+	}
 
-		if errResponse == nil {
-			errResponse = newError(err.Error()).
-				WithCode(code).
-				WithVerb(req.Request.Method).
-				WithURI(req.Request.RequestURI)
-		}
+	if strings.Contains(err.Error(), "record not found") {
+		code = http.StatusNotFound
+		err = errors.New("resource not found")
+	}
+	if kerrors.IsNotFound(err) {
+		code = http.StatusNotFound
+	}
 
-		if err := resp.WriteHeaderAndEntity(code, errResponse); err != nil {
-			log.WithError(err).Error("failed to respond to request")
-		}
+	writeError(req, resp, err, code)
+}
+
+func writeError(req *restful.Request, resp *restful.Response, err error, code int) {
+	switch err.(type) {
+	case validation.Error, *validation.Error:
+		// Error can be directly serialized to json so just return that.
+	default:
+		err = newError(err.Error()).
+			WithCode(code).
+			WithVerb(req.Request.Method).
+			WithURI(req.Request.RequestURI)
+	}
+
+	if err := resp.WriteHeaderAndEntity(code, err); err != nil {
+		log.WithError(err).Error("failed to respond to request")
 	}
 }
