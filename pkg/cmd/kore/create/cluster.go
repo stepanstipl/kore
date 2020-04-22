@@ -105,7 +105,7 @@ func NewCmdCreateCluster(factory cmdutil.Factory) *cobra.Command {
 	flags.StringVarP(&o.Allocation, "allocation", "a", "", "name of the allocated to use for this cluster `NAME`")
 	flags.StringVarP(&o.Plan, "plan", "p", "", "plan which this cluster will be templated from `NAME`")
 	flags.StringVarP(&o.Description, "description", "d", "", "a short description for the cluster `DESCRIPTION`")
-	flags.StringSliceVar(&o.PlanParams, "param", []string{}, "preprovision a collection namespaces on this cluster as well `NAMES`")
+	flags.StringArrayVar(&o.PlanParams, "param", []string{}, "preprovision a collection namespaces on this cluster as well `NAMES`")
 	flags.StringSliceVar(&o.Namespaces, "namespaces", []string{}, "used to override the plan parameters `KEY=VALUE`")
 	flags.BoolVarP(&o.ShowTime, "show-time", "T", false, "shows the time it took to successfully provision a new cluster `BOOL`")
 
