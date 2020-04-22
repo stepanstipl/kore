@@ -58,15 +58,10 @@ generate-clusterappman-manifests:
 build: golang generate-clusterappman-manifests
 	@echo "--> Compiling the project ($(VERSION))"
 	@mkdir -p bin
-	@for binary in kore kore-apiserver korectl auth-proxy kore-clusterappman; do \
+	@for binary in kore kore-apiserver auth-proxy kore-clusterappman; do \
 		echo "--> Building $${binary} binary" ; \
 		go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go || exit 1; \
 	done
-
-korectl: golang deps
-	@echo "--> Compiling the korectl binary"
-	@mkdir -p bin
-	go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/korectl cmd/korectl/*.go
 
 kore: golang deps
 	@echo "--> Compiling the kore binary"
@@ -123,32 +118,30 @@ push-images:
 		docker push ${REGISTRY}/${AUTHOR}/$${name}:${VERSION} ; \
 	done
 
-patch-images:
-	@echo "--> Patching version tag into demo compose files and helm charts"
-	go run github.com/mikefarah/yq/v3 w -i hack/compose/demo.yml services.kore-apiserver.image ${REGISTRY}/${AUTHOR}/kore-apiserver:${VERSION}
-	go run github.com/mikefarah/yq/v3 w -i hack/compose/demo.yml services.kore-ui.image ${REGISTRY}/${AUTHOR}/kore-ui:${VERSION}
+package: 
+	@rm -rf ./release
+	@mkdir ./release
+	@$(MAKE) package-cli
+	@$(MAKE) package-helm
+	cd ./release && sha256sum * > kore.sha256sums
+	
+package-cli:
+	@echo "--> Compiling CLI static binaries"
+	CGO_ENABLED=0 go run github.com/mitchellh/gox -parallel=4 -arch="${CLI_ARCHITECTURES}" -os="${CLI_PLATFORMS}" -ldflags "-w ${LFLAGS}" -output=./release/{{.Dir}}-cli-{{.OS}}-{{.Arch}} ./cmd/kore/
+
+package-helm:
+	@echo "--> Patching version tag into helm charts"
 	go run github.com/mikefarah/yq/v3 w -i charts/kore/values.yaml api.image ${REGISTRY}/${AUTHOR}/kore-apiserver
 	go run github.com/mikefarah/yq/v3 w -i charts/kore/values.yaml api.version ${VERSION}
 	go run github.com/mikefarah/yq/v3 w -i charts/kore/values.yaml ui.image ${REGISTRY}/${AUTHOR}/kore-ui
 	go run github.com/mikefarah/yq/v3 w -i charts/kore/values.yaml ui.version ${VERSION}
+	@echo "--> Packaging helm chart release"
+	@helm package ./charts/kore --app-version ${VERSION} --version ${VERSION} -d ./release/
+	@mv ./release/kore-${VERSION}.tgz ./release/kore-helm-chart-${VERSION}.tgz
 
-release-cli:
-	@$(MAKE) patch-images
-	@echo "--> Compiling CLI static binaries"
-	@rm -rf ./cli-release
-	CGO_ENABLED=0 go run github.com/mitchellh/gox -parallel=4 -arch="${CLI_ARCHITECTURES}" -os="${CLI_PLATFORMS}" -ldflags "-w ${LFLAGS}" -output=./cli-release/arch/{{.OS}}_{{.Arch}}_${VERSION}/{{.Dir}} ./cmd/korectl/ ./cmd/kore/
-	@mkdir ./cli-release/output/
-	@for f in `ls -1 ./cli-release/arch/`; do \
-		zip -j -m cli-release/output/korectl_$$f.zip cli-release/arch/$$f/korectl*; \
-		zip -ur cli-release/output/korectl_$$f.zip hack/compose/* hack/ca/* hack/kubeconfig.local hack/setup/dex/* charts/**/*; \
-		zip -j -m cli-release/output/kore_$$f.zip cli-release/arch/$$f/kore*; \
-		zip -ur cli-release/output/kore_$$f.zip hack/compose/* hack/ca/* hack/kubeconfig.local hack/setup/dex/* charts/**/*; \
-	done
-	cd ./cli-release/output && sha256sum *.zip > korectl.sha256sums
-
-push-cli:
-	@echo "--> Pushing compiled CLI binaries to release (requires github token set in .gitconfig or GITHUB_TOKEN env variable)"
-	go run github.com/tcnksm/ghr "${VERSION}" ./cli-release/output
+push-release-packages:
+	@echo "--> Pushing compiled CLI binaries and helm chart to draft release (requires github token set in .gitconfig or GITHUB_TOKEN env variable)"
+	go run github.com/tcnksm/ghr -replace -draft -n "Release ${VERSION}" "${VERSION}" ./release
 
 in-docker-build:
 	@echo "--> Building in Docker"
@@ -165,8 +158,9 @@ swagger: compose
 #@kill `cat $@ 2>/dev/null` 2>/dev/null && rm $@ 2>/dev/null
 
 swagger-json: api-wait
-	@curl --retry 20 --retry-delay 5 --retry-connrefused -sSL http://127.0.0.1:10080/swagger.json > swagger-raw.json
-	@cat swagger-raw.json | jq > swagger.json
+	@curl --retry 20 --retry-delay 5 --retry-connrefused -sSL http://127.0.0.1:10080/swagger.json | jq > swagger.json
+	@echo "--> Copy swagger JSON for UI to use for its auto-gen"
+	@cp swagger.json ui/kore-api-swagger.json
 
 swagger-validate:
 	@echo "--> Validating the swagger api"
@@ -174,8 +168,6 @@ swagger-validate:
 
 swagger-apiclient:
 	@$(MAKE) swagger-json
-	@echo "--> Copy swagger JSON for UI to use for its auto-gen"
-	@cp swagger-raw.json ui/kore-api-swagger.json
 	@echo "--> Creating API client based on the swagger definition"
 	@go run github.com/go-swagger/go-swagger/cmd/swagger generate client -q -f swagger.json -c pkg/apiclient -m pkg/apiclient/models
 
