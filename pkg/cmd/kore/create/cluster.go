@@ -17,8 +17,6 @@
 package create
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -31,8 +29,10 @@ import (
 	"github.com/appvia/kore/pkg/cmd/errors"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 	cmdutils "github.com/appvia/kore/pkg/cmd/utils"
+	"github.com/appvia/kore/pkg/utils/jsonpath"
 
 	"github.com/spf13/cobra"
+	"github.com/tidwall/sjson"
 	apiexts "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -57,11 +57,26 @@ $ kore -t <myteam> create cluster dev --plan gke-development -a <name> --cluster
 # Check the status of the cluster
 $ kore -t <myteam> get cluster dev -o yaml
 
+# You can override the plan parameters using the --param
+$ kore -t <myteam> create cluster dev --param authProxyAllowedIPs.0=1.1.1.1/8
+$ kore -t <myteam> create cluster dev --param authProxyAllowedIPs=["1.1.1.1/32","2,2,2,2"]'
+
+# Or you can add via an index
+$ kore -t <myteam> create cluster dev --param authProxyAllowedIPs.-1=127.0.0.0/8
+
+# Alternatively you can use json directly
+$ kore -t <myteam> create cluster dev --param nodeGroups.1'='{json}|[json]'
+
 Now update your kubeconfig to use your team's provisioned cluster.
 $ kore kubeconfig -t <myteam>
 
 This will modify your ${HOME}/.kube/config. Now you can use 'kubectl' to interact with your team's cluster.
 `
+)
+
+var (
+	// PlanParameterFilter is the regex filter for a param
+	PlanParameterFilter = regexp.MustCompile(`\s*=\s*`)
 )
 
 // CreateClusterOptions is used to provision a team
@@ -199,7 +214,7 @@ func (o *CreateClusterOptions) Run() error {
 	if err != nil {
 		return err
 	}
-	if o.ShowTime {
+	if o.ShowTime && !o.NoWait {
 		o.Println("Provisioning took: %s", time.Since(now))
 	}
 
@@ -236,37 +251,36 @@ func (o *CreateClusterOptions) CreateClusterConfiguration() (*clustersv1.Cluster
 		return nil, err
 	}
 
-	var configuration map[string]interface{}
-
-	if err := json.Unmarshal(plan.Spec.Configuration.Raw, &configuration); err != nil {
-		return nil, fmt.Errorf("failed to parse plan configuration: %s", err)
-	}
-
 	params, err := o.ParsePlanParams()
 	if err != nil {
 		return nil, err
 	}
+	config := string(plan.Spec.Configuration.Raw)
 
-	// @step: inject ourself as the cluster admin
-	if _, ok := params["clusterUsers"]; !ok {
-		params["clusterUsers"] = []map[string]interface{}{
-			{
-				"username": userauth.Username,
-				"roles":    []string{"cluster-admin"},
-			},
+	for key, value := range params {
+		if !jsonpath.Get(config, strings.Split(key, ".")[0]).Exists() {
+			return nil, errors.NewInvalidParamWithMessageError(key, value, "parameter does not exist in plan")
+		}
+		switch strings.HasPrefix(value, "{") || strings.HasPrefix(value, "[") {
+		case true:
+			config, err = sjson.SetRaw(config, key, value)
+			if err != nil {
+				return nil, err
+			}
+		default:
+			config, err = sjson.Set(config, key, value)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
-
-	// @step: copy the plan parameters into the cluster configuration
-	for k, v := range params {
-		configuration[k] = v
-	}
-
-	// @step: json encode the cluster parameters
-	cc := &bytes.Buffer{}
-	if err := json.NewEncoder(cc).Encode(configuration); err != nil {
-		return nil, fmt.Errorf("failed to process cluster configuration: %s", err)
-	}
+	// @step: inject ourself as the cluster admin
+	config, err = sjson.Set(config, "clusterUsers", []clustersv1.ClusterUser{
+		{
+			Username: userauth.Username,
+			Roles:    []string{"cluster-admin"},
+		},
+	})
 
 	cluster := &clustersv1.Cluster{
 		TypeMeta: metav1.TypeMeta{
@@ -280,7 +294,7 @@ func (o *CreateClusterOptions) CreateClusterConfiguration() (*clustersv1.Cluster
 		Spec: clustersv1.ClusterSpec{
 			Kind:          plan.Spec.Kind,
 			Plan:          plan.Name,
-			Configuration: apiexts.JSON{Raw: cc.Bytes()},
+			Configuration: apiexts.JSON{Raw: []byte(config)},
 			Credentials:   allocation.Spec.Resource,
 		},
 	}
@@ -338,22 +352,16 @@ func (o *CreateClusterOptions) CreateClusterNamespace(name string) error {
 }
 
 // ParsePlanParams is responsible for parsing the plan overrides
-func (o *CreateClusterOptions) ParsePlanParams() (map[string]interface{}, error) {
-	params := map[string]interface{}{}
+func (o *CreateClusterOptions) ParsePlanParams() (map[string]string, error) {
+	params := make(map[string]string)
 
-	for _, param := range o.PlanParams {
-		parts := regexp.MustCompile(`\s*=\s*`).Split(strings.TrimSpace(param), 2)
-		if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-			return nil, fmt.Errorf("invalid plan-param value %q, you must use param=<JSON value> format", param)
-		}
-		name := parts[0]
-		jsonValue := parts[1]
+	for _, x := range o.PlanParams {
+		e := PlanParameterFilter.Split(strings.TrimSpace(x), 2)
 
-		var parsed interface{}
-		if err := json.Unmarshal([]byte(jsonValue), &parsed); err != nil {
-			return nil, err
+		if len(e) != 2 || e[0] == "" || e[1] == "" {
+			return nil, errors.NewInvalidParamError("param", x)
 		}
-		params[name] = parsed
+		params[e[0]] = e[1]
 	}
 
 	return params, nil
