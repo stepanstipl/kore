@@ -17,6 +17,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"sort"
@@ -27,6 +28,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -220,13 +222,11 @@ func (c *VPCClient) Exists() (bool, error) {
 }
 
 // Delete will clear up all VPC resources
-// Currently noop
-func (c *VPCClient) Delete() (ready bool, _ error) {
+func (c *VPCClient) Delete(ctx context.Context) (ready bool, _ error) {
 	exists, err := c.Exists()
 	if err != nil {
 		return false, err
 	}
-
 	if !exists {
 		return true, nil
 	}
@@ -240,19 +240,20 @@ func (c *VPCClient) Delete() (ready bool, _ error) {
 		return false, err
 	}
 
+	// @step: we need to delete any lingering ENI which have not been cleaned up
+	if err := DeleteLingeringResources(ctx, c); err != nil {
+		return false, err
+	}
 	ready, err = DeletePrivateSubnets(*c.svc, c.VPC, azs)
 	if err != nil || !ready {
 		return ready, err
 	}
-
 	if err := DeletePublicSubnets(*c.svc, c.VPC, azs); err != nil {
 		return false, err
 	}
-
 	if err := DeleteInternetGateway(*c.svc, c.VPC); err != nil {
 		return false, err
 	}
-
 	if err := DeleteSecurityGroup(*c.svc, c.VPC, SecurityGroupTypeEKSCluster); err != nil {
 		return false, err
 	}
@@ -265,6 +266,108 @@ func (c *VPCClient) Delete() (ready bool, _ error) {
 	}
 
 	return true, nil
+}
+
+// DeleteLingeringResources is responsible for fixing up what aws does not
+// https://github.com/aws/amazon-vpc-cni-k8s/issues/69
+// https://github.com/weaveworks/eksctl/issues/1325
+func DeleteLingeringResources(ctx context.Context, client *VPCClient) error {
+	if err := DeleteLingeringENI(ctx, client); err != nil {
+		return err
+	}
+
+	return DeleteLingeringSecurityGroups(ctx, client)
+}
+
+// DeleteLingeringSecurityGroups is related to https://github.com/aws/amazon-vpc-cni-k8s/issues/69
+func DeleteLingeringSecurityGroups(ctx context.Context, client *VPCClient) error {
+	vpcid := aws.StringValue(client.VPC.awsObj.VpcId)
+
+	resp, err := client.svc.DescribeSecurityGroupsWithContext(ctx, &ec2.DescribeSecurityGroupsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("tag:aws:eks:cluster-name"),
+				Values: aws.StringSlice([]string{client.VPC.Name}),
+			},
+			{
+				Name:   aws.String("vpc-id"),
+				Values: aws.StringSlice([]string{vpcid}),
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, x := range resp.SecurityGroups {
+		log.WithFields(log.Fields{
+			"securitygroup-id": aws.StringValue(x.GroupId),
+			"vpc-id":           aws.StringValue(client.VPC.awsObj.VpcId),
+		}).Debug("deleting the lingering security group")
+
+		if _, err := client.svc.DeleteSecurityGroupWithContext(ctx, &ec2.DeleteSecurityGroupInput{
+			GroupId: x.GroupId,
+		}); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// DeleteLingeringENI removes any node ENI and security groups from the VPC
+// https://github.com/aws/amazon-vpc-cni-k8s/issues/69
+func DeleteLingeringENI(ctx context.Context, client *VPCClient) error {
+	vpcid := aws.StringValue(client.VPC.awsObj.VpcId)
+
+	logger := log.WithFields(log.Fields{
+		"vpc-id": vpcid,
+	})
+	logger.Debug("checking for any lingering eni")
+
+	// @step: we find any lingering network interfaces on the VPC
+	resp, err := client.svc.DescribeNetworkInterfacesWithContext(ctx, &ec2.DescribeNetworkInterfacesInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("tag-key"),
+				Values: aws.StringSlice([]string{"node.k8s.amazonaws.com/instance_id"}),
+			},
+			{
+				Name:   aws.String("vpc-id"),
+				Values: aws.StringSlice([]string{vpcid}),
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	logger.WithField("size", len(resp.NetworkInterfaces)).Debug("found the following attached eni")
+
+	for _, x := range resp.NetworkInterfaces {
+
+		logger.WithFields(log.Fields{
+			"eni-id":     aws.StringValue(x.NetworkInterfaceId),
+			"status":     aws.StringValue(x.Status),
+			"eni-vpc-id": aws.StringValue(x.VpcId),
+		}).Debug("found the lingering network interface")
+
+		if vpcid != aws.StringValue(x.VpcId) {
+			continue
+		}
+		if aws.StringValue(x.Status) != strings.ToLower(ec2.StateAvailable) {
+			continue
+		}
+
+		_, err := client.svc.DeleteNetworkInterfaceWithContext(ctx, &ec2.DeleteNetworkInterfaceInput{
+			NetworkInterfaceId: x.NetworkInterfaceId,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (c *VPCClient) getAZs(limit int) ([]string, error) {
