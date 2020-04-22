@@ -16,43 +16,121 @@
 #
 source test/e2e/environment.sh || exit 1
 
-announce "running the integration suite, cluster name: ${CLUSTER}"
+BATS_OPTIONS="${BATS_OPTIONS:-""}"
+ENABLE_EKS_E2E=${ENABLE_EKS_E2E:-"false"}
+ENABLE_GKE_E2E=${ENABLE_GKE_E2E:-"false"}
+CLUSTER="${CLUSTER="ci-${CIRCLE_BUILD_NUM:-$USER}"}"
 
-# options for the bats command
-BATS_OPTIONS=""
+usage() {
+  cat <<EOF
+  Usage: $(basename $0)
+  --enable-gke   : indicates we should run the GKE (default: ${ENBALE_GKE_E2E})
+  --enable-eks   : indicates we should run E2E on EKS (default: ${ENABLE_EKS_E2E})
+  -h|--help      : display this usage menu
+EOF
+  if [[ -n $@ ]]; then
+    error "$@"
+    exit 1
+  fi
 
-cd ${PLATFORM_DIR}/integration
-announce "performing the setup for unit test "
-bats ${BATS_OPTIONS} setup.bats || exit 1
-announce "performing the checks for profiles"
-bats ${BATS_OPTIONS} profiles.bats || exit 1
-announce "performing the checks for users"
-bats ${BATS_OPTIONS} users.bats || exit 1
-announce "performing the checks for whoami"
-bats ${BATS_OPTIONS} whoami.bats || exit 1
-announce "performing the checks for teams"
-bats ${BATS_OPTIONS} teams.bats || exit 1
-announce "performing the tests for plans"
-bats ${BATS_OPTIONS} plans.bats || exit 1
-announce "performing the gke credentials"
-bats ${BATS_OPTIONS} gke-credentials.bats || exit 1
-announce "performing checks on gke clusters"
-bats ${BATS_OPTIONS} gke.bats || exit 1
-announce "performing checks on clusterappman"
-bats ${BATS_OPTIONS} clusterappman.bats || exit 1
-announce "performing checks on clusterroles"
-bats ${BATS_OPTIONS} clusterroles.bats || exit 1
-announce "performing checks on clusterconfig"
-bats ${BATS_OPTIONS} clusterconfig.bats || exit 1
-announce "performing checks on namespaces"
-bats ${BATS_OPTIONS} namespaces.bats || exit 1
-announce "performing checks on safeguards"
-bats ${BATS_OPTIONS} safeguards.bats || exit 1
-announce "performing checks on authentication proxy"
-bats ${BATS_OPTIONS} auth-proxy.bats || exit 1
-announce "performing checks on cluster delete"
-bats ${BATS_OPTIONS} gke-deletion.bats || exit 1
-announce "performing checks on teardown"
-bats ${BATS_OPTIONS} teardown.bats || exit 1
+  exit 0
+}
 
-exit 0
+announce "running the integration suite"
+
+# run-generic-checks runs a collection fo generic cli & api checks
+run-generic-checks() {
+  announce "running generic unit tests"
+  local units=(
+      setup.bats
+      profiles.bats
+      users.bats
+      whoami.bats
+      teams.bats
+      plans.bats
+  )
+  for unit in ${units[@]}; do
+    bats ${BATS_OPTIONS} ${unit} || exit 1
+  done
+}
+
+# run-cluster-checks runs a series of cluster a clister
+run-cluster-checks() {
+  local name=${1}
+  announce "running cluster checks on cluster: ${name}"
+  local units=(
+    clusterappman.bats
+    clusterroles.bats
+    clusterconfig.bats
+    namespaces.bats
+    auth-proxy.bats
+    safeguards.bats
+  )
+  for unit in ${units[@]}; do
+    CLUSTER=${name} bats ${BATS_OPTIONS} ${unit} || exit 1
+  done
+}
+
+# run-gke-check runs a collection of gke checks
+run-gke-checks() {
+  announce "running e2e suite on gke"
+  local units=(
+      gke-credentials.bats
+      gke.bats
+  )
+  local name="${CLUSTER="ci-${CIRCLE_BUILD_NUM:-$USER}"}"
+  # run the check on the gke
+  for unit in ${units[@]}; do
+    CLUSTER=${name} bats ${BATS_OPTIONS} ${unit} || exit 1
+  done
+  # run the cluster checks on on it
+  run-cluster-checks ${name}
+}
+
+# run-eks-checks runs a collection of e2e on eks
+run-eks-checks() {
+  announce "running e2e suite on eks"
+  local units=(
+      eks.bats
+  )
+  local name="${CLUSTER="ci-${CIRCLE_BUILD_NUM:-$USER}"}"
+  for unit in ${units[@]}; do
+    CLUSTER=${name} bats ${BATS_OPTIONS} ${unit} || exit 1
+  done
+  # run the cluster checks on on it
+  run-cluster-checks ${name}
+}
+
+run-teardown() {
+  announce "running the teardown checks"
+  local units=(
+      gke-deletion.bats
+      eks-deletion.bats
+  )
+  local name="${CLUSTER="ci-${CIRCLE_BUILD_NUM:-$USER}"}"
+  for unit in ${units[@]}; do
+    CLUSTER=${name} bats ${BATS_OPTIONS} ${unit} || exit 1
+  done
+
+  CLUSTER=${CLUSTER} bats ${BATS_OPTIONS} teardown.bats || exit 1
+}
+
+# run-units is responsible for running the test framework
+run-units() {
+  run-generic-checks
+  [[ "${ENABLE_GKE_E2E}" == "true" ]] && run-gke-checks
+  [[ "${ENABLE_EKS_E2E}" == "true" ]] && run-eks-checks
+  run-teardown
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+  --enable-gke) ENABLE_GKE_E2E=${2}; shift 2; ;;
+  --enable-eks) ENABLE_EKS_E2E=${2}; shift 2; ;;
+  -h|--help)    usage;                        ;;
+  *)                                 shift 1; ;;
+  esac
+done
+
+cd ${PLATFORM_DIR}/integration || exit 1
+run-units || exit 1

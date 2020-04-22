@@ -25,15 +25,14 @@ export KORE_IDP_CLIENT_ID=${KORE_IDP_CLIENT_ID:-"unknown"}
 export KORE_IDP_SERVER_URL=${KORE_IDP_SERVER_URL:-"unknown"}
 export KORE_ID_TOKEN=${KORE_ID_TOKEN_QA:-"unknown"}
 export KORE_PROFILE="local"
-export TEAM="e2e"
+export TEAM="${TEAM:-"e2e"}"
 
 ENABLE_CONFORMANCE=${ENABLE_CONFORMANCE:-false}
+ENABLE_EKS_E2E=${ENABLE_EKS_E2E:-"false"}
+ENABLE_GKE_E2E=${ENABLE_GKE_E2E:-"false"}
 ENABLE_UNIT_TESTS=${ENABLE_UNIT_TESTS:-true}
-MAX_RETRIES=${1:-60}
 PATH=$PATH:${GOPATH}/bin
 KORE_CONFIG=${HOME}/.kore/config
-RETRIES=0
-WAIT_TIME=20
 
 mkdir -p ${GOPATH}/bin
 
@@ -43,6 +42,9 @@ usage() {
   --enable-conformance   : run the kubernetes conformance check suite
   --enable-unit-tests    : run the bats unit tests
   --enable-e2e-user      : indicates we should provision a test user
+  --enable-gke           : indicates we should run the GKE (default: ${ENABLE_GKE_E2E})
+  --enable-eks           : indicates we should run E2E on EKS (default: ${ENABLE_EKS_E2E})
+  --e2e-team             : is the name of the team to use
   -h|--help              : display this usage menu
 EOF
   if [[ -n $@ ]]; then
@@ -120,7 +122,10 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
   --enable-conformance) ENABLE_CONFORMANCE="true"; shift 1; ;;
   --enable-unit-tests)  ENABLE_UNIT_TESTS="true";  shift 1; ;;
+  --enable-gke)         ENABLE_GKE_E2E=${2};       shift 2; ;;
+  --enable-eks)         ENABLE_EKS_E2E=${2};       shift 2; ;;
   --enable-e2e-user)    ADMIN_USER=$2;             shift 2; ;;
+  --e2e-team)           TEAM=$2;                   shift 2; ;;
   -h|--help)            usage;                              ;;
   *)                                               shift 1; ;;
   esac
@@ -131,9 +136,14 @@ if [[ -n "${ADMIN_USER}" ]]; then
 fi
 
 if [[ "${ENABLE_UNIT_TESTS}" == "true" ]]; then
+  # @step: write the credentials to disk
   if [[ -n "${GKE_SA_QA}" ]]; then
     mkdir -p ${E2E_DIR}
     echo -n ${GKE_SA_QA} | base64 -d > ${E2E_DIR}/gke-credentials.yml 2>/dev/null
+  fi
+  if [[ -n "${EKS_SA_QA}" ]]; then
+    mkdir -p ${E2E_DIR}
+    echo -n ${EKS_SA_QA} | base64 -d > ${E2E_DIR}/eks-credentials.yml 2>/dev/null
   fi
 
   if [[ ! -f "${E2E_DIR}/gke-credentials.yml" ]]; then
@@ -147,7 +157,12 @@ if [[ "${ENABLE_UNIT_TESTS}" == "true" ]]; then
     exit 1
   fi
 
-  test/e2e/check-suite-units.sh || exit 1
+  if ! test/e2e/check-suite-units.sh \
+    --enable-gke ${ENABLE_GKE_E2E} \
+    --enable-eks ${ENABLE_EKS_E2E}; then
+    error "failed trying on unit tests"
+    exit 1
+   fi
 else
   announce "skipping the unit tests suite"
 fi

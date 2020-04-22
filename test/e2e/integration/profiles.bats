@@ -50,3 +50,10 @@ load helper
   [[ "$status" -eq 0 ]]
 }
 
+@test "We should be able to set the default team of the profile" {
+  runit "${KORE} profiles set current.team ${TEAM}"
+  [[ "$status" -eq 0 ]]
+  runit "${KORE} profiles list | awk \"/^${KORE_PROFILE}/ { print \$3 }\" | grep ^${KORE_PROFILE}"
+  [[ "$status" -eq 0 ]]
+}
+

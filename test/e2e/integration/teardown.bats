@@ -23,11 +23,6 @@ load helper
   [[ "$status" -eq 0 ]]
 }
 
-@test "We should able to delete the ${TEAM} gke credentials" {
-  runit "${KORE} delete -f ${BASE_DIR}/${E2E_DIR}/gke-credentials.yml -t kore-admin"
-  [[ "$status" -eq 0 ]]
-}
-
 @test "We should be able to delete the user from kore" {
   runit "${KORE} delete user test"
   [[ "$status" -eq 0 ]]

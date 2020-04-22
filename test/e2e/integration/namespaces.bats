@@ -14,8 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 load helper
+
+setup() {
+  ${KORE} get cluster ${CLUSTER} | grep -i deleting && skip || true
+  ${KORE} get cluster ${CLUSTER} | grep -i pending && skip || true
+}
 
 @test "We should fail to provision a namespace if the cluster does not exist" {
   run bash -c "${KORE} create namespace nothing -c does_not_exist -t ${TEAM}"

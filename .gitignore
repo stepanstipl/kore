@@ -1,6 +1,6 @@
 # IDEs
 .idea
-
+1
 /bin/
 cmd/cluster-controller
 demo.env

@@ -17,6 +17,11 @@
 
 load helper
 
+setup() {
+  ${KORE} get cluster ${CLUSTER} | grep -i deleting && skip || true
+  ${KORE} get cluster ${CLUSTER} | grep -i pending && skip || true
+}
+
 @test "We should find the cluster config in the kore namespace" {
   runit "${KUBECTL} --context=${CLUSTER} get namespace kore"
   [[ "$status" -eq 0 ]]

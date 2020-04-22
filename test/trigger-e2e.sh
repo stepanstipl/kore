@@ -18,6 +18,24 @@
 : ${CIRCLECI_TOKEN?"Your circle ci token must be set in the environment to trigger jobs"}
 
 DEFAULT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+ENABLE_GKE_E2E="true"
+ENABLE_EKS_E2E="false"
+
+usage() {
+  cat <<EOF
+  Usage: $(basename $0)
+  --branch <name>      : the branch to run the e2e on (defaults: ${DEFAULT_BRANCH})
+  --enable-gke <bool>  : indicates we should run e2e on gke builds (defaults: ${ENABLE_GKE_E2E})
+  --enable-eks <bool>  : indicates we should run e2e on eks (defaults: ${ENABLE_EKS_E2E})
+  -h|--help            : display this usage menu
+EOF
+  if [[ -n $@ ]]; then
+    echo "[error] $@"
+    exit 1
+  fi
+  exit 0
+}
+
 
 echo -n "What branch do you want the pipeline to run e2e test? (defaults: ${DEFAULT_BRANCH}) "
 read BRANCH
@@ -30,10 +48,21 @@ JOB=$(curl -s -u ${CIRCLECI_TOKEN}: -X POST \
   --header "Content-Type: application/json" -d "{
     \"branch\": \"${BRANCH}\",
     \"parameters\": {
-      \"enable_e2e\": true
+      \"enable_e2e\": true,
+      \"enable_gke_e2e\": ${ENABLE_GKE_E2E},
+      \"enable_eks_e2e\": ${ENABLE_EKS_E2E}
     }
   }" \
   https://circleci.com/api/v2/project/github/appvia/kore/pipeline)
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+  --enable-gke) ENABLE_GKE_E2E=${2}; shift 2; ;;
+  --enable-eks) ENABLE_EKS_E2E=${2}; shift 2; ;;
+  -h|--help)    usage;                        ;;
+  *)                                 shift 1; ;;
+  esac
+done
 
 if [[ $? -ne 0 ]]; then
   echo "[error] failed to trigger the pipeline, ${JOB}"
