@@ -119,7 +119,7 @@ func (r *resourceImpl) LookupResourceNames(kind, team string) ([]string, error) 
 	}
 
 	// @step: we then construct a request for the list of that type
-	req := r.client.Request().Resource(resource.Name)
+	req := r.client.Request().Resource(resource.GetAPIName())
 	if resource.IsTeamScoped() {
 		req.Team(team)
 	}
