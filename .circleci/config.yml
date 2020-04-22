@@ -152,7 +152,7 @@ jobs:
             VERSION=${CIRCLE_SHA1} make images
             VERSION=${CIRCLE_SHA1} make push-images
 
-  release-cli:
+  package-release:
     environment:
       GOFLAGS: "-mod=vendor"
 
@@ -163,12 +163,16 @@ jobs:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
-      - attach_workspace:
-          at: bin
+      - run:
+          name: Installing helm
+          command: |
+            sudo curl -sL https://get.helm.sh/helm-v3.1.2-linux-amd64.tar.gz -o helm.tar.gz
+            sudo tar -xzf helm.tar.gz --strip-components=1 -C /bin/ linux-amd64/helm
+            sudo chmod +x /bin/helm
       - deploy:
           command: |
-            VERSION=${CIRCLE_TAG} make release-cli
-            VERSION=${CIRCLE_TAG} make push-cli
+            VERSION=${CIRCLE_TAG} make package
+            VERSION=${CIRCLE_TAG} make push-release-packages
 
   build-ui:
     docker:
@@ -366,7 +370,7 @@ workflows:
               only: master
             tags:
               only: /^v.*$/
-      - release-cli:
+      - package-release:
           requires:
             - build
             - check-apis
