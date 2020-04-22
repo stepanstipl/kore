@@ -16,7 +16,8 @@ const props = {
   members: { items: ['jbloggs', 'fflintstone'] },
   clusters: { items: [] },
   namespaceClaims: { items: [] },
-  available: { items: [] }
+  available: { items: [] },
+  teamRemoved: jest.fn()
 }
 
 describe('TeamPage', () => {
