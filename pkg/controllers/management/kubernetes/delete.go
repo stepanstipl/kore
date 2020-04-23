@@ -20,15 +20,11 @@ import (
 	"context"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
-	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -47,58 +43,28 @@ func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (rec
 
 	original := object.DeepCopy()
 
-	finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
-
 	result, err := func() (reconcile.Result, error) {
-		// @step: we need to grab the cloud provider and check if it's deletion
-		u := &unstructured.Unstructured{}
-		u.SetGroupVersionKind(schema.GroupVersionKind{
-			Group:   object.Spec.Provider.Group,
-			Kind:    object.Spec.Provider.Kind,
-			Version: object.Spec.Provider.Version,
-		})
-		u.SetName(object.Name)
-		u.SetNamespace(object.Namespace)
-
-		object.Status.Status = corev1.DeletingStatus
-
-		// @check if a we are backed by a cloud provider
-		if kore.IsProviderBacked(object) {
-			// Assumption: we only clean up everything if we own the provider
-			if object.Spec.Provider.Kind == "EKS" {
-				if err := a.EnsureResourceDeletion(context.Background(), object); err != nil {
-					return reconcile.Result{}, err
-				}
-			}
+		operations := []controllers.EnsureFunc{
+			a.EnsureDeleteStatus(object),
+			a.EnsureServiceDeletion(object),
+			a.EnsureSecretDeletion(object),
 		}
 
-		// @step: we should delete the secert from api
-		if err := kubernetes.DeleteIfExists(ctx, a.mgr.GetClient(), &configv1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      object.Name,
-				Namespace: object.Namespace,
-			},
-		}); err != nil {
-			log.WithError(err).Error("trying to delete the secret from api")
-
-			return reconcile.Result{}, err
+		for _, handler := range operations {
+			result, err := handler(ctx)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+			if result.Requeue || result.RequeueAfter > 0 {
+				return result, nil
+			}
 		}
 
 		return reconcile.Result{}, nil
 	}()
 	if err != nil {
 		logger.WithError(err).Error("trying to delete the kubernetes resource")
-	}
-	if err == nil {
-		if result.RequeueAfter <= 0 && !result.Requeue {
-			if err := finalizer.Remove(object); err != nil {
-				log.WithError(err).Error("trying to remove the finalizer from resource")
-
-				return reconcile.Result{}, err
-			}
-
-			return reconcile.Result{Requeue: true}, nil
-		}
+		object.Status.Status = corev1.DeleteFailedStatus
 	}
 
 	// @step: update the status of the resource
@@ -108,5 +74,21 @@ func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (rec
 		return reconcile.Result{}, err
 	}
 
-	return result, nil
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	if result.Requeue || result.RequeueAfter > 0 {
+		return result, nil
+	}
+
+	// @cool we can remove the finalizer now
+	finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
+	if err := finalizer.Remove(object); err != nil {
+		logger.WithError(err).Error("removing the finalizer from eks resource")
+
+		return reconcile.Result{}, err
+	}
+
+	return reconcile.Result{}, nil
 }

@@ -21,6 +21,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/appvia/kore/pkg/utils"
+
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
@@ -28,6 +30,40 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+// ListServices returns a list of all services
+func ListServices(ctx context.Context, cc client.Client, namespace string) (*v1.ServiceList, error) {
+	list := &v1.ServiceList{}
+	if err := cc.List(ctx, list, client.InNamespace(namespace)); err != nil {
+		return nil, err
+	}
+
+	return list, nil
+}
+
+// ListServicesByTypes returns a list of services in a namespace by type
+func ListServicesByTypes(ctx context.Context, cc client.Client, namespace string, filters ...string) (*v1.ServiceList, error) {
+	filtered := &v1.ServiceList{}
+
+	if len(filters) == 0 {
+		return filtered, nil
+	}
+
+	list, err := ListServices(ctx, cc, namespace)
+	if err != nil {
+		return nil, err
+	}
+	filtered.TypeMeta.APIVersion = list.TypeMeta.APIVersion
+	filtered.TypeMeta.Kind = list.TypeMeta.Kind
+
+	for _, x := range list.Items {
+		if utils.Contains(string(x.Spec.Type), filters) {
+			filtered.Items = append(filtered.Items, x)
+		}
+	}
+
+	return filtered, nil
+}
 
 // CreateOrUpdateService does what is says on the tin
 func CreateOrUpdateService(ctx context.Context, cc client.Client, s *corev1.Service) (*corev1.Service, error) {

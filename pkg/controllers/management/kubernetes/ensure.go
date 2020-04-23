@@ -18,76 +18,126 @@ package kubernetes
 
 import (
 	"context"
+	"time"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/controllers"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
+	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-// EnsureResourceDeletion is responsible for cleanup the resources in the cluster
-// @note: at present this is only done for EKS as GKE performs it's own cleanup
-func (a k8sCtrl) EnsureResourceDeletion(ctx context.Context, object *clustersv1.Kubernetes) error {
-	logger := log.WithFields(log.Fields{
-		"name":      object.Name,
-		"namespace": object.Namespace,
-	})
+// EnsureDeleteStatus is responsible for ensure the status is set to deleting
+func (a k8sCtrl) EnsureDeleteStatus(object *clustersv1.Kubernetes) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		if object.Status.Status != corev1.DeletingStatus {
+			object.Status.Status = corev1.DeletingStatus
 
-	// @note: it debatable if this should be includes as the user wont see it anyhow
-	object.Status.Components.SetCondition(corev1.Component{
-		Name:    ComponentKubernetesCleanup,
-		Message: "attempting to clean up in-cluster kubernetes resources",
-	})
-
-	// First delete all namespaces to ensure this will work
-	// @step: retrieve the provider credentials secret
-	token, err := controllers.GetConfigSecret(ctx, a.mgr.GetClient(), object.Namespace, object.Name)
-	if err != nil {
-		if kerrors.IsNotFound(err) {
-			return nil
+			return reconcile.Result{Requeue: true}, nil
 		}
-		logger.WithError(err).Error("unable to obtain credentials secret")
 
-		object.Status.Components.SetCondition(corev1.Component{
-			Name:    ComponentKubernetesCleanup,
-			Message: "Unable obtain cluster access cluster credentials",
-			Detail:  err.Error(),
-			Status:  corev1.FailureStatus,
-		})
-
-		return err
+		return reconcile.Result{}, nil
 	}
+}
 
-	// @step: create a client for the remote cluster
-	client, err := kubernetes.NewRuntimeClientFromConfigSecret(token)
-	if err != nil {
-		logger.WithError(err).Error("trying to create client from credentials secret")
-
-		object.Status.Components.SetCondition(corev1.Component{
-			Name:    ComponentKubernetesCleanup,
-			Message: "Unable to access cluster using provided cluster credentials",
-			Detail:  err.Error(),
-			Status:  corev1.FailureStatus,
+// EnsureServiceDeletion is responsible for cleanup the resources in the cluster
+// @note: at present this is only done for EKS as GKE performs it's own cleanup
+func (a k8sCtrl) EnsureServiceDeletion(object *clustersv1.Kubernetes) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		logger := log.WithFields(log.Fields{
+			"name":      object.Name,
+			"namespace": object.Namespace,
 		})
+		logger.Debug("attempting to delete the kubernetes resource")
 
-		return err
+		if !kore.IsProviderBacked(object) {
+			return reconcile.Result{}, nil
+		}
+		if object.Spec.Provider.Kind != "EKS" {
+			return reconcile.Result{}, nil
+		}
+
+		result, err := func() (reconcile.Result, error) {
+			// @step: retrieve the provider credentials secret
+			token, err := controllers.GetConfigSecret(ctx, a.mgr.GetClient(), object.Namespace, object.Name)
+			if err != nil {
+				if kerrors.IsNotFound(err) {
+					return reconcile.Result{}, nil
+				}
+
+				return reconcile.Result{}, err
+			}
+
+			// @step: create a client for the remote cluster
+			cc, err := kubernetes.NewRuntimeClientFromConfigSecret(token)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+
+			// @note: we need to look for any namespaces with loadbalancer types and
+			// delete them to free up the ELB and security groups. Deleting namespace isn't easier
+			// as you will probably end up with namespace in a forever loop due to you deleting
+			// the controllers which is responsible for finalizing them
+			list, err := kubernetes.ListServicesByTypes(ctx, cc, v1.NamespaceAll, string(v1.ServiceTypeLoadBalancer))
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+			if len(list.Items) > 0 {
+				logger.Debug("cluster still has resource left to cleanup")
+
+				for _, x := range list.Items {
+					if x.GetDeletionTimestamp() != nil {
+						continue
+					}
+					if err := cc.Delete(ctx, &x); err != nil {
+						return reconcile.Result{}, err
+					}
+				}
+
+				return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+			}
+
+			return reconcile.Result{}, nil
+		}()
+		if err != nil {
+			logger.WithError(err).Error("trying to ensure the cluster is cleaned out")
+
+			object.Status.Components.SetCondition(corev1.Component{
+				Name:    ComponentKubernetesCleanup,
+				Message: "Failed trying to cleanup in cluster resources",
+				Detail:  err.Error(),
+				Status:  corev1.FailureStatus,
+			})
+
+			return reconcile.Result{}, err
+		}
+
+		return result, nil
 	}
+}
 
-	if err = CleanupKoreCluster(ctx, client); err != nil {
-		logger.WithError(err).Error("trying to clean up cluster resources")
+// EnsureSecretDeletion is responsible for deletion the admin token
+func (a k8sCtrl) EnsureSecretDeletion(object *clustersv1.Kubernetes) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		// @step: we should delete the secert from api
+		if err := kubernetes.DeleteIfExists(ctx, a.mgr.GetClient(), &configv1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      object.Name,
+				Namespace: object.Namespace,
+			},
+		}); err != nil {
+			log.WithError(err).Error("trying to delete the secret from api")
 
-		object.Status.Components.SetCondition(corev1.Component{
-			Name:    ComponentKubernetesCleanup,
-			Message: "Unable to delete all cluster namespaces",
-			Detail:  err.Error(),
-			Status:  corev1.FailureStatus,
-		})
+			return reconcile.Result{}, err
+		}
 
-		return err
+		return reconcile.Result{}, nil
 	}
-
-	return nil
 }
