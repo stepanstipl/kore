@@ -136,19 +136,18 @@ We'll be using our CLI, `kore`, to help us set up Kore locally.
 
 #### Install the kore CLI
 
-Find the latest kore release from https://github.com/appvia/kore/releases for your machine architecture and unzip it in a suitable location.
+Find the latest kore release from https://github.com/appvia/kore/releases for your machine architecture and download it to a suitable location.
 
 For example:
 
 ```shell script
-mkdir ~/kore
-cd ~/kore
-curl -L https://github.com/appvia/kore/releases/download/v0.0.23/kore_darwin_amd64_v0.0.23.zip --output kore.zip
-unzip kore.zip
+KORE_VERSION=v0.0.26
+curl -L https://github.com/appvia/kore/releases/download/${KORE_VERSION}/kore-cli-darwin-amd64 --output kore
+chmod +x kore
 
 # Confirm you have a working CLI:
-./kore -v
-# kore version v0.0.23 (git+sha: aaaaaaa, built: 01-01-2020)
+./kore version
+# kore version v0.0.26 (git+sha: aaaaaaa, built: 01-01-2020)
 ```
 
 #### Configure Appvia Kore
@@ -158,9 +157,6 @@ You'll need access to the following details created earlier:
 - Auth0 ClientID.
 - Auth0 Client Secret.
 - Auth0 domain.
-- GKE Project ID.
-- GKE Region.
-- Path to the service account key JSON file.
 
 Make sure you fill in the OpenID endpoint as `https://[Auth0 domain]/`, including the trailing `/`.
 
@@ -226,16 +222,22 @@ To ensure the team was created,
 
 ### Enable Kore to Set up Team Environments on GKE
 
-This command applies a set of manifests created when configuring Kore to run locally.
+We now need to give Kore the credentials it needs to build a cluster on our behalf. This command imports a set of credentials into kore 
+and allows your new team to use them to make clusters. 
 
-When applied, these manifests give Kore the credentials necessary to build a GKE cluster on behalf of our team.
+We'll then use these to create a cluster to host our sandbox environment. You'll need the following details which you set up earlier:
 
-This cluster will in turn host our sandbox environment.
+- GKE Project ID.
+- Path to the service account key JSON file.
 
 ```shell script
-./kore create gkecredentials gke -d "GKE Credentials" -p gcp-project-id --cred-file <path-to-json-service-account> --all-teams
-# gke.compute.kore.appvia.io/teams/kore-admin/gkecredentials/gke configured
-# config.kore.appvia.io/teams/kore-admin/allocations/gke configured
+./kore create gkecredentials gke --description "GKE Credentials" -p <gcp-project-id> --cred-file <path-to-json-service-account> --allocate team-appvia
+# Storing credentials in Kore
+# Waiting for resource "gke" to provision (you can background with ctrl-c)
+# Successfully provisioned the resource: "gke"
+# Storing credential allocation in Kore
+# Waiting for resource "gke" to provision (you can background with ctrl-c)
+# Successfully provisioned the resource: "gke"
 ```
 
 ### Provision a Sandbox Env with CLI
@@ -243,7 +245,7 @@ This cluster will in turn host our sandbox environment.
 Its time to use the Kore CLI To provision our Sandbox environment,
 
 ```shell script
-./kore create cluster appvia-trial -t team-appvia --plan gke-development -a gke --namespace sandbox
+./kore create cluster appvia-trial -t team-appvia --plan gke-development -a gke --namespaces sandbox
 # Attempting to create cluster: "appvia-trial", plan: gke-development
 # Waiting for "appvia-trial" to provision (usually takes around 5 minutes, ctrl-c to background)
 # Cluster appvia-sdbox has been successfully provisioned

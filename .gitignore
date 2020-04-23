@@ -15,7 +15,7 @@ charts/my_values.yaml
 e2eci/
 values.yaml
 token
-/cli-release
+/release
 
 # This is pulled down by the makefile:
 /swagger.json
