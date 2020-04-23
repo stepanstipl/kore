@@ -61,3 +61,11 @@ func (c Config) HasCertificateAuthority() bool {
 func (c Config) HasHMAC() bool {
 	return c.HMAC != ""
 }
+
+func (c Config) IsFeatureGateEnabled(gate string) bool {
+	if c.FeatureGates == nil {
+		return false
+	}
+
+	return c.FeatureGates[gate]
+}
