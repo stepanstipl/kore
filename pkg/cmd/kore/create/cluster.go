@@ -60,7 +60,7 @@ $ kore -t <myteam> get cluster dev -o yaml
 
 # You can override the plan parameters using the --param
 $ kore -t <myteam> create cluster dev --param authProxyAllowedIPs.0=1.1.1.1/8
-$ kore -t <myteam> create cluster dev --param authProxyAllowedIPs=["1.1.1.1/32","2,2,2,2"]'
+$ kore -t <myteam> create cluster dev --param authProxyAllowedIPs='["1.1.1.1/32","2,2,2,2"]'
 
 # Or you can add via an index
 $ kore -t <myteam> create cluster dev --param authProxyAllowedIPs.-1=127.0.0.0/8
