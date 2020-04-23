@@ -67,13 +67,20 @@ class PlanForm extends React.Component {
     })
   }
 
+  getMetadataName = values => {
+    const data = this.props.data
+    return (data && data.metadata && data.metadata.name) || canonical(values.description)
+  }
+
   generatePlanResource = values => {
+    const metadataName = this.getMetadataName(values)
+
     const planResource = new V1Plan()
     planResource.setApiVersion('config.kore.appvia.io/v1')
     planResource.setKind('Plan')
 
     const meta = new V1ObjectMeta()
-    meta.setName(canonical(values.description))
+    meta.setName(metadataName)
     planResource.setMetadata(meta)
 
     const spec = new V1PlanSpec()
@@ -100,7 +107,7 @@ class PlanForm extends React.Component {
     }
     try {
       const api = await KoreApi.client()
-      const metadataName = canonical(values.description)
+      const metadataName = this.getMetadataName(values)
       const planResult = await api.UpdatePlan(metadataName, this.generatePlanResource({ ...values, configuration: this.generatePlanConfiguration() }))
       return await this.props.handleSubmit(planResult)
     } catch (err) {
