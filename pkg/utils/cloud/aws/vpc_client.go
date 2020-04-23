@@ -315,7 +315,7 @@ func DeleteLingeringSecurityGroups(ctx context.Context, client *VPCClient) error
 	return nil
 }
 
-// DeleteLingeringENI removes any node ENI and security groups from the VPC
+// DeleteLingeringENI removes any rouge node ENIs from the VPC
 // https://github.com/aws/amazon-vpc-cni-k8s/issues/69
 func DeleteLingeringENI(ctx context.Context, client *VPCClient) error {
 	vpcid := aws.StringValue(client.VPC.awsObj.VpcId)
