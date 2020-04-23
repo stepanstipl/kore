@@ -290,7 +290,11 @@ func (o *CreateClusterOptions) CreateClusterConfiguration() (*clustersv1.Cluster
 
 // CreateClusterNamespace is called to provision a namespace on the cluster
 func (o *CreateClusterOptions) CreateClusterNamespace(name string) error {
-	rs := fmt.Sprintf("%s-%s", o.Name, name)
+	// @note we have have to prefix the name with the cluster here else since these resources
+	// are going into a common team namespace. User creates the same namespace name across multiple
+	// clusters will conflict. i.e. i've prod and dev and want to create namespace app1 in both
+
+	resourceName := fmt.Sprintf("%s-%s", o.Name, name)
 	kind := "namespaceclaims"
 
 	object := &clustersv1.NamespaceClaim{
@@ -299,7 +303,7 @@ func (o *CreateClusterOptions) CreateClusterNamespace(name string) error {
 			Kind:       "NamespaceClaim",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: rs,
+			Name: resourceName,
 		},
 		Spec: clustersv1.NamespaceClaimSpec{
 			Name: name,
@@ -318,7 +322,7 @@ func (o *CreateClusterOptions) CreateClusterNamespace(name string) error {
 		return err
 	}
 
-	found, err := o.ClientWithTeamResource(o.Team, resource).Name(rs).Exists()
+	found, err := o.ClientWithTeamResource(o.Team, resource).Name(resourceName).Exists()
 	if err != nil {
 		return err
 	}
@@ -331,7 +335,7 @@ func (o *CreateClusterOptions) CreateClusterNamespace(name string) error {
 
 	return o.WaitForCreation(
 		o.ClientWithTeamResource(o.Team, resource).
-			Name(o.Name).
+			Name(resourceName).
 			Payload(object),
 		o.NoWait,
 	)
