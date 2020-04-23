@@ -205,7 +205,7 @@ compose: build compose-up
 	@echo "--> Remember to start the api: make run"
 
 run:
-	@echo "--> Starting dependancies..."
+	@echo "--> Starting dependencies..."
 	@$(MAKE) compose-up
 	@$(MAKE) kube-api-wait
 	@$(MAKE) run-api-only
