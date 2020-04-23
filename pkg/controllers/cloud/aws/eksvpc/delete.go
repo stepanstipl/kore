@@ -105,7 +105,7 @@ func (t *eksvpcCtrl) Delete(request reconcile.Request) (reconcile.Result, error)
 				return reconcile.Result{Requeue: true}, nil
 			}
 			// We can now delete the VPC
-			ready, err := client.Delete()
+			ready, err := client.Delete(ctx)
 			if err != nil {
 				log.WithError(err).Errorf("failed to delete the EKS VPC")
 			}
