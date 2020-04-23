@@ -20,7 +20,8 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"strings"
+
+	"github.com/jinzhu/gorm"
 
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/validation"
@@ -82,7 +83,7 @@ func handleError(req *restful.Request, resp *restful.Response, err error) {
 		code = http.StatusBadRequest
 	}
 
-	if strings.Contains(err.Error(), "record not found") {
+	if err == gorm.ErrRecordNotFound {
 		code = http.StatusNotFound
 		err = errors.New("resource not found")
 	}
