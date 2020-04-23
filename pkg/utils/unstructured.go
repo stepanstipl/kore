@@ -17,6 +17,7 @@
 package utils
 
 import (
+	"fmt"
 	"strings"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -31,6 +32,13 @@ func IsMissingKind(err error) bool {
 	}
 
 	return strings.Contains(err.Error(), "Object 'Kind' is missing in")
+}
+
+// GetUnstructuredSelfLink returns a self link to the resource
+func GetUnstructuredSelfLink(u *unstructured.Unstructured) string {
+	gvk := u.GetObjectKind().GroupVersionKind()
+
+	return fmt.Sprintf("%s/%s/%s/%s", gvk.Group, gvk.Version, strings.ToLower(gvk.Kind), u.GetName())
 }
 
 // GetOwnership returns an ownership from a object

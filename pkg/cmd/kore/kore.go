@@ -21,6 +21,7 @@ import (
 
 	"github.com/appvia/kore/pkg/client"
 	"github.com/appvia/kore/pkg/client/config"
+	"github.com/appvia/kore/pkg/cmd/kore/alpha"
 	"github.com/appvia/kore/pkg/cmd/kore/apiresources"
 	"github.com/appvia/kore/pkg/cmd/kore/apply"
 	"github.com/appvia/kore/pkg/cmd/kore/create"
@@ -106,6 +107,7 @@ func NewKoreCommand(streams cmdutil.Streams) (*cobra.Command, error) {
 		NewCmdWhoami(factory),
 		apiresources.NewCmdAPIResources(factory),
 		NewCmdVersion(factory),
+		alpha.NewCmdAlpha(factory),
 		local.NewCmdCreateLocal(factory),
 	)
 

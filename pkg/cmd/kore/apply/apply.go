@@ -18,7 +18,6 @@ package apply
 
 import (
 	"bytes"
-	"fmt"
 
 	"github.com/appvia/kore/pkg/cmd/errors"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
@@ -86,7 +85,6 @@ func (o *ApplyOptions) Run() error {
 
 			// @step: create a request to check the status
 			kind := x.Object.GetKind()
-			groupversion := x.Object.GetObjectKind().GroupVersionKind().GroupVersion()
 			resource, err := o.Resources().Lookup(kind)
 			if err != nil {
 				return err
@@ -134,9 +132,7 @@ func (o *ApplyOptions) Run() error {
 				state = "no changes"
 			}
 
-			endpoint := fmt.Sprintf("%s/%s", groupversion, x.Object.GetName())
-
-			o.Println("%s %s", endpoint, state)
+			o.Println("%s %s", utils.GetUnstructuredSelfLink(x.Object), state)
 		}
 	}
 
