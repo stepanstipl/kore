@@ -29,12 +29,16 @@ type Prompt struct {
 	ErrMsg      string
 	Value       *string
 	AllowEdit   bool
+	Validate    func(in string) error
 }
 
 func (p *Prompt) Do() error {
 	var value string
 	if p.Value != nil {
 		value = *p.Value
+	}
+	if p.ErrMsg == "" {
+		p.ErrMsg = "%s cannot be blank"
 	}
 	runner := promptui.Prompt{
 		Label:     p.Id + " " + p.LabelSuffix,
@@ -43,6 +47,11 @@ func (p *Prompt) Do() error {
 		Validate: func(in string) error {
 			if len(in) == 0 {
 				return fmt.Errorf(p.ErrMsg, p.Id)
+			}
+			if p.Validate != nil {
+				if err := p.Validate(in); err != nil {
+					return err
+				}
 			}
 			return nil
 		},
