@@ -158,6 +158,10 @@ func (o *PatchOptions) Run() error {
 
 		return sjson.Set(string(content), o.Key, ParseValue(o.Value))
 	}()
+	if err != nil {
+		return err
+	}
+
 	if err := json.NewDecoder(strings.NewReader(update)).Decode(u); err != nil {
 		return err
 	}
