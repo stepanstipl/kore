@@ -19,6 +19,7 @@ package create
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -120,8 +121,8 @@ func NewCmdCreateCluster(factory cmdutil.Factory) *cobra.Command {
 	flags.StringVarP(&o.Allocation, "allocation", "a", "", "name of the allocated to use for this cluster `NAME`")
 	flags.StringVarP(&o.Plan, "plan", "p", "", "plan which this cluster will be templated from `NAME`")
 	flags.StringVarP(&o.Description, "description", "d", "", "a short description for the cluster `DESCRIPTION`")
-	flags.StringArrayVar(&o.PlanParams, "param", []string{}, "preprovision a collection namespaces on this cluster as well `NAMES`")
-	flags.StringSliceVar(&o.Namespaces, "namespaces", []string{}, "used to override the plan parameters `KEY=VALUE`")
+	flags.StringArrayVar(&o.PlanParams, "param", []string{}, "a series of key value pairs used to override plan parameters  `KEY=VALUE`")
+	flags.StringSliceVar(&o.Namespaces, "namespaces", []string{}, "preprovision a collection namespaces on this cluster as well `NAMES`")
 	flags.BoolVarP(&o.ShowTime, "show-time", "T", false, "shows the time it took to successfully provision a new cluster `BOOL`")
 
 	cmdutils.MustMarkFlagRequired(command, "allocation")
@@ -268,7 +269,7 @@ func (o *CreateClusterOptions) CreateClusterConfiguration() (*clustersv1.Cluster
 				return nil, err
 			}
 		default:
-			config, err = sjson.Set(config, key, value)
+			config, err = sjson.Set(config, key, o.ParseValue(value))
 			if err != nil {
 				return nil, err
 			}
@@ -397,4 +398,13 @@ func (o *CreateClusterOptions) GetUserAuth() (*types.WhoAmI, error) {
 	who := &types.WhoAmI{}
 
 	return who, o.ClientWithEndpoint("/whoami").Result(who).Get().Error()
+}
+
+// ParseValue parses the value incase numeric
+func (o *CreateClusterOptions) ParseValue(v string) interface{} {
+	if num, err := strconv.ParseFloat(v, 64); err == nil {
+		return num
+	}
+
+	return v
 }
