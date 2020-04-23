@@ -45,13 +45,7 @@ func newResourceManager(client client.Interface) (Resources, error) {
 // Lookup is used to check if a resource is supported
 func (r *resourceImpl) Lookup(name string) (Resource, error) {
 	name = strings.ToLower(name)
-	var singular string
-	switch name {
-	case "eks", "ekss":
-		singular = "eks"
-	default:
-		singular = utils.Singularize(name)
-	}
+	singular := utils.Singularize(name)
 
 	for _, x := range ResourceList {
 		if singular == x.Name || name == x.ShortName {

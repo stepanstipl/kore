@@ -22,6 +22,7 @@ import (
 
 func init() {
 	inflect.AddUncountable("kubernetes")
+	inflect.AddUncountable("eks")
 }
 
 func Singularize(word string) string {

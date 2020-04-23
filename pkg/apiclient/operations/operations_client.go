@@ -2778,7 +2778,7 @@ func (a *Client) FindEKS(params *FindEKSParams, authInfo runtime.ClientAuthInfoW
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "findEKS",
 		Method:             "GET",
-		PathPattern:        "/api/v1alpha1/teams/{team}/ekss/{name}",
+		PathPattern:        "/api/v1alpha1/teams/{team}/eks/{name}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
@@ -2948,7 +2948,7 @@ func (a *Client) FindEKSs(params *FindEKSsParams, authInfo runtime.ClientAuthInf
 	result, err := a.transport.Submit(&runtime.ClientOperation{
 		ID:                 "findEKSs",
 		Method:             "GET",
-		PathPattern:        "/api/v1alpha1/teams/{team}/ekss",
+		PathPattern:        "/api/v1alpha1/teams/{team}/eks",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},

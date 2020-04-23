@@ -2,9 +2,9 @@
 // sources:
 // deploy/crds/apps.kore.appvia.io_appdeployments.yaml
 // deploy/crds/apps.kore.appvia.io_installplans.yaml
+// deploy/crds/aws.compute.kore.appvia.io_eks.yaml
 // deploy/crds/aws.compute.kore.appvia.io_ekscredentials.yaml
 // deploy/crds/aws.compute.kore.appvia.io_eksnodegroups.yaml
-// deploy/crds/aws.compute.kore.appvia.io_ekss.yaml
 // deploy/crds/aws.compute.kore.appvia.io_eksvpcs.yaml
 // deploy/crds/clusters.compute.kore.appvia.io_clusters.yaml
 // deploy/crds/clusters.compute.kore.appvia.io_kubernetes.yaml
@@ -670,6 +670,206 @@ func crdsAppsKoreAppviaIo_installplansYaml() (*asset, error) {
 	return a, nil
 }
 
+var _crdsAwsComputeKoreAppviaIo_eksYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: eks.aws.compute.kore.appvia.io
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.description
+    description: A description of the EKS cluster
+    name: Description
+    type: string
+  - JSONPath: .status.endpoint
+    description: The endpoint of the eks cluster
+    name: Endpoint
+    type: string
+  - JSONPath: .status.status
+    description: The overall status of the cluster
+    name: Status
+    type: string
+  group: aws.compute.kore.appvia.io
+  names:
+    kind: EKS
+    listKind: EKSList
+    plural: eks
+    singular: eks
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: EKS is the Schema for the eksclusters API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: EKSSpec defines the desired state of EKSCluster
+          properties:
+            authorizedMasterNetworks:
+              description: AuthorizedMasterNetworks is the network ranges which are
+                permitted to access the EKS control plane endpoint i.e the managed
+                one (not the authentication proxy)
+              items:
+                type: string
+              type: array
+              x-kubernetes-list-type: set
+            cluster:
+              description: Cluster refers to the cluster this object belongs to
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
+            credentials:
+              description: Credentials is a reference to an EKSCredentials object
+                to use for authentication
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
+            region:
+              description: Region is the AWS region to launch this cluster within
+              type: string
+            securityGroupIDs:
+              description: SecurityGroupIds is a list of security group IDs
+              items:
+                type: string
+              type: array
+              x-kubernetes-list-type: set
+            subnetIDs:
+              description: SubnetIds is a list of subnet IDs
+              items:
+                type: string
+              type: array
+              x-kubernetes-list-type: set
+            version:
+              description: Version is the Kubernetes version to use
+              minLength: 3
+              type: string
+          required:
+          - credentials
+          - region
+          - subnetIDs
+          type: object
+        status:
+          description: EKSStatus defines the observed state of EKS cluster
+          properties:
+            caCertificate:
+              description: CACertificate is the certificate for this cluster
+              type: string
+            conditions:
+              description: Conditions is the status of the components
+              items:
+                description: Component the state of a component of the resource
+                properties:
+                  detail:
+                    description: Detail is additional details on the error is any
+                    type: string
+                  message:
+                    description: Message is a human readable message on the status
+                      of the component
+                    type: string
+                  name:
+                    description: Name is the name of the component
+                    type: string
+                  status:
+                    description: Status is the status of the component
+                    type: string
+                type: object
+              type: array
+            endpoint:
+              description: Endpoint is the endpoint of the cluster
+              type: string
+            roleARN:
+              description: RoleARN is the role ARN which provides permissions to EKS
+              type: string
+            status:
+              description: Status provides a overall status
+              type: string
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsAwsComputeKoreAppviaIo_eksYamlBytes() ([]byte, error) {
+	return _crdsAwsComputeKoreAppviaIo_eksYaml, nil
+}
+
+func crdsAwsComputeKoreAppviaIo_eksYaml() (*asset, error) {
+	bytes, err := crdsAwsComputeKoreAppviaIo_eksYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/aws.compute.kore.appvia.io_eks.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _crdsAwsComputeKoreAppviaIo_ekscredentialsYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -1013,206 +1213,6 @@ func crdsAwsComputeKoreAppviaIo_eksnodegroupsYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "crds/aws.compute.kore.appvia.io_eksnodegroups.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _crdsAwsComputeKoreAppviaIo_ekssYaml = []byte(`
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  annotations:
-    controller-gen.kubebuilder.io/version: v0.2.5
-  creationTimestamp: null
-  name: ekss.aws.compute.kore.appvia.io
-spec:
-  additionalPrinterColumns:
-  - JSONPath: .spec.description
-    description: A description of the EKS cluster
-    name: Description
-    type: string
-  - JSONPath: .status.endpoint
-    description: The endpoint of the eks cluster
-    name: Endpoint
-    type: string
-  - JSONPath: .status.status
-    description: The overall status of the cluster
-    name: Status
-    type: string
-  group: aws.compute.kore.appvia.io
-  names:
-    kind: EKS
-    listKind: EKSList
-    plural: ekss
-    singular: eks
-  preserveUnknownFields: false
-  scope: Namespaced
-  subresources:
-    status: {}
-  validation:
-    openAPIV3Schema:
-      description: EKS is the Schema for the eksclusters API
-      properties:
-        apiVersion:
-          description: 'APIVersion defines the versioned schema of this representation
-            of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-          type: string
-        kind:
-          description: 'Kind is a string value representing the REST resource this
-            object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-          type: string
-        metadata:
-          type: object
-        spec:
-          description: EKSSpec defines the desired state of EKSCluster
-          properties:
-            authorizedMasterNetworks:
-              description: AuthorizedMasterNetworks is the network ranges which are
-                permitted to access the EKS control plane endpoint i.e the managed
-                one (not the authentication proxy)
-              items:
-                type: string
-              type: array
-              x-kubernetes-list-type: set
-            cluster:
-              description: Cluster refers to the cluster this object belongs to
-              properties:
-                group:
-                  description: Group is the api group
-                  type: string
-                kind:
-                  description: Kind is the name of the resource under the group
-                  type: string
-                name:
-                  description: Name is name of the resource
-                  type: string
-                namespace:
-                  description: Namespace is the location of the object
-                  type: string
-                version:
-                  description: Version is the group version
-                  type: string
-              required:
-              - group
-              - kind
-              - name
-              - namespace
-              - version
-              type: object
-            credentials:
-              description: Credentials is a reference to an EKSCredentials object
-                to use for authentication
-              properties:
-                group:
-                  description: Group is the api group
-                  type: string
-                kind:
-                  description: Kind is the name of the resource under the group
-                  type: string
-                name:
-                  description: Name is name of the resource
-                  type: string
-                namespace:
-                  description: Namespace is the location of the object
-                  type: string
-                version:
-                  description: Version is the group version
-                  type: string
-              required:
-              - group
-              - kind
-              - name
-              - namespace
-              - version
-              type: object
-            region:
-              description: Region is the AWS region to launch this cluster within
-              type: string
-            securityGroupIDs:
-              description: SecurityGroupIds is a list of security group IDs
-              items:
-                type: string
-              type: array
-              x-kubernetes-list-type: set
-            subnetIDs:
-              description: SubnetIds is a list of subnet IDs
-              items:
-                type: string
-              type: array
-              x-kubernetes-list-type: set
-            version:
-              description: Version is the Kubernetes version to use
-              minLength: 3
-              type: string
-          required:
-          - credentials
-          - region
-          - subnetIDs
-          type: object
-        status:
-          description: EKSStatus defines the observed state of EKS cluster
-          properties:
-            caCertificate:
-              description: CACertificate is the certificate for this cluster
-              type: string
-            conditions:
-              description: Conditions is the status of the components
-              items:
-                description: Component the state of a component of the resource
-                properties:
-                  detail:
-                    description: Detail is additional details on the error is any
-                    type: string
-                  message:
-                    description: Message is a human readable message on the status
-                      of the component
-                    type: string
-                  name:
-                    description: Name is the name of the component
-                    type: string
-                  status:
-                    description: Status is the status of the component
-                    type: string
-                type: object
-              type: array
-            endpoint:
-              description: Endpoint is the endpoint of the cluster
-              type: string
-            roleARN:
-              description: RoleARN is the role ARN which provides permissions to EKS
-              type: string
-            status:
-              description: Status provides a overall status
-              type: string
-          type: object
-      type: object
-  version: v1alpha1
-  versions:
-  - name: v1alpha1
-    served: true
-    storage: true
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
-`)
-
-func crdsAwsComputeKoreAppviaIo_ekssYamlBytes() ([]byte, error) {
-	return _crdsAwsComputeKoreAppviaIo_ekssYaml, nil
-}
-
-func crdsAwsComputeKoreAppviaIo_ekssYaml() (*asset, error) {
-	bytes, err := crdsAwsComputeKoreAppviaIo_ekssYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "crds/aws.compute.kore.appvia.io_ekss.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -5643,9 +5643,9 @@ func AssetNames() []string {
 var _bindata = map[string]func() (*asset, error){
 	"crds/apps.kore.appvia.io_appdeployments.yaml":                        crdsAppsKoreAppviaIo_appdeploymentsYaml,
 	"crds/apps.kore.appvia.io_installplans.yaml":                          crdsAppsKoreAppviaIo_installplansYaml,
+	"crds/aws.compute.kore.appvia.io_eks.yaml":                            crdsAwsComputeKoreAppviaIo_eksYaml,
 	"crds/aws.compute.kore.appvia.io_ekscredentials.yaml":                 crdsAwsComputeKoreAppviaIo_ekscredentialsYaml,
 	"crds/aws.compute.kore.appvia.io_eksnodegroups.yaml":                  crdsAwsComputeKoreAppviaIo_eksnodegroupsYaml,
-	"crds/aws.compute.kore.appvia.io_ekss.yaml":                           crdsAwsComputeKoreAppviaIo_ekssYaml,
 	"crds/aws.compute.kore.appvia.io_eksvpcs.yaml":                        crdsAwsComputeKoreAppviaIo_eksvpcsYaml,
 	"crds/clusters.compute.kore.appvia.io_clusters.yaml":                  crdsClustersComputeKoreAppviaIo_clustersYaml,
 	"crds/clusters.compute.kore.appvia.io_kubernetes.yaml":                crdsClustersComputeKoreAppviaIo_kubernetesYaml,
@@ -5717,9 +5717,9 @@ var _bintree = &bintree{nil, map[string]*bintree{
 	"crds": {nil, map[string]*bintree{
 		"apps.kore.appvia.io_appdeployments.yaml":                        {crdsAppsKoreAppviaIo_appdeploymentsYaml, map[string]*bintree{}},
 		"apps.kore.appvia.io_installplans.yaml":                          {crdsAppsKoreAppviaIo_installplansYaml, map[string]*bintree{}},
+		"aws.compute.kore.appvia.io_eks.yaml":                            {crdsAwsComputeKoreAppviaIo_eksYaml, map[string]*bintree{}},
 		"aws.compute.kore.appvia.io_ekscredentials.yaml":                 {crdsAwsComputeKoreAppviaIo_ekscredentialsYaml, map[string]*bintree{}},
 		"aws.compute.kore.appvia.io_eksnodegroups.yaml":                  {crdsAwsComputeKoreAppviaIo_eksnodegroupsYaml, map[string]*bintree{}},
-		"aws.compute.kore.appvia.io_ekss.yaml":                           {crdsAwsComputeKoreAppviaIo_ekssYaml, map[string]*bintree{}},
 		"aws.compute.kore.appvia.io_eksvpcs.yaml":                        {crdsAwsComputeKoreAppviaIo_eksvpcsYaml, map[string]*bintree{}},
 		"clusters.compute.kore.appvia.io_clusters.yaml":                  {crdsClustersComputeKoreAppviaIo_clustersYaml, map[string]*bintree{}},
 		"clusters.compute.kore.appvia.io_kubernetes.yaml":                {crdsClustersComputeKoreAppviaIo_kubernetesYaml, map[string]*bintree{}},

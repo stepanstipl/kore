@@ -94,7 +94,7 @@ var (
 		},
 		{
 			Name:         "eks",
-			APIName:      "ekss",
+			APIName:      "eks",
 			GroupVersion: eks.GroupVersion.String(),
 			Kind:         "EKS",
 			Scope:        TeamScope,
