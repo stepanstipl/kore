@@ -70,3 +70,19 @@ func (s *ServiceProviderRegistry) GetProviderForKind(kind string) ServiceProvide
 	}
 	return nil
 }
+
+func (s *ServiceProviderRegistry) GetAllPlans() []servicesv1.ServicePlan {
+	var res []servicesv1.ServicePlan
+	for _, provider := range s.providers {
+		res = append(res, provider.Plans()...)
+	}
+	return res
+}
+
+func (s *ServiceProviderRegistry) Providers() map[string]ServiceProvider {
+	res := make(map[string]ServiceProvider, len(s.providers))
+	for k, v := range s.providers {
+		res[k] = v
+	}
+	return res
+}
