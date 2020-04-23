@@ -25,6 +25,7 @@ import (
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/utils/render"
 
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
@@ -37,6 +38,8 @@ type CreateGKECredentialsOptions struct {
 	cmdutil.DefaultHandler
 	// Name is the name of the credential
 	Name string
+	// DryRun indicates we only dryrun the resources
+	DryRun bool
 	// Description is a description of the credential
 	Description string
 	// ProjectName is the name of the GCP project
@@ -64,11 +67,13 @@ func NewCmdGKECredentials(factory cmdutil.Factory) *cobra.Command {
 		Run:     cmdutil.DefaultRunFunc(o),
 	}
 
-	command.Flags().StringVarP(&o.Description, "description", "d", "", "the description of the credential")
-	command.Flags().StringVarP(&o.ProjectName, "project", "p", "", "the GCP project for these credentials")
-	command.Flags().StringVarP(&o.ServiceAccountJSON, "cred-file", "c", "", "the service account JSON file containing the credentials to import")
-	command.Flags().StringArrayVarP(&o.AllocateToTeams, "allocate", "a", []string{}, "list of teams to allocate to, e.g. team1,team2")
-	command.Flags().BoolVar(&o.AllocateToAll, "all-teams", false, "make these credentials available to all teams in kore (if not set, you must create an allocation for these credentials for them to be usable)")
+	flags := command.Flags()
+	flags.StringVarP(&o.Description, "description", "d", "", "the description of the credential")
+	flags.StringVarP(&o.ProjectName, "project", "p", "", "the GCP project for these credentials")
+	flags.StringVarP(&o.ServiceAccountJSON, "cred-file", "c", "", "the service account JSON file containing the credentials to import")
+	flags.StringArrayVarP(&o.AllocateToTeams, "allocate", "a", []string{}, "list of teams to allocate to, e.g. team1,team2")
+	flags.BoolVar(&o.AllocateToAll, "all-teams", false, "make these credentials available to all teams in kore (if not set, you must create an allocation for these credentials for them to be usable)")
+	flags.BoolVar(&o.DryRun, "dry-run", false, "shows the resource but does not apply or create (defaults: false)")
 
 	cmdutil.MustMarkFlagRequired(command, "project")
 	cmdutil.MustMarkFlagRequired(command, "cred-file")
@@ -78,19 +83,9 @@ func NewCmdGKECredentials(factory cmdutil.Factory) *cobra.Command {
 
 // Run is responsible for creating the credentials
 func (o CreateGKECredentialsOptions) Run() error {
-	found, err := o.ClientWithTeamResource(kore.HubAdminTeam, o.Resources().MustLookup("gkecredential")).Name(o.Name).Exists()
-	if err != nil {
-		return err
-	}
-	if found {
-		return fmt.Errorf("%q already exists, please edit instead", o.Name)
-	}
-
 	json, err := ioutil.ReadFile(o.ServiceAccountJSON)
 	if err != nil {
-		o.Println("Error reading service account from %v", o.ServiceAccountJSON)
-
-		return err
+		return fmt.Errorf("trying reading service account from %v", o.ServiceAccountJSON)
 	}
 
 	secret := &confv1.Secret{
@@ -142,7 +137,14 @@ func (o CreateGKECredentialsOptions) Run() error {
 		},
 	}
 
-	o.Println("Storing credentials in Kore")
+	if o.DryRun {
+		return render.Render().
+			Writer(o.Writer()).
+			Format(render.FormatYAML).
+			Resource(render.FromStruct(cred)).
+			Do()
+	}
+
 	err = o.WaitForCreation(
 		o.ClientWithTeamResource(kore.HubAdminTeam, o.Resources().MustLookup("gkecredential")).
 			Name(o.Name).

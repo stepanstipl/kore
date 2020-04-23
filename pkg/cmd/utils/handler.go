@@ -105,7 +105,7 @@ func checkTeam(factory Factory, cfg *config.Config) func(value interface{}) erro
 		if !exists {
 			// Let's check whether the current profile has a non-existing team and remove it
 			if cfg.GetCurrentProfile().Team == team {
-				errStr := fmt.Sprintf("team %q does not exist, please update your profile using\n  $ kore profiles set current.team <EXISTING TEAM>", team)
+				errStr := fmt.Sprintf("team %q does not exist, please update your profile using\n$ kore profiles set current.team <EXISTING TEAM>", team)
 				cfg.GetCurrentProfile().Team = ""
 				if err := config.UpdateConfig(cfg, config.GetClientConfigurationPath()); err != nil {
 					errStr = errStr + "\n" + err.Error()

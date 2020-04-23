@@ -97,7 +97,7 @@ func NewCmdCreateServiceCredentials(factory cmdutil.Factory) *cobra.Command {
 	flags.StringVarP(&o.Namespace, "namespace", "n", "", "target namespace in the cluster `NAMESPACE`")
 	flags.StringArrayVar(&o.Params, "param", []string{}, "a series of key value pairs used to override configuration parameters `KEY=VALUE`")
 	flags.BoolVarP(&o.ShowTime, "show-time", "T", false, "shows the time it took to successfully provision a new service `BOOL`")
-	flags.BoolVarP(&o.DryRun, "dry-run", "", false, "if true it will print the service credentials object and won't call the API `BOOL`")
+	flags.BoolVar(&o.DryRun, "dry-run", false, "shows the resource but does not apply or create (defaults: false)")
 
 	cmdutils.MustMarkFlagRequired(command, "service")
 	cmdutils.MustMarkFlagRequired(command, "cluster")
