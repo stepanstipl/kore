@@ -47,7 +47,6 @@ jobs:
             - auth-proxy
             - kore-apiserver
             - kore-clusterappman
-            - korectl
             - kore
 
   check-apis:
