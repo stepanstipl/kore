@@ -24,8 +24,8 @@ CLUSTER="${CLUSTER="ci-${CIRCLE_BUILD_NUM:-$USER}"}"
 usage() {
   cat <<EOF
   Usage: $(basename $0)
-  --enable-gke   : indicates we should run the GKE (default: ${ENBALE_GKE_E2E})
-  --enable-eks   : indicates we should run E2E on EKS (default: ${ENABLE_EKS_E2E})
+  --enable-gke <bool>  : indicates we should run the GKE (default: ${ENBALE_GKE_E2E})
+  --enable-eks <bool>  : indicates we should run E2E on EKS (default: ${ENABLE_EKS_E2E})
   -h|--help      : display this usage menu
 EOF
   if [[ -n $@ ]]; then

@@ -9,104 +9,60 @@ parameters:
     type: boolean
     default: false
 
-  enable_e2e_master:
-    type: boolean
-    default: false
-    
   enable_gke_e2e:
     type: boolean
-    default: true
+    default: false
 
   enable_eks_e2e:
     type: boolean
     default: false
 
-e2e: &E2E_DEFAULT
-  docker:
-    - image: circleci/golang:1.14
-
-  parameters:
-    enable_e2e:
-      type: boolean
-      default: false
-
-  environment:
-    ENABLE_EKS_E2E: << parameters.enable_e2e >>
-    KORE_ADMIN_TOKEN: "password"
-    KORE_API_PUBLIC_URL_QA: http://127.0.0.1:10080
-
-e2e_steps: &E2E_DEFAULT_STEPS
-  steps:
-    - checkout
-    - attach_workspace:
-        at: bin
-    - run:
-        name: Installing tools
-        command: |
-          sudo cp bin/ /bin
-          sudo apt install -y bash bats curl jq
-    - run:
-        name: Waiting for API
-        command: |
-          curl -s \
-            --retry 10 \
-            --retry-connrefused \
-            --retry-delay 5 \
-            ${KORE_API_PUBLIC_URL_QA}/healthz
-
-e2e_gke: &E2E_GKE
-  steps:
-    - run:
-        name: Running E2E Suite
-        command: |
-          test/e2e/check-suite.sh \
-            --enable-e2e-user ${KORE_E2E_USER} \
-            --enable-gke true
-
-services: &SERVICES 
-  docker:
-    - image: circleci/golang:1.14
-    - name: etcd
-      image: bitnami/etcd:latest
-      environment:
-        ALLOW_NONE_AUTHENTICATION: "yes"
-    - name: database
-      image: mariadb:bionic
-      environment:
-        MYSQL_ROOT_PASSWORD: pass
-      command:
-        sh -c "
-          echo 'CREATE DATABASE IF NOT EXISTS kore;' > /docker-entrypoint-initdb.d/init.sql;
-          /usr/local/bin/docker-entrypoint.sh --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
-    - name: kube-controller-manager
-      image: gcr.io/google-containers/kube-controller-manager-amd64:v1.15.11
-      command:
-        - /usr/local/bin/kube-controller-manager
-        - --master=http://kube-apiserver:8080
-    - name: kube-apiserver
-      image: gcr.io/google-containers/kube-apiserver-amd64:v1.15.11
-      command:
-        - /usr/local/bin/kube-apiserver
-        - --address=0.0.0.0
-        - --alsologtostderr
-        - --authorization-mode=RBAC
-        - --bind-address=0.0.0.0
-        - --default-watch-cache-size=200
-        - --delete-collection-workers=10
-        - --etcd-servers=http://etcd:2379
-        - --log-flush-frequency=10s
-        - --runtime-config=autoscaling/v1=false
-        - --runtime-config=autoscaling/v2beta1=false
-        - --runtime-config=autoscaling/v2beta2=false
-        - --runtime-config=batch/v1=false
-        - --runtime-config=batch/v1beta1=false
-        - --runtime-config=networking.k8s.io/v1=false
-        - --runtime-config=networking.k8s.io/v1beta1=false
-        - --runtime-config=node.k8s.io/v1beta1=false
+services: &SERVICES
+  - image: circleci/golang:1.14
+  - name: etcd
+    image: bitnami/etcd:latest
+    environment:
+      ALLOW_NONE_AUTHENTICATION: "yes"
+  - name: redis
+    image: redis:5
+  - name: database
+    image: mariadb:bionic
+    environment:
+      MYSQL_ROOT_PASSWORD: pass
+    command:
+      sh -c "
+        echo 'CREATE DATABASE IF NOT EXISTS kore;' > /docker-entrypoint-initdb.d/init.sql;
+        /usr/local/bin/docker-entrypoint.sh --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
+  - name: kube-controller-manager
+    image: gcr.io/google-containers/kube-controller-manager-amd64:v1.15.11
+    command:
+      - /usr/local/bin/kube-controller-manager
+      - --master=http://kube-apiserver:8080
+  - name: kube-apiserver
+    image: gcr.io/google-containers/kube-apiserver-amd64:v1.15.11
+    command:
+      - /usr/local/bin/kube-apiserver
+      - --address=0.0.0.0
+      - --alsologtostderr
+      - --authorization-mode=RBAC
+      - --bind-address=0.0.0.0
+      - --default-watch-cache-size=200
+      - --delete-collection-workers=10
+      - --etcd-servers=http://etcd:2379
+      - --log-flush-frequency=10s
+      - --runtime-config=autoscaling/v1=false
+      - --runtime-config=autoscaling/v2beta1=false
+      - --runtime-config=autoscaling/v2beta2=false
+      - --runtime-config=batch/v1=false
+      - --runtime-config=batch/v1beta1=false
+      - --runtime-config=networking.k8s.io/v1=false
+      - --runtime-config=networking.k8s.io/v1beta1=false
+      - --runtime-config=node.k8s.io/v1beta1=false
 
 service_env: &SERVICES_ENV
+  KORE_ADMIN_PASS: "password"
   KORE_ADMIN_TOKEN: "password"
-  KORE_AUTHENTICATION_PLUGINS: "admintoken,localjwt"
+  KORE_AUTHENTICATION_PLUGINS: "admintoken,basicauth,localjwt,openid"
   KORE_CERTIFICATE_AUTHORITY: "hack/ca/ca.pem"
   KORE_CERTIFICATE_AUTHORITY_KEY: "hack/ca/ca-key.pem"
   KORE_HMAC: "bdT2Qg6DybsLIwc0TbYWrkGC4auovscg"
@@ -145,20 +101,14 @@ jobs:
           name: Build
           command: |
             make build
-      - persist_to_workspace:
-          root: bin
-          paths:
-            - auth-proxy
-            - kore-apiserver
-            - kore-clusterappman
-            - kore
 
   check-apis:
     environment:
       GOFLAGS: "-mod=vendor"
       USE_GIT_VERSION: "true"
 
-    <<: *SERVICES
+    docker:
+      *SERVICES
 
     steps:
       - checkout
@@ -250,51 +200,7 @@ jobs:
       USE_GIT_VERSION: "true"
 
     docker:
-      - image: circleci/golang:1.14
-
-      - name: etcd
-        image: bitnami/etcd:latest
-        environment:
-          ALLOW_NONE_AUTHENTICATION: "yes"
-
-      - name: redis
-        image: redis:5
-
-      - name: database
-        image: mariadb:bionic
-        environment:
-          MYSQL_ROOT_PASSWORD: pass
-        command:
-          sh -c "
-            echo 'CREATE DATABASE IF NOT EXISTS kore;' > /docker-entrypoint-initdb.d/init.sql;
-            /usr/local/bin/docker-entrypoint.sh --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
-
-      - name: kube-controller-manager
-        image: gcr.io/google-containers/kube-controller-manager-amd64:v1.15.11
-        command:
-          - /usr/local/bin/kube-controller-manager
-          - --master=http://kube-apiserver:8080
-
-      - name: kube-apiserver
-        image: gcr.io/google-containers/kube-apiserver-amd64:v1.15.11
-        command:
-          - /usr/local/bin/kube-apiserver
-          - --address=0.0.0.0
-          - --alsologtostderr
-          - --authorization-mode=RBAC
-          - --bind-address=0.0.0.0
-          - --default-watch-cache-size=200
-          - --delete-collection-workers=10
-          - --etcd-servers=http://etcd:2379
-          - --log-flush-frequency=10s
-          - --runtime-config=autoscaling/v1=false
-          - --runtime-config=autoscaling/v2beta1=false
-          - --runtime-config=autoscaling/v2beta2=false
-          - --runtime-config=batch/v1=false
-          - --runtime-config=batch/v1beta1=false
-          - --runtime-config=networking.k8s.io/v1=false
-          - --runtime-config=networking.k8s.io/v1beta1=false
-          - --runtime-config=node.k8s.io/v1beta1=false
+      *SERVICES
 
     steps:
       - checkout
@@ -318,17 +224,7 @@ jobs:
             bin/kore-apiserver --verbose
           background: true
           environment:
-            KORE_ADMIN_PASS: "password"
-            KORE_ADMIN_TOKEN: "password"
-            KORE_AUTHENTICATION_PLUGINS: "basicauth,admintoken"
-            KORE_CERTIFICATE_AUTHORITY: "hack/ca/ca.pem"
-            KORE_CERTIFICATE_AUTHORITY_KEY: "hack/ca/ca-key.pem"
-            KORE_HMAC: "bdT2Qg6DybsLIwc0TbYWrkGC4auovscg"
-            # The below must be matched with the private key in the API test project:
-            KORE_LOCAL_JWT_PUBLIC_KEY: "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAIG6XiNhkwDETU2zk0tGlI0DKlbEJcN4jxwJBqhd3neReLDnqg9SBgKepdy9Nxw5LAd1gNoBkLvdFJg9SbHlM0sCAwEAAQ=="
-            KORE_UI_PUBLIC_URL: "http://localhost:3000"
-            KUBE_API_SERVER: "http://kube-apiserver:8080"
-            USERS_DB_URL: "root:pass@tcp(database:3306)/kore?parseTime=true"
+            <<: *SERVICES_ENV
       - run:
           name: Running kore-ui
           working_directory: ~/project/ui
@@ -410,30 +306,45 @@ jobs:
             VERSION=${CIRCLE_SHA1} make push-images
 
   e2e:
-    <<: *SERVICES
+    parameters:
+      enable_eks:
+        type: boolean
+        default: false
+      enable_gke:
+        type: boolean
+        default: false
+      host:
+        type: string
+        default: http://127.0.0.1:10080
 
     environment:
+      ENABLE_EKS_E2E: << parameters.enable_eks >>
+      ENABLE_GKE_E2E: << parameters.enable_gke >>
       GOFLAGS: "-mod=vendor"
-      KORE_API_PUBLIC_URL_QA: http://127.0.0.1:10080
+      KORE_ADMIN_TOKEN: "password"
+      KORE_API_PUBLIC_URL_QA: << parameters.host >>
+
+    docker:
+      *SERVICES
 
     steps:
       - checkout
+      - run:
+          name: Installing tools
+          command: |
+            sudo apt install -y bash bats curl jq
+      - run:
+          name: Installing kubectl
+          command: |
+            sudo curl -L https://storage.googleapis.com/kubernetes-release/release/v1.15.11/bin/linux/amd64/kubectl -o /bin/kubectl
+            sudo chmod +x /bin/kubectl
       - run:
           name: Building binaries
           command: |
             make kore-apiserver
             make kore
-            sudo mv bin/kore /bin
-      - run:
-          name: Installing kubectl
-          command: |
-            sudo curl -sL https://storage.googleapis.com/kubernetes-release/release/v1.15.11/bin/linux/amd64/kubectl -o bin/kubectl
-            sudo chmod +x bin/kubectl
-      - persist_to_workspace:
-          root: bin
-          paths:
-            - kore
-            - kubectl
+            sudo cp bin/kore /bin/kore
+            /bin/kubectl version --client
       - run:
           name: Running the Kore API
           command: |
@@ -443,22 +354,21 @@ jobs:
           background: true
           environment:
             <<: *SERVICES_ENV
-
-  e2e-gke:
-    <<: *E2E_DEFAULT
-    steps:
-      - when:
-          condition: << parameters.enable_e2e >>
-          steps:
-            <<: [*E2E_DEFAULT_STEPS, *E2E_GKE]
-
-  e2e-eks:
-    <<: *E2E_DEFAULT
-    steps:
-      - when:
-          condition: << parameters.enable_e2e >>
-          steps:
-            <<: [*E2E_DEFAULT_STEPS, *E2E_GKE]
+      - run:
+          name: Waiting for API
+          command: |
+            curl -s \
+              --retry 10 \
+              --retry-connrefused \
+              --retry-delay 5 \
+              ${KORE_API_PUBLIC_URL_QA}/healthz
+      - run:
+          name: Running E2E Suite
+          command: |
+            test/e2e/check-suite.sh \
+              --enable-e2e-user ${KORE_E2E_USER} \
+              --enable-gke ${ENABLE_GKE_E2E} \
+              --enable-eks ${ENABLE_EKS_E2E}
 
 workflows:
   version: 2.1
@@ -516,38 +426,21 @@ workflows:
             - release
             - release-ui
 
-  e2e:
-    when: << pipeline.parameters.enable_e2e >>
+  e2e_gke:
+    when: << pipeline.parameters.enable_gke_e2e >>
     jobs:
-      - e2e-images:
-          filters:
-            branches:
-              ignore: master
+      - e2e-images
       - e2e:
-          filters:
-            branches:
-              ignore: master
+          enable_gke: true
           requires:
             - e2e-images
-      - e2e-gke:
-          enable_e2e: << pipeline.parameters.enable_gke_e2e >>
-          filters:
-            branches:
-              ignore: master
-          requires:
-            - e2e
-      - e2e-eks:
-          enable_e2e: << pipeline.parameters.enable_eks_e2e >>
-          filters:
-            branches:
-              ignore: master
-          requires:
-            - e2e
 
-  e2e_master:
-    when: << pipeline.parameters.enable_e2e_master >>
+  e2e_eks:
+    when: << pipeline.parameters.enable_eks_e2e >>
     jobs:
+      - e2e-images
       - e2e:
-          filters:
-            branches:
-              only: master
+          enable_eks: true
+          requires:
+            - e2e-images
+

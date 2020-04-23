@@ -136,13 +136,12 @@ if [[ -n "${ADMIN_USER}" ]]; then
 fi
 
 if [[ "${ENABLE_UNIT_TESTS}" == "true" ]]; then
+  mkdir -p ${E2E_DIR}
   # @step: write the credentials to disk
   if [[ -n "${GKE_SA_QA}" ]]; then
-    mkdir -p ${E2E_DIR}
     echo -n ${GKE_SA_QA} | base64 -d > ${E2E_DIR}/gke-credentials.yml 2>/dev/null
   fi
   if [[ -n "${EKS_SA_QA}" ]]; then
-    mkdir -p ${E2E_DIR}
     echo -n ${EKS_SA_QA} | base64 -d > ${E2E_DIR}/eks-credentials.yml 2>/dev/null
   fi
 
