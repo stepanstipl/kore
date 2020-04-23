@@ -17,7 +17,6 @@
 package profiles
 
 import (
-	"bufio"
 	"fmt"
 	"strings"
 
@@ -71,19 +70,24 @@ func (o *ConfigureOptions) Run() error {
 		return errors.NewConflictError("profile name is already taken, please choose another name")
 	}
 
-	// @step: ask for the endpoint
-	o.Printf("Please enter the Kore API URL (e.g https://api.domain.com): ")
-
-	endpoint, err := bufio.NewReader(o.Stdin()).ReadString('\n')
-	if err != nil {
-		return fmt.Errorf("trying to read input: %s", err)
+	var endpoint string
+	prompts := cmdutil.Prompts{
+		&cmdutil.Prompt{
+			Id:    "Please enter the Kore API URL: (e.g https://api.domain.com)",
+			Value: &endpoint,
+			Validate: func(in string) error {
+				if !utils.IsValidURL(in) {
+					return fmt.Errorf("invalid endpoint: %s", in)
+				}
+				return nil
+			},
+		},
 	}
-	endpoint = strings.TrimSuffix(endpoint, "\n")
-
-	// @check this is a valid url
-	if !utils.IsValidURL(endpoint) {
-		return fmt.Errorf("invalid endpoint: %s", endpoint)
+	if err := prompts.Collect(); err != nil {
+		return err
 	}
+
+	endpoint = strings.TrimRight(endpoint, "/")
 
 	// @step: create an empty endpoint for then
 	config.CreateProfile(o.Name, endpoint)
