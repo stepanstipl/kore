@@ -56,7 +56,7 @@ type ErrConflict struct {
 
 // ErrInvalidParameter indicates an invalid param
 type ErrInvalidParameter struct {
-	field, value string
+	field, value, message string
 }
 
 func (e *ErrConflict) Error() string {
@@ -68,7 +68,11 @@ func (e *ErrResourceNotFound) Error() string {
 }
 
 func (e *ErrInvalidParameter) Error() string {
-	return fmt.Sprintf("invalid parameter: %s, value: %s", e.field, e.value)
+	if e.message == "" {
+		return fmt.Sprintf("invalid field %s, value: %s", e.field, e.value)
+	}
+
+	return fmt.Sprintf("invalid field %s, value: %s, %s", e.field, e.value, e.message)
 }
 
 // NewResourceNotFound returns a error type
@@ -89,4 +93,9 @@ func NewConflictError(message string, args ...interface{}) error {
 // NewInvalidParamError returns a error type
 func NewInvalidParamError(field, value string) error {
 	return &ErrInvalidParameter{field: field, value: value}
+}
+
+// NewInvalidParamWithMessageError returns a error type
+func NewInvalidParamWithMessageError(field, value, message string) error {
+	return &ErrInvalidParameter{field: field, value: value, message: message}
 }
