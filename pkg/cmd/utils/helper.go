@@ -17,9 +17,12 @@
 package utils
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"regexp"
+
+	"github.com/appvia/kore/pkg/utils"
 
 	"github.com/appvia/kore/pkg/cmd/errors"
 	"github.com/appvia/kore/pkg/utils/render"
@@ -151,10 +154,12 @@ func ParseDocument(f Factory, src io.Reader) ([]*ResourceDocument, error) {
 			return nil, errors.ErrMissingResourceVersion
 		}
 
+		displayName := utils.GetUnstructuredSelfLink(u)
+
 		// @step: lookup the resource from the cache
 		resource, err := f.Resources().Lookup(u.GetKind())
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s: %w", displayName, err)
 		}
 
 		list = append(list, &ResourceDocument{Object: u, Resource: resource})
