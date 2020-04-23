@@ -29,6 +29,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -67,6 +68,10 @@ func (a k8sCtrl) EnsureServiceDeletion(object *clustersv1.Kubernetes) controller
 			// @step: retrieve the provider credentials secret
 			token, err := controllers.GetConfigSecret(ctx, a.mgr.GetClient(), object.Namespace, object.Name)
 			if err != nil {
+				if kerrors.IsNotFound(err) {
+					return reconcile.Result{}, nil
+				}
+
 				return reconcile.Result{}, err
 			}
 
@@ -106,7 +111,7 @@ func (a k8sCtrl) EnsureServiceDeletion(object *clustersv1.Kubernetes) controller
 
 			object.Status.Components.SetCondition(corev1.Component{
 				Name:    ComponentKubernetesCleanup,
-				Message: "Failed trying to cleanup incluster resources",
+				Message: "Failed trying to cleanup in cluster resources",
 				Detail:  err.Error(),
 				Status:  corev1.FailureStatus,
 			})

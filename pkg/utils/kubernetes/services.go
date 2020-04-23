@@ -27,7 +27,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -43,24 +42,22 @@ func ListServices(ctx context.Context, cc client.Client, namespace string) (*v1.
 }
 
 // ListServicesByTypes returns a list of services in a namespace by type
-func ListServicesByTypes(ctx context.Context, cc client.Client, namespace string, types ...string) (*v1.ServiceList, error) {
-	if len(types) == 0 {
-		return nil, errors.New("no types defined")
+func ListServicesByTypes(ctx context.Context, cc client.Client, namespace string, filters ...string) (*v1.ServiceList, error) {
+	filtered := &v1.ServiceList{}
+
+	if len(filters) == 0 {
+		return filtered, nil
 	}
 
 	list, err := ListServices(ctx, cc, namespace)
 	if err != nil {
 		return nil, err
 	}
+	filtered.TypeMeta.APIVersion = list.TypeMeta.APIVersion
+	filtered.TypeMeta.Kind = list.TypeMeta.Kind
 
-	filtered := &v1.ServiceList{
-		TypeMeta: metav1.TypeMeta{
-			APIVersion: "v1",
-			Kind:       "List",
-		},
-	}
 	for _, x := range list.Items {
-		if utils.Contains(string(x.Spec.Type), types) {
+		if utils.Contains(string(x.Spec.Type), filters) {
 			filtered.Items = append(filtered.Items, x)
 		}
 	}
