@@ -348,7 +348,7 @@ func (r *rclient) Update(ctx context.Context, options ...UpdateOptionFunc) error
 		r.value.GetObjectKind().SetGroupVersionKind(gvk)
 	}
 
-	return nil
+	return err
 }
 
 // updateQueryFromList is responsible for filling in the scheme for query
