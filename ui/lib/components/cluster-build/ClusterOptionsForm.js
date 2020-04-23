@@ -7,6 +7,7 @@ const { Option } = Select
 
 import PlanViewer from '../configure/PlanViewer'
 import PlanOptionsForm from '../plans/PlanOptionsForm'
+import { patterns } from '../../utils/validation'
 
 class ClusterOptionsForm extends React.Component {
   static propTypes = {
@@ -105,7 +106,7 @@ class ClusterOptionsForm extends React.Component {
             {getFieldDecorator('clusterName', {
               rules: [
                 { required: true, message: 'Please enter cluster name!' },
-                { pattern: '^[a-z][a-z0-9-]{0,38}[a-z0-9]$', message: 'Name must consist of lower case alphanumeric characters or "-", it must start with a letter and end with an alphanumeric and must be no longer than 40 characters' },
+                { ...patterns.uriCompatible40CharMax },
                 { validator: checkForDuplicateName }
               ],
               initialValue: this.generateClusterName(selectedPlan)
