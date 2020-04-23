@@ -34,13 +34,17 @@ import (
 
 var (
 	longDescription = `
-Patch allows you to apply patches to the resource managed in kore
+Patch allows you to apply patches to the resource managed in kore to add or
+remove values from a resource.
 
 # Update the size in a cluster resource
-$ kore alpha patch clusters test spec.configuration.size 1
+$ kore alpha patch clusters test spec.configuration.size 1 [-t <team>]
 
 # Update the allowed subnets
-$ kore alpha patch clusters test spec.configuration.authProxyAllowedIPs.-1 127.0.0.0/8
+$ kore alpha patch clusters test spec.configuration.authProxyAllowedIPs.-1 127.0.0.0/8 [-t team]
+
+# Remove the value
+$ kore alpha patch clusters test spec.configuration.authProxyAllowedIPs.0
 `
 )
 
@@ -70,7 +74,7 @@ func NewCmdPatch(factory cmdutil.Factory) *cobra.Command {
 		Use:     "patch",
 		Short:   "Allows you to patch resource in kore",
 		Long:    longDescription,
-		Example: "kore alpha patch <resource> <name> <key> <value> [options]",
+		Example: "kore alpha patch <resource> <name> <key> [value] [options]",
 
 		Run: func(cmd *cobra.Command, args []string) {
 			o.Key = cmd.Flags().Arg(2)
@@ -110,9 +114,6 @@ func (o *PatchOptions) Validate() error {
 	if o.Key == "" {
 		return errors.NewInvalidParamError("key", "missing")
 	}
-	if o.Value == "" {
-		return errors.NewInvalidParamError("value", "missing")
-	}
 	resource, err := o.Resources().Lookup(o.Resource)
 	if err != nil {
 		return err
@@ -150,10 +151,13 @@ func (o *PatchOptions) Run() error {
 	}
 
 	// @step: apply the patch to the json
-	update, err := sjson.Set(string(content), o.Key, ParseValue(o.Value))
-	if err != nil {
-		return err
-	}
+	update, err := func() (string, error) {
+		if o.Value == "" {
+			return sjson.Delete(string(content), o.Key)
+		}
+
+		return sjson.Set(string(content), o.Key, ParseValue(o.Value))
+	}()
 	if err := json.NewDecoder(strings.NewReader(update)).Decode(u); err != nil {
 		return err
 	}
