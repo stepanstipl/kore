@@ -56,8 +56,9 @@ func DefaultRunFunc(o RunHandler) func(*cobra.Command, []string) {
 
 		// @step: we can help with resource and name as well
 		if utils.HasReflectField("Resource", o) && utils.HasReflectField("Name", o) {
-			resource, err := o.Resources().Lookup(cmd.Flags().Arg(0))
-			if err == nil {
+			if cmd.Flags().Arg(0) != "" {
+				resource, err := o.Resources().Lookup(cmd.Flags().Arg(0))
+				o.CheckError(err)
 				utils.SetReflectedField("Resource", resource.Name, o)
 			}
 			utils.SetReflectedField("Name", cmd.Flags().Arg(1), o)

@@ -35,6 +35,8 @@ type Config struct {
 	Servers map[string]*Server `json:"servers,omitempty" yaml:"servers"`
 	// Version is the version of the configuration
 	Version string `json:"version,omitempty" yaml:"version"`
+	// FeatureGates shows all feature gates
+	FeatureGates map[string]bool `json:"feature-gates,omitempty" yaml:"feature-gates"`
 }
 
 // AuthInfo defines a credential to the api endpoint

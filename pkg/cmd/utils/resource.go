@@ -23,6 +23,8 @@ import (
 	"strings"
 
 	"github.com/appvia/kore/pkg/client"
+	"github.com/appvia/kore/pkg/client/config"
+	cmderrors "github.com/appvia/kore/pkg/cmd/errors"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/jsonpath"
 
@@ -32,14 +34,15 @@ import (
 // resourceImpl implements the Resources interface
 type resourceImpl struct {
 	client client.Interface
+	cfg    *config.Config
 }
 
-func newResourceManager(client client.Interface) (Resources, error) {
+func newResourceManager(client client.Interface, cfg *config.Config) (Resources, error) {
 	if client == nil {
 		return nil, errors.New("client is nil")
 	}
 
-	return &resourceImpl{client: client}, nil
+	return &resourceImpl{client: client, cfg: cfg}, nil
 }
 
 // Lookup is used to check if a resource is supported
@@ -54,20 +57,22 @@ func (r *resourceImpl) Lookup(name string) (Resource, error) {
 	}
 
 	for _, x := range ResourceList {
-		if singular == x.Name || name == x.ShortName {
-			log.WithFields(log.Fields{
-				"scope": x.Scope,
-				"name":  x.Name,
-			}).Debug("found a matching resource type")
-
-			return x, nil
+		if singular == x.Name || (x.ShortName != "" && name == x.ShortName) {
+			if r.isResourceEnabled(x) {
+				log.WithFields(log.Fields{
+					"scope": x.Scope,
+					"name":  x.Name,
+				}).Debug("found a matching resource type")
+				return x, nil
+			}
+			return Resource{}, cmderrors.ErrUnknownResource
 		}
 	}
 	log.WithFields(log.Fields{
 		"name": name,
-	}).Debug("no resource type found, using default")
+	}).Debug("no resource type found")
 
-	return DefaultResource, nil
+	return Resource{}, cmderrors.ErrUnknownResource
 }
 
 func (r *resourceImpl) MustLookup(name string) Resource {
@@ -80,12 +85,24 @@ func (r *resourceImpl) MustLookup(name string) Resource {
 
 // Names returns all the names of the resource types
 func (r *resourceImpl) Names() ([]string, error) {
-	return ResourceNames, nil
+	var names []string
+	for _, res := range ResourceList {
+		if r.isResourceEnabled(res) {
+			names = append(names, res.Name)
+		}
+	}
+	return names, nil
 }
 
 // List return a full list of resources
 func (r *resourceImpl) List() ([]Resource, error) {
-	return ResourceList, nil
+	var list []Resource
+	for _, res := range ResourceList {
+		if r.isResourceEnabled(res) {
+			list = append(list, res)
+		}
+	}
+	return list, nil
 }
 
 // LookResourceNamesWithFilter returns a list of resource names against a regexp
@@ -140,4 +157,8 @@ func (r *resourceImpl) LookupResourceNames(kind, team string) ([]string, error) 
 	}
 
 	return list, nil
+}
+
+func (r *resourceImpl) isResourceEnabled(res Resource) bool {
+	return res.FeatureGate == "" || r.cfg.FeatureGates[res.FeatureGate]
 }

@@ -24,7 +24,7 @@ import (
 var (
 	// ErrAuthentication indicates we need to authenticate
 	ErrAuthentication = kerrors.New("authorization require, ensure you have $ kore login")
-	// ErrMissingResource indicates the resource name is missing
+	// ErrMissingResource indicates the resource is missing
 	ErrMissingResource = kerrors.New("resource is missing")
 	// ErrMissingResourceName indicates the resource name is missing
 	ErrMissingResourceName = kerrors.New("name is missing")

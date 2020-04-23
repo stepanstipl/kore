@@ -133,6 +133,8 @@ type Resource struct {
 	Scope ResourceScope `json:"scope,omitempty"`
 	// Printer is printer columns for the resource
 	Printer []Column `json:"printer,omitempty"`
+	// FeatureFlag binds the resource to a feature gate
+	FeatureGate string `json:"featureFlag,omitempty"`
 }
 
 // IsTeamScoped checks if a team resource

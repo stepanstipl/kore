@@ -108,7 +108,7 @@ func (o *DeleteOptions) Validate() error {
 		return nil
 	}
 	if o.Resource == "" {
-		return errors.ErrMissingResourceName
+		return errors.ErrMissingResource
 	}
 	if o.Name == "" {
 		return errors.ErrMissingResourceName
