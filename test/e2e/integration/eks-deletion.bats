@@ -44,7 +44,7 @@ setup() {
 }
 
 @test "We should see the eksnodegroup resource delete" {
-  "${KORE} get eksnodegroup ${CLUSTER} -t ${TEAM}" || skip
+  "${KORE} get eksnodegroup ${CLUSTER}-default -t ${TEAM}" || skip
 
   runit "${KORE} get eksnodegroup ${CLUSTER} -t ${TEAM} -o json | jq -r '.status.status' | grep -i deleting"
   [[ "$status" -eq 0 ]]
@@ -53,7 +53,7 @@ setup() {
 }
 
 @test "We should see the eks cluster deleted" {
-  retry 120 "${KORE} delete cluster ${CLUSTER} -t ${TEAM}"
+  retry 240 "${KORE} delete cluster ${CLUSTER} -t ${TEAM}"
   [[ "$status" -eq 0 ]]
   runit "${KORE} delete cluster ${CLUSTER} -t ${TEAM} 2>&1 | grep 'not found$'"
   [[ "$status" -eq 0 ]]
