@@ -47,7 +47,7 @@ class GCPOrganization extends AutoRefreshComponent {
     return (
       <List.Item key={organization.metadata.name} actions={[
         <ResourceVerificationStatus key="verification_status" resourceStatus={organization.status} />,
-        <Text key="edit"><a onClick={editOrganization(organization)}><Icon type="eye" theme="filled"/> Edit</a></Text>
+        <Text key="edit"><a onClick={editOrganization(organization)}><Icon type="edit" theme="filled"/> Edit</a></Text>
       ]}>
         <List.Item.Meta
           avatar={<Avatar icon="cloud" />}
