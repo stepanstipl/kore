@@ -15,6 +15,33 @@ const getOpenidURL = () => {
   return `${envValue}${suffix}`
 }
 
+function getFeatureGates() {
+  var featureGates = new Map([['services', false]])
+
+  var envValue = (process.env.KORE_FEATURE_GATES || '').trim()
+  if (envValue === '') {
+    return featureGates
+  }
+
+  envValue.split(',').forEach((e) => {
+    const parts = e.split('=')
+    if (parts.length !== 2) {
+      throw new Error(`KORE_FEATURE_GATES is invalid: ${envValue}, it must be in "service1=true,service2=false" format`)
+    }
+    const gate = parts[0].trim()
+    const value = parts[1].trim()
+    if (!featureGates.has(gate)) {
+      throw new Error(`${gate} feature gate does not exst`)
+    }
+    if (value !== 'true' && value !== 'false') {
+      throw new Error(`KORE_FEATURE_GATES is invalid: ${envValue}, it must be in "service1=true,service2=false" format`)
+    }
+    featureGates.set(gate, value === 'true')
+  })
+
+  return featureGates
+}
+
 module.exports = {
   server: {
     port: process.env.PORT || '3000',
@@ -39,7 +66,8 @@ module.exports = {
     baseUrl: process.env.KORE_BASE_URL || 'http://localhost:3000',
     koreAdminTeamName: 'kore-admin',
     ignoreTeams: ['kore-admin', 'kore-default'],
-    gtmId: 'GTM-T9THH55'
+    gtmId: 'GTM-T9THH55',
+    featureGates: getFeatureGates()
   },
   koreApi: {
     url: process.env.KORE_API_URL || 'http://localhost:10080/api/v1alpha1',

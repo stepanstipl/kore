@@ -15,7 +15,8 @@ export \
     KORE_IDP_CLIENT_SECRET \
     KORE_IDP_SERVER_URL \
     KORE_IDP_USER_CLAIMS \
-    KORE_IDP_CLIENT_SCOPES
+    KORE_IDP_CLIENT_SCOPES \
+    KORE_FEATURE_GATES
 
 ./bin/kore-apiserver \
     --listen localhost:10080 \

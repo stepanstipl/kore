@@ -12,6 +12,7 @@ import Breadcrumb from '../../lib/components/Breadcrumb'
 import copy from '../../lib/utils/object-copy'
 import asyncForEach from '../../lib/utils/async-foreach'
 import KoreApi from '../../lib/kore-api'
+import { kore } from '../../config'
 
 class NewTeamPage extends React.Component {
   static propTypes = {
@@ -182,15 +183,16 @@ class NewTeamPage extends React.Component {
               />
             </Card>
 
-            <Card title="Create a service for your team" style={{ marginBottom: '30px', marginTop: '20px' }}>
-              <Alert message="Choose a service kind below to create a service" type="info" />
-              <ServiceBuildForm
-                user={user}
-                team={team}
-                teamServices={[]}
-              />
-            </Card>
-
+            {kore.featureGates.get('services') &&
+              <Card title="Create a service for your team" style={{ marginBottom: '30px', marginTop: '20px' }}>
+                <Alert message="Choose a service kind below to create a service" type="info" />
+                <ServiceBuildForm
+                  user={user}
+                  team={team}
+                  teamServices={[]}
+                />
+              </Card>
+            }
           </div>
         ) : null}
       </div>

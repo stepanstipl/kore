@@ -20,6 +20,7 @@ import asyncForEach from '../../lib/utils/async-foreach'
 import apiPaths from '../../lib/utils/api-paths'
 import redirect from '../../lib/utils/redirect'
 import KoreApi from '../../lib/kore-api'
+import { kore } from '../../config'
 
 class TeamDashboard extends React.Component {
   static propTypes = {
@@ -520,40 +521,41 @@ class TeamDashboard extends React.Component {
           <NamespaceClaimForm team={team.metadata.name} clusters={clusters} handleSubmit={this.handleNamespaceCreated} handleCancel={this.createNamespace(false)}/>
         </Drawer>
 
-        <Card
-          title={<div><Text style={{ marginRight: '10px' }}>Services</Text><Badge style={{ backgroundColor: '#1890ff' }} count={services.items.filter(c => !c.deleted).length} /></div>}
-          style={{ marginBottom: '20px' }}
-          extra={
-            <div>
-              <Button type="primary">
-                <Link href="/teams/[name]/services/new" as={`/teams/${team.metadata.name}/services/new`}>
-                  <a>+ New</a>
-                </Link>
-              </Button>
-            </div>
-          }
-        >
-          <List
-            dataSource={services.items}
-            renderItem={service => {
-              return (
-                <Service
-                  team={team.metadata.name}
-                  service={service}
-                  namespaceClaims={namespaceClaims}
-                  deleteService={this.deleteService}
-                  handleUpdate={this.handleResourceUpdated('services')}
-                  handleDelete={this.handleResourceDeleted('services')}
-                  refreshMs={10000}
-                  propsResourceDataKey="service"
-                  resourceApiPath={`${apiPaths.team(team.metadata.name).services}/${service.metadata.name}`}
-                />
-              )
-            }}
+        {kore.featureGates.get('services') &&
+          <Card
+            title={<div><Text style={{ marginRight: '10px' }}>Services</Text><Badge style={{ backgroundColor: '#1890ff' }} count={services.items.filter(c => !c.deleted).length} /></div>}
+            style={{ marginBottom: '20px' }}
+            extra={
+              <div>
+                <Button type="primary">
+                  <Link href="/teams/[name]/services/new" as={`/teams/${team.metadata.name}/services/new`}>
+                    <a>+ New</a>
+                  </Link>
+                </Button>
+              </div>
+            }
           >
-          </List>
-        </Card>
-
+            <List
+              dataSource={services.items}
+              renderItem={service => {
+                return (
+                  <Service
+                    team={team.metadata.name}
+                    service={service}
+                    namespaceClaims={namespaceClaims}
+                    deleteService={this.deleteService}
+                    handleUpdate={this.handleResourceUpdated('services')}
+                    handleDelete={this.handleResourceDeleted('services')}
+                    refreshMs={10000}
+                    propsResourceDataKey="service"
+                    resourceApiPath={`${apiPaths.team(team.metadata.name).services}/${service.metadata.name}`}
+                  />
+                )
+              }}
+            >
+            </List>
+          </Card>
+        }
       </div>
     )
   }
