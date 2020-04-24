@@ -35,37 +35,27 @@ setup() {
 }
 
 @test "We should be able to build a cluster in EKS" {
-  ${KORE} get cluster ${CLUSTER} -t ${TEAM} && skip
-
   runit "${KORE} create cluster ${CLUSTER} -t ${TEAM} -a aws -p eks-development --no-wait"
-  [[ "$status" -eq 0 ]]
-  runit "${KORE} get cluster ${CLUSTER} -t ${TEAM}"
   [[ "$status" -eq 0 ]]
 }
 
-@test "We should have a EKS VPC provioned from the cluster" {
-  runit "${KORE} get eksvpc ${CLUSTER} -t ${TEAM}"
-  [[ "$status" -eq 0 ]]
+@test "We should see a VPC provisioned for us" {
   retry 30 "${KORE} get eksvpc ${CLUSTER} -t ${TEAM} -o json | jq '.status.status' | grep -i success"
   [[ "$status" -eq 0 ]]
 }
 
-@test "We should have a EKS cluster with 20 minutes" {
-  local found=false
-  for ((i=0; i<100; i++)); do
-    if runit "${KORE} get cluster ${CLUSTER} -t ${TEAM} -o json | jq '.status.status' | grep -i success"; then
-      found=true
-      break
-    fi
-    sleep 45
-  done
-  [[ $found -eq 0 ]]
+@test "We should see a EKS cluster provisions" {
+  retry 100 "${KORE} get eks ${CLUSTER} -t ${TEAM} -o json | jq '.status.status' | grep -i success"
+  [[ "$status" -eq 0 ]]
 }
 
-@test "We should a default EKS nodegroup" {
-  runit "${KORE} get eksnodegroup -t ${TEAM} ${CLUSTER}-default"
+@test "We should have a default EKS Nodegroup provision" {
+  retry 50 "${KORE} get eksnodegroup ${CLUSTER}-default -t ${TEAM} -o json | jq '.status.status' | grep -i success"
   [[ "$status" -eq 0 ]]
-  retry 120 "${KORE} get eksnodegroup -t ${TEAM} ${CLUSTER}-default -o json | jq '.status.status' | grep -i success"
+}
+
+@test "We should see the cluster go successful" {
+  retry 50 "${KORE} get cluster ${CLUSTER} -t ${TEAM} -o json | jq '.status.status' | grep -i success"
   [[ "$status" -eq 0 ]]
 }
 
