@@ -68,6 +68,10 @@ spec:
           {{- end }}
         - name: KORE_API_URL
           value: http://{{ include "kore.name" . }}-apiserver:10080/api/v1alpha1
+        {{- if .Values.ui.show_prototypes }}
+        - name: KORE_UI_SHOW_PROTOTYPES
+          value: {{ .Values.ui.show_prototypes }}
+        {{- end }}
         - name: KORE_API_PUBLIC_URL
           {{- if and (eq .Values.api.serviceType "LoadBalancer") .Values.api.endpoint.detect}}
           valueFrom:
