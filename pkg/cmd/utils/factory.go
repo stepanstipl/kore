@@ -39,7 +39,7 @@ type factory struct {
 
 // NewFactory returns a default factory
 func NewFactory(client client.Interface, streams Streams, config *config.Config) (Factory, error) {
-	resources, err := newResourceManager(client)
+	resources, err := newResourceManager(client, config)
 	if err != nil {
 		return nil, err
 	}

@@ -123,6 +123,11 @@ func Options() []cli.Flag {
 			EnvVars: []string{"KORE_IDP_USER_CLAIMS"},
 			Value:   cli.NewStringSlice("preferred_username", "email", "name", "username"),
 		},
+		&cli.StringFlag{
+			Name:    "feature-gates",
+			Usage:   "List of feature gates to disable/enable, as key-value pairs, e.g. 'services=true' `GATES`",
+			EnvVars: []string{"KORE_FEATURE_GATES"},
+		},
 
 		//
 		// @related to the user management service

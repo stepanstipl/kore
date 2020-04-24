@@ -14,22 +14,16 @@
  * limitations under the License.
  */
 
-package alpha
+package kore
 
-import (
-	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
-
-	"github.com/spf13/cobra"
+const (
+	// FeatureGateServices enables the managed services
+	FeatureGateServices = "services"
 )
 
-// NewCmdCreatAlpha creates and returns the alpha create command
-func NewCmdCreateAlpha(factory cmdutil.Factory) *cobra.Command {
-	command := &cobra.Command{
-		Use:                   "create",
-		DisableFlagsInUseLine: true,
-		Short:                 "Creates a collection of experimental resources in kore",
-		Run:                   cmdutil.RunHelp,
+// DefaultFeatureGates returns the existing feature gates with the default statuses
+func DefaultFeatureGates() map[string]bool {
+	return map[string]bool{
+		FeatureGateServices: false,
 	}
-
-	return command
 }

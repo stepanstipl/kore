@@ -18,6 +18,7 @@ package apply
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/appvia/kore/pkg/cmd/errors"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
@@ -83,13 +84,10 @@ func (o *ApplyOptions) Run() error {
 			name := x.Object.GetName()
 			namespace := x.Object.GetNamespace()
 
+			displayName := utils.GetUnstructuredSelfLink(x.Object)
+
 			// @step: create a request to check the status
-			kind := x.Object.GetKind()
-			resource, err := o.Resources().Lookup(kind)
-			if err != nil {
-				return err
-			}
-			request := o.ClientWithResource(resource).Name(name)
+			request := o.ClientWithResource(x.Resource).Name(name)
 
 			// @step: check the resource scope
 			if x.Resource.IsTeamScoped() {
@@ -117,12 +115,12 @@ func (o *ApplyOptions) Run() error {
 			current.SetGroupVersionKind(x.Object.GetObjectKind().GroupVersionKind())
 			existing, err := request.Result(current).Exists()
 			if err != nil {
-				return err
+				return fmt.Errorf("%s: %w", displayName, err)
 			}
 
 			// @step: attempt to apply the resource
 			if err := request.Payload(x.Object).Result(x.Object).Update().Error(); err != nil {
-				return err
+				return fmt.Errorf("%s: %w", displayName, err)
 			}
 
 			// @step: if we had an exiting resource, we an use the revision to check
@@ -132,7 +130,7 @@ func (o *ApplyOptions) Run() error {
 				state = "no changes"
 			}
 
-			o.Println("%s %s", utils.GetUnstructuredSelfLink(x.Object), state)
+			o.Println("%s %s", displayName, state)
 		}
 	}
 

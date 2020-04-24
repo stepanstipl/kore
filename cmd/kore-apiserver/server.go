@@ -18,8 +18,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
+	"regexp"
 	"strings"
 	"syscall"
 
@@ -27,7 +29,6 @@ import (
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/server"
 	"github.com/appvia/kore/pkg/services/users"
-
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
@@ -42,6 +43,11 @@ func invoke(ctx *cli.Context) error {
 		log.SetOutput(os.Stdout)
 		log.SetLevel(log.DebugLevel)
 		log.Debug("enabling verbose logging for debug")
+	}
+
+	featuresGates, err := mergeFeatureGates(ctx.String("feature-gates"))
+	if err != nil {
+		return err
 	}
 
 	// @step: construct the server config
@@ -67,6 +73,7 @@ func invoke(ctx *cli.Context) error {
 			CertificateAuthorityKey:    ctx.String("certificate-authority-key"),
 			ClusterAppManImage:         ctx.String("clusterappman-image"),
 			EnableClusterProviderCheck: ctx.Bool("enable-cluster-provider-check"),
+			FeatureGates:               featuresGates,
 			HMAC:                       ctx.String("kore-hmac"),
 			IDPClientID:                ctx.String("idp-client-id"),
 			IDPClientScopes:            ctx.StringSlice("idp-client-scopes"),
@@ -101,7 +108,7 @@ func invoke(ctx *cli.Context) error {
 	c, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	log.Info("attempting to start the kore-apiserver")
+	log.WithField("feature-gates", config.Kore.FeatureGates).Info("starting kore-apiserver")
 
 	if err := s.Run(c); err != nil {
 		return err
@@ -117,4 +124,31 @@ func invoke(ctx *cli.Context) error {
 	}
 
 	return nil
+}
+
+var featureGateRegexp = regexp.MustCompile(`^\s*(.*?)\s*=\s*(true|false)\s*$`)
+
+func mergeFeatureGates(values string) (map[string]bool, error) {
+	featureGates := kore.DefaultFeatureGates()
+
+	if strings.TrimSpace(values) == "" {
+		return featureGates, nil
+	}
+
+	for _, s := range strings.Split(values, ",") {
+		parts := featureGateRegexp.FindStringSubmatch(s)
+		if len(parts) == 0 {
+			return nil, fmt.Errorf("--feature-gates is invalid, it must be in 'service1=true,service2=false' format")
+		}
+		gate := parts[1]
+		enabled := parts[2] == "true"
+
+		if _, exists := featureGates[gate]; !exists {
+			return nil, fmt.Errorf("feature gate %q does not exist", gate)
+		}
+
+		featureGates[gate] = enabled
+	}
+
+	return featureGates, nil
 }

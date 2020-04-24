@@ -115,6 +115,8 @@ type Config struct {
 	// EnableClusterProviderCheck indicate the k8s controller should check the status of the
 	// cloud provider as well
 	EnableClusterProviderCheck bool `json:"enable-cluster-provider-check,omitempty"`
+	// FeatureGates defines which feature gates should be enabled/disabled
+	FeatureGates map[string]bool `json:"feature-gates,omitempty"`
 	// HMAC is the token used to sign things
 	HMAC string `json:"hmac"`
 	// IDPClientID is the client id for the openid authenticator

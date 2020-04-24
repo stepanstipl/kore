@@ -24,28 +24,7 @@ import (
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 )
 
-func init() {
-	ResourceNames = make([]string, len(ResourceList))
-	for i := 0; i < len(ResourceList); i++ {
-		ResourceNames[i] = ResourceList[i].Name
-	}
-}
-
 var (
-	// ResourceNames is a list of resource names
-	ResourceNames []string
-
-	// DefaultResource the printer to use for unknown resources
-	DefaultResource = Resource{
-		Name:  "default",
-		Scope: TeamScope,
-		Printer: []Column{
-			{"Name", "metadata.name", ""},
-			{"Status", "status.status", ""},
-			{"Age", "metadata.creationTimestamp", "age"},
-		},
-	}
-
 	// ResourceList is a list of supported resources
 	ResourceList = []Resource{
 		{

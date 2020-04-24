@@ -19,7 +19,8 @@ package config
 import (
 	"errors"
 	"io"
-	"os"
+
+	"github.com/appvia/kore/pkg/kore"
 
 	"github.com/appvia/kore/pkg/version"
 
@@ -30,27 +31,31 @@ import (
 func New(reader io.Reader) (*Config, error) {
 	config := &Config{}
 
-	return config, yaml.NewDecoder(reader).Decode(config)
+	if err := yaml.NewDecoder(reader).Decode(config); err != nil {
+		return nil, err
+	}
+
+	if config.FeatureGates == nil {
+		config.FeatureGates = map[string]bool{}
+	}
+	for fg, enabled := range kore.DefaultFeatureGates() {
+		if _, isSet := config.FeatureGates[fg]; !isSet {
+			config.FeatureGates[fg] = enabled
+		}
+	}
+
+	return config, nil
 }
 
 // NewEmpty returns an empty configuration
 func NewEmpty() *Config {
 	return &Config{
-		AuthInfos: make(map[string]*AuthInfo),
-		Profiles:  make(map[string]*Profile),
-		Servers:   make(map[string]*Server),
-		Version:   version.Release,
+		AuthInfos:    make(map[string]*AuthInfo),
+		Profiles:     make(map[string]*Profile),
+		Servers:      make(map[string]*Server),
+		Version:      version.Release,
+		FeatureGates: kore.DefaultFeatureGates(),
 	}
-}
-
-// NewFromFile returns the the configuration from a file
-func NewFromFile(path string) (*Config, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-
-	return New(file)
 }
 
 // IsValid checks if the configuration is valid
