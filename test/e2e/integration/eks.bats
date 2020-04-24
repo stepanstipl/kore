@@ -40,22 +40,22 @@ setup() {
 }
 
 @test "We should see a VPC provisioned for us" {
-  retry 30 "${KORE} get eksvpc ${CLUSTER} -t ${TEAM} -o json | jq '.status.status' | grep -i success"
+  retry 100 "${KORE} get eksvpc ${CLUSTER} -t ${TEAM} -o json | jq '.status.status' | grep -i success"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should see a EKS cluster provisions" {
-  retry 100 "${KORE} get eks ${CLUSTER} -t ${TEAM} -o json | jq '.status.status' | grep -i success"
+  retry 300 "${KORE} get eks ${CLUSTER} -t ${TEAM} -o json | jq '.status.status' | grep -i success"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should have a default EKS Nodegroup provision" {
-  retry 50 "${KORE} get eksnodegroup ${CLUSTER}-default -t ${TEAM} -o json | jq '.status.status' | grep -i success"
+  retry 240 "${KORE} get eksnodegroup ${CLUSTER}-default -t ${TEAM} -o json | jq '.status.status' | grep -i success"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should see the cluster go successful" {
-  retry 50 "${KORE} get cluster ${CLUSTER} -t ${TEAM} -o json | jq '.status.status' | grep -i success"
+  retry 60 "${KORE} get cluster ${CLUSTER} -t ${TEAM} -o json | jq '.status.status' | grep -i success"
   [[ "$status" -eq 0 ]]
 }
 
