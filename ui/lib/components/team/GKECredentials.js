@@ -47,7 +47,7 @@ class GKECredentials extends AutoRefreshComponent {
     return (
       <List.Item key={gkeCredentials.metadata.name} actions={[
         <ResourceVerificationStatus key="verification_status" resourceStatus={gkeCredentials.status} />,
-        <Text key="show_creds"><a onClick={editGKECredential(gkeCredentials)}><Icon type="eye" theme="filled"/> Edit</a></Text>
+        <Text key="show_creds"><a onClick={editGKECredential(gkeCredentials)}><Icon type="edit" theme="filled"/> Edit</a></Text>
       ]}>
         <List.Item.Meta
           avatar={<Avatar icon="project" />}
