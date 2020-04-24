@@ -46,20 +46,20 @@ setup() {
 @test "We should see the eksnodegroup resource delete" {
   "${KORE} get eksnodegroup ${CLUSTER}-default -t ${TEAM}" || skip
 
-  runit "${KORE} get eksnodegroup ${CLUSTER} -t ${TEAM} -o json | jq -r '.status.status' | grep -i deleting"
+  runit "${KORE} get eksnodegroup ${CLUSTER}-default -t ${TEAM} -o json | jq -r '.status.status' | grep -i deleting"
   [[ "$status" -eq 0 ]]
-  retry 120 "${KORE} get eksnodegroup ${CLUSTER} -t ${TEAM} 2>&1 | grep 'not found$'"
+  retry 120 "${KORE} get eksnodegroup ${CLUSTER}-default -t ${TEAM} 2>&1 | grep 'not exist$'"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should see the eks cluster deleted" {
   retry 240 "${KORE} delete cluster ${CLUSTER} -t ${TEAM}"
   [[ "$status" -eq 0 ]]
-  runit "${KORE} delete cluster ${CLUSTER} -t ${TEAM} 2>&1 | grep 'not found$'"
+  runit "${KORE} get cluster ${CLUSTER} -t ${TEAM} 2>&1 | grep 'not exist$'"
   [[ "$status" -eq 0 ]]
 }
 
-#@test "We should able to delete the ${TEAM} ekse credentials" {
-#  runit "${KORE} delete -f ${BASE_DIR}/${E2E_DIR}/eks-credentials.yml -t kore-admin"
-#  [[ "$status" -eq 0 ]]
-#}
+@test "We should able to delete the ${TEAM} ekse credentials" {
+  runit "${KORE} delete -f ${BASE_DIR}/${E2E_DIR}/eks-credentials.yml -t kore-admin"
+  [[ "$status" -eq 0 ]]
+}
