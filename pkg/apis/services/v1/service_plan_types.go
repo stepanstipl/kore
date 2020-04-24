@@ -44,7 +44,6 @@ type ServicePlanSpec struct {
 	Configuration apiextv1.JSON `json:"configuration"`
 }
 
-// +genclient:nonNamespaced
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // ServicePlan is a template for a service
