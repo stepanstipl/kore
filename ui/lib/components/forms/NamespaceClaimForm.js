@@ -4,6 +4,7 @@ import copy from '../../utils/object-copy'
 import Generic from '../../crd/Generic'
 import apiRequest from '../../utils/api-request'
 import apiPaths from '../../utils/api-paths'
+import { patterns } from '../../utils/validation'
 import { Button, Form, Input, Alert, Select } from 'antd'
 
 class NamespaceClaimForm extends React.Component {
@@ -150,7 +151,7 @@ class NamespaceClaimForm extends React.Component {
           {getFieldDecorator('name', {
             rules: [
               { required: true, message: 'Please enter the namespace name!' },
-              { pattern: '^[a-z0-9-_]+$', message: 'Name must only contain lowercase letters, numbers, hyphen and underscore' }
+              { ...patterns.uriCompatible63CharMax }
             ]
           })(
             <Input placeholder="Name" />,
