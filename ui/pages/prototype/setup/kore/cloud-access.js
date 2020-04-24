@@ -200,7 +200,10 @@ class CloudAccessPage extends React.Component {
     return () => {
       Modal.info({
         title: (<><Title level={4}>{plan.spec.description}</Title><Text>{plan.spec.summary}</Text></>),
-        content: <PlanViewer plan={plan} />,
+        content: <PlanViewer
+          plan={plan}
+          getPlanSchema={async () => await (await KoreApi.client()).GetServicePlanSchema(plan.spec.kind)}
+        />,
         width: 700,
         onOk() {}
       })

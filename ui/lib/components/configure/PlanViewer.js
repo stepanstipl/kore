@@ -1,6 +1,5 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import KoreApi from '../../kore-api'
 import { Table, Icon, Tag, Typography } from 'antd'
 const { Text } = Typography
 import { startCase } from 'lodash'
@@ -8,7 +7,8 @@ import { startCase } from 'lodash'
 class PlanViewer extends React.Component {
 
   static propTypes = {
-    plan: PropTypes.object.isRequired
+    plan: PropTypes.object.isRequired,
+    getPlanSchema: PropTypes.func.isRequired
   }
 
   state = {
@@ -22,7 +22,7 @@ class PlanViewer extends React.Component {
   }
 
   async fetchComponentData() {
-    const schema = await (await KoreApi.client()).GetPlanSchema(this.props.plan.spec.kind)
+    const schema = await this.props.getPlanSchema()
     this.setState({
       schema,
       dataLoading: false

@@ -49,7 +49,10 @@ class ClusterOptionsForm extends React.Component {
       const selectedPlan = this.props.plans.find(p => p.metadata.name === planName)
       Modal.info({
         title: (<><Title level={4}>{selectedPlan.spec.description}</Title><Text>{selectedPlan.spec.summary}</Text></>),
-        content: <PlanViewer plan={selectedPlan} />,
+        content: <PlanViewer
+          plan={selectedPlan}
+          getPlanSchema={async () => await (await KoreApi.client()).GetPlanSchema(selectedPlan.spec.kind)}
+        />,
         width: 700,
         onOk() {}
       })

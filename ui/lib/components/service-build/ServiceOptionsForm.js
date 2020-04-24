@@ -4,7 +4,7 @@ import PropTypes from 'prop-types'
 import { Typography, Form, Card, Radio, Modal, Input, Collapse } from 'antd'
 const { Text, Title } = Typography
 
-import ServicePlanViewer from '../configure/ServicePlanViewer'
+import PlanViewer from '../configure/PlanViewer'
 import PlanOptionsForm from '../plans/PlanOptionsForm'
 import KoreApi from '../../kore-api'
 
@@ -39,7 +39,10 @@ class ServiceOptionsForm extends React.Component {
       const selectedServicePlan = this.props.servicePlans.find(p => p.metadata.name === servicePlanName)
       Modal.info({
         title: (<><Title level={4}>{selectedServicePlan.spec.description}</Title><Text>{selectedServicePlan.spec.summary}</Text></>),
-        content: <ServicePlanViewer servicePlan={selectedServicePlan} />,
+        content: <PlanViewer
+          plan={selectedServicePlan}
+          getPlanSchema={async () => await (await KoreApi.client()).GetServicePlanSchema(selectedServicePlan.spec.kind)}
+        />,
         width: 700,
         onOk() {}
       })
