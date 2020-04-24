@@ -74,7 +74,7 @@ setup() {
 }
 
 @test "You should be able to retrieve the nodes of the cluster" {
-  retry 10 "${KUBECTL} --context=${CLUSTER} get nodes"
+  retry 60 "${KUBECTL} --context=${CLUSTER} get nodes"
   [[ "$status" -eq 0 ]]
 }
 
