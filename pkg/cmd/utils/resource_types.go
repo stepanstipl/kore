@@ -22,6 +22,8 @@ import (
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
+	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
+	"github.com/appvia/kore/pkg/kore"
 )
 
 var (
@@ -277,6 +279,35 @@ var (
 				{"Username", "metadata.name", ""},
 				{"Email", "spec.email", ""},
 				{"Disabled", "spec.disabled", ""},
+				{"Age", "metadata.creationTimestamp", "age"},
+			},
+		},
+		{
+			Name:         "service",
+			GroupVersion: servicesv1.GroupVersion.String(),
+			Kind:         "Service",
+			Scope:        TeamScope,
+			ShortName:    "svc",
+			FeatureGate:  kore.FeatureGateServices,
+			Printer: []Column{
+				{"Name", "metadata.name", ""},
+				{"Kind", "spec.kind", ""},
+				{"Plan", "spec.plan", ""},
+				{"Status", "status.status", ""},
+				{"Age", "metadata.creationTimestamp", "age"},
+			},
+		},
+		{
+			Name:         "serviceplan",
+			GroupVersion: servicesv1.GroupVersion.String(),
+			Kind:         "ServicePlan",
+			Scope:        GlobalScope,
+			ShortName:    "svcp",
+			FeatureGate:  kore.FeatureGateServices,
+			Printer: []Column{
+				{"Name", "metadata.name", ""},
+				{"Summary", "spec.summary", ""},
+				{"Kind", "spec.kind", ""},
 				{"Age", "metadata.creationTimestamp", "age"},
 			},
 		},

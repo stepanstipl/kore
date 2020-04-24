@@ -26,6 +26,9 @@ import (
 	// controller imports
 	_ "github.com/appvia/kore/pkg/controllers/register"
 
+	// service provider imports
+	_ "github.com/appvia/kore/pkg/serviceproviders"
+
 	"github.com/appvia/kore/pkg/apiserver"
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
@@ -106,7 +109,7 @@ func New(config Config) (Interface, error) {
 	}
 
 	// @step: we need to create the kore bridge / business logic
-	hubcc, err := kore.New(storecc, usermgr, config.Kore)
+	hubcc, err := kore.New(storecc, usermgr, config.Kore, kore.DefaultServiceProviders)
 	if err != nil {
 		return nil, fmt.Errorf("trying to create the kore bridge: %s", err)
 	}

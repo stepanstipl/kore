@@ -53,10 +53,14 @@ type hubImpl struct {
 	signer certificates.Signer
 	// audit is the audit implementation
 	audit Audit
+	// serviceplans is the ServicePlans implementation
+	servicePlans ServicePlans
+	// serviceProviders contains all service providers
+	serviceProviders *ServiceProviderRegistry
 }
 
 // New returns a new instance of the kore bridge
-func New(sc store.Store, usermgr users.Interface, config Config) (Interface, error) {
+func New(sc store.Store, usermgr users.Interface, config Config, serviceProviders *ServiceProviderRegistry) (Interface, error) {
 	log.Info("initializing the kore api bridge")
 
 	// @step: check the options
@@ -96,6 +100,8 @@ func New(sc store.Store, usermgr users.Interface, config Config) (Interface, err
 	h.usermgr = usermgr
 	h.users = &usersImpl{hubImpl: h}
 	h.audit = &auditImpl{hubImpl: h}
+	h.servicePlans = &servicePlansImpl{Interface: h}
+	h.serviceProviders = serviceProviders
 
 	// @step: call the setup code for the kore
 	if err := h.Setup(context.Background()); err != nil {
@@ -184,4 +190,13 @@ func (h hubImpl) Config() *Config {
 // Store returns underlying data layer
 func (h hubImpl) Store() store.Store {
 	return h.store
+}
+
+// ServicePlans returns the serviceplans interface
+func (h hubImpl) ServicePlans() ServicePlans {
+	return h.servicePlans
+}
+
+func (h hubImpl) ServiceProviders() *ServiceProviderRegistry {
+	return h.serviceProviders
 }

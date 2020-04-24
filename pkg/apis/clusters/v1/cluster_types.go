@@ -75,7 +75,6 @@ type ClusterStatus struct {
 	Message string `json:"message,omitempty"`
 }
 
-// +genclient:nonNamespaced
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Cluster is the Schema for the plans API

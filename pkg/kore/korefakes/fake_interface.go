@@ -106,6 +106,26 @@ type FakeInterface struct {
 	plansReturnsOnCall map[int]struct {
 		result1 kore.Plans
 	}
+	ServicePlansStub        func() kore.ServicePlans
+	servicePlansMutex       sync.RWMutex
+	servicePlansArgsForCall []struct {
+	}
+	servicePlansReturns struct {
+		result1 kore.ServicePlans
+	}
+	servicePlansReturnsOnCall map[int]struct {
+		result1 kore.ServicePlans
+	}
+	ServiceProvidersStub        func() *kore.ServiceProviderRegistry
+	serviceProvidersMutex       sync.RWMutex
+	serviceProvidersArgsForCall []struct {
+	}
+	serviceProvidersReturns struct {
+		result1 *kore.ServiceProviderRegistry
+	}
+	serviceProvidersReturnsOnCall map[int]struct {
+		result1 *kore.ServiceProviderRegistry
+	}
 	SignedClientCertificateStub        func(string, string) ([]byte, []byte, error)
 	signedClientCertificateMutex       sync.RWMutex
 	signedClientCertificateArgsForCall []struct {
@@ -619,6 +639,110 @@ func (fake *FakeInterface) PlansReturnsOnCall(i int, result1 kore.Plans) {
 	}{result1}
 }
 
+func (fake *FakeInterface) ServicePlans() kore.ServicePlans {
+	fake.servicePlansMutex.Lock()
+	ret, specificReturn := fake.servicePlansReturnsOnCall[len(fake.servicePlansArgsForCall)]
+	fake.servicePlansArgsForCall = append(fake.servicePlansArgsForCall, struct {
+	}{})
+	fake.recordInvocation("ServicePlans", []interface{}{})
+	fake.servicePlansMutex.Unlock()
+	if fake.ServicePlansStub != nil {
+		return fake.ServicePlansStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.servicePlansReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeInterface) ServicePlansCallCount() int {
+	fake.servicePlansMutex.RLock()
+	defer fake.servicePlansMutex.RUnlock()
+	return len(fake.servicePlansArgsForCall)
+}
+
+func (fake *FakeInterface) ServicePlansCalls(stub func() kore.ServicePlans) {
+	fake.servicePlansMutex.Lock()
+	defer fake.servicePlansMutex.Unlock()
+	fake.ServicePlansStub = stub
+}
+
+func (fake *FakeInterface) ServicePlansReturns(result1 kore.ServicePlans) {
+	fake.servicePlansMutex.Lock()
+	defer fake.servicePlansMutex.Unlock()
+	fake.ServicePlansStub = nil
+	fake.servicePlansReturns = struct {
+		result1 kore.ServicePlans
+	}{result1}
+}
+
+func (fake *FakeInterface) ServicePlansReturnsOnCall(i int, result1 kore.ServicePlans) {
+	fake.servicePlansMutex.Lock()
+	defer fake.servicePlansMutex.Unlock()
+	fake.ServicePlansStub = nil
+	if fake.servicePlansReturnsOnCall == nil {
+		fake.servicePlansReturnsOnCall = make(map[int]struct {
+			result1 kore.ServicePlans
+		})
+	}
+	fake.servicePlansReturnsOnCall[i] = struct {
+		result1 kore.ServicePlans
+	}{result1}
+}
+
+func (fake *FakeInterface) ServiceProviders() *kore.ServiceProviderRegistry {
+	fake.serviceProvidersMutex.Lock()
+	ret, specificReturn := fake.serviceProvidersReturnsOnCall[len(fake.serviceProvidersArgsForCall)]
+	fake.serviceProvidersArgsForCall = append(fake.serviceProvidersArgsForCall, struct {
+	}{})
+	fake.recordInvocation("ServiceProviders", []interface{}{})
+	fake.serviceProvidersMutex.Unlock()
+	if fake.ServiceProvidersStub != nil {
+		return fake.ServiceProvidersStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.serviceProvidersReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeInterface) ServiceProvidersCallCount() int {
+	fake.serviceProvidersMutex.RLock()
+	defer fake.serviceProvidersMutex.RUnlock()
+	return len(fake.serviceProvidersArgsForCall)
+}
+
+func (fake *FakeInterface) ServiceProvidersCalls(stub func() *kore.ServiceProviderRegistry) {
+	fake.serviceProvidersMutex.Lock()
+	defer fake.serviceProvidersMutex.Unlock()
+	fake.ServiceProvidersStub = stub
+}
+
+func (fake *FakeInterface) ServiceProvidersReturns(result1 *kore.ServiceProviderRegistry) {
+	fake.serviceProvidersMutex.Lock()
+	defer fake.serviceProvidersMutex.Unlock()
+	fake.ServiceProvidersStub = nil
+	fake.serviceProvidersReturns = struct {
+		result1 *kore.ServiceProviderRegistry
+	}{result1}
+}
+
+func (fake *FakeInterface) ServiceProvidersReturnsOnCall(i int, result1 *kore.ServiceProviderRegistry) {
+	fake.serviceProvidersMutex.Lock()
+	defer fake.serviceProvidersMutex.Unlock()
+	fake.ServiceProvidersStub = nil
+	if fake.serviceProvidersReturnsOnCall == nil {
+		fake.serviceProvidersReturnsOnCall = make(map[int]struct {
+			result1 *kore.ServiceProviderRegistry
+		})
+	}
+	fake.serviceProvidersReturnsOnCall[i] = struct {
+		result1 *kore.ServiceProviderRegistry
+	}{result1}
+}
+
 func (fake *FakeInterface) SignedClientCertificate(arg1 string, arg2 string) ([]byte, []byte, error) {
 	fake.signedClientCertificateMutex.Lock()
 	ret, specificReturn := fake.signedClientCertificateReturnsOnCall[len(fake.signedClientCertificateArgsForCall)]
@@ -933,6 +1057,10 @@ func (fake *FakeInterface) Invocations() map[string][][]interface{} {
 	defer fake.planPoliciesMutex.RUnlock()
 	fake.plansMutex.RLock()
 	defer fake.plansMutex.RUnlock()
+	fake.servicePlansMutex.RLock()
+	defer fake.servicePlansMutex.RUnlock()
+	fake.serviceProvidersMutex.RLock()
+	defer fake.serviceProvidersMutex.RUnlock()
 	fake.signedClientCertificateMutex.RLock()
 	defer fake.signedClientCertificateMutex.RUnlock()
 	fake.signedServerCertificateMutex.RLock()

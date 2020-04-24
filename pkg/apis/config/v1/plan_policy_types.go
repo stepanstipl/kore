@@ -57,7 +57,6 @@ type PlanPolicyStatus struct {
 	Status corev1.Status `json:"status"`
 }
 
-// +genclient:nonNamespaced
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // PlanPolicy is the Schema for the plan policies API

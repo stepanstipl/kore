@@ -33,6 +33,10 @@ type ClientService interface {
 
 	DeleteGCPOrganization(params *DeleteGCPOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteGCPOrganizationOK, error)
 
+	DeleteService(params *DeleteServiceParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteServiceOK, error)
+
+	DeleteServicePLan(params *DeleteServicePLanParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteServicePLanOK, error)
+
 	DeleteTeamSecret(params *DeleteTeamSecretParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteTeamSecretOK, error)
 
 	GenerateInviteLink(params *GenerateInviteLinkParams, authInfo runtime.ClientAuthInfoWriter) (*GenerateInviteLinkOK, error)
@@ -67,11 +71,19 @@ type ClientService interface {
 
 	GetPlanSchema(params *GetPlanSchemaParams, authInfo runtime.ClientAuthInfoWriter) (*GetPlanSchemaOK, error)
 
+	GetService(params *GetServiceParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceOK, error)
+
+	GetServicePlan(params *GetServicePlanParams, authInfo runtime.ClientAuthInfoWriter) (*GetServicePlanOK, error)
+
+	GetServicePlanSchema(params *GetServicePlanSchemaParams, authInfo runtime.ClientAuthInfoWriter) (*GetServicePlanSchemaOK, error)
+
 	GetTeam(params *GetTeamParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamOK, error)
 
 	GetTeamPlanDetails(params *GetTeamPlanDetailsParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamPlanDetailsOK, error)
 
 	GetTeamSecret(params *GetTeamSecretParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamSecretOK, error)
+
+	GetTeamServicePlanDetails(params *GetTeamServicePlanDetailsParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamServicePlanDetailsOK, error)
 
 	GetUser(params *GetUserParams, authInfo runtime.ClientAuthInfoWriter) (*GetUserOK, error)
 
@@ -106,6 +118,10 @@ type ClientService interface {
 	ListPlanPolicies(params *ListPlanPoliciesParams, authInfo runtime.ClientAuthInfoWriter) (*ListPlanPoliciesOK, error)
 
 	ListPlans(params *ListPlansParams, authInfo runtime.ClientAuthInfoWriter) (*ListPlansOK, error)
+
+	ListServicePlans(params *ListServicePlansParams, authInfo runtime.ClientAuthInfoWriter) (*ListServicePlansOK, error)
+
+	ListServices(params *ListServicesParams, authInfo runtime.ClientAuthInfoWriter) (*ListServicesOK, error)
 
 	ListTeamAudit(params *ListTeamAuditParams, authInfo runtime.ClientAuthInfoWriter) (*ListTeamAuditOK, error)
 
@@ -162,6 +178,10 @@ type ClientService interface {
 	UpdatePlan(params *UpdatePlanParams, authInfo runtime.ClientAuthInfoWriter) (*UpdatePlanOK, error)
 
 	UpdatePlanPolicy(params *UpdatePlanPolicyParams, authInfo runtime.ClientAuthInfoWriter) (*UpdatePlanPolicyOK, error)
+
+	UpdateService(params *UpdateServiceParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateServiceOK, error)
+
+	UpdateServicePlan(params *UpdateServicePlanParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateServicePlanOK, error)
 
 	UpdateTeam(params *UpdateTeamParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateTeamOK, error)
 
@@ -299,6 +319,76 @@ func (a *Client) DeleteGCPOrganization(params *DeleteGCPOrganizationParams, auth
 	// unexpected success response
 	unexpectedSuccess := result.(*DeleteGCPOrganizationDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  DeleteService deletes a service
+*/
+func (a *Client) DeleteService(params *DeleteServiceParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteServiceOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewDeleteServiceParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "DeleteService",
+		Method:             "DELETE",
+		PathPattern:        "/api/v1alpha1/teams/{team}/services/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &DeleteServiceReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*DeleteServiceOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for DeleteService: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  DeleteServicePLan deletes a service plan
+*/
+func (a *Client) DeleteServicePLan(params *DeleteServicePLanParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteServicePLanOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewDeleteServicePLanParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "DeleteServicePLan",
+		Method:             "DELETE",
+		PathPattern:        "/api/v1alpha1/serviceplans/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &DeleteServicePLanReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*DeleteServicePLanOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for DeleteServicePLan: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -892,6 +982,111 @@ func (a *Client) GetPlanSchema(params *GetPlanSchemaParams, authInfo runtime.Cli
 }
 
 /*
+  GetService returns a service
+*/
+func (a *Client) GetService(params *GetServiceParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetServiceParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "GetService",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/services/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetServiceReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetServiceOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetService: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  GetServicePlan returns a specific service plan
+*/
+func (a *Client) GetServicePlan(params *GetServicePlanParams, authInfo runtime.ClientAuthInfoWriter) (*GetServicePlanOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetServicePlanParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "GetServicePlan",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/serviceplans/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetServicePlanReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetServicePlanOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetServicePlan: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  GetServicePlanSchema returns a specific service plan schema from the kore
+*/
+func (a *Client) GetServicePlanSchema(params *GetServicePlanSchemaParams, authInfo runtime.ClientAuthInfoWriter) (*GetServicePlanSchemaOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetServicePlanSchemaParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "GetServicePlanSchema",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/serviceplanschemas/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetServicePlanSchemaReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetServicePlanSchemaOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetServicePlanSchema: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
   GetTeam returns information related to the specific team in the kore
 */
 func (a *Client) GetTeam(params *GetTeamParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamOK, error) {
@@ -993,6 +1188,41 @@ func (a *Client) GetTeamSecret(params *GetTeamSecretParams, authInfo runtime.Cli
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for GetTeamSecret: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  GetTeamServicePlanDetails returns the plan the JSON schema of the plan and what what parameters are allowed to be edited by this team when using the plan
+*/
+func (a *Client) GetTeamServicePlanDetails(params *GetTeamServicePlanDetailsParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamServicePlanDetailsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetTeamServicePlanDetailsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "GetTeamServicePlanDetails",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/serviceplans/{plan}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetTeamServicePlanDetailsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetTeamServicePlanDetailsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetTeamServicePlanDetails: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1583,6 +1813,76 @@ func (a *Client) ListPlans(params *ListPlansParams, authInfo runtime.ClientAuthI
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for ListPlans: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  ListServicePlans returns all the available service plans
+*/
+func (a *Client) ListServicePlans(params *ListServicePlansParams, authInfo runtime.ClientAuthInfoWriter) (*ListServicePlansOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewListServicePlansParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "ListServicePlans",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/serviceplans",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &ListServicePlansReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*ListServicePlansOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for ListServicePlans: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  ListServices lists all services for a team
+*/
+func (a *Client) ListServices(params *ListServicesParams, authInfo runtime.ClientAuthInfoWriter) (*ListServicesOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewListServicesParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "ListServices",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/services",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &ListServicesReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*ListServicesOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for ListServices: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -2556,6 +2856,76 @@ func (a *Client) UpdatePlanPolicy(params *UpdatePlanPolicyParams, authInfo runti
 	// unexpected success response
 	unexpectedSuccess := result.(*UpdatePlanPolicyDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  UpdateService creates or updates a service
+*/
+func (a *Client) UpdateService(params *UpdateServiceParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateServiceOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewUpdateServiceParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "UpdateService",
+		Method:             "PUT",
+		PathPattern:        "/api/v1alpha1/teams/{team}/services/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &UpdateServiceReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*UpdateServiceOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for UpdateService: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  UpdateServicePlan creates or updates a service plan
+*/
+func (a *Client) UpdateServicePlan(params *UpdateServicePlanParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateServicePlanOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewUpdateServicePlanParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "UpdateServicePlan",
+		Method:             "PUT",
+		PathPattern:        "/api/v1alpha1/serviceplans/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &UpdateServicePlanReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*UpdateServicePlanOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for UpdateServicePlan: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*

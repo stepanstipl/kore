@@ -106,6 +106,22 @@ func (h hubImpl) Setup(ctx context.Context) error {
 		}
 	}
 
+	if h.Config().IsFeatureGateEnabled(FeatureGateServices) {
+		for _, provider := range h.ServiceProviders().Providers() {
+			for _, plan := range provider.Plans() {
+				exists, err := h.servicePlans.Has(getAdminContext(ctx), plan.Name)
+				if err != nil {
+					return err
+				}
+				if !exists {
+					if err := h.servicePlans.Update(getAdminContext(ctx), &plan); err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+
 	return nil
 }
 

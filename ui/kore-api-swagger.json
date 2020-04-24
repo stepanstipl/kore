@@ -644,6 +644,230 @@
         }
       }
     },
+    "/api/v1alpha1/serviceplans": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Returns all the available service plans",
+        "operationId": "ListServicePlans",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Filters service plans for a specific kind",
+            "name": "kind",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of service plans",
+            "schema": {
+              "$ref": "#/definitions/v1.ServicePlanList"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/serviceplans/{name}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Returns a specific service plan",
+        "operationId": "GetServicePlan",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of the service plan you wish to retrieve",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the service plan definition",
+            "schema": {
+              "$ref": "#/definitions/v1.ServicePlan"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "the service plan with the given name doesn't exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Creates or updates a service plan",
+        "operationId": "UpdateServicePlan",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of the service plan you wish to create or update",
+            "name": "name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "The specification for the service plan you are creating or updating",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.ServicePlan"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the service plan definition",
+            "schema": {
+              "$ref": "#/definitions/v1.ServicePlan"
+            }
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Deletes a service plan",
+        "operationId": "DeleteServicePLan",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of the service plan you wish to delete",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the service plan definition",
+            "schema": {
+              "$ref": "#/definitions/v1.ServicePlan"
+            }
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "the service plan with the given name doesn't exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/serviceplanschemas/{name}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Returns a specific service plan schema from the kore",
+        "operationId": "GetServicePlanSchema",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of the service plan schema you wish to retrieve",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the service plan schema definition"
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
     "/api/v1alpha1/teams": {
       "get": {
         "consumes": [
@@ -3132,6 +3356,259 @@
         }
       }
     },
+    "/api/v1alpha1/teams/{team}/serviceplans/{plan}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Returns the plan, the JSON schema of the plan, and what what parameters are allowed to be edited by this team when using the plan",
+        "operationId": "GetTeamServicePlanDetails",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name the of the service plan you're interested in",
+            "name": "plan",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains details of the plan",
+            "schema": {
+              "$ref": "#/definitions/apiserver.TeamServicePlan"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "Team or service plan doesn't exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/teams/{team}/services": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Lists all services for a team",
+        "operationId": "ListServices",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of all services for a team",
+            "schema": {
+              "$ref": "#/definitions/v1.ServiceList"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/teams/{team}/services/{name}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Returns a service",
+        "operationId": "GetService",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name of the service",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The requested service details",
+            "schema": {
+              "$ref": "#/definitions/v1.Service"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "the service with the given name doesn't exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Creates or updates a service",
+        "operationId": "UpdateService",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name the of the service",
+            "name": "name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "The definition for the service",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.Service"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The service details",
+            "schema": {
+              "$ref": "#/definitions/v1.Service"
+            }
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Deletes a service",
+        "operationId": "DeleteService",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the service",
+            "name": "name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former service definition from the kore",
+            "schema": {
+              "$ref": "#/definitions/v1.Service"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "the service with the given name doesn't exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
     "/api/v1alpha1/users": {
       "get": {
         "consumes": [
@@ -3523,6 +4000,26 @@
         },
         "schema": {
           "type": "string"
+        }
+      }
+    },
+    "apiserver.TeamServicePlan": {
+      "required": [
+        "schema",
+        "parameterEditable"
+      ],
+      "properties": {
+        "parameterEditable": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        },
+        "schema": {
+          "type": "string"
+        },
+        "servicePlan": {
+          "$ref": "#/definitions/v1.ServicePlanSpec"
         }
       }
     },
@@ -4773,13 +5270,162 @@
         }
       }
     },
+    "v1.Service": {
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1.ServiceSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/v1.ServiceStatus"
+        }
+      }
+    },
+    "v1.ServiceList": {
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.Service"
+          }
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ListMeta"
+        }
+      }
+    },
+    "v1.ServicePlan": {
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1.ServicePlanSpec"
+        }
+      }
+    },
+    "v1.ServicePlanList": {
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.ServicePlan"
+          }
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ListMeta"
+        }
+      }
+    },
+    "v1.ServicePlanSpec": {
+      "required": [
+        "kind",
+        "description",
+        "summary",
+        "configuration"
+      ],
+      "properties": {
+        "configuration": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "summary": {
+          "type": "string"
+        }
+      }
+    },
+    "v1.ServiceSpec": {
+      "required": [
+        "kind",
+        "plan",
+        "configuration"
+      ],
+      "properties": {
+        "configuration": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "plan": {
+          "type": "string"
+        }
+      }
+    },
+    "v1.ServiceStatus": {
+      "properties": {
+        "components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.Component"
+          }
+        },
+        "message": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
     "v1.StaticOIDCIDP": {
       "required": [
+        "clientScopes",
+        "userClaims",
         "clientID",
         "clientSecret",
-        "issuer",
-        "clientScopes",
-        "userClaims"
+        "issuer"
       ],
       "properties": {
         "clientID": {
