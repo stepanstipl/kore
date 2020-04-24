@@ -20,9 +20,9 @@
 
 ## Local Quick Start
 
-The fastest way to provision teams on Appvia Kore (Alpha) is try it out locally.
+The fastest way to provision teams on Appvia Kore is try it out locally.
 
-See our [Local Quick Start Guide (Alpha)](doc/alpha-local-quick-start.md).
+See our [Local Quick Start Guide](doc/local-quick-start.md).
 
 ### Appvia Kore / Kubernetes API / GKE
 

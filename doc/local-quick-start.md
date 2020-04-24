@@ -1,8 +1,10 @@
-# Local Quick Start Guide (Alpha)
+# Local Quick Start Guide
 
 In this guide, we'll walk you through how to use the Appvia Kore CLI to set up a sandbox team environment locally and deploy a sample application.
 
 We'll showcase how Appvia Kore can give you a head start with setting up [clusters](https://www.redhat.com/en/topics/containers/what-is-a-kubernetes-cluster), team members and environments.
+
+**NOTE** NOTE The installation of Kore created by the `kore local` command in this quick start is suitable for testing and proof-of-concept work only. Bootstrapping a production installation of Kore is coming soon with [issue/340](https://github.com/appvia/kore/issues/340).
 
 ## Kubernetes
 
