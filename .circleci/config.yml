@@ -364,6 +364,7 @@ jobs:
               ${KORE_API_PUBLIC_URL_QA}/healthz
       - run:
           name: Running E2E Suite
+          no_output_timeout: 30m
           command: |
             test/e2e/check-suite.sh \
               --enable-e2e-user ${KORE_E2E_USER} \
