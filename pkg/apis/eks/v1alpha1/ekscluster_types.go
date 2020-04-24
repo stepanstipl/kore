@@ -78,7 +78,7 @@ type EKSStatus struct {
 // EKS is the Schema for the eksclusters API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:path=ekss,scope=Namespaced
+// +kubebuilder:resource:path=eks,scope=Namespaced
 // +kubebuilder:printcolumn:name="Description",type="string",JSONPath=".spec.description",description="A description of the EKS cluster"
 // +kubebuilder:printcolumn:name="Endpoint",type="string",JSONPath=".status.endpoint",description="The endpoint of the eks cluster"
 // +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.status",description="The overall status of the cluster"

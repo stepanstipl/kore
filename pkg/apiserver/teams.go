@@ -539,7 +539,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	// EKS clusters
 
 	ws.Route(
-		ws.GET("/{team}/ekss").To(u.findEKSs).
+		ws.GET("/{team}/eks").To(u.findEKSs).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Doc("Is the used to return a list of Amazon EKS clusters which thhe team has access").
 			Returns(http.StatusOK, "Contains the former team definition from the kore", eks.EKSList{}).
@@ -547,7 +547,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	)
 
 	ws.Route(
-		ws.GET("/{team}/ekss/{name}").To(u.findEKS).
+		ws.GET("/{team}/eks/{name}").To(u.findEKS).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the EKS cluster you are acting upon")).
 			Doc("Is the used to return a EKS cluster which the team has access").

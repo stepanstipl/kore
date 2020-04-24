@@ -55,19 +55,8 @@ class KoreApiClient {
     if (process.browser) {
       basePath = '/apiproxy'
     }
-
-    // EKS breaks the mould, everything else follows normal pluralization.
-    switch (parts[0]) {
-    case 'EKS': {
-      pathName = `${basePath}/teams/{team}/ekss/{name}`
-      break
-    }
-    default: {
-      const resTypePlural = inflect.pluralize(resType).toLowerCase()
-      pathName = `${basePath}/teams/{team}/${resTypePlural}/{name}`
-      break
-    } 
-    }
+    const resTypePlural = inflect.pluralize(resType).toLowerCase()
+    pathName = `${basePath}/teams/{team}/${resTypePlural}/{name}`
     return {
       pathName: pathName,
       method: 'GET',

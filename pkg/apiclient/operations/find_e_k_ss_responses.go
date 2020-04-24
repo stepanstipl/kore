@@ -55,7 +55,7 @@ type FindEKSsOK struct {
 }
 
 func (o *FindEKSsOK) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/teams/{team}/ekss][%d] findEKSsOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[GET /api/v1alpha1/teams/{team}/eks][%d] findEKSsOK  %+v", 200, o.Payload)
 }
 
 func (o *FindEKSsOK) GetPayload() *models.V1alpha1EKSList {
@@ -97,7 +97,7 @@ func (o *FindEKSsDefault) Code() int {
 }
 
 func (o *FindEKSsDefault) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/teams/{team}/ekss][%d] findEKSs default  %+v", o._statusCode, o.Payload)
+	return fmt.Sprintf("[GET /api/v1alpha1/teams/{team}/eks][%d] findEKSs default  %+v", o._statusCode, o.Payload)
 }
 
 func (o *FindEKSsDefault) GetPayload() *models.ApiserverError {
