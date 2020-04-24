@@ -7,7 +7,7 @@ import KoreApi from '../../kore-api'
 import V1ServicePlan from '../../kore-api/model/V1ServicePlan'
 import V1ServicePlanSpec from '../../kore-api/model/V1ServicePlanSpec'
 import V1ObjectMeta from '../../kore-api/model/V1ObjectMeta'
-import ServicePlanOption from './ServicePlanOption'
+import PlanOption from '../plans/PlanOption'
 import FormErrorMessage from '../forms/FormErrorMessage'
 import canonical from '../../utils/canonical'
 
@@ -191,7 +191,7 @@ class ServicePlanForm extends React.Component {
           />
 
           {Object.keys(schema.properties).map(property =>
-            <ServicePlanOption
+            <PlanOption
               key={property}
               name={property}
               property={schema.properties[property]}

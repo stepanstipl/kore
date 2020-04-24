@@ -7,7 +7,7 @@ const { Text } = Typography
 
 import KoreApi from '../../../../lib/kore-api'
 import Breadcrumb from '../../../../lib/components/Breadcrumb'
-import ServicePlanOptionsForm from '../../../../lib/components/serviceplans/ServicePlanOptionsForm'
+import PlanOptionsForm from '../../../../lib/components/plans/PlanOptionsForm'
 import ComponentStatusTree from '../../../../lib/components/ComponentStatusTree'
 import ResourceStatusTag from '../../../../lib/components/ResourceStatusTag'
 import copy from '../../../../lib/utils/object-copy'
@@ -181,13 +181,15 @@ class ServicePage extends React.Component {
                       </>
                     )}
                   </Form.Item>
-                  <ServicePlanOptionsForm 
+                  <PlanOptionsForm
                     team={team}
-                    servicePlan={service.spec.plan}
-                    servicePlanValues={this.state.serviceParams}
+                    plan={service.spec.plan}
+                    planValues={this.state.serviceParams}
+                    getPlanDetails={async (team, plan) => await (await KoreApi.client()).GetTeamServicePlanDetails(team, plan)}
+                    getPlanConfiguration={(planDetails) => planDetails.servicePlan.configuration}
                     mode={this.state.editMode ? 'edit' : 'view'}
                     validationErrors={this.state.validationErrors}
-                    onServicePlanChange={this.onServiceConfigChanged}
+                    onPlanChange={this.onServiceConfigChanged}
                   />
                 </Form>
               </Collapse.Panel>

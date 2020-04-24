@@ -5,7 +5,8 @@ import { Typography, Form, Card, Radio, Modal, Input, Collapse } from 'antd'
 const { Text, Title } = Typography
 
 import ServicePlanViewer from '../configure/ServicePlanViewer'
-import ServicePlanOptionsForm from '../serviceplans/ServicePlanOptionsForm'
+import PlanOptionsForm from '../plans/PlanOptionsForm'
+import KoreApi from '../../kore-api'
 
 class ServiceOptionsForm extends React.Component {
   static propTypes = {
@@ -98,11 +99,13 @@ class ServiceOptionsForm extends React.Component {
         {selectedServicePlan ? (
           <Collapse>
             <Collapse.Panel header="Customize service parameters">
-              <ServicePlanOptionsForm
+              <PlanOptionsForm
                 team={this.props.team}
-                servicePlan={selectedServicePlan}
+                plan={selectedServicePlan}
+                getPlanDetails={async (team, plan) => await (await KoreApi.client()).GetTeamServicePlanDetails(team, plan)}
+                getPlanConfiguration={(planDetails) => planDetails.servicePlan.configuration}
                 validationErrors={this.props.validationErrors}
-                onServicePlanChange={this.onServicePlanOverridden}
+                onPlanChange={this.onServicePlanOverridden}
                 mode="create"
               />
             </Collapse.Panel>

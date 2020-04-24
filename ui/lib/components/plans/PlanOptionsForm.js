@@ -3,7 +3,6 @@ import PropTypes from 'prop-types'
 import { Form, Checkbox } from 'antd'
 import { set } from 'lodash'
 
-import KoreApi from '../../kore-api'
 import copy from '../../utils/object-copy'
 import PlanOption from './PlanOption'
 
@@ -12,6 +11,8 @@ class PlanOptionsForm extends React.Component {
     team: PropTypes.object.isRequired,
     plan: PropTypes.string.isRequired,
     planValues: PropTypes.object,
+    getPlanDetails: PropTypes.func.isRequired,
+    getPlanConfiguration: PropTypes.func.isRequired,
     onPlanChange: PropTypes.func,
     validationErrors: PropTypes.array,
     mode: PropTypes.oneOf(['create','edit','view']).isRequired
@@ -20,7 +21,6 @@ class PlanOptionsForm extends React.Component {
     dataLoading: true,
     schema: null,
     parameterEditable: {},
-    planSpec: null,
     planValues: {},
   }
 
@@ -56,14 +56,13 @@ class PlanOptionsForm extends React.Component {
   }
 
   async fetchComponentData() {
-    const planDetails = await (await KoreApi.client()).GetTeamPlanDetails(this.props.team.metadata.name, this.props.plan)
+    const planDetails = await this.props.getPlanDetails(this.props.team.metadata.name, this.props.plan)
     this.setState({
       ...this.state,
       schema: JSON.parse(planDetails.schema),
       parameterEditable: planDetails.parameterEditable || {},
-      planSpec: planDetails.plan,
       // Overwrite plan values only if it's still set to the default value
-      planValues: this.state.planValues === PlanOptionsForm.initialState.planValues ? copy(planDetails.plan.configuration) : this.state.planValues,
+      planValues: this.state.planValues === PlanOptionsForm.initialState.planValues ? copy(this.props.getPlanConfiguration(planDetails)) : this.state.planValues,
       showReadOnly: this.props.mode === 'view',
       dataLoading: false
     })

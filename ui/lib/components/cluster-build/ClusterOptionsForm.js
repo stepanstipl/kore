@@ -8,6 +8,7 @@ const { Option } = Select
 import PlanViewer from '../configure/PlanViewer'
 import PlanOptionsForm from '../plans/PlanOptionsForm'
 import { patterns } from '../../utils/validation'
+import KoreApi from '../../kore-api'
 
 class ClusterOptionsForm extends React.Component {
   static propTypes = {
@@ -121,6 +122,8 @@ class ClusterOptionsForm extends React.Component {
               <PlanOptionsForm
                 team={this.props.team}
                 plan={selectedPlan}
+                getPlanDetails={async (team, plan) => await (await KoreApi.client()).GetTeamPlanDetails(team, plan)}
+                getPlanConfiguration={(planDetails) => planDetails.plan.configuration}
                 validationErrors={this.props.validationErrors}
                 onPlanChange={this.onPlanOverridden}
                 mode="create"

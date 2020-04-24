@@ -182,10 +182,12 @@ class ClusterPage extends React.Component {
                       </>
                     )}
                   </Form.Item>
-                  <PlanOptionsForm 
+                  <PlanOptionsForm
                     team={team}
                     plan={cluster.spec.plan}
                     planValues={this.state.clusterParams}
+                    getPlanDetails={async (team, plan) => await (await KoreApi.client()).GetTeamPlanDetails(team, plan)}
+                    getPlanConfiguration={(planDetails) => planDetails.plan.configuration}
                     mode={this.state.editMode ? 'edit' : 'view'}
                     validationErrors={this.state.validationErrors}
                     onPlanChange={this.onClusterConfigChanged}
