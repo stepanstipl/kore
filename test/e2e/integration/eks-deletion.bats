@@ -30,7 +30,7 @@ setup() {
 @test "We should be able to delete the EKS cluster" {
   runit "${KORE} delete cluster ${CLUSTER} -t ${TEAM} --no-wait"
   [[ "$status" -eq 0 ]]
-  retry 20 "${KORE} get cluster ${CLUSTER} -t ${TEAM} -o json --no-wait | jq -r '.status.status' | grep -i deleting"
+  retry 30 "${KORE} get cluster ${CLUSTER} -t ${TEAM} -o json --no-wait | jq -r '.status.status' | grep -i deleting"
   [[ "$status" -eq 0 ]]
 }
 
@@ -39,27 +39,25 @@ setup() {
 
   runit "${KORE} get kubernetes ${CLUSTER} -t ${TEAM} -o json | jq -r '.status.status' | grep -i deleting"
   [[ "$status" -eq 0 ]]
-  retry 20 "${KORE} get kubernetes ${CLUSTER} -t ${TEAM} 2>&1 | grep 'not found$'"
+  retry 30 "${KORE} get kubernetes ${CLUSTER} -t ${TEAM} 2>&1 | grep 'not found$'"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should see the eksnodegroup resource delete" {
-  "${KORE} get eksnodegroup ${CLUSTER}-default -t ${TEAM}" || skip
+  ${KORE} get eksnodegroup ${CLUSTER}-default -t ${TEAM} || skip
 
   runit "${KORE} get eksnodegroup ${CLUSTER}-default -t ${TEAM} -o json | jq -r '.status.status' | grep -i deleting"
   [[ "$status" -eq 0 ]]
-  retry 120 "${KORE} get eksnodegroup ${CLUSTER}-default -t ${TEAM} 2>&1 | grep 'not exist$'"
+  retry 180 "${KORE} get eksnodegroup ${CLUSTER}-default -t ${TEAM} 2>&1 | grep 'not exist$'"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should see the eks cluster deleted" {
-  retry 240 "${KORE} delete cluster ${CLUSTER} -t ${TEAM}"
-  [[ "$status" -eq 0 ]]
-  runit "${KORE} get cluster ${CLUSTER} -t ${TEAM} 2>&1 | grep 'not exist$'"
+  retry 300 "${KORE} get cluster ${CLUSTER} -t ${TEAM} 2>&1 | grep 'not exist$'"
   [[ "$status" -eq 0 ]]
 }
 
-@test "We should able to delete the ${TEAM} ekse credentials" {
+@test "We should able to delete the ${TEAM} eks credentials" {
   runit "${KORE} delete -f ${BASE_DIR}/${E2E_DIR}/eks-credentials.yml -t kore-admin"
   [[ "$status" -eq 0 ]]
 }
