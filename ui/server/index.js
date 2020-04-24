@@ -13,6 +13,8 @@ const port = config.server.port
 const RedisStore = require('connect-redis')(session)
 const redisClient = redis.createClient({ url: config.server.session.url })
 
+const nextjsPath = config.showPrototypes ? '*' : /^((?!\/prototype).)*$/
+
 app.prepare().then(() => {
   const server = express()
 
@@ -35,7 +37,7 @@ app.prepare().then(() => {
 
   server.use(routes)
 
-  server.all('*', (req, res) => {
+  server.all(nextjsPath, (req, res) => {
     const handle = app.getRequestHandler()
     return handle(req, res)
   })

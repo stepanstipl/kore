@@ -4,7 +4,7 @@ import Head from 'next/head'
 import Router from 'next/router'
 import Link from 'next/link'
 import axios from 'axios'
-import { Layout } from 'antd'
+import { Layout, Tag } from 'antd'
 const { Header, Content } = Layout
 
 import User from '../lib/components/User'
@@ -12,7 +12,7 @@ import SiderMenu from '../lib/components/SiderMenu'
 import redirect from '../lib/utils/redirect'
 import KoreApi from '../lib/kore-api'
 import copy from '../lib/utils/object-copy'
-import { kore, server } from '../config'
+import { kore, server, showPrototypes } from '../config'
 import OrgService from '../server/services/org'
 import userExpired from '../server/lib/user-expired'
 import gtag from '../lib/utils/gtag'
@@ -110,13 +110,22 @@ class MyApp extends App {
 
   componentDidMount() {
     this.setSessionTimeout()
+    if (showPrototypes) {
+      this.setState({ prototypePath: window.location.pathname.indexOf('/prototype') === 0 })
+    }
     axios.get(`${window.location.origin}/version`).then((v) => {
       this.setState({ version: v.data.version })
     })
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps, prevState) {
     this.setSessionTimeout()
+    if (showPrototypes) {
+      const prototypePath = window.location.pathname.indexOf('/prototype') === 0
+      if (prevState.prototypePath !== prototypePath) {
+        this.setState({ prototypePath })
+      }
+    }
   }
 
   componentWillUnmount() {
@@ -142,7 +151,7 @@ class MyApp extends App {
     const isAdmin = Boolean(props.user && props.user.isAdmin)
     const hideSider = Boolean(props.hideSider || props.unrestrictedPage)
     const hidePage = Boolean(!props.unrestrictedPage && !props.user)
-    const { version } = this.state
+    const { version, prototypePath } = this.state
 
     if (hidePage) {
       return null
@@ -184,6 +193,7 @@ class MyApp extends App {
                   <a style={{ color: '#FFFFFF' }}>Appvia Kore</a>
                 </Link>
               </div>
+              {showPrototypes && prototypePath ? <Link href="/prototype"><Tag style={{ marginLeft: '20px' }}>PROTOTYPE</Tag></Link> : null}
             </div>
             <User user={props.user}/>
           </Header>
