@@ -415,3 +415,15 @@ crd-gen:
 	@mkdir -p deploy
 	@rm -f deploy/crds/* 2>/dev/null || true
 	@go run sigs.k8s.io/controller-tools/cmd/controller-gen crd:trivialVersions=true,preserveUnknownFields=false paths=./pkg/apis/...  output:dir=deploy/crds
+
+check-release-notes:
+	@echo "--> Verifying Release Notes"
+	@${MAKE} generate-release-notes
+	@if [ $$(git status --porcelain | wc -l) -gt 0 ]; then \
+		echo "There are local changes after running 'make generate-release-notes'. Did you forget to run it?"; \
+		git status --porcelain; \
+		exit 1; \
+	fi
+
+generate-release-notes:
+	@go run ./hack/build/tools/awesome-release-logger/main.go -r -t ${VERSION} -notag -derivetag '-rc([0-9])*' -o CHANGELOG.md
