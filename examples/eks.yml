@@ -3,11 +3,10 @@ apiVersion: clusters.compute.kore.appvia.io/v1
 kind: Cluster
 metadata:
   name: test-eks-dev
-  namespace: a-team
 spec:
   description: Test EKS Plan
   kind: EKS
-  plan: test-eks-plan
+  plan: eks-development
   credentials:
     group: aws.compute.kore.appvia.io
     version: v1alpha1
