@@ -10,6 +10,7 @@ const { Option } = Select
 
 import Breadcrumb from '../../lib/components/Breadcrumb'
 import Cluster from '../../lib/components/team/Cluster'
+import Service from '../../lib/components/team/Service'
 import NamespaceClaim from '../../lib/components/team/NamespaceClaim'
 import InviteLink from '../../lib/components/team/InviteLink'
 import NamespaceClaimForm from '../../lib/components/forms/NamespaceClaimForm'
@@ -27,6 +28,7 @@ class TeamDashboard extends React.Component {
     members: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
     clusters: PropTypes.object.isRequired,
+    services: PropTypes.object.isRequired,
     namespaceClaims: PropTypes.object.isRequired,
     available: PropTypes.object.isRequired,
     teamRemoved: PropTypes.func.isRequired
@@ -43,6 +45,7 @@ class TeamDashboard extends React.Component {
       allUsers: [],
       membersToAdd: [],
       clusters: props.clusters,
+      services: props.services,
       createNamespace: false,
       namespaceClaims: props.namespaceClaims
     }
@@ -54,12 +57,13 @@ class TeamDashboard extends React.Component {
     const getTeam = () => api.GetTeam(name)
     const getTeamMembers = () => api.ListTeamMembers(name)
     const getTeamClusters = () => api.ListClusters(name)
+    const getTeamServices = () => api.ListServices(name)
     const getNamespaceClaims = () => api.ListNamespaces(name)
     const getAvailable = () => api.ListAllocations(name, true)
 
-    return axios.all([getTeam(), getTeamMembers(), getTeamClusters(), getNamespaceClaims(), getAvailable()])
-      .then(axios.spread(function (team, members, clusters, namespaceClaims, available) {
-        return { team, members, clusters, namespaceClaims, available }
+    return axios.all([getTeam(), getTeamMembers(), getTeamClusters(), getTeamServices(), getNamespaceClaims(), getAvailable()])
+      .then(axios.spread(function (team, members, clusters, services, namespaceClaims, available) {
+        return { team, members, clusters, services, namespaceClaims, available }
       }))
       .catch(err => {
         throw new Error(err.message)
@@ -102,6 +106,7 @@ class TeamDashboard extends React.Component {
       const state = copy(this.state)
       state.members = this.props.members
       state.clusters = this.props.clusters
+      state.services = this.props.services
       state.namespaceClaims = this.props.namespaceClaims
       this.getAllUsers()
         .then(users => {
@@ -179,6 +184,22 @@ class TeamDashboard extends React.Component {
     } catch (err) {
       console.error('Error deleting cluster', err)
       message.error('Error deleting cluster, please try again.')
+    }
+  }
+
+  deleteService = async (name, done) => {
+    const team = this.props.team.metadata.name
+    try {
+      const state = copy(this.state)
+      const service = state.services.items.find(s => s.metadata.name === name)
+      await apiRequest(null, 'delete', `${apiPaths.team(team).services}/${service.metadata.name}`)
+      service.status.status = 'Deleting'
+      service.metadata.deletionTimestamp = new Date()
+      this.setState(state, done)
+      message.loading(`Service deletion requested: ${service.metadata.name}`)
+    } catch (err) {
+      console.error('Error deleting service', err)
+      message.error('Error deleting service, please try again.')
     }
   }
 
@@ -344,7 +365,7 @@ class TeamDashboard extends React.Component {
       return <Error statusCode={404} />
     }
 
-    const { members, namespaceClaims, allUsers, membersToAdd, createNamespace, clusters } = this.state
+    const { members, namespaceClaims, allUsers, membersToAdd, createNamespace, clusters, services } = this.state
     const teamMembers = ['ADD_USER', ...members.items]
 
     const memberActions = member => {
@@ -498,6 +519,40 @@ class TeamDashboard extends React.Component {
         >
           <NamespaceClaimForm team={team.metadata.name} clusters={clusters} handleSubmit={this.handleNamespaceCreated} handleCancel={this.createNamespace(false)}/>
         </Drawer>
+
+        <Card
+          title={<div><Text style={{ marginRight: '10px' }}>Services</Text><Badge style={{ backgroundColor: '#1890ff' }} count={services.items.filter(c => !c.deleted).length} /></div>}
+          style={{ marginBottom: '20px' }}
+          extra={
+            <div>
+              <Button type="primary">
+                <Link href="/teams/[name]/services/new" as={`/teams/${team.metadata.name}/services/new`}>
+                  <a>+ New</a>
+                </Link>
+              </Button>
+            </div>
+          }
+        >
+          <List
+            dataSource={services.items}
+            renderItem={service => {
+              return (
+                <Service
+                  team={team.metadata.name}
+                  service={service}
+                  namespaceClaims={namespaceClaims}
+                  deleteService={this.deleteService}
+                  handleUpdate={this.handleResourceUpdated('services')}
+                  handleDelete={this.handleResourceDeleted('services')}
+                  refreshMs={10000}
+                  propsResourceDataKey="service"
+                  resourceApiPath={`${apiPaths.team(team.metadata.name).services}/${service.metadata.name}`}
+                />
+              )
+            }}
+          >
+          </List>
+        </Card>
 
       </div>
     )

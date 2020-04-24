@@ -5,14 +5,14 @@ import { set } from 'lodash'
 
 import KoreApi from '../../kore-api'
 import copy from '../../utils/object-copy'
-import PlanOption from './PlanOption'
+import ServicePlanOption from './ServicePlanOption'
 
-class PlanOptionsForm extends React.Component {
+class ServicePlanOptionsForm extends React.Component {
   static propTypes = {
     team: PropTypes.object.isRequired,
-    plan: PropTypes.string.isRequired,
-    planValues: PropTypes.object,
-    onPlanChange: PropTypes.func,
+    servicePlan: PropTypes.string.isRequired,
+    servicePlanValues: PropTypes.object,
+    onServicePlanChange: PropTypes.func,
     validationErrors: PropTypes.array,
     mode: PropTypes.oneOf(['create','edit','view']).isRequired
   }
@@ -20,17 +20,17 @@ class PlanOptionsForm extends React.Component {
     dataLoading: true,
     schema: null,
     parameterEditable: {},
-    planSpec: null,
-    planValues: {},
+    servicePlanSpec: null,
+    servicePlanValues: {},
   }
 
   constructor(props) {
     super(props)
-    // Use passed-in plan values if we have them.
-    const planValues = this.props.planValues ? this.props.planValues : PlanOptionsForm.initialState.planValues
+    // Use passed-in service plan values if we have them.
+    const servicePlanValues = this.props.servicePlanValues ? this.props.servicePlanValues : ServicePlanOptionsForm.initialState.servicePlanValues
     this.state = { 
-      ...PlanOptionsForm.initialState,
-      planValues
+      ...ServicePlanOptionsForm.initialState,
+      servicePlanValues
     }
   }
 
@@ -41,29 +41,29 @@ class PlanOptionsForm extends React.Component {
 
   componentDidUpdateComplete = null
   componentDidUpdate(prevProps) {
-    if (this.props.plan !== prevProps.plan || this.props.team !== prevProps.team) {
-      this.setState({ ...PlanOptionsForm.initialState })
+    if (this.props.servicePlan !== prevProps.servicePlan || this.props.team !== prevProps.team) {
+      this.setState({ ...ServicePlanOptionsForm.initialState })
       this.componentDidUpdateComplete = this.fetchComponentData()
     }
     if (this.props.mode !== prevProps.mode) {
       this.setState({ showReadOnly: this.props.mode === 'view' })
     }
-    if (this.props.planValues !== prevProps.planValues) {
+    if (this.props.servicePlanValues !== prevProps.servicePlanValues) {
       this.setState({
-        planValues: this.props.planValues
+        servicePlanValues: this.props.servicePlanValues
       })
     }
   }
 
   async fetchComponentData() {
-    const planDetails = await (await KoreApi.client()).GetTeamPlanDetails(this.props.team.metadata.name, this.props.plan)
+    const servicePlanDetails = await (await KoreApi.client()).GetTeamServicePlanDetails(this.props.team.metadata.name, this.props.servicePlan)
     this.setState({
       ...this.state,
-      schema: JSON.parse(planDetails.schema),
-      parameterEditable: planDetails.parameterEditable || {},
-      planSpec: planDetails.plan,
-      // Overwrite plan values only if it's still set to the default value
-      planValues: this.state.planValues === PlanOptionsForm.initialState.planValues ? copy(planDetails.plan.configuration) : this.state.planValues,
+      schema: JSON.parse(servicePlanDetails.schema),
+      parameterEditable: servicePlanDetails.parameterEditable || {},
+      servicePlanSpec: servicePlanDetails.servicePlan,
+      // Overwrite service plan values only if it's still set to the default value
+      servicePlanValues: this.state.servicePlanValues === ServicePlanOptionsForm.initialState.servicePlanValues ? copy(servicePlanDetails.servicePlan.configuration) : this.state.servicePlanValues,
       showReadOnly: this.props.mode === 'view',
       dataLoading: false
     })
@@ -71,11 +71,11 @@ class PlanOptionsForm extends React.Component {
 
   onValueChange(name, value) {
     // Texture this back into a state update using the nifty lodash set function:
-    const newPlanValues = set({ ...this.state.planValues }, name, value)
+    const newServicePlanValues = set({ ...this.state.servicePlanValues }, name, value)
     this.setState({
-      planValues: newPlanValues
+      servicePlanValues: newServicePlanValues
     })
-    this.props.onPlanChange && this.props.onPlanChange(newPlanValues)
+    this.props.onServicePlanChange && this.props.onServicePlanChange(newServicePlanValues)
   }
 
   handleShowReadOnlyChange = (checked) => {
@@ -87,7 +87,7 @@ class PlanOptionsForm extends React.Component {
   render() {
     if (this.state.dataLoading) {
       return (
-        <div>Loading plan details...</div>
+        <div>Loading service plan details...</div>
       )
     }
 
@@ -104,11 +104,11 @@ class PlanOptionsForm extends React.Component {
             (this.props.mode === 'create' || !this.state.schema.properties[name].immutable) // Disallow editing of params which can only be set at create time.
 
           return (
-            <PlanOption 
+            <ServicePlanOption 
               key={name} 
               name={name} 
               property={this.state.schema.properties[name]} 
-              value={this.state.planValues[name]} 
+              value={this.state.servicePlanValues[name]} 
               hideNonEditable={!this.state.showReadOnly} 
               editable={editable} 
               onChange={(n, v) => this.onValueChange(n, v)}
@@ -120,5 +120,5 @@ class PlanOptionsForm extends React.Component {
   }
 }
 
-export default PlanOptionsForm
+export default ServicePlanOptionsForm
 

@@ -81,6 +81,12 @@ class KoreApiClient {
   UpdatePlan = (name, plan) => this.apis.default.UpdatePlan({ name, body: JSON.stringify(plan) })
   GetPlanSchema = (name) => this.apis.default.GetPlanSchema({ name })
 
+  // Service plans
+  ListServicePlans = (kind) => this.apis.default.ListServicePlans({ kind })
+  UpdateServicePlan = (name, servicePlan) => this.apis.default.UpdateServicePlan({ name, body: JSON.stringify(servicePlan) })
+  GetServicePlanSchema = (name) => this.apis.default.GetServicePlanSchema({ name })
+
+
   // Audit
   ListAuditEvents = () => this.apis.default.ListAuditEvents()
   
@@ -118,6 +124,10 @@ class KoreApiClient {
   GetTeamPlanDetails = (team, plan) => this.apis.default.GetTeamPlanDetails({ team, plan })
   UpdateTeamSecret = (team, name, secret) => this.apis.default.UpdateTeamSecret({ team, name, body: JSON.stringify(secret) })
   ListTeamAudit = (team) => this.apis.default.ListTeamAudit({ team })
+  ListServices = (team) => this.apis.default.ListServices({ team })
+  UpdateService = (team, name, service) => this.apis.default.UpdateService({ team, name, body: JSON.stringify(service) })
+  GetService = (team, name) => this.apis.default.GetService({ team, name })
+  GetTeamServicePlanDetails = (team, plan) => this.apis.default.GetTeamServicePlanDetails({ team, plan })
 }
 
 module.exports = KoreApiClient

@@ -6,6 +6,7 @@ const { Title, Paragraph, Text } = Typography
 
 import NewTeamForm from '../../lib/components/forms/NewTeamForm'
 import ClusterBuildForm from '../../lib/components/forms/ClusterBuildForm'
+import ServiceBuildForm from '../../lib/components/forms/ServiceBuildForm'
 import InviteLink from '../../lib/components/team/InviteLink'
 import Breadcrumb from '../../lib/components/Breadcrumb'
 import copy from '../../lib/utils/object-copy'
@@ -172,7 +173,7 @@ class NewTeamPage extends React.Component {
               </Row>
             </Card>
 
-            <Card title="Create a cluster for your team">
+            <Card title="Create a cluster for your team" style={{ marginBottom: '30px', marginTop: '20px' }}>
               <Alert message="Choose a cloud provider below to create a cluster" type="info" />
               <ClusterBuildForm
                 user={user}
@@ -180,6 +181,16 @@ class NewTeamPage extends React.Component {
                 teamClusters={[]}
               />
             </Card>
+
+            <Card title="Create a service for your team" style={{ marginBottom: '30px', marginTop: '20px' }}>
+              <Alert message="Choose a service kind below to create a service" type="info" />
+              <ServiceBuildForm
+                user={user}
+                team={team}
+                teamServices={[]}
+              />
+            </Card>
+
           </div>
         ) : null}
       </div>

@@ -18,7 +18,8 @@ module.exports = {
     gkeCredentials: `/teams/${id}/gkecredentials`,
     allocations: `/teams/${id}/allocations`,
     generateInviteLink: `/teams/${id}/invites/generate`,
-    audit: `/teams/${id}/audits`
+    audit: `/teams/${id}/audits`,
+    services: `/teams/${id}/services`,
   }),
   idp: {
     default: '/idp/default',
