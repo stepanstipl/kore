@@ -10,6 +10,10 @@ const prototypeList = [{
   title: 'Setup wizard',
   description: 'Setup Kore cloud access and team project settings for GCP',
   path: '/prototype/setup/kore'
+}, {
+  title: 'Security',
+  description: 'Review the security posture of all Kore-provisioned clusters and plans',
+  path: '/prototype/security'
 }]
 
 const PrototypeIndex = () => (
