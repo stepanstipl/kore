@@ -14,4 +14,6 @@ export \
     KORE_IDP_USER_CLAIMS \
     KORE_IDP_CLIENT_SCOPES
 
+export KORE_UI_SHOW_PROTOTYPES=true
+
 npm run dev
