@@ -83,6 +83,12 @@ class KoreApiClient {
 
   // Audit
   ListAuditEvents = () => this.apis.default.ListAuditEvents()
+  
+  // Policies 
+  ListPlanPolicies = (kind) => this.apis.default.ListPlanPolicies({ kind })
+  GetPlanPolicy = (name) => this.apis.default.GetPlanPolicy({ name })
+  UpdatePlanPolicy = (name, plan) => this.apis.default.UpdatePlanPolicy({ name, body: JSON.stringify(plan) })
+  RemovePlanPolicy = (name) => this.apis.default.RemovePlanPolicy({ name })
 
   // Teams
   GetTeam = (team) => this.apis.default.GetTeam({ team })
@@ -104,6 +110,7 @@ class KoreApiClient {
   ListAllocations = (team, assigned = undefined) => this.apis.default.ListAllocations({ team, assigned })
   GetAllocation = (team, name) => this.apis.default.GetAllocation({ team, name })
   UpdateAllocation = (team, name, resource) => this.apis.default.UpdateAllocation({ team, name, body: JSON.stringify(resource) })
+  RemoveAllocation = (team, name) => this.apis.default.RemoveAllocation({ team, name })
   ListClusters = (team) => this.apis.default.ListClusters({ team })
   UpdateCluster = (team, name, cluster) => this.apis.default.UpdateCluster({ team, name, body: JSON.stringify(cluster) })
   GetCluster = (team, name) => this.apis.default.GetCluster({ team, name })

@@ -52,7 +52,7 @@ describe('GKECredentialsForm', () => {
     beforeEach(() => {
       apiScope
         .get(`${ApiTestHelpers.basePath}/teams/abc/gkecredentials/gke`).reply(200, gkeCredential)
-        .get(`${ApiTestHelpers.basePath}/teams/abc/allocations/gke`).reply(200, allocation)
+        .get(`${ApiTestHelpers.basePath}/teams/kore-admin/allocations/gke`).reply(200, allocation)
     })
 
     it('returns GKE credential and allocation from API', async () => {
@@ -67,7 +67,7 @@ describe('GKECredentialsForm', () => {
     beforeEach(() => {
       apiScope
         .put(`${ApiTestHelpers.basePath}/teams/abc/gkecredentials/gke`).reply(200, gkeCredential)
-        .put(`${ApiTestHelpers.basePath}/teams/abc/allocations/gke`).reply(200, allocation)
+        .put(`${ApiTestHelpers.basePath}/teams/kore-admin/allocations/gke`).reply(200, allocation)
     })
 
     it('creates/updates and returns GKE credential and allocation from API', async () => {
