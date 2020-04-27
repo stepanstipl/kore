@@ -84,6 +84,17 @@ func (s *servicesImpl) Delete(ctx context.Context, name string) (*servicesv1.Ser
 		return nil, err
 	}
 
+	creds, err := s.Teams().Team(s.team).ServiceCredentials().List(ctx)
+	if err != nil {
+		logger.WithError(err).Error("failed to retrieve the service credentials")
+
+		return nil, err
+	}
+
+	if creds != nil && len(creds.Items) > 0 {
+		return nil, fmt.Errorf("the service can not be deleted, please delete all service credentials first")
+	}
+
 	return original, s.Store().Client().Delete(ctx, store.DeleteOptions.From(original))
 }
 
