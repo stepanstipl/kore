@@ -61,5 +61,6 @@ ui:
   image: quay.io/appvia/kore-ui
   version: v0.0.22
   replicas: 2
+  show_prototypes: false
 kubectl:
   version: 1.16

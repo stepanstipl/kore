@@ -90,7 +90,7 @@ if ! helm upgrade kore ${CHART} \
   --set=idp.client_secret=${KORE_IDP_CLIENT_SECRET} \
   --set=idp.server_url=${KORE_IDP_SERVER_URL} \
   --set=ui.build=${VERSION} \
-  --set=ui.show_prototypes=${KORE_UI_SHOW_PROTOTYPES:-false} \
+  --set=ui.show_prototypes=${KORE_UI_SHOW_PROTOTYPES:-"false"} \
   --set=ui.endpoint.url=${KORE_UI_PUBLIC_URL} \
   --set=ui.ingress.enabled=true \
   --set=ui.ingress.hostname=${KORE_UI_PUBLIC_URL##https://} \
