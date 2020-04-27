@@ -17,6 +17,10 @@
 
 load helper
 
+setup() {
+  ${KORE} get allocation gke -t ${TEAM} | grep GKE || skip && true
+}
+
 @test "We should be able to delete the gke cluster" {
   ${KORE} get cluster ${CLUSTER} -t ${TEAM} || skip
 
@@ -49,6 +53,11 @@ load helper
   ${KORE} get cluster ${CLUSTER} -t ${TEAM} || skip
 
   retry 120 "${KORE} get clusters ${CLUSTER} -t ${TEAM} 2>&1 | grep 'does not exist$'"
+  [[ "$status" -eq 0 ]]
+}
+
+@test "We should able to delete the ${TEAM} gke credentials" {
+  runit "${KORE} delete -f ${BASE_DIR}/${E2E_DIR}/gke-credentials.yml -t kore-admin"
   [[ "$status" -eq 0 ]]
 }
 

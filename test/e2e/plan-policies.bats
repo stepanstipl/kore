@@ -14,30 +14,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 load helper
 
-@test "We should be able to list the embedded plans" {
-  runit "${KORE} get plans"
+@test "We should be able to retrieve all plan policies" {
+  runit "${KORE} get planpolicies"
   [[ "$status" -eq 0 ]]
 }
 
-@test "We should have a gke-development plan" {
-  runit "${KORE} get plans gke-development"
+@test "We should have a plan policy for gke" {
+  runit "${KORE} get planpolicies default-gke"
   [[ "$status" -eq 0 ]]
 }
 
-@test "We should have a gke production plan" {
-  runit "${KORE} get plans gke-production"
+@test "We should have a plan policy for eks" {
+  runit "${KORE} get planpolicies default-eks"
   [[ "$status" -eq 0 ]]
 }
 
-@test "The plans should include valid json data" {
-  runit "${KORE} get plans gke-development -o json | jq '.'"
-  [[ "$status" -eq 0 ]]
-}
-
-@test "We should see a valid version in the gke plan" {
-  runit "${KORE} get plans gke-development -o json | jq '.spec.configuration.version' | grep gke"
+@test "We should be not able to create a cluster from a parameter not permitted" {
+  runit "${KORE} create cluster ${CLUSTER} --plan-param '{\"enableIstio\": \"true\"}' -t ${TEAM}"
   [[ "$status" -eq 0 ]]
 }

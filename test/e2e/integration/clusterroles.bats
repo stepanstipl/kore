@@ -17,6 +17,11 @@
 
 load helper
 
+setup() {
+  ${KORE} get cluster ${CLUSTER} | grep -i deleting && skip || true
+  ${KORE} get cluster ${CLUSTER} | grep -i pending && skip || true
+}
+
 @test "We should ensure the kore-nsadmin role has been provisioned by clusterroles" {
   role="kore-nsadmin"
 

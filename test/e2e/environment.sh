@@ -29,11 +29,11 @@ export RED='\e[0;31m'
 # log will echo the message and reset colour code
 log()      { (2>/dev/null echo -e "$@${NC}"); }
 # announce will log a given message (used for standard info logging)
-announce() { log "${GREEN}[$(date)][INFO] $@"; }
+announce() { log "${GREEN}[$(date +"%T")] [INFO] $@"; }
 # failed is to notify of configuration failures (e.g. missing files / environment variables)
-failed()   { log "${YELLOW}[$(date)][FAIL] $@"; }
+failed()   { log "${YELLOW}[$(date +"%T")] [FAIL] $@"; }
 # error is used when unexpected errors occur (e.g. unable to communicate with API)
-error()    { log "${RED}[$(date)][ERROR] $@"; }
+error()    { log "${RED}[$(date +"%T")] [ERROR] $@"; }
 
 # attempt tries to perform a command x number of times before giving up
 attempt() {

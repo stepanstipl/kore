@@ -21,7 +21,7 @@ load helper
   [[ "$status" -eq 0 ]]
 }
 
-@test "We should be able to build a cluster in GKE" {
+@test "We should be able to build a cluster ${CLUSTER} in GKE" {
   if runit "${KORE} get clusters ${CLUSTER} -t ${TEAM}"; then
     skip
   else
@@ -30,7 +30,7 @@ load helper
   fi
 }
 
-@test "We should be able to see the cluster in the team" {
+@test "We should be able to see the cluster ${CLUSTER} in the team" {
   runit "${KORE} get clusters ${CLUSTER} -t ${TEAM} | grep -i success"
   [[ "$status" -eq 0 ]]
 }
@@ -96,4 +96,3 @@ load helper
   ${KUBECTL} --context=${CLUSTER} create deployment web --image=nginx
   [[ "$status" -eq 0 ]]
 }
-

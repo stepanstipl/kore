@@ -14,30 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 load helper
 
-@test "We should be able to list the embedded plans" {
-  runit "${KORE} get plans"
+@test "We should find polcies for eks and gke" {
+  runit "${KORE} get planpolicies"
+  [[ "$status" -eq 0 ]]
+  runit "${KORE} get planpolicies gke-default"
+  [[ "$status" -eq 0 ]]
+  runit "${KORE} get planpolicies eks-default"
   [[ "$status" -eq 0 ]]
 }
 
-@test "We should have a gke-development plan" {
-  runit "${KORE} get plans gke-development"
+@test "We should see the default policies are allocated to all teams" {
+  runit "${KORE} get allocations default-eks -t ${TEAM}"  
   [[ "$status" -eq 0 ]]
-}
-
-@test "We should have a gke production plan" {
-  runit "${KORE} get plans gke-production"
-  [[ "$status" -eq 0 ]]
-}
-
-@test "The plans should include valid json data" {
-  runit "${KORE} get plans gke-development -o json | jq '.'"
-  [[ "$status" -eq 0 ]]
-}
-
-@test "We should see a valid version in the gke plan" {
-  runit "${KORE} get plans gke-development -o json | jq '.spec.configuration.version' | grep gke"
+  runit "${KORE} get allocations default-gke -t ${TEAM}"  
   [[ "$status" -eq 0 ]]
 }

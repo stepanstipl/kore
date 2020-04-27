@@ -36,7 +36,7 @@ retry() {
 }
 
 runit() {
-  retry 3 "$@"
+  retry 5 "$@"
 }
 
 # wait-on-deployment is responsible for waiting for a deployment to deploy

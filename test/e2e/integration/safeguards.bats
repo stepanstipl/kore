@@ -16,6 +16,11 @@
 #
 load helper
 
+setup() {
+  ${KORE} get cluster ${CLUSTER} | grep -i deleting && skip || true
+  ${KORE} get cluster ${CLUSTER} | grep -i pending && skip || true
+}
+
 @test "We should not be able to delete the team if clusters exist" {
   runit "${KORE} delete teams ${TEAM} || true"
   [[ "$status" -eq 0 ]]
@@ -31,3 +36,10 @@ load helper
   retry 4 "${KORE} get namespaceclaims ${CLUSTER}-ingress -t ${TEAM} || true"
   [[ "$status" -eq 0 ]]
 }
+
+#@test "We should not be able to create a gke cluster with an disallowed paramater" {
+#  ${KORE} get allocation gke -t ${TEAM} || skip
+#
+#  runit "${KORE} create cluster ${CLUSTER} -p gke-development -a gke --param '{\"enableIstio\":\"true\"}' || true"
+#  [[ "$status" -eq 0 ]]
+#}

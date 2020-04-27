@@ -16,6 +16,11 @@
 #
 load helper
 
+setup() {
+  ${KORE} get cluster ${CLUSTER} | grep -i deleting && skip || true
+  ${KORE} get cluster ${CLUSTER} | grep -i pending && skip || true
+}
+
 @test "We should be able to retrieve the namespaces from the cluster" {
   if ${KORE} get clusters ${CLUSTER} -t ${TEAM} -o yaml | grep 1.1.1.1; then
     skip
