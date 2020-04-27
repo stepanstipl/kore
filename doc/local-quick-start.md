@@ -4,7 +4,7 @@ In this guide, we'll walk you through how to use the Appvia Kore CLI to set up a
 
 We'll showcase how Appvia Kore can give you a head start with setting up [clusters](https://www.redhat.com/en/topics/containers/what-is-a-kubernetes-cluster), team members and environments.
 
-**NOTE** NOTE The installation of Kore created by the `kore local` command in this quick start is suitable for testing and proof-of-concept work only. Bootstrapping a production installation of Kore is coming soon with [issue/340](https://github.com/appvia/kore/issues/340).
+**NOTE** The installation of Kore created by the `kore local` command in this quick start is suitable for testing and proof-of-concept work only. Bootstrapping a production installation of Kore is coming soon with [issue/340](https://github.com/appvia/kore/issues/340).
 
 ## Kubernetes
 
@@ -143,13 +143,13 @@ Find the latest kore release from https://github.com/appvia/kore/releases for yo
 For example:
 
 ```shell script
-KORE_VERSION=v0.0.26
+KORE_VERSION=v0.1.0
 curl -L https://github.com/appvia/kore/releases/download/${KORE_VERSION}/kore-cli-darwin-amd64 --output kore
 chmod +x kore
 
 # Confirm you have a working CLI:
 ./kore version
-# kore version v0.0.26 (git+sha: aaaaaaa, built: 01-01-2020)
+# kore version v0.1.0 (git+sha: aaaaaaa, built: 01-01-2020)
 ```
 
 #### Configure Appvia Kore
