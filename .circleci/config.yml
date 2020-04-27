@@ -154,6 +154,19 @@ jobs:
             VERSION=${CIRCLE_SHA1} make images
             VERSION=${CIRCLE_SHA1} make push-images
 
+  pre-package-release:
+    environment:
+      GOFLAGS: "-mod=vendor"
+
+    docker:
+      - image: circleci/golang:1.14
+
+    steps:
+      - checkout
+      - run:
+          command: |
+            VERSION=${CIRCLE_TAG} make check-release-notes
+
   package-release:
     environment:
       GOFLAGS: "-mod=vendor"
@@ -393,6 +406,14 @@ workflows:
               only: master
             tags:
               only: /^v.*$/
+      - pre-package-release:
+          requires:
+            - release
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v([0-9]+)\.([0-9]+)\.([0-9]+)($|-rc([0-9]+))$/
       - package-release:
           requires:
             - build
