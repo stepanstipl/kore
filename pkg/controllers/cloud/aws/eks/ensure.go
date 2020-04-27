@@ -50,6 +50,8 @@ func (t *eksCtrl) EnsureResourcePending(cluster *eks.EKS) controllers.EnsureFunc
 
 // EnsureCluster is responsible for creating the cluster
 func (t *eksCtrl) EnsureCluster(client *aws.Client, cluster *eks.EKS) controllers.EnsureFunc {
+	component := ComponentClusterCreator
+
 	return func(ctx context.Context) (reconcile.Result, error) {
 		logger := log.WithFields(log.Fields{
 			"name":      cluster.Name,
@@ -58,53 +60,79 @@ func (t *eksCtrl) EnsureCluster(client *aws.Client, cluster *eks.EKS) controller
 		logger.Debug("attempting to ensure the eks cluster")
 
 		// @step: check if the cluster already exists
-		found, err := client.Exists(ctx)
-		if err != nil {
+		if exists, err := client.Exists(ctx); err != nil {
 			cluster.Status.Conditions.SetCondition(corev1.Component{
 				Detail:  err.Error(),
-				Name:    ComponentClusterCreator,
+				Name:    component,
 				Message: "Failed to check for cluster existence",
 				Status:  corev1.FailureStatus,
 			})
 
 			return reconcile.Result{}, err
+
+		} else if !exists {
+			return t.EnsureClusterCreation(client, cluster)(ctx)
 		}
 
-		if !found {
-			// @step: ensure we update the status and the component
-			status, found := cluster.Status.Conditions.GetStatus(ComponentClusterCreator)
-			if !found || status != corev1.PendingStatus {
-				cluster.Status.Conditions.SetCondition(corev1.Component{
-					Name:    ComponentClusterCreator,
-					Message: "Provisioning the EKS cluster in AWS",
-					Status:  corev1.PendingStatus,
-				})
-				cluster.Status.Status = corev1.PendingStatus
+		return t.EnsureClusterInSync(client, cluster)(ctx)
+	}
+}
 
-				return reconcile.Result{Requeue: true}, nil
-			}
+// EnsureClusterCreation is responsible for ensure the cluster is provision
+func (t *eksCtrl) EnsureClusterCreation(client *aws.Client, cluster *eks.EKS) controllers.EnsureFunc {
+	component := ComponentClusterCreator
 
-			if err := client.Create(ctx); err != nil {
-				logger.WithError(err).Error("failed to create cluster")
+	return func(ctx context.Context) (reconcile.Result, error) {
+		logger := log.WithFields(log.Fields{
+			"name":      cluster.Name,
+			"namespace": cluster.Namespace,
+		})
+		logger.Debug("cluster does not exist, attempting to provision")
 
-				// The IAM role is not always available right away after creation and the API might return with the following error:
-				// InvalidParameterException: Role with arn: <ARN> could not be assumed because it does not exist or the trusted entity is not correct
-				// In this case we are going to retry and not throw an error
-				if client.IsInvalidParameterException(err) {
-					return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
-				}
+		// @step: ensure we update the status and the component
+		status, found := cluster.Status.Conditions.GetStatus(component)
+		if status != corev1.PendingStatus || !found {
+			cluster.Status.Conditions.SetCondition(corev1.Component{
+				Name:    component,
+				Message: "Provisioning the EKS cluster in AWS",
+				Status:  corev1.PendingStatus,
+			})
+			cluster.Status.Status = corev1.PendingStatus
 
-				cluster.Status.Conditions.SetCondition(corev1.Component{
-					Name:    ComponentClusterCreator,
-					Message: "Failed trying to provision the cluster, will retry",
-					Detail:  err.Error(),
-				})
-
-				return reconcile.Result{}, err
-			}
-
-			return reconcile.Result{RequeueAfter: 1 * time.Minute}, err
+			return reconcile.Result{Requeue: true}, nil
 		}
+
+		if err := client.Create(ctx); err != nil {
+			logger.WithError(err).Error("failed to create the eks cluster")
+
+			// The IAM role is not always available right away after creation and the API might return with the following error:
+			// InvalidParameterException: Role with arn: <ARN> could not be assumed because it does not exist or the trusted entity is not correct
+			// In this case we are going to retry and not throw an error
+			if client.IsInvalidParameterException(err) {
+				return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+			}
+
+			cluster.Status.Conditions.SetCondition(corev1.Component{
+				Name:    component,
+				Message: "Failed to provision the EKS cluster",
+				Detail:  err.Error(),
+			})
+
+			return reconcile.Result{}, err
+		}
+
+		return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+	}
+}
+
+// EnsureClusterInSync is responsible for ensuring the cluster is insync
+func (t *eksCtrl) EnsureClusterInSync(client *aws.Client, cluster *eks.EKS) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		logger := log.WithFields(log.Fields{
+			"name":      cluster.Name,
+			"namespace": cluster.Namespace,
+		})
+		logger.Debug("attempting to check the eks cluster is insync")
 
 		// @step: we retrieve the current state
 		state, err := client.Describe(ctx)
@@ -113,13 +141,12 @@ func (t *eksCtrl) EnsureCluster(client *aws.Client, cluster *eks.EKS) controller
 
 			return reconcile.Result{}, err
 		}
-
 		status := utils.StringValue(state.Status)
+
 		logger.WithField("status", status).Debug("current state of the eks cluster")
 
 		switch status {
 		case awseks.ClusterStatusActive:
-			// @step: update the state as provisioned
 			cluster.Status.Conditions.SetCondition(corev1.Component{
 				Name:    ComponentClusterCreator,
 				Message: "Cluster has been provisioned",
@@ -130,7 +157,7 @@ func (t *eksCtrl) EnsureCluster(client *aws.Client, cluster *eks.EKS) controller
 		case awseks.ClusterStatusFailed:
 			cluster.Status.Conditions.SetCondition(corev1.Component{
 				Name:    ComponentClusterCreator,
-				Message: "EKS Cluster has failed provisioned",
+				Message: "EKS Cluster has failed to provision",
 				Status:  corev1.FailureStatus,
 			})
 			cluster.Status.Status = corev1.FailureStatus
@@ -146,19 +173,17 @@ func (t *eksCtrl) EnsureCluster(client *aws.Client, cluster *eks.EKS) controller
 			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
 		}
 
-		// @step: has the desired state drifted from the current
-		needupdate, err := client.Update(ctx)
-		if err != nil {
+		// @step: has the desired state drifted and if so was an update requested
+		if needupdate, err := client.Update(ctx); err != nil {
 			logger.WithError(err).Error("trying check or perform an update on the eks cluster")
 
 			return reconcile.Result{}, err
-		}
-		if needupdate {
+		} else if needupdate {
 			// we requeue and wait for the state to settle
 			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
 		}
 
-		// @step: ensure the status is correct
+		// @step: ensure the eks cluster status is updated
 		cadata := utils.StringValue(state.CertificateAuthority.Data)
 		endpoint := utils.StringValue(state.Endpoint)
 

@@ -35,6 +35,8 @@ setup() {
 }
 
 @test "We should be able to build a cluster in EKS" {
+  ${KORE} get cluster ${CLUSTER} -t ${TEAM} && skip
+
   runit "${KORE} create cluster ${CLUSTER} -t ${TEAM} -a aws -p eks-development --no-wait"
   [[ "$status" -eq 0 ]]
 }
@@ -103,7 +105,7 @@ setup() {
 }
 
 @test "We should see the number of nodes change when I update the desired state" {
-  runit "${KORE} alpha patch cluster ${CLUSTER} spec.nodeGroups.0.desiredSize 2"
+  runit "${KORE} alpha patch cluster ${CLUSTER} spec.configuration.nodeGroups.0.desiredSize 2"
   [[ "$status" -eq 0 ]]
   retry 60 "${KUBECTL} --context=${CLUSTER} get nodes --no-headers | grep Ready | wc -l | grep 2"
   [[ "$status" -eq 0 ]]

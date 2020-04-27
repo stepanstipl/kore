@@ -248,10 +248,12 @@ func (c *Client) Update(ctx context.Context) (bool, error) {
 			if _, err := c.svc.UpdateClusterConfigWithContext(ctx, update); err != nil {
 				return false, err
 			}
+
+			return true, nil
 		}
 	}
 
-	return true, nil
+	return false, nil
 }
 
 // VerifyCredentials is responsible for verifying AWS creds
