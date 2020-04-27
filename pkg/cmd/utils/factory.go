@@ -28,6 +28,8 @@ import (
 	"github.com/appvia/kore/pkg/cmd/errors"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/openid"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type factory struct {
@@ -59,6 +61,8 @@ func (f *factory) refreshToken() {
 		token, err := utils.NewClaimsFromRawToken(auth.OIDC.IDToken)
 		if err == nil {
 			if token.HasExpired() {
+				log.Debug("attempting to refresh id-token")
+
 				refresh, err := openid.DefaultTokenRefresher.RefreshToken(context.Background(),
 					auth.OIDC.RefreshToken,
 					auth.OIDC.TokenURL,
@@ -102,7 +106,7 @@ func (f *factory) CheckError(kerror error) {
 		case client.IsMethodNotAllowed(kerror):
 			return errors.ErrOperationNotPermitted
 		case errors.IsError(kerror, errors.ErrProfileInvalid{}):
-			return fmt.Errorf("invalid profile (%s) use\n$ kore profiles configure <name> --force to fix", kerror.Error())
+			return fmt.Errorf("invalid profile (%s), to fix run\n$ kore profiles configure <name> --force", kerror.Error())
 		}
 
 		return kerror
