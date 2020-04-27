@@ -24,7 +24,7 @@ set -o pipefail
 
 export ENVIRONMENT="${ENVIRONMENT:-"qa"}"
 export BUILD_ID=${BUILD_ID:-${VERSION}}
-export KORE_UI_SHOW_PROTOTYPES="true"
+export KORE_UI_SHOW_PROTOTYPES=true
 export VERSION=${VERSION:-"latest"}
 export KORE_API_PUBLIC_URL=${KORE_API_PUBLIC_URL_QA}
 export KORE_UI_PUBLIC_URL=${KORE_UI_PUBLIC_URL_QA}
