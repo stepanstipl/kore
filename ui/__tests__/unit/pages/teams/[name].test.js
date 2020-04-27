@@ -18,7 +18,10 @@ const props = {
   services: { items: [] },
   namespaceClaims: { items: [] },
   available: { items: [] },
-  teamRemoved: jest.fn()
+  teamRemoved: jest.fn(),
+  config: {
+    featureGates: {}
+  }
 }
 
 describe('TeamPage', () => {

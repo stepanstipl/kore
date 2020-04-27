@@ -10,6 +10,11 @@ jest.mock('../../../lib/utils/redirect')
 jest.mock('axios')
 
 describe('App', () => {
+  const config = {
+    apiUrl: 'http://localhost:10080',
+    featureGates: {}
+  }
+
   beforeEach(() => {
     OrgService.mockClear()
     apiRequest.mockClear()
@@ -37,28 +42,30 @@ describe('App', () => {
         it('returns false if no user session exists', async () => {
           delete req.session
           const userSession = await App.getUserSession({ req })
-          expect(userSession).toBe(false)
+          expect(userSession.user).toBe(undefined)
         })
 
-        it('refreshes the user object and returns it', async () => {
+        it('refreshes the user object and returns it, along with the config', async () => {
           const userSession = await App.getUserSession({ req })
           expect(OrgService).toHaveBeenCalledTimes(1)
           const mockOrgServiceInstance = OrgService.mock.instances[0]
           const mockRefreshUser = mockOrgServiceInstance.refreshUser
           expect(mockRefreshUser).toHaveBeenCalledWith(req.session.passport.user)
-          expect(userSession).toEqual(req.session.passport.user)
+          expect(userSession.user).toEqual(req.session.passport.user)
+          expect(userSession.config).toEqual(config)
         })
 
       })
 
       describe('CSR::no request present', () => {
-        it('makes request to get user session', async () => {
-          axios.get.mockResolvedValue({ data: sessionUser })
+        test('makes request to get user session and config', async () => {
+          axios.get.mockResolvedValue({ data: { user: sessionUser, config } })
 
           const userSession = await App.getUserSession({ asPath: '/requested-path' })
           expect(axios.get).toHaveBeenCalledTimes(1)
           expect(axios.get).toHaveBeenCalledWith(`${window.location.origin}/session/user?requestedPath=/requested-path`)
-          expect(userSession).toEqual(userSession)
+          expect(userSession.user).toEqual(sessionUser)
+          expect(userSession.config).toEqual(config)
         })
 
         it('returns false if an error occurred', async () => {
@@ -86,7 +93,7 @@ describe('App', () => {
       const getUserSessionOriginal = App.getUserSession
 
       beforeEach(() => {
-        App.getUserSession = jest.fn().mockResolvedValue(user)
+        App.getUserSession = jest.fn().mockResolvedValue({ user, config })
       })
 
       afterEach(() => {
@@ -133,7 +140,8 @@ describe('App', () => {
           pageProps: { myProp: 'myValue' },
           user,
           userTeams: [teamObj('team1'), teamObj('team2')],
-          otherTeams: [teamObj('team3')]
+          otherTeams: [teamObj('team3')],
+          config
         })
       })
 
@@ -155,7 +163,8 @@ describe('App', () => {
           pageProps: { myProp: 'myValue', ...initialProps },
           user,
           userTeams: [teamObj('team1'), teamObj('team2')],
-          otherTeams: [teamObj('team3')]
+          otherTeams: [teamObj('team3')],
+          config
         })
       })
     })

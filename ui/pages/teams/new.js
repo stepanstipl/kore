@@ -12,12 +12,12 @@ import Breadcrumb from '../../lib/components/Breadcrumb'
 import copy from '../../lib/utils/object-copy'
 import asyncForEach from '../../lib/utils/async-foreach'
 import KoreApi from '../../lib/kore-api'
-import { kore } from '../../config'
 
 class NewTeamPage extends React.Component {
   static propTypes = {
     user: PropTypes.object.isRequired,
-    teamAdded: PropTypes.func.isRequired
+    teamAdded: PropTypes.func.isRequired,
+    config: PropTypes.object.isRequired
   }
 
   state = {
@@ -97,7 +97,7 @@ class NewTeamPage extends React.Component {
   }
 
   render() {
-    const { user } = this.props
+    const { user, config } = this.props
     const { team, members, membersToAdd, allUsers } = this.state
 
     const membersAvailableToAdd = (allUsers || []).filter(user => !members.includes(user))
@@ -183,7 +183,7 @@ class NewTeamPage extends React.Component {
               />
             </Card>
 
-            {kore.featureGates.get('services') &&
+            {config.featureGates['services'] ? (
               <Card title="Create a service for your team" style={{ marginBottom: '30px', marginTop: '20px' }}>
                 <Alert message="Choose a service kind below to create a service" type="info" />
                 <ServiceBuildForm
@@ -192,7 +192,7 @@ class NewTeamPage extends React.Component {
                   teamServices={[]}
                 />
               </Card>
-            }
+            ) :null}
           </div>
         ) : null}
       </div>

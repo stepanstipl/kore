@@ -12,7 +12,7 @@ import SiderMenu from '../lib/components/SiderMenu'
 import redirect from '../lib/utils/redirect'
 import KoreApi from '../lib/kore-api'
 import copy from '../lib/utils/object-copy'
-import { kore, server, showPrototypes } from '../config'
+import { kore, koreApi, server, showPrototypes } from '../config'
 import OrgService from '../server/services/org'
 import userExpired from '../server/lib/user-expired'
 import gtag from '../lib/utils/gtag'
@@ -41,7 +41,11 @@ class MyApp extends App {
         const orgService = new OrgService(KoreApi)
         try {
           await orgService.refreshUser(user)
-          return user
+          const config = {
+            apiUrl: koreApi.publicUrl,
+            featureGates: kore.featureGates
+          }
+          return { user, config }
         } catch (err) {
           console.log('Failed to refresh user in _app.js', err)
           return false
@@ -62,7 +66,7 @@ class MyApp extends App {
     if (pageProps.unrestrictedPage) {
       return { pageProps }
     }
-    const user = await MyApp.getUserSession(ctx)
+    const { user, config } = await MyApp.getUserSession(ctx)
     if (!user) {
       return redirect({
         res: ctx.res,
@@ -83,7 +87,7 @@ class MyApp extends App {
       const initialProps = await Component.getInitialProps({ ...ctx, user })
       pageProps = { ...pageProps, ...initialProps }
     }
-    return { pageProps, user, userTeams, otherTeams }
+    return { pageProps, user, userTeams, otherTeams, config }
   }
 
   state = {
@@ -201,7 +205,7 @@ class MyApp extends App {
             <SiderMenu hide={hideSider} isAdmin={isAdmin} userTeams={this.state.userTeams} otherTeams={props.otherTeams}/>
             <Layout>
               <Content style={{ background: '#fff', padding: 24 }}>
-                <Component {...this.props.pageProps} user={this.props.user} teamAdded={this.teamAdded} teamRemoved={this.teamRemoved} version={version} />
+                <Component {...this.props.pageProps} user={this.props.user} teamAdded={this.teamAdded} teamRemoved={this.teamRemoved} version={version} config={this.props.config} />
               </Content>
               <Footer className="footer">
                 <Paragraph className="version">Appvia Kore {version}</Paragraph>

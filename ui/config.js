@@ -16,29 +16,19 @@ const getOpenidURL = () => {
 }
 
 function getFeatureGates() {
-  var featureGates = new Map([['services', false]])
+  const featureGates = {}
 
-  var envValue = (process.env.KORE_FEATURE_GATES || '').trim()
-  if (envValue === '') {
+  const envValue = (process.env.KORE_FEATURE_GATES || '').trim()
+  if (!envValue) {
     return featureGates
   }
 
   envValue.split(',').forEach((e) => {
-    const parts = e.split('=')
-    if (parts.length !== 2) {
-      throw new Error(`KORE_FEATURE_GATES is invalid: ${envValue}, it must be in "service1=true,service2=false" format`)
+    const parts = e.split('=', 2)
+    if (parts.length === 2 && parts[0].trim() !== '') {
+      featureGates[parts[0].trim()] = parts[1].trim() === 'true'
     }
-    const gate = parts[0].trim()
-    const value = parts[1].trim()
-    if (!featureGates.has(gate)) {
-      throw new Error(`${gate} feature gate does not exst`)
-    }
-    if (value !== 'true' && value !== 'false') {
-      throw new Error(`KORE_FEATURE_GATES is invalid: ${envValue}, it must be in "service1=true,service2=false" format`)
-    }
-    featureGates.set(gate, value === 'true')
   })
-
   return featureGates
 }
 

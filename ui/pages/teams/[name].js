@@ -20,7 +20,6 @@ import asyncForEach from '../../lib/utils/async-foreach'
 import apiPaths from '../../lib/utils/api-paths'
 import redirect from '../../lib/utils/redirect'
 import KoreApi from '../../lib/kore-api'
-import { kore } from '../../config'
 
 class TeamDashboard extends React.Component {
   static propTypes = {
@@ -32,7 +31,8 @@ class TeamDashboard extends React.Component {
     services: PropTypes.object.isRequired,
     namespaceClaims: PropTypes.object.isRequired,
     available: PropTypes.object.isRequired,
-    teamRemoved: PropTypes.func.isRequired
+    teamRemoved: PropTypes.func.isRequired,
+    config: PropTypes.object.isRequired
   }
 
   static staticProps = {
@@ -237,56 +237,46 @@ class TeamDashboard extends React.Component {
   }
 
   clusterAccess = async () => {
-    try {
-      const configResult = await axios.get(`${window.location.origin}/session/config`)
-      const apiUrl = new URL(configResult.data.apiUrl)
+    const apiUrl = new URL(this.props.config.apiUrl)
 
-      const profileConfigureCommand = `kore profile configure ${apiUrl.hostname}`
-      const loginCommand = 'kore login'
-      const kubeconfigCommand = `kore kubeconfig -t ${this.props.team.metadata.name}`
+    const profileConfigureCommand = `kore profile configure ${apiUrl.hostname}`
+    const loginCommand = 'kore login'
+    const kubeconfigCommand = `kore kubeconfig -t ${this.props.team.metadata.name}`
 
-      const InfoItem = ({ num, title }) => (
-        <div style={{ marginBottom: '10px' }}>
-          <Badge style={{ backgroundColor: '#1890ff', marginRight: '10px' }} count={num} />
-          <Text strong>{title}</Text>
+    const InfoItem = ({ num, title }) => (
+      <div style={{ marginBottom: '10px' }}>
+        <Badge style={{ backgroundColor: '#1890ff', marginRight: '10px' }} count={num} />
+        <Text strong>{title}</Text>
+      </div>
+    )
+    Modal.info({
+      title: 'Cluster access',
+      content: (
+        <div style={{ marginTop: '20px' }}>
+          <InfoItem num="1" title="Download" />
+          <Paragraph>If you haven&apos;t already, download the CLI from <a href="https://github.com/appvia/kore/releases">https://github.com/appvia/kore/releases</a></Paragraph>
+
+          <InfoItem num="2" title="Setup profile" />
+          <Paragraph>Create a profile</Paragraph>
+          <Paragraph className="copy-command" style={{ marginRight: '40px' }} copyable>{profileConfigureCommand}</Paragraph>
+          <Paragraph>Enter the Kore API URL as follows</Paragraph>
+          <Paragraph className="copy-command" style={{ marginRight: '40px' }} copyable>{apiUrl.origin}</Paragraph>
+
+          <InfoItem num="3" title="Login" />
+          <Paragraph>Login to the CLI</Paragraph>
+          <Paragraph className="copy-command" style={{ marginRight: '40px' }} copyable>{loginCommand}</Paragraph>
+
+          <InfoItem num="4" title="Setup access" />
+          <Paragraph>Then, you can use the Kore CLI to setup access to your team&apos;s clusters</Paragraph>
+          <Paragraph className="copy-command" style={{ marginRight: '40px' }} copyable>{kubeconfigCommand}</Paragraph>
+          <Paragraph>This will add local kubernetes configuration to allow you to use <Text
+            style={{ fontFamily: 'monospace' }}>kubectl</Text> to talk to the provisioned cluster(s).</Paragraph>
+          <Paragraph>See examples: <a href="https://kubernetes.io/docs/reference/kubectl/overview/" target="_blank" rel="noopener noreferrer">https://kubernetes.io/docs/reference/kubectl/overview/</a></Paragraph>
         </div>
-      )
-      Modal.info({
-        title: 'Cluster access',
-        content: (
-          <div style={{ marginTop: '20px' }}>
-            <InfoItem num="1" title="Download" />
-            <Paragraph>If you haven&apos;t already, download the CLI from <a href="https://github.com/appvia/kore/releases">https://github.com/appvia/kore/releases</a></Paragraph>
-
-            <InfoItem num="2" title="Setup profile" />
-            <Paragraph>Create a profile</Paragraph>
-            <Paragraph className="copy-command" style={{ marginRight: '40px' }} copyable>{profileConfigureCommand}</Paragraph>
-            <Paragraph>Enter the Kore API URL as follows</Paragraph>
-            <Paragraph className="copy-command" style={{ marginRight: '40px' }} copyable>{apiUrl.origin}</Paragraph>
-
-            <InfoItem num="3" title="Login" />
-            <Paragraph>Login to the CLI</Paragraph>
-            <Paragraph className="copy-command" style={{ marginRight: '40px' }} copyable>{loginCommand}</Paragraph>
-
-            <InfoItem num="4" title="Setup access" />
-            <Paragraph>Then, you can use the Kore CLI to setup access to your team&apos;s clusters</Paragraph>
-            <Paragraph className="copy-command" style={{ marginRight: '40px' }} copyable>{kubeconfigCommand}</Paragraph>
-            <Paragraph>This will add local kubernetes configuration to allow you to use <Text
-              style={{ fontFamily: 'monospace' }}>kubectl</Text> to talk to the provisioned cluster(s).</Paragraph>
-            <Paragraph>See examples: <a href="https://kubernetes.io/docs/reference/kubectl/overview/" target="_blank" rel="noopener noreferrer">https://kubernetes.io/docs/reference/kubectl/overview/</a></Paragraph>
-          </div>
-        ),
-        width: 700,
-        onOk() {}
-      })
-    } catch (err) {
-      Modal.error({
-        title: 'Error',
-        content: 'Unable to load cluster access details, please try again later.',
-        width: 700,
-        onOk() {}
-      })
-    }
+      ),
+      width: 700,
+      onOk() {}
+    })
   }
 
   deleteTeam = async () => {
@@ -360,7 +350,7 @@ class TeamDashboard extends React.Component {
   }
 
   render() {
-    const { team, user, invitation } = this.props
+    const { team, user, invitation, config } = this.props
 
     if (Object.keys(team).length === 0) {
       return <Error statusCode={404} />
@@ -521,7 +511,7 @@ class TeamDashboard extends React.Component {
           <NamespaceClaimForm team={team.metadata.name} clusters={clusters} handleSubmit={this.handleNamespaceCreated} handleCancel={this.createNamespace(false)}/>
         </Drawer>
 
-        {kore.featureGates.get('services') &&
+        {config.featureGates['services'] ? (
           <Card
             title={<div><Text style={{ marginRight: '10px' }}>Services</Text><Badge style={{ backgroundColor: '#1890ff' }} count={services.items.filter(c => !c.deleted).length} /></div>}
             style={{ marginBottom: '20px' }}
@@ -555,7 +545,7 @@ class TeamDashboard extends React.Component {
             >
             </List>
           </Card>
-        }
+        ): null}
       </div>
     )
   }
