@@ -37,13 +37,6 @@ var (
 	}
 )
 
-// IsAPIError checks if the error is a official api error
-func IsAPIError(err error) bool {
-	_, ok := (err).(*apiserver.Error)
-
-	return ok
-}
-
 // IsNotFound check if error is an 404 error
 func IsNotFound(err error) bool {
 	return isExpectedError(err, http.StatusNotFound)

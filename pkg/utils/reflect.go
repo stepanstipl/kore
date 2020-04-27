@@ -26,6 +26,27 @@ var (
 	ErrNoValue = errors.New("no value defined")
 )
 
+// IsEqualType checks if the types are the same
+func IsEqualType(a, b interface{}) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	av := reflect.ValueOf(a).Type()
+	bv := reflect.ValueOf(b).Type()
+
+	if av.Kind() == reflect.Ptr {
+		av = av.Elem()
+	}
+	if bv.Kind() == reflect.Ptr {
+		bv = bv.Elem()
+	}
+
+	return av == bv
+}
+
 // SetReflectedField checks if the interface has the field
 func SetReflectedField(name string, value, o interface{}) {
 	var caller reflect.Value
