@@ -87,6 +87,9 @@ func (p plansImpl) Update(ctx context.Context, plan *configv1.Plan) error {
 		return err
 	}
 
+	// Run a security scan (disregard errors, allow the system to continue even if persisting the scan fails)
+	_ = p.Security().ScanPlan(ctx, plan)
+
 	return nil
 }
 

@@ -40,3 +40,68 @@ members:
     user_id: 1
   - team_id: 3
     user_id: 2
+security_scan_results:
+  - id: 1
+    resource_namespace: test-team
+    resource_name: test
+    owning_team: test-team
+    checked_at: '2020-04-29 17:03:00'
+    overall_status: Warning
+  - id: 2
+    resource_namespace: test-team
+    resource_name: test2
+    owning_team: test-team
+    checked_at: '2020-04-29 17:03:00'
+    archived_at: '2020-04-29 17:03:01'
+    overall_status: Warning
+  - id: 3
+    resource_namespace: test-team
+    resource_name: test2
+    owning_team: test-team
+    checked_at: '2020-04-29 17:03:01'
+    archived_at: null
+    overall_status: Compliant
+  - id: 4
+    resource_namespace: test-team2
+    resource_name: test3
+    owning_team: test-team2
+    checked_at: '2020-04-29 17:03:01'
+    archived_at: null
+    overall_status: Compliant
+security_rule_results:
+  - id: 10
+    scan_id: 1
+    rule_code: EXAMPLE-001
+    status: Compliant
+    message: Extra information
+    checked_at: '2020-04-29 17:03:01'
+  - id: 11
+    scan_id: 1
+    rule_code: EXAMPLE-002
+    status: Warning
+    message: Extra information 2
+    checked_at: '2020-04-29 17:03:02'
+  - id: 20
+    scan_id: 2
+    rule_code: EXAMPLE-001
+    status: Compliant
+    message: Extra information
+    checked_at: '2020-04-29 17:03:01'
+  - id: 21
+    scan_id: 2
+    rule_code: EXAMPLE-002
+    status: Warning
+    message: Extra information 2
+    checked_at: '2020-04-29 17:03:02'   
+  - id: 30
+    scan_id: 3
+    rule_code: EXAMPLE-001
+    status: Compliant
+    message: Extra information
+    checked_at: '2020-04-29 17:03:01'
+  - id: 31
+    scan_id: 3
+    rule_code: EXAMPLE-002
+    status: Compliant
+    message: Extra information 2
+    checked_at: '2020-04-29 17:03:02'     

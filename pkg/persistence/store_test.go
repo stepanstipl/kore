@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package persistence
+package persistence_test
 
 import (
 	"bytes"
@@ -24,6 +24,8 @@ import (
 	"os"
 	"sync"
 	"testing"
+
+	. "github.com/appvia/kore/pkg/persistence"
 
 	"github.com/romanyx/polluter"
 	log "github.com/sirupsen/logrus"

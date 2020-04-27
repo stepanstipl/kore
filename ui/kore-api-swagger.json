@@ -644,6 +644,232 @@
         }
       }
     },
+    "/api/v1alpha1/securityscans": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Used to return security scans for any object in the system",
+        "operationId": "ListSecurityScans",
+        "parameters": [
+          {
+            "type": "boolean",
+            "default": true,
+            "description": "Set to false to retrieve full history",
+            "name": "latestOnly",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A collection of security scans",
+            "schema": {
+              "$ref": "#/definitions/v1.ScanResultList"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/securityscans/{group}/{version}/{kind}/{namespace}/{name}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Used to return latest security scan for specific object in the system",
+        "operationId": "GetSecurityScanForResource",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the group of the kind",
+            "name": "group",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the version of the kind",
+            "name": "version",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the kind of the resource",
+            "name": "kind",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the namespace of the resource",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the name of the resource",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Latest security scan for this resource",
+            "schema": {
+              "$ref": "#/definitions/v1.ScanResult"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "No current security scan exists for the resource"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/securityscans/{group}/{version}/{kind}/{namespace}/{name}/history": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Used to return the history of security scans for specific object in the system",
+        "operationId": "ListSecurityScansForResource",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the group of the kind",
+            "name": "group",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the version of the kind",
+            "name": "version",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the kind of the resource",
+            "name": "kind",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the namespace of the resource",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the name of the resource",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Latest security scan for this resource",
+            "schema": {
+              "$ref": "#/definitions/v1.ScanResultList"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/securityscans/{id}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Used to return specific security scan by ID",
+        "operationId": "GetSecurityScan",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "Is the ID of the scan",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Security scan",
+            "schema": {
+              "$ref": "#/definitions/v1.ScanResult"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "No current security scan exists for the ID"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
     "/api/v1alpha1/serviceplans": {
       "get": {
         "consumes": [
@@ -5551,6 +5777,22 @@
         }
       }
     },
+    "v1.RuleResult": {
+      "properties": {
+        "checkedAt": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "ruleCode": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
     "v1.SAMLIDP": {
       "required": [
         "ssoURL",
@@ -5582,6 +5824,85 @@
         },
         "usernameAttr": {
           "type": "string"
+        }
+      }
+    },
+    "v1.ScanResult": {
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1.ScanResultSpec"
+        }
+      }
+    },
+    "v1.ScanResultList": {
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.ScanResult"
+          }
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ListMeta"
+        }
+      }
+    },
+    "v1.ScanResultSpec": {
+      "properties": {
+        "archivedAt": {
+          "type": "string"
+        },
+        "checkedAt": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "overallStatus": {
+          "type": "string"
+        },
+        "owningTeam": {
+          "type": "string"
+        },
+        "resourceApiVersion": {
+          "type": "string"
+        },
+        "resourceKind": {
+          "type": "string"
+        },
+        "resourceName": {
+          "type": "string"
+        },
+        "resourceNamespace": {
+          "type": "string"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.RuleResult"
+          }
         }
       }
     },

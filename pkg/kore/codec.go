@@ -19,6 +19,7 @@ package kore
 import (
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
+	securityv1 "github.com/appvia/kore/pkg/apis/security/v1"
 	"github.com/appvia/kore/pkg/persistence/model"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -261,4 +262,70 @@ func (c Convertor) FromMembersToTeamList(members []*model.Member) *orgv1.TeamLis
 	}
 
 	return c.FromTeamsModelList(teams)
+}
+
+// ToSecurityScanResult converts to the DB-layer scan result from the Security scan result
+func (c Convertor) ToSecurityScanResult(result *securityv1.ScanResult) model.SecurityScanResult {
+	res := model.SecurityScanResult{
+		ID:                 result.Spec.ID,
+		ResourceAPIVersion: result.Spec.ResourceAPIVersion,
+		ResourceKind:       result.Spec.ResourceKind,
+		ResourceNamespace:  result.Spec.ResourceNamespace,
+		ResourceName:       result.Spec.ResourceName,
+		OwningTeam:         result.Spec.OwningTeam,
+		CheckedAt:          result.Spec.CheckedAt.Time,
+		ArchivedAt:         result.Spec.ArchivedAt.Time,
+		OverallStatus:      result.Spec.OverallStatus.String(),
+		Results:            make([]model.SecurityRuleResult, len(result.Spec.Results)),
+	}
+	for i, rr := range result.Spec.Results {
+		res.Results[i] = c.ToSecurityRuleResult(rr)
+	}
+	return res
+}
+
+// FromSecurityScanResult converts from the DB-layer scan result to the Security scan result
+func (c Convertor) FromSecurityScanResult(result *model.SecurityScanResult) securityv1.ScanResult {
+	res := securityv1.ScanResult{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: securityv1.SchemeGroupVersion.String(),
+			Kind:       "ScanResult",
+		},
+		Spec: securityv1.ScanResultSpec{
+			ID:                 result.ID,
+			ResourceAPIVersion: result.ResourceAPIVersion,
+			ResourceKind:       result.ResourceKind,
+			ResourceNamespace:  result.ResourceNamespace,
+			ResourceName:       result.ResourceName,
+			OwningTeam:         result.OwningTeam,
+			CheckedAt:          metav1.NewTime(result.CheckedAt),
+			ArchivedAt:         metav1.NewTime(result.ArchivedAt),
+			OverallStatus:      securityv1.RuleStatus(result.OverallStatus),
+			Results:            make([]securityv1.RuleResult, len(result.Results)),
+		},
+	}
+	for i, rr := range result.Results {
+		res.Spec.Results[i] = c.FromSecurityRuleResult(rr)
+	}
+	return res
+}
+
+// ToSecurityRuleResult converts to the DB-layer rule result from the Security rule result
+func (c Convertor) ToSecurityRuleResult(result securityv1.RuleResult) model.SecurityRuleResult {
+	return model.SecurityRuleResult{
+		RuleCode:  result.RuleCode,
+		Status:    result.Status.String(),
+		Message:   result.Message,
+		CheckedAt: result.CheckedAt.Time,
+	}
+}
+
+// FromSecurityRuleResult converts from the DB-layer rule result to the Security rule result
+func (c Convertor) FromSecurityRuleResult(result model.SecurityRuleResult) securityv1.RuleResult {
+	return securityv1.RuleResult{
+		RuleCode:  result.RuleCode,
+		Status:    securityv1.RuleStatus(result.Status),
+		Message:   result.Message,
+		CheckedAt: metav1.NewTime(result.CheckedAt),
+	}
 }

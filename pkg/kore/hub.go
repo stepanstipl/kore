@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/appvia/kore/pkg/persistence"
+	"github.com/appvia/kore/pkg/security"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/certificates"
@@ -57,6 +58,8 @@ type hubImpl struct {
 	servicePlans ServicePlans
 	// serviceProviders is the ServiceProviders implementation
 	serviceProviders ServiceProviders
+	// security provides the ability to scan kore objects for security compliance
+	security Security
 }
 
 // New returns a new instance of the kore bridge
@@ -99,9 +102,13 @@ func New(sc store.Store, persistenceMgr persistence.Interface, config Config) (I
 	h.teams = &teamsImpl{hubImpl: h}
 	h.persistenceMgr = persistenceMgr
 	h.users = &usersImpl{hubImpl: h}
-	h.audit = &auditImpl{hubImpl: h}
+	h.audit = &auditImpl{auditPersist: persistenceMgr.Audit()}
 	h.servicePlans = &servicePlansImpl{Interface: h}
 	h.serviceProviders = &serviceProvidersImpl{Interface: h}
+	h.security = &securityImpl{
+		scanner:         security.New(),
+		securityPersist: persistenceMgr.Security(),
+	}
 
 	// @step: call the setup code for the kore
 	if err := h.Setup(context.Background()); err != nil {
@@ -199,4 +206,12 @@ func (h hubImpl) ServicePlans() ServicePlans {
 
 func (h hubImpl) ServiceProviders() ServiceProviders {
 	return h.serviceProviders
+}
+
+func (h hubImpl) Security() Security {
+	return h.security
+}
+
+func (h hubImpl) Persist() persistence.Interface {
+	return h.persistenceMgr
 }

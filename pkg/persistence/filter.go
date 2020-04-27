@@ -118,3 +118,27 @@ func (q ListFuncs) WithUser(v string) ListFunc {
 		o.Fields["user"] = v
 	}
 }
+
+// WithName sets the name
+func (q ListFuncs) WithName(v string) ListFunc {
+	return func(o *ListOptions) {
+		o.Fields["name"] = v
+	}
+}
+
+// WithNamespace sets the namespace
+func (q ListFuncs) WithNamespace(v string) ListFunc {
+	return func(o *ListOptions) {
+		o.Fields["namespace"] = v
+	}
+}
+
+// WithIdentity sets the API version, kind, namespace and name
+func (q ListFuncs) WithIdentity(apiVersion string, kind string, namespace string, name string) ListFunc {
+	return func(o *ListOptions) {
+		o.Fields["apiVersion"] = apiVersion
+		o.Fields["kind"] = kind
+		o.Fields["namespace"] = namespace
+		o.Fields["name"] = name
+	}
+}

@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/appvia/kore/pkg/kore/authentication"
+	"github.com/appvia/kore/pkg/persistence"
 	"github.com/appvia/kore/pkg/persistence/model"
 	"github.com/appvia/kore/pkg/store"
 )
@@ -78,6 +79,10 @@ type Interface interface {
 	SignedClientCertificate(string, string) ([]byte, []byte, error)
 	// SignedServerCertificate is used to generate a server certificate
 	SignedServerCertificate([]string, time.Duration) ([]byte, []byte, error)
+	// Security returns the security scanner
+	Security() Security
+	// Persist returns the access layer for the non-Kubernetes data store
+	Persist() persistence.Interface
 }
 
 // DEX is the configuration required to setup identity providers
