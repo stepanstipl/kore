@@ -51,6 +51,10 @@ type ServiceProvider interface {
 	Reconcile(context.Context, log.FieldLogger, *servicesv1.Service) (reconcile.Result, error)
 	// Delete will delete the service
 	Delete(context.Context, log.FieldLogger, *servicesv1.Service) (reconcile.Result, error)
+	// ReconcileCredentials will create or update the service credentials
+	ReconcileCredentials(context.Context, log.FieldLogger, *servicesv1.ServiceCredentials) (reconcile.Result, map[string]string, error)
+	// DeleteCredentials will delete the service credentials
+	DeleteCredentials(context.Context, log.FieldLogger, *servicesv1.ServiceCredentials) (reconcile.Result, error)
 }
 
 type ServiceProviderRegistry struct {

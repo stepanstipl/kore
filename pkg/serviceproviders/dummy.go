@@ -118,3 +118,16 @@ func (d Dummy) Delete(_ context.Context, _ logrus.FieldLogger, service *services
 	service.Status.Status = corev1.DeletedStatus
 	return reconcile.Result{}, nil
 }
+
+func (d Dummy) ReconcileCredentials(_ context.Context, _ logrus.FieldLogger, creds *servicesv1.ServiceCredentials) (reconcile.Result, map[string]string, error) {
+	creds.Status.Status = corev1.SuccessStatus
+	res := map[string]string{
+		"superSecret": creds.Name + "-secret",
+	}
+	return reconcile.Result{}, res, nil
+}
+
+func (d Dummy) DeleteCredentials(_ context.Context, _ logrus.FieldLogger, creds *servicesv1.ServiceCredentials) (reconcile.Result, error) {
+	creds.Status.Status = corev1.DeletedStatus
+	return reconcile.Result{}, nil
+}

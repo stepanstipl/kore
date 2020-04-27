@@ -126,10 +126,12 @@ func (c Components) HasStatusForAll(status Status) bool {
 }
 
 // SetStatus sets the status of a component
-func (c Components) SetStatus(name string, status Status) {
+func (c Components) SetStatus(name string, status Status, message, detail string) {
 	comp, found := c.GetComponent(name)
 	if found {
 		comp.Status = status
+		comp.Message = message
+		comp.Detail = detail
 	}
 }
 
