@@ -27,7 +27,6 @@ import (
 func GetDefaultPlanPolicies() []*configv1.PlanPolicy {
 	return []*configv1.PlanPolicy{
 		{
-
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "default-gke",
 				Labels: map[string]string{
@@ -36,8 +35,8 @@ func GetDefaultPlanPolicies() []*configv1.PlanPolicy {
 			},
 			Spec: configv1.PlanPolicySpec{
 				Kind:        "GKE",
-				Summary:     "Default policy for GKE Cluster plans",
-				Description: "This policy defines which plan properties can be edited by default",
+				Summary:     "Default GKE",
+				Description: "This policy defines which plan properties can be edited by default for GKE clusters",
 				Properties: []configv1.PlanPolicyProperty{
 					{Name: "authProxyAllowedIPs", AllowUpdate: true},
 					{Name: "clusterUsers", AllowUpdate: true},
@@ -60,8 +59,8 @@ func GetDefaultPlanPolicies() []*configv1.PlanPolicy {
 			},
 			Spec: configv1.PlanPolicySpec{
 				Kind:        "EKS",
-				Summary:     "Default policy for EKS Cluster plans",
-				Description: "This policy defines which plan properties can be edited by default",
+				Summary:     "Default EKS",
+				Description: "This policy defines which plan properties can be edited by default for EKS clusters",
 				Properties: []configv1.PlanPolicyProperty{
 					{Name: "authProxyAllowedIPs", AllowUpdate: true},
 					{Name: "clusterUsers", AllowUpdate: true},

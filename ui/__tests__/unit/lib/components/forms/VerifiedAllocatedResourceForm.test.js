@@ -82,16 +82,6 @@ describe('VerifiedAllocatedResourceForm', () => {
     })
   })
 
-  describe('#generateAllocationResource', () => {
-    it('returns a configured Allocation object when given valid values', () => {
-      const allocation = form.generateAllocationResource(
-        { group: 'aws.compute.kore.appvia.io', version: 'v1alpha1', kind: 'EKSCredentials' },
-        { name: 'Allocation name', summary: 'Summary of allocation' }
-      )
-      expect(allocation).toBeDefined()
-    })
-  })
-
   describe('#handleSubmit', () => {
     let event
     beforeEach(() => {

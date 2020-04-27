@@ -14,6 +14,7 @@ class ApiTestHelpers {
   
     return nock(`${u.protocol}//${u.host}`)
       .get('/swagger.json')
+      .times(10000)
       .optionally()
       .reply(200, spec, { 'Content-type': 'application/json' })
   }

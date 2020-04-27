@@ -24,11 +24,19 @@ class ResourceList extends React.Component {
     return this.fetchComponentData()
       .then(data => {
         this.setState({
-          ...this.state,
           ...data,
           dataLoading: false
         })
       })
+  }
+
+  refresh = async () => {
+    this.setState({ dataLoading: true })
+    const data = await this.fetchComponentData()
+    this.setState({
+      ...data,
+      dataLoading: false
+    })
   }
 
   handleStatusUpdated = (updatedResource, done) => {
