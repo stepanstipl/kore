@@ -29,11 +29,14 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/appvia/kore/pkg/apis/services/v1.Service":         schema_pkg_apis_services_v1_Service(ref),
-		"github.com/appvia/kore/pkg/apis/services/v1.ServicePlan":     schema_pkg_apis_services_v1_ServicePlan(ref),
-		"github.com/appvia/kore/pkg/apis/services/v1.ServicePlanSpec": schema_pkg_apis_services_v1_ServicePlanSpec(ref),
-		"github.com/appvia/kore/pkg/apis/services/v1.ServiceSpec":     schema_pkg_apis_services_v1_ServiceSpec(ref),
-		"github.com/appvia/kore/pkg/apis/services/v1.ServiceStatus":   schema_pkg_apis_services_v1_ServiceStatus(ref),
+		"github.com/appvia/kore/pkg/apis/services/v1.Service":                  schema_pkg_apis_services_v1_Service(ref),
+		"github.com/appvia/kore/pkg/apis/services/v1.ServiceCredentials":       schema_pkg_apis_services_v1_ServiceCredentials(ref),
+		"github.com/appvia/kore/pkg/apis/services/v1.ServiceCredentialsSpec":   schema_pkg_apis_services_v1_ServiceCredentialsSpec(ref),
+		"github.com/appvia/kore/pkg/apis/services/v1.ServiceCredentialsStatus": schema_pkg_apis_services_v1_ServiceCredentialsStatus(ref),
+		"github.com/appvia/kore/pkg/apis/services/v1.ServicePlan":              schema_pkg_apis_services_v1_ServicePlan(ref),
+		"github.com/appvia/kore/pkg/apis/services/v1.ServicePlanSpec":          schema_pkg_apis_services_v1_ServicePlanSpec(ref),
+		"github.com/appvia/kore/pkg/apis/services/v1.ServiceSpec":              schema_pkg_apis_services_v1_ServiceSpec(ref),
+		"github.com/appvia/kore/pkg/apis/services/v1.ServiceStatus":            schema_pkg_apis_services_v1_ServiceStatus(ref),
 	}
 }
 
@@ -78,6 +81,140 @@ func schema_pkg_apis_services_v1_Service(ref common.ReferenceCallback) common.Op
 		},
 		Dependencies: []string{
 			"github.com/appvia/kore/pkg/apis/services/v1.ServiceSpec", "github.com/appvia/kore/pkg/apis/services/v1.ServiceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_services_v1_ServiceCredentials(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ServiceCredentials is credentials provisioned by a service into the target namespace",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/appvia/kore/pkg/apis/services/v1.ServiceCredentialsSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/appvia/kore/pkg/apis/services/v1.ServiceCredentialsStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/services/v1.ServiceCredentialsSpec", "github.com/appvia/kore/pkg/apis/services/v1.ServiceCredentialsStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_services_v1_ServiceCredentialsSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ServiceCredentialsSpec defines the the desired status for service credentials",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind refers to the service type",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"service": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Service contains the reference to the service object",
+							Ref:         ref("github.com/appvia/kore/pkg/apis/core/v1.Ownership"),
+						},
+					},
+					"cluster": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Cluster contains the reference to the cluster where the credentials will be saved as a secret",
+							Ref:         ref("github.com/appvia/kore/pkg/apis/core/v1.Ownership"),
+						},
+					},
+					"clusterNamespace": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ClusterNamespace is the target namespace in the cluster where the secret will be created",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"configuration": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Configuration are the configuration values for this service credentials It will be used by the service provider to provision the credentials",
+							Ref:         ref("k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"),
+						},
+					},
+				},
+				Required: []string{"kind", "configuration"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/core/v1.Ownership", "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"},
+	}
+}
+
+func schema_pkg_apis_services_v1_ServiceCredentialsStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ServiceCredentialsStatus defines the observed state of a service",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"components": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Components is a collection of component statuses",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/appvia/kore/pkg/apis/core/v1.Component"),
+									},
+								},
+							},
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Status is the overall status of the service",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"message": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Message is the description of the current status",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/core/v1.Component"},
 	}
 }
 

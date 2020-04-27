@@ -59,6 +59,8 @@ func init() {
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&Service{},
+		&ServiceCredentials{},
+		&ServiceCredentialsList{},
 		&ServiceList{},
 		&ServicePlan{},
 		&ServicePlanList{},

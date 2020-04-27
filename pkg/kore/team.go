@@ -34,6 +34,8 @@ type Team interface {
 	Secrets() Secrets
 	// Services returns the services interface
 	Services() Services
+	// ServiceCredentials returns the service credentials interface
+	ServiceCredentials() ServiceCredentials
 }
 
 // tmImpl is a team interface
@@ -99,6 +101,14 @@ func (t *tmImpl) Secrets() Secrets {
 // Services returns the services implementation
 func (t *tmImpl) Services() Services {
 	return &servicesImpl{
+		hubImpl: t.hubImpl,
+		team:    t.team,
+	}
+}
+
+// ServiceCredentials returns the service credentials implementation
+func (t *tmImpl) ServiceCredentials() ServiceCredentials {
+	return &serviceCredentialsImpl{
 		hubImpl: t.hubImpl,
 		team:    t.team,
 	}

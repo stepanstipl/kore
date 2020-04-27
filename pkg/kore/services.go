@@ -223,7 +223,7 @@ func (s *servicesImpl) validateConfiguration(ctx context.Context, service *servi
 		return fmt.Errorf("failed to parse service configuration values: %s", err)
 	}
 
-	if err := jsonschema.Validate(provider.JSONSchema(service.Spec.Kind), "plan", service.Spec.Configuration.Raw); err != nil {
+	if err := jsonschema.Validate(provider.JSONSchema(service.Spec.Kind), "service", service.Spec.Configuration.Raw); err != nil {
 		return err
 	}
 

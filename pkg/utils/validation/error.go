@@ -125,4 +125,6 @@ const (
 	ReadOnly ErrorCode = "readOnly"
 	// InvalidType error indicates that we've expected a different type
 	InvalidType ErrorCode = "invalidType"
+	// InvalidValue error indicates that the given value is invalid
+	InvalidValue ErrorCode = "invalidValue"
 )

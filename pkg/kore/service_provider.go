@@ -43,12 +43,14 @@ type ServiceProvider interface {
 	Plans() []servicesv1.ServicePlan
 	// JSONSchema returns the JSON schema for a service kind
 	JSONSchema(kind string) string
+	// CredentialsJSONSchema returns the JSON schema for the credentials configuration
+	CredentialsJSONSchema(kind string) string
+	// RequiredCredentialTypes returns with the required credential types
+	RequiredCredentialTypes(kind string) []schema.GroupVersionKind
 	// Reconcile will create or update the service
 	Reconcile(context.Context, log.FieldLogger, *servicesv1.Service) (reconcile.Result, error)
 	// Delete will delete the service
 	Delete(context.Context, log.FieldLogger, *servicesv1.Service) (reconcile.Result, error)
-	// RequiredCredentialTypes returns with the required credential types
-	RequiredCredentialTypes(kind string) []schema.GroupVersionKind
 }
 
 type ServiceProviderRegistry struct {

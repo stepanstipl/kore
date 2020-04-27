@@ -67,7 +67,7 @@ func (d Dummy) Plans() []servicesv1.ServicePlan {
 	}
 }
 
-func (d Dummy) JSONSchema(kind string) string {
+func (d Dummy) JSONSchema(_ string) string {
 	return `{
 		"$id": "https://appvia.io/schemas/services/dummy/dummy.json",
 		"$schema": "http://json-schema.org/draft-07/schema#",
@@ -86,7 +86,26 @@ func (d Dummy) JSONSchema(kind string) string {
 	}`
 }
 
-func (d Dummy) RequiredCredentialTypes(kind string) []schema.GroupVersionKind {
+func (d Dummy) CredentialsJSONSchema(_ string) string {
+	return `{
+		"$id": "https://appvia.io/schemas/services/dummy/dummy-credentials.json",
+		"$schema": "http://json-schema.org/draft-07/schema#",
+		"description": "Dummy service plan credentials schema",
+		"type": "object",
+		"additionalProperties": false,
+		"required": [
+			"bar"
+		],
+		"properties": {
+			"bar": {
+				"type": "string",
+				"minLength": 1
+			}
+		}
+	}`
+}
+
+func (d Dummy) RequiredCredentialTypes(_ string) []schema.GroupVersionKind {
 	return nil
 }
 
