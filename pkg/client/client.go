@@ -109,7 +109,7 @@ func (a *apiClient) HandleRequest(method string) RestInterface {
 		}
 
 		if a.cfg.GetCurrentServer().Endpoint == "" {
-			return cerrors.NewProfileInvalidError("missing endpoint")
+			return cerrors.NewProfileInvalidError("missing endpoint", a.cfg.CurrentProfile)
 		}
 
 		// @step: we generate the uri from the parameter

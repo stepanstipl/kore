@@ -105,8 +105,9 @@ func (f *factory) CheckError(kerror error) {
 			return errors.ErrAuthentication
 		case client.IsMethodNotAllowed(kerror):
 			return errors.ErrOperationNotPermitted
-		case errors.IsError(kerror, errors.ErrProfileInvalid{}):
-			return fmt.Errorf("invalid profile (%s), to fix run\n$ kore profiles configure <name> --force", kerror.Error())
+		case errors.IsError(kerror, &errors.ErrProfileInvalid{}):
+			return fmt.Errorf("invalid profile (%s), to fix run\n$ kore profiles configure %s --force",
+				kerror.Error(), kerror.(*errors.ErrProfileInvalid).Profile())
 		}
 
 		return kerror

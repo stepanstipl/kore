@@ -58,7 +58,7 @@ type ErrConflict struct {
 
 // ErrProfileInvalid indicates an issue with the profile
 type ErrProfileInvalid struct {
-	message string
+	message, profile string
 }
 
 // ErrInvalidParameter indicates an invalid param
@@ -82,6 +82,11 @@ func (e *ErrInvalidParameter) Error() string {
 	return fmt.Sprintf("%s, field: %q, value: %q", e.message, e.field, e.value)
 }
 
+// Profile returns the profile name is was concerning
+func (e *ErrProfileInvalid) Profile() string {
+	return e.profile
+}
+
 func (e *ErrProfileInvalid) Error() string {
 	return e.message
 }
@@ -92,8 +97,8 @@ func IsError(err error, t interface{}) bool {
 }
 
 // NewProfileInvalidError returns a profile invalid
-func NewProfileInvalidError(message string) error {
-	return &ErrProfileInvalid{message: message}
+func NewProfileInvalidError(message, profile string) error {
+	return &ErrProfileInvalid{message: message, profile: profile}
 }
 
 // NewResourceNotFound returns a error type
