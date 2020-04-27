@@ -174,6 +174,7 @@ func (in *ServicePlanSpec) DeepCopy() *ServicePlanSpec {
 func (in *ServiceSpec) DeepCopyInto(out *ServiceSpec) {
 	*out = *in
 	in.Configuration.DeepCopyInto(&out.Configuration)
+	out.Credentials = in.Credentials
 	return
 }
 

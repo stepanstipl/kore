@@ -19,6 +19,8 @@ package serviceproviders
 import (
 	"context"
 
+	"k8s.io/apimachinery/pkg/runtime/schema"
+
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/kore"
@@ -82,6 +84,10 @@ func (d Dummy) JSONSchema(kind string) string {
 			}
 		}
 	}`
+}
+
+func (d Dummy) RequiredCredentialTypes(kind string) []schema.GroupVersionKind {
+	return nil
 }
 
 func (d Dummy) Reconcile(_ context.Context, _ logrus.FieldLogger, service *servicesv1.Service) (reconcile.Result, error) {

@@ -102,8 +102,8 @@ func (o *CreateMemberOptions) Run() error {
 
 			err := o.ClientWithEndpoint("/teams/{team}/invites/generate/{user}").
 				Parameters(
-					client.PathParmeter("team", o.Team),
-					client.PathParmeter("user", o.Username),
+					client.PathParameter("team", o.Team),
+					client.PathParameter("user", o.Username),
 				).
 				Result(&inviteURL).
 				Get().Error()

@@ -205,12 +205,18 @@ func schema_pkg_apis_services_v1_ServiceSpec(ref common.ReferenceCallback) commo
 							Ref:         ref("k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"),
 						},
 					},
+					"credentials": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Credentials is a reference to the credentials object to use",
+							Ref:         ref("github.com/appvia/kore/pkg/apis/core/v1.Ownership"),
+						},
+					},
 				},
-				Required: []string{"kind", "plan", "configuration"},
+				Required: []string{"kind", "plan", "configuration", "credentials"},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"},
+			"github.com/appvia/kore/pkg/apis/core/v1.Ownership", "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"},
 	}
 }
 

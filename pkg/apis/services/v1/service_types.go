@@ -39,6 +39,9 @@ type ServiceSpec struct {
 	// This will provide a simple interface to calculate diffs between plan and service configuration
 	// +kubebuilder:validation:Type=object
 	Configuration apiextv1.JSON `json:"configuration"`
+	// Credentials is a reference to the credentials object to use
+	// +kubebuilder:validation:Optional
+	Credentials corev1.Ownership `json:"credentials"`
 }
 
 // ServiceStatus defines the observed state of a service
@@ -67,6 +70,17 @@ type Service struct {
 
 	Spec   ServiceSpec   `json:"spec,omitempty"`
 	Status ServiceStatus `json:"status,omitempty"`
+}
+
+// Ownership creates an Ownership object
+func (s *Service) Ownership() corev1.Ownership {
+	return corev1.Ownership{
+		Group:     GroupVersion.Group,
+		Version:   GroupVersion.Version,
+		Kind:      "Service",
+		Namespace: s.Namespace,
+		Name:      s.Name,
+	}
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -5732,6 +5732,32 @@ spec:
                 service configuration
               type: object
               x-kubernetes-preserve-unknown-fields: true
+            credentials:
+              description: Credentials is a reference to the credentials object to
+                use
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
             kind:
               description: Kind refers to the service type
               minLength: 1

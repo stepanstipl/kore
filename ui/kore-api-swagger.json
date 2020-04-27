@@ -5389,11 +5389,15 @@
       "required": [
         "kind",
         "plan",
-        "configuration"
+        "configuration",
+        "credentials"
       ],
       "properties": {
         "configuration": {
           "type": "string"
+        },
+        "credentials": {
+          "$ref": "#/definitions/v1.Ownership"
         },
         "kind": {
           "type": "string"

@@ -21,6 +21,10 @@ type V1ServiceSpec struct {
 	// Required: true
 	Configuration *string `json:"configuration"`
 
+	// credentials
+	// Required: true
+	Credentials *V1Ownership `json:"credentials"`
+
 	// kind
 	// Required: true
 	Kind *string `json:"kind"`
@@ -35,6 +39,10 @@ func (m *V1ServiceSpec) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateConfiguration(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateCredentials(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -56,6 +64,24 @@ func (m *V1ServiceSpec) validateConfiguration(formats strfmt.Registry) error {
 
 	if err := validate.Required("configuration", "body", m.Configuration); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (m *V1ServiceSpec) validateCredentials(formats strfmt.Registry) error {
+
+	if err := validate.Required("credentials", "body", m.Credentials); err != nil {
+		return err
+	}
+
+	if m.Credentials != nil {
+		if err := m.Credentials.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("credentials")
+			}
+			return err
+		}
 	}
 
 	return nil

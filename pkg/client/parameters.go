@@ -16,23 +16,18 @@
 
 package client
 
-import "errors"
-
-var (
-	// ErrMissingParamValue indicates a value is missing from the param
-	ErrMissingParamValue = errors.New("missing parameter value")
-	// ErrMissingParamName indicates the path or name is missing
-	ErrMissingParamName = errors.New("missing a parameter path or name")
+import (
+	"fmt"
 )
 
 // PathParameters creates and returns a path param
-func PathParmeter(path, value string) ParameterFunc {
+func PathParameter(path, value string) ParameterFunc {
 	return func() (Parameter, error) {
 		if path == "" {
-			return Parameter{}, ErrMissingParamValue
+			panic("path parameter name can not be empty")
 		}
 		if value == "" {
-			return Parameter{}, ErrMissingParamValue
+			panic(fmt.Errorf("%q path parameter can not be empty", path))
 		}
 
 		return Parameter{
@@ -47,7 +42,7 @@ func PathParmeter(path, value string) ParameterFunc {
 func QueryParameter(name, value string) ParameterFunc {
 	return func() (Parameter, error) {
 		if name == "" {
-			return Parameter{}, ErrMissingParamValue
+			return Parameter{}, fmt.Errorf("%s query parameter not be empty", name)
 		}
 
 		return Parameter{

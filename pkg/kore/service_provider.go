@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"strings"
 
+	"k8s.io/apimachinery/pkg/runtime/schema"
+
 	log "github.com/sirupsen/logrus"
 
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
@@ -45,6 +47,8 @@ type ServiceProvider interface {
 	Reconcile(context.Context, log.FieldLogger, *servicesv1.Service) (reconcile.Result, error)
 	// Delete will delete the service
 	Delete(context.Context, log.FieldLogger, *servicesv1.Service) (reconcile.Result, error)
+	// RequiredCredentialTypes returns with the required credential types
+	RequiredCredentialTypes(kind string) []schema.GroupVersionKind
 }
 
 type ServiceProviderRegistry struct {

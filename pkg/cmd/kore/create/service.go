@@ -24,6 +24,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/appvia/kore/pkg/client"
+
+	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
+
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/cmd/errors"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
@@ -57,6 +61,8 @@ type CreateServiceOptions struct {
 	cmdutil.Factory
 	// Name is the name of the service
 	Name string
+	// Credentials is the credentials allocation to build the cluster off
+	Credentials string
 	// Description is a description of the service
 	Description string
 	// Plan is the plan to build the service off
@@ -84,6 +90,7 @@ func NewCmdCreateService(factory cmdutil.Factory) *cobra.Command {
 	}
 
 	flags := command.Flags()
+	flags.StringVarP(&o.Credentials, "credentials", "c", "", "name of the credentials allocation to use for this service `NAME`")
 	flags.StringVarP(&o.Plan, "plan", "p", "", "plan which this service will be templated from `NAME`")
 	flags.StringVarP(&o.Description, "description", "d", "", "a short description for the service `DESCRIPTION`")
 	flags.StringSliceVar(&o.PlanParams, "param", []string{}, "preprovision a collection namespaces on this service as well `NAMES`")
@@ -183,6 +190,11 @@ func (o *CreateServiceOptions) CreateServiceConfiguration() (*servicesv1.Service
 		return nil, fmt.Errorf("failed to process service configuration: %s", err)
 	}
 
+	credentials, err := o.GetCredentialsAllocation()
+	if err != nil {
+		return nil, err
+	}
+
 	service := &servicesv1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -196,6 +208,7 @@ func (o *CreateServiceOptions) CreateServiceConfiguration() (*servicesv1.Service
 			Kind:          plan.Spec.Kind,
 			Plan:          plan.Name,
 			Configuration: apiexts.JSON{Raw: cc.Bytes()},
+			Credentials:   credentials.Spec.Resource,
 		},
 	}
 
@@ -233,4 +246,27 @@ func (o *CreateServiceOptions) GetPlan() (*servicesv1.ServicePlan, error) {
 		Result(plan).
 		Get().
 		Error()
+}
+
+// GetAllocation retrieves the requested allocation
+func (o *CreateServiceOptions) GetCredentialsAllocation() (*configv1.Allocation, error) {
+	allocation := &configv1.Allocation{}
+
+	if o.Credentials == "" {
+		return allocation, nil
+	}
+
+	err := o.ClientWithTeamResource(o.Team, o.Resources().MustLookup("allocation")).
+		Name(o.Credentials).
+		Result(allocation).
+		Get().
+		Error()
+	if err != nil {
+		if client.IsNotFound(err) {
+			return nil, fmt.Errorf("credentials allocation %q does not exist", o.Credentials)
+		}
+		return nil, err
+	}
+
+	return allocation, nil
 }
