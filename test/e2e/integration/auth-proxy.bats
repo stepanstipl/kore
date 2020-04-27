@@ -53,7 +53,7 @@ setup() {
   if ! ${KORE} get clusters ${CLUSTER} -t ${TEAM} -o yaml | grep 1.1.1.1; then
     runit "${KUBECTL} --context=${CLUSTER} get nodes"
     [[ "$status" -eq 0 ]]
-    runit "${KORE} alpha patch clusters ${CLUSTER} spec.configuration.authProxyAllowedIPs.0 1.1.1.1/32 -t ${TEAM}
+    runit "${KORE} alpha patch clusters ${CLUSTER} spec.configuration.authProxyAllowedIPs.0 1.1.1.1/32 -t ${TEAM}"
     [[ "$status" -eq 0 ]]
   fi
   retry 10 "${KUBECTL} --context=${CLUSTER} get nodes 2>&1 | grep '^Error from server (Forbidden)'"
@@ -61,7 +61,7 @@ setup() {
 }
 
 @test "If we revert the allowed network range back, we should see the cluster again" {
-  runit "${KORE} alpha patch clusters ${CLUSTER} spec.configuration.authProxyAllowedIPs.0 0.0.0.0/0 -t ${TEAM}
+  runit "${KORE} alpha patch clusters ${CLUSTER} spec.configuration.authProxyAllowedIPs.0 0.0.0.0/0 -t ${TEAM}"
   [[ "$status" -eq 0 ]]
   retry 10 "${KUBECTL} --context=${CLUSTER} get nodes 2>&1"
   [[ "$status" -eq 0 ]]
