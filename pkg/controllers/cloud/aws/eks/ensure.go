@@ -146,7 +146,7 @@ func (t *eksCtrl) EnsureCluster(client *aws.Client, cluster *eks.EKS) controller
 			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
 		}
 
-		// @step: has the desired state drited from the current
+		// @step: has the desired state drifted from the current
 		needupdate, err := client.Update(ctx)
 		if err != nil {
 			logger.WithError(err).Error("trying check or perform an update on the eks cluster")
