@@ -1,89 +1,20 @@
 import React from 'react'
-import PropTypes from 'prop-types'
 import Link from 'next/link'
-import { Typography, Card, Alert, Divider, Radio, List, Icon, Tooltip, Steps, Button, Row, Col, Modal , Drawer, Form, Input, Popover, Result } from 'antd'
+import { Typography, Card, Alert, Divider, Tooltip, Radio, List, Icon, Steps, Button, Row, Col, Modal , Drawer, Form, Input, Popover, Result } from 'antd'
 const { Title, Text, Paragraph } = Typography
 const { Step } = Steps
 
 import copy from '../../../../lib/utils/object-copy'
 import canonical from '../../../../lib/utils/canonical'
 import KoreApi from '../../../../lib/kore-api'
-import GCPOrganizationsList from '../../../../lib/components/configure/GCPOrganizationsList'
 import GKECredentialsList from '../../../../lib/components/configure/GKECredentialsList'
 import PlanList from '../../../../lib/components/configure/PlanList'
 import PlanViewer from '../../../../lib/components/configure/PlanViewer'
 import CloudSelector from '../../../../lib/components/cluster-build/CloudSelector'
-import FormErrorMessage from '../../../../lib/components/forms/FormErrorMessage'
 
-class ProjectForm extends React.Component {
-  static propTypes = {
-    form: PropTypes.object.isRequired,
-    handleSubmit: PropTypes.func.isRequired,
-    handleCancel: PropTypes.func.isRequired,
-  }
-
-  state = {
-    submitting: false,
-    formErrorMessage: false
-  }
-
-  handleSubmit = (e) => {
-    e.preventDefault()
-    this.setState({ submitting: true })
-    this.props.form.validateFields((err, values) => {
-      if (err) {
-        this.setState({ submitting: false, formErrorMessage: 'Validation failed' })
-        return
-      }
-      this.props.handleSubmit(values)
-    })
-  }
-
-  fieldError = fieldKey => this.props.form.isFieldTouched(fieldKey) && this.props.form.getFieldError(fieldKey)
-
-  render() {
-    const { getFieldDecorator } = this.props.form
-    const formConfig = {
-      layout: 'horizontal',
-      labelAlign: 'left',
-      hideRequiredMark: true,
-      labelCol: { span: 8 },
-      wrapperCol: { span: 16 }
-    }
-    return (
-      <>
-        <FormErrorMessage message={this.state.formErrorMessage} />
-        <Form { ...formConfig } onSubmit={this.handleSubmit}>
-          <Form.Item label="Title" help={this.fieldError('title') || ''}>
-            {getFieldDecorator('title', { rules: [{ required: true, message: 'Please enter the title!' }] })(
-              <Input placeholder="Title" />
-            )}
-          </Form.Item>
-          <Form.Item label="Description" help={this.fieldError('description') || ''}>
-            {getFieldDecorator('description', { rules: [{ required: true, message: 'Please enter the description!' }] })(
-              <Input placeholder="Description" />
-            )}
-          </Form.Item>
-          <Form.Item label="Prefix" help={this.fieldError('prefix') || 'The project ID prefix'}>
-            {getFieldDecorator('prefix', { initialValue: 'kore' })(
-              <Input placeholder="Prefix" />
-            )}
-          </Form.Item>
-          <Form.Item label="Suffix" help={this.fieldError('suffix') || 'The project ID suffix'}>
-            {getFieldDecorator('suffix', { rules: [{ required: true, message: 'Please enter the suffix!' }] })(
-              <Input placeholder="Suffix" />
-            )}
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit" loading={this.state.submitting}>Save</Button>
-            <Button type="link" onClick={this.props.handleCancel}>Cancel</Button>
-          </Form.Item>
-        </Form>
-      </>
-    )
-  }
-}
-const WrappedProjectForm = Form.create({ name: 'project_form' })(ProjectForm)
+// prototype components
+import GCPOrganizationsList from '../../../../lib/prototype/components/credentials/GCPOrganizationsList'
+import AutomatedProjectForm from '../../../../lib/prototype/components/configure/AutomatedProjectForm'
 
 class CloudAccessPage extends React.Component {
 
@@ -306,15 +237,15 @@ class CloudAccessPage extends React.Component {
           <Card>
 
             <div style={{ marginBottom: '15px' }}>
-              <Paragraph style={{ fontSize: '16px', fontWeight: '600' }}>How do you want Kore to integrate with GCP projects?</Paragraph>
+              <Paragraph style={{ fontSize: '16px', fontWeight: '600' }}>How do you want Kore teams to integrate with GCP projects?</Paragraph>
               <Radio.Group onChange={this.selectGcpManagementType} value={gcpManagementType} disabled={stepsKoreManagedComplete || stepsExistingComplete}>
                 <Radio value={'KORE'} style={{ marginRight: '20px' }}>
-                  <Text style={{ fontSize: '16px', fontWeight: '600' }}>Kore managed <Text type="secondary">(recommended)</Text></Text>
-                  <Paragraph style={{ marginLeft: '24px', marginBottom: '0' }}>Kore will manage the lifecycle of GCP projects along with Kore teams</Paragraph>
+                  <Text style={{ fontSize: '16px', fontWeight: '600' }}>Kore managed projects <Text type="secondary">(recommended)</Text></Text>
+                  <Paragraph style={{ marginLeft: '24px', marginBottom: '0' }}>Kore will manage the GCP projects required for teams and their clusters</Paragraph>
                 </Radio>
                 <Radio value={'EXTERNAL'}>
-                  <Text style={{ fontSize: '16px', fontWeight: '600' }}>Use existing</Text>
-                  <Paragraph style={{ marginLeft: '24px', marginBottom: '0' }}>Kore will use existing GCP projects that it&apos;s given access to</Paragraph>
+                  <Text style={{ fontSize: '16px', fontWeight: '600' }}>Use existing projects</Text>
+                  <Paragraph style={{ marginLeft: '24px', marginBottom: '0' }}>Kore teams will use existing GCP projects that it&apos;s given access to</Paragraph>
                 </Radio>
               </Radio.Group>
             </div>
@@ -465,7 +396,7 @@ class CloudAccessPage extends React.Component {
 
                                           <Popover
                                             content={this.associatePlanContent(project.code)}
-                                            title={`${project.title}: associate plans`}
+                                            title={`${project.title}: Associate plans`}
                                             trigger="click"
                                             visible={associatePlanVisible === project.code}
                                             onVisibleChange={this.handleAssociatePlanVisibleChange(project.code)}
@@ -487,7 +418,7 @@ class CloudAccessPage extends React.Component {
                                 onClose={this.addProject(false)}
                                 width={700}
                               >
-                                <WrappedProjectForm handleSubmit={this.handleProjectAdded} handleCancel={this.addProject(false)} />
+                                <AutomatedProjectForm handleSubmit={this.handleProjectAdded} handleCancel={this.addProject(false)} />
                               </Drawer>
                             ) : null}
                           </>
