@@ -101,3 +101,11 @@ setup() {
   runit "${KUBECTL} --context=${CLUSTER} get psp eks.privileged"
   [[ "$status" -eq 0 ]]
 }
+
+@test "We should see the number of nodes change when I update the desired state" {
+  runit "${KORE} alpha patch cluster ${CLUSTER} spec.nodeGroups.0.desiredSize 2"
+  [[ "$status" -eq 0 ]]
+  retry 60 "${KUBECTL} --context=${CLUSTER} get nodes --no-headers | grep Ready | wc -l | grep 2"
+  [[ "$status" -eq 0 ]]
+}
+
