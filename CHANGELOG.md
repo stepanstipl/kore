@@ -1,43 +1,106 @@
-## Release v0.1.0 - 2020-04-24
-## Added
-add check for release notes (and generator) ([e8cc014](https://github.com/appvia/kore/commit/e8cc0140a6e662bac6679f795a68d495e44ad19b))
-- fixing the documentation ([49771ad](https://github.com/appvia/kore/commit/49771ad8924db686727a0586ad01548de1cd79ad))
-- fixing the linting issue ([10ddc90](https://github.com/appvia/kore/commit/10ddc9022875960c1ba37744d7e576d29147641f))
-- adding the ability to delete as well ([458f2eb](https://github.com/appvia/kore/commit/458f2eb5f9b5ff0526343c75699293fa5d7c322d))
-- fixing up the commend on the method ([743bd7d](https://github.com/appvia/kore/commit/743bd7de15d582224ac4e7a2b22a91460e6a7153))
-- fixing up what was highlighted in the review ([4e6958b](https://github.com/appvia/kore/commit/4e6958b75981a207a6998495504a159def0069c0))
-- fixing the linting issue ([0ac2dae](https://github.com/appvia/kore/commit/0ac2daea5163007d53b3283cb978fdee0a1e4eb7))
-- fixing the wording ([b0805f2](https://github.com/appvia/kore/commit/b0805f2d4b0da96a0992a823b79ce5a6a613fb3f))
-- taking the opportunity to use sjson instead and adding some examples ([24ca17a](https://github.com/appvia/kore/commit/24ca17a67ab974340b1731a5f28a9ecd0142e5e9))
-- fixing the parsing of the parameter as json was failing ([c722a20](https://github.com/appvia/kore/commit/c722a20f1c2979f468f8634cfec22643c892ac35))
-- updating the path to the kore configuration file ([c0addb9](https://github.com/appvia/kore/commit/c0addb9b879cea3ee6bef5ffab49f0e9865823d1))
-Handle validation errors in kore ([81a23d2](https://github.com/appvia/kore/commit/81a23d253920786fe02e99912cfe2d7fa03a97d1))
-When logging in with Kore, start to callback http server on localhost, to avoid firewall warnings ([773b9c3](https://github.com/appvia/kore/commit/773b9c3693de0080c967b869df9f20a2bae9f4e6))
-Refactor Kore CLI to create an API client from a resource ([2e255e9](https://github.com/appvia/kore/commit/2e255e9f9f1e161785eef95e64ea15b3101ef17e))
-- testing out on the branch ([2e5b2ac](https://github.com/appvia/kore/commit/2e5b2acadea733c9fd51ea6f036458d6414262de))
-The deployment wasn't changing, fixing up so we always use the sha1 ([38837c5](https://github.com/appvia/kore/commit/38837c57676df17f22989e2f998d96bbb98fe843))
-- fixing up the review comments ([4a4c0ec](https://github.com/appvia/kore/commit/4a4c0ec129ce2a14e938028950ced8edbf855c4d))
-UI end-to-end testing ([1810498](https://github.com/appvia/kore/commit/1810498aaaae24f5f49323010f4802b67485d4de))
-- fixing up the references in the UI ([38b1105](https://github.com/appvia/kore/commit/38b11055122ea87a723b971f1709ec5427011de7))
-- fixing up the auth-proxy check ([0eb9a78](https://github.com/appvia/kore/commit/0eb9a78b3e511959f876676cf1d1ae2a0a84d26d))
-Fixing incorrect plan description on AWS cloud config ([2c463e0](https://github.com/appvia/kore/commit/2c463e07eb5424a622813fe261403e897321b9d8))
-- fixing the check as it was being skipped due to the order ([5e3c546](https://github.com/appvia/kore/commit/5e3c54607af8911a80841788238fdc82df561aea))
-- changing all the references in kore command ([d7ad029](https://github.com/appvia/kore/commit/d7ad029e5fb2bda926534b69bb2c68930196eee6))
-- removing all the references to viewer ([ed78716](https://github.com/appvia/kore/commit/ed7871694dbcd09b34ceadf645123cb20b72eea0))
-- dropping the team role paramater and defaulting to use of the plan params ([3adab96](https://github.com/appvia/kore/commit/3adab96cba1958f6660f9ca8f320b38ca4bb7ad7))
-Add and edit plans ([cc84693](https://github.com/appvia/kore/commit/cc846932812b81b0d5762f37703086cfce6421b4))
-- fixing up the routes in the UI ([7fc5fa8](https://github.com/appvia/kore/commit/7fc5fa81fe62bf7056fdeb75c7f082d7d8cdae88))
-- fixing up the plans to the view role ([140567b](https://github.com/appvia/kore/commit/140567b113f2cda3b44c673a5239c721c01fc691))
-- using a single printer ([bd0c339](https://github.com/appvia/kore/commit/bd0c3390fcedd2ba81b79b704d751a46ebe72d48))
-- fixing up the error being thrown ([a35f8a4](https://github.com/appvia/kore/commit/a35f8a4487f73f2bdb5754b3beadb83bccdfb3f9))
-- fixing the wording ([6796c60](https://github.com/appvia/kore/commit/6796c608b4b326b3eb5fc5f7a52de1de2215b60a))
-- fixing the check on the all flag ([d13b9db](https://github.com/appvia/kore/commit/d13b9db7ed5163a08dcb4750ebc9d294a4f6bc3e))
-- updaing the swagger apiclient ([9984af8](https://github.com/appvia/kore/commit/9984af8d8776810b7fb5d5042fe241ba5b3ee1f9))
-- fixing up the audit to be a plural ([0be1c92](https://github.com/appvia/kore/commit/0be1c92c1af79d5d2c55f280ddcd3d1c52ed2a29))
-- adding the get audit command ([c60cd6c](https://github.com/appvia/kore/commit/c60cd6c26ff9b9e34e6722d2796ae6690d0a23bd))
-- fixing a bug in the api client ([acda2bb](https://github.com/appvia/kore/commit/acda2bb20d2b24ca865d23e9e55b7cea8adcc692))
+## Release v0.1.0 - 2020-04-27
 
+The first beta release of Kore delivers the following key themes:
+- Added GCP Projects for teams (CLI & UI).
+- Single account EKS support.
+- Clusters by Plans only. Ability for operators to control the shape of the plans which teams consume.
+- A formalized release process for Kore.
+- The addition of a team audit trail of operations, view-able from CLI and UI.
+- A new CLI - `kore`.
 
+### Added
+
+- **GCP Projects for teams (CLI & UI)**
+    - GCP Projects [PR #327](https://github.com/appvia/kore/pull/327)
+    - GCP Organization Credentials Verification [PR #457](https://github.com/appvia/kore/pull/457)
+    - GCP IAM Permissions Check [PR #368](https://github.com/appvia/kore/pull/368)
+- **EKS Support**
+    - Basic EKS Cluster Support [#348](https://github.com/appvia/kore/issues/348)
+    - Add EKS Cluster Build support in the UI [#402](https://github.com/appvia/kore/issues/402)
+- **Plans and Policies**
+    - limit cluster creation to be only available via a plan [#343](https://github.com/appvia/kore/issues/343)
+    - As a kore admin be able to get, create, update plans in the UI [#442](https://github.com/appvia/kore/issues/442)
+    - Be able to edit an existing cluster configuration once it's built [#567](https://github.com/appvia/kore/issues/567)
+    - Create plan policies associated with teams and plans [#536](https://github.com/appvia/kore/issues/536)
+    - View cluster plans [#420](https://github.com/appvia/kore/issues/420)
+    - Cluster Deployment from Plans [#346](https://github.com/appvia/kore/issues/346)
+- **Audit**
+    - Improved Auditing [PR #331](https://github.com/appvia/kore/pull/331)
+- **Stable Kore Releases**
+    - A release process for kore [#345](https://github.com/appvia/kore/issues/345)
+    - Testing: Create basic infrastructure in which we can produce API-level tests [#334](https://github.com/appvia/kore/issues/334)
+- **Kore CLI**
+    - Add 'local' command to kore cli [#590](https://github.com/appvia/kore/issues/590)
+    - Tab Completion of Resource [#640](https://github.com/appvia/kore/issues/640)
+    - Stop building korectl [#636](https://github.com/appvia/kore/issues/636)
+    - Korectl Bash Autocompletion [#424](https://github.com/appvia/kore/issues/424)
+
+- **Other Additions**
+    - UI: See detailed status of a cluster and its underlying objects [#494](https://github.com/appvia/kore/issues/494)
+    - UI: Allow deletion of a cluster in failed state [#493](https://github.com/appvia/kore/issues/493)
+    - have a way of knowing how and where to authenticate to when i have a cluster [#341](https://github.com/appvia/kore/issues/341)
+    - Know the API endpoint for `kore` via the UI [#443](https://github.com/appvia/kore/issues/443)
+    - remove alpha from kore local documentation [#687](https://github.com/appvia/kore/issues/687)
+    - make the version displayed at the bottom of every page discretely [#686](https://github.com/appvia/kore/issues/686)
+    - Create & Delete Admin [PR #483](https://github.com/appvia/kore/pull/483)
+    - Korectl Cluster Kubeconfig [#444](https://github.com/appvia/kore/issues/444)
+    - GKE Kubernetes Version [PR #462](https://github.com/appvia/kore/pull/462)
+    - as an owner of a team i want to be able to delete my team [#430](https://github.com/appvia/kore/issues/430)
+    - Apply From Stdin [#408](https://github.com/appvia/kore/issues/408)
+    - invite an admin user to kore  [#360](https://github.com/appvia/kore/issues/360)
+    - promote a user to be an admin of kore [#359](https://github.com/appvia/kore/issues/359)
+
+### Changes
+- Rename API endpoint ekss/ to eks/ to match other resources [#675](https://github.com/appvia/kore/issues/675)
+- As a kore administrator I expect to be able to deploy kore using helm with a URL [#624](https://github.com/appvia/kore/issues/624)
+
+### Fixes
+- Store Client hiding errors [#671](https://github.com/appvia/kore/issues/671)
+- Kubernetes Deletion Bug [#655](https://github.com/appvia/kore/issues/655)
+- Team Deletion Bug [#654](https://github.com/appvia/kore/issues/654)
+- Always check on the team API endpoints whether a team exists [PR #651](https://github.com/appvia/kore/pull/651)
+- Handle validation errors in kore [PR #637](https://github.com/appvia/kore/pull/637)
+- EKS resource type doesn't work in the `kore` CLI [#607](https://github.com/appvia/kore/issues/607)
+- Create/delete admin is broken in the `kore` CLI [#606](https://github.com/appvia/kore/issues/606)
+- Handle trailing slashes for kore profile configure command [#638](https://github.com/appvia/kore/issues/638)
+- Oauth Redirect URL Bug Fix [PR #490](https://github.com/appvia/kore/pull/490)
+- Helm Chart HMAC  [#476](https://github.com/appvia/kore/issues/476)
+- Fix Max Attempts on Resource Waits [PR #452](https://github.com/appvia/kore/pull/452)
+- Deleting GKE before Cluster Fix [PR #435](https://github.com/appvia/kore/pull/435)
+- Controller Runtime Client GVK [PR #434](https://github.com/appvia/kore/pull/434)
+- Fix namespace claim wait [PR #431](https://github.com/appvia/kore/pull/431)
+- GKE Bootstrap Fix [PR #454](https://github.com/appvia/kore/pull/454)
+- Team Removal with Clusters Bug [PR #426](https://github.com/appvia/kore/pull/426)
+- Namespace required when setting Allocation via API [#417](https://github.com/appvia/kore/issues/417)
+- Fix Cloud Provider failing state [PR #407](https://github.com/appvia/kore/pull/407)
+- fix invalid gke status when no credentials [PR #405](https://github.com/appvia/kore/pull/405)
+- Fix invalid status for GKE nodes [#404](https://github.com/appvia/kore/issues/404)
+- Make relevant audit visible to the correct personas [#299](https://github.com/appvia/kore/issues/299)
+- korectl cls auth doesn't give any context help [#296](https://github.com/appvia/kore/issues/296)
+- korectl cls auth on it's own gives 404 [#295](https://github.com/appvia/kore/issues/295)
+- Use the refresh token to refresh expired credentials [PR #325](https://github.com/appvia/kore/pull/325)
+- When creating a team with an invalid name, it returns 500 [#367](https://github.com/appvia/kore/issues/367)
+
+### Other
+- Examples use different teams and invalid plans which make them hard to use [#633](https://github.com/appvia/kore/issues/633)
+- Kubernetes Images [PR #463](https://github.com/appvia/kore/pull/463)
+- Default Option Value [PR #428](https://github.com/appvia/kore/pull/428)
+- Add kubernetes resource config, clean up custom path override logic [PR #414](https://github.com/appvia/kore/pull/414)
+- Makefile Images Stage Fix [PR #409](https://github.com/appvia/kore/pull/409)
+- Kore Admin Delete Check [PR #397](https://github.com/appvia/kore/pull/397)
+- Enable simple kore UI releases with kore [#389](https://github.com/appvia/kore/issues/389)
+- Auto Generated Resources  [PR #388](https://github.com/appvia/kore/pull/388)
+- CLI Cleanup & Resource Waits [PR #386](https://github.com/appvia/kore/pull/386)
+- Fix deepcopy-gen [PR #383](https://github.com/appvia/kore/pull/383)
+- JSONPath Dependency [PR #382](https://github.com/appvia/kore/pull/382)
+- WhoAmI Command Rendering Fix [PR #381](https://github.com/appvia/kore/pull/381)
+- Team Name Regex [PR #375](https://github.com/appvia/kore/pull/375)
+- Long Description Format [PR #374](https://github.com/appvia/kore/pull/374)
+- Profile Delete Command [PR #373](https://github.com/appvia/kore/pull/373)
+- Potential Segmentation Fault [PR #370](https://github.com/appvia/kore/pull/370)
+- UI Endpoint [PR #353](https://github.com/appvia/kore/pull/353)
+- Enable APIs [PR #349](https://github.com/appvia/kore/pull/349)
+- Logrus Caller Report  [#330](https://github.com/appvia/kore/issues/330)
 
 ## Release v0.0.23 - 2020-04-16
 This release targets being able to use Kore to create, manage and destroy EKS Kubernetes clusters in AWS, with

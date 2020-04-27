@@ -460,42 +460,44 @@ func writeReleaseLog() {
 	}()
 
 	writeLine(nf, fmt.Sprintf(ReleasePrefixFmt+" - %s", newTag, todayFormated))
+	// TODO: make this a thing not just some bits
+	fmt.Printf("Manually run the following:\n./hack/build/tools/github-issues/main.go %s", newTag)
 
-	if len(features) > 0 {
-		writeLine(nf, "## Added")
-		for _, message := range features {
-			writeLine(nf, message)
-		}
-		//write a empty line
-		writeLine(nf, "")
-	}
+	/* 	if len(features) > 0 {
+	   		writeLine(nf, "## Added")
+	   		for _, message := range features {
+	   			writeLine(nf, message)
+	   		}
+	   		//write a empty line
+	   		writeLine(nf, "")
+	   	}
 
-	if len(fixes) > 0 {
-		writeLine(nf, "## Fix")
-		for _, message := range fixes {
-			writeLine(nf, message)
-		}
-		//write a empty line
-		writeLine(nf, "")
-	}
+	   	if len(fixes) > 0 {
+	   		writeLine(nf, "## Fix")
+	   		for _, message := range fixes {
+	   			writeLine(nf, message)
+	   		}
+	   		//write a empty line
+	   		writeLine(nf, "")
+	   	}
 
-	if len(chores) > 0 {
-		writeLine(nf, "## Chore")
-		for _, message := range chores {
-			writeLine(nf, message)
-		}
-		//write a empty line
-		writeLine(nf, "")
-	}
-	if len(oldContents) > 0 {
-		//write empty lines
-		writeLine(nf, "")
-		writeLine(nf, "")
-		for _, line := range oldContents {
-			writeLine(nf, line)
-		}
-	}
-
+	   	if len(chores) > 0 {
+	   		writeLine(nf, "## Chore")
+	   		for _, message := range chores {
+	   			writeLine(nf, message)
+	   		}
+	   		//write a empty line
+	   		writeLine(nf, "")
+	   	}
+	   	if len(oldContents) > 0 {
+	   		//write empty lines
+	   		writeLine(nf, "")
+	   		writeLine(nf, "")
+	   		for _, line := range oldContents {
+	   			writeLine(nf, line)
+	   		}
+	   	}
+	*/
 	fmt.Println("----------Release Log----------")
 	fmt.Println("File: " + outputPath)
 	fmt.Println("-------------------------------")
