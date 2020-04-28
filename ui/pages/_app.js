@@ -84,7 +84,7 @@ class MyApp extends App {
       })
     }
     if (Component.getInitialProps) {
-      const initialProps = await Component.getInitialProps({ ...ctx, user })
+      const initialProps = await Component.getInitialProps({ ...ctx, user, config })
       pageProps = { ...pageProps, ...initialProps }
     }
     return { pageProps, user, userTeams, otherTeams, config }

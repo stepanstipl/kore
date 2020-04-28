@@ -52,13 +52,13 @@ class TeamDashboard extends React.Component {
     }
   }
 
-  static async getTeamDetails(ctx) {
+  static async getTeamDetails(ctx, config) {
     const name = ctx.query.name
     const api = await KoreApi.client(ctx)
     const getTeam = () => api.GetTeam(name)
     const getTeamMembers = () => api.ListTeamMembers(name)
     const getTeamClusters = () => api.ListClusters(name)
-    const getTeamServices = () => api.ListServices(name)
+    const getTeamServices = () => config.featureGates['services'] ? api.ListServices(name) : []
     const getNamespaceClaims = () => api.ListNamespaces(name)
     const getAvailable = () => api.ListAllocations(name, true)
 
@@ -72,7 +72,8 @@ class TeamDashboard extends React.Component {
   }
 
   static getInitialProps = async ctx => {
-    const teamDetails = await TeamDashboard.getTeamDetails(ctx)
+    const { config } = ctx
+    const teamDetails = await TeamDashboard.getTeamDetails(ctx, config)
     if (Object.keys(teamDetails.team).length === 0 && ctx.res) {
       /* eslint-disable-next-line require-atomic-updates */
       ctx.res.statusCode = 404

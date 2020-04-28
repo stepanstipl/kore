@@ -158,7 +158,7 @@ describe('App', () => {
         }
         const props = await App.getInitialProps(params)
         expect(params.Component.getInitialProps).toHaveBeenCalledTimes(1)
-        expect(params.Component.getInitialProps).toHaveBeenCalledWith(params.ctx)
+        expect(params.Component.getInitialProps).toHaveBeenCalledWith({ ...params.ctx, config })
         expect(props).toEqual({
           pageProps: { myProp: 'myValue', ...initialProps },
           user,
