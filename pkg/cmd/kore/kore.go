@@ -48,18 +48,18 @@ var (
 // NewKoreCommand creates and returns the kore command
 func NewKoreCommand(streams cmdutil.Streams) (*cobra.Command, error) {
 	// @step: create or read in the client configuration
-	config, err := config.GetOrCreateClientConfiguration()
+	cfg, err := config.GetOrCreateClientConfiguration()
 	if err != nil {
 		return nil, err
 	}
 	// we create an client from the configuration
-	client, err := client.New(config)
+	client, err := client.New(cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	// @step: create a factory for the commands
-	factory, err := cmdutil.NewFactory(client, streams, config)
+	factory, err := cmdutil.NewFactory(client, streams, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -80,16 +80,26 @@ func NewKoreCommand(streams cmdutil.Streams) (*cobra.Command, error) {
 				log.SetLevel(log.TraceLevel)
 			}
 
-			log.WithField("profile", config.CurrentProfile).Debug("running with the selected profile")
+			log.WithField("profile", cfg.CurrentProfile).Debug("running with the selected profile")
 
 			team := cmdutil.GetTeam(cmd)
 			if team != "" {
 				exists, err := factory.ClientWithResource(factory.Resources().MustLookup("team")).Name(team).Exists()
 				if err != nil {
 					factory.Println("Error: %s\n", err)
+					os.Exit(1)
 				}
 				if !exists {
-					factory.Println("Error: team %q does not exist\n", team)
+					// Let's check whether the current profile has a non-existing team and remove it
+					if cfg.GetCurrentProfile().Team == team {
+						factory.Println("Error: team %q does not exist, please update your profile using\n  $ kore profiles set current.team <EXISTING TEAM>", team)
+						cfg.GetCurrentProfile().Team = ""
+						if err := config.UpdateConfig(cfg, config.GetClientConfigurationPath()); err != nil {
+							factory.Println("Error: %s", err)
+						}
+					} else {
+						factory.Println("Error: team %q does not exist\n", team)
+					}
 					os.Exit(1)
 				}
 			}
@@ -98,7 +108,7 @@ func NewKoreCommand(streams cmdutil.Streams) (*cobra.Command, error) {
 
 	flags := root.PersistentFlags()
 	flags.Bool("force", false, "is used to force an operation to happen (defaults: false)")
-	flags.StringP("team", "t", config.GetCurrentProfile().Team, "the team you are operating within")
+	flags.StringP("team", "t", cfg.GetCurrentProfile().Team, "the team you are operating within")
 	flags.StringP("output", "o", "table", "the output format of the resource ("+strings.Join(render.SupportedFormats(), ",")+")")
 	flags.BoolP("no-wait", "", false, "indicates if we should wait for resources to provision")
 	flags.BoolP("show-headers", "", true, "indicates we should display headers on table out (defaults: true)")
