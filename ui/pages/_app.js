@@ -5,7 +5,7 @@ import Router from 'next/router'
 import Link from 'next/link'
 import axios from 'axios'
 import { Layout, Tag } from 'antd'
-const { Header, Content } = Layout
+const { Header, Content, Footer } = Layout
 
 import User from '../lib/components/User'
 import SiderMenu from '../lib/components/SiderMenu'
@@ -199,10 +199,14 @@ class MyApp extends App {
           </Header>
           <Layout hasSider="true">
             <SiderMenu hide={hideSider} isAdmin={isAdmin} userTeams={this.state.userTeams} otherTeams={props.otherTeams}/>
-            <Content style={{ background: '#fff', padding: 24, minHeight: 280 }}>
-              <Component {...this.props.pageProps} user={this.props.user} teamAdded={this.teamAdded} teamRemoved={this.teamRemoved} version={version} />
-              <Paragraph style={{ textAlign: 'center', fontSize: '0.8em', padding: '5px 0 0 0', margin: '15px 0 0 0', borderTop: '1px solid #efefef', color: 'darkgray' }}>Appvia Kore {version}</Paragraph>
-            </Content>
+            <Layout>
+              <Content style={{ background: '#fff', padding: 24 }}>
+                <Component {...this.props.pageProps} user={this.props.user} teamAdded={this.teamAdded} teamRemoved={this.teamRemoved} version={version} />
+              </Content>
+              <Footer className="footer">
+                <Paragraph className="version">Appvia Kore {version}</Paragraph>
+              </Footer>
+            </Layout>
           </Layout>
         </Layout>
       </div>
