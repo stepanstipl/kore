@@ -70,7 +70,7 @@ class PlanList extends ResourceList {
               >
                 <PlanViewer
                   plan={view}
-                  getPlanSchema={async () => await (await KoreApi.client()).GetPlanSchema(view.spec.kind)}
+                  resourceType="cluster"
                 />
               </Drawer>
             ) : null}

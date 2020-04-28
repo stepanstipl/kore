@@ -8,7 +8,6 @@ const { Option } = Select
 import PlanViewer from '../configure/PlanViewer'
 import PlanOptionsForm from '../plans/PlanOptionsForm'
 import { patterns } from '../../utils/validation'
-import KoreApi from '../../kore-api'
 
 class ClusterOptionsForm extends React.Component {
   static propTypes = {
@@ -51,7 +50,7 @@ class ClusterOptionsForm extends React.Component {
         title: (<><Title level={4}>{selectedPlan.spec.description}</Title><Text>{selectedPlan.spec.summary}</Text></>),
         content: <PlanViewer
           plan={selectedPlan}
-          getPlanSchema={async () => await (await KoreApi.client()).GetPlanSchema(selectedPlan.spec.kind)}
+          resourceType="cluster"
         />,
         width: 700,
         onOk() {}

@@ -6,7 +6,6 @@ const { Text, Title } = Typography
 
 import PlanViewer from '../configure/PlanViewer'
 import PlanOptionsForm from '../plans/PlanOptionsForm'
-import KoreApi from '../../kore-api'
 
 class ServiceOptionsForm extends React.Component {
   static propTypes = {
@@ -41,7 +40,7 @@ class ServiceOptionsForm extends React.Component {
         title: (<><Title level={4}>{selectedServicePlan.spec.description}</Title><Text>{selectedServicePlan.spec.summary}</Text></>),
         content: <PlanViewer
           plan={selectedServicePlan}
-          getPlanSchema={async () => await (await KoreApi.client()).GetServicePlanSchema(selectedServicePlan.spec.kind)}
+          resourceType="service"
         />,
         width: 700,
         onOk() {}

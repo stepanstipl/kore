@@ -202,7 +202,7 @@ class CloudAccessPage extends React.Component {
         title: (<><Title level={4}>{plan.spec.description}</Title><Text>{plan.spec.summary}</Text></>),
         content: <PlanViewer
           plan={plan}
-          getPlanSchema={async () => await (await KoreApi.client()).GetServicePlanSchema(plan.spec.kind)}
+          resourceType="cluster"
         />,
         width: 700,
         onOk() {}
