@@ -104,9 +104,8 @@ class ServiceOptionsForm extends React.Component {
             <Collapse.Panel header="Customize service parameters">
               <PlanOptionsForm
                 team={this.props.team}
+                resourceType="service"
                 plan={selectedServicePlan}
-                getPlanDetails={async (team, plan) => await (await KoreApi.client()).GetTeamServicePlanDetails(team, plan)}
-                getPlanConfiguration={(planDetails) => planDetails.servicePlan.configuration}
                 validationErrors={this.props.validationErrors}
                 onPlanChange={this.onServicePlanOverridden}
                 mode="create"

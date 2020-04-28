@@ -183,10 +183,9 @@ class ServicePage extends React.Component {
                   </Form.Item>
                   <PlanOptionsForm
                     team={team}
+                    resourceType="service"
                     plan={service.spec.plan}
                     planValues={this.state.serviceParams}
-                    getPlanDetails={async (team, plan) => await (await KoreApi.client()).GetTeamServicePlanDetails(team, plan)}
-                    getPlanConfiguration={(planDetails) => planDetails.servicePlan.configuration}
                     mode={this.state.editMode ? 'edit' : 'view'}
                     validationErrors={this.state.validationErrors}
                     onPlanChange={this.onServiceConfigChanged}

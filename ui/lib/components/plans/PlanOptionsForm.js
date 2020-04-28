@@ -5,14 +5,14 @@ import { set } from 'lodash'
 
 import copy from '../../utils/object-copy'
 import PlanOption from './PlanOption'
+import KoreApi from '../../kore-api'
 
 class PlanOptionsForm extends React.Component {
   static propTypes = {
     team: PropTypes.object.isRequired,
+    resourceType: PropTypes.oneOf(['cluster', 'service']).isRequired,
     plan: PropTypes.string.isRequired,
     planValues: PropTypes.object,
-    getPlanDetails: PropTypes.func.isRequired,
-    getPlanConfiguration: PropTypes.func.isRequired,
     onPlanChange: PropTypes.func,
     validationErrors: PropTypes.array,
     mode: PropTypes.oneOf(['create','edit','view']).isRequired
@@ -56,13 +56,25 @@ class PlanOptionsForm extends React.Component {
   }
 
   async fetchComponentData() {
-    const planDetails = await this.props.getPlanDetails(this.props.team.metadata.name, this.props.plan)
+    let planDetails, schema, parameterEditable, planValues
+
+    switch (this.props.resourceType) {
+    case 'cluster':
+      planDetails = await (await KoreApi.client()).GetTeamPlanDetails(this.props.team.metadata.name, this.props.plan);
+      [schema, parameterEditable, planValues] = [planDetails.schema, planDetails.parameterEditable, planDetails.plan.configuration]
+      break
+    case 'service':
+      planDetails = await (await KoreApi.client()).GetTeamServicePlanDetails(this.props.team.metadata.name, this.props.plan);
+      [schema, parameterEditable, planValues] = [planDetails.schema, planDetails.parameterEditable, planDetails.servicePlan.configuration]
+      break
+    }
+
     this.setState({
       ...this.state,
-      schema: JSON.parse(planDetails.schema),
-      parameterEditable: planDetails.parameterEditable || {},
+      schema: JSON.parse(schema),
+      parameterEditable: parameterEditable || {},
       // Overwrite plan values only if it's still set to the default value
-      planValues: this.state.planValues === PlanOptionsForm.initialState.planValues ? copy(this.props.getPlanConfiguration(planDetails)) : this.state.planValues,
+      planValues: this.state.planValues === PlanOptionsForm.initialState.planValues ? copy(planValues) : this.state.planValues,
       showReadOnly: this.props.mode === 'view',
       dataLoading: false
     })

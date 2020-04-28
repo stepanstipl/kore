@@ -124,9 +124,8 @@ class ClusterOptionsForm extends React.Component {
             <Collapse.Panel header="Customize cluster parameters">
               <PlanOptionsForm
                 team={this.props.team}
+                resourceType="cluster"
                 plan={selectedPlan}
-                getPlanDetails={async (team, plan) => await (await KoreApi.client()).GetTeamPlanDetails(team, plan)}
-                getPlanConfiguration={(planDetails) => planDetails.plan.configuration}
                 validationErrors={this.props.validationErrors}
                 onPlanChange={this.onPlanOverridden}
                 mode="create"
