@@ -103,14 +103,11 @@ func (a *authInfoConfig) createPrompts() cmdutil.Prompts {
 }
 
 func (a *authInfoConfig) update(c *config.Config) {
-	c.AuthInfos = map[string]*config.AuthInfo{
-		"local": {
-			Token: nil,
-			OIDC: &config.OIDC{
-				ClientID:     a.ClientID,
-				ClientSecret: a.ClientSecret,
-				AuthorizeURL: a.AuthorizeURL,
-			},
+	c.AddAuthInfo("local", &config.AuthInfo{
+		OIDC: &config.OIDC{
+			ClientID:     a.ClientID,
+			ClientSecret: a.ClientSecret,
+			AuthorizeURL: a.AuthorizeURL,
 		},
-	}
+	})
 }
