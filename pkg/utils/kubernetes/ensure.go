@@ -34,7 +34,7 @@ import (
 
 // CheckIfExists checks if a runtime object exist in the api
 func CheckIfExists(ctx context.Context, cc client.Client, object runtime.Object) (bool, error) {
-	return GetIfExists(ctx, cc, object)
+	return GetIfExists(ctx, cc, object.DeepCopyObject())
 }
 
 // GetIfExists retrieves an object if it exists

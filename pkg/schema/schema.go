@@ -17,6 +17,7 @@
 package schema
 
 import (
+	accountsv1beta1 "github.com/appvia/kore/pkg/apis/accounts/v1beta1"
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -42,12 +43,13 @@ func init() {
 	hs = scheme.Scheme
 
 	builder := runtime.NewSchemeBuilder(
-		eksv1alpha1.AddToScheme,
+		accountsv1beta1.AddToScheme,
 		clustersv1.AddToScheme,
 		configv1.AddToScheme,
 		corev1.AddToScheme,
-		gkev1alpha1.AddToScheme,
+		eksv1alpha1.AddToScheme,
 		gcpv1alpha1.AddToScheme,
+		gkev1alpha1.AddToScheme,
 		orgv1.AddToScheme,
 		servicesv1.AddToScheme,
 	)

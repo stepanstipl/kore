@@ -37,6 +37,7 @@ func CopyWithMeta(objIn runtime.Object) (runtime.Object, error) {
 	objCopyMeta.SetName(objInMeta.GetName())
 	objCopyMeta.SetNamespace(objInMeta.GetNamespace())
 	objCopyMeta.SetLabels(objInMeta.GetLabels())
+
 	return objCopy, nil
 }
 
@@ -50,5 +51,24 @@ func GetMeta(obj runtime.Object) (metav1.ObjectMeta, error) {
 	objMeta.Name = accessor.GetName()
 	objMeta.Namespace = accessor.GetNamespace()
 	objMeta.Labels = accessor.GetLabels()
+
 	return objMeta, nil
+}
+
+// GetRuntimeAnnotation returns an annotation from a runtime object
+func GetRuntimeAnnotation(object runtime.Object, name string) string {
+	ma, _ := meta.Accessor(object)
+
+	return ma.GetAnnotations()[name]
+}
+
+// SetRuntimeAnnotation sets an annotation on a runtime object
+func SetRuntimeAnnotation(object runtime.Object, key, value string) {
+	ma, _ := meta.Accessor(object)
+
+	if ma.GetAnnotations() == nil {
+		ma.SetAnnotations(map[string]string{})
+	}
+
+	ma.GetAnnotations()[key] = value
 }

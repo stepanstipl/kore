@@ -24,19 +24,18 @@ import (
 	"reflect"
 	"strings"
 
-	kerrors "k8s.io/apimachinery/pkg/api/errors"
-
-	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
-
-	"github.com/appvia/kore/pkg/kore/assets"
-	"github.com/appvia/kore/pkg/utils/jsonschema"
-
+	accountv1beta1 "github.com/appvia/kore/pkg/apis/accounts/v1beta1"
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
+	"github.com/appvia/kore/pkg/kore/assets"
 	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/store"
+	"github.com/appvia/kore/pkg/utils"
+	"github.com/appvia/kore/pkg/utils/jsonschema"
 	"github.com/appvia/kore/pkg/utils/validation"
 
 	log "github.com/sirupsen/logrus"
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 // Clusters returns the an interface for handling clusters
@@ -119,8 +118,8 @@ func (c *clustersImpl) Get(ctx context.Context, name string) (*clustersv1.Cluste
 		if kerrors.IsNotFound(err) {
 			return nil, ErrNotFound
 		}
+		log.WithError(err).Error("trying to retrieve the cluster")
 
-		log.WithError(err).Error("failed to retrieve the cluster")
 		return nil, err
 	}
 
@@ -129,8 +128,6 @@ func (c *clustersImpl) Get(ctx context.Context, name string) (*clustersv1.Cluste
 
 // Update is used to update the cluster
 func (c *clustersImpl) Update(ctx context.Context, cluster *clustersv1.Cluster) error {
-	// @TODO check whether the user is an admin in the team
-
 	user := authentication.MustGetIdentity(ctx)
 	if !user.IsMember(c.team) && !user.IsGlobalAdmin() {
 		return NewErrNotAllowed("must be global admin or a team member")
@@ -180,15 +177,52 @@ func (c *clustersImpl) Update(ctx context.Context, cluster *clustersv1.Cluster) 
 		return err
 	}
 
+	if err := c.validateAccounting(ctx, cluster); err != nil {
+		return err
+	}
+
 	return c.Store().Client().Update(ctx,
 		store.UpdateOptions.To(cluster),
 		store.UpdateOptions.WithCreate(true),
 	)
 }
 
+// validateAccounting is responsible for checking if accounting is enabled that the cluster is using
+// a valid plan
+func (c *clustersImpl) validateAccounting(ctx context.Context, cluster *clustersv1.Cluster) error {
+	list, err := c.Accounts().List(ctx)
+	if err != nil {
+		return err
+	}
+	if len(list.Items) <= 0 {
+		return nil
+	}
+
+	// @step: does this team having accounts enabled for it
+	allocations, err := c.Teams().Team(c.team).Allocations().ListAllocationsByType(ctx,
+		accountv1beta1.GroupVersion.Group,
+		accountv1beta1.GroupVersion.Version,
+		"Account",
+	)
+	if err != nil {
+		return err
+	}
+	if len(allocations.Items) <= 0 {
+		return nil
+	}
+
+	_, err = c.Accounts().List(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *clustersImpl) validateCredentials(ctx context.Context, cluster *clustersv1.Cluster) error {
 	creds := cluster.Spec.Credentials
 	var alloc configv1.Allocation
+
 	credentialAllocations, err := c.Teams().Team(c.team).Allocations().ListAllocationsByType(
 		ctx, creds.Group, creds.Version, creds.Kind,
 	)
@@ -210,13 +244,13 @@ func (c *clustersImpl) validateCredentials(ctx context.Context, cluster *cluster
 		)
 	}
 
-	expectedKind := fmt.Sprintf("%sCredentials", cluster.Spec.Kind)
-	if !strings.EqualFold(alloc.Spec.Resource.Kind, expectedKind) {
+	supported := []string{"EKSCredentials", "GKECredentials", "AccountManagement"}
+	if !utils.Contains(alloc.Spec.Resource.Kind, supported) {
 		return validation.NewError("cluster has failed validation").WithFieldErrorf(
 			"credentials",
 			validation.InvalidType,
 			"must be %q type",
-			expectedKind,
+			strings.Join(supported, ","),
 		)
 	}
 

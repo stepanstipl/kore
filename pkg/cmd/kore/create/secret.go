@@ -147,7 +147,7 @@ func createSecretFromLiterals(keypairs []string) (*configv1.Secret, error) {
 			return nil, fmt.Errorf("invalid value: %s must conform to: %s", kv, filter)
 		}
 		items := strings.Split(kv, "=")
-		secret.Spec.Data[items[0]] = base64.StdEncoding.EncodeToString([]byte(items[1]))
+		secret.Spec.Data[items[0]] = base64.RawStdEncoding.EncodeToString([]byte(items[1]))
 	}
 
 	return secret, nil
@@ -174,7 +174,7 @@ func createSecretFromFile(keypair string) (*configv1.Secret, error) {
 	return &configv1.Secret{
 		Spec: configv1.SecretSpec{
 			Data: map[string]string{
-				key: base64.StdEncoding.EncodeToString(content),
+				key: base64.RawStdEncoding.EncodeToString(content),
 			},
 		},
 	}, nil
@@ -209,7 +209,7 @@ func createSecretFromEnvironmentFile(path string) (*configv1.Secret, error) {
 
 		e := strings.Split(scanner.Text(), "=")
 
-		secret.Spec.Data[e[0]] = base64.StdEncoding.EncodeToString([]byte(e[1]))
+		secret.Spec.Data[e[0]] = base64.RawStdEncoding.EncodeToString([]byte(e[1]))
 	}
 
 	return secret, nil

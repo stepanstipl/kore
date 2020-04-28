@@ -79,6 +79,8 @@ type Component struct {
 	Message string `json:"message,omitempty"`
 	// Detail is additional details on the error is any
 	Detail string `json:"detail,omitempty"`
+	// Resource is a reference to the resource
+	Resource *Ownership `json:"resource,omitempty"`
 }
 
 func (c *Component) Update(status Status, message, detail string) {

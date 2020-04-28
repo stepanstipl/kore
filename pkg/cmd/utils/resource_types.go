@@ -17,6 +17,7 @@
 package utils
 
 import (
+	accountsv1beta1 "github.com/appvia/kore/pkg/apis/accounts/v1beta1"
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
@@ -29,6 +30,19 @@ import (
 var (
 	// ResourceList is a list of supported resources
 	ResourceList = []Resource{
+		{
+			Name:         "accountmanagement",
+			GroupVersion: accountsv1beta1.GroupVersion.String(),
+			Kind:         "Account",
+			Scope:        GlobalScope,
+			ShortName:    "acc",
+			Printer: []Column{
+				{"Name", "metadata.name", ""},
+				{"Provider", "spec.provider", ""},
+				{"Managed", "spec.managed", ""},
+				{"Age", "metadata.creationTimestamp", "age"},
+			},
+		},
 		{
 			Name:         "allocation",
 			GroupVersion: configv1.GroupVersion.String(),
@@ -236,7 +250,7 @@ var (
 			Scope:        TeamScope,
 			Printer: []Column{
 				{"Name", "metadata.name", ""},
-				{"Organization", "spec.organization.name.", ""},
+				{"Organization", "spec.organization.name", ""},
 				{"Owned By", "spec.organization.namespace", ""},
 				{"Status", "status.status", ""},
 				{"Age", "metadata.creationTimestamp", "age"},

@@ -17,9 +17,6 @@
 package v1alpha1
 
 import (
-	"encoding/json"
-
-	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	core "github.com/appvia/kore/pkg/apis/core/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -90,47 +87,6 @@ type EKSVPC struct {
 
 	Spec   EKSVPCSpec   `json:"spec,omitempty"`
 	Status EKSVPCStatus `json:"status,omitempty"`
-}
-
-// NewEKSVPC creates a new EKSVPC object
-func NewEKSVPC(name, namespace string) *EKSVPC {
-	return &EKSVPC{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "EKSVPC",
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-	}
-}
-
-func (e *EKSVPC) GetStatus() (corev1.Status, string) {
-	return e.Status.Status, ""
-}
-
-func (e *EKSVPC) SetStatus(status corev1.Status) {
-	e.Status.Status = status
-}
-
-func (e *EKSVPC) GetComponents() corev1.Components {
-	return e.Status.Conditions
-}
-
-func (e *EKSVPC) ApplyClusterConfiguration(cluster *clustersv1.Cluster) error {
-	if err := json.Unmarshal(cluster.Spec.Configuration.Raw, &e.Spec); err != nil {
-		return err
-	}
-
-	e.Spec.Cluster = cluster.Ownership()
-	e.Spec.Credentials = cluster.Spec.Credentials
-
-	return nil
-}
-
-func (e *EKSVPC) ComponentDependencies() []string {
-	return nil
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

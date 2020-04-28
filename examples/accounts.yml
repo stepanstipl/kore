@@ -1,0 +1,42 @@
+---
+apiVersion: accounts.kore.appvia.io/v1beta1
+kind: Account
+metadata:
+  name: gke
+spec:
+  provider: GKE
+  managed: true
+  organization:
+    group: gcp.compute.kore.appvia.io
+    version: v1alpha1
+    kind: Organization
+    namespace: kore-admin
+    name: gcp
+  rules:
+    - name: prod
+      plans:
+        - gke-production
+      prefix: kore-
+    - name: dev
+      plans:
+        - gke-development
+      prefix: kore-
+---
+apiVersion: config.kore.appvia.io/v1
+kind: Allocation
+metadata:
+  name: gke-accounts
+spec:
+  # The name of the allocation
+  name: GKE Accounts Provisioning
+  # A short description provided for the UI
+  summary: Provides the details around GCP account provisioning for the team
+  # We reference the above resource when allocating to one or more teams
+  resource:
+    group: accounts.kore.appvia.io
+    version: v1beta1
+    kind: Account
+    namespace: kore-admin
+    name: gke
+  teams:
+    - "*"

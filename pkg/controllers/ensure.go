@@ -14,6 +14,32 @@
  * limitations under the License.
  */
 
-// Package kubernetes provides a controller used to autoprovision bindings for
-// GKE, AWS and EKS clusters
-package cluster
+package controllers
+
+import (
+	"context"
+
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+)
+
+var (
+	DefaultEnsureHandler = EnsureRunner{}
+)
+
+// EnsureRunner provides a wrapper for running ensure funcs
+type EnsureRunner struct{}
+
+// Run is a generic handler for running the ensure methods
+func (e *EnsureRunner) Run(ctx context.Context, ensures []EnsureFunc) (reconcile.Result, error) {
+	for _, x := range ensures {
+		result, err := x(ctx)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		if result.Requeue || result.RequeueAfter > 0 {
+			return result, nil
+		}
+	}
+
+	return reconcile.Result{}, nil
+}

@@ -17,10 +17,6 @@
 package v1alpha1
 
 import (
-	"encoding/json"
-
-	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
-
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -193,44 +189,15 @@ type GKE struct {
 	Status GKEStatus `json:"status,omitempty"`
 }
 
-func NewGKE(name, namespace string) *GKE {
-	return &GKE{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "GKE",
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
+// Ownership returns a owner reference
+func (g *GKE) Ownership() corev1.Ownership {
+	return corev1.Ownership{
+		Group:     GroupVersion.Group,
+		Version:   GroupVersion.Version,
+		Kind:      "GKE",
+		Namespace: g.Namespace,
+		Name:      g.Name,
 	}
-}
-
-func (g *GKE) GetStatus() (corev1.Status, string) {
-	return g.Status.Status, ""
-}
-
-func (g *GKE) SetStatus(status corev1.Status) {
-	g.Status.Status = status
-}
-
-func (g *GKE) GetComponents() corev1.Components {
-	return g.Status.Conditions
-}
-
-func (g *GKE) ApplyClusterConfiguration(cluster *clustersv1.Cluster) error {
-	if err := json.Unmarshal(cluster.Spec.Configuration.Raw, &g.Spec); err != nil {
-		return err
-	}
-
-	g.Spec.Cluster = cluster.Ownership()
-	g.Spec.Credentials = cluster.Spec.Credentials
-
-	return nil
-}
-
-func (g *GKE) ComponentDependencies() []string {
-	return nil
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

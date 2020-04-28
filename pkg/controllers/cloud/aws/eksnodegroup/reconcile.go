@@ -28,12 +28,12 @@ import (
 	aws "github.com/appvia/kore/pkg/utils/cloud/aws"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -103,24 +103,14 @@ func (n *ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 			return reconcile.Result{}, err
 		}
 
-		ensure := []controllers.EnsureFunc{
-			n.EnsureNodeGroupIsPending(resource),
-			n.EnsureClusterReady(resource),
-			n.EnsureNodeRole(resource, creds),
-			n.EnsureNodeGroup(client, resource),
-		}
-
-		for _, handler := range ensure {
-			result, err := handler(ctx)
-			if err != nil {
-				return reconcile.Result{}, err
-			}
-			if result.Requeue || result.RequeueAfter > 0 {
-				return result, nil
-			}
-		}
-
-		return reconcile.Result{}, nil
+		return controllers.DefaultEnsureHandler.Run(ctx,
+			[]controllers.EnsureFunc{
+				n.EnsureNodeGroupIsPending(resource),
+				n.EnsureClusterReady(resource),
+				n.EnsureNodeRole(resource, credentials),
+				n.EnsureNodeGroup(client, resource),
+			},
+		)
 	}()
 	if err != nil {
 		logger.WithError(err).Error("trying to reconcile the eks cluster")

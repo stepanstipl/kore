@@ -17,10 +17,6 @@
 package v1alpha1
 
 import (
-	"encoding/json"
-
-	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
-
 	core "github.com/appvia/kore/pkg/apis/core/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 
@@ -90,52 +86,15 @@ type EKS struct {
 	Status EKSStatus `json:"status,omitempty"`
 }
 
-func NewEKS(name, namespace string) *EKS {
-	return &EKS{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "EKS",
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
+// Ownership returns a owner reference
+func (e *EKS) Ownership() corev1.Ownership {
+	return corev1.Ownership{
+		Group:     GroupVersion.Group,
+		Version:   GroupVersion.Version,
+		Kind:      "EKS",
+		Namespace: e.Namespace,
+		Name:      e.Name,
 	}
-}
-
-func (e *EKS) GetStatus() (corev1.Status, string) {
-	return e.Status.Status, ""
-}
-
-func (e *EKS) SetStatus(status corev1.Status) {
-	e.Status.Status = status
-}
-
-func (e *EKS) GetComponents() corev1.Components {
-	return e.Status.Conditions
-}
-
-func (e *EKS) ApplyClusterConfiguration(cluster *clustersv1.Cluster) error {
-	if err := json.Unmarshal(cluster.Spec.Configuration.Raw, &e.Spec); err != nil {
-		return err
-	}
-
-	e.Spec.Cluster = cluster.Ownership()
-	e.Spec.Credentials = cluster.Spec.Credentials
-
-	return nil
-}
-
-func (e *EKS) ComponentDependencies() []string {
-	return []string{"EKSVPC/"}
-}
-
-func (e *EKS) ApplyEKSVPC(eksvpc *EKSVPC) {
-	e.Spec.Region = eksvpc.Spec.Region
-	e.Spec.SecurityGroupIDs = eksvpc.Status.Infra.SecurityGroupIDs
-	e.Spec.SubnetIDs = nil
-	e.Spec.SubnetIDs = append(e.Spec.SubnetIDs, eksvpc.Status.Infra.PrivateSubnetIDs...)
-	e.Spec.SubnetIDs = append(e.Spec.SubnetIDs, eksvpc.Status.Infra.PublicSubnetIDs...)
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

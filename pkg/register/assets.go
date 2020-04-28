@@ -1,5 +1,6 @@
 // Code generated for package register by go-bindata DO NOT EDIT. (@generated)
 // sources:
+// deploy/crds/accounts.kore.appvia.io_accountmanagement.yaml
 // deploy/crds/apps.kore.appvia.io_appdeployments.yaml
 // deploy/crds/apps.kore.appvia.io_installplans.yaml
 // deploy/crds/aws.compute.kore.appvia.io_eks.yaml
@@ -87,6 +88,173 @@ func (fi bindataFileInfo) IsDir() bool {
 // Sys return file is sys mode
 func (fi bindataFileInfo) Sys() interface{} {
 	return nil
+}
+
+var _crdsAccountsKoreAppviaIo_accountmanagementYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: accountmanagement.accounts.kore.appvia.io
+spec:
+  group: accounts.kore.appvia.io
+  names:
+    kind: AccountManagement
+    listKind: AccountManagementList
+    plural: accountmanagement
+    singular: accountmanagement
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: AccountManagement is the Schema for the accounts API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: AccountManagementSpec defines the desired state of accounting
+            for a provider I've a feeling this will probably need provider specific
+            attributes are some point
+          properties:
+            managed:
+              description: Managed indicates if kore to manage the accounts - is this
+                one actually required???
+              type: boolean
+            organization:
+              description: Organization is the underlying organizational resource
+                (only require if more than one)
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
+            provider:
+              description: Provider is the name of provider which maps to the cluster
+                kind
+              minLength: 1
+              type: string
+            rules:
+              description: Rules is a set of rules for this provider
+              items:
+                description: AccountRule defines a rule for the provider
+                properties:
+                  labels:
+                    additionalProperties:
+                      type: string
+                    description: Labels a collection of labels to apply the account
+                    type: object
+                  name:
+                    description: Name is the given name of the rule
+                    minLength: 1
+                    type: string
+                  plans:
+                    description: Plans is a list of plans permitted
+                    items:
+                      type: string
+                    minItems: 1
+                    type: array
+                    x-kubernetes-list-type: set
+                  prefix:
+                    description: Prefix is a prefix for the account name
+                    type: string
+                  suffix:
+                    description: Suffix is the applied suffix
+                    type: string
+                required:
+                - name
+                - plans
+                type: object
+              type: array
+              x-kubernetes-list-type: set
+          required:
+          - managed
+          - provider
+          type: object
+        status:
+          description: AccountManagementStatus defines the observed state of Allocation
+          properties:
+            conditions:
+              description: Conditions is a collection of potential issues
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+              x-kubernetes-list-type: set
+            status:
+              description: Status is the general status of the resource
+              type: string
+          type: object
+      type: object
+  version: v1beta1
+  versions:
+  - name: v1beta1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsAccountsKoreAppviaIo_accountmanagementYamlBytes() ([]byte, error) {
+	return _crdsAccountsKoreAppviaIo_accountmanagementYaml, nil
+}
+
+func crdsAccountsKoreAppviaIo_accountmanagementYaml() (*asset, error) {
+	bytes, err := crdsAccountsKoreAppviaIo_accountmanagementYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/accounts.kore.appvia.io_accountmanagement.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
 }
 
 var _crdsAppsKoreAppviaIo_appdeploymentsYaml = []byte(`
@@ -832,6 +1000,31 @@ spec:
                   name:
                     description: Name is the name of the component
                     type: string
+                  resource:
+                    description: Resource is a reference to the resource
+                    properties:
+                      group:
+                        description: Group is the api group
+                        type: string
+                      kind:
+                        description: Kind is the name of the resource under the group
+                        type: string
+                      name:
+                        description: Name is name of the resource
+                        type: string
+                      namespace:
+                        description: Namespace is the location of the object
+                        type: string
+                      version:
+                        description: Version is the group version
+                        type: string
+                    required:
+                    - group
+                    - kind
+                    - name
+                    - namespace
+                    - version
+                    type: object
                   status:
                     description: Status is the status of the component
                     type: string
@@ -1190,6 +1383,31 @@ spec:
                   name:
                     description: Name is the name of the component
                     type: string
+                  resource:
+                    description: Resource is a reference to the resource
+                    properties:
+                      group:
+                        description: Group is the api group
+                        type: string
+                      kind:
+                        description: Kind is the name of the resource under the group
+                        type: string
+                      name:
+                        description: Name is name of the resource
+                        type: string
+                      namespace:
+                        description: Namespace is the location of the object
+                        type: string
+                      version:
+                        description: Version is the group version
+                        type: string
+                    required:
+                    - group
+                    - kind
+                    - name
+                    - namespace
+                    - version
+                    type: object
                   status:
                     description: Status is the status of the component
                     type: string
@@ -1356,6 +1574,31 @@ spec:
                   name:
                     description: Name is the name of the component
                     type: string
+                  resource:
+                    description: Resource is a reference to the resource
+                    properties:
+                      group:
+                        description: Group is the api group
+                        type: string
+                      kind:
+                        description: Kind is the name of the resource under the group
+                        type: string
+                      name:
+                        description: Name is name of the resource
+                        type: string
+                      namespace:
+                        description: Namespace is the location of the object
+                        type: string
+                      version:
+                        description: Version is the group version
+                        type: string
+                    required:
+                    - group
+                    - kind
+                    - name
+                    - namespace
+                    - version
+                    type: object
                   status:
                     description: Status is the status of the component
                     type: string
@@ -1543,6 +1786,31 @@ spec:
                   name:
                     description: Name is the name of the component
                     type: string
+                  resource:
+                    description: Resource is a reference to the resource
+                    properties:
+                      group:
+                        description: Group is the api group
+                        type: string
+                      kind:
+                        description: Kind is the name of the resource under the group
+                        type: string
+                      name:
+                        description: Name is name of the resource
+                        type: string
+                      namespace:
+                        description: Namespace is the location of the object
+                        type: string
+                      version:
+                        description: Version is the group version
+                        type: string
+                    required:
+                    - group
+                    - kind
+                    - name
+                    - namespace
+                    - version
+                    type: object
                   status:
                     description: Status is the status of the component
                     type: string
@@ -1748,6 +2016,31 @@ spec:
                   name:
                     description: Name is the name of the component
                     type: string
+                  resource:
+                    description: Resource is a reference to the resource
+                    properties:
+                      group:
+                        description: Group is the api group
+                        type: string
+                      kind:
+                        description: Kind is the name of the resource under the group
+                        type: string
+                      name:
+                        description: Name is name of the resource
+                        type: string
+                      namespace:
+                        description: Namespace is the location of the object
+                        type: string
+                      version:
+                        description: Version is the group version
+                        type: string
+                    required:
+                    - group
+                    - kind
+                    - name
+                    - namespace
+                    - version
+                    type: object
                   status:
                     description: Status is the status of the component
                     type: string
@@ -4422,6 +4715,31 @@ spec:
                   name:
                     description: Name is the name of the component
                     type: string
+                  resource:
+                    description: Resource is a reference to the resource
+                    properties:
+                      group:
+                        description: Group is the api group
+                        type: string
+                      kind:
+                        description: Kind is the name of the resource under the group
+                        type: string
+                      name:
+                        description: Name is name of the resource
+                        type: string
+                      namespace:
+                        description: Namespace is the location of the object
+                        type: string
+                      version:
+                        description: Version is the group version
+                        type: string
+                    required:
+                    - group
+                    - kind
+                    - name
+                    - namespace
+                    - version
+                    type: object
                   status:
                     description: Status is the status of the component
                     type: string
@@ -4485,7 +4803,7 @@ spec:
     status: {}
   validation:
     openAPIV3Schema:
-      description: ProjectClaim is the Schema for the gcpprojects API
+      description: ProjectClaim is the Schema for the ProjectClaims API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -4528,6 +4846,12 @@ spec:
               - namespace
               - version
               type: object
+            projectName:
+              description: ProjectName is the name of the project to create We do
+                this internally so we can easily change the project name without changing
+                the resource name
+              minLength: 1
+              type: string
           required:
           - organization
           type: object
@@ -4549,6 +4873,31 @@ spec:
                   name:
                     description: Name is the name of the component
                     type: string
+                  resource:
+                    description: Resource is a reference to the resource
+                    properties:
+                      group:
+                        description: Group is the api group
+                        type: string
+                      kind:
+                        description: Kind is the name of the resource under the group
+                        type: string
+                      name:
+                        description: Name is name of the resource
+                        type: string
+                      namespace:
+                        description: Namespace is the location of the object
+                        type: string
+                      version:
+                        description: Version is the group version
+                        type: string
+                    required:
+                    - group
+                    - kind
+                    - name
+                    - namespace
+                    - version
+                    type: object
                   status:
                     description: Status is the status of the component
                     type: string
@@ -5028,6 +5377,31 @@ spec:
                   name:
                     description: Name is the name of the component
                     type: string
+                  resource:
+                    description: Resource is a reference to the resource
+                    properties:
+                      group:
+                        description: Group is the api group
+                        type: string
+                      kind:
+                        description: Kind is the name of the resource under the group
+                        type: string
+                      name:
+                        description: Name is name of the resource
+                        type: string
+                      namespace:
+                        description: Namespace is the location of the object
+                        type: string
+                      version:
+                        description: Version is the group version
+                        type: string
+                    required:
+                    - group
+                    - kind
+                    - name
+                    - namespace
+                    - version
+                    type: object
                   status:
                     description: Status is the status of the component
                     type: string
@@ -5969,6 +6343,31 @@ spec:
                   name:
                     description: Name is the name of the component
                     type: string
+                  resource:
+                    description: Resource is a reference to the resource
+                    properties:
+                      group:
+                        description: Group is the api group
+                        type: string
+                      kind:
+                        description: Kind is the name of the resource under the group
+                        type: string
+                      name:
+                        description: Name is name of the resource
+                        type: string
+                      namespace:
+                        description: Namespace is the location of the object
+                        type: string
+                      version:
+                        description: Version is the group version
+                        type: string
+                    required:
+                    - group
+                    - kind
+                    - name
+                    - namespace
+                    - version
+                    type: object
                   status:
                     description: Status is the status of the component
                     type: string
@@ -6326,6 +6725,31 @@ spec:
                   name:
                     description: Name is the name of the component
                     type: string
+                  resource:
+                    description: Resource is a reference to the resource
+                    properties:
+                      group:
+                        description: Group is the api group
+                        type: string
+                      kind:
+                        description: Kind is the name of the resource under the group
+                        type: string
+                      name:
+                        description: Name is name of the resource
+                        type: string
+                      namespace:
+                        description: Namespace is the location of the object
+                        type: string
+                      version:
+                        description: Version is the group version
+                        type: string
+                    required:
+                    - group
+                    - kind
+                    - name
+                    - namespace
+                    - version
+                    type: object
                   status:
                     description: Status is the status of the component
                     type: string
@@ -6435,6 +6859,7 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
+	"crds/accounts.kore.appvia.io_accountmanagement.yaml":                 crdsAccountsKoreAppviaIo_accountmanagementYaml,
 	"crds/apps.kore.appvia.io_appdeployments.yaml":                        crdsAppsKoreAppviaIo_appdeploymentsYaml,
 	"crds/apps.kore.appvia.io_installplans.yaml":                          crdsAppsKoreAppviaIo_installplansYaml,
 	"crds/aws.compute.kore.appvia.io_eks.yaml":                            crdsAwsComputeKoreAppviaIo_eksYaml,
@@ -6515,6 +6940,7 @@ type bintree struct {
 
 var _bintree = &bintree{nil, map[string]*bintree{
 	"crds": {nil, map[string]*bintree{
+		"accounts.kore.appvia.io_accountmanagement.yaml":                 {crdsAccountsKoreAppviaIo_accountmanagementYaml, map[string]*bintree{}},
 		"apps.kore.appvia.io_appdeployments.yaml":                        {crdsAppsKoreAppviaIo_appdeploymentsYaml, map[string]*bintree{}},
 		"apps.kore.appvia.io_installplans.yaml":                          {crdsAppsKoreAppviaIo_installplansYaml, map[string]*bintree{}},
 		"aws.compute.kore.appvia.io_eks.yaml":                            {crdsAwsComputeKoreAppviaIo_eksYaml, map[string]*bintree{}},

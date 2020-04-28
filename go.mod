@@ -24,6 +24,7 @@ require (
 	github.com/emicklei/go-restful v2.11.1+incompatible
 	github.com/emicklei/go-restful-openapi v1.2.0
 	github.com/etcd-io/bbolt v1.3.3 // indirect
+	github.com/evanphx/json-patch v4.5.0+incompatible
 	github.com/facebookgo/ensure v0.0.0-20160127193407-b4ab57deab51 // indirect
 	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
 	github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870 // indirect
@@ -45,6 +46,7 @@ require (
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/uuid v1.1.1
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
+	github.com/heimdalr/dag v0.9.12
 	github.com/huandu/xstrings v1.2.1 // indirect
 	github.com/imdario/mergo v0.3.8 // indirect
 	github.com/jinzhu/gorm v1.9.12

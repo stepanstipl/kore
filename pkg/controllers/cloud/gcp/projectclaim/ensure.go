@@ -78,8 +78,8 @@ func (t ctrl) EnsurePermitted(ctx context.Context, project *gcp.ProjectClaim) er
 // EnsureUnclaimed is responsible for making sure the project is unclaimed
 func (t ctrl) EnsureUnclaimed(ctx context.Context, project *gcp.ProjectClaim) error {
 	logger := log.WithFields(log.Fields{
-		"project": project.Name,
-		"team":    project.Namespace,
+		"name":      project.Name,
+		"namespace": project.Namespace,
 	})
 
 	// @step: check if the project claim has already been claimed else where
@@ -192,8 +192,7 @@ func (t ctrl) EnsureOrganizationCredentials(ctx context.Context, org *gcp.Organi
 	}
 
 	// @step: decode the secret for them
-	key, err := base64.StdEncoding.DecodeString(secret.Spec.Data["key"])
-	if err != nil {
+	if err := secret.Decode(); err != nil {
 		project.Status.Conditions.SetCondition(corev1.Component{
 			Name:    "provision",
 			Detail:  err.Error(),
@@ -203,9 +202,6 @@ func (t ctrl) EnsureOrganizationCredentials(ctx context.Context, org *gcp.Organi
 
 		return nil, errors.New("organizational credentials service account invalid")
 	}
-
-	// @step: update the key inline for now - probably need to wrap them in common lib
-	secret.Spec.Data[ServiceAccountKey] = string(key)
 
 	return secret, nil
 }
@@ -217,8 +213,9 @@ func (t ctrl) EnsureProject(ctx context.Context,
 	project *gcp.ProjectClaim) error {
 
 	logger := log.WithFields(log.Fields{
-		"project": project.Name,
-		"team":    project.Namespace,
+		"name":      project.Name,
+		"namespace": project.Namespace,
+		"project":   project.Spec.ProjectName,
 	})
 	stage := "provision"
 	success := "GCP Project successfully provisioned"
@@ -239,7 +236,7 @@ func (t ctrl) EnsureProject(ctx context.Context,
 	}
 
 	// @step: we check if the project exists and if not create it
-	obj, found, err := IsProject(ctx, client, project.Name)
+	obj, found, err := IsProject(ctx, client, project.Spec.ProjectName)
 	if err != nil {
 		logger.WithError(err).Error("trying to check for gcp project")
 
@@ -254,6 +251,28 @@ func (t ctrl) EnsureProject(ctx context.Context,
 	}
 	if found {
 		project.Status.ProjectID = obj.ProjectId
+
+		// @step: we need to check the lifecycle of the project
+		switch obj.LifecycleState {
+		case "DELETE_REQUESTED", "DELETE_IN_PROGRESS":
+			logger.Warn("gcp project has been deleted, attempting to restore")
+
+			_, err := client.Projects.Undelete(obj.ProjectId, &cloudresourcemanager.UndeleteProjectRequest{}).
+				Context(ctx).
+				Do()
+			if err != nil {
+				logger.WithError(err).Error("trying to restore project")
+
+				project.Status.Conditions.SetCondition(corev1.Component{
+					Name:    stage,
+					Detail:  err.Error(),
+					Message: "Failed to restore deleted GCP project",
+					Status:  corev1.FailureStatus,
+				})
+
+				return err
+			}
+		}
 
 		logger.Debug("gcp project already exists, checking if it was created by us")
 
@@ -284,9 +303,9 @@ func (t ctrl) EnsureProject(ctx context.Context,
 
 	// @step: create the project in gcp
 	resp, err := client.Projects.Create(&cloudresourcemanager.Project{
-		Name: project.Name,
+		Name: project.Spec.ProjectName,
 		// @QUESTION should this be the same as the name?
-		ProjectId: project.Name,
+		ProjectId: project.Spec.ProjectName,
 		Labels: map[string]string{
 			"builder": "kore",
 		},
@@ -337,7 +356,7 @@ func (t ctrl) EnsureProject(ctx context.Context,
 	}
 
 	// @step: we check if the project exists and if not create it
-	obj, found, err = IsProject(ctx, client, project.Name)
+	obj, found, err = IsProject(ctx, client, project.Spec.ProjectName)
 	if err != nil {
 		logger.WithError(err).Error("trying to check for gcp project")
 
@@ -380,9 +399,9 @@ func (t ctrl) EnsureBilling(
 	project *gcp.ProjectClaim) error {
 
 	logger := log.WithFields(log.Fields{
-		"project":    project.Name,
+		"name":       project.Name,
+		"namespace":  project.Namespace,
 		"project_id": project.Status.ProjectID,
-		"team":       project.Namespace,
 	})
 	stage := "billing"
 
@@ -460,8 +479,8 @@ func (t ctrl) EnsureAPIs(ctx context.Context, credentials *configv1.Secret, proj
 	stage := "iam"
 
 	logger := log.WithFields(log.Fields{
-		"project": project.Name,
-		"team":    project.Namespace,
+		"name":      project.Name,
+		"namespace": project.Namespace,
 	})
 
 	client, err := servicemanagement.NewService(ctx, option.WithCredentialsJSON([]byte(credentials.Spec.Data["key"])))
@@ -525,10 +544,10 @@ func (t ctrl) EnsureServiceAccount(ctx context.Context, credentials *configv1.Se
 
 	account := t.GetServiceAccountName(project)
 	logger := log.WithFields(log.Fields{
+		"name":       project.Name,
+		"namespace":  project.Namespace,
 		"account":    account,
-		"project":    project.Name,
 		"project_id": project.Status.ProjectID,
-		"team":       project.Namespace,
 	})
 	logger.Debug("attempting to ensure the servie account in gcp project")
 
@@ -640,9 +659,9 @@ func (t ctrl) EnsureServiceAccountKey(
 	stage := "permissions"
 
 	logger := log.WithFields(log.Fields{
-		"account": account.Email,
-		"project": project.Name,
-		"team":    project.Namespace,
+		"account":   account.Email,
+		"name":      project.Name,
+		"namespace": project.Namespace,
 	})
 	var key *iam.ServiceAccountKey
 
@@ -771,7 +790,7 @@ func (t ctrl) EnsureServiceAccountKey(
 		keys := map[string]string{
 			ExpiryKey:           fmt.Sprintf("%d", tm.Unix()),
 			ProjectIDKey:        project.Status.ProjectID,
-			ProjectNameKey:      project.Name,
+			ProjectNameKey:      project.Spec.ProjectName,
 			ServiceAccountKey:   string(decoded),
 			ServiceAccountKeyID: GetServiceAccountKeyID(key.Name),
 		}
@@ -812,8 +831,8 @@ func (t ctrl) EnsureCredentialsAllocation(
 	project *gcp.ProjectClaim) error {
 
 	logger := log.WithFields(log.Fields{
-		"project": project.Name,
-		"team":    project.Namespace,
+		"name":      project.Name,
+		"namespace": project.Namespace,
 	})
 	logger.Debug("attempting to create the allocation for the gcp project")
 
@@ -830,7 +849,7 @@ func (t ctrl) EnsureCredentialsAllocation(
 		},
 		Spec: configv1.AllocationSpec{
 			Name:    "gcp-" + project.Name,
-			Summary: "Provides credentials to team GCP Project " + project.Name,
+			Summary: "Provides credentials to team GCP Project " + project.Spec.ProjectName,
 			Resource: corev1.Ownership{
 				Group:     gcp.SchemeGroupVersion.Group,
 				Kind:      "ProjectClaim",
@@ -873,9 +892,9 @@ func (t ctrl) EnsureDeleteOldestKey(
 	project *gcp.ProjectClaim) error {
 
 	logger := log.WithFields(log.Fields{
-		"account": account.Email,
-		"project": project.Name,
-		"team":    project.Namespace,
+		"account":   account.Email,
+		"name":      project.Name,
+		"namespace": project.Namespace,
 	})
 
 	// @step: create a client to the iam api
@@ -937,8 +956,8 @@ func (t ctrl) EnsureCredentialsAllocationDeleted(
 	project *gcp.ProjectClaim) error {
 
 	logger := log.WithFields(log.Fields{
-		"project": project.Name,
-		"team":    project.Namespace,
+		"name":      project.Name,
+		"namespace": project.Namespace,
 	})
 	logger.Debug("ensuring the allocation has been removed")
 
@@ -970,8 +989,8 @@ func (t ctrl) EnsureCredentialsDeleted(
 	project *gcp.ProjectClaim) error {
 
 	logger := log.WithFields(log.Fields{
-		"project": project.Name,
-		"team":    project.Namespace,
+		"name":      project.Name,
+		"namespace": project.Namespace,
 	})
 	stage := "cleanup"
 
@@ -1007,9 +1026,9 @@ func (t ctrl) EnsureProjectDeleted(
 	project *gcp.ProjectClaim) error {
 
 	logger := log.WithFields(log.Fields{
-		"project":    project.Name,
+		"name":       project.Name,
+		"namespace":  project.Namespace,
 		"project_id": project.Status.ProjectID,
-		"team":       project.Namespace,
 	})
 	stage := "deleting"
 
@@ -1029,7 +1048,7 @@ func (t ctrl) EnsureProjectDeleted(
 	}
 
 	// @step: we check if the project exists and if not create it
-	resource, found, err := IsProject(ctx, client, project.Name)
+	resource, found, err := IsProject(ctx, client, project.Spec.ProjectName)
 	if err != nil {
 		logger.WithError(err).Error("trying to check for project existence")
 
@@ -1109,7 +1128,11 @@ func (t ctrl) IsProjectClaimed(ctx context.Context, project *gcp.ProjectClaim) (
 	// @step: we iterate the list and look for any claims with the same name
 	// but NOT in our namespace
 	for _, x := range list.Items {
-		if x.Name == project.Name && x.Namespace != project.Namespace {
+		if x.Namespace == project.Namespace && x.Name == project.Name {
+			continue
+		}
+
+		if x.Spec.ProjectName == project.Spec.ProjectName || x.Status.ProjectID == project.Spec.ProjectName {
 			return true, nil
 		}
 	}

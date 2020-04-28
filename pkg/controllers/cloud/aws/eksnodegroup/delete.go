@@ -51,24 +51,12 @@ func (n *ctrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 	original := resource.DeepCopy()
 
 	result, err := func() (reconcile.Result, error) {
-		// @step: we perform the following operations
-		ensure := []controllers.EnsureFunc{
-			n.EnsureDeletionStatus(resource),
-			n.EnsureDeletion(resource),
-		}
-
-		// @step: we iterate the handler operations, implement and act on result
-		for _, handler := range ensure {
-			result, err := handler(ctx)
-			if err != nil {
-				return reconcile.Result{}, err
-			}
-			if result.Requeue || result.RequeueAfter > 0 {
-				return result, nil
-			}
-		}
-
-		return reconcile.Result{}, nil
+		return controllers.DefaultEnsureHandler.Run(ctx,
+			[]controllers.EnsureFunc{
+				n.EnsureDeletionStatus(resource),
+				n.EnsureDeletion(resource),
+			},
+		)
 	}()
 	if err != nil {
 		logger.WithError(err).Error("attempting to delete the eks cluster")

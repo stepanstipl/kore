@@ -34,6 +34,17 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
+// EnsureCloudProvider is responsible for checking the cloud provider
+func (a k8sCtrl) EnsureCloudProvider(object *clustersv1.Kubernetes) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		if !kore.IsProviderBacked(object) {
+			return reconcile.Result{}, nil
+		}
+
+		return reconcile.Result{}, nil
+	}
+}
+
 // EnsureDeleteStatus is responsible for ensure the status is set to deleting
 func (a k8sCtrl) EnsureDeleteStatus(object *clustersv1.Kubernetes) controllers.EnsureFunc {
 	return func(ctx context.Context) (reconcile.Result, error) {

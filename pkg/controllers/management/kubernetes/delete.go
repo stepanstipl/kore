@@ -44,23 +44,13 @@ func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (rec
 	original := object.DeepCopy()
 
 	result, err := func() (reconcile.Result, error) {
-		operations := []controllers.EnsureFunc{
-			a.EnsureDeleteStatus(object),
-			a.EnsureServiceDeletion(object),
-			a.EnsureSecretDeletion(object),
-		}
-
-		for _, handler := range operations {
-			result, err := handler(ctx)
-			if err != nil {
-				return reconcile.Result{}, err
-			}
-			if result.Requeue || result.RequeueAfter > 0 {
-				return result, nil
-			}
-		}
-
-		return reconcile.Result{}, nil
+		return controllers.DefaultEnsureHandler.Run(ctx,
+			[]controllers.EnsureFunc{
+				a.EnsureDeleteStatus(object),
+				a.EnsureServiceDeletion(object),
+				a.EnsureSecretDeletion(object),
+			},
+		)
 	}()
 	if err != nil {
 		logger.WithError(err).Error("trying to delete the kubernetes resource")
@@ -74,14 +64,6 @@ func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (rec
 		return reconcile.Result{}, err
 	}
 
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	if result.Requeue || result.RequeueAfter > 0 {
-		return result, nil
-	}
-
 	// @cool we can remove the finalizer now
 	finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
 	if err := finalizer.Remove(object); err != nil {
@@ -90,5 +72,5 @@ func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (rec
 		return reconcile.Result{}, err
 	}
 
-	return reconcile.Result{}, nil
+	return result, nil
 }

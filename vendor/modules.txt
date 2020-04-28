@@ -369,6 +369,8 @@ github.com/hashicorp/hcl/hcl/token
 github.com/hashicorp/hcl/json/parser
 github.com/hashicorp/hcl/json/scanner
 github.com/hashicorp/hcl/json/token
+# github.com/heimdalr/dag v0.9.12
+github.com/heimdalr/dag
 # github.com/hpcloud/tail v1.0.0
 github.com/hpcloud/tail
 github.com/hpcloud/tail/ratelimiter

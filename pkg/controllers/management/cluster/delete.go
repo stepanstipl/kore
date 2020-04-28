@@ -18,7 +18,7 @@ package cluster
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"time"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
@@ -26,111 +26,166 @@ import (
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
-	log "github.com/sirupsen/logrus"
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 // Delete is responsible for deleting the cluster and all it's resources
-func (a Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (reconcile.Result, error) {
-	logger := a.logger.WithFields(log.Fields{
-		"name":      cluster.Name,
-		"namespace": cluster.Namespace,
-	})
-	logger.Debug("attempting to delete the cluster from the api")
+func (a *Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (reconcile.Result, error) {
+	a.logger.Debug("attempting to delete the cluster from the api")
 
 	finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
-
-	if cluster.Status.Status == corev1.DeletedStatus {
-		err := finalizer.Remove(cluster)
-		if err != nil {
-			logger.WithError(err).Error("failed to remove the finalizer from the cluster")
-
-			return reconcile.Result{}, err
-		}
+	if !finalizer.IsDeletionCandidate(cluster) {
+		a.logger.Debug("not ready for deletion yet")
 
 		return reconcile.Result{}, nil
 	}
 	original := cluster.DeepCopyObject()
 
-	err := func() error {
-		cluster.Status.Status = corev1.DeletingStatus
-
-		components, err := createClusterComponents(cluster)
-		if err != nil {
-			return controllers.NewCriticalError(err)
-		}
-
-		for componentName, c := range components {
-			if err := a.loadComponent(ctx, cluster, c); err != nil {
-				return fmt.Errorf("failed to load %s component: %w", componentName, err)
-			}
-			status, _ := c.GetStatus()
-			if status == "" {
-				c.SetStatus(corev1.DeletedStatus)
-			}
-		}
-
-		for componentName, c := range components {
-			status, message := c.GetStatus()
-
-			if readyForDelete(c, components) {
-				if status != corev1.DeletedStatus {
-					m, _ := kubernetes.GetMeta(c)
-					if m.GetDeletionTimestamp() == nil {
-						if err := a.mgr.GetClient().Delete(ctx, c); err != nil {
-							return fmt.Errorf("failed to delete %s component: %w", componentName, err)
-						}
-					}
-				}
-			}
-
-			if status == corev1.DeleteFailedStatus && message == "" {
-				if err := c.GetComponents().Error(); err != nil {
-					message = err.Error()
-				}
-			}
-
-			cluster.Status.Components.SetCondition(corev1.Component{
-				Name:    componentName,
-				Status:  status,
-				Message: message,
-			})
-		}
-
-		ready := cluster.Status.Components.HasStatusForAll(corev1.DeletedStatus)
-		if ready {
-			cluster.Status.Status = corev1.DeletedStatus
-			cluster.Status.Message = "The cluster has been deleted successfully"
-			return nil
-		} else if cluster.Status.Components.HasStatus(corev1.DeleteFailedStatus) {
-			return controllers.NewCriticalError(cluster.Status.Components.Error())
-		}
-
-		return nil
-	}()
-
+	components, err := NewComponents()
 	if err != nil {
-		logger.WithError(err).Error("failed to reconcile the cluster")
+		a.logger.WithError(err).Error("trying to create the components")
+
+		return reconcile.Result{}, err
+	}
+
+	result, err := func() (reconcile.Result, error) {
+		p, err := a.Provider(cluster.Spec.Kind)
+		if err != nil {
+			return reconcile.Result{}, controllers.NewCriticalError(err)
+		}
+
+		return controllers.DefaultEnsureHandler.Run(ctx,
+			[]controllers.EnsureFunc{
+				a.Deleting(cluster),
+				p.Components(cluster, components),
+				a.Components(cluster, components),
+				a.Load(cluster, components),
+				a.Remove(cluster, components),
+				a.RemoveFinalizer(cluster),
+			},
+		)
+	}()
+	if err != nil {
+		a.logger.WithError(err).Error("trying to delete the cluster")
+
 		if controllers.IsCriticalError(err) {
-			cluster.Status.Status = corev1.DeleteFailedStatus
+			cluster.Status.Status = corev1.FailureStatus
 			cluster.Status.Message = err.Error()
 		}
 	}
 
 	if err := a.mgr.GetClient().Status().Patch(ctx, cluster, client.MergeFrom(original)); err != nil {
-		logger.WithError(err).Error("failed to update the cluster status")
-		return reconcile.Result{}, err
+		if !kerrors.IsNotFound(err) {
+			a.logger.WithError(err).Error("failed to update the cluster status")
+
+			return reconcile.Result{}, err
+		}
 	}
 
-	// We haven't finished yet as we have to remove the finalizer in the last loop
-	if cluster.Status.Status == corev1.DeletedStatus {
-		return reconcile.Result{RequeueAfter: 1 * time.Millisecond}, nil
-	}
+	return result, err
+}
 
-	if cluster.Status.Status == corev1.DeleteFailedStatus {
+// Deleting ensures the state of the cluster is set to pending if not
+func (a *Controller) Deleting(cluster *clustersv1.Cluster) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+
+		switch cluster.Status.Status {
+		case corev1.SuccessStatus, corev1.FailureStatus, corev1.PendingStatus, "":
+			cluster.Status.Status = corev1.DeletingStatus
+
+			return reconcile.Result{Requeue: true}, nil
+
+		case corev1.DeletingStatus, corev1.DeletedStatus:
+			return reconcile.Result{}, nil
+		}
+
+		// else the cluster is not in a state to delete yet
+		return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+	}
+}
+
+// Remove is responsible for removing the resources one by one
+func (a *Controller) Remove(cluster *clustersv1.Cluster, components *Components) controllers.EnsureFunc {
+	client := a.mgr.GetClient()
+
+	return func(ctx context.Context) (reconcile.Result, error) {
+
+		err := components.InverseWalkFunc(func(co *Vertex) (bool, error) {
+			a.logger.WithField(
+				"resource", co.String(),
+			).Debug("attempting to delete the resource from the cluster")
+
+			condition := corev1.Component{Name: co.String(), Status: corev1.DeletingStatus}
+
+			defer func() {
+				cluster.Status.Components.SetCondition(condition)
+			}()
+
+			found, err := kubernetes.CheckIfExists(ctx, client, co.Object)
+			if err != nil {
+				return false, err
+			}
+			if !found {
+				condition.Status = corev1.DeletedStatus
+
+				return true, nil
+			}
+
+			// @step: check if the resource is deleting and if not try and delete it
+			condition.Status = corev1.DeletingStatus
+
+			if !IsDeleting(co.Object) {
+				if err := kubernetes.DeleteIfExists(ctx, client, co.Object); err != nil {
+					return false, err
+				}
+			}
+
+			status, err := GetObjectStatus(co.Object)
+			if err != nil {
+				return false, err
+			}
+			switch status {
+			case corev1.DeleteFailedStatus:
+				condition.Status = corev1.DeleteFailedStatus
+				cluster.Status.Status = corev1.FailureStatus
+
+				return false, controllers.NewCriticalError(errors.New("Failed trying to remove resource"))
+			}
+
+			return false, nil
+		})
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+
+		if cluster.Status.Components.HasStatusForAll(corev1.DeletedStatus) {
+			cluster.Status.Status = corev1.DeletedStatus
+			cluster.Status.Message = "The cluster successfully removed all components"
+
+			return reconcile.Result{}, nil
+		}
+
+		return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+	}
+}
+
+// RemoveFinalizer is responsible for removing the finalizer
+func (a *Controller) RemoveFinalizer(cluster *clustersv1.Cluster) controllers.EnsureFunc {
+	client := a.mgr.GetClient()
+
+	return func(ctx context.Context) (reconcile.Result, error) {
+		if cluster.Status.Status != corev1.DeletedStatus {
+			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+		}
+
+		finalizer := kubernetes.NewFinalizer(client, finalizerName)
+
+		if err := finalizer.Remove(cluster); err != nil {
+			return reconcile.Result{}, err
+		}
+
 		return reconcile.Result{}, nil
 	}
-
-	return reconcile.Result{RequeueAfter: 30 * time.Second}, err
 }

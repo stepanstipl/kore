@@ -65,7 +65,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		"name":      request.NamespacedName.Name,
 		"namespace": request.NamespacedName.Namespace,
 	})
-	logger.Debug("attempting to renconcile the kubernetes cluster")
+	logger.Debug("attempting to reconcile the kubernetes cluster")
 
 	// @step: retrieve the type from the api
 	object := &clustersv1.Kubernetes{}
@@ -80,6 +80,15 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 	// @step: keep the original object from api
 	original := object.DeepCopy()
 	finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
+	if finalizer.NeedToAdd(object) {
+		if err := finalizer.Add(object); err != nil {
+			logger.WithError(err).Error("trying to add ourself as a finalizer")
+
+			return reconcile.Result{}, err
+		}
+
+		return reconcile.Result{Requeue: true}, nil
+	}
 
 	if finalizer.IsDeletionCandidate(object) {
 		return a.Delete(context.Background(), object)
@@ -436,18 +445,6 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 	}()
 	if err != nil {
 		object.Status.Status = corev1.FailureStatus
-	}
-	if err == nil {
-		// check if we need to add the finalizer
-		if finalizer.NeedToAdd(object) {
-			if err := finalizer.Add(object); err != nil {
-				logger.WithError(err).Error("trying to add ourself as a finalizer")
-
-				return reconcile.Result{}, err
-			}
-
-			return reconcile.Result{Requeue: true}, nil
-		}
 	}
 
 	// @step: the resource has been reconcile, update the status
