@@ -19,9 +19,10 @@ package create
 import (
 	"fmt"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
+
+	"github.com/appvia/kore/pkg/utils/render"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
@@ -30,7 +31,6 @@ import (
 	"github.com/appvia/kore/pkg/cmd/errors"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 	cmdutils "github.com/appvia/kore/pkg/cmd/utils"
-	"github.com/appvia/kore/pkg/utils/jsonpath"
 
 	"github.com/spf13/cobra"
 	"github.com/tidwall/sjson"
@@ -75,11 +75,6 @@ This will modify your ${HOME}/.kube/config. Now you can use 'kubectl' to interac
 `
 )
 
-var (
-	// PlanParameterFilter is the regex filter for a param
-	PlanParameterFilter = regexp.MustCompile(`\s*=\s*`)
-)
-
 // CreateClusterOptions is used to provision a team
 type CreateClusterOptions struct {
 	cmdutil.Factory
@@ -103,6 +98,8 @@ type CreateClusterOptions struct {
 	NoWait bool
 	// ShowTime indicate we should show the build time
 	ShowTime bool
+	// DryRun indicates that we should print the object instead of creating it
+	DryRun bool
 }
 
 // NewCmdCreateCluster returns the create cluster command
@@ -124,6 +121,7 @@ func NewCmdCreateCluster(factory cmdutil.Factory) *cobra.Command {
 	flags.StringArrayVar(&o.PlanParams, "param", []string{}, "a series of key value pairs used to override plan parameters  `KEY=VALUE`")
 	flags.StringSliceVar(&o.Namespaces, "namespaces", []string{}, "preprovision a collection namespaces on this cluster as well `NAMES`")
 	flags.BoolVarP(&o.ShowTime, "show-time", "T", false, "shows the time it took to successfully provision a new cluster `BOOL`")
+	flags.BoolVarP(&o.DryRun, "dry-run", "", false, "if true it will print the cluster object and won't call the API `BOOL`")
 
 	cmdutils.MustMarkFlagRequired(command, "allocation")
 	cmdutils.MustMarkFlagRequired(command, "plan")
@@ -199,9 +197,17 @@ func (o *CreateClusterOptions) Validate() error {
 // Run implements the action
 func (o *CreateClusterOptions) Run() error {
 	// @step: generate the cluster configuration
-	config, err := o.CreateClusterConfiguration()
+	cluster, err := o.CreateCluster()
 	if err != nil {
 		return err
+	}
+
+	if o.DryRun {
+		return render.Render().
+			Writer(o.Writer()).
+			Resource(render.FromStruct(cluster)).
+			Format(render.FormatYAML).
+			Do()
 	}
 
 	now := time.Now()
@@ -209,7 +215,7 @@ func (o *CreateClusterOptions) Run() error {
 	err = o.WaitForCreation(
 		o.ClientWithTeamResource(o.Team, o.Resources().MustLookup("cluster")).
 			Name(o.Name).
-			Payload(config),
+			Payload(cluster),
 		o.NoWait,
 	)
 	if err != nil {
@@ -237,7 +243,7 @@ func (o *CreateClusterOptions) Run() error {
 }
 
 // CreateClusterConfiguration is responsible for generating the cluster config
-func (o *CreateClusterOptions) CreateClusterConfiguration() (*clustersv1.Cluster, error) {
+func (o *CreateClusterOptions) CreateCluster() (*clustersv1.Cluster, error) {
 	// @step: retrieve the plan, allocation and user auth
 	plan, err := o.GetPlan()
 	if err != nil {
@@ -252,29 +258,11 @@ func (o *CreateClusterOptions) CreateClusterConfiguration() (*clustersv1.Cluster
 		return nil, err
 	}
 
-	params, err := o.ParsePlanParams()
-	if err != nil {
+	config := string(plan.Spec.Configuration.Raw)
+	if config, err = cmdutil.PatchJSON(config, o.PlanParams); err != nil {
 		return nil, err
 	}
-	config := string(plan.Spec.Configuration.Raw)
 
-	for key, value := range params {
-		if !jsonpath.Get(config, strings.Split(key, ".")[0]).Exists() {
-			return nil, errors.NewInvalidParamWithMessageError(key, value, "parameter does not exist in plan")
-		}
-		switch strings.HasPrefix(value, "{") || strings.HasPrefix(value, "[") {
-		case true:
-			config, err = sjson.SetRaw(config, key, value)
-			if err != nil {
-				return nil, err
-			}
-		default:
-			config, err = sjson.Set(config, key, o.ParseValue(value))
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
 	// @step: inject ourself as the cluster admin
 	config, err = sjson.Set(config, "clusterUsers", []clustersv1.ClusterUser{
 		{
@@ -359,22 +347,6 @@ func (o *CreateClusterOptions) CreateClusterNamespace(name string) error {
 	)
 }
 
-// ParsePlanParams is responsible for parsing the plan overrides
-func (o *CreateClusterOptions) ParsePlanParams() (map[string]string, error) {
-	params := make(map[string]string)
-
-	for _, x := range o.PlanParams {
-		e := PlanParameterFilter.Split(strings.TrimSpace(x), 2)
-
-		if len(e) != 2 || e[0] == "" || e[1] == "" {
-			return nil, errors.NewInvalidParamError("param", x)
-		}
-		params[e[0]] = e[1]
-	}
-
-	return params, nil
-}
-
 // GetPlan retrieve the requested cluster plan
 func (o *CreateClusterOptions) GetPlan() (*configv1.Plan, error) {
 	plan := &configv1.Plan{}
@@ -402,13 +374,4 @@ func (o *CreateClusterOptions) GetUserAuth() (*types.WhoAmI, error) {
 	who := &types.WhoAmI{}
 
 	return who, o.ClientWithEndpoint("/whoami").Result(who).Get().Error()
-}
-
-// ParseValue parses the value incase numeric
-func (o *CreateClusterOptions) ParseValue(v string) interface{} {
-	if num, err := strconv.ParseFloat(v, 64); err == nil {
-		return num
-	}
-
-	return v
 }

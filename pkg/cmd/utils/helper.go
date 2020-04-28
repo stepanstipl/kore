@@ -21,6 +21,10 @@ import (
 	"io"
 	"io/ioutil"
 	"regexp"
+	"strconv"
+	"strings"
+
+	"github.com/tidwall/sjson"
 
 	"github.com/appvia/kore/pkg/utils"
 
@@ -182,4 +186,41 @@ func ConvertColumnsToRender(columns []Column) []render.PrinterColumnFunc {
 	}
 
 	return list
+}
+
+func PatchJSON(document string, cliValues []string) (string, error) {
+	var parameterRegexp = regexp.MustCompile(`\s*=\s*`)
+
+	params := make(map[string]string)
+
+	for _, x := range cliValues {
+		e := parameterRegexp.Split(strings.TrimSpace(x), 2)
+
+		if len(e) != 2 || e[0] == "" || e[1] == "" {
+			return "", errors.NewInvalidParamError("param", x)
+		}
+		params[e[0]] = e[1]
+	}
+
+	var err error
+	for key, value := range params {
+		if strings.HasPrefix(value, "{") || strings.HasPrefix(value, "[") {
+			document, err = sjson.SetRaw(document, key, value)
+			if err != nil {
+				return "", err
+			}
+		} else {
+			document, err = sjson.Set(document, key, func(v string) interface{} {
+				if num, err := strconv.ParseFloat(v, 64); err == nil {
+					return num
+				}
+				return v
+			}(value))
+			if err != nil {
+				return "", err
+			}
+		}
+	}
+
+	return document, nil
 }

@@ -17,12 +17,9 @@
 package create
 
 import (
-	"regexp"
-	"strconv"
-	"strings"
 	"time"
 
-	"github.com/tidwall/sjson"
+	"github.com/appvia/kore/pkg/utils/render"
 
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 
@@ -78,6 +75,8 @@ type CreateServiceCredentialsOptions struct {
 	NoWait bool
 	// ShowTime indicate we should show the build time
 	ShowTime bool
+	// DryRun indicates that we should print the object instead of creating it
+	DryRun bool
 }
 
 // NewCmdCreateServiceCredentials returns the create service credentials command
@@ -96,8 +95,9 @@ func NewCmdCreateServiceCredentials(factory cmdutil.Factory) *cobra.Command {
 	flags.StringVarP(&o.Service, "service", "s", "", "service name `SERVICE`")
 	flags.StringVarP(&o.Cluster, "cluster", "c", "", "cluster name `CLUSTER`")
 	flags.StringVarP(&o.Namespace, "namespace", "n", "", "target namespace in the cluster `NAMESPACE`")
-	flags.StringSliceVar(&o.Params, "param", []string{}, "key=value configuration parameters `KEYVALUE`")
+	flags.StringArrayVar(&o.Params, "param", []string{}, "a series of key value pairs used to override configuration parameters `KEY=VALUE`")
 	flags.BoolVarP(&o.ShowTime, "show-time", "T", false, "shows the time it took to successfully provision a new service `BOOL`")
+	flags.BoolVarP(&o.DryRun, "dry-run", "", false, "if true it will print the service credentials object and won't call the API `BOOL`")
 
 	cmdutils.MustMarkFlagRequired(command, "service")
 	cmdutils.MustMarkFlagRequired(command, "cluster")
@@ -151,6 +151,14 @@ func (o *CreateServiceCredentialsOptions) Run() error {
 		return err
 	}
 
+	if o.DryRun {
+		return render.Render().
+			Writer(o.Writer()).
+			Resource(render.FromStruct(serviceCreds)).
+			Format(render.FormatYAML).
+			Do()
+	}
+
 	now := time.Now()
 	// @step: provision and wait if required
 	err = o.WaitForCreation(
@@ -181,30 +189,9 @@ func (o *CreateServiceCredentialsOptions) CreateServiceCreds() (*servicesv1.Serv
 		return nil, err
 	}
 
-	configJSON := "{}"
-
-	params, err := o.parseParams()
+	configJSON, err := cmdutil.PatchJSON("{}", o.Params)
 	if err != nil {
 		return nil, err
-	}
-
-	for key, value := range params {
-		if strings.HasPrefix(value, "{") || strings.HasPrefix(value, "[") {
-			configJSON, err = sjson.SetRaw(configJSON, key, value)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			configJSON, err = sjson.Set(configJSON, key, func(v string) interface{} {
-				if num, err := strconv.ParseFloat(v, 64); err == nil {
-					return num
-				}
-				return v
-			}(value))
-			if err != nil {
-				return nil, err
-			}
-		}
 	}
 
 	serviceCreds := &servicesv1.ServiceCredentials{
@@ -246,21 +233,4 @@ func (o *CreateServiceCredentialsOptions) GetCluster() (*clustersv1.Cluster, err
 		Result(cluster).
 		Get().
 		Error()
-}
-
-func (o *CreateServiceCredentialsOptions) parseParams() (map[string]string, error) {
-	var parameterFilter = regexp.MustCompile(`\s*=\s*`)
-
-	params := make(map[string]string)
-
-	for _, x := range o.Params {
-		e := parameterFilter.Split(strings.TrimSpace(x), 2)
-
-		if len(e) != 2 || e[0] == "" || e[1] == "" {
-			return nil, errors.NewInvalidParamError("param", x)
-		}
-		params[e[0]] = e[1]
-	}
-
-	return params, nil
 }
