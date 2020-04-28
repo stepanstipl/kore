@@ -5728,6 +5728,13 @@ spec:
             message:
               description: Message is the description of the current status
               type: string
+            providerData:
+              description: ProviderData is provider specific data
+              type: string
+            providerID:
+              description: ProviderID is the service credentials identifier in the
+                service provider
+              type: string
             status:
               description: Status is the overall status of the service
               type: string
@@ -5965,8 +5972,23 @@ spec:
                     type: string
                 type: object
               type: array
+            configuration:
+              description: Configuration are the applied configuration values for
+                this service
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
             message:
               description: Message is the description of the current status
+              type: string
+            plan:
+              description: Plan is the name of the service plan which was used to
+                create this service
+              type: string
+            providerData:
+              description: ProviderData is provider specific data
+              type: string
+            providerID:
+              description: ProviderID is the service identifier in the service provider
               type: string
             status:
               description: Status is the overall status of the service

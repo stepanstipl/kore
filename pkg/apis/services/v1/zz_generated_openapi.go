@@ -210,6 +210,20 @@ func schema_pkg_apis_services_v1_ServiceCredentialsStatus(ref common.ReferenceCa
 							Format:      "",
 						},
 					},
+					"providerID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ProviderID is the service credentials identifier in the service provider",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"providerData": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ProviderData is provider specific data",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 				},
 			},
 		},
@@ -349,7 +363,7 @@ func schema_pkg_apis_services_v1_ServiceSpec(ref common.ReferenceCallback) commo
 						},
 					},
 				},
-				Required: []string{"kind", "plan", "configuration", "credentials"},
+				Required: []string{"kind", "plan", "configuration"},
 			},
 		},
 		Dependencies: []string{
@@ -391,10 +405,37 @@ func schema_pkg_apis_services_v1_ServiceStatus(ref common.ReferenceCallback) com
 							Format:      "",
 						},
 					},
+					"providerID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ProviderID is the service identifier in the service provider",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"providerData": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ProviderData is provider specific data",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"plan": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Plan is the name of the service plan which was used to create this service",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"configuration": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Configuration are the applied configuration values for this service",
+							Ref:         ref("k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"),
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/appvia/kore/pkg/apis/core/v1.Component"},
+			"github.com/appvia/kore/pkg/apis/core/v1.Component", "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"},
 	}
 }

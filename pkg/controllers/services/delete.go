@@ -36,6 +36,7 @@ func (c Controller) Delete(
 	ctx context.Context,
 	logger log.FieldLogger,
 	service *servicesv1.Service,
+	plan *servicesv1.ServicePlan,
 	finalizer *kubernetes.Finalizer,
 	provider kore.ServiceProvider,
 ) (reconcile.Result, error) {
@@ -52,14 +53,21 @@ func (c Controller) Delete(
 
 	original := service.DeepCopyObject()
 
-	result, err := provider.Delete(ctx, logger, service)
+	result, err := provider.Delete(ctx, logger, service, plan)
 
 	if err != nil {
-		logger.WithError(err).Error("failed to reconcile the service")
+		logger.WithError(err).Error("failed to delete the service")
+
+		service.Status.Status = corev1.ErrorStatus
+		service.Status.Message = err.Error()
+
 		if controllers.IsCriticalError(err) {
 			service.Status.Status = corev1.DeleteFailedStatus
-			service.Status.Message = err.Error()
 		}
+	}
+
+	if err == nil && !result.Requeue && result.RequeueAfter == 0 {
+		service.Status.Status = corev1.DeletedStatus
 	}
 
 	if err := c.mgr.GetClient().Status().Patch(ctx, service, client.MergeFrom(original)); err != nil {

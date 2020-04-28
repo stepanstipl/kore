@@ -5548,6 +5548,12 @@
         "message": {
           "type": "string"
         },
+        "providerData": {
+          "type": "string"
+        },
+        "providerID": {
+          "type": "string"
+        },
         "status": {
           "type": "string"
         }
@@ -5651,8 +5657,7 @@
       "required": [
         "kind",
         "plan",
-        "configuration",
-        "credentials"
+        "configuration"
       ],
       "properties": {
         "configuration": {
@@ -5677,7 +5682,19 @@
             "$ref": "#/definitions/v1.Component"
           }
         },
+        "configuration": {
+          "type": "string"
+        },
         "message": {
+          "type": "string"
+        },
+        "plan": {
+          "type": "string"
+        },
+        "providerData": {
+          "type": "string"
+        },
+        "providerID": {
           "type": "string"
         },
         "status": {
@@ -5687,11 +5704,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
-        "userClaims",
         "clientID",
         "clientSecret",
         "issuer",
-        "clientScopes"
+        "clientScopes",
+        "userClaims"
       ],
       "properties": {
         "clientID": {

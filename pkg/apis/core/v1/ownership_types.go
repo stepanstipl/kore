@@ -19,6 +19,8 @@ package v1
 import (
 	"strings"
 
+	"k8s.io/apimachinery/pkg/types"
+
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -46,4 +48,11 @@ func (o Ownership) IsSameType(o2 Ownership) bool {
 
 func (o Ownership) HasGroupVersionKind(gvk schema.GroupVersionKind) bool {
 	return strings.EqualFold(gvk.Group, o.Group) && strings.EqualFold(gvk.Version, o.Version) && strings.EqualFold(gvk.Kind, o.Kind)
+}
+
+func (o Ownership) NamespacedName() types.NamespacedName {
+	return types.NamespacedName{
+		Name:      o.Name,
+		Namespace: o.Namespace,
+	}
 }

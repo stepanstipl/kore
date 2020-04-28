@@ -58,6 +58,10 @@ func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePl
 		return ErrUnauthorized
 	}
 
+	if err := IsValidResourceName("plan", plan.Name); err != nil {
+		return err
+	}
+
 	plan.Namespace = HubNamespace
 
 	provider := p.ServiceProviders().GetProviderForKind(plan.Spec.Kind)
@@ -66,11 +70,16 @@ func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePl
 			WithFieldErrorf("kind", validation.InvalidType, "%q is not a known service kind", plan.Spec.Kind)
 	}
 
-	if err := jsonschema.Validate(provider.JSONSchema(plan.Spec.Kind), "plan", plan.Spec.Configuration.Raw); err != nil {
+	schema, err := provider.JSONSchema(plan.Spec.Kind, plan.Name)
+	if err != nil {
 		return err
 	}
 
-	err := p.Store().Client().Update(ctx,
+	if err := jsonschema.Validate(schema, "plan", plan.Spec.Configuration.Raw); err != nil {
+		return err
+	}
+
+	err = p.Store().Client().Update(ctx,
 		store.UpdateOptions.To(plan),
 		store.UpdateOptions.WithCreate(true),
 		store.UpdateOptions.WithForce(true),

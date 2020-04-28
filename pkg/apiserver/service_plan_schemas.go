@@ -70,9 +70,14 @@ func (p servicePlanSchemasHandler) getServicePlanSchema(req *restful.Request, re
 			return resp.WriteHeaderAndEntity(http.StatusNotFound, nil)
 		}
 
+		schema, err := provider.JSONSchema(kind, "")
+		if err != nil {
+			return err
+		}
+
 		resp.AddHeader("Content-Type", restful.MIME_JSON)
 		resp.WriteHeader(http.StatusOK)
-		if _, err := resp.Write([]byte(provider.JSONSchema(kind))); err != nil {
+		if _, err := resp.Write([]byte(schema)); err != nil {
 			return err
 		}
 		return nil

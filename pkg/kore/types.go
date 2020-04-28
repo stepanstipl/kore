@@ -40,7 +40,7 @@ const (
 var (
 	// Client is the default client for the kore
 	Client Interface
-	// ResourceNameFilter is a filter that all team names MUST comply with
+	// ResourceNameFilter is a filter that all resource names MUST comply with
 	// https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 	ResourceNameFilter = regexp.MustCompile(`^[a-z][a-z0-9]*(-[a-z0-9]+)*$`)
 )

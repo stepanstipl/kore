@@ -21,6 +21,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/appvia/kore/pkg/kore"
+	"k8s.io/apimachinery/pkg/types"
+
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/controllers"
@@ -52,11 +55,18 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
-		logger.WithError(err).Error("trying to retrieve service from api")
+		logger.WithError(err).Error("failed to retrieve service from api")
 
 		return reconcile.Result{}, err
 	}
 	original := service.DeepCopy()
+
+	plan := &servicesv1.ServicePlan{}
+	if err := c.mgr.GetClient().Get(ctx, types.NamespacedName{Namespace: kore.HubNamespace, Name: service.Spec.Plan}, plan); err != nil {
+		logger.WithError(err).Error("failed to retrieve service plan from api")
+
+		return reconcile.Result{}, err
+	}
 
 	provider := c.ServiceProviders().GetProviderForKind(service.Spec.Kind)
 	if provider == nil {
@@ -68,7 +78,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 	finalizer := kubernetes.NewFinalizer(c.mgr.GetClient(), finalizerName)
 	if finalizer.IsDeletionCandidate(service) {
-		return c.Delete(ctx, logger, service, finalizer, provider)
+		return c.Delete(ctx, logger, service, plan, finalizer, provider)
 	}
 
 	result, err := func() (reconcile.Result, error) {
@@ -76,7 +86,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 			c.EnsureFinalizer(logger, service, finalizer),
 			c.EnsureServicePending(logger, service),
 			func(ctx context.Context) (result reconcile.Result, err error) {
-				return provider.Reconcile(ctx, logger, service)
+				return provider.Reconcile(ctx, logger, service, plan)
 			},
 		}
 
@@ -98,6 +108,12 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 			service.Status.Status = corev1.FailureStatus
 			service.Status.Message = err.Error()
 		}
+	}
+
+	if err == nil && !result.Requeue && result.RequeueAfter == 0 {
+		service.Status.Plan = service.Spec.Plan
+		service.Status.Configuration = service.Spec.Configuration
+		service.Status.Status = corev1.SuccessStatus
 	}
 
 	if err := c.mgr.GetClient().Status().Patch(ctx, service, client.MergeFrom(original)); err != nil {

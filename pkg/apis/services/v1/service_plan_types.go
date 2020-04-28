@@ -56,6 +56,19 @@ type ServicePlan struct {
 	Spec ServicePlanSpec `json:"spec,omitempty"`
 }
 
+func NewServicePlan(name, namespace string) *ServicePlan {
+	return &ServicePlan{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ServicePlan",
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+	}
+}
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // ServicePlanList contains a list of service plans

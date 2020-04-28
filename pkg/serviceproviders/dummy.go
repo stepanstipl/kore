@@ -21,7 +21,6 @@ import (
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/kore"
 
@@ -67,7 +66,7 @@ func (d Dummy) Plans() []servicesv1.ServicePlan {
 	}
 }
 
-func (d Dummy) JSONSchema(_ string) string {
+func (d Dummy) JSONSchema(_, _ string) (string, error) {
 	return `{
 		"$id": "https://appvia.io/schemas/services/dummy/dummy.json",
 		"$schema": "http://json-schema.org/draft-07/schema#",
@@ -83,10 +82,10 @@ func (d Dummy) JSONSchema(_ string) string {
 				"minLength": 1
 			}
 		}
-	}`
+	}`, nil
 }
 
-func (d Dummy) CredentialsJSONSchema(_ string) string {
+func (d Dummy) CredentialsJSONSchema(_, _ string) (string, error) {
 	return `{
 		"$id": "https://appvia.io/schemas/services/dummy/dummy-credentials.json",
 		"$schema": "http://json-schema.org/draft-07/schema#",
@@ -102,32 +101,50 @@ func (d Dummy) CredentialsJSONSchema(_ string) string {
 				"minLength": 1
 			}
 		}
-	}`
+	}`, nil
 }
 
-func (d Dummy) RequiredCredentialTypes(_ string) []schema.GroupVersionKind {
-	return nil
+func (d Dummy) RequiredCredentialTypes(_ string) ([]schema.GroupVersionKind, error) {
+	return nil, nil
 }
 
-func (d Dummy) Reconcile(_ context.Context, _ logrus.FieldLogger, service *servicesv1.Service) (reconcile.Result, error) {
-	service.Status.Status = corev1.SuccessStatus
+func (d Dummy) Reconcile(
+	_ context.Context,
+	_ logrus.FieldLogger,
+	service *servicesv1.Service,
+	_ *servicesv1.ServicePlan,
+) (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func (d Dummy) Delete(_ context.Context, _ logrus.FieldLogger, service *servicesv1.Service) (reconcile.Result, error) {
-	service.Status.Status = corev1.DeletedStatus
+func (d Dummy) Delete(
+	_ context.Context,
+	_ logrus.FieldLogger,
+	service *servicesv1.Service,
+	_ *servicesv1.ServicePlan,
+) (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func (d Dummy) ReconcileCredentials(_ context.Context, _ logrus.FieldLogger, creds *servicesv1.ServiceCredentials) (reconcile.Result, map[string]string, error) {
-	creds.Status.Status = corev1.SuccessStatus
+func (d Dummy) ReconcileCredentials(
+	_ context.Context,
+	_ logrus.FieldLogger,
+	_ *servicesv1.Service,
+	_ *servicesv1.ServicePlan,
+	creds *servicesv1.ServiceCredentials,
+) (reconcile.Result, map[string]string, error) {
 	res := map[string]string{
 		"superSecret": creds.Name + "-secret",
 	}
 	return reconcile.Result{}, res, nil
 }
 
-func (d Dummy) DeleteCredentials(_ context.Context, _ logrus.FieldLogger, creds *servicesv1.ServiceCredentials) (reconcile.Result, error) {
-	creds.Status.Status = corev1.DeletedStatus
+func (d Dummy) DeleteCredentials(
+	_ context.Context,
+	_ logrus.FieldLogger,
+	_ *servicesv1.Service,
+	_ *servicesv1.ServicePlan,
+	creds *servicesv1.ServiceCredentials,
+) (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }

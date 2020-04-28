@@ -22,8 +22,7 @@ type V1ServiceSpec struct {
 	Configuration *string `json:"configuration"`
 
 	// credentials
-	// Required: true
-	Credentials *V1Ownership `json:"credentials"`
+	Credentials *V1Ownership `json:"credentials,omitempty"`
 
 	// kind
 	// Required: true
@@ -71,8 +70,8 @@ func (m *V1ServiceSpec) validateConfiguration(formats strfmt.Registry) error {
 
 func (m *V1ServiceSpec) validateCredentials(formats strfmt.Registry) error {
 
-	if err := validate.Required("credentials", "body", m.Credentials); err != nil {
-		return err
+	if swag.IsZero(m.Credentials) { // not required
+		return nil
 	}
 
 	if m.Credentials != nil {

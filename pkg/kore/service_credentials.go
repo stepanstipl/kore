@@ -160,7 +160,8 @@ func (s *serviceCredentialsImpl) Update(ctx context.Context, serviceCreds *servi
 		)
 	}
 
-	if err := s.validateService(ctx, serviceCreds); err != nil {
+	service, err := s.validateService(ctx, serviceCreds)
+	if err != nil {
 		return err
 	}
 
@@ -174,7 +175,7 @@ func (s *serviceCredentialsImpl) Update(ctx context.Context, serviceCreds *servi
 			WithFieldErrorf("kind", validation.InvalidType, "%q is not a known service kind", serviceCreds.Spec.Kind)
 	}
 
-	if err := s.validateConfiguration(ctx, serviceCreds, provider); err != nil {
+	if err := s.validateConfiguration(ctx, service, serviceCreds, provider); err != nil {
 		return err
 	}
 
@@ -184,14 +185,24 @@ func (s *serviceCredentialsImpl) Update(ctx context.Context, serviceCreds *servi
 	)
 }
 
-func (s *serviceCredentialsImpl) validateConfiguration(_ context.Context, serviceCreds *servicesv1.ServiceCredentials, provider ServiceProvider) error {
+func (s *serviceCredentialsImpl) validateConfiguration(
+	_ context.Context,
+	service *servicesv1.Service,
+	serviceCreds *servicesv1.ServiceCredentials,
+	provider ServiceProvider,
+) error {
 	serviceCredsCfg := make(map[string]interface{})
 	if err := json.NewDecoder(bytes.NewReader(serviceCreds.Spec.Configuration.Raw)).Decode(&serviceCredsCfg); err != nil {
 		return fmt.Errorf("failed to parse service configuration values: %s", err)
 	}
 
+	schema, err := provider.CredentialsJSONSchema(serviceCreds.Spec.Kind, service.Spec.Plan)
+	if err != nil {
+		return err
+	}
+
 	if err := jsonschema.Validate(
-		provider.CredentialsJSONSchema(serviceCreds.Spec.Kind),
+		schema,
 		"configuration",
 		serviceCreds.Spec.Configuration.Raw,
 	); err != nil {
@@ -201,9 +212,9 @@ func (s *serviceCredentialsImpl) validateConfiguration(_ context.Context, servic
 	return nil
 }
 
-func (s *serviceCredentialsImpl) validateService(ctx context.Context, serviceCreds *servicesv1.ServiceCredentials) error {
+func (s *serviceCredentialsImpl) validateService(ctx context.Context, serviceCreds *servicesv1.ServiceCredentials) (*servicesv1.Service, error) {
 	if serviceCreds.Spec.Service.Namespace != serviceCreds.Namespace {
-		return validation.NewError("%q failed validation", serviceCreds.Name).WithFieldErrorf(
+		return nil, validation.NewError("%q failed validation", serviceCreds.Name).WithFieldErrorf(
 			"service.namespace",
 			validation.InvalidValue,
 			"must be the same as the team name: %q",
@@ -212,7 +223,7 @@ func (s *serviceCredentialsImpl) validateService(ctx context.Context, serviceCre
 	}
 
 	if !serviceCreds.Spec.Service.HasGroupVersionKind(servicesv1.ServiceGroupVersionKind) {
-		return validation.NewError("%q failed validation", serviceCreds.Name).WithFieldErrorf(
+		return nil, validation.NewError("%q failed validation", serviceCreds.Name).WithFieldErrorf(
 			"service",
 			validation.InvalidValue,
 			"must have type of %s",
@@ -220,17 +231,17 @@ func (s *serviceCredentialsImpl) validateService(ctx context.Context, serviceCre
 		)
 	}
 
-	_, err := s.Teams().Team(s.team).Services().Get(ctx, serviceCreds.Spec.Service.Name)
+	service, err := s.Teams().Team(s.team).Services().Get(ctx, serviceCreds.Spec.Service.Name)
 	if err != nil {
 		if kerrors.IsNotFound(err) {
-			return validation.NewError("%q failed validation", serviceCreds.Name).WithFieldError(
+			return nil, validation.NewError("%q failed validation", serviceCreds.Name).WithFieldError(
 				"service.name",
 				validation.MustExist,
 				"does not exist",
 			)
 		}
 	}
-	return nil
+	return service, nil
 }
 
 func (s *serviceCredentialsImpl) validateCluster(ctx context.Context, serviceCreds *servicesv1.ServiceCredentials) error {

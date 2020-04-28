@@ -57,6 +57,12 @@ type ServiceCredentialsStatus struct {
 	// Message is the description of the current status
 	// +kubebuilder:validation:Optional
 	Message string `json:"message,omitempty"`
+	// ProviderID is the service credentials identifier in the service provider
+	// +kubebuilder:validation:Optional
+	ProviderID string `json:"providerID,omitempty"`
+	// ProviderData is provider specific data
+	// +kubebuilder:validation:Optional
+	ProviderData string `json:"providerData,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -71,6 +77,19 @@ type ServiceCredentials struct {
 
 	Spec   ServiceCredentialsSpec   `json:"spec,omitempty"`
 	Status ServiceCredentialsStatus `json:"status,omitempty"`
+}
+
+func NewServiceCredentials(name, namespace string) *ServiceCredentials {
+	return &ServiceCredentials{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ServiceCredentials",
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+	}
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -19,7 +19,6 @@ package kore
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
@@ -41,20 +40,38 @@ type ServiceProvider interface {
 	Kinds() []string
 	// Plans returns all default service plans for this provider
 	Plans() []servicesv1.ServicePlan
-	// JSONSchema returns the JSON schema for a service kind
-	JSONSchema(kind string) string
+	// JSONSchema returns the JSON schema for the given service kind and plan
+	JSONSchema(kind string, plan string) (string, error)
 	// CredentialsJSONSchema returns the JSON schema for the credentials configuration
-	CredentialsJSONSchema(kind string) string
+	CredentialsJSONSchema(kind string, plan string) (string, error)
 	// RequiredCredentialTypes returns with the required credential types
-	RequiredCredentialTypes(kind string) []schema.GroupVersionKind
+	RequiredCredentialTypes(kind string) ([]schema.GroupVersionKind, error)
 	// Reconcile will create or update the service
-	Reconcile(context.Context, log.FieldLogger, *servicesv1.Service) (reconcile.Result, error)
+	Reconcile(
+		context.Context,
+		log.FieldLogger,
+		*servicesv1.Service,
+		*servicesv1.ServicePlan) (reconcile.Result, error)
 	// Delete will delete the service
-	Delete(context.Context, log.FieldLogger, *servicesv1.Service) (reconcile.Result, error)
+	Delete(
+		context.Context,
+		log.FieldLogger,
+		*servicesv1.Service,
+		*servicesv1.ServicePlan) (reconcile.Result, error)
 	// ReconcileCredentials will create or update the service credentials
-	ReconcileCredentials(context.Context, log.FieldLogger, *servicesv1.ServiceCredentials) (reconcile.Result, map[string]string, error)
+	ReconcileCredentials(
+		context.Context,
+		log.FieldLogger,
+		*servicesv1.Service,
+		*servicesv1.ServicePlan,
+		*servicesv1.ServiceCredentials) (reconcile.Result, map[string]string, error)
 	// DeleteCredentials will delete the service credentials
-	DeleteCredentials(context.Context, log.FieldLogger, *servicesv1.ServiceCredentials) (reconcile.Result, error)
+	DeleteCredentials(
+		context.Context,
+		log.FieldLogger,
+		*servicesv1.Service,
+		*servicesv1.ServicePlan,
+		*servicesv1.ServiceCredentials) (reconcile.Result, error)
 }
 
 type ServiceProviderRegistry struct {
@@ -73,7 +90,7 @@ func (s *ServiceProviderRegistry) Register(provider ServiceProvider) {
 func (s *ServiceProviderRegistry) GetProviderForKind(kind string) ServiceProvider {
 	for _, provider := range s.providers {
 		for _, k := range provider.Kinds() {
-			if strings.EqualFold(k, kind) {
+			if k == kind {
 				return provider
 			}
 		}

@@ -49,7 +49,7 @@ type ServiceSpec struct {
 	Configuration apiextv1.JSON `json:"configuration"`
 	// Credentials is a reference to the credentials object to use
 	// +kubebuilder:validation:Optional
-	Credentials corev1.Ownership `json:"credentials"`
+	Credentials corev1.Ownership `json:"credentials,omitempty"`
 }
 
 // ServiceStatus defines the observed state of a service
@@ -64,6 +64,19 @@ type ServiceStatus struct {
 	// Message is the description of the current status
 	// +kubebuilder:validation:Optional
 	Message string `json:"message,omitempty"`
+	// ProviderID is the service identifier in the service provider
+	// +kubebuilder:validation:Optional
+	ProviderID string `json:"providerID,omitempty"`
+	// ProviderData is provider specific data
+	// +kubebuilder:validation:Optional
+	ProviderData string `json:"providerData,omitempty"`
+	// Plan is the name of the service plan which was used to create this service
+	// +kubebuilder:validation:Optional
+	Plan string `json:"plan,omitempty"`
+	// Configuration are the applied configuration values for this service
+	// +kubebuilder:validation:Type=object
+	// +kubebuilder:validation:Optional
+	Configuration apiextv1.JSON `json:"configuration,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -78,6 +91,19 @@ type Service struct {
 
 	Spec   ServiceSpec   `json:"spec,omitempty"`
 	Status ServiceStatus `json:"status,omitempty"`
+}
+
+func NewService(name, namespace string) *Service {
+	return &Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Service",
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+	}
 }
 
 // Ownership creates an Ownership object

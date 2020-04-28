@@ -21,8 +21,20 @@ type V1ServiceStatus struct {
 	// components
 	Components []*V1Component `json:"components"`
 
+	// configuration
+	Configuration string `json:"configuration,omitempty"`
+
 	// message
 	Message string `json:"message,omitempty"`
+
+	// plan
+	Plan string `json:"plan,omitempty"`
+
+	// provider data
+	ProviderData string `json:"providerData,omitempty"`
+
+	// provider ID
+	ProviderID string `json:"providerID,omitempty"`
 
 	// status
 	Status string `json:"status,omitempty"`

@@ -309,6 +309,7 @@ func (in *ServiceStatus) DeepCopyInto(out *ServiceStatus) {
 			}
 		}
 	}
+	in.Configuration.DeepCopyInto(&out.Configuration)
 	return
 }
 

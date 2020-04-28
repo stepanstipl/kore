@@ -147,6 +147,28 @@ func (s *servicesImpl) Update(ctx context.Context, service *servicesv1.Service) 
 		return NewErrNotAllowed("must be global admin or a team member")
 	}
 
+	if err := IsValidResourceName("service", service.Name); err != nil {
+		return err
+	}
+
+	if !ResourceNameFilter.MatchString(service.Spec.Kind) {
+		return validation.NewError("service has failed validation").WithFieldErrorf(
+			"kind",
+			validation.InvalidValue,
+			"must match %s",
+			ResourceNameFilter.String(),
+		)
+	}
+
+	if !ResourceNameFilter.MatchString(service.Spec.Plan) {
+		return validation.NewError("service has failed validation").WithFieldErrorf(
+			"plan",
+			validation.InvalidValue,
+			"must match %s",
+			ResourceNameFilter.String(),
+		)
+	}
+
 	existing, err := s.Get(ctx, service.Name)
 	if err != nil && err != ErrNotFound {
 		return err
@@ -176,11 +198,6 @@ func (s *servicesImpl) Update(ctx context.Context, service *servicesv1.Service) 
 			"must be the same as the team name: %q",
 			s.team,
 		)
-	}
-
-	if len(service.Name) > 40 {
-		return validation.NewError("service has failed validation").
-			WithFieldError("name", validation.MaxLength, "must be 40 characters or less")
 	}
 
 	provider := s.serviceProviders.GetProviderForKind(service.Spec.Kind)
@@ -219,7 +236,7 @@ func (s *servicesImpl) validateConfiguration(ctx context.Context, service *servi
 		return err
 	}
 
-	if !strings.EqualFold(plan.Spec.Kind, service.Spec.Kind) {
+	if plan.Spec.Kind != service.Spec.Kind {
 		return validation.NewError("%q failed validation", service.Name).
 			WithFieldErrorf("plan", validation.InvalidType, "service has kind %q, but plan has %q", service.Spec.Kind, plan.Spec.Kind)
 	}
@@ -234,7 +251,12 @@ func (s *servicesImpl) validateConfiguration(ctx context.Context, service *servi
 		return fmt.Errorf("failed to parse service configuration values: %s", err)
 	}
 
-	if err := jsonschema.Validate(provider.JSONSchema(service.Spec.Kind), "service", service.Spec.Configuration.Raw); err != nil {
+	schema, err := provider.JSONSchema(service.Spec.Kind, service.Spec.Plan)
+	if err != nil {
+		return err
+	}
+
+	if err := jsonschema.Validate(schema, "service", service.Spec.Configuration.Raw); err != nil {
 		return err
 	}
 
@@ -260,7 +282,11 @@ func (s *servicesImpl) validateConfiguration(ctx context.Context, service *servi
 }
 
 func (s *servicesImpl) validateCredentials(ctx context.Context, service *servicesv1.Service, provider ServiceProvider) error {
-	expectedKinds := provider.RequiredCredentialTypes(service.Spec.Kind)
+	expectedKinds, err := provider.RequiredCredentialTypes(service.Spec.Kind)
+	if err != nil {
+		return err
+	}
+
 	creds := service.Spec.Credentials
 
 	if expectedKinds == nil {
