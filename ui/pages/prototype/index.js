@@ -4,12 +4,12 @@ const { Title, Text } = Typography
 
 const prototypeList = [{
   title: 'Setup wizard',
-  description: 'Setup Kore cloud access and team project settings for GCP',
+  description: 'Setup Kore cloud access and team project automation settings for GCP',
   path: '/prototype/setup/kore'
 }, {
-  title: 'Team settings',
-  description: 'Configure teams settings, such as targets available for teams',
-  path: '/prototype/configure/settings'
+  title: 'Project automation settings',
+  description: 'Configure the team project automation settings, within the configure cloud page',
+  path: '/prototype/configure/cloud'
 }, {
   title: 'Security',
   description: 'Review the security posture of all Kore-provisioned clusters and plans',

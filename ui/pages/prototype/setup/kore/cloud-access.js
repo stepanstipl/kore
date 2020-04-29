@@ -1,6 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
-import { Typography, Card, Alert, Divider, Tooltip, Radio, List, Icon, Steps, Button, Row, Col, Modal , Drawer, Form, Input, Popover, Result } from 'antd'
+import { Typography, Card, Alert, Divider, Tooltip, Radio, List, Icon, Steps, Button, Row, Col, Modal , Drawer, Form, Input, Popover, Result, message } from 'antd'
 const { Title, Text, Paragraph } = Typography
 const { Step } = Steps
 
@@ -8,7 +8,6 @@ import copy from '../../../../lib/utils/object-copy'
 import canonical from '../../../../lib/utils/canonical'
 import KoreApi from '../../../../lib/kore-api'
 import GKECredentialsList from '../../../../lib/components/configure/GKECredentialsList'
-import PlanList from '../../../../lib/components/configure/PlanList'
 import PlanViewer from '../../../../lib/components/configure/PlanViewer'
 import CloudSelector from '../../../../lib/components/cluster-build/CloudSelector'
 
@@ -42,13 +41,11 @@ class CloudAccessPage extends React.Component {
 
   stepsKoreManaged = [
     { id: 'CREDS', title: 'Credentials' },
-    { id: 'PLANS', title: 'Review plans' },
     { id: 'PROJECTS', title: 'Project automation' }
   ]
 
   stepsExisting = [
     { id: 'CREDS', title: 'Credentials' },
-    { id: 'PLANS', title: 'Review plans' },
     { id: 'ACCESS', title: 'Project access' }
   ]
 
@@ -56,7 +53,7 @@ class CloudAccessPage extends React.Component {
     selectedCloud: '',
     gcpManagementType: '',
     gcpProjectAutomationType: '',
-    gcpProjectList: CloudAccessPage.initialProjectList,
+    gcpProjectList: [],
     currentStepKoreManaged: 0,
     currentStepExisting: 0,
     stepsKoreManagedComplete: false,
@@ -112,9 +109,12 @@ class CloudAccessPage extends React.Component {
   selectGcpProjectAutomationType = e => this.setState({ gcpProjectAutomationType: e.target.value })
 
   deleteGcpProject = (code) => {
-    return () => this.setState({
-      gcpProjectList: this.state.gcpProjectList.filter(p => p.code !== code)
-    })
+    return () => {
+      this.setState({
+        gcpProjectList: this.state.gcpProjectList.filter(p => p.code !== code)
+      })
+      message.success('GCP automated project removed')
+    }
   }
 
   onChange = (code, property) => {
@@ -148,6 +148,7 @@ class CloudAccessPage extends React.Component {
       const gcpProjectList = copy(this.state.gcpProjectList)
       gcpProjectList.find(p => p.code === projectCode).plans.push(plan)
       this.setState({ gcpProjectList })
+      message.success('Plan associated')
     }
   }
 
@@ -183,8 +184,11 @@ class CloudAccessPage extends React.Component {
       const project = gcpProjectList.find(p => p.code === projectCode)
       project.plans = project.plans.filter(p => p !== plan)
       this.setState({ gcpProjectList })
+      message.success('Plan unassociated')
     }
   }
+
+  setGcpProjectsToDefault = () => this.setState({ gcpProjectList: CloudAccessPage.initialProjectList })
 
   addProject = (enabled) => () => this.setState({ addProject: enabled })
 
@@ -194,6 +198,7 @@ class CloudAccessPage extends React.Component {
       gcpProjectList: this.state.gcpProjectList.concat([{ code, plans: [], ...project }]),
       addProject: false
     })
+    message.success('GCP automated project added')
   }
 
   IconTooltip = ({ icon, text }) => (
@@ -244,7 +249,7 @@ class CloudAccessPage extends React.Component {
               <Radio.Group onChange={this.selectGcpManagementType} value={gcpManagementType} disabled={stepsKoreManagedComplete || stepsExistingComplete}>
                 <Radio value={'KORE'} style={{ marginRight: '20px' }}>
                   <Text style={{ fontSize: '16px', fontWeight: '600' }}>Kore managed projects <Text type="secondary">(recommended)</Text></Text>
-                  <Paragraph style={{ marginLeft: '24px', marginBottom: '0' }}>Kore will manage the GCP projects required for teams and their clusters</Paragraph>
+                  <Paragraph style={{ marginLeft: '24px', marginBottom: '0' }}>Kore will manage the GCP projects required for teams</Paragraph>
                 </Radio>
                 <Radio value={'EXTERNAL'}>
                   <Text style={{ fontSize: '16px', fontWeight: '600' }}>Use existing projects</Text>
@@ -262,7 +267,6 @@ class CloudAccessPage extends React.Component {
                   extra={<Link href="/prototype/setup/kore/complete"><Button type="primary" key="continue">Continue</Button></Link>}
                 >
                   <Paragraph><Icon type="check-circle" theme="twoTone" twoToneColor="#52c41a" /> GCP organization credentials</Paragraph>
-                  <Paragraph><Icon type="check-circle" theme="twoTone" twoToneColor="#52c41a" /> Review cluster plans</Paragraph>
                   <Paragraph><Icon type="check-circle" theme="twoTone" twoToneColor="#52c41a" /> Project automation</Paragraph>
                 </Result>
               </Card>
@@ -282,12 +286,6 @@ class CloudAccessPage extends React.Component {
                       <>
                         <Paragraph style={{ fontSize: '16px', fontWeight: '600' }}>Add one or more GCP organization credentials</Paragraph>
                         <GCPOrganizationsList />
-                      </>
-                    ) : null}
-                    {this.stepsKoreManaged[currentStepKoreManaged].id === 'PLANS' ? (
-                      <>
-                        <Paragraph style={{ fontSize: '16px', fontWeight: '600' }}>Review the cluster plans available for GKE</Paragraph>
-                        <PlanList kind={selectedCloud} />
                       </>
                     ) : null}
                     {this.stepsKoreManaged[currentStepKoreManaged].id === 'PROJECTS' ? (
@@ -333,87 +331,94 @@ class CloudAccessPage extends React.Component {
                               showIcon
                               style={{ marginBottom: '20px' }}
                             />
-                            <Button type="primary" onClick={this.addProject(true)} style={{ display: 'block', marginBottom: '20px' }}>+ New</Button>
-                            <List
-                              itemLayout="vertical"
-                              bordered={true}
-                              dataSource={gcpProjectList}
-                              renderItem={project => (
-                                <List.Item actions={[<a key="delete" onClick={this.deleteGcpProject(project.code)}><Icon type="delete" /> Remove</a>]}>
-                                  <List.Item.Meta
-                                    title={<Text editable={{ onChange: this.onChange(project.code, 'title') }} style={{ fontSize: '16px' }}>{project.title}</Text>}
-                                    description={<Text editable={{ onChange: this.onChange(project.code, 'description') }}>{project.description}</Text>}
-                                  />
+                            <div style={{ display: 'block', marginBottom: '20px' }}>
+                              <Button type="primary" onClick={this.addProject(true)}>+ New</Button>
+                              <Button type="link" onClick={this.setGcpProjectsToDefault}>Set to Kore defaults</Button>
+                            </div>
+                            {gcpProjectList.length === 0 ? (
+                              <Paragraph>No automated projects configured, you can &apos;Set to Kore defaults&apos; and/or add new ones. </Paragraph>
+                            ) : (
+                              <List
+                                itemLayout="vertical"
+                                bordered={true}
+                                dataSource={gcpProjectList}
+                                renderItem={project => (
+                                  <List.Item actions={[<a key="delete" onClick={this.deleteGcpProject(project.code)}><Icon type="delete" /> Remove</a>]}>
+                                    <List.Item.Meta
+                                      title={<Text editable={{ onChange: this.onChange(project.code, 'title') }} style={{ fontSize: '16px' }}>{project.title}</Text>}
+                                      description={<Text editable={{ onChange: this.onChange(project.code, 'description') }}>{project.description}</Text>}
+                                    />
 
-                                  <Row gutter={16}>
-                                    <Col span={8}>
-                                      <Card
-                                        title="Naming"
-                                        size="small"
-                                        bordered={false}
-                                      >
-                                        <Paragraph>The project will be named using the team name, with the prefix and suffix below</Paragraph>
-                                        <Row style={{ padding: '5px 0' }}>
-                                          <Col span={8}>
-                                          Prefix
-                                          </Col>
-                                          <Col span={16}>
-                                            <Text editable={{ onChange: this.onChange(project.code, 'prefix') }}>{project.prefix}</Text>
-                                          </Col>
-                                        </Row>
-                                        <Row style={{ padding: '5px 0' }}>
-                                          <Col span={8}>
-                                          Suffix
-                                          </Col>
-                                          <Col span={16}>
-                                            <Text editable={{ onChange: this.onChange(project.code, 'suffix') }}>{project.suffix}</Text>
-                                          </Col>
-                                        </Row>
-                                        <Row style={{ paddingTop: '15px' }}>
-                                          <Col span={8}>
-                                          Example
-                                          </Col>
-                                          <Col span={16}>
-                                            <Text>{project.prefix}-<span style={{ fontStyle: 'italic' }}>team-name</span>-{project.suffix}</Text>
-                                          </Col>
-                                        </Row>
-                                      </Card>
-                                    </Col>
-                                    <Col span={8}>
-                                      <Card
-                                        title="Cluster plans"
-                                        size="small"
-                                        bordered={false}
-                                      >
-                                        <Paragraph>The cluster plans associated with this project.</Paragraph>
-                                        {project.plans.length === 0 ? <div style={{ padding: '5px 0' }}>No plans</div> : null}
-                                        {(plans || []).filter(p => project.plans.includes(p.metadata.name)).map((plan, i) => (
-                                          <div key={i} style={{ padding: '5px 0' }}>
-                                            <Text style={{ marginRight: '10px' }}>{plan.spec.description}</Text>
-                                            <this.IconTooltip icon="info-circle" text={plan.spec.summary} />
-                                            <this.IconTooltipButton icon="eye" text="View plan" onClick={this.showPlanDetails(plan)} />
-                                            <this.IconTooltipButton icon="delete" text="Unassociate plan" onClick={this.unassociatePlan(project.code, plan.metadata.name)} />
+                                    <Row gutter={16}>
+                                      <Col span={8}>
+                                        <Card
+                                          title="Naming"
+                                          size="small"
+                                          bordered={false}
+                                        >
+                                          <Paragraph>The project will be named using the team name, with the prefix and suffix below</Paragraph>
+                                          <Row style={{ padding: '5px 0' }}>
+                                            <Col span={8}>
+                                              Prefix
+                                            </Col>
+                                            <Col span={16}>
+                                              <Text editable={{ onChange: this.onChange(project.code, 'prefix') }}>{project.prefix}</Text>
+                                            </Col>
+                                          </Row>
+                                          <Row style={{ padding: '5px 0' }}>
+                                            <Col span={8}>
+                                              Suffix
+                                            </Col>
+                                            <Col span={16}>
+                                              <Text editable={{ onChange: this.onChange(project.code, 'suffix') }}>{project.suffix}</Text>
+                                            </Col>
+                                          </Row>
+                                          <Row style={{ paddingTop: '15px' }}>
+                                            <Col span={8}>
+                                              Example
+                                            </Col>
+                                            <Col span={16}>
+                                              <Text>{project.prefix}-<span style={{ fontStyle: 'italic' }}>team-name</span>-{project.suffix}</Text>
+                                            </Col>
+                                          </Row>
+                                        </Card>
+                                      </Col>
+                                      <Col span={8}>
+                                        <Card
+                                          title="Cluster plans"
+                                          size="small"
+                                          bordered={false}
+                                        >
+                                          <Paragraph>The cluster plans associated with this project.</Paragraph>
+                                          {project.plans.length === 0 ? <div style={{ padding: '5px 0' }}>No plans</div> : null}
+                                          {(plans || []).filter(p => project.plans.includes(p.metadata.name)).map((plan, i) => (
+                                            <div key={i} style={{ padding: '5px 0' }}>
+                                              <Text style={{ marginRight: '10px' }}>{plan.spec.description}</Text>
+                                              <this.IconTooltip icon="info-circle" text={plan.spec.summary} />
+                                              <this.IconTooltipButton icon="eye" text="View plan" onClick={this.showPlanDetails(plan)} />
+                                              <this.IconTooltipButton icon="delete" text="Unassociate plan" onClick={this.unassociatePlan(project.code, plan.metadata.name)} />
+                                            </div>
+                                          ))}
+                                          <div style={{ padding: '5px 0' }}>
+
+                                            <Popover
+                                              content={this.associatePlanContent(project.code)}
+                                              title={`${project.title}: Associate plans`}
+                                              trigger="click"
+                                              visible={associatePlanVisible === project.code}
+                                              onVisibleChange={this.handleAssociatePlanVisibleChange(project.code)}
+                                            >
+                                              <a>+ Associate plan</a>
+                                            </Popover>
                                           </div>
-                                        ))}
-                                        <div style={{ padding: '5px 0' }}>
+                                        </Card>
+                                      </Col>
+                                    </Row>
 
-                                          <Popover
-                                            content={this.associatePlanContent(project.code)}
-                                            title={`${project.title}: Associate plans`}
-                                            trigger="click"
-                                            visible={associatePlanVisible === project.code}
-                                            onVisibleChange={this.handleAssociatePlanVisibleChange(project.code)}
-                                          >
-                                            <a>+ Associate plan</a>
-                                          </Popover>
-                                        </div>
-                                      </Card>
-                                    </Col>
-                                  </Row>
-
-                                </List.Item>
-                              )}
-                            />
+                                  </List.Item>
+                                )}
+                              />
+                            )}
                             {addProject ? (
                               <Drawer
                                 title={<Title level={4}>New project</Title>}
@@ -463,7 +468,6 @@ class CloudAccessPage extends React.Component {
                   extra={<Link href="/prototype/setup/kore/complete"><Button type="primary" key="continue">Continue</Button></Link>}
                 >
                   <Paragraph><Icon type="check-circle" theme="twoTone" twoToneColor="#52c41a" /> GCP project credentials</Paragraph>
-                  <Paragraph><Icon type="check-circle" theme="twoTone" twoToneColor="#52c41a" /> Review cluster plans</Paragraph>
                   <Paragraph><Icon type="check-circle" theme="twoTone" twoToneColor="#52c41a" /> Project access guidance</Paragraph>
                 </Result>
               </Card>
@@ -484,12 +488,6 @@ class CloudAccessPage extends React.Component {
                     <>
                       <Paragraph style={{ fontSize: '16px', fontWeight: '600' }}>Add one or more GCP project credentials</Paragraph>
                       <GKECredentialsList />
-                    </>
-                  ) : null}
-                  {this.stepsExisting[currentStepExisting].id === 'PLANS' ? (
-                    <>
-                      <Paragraph style={{ fontSize: '16px', fontWeight: '600' }}>Review the cluster plans available for GKE</Paragraph>
-                      <PlanList kind={selectedCloud} />
                     </>
                   ) : null}
                   {this.stepsExisting[currentStepExisting].id === 'ACCESS' ? (
