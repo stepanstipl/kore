@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"strings"
 
+	"k8s.io/apimachinery/pkg/runtime/schema"
+
 	log "github.com/sirupsen/logrus"
 
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
@@ -41,10 +43,18 @@ type ServiceProvider interface {
 	Plans() []servicesv1.ServicePlan
 	// JSONSchema returns the JSON schema for a service kind
 	JSONSchema(kind string) string
+	// CredentialsJSONSchema returns the JSON schema for the credentials configuration
+	CredentialsJSONSchema(kind string) string
+	// RequiredCredentialTypes returns with the required credential types
+	RequiredCredentialTypes(kind string) []schema.GroupVersionKind
 	// Reconcile will create or update the service
 	Reconcile(context.Context, log.FieldLogger, *servicesv1.Service) (reconcile.Result, error)
 	// Delete will delete the service
 	Delete(context.Context, log.FieldLogger, *servicesv1.Service) (reconcile.Result, error)
+	// ReconcileCredentials will create or update the service credentials
+	ReconcileCredentials(context.Context, log.FieldLogger, *servicesv1.ServiceCredentials) (reconcile.Result, map[string]string, error)
+	// DeleteCredentials will delete the service credentials
+	DeleteCredentials(context.Context, log.FieldLogger, *servicesv1.ServiceCredentials) (reconcile.Result, error)
 }
 
 type ServiceProviderRegistry struct {

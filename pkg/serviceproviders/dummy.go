@@ -19,6 +19,8 @@ package serviceproviders
 import (
 	"context"
 
+	"k8s.io/apimachinery/pkg/runtime/schema"
+
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/kore"
@@ -65,7 +67,7 @@ func (d Dummy) Plans() []servicesv1.ServicePlan {
 	}
 }
 
-func (d Dummy) JSONSchema(kind string) string {
+func (d Dummy) JSONSchema(_ string) string {
 	return `{
 		"$id": "https://appvia.io/schemas/services/dummy/dummy.json",
 		"$schema": "http://json-schema.org/draft-07/schema#",
@@ -84,6 +86,29 @@ func (d Dummy) JSONSchema(kind string) string {
 	}`
 }
 
+func (d Dummy) CredentialsJSONSchema(_ string) string {
+	return `{
+		"$id": "https://appvia.io/schemas/services/dummy/dummy-credentials.json",
+		"$schema": "http://json-schema.org/draft-07/schema#",
+		"description": "Dummy service plan credentials schema",
+		"type": "object",
+		"additionalProperties": false,
+		"required": [
+			"bar"
+		],
+		"properties": {
+			"bar": {
+				"type": "string",
+				"minLength": 1
+			}
+		}
+	}`
+}
+
+func (d Dummy) RequiredCredentialTypes(_ string) []schema.GroupVersionKind {
+	return nil
+}
+
 func (d Dummy) Reconcile(_ context.Context, _ logrus.FieldLogger, service *servicesv1.Service) (reconcile.Result, error) {
 	service.Status.Status = corev1.SuccessStatus
 	return reconcile.Result{}, nil
@@ -91,5 +116,18 @@ func (d Dummy) Reconcile(_ context.Context, _ logrus.FieldLogger, service *servi
 
 func (d Dummy) Delete(_ context.Context, _ logrus.FieldLogger, service *servicesv1.Service) (reconcile.Result, error) {
 	service.Status.Status = corev1.DeletedStatus
+	return reconcile.Result{}, nil
+}
+
+func (d Dummy) ReconcileCredentials(_ context.Context, _ logrus.FieldLogger, creds *servicesv1.ServiceCredentials) (reconcile.Result, map[string]string, error) {
+	creds.Status.Status = corev1.SuccessStatus
+	res := map[string]string{
+		"superSecret": creds.Name + "-secret",
+	}
+	return reconcile.Result{}, res, nil
+}
+
+func (d Dummy) DeleteCredentials(_ context.Context, _ logrus.FieldLogger, creds *servicesv1.ServiceCredentials) (reconcile.Result, error) {
+	creds.Status.Status = corev1.DeletedStatus
 	return reconcile.Result{}, nil
 }

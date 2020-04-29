@@ -3356,6 +3356,208 @@
         }
       }
     },
+    "/api/v1alpha1/teams/{team}/servicecredentials": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Lists all service credentials for a team",
+        "operationId": "ListServiceCredentials",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of all service credentials for a team",
+            "schema": {
+              "$ref": "#/definitions/v1.ServiceCredentials"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/teams/{team}/servicecredentials/{name}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Returns the requsted service credentials",
+        "operationId": "GetServiceCredentials",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name of the service credentials",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The requested service crendential details",
+            "schema": {
+              "$ref": "#/definitions/v1.ServiceCredentials"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "the service credentials with the given name doesn't exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Creates or updates service credentials",
+        "operationId": "UpdateServiceCredentials",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name the of the service credentials",
+            "name": "name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "The definition for the service credentials",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.ServiceCredentials"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The service credentail details",
+            "schema": {
+              "$ref": "#/definitions/v1.ServiceCredentials"
+            }
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Deletes the given service credentials",
+        "operationId": "DeleteServiceCredentials",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the service credentials",
+            "name": "name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former service credentials definition",
+            "schema": {
+              "$ref": "#/definitions/v1.ServiceCredentials"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "the service credentials with the given name doesn't exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
     "/api/v1alpha1/teams/{team}/serviceplans/{plan}": {
       "get": {
         "consumes": [
@@ -5291,6 +5493,66 @@
         }
       }
     },
+    "v1.ServiceCredentials": {
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1.ServiceCredentialsSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/v1.ServiceCredentialsStatus"
+        }
+      }
+    },
+    "v1.ServiceCredentialsSpec": {
+      "required": [
+        "kind",
+        "configuration"
+      ],
+      "properties": {
+        "cluster": {
+          "$ref": "#/definitions/v1.Ownership"
+        },
+        "clusterNamespace": {
+          "type": "string"
+        },
+        "configuration": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "service": {
+          "$ref": "#/definitions/v1.Ownership"
+        }
+      }
+    },
+    "v1.ServiceCredentialsStatus": {
+      "properties": {
+        "components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.Component"
+          }
+        },
+        "message": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
     "v1.ServiceList": {
       "required": [
         "items"
@@ -5389,11 +5651,15 @@
       "required": [
         "kind",
         "plan",
-        "configuration"
+        "configuration",
+        "credentials"
       ],
       "properties": {
         "configuration": {
           "type": "string"
+        },
+        "credentials": {
+          "$ref": "#/definitions/v1.Ownership"
         },
         "kind": {
           "type": "string"
@@ -5421,11 +5687,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
-        "clientScopes",
         "userClaims",
         "clientID",
         "clientSecret",
-        "issuer"
+        "issuer",
+        "clientScopes"
       ],
       "properties": {
         "clientID": {

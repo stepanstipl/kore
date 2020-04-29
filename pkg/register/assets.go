@@ -30,6 +30,7 @@
 // deploy/crds/org.kore.appvia.io_teaminvitations.yaml
 // deploy/crds/org.kore.appvia.io_teams.yaml
 // deploy/crds/org.kore.appvia.io_users.yaml
+// deploy/crds/services.kore.appvia.io_servicecredentials.yaml
 // deploy/crds/services.kore.appvia.io_serviceplans.yaml
 // deploy/crds/services.kore.appvia.io_services.yaml
 package register
@@ -5591,6 +5592,175 @@ func crdsOrgKoreAppviaIo_usersYaml() (*asset, error) {
 	return a, nil
 }
 
+var _crdsServicesKoreAppviaIo_servicecredentialsYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: servicecredentials.services.kore.appvia.io
+spec:
+  group: services.kore.appvia.io
+  names:
+    kind: ServiceCredentials
+    listKind: ServiceCredentialsList
+    plural: servicecredentials
+    singular: servicecredentials
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: ServiceCredentials is credentials provisioned by a service into
+        the target namespace
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: ServiceCredentialsSpec defines the the desired status for service
+            credentials
+          properties:
+            cluster:
+              description: Cluster contains the reference to the cluster where the
+                credentials will be saved as a secret
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
+            clusterNamespace:
+              description: ClusterNamespace is the target namespace in the cluster
+                where the secret will be created
+              type: string
+            configuration:
+              description: Configuration are the configuration values for this service
+                credentials It will be used by the service provider to provision the
+                credentials
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+            kind:
+              description: Kind refers to the service type
+              minLength: 1
+              type: string
+            service:
+              description: Service contains the reference to the service object
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
+          required:
+          - configuration
+          - kind
+          type: object
+        status:
+          description: ServiceCredentialsStatus defines the observed state of a service
+          properties:
+            components:
+              description: Components is a collection of component statuses
+              items:
+                description: Component the state of a component of the resource
+                properties:
+                  detail:
+                    description: Detail is additional details on the error is any
+                    type: string
+                  message:
+                    description: Message is a human readable message on the status
+                      of the component
+                    type: string
+                  name:
+                    description: Name is the name of the component
+                    type: string
+                  status:
+                    description: Status is the status of the component
+                    type: string
+                type: object
+              type: array
+            message:
+              description: Message is the description of the current status
+              type: string
+            status:
+              description: Status is the overall status of the service
+              type: string
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsServicesKoreAppviaIo_servicecredentialsYamlBytes() ([]byte, error) {
+	return _crdsServicesKoreAppviaIo_servicecredentialsYaml, nil
+}
+
+func crdsServicesKoreAppviaIo_servicecredentialsYaml() (*asset, error) {
+	bytes, err := crdsServicesKoreAppviaIo_servicecredentialsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/services.kore.appvia.io_servicecredentials.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _crdsServicesKoreAppviaIo_serviceplansYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -5732,6 +5902,32 @@ spec:
                 service configuration
               type: object
               x-kubernetes-preserve-unknown-fields: true
+            credentials:
+              description: Credentials is a reference to the credentials object to
+                use
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
             kind:
               description: Kind refers to the service type
               minLength: 1
@@ -5887,6 +6083,7 @@ var _bindata = map[string]func() (*asset, error){
 	"crds/org.kore.appvia.io_teaminvitations.yaml":                        crdsOrgKoreAppviaIo_teaminvitationsYaml,
 	"crds/org.kore.appvia.io_teams.yaml":                                  crdsOrgKoreAppviaIo_teamsYaml,
 	"crds/org.kore.appvia.io_users.yaml":                                  crdsOrgKoreAppviaIo_usersYaml,
+	"crds/services.kore.appvia.io_servicecredentials.yaml":                crdsServicesKoreAppviaIo_servicecredentialsYaml,
 	"crds/services.kore.appvia.io_serviceplans.yaml":                      crdsServicesKoreAppviaIo_serviceplansYaml,
 	"crds/services.kore.appvia.io_services.yaml":                          crdsServicesKoreAppviaIo_servicesYaml,
 }
@@ -5963,6 +6160,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"org.kore.appvia.io_teaminvitations.yaml":                        {crdsOrgKoreAppviaIo_teaminvitationsYaml, map[string]*bintree{}},
 		"org.kore.appvia.io_teams.yaml":                                  {crdsOrgKoreAppviaIo_teamsYaml, map[string]*bintree{}},
 		"org.kore.appvia.io_users.yaml":                                  {crdsOrgKoreAppviaIo_usersYaml, map[string]*bintree{}},
+		"services.kore.appvia.io_servicecredentials.yaml":                {crdsServicesKoreAppviaIo_servicecredentialsYaml, map[string]*bintree{}},
 		"services.kore.appvia.io_serviceplans.yaml":                      {crdsServicesKoreAppviaIo_serviceplansYaml, map[string]*bintree{}},
 		"services.kore.appvia.io_services.yaml":                          {crdsServicesKoreAppviaIo_servicesYaml, map[string]*bintree{}},
 	}},

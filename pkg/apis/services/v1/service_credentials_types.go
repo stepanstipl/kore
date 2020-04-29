@@ -18,43 +18,36 @@ package v1
 
 import (
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// ServiceGroupVersionKind is the GVK for a Service
-var ServiceGroupVersionKind = schema.GroupVersionKind{
-	Group:   GroupVersion.Group,
-	Version: GroupVersion.Version,
-	Kind:    "Service",
-}
-
-// ServiceSpec defines the desired state of a service
+// ServiceCredentialsSpec defines the the desired status for service credentials
 // +k8s:openapi-gen=true
-type ServiceSpec struct {
+type ServiceCredentialsSpec struct {
 	// Kind refers to the service type
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
 	Kind string `json:"kind"`
-	// Plan is the name of the service plan which was used to create this service
+	// Service contains the reference to the service object
 	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinLength=1
-	Plan string `json:"plan"`
-	// Configuration are the configuration values for this service
-	// It will contain values from the plan + overrides by the user
-	// This will provide a simple interface to calculate diffs between plan and service configuration
+	Service corev1.Ownership `json:"service,omitempty"`
+	// Cluster contains the reference to the cluster where the credentials will be saved as a secret
+	// +kubebuilder:validation:Required
+	Cluster corev1.Ownership `json:"cluster,omitempty"`
+	// ClusterNamespace is the target namespace in the cluster where the secret will be created
+	// +kubebuilder:validation:Required
+	ClusterNamespace string `json:"clusterNamespace,omitempty"`
+	// Configuration are the configuration values for this service credentials
+	// It will be used by the service provider to provision the credentials
 	// +kubebuilder:validation:Type=object
 	Configuration apiextv1.JSON `json:"configuration"`
-	// Credentials is a reference to the credentials object to use
-	// +kubebuilder:validation:Optional
-	Credentials corev1.Ownership `json:"credentials"`
 }
 
-// ServiceStatus defines the observed state of a service
+// ServiceCredentialsStatus defines the observed state of a service
 // +k8s:openapi-gen=true
-type ServiceStatus struct {
+type ServiceCredentialsStatus struct {
 	// Components is a collection of component statuses
 	// +kubebuilder:validation:Optional
 	Components corev1.Components `json:"components,omitempty"`
@@ -68,34 +61,23 @@ type ServiceStatus struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// Service is a managed service instance
+// ServiceCredentials is credentials provisioned by a service into the target namespace
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:path=services
-type Service struct {
+// +kubebuilder:resource:path=servicecredentials
+type ServiceCredentials struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   ServiceSpec   `json:"spec,omitempty"`
-	Status ServiceStatus `json:"status,omitempty"`
-}
-
-// Ownership creates an Ownership object
-func (s *Service) Ownership() corev1.Ownership {
-	return corev1.Ownership{
-		Group:     GroupVersion.Group,
-		Version:   GroupVersion.Version,
-		Kind:      "Service",
-		Namespace: s.Namespace,
-		Name:      s.Name,
-	}
+	Spec   ServiceCredentialsSpec   `json:"spec,omitempty"`
+	Status ServiceCredentialsStatus `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ServiceList contains a list of services
-type ServiceList struct {
+// ServiceCredentialsList contains a list of service credentials
+type ServiceCredentialsList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Service `json:"items"`
+	Items           []ServiceCredentials `json:"items"`
 }

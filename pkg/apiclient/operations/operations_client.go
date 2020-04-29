@@ -35,6 +35,8 @@ type ClientService interface {
 
 	DeleteService(params *DeleteServiceParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteServiceOK, error)
 
+	DeleteServiceCredentials(params *DeleteServiceCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteServiceCredentialsOK, error)
+
 	DeleteServicePLan(params *DeleteServicePLanParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteServicePLanOK, error)
 
 	DeleteTeamSecret(params *DeleteTeamSecretParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteTeamSecretOK, error)
@@ -72,6 +74,8 @@ type ClientService interface {
 	GetPlanSchema(params *GetPlanSchemaParams, authInfo runtime.ClientAuthInfoWriter) (*GetPlanSchemaOK, error)
 
 	GetService(params *GetServiceParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceOK, error)
+
+	GetServiceCredentials(params *GetServiceCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceCredentialsOK, error)
 
 	GetServicePlan(params *GetServicePlanParams, authInfo runtime.ClientAuthInfoWriter) (*GetServicePlanOK, error)
 
@@ -118,6 +122,8 @@ type ClientService interface {
 	ListPlanPolicies(params *ListPlanPoliciesParams, authInfo runtime.ClientAuthInfoWriter) (*ListPlanPoliciesOK, error)
 
 	ListPlans(params *ListPlansParams, authInfo runtime.ClientAuthInfoWriter) (*ListPlansOK, error)
+
+	ListServiceCredentials(params *ListServiceCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*ListServiceCredentialsOK, error)
 
 	ListServicePlans(params *ListServicePlansParams, authInfo runtime.ClientAuthInfoWriter) (*ListServicePlansOK, error)
 
@@ -180,6 +186,8 @@ type ClientService interface {
 	UpdatePlanPolicy(params *UpdatePlanPolicyParams, authInfo runtime.ClientAuthInfoWriter) (*UpdatePlanPolicyOK, error)
 
 	UpdateService(params *UpdateServiceParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateServiceOK, error)
+
+	UpdateServiceCredentials(params *UpdateServiceCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateServiceCredentialsOK, error)
 
 	UpdateServicePlan(params *UpdateServicePlanParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateServicePlanOK, error)
 
@@ -353,6 +361,41 @@ func (a *Client) DeleteService(params *DeleteServiceParams, authInfo runtime.Cli
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for DeleteService: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  DeleteServiceCredentials deletes the given service credentials
+*/
+func (a *Client) DeleteServiceCredentials(params *DeleteServiceCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteServiceCredentialsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewDeleteServiceCredentialsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "DeleteServiceCredentials",
+		Method:             "DELETE",
+		PathPattern:        "/api/v1alpha1/teams/{team}/servicecredentials/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &DeleteServiceCredentialsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*DeleteServiceCredentialsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for DeleteServiceCredentials: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1013,6 +1056,41 @@ func (a *Client) GetService(params *GetServiceParams, authInfo runtime.ClientAut
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for GetService: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  GetServiceCredentials returns the requsted service credentials
+*/
+func (a *Client) GetServiceCredentials(params *GetServiceCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceCredentialsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetServiceCredentialsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "GetServiceCredentials",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/servicecredentials/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetServiceCredentialsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetServiceCredentialsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetServiceCredentials: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1813,6 +1891,41 @@ func (a *Client) ListPlans(params *ListPlansParams, authInfo runtime.ClientAuthI
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for ListPlans: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  ListServiceCredentials lists all service credentials for a team
+*/
+func (a *Client) ListServiceCredentials(params *ListServiceCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*ListServiceCredentialsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewListServiceCredentialsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "ListServiceCredentials",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/servicecredentials",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &ListServiceCredentialsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*ListServiceCredentialsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for ListServiceCredentials: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -2890,6 +3003,41 @@ func (a *Client) UpdateService(params *UpdateServiceParams, authInfo runtime.Cli
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for UpdateService: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  UpdateServiceCredentials creates or updates service credentials
+*/
+func (a *Client) UpdateServiceCredentials(params *UpdateServiceCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateServiceCredentialsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewUpdateServiceCredentialsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "UpdateServiceCredentials",
+		Method:             "PUT",
+		PathPattern:        "/api/v1alpha1/teams/{team}/servicecredentials/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &UpdateServiceCredentialsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*UpdateServiceCredentialsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for UpdateServiceCredentials: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

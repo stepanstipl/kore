@@ -16,6 +16,12 @@
 
 package v1
 
+import (
+	"strings"
+
+	"k8s.io/apimachinery/pkg/runtime/schema"
+)
+
 // Ownership indicates the ownership of a resource
 // +k8s:openapi-gen=true
 type Ownership struct {
@@ -32,8 +38,12 @@ type Ownership struct {
 }
 
 func (o Ownership) IsSameType(o2 Ownership) bool {
-	return o.Group == o2.Group &&
-		o.Version == o2.Version &&
-		o.Kind == o2.Kind &&
-		o.Namespace == o2.Namespace
+	return strings.EqualFold(o.Group, o2.Group) &&
+		strings.EqualFold(o.Version, o2.Version) &&
+		strings.EqualFold(o.Kind, o2.Kind) &&
+		strings.EqualFold(o.Namespace, o2.Namespace)
+}
+
+func (o Ownership) HasGroupVersionKind(gvk schema.GroupVersionKind) bool {
+	return strings.EqualFold(gvk.Group, o.Group) && strings.EqualFold(gvk.Version, o.Version) && strings.EqualFold(gvk.Kind, o.Kind)
 }

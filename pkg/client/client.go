@@ -400,9 +400,7 @@ func (a *apiClient) Result(v interface{}) RestInterface {
 // InjectParam is responsible for injecting the parameter
 func (a *apiClient) InjectParam(key, value string) {
 	if value == "" {
-		a.ferror = ErrMissingParamValue
-
-		return
+		panic(fmt.Errorf("%q path parameter can not be empty", key))
 	}
 
 	a.parameters[key] = value

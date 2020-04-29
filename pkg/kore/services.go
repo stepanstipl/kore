@@ -24,6 +24,10 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/appvia/kore/pkg/utils"
+
+	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
+
 	"github.com/appvia/kore/pkg/utils/jsonschema"
 
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
@@ -54,22 +58,22 @@ type servicesImpl struct {
 }
 
 // Delete is used to delete a service
-func (c *servicesImpl) Delete(ctx context.Context, name string) (*servicesv1.Service, error) {
+func (s *servicesImpl) Delete(ctx context.Context, name string) (*servicesv1.Service, error) {
 	// @TODO check whether the user is an admin in the team
 
 	user := authentication.MustGetIdentity(ctx)
-	if !user.IsMember(c.team) && !user.IsGlobalAdmin() {
+	if !user.IsMember(s.team) && !user.IsGlobalAdmin() {
 		return nil, NewErrNotAllowed("must be global admin or a team member")
 	}
 
 	logger := log.WithFields(log.Fields{
 		"service": name,
-		"team":    c.team,
+		"team":    s.team,
 		"user":    user.Username(),
 	})
 	logger.Info("attempting to delete the service")
 
-	original, err := c.Get(ctx, name)
+	original, err := s.Get(ctx, name)
 	if err != nil {
 		if err == ErrNotFound {
 			return nil, err
@@ -80,35 +84,46 @@ func (c *servicesImpl) Delete(ctx context.Context, name string) (*servicesv1.Ser
 		return nil, err
 	}
 
-	return original, c.Store().Client().Delete(ctx, store.DeleteOptions.From(original))
+	creds, err := s.Teams().Team(s.team).ServiceCredentials().List(ctx)
+	if err != nil {
+		logger.WithError(err).Error("failed to retrieve the service credentials")
+
+		return nil, err
+	}
+
+	if creds != nil && len(creds.Items) > 0 {
+		return nil, fmt.Errorf("the service can not be deleted, please delete all service credentials first")
+	}
+
+	return original, s.Store().Client().Delete(ctx, store.DeleteOptions.From(original))
 }
 
 // List returns a list of services we have access to
-func (c *servicesImpl) List(ctx context.Context) (*servicesv1.ServiceList, error) {
+func (s *servicesImpl) List(ctx context.Context) (*servicesv1.ServiceList, error) {
 	user := authentication.MustGetIdentity(ctx)
-	if !user.IsMember(c.team) && !user.IsGlobalAdmin() {
+	if !user.IsMember(s.team) && !user.IsGlobalAdmin() {
 		return nil, NewErrNotAllowed("must be global admin or a team member")
 	}
 
 	list := &servicesv1.ServiceList{}
 
-	return list, c.Store().Client().List(ctx,
-		store.ListOptions.InNamespace(c.team),
+	return list, s.Store().Client().List(ctx,
+		store.ListOptions.InNamespace(s.team),
 		store.ListOptions.InTo(list),
 	)
 }
 
 // Get returns a specific service
-func (c *servicesImpl) Get(ctx context.Context, name string) (*servicesv1.Service, error) {
+func (s *servicesImpl) Get(ctx context.Context, name string) (*servicesv1.Service, error) {
 	user := authentication.MustGetIdentity(ctx)
-	if !user.IsMember(c.team) && !user.IsGlobalAdmin() {
+	if !user.IsMember(s.team) && !user.IsGlobalAdmin() {
 		return nil, NewErrNotAllowed("must be global admin or a team member")
 	}
 
 	service := &servicesv1.Service{}
 
-	if err := c.Store().Client().Get(ctx,
-		store.GetOptions.InNamespace(c.team),
+	if err := s.Store().Client().Get(ctx,
+		store.GetOptions.InNamespace(s.team),
 		store.GetOptions.InTo(service),
 		store.GetOptions.WithName(name),
 	); err != nil {
@@ -124,15 +139,15 @@ func (c *servicesImpl) Get(ctx context.Context, name string) (*servicesv1.Servic
 }
 
 // Update is used to update the service
-func (c *servicesImpl) Update(ctx context.Context, service *servicesv1.Service) error {
+func (s *servicesImpl) Update(ctx context.Context, service *servicesv1.Service) error {
 	// @TODO check whether the user is an admin in the team
 
 	user := authentication.MustGetIdentity(ctx)
-	if !user.IsMember(c.team) && !user.IsGlobalAdmin() {
+	if !user.IsMember(s.team) && !user.IsGlobalAdmin() {
 		return NewErrNotAllowed("must be global admin or a team member")
 	}
 
-	existing, err := c.Get(ctx, service.Name)
+	existing, err := s.Get(ctx, service.Name)
 	if err != nil && err != ErrNotFound {
 		return err
 	}
@@ -151,15 +166,15 @@ func (c *servicesImpl) Update(ctx context.Context, service *servicesv1.Service) 
 	}
 
 	if service.Namespace == "" {
-		service.Namespace = c.team
+		service.Namespace = s.team
 	}
 
-	if service.Namespace != c.team {
+	if service.Namespace != s.team {
 		return validation.NewError("service has failed validation").WithFieldErrorf(
 			"namespace",
 			validation.MustExist,
 			"must be the same as the team name: %q",
-			c.team,
+			s.team,
 		)
 	}
 
@@ -168,18 +183,28 @@ func (c *servicesImpl) Update(ctx context.Context, service *servicesv1.Service) 
 			WithFieldError("name", validation.MaxLength, "must be 40 characters or less")
 	}
 
-	if err := c.validateConfiguration(ctx, service); err != nil {
+	provider := s.serviceProviders.GetProviderForKind(service.Spec.Kind)
+	if provider == nil {
+		return validation.NewError("%q failed validation", service.Name).
+			WithFieldErrorf("kind", validation.InvalidType, "%q is not a known service kind", service.Spec.Kind)
+	}
+
+	if err := s.validateConfiguration(ctx, service, provider); err != nil {
 		return err
 	}
 
-	return c.Store().Client().Update(ctx,
+	if err := s.validateCredentials(ctx, service, provider); err != nil {
+		return err
+	}
+
+	return s.Store().Client().Update(ctx,
 		store.UpdateOptions.To(service),
 		store.UpdateOptions.WithCreate(true),
 	)
 }
 
-func (c *servicesImpl) validateConfiguration(ctx context.Context, service *servicesv1.Service) error {
-	plan, err := c.servicePlans.Get(ctx, service.Spec.Plan)
+func (s *servicesImpl) validateConfiguration(ctx context.Context, service *servicesv1.Service, provider ServiceProvider) error {
+	plan, err := s.servicePlans.Get(ctx, service.Spec.Plan)
 	if err != nil {
 		if err == ErrNotFound {
 			return validation.NewError("%q failed validation", service.Name).
@@ -187,7 +212,7 @@ func (c *servicesImpl) validateConfiguration(ctx context.Context, service *servi
 		}
 		log.WithFields(log.Fields{
 			"service": service.Name,
-			"team":    c.team,
+			"team":    s.team,
 			"plan":    service.Spec.Plan,
 		}).WithError(err).Error("failed to load service plan")
 
@@ -196,7 +221,7 @@ func (c *servicesImpl) validateConfiguration(ctx context.Context, service *servi
 
 	if !strings.EqualFold(plan.Spec.Kind, service.Spec.Kind) {
 		return validation.NewError("%q failed validation", service.Name).
-			WithFieldErrorf("plan", validation.InvalidType, "service has service kind %q, but plan has %q", service.Spec.Kind, plan.Spec.Kind)
+			WithFieldErrorf("plan", validation.InvalidType, "service has kind %q, but plan has %q", service.Spec.Kind, plan.Spec.Kind)
 	}
 
 	planConfiguration := make(map[string]interface{})
@@ -209,17 +234,11 @@ func (c *servicesImpl) validateConfiguration(ctx context.Context, service *servi
 		return fmt.Errorf("failed to parse service configuration values: %s", err)
 	}
 
-	provider := c.serviceProviders.GetProviderForKind(plan.Spec.Kind)
-	if provider == nil {
-		return validation.NewError("%q failed validation", service.Name).
-			WithFieldErrorf("kind", validation.InvalidType, "%q is not a known service kind", plan.Spec.Kind)
-	}
-
-	if err := jsonschema.Validate(provider.JSONSchema(service.Spec.Kind), "plan", service.Spec.Configuration.Raw); err != nil {
+	if err := jsonschema.Validate(provider.JSONSchema(service.Spec.Kind), "service", service.Spec.Configuration.Raw); err != nil {
 		return err
 	}
 
-	editableParams, err := c.servicePlans.GetEditablePlanParams(ctx, c.team, service.Spec.Kind)
+	editableParams, err := s.servicePlans.GetEditablePlanParams(ctx, s.team, service.Spec.Kind)
 	if err != nil {
 		return err
 	}
@@ -235,6 +254,67 @@ func (c *servicesImpl) validateConfiguration(ctx context.Context, service *servi
 	}
 	if verr.HasErrors() {
 		return verr
+	}
+
+	return nil
+}
+
+func (s *servicesImpl) validateCredentials(ctx context.Context, service *servicesv1.Service, provider ServiceProvider) error {
+	expectedKinds := provider.RequiredCredentialTypes(service.Spec.Kind)
+	creds := service.Spec.Credentials
+
+	if expectedKinds == nil {
+		if creds.Kind != "" {
+			return validation.NewError("service has failed validation").WithFieldError(
+				"credentials",
+				validation.InvalidType,
+				"should not be set as this service kind doesn't require credentials",
+			)
+		}
+		return nil
+	}
+
+	found := false
+	for _, gvk := range expectedKinds {
+		if creds.HasGroupVersionKind(gvk) {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		var expected []string
+		for _, gvk := range expectedKinds {
+			expected = append(expected, utils.FormatGroupVersionKind(gvk))
+		}
+		return validation.NewError("service has failed validation").WithFieldErrorf(
+			"credentials",
+			validation.InvalidType,
+			"should be one of: %s",
+			strings.Join(expected, ", "),
+		)
+	}
+
+	var alloc configv1.Allocation
+	credentialAllocations, err := s.Teams().Team(s.team).Allocations().ListAllocationsByType(
+		ctx, creds.Group, creds.Version, creds.Kind,
+	)
+	if err != nil {
+		return err
+	}
+	for _, a := range credentialAllocations.Items {
+		if a.Spec.Resource.Name == creds.Name {
+			alloc = a
+			break
+		}
+	}
+	if alloc.Name == "" {
+		return validation.NewError("service has failed validation").WithFieldErrorf(
+			"credentials",
+			validation.MustExist,
+			"%q does not exist or it is not assigned to the team",
+			creds.Name,
+		)
 	}
 
 	return nil

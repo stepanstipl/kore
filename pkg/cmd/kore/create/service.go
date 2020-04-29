@@ -17,12 +17,15 @@
 package create
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"regexp"
-	"strings"
 	"time"
+
+	"github.com/appvia/kore/pkg/utils/render"
+
+	"github.com/appvia/kore/pkg/client"
+
+	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/cmd/errors"
@@ -47,6 +50,12 @@ $ kore get serviceplan <name> -o yaml
 Examples:
 $ kore -t <myteam> create service foo --plan some-plan
 
+# You can override the plan parameters using the --param
+$ kore -t <myteam> create service foo --param configkey=value
+
+# You can using JSON values when setting a parameter
+$ kore -t <myteam> create service foo --param 'configlist=[1, 2, 3]'
+
 # Check the status of the service
 $ kore -t <myteam> get service foo -o yaml
 `
@@ -57,6 +66,8 @@ type CreateServiceOptions struct {
 	cmdutil.Factory
 	// Name is the name of the service
 	Name string
+	// Credentials is the credentials allocation to build the cluster off
+	Credentials string
 	// Description is a description of the service
 	Description string
 	// Plan is the plan to build the service off
@@ -69,6 +80,8 @@ type CreateServiceOptions struct {
 	NoWait bool
 	// ShowTime indicate we should show the build time
 	ShowTime bool
+	// DryRun indicates that we should print the object instead of creating it
+	DryRun bool
 }
 
 // NewCmdCreateService returns the create service command
@@ -84,10 +97,12 @@ func NewCmdCreateService(factory cmdutil.Factory) *cobra.Command {
 	}
 
 	flags := command.Flags()
+	flags.StringVarP(&o.Credentials, "credentials", "c", "", "name of the credentials allocation to use for this service `NAME`")
 	flags.StringVarP(&o.Plan, "plan", "p", "", "plan which this service will be templated from `NAME`")
 	flags.StringVarP(&o.Description, "description", "d", "", "a short description for the service `DESCRIPTION`")
-	flags.StringSliceVar(&o.PlanParams, "param", []string{}, "preprovision a collection namespaces on this service as well `NAMES`")
+	flags.StringArrayVar(&o.PlanParams, "param", []string{}, "a series of key value pairs used to override plan parameters  `KEY=VALUE`")
 	flags.BoolVarP(&o.ShowTime, "show-time", "T", false, "shows the time it took to successfully provision a new service `BOOL`")
+	flags.BoolVarP(&o.DryRun, "dry-run", "", false, "if true it will print the service object and won't call the API `BOOL`")
 
 	cmdutils.MustMarkFlagRequired(command, "plan")
 
@@ -133,9 +148,17 @@ func (o *CreateServiceOptions) Validate() error {
 
 // Run implements the action
 func (o *CreateServiceOptions) Run() error {
-	config, err := o.CreateServiceConfiguration()
+	service, err := o.CreateService()
 	if err != nil {
 		return err
+	}
+
+	if o.DryRun {
+		return render.Render().
+			Writer(o.Writer()).
+			Resource(render.FromStruct(service)).
+			Format(render.FormatYAML).
+			Do()
 	}
 
 	now := time.Now()
@@ -143,7 +166,7 @@ func (o *CreateServiceOptions) Run() error {
 	err = o.WaitForCreation(
 		o.ClientWithTeamResource(o.Team, o.Resources().MustLookup("service")).
 			Name(o.Name).
-			Payload(config),
+			Payload(service),
 		o.NoWait,
 	)
 	if err != nil {
@@ -157,30 +180,20 @@ func (o *CreateServiceOptions) Run() error {
 }
 
 // CreateServiceConfiguration is responsible for generating the service config
-func (o *CreateServiceOptions) CreateServiceConfiguration() (*servicesv1.Service, error) {
+func (o *CreateServiceOptions) CreateService() (*servicesv1.Service, error) {
 	plan, err := o.GetPlan()
 	if err != nil {
 		return nil, err
 	}
 
-	var configuration map[string]interface{}
-
-	if err := json.Unmarshal(plan.Spec.Configuration.Raw, &configuration); err != nil {
-		return nil, fmt.Errorf("failed to parse plan configuration: %s", err)
-	}
-
-	params, err := o.ParsePlanParams()
+	configJSON, err := cmdutil.PatchJSON(string(plan.Spec.Configuration.Raw), o.PlanParams)
 	if err != nil {
 		return nil, err
 	}
 
-	for k, v := range params {
-		configuration[k] = v
-	}
-
-	cc := &bytes.Buffer{}
-	if err := json.NewEncoder(cc).Encode(configuration); err != nil {
-		return nil, fmt.Errorf("failed to process service configuration: %s", err)
+	credentials, err := o.GetCredentialsAllocation()
+	if err != nil {
+		return nil, err
 	}
 
 	service := &servicesv1.Service{
@@ -195,33 +208,12 @@ func (o *CreateServiceOptions) CreateServiceConfiguration() (*servicesv1.Service
 		Spec: servicesv1.ServiceSpec{
 			Kind:          plan.Spec.Kind,
 			Plan:          plan.Name,
-			Configuration: apiexts.JSON{Raw: cc.Bytes()},
+			Configuration: apiexts.JSON{Raw: []byte(configJSON)},
+			Credentials:   credentials.Spec.Resource,
 		},
 	}
 
 	return service, nil
-}
-
-// ParsePlanParams is responsible for parsing the plan overrides
-func (o *CreateServiceOptions) ParsePlanParams() (map[string]interface{}, error) {
-	params := map[string]interface{}{}
-
-	for _, param := range o.PlanParams {
-		parts := regexp.MustCompile(`\s*=\s*`).Split(strings.TrimSpace(param), 2)
-		if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-			return nil, fmt.Errorf("invalid plan-param value %q, you must use param=<JSON value> format", param)
-		}
-		name := parts[0]
-		jsonValue := parts[1]
-
-		var parsed interface{}
-		if err := json.Unmarshal([]byte(jsonValue), &parsed); err != nil {
-			return nil, err
-		}
-		params[name] = parsed
-	}
-
-	return params, nil
 }
 
 // GetPlan retrieves the requested service plan
@@ -233,4 +225,27 @@ func (o *CreateServiceOptions) GetPlan() (*servicesv1.ServicePlan, error) {
 		Result(plan).
 		Get().
 		Error()
+}
+
+// GetAllocation retrieves the requested allocation
+func (o *CreateServiceOptions) GetCredentialsAllocation() (*configv1.Allocation, error) {
+	allocation := &configv1.Allocation{}
+
+	if o.Credentials == "" {
+		return allocation, nil
+	}
+
+	err := o.ClientWithTeamResource(o.Team, o.Resources().MustLookup("allocation")).
+		Name(o.Credentials).
+		Result(allocation).
+		Get().
+		Error()
+	if err != nil {
+		if client.IsNotFound(err) {
+			return nil, fmt.Errorf("credentials allocation %q does not exist", o.Credentials)
+		}
+		return nil, err
+	}
+
+	return allocation, nil
 }

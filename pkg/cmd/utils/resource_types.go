@@ -311,5 +311,20 @@ var (
 				{"Age", "metadata.creationTimestamp", "age"},
 			},
 		},
+		{
+			Name:         "servicecredential",
+			GroupVersion: servicesv1.GroupVersion.String(),
+			Kind:         "ServiceCredentials",
+			Scope:        TeamScope,
+			FeatureGate:  kore.FeatureGateServices,
+			Printer: []Column{
+				{"Name", "metadata.name", ""},
+				{"Status", "status.status", ""},
+				{"Service", "spec.service.name", ""},
+				{"Cluster", "spec.cluster.name", ""},
+				{"Namespace", "spec.clusterNamespace", ""},
+				{"Age", "metadata.creationTimestamp", "age"},
+			},
+		},
 	}
 )

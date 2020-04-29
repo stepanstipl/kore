@@ -45,7 +45,10 @@ func NewCmdCreate(factory cmdutil.Factory) *cobra.Command {
 	)
 
 	if factory.Config().FeatureGates[kore.FeatureGateServices] {
-		command.AddCommand(NewCmdCreateService(factory))
+		command.AddCommand(
+			NewCmdCreateService(factory),
+			NewCmdCreateServiceCredentials(factory),
+		)
 	}
 
 	return command
