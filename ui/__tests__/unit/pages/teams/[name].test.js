@@ -15,9 +15,13 @@ const props = {
   },
   members: { items: ['jbloggs', 'fflintstone'] },
   clusters: { items: [] },
+  services: { items: [] },
   namespaceClaims: { items: [] },
   available: { items: [] },
-  teamRemoved: jest.fn()
+  teamRemoved: jest.fn(),
+  config: {
+    featureGates: {}
+  }
 }
 
 describe('TeamPage', () => {

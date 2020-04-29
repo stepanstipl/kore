@@ -131,7 +131,10 @@ class CloudAccessPage extends React.Component {
     return () => {
       Modal.info({
         title: (<><Title level={4}>{plan.spec.description}</Title><Text>{plan.spec.summary}</Text></>),
-        content: <PlanViewer plan={plan} />,
+        content: <PlanViewer
+          plan={plan}
+          resourceType="cluster"
+        />,
         width: 700,
         onOk() {}
       })

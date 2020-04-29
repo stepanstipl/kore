@@ -68,7 +68,10 @@ class PlanList extends ResourceList {
                 onClose={this.view(false)}
                 width={900}
               >
-                <PlanViewer plan={view} />
+                <PlanViewer
+                  plan={view}
+                  resourceType="cluster"
+                />
               </Drawer>
             ) : null}
 

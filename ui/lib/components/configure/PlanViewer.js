@@ -1,14 +1,15 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import KoreApi from '../../kore-api'
 import { Table, Icon, Tag, Typography } from 'antd'
 const { Text } = Typography
 import { startCase } from 'lodash'
+import KoreApi from '../../kore-api'
 
 class PlanViewer extends React.Component {
 
   static propTypes = {
-    plan: PropTypes.object.isRequired
+    plan: PropTypes.object.isRequired,
+    resourceType: PropTypes.oneOf(['cluster', 'service']).isRequired
   }
 
   state = {
@@ -22,7 +23,15 @@ class PlanViewer extends React.Component {
   }
 
   async fetchComponentData() {
-    const schema = await (await KoreApi.client()).GetPlanSchema(this.props.plan.spec.kind)
+    let schema
+    switch (this.props.resourceType) {
+    case 'cluster':
+      schema = await (await KoreApi.client()).GetPlanSchema(this.props.plan.spec.kind)
+      break
+    case 'service':
+      schema = await (await KoreApi.client()).GetServicePlanSchema(this.props.plan.spec.kind)
+      break
+    }
     this.setState({
       schema,
       dataLoading: false

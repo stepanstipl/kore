@@ -15,6 +15,23 @@ const getOpenidURL = () => {
   return `${envValue}${suffix}`
 }
 
+function getFeatureGates() {
+  const featureGates = {}
+
+  const envValue = (process.env.KORE_FEATURE_GATES || '').trim()
+  if (!envValue) {
+    return featureGates
+  }
+
+  envValue.split(',').forEach((e) => {
+    const parts = e.split('=', 2)
+    if (parts.length === 2 && parts[0].trim() !== '') {
+      featureGates[parts[0].trim()] = parts[1].trim() === 'true'
+    }
+  })
+  return featureGates
+}
+
 module.exports = {
   server: {
     port: process.env.PORT || '3000',
@@ -39,7 +56,8 @@ module.exports = {
     baseUrl: process.env.KORE_BASE_URL || 'http://localhost:3000',
     koreAdminTeamName: 'kore-admin',
     ignoreTeams: ['kore-admin', 'kore-default'],
-    gtmId: 'GTM-T9THH55'
+    gtmId: 'GTM-T9THH55',
+    featureGates: getFeatureGates()
   },
   koreApi: {
     url: process.env.KORE_API_URL || 'http://localhost:10080/api/v1alpha1',

@@ -48,7 +48,10 @@ class ClusterOptionsForm extends React.Component {
       const selectedPlan = this.props.plans.find(p => p.metadata.name === planName)
       Modal.info({
         title: (<><Title level={4}>{selectedPlan.spec.description}</Title><Text>{selectedPlan.spec.summary}</Text></>),
-        content: <PlanViewer plan={selectedPlan} />,
+        content: <PlanViewer
+          plan={selectedPlan}
+          resourceType="cluster"
+        />,
         width: 700,
         onOk() {}
       })
@@ -120,6 +123,7 @@ class ClusterOptionsForm extends React.Component {
             <Collapse.Panel header="Customize cluster parameters">
               <PlanOptionsForm
                 team={this.props.team}
+                resourceType="cluster"
                 plan={selectedPlan}
                 validationErrors={this.props.validationErrors}
                 onPlanChange={this.onPlanOverridden}
