@@ -48,36 +48,6 @@ func (t *eksCtrl) EnsureResourcePending(cluster *eks.EKS) controllers.EnsureFunc
 	}
 }
 
-// EnsureCluster is responsible for creating the cluster
-func (t *eksCtrl) EnsureCluster(client *aws.Client, cluster *eks.EKS) controllers.EnsureFunc {
-	component := ComponentClusterCreator
-
-	return func(ctx context.Context) (reconcile.Result, error) {
-		logger := log.WithFields(log.Fields{
-			"name":      cluster.Name,
-			"namespace": cluster.Namespace,
-		})
-		logger.Debug("attempting to ensure the eks cluster")
-
-		// @step: check if the cluster already exists
-		if exists, err := client.Exists(ctx); err != nil {
-			cluster.Status.Conditions.SetCondition(corev1.Component{
-				Detail:  err.Error(),
-				Name:    component,
-				Message: "Failed to check for cluster existence",
-				Status:  corev1.FailureStatus,
-			})
-
-			return reconcile.Result{}, err
-
-		} else if !exists {
-			return t.EnsureClusterCreation(client, cluster)(ctx)
-		}
-
-		return t.EnsureClusterInSync(client, cluster)(ctx)
-	}
-}
-
 // EnsureClusterCreation is responsible for ensure the cluster is provision
 func (t *eksCtrl) EnsureClusterCreation(client *aws.Client, cluster *eks.EKS) controllers.EnsureFunc {
 	component := ComponentClusterCreator
@@ -87,6 +57,24 @@ func (t *eksCtrl) EnsureClusterCreation(client *aws.Client, cluster *eks.EKS) co
 			"name":      cluster.Name,
 			"namespace": cluster.Namespace,
 		})
+
+		// @step: check if the cluster already exists
+		exists, err := client.Exists(ctx)
+		if err != nil {
+			cluster.Status.Conditions.SetCondition(corev1.Component{
+				Detail:  err.Error(),
+				Name:    component,
+				Message: "Failed to check for cluster existence",
+				Status:  corev1.FailureStatus,
+			})
+
+			return reconcile.Result{}, err
+		}
+
+		if exists {
+			return reconcile.Result{}, nil
+		}
+
 		logger.Debug("cluster does not exist, attempting to provision")
 
 		// @step: ensure we update the status and the component
@@ -132,7 +120,7 @@ func (t *eksCtrl) EnsureClusterInSync(client *aws.Client, cluster *eks.EKS) cont
 			"name":      cluster.Name,
 			"namespace": cluster.Namespace,
 		})
-		logger.Debug("attempting to check the eks cluster is insync")
+		logger.Debug("attempting to check the eks cluster is in-sync")
 
 		// @step: we retrieve the current state
 		state, err := client.Describe(ctx)

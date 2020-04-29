@@ -19,6 +19,7 @@ package aws
 import (
 	"context"
 	"errors"
+	"reflect"
 	"strings"
 
 	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
@@ -213,44 +214,40 @@ func (c *Client) Update(ctx context.Context) (bool, error) {
 		}
 	}
 
+	update := &awseks.UpdateClusterConfigInput{
+		Name:               aws.String(c.cluster.Name),
+		ResourcesVpcConfig: &awseks.VpcConfigRequest{},
+	}
+
 	if c.cluster.Spec.AuthorizedMasterNetworks != nil {
 		// @step: have the public ranges changed for the endpoint?
-		haschanged := func() bool {
-			for _, x := range state.ResourcesVpcConfig.PublicAccessCidrs {
-				if !utils.Contains(aws.StringValue(x), c.cluster.Spec.AuthorizedMasterNetworks) {
-					return true
-				}
-			}
-
-			return false
-		}()
-
-		if haschanged {
-			update := &awseks.UpdateClusterConfigInput{
-				Name: aws.String(c.cluster.Name),
-				ResourcesVpcConfig: &awseks.VpcConfigRequest{
-					PublicAccessCidrs: aws.StringSlice(c.cluster.Spec.AuthorizedMasterNetworks),
-				},
-			}
-
-			// @check if the public endpoint has changed
-			if !aws.BoolValue(state.ResourcesVpcConfig.EndpointPublicAccess) {
-				update.ResourcesVpcConfig.EndpointPublicAccess = aws.Bool(true)
-			}
-
-			// @check if the private endpoint has changed
-			if !aws.BoolValue(state.ResourcesVpcConfig.EndpointPrivateAccess) {
-				update.ResourcesVpcConfig.EndpointPrivateAccess = aws.Bool(true)
-			}
-
-			logger.Debug("eks cluster vpc configuration has drifted, attempting to sync")
-
-			if _, err := c.svc.UpdateClusterConfigWithContext(ctx, update); err != nil {
-				return false, err
-			}
-
-			return true, nil
+		if !reflect.DeepEqual(
+			utils.StringsSorted(aws.StringValueSlice(state.ResourcesVpcConfig.PublicAccessCidrs)),
+			utils.StringsSorted(c.cluster.Spec.AuthorizedMasterNetworks),
+		) {
+			update.ResourcesVpcConfig.PublicAccessCidrs = aws.StringSlice(c.cluster.Spec.AuthorizedMasterNetworks)
 		}
+	}
+
+	// @check if the public endpoint has changed
+	if !aws.BoolValue(state.ResourcesVpcConfig.EndpointPublicAccess) {
+		update.ResourcesVpcConfig.EndpointPublicAccess = aws.Bool(true)
+	}
+
+	// @check if the private endpoint has changed
+	if !aws.BoolValue(state.ResourcesVpcConfig.EndpointPrivateAccess) {
+		update.ResourcesVpcConfig.EndpointPrivateAccess = aws.Bool(true)
+	}
+
+	// has anything been changed?
+	if utils.IsEmpty(update.ResourcesVpcConfig) {
+		return false, nil
+	}
+
+	logger.Debug("eks cluster vpc configuration has drifted, attempting to sync")
+
+	if _, err := c.svc.UpdateClusterConfigWithContext(ctx, update); err != nil {
+		return false, err
 	}
 
 	return false, nil

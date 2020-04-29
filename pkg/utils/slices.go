@@ -16,6 +16,8 @@
 
 package utils
 
+import "sort"
+
 // Contains checks a list has a value in it
 func Contains(v string, l []string) bool {
 	for _, x := range l {
@@ -62,4 +64,14 @@ func Unique(items []string) []string {
 	}
 
 	return list
+}
+
+// StringsSorted returns a 'copy' of a sorted list of strings
+func StringsSorted(list []string) []string {
+	v := make([]string, len(list))
+	copy(v, list)
+
+	sort.Strings(v)
+
+	return v
 }

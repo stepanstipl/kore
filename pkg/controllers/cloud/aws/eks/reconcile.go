@@ -93,7 +93,8 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 		ensure := []controllers.EnsureFunc{
 			t.EnsureResourcePending(resource),
 			t.EnsureClusterRoles(resource),
-			t.EnsureCluster(client, resource),
+			t.EnsureClusterCreation(client, resource),
+			t.EnsureClusterInSync(client, resource),
 			t.EnsureClusterBootstrap(client, resource),
 		}
 
