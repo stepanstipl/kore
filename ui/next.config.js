@@ -2,6 +2,7 @@ const withLess = require('@zeit/next-less')
 const lessToJS = require('less-vars-to-js')
 const fs = require('fs')
 const path = require('path')
+const publicConfig = require('./config.public')
 
 // Where your antd-custom.less file lives
 const themeVariables = lessToJS(
@@ -38,4 +39,5 @@ module.exports = withLess({
     }
     return config
   },
+  publicRuntimeConfig: publicConfig
 })

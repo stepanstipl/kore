@@ -1,8 +1,9 @@
 import PropTypes from 'prop-types'
 import { Typography, List, Button, Drawer, Alert, Icon } from 'antd'
 const { Title } = Typography
+import getConfig from 'next/config'
+const { publicRuntimeConfig } = getConfig()
 
-import { kore } from '../../../config'
 import GKECredentials from '../team/GKECredentials'
 import ResourceList from '../configure/ResourceList'
 import GKECredentialsForm from '../forms/GKECredentialsForm'
@@ -21,10 +22,10 @@ class GKECredentialsList extends ResourceList {
     const api = await KoreApi.client()
     const [ allTeams, gkeCredentials, allAllocations ] = await Promise.all([
       api.ListTeams(),
-      api.ListGKECredentials(kore.koreAdminTeamName),
-      api.ListAllocations(kore.koreAdminTeamName)
+      api.ListGKECredentials(publicRuntimeConfig.koreAdminTeamName),
+      api.ListAllocations(publicRuntimeConfig.koreAdminTeamName)
     ])
-    allTeams.items = allTeams.items.filter(t => !kore.ignoreTeams.includes(t.metadata.name))
+    allTeams.items = allTeams.items.filter(t => !publicRuntimeConfig.ignoreTeams.includes(t.metadata.name))
     gkeCredentials.items.forEach(gke => {
       gke.allocation = (allAllocations.items || []).find(alloc => alloc.metadata.name === gke.metadata.name)
     })
@@ -56,7 +57,7 @@ class GKECredentialsList extends ResourceList {
                   handleUpdate={this.handleStatusUpdated}
                   refreshMs={2000}
                   propsResourceDataKey="gkeCredentials"
-                  resourceApiPath={`/teams/${kore.koreAdminTeamName}/gkecredentials/${gke.metadata.name}`}
+                  resourceApiPath={`/teams/${publicRuntimeConfig.koreAdminTeamName}/gkecredentials/${gke.metadata.name}`}
                 />
               }
             >
@@ -69,7 +70,7 @@ class GKECredentialsList extends ResourceList {
                 width={700}
               >
                 <GKECredentialsForm
-                  team={kore.koreAdminTeamName}
+                  team={publicRuntimeConfig.koreAdminTeamName}
                   allTeams={allTeams}
                   data={edit}
                   handleSubmit={this.handleEditSave}
@@ -84,7 +85,7 @@ class GKECredentialsList extends ResourceList {
                 width={700}
               >
                 <GKECredentialsForm
-                  team={kore.koreAdminTeamName}
+                  team={publicRuntimeConfig.koreAdminTeamName}
                   allTeams={allTeams}
                   handleSubmit={this.handleAddSave}
                 />

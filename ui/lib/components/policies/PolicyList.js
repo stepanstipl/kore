@@ -2,13 +2,14 @@ import PropTypes from 'prop-types'
 import moment from 'moment'
 import { message, Avatar, List, Alert, Icon, Drawer, Typography, Button, Tooltip, Modal } from 'antd'
 const { Title, Text, Paragraph } = Typography
+import getConfig from 'next/config'
+const { publicRuntimeConfig } = getConfig()
 
 import ResourceList from '../configure/ResourceList'
 import KoreApi from '../../kore-api'
 import Policy from './Policy'
 import PolicyForm from './PolicyForm'
 import AllocationHelpers from '../../utils/allocation-helpers'
-import config from '../../../config'
 
 class PolicyList extends ResourceList {
   static propTypes = {
@@ -20,7 +21,7 @@ class PolicyList extends ResourceList {
     const api = await KoreApi.client()
     const [ policyList, allAllocations ] = await Promise.all([
       api.ListPlanPolicies(this.props.kind),
-      api.ListAllocations(config.kore.koreAdminTeamName)
+      api.ListAllocations(publicRuntimeConfig.koreAdminTeamName)
     ])
     policyList.items.forEach((p) => {
       p.allocation = AllocationHelpers.findAllocationForResource(allAllocations, p)

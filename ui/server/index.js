@@ -8,12 +8,12 @@ const app = require('./next')
 const config = require('../config')
 const routes = require('./routes')
 
-const port = config.server.port
+const port = config.port
 
 const RedisStore = require('connect-redis')(session)
-const redisClient = redis.createClient({ url: config.server.session.url })
+const redisClient = redis.createClient({ url: config.session.url })
 
-const nextjsPath = config.showPrototypes ? '*' : /^((?!\/prototype).)*$/
+const nextjsPath = config.kore.showPrototypes ? '*' : /^((?!\/prototype).)*$/
 
 app.prepare().then(() => {
   const server = express()
@@ -24,10 +24,10 @@ app.prepare().then(() => {
   server.use(session({
     store: new RedisStore({
       client: redisClient,
-      url: config.server.session.url,
-      ttl: config.server.session.ttlInSeconds
+      url: config.session.url,
+      ttl: config.session.ttlInSeconds
     }),
-    secret: config.server.session.sessionSecret,
+    secret: config.session.sessionSecret,
     resave: false,
     saveUninitialized: true
   }))

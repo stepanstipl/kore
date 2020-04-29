@@ -4,20 +4,21 @@ import Head from 'next/head'
 import Router from 'next/router'
 import Link from 'next/link'
 import axios from 'axios'
+import Paragraph from 'antd/lib/typography/Paragraph'
 import { Layout, Tag } from 'antd'
 const { Header, Content, Footer } = Layout
+import getConfig from 'next/config'
+const { publicRuntimeConfig } = getConfig()
 
 import User from '../lib/components/User'
 import SiderMenu from '../lib/components/SiderMenu'
 import redirect from '../lib/utils/redirect'
 import KoreApi from '../lib/kore-api'
 import copy from '../lib/utils/object-copy'
-import { kore, koreApi, server, showPrototypes } from '../config'
 import OrgService from '../server/services/org'
 import userExpired from '../server/lib/user-expired'
 import gtag from '../lib/utils/gtag'
 import '../assets/styles.less'
-import Paragraph from 'antd/lib/typography/Paragraph'
 
 Router.events.on('routeChangeComplete', url => {
   gtag.pageView(url)
@@ -41,11 +42,7 @@ class MyApp extends App {
         const orgService = new OrgService(KoreApi)
         try {
           await orgService.refreshUser(user)
-          const config = {
-            apiUrl: koreApi.publicUrl,
-            featureGates: kore.featureGates
-          }
-          return { user, config }
+          return user
         } catch (err) {
           console.log('Failed to refresh user in _app.js', err)
           return false
@@ -66,7 +63,7 @@ class MyApp extends App {
     if (pageProps.unrestrictedPage) {
       return { pageProps }
     }
-    const { user, config } = await MyApp.getUserSession(ctx)
+    const user = await MyApp.getUserSession(ctx)
     if (!user) {
       return redirect({
         res: ctx.res,
@@ -74,8 +71,8 @@ class MyApp extends App {
         ensureRefreshFromServer: true
       })
     }
-    const userTeams = (user.teams.userTeams || []).filter(t => !kore.ignoreTeams.includes(t.metadata.name))
-    const otherTeams = (user.teams.otherTeams || []).filter(t => !kore.ignoreTeams.includes(t.metadata.name))
+    const userTeams = (user.teams.userTeams || []).filter(t => !publicRuntimeConfig.ignoreTeams.includes(t.metadata.name))
+    const otherTeams = (user.teams.otherTeams || []).filter(t => !publicRuntimeConfig.ignoreTeams.includes(t.metadata.name))
     if (pageProps.adminOnly && !user.isAdmin) {
       return redirect({
         res: ctx.res,
@@ -84,10 +81,10 @@ class MyApp extends App {
       })
     }
     if (Component.getInitialProps) {
-      const initialProps = await Component.getInitialProps({ ...ctx, user, config })
+      const initialProps = await Component.getInitialProps({ ...ctx, user })
       pageProps = { ...pageProps, ...initialProps }
     }
-    return { pageProps, user, userTeams, otherTeams, config }
+    return { pageProps, user, userTeams, otherTeams }
   }
 
   state = {
@@ -99,7 +96,7 @@ class MyApp extends App {
     clearInterval(this.interval)
     if (this.props.pageProps && !this.props.pageProps.unrestrictedPage) {
       // using session TTL + 5 seconds
-      const intervalMs = (server.session.ttlInSeconds + 5) * 1000
+      const intervalMs = (publicRuntimeConfig.sessionTtlInSeconds + 5) * 1000
       this.interval = setInterval(async () => {
         const user = await MyApp.getUserSession()
         if (!user) {
@@ -114,7 +111,7 @@ class MyApp extends App {
 
   componentDidMount() {
     this.setSessionTimeout()
-    if (showPrototypes) {
+    if (publicRuntimeConfig.showPrototypes) {
       this.setState({ prototypePath: window.location.pathname.indexOf('/prototype') === 0 })
     }
     axios.get(`${window.location.origin}/version`).then((v) => {
@@ -124,7 +121,7 @@ class MyApp extends App {
 
   componentDidUpdate(prevProps, prevState) {
     this.setSessionTimeout()
-    if (showPrototypes) {
+    if (publicRuntimeConfig.showPrototypes) {
       const prototypePath = window.location.pathname.indexOf('/prototype') === 0
       if (prevState.prototypePath !== prototypePath) {
         this.setState({ prototypePath })
@@ -197,7 +194,7 @@ class MyApp extends App {
                   <a style={{ color: '#FFFFFF' }}>Appvia Kore</a>
                 </Link>
               </div>
-              {showPrototypes && prototypePath ? <Link href="/prototype"><Tag style={{ marginLeft: '20px' }}>PROTOTYPE</Tag></Link> : null}
+              {prototypePath ? <Link href="/prototype"><Tag style={{ marginLeft: '20px' }}>PROTOTYPE</Tag></Link> : null}
             </div>
             <User user={props.user}/>
           </Header>
@@ -205,7 +202,7 @@ class MyApp extends App {
             <SiderMenu hide={hideSider} isAdmin={isAdmin} userTeams={this.state.userTeams} otherTeams={props.otherTeams}/>
             <Layout>
               <Content style={{ background: '#fff', padding: 24 }}>
-                <Component {...this.props.pageProps} user={this.props.user} teamAdded={this.teamAdded} teamRemoved={this.teamRemoved} version={version} config={this.props.config} />
+                <Component {...this.props.pageProps} user={this.props.user} teamAdded={this.teamAdded} teamRemoved={this.teamRemoved} version={version} />
               </Content>
               <Footer className="footer">
                 <Paragraph className="version">Appvia Kore {version}</Paragraph>

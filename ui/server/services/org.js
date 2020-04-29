@@ -1,5 +1,5 @@
 const User = require('../../lib/crd/User')
-const { kore, koreApi } = require('../../config')
+const config = require('../../config')
 
 class OrgService {
   constructor(KoreApi) {
@@ -15,11 +15,11 @@ class OrgService {
     try {
       const userResource = await User(user)
       console.log(`*** putting user ${user.id}`, userResource)
-      const api = await this.getApiClient(koreApi.token)
+      const api = await this.getApiClient(config.api.token)
       const userResult = await api.UpdateUser(user.id, userResource)
-      const adminTeamMembers = await this.getTeamMembers(kore.koreAdminTeamName, koreApi.token)
+      const adminTeamMembers = await this.getTeamMembers(config.kore.koreAdminTeamName, config.api.token)
       if (adminTeamMembers.length === 1) {
-        await this.addUserToTeam(kore.koreAdminTeamName, user.id, koreApi.token)
+        await this.addUserToTeam(config.kore.koreAdminTeamName, user.id, config.api.token)
       }
       userResult.teams = await this.getUserTeams(user)
       userResult.isAdmin = this.isAdmin(userResult.teams.userTeams)
@@ -38,7 +38,7 @@ class OrgService {
   /* eslint-enable require-atomic-updates */
 
   isAdmin(userTeams) {
-    return (userTeams || []).filter(t => t.metadata && t.metadata.name === kore.koreAdminTeamName).length > 0
+    return (userTeams || []).filter(t => t.metadata && t.metadata.name === config.kore.koreAdminTeamName).length > 0
   }
 
   async getTeamMembers(team, requestingIdToken) {

@@ -7,6 +7,8 @@ import Error from 'next/error'
 import { Typography, Card, List, Tag, Button, Avatar, Popconfirm, message, Select, Drawer, Badge, Alert, Icon, Modal, Dropdown, Menu } from 'antd'
 const { Paragraph, Text } = Typography
 const { Option } = Select
+import getConfig from 'next/config'
+const { publicRuntimeConfig } = getConfig()
 
 import Breadcrumb from '../../lib/components/Breadcrumb'
 import Cluster from '../../lib/components/team/Cluster'
@@ -31,8 +33,7 @@ class TeamDashboard extends React.Component {
     services: PropTypes.object.isRequired,
     namespaceClaims: PropTypes.object.isRequired,
     available: PropTypes.object.isRequired,
-    teamRemoved: PropTypes.func.isRequired,
-    config: PropTypes.object.isRequired
+    teamRemoved: PropTypes.func.isRequired
   }
 
   static staticProps = {
@@ -52,13 +53,13 @@ class TeamDashboard extends React.Component {
     }
   }
 
-  static async getTeamDetails(ctx, config) {
+  static async getTeamDetails(ctx) {
     const name = ctx.query.name
     const api = await KoreApi.client(ctx)
     const getTeam = () => api.GetTeam(name)
     const getTeamMembers = () => api.ListTeamMembers(name)
     const getTeamClusters = () => api.ListClusters(name)
-    const getTeamServices = () => config.featureGates['services'] ? api.ListServices(name) : []
+    const getTeamServices = () => publicRuntimeConfig.featureGates['services'] ? api.ListServices(name) : {}
     const getNamespaceClaims = () => api.ListNamespaces(name)
     const getAvailable = () => api.ListAllocations(name, true)
 
@@ -72,8 +73,7 @@ class TeamDashboard extends React.Component {
   }
 
   static getInitialProps = async ctx => {
-    const { config } = ctx
-    const teamDetails = await TeamDashboard.getTeamDetails(ctx, config)
+    const teamDetails = await TeamDashboard.getTeamDetails(ctx)
     if (Object.keys(teamDetails.team).length === 0 && ctx.res) {
       /* eslint-disable-next-line require-atomic-updates */
       ctx.res.statusCode = 404
@@ -238,7 +238,7 @@ class TeamDashboard extends React.Component {
   }
 
   clusterAccess = async () => {
-    const apiUrl = new URL(this.props.config.apiUrl)
+    const apiUrl = new URL(publicRuntimeConfig.koreApiPublicUrl)
 
     const profileConfigureCommand = `kore profile configure ${apiUrl.hostname}`
     const loginCommand = 'kore login'
@@ -351,7 +351,7 @@ class TeamDashboard extends React.Component {
   }
 
   render() {
-    const { team, user, invitation, config } = this.props
+    const { team, user, invitation } = this.props
 
     if (Object.keys(team).length === 0) {
       return <Error statusCode={404} />
@@ -512,7 +512,7 @@ class TeamDashboard extends React.Component {
           <NamespaceClaimForm team={team.metadata.name} clusters={clusters} handleSubmit={this.handleNamespaceCreated} handleCancel={this.createNamespace(false)}/>
         </Drawer>
 
-        {config.featureGates['services'] ? (
+        {publicRuntimeConfig.featureGates['services'] ? (
           <Card
             title={<div><Text style={{ marginRight: '10px' }}>Services</Text><Badge style={{ backgroundColor: '#1890ff' }} count={services.items.filter(c => !c.deleted).length} /></div>}
             style={{ marginBottom: '20px' }}

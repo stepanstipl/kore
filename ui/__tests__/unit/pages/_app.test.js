@@ -10,10 +10,6 @@ jest.mock('../../../lib/utils/redirect')
 jest.mock('axios')
 
 describe('App', () => {
-  const config = {
-    apiUrl: 'http://localhost:10080',
-    featureGates: {}
-  }
 
   beforeEach(() => {
     OrgService.mockClear()
@@ -45,27 +41,25 @@ describe('App', () => {
           expect(userSession.user).toBe(undefined)
         })
 
-        it('refreshes the user object and returns it, along with the config', async () => {
+        it('refreshes the user object and returns it', async () => {
           const userSession = await App.getUserSession({ req })
           expect(OrgService).toHaveBeenCalledTimes(1)
           const mockOrgServiceInstance = OrgService.mock.instances[0]
           const mockRefreshUser = mockOrgServiceInstance.refreshUser
           expect(mockRefreshUser).toHaveBeenCalledWith(req.session.passport.user)
-          expect(userSession.user).toEqual(req.session.passport.user)
-          expect(userSession.config).toEqual(config)
+          expect(userSession).toEqual(req.session.passport.user)
         })
 
       })
 
       describe('CSR::no request present', () => {
-        test('makes request to get user session and config', async () => {
-          axios.get.mockResolvedValue({ data: { user: sessionUser, config } })
+        test('makes request to get user session', async () => {
+          axios.get.mockResolvedValue({ data: sessionUser })
 
           const userSession = await App.getUserSession({ asPath: '/requested-path' })
           expect(axios.get).toHaveBeenCalledTimes(1)
           expect(axios.get).toHaveBeenCalledWith(`${window.location.origin}/session/user?requestedPath=/requested-path`)
-          expect(userSession.user).toEqual(sessionUser)
-          expect(userSession.config).toEqual(config)
+          expect(userSession).toEqual(sessionUser)
         })
 
         it('returns false if an error occurred', async () => {
@@ -93,7 +87,7 @@ describe('App', () => {
       const getUserSessionOriginal = App.getUserSession
 
       beforeEach(() => {
-        App.getUserSession = jest.fn().mockResolvedValue({ user, config })
+        App.getUserSession = jest.fn().mockResolvedValue(user)
       })
 
       afterEach(() => {
@@ -140,8 +134,7 @@ describe('App', () => {
           pageProps: { myProp: 'myValue' },
           user,
           userTeams: [teamObj('team1'), teamObj('team2')],
-          otherTeams: [teamObj('team3')],
-          config
+          otherTeams: [teamObj('team3')]
         })
       })
 
@@ -158,13 +151,12 @@ describe('App', () => {
         }
         const props = await App.getInitialProps(params)
         expect(params.Component.getInitialProps).toHaveBeenCalledTimes(1)
-        expect(params.Component.getInitialProps).toHaveBeenCalledWith({ ...params.ctx, config })
+        expect(params.Component.getInitialProps).toHaveBeenCalledWith(params.ctx)
         expect(props).toEqual({
           pageProps: { myProp: 'myValue', ...initialProps },
           user,
           userTeams: [teamObj('team1'), teamObj('team2')],
-          otherTeams: [teamObj('team3')],
-          config
+          otherTeams: [teamObj('team3')]
         })
       })
     })

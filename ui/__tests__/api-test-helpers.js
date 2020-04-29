@@ -8,7 +8,7 @@ class ApiTestHelpers {
   static basePath = null
 
   static getScope = () => {
-    const u = url.parse(config.koreApi.url)
+    const u = url.parse(config.api.url)
     ApiTestHelpers.basePath = u.path
     const spec = JSON.parse((fs.readFileSync(path.join(__dirname, '../kore-api-swagger.json'))).toString())
   

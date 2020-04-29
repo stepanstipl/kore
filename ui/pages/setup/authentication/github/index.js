@@ -3,7 +3,9 @@ import axios from 'axios'
 import PropTypes from 'prop-types'
 import Router from 'next/router'
 import { Typography, Steps, Button, Alert, Form, Input, Card } from 'antd'
-import { auth } from '../../../../config'
+import getConfig from 'next/config'
+const { publicRuntimeConfig } = getConfig()
+
 import CopyTextWithLabel from '../../../../lib/components/CopyTextWithLabel'
 import copy from '../../../../lib/utils/object-copy'
 import redirect from '../../../../lib/utils/redirect'
@@ -45,8 +47,8 @@ class GithubSetupPage extends React.Component {
   static staticProps = {
     title: 'Configure authentication provider',
     hideSider: true,
-    authUrl: auth.openid.url,
-    authCallbackUrl: auth.openid.callbackURL,
+    authUrl: publicRuntimeConfig.authOpenidUrl,
+    authCallbackUrl: publicRuntimeConfig.authOpenidCallbackUrl,
     adminOnly: true
   }
 

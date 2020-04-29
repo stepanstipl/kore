@@ -1,5 +1,5 @@
 const axios = require('axios')
-const { koreApi } = require('../../config')
+const config = require('../../config')
 
 const template = (user) => ({
   apiVersion: 'org.kore.appvia.io/v1',
@@ -19,10 +19,10 @@ module.exports = async (user) => {
   try {
     const requestOptions = {
       headers: {
-        'Authorization': `Bearer ${koreApi.token}`
+        'Authorization': `Bearer ${config.api.token}`
       }
     }
-    const userResult = await axios.get(`${koreApi.url}/users/${user.id}`, requestOptions)
+    const userResult = await axios.get(`${config.api.url}/users/${user.id}`, requestOptions)
     console.info('*** user found', userResult.data)
     return userResult.data
   } catch (err) {

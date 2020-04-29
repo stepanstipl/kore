@@ -10,15 +10,16 @@ const ensureUserCurrent = require('./middleware/ensure-user-current')
 const persistRequestedPath = require('./middleware/persist-requested-path')
 
 const koreConfig = config.kore
-const koreApi = config.koreApi
 const embeddedAuth = config.auth.embedded
 const userClaimsOrder = config.auth.openid.userClaimsOrder.split(',')
+const koreApiUrl = config.api.url
+const baseUrl = config.kore.baseUrl
 
-const authService = new AuthService(config.koreApi, config.kore.baseUrl)
+const authService = new AuthService(config.api, baseUrl)
 const orgService = new OrgService(KoreApi)
 const authCallback = require('./middleware/auth-callback')(orgService, authService, koreConfig, userClaimsOrder, embeddedAuth)
 
-const openIdClient = new OpenIdClient(config.kore.baseUrl, config.auth.openid, embeddedAuth, authService)
+const openIdClient = new OpenIdClient(baseUrl, config.auth.openid, embeddedAuth, authService)
 openIdClient.init()
   .then(() => {})
   .catch(err => {
@@ -31,12 +32,12 @@ const ensureAuthenticated401 = ensureAuthenticated({ redirect: false })
 router.use(require('./controllers/auth-local').initRouter({ authService, ensureAuthenticated: ensureAuthenticatedRedirect, authCallback }))
 router.use(require('./controllers/auth-openid').initRouter({ authService, ensureOpenIdClient, persistRequestedPath, embeddedAuth, authCallback }))
 
-router.use(require('./controllers/swagger').initRouter({ koreApi }))
+router.use(require('./controllers/swagger').initRouter({ koreApiUrl }))
 
 // other routes must have an authenticated user
-router.use(require('./controllers/session').initRouter({ ensureAuthenticated: ensureAuthenticated401, ensureUserCurrent, persistRequestedPath, orgService, config }))
-router.use(require('./controllers/apiproxy').initRouter({ ensureAuthenticated: ensureAuthenticatedRedirect, ensureUserCurrent, koreApi }))
-router.use(require('./controllers/process').initRouter({ ensureAuthenticated: ensureAuthenticatedRedirect, ensureUserCurrent, koreApi }))
+router.use(require('./controllers/session').initRouter({ ensureAuthenticated: ensureAuthenticated401, ensureUserCurrent, persistRequestedPath, orgService }))
+router.use(require('./controllers/apiproxy').initRouter({ ensureAuthenticated: ensureAuthenticatedRedirect, ensureUserCurrent, koreApiUrl }))
+router.use(require('./controllers/process').initRouter({ ensureAuthenticated: ensureAuthenticatedRedirect, ensureUserCurrent, koreApiUrl }))
 router.use(require('./controllers/version').initRouter())
 
 module.exports = router

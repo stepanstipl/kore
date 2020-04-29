@@ -32,14 +32,13 @@ function getFeatureGates() {
   return featureGates
 }
 
+// this config should be exposed to the server only and can contain necessary secrets set via environment variables
 module.exports = {
-  server: {
-    port: process.env.PORT || '3000',
-    session: {
-      sessionSecret: process.env.SESSION_SECRET || 'sessionsecret',
-      url: process.env.REDIS_URL || 'redis://127.0.0.1:6379',
-      ttlInSeconds: 1200
-    }
+  port: process.env.PORT || '3000',
+  session: {
+    sessionSecret: process.env.SESSION_SECRET || 'sessionsecret',
+    url: process.env.REDIS_URL || 'redis://127.0.0.1:6379',
+    ttlInSeconds: 1200
   },
   auth: {
     embedded: process.env.KORE_UI_USE_EMBEDDED_AUTH === 'true' || false,
@@ -52,17 +51,17 @@ module.exports = {
       userClaimsOrder: process.env.KORE_IDP_USER_CLAIMS || 'preferred_username,email,name,username'
     }
   },
+  api: {
+    url: process.env.KORE_API_URL || 'http://localhost:10080/api/v1alpha1',
+    token: process.env.KORE_API_TOKEN || 'password',
+    publicUrl: process.env.KORE_API_PUBLIC_URL || 'http://localhost:10080'
+  },
   kore: {
     baseUrl: process.env.KORE_BASE_URL || 'http://localhost:3000',
     koreAdminTeamName: 'kore-admin',
     ignoreTeams: ['kore-admin', 'kore-default'],
     gtmId: 'GTM-T9THH55',
+    showPrototypes: process.env.NODE_ENV === 'development' || process.env.KORE_UI_SHOW_PROTOTYPES === 'true',
     featureGates: getFeatureGates()
-  },
-  koreApi: {
-    url: process.env.KORE_API_URL || 'http://localhost:10080/api/v1alpha1',
-    publicUrl: process.env.KORE_API_PUBLIC_URL || 'http://localhost:10080',
-    token: process.env.KORE_API_TOKEN || 'password'
-  },
-  showPrototypes: process.env.NODE_ENV === 'development' || process.env.KORE_UI_SHOW_PROTOTYPES === 'true'
+  }
 }

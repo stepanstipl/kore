@@ -3,6 +3,8 @@ import PropTypes from 'prop-types'
 import Link from 'next/link'
 import { Typography, Button, Card, List, Row, Col, Icon, Alert, message, Select, Tooltip } from 'antd'
 const { Title, Paragraph, Text } = Typography
+import getConfig from 'next/config'
+const { publicRuntimeConfig } = getConfig()
 
 import NewTeamForm from '../../lib/components/forms/NewTeamForm'
 import ClusterBuildForm from '../../lib/components/forms/ClusterBuildForm'
@@ -16,8 +18,7 @@ import KoreApi from '../../lib/kore-api'
 class NewTeamPage extends React.Component {
   static propTypes = {
     user: PropTypes.object.isRequired,
-    teamAdded: PropTypes.func.isRequired,
-    config: PropTypes.object.isRequired
+    teamAdded: PropTypes.func.isRequired
   }
 
   state = {
@@ -97,7 +98,7 @@ class NewTeamPage extends React.Component {
   }
 
   render() {
-    const { user, config } = this.props
+    const { user } = this.props
     const { team, members, membersToAdd, allUsers } = this.state
 
     const membersAvailableToAdd = (allUsers || []).filter(user => !members.includes(user))
@@ -183,7 +184,7 @@ class NewTeamPage extends React.Component {
               />
             </Card>
 
-            {config.featureGates['services'] ? (
+            {publicRuntimeConfig.featureGates['services'] ? (
               <Card title="Create a service for your team" style={{ marginBottom: '30px', marginTop: '20px' }}>
                 <Alert message="Choose a service kind below to create a service" type="info" />
                 <ServiceBuildForm

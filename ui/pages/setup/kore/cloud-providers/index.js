@@ -3,12 +3,13 @@ import PropTypes from 'prop-types'
 import Router from 'next/router'
 import { Typography, Card } from 'antd'
 const { Title, Paragraph } = Typography
+import getConfig from 'next/config'
+const { publicRuntimeConfig } = getConfig()
 
 import redirect from '../../../../lib/utils/redirect'
 import copy from '../../../../lib/utils/object-copy'
 import apiRequest from '../../../../lib/utils/api-request'
 import apiPaths from '../../../../lib/utils/api-paths'
-import { kore } from '../../../../config'
 import GKECredentialsForm from '../../../../lib/components/forms/GKECredentialsForm'
 import CloudSelector from '../../../../lib/components/cluster-build/CloudSelector'
 
@@ -29,7 +30,7 @@ class ConfigureCloudProvidersPage extends React.Component {
 
   static getInitialProps = async ctx => {
     const allTeams = await apiRequest(ctx, 'get', apiPaths.teams)
-    allTeams.items = allTeams.items.filter(t => !kore.ignoreTeams.includes(t.metadata.name))
+    allTeams.items = allTeams.items.filter(t => !publicRuntimeConfig.ignoreTeams.includes(t.metadata.name))
     return { allTeams }
   }
 
@@ -61,7 +62,7 @@ class ConfigureCloudProvidersPage extends React.Component {
         </div>
         { selectedCloud === 'GKE' ? (
           <Card title="Enter GKE credentials" style={{ paddingBottom: '0' }}>
-            <GKECredentialsForm team={kore.koreAdminTeamName} allTeams={allTeams} handleSubmit={this.handleFormSubmit} saveButtonText="Save & Verify" inlineVerification={true} />
+            <GKECredentialsForm team={publicRuntimeConfig.koreAdminTeamName} allTeams={allTeams} handleSubmit={this.handleFormSubmit} saveButtonText="Save & Verify" inlineVerification={true} />
           </Card>
         ) : null }
       </div>
