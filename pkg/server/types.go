@@ -21,7 +21,7 @@ import (
 
 	api "github.com/appvia/kore/pkg/apiserver"
 	"github.com/appvia/kore/pkg/kore"
-	"github.com/appvia/kore/pkg/services/users"
+	"github.com/appvia/kore/pkg/persistence"
 )
 
 // Interface is the contract to the server
@@ -54,6 +54,6 @@ type Config struct {
 	Kubernetes KubernetesAPI `json:"kubernetes"`
 	// Kore is the configuration for the kore bridge
 	Kore kore.Config `json:"kore"`
-	// UsersMgr are the user management service options
-	UsersMgr users.Config `json:"usersMgr"`
+	// PersistenceMgr are the options for the persistence manager
+	PersistenceMgr persistence.Config `json:"persistenceMgr"`
 }

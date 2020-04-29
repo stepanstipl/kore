@@ -23,8 +23,8 @@ import (
 	"time"
 
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
-	"github.com/appvia/kore/pkg/services/users"
-	"github.com/appvia/kore/pkg/services/users/model"
+	"github.com/appvia/kore/pkg/persistence"
+	"github.com/appvia/kore/pkg/persistence/model"
 	"github.com/appvia/kore/pkg/store"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -82,9 +82,9 @@ func (t tmsImpl) Add(ctx context.Context, name string) error {
 	logger.Info("attempting user membership to the team")
 
 	// @step: check the user exists
-	user, err := t.usermgr.Users().Get(ctx, name)
+	user, err := t.persistenceMgr.Users().Get(ctx, name)
 	if err != nil {
-		if !users.IsNotFound(err) {
+		if !persistence.IsNotFound(err) {
 			logger.WithError(err).Error("trying to retrieve the user from service")
 
 			return err
@@ -97,7 +97,7 @@ func (t tmsImpl) Add(ctx context.Context, name string) error {
 	// to the team
 
 	// @step: we need to retrieve the team
-	team, err := t.usermgr.Teams().Get(ctx, t.team)
+	team, err := t.persistenceMgr.Teams().Get(ctx, t.team)
 	if err != nil {
 		logger.WithError(err).Error("trying to retrieve the team")
 
@@ -105,7 +105,7 @@ func (t tmsImpl) Add(ctx context.Context, name string) error {
 	}
 
 	// @step: add the user as a member of the team
-	if err := t.usermgr.Members().Update(ctx, &model.Member{
+	if err := t.persistenceMgr.Members().Update(ctx, &model.Member{
 		UserID: user.ID,
 		TeamID: team.ID,
 		Roles:  []string{"member"},
@@ -134,9 +134,9 @@ func (t tmsImpl) Delete(ctx context.Context, name string) error {
 	logger.Info("attempting to delete the user from the team")
 
 	// @step: check for membership
-	list, err := t.usermgr.Members().List(ctx,
-		users.Filter.WithUser(name),
-		users.Filter.WithTeam(t.team),
+	list, err := t.persistenceMgr.Members().List(ctx,
+		persistence.Filter.WithUser(name),
+		persistence.Filter.WithTeam(t.team),
 	)
 	if err != nil {
 		logger.WithError(err).Error("trying to check for user membership")
@@ -153,7 +153,7 @@ func (t tmsImpl) Delete(ctx context.Context, name string) error {
 			return ErrNotAllowed{message: "you cannot remove " + HubAdminUser + " user from this team"}
 		}
 
-		admins, err := t.usermgr.Members().List(ctx, users.Filter.WithTeam(t.team))
+		admins, err := t.persistenceMgr.Members().List(ctx, persistence.Filter.WithTeam(t.team))
 		if err != nil {
 			logger.WithError(err).Error("failed to list the admin users")
 			return err
@@ -165,9 +165,9 @@ func (t tmsImpl) Delete(ctx context.Context, name string) error {
 	}
 
 	// @step: we can delete all the membership
-	if err := t.usermgr.Members().DeleteBy(ctx,
-		users.Filter.WithUser(name),
-		users.Filter.WithTeam(t.team),
+	if err := t.persistenceMgr.Members().DeleteBy(ctx,
+		persistence.Filter.WithUser(name),
+		persistence.Filter.WithTeam(t.team),
 	); err != nil {
 		logger.WithError(err).Error("trying to delete user membership from team")
 
@@ -232,18 +232,18 @@ func (t tmsImpl) Invite(ctx context.Context, name string, options InvitationOpti
 	logger.Info("adding user invitation to the team")
 
 	// @step: check the user and team
-	user, err := t.usermgr.Users().Get(ctx, name)
+	user, err := t.persistenceMgr.Users().Get(ctx, name)
 	if err != nil {
-		if users.IsNotFound(err) {
+		if persistence.IsNotFound(err) {
 			return ErrNotAllowed{message: "user does not exist in the appvia kore"}
 		}
 		logger.WithError(err).Error("trying to retrieve user")
 
 		return err
 	}
-	team, err := t.usermgr.Teams().Get(ctx, t.team)
+	team, err := t.persistenceMgr.Teams().Get(ctx, t.team)
 	if err != nil {
-		if users.IsNotFound(err) {
+		if persistence.IsNotFound(err) {
 			return ErrNotAllowed{message: "team does not exist in the appvia kore"}
 		}
 		logger.WithError(err).Error("trying to retrieve team from user service")
@@ -254,7 +254,7 @@ func (t tmsImpl) Invite(ctx context.Context, name string, options InvitationOpti
 	// @TODO need to add a audit entry about the invitation
 
 	// @step: invite the user into the team - @TODO need to add a role as well
-	if err := t.usermgr.Invitations().Update(ctx,
+	if err := t.persistenceMgr.Invitations().Update(ctx,
 		&model.Invitation{
 			Expires: time.Now().Add(options.Duration),
 			TeamID:  team.ID,
@@ -276,9 +276,9 @@ func (t tmsImpl) DeleteInvitation(ctx context.Context, name string) error {
 	})
 	logger.Debug("removing any invitations for user")
 
-	err := t.usermgr.Invitations().DeleteBy(ctx,
-		users.Filter.WithUser(name),
-		users.Filter.WithTeam(t.team),
+	err := t.persistenceMgr.Invitations().DeleteBy(ctx,
+		persistence.Filter.WithUser(name),
+		persistence.Filter.WithTeam(t.team),
 	)
 	if err != nil {
 		logger.WithError(err).Error("trying to delete invitations for team")
@@ -291,9 +291,9 @@ func (t tmsImpl) DeleteInvitation(ctx context.Context, name string) error {
 
 // Exists check if a member exists in the team
 func (t tmsImpl) Exists(ctx context.Context, name string) (bool, error) {
-	list, err := t.usermgr.Members().List(ctx,
-		users.Filter.WithUser(name),
-		users.Filter.WithTeam(t.team),
+	list, err := t.persistenceMgr.Members().List(ctx,
+		persistence.Filter.WithUser(name),
+		persistence.Filter.WithTeam(t.team),
 	)
 	if err != nil {
 		log.WithError(err).Error("trying to retrieve list of memberships")
@@ -308,8 +308,8 @@ func (t tmsImpl) Exists(ctx context.Context, name string) (bool, error) {
 
 // List returns a list of memberships for the team
 func (t tmsImpl) List(ctx context.Context) (*orgv1.UserList, error) {
-	list, err := t.usermgr.Members().Preload("User").List(ctx,
-		users.Filter.WithTeam(t.team),
+	list, err := t.persistenceMgr.Members().Preload("User").List(ctx,
+		persistence.Filter.WithTeam(t.team),
 	)
 	if err != nil {
 		log.WithError(err).Error("trying to retrieve list of memberships")
@@ -322,8 +322,8 @@ func (t tmsImpl) List(ctx context.Context) (*orgv1.UserList, error) {
 
 // ListInvitations returns a list of invitations for the team
 func (t tmsImpl) ListInvitations(ctx context.Context) (*orgv1.TeamInvitationList, error) {
-	list, err := t.usermgr.Invitations().List(ctx,
-		users.Filter.WithTeam(t.team),
+	list, err := t.persistenceMgr.Invitations().List(ctx,
+		persistence.Filter.WithTeam(t.team),
 	)
 	if err != nil {
 		log.WithError(err).Error("trying to retrieve the users invitations for team")

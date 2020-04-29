@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/appvia/kore/pkg/services/users"
+	"github.com/appvia/kore/pkg/persistence"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/certificates"
@@ -47,8 +47,8 @@ type hubImpl struct {
 	plans Plans
 	// plan policies
 	planPolicies PlanPolicies
-	// usermgr is the user manager
-	usermgr users.Interface
+	// persistenceMgr is the persistence manager
+	persistenceMgr persistence.Interface
 	// signer is used to sign off client certs
 	signer certificates.Signer
 	// audit is the audit implementation
@@ -60,7 +60,7 @@ type hubImpl struct {
 }
 
 // New returns a new instance of the kore bridge
-func New(sc store.Store, usermgr users.Interface, config Config, serviceProviders *ServiceProviderRegistry) (Interface, error) {
+func New(sc store.Store, persistenceMgr persistence.Interface, config Config, serviceProviders *ServiceProviderRegistry) (Interface, error) {
 	log.Info("initializing the kore api bridge")
 
 	// @step: check the options
@@ -97,7 +97,7 @@ func New(sc store.Store, usermgr users.Interface, config Config, serviceProvider
 	h.plans = &plansImpl{Interface: h}
 	h.planPolicies = &planPoliciesImpl{Interface: h}
 	h.teams = &teamsImpl{hubImpl: h}
-	h.usermgr = usermgr
+	h.persistenceMgr = persistenceMgr
 	h.users = &usersImpl{hubImpl: h}
 	h.audit = &auditImpl{hubImpl: h}
 	h.servicePlans = &servicePlansImpl{Interface: h}

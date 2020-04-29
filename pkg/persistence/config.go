@@ -14,16 +14,23 @@
  * limitations under the License.
  */
 
-package users
+package persistence
 
-import "context"
+import "errors"
 
-// Find is used to return results from the log
-func (a *storeImpl) Find(ctx context.Context, filters ...ListFunc) Find {
-	return newQuery(ctx, a.dbc, filters...)
-}
+// IsValid checks the configuration is valid
+func (c Config) IsValid() error {
+	switch c.Driver {
+	case "mysql", "postgres":
+	case "":
+		return errors.New("no database driver configured")
+	default:
+		return errors.New("unknown driver configured")
+	}
 
-// Record is responsible for adding an entry into the log
-func (a *storeImpl) Record(ctx context.Context, fields ...AuditFunc) Log {
-	return newEntry(ctx, a.dbc, fields...)
+	if c.StoreURL == "" {
+		return errors.New("no database url configured")
+	}
+
+	return nil
 }

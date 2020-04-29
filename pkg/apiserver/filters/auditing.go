@@ -23,7 +23,7 @@ import (
 
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/kore/authentication"
-	"github.com/appvia/kore/pkg/services/users"
+	"github.com/appvia/kore/pkg/persistence"
 
 	restful "github.com/emicklei/go-restful"
 )
@@ -54,16 +54,16 @@ func NewAuditingFilter(audit func() kore.Audit, apiVersion string, resource stri
 
 			// @TODO: Refine what is audited with a policy in future, for now, just audit everything.
 			audit().Record(req.Request.Context(),
-				users.Resource(resource),
-				users.ResourceURI(uri),
-				users.APIVersion(apiVersion),
-				users.Verb(req.Request.Method),
-				users.Operation(operation),
-				users.Team(req.PathParameter("team")), // Might be nil for some paths, but that's OK.
-				users.User(username),
-				users.StartedAt(start),
-				users.CompletedAt(finish),
-				users.ResponseCode(responseCode),
+				persistence.Resource(resource),
+				persistence.ResourceURI(uri),
+				persistence.APIVersion(apiVersion),
+				persistence.Verb(req.Request.Method),
+				persistence.Operation(operation),
+				persistence.Team(req.PathParameter("team")), // Might be nil for some paths, but that's OK.
+				persistence.User(username),
+				persistence.StartedAt(start),
+				persistence.CompletedAt(finish),
+				persistence.ResponseCode(responseCode),
 			).Event(fmt.Sprintf("%s: %s %s", operation, req.Request.Method, req.Request.URL.EscapedPath()))
 		}()
 

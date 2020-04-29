@@ -19,7 +19,7 @@ package kore
 import (
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
-	"github.com/appvia/kore/pkg/services/users/model"
+	"github.com/appvia/kore/pkg/persistence/model"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

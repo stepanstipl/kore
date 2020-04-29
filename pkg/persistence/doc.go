@@ -14,15 +14,6 @@
  * limitations under the License.
  */
 
-package kore
-
-import "github.com/appvia/kore/pkg/persistence"
-
-// options returns an options method
-type optionsFunc func(*hubImpl)
-
-func WithUsersService(v persistence.Interface) optionsFunc {
-	return func(h *hubImpl) {
-		h.persistenceMgr = v
-	}
-}
+// Package persistence is responsible for persisting data for Kore to be stored
+// outside Kubernetes (i.e. in a database)
+package persistence

@@ -20,8 +20,8 @@ import (
 	"context"
 
 	"github.com/appvia/kore/pkg/kore/authentication"
-	"github.com/appvia/kore/pkg/services/users"
-	"github.com/appvia/kore/pkg/services/users/model"
+	"github.com/appvia/kore/pkg/persistence"
+	"github.com/appvia/kore/pkg/persistence/model"
 	"github.com/appvia/kore/pkg/utils"
 )
 
@@ -63,9 +63,9 @@ func (i identImpl) IsMember(name string) bool {
 // GetUserIdentity queries the user services for the identity
 func (h *hubImpl) GetUserIdentity(ctx context.Context, username string) (authentication.Identity, bool, error) {
 	// @step: retrieve the user from the service
-	user, err := h.usermgr.Users().Get(ctx, username)
+	user, err := h.persistenceMgr.Users().Get(ctx, username)
 	if err != nil {
-		if users.IsNotFound(err) {
+		if persistence.IsNotFound(err) {
 			return nil, false, nil
 		}
 
@@ -73,8 +73,8 @@ func (h *hubImpl) GetUserIdentity(ctx context.Context, username string) (authent
 	}
 
 	// @step: retrieve the teams the user is in
-	teams, err := h.usermgr.Members().List(ctx,
-		users.Filter.WithUser(username),
+	teams, err := h.persistenceMgr.Members().List(ctx,
+		persistence.Filter.WithUser(username),
 	)
 	if err != nil {
 		return nil, false, err
@@ -94,12 +94,12 @@ func (h *hubImpl) GetUserIdentity(ctx context.Context, username string) (authent
 
 // GetUserIdentityByProvider returns the user model by proviser if any
 func (h *hubImpl) GetUserIdentityByProvider(ctx context.Context, username, provider string) (*model.Identity, bool, error) {
-	id, err := h.usermgr.Identities().Get(ctx,
-		users.Filter.WithUser(username),
-		users.Filter.WithProvider(provider),
+	id, err := h.persistenceMgr.Identities().Get(ctx,
+		persistence.Filter.WithUser(username),
+		persistence.Filter.WithProvider(provider),
 	)
 	if err != nil {
-		if !users.IsNotFound(err) {
+		if !persistence.IsNotFound(err) {
 			return nil, false, err
 		}
 

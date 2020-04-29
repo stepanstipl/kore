@@ -22,7 +22,8 @@ import (
 
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/appvia/kore/pkg/kore/authentication"
-	"github.com/appvia/kore/pkg/services/users"
+	"github.com/appvia/kore/pkg/persistence"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -33,15 +34,15 @@ type Audit interface {
 	// AuditEventsTeam returns a stream of events in relation to a specific team
 	AuditEventsTeam(ctx context.Context, team string, since time.Duration) (*orgv1.AuditEventList, error)
 	// Record stores an event in the underlying audit service.
-	Record(ctx context.Context, fields ...users.AuditFunc) users.Log
+	Record(ctx context.Context, fields ...persistence.AuditFunc) persistence.Log
 }
 
 type auditImpl struct {
 	*hubImpl
 }
 
-func (a *auditImpl) Record(ctx context.Context, fields ...users.AuditFunc) users.Log {
-	return a.usermgr.Audit().Record(ctx, fields[:]...)
+func (a *auditImpl) Record(ctx context.Context, fields ...persistence.AuditFunc) persistence.Log {
+	return a.persistenceMgr.Audit().Record(ctx, fields[:]...)
 }
 
 // AuditEvents returns all events since the specified duration before the current time
@@ -57,8 +58,8 @@ func (a *auditImpl) AuditEvents(ctx context.Context, since time.Duration) (*orgv
 	}
 
 	// @step: retrieve a list of audit events across all teams
-	list, err := a.usermgr.Audit().Find(ctx,
-		users.Filter.WithDuration(since),
+	list, err := a.persistenceMgr.Audit().Find(ctx,
+		persistence.Filter.WithDuration(since),
 	).Do()
 	if err != nil {
 		log.WithError(err).Error("trying to retrieve audit logs for teams")
@@ -88,9 +89,9 @@ func (a *auditImpl) AuditEventsTeam(ctx context.Context, team string, since time
 		return nil, NewErrNotAllowed("Must be global admin or a team member")
 	}
 
-	list, err := a.usermgr.Audit().Find(ctx,
-		users.Filter.WithTeam(team),
-		users.Filter.WithDuration(since),
+	list, err := a.persistenceMgr.Audit().Find(ctx,
+		persistence.Filter.WithTeam(team),
+		persistence.Filter.WithDuration(since),
 	).Do()
 	if err != nil {
 		log.WithError(err).Error("trying to retrieve audit logs for team")

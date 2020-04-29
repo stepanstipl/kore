@@ -25,7 +25,7 @@ import (
 	core "github.com/appvia/kore/pkg/apis/core/v1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/appvia/kore/pkg/kore/assets"
-	"github.com/appvia/kore/pkg/services/users/model"
+	"github.com/appvia/kore/pkg/persistence/model"
 	"github.com/appvia/kore/pkg/store"
 
 	log "github.com/sirupsen/logrus"
@@ -127,7 +127,7 @@ func (h hubImpl) Setup(ctx context.Context) error {
 
 // ensureHubAdminMembership ensures the user is there
 func (h hubImpl) ensureHubAdminMembership(ctx context.Context, name, team string) error {
-	return h.usermgr.Teams().AddUser(ctx, name, team, []string{"member", "admin"})
+	return h.persistenceMgr.Teams().AddUser(ctx, name, team, []string{"member", "admin"})
 }
 
 // ensureHubAdminUser ensures the user is there
@@ -144,7 +144,7 @@ func (h hubImpl) ensureHubAdminUser(ctx context.Context, name, email string) err
 	if !found {
 		logger.Info("provisioning the default kore team in api")
 
-		err := h.usermgr.Users().Update(ctx, &model.User{Email: email, Username: name})
+		err := h.persistenceMgr.Users().Update(ctx, &model.User{Email: email, Username: name})
 		if err != nil {
 			logger.WithError(err).Error("trying to create admin user")
 
@@ -161,12 +161,12 @@ func (h hubImpl) ensureHubAdminUser(ctx context.Context, name, email string) err
 	}
 
 	if h.Config().AdminPass != "" {
-		user, err := h.usermgr.Users().Get(ctx, name)
+		user, err := h.persistenceMgr.Users().Get(ctx, name)
 		if err != nil {
 			return err
 		}
 
-		return h.usermgr.Identities().Update(ctx, &model.Identity{
+		return h.persistenceMgr.Identities().Update(ctx, &model.Identity{
 			Provider:      "basicauth",
 			ProviderEmail: email,
 			ProviderToken: h.Config().AdminPass,
