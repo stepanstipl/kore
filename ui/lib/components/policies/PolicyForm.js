@@ -1,6 +1,8 @@
 import * as React from 'react'
-import { Card, Alert, Form, Input, Button } from 'antd'
 import PropTypes from 'prop-types'
+import { Card, Alert, Form, Input, Button } from 'antd'
+import getConfig from 'next/config'
+const { publicRuntimeConfig } = getConfig()
 
 import KoreApi from '../../kore-api'
 import V1PlanPolicy from '../../kore-api/model/V1PlanPolicy'
@@ -11,7 +13,6 @@ import canonical from '../../utils/canonical'
 import Policy from './Policy'
 import AllocationsFormItem from '../forms/AllocationsFormItem'
 import AllocationHelpers  from '../../utils/allocation-helpers'
-import config from '../../../config'
 
 class PolicyForm extends React.Component {
   static propTypes = {
@@ -82,7 +83,7 @@ class PolicyForm extends React.Component {
 
     const meta = new V1ObjectMeta()
     meta.setName(metadataName)
-    meta.setNamespace(config.kore.koreAdminTeamName)
+    meta.setNamespace(publicRuntimeConfig.koreAdminTeamName)
     resource.setMetadata(meta)
 
     const spec = new V1PlanPolicySpec()

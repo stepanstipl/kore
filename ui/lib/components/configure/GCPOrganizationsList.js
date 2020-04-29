@@ -1,8 +1,9 @@
 import PropTypes from 'prop-types'
 import { Typography, List, Button, Drawer, Icon, Alert } from 'antd'
 const { Title } = Typography
+import getConfig from 'next/config'
+const { publicRuntimeConfig } = getConfig()
 
-import { kore } from '../../../config'
 import GCPOrganization from '../team/GCPOrganization'
 import ResourceList from '../configure/ResourceList'
 import GCPOrganizationForm from '../forms/GCPOrganizationForm'
@@ -21,10 +22,10 @@ class GCPOrganizationsList extends ResourceList {
     const api = await KoreApi.client()
     const [ allTeams, gcpOrganizations, allAllocations ] = await Promise.all([
       api.ListTeams(),
-      api.ListGCPOrganizations(kore.koreAdminTeamName),
-      api.ListAllocations(kore.koreAdminTeamName)
+      api.ListGCPOrganizations(publicRuntimeConfig.koreAdminTeamName),
+      api.ListAllocations(publicRuntimeConfig.koreAdminTeamName)
     ])
-    allTeams.items = allTeams.items.filter(t => !kore.ignoreTeams.includes(t.metadata.name))
+    allTeams.items = allTeams.items.filter(t => !publicRuntimeConfig.ignoreTeams.includes(t.metadata.name))
     gcpOrganizations.items.forEach(org => {
       org.allocation = (allAllocations.items || []).find(alloc => alloc.metadata.name === org.metadata.name)
     })
@@ -56,7 +57,7 @@ class GCPOrganizationsList extends ResourceList {
                   handleUpdate={this.handleStatusUpdated}
                   refreshMs={2000}
                   propsResourceDataKey="organization"
-                  resourceApiPath={`/teams/${kore.koreAdminTeamName}/organizations/${org.metadata.name}`}
+                  resourceApiPath={`/teams/${publicRuntimeConfig.koreAdminTeamName}/organizations/${org.metadata.name}`}
                 />
               }
             >
@@ -69,7 +70,7 @@ class GCPOrganizationsList extends ResourceList {
                 width={700}
               >
                 <GCPOrganizationForm
-                  team={kore.koreAdminTeamName}
+                  team={publicRuntimeConfig.koreAdminTeamName}
                   allTeams={allTeams}
                   data={edit}
                   handleSubmit={this.handleEditSave}
@@ -84,7 +85,7 @@ class GCPOrganizationsList extends ResourceList {
                 width={700}
               >
                 <GCPOrganizationForm
-                  team={kore.koreAdminTeamName}
+                  team={publicRuntimeConfig.koreAdminTeamName}
                   allTeams={allTeams}
                   handleSubmit={this.handleAddSave}
                 />

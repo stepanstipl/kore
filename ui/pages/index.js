@@ -3,9 +3,10 @@ import PropTypes from 'prop-types'
 import Link from 'next/link'
 import { Typography, Statistic, Icon, Row, Col, Card, Alert, Button, Tag } from 'antd'
 const { Title, Paragraph, Text } = Typography
+import getConfig from 'next/config'
+const { publicRuntimeConfig } = getConfig()
 
 import KoreApi from '../lib/kore-api'
-import { kore } from '../config'
 
 class IndexPage extends React.Component {
   static propTypes = {
@@ -38,10 +39,10 @@ class IndexPage extends React.Component {
       [ allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations, eksCredentials ] = await Promise.all([
         api.ListTeams(),
         api.ListUsers(),
-        api.ListTeamMembers(kore.koreAdminTeamName),
-        api.ListGKECredentials(kore.koreAdminTeamName),
-        api.ListGCPOrganizations(kore.koreAdminTeamName),
-        api.ListEKSCredentials(kore.koreAdminTeamName)
+        api.ListTeamMembers(publicRuntimeConfig.koreAdminTeamName),
+        api.ListGKECredentials(publicRuntimeConfig.koreAdminTeamName),
+        api.ListGCPOrganizations(publicRuntimeConfig.koreAdminTeamName),
+        api.ListEKSCredentials(publicRuntimeConfig.koreAdminTeamName)
       ])
     } else {
       [ allTeams, allUsers ] = await Promise.all([
@@ -50,7 +51,7 @@ class IndexPage extends React.Component {
       ])
     }
 
-    allTeams.items = (allTeams.items || []).filter(t => !kore.ignoreTeams.includes(t.metadata.name))
+    allTeams.items = (allTeams.items || []).filter(t => !publicRuntimeConfig.ignoreTeams.includes(t.metadata.name))
     return { allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations, eksCredentials }
   }
 
@@ -61,7 +62,7 @@ class IndexPage extends React.Component {
 
   render() {
     const { user, allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations, eksCredentials, version } = this.props
-    const userTeams = (user.teams.userTeams || []).filter(t => !kore.ignoreTeams.includes(t.metadata.name))
+    const userTeams = (user.teams.userTeams || []).filter(t => !publicRuntimeConfig.ignoreTeams.includes(t.metadata.name))
     const noUserTeamsExist = userTeams.length === 0
     const gcpCredsMissing = (gkeCredentials && gkeCredentials.items.length === 0) && (gcpOrganizations && gcpOrganizations.items.length === 0)
     const awsCredsMissing = eksCredentials && eksCredentials.items.length === 0

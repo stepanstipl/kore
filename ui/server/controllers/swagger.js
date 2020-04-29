@@ -2,9 +2,9 @@ const axios = require('axios')
 const Router = require('express').Router
 const url = require('url')
 
-function swagger(koreApi) {
+function swagger(koreApiUrl) {
   return async (req, res) => {
-    const u = url.parse(koreApi.url)
+    const u = url.parse(koreApiUrl)
     const swaggerUrl = `${u.protocol}//${u.host}/swagger.json`
     try {
       const result = await axios['get'](swaggerUrl)
@@ -24,9 +24,9 @@ function swagger(koreApi) {
   }
 }
 
-function initRouter({ koreApi }) {
+function initRouter({ koreApiUrl }) {
   const router = Router()
-  router.use('/swagger.json', swagger(koreApi))
+  router.use('/swagger.json', swagger(koreApiUrl))
   return router
 }
 

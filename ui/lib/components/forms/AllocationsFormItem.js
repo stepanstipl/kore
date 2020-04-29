@@ -1,9 +1,10 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { Form, Select, Radio, Alert } from 'antd'
+import getConfig from 'next/config'
+const { publicRuntimeConfig } = getConfig()
 
 import KoreApi from '../../kore-api'
-import { kore } from '../../../config'
 
 export default class AllocationsFormItem extends React.Component {
   static propTypes = {
@@ -25,7 +26,7 @@ export default class AllocationsFormItem extends React.Component {
         teams = await (await KoreApi.client()).ListTeams()
       }
       this.setState({
-        allTeams: teams.items.filter(t => !kore.ignoreTeams.includes(t.metadata.name))
+        allTeams: teams.items.filter(t => !publicRuntimeConfig.ignoreTeams.includes(t.metadata.name))
       })
     })
   }

@@ -1,4 +1,4 @@
-import { kore } from '../../config'
+import config from '../../config'
 
 function pageView(url) {
   window.dataLayer = window.dataLayer || []
@@ -9,6 +9,6 @@ function pageView(url) {
 }
 
 module.exports = {
-  GTM_ID: kore.gtmId,
+  GTM_ID: config.kore.gtmId,
   pageView
 }

@@ -48,7 +48,7 @@ class KoreApi {
     if (KoreApi.spec) { 
       return KoreApi.spec 
     }
-    const u = url.parse(config.koreApi.url)
+    const u = url.parse(config.api.url)
     KoreApi.basePath = u.path
     if (process.browser) {
       KoreApi.swaggerUrl = `${window.location.origin}/swagger.json`

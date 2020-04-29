@@ -3,7 +3,7 @@ const Router = require('express').Router
 
 const PATH_BLACKLIST = ['/auth']
 
-function apiProxy(koreApi) {
+function apiProxy(koreApiUrl) {
   return async (req, res) => {
     const method = req.method.toLowerCase()
     const apiUrlPath = req.originalUrl.replace('/apiproxy', '')
@@ -14,7 +14,7 @@ function apiProxy(koreApi) {
     }
     try {
       const result = await axios[method](
-        `${koreApi.url}${apiUrlPath}`,
+        `${koreApiUrl}${apiUrlPath}`,
         ['get', 'delete'].includes(method) ? options : req.body,
         ['get', 'delete'].includes(method) ? undefined : options
       )
@@ -40,9 +40,9 @@ function checkBlacklist(req, res, next) {
   next()
 }
 
-function initRouter({ ensureAuthenticated, ensureUserCurrent, koreApi }) {
+function initRouter({ ensureAuthenticated, ensureUserCurrent, koreApiUrl }) {
   const router = Router()
-  router.use('/apiproxy/*', ensureAuthenticated, checkBlacklist, ensureUserCurrent, apiProxy(koreApi))
+  router.use('/apiproxy/*', ensureAuthenticated, checkBlacklist, ensureUserCurrent, apiProxy(koreApiUrl))
   return router
 }
 

@@ -1,8 +1,9 @@
 import PropTypes from 'prop-types'
 import { Typography, List, Button, Drawer, Alert, Icon } from 'antd'
 const { Title } = Typography
+import getConfig from 'next/config'
+const { publicRuntimeConfig } = getConfig()
 
-import { kore } from '../../../config'
 import ResourceList from '../configure/ResourceList'
 import EKSCredentialsForm from '../forms/EKSCredentialsForm'
 import EKSCredentials from '../team/EKSCredentials'
@@ -21,10 +22,10 @@ class EKSCredentialsList extends ResourceList {
     const api = await KoreApi.client()
     const [ allTeams, eksCredentials, allAllocations ] = await Promise.all([
       api.ListTeams(),
-      api.ListEKSCredentials(kore.koreAdminTeamName),
-      api.ListAllocations(kore.koreAdminTeamName)
+      api.ListEKSCredentials(publicRuntimeConfig.koreAdminTeamName),
+      api.ListAllocations(publicRuntimeConfig.koreAdminTeamName)
     ])
-    allTeams.items = allTeams.items.filter(t => !kore.ignoreTeams.includes(t.metadata.name))
+    allTeams.items = allTeams.items.filter(t => !publicRuntimeConfig.ignoreTeams.includes(t.metadata.name))
     eksCredentials.items.forEach(eks => {
       eks.allocation = (allAllocations.items || []).find(alloc => alloc.metadata.name === eks.metadata.name)
     })
@@ -56,7 +57,7 @@ class EKSCredentialsList extends ResourceList {
                   handleUpdate={this.handleStatusUpdated}
                   refreshMs={2000}
                   propsResourceDataKey="eksCredentials"
-                  resourceApiPath={`/teams/${kore.koreAdminTeamName}/ekscredentials/${eks.metadata.name}`}
+                  resourceApiPath={`/teams/${publicRuntimeConfig.koreAdminTeamName}/ekscredentials/${eks.metadata.name}`}
                 />
               }
             >
@@ -70,7 +71,7 @@ class EKSCredentialsList extends ResourceList {
                 width={700}
               >
                 <EKSCredentialsForm
-                  team={kore.koreAdminTeamName}
+                  team={publicRuntimeConfig.koreAdminTeamName}
                   allTeams={allTeams}
                   data={edit}
                   handleSubmit={this.handleEditSave}
@@ -85,7 +86,7 @@ class EKSCredentialsList extends ResourceList {
                 width={700}
               >
                 <EKSCredentialsForm
-                  team={kore.koreAdminTeamName}
+                  team={publicRuntimeConfig.koreAdminTeamName}
                   allTeams={allTeams}
                   handleSubmit={this.handleAddSave}
                 />

@@ -2,7 +2,7 @@ const axios = require('axios')
 const Router = require('express').Router
 const apiPaths = require('../../lib/utils/api-paths')
 
-function processTeamInvitation(koreApi) {
+function processTeamInvitation(koreApiUrl) {
   return async (req, res) => {
     const token = req.params.token
     const options = {
@@ -12,7 +12,7 @@ function processTeamInvitation(koreApi) {
       }
     }
     try {
-      const url = koreApi.url + apiPaths.useTeamInvitation(token)
+      const url = koreApiUrl + apiPaths.useTeamInvitation(token)
       const invitationResponse = await axios.put(url, undefined, options)
       let redirectTo = '/'
       if (invitationResponse.data.team) {
@@ -34,9 +34,9 @@ function persistPath(req, res, next) {
   next()
 }
 
-function initRouter({ ensureAuthenticated, ensureUserCurrent, koreApi }) {
+function initRouter({ ensureAuthenticated, ensureUserCurrent, koreApiUrl }) {
   const router = Router()
-  router.get('/process/teams/invitation/:token', persistPath, ensureAuthenticated, ensureUserCurrent, processTeamInvitation(koreApi))
+  router.get('/process/teams/invitation/:token', persistPath, ensureAuthenticated, ensureUserCurrent, processTeamInvitation(koreApiUrl))
   return router
 }
 

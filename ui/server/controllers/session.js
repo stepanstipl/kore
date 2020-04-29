@@ -1,15 +1,11 @@
 const Router = require('express').Router
 
-function getSessionUser(orgService, config) {
+function getSessionUser(orgService) {
   return async(req, res) => {
     const user = req.session.passport.user
     try {
       await orgService.refreshUser(user)
-      const clientConfig = {
-        apiUrl: config.koreApi.publicUrl,
-        featureGates: config.kore.featureGates
-      }
-      return res.json({ user, config: clientConfig })
+      return res.json(user)
     } catch (err) {
       console.log('Failed to refresh user in /session/user', err)
       return res.status(err.statusCode || 500).send()
@@ -17,16 +13,9 @@ function getSessionUser(orgService, config) {
   }
 }
 
-function getConfig(config) {
-  return (req, res) => {
-    res.json({ apiUrl: config.koreApi.publicUrl })
-  }
-}
-
-function initRouter({ ensureAuthenticated, ensureUserCurrent, persistRequestedPath, orgService, config }) {
+function initRouter({ ensureAuthenticated, ensureUserCurrent, persistRequestedPath, orgService }) {
   const router = Router()
-  router.get('/session/user', ensureAuthenticated, ensureUserCurrent, persistRequestedPath, getSessionUser(orgService, config))
-  router.get('/session/config', ensureAuthenticated, ensureUserCurrent, getConfig(config))
+  router.get('/session/user', ensureAuthenticated, ensureUserCurrent, persistRequestedPath, getSessionUser(orgService))
   return router
 }
 

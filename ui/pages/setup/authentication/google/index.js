@@ -2,13 +2,15 @@ import * as React from 'react'
 import axios from 'axios'
 import PropTypes from 'prop-types'
 import Router from 'next/router'
-import { kore, auth } from '../../../../config'
 import { Typography, Steps, Button, Alert, Row, Col, Form, Input, Card, List, Icon } from 'antd'
+const { Step } = Steps
+const { Title, Paragraph, Text } = Typography
+import getConfig from 'next/config'
+const { publicRuntimeConfig } = getConfig()
+
 import CopyTextWithLabel from '../../../../lib/components/CopyTextWithLabel'
 import copy from '../../../../lib/utils/object-copy'
 import redirect from '../../../../lib/utils/redirect'
-const { Step } = Steps
-const { Title, Paragraph, Text } = Typography
 
 class ConfigureKoreForm extends React.Component {
   static propTypes = {
@@ -43,9 +45,9 @@ class GoogleSetupPage extends React.Component {
   static staticProps = {
     title: 'Configure authentication provider',
     hideSider: true,
-    authUrl: auth.openid.url,
-    authCallbackUrl: auth.openid.callbackURL,
-    baseUrl: kore.baseUrl,
+    authUrl: publicRuntimeConfig.authOpenidUrl,
+    authCallbackUrl: publicRuntimeConfig.authOpenidCallbackUrl,
+    baseUrl: publicRuntimeConfig.koreBaseUrl,
     adminOnly: true
   }
 

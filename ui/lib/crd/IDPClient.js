@@ -1,4 +1,4 @@
-const { auth, kore } = require('../../config')
+const config = require('../../config')
 
 module.exports = {
   apiVersion: 'core.kore.appvia.io/v1',
@@ -8,8 +8,8 @@ module.exports = {
   },
   spec: {
     displayName: 'Kore UI',
-    secret: auth.openid.clientSecret,
-    id: auth.openid.clientID,
-    redirectURIs: [`${kore.baseUrl}/auth/callback`]
+    secret: config.auth.openid.clientSecret,
+    id: config.auth.openid.clientID,
+    redirectURIs: [`${config.kore.baseUrl}/auth/callback`]
   }
 }
