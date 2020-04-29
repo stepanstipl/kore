@@ -253,7 +253,7 @@ class ProjectAutomationSettings extends React.Component {
               <>
                 <div style={{ display: 'block', marginBottom: '20px' }}>
                   <Button type="primary" onClick={this.addProject(true)}>+ New</Button>
-                  <Button type="link" onClick={this.setGcpProjectsToDefault}>Set to Kore defaults</Button>
+                  <Button style={{ marginLeft: '10px' }} onClick={this.setGcpProjectsToDefault}>Set to Kore defaults</Button>
                 </div>
                 {gcpProjectList.length === 0 ? (
                   <Paragraph>No automated projects configured, you can &apos;Set to Kore defaults&apos; and/or add new ones. </Paragraph>
