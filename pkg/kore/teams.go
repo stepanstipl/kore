@@ -73,7 +73,7 @@ func (t *teamsImpl) Delete(ctx context.Context, name string) error {
 	}
 
 	// @step: retrieve the team
-	team, err := t.usermgr.Teams().Get(ctx, name)
+	team, err := t.persistenceMgr.Teams().Get(ctx, name)
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func (t *teamsImpl) Delete(ctx context.Context, name string) error {
 	}).Info("deleting the team from the kore")
 
 	// @step: delete in the db
-	if err := t.usermgr.Teams().Delete(ctx, team); err != nil {
+	if err := t.persistenceMgr.Teams().Delete(ctx, team); err != nil {
 		log.WithError(err).Error("trying to delete the team in kore")
 
 		return err
@@ -123,7 +123,7 @@ func (t *teamsImpl) Delete(ctx context.Context, name string) error {
 
 // Get returns the team from the kore
 func (t *teamsImpl) Get(ctx context.Context, name string) (*orgv1.Team, error) {
-	model, err := t.usermgr.Teams().Get(ctx, name)
+	model, err := t.persistenceMgr.Teams().Get(ctx, name)
 	if err != nil {
 		log.WithField("name", name).WithError(err).Error("trying to retrieve the user")
 
@@ -135,7 +135,7 @@ func (t *teamsImpl) Get(ctx context.Context, name string) (*orgv1.Team, error) {
 
 // List returns a list of teams
 func (t *teamsImpl) List(ctx context.Context) (*orgv1.TeamList, error) {
-	model, err := t.usermgr.Teams().List(ctx)
+	model, err := t.persistenceMgr.Teams().List(ctx)
 	if err != nil {
 		log.WithError(err).Error("trying to retrieve list of team in kore")
 
@@ -148,7 +148,7 @@ func (t *teamsImpl) List(ctx context.Context) (*orgv1.TeamList, error) {
 // Exists checks if the team exists in the kore
 func (t *teamsImpl) Exists(ctx context.Context, name string) (bool, error) {
 	// @step: we check the user management service for teams
-	return t.usermgr.Teams().Exists(ctx, name)
+	return t.persistenceMgr.Teams().Exists(ctx, name)
 }
 
 // Update is responsible for updating the team
@@ -178,7 +178,7 @@ func (t *teamsImpl) Update(ctx context.Context, team *orgv1.Team) (*orgv1.Team, 
 	// - if the team does not exist then any user can claim the team and added as member
 	// - ensure the namespace name is valid
 
-	found, err := t.usermgr.Teams().Exists(ctx, team.Name)
+	found, err := t.persistenceMgr.Teams().Exists(ctx, team.Name)
 	if err != nil {
 		logger.WithError(err).Error("trying to check if the team exists")
 
@@ -209,7 +209,7 @@ func (t *teamsImpl) Update(ctx context.Context, team *orgv1.Team) (*orgv1.Team, 
 	model := DefaultConvertor.ToTeamModel(team)
 
 	// @step: update the team in the users store
-	if err := t.usermgr.Teams().Update(ctx, model); err != nil {
+	if err := t.persistenceMgr.Teams().Update(ctx, model); err != nil {
 		log.WithError(err).Error("trying to update a team in user management")
 
 		return nil, err
@@ -221,7 +221,7 @@ func (t *teamsImpl) Update(ctx context.Context, team *orgv1.Team) (*orgv1.Team, 
 
 		logger.Info("adding the user as the admin of team")
 
-		if err := t.usermgr.Members().AddUser(ctx, user.Username(), team.Name, roles); err != nil {
+		if err := t.persistenceMgr.Members().AddUser(ctx, user.Username(), team.Name, roles); err != nil {
 			logger.WithError(err).Error("trying to add the user a admin user on the team")
 
 			return nil, err

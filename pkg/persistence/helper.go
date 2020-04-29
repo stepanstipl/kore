@@ -14,23 +14,20 @@
  * limitations under the License.
  */
 
-package users
+package persistence
 
-import "errors"
+import "github.com/jinzhu/gorm"
 
-// IsValid checks the configuration is valid
-func (c Config) IsValid() error {
-	switch c.Driver {
-	case "mysql", "postgres":
-	case "":
-		return errors.New("no database driver configured")
-	default:
-		return errors.New("unknown driver configured")
+// IsNotFound checks if the error is an not found error
+func IsNotFound(err error) bool {
+	return err == gorm.ErrRecordNotFound
+}
+
+// Preload applys the preloading to the query
+func Preload(load []string, db *gorm.DB) *gorm.DB {
+	for _, x := range load {
+		db = db.Preload(x)
 	}
 
-	if c.StoreURL == "" {
-		return errors.New("no database url configured")
-	}
-
-	return nil
+	return db
 }

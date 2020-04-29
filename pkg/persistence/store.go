@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package users
+package persistence
 
 import (
 	"time"
 
-	"github.com/appvia/kore/pkg/services/users/model"
+	"github.com/appvia/kore/pkg/persistence/model"
 
 	// include the database drivers
 	_ "github.com/jinzhu/gorm/dialects/mysql"

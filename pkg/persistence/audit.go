@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-package users
+package persistence
 
-import "github.com/jinzhu/gorm"
+import "context"
 
-// IsNotFound checks if the error is an not found error
-func IsNotFound(err error) bool {
-	return err == gorm.ErrRecordNotFound
+// Find is used to return results from the log
+func (a *storeImpl) Find(ctx context.Context, filters ...ListFunc) Find {
+	return newQuery(ctx, a.dbc, filters...)
 }
 
-// Preload applys the preloading to the query
-func Preload(load []string, db *gorm.DB) *gorm.DB {
-	for _, x := range load {
-		db = db.Preload(x)
-	}
-
-	return db
+// Record is responsible for adding an entry into the log
+func (a *storeImpl) Record(ctx context.Context, fields ...AuditFunc) Log {
+	return newEntry(ctx, a.dbc, fields...)
 }

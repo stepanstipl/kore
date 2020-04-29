@@ -22,7 +22,7 @@ import (
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	"github.com/appvia/kore/pkg/kore/assets"
 	"github.com/appvia/kore/pkg/kore/authentication"
-	"github.com/appvia/kore/pkg/services/users"
+	"github.com/appvia/kore/pkg/persistence"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils"
 
@@ -87,9 +87,9 @@ func (h *secretImpl) Update(ctx context.Context, secret *configv1.Secret) error 
 	}
 
 	h.Audit().Record(ctx,
-		users.Resource("secrets/"+secret.Name),
-		users.Team(h.team),
-		users.User(user.Username()),
+		persistence.Resource("secrets/"+secret.Name),
+		persistence.Team(h.team),
+		persistence.User(user.Username()),
 	).Event("user creating or updating secret in team")
 
 	return h.Store().Client().Update(ctx,

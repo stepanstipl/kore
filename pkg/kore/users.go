@@ -23,8 +23,8 @@ import (
 
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/appvia/kore/pkg/kore/authentication"
-	"github.com/appvia/kore/pkg/services/users"
-	"github.com/appvia/kore/pkg/services/users/model"
+	"github.com/appvia/kore/pkg/persistence"
+	"github.com/appvia/kore/pkg/persistence/model"
 	"github.com/appvia/kore/pkg/utils/validation"
 
 	log "github.com/sirupsen/logrus"
@@ -78,7 +78,7 @@ func (h *usersImpl) EnableUser(ctx context.Context, username, email string) erro
 	if !found {
 		logger.Debug("provisioning the user in the kore")
 
-		if err := h.usermgr.Users().Update(ctx, &model.User{
+		if err := h.persistenceMgr.Users().Update(ctx, &model.User{
 			Username: username,
 			Email:    email,
 		}); err != nil {
@@ -89,7 +89,7 @@ func (h *usersImpl) EnableUser(ctx context.Context, username, email string) erro
 
 		// @step: check for the user count - if this is the first user (minus admin)
 		// they should be placed into the admin group
-		count, err := h.usermgr.Users().Size(ctx)
+		count, err := h.persistenceMgr.Users().Size(ctx)
 		if err != nil {
 			log.WithError(err).Error("trying to get a count on the kore users")
 
@@ -108,18 +108,18 @@ func (h *usersImpl) EnableUser(ctx context.Context, username, email string) erro
 			defer func() {
 				finish := time.Now()
 				h.Audit().Record(ctx,
-					users.Resource("/users"),
-					users.ResourceURI("/users/"+username),
-					users.Verb("PUT"),
-					users.Operation("InitialiseFirstUserAsAdmin"),
-					users.User(username),
-					users.StartedAt(start),
-					users.CompletedAt(finish),
-					users.ResponseCode(responseCode),
+					persistence.Resource("/users"),
+					persistence.ResourceURI("/users/"+username),
+					persistence.Verb("PUT"),
+					persistence.Operation("InitialiseFirstUserAsAdmin"),
+					persistence.User(username),
+					persistence.StartedAt(start),
+					persistence.CompletedAt(finish),
+					persistence.ResponseCode(responseCode),
 				).Event("InitialiseFirstUserAsAdmin: Adding first user as administrator")
 			}()
 
-			if err := h.usermgr.Members().AddUser(ctx, username, HubAdminTeam, roles); err != nil {
+			if err := h.persistenceMgr.Members().AddUser(ctx, username, HubAdminTeam, roles); err != nil {
 				logger.WithError(err).Error("trying to add user to admin team")
 
 				return err
@@ -128,7 +128,7 @@ func (h *usersImpl) EnableUser(ctx context.Context, username, email string) erro
 		} else {
 			logger.Info("adding the user into the kore")
 
-			if err := h.usermgr.Teams().AddUser(ctx, username, HubDefaultTeam, roles); err != nil {
+			if err := h.persistenceMgr.Teams().AddUser(ctx, username, HubDefaultTeam, roles); err != nil {
 				logger.WithError(err).Error("trying to add user to default team")
 
 				return err
@@ -141,9 +141,9 @@ func (h *usersImpl) EnableUser(ctx context.Context, username, email string) erro
 
 // Get returns the user from the kore
 func (h *usersImpl) Get(ctx context.Context, username string) (*orgv1.User, error) {
-	user, err := h.usermgr.Users().Get(ctx, username)
+	user, err := h.persistenceMgr.Users().Get(ctx, username)
 	if err != nil {
-		if users.IsNotFound(err) {
+		if persistence.IsNotFound(err) {
 			return nil, ErrNotFound
 		}
 		log.WithError(err).Error("trying to retrieve the user")
@@ -156,7 +156,7 @@ func (h *usersImpl) Get(ctx context.Context, username string) (*orgv1.User, erro
 
 // List returns a list of users
 func (h *usersImpl) List(ctx context.Context) (*orgv1.UserList, error) {
-	list, err := h.usermgr.Users().List(ctx)
+	list, err := h.persistenceMgr.Users().List(ctx)
 	if err != nil {
 		log.WithError(err).Error("trying to retrieve a list of users")
 
@@ -175,8 +175,8 @@ func (h *usersImpl) ListInvitations(ctx context.Context, username string) (*orgv
 		return nil, ErrNotFound
 	}
 
-	list, err := h.usermgr.Invitations().List(ctx,
-		users.Filter.WithUser(username),
+	list, err := h.persistenceMgr.Invitations().List(ctx,
+		persistence.Filter.WithUser(username),
 	)
 	if err != nil {
 		log.WithError(err).Error("trying to list the invitations for user")
@@ -199,7 +199,7 @@ func (h *usersImpl) Delete(ctx context.Context, username string) (*orgv1.User, e
 	}
 
 	// @step: check the user exists
-	u, err := h.usermgr.Users().Get(ctx, username)
+	u, err := h.persistenceMgr.Users().Get(ctx, username)
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +220,7 @@ func (h *usersImpl) Delete(ctx context.Context, username string) (*orgv1.User, e
 		}
 	}
 
-	if _, err := h.usermgr.Users().Delete(ctx, u); err != nil {
+	if _, err := h.persistenceMgr.Users().Delete(ctx, u); err != nil {
 		log.WithError(err).Error("trying to remove user from kore")
 
 		return nil, err
@@ -255,7 +255,7 @@ func (h *usersImpl) Update(ctx context.Context, user *orgv1.User) (*orgv1.User, 
 	}
 
 	// @step: update the user in the user management service
-	if err := h.usermgr.Users().Update(ctx, DefaultConvertor.ToUserModel(user)); err != nil {
+	if err := h.persistenceMgr.Users().Update(ctx, DefaultConvertor.ToUserModel(user)); err != nil {
 		log.WithError(err).Error("trying to update the user in the kore")
 
 		return nil, err
@@ -266,8 +266,8 @@ func (h *usersImpl) Update(ctx context.Context, user *orgv1.User) (*orgv1.User, 
 
 // ListTeams return a list of teams the user is in
 func (h *usersImpl) ListTeams(ctx context.Context, username string) (*orgv1.TeamList, error) {
-	list, err := h.usermgr.Members().List(ctx,
-		users.Filter.WithUser(username),
+	list, err := h.persistenceMgr.Members().List(ctx,
+		persistence.Filter.WithUser(username),
 	)
 	if err != nil {
 		log.WithError(err).Error("trying to list the teams the user is in")
@@ -280,5 +280,5 @@ func (h *usersImpl) ListTeams(ctx context.Context, username string) (*orgv1.Team
 
 // Exists checks if the user exists
 func (h usersImpl) Exists(ctx context.Context, name string) (bool, error) {
-	return h.usermgr.Users().Exists(ctx, name)
+	return h.persistenceMgr.Users().Exists(ctx, name)
 }

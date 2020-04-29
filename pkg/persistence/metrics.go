@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package users
+package persistence
 
 import "github.com/prometheus/client_golang/prometheus"
 

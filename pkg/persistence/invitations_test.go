@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package users
+package persistence
 
 import (
 	"context"
 	"testing"
 	"time"
 
-	"github.com/appvia/kore/pkg/services/users/model"
+	"github.com/appvia/kore/pkg/persistence/model"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

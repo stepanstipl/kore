@@ -25,6 +25,7 @@ import (
 
 	// controller imports
 	_ "github.com/appvia/kore/pkg/controllers/register"
+	"github.com/appvia/kore/pkg/persistence"
 
 	// service provider imports
 	_ "github.com/appvia/kore/pkg/serviceproviders"
@@ -33,7 +34,6 @@ import (
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/schema"
-	"github.com/appvia/kore/pkg/services/users"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils/crds"
 
@@ -98,18 +98,18 @@ func New(config Config) (Interface, error) {
 		return nil, fmt.Errorf("failed creating store api: %s", err)
 	}
 
-	// @step: create the users service
-	usermgr, err := users.New(users.Config{
-		Driver:        config.UsersMgr.Driver,
-		EnableLogging: config.UsersMgr.EnableLogging,
-		StoreURL:      config.UsersMgr.StoreURL,
+	// @step: create the persistence service
+	persistenceMgr, err := persistence.New(persistence.Config{
+		Driver:        config.PersistenceMgr.Driver,
+		EnableLogging: config.PersistenceMgr.EnableLogging,
+		StoreURL:      config.PersistenceMgr.StoreURL,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("trying to create the user management service: %s", err)
 	}
 
 	// @step: we need to create the kore bridge / business logic
-	hubcc, err := kore.New(storecc, usermgr, config.Kore, kore.DefaultServiceProviders)
+	hubcc, err := kore.New(storecc, persistenceMgr, config.Kore, kore.DefaultServiceProviders)
 	if err != nil {
 		return nil, fmt.Errorf("trying to create the kore bridge: %s", err)
 	}
