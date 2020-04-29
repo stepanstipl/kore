@@ -17,6 +17,10 @@ parameters:
     type: boolean
     default: false
 
+#
+# Templates ---
+#
+
 services: &SERVICES
   - image: circleci/golang:1.14
   - name: etcd
@@ -71,6 +75,76 @@ service_env: &SERVICES_ENV
   KORE_UI_PUBLIC_URL: "http://localhost:3000"
   KUBE_API_SERVER: "http://kube-apiserver:8080"
   USERS_DB_URL: "root:pass@tcp(database:3306)/kore?parseTime=true"
+
+e2e_job_template: &E2E_JOB_TEMPLATE
+  parameters:
+    enable_eks:
+      type: boolean
+      default: false
+    enable_gke:
+      type: boolean
+      default: false
+    host:
+      type: string
+      default: http://127.0.0.1:10080
+
+  environment:
+    ENABLE_EKS_E2E: << parameters.enable_eks >>
+    ENABLE_GKE_E2E: << parameters.enable_gke >>
+    GOFLAGS: "-mod=vendor"
+    KORE_ADMIN_TOKEN: "password"
+    KORE_API_PUBLIC_URL_QA: << parameters.host >>
+
+  docker:
+    *SERVICES
+
+  steps:
+    - checkout
+    - run:
+        name: Installing tools
+        command: |
+          sudo apt install -y bash bats curl jq
+    - run:
+        name: Installing kubectl
+        command: |
+          sudo curl -L https://storage.googleapis.com/kubernetes-release/release/v1.15.11/bin/linux/amd64/kubectl -o /bin/kubectl
+          sudo chmod +x /bin/kubectl
+    - run:
+        name: Building binaries
+        command: |
+          make kore-apiserver
+          make kore
+          sudo cp bin/kore /bin/kore
+          /bin/kubectl version --client
+    - run:
+        name: Running the Kore API
+        command: |
+          export AUTH_PROXY_IMAGE="quay.io/appvia/auth-proxy:${CIRCLE_SHA1}"
+          export CLUSTERAPPMAN_IMAGE="quay.io/appvia/kore-apiserver:${CIRCLE_SHA1}"
+          bin/kore-apiserver --disable-json-logging --verbose
+        background: true
+        environment:
+          <<: *SERVICES_ENV
+    - run:
+        name: Waiting for API
+        command: |
+          curl -s \
+            --retry 10 \
+            --retry-connrefused \
+            --retry-delay 5 \
+            ${KORE_API_PUBLIC_URL_QA}/healthz
+    - run:
+        name: Running E2E Suite
+        no_output_timeout: 30m
+        command: |
+          test/e2e/check-suite.sh \
+            --enable-e2e-user ${KORE_E2E_USER} \
+            --enable-gke ${ENABLE_GKE_E2E} \
+            --enable-eks ${ENABLE_EKS_E2E}
+
+#
+# Jobs ---
+#
 
 jobs:
   build:
@@ -305,71 +379,11 @@ jobs:
             VERSION=${CIRCLE_SHA1} make images
             VERSION=${CIRCLE_SHA1} make push-images
 
-  e2e:
-    parameters:
-      enable_eks:
-        type: boolean
-        default: false
-      enable_gke:
-        type: boolean
-        default: false
-      host:
-        type: string
-        default: http://127.0.0.1:10080
+  e2e_gke:
+    <<: *E2E_JOB_TEMPLATE
 
-    environment:
-      ENABLE_EKS_E2E: << parameters.enable_eks >>
-      ENABLE_GKE_E2E: << parameters.enable_gke >>
-      GOFLAGS: "-mod=vendor"
-      KORE_ADMIN_TOKEN: "password"
-      KORE_API_PUBLIC_URL_QA: << parameters.host >>
-
-    docker:
-      *SERVICES
-
-    steps:
-      - checkout
-      - run:
-          name: Installing tools
-          command: |
-            sudo apt install -y bash bats curl jq
-      - run:
-          name: Installing kubectl
-          command: |
-            sudo curl -L https://storage.googleapis.com/kubernetes-release/release/v1.15.11/bin/linux/amd64/kubectl -o /bin/kubectl
-            sudo chmod +x /bin/kubectl
-      - run:
-          name: Building binaries
-          command: |
-            make kore-apiserver
-            make kore
-            sudo cp bin/kore /bin/kore
-            /bin/kubectl version --client
-      - run:
-          name: Running the Kore API
-          command: |
-            export AUTH_PROXY_IMAGE="quay.io/appvia/auth-proxy:${CIRCLE_SHA1}"
-            export CLUSTERAPPMAN_IMAGE="quay.io/appvia/kore-apiserver:${CIRCLE_SHA1}"
-            bin/kore-apiserver --disable-json-logging --verbose
-          background: true
-          environment:
-            <<: *SERVICES_ENV
-      - run:
-          name: Waiting for API
-          command: |
-            curl -s \
-              --retry 10 \
-              --retry-connrefused \
-              --retry-delay 5 \
-              ${KORE_API_PUBLIC_URL_QA}/healthz
-      - run:
-          name: Running E2E Suite
-          no_output_timeout: 30m
-          command: |
-            test/e2e/check-suite.sh \
-              --enable-e2e-user ${KORE_E2E_USER} \
-              --enable-gke ${ENABLE_GKE_E2E} \
-              --enable-eks ${ENABLE_EKS_E2E}
+  e2e_eks:
+    <<: *E2E_JOB_TEMPLATE
 
 workflows:
   version: 2.1
@@ -431,7 +445,7 @@ workflows:
     when: << pipeline.parameters.enable_gke_e2e >>
     jobs:
       - e2e-images
-      - e2e:
+      - e2e_gke:
           enable_gke: true
           requires:
             - e2e-images
@@ -440,8 +454,7 @@ workflows:
     when: << pipeline.parameters.enable_eks_e2e >>
     jobs:
       - e2e-images
-      - e2e:
+      - e2e_eks:
           enable_eks: true
           requires:
             - e2e-images
-
