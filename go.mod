@@ -125,4 +125,6 @@ replace github.com/dexidp/dex => github.com/appvia/dex v0.0.0-20191213161401-b14
 // This is the kubernetes-1.14.1-tools tag (which is the same as upstream kubernetes-1.14.1)
 replace k8s.io/code-generator => github.com/appvia/kubernetes-code-generator v0.0.0-20200311145355-28f8f0159a26
 
+replace github.com/kubernetes-sigs/go-open-service-broker-client => github.com/appvia/go-open-service-broker-client v0.0.0-20200430155427-f6c465273916
+
 go 1.13

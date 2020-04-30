@@ -24,48 +24,48 @@ import (
 // client may use to authenticate to a broker.  Currently, only basic auth is
 // supported.
 type AuthConfig struct {
-	BasicAuthConfig *BasicAuthConfig
-	BearerConfig    *BearerConfig
+	BasicAuthConfig *BasicAuthConfig `json:"basic_auth_config"`
+	BearerConfig    *BearerConfig `json:"bearer_config"`
 }
 
 // BasicAuthConfig represents a set of basic auth credentials.
 type BasicAuthConfig struct {
 	// Username is the basic auth username.
-	Username string
+	Username string `json:"username"`
 	// Password is the basic auth password.
-	Password string
+	Password string `json:"password"`
 }
 
 // BearerConfig represents bearer token credentials.
 type BearerConfig struct {
 	// Token is the bearer token.
-	Token string
+	Token string `json:"token"`
 }
 
 // ClientConfiguration represents the configuration of a Client.
 type ClientConfiguration struct {
 	// Name is the name to use for this client in log messages.  Using the
 	// logical name of the Broker this client is for is recommended.
-	Name string
+	Name string `json:"name"`
 	// URL is the URL to use to contact the broker.
-	URL string
+	URL string `json:"url"`
 	// APIVersion is the APIVersion to use for this client.  API features
 	// adopted after the 2.11 version of the API will only be sent if
 	// APIVersion is an API version that supports them.
-	APIVersion APIVersion
+	APIVersion APIVersion `json:"api_version"`
 	// AuthInfo is the auth configuration the client should use to authenticate
 	// to the broker.
-	AuthConfig *AuthConfig
+	AuthConfig *AuthConfig `json:"auth_config"`
 	// TLSConfig is the TLS configuration to use when communicating with the
 	// broker.
-	TLSConfig *tls.Config
+	TLSConfig *tls.Config `json:"tls_config"`
 	// Insecure represents whether the 'InsecureSkipVerify' TLS configuration
 	// field should be set.  If the TLSConfig field is set and this field is
 	// set to true, it overrides the value in the TLSConfig field.
-	Insecure bool
+	Insecure bool `json:"insecure"`
 	// TimeoutSeconds is the length of the timeout of any request to the
 	// broker, in seconds.
-	TimeoutSeconds int
+	TimeoutSeconds int `json:"timeout_seconds"`
 	// EnableAlphaFeatures controls whether alpha features in the Open Service
 	// Broker API are enabled in a client.  Features are considered to be
 	// alpha if they have been accepted into the Open Service Broker API but
@@ -76,12 +76,12 @@ type ClientConfiguration struct {
 	// If alpha features are not enabled, the client will not send or return
 	// any request parameters or request or response fields that correspond to
 	// alpha features.
-	EnableAlphaFeatures bool
+	EnableAlphaFeatures bool `json:"enable_alpha_features"`
 	// CAData holds PEM-encoded bytes (typically read from a root certificates bundle).
 	// This CA certificate will be added to any specified in TLSConfig.RootCAs.
-	CAData []byte
+	CAData []byte `json:"ca_data"`
 	// Verbose is whether the client will log to klog.
-	Verbose bool
+	Verbose bool `json:"verbose"`
 }
 
 // DefaultClientConfiguration returns a default ClientConfiguration:
