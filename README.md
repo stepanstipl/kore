@@ -22,19 +22,7 @@
 
 The fastest way to provision teams on Appvia Kore is try it out locally.
 
-See our [Local Quick Start Guide](doc/local-quick-start.md).
-
-### Appvia Kore / Kubernetes API / GKE
-
-In local mode, Appvia Kore will start the Kubernetes API locally. But, will still need access to a Kubernetes provider to create clusters.
-
-We'll utilise [GKE](https://cloud.google.com/kubernetes-engine) for this. And, we'll help you set it up to work with Appvia Kore.
-
-**Please Note**: Created GKE clusters are for demo purposes only. They're tied to a local environment and will be orphaned once the local Kore instance is stopped.
-
-### Appvia Kore CLI
-
-The Quick Start guide will walk you through using the CLI to set up a team, provision a sandbox environment and deploy a sample application.
+Follow the [Local Quick Start Guide](doc/local-quick-start.md) to get up and running.
 
 ## Why Appvia Kore?
 
