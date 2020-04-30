@@ -133,13 +133,6 @@ func schema_pkg_apis_gke_v1alpha1_GKECredentialsSpec(ref common.ReferenceCallbac
 				Description: "GKECredentialsSpec defines the desired state of GKECredentials",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"account": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Account is the credentials used to speak the GCP APIs; you create a service account under the Cloud IAM within the project, adding the permissions 'Compute Admin' role to the service account via IAM tab. Once done you can create a key under 'Service Accounts' and copy and paste the JSON payload here.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
 					"project": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Project is the GCP project these credentias pretain to",
@@ -154,10 +147,25 @@ func schema_pkg_apis_gke_v1alpha1_GKECredentialsSpec(ref common.ReferenceCallbac
 							Format:      "",
 						},
 					},
+					"account": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Account is the credentials used to speak the GCP APIs; you create a service account under the Cloud IAM within the project, adding the permissions 'Compute Admin' role to the service account via IAM tab. Once done you can create a key under 'Service Accounts' and copy and paste the JSON payload here. This is deprecated, please use a Secret and CredentialsRef",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"credentialsRef": {
+						SchemaProps: spec.SchemaProps{
+							Description: "CredentialsRef is a reference to the credentials used to create clusters",
+							Ref:         ref("k8s.io/api/core/v1.SecretReference"),
+						},
+					},
 				},
-				Required: []string{"account", "project"},
+				Required: []string{"project", "credentialsRef"},
 			},
 		},
+		Dependencies: []string{
+			"k8s.io/api/core/v1.SecretReference"},
 	}
 }
 

@@ -18,7 +18,6 @@ package create
 
 import (
 	"fmt"
-	"io/ioutil"
 
 	confv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -85,7 +84,6 @@ func (o CreateGKECredentialsOptions) Run() error {
 		return fmt.Errorf("%q already exists, please edit instead", o.Name)
 	}
 
-	json, err := ioutil.ReadFile(o.ServiceAccountJSON)
 	if err != nil {
 		o.Println("Error reading service account from %v", o.ServiceAccountJSON)
 
@@ -102,7 +100,6 @@ func (o CreateGKECredentialsOptions) Run() error {
 			Namespace: kore.HubAdminTeam,
 		},
 		Spec: gke.GKECredentialsSpec{
-			Account: string(json),
 			Project: o.ProjectName,
 		},
 	}

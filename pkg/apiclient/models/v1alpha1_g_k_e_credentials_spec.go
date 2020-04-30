@@ -18,8 +18,11 @@ import (
 type V1alpha1GKECredentialsSpec struct {
 
 	// account
+	Account string `json:"account,omitempty"`
+
+	// credentials ref
 	// Required: true
-	Account *string `json:"account"`
+	CredentialsRef *V1SecretReference `json:"credentialsRef"`
 
 	// project
 	// Required: true
@@ -33,7 +36,7 @@ type V1alpha1GKECredentialsSpec struct {
 func (m *V1alpha1GKECredentialsSpec) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateAccount(formats); err != nil {
+	if err := m.validateCredentialsRef(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -47,10 +50,19 @@ func (m *V1alpha1GKECredentialsSpec) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1alpha1GKECredentialsSpec) validateAccount(formats strfmt.Registry) error {
+func (m *V1alpha1GKECredentialsSpec) validateCredentialsRef(formats strfmt.Registry) error {
 
-	if err := validate.Required("account", "body", m.Account); err != nil {
+	if err := validate.Required("credentialsRef", "body", m.CredentialsRef); err != nil {
 		return err
+	}
+
+	if m.CredentialsRef != nil {
+		if err := m.CredentialsRef.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("credentialsRef")
+			}
+			return err
+		}
 	}
 
 	return nil

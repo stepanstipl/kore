@@ -1,6 +1,9 @@
 import V1alpha1GKECredentials from '../../kore-api/model/V1alpha1GKECredentials'
 import V1alpha1GKECredentialsSpec from '../../kore-api/model/V1alpha1GKECredentialsSpec'
 import V1ObjectMeta from '../../kore-api/model/V1ObjectMeta'
+import V1Secret from '../../kore-api/model/V1Secret'
+import V1SecretSpec from '../../kore-api/model/V1SecretSpec'
+import V1SecretReference from '../../kore-api/model/V1SecretReference'
 import VerifiedAllocatedResourceForm from '../resources/VerifiedAllocatedResourceForm'
 import KoreApi from '../../kore-api'
 import { Form, Input, Alert, Card } from 'antd'
@@ -8,19 +11,43 @@ import AllocationHelpers from '../../utils/allocation-helpers'
 
 class GKECredentialsForm extends VerifiedAllocatedResourceForm {
 
-  generateGKECredentialsResource = values => {
-    const resource = new V1alpha1GKECredentials()
-    resource.setApiVersion('gke.compute.kore.appvia.io/v1alpha1')
-    resource.setKind('GKECredentials')
+  generateSecretResource = values => {
+    const resource = new V1Secret()
+    resource.setApiVersion('config.kore.appvia.io')
+    resource.setKind('Secret')
 
     const meta = new V1ObjectMeta()
     meta.setName(this.getMetadataName(values))
     meta.setNamespace(this.props.team)
     resource.setMetadata(meta)
 
+    const spec = new V1SecretSpec()
+    spec.setType('gke-credentials')
+    spec.setDescription(`GCP ${values.project} project Service Account`)
+    spec.setData({ key: btoa(values.account) })
+    resource.setSpec(spec)
+
+    return resource
+  }
+
+  generateGKECredentialsResource = values => {
+    const name = this.getMetadataName(values)
+    const resource = new V1alpha1GKECredentials()
+    resource.setApiVersion('gke.compute.kore.appvia.io/v1alpha1')
+    resource.setKind('GKECredentials')
+
+    const meta = new V1ObjectMeta()
+    meta.setName(name)
+    meta.setNamespace(this.props.team)
+    resource.setMetadata(meta)
+
     const spec = new V1alpha1GKECredentialsSpec()
     spec.setProject(values.project)
-    spec.setAccount(values.account)
+
+    const secret = new V1SecretReference()
+    secret.setName(name)
+    secret.setNamespace(this.props.team)
+    spec.setCredentialsRef(secret)
 
     resource.setSpec(spec)
 
@@ -37,6 +64,7 @@ class GKECredentialsForm extends VerifiedAllocatedResourceForm {
   putResource = async values => {
     const api = await KoreApi.client()
     const metadataName = this.getMetadataName(values)
+    await api.UpdateTeamSecret(this.props.team, metadataName, this.generateSecretResource(values))
     const gkeCredRes = this.generateGKECredentialsResource(values)
     const gkeResult = await api.UpdateGKECredential(this.props.team, metadataName, gkeCredRes)
     gkeResult.allocation = await this.storeAllocation(gkeCredRes, values)
@@ -82,11 +110,18 @@ class GKECredentialsForm extends VerifiedAllocatedResourceForm {
           )}
         </Form.Item>
         <Form.Item label="Service Account JSON" labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} validateStatus={this.fieldError('account') ? 'error' : ''} help={this.fieldError('account') || 'The Service Account key in JSON format, with GKE admin permissions on the GCP project'}>
-          {form.getFieldDecorator('account', {
-            rules: [{ required: true, message: 'Please enter your Service Account!' }],
-            initialValue: data && data.spec.account
-          })(
-            <Input.TextArea autoSize={{ minRows: 4, maxRows: 10  }} placeholder="Service Account JSON" />,
+          {!data ? (
+            form.getFieldDecorator('account', {
+              rules: [{ required: true, message: 'Please enter your Service Account!' }]
+            })(
+              <Input.TextArea autoSize={{ minRows: 4, maxRows: 10  }} placeholder="Service Account JSON" />,
+            )
+          ) : (
+            <Alert
+              message="For security reasons, the Service Account key is not shown after creation of the project credential"
+              type="warning"
+              style={{ marginBottom: '-20px', marginTop: '10px' }}
+            />
           )}
         </Form.Item>
       </Card>

@@ -342,8 +342,39 @@ func (t *gkeCtrl) GetGKECredentials(ctx context.Context, key types.NamespacedNam
 		return nil, errors.New("gke credentials have failed validation, please check credentials")
 	}
 
+	// for backwards-compatibility, use the key (Account) set on the GKECredentials resource, if it exists
+	if c.Spec.Account != "" {
+		return &credentials{
+			key:        c.Spec.Account,
+			project_id: c.Spec.Project,
+			project:    c.Spec.Project,
+			region:     c.Spec.Region,
+		}, nil
+	}
+
+	// @step: we need to grab the secret
+	secret := &config.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      c.Spec.CredentialsRef.Name,
+			Namespace: c.Spec.CredentialsRef.Namespace,
+		},
+	}
+
+	found, err = kubernetes.GetIfExists(ctx, t.mgr.GetClient(), secret)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, fmt.Errorf("gke credentials secret is missing")
+	}
+
+	// @step: ensure the secret is decoded before using
+	if err := secret.Decode(); err != nil {
+		return nil, err
+	}
+
 	return &credentials{
-		key:        c.Spec.Account,
+		key:        secret.Spec.Data["key"],
 		project_id: c.Spec.Project,
 		project:    c.Spec.Project,
 		region:     c.Spec.Region,

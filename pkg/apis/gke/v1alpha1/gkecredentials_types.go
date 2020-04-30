@@ -19,19 +19,13 @@ package v1alpha1
 import (
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // GKECredentialsSpec defines the desired state of GKECredentials
 // +k8s:openapi-gen=true
 type GKECredentialsSpec struct {
-	// Account is the credentials used to speak the GCP APIs; you create a service account
-	// under the Cloud IAM within the project, adding the permissions 'Compute
-	// Admin' role to the service account via IAM tab. Once done you can create
-	// a key under 'Service Accounts' and copy and paste the JSON payload here.
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Required
-	Account string `json:"account"`
 	// Project is the GCP project these credentias pretain to
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
@@ -39,6 +33,16 @@ type GKECredentialsSpec struct {
 	// Region is the GCP region you wish to the cluster to reside within
 	// +kubebuilder:validation:Optional
 	Region string `json:"region,omitempty"`
+	// Account is the credentials used to speak the GCP APIs; you create a service account
+	// under the Cloud IAM within the project, adding the permissions 'Compute
+	// Admin' role to the service account via IAM tab. Once done you can create
+	// a key under 'Service Accounts' and copy and paste the JSON payload here.
+	// This is deprecated, please use a Secret and CredentialsRef
+	// +kubebuilder:validation:Optional
+	Account string `json:"account,omitempty"`
+	// CredentialsRef is a reference to the credentials used to create clusters
+	// +kubebuilder:validation:Optional
+	CredentialsRef *v1.SecretReference `json:"credentialsRef"`
 }
 
 // GKECredentialsStatus defines the observed state of GKECredentials

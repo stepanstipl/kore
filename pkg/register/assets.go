@@ -4650,9 +4650,22 @@ spec:
                 you create a service account under the Cloud IAM within the project,
                 adding the permissions 'Compute Admin' role to the service account
                 via IAM tab. Once done you can create a key under 'Service Accounts'
-                and copy and paste the JSON payload here.
-              minLength: 1
+                and copy and paste the JSON payload here. This is deprecated, please
+                use a Secret and CredentialsRef
               type: string
+            credentialsRef:
+              description: CredentialsRef is a reference to the credentials used to
+                create clusters
+              properties:
+                name:
+                  description: Name is unique within a namespace to reference a secret
+                    resource.
+                  type: string
+                namespace:
+                  description: Namespace defines the space within which the secret
+                    name must be unique.
+                  type: string
+              type: object
             project:
               description: Project is the GCP project these credentias pretain to
               minLength: 1
@@ -4662,7 +4675,6 @@ spec:
                 within
               type: string
           required:
-          - account
           - project
           type: object
         status:
