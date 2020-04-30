@@ -32,14 +32,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func (s *Provider) ReconcileCredentials(
+func (p *Provider) ReconcileCredentials(
 	ctx context.Context,
 	logger logrus.FieldLogger,
 	service *servicesv1.Service,
 	plan *servicesv1.ServicePlan,
 	creds *servicesv1.ServiceCredentials,
 ) (reconcile.Result, map[string]string, error) {
-	providerPlan, err := s.plan(service.Spec.Kind, plan.Name)
+	providerPlan, err := p.plan(service.Spec.Kind, plan.Name)
 	if err != nil {
 		return reconcile.Result{}, nil, err
 	}
@@ -60,7 +60,7 @@ func (s *Provider) ReconcileCredentials(
 	}
 
 	if component.Status == corev1.PendingStatus {
-		return s.pollLastBindingOperation(ctx, logger, service, plan, creds, component)
+		return p.pollLastBindingOperation(ctx, logger, service, plan, creds, component)
 	}
 
 	component.Update(corev1.PendingStatus, "", "")
@@ -76,7 +76,7 @@ func (s *Provider) ReconcileCredentials(
 
 	logger.Debug("calling bind on service broker")
 
-	resp, err := s.client.Bind(&osb.BindRequest{
+	resp, err := p.client.Bind(&osb.BindRequest{
 		AcceptsIncomplete: true,
 		BindingID:         creds.Status.ProviderID,
 		InstanceID:        service.Status.ProviderID,

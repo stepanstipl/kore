@@ -31,7 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func (s *Provider) pollLastBindingOperation(
+func (p *Provider) pollLastBindingOperation(
 	ctx context.Context,
 	logger logrus.FieldLogger,
 	service *servicesv1.Service,
@@ -39,7 +39,7 @@ func (s *Provider) pollLastBindingOperation(
 	creds *servicesv1.ServiceCredentials,
 	component *corev1.Component,
 ) (reconcile.Result, map[string]string, error) {
-	providerPlan, err := s.plan(service.Spec.Kind, plan.Name)
+	providerPlan, err := p.plan(service.Spec.Kind, plan.Name)
 	if err != nil {
 		return reconcile.Result{}, nil, err
 	}
@@ -52,7 +52,7 @@ func (s *Provider) pollLastBindingOperation(
 
 	logger.WithField("operation", operationKey).Debug("polling last bind operation from service broker")
 
-	resp, err := s.client.PollBindingLastOperation(&osb.BindingLastOperationRequest{
+	resp, err := p.client.PollBindingLastOperation(&osb.BindingLastOperationRequest{
 		InstanceID:   service.Status.ProviderID,
 		BindingID:    creds.Status.ProviderID,
 		ServiceID:    utils.StringPtr(providerPlan.serviceID),
@@ -81,7 +81,7 @@ func (s *Provider) pollLastBindingOperation(
 		}
 
 		logger.Debug("requesting binding details")
-		resp, err := s.client.GetBinding(&osb.GetBindingRequest{
+		resp, err := p.client.GetBinding(&osb.GetBindingRequest{
 			InstanceID: service.Status.ProviderID,
 			BindingID:  creds.Status.ProviderID,
 		})

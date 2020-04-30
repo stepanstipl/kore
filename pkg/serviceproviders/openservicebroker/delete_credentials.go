@@ -28,14 +28,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func (s *Provider) DeleteCredentials(
+func (p *Provider) DeleteCredentials(
 	ctx context.Context,
 	logger logrus.FieldLogger,
 	service *servicesv1.Service,
 	plan *servicesv1.ServicePlan,
 	creds *servicesv1.ServiceCredentials,
 ) (reconcile.Result, error) {
-	providerPlan, err := s.plan(service.Spec.Kind, plan.Name)
+	providerPlan, err := p.plan(service.Spec.Kind, plan.Name)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -56,7 +56,7 @@ func (s *Provider) DeleteCredentials(
 	}
 
 	if component.Status == corev1.PendingStatus {
-		res, _, err := s.pollLastBindingOperation(ctx, logger, service, plan, creds, component)
+		res, _, err := p.pollLastBindingOperation(ctx, logger, service, plan, creds, component)
 		return res, err
 	}
 
@@ -64,7 +64,7 @@ func (s *Provider) DeleteCredentials(
 
 	logger.Debug("calling unbind on the service broker")
 
-	resp, err := s.client.Unbind(&osb.UnbindRequest{
+	resp, err := p.client.Unbind(&osb.UnbindRequest{
 		// Async unbinding is only supported in API version >= 2.14, so we leave this as false for now
 		AcceptsIncomplete: false,
 		InstanceID:        service.Status.ProviderID,

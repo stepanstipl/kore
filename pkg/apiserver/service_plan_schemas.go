@@ -70,7 +70,7 @@ func (p servicePlanSchemasHandler) getServicePlanSchema(req *restful.Request, re
 			return resp.WriteHeaderAndEntity(http.StatusNotFound, nil)
 		}
 
-		schema, err := provider.JSONSchema(kind, "")
+		schema, err := provider.PlanJSONSchema(kind, "")
 		if err != nil {
 			return err
 		}

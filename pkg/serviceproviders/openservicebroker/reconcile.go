@@ -35,13 +35,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func (s *Provider) Reconcile(
+func (p *Provider) Reconcile(
 	ctx context.Context,
 	logger logrus.FieldLogger,
 	service *servicesv1.Service,
 	plan *servicesv1.ServicePlan,
 ) (reconcile.Result, error) {
-	providerPlan, err := s.plan(service.Spec.Kind, plan.Name)
+	providerPlan, err := p.plan(service.Spec.Kind, plan.Name)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -60,14 +60,14 @@ func (s *Provider) Reconcile(
 	if component.Status == corev1.SuccessStatus {
 		// Check if there was any change to the service configuration
 		if service.Spec.Plan != service.Status.Plan || !bytes.Equal(service.Spec.Configuration.Raw, service.Status.Configuration.Raw) {
-			return s.update(ctx, logger, service, plan)
+			return p.update(ctx, logger, service, plan)
 		}
 
 		return reconcile.Result{}, nil
 	}
 
 	if component.Status == corev1.PendingStatus {
-		return s.pollLastOperation(ctx, logger, service, plan, component)
+		return p.pollLastOperation(ctx, logger, service, plan, component)
 	}
 
 	component.Update(corev1.PendingStatus, "", "")
@@ -83,7 +83,7 @@ func (s *Provider) Reconcile(
 
 	logger.Debug("provisioning service with service broker")
 
-	resp, err := s.client.ProvisionInstance(&osb.ProvisionRequest{
+	resp, err := p.client.ProvisionInstance(&osb.ProvisionRequest{
 		InstanceID:        service.Status.ProviderID,
 		AcceptsIncomplete: true,
 		ServiceID:         providerPlan.serviceID,
@@ -111,13 +111,13 @@ func (s *Provider) Reconcile(
 	return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
 }
 
-func (s *Provider) update(
+func (p *Provider) update(
 	ctx context.Context,
 	logger logrus.FieldLogger,
 	service *servicesv1.Service,
 	plan *servicesv1.ServicePlan,
 ) (reconcile.Result, error) {
-	providerPlan, err := s.plan(service.Spec.Kind, plan.Name)
+	providerPlan, err := p.plan(service.Spec.Kind, plan.Name)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -138,7 +138,7 @@ func (s *Provider) update(
 	}
 
 	if component.Status == corev1.PendingStatus {
-		return s.pollLastOperation(ctx, logger, service, plan, component)
+		return p.pollLastOperation(ctx, logger, service, plan, component)
 	}
 
 	component.Update(corev1.PendingStatus, "", "")
@@ -154,7 +154,7 @@ func (s *Provider) update(
 
 	logger.Debug("updating service with service broker")
 
-	resp, err := s.client.UpdateInstance(&osb.UpdateInstanceRequest{
+	resp, err := p.client.UpdateInstance(&osb.UpdateInstanceRequest{
 		InstanceID:        service.Status.ProviderID,
 		AcceptsIncomplete: true,
 		ServiceID:         providerPlan.serviceID,

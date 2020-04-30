@@ -251,7 +251,7 @@ func (s *servicesImpl) validateConfiguration(ctx context.Context, service *servi
 		return fmt.Errorf("failed to parse service configuration values: %s", err)
 	}
 
-	schema, err := provider.JSONSchema(service.Spec.Kind, service.Spec.Plan)
+	schema, err := provider.PlanJSONSchema(service.Spec.Kind, service.Spec.Plan)
 	if err != nil {
 		return err
 	}

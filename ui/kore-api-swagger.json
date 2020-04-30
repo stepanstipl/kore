@@ -868,6 +868,192 @@
         }
       }
     },
+    "/api/v1alpha1/serviceproviders": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Returns all the available service providers",
+        "operationId": "ListServiceProviders",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Filters service providers for a specific kind",
+            "name": "kind",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of service providers",
+            "schema": {
+              "$ref": "#/definitions/v1.ServiceProviderList"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/serviceproviders/{name}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Returns a specific service provider",
+        "operationId": "GetServiceProvider",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of the service provider you wish to retrieve",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the service provider definition",
+            "schema": {
+              "$ref": "#/definitions/v1.ServiceProvider"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "the service provider with the given name doesn't exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Creates or updates a service provider",
+        "operationId": "UpdateServiceProvider",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of the service provider you wish to create or update",
+            "name": "name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "The specification for the service provider you are creating or updating",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.ServiceProvider"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the service provider definition",
+            "schema": {
+              "$ref": "#/definitions/v1.ServiceProvider"
+            }
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Deletes a service provider",
+        "operationId": "DeleteServiceProvider",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of the service provider you wish to delete",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the service provider definition",
+            "schema": {
+              "$ref": "#/definitions/v1.ServiceProvider"
+            }
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "the service provider with the given name doesn't exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
     "/api/v1alpha1/teams": {
       "get": {
         "consumes": [
@@ -5649,6 +5835,83 @@
           }
         },
         "summary": {
+          "type": "string"
+        }
+      }
+    },
+    "v1.ServiceProvider": {
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1.ServiceProviderSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/v1.ServiceProviderStatus"
+        }
+      }
+    },
+    "v1.ServiceProviderList": {
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.ServiceProvider"
+          }
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ListMeta"
+        }
+      }
+    },
+    "v1.ServiceProviderSpec": {
+      "required": [
+        "type",
+        "description",
+        "summary",
+        "configuration"
+      ],
+      "properties": {
+        "configuration": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      }
+    },
+    "v1.ServiceProviderStatus": {
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "status": {
           "type": "string"
         }
       }

@@ -144,70 +144,74 @@ func NewProvider(name string, client osb.Client) (*Provider, error) {
 	}, nil
 }
 
-func (s *Provider) Name() string {
-	return s.name
+func (p *Provider) Name() string {
+	return p.name
 }
 
-func (s *Provider) Kinds() []string {
+func (p *Provider) Type() string {
+	return "openservicebroker"
+}
+
+func (p *Provider) Kinds() []string {
 	var kinds []string
-	for kind := range s.services {
+	for kind := range p.services {
 		kinds = append(kinds, kind)
 	}
 	return kinds
 }
 
-func (s *Provider) Plans() []servicesv1.ServicePlan {
-	return s.servicePlans
+func (p *Provider) Plans() []servicesv1.ServicePlan {
+	return p.servicePlans
 }
 
-func (s *Provider) JSONSchema(kind string, plan string) (string, error) {
-	p, err := s.planWithFilter(kind, plan, func(p providerPlan) bool { return p.schema != "" })
+func (p *Provider) PlanJSONSchema(kind string, planName string) (string, error) {
+	plan, err := p.planWithFilter(kind, planName, func(p providerPlan) bool { return p.schema != "" })
 	if err != nil {
 		return "", err
 	}
 
-	return p.schema, nil
+	return plan.schema, nil
 }
 
-func (s *Provider) CredentialsJSONSchema(kind string, plan string) (string, error) {
-	p, err := s.planWithFilter(kind, plan, func(p providerPlan) bool { return p.credentialsSchema != "" })
+func (p *Provider) CredentialsJSONSchema(kind string, planName string) (string, error) {
+	plan, err := p.planWithFilter(kind, planName, func(p providerPlan) bool { return p.credentialsSchema != "" })
 	if err != nil {
 		return "", err
 	}
 
-	return p.credentialsSchema, nil
+	return plan.credentialsSchema, nil
 }
 
-func (s *Provider) RequiredCredentialTypes(kind string) ([]schema.GroupVersionKind, error) {
-	_, ok := s.services[kind]
+func (p *Provider) RequiredCredentialTypes(kind string) ([]schema.GroupVersionKind, error) {
+	_, ok := p.services[kind]
 	if !ok {
 		return nil, fmt.Errorf("%q service kind is invalid", kind)
 	}
 	return nil, nil
 }
 
-func (s *Provider) plan(kind, name string) (providerPlan, error) {
-	return s.planWithFilter(kind, name, nil)
+func (p *Provider) plan(kind, planName string) (providerPlan, error) {
+	return p.planWithFilter(kind, planName, nil)
 }
 
-func (s *Provider) planWithFilter(kind, name string, filter func(providerPlan) bool) (providerPlan, error) {
-	service, ok := s.services[kind]
+func (p *Provider) planWithFilter(kind, planName string, filter func(providerPlan) bool) (providerPlan, error) {
+	service, ok := p.services[kind]
 	if !ok {
 		return providerPlan{}, fmt.Errorf("%q service kind is invalid", kind)
 	}
 
-	if name != "" {
-		if plan, ok := service.plans[name]; ok {
+	if planName != "" {
+		if plan, ok := service.plans[planName]; ok {
 			if filter == nil || filter(plan) {
 				return plan, nil
 			}
 		}
 	}
 
-	if s.services[kind].defaultPlan == nil {
+	if p.services[kind].defaultPlan == nil {
 		return providerPlan{}, fmt.Errorf("%q service must define a %q plan", kind, DefaultPlan)
 	}
-	return *s.services[kind].defaultPlan, nil
+	return *p.services[kind].defaultPlan, nil
 }
 
 func catalogPlanToServicePlan(service osb.Service, plan osb.Plan) (servicesv1.ServicePlan, error) {

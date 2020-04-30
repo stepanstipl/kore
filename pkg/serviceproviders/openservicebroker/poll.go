@@ -31,14 +31,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func (s *Provider) pollLastOperation(
+func (p *Provider) pollLastOperation(
 	ctx context.Context,
 	logger logrus.FieldLogger,
 	service *servicesv1.Service,
 	plan *servicesv1.ServicePlan,
 	component *corev1.Component,
 ) (reconcile.Result, error) {
-	providerPlan, err := s.plan(service.Spec.Kind, plan.Name)
+	providerPlan, err := p.plan(service.Spec.Kind, plan.Name)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -51,7 +51,7 @@ func (s *Provider) pollLastOperation(
 
 	logger.WithField("operation", operationKey).Debug("polling last operation from service broker")
 
-	resp, err := s.client.PollLastOperation(&osb.LastOperationRequest{
+	resp, err := p.client.PollLastOperation(&osb.LastOperationRequest{
 		InstanceID:   service.Status.ProviderID,
 		ServiceID:    utils.StringPtr(providerPlan.serviceID),
 		PlanID:       utils.StringPtr(providerPlan.id),

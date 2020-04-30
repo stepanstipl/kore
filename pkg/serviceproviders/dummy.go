@@ -31,14 +31,44 @@ import (
 )
 
 func init() {
-	kore.DefaultServiceProviders.Register(Dummy{})
+	kore.RegisterServiceProviderFactory(DummyFactory{})
+}
+
+type DummyFactory struct{}
+
+func (d DummyFactory) Type() string {
+	return "dummy"
+}
+
+func (d DummyFactory) JSONSchema() string {
+	return `{
+		"$id": "https://appvia.io/schemas/serviceprovider/dummy.json",
+		"$schema": "http://json-schema.org/draft-07/schema#",
+		"description": "Dummy service plan schema",
+		"type": "object",
+		"additionalProperties": false,
+		"required": [
+			"iAmDummy"
+		],
+		"properties": {
+			"iAmDummy": {
+				"type": "string",
+				"minLength": 1
+			}
+		}
+	}`
+}
+
+func (d DummyFactory) CreateProvider(provider servicesv1.ServiceProvider) (kore.ServiceProvider, error) {
+	return Dummy{name: provider.Name}, nil
 }
 
 type Dummy struct {
+	name string
 }
 
 func (d Dummy) Name() string {
-	return "dummy"
+	return d.name
 }
 
 func (d Dummy) Kinds() []string {
@@ -54,7 +84,7 @@ func (d Dummy) Plans() []servicesv1.ServicePlan {
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "dummy",
-				Namespace: "kore-admin",
+				Namespace: "kore",
 			},
 			Spec: servicesv1.ServicePlanSpec{
 				Kind:          "dummy",
@@ -66,7 +96,7 @@ func (d Dummy) Plans() []servicesv1.ServicePlan {
 	}
 }
 
-func (d Dummy) JSONSchema(_, _ string) (string, error) {
+func (d Dummy) PlanJSONSchema(_, _ string) (string, error) {
 	return `{
 		"$id": "https://appvia.io/schemas/services/dummy/dummy.json",
 		"$schema": "http://json-schema.org/draft-07/schema#",

@@ -326,5 +326,19 @@ var (
 				{"Age", "metadata.creationTimestamp", "age"},
 			},
 		},
+		{
+			Name:         "serviceprovider",
+			GroupVersion: servicesv1.GroupVersion.String(),
+			Kind:         "ServiceProvider",
+			Scope:        GlobalScope,
+			FeatureGate:  kore.FeatureGateServices,
+			Printer: []Column{
+				{"Name", "metadata.name", ""},
+				{"Type", "spec.type", ""},
+				{"Summary", "spec.summary", ""},
+				{"Status", "status.status", ""},
+				{"Age", "metadata.creationTimestamp", "age"},
+			},
+		},
 	}
 )

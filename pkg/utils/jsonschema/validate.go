@@ -29,7 +29,7 @@ import (
 func Validate(schemaJSON string, subject string, data interface{}) error {
 	schema, err := gojsonschema.NewSchema(gojsonschema.NewStringLoader(schemaJSON))
 	if err != nil {
-		panic(fmt.Errorf("failed to compile plan schema: %v", err))
+		return fmt.Errorf("failed to compile schema: %v", err)
 	}
 
 	var loader gojsonschema.JSONLoader

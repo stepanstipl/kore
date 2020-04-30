@@ -62,7 +62,10 @@ func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePl
 		return err
 	}
 
-	plan.Namespace = HubNamespace
+	if plan.Namespace != HubNamespace {
+		return validation.NewError("%q failed validation", plan.Name).
+			WithFieldErrorf("namespace", validation.InvalidValue, "must be %q", HubNamespace)
+	}
 
 	provider := p.ServiceProviders().GetProviderForKind(plan.Spec.Kind)
 	if provider == nil {
@@ -70,7 +73,7 @@ func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePl
 			WithFieldErrorf("kind", validation.InvalidType, "%q is not a known service kind", plan.Spec.Kind)
 	}
 
-	schema, err := provider.JSONSchema(plan.Spec.Kind, plan.Name)
+	schema, err := provider.PlanJSONSchema(plan.Spec.Kind, plan.Name)
 	if err != nil {
 		return err
 	}

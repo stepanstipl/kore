@@ -28,13 +28,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func (s *Provider) Delete(
+func (p *Provider) Delete(
 	ctx context.Context,
 	logger logrus.FieldLogger,
 	service *servicesv1.Service,
 	plan *servicesv1.ServicePlan,
 ) (reconcile.Result, error) {
-	providerPlan, err := s.plan(service.Spec.Kind, plan.Name)
+	providerPlan, err := p.plan(service.Spec.Kind, plan.Name)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -55,14 +55,14 @@ func (s *Provider) Delete(
 	}
 
 	if component.Status == corev1.PendingStatus {
-		return s.pollLastOperation(ctx, logger, service, plan, component)
+		return p.pollLastOperation(ctx, logger, service, plan, component)
 	}
 
 	component.Update(corev1.PendingStatus, "", "")
 
 	logger.Debug("deprovisioning service with service broker")
 
-	resp, err := s.client.DeprovisionInstance(&osb.DeprovisionRequest{
+	resp, err := p.client.DeprovisionInstance(&osb.DeprovisionRequest{
 		InstanceID:        service.Status.ProviderID,
 		AcceptsIncomplete: true,
 		ServiceID:         providerPlan.serviceID,
