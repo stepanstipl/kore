@@ -35,3 +35,11 @@ func TestContainsBad(t *testing.T) {
 
 	assert.False(t, Contains("d", list))
 }
+
+func TestStringsSorted(t *testing.T) {
+	a := []string{"a", "c", "b"}
+	expected := []string{"a", "b", "c"}
+	v := StringsSorted(a)
+	assert.Equal(t, []string{"a", "c", "b"}, a)
+	assert.Equal(t, expected, v)
+}

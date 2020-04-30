@@ -24,10 +24,10 @@ ENABLE_EKS_E2E="false"
 usage() {
   cat <<EOF
   Usage: $(basename $0)
-  --branch <name>      : the branch to run the e2e on (defaults: ${BRANCH})
-  --enable-gke <bool>  : indicates we should run e2e on gke builds (defaults: ${ENABLE_GKE_E2E})
-  --enable-eks <bool>  : indicates we should run e2e on eks (defaults: ${ENABLE_EKS_E2E})
-  -h|--help            : display this usage menu
+  --branch <name>   : the branch to run the e2e on (defaults: ${BRANCH})
+  --enable-gke      : indicates we should run e2e on gke builds (defaults: ${ENABLE_GKE_E2E})
+  --enable-eks      : indicates we should run e2e on eks (defaults: ${ENABLE_EKS_E2E})
+  -h|--help         : display this usage menu
 EOF
   if [[ -n $@ ]]; then
     echo "[error] $@"

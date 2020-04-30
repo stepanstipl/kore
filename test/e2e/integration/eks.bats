@@ -35,6 +35,8 @@ setup() {
 }
 
 @test "We should be able to build a cluster in EKS" {
+  ${KORE} get cluster ${CLUSTER} -t ${TEAM} && skip
+
   runit "${KORE} create cluster ${CLUSTER} -t ${TEAM} -a aws -p eks-development --no-wait"
   [[ "$status" -eq 0 ]]
 }
@@ -101,3 +103,93 @@ setup() {
   runit "${KUBECTL} --context=${CLUSTER} get psp eks.privileged"
   [[ "$status" -eq 0 ]]
 }
+
+@test "We should see the number of nodes change when I update the desired state" {
+  runit "${KORE} alpha patch cluster ${CLUSTER} spec.configuration.nodeGroups.0.desiredSize 2"
+  [[ "$status" -eq 0 ]]
+  retry 60 "${KUBECTL} --context=${CLUSTER} get nodes --no-headers | grep Ready | wc -l | grep 2"
+  [[ "$status" -eq 0 ]]
+}
+
+#
+### Disabling for now as this add almost 15 minutes to the E2E .. honestly how can it take
+# 15 MINUTES to update a firewall rule
+#
+#@test "We should be able to update the authorized master list of eks and lose access" {
+#  cat <<EOF > /tmp/plan-policy
+#---
+#apiVersion: config.kore.appvia.io/v1
+#kind: PlanPolicy
+#metadata:
+#  name: eks-open
+#spec:
+#  description: Allows changing the AuthorizedMasterNetworks
+#  summary: Allows changing the AuthorizedMasterNetworks
+#  kind: EKS
+#  properties:
+#  - allowUpdate: true
+#    disallowUpdate: false
+#    name: authorizedMasterNetworks
+#  - allowUpdate: true
+#    disallowUpdate: false
+#    name: authProxyAllowedIPs
+#  - allowUpdate: true
+#    disallowUpdate: false
+#    name: clusterUsers
+#  - allowUpdate: true
+#    disallowUpdate: false
+#    name: defaultTeamRole
+#  - allowUpdate: true
+#    disallowUpdate: false
+#    name: description
+#  - allowUpdate: true
+#    disallowUpdate: false
+#    name: domain
+#  - allowUpdate: true
+#    disallowUpdate: false
+#    name: nodeGroups
+#  - allowUpdate: true
+#    disallowUpdate: false
+#    name: privateIPV4Cidr
+#  - allowUpdate: true
+#    disallowUpdate: false
+#    name: region
+#  - allowUpdate: true
+#    disallowUpdate: false
+#    name: version
+#---
+#apiVersion: config.kore.appvia.io/v1
+#kind: Allocation
+#metadata:
+#  name: eks-open
+#spec:
+#  name: eks-open
+#  resource:
+#    group: config.kore.appvia.io
+#    kind: PlanPolicy
+#    name: eks-open
+#    namespace: kore-admin
+#    version: v1
+#  summary: Allows changing the authorizedMasterNetworks
+#  teams:
+#    - '*'
+#EOF
+#  [[ "$status" -eq 0 ]]
+#  runit "${KORE} apply -f /tmp/plan-policy -t kore-admin"
+#  [[ "$status" -eq 0 ]]
+#  runit "${KORE} alpha patch cluster ${CLUSTER} spec.configuration.authorizedMasterNetworks.0 1.1.1.1/32"
+#  [[ "$status" -eq 0 ]]
+#  retry 60 "aws eks describe-cluster --name ${CLUSTER} | jq -r '.cluster.resourcesVpcConfig.publicAccessCidrs[0]' | grep '1.1.1.1/32'"
+#  [[ "$status" -eq 0 ]]
+#}
+#
+#@test "We should be able to revert the change back and restore access" {
+#  runit "${KORE} delete -f /tmp/plan-policy -t kore-admin"
+#  [[ "$status" -eq 0 ]]
+#  runit "${KORE} alpha patch cluster ${CLUSTER} spec.configuration.authorizedMasterNetworks.0 0.0.0/0"
+#  [[ "$status" -eq 0 ]]
+#  retry 60 "aws eks describe-cluster --name ${CLUSTER} | jq -r '.cluster.resourcesVpcConfig.publicAccessCidrs[0]' | grep '0.0.0.0/0'"
+#  [[ "$status" -eq 0 ]]
+#  runit "rm -f /tmp/plan-policy"
+#  [[ "$status" -eq 0 ]]
+#}

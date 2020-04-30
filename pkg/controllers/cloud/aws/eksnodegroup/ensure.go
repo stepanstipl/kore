@@ -268,6 +268,7 @@ func (n *ctrl) EnsureDeletion(group *eks.EKSNodeGroup) controllers.EnsureFunc {
 		status := utils.StringValue(state.Status)
 
 		switch status {
+
 		case awseks.NodegroupStatusActive, awseks.NodegroupStatusCreateFailed, awseks.NodegroupStatusDegraded:
 			if err := client.DeleteNodeGroup(ctx, group); err != nil {
 				logger.WithError(err).Error("trying to delete the nodegroup")

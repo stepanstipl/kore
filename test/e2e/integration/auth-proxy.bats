@@ -22,17 +22,11 @@ setup() {
 }
 
 @test "We should be able to retrieve the namespaces from the cluster" {
-  if ${KORE} get clusters ${CLUSTER} -t ${TEAM} -o yaml | grep 1.1.1.1; then
-    skip
-  fi
   runit "${KUBECTL} --context=${CLUSTER} get ns"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should not be about to access to the cluster with an invalid token" {
-  if ${KORE} get clusters ${CLUSTER} -t ${TEAM} -o yaml | grep 1.1.1.1; then
-    skip
-  fi
   runit "${KUBECTL} --context=${CLUSTER} --token=invalid get no 2>&1 | grep '^Error from server (Forbidden)'"
   [[ "$status" -eq 0 ]]
 }
@@ -56,18 +50,10 @@ setup() {
 }
 
 @test "If we change the auth-proxy allowed range we should lose access to the cluster" {
-  tempfile="${BASE_DIR}/${E2E_DIR}/gke.auth"
-
   if ! ${KORE} get clusters ${CLUSTER} -t ${TEAM} -o yaml | grep 1.1.1.1; then
     runit "${KUBECTL} --context=${CLUSTER} get nodes"
     [[ "$status" -eq 0 ]]
-    runit "${KORE} get clusters ${CLUSTER} -t ${TEAM} -o yaml > ${tempfile}"
-    [[ "$status" -eq 0 ]]
-    runit "sed -i -e '0,/0.0.0.0/{s/0.0.0.0\/0/1.1.1.1\/32/}' ${tempfile}"
-    [[ "$status" -eq 0 ]]
-    runit "grep 1.1.1.1 ${tempfile}"
-    [[ "$status" -eq 0 ]]
-    runit "${KORE} apply -f ${tempfile} -t ${TEAM}"
+    runit "${KORE} alpha patch clusters ${CLUSTER} spec.configuration.authProxyAllowedIPs.0 1.1.1.1/32 -t ${TEAM}"
     [[ "$status" -eq 0 ]]
   fi
   retry 10 "${KUBECTL} --context=${CLUSTER} get nodes 2>&1 | grep '^Error from server (Forbidden)'"
@@ -75,17 +61,7 @@ setup() {
 }
 
 @test "If we revert the allowed network range back, we should see the cluster again" {
-  tempfile=${BASE_DIR}/${E2E_DIR}/gke.auth
-
-  runit "${KORE} get clusters ${CLUSTER} -t ${TEAM} -o yaml > ${tempfile}"
-  [[ "$status" -eq 0 ]]
-  runit "sed -i -e '0,/1.1.1.1/{s/1.1.1.1\/32/0.0.0.0\/0/}' ${tempfile}"
-  [[ "$status" -eq 0 ]]
-  runit "${KORE} apply -f ${tempfile} -t ${TEAM}"
-  [[ "$status" -eq 0 ]]
-  retry 20 "${KUBECTL} --context=${CLUSTER} get nodes"
-  [[ "$status" -eq 0 ]]
-  runit "rm -f ${tempfile} || false"
+  runit "${KORE} alpha patch clusters ${CLUSTER} spec.configuration.authProxyAllowedIPs.0 0.0.0.0/0 -t ${TEAM}"
   [[ "$status" -eq 0 ]]
   retry 10 "${KUBECTL} --context=${CLUSTER} get nodes 2>&1"
   [[ "$status" -eq 0 ]]
