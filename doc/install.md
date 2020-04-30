@@ -7,7 +7,7 @@
 You can find instructions for this [here](https://cloud.google.com/kubernetes-engine/docs/quickstart). Follow them to the end of the 'Get authentication credentials for the cluster' step
 
 ### 2. Initial IDP Configuration
-Configure Auth0 by following the docs [here](alpha-local-quick-start.md#configure-auth0) and export the obtained values. You do not need to configure 'Allowed Callback URLs' at this stage
+Configure Auth0 by following the docs [here](local-quick-start.md#configure-auth0) and export the obtained values. You do not need to configure 'Allowed Callback URLs' at this stage
 
 ```
 export KORE_IDP_CLIENT_ID=<your client id>

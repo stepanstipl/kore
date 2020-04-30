@@ -4,7 +4,7 @@
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/appvia/kore?style=for-the-badge)
 ![License: Apache-2.0](https://img.shields.io/github/license/appvia/kore?style=for-the-badge&color=%23D1374D)
 
-## Kubernetes for Teams via Appvia Kore (Alpha)
+## Kubernetes for Teams via Appvia Kore
 - **Cluster provisioning** provides secure and consistent provisioning of kubernetes environments for teams.
 - **Accounts & Account Users** provides a single source for access and control across the estate.
 - **Plans and Templates** allows the administrators to define the type and shape of resources for teams to consume.
