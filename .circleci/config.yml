@@ -228,7 +228,7 @@ jobs:
             VERSION=${CIRCLE_SHA1} make images
             VERSION=${CIRCLE_SHA1} make push-images
 
-  pre-package-release:
+  check-release-notes:
     environment:
       GOFLAGS: "-mod=vendor"
 
@@ -241,7 +241,7 @@ jobs:
           command: |
             VERSION=${CIRCLE_TAG} make check-release-notes
 
-  package-release:
+  publish-release:
     environment:
       GOFLAGS: "-mod=vendor"
 
@@ -420,7 +420,7 @@ workflows:
               only: master
             tags:
               only: /^v.*$/
-      - pre-package-release:
+      - check-release-notes:
           requires:
             - release
           filters:
@@ -428,10 +428,37 @@ workflows:
               ignore: /.*/
             tags:
               only: /^v([0-9]+)\.([0-9]+)\.([0-9]+)($|-rc([0-9]+))$/
-      - package-release:
+      - e2e-images:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v([0-9]+)\.([0-9]+)\.([0-9]+)($|-rc([0-9]+))$/
+      - e2e_gke:
+          enable_gke: true
+          requires:
+            - e2e-images
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v([0-9]+)\.([0-9]+)\.([0-9]+)($|-rc([0-9]+))$/
+      - e2e_eks:
+          enable_eks: true
+          requires:
+            - e2e-images
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v([0-9]+)\.([0-9]+)\.([0-9]+)($|-rc([0-9]+))$/
+      - publish-release:
           requires:
             - build
             - check-apis
+            - check-release-notes
+            - e2e_eks
+            - e2e_gke
           filters:
             branches:
               ignore: /.*/
