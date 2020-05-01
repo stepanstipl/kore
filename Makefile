@@ -41,7 +41,7 @@ CLI_PLATFORMS=darwin linux windows
 CLI_ARCHITECTURES=386 amd64
 export GOFLAGS = -mod=vendor
 
-.PHONY: test authors changelog build docker release cover vet glide-install demo golangci-lint apis swagger images
+.PHONY: test authors changelog build docker release check vet glide-install demo golangci-lint apis swagger images
 
 default: build
 
@@ -318,10 +318,6 @@ coverage:
 	@go test -coverprofile cover.out
 	@go tool cover -html=cover.out -o cover.html
 
-cover:
-	@echo "--> Running go cover"
-	@go test --cover $(PACKAGES)
-
 spelling:
 	@echo "--> Checking the spelling"
 	@find . -name "*.go" -type f -not -path "./vendor/*" -not -path "./ui/node_modules/*" | xargs go run github.com/client9/misspell/cmd/misspell -error -source=go *.go
@@ -331,16 +327,18 @@ golangci-lint:
 	@echo "--> Checking against the golangci-lint"
 	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run ./...
 
-test: generate-clusterappman-manifests
-	@echo "--> Running the tests"
-	@go test -v $(PACKAGES)
+check: generate-clusterappman-manifests
+	@echo "--> Running code checkers"
 	@$(MAKE) golang
 	@$(MAKE) gofmt
 	@$(MAKE) golangci-lint
 	@$(MAKE) spelling
 	@$(MAKE) vet
-	@$(MAKE) cover
 	@$(MAKE) verify-licences
+
+test: generate-clusterappman-manifests
+	@echo "--> Running the tests"
+	@go test --cover -v $(PACKAGES)
 
 run-api-test:
 	(cd ${ROOT_DIR}/pkg/apiserver; go test -tags=integration -ginkgo.v)

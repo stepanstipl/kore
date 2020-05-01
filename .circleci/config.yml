@@ -147,6 +147,21 @@ e2e_job_template: &E2E_JOB_TEMPLATE
 #
 
 jobs:
+  check:
+    environment:
+      GOFLAGS: "-mod=vendor"
+      USE_GIT_VERSION: "true"
+
+    docker:
+      - image: circleci/golang:1.14
+
+    steps:
+      - checkout
+      - run:
+          name: Check
+          command: |
+            make check
+
   build:
     environment:
       GOFLAGS: "-mod=vendor"
@@ -403,6 +418,10 @@ workflows:
   workflow:
     unless: << pipeline.parameters.enable_e2e >>
     jobs:
+      - check:
+          filters:
+            tags:
+              only: /^v.*$/
       - build:
           filters:
             tags:
@@ -413,6 +432,7 @@ workflows:
               only: /^v.*$/
       - release:
           requires:
+            - check
             - build
             - check-apis
           filters:
@@ -454,6 +474,7 @@ workflows:
               only: /^v([0-9]+)\.([0-9]+)\.([0-9]+)($|-rc([0-9]+))$/
       - publish-release:
           requires:
+            - check
             - build
             - check-apis
             - check-release-notes
