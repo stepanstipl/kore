@@ -59,7 +59,7 @@ type ServiceProviderFactory interface {
 	// JSONSchema returns the JSON schema for the provider's configuration
 	JSONSchema() string
 	// CreateProvider creates the provider
-	CreateProvider(provider servicesv1.ServiceProvider) (ServiceProvider, error)
+	CreateProvider(servicesv1.ServiceProvider, store.Client) (ServiceProvider, error)
 }
 
 type ServiceProvider interface {
@@ -76,31 +76,13 @@ type ServiceProvider interface {
 	// RequiredCredentialTypes returns with the required credential types
 	RequiredCredentialTypes(kind string) ([]schema.GroupVersionKind, error)
 	// Reconcile will create or update the service
-	Reconcile(
-		context.Context,
-		log.FieldLogger,
-		*servicesv1.Service,
-		*servicesv1.ServicePlan) (reconcile.Result, error)
+	Reconcile(context.Context, log.FieldLogger, *servicesv1.Service) (reconcile.Result, error)
 	// Delete will delete the service
-	Delete(
-		context.Context,
-		log.FieldLogger,
-		*servicesv1.Service,
-		*servicesv1.ServicePlan) (reconcile.Result, error)
+	Delete(context.Context, log.FieldLogger, *servicesv1.Service) (reconcile.Result, error)
 	// ReconcileCredentials will create or update the service credentials
-	ReconcileCredentials(
-		context.Context,
-		log.FieldLogger,
-		*servicesv1.Service,
-		*servicesv1.ServicePlan,
-		*servicesv1.ServiceCredentials) (reconcile.Result, map[string]string, error)
+	ReconcileCredentials(context.Context, log.FieldLogger, *servicesv1.Service, *servicesv1.ServiceCredentials) (reconcile.Result, map[string]string, error)
 	// DeleteCredentials will delete the service credentials
-	DeleteCredentials(
-		context.Context,
-		log.FieldLogger,
-		*servicesv1.Service,
-		*servicesv1.ServicePlan,
-		*servicesv1.ServiceCredentials) (reconcile.Result, error)
+	DeleteCredentials(context.Context, log.FieldLogger, *servicesv1.Service, *servicesv1.ServiceCredentials) (reconcile.Result, error)
 }
 
 // ServiceProviders is the interface to manage service providers
@@ -306,7 +288,7 @@ func (p *serviceProvidersImpl) Register(serviceProvider *servicesv1.ServiceProvi
 	defer p.providersLock.Unlock()
 
 	factory := serviceProviderFactories[serviceProvider.Spec.Type]
-	provider, err := factory.CreateProvider(*serviceProvider)
+	provider, err := factory.CreateProvider(*serviceProvider, p.Store().Client())
 	if err != nil {
 		return nil, err
 	}

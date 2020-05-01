@@ -32,9 +32,8 @@ func (p *Provider) Delete(
 	ctx context.Context,
 	logger logrus.FieldLogger,
 	service *servicesv1.Service,
-	plan *servicesv1.ServicePlan,
 ) (reconcile.Result, error) {
-	providerPlan, err := p.plan(service.Spec.Kind, plan.Name)
+	providerPlan, err := p.plan(service.Spec.Kind, service.Spec.Plan)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -55,7 +54,7 @@ func (p *Provider) Delete(
 	}
 
 	if component.Status == corev1.PendingStatus {
-		return p.pollLastOperation(ctx, logger, service, plan, component)
+		return p.pollLastOperation(ctx, logger, service, component)
 	}
 
 	component.Update(corev1.PendingStatus, "", "")

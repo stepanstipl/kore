@@ -36,10 +36,9 @@ func (p *Provider) ReconcileCredentials(
 	ctx context.Context,
 	logger logrus.FieldLogger,
 	service *servicesv1.Service,
-	plan *servicesv1.ServicePlan,
 	creds *servicesv1.ServiceCredentials,
 ) (reconcile.Result, map[string]string, error) {
-	providerPlan, err := p.plan(service.Spec.Kind, plan.Name)
+	providerPlan, err := p.plan(service.Spec.Kind, service.Spec.Plan)
 	if err != nil {
 		return reconcile.Result{}, nil, err
 	}
@@ -60,7 +59,7 @@ func (p *Provider) ReconcileCredentials(
 	}
 
 	if component.Status == corev1.PendingStatus {
-		return p.pollLastBindingOperation(ctx, logger, service, plan, creds, component)
+		return p.pollLastBindingOperation(ctx, logger, service, creds, component)
 	}
 
 	component.Update(corev1.PendingStatus, "", "")

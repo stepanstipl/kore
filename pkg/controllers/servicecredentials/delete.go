@@ -39,7 +39,6 @@ func (c *Controller) delete(
 	ctx context.Context,
 	logger log.FieldLogger,
 	service *servicesv1.Service,
-	plan *servicesv1.ServicePlan,
 	serviceCreds *servicesv1.ServiceCredentials,
 	finalizer *kubernetes.Finalizer,
 	provider kore.ServiceProvider,
@@ -100,7 +99,7 @@ func (c *Controller) delete(
 
 		serviceCreds.Status.Components.SetStatus(ComponentKubernetesSecret, corev1.DeletedStatus, "", "")
 
-		result, err := provider.DeleteCredentials(ctx, logger, service, plan, serviceCreds)
+		result, err := provider.DeleteCredentials(ctx, logger, service, serviceCreds)
 		if err != nil {
 			serviceCreds.Status.Components.SetCondition(corev1.Component{
 				Name:    ComponentProviderSecret,

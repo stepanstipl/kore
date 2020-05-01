@@ -20,6 +20,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/appvia/kore/pkg/store"
+
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/kore"
 	osb "github.com/kubernetes-sigs/go-open-service-broker-client/v2"
@@ -100,7 +102,7 @@ func (d ProviderFactory) JSONSchema() string {
 	}`
 }
 
-func (d ProviderFactory) CreateProvider(serviceProvider servicesv1.ServiceProvider) (kore.ServiceProvider, error) {
+func (d ProviderFactory) CreateProvider(serviceProvider servicesv1.ServiceProvider, client store.Client) (kore.ServiceProvider, error) {
 	var config = osb.DefaultClientConfiguration()
 	config.Name = serviceProvider.Name
 
@@ -109,12 +111,12 @@ func (d ProviderFactory) CreateProvider(serviceProvider servicesv1.ServiceProvid
 		return nil, fmt.Errorf("failed to process service provider configuration: %w", err)
 	}
 
-	client, err := osb.NewClient(config)
+	osbClient, err := osb.NewClient(config)
 	if err != nil {
 		return nil, err
 	}
 
-	provider, err := NewProvider(serviceProvider.Name, client)
+	provider, err := NewProvider(serviceProvider.Name, osbClient)
 	if err != nil {
 		return nil, err
 	}

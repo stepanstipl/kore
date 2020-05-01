@@ -32,10 +32,9 @@ func (p *Provider) DeleteCredentials(
 	ctx context.Context,
 	logger logrus.FieldLogger,
 	service *servicesv1.Service,
-	plan *servicesv1.ServicePlan,
 	creds *servicesv1.ServiceCredentials,
 ) (reconcile.Result, error) {
-	providerPlan, err := p.plan(service.Spec.Kind, plan.Name)
+	providerPlan, err := p.plan(service.Spec.Kind, service.Spec.Plan)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -56,7 +55,7 @@ func (p *Provider) DeleteCredentials(
 	}
 
 	if component.Status == corev1.PendingStatus {
-		res, _, err := p.pollLastBindingOperation(ctx, logger, service, plan, creds, component)
+		res, _, err := p.pollLastBindingOperation(ctx, logger, service, creds, component)
 		return res, err
 	}
 

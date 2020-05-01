@@ -39,9 +39,8 @@ func (p *Provider) Reconcile(
 	ctx context.Context,
 	logger logrus.FieldLogger,
 	service *servicesv1.Service,
-	plan *servicesv1.ServicePlan,
 ) (reconcile.Result, error) {
-	providerPlan, err := p.plan(service.Spec.Kind, plan.Name)
+	providerPlan, err := p.plan(service.Spec.Kind, service.Spec.Plan)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -60,14 +59,14 @@ func (p *Provider) Reconcile(
 	if component.Status == corev1.SuccessStatus {
 		// Check if there was any change to the service configuration
 		if service.Spec.Plan != service.Status.Plan || !bytes.Equal(service.Spec.Configuration.Raw, service.Status.Configuration.Raw) {
-			return p.update(ctx, logger, service, plan)
+			return p.update(ctx, logger, service)
 		}
 
 		return reconcile.Result{}, nil
 	}
 
 	if component.Status == corev1.PendingStatus {
-		return p.pollLastOperation(ctx, logger, service, plan, component)
+		return p.pollLastOperation(ctx, logger, service, component)
 	}
 
 	component.Update(corev1.PendingStatus, "", "")
@@ -118,9 +117,8 @@ func (p *Provider) update(
 	ctx context.Context,
 	logger logrus.FieldLogger,
 	service *servicesv1.Service,
-	plan *servicesv1.ServicePlan,
 ) (reconcile.Result, error) {
-	providerPlan, err := p.plan(service.Spec.Kind, plan.Name)
+	providerPlan, err := p.plan(service.Spec.Kind, service.Spec.Plan)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -141,7 +139,7 @@ func (p *Provider) update(
 	}
 
 	if component.Status == corev1.PendingStatus {
-		return p.pollLastOperation(ctx, logger, service, plan, component)
+		return p.pollLastOperation(ctx, logger, service, component)
 	}
 
 	component.Update(corev1.PendingStatus, "", "")

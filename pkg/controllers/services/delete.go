@@ -36,7 +36,6 @@ func (c Controller) Delete(
 	ctx context.Context,
 	logger log.FieldLogger,
 	service *servicesv1.Service,
-	plan *servicesv1.ServicePlan,
 	finalizer *kubernetes.Finalizer,
 	provider kore.ServiceProvider,
 ) (reconcile.Result, error) {
@@ -53,7 +52,7 @@ func (c Controller) Delete(
 
 	original := service.DeepCopyObject()
 
-	result, err := provider.Delete(ctx, logger, service, plan)
+	result, err := provider.Delete(ctx, logger, service)
 
 	if err != nil {
 		logger.WithError(err).Error("failed to delete the service")

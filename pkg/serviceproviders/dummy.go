@@ -19,6 +19,8 @@ package serviceproviders
 import (
 	"context"
 
+	"github.com/appvia/kore/pkg/store"
+
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
@@ -59,7 +61,7 @@ func (d DummyFactory) JSONSchema() string {
 	}`
 }
 
-func (d DummyFactory) CreateProvider(provider servicesv1.ServiceProvider) (kore.ServiceProvider, error) {
+func (d DummyFactory) CreateProvider(provider servicesv1.ServiceProvider, client store.Client) (kore.ServiceProvider, error) {
 	return Dummy{name: provider.Name}, nil
 }
 
@@ -142,7 +144,6 @@ func (d Dummy) Reconcile(
 	_ context.Context,
 	_ logrus.FieldLogger,
 	service *servicesv1.Service,
-	_ *servicesv1.ServicePlan,
 ) (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
@@ -151,7 +152,6 @@ func (d Dummy) Delete(
 	_ context.Context,
 	_ logrus.FieldLogger,
 	service *servicesv1.Service,
-	_ *servicesv1.ServicePlan,
 ) (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
@@ -160,7 +160,6 @@ func (d Dummy) ReconcileCredentials(
 	_ context.Context,
 	_ logrus.FieldLogger,
 	_ *servicesv1.Service,
-	_ *servicesv1.ServicePlan,
 	creds *servicesv1.ServiceCredentials,
 ) (reconcile.Result, map[string]string, error) {
 	res := map[string]string{
@@ -173,7 +172,6 @@ func (d Dummy) DeleteCredentials(
 	_ context.Context,
 	_ logrus.FieldLogger,
 	_ *servicesv1.Service,
-	_ *servicesv1.ServicePlan,
 	creds *servicesv1.ServiceCredentials,
 ) (reconcile.Result, error) {
 	return reconcile.Result{}, nil

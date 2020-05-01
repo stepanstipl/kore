@@ -35,11 +35,10 @@ func (p *Provider) pollLastBindingOperation(
 	ctx context.Context,
 	logger logrus.FieldLogger,
 	service *servicesv1.Service,
-	plan *servicesv1.ServicePlan,
 	creds *servicesv1.ServiceCredentials,
 	component *corev1.Component,
 ) (reconcile.Result, map[string]string, error) {
-	providerPlan, err := p.plan(service.Spec.Kind, plan.Name)
+	providerPlan, err := p.plan(service.Spec.Kind, service.Spec.Plan)
 	if err != nil {
 		return reconcile.Result{}, nil, err
 	}

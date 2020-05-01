@@ -21,9 +21,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/appvia/kore/pkg/kore"
-	"k8s.io/apimachinery/pkg/types"
-
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/controllers"
@@ -69,13 +66,6 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		return reconcile.Result{}, err
 	}
 
-	plan := &servicesv1.ServicePlan{}
-	if err := c.mgr.GetClient().Get(ctx, types.NamespacedName{Namespace: kore.HubNamespace, Name: service.Spec.Plan}, plan); err != nil {
-		logger.WithError(err).Error("failed to retrieve service plan from api")
-
-		return reconcile.Result{}, err
-	}
-
 	provider := c.ServiceProviders().GetProviderForKind(creds.Spec.Kind)
 	if provider == nil {
 		logger.Errorf("provider not found for service kind %q", creds.Spec.Kind)
@@ -86,7 +76,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 	finalizer := kubernetes.NewFinalizer(c.mgr.GetClient(), finalizerName)
 	if finalizer.IsDeletionCandidate(creds) {
-		return c.delete(ctx, logger, service, plan, creds, finalizer, provider)
+		return c.delete(ctx, logger, service, creds, finalizer, provider)
 	}
 
 	result, err := func() (reconcile.Result, error) {
@@ -94,7 +84,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 			c.ensureFinalizer(logger, creds, finalizer),
 			c.ensurePending(logger, creds),
 			c.EnsureActiveCluster(logger, creds),
-			c.ensureSecret(logger, service, plan, creds, provider),
+			c.ensureSecret(logger, service, creds, provider),
 		}
 
 		for _, handler := range ensure {

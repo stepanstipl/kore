@@ -53,7 +53,6 @@ const (
 
 	KoreServiceName            = "kore-service"
 	KoreServiceID              = "kore-service-uuid"
-	KoreServicePlanName        = "service-1-plan-1"
 	KoreServiceCredentialsName = "kore-service-credentials"
 	KoreServiceCredentialsID   = "kore-service-credentials-uuid"
 	Namespace                  = "test"
@@ -146,7 +145,6 @@ var _ = Describe("Provider", func() {
 	var cancel context.CancelFunc
 	var logger *log.Logger
 	var service *servicesv1.Service
-	var servicePlan *servicesv1.ServicePlan
 	var serviceCreds *servicesv1.ServiceCredentials
 	var reconcileResult reconcile.Result
 	var reconcileErr error
@@ -198,13 +196,7 @@ var _ = Describe("Provider", func() {
 		service = servicesv1.NewService(KoreServiceName, Namespace)
 		service.Spec = servicesv1.ServiceSpec{
 			Kind:          Service1Name,
-			Plan:          plan1Name,
-			Configuration: apiextv1.JSON{Raw: []byte("{}")},
-		}
-
-		servicePlan = servicesv1.NewServicePlan(KoreServicePlanName, Namespace)
-		servicePlan.Spec = servicesv1.ServicePlanSpec{
-			Kind:          Service1Name,
+			Plan:          Service1Name + "-" + plan1Name,
 			Configuration: apiextv1.JSON{Raw: []byte("{}")},
 		}
 
@@ -306,7 +298,7 @@ var _ = Describe("Provider", func() {
 
 	Context("Reconcile", func() {
 		JustBeforeEach(func() {
-			reconcileResult, reconcileErr = provider.Reconcile(ctx, logger, service, servicePlan)
+			reconcileResult, reconcileErr = provider.Reconcile(ctx, logger, service)
 		})
 
 		When("the service does not exist", func() {
@@ -782,7 +774,7 @@ var _ = Describe("Provider", func() {
 		})
 
 		JustBeforeEach(func() {
-			reconcileResult, reconcileErr = provider.Delete(ctx, logger, service, servicePlan)
+			reconcileResult, reconcileErr = provider.Delete(ctx, logger, service)
 		})
 
 		When("the service exists", func() {
@@ -1027,7 +1019,7 @@ var _ = Describe("Provider", func() {
 		})
 
 		JustBeforeEach(func() {
-			reconcileResult, secrets, reconcileErr = provider.ReconcileCredentials(ctx, logger, service, servicePlan, serviceCreds)
+			reconcileResult, secrets, reconcileErr = provider.ReconcileCredentials(ctx, logger, service, serviceCreds)
 		})
 
 		When("the service credentials do not exist", func() {
@@ -1325,7 +1317,7 @@ var _ = Describe("Provider", func() {
 		})
 
 		JustBeforeEach(func() {
-			reconcileResult, reconcileErr = provider.DeleteCredentials(ctx, logger, service, servicePlan, serviceCreds)
+			reconcileResult, reconcileErr = provider.DeleteCredentials(ctx, logger, service, serviceCreds)
 		})
 
 		When("the service credentials exist", func() {

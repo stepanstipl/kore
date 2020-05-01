@@ -112,7 +112,6 @@ func (c *Controller) EnsureActiveCluster(logger log.FieldLogger, serviceCreds *s
 func (c *Controller) ensureSecret(
 	logger log.FieldLogger,
 	service *servicesv1.Service,
-	plan *servicesv1.ServicePlan,
 	serviceCreds *servicesv1.ServiceCredentials,
 	provider kore.ServiceProvider) controllers.EnsureFunc {
 	return func(ctx context.Context) (reconcile.Result, error) {
@@ -139,7 +138,7 @@ func (c *Controller) ensureSecret(
 			return reconcile.Result{}, nil
 		}
 
-		result, credentials, err := provider.ReconcileCredentials(ctx, logger, service, plan, serviceCreds)
+		result, credentials, err := provider.ReconcileCredentials(ctx, logger, service, serviceCreds)
 		if err != nil {
 			serviceCreds.Status.Components.SetCondition(corev1.Component{
 				Name:    ComponentProviderSecret,
