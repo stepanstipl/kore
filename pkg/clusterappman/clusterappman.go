@@ -58,11 +58,12 @@ type clusterappmanImpl struct {
 // manifest defines the data types that are required to initialise a clusterapp from
 // embebed manifest data.
 type manifest struct {
-	EmededManifests []string
-	Name            string
-	Namespace       string
-	EnsureNamespace bool
-	DeployTimeOut   time.Duration
+	EmededManifests    []string
+	Name               string
+	Namespace          string
+	EnsureNamespace    bool
+	DeployTimeOut      time.Duration
+	PreDeleteManifests []string
 }
 
 var (
@@ -79,6 +80,9 @@ var (
 			Namespace:       appControlNamespsace,
 			EnsureNamespace: false,
 			DeployTimeOut:   3 * time.Minute,
+			PreDeleteManifests: []string{
+				"application-controller/pre-delete.yaml",
+			},
 		},
 		{
 			Name: "Helm Chart Operator",

@@ -80,7 +80,15 @@ func getClusterAppFromEmbeddedManifests(m manifest, cc client.Client) (clusterap
 		}
 		resfiles = append(resfiles, file)
 	}
-	return clusterapp.NewAppFromManifestFiles(cc, m.Name, resfiles)
+	deleteResfiles := make([]http.File, 0)
+	for _, manifestFile := range m.PreDeleteManifests {
+		file, err := Manifests.Open(manifestFile)
+		if err != nil {
+			return clusterapp.Instance{}, err
+		}
+		deleteResfiles = append(deleteResfiles, file)
+	}
+	return clusterapp.NewAppFromManifestFiles(cc, m.Name, resfiles, deleteResfiles)
 }
 
 func ensureNamespace(ctx context.Context, cc client.Client, name string) error {
