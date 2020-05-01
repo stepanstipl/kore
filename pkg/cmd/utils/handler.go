@@ -17,6 +17,11 @@
 package utils
 
 import (
+	"errors"
+	"fmt"
+
+	"github.com/appvia/kore/pkg/client"
+	"github.com/appvia/kore/pkg/client/config"
 	"github.com/appvia/kore/pkg/utils"
 
 	"github.com/spf13/cobra"
@@ -52,7 +57,9 @@ func DefaultRunFunc(o RunHandler) func(*cobra.Command, []string) {
 		utils.SetReflectedField("NoWait", GetFlagBool(cmd, "no-wait"), o)
 		utils.SetReflectedField("Output", GetFlagString(cmd, "output"), o)
 		utils.SetReflectedField("Headers", GetFlagBool(cmd, "show-headers"), o)
-		utils.SetReflectedField("Team", GetFlagString(cmd, "team"), o)
+
+		err := utils.SetAndValidateReflectedField("Team", GetFlagString(cmd, "team"), o, checkTeam(o, o.Config()))
+		o.CheckError(err)
 
 		// @step: we can help with resource and name as well
 		if utils.HasReflectField("Resource", o) && utils.HasReflectField("Name", o) {
@@ -78,4 +85,37 @@ func ExecuteHandler(o RunHandler) error {
 	}
 
 	return o.Run()
+}
+
+func checkTeam(factory Factory, cfg *config.Config) func(value interface{}) error {
+	return func(value interface{}) error {
+		team := value.(string)
+		if team == "" {
+			return nil
+		}
+
+		exists, err := factory.ClientWithResource(factory.Resources().MustLookup("team")).Name(team).Exists()
+		if err != nil {
+			// We will ignore authentication errors as those will be handled elsewhere
+			if client.IsNotAuthorized(err) {
+				return nil
+			}
+			return err
+		}
+		if !exists {
+			// Let's check whether the current profile has a non-existing team and remove it
+			if cfg.GetCurrentProfile().Team == team {
+				errStr := fmt.Sprintf("team %q does not exist, please update your profile using\n  $ kore profiles set current.team <EXISTING TEAM>", team)
+				cfg.GetCurrentProfile().Team = ""
+				if err := config.UpdateConfig(cfg, config.GetClientConfigurationPath()); err != nil {
+					errStr = errStr + "\n" + err.Error()
+				}
+				return errors.New(errStr)
+			}
+
+			return fmt.Errorf("team %q does not exist", team)
+		}
+
+		return nil
+	}
 }

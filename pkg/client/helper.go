@@ -42,8 +42,8 @@ func IsNotFound(err error) bool {
 	return isExpectedError(err, http.StatusNotFound)
 }
 
-// IsNotAuthentication checks if the error as a 401
-func IsNotAuthentication(err error) bool {
+// IsNotAuthorized checks if the error as a 401
+func IsNotAuthorized(err error) bool {
 	return isExpectedError(err, http.StatusUnauthorized)
 }
 

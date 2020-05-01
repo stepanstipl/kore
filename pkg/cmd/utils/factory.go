@@ -101,7 +101,7 @@ func (f *factory) ClientWithTeamResource(team string, resource Resource) client.
 func (f *factory) CheckError(kerror error) {
 	err := func() error {
 		switch {
-		case client.IsNotAuthentication(kerror):
+		case client.IsNotAuthorized(kerror):
 			return errors.ErrAuthentication
 		case client.IsMethodNotAllowed(kerror):
 			return errors.ErrOperationNotPermitted

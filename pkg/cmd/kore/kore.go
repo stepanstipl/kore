@@ -17,7 +17,6 @@
 package kore
 
 import (
-	"os"
 	"strings"
 
 	"github.com/appvia/kore/pkg/client"
@@ -81,28 +80,6 @@ func NewKoreCommand(streams cmdutil.Streams) (*cobra.Command, error) {
 			}
 
 			log.WithField("profile", cfg.CurrentProfile).Debug("running with the selected profile")
-
-			team := cmdutil.GetTeam(cmd)
-			if team != "" {
-				exists, err := factory.ClientWithResource(factory.Resources().MustLookup("team")).Name(team).Exists()
-				if err != nil {
-					factory.Println("Error: %s\n", err)
-					os.Exit(1)
-				}
-				if !exists {
-					// Let's check whether the current profile has a non-existing team and remove it
-					if cfg.GetCurrentProfile().Team == team {
-						factory.Println("Error: team %q does not exist, please update your profile using\n  $ kore profiles set current.team <EXISTING TEAM>", team)
-						cfg.GetCurrentProfile().Team = ""
-						if err := config.UpdateConfig(cfg, config.GetClientConfigurationPath()); err != nil {
-							factory.Println("Error: %s", err)
-						}
-					} else {
-						factory.Println("Error: team %q does not exist\n", team)
-					}
-					os.Exit(1)
-				}
-			}
 		},
 	}
 
