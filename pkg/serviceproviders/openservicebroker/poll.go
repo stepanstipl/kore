@@ -43,10 +43,9 @@ func (p *Provider) pollLastOperation(
 		return reconcile.Result{}, err
 	}
 
-	var operationKey *osb.OperationKey
-	if service.Status.ProviderData != "" {
-		o := osb.OperationKey(service.Status.ProviderData)
-		operationKey = &o
+	operationKey, err := decodeProviderData(service.Status.ProviderData)
+	if err != nil {
+		return reconcile.Result{}, err
 	}
 
 	logger.WithField("operation", operationKey).Debug("polling last operation from service broker")

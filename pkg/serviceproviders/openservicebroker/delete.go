@@ -78,7 +78,10 @@ func (p *Provider) Delete(
 
 	logger.WithField("response", resp).Debug("deprovision response from service broker")
 
-	service.Status.ProviderData = operationValue(resp.OperationKey)
+	service.Status.ProviderData, err = encodeProviderData(resp.OperationKey)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
 
 	if !resp.Async {
 		component.Update(corev1.SuccessStatus, "", "")

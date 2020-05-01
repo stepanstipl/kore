@@ -101,7 +101,10 @@ func (p *Provider) Reconcile(
 
 	logger.WithField("response", resp).Debug("provisioning response from service broker")
 
-	service.Status.ProviderData = operationValue(resp.OperationKey)
+	service.Status.ProviderData, err = encodeProviderData(resp.OperationKey)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
 
 	if !resp.Async {
 		component.Update(corev1.SuccessStatus, "", "")
@@ -170,7 +173,10 @@ func (p *Provider) update(
 
 	logger.WithField("response", resp).Debug("update response from service broker")
 
-	service.Status.ProviderData = operationValue(resp.OperationKey)
+	service.Status.ProviderData, err = encodeProviderData(resp.OperationKey)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
 
 	if !resp.Async {
 		component.Update(corev1.SuccessStatus, "", "")

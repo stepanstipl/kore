@@ -25,7 +25,7 @@ type V1ServiceCredentialsStatus struct {
 	Message string `json:"message,omitempty"`
 
 	// provider data
-	ProviderData string `json:"providerData,omitempty"`
+	ProviderData interface{} `json:"providerData,omitempty"`
 
 	// provider ID
 	ProviderID string `json:"providerID,omitempty"`

@@ -223,15 +223,14 @@ func schema_pkg_apis_services_v1_ServiceCredentialsStatus(ref common.ReferenceCa
 					"providerData": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ProviderData is provider specific data",
-							Type:        []string{"string"},
-							Format:      "",
+							Ref:         ref("k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/appvia/kore/pkg/apis/core/v1.Component"},
+			"github.com/appvia/kore/pkg/apis/core/v1.Component", "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"},
 	}
 }
 
@@ -532,8 +531,7 @@ func schema_pkg_apis_services_v1_ServiceStatus(ref common.ReferenceCallback) com
 					"providerData": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ProviderData is provider specific data",
-							Type:        []string{"string"},
-							Format:      "",
+							Ref:         ref("k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"),
 						},
 					},
 					"plan": {

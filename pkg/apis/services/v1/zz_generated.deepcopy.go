@@ -147,6 +147,7 @@ func (in *ServiceCredentialsStatus) DeepCopyInto(out *ServiceCredentialsStatus) 
 			}
 		}
 	}
+	in.ProviderData.DeepCopyInto(&out.ProviderData)
 	return
 }
 
@@ -403,6 +404,7 @@ func (in *ServiceStatus) DeepCopyInto(out *ServiceStatus) {
 			}
 		}
 	}
+	in.ProviderData.DeepCopyInto(&out.ProviderData)
 	in.Configuration.DeepCopyInto(&out.Configuration)
 	return
 }

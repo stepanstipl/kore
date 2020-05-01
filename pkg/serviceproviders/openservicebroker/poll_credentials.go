@@ -44,10 +44,9 @@ func (p *Provider) pollLastBindingOperation(
 		return reconcile.Result{}, nil, err
 	}
 
-	var operationKey *osb.OperationKey
-	if creds.Status.ProviderData != "" {
-		o := osb.OperationKey(creds.Status.ProviderData)
-		operationKey = &o
+	operationKey, err := decodeProviderData(creds.Status.ProviderData)
+	if err != nil {
+		return reconcile.Result{}, nil, err
 	}
 
 	logger.WithField("operation", operationKey).Debug("polling last bind operation from service broker")

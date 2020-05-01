@@ -62,7 +62,8 @@ type ServiceCredentialsStatus struct {
 	ProviderID string `json:"providerID,omitempty"`
 	// ProviderData is provider specific data
 	// +kubebuilder:validation:Optional
-	ProviderData string `json:"providerData,omitempty"`
+	// +kubebuilder:validation:Type=object
+	ProviderData apiextv1.JSON `json:"providerData,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

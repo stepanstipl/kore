@@ -132,6 +132,12 @@ func createPlan(id string, name string) osb.Plan {
 	}
 }
 
+func createProviderData(operation *osb.OperationKey) apiextv1.JSON {
+	data := openservicebroker.ProviderData{Operation: operation}
+	res, _ := json.Marshal(data)
+	return apiextv1.JSON{Raw: res}
+}
+
 var _ = Describe("Provider", func() {
 	var client *openservicebrokerfakes.FakeClient
 	var provider *openservicebroker.Provider
@@ -351,7 +357,7 @@ var _ = Describe("Provider", func() {
 				})
 
 				It("should save the operation data", func() {
-					Expect(service.Status.ProviderData).To(Equal(string(Operation)))
+					Expect(service.Status.ProviderData).To(Equal(createProviderData(&Operation)))
 				})
 
 				It("should requeue", func() {
@@ -409,7 +415,7 @@ var _ = Describe("Provider", func() {
 					Status: corev1.PendingStatus,
 				})
 				service.Status.ProviderID = KoreServiceID
-				service.Status.ProviderData = string(Operation)
+				service.Status.ProviderData = createProviderData(&Operation)
 
 				client.PollLastOperationReturns(&osb.LastOperationResponse{
 					State: osb.StateInProgress,
@@ -593,7 +599,7 @@ var _ = Describe("Provider", func() {
 					})
 
 					It("should save the operation data", func() {
-						Expect(service.Status.ProviderData).To(Equal(string(Operation)))
+						Expect(service.Status.ProviderData).To(Equal(createProviderData(&Operation)))
 					})
 
 					It("should requeue", func() {
@@ -657,7 +663,7 @@ var _ = Describe("Provider", func() {
 					Status: corev1.PendingStatus,
 				})
 				service.Status.ProviderID = KoreServiceID
-				service.Status.ProviderData = string(Operation)
+				service.Status.ProviderData = createProviderData(&Operation)
 
 				client.PollLastOperationReturns(&osb.LastOperationResponse{
 					State: osb.StateInProgress,
@@ -826,7 +832,7 @@ var _ = Describe("Provider", func() {
 				})
 
 				It("should save the operation data", func() {
-					Expect(service.Status.ProviderData).To(Equal(string(Operation)))
+					Expect(service.Status.ProviderData).To(Equal(createProviderData(&Operation)))
 				})
 
 				It("should requeue", func() {
@@ -884,7 +890,7 @@ var _ = Describe("Provider", func() {
 					Status: corev1.PendingStatus,
 				})
 				service.Status.ProviderID = KoreServiceID
-				service.Status.ProviderData = string(Operation)
+				service.Status.ProviderData = createProviderData(&Operation)
 
 				client.PollLastOperationReturns(&osb.LastOperationResponse{
 					State: osb.StateInProgress,
@@ -1078,7 +1084,7 @@ var _ = Describe("Provider", func() {
 				})
 
 				It("should save the operation data", func() {
-					Expect(serviceCreds.Status.ProviderData).To(Equal(string(Operation)))
+					Expect(serviceCreds.Status.ProviderData).To(Equal(createProviderData(&Operation)))
 				})
 
 				It("should requeue", func() {
@@ -1138,7 +1144,7 @@ var _ = Describe("Provider", func() {
 					Status: corev1.PendingStatus,
 				})
 				serviceCreds.Status.ProviderID = KoreServiceCredentialsID
-				serviceCreds.Status.ProviderData = string(Operation)
+				serviceCreds.Status.ProviderData = createProviderData(&Operation)
 
 				client.PollBindingLastOperationReturns(&osb.LastOperationResponse{
 					State: osb.StateInProgress,
@@ -1370,7 +1376,7 @@ var _ = Describe("Provider", func() {
 				})
 
 				It("should save the operation data", func() {
-					Expect(serviceCreds.Status.ProviderData).To(Equal(string(Operation)))
+					Expect(serviceCreds.Status.ProviderData).To(Equal(createProviderData(&Operation)))
 				})
 
 				It("should requeue", func() {
@@ -1430,7 +1436,7 @@ var _ = Describe("Provider", func() {
 					Status: corev1.PendingStatus,
 				})
 				serviceCreds.Status.ProviderID = KoreServiceCredentialsID
-				serviceCreds.Status.ProviderData = string(Operation)
+				serviceCreds.Status.ProviderData = createProviderData(&Operation)
 
 				client.PollBindingLastOperationReturns(&osb.LastOperationResponse{
 					State: osb.StateInProgress,

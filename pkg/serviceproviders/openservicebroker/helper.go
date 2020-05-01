@@ -26,6 +26,7 @@ import (
 	"github.com/appvia/kore/pkg/controllers"
 
 	osb "github.com/kubernetes-sigs/go-open-service-broker-client/v2"
+	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 )
 
 func bindingCredentialsToStringMap(credentials map[string]interface{}) (map[string]string, error) {
@@ -70,9 +71,27 @@ func handleError(component *corev1.Component, message string, err error) error {
 	return fmt.Errorf("%s: %w", message, err)
 }
 
-func operationValue(v *osb.OperationKey) string {
-	if v == nil {
-		return ""
+func encodeProviderData(v *osb.OperationKey) (apiextv1.JSON, error) {
+	data := ProviderData{
+		Operation: v,
 	}
-	return string(*v)
+	raw, err := json.Marshal(data)
+	if err != nil {
+		return apiextv1.JSON{}, fmt.Errorf("failed to encode provider data: %w", err)
+	}
+	return apiextv1.JSON{Raw: raw}, nil
+}
+
+func decodeProviderData(data apiextv1.JSON) (*osb.OperationKey, error) {
+	if data.Raw == nil {
+		return nil, nil
+	}
+
+	var res ProviderData
+	err := json.Unmarshal(data.Raw, &res)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode provider data: %w", err)
+	}
+
+	return res.Operation, nil
 }

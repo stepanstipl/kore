@@ -19,7 +19,7 @@ type V1ServiceSpec struct {
 
 	// configuration
 	// Required: true
-	Configuration *string `json:"configuration"`
+	Configuration interface{} `json:"configuration"`
 
 	// credentials
 	Credentials *V1Ownership `json:"credentials,omitempty"`

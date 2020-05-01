@@ -22,7 +22,7 @@ type V1ServiceStatus struct {
 	Components []*V1Component `json:"components"`
 
 	// configuration
-	Configuration string `json:"configuration,omitempty"`
+	Configuration interface{} `json:"configuration,omitempty"`
 
 	// message
 	Message string `json:"message,omitempty"`
@@ -31,7 +31,7 @@ type V1ServiceStatus struct {
 	Plan string `json:"plan,omitempty"`
 
 	// provider data
-	ProviderData string `json:"providerData,omitempty"`
+	ProviderData interface{} `json:"providerData,omitempty"`
 
 	// provider ID
 	ProviderID string `json:"providerID,omitempty"`

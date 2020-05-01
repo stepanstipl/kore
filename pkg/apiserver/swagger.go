@@ -69,7 +69,13 @@ func EnrichSwagger(swo *spec.Swagger) {
 	// but it should be an "object". ModelTypeNameHandler didn't work in restfulspec.Config.
 	enrichSwaggerFixRawJSON(swo, "v1.PlanSpec", "configuration")
 	enrichSwaggerFixRawJSON(swo, "v1.ClusterSpec", "configuration")
-
+	enrichSwaggerFixRawJSON(swo, "v1.ServiceSpec", "configuration")
+	enrichSwaggerFixRawJSON(swo, "v1.ServiceStatus", "configuration")
+	enrichSwaggerFixRawJSON(swo, "v1.ServiceStatus", "providerData")
+	enrichSwaggerFixRawJSON(swo, "v1.ServicePlanSpec", "configuration")
+	enrichSwaggerFixRawJSON(swo, "v1.ServiceCredentialsSpec", "configuration")
+	enrichSwaggerFixRawJSON(swo, "v1.ServiceCredentialsStatus", "providerData")
+	enrichSwaggerFixRawJSON(swo, "v1.ServiceProviderSpec", "configuration")
 }
 
 func enrichSwaggerFixRawJSON(swo *spec.Swagger, typeName, propertyName string) {

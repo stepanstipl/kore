@@ -82,7 +82,10 @@ func (p *Provider) DeleteCredentials(
 
 	logger.WithField("response", resp).Debug("unbind response from service broker")
 
-	creds.Status.ProviderData = operationValue(resp.OperationKey)
+	creds.Status.ProviderData, err = encodeProviderData(resp.OperationKey)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
 
 	if !resp.Async {
 		component.Update(corev1.SuccessStatus, "", "")

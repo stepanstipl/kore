@@ -5731,7 +5731,8 @@ spec:
               type: string
             providerData:
               description: ProviderData is provider specific data
-              type: string
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
             providerID:
               description: ProviderID is the service credentials identifier in the
                 service provider
@@ -6090,7 +6091,8 @@ spec:
               type: string
             providerData:
               description: ProviderData is provider specific data
-              type: string
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
             providerID:
               description: ProviderID is the service identifier in the service provider
               type: string

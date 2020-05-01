@@ -5713,7 +5713,7 @@
           "type": "string"
         },
         "configuration": {
-          "type": "string"
+          "type": "object"
         },
         "kind": {
           "type": "string"
@@ -5735,7 +5735,7 @@
           "type": "string"
         },
         "providerData": {
-          "type": "string"
+          "type": "object"
         },
         "providerID": {
           "type": "string"
@@ -5820,7 +5820,7 @@
       ],
       "properties": {
         "configuration": {
-          "type": "string"
+          "type": "object"
         },
         "description": {
           "type": "string"
@@ -5893,7 +5893,7 @@
       ],
       "properties": {
         "configuration": {
-          "type": "string"
+          "type": "object"
         },
         "description": {
           "type": "string"
@@ -5924,7 +5924,7 @@
       ],
       "properties": {
         "configuration": {
-          "type": "string"
+          "type": "object"
         },
         "credentials": {
           "$ref": "#/definitions/v1.Ownership"
@@ -5946,7 +5946,7 @@
           }
         },
         "configuration": {
-          "type": "string"
+          "type": "object"
         },
         "message": {
           "type": "string"
@@ -5955,7 +5955,7 @@
           "type": "string"
         },
         "providerData": {
-          "type": "string"
+          "type": "object"
         },
         "providerID": {
           "type": "string"
@@ -5967,11 +5967,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
+        "userClaims",
         "clientID",
         "clientSecret",
         "issuer",
-        "clientScopes",
-        "userClaims"
+        "clientScopes"
       ],
       "properties": {
         "clientID": {

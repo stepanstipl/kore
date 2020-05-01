@@ -69,7 +69,8 @@ type ServiceStatus struct {
 	ProviderID string `json:"providerID,omitempty"`
 	// ProviderData is provider specific data
 	// +kubebuilder:validation:Optional
-	ProviderData string `json:"providerData,omitempty"`
+	// +kubebuilder:validation:Type=object
+	ProviderData apiextv1.JSON `json:"providerData,omitempty"`
 	// Plan is the name of the service plan which was used to create this service
 	// +kubebuilder:validation:Optional
 	Plan string `json:"plan,omitempty"`

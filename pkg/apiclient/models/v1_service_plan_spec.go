@@ -19,7 +19,7 @@ type V1ServicePlanSpec struct {
 
 	// configuration
 	// Required: true
-	Configuration *string `json:"configuration"`
+	Configuration interface{} `json:"configuration"`
 
 	// description
 	// Required: true
