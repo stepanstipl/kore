@@ -99,7 +99,7 @@ docker-build:
 		make in-docker-build
 
 verify-circleci:
-	@echo "--> Verifiying the circleci config"
+	@echo "--> Verifying the circleci config"
 	@docker run -ti --rm -v ${PWD}:/workspace \
 		-w /workspace circleci/circleci-cli \
 		circleci config validate
@@ -310,7 +310,7 @@ bench:
 	@go test -bench=. -benchmem
 
 verify-licences:
-	@echo "--> Verifiying the licence headers"
+	@echo "--> Verifying the licence headers"
 	@hack/verify-licence.sh
 
 coverage:
