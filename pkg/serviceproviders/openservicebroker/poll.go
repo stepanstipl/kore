@@ -42,18 +42,18 @@ func (p *Provider) pollLastOperation(
 		return reconcile.Result{}, err
 	}
 
-	operationKey, err := decodeProviderData(service.Status.ProviderData)
-	if err != nil {
+	providerData := ProviderData{}
+	if err := service.Status.GetProviderData(&providerData); err != nil {
 		return reconcile.Result{}, err
 	}
 
-	logger.WithField("operation", operationKey).Debug("polling last operation from service broker")
+	logger.WithField("operation", providerData.Operation).Debug("polling last operation from service broker")
 
 	resp, err := p.client.PollLastOperation(&osb.LastOperationRequest{
 		InstanceID:   service.Status.ProviderID,
 		ServiceID:    utils.StringPtr(providerPlan.serviceID),
 		PlanID:       utils.StringPtr(providerPlan.id),
-		OperationKey: operationKey,
+		OperationKey: providerData.Operation,
 	})
 	if err != nil {
 		if component.Name == ComponentDeprovision && isHttpNotFound(err) {

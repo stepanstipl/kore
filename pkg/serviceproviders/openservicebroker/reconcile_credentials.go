@@ -94,8 +94,7 @@ func (p *Provider) ReconcileCredentials(
 
 	logger.WithField("response", filteredResponse).Debug("bind response from service broker")
 
-	creds.Status.ProviderData, err = encodeProviderData(resp.OperationKey)
-	if err != nil {
+	if err := creds.Status.SetProviderData(ProviderData{Operation: resp.OperationKey}); err != nil {
 		return reconcile.Result{}, nil, err
 	}
 

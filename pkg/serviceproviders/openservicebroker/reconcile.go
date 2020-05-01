@@ -100,8 +100,7 @@ func (p *Provider) Reconcile(
 
 	logger.WithField("response", resp).Debug("provisioning response from service broker")
 
-	service.Status.ProviderData, err = encodeProviderData(resp.OperationKey)
-	if err != nil {
+	if err := service.Status.SetProviderData(ProviderData{Operation: resp.OperationKey}); err != nil {
 		return reconcile.Result{}, err
 	}
 
@@ -171,8 +170,7 @@ func (p *Provider) update(
 
 	logger.WithField("response", resp).Debug("update response from service broker")
 
-	service.Status.ProviderData, err = encodeProviderData(resp.OperationKey)
-	if err != nil {
+	if err := service.Status.SetProviderData(ProviderData{Operation: resp.OperationKey}); err != nil {
 		return reconcile.Result{}, err
 	}
 

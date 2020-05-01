@@ -222,12 +222,12 @@ func (s *serviceCredentialsImpl) validateService(ctx context.Context, serviceCre
 		)
 	}
 
-	if !serviceCreds.Spec.Service.HasGroupVersionKind(servicesv1.ServiceGroupVersionKind) {
+	if !serviceCreds.Spec.Service.HasGroupVersionKind(servicesv1.ServiceGVK) {
 		return nil, validation.NewError("%q failed validation", serviceCreds.Name).WithFieldErrorf(
 			"service",
 			validation.InvalidValue,
 			"must have type of %s",
-			servicesv1.ServiceGroupVersionKind,
+			servicesv1.ServiceGVK,
 		)
 	}
 

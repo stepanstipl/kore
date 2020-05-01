@@ -17,10 +17,21 @@
 package v1
 
 import (
+	"encoding/json"
+	"fmt"
+
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
+
+// ServiceProviderGVK is the GroupVersionKind for ServiceProvider
+var ServiceProviderGVK = schema.GroupVersionKind{
+	Group:   GroupVersion.Group,
+	Version: GroupVersion.Version,
+	Kind:    "ServiceProvider",
+}
 
 // ServiceProviderSpec defines the desired state of a Service provider
 // +k8s:openapi-gen=true
@@ -40,6 +51,22 @@ type ServiceProviderSpec struct {
 	// Configuration are the key+value pairs describing a service provider
 	// +kubebuilder:validation:Type=object
 	Configuration apiextv1.JSON `json:"configuration"`
+}
+
+func (s *ServiceProviderSpec) GetConfiguration(v interface{}) error {
+	if err := json.Unmarshal(s.Configuration.Raw, v); err != nil {
+		return fmt.Errorf("failed to unmarshal service provider configuration: %w", err)
+	}
+	return nil
+}
+
+func (s *ServiceProviderSpec) SetConfiguration(v interface{}) error {
+	raw, err := json.Marshal(v)
+	if err != nil {
+		return fmt.Errorf("failed to marshal service provider configuration: %w", err)
+	}
+	s.Configuration = apiextv1.JSON{Raw: raw}
+	return nil
 }
 
 // ServiceProviderStatus defines the observed state of a service provider
@@ -70,7 +97,7 @@ type ServiceProvider struct {
 func NewServiceProvider(name, namespace string) *ServiceProvider {
 	return &ServiceProvider{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "ServiceProvider",
+			Kind:       ServiceProviderGVK.Kind,
 			APIVersion: GroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{

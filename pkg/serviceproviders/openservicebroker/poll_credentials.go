@@ -43,19 +43,19 @@ func (p *Provider) pollLastBindingOperation(
 		return reconcile.Result{}, nil, err
 	}
 
-	operationKey, err := decodeProviderData(creds.Status.ProviderData)
-	if err != nil {
+	providerData := ProviderData{}
+	if err := creds.Status.GetProviderData(&providerData); err != nil {
 		return reconcile.Result{}, nil, err
 	}
 
-	logger.WithField("operation", operationKey).Debug("polling last bind operation from service broker")
+	logger.WithField("operation", providerData.Operation).Debug("polling last bind operation from service broker")
 
 	resp, err := p.client.PollBindingLastOperation(&osb.BindingLastOperationRequest{
 		InstanceID:   service.Status.ProviderID,
 		BindingID:    creds.Status.ProviderID,
 		ServiceID:    utils.StringPtr(providerPlan.serviceID),
 		PlanID:       utils.StringPtr(providerPlan.id),
-		OperationKey: operationKey,
+		OperationKey: providerData.Operation,
 	})
 	if err != nil {
 		if component.Name == ComponentUnbind && isHttpNotFound(err) {

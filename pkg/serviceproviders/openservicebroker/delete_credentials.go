@@ -81,8 +81,7 @@ func (p *Provider) DeleteCredentials(
 
 	logger.WithField("response", resp).Debug("unbind response from service broker")
 
-	creds.Status.ProviderData, err = encodeProviderData(resp.OperationKey)
-	if err != nil {
+	if err := creds.Status.SetProviderData(ProviderData{Operation: resp.OperationKey}); err != nil {
 		return reconcile.Result{}, err
 	}
 
