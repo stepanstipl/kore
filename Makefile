@@ -63,12 +63,12 @@ build: golang generate-clusterappman-manifests
 		go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go || exit 1; \
 	done
 
-kore: golang deps
+kore: golang
 	@echo "--> Compiling the kore binary"
 	@mkdir -p bin
 	go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/kore cmd/kore/*.go
 
-auth-proxy: golang deps
+auth-proxy: golang
 	@echo "--> Compiling the auth-proxy binary"
 	@mkdir -p bin
 	go build -ldflags "${LFLAGS}" -o bin/auth-proxy cmd/auth-proxy/*.go
@@ -77,12 +77,12 @@ auth-proxy-image: golang
 	@echo "--> Build the auth-proxy docker image"
 	docker build -t ${REGISTRY}/${AUTHOR}/auth-proxy:${VERSION} -f images/Dockerfile.auth-proxy .
 
-kore-apiserver: golang deps generate-clusterappman-manifests
+kore-apiserver: golang generate-clusterappman-manifests
 	@echo "--> Compiling the kore-apiserver binary"
 	@mkdir -p bin
 	go build -ldflags "${LFLAGS}" -o bin/kore-apiserver cmd/kore-apiserver/*.go
 
-kore-clusterappman: golang generate-clusterappman-manifests deps
+kore-clusterappman: golang generate-clusterappman-manifests
 	@echo "--> Compiling the kore-clusterappman binary"
 	@mkdir -p bin
 	go build -ldflags "${LFLAGS}" -o bin/kore-clusterappman cmd/kore-clusterappman/*.go
@@ -289,9 +289,6 @@ dep-install:
 	@echo "--> Installing dependencies"
 	@dep ensure -v
 
-deps:
-	@echo "--> Installing build dependencies"
-
 vet:
 	@echo "--> Running go vet $(VETARGS) $(PACKAGES)"
 	@go vet $(VETARGS) $(PACKAGES)
@@ -336,9 +333,6 @@ golangci-lint:
 
 test: generate-clusterappman-manifests
 	@echo "--> Running the tests"
-	@if [ ! -d "vendor" ]; then \
-		make deps; \
-  	fi
 	@go test -v $(PACKAGES)
 	@$(MAKE) golang
 	@$(MAKE) gofmt
