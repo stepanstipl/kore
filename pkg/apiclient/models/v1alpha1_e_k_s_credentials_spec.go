@@ -18,46 +18,35 @@ import (
 type V1alpha1EKSCredentialsSpec struct {
 
 	// access key ID
-	// Required: true
-	AccessKeyID *string `json:"accessKeyID"`
+	AccessKeyID string `json:"accessKeyID,omitempty"`
 
 	// account ID
 	// Required: true
 	AccountID *string `json:"accountID"`
 
-	// secret access key
+	// credentials ref
 	// Required: true
-	SecretAccessKey *string `json:"secretAccessKey"`
+	CredentialsRef *V1SecretReference `json:"credentialsRef"`
+
+	// secret access key
+	SecretAccessKey string `json:"secretAccessKey,omitempty"`
 }
 
 // Validate validates this v1alpha1 e k s credentials spec
 func (m *V1alpha1EKSCredentialsSpec) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateAccessKeyID(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateAccountID(formats); err != nil {
 		res = append(res, err)
 	}
 
-	if err := m.validateSecretAccessKey(formats); err != nil {
+	if err := m.validateCredentialsRef(formats); err != nil {
 		res = append(res, err)
 	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *V1alpha1EKSCredentialsSpec) validateAccessKeyID(formats strfmt.Registry) error {
-
-	if err := validate.Required("accessKeyID", "body", m.AccessKeyID); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -70,10 +59,19 @@ func (m *V1alpha1EKSCredentialsSpec) validateAccountID(formats strfmt.Registry) 
 	return nil
 }
 
-func (m *V1alpha1EKSCredentialsSpec) validateSecretAccessKey(formats strfmt.Registry) error {
+func (m *V1alpha1EKSCredentialsSpec) validateCredentialsRef(formats strfmt.Registry) error {
 
-	if err := validate.Required("secretAccessKey", "body", m.SecretAccessKey); err != nil {
+	if err := validate.Required("credentialsRef", "body", m.CredentialsRef); err != nil {
 		return err
+	}
+
+	if m.CredentialsRef != nil {
+		if err := m.CredentialsRef.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("credentialsRef")
+			}
+			return err
+		}
 	}
 
 	return nil

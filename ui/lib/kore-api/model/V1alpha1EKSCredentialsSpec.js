@@ -12,6 +12,7 @@
  */
 
 import ApiClient from '../ApiClient';
+import V1SecretReference from './V1SecretReference';
 
 /**
  * The V1alpha1EKSCredentialsSpec model module.
@@ -22,13 +23,12 @@ class V1alpha1EKSCredentialsSpec {
     /**
      * Constructs a new <code>V1alpha1EKSCredentialsSpec</code>.
      * @alias module:model/V1alpha1EKSCredentialsSpec
-     * @param accessKeyID {String} 
      * @param accountID {String} 
-     * @param secretAccessKey {String} 
+     * @param credentialsRef {module:model/V1SecretReference} 
      */
-    constructor(accessKeyID, accountID, secretAccessKey) { 
+    constructor(accountID, credentialsRef) { 
         
-        V1alpha1EKSCredentialsSpec.initialize(this, accessKeyID, accountID, secretAccessKey);
+        V1alpha1EKSCredentialsSpec.initialize(this, accountID, credentialsRef);
     }
 
     /**
@@ -36,10 +36,9 @@ class V1alpha1EKSCredentialsSpec {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, accessKeyID, accountID, secretAccessKey) { 
-        obj['accessKeyID'] = accessKeyID;
+    static initialize(obj, accountID, credentialsRef) { 
         obj['accountID'] = accountID;
-        obj['secretAccessKey'] = secretAccessKey;
+        obj['credentialsRef'] = credentialsRef;
     }
 
     /**
@@ -53,32 +52,16 @@ class V1alpha1EKSCredentialsSpec {
         if (data) {
             obj = obj || new V1alpha1EKSCredentialsSpec();
 
-            if (data.hasOwnProperty('accessKeyID')) {
-                obj['accessKeyID'] = ApiClient.convertToType(data['accessKeyID'], 'String');
-            }
             if (data.hasOwnProperty('accountID')) {
                 obj['accountID'] = ApiClient.convertToType(data['accountID'], 'String');
             }
-            if (data.hasOwnProperty('secretAccessKey')) {
-                obj['secretAccessKey'] = ApiClient.convertToType(data['secretAccessKey'], 'String');
+            if (data.hasOwnProperty('credentialsRef')) {
+                obj['credentialsRef'] = V1SecretReference.constructFromObject(data['credentialsRef']);
             }
         }
         return obj;
     }
 
-/**
-     * @return {String}
-     */
-    getAccessKeyID() {
-        return this.accessKeyID;
-    }
-
-    /**
-     * @param {String} accessKeyID
-     */
-    setAccessKeyID(accessKeyID) {
-        this['accessKeyID'] = accessKeyID;
-    }
 /**
      * @return {String}
      */
@@ -93,25 +76,20 @@ class V1alpha1EKSCredentialsSpec {
         this['accountID'] = accountID;
     }
 /**
-     * @return {String}
+     * @return {module:model/V1SecretReference}
      */
-    getSecretAccessKey() {
-        return this.secretAccessKey;
+    getCredentialsRef() {
+        return this.credentialsRef;
     }
 
     /**
-     * @param {String} secretAccessKey
+     * @param {module:model/V1SecretReference} credentialsRef
      */
-    setSecretAccessKey(secretAccessKey) {
-        this['secretAccessKey'] = secretAccessKey;
+    setCredentialsRef(credentialsRef) {
+        this['credentialsRef'] = credentialsRef;
     }
 
 }
-
-/**
- * @member {String} accessKeyID
- */
-V1alpha1EKSCredentialsSpec.prototype['accessKeyID'] = undefined;
 
 /**
  * @member {String} accountID
@@ -119,9 +97,9 @@ V1alpha1EKSCredentialsSpec.prototype['accessKeyID'] = undefined;
 V1alpha1EKSCredentialsSpec.prototype['accountID'] = undefined;
 
 /**
- * @member {String} secretAccessKey
+ * @member {module:model/V1SecretReference} credentialsRef
  */
-V1alpha1EKSCredentialsSpec.prototype['secretAccessKey'] = undefined;
+V1alpha1EKSCredentialsSpec.prototype['credentialsRef'] = undefined;
 
 
 

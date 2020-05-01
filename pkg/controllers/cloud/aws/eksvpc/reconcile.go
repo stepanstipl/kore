@@ -22,14 +22,15 @@ import (
 	"fmt"
 	"time"
 
+	config "github.com/appvia/kore/pkg/apis/config/v1"
 	core "github.com/appvia/kore/pkg/apis/core/v1"
 	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/utils/cloud/aws"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -95,10 +96,7 @@ func (t *eksvpcCtrl) Reconcile(request reconcile.Request) (reconcile.Result, err
 		}
 		logger.Info("Found EKSCredential")
 
-		client, err := aws.NewVPCClient(aws.Credentials{
-			AccessKeyID:     credentials.Spec.AccessKeyID,
-			SecretAccessKey: credentials.Spec.SecretAccessKey,
-		}, aws.VPC{
+		client, err := aws.NewVPCClient(*credentials, aws.VPC{
 			CidrBlock: resource.Spec.PrivateIPV4Cidr,
 			Name:      resource.Name,
 			Region:    resource.Spec.Region,
@@ -190,7 +188,7 @@ func (t *eksvpcCtrl) Reconcile(request reconcile.Request) (reconcile.Result, err
 }
 
 // GetCredentials returns the cloud credential
-func (t *eksvpcCtrl) GetCredentials(ctx context.Context, vpc *eksv1alpha1.EKSVPC, team string) (*eksv1alpha1.EKSCredentials, error) {
+func (t *eksvpcCtrl) GetCredentials(ctx context.Context, vpc *eksv1alpha1.EKSVPC, team string) (*aws.Credentials, error) {
 	// @step: is the team permitted access to this credentials
 	permitted, err := t.Teams().Team(team).Allocations().IsPermitted(ctx, vpc.Spec.Credentials)
 	if err != nil {
@@ -206,12 +204,53 @@ func (t *eksvpcCtrl) GetCredentials(ctx context.Context, vpc *eksv1alpha1.EKSVPC
 	}
 
 	// @step: retrieve the credentials
-	creds := &eksv1alpha1.EKSCredentials{}
-
-	return creds, t.mgr.GetClient().Get(ctx,
-		types.NamespacedName{
-			Namespace: vpc.Spec.Credentials.Namespace,
+	creds := &eksv1alpha1.EKSCredentials{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      vpc.Spec.Credentials.Name,
-		}, creds,
-	)
+			Namespace: vpc.Spec.Credentials.Namespace,
+		},
+	}
+	found, err := kubernetes.GetIfExists(ctx, t.mgr.GetClient(), creds)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, fmt.Errorf("eks credentials: (%s/%s) not found", vpc.Spec.Credentials.Namespace, vpc.Spec.Credentials.Name)
+	}
+
+	// for backwards-compatibility, use the creds set on the EKSCredentials resource, if they exist
+	if creds.Spec.SecretAccessKey != "" && creds.Spec.AccessKeyID != "" {
+		return &aws.Credentials{
+			AccountID:       creds.Spec.AccountID,
+			AccessKeyID:     creds.Spec.AccessKeyID,
+			SecretAccessKey: creds.Spec.SecretAccessKey,
+		}, nil
+	}
+
+	// @step: we need to grab the secret
+	secret := &config.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      creds.Spec.CredentialsRef.Name,
+			Namespace: creds.Spec.CredentialsRef.Namespace,
+		},
+	}
+
+	found, err = kubernetes.GetIfExists(ctx, t.mgr.GetClient(), secret)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, fmt.Errorf("eks credentials secret: (%s/%s) not found", creds.Spec.CredentialsRef.Namespace, creds.Spec.CredentialsRef.Name)
+	}
+
+	// @step: ensure the secret is decoded before using
+	if err := secret.Decode(); err != nil {
+		return nil, err
+	}
+
+	return &aws.Credentials{
+		AccountID:       creds.Spec.AccountID,
+		AccessKeyID:     secret.Spec.Data["access_id"],
+		SecretAccessKey: secret.Spec.Data["access_secret"],
+	}, nil
 }

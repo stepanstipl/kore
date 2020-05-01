@@ -6907,19 +6907,15 @@
     },
     "v1alpha1.EKSCredentialsSpec": {
       "required": [
-        "secretAccessKey",
-        "accessKeyID",
-        "accountID"
+        "accountID",
+        "credentialsRef"
       ],
       "properties": {
-        "accessKeyID": {
-          "type": "string"
-        },
         "accountID": {
           "type": "string"
         },
-        "secretAccessKey": {
-          "type": "string"
+        "credentialsRef": {
+          "$ref": "#/definitions/v1.SecretReference"
         }
       }
     },

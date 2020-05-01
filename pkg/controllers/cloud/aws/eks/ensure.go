@@ -236,7 +236,7 @@ func (t *eksCtrl) EnsureClusterRoles(cluster *eks.EKS) controllers.EnsureFunc {
 		logger.Debug("attempting to ensure the iam role for the eks cluster")
 
 		// @step: first we need to check if we have access to the credentials
-		credentials, err := t.GetCredentials(ctx, cluster, cluster.Namespace)
+		_, creds, err := t.GetCredentials(ctx, cluster, cluster.Namespace)
 		if err != nil {
 			logger.WithError(err).Error("trying to retrieve cloud credentials")
 
@@ -250,10 +250,7 @@ func (t *eksCtrl) EnsureClusterRoles(cluster *eks.EKS) controllers.EnsureFunc {
 		}
 
 		// @step: we need to ensure the iam role for the cluster is there
-		client := aws.NewIamClient(aws.Credentials{
-			AccessKeyID:     credentials.Spec.AccessKeyID,
-			SecretAccessKey: credentials.Spec.SecretAccessKey,
-		})
+		client := aws.NewIamClient(*creds)
 
 		role, err := client.EnsureEKSClusterRole(ctx, cluster.Name)
 		if err != nil {
@@ -333,13 +330,13 @@ func (t *eksCtrl) EnsureDeletion(cluster *eks.EKS) controllers.EnsureFunc {
 		logger.Debug("attempting to delete the eks cluster")
 
 		// @step: retrieve the cloud credentials
-		creds, err := t.GetCredentials(ctx, cluster, cluster.Namespace)
+		eksCreds, creds, err := t.GetCredentials(ctx, cluster, cluster.Namespace)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
 
 		// @step: create a cloud client for us
-		client, err := aws.NewEKSClient(creds, cluster)
+		client, err := aws.NewEKSClient(eksCreds, creds, cluster)
 		if err != nil {
 			logger.WithError(err).Error("trying to create eks client")
 

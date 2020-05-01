@@ -917,20 +917,29 @@ spec:
           properties:
             accessKeyID:
               description: AccessKeyID is the AWS Access Key ID
-              minLength: 3
               type: string
             accountID:
               description: AccountID is the AWS account these credentials reside within
               minLength: 3
               type: string
+            credentialsRef:
+              description: CredentialsRef is a reference to the credentials used to
+                create clusters
+              properties:
+                name:
+                  description: Name is unique within a namespace to reference a secret
+                    resource.
+                  type: string
+                namespace:
+                  description: Namespace defines the space within which the secret
+                    name must be unique.
+                  type: string
+              type: object
             secretAccessKey:
               description: SecretAccessKey is the AWS Secret Access Key
-              minLength: 3
               type: string
           required:
-          - accessKeyID
           - accountID
-          - secretAccessKey
           type: object
         status:
           description: EKSCredentialsStatus defines the observed state of EKSCredential

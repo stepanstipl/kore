@@ -7,6 +7,10 @@ describe('EKSCredentialsForm', () => {
   let props
   let form
   let apiScope
+  const secret = {
+    metadata: { name: 'eks' },
+    spec: { type: 'eks-credential' }
+  }
   const eksCredential = {
     metadata: { name: 'eks' },
     spec: { accountID: '1234567890', accessKeyID: '123', secretAccessKey: 'aws-account-cred' }
@@ -41,6 +45,15 @@ describe('EKSCredentialsForm', () => {
     apiScope.done()
   })
 
+  describe('#generateSecretResource', () => {
+    it('returns a configured Secret object', () => {
+      const secret = form.generateSecretResource({ name: 'eks', accessKeyID: 'access-key', secretAccessKey: 'secret-key' })
+      expect(secret).toBeDefined()
+      expect(secret.spec.data.access_key_id).toBe(btoa('access-key'))
+      expect(secret.spec.data.access_secret_key).toBe(btoa('secret-key'))
+    })
+  })
+
   describe('#generateEKSCredentialsResource', () => {
     it('returns a configured EKSCredentials object when given valid values', () => {
       const eksCredential = form.generateEKSCredentialsResource({ name: 'eks', accountID: '1234567890', accessKeyID: '123', secretAccessKey: 'aws-account-cred' })
@@ -66,6 +79,7 @@ describe('EKSCredentialsForm', () => {
   describe('#putResource', () => {
     beforeEach(() => {
       apiScope
+        .put(`${ApiTestHelpers.basePath}/teams/kore-admin/secrets/eks`).reply(200, secret)
         .put(`${ApiTestHelpers.basePath}/teams/kore-admin/ekscredentials/eks`).reply(200, eksCredential)
         .put(`${ApiTestHelpers.basePath}/teams/kore-admin/allocations/eks`).reply(200, allocation)
     })

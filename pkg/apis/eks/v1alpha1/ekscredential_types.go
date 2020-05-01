@@ -18,24 +18,26 @@ package v1alpha1
 
 import (
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // EKSCredentialsSpec defines the desired state of EKSCredential
 // +k8s:openapi-gen=true
 type EKSCredentialsSpec struct {
-	// SecretAccessKey is the AWS Secret Access Key
-	// +kubebuilder:validation:MinLength=3
-	// +kubebuilder:validation:Required
-	SecretAccessKey string `json:"secretAccessKey"`
-	// AccessKeyID is the AWS Access Key ID
-	// +kubebuilder:validation:MinLength=3
-	// +kubebuilder:validation:Required
-	AccessKeyID string `json:"accessKeyID"`
 	// AccountID is the AWS account these credentials reside within
 	// +kubebuilder:validation:MinLength=3
 	// +kubebuilder:validation:Required
 	AccountID string `json:"accountID"`
+	// SecretAccessKey is the AWS Secret Access Key
+	// +kubebuilder:validation:Optional
+	SecretAccessKey string `json:"secretAccessKey,omitempty"`
+	// AccessKeyID is the AWS Access Key ID
+	// +kubebuilder:validation:Optional
+	AccessKeyID string `json:"accessKeyID,omitempty"`
+	// CredentialsRef is a reference to the credentials used to create clusters
+	// +kubebuilder:validation:Optional
+	CredentialsRef *v1.SecretReference `json:"credentialsRef"`
 }
 
 // EKSCredentialsStatus defines the observed state of EKSCredential
