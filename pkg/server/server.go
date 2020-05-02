@@ -20,20 +20,16 @@ import (
 	"context"
 	"fmt"
 
-	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
-
 	// controller imports
 	_ "github.com/appvia/kore/pkg/controllers/register"
-	"github.com/appvia/kore/pkg/persistence"
 
 	// service provider imports
-	_ "github.com/appvia/kore/pkg/serviceproviders"
-	_ "github.com/appvia/kore/pkg/serviceproviders/openservicebroker"
+	_ "github.com/appvia/kore/pkg/serviceproviders/register"
 
 	"github.com/appvia/kore/pkg/apiserver"
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/persistence"
 	"github.com/appvia/kore/pkg/schema"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils/crds"
@@ -42,6 +38,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	rc "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
 type serverImpl struct {
