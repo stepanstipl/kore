@@ -18,6 +18,7 @@ package serviceproviders
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/appvia/kore/pkg/kore"
@@ -77,6 +78,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 				serviceProvider.Status.SupportedKinds = provider.Kinds()
 
 				for _, plan := range provider.Plans() {
+					plan.Name = fmt.Sprintf("%s-%s", plan.Spec.Kind, plan.Name)
 					plan.Namespace = kore.HubNamespace
 					exists, err := kubernetes.CheckIfExists(ctx, c.mgr.GetClient(), &plan)
 					if err != nil {
