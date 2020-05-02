@@ -48,6 +48,8 @@ type VPC struct {
 	Tags map[string]string
 	// PublicIPV4EgressAddresses provides the source addresses for traffic coming from the cluster
 	PublicIPV4EgressAddresses []string
+	// SubnetCount is the maximum number of subnets of each subnet type
+	SubnetCount int
 	// Cache of aws VPC
 	awsObj *ec2.Vpc
 }

@@ -31,10 +31,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const (
-	AZLimit = 3
-)
-
 // VPCClient for aws VPC
 type VPCClient struct {
 	// credentials are the aws credentials
@@ -49,6 +45,10 @@ type VPCClient struct {
 
 // NewVPCClient gets an AWS and session with a reference to a matching VPC
 func NewVPCClient(creds Credentials, vpc VPC) (*VPCClient, error) {
+	if vpc.SubnetCount == 0 {
+		vpc.SubnetCount = 3
+	}
+
 	sess := getNewSession(creds, vpc.Region)
 
 	// TODO: verify the current CIDR is big enough for the required subnets given:
@@ -126,7 +126,7 @@ func (c *VPCClient) Ensure() (ready bool, _ error) {
 		return false, err
 	}
 
-	azs, err := c.getAZs(AZLimit)
+	azs, err := c.getAZs(c.VPC.SubnetCount)
 	if err != nil {
 		return false, err
 	}
@@ -235,7 +235,7 @@ func (c *VPCClient) Delete(ctx context.Context) (ready bool, _ error) {
 		return true, nil
 	}
 
-	azs, err := c.getAZs(AZLimit)
+	azs, err := c.getAZs(c.VPC.SubnetCount)
 	if err != nil {
 		return false, err
 	}
