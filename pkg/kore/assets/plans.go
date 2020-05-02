@@ -79,7 +79,7 @@ func GetDefaultPlans() []*configv1.Plan {
 							"region":                        "europe-west2",
 							"size":                          1,
 							"subnetwork":                    "default",
-							"version":                       "1.15.11-gke.1"
+							"version":                       "1.15.11-gke.11"
 						}`,
 					),
 				},
@@ -133,7 +133,7 @@ func GetDefaultPlans() []*configv1.Plan {
 							"region":                        "europe-west2",
 							"size":                          2,
 							"subnetwork":                    "default",
-							"version":                       "1.15.11-gke.1"
+							"version":                       "1.15.11-gke.11"
 						}`,
 					),
 				},
