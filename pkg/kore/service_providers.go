@@ -21,21 +21,20 @@ import (
 	"fmt"
 	"strings"
 	"sync"
-
-	"github.com/appvia/kore/pkg/utils"
-
-	"github.com/appvia/kore/pkg/utils/validation"
-
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"time"
 
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/store"
+	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/jsonschema"
+	"github.com/appvia/kore/pkg/utils/validation"
 
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 var serviceProviderFactories = map[string]ServiceProviderFactory{}
@@ -59,7 +58,41 @@ type ServiceProviderFactory interface {
 	// JSONSchema returns the JSON schema for the provider's configuration
 	JSONSchema() string
 	// CreateProvider creates the provider
-	CreateProvider(servicesv1.ServiceProvider, store.Client) (ServiceProvider, error)
+	CreateProvider(servicesv1.ServiceProvider) (ServiceProvider, error)
+}
+
+type ServiceProviderContext struct {
+	Context context.Context
+	Logger  log.FieldLogger
+	Client  client.Client
+}
+
+func (s ServiceProviderContext) Deadline() (deadline time.Time, ok bool) {
+	return s.Context.Deadline()
+}
+
+func (s ServiceProviderContext) Done() <-chan struct{} {
+	return s.Context.Done()
+}
+
+func (s ServiceProviderContext) Err() error {
+	return s.Context.Err()
+}
+
+func (s ServiceProviderContext) Value(key interface{}) interface{} {
+	return s.Context.Value(key)
+}
+
+func NewServiceProviderContext(
+	ctx context.Context,
+	logger log.FieldLogger,
+	client client.Client,
+) ServiceProviderContext {
+	return ServiceProviderContext{
+		Context: ctx,
+		Logger:  logger,
+		Client:  client,
+	}
 }
 
 type ServiceProvider interface {
@@ -76,13 +109,13 @@ type ServiceProvider interface {
 	// RequiredCredentialTypes returns with the required credential types
 	RequiredCredentialTypes(kind string) ([]schema.GroupVersionKind, error)
 	// Reconcile will create or update the service
-	Reconcile(context.Context, log.FieldLogger, *servicesv1.Service) (reconcile.Result, error)
+	Reconcile(ServiceProviderContext, *servicesv1.Service) (reconcile.Result, error)
 	// Delete will delete the service
-	Delete(context.Context, log.FieldLogger, *servicesv1.Service) (reconcile.Result, error)
+	Delete(ServiceProviderContext, *servicesv1.Service) (reconcile.Result, error)
 	// ReconcileCredentials will create or update the service credentials
-	ReconcileCredentials(context.Context, log.FieldLogger, *servicesv1.Service, *servicesv1.ServiceCredentials) (reconcile.Result, map[string]string, error)
+	ReconcileCredentials(ServiceProviderContext, *servicesv1.Service, *servicesv1.ServiceCredentials) (reconcile.Result, map[string]string, error)
 	// DeleteCredentials will delete the service credentials
-	DeleteCredentials(context.Context, log.FieldLogger, *servicesv1.Service, *servicesv1.ServiceCredentials) (reconcile.Result, error)
+	DeleteCredentials(ServiceProviderContext, *servicesv1.Service, *servicesv1.ServiceCredentials) (reconcile.Result, error)
 }
 
 // ServiceProviders is the interface to manage service providers
@@ -251,7 +284,7 @@ func (p *serviceProvidersImpl) Register(ctx context.Context, serviceProvider *se
 		return nil, fmt.Errorf("service provider type %q is invalid", serviceProvider.Spec.Type)
 	}
 
-	provider, err := factory.CreateProvider(*serviceProvider, p.Store().Client())
+	provider, err := factory.CreateProvider(*serviceProvider)
 	if err != nil {
 		return nil, err
 	}

@@ -17,16 +17,11 @@
 package serviceproviders
 
 import (
-	"context"
-
-	"github.com/appvia/kore/pkg/store"
-
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/kore"
 
-	"github.com/sirupsen/logrus"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -61,9 +56,11 @@ func (d DummyFactory) JSONSchema() string {
 	}`
 }
 
-func (d DummyFactory) CreateProvider(provider servicesv1.ServiceProvider, client store.Client) (kore.ServiceProvider, error) {
+func (d DummyFactory) CreateProvider(provider servicesv1.ServiceProvider) (kore.ServiceProvider, error) {
 	return Dummy{name: provider.Name}, nil
 }
+
+var _ kore.ServiceProvider = Dummy{}
 
 type Dummy struct {
 	name string
@@ -141,25 +138,22 @@ func (d Dummy) RequiredCredentialTypes(_ string) ([]schema.GroupVersionKind, err
 }
 
 func (d Dummy) Reconcile(
-	_ context.Context,
-	_ logrus.FieldLogger,
+	ctx kore.ServiceProviderContext,
 	service *servicesv1.Service,
 ) (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
 func (d Dummy) Delete(
-	_ context.Context,
-	_ logrus.FieldLogger,
+	ctx kore.ServiceProviderContext,
 	service *servicesv1.Service,
 ) (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
 func (d Dummy) ReconcileCredentials(
-	_ context.Context,
-	_ logrus.FieldLogger,
-	_ *servicesv1.Service,
+	ctx kore.ServiceProviderContext,
+	service *servicesv1.Service,
 	creds *servicesv1.ServiceCredentials,
 ) (reconcile.Result, map[string]string, error) {
 	res := map[string]string{
@@ -169,9 +163,8 @@ func (d Dummy) ReconcileCredentials(
 }
 
 func (d Dummy) DeleteCredentials(
-	_ context.Context,
-	_ logrus.FieldLogger,
-	_ *servicesv1.Service,
+	ctx kore.ServiceProviderContext,
+	service *servicesv1.Service,
 	creds *servicesv1.ServiceCredentials,
 ) (reconcile.Result, error) {
 	return reconcile.Result{}, nil

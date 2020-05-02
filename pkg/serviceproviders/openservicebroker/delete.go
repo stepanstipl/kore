@@ -17,20 +17,19 @@
 package openservicebroker
 
 import (
-	"context"
 	"time"
+
+	"github.com/appvia/kore/pkg/kore"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 
 	osb "github.com/kubernetes-sigs/go-open-service-broker-client/v2"
-	"github.com/sirupsen/logrus"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 func (p *Provider) Delete(
-	ctx context.Context,
-	logger logrus.FieldLogger,
+	ctx kore.ServiceProviderContext,
 	service *servicesv1.Service,
 ) (reconcile.Result, error) {
 	providerPlan, err := p.plan(service.Spec.Kind, service.Spec.Plan)
@@ -54,12 +53,12 @@ func (p *Provider) Delete(
 	}
 
 	if component.Status == corev1.PendingStatus {
-		return p.pollLastOperation(ctx, logger, service, component)
+		return p.pollLastOperation(ctx, service, component)
 	}
 
 	component.Update(corev1.PendingStatus, "", "")
 
-	logger.Debug("deprovisioning service with service broker")
+	ctx.Logger.Debug("deprovisioning service with service broker")
 
 	resp, err := p.client.DeprovisionInstance(&osb.DeprovisionRequest{
 		InstanceID:        service.Status.ProviderID,
@@ -75,7 +74,7 @@ func (p *Provider) Delete(
 		return reconcile.Result{}, handleError(component, "failed to call deprovision on the service broker", err)
 	}
 
-	logger.WithField("response", resp).Debug("deprovision response from service broker")
+	ctx.Logger.WithField("response", resp).Debug("deprovision response from service broker")
 
 	if err := service.Status.SetProviderData(ProviderData{Operation: resp.OperationKey}); err != nil {
 		return reconcile.Result{}, err

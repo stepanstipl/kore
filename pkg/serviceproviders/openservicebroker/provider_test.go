@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/appvia/kore/pkg/kore"
+
 	"github.com/appvia/kore/pkg/controllers"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -142,6 +144,7 @@ var _ = Describe("Provider", func() {
 	var provider *openservicebroker.Provider
 	var providerCreateErr error
 	var ctx context.Context
+	var serviceProviderCtx kore.ServiceProviderContext
 	var cancel context.CancelFunc
 	var logger *log.Logger
 	var service *servicesv1.Service
@@ -178,6 +181,11 @@ var _ = Describe("Provider", func() {
 		ctx, cancel = context.WithCancel(context.Background())
 		logger = log.StandardLogger()
 		logger.Out = GinkgoWriter
+
+		serviceProviderCtx = kore.ServiceProviderContext{
+			Context: ctx,
+			Logger:  logger,
+		}
 
 		client = &openservicebrokerfakes.FakeClient{}
 		client.GetCatalogReturns(&osb.CatalogResponse{
@@ -298,7 +306,7 @@ var _ = Describe("Provider", func() {
 
 	Context("Reconcile", func() {
 		JustBeforeEach(func() {
-			reconcileResult, reconcileErr = provider.Reconcile(ctx, logger, service)
+			reconcileResult, reconcileErr = provider.Reconcile(serviceProviderCtx, service)
 		})
 
 		When("the service does not exist", func() {
@@ -774,7 +782,7 @@ var _ = Describe("Provider", func() {
 		})
 
 		JustBeforeEach(func() {
-			reconcileResult, reconcileErr = provider.Delete(ctx, logger, service)
+			reconcileResult, reconcileErr = provider.Delete(serviceProviderCtx, service)
 		})
 
 		When("the service exists", func() {
@@ -1019,7 +1027,7 @@ var _ = Describe("Provider", func() {
 		})
 
 		JustBeforeEach(func() {
-			reconcileResult, secrets, reconcileErr = provider.ReconcileCredentials(ctx, logger, service, serviceCreds)
+			reconcileResult, secrets, reconcileErr = provider.ReconcileCredentials(serviceProviderCtx, service, serviceCreds)
 		})
 
 		When("the service credentials do not exist", func() {
@@ -1317,7 +1325,7 @@ var _ = Describe("Provider", func() {
 		})
 
 		JustBeforeEach(func() {
-			reconcileResult, reconcileErr = provider.DeleteCredentials(ctx, logger, service, serviceCreds)
+			reconcileResult, reconcileErr = provider.DeleteCredentials(serviceProviderCtx, service, serviceCreds)
 		})
 
 		When("the service credentials exist", func() {

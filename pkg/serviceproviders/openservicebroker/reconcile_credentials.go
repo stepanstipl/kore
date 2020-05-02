@@ -17,10 +17,11 @@
 package openservicebroker
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"github.com/appvia/kore/pkg/kore"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
@@ -28,13 +29,11 @@ import (
 
 	"github.com/google/uuid"
 	osb "github.com/kubernetes-sigs/go-open-service-broker-client/v2"
-	"github.com/sirupsen/logrus"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 func (p *Provider) ReconcileCredentials(
-	ctx context.Context,
-	logger logrus.FieldLogger,
+	ctx kore.ServiceProviderContext,
 	service *servicesv1.Service,
 	creds *servicesv1.ServiceCredentials,
 ) (reconcile.Result, map[string]string, error) {
@@ -59,7 +58,7 @@ func (p *Provider) ReconcileCredentials(
 	}
 
 	if component.Status == corev1.PendingStatus {
-		return p.pollLastBindingOperation(ctx, logger, service, creds, component)
+		return p.pollLastBindingOperation(ctx, service, creds, component)
 	}
 
 	component.Update(corev1.PendingStatus, "", "")
@@ -73,7 +72,7 @@ func (p *Provider) ReconcileCredentials(
 		return reconcile.Result{}, nil, controllers.NewCriticalError(fmt.Errorf("failed to unmarshal service credentials configuration"))
 	}
 
-	logger.Debug("calling bind on service broker")
+	ctx.Logger.Debug("calling bind on service broker")
 
 	resp, err := p.client.Bind(&osb.BindRequest{
 		AcceptsIncomplete: true,
@@ -92,7 +91,7 @@ func (p *Provider) ReconcileCredentials(
 		"async":     resp.Async,
 	}
 
-	logger.WithField("response", filteredResponse).Debug("bind response from service broker")
+	ctx.Logger.WithField("response", filteredResponse).Debug("bind response from service broker")
 
 	if err := creds.Status.SetProviderData(ProviderData{Operation: resp.OperationKey}); err != nil {
 		return reconcile.Result{}, nil, err

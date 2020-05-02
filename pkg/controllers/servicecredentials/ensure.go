@@ -138,7 +138,10 @@ func (c *Controller) ensureSecret(
 			return reconcile.Result{}, nil
 		}
 
-		result, credentials, err := provider.ReconcileCredentials(ctx, logger, service, serviceCreds)
+		result, credentials, err := provider.ReconcileCredentials(
+			kore.NewServiceProviderContext(ctx, logger, c.mgr.GetClient()),
+			service, serviceCreds,
+		)
 		if err != nil {
 			serviceCreds.Status.Components.SetCondition(corev1.Component{
 				Name:    ComponentProviderSecret,

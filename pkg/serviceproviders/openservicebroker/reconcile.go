@@ -18,10 +18,11 @@ package openservicebroker
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"github.com/appvia/kore/pkg/kore"
 
 	"github.com/appvia/kore/pkg/utils"
 
@@ -31,13 +32,11 @@ import (
 
 	"github.com/google/uuid"
 	osb "github.com/kubernetes-sigs/go-open-service-broker-client/v2"
-	"github.com/sirupsen/logrus"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 func (p *Provider) Reconcile(
-	ctx context.Context,
-	logger logrus.FieldLogger,
+	ctx kore.ServiceProviderContext,
 	service *servicesv1.Service,
 ) (reconcile.Result, error) {
 	providerPlan, err := p.plan(service.Spec.Kind, service.Spec.Plan)
@@ -59,14 +58,14 @@ func (p *Provider) Reconcile(
 	if component.Status == corev1.SuccessStatus {
 		// Check if there was any change to the service configuration
 		if service.Spec.Plan != service.Status.Plan || !bytes.Equal(service.Spec.Configuration.Raw, service.Status.Configuration.Raw) {
-			return p.update(ctx, logger, service)
+			return p.update(ctx, service)
 		}
 
 		return reconcile.Result{}, nil
 	}
 
 	if component.Status == corev1.PendingStatus {
-		return p.pollLastOperation(ctx, logger, service, component)
+		return p.pollLastOperation(ctx, service, component)
 	}
 
 	component.Update(corev1.PendingStatus, "", "")
@@ -80,7 +79,7 @@ func (p *Provider) Reconcile(
 		return reconcile.Result{}, controllers.NewCriticalError(fmt.Errorf("failed to unmarshal service configuration: %w", err))
 	}
 
-	logger.Debug("provisioning service with service broker")
+	ctx.Logger.Debug("provisioning service with service broker")
 
 	resp, err := p.client.ProvisionInstance(&osb.ProvisionRequest{
 		InstanceID:        service.Status.ProviderID,
@@ -98,7 +97,7 @@ func (p *Provider) Reconcile(
 		return reconcile.Result{}, handleError(component, "failed to call provision on the service broker", err)
 	}
 
-	logger.WithField("response", resp).Debug("provisioning response from service broker")
+	ctx.Logger.WithField("response", resp).Debug("provisioning response from service broker")
 
 	if err := service.Status.SetProviderData(ProviderData{Operation: resp.OperationKey}); err != nil {
 		return reconcile.Result{}, err
@@ -113,8 +112,7 @@ func (p *Provider) Reconcile(
 }
 
 func (p *Provider) update(
-	ctx context.Context,
-	logger logrus.FieldLogger,
+	ctx kore.ServiceProviderContext,
 	service *servicesv1.Service,
 ) (reconcile.Result, error) {
 	providerPlan, err := p.plan(service.Spec.Kind, service.Spec.Plan)
@@ -138,7 +136,7 @@ func (p *Provider) update(
 	}
 
 	if component.Status == corev1.PendingStatus {
-		return p.pollLastOperation(ctx, logger, service, component)
+		return p.pollLastOperation(ctx, service, component)
 	}
 
 	component.Update(corev1.PendingStatus, "", "")
@@ -152,7 +150,7 @@ func (p *Provider) update(
 		return reconcile.Result{}, controllers.NewCriticalError(fmt.Errorf("failed to unmarshal service configuration"))
 	}
 
-	logger.Debug("updating service with service broker")
+	ctx.Logger.Debug("updating service with service broker")
 
 	resp, err := p.client.UpdateInstance(&osb.UpdateInstanceRequest{
 		InstanceID:        service.Status.ProviderID,
@@ -168,7 +166,7 @@ func (p *Provider) update(
 		return reconcile.Result{}, handleError(component, "failed to call update on the service broker", err)
 	}
 
-	logger.WithField("response", resp).Debug("update response from service broker")
+	ctx.Logger.WithField("response", resp).Debug("update response from service broker")
 
 	if err := service.Status.SetProviderData(ProviderData{Operation: resp.OperationKey}); err != nil {
 		return reconcile.Result{}, err

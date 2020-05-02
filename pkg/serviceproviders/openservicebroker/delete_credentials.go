@@ -17,20 +17,19 @@
 package openservicebroker
 
 import (
-	"context"
 	"time"
+
+	"github.com/appvia/kore/pkg/kore"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 
 	osb "github.com/kubernetes-sigs/go-open-service-broker-client/v2"
-	"github.com/sirupsen/logrus"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 func (p *Provider) DeleteCredentials(
-	ctx context.Context,
-	logger logrus.FieldLogger,
+	ctx kore.ServiceProviderContext,
 	service *servicesv1.Service,
 	creds *servicesv1.ServiceCredentials,
 ) (reconcile.Result, error) {
@@ -55,13 +54,13 @@ func (p *Provider) DeleteCredentials(
 	}
 
 	if component.Status == corev1.PendingStatus {
-		res, _, err := p.pollLastBindingOperation(ctx, logger, service, creds, component)
+		res, _, err := p.pollLastBindingOperation(ctx, service, creds, component)
 		return res, err
 	}
 
 	component.Update(corev1.PendingStatus, "", "")
 
-	logger.Debug("calling unbind on the service broker")
+	ctx.Logger.Debug("calling unbind on the service broker")
 
 	resp, err := p.client.Unbind(&osb.UnbindRequest{
 		// Async unbinding is only supported in API version >= 2.14, so we leave this as false for now
@@ -79,7 +78,7 @@ func (p *Provider) DeleteCredentials(
 		return reconcile.Result{}, handleError(component, "failed to call unbind on the service broker", err)
 	}
 
-	logger.WithField("response", resp).Debug("unbind response from service broker")
+	ctx.Logger.WithField("response", resp).Debug("unbind response from service broker")
 
 	if err := creds.Status.SetProviderData(ProviderData{Operation: resp.OperationKey}); err != nil {
 		return reconcile.Result{}, err

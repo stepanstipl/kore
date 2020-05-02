@@ -17,9 +17,10 @@
 package openservicebroker
 
 import (
-	"context"
 	"fmt"
 	"time"
+
+	"github.com/appvia/kore/pkg/kore"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
@@ -27,13 +28,11 @@ import (
 	"github.com/appvia/kore/pkg/utils"
 
 	osb "github.com/kubernetes-sigs/go-open-service-broker-client/v2"
-	"github.com/sirupsen/logrus"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 func (p *Provider) pollLastOperation(
-	ctx context.Context,
-	logger logrus.FieldLogger,
+	ctx kore.ServiceProviderContext,
 	service *servicesv1.Service,
 	component *corev1.Component,
 ) (reconcile.Result, error) {
@@ -47,7 +46,7 @@ func (p *Provider) pollLastOperation(
 		return reconcile.Result{}, err
 	}
 
-	logger.WithField("operation", providerData.Operation).Debug("polling last operation from service broker")
+	ctx.Logger.WithField("operation", providerData.Operation).Debug("polling last operation from service broker")
 
 	resp, err := p.client.PollLastOperation(&osb.LastOperationRequest{
 		InstanceID:   service.Status.ProviderID,
@@ -63,7 +62,7 @@ func (p *Provider) pollLastOperation(
 		return reconcile.Result{}, handleError(component, "failed to poll last operation on the service broker", err)
 	}
 
-	logger.WithField("response", resp).Debug("last operation response from service broker")
+	ctx.Logger.WithField("response", resp).Debug("last operation response from service broker")
 
 	component.Message = utils.StringValue(resp.Description)
 

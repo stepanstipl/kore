@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/appvia/kore/pkg/kore"
+
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/controllers"
@@ -76,7 +78,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 			c.EnsureFinalizer(logger, service, finalizer),
 			c.EnsureServicePending(logger, service),
 			func(ctx context.Context) (result reconcile.Result, err error) {
-				return provider.Reconcile(ctx, logger, service)
+				return provider.Reconcile(kore.NewServiceProviderContext(ctx, logger, c.mgr.GetClient()), service)
 			},
 		}
 
