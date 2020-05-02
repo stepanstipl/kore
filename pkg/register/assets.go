@@ -5938,6 +5938,12 @@ spec:
             status:
               description: Status is the overall status of the service
               type: string
+            supportedKinds:
+              description: SupportedKinds contains all the supported service kinds
+              items:
+                type: string
+              type: array
+              x-kubernetes-list-type: set
           type: object
       type: object
   version: v1

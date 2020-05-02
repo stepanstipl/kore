@@ -5913,6 +5913,12 @@
         },
         "status": {
           "type": "string"
+        },
+        "supportedKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -5967,11 +5973,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
-        "userClaims",
-        "clientID",
         "clientSecret",
         "issuer",
-        "clientScopes"
+        "clientScopes",
+        "userClaims",
+        "clientID"
       ],
       "properties": {
         "clientID": {

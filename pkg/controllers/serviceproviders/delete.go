@@ -52,8 +52,7 @@ func (c *Controller) delete(
 	serviceProvider.Status.Status = corev1.DeletingStatus
 
 	result, err := func() (reconcile.Result, error) {
-		_, err := c.ServiceProviders().Unregister(serviceProvider)
-		if err != nil {
+		if err := c.ServiceProviders().Unregister(ctx, serviceProvider); err != nil {
 			return reconcile.Result{}, err
 		}
 

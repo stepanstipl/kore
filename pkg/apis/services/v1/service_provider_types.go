@@ -78,6 +78,10 @@ type ServiceProviderStatus struct {
 	// Message is the description of the current status
 	// +kubebuilder:validation:Optional
 	Message string `json:"message,omitempty"`
+	// SupportedKinds contains all the supported service kinds
+	// +kubebuilder:validation:Optional
+	// +listType=set
+	SupportedKinds []string `json:"supportedKinds,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -20,6 +20,9 @@ type V1ServiceProviderStatus struct {
 
 	// status
 	Status string `json:"status,omitempty"`
+
+	// supported kinds
+	SupportedKinds []string `json:"supportedKinds"`
 }
 
 // Validate validates this v1 service provider status

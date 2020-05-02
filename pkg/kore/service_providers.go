@@ -102,9 +102,9 @@ type ServiceProviders interface {
 	// GetProviderForKind returns a service provider for the given service kind
 	GetProviderForKind(kind string) ServiceProvider
 	// RegisterProvider registers a new provider
-	Register(*servicesv1.ServiceProvider) (ServiceProvider, error)
+	Register(context.Context, *servicesv1.ServiceProvider) (ServiceProvider, error)
 	// UnregisterProvider removes the given provider
-	Unregister(*servicesv1.ServiceProvider) (ServiceProvider, error)
+	Unregister(context.Context, *servicesv1.ServiceProvider) error
 }
 
 type serviceProvidersImpl struct {
@@ -185,22 +185,10 @@ func (p *serviceProvidersImpl) Delete(ctx context.Context, name string) (*servic
 		return nil, err
 	}
 
-	plans, err := p.getServicePlansWithProvider(ctx, name)
-	if err != nil {
-		return nil, err
-	}
-	if len(plans) > 0 {
-		if len(plans) <= 5 {
-			return nil, fmt.Errorf(
-				"the service provider can not be deleted as there are %d service plans using it: %s",
-				len(plans),
-				strings.Join(plans, ", "),
-			)
+	for _, kind := range provider.Status.SupportedKinds {
+		if err := p.unregisterKind(ctx, kind); err != nil {
+			return nil, err
 		}
-		return nil, fmt.Errorf(
-			"the service provider can not be deleted as there are %d service plans using it",
-			len(plans),
-		)
 	}
 
 	if err := p.Store().Client().Delete(ctx, store.DeleteOptions.From(provider)); err != nil {
@@ -254,21 +242,95 @@ func (p *serviceProvidersImpl) GetEditableProviderParams(ctx context.Context, te
 	return nil, nil
 }
 
-func (p *serviceProvidersImpl) getServicePlansWithProvider(ctx context.Context, providerName string) ([]string, error) {
-	var res []string
+func (p *serviceProvidersImpl) Register(ctx context.Context, serviceProvider *servicesv1.ServiceProvider) (ServiceProvider, error) {
+	p.providersLock.Lock()
+	defer p.providersLock.Unlock()
 
-	provider := p.getProvider(providerName)
-
-	if provider == nil {
-		return nil, fmt.Errorf("provider is being initialised and can not be deleted yet")
+	factory, ok := serviceProviderFactories[serviceProvider.Spec.Type]
+	if !ok {
+		return nil, fmt.Errorf("service provider type %q is invalid", serviceProvider.Spec.Type)
 	}
+
+	provider, err := factory.CreateProvider(*serviceProvider, p.Store().Client())
+	if err != nil {
+		return nil, err
+	}
+
+	for _, kind := range provider.Kinds() {
+		if p, registered := p.providers[kind]; registered {
+			if p.Name() != serviceProvider.Name {
+				return nil, fmt.Errorf("service kind is already registered by an other service provider: %s", p.Name())
+			}
+		}
+	}
+
+	// check for removed kinds
+	for kind, provider := range p.providers {
+		if provider.Name() == serviceProvider.Name && !utils.Contains(kind, provider.Kinds()) {
+			if err := p.unregisterKind(ctx, kind); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	if p.providers == nil {
+		p.providers = map[string]ServiceProvider{}
+	}
+
+	for _, kind := range provider.Kinds() {
+		p.providers[kind] = provider
+	}
+
+	return provider, nil
+}
+
+func (p *serviceProvidersImpl) Unregister(ctx context.Context, serviceProvider *servicesv1.ServiceProvider) error {
+	for _, kind := range serviceProvider.Status.SupportedKinds {
+		if err := p.unregisterKind(ctx, kind); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (p *serviceProvidersImpl) unregisterKind(ctx context.Context, kind string) error {
+	plans, err := p.getServicePlansWithKind(ctx, kind)
+	if err != nil {
+		return err
+	}
+	if len(plans) > 0 {
+		if len(plans) <= 5 {
+			return fmt.Errorf(
+				"service kind %q can not be unregistered as there are service plans using it: %s",
+				kind,
+				strings.Join(plans, ", "),
+			)
+		}
+		return fmt.Errorf(
+			"service kind %q can not be unregistered as there are %d service plans using it",
+			kind,
+			len(plans),
+		)
+	}
+
+	p.providersLock.Lock()
+	defer p.providersLock.Unlock()
+
+	delete(p.providers, kind)
+
+	return nil
+}
+
+func (p *serviceProvidersImpl) getServicePlansWithKind(ctx context.Context, kind string) ([]string, error) {
+	var res []string
 
 	servicePlansList, err := p.ServicePlans().List(ctx)
 	if err != nil {
 		return nil, err
 	}
 	for _, servicePlan := range servicePlansList.Items {
-		if utils.Contains(servicePlan.Spec.Kind, provider.Kinds()) {
+		if servicePlan.Spec.Kind == kind {
 			res = append(res, servicePlan.Name)
 		}
 	}
@@ -276,57 +338,9 @@ func (p *serviceProvidersImpl) getServicePlansWithProvider(ctx context.Context, 
 	return res, nil
 }
 
-func (p *serviceProvidersImpl) getProvider(name string) ServiceProvider {
-	p.providersLock.RLock()
-	defer p.providersLock.RUnlock()
-
-	return p.providers[name]
-}
-
-func (p *serviceProvidersImpl) Register(serviceProvider *servicesv1.ServiceProvider) (ServiceProvider, error) {
-	p.providersLock.Lock()
-	defer p.providersLock.Unlock()
-
-	factory := serviceProviderFactories[serviceProvider.Spec.Type]
-	provider, err := factory.CreateProvider(*serviceProvider, p.Store().Client())
-	if err != nil {
-		return nil, err
-	}
-
-	if p.providers == nil {
-		p.providers = map[string]ServiceProvider{}
-	}
-
-	p.providers[serviceProvider.Name] = provider
-
-	return provider, nil
-}
-
-func (p *serviceProvidersImpl) Unregister(serviceProvider *servicesv1.ServiceProvider) (ServiceProvider, error) {
-	p.providersLock.Lock()
-	defer p.providersLock.Unlock()
-
-	if p.providers == nil {
-		return nil, nil
-	}
-
-	provider := p.providers[serviceProvider.Name]
-
-	delete(p.providers, serviceProvider.Name)
-
-	return provider, nil
-}
-
 func (p *serviceProvidersImpl) GetProviderForKind(kind string) ServiceProvider {
 	p.providersLock.RLock()
 	defer p.providersLock.RUnlock()
 
-	for _, provider := range p.providers {
-		for _, k := range provider.Kinds() {
-			if k == kind {
-				return provider
-			}
-		}
-	}
-	return nil
+	return p.providers[kind]
 }

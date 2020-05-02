@@ -69,10 +69,12 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 			c.ensureFinalizer(serviceProvider, finalizer),
 			c.ensurePending(serviceProvider),
 			func(ctx context.Context) (result reconcile.Result, err error) {
-				provider, err := c.ServiceProviders().Register(serviceProvider)
+				provider, err := c.ServiceProviders().Register(ctx, serviceProvider)
 				if err != nil {
 					return reconcile.Result{}, err
 				}
+
+				serviceProvider.Status.SupportedKinds = provider.Kinds()
 
 				for _, plan := range provider.Plans() {
 					plan.Namespace = kore.HubNamespace
