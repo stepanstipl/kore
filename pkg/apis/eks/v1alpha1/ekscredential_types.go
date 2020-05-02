@@ -19,7 +19,15 @@ package v1alpha1
 import (
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
+
+// EKSCredentialsGVK is the GroupVersionKind for EKSCredentials
+var EKSCredentialsGVK = schema.GroupVersionKind{
+	Group:   GroupVersion.Group,
+	Version: GroupVersion.Version,
+	Kind:    "EKSCredentials",
+}
 
 // EKSCredentialsSpec defines the desired state of EKSCredential
 // +k8s:openapi-gen=true
