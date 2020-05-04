@@ -49,6 +49,11 @@ func IsEqualType(a, b interface{}) bool {
 
 // SetReflectedField checks if the interface has the field
 func SetReflectedField(name string, value, o interface{}) {
+	_ = SetAndValidateReflectedField(name, value, o, nil)
+}
+
+// SetAndValidateReflectedField checks if the interface has the field
+func SetAndValidateReflectedField(name string, value, o interface{}, validate func(value interface{}) error) error {
 	var caller reflect.Value
 
 	if reflect.ValueOf(o).Kind() == reflect.Ptr {
@@ -60,9 +65,18 @@ func SetReflectedField(name string, value, o interface{}) {
 	field := caller.FieldByName(name)
 
 	if !field.IsValid() || !field.CanSet() {
-		return
+		return nil
 	}
+
+	if validate != nil {
+		if err := validate(value); err != nil {
+			return err
+		}
+	}
+
 	field.Set(reflect.ValueOf(value))
+
+	return nil
 }
 
 // HasReflectField checks if a field exists in a interface

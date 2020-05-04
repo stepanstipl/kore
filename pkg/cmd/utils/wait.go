@@ -66,7 +66,7 @@ func (f *factory) WaitForDeletion(request client.RestInterface, name string, now
 			if client.IsNotAllowed(err) {
 				return false, err
 			}
-			if client.IsNotAuthentication(err) {
+			if client.IsNotAuthorized(err) {
 				return false, err
 			}
 			if client.IsNotFound(err) {
@@ -163,7 +163,7 @@ func (f *factory) WaitForCreation(request client.RestInterface, nowait bool) err
 			if client.IsNotAllowed(err) || client.IsMethodNotAllowed(err) {
 				return false, err
 			}
-			if client.IsNotAuthentication(err) {
+			if client.IsNotAuthorized(err) {
 				return false, err
 			}
 
