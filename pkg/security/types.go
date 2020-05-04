@@ -26,11 +26,11 @@ import (
 type Scanner interface {
 	// ScanPlan scans the given plan against the registered rules and returns the result
 	// of that scan
-	ScanPlan(target *configv1.Plan) *securityv1.ScanResult
+	ScanPlan(target *configv1.Plan) *securityv1.SecurityScanResult
 
 	// ScanCluster scans the given cluster against the registered rules and returns the result
 	// of that scan
-	ScanCluster(target *clustersv1.Cluster) *securityv1.ScanResult
+	ScanCluster(target *clustersv1.Cluster) *securityv1.SecurityScanResult
 
 	// GetRules returns all rules registered with this scanner
 	GetRules() []Rule
@@ -57,11 +57,11 @@ type Rule interface {
 // PlanRule implementations can be executed against a plan
 type PlanRule interface {
 	// CheckPlan runs this rule against the specified plan
-	CheckPlan(target *configv1.Plan) securityv1.RuleResult
+	CheckPlan(target *configv1.Plan) securityv1.SecurityScanRuleResult
 }
 
 // ClusterRule implementations can be executed against a cluster
 type ClusterRule interface {
 	// CheckCluster runs this rule against the specified cluster
-	CheckCluster(target *clustersv1.Cluster) securityv1.RuleResult
+	CheckCluster(target *clustersv1.Cluster) securityv1.SecurityScanRuleResult
 }

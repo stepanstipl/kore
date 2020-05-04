@@ -63,20 +63,20 @@ func NewListSecurityScansOK() *ListSecurityScansOK {
 A collection of security scans
 */
 type ListSecurityScansOK struct {
-	Payload *models.V1ScanResultList
+	Payload *models.V1SecurityScanResultList
 }
 
 func (o *ListSecurityScansOK) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/securityscans][%d] listSecurityScansOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[GET /api/v1alpha1/security/scans][%d] listSecurityScansOK  %+v", 200, o.Payload)
 }
 
-func (o *ListSecurityScansOK) GetPayload() *models.V1ScanResultList {
+func (o *ListSecurityScansOK) GetPayload() *models.V1SecurityScanResultList {
 	return o.Payload
 }
 
 func (o *ListSecurityScansOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1ScanResultList)
+	o.Payload = new(models.V1SecurityScanResultList)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
@@ -99,7 +99,7 @@ type ListSecurityScansUnauthorized struct {
 }
 
 func (o *ListSecurityScansUnauthorized) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/securityscans][%d] listSecurityScansUnauthorized ", 401)
+	return fmt.Sprintf("[GET /api/v1alpha1/security/scans][%d] listSecurityScansUnauthorized ", 401)
 }
 
 func (o *ListSecurityScansUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -120,7 +120,7 @@ type ListSecurityScansForbidden struct {
 }
 
 func (o *ListSecurityScansForbidden) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/securityscans][%d] listSecurityScansForbidden ", 403)
+	return fmt.Sprintf("[GET /api/v1alpha1/security/scans][%d] listSecurityScansForbidden ", 403)
 }
 
 func (o *ListSecurityScansForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -142,7 +142,7 @@ type ListSecurityScansInternalServerError struct {
 }
 
 func (o *ListSecurityScansInternalServerError) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/securityscans][%d] listSecurityScansInternalServerError  %+v", 500, o.Payload)
+	return fmt.Sprintf("[GET /api/v1alpha1/security/scans][%d] listSecurityScansInternalServerError  %+v", 500, o.Payload)
 }
 
 func (o *ListSecurityScansInternalServerError) GetPayload() *models.ApiserverError {

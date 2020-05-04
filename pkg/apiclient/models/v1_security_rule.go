@@ -11,10 +11,10 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// V1alpha1Service v1alpha1 service
+// V1SecurityRule v1 security rule
 //
-// swagger:model v1alpha1.Service
-type V1alpha1Service struct {
+// swagger:model v1.SecurityRule
+type V1SecurityRule struct {
 
 	// APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
 	APIVersion string `json:"apiVersion,omitempty"`
@@ -26,14 +26,11 @@ type V1alpha1Service struct {
 	Metadata *V1ObjectMeta `json:"metadata,omitempty"`
 
 	// spec
-	Spec *V1alpha1ServiceSpec `json:"spec,omitempty"`
-
-	// status
-	Status *V1alpha1ServiceStatus `json:"status,omitempty"`
+	Spec *V1SecurityRuleSpec `json:"spec,omitempty"`
 }
 
-// Validate validates this v1alpha1 service
-func (m *V1alpha1Service) Validate(formats strfmt.Registry) error {
+// Validate validates this v1 security rule
+func (m *V1SecurityRule) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateMetadata(formats); err != nil {
@@ -44,17 +41,13 @@ func (m *V1alpha1Service) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
-	if err := m.validateStatus(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
 	return nil
 }
 
-func (m *V1alpha1Service) validateMetadata(formats strfmt.Registry) error {
+func (m *V1SecurityRule) validateMetadata(formats strfmt.Registry) error {
 
 	if swag.IsZero(m.Metadata) { // not required
 		return nil
@@ -72,7 +65,7 @@ func (m *V1alpha1Service) validateMetadata(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1alpha1Service) validateSpec(formats strfmt.Registry) error {
+func (m *V1SecurityRule) validateSpec(formats strfmt.Registry) error {
 
 	if swag.IsZero(m.Spec) { // not required
 		return nil
@@ -90,26 +83,8 @@ func (m *V1alpha1Service) validateSpec(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1alpha1Service) validateStatus(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.Status) { // not required
-		return nil
-	}
-
-	if m.Status != nil {
-		if err := m.Status.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("status")
-			}
-			return err
-		}
-	}
-
-	return nil
-}
-
 // MarshalBinary interface implementation
-func (m *V1alpha1Service) MarshalBinary() ([]byte, error) {
+func (m *V1SecurityRule) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -117,8 +92,8 @@ func (m *V1alpha1Service) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *V1alpha1Service) UnmarshalBinary(b []byte) error {
-	var res V1alpha1Service
+func (m *V1SecurityRule) UnmarshalBinary(b []byte) error {
+	var res V1SecurityRule
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

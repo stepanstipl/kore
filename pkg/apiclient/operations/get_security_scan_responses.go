@@ -69,20 +69,20 @@ func NewGetSecurityScanOK() *GetSecurityScanOK {
 Security scan
 */
 type GetSecurityScanOK struct {
-	Payload *models.V1ScanResult
+	Payload *models.V1SecurityScanResult
 }
 
 func (o *GetSecurityScanOK) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/securityscans/{id}][%d] getSecurityScanOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[GET /api/v1alpha1/security/scans/{id}][%d] getSecurityScanOK  %+v", 200, o.Payload)
 }
 
-func (o *GetSecurityScanOK) GetPayload() *models.V1ScanResult {
+func (o *GetSecurityScanOK) GetPayload() *models.V1SecurityScanResult {
 	return o.Payload
 }
 
 func (o *GetSecurityScanOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1ScanResult)
+	o.Payload = new(models.V1SecurityScanResult)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
@@ -105,7 +105,7 @@ type GetSecurityScanUnauthorized struct {
 }
 
 func (o *GetSecurityScanUnauthorized) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/securityscans/{id}][%d] getSecurityScanUnauthorized ", 401)
+	return fmt.Sprintf("[GET /api/v1alpha1/security/scans/{id}][%d] getSecurityScanUnauthorized ", 401)
 }
 
 func (o *GetSecurityScanUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -126,7 +126,7 @@ type GetSecurityScanForbidden struct {
 }
 
 func (o *GetSecurityScanForbidden) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/securityscans/{id}][%d] getSecurityScanForbidden ", 403)
+	return fmt.Sprintf("[GET /api/v1alpha1/security/scans/{id}][%d] getSecurityScanForbidden ", 403)
 }
 
 func (o *GetSecurityScanForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -147,7 +147,7 @@ type GetSecurityScanNotFound struct {
 }
 
 func (o *GetSecurityScanNotFound) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/securityscans/{id}][%d] getSecurityScanNotFound ", 404)
+	return fmt.Sprintf("[GET /api/v1alpha1/security/scans/{id}][%d] getSecurityScanNotFound ", 404)
 }
 
 func (o *GetSecurityScanNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -169,7 +169,7 @@ type GetSecurityScanInternalServerError struct {
 }
 
 func (o *GetSecurityScanInternalServerError) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/securityscans/{id}][%d] getSecurityScanInternalServerError  %+v", 500, o.Payload)
+	return fmt.Sprintf("[GET /api/v1alpha1/security/scans/{id}][%d] getSecurityScanInternalServerError  %+v", 500, o.Payload)
 }
 
 func (o *GetSecurityScanInternalServerError) GetPayload() *models.ApiserverError {

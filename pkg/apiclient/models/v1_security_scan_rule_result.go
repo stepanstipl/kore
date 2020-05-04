@@ -10,10 +10,10 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// V1RuleResult v1 rule result
+// V1SecurityScanRuleResult v1 security scan rule result
 //
-// swagger:model v1.RuleResult
-type V1RuleResult struct {
+// swagger:model v1.SecurityScanRuleResult
+type V1SecurityScanRuleResult struct {
 
 	// checked at
 	CheckedAt string `json:"checkedAt,omitempty"`
@@ -28,13 +28,13 @@ type V1RuleResult struct {
 	Status string `json:"status,omitempty"`
 }
 
-// Validate validates this v1 rule result
-func (m *V1RuleResult) Validate(formats strfmt.Registry) error {
+// Validate validates this v1 security scan rule result
+func (m *V1SecurityScanRuleResult) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (m *V1RuleResult) MarshalBinary() ([]byte, error) {
+func (m *V1SecurityScanRuleResult) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -42,8 +42,8 @@ func (m *V1RuleResult) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *V1RuleResult) UnmarshalBinary(b []byte) error {
-	var res V1RuleResult
+func (m *V1SecurityScanRuleResult) UnmarshalBinary(b []byte) error {
+	var res V1SecurityScanRuleResult
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

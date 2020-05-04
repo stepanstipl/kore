@@ -13,10 +13,10 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// V1ScanResultSpec v1 scan result spec
+// V1SecurityScanResultSpec v1 security scan result spec
 //
-// swagger:model v1.ScanResultSpec
-type V1ScanResultSpec struct {
+// swagger:model v1.SecurityScanResultSpec
+type V1SecurityScanResultSpec struct {
 
 	// archived at
 	ArchivedAt string `json:"archivedAt,omitempty"`
@@ -46,11 +46,11 @@ type V1ScanResultSpec struct {
 	ResourceNamespace string `json:"resourceNamespace,omitempty"`
 
 	// results
-	Results []*V1RuleResult `json:"results"`
+	Results []*V1SecurityScanRuleResult `json:"results"`
 }
 
-// Validate validates this v1 scan result spec
-func (m *V1ScanResultSpec) Validate(formats strfmt.Registry) error {
+// Validate validates this v1 security scan result spec
+func (m *V1SecurityScanResultSpec) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateResults(formats); err != nil {
@@ -63,7 +63,7 @@ func (m *V1ScanResultSpec) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1ScanResultSpec) validateResults(formats strfmt.Registry) error {
+func (m *V1SecurityScanResultSpec) validateResults(formats strfmt.Registry) error {
 
 	if swag.IsZero(m.Results) { // not required
 		return nil
@@ -89,7 +89,7 @@ func (m *V1ScanResultSpec) validateResults(formats strfmt.Registry) error {
 }
 
 // MarshalBinary interface implementation
-func (m *V1ScanResultSpec) MarshalBinary() ([]byte, error) {
+func (m *V1SecurityScanResultSpec) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -97,8 +97,8 @@ func (m *V1ScanResultSpec) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *V1ScanResultSpec) UnmarshalBinary(b []byte) error {
-	var res V1ScanResultSpec
+func (m *V1SecurityScanResultSpec) UnmarshalBinary(b []byte) error {
+	var res V1SecurityScanResultSpec
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

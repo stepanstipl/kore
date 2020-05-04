@@ -63,20 +63,20 @@ func NewListSecurityScansForResourceOK() *ListSecurityScansForResourceOK {
 Latest security scan for this resource
 */
 type ListSecurityScansForResourceOK struct {
-	Payload *models.V1ScanResultList
+	Payload *models.V1SecurityScanResultList
 }
 
 func (o *ListSecurityScansForResourceOK) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/securityscans/{group}/{version}/{kind}/{namespace}/{name}/history][%d] listSecurityScansForResourceOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[GET /api/v1alpha1/security/scans/{group}/{version}/{kind}/{namespace}/{name}/history][%d] listSecurityScansForResourceOK  %+v", 200, o.Payload)
 }
 
-func (o *ListSecurityScansForResourceOK) GetPayload() *models.V1ScanResultList {
+func (o *ListSecurityScansForResourceOK) GetPayload() *models.V1SecurityScanResultList {
 	return o.Payload
 }
 
 func (o *ListSecurityScansForResourceOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1ScanResultList)
+	o.Payload = new(models.V1SecurityScanResultList)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
@@ -99,7 +99,7 @@ type ListSecurityScansForResourceUnauthorized struct {
 }
 
 func (o *ListSecurityScansForResourceUnauthorized) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/securityscans/{group}/{version}/{kind}/{namespace}/{name}/history][%d] listSecurityScansForResourceUnauthorized ", 401)
+	return fmt.Sprintf("[GET /api/v1alpha1/security/scans/{group}/{version}/{kind}/{namespace}/{name}/history][%d] listSecurityScansForResourceUnauthorized ", 401)
 }
 
 func (o *ListSecurityScansForResourceUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -120,7 +120,7 @@ type ListSecurityScansForResourceForbidden struct {
 }
 
 func (o *ListSecurityScansForResourceForbidden) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/securityscans/{group}/{version}/{kind}/{namespace}/{name}/history][%d] listSecurityScansForResourceForbidden ", 403)
+	return fmt.Sprintf("[GET /api/v1alpha1/security/scans/{group}/{version}/{kind}/{namespace}/{name}/history][%d] listSecurityScansForResourceForbidden ", 403)
 }
 
 func (o *ListSecurityScansForResourceForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -142,7 +142,7 @@ type ListSecurityScansForResourceInternalServerError struct {
 }
 
 func (o *ListSecurityScansForResourceInternalServerError) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/securityscans/{group}/{version}/{kind}/{namespace}/{name}/history][%d] listSecurityScansForResourceInternalServerError  %+v", 500, o.Payload)
+	return fmt.Sprintf("[GET /api/v1alpha1/security/scans/{group}/{version}/{kind}/{namespace}/{name}/history][%d] listSecurityScansForResourceInternalServerError  %+v", 500, o.Payload)
 }
 
 func (o *ListSecurityScansForResourceInternalServerError) GetPayload() *models.ApiserverError {

@@ -30,7 +30,8 @@
 // deploy/crds/org.kore.appvia.io_teaminvitations.yaml
 // deploy/crds/org.kore.appvia.io_teams.yaml
 // deploy/crds/org.kore.appvia.io_users.yaml
-// deploy/crds/security.kore.appvia.io_scanresults.yaml
+// deploy/crds/security.kore.appvia.io_securityrules.yaml
+// deploy/crds/security.kore.appvia.io_securityscanresults.yaml
 // deploy/crds/services.kore.appvia.io_servicecredentials.yaml
 // deploy/crds/services.kore.appvia.io_serviceplans.yaml
 // deploy/crds/services.kore.appvia.io_serviceproviders.yaml
@@ -5594,7 +5595,7 @@ func crdsOrgKoreAppviaIo_usersYaml() (*asset, error) {
 	return a, nil
 }
 
-var _crdsSecurityKoreAppviaIo_scanresultsYaml = []byte(`
+var _crdsSecurityKoreAppviaIo_securityrulesYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -5602,19 +5603,102 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
-  name: scanresults.security.kore.appvia.io
+  name: securityrules.security.kore.appvia.io
 spec:
   group: security.kore.appvia.io
   names:
-    kind: ScanResult
-    listKind: ScanResultList
-    plural: scanresults
-    singular: scanresult
+    kind: SecurityRule
+    listKind: SecurityRuleList
+    plural: securityrules
+    singular: securityrule
   preserveUnknownFields: false
   scope: Namespaced
   validation:
     openAPIV3Schema:
-      description: ScanResult contains the result of a scan against all registered
+      description: SecurityRule contains the definition of a security rule
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: SecurityRuleSpec specifies the details of a security rule
+          properties:
+            appliesTo:
+              description: AppliesTo is the list of resource types (e.g. Plan, Cluster)
+                that this rule is applicable for
+              items:
+                type: string
+              type: array
+            code:
+              description: Code is the unique identifier of this rule
+              type: string
+            description:
+              description: Description is the markdown-formatted extended description
+                of this rule.
+              type: string
+            name:
+              description: Name is the human-readable name of this rule
+              type: string
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsSecurityKoreAppviaIo_securityrulesYamlBytes() ([]byte, error) {
+	return _crdsSecurityKoreAppviaIo_securityrulesYaml, nil
+}
+
+func crdsSecurityKoreAppviaIo_securityrulesYaml() (*asset, error) {
+	bytes, err := crdsSecurityKoreAppviaIo_securityrulesYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/security.kore.appvia.io_securityrules.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsSecurityKoreAppviaIo_securityscanresultsYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: securityscanresults.security.kore.appvia.io
+spec:
+  group: security.kore.appvia.io
+  names:
+    kind: SecurityScanResult
+    listKind: SecurityScanResultList
+    plural: securityscanresults
+    singular: securityscanresult
+  preserveUnknownFields: false
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      description: SecurityScanResult contains the result of a scan against all registered
         rules
       properties:
         apiVersion:
@@ -5675,8 +5759,8 @@ spec:
               description: Results are the underlying results of the individual rules
                 run as part of this scan
               items:
-                description: RuleResult represents the compliance status of a target
-                  with respect to a specific security rule.
+                description: SecurityScanRuleResult represents the compliance status
+                  of a target with respect to a specific security rule.
                 properties:
                   checkedAt:
                     description: CheckedAt is the timestamp this result was determined
@@ -5711,17 +5795,17 @@ status:
   storedVersions: []
 `)
 
-func crdsSecurityKoreAppviaIo_scanresultsYamlBytes() ([]byte, error) {
-	return _crdsSecurityKoreAppviaIo_scanresultsYaml, nil
+func crdsSecurityKoreAppviaIo_securityscanresultsYamlBytes() ([]byte, error) {
+	return _crdsSecurityKoreAppviaIo_securityscanresultsYaml, nil
 }
 
-func crdsSecurityKoreAppviaIo_scanresultsYaml() (*asset, error) {
-	bytes, err := crdsSecurityKoreAppviaIo_scanresultsYamlBytes()
+func crdsSecurityKoreAppviaIo_securityscanresultsYaml() (*asset, error) {
+	bytes, err := crdsSecurityKoreAppviaIo_securityscanresultsYamlBytes()
 	if err != nil {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "crds/security.kore.appvia.io_scanresults.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	info := bindataFileInfo{name: "crds/security.kore.appvia.io_securityscanresults.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -6350,7 +6434,8 @@ var _bindata = map[string]func() (*asset, error){
 	"crds/org.kore.appvia.io_teaminvitations.yaml":                        crdsOrgKoreAppviaIo_teaminvitationsYaml,
 	"crds/org.kore.appvia.io_teams.yaml":                                  crdsOrgKoreAppviaIo_teamsYaml,
 	"crds/org.kore.appvia.io_users.yaml":                                  crdsOrgKoreAppviaIo_usersYaml,
-	"crds/security.kore.appvia.io_scanresults.yaml":                       crdsSecurityKoreAppviaIo_scanresultsYaml,
+	"crds/security.kore.appvia.io_securityrules.yaml":                     crdsSecurityKoreAppviaIo_securityrulesYaml,
+	"crds/security.kore.appvia.io_securityscanresults.yaml":               crdsSecurityKoreAppviaIo_securityscanresultsYaml,
 	"crds/services.kore.appvia.io_servicecredentials.yaml":                crdsServicesKoreAppviaIo_servicecredentialsYaml,
 	"crds/services.kore.appvia.io_serviceplans.yaml":                      crdsServicesKoreAppviaIo_serviceplansYaml,
 	"crds/services.kore.appvia.io_serviceproviders.yaml":                  crdsServicesKoreAppviaIo_serviceprovidersYaml,
@@ -6429,7 +6514,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"org.kore.appvia.io_teaminvitations.yaml":                        {crdsOrgKoreAppviaIo_teaminvitationsYaml, map[string]*bintree{}},
 		"org.kore.appvia.io_teams.yaml":                                  {crdsOrgKoreAppviaIo_teamsYaml, map[string]*bintree{}},
 		"org.kore.appvia.io_users.yaml":                                  {crdsOrgKoreAppviaIo_usersYaml, map[string]*bintree{}},
-		"security.kore.appvia.io_scanresults.yaml":                       {crdsSecurityKoreAppviaIo_scanresultsYaml, map[string]*bintree{}},
+		"security.kore.appvia.io_securityrules.yaml":                     {crdsSecurityKoreAppviaIo_securityrulesYaml, map[string]*bintree{}},
+		"security.kore.appvia.io_securityscanresults.yaml":               {crdsSecurityKoreAppviaIo_securityscanresultsYaml, map[string]*bintree{}},
 		"services.kore.appvia.io_servicecredentials.yaml":                {crdsServicesKoreAppviaIo_servicecredentialsYaml, map[string]*bintree{}},
 		"services.kore.appvia.io_serviceplans.yaml":                      {crdsServicesKoreAppviaIo_serviceplansYaml, map[string]*bintree{}},
 		"services.kore.appvia.io_serviceproviders.yaml":                  {crdsServicesKoreAppviaIo_serviceprovidersYaml, map[string]*bintree{}},

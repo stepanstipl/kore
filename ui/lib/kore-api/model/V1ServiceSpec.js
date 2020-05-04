@@ -12,6 +12,7 @@
  */
 
 import ApiClient from '../ApiClient';
+import V1Ownership from './V1Ownership';
 
 /**
  * The V1ServiceSpec model module.
@@ -23,12 +24,13 @@ class V1ServiceSpec {
      * Constructs a new <code>V1ServiceSpec</code>.
      * @alias module:model/V1ServiceSpec
      * @param configuration {String} 
+     * @param credentials {module:model/V1Ownership} 
      * @param kind {String} 
      * @param plan {String} 
      */
-    constructor(configuration, kind, plan) { 
+    constructor(configuration, credentials, kind, plan) { 
         
-        V1ServiceSpec.initialize(this, configuration, kind, plan);
+        V1ServiceSpec.initialize(this, configuration, credentials, kind, plan);
     }
 
     /**
@@ -36,8 +38,9 @@ class V1ServiceSpec {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, configuration, kind, plan) { 
+    static initialize(obj, configuration, credentials, kind, plan) { 
         obj['configuration'] = configuration;
+        obj['credentials'] = credentials;
         obj['kind'] = kind;
         obj['plan'] = plan;
     }
@@ -55,6 +58,9 @@ class V1ServiceSpec {
 
             if (data.hasOwnProperty('configuration')) {
                 obj['configuration'] = ApiClient.convertToType(data['configuration'], 'String');
+            }
+            if (data.hasOwnProperty('credentials')) {
+                obj['credentials'] = V1Ownership.constructFromObject(data['credentials']);
             }
             if (data.hasOwnProperty('kind')) {
                 obj['kind'] = ApiClient.convertToType(data['kind'], 'String');
@@ -78,6 +84,19 @@ class V1ServiceSpec {
      */
     setConfiguration(configuration) {
         this['configuration'] = configuration;
+    }
+/**
+     * @return {module:model/V1Ownership}
+     */
+    getCredentials() {
+        return this.credentials;
+    }
+
+    /**
+     * @param {module:model/V1Ownership} credentials
+     */
+    setCredentials(credentials) {
+        this['credentials'] = credentials;
     }
 /**
      * @return {String}
@@ -112,6 +131,11 @@ class V1ServiceSpec {
  * @member {String} configuration
  */
 V1ServiceSpec.prototype['configuration'] = undefined;
+
+/**
+ * @member {module:model/V1Ownership} credentials
+ */
+V1ServiceSpec.prototype['credentials'] = undefined;
 
 /**
  * @member {String} kind

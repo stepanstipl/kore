@@ -14,17 +14,17 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// V1alpha1ServiceList v1alpha1 service list
+// V1SecurityScanResultList v1 security scan result list
 //
-// swagger:model v1alpha1.ServiceList
-type V1alpha1ServiceList struct {
+// swagger:model v1.SecurityScanResultList
+type V1SecurityScanResultList struct {
 
 	// APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
 	APIVersion string `json:"apiVersion,omitempty"`
 
 	// items
 	// Required: true
-	Items []*V1alpha1Service `json:"items"`
+	Items []*V1SecurityScanResult `json:"items"`
 
 	// Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
 	Kind string `json:"kind,omitempty"`
@@ -33,8 +33,8 @@ type V1alpha1ServiceList struct {
 	Metadata *V1ListMeta `json:"metadata,omitempty"`
 }
 
-// Validate validates this v1alpha1 service list
-func (m *V1alpha1ServiceList) Validate(formats strfmt.Registry) error {
+// Validate validates this v1 security scan result list
+func (m *V1SecurityScanResultList) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateItems(formats); err != nil {
@@ -51,7 +51,7 @@ func (m *V1alpha1ServiceList) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1alpha1ServiceList) validateItems(formats strfmt.Registry) error {
+func (m *V1SecurityScanResultList) validateItems(formats strfmt.Registry) error {
 
 	if err := validate.Required("items", "body", m.Items); err != nil {
 		return err
@@ -76,7 +76,7 @@ func (m *V1alpha1ServiceList) validateItems(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1alpha1ServiceList) validateMetadata(formats strfmt.Registry) error {
+func (m *V1SecurityScanResultList) validateMetadata(formats strfmt.Registry) error {
 
 	if swag.IsZero(m.Metadata) { // not required
 		return nil
@@ -95,7 +95,7 @@ func (m *V1alpha1ServiceList) validateMetadata(formats strfmt.Registry) error {
 }
 
 // MarshalBinary interface implementation
-func (m *V1alpha1ServiceList) MarshalBinary() ([]byte, error) {
+func (m *V1SecurityScanResultList) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -103,8 +103,8 @@ func (m *V1alpha1ServiceList) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *V1alpha1ServiceList) UnmarshalBinary(b []byte) error {
-	var res V1alpha1ServiceList
+func (m *V1SecurityScanResultList) UnmarshalBinary(b []byte) error {
+	var res V1SecurityScanResultList
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

@@ -34,10 +34,12 @@ import (
 type Security interface {
 	ScanPlan(ctx context.Context, plan *configv1.Plan) error
 	ScanCluster(ctx context.Context, cluster *clustersv1.Cluster) error
-	ListScans(ctx context.Context, latestOnly bool) (*securityv1.ScanResultList, error)
-	ScanHistoryForResource(ctx context.Context, typ metav1.TypeMeta, obj metav1.ObjectMeta) (*securityv1.ScanResultList, error)
-	GetCurrentScanForResource(ctx context.Context, typ metav1.TypeMeta, obj metav1.ObjectMeta) (*securityv1.ScanResult, error)
-	GetScan(ctx context.Context, id uint64) (*securityv1.ScanResult, error)
+	ListScans(ctx context.Context, latestOnly bool) (*securityv1.SecurityScanResultList, error)
+	ScanHistoryForResource(ctx context.Context, typ metav1.TypeMeta, obj metav1.ObjectMeta) (*securityv1.SecurityScanResultList, error)
+	GetCurrentScanForResource(ctx context.Context, typ metav1.TypeMeta, obj metav1.ObjectMeta) (*securityv1.SecurityScanResult, error)
+	GetScan(ctx context.Context, id uint64) (*securityv1.SecurityScanResult, error)
+	ListRules(ctx context.Context) (*securityv1.SecurityRuleList, error)
+	GetRule(ctx context.Context, code string) (*securityv1.SecurityRule, error)
 }
 
 type securityImpl struct {
@@ -55,7 +57,7 @@ func (s *securityImpl) ScanCluster(ctx context.Context, cluster *clustersv1.Clus
 	return s.persistScan(ctx, scanResult)
 }
 
-func (s *securityImpl) persistScan(ctx context.Context, scanResult *securityv1.ScanResult) error {
+func (s *securityImpl) persistScan(ctx context.Context, scanResult *securityv1.SecurityScanResult) error {
 	scanResultDB := DefaultConvertor.ToSecurityScanResult(scanResult)
 	err := s.securityPersist.StoreScan(ctx, &scanResultDB)
 	if err != nil {
@@ -65,7 +67,7 @@ func (s *securityImpl) persistScan(ctx context.Context, scanResult *securityv1.S
 	return nil
 }
 
-func (s *securityImpl) ListScans(ctx context.Context, latestOnly bool) (*securityv1.ScanResultList, error) {
+func (s *securityImpl) ListScans(ctx context.Context, latestOnly bool) (*securityv1.SecurityScanResultList, error) {
 	user := authentication.MustGetIdentity(ctx)
 	if !user.IsGlobalAdmin() {
 		log.WithField(
@@ -79,15 +81,15 @@ func (s *securityImpl) ListScans(ctx context.Context, latestOnly bool) (*securit
 	if err != nil {
 		return nil, err
 	}
-	result := &securityv1.ScanResultList{}
-	result.Items = make([]securityv1.ScanResult, len(res))
+	result := &securityv1.SecurityScanResultList{}
+	result.Items = make([]securityv1.SecurityScanResult, len(res))
 	for i, r := range res {
 		result.Items[i] = DefaultConvertor.FromSecurityScanResult(r)
 	}
 	return result, nil
 }
 
-func (s *securityImpl) ScanHistoryForResource(ctx context.Context, typ metav1.TypeMeta, obj metav1.ObjectMeta) (*securityv1.ScanResultList, error) {
+func (s *securityImpl) ScanHistoryForResource(ctx context.Context, typ metav1.TypeMeta, obj metav1.ObjectMeta) (*securityv1.SecurityScanResultList, error) {
 	user := authentication.MustGetIdentity(ctx)
 	if !user.IsGlobalAdmin() {
 		log.WithField(
@@ -101,15 +103,15 @@ func (s *securityImpl) ScanHistoryForResource(ctx context.Context, typ metav1.Ty
 	if err != nil {
 		return nil, err
 	}
-	result := &securityv1.ScanResultList{}
-	result.Items = make([]securityv1.ScanResult, len(res))
+	result := &securityv1.SecurityScanResultList{}
+	result.Items = make([]securityv1.SecurityScanResult, len(res))
 	for i, r := range res {
 		result.Items[i] = DefaultConvertor.FromSecurityScanResult(r)
 	}
 	return result, nil
 }
 
-func (s *securityImpl) GetCurrentScanForResource(ctx context.Context, typ metav1.TypeMeta, obj metav1.ObjectMeta) (*securityv1.ScanResult, error) {
+func (s *securityImpl) GetCurrentScanForResource(ctx context.Context, typ metav1.TypeMeta, obj metav1.ObjectMeta) (*securityv1.SecurityScanResult, error) {
 	user := authentication.MustGetIdentity(ctx)
 	if !user.IsGlobalAdmin() {
 		log.WithField(
@@ -130,7 +132,7 @@ func (s *securityImpl) GetCurrentScanForResource(ctx context.Context, typ metav1
 	return &conv, nil
 }
 
-func (s *securityImpl) GetScan(ctx context.Context, id uint64) (*securityv1.ScanResult, error) {
+func (s *securityImpl) GetScan(ctx context.Context, id uint64) (*securityv1.SecurityScanResult, error) {
 	user := authentication.MustGetIdentity(ctx)
 	if !user.IsGlobalAdmin() {
 		log.WithField(
@@ -149,4 +151,38 @@ func (s *securityImpl) GetScan(ctx context.Context, id uint64) (*securityv1.Scan
 	}
 	conv := DefaultConvertor.FromSecurityScanResult(res)
 	return &conv, nil
+}
+
+func (s *securityImpl) ListRules(ctx context.Context) (*securityv1.SecurityRuleList, error) {
+	user := authentication.MustGetIdentity(ctx)
+	if !user.IsGlobalAdmin() {
+		log.WithField(
+			"username", user.Username(),
+		).Warn("user trying to access the security logs")
+
+		return nil, NewErrNotAllowed("Must be global admin")
+	}
+
+	rules := s.scanner.GetRules()
+	ruleList := DefaultConvertor.FromSecurityRuleList(rules)
+	return &ruleList, nil
+}
+
+func (s *securityImpl) GetRule(ctx context.Context, code string) (*securityv1.SecurityRule, error) {
+	user := authentication.MustGetIdentity(ctx)
+	if !user.IsGlobalAdmin() {
+		log.WithField(
+			"username", user.Username(),
+		).Warn("user trying to access the security logs")
+
+		return nil, NewErrNotAllowed("Must be global admin")
+	}
+
+	rule := s.scanner.GetRule(code)
+	if rule == nil {
+		return nil, nil
+	}
+
+	r := DefaultConvertor.FromSecurityRule(rule)
+	return &r, nil
 }

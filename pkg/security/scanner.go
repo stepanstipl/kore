@@ -83,31 +83,31 @@ func (s *scannerImpl) GetRule(code string) Rule {
 	return nil
 }
 
-func (s *scannerImpl) ScanPlan(target *configv1.Plan) *securityv1.ScanResult {
-	return s.scanRules(target.TypeMeta, target.ObjectMeta, func(rule Rule) (bool, securityv1.RuleResult) {
+func (s *scannerImpl) ScanPlan(target *configv1.Plan) *securityv1.SecurityScanResult {
+	return s.scanRules(target.TypeMeta, target.ObjectMeta, func(rule Rule) (bool, securityv1.SecurityScanRuleResult) {
 		// Apply the rule if it implements PlanRule interface:
 		pr, applicable := rule.(PlanRule)
 		if !applicable {
-			return false, securityv1.RuleResult{}
+			return false, securityv1.SecurityScanRuleResult{}
 		}
 		return true, pr.CheckPlan(target)
 	})
 }
 
-func (s *scannerImpl) ScanCluster(target *clustersv1.Cluster) *securityv1.ScanResult {
-	return s.scanRules(target.TypeMeta, target.ObjectMeta, func(rule Rule) (bool, securityv1.RuleResult) {
+func (s *scannerImpl) ScanCluster(target *clustersv1.Cluster) *securityv1.SecurityScanResult {
+	return s.scanRules(target.TypeMeta, target.ObjectMeta, func(rule Rule) (bool, securityv1.SecurityScanRuleResult) {
 		// Apply the rule if it implements ClusterRule interface:
 		cr, applicable := rule.(ClusterRule)
 		if !applicable {
-			return false, securityv1.RuleResult{}
+			return false, securityv1.SecurityScanRuleResult{}
 		}
 		return true, cr.CheckCluster(target)
 	})
 }
 
-func (s *scannerImpl) scanRules(typeMeta metav1.TypeMeta, objMeta metav1.ObjectMeta, scan func(Rule) (bool, securityv1.RuleResult)) *securityv1.ScanResult {
-	result := securityv1.ScanResult{
-		Spec: securityv1.ScanResultSpec{
+func (s *scannerImpl) scanRules(typeMeta metav1.TypeMeta, objMeta metav1.ObjectMeta, scan func(Rule) (bool, securityv1.SecurityScanRuleResult)) *securityv1.SecurityScanResult {
+	result := securityv1.SecurityScanResult{
+		Spec: securityv1.SecurityScanResultSpec{
 			OverallStatus:      securityv1.Compliant,
 			ResourceAPIVersion: typeMeta.APIVersion,
 			ResourceKind:       typeMeta.Kind,
@@ -134,7 +134,7 @@ func (s *scannerImpl) scanRules(typeMeta metav1.TypeMeta, objMeta metav1.ObjectM
 
 // setOverallResult sets the result on the scan result to that of the rule result only if the
 // rule result is WORSE than the overall result, otherwise it leaves it as is.
-func setOverallResult(result *securityv1.ScanResult, ruleResult *securityv1.RuleResult) {
+func setOverallResult(result *securityv1.SecurityScanResult, ruleResult *securityv1.SecurityScanRuleResult) {
 	// Downgrade overall result if applicable
 	if result.Spec.OverallStatus == securityv1.Compliant && (ruleResult.Status == securityv1.Warning || ruleResult.Status == securityv1.Failure) {
 		result.Spec.OverallStatus = ruleResult.Status

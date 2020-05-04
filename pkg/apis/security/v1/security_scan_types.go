@@ -43,17 +43,17 @@ const (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ScanResult contains the result of a scan against all registered rules
+// SecurityScanResult contains the result of a scan against all registered rules
 // +k8s:openapi-gen=false
-type ScanResult struct {
+type SecurityScanResult struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              ScanResultSpec `json:"spec,omitempty"`
+	Spec              SecurityScanResultSpec `json:"spec,omitempty"`
 }
 
 // ScanResultSpec shows the overall result of a scan against all registered rules
 // +k8s:openapi-gen=false
-type ScanResultSpec struct {
+type SecurityScanResultSpec struct {
 	// ID is the ID of this scan result in the data store
 	ID uint64 `json:"id,omitempty"`
 	// ResourceAPIVersion is the group and version of the resource scanned by this scan
@@ -73,13 +73,13 @@ type ScanResultSpec struct {
 	// OverallStatus indicates the worst-case status of the rules checked in this scan
 	OverallStatus RuleStatus `json:"overallStatus,omitempty"`
 	// Results are the underlying results of the individual rules run as part of this scan
-	Results []RuleResult `json:"results,omitempty"`
+	Results []SecurityScanRuleResult `json:"results,omitempty"`
 }
 
-// RuleResult represents the compliance status of a target with respect to a
+// SecurityScanRuleResult represents the compliance status of a target with respect to a
 // specific security rule.
 // +k8s:openapi-gen=false
-type RuleResult struct {
+type SecurityScanRuleResult struct {
 	// RuleCode indicates the rule that this result relates to
 	RuleCode string `json:"ruleCode,omitempty"`
 	// Status indicates the compliance of the target with this rule
@@ -93,9 +93,9 @@ type RuleResult struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ScanResultList contains a list of scan results event
-type ScanResultList struct {
+// SecurityScanResultList contains a list of scan results event
+type SecurityScanResultList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []ScanResult `json:"items"`
+	Items           []SecurityScanResult `json:"items"`
 }

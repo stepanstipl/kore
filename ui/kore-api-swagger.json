@@ -644,7 +644,83 @@
         }
       }
     },
-    "/api/v1alpha1/securityscans": {
+    "/api/v1alpha1/security/rules": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Used to return a list of all the security rules in the system",
+        "operationId": "ListSecurityRules",
+        "responses": {
+          "200": {
+            "description": "A collection of security rules",
+            "schema": {
+              "$ref": "#/definitions/v1.SecurityRuleList"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/security/rules/{code}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Used to return details of a specific security rule within the system",
+        "operationId": "GetSecurityRule",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the unique code for the security rule",
+            "name": "code",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A security rule",
+            "schema": {
+              "$ref": "#/definitions/v1.SecurityRule"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "No security rule exists for the code"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/security/scans": {
       "get": {
         "consumes": [
           "application/json"
@@ -667,7 +743,7 @@
           "200": {
             "description": "A collection of security scans",
             "schema": {
-              "$ref": "#/definitions/v1.ScanResultList"
+              "$ref": "#/definitions/v1.SecurityScanResultList"
             }
           },
           "401": {
@@ -685,7 +761,7 @@
         }
       }
     },
-    "/api/v1alpha1/securityscans/{group}/{version}/{kind}/{namespace}/{name}": {
+    "/api/v1alpha1/security/scans/{group}/{version}/{kind}/{namespace}/{name}": {
       "get": {
         "consumes": [
           "application/json"
@@ -736,7 +812,7 @@
           "200": {
             "description": "Latest security scan for this resource",
             "schema": {
-              "$ref": "#/definitions/v1.ScanResult"
+              "$ref": "#/definitions/v1.SecurityScanResult"
             }
           },
           "401": {
@@ -757,7 +833,7 @@
         }
       }
     },
-    "/api/v1alpha1/securityscans/{group}/{version}/{kind}/{namespace}/{name}/history": {
+    "/api/v1alpha1/security/scans/{group}/{version}/{kind}/{namespace}/{name}/history": {
       "get": {
         "consumes": [
           "application/json"
@@ -808,7 +884,7 @@
           "200": {
             "description": "Latest security scan for this resource",
             "schema": {
-              "$ref": "#/definitions/v1.ScanResultList"
+              "$ref": "#/definitions/v1.SecurityScanResultList"
             }
           },
           "401": {
@@ -826,7 +902,7 @@
         }
       }
     },
-    "/api/v1alpha1/securityscans/{id}": {
+    "/api/v1alpha1/security/scans/{id}": {
       "get": {
         "consumes": [
           "application/json"
@@ -849,7 +925,7 @@
           "200": {
             "description": "Security scan",
             "schema": {
-              "$ref": "#/definitions/v1.ScanResult"
+              "$ref": "#/definitions/v1.SecurityScanResult"
             }
           },
           "401": {
@@ -5777,22 +5853,6 @@
         }
       }
     },
-    "v1.RuleResult": {
-      "properties": {
-        "checkedAt": {
-          "type": "string"
-        },
-        "message": {
-          "type": "string"
-        },
-        "ruleCode": {
-          "type": "string"
-        },
-        "status": {
-          "type": "string"
-        }
-      }
-    },
     "v1.SAMLIDP": {
       "required": [
         "ssoURL",
@@ -5824,85 +5884,6 @@
         },
         "usernameAttr": {
           "type": "string"
-        }
-      }
-    },
-    "v1.ScanResult": {
-      "properties": {
-        "apiVersion": {
-          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-          "type": "string"
-        },
-        "kind": {
-          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-          "type": "string"
-        },
-        "metadata": {
-          "$ref": "#/definitions/v1.ObjectMeta"
-        },
-        "spec": {
-          "$ref": "#/definitions/v1.ScanResultSpec"
-        }
-      }
-    },
-    "v1.ScanResultList": {
-      "required": [
-        "items"
-      ],
-      "properties": {
-        "apiVersion": {
-          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
-          "type": "string"
-        },
-        "items": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1.ScanResult"
-          }
-        },
-        "kind": {
-          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
-          "type": "string"
-        },
-        "metadata": {
-          "$ref": "#/definitions/v1.ListMeta"
-        }
-      }
-    },
-    "v1.ScanResultSpec": {
-      "properties": {
-        "archivedAt": {
-          "type": "string"
-        },
-        "checkedAt": {
-          "type": "string"
-        },
-        "id": {
-          "type": "integer"
-        },
-        "overallStatus": {
-          "type": "string"
-        },
-        "owningTeam": {
-          "type": "string"
-        },
-        "resourceApiVersion": {
-          "type": "string"
-        },
-        "resourceKind": {
-          "type": "string"
-        },
-        "resourceName": {
-          "type": "string"
-        },
-        "resourceNamespace": {
-          "type": "string"
-        },
-        "results": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1.RuleResult"
-          }
         }
       }
     },
@@ -5976,6 +5957,162 @@
         },
         "verified": {
           "type": "boolean"
+        }
+      }
+    },
+    "v1.SecurityRule": {
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1.SecurityRuleSpec"
+        }
+      }
+    },
+    "v1.SecurityRuleList": {
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.SecurityRule"
+          }
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ListMeta"
+        }
+      }
+    },
+    "v1.SecurityRuleSpec": {
+      "properties": {
+        "appliesTo": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "code": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "v1.SecurityScanResult": {
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1.SecurityScanResultSpec"
+        }
+      }
+    },
+    "v1.SecurityScanResultList": {
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.SecurityScanResult"
+          }
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ListMeta"
+        }
+      }
+    },
+    "v1.SecurityScanResultSpec": {
+      "properties": {
+        "archivedAt": {
+          "type": "string"
+        },
+        "checkedAt": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer"
+        },
+        "overallStatus": {
+          "type": "string"
+        },
+        "owningTeam": {
+          "type": "string"
+        },
+        "resourceApiVersion": {
+          "type": "string"
+        },
+        "resourceKind": {
+          "type": "string"
+        },
+        "resourceName": {
+          "type": "string"
+        },
+        "resourceNamespace": {
+          "type": "string"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.SecurityScanRuleResult"
+          }
+        }
+      }
+    },
+    "v1.SecurityScanRuleResult": {
+      "properties": {
+        "checkedAt": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "ruleCode": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
         }
       }
     },
@@ -6294,11 +6431,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
+        "clientID",
         "clientSecret",
         "issuer",
         "clientScopes",
-        "userClaims",
-        "clientID"
+        "userClaims"
       ],
       "properties": {
         "clientID": {
