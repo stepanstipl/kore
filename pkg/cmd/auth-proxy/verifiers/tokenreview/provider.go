@@ -20,6 +20,8 @@ import (
 	"net/http"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/appvia/kore/pkg/cmd/auth-proxy/verifiers"
 	"github.com/appvia/kore/pkg/utils"
 
@@ -89,12 +91,14 @@ func (k *kvImpl) Admit(request *http.Request) (bool, error) {
 		}
 
 		resp, err := k.client.AuthenticationV1().TokenReviews().Create(
+			request.Context(),
 			&authentication.TokenReview{
 				Spec: authentication.TokenReviewSpec{
 					Token:     bearer,
 					Audiences: k.Audiences,
 				},
 			},
+			metav1.CreateOptions{},
 		)
 		if err != nil {
 			return nil, err

@@ -34,9 +34,9 @@ func NewExtentionsAPIClient(cfg *rest.Config) (client.Interface, error) {
 }
 
 // ApplyCustomResourceDefinitions s responsible for applying a collection of CRDs
-func ApplyCustomResourceDefinitions(c client.Interface, list []*apiextensions.CustomResourceDefinition) error {
+func ApplyCustomResourceDefinitions(ctx context.Context, c client.Interface, list []*apiextensions.CustomResourceDefinition) error {
 	for _, crd := range list {
-		if err := ApplyCustomResourceDefinition(c, crd); err != nil {
+		if err := ApplyCustomResourceDefinition(ctx, c, crd); err != nil {
 			return err
 		}
 	}
@@ -45,16 +45,16 @@ func ApplyCustomResourceDefinitions(c client.Interface, list []*apiextensions.Cu
 }
 
 // ApplyCustomResourceDefinition is responsible for applying the CRD to the cluster
-func ApplyCustomResourceDefinition(c client.Interface, crd *apiextensions.CustomResourceDefinition) error {
+func ApplyCustomResourceDefinition(ctx context.Context, c client.Interface, crd *apiextensions.CustomResourceDefinition) error {
 	// @step: retrieve the current if there
 	err := func() error {
-		current, err := c.ApiextensionsV1beta1().CustomResourceDefinitions().Get(crd.Name, metav1.GetOptions{})
+		current, err := c.ApiextensionsV1beta1().CustomResourceDefinitions().Get(ctx, crd.Name, metav1.GetOptions{})
 		if err != nil {
 			if !errors.IsNotFound(err) {
 				return err
 			}
 
-			_, err := c.ApiextensionsV1beta1().CustomResourceDefinitions().Create(crd)
+			_, err := c.ApiextensionsV1beta1().CustomResourceDefinitions().Create(ctx, crd, metav1.CreateOptions{})
 
 			return err
 		}
@@ -62,7 +62,7 @@ func ApplyCustomResourceDefinition(c client.Interface, crd *apiextensions.Custom
 		crd.SetGeneration(current.GetGeneration())
 		crd.SetResourceVersion(current.GetResourceVersion())
 
-		_, err = c.ApiextensionsV1beta1().CustomResourceDefinitions().Update(crd)
+		_, err = c.ApiextensionsV1beta1().CustomResourceDefinitions().Update(ctx, crd, metav1.UpdateOptions{})
 
 		return err
 	}()
@@ -70,11 +70,11 @@ func ApplyCustomResourceDefinition(c client.Interface, crd *apiextensions.Custom
 		return err
 	}
 
-	return CheckCustomResourceDefinition(c, crd)
+	return CheckCustomResourceDefinition(ctx, c, crd)
 }
 
 // CheckCustomResourceDefinition ensures the CRD is ok to go
-func CheckCustomResourceDefinition(c client.Interface, crd *apiextensions.CustomResourceDefinition) error {
+func CheckCustomResourceDefinition(ctx context.Context, c client.Interface, crd *apiextensions.CustomResourceDefinition) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -90,7 +90,7 @@ func CheckCustomResourceDefinition(c client.Interface, crd *apiextensions.Custom
 
 			err := func() error {
 				// @step: ensure the crd has been registered
-				obj, err := c.ApiextensionsV1beta1().CustomResourceDefinitions().Get(crd.Name, metav1.GetOptions{})
+				obj, err := c.ApiextensionsV1beta1().CustomResourceDefinitions().Get(ctx, crd.Name, metav1.GetOptions{})
 				if err != nil {
 					return err
 				}

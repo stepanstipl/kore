@@ -58,7 +58,7 @@ type serverImpl struct {
 
 // New is responsible for creating the server container, effectively acting
 // as a controller to the other components
-func New(config Config) (Interface, error) {
+func New(ctx context.Context, config Config) (Interface, error) {
 	if err := config.IsValid(); err != nil {
 		return nil, err
 	}
@@ -83,7 +83,7 @@ func New(config Config) (Interface, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create api extensions client: %s", err)
 	}
-	if err := registerCustomResources(crdc); err != nil {
+	if err := registerCustomResources(ctx, crdc); err != nil {
 		return nil, fmt.Errorf("failed to apply the kore crds: %s", err)
 	}
 

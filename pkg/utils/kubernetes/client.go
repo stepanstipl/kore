@@ -153,7 +153,7 @@ func NewGKEClient(account, endpoint string) (k8s.Interface, error) {
 func WaitOnKubeAPI(ctx context.Context, client k8s.Interface, interval, timeout time.Duration) error {
 	return wait.PollImmediate(interval, timeout, func() (bool, error) {
 		healthStatus := 0
-		client.Discovery().RESTClient().Get().AbsPath("/healthz").Do().StatusCode(&healthStatus)
+		client.Discovery().RESTClient().Get().AbsPath("/healthz").Do(ctx).StatusCode(&healthStatus)
 
 		if healthStatus != http.StatusOK {
 			return false, nil
