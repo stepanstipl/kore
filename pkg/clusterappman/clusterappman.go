@@ -44,7 +44,7 @@ const (
 	// StatusConfigMapComponentsKey is the key in the configmap used for all conditions
 	StatusConfigMapComponentsKey string = "components"
 	appControlNamespsace         string = "application-system"
-	captainNamespace             string = "captain-system"
+	fluxNamespace                string = "flux"
 )
 
 type clusterappmanImpl struct {
@@ -87,14 +87,17 @@ var (
 		{
 			Name: "Helm Chart Operator",
 			EmededManifests: []string{
-				"captain/clusterrolebinding.yaml",
-				"captain/captain.yaml",
-				"captain/captain-application.yaml",
+				"flux/application.yaml",
+				"flux/crds.yaml",
+				"flux/rbac.yaml",
+				"flux/deployment.yaml",
 			},
-			Namespace:       captainNamespace,
+			Namespace:       fluxNamespace,
 			EnsureNamespace: true,
-			// Not sure why this takes so long (may be application controller related)
-			DeployTimeOut: 30 * time.Minute,
+			DeployTimeOut:   10 * time.Minute, // Allow for time for application kind to be ready
+			PreDeleteManifests: []string{
+				"captain/delete-captain.yaml",
+			},
 		},
 		{
 			Name: "Kore Helm Repository",
