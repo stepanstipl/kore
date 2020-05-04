@@ -50,6 +50,7 @@ require (
 	github.com/jinzhu/gorm v1.9.12
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/jpillora/backoff v1.0.0
+	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/kubernetes-sigs/go-open-service-broker-client v0.0.0-20200323235047-56a01c84bf43
 	github.com/manifoldco/promptui v0.7.0
@@ -61,7 +62,7 @@ require (
 	github.com/onsi/gomega v1.9.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.1.0
-	github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4
+	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/procfs v0.0.8 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20190728182440-6a916e37a237 // indirect
 	github.com/romanyx/polluter v1.2.2
@@ -85,19 +86,19 @@ require (
 	gonum.org/v1/gonum v0.7.0 // indirect
 	google.golang.org/api v0.20.0
 	google.golang.org/grpc v1.27.0
+	gopkg.in/resty.v1 v1.12.0
 	gopkg.in/yaml.v2 v2.2.8
-	k8s.io/api v0.17.0
-	k8s.io/apiextensions-apiserver v0.17.0
-	k8s.io/apimachinery v0.17.0
-	k8s.io/client-go v0.17.0
-	k8s.io/code-generator v0.17.3
-	k8s.io/kube-openapi v0.0.0-20191107075043-30be4d16710a
-	k8s.io/utils v0.0.0-20191218082557-f07c713de883 // indirect
-	sigs.k8s.io/application v0.8.2
+	k8s.io/api v0.18.2
+	k8s.io/apiextensions-apiserver v0.18.2
+	k8s.io/apimachinery v0.18.2
+	k8s.io/client-go v0.18.2
+	k8s.io/code-generator v0.18.2
+	k8s.io/kube-openapi v0.0.0-20200121204235-bf4fb3bd569c
+	sigs.k8s.io/application v0.8.2-0.20200209202752-a485a03cdc47
 	sigs.k8s.io/aws-iam-authenticator v0.5.0
-	sigs.k8s.io/controller-runtime v0.4.0
+	sigs.k8s.io/controller-runtime v0.6.0
 	sigs.k8s.io/controller-tools v0.2.5
-	sigs.k8s.io/yaml v1.1.0
+	sigs.k8s.io/yaml v1.2.0
 )
 
 // Pinned to kubernetes-1.16.4
