@@ -64,7 +64,7 @@ where your administrators will access the cluster from.
 }
 
 // CheckPlan checks a plan for compliance with this rule
-func (p *AuthProxyIPRangeRule) CheckPlan(target *configv1.Plan) securityv1.SecurityScanRuleResult {
+func (p *AuthProxyIPRangeRule) CheckPlan(target *configv1.Plan) (securityv1.SecurityScanRuleResult, error) {
 	result := securityv1.SecurityScanRuleResult{
 		RuleCode: p.Code(),
 		Status:   securityv1.Warning,
@@ -73,43 +73,43 @@ func (p *AuthProxyIPRangeRule) CheckPlan(target *configv1.Plan) securityv1.Secur
 	var config map[string]interface{}
 	if err := json.Unmarshal(target.Spec.Configuration.Raw, &config); err != nil {
 		result.Message = "Could not check plan as plan JSON invalid"
-		return result
+		return result, err
 	}
 
 	ipRanges, ok := config["authProxyAllowedIPs"].([]interface{})
 	if !ok {
 		result.Message = "Could not check plan as plan authProxyAllowedIPs not an array"
-		return result
+		return result, fmt.Errorf("authProxyAllowedIPs not an array")
 	}
 
 	if len(ipRanges) == 0 {
 		result.Message = "No Auth Proxy IP ranges specified by plan"
-		return result
+		return result, nil
 	}
 
 	for _, r := range ipRanges {
 		rangeStr, ok := r.(string)
 		if !ok {
 			result.Message = fmt.Sprintf("Range %v not a string, can't check", r)
-			return result
+			return result, fmt.Errorf("Invalid plan value: %s", result.Message)
 		}
 		bits := strings.Split(rangeStr, "/")
 		if len(bits) != 2 {
 			result.Message = fmt.Sprintf("Range %s not in format 0.0.0.0/0, can't check", rangeStr)
-			return result
+			return result, fmt.Errorf("Invalid plan value: %s", result.Message)
 		}
 		net, err := strconv.Atoi(bits[1])
 		if err != nil {
 			result.Message = fmt.Sprintf("Range %s not in format 0.0.0.0/0, can't check", rangeStr)
-			return result
+			return result, fmt.Errorf("Invalid plan value: %s", result.Message)
 		}
 		if net < 16 {
 			result.Message = fmt.Sprintf("Range %s specifies wider than /16", rangeStr)
-			return result
+			return result, nil
 		}
 	}
 
 	result.Message = "All ranges specified checked and compliant"
 	result.Status = securityv1.Compliant
-	return result
+	return result, nil
 }

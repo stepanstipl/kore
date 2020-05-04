@@ -22,8 +22,10 @@ import (
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
+	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	securityv1 "github.com/appvia/kore/pkg/apis/security/v1"
 
+	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -43,11 +45,8 @@ func New() Scanner {
 func NewEmpty() Scanner {
 	scanner := scannerImpl{
 		rulesLock: &sync.RWMutex{},
+		logger:    log.StandardLogger(),
 	}
-
-	// Register default built-in security rules. Further rules can be added using
-	// RegisterRule if required.
-	scanner.RegisterRule(&AuthProxyIPRangeRule{})
 
 	return &scanner
 }
@@ -55,9 +54,11 @@ func NewEmpty() Scanner {
 type scannerImpl struct {
 	rulesLock *sync.RWMutex
 	rules     []Rule
+	logger    log.FieldLogger
 }
 
 func (s *scannerImpl) RegisterRule(rule Rule) {
+	s.logger.Infof("Registering security rule %s", rule.Name())
 	s.rulesLock.Lock()
 	defer s.rulesLock.Unlock()
 
@@ -84,36 +85,42 @@ func (s *scannerImpl) GetRule(code string) Rule {
 }
 
 func (s *scannerImpl) ScanPlan(target *configv1.Plan) *securityv1.SecurityScanResult {
-	return s.scanRules(target.TypeMeta, target.ObjectMeta, func(rule Rule) (bool, securityv1.SecurityScanRuleResult) {
+	return s.scanRules(target.TypeMeta, target.ObjectMeta, func(rule Rule) (bool, securityv1.SecurityScanRuleResult, error) {
 		// Apply the rule if it implements PlanRule interface:
 		pr, applicable := rule.(PlanRule)
 		if !applicable {
-			return false, securityv1.SecurityScanRuleResult{}
+			return false, securityv1.SecurityScanRuleResult{}, nil
 		}
-		return true, pr.CheckPlan(target)
+		res, err := pr.CheckPlan(target)
+		return true, res, err
 	})
 }
 
 func (s *scannerImpl) ScanCluster(target *clustersv1.Cluster) *securityv1.SecurityScanResult {
-	return s.scanRules(target.TypeMeta, target.ObjectMeta, func(rule Rule) (bool, securityv1.SecurityScanRuleResult) {
+	return s.scanRules(target.TypeMeta, target.ObjectMeta, func(rule Rule) (bool, securityv1.SecurityScanRuleResult, error) {
 		// Apply the rule if it implements ClusterRule interface:
 		cr, applicable := rule.(ClusterRule)
 		if !applicable {
-			return false, securityv1.SecurityScanRuleResult{}
+			return false, securityv1.SecurityScanRuleResult{}, nil
 		}
-		return true, cr.CheckCluster(target)
+		res, err := cr.CheckCluster(target)
+		return true, res, err
 	})
 }
 
-func (s *scannerImpl) scanRules(typeMeta metav1.TypeMeta, objMeta metav1.ObjectMeta, scan func(Rule) (bool, securityv1.SecurityScanRuleResult)) *securityv1.SecurityScanResult {
+func (s *scannerImpl) scanRules(typeMeta metav1.TypeMeta, objMeta metav1.ObjectMeta, scan func(Rule) (bool, securityv1.SecurityScanRuleResult, error)) *securityv1.SecurityScanResult {
+	gvk := typeMeta.GroupVersionKind()
 	result := securityv1.SecurityScanResult{
 		Spec: securityv1.SecurityScanResultSpec{
-			OverallStatus:      securityv1.Compliant,
-			ResourceAPIVersion: typeMeta.APIVersion,
-			ResourceKind:       typeMeta.Kind,
-			ResourceNamespace:  objMeta.Namespace,
-			ResourceName:       objMeta.Name,
-			CheckedAt:          metav1.NewTime(time.Now()),
+			OverallStatus: securityv1.Compliant,
+			Resource: corev1.Ownership{
+				Group:     gvk.Group,
+				Version:   gvk.Version,
+				Kind:      gvk.Kind,
+				Namespace: objMeta.Namespace,
+				Name:      objMeta.Name,
+			},
+			CheckedAt: metav1.NewTime(time.Now()),
 		},
 	}
 
@@ -121,7 +128,21 @@ func (s *scannerImpl) scanRules(typeMeta metav1.TypeMeta, objMeta metav1.ObjectM
 	defer s.rulesLock.RUnlock()
 
 	for _, rule := range s.rules {
-		applicable, ruleResult := scan(rule)
+		applicable, ruleResult, err := scan(rule)
+		if err != nil {
+			// Log error and continue with the other rules
+			log.WithFields(log.Fields{
+				"kind":      result.Spec.Resource.Kind,
+				"namespace": result.Spec.Resource.Namespace,
+				"name":      result.Spec.Resource.Name,
+				"rule":      rule.Name(),
+			}).
+				WithError(err).
+				Error("Error scanning resource for rule", rule.Name())
+
+			continue
+		}
+
 		if applicable {
 			ruleResult.CheckedAt = metav1.NewTime(time.Now())
 			result.Spec.Results = append(result.Spec.Results, ruleResult)

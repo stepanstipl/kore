@@ -24,8 +24,10 @@ import (
 type SecurityScanResult struct {
 	// ID is the unique record id
 	ID uint64 `gorm:"primary_key"`
-	// ResourceAPIVersion is the group and version of the resource scanned by this scan
-	ResourceAPIVersion string
+	// ResourceGroup is the group of the resource scanned by this scan
+	ResourceGroup string
+	// ResourceVersion is the version of the resource scanned by this scan
+	ResourceVersion string
 	// ResourceKind is the kind of the resource scanned by this scan
 	ResourceKind string
 	// ResourceNamespace is the namespace of the resource scanned by this scan

@@ -5739,22 +5739,32 @@ spec:
               description: OwningTeam is the name of the Kore team that owns this
                 resource, will be empty if it is a non-team resource.
               type: string
-            resourceApiVersion:
-              description: ResourceAPIVersion is the group and version of the resource
-                scanned by this scan
-              type: string
-            resourceKind:
-              description: ResourceKind is the kind of the resource scanned by this
-                scan
-              type: string
-            resourceName:
-              description: ResourceName is the name of the resource scanned by this
-                scan
-              type: string
-            resourceNamespace:
-              description: ResourceNamespace is the namespace of the resource scanned
-                by this scan
-              type: string
+            resource:
+              description: Resource is a reference to the group/version/kind/namespace/name
+                of the resource scanned by this scan
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
             results:
               description: Results are the underlying results of the individual rules
                 run as part of this scan

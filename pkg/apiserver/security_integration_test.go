@@ -177,11 +177,14 @@ var _ = Describe("/security", func() {
 					},
 				},
 			}
-			params := operations.NewUpdatePlanParams().WithName(planName).WithBody(plan)
-			_, _ = api.Operations.UpdatePlan(params, getAuth(TestUserAdmin))
+			p := operations.NewUpdatePlanParams().WithName(planName).WithBody(plan)
+			_, _ = api.Operations.UpdatePlan(p, getAuth(TestUserAdmin))
 			plan.Spec.Description = stringPrt("Updated description")
-			params = operations.NewUpdatePlanParams().WithName(planName).WithBody(plan)
-			_, _ = api.Operations.UpdatePlan(params, getAuth(TestUserAdmin))
+			params["authProxyAllowedIPs"] = []string{"1.2.3.4/16"}
+			rawConfig, _ = json.Marshal(params)
+			plan.Spec.Configuration = apiextv1.JSON{Raw: rawConfig}
+			p = operations.NewUpdatePlanParams().WithName(planName).WithBody(plan)
+			_, _ = api.Operations.UpdatePlan(p, getAuth(TestUserAdmin))
 		})
 
 		AfterEach(func() {

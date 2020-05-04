@@ -50,4 +50,7 @@ import (
 	_ "github.com/appvia/kore/pkg/controllers/servicecredentials"
 	_ "github.com/appvia/kore/pkg/controllers/serviceproviders"
 	_ "github.com/appvia/kore/pkg/controllers/services"
+
+	// importing the security controllers
+	_ "github.com/appvia/kore/pkg/controllers/security"
 )

@@ -57,11 +57,11 @@ type Rule interface {
 // PlanRule implementations can be executed against a plan
 type PlanRule interface {
 	// CheckPlan runs this rule against the specified plan
-	CheckPlan(target *configv1.Plan) securityv1.SecurityScanRuleResult
+	CheckPlan(target *configv1.Plan) (securityv1.SecurityScanRuleResult, error)
 }
 
 // ClusterRule implementations can be executed against a cluster
 type ClusterRule interface {
 	// CheckCluster runs this rule against the specified cluster
-	CheckCluster(target *clustersv1.Cluster) securityv1.SecurityScanRuleResult
+	CheckCluster(target *clustersv1.Cluster) (securityv1.SecurityScanRuleResult, error)
 }

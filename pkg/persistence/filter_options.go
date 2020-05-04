@@ -195,12 +195,17 @@ func (l *ListOptions) HasUser() bool {
 
 // HasIdentity checks if all of the identity fields are present
 func (l *ListOptions) HasIdentity() bool {
-	return l.HasAPIVersion() && l.HasKind() && l.HasNamespace() && l.HasName()
+	return l.HasGroup() && l.HasVersion() && l.HasKind() && l.HasNamespace() && l.HasName()
 }
 
-// HasAPIVersion checks if API version set
-func (l *ListOptions) HasAPIVersion() bool {
-	return l.Has("apiVersion")
+// HasGroup checks if group set
+func (l *ListOptions) HasGroup() bool {
+	return l.Has("group")
+}
+
+// HasVersion checks if version set
+func (l *ListOptions) HasVersion() bool {
+	return l.Has("version")
 }
 
 // HasKind checks if kind set
@@ -228,9 +233,14 @@ func (l *ListOptions) GetNamespace() string {
 	return l.GetString("namespace")
 }
 
-// GetAPIVersion gets the group and version
-func (l *ListOptions) GetAPIVersion() string {
-	return l.GetString("apiVersion")
+// GetGroup gets the group
+func (l *ListOptions) GetGroup() string {
+	return l.GetString("group")
+}
+
+// GetVersion gets the version
+func (l *ListOptions) GetVersion() string {
+	return l.GetString("version")
 }
 
 // GetKind gets the kind

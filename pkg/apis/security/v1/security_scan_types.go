@@ -17,6 +17,8 @@
 package v1
 
 import (
+	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -56,14 +58,8 @@ type SecurityScanResult struct {
 type SecurityScanResultSpec struct {
 	// ID is the ID of this scan result in the data store
 	ID uint64 `json:"id,omitempty"`
-	// ResourceAPIVersion is the group and version of the resource scanned by this scan
-	ResourceAPIVersion string `json:"resourceApiVersion,omitempty"`
-	// ResourceKind is the kind of the resource scanned by this scan
-	ResourceKind string `json:"resourceKind,omitempty"`
-	// ResourceNamespace is the namespace of the resource scanned by this scan
-	ResourceNamespace string `json:"resourceNamespace,omitempty"`
-	// ResourceName is the name of the resource scanned by this scan
-	ResourceName string `json:"resourceName,omitempty"`
+	// Resource is a reference to the group/version/kind/namespace/name of the resource scanned by this scan
+	Resource corev1.Ownership `json:"resource,omitempty"`
 	// OwningTeam is the name of the Kore team that owns this resource, will be empty if it is a non-team resource.
 	OwningTeam string `json:"owningTeam,omitempty"`
 	// CheckedAt is the timestamp this result was determined

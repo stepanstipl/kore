@@ -33,17 +33,8 @@ type V1SecurityScanResultSpec struct {
 	// owning team
 	OwningTeam string `json:"owningTeam,omitempty"`
 
-	// resource Api version
-	ResourceAPIVersion string `json:"resourceApiVersion,omitempty"`
-
-	// resource kind
-	ResourceKind string `json:"resourceKind,omitempty"`
-
-	// resource name
-	ResourceName string `json:"resourceName,omitempty"`
-
-	// resource namespace
-	ResourceNamespace string `json:"resourceNamespace,omitempty"`
+	// resource
+	Resource *V1Ownership `json:"resource,omitempty"`
 
 	// results
 	Results []*V1SecurityScanRuleResult `json:"results"`
@@ -53,6 +44,10 @@ type V1SecurityScanResultSpec struct {
 func (m *V1SecurityScanResultSpec) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateResource(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateResults(formats); err != nil {
 		res = append(res, err)
 	}
@@ -60,6 +55,24 @@ func (m *V1SecurityScanResultSpec) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *V1SecurityScanResultSpec) validateResource(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Resource) { // not required
+		return nil
+	}
+
+	if m.Resource != nil {
+		if err := m.Resource.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("resource")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 

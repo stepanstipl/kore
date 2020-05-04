@@ -94,6 +94,19 @@ func (s *securityHandler) Register(i kore.Interface, builder utils.PathBuilder) 
 	)
 
 	ws.Route(
+		withAllErrors(ws.PUT("scans/{group}/{version}/{kind}/{namespace}/{name}")).To(s.storeSecurityScanForResource).
+			Doc("Used to persist a new security scan result for specific object in the system").
+			Operation("StoreSecurityScanForResource").
+			Reads(securityv1.SecurityScanResult{}, "The result of a security scan").
+			Param(ws.PathParameter("group", "Is the group of the kind")).
+			Param(ws.PathParameter("version", "Is the version of the kind")).
+			Param(ws.PathParameter("kind", "Is the kind of the resource")).
+			Param(ws.PathParameter("namespace", "Is the namespace of the resource")).
+			Param(ws.PathParameter("name", "Is the name of the resource")).
+			Returns(http.StatusOK, "Latest security scan for this resource", securityv1.SecurityScanResult{}),
+	)
+
+	ws.Route(
 		withAllNonValidationErrors(ws.GET("scans/{group}/{version}/{kind}/{namespace}/{name}/history")).
 			To(s.listSecurityScansForResource).
 			Doc("Used to return the history of security scans for specific object in the system").
@@ -178,6 +191,18 @@ func (s *securityHandler) getSecurityScanForResource(req *restful.Request, resp 
 			return nil
 		}
 		return resp.WriteHeaderAndEntity(http.StatusOK, scan)
+	})
+}
+
+func (s *securityHandler) storeSecurityScanForResource(req *restful.Request, resp *restful.Response) {
+	handleErrors(req, resp, func() error {
+
+		scanResult := &securityv1.SecurityScanResult{}
+		if err := req.ReadEntity(scanResult); err != nil {
+			return err
+		}
+
+		return fmt.Errorf("Not implemented")
 	})
 }
 

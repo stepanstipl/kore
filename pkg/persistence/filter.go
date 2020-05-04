@@ -134,9 +134,10 @@ func (q ListFuncs) WithNamespace(v string) ListFunc {
 }
 
 // WithIdentity sets the API version, kind, namespace and name
-func (q ListFuncs) WithIdentity(apiVersion string, kind string, namespace string, name string) ListFunc {
+func (q ListFuncs) WithIdentity(group string, version string, kind string, namespace string, name string) ListFunc {
 	return func(o *ListOptions) {
-		o.Fields["apiVersion"] = apiVersion
+		o.Fields["group"] = group
+		o.Fields["version"] = version
 		o.Fields["kind"] = kind
 		o.Fields["namespace"] = namespace
 		o.Fields["name"] = name

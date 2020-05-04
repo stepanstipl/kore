@@ -48,7 +48,9 @@ func Migrations(db *gorm.DB) error {
 		AddForeignKey("team_id", "teams(id)", "CASCADE", "RESTRICT")
 
 	db.AutoMigrate(SecurityScanResult{}).
-		AddIndex("idx_scan_identity", "resource_api_version", "resource_kind", "resource_namespace", "resource_name")
+		AddIndex("idx_scan_identity", "resource_kind", "resource_group", "resource_version", "resource_namespace", "resource_name", "archived_at").
+		AddIndex("idx_scan_team", "owning_team", "archived_at")
+
 	db.AutoMigrate(SecurityRuleResult{}).
 		AddForeignKey("scan_id", "security_scan_results(id)", "CASCADE", "RESTRICT")
 

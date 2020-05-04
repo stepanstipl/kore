@@ -831,6 +831,88 @@
             }
           }
         }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Used to persist a new security scan result for specific object in the system",
+        "operationId": "StoreSecurityScanForResource",
+        "parameters": [
+          {
+            "description": "The result of a security scan",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.SecurityScanResult"
+            }
+          },
+          {
+            "type": "string",
+            "description": "Is the group of the kind",
+            "name": "group",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the version of the kind",
+            "name": "version",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the kind of the resource",
+            "name": "kind",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the namespace of the resource",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the name of the resource",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Latest security scan for this resource",
+            "schema": {
+              "$ref": "#/definitions/v1.SecurityScanResult"
+            }
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
       }
     },
     "/api/v1alpha1/security/scans/{group}/{version}/{kind}/{namespace}/{name}/history": {
@@ -6080,17 +6162,8 @@
         "owningTeam": {
           "type": "string"
         },
-        "resourceApiVersion": {
-          "type": "string"
-        },
-        "resourceKind": {
-          "type": "string"
-        },
-        "resourceName": {
-          "type": "string"
-        },
-        "resourceNamespace": {
-          "type": "string"
+        "resource": {
+          "$ref": "#/definitions/v1.Ownership"
         },
         "results": {
           "type": "array",

@@ -99,7 +99,8 @@ func (s *securityImpl) ScanHistoryForResource(ctx context.Context, typ metav1.Ty
 		return nil, NewErrNotAllowed("Must be global admin")
 	}
 
-	res, err := s.securityPersist.ListResourceScanHistory(ctx, typ.APIVersion, typ.Kind, obj.Namespace, obj.Name)
+	gvk := typ.GroupVersionKind()
+	res, err := s.securityPersist.ListResourceScanHistory(ctx, gvk.Group, gvk.Version, gvk.Kind, obj.Namespace, obj.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +122,8 @@ func (s *securityImpl) GetCurrentScanForResource(ctx context.Context, typ metav1
 		return nil, NewErrNotAllowed("Must be global admin")
 	}
 
-	res, err := s.securityPersist.GetLatestResourceScan(ctx, typ.APIVersion, typ.Kind, obj.Namespace, obj.Name)
+	gvk := typ.GroupVersionKind()
+	res, err := s.securityPersist.GetLatestResourceScan(ctx, gvk.Group, gvk.Version, gvk.Kind, obj.Namespace, obj.Name)
 	if err != nil {
 		return nil, err
 	}
