@@ -17,29 +17,57 @@
 package serviceproviders
 
 import (
-	"context"
-
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
-	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/kore"
 
-	"github.com/sirupsen/logrus"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 func init() {
-	kore.DefaultServiceProviders.Register(Dummy{})
+	kore.RegisterServiceProviderFactory(DummyFactory{})
 }
 
+type DummyFactory struct{}
+
+func (d DummyFactory) Type() string {
+	return "dummy"
+}
+
+func (d DummyFactory) JSONSchema() string {
+	return `{
+		"$id": "https://appvia.io/schemas/serviceprovider/dummy.json",
+		"$schema": "http://json-schema.org/draft-07/schema#",
+		"description": "Dummy service plan schema",
+		"type": "object",
+		"additionalProperties": false,
+		"required": [
+			"iAmDummy"
+		],
+		"properties": {
+			"iAmDummy": {
+				"type": "string",
+				"minLength": 1
+			}
+		}
+	}`
+}
+
+func (d DummyFactory) CreateProvider(provider servicesv1.ServiceProvider) (kore.ServiceProvider, error) {
+	return Dummy{name: provider.Name}, nil
+}
+
+var _ kore.ServiceProvider = Dummy{}
+
 type Dummy struct {
+	name string
 }
 
 func (d Dummy) Name() string {
-	return "dummy"
+	return d.name
 }
 
 func (d Dummy) Kinds() []string {
@@ -55,7 +83,7 @@ func (d Dummy) Plans() []servicesv1.ServicePlan {
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "dummy",
-				Namespace: "kore-admin",
+				Namespace: "kore",
 			},
 			Spec: servicesv1.ServicePlanSpec{
 				Kind:          "dummy",
@@ -67,7 +95,7 @@ func (d Dummy) Plans() []servicesv1.ServicePlan {
 	}
 }
 
-func (d Dummy) JSONSchema(_ string) string {
+func (d Dummy) PlanJSONSchema(_, _ string) (string, error) {
 	return `{
 		"$id": "https://appvia.io/schemas/services/dummy/dummy.json",
 		"$schema": "http://json-schema.org/draft-07/schema#",
@@ -83,10 +111,10 @@ func (d Dummy) JSONSchema(_ string) string {
 				"minLength": 1
 			}
 		}
-	}`
+	}`, nil
 }
 
-func (d Dummy) CredentialsJSONSchema(_ string) string {
+func (d Dummy) CredentialsJSONSchema(_, _ string) (string, error) {
 	return `{
 		"$id": "https://appvia.io/schemas/services/dummy/dummy-credentials.json",
 		"$schema": "http://json-schema.org/draft-07/schema#",
@@ -102,32 +130,42 @@ func (d Dummy) CredentialsJSONSchema(_ string) string {
 				"minLength": 1
 			}
 		}
-	}`
+	}`, nil
 }
 
-func (d Dummy) RequiredCredentialTypes(_ string) []schema.GroupVersionKind {
-	return nil
+func (d Dummy) RequiredCredentialTypes(_ string) ([]schema.GroupVersionKind, error) {
+	return nil, nil
 }
 
-func (d Dummy) Reconcile(_ context.Context, _ logrus.FieldLogger, service *servicesv1.Service) (reconcile.Result, error) {
-	service.Status.Status = corev1.SuccessStatus
+func (d Dummy) Reconcile(
+	ctx kore.ServiceProviderContext,
+	service *servicesv1.Service,
+) (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func (d Dummy) Delete(_ context.Context, _ logrus.FieldLogger, service *servicesv1.Service) (reconcile.Result, error) {
-	service.Status.Status = corev1.DeletedStatus
+func (d Dummy) Delete(
+	ctx kore.ServiceProviderContext,
+	service *servicesv1.Service,
+) (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
-func (d Dummy) ReconcileCredentials(_ context.Context, _ logrus.FieldLogger, creds *servicesv1.ServiceCredentials) (reconcile.Result, map[string]string, error) {
-	creds.Status.Status = corev1.SuccessStatus
+func (d Dummy) ReconcileCredentials(
+	ctx kore.ServiceProviderContext,
+	service *servicesv1.Service,
+	creds *servicesv1.ServiceCredentials,
+) (reconcile.Result, map[string]string, error) {
 	res := map[string]string{
 		"superSecret": creds.Name + "-secret",
 	}
 	return reconcile.Result{}, res, nil
 }
 
-func (d Dummy) DeleteCredentials(_ context.Context, _ logrus.FieldLogger, creds *servicesv1.ServiceCredentials) (reconcile.Result, error) {
-	creds.Status.Status = corev1.DeletedStatus
+func (d Dummy) DeleteCredentials(
+	ctx kore.ServiceProviderContext,
+	service *servicesv1.Service,
+	creds *servicesv1.ServiceCredentials,
+) (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }

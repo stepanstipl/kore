@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/appvia/kore/pkg/kore"
+
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/controllers"
@@ -52,7 +54,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
-		logger.WithError(err).Error("trying to retrieve service from api")
+		logger.WithError(err).Error("failed to retrieve service from api")
 
 		return reconcile.Result{}, err
 	}
@@ -76,7 +78,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 			c.EnsureFinalizer(logger, service, finalizer),
 			c.EnsureServicePending(logger, service),
 			func(ctx context.Context) (result reconcile.Result, err error) {
-				return provider.Reconcile(ctx, logger, service)
+				return provider.Reconcile(kore.NewServiceProviderContext(ctx, logger, c.mgr.GetClient()), service)
 			},
 		}
 
@@ -98,6 +100,12 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 			service.Status.Status = corev1.FailureStatus
 			service.Status.Message = err.Error()
 		}
+	}
+
+	if err == nil && !result.Requeue && result.RequeueAfter == 0 {
+		service.Status.Plan = service.Spec.Plan
+		service.Status.Configuration = service.Spec.Configuration
+		service.Status.Status = corev1.SuccessStatus
 	}
 
 	if err := c.mgr.GetClient().Status().Patch(ctx, service, client.MergeFrom(original)); err != nil {

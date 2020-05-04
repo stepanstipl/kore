@@ -48,3 +48,12 @@ func StringValue(v *string) string {
 
 	return *v
 }
+
+// BoolValue return the boolean value or false
+func BoolValue(v *bool) bool {
+	if v == nil {
+		return false
+	}
+
+	return *v
+}

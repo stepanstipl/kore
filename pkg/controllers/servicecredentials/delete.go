@@ -38,6 +38,7 @@ import (
 func (c *Controller) delete(
 	ctx context.Context,
 	logger log.FieldLogger,
+	service *servicesv1.Service,
 	serviceCreds *servicesv1.ServiceCredentials,
 	finalizer *kubernetes.Finalizer,
 	provider kore.ServiceProvider,
@@ -98,7 +99,10 @@ func (c *Controller) delete(
 
 		serviceCreds.Status.Components.SetStatus(ComponentKubernetesSecret, corev1.DeletedStatus, "", "")
 
-		result, err := provider.DeleteCredentials(ctx, logger, serviceCreds)
+		result, err := provider.DeleteCredentials(
+			kore.NewServiceProviderContext(ctx, logger, c.mgr.GetClient()),
+			service, serviceCreds,
+		)
 		if err != nil {
 			serviceCreds.Status.Components.SetCondition(corev1.Component{
 				Name:    ComponentProviderSecret,
@@ -119,10 +123,17 @@ func (c *Controller) delete(
 
 	if err != nil {
 		logger.WithError(err).Error("failed to delete the service credentials")
+
+		serviceCreds.Status.Status = corev1.ErrorStatus
+		serviceCreds.Status.Message = err.Error()
+
 		if controllers.IsCriticalError(err) {
 			serviceCreds.Status.Status = corev1.DeleteFailedStatus
-			serviceCreds.Status.Message = err.Error()
 		}
+	}
+
+	if err == nil && !result.Requeue && result.RequeueAfter == 0 {
+		serviceCreds.Status.Status = corev1.DeletedStatus
 	}
 
 	if err := c.mgr.GetClient().Status().Patch(ctx, serviceCreds, client.MergeFrom(original)); err != nil {

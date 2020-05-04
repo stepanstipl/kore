@@ -47,8 +47,8 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 	logger.Debug("attempting to reconcile the service credentials")
 
 	// @step: retrieve the object from the api
-	serviceCreds := &servicesv1.ServiceCredentials{}
-	if err := c.mgr.GetClient().Get(ctx, request.NamespacedName, serviceCreds); err != nil {
+	creds := &servicesv1.ServiceCredentials{}
+	if err := c.mgr.GetClient().Get(ctx, request.NamespacedName, creds); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
@@ -56,27 +56,35 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 		return reconcile.Result{}, err
 	}
-	original := serviceCreds.DeepCopy()
+	original := creds.DeepCopy()
 
-	provider := c.ServiceProviders().GetProviderForKind(serviceCreds.Spec.Kind)
+	// @step: retrieve the object from the api
+	service := &servicesv1.Service{}
+	if err := c.mgr.GetClient().Get(ctx, creds.Spec.Service.NamespacedName(), service); err != nil {
+		logger.WithError(err).Error("failed to retrieve service from api")
+
+		return reconcile.Result{}, err
+	}
+
+	provider := c.ServiceProviders().GetProviderForKind(creds.Spec.Kind)
 	if provider == nil {
-		logger.Errorf("provider not found for service kind %q", serviceCreds.Spec.Kind)
-		serviceCreds.Status.Status = corev1.FailureStatus
-		serviceCreds.Status.Message = fmt.Sprintf("provider not found for service kind %q", serviceCreds.Spec.Kind)
+		logger.Errorf("provider not found for service kind %q", creds.Spec.Kind)
+		creds.Status.Status = corev1.FailureStatus
+		creds.Status.Message = fmt.Sprintf("provider not found for service kind %q", creds.Spec.Kind)
 		return reconcile.Result{}, nil
 	}
 
 	finalizer := kubernetes.NewFinalizer(c.mgr.GetClient(), finalizerName)
-	if finalizer.IsDeletionCandidate(serviceCreds) {
-		return c.delete(ctx, logger, serviceCreds, finalizer, provider)
+	if finalizer.IsDeletionCandidate(creds) {
+		return c.delete(ctx, logger, service, creds, finalizer, provider)
 	}
 
 	result, err := func() (reconcile.Result, error) {
 		ensure := []controllers.EnsureFunc{
-			c.ensureFinalizer(logger, serviceCreds, finalizer),
-			c.ensurePending(logger, serviceCreds),
-			c.EnsureActiveCluster(logger, serviceCreds),
-			c.ensureSecret(logger, serviceCreds, provider),
+			c.ensureFinalizer(logger, creds, finalizer),
+			c.ensurePending(logger, creds),
+			c.EnsureActiveCluster(logger, creds),
+			c.ensureSecret(logger, service, creds, provider),
 		}
 
 		for _, handler := range ensure {
@@ -93,13 +101,20 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 	if err != nil {
 		logger.WithError(err).Error("failed to reconcile the service credentials")
+
+		creds.Status.Status = corev1.ErrorStatus
+		creds.Status.Message = err.Error()
+
 		if controllers.IsCriticalError(err) {
-			serviceCreds.Status.Status = corev1.FailureStatus
-			serviceCreds.Status.Message = err.Error()
+			creds.Status.Status = corev1.FailureStatus
 		}
 	}
 
-	if err := c.mgr.GetClient().Status().Patch(ctx, serviceCreds, client.MergeFrom(original)); err != nil {
+	if err == nil && !result.Requeue && result.RequeueAfter == 0 {
+		creds.Status.Status = corev1.SuccessStatus
+	}
+
+	if err := c.mgr.GetClient().Status().Patch(ctx, creds, client.MergeFrom(original)); err != nil {
 		logger.WithError(err).Error("failed to update the service credentials status")
 
 		return reconcile.Result{}, err
@@ -112,7 +127,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		return reconcile.Result{}, err
 	}
 
-	if serviceCreds.Status.Status == corev1.SuccessStatus {
+	if creds.Status.Status == corev1.SuccessStatus {
 		return reconcile.Result{}, nil
 	}
 

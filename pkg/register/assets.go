@@ -32,6 +32,7 @@
 // deploy/crds/org.kore.appvia.io_users.yaml
 // deploy/crds/services.kore.appvia.io_servicecredentials.yaml
 // deploy/crds/services.kore.appvia.io_serviceplans.yaml
+// deploy/crds/services.kore.appvia.io_serviceproviders.yaml
 // deploy/crds/services.kore.appvia.io_services.yaml
 package register
 
@@ -5728,6 +5729,14 @@ spec:
             message:
               description: Message is the description of the current status
               type: string
+            providerData:
+              description: ProviderData is provider specific data
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+            providerID:
+              description: ProviderID is the service credentials identifier in the
+                service provider
+              type: string
             status:
               description: Status is the overall status of the service
               type: string
@@ -5856,6 +5865,115 @@ func crdsServicesKoreAppviaIo_serviceplansYaml() (*asset, error) {
 	return a, nil
 }
 
+var _crdsServicesKoreAppviaIo_serviceprovidersYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: serviceproviders.services.kore.appvia.io
+spec:
+  group: services.kore.appvia.io
+  names:
+    kind: ServiceProvider
+    listKind: ServiceProviderList
+    plural: serviceproviders
+    singular: serviceprovider
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: ServiceProvider is a template for a service provider
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: ServiceProviderSpec defines the desired state of a Service
+            provider
+          properties:
+            configuration:
+              description: Configuration are the key+value pairs describing a service
+                provider
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+            description:
+              description: Description provides a summary of the provider
+              minLength: 1
+              type: string
+            summary:
+              description: Summary provides a short title summary for the provider
+              minLength: 1
+              type: string
+            type:
+              description: Type refers to the service provider type
+              minLength: 1
+              type: string
+          required:
+          - configuration
+          - description
+          - summary
+          - type
+          type: object
+        status:
+          description: ServiceProviderStatus defines the observed state of a service
+            provider
+          properties:
+            message:
+              description: Message is the description of the current status
+              type: string
+            status:
+              description: Status is the overall status of the service
+              type: string
+            supportedKinds:
+              description: SupportedKinds contains all the supported service kinds
+              items:
+                type: string
+              type: array
+              x-kubernetes-list-type: set
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsServicesKoreAppviaIo_serviceprovidersYamlBytes() ([]byte, error) {
+	return _crdsServicesKoreAppviaIo_serviceprovidersYaml, nil
+}
+
+func crdsServicesKoreAppviaIo_serviceprovidersYaml() (*asset, error) {
+	bytes, err := crdsServicesKoreAppviaIo_serviceprovidersYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/services.kore.appvia.io_serviceproviders.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _crdsServicesKoreAppviaIo_servicesYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -5965,8 +6083,24 @@ spec:
                     type: string
                 type: object
               type: array
+            configuration:
+              description: Configuration are the applied configuration values for
+                this service
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
             message:
               description: Message is the description of the current status
+              type: string
+            plan:
+              description: Plan is the name of the service plan which was used to
+                create this service
+              type: string
+            providerData:
+              description: ProviderData is provider specific data
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+            providerID:
+              description: ProviderID is the service identifier in the service provider
               type: string
             status:
               description: Status is the overall status of the service
@@ -6085,6 +6219,7 @@ var _bindata = map[string]func() (*asset, error){
 	"crds/org.kore.appvia.io_users.yaml":                                  crdsOrgKoreAppviaIo_usersYaml,
 	"crds/services.kore.appvia.io_servicecredentials.yaml":                crdsServicesKoreAppviaIo_servicecredentialsYaml,
 	"crds/services.kore.appvia.io_serviceplans.yaml":                      crdsServicesKoreAppviaIo_serviceplansYaml,
+	"crds/services.kore.appvia.io_serviceproviders.yaml":                  crdsServicesKoreAppviaIo_serviceprovidersYaml,
 	"crds/services.kore.appvia.io_services.yaml":                          crdsServicesKoreAppviaIo_servicesYaml,
 }
 
@@ -6162,6 +6297,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"org.kore.appvia.io_users.yaml":                                  {crdsOrgKoreAppviaIo_usersYaml, map[string]*bintree{}},
 		"services.kore.appvia.io_servicecredentials.yaml":                {crdsServicesKoreAppviaIo_servicecredentialsYaml, map[string]*bintree{}},
 		"services.kore.appvia.io_serviceplans.yaml":                      {crdsServicesKoreAppviaIo_serviceplansYaml, map[string]*bintree{}},
+		"services.kore.appvia.io_serviceproviders.yaml":                  {crdsServicesKoreAppviaIo_serviceprovidersYaml, map[string]*bintree{}},
 		"services.kore.appvia.io_services.yaml":                          {crdsServicesKoreAppviaIo_servicesYaml, map[string]*bintree{}},
 	}},
 }}

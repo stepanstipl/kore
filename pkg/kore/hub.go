@@ -55,12 +55,12 @@ type hubImpl struct {
 	audit Audit
 	// serviceplans is the ServicePlans implementation
 	servicePlans ServicePlans
-	// serviceProviders contains all service providers
-	serviceProviders *ServiceProviderRegistry
+	// serviceProviders is the ServiceProviders implementation
+	serviceProviders ServiceProviders
 }
 
 // New returns a new instance of the kore bridge
-func New(sc store.Store, persistenceMgr persistence.Interface, config Config, serviceProviders *ServiceProviderRegistry) (Interface, error) {
+func New(sc store.Store, persistenceMgr persistence.Interface, config Config) (Interface, error) {
 	log.Info("initializing the kore api bridge")
 
 	// @step: check the options
@@ -101,7 +101,7 @@ func New(sc store.Store, persistenceMgr persistence.Interface, config Config, se
 	h.users = &usersImpl{hubImpl: h}
 	h.audit = &auditImpl{hubImpl: h}
 	h.servicePlans = &servicePlansImpl{Interface: h}
-	h.serviceProviders = serviceProviders
+	h.serviceProviders = &serviceProvidersImpl{Interface: h}
 
 	// @step: call the setup code for the kore
 	if err := h.Setup(context.Background()); err != nil {
@@ -197,6 +197,6 @@ func (h hubImpl) ServicePlans() ServicePlans {
 	return h.servicePlans
 }
 
-func (h hubImpl) ServiceProviders() *ServiceProviderRegistry {
+func (h hubImpl) ServiceProviders() ServiceProviders {
 	return h.serviceProviders
 }

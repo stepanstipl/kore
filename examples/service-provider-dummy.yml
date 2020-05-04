@@ -1,0 +1,12 @@
+---
+apiVersion: serviceproviders.kore.appvia.io/v1
+kind: ServiceProvider
+metadata:
+  name: dummy
+  namespace: kore
+spec:
+  description: Dummy service provider
+  type: dummy
+  summary: Dummy service provider for testing
+  configuration:
+    iAmDummy: "yes"

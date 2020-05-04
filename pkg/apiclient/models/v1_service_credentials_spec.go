@@ -25,7 +25,7 @@ type V1ServiceCredentialsSpec struct {
 
 	// configuration
 	// Required: true
-	Configuration *string `json:"configuration"`
+	Configuration interface{} `json:"configuration"`
 
 	// kind
 	// Required: true

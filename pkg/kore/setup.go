@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"time"
 
+	corev1 "k8s.io/api/core/v1"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	core "github.com/appvia/kore/pkg/apis/core/v1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
@@ -29,7 +31,6 @@ import (
 	"github.com/appvia/kore/pkg/store"
 
 	log "github.com/sirupsen/logrus"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -106,18 +107,19 @@ func (h hubImpl) Setup(ctx context.Context) error {
 		}
 	}
 
-	if h.Config().IsFeatureGateEnabled(FeatureGateServices) {
-		for _, provider := range h.ServiceProviders().Providers() {
-			for _, plan := range provider.Plans() {
-				exists, err := h.servicePlans.Has(getAdminContext(ctx), plan.Name)
-				if err != nil {
-					return err
-				}
-				if !exists {
-					if err := h.servicePlans.Update(getAdminContext(ctx), &plan); err != nil {
-						return err
-					}
-				}
+	serviceProviders, err := h.ServiceProviders().List(getAdminContext(ctx))
+	if err != nil {
+		return err
+	}
+
+	for _, serviceProvider := range serviceProviders.Items {
+		if err != nil {
+			if serviceProvider.Annotations == nil {
+				serviceProvider.Annotations = map[string]string{}
+			}
+			serviceProvider.Annotations[Label("initializedAt")] = time.Now().String()
+			if err := h.ServiceProviders().Update(getAdminContext(ctx), &serviceProvider); err != nil {
+				return fmt.Errorf("failed to initialize service provider: %w", err)
 			}
 		}
 	}

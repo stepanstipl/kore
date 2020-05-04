@@ -18,6 +18,7 @@ package servicecredentials
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/appvia/kore/pkg/kore"
@@ -77,8 +78,7 @@ func (c *Controller) ensureFinalizer(logger log.FieldLogger, serviceCreds *servi
 		if finalizer.NeedToAdd(serviceCreds) {
 			err := finalizer.Add(serviceCreds)
 			if err != nil {
-				logger.WithError(err).Error("failed to set the finalizer")
-				return reconcile.Result{}, err
+				return reconcile.Result{}, fmt.Errorf("failed to set the finalizer: %w", err)
 			}
 			return reconcile.Result{Requeue: true}, nil
 		}
@@ -96,7 +96,6 @@ func (c *Controller) EnsureActiveCluster(logger log.FieldLogger, serviceCreds *s
 		}, cluster); err != nil {
 			if kerrors.IsNotFound(err) {
 				logger.Debug("cluster does not exist")
-
 				return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
 			}
 			return reconcile.Result{}, err
@@ -110,14 +109,16 @@ func (c *Controller) EnsureActiveCluster(logger log.FieldLogger, serviceCreds *s
 	}
 }
 
-func (c *Controller) ensureSecret(logger log.FieldLogger, serviceCreds *servicesv1.ServiceCredentials, provider kore.ServiceProvider) controllers.EnsureFunc {
+func (c *Controller) ensureSecret(
+	logger log.FieldLogger,
+	service *servicesv1.Service,
+	serviceCreds *servicesv1.ServiceCredentials,
+	provider kore.ServiceProvider) controllers.EnsureFunc {
 	return func(ctx context.Context) (reconcile.Result, error) {
 		// @step: create client for the cluster credentials
 		client, err := controllers.CreateClientFromSecret(context.Background(), c.mgr.GetClient(),
 			serviceCreds.Spec.Cluster.Namespace, serviceCreds.Spec.Cluster.Name)
 		if err != nil {
-			logger.WithError(err).Error("failed to create client from cluster secret")
-
 			serviceCreds.Status.Components.SetCondition(corev1.Component{
 				Name:    ComponentKubernetesSecret,
 				Status:  corev1.FailureStatus,
@@ -125,13 +126,23 @@ func (c *Controller) ensureSecret(logger log.FieldLogger, serviceCreds *services
 				Detail:  err.Error(),
 			})
 
-			return reconcile.Result{}, err
+			return reconcile.Result{}, fmt.Errorf("failed to create client from cluster secret: %w", err)
 		}
 
-		result, credentials, err := provider.ReconcileCredentials(ctx, logger, serviceCreds)
+		exists, err := kubernetes.HasSecret(ctx, client, serviceCreds.Spec.ClusterNamespace, serviceCreds.Name)
 		if err != nil {
-			logger.WithError(err).Error("failed to request secret from service provider")
+			return reconcile.Result{}, fmt.Errorf("failed to get secret from cluster: %w", err)
+		}
 
+		if exists {
+			return reconcile.Result{}, nil
+		}
+
+		result, credentials, err := provider.ReconcileCredentials(
+			kore.NewServiceProviderContext(ctx, logger, c.mgr.GetClient()),
+			service, serviceCreds,
+		)
+		if err != nil {
 			serviceCreds.Status.Components.SetCondition(corev1.Component{
 				Name:    ComponentProviderSecret,
 				Status:  corev1.FailureStatus,
@@ -139,7 +150,7 @@ func (c *Controller) ensureSecret(logger log.FieldLogger, serviceCreds *services
 				Detail:  err.Error(),
 			})
 
-			return reconcile.Result{}, err
+			return reconcile.Result{}, fmt.Errorf("failed to request secret from service provider: %w", err)
 		}
 		if result.Requeue || result.RequeueAfter > 0 {
 			return result, nil
@@ -161,11 +172,6 @@ func (c *Controller) ensureSecret(logger log.FieldLogger, serviceCreds *services
 		}
 
 		if _, err := kubernetes.CreateOrUpdateSecret(ctx, client, secret); err != nil {
-			logger.WithFields(log.Fields{
-				"cluster":   serviceCreds.Spec.Cluster.Name,
-				"namespace": serviceCreds.Spec.ClusterNamespace,
-			}).WithError(err).Error("failed to create Secret object in cluster")
-
 			serviceCreds.Status.Components.SetCondition(corev1.Component{
 				Name:    ComponentKubernetesSecret,
 				Status:  corev1.FailureStatus,
@@ -173,7 +179,7 @@ func (c *Controller) ensureSecret(logger log.FieldLogger, serviceCreds *services
 				Detail:  err.Error(),
 			})
 
-			return reconcile.Result{}, err
+			return reconcile.Result{}, fmt.Errorf("failed to create Secret object in cluster: %w", err)
 		}
 
 		serviceCreds.Status.Components.SetStatus(ComponentKubernetesSecret, corev1.SuccessStatus, "", "")

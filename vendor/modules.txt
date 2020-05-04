@@ -415,6 +415,8 @@ github.com/konsorten/go-windows-terminal-sequences
 github.com/kr/pretty
 # github.com/kr/text v0.2.0
 github.com/kr/text
+# github.com/kubernetes-sigs/go-open-service-broker-client v0.0.0-20200323235047-56a01c84bf43 => github.com/appvia/go-open-service-broker-client v0.0.0-20200430155427-f6c465273916
+github.com/kubernetes-sigs/go-open-service-broker-client/v2
 # github.com/kylelemons/godebug v1.1.0
 github.com/kylelemons/godebug/diff
 # github.com/lib/pq v1.2.0
@@ -676,7 +678,6 @@ golang.org/x/net/http2
 golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/internal/timeseries
-golang.org/x/net/publicsuffix
 golang.org/x/net/trace
 # golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 golang.org/x/oauth2
@@ -876,8 +877,6 @@ gopkg.in/inf.v0
 gopkg.in/ini.v1
 # gopkg.in/op/go-logging.v1 v1.0.0-20160211212156-b2cb9fa56473
 gopkg.in/op/go-logging.v1
-# gopkg.in/resty.v1 v1.12.0
-gopkg.in/resty.v1
 # gopkg.in/square/go-jose.v2 v2.4.1
 gopkg.in/square/go-jose.v2
 gopkg.in/square/go-jose.v2/cipher

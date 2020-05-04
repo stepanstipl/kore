@@ -46,7 +46,7 @@ func IsValidResourceName(subject, name string) error {
 		return validation.NewError("%s has failed validation", subject).WithFieldErrorf(
 			"name",
 			validation.Pattern,
-			"must comply with %s",
+			"must match %s",
 			ResourceNameFilter.String(),
 		)
 	}

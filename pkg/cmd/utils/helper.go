@@ -211,8 +211,17 @@ func PatchJSON(document string, cliValues []string) (string, error) {
 			}
 		} else {
 			document, err = sjson.Set(document, key, func(v string) interface{} {
-				if num, err := strconv.ParseFloat(v, 64); err == nil {
-					return num
+				if val, err := strconv.ParseBool(v); err == nil {
+					return val
+				}
+				if val, err := strconv.ParseFloat(v, 64); err == nil {
+					return val
+				}
+				if val, err := strconv.ParseInt(v, 10, 64); err == nil {
+					return val
+				}
+				if val, err := strconv.Unquote(v); err == nil {
+					return val
 				}
 				return v
 			}(value))

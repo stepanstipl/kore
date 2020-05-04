@@ -17,6 +17,9 @@
 package v1
 
 import (
+	"encoding/json"
+	"fmt"
+
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
@@ -24,8 +27,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// ServiceGroupVersionKind is the GVK for a Service
-var ServiceGroupVersionKind = schema.GroupVersionKind{
+// ServiceGroupVersionKind is the GroupVersionKind for Service
+var ServiceGVK = schema.GroupVersionKind{
 	Group:   GroupVersion.Group,
 	Version: GroupVersion.Version,
 	Kind:    "Service",
@@ -49,7 +52,23 @@ type ServiceSpec struct {
 	Configuration apiextv1.JSON `json:"configuration"`
 	// Credentials is a reference to the credentials object to use
 	// +kubebuilder:validation:Optional
-	Credentials corev1.Ownership `json:"credentials"`
+	Credentials corev1.Ownership `json:"credentials,omitempty"`
+}
+
+func (s *ServiceSpec) GetConfiguration(v interface{}) error {
+	if err := json.Unmarshal(s.Configuration.Raw, v); err != nil {
+		return fmt.Errorf("failed to unmarshal service configuration: %w", err)
+	}
+	return nil
+}
+
+func (s *ServiceSpec) SetConfiguration(v interface{}) error {
+	raw, err := json.Marshal(v)
+	if err != nil {
+		return fmt.Errorf("failed to marshal service configuration: %w", err)
+	}
+	s.Configuration = apiextv1.JSON{Raw: raw}
+	return nil
 }
 
 // ServiceStatus defines the observed state of a service
@@ -64,6 +83,36 @@ type ServiceStatus struct {
 	// Message is the description of the current status
 	// +kubebuilder:validation:Optional
 	Message string `json:"message,omitempty"`
+	// ProviderID is the service identifier in the service provider
+	// +kubebuilder:validation:Optional
+	ProviderID string `json:"providerID,omitempty"`
+	// ProviderData is provider specific data
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Type=object
+	ProviderData apiextv1.JSON `json:"providerData,omitempty"`
+	// Plan is the name of the service plan which was used to create this service
+	// +kubebuilder:validation:Optional
+	Plan string `json:"plan,omitempty"`
+	// Configuration are the applied configuration values for this service
+	// +kubebuilder:validation:Type=object
+	// +kubebuilder:validation:Optional
+	Configuration apiextv1.JSON `json:"configuration,omitempty"`
+}
+
+func (s *ServiceStatus) GetProviderData(v interface{}) error {
+	if err := json.Unmarshal(s.ProviderData.Raw, v); err != nil {
+		return fmt.Errorf("failed to unmarshal service provider data: %w", err)
+	}
+	return nil
+}
+
+func (s *ServiceStatus) SetProviderData(v interface{}) error {
+	raw, err := json.Marshal(v)
+	if err != nil {
+		return fmt.Errorf("failed to marshal service provider data: %w", err)
+	}
+	s.ProviderData = apiextv1.JSON{Raw: raw}
+	return nil
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -78,6 +127,19 @@ type Service struct {
 
 	Spec   ServiceSpec   `json:"spec,omitempty"`
 	Status ServiceStatus `json:"status,omitempty"`
+}
+
+func NewService(name, namespace string) *Service {
+	return &Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       ServiceGVK.Kind,
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+	}
 }
 
 // Ownership creates an Ownership object

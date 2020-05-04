@@ -17,11 +17,22 @@
 package v1
 
 import (
+	"encoding/json"
+	"fmt"
+
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+// ServiceCredentialsGVK is the GroupVersionKind for ServiceCredentials
+var ServiceCredentialsGVK = schema.GroupVersionKind{
+	Group:   GroupVersion.Group,
+	Version: GroupVersion.Version,
+	Kind:    "ServiceCredentials",
+}
 
 // ServiceCredentialsSpec defines the the desired status for service credentials
 // +k8s:openapi-gen=true
@@ -45,6 +56,22 @@ type ServiceCredentialsSpec struct {
 	Configuration apiextv1.JSON `json:"configuration"`
 }
 
+func (s *ServiceCredentialsSpec) GetConfiguration(v interface{}) error {
+	if err := json.Unmarshal(s.Configuration.Raw, v); err != nil {
+		return fmt.Errorf("failed to unmarshal service credentials configuration: %w", err)
+	}
+	return nil
+}
+
+func (s *ServiceCredentialsSpec) SetConfiguration(v interface{}) error {
+	raw, err := json.Marshal(v)
+	if err != nil {
+		return fmt.Errorf("failed to marshal service credentials configuration: %w", err)
+	}
+	s.Configuration = apiextv1.JSON{Raw: raw}
+	return nil
+}
+
 // ServiceCredentialsStatus defines the observed state of a service
 // +k8s:openapi-gen=true
 type ServiceCredentialsStatus struct {
@@ -57,6 +84,29 @@ type ServiceCredentialsStatus struct {
 	// Message is the description of the current status
 	// +kubebuilder:validation:Optional
 	Message string `json:"message,omitempty"`
+	// ProviderID is the service credentials identifier in the service provider
+	// +kubebuilder:validation:Optional
+	ProviderID string `json:"providerID,omitempty"`
+	// ProviderData is provider specific data
+	// +kubebuilder:validation:Optional
+	// +kubebuilder:validation:Type=object
+	ProviderData apiextv1.JSON `json:"providerData,omitempty"`
+}
+
+func (s *ServiceCredentialsStatus) GetProviderData(v interface{}) error {
+	if err := json.Unmarshal(s.ProviderData.Raw, v); err != nil {
+		return fmt.Errorf("failed to unmarshal service provider data: %w", err)
+	}
+	return nil
+}
+
+func (s *ServiceCredentialsStatus) SetProviderData(v interface{}) error {
+	raw, err := json.Marshal(v)
+	if err != nil {
+		return fmt.Errorf("failed to marshal service provider data: %w", err)
+	}
+	s.ProviderData = apiextv1.JSON{Raw: raw}
+	return nil
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -71,6 +121,19 @@ type ServiceCredentials struct {
 
 	Spec   ServiceCredentialsSpec   `json:"spec,omitempty"`
 	Status ServiceCredentialsStatus `json:"status,omitempty"`
+}
+
+func NewServiceCredentials(name, namespace string) *ServiceCredentials {
+	return &ServiceCredentials{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       ServiceCredentialsGVK.Kind,
+			APIVersion: GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+	}
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

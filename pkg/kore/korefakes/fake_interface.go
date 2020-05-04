@@ -116,15 +116,15 @@ type FakeInterface struct {
 	servicePlansReturnsOnCall map[int]struct {
 		result1 kore.ServicePlans
 	}
-	ServiceProvidersStub        func() *kore.ServiceProviderRegistry
+	ServiceProvidersStub        func() kore.ServiceProviders
 	serviceProvidersMutex       sync.RWMutex
 	serviceProvidersArgsForCall []struct {
 	}
 	serviceProvidersReturns struct {
-		result1 *kore.ServiceProviderRegistry
+		result1 kore.ServiceProviders
 	}
 	serviceProvidersReturnsOnCall map[int]struct {
-		result1 *kore.ServiceProviderRegistry
+		result1 kore.ServiceProviders
 	}
 	SignedClientCertificateStub        func(string, string) ([]byte, []byte, error)
 	signedClientCertificateMutex       sync.RWMutex
@@ -691,7 +691,7 @@ func (fake *FakeInterface) ServicePlansReturnsOnCall(i int, result1 kore.Service
 	}{result1}
 }
 
-func (fake *FakeInterface) ServiceProviders() *kore.ServiceProviderRegistry {
+func (fake *FakeInterface) ServiceProviders() kore.ServiceProviders {
 	fake.serviceProvidersMutex.Lock()
 	ret, specificReturn := fake.serviceProvidersReturnsOnCall[len(fake.serviceProvidersArgsForCall)]
 	fake.serviceProvidersArgsForCall = append(fake.serviceProvidersArgsForCall, struct {
@@ -714,32 +714,32 @@ func (fake *FakeInterface) ServiceProvidersCallCount() int {
 	return len(fake.serviceProvidersArgsForCall)
 }
 
-func (fake *FakeInterface) ServiceProvidersCalls(stub func() *kore.ServiceProviderRegistry) {
+func (fake *FakeInterface) ServiceProvidersCalls(stub func() kore.ServiceProviders) {
 	fake.serviceProvidersMutex.Lock()
 	defer fake.serviceProvidersMutex.Unlock()
 	fake.ServiceProvidersStub = stub
 }
 
-func (fake *FakeInterface) ServiceProvidersReturns(result1 *kore.ServiceProviderRegistry) {
+func (fake *FakeInterface) ServiceProvidersReturns(result1 kore.ServiceProviders) {
 	fake.serviceProvidersMutex.Lock()
 	defer fake.serviceProvidersMutex.Unlock()
 	fake.ServiceProvidersStub = nil
 	fake.serviceProvidersReturns = struct {
-		result1 *kore.ServiceProviderRegistry
+		result1 kore.ServiceProviders
 	}{result1}
 }
 
-func (fake *FakeInterface) ServiceProvidersReturnsOnCall(i int, result1 *kore.ServiceProviderRegistry) {
+func (fake *FakeInterface) ServiceProvidersReturnsOnCall(i int, result1 kore.ServiceProviders) {
 	fake.serviceProvidersMutex.Lock()
 	defer fake.serviceProvidersMutex.Unlock()
 	fake.ServiceProvidersStub = nil
 	if fake.serviceProvidersReturnsOnCall == nil {
 		fake.serviceProvidersReturnsOnCall = make(map[int]struct {
-			result1 *kore.ServiceProviderRegistry
+			result1 kore.ServiceProviders
 		})
 	}
 	fake.serviceProvidersReturnsOnCall[i] = struct {
-		result1 *kore.ServiceProviderRegistry
+		result1 kore.ServiceProviders
 	}{result1}
 }
 

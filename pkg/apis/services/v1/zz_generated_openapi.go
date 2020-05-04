@@ -35,6 +35,9 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/appvia/kore/pkg/apis/services/v1.ServiceCredentialsStatus": schema_pkg_apis_services_v1_ServiceCredentialsStatus(ref),
 		"github.com/appvia/kore/pkg/apis/services/v1.ServicePlan":              schema_pkg_apis_services_v1_ServicePlan(ref),
 		"github.com/appvia/kore/pkg/apis/services/v1.ServicePlanSpec":          schema_pkg_apis_services_v1_ServicePlanSpec(ref),
+		"github.com/appvia/kore/pkg/apis/services/v1.ServiceProvider":          schema_pkg_apis_services_v1_ServiceProvider(ref),
+		"github.com/appvia/kore/pkg/apis/services/v1.ServiceProviderSpec":      schema_pkg_apis_services_v1_ServiceProviderSpec(ref),
+		"github.com/appvia/kore/pkg/apis/services/v1.ServiceProviderStatus":    schema_pkg_apis_services_v1_ServiceProviderStatus(ref),
 		"github.com/appvia/kore/pkg/apis/services/v1.ServiceSpec":              schema_pkg_apis_services_v1_ServiceSpec(ref),
 		"github.com/appvia/kore/pkg/apis/services/v1.ServiceStatus":            schema_pkg_apis_services_v1_ServiceStatus(ref),
 	}
@@ -210,11 +213,24 @@ func schema_pkg_apis_services_v1_ServiceCredentialsStatus(ref common.ReferenceCa
 							Format:      "",
 						},
 					},
+					"providerID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ProviderID is the service credentials identifier in the service provider",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"providerData": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ProviderData is provider specific data",
+							Ref:         ref("k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"),
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/appvia/kore/pkg/apis/core/v1.Component"},
+			"github.com/appvia/kore/pkg/apis/core/v1.Component", "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"},
 	}
 }
 
@@ -315,6 +331,139 @@ func schema_pkg_apis_services_v1_ServicePlanSpec(ref common.ReferenceCallback) c
 	}
 }
 
+func schema_pkg_apis_services_v1_ServiceProvider(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ServiceProvider is a template for a service provider",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/appvia/kore/pkg/apis/services/v1.ServiceProviderSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/appvia/kore/pkg/apis/services/v1.ServiceProviderStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/services/v1.ServiceProviderSpec", "github.com/appvia/kore/pkg/apis/services/v1.ServiceProviderStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_services_v1_ServiceProviderSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ServiceProviderSpec defines the desired state of a Service provider",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"type": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Type refers to the service provider type",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Description provides a summary of the provider",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"summary": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Summary provides a short title summary for the provider",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"configuration": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Configuration are the key+value pairs describing a service provider",
+							Ref:         ref("k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"),
+						},
+					},
+				},
+				Required: []string{"type", "description", "summary", "configuration"},
+			},
+		},
+		Dependencies: []string{
+			"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"},
+	}
+}
+
+func schema_pkg_apis_services_v1_ServiceProviderStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ServiceProviderStatus defines the observed state of a service provider",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Status is the overall status of the service",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"message": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Message is the description of the current status",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"supportedKinds": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "SupportedKinds contains all the supported service kinds",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func schema_pkg_apis_services_v1_ServiceSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -349,7 +498,7 @@ func schema_pkg_apis_services_v1_ServiceSpec(ref common.ReferenceCallback) commo
 						},
 					},
 				},
-				Required: []string{"kind", "plan", "configuration", "credentials"},
+				Required: []string{"kind", "plan", "configuration"},
 			},
 		},
 		Dependencies: []string{
@@ -391,10 +540,36 @@ func schema_pkg_apis_services_v1_ServiceStatus(ref common.ReferenceCallback) com
 							Format:      "",
 						},
 					},
+					"providerID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ProviderID is the service identifier in the service provider",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"providerData": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ProviderData is provider specific data",
+							Ref:         ref("k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"),
+						},
+					},
+					"plan": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Plan is the name of the service plan which was used to create this service",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"configuration": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Configuration are the applied configuration values for this service",
+							Ref:         ref("k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"),
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/appvia/kore/pkg/apis/core/v1.Component"},
+			"github.com/appvia/kore/pkg/apis/core/v1.Component", "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"},
 	}
 }

@@ -40,7 +40,7 @@ const (
 var (
 	// Client is the default client for the kore
 	Client Interface
-	// ResourceNameFilter is a filter that all team names MUST comply with
+	// ResourceNameFilter is a filter that all resource names MUST comply with
 	// https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 	ResourceNameFilter = regexp.MustCompile(`^[a-z][a-z0-9]*(-[a-z0-9]+)*$`)
 )
@@ -64,6 +64,8 @@ type Interface interface {
 	PlanPolicies() PlanPolicies
 	// ServicePlans returns the interface for service plans
 	ServicePlans() ServicePlans
+	// ServiceProviders returns the service provider registry
+	ServiceProviders() ServiceProviders
 	// IDP returns the IDP interface
 	IDP() IDP
 	// Users returns the users interface
@@ -76,8 +78,6 @@ type Interface interface {
 	SignedClientCertificate(string, string) ([]byte, []byte, error)
 	// SignedServerCertificate is used to generate a server certificate
 	SignedServerCertificate([]string, time.Duration) ([]byte, []byte, error)
-	// ServiceProviders returns the service provider registry
-	ServiceProviders() *ServiceProviderRegistry
 }
 
 // DEX is the configuration required to setup identity providers

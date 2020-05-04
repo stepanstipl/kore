@@ -32,6 +32,8 @@ const (
 	DeletedStatus Status = "Deleted"
 	// DeleteFailedStatus indicates that deleting the entity failed
 	DeleteFailedStatus Status = "DeleteFailed"
+	// ErrorStatus indicates that a recoverable error happened
+	ErrorStatus Status = "Error"
 	// PendingStatus indicate we are waiting
 	PendingStatus Status = "Pending"
 	// SuccessStatus is a successful resource
@@ -77,6 +79,12 @@ type Component struct {
 	Message string `json:"message,omitempty"`
 	// Detail is additional details on the error is any
 	Detail string `json:"detail,omitempty"`
+}
+
+func (c *Component) Update(status Status, message, detail string) {
+	c.Status = status
+	c.Message = message
+	c.Detail = detail
 }
 
 func (c Component) IsFailed() bool {

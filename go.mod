@@ -48,8 +48,8 @@ require (
 	github.com/jinzhu/gorm v1.9.12
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/jpillora/backoff v1.0.0
-	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a
 	github.com/julienschmidt/httprouter v1.2.0
+	github.com/kubernetes-sigs/go-open-service-broker-client v0.0.0-20200323235047-56a01c84bf43
 	github.com/manifoldco/promptui v0.7.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.2.2
 	github.com/mikefarah/yq/v3 v3.0.0-20200415014842-6f0a329331f9
@@ -83,9 +83,7 @@ require (
 	gonum.org/v1/gonum v0.7.0 // indirect
 	google.golang.org/api v0.20.0
 	google.golang.org/grpc v1.27.0
-	gopkg.in/resty.v1 v1.12.0
 	gopkg.in/yaml.v2 v2.2.8
-	gotest.tools v2.2.0+incompatible
 	k8s.io/api v0.17.0
 	k8s.io/apiextensions-apiserver v0.17.0
 	k8s.io/apimachinery v0.17.0
@@ -126,5 +124,7 @@ replace github.com/dexidp/dex => github.com/appvia/dex v0.0.0-20191213161401-b14
 
 // This is the kubernetes-1.14.1-tools tag (which is the same as upstream kubernetes-1.14.1)
 replace k8s.io/code-generator => github.com/appvia/kubernetes-code-generator v0.0.0-20200311145355-28f8f0159a26
+
+replace github.com/kubernetes-sigs/go-open-service-broker-client => github.com/appvia/go-open-service-broker-client v0.0.0-20200430155427-f6c465273916
 
 go 1.13
