@@ -18,6 +18,7 @@ package create
 
 import (
 	"fmt"
+	"io/ioutil"
 
 	confv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -26,6 +27,7 @@ import (
 	"github.com/appvia/kore/pkg/kore"
 
 	"github.com/spf13/cobra"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -84,10 +86,42 @@ func (o CreateGKECredentialsOptions) Run() error {
 		return fmt.Errorf("%q already exists, please edit instead", o.Name)
 	}
 
+	json, err := ioutil.ReadFile(o.ServiceAccountJSON)
 	if err != nil {
 		o.Println("Error reading service account from %v", o.ServiceAccountJSON)
 
 		return err
+	}
+
+	secret := &confv1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Secret",
+			APIVersion: confv1.GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      o.Name,
+			Namespace: kore.HubAdminTeam,
+		},
+		Spec: confv1.SecretSpec{
+			Type:        "gke-credentials",
+			Description: o.Description,
+			Data: map[string]string{
+				"key": string(json),
+			},
+		},
+	}
+	secret.Encode()
+
+	o.Println("Storing credentials secret in Kore")
+	err = o.WaitForCreation(
+		o.ClientWithTeamResource(kore.HubAdminTeam, o.Resources().MustLookup("secret")).
+			Name(o.Name).
+			Payload(secret).
+			Result(&confv1.Secret{}),
+		o.NoWait,
+	)
+	if err != nil {
+		return fmt.Errorf("trying to create secret: %s", err)
 	}
 
 	cred := &gke.GKECredentials{
@@ -101,6 +135,10 @@ func (o CreateGKECredentialsOptions) Run() error {
 		},
 		Spec: gke.GKECredentialsSpec{
 			Project: o.ProjectName,
+			CredentialsRef: &v1.SecretReference{
+				Name:      o.Name,
+				Namespace: kore.HubAdminTeam,
+			},
 		},
 	}
 
