@@ -23,14 +23,13 @@ class V1ServiceSpec {
     /**
      * Constructs a new <code>V1ServiceSpec</code>.
      * @alias module:model/V1ServiceSpec
-     * @param configuration {String} 
-     * @param credentials {module:model/V1Ownership} 
+     * @param configuration {Object} 
      * @param kind {String} 
      * @param plan {String} 
      */
-    constructor(configuration, credentials, kind, plan) { 
+    constructor(configuration, kind, plan) { 
         
-        V1ServiceSpec.initialize(this, configuration, credentials, kind, plan);
+        V1ServiceSpec.initialize(this, configuration, kind, plan);
     }
 
     /**
@@ -38,9 +37,8 @@ class V1ServiceSpec {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, configuration, credentials, kind, plan) { 
+    static initialize(obj, configuration, kind, plan) { 
         obj['configuration'] = configuration;
-        obj['credentials'] = credentials;
         obj['kind'] = kind;
         obj['plan'] = plan;
     }
@@ -57,7 +55,7 @@ class V1ServiceSpec {
             obj = obj || new V1ServiceSpec();
 
             if (data.hasOwnProperty('configuration')) {
-                obj['configuration'] = ApiClient.convertToType(data['configuration'], 'String');
+                obj['configuration'] = ApiClient.convertToType(data['configuration'], Object);
             }
             if (data.hasOwnProperty('credentials')) {
                 obj['credentials'] = V1Ownership.constructFromObject(data['credentials']);
@@ -73,14 +71,14 @@ class V1ServiceSpec {
     }
 
 /**
-     * @return {String}
+     * @return {Object}
      */
     getConfiguration() {
         return this.configuration;
     }
 
     /**
-     * @param {String} configuration
+     * @param {Object} configuration
      */
     setConfiguration(configuration) {
         this['configuration'] = configuration;
@@ -128,7 +126,7 @@ class V1ServiceSpec {
 }
 
 /**
- * @member {String} configuration
+ * @member {Object} configuration
  */
 V1ServiceSpec.prototype['configuration'] = undefined;
 

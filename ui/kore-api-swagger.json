@@ -6911,11 +6911,17 @@
         "credentialsRef"
       ],
       "properties": {
+        "accessKeyID": {
+          "type": "string"
+        },
         "accountID": {
           "type": "string"
         },
         "credentialsRef": {
           "$ref": "#/definitions/v1.SecretReference"
+        },
+        "secretAccessKey": {
+          "type": "string"
         }
       }
     },
@@ -7310,12 +7316,15 @@
     },
     "v1alpha1.GKECredentialsSpec": {
       "required": [
-        "account",
-        "project"
+        "project",
+        "credentialsRef"
       ],
       "properties": {
         "account": {
           "type": "string"
+        },
+        "credentialsRef": {
+          "$ref": "#/definitions/v1.SecretReference"
         },
         "project": {
           "type": "string"

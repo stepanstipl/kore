@@ -23,7 +23,7 @@ class V1ServiceCredentialsSpec {
     /**
      * Constructs a new <code>V1ServiceCredentialsSpec</code>.
      * @alias module:model/V1ServiceCredentialsSpec
-     * @param configuration {String} 
+     * @param configuration {Object} 
      * @param kind {String} 
      */
     constructor(configuration, kind) { 
@@ -59,7 +59,7 @@ class V1ServiceCredentialsSpec {
                 obj['clusterNamespace'] = ApiClient.convertToType(data['clusterNamespace'], 'String');
             }
             if (data.hasOwnProperty('configuration')) {
-                obj['configuration'] = ApiClient.convertToType(data['configuration'], 'String');
+                obj['configuration'] = ApiClient.convertToType(data['configuration'], Object);
             }
             if (data.hasOwnProperty('kind')) {
                 obj['kind'] = ApiClient.convertToType(data['kind'], 'String');
@@ -98,14 +98,14 @@ class V1ServiceCredentialsSpec {
         this['clusterNamespace'] = clusterNamespace;
     }
 /**
-     * @return {String}
+     * @return {Object}
      */
     getConfiguration() {
         return this.configuration;
     }
 
     /**
-     * @param {String} configuration
+     * @param {Object} configuration
      */
     setConfiguration(configuration) {
         this['configuration'] = configuration;
@@ -150,7 +150,7 @@ V1ServiceCredentialsSpec.prototype['cluster'] = undefined;
 V1ServiceCredentialsSpec.prototype['clusterNamespace'] = undefined;
 
 /**
- * @member {String} configuration
+ * @member {Object} configuration
  */
 V1ServiceCredentialsSpec.prototype['configuration'] = undefined;
 

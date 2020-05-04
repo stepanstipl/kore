@@ -52,6 +52,9 @@ class V1alpha1GKECredentialsSpec {
         if (data) {
             obj = obj || new V1alpha1GKECredentialsSpec();
 
+            if (data.hasOwnProperty('account')) {
+                obj['account'] = ApiClient.convertToType(data['account'], 'String');
+            }
             if (data.hasOwnProperty('credentialsRef')) {
                 obj['credentialsRef'] = V1SecretReference.constructFromObject(data['credentialsRef']);
             }
@@ -65,6 +68,19 @@ class V1alpha1GKECredentialsSpec {
         return obj;
     }
 
+/**
+     * @return {String}
+     */
+    getAccount() {
+        return this.account;
+    }
+
+    /**
+     * @param {String} account
+     */
+    setAccount(account) {
+        this['account'] = account;
+    }
 /**
      * @return {module:model/V1SecretReference}
      */
@@ -106,6 +122,11 @@ class V1alpha1GKECredentialsSpec {
     }
 
 }
+
+/**
+ * @member {String} account
+ */
+V1alpha1GKECredentialsSpec.prototype['account'] = undefined;
 
 /**
  * @member {module:model/V1SecretReference} credentialsRef

@@ -52,16 +52,35 @@ class V1alpha1EKSCredentialsSpec {
         if (data) {
             obj = obj || new V1alpha1EKSCredentialsSpec();
 
+            if (data.hasOwnProperty('accessKeyID')) {
+                obj['accessKeyID'] = ApiClient.convertToType(data['accessKeyID'], 'String');
+            }
             if (data.hasOwnProperty('accountID')) {
                 obj['accountID'] = ApiClient.convertToType(data['accountID'], 'String');
             }
             if (data.hasOwnProperty('credentialsRef')) {
                 obj['credentialsRef'] = V1SecretReference.constructFromObject(data['credentialsRef']);
             }
+            if (data.hasOwnProperty('secretAccessKey')) {
+                obj['secretAccessKey'] = ApiClient.convertToType(data['secretAccessKey'], 'String');
+            }
         }
         return obj;
     }
 
+/**
+     * @return {String}
+     */
+    getAccessKeyID() {
+        return this.accessKeyID;
+    }
+
+    /**
+     * @param {String} accessKeyID
+     */
+    setAccessKeyID(accessKeyID) {
+        this['accessKeyID'] = accessKeyID;
+    }
 /**
      * @return {String}
      */
@@ -88,8 +107,26 @@ class V1alpha1EKSCredentialsSpec {
     setCredentialsRef(credentialsRef) {
         this['credentialsRef'] = credentialsRef;
     }
+/**
+     * @return {String}
+     */
+    getSecretAccessKey() {
+        return this.secretAccessKey;
+    }
+
+    /**
+     * @param {String} secretAccessKey
+     */
+    setSecretAccessKey(secretAccessKey) {
+        this['secretAccessKey'] = secretAccessKey;
+    }
 
 }
+
+/**
+ * @member {String} accessKeyID
+ */
+V1alpha1EKSCredentialsSpec.prototype['accessKeyID'] = undefined;
 
 /**
  * @member {String} accountID
@@ -100,6 +137,11 @@ V1alpha1EKSCredentialsSpec.prototype['accountID'] = undefined;
  * @member {module:model/V1SecretReference} credentialsRef
  */
 V1alpha1EKSCredentialsSpec.prototype['credentialsRef'] = undefined;
+
+/**
+ * @member {String} secretAccessKey
+ */
+V1alpha1EKSCredentialsSpec.prototype['secretAccessKey'] = undefined;
 
 
 

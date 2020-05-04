@@ -54,6 +54,12 @@ class V1ServiceCredentialsStatus {
             if (data.hasOwnProperty('message')) {
                 obj['message'] = ApiClient.convertToType(data['message'], 'String');
             }
+            if (data.hasOwnProperty('providerData')) {
+                obj['providerData'] = ApiClient.convertToType(data['providerData'], Object);
+            }
+            if (data.hasOwnProperty('providerID')) {
+                obj['providerID'] = ApiClient.convertToType(data['providerID'], 'String');
+            }
             if (data.hasOwnProperty('status')) {
                 obj['status'] = ApiClient.convertToType(data['status'], 'String');
             }
@@ -88,6 +94,32 @@ class V1ServiceCredentialsStatus {
         this['message'] = message;
     }
 /**
+     * @return {Object}
+     */
+    getProviderData() {
+        return this.providerData;
+    }
+
+    /**
+     * @param {Object} providerData
+     */
+    setProviderData(providerData) {
+        this['providerData'] = providerData;
+    }
+/**
+     * @return {String}
+     */
+    getProviderID() {
+        return this.providerID;
+    }
+
+    /**
+     * @param {String} providerID
+     */
+    setProviderID(providerID) {
+        this['providerID'] = providerID;
+    }
+/**
      * @return {String}
      */
     getStatus() {
@@ -112,6 +144,16 @@ V1ServiceCredentialsStatus.prototype['components'] = undefined;
  * @member {String} message
  */
 V1ServiceCredentialsStatus.prototype['message'] = undefined;
+
+/**
+ * @member {Object} providerData
+ */
+V1ServiceCredentialsStatus.prototype['providerData'] = undefined;
+
+/**
+ * @member {String} providerID
+ */
+V1ServiceCredentialsStatus.prototype['providerID'] = undefined;
 
 /**
  * @member {String} status
