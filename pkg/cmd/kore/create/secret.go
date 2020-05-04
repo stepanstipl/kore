@@ -129,6 +129,7 @@ func (o *CreateSecretOptions) Run() error {
 
 	return o.ClientWithTeamResource(o.Team, o.Resources().MustLookup("secret")).
 		Payload(secret).
+		Name(o.Name).
 		Update().
 		Error()
 }
