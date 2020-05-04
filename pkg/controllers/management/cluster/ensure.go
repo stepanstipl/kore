@@ -113,7 +113,7 @@ func (a *Controller) SetClusterStatus(cluster *clustersv1.Cluster, components *C
 		cluster.Status.Status = corev1.PendingStatus
 
 		// @step: walk the component and find the kubernetes type
-		components.WalkFunc(func(v *Vertex) (bool, error) {
+		_ = components.WalkFunc(func(v *Vertex) (bool, error) {
 			if utils.IsEqualType(v.Object, &clustersv1.Kubernetes{}) {
 
 				k := v.Object.(*clustersv1.Kubernetes)

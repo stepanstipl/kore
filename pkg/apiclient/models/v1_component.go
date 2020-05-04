@@ -6,6 +6,7 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 )
@@ -24,12 +25,42 @@ type V1Component struct {
 	// name
 	Name string `json:"name,omitempty"`
 
+	// resource
+	Resource *V1Ownership `json:"resource,omitempty"`
+
 	// status
 	Status string `json:"status,omitempty"`
 }
 
 // Validate validates this v1 component
 func (m *V1Component) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateResource(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *V1Component) validateResource(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Resource) { // not required
+		return nil
+	}
+
+	if m.Resource != nil {
+		if err := m.Resource.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("resource")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 

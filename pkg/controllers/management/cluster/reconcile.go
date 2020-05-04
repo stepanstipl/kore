@@ -166,7 +166,7 @@ func (a *Controller) Apply(cluster *clustersv1.Cluster, components *Components) 
 		var result reconcile.Result
 
 		// We walk each of the components in order, we create them if required. If the resource
-		// is not yet successfull we wait and requeue. If the resource has failed, we throw
+		// is not yet successful we wait and requeue. If the resource has failed, we throw
 		// a critical failure and stop
 		err := components.WalkFunc(func(co *Vertex) (bool, error) {
 			condition := corev1.Component{

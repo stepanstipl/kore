@@ -47,6 +47,8 @@ type ClientService interface {
 
 	GenerateInviteLinkForUser(params *GenerateInviteLinkForUserParams, authInfo runtime.ClientAuthInfoWriter) (*GenerateInviteLinkForUserOK, error)
 
+	GetAccount(params *GetAccountParams, authInfo runtime.ClientAuthInfoWriter) (*GetAccountOK, error)
+
 	GetAllocation(params *GetAllocationParams, authInfo runtime.ClientAuthInfoWriter) (*GetAllocationOK, error)
 
 	GetCluster(params *GetClusterParams, authInfo runtime.ClientAuthInfoWriter) (*GetClusterOK, error)
@@ -104,6 +106,8 @@ type ClientService interface {
 	InvitationSubmit(params *InvitationSubmitParams, authInfo runtime.ClientAuthInfoWriter) (*InvitationSubmitOK, error)
 
 	InviteUser(params *InviteUserParams, authInfo runtime.ClientAuthInfoWriter) (*InviteUserOK, error)
+
+	ListAccounts(params *ListAccountsParams, authInfo runtime.ClientAuthInfoWriter) (*ListAccountsOK, error)
 
 	ListAllocations(params *ListAllocationsParams, authInfo runtime.ClientAuthInfoWriter) (*ListAllocationsOK, error)
 
@@ -163,6 +167,8 @@ type ClientService interface {
 
 	LoginCallback(params *LoginCallbackParams, authInfo runtime.ClientAuthInfoWriter) (*LoginCallbackOK, error)
 
+	RemoveAccount(params *RemoveAccountParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveAccountOK, error)
+
 	RemoveAllocation(params *RemoveAllocationParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveAllocationOK, error)
 
 	RemoveCluster(params *RemoveClusterParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveClusterOK, error)
@@ -184,6 +190,8 @@ type ClientService interface {
 	RemoveUser(params *RemoveUserParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveUserOK, error)
 
 	StoreSecurityScanForResource(params *StoreSecurityScanForResourceParams, authInfo runtime.ClientAuthInfoWriter) (*StoreSecurityScanForResourceOK, error)
+
+	UpdateAccount(params *UpdateAccountParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateAccountOK, error)
 
 	UpdateAllocation(params *UpdateAllocationParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateAllocationOK, error)
 

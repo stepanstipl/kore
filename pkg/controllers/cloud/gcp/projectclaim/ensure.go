@@ -43,11 +43,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var (
-	// used for boolean reference
-	isTrue = true
-)
-
 const (
 	// ServiceAccountKeyMax is the max number of service account keys to keep
 	ServiceAccountKeyMax = 2

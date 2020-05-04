@@ -69,7 +69,7 @@ func (c *Components) Add(object runtime.Object) *Vertex {
 	}
 
 	if c.graph.GetSize() <= 0 {
-		c.graph.AddEdge(c.root, v)
+		_ = c.graph.AddEdge(c.root, v)
 	}
 
 	return v

@@ -20,6 +20,9 @@ type V1alpha1ProjectClaimSpec struct {
 	// organization
 	// Required: true
 	Organization *V1Ownership `json:"organization"`
+
+	// project name
+	ProjectName string `json:"projectName,omitempty"`
 }
 
 // Validate validates this v1alpha1 project claim spec
