@@ -38,6 +38,7 @@ const (
 	// Policies required for eks clusters:
 	amazonEKSClusterPolicy = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
 	amazonEKSServicePolicy = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
+	amazonEKSFargatePolicy = "arn:aws:iam::aws:policy/AmazonEKSFargatePodExecutionRolePolicy"
 
 	// ClusterStsTrustPolicy provides the trust policy for the EKS cluster Role
 	ClusterStsTrustPolicy = `{
@@ -70,7 +71,22 @@ const (
 			"Action": "sts:AssumeRole"
 		  }
 		]
-	  }
+	}
+	`
+
+	fargateTrustPolicy = `
+	{
+		"Version": "2012-10-17",
+		"Statement": [
+		  {
+			"Effect": "Allow",
+			"Principal": {
+        "Service": "eks-fargate-pods.amazonaws.com"
+      },
+			"Action": "sts:AssumeRole"
+		  }
+		]
+	}
 	`
 
 	// amazonEKSWorkerNodePolicy provides read-only access to Amazon EC2 Container Registry repositories.
@@ -120,6 +136,15 @@ func (i *IamClient) EnsureEKSNodePoolRole(ctx context.Context, prefix string) (*
 	}
 
 	return i.EnsureRole(ctx, prefix+"-eks-nodepool", policies, nodeStsTrustPolicy)
+}
+
+// EnsureFargatPodExecutionRole creates a default role for the fargat pods to run under
+func (i IamClient) EnsureFargatPodExecutionRole(ctx context.Context, prefix string) (*iam.Role, error) {
+	policies := []string{
+		amazonEKSFargatePolicy,
+	}
+
+	return i.EnsureRole(ctx, prefix+"-fargate", policies, fargateTrustPolicy)
 }
 
 // EnsureRole is responsible for creating a role

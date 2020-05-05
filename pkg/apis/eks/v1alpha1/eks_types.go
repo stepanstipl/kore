@@ -38,24 +38,55 @@ type EKSSpec struct {
 	// Cluster refers to the cluster this object belongs to
 	// +kubebuilder:validation:Required
 	Cluster corev1.Ownership `json:"cluster,omitempty"`
-	// Version is the Kubernetes version to use
-	// +kubebuilder:validation:MinLength=3
-	// +kubebuilder:validation:Required
-	Version string `json:"version,omitempty"`
+	// Credentials is a reference to an EKSCredentials object to use for authentication
+	// +k8s:openapi-gen=false
+	Credentials core.Ownership `json:"credentials"`
+	// FargateProfiles are a collection of fargate profiles
+	// +kubebuilder:validation:Optional
+	FargateProfiles []*FargateProfile `json:"fargateProfiles,omitempty"`
 	// Region is the AWS region to launch this cluster within
 	// +kubebuilder:validation:Required
 	Region string `json:"region"`
-	// SubnetIds is a list of subnet IDs
-	// +kubebuilder:validation:Required
-	// +listType=set
-	SubnetIDs []string `json:"subnetIDs"`
 	// SecurityGroupIds is a list of security group IDs
 	// +kubebuilder:validation:Required
 	// +listType=set
 	SecurityGroupIDs []string `json:"securityGroupIDs,omitempty"`
-	// Credentials is a reference to an EKSCredentials object to use for authentication
-	// +k8s:openapi-gen=false
-	Credentials core.Ownership `json:"credentials"`
+	// SubnetIds is a list of subnet IDs
+	// +kubebuilder:validation:Required
+	// +listType=set
+	SubnetIDs []string `json:"subnetIDs"`
+	// Version is the Kubernetes version to use
+	// +kubebuilder:validation:MinLength=3
+	// +kubebuilder:validation:Required
+	Version string `json:"version,omitempty"`
+}
+
+// FargateProfile defines a profile for matching pods to fargate
+type FargateProfile struct {
+	// Name is the name of the profile
+	// +kubebuilder:validation:MinLength=3
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+	// ARN is the IAM ARN the pods run under
+	// +kubebuilder:validation:MinLength=3
+	// +kubebuilder:validation:Required
+	ARN string `json:"arn"`
+	// Subnets is a collection of private subnets for the pods
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:Required
+	// +listType=set
+	// Subnets []string `json:"subnets"`
+	// Selectors is a filter for matching the pods that will run on fargate
+	// +kubebuilder:validation:Required
+	Selectors []FargateSelector `json:"selectors"`
+}
+
+// FargateSelector is a pod selector for a fargate profile
+type FargateSelector struct {
+	// Namespace selects by namespace
+	Namespace string `json:"namespace,omitempty"`
+	// Labels is a collection of labels to pod filter on
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 // EKSStatus defines the observed state of EKS cluster

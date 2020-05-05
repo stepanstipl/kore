@@ -100,6 +100,47 @@ const EKSPlanSchema = `
 		"enableDefaultTrafficBlock": {
 			"type": "boolean"
 		},
+		"fargateProfiles": {
+			"type": "array",
+			"description": "A collection of fargate profiles to provision",
+			"items": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": [
+					"name",
+					"subnets",
+					"selectors",
+				],
+				"properties": {
+					"name": {
+						"description": "The name of the fargate profile.",
+						"type": "string",
+						"minLength": 1
+					},
+					"arn": {
+						"description": "An optional pod execution IAM Arn the pods to run under.",
+						"type": "string"
+					},
+					"selectors": {
+						"type": "array",
+						"description": "A collection of filers to match pods which should run on fargate.",
+						"additionalProperties": false,
+						"properties": {
+							"namespace": {
+								"description": "Selects all the pods within the namespace to run on fargate.",
+								"type": "string",
+								"minLength": 1
+							},
+							"labels": {
+								"description": "Selects the pods based on matching labels.",
+								"type": "object",
+								"additionalProperties": { "type": "string" }
+							}
+						}
+					}
+				}
+			}
+		},
 		"inheritTeamMembers": {
 			"type": "boolean"
 		},

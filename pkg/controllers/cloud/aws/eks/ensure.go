@@ -274,6 +274,65 @@ func (t *eksCtrl) EnsureClusterRoles(cluster *eks.EKS) controllers.EnsureFunc {
 	}
 }
 
+/*
+// EnsureFargateProfiles is used to ensure the profiles for fargate are in sync
+func (t *eksCtrl) EnsureFargateProfiles(client *aws.Client, cluster eks.EKS) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		logger := log.WithFields(log.Fields{
+			"name":      cluster.Name,
+			"namespace": cluster.Namespace,
+		})
+		logger.Debug("ensuring the fargate profiles")
+
+		list, err := client.ListFargateProfile(ctx)
+		if err != nil {
+			logger.WithError(err).Error("trying to list the fargate profiles")
+
+			return reconcile.Result{}, nil
+		}
+
+		if len(cluster.Spec.FargateProfiles) == 0 {
+			for _, x := range list {
+				if err := client.DeleteFargateProfile(ctx, x); err != nil {
+					logger.WithError(err).Error("trying to delete the fargate profile")
+
+					return reconcile.Result{}, err
+				}
+			}
+
+			return reconcile.Result{}, nil
+		}
+
+		// @step: first we delete then we add
+		for _, x := range list {
+			found := func(name string) bool {
+				for _, j := range cluster.Spec.FargateProfiles {
+					if j.Name == name {
+						return true
+					}
+				}
+
+				return false
+			}(x)
+			if !found {
+				logger.WithField(
+					"profile", x,
+				).Debug("attempting to remove the fargate profile")
+
+				if err := client.DeleteFargateProfile(ctx, x); err != nil {
+					logger.WithError(err).Error("trying to delete the fargate profile")
+
+					return reconcile.Result{}, err
+				}
+			}
+
+		}
+
+		return reconcile.Result{}, nil
+	}
+}
+*/
+
 // EnsureDeletionStatus ensures the resource is in a deleting state
 func (t *eksCtrl) EnsureDeletionStatus(cluster *eks.EKS) controllers.EnsureFunc {
 	return func(ctx context.Context) (reconcile.Result, error) {

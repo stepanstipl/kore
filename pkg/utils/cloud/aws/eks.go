@@ -19,6 +19,7 @@ package aws
 import (
 	"context"
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -30,6 +31,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/aws/aws-sdk-go/service/eks"
 	awseks "github.com/aws/aws-sdk-go/service/eks"
 	log "github.com/sirupsen/logrus"
@@ -56,6 +59,8 @@ type Client struct {
 	Sess *session.Session
 	// svc is the eks service
 	svc *eks.EKS
+	// compute is a client for ec2
+	compute ec2iface.EC2API
 }
 
 // NewBasicClient gets an AWS session relating to a cluster
@@ -66,7 +71,6 @@ func NewBasicClient(cred *eksv1alpha1.EKSCredentials, clusterName, region string
 		Credentials: credentials.NewStaticCredentials(cred.Spec.AccessKeyID, cred.Spec.SecretAccessKey, ""),
 	})
 	if err != nil {
-
 		return nil, err
 	}
 
@@ -98,6 +102,7 @@ func NewEKSClient(cred *eksv1alpha1.EKSCredentials, cluster *eksv1alpha1.EKS) (*
 		cluster:     cluster,
 		Sess:        sesh,
 		svc:         eks.New(sesh),
+		compute:     ec2.New(sesh),
 	}, err
 }
 
@@ -129,6 +134,111 @@ func (c *Client) Exists(ctx context.Context) (exists bool, err error) {
 	}
 
 	return true, nil
+}
+
+// FargateProfileName returns the profile name
+func FargateProfileName(cluster *eksv1alpha1.EKS, profile string) string {
+	return fmt.Sprintf("%s-%s", cluster.Name, profile)
+}
+
+// DefaultFargateARN is the default name for the pod execution ARN
+func DefaultFargateARN(cluster *eksv1alpha1.EKS) string {
+	return fmt.Sprintf("%s-fargate", cluster.Name)
+}
+
+// DeleteFargateProfile is used to delete a profile
+func (c *Client) DeleteFargateProfile(ctx context.Context, profile string) error {
+	resp, err := c.svc.DescribeFargateProfileWithContext(ctx, &eks.DescribeFargateProfileInput{
+		ClusterName:        aws.String(c.cluster.Name),
+		FargateProfileName: aws.String(FargateProfileName(c.cluster, profile)),
+	})
+	if err != nil {
+		return err
+	}
+
+	if resp.FargateProfile == nil {
+		return nil
+	}
+
+	_, err = c.svc.DeleteFargateProfileWithContext(ctx, &eks.DeleteFargateProfileInput{
+		ClusterName:        aws.String(c.cluster.Name),
+		FargateProfileName: aws.String(FargateProfileName(c.cluster, profile)),
+	})
+
+	return err
+}
+
+// ListFargateProfile is used list all the profiles for a cluster
+func (c *Client) ListFargateProfile(ctx context.Context) ([]string, error) {
+	resp, err := c.svc.ListFargateProfilesWithContext(ctx, &eks.ListFargateProfilesInput{
+		ClusterName: aws.String(c.cluster.Name),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return aws.StringValueSlice(resp.FargateProfileNames), nil
+}
+
+// CreateFargateProfile is used to provision a fargate profile
+func (c *Client) CreateFargateProfile(ctx context.Context, profile *eksv1alpha1.FargateProfile) error {
+	logger := log.WithFields(log.Fields{
+		"name":      c.cluster.Name,
+		"namespace": c.cluster.Namespace,
+	})
+	logger.Debug("attempting to create the eks cluster")
+
+	{
+		resp, err := c.svc.DescribeFargateProfileWithContext(ctx, &eks.DescribeFargateProfileInput{
+			ClusterName:        aws.String(c.cluster.Name),
+			FargateProfileName: aws.String(FargateProfileName(c.cluster, profile)),
+		})
+		if err != nil {
+			return err
+		}
+
+		if resp.FargateProfile != nil {
+			return errors.New("fargate profiles cannot be update, you have to create a new one")
+		}
+	}
+
+	resp, err := c.compute.DescribeSubnetsWithContext(ctx, &ec2.DescribeSubnetsInput{
+		SubnetIds: aws.StringSlice(c.cluster.Spec.SubnetIDs),
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("tag:kubernetes.io/role/internal-elb"),
+				Values: aws.StringSlice([]string{"1"}),
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+	subnets := make([]*string, len(resp.Subnets))
+
+	for i := 0; i < len(resp.Subnets); i++ {
+		subnets[i] = resp.Subnets[i].SubnetId
+	}
+
+	input := &eks.CreateFargateProfileInput{
+		ClusterName:        aws.String(c.cluster.Name),
+		FargateProfileName: aws.String(FargateProfileName(c.cluster, profile)),
+		Subnets:            subnets,
+	}
+
+	for _, x := range profile.Selectors {
+		input.Selectors = append(input.Selectors, &eks.FargateProfileSelector{
+			Labels:    aws.StringMap(x.Labels),
+			Namespace: aws.String(x.Namespace),
+		})
+	}
+	if profile.ARN == "" {
+		input.PodExecutionRoleArn = aws.String(DefaultFargateARN(c.cluster))
+	}
+
+	_, err = c.svc.CreateFargateProfileWithContext(ctx, input)
+
+	return err
 }
 
 // Create creates an EKS cluster
