@@ -106,7 +106,7 @@ func (o CreateGKECredentialsOptions) Run() error {
 			Type:        "gke-credentials",
 			Description: o.Description,
 			Data: map[string]string{
-				"key": string(json),
+				"service_account_key": string(json),
 			},
 		},
 	}

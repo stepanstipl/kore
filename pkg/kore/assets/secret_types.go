@@ -28,8 +28,8 @@ type SecretTypes struct {
 var (
 	// AWSCredentialsSecret holds kubernetes endpoints
 	AWSCredentialsSecret = SecretTypes{
-		Name:   "aws-credential",
-		Fields: []string{"access_id", "access_secret"},
+		Name:   "aws-credentials",
+		Fields: []string{"access_key_id", "access_secret_key"},
 	}
 
 	// GenericSecret is used to generic secrets
@@ -41,7 +41,7 @@ var (
 	// GKECredentialsSecret holds the gke credentials
 	GKECredentialsSecret = SecretTypes{
 		Name:   "gke-credentials",
-		Fields: []string{"key"},
+		Fields: []string{"service_account_key"},
 	}
 
 	// GCPProjectSecret holds the details related to a gcp project credential

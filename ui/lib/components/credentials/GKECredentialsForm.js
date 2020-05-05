@@ -24,7 +24,7 @@ class GKECredentialsForm extends VerifiedAllocatedResourceForm {
     const spec = new V1SecretSpec()
     spec.setType('gke-credentials')
     spec.setDescription(`GCP ${values.project} project Service Account`)
-    spec.setData({ key: btoa(values.account) })
+    spec.setData({ service_account_key: btoa(values.account) })
     resource.setSpec(spec)
 
     return resource
@@ -112,7 +112,7 @@ class GKECredentialsForm extends VerifiedAllocatedResourceForm {
         <Form.Item label="Service Account JSON" labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} validateStatus={this.fieldError('account') ? 'error' : ''} help={this.fieldError('account') || 'The Service Account key in JSON format, with GKE admin permissions on the GCP project'}>
           {!data ? (
             form.getFieldDecorator('account', {
-              rules: [{ required: true, message: 'Please enter your Service Account!' }]
+              rules: [{ required: true, message: 'Please enter your Service Account key!' }]
             })(
               <Input.TextArea autoSize={{ minRows: 4, maxRows: 10  }} placeholder="Service Account JSON" />,
             )

@@ -119,11 +119,11 @@ func (o CreateEKSCredentialsOptions) Run() error {
 			Namespace: kore.HubAdminTeam,
 		},
 		Spec: confv1.SecretSpec{
-			Type:        "aws-credential",
+			Type:        "aws-credentials",
 			Description: o.Description,
 			Data: map[string]string{
-				"access_id":     o.AccessKeyID,
-				"access_secret": o.SecretAccessKey,
+				"access_key_id":     o.AccessKeyID,
+				"access_secret_key": o.SecretAccessKey,
 			},
 		},
 	}

@@ -22,9 +22,9 @@ import (
 	"fmt"
 	"time"
 
-	config "github.com/appvia/kore/pkg/apis/config/v1"
 	core "github.com/appvia/kore/pkg/apis/core/v1"
 	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
+	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/utils/cloud/aws"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 	log "github.com/sirupsen/logrus"
@@ -228,29 +228,14 @@ func (t *eksvpcCtrl) GetCredentials(ctx context.Context, vpc *eksv1alpha1.EKSVPC
 	}
 
 	// @step: we need to grab the secret
-	secret := &config.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      creds.Spec.CredentialsRef.Name,
-			Namespace: creds.Spec.CredentialsRef.Namespace,
-		},
-	}
-
-	found, err = kubernetes.GetIfExists(ctx, t.mgr.GetClient(), secret)
+	secret, err := controllers.GetDecodedSecret(ctx, t.mgr.GetClient(), creds.Spec.CredentialsRef)
 	if err != nil {
-		return nil, err
-	}
-	if !found {
-		return nil, fmt.Errorf("eks credentials secret: (%s/%s) not found", creds.Spec.CredentialsRef.Namespace, creds.Spec.CredentialsRef.Name)
-	}
-
-	// @step: ensure the secret is decoded before using
-	if err := secret.Decode(); err != nil {
 		return nil, err
 	}
 
 	return &aws.Credentials{
 		AccountID:       creds.Spec.AccountID,
-		AccessKeyID:     secret.Spec.Data["access_id"],
-		SecretAccessKey: secret.Spec.Data["access_secret"],
+		AccessKeyID:     secret.Spec.Data["access_key_id"],
+		SecretAccessKey: secret.Spec.Data["access_secret_key"],
 	}, nil
 }

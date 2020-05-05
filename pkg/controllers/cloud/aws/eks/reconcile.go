@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 
-	config "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
@@ -129,7 +128,7 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 // GetClusterClient returns a EKS cluster client
 func (t *eksCtrl) GetClusterClient(ctx context.Context, resource *eksv1alpha1.EKS) (*aws.Client, error) {
 	// @step: first we need to check if we have access to the credentials
-	eksCreds, creds, err := t.GetCredentials(ctx, resource, resource.Namespace)
+	creds, err := t.GetCredentials(ctx, resource, resource.Namespace)
 	if err != nil {
 		resource.Status.Conditions.SetCondition(corev1.Component{
 			Name:    ComponentClusterCreator,
@@ -140,7 +139,7 @@ func (t *eksCtrl) GetClusterClient(ctx context.Context, resource *eksv1alpha1.EK
 		return nil, err
 	}
 
-	client, err := aws.NewEKSClient(eksCreds, creds, resource)
+	client, err := aws.NewEKSClient(creds, resource)
 	if err != nil {
 		resource.Status.Conditions.SetCondition(corev1.Component{
 			Detail:  err.Error(),
@@ -156,19 +155,19 @@ func (t *eksCtrl) GetClusterClient(ctx context.Context, resource *eksv1alpha1.EK
 }
 
 // GetCredentials returns the cloud credential
-func (t *eksCtrl) GetCredentials(ctx context.Context, cluster *eksv1alpha1.EKS, team string) (*eksv1alpha1.EKSCredentials, *aws.Credentials, error) {
+func (t *eksCtrl) GetCredentials(ctx context.Context, cluster *eksv1alpha1.EKS, team string) (*aws.Credentials, error) {
 	// @step: is the team permitted access to this credentials
 	permitted, err := t.Teams().Team(team).Allocations().IsPermitted(ctx, cluster.Spec.Credentials)
 	if err != nil {
 		log.WithError(err).Error("attempting to check for permission on credentials")
 
-		return nil, nil, fmt.Errorf("attempting to check for permission on credentials")
+		return nil, fmt.Errorf("attempting to check for permission on credentials")
 	}
 
 	if !permitted {
 		log.Warn("trying to build eks cluster unallocated permissions")
 
-		return nil, nil, errors.New("you do not have permissions to the eks credentials")
+		return nil, errors.New("you do not have permissions to the eks credentials")
 	}
 
 	// @step: retrieve the credentials
@@ -180,15 +179,15 @@ func (t *eksCtrl) GetCredentials(ctx context.Context, cluster *eksv1alpha1.EKS, 
 	}
 	found, err := kubernetes.GetIfExists(ctx, t.mgr.GetClient(), eksCreds)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	if !found {
-		return nil, nil, fmt.Errorf("eks credentials: (%s/%s) not found", cluster.Spec.Credentials.Namespace, cluster.Spec.Credentials.Name)
+		return nil, fmt.Errorf("eks credentials: (%s/%s) not found", cluster.Spec.Credentials.Namespace, cluster.Spec.Credentials.Name)
 	}
 
 	// for backwards-compatibility, use the creds set on the EKSCredentials resource, if they exist
 	if eksCreds.Spec.SecretAccessKey != "" && eksCreds.Spec.AccessKeyID != "" {
-		return eksCreds, &aws.Credentials{
+		return &aws.Credentials{
 			AccountID:       eksCreds.Spec.AccountID,
 			AccessKeyID:     eksCreds.Spec.AccessKeyID,
 			SecretAccessKey: eksCreds.Spec.SecretAccessKey,
@@ -196,29 +195,14 @@ func (t *eksCtrl) GetCredentials(ctx context.Context, cluster *eksv1alpha1.EKS, 
 	}
 
 	// @step: we need to grab the secret
-	secret := &config.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      eksCreds.Spec.CredentialsRef.Name,
-			Namespace: eksCreds.Spec.CredentialsRef.Namespace,
-		},
-	}
-
-	found, err = kubernetes.GetIfExists(ctx, t.mgr.GetClient(), secret)
+	secret, err := controllers.GetDecodedSecret(ctx, t.mgr.GetClient(), eksCreds.Spec.CredentialsRef)
 	if err != nil {
-		return nil, nil, err
-	}
-	if !found {
-		return nil, nil, fmt.Errorf("eks credentials secret: (%s/%s) not found", eksCreds.Spec.CredentialsRef.Namespace, eksCreds.Spec.CredentialsRef.Name)
+		return nil, err
 	}
 
-	// @step: ensure the secret is decoded before using
-	if err := secret.Decode(); err != nil {
-		return nil, nil, err
-	}
-
-	return eksCreds, &aws.Credentials{
+	return &aws.Credentials{
 		AccountID:       eksCreds.Spec.AccountID,
-		AccessKeyID:     secret.Spec.Data["access_id"],
-		SecretAccessKey: secret.Spec.Data["access_secret"],
+		AccessKeyID:     secret.Spec.Data["access_key_id"],
+		SecretAccessKey: secret.Spec.Data["access_secret_key"],
 	}, nil
 }

@@ -21,15 +21,13 @@ import (
 	"fmt"
 	"strings"
 
-	config "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
+	"github.com/appvia/kore/pkg/controllers"
 	gcputils "github.com/appvia/kore/pkg/utils/cloud/gcp"
-	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -67,32 +65,15 @@ func (t gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			return reconcile.Result{Requeue: true}, nil
 		}
 
-		var key string
-		if resource.Spec.Account != "" {
-			key = resource.Spec.Account
-		} else {
+		// for backwards-compatibility, use the key (Account) set on the GKECredentials resource, if it exists
+		var key string = resource.Spec.Account
+		if key == "" {
 			// @step: we need to grab the secret
-			secret := &config.Secret{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      resource.Spec.CredentialsRef.Name,
-					Namespace: resource.Spec.CredentialsRef.Namespace,
-				},
-			}
-
-			found, err := kubernetes.GetIfExists(ctx, t.mgr.GetClient(), secret)
+			secret, err := controllers.GetDecodedSecret(ctx, t.mgr.GetClient(), resource.Spec.CredentialsRef)
 			if err != nil {
 				return reconcile.Result{}, err
 			}
-			if !found {
-				return reconcile.Result{}, fmt.Errorf("gke credentials secret is missing")
-			}
-
-			// @step: ensure the secret is decoded before using
-			if err := secret.Decode(); err != nil {
-				return reconcile.Result{}, err
-			}
-
-			key = secret.Spec.Data["key"]
+			key = secret.Spec.Data["service_account_key"]
 		}
 
 		// @step: create the client to verify the permissions

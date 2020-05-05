@@ -19,19 +19,14 @@ package eksnodegroup
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
-	config "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
 	ekscc "github.com/appvia/kore/pkg/controllers/cloud/aws/eks"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/cloud/aws"
-	"github.com/appvia/kore/pkg/utils/kubernetes"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	awseks "github.com/aws/aws-sdk-go/service/eks"
 	log "github.com/sirupsen/logrus"
@@ -86,7 +81,7 @@ func (n *ctrl) EnsureClusterReady(group *eks.EKSNodeGroup) controllers.EnsureFun
 }
 
 // EnsureNodeRole is responsible for ensuring the IAM role is there
-func (n *ctrl) EnsureNodeRole(group *eks.EKSNodeGroup, credentials *eks.EKSCredentials) controllers.EnsureFunc {
+func (n *ctrl) EnsureNodeRole(group *eks.EKSNodeGroup, credentials *aws.Credentials) controllers.EnsureFunc {
 	return func(ctx context.Context) (reconcile.Result, error) {
 		logger := log.WithFields(log.Fields{
 			"name":      group.Name,
@@ -94,41 +89,7 @@ func (n *ctrl) EnsureNodeRole(group *eks.EKSNodeGroup, credentials *eks.EKSCrede
 		})
 		logger.Debug("attempting to ensure the node iam role")
 
-		var awsCreds aws.Credentials
-		if credentials.Spec.AccessKeyID != "" && credentials.Spec.SecretAccessKey != "" {
-			awsCreds = aws.Credentials{
-				AccessKeyID:     credentials.Spec.AccessKeyID,
-				SecretAccessKey: credentials.Spec.SecretAccessKey,
-			}
-		} else {
-			// @step: we need to grab the secret
-			secret := &config.Secret{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      credentials.Spec.CredentialsRef.Name,
-					Namespace: credentials.Spec.CredentialsRef.Namespace,
-				},
-			}
-
-			found, err := kubernetes.GetIfExists(ctx, n.mgr.GetClient(), secret)
-			if err != nil {
-				return reconcile.Result{}, err
-			}
-			if !found {
-				return reconcile.Result{}, fmt.Errorf("eks credentials secret is missing")
-			}
-
-			// @step: ensure the secret is decoded before using
-			if err := secret.Decode(); err != nil {
-				return reconcile.Result{}, err
-			}
-
-			awsCreds = aws.Credentials{
-				AccessKeyID:     secret.Spec.Data["access_id"],
-				SecretAccessKey: secret.Spec.Data["access_secret"],
-			}
-		}
-
-		client := aws.NewIamClient(awsCreds)
+		client := aws.NewIamClient(*credentials)
 
 		role, err := client.EnsureEKSNodePoolRole(ctx, group.Name)
 		if err != nil {
@@ -270,13 +231,13 @@ func (n *ctrl) EnsureDeletion(group *eks.EKSNodeGroup) controllers.EnsureFunc {
 		})
 		logger.Debug("attempting to delete eks nodegroup")
 
-		eksCreds, creds, err := n.GetCredentials(ctx, group, group.Namespace)
+		creds, err := n.GetCredentials(ctx, group, group.Namespace)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
 
 		// @step: create a cloud client for us
-		client, err := aws.NewBasicClient(eksCreds, creds, group.Spec.Cluster.Name, group.Spec.Region)
+		client, err := aws.NewBasicClient(creds, group.Spec.Cluster.Name, group.Spec.Region)
 		if err != nil {
 			log.WithError(err).Error("trying to create a aws client for the nodegroup")
 

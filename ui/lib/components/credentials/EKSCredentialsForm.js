@@ -22,11 +22,11 @@ class EKSCredentialsForm extends VerifiedAllocatedResourceForm {
     resource.setMetadata(meta)
 
     const spec = new V1SecretSpec()
-    spec.setType('aws-credential')
+    spec.setType('aws-credentials')
     spec.setDescription(`AWS account ${values.accountID} credential`)
     spec.setData({
-      access_id: btoa(values.accessKeyID),
-      access_secret: btoa(values.secretAccessKey)
+      access_key_id: btoa(values.accessKeyID),
+      access_secret_key: btoa(values.secretAccessKey)
     })
     resource.setSpec(spec)
 

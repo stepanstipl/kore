@@ -46,8 +46,6 @@ var (
 
 // Client for aws EKS and EKS nodegroups
 type Client struct {
-	// credentials are the eks credentials
-	credentials *eksv1alpha1.EKSCredentials
 	// cluster is the API object used
 	cluster *eksv1alpha1.EKS
 	// clusterName is the eks cluster name
@@ -60,7 +58,7 @@ type Client struct {
 
 // NewBasicClient gets an AWS session relating to a cluster
 // TODO: maybe remove after refactor of nodegroup to use clusterref?
-func NewBasicClient(eksCreds *eksv1alpha1.EKSCredentials, creds *Credentials, clusterName, region string) (*Client, error) {
+func NewBasicClient(creds *Credentials, clusterName, region string) (*Client, error) {
 	sesh, err := session.NewSession(&aws.Config{
 		Region:      aws.String(region),
 		Credentials: credentials.NewStaticCredentials(creds.AccessKeyID, creds.SecretAccessKey, ""),
@@ -71,7 +69,6 @@ func NewBasicClient(eksCreds *eksv1alpha1.EKSCredentials, creds *Credentials, cl
 	}
 
 	return &Client{
-		credentials: eksCreds,
 		clusterName: clusterName,
 		Sess:        sesh,
 		svc:         eks.New(sesh),
@@ -79,7 +76,7 @@ func NewBasicClient(eksCreds *eksv1alpha1.EKSCredentials, creds *Credentials, cl
 }
 
 // NewEKSClient gets an AWS and cluster session with a reference to our API object
-func NewEKSClient(eksCred *eksv1alpha1.EKSCredentials, cred *Credentials, cluster *eksv1alpha1.EKS) (*Client, error) {
+func NewEKSClient(cred *Credentials, cluster *eksv1alpha1.EKS) (*Client, error) {
 
 	sesh, err := session.NewSession(&aws.Config{
 		Region: aws.String(cluster.Spec.Region),
@@ -94,7 +91,6 @@ func NewEKSClient(eksCred *eksv1alpha1.EKSCredentials, cred *Credentials, cluste
 	}
 
 	return &Client{
-		credentials: eksCred,
 		clusterName: cluster.Name,
 		cluster:     cluster,
 		Sess:        sesh,
