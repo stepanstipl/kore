@@ -217,18 +217,17 @@ func (p *Provider) planWithFilter(kind, planName string, filter func(providerPla
 func catalogPlanToServicePlan(service osb.Service, plan osb.Plan) (servicesv1.ServicePlan, error) {
 	name := planName(service, plan)
 
+	var configJSON []byte
 	configuration, ok := plan.Metadata[MetadataKeyConfiguration]
-	if !ok {
-		return servicesv1.ServicePlan{}, fmt.Errorf("%s plan is invalid: %s key is missing from metadata", name, MetadataKeyConfiguration)
-	}
-
-	if _, ok := configuration.(map[string]interface{}); !ok {
-		return servicesv1.ServicePlan{}, fmt.Errorf("%s plan has an invalid configuration, it must be an object", name)
-	}
-
-	configJSON, err := json.Marshal(configuration)
-	if err != nil {
-		return servicesv1.ServicePlan{}, fmt.Errorf("%s plan is invalid: %s key can not be json encoded", name, MetadataKeyConfiguration)
+	if ok {
+		if _, ok := configuration.(map[string]interface{}); !ok {
+			return servicesv1.ServicePlan{}, fmt.Errorf("%s plan has an invalid configuration, it must be an object", name)
+		}
+		var err error
+		configJSON, err = json.Marshal(configuration)
+		if err != nil {
+			return servicesv1.ServicePlan{}, fmt.Errorf("%s plan is invalid: %s key can not be json encoded", name, MetadataKeyConfiguration)
+		}
 	}
 
 	return servicesv1.ServicePlan{

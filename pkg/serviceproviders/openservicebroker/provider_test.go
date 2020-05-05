@@ -273,7 +273,7 @@ var _ = Describe("Provider", func() {
 			})
 		})
 
-		When("a plan doesn't configuration", func() {
+		When("a plan doesn't have configuration", func() {
 			BeforeEach(func() {
 				plan := createPlan(plan1ID, plan1Name)
 				delete(plan.Metadata, openservicebroker.MetadataKeyConfiguration)
@@ -283,8 +283,13 @@ var _ = Describe("Provider", func() {
 				}, nil)
 			})
 
-			It("should error", func() {
-				Expect(providerCreateErr).To(MatchError("service-1-plan-1 plan is invalid: kore.appvia.io/configuration key is missing from metadata"))
+			It("should not error", func() {
+				Expect(providerCreateErr).ToNot(HaveOccurred())
+			})
+
+			It("should create a plan with empty config", func() {
+				plans := provider.Plans()
+				Expect(plans[0].Spec.Configuration.Raw).To(BeEmpty())
 			})
 		})
 
