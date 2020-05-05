@@ -2,10 +2,10 @@ import React from 'react'
 import { Alert, Card, Typography, Tooltip, Icon, Row, Col, Button, Form, Input, Radio, List, Drawer, Popover, Modal, message } from 'antd'
 const { Title, Text, Paragraph } = Typography
 
-import KoreApi from '../../../kore-api/index'
+import KoreApi from '../../../kore-api'
 import copy from '../../../utils/object-copy'
 import canonical from '../../../utils/canonical'
-import PlanViewer from '../../../components/configure/PlanViewer'
+import PlanViewer from '../../../components/plans/PlanViewer'
 
 // prototype components
 import AutomatedProjectForm from './AutomatedProjectForm'

@@ -1,12 +1,12 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
-import { message, Typography, Form, Card, Alert, Button, Input } from 'antd'
+import { message, Typography, Form, Card, Alert, Button, Input, Select } from 'antd'
 const { Paragraph, Text } = Typography
 
-import canonical from '../../../utils/canonical'
-import ResourceVerificationStatus from '../../../components/resources/ResourceVerificationStatus'
-import FormErrorMessage from '../../../components/forms/FormErrorMessage'
-import AllocationHelpers from '../../../utils/allocation-helpers'
+import canonical from '../../utils/canonical'
+import ResourceVerificationStatus from './ResourceVerificationStatus'
+import FormErrorMessage from '../forms/FormErrorMessage'
+import AllocationHelpers from '../../utils/allocation-helpers'
 
 class VerifiedAllocatedResourceForm extends React.Component {
   static propTypes = {
@@ -156,9 +156,9 @@ class VerifiedAllocatedResourceForm extends React.Component {
   }
 
   render() {
-    const { form, data, saveButtonText } = this.props
+    const { form, data, allTeams, saveButtonText } = this.props
     const { getFieldDecorator, getFieldsError } = form
-    const { formErrorMessage, submitting, inlineVerificationFailed } = this.state
+    const { formErrorMessage, allocations, submitting, inlineVerificationFailed } = this.state
     const formConfig = {
       layout: 'horizontal',
       labelAlign: 'left',
@@ -176,7 +176,7 @@ class VerifiedAllocatedResourceForm extends React.Component {
     }
 
     const noAllocation = Boolean(data && !data.allocation)
-    const { allocationMissing, nameSection } = this.allocationFormFieldsInfo
+    const { allocationMissing, nameSection, allocationSection } = this.allocationFormFieldsInfo
 
     return (
       <>
@@ -222,6 +222,39 @@ class VerifiedAllocatedResourceForm extends React.Component {
             </Form.Item>
           </Card>
 
+          <Card style={{ marginBottom: '20px' }}>
+            <Alert
+              message={allocationSection.infoMessage}
+              description={allocationSection.infoDescription}
+              type="info"
+              style={{ marginBottom: '20px' }}
+            />
+
+            {allTeams.items.length === 0 ? (
+              <Alert
+                message={allocationSection.allTeamsWarningMessage}
+                description={allocationSection.allTeamsWarningDescription}
+                type="warning"
+                showIcon
+              />
+            ) : (
+              <Form.Item label="Allocate team(s)" extra={allocationSection.allocateExtra}>
+                {getFieldDecorator('allocations', { initialValue: allocations })(
+                  <Select
+                    mode="multiple"
+                    style={{ width: '100%' }}
+                    placeholder={allocationMissing ? 'No teams' : 'All teams'}
+                    onChange={this.onAllocationsChange}
+                  >
+                    {allTeams.items.map(t => (
+                      <Select.Option key={t.metadata.name} value={t.metadata.name}>{t.spec.summary}</Select.Option>
+                    ))}
+                  </Select>
+                )}
+              </Form.Item>
+            )}
+
+          </Card>
           <Form.Item style={{ marginBottom: '0' }}>
             <Button type="primary" htmlType="submit" loading={submitting} disabled={this.disableButton(getFieldsError())}>{saveButtonText || 'Save'}</Button>
             {inlineVerificationFailed ? (

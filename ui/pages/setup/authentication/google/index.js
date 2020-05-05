@@ -8,7 +8,7 @@ const { Title, Paragraph, Text } = Typography
 import getConfig from 'next/config'
 const { publicRuntimeConfig } = getConfig()
 
-import CopyTextWithLabel from '../../../../lib/components/CopyTextWithLabel'
+import CopyTextWithLabel from '../../../../lib/components/utils/CopyTextWithLabel'
 import copy from '../../../../lib/utils/object-copy'
 import redirect from '../../../../lib/utils/redirect'
 

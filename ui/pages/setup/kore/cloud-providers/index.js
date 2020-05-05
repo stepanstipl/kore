@@ -10,8 +10,8 @@ import redirect from '../../../../lib/utils/redirect'
 import copy from '../../../../lib/utils/object-copy'
 import apiRequest from '../../../../lib/utils/api-request'
 import apiPaths from '../../../../lib/utils/api-paths'
-import GKECredentialsForm from '../../../../lib/components/forms/GKECredentialsForm'
-import CloudSelector from '../../../../lib/components/cluster-build/CloudSelector'
+import GKECredentialsForm from '../../../../lib/components/credentials/GKECredentialsForm'
+import CloudSelector from '../../../../lib/components/common/CloudSelector'
 
 class ConfigureCloudProvidersPage extends React.Component {
   static propTypes = {

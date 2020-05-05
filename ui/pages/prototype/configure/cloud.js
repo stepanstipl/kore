@@ -2,13 +2,13 @@ import React from 'react'
 
 import { Alert, Tabs } from 'antd'
 
-import Breadcrumb from '../../../lib/components/Breadcrumb'
-import GKECredentialsList from '../../../lib/components/configure/GKECredentialsList'
-import GCPOrganizationsList from '../../../lib/components/configure/GCPOrganizationsList'
-import EKSCredentialsList from '../../../lib/components/configure/EKSCredentialsList'
-import PlanList from '../../../lib/components/configure/PlanList'
+import Breadcrumb from '../../../lib/components/layout/Breadcrumb'
+import GKECredentialsList from '../../../lib/components/credentials/GKECredentialsList'
+import GCPOrganizationsList from '../../../lib/components/credentials/GCPOrganizationsList'
+import EKSCredentialsList from '../../../lib/components/credentials/EKSCredentialsList'
+import PlanList from '../../../lib/components/plans/PlanList'
 import PolicyList from '../../../lib/components/policies/PolicyList'
-import CloudTabs from '../../../lib/components/configure/CloudTabs'
+import CloudTabs from '../../../lib/components/common/CloudTabs'
 
 // prototype components
 import ProjectAutomationSettings from '../../../lib/prototype/components/configure/ProjectAutomationSettings'

@@ -8,7 +8,7 @@ const { publicRuntimeConfig } = getConfig()
 import apiRequest from '../../lib/utils/api-request'
 import apiPaths from '../../lib/utils/api-paths'
 import copy from '../../lib/utils/object-copy'
-import Breadcrumb from '../../lib/components/Breadcrumb'
+import Breadcrumb from '../../lib/components/layout/Breadcrumb'
 
 class ConfigureUsersPage extends React.Component {
   static propTypes = {

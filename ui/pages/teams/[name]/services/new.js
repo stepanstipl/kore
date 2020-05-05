@@ -4,8 +4,8 @@ import axios from 'axios'
 import { Typography } from 'antd'
 const { Title } = Typography
 
-import Breadcrumb from '../../../../lib/components/Breadcrumb'
-import ServiceBuildForm from '../../../../lib/components/forms/ServiceBuildForm'
+import Breadcrumb from '../../../../lib/components/layout/Breadcrumb'
+import ServiceBuildForm from '../../../../lib/components/teams/service/ServiceBuildForm'
 import apiRequest from '../../../../lib/utils/api-request'
 import apiPaths from '../../../../lib/utils/api-paths'
 

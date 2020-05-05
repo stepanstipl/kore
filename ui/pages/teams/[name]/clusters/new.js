@@ -4,8 +4,8 @@ import axios from 'axios'
 import { Typography } from 'antd'
 const { Title } = Typography
 
-import Breadcrumb from '../../../../lib/components/Breadcrumb'
-import ClusterBuildForm from '../../../../lib/components/forms/ClusterBuildForm'
+import Breadcrumb from '../../../../lib/components/layout/Breadcrumb'
+import ClusterBuildForm from '../../../../lib/components/teams/cluster/ClusterBuildForm'
 import apiRequest from '../../../../lib/utils/api-request'
 import apiPaths from '../../../../lib/utils/api-paths'
 

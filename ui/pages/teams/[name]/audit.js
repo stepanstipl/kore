@@ -2,8 +2,8 @@ import React from 'react'
 import axios from 'axios'
 import PropTypes from 'prop-types'
 
-import Breadcrumb from '../../../lib/components/Breadcrumb'
-import AuditViewer from '../../../lib/components/AuditViewer'
+import Breadcrumb from '../../../lib/components/layout/Breadcrumb'
+import AuditViewer from '../../../lib/components/common/AuditViewer'
 import KoreApi from '../../../lib/kore-api'
 
 class TeamAuditPage extends React.Component {

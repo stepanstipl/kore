@@ -10,12 +10,12 @@ const { Option } = Select
 import getConfig from 'next/config'
 const { publicRuntimeConfig } = getConfig()
 
-import Breadcrumb from '../../lib/components/Breadcrumb'
-import Cluster from '../../lib/components/team/Cluster'
-import Service from '../../lib/components/team/Service'
-import NamespaceClaim from '../../lib/components/team/NamespaceClaim'
-import InviteLink from '../../lib/components/team/InviteLink'
-import NamespaceClaimForm from '../../lib/components/forms/NamespaceClaimForm'
+import Breadcrumb from '../../lib/components/layout/Breadcrumb'
+import Cluster from '../../lib/components/teams/cluster/Cluster'
+import Service from '../../lib/components/teams/service/Service'
+import NamespaceClaim from '../../lib/components/teams/namespace/NamespaceClaim'
+import InviteLink from '../../lib/components/teams/InviteLink'
+import NamespaceClaimForm from '../../lib/components/teams/namespace/NamespaceClaimForm'
 import apiRequest from '../../lib/utils/api-request'
 import copy from '../../lib/utils/object-copy'
 import asyncForEach from '../../lib/utils/async-foreach'
