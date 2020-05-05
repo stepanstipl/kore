@@ -186,8 +186,12 @@ func (o *CreateServiceOptions) CreateService() (*servicesv1.Service, error) {
 		return nil, err
 	}
 
-	configJSON, err := cmdutil.PatchJSON(string(plan.Spec.Configuration.Raw), o.PlanParams)
-	if err != nil {
+	var configJSON string
+	if plan.Spec.Configuration != nil {
+		configJSON = string(plan.Spec.Configuration.Raw)
+	}
+
+	if configJSON, err = cmdutil.PatchJSON(configJSON, o.PlanParams); err != nil {
 		return nil, err
 	}
 
@@ -208,7 +212,7 @@ func (o *CreateServiceOptions) CreateService() (*servicesv1.Service, error) {
 		Spec: servicesv1.ServiceSpec{
 			Kind:          plan.Spec.Kind,
 			Plan:          plan.Name,
-			Configuration: apiexts.JSON{Raw: []byte(configJSON)},
+			Configuration: &apiexts.JSON{Raw: []byte(configJSON)},
 			Credentials:   credentials.Spec.Resource,
 		},
 	}

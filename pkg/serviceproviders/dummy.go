@@ -89,7 +89,7 @@ func (d Dummy) Plans() []servicesv1.ServicePlan {
 				Kind:          "dummy",
 				Description:   "Used for testing",
 				Summary:       "This is a dummy service plan",
-				Configuration: v1beta1.JSON{Raw: []byte(`{"foo":"bar"}`)},
+				Configuration: &v1beta1.JSON{Raw: []byte(`{"foo":"bar"}`)},
 			},
 		},
 	}

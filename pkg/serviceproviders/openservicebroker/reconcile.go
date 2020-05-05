@@ -17,8 +17,6 @@
 package openservicebroker
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -57,7 +55,7 @@ func (p *Provider) Reconcile(
 
 	if component.Status == corev1.SuccessStatus {
 		// Check if there was any change to the service configuration
-		if service.Spec.Plan != service.Status.Plan || !bytes.Equal(service.Spec.Configuration.Raw, service.Status.Configuration.Raw) {
+		if service.NeedsUpdate() {
 			return p.update(ctx, service)
 		}
 
@@ -75,7 +73,7 @@ func (p *Provider) Reconcile(
 	}
 
 	config := map[string]interface{}{}
-	if err := json.Unmarshal(service.Spec.Configuration.Raw, &config); err != nil {
+	if err := service.Spec.GetConfiguration(&config); err != nil {
 		return reconcile.Result{}, controllers.NewCriticalError(fmt.Errorf("failed to unmarshal service configuration: %w", err))
 	}
 
@@ -146,7 +144,7 @@ func (p *Provider) update(
 	}
 
 	config := map[string]interface{}{}
-	if err := json.Unmarshal(service.Spec.Configuration.Raw, &config); err != nil {
+	if err := service.Spec.GetConfiguration(&config); err != nil {
 		return reconcile.Result{}, controllers.NewCriticalError(fmt.Errorf("failed to unmarshal service configuration"))
 	}
 

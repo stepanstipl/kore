@@ -242,12 +242,12 @@ func (s *servicesImpl) validateConfiguration(ctx context.Context, service *servi
 	}
 
 	planConfiguration := make(map[string]interface{})
-	if err := json.NewDecoder(bytes.NewReader(plan.Spec.Configuration.Raw)).Decode(&planConfiguration); err != nil {
+	if err := plan.Spec.GetConfiguration(&planConfiguration); err != nil {
 		return fmt.Errorf("failed to parse plan configuration values: %s", err)
 	}
 
 	serviceConfig := make(map[string]interface{})
-	if err := json.NewDecoder(bytes.NewReader(service.Spec.Configuration.Raw)).Decode(&serviceConfig); err != nil {
+	if err := service.Spec.GetConfiguration(&serviceConfig); err != nil {
 		return fmt.Errorf("failed to parse service configuration values: %s", err)
 	}
 

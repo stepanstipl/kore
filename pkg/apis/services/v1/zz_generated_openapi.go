@@ -171,7 +171,7 @@ func schema_pkg_apis_services_v1_ServiceCredentialsSpec(ref common.ReferenceCall
 						},
 					},
 				},
-				Required: []string{"kind", "configuration"},
+				Required: []string{"kind"},
 			},
 		},
 		Dependencies: []string{
@@ -323,7 +323,7 @@ func schema_pkg_apis_services_v1_ServicePlanSpec(ref common.ReferenceCallback) c
 						},
 					},
 				},
-				Required: []string{"kind", "description", "summary", "configuration"},
+				Required: []string{"kind", "description", "summary"},
 			},
 		},
 		Dependencies: []string{
@@ -410,7 +410,7 @@ func schema_pkg_apis_services_v1_ServiceProviderSpec(ref common.ReferenceCallbac
 						},
 					},
 				},
-				Required: []string{"type", "description", "summary", "configuration"},
+				Required: []string{"type", "description", "summary"},
 			},
 		},
 		Dependencies: []string{
@@ -498,7 +498,7 @@ func schema_pkg_apis_services_v1_ServiceSpec(ref common.ReferenceCallback) commo
 						},
 					},
 				},
-				Required: []string{"kind", "plan", "configuration"},
+				Required: []string{"kind", "plan"},
 			},
 		},
 		Dependencies: []string{

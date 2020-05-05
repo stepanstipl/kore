@@ -208,7 +208,7 @@ func (o *CreateServiceCredentialsOptions) CreateServiceCreds() (*servicesv1.Serv
 			Service:          service.Ownership(),
 			Cluster:          cluster.Ownership(),
 			ClusterNamespace: o.Namespace,
-			Configuration:    apiextv1.JSON{Raw: []byte(configJSON)},
+			Configuration:    &apiextv1.JSON{Raw: []byte(configJSON)},
 		},
 	}
 

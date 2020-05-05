@@ -17,7 +17,6 @@
 package openservicebroker
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -68,7 +67,7 @@ func (p *Provider) ReconcileCredentials(
 	}
 
 	config := map[string]interface{}{}
-	if err := json.Unmarshal(creds.Spec.Configuration.Raw, &config); err != nil {
+	if err := creds.Spec.GetConfiguration(&config); err != nil {
 		return reconcile.Result{}, nil, controllers.NewCriticalError(fmt.Errorf("failed to unmarshal service credentials configuration"))
 	}
 

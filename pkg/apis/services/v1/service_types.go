@@ -17,8 +17,10 @@
 package v1
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -49,13 +51,18 @@ type ServiceSpec struct {
 	// It will contain values from the plan + overrides by the user
 	// This will provide a simple interface to calculate diffs between plan and service configuration
 	// +kubebuilder:validation:Type=object
-	Configuration apiextv1.JSON `json:"configuration"`
+	// +kubebuilder:validation:Optional
+	Configuration *apiextv1.JSON `json:"configuration,omitempty"`
 	// Credentials is a reference to the credentials object to use
 	// +kubebuilder:validation:Optional
 	Credentials corev1.Ownership `json:"credentials,omitempty"`
 }
 
 func (s *ServiceSpec) GetConfiguration(v interface{}) error {
+	if s.Configuration == nil {
+		return nil
+	}
+
 	if err := json.Unmarshal(s.Configuration.Raw, v); err != nil {
 		return fmt.Errorf("failed to unmarshal service configuration: %w", err)
 	}
@@ -63,11 +70,16 @@ func (s *ServiceSpec) GetConfiguration(v interface{}) error {
 }
 
 func (s *ServiceSpec) SetConfiguration(v interface{}) error {
+	if v == nil {
+		s.Configuration = nil
+		return nil
+	}
+
 	raw, err := json.Marshal(v)
 	if err != nil {
 		return fmt.Errorf("failed to marshal service configuration: %w", err)
 	}
-	s.Configuration = apiextv1.JSON{Raw: raw}
+	s.Configuration = &apiextv1.JSON{Raw: raw}
 	return nil
 }
 
@@ -87,19 +99,23 @@ type ServiceStatus struct {
 	// +kubebuilder:validation:Optional
 	ProviderID string `json:"providerID,omitempty"`
 	// ProviderData is provider specific data
-	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Type=object
-	ProviderData apiextv1.JSON `json:"providerData,omitempty"`
+	// +kubebuilder:validation:Optional
+	ProviderData *apiextv1.JSON `json:"providerData,omitempty"`
 	// Plan is the name of the service plan which was used to create this service
 	// +kubebuilder:validation:Optional
 	Plan string `json:"plan,omitempty"`
 	// Configuration are the applied configuration values for this service
 	// +kubebuilder:validation:Type=object
 	// +kubebuilder:validation:Optional
-	Configuration apiextv1.JSON `json:"configuration,omitempty"`
+	Configuration *apiextv1.JSON `json:"configuration,omitempty"`
 }
 
 func (s *ServiceStatus) GetProviderData(v interface{}) error {
+	if s.ProviderData == nil {
+		return nil
+	}
+
 	if err := json.Unmarshal(s.ProviderData.Raw, v); err != nil {
 		return fmt.Errorf("failed to unmarshal service provider data: %w", err)
 	}
@@ -107,11 +123,16 @@ func (s *ServiceStatus) GetProviderData(v interface{}) error {
 }
 
 func (s *ServiceStatus) SetProviderData(v interface{}) error {
+	if v == nil {
+		s.ProviderData = nil
+		return nil
+	}
+
 	raw, err := json.Marshal(v)
 	if err != nil {
 		return fmt.Errorf("failed to marshal service provider data: %w", err)
 	}
-	s.ProviderData = apiextv1.JSON{Raw: raw}
+	s.ProviderData = &apiextv1.JSON{Raw: raw}
 	return nil
 }
 
@@ -151,6 +172,29 @@ func (s *Service) Ownership() corev1.Ownership {
 		Namespace: s.Namespace,
 		Name:      s.Name,
 	}
+}
+
+// PlanShortName returns the plan name without the service kind prefix
+func (s Service) PlanShortName() string {
+	return strings.TrimPrefix(s.Spec.Plan, s.Spec.Kind+"-")
+}
+
+// NeedsUpdate returns true if the plan or the configuration changed compared to the status
+func (s Service) NeedsUpdate() bool {
+	if s.Spec.Plan != s.Status.Plan {
+		return true
+	}
+
+	var raw1, raw2 []byte
+
+	if s.Spec.Configuration != nil {
+		raw1 = s.Spec.Configuration.Raw
+	}
+	if s.Status.Configuration != nil {
+		raw2 = s.Status.Configuration.Raw
+	}
+
+	return !bytes.Equal(raw1, raw2)
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

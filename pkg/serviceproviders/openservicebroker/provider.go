@@ -28,7 +28,6 @@ import (
 	"github.com/appvia/kore/pkg/utils/jsonschema"
 
 	osb "github.com/kubernetes-sigs/go-open-service-broker-client/v2"
-	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -217,20 +216,7 @@ func (p *Provider) planWithFilter(kind, planName string, filter func(providerPla
 func catalogPlanToServicePlan(service osb.Service, plan osb.Plan) (servicesv1.ServicePlan, error) {
 	name := planName(service, plan)
 
-	var configJSON []byte
-	configuration, ok := plan.Metadata[MetadataKeyConfiguration]
-	if ok {
-		if _, ok := configuration.(map[string]interface{}); !ok {
-			return servicesv1.ServicePlan{}, fmt.Errorf("%s plan has an invalid configuration, it must be an object", name)
-		}
-		var err error
-		configJSON, err = json.Marshal(configuration)
-		if err != nil {
-			return servicesv1.ServicePlan{}, fmt.Errorf("%s plan is invalid: %s key can not be json encoded", name, MetadataKeyConfiguration)
-		}
-	}
-
-	return servicesv1.ServicePlan{
+	res := servicesv1.ServicePlan{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ServicePlan",
 			APIVersion: servicesv1.GroupVersion.String(),
@@ -240,12 +226,23 @@ func catalogPlanToServicePlan(service osb.Service, plan osb.Plan) (servicesv1.Se
 			Namespace: kore.HubNamespace,
 		},
 		Spec: servicesv1.ServicePlanSpec{
-			Kind:          service.Name,
-			Summary:       fmt.Sprintf("%s service - %s plan", service.Name, plan.Name),
-			Description:   plan.Description,
-			Configuration: v1beta1.JSON{Raw: configJSON},
+			Kind:        service.Name,
+			Summary:     fmt.Sprintf("%s service - %s plan", service.Name, plan.Name),
+			Description: plan.Description,
 		},
-	}, nil
+	}
+
+	if configuration, hasConfig := plan.Metadata[MetadataKeyConfiguration]; hasConfig {
+		if _, isMap := configuration.(map[string]interface{}); !isMap {
+			return servicesv1.ServicePlan{}, fmt.Errorf("%s plan has an invalid configuration, it must be an object", name)
+		}
+
+		if err := res.Spec.SetConfiguration(configuration); err != nil {
+			return servicesv1.ServicePlan{}, err
+		}
+	}
+
+	return res, nil
 }
 
 func getPlanSchema(plan osb.Plan) (string, error) {

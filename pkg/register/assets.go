@@ -6325,7 +6325,6 @@ spec:
               - version
               type: object
           required:
-          - configuration
           - kind
           type: object
         status:
@@ -6481,7 +6480,6 @@ spec:
               minLength: 1
               type: string
           required:
-          - configuration
           - description
           - kind
           - summary
@@ -6573,7 +6571,6 @@ spec:
               minLength: 1
               type: string
           required:
-          - configuration
           - description
           - summary
           - type
@@ -6706,7 +6703,6 @@ spec:
               minLength: 1
               type: string
           required:
-          - configuration
           - kind
           - plan
           type: object

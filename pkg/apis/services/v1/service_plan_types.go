@@ -52,10 +52,15 @@ type ServicePlanSpec struct {
 	Summary string `json:"summary"`
 	// Configuration are the key+value pairs describing a service configuration
 	// +kubebuilder:validation:Type=object
-	Configuration apiextv1.JSON `json:"configuration"`
+	// +kubebuilder:validation:Optional
+	Configuration *apiextv1.JSON `json:"configuration,omitempty"`
 }
 
 func (s *ServicePlanSpec) GetConfiguration(v interface{}) error {
+	if s.Configuration == nil {
+		return nil
+	}
+
 	if err := json.Unmarshal(s.Configuration.Raw, v); err != nil {
 		return fmt.Errorf("failed to unmarshal service plan configuration: %w", err)
 	}
@@ -63,11 +68,16 @@ func (s *ServicePlanSpec) GetConfiguration(v interface{}) error {
 }
 
 func (s *ServicePlanSpec) SetConfiguration(v interface{}) error {
+	if v == nil {
+		s.Configuration = nil
+		return nil
+	}
+
 	raw, err := json.Marshal(v)
 	if err != nil {
 		return fmt.Errorf("failed to marshal service plan configuration: %w", err)
 	}
-	s.Configuration = apiextv1.JSON{Raw: raw}
+	s.Configuration = &apiextv1.JSON{Raw: raw}
 	return nil
 }
 

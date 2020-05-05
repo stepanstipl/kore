@@ -6342,8 +6342,7 @@
     },
     "v1.ServiceCredentialsSpec": {
       "required": [
-        "kind",
-        "configuration"
+        "kind"
       ],
       "properties": {
         "cluster": {
@@ -6455,8 +6454,7 @@
       "required": [
         "kind",
         "description",
-        "summary",
-        "configuration"
+        "summary"
       ],
       "properties": {
         "configuration": {
@@ -6528,8 +6526,7 @@
       "required": [
         "type",
         "description",
-        "summary",
-        "configuration"
+        "summary"
       ],
       "properties": {
         "configuration": {
@@ -6565,8 +6562,7 @@
     "v1.ServiceSpec": {
       "required": [
         "kind",
-        "plan",
-        "configuration"
+        "plan"
       ],
       "properties": {
         "configuration": {

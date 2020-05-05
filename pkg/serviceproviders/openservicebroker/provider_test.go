@@ -131,10 +131,10 @@ func createPlan(id string, name string) osb.Plan {
 	}
 }
 
-func createProviderData(operation *osb.OperationKey) apiextv1.JSON {
+func createProviderData(operation *osb.OperationKey) *apiextv1.JSON {
 	data := openservicebroker.ProviderData{Operation: operation}
 	res, _ := json.Marshal(data)
-	return apiextv1.JSON{Raw: res}
+	return &apiextv1.JSON{Raw: res}
 }
 
 var _ = Describe("Provider", func() {
@@ -201,17 +201,17 @@ var _ = Describe("Provider", func() {
 
 		service = servicesv1.NewService(KoreServiceName, Namespace)
 		service.Spec = servicesv1.ServiceSpec{
-			Kind:          Service1Name,
-			Plan:          Service1Name + "-" + plan1Name,
-			Configuration: apiextv1.JSON{Raw: []byte("{}")},
+			Kind: Service1Name,
+			Plan: Service1Name + "-" + plan1Name,
 		}
+		service.Spec.Configuration = &apiextv1.JSON{Raw: []byte(`{"serviceParam":"foo"}`)}
 
 		serviceCreds = servicesv1.NewServiceCredentials(KoreServiceCredentialsName, Namespace)
 		serviceCreds.Spec = servicesv1.ServiceCredentialsSpec{
-			Kind:          Service1Name,
-			Service:       service.Ownership(),
-			Configuration: apiextv1.JSON{Raw: []byte("{}")},
+			Kind:    Service1Name,
+			Service: service.Ownership(),
 		}
+		serviceCreds.Spec.Configuration = &apiextv1.JSON{Raw: []byte(`{"credsParam":"foo"}`)}
 
 		reconcileResult = reconcile.Result{}
 		reconcileErr = nil
@@ -287,7 +287,7 @@ var _ = Describe("Provider", func() {
 
 			It("should create a plan with empty config", func() {
 				plans := provider.Plans()
-				Expect(plans[0].Spec.Configuration.Raw).To(BeEmpty())
+				Expect(plans[0].Spec.Configuration).To(BeNil())
 			})
 		})
 
@@ -558,7 +558,7 @@ var _ = Describe("Provider", func() {
 
 			When("the configuration did change", func() {
 				BeforeEach(func() {
-					service.Spec.Configuration = apiextv1.JSON{Raw: []byte(`{"foo":"bar"}`)}
+					service.Spec.Configuration = &apiextv1.JSON{Raw: []byte(`{"foo":"bar"}`)}
 				})
 
 				It("should call update", func() {
@@ -1048,7 +1048,7 @@ var _ = Describe("Provider", func() {
 				Expect(req.InstanceID).To(Equal(KoreServiceID))
 				Expect(req.ServiceID).To(Equal(Service1ID))
 				Expect(req.PlanID).To(Equal(plan1ID))
-				Expect(json.Marshal(req.Parameters)).To(Equal(service.Spec.Configuration.Raw))
+				Expect(json.Marshal(req.Parameters)).To(Equal(serviceCreds.Spec.Configuration.Raw))
 			})
 
 			When("the response has async=false", func() {
