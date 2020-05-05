@@ -38,11 +38,11 @@ type Audit interface {
 }
 
 type auditImpl struct {
-	*hubImpl
+	auditPersist persistence.Audit
 }
 
 func (a *auditImpl) Record(ctx context.Context, fields ...persistence.AuditFunc) persistence.Log {
-	return a.persistenceMgr.Audit().Record(ctx, fields[:]...)
+	return a.auditPersist.Record(ctx, fields[:]...)
 }
 
 // AuditEvents returns all events since the specified duration before the current time
@@ -58,7 +58,7 @@ func (a *auditImpl) AuditEvents(ctx context.Context, since time.Duration) (*orgv
 	}
 
 	// @step: retrieve a list of audit events across all teams
-	list, err := a.persistenceMgr.Audit().Find(ctx,
+	list, err := a.auditPersist.Find(ctx,
 		persistence.Filter.WithDuration(since),
 	).Do()
 	if err != nil {
@@ -89,7 +89,7 @@ func (a *auditImpl) AuditEventsTeam(ctx context.Context, team string, since time
 		return nil, NewErrNotAllowed("Must be global admin or a team member")
 	}
 
-	list, err := a.persistenceMgr.Audit().Find(ctx,
+	list, err := a.auditPersist.Find(ctx,
 		persistence.Filter.WithTeam(team),
 		persistence.Filter.WithDuration(since),
 	).Do()

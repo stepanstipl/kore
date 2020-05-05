@@ -65,8 +65,8 @@ func New(config Config) (Interface, error) {
 }
 
 // Audit returns the audit interface
-func (a *storeImpl) Audit() Audit {
-	return a
+func (s *storeImpl) Audit() Audit {
+	return s
 }
 
 // Members returns the team members
@@ -104,6 +104,14 @@ func (s *storeImpl) Identities() Identities {
 // Users returns the users interface
 func (s *storeImpl) Users() Users {
 	return &userImpl{
+		Interface: s,
+		conn:      s.dbc,
+	}
+}
+
+// Security returns the security interface
+func (s *storeImpl) Security() Security {
+	return &securityImpl{
 		Interface: s,
 		conn:      s.dbc,
 	}

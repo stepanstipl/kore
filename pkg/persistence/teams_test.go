@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package persistence
+package persistence_test
 
 import (
 	"context"

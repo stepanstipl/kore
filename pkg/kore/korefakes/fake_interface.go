@@ -8,6 +8,7 @@ import (
 
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/kore/authentication"
+	"github.com/appvia/kore/pkg/persistence"
 	"github.com/appvia/kore/pkg/persistence/model"
 	"github.com/appvia/kore/pkg/store"
 )
@@ -86,6 +87,16 @@ type FakeInterface struct {
 	invitationsReturnsOnCall map[int]struct {
 		result1 kore.Invitations
 	}
+	PersistStub        func() persistence.Interface
+	persistMutex       sync.RWMutex
+	persistArgsForCall []struct {
+	}
+	persistReturns struct {
+		result1 persistence.Interface
+	}
+	persistReturnsOnCall map[int]struct {
+		result1 persistence.Interface
+	}
 	PlanPoliciesStub        func() kore.PlanPolicies
 	planPoliciesMutex       sync.RWMutex
 	planPoliciesArgsForCall []struct {
@@ -105,6 +116,16 @@ type FakeInterface struct {
 	}
 	plansReturnsOnCall map[int]struct {
 		result1 kore.Plans
+	}
+	SecurityStub        func() kore.Security
+	securityMutex       sync.RWMutex
+	securityArgsForCall []struct {
+	}
+	securityReturns struct {
+		result1 kore.Security
+	}
+	securityReturnsOnCall map[int]struct {
+		result1 kore.Security
 	}
 	ServicePlansStub        func() kore.ServicePlans
 	servicePlansMutex       sync.RWMutex
@@ -535,6 +556,58 @@ func (fake *FakeInterface) InvitationsReturnsOnCall(i int, result1 kore.Invitati
 	}{result1}
 }
 
+func (fake *FakeInterface) Persist() persistence.Interface {
+	fake.persistMutex.Lock()
+	ret, specificReturn := fake.persistReturnsOnCall[len(fake.persistArgsForCall)]
+	fake.persistArgsForCall = append(fake.persistArgsForCall, struct {
+	}{})
+	fake.recordInvocation("Persist", []interface{}{})
+	fake.persistMutex.Unlock()
+	if fake.PersistStub != nil {
+		return fake.PersistStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.persistReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeInterface) PersistCallCount() int {
+	fake.persistMutex.RLock()
+	defer fake.persistMutex.RUnlock()
+	return len(fake.persistArgsForCall)
+}
+
+func (fake *FakeInterface) PersistCalls(stub func() persistence.Interface) {
+	fake.persistMutex.Lock()
+	defer fake.persistMutex.Unlock()
+	fake.PersistStub = stub
+}
+
+func (fake *FakeInterface) PersistReturns(result1 persistence.Interface) {
+	fake.persistMutex.Lock()
+	defer fake.persistMutex.Unlock()
+	fake.PersistStub = nil
+	fake.persistReturns = struct {
+		result1 persistence.Interface
+	}{result1}
+}
+
+func (fake *FakeInterface) PersistReturnsOnCall(i int, result1 persistence.Interface) {
+	fake.persistMutex.Lock()
+	defer fake.persistMutex.Unlock()
+	fake.PersistStub = nil
+	if fake.persistReturnsOnCall == nil {
+		fake.persistReturnsOnCall = make(map[int]struct {
+			result1 persistence.Interface
+		})
+	}
+	fake.persistReturnsOnCall[i] = struct {
+		result1 persistence.Interface
+	}{result1}
+}
+
 func (fake *FakeInterface) PlanPolicies() kore.PlanPolicies {
 	fake.planPoliciesMutex.Lock()
 	ret, specificReturn := fake.planPoliciesReturnsOnCall[len(fake.planPoliciesArgsForCall)]
@@ -636,6 +709,58 @@ func (fake *FakeInterface) PlansReturnsOnCall(i int, result1 kore.Plans) {
 	}
 	fake.plansReturnsOnCall[i] = struct {
 		result1 kore.Plans
+	}{result1}
+}
+
+func (fake *FakeInterface) Security() kore.Security {
+	fake.securityMutex.Lock()
+	ret, specificReturn := fake.securityReturnsOnCall[len(fake.securityArgsForCall)]
+	fake.securityArgsForCall = append(fake.securityArgsForCall, struct {
+	}{})
+	fake.recordInvocation("Security", []interface{}{})
+	fake.securityMutex.Unlock()
+	if fake.SecurityStub != nil {
+		return fake.SecurityStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.securityReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeInterface) SecurityCallCount() int {
+	fake.securityMutex.RLock()
+	defer fake.securityMutex.RUnlock()
+	return len(fake.securityArgsForCall)
+}
+
+func (fake *FakeInterface) SecurityCalls(stub func() kore.Security) {
+	fake.securityMutex.Lock()
+	defer fake.securityMutex.Unlock()
+	fake.SecurityStub = stub
+}
+
+func (fake *FakeInterface) SecurityReturns(result1 kore.Security) {
+	fake.securityMutex.Lock()
+	defer fake.securityMutex.Unlock()
+	fake.SecurityStub = nil
+	fake.securityReturns = struct {
+		result1 kore.Security
+	}{result1}
+}
+
+func (fake *FakeInterface) SecurityReturnsOnCall(i int, result1 kore.Security) {
+	fake.securityMutex.Lock()
+	defer fake.securityMutex.Unlock()
+	fake.SecurityStub = nil
+	if fake.securityReturnsOnCall == nil {
+		fake.securityReturnsOnCall = make(map[int]struct {
+			result1 kore.Security
+		})
+	}
+	fake.securityReturnsOnCall[i] = struct {
+		result1 kore.Security
 	}{result1}
 }
 
@@ -1053,10 +1178,14 @@ func (fake *FakeInterface) Invocations() map[string][][]interface{} {
 	defer fake.iDPMutex.RUnlock()
 	fake.invitationsMutex.RLock()
 	defer fake.invitationsMutex.RUnlock()
+	fake.persistMutex.RLock()
+	defer fake.persistMutex.RUnlock()
 	fake.planPoliciesMutex.RLock()
 	defer fake.planPoliciesMutex.RUnlock()
 	fake.plansMutex.RLock()
 	defer fake.plansMutex.RUnlock()
+	fake.securityMutex.RLock()
+	defer fake.securityMutex.RUnlock()
 	fake.servicePlansMutex.RLock()
 	defer fake.servicePlansMutex.RUnlock()
 	fake.serviceProvidersMutex.RLock()

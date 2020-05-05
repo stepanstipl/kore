@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package persistence
+package persistence_test
 
 import (
 	"context"
 	"testing"
 
+	. "github.com/appvia/kore/pkg/persistence"
 	"github.com/appvia/kore/pkg/persistence/model"
 
 	"github.com/stretchr/testify/assert"

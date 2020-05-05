@@ -128,6 +128,11 @@ func (l *ListOptions) HasName() bool {
 	return l.Has("name")
 }
 
+// HasNamespace checks the namespace
+func (l *ListOptions) HasNamespace() bool {
+	return l.Has("namespace")
+}
+
 // HasProvider checks the name
 func (l *ListOptions) HasProvider() bool {
 	return l.Has("provider.name")
@@ -188,6 +193,26 @@ func (l *ListOptions) HasUser() bool {
 	return l.Has("user")
 }
 
+// HasIdentity checks if all of the identity fields are present
+func (l *ListOptions) HasIdentity() bool {
+	return l.HasGroup() && l.HasVersion() && l.HasKind() && l.HasNamespace() && l.HasName()
+}
+
+// HasGroup checks if group set
+func (l *ListOptions) HasGroup() bool {
+	return l.Has("group")
+}
+
+// HasVersion checks if version set
+func (l *ListOptions) HasVersion() bool {
+	return l.Has("version")
+}
+
+// HasKind checks if kind set
+func (l *ListOptions) HasKind() bool {
+	return l.Has("kind")
+}
+
 // GetID gets the id
 func (l *ListOptions) GetID() int {
 	return l.GetInt("id")
@@ -201,6 +226,26 @@ func (l *ListOptions) GetNotNames() []string {
 // GetName gets the name
 func (l *ListOptions) GetName() string {
 	return l.GetString("name")
+}
+
+// GetNamespace gets the namespace
+func (l *ListOptions) GetNamespace() string {
+	return l.GetString("namespace")
+}
+
+// GetGroup gets the group
+func (l *ListOptions) GetGroup() string {
+	return l.GetString("group")
+}
+
+// GetVersion gets the version
+func (l *ListOptions) GetVersion() string {
+	return l.GetString("version")
+}
+
+// GetKind gets the kind
+func (l *ListOptions) GetKind() string {
+	return l.GetString("kind")
 }
 
 // GetProvider gets the name

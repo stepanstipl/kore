@@ -19,7 +19,9 @@ package kore
 import (
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
+	securityv1 "github.com/appvia/kore/pkg/apis/security/v1"
 	"github.com/appvia/kore/pkg/persistence/model"
+	"github.com/appvia/kore/pkg/security"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -261,4 +263,111 @@ func (c Convertor) FromMembersToTeamList(members []*model.Member) *orgv1.TeamLis
 	}
 
 	return c.FromTeamsModelList(teams)
+}
+
+// ToSecurityScanResult converts to the DB-layer scan result from the Security scan result
+func (c Convertor) ToSecurityScanResult(result *securityv1.SecurityScanResult) model.SecurityScanResult {
+	res := model.SecurityScanResult{
+		ID:                result.Spec.ID,
+		ResourceGroup:     result.Spec.Resource.Group,
+		ResourceVersion:   result.Spec.Resource.Version,
+		ResourceKind:      result.Spec.Resource.Kind,
+		ResourceNamespace: result.Spec.Resource.Namespace,
+		ResourceName:      result.Spec.Resource.Name,
+		OwningTeam:        result.Spec.OwningTeam,
+		CheckedAt:         result.Spec.CheckedAt.Time,
+		ArchivedAt:        result.Spec.ArchivedAt.Time,
+		OverallStatus:     result.Spec.OverallStatus.String(),
+		Results:           make([]model.SecurityRuleResult, len(result.Spec.Results)),
+	}
+	for i, rr := range result.Spec.Results {
+		res.Results[i] = c.ToSecurityRuleResult(rr)
+	}
+	return res
+}
+
+// FromSecurityScanResult converts from the DB-layer scan result to the Security scan result
+func (c Convertor) FromSecurityScanResult(result *model.SecurityScanResult) securityv1.SecurityScanResult {
+
+	res := securityv1.SecurityScanResult{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: securityv1.SchemeGroupVersion.String(),
+			Kind:       "SecurityScanResult",
+		},
+		Spec: securityv1.SecurityScanResultSpec{
+			ID: result.ID,
+			Resource: corev1.Ownership{
+				Group:     result.ResourceGroup,
+				Version:   result.ResourceVersion,
+				Kind:      result.ResourceKind,
+				Namespace: result.ResourceNamespace,
+				Name:      result.ResourceName,
+			},
+			OwningTeam:    result.OwningTeam,
+			CheckedAt:     metav1.NewTime(result.CheckedAt),
+			ArchivedAt:    metav1.NewTime(result.ArchivedAt),
+			OverallStatus: securityv1.RuleStatus(result.OverallStatus),
+			Results:       make([]securityv1.SecurityScanRuleResult, len(result.Results)),
+		},
+	}
+	for i, rr := range result.Results {
+		res.Spec.Results[i] = c.FromSecurityRuleResult(rr)
+	}
+	return res
+}
+
+// ToSecurityRuleResult converts to the DB-layer rule result from the Security rule result
+func (c Convertor) ToSecurityRuleResult(result securityv1.SecurityScanRuleResult) model.SecurityRuleResult {
+	return model.SecurityRuleResult{
+		RuleCode:  result.RuleCode,
+		Status:    result.Status.String(),
+		Message:   result.Message,
+		CheckedAt: result.CheckedAt.Time,
+	}
+}
+
+// FromSecurityRuleResult converts from the DB-layer rule result to the Security rule result
+func (c Convertor) FromSecurityRuleResult(result model.SecurityRuleResult) securityv1.SecurityScanRuleResult {
+	return securityv1.SecurityScanRuleResult{
+		RuleCode:  result.RuleCode,
+		Status:    securityv1.RuleStatus(result.Status),
+		Message:   result.Message,
+		CheckedAt: metav1.NewTime(result.CheckedAt),
+	}
+}
+
+// FromSecurityRuleList converts from the security API rule slice to the security rule list
+func (c Convertor) FromSecurityRuleList(rules []security.Rule) securityv1.SecurityRuleList {
+	result := securityv1.SecurityRuleList{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: securityv1.SchemeGroupVersion.String(),
+			Kind:       "SecurityRuleList",
+		},
+		Items: make([]securityv1.SecurityRule, len(rules)),
+	}
+
+	for i, r := range rules {
+		result.Items[i] = c.FromSecurityRule(r)
+	}
+
+	return result
+}
+
+// FromSecurityRule converts from the security API rule to a security rule
+func (c Convertor) FromSecurityRule(rule security.Rule) securityv1.SecurityRule {
+	return securityv1.SecurityRule{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: securityv1.SchemeGroupVersion.String(),
+			Kind:       "SecurityRule",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: rule.Code(),
+		},
+		Spec: securityv1.SecurityRuleSpec{
+			Code:        rule.Code(),
+			Name:        rule.Name(),
+			Description: rule.Description(),
+			AppliesTo:   security.RuleApplies(rule),
+		},
+	}
 }

@@ -30,6 +30,8 @@
 // deploy/crds/org.kore.appvia.io_teaminvitations.yaml
 // deploy/crds/org.kore.appvia.io_teams.yaml
 // deploy/crds/org.kore.appvia.io_users.yaml
+// deploy/crds/security.kore.appvia.io_securityrules.yaml
+// deploy/crds/security.kore.appvia.io_securityscanresults.yaml
 // deploy/crds/services.kore.appvia.io_servicecredentials.yaml
 // deploy/crds/services.kore.appvia.io_serviceplans.yaml
 // deploy/crds/services.kore.appvia.io_serviceproviders.yaml
@@ -5593,6 +5595,231 @@ func crdsOrgKoreAppviaIo_usersYaml() (*asset, error) {
 	return a, nil
 }
 
+var _crdsSecurityKoreAppviaIo_securityrulesYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: securityrules.security.kore.appvia.io
+spec:
+  group: security.kore.appvia.io
+  names:
+    kind: SecurityRule
+    listKind: SecurityRuleList
+    plural: securityrules
+    singular: securityrule
+  preserveUnknownFields: false
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      description: SecurityRule contains the definition of a security rule
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: SecurityRuleSpec specifies the details of a security rule
+          properties:
+            appliesTo:
+              description: AppliesTo is the list of resource types (e.g. Plan, Cluster)
+                that this rule is applicable for
+              items:
+                type: string
+              type: array
+            code:
+              description: Code is the unique identifier of this rule
+              type: string
+            description:
+              description: Description is the markdown-formatted extended description
+                of this rule.
+              type: string
+            name:
+              description: Name is the human-readable name of this rule
+              type: string
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsSecurityKoreAppviaIo_securityrulesYamlBytes() ([]byte, error) {
+	return _crdsSecurityKoreAppviaIo_securityrulesYaml, nil
+}
+
+func crdsSecurityKoreAppviaIo_securityrulesYaml() (*asset, error) {
+	bytes, err := crdsSecurityKoreAppviaIo_securityrulesYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/security.kore.appvia.io_securityrules.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsSecurityKoreAppviaIo_securityscanresultsYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: securityscanresults.security.kore.appvia.io
+spec:
+  group: security.kore.appvia.io
+  names:
+    kind: SecurityScanResult
+    listKind: SecurityScanResultList
+    plural: securityscanresults
+    singular: securityscanresult
+  preserveUnknownFields: false
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      description: SecurityScanResult contains the result of a scan against all registered
+        rules
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: ScanResultSpec shows the overall result of a scan against all
+            registered rules
+          properties:
+            archivedAt:
+              description: ArchivedAt is the timestamp this result was superceded
+                by a later scan - if ArchivedAt.IsZero() is true this is the most
+                recent scan.
+              format: date-time
+              type: string
+            checkedAt:
+              description: CheckedAt is the timestamp this result was determined
+              format: date-time
+              type: string
+            id:
+              description: ID is the ID of this scan result in the data store
+              format: int64
+              type: integer
+            overallStatus:
+              description: OverallStatus indicates the worst-case status of the rules
+                checked in this scan
+              type: string
+            owningTeam:
+              description: OwningTeam is the name of the Kore team that owns this
+                resource, will be empty if it is a non-team resource.
+              type: string
+            resource:
+              description: Resource is a reference to the group/version/kind/namespace/name
+                of the resource scanned by this scan
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
+            results:
+              description: Results are the underlying results of the individual rules
+                run as part of this scan
+              items:
+                description: SecurityScanRuleResult represents the compliance status
+                  of a target with respect to a specific security rule.
+                properties:
+                  checkedAt:
+                    description: CheckedAt is the timestamp this result was determined
+                    format: date-time
+                    type: string
+                  message:
+                    description: Message provides additional information about the
+                      status of this rule on this target, if applicable
+                    type: string
+                  ruleCode:
+                    description: RuleCode indicates the rule that this result relates
+                      to
+                    type: string
+                  status:
+                    description: Status indicates the compliance of the target with
+                      this rule
+                    type: string
+                type: object
+              type: array
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsSecurityKoreAppviaIo_securityscanresultsYamlBytes() ([]byte, error) {
+	return _crdsSecurityKoreAppviaIo_securityscanresultsYaml, nil
+}
+
+func crdsSecurityKoreAppviaIo_securityscanresultsYaml() (*asset, error) {
+	bytes, err := crdsSecurityKoreAppviaIo_securityscanresultsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/security.kore.appvia.io_securityscanresults.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _crdsServicesKoreAppviaIo_servicecredentialsYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -6217,6 +6444,8 @@ var _bindata = map[string]func() (*asset, error){
 	"crds/org.kore.appvia.io_teaminvitations.yaml":                        crdsOrgKoreAppviaIo_teaminvitationsYaml,
 	"crds/org.kore.appvia.io_teams.yaml":                                  crdsOrgKoreAppviaIo_teamsYaml,
 	"crds/org.kore.appvia.io_users.yaml":                                  crdsOrgKoreAppviaIo_usersYaml,
+	"crds/security.kore.appvia.io_securityrules.yaml":                     crdsSecurityKoreAppviaIo_securityrulesYaml,
+	"crds/security.kore.appvia.io_securityscanresults.yaml":               crdsSecurityKoreAppviaIo_securityscanresultsYaml,
 	"crds/services.kore.appvia.io_servicecredentials.yaml":                crdsServicesKoreAppviaIo_servicecredentialsYaml,
 	"crds/services.kore.appvia.io_serviceplans.yaml":                      crdsServicesKoreAppviaIo_serviceplansYaml,
 	"crds/services.kore.appvia.io_serviceproviders.yaml":                  crdsServicesKoreAppviaIo_serviceprovidersYaml,
@@ -6295,6 +6524,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"org.kore.appvia.io_teaminvitations.yaml":                        {crdsOrgKoreAppviaIo_teaminvitationsYaml, map[string]*bintree{}},
 		"org.kore.appvia.io_teams.yaml":                                  {crdsOrgKoreAppviaIo_teamsYaml, map[string]*bintree{}},
 		"org.kore.appvia.io_users.yaml":                                  {crdsOrgKoreAppviaIo_usersYaml, map[string]*bintree{}},
+		"security.kore.appvia.io_securityrules.yaml":                     {crdsSecurityKoreAppviaIo_securityrulesYaml, map[string]*bintree{}},
+		"security.kore.appvia.io_securityscanresults.yaml":               {crdsSecurityKoreAppviaIo_securityscanresultsYaml, map[string]*bintree{}},
 		"services.kore.appvia.io_servicecredentials.yaml":                {crdsServicesKoreAppviaIo_servicecredentialsYaml, map[string]*bintree{}},
 		"services.kore.appvia.io_serviceplans.yaml":                      {crdsServicesKoreAppviaIo_serviceplansYaml, map[string]*bintree{}},
 		"services.kore.appvia.io_serviceproviders.yaml":                  {crdsServicesKoreAppviaIo_serviceprovidersYaml, map[string]*bintree{}},

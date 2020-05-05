@@ -51,6 +51,8 @@ type Interface interface {
 	Invitations() Invitations
 	// Members returns the members interface
 	Members() Members
+	// Security returns the security interface
+	Security() Security
 	// Stop is called to shutdown the store and clean up resources
 	Stop() error
 	// Teams returns the teams interface

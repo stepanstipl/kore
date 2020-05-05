@@ -169,6 +169,7 @@ swagger-validate:
 swagger-apiclient:
 	@$(MAKE) swagger-json
 	@echo "--> Creating API client based on the swagger definition"
+	@rm -r pkg/apiclient/*
 	@go run github.com/go-swagger/go-swagger/cmd/swagger generate client -q -f swagger.json -c pkg/apiclient -m pkg/apiclient/models
 
 check-swagger-apiclient: swagger-apiclient
