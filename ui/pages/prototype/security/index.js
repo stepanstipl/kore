@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { Alert } from 'antd'
 
-import Breadcrumb from '../../../lib/components/Breadcrumb'
+import Breadcrumb from '../../../lib/components/layout/Breadcrumb'
 import SecurityData from '../../../lib/prototype/utils/dummy-security-data'
 import SecurityOverview from '../../../lib/prototype/components/security/SecurityOverview'
 

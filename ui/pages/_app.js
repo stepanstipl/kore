@@ -10,8 +10,8 @@ const { Header, Content, Footer } = Layout
 import getConfig from 'next/config'
 const { publicRuntimeConfig } = getConfig()
 
-import User from '../lib/components/User'
-import SiderMenu from '../lib/components/SiderMenu'
+import User from '../lib/components/layout/User'
+import SiderMenu from '../lib/components/layout/SiderMenu'
 import redirect from '../lib/utils/redirect'
 import KoreApi from '../lib/kore-api'
 import copy from '../lib/utils/object-copy'

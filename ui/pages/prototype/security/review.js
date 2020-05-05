@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
-import Breadcrumb from '../../../lib/components/Breadcrumb'
+import Breadcrumb from '../../../lib/components/layout/Breadcrumb'
 import SecurityEventViewer from '../../../lib/prototype/components/security/SecurityEventViewer'
 import SecurityData from '../../../lib/prototype/utils/dummy-security-data'
 

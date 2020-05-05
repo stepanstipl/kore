@@ -3,8 +3,8 @@ import moment from 'moment'
 import { List, Avatar, Icon, Typography, message, Tooltip } from 'antd'
 const { Text } = Typography
 
-import ResourceVerificationStatus from '../../../components/resources/ResourceVerificationStatus'
-import AutoRefreshComponent from '../../../components/teams/AutoRefreshComponent'
+import ResourceVerificationStatus from '../resources/ResourceVerificationStatus'
+import AutoRefreshComponent from '../teams/AutoRefreshComponent'
 
 class GCPOrganization extends AutoRefreshComponent {
   static propTypes = {
@@ -33,8 +33,16 @@ class GCPOrganization extends AutoRefreshComponent {
   }
 
   render() {
-    const { organization, editOrganization } = this.props
+    const { organization, editOrganization, allTeams } = this.props
     const created = moment(organization.metadata.creationTimestamp).fromNow()
+
+    const displayAllocations = () => {
+      if (!organization.allocation) {
+        return <Text>No teams <Tooltip title="This organization is not allocated to any teams, click edit to fix this."><Icon type="warning" theme="twoTone" twoToneColor="orange" /></Tooltip> </Text>
+      }
+      const allocatedTeams = allTeams.filter(team => organization.allocation.spec.teams.includes(team.metadata.name)).map(team => team.spec.summary)
+      return allocatedTeams.length > 0 ? allocatedTeams.join(', ') : 'All teams'
+    }
 
     return (
       <List.Item key={organization.metadata.name} actions={[
@@ -43,14 +51,17 @@ class GCPOrganization extends AutoRefreshComponent {
       ]}>
         <List.Item.Meta
           avatar={<Avatar icon="cloud" />}
-          title={<Text style={{ display: 'inline', marginRight: '15px', fontSize: '20px', fontWeight: '600' }}>{organization.spec.parentID}</Text>}
-          description={
+          title={
             <>
+              <Text style={{ display: 'inline', marginRight: '15px', fontSize: '20px', fontWeight: '600' }}>{organization.spec.parentID}</Text>
               <Text style={{ marginRight: '5px' }}>{organization.allocation.spec.name}</Text>
               <Tooltip title={organization.allocation.spec.summary}>
                 <Icon type="info-circle" theme="twoTone" />
               </Tooltip>
             </>
+          }
+          description={
+            <Text>Allocated to: {displayAllocations()}</Text>
           }
         />
         <Text type='secondary'>Created {created}</Text>

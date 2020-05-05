@@ -5,7 +5,7 @@ const { Title, Text, Paragraph } = Typography
 import getConfig from 'next/config'
 const { publicRuntimeConfig } = getConfig()
 
-import ResourceList from '../configure/ResourceList'
+import ResourceList from '../resources/ResourceList'
 import KoreApi from '../../kore-api'
 import Policy from './Policy'
 import PolicyForm from './PolicyForm'

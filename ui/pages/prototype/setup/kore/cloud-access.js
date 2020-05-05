@@ -7,9 +7,9 @@ const { Step } = Steps
 import copy from '../../../../lib/utils/object-copy'
 import canonical from '../../../../lib/utils/canonical'
 import KoreApi from '../../../../lib/kore-api'
-import GKECredentialsList from '../../../../lib/components/configure/GKECredentialsList'
-import PlanViewer from '../../../../lib/components/configure/PlanViewer'
-import CloudSelector from '../../../../lib/components/cluster-build/CloudSelector'
+import GKECredentialsList from '../../../../lib/components/credentials/GKECredentialsList'
+import PlanViewer from '../../../../lib/components/plans/PlanViewer'
+import CloudSelector from '../../../../lib/components/common/CloudSelector'
 
 // prototype components
 import GCPOrganizationsList from '../../../../lib/prototype/components/credentials/GCPOrganizationsList'
