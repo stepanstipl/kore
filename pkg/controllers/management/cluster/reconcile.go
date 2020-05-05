@@ -178,14 +178,24 @@ func (a *Controller) Apply(cluster *clustersv1.Cluster, components *Components) 
 				condition = &corev1.Component{
 					Name:   co.String(),
 					Status: corev1.PendingStatus,
-					Resource: &corev1.Ownership{
-						Group:     co.Object.GetObjectKind().GroupVersionKind().Group,
-						Version:   co.Object.GetObjectKind().GroupVersionKind().Version,
-						Kind:      co.Object.GetObjectKind().GroupVersionKind().Kind,
-						Namespace: co.Object.(metav1.Object).GetNamespace(),
-						Name:      co.Object.(metav1.Object).GetName(),
-					},
 				}
+			}
+			condition.Resource = &corev1.Ownership{
+				Group:     co.Object.GetObjectKind().GroupVersionKind().Group,
+				Version:   co.Object.GetObjectKind().GroupVersionKind().Version,
+				Kind:      co.Object.GetObjectKind().GroupVersionKind().Kind,
+				Namespace: co.Object.(metav1.Object).GetNamespace(),
+				Name:      co.Object.(metav1.Object).GetName(),
+			}
+			logger := a.logger.WithFields(log.Fields{
+				"component": co.String(),
+				"condition": condition.Status,
+				"existing":  co.Exists,
+			})
+			logger.Debug("attempting to reconciling the component")
+
+			if condition.Status == corev1.DeletedStatus {
+				return true, nil
 			}
 
 			defer func() {
@@ -214,8 +224,10 @@ func (a *Controller) Apply(cluster *clustersv1.Cluster, components *Components) 
 			// @check if the resource is ready to reconcile
 			status, err := GetObjectStatus(co.Object)
 			if err != nil {
+				logger.WithError(err).Error("trying to check the component status")
+
 				if err == kubernetes.ErrFieldNotFound {
-					result.RequeueAfter = 10 * time.Second
+					result.RequeueAfter = 30 * time.Second
 
 					return false, nil
 				}
@@ -223,13 +235,14 @@ func (a *Controller) Apply(cluster *clustersv1.Cluster, components *Components) 
 				return false, err
 			}
 
-			a.logger.WithFields(log.Fields{
-				"name":   co.String(),
-				"status": status,
-			}).Debug("current state of the resource")
+			logger.WithField(
+				"status", status,
+			).Debug("current state of the resource")
 
 			switch status {
 			case corev1.SuccessStatus:
+				condition.Message = ""
+				condition.Detail = ""
 				// @try and update the status straight away
 				if condition.Status != corev1.SuccessStatus {
 					condition.Status = corev1.SuccessStatus
@@ -238,7 +251,6 @@ func (a *Controller) Apply(cluster *clustersv1.Cluster, components *Components) 
 
 					return false, nil
 				}
-
 				return true, nil
 
 			case corev1.FailureStatus:
@@ -256,6 +268,8 @@ func (a *Controller) Apply(cluster *clustersv1.Cluster, components *Components) 
 			default:
 				condition.Status = status
 			}
+			a.logger.Debug("waiting for resource to move to success or failed")
+
 			result.RequeueAfter = 30 * time.Second
 
 			return false, nil

@@ -98,8 +98,12 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 	token := &configv1.Secret{}
 
 	result, err := func() (reconcile.Result, error) {
-		object.Status.Status = corev1.PendingStatus
+		// @step: ensure the status is pending
+		if object.Status.Status != corev1.PendingStatus {
+			object.Status.Status = corev1.PendingStatus
 
+			return reconcile.Result{Requeue: true}, nil
+		}
 		logger.Debugf("retrieving the cluster credentials from secret %s/%s", object.Namespace, object.Name)
 
 		// @step: retrieve the provider credentials secret

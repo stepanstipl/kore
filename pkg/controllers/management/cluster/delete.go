@@ -111,6 +111,11 @@ func (a *Controller) Remove(cluster *clustersv1.Cluster, components *Components)
 	client := a.mgr.GetClient()
 
 	return func(ctx context.Context) (reconcile.Result, error) {
+		// @logic
+		// - we walk the components in reverse
+		// - we delete the component if required
+		// - we update the status of the components in the cluster
+		// - we wait for it to be delete and then to move to the next
 
 		err := components.InverseWalkFunc(func(co *Vertex) (bool, error) {
 			a.logger.WithField(
