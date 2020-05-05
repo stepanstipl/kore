@@ -3,6 +3,7 @@ version: 2.1
 
 orbs:
   kube-orb: circleci/kubernetes@0.11.0
+  slack: circleci/slack@3.4.2
 
 parameters:
   enable_e2e:
@@ -141,7 +142,8 @@ e2e_job_template: &E2E_JOB_TEMPLATE
             --enable-e2e-user ${KORE_E2E_USER} \
             --enable-gke ${ENABLE_GKE_E2E} \
             --enable-eks ${ENABLE_EKS_E2E}
-
+    - slack/notify-on-failure:
+        only_for_branches: master
 #
 # Jobs ---
 #
@@ -525,5 +527,19 @@ workflows:
       - e2e-images
       - e2e_eks:
           enable_eks: true
+          requires:
+            - e2e-images
+  nightly:
+    triggers:
+      - schedule:
+          cron: "0 21 * * 1-5"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - e2e-images
+      - e2e_gke:
+          enable_gke: true
           requires:
             - e2e-images
