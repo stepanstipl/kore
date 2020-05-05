@@ -15,6 +15,6 @@ spec:
       kind: Deployment
   assemblyPhase: "Pending"
   descriptor:
-    version: "v0.9.5"
+    version: "v1.0.1"
     description: "A controller for deploying helm3 charts"
     type: "captain"
