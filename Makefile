@@ -105,14 +105,14 @@ verify-circleci:
 		circleci config validate
 
 images:
-	@echo "--> Building docker images"
+	@echo "--> Building docker images @ ${VERSION}"
 	@for name in ${DOCKER_IMAGES}; do \
 		echo "--> Building docker image $${name}" ; \
 		docker build -t ${REGISTRY}/${AUTHOR}/$${name}:${VERSION} -f images/Dockerfile.$${name} . ; \
 	done
 
 push-images:
-	@echo "--> Pushing docker images"
+	@echo "--> Pushing docker images ${VERSION}"
 	@for name in ${DOCKER_IMAGES}; do \
 		echo "--> Pushing docker image $${name}" ; \
 		docker push ${REGISTRY}/${AUTHOR}/$${name}:${VERSION} ; \
