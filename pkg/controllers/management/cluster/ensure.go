@@ -92,6 +92,12 @@ func (a *Controller) Complete(cluster *clustersv1.Cluster, components *Component
 
 		return reconcile.Result{}, components.WalkFunc(func(co *Vertex) (bool, error) {
 			switch {
+			case utils.IsEqualType(co.Object, &gke.GKE{}):
+				ownership = co.Object.(*gke.GKE).Ownership()
+
+			case utils.IsEqualType(co.Object, &eks.EKS{}):
+				ownership = co.Object.(*eks.EKS).Ownership()
+
 			case utils.IsEqualType(co.Object, &clustersv1.Kubernetes{}):
 				k := co.Object.(*clustersv1.Kubernetes)
 				if err := kubernetes.PatchSpec(k, cluster.Spec.Configuration.Raw); err != nil {

@@ -449,9 +449,11 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 	// @step: the resource has been reconcile, update the status
 	if err := a.mgr.GetClient().Status().Patch(context.Background(), object, client.MergeFrom(original)); err != nil {
-		logger.WithError(err).Error("trying to update the kubernetes status")
+		if !kerrors.IsNotFound(err) {
+			logger.WithError(err).Error("trying to update the kubernetes status")
 
-		return reconcile.Result{}, err
+			return reconcile.Result{}, err
+		}
 	}
 
 	return result, nil

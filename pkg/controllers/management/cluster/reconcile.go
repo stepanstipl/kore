@@ -18,6 +18,7 @@ package cluster
 
 import (
 	"context"
+	"reflect"
 	"time"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
@@ -110,16 +111,15 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		}
 	}
 
-	if err := a.mgr.GetClient().Status().Patch(ctx, cluster, client.MergeFrom(original)); err != nil {
-		logger.WithError(err).Error("trying to patch the cluster status")
+	if !reflect.DeepEqual(cluster, original) {
+		if err := a.mgr.GetClient().Status().Patch(ctx, cluster, client.MergeFrom(original)); err != nil {
+			logger.WithError(err).Error("trying to patch the cluster status")
 
-		return reconcile.Result{}, err
-	}
-	if err != nil {
-		return reconcile.Result{}, err
+			return reconcile.Result{}, err
+		}
 	}
 
-	return result, nil
+	return result, err
 }
 
 // AddFinalizer ensures the finalizer is on the resource
@@ -165,30 +165,35 @@ func (a *Controller) Apply(cluster *clustersv1.Cluster, components *Components) 
 	return func(ctx context.Context) (reconcile.Result, error) {
 		var result reconcile.Result
 
+		if cluster.Status.Components == nil {
+			cluster.Status.Components = corev1.Components{}
+		}
+
 		// We walk each of the components in order, we create them if required. If the resource
 		// is not yet successful we wait and requeue. If the resource has failed, we throw
 		// a critical failure and stop
 		err := components.WalkFunc(func(co *Vertex) (bool, error) {
-			condition := corev1.Component{
-				Name:   co.String(),
-				Status: corev1.PendingStatus,
-				Resource: &corev1.Ownership{
-					Group:     co.Object.GetObjectKind().GroupVersionKind().Group,
-					Version:   co.Object.GetObjectKind().GroupVersionKind().Version,
-					Kind:      co.Object.GetObjectKind().GroupVersionKind().Kind,
-					Namespace: co.Object.(metav1.Object).GetNamespace(),
-					Name:      co.Object.(metav1.Object).GetName(),
-				},
+			condition, found := cluster.Status.Components.GetComponent(co.String())
+			if !found {
+				condition = &corev1.Component{
+					Name:   co.String(),
+					Status: corev1.PendingStatus,
+					Resource: &corev1.Ownership{
+						Group:     co.Object.GetObjectKind().GroupVersionKind().Group,
+						Version:   co.Object.GetObjectKind().GroupVersionKind().Version,
+						Kind:      co.Object.GetObjectKind().GroupVersionKind().Kind,
+						Namespace: co.Object.(metav1.Object).GetNamespace(),
+						Name:      co.Object.(metav1.Object).GetName(),
+					},
+				}
 			}
 
 			defer func() {
-				cluster.Status.Components.SetCondition(condition)
+				cluster.Status.Components.SetCondition(*condition)
 			}()
 
 			// @step: the resource does not exist we can simply apply it
 			if !co.Exists {
-				SetClusterRevision(co.Object, cluster.ResourceVersion)
-
 				if _, err := kubernetes.CreateOrUpdate(ctx, client, co.Object); err != nil {
 					return false, err
 				}
@@ -199,6 +204,8 @@ func (a *Controller) Apply(cluster *clustersv1.Cluster, components *Components) 
 
 			// @step: do we need to update the resource? if the revision is different yes
 			if GetClusterRevision(co.Object) != cluster.ResourceVersion {
+				SetClusterRevision(co.Object, cluster.ResourceVersion)
+
 				if _, err := kubernetes.CreateOrUpdate(ctx, client, co.Object); err != nil {
 					return false, err
 				}
@@ -219,11 +226,18 @@ func (a *Controller) Apply(cluster *clustersv1.Cluster, components *Components) 
 			a.logger.WithFields(log.Fields{
 				"name":   co.String(),
 				"status": status,
-			}).Debug("the current state of the resource")
+			}).Debug("current state of the resource")
 
 			switch status {
 			case corev1.SuccessStatus:
-				condition.Status = corev1.SuccessStatus
+				// @try and update the status straight away
+				if condition.Status != corev1.SuccessStatus {
+					condition.Status = corev1.SuccessStatus
+
+					result.Requeue = true
+
+					return false, nil
+				}
 
 				return true, nil
 

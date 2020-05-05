@@ -98,8 +98,8 @@ func (e *eksComponents) Complete(cluster *clustersv1.Cluster, components *Compon
 				ek.Spec.Credentials = cluster.Spec.Credentials
 				ek.Spec.Region = vpc.Spec.Region
 				ek.Spec.SecurityGroupIDs = vpc.Status.Infra.SecurityGroupIDs
-				ek.Spec.SubnetIDs = append(ek.Spec.SubnetIDs, vpc.Status.Infra.PublicSubnetIDs...)
 				ek.Spec.SubnetIDs = vpc.Status.Infra.PrivateSubnetIDs
+				ek.Spec.SubnetIDs = append(ek.Spec.SubnetIDs, vpc.Status.Infra.PublicSubnetIDs...)
 
 			case utils.IsEqualType(v.Object, &eks.EKSNodeGroup{}):
 				eg := v.Object.(*eks.EKSNodeGroup)

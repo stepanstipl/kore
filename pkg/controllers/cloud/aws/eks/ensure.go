@@ -167,6 +167,7 @@ func (t *eksCtrl) EnsureClusterInSync(client *aws.Client, cluster *eks.EKS) cont
 
 			return reconcile.Result{}, err
 		} else if needupdate {
+			cluster.Status.Status = corev1.PendingStatus
 			// we requeue and wait for the state to settle
 			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
 		}
