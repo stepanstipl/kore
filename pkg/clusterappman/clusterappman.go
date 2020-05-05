@@ -58,11 +58,12 @@ type clusterappmanImpl struct {
 // manifest defines the data types that are required to initialise a clusterapp from
 // embebed manifest data.
 type manifest struct {
-	EmededManifests []string
-	Name            string
-	Namespace       string
-	EnsureNamespace bool
-	DeployTimeOut   time.Duration
+	EmededManifests    []string
+	Name               string
+	Namespace          string
+	EnsureNamespace    bool
+	DeployTimeOut      time.Duration
+	PreDeleteManifests []string
 }
 
 var (
@@ -79,6 +80,9 @@ var (
 			Namespace:       appControlNamespsace,
 			EnsureNamespace: false,
 			DeployTimeOut:   3 * time.Minute,
+			PreDeleteManifests: []string{
+				"application-controller/pre-delete.yaml",
+			},
 		},
 		{
 			Name: "Helm Chart Operator",
@@ -175,7 +179,7 @@ func (s clusterappmanImpl) Run(ctx context.Context) error {
 				return fmt.Errorf("failed creating namespace %s: %s", m.Namespace, err)
 			}
 		}
-		// Write all objects to the API on a separate thread...
+		// TODO: Write all objects to the API on a separate thread...
 		if err := ca.CreateOrUpdate(ctx, m.Namespace); err != nil {
 			return fmt.Errorf("failed to create or update '%s' deployment: %s", m.Name, err)
 		}
@@ -195,18 +199,20 @@ func (s clusterappmanImpl) Run(ctx context.Context) error {
 	if err := createStatusConfig(ctx, s.RuntimeClient, components); err != nil {
 		return fmt.Errorf("error reporting status: %s", err)
 	}
-
+	logger.Infof("waiting for %d cluster apps", len(components))
 	wg.Wait()
-	close(ch)
+	logger.Debug("finished waiting for all cluster apps")
+	defer close(ch)
 
-	// now gather up all the component slices as they complete...
-	logger.Infof("waiting for %d cluster apps", len(mm))
-	for i := range cs {
-		// get the first component "reason"
+	// now gather up all the component slices from channels now the routines are complete...
+	for i := range components {
+		// get the first component "status"
+		logger.Debugf("getting cluster app status %d of %d", i, len(components))
 		c := <-ch
+		logger.Debugf("received channel update %d for %s", i, c.Name)
 		// get the corresponding app
 		ca, ok := cas[c.Name]
-		// overwrite the component with the received updated "reason"
+		// overwrite the component with the received updated "status"
 		ca.Component = c
 		if !ok {
 			return fmt.Errorf("missing application from component -  %s", c.Name)
@@ -215,7 +221,7 @@ func (s clusterappmanImpl) Run(ctx context.Context) error {
 			logger.Infof("cluster app '%s' is ready", ca.Component.Name)
 		} else {
 			logger.Errorf(
-				"cluster app '%s' has timed out and has status [%s] due to [%s]",
+				"cluster app '%s' has timed out or failed and has status [%s] due to [%s]",
 				ca.Component.Name,
 				ca.Component.Status,
 				ca.Component.Detail,
@@ -223,7 +229,7 @@ func (s clusterappmanImpl) Run(ctx context.Context) error {
 		}
 		cs[i] = ca.Component
 	}
-	logger.Logger.Infof("saving status")
+	logger.Logger.Infof("saving final status")
 	if err := createStatusConfig(ctx, s.RuntimeClient, components); err != nil {
 		return fmt.Errorf("error reporting status: %s", err)
 	}

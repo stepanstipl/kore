@@ -39,7 +39,9 @@ require (
 	github.com/go-openapi/validate v0.19.7
 	github.com/go-swagger/go-swagger v0.23.0
 	github.com/gogo/protobuf v1.3.1 // indirect
+	github.com/golang/mock v1.3.1 // indirect
 	github.com/golangci/golangci-lint v1.23.7
+	github.com/google/addlicense v0.0.0-20200109101052-9fa18aaf59fb // indirect
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/uuid v1.1.1
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
@@ -91,10 +93,11 @@ require (
 	k8s.io/code-generator v0.17.3
 	k8s.io/kube-openapi v0.0.0-20191107075043-30be4d16710a
 	k8s.io/utils v0.0.0-20191218082557-f07c713de883 // indirect
-	sigs.k8s.io/application v0.8.2-0.20200209202752-a485a03cdc47
+	sigs.k8s.io/application v0.8.2
 	sigs.k8s.io/aws-iam-authenticator v0.5.0
 	sigs.k8s.io/controller-runtime v0.4.0
 	sigs.k8s.io/controller-tools v0.2.5
+	sigs.k8s.io/kind v0.6.0 // indirect
 	sigs.k8s.io/yaml v1.1.0
 )
 

@@ -39,6 +39,8 @@ import (
 type Instance struct {
 	// client provides access to a kubernetes api
 	client client.Client
+	// PreDeleteResources are the K8 objects created for deletion
+	PreDeleteResources []runtime.Object
 	// Resources are the K8 objects created for deployment / update
 	Resources []runtime.Object
 	// ApplicationObject provides access to the application kind
@@ -48,7 +50,7 @@ type Instance struct {
 }
 
 // NewAppFromManifestFiles creates a new cluster application
-func NewAppFromManifestFiles(client client.Client, name string, manifestfiles []http.File) (Instance, error) {
+func NewAppFromManifestFiles(client client.Client, name string, manifestfiles, deleteResfiles []http.File) (Instance, error) {
 	ca := Instance{
 		client:    client,
 		Resources: make([]runtime.Object, 0),
@@ -79,12 +81,43 @@ func NewAppFromManifestFiles(client client.Client, name string, manifestfiles []
 			ca.Resources = append(ca.Resources, obj)
 		}
 	}
+	for _, file := range deleteResfiles {
+		fileBytes, err := ioutil.ReadAll(file)
+		if err != nil {
+			return ca, err
+		}
+		// Pass the yaml ([]bytes) and function (addAllToScheme) to create the runtim.Objects
+		apiObjs, err := kubernetes.ParseK8sYaml(fileBytes, addAllToScheme)
+		if err != nil {
+			return ca, err
+		}
+		ca.PreDeleteResources = append(ca.PreDeleteResources, apiObjs...)
+	}
+
 	return ca, nil
 }
 
 // CreateOrUpdate will deploy or update all the manifets
 // the deafultNamespace is used if not otherwise specified.
 func (ca Instance) CreateOrUpdate(ctx context.Context, defaultNamepsace string) error {
+	for _, res := range ca.PreDeleteResources {
+		objMeta, err := getObjMeta(res)
+		if err != nil {
+			log.Errorf("error getting metadata for %v - %s", res, err)
+		}
+		if err := setMissingNamespace(defaultNamepsace, res); err != nil {
+			log.Debugf("error setting namespace for %v - %s", res, err)
+		}
+		log.Debugf(
+			"ensuring deprecated resource is deleted %s/%s",
+			objMeta.Namespace,
+			objMeta.Name,
+		)
+		// Create / update / replace resources as required
+		if err := kubernetes.DeleteIfExists(ctx, ca.client, res); err != nil {
+			return err
+		}
+	}
 	for _, res := range ca.Resources {
 		objMeta, err := getObjMeta(res)
 		if err != nil {

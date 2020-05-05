@@ -1282,7 +1282,7 @@ mvdan.cc/interfacer/check
 mvdan.cc/lint
 # mvdan.cc/unparam v0.0.0-20190720180237-d51796306d8f
 mvdan.cc/unparam/check
-# sigs.k8s.io/application v0.8.2-0.20200209202752-a485a03cdc47
+# sigs.k8s.io/application v0.8.2
 sigs.k8s.io/application/api/v1beta1
 # sigs.k8s.io/aws-iam-authenticator v0.5.0
 sigs.k8s.io/aws-iam-authenticator/pkg/arn
