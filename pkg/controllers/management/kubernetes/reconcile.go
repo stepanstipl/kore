@@ -65,7 +65,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		"name":      request.NamespacedName.Name,
 		"namespace": request.NamespacedName.Namespace,
 	})
-	logger.Debug("attempting to renconcile the kubernetes cluster")
+	logger.Debug("attempting to reconcile the kubernetes cluster")
 
 	// @step: retrieve the type from the api
 	object := &clustersv1.Kubernetes{}
@@ -208,7 +208,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			object.Status.Status = corev1.FailureStatus
 			object.Status.Components.SetCondition(corev1.Component{
 				Name:    ComponentAPIAuthProxy,
-				Message: "Unable to create client from cluster credentials",
+				Message: "Failed to provision the Service proxy",
 				Detail:  err.Error(),
 				Status:  corev1.FailureStatus,
 			})
