@@ -108,9 +108,8 @@ func createPlan(id string, name string) osb.Plan {
 				},
 			},
 			ServiceBinding: &osb.ServiceBindingSchema{
-				Create: &osb.RequestResponseSchema{
-					InputParametersSchema: osb.InputParametersSchema{
-						Parameters: fmt.Sprintf(`{
+				Create: &osb.InputParametersSchema{
+					Parameters: fmt.Sprintf(`{
 							"$id": "https://test.appvia.io/schemas/credentials.json",
 							"$schema": "http://json-schema.org/draft-07/schema#",
 							"description": "Test plan credentials schema",
@@ -126,7 +125,6 @@ func createPlan(id string, name string) osb.Plan {
 								}
 							}
 						}`, name, name),
-					},
 				},
 			},
 		},
