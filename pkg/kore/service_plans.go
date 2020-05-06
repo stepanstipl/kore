@@ -230,8 +230,8 @@ func (p servicePlansImpl) Has(ctx context.Context, name string) (bool, error) {
 
 // GetEditablePlanParams returns with the editable service plan parameters for a specific team and service kind
 func (p servicePlansImpl) GetEditablePlanParams(ctx context.Context, team string, clusterKind string) (map[string]bool, error) {
-	// TODO: implement this when the service plan policies are implemented
-	return nil, nil
+	// TODO: read this from the allocated service plan policies
+	return map[string]bool{"*": true}, nil
 }
 
 func (p servicePlansImpl) getServicesWithPlan(ctx context.Context, clusterName string) ([]string, error) {

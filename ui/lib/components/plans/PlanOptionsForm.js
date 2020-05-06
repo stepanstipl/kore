@@ -111,7 +111,7 @@ class PlanOptionsForm extends React.Component {
         ): null}
         {Object.keys(this.state.schema.properties).map((name) => {
           const editable = this.props.mode !== 'view' &&
-            this.state.parameterEditable[name] === true &&
+            (this.state.parameterEditable['*'] === true || this.state.parameterEditable[name] === true) &&
             (this.props.mode === 'create' || !this.state.schema.properties[name].immutable) // Disallow editing of params which can only be set at create time.
 
           return (

@@ -250,6 +250,10 @@ func (s *servicesImpl) validateConfiguration(ctx context.Context, service, exist
 		return err
 	}
 
+	if editableParams["*"] {
+		return nil
+	}
+
 	verr := validation.NewError("%q failed validation", service.Name)
 
 	for paramName, paramValue := range serviceConfig {
