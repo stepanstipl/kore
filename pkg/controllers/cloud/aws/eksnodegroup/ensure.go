@@ -81,7 +81,7 @@ func (n *ctrl) EnsureClusterReady(group *eks.EKSNodeGroup) controllers.EnsureFun
 }
 
 // EnsureNodeRole is responsible for ensuring the IAM role is there
-func (n *ctrl) EnsureNodeRole(group *eks.EKSNodeGroup, credentials *eks.EKSCredentials) controllers.EnsureFunc {
+func (n *ctrl) EnsureNodeRole(group *eks.EKSNodeGroup, credentials *aws.Credentials) controllers.EnsureFunc {
 	return func(ctx context.Context) (reconcile.Result, error) {
 		logger := log.WithFields(log.Fields{
 			"name":      group.Name,
@@ -89,10 +89,7 @@ func (n *ctrl) EnsureNodeRole(group *eks.EKSNodeGroup, credentials *eks.EKSCrede
 		})
 		logger.Debug("attempting to ensure the node iam role")
 
-		client := aws.NewIamClient(aws.Credentials{
-			AccessKeyID:     credentials.Spec.AccessKeyID,
-			SecretAccessKey: credentials.Spec.SecretAccessKey,
-		})
+		client := aws.NewIamClient(*credentials)
 
 		role, err := client.EnsureEKSNodePoolRole(ctx, group.Name)
 		if err != nil {

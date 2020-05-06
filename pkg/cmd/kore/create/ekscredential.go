@@ -28,6 +28,7 @@ import (
 	"github.com/manifoldco/promptui"
 
 	"github.com/spf13/cobra"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -108,6 +109,38 @@ func (o CreateEKSCredentialsOptions) Run() error {
 		o.SecretAccessKey = strings.TrimSpace(key)
 	}
 
+	secret := &confv1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Secret",
+			APIVersion: confv1.GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      o.Name,
+			Namespace: kore.HubAdminTeam,
+		},
+		Spec: confv1.SecretSpec{
+			Type:        "aws-credentials",
+			Description: o.Description,
+			Data: map[string]string{
+				"access_key_id":     o.AccessKeyID,
+				"access_secret_key": o.SecretAccessKey,
+			},
+		},
+	}
+	secret.Encode()
+
+	o.Println("Storing credentials secret in Kore")
+	err = o.WaitForCreation(
+		o.ClientWithTeamResource(kore.HubAdminTeam, o.Resources().MustLookup("secret")).
+			Name(o.Name).
+			Payload(secret).
+			Result(&confv1.Secret{}),
+		o.NoWait,
+	)
+	if err != nil {
+		return fmt.Errorf("Error while creating credential secret: %s", err)
+	}
+
 	cred := &eks.EKSCredentials{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "EKSCredentials",
@@ -118,9 +151,11 @@ func (o CreateEKSCredentialsOptions) Run() error {
 			Namespace: kore.HubAdminTeam,
 		},
 		Spec: eks.EKSCredentialsSpec{
-			AccountID:       o.AccountID,
-			AccessKeyID:     o.AccessKeyID,
-			SecretAccessKey: o.SecretAccessKey,
+			AccountID: o.AccountID,
+			CredentialsRef: &v1.SecretReference{
+				Name:      o.Name,
+				Namespace: kore.HubAdminTeam,
+			},
 		},
 	}
 

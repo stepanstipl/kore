@@ -23,6 +23,7 @@ import (
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
+	"github.com/appvia/kore/pkg/controllers"
 	gcputils "github.com/appvia/kore/pkg/utils/cloud/gcp"
 
 	log "github.com/sirupsen/logrus"
@@ -64,10 +65,21 @@ func (t gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			return reconcile.Result{Requeue: true}, nil
 		}
 
+		// for backwards-compatibility, use the key (Account) set on the GKECredentials resource, if it exists
+		var key string = resource.Spec.Account
+		if key == "" {
+			// @step: we need to grab the secret
+			secret, err := controllers.GetDecodedSecret(ctx, t.mgr.GetClient(), resource.Spec.CredentialsRef)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+			key = secret.Spec.Data["service_account_key"]
+		}
+
 		// @step: create the client to verify the permissions
 		permitted, missing, err := gcputils.CheckServiceAccountPermissions(ctx,
 			resource.Spec.Project,
-			resource.Spec.Account,
+			key,
 			requiredPermissions(),
 		)
 		if err != nil {

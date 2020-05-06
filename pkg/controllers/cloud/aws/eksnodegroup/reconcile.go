@@ -28,9 +28,10 @@ import (
 	aws "github.com/appvia/kore/pkg/utils/cloud/aws"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -83,7 +84,7 @@ func (n *ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 		}
 
 		// @step: retrieve the cloud credentials for the aws account
-		credentials, err := n.GetCredentials(ctx, resource, resource.Namespace)
+		creds, err := n.GetCredentials(ctx, resource, resource.Namespace)
 		if err != nil {
 			resource.Status.Conditions.SetCondition(corev1.Component{
 				Name:    ComponentClusterNodegroupCreator,
@@ -105,7 +106,7 @@ func (n *ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 		ensure := []controllers.EnsureFunc{
 			n.EnsureNodeGroupIsPending(resource),
 			n.EnsureClusterReady(resource),
-			n.EnsureNodeRole(resource, credentials),
+			n.EnsureNodeRole(resource, creds),
 			n.EnsureNodeGroup(client, resource),
 		}
 
@@ -138,7 +139,7 @@ func (n *ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 
 // GetClusterClient returns a EKS cluster client
 func (n *ctrl) GetClusterClient(ctx context.Context, resource *eks.EKSNodeGroup) (*aws.Client, error) {
-	credentials, err := n.GetCredentials(ctx, resource, resource.Namespace)
+	creds, err := n.GetCredentials(ctx, resource, resource.Namespace)
 	if err != nil {
 		resource.Status.Conditions.SetCondition(corev1.Component{
 			Name:    ComponentClusterNodegroupCreator,
@@ -149,7 +150,7 @@ func (n *ctrl) GetClusterClient(ctx context.Context, resource *eks.EKSNodeGroup)
 		return nil, err
 	}
 
-	client, err := aws.NewBasicClient(credentials, resource.Spec.Cluster.Name, resource.Spec.Region)
+	client, err := aws.NewBasicClient(creds, resource.Spec.Cluster.Name, resource.Spec.Region)
 	if err != nil {
 		resource.Status.Conditions.SetCondition(corev1.Component{
 			Detail:  err.Error(),
@@ -165,7 +166,7 @@ func (n *ctrl) GetClusterClient(ctx context.Context, resource *eks.EKSNodeGroup)
 }
 
 // GetCredentials returns the cloud credential
-func (n *ctrl) GetCredentials(ctx context.Context, ng *eks.EKSNodeGroup, team string) (*eks.EKSCredentials, error) {
+func (n *ctrl) GetCredentials(ctx context.Context, ng *eks.EKSNodeGroup, team string) (*aws.Credentials, error) {
 	// @step: is the team permitted access to this credentials
 	permitted, err := n.Teams().Team(team).Allocations().IsPermitted(ctx, ng.Spec.Credentials)
 	if err != nil {
@@ -181,14 +182,38 @@ func (n *ctrl) GetCredentials(ctx context.Context, ng *eks.EKSNodeGroup, team st
 	}
 
 	// @step: retrieve the credentials
-	creds := &eks.EKSCredentials{}
-
-	return creds, n.mgr.GetClient().Get(
-		ctx,
-		types.NamespacedName{
-			Namespace: ng.Spec.Credentials.Namespace,
+	eksCreds := &eks.EKSCredentials{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      ng.Spec.Credentials.Name,
+			Namespace: ng.Spec.Credentials.Namespace,
 		},
-		creds,
-	)
+	}
+	found, err := kubernetes.GetIfExists(ctx, n.mgr.GetClient(), eksCreds)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, fmt.Errorf("eks credentials: (%s/%s) not found", ng.Spec.Credentials.Namespace, ng.Spec.Credentials.Name)
+	}
+
+	// for backwards-compatibility, use the creds set on the EKSCredentials resource, if they exist
+	if eksCreds.Spec.SecretAccessKey != "" && eksCreds.Spec.AccessKeyID != "" {
+		return &aws.Credentials{
+			AccountID:       eksCreds.Spec.AccountID,
+			AccessKeyID:     eksCreds.Spec.AccessKeyID,
+			SecretAccessKey: eksCreds.Spec.SecretAccessKey,
+		}, nil
+	}
+
+	// @step: we need to grab the secret
+	secret, err := controllers.GetDecodedSecret(ctx, n.mgr.GetClient(), eksCreds.Spec.CredentialsRef)
+	if err != nil {
+		return nil, err
+	}
+
+	return &aws.Credentials{
+		AccountID:       eksCreds.Spec.AccountID,
+		AccessKeyID:     secret.Spec.Data["access_key_id"],
+		SecretAccessKey: secret.Spec.Data["access_secret_key"],
+	}, nil
 }

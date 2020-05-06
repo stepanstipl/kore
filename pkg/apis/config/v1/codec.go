@@ -24,7 +24,7 @@ import (
 // Encode is responsible for ensuring the secret is encoded
 func (s *Secret) Encode() *Secret {
 	for k, v := range s.Spec.Data {
-		s.Spec.Data[k] = base64.RawStdEncoding.EncodeToString([]byte(v))
+		s.Spec.Data[k] = base64.StdEncoding.EncodeToString([]byte(v))
 	}
 
 	return s
@@ -33,7 +33,7 @@ func (s *Secret) Encode() *Secret {
 // Decode is responsible for decoding the secret
 func (s *Secret) Decode() error {
 	for k, v := range s.Spec.Data {
-		decoded, err := base64.RawStdEncoding.DecodeString(v)
+		decoded, err := base64.StdEncoding.DecodeString(v)
 		if err != nil {
 			return fmt.Errorf("key: %q is not base64 encoded", k)
 		}

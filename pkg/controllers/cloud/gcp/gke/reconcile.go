@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"time"
 
-	config "github.com/appvia/kore/pkg/apis/config/v1"
 	core "github.com/appvia/kore/pkg/apis/core/v1"
 	gcp "github.com/appvia/kore/pkg/apis/gcp/v1alpha1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
@@ -342,8 +341,24 @@ func (t *gkeCtrl) GetGKECredentials(ctx context.Context, key types.NamespacedNam
 		return nil, errors.New("gke credentials have failed validation, please check credentials")
 	}
 
+	// for backwards-compatibility, use the key (Account) set on the GKECredentials resource, if it exists
+	if c.Spec.Account != "" {
+		return &credentials{
+			key:        c.Spec.Account,
+			project_id: c.Spec.Project,
+			project:    c.Spec.Project,
+			region:     c.Spec.Region,
+		}, nil
+	}
+
+	// @step: we need to grab the secret
+	secret, err := controllers.GetDecodedSecret(ctx, t.mgr.GetClient(), c.Spec.CredentialsRef)
+	if err != nil {
+		return nil, err
+	}
+
 	return &credentials{
-		key:        c.Spec.Account,
+		key:        secret.Spec.Data["service_account_key"],
 		project_id: c.Spec.Project,
 		project:    c.Spec.Project,
 		region:     c.Spec.Region,
@@ -380,23 +395,8 @@ func (t *gkeCtrl) GetProjectClaimCredentials(ctx context.Context, key types.Name
 	}
 
 	// @step: we need to grab the secret
-	secret := &config.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      c.Status.CredentialRef.Name,
-			Namespace: c.Status.CredentialRef.Namespace,
-		},
-	}
-
-	found, err = kubernetes.GetIfExists(ctx, t.mgr.GetClient(), secret)
+	secret, err := controllers.GetDecodedSecret(ctx, t.mgr.GetClient(), c.Status.CredentialRef)
 	if err != nil {
-		return nil, err
-	}
-	if !found {
-		return nil, fmt.Errorf("gcp project secret is missing")
-	}
-
-	// @step: ensure the secret is decoded before using
-	if err := secret.Decode(); err != nil {
 		return nil, err
 	}
 

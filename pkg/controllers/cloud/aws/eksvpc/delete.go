@@ -66,10 +66,7 @@ func (t *eksvpcCtrl) Delete(request reconcile.Request) (reconcile.Result, error)
 		// @step: TODO: first we need to check if there are any EKS clusters present
 		// For now we just check the one cluster we know about...
 		// @step: create a cloud client
-		client, err := aws.NewVPCClient(aws.Credentials{
-			AccessKeyID:     creds.Spec.AccessKeyID,
-			SecretAccessKey: creds.Spec.SecretAccessKey,
-		}, aws.VPC{
+		client, err := aws.NewVPCClient(*creds, aws.VPC{
 			CidrBlock: resource.Spec.PrivateIPV4Cidr,
 			Name:      resource.Name,
 			Region:    resource.Spec.Region,

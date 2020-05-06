@@ -236,7 +236,7 @@ func (t *eksCtrl) EnsureClusterRoles(cluster *eks.EKS) controllers.EnsureFunc {
 		logger.Debug("attempting to ensure the iam role for the eks cluster")
 
 		// @step: first we need to check if we have access to the credentials
-		credentials, err := t.GetCredentials(ctx, cluster, cluster.Namespace)
+		creds, err := t.GetCredentials(ctx, cluster, cluster.Namespace)
 		if err != nil {
 			logger.WithError(err).Error("trying to retrieve cloud credentials")
 
@@ -250,10 +250,7 @@ func (t *eksCtrl) EnsureClusterRoles(cluster *eks.EKS) controllers.EnsureFunc {
 		}
 
 		// @step: we need to ensure the iam role for the cluster is there
-		client := aws.NewIamClient(aws.Credentials{
-			AccessKeyID:     credentials.Spec.AccessKeyID,
-			SecretAccessKey: credentials.Spec.SecretAccessKey,
-		})
+		client := aws.NewIamClient(*creds)
 
 		role, err := client.EnsureEKSClusterRole(ctx, cluster.Name)
 		if err != nil {

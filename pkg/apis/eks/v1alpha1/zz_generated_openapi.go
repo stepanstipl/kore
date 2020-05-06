@@ -139,6 +139,13 @@ func schema_pkg_apis_eks_v1alpha1_EKSCredentialsSpec(ref common.ReferenceCallbac
 				Description: "EKSCredentialsSpec defines the desired state of EKSCredential",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"accountID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "AccountID is the AWS account these credentials reside within",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"secretAccessKey": {
 						SchemaProps: spec.SchemaProps{
 							Description: "SecretAccessKey is the AWS Secret Access Key",
@@ -153,17 +160,18 @@ func schema_pkg_apis_eks_v1alpha1_EKSCredentialsSpec(ref common.ReferenceCallbac
 							Format:      "",
 						},
 					},
-					"accountID": {
+					"credentialsRef": {
 						SchemaProps: spec.SchemaProps{
-							Description: "AccountID is the AWS account these credentials reside within",
-							Type:        []string{"string"},
-							Format:      "",
+							Description: "CredentialsRef is a reference to the credentials used to create clusters",
+							Ref:         ref("k8s.io/api/core/v1.SecretReference"),
 						},
 					},
 				},
-				Required: []string{"secretAccessKey", "accessKeyID", "accountID"},
+				Required: []string{"accountID", "credentialsRef"},
 			},
 		},
+		Dependencies: []string{
+			"k8s.io/api/core/v1.SecretReference"},
 	}
 }
 

@@ -14,22 +14,22 @@
 import ApiClient from '../ApiClient';
 
 /**
- * The V1ServicePlanSpec model module.
- * @module model/V1ServicePlanSpec
+ * The V1ServiceProviderSpec model module.
+ * @module model/V1ServiceProviderSpec
  * @version 0.0.1
  */
-class V1ServicePlanSpec {
+class V1ServiceProviderSpec {
     /**
-     * Constructs a new <code>V1ServicePlanSpec</code>.
-     * @alias module:model/V1ServicePlanSpec
+     * Constructs a new <code>V1ServiceProviderSpec</code>.
+     * @alias module:model/V1ServiceProviderSpec
      * @param configuration {Object} 
      * @param description {String} 
-     * @param kind {String} 
      * @param summary {String} 
+     * @param type {String} 
      */
-    constructor(configuration, description, kind, summary) { 
+    constructor(configuration, description, summary, type) { 
         
-        V1ServicePlanSpec.initialize(this, configuration, description, kind, summary);
+        V1ServiceProviderSpec.initialize(this, configuration, description, summary, type);
     }
 
     /**
@@ -37,23 +37,23 @@ class V1ServicePlanSpec {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, configuration, description, kind, summary) { 
+    static initialize(obj, configuration, description, summary, type) { 
         obj['configuration'] = configuration;
         obj['description'] = description;
-        obj['kind'] = kind;
         obj['summary'] = summary;
+        obj['type'] = type;
     }
 
     /**
-     * Constructs a <code>V1ServicePlanSpec</code> from a plain JavaScript object, optionally creating a new instance.
+     * Constructs a <code>V1ServiceProviderSpec</code> from a plain JavaScript object, optionally creating a new instance.
      * Copies all relevant properties from <code>data</code> to <code>obj</code> if supplied or a new instance if not.
      * @param {Object} data The plain JavaScript object bearing properties of interest.
-     * @param {module:model/V1ServicePlanSpec} obj Optional instance to populate.
-     * @return {module:model/V1ServicePlanSpec} The populated <code>V1ServicePlanSpec</code> instance.
+     * @param {module:model/V1ServiceProviderSpec} obj Optional instance to populate.
+     * @return {module:model/V1ServiceProviderSpec} The populated <code>V1ServiceProviderSpec</code> instance.
      */
     static constructFromObject(data, obj) {
         if (data) {
-            obj = obj || new V1ServicePlanSpec();
+            obj = obj || new V1ServiceProviderSpec();
 
             if (data.hasOwnProperty('configuration')) {
                 obj['configuration'] = ApiClient.convertToType(data['configuration'], Object);
@@ -61,14 +61,11 @@ class V1ServicePlanSpec {
             if (data.hasOwnProperty('description')) {
                 obj['description'] = ApiClient.convertToType(data['description'], 'String');
             }
-            if (data.hasOwnProperty('kind')) {
-                obj['kind'] = ApiClient.convertToType(data['kind'], 'String');
-            }
-            if (data.hasOwnProperty('labels')) {
-                obj['labels'] = ApiClient.convertToType(data['labels'], {'String': 'String'});
-            }
             if (data.hasOwnProperty('summary')) {
                 obj['summary'] = ApiClient.convertToType(data['summary'], 'String');
+            }
+            if (data.hasOwnProperty('type')) {
+                obj['type'] = ApiClient.convertToType(data['type'], 'String');
             }
         }
         return obj;
@@ -103,32 +100,6 @@ class V1ServicePlanSpec {
 /**
      * @return {String}
      */
-    getKind() {
-        return this.kind;
-    }
-
-    /**
-     * @param {String} kind
-     */
-    setKind(kind) {
-        this['kind'] = kind;
-    }
-/**
-     * @return {Object.<String, String>}
-     */
-    getLabels() {
-        return this.labels;
-    }
-
-    /**
-     * @param {Object.<String, String>} labels
-     */
-    setLabels(labels) {
-        this['labels'] = labels;
-    }
-/**
-     * @return {String}
-     */
     getSummary() {
         return this.summary;
     }
@@ -139,38 +110,46 @@ class V1ServicePlanSpec {
     setSummary(summary) {
         this['summary'] = summary;
     }
+/**
+     * @return {String}
+     */
+    getType() {
+        return this.type;
+    }
+
+    /**
+     * @param {String} type
+     */
+    setType(type) {
+        this['type'] = type;
+    }
 
 }
 
 /**
  * @member {Object} configuration
  */
-V1ServicePlanSpec.prototype['configuration'] = undefined;
+V1ServiceProviderSpec.prototype['configuration'] = undefined;
 
 /**
  * @member {String} description
  */
-V1ServicePlanSpec.prototype['description'] = undefined;
-
-/**
- * @member {String} kind
- */
-V1ServicePlanSpec.prototype['kind'] = undefined;
-
-/**
- * @member {Object.<String, String>} labels
- */
-V1ServicePlanSpec.prototype['labels'] = undefined;
+V1ServiceProviderSpec.prototype['description'] = undefined;
 
 /**
  * @member {String} summary
  */
-V1ServicePlanSpec.prototype['summary'] = undefined;
+V1ServiceProviderSpec.prototype['summary'] = undefined;
+
+/**
+ * @member {String} type
+ */
+V1ServiceProviderSpec.prototype['type'] = undefined;
 
 
 
 
 
 
-export default V1ServicePlanSpec;
+export default V1ServiceProviderSpec;
 

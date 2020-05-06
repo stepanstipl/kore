@@ -51,8 +51,20 @@ class V1ServiceStatus {
             if (data.hasOwnProperty('components')) {
                 obj['components'] = ApiClient.convertToType(data['components'], [V1Component]);
             }
+            if (data.hasOwnProperty('configuration')) {
+                obj['configuration'] = ApiClient.convertToType(data['configuration'], Object);
+            }
             if (data.hasOwnProperty('message')) {
                 obj['message'] = ApiClient.convertToType(data['message'], 'String');
+            }
+            if (data.hasOwnProperty('plan')) {
+                obj['plan'] = ApiClient.convertToType(data['plan'], 'String');
+            }
+            if (data.hasOwnProperty('providerData')) {
+                obj['providerData'] = ApiClient.convertToType(data['providerData'], Object);
+            }
+            if (data.hasOwnProperty('providerID')) {
+                obj['providerID'] = ApiClient.convertToType(data['providerID'], 'String');
             }
             if (data.hasOwnProperty('status')) {
                 obj['status'] = ApiClient.convertToType(data['status'], 'String');
@@ -75,6 +87,19 @@ class V1ServiceStatus {
         this['components'] = components;
     }
 /**
+     * @return {Object}
+     */
+    getConfiguration() {
+        return this.configuration;
+    }
+
+    /**
+     * @param {Object} configuration
+     */
+    setConfiguration(configuration) {
+        this['configuration'] = configuration;
+    }
+/**
      * @return {String}
      */
     getMessage() {
@@ -86,6 +111,45 @@ class V1ServiceStatus {
      */
     setMessage(message) {
         this['message'] = message;
+    }
+/**
+     * @return {String}
+     */
+    getPlan() {
+        return this.plan;
+    }
+
+    /**
+     * @param {String} plan
+     */
+    setPlan(plan) {
+        this['plan'] = plan;
+    }
+/**
+     * @return {Object}
+     */
+    getProviderData() {
+        return this.providerData;
+    }
+
+    /**
+     * @param {Object} providerData
+     */
+    setProviderData(providerData) {
+        this['providerData'] = providerData;
+    }
+/**
+     * @return {String}
+     */
+    getProviderID() {
+        return this.providerID;
+    }
+
+    /**
+     * @param {String} providerID
+     */
+    setProviderID(providerID) {
+        this['providerID'] = providerID;
     }
 /**
      * @return {String}
@@ -109,9 +173,29 @@ class V1ServiceStatus {
 V1ServiceStatus.prototype['components'] = undefined;
 
 /**
+ * @member {Object} configuration
+ */
+V1ServiceStatus.prototype['configuration'] = undefined;
+
+/**
  * @member {String} message
  */
 V1ServiceStatus.prototype['message'] = undefined;
+
+/**
+ * @member {String} plan
+ */
+V1ServiceStatus.prototype['plan'] = undefined;
+
+/**
+ * @member {Object} providerData
+ */
+V1ServiceStatus.prototype['providerData'] = undefined;
+
+/**
+ * @member {String} providerID
+ */
+V1ServiceStatus.prototype['providerID'] = undefined;
 
 /**
  * @member {String} status

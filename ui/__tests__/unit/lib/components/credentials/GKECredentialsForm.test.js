@@ -7,6 +7,10 @@ describe('GKECredentialsForm', () => {
   let props
   let form
   let apiScope
+  const secret = {
+    metadata: { name: 'gke' },
+    spec: { type: 'gke-credentials' }
+  }
   const gkeCredential = {
     metadata: { name: 'gke' },
     spec: { project: 'project-id', account: 'gke-service-account-cred' }
@@ -41,6 +45,14 @@ describe('GKECredentialsForm', () => {
     apiScope.done()
   })
 
+  describe('#generateSecretResource', () => {
+    it('returns a configured Secret object', () => {
+      const secret = form.generateSecretResource({ name: 'gke', project: 'project-id', account: 'gke-cred' })
+      expect(secret).toBeDefined()
+      expect(secret.spec.data.service_account_key).toBe(btoa('gke-cred'))
+    })
+  })
+
   describe('#generateGKECredentialsResource', () => {
     it('returns a configured GKECredentials object when given valid values', () => {
       const gkeCredential = form.generateGKECredentialsResource({ name: 'gke', project: 'project-id', account: 'gke-service-account-cred' })
@@ -66,6 +78,7 @@ describe('GKECredentialsForm', () => {
   describe('#putResource', () => {
     beforeEach(() => {
       apiScope
+        .put(`${ApiTestHelpers.basePath}/teams/kore-admin/secrets/gke`).reply(200, secret)
         .put(`${ApiTestHelpers.basePath}/teams/kore-admin/gkecredentials/gke`).reply(200, gkeCredential)
         .put(`${ApiTestHelpers.basePath}/teams/kore-admin/allocations/gke`).reply(200, allocation)
     })

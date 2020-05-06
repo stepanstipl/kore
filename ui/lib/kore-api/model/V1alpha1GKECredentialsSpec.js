@@ -12,6 +12,7 @@
  */
 
 import ApiClient from '../ApiClient';
+import V1SecretReference from './V1SecretReference';
 
 /**
  * The V1alpha1GKECredentialsSpec model module.
@@ -22,12 +23,12 @@ class V1alpha1GKECredentialsSpec {
     /**
      * Constructs a new <code>V1alpha1GKECredentialsSpec</code>.
      * @alias module:model/V1alpha1GKECredentialsSpec
-     * @param account {String} 
+     * @param credentialsRef {module:model/V1SecretReference} 
      * @param project {String} 
      */
-    constructor(account, project) { 
+    constructor(credentialsRef, project) { 
         
-        V1alpha1GKECredentialsSpec.initialize(this, account, project);
+        V1alpha1GKECredentialsSpec.initialize(this, credentialsRef, project);
     }
 
     /**
@@ -35,8 +36,8 @@ class V1alpha1GKECredentialsSpec {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, account, project) { 
-        obj['account'] = account;
+    static initialize(obj, credentialsRef, project) { 
+        obj['credentialsRef'] = credentialsRef;
         obj['project'] = project;
     }
 
@@ -53,6 +54,9 @@ class V1alpha1GKECredentialsSpec {
 
             if (data.hasOwnProperty('account')) {
                 obj['account'] = ApiClient.convertToType(data['account'], 'String');
+            }
+            if (data.hasOwnProperty('credentialsRef')) {
+                obj['credentialsRef'] = V1SecretReference.constructFromObject(data['credentialsRef']);
             }
             if (data.hasOwnProperty('project')) {
                 obj['project'] = ApiClient.convertToType(data['project'], 'String');
@@ -76,6 +80,19 @@ class V1alpha1GKECredentialsSpec {
      */
     setAccount(account) {
         this['account'] = account;
+    }
+/**
+     * @return {module:model/V1SecretReference}
+     */
+    getCredentialsRef() {
+        return this.credentialsRef;
+    }
+
+    /**
+     * @param {module:model/V1SecretReference} credentialsRef
+     */
+    setCredentialsRef(credentialsRef) {
+        this['credentialsRef'] = credentialsRef;
     }
 /**
      * @return {String}
@@ -110,6 +127,11 @@ class V1alpha1GKECredentialsSpec {
  * @member {String} account
  */
 V1alpha1GKECredentialsSpec.prototype['account'] = undefined;
+
+/**
+ * @member {module:model/V1SecretReference} credentialsRef
+ */
+V1alpha1GKECredentialsSpec.prototype['credentialsRef'] = undefined;
 
 /**
  * @member {String} project

@@ -25,7 +25,7 @@ class GCPOrganizationForm extends VerifiedAllocatedResourceForm {
     const spec = new V1SecretSpec()
     spec.setType('gcp-org')
     spec.setDescription(`GCP admin project Service Account for ${values.parentID}`)
-    spec.setData({ key: values.account })
+    spec.setData({ key: btoa(values.account) })
     resource.setSpec(spec)
 
     return resource
@@ -130,7 +130,7 @@ class GCPOrganizationForm extends VerifiedAllocatedResourceForm {
             )
           ) : (
             <Alert
-              message="For security reasons, the Service Account key is not shown after creation of the organization"
+              message="For security reasons, the Service Account key is not shown after creation of the organization credential"
               type="warning"
               style={{ marginBottom: '-20px', marginTop: '10px' }}
             />

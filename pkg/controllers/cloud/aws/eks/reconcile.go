@@ -29,7 +29,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/types"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -128,7 +128,7 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 // GetClusterClient returns a EKS cluster client
 func (t *eksCtrl) GetClusterClient(ctx context.Context, resource *eksv1alpha1.EKS) (*aws.Client, error) {
 	// @step: first we need to check if we have access to the credentials
-	credentials, err := t.GetCredentials(ctx, resource, resource.Namespace)
+	creds, err := t.GetCredentials(ctx, resource, resource.Namespace)
 	if err != nil {
 		resource.Status.Conditions.SetCondition(corev1.Component{
 			Name:    ComponentClusterCreator,
@@ -139,7 +139,7 @@ func (t *eksCtrl) GetClusterClient(ctx context.Context, resource *eksv1alpha1.EK
 		return nil, err
 	}
 
-	client, err := aws.NewEKSClient(credentials, resource)
+	client, err := aws.NewEKSClient(creds, resource)
 	if err != nil {
 		resource.Status.Conditions.SetCondition(corev1.Component{
 			Detail:  err.Error(),
@@ -155,7 +155,7 @@ func (t *eksCtrl) GetClusterClient(ctx context.Context, resource *eksv1alpha1.EK
 }
 
 // GetCredentials returns the cloud credential
-func (t *eksCtrl) GetCredentials(ctx context.Context, cluster *eksv1alpha1.EKS, team string) (*eksv1alpha1.EKSCredentials, error) {
+func (t *eksCtrl) GetCredentials(ctx context.Context, cluster *eksv1alpha1.EKS, team string) (*aws.Credentials, error) {
 	// @step: is the team permitted access to this credentials
 	permitted, err := t.Teams().Team(team).Allocations().IsPermitted(ctx, cluster.Spec.Credentials)
 	if err != nil {
@@ -171,12 +171,38 @@ func (t *eksCtrl) GetCredentials(ctx context.Context, cluster *eksv1alpha1.EKS, 
 	}
 
 	// @step: retrieve the credentials
-	creds := &eksv1alpha1.EKSCredentials{}
-
-	return creds, t.mgr.GetClient().Get(ctx,
-		types.NamespacedName{
-			Namespace: cluster.Spec.Credentials.Namespace,
+	eksCreds := &eksv1alpha1.EKSCredentials{
+		ObjectMeta: metav1.ObjectMeta{
 			Name:      cluster.Spec.Credentials.Name,
-		}, creds,
-	)
+			Namespace: cluster.Spec.Credentials.Namespace,
+		},
+	}
+	found, err := kubernetes.GetIfExists(ctx, t.mgr.GetClient(), eksCreds)
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, fmt.Errorf("eks credentials: (%s/%s) not found", cluster.Spec.Credentials.Namespace, cluster.Spec.Credentials.Name)
+	}
+
+	// for backwards-compatibility, use the creds set on the EKSCredentials resource, if they exist
+	if eksCreds.Spec.SecretAccessKey != "" && eksCreds.Spec.AccessKeyID != "" {
+		return &aws.Credentials{
+			AccountID:       eksCreds.Spec.AccountID,
+			AccessKeyID:     eksCreds.Spec.AccessKeyID,
+			SecretAccessKey: eksCreds.Spec.SecretAccessKey,
+		}, nil
+	}
+
+	// @step: we need to grab the secret
+	secret, err := controllers.GetDecodedSecret(ctx, t.mgr.GetClient(), eksCreds.Spec.CredentialsRef)
+	if err != nil {
+		return nil, err
+	}
+
+	return &aws.Credentials{
+		AccountID:       eksCreds.Spec.AccountID,
+		AccessKeyID:     secret.Spec.Data["access_key_id"],
+		SecretAccessKey: secret.Spec.Data["access_secret_key"],
+	}, nil
 }
