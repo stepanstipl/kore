@@ -8,23 +8,22 @@ import GCPOrganizationsList from '../../lib/components/credentials/GCPOrganizati
 import EKSCredentialsList from '../../lib/components/credentials/EKSCredentialsList'
 import PlanList from '../../lib/components/plans/PlanList'
 import PolicyList from '../../lib/components/policies/PolicyList'
+import GCPProjectAutomationSettings from '../../lib/components/setup/GCPProjectAutomationSettings'
 import CloudTabs from '../../lib/components/common/CloudTabs'
 
 class ConfigureCloudPage extends React.Component {
 
   state = {
-    selectedCloud: 'GCP'
+    selectedCloud: 'GCP',
+    activeKey: 'orgs'
   }
 
   handleSelectCloud = cloud => {
-    this.setState({
-      ...this.state,
-      selectedCloud: cloud
-    })
+    this.setState({ selectedCloud: cloud })
   }
 
   render() {
-    const { selectedCloud } = this.state
+    const { selectedCloud, activeKey } = this.state
 
     return (
       <>
@@ -36,7 +35,7 @@ class ConfigureCloudPage extends React.Component {
         />
         <CloudTabs defaultSelectedKey={selectedCloud} handleSelectCloud={this.handleSelectCloud}/>
         {selectedCloud === 'GCP' ? (
-          <Tabs defaultActiveKey={'orgs'} tabPosition="left" style={{ marginTop: '20px' }}>
+          <Tabs activeKey={activeKey} onChange={(key) => this.setState({ activeKey: key })} tabPosition="left" style={{ marginTop: '20px' }}>
             <Tabs.TabPane tab="Organization credentials" key="orgs">
               <GCPOrganizationsList />
             </Tabs.TabPane>
@@ -48,6 +47,9 @@ class ConfigureCloudPage extends React.Component {
             </Tabs.TabPane>
             <Tabs.TabPane tab="Policies" key="policies">
               <PolicyList kind="GKE" />
+            </Tabs.TabPane>
+            <Tabs.TabPane tab="Project automation" key="project_automation">
+              <GCPProjectAutomationSettings tabActiveKey={activeKey} setTabActiveKey={(key) => this.setState({ activeKey: key })} />
             </Tabs.TabPane>
           </Tabs>
         ) : null}

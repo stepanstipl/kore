@@ -122,10 +122,10 @@ func (g *gkeComponents) Complete(cluster *clustersv1.Cluster, components *Compon
 					} else {
 						name := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
 						if rule.Suffix != "" {
-							name = name + rule.Suffix
+							name = fmt.Sprintf("%s-%s", name, rule.Suffix)
 						}
 						if rule.Prefix != "" {
-							name = rule.Prefix + name
+							name = fmt.Sprintf("%s-%s", rule.Prefix, name)
 						}
 						o.Spec.ProjectName = name
 					}

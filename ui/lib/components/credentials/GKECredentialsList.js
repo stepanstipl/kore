@@ -8,6 +8,7 @@ import GKECredentials from './GKECredentials'
 import ResourceList from '../resources/ResourceList'
 import GKECredentialsForm from './GKECredentialsForm'
 import KoreApi from '../../kore-api'
+import AllocationHelpers from '../../utils/allocation-helpers'
 
 class GKECredentialsList extends ResourceList {
 
@@ -27,7 +28,7 @@ class GKECredentialsList extends ResourceList {
     ])
     allTeams.items = allTeams.items.filter(t => !publicRuntimeConfig.ignoreTeams.includes(t.metadata.name))
     gkeCredentials.items.forEach(gke => {
-      gke.allocation = (allAllocations.items || []).find(alloc => alloc.metadata.name === gke.metadata.name)
+      gke.allocation = (allAllocations.items || []).find(alloc => alloc.metadata.name === AllocationHelpers.getAllocationNameForResource(gke))
     })
     return { resources: gkeCredentials, allTeams }
   }

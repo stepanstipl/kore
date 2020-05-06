@@ -10,7 +10,7 @@ const SetupKoreIndexPage = ({ user }) => (
       subTitle="As the first user you are now an administrator and are responsible for the initial setup"
       extra={[
         <Button key="buttonBegin" type="primary">
-          <Link href="/setup/kore/cloud-providers">
+          <Link href="/setup/kore/cloud-access">
             <a>Begin setup</a>
           </Link>
         </Button>,

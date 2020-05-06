@@ -8,6 +8,7 @@ import ResourceList from '../resources/ResourceList'
 import EKSCredentialsForm from './EKSCredentialsForm'
 import EKSCredentials from './EKSCredentials'
 import KoreApi from '../../kore-api'
+import AllocationHelpers from '../../utils/allocation-helpers'
 
 class EKSCredentialsList extends ResourceList {
 
@@ -27,7 +28,7 @@ class EKSCredentialsList extends ResourceList {
     ])
     allTeams.items = allTeams.items.filter(t => !publicRuntimeConfig.ignoreTeams.includes(t.metadata.name))
     eksCredentials.items.forEach(eks => {
-      eks.allocation = (allAllocations.items || []).find(alloc => alloc.metadata.name === eks.metadata.name)
+      eks.allocation = (allAllocations.items || []).find(alloc => alloc.metadata.name === AllocationHelpers.getAllocationNameForResource(eks))
     })
     return { resources: eksCredentials, allTeams }
   }

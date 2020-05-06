@@ -15,7 +15,7 @@ describe('AllocationHelpers', () => {
     it('should return an allocation when called with a resource', () => {
       const allocation = AllocationHelpers.generateAllocation({ resourceToAllocate: resource, teams: [] })
       expect(allocation).toBeDefined()
-      expect(allocation.metadata.name).toEqual(resource.metadata.name)
+      expect(allocation.metadata.name).toEqual(`${resource.kind.toLowerCase()}-${resource.metadata.name}`)
       expect(allocation.metadata.namespace).toEqual(config.kore.koreAdminTeamName)
       expect(allocation.spec.resource.group).toEqual('testgroup.appvia.io')
       expect(allocation.spec.resource.version).toEqual('v1alpha1')

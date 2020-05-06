@@ -2,7 +2,7 @@ import * as React from 'react'
 import PropTypes from 'prop-types'
 
 import { Typography, Form, Select, Card, Radio, Modal, Input, Collapse } from 'antd'
-const { Text, Title } = Typography
+const { Paragraph, Text, Title } = Typography
 const { Option } = Select
 
 import PlanViewer from '../../plans/PlanViewer'
@@ -15,15 +15,20 @@ class ClusterOptionsForm extends React.Component {
     team: PropTypes.object.isRequired,
     selectedCloud: PropTypes.string.isRequired,
     credentials: PropTypes.array.isRequired,
+    accountManagement: PropTypes.array.isRequired,
     plans: PropTypes.array.isRequired,
     teamClusters: PropTypes.array.isRequired,
     onPlanOverridden: PropTypes.func,
     validationErrors: PropTypes.array
   }
 
+  state = {
+    cloudAccountType: 'KORE'
+  }
+
   componentDidUpdate(prevProps) {
-    // Reset the selected plan if the credential changes:
-    if (this.props.credentials !== prevProps.credentials) {
+    // Reset the selected plan if the credential/accountManagement changes:
+    if (this.props.credentials !== prevProps.credentials || this.props.accountManagement !== prevProps.accountManagement) {
       this.props.form.setFieldsValue({ 'plan': null })
     }
   }
@@ -66,7 +71,7 @@ class ClusterOptionsForm extends React.Component {
 
   render() {
     const { getFieldDecorator, getFieldValue } = this.props.form
-    const { credentials, plans, selectedCloud } = this.props
+    const { credentials, accountManagement, plans, selectedCloud } = this.props
     const selectedPlan = getFieldValue('plan')
 
     const checkForDuplicateName = (rule, value) => {
@@ -77,18 +82,45 @@ class ClusterOptionsForm extends React.Component {
       return Promise.reject('This name is already used!')
     }
 
+    const cloudAccountName = {'GKE': 'Project', 'EKS': 'Account'}[selectedCloud]
+
     return (
       <Card title="Cluster options">
-        <Form.Item label="Credential">
-          {getFieldDecorator('credential', {
-            rules: [{ required: true, message: 'Please select your credential!' }],
-            initialValue: credentials.length === 1 ? credentials[0].metadata.name : undefined
-          })(
-            <Select placeholder="Credential">
-              {credentials.map(c => <Option key={c.metadata.name} value={c.metadata.name}>{c.spec.name} - {c.spec.summary}</Option>)}
-            </Select>
-          )}
-        </Form.Item>
+
+        {accountManagement.length >= 1 && credentials.length >= 1 ? (
+          <Form.Item label={cloudAccountName} style={{ marginBottom: '5px' }}>
+            <Radio.Group onChange={(e) => this.setState({ cloudAccountType: e.target.value })} value={this.state.cloudAccountType}>
+              <Radio value={'KORE'} style={{ marginRight: '20px' }}>
+                <Text style={{ fontSize: '16px', fontWeight: '600' }}>Kore managed {cloudAccountName.toLowerCase()}<Text type="secondary">(recommended)</Text></Text>
+                <Paragraph style={{ marginLeft: '24px', marginBottom: '0' }}>Kore will create the required {cloudAccountName.toLowerCase()}</Paragraph>
+              </Radio>
+              <Radio value={'EXISTING'}>
+                <Text style={{ fontSize: '16px', fontWeight: '600' }}>Use existing {cloudAccountName.toLowerCase()}</Text>
+                <Paragraph style={{ marginLeft: '24px', marginBottom: '0' }}>Specify an existing {cloudAccountName.toLowerCase()} the team has access to</Paragraph>
+              </Radio>
+            </Radio.Group>
+          </Form.Item>
+        ) : null}
+
+        {accountManagement.length >= 1 && credentials.length === 0 ? (
+          <Form.Item label={cloudAccountName}>
+            <Text>Kore managed {cloudAccountName}</Text>
+          </Form.Item>
+        ) : null}
+
+        {accountManagement.length === 0 || this.state.cloudAccountType === 'EXISTING' ? (
+          <Form.Item label={cloudAccountName}>
+            {getFieldDecorator('credential', {
+              rules: [{ required: true, message: 'Please select your credential!' }],
+              initialValue: credentials.length === 1 ? credentials[0].metadata.name : undefined
+            })(
+              <Select placeholder={cloudAccountName}>
+                {credentials.map(c => <Option key={c.metadata.name} value={c.metadata.name}>{c.spec.name} - {c.spec.summary}</Option>)}
+              </Select>
+            )}
+          </Form.Item>
+        ) : null}
+
         <Form.Item label="Plan">
           {getFieldDecorator('plan', {
             rules: [{ required: true, message: 'Please select your plan!' }],

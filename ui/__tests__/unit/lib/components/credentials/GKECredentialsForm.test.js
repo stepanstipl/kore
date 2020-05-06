@@ -12,11 +12,12 @@ describe('GKECredentialsForm', () => {
     spec: { type: 'gke-credentials' }
   }
   const gkeCredential = {
+    kind: 'GKECredentials',
     metadata: { name: 'gke' },
     spec: { project: 'project-id', account: 'gke-service-account-cred' }
   }
   const allocation = {
-    metadata: { name: 'gke' },
+    metadata: { name: 'gkecredentials-gke' },
     spec: { resource: { kind: 'GKECredentials' } }
   }
 
@@ -64,7 +65,7 @@ describe('GKECredentialsForm', () => {
     beforeEach(() => {
       apiScope
         .get(`${ApiTestHelpers.basePath}/teams/kore-admin/gkecredentials/gke`).reply(200, gkeCredential)
-        .get(`${ApiTestHelpers.basePath}/teams/kore-admin/allocations/gke`).reply(200, allocation)
+        .get(`${ApiTestHelpers.basePath}/teams/kore-admin/allocations/gkecredentials-gke`).reply(200, allocation)
     })
 
     it('returns GKE credential and allocation from API', async () => {
@@ -80,7 +81,7 @@ describe('GKECredentialsForm', () => {
       apiScope
         .put(`${ApiTestHelpers.basePath}/teams/kore-admin/secrets/gke`).reply(200, secret)
         .put(`${ApiTestHelpers.basePath}/teams/kore-admin/gkecredentials/gke`).reply(200, gkeCredential)
-        .put(`${ApiTestHelpers.basePath}/teams/kore-admin/allocations/gke`).reply(200, allocation)
+        .put(`${ApiTestHelpers.basePath}/teams/kore-admin/allocations/gkecredentials-gke`).reply(200, allocation)
     })
 
     it('creates/updates and returns GKE credential and allocation from API', async () => {

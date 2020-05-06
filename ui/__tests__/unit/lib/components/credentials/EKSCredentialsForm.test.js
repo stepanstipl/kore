@@ -12,11 +12,12 @@ describe('EKSCredentialsForm', () => {
     spec: { type: 'eks-credential' }
   }
   const eksCredential = {
+    kind: 'EKSCredentials',
     metadata: { name: 'eks' },
     spec: { accountID: '1234567890', accessKeyID: '123', secretAccessKey: 'aws-account-cred' }
   }
   const allocation = {
-    metadata: { name: 'eks' },
+    metadata: { name: 'ekscredentials-eks' },
     spec: { resource: { kind: 'EKSCredentials' } }
   }
 
@@ -65,7 +66,7 @@ describe('EKSCredentialsForm', () => {
     beforeEach(() => {
       apiScope
         .get(`${ApiTestHelpers.basePath}/teams/kore-admin/ekscredentials/eks`).reply(200, eksCredential)
-        .get(`${ApiTestHelpers.basePath}/teams/kore-admin/allocations/eks`).reply(200, allocation)
+        .get(`${ApiTestHelpers.basePath}/teams/kore-admin/allocations/ekscredentials-eks`).reply(200, allocation)
     })
 
     it('returns EKS credential and allocation from API', async () => {
@@ -81,7 +82,7 @@ describe('EKSCredentialsForm', () => {
       apiScope
         .put(`${ApiTestHelpers.basePath}/teams/kore-admin/secrets/eks`).reply(200, secret)
         .put(`${ApiTestHelpers.basePath}/teams/kore-admin/ekscredentials/eks`).reply(200, eksCredential)
-        .put(`${ApiTestHelpers.basePath}/teams/kore-admin/allocations/eks`).reply(200, allocation)
+        .put(`${ApiTestHelpers.basePath}/teams/kore-admin/allocations/ekscredentials-eks`).reply(200, allocation)
     })
 
     it('creates/updates and returns EKS credential and allocation from API', async () => {

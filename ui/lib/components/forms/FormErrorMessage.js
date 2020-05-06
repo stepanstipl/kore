@@ -10,7 +10,6 @@ const FormErrorMessage = ({ message }) => {
       message={message}
       type="error"
       showIcon
-      closable
       style={{ marginBottom: '20px' }}
     />
   )

@@ -20,7 +20,7 @@ describe('PolicyForm', () => {
     apiScope = (ApiTestHelpers.getScope())
       .get(`${ApiTestHelpers.basePath}/planschemas/GKE`).reply(200, schema)
       .get(`${ApiTestHelpers.basePath}/teams`).reply(200, { items: [] })
-      .get(`${ApiTestHelpers.basePath}/teams/kore-admin/allocations/allow-gke-node-type-changes`).reply(404)
+      .get(`${ApiTestHelpers.basePath}/teams/kore-admin/allocations/planpolicy-allow-gke-node-type-changes`).reply(404)
 
     props = {
       form: {
@@ -123,7 +123,7 @@ describe('PolicyForm', () => {
 
     test('creates the resource and calls the wrapper component handleSubmit function', async () => {
       apiScope.put(`${ApiTestHelpers.basePath}/planpolicies/allow-gke-node-type-changes`).reply(200, policyResource)
-      apiScope.put(`${ApiTestHelpers.basePath}/teams/kore-admin/allocations/allow-gke-node-type-changes`).reply(200)
+      apiScope.put(`${ApiTestHelpers.basePath}/teams/kore-admin/allocations/planpolicy-allow-gke-node-type-changes`).reply(200)
       await form._process(null, { summary: 'Allow GKE node type changes', description: 'Description of policy' })
       expect(props.handleSubmit).toHaveBeenCalledTimes(1)
       expect(props.handleSubmit.mock.calls[0]).toEqual([policyResource])

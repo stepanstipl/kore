@@ -35,7 +35,7 @@ spec:
   resource:
     group: accounts.kore.appvia.io
     version: v1beta1
-    kind: Account
+    kind: AccountManagement
     namespace: kore-admin
     name: gke
   teams:
