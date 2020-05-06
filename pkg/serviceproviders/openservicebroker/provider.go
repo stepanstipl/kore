@@ -76,63 +76,63 @@ func NewProvider(name string, client osb.Client) (*Provider, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch catalog from service broker: %w", err)
 	}
-	for _, s := range catalog.Services {
-		if !kore.ResourceNameFilter.MatchString(s.Name) {
-			return nil, fmt.Errorf("%q service name is invalid, must match %s", s.Name, kore.ResourceNameFilter.String())
+	for _, catalogService := range catalog.Services {
+		if !kore.ResourceNameFilter.MatchString(catalogService.Name) {
+			return nil, fmt.Errorf("%q service name is invalid, must match %s", catalogService.Name, kore.ResourceNameFilter.String())
 		}
 
-		providerService := providerService{
-			id:       s.ID,
+		service := providerService{
+			id:       catalogService.ID,
 			plans:    map[string]providerPlan{},
-			bindable: s.Bindable,
+			bindable: catalogService.Bindable,
 		}
 
-		for _, p := range s.Plans {
-			if !kore.ResourceNameFilter.MatchString(p.Name) {
-				return nil, fmt.Errorf("%q plan name is invalid, must match %s", p.Name, kore.ResourceNameFilter.String())
+		for _, catalogPlan := range catalogService.Plans {
+			if !kore.ResourceNameFilter.MatchString(catalogPlan.Name) {
+				return nil, fmt.Errorf("%q plan name is invalid, must match %s", catalogPlan.Name, kore.ResourceNameFilter.String())
 			}
 
-			servicePlan, err := catalogPlanToServicePlan(s, p)
+			servicePlan, err := catalogPlanToServicePlan(catalogService, catalogPlan)
 			if err != nil {
 				return nil, err
 			}
 
-			schema, err := getPlanSchema(p)
+			schema, err := getPlanSchema(catalogPlan)
 			if err != nil {
 				return nil, err
 			}
 
-			credentialsSchema, err := getCredentialsSchema(p)
+			credentialsSchema, err := getCredentialsSchema(catalogPlan)
 			if err != nil {
 				return nil, err
 			}
 
-			providerPlan := providerPlan{
-				name:              p.Name,
-				id:                p.ID,
-				serviceID:         s.ID,
-				bindable:          utils.BoolValue(p.Bindable),
+			plan := providerPlan{
+				name:              catalogPlan.Name,
+				id:                catalogPlan.ID,
+				serviceID:         catalogService.ID,
+				bindable:          utils.BoolValue(catalogPlan.Bindable),
 				schema:            schema,
 				credentialsSchema: credentialsSchema,
 			}
 
-			if p.Name == DefaultPlan {
-				providerService.defaultPlan = &providerPlan
+			if catalogPlan.Name == DefaultPlan {
+				service.defaultPlan = &plan
 
 				if schema == "" {
-					return nil, fmt.Errorf("%s-%s plan does not have a schema for provisioning", s.Name, p.Name)
+					return nil, fmt.Errorf("%s-%s plan does not have a schema for provisioning", catalogService.Name, catalogPlan.Name)
 				}
 
 				if credentialsSchema == "" {
-					return nil, fmt.Errorf("%s-%s plan does not have a schema for bind", s.Name, p.Name)
+					return nil, fmt.Errorf("%s-%s plan does not have a schema for bind", catalogService.Name, catalogPlan.Name)
 				}
 			} else {
 				plans = append(plans, servicePlan)
-				providerService.plans[servicePlan.Name] = providerPlan
+				service.plans[servicePlan.Name] = plan
 			}
 		}
 
-		services[s.Name] = providerService
+		services[catalogService.Name] = service
 	}
 
 	return &Provider{
@@ -164,18 +164,25 @@ func (p *Provider) Plans() []servicesv1.ServicePlan {
 }
 
 func (p *Provider) PlanJSONSchema(kind string, planName string) (string, error) {
-	plan, err := p.planWithFilter(kind, planName, func(p providerPlan) bool { return p.schema != "" })
+	plan, found, err := p.planWithFilter(kind, planName, func(p providerPlan) bool { return p.schema != "" })
 	if err != nil {
 		return "", err
 	}
+	if !found {
+		return "", nil
+	}
 
 	return plan.schema, nil
+
 }
 
 func (p *Provider) CredentialsJSONSchema(kind string, planName string) (string, error) {
-	plan, err := p.planWithFilter(kind, planName, func(p providerPlan) bool { return p.credentialsSchema != "" })
+	plan, found, err := p.planWithFilter(kind, planName, func(p providerPlan) bool { return p.credentialsSchema != "" })
 	if err != nil {
 		return "", err
+	}
+	if !found {
+		return "", nil
 	}
 
 	return plan.credentialsSchema, nil
@@ -190,27 +197,38 @@ func (p *Provider) RequiredCredentialTypes(kind string) ([]schema.GroupVersionKi
 }
 
 func (p *Provider) plan(service *servicesv1.Service) (providerPlan, error) {
-	return p.planWithFilter(service.Spec.Kind, service.PlanShortName(), nil)
+	res, found, err := p.planWithFilter(service.Spec.Kind, service.PlanShortName(), nil)
+	if err != nil {
+		return providerPlan{}, err
+	}
+	if !found {
+		return providerPlan{}, fmt.Errorf("%q service must define a %q plan to create and use custom plans", service.Spec.Kind, DefaultPlan)
+	}
+
+	return res, nil
 }
 
-func (p *Provider) planWithFilter(kind, planName string, filter func(providerPlan) bool) (providerPlan, error) {
+func (p *Provider) planWithFilter(kind, planName string, filter func(providerPlan) bool) (providerPlan, bool, error) {
 	service, ok := p.services[kind]
 	if !ok {
-		return providerPlan{}, fmt.Errorf("%q service kind is invalid", kind)
+		return providerPlan{}, false, fmt.Errorf("%q service kind is invalid", kind)
 	}
 
 	if planName != "" {
 		if plan, ok := service.plans[planName]; ok {
 			if filter == nil || filter(plan) {
-				return plan, nil
+				return plan, true, nil
 			}
 		}
 	}
 
-	if p.services[kind].defaultPlan == nil {
-		return providerPlan{}, fmt.Errorf("%q service must define a %q plan", kind, DefaultPlan)
+	if service.defaultPlan != nil {
+		if filter == nil || filter(*service.defaultPlan) {
+			return *service.defaultPlan, true, nil
+		}
 	}
-	return *p.services[kind].defaultPlan, nil
+
+	return providerPlan{}, false, nil
 }
 
 func catalogPlanToServicePlan(service osb.Service, plan osb.Plan) (servicesv1.ServicePlan, error) {

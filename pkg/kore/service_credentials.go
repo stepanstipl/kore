@@ -19,6 +19,8 @@ package kore
 import (
 	"context"
 
+	"github.com/appvia/kore/pkg/utils"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 
 	"github.com/appvia/kore/pkg/utils/jsonschema"
@@ -146,7 +148,7 @@ func (s *serviceCredentialsImpl) Update(ctx context.Context, serviceCreds *servi
 			WithFieldErrorf("kind", validation.InvalidType, "%q is not a known service kind", serviceCreds.Spec.Kind)
 	}
 
-	if err := s.validateConfiguration(ctx, service, serviceCreds, provider); err != nil {
+	if err := s.validateConfiguration(ctx, service, serviceCreds, existing, provider); err != nil {
 		return err
 	}
 
@@ -159,7 +161,7 @@ func (s *serviceCredentialsImpl) Update(ctx context.Context, serviceCreds *servi
 func (s *serviceCredentialsImpl) validateConfiguration(
 	_ context.Context,
 	service *servicesv1.Service,
-	serviceCreds *servicesv1.ServiceCredentials,
+	serviceCreds, existing *servicesv1.ServiceCredentials,
 	provider ServiceProvider,
 ) error {
 	schema, err := provider.CredentialsJSONSchema(serviceCreds.Spec.Kind, service.PlanShortName())
@@ -167,12 +169,25 @@ func (s *serviceCredentialsImpl) validateConfiguration(
 		return err
 	}
 
-	if err := jsonschema.Validate(
-		schema,
-		"configuration",
-		serviceCreds.Spec.Configuration,
-	); err != nil {
-		return err
+	if schema == "" && !utils.ApiExtJSONEmpty(serviceCreds.Spec.Configuration) {
+		if existing == nil || !utils.ApiExtJSONEquals(serviceCreds.Spec.Configuration, existing.Spec.Configuration) {
+			return validation.NewError("%q failed validation", serviceCreds.Name).
+				WithFieldErrorf(
+					"configuration",
+					validation.ReadOnly,
+					"the service provider doesn't have a JSON schema to validate the configuration",
+				)
+		}
+	}
+
+	if schema != "" {
+		if err := jsonschema.Validate(
+			schema,
+			"configuration",
+			serviceCreds.Spec.Configuration,
+		); err != nil {
+			return err
+		}
 	}
 
 	return nil

@@ -178,7 +178,7 @@ func (s *servicesImpl) Update(ctx context.Context, service *servicesv1.Service) 
 			WithFieldErrorf("kind", validation.InvalidType, "%q is not a known service kind", service.Spec.Kind)
 	}
 
-	if err := s.validateConfiguration(ctx, service, provider); err != nil {
+	if err := s.validateConfiguration(ctx, service, existing, provider); err != nil {
 		return err
 	}
 
@@ -192,7 +192,7 @@ func (s *servicesImpl) Update(ctx context.Context, service *servicesv1.Service) 
 	)
 }
 
-func (s *servicesImpl) validateConfiguration(ctx context.Context, service *servicesv1.Service, provider ServiceProvider) error {
+func (s *servicesImpl) validateConfiguration(ctx context.Context, service, existing *servicesv1.Service, provider ServiceProvider) error {
 	plan, err := s.servicePlans.Get(ctx, service.Spec.Plan)
 	if err != nil {
 		if err == ErrNotFound {
@@ -228,8 +228,21 @@ func (s *servicesImpl) validateConfiguration(ctx context.Context, service *servi
 		return err
 	}
 
-	if err := jsonschema.Validate(schema, "service", service.Spec.Configuration); err != nil {
-		return err
+	if schema == "" && !utils.ApiExtJSONEmpty(service.Spec.Configuration) {
+		if existing == nil || !utils.ApiExtJSONEquals(service.Spec.Configuration, existing.Spec.Configuration) {
+			return validation.NewError("%q failed validation", service.Name).
+				WithFieldErrorf(
+					"configuration",
+					validation.ReadOnly,
+					"the service provider doesn't have a JSON schema to validate the configuration",
+				)
+		}
+	}
+
+	if schema != "" {
+		if err := jsonschema.Validate(schema, "service", service.Spec.Configuration); err != nil {
+			return err
+		}
 	}
 
 	editableParams, err := s.servicePlans.GetEditablePlanParams(ctx, s.team, service.Spec.Kind)

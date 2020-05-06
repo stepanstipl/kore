@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/appvia/kore/pkg/utils"
+
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils/jsonschema"
@@ -68,6 +70,21 @@ func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePl
 			WithFieldErrorf("namespace", validation.InvalidValue, "must be %q", HubNamespace)
 	}
 
+	existing, err := p.Get(ctx, plan.Name)
+	if err != nil && err != ErrNotFound {
+		return err
+	}
+
+	if existing != nil {
+		verr := validation.NewError("%q failed validation", plan.Name)
+		if existing.Spec.Kind != plan.Spec.Kind {
+			verr.AddFieldErrorf("kind", validation.ReadOnly, "can not be changed after the service plan was created")
+		}
+		if verr.HasErrors() {
+			return verr
+		}
+	}
+
 	provider := p.ServiceProviders().GetProviderForKind(plan.Spec.Kind)
 	if provider == nil {
 		return validation.NewError("%q failed validation", plan.Name).
@@ -79,8 +96,21 @@ func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePl
 		return err
 	}
 
-	if err := jsonschema.Validate(schema, "plan", plan.Spec.Configuration); err != nil {
-		return err
+	if schema == "" && !utils.ApiExtJSONEmpty(plan.Spec.Configuration) {
+		if existing == nil || !utils.ApiExtJSONEquals(plan.Spec.Configuration, existing.Spec.Configuration) {
+			return validation.NewError("%q failed validation", plan.Name).
+				WithFieldErrorf(
+					"configuration",
+					validation.ReadOnly,
+					"the service provider doesn't have a JSON schema to validate the configuration",
+				)
+		}
+	}
+
+	if schema != "" {
+		if err := jsonschema.Validate(schema, "plan", plan.Spec.Configuration); err != nil {
+			return err
+		}
 	}
 
 	err = p.Store().Client().Update(ctx,
