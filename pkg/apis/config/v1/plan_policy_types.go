@@ -78,7 +78,7 @@ func (p PlanPolicy) CreateAllocation(teams []string) *Allocation {
 	}
 	return &Allocation{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   p.Name,
+			Name:   "planpolicy-" + p.Name,
 			Labels: labels,
 		},
 		Spec: AllocationSpec{

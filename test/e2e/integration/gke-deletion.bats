@@ -18,7 +18,7 @@
 load helper
 
 setup() {
-  ${KORE} get allocation gke -t ${TEAM} | grep GKE || skip && true
+  ${KORE} get allocation gkecredentials-gke -t ${TEAM} | grep GKE || skip && true
 }
 
 @test "We should be able to delete the gke cluster" {

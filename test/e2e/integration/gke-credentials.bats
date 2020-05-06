@@ -66,18 +66,18 @@ load helper
 }
 
 @test "We should be able to see the gke allocations in the ${TEAM} team" {
-  runit "${KORE} get allocations gke -t ${TEAM}"
+  runit "${KORE} get allocations gkecredentials-gke -t ${TEAM}"
   [[ "$status" -eq 0 ]]
-  runit "${KORE} get allocations gke -o json -t ${TEAM} | jq '.status.status' | grep -i success"
+  runit "${KORE} get allocations gkecredentials-gke -o json -t ${TEAM} | jq '.status.status' | grep -i success"
   [[ "$status" -eq 0 ]]
 }
 
 @test "If we delete the allocation, the ${TEAM} should no longer see the gke credentials" {
-  runit "${KORE} get allocations gke -t kore-admin"
+  runit "${KORE} get allocations gkecredentials-gke -t kore-admin"
   [[ "$status" -eq 0 ]]
-  runit "${KORE} delete allocations gke -t kore-admin"
+  runit "${KORE} delete allocations gkecredentials-gke -t kore-admin"
   [[ "$status" -eq 0 ]]
-  retry 5 "${KORE} get allocations -t ${TEAM} | grep ^gke || true"
+  retry 5 "${KORE} get allocations -t ${TEAM} | grep ^gkecredentials-gke || true"
   [[ "$status" -eq 0 ]]
 }
 
@@ -88,6 +88,6 @@ load helper
   [[ "$status" -eq 0 ]]
   retry 5 "${KORE} get gkecredentials gke -t kore-admin -o json | jq '.status.status' | grep -i success"
   [[ "$status" -eq 0 ]]
-  retry 5 "${KORE} get allocations gke -t ${TEAM}"
+  retry 5 "${KORE} get allocations gkecredentials-gke -t ${TEAM}"
   [[ "$status" -eq 0 ]]
 }

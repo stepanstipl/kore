@@ -117,7 +117,7 @@ func (u teamHandler) deleteAllocation(req *restful.Request, resp *restful.Respon
 		team := req.PathParameter("team")
 		name := req.PathParameter("name")
 
-		obj, err := u.Teams().Team(team).Allocations().Delete(req.Request.Context(), name)
+		obj, err := u.Teams().Team(team).Allocations().Delete(req.Request.Context(), name, false)
 		if err != nil {
 			return err
 		}

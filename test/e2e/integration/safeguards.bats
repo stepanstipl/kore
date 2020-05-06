@@ -38,7 +38,7 @@ setup() {
 }
 
 #@test "We should not be able to create a gke cluster with an disallowed paramater" {
-#  ${KORE} get allocation gke -t ${TEAM} || skip
+#  ${KORE} get allocation gkecredentials-gke -t ${TEAM} || skip
 #
 #  runit "${KORE} create cluster ${CLUSTER} -p gke-development -a gke --param '{\"enableIstio\":\"true\"}' || true"
 #  [[ "$status" -eq 0 ]]

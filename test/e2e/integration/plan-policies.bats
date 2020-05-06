@@ -26,8 +26,8 @@ load helper
 }
 
 @test "We should see the default policies are allocated to all teams" {
-  runit "${KORE} get allocations default-eks -t ${TEAM}"  
+  runit "${KORE} get allocations planpolicy-default-eks -t ${TEAM}"  
   [[ "$status" -eq 0 ]]
-  runit "${KORE} get allocations default-gke -t ${TEAM}"  
+  runit "${KORE} get allocations planpolicy-default-gke -t ${TEAM}"  
   [[ "$status" -eq 0 ]]
 }
