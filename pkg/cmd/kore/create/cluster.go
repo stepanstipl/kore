@@ -22,7 +22,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/appvia/kore/pkg/client"
 	"github.com/appvia/kore/pkg/utils/render"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
