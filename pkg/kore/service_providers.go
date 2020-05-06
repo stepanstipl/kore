@@ -19,7 +19,6 @@ package kore
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -134,9 +133,9 @@ type ServiceProviders interface {
 	GetEditableProviderParams(ctx context.Context, team string, clusterKind string) (map[string]bool, error)
 	// GetProviderForKind returns a service provider for the given service kind
 	GetProviderForKind(kind string) ServiceProvider
-	// RegisterProvider registers a new provider
+	// Register registers a new provider
 	Register(context.Context, *servicesv1.ServiceProvider) (ServiceProvider, error)
-	// UnregisterProvider removes the given provider
+	// Unregister removes the given provider
 	Unregister(context.Context, *servicesv1.ServiceProvider) error
 }
 
@@ -218,12 +217,6 @@ func (p *serviceProvidersImpl) Delete(ctx context.Context, name string) (*servic
 		return nil, err
 	}
 
-	for _, kind := range provider.Status.SupportedKinds {
-		if err := p.unregisterKind(ctx, kind); err != nil {
-			return nil, err
-		}
-	}
-
 	if err := p.Store().Client().Delete(ctx, store.DeleteOptions.From(provider)); err != nil {
 		log.WithError(err).Error("failed to delete the service provider")
 
@@ -275,6 +268,7 @@ func (p *serviceProvidersImpl) GetEditableProviderParams(ctx context.Context, te
 	return nil, nil
 }
 
+// Register registers a new provider
 func (p *serviceProvidersImpl) Register(ctx context.Context, serviceProvider *servicesv1.ServiceProvider) (ServiceProvider, error) {
 	p.providersLock.Lock()
 	defer p.providersLock.Unlock()
@@ -317,6 +311,7 @@ func (p *serviceProvidersImpl) Register(ctx context.Context, serviceProvider *se
 	return provider, nil
 }
 
+// Unregister removes the given provider
 func (p *serviceProvidersImpl) Unregister(ctx context.Context, serviceProvider *servicesv1.ServiceProvider) error {
 	for _, kind := range serviceProvider.Status.SupportedKinds {
 		if err := p.unregisterKind(ctx, kind); err != nil {
@@ -328,23 +323,14 @@ func (p *serviceProvidersImpl) Unregister(ctx context.Context, serviceProvider *
 }
 
 func (p *serviceProvidersImpl) unregisterKind(ctx context.Context, kind string) error {
-	plans, err := p.getServicePlansWithKind(ctx, kind)
+	plans, err := p.ServicePlans().ListFiltered(ctx, func(x servicesv1.ServicePlan) bool { return x.Spec.Kind == kind })
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get service plans: %w", err)
 	}
-	if len(plans) > 0 {
-		if len(plans) <= 5 {
-			return fmt.Errorf(
-				"service kind %q can not be unregistered as there are service plans using it: %s",
-				kind,
-				strings.Join(plans, ", "),
-			)
+	for _, plan := range plans.Items {
+		if _, err := p.ServicePlans().Delete(ctx, plan.Name); err != nil {
+			return fmt.Errorf("failed to delete service plan %q: %w", plan.Name, err)
 		}
-		return fmt.Errorf(
-			"service kind %q can not be unregistered as there are %d service plans using it",
-			kind,
-			len(plans),
-		)
 	}
 
 	p.providersLock.Lock()
@@ -353,22 +339,6 @@ func (p *serviceProvidersImpl) unregisterKind(ctx context.Context, kind string) 
 	delete(p.providers, kind)
 
 	return nil
-}
-
-func (p *serviceProvidersImpl) getServicePlansWithKind(ctx context.Context, kind string) ([]string, error) {
-	var res []string
-
-	servicePlansList, err := p.ServicePlans().List(ctx)
-	if err != nil {
-		return nil, err
-	}
-	for _, servicePlan := range servicePlansList.Items {
-		if servicePlan.Spec.Kind == kind {
-			res = append(res, servicePlan.Name)
-		}
-	}
-
-	return res, nil
 }
 
 func (p *serviceProvidersImpl) GetProviderForKind(kind string) ServiceProvider {

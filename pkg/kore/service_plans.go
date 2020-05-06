@@ -39,6 +39,8 @@ type ServicePlans interface {
 	Get(context.Context, string) (*servicesv1.ServicePlan, error)
 	// List returns the existing service plans
 	List(context.Context) (*servicesv1.ServicePlanList, error)
+	// ListFiltered returns a list of service plans using the given filter.
+	ListFiltered(context.Context, func(servicesv1.ServicePlan) bool) (*servicesv1.ServicePlanList, error)
 	// Has checks if a service plan exists
 	Has(context.Context, string) (bool, error)
 	// Update is responsible for updating a service plan
@@ -170,6 +172,27 @@ func (p servicePlansImpl) List(ctx context.Context) (*servicesv1.ServicePlanList
 		store.ListOptions.InNamespace(HubNamespace),
 		store.ListOptions.InTo(plans),
 	)
+}
+
+// ListFiltered returns a list of service plans using the given filter.
+// A service plan is included if the filter function returns true
+func (p servicePlansImpl) ListFiltered(ctx context.Context, filter func(plan servicesv1.ServicePlan) bool) (*servicesv1.ServicePlanList, error) {
+	var res []servicesv1.ServicePlan
+
+	servicePlansList, err := p.ServicePlans().List(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, servicePlan := range servicePlansList.Items {
+		if filter(servicePlan) {
+			res = append(res, servicePlan)
+		}
+	}
+
+	servicePlansList.Items = res
+
+	return servicePlansList, nil
 }
 
 // Has checks if a service plan exists
