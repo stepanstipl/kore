@@ -42,7 +42,7 @@ type GKECredentialsSpec struct {
 	Account string `json:"account,omitempty"`
 	// CredentialsRef is a reference to the credentials used to create clusters
 	// +kubebuilder:validation:Optional
-	CredentialsRef *v1.SecretReference `json:"credentialsRef"`
+	CredentialsRef *v1.SecretReference `json:"credentialsRef,omitempty"`
 }
 
 // GKECredentialsStatus defines the observed state of GKECredentials

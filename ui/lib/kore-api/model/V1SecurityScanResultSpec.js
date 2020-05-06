@@ -12,6 +12,7 @@
  */
 
 import ApiClient from '../ApiClient';
+import V1Ownership from './V1Ownership';
 import V1SecurityScanRuleResult from './V1SecurityScanRuleResult';
 
 /**
@@ -63,17 +64,8 @@ class V1SecurityScanResultSpec {
             if (data.hasOwnProperty('owningTeam')) {
                 obj['owningTeam'] = ApiClient.convertToType(data['owningTeam'], 'String');
             }
-            if (data.hasOwnProperty('resourceApiVersion')) {
-                obj['resourceApiVersion'] = ApiClient.convertToType(data['resourceApiVersion'], 'String');
-            }
-            if (data.hasOwnProperty('resourceKind')) {
-                obj['resourceKind'] = ApiClient.convertToType(data['resourceKind'], 'String');
-            }
-            if (data.hasOwnProperty('resourceName')) {
-                obj['resourceName'] = ApiClient.convertToType(data['resourceName'], 'String');
-            }
-            if (data.hasOwnProperty('resourceNamespace')) {
-                obj['resourceNamespace'] = ApiClient.convertToType(data['resourceNamespace'], 'String');
+            if (data.hasOwnProperty('resource')) {
+                obj['resource'] = V1Ownership.constructFromObject(data['resource']);
             }
             if (data.hasOwnProperty('results')) {
                 obj['results'] = ApiClient.convertToType(data['results'], [V1SecurityScanRuleResult]);
@@ -148,56 +140,17 @@ class V1SecurityScanResultSpec {
         this['owningTeam'] = owningTeam;
     }
 /**
-     * @return {String}
+     * @return {module:model/V1Ownership}
      */
-    getResourceApiVersion() {
-        return this.resourceApiVersion;
+    getResource() {
+        return this.resource;
     }
 
     /**
-     * @param {String} resourceApiVersion
+     * @param {module:model/V1Ownership} resource
      */
-    setResourceApiVersion(resourceApiVersion) {
-        this['resourceApiVersion'] = resourceApiVersion;
-    }
-/**
-     * @return {String}
-     */
-    getResourceKind() {
-        return this.resourceKind;
-    }
-
-    /**
-     * @param {String} resourceKind
-     */
-    setResourceKind(resourceKind) {
-        this['resourceKind'] = resourceKind;
-    }
-/**
-     * @return {String}
-     */
-    getResourceName() {
-        return this.resourceName;
-    }
-
-    /**
-     * @param {String} resourceName
-     */
-    setResourceName(resourceName) {
-        this['resourceName'] = resourceName;
-    }
-/**
-     * @return {String}
-     */
-    getResourceNamespace() {
-        return this.resourceNamespace;
-    }
-
-    /**
-     * @param {String} resourceNamespace
-     */
-    setResourceNamespace(resourceNamespace) {
-        this['resourceNamespace'] = resourceNamespace;
+    setResource(resource) {
+        this['resource'] = resource;
     }
 /**
      * @return {Array.<module:model/V1SecurityScanRuleResult>}
@@ -241,24 +194,9 @@ V1SecurityScanResultSpec.prototype['overallStatus'] = undefined;
 V1SecurityScanResultSpec.prototype['owningTeam'] = undefined;
 
 /**
- * @member {String} resourceApiVersion
+ * @member {module:model/V1Ownership} resource
  */
-V1SecurityScanResultSpec.prototype['resourceApiVersion'] = undefined;
-
-/**
- * @member {String} resourceKind
- */
-V1SecurityScanResultSpec.prototype['resourceKind'] = undefined;
-
-/**
- * @member {String} resourceName
- */
-V1SecurityScanResultSpec.prototype['resourceName'] = undefined;
-
-/**
- * @member {String} resourceNamespace
- */
-V1SecurityScanResultSpec.prototype['resourceNamespace'] = undefined;
+V1SecurityScanResultSpec.prototype['resource'] = undefined;
 
 /**
  * @member {Array.<module:model/V1SecurityScanRuleResult>} results
