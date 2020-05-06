@@ -19,6 +19,7 @@ package authproxy
 import (
 	"context"
 	"net/http"
+	"time"
 )
 
 var (
@@ -40,6 +41,8 @@ type Config struct {
 	AllowedIPs []string `json:"allowed-ips,omitempty"`
 	// EnableProxyProtocol indicates we should use proxy protocol
 	EnableProxyProtocol bool `json:"enable-proxy-protocol,omitempty"`
+	// FlushInterval is flush interval for the proxy
+	FlushInterval time.Duration `json:"flush-interval,omitempty"`
 	// MetricsListen is the interface for metrics to render
 	MetricsListen string `json:"metrics-listen,omitempty"`
 	// Listen is the interface to listen on

@@ -86,6 +86,7 @@ func main() {
 	flags.StringSliceVar(&o.Server.AllowedIPs, "allowed-ips", sl("ALLOWED_IPS", []string{"0.0.0.0/0"}), "network cidr allowed access")
 	flags.StringVar(&o.Server.UpstreamURL, "upstream-url", s("UPSTREAM_URL", "https://kubernetes.default.svc.cluster.local"), "upstream url to forward the requests")
 	flags.StringVar(&o.Server.Token, "upstream-token", s("UPSTREAM_AUTHENTICATION_TOKEN", "/var/run/secrets/kubernetes.io/serviceaccount/token"), "containing the authentication token for upstream")
+	flags.DurationVar(&o.Server.FlushInterval, "flush-interval", 10*time.Millisecond, "the flush interval used on the revervse proxy")
 	flags.Bool("verbose", false, "switches on verbose logging for debugging purposes `BOOL`")
 
 	// OpenID options
