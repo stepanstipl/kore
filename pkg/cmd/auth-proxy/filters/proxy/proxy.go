@@ -35,6 +35,8 @@ import (
 type Options struct {
 	// Endpoint is the destination to proxy
 	Endpoint string
+	// FlushInterval is the flush interval for reverse proxy
+	FlushInterval time.Duration
 }
 
 type pxyImpl struct {
@@ -57,9 +59,10 @@ func New(options Options) (filters.Middleware, error) {
 		return nil, errors.New("no endpoint")
 	}
 
-	log.WithField(
-		"endpoint", options.Endpoint,
-	).Debug("using the endpoint reverse proxy")
+	log.WithFields(log.Fields{
+		"endpoint": options.Endpoint,
+		"flush":    options.FlushInterval,
+	}).Debug("using the endpoint reverse proxy")
 
 	origin, err := url.Parse(options.Endpoint)
 	if err != nil {
@@ -78,7 +81,7 @@ func New(options Options) (filters.Middleware, error) {
 		req.URL.Scheme = origin.Scheme
 		req.URL.Host = origin.Host
 	}
-
+	rv.FlushInterval = options.FlushInterval
 	rv.ModifyResponse = func(resp *http.Response) error {
 		return nil
 	}

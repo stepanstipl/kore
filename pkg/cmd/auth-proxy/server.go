@@ -159,7 +159,8 @@ func (a *authImpl) makeFilters() (filters.Interface, error) {
 		return nil, err
 	}
 	proxy, err := proxy.New(proxy.Options{
-		Endpoint: a.UpstreamURL,
+		Endpoint:      a.UpstreamURL,
+		FlushInterval: a.FlushInterval,
 	})
 	if err != nil {
 		return nil, err
