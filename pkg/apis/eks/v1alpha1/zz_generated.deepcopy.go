@@ -307,13 +307,8 @@ func (in *EKSNodeGroupStatus) DeepCopyInto(out *EKSNodeGroupStatus) {
 		for i := range *in {
 			if (*in)[i] != nil {
 				in, out := &(*in)[i], &(*out)[i]
-<<<<<<< HEAD
 				*out = new(corev1.Component)
-				**out = **in
-=======
-				*out = new(v1.Component)
 				(*in).DeepCopyInto(*out)
->>>>>>> e06e06ac... GCP Account Management
 			}
 		}
 	}
@@ -372,13 +367,8 @@ func (in *EKSStatus) DeepCopyInto(out *EKSStatus) {
 		for i := range *in {
 			if (*in)[i] != nil {
 				in, out := &(*in)[i], &(*out)[i]
-<<<<<<< HEAD
 				*out = new(corev1.Component)
-				**out = **in
-=======
-				*out = new(v1.Component)
 				(*in).DeepCopyInto(*out)
->>>>>>> e06e06ac... GCP Account Management
 			}
 		}
 	}
@@ -483,13 +473,8 @@ func (in *EKSVPCStatus) DeepCopyInto(out *EKSVPCStatus) {
 		for i := range *in {
 			if (*in)[i] != nil {
 				in, out := &(*in)[i], &(*out)[i]
-<<<<<<< HEAD
 				*out = new(corev1.Component)
-				**out = **in
-=======
-				*out = new(v1.Component)
 				(*in).DeepCopyInto(*out)
->>>>>>> e06e06ac... GCP Account Management
 			}
 		}
 	}

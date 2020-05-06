@@ -30,10 +30,9 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/types"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -107,7 +106,7 @@ func (n *ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 			[]controllers.EnsureFunc{
 				n.EnsureNodeGroupIsPending(resource),
 				n.EnsureClusterReady(resource),
-				n.EnsureNodeRole(resource, credentials),
+				n.EnsureNodeRole(resource, creds),
 				n.EnsureNodeGroup(client, resource),
 			},
 		)
