@@ -35,9 +35,6 @@ type AccountManagementSpec struct {
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
 	Provider string `json:"provider"`
-	// Managed indicates if kore to manage the accounts - is this one actually required???
-	// +kubebuilder:validation:Required
-	Managed bool `json:"managed"`
 	// Rules is a set of rules for this provider
 	// +kubebuilder:validation:Optional
 	// +listType=set
@@ -47,7 +44,7 @@ type AccountManagementSpec struct {
 	Organization corev1.Ownership `json:"organization,omitempty"`
 }
 
-// AccountRule defines a rule for the provider
+// AccountsRule defines a rule for the provider
 type AccountsRule struct {
 	// Name is the given name of the rule
 	// +kubebuilder:validation:MinLength=1

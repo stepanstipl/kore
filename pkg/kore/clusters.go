@@ -24,7 +24,6 @@ import (
 	"reflect"
 	"strings"
 
-	accountv1beta1 "github.com/appvia/kore/pkg/apis/accounts/v1beta1"
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	"github.com/appvia/kore/pkg/kore/assets"
@@ -187,33 +186,58 @@ func (c *clustersImpl) Update(ctx context.Context, cluster *clustersv1.Cluster) 
 	)
 }
 
-// validateAccounting is responsible for checking if accounting is enabled that the cluster is using
-// a valid plan
+// validateAccounting is responsible for checking if accounting
 func (c *clustersImpl) validateAccounting(ctx context.Context, cluster *clustersv1.Cluster) error {
-	list, err := c.Accounts().List(ctx)
-	if err != nil {
-		return err
-	}
-	if len(list.Items) <= 0 {
+	fmt.Println("KIND", cluster.Spec.Credentials.Kind)
+
+	if cluster.Spec.Credentials.Kind != "AccountManagement" {
 		return nil
 	}
 
-	// @step: does this team having accounts enabled for it
-	allocations, err := c.Teams().Team(c.team).Allocations().ListAllocationsByType(ctx,
-		accountv1beta1.GroupVersion.Group,
-		accountv1beta1.GroupVersion.Version,
-		"Account",
-	)
-	if err != nil {
-		return err
-	}
-	if len(allocations.Items) <= 0 {
+	// @choice: if the cluster already exist we should bypass this check
+	if _, err := c.Teams().Team(c.team).Clusters().Get(ctx, cluster.Name); err != nil {
+		if err != ErrNotFound {
+			return err
+		}
+	} else {
 		return nil
 	}
 
-	_, err = c.Accounts().List(ctx)
+	// @step: does this team having accounts enabled
+	permitted, err := c.Teams().Team(c.team).Allocations().IsPermitted(ctx, cluster.Spec.Credentials)
 	if err != nil {
 		return err
+	}
+	if !permitted {
+		return ErrNotAllowed{message: "account management is not allocated to the team"}
+	}
+
+	// @step: if the plan requested available in the account plan?
+	account, err := c.Accounts().Get(ctx, cluster.Spec.Credentials.Name)
+	if err != nil {
+		return err
+	}
+
+	if len(account.Spec.Rules) <= 0 {
+		return nil
+	}
+
+	found, list := func() (bool, []string) {
+		var list []string
+
+		for _, rule := range account.Spec.Rules {
+			list = append(list, rule.Plans...)
+			if utils.Contains(cluster.Spec.Plan, rule.Plans) {
+				return true, nil
+			}
+		}
+
+		return false, list
+	}()
+	if !found {
+		return ErrNotAllowed{
+			message: fmt.Sprintf("Plan is not permitted by accounting rules (allowed: %s)", strings.Join(list, ",")),
+		}
 	}
 
 	return nil

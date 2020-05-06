@@ -131,10 +131,6 @@ spec:
             for a provider I've a feeling this will probably need provider specific
             attributes are some point
           properties:
-            managed:
-              description: Managed indicates if kore to manage the accounts - is this
-                one actually required???
-              type: boolean
             organization:
               description: Organization is the underlying organizational resource
                 (only require if more than one)
@@ -169,7 +165,7 @@ spec:
             rules:
               description: Rules is a set of rules for this provider
               items:
-                description: AccountRule defines a rule for the provider
+                description: AccountsRule defines a rule for the provider
                 properties:
                   labels:
                     additionalProperties:
@@ -200,7 +196,6 @@ spec:
               type: array
               x-kubernetes-list-type: set
           required:
-          - managed
           - provider
           type: object
         status:

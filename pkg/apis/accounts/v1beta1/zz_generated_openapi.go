@@ -93,13 +93,6 @@ func schema_pkg_apis_accounts_v1beta1_AccountManagementSpec(ref common.Reference
 							Format:      "",
 						},
 					},
-					"managed": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Managed indicates if kore to manage the accounts - is this one actually required???",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
 					"rules": {
 						VendorExtensible: spec.VendorExtensible{
 							Extensions: spec.Extensions{
@@ -125,7 +118,7 @@ func schema_pkg_apis_accounts_v1beta1_AccountManagementSpec(ref common.Reference
 						},
 					},
 				},
-				Required: []string{"provider", "managed"},
+				Required: []string{"provider"},
 			},
 		},
 		Dependencies: []string{

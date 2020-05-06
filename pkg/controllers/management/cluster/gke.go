@@ -107,7 +107,7 @@ func (g *gkeComponents) Complete(cluster *clustersv1.Cluster, components *Compon
 					Version:   gcp.GroupVersion.Version,
 				}
 
-				switch mgmt.Spec.Managed {
+				switch len(mgmt.Spec.Rules) > 0 {
 				case true:
 					rule, found := FindAccountingRule(mgmt, cluster.Spec.Plan)
 					if !found {

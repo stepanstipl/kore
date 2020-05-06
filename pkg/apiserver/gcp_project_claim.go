@@ -19,8 +19,6 @@ package apiserver
 import (
 	"net/http"
 
-	gcp "github.com/appvia/kore/pkg/apis/gcp/v1alpha1"
-
 	restful "github.com/emicklei/go-restful"
 )
 
@@ -50,39 +48,5 @@ func (u teamHandler) findProjectClaim(req *restful.Request, resp *restful.Respon
 		}
 
 		return resp.WriteHeaderAndEntity(http.StatusOK, n)
-	})
-}
-
-// updateProjectClaim is used to update an credential claim for a team
-func (u teamHandler) updateProjectClaim(req *restful.Request, resp *restful.Response) {
-	handleErrors(req, resp, func() error {
-		team := req.PathParameter("team")
-
-		claim := &gcp.ProjectClaim{}
-		if err := req.ReadEntity(claim); err != nil {
-			return err
-		}
-
-		n, err := u.Teams().Team(team).Cloud().GCP().ProjectClaims().Update(req.Request.Context(), claim)
-		if err != nil {
-			return err
-		}
-
-		return resp.WriteHeaderAndEntity(http.StatusOK, n)
-	})
-}
-
-// deleteProjectClaim is used to remove a credential from a team cluster
-func (u teamHandler) deleteProjectClaim(req *restful.Request, resp *restful.Response) {
-	handleErrors(req, resp, func() error {
-		team := req.PathParameter("team")
-		name := req.PathParameter("name")
-
-		original, err := u.Teams().Team(team).Cloud().GCP().ProjectClaims().Delete(req.Request.Context(), name)
-		if err != nil {
-			return err
-		}
-
-		return resp.WriteHeaderAndEntity(http.StatusOK, original)
 	})
 }

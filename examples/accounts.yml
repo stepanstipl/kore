@@ -1,6 +1,6 @@
 ---
 apiVersion: accounts.kore.appvia.io/v1beta1
-kind: Account
+kind: AccountManagement
 metadata:
   name: gke
 spec:
