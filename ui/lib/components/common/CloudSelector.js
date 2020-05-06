@@ -5,7 +5,7 @@ const { Title, Paragraph, Text } = Typography
 
 class CloudSelector extends React.Component {
   static propTypes = {
-    selectedCloud: PropTypes.string.isRequired,
+    selectedCloud: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]).isRequired,
     handleSelectCloud: PropTypes.func.isRequired,
     credentials: PropTypes.object,
     showCustom: PropTypes.bool

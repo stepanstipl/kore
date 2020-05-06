@@ -111,7 +111,12 @@ class VerifiedAllocatedResourceForm extends React.Component {
   }
 
   storeAllocation = async (resource, values) => {
-    return await AllocationHelpers.storeAllocation({ resourceToAllocate: resource, teams: this.state.allocations, name: values.name, summary: values.summary })
+    return await AllocationHelpers.storeAllocation({
+      resourceToAllocate: resource,
+      teams: this.state.autoAllocateToAllTeams ? '*' : this.state.allocations,
+      name: values.name,
+      summary: values.summary
+    })
   }
 
   _process = async (err, values) => {

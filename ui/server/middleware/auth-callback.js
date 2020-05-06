@@ -29,13 +29,10 @@ module.exports = (orgService, authService, koreConfig, userClaimsOrder, embedded
             redirectPath = '/setup/authentication'
           }
         }
-        if (redirectPath === '/') {
-          // this is hard-coded to check for GKE credentials, but this will need to be more flexible in the future
-          const gkeCredentials = await orgService.getTeamGkeCredentials(koreConfig.koreAdminTeamName, user.id_token)
-          if (gkeCredentials.items.length === 0) {
-            /* eslint-disable-next-line require-atomic-updates */
-            redirectPath = '/setup/kore'
-          }
+        const setupComplete = await orgService.hasTeamCredentials(koreConfig.koreAdminTeamName, user.id_token)
+        if (!setupComplete) {
+          /* eslint-disable-next-line require-atomic-updates */
+          redirectPath = '/setup/kore'
         }
       }
       res.redirect(redirectPath)

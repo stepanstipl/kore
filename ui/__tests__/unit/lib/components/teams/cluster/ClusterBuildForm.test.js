@@ -16,7 +16,8 @@ describe('ClusterBuildForm', () => {
   }
   let allocations = [
     { spec: { resource: { kind: 'GKECredentials' } }, metadata: { name: 'GKE' } },
-    { spec: { resource: { kind: 'EKSCredentials' } }, metadata: { name: 'EKS' } }
+    { spec: { resource: { kind: 'EKSCredentials' } }, metadata: { name: 'EKS' } },
+    { spec: { resource: { kind: 'AccountManagement' } }, metadata: { name: 'GCP' } },
   ]
 
   beforeEach(async () => {
@@ -53,8 +54,10 @@ describe('ClusterBuildForm', () => {
       // Check API has been accessed as expected.
       apiScope.done()
       expect(form.state.plans).toEqual(plans)
-      expect(form.state.credentials.GKE).toEqual([{ ...allocations[0] }])
-      expect(form.state.credentials.EKS).toEqual([{ ...allocations[1] }])
+      expect(form.state.credentials.GKE.credentials).toEqual([{ ...allocations[0] }])
+      expect(form.state.credentials.GKE.accountManagement).toEqual({ ...allocations[2] })
+      expect(form.state.credentials.EKS.credentials).toEqual([{ ...allocations[1] }])
+      expect(form.state.credentials.EKS.accountManagement).toEqual(undefined)
     })
   })
 

@@ -52,12 +52,19 @@ class ClusterBuildForm extends React.Component {
     // Assign the promise chain to a variable so tests can wait for it to complete.
     this.componentDidMountComplete = Promise.resolve().then(async () => {
       const { allocations, plans } = await this.fetchComponentData()
+      const gcpAccountManagement = (allocations.items || []).find(a => a.spec.resource.kind === 'AccountManagement')
       const gkeCredentials = (allocations.items || []).filter(a => a.spec.resource.kind === 'GKECredentials')
       const eksCredentials = (allocations.items || []).filter(a => a.spec.resource.kind === 'EKSCredentials')
       this.setState({
         credentials: {
-          GKE: gkeCredentials,
-          EKS: eksCredentials
+          GKE: {
+            credentials: gkeCredentials,
+            accountManagement: gcpAccountManagement
+          },
+          EKS: {
+            credentials: eksCredentials,
+            accountManagement: undefined
+          }
         },
         plans: plans,
         dataLoading: false
@@ -66,7 +73,12 @@ class ClusterBuildForm extends React.Component {
   }
 
   getClusterResource = (values) => {
-    const selectedCredential = this.state.credentials[this.state.selectedCloud].find(p => p.metadata.name === values.credential)
+    let selectedCredential
+    if (values.credential) {
+      selectedCredential = this.state.credentials[this.state.selectedCloud].credentials.find(p => p.metadata.name === values.credential)
+    } else {
+      selectedCredential = this.state.credentials[this.state.selectedCloud].accountManagement
+    }
     const selectedPlan = this.state.plans.items.find(p => p.metadata.name === values.plan)
 
     const clusterResource = new V1Cluster()
@@ -104,26 +116,19 @@ class ClusterBuildForm extends React.Component {
 
   handleSubmit = e => {
     e.preventDefault()
+    this.setState({ submitting: true, formErrorMessage: false })
 
     this.clusterOptionsForm.props.form.validateFields(async (err, values) => {
       if (err) {
-        console.log(err)
-        this.setState({
-          ...this.state,
-          formErrorMessage: 'Validation failed'
-        })
+        this.setState({ formErrorMessage: 'Validation failed', submitting: false })
         return
       }
-      this.setState({
-        ...this.state,
-        submitting: true,
-        formErrorMessage: false
-      })
       try {
         await (await KoreApi.client()).UpdateCluster(
           this.props.team.metadata.name,
           values.clusterName,
-          this.getClusterResource(values))
+          this.getClusterResource(values)
+        )
         message.loading('Cluster build requested...')
         return redirect({
           router: Router,
@@ -131,7 +136,6 @@ class ClusterBuildForm extends React.Component {
         })
       } catch (err) {
         this.setState({
-          ...this.state,
           submitting: false,
           formErrorMessage: (err.fieldErrors && err.message) ? err.message : 'An error occurred requesting the cluster, please try again',
           validationErrors: err.fieldErrors // This will be undefined on non-validation errors, which is fine.
@@ -157,7 +161,8 @@ class ClusterBuildForm extends React.Component {
   clusterBuildForm = () => {
     const { submitting, selectedCloud, formErrorMessage } = this.state
     const filteredPlans = this.state.plans.items.filter(p => p.spec.kind === selectedCloud)
-    const filteredCredentials = this.state.credentials[selectedCloud]
+    const filteredCredentials = this.state.credentials[selectedCloud].credentials
+    const accountManagement = this.state.credentials[selectedCloud].accountManagement
     const formConfig = {
       layout: 'horizontal',
       labelAlign: 'left',
@@ -181,6 +186,7 @@ class ClusterBuildForm extends React.Component {
           team={this.props.team}
           selectedCloud={selectedCloud}
           credentials={filteredCredentials}
+          accountManagement={accountManagement}
           plans={filteredPlans}
           teamClusters={this.props.teamClusters}
           onPlanOverridden={this.handlePlanOverride}
@@ -201,21 +207,20 @@ class ClusterBuildForm extends React.Component {
       return null
     }
 
-    const { credentials, cloudConfig, selectedCloud } = this.state
-    const filteredCredentials = this.state.credentials[selectedCloud]
+    const { selectedCloud } = this.state
+    const filteredCredentials = selectedCloud && this.state.credentials[selectedCloud].credentials
+    const accountManagement = selectedCloud && this.state.credentials[selectedCloud].accountManagement
 
     return (
       <div>
         <CloudSelector
           showCustom={false}
-          credentials={credentials}
-          cloudConfig={cloudConfig}
           selectedCloud={selectedCloud}
           handleSelectCloud={this.handleSelectCloud} />
         {selectedCloud ? (
-          filteredCredentials.length > 0 ?
+          filteredCredentials.length > 0 || accountManagement ?
             <this.clusterBuildForm /> :
-            <MissingCredential team={this.props.team.metadata.name}/>
+            <MissingCredential team={this.props.team.metadata.name} cloud={selectedCloud} />
         ) : null}
       </div>
     )

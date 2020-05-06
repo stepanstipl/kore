@@ -7,7 +7,9 @@ import copy from '../../utils/object-copy'
 class ResourceList extends React.Component {
 
   static propTypes = {
-    style: PropTypes.object
+    style: PropTypes.object,
+    getResourceItemList: PropTypes.func,
+    autoAllocateToAllTeams: PropTypes.bool
   }
 
   constructor(props) {
@@ -23,6 +25,7 @@ class ResourceList extends React.Component {
   componentDidMount() {
     return this.fetchComponentData()
       .then(data => {
+        this.props.getResourceItemList && this.props.getResourceItemList(data.resources.items)
         this.setState({
           ...data,
           dataLoading: false
@@ -33,6 +36,7 @@ class ResourceList extends React.Component {
   refresh = async () => {
     this.setState({ dataLoading: true })
     const data = await this.fetchComponentData()
+    this.props.getResourceItemList && this.props.getResourceItemList(data.resources.items)
     this.setState({
       ...data,
       dataLoading: false
@@ -70,7 +74,8 @@ class ResourceList extends React.Component {
               allocation: updated.allocation,
               status: {
                 ...resource.status, status: 'Pending'
-              }
+              },
+              ...updated.append
             }
           }
           return resource
@@ -88,6 +93,7 @@ class ResourceList extends React.Component {
         items: this.state.resources.items.concat([ created ])
       }
     })
+    this.props.getResourceItemList && this.props.getResourceItemList(this.state.resources.items)
     message.success(this.createdMessage)
   }
 }

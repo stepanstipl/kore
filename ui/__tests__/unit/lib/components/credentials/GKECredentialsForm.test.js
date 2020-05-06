@@ -12,6 +12,7 @@ describe('GKECredentialsForm', () => {
     spec: { type: 'gke-credentials' }
   }
   const gkeCredential = {
+    kind: 'GKECredentials',
     metadata: { name: 'gke' },
     spec: { project: 'project-id', account: 'gke-service-account-cred' }
   }

@@ -99,6 +99,23 @@ class OrgService {
       return Promise.reject(err)
     }
   }
+
+  async hasTeamCredentials(team, requestingIdToken) {
+    try {
+      const api = await this.getApiClient(requestingIdToken)
+      const [ gkeCredentialsList, gcpOrgList, eksCredentialsList ] = await Promise.all([
+        api.ListGKECredentials(team),
+        api.ListGCPOrganizations(team),
+        api.ListEKSCredentials(team)
+      ])
+      return gkeCredentialsList.items.length !== 0 ||
+        gcpOrgList.items.length !== 0 ||
+        eksCredentialsList.items.length !== 0
+    } catch (err) {
+      console.error('Error checking for team credentials from API', err)
+      return Promise.reject(err)
+    }
+  }
 }
 
 module.exports = OrgService

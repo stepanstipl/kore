@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types'
 import { Typography, List, Button, Drawer, Icon, Alert } from 'antd'
 const { Title } = Typography
 import getConfig from 'next/config'
@@ -8,12 +7,9 @@ import GCPOrganization from './GCPOrganization'
 import ResourceList from '../resources/ResourceList'
 import GCPOrganizationForm from './GCPOrganizationForm'
 import KoreApi from '../../kore-api'
+import AllocationHelpers from '../../utils/allocation-helpers'
 
 class GCPOrganizationsList extends ResourceList {
-
-  static propTypes = {
-    style: PropTypes.object
-  }
 
   createdMessage = 'GCP organization created successfully'
   updatedMessage = 'GCP organization updated successfully'
@@ -27,7 +23,7 @@ class GCPOrganizationsList extends ResourceList {
     ])
     allTeams.items = allTeams.items.filter(t => !publicRuntimeConfig.ignoreTeams.includes(t.metadata.name))
     gcpOrganizations.items.forEach(org => {
-      org.allocation = (allAllocations.items || []).find(alloc => alloc.metadata.name === org.metadata.name)
+      org.allocation = AllocationHelpers.findAllocationForResource(allAllocations, org)
     })
     return { resources: gcpOrganizations, allTeams }
   }
@@ -44,9 +40,9 @@ class GCPOrganizationsList extends ResourceList {
           showIcon
           style={{ marginBottom: '20px' }}
         />
-        <Button type="primary" onClick={this.add(true)} style={{ display: 'block', marginBottom: '20px' }}>+ New</Button>
         {!resources ? <Icon type="loading" /> : (
           <>
+            {resources.items.length === 0 && <Button type="primary" onClick={this.add(true)} style={{ display: 'block', marginBottom: '20px' }} className="new-gcp-organization">Configure</Button>}
             <List
               dataSource={resources.items}
               renderItem={org =>
@@ -74,6 +70,7 @@ class GCPOrganizationsList extends ResourceList {
                   allTeams={allTeams}
                   data={edit}
                   handleSubmit={this.handleEditSave}
+                  autoAllocateToAllTeams={this.props.autoAllocateToAllTeams}
                 />
               </Drawer>
             ) : null}
@@ -88,6 +85,7 @@ class GCPOrganizationsList extends ResourceList {
                   team={publicRuntimeConfig.koreAdminTeamName}
                   allTeams={allTeams}
                   handleSubmit={this.handleAddSave}
+                  autoAllocateToAllTeams={this.props.autoAllocateToAllTeams}
                 />
               </Drawer>
             ) : null}

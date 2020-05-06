@@ -1,15 +1,17 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Table, Icon, Tag, Typography } from 'antd'
-const { Text } = Typography
+import { Alert, Table, Icon, Tag, Tooltip, Typography } from 'antd'
+const { Paragraph, Text } = Typography
 import { startCase } from 'lodash'
+
 import KoreApi from '../../kore-api'
 
 class PlanViewer extends React.Component {
 
   static propTypes = {
     plan: PropTypes.object.isRequired,
-    resourceType: PropTypes.oneOf(['cluster', 'service']).isRequired
+    resourceType: PropTypes.oneOf(['cluster', 'service']).isRequired,
+    displayUnassociatedPlanWarning: PropTypes.bool
   }
 
   state = {
@@ -39,7 +41,7 @@ class PlanViewer extends React.Component {
   }
 
   render() {
-    const { spec } = this.props.plan
+    const { plan, displayUnassociatedPlanWarning } = this.props
     const { schema, dataLoading } = this.state
 
     if (dataLoading) {
@@ -90,21 +92,34 @@ class PlanViewer extends React.Component {
       }
     }
 
-    const planValues = Object.keys(spec.configuration).map(name => {
+    const planValues = Object.keys(plan.spec.configuration).map(name => {
       return {
         key: name,
         property: propertyDisplayName(name, schema.properties[name].description),
-        value: propertyDisplayValue(schema.properties[name], spec.configuration[name])
+        value: propertyDisplayValue(schema.properties[name], plan.spec.configuration[name])
       }
     })
 
     return (
-      <Table
-        size="small"
-        pagination={false}
-        columns={columns}
-        dataSource={planValues}
-      />
+      <>
+        {plan.gcpAutomatedProject && (
+          <Paragraph>GCP project automation: <Tooltip overlay="When using Kore managed GCP projects, clusters using this plan will provisioned inside this project type."><Tag style={{ marginLeft: '10px' }}>{plan.gcpAutomatedProject.name}</Tag></Tooltip></Paragraph>
+        )}
+        {displayUnassociatedPlanWarning && (
+          <Alert
+            message="This plan not associated with any GCP automated projects and will not be available for teams to use. Edit this plan or go to Project automation settings to review this."
+            type="warning"
+            showIcon
+            style={{ marginBottom: '20px' }}
+          />
+        )}
+        <Table
+          size="small"
+          pagination={false}
+          columns={columns}
+          dataSource={planValues}
+        />
+      </>
     )
 
   }

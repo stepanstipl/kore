@@ -100,12 +100,28 @@ class KoreApiClient {
     ListSecurityRules: () => this.apis.security.ListSecurityRules(),
     GetSecurityRule: (code) => this.apis.security.GetSecurityRule({ code })
   }
-  
+
   // Policies 
   ListPlanPolicies = (kind) => this.apis.default.ListPlanPolicies({ kind })
   GetPlanPolicy = (name) => this.apis.default.GetPlanPolicy({ name })
   UpdatePlanPolicy = (name, plan) => this.apis.default.UpdatePlanPolicy({ name, body: JSON.stringify(plan) })
   RemovePlanPolicy = (name) => this.apis.default.RemovePlanPolicy({ name })
+
+  // Account management
+  ListAccounts = (kind) => this.apis.default.ListAccounts({ kind })
+  UpdateAccount = (name, account) => this.apis.default.UpdateAccount({ name, body: JSON.stringify(account) })
+  RemoveAccount = (name) => this.apis.default.RemoveAccount({ name })
+
+  // Credentials
+  ListGKECredentials = (team) => this.apis.default.ListGKECredentials({ team })
+  GetGKECredential = (team, name) => this.apis.default.GetGKECredential({ team, name })
+  UpdateGKECredential = (team, name, resource) => this.apis.default.UpdateGKECredential({ team, name, body: JSON.stringify(resource) })
+  ListGCPOrganizations = (team) => this.apis.default.ListGCPOrganizations({ team })
+  GetGCPOrganization = (team, name) => this.apis.default.GetGCPOrganization({ team, name })
+  UpdateGCPOrganization = (team, name, org) => this.apis.default.UpdateGCPOrganization({ team, name, body: JSON.stringify(org) })
+  ListEKSCredentials = (team) => this.apis.default.ListEKSCredentials({ team })
+  GetEKSCredentials = (team, name) => this.apis.default.GetEKSCredentials({ team, name })
+  UpdateEKSCredentials = (team, name, resource) => this.apis.default.UpdateEKSCredentials({ team, name, body: JSON.stringify(resource) })
 
   // Teams
   GetTeam = (team) => this.apis.default.GetTeam({ team })
@@ -116,15 +132,6 @@ class KoreApiClient {
   AddTeamMember = (team, user) => this.apis.default.AddTeamMember({ team, user })
   RemoveTeamMember = (team, user) => this.apis.default.RemoveTeamMember({ team, user })
   GetTeamSecurityOverview = (team) => this.apis.default.GetTeamSecurityOverview({ team })
-  ListGKECredentials = (team) => this.apis.default.ListGKECredentials({ team })
-  GetGKECredential = (team, name) => this.apis.default.GetGKECredential({ team, name })
-  UpdateGKECredential = (team, name, resource) => this.apis.default.UpdateGKECredential({ team, name, body: JSON.stringify(resource) })
-  ListGCPOrganizations = (team) => this.apis.default.ListGCPOrganizations({ team })
-  GetGCPOrganization = (team, name) => this.apis.default.GetGCPOrganization({ team, name })
-  UpdateGCPOrganization = (team, name, org) => this.apis.default.UpdateGCPOrganization({ team, name, body: JSON.stringify(org) })
-  ListEKSCredentials = (team) => this.apis.default.ListEKSCredentials({ team })
-  GetEKSCredentials = (team, name) => this.apis.default.GetEKSCredentials({ team, name })
-  UpdateEKSCredentials = (team, name, resource) => this.apis.default.UpdateEKSCredentials({ team, name, body: JSON.stringify(resource) })
   ListAllocations = (team, assigned = undefined) => this.apis.default.ListAllocations({ team, assigned })
   GetAllocation = (team, name) => this.apis.default.GetAllocation({ team, name })
   UpdateAllocation = (team, name, resource) => this.apis.default.UpdateAllocation({ team, name, body: JSON.stringify(resource) })
