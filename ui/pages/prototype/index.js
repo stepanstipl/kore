@@ -14,6 +14,10 @@ const prototypeList = [{
   title: 'Security',
   description: 'Review the security posture of all Kore-provisioned clusters and plans',
   path: '/prototype/security'
+}, {
+  title: 'Cloud services for teams',
+  description: 'Team dashboard with cloud service provisioning',
+  path: '/prototype/teams/demo'
 }]
 
 const PrototypeIndex = () => (
