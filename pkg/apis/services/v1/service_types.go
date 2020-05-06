@@ -164,7 +164,7 @@ func NewService(name, namespace string) *Service {
 }
 
 // Ownership creates an Ownership object
-func (s *Service) Ownership() corev1.Ownership {
+func (s Service) Ownership() corev1.Ownership {
 	return corev1.Ownership{
 		Group:     GroupVersion.Group,
 		Version:   GroupVersion.Version,

@@ -64,6 +64,11 @@ func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePl
 		return err
 	}
 
+	if !strings.HasPrefix(plan.Name, plan.Spec.Kind+"-") {
+		return validation.NewError("%q failed validation", plan.Name).
+			WithFieldErrorf("name", validation.InvalidValue, "must start with %s-", plan.Spec.Kind)
+	}
+
 	if plan.Namespace != HubNamespace {
 		return validation.NewError("%q failed validation", plan.Name).
 			WithFieldErrorf("namespace", validation.InvalidValue, "must be %q", HubNamespace)
@@ -75,7 +80,7 @@ func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePl
 			WithFieldErrorf("kind", validation.InvalidType, "%q is not a known service kind", plan.Spec.Kind)
 	}
 
-	schema, err := provider.PlanJSONSchema(plan.Spec.Kind, plan.Name)
+	schema, err := provider.PlanJSONSchema(plan.Spec.Kind, plan.PlanShortName())
 	if err != nil {
 		return err
 	}

@@ -120,15 +120,15 @@ func NewProvider(name string, client osb.Client) (*Provider, error) {
 				providerService.defaultPlan = &providerPlan
 
 				if schema == "" {
-					return nil, fmt.Errorf("%s plan does not have a schema for provisioning", p.Name)
+					return nil, fmt.Errorf("%s-%s plan does not have a schema for provisioning", s.Name, p.Name)
 				}
 
 				if credentialsSchema == "" {
-					return nil, fmt.Errorf("%s plan does not have a schema for bind", p.Name)
+					return nil, fmt.Errorf("%s-%s plan does not have a schema for bind", s.Name, p.Name)
 				}
 			} else {
 				plans = append(plans, servicePlan)
-				providerService.plans[planName(s, p)] = providerPlan
+				providerService.plans[servicePlan.Name] = providerPlan
 			}
 		}
 
@@ -189,8 +189,8 @@ func (p *Provider) RequiredCredentialTypes(kind string) ([]schema.GroupVersionKi
 	return nil, nil
 }
 
-func (p *Provider) plan(kind, planName string) (providerPlan, error) {
-	return p.planWithFilter(kind, planName, nil)
+func (p *Provider) plan(service *servicesv1.Service) (providerPlan, error) {
+	return p.planWithFilter(service.Spec.Kind, service.PlanShortName(), nil)
 }
 
 func (p *Provider) planWithFilter(kind, planName string, filter func(providerPlan) bool) (providerPlan, error) {
@@ -214,15 +214,13 @@ func (p *Provider) planWithFilter(kind, planName string, filter func(providerPla
 }
 
 func catalogPlanToServicePlan(service osb.Service, plan osb.Plan) (servicesv1.ServicePlan, error) {
-	name := planName(service, plan)
-
 	res := servicesv1.ServicePlan{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ServicePlan",
 			APIVersion: servicesv1.GroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
+			Name:      plan.Name,
 			Namespace: kore.HubNamespace,
 		},
 		Spec: servicesv1.ServicePlanSpec{
@@ -234,7 +232,7 @@ func catalogPlanToServicePlan(service osb.Service, plan osb.Plan) (servicesv1.Se
 
 	if configuration, hasConfig := plan.Metadata[MetadataKeyConfiguration]; hasConfig {
 		if _, isMap := configuration.(map[string]interface{}); !isMap {
-			return servicesv1.ServicePlan{}, fmt.Errorf("%s plan has an invalid configuration, it must be an object", name)
+			return servicesv1.ServicePlan{}, fmt.Errorf("%s-%s plan has an invalid configuration, it must be an object", service.Name, plan.Name)
 		}
 
 		if err := res.Spec.SetConfiguration(configuration); err != nil {
@@ -282,8 +280,4 @@ func parseSchema(subject string, val interface{}) (string, error) {
 		return "", err
 	}
 	return schema, nil
-}
-
-func planName(service osb.Service, plan osb.Plan) string {
-	return fmt.Sprintf("%s-%s", service.Name, plan.Name)
 }

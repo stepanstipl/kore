@@ -19,6 +19,7 @@ package v1
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -104,6 +105,11 @@ func NewServicePlan(name, namespace string) *ServicePlan {
 			Namespace: namespace,
 		},
 	}
+}
+
+// PlanShortName returns the plan name without the service kind prefix
+func (s ServicePlan) PlanShortName() string {
+	return strings.TrimPrefix(s.Name, s.Spec.Kind+"-")
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

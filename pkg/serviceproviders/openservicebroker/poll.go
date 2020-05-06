@@ -36,7 +36,7 @@ func (p *Provider) pollLastOperation(
 	service *servicesv1.Service,
 	component *corev1.Component,
 ) (reconcile.Result, error) {
-	providerPlan, err := p.plan(service.Spec.Kind, service.Spec.Plan)
+	providerPlan, err := p.plan(service)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

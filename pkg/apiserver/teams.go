@@ -900,7 +900,7 @@ func (u teamHandler) getTeamServicePlanDetails(req *restful.Request, resp *restf
 			return fmt.Errorf("provider not found for service kind %q", servicePlan.Spec.Kind)
 		}
 
-		schema, err := provider.PlanJSONSchema(servicePlan.Spec.Kind, servicePlan.Name)
+		schema, err := provider.PlanJSONSchema(servicePlan.Spec.Kind, servicePlan.PlanShortName())
 		if err != nil {
 			return err
 		}

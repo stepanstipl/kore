@@ -82,13 +82,13 @@ func (d Dummy) Plans() []servicesv1.ServicePlan {
 				APIVersion: servicesv1.GroupVersion.String(),
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "dummy",
+				Name:      "default",
 				Namespace: "kore",
 			},
 			Spec: servicesv1.ServicePlanSpec{
 				Kind:          "dummy",
 				Description:   "Used for testing",
-				Summary:       "This is a dummy service plan",
+				Summary:       "This is a default dummy service plan",
 				Configuration: &v1beta1.JSON{Raw: []byte(`{"foo":"bar"}`)},
 			},
 		},

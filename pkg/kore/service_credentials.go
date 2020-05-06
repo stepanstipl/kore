@@ -196,7 +196,7 @@ func (s *serviceCredentialsImpl) validateConfiguration(
 		return fmt.Errorf("failed to parse service configuration values: %s", err)
 	}
 
-	schema, err := provider.CredentialsJSONSchema(serviceCreds.Spec.Kind, service.Spec.Plan)
+	schema, err := provider.CredentialsJSONSchema(serviceCreds.Spec.Kind, service.PlanShortName())
 	if err != nil {
 		return err
 	}

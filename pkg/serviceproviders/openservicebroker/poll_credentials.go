@@ -37,7 +37,7 @@ func (p *Provider) pollLastBindingOperation(
 	creds *servicesv1.ServiceCredentials,
 	component *corev1.Component,
 ) (reconcile.Result, map[string]string, error) {
-	providerPlan, err := p.plan(service.Spec.Kind, service.Spec.Plan)
+	providerPlan, err := p.plan(service)
 	if err != nil {
 		return reconcile.Result{}, nil, err
 	}

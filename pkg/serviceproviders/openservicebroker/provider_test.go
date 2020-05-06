@@ -252,7 +252,7 @@ var _ = Describe("Provider", func() {
 			})
 
 			It("should error", func() {
-				Expect(providerCreateErr).To(MatchError("kore-default plan does not have a schema for provisioning"))
+				Expect(providerCreateErr).To(MatchError("service-1-kore-default plan does not have a schema for provisioning"))
 			})
 		})
 
@@ -267,7 +267,7 @@ var _ = Describe("Provider", func() {
 			})
 
 			It("should error", func() {
-				Expect(providerCreateErr).To(MatchError("kore-default plan does not have a schema for bind"))
+				Expect(providerCreateErr).To(MatchError("service-1-kore-default plan does not have a schema for bind"))
 			})
 		})
 
