@@ -31,7 +31,6 @@ import (
 	"github.com/appvia/kore/pkg/utils/jsonschema"
 
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
-	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils/validation"
 
@@ -59,17 +58,9 @@ type servicesImpl struct {
 
 // Delete is used to delete a service
 func (s *servicesImpl) Delete(ctx context.Context, name string) (*servicesv1.Service, error) {
-	// @TODO check whether the user is an admin in the team
-
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsMember(s.team) && !user.IsGlobalAdmin() {
-		return nil, NewErrNotAllowed("must be global admin or a team member")
-	}
-
 	logger := log.WithFields(log.Fields{
 		"service": name,
 		"team":    s.team,
-		"user":    user.Username(),
 	})
 	logger.Info("attempting to delete the service")
 
@@ -100,11 +91,6 @@ func (s *servicesImpl) Delete(ctx context.Context, name string) (*servicesv1.Ser
 
 // List returns a list of services we have access to
 func (s *servicesImpl) List(ctx context.Context) (*servicesv1.ServiceList, error) {
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsMember(s.team) && !user.IsGlobalAdmin() {
-		return nil, NewErrNotAllowed("must be global admin or a team member")
-	}
-
 	list := &servicesv1.ServiceList{}
 
 	return list, s.Store().Client().List(ctx,
@@ -115,11 +101,6 @@ func (s *servicesImpl) List(ctx context.Context) (*servicesv1.ServiceList, error
 
 // Get returns a specific service
 func (s *servicesImpl) Get(ctx context.Context, name string) (*servicesv1.Service, error) {
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsMember(s.team) && !user.IsGlobalAdmin() {
-		return nil, NewErrNotAllowed("must be global admin or a team member")
-	}
-
 	service := &servicesv1.Service{}
 
 	if err := s.Store().Client().Get(ctx,
@@ -140,13 +121,6 @@ func (s *servicesImpl) Get(ctx context.Context, name string) (*servicesv1.Servic
 
 // Update is used to update the service
 func (s *servicesImpl) Update(ctx context.Context, service *servicesv1.Service) error {
-	// @TODO check whether the user is an admin in the team
-
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsMember(s.team) && !user.IsGlobalAdmin() {
-		return NewErrNotAllowed("must be global admin or a team member")
-	}
-
 	if err := IsValidResourceName("service", service.Name); err != nil {
 		return err
 	}

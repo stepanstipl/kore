@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
-	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils/jsonschema"
 	"github.com/appvia/kore/pkg/utils/validation"
@@ -55,11 +54,6 @@ type servicePlansImpl struct {
 
 // Update is responsible for updating a service plan
 func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePlan) error {
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsGlobalAdmin() {
-		return ErrUnauthorized
-	}
-
 	if err := IsValidResourceName("plan", plan.Name); err != nil {
 		return err
 	}
@@ -105,11 +99,6 @@ func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePl
 
 // Delete is used to delete a service plan in the kore
 func (p servicePlansImpl) Delete(ctx context.Context, name string) (*servicesv1.ServicePlan, error) {
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsGlobalAdmin() {
-		return nil, ErrUnauthorized
-	}
-
 	plan := &servicesv1.ServicePlan{}
 	err := p.Store().Client().Get(ctx,
 		store.GetOptions.InNamespace(HubNamespace),

@@ -23,7 +23,6 @@ import (
 	"time"
 
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
-	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/jsonschema"
@@ -147,11 +146,6 @@ type serviceProvidersImpl struct {
 
 // Update is responsible for updating a service provider
 func (p *serviceProvidersImpl) Update(ctx context.Context, provider *servicesv1.ServiceProvider) error {
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsGlobalAdmin() {
-		return ErrUnauthorized
-	}
-
 	existing, err := p.Get(ctx, provider.Name)
 	if err != nil && err != ErrNotFound {
 		return err
@@ -197,11 +191,6 @@ func (p *serviceProvidersImpl) Update(ctx context.Context, provider *servicesv1.
 
 // Delete is used to delete a service provider in the kore
 func (p *serviceProvidersImpl) Delete(ctx context.Context, name string) (*servicesv1.ServiceProvider, error) {
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsGlobalAdmin() {
-		return nil, ErrUnauthorized
-	}
-
 	provider := &servicesv1.ServiceProvider{}
 	err := p.Store().Client().Get(ctx,
 		store.GetOptions.InNamespace(HubNamespace),
