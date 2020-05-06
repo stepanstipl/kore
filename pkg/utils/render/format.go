@@ -29,7 +29,12 @@ func Age() PrinterColumnFormatter {
 			return "Invalid"
 		}
 
-		return strings.Split(time.Since(created).String(), ".")[0] + "s"
+		age := time.Since(created)
+		if age < 1*time.Second {
+			return "1s"
+		}
+
+		return strings.Split(age.String(), ".")[0] + "s"
 	}
 }
 
