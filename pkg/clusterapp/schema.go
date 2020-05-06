@@ -24,6 +24,7 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	rbacv1beta1 "k8s.io/api/rbac/v1beta1"
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	applicationv1beta "sigs.k8s.io/application/api/v1beta1"
@@ -37,7 +38,7 @@ func GetClientOptions() (client.Options, error) {
 	appSchema := runtime.NewScheme()
 	err := addAllToScheme(appSchema)
 	if err != nil {
-		return client.Options{}, err
+		return client.Options{}, fmt.Errorf("we only support fixed api versions - %s", err)
 	}
 	options := client.Options{
 		Scheme: appSchema,
@@ -64,6 +65,11 @@ func addAllToScheme(appScheme *runtime.Scheme) error {
 	if err != nil {
 		return fmt.Errorf("error adding batch schema - %s", err)
 	}
+	err = rbacv1beta1.AddToScheme(appScheme)
+	if err != nil {
+		return fmt.Errorf("error adding batch schema - %s", err)
+	}
+
 	// Batch
 	err = batchv1.AddToScheme(appScheme)
 	if err != nil {
