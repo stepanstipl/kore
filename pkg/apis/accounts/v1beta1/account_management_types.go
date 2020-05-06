@@ -50,11 +50,17 @@ type AccountsRule struct {
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
 	Name string `json:"name"`
+	// Description provides an optional description for the account rule
+	// +kubebuilder:validation:Optional
+	Description string `json:"description,omitempty"`
 	// Plans is a list of plans permitted
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:Required
 	// +listType=set
 	Plans []string `json:"plans"`
+	// Exact override any values in prefix and suffix uses that for the account name
+	// +kubebuilder:validation:Optional
+	Exact string `json:"exact,omitempty"`
 	// Suffix is the applied suffix
 	// +kubebuilder:validation:Optional
 	Suffix string `json:"suffix,omitempty"`

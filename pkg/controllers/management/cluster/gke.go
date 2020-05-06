@@ -117,14 +117,18 @@ func (g *gkeComponents) Complete(cluster *clustersv1.Cluster, components *Compon
 					}
 
 					// @step: we derive the account name from the rule
-					name := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
-					if rule.Suffix != "" {
-						name = rule.Suffix + name
+					if rule.Exact != "" {
+						o.Spec.ProjectName = rule.Exact
+					} else {
+						name := fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
+						if rule.Suffix != "" {
+							name = rule.Suffix + name
+						}
+						if rule.Prefix != "" {
+							name = rule.Prefix + name
+						}
+						o.Spec.ProjectName = name
 					}
-					if rule.Prefix != "" {
-						name = rule.Prefix + name
-					}
-					o.Spec.ProjectName = name
 
 				default:
 					// else we are just create a project per cluster

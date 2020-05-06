@@ -167,6 +167,14 @@ spec:
               items:
                 description: AccountsRule defines a rule for the provider
                 properties:
+                  description:
+                    description: Description provides an optional description for
+                      the account rule
+                    type: string
+                  exact:
+                    description: Exact override any values in prefix and suffix uses
+                      that for the account name
+                    type: string
                   labels:
                     additionalProperties:
                       type: string
