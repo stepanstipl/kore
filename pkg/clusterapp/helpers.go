@@ -18,6 +18,7 @@ package clusterapp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -31,6 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	applicationv1beta "sigs.k8s.io/application/api/v1beta1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func setMissingNamespace(namespace string, obj runtime.Object) error {
@@ -50,6 +52,33 @@ func setMissingNamespace(namespace string, obj runtime.Object) error {
 	}
 
 	return nil
+}
+
+// waitOnKindDeploy will deploy a object and not fail with unregistered Kind's until timeout
+func waitOnKindDeploy(ctx context.Context, cc client.Client, object runtime.Object) error {
+	for {
+		select {
+		case <-ctx.Done():
+			return errors.New("timeout")
+		default:
+		}
+		err := func() error {
+			if _, err := kubernetes.CreateOrUpdate(ctx, cc, object); err != nil {
+				return err
+			}
+			return nil
+		}()
+		if err == nil {
+			// deploy good, return now
+			return nil
+		}
+		if !meta.IsNoMatchError(err) {
+			// generic error and not just waiting for CRD's to be ready...
+			return err
+		}
+		log.Debug("kind not known, waiting for CRD to be known")
+		time.Sleep(10 * time.Second)
+	}
 }
 
 // waitOnStatus manages a timeout context when getting application status
@@ -159,17 +188,33 @@ func getStatus(ctx context.Context, ca *Instance) (err error) {
 	return nil
 }
 
-func getObjMeta(obj runtime.Object) (metav1.ObjectMeta, error) {
+func getObjMetaAndSetDefaultNamespace(obj runtime.Object, defaultNamepsace string) metav1.ObjectMeta {
+	objMeta := getObjMeta(obj)
+	if err := setMissingNamespace(defaultNamepsace, obj); err != nil {
+		log.Debugf("error setting namespace for %v - %s", obj, err)
+	}
+	return objMeta
+}
+
+func getObjMeta(obj runtime.Object) metav1.ObjectMeta {
 	metaObj := metav1.ObjectMeta{}
 	accessor, err := meta.Accessor(obj)
+	// TODO: error or not error
 	if err != nil {
-		return metaObj, err
+		if err != nil {
+			log.Errorf("error getting metadata for %v - %s", obj, err)
+		}
+		log.Debugf(
+			"got object %s/%s",
+			metaObj.Namespace,
+			metaObj.Name,
+		)
 	}
 	// TODO: this should be a pointer to the origonal data?
 	metaObj.Name = accessor.GetName()
 	metaObj.Namespace = accessor.GetNamespace()
 	metaObj.Labels = accessor.GetLabels()
-	return metaObj, nil
+	return metaObj
 }
 
 func toUnstructuredObj(obj runtime.Object) (*unstructured.Unstructured, error) {
@@ -179,7 +224,7 @@ func toUnstructuredObj(obj runtime.Object) (*unstructured.Unstructured, error) {
 		Kind:    obj.GetObjectKind().GroupVersionKind().Kind,
 		Group:   obj.GetObjectKind().GroupVersionKind().Group,
 	})
-	objMeta, _ := getObjMeta(obj)
+	objMeta := getObjMeta(obj)
 	u.SetName(objMeta.Name)
 	u.SetNamespace(objMeta.Namespace)
 	u.SetLabels(objMeta.Labels)

@@ -45,6 +45,8 @@ const (
 	StatusConfigMapComponentsKey string = "components"
 	appControlNamespsace         string = "application-system"
 	fluxNamespace                string = "flux"
+	// DefaultAppTimeout is the amount of time allowed if none set
+	DefaultAppTimeout = 3 * time.Minute
 )
 
 type clusterappmanImpl struct {
@@ -146,28 +148,32 @@ func New(config Config) (Interface, error) {
 // it should start threads for monitoring cluster apps
 // it should only return if "initial" kore deployments don't become ready
 func (s clusterappmanImpl) Run(ctx context.Context) error {
-	// Maybe this whole thing runs in a loop - ensuring no manual change?
-	// deploy / reconcile the Application kind controller
-	// deploy / reconcile the Helm operator
-	// deploy / reconcile the Appvia helm repo
-
-	// initialise clusterapps and parse all the manifests
-	// fail early if we can't even load the manifests
-	// we should add a test for this!
 	logger := log.WithFields(log.Fields{
 		"service": "clusterappman",
 	})
 	logger.Info("attempting to reconcile the applications incluster")
-
-	var wg sync.WaitGroup
-	// component updates channel
-	ch := make(chan *kcore.Component, len(mm))
-
-	// make this tesable
+	// initialise clusterapps and parse all the manifests
 	logger.Info("loading manifests")
 	if err := LoadAllManifests(s.RuntimeClient); err != nil {
 		return fmt.Errorf("failed loading manifests - %s", err)
 	}
+	for {
+		err := s.Deploy(ctx, logger)
+		if err != nil {
+			return err
+		}
+		time.Sleep(45 * time.Second)
+	}
+}
+
+func (s clusterappmanImpl) Deploy(ctx context.Context, logger *log.Entry) error {
+	// deploy / reconcile the Application kind controller
+	// deploy / reconcile the Helm operator
+	// deploy / reconcile the Appvia helm repo
+
+	var wg sync.WaitGroup
+	// component updates channel
+	ch := make(chan *kcore.Component, len(mm))
 	var cs = make([]*kcore.Component, len(mm))
 	var components kcore.Components = cs
 	for i, m := range mm {
@@ -182,14 +188,12 @@ func (s clusterappmanImpl) Run(ctx context.Context) error {
 				return fmt.Errorf("failed creating namespace %s: %s", m.Namespace, err)
 			}
 		}
-		// TODO: Write all objects to the API on a separate thread...
-		if err := ca.CreateOrUpdate(ctx, m.Namespace); err != nil {
-			return fmt.Errorf("failed to create or update '%s' deployment: %s", m.Name, err)
-		}
-		// TODO: write a status monitor entry point
 		deployCtx, cancel := context.WithTimeout(ctx, m.DeployTimeOut)
 		// make sure we run this cancel whatevs
 		defer cancel()
+		if err := ca.CreateOrUpdate(deployCtx, m.Namespace); err != nil {
+			return fmt.Errorf("failed to create or update '%s' deployment: %s", m.Name, err)
+		}
 		wg.Add(1)
 		// start a deployment thread:
 		logger.Infof("starting to wait for '%s' to become ready", ca.Component.Name)
@@ -236,17 +240,6 @@ func (s clusterappmanImpl) Run(ctx context.Context) error {
 	if err := createStatusConfig(ctx, s.RuntimeClient, components); err != nil {
 		return fmt.Errorf("error reporting status: %s", err)
 	}
-	// TODO:
-	// 3. Update check at other side...
-
-	// Further TODO:
-	// 2. start kore-helm-repo reconciler
-	// 3. watch for all application types from operators in our repo to monitor readiness across reszt of cluster estate...
-	// 3. de-serialize the parameters and deploy all the CRD's (probably using templates)
-	// 4. Ensure we have application types or status known for all CRD's and add to components list
-	// 4. re-start loop
-
-	// we shouldn't get here!
 	return nil
 }
 

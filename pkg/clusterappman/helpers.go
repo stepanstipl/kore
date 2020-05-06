@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	kcore "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/clusterapp"
@@ -87,6 +88,10 @@ func getClusterAppFromEmbeddedManifests(m manifest, cc client.Client) (clusterap
 			return clusterapp.Instance{}, err
 		}
 		deleteResfiles = append(deleteResfiles, file)
+	}
+	// TODO move the timeout to a feature of a clusterapp but for now
+	if m.DeployTimeOut == time.Minute*0 {
+		m.DeployTimeOut = DefaultAppTimeout
 	}
 	return clusterapp.NewAppFromManifestFiles(cc, m.Name, resfiles, deleteResfiles)
 }

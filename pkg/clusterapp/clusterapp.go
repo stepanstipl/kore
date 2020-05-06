@@ -101,39 +101,23 @@ func NewAppFromManifestFiles(client client.Client, name string, manifestfiles, d
 // the deafultNamespace is used if not otherwise specified.
 func (ca Instance) CreateOrUpdate(ctx context.Context, defaultNamepsace string) error {
 	for _, res := range ca.PreDeleteResources {
-		objMeta, err := getObjMeta(res)
-		if err != nil {
-			log.Errorf("error getting metadata for %v - %s", res, err)
-		}
-		if err := setMissingNamespace(defaultNamepsace, res); err != nil {
-			log.Debugf("error setting namespace for %v - %s", res, err)
-		}
-		log.Debugf(
-			"ensuring deprecated resource is deleted %s/%s",
-			objMeta.Namespace,
-			objMeta.Name,
-		)
+		getObjMetaAndSetDefaultNamespace(res, defaultNamepsace)
 		// Create / update / replace resources as required
 		if err := kubernetes.DeleteIfExists(ctx, ca.client, res); err != nil {
 			return err
 		}
 	}
 	for _, res := range ca.Resources {
-		objMeta, err := getObjMeta(res)
-		if err != nil {
-			log.Errorf("error getting metadata for %v - %s", res, err)
-		}
-		if err := setMissingNamespace(defaultNamepsace, res); err != nil {
-			log.Debugf("error setting namespace for %v - %s", res, err)
-		}
-		log.Debugf(
-			"deploying %s/%s",
-			objMeta.Namespace,
-			objMeta.Name,
-		)
-		// Create / update / replace resources as required
-		if _, err := kubernetes.CreateOrUpdate(ctx, ca.client, res); err != nil {
-			return err
+		objMeta := getObjMetaAndSetDefaultNamespace(res, defaultNamepsace)
+		// do not affect original object (we don't want to affect redeploy in loop)
+		resCopy := res.DeepCopyObject()
+		if err := waitOnKindDeploy(ctx, ca.client, resCopy); err != nil {
+			return fmt.Errorf(
+				"can not deploy %s of kind %s to namespace %s - %s",
+				objMeta.Name,
+				res.GetObjectKind().GroupVersionKind().Kind,
+				objMeta.Namespace,
+				err)
 		}
 	}
 	ca.Component.Status = kcore.PendingStatus
@@ -164,9 +148,6 @@ func (ca Instance) GetApplicationObjectName() string {
 	if ca.ApplicationObject == nil {
 		return ""
 	}
-	metaObj, err := getObjMeta(ca.ApplicationObject)
-	if err != nil {
-		return ""
-	}
+	metaObj := getObjMeta(ca.ApplicationObject)
 	return metaObj.Name
 }
