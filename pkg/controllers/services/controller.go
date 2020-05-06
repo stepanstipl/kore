@@ -20,6 +20,8 @@ import (
 	"context"
 	"time"
 
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 
 	"github.com/appvia/kore/pkg/controllers"
@@ -91,7 +93,11 @@ func (c *Controller) RunWithDependencies(ctx context.Context, mgr manager.Manage
 	c.logger.Debug("controller has been started")
 
 	// @step: setup watches for the resources
-	if err := c.ctrl.Watch(&source.Kind{Type: &servicesv1.Service{}}, &handler.EnqueueRequestForObject{}); err != nil {
+	if err := c.ctrl.Watch(
+		&source.Kind{Type: &servicesv1.Service{}},
+		&handler.EnqueueRequestForObject{},
+		&predicate.GenerationChangedPredicate{},
+	); err != nil {
 		c.logger.WithError(err).Error("failed to create watcher on Service resource")
 		return err
 	}
