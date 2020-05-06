@@ -21,8 +21,7 @@ type V1alpha1GKECredentialsSpec struct {
 	Account string `json:"account,omitempty"`
 
 	// credentials ref
-	// Required: true
-	CredentialsRef *V1SecretReference `json:"credentialsRef"`
+	CredentialsRef *V1SecretReference `json:"credentialsRef,omitempty"`
 
 	// project
 	// Required: true
@@ -52,8 +51,8 @@ func (m *V1alpha1GKECredentialsSpec) Validate(formats strfmt.Registry) error {
 
 func (m *V1alpha1GKECredentialsSpec) validateCredentialsRef(formats strfmt.Registry) error {
 
-	if err := validate.Required("credentialsRef", "body", m.CredentialsRef); err != nil {
-		return err
+	if swag.IsZero(m.CredentialsRef) { // not required
+		return nil
 	}
 
 	if m.CredentialsRef != nil {

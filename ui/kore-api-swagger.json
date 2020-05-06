@@ -6504,11 +6504,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
+        "userClaims",
         "clientID",
         "clientSecret",
         "issuer",
-        "clientScopes",
-        "userClaims"
+        "clientScopes"
       ],
       "properties": {
         "clientID": {
@@ -6907,8 +6907,7 @@
     },
     "v1alpha1.EKSCredentialsSpec": {
       "required": [
-        "accountID",
-        "credentialsRef"
+        "accountID"
       ],
       "properties": {
         "accessKeyID": {
@@ -7316,8 +7315,7 @@
     },
     "v1alpha1.GKECredentialsSpec": {
       "required": [
-        "project",
-        "credentialsRef"
+        "project"
       ],
       "properties": {
         "account": {

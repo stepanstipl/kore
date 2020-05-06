@@ -25,8 +25,7 @@ type V1alpha1EKSCredentialsSpec struct {
 	AccountID *string `json:"accountID"`
 
 	// credentials ref
-	// Required: true
-	CredentialsRef *V1SecretReference `json:"credentialsRef"`
+	CredentialsRef *V1SecretReference `json:"credentialsRef,omitempty"`
 
 	// secret access key
 	SecretAccessKey string `json:"secretAccessKey,omitempty"`
@@ -61,8 +60,8 @@ func (m *V1alpha1EKSCredentialsSpec) validateAccountID(formats strfmt.Registry) 
 
 func (m *V1alpha1EKSCredentialsSpec) validateCredentialsRef(formats strfmt.Registry) error {
 
-	if err := validate.Required("credentialsRef", "body", m.CredentialsRef); err != nil {
-		return err
+	if swag.IsZero(m.CredentialsRef) { // not required
+		return nil
 	}
 
 	if m.CredentialsRef != nil {

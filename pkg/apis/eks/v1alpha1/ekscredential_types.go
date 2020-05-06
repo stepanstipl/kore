@@ -37,7 +37,7 @@ type EKSCredentialsSpec struct {
 	AccessKeyID string `json:"accessKeyID,omitempty"`
 	// CredentialsRef is a reference to the credentials used to create clusters
 	// +kubebuilder:validation:Optional
-	CredentialsRef *v1.SecretReference `json:"credentialsRef"`
+	CredentialsRef *v1.SecretReference `json:"credentialsRef,omitempty"`
 }
 
 // EKSCredentialsStatus defines the observed state of EKSCredential

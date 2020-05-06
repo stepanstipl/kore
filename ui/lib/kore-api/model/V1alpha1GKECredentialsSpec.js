@@ -23,12 +23,11 @@ class V1alpha1GKECredentialsSpec {
     /**
      * Constructs a new <code>V1alpha1GKECredentialsSpec</code>.
      * @alias module:model/V1alpha1GKECredentialsSpec
-     * @param credentialsRef {module:model/V1SecretReference} 
      * @param project {String} 
      */
-    constructor(credentialsRef, project) { 
+    constructor(project) { 
         
-        V1alpha1GKECredentialsSpec.initialize(this, credentialsRef, project);
+        V1alpha1GKECredentialsSpec.initialize(this, project);
     }
 
     /**
@@ -36,8 +35,7 @@ class V1alpha1GKECredentialsSpec {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, credentialsRef, project) { 
-        obj['credentialsRef'] = credentialsRef;
+    static initialize(obj, project) { 
         obj['project'] = project;
     }
 
