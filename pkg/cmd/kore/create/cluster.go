@@ -68,10 +68,15 @@ $ kore -t <myteam> create cluster dev --param authProxyAllowedIPs.-1=127.0.0.0/8
 # Alternatively you can use json directly
 $ kore -t <myteam> create cluster dev --param nodeGroups.1'='{json}|[json]'
 
+Note if you only have the one allocation for a given cloud provider in your team you can
+forgo the the need to specify the credentials allocation (-a|--allocation) as they will be
+automatically provisioned for you.
+
 Now update your kubeconfig to use your team's provisioned cluster.
 $ kore kubeconfig -t <myteam>
 
-This will modify your ${HOME}/.kube/config. Now you can use 'kubectl' to interact with your team's cluster.
+This will modify your ${HOME}/.kube/config. Now you can use 'kubectl' to interact with your
+team's cluster.
 `
 )
 
@@ -123,11 +128,11 @@ func NewCmdCreateCluster(factory cmdutil.Factory) *cobra.Command {
 	flags.BoolVarP(&o.ShowTime, "show-time", "T", false, "shows the time it took to successfully provision a new cluster `BOOL`")
 	flags.BoolVarP(&o.DryRun, "dry-run", "", false, "if true it will print the cluster object and won't call the API `BOOL`")
 
-	cmdutils.MustMarkFlagRequired(command, "allocation")
 	cmdutils.MustMarkFlagRequired(command, "plan")
 
 	// @step: register the autocompletions
 	cmdutils.MustRegisterFlagCompletionFunc(command, "allocation", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.ShellCompDirective) {
+
 		list := &configv1.AllocationList{}
 		if err := o.ClientWithTeamResource(cmdutil.GetTeam(cmd), o.Resources().MustLookup("allocation")).Result(list).Get().Error(); err != nil {
 			return nil, cobra.ShellCompDirectiveError
@@ -135,7 +140,7 @@ func NewCmdCreateCluster(factory cmdutil.Factory) *cobra.Command {
 		var filtered []string
 		for _, x := range list.Items {
 			switch x.Spec.Resource.Kind {
-			case "GKECredentials", "EKSCredentials", "ProjectClaim":
+			case "GKECredentials", "EKSCredentials":
 				filtered = append(filtered, x.Name)
 			}
 		}
@@ -167,20 +172,32 @@ func (o *CreateClusterOptions) Validate() error {
 		return errors.ErrMissingResourceName
 	}
 
-	found, err := o.ClientWithTeamResource(o.Team, o.Resources().MustLookup("allocation")).Name(o.Allocation).Exists()
-	if err != nil {
-		return err
-	}
-	if !found {
-		return errors.NewResourceNotFoundWithKind(o.Allocation, "allocation")
-	}
-
-	found, err = o.ClientWithResource(o.Resources().MustLookup("plan")).Name(o.Plan).Exists()
+	found, err := o.ClientWithResource(o.Resources().MustLookup("plan")).Name(o.Plan).Exists()
 	if err != nil {
 		return err
 	}
 	if !found {
 		return errors.NewResourceNotFoundWithKind(o.Plan, "plan")
+	}
+
+	// if no allocation has been defined we need to check we can default
+	switch o.Allocation == "" {
+	case true:
+		available, err := o.GetDefaultAllocation(o.Plan)
+		if err != nil {
+			return err
+		}
+		if available == nil {
+			return fmt.Errorf("team has multiple allocations for, use -a <name> ($ kore get allocations -- for listing)")
+		}
+	default:
+		found, err := o.ClientWithTeamResource(o.Team, o.Resources().MustLookup("allocation")).Name(o.Allocation).Exists()
+		if err != nil {
+			return err
+		}
+		if !found {
+			return errors.NewResourceNotFoundWithKind(o.Allocation, "allocation")
+		}
 	}
 
 	match := regexp.MustCompile("^.*=.*$")
@@ -242,7 +259,7 @@ func (o *CreateClusterOptions) Run() error {
 	return nil
 }
 
-// CreateClusterConfiguration is responsible for generating the cluster config
+// CreateCluster is responsible for generating the cluster config
 func (o *CreateClusterOptions) CreateCluster() (*clustersv1.Cluster, error) {
 	// @step: retrieve the plan, allocation and user auth
 	plan, err := o.GetPlan()
@@ -347,6 +364,53 @@ func (o *CreateClusterOptions) CreateClusterNamespace(name string) error {
 	)
 }
 
+// GetDefaultAllocation is responsible for retrieve a default allocation for the cluster
+// i.e. if we are using plan x and we only have a one allocation that suits it, we can use that
+func (o *CreateClusterOptions) GetDefaultAllocation(planName string) (*configv1.Allocation, error) {
+	plan := &configv1.Plan{}
+
+	err := o.ClientWithResource(o.Resources().MustLookup("plan")).
+		Name(o.Plan).
+		Result(plan).
+		Get().
+		Error()
+	if err != nil {
+		return nil, err
+	}
+
+	list := &configv1.AllocationList{}
+	err = o.ClientWithTeamResource(o.Team, o.Resources().MustLookup("allocation")).
+		Result(list).
+		Get().
+		Error()
+	if err != nil {
+		return nil, err
+	}
+
+	var available []configv1.Allocation
+
+	matcher := map[string]string{
+		"GKE": "GKECredentials",
+		"EKS": "EKSCredentials",
+	}
+	for _, x := range list.Items {
+		expected, found := matcher[plan.Spec.Kind]
+		if !found {
+			continue
+		}
+		if x.Spec.Resource.Kind == expected {
+			available = append(available, x)
+		}
+	}
+
+	switch len(available) {
+	case 1:
+		return &available[0], nil
+	default:
+		return nil, nil
+	}
+}
+
 // GetPlan retrieve the requested cluster plan
 func (o *CreateClusterOptions) GetPlan() (*configv1.Plan, error) {
 	plan := &configv1.Plan{}
@@ -361,6 +425,10 @@ func (o *CreateClusterOptions) GetPlan() (*configv1.Plan, error) {
 // GetAllocation retrieve the request allocation
 func (o *CreateClusterOptions) GetAllocation() (*configv1.Allocation, error) {
 	allocation := &configv1.Allocation{}
+
+	if o.Allocation == "" {
+		return o.GetDefaultAllocation(o.Plan)
+	}
 
 	return allocation, o.ClientWithTeamResource(o.Team, o.Resources().MustLookup("allocation")).
 		Name(o.Allocation).

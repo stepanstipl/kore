@@ -153,9 +153,11 @@ func (f *factory) WaitForCreation(request client.RestInterface, nowait bool) err
 
 	// @step: craft the status from the resource type - used later
 	status := fmt.Sprintf("kore get %s", strings.ToLower(kind))
-	team, found := request.HasParamater("team")
-	if found {
-		status = fmt.Sprintf("%s -t %s", status, team)
+	if v, found := request.HasParamater("name"); found {
+		status = fmt.Sprintf("%s %s", status, v)
+	}
+	if v, found := request.HasParamater("team"); found {
+		status = fmt.Sprintf("%s -t %s", status, v)
 	}
 
 	err = kutils.WaitUntilComplete(ctx, 20*time.Minute, 5*time.Second, func() (bool, error) {
