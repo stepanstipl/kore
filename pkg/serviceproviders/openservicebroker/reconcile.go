@@ -83,7 +83,7 @@ func (p *Provider) Reconcile(
 		InstanceID:        service.Status.ProviderID,
 		AcceptsIncomplete: true,
 		ServiceID:         providerPlan.serviceID,
-		PlanID:            providerPlan.id,
+		PlanID:            providerPlan.osbPlan.ID,
 		OrganizationGUID:  "Kore",
 		SpaceGUID:         service.Namespace,
 		Context: map[string]interface{}{
@@ -154,7 +154,7 @@ func (p *Provider) update(
 		InstanceID:        service.Status.ProviderID,
 		AcceptsIncomplete: true,
 		ServiceID:         providerPlan.serviceID,
-		PlanID:            utils.StringPtr(providerPlan.id),
+		PlanID:            utils.StringPtr(providerPlan.osbPlan.ID),
 		Parameters:        config,
 		Context: map[string]interface{}{
 			"team": service.Namespace,

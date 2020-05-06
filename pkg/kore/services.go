@@ -172,6 +172,20 @@ func (s *servicesImpl) Update(ctx context.Context, service *servicesv1.Service) 
 		)
 	}
 
+	kind, err := s.serviceKinds.Get(ctx, service.Spec.Kind)
+	if err != nil {
+		if err == ErrNotFound {
+			return validation.NewError("%q failed validation", service.Name).
+				WithFieldErrorf("kind", validation.InvalidType, "%q is not a known service kind", service.Spec.Kind)
+		}
+		return err
+	}
+
+	if !kind.Spec.Enabled {
+		return validation.NewError("%q failed validation", service.Name).
+			WithFieldErrorf("kind", validation.InvalidType, "%q is not enabled", service.Spec.Kind)
+	}
+
 	provider := s.serviceProviders.GetProviderForKind(service.Spec.Kind)
 	if provider == nil {
 		return validation.NewError("%q failed validation", service.Name).

@@ -53,7 +53,7 @@ func (p *Provider) pollLastBindingOperation(
 		InstanceID:   service.Status.ProviderID,
 		BindingID:    creds.Status.ProviderID,
 		ServiceID:    utils.StringPtr(providerPlan.serviceID),
-		PlanID:       utils.StringPtr(providerPlan.id),
+		PlanID:       utils.StringPtr(providerPlan.osbPlan.ID),
 		OperationKey: providerData.Operation,
 	})
 	if err != nil {

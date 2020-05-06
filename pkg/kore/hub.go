@@ -58,6 +58,8 @@ type hubImpl struct {
 	audit Audit
 	// serviceplans is the ServicePlans implementation
 	servicePlans ServicePlans
+	// servicekinds is the ServiceKinds implementation
+	serviceKinds ServiceKinds
 	// serviceProviders is the ServiceProviders implementation
 	serviceProviders ServiceProviders
 	// security provides the ability to scan kore objects for security compliance
@@ -107,6 +109,7 @@ func New(sc store.Store, persistenceMgr persistence.Interface, config Config) (I
 	h.users = &usersImpl{hubImpl: h}
 	h.audit = &auditImpl{auditPersist: persistenceMgr.Audit()}
 	h.servicePlans = &servicePlansImpl{Interface: h}
+	h.serviceKinds = &serviceKindsImpl{Interface: h}
 	h.serviceProviders = &serviceProvidersImpl{Interface: h}
 	h.security = &securityImpl{
 		scanner:         security.New(),
@@ -210,6 +213,11 @@ func (h hubImpl) Store() store.Store {
 // ServicePlans returns the serviceplans interface
 func (h hubImpl) ServicePlans() ServicePlans {
 	return h.servicePlans
+}
+
+// ServiceKinds returns the service interface
+func (h hubImpl) ServiceKinds() ServiceKinds {
+	return h.serviceKinds
 }
 
 func (h hubImpl) ServiceProviders() ServiceProviders {

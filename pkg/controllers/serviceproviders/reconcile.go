@@ -76,10 +76,27 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 					return reconcile.Result{}, err
 				}
 
-				kinds := provider.Kinds()
-				sort.Strings(kinds)
+				var supportedKinds []string
+				for _, kind := range provider.Kinds() {
+					supportedKinds = append(supportedKinds, kind.Name)
+				}
+				sort.Strings(supportedKinds)
 
-				serviceProvider.Status.SupportedKinds = kinds
+				serviceProvider.Status.SupportedKinds = supportedKinds
+
+				for _, kind := range provider.Kinds() {
+					kind.Namespace = kore.HubNamespace
+					exists, err := kubernetes.CheckIfExists(ctx, c.mgr.GetClient(), &kind)
+					if err != nil {
+						return reconcile.Result{}, err
+					}
+
+					if !exists {
+						if err := c.mgr.GetClient().Create(ctx, &kind); err != nil {
+							return reconcile.Result{}, err
+						}
+					}
+				}
 
 				for _, plan := range provider.Plans() {
 					plan.Name = fmt.Sprintf("%s-%s", plan.Spec.Kind, plan.Name)

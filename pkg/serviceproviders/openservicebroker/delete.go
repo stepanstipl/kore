@@ -64,7 +64,7 @@ func (p *Provider) Delete(
 		InstanceID:        service.Status.ProviderID,
 		AcceptsIncomplete: true,
 		ServiceID:         providerPlan.serviceID,
-		PlanID:            providerPlan.id,
+		PlanID:            providerPlan.osbPlan.ID,
 	})
 	if err != nil {
 		if isHttpNotFound(err) {

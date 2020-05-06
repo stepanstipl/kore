@@ -67,6 +67,8 @@ type Interface interface {
 	PlanPolicies() PlanPolicies
 	// ServicePlans returns the interface for service plans
 	ServicePlans() ServicePlans
+	// ServiceKinds returns the interface for service plans
+	ServiceKinds() ServiceKinds
 	// ServiceProviders returns the service provider registry
 	ServiceProviders() ServiceProviders
 	// IDP returns the IDP interface

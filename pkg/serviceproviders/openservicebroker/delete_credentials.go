@@ -67,7 +67,7 @@ func (p *Provider) DeleteCredentials(
 		InstanceID:        service.Status.ProviderID,
 		BindingID:         creds.Status.ProviderID,
 		ServiceID:         providerPlan.serviceID,
-		PlanID:            providerPlan.id,
+		PlanID:            providerPlan.osbPlan.ID,
 	}
 
 	resp, err := p.client.Unbind(unbindRequest)

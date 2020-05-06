@@ -37,6 +37,8 @@ type ClientService interface {
 
 	DeleteServiceCredentials(params *DeleteServiceCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteServiceCredentialsOK, error)
 
+	DeleteServiceKind(params *DeleteServiceKindParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteServiceKindOK, error)
+
 	DeleteServicePLan(params *DeleteServicePLanParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteServicePLanOK, error)
 
 	DeleteServiceProvider(params *DeleteServiceProviderParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteServiceProviderOK, error)
@@ -86,6 +88,8 @@ type ClientService interface {
 	GetService(params *GetServiceParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceOK, error)
 
 	GetServiceCredentials(params *GetServiceCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceCredentialsOK, error)
+
+	GetServiceKind(params *GetServiceKindParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceKindOK, error)
 
 	GetServicePlan(params *GetServicePlanParams, authInfo runtime.ClientAuthInfoWriter) (*GetServicePlanOK, error)
 
@@ -144,6 +148,8 @@ type ClientService interface {
 	ListSecurityScansForResource(params *ListSecurityScansForResourceParams, authInfo runtime.ClientAuthInfoWriter) (*ListSecurityScansForResourceOK, error)
 
 	ListServiceCredentials(params *ListServiceCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*ListServiceCredentialsOK, error)
+
+	ListServiceKinds(params *ListServiceKindsParams, authInfo runtime.ClientAuthInfoWriter) (*ListServiceKindsOK, error)
 
 	ListServicePlans(params *ListServicePlansParams, authInfo runtime.ClientAuthInfoWriter) (*ListServicePlansOK, error)
 
@@ -216,6 +222,8 @@ type ClientService interface {
 	UpdateService(params *UpdateServiceParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateServiceOK, error)
 
 	UpdateServiceCredentials(params *UpdateServiceCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateServiceCredentialsOK, error)
+
+	UpdateServiceKind(params *UpdateServiceKindParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateServiceKindOK, error)
 
 	UpdateServicePlan(params *UpdateServicePlanParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateServicePlanOK, error)
 
@@ -422,6 +430,41 @@ func (a *Client) DeleteServiceCredentials(params *DeleteServiceCredentialsParams
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for DeleteServiceCredentials: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  DeleteServiceKind deletes a service kind
+*/
+func (a *Client) DeleteServiceKind(params *DeleteServiceKindParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteServiceKindOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewDeleteServiceKindParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "DeleteServiceKind",
+		Method:             "DELETE",
+		PathPattern:        "/api/v1alpha1/servicekinds/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &DeleteServiceKindReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*DeleteServiceKindOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for DeleteServiceKind: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1292,6 +1335,41 @@ func (a *Client) GetServiceCredentials(params *GetServiceCredentialsParams, auth
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for GetServiceCredentials: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  GetServiceKind returns a specific service kind
+*/
+func (a *Client) GetServiceKind(params *GetServiceKindParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceKindOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetServiceKindParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "GetServiceKind",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/servicekinds/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetServiceKindReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetServiceKindOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetServiceKind: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -2302,6 +2380,41 @@ func (a *Client) ListServiceCredentials(params *ListServiceCredentialsParams, au
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for ListServiceCredentials: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  ListServiceKinds returns all the available service kinds
+*/
+func (a *Client) ListServiceKinds(params *ListServiceKindsParams, authInfo runtime.ClientAuthInfoWriter) (*ListServiceKindsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewListServiceKindsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "ListServiceKinds",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/servicekinds",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &ListServiceKindsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*ListServiceKindsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for ListServiceKinds: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -3554,6 +3667,41 @@ func (a *Client) UpdateServiceCredentials(params *UpdateServiceCredentialsParams
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for UpdateServiceCredentials: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  UpdateServiceKind creates or updates a service kind
+*/
+func (a *Client) UpdateServiceKind(params *UpdateServiceKindParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateServiceKindOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewUpdateServiceKindParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "UpdateServiceKind",
+		Method:             "PUT",
+		PathPattern:        "/api/v1alpha1/servicekinds/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &UpdateServiceKindReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*UpdateServiceKindOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for UpdateServiceKind: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

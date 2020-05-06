@@ -97,7 +97,7 @@ type ServiceProvider interface {
 	// Name returns a unique id for the service provider
 	Name() string
 	// Kinds returns a list of service kinds supported by this provider. All kinds must be unique
-	Kinds() []string
+	Kinds() []servicesv1.ServiceKind
 	// Plans returns all default service plans for this provider
 	Plans() []servicesv1.ServicePlan
 	// PlanJSONSchema returns the JSON schema for the given service kind and plan
@@ -272,7 +272,12 @@ func (p *serviceProvidersImpl) Register(ctx context.Context, serviceProvider *se
 		return nil, err
 	}
 
+	var supportedKinds []string
 	for _, kind := range provider.Kinds() {
+		supportedKinds = append(supportedKinds, kind.Name)
+	}
+
+	for _, kind := range supportedKinds {
 		if p, registered := p.providers[kind]; registered {
 			if p.Name() != serviceProvider.Name {
 				return nil, fmt.Errorf("service kind is already registered by an other service provider: %s", p.Name())
@@ -282,7 +287,7 @@ func (p *serviceProvidersImpl) Register(ctx context.Context, serviceProvider *se
 
 	// check for removed kinds
 	for kind, provider := range p.providers {
-		if provider.Name() == serviceProvider.Name && !utils.Contains(kind, provider.Kinds()) {
+		if provider.Name() == serviceProvider.Name && !utils.Contains(kind, supportedKinds) {
 			if err := p.unregisterKind(ctx, kind); err != nil {
 				return nil, err
 			}
@@ -293,7 +298,7 @@ func (p *serviceProvidersImpl) Register(ctx context.Context, serviceProvider *se
 		p.providers = map[string]ServiceProvider{}
 	}
 
-	for _, kind := range provider.Kinds() {
+	for _, kind := range supportedKinds {
 		p.providers[kind] = provider
 	}
 
@@ -317,9 +322,14 @@ func (p *serviceProvidersImpl) unregisterKind(ctx context.Context, kind string) 
 		return fmt.Errorf("failed to get service plans: %w", err)
 	}
 	for _, plan := range plans.Items {
-		if _, err := p.ServicePlans().Delete(ctx, plan.Name); err != nil {
+		if _, err := p.ServicePlans().Delete(ctx, plan.Name); err != nil && err != ErrNotFound {
 			return fmt.Errorf("failed to delete service plan %q: %w", plan.Name, err)
 		}
+	}
+
+	_, err = p.ServiceKinds().Delete(ctx, kind)
+	if err != nil && err != ErrNotFound {
+		return fmt.Errorf("failed to delete service kind: %w", err)
 	}
 
 	p.providersLock.Lock()

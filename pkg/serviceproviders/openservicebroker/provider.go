@@ -24,7 +24,6 @@ import (
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/kore/assets"
-	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/jsonschema"
 
 	osb "github.com/kubernetes-sigs/go-open-service-broker-client/v2"
@@ -33,30 +32,32 @@ import (
 )
 
 const (
-	DefaultPlan              = "kore-default"
-	MetadataKeyConfiguration = "kore.appvia.io/configuration"
-	ComponentProvision       = "Provision"
-	ComponentUpdate          = "Update"
-	ComponentDeprovision     = "Deprovision"
-	ComponentBind            = "Bind"
-	ComponentUnbind          = "Unbind"
+	DefaultPlan                 = "kore-default"
+	MetadataKeyConfiguration    = "kore.appvia.io/configuration"
+	MetadataKeyDisplayName      = "displayName"
+	MetadataKeyImageURL         = "imageUrl"
+	MetadataKeyDescription      = "longDescription"
+	MetadataKeyDocumentationURL = "documentationUrl"
+	ComponentProvision          = "Provision"
+	ComponentUpdate             = "Update"
+	ComponentDeprovision        = "Deprovision"
+	ComponentBind               = "Bind"
+	ComponentUnbind             = "Unbind"
 )
 
 var _ kore.ServiceProvider = &Provider{}
 
 type providerService struct {
-	id          string
-	bindable    bool
+	osbService  osb.Service
 	defaultPlan *providerPlan
 	plans       map[string]providerPlan
 }
 
 type providerPlan struct {
+	osbPlan           osb.Plan
 	name              string
-	id                string
 	serviceID         string
 	schema            string
-	bindable          bool
 	credentialsSchema string
 }
 
@@ -82,9 +83,8 @@ func NewProvider(name string, client osb.Client) (*Provider, error) {
 		}
 
 		service := providerService{
-			id:       catalogService.ID,
-			plans:    map[string]providerPlan{},
-			bindable: catalogService.Bindable,
+			osbService: catalogService,
+			plans:      map[string]providerPlan{},
 		}
 
 		for _, catalogPlan := range catalogService.Plans {
@@ -108,10 +108,9 @@ func NewProvider(name string, client osb.Client) (*Provider, error) {
 			}
 
 			plan := providerPlan{
+				osbPlan:           catalogPlan,
 				name:              catalogPlan.Name,
-				id:                catalogPlan.ID,
 				serviceID:         catalogService.ID,
-				bindable:          utils.BoolValue(catalogPlan.Bindable),
 				schema:            schema,
 				credentialsSchema: credentialsSchema,
 			}
@@ -151,12 +150,28 @@ func (p *Provider) Type() string {
 	return "openservicebroker"
 }
 
-func (p *Provider) Kinds() []string {
-	var kinds []string
-	for kind := range p.services {
-		kinds = append(kinds, kind)
+func (p *Provider) Kinds() []servicesv1.ServiceKind {
+	var res []servicesv1.ServiceKind
+	for _, service := range p.services {
+		res = append(res, servicesv1.ServiceKind{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       servicesv1.ServiceKindGVK.Kind,
+				APIVersion: servicesv1.GroupVersion.String(),
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      service.osbService.Name,
+				Namespace: kore.HubNamespace,
+			},
+			Spec: servicesv1.ServiceKindSpec{
+				Summary:          service.osbService.Description,
+				DisplayName:      getMetadataStringVal(service.osbService.Metadata, MetadataKeyDisplayName, ""),
+				Description:      getMetadataStringVal(service.osbService.Metadata, MetadataKeyDescription, ""),
+				ImageURL:         getMetadataStringVal(service.osbService.Metadata, MetadataKeyImageURL, ""),
+				DocumentationURL: getMetadataStringVal(service.osbService.Metadata, MetadataKeyDocumentationURL, ""),
+			},
+		})
 	}
-	return kinds
+	return res
 }
 
 func (p *Provider) Plans() []servicesv1.ServicePlan {
@@ -298,4 +313,15 @@ func parseSchema(subject string, val interface{}) (string, error) {
 		return "", err
 	}
 	return schema, nil
+}
+
+func getMetadataStringVal(metadata map[string]interface{}, key, def string) string {
+	val, ok := metadata[key]
+	if ok {
+		if strVal, ok := val.(string); ok && strVal != "" {
+			return strVal
+		}
+	}
+
+	return def
 }

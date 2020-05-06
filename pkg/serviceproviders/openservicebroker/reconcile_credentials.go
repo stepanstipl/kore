@@ -78,7 +78,7 @@ func (p *Provider) ReconcileCredentials(
 		BindingID:         creds.Status.ProviderID,
 		InstanceID:        service.Status.ProviderID,
 		ServiceID:         providerPlan.serviceID,
-		PlanID:            providerPlan.id,
+		PlanID:            providerPlan.osbPlan.ID,
 		Parameters:        config,
 	}
 
