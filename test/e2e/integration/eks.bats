@@ -23,7 +23,7 @@ setup() {
 }
 
 @test "We should be able to apply the EKS credentials" {
-  runit "${KORE} apply -f ${BASE_DIR}/e2eci/eks-credentials.yml -t kore-admin"
+  runit "${KORE} apply -f ${BASE_DIR}/e2eci/eks-credentials.yml -t kore-admin 2>&1 >/dev/null"
   [[ "$status" -eq 0 ]]
   runit "${KORE} get ekscredentials aws -t kore-admin"
   [[ "$status" -eq 0 ]]
