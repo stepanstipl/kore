@@ -19,6 +19,7 @@ package serviceproviders
 import (
 	"context"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/appvia/kore/pkg/kore"
@@ -75,7 +76,10 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 					return reconcile.Result{}, err
 				}
 
-				serviceProvider.Status.SupportedKinds = provider.Kinds()
+				kinds := provider.Kinds()
+				sort.Strings(kinds)
+
+				serviceProvider.Status.SupportedKinds = kinds
 
 				for _, plan := range provider.Plans() {
 					plan.Name = fmt.Sprintf("%s-%s", plan.Spec.Kind, plan.Name)
