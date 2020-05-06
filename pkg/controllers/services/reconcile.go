@@ -63,9 +63,9 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 	provider := c.ServiceProviders().GetProviderForKind(service.Spec.Kind)
 	if provider == nil {
 		logger.Errorf("provider not found for service kind %q", service.Spec.Kind)
-		service.Status.Status = corev1.FailureStatus
+		service.Status.Status = corev1.ErrorStatus
 		service.Status.Message = fmt.Sprintf("provider not found for service kind %q", service.Spec.Kind)
-		return reconcile.Result{}, nil
+		return reconcile.Result{Requeue: true}, nil
 	}
 
 	finalizer := kubernetes.NewFinalizer(c.mgr.GetClient(), finalizerName)
