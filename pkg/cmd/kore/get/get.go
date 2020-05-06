@@ -19,6 +19,7 @@ package get
 import (
 	"github.com/appvia/kore/pkg/cmd/errors"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/render"
 
 	"github.com/spf13/cobra"
@@ -54,8 +55,6 @@ type GetOptions struct {
 	Team string
 	// Output is the output format
 	Output string
-	// NoWait indicates if we should wait for a resource to provision
-	NoWait bool
 	// Headers indicates no headers on the table output
 	Headers bool
 }
@@ -100,6 +99,12 @@ func NewCmdGet(factory cmdutil.Factory) *cobra.Command {
 		NewCmdGetAdmin(factory),
 		NewCmdGetAudit(factory),
 	)
+
+	if factory.Config().FeatureGates[kore.FeatureGateServices] {
+		command.AddCommand(
+			NewCmdGetServicePlan(factory),
+		)
+	}
 
 	return command
 }
