@@ -1341,7 +1341,7 @@ var _ = Describe("Provider", func() {
 				Expect(client.UnbindCallCount()).To(Equal(1))
 
 				req := client.UnbindArgsForCall(0)
-				Expect(req.AcceptsIncomplete).To(BeFalse())
+				Expect(req.AcceptsIncomplete).To(BeTrue())
 				Expect(req.BindingID).To(Equal(KoreServiceCredentialsID))
 				Expect(req.InstanceID).To(Equal(KoreServiceID))
 				Expect(req.ServiceID).To(Equal(Service1ID))

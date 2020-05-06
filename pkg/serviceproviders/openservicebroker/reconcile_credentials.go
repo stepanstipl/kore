@@ -73,14 +73,21 @@ func (p *Provider) ReconcileCredentials(
 
 	ctx.Logger.Debug("calling bind on service broker")
 
-	resp, err := p.client.Bind(&osb.BindRequest{
+	bindRequest := &osb.BindRequest{
 		AcceptsIncomplete: true,
 		BindingID:         creds.Status.ProviderID,
 		InstanceID:        service.Status.ProviderID,
 		ServiceID:         providerPlan.serviceID,
 		PlanID:            providerPlan.id,
 		Parameters:        config,
-	})
+	}
+
+	resp, err := p.client.Bind(bindRequest)
+	if err != nil && osb.IsAsyncBindingOperationsNotAllowedError(err) {
+		bindRequest.AcceptsIncomplete = false
+		resp, err = p.client.Bind(bindRequest)
+	}
+
 	if err != nil {
 		return reconcile.Result{}, nil, handleError(component, "failed to call bind on the service broker", err)
 	}

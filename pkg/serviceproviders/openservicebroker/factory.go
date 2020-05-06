@@ -45,6 +45,9 @@ func (d ProviderFactory) JSONSchema() string {
 			"url"
 		],
 		"properties": {
+			"enable_alpha_features": {
+				"type": "boolean"
+			},
 			"url": {
 				"type": "string",
 				"minLength": 1
