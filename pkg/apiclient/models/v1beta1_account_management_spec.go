@@ -19,10 +19,6 @@ import (
 // swagger:model v1beta1.AccountManagementSpec
 type V1beta1AccountManagementSpec struct {
 
-	// managed
-	// Required: true
-	Managed *bool `json:"managed"`
-
 	// organization
 	Organization *V1Ownership `json:"organization,omitempty"`
 
@@ -37,10 +33,6 @@ type V1beta1AccountManagementSpec struct {
 // Validate validates this v1beta1 account management spec
 func (m *V1beta1AccountManagementSpec) Validate(formats strfmt.Registry) error {
 	var res []error
-
-	if err := m.validateManaged(formats); err != nil {
-		res = append(res, err)
-	}
 
 	if err := m.validateOrganization(formats); err != nil {
 		res = append(res, err)
@@ -57,15 +49,6 @@ func (m *V1beta1AccountManagementSpec) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *V1beta1AccountManagementSpec) validateManaged(formats strfmt.Registry) error {
-
-	if err := validate.Required("managed", "body", m.Managed); err != nil {
-		return err
-	}
-
 	return nil
 }
 

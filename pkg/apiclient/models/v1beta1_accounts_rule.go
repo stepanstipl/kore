@@ -17,6 +17,12 @@ import (
 // swagger:model v1beta1.AccountsRule
 type V1beta1AccountsRule struct {
 
+	// description
+	Description string `json:"description,omitempty"`
+
+	// exact
+	Exact string `json:"exact,omitempty"`
+
 	// labels
 	Labels map[string]string `json:"labels,omitempty"`
 

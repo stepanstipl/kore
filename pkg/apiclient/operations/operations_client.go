@@ -231,8 +231,6 @@ type ClientService interface {
 
 	DeleteEKSVPC(params *DeleteEKSVPCParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteEKSVPCOK, error)
 
-	DeleteProjectClaim(params *DeleteProjectClaimParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteProjectClaimOK, error)
-
 	FindEKS(params *FindEKSParams, authInfo runtime.ClientAuthInfoWriter) (*FindEKSOK, error)
 
 	FindEKSNodeGroup(params *FindEKSNodeGroupParams, authInfo runtime.ClientAuthInfoWriter) (*FindEKSNodeGroupOK, error)
@@ -250,8 +248,6 @@ type ClientService interface {
 	FindProjectClaims(params *FindProjectClaimsParams, authInfo runtime.ClientAuthInfoWriter) (*FindProjectClaimsOK, error)
 
 	UpdateEKSVPC(params *UpdateEKSVPCParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateEKSVPCOK, error)
-
-	UpdateProjectClaim(params *UpdateProjectClaimParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateProjectClaimOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
 }
@@ -601,6 +597,41 @@ func (a *Client) GenerateInviteLinkForUser(params *GenerateInviteLinkForUserPara
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for GenerateInviteLinkForUser: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  GetAccount returns a specific account account from the kore
+*/
+func (a *Client) GetAccount(params *GetAccountParams, authInfo runtime.ClientAuthInfoWriter) (*GetAccountOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetAccountParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "GetAccount",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/accountmanagements/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetAccountReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetAccountOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetAccount: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1615,6 +1646,41 @@ func (a *Client) InviteUser(params *InviteUserParams, authInfo runtime.ClientAut
 }
 
 /*
+  ListAccounts returns all the accounts available to initialized in the kore
+*/
+func (a *Client) ListAccounts(params *ListAccountsParams, authInfo runtime.ClientAuthInfoWriter) (*ListAccountsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewListAccountsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "ListAccounts",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/accountmanagements",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &ListAccountsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*ListAccountsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for ListAccounts: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
   ListAllocations useds to return a list of all the allocations in the team
 */
 func (a *Client) ListAllocations(params *ListAllocationsParams, authInfo runtime.ClientAuthInfoWriter) (*ListAllocationsOK, error) {
@@ -2623,6 +2689,41 @@ func (a *Client) LoginCallback(params *LoginCallbackParams, authInfo runtime.Cli
 }
 
 /*
+  RemoveAccount useds to delete a account from the kore
+*/
+func (a *Client) RemoveAccount(params *RemoveAccountParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveAccountOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewRemoveAccountParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "RemoveAccount",
+		Method:             "DELETE",
+		PathPattern:        "/api/v1alpha1/accountmanagements/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &RemoveAccountReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*RemoveAccountOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for RemoveAccount: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
   RemoveAllocation removes an allocation from a team
 */
 func (a *Client) RemoveAllocation(params *RemoveAllocationParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveAllocationOK, error) {
@@ -3003,6 +3104,41 @@ func (a *Client) StoreSecurityScanForResource(params *StoreSecurityScanForResour
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for StoreSecurityScanForResource: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  UpdateAccount useds to create or update a account in the kore
+*/
+func (a *Client) UpdateAccount(params *UpdateAccountParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateAccountOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewUpdateAccountParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "UpdateAccount",
+		Method:             "PUT",
+		PathPattern:        "/api/v1alpha1/accountmanagements/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &UpdateAccountReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*UpdateAccountOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for UpdateAccount: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -3666,40 +3802,6 @@ func (a *Client) DeleteEKSVPC(params *DeleteEKSVPCParams, authInfo runtime.Clien
 }
 
 /*
-  DeleteProjectClaim is used to delete a managed gcp project claim
-*/
-func (a *Client) DeleteProjectClaim(params *DeleteProjectClaimParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteProjectClaimOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewDeleteProjectClaimParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "deleteProjectClaim",
-		Method:             "DELETE",
-		PathPattern:        "/api/v1alpha1/teams/{team}/projectclaims/{name}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &DeleteProjectClaimReader{formats: a.formats},
-		AuthInfo:           authInfo,
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*DeleteProjectClaimOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	unexpectedSuccess := result.(*DeleteProjectClaimDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
-}
-
-/*
   FindEKS is the used to return a e k s cluster which the team has access
 */
 func (a *Client) FindEKS(params *FindEKSParams, authInfo runtime.ClientAuthInfoWriter) (*FindEKSOK, error) {
@@ -4002,40 +4104,6 @@ func (a *Client) UpdateEKSVPC(params *UpdateEKSVPCParams, authInfo runtime.Clien
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*UpdateEKSVPCDefault)
-	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
-}
-
-/*
-  UpdateProjectClaim is used to provision or update a gcp project claim
-*/
-func (a *Client) UpdateProjectClaim(params *UpdateProjectClaimParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateProjectClaimOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewUpdateProjectClaimParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "updateProjectClaim",
-		Method:             "PUT",
-		PathPattern:        "/api/v1alpha1/teams/{team}/projectclaims/{name}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &UpdateProjectClaimReader{formats: a.formats},
-		AuthInfo:           authInfo,
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*UpdateProjectClaimOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	unexpectedSuccess := result.(*UpdateProjectClaimDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
