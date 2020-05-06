@@ -1,3 +1,7 @@
+## Release v0.2.0 - 2020-05-06
+
+TBC
+
 ## Release v0.1.0 - 2020-04-27
 
 The first beta release of Kore delivers the following key themes:
