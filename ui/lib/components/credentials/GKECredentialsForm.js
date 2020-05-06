@@ -6,10 +6,14 @@ import V1SecretSpec from '../../kore-api/model/V1SecretSpec'
 import V1SecretReference from '../../kore-api/model/V1SecretReference'
 import VerifiedAllocatedResourceForm from '../resources/VerifiedAllocatedResourceForm'
 import KoreApi from '../../kore-api'
-import { Form, Input, Alert, Card } from 'antd'
+import { Form, Input, Alert, Card, Checkbox } from 'antd'
 import AllocationHelpers from '../../utils/allocation-helpers'
 
 class GKECredentialsForm extends VerifiedAllocatedResourceForm {
+
+  state = {
+    replaceKey: false
+  }
 
   generateSecretResource = values => {
     const resource = new V1Secret()
@@ -64,7 +68,9 @@ class GKECredentialsForm extends VerifiedAllocatedResourceForm {
   putResource = async values => {
     const api = await KoreApi.client()
     const metadataName = this.getMetadataName(values)
-    await api.UpdateTeamSecret(this.props.team, metadataName, this.generateSecretResource(values))
+    if (!this.props.data || this.state.replaceKey) {
+      await api.UpdateTeamSecret(this.props.team, metadataName, this.generateSecretResource(values))
+    }
     const gkeCredRes = this.generateGKECredentialsResource(values)
     const gkeResult = await api.UpdateGKECredential(this.props.team, metadataName, gkeCredRes)
     gkeResult.allocation = await this.storeAllocation(gkeCredRes, values)
@@ -93,6 +99,7 @@ class GKECredentialsForm extends VerifiedAllocatedResourceForm {
 
   resourceFormFields = () => {
     const { form, data } = this.props
+    const { replaceKey } = this.state
     return (
       <Card style={{ marginBottom: '20px' }}>
         <Alert
@@ -109,21 +116,31 @@ class GKECredentialsForm extends VerifiedAllocatedResourceForm {
             <Input placeholder="Project" />,
           )}
         </Form.Item>
-        <Form.Item label="Service Account JSON" labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} validateStatus={this.fieldError('account') ? 'error' : ''} help={this.fieldError('account') || 'The Service Account key in JSON format, with GKE admin permissions on the GCP project'}>
-          {!data ? (
-            form.getFieldDecorator('account', {
-              rules: [{ required: true, message: 'Please enter your Service Account key!' }]
-            })(
-              <Input.TextArea autoSize={{ minRows: 4, maxRows: 10  }} placeholder="Service Account JSON" />,
-            )
-          ) : (
+
+        {data ? (
+          <>
             <Alert
-              message="For security reasons, the Service Account key is not shown after creation of the project credential"
+              message="For security reasons, the service account key cannot be retrieved after creation. If you need to replace it, tick the box below."
               type="warning"
-              style={{ marginBottom: '-20px', marginTop: '10px' }}
+              style={{ marginTop: '10px' }}
             />
-          )}
-        </Form.Item>
+            <Form.Item label="Replace key">
+              <Checkbox onChange={(e) => this.setState({ replaceKey: e.target.checked })}></Checkbox>
+            </Form.Item>
+          </>
+        ) : null}
+
+        {!data || replaceKey ? (
+          <>
+            <Form.Item label="Service Account JSON" labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} validateStatus={this.fieldError('account') ? 'error' : ''} help={this.fieldError('account') || 'The Service Account key in JSON format, with GKE admin permissions on the GCP project'}>
+              {form.getFieldDecorator('account', {
+                rules: [{ required: true, message: 'Please enter your Service Account key!' }]
+              })(
+                <Input.TextArea autoSize={{ minRows: 4, maxRows: 10  }} placeholder="Service Account JSON" />,
+              )}
+            </Form.Item>
+          </>
+        ) : null}
       </Card>
     )
   }

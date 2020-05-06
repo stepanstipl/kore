@@ -6,10 +6,14 @@ import V1SecretSpec from '../../kore-api/model/V1SecretSpec'
 import V1SecretReference from '../../kore-api/model/V1SecretReference'
 import VerifiedAllocatedResourceForm from '../resources/VerifiedAllocatedResourceForm'
 import KoreApi from '../../kore-api'
-import { Form, Input, Alert, Card } from 'antd'
+import { Form, Input, Alert, Card, Checkbox } from 'antd'
 import AllocationHelpers from '../../utils/allocation-helpers'
 
 class EKSCredentialsForm extends VerifiedAllocatedResourceForm {
+
+  state = {
+    replaceKey: false
+  }
 
   generateSecretResource = values => {
     const resource = new V1Secret()
@@ -67,7 +71,9 @@ class EKSCredentialsForm extends VerifiedAllocatedResourceForm {
   putResource = async values => {
     const api = await KoreApi.client()
     const metadataName = this.getMetadataName(values)
-    await api.UpdateTeamSecret(this.props.team, metadataName, this.generateSecretResource(values))
+    if (!this.props.data || this.state.replaceKey) {
+      await api.UpdateTeamSecret(this.props.team, metadataName, this.generateSecretResource(values))
+    }
     const eksCredResource = this.generateEKSCredentialsResource(values)
     const eksResult = await api.UpdateEKSCredentials(this.props.team, metadataName, eksCredResource)
     eksResult.allocation = await this.storeAllocation(eksCredResource, values)
@@ -96,6 +102,7 @@ class EKSCredentialsForm extends VerifiedAllocatedResourceForm {
 
   resourceFormFields = () => {
     const { form, data } = this.props
+    const { replaceKey } = this.state
     return (
       <Card style={{ marginBottom: '20px' }}>
         <Alert
@@ -113,7 +120,20 @@ class EKSCredentialsForm extends VerifiedAllocatedResourceForm {
           )}
         </Form.Item>
 
-        {!data ? (
+        {data ? (
+          <>
+            <Alert
+              message="For security reasons, the access key cannot be retrieved after creation. If you need to replace the key, tick the box below."
+              type="warning"
+              style={{ marginTop: '10px' }}
+            />
+            <Form.Item label="Replace access key">
+              <Checkbox onChange={(e) => this.setState({ replaceKey: e.target.checked })}></Checkbox>
+            </Form.Item>
+          </>
+        ) : null}
+
+        {!data || replaceKey ? (
           <>
             <Form.Item label="Access key ID" validateStatus={this.fieldError('accessKeyID') ? 'error' : ''} help={this.fieldError('accessKeyID') || 'The Access key ID part of the access key'}>
               {form.getFieldDecorator('accessKeyID', {
@@ -132,13 +152,7 @@ class EKSCredentialsForm extends VerifiedAllocatedResourceForm {
               )}
             </Form.Item>
           </>
-        ) : (
-          <Alert
-            message="For security reasons, the access key is not shown after creating the account credential"
-            type="warning"
-            style={{ marginTop: '10px' }}
-          />
-        )}
+        ) : null}
 
       </Card>
     )
