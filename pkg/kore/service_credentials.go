@@ -17,10 +17,7 @@
 package kore
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"fmt"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 
@@ -165,11 +162,6 @@ func (s *serviceCredentialsImpl) validateConfiguration(
 	serviceCreds *servicesv1.ServiceCredentials,
 	provider ServiceProvider,
 ) error {
-	serviceCredsCfg := make(map[string]interface{})
-	if err := json.NewDecoder(bytes.NewReader(serviceCreds.Spec.Configuration.Raw)).Decode(&serviceCredsCfg); err != nil {
-		return fmt.Errorf("failed to parse service configuration values: %s", err)
-	}
-
 	schema, err := provider.CredentialsJSONSchema(serviceCreds.Spec.Kind, service.PlanShortName())
 	if err != nil {
 		return err
@@ -178,7 +170,7 @@ func (s *serviceCredentialsImpl) validateConfiguration(
 	if err := jsonschema.Validate(
 		schema,
 		"configuration",
-		serviceCreds.Spec.Configuration.Raw,
+		serviceCreds.Spec.Configuration,
 	); err != nil {
 		return err
 	}

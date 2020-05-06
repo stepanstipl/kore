@@ -40,7 +40,7 @@ var _ = Describe("Plans", func() {
 			default:
 				Fail(fmt.Sprintf("unknown plan kind: %q", plan.Spec.Kind))
 			}
-			err := jsonschema.Validate(schema, plan.Name, plan.Spec.Configuration.Raw)
+			err := jsonschema.Validate(schema, plan.Name, plan.Spec.Configuration)
 			Expect(err).ToNot(HaveOccurred(), "%s plan is not valid: %s", plan.Name, err)
 
 		}

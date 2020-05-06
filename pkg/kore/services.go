@@ -17,9 +17,7 @@
 package kore
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -230,7 +228,7 @@ func (s *servicesImpl) validateConfiguration(ctx context.Context, service *servi
 		return err
 	}
 
-	if err := jsonschema.Validate(schema, "service", service.Spec.Configuration.Raw); err != nil {
+	if err := jsonschema.Validate(schema, "service", service.Spec.Configuration); err != nil {
 		return err
 	}
 

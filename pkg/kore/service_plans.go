@@ -79,7 +79,7 @@ func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePl
 		return err
 	}
 
-	if err := jsonschema.Validate(schema, "plan", plan.Spec.Configuration.Raw); err != nil {
+	if err := jsonschema.Validate(schema, "plan", plan.Spec.Configuration); err != nil {
 		return err
 	}
 

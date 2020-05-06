@@ -171,7 +171,7 @@ func (p *serviceProvidersImpl) Update(ctx context.Context, provider *servicesv1.
 			WithFieldErrorf("type", validation.InvalidType, "%q is not a valid service provider type", provider.Spec.Type)
 	}
 
-	if err := jsonschema.Validate(factory.JSONSchema(), "provider", provider.Spec.Configuration.Raw); err != nil {
+	if err := jsonschema.Validate(factory.JSONSchema(), "provider", provider.Spec.Configuration); err != nil {
 		return err
 	}
 
