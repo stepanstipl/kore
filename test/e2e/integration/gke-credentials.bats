@@ -28,7 +28,7 @@ load helper
 }
 
 @test "We should be able to apply the gke credentials" {
-  run "${KORE} apply -f ${BASE_DIR}/e2eci/gke-credentials.yml -t kore-admin 2>&1 >/dev/null"
+  runit "${KORE} apply -f ${BASE_DIR}/e2eci/gke-credentials.yml -t kore-admin 2>&1 >/dev/null"
   [[ "$status" -eq 0 ]]
 }
 
@@ -45,7 +45,7 @@ load helper
 }
 
 @test "If we break the GKE credentials the verification should fail" {
-  run ${KORE} apply -f ${BASE_DIR}/examples/gcp-credentials.yml -t kore-admin 2>&1 >/dev/null
+  runit "${KORE} apply -f ${BASE_DIR}/examples/gcp-credentials.yml -t kore-admin 2>&1 >/dev/null"
   [[ "$status" -eq 0 ]]
 }
 
@@ -57,7 +57,7 @@ load helper
 }
 
 @test "We should be able to reapply the valid credentials and be ok" {
-  run ${KORE} apply -f ${BASE_DIR}/e2eci/gke-credentials.yml -t kore-admin 2>&1 >/dev/null
+  runit "${KORE} apply -f ${BASE_DIR}/e2eci/gke-credentials.yml -t kore-admin 2>&1 >/dev/null"
   [[ "$status" -eq 0 ]]
   retry 5 "${KORE} get gkecredentials gke -t kore-admin -o json | jq '.status.verified' | grep -i true"
   [[ "$status" -eq 0 ]]
