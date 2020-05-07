@@ -93,15 +93,14 @@ func getClusterAppFromEmbeddedManifests(m manifest, cc client.Client) (clusterap
 	if m.DeployTimeOut == time.Minute*0 {
 		m.DeployTimeOut = DefaultAppTimeout
 	}
-	return clusterapp.NewAppFromManifestFiles(cc, m.Name, resfiles, deleteResfiles)
-}
-
-func ensureNamespace(ctx context.Context, cc client.Client, name string) error {
-	return kubernetes.EnsureNamespace(ctx, cc, &core.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-		},
-	})
+	app := clusterapp.AppData{
+		Name:             m.Name,
+		EnsureNamespace:  m.EnsureNamespace,
+		DefaultNamespace: m.Namespace,
+		DeleteResfiles:   deleteResfiles,
+		Manifestfiles:    resfiles,
+	}
+	return clusterapp.NewAppFromManifestFiles(cc, app)
 }
 
 // GetStatus returns the status of all compoents deployed by ClusterAppMan

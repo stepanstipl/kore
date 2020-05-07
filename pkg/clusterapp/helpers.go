@@ -24,6 +24,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/appvia/kore/pkg/utils/kubernetes"
+	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -77,6 +78,14 @@ func waitOnKindDeploy(ctx context.Context, cc client.Client, object runtime.Obje
 		log.Debug("kind not known, waiting for CRD to be known")
 		time.Sleep(10 * time.Second)
 	}
+}
+
+func ensureNamespace(ctx context.Context, cc client.Client, name string) error {
+	return kubernetes.EnsureNamespace(ctx, cc, &core.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+	})
 }
 
 func getObjMetaAndSetDefaultNamespace(obj runtime.Object, defaultNamepsace string) metav1.ObjectMeta {

@@ -182,22 +182,13 @@ func (s clusterappmanImpl) Deploy(ctx context.Context, logger *log.Entry) error 
 		if !ok {
 			return fmt.Errorf("failed creating all manifests as could not find manifest %s", m.Name)
 		}
-		if m.EnsureNamespace {
-			logger.Infof("ensuring namespace %s exists", m.Namespace)
-			if err := ensureNamespace(ctx, s.RuntimeClient, m.Namespace); err != nil {
-				return fmt.Errorf("failed creating namespace %s: %s", m.Namespace, err)
-			}
-		}
 		deployCtx, cancel := context.WithTimeout(ctx, m.DeployTimeOut)
 		// make sure we run this cancel whatevs
 		defer cancel()
-		if err := ca.CreateOrUpdate(deployCtx, m.Namespace); err != nil {
-			return fmt.Errorf("failed to create or update '%s' deployment: %s", m.Name, err)
-		}
 		wg.Add(1)
 		// start a deployment thread:
 		logger.Infof("starting to wait for '%s' to become ready", ca.Component.Name)
-		go ca.WaitForReadyOrTimeout(deployCtx, ch, &wg)
+		go ca.WaitForReadyOrTimeout(deployCtx, ch, &wg, logger)
 		// Ensure we capture initial status
 		components[i] = ca.Component
 	}

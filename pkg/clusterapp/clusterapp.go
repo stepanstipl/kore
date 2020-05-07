@@ -57,6 +57,15 @@ func setAppControllerStatus(s bool) {
 	appControllerStatus = s
 }
 
+// AppData is the input to create an app
+type AppData struct {
+	Name             string
+	EnsureNamespace  bool
+	DefaultNamespace string
+	Manifestfiles    []http.File
+	DeleteResfiles   []http.File
+}
+
 // Instance provides access to a Cluster Application
 // a cluster app is a facility, running in a cluster
 // it is provided directly or indirectly by cluster manager
@@ -72,21 +81,23 @@ type Instance struct {
 	ApplicationObject runtime.Object
 	// Kore standard component and status information
 	Component *kcore.Component
+	app       AppData
 }
 
 // NewAppFromManifestFiles creates a new cluster application
-func NewAppFromManifestFiles(client client.Client, name string, manifestfiles, deleteResfiles []http.File) (Instance, error) {
+func NewAppFromManifestFiles(client client.Client, app AppData) (Instance, error) {
 	ca := Instance{
 		client:    client,
 		Resources: make([]runtime.Object, 0),
 		Component: &kcore.Component{
-			Name:    name,
+			Name:    app.Name,
 			Status:  kcore.Unknown,
 			Message: "Component is not yet deployed",
 		},
+		app: app,
 	}
 	// for all the embedded paths specified...
-	for _, file := range manifestfiles {
+	for _, file := range app.Manifestfiles {
 		fileBytes, err := ioutil.ReadAll(file)
 		if err != nil {
 			return ca, err
@@ -96,17 +107,18 @@ func NewAppFromManifestFiles(client client.Client, name string, manifestfiles, d
 		if err != nil {
 			return ca, err
 		}
+
 		for _, obj := range apiObjs {
 			if obj.GetObjectKind().GroupVersionKind().Kind == "Application" {
 				if ca.ApplicationObject != nil {
-					return ca, fmt.Errorf("only one application kind per kore cluster app is supported in cluster app %s", name)
+					return ca, fmt.Errorf("only one application kind per kore cluster app is supported in cluster app %s", app.Name)
 				}
 				ca.ApplicationObject = obj
 			}
 			ca.Resources = append(ca.Resources, obj)
 		}
 	}
-	for _, file := range deleteResfiles {
+	for _, file := range app.DeleteResfiles {
 		fileBytes, err := ioutil.ReadAll(file)
 		if err != nil {
 			return ca, err
@@ -154,12 +166,28 @@ func (ca Instance) CreateOrUpdate(ctx context.Context, defaultNamepsace string) 
 // WaitForReadyOrTimeout will wait a reasonable time (defined in context) until a resource is ready
 // if the resource become ready, it will update the channel with the component (and status)
 // if there is any error or a timeout, it will update the channel with the details on the component
-func (ca Instance) WaitForReadyOrTimeout(ctx context.Context, respond chan<- *kcore.Component, wg *sync.WaitGroup) {
+func (ca Instance) WaitForReadyOrTimeout(ctx context.Context, respond chan<- *kcore.Component, wg *sync.WaitGroup, logger *log.Entry) {
 	defer wg.Done()
 
-	// here we handle channels and wait groups not errors so pass the timeout context on:
-	if err := ca.waitOnApplicationStatus(ctx); err != nil {
-		log.Errorf("error with %s", ca.Component.Name)
+	err := func() error {
+		if ca.app.EnsureNamespace {
+			logger.Infof("ensuring namespace %s exists", ca.app.DefaultNamespace)
+			if err := ensureNamespace(ctx, ca.client, ca.app.DefaultNamespace); err != nil {
+				return fmt.Errorf("failed creating namespace %s: %s", ca.app.DefaultNamespace, err)
+			}
+		}
+		if err := ca.CreateOrUpdate(ctx, ca.app.DefaultNamespace); err != nil {
+			return fmt.Errorf("failed to create or update '%s' deployment: %s", ca.app.Name, err)
+		}
+
+		// here we handle channels and wait groups not errors so pass the timeout context on:
+		if err := ca.waitOnApplicationStatus(ctx); err != nil {
+			return err
+		}
+		return nil
+	}()
+	if err != nil {
+		logger.Errorf("error with %s", ca.Component.Name)
 		ca.Component.Status = kcore.Unknown
 		ca.Component.Message = fmt.Sprintf("An error occured when checking for the status of %s", ca.Component.Name)
 		ca.Component.Detail = fmt.Sprintf("An error occured waiting for status %s", err)
