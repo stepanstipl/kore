@@ -56,9 +56,12 @@ func (c *Controller) delete(
 
 	original := serviceCreds.DeepCopyObject()
 
-	serviceCreds.Status.Status = corev1.DeletingStatus
-
 	result, err := func() (reconcile.Result, error) {
+		if !serviceCreds.Status.Status.OneOf(corev1.DeletingStatus, corev1.DeleteFailedStatus, corev1.ErrorStatus) {
+			serviceCreds.Status.Status = corev1.DeletingStatus
+			return reconcile.Result{Requeue: true}, nil
+		}
+
 		// @step: create client for the cluster credentials
 		client, err := controllers.CreateClientFromSecret(context.Background(), c.mgr.GetClient(),
 			serviceCreds.Spec.Cluster.Namespace, serviceCreds.Spec.Cluster.Name)

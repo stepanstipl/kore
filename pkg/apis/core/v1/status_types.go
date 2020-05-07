@@ -50,6 +50,15 @@ func (s Status) IsFailed() bool {
 	return s == FailureStatus || s == DeleteFailedStatus
 }
 
+func (s Status) OneOf(statuses ...Status) bool {
+	for _, status := range statuses {
+		if status == s {
+			return true
+		}
+	}
+	return false
+}
+
 // StatusAware is an interface for objects which have a status and zero or more components
 type StatusAware interface {
 	GetStatus() (status Status, message string)

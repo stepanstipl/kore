@@ -52,7 +52,14 @@ func (c Controller) Delete(
 
 	original := service.DeepCopyObject()
 
-	result, err := provider.Delete(kore.NewServiceProviderContext(ctx, logger, c.mgr.GetClient()), service)
+	result, err := func() (reconcile.Result, error) {
+		if !service.Status.Status.OneOf(corev1.DeletingStatus, corev1.DeleteFailedStatus, corev1.ErrorStatus) {
+			service.Status.Status = corev1.DeletingStatus
+			return reconcile.Result{Requeue: true}, nil
+		}
+
+		return provider.Delete(kore.NewServiceProviderContext(ctx, logger, c.mgr.GetClient()), service)
+	}()
 
 	if err != nil {
 		logger.WithError(err).Error("failed to delete the service")
