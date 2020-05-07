@@ -369,8 +369,8 @@ jobs:
           working_directory: ~/project/ui
           command: |
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
-            docker build -t ${KORE_UI_IMAGE}:${CIRCLE_TAG:-latest} --build-arg version=${CIRCLE_TAG:-latest} .
             docker build -t ${KORE_UI_IMAGE}:${CIRCLE_SHA1} --build-arg version=${CIRCLE_SHA1} .
+            docker tag ${KORE_UI_IMAGE}:${CIRCLE_SHA1} ${KORE_UI_IMAGE}:${CIRCLE_TAG:-latest}
             docker push ${KORE_UI_IMAGE}:${CIRCLE_TAG:-latest}
             docker push ${KORE_UI_IMAGE}:${CIRCLE_SHA1}
 
