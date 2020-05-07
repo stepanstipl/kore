@@ -19,6 +19,7 @@ package kore
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -57,6 +58,8 @@ type ServiceProviderFactory interface {
 	JSONSchema() string
 	// CreateProvider creates the provider
 	CreateProvider(servicesv1.ServiceProvider) (ServiceProvider, error)
+	// RequiredCredentialTypes returns with the required credential types
+	RequiredCredentialTypes() []schema.GroupVersionKind
 }
 
 type ServiceProviderContext struct {
@@ -172,6 +175,10 @@ func (p *serviceProvidersImpl) Update(ctx context.Context, provider *servicesv1.
 	}
 
 	if err := jsonschema.Validate(factory.JSONSchema(), "provider", provider.Spec.Configuration); err != nil {
+		return err
+	}
+
+	if err := p.validateCredentials(ctx, provider, factory); err != nil {
 		return err
 	}
 
@@ -345,4 +352,43 @@ func (p *serviceProvidersImpl) GetProviderForKind(kind string) ServiceProvider {
 	defer p.providersLock.RUnlock()
 
 	return p.providers[kind]
+}
+
+func (p *serviceProvidersImpl) validateCredentials(ctx context.Context, serviceProvider *servicesv1.ServiceProvider, factory ServiceProviderFactory) error {
+	expectedKinds := factory.RequiredCredentialTypes()
+	creds := serviceProvider.Spec.Credentials
+
+	if expectedKinds == nil {
+		if creds.Kind != "" {
+			return validation.NewError("service provider has failed validation").WithFieldError(
+				"credentials",
+				validation.InvalidType,
+				"should not be set as this service provider doesn't require credentials",
+			)
+		}
+		return nil
+	}
+
+	found := false
+	for _, gvk := range expectedKinds {
+		if creds.HasGroupVersionKind(gvk) {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		var expected []string
+		for _, gvk := range expectedKinds {
+			expected = append(expected, utils.FormatGroupVersionKind(gvk))
+		}
+		return validation.NewError("service provider has failed validation").WithFieldErrorf(
+			"credentials",
+			validation.InvalidType,
+			"should be one of: %s",
+			strings.Join(expected, ", "),
+		)
+	}
+
+	return nil
 }

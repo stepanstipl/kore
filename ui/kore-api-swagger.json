@@ -7080,6 +7080,9 @@
         "configuration": {
           "type": "object"
         },
+        "credentials": {
+          "$ref": "#/definitions/v1.Ownership"
+        },
         "description": {
           "type": "string"
         },

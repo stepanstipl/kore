@@ -436,6 +436,7 @@ func (in *ServiceProviderSpec) DeepCopyInto(out *ServiceProviderSpec) {
 		*out = new(v1beta1.JSON)
 		(*in).DeepCopyInto(*out)
 	}
+	out.Credentials = in.Credentials
 	return
 }
 

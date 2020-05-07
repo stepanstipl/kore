@@ -52,6 +52,9 @@ type ServiceProviderSpec struct {
 	// +kubebuilder:validation:Type=object
 	// +kubebuilder:validation:Optional
 	Configuration *apiextv1.JSON `json:"configuration,omitempty"`
+	// Credentials is a reference to the credentials object to use
+	// +kubebuilder:validation:Optional
+	Credentials corev1.Ownership `json:"credentials,omitempty"`
 }
 
 func (s *ServiceProviderSpec) GetConfiguration(v interface{}) error {

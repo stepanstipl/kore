@@ -60,6 +60,10 @@ func (d DummyFactory) CreateProvider(provider servicesv1.ServiceProvider) (kore.
 	return Dummy{name: provider.Name}, nil
 }
 
+func (d DummyFactory) RequiredCredentialTypes() []schema.GroupVersionKind {
+	return nil
+}
+
 var _ kore.ServiceProvider = Dummy{}
 
 type Dummy struct {

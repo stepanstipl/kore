@@ -22,6 +22,7 @@ import (
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/kore"
 	osb "github.com/kubernetes-sigs/go-open-service-broker-client/v2"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 func init() {
@@ -121,4 +122,8 @@ func (d ProviderFactory) CreateProvider(serviceProvider servicesv1.ServiceProvid
 	}
 
 	return provider, nil
+}
+
+func (d ProviderFactory) RequiredCredentialTypes() []schema.GroupVersionKind {
+	return nil
 }
