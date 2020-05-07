@@ -56,7 +56,7 @@ func (d DummyFactory) JSONSchema() string {
 	}`
 }
 
-func (d DummyFactory) CreateProvider(provider servicesv1.ServiceProvider) (kore.ServiceProvider, error) {
+func (d DummyFactory) CreateProvider(ctx kore.ServiceProviderContext, provider servicesv1.ServiceProvider) (kore.ServiceProvider, error) {
 	return Dummy{name: provider.Name}, nil
 }
 

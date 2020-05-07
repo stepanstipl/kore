@@ -103,7 +103,7 @@ func (d ProviderFactory) JSONSchema() string {
 	}`
 }
 
-func (d ProviderFactory) CreateProvider(serviceProvider servicesv1.ServiceProvider) (kore.ServiceProvider, error) {
+func (d ProviderFactory) CreateProvider(ctx kore.ServiceProviderContext, serviceProvider servicesv1.ServiceProvider) (kore.ServiceProvider, error) {
 	var config = osb.DefaultClientConfiguration()
 	config.Name = serviceProvider.Name
 

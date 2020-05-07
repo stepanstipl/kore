@@ -20,6 +20,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/appvia/kore/pkg/kore"
+
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/controllers"
@@ -55,7 +57,11 @@ func (c *Controller) delete(
 			return reconcile.Result{Requeue: true}, nil
 		}
 
-		if err := c.ServiceProviders().Unregister(ctx, serviceProvider); err != nil {
+		if err := c.ServiceProviders().Unregister(kore.ServiceProviderContext{
+			Context: ctx,
+			Logger:  logger,
+			Client:  c.mgr.GetClient(),
+		}, serviceProvider); err != nil {
 			return reconcile.Result{}, err
 		}
 

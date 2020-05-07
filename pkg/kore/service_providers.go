@@ -57,7 +57,7 @@ type ServiceProviderFactory interface {
 	// JSONSchema returns the JSON schema for the provider's configuration
 	JSONSchema() string
 	// CreateProvider creates the provider
-	CreateProvider(servicesv1.ServiceProvider) (ServiceProvider, error)
+	CreateProvider(ServiceProviderContext, servicesv1.ServiceProvider) (ServiceProvider, error)
 	// RequiredCredentialTypes returns with the required credential types
 	RequiredCredentialTypes() []schema.GroupVersionKind
 }
@@ -136,9 +136,9 @@ type ServiceProviders interface {
 	// GetProviderForKind returns a service provider for the given service kind
 	GetProviderForKind(kind string) ServiceProvider
 	// Register registers a new provider
-	Register(context.Context, *servicesv1.ServiceProvider) (ServiceProvider, error)
+	Register(ServiceProviderContext, *servicesv1.ServiceProvider) (ServiceProvider, error)
 	// Unregister removes the given provider
-	Unregister(context.Context, *servicesv1.ServiceProvider) error
+	Unregister(ServiceProviderContext, *servicesv1.ServiceProvider) error
 }
 
 type serviceProvidersImpl struct {
@@ -265,7 +265,7 @@ func (p *serviceProvidersImpl) GetEditableProviderParams(ctx context.Context, te
 }
 
 // Register registers a new provider
-func (p *serviceProvidersImpl) Register(ctx context.Context, serviceProvider *servicesv1.ServiceProvider) (ServiceProvider, error) {
+func (p *serviceProvidersImpl) Register(ctx ServiceProviderContext, serviceProvider *servicesv1.ServiceProvider) (ServiceProvider, error) {
 	p.providersLock.Lock()
 	defer p.providersLock.Unlock()
 
@@ -274,7 +274,7 @@ func (p *serviceProvidersImpl) Register(ctx context.Context, serviceProvider *se
 		return nil, fmt.Errorf("service provider type %q is invalid", serviceProvider.Spec.Type)
 	}
 
-	provider, err := factory.CreateProvider(*serviceProvider)
+	provider, err := factory.CreateProvider(ctx, *serviceProvider)
 	if err != nil {
 		return nil, err
 	}
@@ -313,7 +313,7 @@ func (p *serviceProvidersImpl) Register(ctx context.Context, serviceProvider *se
 }
 
 // Unregister removes the given provider
-func (p *serviceProvidersImpl) Unregister(ctx context.Context, serviceProvider *servicesv1.ServiceProvider) error {
+func (p *serviceProvidersImpl) Unregister(ctx ServiceProviderContext, serviceProvider *servicesv1.ServiceProvider) error {
 	for _, kind := range serviceProvider.Status.SupportedKinds {
 		if err := p.unregisterKind(ctx, kind); err != nil {
 			return err
