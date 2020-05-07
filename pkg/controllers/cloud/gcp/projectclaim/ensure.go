@@ -989,7 +989,7 @@ func (t ctrl) EnsureCredentialsDeleted(
 	})
 	stage := "cleanup"
 
-	secret := &v1.Secret{
+	secret := &configv1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      t.GetProjectCredentialsSecretName(project),
 			Namespace: project.Namespace,
