@@ -7096,6 +7096,12 @@
     },
     "v1.ServiceProviderStatus": {
       "properties": {
+        "components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.Component"
+          }
+        },
         "message": {
           "type": "string"
         },
@@ -7160,11 +7166,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
-        "clientSecret",
         "issuer",
         "clientScopes",
         "userClaims",
-        "clientID"
+        "clientID",
+        "clientSecret"
       ],
       "properties": {
         "clientID": {

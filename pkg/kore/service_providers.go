@@ -57,7 +57,9 @@ type ServiceProviderFactory interface {
 	// JSONSchema returns the JSON schema for the provider's configuration
 	JSONSchema() string
 	// CreateProvider creates the provider
-	CreateProvider(ServiceProviderContext, servicesv1.ServiceProvider) (ServiceProvider, error)
+	CreateProvider(ServiceProviderContext, *servicesv1.ServiceProvider) (_ ServiceProvider, complete bool, _ error)
+	// TearDownProvider makes sure all provider resources are deleted
+	TearDownProvider(ServiceProviderContext, *servicesv1.ServiceProvider) (complete bool, err error)
 	// RequiredCredentialTypes returns with the required credential types
 	RequiredCredentialTypes() []schema.GroupVersionKind
 }
@@ -136,9 +138,9 @@ type ServiceProviders interface {
 	// GetProviderForKind returns a service provider for the given service kind
 	GetProviderForKind(kind string) ServiceProvider
 	// Register registers a new provider
-	Register(ServiceProviderContext, *servicesv1.ServiceProvider) (ServiceProvider, error)
+	Register(ServiceProviderContext, *servicesv1.ServiceProvider) (_ ServiceProvider, complete bool, _ error)
 	// Unregister removes the given provider
-	Unregister(ServiceProviderContext, *servicesv1.ServiceProvider) error
+	Unregister(ServiceProviderContext, *servicesv1.ServiceProvider) (complete bool, _ error)
 }
 
 type serviceProvidersImpl struct {
@@ -265,18 +267,18 @@ func (p *serviceProvidersImpl) GetEditableProviderParams(ctx context.Context, te
 }
 
 // Register registers a new provider
-func (p *serviceProvidersImpl) Register(ctx ServiceProviderContext, serviceProvider *servicesv1.ServiceProvider) (ServiceProvider, error) {
+func (p *serviceProvidersImpl) Register(ctx ServiceProviderContext, serviceProvider *servicesv1.ServiceProvider) (_ ServiceProvider, complete bool, _ error) {
 	p.providersLock.Lock()
 	defer p.providersLock.Unlock()
 
 	factory, ok := serviceProviderFactories[serviceProvider.Spec.Type]
 	if !ok {
-		return nil, fmt.Errorf("service provider type %q is invalid", serviceProvider.Spec.Type)
+		return nil, false, fmt.Errorf("service provider type %q is invalid", serviceProvider.Spec.Type)
 	}
 
-	provider, err := factory.CreateProvider(ctx, *serviceProvider)
-	if err != nil {
-		return nil, err
+	provider, complete, err := factory.CreateProvider(ctx, serviceProvider)
+	if err != nil || !complete {
+		return nil, complete, err
 	}
 
 	var supportedKinds []string
@@ -287,7 +289,7 @@ func (p *serviceProvidersImpl) Register(ctx ServiceProviderContext, serviceProvi
 	for _, kind := range supportedKinds {
 		if p, registered := p.providers[kind]; registered {
 			if p.Name() != serviceProvider.Name {
-				return nil, fmt.Errorf("service kind is already registered by an other service provider: %s", p.Name())
+				return nil, false, fmt.Errorf("service kind is already registered by an other service provider: %s", p.Name())
 			}
 		}
 	}
@@ -296,7 +298,7 @@ func (p *serviceProvidersImpl) Register(ctx ServiceProviderContext, serviceProvi
 	for kind, provider := range p.providers {
 		if provider.Name() == serviceProvider.Name && !utils.Contains(kind, supportedKinds) {
 			if err := p.unregisterKind(ctx, kind); err != nil {
-				return nil, err
+				return nil, false, err
 			}
 		}
 	}
@@ -309,18 +311,23 @@ func (p *serviceProvidersImpl) Register(ctx ServiceProviderContext, serviceProvi
 		p.providers[kind] = provider
 	}
 
-	return provider, nil
+	return provider, true, nil
 }
 
 // Unregister removes the given provider
-func (p *serviceProvidersImpl) Unregister(ctx ServiceProviderContext, serviceProvider *servicesv1.ServiceProvider) error {
+func (p *serviceProvidersImpl) Unregister(ctx ServiceProviderContext, serviceProvider *servicesv1.ServiceProvider) (complete bool, _ error) {
 	for _, kind := range serviceProvider.Status.SupportedKinds {
 		if err := p.unregisterKind(ctx, kind); err != nil {
-			return err
+			return false, err
 		}
 	}
 
-	return nil
+	factory, ok := serviceProviderFactories[serviceProvider.Spec.Type]
+	if !ok {
+		return false, fmt.Errorf("service provider type %q is invalid", serviceProvider.Spec.Type)
+	}
+
+	return factory.TearDownProvider(ctx, serviceProvider)
 }
 
 func (p *serviceProvidersImpl) unregisterKind(ctx context.Context, kind string) error {

@@ -91,6 +91,9 @@ type ServiceProviderStatus struct {
 	// Message is the description of the current status
 	// +kubebuilder:validation:Optional
 	Message string `json:"message,omitempty"`
+	// Components is a collection of component statuses
+	// +kubebuilder:validation:Optional
+	Components corev1.Components `json:"components,omitempty"`
 	// SupportedKinds contains all the supported service kinds
 	// +kubebuilder:validation:Optional
 	// +listType=set

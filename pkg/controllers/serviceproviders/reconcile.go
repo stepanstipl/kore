@@ -71,13 +71,16 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 			c.ensureFinalizer(serviceProvider, finalizer),
 			c.ensurePending(serviceProvider),
 			func(ctx context.Context) (result reconcile.Result, err error) {
-				provider, err := c.ServiceProviders().Register(kore.ServiceProviderContext{
+				provider, complete, err := c.ServiceProviders().Register(kore.ServiceProviderContext{
 					Context: ctx,
 					Logger:  logger,
 					Client:  c.mgr.GetClient(),
 				}, serviceProvider)
 				if err != nil {
 					return reconcile.Result{}, err
+				}
+				if !complete {
+					return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 				}
 
 				var supportedKinds []string
@@ -146,6 +149,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 	if err == nil && !result.Requeue && result.RequeueAfter == 0 {
 		serviceProvider.Status.Status = corev1.SuccessStatus
+		serviceProvider.Status.Message = ""
 	}
 
 	if err := c.mgr.GetClient().Status().Patch(ctx, serviceProvider, client.MergeFrom(original)); err != nil {
@@ -161,13 +165,5 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		return reconcile.Result{}, err
 	}
 
-	if serviceProvider.Status.Status == corev1.SuccessStatus {
-		return reconcile.Result{}, nil
-	}
-
-	if result.Requeue || result.RequeueAfter > 0 {
-		return result, nil
-	}
-
-	return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
+	return result, nil
 }

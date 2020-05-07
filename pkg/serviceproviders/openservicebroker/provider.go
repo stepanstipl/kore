@@ -77,6 +77,11 @@ func NewProvider(name string, client osb.Client) (*Provider, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch catalog from service broker: %w", err)
 	}
+
+	if len(catalog.Services) == 0 {
+		return nil, fmt.Errorf("service broker returned an empty catalog")
+	}
+
 	for _, catalogService := range catalog.Services {
 		if !kore.ResourceNameFilter.MatchString(catalogService.Name) {
 			return nil, fmt.Errorf("%q service name is invalid, must match %s", catalogService.Name, kore.ResourceNameFilter.String())

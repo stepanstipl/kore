@@ -56,8 +56,12 @@ func (d DummyFactory) JSONSchema() string {
 	}`
 }
 
-func (d DummyFactory) CreateProvider(ctx kore.ServiceProviderContext, provider servicesv1.ServiceProvider) (kore.ServiceProvider, error) {
-	return Dummy{name: provider.Name}, nil
+func (d DummyFactory) CreateProvider(ctx kore.ServiceProviderContext, provider *servicesv1.ServiceProvider) (_ kore.ServiceProvider, complete bool, _ error) {
+	return Dummy{name: provider.Name}, true, nil
+}
+
+func (d DummyFactory) TearDownProvider(ctx kore.ServiceProviderContext, provider *servicesv1.ServiceProvider) (complete bool, _ error) {
+	return true, nil
 }
 
 func (d DummyFactory) RequiredCredentialTypes() []schema.GroupVersionKind {
