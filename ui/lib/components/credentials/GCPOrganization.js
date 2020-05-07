@@ -54,8 +54,8 @@ class GCPOrganization extends AutoRefreshComponent {
           title={
             <>
               <Text style={{ display: 'inline', marginRight: '15px', fontSize: '20px', fontWeight: '600' }}>{organization.spec.parentID}</Text>
-              <Text style={{ marginRight: '5px' }}>{organization.allocation.spec.name}</Text>
-              <Tooltip title={organization.allocation.spec.summary}>
+              <Text style={{ marginRight: '5px' }}>{organization.allocation ? organization.allocation.spec.name : organization.metadata.name}</Text>
+              <Tooltip title={organization.allocation ? organization.allocation.spec.summary : organization.spec.summary}>
                 <Icon type="info-circle" theme="twoTone" />
               </Tooltip>
             </>
