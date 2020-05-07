@@ -22,12 +22,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/appvia/kore/pkg/kore"
-
-	"github.com/appvia/kore/pkg/controllers"
-
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
+	"github.com/appvia/kore/pkg/controllers"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/serviceproviders/openservicebroker"
 	"github.com/appvia/kore/pkg/serviceproviders/openservicebroker/openservicebrokerfakes"
 	"github.com/appvia/kore/pkg/utils"
@@ -37,6 +35,7 @@ import (
 	. "github.com/onsi/gomega"
 	log "github.com/sirupsen/logrus"
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -81,11 +80,6 @@ func createPlan(id string, name string) osb.Plan {
 		Name:        name,
 		Description: name + " description",
 		Bindable:    utils.BoolPtr(true),
-		Metadata: map[string]interface{}{
-			openservicebroker.MetadataKeyConfiguration: map[string]interface{}{
-				fmt.Sprintf("%s-param", name): "value",
-			},
-		},
 		Schemas: &osb.Schemas{
 			ServiceInstance: &osb.ServiceInstanceSchema{
 				Create: &osb.InputParametersSchema{
@@ -101,10 +95,11 @@ func createPlan(id string, name string) osb.Plan {
 						"properties": {
 							"%s-param": {
 								"type": "string",
-								"minLength": 1
+								"minLength": 1,
+								"default": "%s-value"
 							}
 						}
-					}`, name, name),
+					}`, name, name, name),
 				},
 			},
 			ServiceBinding: &osb.ServiceBindingSchema{
@@ -121,10 +116,11 @@ func createPlan(id string, name string) osb.Plan {
 							"properties": {
 								"%s-credentials-param": {
 									"type": "string",
-									"minLength": 1
+									"minLength": 1,
+									"default": "%s-credentials-value"
 								}
 							}
-						}`, name, name),
+						}`, name, name, name),
 				},
 			},
 		},
@@ -231,6 +227,42 @@ var _ = Describe("Provider", func() {
 			Expect(provider).ToNot(BeNil())
 		})
 
+		It("should create service plans from the catalog plans", func() {
+			plans := provider.Plans()
+			Expect(plans[0]).To(Equal(servicesv1.ServicePlan{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "ServicePlan",
+					APIVersion: servicesv1.GroupVersion.String(),
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "plan-1",
+					Namespace: kore.HubNamespace,
+				},
+				Spec: servicesv1.ServicePlanSpec{
+					Kind:          "service-1",
+					Description:   "plan-1 description",
+					Summary:       "service-1 service - plan-1 plan",
+					Configuration: &apiextv1.JSON{Raw: []byte(`{"plan-1-param":"plan-1-value"}`)},
+				},
+			}))
+			Expect(plans[1]).To(Equal(servicesv1.ServicePlan{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "ServicePlan",
+					APIVersion: servicesv1.GroupVersion.String(),
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "plan-2",
+					Namespace: kore.HubNamespace,
+				},
+				Spec: servicesv1.ServicePlanSpec{
+					Kind:          "service-2",
+					Description:   "plan-2 description",
+					Summary:       "service-2 service - plan-2 plan",
+					Configuration: &apiextv1.JSON{Raw: []byte(`{"plan-2-param":"plan-2-value"}`)},
+				},
+			}))
+		})
+
 		When("the catalog endpoint returns an error", func() {
 			BeforeEach(func() {
 				client.GetCatalogReturns(nil, fmt.Errorf("some error"))
@@ -271,10 +303,14 @@ var _ = Describe("Provider", func() {
 			})
 		})
 
-		When("a plan doesn't have configuration", func() {
+		When("a plan has a configuration key in the metadata", func() {
 			BeforeEach(func() {
 				plan := createPlan(plan1ID, plan1Name)
-				delete(plan.Metadata, openservicebroker.MetadataKeyConfiguration)
+				plan.Metadata = map[string]interface{}{
+					openservicebroker.MetadataKeyConfiguration: map[string]interface{}{
+						"extraKey": "extraValue",
+					},
+				}
 				service := createService(Service1ID, Service1Name, []osb.Plan{plan})
 				client.GetCatalogReturns(&osb.CatalogResponse{
 					Services: []osb.Service{service},
@@ -285,16 +321,21 @@ var _ = Describe("Provider", func() {
 				Expect(providerCreateErr).ToNot(HaveOccurred())
 			})
 
-			It("should create a plan with empty config", func() {
+			It("should create service plans from the catalog plans", func() {
 				plans := provider.Plans()
-				Expect(plans[0].Spec.Configuration).To(BeNil())
+				config := map[string]interface{}{}
+				_ = plans[0].Spec.GetConfiguration(&config)
+				Expect(config).To(HaveKeyWithValue("plan-1-param", "plan-1-value"))
+				Expect(config).To(HaveKeyWithValue("extraKey", "extraValue"))
 			})
 		})
 
-		When("a plan has an invalid configuration", func() {
+		When("a plan has an invalid configuration key in the metadata", func() {
 			BeforeEach(func() {
 				plan := createPlan(plan1ID, plan1Name)
-				plan.Metadata[openservicebroker.MetadataKeyConfiguration] = "invalid"
+				plan.Metadata = map[string]interface{}{
+					openservicebroker.MetadataKeyConfiguration: "invalid",
+				}
 				service := createService(Service1ID, Service1Name, []osb.Plan{plan})
 				client.GetCatalogReturns(&osb.CatalogResponse{
 					Services: []osb.Service{service},

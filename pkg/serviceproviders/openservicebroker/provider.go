@@ -92,17 +92,7 @@ func NewProvider(name string, client osb.Client) (*Provider, error) {
 				return nil, fmt.Errorf("%q plan name is invalid, must match %s", catalogPlan.Name, kore.ResourceNameFilter.String())
 			}
 
-			servicePlan, err := catalogPlanToServicePlan(catalogService, catalogPlan)
-			if err != nil {
-				return nil, err
-			}
-
-			schema, err := getPlanSchema(catalogPlan)
-			if err != nil {
-				return nil, err
-			}
-
-			credentialsSchema, err := getCredentialsSchema(catalogPlan)
+			servicePlan, schema, credentialsSchema, err := parseCatalogPlan(catalogService, catalogPlan)
 			if err != nil {
 				return nil, err
 			}
@@ -126,7 +116,7 @@ func NewProvider(name string, client osb.Client) (*Provider, error) {
 					return nil, fmt.Errorf("%s-%s plan does not have a schema for bind", catalogService.Name, catalogPlan.Name)
 				}
 			} else {
-				plans = append(plans, servicePlan)
+				plans = append(plans, *servicePlan)
 				service.plans[servicePlan.Name] = plan
 			}
 		}
@@ -246,8 +236,18 @@ func (p *Provider) planWithFilter(kind, planName string, filter func(providerPla
 	return providerPlan{}, false, nil
 }
 
-func catalogPlanToServicePlan(service osb.Service, plan osb.Plan) (servicesv1.ServicePlan, error) {
-	res := servicesv1.ServicePlan{
+func parseCatalogPlan(service osb.Service, plan osb.Plan) (*servicesv1.ServicePlan, string, string, error) {
+	schemaStr, err := getPlanSchema(plan)
+	if err != nil {
+		return nil, "", "", err
+	}
+
+	credentialsSchemaStr, err := getCredentialsSchema(plan)
+	if err != nil {
+		return nil, "", "", err
+	}
+
+	res := &servicesv1.ServicePlan{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ServicePlan",
 			APIVersion: servicesv1.GroupVersion.String(),
@@ -263,17 +263,40 @@ func catalogPlanToServicePlan(service osb.Service, plan osb.Plan) (servicesv1.Se
 		},
 	}
 
-	if configuration, hasConfig := plan.Metadata[MetadataKeyConfiguration]; hasConfig {
-		if _, isMap := configuration.(map[string]interface{}); !isMap {
-			return servicesv1.ServicePlan{}, fmt.Errorf("%s-%s plan has an invalid configuration, it must be an object", service.Name, plan.Name)
-		}
+	configuration := map[string]interface{}{}
 
-		if err := res.Spec.SetConfiguration(configuration); err != nil {
-			return servicesv1.ServicePlan{}, err
+	if rawConfiguration, hasConfig := plan.Metadata[MetadataKeyConfiguration]; hasConfig {
+		var ok bool
+		configuration, ok = rawConfiguration.(map[string]interface{})
+		if !ok {
+			return nil, "", "", fmt.Errorf("%s-%s plan has an invalid configuration, it must be an object", service.Name, plan.Name)
 		}
 	}
 
-	return res, nil
+	if schemaStr != "" {
+		schema := &jsonschema.Schema{}
+		if err := json.Unmarshal([]byte(schemaStr), schema); err != nil {
+			return nil, "", "", fmt.Errorf("failed to unmarshal JSON schema: %w", err)
+		}
+
+		for name, prop := range schema.Properties {
+			if _, isSet := configuration[name]; !isSet {
+				defaultValue, err := prop.ParseDefault()
+				if err != nil {
+					return nil, "", "", fmt.Errorf("invalid default value %v in JSON schema: %w", prop.Default, err)
+				}
+				if defaultValue != nil {
+					configuration[name] = defaultValue
+				}
+			}
+		}
+	}
+
+	if err := res.Spec.SetConfiguration(configuration); err != nil {
+		return nil, "", "", err
+	}
+
+	return res, schemaStr, credentialsSchemaStr, nil
 }
 
 func getPlanSchema(plan osb.Plan) (string, error) {
