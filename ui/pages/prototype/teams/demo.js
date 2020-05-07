@@ -240,7 +240,6 @@ class TeamDashboard extends React.Component {
   }
 
   handleCloudServiceCreated = cloudService => {
-    console.log('handleCloudServiceCreated', cloudService)
     const state = copy(this.state)
     state.createCloudService = false
     state.cloudServices.push(cloudService)

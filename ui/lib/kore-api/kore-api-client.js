@@ -128,6 +128,7 @@ class KoreApiClient {
   UpdateService = (team, name, service) => this.apis.default.UpdateService({ team, name, body: JSON.stringify(service) })
   GetService = (team, name) => this.apis.default.GetService({ team, name })
   GetTeamServicePlanDetails = (team, plan) => this.apis.default.GetTeamServicePlanDetails({ team, plan })
+  ListServiceKinds = (team) => this.apis.default.ListServiceKinds({ team })
 }
 
 module.exports = KoreApiClient

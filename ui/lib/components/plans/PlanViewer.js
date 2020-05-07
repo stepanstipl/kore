@@ -33,7 +33,7 @@ class PlanViewer extends React.Component {
       break
     }
     this.setState({
-      schema,
+      schema: schema || { properties:[] },
       dataLoading: false
     })
   }

@@ -36,16 +36,21 @@ class ServiceBuildForm extends React.Component {
   }
 
   async fetchComponentData() {
-    const servicePlans = await (await KoreApi.client()).ListServicePlans()
-    return { servicePlans }
+    const api = await KoreApi.client()
+    const [ serviceKinds, servicePlans ] = await Promise.all([
+      api.ListServiceKinds(),
+      api.ListServicePlans()
+    ])
+    return { serviceKinds, servicePlans }
   }
 
   componentDidMountComplete = null
   componentDidMount() {
     // Assign the promise chain to a variable so tests can wait for it to complete.
     this.componentDidMountComplete = Promise.resolve().then(async () => {
-      const { servicePlans } = await this.fetchComponentData()
+      const { serviceKinds, servicePlans } = await this.fetchComponentData()
       this.setState({
+        serviceKinds: serviceKinds,
         servicePlans: servicePlans,
         dataLoading: false
       })
@@ -173,11 +178,12 @@ class ServiceBuildForm extends React.Component {
       return null
     }
 
-    const { selectedServiceKind } = this.state
+    const { serviceKinds, selectedServiceKind } = this.state
 
     return (
       <div>
         <ServiceKindSelector
+          serviceKinds={serviceKinds}
           selectedServiceKind={selectedServiceKind}
           handleSelectKind={this.handleSelectKind} />
         {selectedServiceKind ? <this.serviceBuildForm /> : null}
