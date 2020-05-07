@@ -88,6 +88,19 @@ class SiderMenu extends React.Component {
           </SubMenu>
           {AdminMenu()}
           {AuditMenu()}
+          {isAdmin ? (
+            <SubMenu key="security"
+              title={
+                <span>
+                  <Icon type="lock" theme="outlined" />
+                  <span>Security</span>
+                </span>
+              }
+            >
+              {menuItem({ key: 'overview', text: 'Overview', link: '/security', icon: 'global' })}
+              {menuItem({ key: 'rules', text: 'Rule Reference', link: '/security/rules', icon: 'schedule' })}
+            </SubMenu>
+          ) : null}
         </Menu>
       </Sider>
     )

@@ -830,13 +830,16 @@
         }
       }
     },
-    "/api/v1alpha1/security/rules": {
+    "/api/v1alpha1/securityrules": {
       "get": {
         "consumes": [
           "application/json"
         ],
         "produces": [
           "application/json"
+        ],
+        "tags": [
+          "security"
         ],
         "summary": "Used to return a list of all the security rules in the system",
         "operationId": "ListSecurityRules",
@@ -862,13 +865,16 @@
         }
       }
     },
-    "/api/v1alpha1/security/rules/{code}": {
+    "/api/v1alpha1/securityrules/{code}": {
       "get": {
         "consumes": [
           "application/json"
         ],
         "produces": [
           "application/json"
+        ],
+        "tags": [
+          "security"
         ],
         "summary": "Used to return details of a specific security rule within the system",
         "operationId": "GetSecurityRule",
@@ -906,7 +912,7 @@
         }
       }
     },
-    "/api/v1alpha1/security/scans": {
+    "/api/v1alpha1/securityscans": {
       "get": {
         "consumes": [
           "application/json"
@@ -914,7 +920,10 @@
         "produces": [
           "application/json"
         ],
-        "summary": "Used to return security scans for any object in the system",
+        "tags": [
+          "security"
+        ],
+        "summary": "Used to return a list of security scan results",
         "operationId": "ListSecurityScans",
         "parameters": [
           {
@@ -947,7 +956,7 @@
         }
       }
     },
-    "/api/v1alpha1/security/scans/{group}/{version}/{kind}/{namespace}/{name}": {
+    "/api/v1alpha1/securityscans/overview": {
       "get": {
         "consumes": [
           "application/json"
@@ -955,50 +964,16 @@
         "produces": [
           "application/json"
         ],
-        "summary": "Used to return latest security scan for specific object in the system",
-        "operationId": "GetSecurityScanForResource",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "Is the group of the kind",
-            "name": "group",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "Is the version of the kind",
-            "name": "version",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "Is the kind of the resource",
-            "name": "kind",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "Is the namespace of the resource",
-            "name": "namespace",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "Is the name of the resource",
-            "name": "name",
-            "in": "path",
-            "required": true
-          }
+        "tags": [
+          "security"
         ],
+        "summary": "Used to return a summary of the security overview for the entire Kore estate",
+        "operationId": "GetSecurityOverview",
         "responses": {
           "200": {
-            "description": "Latest security scan for this resource",
+            "description": "A report of the security posture of Kore",
             "schema": {
-              "$ref": "#/definitions/v1.SecurityScanResult"
+              "$ref": "#/definitions/v1.SecurityOverview"
             }
           },
           "401": {
@@ -1007,9 +982,6 @@
           "403": {
             "description": "If authenticated but not authorized"
           },
-          "404": {
-            "description": "No current security scan exists for the resource"
-          },
           "500": {
             "description": "A generic API error containing the cause of the error",
             "schema": {
@@ -1017,13 +989,18 @@
             }
           }
         }
-      },
+      }
+    },
+    "/api/v1alpha1/securityscans/scans/{group}/{version}/{kind}/{namespace}/{name}": {
       "put": {
         "consumes": [
           "application/json"
         ],
         "produces": [
           "application/json"
+        ],
+        "tags": [
+          "security"
         ],
         "summary": "Used to persist a new security scan result for specific object in the system",
         "operationId": "StoreSecurityScanForResource",
@@ -1101,13 +1078,16 @@
         }
       }
     },
-    "/api/v1alpha1/security/scans/{group}/{version}/{kind}/{namespace}/{name}/history": {
+    "/api/v1alpha1/securityscans/scans/{group}/{version}/{kind}/{namespace}/{name}/history": {
       "get": {
         "consumes": [
           "application/json"
         ],
         "produces": [
           "application/json"
+        ],
+        "tags": [
+          "security"
         ],
         "summary": "Used to return the history of security scans for specific object in the system",
         "operationId": "ListSecurityScansForResource",
@@ -1170,13 +1150,91 @@
         }
       }
     },
-    "/api/v1alpha1/security/scans/{id}": {
+    "/api/v1alpha1/securityscans/{group}/{version}/{kind}/{namespace}/{name}": {
       "get": {
         "consumes": [
           "application/json"
         ],
         "produces": [
           "application/json"
+        ],
+        "tags": [
+          "security"
+        ],
+        "summary": "Used to return latest security scan for specific object in the system",
+        "operationId": "GetSecurityScanForResource",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the group of the kind",
+            "name": "group",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the version of the kind",
+            "name": "version",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the kind of the resource",
+            "name": "kind",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the namespace of the resource",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the name of the resource",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Latest security scan for this resource",
+            "schema": {
+              "$ref": "#/definitions/v1.SecurityScanResult"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "No current security scan exists for the resource"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/securityscans/{id}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "security"
         ],
         "summary": "Used to return specific security scan by ID",
         "operationId": "GetSecurityScan",
@@ -4263,6 +4321,47 @@
         }
       }
     },
+    "/api/v1alpha1/teams/{team}/security": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Returns an overview of the security posture for resources owned by this team",
+        "operationId": "GetTeamSecurityOverview",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The requested security overview",
+            "schema": {
+              "$ref": "#/definitions/v1.SecurityOverview"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
     "/api/v1alpha1/teams/{team}/servicecredentials": {
       "get": {
         "consumes": [
@@ -6382,6 +6481,62 @@
         }
       }
     },
+    "v1.SecurityOverview": {
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1.SecurityOverviewSpec"
+        }
+      }
+    },
+    "v1.SecurityOverviewSpec": {
+      "properties": {
+        "openIssueCounts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          }
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.SecurityResourceOverview"
+          }
+        },
+        "team": {
+          "type": "string"
+        }
+      }
+    },
+    "v1.SecurityResourceOverview": {
+      "properties": {
+        "lastChecked": {
+          "type": "string"
+        },
+        "openIssueCounts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          }
+        },
+        "overallStatus": {
+          "type": "string"
+        },
+        "resource": {
+          "$ref": "#/definitions/v1.Ownership"
+        }
+      }
+    },
     "v1.SecurityRule": {
       "properties": {
         "apiVersion": {
@@ -6907,11 +7062,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
-        "clientID",
-        "clientSecret",
         "issuer",
         "clientScopes",
-        "userClaims"
+        "userClaims",
+        "clientID",
+        "clientSecret"
       ],
       "properties": {
         "clientID": {

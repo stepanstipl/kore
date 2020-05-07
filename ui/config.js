@@ -59,7 +59,7 @@ module.exports = {
   kore: {
     baseUrl: process.env.KORE_BASE_URL || 'http://localhost:3000',
     koreAdminTeamName: 'kore-admin',
-    ignoreTeams: ['kore-admin', 'kore-default'],
+    ignoreTeams: ['kore-admin', 'kore-default', 'kore'],
     gtmId: 'GTM-T9THH55',
     showPrototypes: process.env.NODE_ENV === 'development' || process.env.KORE_UI_SHOW_PROTOTYPES === 'true',
     featureGates: getFeatureGates()

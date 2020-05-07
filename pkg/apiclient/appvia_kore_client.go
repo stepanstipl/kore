@@ -6,10 +6,12 @@ package apiclient
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"github.com/appvia/kore/pkg/apiclient/operations"
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+
+	"github.com/appvia/kore/pkg/apiclient/operations"
+	securityops "github.com/appvia/kore/pkg/apiclient/security"
 )
 
 // Default appvia kore HTTP client.
@@ -55,6 +57,7 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *AppviaKore
 	cli := new(AppviaKore)
 	cli.Transport = transport
 	cli.Operations = operations.New(transport, formats)
+	cli.Security = securityops.New(transport, formats)
 	return cli
 }
 
@@ -101,6 +104,8 @@ func (cfg *TransportConfig) WithSchemes(schemes []string) *TransportConfig {
 type AppviaKore struct {
 	Operations operations.ClientService
 
+	Security securityops.ClientService
+
 	Transport runtime.ClientTransport
 }
 
@@ -108,4 +113,5 @@ type AppviaKore struct {
 func (c *AppviaKore) SetTransport(transport runtime.ClientTransport) {
 	c.Transport = transport
 	c.Operations.SetTransport(transport)
+	c.Security.SetTransport(transport)
 }

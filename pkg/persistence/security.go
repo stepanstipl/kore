@@ -18,6 +18,7 @@ package persistence
 
 import (
 	"context"
+	"time"
 
 	"github.com/jinzhu/gorm"
 	"github.com/prometheus/client_golang/prometheus"
@@ -40,7 +41,15 @@ type Security interface {
 	// and if different, the old result will have its archived_at set, else the old result will be updated with an updated checked_at
 	// time. If archived_at is set, it will simply be persisted with no changes to any other results.
 	StoreScan(context.Context, *model.SecurityScanResult) error
+	// ArchiveResourceScans sets any non-archived scan results for the resource to archived. This is for when a resource is deleted.
+	ArchiveResourceScans(ctx context.Context, group string, version string, kind string, namespace string, name string) error
+	// GetOverview retrieves an overview of the current security situation of all resources
+	GetOverview(context.Context) (*model.SecurityOverview, error)
+	// GetOverview retrieves an overview of the current security situation of all resources owned by a specific team
+	GetTeamOverview(context.Context, string) (*model.SecurityOverview, error)
 }
+
+var _ Security = &securityImpl{}
 
 type securityImpl struct {
 	Interface
@@ -143,6 +152,21 @@ func (s *securityImpl) ListResourceScanHistory(ctx context.Context, group string
 	return s.ListScans(ctx, false, Filter.WithIdentity(group, version, kind, namespace, name))
 }
 
+func (s *securityImpl) ArchiveResourceScans(ctx context.Context, group string, version string, kind string, namespace string, name string) error {
+	timed := prometheus.NewTimer(setLatency)
+	defer timed.ObserveDuration()
+
+	return s.conn.Exec(
+		"UPDATE security_scan_results SET archived_at = ? WHERE archived_at IS NULL AND resource_group = ? AND resource_version = ? AND resource_kind = ? AND resource_namespace = ? AND resource_name = ?",
+		time.Now(),
+		group,
+		version,
+		kind,
+		namespace,
+		name,
+	).Error
+}
+
 func (s *securityImpl) StoreScan(ctx context.Context, result *model.SecurityScanResult) error {
 	timed := prometheus.NewTimer(setLatency)
 	defer timed.ObserveDuration()
@@ -212,4 +236,79 @@ func (s *securityImpl) StoreScan(ctx context.Context, result *model.SecurityScan
 			Create(result).
 			Error
 	})
+}
+
+func (s *securityImpl) GetOverview(ctx context.Context) (*model.SecurityOverview, error) {
+	timed := prometheus.NewTimer(getLatency)
+	defer timed.ObserveDuration()
+
+	return s.getOverview(ctx, "")
+}
+
+func (s *securityImpl) GetTeamOverview(ctx context.Context, team string) (*model.SecurityOverview, error) {
+	timed := prometheus.NewTimer(getLatency)
+	defer timed.ObserveDuration()
+
+	return s.getOverview(ctx, team)
+}
+
+func (s *securityImpl) getOverview(ctx context.Context, team string) (*model.SecurityOverview, error) {
+	var result []struct {
+		ResourceGroup     string
+		ResourceVersion   string
+		ResourceKind      string
+		ResourceNamespace string
+		ResourceName      string
+		OverallStatus     string
+		CheckedAt         time.Time
+		RuleCode          string
+		Status            string
+	}
+
+	query := s.conn.Table("security_scan_results").
+		Joins("INNER JOIN security_rule_results ON security_scan_results.id = security_rule_results.scan_id").
+		Select("security_scan_results.resource_group, security_scan_results.resource_version, security_scan_results.resource_kind, security_scan_results.resource_namespace, security_scan_results.resource_name, security_scan_results.checked_at, security_scan_results.overall_status, security_rule_results.rule_code, security_rule_results.status").
+		Where("security_scan_results.archived_at IS NULL")
+
+	if team != "" {
+		query = query.
+			Where("security_scan_results.owning_team = ?", team)
+	}
+
+	err := query.
+		Order("security_scan_results.resource_group, security_scan_results.resource_version, security_scan_results.resource_kind, security_scan_results.resource_namespace, security_scan_results.resource_name").
+		Scan(&result).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	overview := model.SecurityOverview{
+		OpenIssueCounts: map[string]uint64{},
+	}
+
+	// Count totals and push results
+	currRes := &model.SecurityResourceOverview{}
+	for _, r := range result {
+		if r.ResourceGroup != currRes.ResourceGroup || r.ResourceVersion != currRes.ResourceVersion || r.ResourceKind != currRes.ResourceKind || r.ResourceNamespace != currRes.ResourceNamespace || r.ResourceName != currRes.ResourceName {
+			currRes = &model.SecurityResourceOverview{
+				SecurityResourceReference: model.SecurityResourceReference{
+					ResourceGroup:     r.ResourceGroup,
+					ResourceVersion:   r.ResourceVersion,
+					ResourceKind:      r.ResourceKind,
+					ResourceNamespace: r.ResourceNamespace,
+					ResourceName:      r.ResourceName,
+				},
+				LastChecked:     r.CheckedAt,
+				OverallStatus:   r.OverallStatus,
+				OpenIssueCounts: map[string]uint64{},
+			}
+			overview.Resources = append(overview.Resources, *currRes)
+		}
+		currRes.OpenIssueCounts[r.Status]++
+		overview.OpenIssueCounts[r.Status]++
+	}
+
+	return &overview, nil
 }

@@ -53,6 +53,9 @@ class V1alpha1ProjectClaimSpec {
             if (data.hasOwnProperty('organization')) {
                 obj['organization'] = V1Ownership.constructFromObject(data['organization']);
             }
+            if (data.hasOwnProperty('projectName')) {
+                obj['projectName'] = ApiClient.convertToType(data['projectName'], 'String');
+            }
         }
         return obj;
     }
@@ -70,6 +73,19 @@ class V1alpha1ProjectClaimSpec {
     setOrganization(organization) {
         this['organization'] = organization;
     }
+/**
+     * @return {String}
+     */
+    getProjectName() {
+        return this.projectName;
+    }
+
+    /**
+     * @param {String} projectName
+     */
+    setProjectName(projectName) {
+        this['projectName'] = projectName;
+    }
 
 }
 
@@ -77,6 +93,11 @@ class V1alpha1ProjectClaimSpec {
  * @member {module:model/V1Ownership} organization
  */
 V1alpha1ProjectClaimSpec.prototype['organization'] = undefined;
+
+/**
+ * @member {String} projectName
+ */
+V1alpha1ProjectClaimSpec.prototype['projectName'] = undefined;
 
 
 

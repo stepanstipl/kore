@@ -12,6 +12,7 @@
  */
 
 import ApiClient from '../ApiClient';
+import V1Ownership from './V1Ownership';
 
 /**
  * The V1Component model module.
@@ -55,6 +56,9 @@ class V1Component {
             }
             if (data.hasOwnProperty('name')) {
                 obj['name'] = ApiClient.convertToType(data['name'], 'String');
+            }
+            if (data.hasOwnProperty('resource')) {
+                obj['resource'] = V1Ownership.constructFromObject(data['resource']);
             }
             if (data.hasOwnProperty('status')) {
                 obj['status'] = ApiClient.convertToType(data['status'], 'String');
@@ -103,6 +107,19 @@ class V1Component {
         this['name'] = name;
     }
 /**
+     * @return {module:model/V1Ownership}
+     */
+    getResource() {
+        return this.resource;
+    }
+
+    /**
+     * @param {module:model/V1Ownership} resource
+     */
+    setResource(resource) {
+        this['resource'] = resource;
+    }
+/**
      * @return {String}
      */
     getStatus() {
@@ -132,6 +149,11 @@ V1Component.prototype['message'] = undefined;
  * @member {String} name
  */
 V1Component.prototype['name'] = undefined;
+
+/**
+ * @member {module:model/V1Ownership} resource
+ */
+V1Component.prototype['resource'] = undefined;
 
 /**
  * @member {String} status

@@ -268,17 +268,19 @@ func (c Convertor) FromMembersToTeamList(members []*model.Member) *orgv1.TeamLis
 // ToSecurityScanResult converts to the DB-layer scan result from the Security scan result
 func (c Convertor) ToSecurityScanResult(result *securityv1.SecurityScanResult) model.SecurityScanResult {
 	res := model.SecurityScanResult{
-		ID:                result.Spec.ID,
-		ResourceGroup:     result.Spec.Resource.Group,
-		ResourceVersion:   result.Spec.Resource.Version,
-		ResourceKind:      result.Spec.Resource.Kind,
-		ResourceNamespace: result.Spec.Resource.Namespace,
-		ResourceName:      result.Spec.Resource.Name,
-		OwningTeam:        result.Spec.OwningTeam,
-		CheckedAt:         result.Spec.CheckedAt.Time,
-		ArchivedAt:        result.Spec.ArchivedAt.Time,
-		OverallStatus:     result.Spec.OverallStatus.String(),
-		Results:           make([]model.SecurityRuleResult, len(result.Spec.Results)),
+		ID: result.Spec.ID,
+		SecurityResourceReference: model.SecurityResourceReference{
+			ResourceGroup:     result.Spec.Resource.Group,
+			ResourceVersion:   result.Spec.Resource.Version,
+			ResourceKind:      result.Spec.Resource.Kind,
+			ResourceNamespace: result.Spec.Resource.Namespace,
+			ResourceName:      result.Spec.Resource.Name,
+		},
+		OwningTeam:    result.Spec.OwningTeam,
+		CheckedAt:     result.Spec.CheckedAt.Time,
+		ArchivedAt:    result.Spec.ArchivedAt.Time,
+		OverallStatus: result.Spec.OverallStatus.String(),
+		Results:       make([]model.SecurityRuleResult, len(result.Spec.Results)),
 	}
 	for i, rr := range result.Spec.Results {
 		res.Results[i] = c.ToSecurityRuleResult(rr)
@@ -370,4 +372,49 @@ func (c Convertor) FromSecurityRule(rule security.Rule) securityv1.SecurityRule 
 			AppliesTo:   security.RuleApplies(rule),
 		},
 	}
+}
+
+func (c Convertor) FromSecurityOverview(overview *model.SecurityOverview) securityv1.SecurityOverview {
+	o := securityv1.SecurityOverview{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: securityv1.SchemeGroupVersion.String(),
+			Kind:       "SecurityOverview",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "overview",
+		},
+		Spec: securityv1.SecurityOverviewSpec{
+			OpenIssueCounts: map[securityv1.RuleStatus]uint64{},
+			Resources:       make([]securityv1.SecurityResourceOverview, len(overview.Resources)),
+		},
+	}
+
+	for k, v := range overview.OpenIssueCounts {
+		o.Spec.OpenIssueCounts[securityv1.RuleStatus(k)] = v
+	}
+
+	for i, r := range overview.Resources {
+		o.Spec.Resources[i] = c.FromSecurityResourceOverview(&r)
+	}
+
+	return o
+}
+
+func (c Convertor) FromSecurityResourceOverview(resource *model.SecurityResourceOverview) securityv1.SecurityResourceOverview {
+	r := securityv1.SecurityResourceOverview{
+		Resource: corev1.Ownership{
+			Group:     resource.ResourceGroup,
+			Version:   resource.ResourceVersion,
+			Kind:      resource.ResourceKind,
+			Namespace: resource.ResourceNamespace,
+			Name:      resource.ResourceName,
+		},
+		OverallStatus:   securityv1.RuleStatus(resource.OverallStatus),
+		LastChecked:     metav1.NewTime(resource.LastChecked),
+		OpenIssueCounts: map[securityv1.RuleStatus]uint64{},
+	}
+	for k, v := range resource.OpenIssueCounts {
+		r.OpenIssueCounts[securityv1.RuleStatus(k)] = v
+	}
+	return r
 }

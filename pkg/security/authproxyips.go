@@ -48,9 +48,11 @@ func (p *AuthProxyIPRangeRule) Name() string {
 func (p *AuthProxyIPRangeRule) Description() string {
 	return `
 ## Overview
+
 This rule ensures that a plan specifies narrow (/16 or smaller) IP ranges for the authentication proxy to accept.
 
-## Details
+## Details
+
 When Kore creates a Kubernetes cluster, it uses an authentication proxy running inside that cluster to authenticate
 access to the cluster. It is best practice to restrict the IP address ranges enabled by default on a cluster to a
 known set of IP ranges.
@@ -59,6 +61,7 @@ This rule returns a warning where a plan either does not specify any IP ranges, 
 than a /16.
 
 ## Impact of warnings from this rule
+
 The authentication proxy deployed is secure to be open to the internet, so if necessary it is acceptable to run
 clusters without restricting the range. However, where possible, the range should be restricted to those IP ranges
 where your administrators will access the cluster from.

@@ -138,6 +138,11 @@ func (p plansImpl) Delete(ctx context.Context, name string) (*configv1.Plan, err
 		return nil, err
 	}
 
+	if err := p.Security().ArchiveResourceScans(ctx, plan.TypeMeta, plan.ObjectMeta); err != nil {
+		// Log but continue in case of errors here - the plan IS deleted.
+		log.WithError(err).Warning("error while archiving security scans for plan")
+	}
+
 	return plan, nil
 }
 

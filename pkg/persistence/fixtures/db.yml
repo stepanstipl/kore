@@ -42,12 +42,18 @@ members:
     user_id: 2
 security_scan_results:
   - id: 1
+    resource_group: example.kore.appvia.io
+    resource_version: v1
+    resource_kind: Plan
     resource_namespace: test-team
     resource_name: test
     owning_team: test-team
     checked_at: '2020-04-29 17:03:00'
     overall_status: Warning
   - id: 2
+    resource_group: example.kore.appvia.io
+    resource_version: v1
+    resource_kind: Plan
     resource_namespace: test-team
     resource_name: test2
     owning_team: test-team
@@ -55,6 +61,9 @@ security_scan_results:
     archived_at: '2020-04-29 17:03:01'
     overall_status: Warning
   - id: 3
+    resource_group: example.kore.appvia.io
+    resource_version: v1
+    resource_kind: Plan
     resource_namespace: test-team
     resource_name: test2
     owning_team: test-team
@@ -62,6 +71,9 @@ security_scan_results:
     archived_at: null
     overall_status: Compliant
   - id: 4
+    resource_group: example.kore.appvia.io
+    resource_version: v1
+    resource_kind: Plan
     resource_namespace: test-team2
     resource_name: test3
     owning_team: test-team2

@@ -20,10 +20,7 @@ import (
 	"time"
 )
 
-// SecurityScanResult stores the result of a security scan
-type SecurityScanResult struct {
-	// ID is the unique record id
-	ID uint64 `gorm:"primary_key"`
+type SecurityResourceReference struct {
 	// ResourceGroup is the group of the resource scanned by this scan
 	ResourceGroup string
 	// ResourceVersion is the version of the resource scanned by this scan
@@ -34,6 +31,13 @@ type SecurityScanResult struct {
 	ResourceNamespace string
 	// ResourceName is the name of the resource scanned by this scan
 	ResourceName string
+}
+
+// SecurityScanResult stores the result of a security scan
+type SecurityScanResult struct {
+	SecurityResourceReference
+	// ID is the unique record id
+	ID uint64 `gorm:"primary_key"`
 	// OwningTeam is the name of the Kore team that owns this resource, will be empty if it is a non-team resource.
 	OwningTeam string
 	// CheckedAt is the timestamp this scan was performed
@@ -60,4 +64,26 @@ type SecurityRuleResult struct {
 	Message string
 	// CheckedAt is the timestamp this scan was performed
 	CheckedAt time.Time `sql:"DEFAULT:current_timestamp"`
+}
+
+// SecurityOverview gives a snapshot of the security status of the kore estate or a team
+type SecurityOverview struct {
+	// Team will be populated with the team name if this report is about a team, else
+	// unpopulated for a report for the whole of Kore
+	Team string
+	// OpenIssueCounts informs how many issues of each rule status exist currently
+	OpenIssueCounts map[string]uint64
+	// Resources contains summaries of the open issues for each resource
+	Resources []SecurityResourceOverview `json:"resources,omitempty"`
+}
+
+// SecurityResourceOverview gives a snapshot of the security status of a specific resource
+type SecurityResourceOverview struct {
+	SecurityResourceReference
+	// LastChecked is the last time this resource was scanned
+	LastChecked time.Time
+	// OverallStatus is the overall status of this resource
+	OverallStatus string
+	// OpenIssueCounts informs how many issues of each rule status exist currently for this resource
+	OpenIssueCounts map[string]uint64
 }

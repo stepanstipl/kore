@@ -89,6 +89,16 @@ class KoreApiClient {
 
   // Audit
   ListAuditEvents = () => this.apis.default.ListAuditEvents()
+
+  // Security
+  security = {
+    GetSecurityOverview: () => this.apis.security.GetSecurityOverview(),
+    GetSecurityScanForResource: (group, version, kind, namespace, name) => this.apis.security.GetSecurityScanForResource({ group, version, kind, namespace, name }),
+    ListSecurityScansForResource: (group, version, kind, namespace, name) => this.apis.security.ListSecurityScansForResource({ group, version, kind, namespace, name }),
+    GetSecurityScan: (id) => this.apis.security.GetSecurityScan({ id: id }),
+    ListSecurityRules: () => this.apis.security.ListSecurityRules(),
+    GetSecurityRule: (code) => this.apis.security.GetSecurityRule({ code })
+  }
   
   // Policies 
   ListPlanPolicies = (kind) => this.apis.default.ListPlanPolicies({ kind })
@@ -104,6 +114,7 @@ class KoreApiClient {
   ListTeamMembers = (team) => this.apis.default.ListTeamMembers({ team })
   AddTeamMember = (team, user) => this.apis.default.AddTeamMember({ team, user })
   RemoveTeamMember = (team, user) => this.apis.default.RemoveTeamMember({ team, user })
+  GetTeamSecurityOverview = (team) => this.apis.default.GetTeamSecurityOverview({ team })
   ListGKECredentials = (team) => this.apis.default.ListGKECredentials({ team })
   GetGKECredential = (team, name) => this.apis.default.GetGKECredential({ team, name })
   UpdateGKECredential = (team, name, resource) => this.apis.default.UpdateGKECredential({ team, name, body: JSON.stringify(resource) })

@@ -27,27 +27,29 @@ import (
 	"github.com/appvia/kore/pkg/utils/validation"
 
 	restful "github.com/emicklei/go-restful"
+	restfulspec "github.com/emicklei/go-restful-openapi"
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func init() {
-	RegisterHandler(&securityHandler{})
+	RegisterHandler(&securityScansHandler{})
 }
 
-type securityHandler struct {
+type securityScansHandler struct {
 	kore.Interface
 	// DefaultHandlder implements default features
 	DefaultHandler
 }
 
 // Register is called by the api server on registration
-func (s *securityHandler) Register(i kore.Interface, builder utils.PathBuilder) (*restful.WebService, error) {
-	path := builder.Add("security")
+func (s *securityScansHandler) Register(i kore.Interface, builder utils.PathBuilder) (*restful.WebService, error) {
+	path := builder.Add("securityscans")
+	tags := []string{"security"}
 
 	log.WithFields(log.Fields{
 		"path": path.Base(),
-	}).Info("registering the security webservice")
+	}).Info("registering the security scans webservice")
 
 	s.Interface = i
 
@@ -57,32 +59,26 @@ func (s *securityHandler) Register(i kore.Interface, builder utils.PathBuilder) 
 	ws.Path(path.Base())
 
 	ws.Route(
-		withAllNonValidationErrors(ws.GET("rules")).To(s.listSecurityRules).
-			Doc("Used to return a list of all the security rules in the system").
-			Operation("ListSecurityRules").
-			Returns(http.StatusOK, "A collection of security rules", securityv1.SecurityRuleList{}),
-	)
-
-	ws.Route(
-		withAllNonValidationErrors(ws.GET("rules/{code}")).To(s.getSecurityRule).
-			Doc("Used to return details of a specific security rule within the system").
-			Operation("GetSecurityRule").
-			Param(ws.PathParameter("code", "Is the unique code for the security rule")).
-			Returns(http.StatusNotFound, "No security rule exists for the code", nil).
-			Returns(http.StatusOK, "A security rule", securityv1.SecurityRule{}),
-	)
-
-	ws.Route(
-		withAllNonValidationErrors(ws.GET("scans")).To(s.listSecurityScans).
-			Doc("Used to return security scans for any object in the system").
+		withAllNonValidationErrors(ws.GET("")).To(s.listSecurityScans).
+			Doc("Used to return a list of security scan results").
+			Metadata(restfulspec.KeyOpenAPITags, tags).
 			Operation("ListSecurityScans").
 			Param(ws.QueryParameter("latestOnly", "Set to false to retrieve full history").DefaultValue("true").DataType("boolean")).
 			Returns(http.StatusOK, "A collection of security scans", securityv1.SecurityScanResultList{}),
 	)
 
 	ws.Route(
-		withAllNonValidationErrors(ws.GET("scans/{group}/{version}/{kind}/{namespace}/{name}")).To(s.getSecurityScanForResource).
+		withAllNonValidationErrors(ws.GET("overview")).To(s.getSecurityOverview).
+			Doc("Used to return a summary of the security overview for the entire Kore estate").
+			Metadata(restfulspec.KeyOpenAPITags, tags).
+			Operation("GetSecurityOverview").
+			Returns(http.StatusOK, "A report of the security posture of Kore", securityv1.SecurityOverview{}),
+	)
+
+	ws.Route(
+		withAllNonValidationErrors(ws.GET("{group}/{version}/{kind}/{namespace}/{name}")).To(s.getSecurityScanForResource).
 			Doc("Used to return latest security scan for specific object in the system").
+			Metadata(restfulspec.KeyOpenAPITags, tags).
 			Operation("GetSecurityScanForResource").
 			Param(ws.PathParameter("group", "Is the group of the kind")).
 			Param(ws.PathParameter("version", "Is the version of the kind")).
@@ -96,6 +92,7 @@ func (s *securityHandler) Register(i kore.Interface, builder utils.PathBuilder) 
 	ws.Route(
 		withAllErrors(ws.PUT("scans/{group}/{version}/{kind}/{namespace}/{name}")).To(s.storeSecurityScanForResource).
 			Doc("Used to persist a new security scan result for specific object in the system").
+			Metadata(restfulspec.KeyOpenAPITags, tags).
 			Operation("StoreSecurityScanForResource").
 			Reads(securityv1.SecurityScanResult{}, "The result of a security scan").
 			Param(ws.PathParameter("group", "Is the group of the kind")).
@@ -110,6 +107,7 @@ func (s *securityHandler) Register(i kore.Interface, builder utils.PathBuilder) 
 		withAllNonValidationErrors(ws.GET("scans/{group}/{version}/{kind}/{namespace}/{name}/history")).
 			To(s.listSecurityScansForResource).
 			Doc("Used to return the history of security scans for specific object in the system").
+			Metadata(restfulspec.KeyOpenAPITags, tags).
 			Operation("ListSecurityScansForResource").
 			Param(ws.PathParameter("group", "Is the group of the kind")).
 			Param(ws.PathParameter("version", "Is the version of the kind")).
@@ -120,8 +118,9 @@ func (s *securityHandler) Register(i kore.Interface, builder utils.PathBuilder) 
 	)
 
 	ws.Route(
-		withAllNonValidationErrors(ws.GET("scans/{id}")).To(s.getSecurityScan).
+		withAllNonValidationErrors(ws.GET("{id}")).To(s.getSecurityScan).
 			Doc("Used to return specific security scan by ID").
+			Metadata(restfulspec.KeyOpenAPITags, tags).
 			Operation("GetSecurityScan").
 			Param(ws.PathParameter("id", "Is the ID of the scan").DataType("integer")).
 			Returns(http.StatusNotFound, "No current security scan exists for the ID", nil).
@@ -131,31 +130,7 @@ func (s *securityHandler) Register(i kore.Interface, builder utils.PathBuilder) 
 	return ws, nil
 }
 
-func (s *securityHandler) listSecurityRules(req *restful.Request, resp *restful.Response) {
-	handleErrors(req, resp, func() error {
-		list, err := s.Security().ListRules(req.Request.Context())
-		if err != nil {
-			return err
-		}
-		return resp.WriteHeaderAndEntity(http.StatusOK, list)
-	})
-}
-
-func (s *securityHandler) getSecurityRule(req *restful.Request, resp *restful.Response) {
-	handleErrors(req, resp, func() error {
-		rule, err := s.Security().GetRule(req.Request.Context(), req.PathParameter("code"))
-		if err != nil {
-			return err
-		}
-		if rule == nil {
-			resp.WriteHeader(http.StatusNotFound)
-			return nil
-		}
-		return resp.WriteHeaderAndEntity(http.StatusOK, rule)
-	})
-}
-
-func (s *securityHandler) listSecurityScans(req *restful.Request, resp *restful.Response) {
+func (s *securityScansHandler) listSecurityScans(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		latestOnly, err := strconv.ParseBool(req.QueryParameter("latestOnly"))
 		if err != nil {
@@ -170,7 +145,17 @@ func (s *securityHandler) listSecurityScans(req *restful.Request, resp *restful.
 	})
 }
 
-func (s *securityHandler) getSecurityScanForResource(req *restful.Request, resp *restful.Response) {
+func (s *securityScansHandler) getSecurityOverview(req *restful.Request, resp *restful.Response) {
+	handleErrors(req, resp, func() error {
+		overview, err := s.Security().GetOverview(req.Request.Context())
+		if err != nil {
+			return err
+		}
+		return resp.WriteHeaderAndEntity(http.StatusOK, overview)
+	})
+}
+
+func (s *securityScansHandler) getSecurityScanForResource(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		scan, err := s.Security().GetCurrentScanForResource(
 			req.Request.Context(),
@@ -194,7 +179,7 @@ func (s *securityHandler) getSecurityScanForResource(req *restful.Request, resp 
 	})
 }
 
-func (s *securityHandler) storeSecurityScanForResource(req *restful.Request, resp *restful.Response) {
+func (s *securityScansHandler) storeSecurityScanForResource(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 
 		scanResult := &securityv1.SecurityScanResult{}
@@ -206,7 +191,7 @@ func (s *securityHandler) storeSecurityScanForResource(req *restful.Request, res
 	})
 }
 
-func (s *securityHandler) listSecurityScansForResource(req *restful.Request, resp *restful.Response) {
+func (s *securityScansHandler) listSecurityScansForResource(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		list, err := s.Security().ScanHistoryForResource(
 			req.Request.Context(),
@@ -226,7 +211,7 @@ func (s *securityHandler) listSecurityScansForResource(req *restful.Request, res
 	})
 }
 
-func (s *securityHandler) getSecurityScan(req *restful.Request, resp *restful.Response) {
+func (s *securityScansHandler) getSecurityScan(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		id, err := strconv.ParseUint(req.PathParameter("id"), 10, 64)
 		if err != nil {
@@ -245,6 +230,6 @@ func (s *securityHandler) getSecurityScan(req *restful.Request, resp *restful.Re
 }
 
 // Name returns the name of the handler
-func (s securityHandler) Name() string {
-	return "security"
+func (s securityScansHandler) Name() string {
+	return "securityscans"
 }
