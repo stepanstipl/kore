@@ -161,7 +161,7 @@ func schema_pkg_apis_gke_v1alpha1_GKECredentialsSpec(ref common.ReferenceCallbac
 						},
 					},
 				},
-				Required: []string{"project", "credentialsRef"},
+				Required: []string{"project"},
 			},
 		},
 		Dependencies: []string{
