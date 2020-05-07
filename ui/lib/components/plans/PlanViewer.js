@@ -90,7 +90,7 @@ class PlanViewer extends React.Component {
       }
     }
 
-    const planValues = Object.keys(schema.properties).map(name => {
+    const planValues = Object.keys(spec.configuration).map(name => {
       return {
         key: name,
         property: propertyDisplayName(name, schema.properties[name].description),
