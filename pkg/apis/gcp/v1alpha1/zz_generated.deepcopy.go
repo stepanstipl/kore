@@ -126,7 +126,7 @@ func (in *OrganizationStatus) DeepCopyInto(out *OrganizationStatus) {
 				if (*in)[i] != nil {
 					in, out := &(*in)[i], &(*out)[i]
 					*out = new(corev1.Component)
-					**out = **in
+					(*in).DeepCopyInto(*out)
 				}
 			}
 		}
@@ -240,7 +240,7 @@ func (in *ProjectClaimStatus) DeepCopyInto(out *ProjectClaimStatus) {
 				if (*in)[i] != nil {
 					in, out := &(*in)[i], &(*out)[i]
 					*out = new(corev1.Component)
-					**out = **in
+					(*in).DeepCopyInto(*out)
 				}
 			}
 		}

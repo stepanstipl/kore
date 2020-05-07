@@ -1,14 +1,15 @@
-# The feature is currently experimental and not complete
 ---
 apiVersion: config.kore.appvia.io/v1
 kind: Secret
 metadata:
   name: gcp
+  namespace: kore-admin
 spec:
   data:
-    key: <credentials>
-  description: your description
-  type: credentials
+    key: |
+      SERVICE_ACCONT
+  description: GCP Origanization
+  type: gcp-org
 ---
 apiVersion: gcp.compute.kore.appvia.io/v1alpha1
 kind: Organization
@@ -16,25 +17,59 @@ metadata:
   name: gcp
 spec:
   parentType: organization
-  parentID: ""
-  billingAccount:
+  parentID: `gcloud organizations list`
+  billingAccount: `gcloud billing list`
   serviceAccount: kore
   credentialsRef:
     name: gcp
     namespace: kore-admin
 ---
-# We then allocate the resource to all users in kore
+apiVersion: accounts.kore.appvia.io/v1beta1
+kind: AccountManagement
+metadata:
+  name: gke
+spec:
+  provider: GKE
+  managed: true
+  organization:
+    group: gcp.compute.kore.appvia.io
+    version: v1alpha1
+    kind: Organization
+    namespace: kore-admin
+    name: gcp
+  rules:
+    - name: prod
+      plans:
+        - gke-production
+      prefix: "kore-"
+    - name: dev
+      plans:
+        - gke-development
+      prefix: "kore-"
+---
 apiVersion: config.kore.appvia.io/v1
 kind: Allocation
 metadata:
-  name: gcp
+  name: gke-accounts
 spec:
-  # The name of the allocation
-  name: GCP Credentials
-  # A short description provided for the UI
-  summary: Provide GKE credentials for the GCP projects
-  # We reference the above resource when allocating to one
-  # or more teams
+  name: GKE Accounts Provisioning
+  summary: Provides the details around GCP account provisioning for the team
+  resource:
+    group: accounts.kore.appvia.io
+    version: v1beta1
+    kind: AccountManagement
+    namespace: kore-admin
+    name: gke
+  teams:
+    - "*"
+---
+apiVersion: config.kore.appvia.io/v1
+kind: Allocation
+metadata:
+  name: gcp-org
+spec:
+  name: GCP Organization
+  summary: Provides the details around GCP account provisioning for the team
   resource:
     group: gcp.compute.kore.appvia.io
     version: v1alpha1

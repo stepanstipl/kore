@@ -92,17 +92,19 @@ func CreateCredentialsSecret(project *gcp.ProjectClaim, name string, values map[
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: project.Namespace,
-			OwnerReferences: []metav1.OwnerReference{{
-				APIVersion: gcp.GroupVersion.String(),
-				Controller: &isTrue,
-				Kind:       "ProjectClaim",
-				Name:       project.GetName(),
-				UID:        project.GetUID(),
-			}},
+			/*
+				OwnerReferences: []metav1.OwnerReference{{
+					APIVersion: gcp.GroupVersion.String(),
+					Controller: &isTrue,
+					Kind:       "ProjectClaim",
+					Name:       project.GetName(),
+					UID:        project.GetUID(),
+				}},
+			*/
 		},
 		Spec: configv1.SecretSpec{
 			Data:        values,
-			Description: fmt.Sprintf("GCP Project credentials for team project: %s", project.Name),
+			Description: fmt.Sprintf("GCP Project credentials for team project: %s", project.Spec.ProjectName),
 			Type:        configv1.GenericSecret,
 		},
 	}
@@ -118,7 +120,7 @@ func IsProject(ctx context.Context, client *cloudresourcemanager.Service, name s
 	}
 
 	for _, x := range list.Projects {
-		if x.Name == name {
+		if x.Name == name || x.ProjectId == name {
 			return x, true, nil
 		}
 	}

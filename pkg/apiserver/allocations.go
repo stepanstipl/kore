@@ -29,6 +29,8 @@ func (u teamHandler) findAllocations(req *restful.Request, resp *restful.Respons
 	handleErrors(req, resp, func() error {
 		team := req.PathParameter("team")
 		assigned := req.QueryParameter("assigned")
+		kind := req.QueryParameter("kind")
+		group := req.QueryParameter("group")
 
 		if assigned == "false" {
 			list, err := u.Teams().Team(team).Allocations().List(req.Request.Context())
@@ -42,6 +44,22 @@ func (u teamHandler) findAllocations(req *restful.Request, resp *restful.Respons
 		list, err := u.Teams().Team(team).Allocations().ListAllocationsAssigned(req.Request.Context())
 		if err != nil {
 			return err
+		}
+
+		// @step: perform any filtering required
+		if kind != "" || group != "" {
+			var filtered []configv1.Allocation
+
+			for _, x := range list.Items {
+				switch {
+				case kind != "" && kind != x.Spec.Resource.Kind:
+					continue
+				case group != "" && group != x.Spec.Resource.Group:
+					continue
+				}
+				filtered = append(filtered, x)
+			}
+			list.Items = filtered
 		}
 
 		return resp.WriteHeaderAndEntity(http.StatusOK, list)

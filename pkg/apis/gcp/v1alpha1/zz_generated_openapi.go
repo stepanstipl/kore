@@ -184,7 +184,7 @@ func schema_pkg_apis_gcp_v1alpha1_ProjectClaim(ref common.ReferenceCallback) com
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
-				Description: "ProjectClaim is the Schema for the gcpprojects API",
+				Description: "ProjectClaim is the Schema for the ProjectClaims API",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
@@ -231,6 +231,13 @@ func schema_pkg_apis_gcp_v1alpha1_ProjectClaimSpec(ref common.ReferenceCallback)
 				Description: "ProjectClaimSpec defines the desired state of ProjectClaim",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"projectName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ProjectName is the name of the project to create We do this internally so we can easily change the project name without changing the resource name",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"organization": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Organization is a reference to the gcp admin project to use",

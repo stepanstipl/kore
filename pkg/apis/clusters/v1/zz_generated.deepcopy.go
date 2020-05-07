@@ -116,7 +116,7 @@ func (in *ClusterStatus) DeepCopyInto(out *ClusterStatus) {
 			if (*in)[i] != nil {
 				in, out := &(*in)[i], &(*out)[i]
 				*out = new(corev1.Component)
-				**out = **in
+				(*in).DeepCopyInto(*out)
 			}
 		}
 	}
@@ -260,7 +260,7 @@ func (in *KubernetesStatus) DeepCopyInto(out *KubernetesStatus) {
 			if (*in)[i] != nil {
 				in, out := &(*in)[i], &(*out)[i]
 				*out = new(corev1.Component)
-				**out = **in
+				(*in).DeepCopyInto(*out)
 			}
 		}
 	}

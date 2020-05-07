@@ -143,7 +143,7 @@ func (in *ServiceCredentialsStatus) DeepCopyInto(out *ServiceCredentialsStatus) 
 			if (*in)[i] != nil {
 				in, out := &(*in)[i], &(*out)[i]
 				*out = new(corev1.Component)
-				**out = **in
+				(*in).DeepCopyInto(*out)
 			}
 		}
 	}
@@ -405,7 +405,7 @@ func (in *ServiceStatus) DeepCopyInto(out *ServiceStatus) {
 			if (*in)[i] != nil {
 				in, out := &(*in)[i], &(*out)[i]
 				*out = new(corev1.Component)
-				**out = **in
+				(*in).DeepCopyInto(*out)
 			}
 		}
 	}

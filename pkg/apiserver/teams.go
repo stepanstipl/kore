@@ -507,24 +507,6 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
-	ws.Route(
-		ws.PUT("/{team}/projectclaims/{name}").To(u.updateProjectClaim).
-			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
-			Param(ws.PathParameter("name", "Is name the of the resource you are acting on")).
-			Doc("Is used to provision or update a gcp project claim").
-			Returns(http.StatusOK, "Contains the former team definition from the kore", gcp.ProjectClaim{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
-	)
-
-	ws.Route(
-		ws.DELETE("/{team}/projectclaims/{name}").To(u.deleteProjectClaim).
-			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
-			Param(ws.PathParameter("name", "Is name the of the resource you are acting on")).
-			Doc("Is used to delete a managed gcp project claim").
-			Returns(http.StatusOK, "Contains the former team definition from the kore", gcp.ProjectClaim{}).
-			DefaultReturns("A generic API error containing the cause of the error", Error{}),
-	)
-
 	// GCP Organization
 
 	ws.Route(

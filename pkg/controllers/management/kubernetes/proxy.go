@@ -349,7 +349,7 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 	}
 
 	// @step: wait for the service to have an endpoint
-	timeout, cancel := context.WithTimeout(ctx, 90*time.Second)
+	timeout, cancel := context.WithTimeout(ctx, 240*time.Second)
 	defer cancel()
 
 	endpoint, err := kubernetes.WaitForServiceEndpoint(timeout, cc, KubeProxyNamespace, "proxy")

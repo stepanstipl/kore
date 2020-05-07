@@ -26,6 +26,12 @@ import (
 // ProjectClaimSpec defines the desired state of ProjectClaim
 // +k8s:openapi-gen=true
 type ProjectClaimSpec struct {
+	// ProjectName is the name of the project to create
+	// We do this internally so we can easily change the project name without
+	// changing the resource name
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Required
+	ProjectName string `json:"projectName,omitempty"`
 	// Organization is a reference to the gcp admin project to use
 	// +kubebuilder:validation:Required
 	Organization core.Ownership `json:"organization"`
@@ -46,7 +52,7 @@ type ProjectClaimStatus struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ProjectClaim is the Schema for the gcpprojects API
+// ProjectClaim is the Schema for the ProjectClaims API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=projectclaims,scope=Namespaced

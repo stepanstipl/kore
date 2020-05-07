@@ -14,6 +14,16 @@ import (
 )
 
 type FakeInterface struct {
+	AccountsStub        func() kore.Accounts
+	accountsMutex       sync.RWMutex
+	accountsArgsForCall []struct {
+	}
+	accountsReturns struct {
+		result1 kore.Accounts
+	}
+	accountsReturnsOnCall map[int]struct {
+		result1 kore.Accounts
+	}
 	AuditStub        func() kore.Audit
 	auditMutex       sync.RWMutex
 	auditArgsForCall []struct {
@@ -211,6 +221,58 @@ type FakeInterface struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *FakeInterface) Accounts() kore.Accounts {
+	fake.accountsMutex.Lock()
+	ret, specificReturn := fake.accountsReturnsOnCall[len(fake.accountsArgsForCall)]
+	fake.accountsArgsForCall = append(fake.accountsArgsForCall, struct {
+	}{})
+	fake.recordInvocation("Accounts", []interface{}{})
+	fake.accountsMutex.Unlock()
+	if fake.AccountsStub != nil {
+		return fake.AccountsStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.accountsReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeInterface) AccountsCallCount() int {
+	fake.accountsMutex.RLock()
+	defer fake.accountsMutex.RUnlock()
+	return len(fake.accountsArgsForCall)
+}
+
+func (fake *FakeInterface) AccountsCalls(stub func() kore.Accounts) {
+	fake.accountsMutex.Lock()
+	defer fake.accountsMutex.Unlock()
+	fake.AccountsStub = stub
+}
+
+func (fake *FakeInterface) AccountsReturns(result1 kore.Accounts) {
+	fake.accountsMutex.Lock()
+	defer fake.accountsMutex.Unlock()
+	fake.AccountsStub = nil
+	fake.accountsReturns = struct {
+		result1 kore.Accounts
+	}{result1}
+}
+
+func (fake *FakeInterface) AccountsReturnsOnCall(i int, result1 kore.Accounts) {
+	fake.accountsMutex.Lock()
+	defer fake.accountsMutex.Unlock()
+	fake.AccountsStub = nil
+	if fake.accountsReturnsOnCall == nil {
+		fake.accountsReturnsOnCall = make(map[int]struct {
+			result1 kore.Accounts
+		})
+	}
+	fake.accountsReturnsOnCall[i] = struct {
+		result1 kore.Accounts
+	}{result1}
 }
 
 func (fake *FakeInterface) Audit() kore.Audit {
@@ -1166,6 +1228,8 @@ func (fake *FakeInterface) UsersReturnsOnCall(i int, result1 kore.Users) {
 func (fake *FakeInterface) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.accountsMutex.RLock()
+	defer fake.accountsMutex.RUnlock()
 	fake.auditMutex.RLock()
 	defer fake.auditMutex.RUnlock()
 	fake.configMutex.RLock()

@@ -18,19 +18,18 @@ package cluster
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"strings"
+	"reflect"
 	"time"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -39,10 +38,14 @@ const (
 	finalizerName = "cluster.clusters.kore.appvia.io"
 )
 
+var (
+	// ClusterRevisionName is the annotation name
+	ClusterRevisionName = kore.Label("clusterRevision")
+)
+
 // Reconcile is the entrypoint for the reconciliation logic
 func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	ctx := context.Background()
-
 	logger := a.logger.WithFields(log.Fields{
 		"name":      request.NamespacedName.Name,
 		"namespace": request.NamespacedName.Namespace,
@@ -61,130 +64,46 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 	}
 	original := cluster.DeepCopy()
 
-	finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
-	if finalizer.NeedToAdd(cluster) {
-		err := finalizer.Add(cluster)
-		if err != nil {
-			logger.WithError(err).Error("failed to set the finalizer")
-		}
-
-		return reconcile.Result{Requeue: true}, err
-	}
-
-	if finalizer.IsDeletionCandidate(cluster) {
+	// @step: create the finalizer on the object and check if deleting
+	if !cluster.DeletionTimestamp.IsZero() {
 		return a.Delete(ctx, cluster)
 	}
 
-	err := func() error {
-		cluster.Status.Status = corev1.PendingStatus
-		if cluster.Status.Components == nil {
-			cluster.Status.Components = corev1.Components{}
-		}
-
-		// @step: we generate a collection of resources based on the cluster type
-		// GKE -> K8S, EKS -> VPC -> K8S etc.
-		components, err := createClusterComponents(cluster)
-		if err != nil {
-			logger.WithError(err).Error("trying to create the cluster components")
-
-			return controllers.NewCriticalError(err)
-		}
-
-		for componentName, c := range components {
-			if err := a.loadComponent(ctx, cluster, c); err != nil {
-				logger.WithError(err).Error("trying to load the cluster components")
-
-				return fmt.Errorf("trying to load %s component: %w", componentName, err)
-			}
-		}
-
-		for _, c := range components {
-			switch r := c.(type) {
-			case *eksv1alpha1.EKSVPC:
-				applyEKSVPC(r, components)
-			}
-		}
-
-		for componentName, c := range components {
-			if readyForReconcile(c, components) {
-				if err := a.createOrUpdateComponent(ctx, cluster, c); err != nil {
-					logger.WithError(err).Error("trying create or update the cluster components")
-
-					return fmt.Errorf("trying to create or update %s component: %w", componentName, err)
-				}
-			}
-			switch r := c.(type) {
-			case *clustersv1.Kubernetes:
-				if r.Status.Status == corev1.SuccessStatus {
-					cluster.Status.APIEndpoint = r.Status.APIEndpoint
-					cluster.Status.AuthProxyEndpoint = r.Status.Endpoint
-					cluster.Status.CaCertificate = r.Status.CaCertificate
-				}
-			}
-
-			status, message := c.GetStatus()
-			if status == "" {
-				status = corev1.PendingStatus
-			}
-			if status.IsFailed() && message == "" {
-				if err := c.GetComponents().Error(); err != nil {
-					logger.WithError(err).Error("trying to retrieve the components")
-
-					message = err.Error()
-				}
-			}
-			component := corev1.Component{
-				Name:    componentName,
-				Status:  status,
-				Message: message,
-			}
-			cluster.Status.Components.SetCondition(component)
-		}
-
-		// Check for deleted EKS node groups
-		for _, existing := range cluster.Status.Components {
-			if strings.HasPrefix(existing.Name, "EKSNodeGroup/") {
-				if components[existing.Name] == nil {
-					name := strings.TrimPrefix(existing.Name, "EKSNodeGroup/")
-					deleted, err := deleteEKSNodeGroup(ctx, a.mgr.GetClient(), cluster, name)
-					if err != nil {
-						cluster.Status.Components.SetCondition(corev1.Component{
-							Name:    existing.Name,
-							Status:  corev1.DeleteFailedStatus,
-							Message: err.Error(),
-						})
-						return err
-					}
-
-					cluster.Status.Components.SetCondition(corev1.Component{
-						Name:   existing.Name,
-						Status: corev1.DeletingStatus,
-					})
-
-					if deleted {
-						logger.Infof("%s EKS Node Group was deleted", name)
-						cluster.Status.Components.RemoveComponent(existing.Name)
-					}
-				}
-			}
-		}
-
-		ready := cluster.Status.Components.HasStatusForAll(corev1.SuccessStatus)
-		if ready {
-			cluster.Status.Status = corev1.SuccessStatus
-			cluster.Status.Message = "The cluster has been created successfully"
-
-			return nil
-		}
-
-		if cluster.Status.Components.HasStatus(corev1.FailureStatus) {
-			return controllers.NewCriticalError(errors.New("one or more components failed"))
-		}
-
-		return nil
-	}()
+	// @logic:
+	// - we retrieve the cloud provider (this is responsible for knowing which components to create)
+	// - we generate on each iteration what we need
+	// - we try and load the components if they exist
+	// - we then use the provider to fill in any components from other i.e. a eks <- vpc
+	// - we apply the components in order when theirs dependents are ready
+	components, err := NewComponents()
 	if err != nil {
-		logger.WithError(err).Error("failed to reconcile the cluster")
+		return reconcile.Result{}, err
+	}
+
+	result, err := func() (reconcile.Result, error) {
+		p, err := a.Provider(cluster.Spec.Kind)
+		if err != nil {
+			return reconcile.Result{}, controllers.NewCriticalError(err)
+		}
+
+		return controllers.DefaultEnsureHandler.Run(ctx,
+			[]controllers.EnsureFunc{
+				a.AddFinalizer(cluster),
+				a.SetPending(cluster),
+				p.Components(cluster, components),
+				a.Components(cluster, components),
+				a.Load(cluster, components),
+				p.Complete(cluster, components),
+				a.Complete(cluster, components),
+				a.Apply(cluster, components),
+				a.Cleanup(cluster, components),
+				a.SetClusterStatus(cluster, components),
+			},
+		)
+	}()
+
+	if err != nil {
+		logger.WithError(err).Error("trying to ensure the cluster")
 
 		if controllers.IsCriticalError(err) {
 			cluster.Status.Status = corev1.FailureStatus
@@ -192,55 +111,231 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		}
 	}
 
-	if err := a.mgr.GetClient().Status().Patch(ctx, cluster, client.MergeFrom(original)); err != nil {
-		logger.WithError(err).Error("failed to update the cluster status")
+	if !reflect.DeepEqual(cluster, original) {
+		if err := a.mgr.GetClient().Status().Patch(ctx, cluster, client.MergeFrom(original)); err != nil {
+			logger.WithError(err).Error("trying to patch the cluster status")
 
-		return reconcile.Result{}, err
+			return reconcile.Result{}, err
+		}
 	}
 
-	if cluster.Status.Status == corev1.SuccessStatus {
+	return result, err
+}
+
+// AddFinalizer ensures the finalizer is on the resource
+func (a *Controller) AddFinalizer(cluster *clustersv1.Cluster) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
+		if finalizer.NeedToAdd(cluster) {
+			if err := finalizer.Add(cluster); err != nil {
+				a.logger.WithError(err).Error("trying to add the finalizer")
+
+				return reconcile.Result{}, err
+			}
+
+			return reconcile.Result{Requeue: true}, nil
+		}
+
 		return reconcile.Result{}, nil
 	}
-	if cluster.Status.Status == corev1.FailureStatus {
-		return reconcile.Result{RequeueAfter: 2 * time.Minute}, nil
-	}
-
-	return reconcile.Result{RequeueAfter: 30 * time.Second}, err
 }
 
-func (a *Controller) loadComponent(ctx context.Context, cluster *clustersv1.Cluster, res clustersv1.ClusterComponent) error {
-	_, err := kubernetes.GetIfExists(ctx, a.mgr.GetClient(), res)
-	if err != nil {
-		return err
-	}
+// SetPending ensures the state of the cluster is set to pending if not
+func (a *Controller) SetPending(cluster *clustersv1.Cluster) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		switch cluster.Status.Status {
+		case corev1.DeletingStatus:
+			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+		}
 
-	if err := res.ApplyClusterConfiguration(cluster); err != nil {
-		return controllers.NewCriticalError(err)
-	}
+		if cluster.Status.Status != corev1.PendingStatus {
+			cluster.Status.Status = corev1.PendingStatus
 
-	return nil
+			return reconcile.Result{Requeue: true}, nil
+		}
+
+		return reconcile.Result{}, nil
+	}
 }
 
-// createOrUpdateComponent is responsible for maintaining the components
-func (a *Controller) createOrUpdateComponent(ctx context.Context, cluster *clustersv1.Cluster, resource clustersv1.ClusterComponent) error {
-	found, err := kubernetes.CheckIfExists(ctx, a.mgr.GetClient(), resource.DeepCopyObject())
-	if err != nil {
-		return err
+// Apply is responsible for applying the component and updating the component status
+func (a *Controller) Apply(cluster *clustersv1.Cluster, components *Components) controllers.EnsureFunc {
+	client := a.mgr.GetClient()
+
+	return func(ctx context.Context) (reconcile.Result, error) {
+		var result reconcile.Result
+
+		if cluster.Status.Components == nil {
+			cluster.Status.Components = corev1.Components{}
+		}
+
+		// We walk each of the components in order, we create them if required. If the resource
+		// is not yet successful we wait and requeue. If the resource has failed, we throw
+		// a critical failure and stop
+		err := components.WalkFunc(func(co *Vertex) (bool, error) {
+			condition, found := cluster.Status.Components.GetComponent(co.String())
+			if !found {
+				condition = &corev1.Component{
+					Name:   co.String(),
+					Status: corev1.PendingStatus,
+				}
+			}
+			condition.Resource = &corev1.Ownership{
+				Group:     co.Object.GetObjectKind().GroupVersionKind().Group,
+				Version:   co.Object.GetObjectKind().GroupVersionKind().Version,
+				Kind:      co.Object.GetObjectKind().GroupVersionKind().Kind,
+				Namespace: co.Object.(metav1.Object).GetNamespace(),
+				Name:      co.Object.(metav1.Object).GetName(),
+			}
+			logger := a.logger.WithFields(log.Fields{
+				"component": co.String(),
+				"condition": condition.Status,
+				"existing":  co.Exists,
+			})
+			logger.Debug("attempting to reconciling the component")
+
+			if condition.Status == corev1.DeletedStatus {
+				return true, nil
+			}
+
+			defer func() {
+				cluster.Status.Components.SetCondition(*condition)
+			}()
+
+			// @step: the resource does not exist we can simply apply it
+			if !co.Exists {
+				if _, err := kubernetes.CreateOrUpdate(ctx, client, co.Object); err != nil {
+					return false, err
+				}
+				result.Requeue = true
+
+				return false, nil
+			}
+
+			// @step: do we need to update the resource? if the revision is different yes
+			if GetClusterRevision(co.Object) != cluster.ResourceVersion {
+				SetClusterRevision(co.Object, cluster.ResourceVersion)
+
+				if _, err := kubernetes.CreateOrUpdate(ctx, client, co.Object); err != nil {
+					return false, err
+				}
+			}
+
+			// @check if the resource is ready to reconcile
+			status, err := GetObjectStatus(co.Object)
+			if err != nil {
+				logger.WithError(err).Error("trying to check the component status")
+
+				if err == kubernetes.ErrFieldNotFound {
+					result.RequeueAfter = 30 * time.Second
+
+					return false, nil
+				}
+
+				return false, err
+			}
+
+			logger.WithField(
+				"status", status,
+			).Debug("current state of the resource")
+
+			switch status {
+			case corev1.SuccessStatus:
+				condition.Message = ""
+				condition.Detail = ""
+				// @try and update the status straight away
+				if condition.Status != corev1.SuccessStatus {
+					condition.Status = corev1.SuccessStatus
+
+					result.Requeue = true
+
+					return false, nil
+				}
+				return true, nil
+
+			case corev1.FailureStatus:
+				cluster.Status.Status = corev1.FailureStatus
+				condition.Status = corev1.FailureStatus
+
+				if cnd, err := GetObjectReasonForFailure(co.Object); err == nil {
+					condition.Message = cnd.Message
+					condition.Detail = cnd.Detail
+				} else {
+					condition.Message = "Failed to provision the resource " + co.String()
+					condition.Status = corev1.FailureStatus
+				}
+
+			default:
+				condition.Status = status
+			}
+			a.logger.Debug("waiting for resource to move to success or failed")
+
+			result.RequeueAfter = 30 * time.Second
+
+			return false, nil
+		})
+
+		return result, err
 	}
+}
 
-	if !found {
-		setClusterResourceVersion(resource, cluster.ResourceVersion)
+// Cleanup is responsible for deleting any components no longer required
+func (a *Controller) Cleanup(cluster *clustersv1.Cluster, components *Components) controllers.EnsureFunc {
+	client := a.mgr.GetClient()
 
-		return kubernetes.CreateOrUpdateObject(ctx, a.mgr.GetClient(), resource)
+	return func(ctx context.Context) (reconcile.Result, error) {
+		// @logic:
+		// - we iterate the component statues
+		// - we find any components which are no longer referenced and we delete
+		// - we update the status of the component and we requeue
+		// - if the component has been removed we can delete it
+
+		for i := 0; i < len(cluster.Status.Components); i++ {
+			required, err := IsComponentReferenced(cluster.Status.Components[i], components)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+			if required {
+				continue
+			}
+
+			// @step: set the resource to deleting
+			if cluster.Status.Components[i].Status != corev1.DeletingStatus {
+				cluster.Status.Components[i].Status = corev1.DeletingStatus
+
+				return reconcile.Result{Requeue: true}, nil
+			}
+
+			u := ComponentToUnstructured(cluster.Status.Components[i])
+
+			found, err := kubernetes.GetIfExists(ctx, client, u)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+			if !found {
+				cluster.Status.Components.RemoveComponent(cluster.Status.Components[i].Name)
+
+				continue
+			}
+
+			if !IsDeleting(u) {
+				if err := kubernetes.DeleteIfExists(ctx, client, u); err != nil {
+					return reconcile.Result{}, err
+				}
+			}
+
+			// @check if the resource is ready to reconcile
+			status, err := GetObjectStatus(u)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+
+			if status == corev1.DeleteFailedStatus {
+				cluster.Status.Status = corev1.FailureStatus
+				cluster.Status.Components[i].Status = corev1.DeleteFailedStatus
+			}
+		}
+
+		return reconcile.Result{}, nil
 	}
-
-	// @step: get the revision of the component
-	revision := getClusterResourceVersion(resource)
-	if revision != cluster.ResourceVersion {
-		setClusterResourceVersion(resource, cluster.ResourceVersion)
-
-		return kubernetes.CreateOrUpdateObject(ctx, a.mgr.GetClient(), resource)
-	}
-
-	return nil
 }

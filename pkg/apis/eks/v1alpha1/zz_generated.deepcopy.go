@@ -308,7 +308,7 @@ func (in *EKSNodeGroupStatus) DeepCopyInto(out *EKSNodeGroupStatus) {
 			if (*in)[i] != nil {
 				in, out := &(*in)[i], &(*out)[i]
 				*out = new(corev1.Component)
-				**out = **in
+				(*in).DeepCopyInto(*out)
 			}
 		}
 	}
@@ -368,7 +368,7 @@ func (in *EKSStatus) DeepCopyInto(out *EKSStatus) {
 			if (*in)[i] != nil {
 				in, out := &(*in)[i], &(*out)[i]
 				*out = new(corev1.Component)
-				**out = **in
+				(*in).DeepCopyInto(*out)
 			}
 		}
 	}
@@ -474,7 +474,7 @@ func (in *EKSVPCStatus) DeepCopyInto(out *EKSVPCStatus) {
 			if (*in)[i] != nil {
 				in, out := &(*in)[i], &(*out)[i]
 				*out = new(corev1.Component)
-				**out = **in
+				(*in).DeepCopyInto(*out)
 			}
 		}
 	}

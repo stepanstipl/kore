@@ -140,7 +140,7 @@ func NewCmdCreateCluster(factory cmdutil.Factory) *cobra.Command {
 		var filtered []string
 		for _, x := range list.Items {
 			switch x.Spec.Resource.Kind {
-			case "GKECredentials", "EKSCredentials":
+			case "GKECredentials", "EKSCredentials", "AccountManagement":
 				filtered = append(filtered, x.Name)
 			}
 		}

@@ -1,0 +1,73 @@
+/**
+ * Copyright 2020 Appvia Ltd <info@appvia.io>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package kubernetes
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"io/ioutil"
+
+	jsonpatch "github.com/evanphx/json-patch"
+	"k8s.io/apimachinery/pkg/runtime"
+)
+
+// PatchSpec is used to update the spec field
+func PatchSpec(object runtime.Object, patch []byte) error {
+	return PatchHelper(object, "spec", bytes.NewReader(patch))
+}
+
+// PatchHelper is used to patch a resource
+func PatchHelper(object runtime.Object, field string, reader io.Reader) error {
+	content, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return err
+	}
+
+	// @step: we apply the patch to a copy of the resource
+	modified, err := func() ([]byte, error) {
+		patch := fmt.Sprintf(`{ "%s" : %s }`, field, content)
+		c := object.DeepCopyObject()
+
+		if err := json.Unmarshal([]byte(patch), c); err != nil {
+			return nil, err
+		}
+
+		return json.Marshal(c)
+	}()
+	if err != nil {
+		return err
+	}
+
+	original, err := json.Marshal(object)
+	if err != nil {
+		return err
+	}
+
+	patch, err := jsonpatch.CreateMergePatch(original, modified)
+	if err != nil {
+		return err
+	}
+
+	patched, err := jsonpatch.MergePatch(original, patch)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(patched, object)
+}

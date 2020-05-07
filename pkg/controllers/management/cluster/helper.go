@@ -18,174 +18,151 @@ package cluster
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
 	"fmt"
-	"strings"
 
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	accounts "github.com/appvia/kore/pkg/apis/accounts/v1beta1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
-	gkev1alpha1 "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
+	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
-	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// createClusterComponents is responsible for generating the various components required
-// by the cluster - i.e. the cloud provider, perhaps a VPC for EKS etc.
-func createClusterComponents(c *clustersv1.Cluster) (map[string]clustersv1.ClusterComponent, error) {
-	components := map[string]clustersv1.ClusterComponent{}
+// SetClusterRevision set the revision annotation on the resource
+func SetClusterRevision(object runtime.Object, revision string) {
+	kubernetes.SetRuntimeAnnotation(object, ClusterRevisionName, revision)
+}
 
-	provider := createProvider(c)
-	components[getComponentName(provider)] = provider
+// GetClusterRevision retrieve the revision from the resource
+func GetClusterRevision(object runtime.Object) string {
+	return kubernetes.GetRuntimeAnnotation(object, ClusterRevisionName)
+}
 
-	providerComponents, err := createProviderComponents(c)
+// GetObjectStatus attempts to inspect the resource for a status
+func GetObjectStatus(object runtime.Object) (corev1.Status, error) {
+	var status corev1.Status
+
+	return status, kubernetes.GetRuntimeField(object, "status.status", &status)
+}
+
+// GetObjectReasonForFailure try's to get the reason for failure
+func GetObjectReasonForFailure(object runtime.Object) (corev1.Condition, error) {
+	c, err := GetObjectComponents(object)
+	if err == nil {
+		return c, nil
+	}
+
+	return GetObjectConditions(object)
+}
+
+// GetObjectComponents attempts to inspect the resource components
+func GetObjectComponents(object runtime.Object) (corev1.Condition, error) {
+	var components corev1.Components
+	if err := kubernetes.GetRuntimeField(object, "status.components", &components); err != nil {
+		return corev1.Condition{}, err
+	}
+
+	if components != nil && len(components) > 0 {
+		return corev1.Condition{
+			Detail:  components[0].Detail,
+			Message: components[0].Message,
+		}, nil
+	}
+
+	return corev1.Condition{}, kubernetes.ErrFieldNotFound
+}
+
+// GetObjectConditions returns the conditions on a resource
+func GetObjectConditions(object runtime.Object) (corev1.Condition, error) {
+	var conditions []corev1.Condition
+
+	if err := kubernetes.GetRuntimeField(object, "status.conditions", &conditions); err != nil {
+		return corev1.Condition{}, err
+	}
+
+	return conditions[0], nil
+}
+
+// IsDeleting check if the resource is being deleted
+func IsDeleting(object runtime.Object) bool {
+	mo, _ := object.(metav1.Object)
+
+	return !mo.GetDeletionTimestamp().IsZero()
+}
+
+// SetRuntimeNamespace is used to apply the namespace
+func SetRuntimeNamespace(object runtime.Object, namespace string) {
+	mo, ok := object.(metav1.Object)
+	if ok {
+		mo.SetNamespace(namespace)
+	}
+}
+
+// FindAccountManagement returns the account management
+func FindAccountManagement(ctx context.Context, cc client.Client, owner corev1.Ownership) (*accounts.AccountManagement, error) {
+	account := &accounts.AccountManagement{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      owner.Name,
+			Namespace: owner.Namespace,
+		},
+	}
+	found, err := kubernetes.GetIfExists(ctx, cc, account)
 	if err != nil {
 		return nil, err
 	}
-	for _, pc := range providerComponents {
-		components[getComponentName(pc)] = pc
+	if !found {
+		return nil, fmt.Errorf("accounting resource %q does not exist", owner.Name)
 	}
 
-	kubernetes := clustersv1.NewKubernetes(c.Name, c.Namespace)
-	kubernetes.Spec.Provider = corev1.Ownership{
-		Group:     provider.GetObjectKind().GroupVersionKind().Group,
-		Kind:      provider.GetObjectKind().GroupVersionKind().Kind,
-		Name:      c.Name,
-		Namespace: c.Namespace,
-		Version:   provider.GetObjectKind().GroupVersionKind().Version,
-	}
-	components[getComponentName(kubernetes)] = kubernetes
-
-	return components, nil
+	return account, nil
 }
 
-// createProvider is responsible for create the cloud provider object based on the
-// kubernetes backing provider
-func createProvider(c *clustersv1.Cluster) clustersv1.ClusterComponent {
-	switch strings.ToLower(c.Spec.Kind) {
-	case "gke":
-		return gkev1alpha1.NewGKE(c.Name, c.Namespace)
-	case "eks":
-		return eksv1alpha1.NewEKS(c.Name, c.Namespace)
-	default:
-		panic(fmt.Errorf("unknown provider type: %q", c.Spec.Kind))
-	}
-}
-
-// createProviderComponents generates any additional components required by the provider -
-// such as a VPC for EKS
-func createProviderComponents(c *clustersv1.Cluster) ([]clustersv1.ClusterComponent, error) {
-	switch strings.ToLower(c.Spec.Kind) {
-	case "gke":
-		return nil, nil
-	case "eks":
-		var components []clustersv1.ClusterComponent
-
-		components = append(components, eksv1alpha1.NewEKSVPC(c.Name, c.Namespace))
-
-		var config map[string]interface{}
-		if err := json.Unmarshal(c.Spec.Configuration.Raw, &config); err != nil {
-			return nil, err
-		}
-		for _, ng := range config["nodeGroups"].([]interface{}) {
-			nodeGroup := ng.(map[string]interface{})
-			name := c.Name + "-" + nodeGroup["name"].(string)
-			components = append(components, eksv1alpha1.NewEKSNodeGroup(name, c.Namespace))
-		}
-
-		return components, nil
-	default:
-		panic(fmt.Errorf("unknown provider type: %q", c.Spec.Kind))
-	}
-}
-
-func getClusterResourceVersion(c clustersv1.ClusterComponent) string {
-	metaAccessor, _ := meta.Accessor(c)
-
-	return metaAccessor.GetAnnotations()[kore.Label("clusterRevision")]
-}
-
-func setClusterResourceVersion(c clustersv1.ClusterComponent, resourceVersion string) {
-	metaAccessor, _ := meta.Accessor(c)
-	if metaAccessor.GetAnnotations() == nil {
-		metaAccessor.SetAnnotations(map[string]string{})
-	}
-
-	metaAccessor.GetAnnotations()[kore.Label("clusterRevision")] = resourceVersion
-}
-
-func getComponentName(c clustersv1.ClusterComponent) string {
-	meta, _ := kubernetes.GetMeta(c)
-
-	return c.GetObjectKind().GroupVersionKind().Kind + "/" + meta.Name
-}
-
-func readyForReconcile(c clustersv1.ClusterComponent, components map[string]clustersv1.ClusterComponent) bool {
-	for _, dep := range c.ComponentDependencies() {
-		for _, depc := range components {
-			if strings.HasPrefix(getComponentName(depc), dep) {
-				status, _ := depc.GetStatus()
-				if status != corev1.SuccessStatus {
-					return false
-				}
-			}
+// FindAccountingRule matches the account rule
+func FindAccountingRule(account *accounts.AccountManagement, plan string) (*accounts.AccountsRule, bool) {
+	for _, x := range account.Spec.Rules {
+		if utils.Contains(plan, x.Plans) {
+			return x, true
 		}
 	}
 
-	return true
+	return nil, false
 }
 
-func readyForDelete(c clustersv1.ClusterComponent, components map[string]clustersv1.ClusterComponent) bool {
-	for _, comp := range components {
-		if hasDependency(comp, getComponentName(c)) {
-			status, _ := comp.GetStatus()
-			if status != corev1.DeletedStatus {
-				return false
-			}
-		}
-	}
-	return true
+// ComponentToUnstructured converts the component to a runtime reference
+func ComponentToUnstructured(component *corev1.Component) *unstructured.Unstructured {
+	u := &unstructured.Unstructured{}
+	u.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   component.Resource.Group,
+		Version: component.Resource.Version,
+		Kind:    component.Resource.Kind,
+	})
+	u.SetNamespace(component.Resource.Namespace)
+	u.SetName(component.Resource.Name)
+
+	return u
 }
 
-func hasDependency(c clustersv1.ClusterComponent, name string) bool {
-	for _, dep := range c.ComponentDependencies() {
-		if strings.HasPrefix(name, dep) {
-			return true
-		}
-	}
-	return false
-}
-
-func applyEKSVPC(eksvpc *eksv1alpha1.EKSVPC, components map[string]clustersv1.ClusterComponent) {
-	for _, c := range components {
-		if applier, ok := c.(eksv1alpha1.EKSVPCApplier); ok {
-			applier.ApplyEKSVPC(eksvpc)
-		}
-	}
-}
-
-func deleteEKSNodeGroup(ctx context.Context, cc client.Client, cluster *clustersv1.Cluster, name string) (ready bool, _ error) {
-	eksNodeGroup := eksv1alpha1.NewEKSNodeGroup(name, cluster.Namespace)
-	exists, err := kubernetes.GetIfExists(ctx, cc, eksNodeGroup)
+// IsComponentReferenced checks if the component is required
+func IsComponentReferenced(component *corev1.Component, components *Components) (bool, error) {
+	list, err := components.Walk()
 	if err != nil {
-		return false, fmt.Errorf("failed to get %s EKS Node group", name)
+		return false, err
 	}
 
-	if !exists || eksNodeGroup.Status.Status == corev1.DeletedStatus {
-		return true, nil
-	}
-
-	if eksNodeGroup.Status.Status == corev1.DeleteFailedStatus {
-		return false, fmt.Errorf("failed to delete %s EKS Node group: %w", name, eksNodeGroup.GetComponents().Error())
-	}
-
-	if eksNodeGroup.GetDeletionTimestamp().IsZero() {
-		if err := cc.Delete(ctx, eksNodeGroup); err != nil {
-			return false, fmt.Errorf("failed to delete %s EKS Node group", name)
+	for _, x := range list {
+		resource := component.Resource
+		if resource == nil {
+			return false, controllers.NewCriticalError(errors.New("resource is nil"))
+		}
+		if kore.IsOwner(x.Object, *resource) {
+			return true, nil
 		}
 	}
 

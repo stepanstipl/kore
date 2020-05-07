@@ -18,18 +18,20 @@ package cluster
 
 import (
 	"context"
+	"errors"
+	"strings"
 	"time"
 
+	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
-
-	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
@@ -52,7 +54,7 @@ func init() {
 	}
 }
 
-// NewController creaes and returns a clusters controller
+// NewController creates and returns a clusters controller
 func NewController(logger log.FieldLogger) *Controller {
 	name := "cluster"
 	return &Controller{
@@ -68,7 +70,7 @@ func (a *Controller) Name() string {
 	return a.name
 }
 
-// ManagerOptions returns the manageer options for the controller
+// ManagerOptions returns the manager options for the controller
 func (a *Controller) ManagerOptions() manager.Options {
 	return controllers.DefaultManagerOptions(a)
 }
@@ -87,7 +89,8 @@ func (a *Controller) RunWithDependencies(ctx context.Context, mgr manager.Manage
 
 	// @step: setup watches for the resources
 	if err := a.ctrl.Watch(&source.Kind{Type: &clustersv1.Cluster{}},
-		&handler.EnqueueRequestForObject{}); err != nil {
+		&handler.EnqueueRequestForObject{},
+		&predicate.GenerationChangedPredicate{}); err != nil {
 
 		a.logger.WithError(err).Error("failed to create watcher on Cluster resource")
 
@@ -133,4 +136,16 @@ func (a *Controller) Stop(context.Context) error {
 	a.logger.Info("attempting to stop the controller")
 
 	return nil
+}
+
+// Provider returns the cloud provider for the cluster type
+func (a *Controller) Provider(kind string) (ClusterProviderComponents, error) {
+	switch strings.ToLower(kind) {
+	case "gke":
+		return &gkeComponents{Controller: a}, nil
+	case "eks":
+		return &eksComponents{Controller: a}, nil
+	default:
+		return nil, errors.New("unsupported cloud provider")
+	}
 }

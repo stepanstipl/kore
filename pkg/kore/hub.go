@@ -36,6 +36,8 @@ type hubImpl struct {
 	config *Config
 	// store is the access layer / kubernetes api
 	store store.Store
+	// accounts implementation
+	accounts Accounts
 	// idp is the idp implementation
 	idp *idpImpl
 	// invitations handles generated links
@@ -95,6 +97,7 @@ func New(sc store.Store, persistenceMgr persistence.Interface, config Config) (I
 		store:  sc,
 		signer: signer,
 	}
+	h.accounts = &accountsImpl{Interface: h}
 	h.idp = &idpImpl{Interface: h}
 	h.invitations = &ivImpl{Interface: h}
 	h.plans = &plansImpl{Interface: h}
@@ -152,6 +155,11 @@ func (h hubImpl) SignedServerCertificate(hosts []string, duration time.Duration)
 	}
 
 	return cert, key, nil
+}
+
+// Accounts return the account implementation
+func (h *hubImpl) Accounts() Accounts {
+	return h.accounts
 }
 
 // Audit returns the auditor

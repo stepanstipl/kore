@@ -117,6 +117,9 @@ func (o *ApplyOptions) Run() error {
 			if err != nil {
 				return fmt.Errorf("%s: %w", displayName, err)
 			}
+			if existing {
+				x.Object.SetResourceVersion(current.GetResourceVersion())
+			}
 
 			// @step: attempt to apply the resource
 			if err := request.Payload(x.Object).Result(x.Object).Update().Error(); err != nil {
