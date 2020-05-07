@@ -60,7 +60,7 @@ func NewGetPlanSchemaOK() *GetPlanSchemaOK {
 
 /*GetPlanSchemaOK handles this case with default header values.
 
-Contains the plan schema definition from the kore
+Contains the plan schema definition
 */
 type GetPlanSchemaOK struct {
 	Payload *models.V1PlanPolicy

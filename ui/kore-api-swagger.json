@@ -802,7 +802,7 @@
         "parameters": [
           {
             "type": "string",
-            "description": "The name of the plan schema you wish to retrieve",
+            "description": "The name of the plan",
             "name": "name",
             "in": "path",
             "required": true
@@ -810,7 +810,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Contains the plan schema definition from the kore",
+            "description": "Contains the plan schema definition",
             "schema": {
               "$ref": "#/definitions/v1.PlanPolicy"
             }
@@ -1599,7 +1599,7 @@
         "parameters": [
           {
             "type": "string",
-            "description": "The name of the service plan schema you wish to retrieve",
+            "description": "The name of the service plan",
             "name": "name",
             "in": "path",
             "required": true
@@ -6862,11 +6862,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
+        "clientID",
+        "clientSecret",
         "issuer",
         "clientScopes",
-        "userClaims",
-        "clientID",
-        "clientSecret"
+        "userClaims"
       ],
       "properties": {
         "clientID": {

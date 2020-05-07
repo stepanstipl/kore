@@ -55,7 +55,7 @@ func (p *servicePlanSchemasHandler) Register(i kore.Interface, builder utils.Pat
 		withAllNonValidationErrors(ws.GET("/{name}")).To(p.getServicePlanSchema).
 			Doc("Returns a specific service plan schema from the kore").
 			Operation("GetServicePlanSchema").
-			Param(ws.PathParameter("name", "The name of the service plan schema you wish to retrieve")).
+			Param(ws.PathParameter("name", "The name of the service plan")).
 			Returns(http.StatusOK, "Contains the service plan schema definition", nil),
 	)
 
@@ -64,13 +64,18 @@ func (p *servicePlanSchemasHandler) Register(i kore.Interface, builder utils.Pat
 
 func (p servicePlanSchemasHandler) getServicePlanSchema(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
-		kind := req.PathParameter("name")
-		provider := p.ServiceProviders().GetProviderForKind(kind)
+		name := req.PathParameter("name")
+		plan, err := p.ServicePlans().Get(req.Request.Context(), name)
+		if err != nil {
+			return err
+		}
+
+		provider := p.ServiceProviders().GetProviderForKind(plan.Spec.Kind)
 		if provider == nil {
 			return resp.WriteHeaderAndEntity(http.StatusNotFound, nil)
 		}
 
-		schema, err := provider.PlanJSONSchema(kind, "")
+		schema, err := provider.PlanJSONSchema(plan.Spec.Kind, plan.PlanShortName())
 		if err != nil {
 			return err
 		}

@@ -61,7 +61,7 @@ for the get plan schema operation typically these are written to a http.Request
 type GetPlanSchemaParams struct {
 
 	/*Name
-	  The name of the plan schema you wish to retrieve
+	  The name of the plan
 
 	*/
 	Name string
