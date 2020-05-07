@@ -22,15 +22,40 @@ import (
 	"io/ioutil"
 	"net/http"
 	"sync"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
 	kcore "github.com/appvia/kore/pkg/apis/core/v1"
+	korev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	applicationv1beta "sigs.k8s.io/application/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+const (
+	// ClusterAppControllerComponentName is the reserved name for the Application controller
+	ClusterAppControllerComponentName string = "Application Controller"
+)
+
+var (
+	appControllerStatus bool
+	mu                  = &sync.Mutex{}
+)
+
+func getAppControllerStatus() bool {
+	mu.Lock()
+	defer mu.Unlock()
+	return appControllerStatus
+}
+
+func setAppControllerStatus(s bool) {
+	mu.Lock()
+	defer mu.Unlock()
+	appControllerStatus = s
+}
 
 // Instance provides access to a Cluster Application
 // a cluster app is a facility, running in a cluster
@@ -133,7 +158,7 @@ func (ca Instance) WaitForReadyOrTimeout(ctx context.Context, respond chan<- *kc
 	defer wg.Done()
 
 	// here we handle channels and wait groups not errors so pass the timeout context on:
-	if err := waitOnApplicationStatus(ctx, &ca); err != nil {
+	if err := ca.waitOnApplicationStatus(ctx); err != nil {
 		log.Errorf("error with %s", ca.Component.Name)
 		ca.Component.Status = kcore.Unknown
 		ca.Component.Message = fmt.Sprintf("An error occured when checking for the status of %s", ca.Component.Name)
@@ -150,4 +175,111 @@ func (ca Instance) GetApplicationObjectName() string {
 	}
 	metaObj := getObjMeta(ca.ApplicationObject)
 	return metaObj.Name
+}
+
+// waitOnStatus manages a timeout context when getting application status
+func (ca Instance) waitOnApplicationStatus(ctx context.Context) error {
+	for {
+		select {
+		case <-ctx.Done():
+			log.Debugf("context waiting for '%s' timed out", ca.Component.Name)
+			// we just accept the last status - it's not an error
+
+			return nil
+		default:
+		}
+		err := func() error {
+			if err := ca.getStatus(ctx); err != nil {
+				log.Debugf("error getting status for %s - %s", ca.Component.Name, err)
+
+				return err
+			}
+
+			return nil
+		}()
+		if err == nil {
+			if ca.Component.Status == korev1.SuccessStatus {
+				return nil
+			}
+			// keep waiting
+		}
+		log.Debugf("not ready so waiting for %s", ca.Component.Name)
+		time.Sleep(10 * time.Second)
+	}
+}
+
+//getStatus will update the ca.component.status from the ca.ApplicationObject conditions
+func (ca Instance) getStatus(ctx context.Context) (err error) {
+	if ca.ApplicationObject == nil {
+		if ca.Component.Name == ClusterAppControllerComponentName {
+			if getAppControllerStatus() {
+				ca.Component.Message = "Application controller is operational"
+				ca.Component.Status = korev1.SuccessStatus
+			} else {
+				ca.Component.Message = "Status unknown until another application has been deployed"
+				ca.Component.Status = korev1.Unknown
+			}
+		} else {
+			ca.Component.Detail = "no application kind created for this component"
+			ca.Component.Message = "Component is not checked directly"
+			ca.Component.Status = korev1.Unknown
+		}
+	} else {
+		// we need to check if the application CRD exists and get it's status'
+		// TODO uses kubebuilder client to get application type and resolve data...
+		// First pass just return if object exists?
+		us, err := toUnstructuredObj(ca.ApplicationObject)
+		if err != nil {
+
+			return fmt.Errorf("error trying to create an unstructured object from the application kind - %s", err)
+
+		}
+		log.Debugf("attempting to get status for %s", ca.GetApplicationObjectName())
+		exists, err := kubernetes.GetIfExists(ctx, ca.client, us)
+		if err != nil {
+
+			return fmt.Errorf(
+				"error trying to get %s - %s",
+				ca.Component.Name,
+				err,
+			)
+
+		}
+		if !exists {
+			log.Debugf("attempting to get status for %s", ca.ApplicationObject)
+			ca.Component.Status = korev1.Unknown
+			ca.Component.Message = "Application status has not been created"
+			ca.Component.Detail = "The application kind"
+
+			return nil
+		}
+		// Marshall unstructure object back to application kind
+		app, err := fromUnstructuredApplication(us)
+		if err != nil {
+
+			return fmt.Errorf("error when trying to create an application crd object from an untrustured type - %s", err)
+
+		}
+		for _, condition := range app.Status.Conditions {
+			setAppControllerStatus(true)
+			if condition.Type == applicationv1beta.Ready {
+				if condition.Status == "True" {
+					ca.Component.Status = korev1.SuccessStatus
+					ca.Component.Message = condition.Message
+
+					// All good
+					return nil
+				}
+			}
+			if condition.Type == applicationv1beta.Error {
+				if condition.Status == "True" {
+					// Overright any possible good status
+					ca.Component.Status = korev1.FailureStatus
+					ca.Component.Message = condition.Message
+				}
+			}
+		}
+	}
+
+	return nil
 }

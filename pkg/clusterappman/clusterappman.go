@@ -75,7 +75,7 @@ var (
 	// mm defines all the embedded manifests and data required to initialise clusterappman
 	mm []manifest = []manifest{
 		{
-			Name: "Application Controller",
+			Name: clusterapp.ClusterAppControllerComponentName,
 			EmededManifests: []string{
 				"application-controller/application-all.yaml",
 			},
