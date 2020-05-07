@@ -3864,86 +3864,6 @@
             }
           }
         }
-      },
-      "put": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "summary": "Is used to provision or update a gcp project claim",
-        "operationId": "updateProjectClaim",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "Is the name of the team you are acting within",
-            "name": "team",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "Is name the of the resource you are acting on",
-            "name": "name",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Contains the former team definition from the kore",
-            "schema": {
-              "$ref": "#/definitions/v1alpha1.ProjectClaim"
-            }
-          },
-          "default": {
-            "description": "A generic API error containing the cause of the error",
-            "schema": {
-              "$ref": "#/definitions/apiserver.Error"
-            }
-          }
-        }
-      },
-      "delete": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "summary": "Is used to delete a managed gcp project claim",
-        "operationId": "deleteProjectClaim",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "Is the name of the team you are acting within",
-            "name": "team",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "Is name the of the resource you are acting on",
-            "name": "name",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Contains the former team definition from the kore",
-            "schema": {
-              "$ref": "#/definitions/v1alpha1.ProjectClaim"
-            }
-          },
-          "default": {
-            "description": "A generic API error containing the cause of the error",
-            "schema": {
-              "$ref": "#/definitions/apiserver.Error"
-            }
-          }
-        }
       }
     },
     "/api/v1alpha1/teams/{team}/secrets": {
@@ -5306,6 +5226,9 @@
         },
         "name": {
           "type": "string"
+        },
+        "resource": {
+          "$ref": "#/definitions/v1.Ownership"
         },
         "status": {
           "type": "string"
@@ -6690,11 +6613,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
+        "issuer",
+        "clientScopes",
         "userClaims",
         "clientID",
-        "clientSecret",
-        "issuer",
-        "clientScopes"
+        "clientSecret"
       ],
       "properties": {
         "clientID": {
@@ -7875,6 +7798,9 @@
       "properties": {
         "organization": {
           "$ref": "#/definitions/v1.Ownership"
+        },
+        "projectName": {
+          "type": "string"
         }
       }
     },
@@ -7893,6 +7819,118 @@
           "type": "string"
         },
         "status": {
+          "type": "string"
+        }
+      }
+    },
+    "v1beta1.AccountManagement": {
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1beta1.AccountManagementSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/v1beta1.AccountManagementStatus"
+        }
+      }
+    },
+    "v1beta1.AccountManagementList": {
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1.AccountManagement"
+          }
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ListMeta"
+        }
+      }
+    },
+    "v1beta1.AccountManagementSpec": {
+      "required": [
+        "provider"
+      ],
+      "properties": {
+        "organization": {
+          "$ref": "#/definitions/v1.Ownership"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1.AccountsRule"
+          }
+        }
+      }
+    },
+    "v1beta1.AccountManagementStatus": {
+      "properties": {
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.Condition"
+          }
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "v1beta1.AccountsRule": {
+      "required": [
+        "name",
+        "plans"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "exact": {
+          "type": "string"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "plans": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "prefix": {
+          "type": "string"
+        },
+        "suffix": {
           "type": "string"
         }
       }

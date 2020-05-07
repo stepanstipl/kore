@@ -167,7 +167,7 @@ func schema_pkg_apis_eks_v1alpha1_EKSCredentialsSpec(ref common.ReferenceCallbac
 						},
 					},
 				},
-				Required: []string{"accountID", "credentialsRef"},
+				Required: []string{"accountID"},
 			},
 		},
 		Dependencies: []string{
