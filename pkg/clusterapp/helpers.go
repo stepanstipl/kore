@@ -54,7 +54,7 @@ func setMissingNamespace(namespace string, obj runtime.Object) error {
 }
 
 // waitOnKindDeploy will deploy a object and not fail with unregistered Kind's until timeout
-func waitOnKindDeploy(ctx context.Context, cc client.Client, object runtime.Object) error {
+func waitOnKindDeploy(ctx context.Context, cc client.Client, object runtime.Object, logger *log.Entry) error {
 	for {
 		select {
 		case <-ctx.Done():
@@ -75,7 +75,8 @@ func waitOnKindDeploy(ctx context.Context, cc client.Client, object runtime.Obje
 			// generic error and not just waiting for CRD's to be ready...
 			return err
 		}
-		log.Debug("kind not known, waiting for CRD to be known")
+		// TODO: The application kind is known but I suspect I need to invalidate client cache
+		logger.Debug("kind not known, waiting for CRD to be known")
 		time.Sleep(10 * time.Second)
 	}
 }

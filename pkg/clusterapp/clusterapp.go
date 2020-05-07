@@ -91,7 +91,7 @@ func NewAppFromManifestFiles(client client.Client, app AppData) (Instance, error
 		Resources: make([]runtime.Object, 0),
 		Component: &kcore.Component{
 			Name:    app.Name,
-			Status:  kcore.Unknown,
+			Status:  kcore.PendingStatus,
 			Message: "Component is not yet deployed",
 		},
 		app: app,
@@ -136,7 +136,7 @@ func NewAppFromManifestFiles(client client.Client, app AppData) (Instance, error
 
 // CreateOrUpdate will deploy or update all the manifets
 // the deafultNamespace is used if not otherwise specified.
-func (ca Instance) CreateOrUpdate(ctx context.Context, defaultNamepsace string) error {
+func (ca Instance) CreateOrUpdate(ctx context.Context, defaultNamepsace string, logger *log.Entry) error {
 	for _, res := range ca.PreDeleteResources {
 		getObjMetaAndSetDefaultNamespace(res, defaultNamepsace)
 		// Create / update / replace resources as required
@@ -148,7 +148,7 @@ func (ca Instance) CreateOrUpdate(ctx context.Context, defaultNamepsace string) 
 		objMeta := getObjMetaAndSetDefaultNamespace(res, defaultNamepsace)
 		// do not affect original object (we don't want to affect redeploy in loop)
 		resCopy := res.DeepCopyObject()
-		if err := waitOnKindDeploy(ctx, ca.client, resCopy); err != nil {
+		if err := waitOnKindDeploy(ctx, ca.client, resCopy, logger); err != nil {
 			return fmt.Errorf(
 				"can not deploy %s of kind %s to namespace %s - %s",
 				objMeta.Name,
@@ -176,7 +176,7 @@ func (ca Instance) WaitForReadyOrTimeout(ctx context.Context, respond chan<- *kc
 				return fmt.Errorf("failed creating namespace %s: %s", ca.app.DefaultNamespace, err)
 			}
 		}
-		if err := ca.CreateOrUpdate(ctx, ca.app.DefaultNamespace); err != nil {
+		if err := ca.CreateOrUpdate(ctx, ca.app.DefaultNamespace, logger); err != nil {
 			return fmt.Errorf("failed to create or update '%s' deployment: %s", ca.app.Name, err)
 		}
 
@@ -190,7 +190,7 @@ func (ca Instance) WaitForReadyOrTimeout(ctx context.Context, respond chan<- *kc
 		logger.Errorf("error with %s", ca.Component.Name)
 		ca.Component.Status = kcore.Unknown
 		ca.Component.Message = fmt.Sprintf("An error occured when checking for the status of %s", ca.Component.Name)
-		ca.Component.Detail = fmt.Sprintf("An error occured waiting for status %s", err)
+		ca.Component.Detail = fmt.Sprintf("An error occured waiting for status - %s", err)
 	}
 	respond <- ca.Component
 }
@@ -244,8 +244,8 @@ func (ca Instance) getStatus(ctx context.Context) (err error) {
 				ca.Component.Message = "Application controller is operational"
 				ca.Component.Status = korev1.SuccessStatus
 			} else {
-				ca.Component.Message = "Status unknown until another application has been deployed"
-				ca.Component.Status = korev1.Unknown
+				ca.Component.Message = "Status pending"
+				ca.Component.Status = korev1.PendingStatus
 			}
 		} else {
 			ca.Component.Detail = "no application kind created for this component"
@@ -275,7 +275,7 @@ func (ca Instance) getStatus(ctx context.Context) (err error) {
 		}
 		if !exists {
 			log.Debugf("attempting to get status for %s", ca.ApplicationObject)
-			ca.Component.Status = korev1.Unknown
+			ca.Component.Status = korev1.PendingStatus
 			ca.Component.Message = "Application status has not been created"
 			ca.Component.Detail = "The application kind"
 
