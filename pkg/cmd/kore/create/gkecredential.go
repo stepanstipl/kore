@@ -19,17 +19,20 @@ package create
 import (
 	"fmt"
 	"io/ioutil"
+	"strings"
 
+	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	confv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 	"github.com/appvia/kore/pkg/kore"
-	"github.com/appvia/kore/pkg/utils/render"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // CreateGKECredentialsOptions is used to provision a team
@@ -83,9 +86,44 @@ func NewCmdGKECredentials(factory cmdutil.Factory) *cobra.Command {
 
 // Run is responsible for creating the credentials
 func (o CreateGKECredentialsOptions) Run() error {
+	var resources []runtime.Object
+
+	secret, err := o.GenerateSecret()
+	if err != nil {
+		return err
+	}
+	resources = append(resources, secret)
+	resources = append(resources, o.GenerateCredentials())
+	resources = append(resources, o.GenerateAllocation())
+
+	if o.DryRun {
+		return cmdutil.RenderRuntimeObjectToYAML(resources, o.Writer())
+	}
+
+	for i := 0; i < len(resources); i++ {
+		resource := resources[i]
+		kind := strings.ToLower(kubernetes.GetRuntimeKind(resource))
+		name := kubernetes.GetRuntimeName(resource)
+
+		err := o.WaitForCreation(
+			o.ClientWithTeamResource(kore.HubAdminTeam, o.Resources().MustLookup(kind)).
+				Name(name).
+				Payload(resource),
+			o.NoWait,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// GenerateSecret generates a secret
+func (o CreateGKECredentialsOptions) GenerateSecret() (*configv1.Secret, error) {
 	json, err := ioutil.ReadFile(o.ServiceAccountJSON)
 	if err != nil {
-		return fmt.Errorf("trying reading service account from %v", o.ServiceAccountJSON)
+		return nil, fmt.Errorf("trying reading service account from %v", o.ServiceAccountJSON)
 	}
 
 	secret := &confv1.Secret{
@@ -107,19 +145,12 @@ func (o CreateGKECredentialsOptions) Run() error {
 	}
 	secret.Encode()
 
-	o.Println("Storing credentials secret in Kore")
-	err = o.WaitForCreation(
-		o.ClientWithTeamResource(kore.HubAdminTeam, o.Resources().MustLookup("secret")).
-			Name(o.Name).
-			Payload(secret).
-			Result(&confv1.Secret{}),
-		o.NoWait,
-	)
-	if err != nil {
-		return fmt.Errorf("trying to create secret: %s", err)
-	}
+	return secret, nil
+}
 
-	cred := &gke.GKECredentials{
+// GenerateCredentials is responsible for producing a gkecredentials
+func (o *CreateGKECredentialsOptions) GenerateCredentials() *gke.GKECredentials {
+	return &gke.GKECredentials{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "GKECredentials",
 			APIVersion: gke.GroupVersion.String(),
@@ -136,36 +167,16 @@ func (o CreateGKECredentialsOptions) Run() error {
 			},
 		},
 	}
+}
 
-	if o.DryRun {
-		return render.Render().
-			Writer(o.Writer()).
-			Format(render.FormatYAML).
-			Resource(render.FromStruct(cred)).
-			Do()
-	}
-
-	err = o.WaitForCreation(
-		o.ClientWithTeamResource(kore.HubAdminTeam, o.Resources().MustLookup("gkecredential")).
-			Name(o.Name).
-			Payload(cred).
-			Result(&gke.GKECredentials{}),
-		o.NoWait,
-	)
-	if err != nil {
-		return fmt.Errorf("trying to create credential: %s", err)
-	}
-
-	if !o.AllocateToAll && len(o.AllocateToTeams) == 0 {
-		return nil
-	}
-
-	// Create allocation
+// GenerateAllocation is responsible for generating an allocation
+func (o *CreateGKECredentialsOptions) GenerateAllocation() *configv1.Allocation {
 	teams := o.AllocateToTeams
 	if o.AllocateToAll {
 		teams = []string{"*"}
 	}
-	alloc := &confv1.Allocation{
+
+	return &confv1.Allocation{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Allocation",
 			APIVersion: confv1.GroupVersion.String(),
@@ -187,14 +198,4 @@ func (o CreateGKECredentialsOptions) Run() error {
 			},
 		},
 	}
-
-	o.Println("Storing credential allocation in Kore")
-
-	return o.WaitForCreation(
-		o.ClientWithTeamResource(kore.HubAdminTeam, o.Resources().MustLookup("allocation")).
-			Name(o.Name).
-			Payload(alloc).
-			Result(&confv1.Allocation{}),
-		o.NoWait,
-	)
 }

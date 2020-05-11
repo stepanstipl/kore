@@ -20,17 +20,19 @@ import (
 	"fmt"
 	"strings"
 
+	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	confv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 	"github.com/appvia/kore/pkg/kore"
-	"github.com/appvia/kore/pkg/utils/render"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
 	"github.com/manifoldco/promptui"
 
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // CreateEKSCredentialsOptions is used to provision a team
@@ -87,6 +89,41 @@ func NewCmdEKSCredentials(factory cmdutil.Factory) *cobra.Command {
 
 // Run is responsible for creating the credentials
 func (o CreateEKSCredentialsOptions) Run() error {
+	var resources []runtime.Object
+
+	secret, err := o.GenerateSecret()
+	if err != nil {
+		return err
+	}
+	resources = append(resources, secret)
+	resources = append(resources, o.GenerateCredentials())
+	resources = append(resources, o.GenerateAllocation())
+
+	if o.DryRun {
+		return cmdutil.RenderRuntimeObjectToYAML(resources, o.Writer())
+	}
+
+	for i := 0; i < len(resources); i++ {
+		resource := resources[i]
+		kind := strings.ToLower(kubernetes.GetRuntimeKind(resource))
+		name := kubernetes.GetRuntimeName(resource)
+
+		err := o.WaitForCreation(
+			o.ClientWithTeamResource(kore.HubAdminTeam, o.Resources().MustLookup(kind)).
+				Name(name).
+				Payload(resource),
+			o.NoWait,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// GenerateSecret pulls in and generates the secret
+func (o CreateEKSCredentialsOptions) GenerateSecret() (*configv1.Secret, error) {
 	if o.SecretAccessKey == "" {
 		runner := promptui.Prompt{
 			Label:   "Secret Access Key",
@@ -100,7 +137,7 @@ func (o CreateEKSCredentialsOptions) Run() error {
 		}
 		key, err := runner.Run()
 		if err != nil {
-			return err
+			return nil, err
 		}
 		o.SecretAccessKey = strings.TrimSpace(key)
 	}
@@ -125,19 +162,12 @@ func (o CreateEKSCredentialsOptions) Run() error {
 	}
 	secret.Encode()
 
-	o.Println("Storing credentials secret in Kore")
-	err := o.WaitForCreation(
-		o.ClientWithTeamResource(kore.HubAdminTeam, o.Resources().MustLookup("secret")).
-			Name(o.Name).
-			Payload(secret).
-			Result(&confv1.Secret{}),
-		o.NoWait,
-	)
-	if err != nil {
-		return fmt.Errorf("Error while creating credential secret: %s", err)
-	}
+	return secret, nil
+}
 
-	cred := &eks.EKSCredentials{
+// GenerateCredentials is responsible for producing a gkecredentials
+func (o *CreateEKSCredentialsOptions) GenerateCredentials() *eks.EKSCredentials {
+	return &eks.EKSCredentials{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "EKSCredentials",
 			APIVersion: eks.GroupVersion.String(),
@@ -154,40 +184,16 @@ func (o CreateEKSCredentialsOptions) Run() error {
 			},
 		},
 	}
+}
 
-	if o.DryRun {
-		if err := render.Render().
-			Writer(o.Writer()).
-			Format(render.FormatYAML).
-			Resource(render.FromStruct(cred)).
-			Do(); err != nil {
-
-			return err
-		}
-	} else {
-		o.Println("Storing credentials in Kore")
-		err = o.WaitForCreation(
-			o.ClientWithTeamResource(kore.HubAdminTeam, o.Resources().MustLookup("ekscredential")).
-				Name(o.Name).
-				Payload(cred).
-				Result(&eks.EKSCredentials{}),
-			o.NoWait,
-		)
-		if err != nil {
-			return err
-		}
-	}
-
-	if !o.AllocateToAll && len(o.AllocateToTeams) == 0 {
-		return nil
-	}
-
-	// Create allocation
+// GenerateAllocation is responsible for generating an allocation
+func (o *CreateEKSCredentialsOptions) GenerateAllocation() *configv1.Allocation {
 	teams := o.AllocateToTeams
 	if o.AllocateToAll {
 		teams = []string{"*"}
 	}
-	alloc := &confv1.Allocation{
+
+	return &confv1.Allocation{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Allocation",
 			APIVersion: confv1.GroupVersion.String(),
@@ -209,22 +215,4 @@ func (o CreateEKSCredentialsOptions) Run() error {
 			},
 		},
 	}
-
-	if o.DryRun {
-		o.Println("---")
-
-		return render.Render().
-			Writer(o.Writer()).
-			Format(render.FormatYAML).
-			Resource(render.FromStruct(cred)).
-			Do()
-	}
-
-	return o.WaitForCreation(
-		o.ClientWithTeamResource(kore.HubAdminTeam, o.Resources().MustLookup("allocation")).
-			Name(o.Name).
-			Payload(alloc).
-			Result(&confv1.Allocation{}),
-		o.NoWait,
-	)
 }
