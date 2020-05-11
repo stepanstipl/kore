@@ -17,8 +17,9 @@
 package render
 
 import (
-	"strings"
 	"time"
+
+	"k8s.io/apimachinery/pkg/util/duration"
 )
 
 // Age formats to an age
@@ -29,12 +30,7 @@ func Age() PrinterColumnFormatter {
 			return "Invalid"
 		}
 
-		age := time.Since(created)
-		if age < 1*time.Second {
-			return "1s"
-		}
-
-		return strings.Split(age.String(), ".")[0] + "s"
+		return duration.HumanDuration(time.Since(created))
 	}
 }
 
