@@ -60,11 +60,11 @@ for the get plan schema operation typically these are written to a http.Request
 */
 type GetPlanSchemaParams struct {
 
-	/*Name
-	  The name of the plan
+	/*Kind
+	  The cluster provider kind
 
 	*/
-	Name string
+	Kind string
 
 	timeout    time.Duration
 	Context    context.Context
@@ -104,15 +104,15 @@ func (o *GetPlanSchemaParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithName adds the name to the get plan schema params
-func (o *GetPlanSchemaParams) WithName(name string) *GetPlanSchemaParams {
-	o.SetName(name)
+// WithKind adds the kind to the get plan schema params
+func (o *GetPlanSchemaParams) WithKind(kind string) *GetPlanSchemaParams {
+	o.SetKind(kind)
 	return o
 }
 
-// SetName adds the name to the get plan schema params
-func (o *GetPlanSchemaParams) SetName(name string) {
-	o.Name = name
+// SetKind adds the kind to the get plan schema params
+func (o *GetPlanSchemaParams) SetKind(kind string) {
+	o.Kind = kind
 }
 
 // WriteToRequest writes these params to a swagger request
@@ -123,8 +123,8 @@ func (o *GetPlanSchemaParams) WriteToRequest(r runtime.ClientRequest, reg strfmt
 	}
 	var res []error
 
-	// path param name
-	if err := r.SetPathParam("name", o.Name); err != nil {
+	// path param kind
+	if err := r.SetPathParam("kind", o.Kind); err != nil {
 		return err
 	}
 

@@ -26,10 +26,10 @@ class PlanViewer extends React.Component {
     let schema
     switch (this.props.resourceType) {
     case 'cluster':
-      schema = await (await KoreApi.client()).GetPlanSchema(this.props.plan.metadata.name)
+      schema = await (await KoreApi.client()).GetPlanSchema(this.props.plan.spec.kind)
       break
     case 'service':
-      schema = await (await KoreApi.client()).GetServicePlanSchema(this.props.plan.metadata.name)
+      schema = await (await KoreApi.client()).GetServicePlanSchemaForPlan(this.props.plan.spec.kind, this.props.plan.metadata.name)
       break
     }
     this.setState({
