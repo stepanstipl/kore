@@ -543,3 +543,7 @@ workflows:
           enable_gke: true
           requires:
             - e2e-images
+      - e2e_eks:
+          enable_eks: true
+          requires:
+            - e2e_gke
