@@ -55,6 +55,7 @@ type clusterappmanImpl struct {
 	RuntimeClient rc.Client
 	ClusterApps   []clusterapp.Instance
 	cfg           *rest.Config
+	kubeAPIConfig clusterapp.KubernetesAPI
 }
 
 // manifest defines the data types that are required to initialise a clusterapp from
@@ -119,34 +120,22 @@ func New(config Config) (Interface, error) {
 		return nil, err
 	}
 	var client kubernetes.Interface
-
-	cfg, err := makeKubernetesConfig(config.Kubernetes)
+	cc, cfg, err := clusterapp.GetKubeCfgAndControllerClient(config.Kubernetes)
 	if err != nil {
-		return nil, fmt.Errorf("failed creating kubernetes config: %s", err)
+		return nil, fmt.Errorf("failed creating controller-runtime client or config: %s", err)
 	}
-
-	options, err := clusterapp.GetClientOptions()
-	if err != nil {
-		return nil, fmt.Errorf("failed getting client options (schemes): %s", err)
-	}
-	cc, err := rc.New(cfg, options)
-	if err != nil {
-		return nil, fmt.Errorf("failed creating kubernetes runtime client: %s", err)
-	}
-
 	client, err = kubernetes.NewForConfig(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed creating kubernetes client: %s", err)
 	}
 	return &clusterappmanImpl{
 		Client:        client,
+		kubeAPIConfig: config.Kubernetes,
 		RuntimeClient: cc,
 	}, nil
 }
 
-// Run is responsible for starting the services:
-// it should start threads for monitoring cluster apps
-// it should only return if "initial" kore deployments don't become ready
+// Run is responsible for starting the services
 func (s clusterappmanImpl) Run(ctx context.Context) error {
 	logger := log.WithFields(log.Fields{
 		"service": "clusterappman",
@@ -154,15 +143,21 @@ func (s clusterappmanImpl) Run(ctx context.Context) error {
 	logger.Info("attempting to reconcile the applications incluster")
 	// initialise clusterapps and parse all the manifests
 	logger.Info("loading manifests")
-	if err := LoadAllManifests(s.RuntimeClient); err != nil {
+	if err := LoadAllManifests(s.RuntimeClient, s.kubeAPIConfig); err != nil {
 		return fmt.Errorf("failed loading manifests - %s", err)
 	}
+	ticker := time.NewTicker(45 * time.Second)
 	for {
-		err := s.Deploy(ctx, logger)
-		if err != nil {
-			return err
+		select {
+		case <-ctx.Done():
+			logger.Print("exiting as requested")
+			return nil
+		case <-ticker.C:
+			err := s.Deploy(ctx, logger)
+			if err != nil {
+				logger.Errorf("error deploying clusterapp dependencies - %s", err)
+			}
 		}
-		time.Sleep(45 * time.Second)
 	}
 }
 
@@ -188,7 +183,7 @@ func (s clusterappmanImpl) Deploy(ctx context.Context, logger *log.Entry) error 
 		wg.Add(1)
 		// start a deployment thread:
 		logger.Infof("starting to wait for '%s' to become ready", ca.Component.Name)
-		go ca.WaitForReadyOrTimeout(deployCtx, ch, &wg, logger)
+		go ca.WaitForReadyOrTimeout(deployCtx, ch, &wg)
 		// Ensure we capture initial status
 		components[i] = ca.Component
 	}

@@ -18,8 +18,7 @@ package clusterapp
 
 import (
 	"context"
-	"errors"
-	"time"
+	"fmt"
 
 	log "github.com/sirupsen/logrus"
 
@@ -30,9 +29,49 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 	applicationv1beta "sigs.k8s.io/application/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+// GetKubeCfgAndControllerClient will return a new controller-runtime client and the cfg used to create it
+func GetKubeCfgAndControllerClient(k KubernetesAPI) (client.Client, *rest.Config, error) {
+	cfg, err := makeKubernetesConfig(k)
+	if err != nil {
+		return nil, cfg, fmt.Errorf("failed creating kubernetes config: %s", err)
+	}
+
+	options, err := GetClientOptions()
+	if err != nil {
+		return nil, cfg, fmt.Errorf("failed getting client options (schemes): %s", err)
+	}
+	cc, err := client.New(cfg, options)
+	if err != nil {
+		return nil, cfg, fmt.Errorf("failed creating kubernetes runtime client: %s", err)
+	}
+	return cc, cfg, nil
+}
+
+// makeKubernetesConfig returns a rest.Config from the options
+func makeKubernetesConfig(config KubernetesAPI) (*rest.Config, error) {
+	// @step: are we creating an in-cluster kubernetes client
+	if config.InCluster {
+		return rest.InClusterConfig()
+	}
+
+	if config.KubeConfig != "" {
+		return clientcmd.BuildConfigFromFlags("", config.KubeConfig)
+	}
+
+	return &rest.Config{
+		Host:        config.MasterAPIURL,
+		BearerToken: config.Token,
+		TLSClientConfig: rest.TLSClientConfig{
+			Insecure: config.SkipTLSVerify,
+		},
+	}, nil
+}
 
 func setMissingNamespace(namespace string, obj runtime.Object) error {
 	accessor, err := meta.Accessor(obj)
@@ -51,34 +90,6 @@ func setMissingNamespace(namespace string, obj runtime.Object) error {
 	}
 
 	return nil
-}
-
-// waitOnKindDeploy will deploy a object and not fail with unregistered Kind's until timeout
-func waitOnKindDeploy(ctx context.Context, cc client.Client, object runtime.Object, logger *log.Entry) error {
-	for {
-		select {
-		case <-ctx.Done():
-			return errors.New("timeout")
-		default:
-		}
-		err := func() error {
-			if _, err := kubernetes.CreateOrUpdate(ctx, cc, object); err != nil {
-				return err
-			}
-			return nil
-		}()
-		if err == nil {
-			// deploy good, return now
-			return nil
-		}
-		if !meta.IsNoMatchError(err) {
-			// generic error and not just waiting for CRD's to be ready...
-			return err
-		}
-		// TODO: The application kind is known but I suspect I need to invalidate client cache
-		logger.Debug("kind not known, waiting for CRD to be known")
-		time.Sleep(10 * time.Second)
-	}
 }
 
 func ensureNamespace(ctx context.Context, cc client.Client, name string) error {

@@ -31,36 +31,14 @@ import (
 	core "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// makeKubernetesConfig returns a rest.Config from the options
-func makeKubernetesConfig(config KubernetesAPI) (*rest.Config, error) {
-	// @step: are we creating an in-cluster kubernetes client
-	if config.InCluster {
-		return rest.InClusterConfig()
-	}
-
-	if config.KubeConfig != "" {
-		return clientcmd.BuildConfigFromFlags("", config.KubeConfig)
-	}
-
-	return &rest.Config{
-		Host:        config.MasterAPIURL,
-		BearerToken: config.Token,
-		TLSClientConfig: rest.TLSClientConfig{
-			Insecure: config.SkipTLSVerify,
-		},
-	}, nil
-}
-
 // LoadAllManifests will load all the manifests defined here
 // This provides a simple testable entrypoint
-func LoadAllManifests(cc client.Client) error {
+func LoadAllManifests(cc client.Client, ccCfg clusterapp.KubernetesAPI) error {
 	for _, m := range mm {
-		ca, err := getClusterAppFromEmbeddedManifests(m, cc)
+		ca, err := getClusterAppFromEmbeddedManifests(m, cc, ccCfg)
 		log.Infof("loading manifest for cluster app - %s", ca.Component.Name)
 		if err != nil {
 			return fmt.Errorf("failed to load %s manifests: %s", m.Name, err)
@@ -71,7 +49,7 @@ func LoadAllManifests(cc client.Client) error {
 	return nil
 }
 
-func getClusterAppFromEmbeddedManifests(m manifest, cc client.Client) (clusterapp.Instance, error) {
+func getClusterAppFromEmbeddedManifests(m manifest, cc client.Client, ccCfg clusterapp.KubernetesAPI) (clusterapp.Instance, error) {
 	// for all the embedded paths specified...
 	resfiles := make([]http.File, 0)
 	for _, manifestFile := range m.EmededManifests {
@@ -100,7 +78,7 @@ func getClusterAppFromEmbeddedManifests(m manifest, cc client.Client) (clusterap
 		DeleteResfiles:   deleteResfiles,
 		Manifestfiles:    resfiles,
 	}
-	return clusterapp.NewAppFromManifestFiles(cc, app)
+	return clusterapp.NewAppFromManifestFiles(cc, ccCfg, app)
 }
 
 // GetStatus returns the status of all compoents deployed by ClusterAppMan

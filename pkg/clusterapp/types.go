@@ -14,9 +14,18 @@
  * limitations under the License.
  */
 
-package clusterappman
+package clusterapp
 
-// IsValid checks the configuration is valid
-func (c Config) IsValid() error {
-	return nil
+// KubernetesAPI is the configuration for the kubernetes api
+type KubernetesAPI struct {
+	// InCluster indicates we are running in cluster
+	InCluster bool
+	// MasterAPIURL specifies the kube-apiserver url
+	MasterAPIURL string
+	// Token is kubernetes token to authenticate to the api
+	Token string
+	// KubeConfig is the kubeconfig path
+	KubeConfig string
+	// SkipTLSVerify indicates we skip tls
+	SkipTLSVerify bool
 }
