@@ -18,6 +18,7 @@ package apiserver
 
 import (
 	"net/http"
+	"strings"
 
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	"github.com/appvia/kore/pkg/kore"
@@ -57,8 +58,8 @@ func (p *planSchemasHandler) Register(i kore.Interface, builder utils.PathBuilde
 		withAllNonValidationErrors(ws.GET("/{name}")).To(p.getPlanSchema).
 			Doc("Returns a specific plan schema from the kore").
 			Operation("GetPlanSchema").
-			Param(ws.PathParameter("name", "The name of the plan schema you wish to retrieve")).
-			Returns(http.StatusOK, "Contains the plan schema definition from the kore", configv1.PlanPolicy{}),
+			Param(ws.PathParameter("name", "The name of the plan")).
+			Returns(http.StatusOK, "Contains the plan schema definition", configv1.PlanPolicy{}),
 	)
 
 	return ws, nil
@@ -66,11 +67,17 @@ func (p *planSchemasHandler) Register(i kore.Interface, builder utils.PathBuilde
 
 func (p planSchemasHandler) getPlanSchema(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
+		name := req.PathParameter("name")
+		plan, err := p.Plans().Get(req.Request.Context(), name)
+		if err != nil {
+			return err
+		}
+
 		schema := ""
-		switch req.PathParameter("name") {
-		case "GKE":
+		switch strings.ToLower(plan.Spec.Kind) {
+		case "gke":
 			schema = assets.GKEPlanSchema
-		case "EKS":
+		case "eks":
 			schema = assets.EKSPlanSchema
 		default:
 			return resp.WriteHeaderAndEntity(http.StatusNotFound, nil)

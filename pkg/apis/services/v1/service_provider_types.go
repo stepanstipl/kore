@@ -50,10 +50,15 @@ type ServiceProviderSpec struct {
 	Summary string `json:"summary"`
 	// Configuration are the key+value pairs describing a service provider
 	// +kubebuilder:validation:Type=object
-	Configuration apiextv1.JSON `json:"configuration"`
+	// +kubebuilder:validation:Optional
+	Configuration *apiextv1.JSON `json:"configuration,omitempty"`
 }
 
 func (s *ServiceProviderSpec) GetConfiguration(v interface{}) error {
+	if s.Configuration == nil {
+		return nil
+	}
+
 	if err := json.Unmarshal(s.Configuration.Raw, v); err != nil {
 		return fmt.Errorf("failed to unmarshal service provider configuration: %w", err)
 	}
@@ -61,11 +66,16 @@ func (s *ServiceProviderSpec) GetConfiguration(v interface{}) error {
 }
 
 func (s *ServiceProviderSpec) SetConfiguration(v interface{}) error {
+	if v == nil {
+		s.Configuration = nil
+		return nil
+	}
+
 	raw, err := json.Marshal(v)
 	if err != nil {
 		return fmt.Errorf("failed to marshal service provider configuration: %w", err)
 	}
-	s.Configuration = apiextv1.JSON{Raw: raw}
+	s.Configuration = &apiextv1.JSON{Raw: raw}
 	return nil
 }
 

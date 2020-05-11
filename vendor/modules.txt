@@ -417,7 +417,7 @@ github.com/konsorten/go-windows-terminal-sequences
 github.com/kr/pretty
 # github.com/kr/text v0.2.0
 github.com/kr/text
-# github.com/kubernetes-sigs/go-open-service-broker-client v0.0.0-20200323235047-56a01c84bf43 => github.com/appvia/go-open-service-broker-client v0.0.0-20200430155427-f6c465273916
+# github.com/kubernetes-sigs/go-open-service-broker-client v0.0.0-20200323235047-56a01c84bf43 => github.com/appvia/go-open-service-broker-client v0.0.0-20200505172434-f28d621ea14e
 github.com/kubernetes-sigs/go-open-service-broker-client/v2
 # github.com/kylelemons/godebug v1.1.0
 github.com/kylelemons/godebug/diff

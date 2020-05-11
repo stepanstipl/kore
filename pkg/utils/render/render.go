@@ -129,7 +129,7 @@ func (r *renderer) RenderTable() error {
 	value := jsonpath.Parse(r.resource)
 	if r.foreach != "" {
 		value = value.Get(r.foreach)
-		if !value.Exists() {
+		if !value.Exists() || value.Value() == nil {
 			return nil
 		}
 	}

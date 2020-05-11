@@ -19,6 +19,8 @@ package apiserver
 import (
 	"net/http"
 
+	"github.com/appvia/kore/pkg/apiserver/filters"
+
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
@@ -71,6 +73,7 @@ func (p *serviceProvidersHandler) Register(i kore.Interface, builder utils.PathB
 
 	ws.Route(
 		withAllErrors(ws.PUT("/{name}")).To(p.updateServiceProvider).
+			Filter(filters.Admin).
 			Doc("Creates or updates a service provider").
 			Operation("UpdateServiceProvider").
 			Param(ws.PathParameter("name", "The name of the service provider you wish to create or update")).
@@ -80,6 +83,7 @@ func (p *serviceProvidersHandler) Register(i kore.Interface, builder utils.PathB
 
 	ws.Route(
 		withAllErrors(ws.DELETE("/{name}")).To(p.deleteServiceProvider).
+			Filter(filters.Admin).
 			Doc("Deletes a service provider").
 			Operation("DeleteServiceProvider").
 			Param(ws.PathParameter("name", "The name of the service provider you wish to delete")).

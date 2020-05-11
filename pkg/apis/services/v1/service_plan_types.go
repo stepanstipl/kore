@@ -19,6 +19,7 @@ package v1
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -52,10 +53,15 @@ type ServicePlanSpec struct {
 	Summary string `json:"summary"`
 	// Configuration are the key+value pairs describing a service configuration
 	// +kubebuilder:validation:Type=object
-	Configuration apiextv1.JSON `json:"configuration"`
+	// +kubebuilder:validation:Optional
+	Configuration *apiextv1.JSON `json:"configuration,omitempty"`
 }
 
 func (s *ServicePlanSpec) GetConfiguration(v interface{}) error {
+	if s.Configuration == nil {
+		return nil
+	}
+
 	if err := json.Unmarshal(s.Configuration.Raw, v); err != nil {
 		return fmt.Errorf("failed to unmarshal service plan configuration: %w", err)
 	}
@@ -63,11 +69,16 @@ func (s *ServicePlanSpec) GetConfiguration(v interface{}) error {
 }
 
 func (s *ServicePlanSpec) SetConfiguration(v interface{}) error {
+	if v == nil {
+		s.Configuration = nil
+		return nil
+	}
+
 	raw, err := json.Marshal(v)
 	if err != nil {
 		return fmt.Errorf("failed to marshal service plan configuration: %w", err)
 	}
-	s.Configuration = apiextv1.JSON{Raw: raw}
+	s.Configuration = &apiextv1.JSON{Raw: raw}
 	return nil
 }
 
@@ -94,6 +105,11 @@ func NewServicePlan(name, namespace string) *ServicePlan {
 			Namespace: namespace,
 		},
 	}
+}
+
+// PlanShortName returns the plan name without the service kind prefix
+func (s ServicePlan) PlanShortName() string {
+	return strings.TrimPrefix(s.Name, s.Spec.Kind+"-")
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

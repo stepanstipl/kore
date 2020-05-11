@@ -32,7 +32,7 @@ func (p *Provider) Delete(
 	ctx kore.ServiceProviderContext,
 	service *servicesv1.Service,
 ) (reconcile.Result, error) {
-	providerPlan, err := p.plan(service.Spec.Kind, service.Spec.Plan)
+	providerPlan, err := p.plan(service)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -64,7 +64,7 @@ func (p *Provider) Delete(
 		InstanceID:        service.Status.ProviderID,
 		AcceptsIncomplete: true,
 		ServiceID:         providerPlan.serviceID,
-		PlanID:            providerPlan.id,
+		PlanID:            providerPlan.osbPlan.ID,
 	})
 	if err != nil {
 		if isHttpNotFound(err) {

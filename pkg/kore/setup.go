@@ -124,6 +124,8 @@ func (h hubImpl) Setup(ctx context.Context) error {
 				serviceProvider.Annotations = map[string]string{}
 			}
 			serviceProvider.Annotations[Label("initializedAt")] = time.Now().String()
+			serviceProvider.Status.Status = core.PendingStatus
+			serviceProvider.Status.Message = "Initializing"
 			if err := h.ServiceProviders().Update(getAdminContext(ctx), &serviceProvider); err != nil {
 				return fmt.Errorf("failed to initialize service provider: %w", err)
 			}

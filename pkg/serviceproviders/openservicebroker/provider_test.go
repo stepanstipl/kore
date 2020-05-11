@@ -22,12 +22,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/appvia/kore/pkg/kore"
-
-	"github.com/appvia/kore/pkg/controllers"
-
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
+	"github.com/appvia/kore/pkg/controllers"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/serviceproviders/openservicebroker"
 	"github.com/appvia/kore/pkg/serviceproviders/openservicebroker/openservicebrokerfakes"
 	"github.com/appvia/kore/pkg/utils"
@@ -37,6 +35,7 @@ import (
 	. "github.com/onsi/gomega"
 	log "github.com/sirupsen/logrus"
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -81,11 +80,6 @@ func createPlan(id string, name string) osb.Plan {
 		Name:        name,
 		Description: name + " description",
 		Bindable:    utils.BoolPtr(true),
-		Metadata: map[string]interface{}{
-			openservicebroker.MetadataKeyConfiguration: map[string]interface{}{
-				fmt.Sprintf("%s-param", name): "value",
-			},
-		},
 		Schemas: &osb.Schemas{
 			ServiceInstance: &osb.ServiceInstanceSchema{
 				Create: &osb.InputParametersSchema{
@@ -101,16 +95,16 @@ func createPlan(id string, name string) osb.Plan {
 						"properties": {
 							"%s-param": {
 								"type": "string",
-								"minLength": 1
+								"minLength": 1,
+								"default": "%s-value"
 							}
 						}
-					}`, name, name),
+					}`, name, name, name),
 				},
 			},
 			ServiceBinding: &osb.ServiceBindingSchema{
-				Create: &osb.RequestResponseSchema{
-					InputParametersSchema: osb.InputParametersSchema{
-						Parameters: fmt.Sprintf(`{
+				Create: &osb.InputParametersSchema{
+					Parameters: fmt.Sprintf(`{
 							"$id": "https://test.appvia.io/schemas/credentials.json",
 							"$schema": "http://json-schema.org/draft-07/schema#",
 							"description": "Test plan credentials schema",
@@ -122,21 +116,21 @@ func createPlan(id string, name string) osb.Plan {
 							"properties": {
 								"%s-credentials-param": {
 									"type": "string",
-									"minLength": 1
+									"minLength": 1,
+									"default": "%s-credentials-value"
 								}
 							}
-						}`, name, name),
-					},
+						}`, name, name, name),
 				},
 			},
 		},
 	}
 }
 
-func createProviderData(operation *osb.OperationKey) apiextv1.JSON {
+func createProviderData(operation *osb.OperationKey) *apiextv1.JSON {
 	data := openservicebroker.ProviderData{Operation: operation}
 	res, _ := json.Marshal(data)
-	return apiextv1.JSON{Raw: res}
+	return &apiextv1.JSON{Raw: res}
 }
 
 var _ = Describe("Provider", func() {
@@ -203,17 +197,17 @@ var _ = Describe("Provider", func() {
 
 		service = servicesv1.NewService(KoreServiceName, Namespace)
 		service.Spec = servicesv1.ServiceSpec{
-			Kind:          Service1Name,
-			Plan:          Service1Name + "-" + plan1Name,
-			Configuration: apiextv1.JSON{Raw: []byte("{}")},
+			Kind: Service1Name,
+			Plan: Service1Name + "-" + plan1Name,
 		}
+		service.Spec.Configuration = &apiextv1.JSON{Raw: []byte(`{"serviceParam":"foo"}`)}
 
 		serviceCreds = servicesv1.NewServiceCredentials(KoreServiceCredentialsName, Namespace)
 		serviceCreds.Spec = servicesv1.ServiceCredentialsSpec{
-			Kind:          Service1Name,
-			Service:       service.Ownership(),
-			Configuration: apiextv1.JSON{Raw: []byte("{}")},
+			Kind:    Service1Name,
+			Service: service.Ownership(),
 		}
+		serviceCreds.Spec.Configuration = &apiextv1.JSON{Raw: []byte(`{"credsParam":"foo"}`)}
 
 		reconcileResult = reconcile.Result{}
 		reconcileErr = nil
@@ -231,6 +225,42 @@ var _ = Describe("Provider", func() {
 		It("should fetch the catalog successfully", func() {
 			Expect(providerCreateErr).ToNot(HaveOccurred())
 			Expect(provider).ToNot(BeNil())
+		})
+
+		It("should create service plans from the catalog plans", func() {
+			plans := provider.Plans()
+			Expect(plans[0]).To(Equal(servicesv1.ServicePlan{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "ServicePlan",
+					APIVersion: servicesv1.GroupVersion.String(),
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "plan-1",
+					Namespace: kore.HubNamespace,
+				},
+				Spec: servicesv1.ServicePlanSpec{
+					Kind:          "service-1",
+					Description:   "plan-1 description",
+					Summary:       "service-1 service - plan-1 plan",
+					Configuration: &apiextv1.JSON{Raw: []byte(`{"plan-1-param":"plan-1-value"}`)},
+				},
+			}))
+			Expect(plans[1]).To(Equal(servicesv1.ServicePlan{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "ServicePlan",
+					APIVersion: servicesv1.GroupVersion.String(),
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "plan-2",
+					Namespace: kore.HubNamespace,
+				},
+				Spec: servicesv1.ServicePlanSpec{
+					Kind:          "service-2",
+					Description:   "plan-2 description",
+					Summary:       "service-2 service - plan-2 plan",
+					Configuration: &apiextv1.JSON{Raw: []byte(`{"plan-2-param":"plan-2-value"}`)},
+				},
+			}))
 		})
 
 		When("the catalog endpoint returns an error", func() {
@@ -254,7 +284,7 @@ var _ = Describe("Provider", func() {
 			})
 
 			It("should error", func() {
-				Expect(providerCreateErr).To(MatchError("kore-default plan does not have a schema for provisioning"))
+				Expect(providerCreateErr).To(MatchError("service-1-kore-default plan does not have a schema for provisioning"))
 			})
 		})
 
@@ -269,29 +299,43 @@ var _ = Describe("Provider", func() {
 			})
 
 			It("should error", func() {
-				Expect(providerCreateErr).To(MatchError("kore-default plan does not have a schema for bind"))
+				Expect(providerCreateErr).To(MatchError("service-1-kore-default plan does not have a schema for bind"))
 			})
 		})
 
-		When("a plan doesn't configuration", func() {
+		When("a plan has a configuration key in the metadata", func() {
 			BeforeEach(func() {
 				plan := createPlan(plan1ID, plan1Name)
-				delete(plan.Metadata, openservicebroker.MetadataKeyConfiguration)
+				plan.Metadata = map[string]interface{}{
+					openservicebroker.MetadataKeyConfiguration: map[string]interface{}{
+						"extraKey": "extraValue",
+					},
+				}
 				service := createService(Service1ID, Service1Name, []osb.Plan{plan})
 				client.GetCatalogReturns(&osb.CatalogResponse{
 					Services: []osb.Service{service},
 				}, nil)
 			})
 
-			It("should error", func() {
-				Expect(providerCreateErr).To(MatchError("service-1-plan-1 plan is invalid: kore.appvia.io/configuration key is missing from metadata"))
+			It("should not error", func() {
+				Expect(providerCreateErr).ToNot(HaveOccurred())
+			})
+
+			It("should create service plans from the catalog plans", func() {
+				plans := provider.Plans()
+				config := map[string]interface{}{}
+				_ = plans[0].Spec.GetConfiguration(&config)
+				Expect(config).To(HaveKeyWithValue("plan-1-param", "plan-1-value"))
+				Expect(config).To(HaveKeyWithValue("extraKey", "extraValue"))
 			})
 		})
 
-		When("a plan has an invalid configuration", func() {
+		When("a plan has an invalid configuration key in the metadata", func() {
 			BeforeEach(func() {
 				plan := createPlan(plan1ID, plan1Name)
-				plan.Metadata[openservicebroker.MetadataKeyConfiguration] = "invalid"
+				plan.Metadata = map[string]interface{}{
+					openservicebroker.MetadataKeyConfiguration: "invalid",
+				}
 				service := createService(Service1ID, Service1Name, []osb.Plan{plan})
 				client.GetCatalogReturns(&osb.CatalogResponse{
 					Services: []osb.Service{service},
@@ -555,7 +599,7 @@ var _ = Describe("Provider", func() {
 
 			When("the configuration did change", func() {
 				BeforeEach(func() {
-					service.Spec.Configuration = apiextv1.JSON{Raw: []byte(`{"foo":"bar"}`)}
+					service.Spec.Configuration = &apiextv1.JSON{Raw: []byte(`{"foo":"bar"}`)}
 				})
 
 				It("should call update", func() {
@@ -1045,7 +1089,7 @@ var _ = Describe("Provider", func() {
 				Expect(req.InstanceID).To(Equal(KoreServiceID))
 				Expect(req.ServiceID).To(Equal(Service1ID))
 				Expect(req.PlanID).To(Equal(plan1ID))
-				Expect(json.Marshal(req.Parameters)).To(Equal(service.Spec.Configuration.Raw))
+				Expect(json.Marshal(req.Parameters)).To(Equal(serviceCreds.Spec.Configuration.Raw))
 			})
 
 			When("the response has async=false", func() {
@@ -1338,7 +1382,7 @@ var _ = Describe("Provider", func() {
 				Expect(client.UnbindCallCount()).To(Equal(1))
 
 				req := client.UnbindArgsForCall(0)
-				Expect(req.AcceptsIncomplete).To(BeFalse())
+				Expect(req.AcceptsIncomplete).To(BeTrue())
 				Expect(req.BindingID).To(Equal(KoreServiceCredentialsID))
 				Expect(req.InstanceID).To(Equal(KoreServiceID))
 				Expect(req.ServiceID).To(Equal(Service1ID))

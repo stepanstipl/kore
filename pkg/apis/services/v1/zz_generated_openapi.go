@@ -33,6 +33,8 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/appvia/kore/pkg/apis/services/v1.ServiceCredentials":       schema_pkg_apis_services_v1_ServiceCredentials(ref),
 		"github.com/appvia/kore/pkg/apis/services/v1.ServiceCredentialsSpec":   schema_pkg_apis_services_v1_ServiceCredentialsSpec(ref),
 		"github.com/appvia/kore/pkg/apis/services/v1.ServiceCredentialsStatus": schema_pkg_apis_services_v1_ServiceCredentialsStatus(ref),
+		"github.com/appvia/kore/pkg/apis/services/v1.ServiceKind":              schema_pkg_apis_services_v1_ServiceKind(ref),
+		"github.com/appvia/kore/pkg/apis/services/v1.ServiceKindSpec":          schema_pkg_apis_services_v1_ServiceKindSpec(ref),
 		"github.com/appvia/kore/pkg/apis/services/v1.ServicePlan":              schema_pkg_apis_services_v1_ServicePlan(ref),
 		"github.com/appvia/kore/pkg/apis/services/v1.ServicePlanSpec":          schema_pkg_apis_services_v1_ServicePlanSpec(ref),
 		"github.com/appvia/kore/pkg/apis/services/v1.ServiceProvider":          schema_pkg_apis_services_v1_ServiceProvider(ref),
@@ -171,7 +173,7 @@ func schema_pkg_apis_services_v1_ServiceCredentialsSpec(ref common.ReferenceCall
 						},
 					},
 				},
-				Required: []string{"kind", "configuration"},
+				Required: []string{"kind"},
 			},
 		},
 		Dependencies: []string{
@@ -231,6 +233,101 @@ func schema_pkg_apis_services_v1_ServiceCredentialsStatus(ref common.ReferenceCa
 		},
 		Dependencies: []string{
 			"github.com/appvia/kore/pkg/apis/core/v1.Component", "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"},
+	}
+}
+
+func schema_pkg_apis_services_v1_ServiceKind(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ServiceKind is a service type",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/appvia/kore/pkg/apis/services/v1.ServiceKindSpec"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/services/v1.ServiceKindSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_services_v1_ServiceKindSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ServiceKindSpec defines the state of a service kind",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"enabled": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Enabled is true if the service kind can be used",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"displayName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DisplayName refers to the display name of the service type",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Description provides a summary of the service kind",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"summary": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Summary provides a short title summary for the service kind",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"imageURL": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ImageURL is a thumbnail for the service kind",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"documentationURL": {
+						SchemaProps: spec.SchemaProps{
+							Description: "} refers to the documentation page for this service",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+				Required: []string{"enabled"},
+			},
+		},
 	}
 }
 
@@ -323,7 +420,7 @@ func schema_pkg_apis_services_v1_ServicePlanSpec(ref common.ReferenceCallback) c
 						},
 					},
 				},
-				Required: []string{"kind", "description", "summary", "configuration"},
+				Required: []string{"kind", "description", "summary"},
 			},
 		},
 		Dependencies: []string{
@@ -410,7 +507,7 @@ func schema_pkg_apis_services_v1_ServiceProviderSpec(ref common.ReferenceCallbac
 						},
 					},
 				},
-				Required: []string{"type", "description", "summary", "configuration"},
+				Required: []string{"type", "description", "summary"},
 			},
 		},
 		Dependencies: []string{
@@ -498,7 +595,7 @@ func schema_pkg_apis_services_v1_ServiceSpec(ref common.ReferenceCallback) commo
 						},
 					},
 				},
-				Required: []string{"kind", "plan", "configuration"},
+				Required: []string{"kind", "plan"},
 			},
 		},
 		Dependencies: []string{

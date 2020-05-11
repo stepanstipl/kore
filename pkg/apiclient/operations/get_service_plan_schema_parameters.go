@@ -61,7 +61,7 @@ for the get service plan schema operation typically these are written to a http.
 type GetServicePlanSchemaParams struct {
 
 	/*Name
-	  The name of the service plan schema you wish to retrieve
+	  The name of the service plan
 
 	*/
 	Name string

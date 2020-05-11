@@ -61,6 +61,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&Service{},
 		&ServiceCredentials{},
 		&ServiceCredentialsList{},
+		&ServiceKind{},
+		&ServiceKindList{},
 		&ServiceList{},
 		&ServicePlan{},
 		&ServicePlanList{},

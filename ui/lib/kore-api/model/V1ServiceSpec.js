@@ -23,13 +23,12 @@ class V1ServiceSpec {
     /**
      * Constructs a new <code>V1ServiceSpec</code>.
      * @alias module:model/V1ServiceSpec
-     * @param configuration {Object} 
      * @param kind {String} 
      * @param plan {String} 
      */
-    constructor(configuration, kind, plan) { 
+    constructor(kind, plan) { 
         
-        V1ServiceSpec.initialize(this, configuration, kind, plan);
+        V1ServiceSpec.initialize(this, kind, plan);
     }
 
     /**
@@ -37,8 +36,7 @@ class V1ServiceSpec {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, configuration, kind, plan) { 
-        obj['configuration'] = configuration;
+    static initialize(obj, kind, plan) { 
         obj['kind'] = kind;
         obj['plan'] = plan;
     }

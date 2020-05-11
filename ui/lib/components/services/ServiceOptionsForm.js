@@ -18,6 +18,13 @@ class ServiceOptionsForm extends React.Component {
     validationErrors: PropTypes.array
   }
 
+  componentDidUpdate(prevProps) {
+    // Reset the selected plan if the credential changes:
+    if (this.props.selectedServiceKind !== prevProps.selectedServiceKind) {
+      this.props.form.setFieldsValue({ 'servicePlan': null })
+    }
+  }
+
   onServicePlanChange = e => {
     if (this.props.form.getFieldValue('serviceName')) {
       this.props.form.setFieldsValue({ 'serviceName': this.generateServiceName(e.target.value) })

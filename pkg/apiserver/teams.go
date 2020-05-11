@@ -900,7 +900,7 @@ func (u teamHandler) getTeamServicePlanDetails(req *restful.Request, resp *restf
 			return fmt.Errorf("provider not found for service kind %q", servicePlan.Spec.Kind)
 		}
 
-		schema, err := provider.PlanJSONSchema(servicePlan.Spec.Kind, servicePlan.Name)
+		schema, err := provider.PlanJSONSchema(servicePlan.Spec.Kind, servicePlan.PlanShortName())
 		if err != nil {
 			return err
 		}
@@ -908,9 +908,11 @@ func (u teamHandler) getTeamServicePlanDetails(req *restful.Request, resp *restf
 		servicePlanDetails := TeamServicePlan{
 			ServicePlan: servicePlan.Spec,
 			Schema:      schema,
+			// TODO: set the editable parameters when we add service plan policies
+			ParameterEditable: map[string]bool{
+				"*": true,
+			},
 		}
-
-		// TODO: set the editable parameters when we add service plan policies
 
 		return resp.WriteHeaderAndEntity(http.StatusOK, servicePlanDetails)
 	})

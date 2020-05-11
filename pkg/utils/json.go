@@ -20,6 +20,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+
+	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 )
 
 // EncodeToJSON encodes the struct to json
@@ -39,4 +41,24 @@ func DecodeToJSON(data io.Reader, in interface{}) error {
 	}
 
 	return nil
+}
+
+func ApiExtJSONEquals(j1, j2 *apiextv1.JSON) bool {
+	if ApiExtJSONEmpty(j1) && ApiExtJSONEmpty(j2) {
+		return true
+	}
+
+	if ApiExtJSONEmpty(j1) || ApiExtJSONEmpty(j2) {
+		return false
+	}
+
+	return bytes.Equal(j1.Raw, j2.Raw)
+}
+
+func ApiExtJSONEmpty(j *apiextv1.JSON) bool {
+	if j == nil {
+		return true
+	}
+
+	return len(j.Raw) == 0 || bytes.Equal(j.Raw, []byte("{}"))
 }

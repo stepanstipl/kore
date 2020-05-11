@@ -33,7 +33,7 @@ func (p *Provider) DeleteCredentials(
 	service *servicesv1.Service,
 	creds *servicesv1.ServiceCredentials,
 ) (reconcile.Result, error) {
-	providerPlan, err := p.plan(service.Spec.Kind, service.Spec.Plan)
+	providerPlan, err := p.plan(service)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -62,14 +62,19 @@ func (p *Provider) DeleteCredentials(
 
 	ctx.Logger.Debug("calling unbind on the service broker")
 
-	resp, err := p.client.Unbind(&osb.UnbindRequest{
-		// Async unbinding is only supported in API version >= 2.14, so we leave this as false for now
-		AcceptsIncomplete: false,
+	unbindRequest := &osb.UnbindRequest{
+		AcceptsIncomplete: true,
 		InstanceID:        service.Status.ProviderID,
 		BindingID:         creds.Status.ProviderID,
 		ServiceID:         providerPlan.serviceID,
-		PlanID:            providerPlan.id,
-	})
+		PlanID:            providerPlan.osbPlan.ID,
+	}
+
+	resp, err := p.client.Unbind(unbindRequest)
+	if err != nil && osb.IsAsyncBindingOperationsNotAllowedError(err) {
+		unbindRequest.AcceptsIncomplete = false
+		resp, err = p.client.Unbind(unbindRequest)
+	}
 	if err != nil {
 		if isHttpNotFound(err) {
 			component.Status = corev1.SuccessStatus

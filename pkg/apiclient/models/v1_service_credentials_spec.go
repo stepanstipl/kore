@@ -24,8 +24,7 @@ type V1ServiceCredentialsSpec struct {
 	ClusterNamespace string `json:"clusterNamespace,omitempty"`
 
 	// configuration
-	// Required: true
-	Configuration interface{} `json:"configuration"`
+	Configuration interface{} `json:"configuration,omitempty"`
 
 	// kind
 	// Required: true
@@ -40,10 +39,6 @@ func (m *V1ServiceCredentialsSpec) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateCluster(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateConfiguration(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -74,15 +69,6 @@ func (m *V1ServiceCredentialsSpec) validateCluster(formats strfmt.Registry) erro
 			}
 			return err
 		}
-	}
-
-	return nil
-}
-
-func (m *V1ServiceCredentialsSpec) validateConfiguration(formats strfmt.Registry) error {
-
-	if err := validate.Required("configuration", "body", m.Configuration); err != nil {
-		return err
 	}
 
 	return nil

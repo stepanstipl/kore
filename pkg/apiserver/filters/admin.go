@@ -24,21 +24,11 @@ import (
 	restful "github.com/emicklei/go-restful"
 )
 
-var (
-	// DefaultAdminHandler is the default filter
-	DefaultAdminHandler AdminHandler
-)
-
-// AdminHandler is the default authentication handler
-type AdminHandler struct{}
-
-// Filter is called on middleware execution
-func (a *AdminHandler) Filter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
-	// @step: ensure the user is a member of the team
+// Admin is a filter which checks whether the user is an admin
+func Admin(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
 	user := authentication.MustGetIdentity(req.Request.Context())
 	if !user.IsGlobalAdmin() {
 		resp.WriteHeader(http.StatusForbidden)
-
 		return
 	}
 

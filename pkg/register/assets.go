@@ -34,6 +34,7 @@
 // deploy/crds/security.kore.appvia.io_securityrules.yaml
 // deploy/crds/security.kore.appvia.io_securityscanresults.yaml
 // deploy/crds/services.kore.appvia.io_servicecredentials.yaml
+// deploy/crds/services.kore.appvia.io_servicekinds.yaml
 // deploy/crds/services.kore.appvia.io_serviceplans.yaml
 // deploy/crds/services.kore.appvia.io_serviceproviders.yaml
 // deploy/crds/services.kore.appvia.io_services.yaml
@@ -6325,7 +6326,6 @@ spec:
               - version
               type: object
           required:
-          - configuration
           - kind
           type: object
         status:
@@ -6420,6 +6420,93 @@ func crdsServicesKoreAppviaIo_servicecredentialsYaml() (*asset, error) {
 	return a, nil
 }
 
+var _crdsServicesKoreAppviaIo_servicekindsYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: servicekinds.services.kore.appvia.io
+spec:
+  group: services.kore.appvia.io
+  names:
+    kind: ServiceKind
+    listKind: ServiceKindList
+    plural: servicekinds
+    singular: servicekind
+  preserveUnknownFields: false
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      description: ServiceKind is a service type
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: ServiceKindSpec defines the state of a service kind
+          properties:
+            description:
+              description: Description provides a summary of the service kind
+              type: string
+            displayName:
+              description: DisplayName refers to the display name of the service type
+              minLength: 1
+              type: string
+            documentationURL:
+              description: '} refers to the documentation page for this service'
+              type: string
+            enabled:
+              description: Enabled is true if the service kind can be used
+              type: boolean
+            imageURL:
+              description: ImageURL is a thumbnail for the service kind
+              type: string
+            summary:
+              description: Summary provides a short title summary for the service
+                kind
+              type: string
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsServicesKoreAppviaIo_servicekindsYamlBytes() ([]byte, error) {
+	return _crdsServicesKoreAppviaIo_servicekindsYaml, nil
+}
+
+func crdsServicesKoreAppviaIo_servicekindsYaml() (*asset, error) {
+	bytes, err := crdsServicesKoreAppviaIo_servicekindsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/services.kore.appvia.io_servicekinds.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _crdsServicesKoreAppviaIo_serviceplansYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -6481,7 +6568,6 @@ spec:
               minLength: 1
               type: string
           required:
-          - configuration
           - description
           - kind
           - summary
@@ -6573,7 +6659,6 @@ spec:
               minLength: 1
               type: string
           required:
-          - configuration
           - description
           - summary
           - type
@@ -6706,7 +6791,6 @@ spec:
               minLength: 1
               type: string
           required:
-          - configuration
           - kind
           - plan
           type: object
@@ -6896,6 +6980,7 @@ var _bindata = map[string]func() (*asset, error){
 	"crds/security.kore.appvia.io_securityrules.yaml":                     crdsSecurityKoreAppviaIo_securityrulesYaml,
 	"crds/security.kore.appvia.io_securityscanresults.yaml":               crdsSecurityKoreAppviaIo_securityscanresultsYaml,
 	"crds/services.kore.appvia.io_servicecredentials.yaml":                crdsServicesKoreAppviaIo_servicecredentialsYaml,
+	"crds/services.kore.appvia.io_servicekinds.yaml":                      crdsServicesKoreAppviaIo_servicekindsYaml,
 	"crds/services.kore.appvia.io_serviceplans.yaml":                      crdsServicesKoreAppviaIo_serviceplansYaml,
 	"crds/services.kore.appvia.io_serviceproviders.yaml":                  crdsServicesKoreAppviaIo_serviceprovidersYaml,
 	"crds/services.kore.appvia.io_services.yaml":                          crdsServicesKoreAppviaIo_servicesYaml,
@@ -6977,6 +7062,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"security.kore.appvia.io_securityrules.yaml":                     {crdsSecurityKoreAppviaIo_securityrulesYaml, map[string]*bintree{}},
 		"security.kore.appvia.io_securityscanresults.yaml":               {crdsSecurityKoreAppviaIo_securityscanresultsYaml, map[string]*bintree{}},
 		"services.kore.appvia.io_servicecredentials.yaml":                {crdsServicesKoreAppviaIo_servicecredentialsYaml, map[string]*bintree{}},
+		"services.kore.appvia.io_servicekinds.yaml":                      {crdsServicesKoreAppviaIo_servicekindsYaml, map[string]*bintree{}},
 		"services.kore.appvia.io_serviceplans.yaml":                      {crdsServicesKoreAppviaIo_serviceplansYaml, map[string]*bintree{}},
 		"services.kore.appvia.io_serviceproviders.yaml":                  {crdsServicesKoreAppviaIo_serviceprovidersYaml, map[string]*bintree{}},
 		"services.kore.appvia.io_services.yaml":                          {crdsServicesKoreAppviaIo_servicesYaml, map[string]*bintree{}},

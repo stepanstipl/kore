@@ -53,10 +53,15 @@ type ServiceCredentialsSpec struct {
 	// Configuration are the configuration values for this service credentials
 	// It will be used by the service provider to provision the credentials
 	// +kubebuilder:validation:Type=object
-	Configuration apiextv1.JSON `json:"configuration"`
+	// +kubebuilder:validation:Optional
+	Configuration *apiextv1.JSON `json:"configuration,omitempty"`
 }
 
 func (s *ServiceCredentialsSpec) GetConfiguration(v interface{}) error {
+	if s.Configuration == nil {
+		return nil
+	}
+
 	if err := json.Unmarshal(s.Configuration.Raw, v); err != nil {
 		return fmt.Errorf("failed to unmarshal service credentials configuration: %w", err)
 	}
@@ -64,11 +69,16 @@ func (s *ServiceCredentialsSpec) GetConfiguration(v interface{}) error {
 }
 
 func (s *ServiceCredentialsSpec) SetConfiguration(v interface{}) error {
+	if v == nil {
+		s.Configuration = nil
+		return nil
+	}
+
 	raw, err := json.Marshal(v)
 	if err != nil {
 		return fmt.Errorf("failed to marshal service credentials configuration: %w", err)
 	}
-	s.Configuration = apiextv1.JSON{Raw: raw}
+	s.Configuration = &apiextv1.JSON{Raw: raw}
 	return nil
 }
 
@@ -88,12 +98,16 @@ type ServiceCredentialsStatus struct {
 	// +kubebuilder:validation:Optional
 	ProviderID string `json:"providerID,omitempty"`
 	// ProviderData is provider specific data
-	// +kubebuilder:validation:Optional
 	// +kubebuilder:validation:Type=object
-	ProviderData apiextv1.JSON `json:"providerData,omitempty"`
+	// +kubebuilder:validation:Optional
+	ProviderData *apiextv1.JSON `json:"providerData,omitempty"`
 }
 
 func (s *ServiceCredentialsStatus) GetProviderData(v interface{}) error {
+	if s.ProviderData == nil {
+		return nil
+	}
+
 	if err := json.Unmarshal(s.ProviderData.Raw, v); err != nil {
 		return fmt.Errorf("failed to unmarshal service provider data: %w", err)
 	}
@@ -101,11 +115,16 @@ func (s *ServiceCredentialsStatus) GetProviderData(v interface{}) error {
 }
 
 func (s *ServiceCredentialsStatus) SetProviderData(v interface{}) error {
+	if v == nil {
+		s.ProviderData = nil
+		return nil
+	}
+
 	raw, err := json.Marshal(v)
 	if err != nil {
 		return fmt.Errorf("failed to marshal service provider data: %w", err)
 	}
-	s.ProviderData = apiextv1.JSON{Raw: raw}
+	s.ProviderData = &apiextv1.JSON{Raw: raw}
 	return nil
 }
 

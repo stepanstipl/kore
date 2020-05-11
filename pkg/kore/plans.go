@@ -65,11 +65,11 @@ func (p plansImpl) Update(ctx context.Context, plan *configv1.Plan) error {
 
 	switch plan.Spec.Kind {
 	case "GKE":
-		if err := jsonschema.Validate(assets.GKEPlanSchema, "plan", plan.Spec.Configuration.Raw); err != nil {
+		if err := jsonschema.Validate(assets.GKEPlanSchema, "plan", plan.Spec.Configuration); err != nil {
 			return err
 		}
 	case "EKS":
-		if err := jsonschema.Validate(assets.EKSPlanSchema, "plan", plan.Spec.Configuration.Raw); err != nil {
+		if err := jsonschema.Validate(assets.EKSPlanSchema, "plan", plan.Spec.Configuration); err != nil {
 			return err
 		}
 	default:

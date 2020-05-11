@@ -17,7 +17,6 @@
 package openservicebroker
 
 import (
-	"encoding/json"
 	"fmt"
 
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
@@ -46,6 +45,9 @@ func (d ProviderFactory) JSONSchema() string {
 			"url"
 		],
 		"properties": {
+			"enable_alpha_features": {
+				"type": "boolean"
+			},
 			"url": {
 				"type": "string",
 				"minLength": 1
@@ -104,8 +106,7 @@ func (d ProviderFactory) CreateProvider(serviceProvider servicesv1.ServiceProvid
 	var config = osb.DefaultClientConfiguration()
 	config.Name = serviceProvider.Name
 
-	err := json.Unmarshal(serviceProvider.Spec.Configuration.Raw, config)
-	if err != nil {
+	if err := serviceProvider.Spec.GetConfiguration(config); err != nil {
 		return nil, fmt.Errorf("failed to process service provider configuration: %w", err)
 	}
 

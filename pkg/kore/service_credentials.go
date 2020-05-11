@@ -17,17 +17,15 @@
 package kore
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"fmt"
+
+	"github.com/appvia/kore/pkg/utils"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 
 	"github.com/appvia/kore/pkg/utils/jsonschema"
 
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
-	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils/validation"
 
@@ -55,17 +53,9 @@ type serviceCredentialsImpl struct {
 
 // Delete is used to delete service credentials
 func (s *serviceCredentialsImpl) Delete(ctx context.Context, name string) (*servicesv1.ServiceCredentials, error) {
-	// @TODO check whether the user is an admin in the team
-
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsMember(s.team) && !user.IsGlobalAdmin() {
-		return nil, NewErrNotAllowed("must be global admin or a team member")
-	}
-
 	logger := log.WithFields(log.Fields{
 		"serviceCredentials": name,
 		"team":               s.team,
-		"user":               user.Username(),
 	})
 	logger.Info("attempting to delete the service credentials")
 
@@ -85,11 +75,6 @@ func (s *serviceCredentialsImpl) Delete(ctx context.Context, name string) (*serv
 
 // List returns a list of service credentials we have access to
 func (s *serviceCredentialsImpl) List(ctx context.Context) (*servicesv1.ServiceCredentialsList, error) {
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsMember(s.team) && !user.IsGlobalAdmin() {
-		return nil, NewErrNotAllowed("must be global admin or a team member")
-	}
-
 	list := &servicesv1.ServiceCredentialsList{}
 
 	return list, s.Store().Client().List(ctx,
@@ -100,11 +85,6 @@ func (s *serviceCredentialsImpl) List(ctx context.Context) (*servicesv1.ServiceC
 
 // Get returns specific service credentials
 func (s *serviceCredentialsImpl) Get(ctx context.Context, name string) (*servicesv1.ServiceCredentials, error) {
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsMember(s.team) && !user.IsGlobalAdmin() {
-		return nil, NewErrNotAllowed("must be global admin or a team member")
-	}
-
 	serviceCredentials := &servicesv1.ServiceCredentials{}
 
 	if err := s.Store().Client().Get(ctx,
@@ -125,13 +105,6 @@ func (s *serviceCredentialsImpl) Get(ctx context.Context, name string) (*service
 
 // Update is used to update service credentials
 func (s *serviceCredentialsImpl) Update(ctx context.Context, serviceCreds *servicesv1.ServiceCredentials) error {
-	// @TODO check whether the user is an admin in the team
-
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsMember(s.team) && !user.IsGlobalAdmin() {
-		return NewErrNotAllowed("must be global admin or a team member")
-	}
-
 	existing, err := s.Get(ctx, serviceCreds.Name)
 	if err != nil && err != ErrNotFound {
 		return err
@@ -175,7 +148,7 @@ func (s *serviceCredentialsImpl) Update(ctx context.Context, serviceCreds *servi
 			WithFieldErrorf("kind", validation.InvalidType, "%q is not a known service kind", serviceCreds.Spec.Kind)
 	}
 
-	if err := s.validateConfiguration(ctx, service, serviceCreds, provider); err != nil {
+	if err := s.validateConfiguration(ctx, service, serviceCreds, existing, provider); err != nil {
 		return err
 	}
 
@@ -188,25 +161,33 @@ func (s *serviceCredentialsImpl) Update(ctx context.Context, serviceCreds *servi
 func (s *serviceCredentialsImpl) validateConfiguration(
 	_ context.Context,
 	service *servicesv1.Service,
-	serviceCreds *servicesv1.ServiceCredentials,
+	serviceCreds, existing *servicesv1.ServiceCredentials,
 	provider ServiceProvider,
 ) error {
-	serviceCredsCfg := make(map[string]interface{})
-	if err := json.NewDecoder(bytes.NewReader(serviceCreds.Spec.Configuration.Raw)).Decode(&serviceCredsCfg); err != nil {
-		return fmt.Errorf("failed to parse service configuration values: %s", err)
-	}
-
-	schema, err := provider.CredentialsJSONSchema(serviceCreds.Spec.Kind, service.Spec.Plan)
+	schema, err := provider.CredentialsJSONSchema(serviceCreds.Spec.Kind, service.PlanShortName())
 	if err != nil {
 		return err
 	}
 
-	if err := jsonschema.Validate(
-		schema,
-		"configuration",
-		serviceCreds.Spec.Configuration.Raw,
-	); err != nil {
-		return err
+	if schema == "" && !utils.ApiExtJSONEmpty(serviceCreds.Spec.Configuration) {
+		if existing == nil || !utils.ApiExtJSONEquals(serviceCreds.Spec.Configuration, existing.Spec.Configuration) {
+			return validation.NewError("%q failed validation", serviceCreds.Name).
+				WithFieldErrorf(
+					"configuration",
+					validation.ReadOnly,
+					"the service provider doesn't have a JSON schema to validate the configuration",
+				)
+		}
+	}
+
+	if schema != "" {
+		if err := jsonschema.Validate(
+			schema,
+			"configuration",
+			serviceCreds.Spec.Configuration,
+		); err != nil {
+			return err
+		}
 	}
 
 	return nil

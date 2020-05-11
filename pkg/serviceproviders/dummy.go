@@ -70,8 +70,24 @@ func (d Dummy) Name() string {
 	return d.name
 }
 
-func (d Dummy) Kinds() []string {
-	return []string{"dummy"}
+func (d Dummy) Kinds() []servicesv1.ServiceKind {
+	return []servicesv1.ServiceKind{
+		{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       servicesv1.ServiceKindGVK.Kind,
+				APIVersion: servicesv1.GroupVersion.String(),
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "dummy",
+				Namespace: kore.HubNamespace,
+			},
+			Spec: servicesv1.ServiceKindSpec{
+				DisplayName: "Dummy",
+				Summary:     "Dummy service used for testing",
+				Enabled:     true,
+			},
+		},
+	}
 }
 
 func (d Dummy) Plans() []servicesv1.ServicePlan {
@@ -82,14 +98,14 @@ func (d Dummy) Plans() []servicesv1.ServicePlan {
 				APIVersion: servicesv1.GroupVersion.String(),
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "dummy",
+				Name:      "default",
 				Namespace: "kore",
 			},
 			Spec: servicesv1.ServicePlanSpec{
 				Kind:          "dummy",
 				Description:   "Used for testing",
-				Summary:       "This is a dummy service plan",
-				Configuration: v1beta1.JSON{Raw: []byte(`{"foo":"bar"}`)},
+				Summary:       "This is a default dummy service plan",
+				Configuration: &v1beta1.JSON{Raw: []byte(`{"foo":"bar"}`)},
 			},
 		},
 	}

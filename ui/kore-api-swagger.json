@@ -802,7 +802,7 @@
         "parameters": [
           {
             "type": "string",
-            "description": "The name of the plan schema you wish to retrieve",
+            "description": "The name of the plan",
             "name": "name",
             "in": "path",
             "required": true
@@ -810,7 +810,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Contains the plan schema definition from the kore",
+            "description": "Contains the plan schema definition",
             "schema": {
               "$ref": "#/definitions/v1.PlanPolicy"
             }
@@ -1214,6 +1214,192 @@
         }
       }
     },
+    "/api/v1alpha1/servicekinds": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Returns all the available service kinds",
+        "operationId": "ListServiceKinds",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Filters service kinds for a specific kind",
+            "name": "kind",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of service kinds",
+            "schema": {
+              "$ref": "#/definitions/v1.ServiceKindList"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/servicekinds/{name}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Returns a specific service kind",
+        "operationId": "GetServiceKind",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of the service kind you wish to retrieve",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the service kind definition",
+            "schema": {
+              "$ref": "#/definitions/v1.ServiceKind"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "the service kind with the given name doesn't exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Creates or updates a service kind",
+        "operationId": "UpdateServiceKind",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of the service kind you wish to create or update",
+            "name": "name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "The specification for the service kind you are creating or updating",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.ServiceKind"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the service kind definition",
+            "schema": {
+              "$ref": "#/definitions/v1.ServiceKind"
+            }
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Deletes a service kind",
+        "operationId": "DeleteServiceKind",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of the service kind you wish to delete",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the service kind definition",
+            "schema": {
+              "$ref": "#/definitions/v1.ServiceKind"
+            }
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "the service kind with the given name doesn't exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
     "/api/v1alpha1/serviceplans": {
       "get": {
         "consumes": [
@@ -1413,7 +1599,7 @@
         "parameters": [
           {
             "type": "string",
-            "description": "The name of the service plan schema you wish to retrieve",
+            "description": "The name of the service plan",
             "name": "name",
             "in": "path",
             "required": true
@@ -6342,8 +6528,7 @@
     },
     "v1.ServiceCredentialsSpec": {
       "required": [
-        "kind",
-        "configuration"
+        "kind"
       ],
       "properties": {
         "cluster": {
@@ -6381,6 +6566,73 @@
           "type": "string"
         },
         "status": {
+          "type": "string"
+        }
+      }
+    },
+    "v1.ServiceKind": {
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1.ServiceKindSpec"
+        }
+      }
+    },
+    "v1.ServiceKindList": {
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.ServiceKind"
+          }
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ListMeta"
+        }
+      }
+    },
+    "v1.ServiceKindSpec": {
+      "required": [
+        "enabled"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "documentationURL": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "imageURL": {
+          "type": "string"
+        },
+        "summary": {
           "type": "string"
         }
       }
@@ -6455,8 +6707,7 @@
       "required": [
         "kind",
         "description",
-        "summary",
-        "configuration"
+        "summary"
       ],
       "properties": {
         "configuration": {
@@ -6528,8 +6779,7 @@
       "required": [
         "type",
         "description",
-        "summary",
-        "configuration"
+        "summary"
       ],
       "properties": {
         "configuration": {
@@ -6565,8 +6815,7 @@
     "v1.ServiceSpec": {
       "required": [
         "kind",
-        "plan",
-        "configuration"
+        "plan"
       ],
       "properties": {
         "configuration": {
@@ -6613,11 +6862,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
+        "clientID",
+        "clientSecret",
         "issuer",
         "clientScopes",
-        "userClaims",
-        "clientID",
-        "clientSecret"
+        "userClaims"
       ],
       "properties": {
         "clientID": {

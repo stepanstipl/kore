@@ -49,9 +49,12 @@ func (c *Controller) delete(
 
 	original := serviceProvider.DeepCopyObject()
 
-	serviceProvider.Status.Status = corev1.DeletingStatus
-
 	result, err := func() (reconcile.Result, error) {
+		if !serviceProvider.Status.Status.OneOf(corev1.DeletingStatus, corev1.DeleteFailedStatus, corev1.ErrorStatus) {
+			serviceProvider.Status.Status = corev1.DeletingStatus
+			return reconcile.Result{Requeue: true}, nil
+		}
+
 		if err := c.ServiceProviders().Unregister(ctx, serviceProvider); err != nil {
 			return reconcile.Result{}, err
 		}

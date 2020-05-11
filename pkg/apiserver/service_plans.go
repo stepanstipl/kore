@@ -20,6 +20,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/appvia/kore/pkg/apiserver/filters"
+
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
@@ -72,6 +74,7 @@ func (p *servicePlansHandler) Register(i kore.Interface, builder utils.PathBuild
 
 	ws.Route(
 		withAllErrors(ws.PUT("/{name}")).To(p.updateServicePlan).
+			Filter(filters.Admin).
 			Doc("Creates or updates a service plan").
 			Operation("UpdateServicePlan").
 			Param(ws.PathParameter("name", "The name of the service plan you wish to create or update")).
@@ -81,6 +84,7 @@ func (p *servicePlansHandler) Register(i kore.Interface, builder utils.PathBuild
 
 	ws.Route(
 		withAllErrors(ws.DELETE("/{name}")).To(p.deleteServicePlan).
+			Filter(filters.Admin).
 			Doc("Deletes a service plan").
 			Operation("DeleteServicePLan").
 			Param(ws.PathParameter("name", "The name of the service plan you wish to delete")).

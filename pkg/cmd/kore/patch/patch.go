@@ -19,7 +19,6 @@ package patch
 import (
 	"encoding/json"
 	"io/ioutil"
-	"strconv"
 	"strings"
 
 	"github.com/appvia/kore/pkg/client"
@@ -156,7 +155,7 @@ func (o *PatchOptions) Run() error {
 			return sjson.Delete(string(content), o.Key)
 		}
 
-		return sjson.Set(string(content), o.Key, ParseValue(o.Value))
+		return cmdutil.SetJSONProperty(string(content), o.Key, o.Value)
 	}()
 	if err != nil {
 		return err
@@ -184,14 +183,4 @@ func (o *PatchOptions) Run() error {
 	o.Println("%s no changes", utils.GetUnstructuredSelfLink(u))
 
 	return nil
-}
-
-// ParseValue is used to parse the value
-func ParseValue(value string) interface{} {
-	num, err := strconv.ParseFloat(value, 64)
-	if err == nil {
-		return num
-	}
-
-	return value
 }

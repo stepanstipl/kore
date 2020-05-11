@@ -17,7 +17,6 @@
 package openservicebroker
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -37,7 +36,7 @@ func (p *Provider) ReconcileCredentials(
 	service *servicesv1.Service,
 	creds *servicesv1.ServiceCredentials,
 ) (reconcile.Result, map[string]string, error) {
-	providerPlan, err := p.plan(service.Spec.Kind, service.Spec.Plan)
+	providerPlan, err := p.plan(service)
 	if err != nil {
 		return reconcile.Result{}, nil, err
 	}
@@ -68,20 +67,27 @@ func (p *Provider) ReconcileCredentials(
 	}
 
 	config := map[string]interface{}{}
-	if err := json.Unmarshal(creds.Spec.Configuration.Raw, &config); err != nil {
+	if err := creds.Spec.GetConfiguration(&config); err != nil {
 		return reconcile.Result{}, nil, controllers.NewCriticalError(fmt.Errorf("failed to unmarshal service credentials configuration"))
 	}
 
 	ctx.Logger.Debug("calling bind on service broker")
 
-	resp, err := p.client.Bind(&osb.BindRequest{
+	bindRequest := &osb.BindRequest{
 		AcceptsIncomplete: true,
 		BindingID:         creds.Status.ProviderID,
 		InstanceID:        service.Status.ProviderID,
 		ServiceID:         providerPlan.serviceID,
-		PlanID:            providerPlan.id,
+		PlanID:            providerPlan.osbPlan.ID,
 		Parameters:        config,
-	})
+	}
+
+	resp, err := p.client.Bind(bindRequest)
+	if err != nil && osb.IsAsyncBindingOperationsNotAllowedError(err) {
+		bindRequest.AcceptsIncomplete = false
+		resp, err = p.client.Bind(bindRequest)
+	}
+
 	if err != nil {
 		return reconcile.Result{}, nil, handleError(component, "failed to call bind on the service broker", err)
 	}

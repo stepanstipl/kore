@@ -312,6 +312,20 @@ var (
 			},
 		},
 		{
+			Name:         "servicekind",
+			GroupVersion: servicesv1.GroupVersion.String(),
+			Kind:         "ServiceKind",
+			Scope:        GlobalScope,
+			ShortName:    "svcp",
+			FeatureGate:  kore.FeatureGateServices,
+			Printer: []Column{
+				{"Name", "metadata.name", ""},
+				{"Summary", "spec.summary", ""},
+				{"Enabled", "spec.enabled", ""},
+				{"Age", "metadata.creationTimestamp", "age"},
+			},
+		},
+		{
 			Name:         "serviceplan",
 			GroupVersion: servicesv1.GroupVersion.String(),
 			Kind:         "ServicePlan",

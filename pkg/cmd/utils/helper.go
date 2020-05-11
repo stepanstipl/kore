@@ -210,21 +210,7 @@ func PatchJSON(document string, cliValues []string) (string, error) {
 				return "", err
 			}
 		} else {
-			document, err = sjson.Set(document, key, func(v string) interface{} {
-				if val, err := strconv.ParseBool(v); err == nil {
-					return val
-				}
-				if val, err := strconv.ParseFloat(v, 64); err == nil {
-					return val
-				}
-				if val, err := strconv.ParseInt(v, 10, 64); err == nil {
-					return val
-				}
-				if val, err := strconv.Unquote(v); err == nil {
-					return val
-				}
-				return v
-			}(value))
+			document, err = SetJSONProperty(document, key, value)
 			if err != nil {
 				return "", err
 			}
@@ -232,4 +218,22 @@ func PatchJSON(document string, cliValues []string) (string, error) {
 	}
 
 	return document, nil
+}
+
+func SetJSONProperty(document, key, value string) (string, error) {
+	return sjson.Set(document, key, func(v string) interface{} {
+		if val, err := strconv.ParseBool(v); err == nil {
+			return val
+		}
+		if val, err := strconv.ParseFloat(v, 64); err == nil {
+			return val
+		}
+		if val, err := strconv.ParseInt(v, 10, 64); err == nil {
+			return val
+		}
+		if val, err := strconv.Unquote(v); err == nil {
+			return val
+		}
+		return v
+	}(value))
 }

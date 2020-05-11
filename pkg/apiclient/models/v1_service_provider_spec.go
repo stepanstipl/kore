@@ -18,8 +18,7 @@ import (
 type V1ServiceProviderSpec struct {
 
 	// configuration
-	// Required: true
-	Configuration interface{} `json:"configuration"`
+	Configuration interface{} `json:"configuration,omitempty"`
 
 	// description
 	// Required: true
@@ -38,10 +37,6 @@ type V1ServiceProviderSpec struct {
 func (m *V1ServiceProviderSpec) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateConfiguration(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateDescription(formats); err != nil {
 		res = append(res, err)
 	}
@@ -57,15 +52,6 @@ func (m *V1ServiceProviderSpec) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *V1ServiceProviderSpec) validateConfiguration(formats strfmt.Registry) error {
-
-	if err := validate.Required("configuration", "body", m.Configuration); err != nil {
-		return err
-	}
-
 	return nil
 }
 

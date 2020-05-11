@@ -20,10 +20,14 @@ import (
 	"fmt"
 	"strings"
 
+	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+
 	"github.com/appvia/kore/pkg/utils/validation"
 
 	"github.com/xeipuuv/gojsonschema"
 )
+
+var emptyObjectLoader = gojsonschema.NewStringLoader("{}")
 
 // Validate runs a JSON schema validation using the given schema against the passed object
 func Validate(schemaJSON string, subject string, data interface{}) error {
@@ -32,14 +36,29 @@ func Validate(schemaJSON string, subject string, data interface{}) error {
 		return fmt.Errorf("failed to compile schema: %v", err)
 	}
 
-	var loader gojsonschema.JSONLoader
+	loader := emptyObjectLoader
+
 	switch d := data.(type) {
+	case apiextv1.JSON:
+		if len(d.Raw) > 0 {
+			loader = gojsonschema.NewBytesLoader(d.Raw)
+		}
+	case *apiextv1.JSON:
+		if d != nil && len(d.Raw) > 0 {
+			loader = gojsonschema.NewBytesLoader(d.Raw)
+		}
 	case []byte:
-		loader = gojsonschema.NewBytesLoader(d)
+		if len(d) > 0 {
+			loader = gojsonschema.NewBytesLoader(d)
+		}
 	case string:
-		loader = gojsonschema.NewStringLoader(d)
+		if len(d) > 0 {
+			loader = gojsonschema.NewStringLoader(d)
+		}
 	default:
-		loader = gojsonschema.NewGoLoader(d)
+		if d != nil {
+			loader = gojsonschema.NewGoLoader(d)
+		}
 	}
 
 	res, err := schema.Validate(loader)

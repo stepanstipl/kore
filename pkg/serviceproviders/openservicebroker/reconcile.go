@@ -17,8 +17,6 @@
 package openservicebroker
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -39,7 +37,7 @@ func (p *Provider) Reconcile(
 	ctx kore.ServiceProviderContext,
 	service *servicesv1.Service,
 ) (reconcile.Result, error) {
-	providerPlan, err := p.plan(service.Spec.Kind, service.Spec.Plan)
+	providerPlan, err := p.plan(service)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -57,7 +55,7 @@ func (p *Provider) Reconcile(
 
 	if component.Status == corev1.SuccessStatus {
 		// Check if there was any change to the service configuration
-		if service.Spec.Plan != service.Status.Plan || !bytes.Equal(service.Spec.Configuration.Raw, service.Status.Configuration.Raw) {
+		if service.NeedsUpdate() {
 			return p.update(ctx, service)
 		}
 
@@ -75,7 +73,7 @@ func (p *Provider) Reconcile(
 	}
 
 	config := map[string]interface{}{}
-	if err := json.Unmarshal(service.Spec.Configuration.Raw, &config); err != nil {
+	if err := service.Spec.GetConfiguration(&config); err != nil {
 		return reconcile.Result{}, controllers.NewCriticalError(fmt.Errorf("failed to unmarshal service configuration: %w", err))
 	}
 
@@ -85,7 +83,7 @@ func (p *Provider) Reconcile(
 		InstanceID:        service.Status.ProviderID,
 		AcceptsIncomplete: true,
 		ServiceID:         providerPlan.serviceID,
-		PlanID:            providerPlan.id,
+		PlanID:            providerPlan.osbPlan.ID,
 		OrganizationGUID:  "Kore",
 		SpaceGUID:         service.Namespace,
 		Context: map[string]interface{}{
@@ -115,7 +113,7 @@ func (p *Provider) update(
 	ctx kore.ServiceProviderContext,
 	service *servicesv1.Service,
 ) (reconcile.Result, error) {
-	providerPlan, err := p.plan(service.Spec.Kind, service.Spec.Plan)
+	providerPlan, err := p.plan(service)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -146,7 +144,7 @@ func (p *Provider) update(
 	}
 
 	config := map[string]interface{}{}
-	if err := json.Unmarshal(service.Spec.Configuration.Raw, &config); err != nil {
+	if err := service.Spec.GetConfiguration(&config); err != nil {
 		return reconcile.Result{}, controllers.NewCriticalError(fmt.Errorf("failed to unmarshal service configuration"))
 	}
 
@@ -156,7 +154,7 @@ func (p *Provider) update(
 		InstanceID:        service.Status.ProviderID,
 		AcceptsIncomplete: true,
 		ServiceID:         providerPlan.serviceID,
-		PlanID:            utils.StringPtr(providerPlan.id),
+		PlanID:            utils.StringPtr(providerPlan.osbPlan.ID),
 		Parameters:        config,
 		Context: map[string]interface{}{
 			"team": service.Namespace,

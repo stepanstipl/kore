@@ -71,10 +71,10 @@ class PlanOptionsForm extends React.Component {
 
     this.setState({
       ...this.state,
-      schema: JSON.parse(schema),
+      schema: schema !== '' ? JSON.parse(schema) : { properties:[] },
       parameterEditable: parameterEditable || {},
       // Overwrite plan values only if it's still set to the default value
-      planValues: this.state.planValues === PlanOptionsForm.initialState.planValues ? copy(planValues) : this.state.planValues,
+      planValues: this.state.planValues === PlanOptionsForm.initialState.planValues ? copy(planValues || {}) : this.state.planValues,
       showReadOnly: this.props.mode === 'view',
       dataLoading: false
     })
@@ -111,7 +111,7 @@ class PlanOptionsForm extends React.Component {
         ): null}
         {Object.keys(this.state.schema.properties).map((name) => {
           const editable = this.props.mode !== 'view' &&
-            this.state.parameterEditable[name] === true &&
+            (this.state.parameterEditable['*'] === true || this.state.parameterEditable[name] === true) &&
             (this.props.mode === 'create' || !this.state.schema.properties[name].immutable) // Disallow editing of params which can only be set at create time.
 
           return (
@@ -119,7 +119,7 @@ class PlanOptionsForm extends React.Component {
               key={name} 
               name={name} 
               property={this.state.schema.properties[name]} 
-              value={this.state.planValues[name]} 
+              value={this.state.planValues[name]}
               hideNonEditable={!this.state.showReadOnly} 
               editable={editable} 
               onChange={(n, v) => this.onValueChange(n, v)}

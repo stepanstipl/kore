@@ -40,9 +40,7 @@ require (
 	github.com/go-openapi/validate v0.19.7
 	github.com/go-swagger/go-swagger v0.23.0
 	github.com/gogo/protobuf v1.3.1 // indirect
-	github.com/golang/mock v1.3.1 // indirect
 	github.com/golangci/golangci-lint v1.23.7
-	github.com/google/addlicense v0.0.0-20200109101052-9fa18aaf59fb // indirect
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/uuid v1.1.1
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
@@ -99,7 +97,6 @@ require (
 	sigs.k8s.io/aws-iam-authenticator v0.5.0
 	sigs.k8s.io/controller-runtime v0.4.0
 	sigs.k8s.io/controller-tools v0.2.5
-	sigs.k8s.io/kind v0.6.0 // indirect
 	sigs.k8s.io/yaml v1.1.0
 )
 
@@ -130,6 +127,6 @@ replace github.com/dexidp/dex => github.com/appvia/dex v0.0.0-20191213161401-b14
 // This is the kubernetes-1.14.1-tools tag (which is the same as upstream kubernetes-1.14.1)
 replace k8s.io/code-generator => github.com/appvia/kubernetes-code-generator v0.0.0-20200311145355-28f8f0159a26
 
-replace github.com/kubernetes-sigs/go-open-service-broker-client => github.com/appvia/go-open-service-broker-client v0.0.0-20200430155427-f6c465273916
+replace github.com/kubernetes-sigs/go-open-service-broker-client => github.com/appvia/go-open-service-broker-client v0.0.0-20200505172434-f28d621ea14e
 
 go 1.13

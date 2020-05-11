@@ -21,8 +21,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/appvia/kore/pkg/utils"
+
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
-	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils/jsonschema"
 	"github.com/appvia/kore/pkg/utils/validation"
@@ -39,6 +40,8 @@ type ServicePlans interface {
 	Get(context.Context, string) (*servicesv1.ServicePlan, error)
 	// List returns the existing service plans
 	List(context.Context) (*servicesv1.ServicePlanList, error)
+	// ListFiltered returns a list of service plans using the given filter.
+	ListFiltered(context.Context, func(servicesv1.ServicePlan) bool) (*servicesv1.ServicePlanList, error)
 	// Has checks if a service plan exists
 	Has(context.Context, string) (bool, error)
 	// Update is responsible for updating a service plan
@@ -53,18 +56,33 @@ type servicePlansImpl struct {
 
 // Update is responsible for updating a service plan
 func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePlan) error {
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsGlobalAdmin() {
-		return ErrUnauthorized
-	}
-
 	if err := IsValidResourceName("plan", plan.Name); err != nil {
 		return err
+	}
+
+	if !strings.HasPrefix(plan.Name, plan.Spec.Kind+"-") {
+		return validation.NewError("%q failed validation", plan.Name).
+			WithFieldErrorf("name", validation.InvalidValue, "must start with %s-", plan.Spec.Kind)
 	}
 
 	if plan.Namespace != HubNamespace {
 		return validation.NewError("%q failed validation", plan.Name).
 			WithFieldErrorf("namespace", validation.InvalidValue, "must be %q", HubNamespace)
+	}
+
+	existing, err := p.Get(ctx, plan.Name)
+	if err != nil && err != ErrNotFound {
+		return err
+	}
+
+	if existing != nil {
+		verr := validation.NewError("%q failed validation", plan.Name)
+		if existing.Spec.Kind != plan.Spec.Kind {
+			verr.AddFieldErrorf("kind", validation.ReadOnly, "can not be changed after the service plan was created")
+		}
+		if verr.HasErrors() {
+			return verr
+		}
 	}
 
 	provider := p.ServiceProviders().GetProviderForKind(plan.Spec.Kind)
@@ -73,13 +91,26 @@ func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePl
 			WithFieldErrorf("kind", validation.InvalidType, "%q is not a known service kind", plan.Spec.Kind)
 	}
 
-	schema, err := provider.PlanJSONSchema(plan.Spec.Kind, plan.Name)
+	schema, err := provider.PlanJSONSchema(plan.Spec.Kind, plan.PlanShortName())
 	if err != nil {
 		return err
 	}
 
-	if err := jsonschema.Validate(schema, "plan", plan.Spec.Configuration.Raw); err != nil {
-		return err
+	if schema == "" && !utils.ApiExtJSONEmpty(plan.Spec.Configuration) {
+		if existing == nil || !utils.ApiExtJSONEquals(plan.Spec.Configuration, existing.Spec.Configuration) {
+			return validation.NewError("%q failed validation", plan.Name).
+				WithFieldErrorf(
+					"configuration",
+					validation.ReadOnly,
+					"the service provider doesn't have a JSON schema to validate the configuration",
+				)
+		}
+	}
+
+	if schema != "" {
+		if err := jsonschema.Validate(schema, "plan", plan.Spec.Configuration); err != nil {
+			return err
+		}
 	}
 
 	err = p.Store().Client().Update(ctx,
@@ -98,11 +129,6 @@ func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePl
 
 // Delete is used to delete a service plan in the kore
 func (p servicePlansImpl) Delete(ctx context.Context, name string) (*servicesv1.ServicePlan, error) {
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsGlobalAdmin() {
-		return nil, ErrUnauthorized
-	}
-
 	plan := &servicesv1.ServicePlan{}
 	err := p.Store().Client().Get(ctx,
 		store.GetOptions.InNamespace(HubNamespace),
@@ -172,6 +198,27 @@ func (p servicePlansImpl) List(ctx context.Context) (*servicesv1.ServicePlanList
 	)
 }
 
+// ListFiltered returns a list of service plans using the given filter.
+// A service plan is included if the filter function returns true
+func (p servicePlansImpl) ListFiltered(ctx context.Context, filter func(plan servicesv1.ServicePlan) bool) (*servicesv1.ServicePlanList, error) {
+	var res []servicesv1.ServicePlan
+
+	servicePlansList, err := p.ServicePlans().List(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, servicePlan := range servicePlansList.Items {
+		if filter(servicePlan) {
+			res = append(res, servicePlan)
+		}
+	}
+
+	servicePlansList.Items = res
+
+	return servicePlansList, nil
+}
+
 // Has checks if a service plan exists
 func (p servicePlansImpl) Has(ctx context.Context, name string) (bool, error) {
 	return p.Store().Client().Has(ctx,
@@ -183,8 +230,8 @@ func (p servicePlansImpl) Has(ctx context.Context, name string) (bool, error) {
 
 // GetEditablePlanParams returns with the editable service plan parameters for a specific team and service kind
 func (p servicePlansImpl) GetEditablePlanParams(ctx context.Context, team string, clusterKind string) (map[string]bool, error) {
-	// TODO: implement this when the service plan policies are implemented
-	return nil, nil
+	// TODO: read this from the allocated service plan policies
+	return map[string]bool{"*": true}, nil
 }
 
 func (p servicePlansImpl) getServicesWithPlan(ctx context.Context, clusterName string) ([]string, error) {
