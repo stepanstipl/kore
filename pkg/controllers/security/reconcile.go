@@ -50,9 +50,9 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 	var err error
 	switch c.kind {
 	case "Plan":
-		err = c.kore.Security().ScanPlan(ctx, t.(*configv1.Plan))
+		err = c.kore.Security().ScanPlan(ctx, c.mgr.GetClient(), t.(*configv1.Plan))
 	case "Cluster":
-		err = c.kore.Security().ScanCluster(ctx, t.(*clustersv1.Cluster))
+		err = c.kore.Security().ScanCluster(ctx, c.mgr.GetClient(), t.(*clustersv1.Cluster))
 	}
 	if err != nil {
 		logger.WithError(err).Error("trying to run security scan", c.kind, request.Namespace, request.Name)

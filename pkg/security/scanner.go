@@ -17,6 +17,7 @@
 package security
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -24,6 +25,7 @@ import (
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	securityv1 "github.com/appvia/kore/pkg/apis/security/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -84,26 +86,28 @@ func (s *scannerImpl) GetRule(code string) Rule {
 	return nil
 }
 
-func (s *scannerImpl) ScanPlan(target *configv1.Plan) *securityv1.SecurityScanResult {
+func (s *scannerImpl) ScanPlan(ctx context.Context, client client.Client, target *configv1.Plan) *securityv1.SecurityScanResult {
 	return s.scanRules(target.TypeMeta, target.ObjectMeta, func(rule Rule) (bool, securityv1.SecurityScanRuleResult, error) {
 		// Apply the rule if it implements PlanRule interface:
 		pr, applicable := rule.(PlanRule)
 		if !applicable {
 			return false, securityv1.SecurityScanRuleResult{}, nil
 		}
-		res, err := pr.CheckPlan(target)
+		res, err := pr.CheckPlan(ctx, client, target)
+
 		return true, res, err
 	})
 }
 
-func (s *scannerImpl) ScanCluster(target *clustersv1.Cluster) *securityv1.SecurityScanResult {
+func (s *scannerImpl) ScanCluster(ctx context.Context, client client.Client, target *clustersv1.Cluster) *securityv1.SecurityScanResult {
 	return s.scanRules(target.TypeMeta, target.ObjectMeta, func(rule Rule) (bool, securityv1.SecurityScanRuleResult, error) {
 		// Apply the rule if it implements ClusterRule interface:
 		cr, applicable := rule.(ClusterRule)
 		if !applicable {
 			return false, securityv1.SecurityScanRuleResult{}, nil
 		}
-		res, err := cr.CheckCluster(target)
+		res, err := cr.CheckCluster(ctx, client, target)
+
 		return true, res, err
 	})
 }

@@ -17,6 +17,7 @@
 package security
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -24,6 +25,7 @@ import (
 
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	securityv1 "github.com/appvia/kore/pkg/apis/security/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // AuthProxyIPRangeRule determines whether the auth proxy IP range is suitably limited
@@ -53,18 +55,18 @@ When Kore creates a Kubernetes cluster, it uses an authentication proxy running 
 access to the cluster. It is best practice to restrict the IP address ranges enabled by default on a cluster to a
 known set of IP ranges.
 
-This rule returns a warning where a plan either does not specify any IP ranges, or specifies any IP range wider 
+This rule returns a warning where a plan either does not specify any IP ranges, or specifies any IP range wider
 than a /16.
 
 ## Impact of warnings from this rule
-The authentication proxy deployed is secure to be open to the internet, so if necessary it is acceptable to run 
-clusters without restricting the range. However, where possible, the range should be restricted to those IP ranges 
+The authentication proxy deployed is secure to be open to the internet, so if necessary it is acceptable to run
+clusters without restricting the range. However, where possible, the range should be restricted to those IP ranges
 where your administrators will access the cluster from.
 `
 }
 
 // CheckPlan checks a plan for compliance with this rule
-func (p *AuthProxyIPRangeRule) CheckPlan(target *configv1.Plan) (securityv1.SecurityScanRuleResult, error) {
+func (p *AuthProxyIPRangeRule) CheckPlan(ctx context.Context, client client.Client, target *configv1.Plan) (securityv1.SecurityScanRuleResult, error) {
 	result := securityv1.SecurityScanRuleResult{
 		RuleCode: p.Code(),
 		Status:   securityv1.Warning,
@@ -111,5 +113,6 @@ func (p *AuthProxyIPRangeRule) CheckPlan(target *configv1.Plan) (securityv1.Secu
 
 	result.Message = "All ranges specified checked and compliant"
 	result.Status = securityv1.Compliant
+
 	return result, nil
 }
