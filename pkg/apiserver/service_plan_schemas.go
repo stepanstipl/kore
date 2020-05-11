@@ -52,10 +52,19 @@ func (p *servicePlanSchemasHandler) Register(i kore.Interface, builder utils.Pat
 	ws.Path(path.Base())
 
 	ws.Route(
-		withAllNonValidationErrors(ws.GET("/{name}")).To(p.getServicePlanSchema).
-			Doc("Returns a specific service plan schema from the kore").
-			Operation("GetServicePlanSchema").
-			Param(ws.PathParameter("name", "The name of the service plan")).
+		withAllNonValidationErrors(ws.GET("/{kind}")).To(p.getServicePlanSchema).
+			Doc("Returns a specific service plan schema").
+			Operation("GetServicePlanSchemaForKind").
+			Param(ws.PathParameter("kind", "The service kind")).
+			Returns(http.StatusOK, "Contains the service plan schema definition", nil),
+	)
+
+	ws.Route(
+		withAllNonValidationErrors(ws.GET("/{kind}/{name}")).To(p.getServicePlanSchema).
+			Doc("Returns a specific service plan schema").
+			Operation("GetServicePlanSchemaForPlan").
+			Param(ws.PathParameter("kind", "The service kind")).
+			Param(ws.PathParameter("name", "The service plan name")).
 			Returns(http.StatusOK, "Contains the service plan schema definition", nil),
 	)
 
@@ -64,18 +73,24 @@ func (p *servicePlanSchemasHandler) Register(i kore.Interface, builder utils.Pat
 
 func (p servicePlanSchemasHandler) getServicePlanSchema(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
+		var planName string
+
+		kind := req.PathParameter("kind")
 		name := req.PathParameter("name")
-		plan, err := p.ServicePlans().Get(req.Request.Context(), name)
-		if err != nil {
-			return err
+		if name != "" {
+			plan, err := p.ServicePlans().Get(req.Request.Context(), name)
+			if err != nil {
+				return err
+			}
+			planName = plan.PlanShortName()
 		}
 
-		provider := p.ServiceProviders().GetProviderForKind(plan.Spec.Kind)
+		provider := p.ServiceProviders().GetProviderForKind(kind)
 		if provider == nil {
 			return resp.WriteHeaderAndEntity(http.StatusNotFound, nil)
 		}
 
-		schema, err := provider.PlanJSONSchema(plan.Spec.Kind, plan.PlanShortName())
+		schema, err := provider.PlanJSONSchema(kind, planName)
 		if err != nil {
 			return err
 		}

@@ -789,7 +789,7 @@
         }
       }
     },
-    "/api/v1alpha1/planschemas/{name}": {
+    "/api/v1alpha1/planschemas/{kind}": {
       "get": {
         "consumes": [
           "application/json"
@@ -802,8 +802,8 @@
         "parameters": [
           {
             "type": "string",
-            "description": "The name of the plan",
-            "name": "name",
+            "description": "The cluster provider kind",
+            "name": "kind",
             "in": "path",
             "required": true
           }
@@ -1586,7 +1586,7 @@
         }
       }
     },
-    "/api/v1alpha1/serviceplanschemas/{name}": {
+    "/api/v1alpha1/serviceplanschemas/{kind}": {
       "get": {
         "consumes": [
           "application/json"
@@ -1594,12 +1594,57 @@
         "produces": [
           "application/json"
         ],
-        "summary": "Returns a specific service plan schema from the kore",
-        "operationId": "GetServicePlanSchema",
+        "summary": "Returns a specific service plan schema",
+        "operationId": "GetServicePlanSchemaForKind",
         "parameters": [
           {
             "type": "string",
-            "description": "The name of the service plan",
+            "description": "The service kind",
+            "name": "kind",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the service plan schema definition"
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/serviceplanschemas/{kind}/{name}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Returns a specific service plan schema",
+        "operationId": "GetServicePlanSchemaForPlan",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The service kind",
+            "name": "kind",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The service plan name",
             "name": "name",
             "in": "path",
             "required": true

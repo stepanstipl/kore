@@ -67,7 +67,7 @@ type GetPlanSchemaOK struct {
 }
 
 func (o *GetPlanSchemaOK) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/planschemas/{name}][%d] getPlanSchemaOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[GET /api/v1alpha1/planschemas/{kind}][%d] getPlanSchemaOK  %+v", 200, o.Payload)
 }
 
 func (o *GetPlanSchemaOK) GetPayload() *models.V1PlanPolicy {
@@ -99,7 +99,7 @@ type GetPlanSchemaUnauthorized struct {
 }
 
 func (o *GetPlanSchemaUnauthorized) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/planschemas/{name}][%d] getPlanSchemaUnauthorized ", 401)
+	return fmt.Sprintf("[GET /api/v1alpha1/planschemas/{kind}][%d] getPlanSchemaUnauthorized ", 401)
 }
 
 func (o *GetPlanSchemaUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -120,7 +120,7 @@ type GetPlanSchemaForbidden struct {
 }
 
 func (o *GetPlanSchemaForbidden) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/planschemas/{name}][%d] getPlanSchemaForbidden ", 403)
+	return fmt.Sprintf("[GET /api/v1alpha1/planschemas/{kind}][%d] getPlanSchemaForbidden ", 403)
 }
 
 func (o *GetPlanSchemaForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -142,7 +142,7 @@ type GetPlanSchemaInternalServerError struct {
 }
 
 func (o *GetPlanSchemaInternalServerError) Error() string {
-	return fmt.Sprintf("[GET /api/v1alpha1/planschemas/{name}][%d] getPlanSchemaInternalServerError  %+v", 500, o.Payload)
+	return fmt.Sprintf("[GET /api/v1alpha1/planschemas/{kind}][%d] getPlanSchemaInternalServerError  %+v", 500, o.Payload)
 }
 
 func (o *GetPlanSchemaInternalServerError) GetPayload() *models.ApiserverError {
