@@ -27,14 +27,16 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
+// Reconcile is responsible for handling the scanning of a kind
 func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	ctx := context.Background()
 
 	logger := c.logger.WithFields(log.Fields{
+		"kind":      c.kind,
 		"name":      request.NamespacedName.Name,
 		"namespace": request.NamespacedName.Namespace,
 	})
-	logger.Debug("attempting to reconcile the security scans for", c.kind)
+	logger.Debug("attempting to reconcile the security scans")
 
 	// @step: retrieve the object from the api
 	t := c.srckind.Type.DeepCopyObject()
@@ -42,22 +44,23 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
-		logger.WithError(err).Error("trying to retrieve from api", c.kind)
+		logger.WithError(err).Error("trying to retrieve from api")
 
 		return reconcile.Result{}, err
 	}
 
 	var err error
 	switch c.kind {
-	case "Plan":
-		err = c.kore.Security().ScanPlan(ctx, c.mgr.GetClient(), t.(*configv1.Plan))
 	case "Cluster":
 		err = c.kore.Security().ScanCluster(ctx, c.mgr.GetClient(), t.(*clustersv1.Cluster))
+	case "Plan":
+		err = c.kore.Security().ScanPlan(ctx, c.mgr.GetClient(), t.(*configv1.Plan))
 	}
 	if err != nil {
-		logger.WithError(err).Error("trying to run security scan", c.kind, request.Namespace, request.Name)
+		logger.WithError(err).Error("trying to run security scan")
 
 		return reconcile.Result{}, err
 	}
+
 	return reconcile.Result{}, nil
 }
