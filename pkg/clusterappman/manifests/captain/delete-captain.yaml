@@ -1,3 +1,20 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: captain-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: captain
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: captain-system
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -169,92 +186,3 @@ webhooks:
     scope: '*'
   sideEffects: Unknown
   timeoutSeconds: 30
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: captain-webhook
-  labels:
-    app: captain
-    service_name: captain
-spec:
-  ports:
-    - port: 443
-      targetPort: 9443
-      name: webhook
-    - port: 6060
-      targetPort: 6060
-      name: metrics
-  selector:
-    app: captain
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: captain
-  name: captain-controller-manager
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: captain
-  strategy:
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
-    type: RollingUpdate
-  template:
-    metadata:
-      labels:
-        app: captain
-    spec:
-      containers:
-      - args:
-        - --metrics-addr=0.0.0.0:6060
-        - --enable-leader-election
-        - --cluster-namespace=$(KUBERNETES_NAMESPACE)
-        - --chartrepo-namespace=$(KUBERNETES_NAMESPACE)
-        command:
-        - /manager
-        env:
-        - name: KUBERNETES_NAMESPACE
-          valueFrom:
-            fieldRef:
-              apiVersion: v1
-              fieldPath: metadata.namespace
-        image: index.alauda.cn/claas/captain:v0.9.8
-        imagePullPolicy: IfNotPresent
-        name: manager
-        resources:
-          limits:
-            cpu: 100m
-            memory: 512Mi
-          requests:
-            cpu: 100m
-            memory: 128Mi
-      dnsPolicy: ClusterFirst
-      initContainers:
-      - command:
-        - sh
-        - /generate_certificate.sh
-        - --service
-        - captain-webhook
-        - --vwebhook
-        - captain-validating-webhook-configuration
-        - --mwebhook
-        - captain-mutating-webhook-configuration
-        - --secret
-        - captain-webhook-cert
-        - --namespace
-        - $(KUBERNETES_NAMESPACE)
-        env:
-        - name: KUBERNETES_NAMESPACE
-          valueFrom:
-            fieldRef:
-              apiVersion: v1
-              fieldPath: metadata.namespace
-        image: index.alauda.cn/claas/captain-cert-init
-        imagePullPolicy: IfNotPresent
-        name: cert-init
----
