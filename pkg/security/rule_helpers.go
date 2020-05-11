@@ -27,5 +27,6 @@ func RuleApplies(rule Rule) []string {
 	if _, applies := rule.(ClusterRule); applies {
 		appliesTo = append(appliesTo, "Cluster")
 	}
+
 	return appliesTo
 }

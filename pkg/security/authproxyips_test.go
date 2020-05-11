@@ -17,6 +17,7 @@
 package security_test
 
 import (
+	"context"
 	"encoding/json"
 
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
@@ -27,6 +28,7 @@ import (
 	. "github.com/onsi/gomega"
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 func getConfig(ipRanges []string) *configv1.Plan {
@@ -63,7 +65,7 @@ var _ = Describe("AuthProxyIPsRule", func() {
 
 		When("called with a plan which contains no IP ranges", func() {
 			It("should return a warning", func() {
-				result := scanner.ScanPlan(getConfig([]string{}))
+				result := scanner.ScanPlan(context.Background(), fake.NewFakeClient(), getConfig([]string{}))
 				Expect(result.Spec.OverallStatus).To(Equal(securityv1.Warning))
 				Expect(result.Spec.Results[0].Status).To(Equal(securityv1.Warning))
 			})
@@ -71,13 +73,13 @@ var _ = Describe("AuthProxyIPsRule", func() {
 
 		When("called with a plan which contains IP ranges", func() {
 			It("should return a warning if an IP range specifies a wider CIDR than /16", func() {
-				result := scanner.ScanPlan(getConfig([]string{"1.2.3.4/15", "2.3.4.5/16"}))
+				result := scanner.ScanPlan(context.Background(), fake.NewFakeClient(), getConfig([]string{"1.2.3.4/15", "2.3.4.5/16"}))
 				Expect(result.Spec.OverallStatus).To(Equal(securityv1.Warning))
 				Expect(result.Spec.Results[0].Status).To(Equal(securityv1.Warning))
 			})
 
 			It("should return compliant if all IP ranges specify /16 or narrower ranges", func() {
-				result := scanner.ScanPlan(getConfig([]string{"1.2.3.4/16", "2.3.4.5/16"}))
+				result := scanner.ScanPlan(context.Background(), fake.NewFakeClient(), getConfig([]string{"1.2.3.4/16", "2.3.4.5/16"}))
 				Expect(result.Spec.OverallStatus).To(Equal(securityv1.Compliant))
 				Expect(result.Spec.Results[0].Status).To(Equal(securityv1.Compliant))
 			})

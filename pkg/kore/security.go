@@ -25,6 +25,7 @@ import (
 	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/persistence"
 	"github.com/appvia/kore/pkg/security"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -32,8 +33,8 @@ import (
 
 // Security represents the interface to the top-level Kore Security service.
 type Security interface {
-	ScanPlan(ctx context.Context, plan *configv1.Plan) error
-	ScanCluster(ctx context.Context, cluster *clustersv1.Cluster) error
+	ScanPlan(ctx context.Context, client client.Client, plan *configv1.Plan) error
+	ScanCluster(ctx context.Context, client client.Client, cluster *clustersv1.Cluster) error
 	ListScans(ctx context.Context, latestOnly bool) (*securityv1.SecurityScanResultList, error)
 	ScanHistoryForResource(ctx context.Context, typ metav1.TypeMeta, obj metav1.ObjectMeta) (*securityv1.SecurityScanResultList, error)
 	GetCurrentScanForResource(ctx context.Context, typ metav1.TypeMeta, obj metav1.ObjectMeta) (*securityv1.SecurityScanResult, error)
@@ -47,13 +48,15 @@ type securityImpl struct {
 	securityPersist persistence.Security
 }
 
-func (s *securityImpl) ScanPlan(ctx context.Context, plan *configv1.Plan) error {
-	scanResult := s.scanner.ScanPlan(plan)
+func (s *securityImpl) ScanPlan(ctx context.Context, client client.Client, plan *configv1.Plan) error {
+	scanResult := s.scanner.ScanPlan(ctx, client, plan)
+
 	return s.persistScan(ctx, scanResult)
 }
 
-func (s *securityImpl) ScanCluster(ctx context.Context, cluster *clustersv1.Cluster) error {
-	scanResult := s.scanner.ScanCluster(cluster)
+func (s *securityImpl) ScanCluster(ctx context.Context, client client.Client, cluster *clustersv1.Cluster) error {
+	scanResult := s.scanner.ScanCluster(ctx, client, cluster)
+
 	return s.persistScan(ctx, scanResult)
 }
 
@@ -62,8 +65,10 @@ func (s *securityImpl) persistScan(ctx context.Context, scanResult *securityv1.S
 	err := s.securityPersist.StoreScan(ctx, &scanResultDB)
 	if err != nil {
 		log.WithError(err).Error("trying to persist security security scan")
+
 		return err
 	}
+
 	return nil
 }
 

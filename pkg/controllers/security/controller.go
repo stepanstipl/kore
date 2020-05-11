@@ -76,6 +76,7 @@ func init() {
 
 }
 
+// NewController creates and returns a new scan controller
 func NewController(logger log.FieldLogger, srckind *source.Kind) *Controller {
 	kind := srckind.Type.GetObjectKind().GroupVersionKind().Kind
 	name := fmt.Sprintf("security-%s", strings.ToLower(kind))
@@ -89,18 +90,22 @@ func NewController(logger log.FieldLogger, srckind *source.Kind) *Controller {
 	}
 }
 
+// Name returns the name of the controller
 func (c *Controller) Name() string {
 	return c.name
 }
 
+// ManagerOptions are the manager options
 func (c *Controller) ManagerOptions() manager.Options {
 	return controllers.DefaultManagerOptions(c)
 }
 
+// ControllerOptions are the controller options
 func (c *Controller) ControllerOptions() controller.Options {
 	return controllers.DefaultControllerOptions(c)
 }
 
+// RunWithDependencies provisions the controller
 func (c *Controller) RunWithDependencies(ctx context.Context, mgr manager.Manager, ctrl controller.Controller, ki kore.Interface) error {
 	c.kore = ki
 	c.mgr = mgr
