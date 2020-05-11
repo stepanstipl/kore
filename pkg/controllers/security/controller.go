@@ -86,6 +86,7 @@ func NewController(logger log.FieldLogger, srckind *source.Kind) *Controller {
 			"controller": name,
 		}),
 		srckind: srckind,
+		kind:    kind,
 	}
 }
 
