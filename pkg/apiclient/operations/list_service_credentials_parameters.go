@@ -60,6 +60,16 @@ for the list service credentials operation typically these are written to a http
 */
 type ListServiceCredentialsParams struct {
 
+	/*Cluster
+	  Is the name of the cluster you are filtering for
+
+	*/
+	Cluster *string
+	/*Service
+	  Is the name of the service you are filtering for
+
+	*/
+	Service *string
 	/*Team
 	  Is the name of the team you are acting within
 
@@ -104,6 +114,28 @@ func (o *ListServiceCredentialsParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithCluster adds the cluster to the list service credentials params
+func (o *ListServiceCredentialsParams) WithCluster(cluster *string) *ListServiceCredentialsParams {
+	o.SetCluster(cluster)
+	return o
+}
+
+// SetCluster adds the cluster to the list service credentials params
+func (o *ListServiceCredentialsParams) SetCluster(cluster *string) {
+	o.Cluster = cluster
+}
+
+// WithService adds the service to the list service credentials params
+func (o *ListServiceCredentialsParams) WithService(service *string) *ListServiceCredentialsParams {
+	o.SetService(service)
+	return o
+}
+
+// SetService adds the service to the list service credentials params
+func (o *ListServiceCredentialsParams) SetService(service *string) {
+	o.Service = service
+}
+
 // WithTeam adds the team to the list service credentials params
 func (o *ListServiceCredentialsParams) WithTeam(team string) *ListServiceCredentialsParams {
 	o.SetTeam(team)
@@ -122,6 +154,38 @@ func (o *ListServiceCredentialsParams) WriteToRequest(r runtime.ClientRequest, r
 		return err
 	}
 	var res []error
+
+	if o.Cluster != nil {
+
+		// query param cluster
+		var qrCluster string
+		if o.Cluster != nil {
+			qrCluster = *o.Cluster
+		}
+		qCluster := qrCluster
+		if qCluster != "" {
+			if err := r.SetQueryParam("cluster", qCluster); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	if o.Service != nil {
+
+		// query param service
+		var qrService string
+		if o.Service != nil {
+			qrService = *o.Service
+		}
+		qService := qrService
+		if qService != "" {
+			if err := r.SetQueryParam("service", qService); err != nil {
+				return err
+			}
+		}
+
+	}
 
 	// path param team
 	if err := r.SetPathParam("team", o.Team); err != nil {

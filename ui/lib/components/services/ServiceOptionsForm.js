@@ -63,7 +63,7 @@ class ServiceOptionsForm extends React.Component {
 
   render() {
     const { getFieldDecorator, getFieldValue } = this.props.form
-    const { servicePlans } = this.props
+    const { servicePlans, selectedServiceKind } = this.props
     const selectedServicePlan = getFieldValue('servicePlan')
 
     const checkForDuplicateName = (rule, value) => {
@@ -111,6 +111,7 @@ class ServiceOptionsForm extends React.Component {
               <PlanOptionsForm
                 team={this.props.team}
                 resourceType="service"
+                kind={selectedServiceKind}
                 plan={selectedServicePlan}
                 validationErrors={this.props.validationErrors}
                 onPlanChange={this.onServicePlanOverridden}

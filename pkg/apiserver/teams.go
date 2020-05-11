@@ -737,6 +737,8 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Doc("Lists all service credentials for a team").
 			Operation("ListServiceCredentials").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.QueryParameter("cluster", "Is the name of the cluster you are filtering for")).
+			Param(ws.QueryParameter("service", "Is the name of the service you are filtering for")).
 			Returns(http.StatusOK, "List of all service credentials for a team", servicesv1.ServiceCredentials{}),
 	)
 

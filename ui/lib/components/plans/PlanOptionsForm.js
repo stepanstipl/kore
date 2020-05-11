@@ -10,7 +10,8 @@ import KoreApi from '../../kore-api'
 class PlanOptionsForm extends React.Component {
   static propTypes = {
     team: PropTypes.object.isRequired,
-    resourceType: PropTypes.oneOf(['cluster', 'service']).isRequired,
+    resourceType: PropTypes.oneOf(['cluster', 'service', 'servicecredential']).isRequired,
+    kind: PropTypes.string.isRequired,
     plan: PropTypes.string.isRequired,
     planValues: PropTypes.object,
     onPlanChange: PropTypes.func,
@@ -67,11 +68,20 @@ class PlanOptionsForm extends React.Component {
       planDetails = await (await KoreApi.client()).GetTeamServicePlanDetails(this.props.team.metadata.name, this.props.plan);
       [schema, parameterEditable, planValues] = [planDetails.schema, planDetails.parameterEditable, planDetails.servicePlan.configuration]
       break
+    case 'servicecredential':
+      schema = await (await KoreApi.client()).GetServiceCredentialSchemaForPlan(this.props.team.metadata.name, this.props.kind, this.props.plan)
+      parameterEditable = { '*': true }
+      planValues = {}
+      break
+    }
+
+    if (schema && typeof schema === 'string') {
+      schema = JSON.parse(schema)
     }
 
     this.setState({
       ...this.state,
-      schema: schema !== '' ? JSON.parse(schema) : { properties:[] },
+      schema: schema || { properties:[] },
       parameterEditable: parameterEditable || {},
       // Overwrite plan values only if it's still set to the default value
       planValues: this.state.planValues === PlanOptionsForm.initialState.planValues ? copy(planValues || {}) : this.state.planValues,
@@ -104,7 +114,7 @@ class PlanOptionsForm extends React.Component {
 
     return (
       <>
-        {this.props.mode !== 'view' ? (
+        {this.props.mode !== 'view' && !this.state.parameterEditable['*'] ? (
           <Form.Item label="Show read-only parameters">
             <Checkbox onChange={(v) => this.handleShowReadOnlyChange(v.target.checked)} checked={this.state.showReadOnly} />
           </Form.Item>
