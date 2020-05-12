@@ -47,6 +47,7 @@ func (p *GKEAutoscaling) Name() string {
 func (p *GKEAutoscaling) Description() string {
 	return `
 ## Overview
+
 This rule checks the status of the autoscaling on the GKE plans or clusters.
 
 ## Details
