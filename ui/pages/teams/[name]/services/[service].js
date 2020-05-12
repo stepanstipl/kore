@@ -225,20 +225,21 @@ class ServicePage extends React.Component {
           ]}
         />
 
-        <List.Item actions={[<ResourceStatusTag key="status" resourceStatus={service.status} />]}>
-          <List.Item.Meta
-            avatar={<Avatar icon="cloud" />}
-            title={<Text>{service.spec.kind} <Text style={{ fontFamily: 'monospace', marginLeft: '15px' }}>{service.metadata.name}</Text></Text>}
-            description={
-              <div>
-                <Text type='secondary'>Created {created}</Text>
-                {deleted ? <Text type='secondary'><br/>Deleted {deleted}</Text> : null }
-              </div>
-            }
-          />
-        </List.Item>
-
         <Row type="flex" gutter={[16,16]}>
+          <Col span={24} xl={12}>
+            <List.Item>
+              <List.Item.Meta
+                avatar={<Avatar icon="cloud" />}
+                title={<Text>{service.spec.kind} <Text style={{ fontFamily: 'monospace', marginLeft: '15px' }}>{service.metadata.name}</Text></Text>}
+                description={
+                  <div>
+                    <Text type='secondary'>Created {created}</Text>
+                    {deleted ? <Text type='secondary'><br/>Deleted {deleted}</Text> : null }
+                  </div>
+                }
+              />
+            </List.Item>
+          </Col>
           <Col span={24} xl={12}>
             <Collapse>
               <Collapse.Panel header="Detailed Service Status" extra={(<ResourceStatusTag resourceStatus={service.status} />)}>
@@ -246,7 +247,10 @@ class ServicePage extends React.Component {
               </Collapse.Panel>
             </Collapse>
           </Col>
-          <Col span={24} xl={12}>
+        </Row>
+
+        <Row type="flex" gutter={[16,16]} style={{ marginBottom: '12px' }}>
+          <Col span={24} xl={24}>
             <Collapse>
               <Collapse.Panel header="Service Parameters">
                 <Form {...editServiceFormConfig} onSubmit={(e) => this.onSubmit(e)}>

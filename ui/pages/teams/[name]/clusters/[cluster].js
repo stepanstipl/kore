@@ -229,28 +229,31 @@ class ClusterPage extends React.Component {
           ]}
         />
 
-        <List.Item actions={[<ResourceStatusTag key="status" resourceStatus={cluster.status} />]}>
-          <List.Item.Meta
-            avatar={<img src={clusterProviderIconSrcMap[cluster.spec.kind]} height="32px" />}
-            title={<Text>{cluster.spec.kind} <Text style={{ fontFamily: 'monospace', marginLeft: '15px' }}>{cluster.metadata.name}</Text></Text>}
-            description={
-              <div>
-                <Text type='secondary'>Created {created}</Text>
-                {deleted ? <Text type='secondary'><br/>Deleted {deleted}</Text> : null }
-              </div>
-            }
-          />
-        </List.Item>
-
         <Row type="flex" gutter={[16,16]}>
           <Col span={24} xl={12}>
-            <Collapse>
+            <List.Item>
+              <List.Item.Meta
+                avatar={<img src={clusterProviderIconSrcMap[cluster.spec.kind]} height="32px" />}
+                title={<Text>{cluster.spec.kind} <Text style={{ fontFamily: 'monospace', marginLeft: '15px' }}>{cluster.metadata.name}</Text></Text>}
+                description={
+                  <div>
+                    <Text type='secondary'>Created {created}</Text>
+                    {deleted ? <Text type='secondary'><br/>Deleted {deleted}</Text> : null }
+                  </div>
+                }
+              />
+            </List.Item>
+          </Col>
+          <Col span={24} xl={12}>
+            <Collapse style={{ marginTop: '12px' }}>
               <Collapse.Panel header="Detailed Cluster Status" extra={(<ResourceStatusTag resourceStatus={cluster.status} />)}>
                 <ComponentStatusTree team={team} user={user} component={cluster} />
               </Collapse.Panel>
             </Collapse>
           </Col>
-          <Col span={24} xl={12}>
+        </Row>
+        <Row type="flex" gutter={[16,16]} style={{ marginBottom: '12px' }}>
+          <Col span={24} xl={24}>
             <Collapse>
               <Collapse.Panel header="Cluster Parameters">
                 <Form {...editClusterFormConfig} onSubmit={(e) => this.onSubmit(e)}>
