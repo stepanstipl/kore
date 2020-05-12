@@ -19,6 +19,7 @@ package server
 import (
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
+	securityv1 "github.com/appvia/kore/pkg/apis/security/v1"
 	"github.com/appvia/kore/pkg/register"
 	"github.com/appvia/kore/pkg/utils/crds"
 
@@ -53,6 +54,31 @@ var (
 			Group:   orgv1.GroupVersion.Group,
 			Version: orgv1.GroupVersion.Version,
 			Kind:    "AuditEvent",
+		},
+		{
+			Group:   securityv1.GroupVersion.Group,
+			Version: securityv1.GroupVersion.Version,
+			Kind:    "SecurityRule",
+		},
+		{
+			Group:   securityv1.GroupVersion.Group,
+			Version: securityv1.GroupVersion.Version,
+			Kind:    "SecurityRuleList",
+		},
+		{
+			Group:   securityv1.GroupVersion.Group,
+			Version: securityv1.GroupVersion.Version,
+			Kind:    "SecurityOverview",
+		},
+		{
+			Group:   securityv1.GroupVersion.Group,
+			Version: securityv1.GroupVersion.Version,
+			Kind:    "SecurityScanResult",
+		},
+		{
+			Group:   securityv1.GroupVersion.Group,
+			Version: securityv1.GroupVersion.Version,
+			Kind:    "SecurityScanResultList",
 		},
 	}
 )
