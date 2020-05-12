@@ -64,6 +64,20 @@ func (a *nsCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 			return reconcile.Result{Requeue: true}, nil
 		}
 
+		// @step: check if the cluster still exists
+		found, err := kubernetes.CheckIfExists(context.Background(), a.mgr.GetClient(), &clustersv1.Kubernetes{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      resource.Spec.Cluster.Name,
+				Namespace: resource.Spec.Cluster.Namespace,
+			},
+		})
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		if !found {
+			return reconcile.Result{}, nil
+		}
+
 		// @step: create a client from the cluster secret
 		client, err := controllers.CreateClientFromSecret(context.Background(), a.mgr.GetClient(),
 			resource.Spec.Cluster.Namespace, resource.Spec.Cluster.Name)
