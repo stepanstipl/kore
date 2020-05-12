@@ -28,6 +28,8 @@ func TestLoadAllManifests(t *testing.T) {
 	options, err := clusterapp.GetClientOptions()
 	assert.NoError(t, err)
 	client := cc.NewFakeClientWithScheme(options.Scheme)
-	err = LoadAllManifests(client)
+
+	// Load all manifests - we won't need them to re-create any API access
+	err = LoadAllManifests(client, clusterapp.KubernetesAPI{})
 	assert.NoError(t, err)
 }

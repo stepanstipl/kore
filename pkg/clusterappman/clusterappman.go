@@ -45,6 +45,8 @@ const (
 	StatusConfigMapComponentsKey string = "components"
 	appControlNamespsace         string = "application-system"
 	fluxNamespace                string = "flux"
+	// DefaultAppTimeout is the amount of time allowed if none set
+	DefaultAppTimeout = 3 * time.Minute
 )
 
 type clusterappmanImpl struct {
@@ -53,6 +55,7 @@ type clusterappmanImpl struct {
 	RuntimeClient rc.Client
 	ClusterApps   []clusterapp.Instance
 	cfg           *rest.Config
+	kubeAPIConfig clusterapp.KubernetesAPI
 }
 
 // manifest defines the data types that are required to initialise a clusterapp from
@@ -73,7 +76,7 @@ var (
 	// mm defines all the embedded manifests and data required to initialise clusterappman
 	mm []manifest = []manifest{
 		{
-			Name: "Application Controller",
+			Name: clusterapp.ClusterAppControllerComponentName,
 			EmededManifests: []string{
 				"application-controller/application-all.yaml",
 			},
@@ -117,57 +120,55 @@ func New(config Config) (Interface, error) {
 		return nil, err
 	}
 	var client kubernetes.Interface
-
-	cfg, err := makeKubernetesConfig(config.Kubernetes)
+	cc, cfg, err := clusterapp.GetKubeCfgAndControllerClient(config.Kubernetes)
 	if err != nil {
-		return nil, fmt.Errorf("failed creating kubernetes config: %s", err)
+		return nil, fmt.Errorf("failed creating controller-runtime client or config: %s", err)
 	}
-
-	options, err := clusterapp.GetClientOptions()
-	if err != nil {
-		return nil, fmt.Errorf("failed getting client options (schemes): %s", err)
-	}
-	cc, err := rc.New(cfg, options)
-	if err != nil {
-		return nil, fmt.Errorf("failed creating kubernetes runtime client: %s", err)
-	}
-
 	client, err = kubernetes.NewForConfig(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed creating kubernetes client: %s", err)
 	}
 	return &clusterappmanImpl{
 		Client:        client,
+		kubeAPIConfig: config.Kubernetes,
 		RuntimeClient: cc,
 	}, nil
 }
 
-// Run is responsible for starting the services:
-// it should start threads for monitoring cluster apps
-// it should only return if "initial" kore deployments don't become ready
+// Run is responsible for starting the services
 func (s clusterappmanImpl) Run(ctx context.Context) error {
-	// Maybe this whole thing runs in a loop - ensuring no manual change?
-	// deploy / reconcile the Application kind controller
-	// deploy / reconcile the Helm operator
-	// deploy / reconcile the Appvia helm repo
-
-	// initialise clusterapps and parse all the manifests
-	// fail early if we can't even load the manifests
-	// we should add a test for this!
 	logger := log.WithFields(log.Fields{
 		"service": "clusterappman",
 	})
 	logger.Info("attempting to reconcile the applications incluster")
+	// initialise clusterapps and parse all the manifests
+	logger.Info("loading manifests")
+	if err := LoadAllManifests(s.RuntimeClient, s.kubeAPIConfig); err != nil {
+		return fmt.Errorf("failed loading manifests - %s", err)
+	}
+	ticker := time.NewTicker(45 * time.Second)
+	for {
+		select {
+		case <-ctx.Done():
+			logger.Print("exiting as requested")
+			return nil
+		case <-ticker.C:
+			err := s.Deploy(ctx, logger)
+			if err != nil {
+				logger.Errorf("error deploying clusterapp dependencies - %s", err)
+			}
+		}
+	}
+}
+
+func (s clusterappmanImpl) Deploy(ctx context.Context, logger *log.Entry) error {
+	// deploy / reconcile the Application kind controller
+	// deploy / reconcile the Helm operator
+	// deploy / reconcile the Appvia helm repo
 
 	var wg sync.WaitGroup
 	// component updates channel
 	ch := make(chan *kcore.Component, len(mm))
-
-	// make this tesable
-	logger.Info("loading manifests")
-	if err := LoadAllManifests(s.RuntimeClient); err != nil {
-		return fmt.Errorf("failed loading manifests - %s", err)
-	}
 	var cs = make([]*kcore.Component, len(mm))
 	var components kcore.Components = cs
 	for i, m := range mm {
@@ -176,17 +177,6 @@ func (s clusterappmanImpl) Run(ctx context.Context) error {
 		if !ok {
 			return fmt.Errorf("failed creating all manifests as could not find manifest %s", m.Name)
 		}
-		if m.EnsureNamespace {
-			logger.Infof("ensuring namespace %s exists", m.Namespace)
-			if err := ensureNamespace(ctx, s.RuntimeClient, m.Namespace); err != nil {
-				return fmt.Errorf("failed creating namespace %s: %s", m.Namespace, err)
-			}
-		}
-		// TODO: Write all objects to the API on a separate thread...
-		if err := ca.CreateOrUpdate(ctx, m.Namespace); err != nil {
-			return fmt.Errorf("failed to create or update '%s' deployment: %s", m.Name, err)
-		}
-		// TODO: write a status monitor entry point
 		deployCtx, cancel := context.WithTimeout(ctx, m.DeployTimeOut)
 		// make sure we run this cancel whatevs
 		defer cancel()
@@ -236,17 +226,6 @@ func (s clusterappmanImpl) Run(ctx context.Context) error {
 	if err := createStatusConfig(ctx, s.RuntimeClient, components); err != nil {
 		return fmt.Errorf("error reporting status: %s", err)
 	}
-	// TODO:
-	// 3. Update check at other side...
-
-	// Further TODO:
-	// 2. start kore-helm-repo reconciler
-	// 3. watch for all application types from operators in our repo to monitor readiness across reszt of cluster estate...
-	// 3. de-serialize the parameters and deploy all the CRD's (probably using templates)
-	// 4. Ensure we have application types or status known for all CRD's and add to components list
-	// 4. re-start loop
-
-	// we shouldn't get here!
 	return nil
 }
 

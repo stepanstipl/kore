@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	kcore "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/clusterapp"
@@ -30,36 +31,14 @@ import (
 	core "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// makeKubernetesConfig returns a rest.Config from the options
-func makeKubernetesConfig(config KubernetesAPI) (*rest.Config, error) {
-	// @step: are we creating an in-cluster kubernetes client
-	if config.InCluster {
-		return rest.InClusterConfig()
-	}
-
-	if config.KubeConfig != "" {
-		return clientcmd.BuildConfigFromFlags("", config.KubeConfig)
-	}
-
-	return &rest.Config{
-		Host:        config.MasterAPIURL,
-		BearerToken: config.Token,
-		TLSClientConfig: rest.TLSClientConfig{
-			Insecure: config.SkipTLSVerify,
-		},
-	}, nil
-}
-
 // LoadAllManifests will load all the manifests defined here
 // This provides a simple testable entrypoint
-func LoadAllManifests(cc client.Client) error {
+func LoadAllManifests(cc client.Client, ccCfg clusterapp.KubernetesAPI) error {
 	for _, m := range mm {
-		ca, err := getClusterAppFromEmbeddedManifests(m, cc)
+		ca, err := getClusterAppFromEmbeddedManifests(m, cc, ccCfg)
 		log.Infof("loading manifest for cluster app - %s", ca.Component.Name)
 		if err != nil {
 			return fmt.Errorf("failed to load %s manifests: %s", m.Name, err)
@@ -70,7 +49,7 @@ func LoadAllManifests(cc client.Client) error {
 	return nil
 }
 
-func getClusterAppFromEmbeddedManifests(m manifest, cc client.Client) (clusterapp.Instance, error) {
+func getClusterAppFromEmbeddedManifests(m manifest, cc client.Client, ccCfg clusterapp.KubernetesAPI) (clusterapp.Instance, error) {
 	// for all the embedded paths specified...
 	resfiles := make([]http.File, 0)
 	for _, manifestFile := range m.EmededManifests {
@@ -88,15 +67,18 @@ func getClusterAppFromEmbeddedManifests(m manifest, cc client.Client) (clusterap
 		}
 		deleteResfiles = append(deleteResfiles, file)
 	}
-	return clusterapp.NewAppFromManifestFiles(cc, m.Name, resfiles, deleteResfiles)
-}
-
-func ensureNamespace(ctx context.Context, cc client.Client, name string) error {
-	return kubernetes.EnsureNamespace(ctx, cc, &core.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-		},
-	})
+	// TODO move the timeout to a feature of a clusterapp but for now
+	if m.DeployTimeOut == time.Minute*0 {
+		m.DeployTimeOut = DefaultAppTimeout
+	}
+	app := clusterapp.AppData{
+		Name:             m.Name,
+		EnsureNamespace:  m.EnsureNamespace,
+		DefaultNamespace: m.Namespace,
+		DeleteResfiles:   deleteResfiles,
+		Manifestfiles:    resfiles,
+	}
+	return clusterapp.NewAppFromManifestFiles(cc, ccCfg, app)
 }
 
 // GetStatus returns the status of all compoents deployed by ClusterAppMan

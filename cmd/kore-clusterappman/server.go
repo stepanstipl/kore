@@ -22,6 +22,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/appvia/kore/pkg/clusterapp"
 	clusterappman "github.com/appvia/kore/pkg/clusterappman"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -41,7 +42,7 @@ func invoke(ctx *cli.Context) error {
 
 	// @step: construct the server config
 	config := clusterappman.Config{
-		Kubernetes: clusterappman.KubernetesAPI{
+		Kubernetes: clusterapp.KubernetesAPI{
 			InCluster:    ctx.Bool("in-cluster"),
 			KubeConfig:   ctx.String("kubeconfig"),
 			MasterAPIURL: ctx.String("kube-api-server"),

@@ -19,19 +19,59 @@ package clusterapp
 import (
 	"context"
 	"fmt"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 
-	korev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
+	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 	applicationv1beta "sigs.k8s.io/application/api/v1beta1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+// GetKubeCfgAndControllerClient will return a new controller-runtime client and the cfg used to create it
+func GetKubeCfgAndControllerClient(k KubernetesAPI) (client.Client, *rest.Config, error) {
+	cfg, err := makeKubernetesConfig(k)
+	if err != nil {
+		return nil, cfg, fmt.Errorf("failed creating kubernetes config: %s", err)
+	}
+
+	options, err := GetClientOptions()
+	if err != nil {
+		return nil, cfg, fmt.Errorf("failed getting client options (schemes): %s", err)
+	}
+	cc, err := client.New(cfg, options)
+	if err != nil {
+		return nil, cfg, fmt.Errorf("failed creating kubernetes runtime client: %s", err)
+	}
+	return cc, cfg, nil
+}
+
+// makeKubernetesConfig returns a rest.Config from the options
+func makeKubernetesConfig(config KubernetesAPI) (*rest.Config, error) {
+	// @step: are we creating an in-cluster kubernetes client
+	if config.InCluster {
+		return rest.InClusterConfig()
+	}
+
+	if config.KubeConfig != "" {
+		return clientcmd.BuildConfigFromFlags("", config.KubeConfig)
+	}
+
+	return &rest.Config{
+		Host:        config.MasterAPIURL,
+		BearerToken: config.Token,
+		TLSClientConfig: rest.TLSClientConfig{
+			Insecure: config.SkipTLSVerify,
+		},
+	}, nil
+}
 
 func setMissingNamespace(namespace string, obj runtime.Object) error {
 	accessor, err := meta.Accessor(obj)
@@ -52,124 +92,41 @@ func setMissingNamespace(namespace string, obj runtime.Object) error {
 	return nil
 }
 
-// waitOnStatus manages a timeout context when getting application status
-func waitOnApplicationStatus(ctx context.Context, ca *Instance) error {
-	for {
-		select {
-		case <-ctx.Done():
-			log.Debugf("context waiting for '%s' timed out", ca.Component.Name)
-			// we just accept the last status - it's not an error
-
-			return nil
-		default:
-		}
-		err := func() error {
-			if err := getStatus(ctx, ca); err != nil {
-				log.Debugf("error getting status for %s - %s", ca.Component.Name, err)
-
-				return err
-			}
-
-			return nil
-		}()
-		if err == nil {
-			if ca.Component.Status == korev1.SuccessStatus {
-				return nil
-			}
-			// keep waiting
-		}
-		log.Debugf("not ready so waiting for %s", ca.Component.Name)
-		time.Sleep(10 * time.Second)
-	}
+func ensureNamespace(ctx context.Context, cc client.Client, name string) error {
+	return kubernetes.EnsureNamespace(ctx, cc, &core.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+	})
 }
 
-//getStatus will update the ca.component.status from the ca.ApplicationObject conditions
-func getStatus(ctx context.Context, ca *Instance) (err error) {
-	//TODO - implement watcher
-	// 1. watcher (separate thread) will watch the kube api for changes to specific "Application" CRD instance
-	// update channel with nil (if status success) or with error (including timeout)
-
-	if ca.ApplicationObject == nil {
-		// TODO - have to support the application operator itself so need to do something here
-		// we have to check the existence of something other...
-		// maybe we just have to look for presence of the statefulset???
-		ca.Component.Detail = "We have to assume ok as we do not have an application to track"
-		ca.Component.Message = "System component not checked"
-		ca.Component.Status = korev1.SuccessStatus
-		log.Debugf(
-			"no application object should only be the case for application controller - component is %s",
-			ca.Component.Name,
-		)
-	} else {
-		// we need to check if the application CRD exists and get it's status'
-		// TODO uses kubebuilder client to get application type and resolve data...
-		// First pass just return if object exists?
-		us, err := toUnstructuredObj(ca.ApplicationObject)
-		if err != nil {
-
-			return fmt.Errorf("error trying to create an unstructured object from the application kind - %s", err)
-
-		}
-		log.Debugf("attempting to get status for %s", ca.GetApplicationObjectName())
-		exists, err := kubernetes.GetIfExists(ctx, ca.client, us)
-		if err != nil {
-
-			return fmt.Errorf(
-				"error trying to get %s - %s",
-				ca.Component.Name,
-				err,
-			)
-
-		}
-		if !exists {
-			log.Debugf("attempting to get status for %s", ca.ApplicationObject)
-			ca.Component.Status = korev1.Unknown
-			ca.Component.Message = "Application status has not been created"
-			ca.Component.Detail = "The application kind"
-
-			return nil
-		}
-		// Marshall unstructure object back to application kind
-		app, err := fromUnstructuredApplication(us)
-		if err != nil {
-
-			return fmt.Errorf("error when trying to create an application crd object from an untrustured type - %s", err)
-
-		}
-		for _, condition := range app.Status.Conditions {
-			if condition.Type == applicationv1beta.Ready {
-				if condition.Status == "True" {
-					ca.Component.Status = korev1.SuccessStatus
-					ca.Component.Message = condition.Message
-
-					// All good
-					return nil
-				}
-			}
-			if condition.Type == applicationv1beta.Error {
-				if condition.Status == "True" {
-					// Overright any possible good status
-					ca.Component.Status = korev1.FailureStatus
-					ca.Component.Message = condition.Message
-				}
-			}
-		}
+func getObjMetaAndSetDefaultNamespace(obj runtime.Object, defaultNamepsace string) metav1.ObjectMeta {
+	objMeta := getObjMeta(obj)
+	if err := setMissingNamespace(defaultNamepsace, obj); err != nil {
+		log.Debugf("error setting namespace for %v - %s", obj, err)
 	}
-
-	return nil
+	return objMeta
 }
 
-func getObjMeta(obj runtime.Object) (metav1.ObjectMeta, error) {
+func getObjMeta(obj runtime.Object) metav1.ObjectMeta {
 	metaObj := metav1.ObjectMeta{}
 	accessor, err := meta.Accessor(obj)
+	// TODO: error or not error
 	if err != nil {
-		return metaObj, err
+		if err != nil {
+			log.Errorf("error getting metadata for %v - %s", obj, err)
+		}
+		log.Debugf(
+			"got object %s/%s",
+			metaObj.Namespace,
+			metaObj.Name,
+		)
 	}
 	// TODO: this should be a pointer to the origonal data?
 	metaObj.Name = accessor.GetName()
 	metaObj.Namespace = accessor.GetNamespace()
 	metaObj.Labels = accessor.GetLabels()
-	return metaObj, nil
+	return metaObj
 }
 
 func toUnstructuredObj(obj runtime.Object) (*unstructured.Unstructured, error) {
@@ -179,7 +136,7 @@ func toUnstructuredObj(obj runtime.Object) (*unstructured.Unstructured, error) {
 		Kind:    obj.GetObjectKind().GroupVersionKind().Kind,
 		Group:   obj.GetObjectKind().GroupVersionKind().Group,
 	})
-	objMeta, _ := getObjMeta(obj)
+	objMeta := getObjMeta(obj)
 	u.SetName(objMeta.Name)
 	u.SetNamespace(objMeta.Namespace)
 	u.SetLabels(objMeta.Labels)
