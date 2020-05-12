@@ -92,10 +92,18 @@ func (p *GKEAutoscaling) ensureFeature(config string) (securityv1.SecurityScanRu
 
 // CheckPlan checks a plan for compliance with this rule
 func (p *GKEAutoscaling) CheckPlan(ctx context.Context, cc client.Client, target *configv1.Plan) (securityv1.SecurityScanRuleResult, error) {
+	if target.Spec.Kind != "GKE" {
+		return securityv1.SecurityScanRuleResult{Status: securityv1.Ignore}, nil
+	}
+
 	return p.ensureFeature(string(target.Spec.Configuration.Raw))
 }
 
 // CheckCluster checks a cluster for compliance with this rule
 func (p *GKEAutoscaling) CheckCluster(ctx context.Context, cc client.Client, target *clustersv1.Cluster) (securityv1.SecurityScanRuleResult, error) {
+	if target.Spec.Kind != "GKE" {
+		return securityv1.SecurityScanRuleResult{Status: securityv1.Ignore}, nil
+	}
+
 	return p.ensureFeature(string(target.Spec.Configuration.Raw))
 }

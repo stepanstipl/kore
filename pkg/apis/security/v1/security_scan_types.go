@@ -41,6 +41,9 @@ const (
 	// should be mitigated. This would typically be used for rules where compliance is
 	// considered to be vital to a well-run cluster.
 	Failure RuleStatus = "Failure"
+	// Ignore indicates the result is not applicable to this rule and should not
+	// be persisted to the store
+	Ignore RuleStatus = "Ignore"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
