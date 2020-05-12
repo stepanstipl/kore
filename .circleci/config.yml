@@ -546,4 +546,4 @@ workflows:
       - e2e_eks:
           enable_eks: true
           requires:
-            - e2e_gke
+            - e2e-images
