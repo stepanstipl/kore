@@ -22,11 +22,13 @@ set -o pipefail
 : ${KORE_API_PUBLIC_URL_QA?"The QA Kore API URL must be set"}
 : ${KORE_UI_PUBLIC_URL_QA?"The QA Kore UI URL must be set"}
 
+export VERSION=${VERSION:-"latest"}
 export ENVIRONMENT="${ENVIRONMENT:-"qa"}"
 export BUILD_ID=${BUILD_ID:-${VERSION}}
-export KORE_UI_SHOW_PROTOTYPES=true
-export VERSION=${VERSION:-"latest"}
+
 export KORE_API_PUBLIC_URL=${KORE_API_PUBLIC_URL_QA}
+export KORE_FEATURE_GATES="[]"
 export KORE_UI_PUBLIC_URL=${KORE_UI_PUBLIC_URL_QA}
+export KORE_UI_SHOW_PROTOTYPES=true
 
 hack/deploy.sh

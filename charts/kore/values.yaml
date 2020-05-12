@@ -27,6 +27,7 @@ idp:
     - profile
     - offline_access
 api:
+  feature_gates: []
   endpoint:
     url: http://localhost:10080
     detect: false
@@ -47,6 +48,7 @@ api:
     - openid
   replicas: 2
 ui:
+  feature_gates: []
   endpoint:
     url: http://localhost:3000
     detect: false
