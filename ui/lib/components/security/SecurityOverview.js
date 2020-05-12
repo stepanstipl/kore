@@ -1,6 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { List, Card, Icon, Tooltip } from 'antd'
+import { List, Card, Icon, Tooltip, Alert } from 'antd'
 import inflect from 'inflect'
 import Link from 'next/link'
 import getConfig from 'next/config'
@@ -30,6 +30,13 @@ export default class SecurityOverview extends React.Component {
   resourceSummary = (overview) => {
     // Sort resources by kind
     const resources = {}
+
+    // If we don't have a full overview (resources can be undefined if the team has no resources), 
+    // return with nothing.
+    if (!overview.spec || !overview.spec.resources) {
+      return resources
+    }
+
     overview.spec.resources.forEach(resource => {
       if (!resources[resource.resource.kind]) {
         resources[resource.resource.kind] = []
@@ -86,25 +93,34 @@ export default class SecurityOverview extends React.Component {
     return (
       <>
         <Card title="Overview" style={{ marginBottom: '20px' }}>
-          <List>
-            {SecurityOverview.statuses.map((statusDetails) => {
-              const { status, title } = statusDetails
-              const count = overview.spec.openIssueCounts[status]
-              return (
-                <List.Item key={status}>
-                  <List.Item.Meta
-                    title={title}
-                    description={count > 0 ? (
-                      <>You have {count} current {this.formatStatus(status, count)}</>
-                    ) : (
-                      <>You have no current {this.formatStatus(status, 2)}</>
-                    )}
-                    avatar={<SecurityStatusIcon status={status} inactive={this.safeCount(count) === 0} />}
-                  />
-                </List.Item>
-              )
-            })}
-          </List>
+          {!overview.spec.openIssueCounts ? (
+            <Alert 
+              message="No resource security scans found. This page will be populated once scannable resources (such as clusters and plans) are created." 
+              type="warning"
+              showIcon
+              style={{ marginBottom: '20px', marginTop: '5px' }}
+            />
+          ) : (
+            <List>
+              {SecurityOverview.statuses.map((statusDetails) => {
+                const { status, title } = statusDetails
+                const count = overview.spec.openIssueCounts[status]
+                return (
+                  <List.Item key={status}>
+                    <List.Item.Meta
+                      title={title}
+                      description={count > 0 ? (
+                        <>You have {count} current {this.formatStatus(status, count)}</>
+                      ) : (
+                        <>You have no current {this.formatStatus(status, 2)}</>
+                      )}
+                      avatar={<SecurityStatusIcon status={status} inactive={this.safeCount(count) === 0} />}
+                    />
+                  </List.Item>
+                )
+              })}
+            </List>
+          )}
         </Card>
         {Object.keys(resourceSummary).map((resKind) => (
           <Card title={`${inflect.pluralize(resKind)} Status`} style={{ marginBottom: '20px' }} key={resKind}>
