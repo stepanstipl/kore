@@ -88,7 +88,7 @@ spec:
               key: KORE_ADMIN_TOKEN
         {{- if .Values.ui.feature_gates }}
         - name: KORE_FEATURE_GATES
-          value: "{{ join "," .Values.api.feature_gates }}"
+          value: "{{ join "," .Values.ui.feature_gates }}"
         {{- end }}
         envFrom:
         - secretRef:
