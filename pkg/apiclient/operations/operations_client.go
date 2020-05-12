@@ -79,12 +79,6 @@ type ClientService interface {
 
 	GetPlanSchema(params *GetPlanSchemaParams, authInfo runtime.ClientAuthInfoWriter) (*GetPlanSchemaOK, error)
 
-	GetSecurityRule(params *GetSecurityRuleParams, authInfo runtime.ClientAuthInfoWriter) (*GetSecurityRuleOK, error)
-
-	GetSecurityScan(params *GetSecurityScanParams, authInfo runtime.ClientAuthInfoWriter) (*GetSecurityScanOK, error)
-
-	GetSecurityScanForResource(params *GetSecurityScanForResourceParams, authInfo runtime.ClientAuthInfoWriter) (*GetSecurityScanForResourceOK, error)
-
 	GetService(params *GetServiceParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceOK, error)
 
 	GetServiceCredentials(params *GetServiceCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceCredentialsOK, error)
@@ -104,6 +98,8 @@ type ClientService interface {
 	GetTeamPlanDetails(params *GetTeamPlanDetailsParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamPlanDetailsOK, error)
 
 	GetTeamSecret(params *GetTeamSecretParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamSecretOK, error)
+
+	GetTeamSecurityOverview(params *GetTeamSecurityOverviewParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamSecurityOverviewOK, error)
 
 	GetTeamServicePlanDetails(params *GetTeamServicePlanDetailsParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamServicePlanDetailsOK, error)
 
@@ -142,12 +138,6 @@ type ClientService interface {
 	ListPlanPolicies(params *ListPlanPoliciesParams, authInfo runtime.ClientAuthInfoWriter) (*ListPlanPoliciesOK, error)
 
 	ListPlans(params *ListPlansParams, authInfo runtime.ClientAuthInfoWriter) (*ListPlansOK, error)
-
-	ListSecurityRules(params *ListSecurityRulesParams, authInfo runtime.ClientAuthInfoWriter) (*ListSecurityRulesOK, error)
-
-	ListSecurityScans(params *ListSecurityScansParams, authInfo runtime.ClientAuthInfoWriter) (*ListSecurityScansOK, error)
-
-	ListSecurityScansForResource(params *ListSecurityScansForResourceParams, authInfo runtime.ClientAuthInfoWriter) (*ListSecurityScansForResourceOK, error)
 
 	ListServiceCredentials(params *ListServiceCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*ListServiceCredentialsOK, error)
 
@@ -196,8 +186,6 @@ type ClientService interface {
 	RemoveTeamMember(params *RemoveTeamMemberParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveTeamMemberOK, error)
 
 	RemoveUser(params *RemoveUserParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveUserOK, error)
-
-	StoreSecurityScanForResource(params *StoreSecurityScanForResourceParams, authInfo runtime.ClientAuthInfoWriter) (*StoreSecurityScanForResourceOK, error)
 
 	UpdateAccount(params *UpdateAccountParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateAccountOK, error)
 
@@ -1166,111 +1154,6 @@ func (a *Client) GetPlanSchema(params *GetPlanSchemaParams, authInfo runtime.Cli
 }
 
 /*
-  GetSecurityRule useds to return details of a specific security rule within the system
-*/
-func (a *Client) GetSecurityRule(params *GetSecurityRuleParams, authInfo runtime.ClientAuthInfoWriter) (*GetSecurityRuleOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewGetSecurityRuleParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "GetSecurityRule",
-		Method:             "GET",
-		PathPattern:        "/api/v1alpha1/security/rules/{code}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &GetSecurityRuleReader{formats: a.formats},
-		AuthInfo:           authInfo,
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*GetSecurityRuleOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetSecurityRule: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
-  GetSecurityScan useds to return specific security scan by ID
-*/
-func (a *Client) GetSecurityScan(params *GetSecurityScanParams, authInfo runtime.ClientAuthInfoWriter) (*GetSecurityScanOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewGetSecurityScanParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "GetSecurityScan",
-		Method:             "GET",
-		PathPattern:        "/api/v1alpha1/security/scans/{id}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &GetSecurityScanReader{formats: a.formats},
-		AuthInfo:           authInfo,
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*GetSecurityScanOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetSecurityScan: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
-  GetSecurityScanForResource useds to return latest security scan for specific object in the system
-*/
-func (a *Client) GetSecurityScanForResource(params *GetSecurityScanForResourceParams, authInfo runtime.ClientAuthInfoWriter) (*GetSecurityScanForResourceOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewGetSecurityScanForResourceParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "GetSecurityScanForResource",
-		Method:             "GET",
-		PathPattern:        "/api/v1alpha1/security/scans/{group}/{version}/{kind}/{namespace}/{name}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &GetSecurityScanForResourceReader{formats: a.formats},
-		AuthInfo:           authInfo,
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*GetSecurityScanForResourceOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetSecurityScanForResource: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
   GetService returns a service
 */
 func (a *Client) GetService(params *GetServiceParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceOK, error) {
@@ -1617,6 +1500,41 @@ func (a *Client) GetTeamSecret(params *GetTeamSecretParams, authInfo runtime.Cli
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for GetTeamSecret: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  GetTeamSecurityOverview returns an overview of the security posture for resources owned by this team
+*/
+func (a *Client) GetTeamSecurityOverview(params *GetTeamSecurityOverviewParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamSecurityOverviewOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetTeamSecurityOverviewParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "GetTeamSecurityOverview",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/security",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetTeamSecurityOverviewReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetTeamSecurityOverviewOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetTeamSecurityOverview: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -2277,111 +2195,6 @@ func (a *Client) ListPlans(params *ListPlansParams, authInfo runtime.ClientAuthI
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for ListPlans: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
-  ListSecurityRules useds to return a list of all the security rules in the system
-*/
-func (a *Client) ListSecurityRules(params *ListSecurityRulesParams, authInfo runtime.ClientAuthInfoWriter) (*ListSecurityRulesOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewListSecurityRulesParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "ListSecurityRules",
-		Method:             "GET",
-		PathPattern:        "/api/v1alpha1/security/rules",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &ListSecurityRulesReader{formats: a.formats},
-		AuthInfo:           authInfo,
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*ListSecurityRulesOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for ListSecurityRules: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
-  ListSecurityScans useds to return security scans for any object in the system
-*/
-func (a *Client) ListSecurityScans(params *ListSecurityScansParams, authInfo runtime.ClientAuthInfoWriter) (*ListSecurityScansOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewListSecurityScansParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "ListSecurityScans",
-		Method:             "GET",
-		PathPattern:        "/api/v1alpha1/security/scans",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &ListSecurityScansReader{formats: a.formats},
-		AuthInfo:           authInfo,
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*ListSecurityScansOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for ListSecurityScans: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
-  ListSecurityScansForResource useds to return the history of security scans for specific object in the system
-*/
-func (a *Client) ListSecurityScansForResource(params *ListSecurityScansForResourceParams, authInfo runtime.ClientAuthInfoWriter) (*ListSecurityScansForResourceOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewListSecurityScansForResourceParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "ListSecurityScansForResource",
-		Method:             "GET",
-		PathPattern:        "/api/v1alpha1/security/scans/{group}/{version}/{kind}/{namespace}/{name}/history",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &ListSecurityScansForResourceReader{formats: a.formats},
-		AuthInfo:           authInfo,
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*ListSecurityScansForResourceOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for ListSecurityScansForResource: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -3219,41 +3032,6 @@ func (a *Client) RemoveUser(params *RemoveUserParams, authInfo runtime.ClientAut
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for RemoveUser: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
-  StoreSecurityScanForResource useds to persist a new security scan result for specific object in the system
-*/
-func (a *Client) StoreSecurityScanForResource(params *StoreSecurityScanForResourceParams, authInfo runtime.ClientAuthInfoWriter) (*StoreSecurityScanForResourceOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewStoreSecurityScanForResourceParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "StoreSecurityScanForResource",
-		Method:             "PUT",
-		PathPattern:        "/api/v1alpha1/security/scans/{group}/{version}/{kind}/{namespace}/{name}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &StoreSecurityScanForResourceReader{formats: a.formats},
-		AuthInfo:           authInfo,
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*StoreSecurityScanForResourceOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for StoreSecurityScanForResource: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

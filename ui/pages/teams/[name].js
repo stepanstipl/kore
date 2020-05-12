@@ -334,6 +334,14 @@ class TeamDashboard extends React.Component {
             </a>
           </Link>
         </Menu.Item>
+        <Menu.Item key="security">
+          <Link href="/teams/[name]/security" as={`/teams/${team.metadata.name}/security`}>
+            <a>
+              <Icon type="lock" style={{ marginRight: '5px' }} />
+              Team security overview
+            </a>
+          </Link>
+        </Menu.Item>
         <Menu.Item key="delete" className="ant-btn-danger" onClick={this.deleteTeamConfirm}>
           <Icon type="delete" style={{ marginRight: '5px' }} />
           Delete team

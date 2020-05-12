@@ -31,6 +31,7 @@
 // deploy/crds/org.kore.appvia.io_teaminvitations.yaml
 // deploy/crds/org.kore.appvia.io_teams.yaml
 // deploy/crds/org.kore.appvia.io_users.yaml
+// deploy/crds/security.kore.appvia.io_securityoverviews.yaml
 // deploy/crds/security.kore.appvia.io_securityrules.yaml
 // deploy/crds/security.kore.appvia.io_securityscanresults.yaml
 // deploy/crds/services.kore.appvia.io_servicecredentials.yaml
@@ -5994,6 +5995,136 @@ func crdsOrgKoreAppviaIo_usersYaml() (*asset, error) {
 	return a, nil
 }
 
+var _crdsSecurityKoreAppviaIo_securityoverviewsYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: securityoverviews.security.kore.appvia.io
+spec:
+  group: security.kore.appvia.io
+  names:
+    kind: SecurityOverview
+    listKind: SecurityOverviewList
+    plural: securityoverviews
+    singular: securityoverview
+  preserveUnknownFields: false
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      description: SecurityOverview contains a report about the current state of Kore
+        or a team
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: SecurityOverviewSpec shows the overall current security posture
+            of Kore or a team
+          properties:
+            openIssueCounts:
+              additionalProperties:
+                format: int64
+                type: integer
+              description: OpenIssueCounts informs how many issues of each rule status
+                exist currently
+              type: object
+            resources:
+              description: Resources contains summaries of the open issues for each
+                resource
+              items:
+                description: SecurityResourceOverview provides an overview of the
+                  open issue counts for a resource
+                properties:
+                  lastChecked:
+                    description: LastChecked is the timestamp this resource was last
+                      scanned
+                    format: date-time
+                    type: string
+                  openIssueCounts:
+                    additionalProperties:
+                      format: int64
+                      type: integer
+                    description: OpenIssueCounts is the summary of open issues for
+                      this resource
+                    type: object
+                  overallStatus:
+                    description: OverallStatus is the overall status of this resource
+                    type: string
+                  resource:
+                    description: Resource is a reference to the group/version/kind/namespace/name
+                      of the resource scanned by this scan
+                    properties:
+                      group:
+                        description: Group is the api group
+                        type: string
+                      kind:
+                        description: Kind is the name of the resource under the group
+                        type: string
+                      name:
+                        description: Name is name of the resource
+                        type: string
+                      namespace:
+                        description: Namespace is the location of the object
+                        type: string
+                      version:
+                        description: Version is the group version
+                        type: string
+                    required:
+                    - group
+                    - kind
+                    - name
+                    - namespace
+                    - version
+                    type: object
+                type: object
+              type: array
+            team:
+              description: Team will be populated with the team name if this report
+                is about a team, else unpopulated for a report for the whole of Kore
+              type: string
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsSecurityKoreAppviaIo_securityoverviewsYamlBytes() ([]byte, error) {
+	return _crdsSecurityKoreAppviaIo_securityoverviewsYaml, nil
+}
+
+func crdsSecurityKoreAppviaIo_securityoverviewsYaml() (*asset, error) {
+	bytes, err := crdsSecurityKoreAppviaIo_securityoverviewsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/security.kore.appvia.io_securityoverviews.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _crdsSecurityKoreAppviaIo_securityrulesYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -6113,8 +6244,8 @@ spec:
         metadata:
           type: object
         spec:
-          description: ScanResultSpec shows the overall result of a scan against all
-            registered rules
+          description: SecurityScanResultSpec shows the overall result of a scan against
+            all registered rules
           properties:
             archivedAt:
               description: ArchivedAt is the timestamp this result was superceded
@@ -6977,6 +7108,7 @@ var _bindata = map[string]func() (*asset, error){
 	"crds/org.kore.appvia.io_teaminvitations.yaml":                        crdsOrgKoreAppviaIo_teaminvitationsYaml,
 	"crds/org.kore.appvia.io_teams.yaml":                                  crdsOrgKoreAppviaIo_teamsYaml,
 	"crds/org.kore.appvia.io_users.yaml":                                  crdsOrgKoreAppviaIo_usersYaml,
+	"crds/security.kore.appvia.io_securityoverviews.yaml":                 crdsSecurityKoreAppviaIo_securityoverviewsYaml,
 	"crds/security.kore.appvia.io_securityrules.yaml":                     crdsSecurityKoreAppviaIo_securityrulesYaml,
 	"crds/security.kore.appvia.io_securityscanresults.yaml":               crdsSecurityKoreAppviaIo_securityscanresultsYaml,
 	"crds/services.kore.appvia.io_servicecredentials.yaml":                crdsServicesKoreAppviaIo_servicecredentialsYaml,
@@ -7059,6 +7191,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"org.kore.appvia.io_teaminvitations.yaml":                        {crdsOrgKoreAppviaIo_teaminvitationsYaml, map[string]*bintree{}},
 		"org.kore.appvia.io_teams.yaml":                                  {crdsOrgKoreAppviaIo_teamsYaml, map[string]*bintree{}},
 		"org.kore.appvia.io_users.yaml":                                  {crdsOrgKoreAppviaIo_usersYaml, map[string]*bintree{}},
+		"security.kore.appvia.io_securityoverviews.yaml":                 {crdsSecurityKoreAppviaIo_securityoverviewsYaml, map[string]*bintree{}},
 		"security.kore.appvia.io_securityrules.yaml":                     {crdsSecurityKoreAppviaIo_securityrulesYaml, map[string]*bintree{}},
 		"security.kore.appvia.io_securityscanresults.yaml":               {crdsSecurityKoreAppviaIo_securityscanresultsYaml, map[string]*bintree{}},
 		"services.kore.appvia.io_servicecredentials.yaml":                {crdsServicesKoreAppviaIo_servicecredentialsYaml, map[string]*bintree{}},

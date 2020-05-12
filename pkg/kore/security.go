@@ -41,7 +41,13 @@ type Security interface {
 	GetScan(ctx context.Context, id uint64) (*securityv1.SecurityScanResult, error)
 	ListRules(ctx context.Context) (*securityv1.SecurityRuleList, error)
 	GetRule(ctx context.Context, code string) (*securityv1.SecurityRule, error)
+	GetOverview(ctx context.Context) (*securityv1.SecurityOverview, error)
+	GetTeamOverview(ctx context.Context, team string) (*securityv1.SecurityOverview, error)
+	// ArchiveResourceScans sets all scans for a resource to archived, for when that resource is deleted.
+	ArchiveResourceScans(ctx context.Context, typ metav1.TypeMeta, obj metav1.ObjectMeta) error
 }
+
+var _ Security = &securityImpl{}
 
 type securityImpl struct {
 	scanner         security.Scanner
@@ -52,6 +58,11 @@ func (s *securityImpl) ScanPlan(ctx context.Context, client client.Client, plan 
 	scanResult := s.scanner.ScanPlan(ctx, client, plan)
 
 	return s.persistScan(ctx, scanResult)
+}
+
+func (s *securityImpl) ArchiveResourceScans(ctx context.Context, typ metav1.TypeMeta, obj metav1.ObjectMeta) error {
+	gvk := typ.GroupVersionKind()
+	return s.securityPersist.ArchiveResourceScans(ctx, gvk.Group, gvk.Version, gvk.Kind, obj.Namespace, obj.Name)
 }
 
 func (s *securityImpl) ScanCluster(ctx context.Context, client client.Client, cluster *clustersv1.Cluster) error {
@@ -73,13 +84,9 @@ func (s *securityImpl) persistScan(ctx context.Context, scanResult *securityv1.S
 }
 
 func (s *securityImpl) ListScans(ctx context.Context, latestOnly bool) (*securityv1.SecurityScanResultList, error) {
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsGlobalAdmin() {
-		log.WithField(
-			"username", user.Username(),
-		).Warn("user trying to access the security logs")
-
-		return nil, NewErrNotAllowed("Must be global admin")
+	err := s.userPermitted(ctx, "")
+	if err != nil {
+		return nil, err
 	}
 
 	res, err := s.securityPersist.ListScans(ctx, latestOnly)
@@ -95,13 +102,9 @@ func (s *securityImpl) ListScans(ctx context.Context, latestOnly bool) (*securit
 }
 
 func (s *securityImpl) ScanHistoryForResource(ctx context.Context, typ metav1.TypeMeta, obj metav1.ObjectMeta) (*securityv1.SecurityScanResultList, error) {
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsGlobalAdmin() {
-		log.WithField(
-			"username", user.Username(),
-		).Warn("user trying to access the security logs")
-
-		return nil, NewErrNotAllowed("Must be global admin")
+	err := s.userPermitted(ctx, obj.Namespace)
+	if err != nil {
+		return nil, err
 	}
 
 	gvk := typ.GroupVersionKind()
@@ -118,15 +121,6 @@ func (s *securityImpl) ScanHistoryForResource(ctx context.Context, typ metav1.Ty
 }
 
 func (s *securityImpl) GetCurrentScanForResource(ctx context.Context, typ metav1.TypeMeta, obj metav1.ObjectMeta) (*securityv1.SecurityScanResult, error) {
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsGlobalAdmin() {
-		log.WithField(
-			"username", user.Username(),
-		).Warn("user trying to access the security logs")
-
-		return nil, NewErrNotAllowed("Must be global admin")
-	}
-
 	gvk := typ.GroupVersionKind()
 	res, err := s.securityPersist.GetLatestResourceScan(ctx, gvk.Group, gvk.Version, gvk.Kind, obj.Namespace, obj.Name)
 	if err != nil {
@@ -135,20 +129,17 @@ func (s *securityImpl) GetCurrentScanForResource(ctx context.Context, typ metav1
 	if res == nil {
 		return nil, nil
 	}
+
+	err = s.userPermitted(ctx, res.OwningTeam)
+	if err != nil {
+		return nil, err
+	}
+
 	conv := DefaultConvertor.FromSecurityScanResult(res)
 	return &conv, nil
 }
 
 func (s *securityImpl) GetScan(ctx context.Context, id uint64) (*securityv1.SecurityScanResult, error) {
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsGlobalAdmin() {
-		log.WithField(
-			"username", user.Username(),
-		).Warn("user trying to access the security logs")
-
-		return nil, NewErrNotAllowed("Must be global admin")
-	}
-
 	res, err := s.securityPersist.GetScan(ctx, id)
 	if err != nil {
 		return nil, err
@@ -156,35 +147,23 @@ func (s *securityImpl) GetScan(ctx context.Context, id uint64) (*securityv1.Secu
 	if res == nil {
 		return nil, nil
 	}
+
+	err = s.userPermitted(ctx, res.OwningTeam)
+	if err != nil {
+		return nil, err
+	}
+
 	conv := DefaultConvertor.FromSecurityScanResult(res)
 	return &conv, nil
 }
 
 func (s *securityImpl) ListRules(ctx context.Context) (*securityv1.SecurityRuleList, error) {
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsGlobalAdmin() {
-		log.WithField(
-			"username", user.Username(),
-		).Warn("user trying to access the security logs")
-
-		return nil, NewErrNotAllowed("Must be global admin")
-	}
-
 	rules := s.scanner.GetRules()
 	ruleList := DefaultConvertor.FromSecurityRuleList(rules)
 	return &ruleList, nil
 }
 
 func (s *securityImpl) GetRule(ctx context.Context, code string) (*securityv1.SecurityRule, error) {
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsGlobalAdmin() {
-		log.WithField(
-			"username", user.Username(),
-		).Warn("user trying to access the security logs")
-
-		return nil, NewErrNotAllowed("Must be global admin")
-	}
-
 	rule := s.scanner.GetRule(code)
 	if rule == nil {
 		return nil, nil
@@ -192,4 +171,63 @@ func (s *securityImpl) GetRule(ctx context.Context, code string) (*securityv1.Se
 
 	r := DefaultConvertor.FromSecurityRule(rule)
 	return &r, nil
+}
+
+func (s *securityImpl) GetOverview(ctx context.Context) (*securityv1.SecurityOverview, error) {
+	err := s.userPermitted(ctx, "")
+	if err != nil {
+		return nil, err
+	}
+
+	overview, err := s.securityPersist.GetOverview(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	r := DefaultConvertor.FromSecurityOverview(overview)
+	return &r, nil
+}
+
+func (s *securityImpl) GetTeamOverview(ctx context.Context, team string) (*securityv1.SecurityOverview, error) {
+	err := s.userPermitted(ctx, team)
+	if err != nil {
+		return nil, err
+	}
+
+	overview, err := s.securityPersist.GetTeamOverview(ctx, team)
+	if err != nil {
+		return nil, err
+	}
+
+	r := DefaultConvertor.FromSecurityOverview(overview)
+	return &r, nil
+}
+
+func (s *securityImpl) userPermitted(ctx context.Context, owningTeam string) error {
+	user := authentication.MustGetIdentity(ctx)
+	if user.IsGlobalAdmin() {
+		// Global admin always allowed
+		return nil
+	}
+
+	if owningTeam == "" {
+		// Not a team-scoped check, so not allowed if not admin.
+		log.WithField(
+			"username", user.Username(),
+		).Warn("user trying to access the security logs")
+		return NewErrNotAllowed("Must be global admin")
+	}
+
+	// Check if user in team which owns this resource
+	for _, t := range user.Teams() {
+		if t == owningTeam {
+			// Permitted as team member
+			return nil
+		}
+	}
+
+	log.WithField(
+		"username", user.Username(),
+	).Warn("user trying to access the security logs")
+	return NewErrNotAllowed("Must be global admin or in team which owns this resource")
 }

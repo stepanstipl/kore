@@ -30,11 +30,106 @@ import (
 var _ = Describe("Security Persistence", func() {
 	var store persistence.Interface
 
+	getScan := func(name string, namespace string, checkedAt time.Time, archivedAt time.Time, overallStatus string, ruleStatus string) model.SecurityScanResult {
+		return model.SecurityScanResult{
+			SecurityResourceReference: model.SecurityResourceReference{
+				ResourceGroup:     "example.appvia.io",
+				ResourceVersion:   "V1",
+				ResourceKind:      "Example",
+				ResourceNamespace: namespace,
+				ResourceName:      name,
+			},
+			OwningTeam:    namespace,
+			OverallStatus: overallStatus,
+			CheckedAt:     checkedAt,
+			ArchivedAt:    archivedAt,
+			Results: []model.SecurityRuleResult{
+				{
+					RuleCode:  "TEST-001",
+					Status:    ruleStatus,
+					CheckedAt: checkedAt,
+				},
+				{
+					RuleCode:  "TEST-002",
+					Status:    "Warning",
+					Message:   "Horse",
+					CheckedAt: checkedAt,
+				},
+			},
+		}
+	}
+
+	storeScans := func(scans ...*model.SecurityScanResult) {
+		for _, scan := range scans {
+			err := store.Security().StoreScan(context.Background(), scan)
+			Expect(err).ToNot(HaveOccurred())
+		}
+	}
+
 	BeforeEach(func() {
 		store = getTestStore()
 	})
+
 	AfterEach(func() {
 		store.Stop()
+	})
+
+	Describe("GetOverview", func() {
+		When("called", func() {
+			It("should provide an overview", func() {
+				overview, err := store.Security().GetOverview(context.Background())
+				Expect(err).ToNot(HaveOccurred())
+				Expect(overview).ToNot(BeNil())
+			})
+
+			It("should sum the statuses for an overall count of open statuses", func() {
+				overview, err := store.Security().GetOverview(context.Background())
+				Expect(err).ToNot(HaveOccurred())
+				Expect(overview.OpenIssueCounts["Compliant"]).To(BeNumerically("==", 3))
+				Expect(overview.OpenIssueCounts["Warning"]).To(BeNumerically("==", 1))
+			})
+
+			It("should summarise the counts for each resource", func() {
+				overview, err := store.Security().GetOverview(context.Background())
+				Expect(err).ToNot(HaveOccurred())
+				Expect(len(overview.Resources)).To(Equal(2))
+				Expect(overview.Resources[0].ResourceName).To(Equal("test"))
+				Expect(overview.Resources[0].OpenIssueCounts["Compliant"]).To(BeNumerically("==", 1))
+				Expect(overview.Resources[0].OpenIssueCounts["Warning"]).To(BeNumerically("==", 1))
+				Expect(overview.Resources[1].ResourceName).To(Equal("test2"))
+				Expect(overview.Resources[1].OpenIssueCounts["Compliant"]).To(BeNumerically("==", 2))
+				Expect(overview.Resources[1].OpenIssueCounts["Warning"]).To(BeNumerically("==", 0))
+			})
+		})
+	})
+
+	Describe("GetTeamOverview", func() {
+		When("called", func() {
+			It("should provide an overview for a specific team", func() {
+				overview, err := store.Security().GetTeamOverview(context.Background(), "test-team")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(overview).ToNot(BeNil())
+			})
+
+			It("should sum the statuses for an overall count of open statuses for a specific team", func() {
+				overview, err := store.Security().GetTeamOverview(context.Background(), "test-team")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(overview.OpenIssueCounts["Compliant"]).To(BeNumerically("==", 3))
+				Expect(overview.OpenIssueCounts["Warning"]).To(BeNumerically("==", 1))
+			})
+
+			It("should summarise the counts for each resource for a specific team", func() {
+				overview, err := store.Security().GetTeamOverview(context.Background(), "test-team")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(len(overview.Resources)).To(Equal(2))
+				Expect(overview.Resources[0].ResourceName).To(Equal("test"))
+				Expect(overview.Resources[0].OpenIssueCounts["Compliant"]).To(BeNumerically("==", 1))
+				Expect(overview.Resources[0].OpenIssueCounts["Warning"]).To(BeNumerically("==", 1))
+				Expect(overview.Resources[1].ResourceName).To(Equal("test2"))
+				Expect(overview.Resources[1].OpenIssueCounts["Compliant"]).To(BeNumerically("==", 2))
+				Expect(overview.Resources[1].OpenIssueCounts["Warning"]).To(BeNumerically("==", 0))
+			})
+		})
 	})
 
 	Describe("GetScan", func() {
@@ -122,43 +217,9 @@ var _ = Describe("Security Persistence", func() {
 
 	Describe("StoreScan", func() {
 
-		getScan := func(name string, namespace string, checkedAt time.Time, archivedAt time.Time, overallStatus string, ruleStatus string) model.SecurityScanResult {
-			return model.SecurityScanResult{
-				ResourceGroup:     "example.appvia.io",
-				ResourceVersion:   "V1",
-				ResourceKind:      "Example",
-				ResourceNamespace: namespace,
-				ResourceName:      name,
-				OwningTeam:        namespace,
-				OverallStatus:     overallStatus,
-				CheckedAt:         checkedAt,
-				ArchivedAt:        archivedAt,
-				Results: []model.SecurityRuleResult{
-					{
-						RuleCode:  "TEST-001",
-						Status:    ruleStatus,
-						CheckedAt: checkedAt,
-					},
-					{
-						RuleCode:  "TEST-002",
-						Status:    "Warning",
-						Message:   "Horse",
-						CheckedAt: checkedAt,
-					},
-				},
-			}
-		}
-
-		storeScans := func(scans ...*model.SecurityScanResult) {
-			for _, scan := range scans {
-				err := store.Security().StoreScan(context.Background(), scan)
-				Expect(err).ToNot(HaveOccurred())
-			}
-		}
-
 		When("called with a scan", func() {
 			It("should persist the scan", func() {
-				scan1 := getScan("test3", "test-team3", time.Now(), time.Time{}, "Critical", "Critical")
+				scan1 := getScan("test3", "test-team3", time.Now(), time.Time{}, "Failure", "Failure")
 				storeScans(&scan1)
 
 				v, err := store.Security().ListScans(context.Background(), true, persistence.Filter.WithTeam("test-team3"))
@@ -171,8 +232,8 @@ var _ = Describe("Security Persistence", func() {
 			})
 
 			It("should archive previous scans for the same name and namespace if ArchivedAt is nil and the result is different", func() {
-				scan1 := getScan("test4", "test-team4", time.Now(), time.Time{}, "Critical", "Critical")
-				scan2 := getScan("test4", "test-team4", time.Now().Add(time.Second*10), time.Time{}, "Warning", "Critical")
+				scan1 := getScan("test4", "test-team4", time.Now(), time.Time{}, "Failure", "Failure")
+				scan2 := getScan("test4", "test-team4", time.Now().Add(time.Second*10), time.Time{}, "Warning", "Failure")
 				scan3 := getScan("test4", "test-team4", time.Now().Add(time.Second*20), time.Time{}, "Warning", "Warning")
 				scan4 := getScan("test4", "test-team4", time.Now().Add(time.Second*20), time.Time{}, "Warning", "Warning")
 				scan4.Results[1].Message = "changed message"
@@ -200,9 +261,9 @@ var _ = Describe("Security Persistence", func() {
 			})
 
 			It("should update checked at for previous scans for the same name and namespace if ArchivedAt is nil and the result is the same", func() {
-				scan1 := getScan("test4a", "test-team4a", time.Now(), time.Time{}, "Critical", "Critical")
-				scan2 := getScan("test4a", "test-team4a", time.Now().Add(time.Second*10), time.Time{}, "Critical", "Critical")
-				scan3 := getScan("test4a", "test-team4a", time.Now().Add(time.Second*20), time.Time{}, "Critical", "Critical")
+				scan1 := getScan("test4a", "test-team4a", time.Now(), time.Time{}, "Failure", "Failure")
+				scan2 := getScan("test4a", "test-team4a", time.Now().Add(time.Second*10), time.Time{}, "Failure", "Failure")
+				scan3 := getScan("test4a", "test-team4a", time.Now().Add(time.Second*20), time.Time{}, "Failure", "Failure")
 
 				storeScans(&scan1, &scan2, &scan3)
 
@@ -227,8 +288,8 @@ var _ = Describe("Security Persistence", func() {
 			})
 
 			It("should NOT archive previous scans for the same name and namespace if ArchivedAt is set (recording an already archived record)", func() {
-				scan1 := getScan("test5", "test-team5", time.Now(), time.Time{}, "Critical", "Critical")
-				scan2 := getScan("test5", "test-team5", time.Now().Add(time.Second*10), time.Time{}, "Warning", "Critical")
+				scan1 := getScan("test5", "test-team5", time.Now(), time.Time{}, "Failure", "Failure")
+				scan2 := getScan("test5", "test-team5", time.Now().Add(time.Second*10), time.Time{}, "Warning", "Failure")
 				scan3 := getScan("test5", "test-team5", time.Now().Add(time.Second*20), time.Now(), "Warning", "Warning")
 				scan3.ArchivedAt = time.Now()
 
@@ -252,9 +313,9 @@ var _ = Describe("Security Persistence", func() {
 			})
 
 			It("should NOT archive previous scans when storing a scan with a different API group or version", func() {
-				scan1 := getScan("test6", "test-team6", time.Now(), time.Time{}, "Critical", "Critical")
-				scan2 := getScan("test6", "test-team6", time.Now().Add(time.Second*10), time.Time{}, "Critical", "Warning")
-				scan3 := getScan("test6", "test-team6", time.Now().Add(time.Second*20), time.Time{}, "Warning", "Critical")
+				scan1 := getScan("test6", "test-team6", time.Now(), time.Time{}, "Failure", "Failure")
+				scan2 := getScan("test6", "test-team6", time.Now().Add(time.Second*10), time.Time{}, "Failure", "Warning")
+				scan3 := getScan("test6", "test-team6", time.Now().Add(time.Second*20), time.Time{}, "Warning", "Failure")
 				scan4 := getScan("test6", "test-team6", time.Now().Add(time.Second*20), time.Time{}, "Warning", "Warning")
 				scan4.ResourceGroup = "example2.appvia.io"
 				scan5 := getScan("test6", "test-team6", time.Now().Add(time.Second*20), time.Time{}, "Warning", "Warning")
@@ -282,9 +343,9 @@ var _ = Describe("Security Persistence", func() {
 			})
 
 			It("should NOT archive previous scans when storing a scan with a different kind", func() {
-				scan1 := getScan("test7", "test-team7", time.Now(), time.Time{}, "Critical", "Critical")
-				scan2 := getScan("test7", "test-team7", time.Now().Add(time.Second*10), time.Time{}, "Critical", "Warning")
-				scan3 := getScan("test7", "test-team7", time.Now().Add(time.Second*20), time.Time{}, "Warning", "Critical")
+				scan1 := getScan("test7", "test-team7", time.Now(), time.Time{}, "Failure", "Failure")
+				scan2 := getScan("test7", "test-team7", time.Now().Add(time.Second*10), time.Time{}, "Failure", "Warning")
+				scan3 := getScan("test7", "test-team7", time.Now().Add(time.Second*20), time.Time{}, "Warning", "Failure")
 				scan4 := getScan("test7", "test-team7", time.Now().Add(time.Second*20), time.Time{}, "Warning", "Warning")
 				scan4.ResourceKind = "Example2"
 
@@ -308,9 +369,9 @@ var _ = Describe("Security Persistence", func() {
 			})
 
 			It("should NOT archive previous scans when storing a scan with a different namespace", func() {
-				scan1 := getScan("test8", "test-team8", time.Now(), time.Time{}, "Critical", "Critical")
-				scan2 := getScan("test8", "test-team8", time.Now().Add(time.Second*10), time.Time{}, "Warning", "Critical")
-				scan3 := getScan("test8", "test-team8", time.Now().Add(time.Second*20), time.Time{}, "Critical", "Warning")
+				scan1 := getScan("test8", "test-team8", time.Now(), time.Time{}, "Failure", "Failure")
+				scan2 := getScan("test8", "test-team8", time.Now().Add(time.Second*10), time.Time{}, "Warning", "Failure")
+				scan3 := getScan("test8", "test-team8", time.Now().Add(time.Second*20), time.Time{}, "Failure", "Warning")
 				scan4 := getScan("test8", "test-team8a", time.Now().Add(time.Second*20), time.Time{}, "Warning", "Warning")
 
 				storeScans(&scan1, &scan2, &scan3, &scan4)
@@ -333,9 +394,9 @@ var _ = Describe("Security Persistence", func() {
 			})
 
 			It("should NOT archive previous scans when storing a scan with a different name", func() {
-				scan1 := getScan("test9", "test-team9", time.Now(), time.Time{}, "Critical", "Critical")
-				scan2 := getScan("test9", "test-team9", time.Now().Add(time.Second*10), time.Time{}, "Critical", "Warning")
-				scan3 := getScan("test9", "test-team9", time.Now().Add(time.Second*20), time.Time{}, "Warning", "Critical")
+				scan1 := getScan("test9", "test-team9", time.Now(), time.Time{}, "Failure", "Failure")
+				scan2 := getScan("test9", "test-team9", time.Now().Add(time.Second*10), time.Time{}, "Failure", "Warning")
+				scan3 := getScan("test9", "test-team9", time.Now().Add(time.Second*20), time.Time{}, "Warning", "Failure")
 				scan4 := getScan("test9a", "test-team9", time.Now().Add(time.Second*20), time.Time{}, "Warning", "Warning")
 
 				storeScans(&scan1, &scan2, &scan3, &scan4)
@@ -357,6 +418,42 @@ var _ = Describe("Security Persistence", func() {
 				scanDetails, err = store.Security().GetLatestResourceScan(context.Background(), scan1.ResourceGroup, scan1.ResourceVersion, scan1.ResourceKind, "test-team9", "test9a")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(scanDetails.ID).To(Equal(scan4.ID))
+			})
+		})
+	})
+
+	Describe("ArchiveResourceScans", func() {
+		When("called", func() {
+			It("should set any unarchived scans to archived for the resource", func() {
+				scan1 := getScan("test10", "test-team10", time.Now(), time.Time{}, "Failure", "Failure")
+				scan2 := getScan("test10", "test-team10", time.Now().Add(time.Second*10), time.Time{}, "Failure", "Warning")
+				scan3 := getScan("test10", "test-team10", time.Now().Add(time.Second*20), time.Time{}, "Warning", "Failure")
+				scan4 := getScan("test10a", "test-team10", time.Now().Add(time.Second*20), time.Time{}, "Warning", "Warning")
+
+				storeScans(&scan1, &scan2, &scan3, &scan4)
+
+				store.Security().ArchiveResourceScans(
+					context.Background(),
+					scan1.ResourceGroup,
+					scan1.ResourceVersion,
+					scan1.ResourceKind,
+					scan1.ResourceNamespace,
+					scan1.ResourceName)
+
+				v, err := store.Security().ListScans(context.Background(), false, persistence.Filter.WithTeam("test-team10"))
+				Expect(err).ToNot(HaveOccurred())
+				Expect(len(v)).To(Equal(4))
+
+				Expect(v[0].ArchivedAt).To(Equal(v[1].CheckedAt))
+				Expect(v[1].ArchivedAt).To(Equal(v[2].CheckedAt))
+				// This will have been set to the current time:
+				Expect(v[2].ArchivedAt.IsZero()).To(BeFalse())
+				// This should not have been archived as it has a different name:
+				Expect(v[3].ArchivedAt.IsZero()).To(BeTrue())
+
+				scanDetails, err := store.Security().GetLatestResourceScan(context.Background(), scan1.ResourceGroup, scan1.ResourceVersion, scan1.ResourceKind, "test-team10", "test10")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(scanDetails).To(BeNil())
 			})
 		})
 	})

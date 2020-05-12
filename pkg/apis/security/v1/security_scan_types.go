@@ -45,6 +45,41 @@ const (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
+// SecurityOverview contains a report about the current state of Kore or a team
+// +k8s:openapi-gen=false
+type SecurityOverview struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec              SecurityOverviewSpec `json:"spec,omitempty"`
+}
+
+// SecurityOverviewSpec shows the overall current security posture of Kore or a team
+// +k8s:openapi-gen=false
+type SecurityOverviewSpec struct {
+	// Team will be populated with the team name if this report is about a team, else
+	// unpopulated for a report for the whole of Kore
+	Team string `json:"team,omitempty"`
+	// OpenIssueCounts informs how many issues of each rule status exist currently
+	OpenIssueCounts map[RuleStatus]uint64 `json:"openIssueCounts,omitempty"`
+	// Resources contains summaries of the open issues for each resource
+	Resources []SecurityResourceOverview `json:"resources,omitempty"`
+}
+
+// SecurityResourceOverview provides an overview of the open issue counts for a resource
+// +k8s:openapi-gen=false
+type SecurityResourceOverview struct {
+	// Resource is a reference to the group/version/kind/namespace/name of the resource scanned by this scan
+	Resource corev1.Ownership `json:"resource,omitempty"`
+	// LastChecked is the timestamp this resource was last scanned
+	LastChecked metav1.Time `json:"lastChecked,omitempty"`
+	// OverallStatus is the overall status of this resource
+	OverallStatus RuleStatus `json:"overallStatus,omitempty"`
+	// OpenIssueCounts is the summary of open issues for this resource
+	OpenIssueCounts map[RuleStatus]uint64 `json:"openIssueCounts,omitempty"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
 // SecurityScanResult contains the result of a scan against all registered rules
 // +k8s:openapi-gen=false
 type SecurityScanResult struct {
@@ -53,7 +88,7 @@ type SecurityScanResult struct {
 	Spec              SecurityScanResultSpec `json:"spec,omitempty"`
 }
 
-// ScanResultSpec shows the overall result of a scan against all registered rules
+// SecurityScanResultSpec shows the overall result of a scan against all registered rules
 // +k8s:openapi-gen=false
 type SecurityScanResultSpec struct {
 	// ID is the ID of this scan result in the data store

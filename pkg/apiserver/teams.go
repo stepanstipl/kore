@@ -31,6 +31,7 @@ import (
 	gcp "github.com/appvia/kore/pkg/apis/gcp/v1alpha1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
+	securityv1 "github.com/appvia/kore/pkg/apis/security/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/apiserver/types"
 	"github.com/appvia/kore/pkg/kore"
@@ -47,7 +48,7 @@ func init() {
 
 type teamHandler struct {
 	kore.Interface
-	// DefaultHandlder implements default features
+	// DefaultHandler implements default features
 	DefaultHandler
 }
 
@@ -769,6 +770,15 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Returns(http.StatusNotFound, "the service credentials with the given name doesn't exist", nil).
 			Returns(http.StatusOK, "Contains the former service credentials definition", servicesv1.ServiceCredentials{}),
+	)
+
+	// Team Security
+	ws.Route(
+		withAllNonValidationErrors(ws.GET("/{team}/security")).To(u.getTeamSecurityOverview).
+			Doc("Returns an overview of the security posture for resources owned by this team").
+			Operation("GetTeamSecurityOverview").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Returns(http.StatusOK, "The requested security overview", securityv1.SecurityOverview{}),
 	)
 
 	return ws, nil

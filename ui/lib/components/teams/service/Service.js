@@ -50,7 +50,7 @@ class Service extends AutoRefreshComponent {
       const status = service.status.status || 'Pending'
 
       actions.push((
-        <Link key="view" href={`/teams/${team}/services/${service.metadata.name}`}><a><Tooltip title="Service status details"><Icon type="info-circle" /></Tooltip></a></Link>
+        <Link key="view" href="/teams/[name]/services/[service]" as={`/teams/${team}/services/${service.metadata.name}`}><a><Tooltip title="Service status details"><Icon type="info-circle" /></Tooltip></a></Link>
       ))
 
       if (!inProgressStatusList.includes(status)) {
@@ -76,7 +76,7 @@ class Service extends AutoRefreshComponent {
       <List.Item actions={actions()}>
         <List.Item.Meta
           avatar={<Avatar icon="database" />}
-          title={<Link href={`/teams/${team}/services/${service.metadata.name}`}><a><Text>{service.spec.kind} <Text style={{ fontFamily: 'monospace', marginLeft: '15px' }}>{service.metadata.name}</Text></Text></a></Link>}
+          title={<Link href="/teams/[name]/services/[service]" as={`/teams/${team}/services/${service.metadata.name}`}><a><Text>{service.spec.kind} <Text style={{ fontFamily: 'monospace', marginLeft: '15px' }}>{service.metadata.name}</Text></Text></a></Link>}
           description={
             <div>
               <Text type='secondary'>Created {created}</Text>

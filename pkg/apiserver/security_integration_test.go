@@ -21,10 +21,12 @@ package apiserver_test
 import (
 	"encoding/json"
 	"strings"
+	"time"
 
 	"github.com/appvia/kore/pkg/apiclient"
 	"github.com/appvia/kore/pkg/apiclient/models"
 	"github.com/appvia/kore/pkg/apiclient/operations"
+	"github.com/appvia/kore/pkg/apiclient/security"
 	"github.com/appvia/kore/pkg/utils"
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 
@@ -42,23 +44,15 @@ var _ = Describe("/security", func() {
 		Describe("GET (ListSecurityRules)", func() {
 			When("called anonymously", func() {
 				It("should return 401", func() {
-					_, err := api.Operations.ListSecurityRules(operations.NewListSecurityRulesParams(), getAuthAnon())
+					_, err := api.Security.ListSecurityRules(security.NewListSecurityRulesParams(), getAuthAnon())
 					Expect(err).To(HaveOccurred())
-					Expect(err).To(BeAssignableToTypeOf(&operations.ListSecurityRulesUnauthorized{}))
+					Expect(err).To(BeAssignableToTypeOf(&security.ListSecurityRulesUnauthorized{}))
 				})
 			})
 
-			When("called as a non-admin", func() {
-				It("should return 403", func() {
-					_, err := api.Operations.ListSecurityRules(operations.NewListSecurityRulesParams(), getAuth(TestUserTeam1))
-					Expect(err).To(HaveOccurred())
-					Expect(err).To(BeAssignableToTypeOf(&operations.ListSecurityRulesForbidden{}))
-				})
-			})
-
-			When("called as admin", func() {
+			When("called as user", func() {
 				It("should return a list of security rules", func() {
-					resp, err := api.Operations.ListSecurityRules(operations.NewListSecurityRulesParams(), getAuth(TestUserAdmin))
+					resp, err := api.Security.ListSecurityRules(security.NewListSecurityRulesParams(), getAuth(TestUserAdmin))
 					if err != nil {
 						Expect(err).ToNot(HaveOccurred())
 					}
@@ -79,23 +73,15 @@ var _ = Describe("/security", func() {
 		Describe("GET /{code} (GetSecurityRule)", func() {
 			When("called anonymously", func() {
 				It("should return 401", func() {
-					_, err := api.Operations.GetSecurityRule(operations.NewGetSecurityRuleParams().WithCode("AUTHIP-01"), getAuthAnon())
+					_, err := api.Security.GetSecurityRule(security.NewGetSecurityRuleParams().WithCode("AUTHIP-01"), getAuthAnon())
 					Expect(err).To(HaveOccurred())
-					Expect(err).To(BeAssignableToTypeOf(&operations.GetSecurityRuleUnauthorized{}))
+					Expect(err).To(BeAssignableToTypeOf(&security.GetSecurityRuleUnauthorized{}))
 				})
 			})
 
-			When("called as a non-admin", func() {
-				It("should return 403", func() {
-					_, err := api.Operations.GetSecurityRule(operations.NewGetSecurityRuleParams().WithCode("AUTHIP-01"), getAuth(TestUserTeam1))
-					Expect(err).To(HaveOccurred())
-					Expect(err).To(BeAssignableToTypeOf(&operations.GetSecurityRuleForbidden{}))
-				})
-			})
-
-			When("called as admin", func() {
+			When("called as user", func() {
 				It("should return a security rule if it exists", func() {
-					resp, err := api.Operations.GetSecurityRule(operations.NewGetSecurityRuleParams().WithCode("AUTHIP-01"), getAuth(TestUserAdmin))
+					resp, err := api.Security.GetSecurityRule(security.NewGetSecurityRuleParams().WithCode("AUTHIP-01"), getAuth(TestUserAdmin))
 					if err != nil {
 						Expect(err).ToNot(HaveOccurred())
 					}
@@ -106,9 +92,9 @@ var _ = Describe("/security", func() {
 				})
 
 				It("should return 404 if the code does not exist", func() {
-					_, err := api.Operations.GetSecurityRule(operations.NewGetSecurityRuleParams().WithCode("NONEXIST-01234"), getAuth(TestUserAdmin))
+					_, err := api.Security.GetSecurityRule(security.NewGetSecurityRuleParams().WithCode("NONEXIST-01234"), getAuth(TestUserAdmin))
 					Expect(err).To(HaveOccurred())
-					Expect(err).To(BeAssignableToTypeOf(&operations.GetSecurityRuleNotFound{}))
+					Expect(err).To(BeAssignableToTypeOf(&security.GetSecurityRuleNotFound{}))
 				})
 			})
 		})
@@ -185,6 +171,21 @@ var _ = Describe("/security", func() {
 			plan.Spec.Configuration = apiextv1.JSON{Raw: rawConfig}
 			p = operations.NewUpdatePlanParams().WithName(planName).WithBody(plan)
 			_, _ = api.Operations.UpdatePlan(p, getAuth(TestUserAdmin))
+
+			// Might take a little while for the scans to be produced as they're done by a background controller
+			params := security.NewListSecurityScansForResourceParams().
+				WithGroup("config.kore.appvia.io").
+				WithVersion("v1").
+				WithKind("Plan").
+				WithNamespace("kore").
+				WithName(planName)
+			Eventually(func() int {
+				resp, err := api.Security.ListSecurityScansForResource(params, getAuth(TestUserAdmin))
+				if err != nil {
+					return 0
+				}
+				return len(resp.Payload.Items)
+			}, time.Second*10, time.Millisecond*200).Should(Equal(2))
 		})
 
 		AfterEach(func() {
@@ -195,23 +196,23 @@ var _ = Describe("/security", func() {
 
 			When("called anonymously", func() {
 				It("should return 401", func() {
-					_, err := api.Operations.ListSecurityScans(operations.NewListSecurityScansParams(), getAuthAnon())
+					_, err := api.Security.ListSecurityScans(security.NewListSecurityScansParams(), getAuthAnon())
 					Expect(err).To(HaveOccurred())
-					Expect(err).To(BeAssignableToTypeOf(&operations.ListSecurityScansUnauthorized{}))
+					Expect(err).To(BeAssignableToTypeOf(&security.ListSecurityScansUnauthorized{}))
 				})
 			})
 
 			When("called as a non-admin", func() {
 				It("should return 403", func() {
-					_, err := api.Operations.ListSecurityScans(operations.NewListSecurityScansParams(), getAuth(TestUserTeam1))
+					_, err := api.Security.ListSecurityScans(security.NewListSecurityScansParams(), getAuth(TestUserTeam1))
 					Expect(err).To(HaveOccurred())
-					Expect(err).To(BeAssignableToTypeOf(&operations.ListSecurityScansForbidden{}))
+					Expect(err).To(BeAssignableToTypeOf(&security.ListSecurityScansForbidden{}))
 				})
 			})
 
 			When("called as admin", func() {
 				It("should return a list of security scans without rule results populated", func() {
-					resp, err := api.Operations.ListSecurityScans(operations.NewListSecurityScansParams(), getAuth(TestUserAdmin))
+					resp, err := api.Security.ListSecurityScans(security.NewListSecurityScansParams(), getAuth(TestUserAdmin))
 					if err != nil {
 						Expect(err).ToNot(HaveOccurred())
 					}
@@ -224,7 +225,7 @@ var _ = Describe("/security", func() {
 
 			When("called without latestOnly set", func() {
 				It("should return a list of security scans with a null ArchivedAt date", func() {
-					resp, err := api.Operations.ListSecurityScans(operations.NewListSecurityScansParams(), getAuth(TestUserAdmin))
+					resp, err := api.Security.ListSecurityScans(security.NewListSecurityScansParams(), getAuth(TestUserAdmin))
 					if err != nil {
 						Expect(err).ToNot(HaveOccurred())
 					}
@@ -237,7 +238,7 @@ var _ = Describe("/security", func() {
 			When("called with latestOnly set false", func() {
 				It("should return a list of security scans including archived scans", func() {
 					f := false
-					resp, err := api.Operations.ListSecurityScans(operations.NewListSecurityScansParams().WithLatestOnly(&f), getAuth(TestUserAdmin))
+					resp, err := api.Security.ListSecurityScans(security.NewListSecurityScansParams().WithLatestOnly(&f), getAuth(TestUserAdmin))
 					Expect(err).ToNot(HaveOccurred())
 					found := false
 					for _, scan := range resp.Payload.Items {
@@ -253,13 +254,13 @@ var _ = Describe("/security", func() {
 
 		Describe("GET /{group}/{version}/{kind}/{namespace}/{name} (GetSecurityScanForResource)", func() {
 			It("should return the latest security scan for the resource", func() {
-				params := operations.NewGetSecurityScanForResourceParams().
+				params := security.NewGetSecurityScanForResourceParams().
 					WithGroup("config.kore.appvia.io").
 					WithVersion("v1").
 					WithKind("Plan").
 					WithNamespace("kore").
 					WithName(planName)
-				resp, err := api.Operations.GetSecurityScanForResource(params, getAuth(TestUserAdmin))
+				resp, err := api.Security.GetSecurityScanForResource(params, getAuth(TestUserAdmin))
 				Expect(err).ToNot(HaveOccurred())
 				Expect(resp.Payload.Spec.ArchivedAt).To(Equal(""))
 				Expect(len(resp.Payload.Spec.Results)).ToNot(Equal(0))
@@ -269,13 +270,13 @@ var _ = Describe("/security", func() {
 
 		Describe("GET /{group}/{version}/{kind}/{namespace}/{name}/history (ListSecurityScansForResource)", func() {
 			It("should return the all security scans for the resource", func() {
-				params := operations.NewListSecurityScansForResourceParams().
+				params := security.NewListSecurityScansForResourceParams().
 					WithGroup("config.kore.appvia.io").
 					WithVersion("v1").
 					WithKind("Plan").
 					WithNamespace("kore").
 					WithName(planName)
-				resp, err := api.Operations.ListSecurityScansForResource(params, getAuth(TestUserAdmin))
+				resp, err := api.Security.ListSecurityScansForResource(params, getAuth(TestUserAdmin))
 				Expect(err).ToNot(HaveOccurred())
 				Expect(len(resp.Payload.Items)).To(Equal(2))
 				Expect(resp.Payload.Items[0].Spec.ArchivedAt).ToNot(Equal(""))
@@ -288,13 +289,21 @@ var _ = Describe("/security", func() {
 
 		Describe("GET /{id} (GetSecurityScan)", func() {
 			It("should return the security scan by ID", func() {
-				resp1, _ := api.Operations.ListSecurityScans(operations.NewListSecurityScansParams(), getAuth(TestUserAdmin))
+				resp1, _ := api.Security.ListSecurityScans(security.NewListSecurityScansParams(), getAuth(TestUserAdmin))
 				id := resp1.Payload.Items[len(resp1.Payload.Items)-1].Spec.ID
-				params := operations.NewGetSecurityScanParams().WithID(id)
-				resp, err := api.Operations.GetSecurityScan(params, getAuth(TestUserAdmin))
+				params := security.NewGetSecurityScanParams().WithID(id)
+				resp, err := api.Security.GetSecurityScan(params, getAuth(TestUserAdmin))
 				Expect(err).ToNot(HaveOccurred())
 				Expect(len(resp.Payload.Spec.Results)).ToNot(Equal(0))
 				// TODO: check other fields.
+			})
+		})
+
+		Describe("GET /overview (GetOverview)", func() {
+			It("should return an overview of the current security posture", func() {
+				resp, err := api.Security.GetSecurityOverview(security.NewGetSecurityOverviewParams(), getAuth(TestUserAdmin))
+				Expect(err).ToNot(HaveOccurred())
+				Expect(resp.Payload).To(BeAssignableToTypeOf(&models.V1SecurityOverview{}))
 			})
 		})
 	})

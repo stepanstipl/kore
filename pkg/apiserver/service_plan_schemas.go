@@ -32,7 +32,7 @@ func init() {
 
 type servicePlanSchemasHandler struct {
 	kore.Interface
-	// DefaultHandlder implements default features
+	// DefaultHandler implements default features
 	DefaultHandler
 }
 

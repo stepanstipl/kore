@@ -69,7 +69,7 @@ class Cluster extends AutoRefreshComponent {
       const status = cluster.status.status || 'Pending'
 
       actions.push((
-        <Link key="view" href={`/teams/${team}/clusters/${cluster.metadata.name}`}><a><Tooltip title="Cluster status details"><Icon type="info-circle" /></Tooltip></a></Link>
+        <Link key="view" href="/teams/[name]/clusters/[cluster]" as={`/teams/${team}/clusters/${cluster.metadata.name}`}><a><Tooltip title="Cluster status details"><Icon type="info-circle" /></Tooltip></a></Link>
       ))
 
       if (!inProgressStatusList.includes(status)) {
@@ -95,7 +95,7 @@ class Cluster extends AutoRefreshComponent {
       <List.Item actions={actions()}>
         <List.Item.Meta
           avatar={<img src={clusterProviderIconSrcMap[cluster.spec.kind]} height="32px" />}
-          title={<Link href={`/teams/${team}/clusters/${cluster.metadata.name}`}><a><Text>{cluster.spec.kind} <Text style={{ fontFamily: 'monospace', marginLeft: '15px' }}>{cluster.metadata.name}</Text></Text></a></Link>}
+          title={<Link href="/teams/[name]/clusters/[cluster]" as={`/teams/${team}/clusters/${cluster.metadata.name}`}><a><Text>{cluster.spec.kind} <Text style={{ fontFamily: 'monospace', marginLeft: '15px' }}>{cluster.metadata.name}</Text></Text></a></Link>}
           description={
             <div>
               <Text type='secondary'>Created {created}</Text>
