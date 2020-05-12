@@ -89,6 +89,8 @@ func (a accountsImpl) Update(ctx context.Context, account *accountv1beta1.Accoun
 	err := a.Store().Client().Update(ctx,
 		store.UpdateOptions.To(account),
 		store.UpdateOptions.WithCreate(true),
+		store.UpdateOptions.WithForce(true),
+		store.UpdateOptions.WithPatch(true),
 	)
 	if err != nil {
 		log.WithError(err).Error("trying to update a account in the kore")
