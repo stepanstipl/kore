@@ -86,6 +86,10 @@ spec:
             secretKeyRef:
               name: {{ include "kore.name" . }}-api
               key: KORE_ADMIN_TOKEN
+        {{- if .Values.ui.feature_gates }}
+        - name: KORE_FEATURE_GATES
+          value: "{{ join "," .Values.api.feature_gates }}"
+        {{- end }}
         envFrom:
         - secretRef:
             name: {{ include "kore.name" . }}-idp

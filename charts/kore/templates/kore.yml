@@ -63,9 +63,17 @@ spec:
           - secretRef:
               name: {{ include "kore.name" . }}-api
         env:
+          {{- if .Values.api.images.auth_proxy }}
+          - name: AUTH_PROXY_IMAGE
+            value: {{ .Values.api.images.auth_proxy }}
+          {{- end }}
           {{- if .Values.api.build }}
           - name: BUILD_ID
             value: {{ .Values.api.build }}
+          {{- end }}
+          {{- if .Values.api.images.clusterappman }}
+          - name: CLUSTERAPPMAN_IMAGE
+            value: {{ .Values.api.images.clusterappman }}
           {{- end }}
           - name: KUBE_IN_CLUSTER
             value: "true"
@@ -93,13 +101,9 @@ spec:
             {{- end }}
           - name: KORE_AUTHENTICATION_PLUGINS
             value: {{ .Values.api.auth_plugins | join "," }}
-          {{- if .Values.api.images.auth_proxy }}
-          - name: AUTH_PROXY_IMAGE
-            value: {{ .Values.api.images.auth_proxy }}
-          {{- end }}
-          {{- if .Values.api.images.clusterappman }}
-          - name: CLUSTERAPPMAN_IMAGE
-            value: {{ .Values.api.images.clusterappman }}
+          {{- if .Values.api.feature_gates }}
+          - name: KORE_FEATURE_GATES
+            value: "{{ join "," .Values.api.feature_gates }}"
           {{- end }}
         volumeMounts:
         - name: ca

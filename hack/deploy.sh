@@ -50,12 +50,14 @@ api:
   images:
     auth_proxy: quay.io/appvia/auth-proxy:${VERSION}
     clusterappman: quay.io/appvia/kore-apiserver:${VERSION}
+  feature_gates: ${KORE_FEATURE_GATES:-'[]'}
 ui:
   ingress:
     annotations:
       kubernetes.io/ingress.class: nginx
       nginx.ingress.kubernetes.io/backend-protocol: HTTP
       nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+  feature_gates: ${KORE_FEATURE_GATES:-'[]'}
 EOF
 
 trap "rm -f values.yaml >/dev/null 2>&1" EXIT
