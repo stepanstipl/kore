@@ -38,6 +38,7 @@ func New() Scanner {
 	// Register default built-in security rules. Further rules can be added using
 	// RegisterRule if required.
 	scanner.RegisterRule(&AuthProxyIPRangeRule{})
+	scanner.RegisterRule(&GKEAutoscaling{})
 
 	return scanner
 }
