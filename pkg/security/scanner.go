@@ -88,11 +88,11 @@ func (s *scannerImpl) GetRule(code string) Rule {
 }
 
 func (s *scannerImpl) ScanPlan(ctx context.Context, client client.Client, target *configv1.Plan) *securityv1.SecurityScanResult {
-	return s.scanRules(target.TypeMeta, target.ObjectMeta, func(rule Rule) (bool, securityv1.SecurityScanRuleResult, error) {
+	return s.scanRules(target.TypeMeta, target.ObjectMeta, func(rule Rule) (bool, *securityv1.SecurityScanRuleResult, error) {
 		// Apply the rule if it implements PlanRule interface:
 		pr, applicable := rule.(PlanRule)
 		if !applicable {
-			return false, securityv1.SecurityScanRuleResult{}, nil
+			return false, nil, nil
 		}
 		res, err := pr.CheckPlan(ctx, client, target)
 
@@ -101,11 +101,11 @@ func (s *scannerImpl) ScanPlan(ctx context.Context, client client.Client, target
 }
 
 func (s *scannerImpl) ScanCluster(ctx context.Context, client client.Client, target *clustersv1.Cluster) *securityv1.SecurityScanResult {
-	return s.scanRules(target.TypeMeta, target.ObjectMeta, func(rule Rule) (bool, securityv1.SecurityScanRuleResult, error) {
+	return s.scanRules(target.TypeMeta, target.ObjectMeta, func(rule Rule) (bool, *securityv1.SecurityScanRuleResult, error) {
 		// Apply the rule if it implements ClusterRule interface:
 		cr, applicable := rule.(ClusterRule)
 		if !applicable {
-			return false, securityv1.SecurityScanRuleResult{}, nil
+			return false, nil, nil
 		}
 		res, err := cr.CheckCluster(ctx, client, target)
 
@@ -113,7 +113,7 @@ func (s *scannerImpl) ScanCluster(ctx context.Context, client client.Client, tar
 	})
 }
 
-func (s *scannerImpl) scanRules(typeMeta metav1.TypeMeta, objMeta metav1.ObjectMeta, scan func(Rule) (bool, securityv1.SecurityScanRuleResult, error)) *securityv1.SecurityScanResult {
+func (s *scannerImpl) scanRules(typeMeta metav1.TypeMeta, objMeta metav1.ObjectMeta, scan func(Rule) (bool, *securityv1.SecurityScanRuleResult, error)) *securityv1.SecurityScanResult {
 	gvk := typeMeta.GroupVersionKind()
 	result := securityv1.SecurityScanResult{
 		Spec: securityv1.SecurityScanResultSpec{
@@ -148,10 +148,15 @@ func (s *scannerImpl) scanRules(typeMeta metav1.TypeMeta, objMeta metav1.ObjectM
 			continue
 		}
 
+		// @step: ignore non-applicable result sets
+		if ruleResult == nil {
+			continue
+		}
+
 		if applicable {
 			ruleResult.CheckedAt = metav1.NewTime(time.Now())
 			result.Spec.Results = append(result.Spec.Results, ruleResult)
-			setOverallResult(&result, &ruleResult)
+			setOverallResult(&result, ruleResult)
 		}
 	}
 

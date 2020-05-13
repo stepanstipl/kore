@@ -64,12 +64,11 @@ due to a lack of nodes.
 }
 
 // ensureFeature handles the feature for both plans anc clusters
-func (p *GKEAutoscaling) ensureFeature(config string) (securityv1.SecurityScanRuleResult, error) {
-	result := securityv1.SecurityScanRuleResult{
+func (p *GKEAutoscaling) ensureFeature(config string) (*securityv1.SecurityScanRuleResult, error) {
+	result := &securityv1.SecurityScanRuleResult{
 		RuleCode: p.Code(),
 		Status:   securityv1.Warning,
 	}
-
 	feature := gjson.Get(string(config), "enableAutoscaler")
 	if !feature.Exists() {
 		result.Message = "Could not check cluster due to invalid JSON"
@@ -92,18 +91,18 @@ func (p *GKEAutoscaling) ensureFeature(config string) (securityv1.SecurityScanRu
 }
 
 // CheckPlan checks a plan for compliance with this rule
-func (p *GKEAutoscaling) CheckPlan(ctx context.Context, cc client.Client, target *configv1.Plan) (securityv1.SecurityScanRuleResult, error) {
+func (p *GKEAutoscaling) CheckPlan(ctx context.Context, cc client.Client, target *configv1.Plan) (*securityv1.SecurityScanRuleResult, error) {
 	if target.Spec.Kind != "GKE" {
-		return securityv1.SecurityScanRuleResult{Status: securityv1.Ignore}, nil
+		return nil, nil
 	}
 
 	return p.ensureFeature(string(target.Spec.Configuration.Raw))
 }
 
 // CheckCluster checks a cluster for compliance with this rule
-func (p *GKEAutoscaling) CheckCluster(ctx context.Context, cc client.Client, target *clustersv1.Cluster) (securityv1.SecurityScanRuleResult, error) {
+func (p *GKEAutoscaling) CheckCluster(ctx context.Context, cc client.Client, target *clustersv1.Cluster) (*securityv1.SecurityScanRuleResult, error) {
 	if target.Spec.Kind != "GKE" {
-		return securityv1.SecurityScanRuleResult{Status: securityv1.Ignore}, nil
+		return nil, nil
 	}
 
 	return p.ensureFeature(string(target.Spec.Configuration.Raw))

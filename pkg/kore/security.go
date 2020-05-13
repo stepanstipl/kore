@@ -72,11 +72,6 @@ func (s *securityImpl) ScanCluster(ctx context.Context, client client.Client, cl
 }
 
 func (s *securityImpl) persistScan(ctx context.Context, scanResult *securityv1.SecurityScanResult) error {
-	// @check if the result can be ignored
-	if scanResult.Spec.OverallStatus == securityv1.Ignore {
-		return nil
-	}
-
 	scanResultDB := DefaultConvertor.ToSecurityScanResult(scanResult)
 
 	if err := s.securityPersist.StoreScan(ctx, &scanResultDB); err != nil {

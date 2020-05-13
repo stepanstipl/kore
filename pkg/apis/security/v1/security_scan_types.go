@@ -41,9 +41,6 @@ const (
 	// should be mitigated. This would typically be used for rules where compliance is
 	// considered to be vital to a well-run cluster.
 	Failure RuleStatus = "Failure"
-	// Ignore indicates the result is not applicable to this rule and should not
-	// be persisted to the store
-	Ignore RuleStatus = "Ignore"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -107,7 +104,7 @@ type SecurityScanResultSpec struct {
 	// OverallStatus indicates the worst-case status of the rules checked in this scan
 	OverallStatus RuleStatus `json:"overallStatus,omitempty"`
 	// Results are the underlying results of the individual rules run as part of this scan
-	Results []SecurityScanRuleResult `json:"results,omitempty"`
+	Results []*SecurityScanRuleResult `json:"results,omitempty"`
 }
 
 // SecurityScanRuleResult represents the compliance status of a target with respect to a

@@ -69,8 +69,8 @@ where your administrators will access the cluster from.
 }
 
 // CheckPlan checks a plan for compliance with this rule
-func (p *AuthProxyIPRangeRule) CheckPlan(ctx context.Context, client client.Client, target *configv1.Plan) (securityv1.SecurityScanRuleResult, error) {
-	result := securityv1.SecurityScanRuleResult{
+func (p *AuthProxyIPRangeRule) CheckPlan(ctx context.Context, client client.Client, target *configv1.Plan) (*securityv1.SecurityScanRuleResult, error) {
+	result := &securityv1.SecurityScanRuleResult{
 		RuleCode: p.Code(),
 		Status:   securityv1.Warning,
 	}
