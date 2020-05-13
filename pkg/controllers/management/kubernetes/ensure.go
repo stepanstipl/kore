@@ -152,3 +152,18 @@ func (a k8sCtrl) EnsureSecretDeletion(object *clustersv1.Kubernetes) controllers
 		return reconcile.Result{}, nil
 	}
 }
+
+// EnsureFinalizerRemoved removes the finalizer now
+func (a k8sCtrl) EnsureFinalizerRemoved(object *clustersv1.Kubernetes) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		// @cool we can remove the finalizer now
+		finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
+		if finalizer.IsDeletionCandidate(object) {
+			if err := finalizer.Remove(object); err != nil {
+				return reconcile.Result{}, err
+			}
+		}
+
+		return reconcile.Result{}, nil
+	}
+}
