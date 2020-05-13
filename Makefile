@@ -195,9 +195,13 @@ docker-swagger-validate:
 
 compose-up:
 	@docker-compose \
-		--file hack/compose/kube.yml pull
+		--file hack/compose/database.yml \
+		--file hack/compose/kube.yml \
+		pull
 	@docker-compose \
-		--file hack/compose/kube.yml up -d
+		--file hack/compose/database.yml \
+		--file hack/compose/kube.yml \
+		up -d
 
 compose: build compose-up
 	@echo "--> Building a test environment"
@@ -205,15 +209,32 @@ compose: build compose-up
 	@echo "--> Note: the UI is running on host-network (some machines might have an issue)"
 	@echo "--> Remember to start the api: make run"
 
+.PHONY: run
 run:
 	@echo "--> Starting dependencies..."
 	@$(MAKE) compose-up
 	@$(MAKE) kube-api-wait
-	@$(MAKE) run-api-only
+	@$(MAKE) run-api
 
-run-api-only: kore-apiserver
+.PHONY: run-with-kind
+run-with-kind:
+	@docker-compose \
+		--file hack/compose/database.yml \
+		pull
+	@docker-compose \
+		--file hack/compose/database.yml \
+		up -d
+	@$(MAKE) run-api-with-kind
+
+.PHONY: run-api
+run-api: kore-apiserver
 	@echo "--> Starting api..."
-	@hack/bin/run-api-with-env.sh
+	@hack/bin/run-api.sh
+
+.PHONY: run-api-with-kind
+run-api-with-kind: kore-apiserver
+	@echo "--> Starting api..."
+	@hack/bin/run-api-with-kind.sh
 
 kube-api-wait:
 	@echo "--> Waiting for Kube API..."
@@ -230,12 +251,14 @@ ui-wait:
 compose-down:
 	@echo "--> Removing the test environment"
 	@docker-compose \
+		--file hack/compose/database.yml \
 		--file hack/compose/kube.yml \
 		--file hack/compose/operators.yml down
 
 compose-logs:
 	@echo "--> Following logs for the test environment"
 	@docker-compose \
+		--file hack/compose/database.yml \
 		--file hack/compose/kube.yml \
 		--file hack/compose/operators.yml logs -f
 
@@ -250,10 +273,12 @@ demo:
 	@echo "--> Building the demo environment"
 	@echo "--> Open a browser: http://localhost:3000"
 	@docker-compose \
+		--file hack/compose/database.yml \
 		--file hack/compose/kube.yml \
 		--file hack/compose/demo.yml \
 		pull
 	@docker-compose \
+		--file hack/compose/database.yml \
 		--file hack/compose/kube.yml \
 		--file hack/compose/demo.yml \
 		up --force-recreate --renew-anon-volumes

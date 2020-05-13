@@ -37,15 +37,3 @@ services:
     ports:
       - 8080:8080
       - 6443:6443
-
-  database:
-    image: mariadb:10.5.1
-    environment:
-      MYSQL_ROOT_PASSWORD: pass
-    entrypoint:
-      sh -c "
-        echo 'CREATE DATABASE IF NOT EXISTS kore;' > /docker-entrypoint-initdb.d/init.sql;
-        /usr/local/bin/docker-entrypoint.sh --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
-    ports:
-      - 3306:3306
-
