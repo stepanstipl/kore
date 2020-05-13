@@ -51,6 +51,7 @@ api:
     auth_proxy: quay.io/appvia/auth-proxy:${VERSION}
     clusterappman: quay.io/appvia/kore-apiserver:${VERSION}
   feature_gates: ${KORE_FEATURE_GATES:-'[]'}
+  verbose: ${KORE_VERBOSE:-"false"}
 ui:
   ingress:
     annotations:
