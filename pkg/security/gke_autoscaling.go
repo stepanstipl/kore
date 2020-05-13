@@ -18,13 +18,11 @@ package security
 
 import (
 	"context"
-	"errors"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	securityv1 "github.com/appvia/kore/pkg/apis/security/v1"
 
-	"github.com/tidwall/gjson"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -65,29 +63,10 @@ due to a lack of nodes.
 
 // ensureFeature handles the feature for both plans anc clusters
 func (p *GKEAutoscaling) ensureFeature(config string) (*securityv1.SecurityScanRuleResult, error) {
-	result := &securityv1.SecurityScanRuleResult{
-		RuleCode: p.Code(),
-		Status:   securityv1.Warning,
-	}
-	feature := gjson.Get(string(config), "enableAutoscaler")
-	if !feature.Exists() {
-		result.Message = "Could not check cluster due to invalid JSON"
-
-		return result, errors.New("enableAutoscaler parameter does not exist")
-	}
-
-	// @step: check if the cluster version is out-of-date
-	if !feature.Bool() {
-		result.Message = "GKE Autoscaler is disabled "
-		result.Status = securityv1.Warning
-
-		return result, nil
-	}
-
-	result.Message = "GKE Autoscaling is enabled"
-	result.Status = securityv1.Compliant
-
-	return result, nil
+	return ValueAsExpected(p.Code(), config, "enableAutoscaler", true, securityv1.Warning,
+		"GKE Autoscaler is disabled",
+		"GKE Autoscaling is enabled",
+	)
 }
 
 // CheckPlan checks a plan for compliance with this rule
