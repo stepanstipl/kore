@@ -22,7 +22,6 @@ import (
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/controllers"
-	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -49,6 +48,7 @@ func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (rec
 				a.EnsureDeleteStatus(object),
 				a.EnsureServiceDeletion(object),
 				a.EnsureSecretDeletion(object),
+				a.EnsureFinalizerRemoved(object),
 			},
 		)
 	}()
@@ -60,14 +60,6 @@ func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (rec
 	// @step: update the status of the resource
 	if err := a.mgr.GetClient().Status().Patch(ctx, object, client.MergeFrom(original)); err != nil {
 		logger.WithError(err).Error("trying to update the status of the resource")
-
-		return reconcile.Result{}, err
-	}
-
-	// @cool we can remove the finalizer now
-	finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
-	if err := finalizer.Remove(object); err != nil {
-		logger.WithError(err).Error("removing the finalizer from eks resource")
 
 		return reconcile.Result{}, err
 	}
