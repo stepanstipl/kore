@@ -62,8 +62,8 @@ Not having this enabled means you may have unschedulable nodes or nodes with hea
 // ensureFeature handles the feature for both plans anc clusters
 func (p *GKEAutorepair) ensureFeature(config string) (*securityv1.SecurityScanRuleResult, error) {
 	return ValueAsExpected(p.Code(), config, "enableAutorepair", true, securityv1.Warning,
-		"GKE Autorepair is disabled",
 		"GKE Autorepair is enabled",
+		"GKE Autorepair is disabled",
 	)
 }
 

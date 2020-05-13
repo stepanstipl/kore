@@ -64,8 +64,8 @@ due to a lack of nodes.
 // ensureFeature handles the feature for both plans anc clusters
 func (p *GKEAutoscaling) ensureFeature(config string) (*securityv1.SecurityScanRuleResult, error) {
 	return ValueAsExpected(p.Code(), config, "enableAutoscaler", true, securityv1.Warning,
-		"GKE Autoscaler is disabled",
 		"GKE Autoscaling is enabled",
+		"GKE Autoscaler is disabled",
 	)
 }
 
