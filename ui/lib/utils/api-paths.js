@@ -20,6 +20,7 @@ module.exports = {
     generateInviteLink: `/teams/${id}/invites/generate`,
     audit: `/teams/${id}/audits`,
     services: `/teams/${id}/services`,
+    serviceCredentials: `/teams/${id}/servicecredentials`
   }),
   idp: {
     default: '/idp/default',

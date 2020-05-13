@@ -66,7 +66,7 @@ class ClusterOptionsForm extends React.Component {
 
   render() {
     const { getFieldDecorator, getFieldValue } = this.props.form
-    const { credentials, plans } = this.props
+    const { credentials, plans, selectedCloud } = this.props
     const selectedPlan = getFieldValue('plan')
 
     const checkForDuplicateName = (rule, value) => {
@@ -124,6 +124,7 @@ class ClusterOptionsForm extends React.Component {
               <PlanOptionsForm
                 team={this.props.team}
                 resourceType="cluster"
+                kind={selectedCloud}
                 plan={selectedPlan}
                 validationErrors={this.props.validationErrors}
                 onPlanChange={this.onPlanOverridden}

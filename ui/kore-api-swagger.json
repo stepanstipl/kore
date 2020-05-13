@@ -1272,6 +1272,89 @@
         }
       }
     },
+    "/api/v1alpha1/servicecredentialschemas/{kind}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Returns a specific service credential schema",
+        "operationId": "GetServiceCredentialSchemaForKind",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The service kind",
+            "name": "kind",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the service credential schema definition"
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/servicecredentialschemas/{kind}/{name}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Returns a specific service credential schema",
+        "operationId": "GetServiceCredentialSchemaForPlan",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The service kind",
+            "name": "kind",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The service plan name",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the service credential schema definition"
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
     "/api/v1alpha1/servicekinds": {
       "get": {
         "consumes": [
@@ -4379,6 +4462,18 @@
             "name": "team",
             "in": "path",
             "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the name of the cluster you are filtering for",
+            "name": "cluster",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Is the name of the service you are filtering for",
+            "name": "service",
+            "in": "query"
           }
         ],
         "responses": {

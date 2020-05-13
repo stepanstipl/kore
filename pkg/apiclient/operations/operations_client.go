@@ -81,6 +81,10 @@ type ClientService interface {
 
 	GetService(params *GetServiceParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceOK, error)
 
+	GetServiceCredentialSchemaForKind(params *GetServiceCredentialSchemaForKindParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceCredentialSchemaForKindOK, error)
+
+	GetServiceCredentialSchemaForPlan(params *GetServiceCredentialSchemaForPlanParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceCredentialSchemaForPlanOK, error)
+
 	GetServiceCredentials(params *GetServiceCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceCredentialsOK, error)
 
 	GetServiceKind(params *GetServiceKindParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceKindOK, error)
@@ -1185,6 +1189,76 @@ func (a *Client) GetService(params *GetServiceParams, authInfo runtime.ClientAut
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for GetService: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  GetServiceCredentialSchemaForKind returns a specific service credential schema
+*/
+func (a *Client) GetServiceCredentialSchemaForKind(params *GetServiceCredentialSchemaForKindParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceCredentialSchemaForKindOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetServiceCredentialSchemaForKindParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "GetServiceCredentialSchemaForKind",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/servicecredentialschemas/{kind}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetServiceCredentialSchemaForKindReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetServiceCredentialSchemaForKindOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetServiceCredentialSchemaForKind: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  GetServiceCredentialSchemaForPlan returns a specific service credential schema
+*/
+func (a *Client) GetServiceCredentialSchemaForPlan(params *GetServiceCredentialSchemaForPlanParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceCredentialSchemaForPlanOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetServiceCredentialSchemaForPlanParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "GetServiceCredentialSchemaForPlan",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/servicecredentialschemas/{kind}/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetServiceCredentialSchemaForPlanReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetServiceCredentialSchemaForPlanOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetServiceCredentialSchemaForPlan: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

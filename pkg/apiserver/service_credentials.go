@@ -34,6 +34,32 @@ func (u teamHandler) listServiceCredentials(req *restful.Request, resp *restful.
 			return err
 		}
 
+		var filters []func(servicesv1.ServiceCredentials) bool
+
+		cluster := req.QueryParameter("cluster")
+		if cluster != "" {
+			filters = append(filters, func(s servicesv1.ServiceCredentials) bool { return s.Spec.Cluster.Name == cluster })
+		}
+
+		service := req.QueryParameter("service")
+		if service != "" {
+			filters = append(filters, func(s servicesv1.ServiceCredentials) bool { return s.Spec.Service.Name == service })
+		}
+
+		if len(filters) > 0 {
+			filtered := []servicesv1.ServiceCredentials{}
+			for _, item := range list.Items {
+				include := true
+				for _, filter := range filters {
+					include = include && filter(item)
+				}
+				if include {
+					filtered = append(filtered, item)
+				}
+			}
+			list.Items = filtered
+		}
+
 		return resp.WriteHeaderAndEntity(http.StatusOK, list)
 	})
 }
