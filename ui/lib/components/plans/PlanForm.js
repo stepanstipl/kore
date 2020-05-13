@@ -129,7 +129,7 @@ class PlanForm extends React.Component {
   fieldError = fieldKey => this.props.form.isFieldTouched(fieldKey) && this.props.form.getFieldError(fieldKey)
 
   render() {
-    const { form, data, validationErrors } = this.props
+    const { form, kind, data, validationErrors } = this.props
     const { dataLoading, submitting, schema, planValues, formErrorMessage } = this.state
     const { getFieldDecorator, getFieldsError } = form
 
@@ -192,6 +192,9 @@ class PlanForm extends React.Component {
 
           {Object.keys(schema.properties).map(property =>
             <PlanOption
+              mode="manage"
+              resourceType="cluster"
+              kind={kind}
               key={property}
               name={property}
               property={schema.properties[property]}

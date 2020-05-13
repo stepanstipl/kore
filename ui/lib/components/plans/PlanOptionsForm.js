@@ -126,6 +126,10 @@ class PlanOptionsForm extends React.Component {
 
           return (
             <PlanOption 
+              mode="use"
+              team={this.props.team}
+              resourceType={this.props.resourceType}
+              kind={this.props.kind}
               key={name} 
               name={name} 
               property={this.state.schema.properties[name]} 

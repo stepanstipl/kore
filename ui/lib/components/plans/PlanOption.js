@@ -1,72 +1,26 @@
 import * as React from 'react'
-import PropTypes from 'prop-types'
 import { Form, Input, Checkbox, InputNumber, Select, Button, Card, Alert } from 'antd'
 import { startCase } from 'lodash'
+import CustomPlanOptionRegistry from './custom'
+import PlanOptionBase from './PlanOptionBase'
 
-class PlanOption extends React.Component {
-  static propTypes = {
-    name: PropTypes.string.isRequired,
-    property: PropTypes.object.isRequired,
-    value: PropTypes.any,
-    editable: PropTypes.bool,
-    hideNonEditable: PropTypes.bool,
-    onChange: PropTypes.func,
-    displayName: PropTypes.string,
-    validationErrors: PropTypes.array
-  }
-
-  describe = (property) => {
-    let descriptionPieces = []
-    if (property.description) {
-      descriptionPieces.push(property.description)
-    }
-    if (property.format) {
-      descriptionPieces.push(`Format: ${property.format}`)
-    } else if (property.items && property.items.format) {
-      descriptionPieces.push(`Format: ${property.items.format}`)
-    }
-    if (property.immutable) {
-      descriptionPieces.push('Cannot be edited after cluster is created.')
-    }
-    if (descriptionPieces.length === 0) {
-      return null
-    }
-    return descriptionPieces.join(' | ')
-  }
-
-  addComplexItemToArray = (property, values) => {
-    if (property.items.type === 'array') {
-      values.push([])
-      return values
-    }
-    let newItem = {}
-    Object.keys(property.items.properties).forEach((p) => newItem[p] = null)
-    values.push(newItem)
-    return values
-  }
-
-  removeFromArray = (values, indToRemove) => {
-    values.splice(indToRemove, 1)
-    return values
-  }
-
-  validationErrors = name => {
-    if (!this.props.validationErrors) {
-      return null
-    }
-    const dotName = name.replace(/\[([0-9+])\]/g, '.$1')
-    const valErrors = this.props.validationErrors.filter(v => v.field.indexOf(dotName) === 0)
-    if (valErrors.length === 0) {
-      return null
-    }
-    return valErrors.map((ve, i) => <Alert key={`${name}.valError.${i}`} type="error" message={ve.message} style={{ marginTop: '10px' }} />)
+export default class PlanOption extends PlanOptionBase {
+  constructor(props) {
+    super(props)
   }
 
   render() {
-    const { name, property, value, editable, hideNonEditable } = this.props
+    const { resourceType, kind, name, property, value, editable, hideNonEditable } = this.props
     if (!editable && hideNonEditable) {
       return null
     }
+
+    // Switch out to a custom option if we have one
+    const customControl = CustomPlanOptionRegistry.getCustomPlanOption(resourceType, kind, name, this.props)
+    if (customControl) {
+      return customControl
+    }
+
     const onChange = this.props.onChange || (() => {})
 
     const displayName = this.props.displayName || name
@@ -77,7 +31,11 @@ class PlanOption extends React.Component {
       return (
         <Card size="small" title={startCase(displayName)}>
           {keys.map((key) =>
-            <PlanOption 
+            <PlanOption
+              mode={this.props.mode} 
+              team={this.props.team} 
+              resourceType={resourceType}
+              kind={kind}
               key={`${name}.${key}`} 
               name={`${name}.${key}`} 
               displayName={key} 
@@ -119,6 +77,10 @@ class PlanOption extends React.Component {
                   {values.map((val, ind) => 
                     <React.Fragment key={`${name}[${ind}]`}>
                       <PlanOption 
+                        mode={this.props.mode} 
+                        team={this.props.team} 
+                        resourceType={resourceType}
+                        kind={kind}
                         name={`${name}[${ind}]`} 
                         property={property.items} 
                         value={val} 
@@ -150,5 +112,3 @@ class PlanOption extends React.Component {
     )
   }
 }
-
-export default PlanOption
