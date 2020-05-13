@@ -28,6 +28,7 @@ idp:
     - offline_access
 api:
   feature_gates: []
+  verbose: false
   endpoint:
     url: http://localhost:10080
     detect: false

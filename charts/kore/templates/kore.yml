@@ -105,6 +105,8 @@ spec:
           - name: KORE_FEATURE_GATES
             value: "{{ join "," .Values.api.feature_gates }}"
           {{- end }}
+          - name: VERBOSE
+            value: "{{ .Values.api.verbose }}"
         volumeMounts:
         - name: ca
           readOnly: true

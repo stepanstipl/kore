@@ -30,5 +30,6 @@ export KORE_API_PUBLIC_URL=${KORE_API_PUBLIC_URL_QA}
 export KORE_FEATURE_GATES="[services=true]"
 export KORE_UI_PUBLIC_URL=${KORE_UI_PUBLIC_URL_QA}
 export KORE_UI_SHOW_PROTOTYPES=true
+export KORE_VERBOSE=true
 
 hack/deploy.sh
