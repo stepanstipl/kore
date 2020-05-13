@@ -58,6 +58,7 @@ func ValueAsExpected(code, config, field string, expected interface{}, failStatu
 
 		return result, nil
 	}
+	result.Message = success
 	result.Status = securityv1.Compliant
 
 	return result, nil
