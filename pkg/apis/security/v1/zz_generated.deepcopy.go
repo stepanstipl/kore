@@ -255,9 +255,13 @@ func (in *SecurityScanResultSpec) DeepCopyInto(out *SecurityScanResultSpec) {
 	in.ArchivedAt.DeepCopyInto(&out.ArchivedAt)
 	if in.Results != nil {
 		in, out := &in.Results, &out.Results
-		*out = make([]SecurityScanRuleResult, len(*in))
+		*out = make([]*SecurityScanRuleResult, len(*in))
 		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(SecurityScanRuleResult)
+				(*in).DeepCopyInto(*out)
+			}
 		}
 	}
 	return

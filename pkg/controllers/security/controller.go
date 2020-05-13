@@ -26,6 +26,7 @@ import (
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/utils"
 
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -97,7 +98,10 @@ func (c *Controller) Name() string {
 
 // ManagerOptions are the manager options
 func (c *Controller) ManagerOptions() manager.Options {
-	return controllers.DefaultManagerOptions(c)
+	options := controllers.DefaultManagerOptions(c)
+	options.SyncPeriod = utils.DurationPtr(3 * time.Hour)
+
+	return options
 }
 
 // ControllerOptions are the controller options

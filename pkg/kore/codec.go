@@ -309,7 +309,7 @@ func (c Convertor) FromSecurityScanResult(result *model.SecurityScanResult) secu
 			CheckedAt:     metav1.NewTime(result.CheckedAt),
 			ArchivedAt:    metav1.NewTime(result.ArchivedAt),
 			OverallStatus: securityv1.RuleStatus(result.OverallStatus),
-			Results:       make([]securityv1.SecurityScanRuleResult, len(result.Results)),
+			Results:       make([]*securityv1.SecurityScanRuleResult, len(result.Results)),
 		},
 	}
 	for i, rr := range result.Results {
@@ -319,7 +319,7 @@ func (c Convertor) FromSecurityScanResult(result *model.SecurityScanResult) secu
 }
 
 // ToSecurityRuleResult converts to the DB-layer rule result from the Security rule result
-func (c Convertor) ToSecurityRuleResult(result securityv1.SecurityScanRuleResult) model.SecurityRuleResult {
+func (c Convertor) ToSecurityRuleResult(result *securityv1.SecurityScanRuleResult) model.SecurityRuleResult {
 	return model.SecurityRuleResult{
 		RuleCode:  result.RuleCode,
 		Status:    result.Status.String(),
@@ -329,8 +329,8 @@ func (c Convertor) ToSecurityRuleResult(result securityv1.SecurityScanRuleResult
 }
 
 // FromSecurityRuleResult converts from the DB-layer rule result to the Security rule result
-func (c Convertor) FromSecurityRuleResult(result model.SecurityRuleResult) securityv1.SecurityScanRuleResult {
-	return securityv1.SecurityScanRuleResult{
+func (c Convertor) FromSecurityRuleResult(result model.SecurityRuleResult) *securityv1.SecurityScanRuleResult {
+	return &securityv1.SecurityScanRuleResult{
 		RuleCode:  result.RuleCode,
 		Status:    securityv1.RuleStatus(result.Status),
 		Message:   result.Message,

@@ -104,7 +104,7 @@ type SecurityScanResultSpec struct {
 	// OverallStatus indicates the worst-case status of the rules checked in this scan
 	OverallStatus RuleStatus `json:"overallStatus,omitempty"`
 	// Results are the underlying results of the individual rules run as part of this scan
-	Results []SecurityScanRuleResult `json:"results,omitempty"`
+	Results []*SecurityScanRuleResult `json:"results,omitempty"`
 }
 
 // SecurityScanRuleResult represents the compliance status of a target with respect to a
