@@ -47,17 +47,3 @@ type NamespaceOptions struct {
 	// Name is the name of the namespace
 	Name string `json:"name,omitempty"`
 }
-
-// Parameters provides the context for clusterappman
-type Parameters struct {
-	// Credentials are creds for the providers
-	Credentials Credentials `json:"credentials,omitempty"`
-	// Domain is the cluster domain
-	Domain string `json:"domain,omitempty"`
-	// Namespaces is a collection of namespaces to create
-	Namespaces []NamespaceOptions `json:"namespaces,omitempty"`
-	// Provider is the cloud provider
-	Provider string `json:"provider,omitempty"`
-	// StorageClass is the class to use when creating PVC's
-	StorageClass string `json:"storage_class,omitempty"`
-}

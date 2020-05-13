@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	// controller imports
+	"github.com/appvia/kore/pkg/clusterappman"
 	_ "github.com/appvia/kore/pkg/controllers/register"
 
 	// service provider imports
@@ -166,6 +167,28 @@ func (s serverImpl) Run(ctx context.Context) error {
 				}).Fatal("failed to start the controller")
 			}
 		}(ctrl)
+	}
+
+	// start the clusterappman in kore cluster
+	// TODO: create a kubernetes object for managing the kore cluster
+	//       see https://github.com/appvia/kore/issues/813
+	if s.hubcc.Config().ManagedDependencies {
+		apps, err := clusterappman.NewDeployer(s.hubcc.Config().ClusterAppManImage, s.rclient)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"error": err.Error(),
+				"name":  clusterappman.DeployerServiceName,
+			}).Fatal("failed to instanciate the clusterappman deployer")
+		}
+		go func() {
+			err := apps.Run(ctx)
+			if err != nil {
+				log.WithFields(log.Fields{
+					"error": err.Error(),
+					"name":  clusterappman.DeployerServiceName,
+				}).Error("error running the clusterappman deployer")
+			}
+		}()
 	}
 
 	// @step: start the apiserver - @note this is not being started before

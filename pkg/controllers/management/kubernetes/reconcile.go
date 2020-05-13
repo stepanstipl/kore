@@ -230,7 +230,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		*/
 
 		// @step: ensure all cluster components are deployed
-		components, err := a.EnsureClusterman(context.Background(), client, object)
+		components, err := a.EnsureClusterman(context.Background(), client, a.Config().ClusterAppManImage)
 		if err != nil {
 			logger.WithError(err).Error("trying to provision the clusterappman service")
 
