@@ -75,6 +75,8 @@ spec:
           - name: CLUSTERAPPMAN_IMAGE
             value: {{ .Values.api.images.clusterappman }}
           {{- end }}
+          - name: KORE_ENABLE_MANAGED_DEPS
+            value: "true"
           - name: KUBE_IN_CLUSTER
             value: "true"
           - name: KORE_CERTIFICATE_AUTHORITY

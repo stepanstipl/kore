@@ -10,6 +10,14 @@ if [ ! -f ./demo.env ] ; then
     exit 1
 fi
 source ./demo.env
+
+if [[ ${KUBE_CONFIG_FILE:-} != '' ]]; then
+    KUBE_CONFIG_FLAG="--kubeconfig ${KUBE_CONFIG_FILE}"
+else
+    KUBE_CONFIG_FLAG=''
+    KUBE_API_SERVER=${KUBE_API_SERVER:-http://127.0.0.1:8080}
+fi
+
 export \
     KORE_IDP_CLIENT_ID \
     KORE_IDP_CLIENT_SECRET \
@@ -19,8 +27,8 @@ export \
     KORE_FEATURE_GATES
 
 ./bin/kore-apiserver \
+    ${KUBE_CONFIG_FLAG} \
     --listen localhost:10080 \
-    --kube-api-server http://127.0.0.1:8080 \
     --verbose \
     --admin-pass password \
     --admin-token password \

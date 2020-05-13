@@ -123,6 +123,11 @@ func Options() []cli.Flag {
 			EnvVars: []string{"KORE_IDP_USER_CLAIMS"},
 			Value:   cli.NewStringSlice("preferred_username", "email", "name", "username"),
 		},
+		&cli.BoolFlag{
+			Name:    "enable-managed-dependencies",
+			Usage:   "enable clusterappman for deployment capabilities in the kore cluster `BOOL`",
+			EnvVars: []string{"KORE_ENABLE_MANAGED_DEPS"},
+		},
 		&cli.StringFlag{
 			Name:    "feature-gates",
 			Usage:   "List of feature gates to disable/enable, as key-value pairs, e.g. 'services=true' `GATES`",
