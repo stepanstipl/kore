@@ -26,51 +26,49 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// GKEAutoscaling determines whether the auth proxy IP range is suitably limited
-type GKEAutoscaling struct{}
+// GKEAutorepair determines whether the auth proxy IP range is suitably limited
+type GKEAutorepair struct{}
 
 // Implement Rule
 
 // Code returns the idenfier for this rule
-func (p *GKEAutoscaling) Code() string {
-	return "GKE-02"
+func (p *GKEAutorepair) Code() string {
+	return "GKE-03"
 }
 
 // Name returns the name of this rule
-func (p *GKEAutoscaling) Name() string {
-	return "GKE Autoscaling"
+func (p *GKEAutorepair) Name() string {
+	return "GKE Autorepair"
 }
 
 // Description returns the markdown-formatted description of this rule
-func (p *GKEAutoscaling) Description() string {
+func (p *GKEAutorepair) Description() string {
 	return `
 ## Overview
 
-This rule checks the status of the autoscaling on the GKE plans or clusters.
+This rule checks the status of the auto repair on the GKE plans or clusters.
 
 ## Details
 
-Autoscaling on GKE permits the control plan to scale the nodegroups based on the requirements. As the compute needs
-(cpu, memory and scheduling constraints) increase on a GKE cluster, they can scale up the nodegroups up to meet the
-requirement and or course back down when no longer required.
+Autorepair on GKE permits the control plan to automatically replace nodes which have failed the
+kubernetes health checks.
 
 ## Impact of warnings from this rule
 
-Having the feature disabled means the cluster will have to manually scaled otherwise you might hit scheduling issues
-due to a lack of nodes.
+Not having this enabled means you may have unschedulable nodes or nodes with health concerned.
 `
 }
 
 // ensureFeature handles the feature for both plans anc clusters
-func (p *GKEAutoscaling) ensureFeature(config string) (*securityv1.SecurityScanRuleResult, error) {
-	return ValueAsExpected(p.Code(), config, "enableAutoscaler", true, securityv1.Warning,
-		"GKE Autoscaler is disabled",
-		"GKE Autoscaling is enabled",
+func (p *GKEAutorepair) ensureFeature(config string) (*securityv1.SecurityScanRuleResult, error) {
+	return ValueAsExpected(p.Code(), config, "enableAutorepair", true, securityv1.Warning,
+		"GKE Autorepair is disabled",
+		"GKE Autorepair is enabled",
 	)
 }
 
 // CheckPlan checks a plan for compliance with this rule
-func (p *GKEAutoscaling) CheckPlan(ctx context.Context, cc client.Client, target *configv1.Plan) (*securityv1.SecurityScanRuleResult, error) {
+func (p *GKEAutorepair) CheckPlan(ctx context.Context, cc client.Client, target *configv1.Plan) (*securityv1.SecurityScanRuleResult, error) {
 	if target.Spec.Kind != "GKE" {
 		return nil, nil
 	}
@@ -79,7 +77,7 @@ func (p *GKEAutoscaling) CheckPlan(ctx context.Context, cc client.Client, target
 }
 
 // CheckCluster checks a cluster for compliance with this rule
-func (p *GKEAutoscaling) CheckCluster(ctx context.Context, cc client.Client, target *clustersv1.Cluster) (*securityv1.SecurityScanRuleResult, error) {
+func (p *GKEAutorepair) CheckCluster(ctx context.Context, cc client.Client, target *clustersv1.Cluster) (*securityv1.SecurityScanRuleResult, error) {
 	if target.Spec.Kind != "GKE" {
 		return nil, nil
 	}

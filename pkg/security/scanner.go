@@ -39,6 +39,7 @@ func New() Scanner {
 	// RegisterRule if required.
 	scanner.RegisterRule(&AuthProxyIPRangeRule{})
 	scanner.RegisterRule(&GKEAutoscaling{})
+	scanner.RegisterRule(&GKEAutorepair{})
 
 	return scanner
 }

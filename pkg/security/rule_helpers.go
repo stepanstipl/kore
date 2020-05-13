@@ -16,6 +16,13 @@
 
 package security
 
+import (
+	"fmt"
+
+	securityv1 "github.com/appvia/kore/pkg/apis/security/v1"
+	"github.com/tidwall/gjson"
+)
+
 // RuleApplies returns a list of strings indicating the resource kinds that a rule
 // can be applied to.
 func RuleApplies(rule Rule) []string {
@@ -29,4 +36,29 @@ func RuleApplies(rule Rule) []string {
 	}
 
 	return appliesTo
+}
+
+// ValueAsExpected checks the value is as expected
+func ValueAsExpected(code, config, field string, expected interface{}, failStatus securityv1.RuleStatus, success, failure string) (*securityv1.SecurityScanRuleResult, error) {
+	result := &securityv1.SecurityScanRuleResult{
+		RuleCode: code,
+		Status:   securityv1.Warning,
+	}
+
+	value := gjson.Get(config, field)
+	if !value.Exists() {
+		result.Message = "Could not check cluster due to invalid JSON"
+
+		return nil, fmt.Errorf("%s parameter does not exist", field)
+	}
+
+	if value.Value() != expected {
+		result.Status = failStatus
+		result.Message = failure
+
+		return result, nil
+	}
+	result.Status = securityv1.Compliant
+
+	return result, nil
 }
