@@ -24,8 +24,6 @@ setup() {
 @test "We should find the clusterappman configmaps in kore namespace" {
   runit "${KUBECTL} --context=${CLUSTER} get namespace kore"
   [[ "$status" -eq 0 ]]
-  runit "${KUBECTL} --context=${CLUSTER} -n kore get configmap kore-cluster-config"
-  [[ "$status" -eq 0 ]]
   runit "${KUBECTL} --context=${CLUSTER} -n kore get configmap kore-cluster-status"
   [[ "$status" -eq 0 ]]
 }
