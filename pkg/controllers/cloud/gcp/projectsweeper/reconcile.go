@@ -44,7 +44,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		"name":      request.NamespacedName.Name,
 		"namespace": request.NamespacedName.Namespace,
 	})
-	logger.Debug("attempting to reconcile the projects")
+	logger.Debug("attempting to cleanup the gcp projects")
 
 	result, err := func() (reconcile.Result, error) {
 		return controllers.DefaultEnsureHandler.Run(ctx,
@@ -86,18 +86,30 @@ func (c *Controller) EnsureRemoval() controllers.EnsureFunc {
 			return reconcile.Result{}, err
 		}
 
+		c.logger.WithField(
+			"size", len(projects.Items),
+		).Debug("found the following gcp projects")
+
 		// @step: iterate the projects and looks for claims
 		for i := 0; i < len(projects.Items); i++ {
+			name := projects.Items[i].Spec.ProjectName
+
 			switch projects.Items[i].Status.Status {
 			case corev1.PendingStatus, corev1.DeletingStatus, "":
+				c.logger.WithField(
+					"name", name,
+				).Debug("skipping the gcp project due to state")
+
 				continue
 			}
-
-			name := projects.Items[i].Spec.ProjectName
 
 			// has we need this project before?
 			v, found := c.cache.Get(name)
 			if !found {
+				c.logger.WithField(
+					"name", name,
+				).Debug("first time seeing the project, holding off for now")
+
 				c.cache.Set(name, time.Now(), cache.DefaultExpiration)
 
 				continue
@@ -106,10 +118,12 @@ func (c *Controller) EnsureRemoval() controllers.EnsureFunc {
 
 			// @step: double check no cluster is using this as a projectclaim
 			logger := c.logger.WithFields(log.Fields{
-				"project":   projects.Items[i].Spec.ProjectName,
+				"age":       time.Since(timer).String(),
 				"name":      projects.Items[i].Name,
 				"namespace": projects.Items[i].Namespace,
+				"project":   projects.Items[i].Spec.ProjectName,
 			})
+			logger.Debug("checking if the project requires deletion")
 
 			claimed, err := c.isClaimed(&projects.Items[i], claims)
 			if err != nil {
@@ -120,6 +134,8 @@ func (c *Controller) EnsureRemoval() controllers.EnsureFunc {
 				return reconcile.Result{}, err
 			}
 
+			expiration := time.Duration(10 * time.Minute)
+
 			switch claimed {
 			case true:
 				logger.Debug("project is still referenced, keeping for now")
@@ -127,7 +143,7 @@ func (c *Controller) EnsureRemoval() controllers.EnsureFunc {
 				c.cache.Set(name, time.Now(), cache.DefaultExpiration)
 
 			default:
-				if time.Since(timer) > 10*time.Minute {
+				if time.Since(timer) > expiration {
 					logger.Info("attempting to delete the unclaimed gcp project")
 
 					if err := kubernetes.DeleteIfExists(ctx, cc, &projects.Items[i]); err != nil {
@@ -135,6 +151,12 @@ func (c *Controller) EnsureRemoval() controllers.EnsureFunc {
 
 						return reconcile.Result{}, err
 					}
+					c.cache.Delete(name)
+
+				} else {
+					logger.WithField(
+						"expires", time.Duration(time.Since(timer)-expiration).String(),
+					).Debug("project has the following period before deletion")
 				}
 			}
 		}

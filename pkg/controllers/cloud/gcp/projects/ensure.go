@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
@@ -512,28 +513,36 @@ func (t ctrl) EnsureAPIs(ctx context.Context, credentials *configv1.Secret, proj
 		return err
 	}
 
+	wg := &sync.WaitGroup{}
+
 	for _, name := range t.GetRequiredAPI() {
 		if utils.Contains(name, list) {
 			continue
 		}
+		wg.Add(1)
 
-		logger.WithField(
-			"api", name,
-		).Debug("attempting to enable the api in the project")
+		go func(service string) {
+			defer func() {
+				wg.Done()
+			}()
 
-		if err := gcputils.EnableAPI(ctx, client, id, name); err != nil {
-			logger.WithError(err).Error("trying to enable the api")
+			logger.WithField(
+				"api", service,
+			).Debug("attempting to enable the api in the project")
 
-			project.Status.Conditions.SetCondition(corev1.Component{
-				Name:    stage,
-				Detail:  err.Error(),
-				Message: "Failed to enable " + name + " api in the project",
-				Status:  corev1.FailureStatus,
-			})
+			if err := gcputils.EnableAPI(ctx, client, id, service); err != nil {
+				logger.WithError(err).Error("trying to enable the api")
 
-			return err
-		}
+				project.Status.Conditions.SetCondition(corev1.Component{
+					Name:    stage,
+					Detail:  err.Error(),
+					Message: "Failed to enable " + service + " api in the project",
+					Status:  corev1.FailureStatus,
+				})
+			}
+		}(name)
 	}
+	wg.Wait()
 
 	project.Status.Conditions.SetCondition(corev1.Component{
 		Name:    stage,

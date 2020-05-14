@@ -19,6 +19,7 @@ package projects
 import (
 	"context"
 	"errors"
+	"time"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	gcp "github.com/appvia/kore/pkg/apis/gcp/v1alpha1"
@@ -117,7 +118,7 @@ func (t ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 		if err := t.EnsureProject(ctx, secret, org, project); err != nil {
 			logger.WithError(err).Error("trying to ensure the project")
 
-			return reconcile.Result{}, err
+			return reconcile.Result{}, nil
 		}
 
 		// @step: ensure the project is linked to the billing account
@@ -138,7 +139,8 @@ func (t ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 		if err != nil {
 			logger.WithError(err).Error("trying to enable the service account in project")
 
-			return reconcile.Result{}, err
+			// @TODO fix when we move to the controller.EnsureFunc
+			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
 		}
 		// @guard check to ensure nothing untowards happens
 		if sa == nil {

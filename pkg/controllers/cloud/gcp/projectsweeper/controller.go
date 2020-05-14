@@ -31,7 +31,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
@@ -75,7 +74,7 @@ func (c *Controller) Name() string {
 // ManagerOptions returns the manager options for the controller
 func (c *Controller) ManagerOptions() manager.Options {
 	options := controllers.DefaultManagerOptions(c)
-	options.SyncPeriod = utils.DurationPtr(5 * time.Minute)
+	options.SyncPeriod = utils.DurationPtr(2 * time.Minute)
 
 	return options
 }
@@ -97,7 +96,6 @@ func (c *Controller) RunWithDependencies(ctx context.Context, mgr manager.Manage
 	if err := c.ctrl.Watch(
 		&source.Kind{Type: &gcp.Project{}},
 		&handler.EnqueueRequestForObject{},
-		&predicate.GenerationChangedPredicate{},
 	); err != nil {
 		c.logger.WithError(err).Error("failed to create watcher on resource")
 
