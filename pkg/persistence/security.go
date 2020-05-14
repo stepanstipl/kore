@@ -190,7 +190,7 @@ func (s *securityImpl) StoreScan(ctx context.Context, result *model.SecurityScan
 		// the checked_at time.
 		newResult := resultCurrent == nil
 		if resultCurrent != nil {
-			newResult = resultCurrent.OverallStatus != result.OverallStatus || len(resultCurrent.Results) != len(result.Results)
+			newResult = resultCurrent.OverallStatus != result.OverallStatus || len(resultCurrent.Results) != len(result.Results) || resultCurrent.OwningTeam != result.OwningTeam
 			if !newResult {
 				for i, rr := range result.Results {
 					if resultCurrent.Results[i].Status != rr.Status || resultCurrent.Results[i].Message != rr.Message {
