@@ -27,6 +27,9 @@ type V1alpha1ProjectClaimStatus struct {
 	// project ID
 	ProjectID string `json:"projectID,omitempty"`
 
+	// project ref
+	ProjectRef *V1Ownership `json:"projectRef,omitempty"`
+
 	// status
 	Status string `json:"status,omitempty"`
 }
@@ -40,6 +43,10 @@ func (m *V1alpha1ProjectClaimStatus) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateCredentialRef(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateProjectRef(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -84,6 +91,24 @@ func (m *V1alpha1ProjectClaimStatus) validateCredentialRef(formats strfmt.Regist
 		if err := m.CredentialRef.Validate(formats); err != nil {
 			if ve, ok := err.(*errors.Validation); ok {
 				return ve.ValidateName("credentialRef")
+			}
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *V1alpha1ProjectClaimStatus) validateProjectRef(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.ProjectRef) { // not required
+		return nil
+	}
+
+	if m.ProjectRef != nil {
+		if err := m.ProjectRef.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("projectRef")
 			}
 			return err
 		}

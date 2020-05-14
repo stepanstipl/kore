@@ -244,9 +244,10 @@ func (c *clustersImpl) validateAccounting(ctx context.Context, cluster *clusters
 		return false, list
 	}()
 	if !found {
-		return ErrNotAllowed{
-			message: fmt.Sprintf("Plan is not permitted by accounting rules (allowed: %s)", strings.Join(list, ",")),
-		}
+		supported := strings.Join(list, ",")
+
+		return validation.NewError("cluster failed validation, plan not part of accounting rules").
+			WithFieldError("plan", validation.InvalidValue, "plan not included the accounting rules (supported: "+supported+")")
 	}
 
 	return nil

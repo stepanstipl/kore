@@ -22,7 +22,8 @@ type V1alpha1ProjectClaimSpec struct {
 	Organization *V1Ownership `json:"organization"`
 
 	// project name
-	ProjectName string `json:"projectName,omitempty"`
+	// Required: true
+	ProjectName *string `json:"projectName"`
 }
 
 // Validate validates this v1alpha1 project claim spec
@@ -30,6 +31,10 @@ func (m *V1alpha1ProjectClaimSpec) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateOrganization(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateProjectName(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -52,6 +57,15 @@ func (m *V1alpha1ProjectClaimSpec) validateOrganization(formats strfmt.Registry)
 			}
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (m *V1alpha1ProjectClaimSpec) validateProjectName(formats strfmt.Registry) error {
+
+	if err := validate.Required("projectName", "body", m.ProjectName); err != nil {
+		return err
 	}
 
 	return nil

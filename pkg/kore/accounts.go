@@ -65,6 +65,25 @@ func (a accountsImpl) Update(ctx context.Context, account *accountv1beta1.Accoun
 		return ErrUnauthorized
 	}
 
+	// @step: ensure we only have one account rule per provider
+	list := &accountv1beta1.AccountManagementList{}
+	if err := a.Store().Client().List(ctx,
+		store.ListOptions.InAllNamespaces(),
+		store.ListOptions.InTo(list),
+	); err != nil {
+		log.WithError(err).Error("trying to retrieve a list of accounting")
+
+		return err
+	}
+	for _, x := range list.Items {
+		if x.Name == account.Name {
+			continue
+		}
+		if x.Spec.Provider == account.Spec.Provider {
+			return ErrNotAllowed{message: "you already have an accounting rule for this provider"}
+		}
+	}
+
 	// @check: the provider is valid
 	if !utils.Contains(account.Spec.Provider, a.SupportedAccountProviders()) {
 		return fmt.Errorf("unsupported provider: %q, permitted: %s",

@@ -32,9 +32,12 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/appvia/kore/pkg/apis/gcp/v1alpha1.Organization":       schema_pkg_apis_gcp_v1alpha1_Organization(ref),
 		"github.com/appvia/kore/pkg/apis/gcp/v1alpha1.OrganizationSpec":   schema_pkg_apis_gcp_v1alpha1_OrganizationSpec(ref),
 		"github.com/appvia/kore/pkg/apis/gcp/v1alpha1.OrganizationStatus": schema_pkg_apis_gcp_v1alpha1_OrganizationStatus(ref),
+		"github.com/appvia/kore/pkg/apis/gcp/v1alpha1.Project":            schema_pkg_apis_gcp_v1alpha1_Project(ref),
 		"github.com/appvia/kore/pkg/apis/gcp/v1alpha1.ProjectClaim":       schema_pkg_apis_gcp_v1alpha1_ProjectClaim(ref),
 		"github.com/appvia/kore/pkg/apis/gcp/v1alpha1.ProjectClaimSpec":   schema_pkg_apis_gcp_v1alpha1_ProjectClaimSpec(ref),
 		"github.com/appvia/kore/pkg/apis/gcp/v1alpha1.ProjectClaimStatus": schema_pkg_apis_gcp_v1alpha1_ProjectClaimStatus(ref),
+		"github.com/appvia/kore/pkg/apis/gcp/v1alpha1.ProjectSpec":        schema_pkg_apis_gcp_v1alpha1_ProjectSpec(ref),
+		"github.com/appvia/kore/pkg/apis/gcp/v1alpha1.ProjectStatus":      schema_pkg_apis_gcp_v1alpha1_ProjectStatus(ref),
 	}
 }
 
@@ -180,6 +183,50 @@ func schema_pkg_apis_gcp_v1alpha1_OrganizationStatus(ref common.ReferenceCallbac
 	}
 }
 
+func schema_pkg_apis_gcp_v1alpha1_Project(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "Project is the Schema for the ProjectClaims API",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/appvia/kore/pkg/apis/gcp/v1alpha1.ProjectSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/appvia/kore/pkg/apis/gcp/v1alpha1.ProjectStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/gcp/v1alpha1.ProjectSpec", "github.com/appvia/kore/pkg/apis/gcp/v1alpha1.ProjectStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
 func schema_pkg_apis_gcp_v1alpha1_ProjectClaim(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -233,19 +280,19 @@ func schema_pkg_apis_gcp_v1alpha1_ProjectClaimSpec(ref common.ReferenceCallback)
 				Properties: map[string]spec.Schema{
 					"projectName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ProjectName is the name of the project to create We do this internally so we can easily change the project name without changing the resource name",
+							Description: "ProjectName is the name of the project to create",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"organization": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Organization is a reference to the gcp admin project to use",
+							Description: "Organization isthe GCP organization",
 							Ref:         ref("github.com/appvia/kore/pkg/apis/core/v1.Ownership"),
 						},
 					},
 				},
-				Required: []string{"organization"},
+				Required: []string{"projectName", "organization"},
 			},
 		},
 		Dependencies: []string{
@@ -266,9 +313,107 @@ func schema_pkg_apis_gcp_v1alpha1_ProjectClaimStatus(ref common.ReferenceCallbac
 							Ref:         ref("k8s.io/api/core/v1.SecretReference"),
 						},
 					},
+					"conditions": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Conditions is a set of components conditions",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/appvia/kore/pkg/apis/core/v1.Component"),
+									},
+								},
+							},
+						},
+					},
 					"projectID": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ProjectID is the  project id",
+							Description: "ProjectID is the project id",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"projectRef": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ProjectRef is a reference to the underlying project",
+							Ref:         ref("github.com/appvia/kore/pkg/apis/core/v1.Ownership"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Status provides a overall status",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/core/v1.Component", "github.com/appvia/kore/pkg/apis/core/v1.Ownership", "k8s.io/api/core/v1.SecretReference"},
+	}
+}
+
+func schema_pkg_apis_gcp_v1alpha1_ProjectSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ProjectSpec defines the desired state of ProjectClaim",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"projectName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ProjectName is the name of the project to create. We do this internally so we can easily change the project name without changing the resource name",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"organization": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Organization is a reference to the gcp admin project to use",
+							Ref:         ref("github.com/appvia/kore/pkg/apis/core/v1.Ownership"),
+						},
+					},
+					"labels": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Labels are a set of labels on the project",
+							Type:        []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"projectName", "organization"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/core/v1.Ownership"},
+	}
+}
+
+func schema_pkg_apis_gcp_v1alpha1_ProjectStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ProjectStatus defines the observed state of GCP Project",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"credentialRef": {
+						SchemaProps: spec.SchemaProps{
+							Description: "CredentialRef is the reference to the credentials secret",
+							Ref:         ref("k8s.io/api/core/v1.SecretReference"),
+						},
+					},
+					"projectID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ProjectID is the project id",
 							Type:        []string{"string"},
 							Format:      "",
 						},

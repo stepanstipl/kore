@@ -224,13 +224,12 @@ func (a *Controller) Apply(cluster *clustersv1.Cluster, components *Components) 
 			// @check if the resource is ready to reconcile
 			status, err := GetObjectStatus(co.Object)
 			if err != nil {
-				logger.WithError(err).Error("trying to check the component status")
-
 				if err == kubernetes.ErrFieldNotFound {
 					result.RequeueAfter = 30 * time.Second
 
 					return false, nil
 				}
+				logger.WithError(err).Error("trying to check the component status")
 
 				return false, err
 			}

@@ -20,11 +20,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/appvia/kore/pkg/utils"
 
 	servicemanagement "google.golang.org/api/servicemanagement/v1"
+	serviceusage "google.golang.org/api/serviceusage/v1"
 )
 
 // EnableAPIs is responsible for enabling a collection of services in the project
@@ -36,6 +38,23 @@ func EnableAPIs(ctx context.Context, cc *servicemanagement.APIService, project s
 	}
 
 	return nil
+}
+
+// ListEnabledAPIs returns a list of enabled services
+func ListEnabledAPIs(ctx context.Context, client *serviceusage.Service, project string) ([]string, error) {
+	resp, err := client.Services.List("projects/" + project).Filter("state:ENABLED").Context(ctx).Do()
+	if err != nil {
+		return nil, err
+	}
+	enabled := make([]string, len(resp.Services))
+
+	for i := 0; i < len(resp.Services); i++ {
+		parts := strings.Split(resp.Services[i].Name, "/")
+
+		enabled[i] = parts[len(parts)-1]
+	}
+
+	return enabled, nil
 }
 
 // EnableAPI is used to enabled a api service in a project
