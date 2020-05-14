@@ -20,8 +20,6 @@ import (
 	"context"
 	"time"
 
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
-
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
@@ -31,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
