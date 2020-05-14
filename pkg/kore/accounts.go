@@ -79,8 +79,8 @@ func (a accountsImpl) Update(ctx context.Context, account *accountv1beta1.Accoun
 		if x.Name == account.Name {
 			continue
 		}
-		if x.Spec.Provider == x.Spec.Provider {
-			return ErrNotAllowed{message: "you already have a accounting rule for this provider"}
+		if x.Spec.Provider == account.Spec.Provider {
+			return ErrNotAllowed{message: "you already have an accounting rule for this provider"}
 		}
 	}
 
