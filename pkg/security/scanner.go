@@ -126,7 +126,10 @@ func (s *scannerImpl) scanRules(typeMeta metav1.TypeMeta, objMeta metav1.ObjectM
 				Namespace: objMeta.Namespace,
 				Name:      objMeta.Name,
 			},
-			CheckedAt: metav1.NewTime(time.Now()),
+			// Assuming for now that the namespace will be the owning team - may change this assumption as some future point
+			// if, e.g., we're scanning in-cluster objects in their own namespaces:
+			OwningTeam: objMeta.Namespace,
+			CheckedAt:  metav1.NewTime(time.Now()),
 		},
 	}
 
