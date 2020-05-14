@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/appvia/kore/pkg/clusterapp"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
 	"github.com/stretchr/testify/assert"
 	cc "sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
@@ -30,6 +31,6 @@ func TestLoadAllManifests(t *testing.T) {
 	client := cc.NewFakeClientWithScheme(options.Scheme)
 
 	// Load all manifests - we won't need them to re-create any API access
-	err = LoadAllManifests(client, clusterapp.KubernetesAPI{})
+	err = LoadAllManifests(client, kubernetes.KubernetesAPI{})
 	assert.NoError(t, err)
 }

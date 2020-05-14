@@ -22,6 +22,7 @@ import (
 
 	// controller imports
 	"github.com/appvia/kore/pkg/clusterappman"
+	"github.com/appvia/kore/pkg/clusterappman/status"
 	_ "github.com/appvia/kore/pkg/controllers/register"
 
 	// service provider imports
@@ -34,6 +35,7 @@ import (
 	"github.com/appvia/kore/pkg/schema"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils/crds"
+	korek "github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
@@ -69,7 +71,7 @@ func New(config Config) (Interface, error) {
 	// register the known types with the schame
 
 	// @step: create the various client
-	cfg, err := makeKubernetesConfig(config.Kubernetes)
+	cfg, err := korek.MakeKubernetesConfig(config.Kubernetes)
 	if err != nil {
 		return nil, fmt.Errorf("failed creating kubernetes config: %s", err)
 	}
@@ -124,6 +126,9 @@ func New(config Config) (Interface, error) {
 		return nil, fmt.Errorf("trying to create the apiserver: %s", err)
 	}
 
+	// save the kubeconfig for when we need to reuse it
+	status.SetLocalKoreClusterAPI(config.Kubernetes)
+
 	return &serverImpl{
 		apicc:   apisvr,
 		cfg:     cfg,
@@ -173,7 +178,7 @@ func (s serverImpl) Run(ctx context.Context) error {
 	// TODO: create a kubernetes object for managing the kore cluster
 	//       see https://github.com/appvia/kore/issues/813
 	if s.hubcc.Config().ManagedDependencies {
-		apps, err := clusterappman.NewDeployer(s.hubcc.Config().ClusterAppManImage, s.rclient)
+		apps, err := clusterappman.NewLocalDeployer(s.hubcc.Config().ClusterAppManImage)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"error": err.Error(),

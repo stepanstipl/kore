@@ -26,6 +26,7 @@ import (
 
 	kcore "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/clusterapp"
+	kkube "github.com/appvia/kore/pkg/utils/kubernetes"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -55,7 +56,7 @@ type clusterappmanImpl struct {
 	RuntimeClient rc.Client
 	ClusterApps   []clusterapp.Instance
 	cfg           *rest.Config
-	kubeAPIConfig clusterapp.KubernetesAPI
+	kubeAPIConfig kkube.KubernetesAPI
 }
 
 // manifest defines the data types that are required to initialise a clusterapp from

@@ -18,8 +18,10 @@ package clusterapp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	yaml "github.com/ghodss/yaml"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/appvia/kore/pkg/utils/kubernetes"
@@ -30,14 +32,18 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 	applicationv1beta "sigs.k8s.io/application/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+const (
+	// HelmKeyForSecrets is the key to use in secret data that contains a yaml file data
+	HelmKeyForSecrets = "values.yaml"
+)
+
 // GetKubeCfgAndControllerClient will return a new controller-runtime client and the cfg used to create it
-func GetKubeCfgAndControllerClient(k KubernetesAPI) (client.Client, *rest.Config, error) {
-	cfg, err := makeKubernetesConfig(k)
+func GetKubeCfgAndControllerClient(k kubernetes.KubernetesAPI) (client.Client, *rest.Config, error) {
+	cfg, err := kubernetes.MakeKubernetesConfig(k)
 	if err != nil {
 		return nil, cfg, fmt.Errorf("failed creating kubernetes config: %s", err)
 	}
@@ -51,26 +57,6 @@ func GetKubeCfgAndControllerClient(k KubernetesAPI) (client.Client, *rest.Config
 		return nil, cfg, fmt.Errorf("failed creating kubernetes runtime client: %s", err)
 	}
 	return cc, cfg, nil
-}
-
-// makeKubernetesConfig returns a rest.Config from the options
-func makeKubernetesConfig(config KubernetesAPI) (*rest.Config, error) {
-	// @step: are we creating an in-cluster kubernetes client
-	if config.InCluster {
-		return rest.InClusterConfig()
-	}
-
-	if config.KubeConfig != "" {
-		return clientcmd.BuildConfigFromFlags("", config.KubeConfig)
-	}
-
-	return &rest.Config{
-		Host:        config.MasterAPIURL,
-		BearerToken: config.Token,
-		TLSClientConfig: rest.TLSClientConfig{
-			Insecure: config.SkipTLSVerify,
-		},
-	}, nil
 }
 
 func setMissingNamespace(namespace string, obj runtime.Object) error {
@@ -149,4 +135,33 @@ func fromUnstructuredApplication(us *unstructured.Unstructured) (*applicationv1b
 		return nil, err
 	}
 	return app, nil
+}
+
+// createHelmSecrets creates a configmap for configuring the kore cluster manager
+func getHelmSecret(chartApp ChartApp) (*HelmSecret, error) {
+	hs := HelmSecret{
+		Name:      chartApp.ReleaseName,
+		Namespace: chartApp.DefaultNamespace,
+		ValuesRef: map[string]interface{}{
+			"secretKeyRef": map[string]interface{}{
+				"name":       chartApp.ReleaseName,
+				"namespace:": chartApp.DefaultNamespace,
+				"key":        HelmKeyForSecrets,
+				"optional":   false,
+			},
+		},
+	}
+	b, err := yaml.Marshal(chartApp.SecretValues)
+	if err != nil {
+		return nil, errors.New("can not marshall secret values into yaml")
+	}
+	// Specify the parameters in the secret
+	hs.Secret = &core.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      chartApp.ReleaseName,
+			Namespace: chartApp.DefaultNamespace,
+		},
+		Data: (map[string][]byte{HelmKeyForSecrets: b}),
+	}
+	return &hs, nil
 }
