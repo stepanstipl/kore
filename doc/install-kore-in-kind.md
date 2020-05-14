@@ -3,7 +3,7 @@
 1. Install kind:
 
     ```
-    GO111MODULE="on" go get sigs.k8s.io/kind@v0.7.0
+    GO111MODULE="on" go get sigs.k8s.io/kind@v0.8.1
     ```
 
 1. Create a Kind cluster:
@@ -13,15 +13,18 @@
     kind: Cluster
     apiVersion: kind.x-k8s.io/v1alpha4
     nodes:
-    - role: control-plane
-      image: kindest/node:v1.14.10@sha256:81ae5a3237c779efc4dda43cc81c696f88a194abcc4f8fa34f86cf674aa14977
-      extraPortMappings:
-      - containerPort: 3000
-        hostPort: 3000
-        protocol: TCP
-      - containerPort: 10080
-        hostPort: 10080
-        protocol: TCP
+      - role: control-plane
+        image: kindest/node:v1.15.11@sha256:6cc31f3533deb138792db2c7d1ffc36f7456a06f1db5556ad3b6927641016f50
+        extraPortMappings:
+          - containerPort: 3000
+            hostPort: 3000
+            protocol: TCP
+          - containerPort: 10080
+            hostPort: 10080
+            protocol: TCP
+        extraMounts:
+          - hostPath: ${GOPATH}/src/github.com/appvia/kore
+            containerPath: /go/src/github.com/appvia/kore
     EOF
     ```
 
@@ -50,13 +53,20 @@
         detect: false
       serviceType: NodePort
       hostPort: 10080
-      version: v0.0.16
+      version: latest
+      replicas: 1
+      feature_gates: []
     ui:
       endpoint:
         detect: false
       serviceType: NodePort
       hostPort: 3000
-      version: v0.0.6
+      version: latest
+      replicas: 1
+      feature_gates: []
+     mysql:
+       pvc:
+         size: 1Gi
     ```
 
 1. Install the Helm chart
@@ -66,3 +76,27 @@
     ```
 
 1. Navigate to http://localhost:3000 or run `kore login`
+
+## Local development
+
+1. Build the dev Docker image and load it into the Kind cluster:
+
+    ```
+    make kind-image-dev
+    ```
+
+1. Update `charts/my_values.yaml` and set `api.version` to `dev`
+
+### Useful commands
+
+1. Restart the API server
+
+   ```
+   kubectl -n kore rollout restart deployment kore-apiserver
+   ```
+
+1. Tailing the API server logs
+
+   ```
+   kubectl -n kore logs -f -l name=kore-apiserver
+   ```
