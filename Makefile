@@ -111,6 +111,11 @@ images:
 		docker build -t ${REGISTRY}/${AUTHOR}/$${name}:${VERSION} -f images/Dockerfile.$${name} . ; \
 	done
 
+kind-image-dev:
+	@echo "--> Building dev Docker image for Kind"
+	docker build -t ${REGISTRY}/${AUTHOR}/kore-apiserver:dev -f images/Dockerfile.kore-apiserver.dev images
+	kind load docker-image ${REGISTRY}/${AUTHOR}/kore-apiserver:dev --name kore
+
 push-images:
 	@echo "--> Pushing docker images"
 	@for name in ${DOCKER_IMAGES}; do \

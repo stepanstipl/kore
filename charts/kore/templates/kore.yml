@@ -113,10 +113,25 @@ spec:
         - name: ca
           readOnly: true
           mountPath: /ca
+        {{ if eq .Values.api.version "dev" -}}
+        - name: kore
+          mountPath: /go/src/github.com/appvia/kore
+        - name: gocache
+          mountPath: /root/.cache/go-build
+        {{- end }}
       volumes:
       - name: ca
         secret:
           secretName: {{ .Values.ca.secretName }}
+      {{ if eq .Values.api.version "dev" -}}
+      - name: kore
+        hostPath:
+          path: /go/src/github.com/appvia/kore
+          type: Directory
+      - name: gocache
+        persistentVolumeClaim:
+          claimName: {{ include "kore.name" . }}-gocache
+      {{- end }}
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -140,3 +155,19 @@ subjects:
 - kind: ServiceAccount
   name: {{ include "kore.name" . }}-admin
   namespace: {{ .Release.Namespace }}
+
+{{ if eq .Values.api.version "dev" -}}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "kore.name" . }}-gocache
+  labels:
+{{ include "kore.labels" . | indent 4}}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+{{- end }}
