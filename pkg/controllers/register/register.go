@@ -27,7 +27,9 @@ import (
 	_ "github.com/appvia/kore/pkg/controllers/cloud/gcp/gke"
 	_ "github.com/appvia/kore/pkg/controllers/cloud/gcp/gkecredentials"
 	_ "github.com/appvia/kore/pkg/controllers/cloud/gcp/organization"
-	_ "github.com/appvia/kore/pkg/controllers/cloud/gcp/projectclaim"
+	_ "github.com/appvia/kore/pkg/controllers/cloud/gcp/projectclaims"
+	_ "github.com/appvia/kore/pkg/controllers/cloud/gcp/projects"
+	_ "github.com/appvia/kore/pkg/controllers/cloud/gcp/projectsweeper"
 
 	// importing the management controller
 	_ "github.com/appvia/kore/pkg/controllers/management/cluster"

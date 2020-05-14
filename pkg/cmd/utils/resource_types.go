@@ -39,7 +39,6 @@ var (
 			Printer: []Column{
 				{"Name", "metadata.name", ""},
 				{"Provider", "spec.provider", ""},
-				{"Managed", "spec.managed", ""},
 				{"Age", "metadata.creationTimestamp", "age"},
 			},
 		},

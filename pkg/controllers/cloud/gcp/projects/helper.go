@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package projectclaim
+package projects
 
 import (
 	"context"
@@ -40,7 +40,7 @@ func GetServiceAccountKeyID(name string) string {
 }
 
 // findOldestServiceAccountKey is used to filter out the oldest service accout
-// @note: i can't find anyway around this at the moment; the service acount key include
+// @note: i can't find anyway around this at the moment; the service account key include
 // a default service account key which is managed by google and cannot be delete. There
 //
 func findOldestServiceAccountKey(keys []*iam.ServiceAccountKey) (*iam.ServiceAccountKey, error) {
@@ -83,7 +83,7 @@ func IsCredentialsValid(secret *configv1.Secret) error {
 }
 
 // CreateCredentialsSecret returns a project credentials secret
-func CreateCredentialsSecret(project *gcp.ProjectClaim, name string, values map[string]string) *configv1.Secret {
+func CreateCredentialsSecret(project *gcp.Project, name string, values map[string]string) *configv1.Secret {
 	secret := &configv1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: configv1.GroupVersion.String(),
@@ -96,7 +96,7 @@ func CreateCredentialsSecret(project *gcp.ProjectClaim, name string, values map[
 				OwnerReferences: []metav1.OwnerReference{{
 					APIVersion: gcp.GroupVersion.String(),
 					Controller: &isTrue,
-					Kind:       "ProjectClaim",
+					Kind:       "Project",
 					Name:       project.GetName(),
 					UID:        project.GetUID(),
 				}},

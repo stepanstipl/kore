@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package projectclaim
+package projects
 
 import (
 	"context"
@@ -74,7 +74,7 @@ func (t *ctrl) Run(ctx context.Context, cfg *rest.Config, hubi kore.Interface) e
 		return err
 	}
 
-	if err := ctrl.Watch(&source.Kind{Type: &gcp.ProjectClaim{}},
+	if err := ctrl.Watch(&source.Kind{Type: &gcp.Project{}},
 		&handler.EnqueueRequestForObject{},
 		&predicate.GenerationChangedPredicate{}); err != nil {
 

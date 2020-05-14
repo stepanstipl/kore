@@ -14,17 +14,5 @@
  * limitations under the License.
  */
 
-package projectclaim
-
-const (
-	// ExpiryKey hold the expiration key
-	ExpiryKey = "expires"
-	// ProjectIDKey is the name of the project
-	ProjectIDKey = "project_id"
-	// ProjectNameKey holds the project name
-	ProjectNameKey = "project"
-	// ServiceAccountKey is the private key service account key
-	ServiceAccountKey = "key"
-	// ServiceAccountKeyID is the key used for the key id
-	ServiceAccountKeyID = "key_id"
-)
+// Package projectsweeper is responsible for cleaning up projects
+package projectsweeper

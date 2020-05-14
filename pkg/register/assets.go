@@ -24,6 +24,7 @@
 // deploy/crds/core.kore.appvia.io_oidclient.yaml
 // deploy/crds/gcp.compute.kore.appvia.io_organizations.yaml
 // deploy/crds/gcp.compute.kore.appvia.io_projectclaims.yaml
+// deploy/crds/gcp.compute.kore.appvia.io_projects.yaml
 // deploy/crds/gke.compute.kore.appvia.io_gkecredentials.yaml
 // deploy/crds/gke.compute.kore.appvia.io_gkes.yaml
 // deploy/crds/org.kore.appvia.io_auditevents.yaml
@@ -172,10 +173,6 @@ spec:
                   description:
                     description: Description provides an optional description for
                       the account rule
-                    type: string
-                  exact:
-                    description: Exact override any values in prefix and suffix uses
-                      that for the account name
                     type: string
                   labels:
                     additionalProperties:
@@ -4826,8 +4823,7 @@ spec:
           description: ProjectClaimSpec defines the desired state of ProjectClaim
           properties:
             organization:
-              description: Organization is a reference to the gcp admin project to
-                use
+              description: Organization isthe GCP organization
               properties:
                 group:
                   description: Group is the api group
@@ -4852,13 +4848,11 @@ spec:
               - version
               type: object
             projectName:
-              description: ProjectName is the name of the project to create We do
-                this internally so we can easily change the project name without changing
-                the resource name
-              minLength: 1
+              description: ProjectName is the name of the project to create
               type: string
           required:
           - organization
+          - projectName
           type: object
         status:
           description: ProjectClaimStatus defines the observed state of GCP Project
@@ -4921,8 +4915,33 @@ spec:
                   type: string
               type: object
             projectID:
-              description: ProjectID is the  project id
+              description: ProjectID is the project id
               type: string
+            projectRef:
+              description: ProjectRef is a reference to the underlying project
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
             status:
               description: Status provides a overall status
               type: string
@@ -4952,6 +4971,182 @@ func crdsGcpComputeKoreAppviaIo_projectclaimsYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "crds/gcp.compute.kore.appvia.io_projectclaims.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsGcpComputeKoreAppviaIo_projectsYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: projects.gcp.compute.kore.appvia.io
+spec:
+  group: gcp.compute.kore.appvia.io
+  names:
+    kind: Project
+    listKind: ProjectList
+    plural: projects
+    singular: project
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: Project is the Schema for the ProjectClaims API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: ProjectSpec defines the desired state of ProjectClaim
+          properties:
+            labels:
+              additionalProperties:
+                type: string
+              description: Labels are a set of labels on the project
+              type: object
+            organization:
+              description: Organization is a reference to the gcp admin project to
+                use
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
+            projectName:
+              description: ProjectName is the name of the project to create. We do
+                this internally so we can easily change the project name without changing
+                the resource name
+              minLength: 1
+              type: string
+          required:
+          - organization
+          - projectName
+          type: object
+        status:
+          description: ProjectStatus defines the observed state of GCP Project
+          properties:
+            conditions:
+              description: Conditions is a set of components conditions
+              items:
+                description: Component the state of a component of the resource
+                properties:
+                  detail:
+                    description: Detail is additional details on the error is any
+                    type: string
+                  message:
+                    description: Message is a human readable message on the status
+                      of the component
+                    type: string
+                  name:
+                    description: Name is the name of the component
+                    type: string
+                  resource:
+                    description: Resource is a reference to the resource
+                    properties:
+                      group:
+                        description: Group is the api group
+                        type: string
+                      kind:
+                        description: Kind is the name of the resource under the group
+                        type: string
+                      name:
+                        description: Name is name of the resource
+                        type: string
+                      namespace:
+                        description: Namespace is the location of the object
+                        type: string
+                      version:
+                        description: Version is the group version
+                        type: string
+                    required:
+                    - group
+                    - kind
+                    - name
+                    - namespace
+                    - version
+                    type: object
+                  status:
+                    description: Status is the status of the component
+                    type: string
+                type: object
+              type: array
+            credentialRef:
+              description: CredentialRef is the reference to the credentials secret
+              properties:
+                name:
+                  description: Name is unique within a namespace to reference a secret
+                    resource.
+                  type: string
+                namespace:
+                  description: Namespace defines the space within which the secret
+                    name must be unique.
+                  type: string
+              type: object
+            projectID:
+              description: ProjectID is the project id
+              type: string
+            status:
+              description: Status provides a overall status
+              type: string
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsGcpComputeKoreAppviaIo_projectsYamlBytes() ([]byte, error) {
+	return _crdsGcpComputeKoreAppviaIo_projectsYaml, nil
+}
+
+func crdsGcpComputeKoreAppviaIo_projectsYaml() (*asset, error) {
+	bytes, err := crdsGcpComputeKoreAppviaIo_projectsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/gcp.compute.kore.appvia.io_projects.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -7101,6 +7296,7 @@ var _bindata = map[string]func() (*asset, error){
 	"crds/core.kore.appvia.io_oidclient.yaml":                             crdsCoreKoreAppviaIo_oidclientYaml,
 	"crds/gcp.compute.kore.appvia.io_organizations.yaml":                  crdsGcpComputeKoreAppviaIo_organizationsYaml,
 	"crds/gcp.compute.kore.appvia.io_projectclaims.yaml":                  crdsGcpComputeKoreAppviaIo_projectclaimsYaml,
+	"crds/gcp.compute.kore.appvia.io_projects.yaml":                       crdsGcpComputeKoreAppviaIo_projectsYaml,
 	"crds/gke.compute.kore.appvia.io_gkecredentials.yaml":                 crdsGkeComputeKoreAppviaIo_gkecredentialsYaml,
 	"crds/gke.compute.kore.appvia.io_gkes.yaml":                           crdsGkeComputeKoreAppviaIo_gkesYaml,
 	"crds/org.kore.appvia.io_auditevents.yaml":                            crdsOrgKoreAppviaIo_auditeventsYaml,
@@ -7184,6 +7380,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"core.kore.appvia.io_oidclient.yaml":                             {crdsCoreKoreAppviaIo_oidclientYaml, map[string]*bintree{}},
 		"gcp.compute.kore.appvia.io_organizations.yaml":                  {crdsGcpComputeKoreAppviaIo_organizationsYaml, map[string]*bintree{}},
 		"gcp.compute.kore.appvia.io_projectclaims.yaml":                  {crdsGcpComputeKoreAppviaIo_projectclaimsYaml, map[string]*bintree{}},
+		"gcp.compute.kore.appvia.io_projects.yaml":                       {crdsGcpComputeKoreAppviaIo_projectsYaml, map[string]*bintree{}},
 		"gke.compute.kore.appvia.io_gkecredentials.yaml":                 {crdsGkeComputeKoreAppviaIo_gkecredentialsYaml, map[string]*bintree{}},
 		"gke.compute.kore.appvia.io_gkes.yaml":                           {crdsGkeComputeKoreAppviaIo_gkesYaml, map[string]*bintree{}},
 		"org.kore.appvia.io_auditevents.yaml":                            {crdsOrgKoreAppviaIo_auditeventsYaml, map[string]*bintree{}},

@@ -14,25 +14,24 @@
  * limitations under the License.
  */
 
-package projectclaim
+package projects
 
 import (
 	"context"
 	"errors"
-	"time"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	gcp "github.com/appvia/kore/pkg/apis/gcp/v1alpha1"
+	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 const (
-	finalizerName = "gcp-project-claims.kore.appvia.io"
+	finalizerName = "projects.gcp.compute.kore.appvia.io"
 )
 
 // Reconcile is the entrypoint for the reconciliation logic
@@ -45,7 +44,7 @@ func (t ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	})
 	logger.Info("attempting to reconcile gcp project")
 
-	project := &gcp.ProjectClaim{}
+	project := &gcp.Project{}
 	if err := t.mgr.GetClient().Get(ctx, request.NamespacedName, project); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
@@ -73,6 +72,17 @@ func (t ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 			return reconcile.Result{Requeue: true}, nil
 		}
 
+		// @step: check if we need to add the finalizer
+		if finalizer.NeedToAdd(project) {
+			if err := finalizer.Add(project); err != nil {
+				logger.WithError(err).Error("trying to add the finalizer to resource")
+
+				return reconcile.Result{}, err
+			}
+
+			return reconcile.Result{Requeue: true}, nil
+		}
+
 		// @step: ensure the project has access to the org
 		if err := t.EnsurePermitted(ctx, project); err != nil {
 			logger.WithError(err).Error("checking if project has permission to gcp organization")
@@ -80,9 +90,9 @@ func (t ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 			return reconcile.Result{}, err
 		}
 
-		// @step: ensure thr project has not been claimed already
-		if err := t.EnsureUnclaimed(ctx, project); err != nil {
-			logger.WithError(err).Error("checking if project is claimed")
+		// @step: ensure thr project has not been projected already
+		if err := t.EnsureProjectUnclaimed(ctx, project); err != nil {
+			logger.WithError(err).Error("checking if project is projected")
 
 			return reconcile.Result{}, err
 		}
@@ -92,7 +102,7 @@ func (t ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 		if err != nil {
 			logger.WithError(err).Error("trying to retrieve the gcp organization")
 
-			return reconcile.Result{RequeueAfter: 2 * time.Minute}, err
+			return reconcile.Result{}, err
 		}
 
 		// @step: we need to grab the credentials from the organization and create clients
@@ -100,7 +110,7 @@ func (t ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 		if err != nil {
 			logger.WithError(err).Error("trying to retrieve the gcp organization")
 
-			return reconcile.Result{RequeueAfter: 5 * time.Minute}, err
+			return reconcile.Result{}, err
 		}
 
 		// @step: ensure the project is created
@@ -120,7 +130,7 @@ func (t ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 		if err := t.EnsureAPIs(ctx, secret, project); err != nil {
 			logger.WithError(err).Error("trying to toggle the apis in the project")
 
-			return reconcile.Result{RequeueAfter: 1 * time.Minute}, err
+			return reconcile.Result{}, err
 		}
 
 		// @step: ensure the service account in the project
@@ -160,20 +170,9 @@ func (t ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 
 		project.Status.Status = corev1.FailureStatus
 	}
-	if err == nil {
-		if finalizer.NeedToAdd(project) {
-			if err := finalizer.Add(project); err != nil {
-				logger.WithError(err).Error("trying to add the finalizer to resource")
 
-				return reconcile.Result{}, err
-			}
-
-			return reconcile.Result{Requeue: true}, nil
-		}
-	}
-
-	if err := t.mgr.GetClient().Status().Patch(ctx, project, client.MergeFrom(original)); err != nil {
-		logger.WithError(err).Error("updating the gcp project claim status")
+	if err := controllers.PatchStatus(ctx, t.mgr.GetClient(), project, original); err != nil {
+		logger.WithError(err).Error("updating the gcp project project status")
 
 		return reconcile.Result{}, err
 	}

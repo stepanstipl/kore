@@ -172,7 +172,7 @@ func (a *Controller) Remove(cluster *clustersv1.Cluster, components *Components)
 			return reconcile.Result{}, nil
 		}
 
-		return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+		return reconcile.Result{RequeueAfter: 20 * time.Second}, nil
 	}
 }
 
@@ -182,7 +182,7 @@ func (a *Controller) RemoveFinalizer(cluster *clustersv1.Cluster) controllers.En
 
 	return func(ctx context.Context) (reconcile.Result, error) {
 		if cluster.Status.Status != corev1.DeletedStatus {
-			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+			return reconcile.Result{RequeueAfter: 20 * time.Second}, nil
 		}
 
 		finalizer := kubernetes.NewFinalizer(client, finalizerName)

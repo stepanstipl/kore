@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package projectclaim
+package projects
 
 import (
 	"context"
@@ -38,6 +38,7 @@ import (
 	iam "google.golang.org/api/iam/v1"
 	"google.golang.org/api/option"
 	servicemanagement "google.golang.org/api/servicemanagement/v1"
+	serviceusage "google.golang.org/api/serviceusage/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -51,7 +52,7 @@ const (
 )
 
 // EnsurePermitted is responsible for checking the project has access to the credentials
-func (t ctrl) EnsurePermitted(ctx context.Context, project *gcp.ProjectClaim) error {
+func (t ctrl) EnsurePermitted(ctx context.Context, project *gcp.Project) error {
 	// @step: we check if the gcp organization has been allocated to us
 	permitted, err := t.Teams().Team(project.Namespace).Allocations().IsPermitted(ctx, project.Spec.Organization)
 	if err != nil {
@@ -70,34 +71,34 @@ func (t ctrl) EnsurePermitted(ctx context.Context, project *gcp.ProjectClaim) er
 	return nil
 }
 
-// EnsureUnclaimed is responsible for making sure the project is unclaimed
-func (t ctrl) EnsureUnclaimed(ctx context.Context, project *gcp.ProjectClaim) error {
+// EnsureProjectUnclaimed is responsible for making sure the project is unclaimed
+func (t ctrl) EnsureProjectUnclaimed(ctx context.Context, project *gcp.Project) error {
 	logger := log.WithFields(log.Fields{
 		"name":      project.Name,
 		"namespace": project.Namespace,
 	})
 
-	// @step: check if the project claim has already been claimed else where
-	claimed, err := t.IsProjectClaimed(ctx, project)
+	// @step: check if the project project has already been claimed else where
+	projected, err := t.IsProjected(ctx, project)
 	if err != nil {
-		logger.WithError(err).Error("trying to check if the project is already claimed")
+		logger.WithError(err).Error("trying to check if the project is already projected")
 
 		project.Status.Status = corev1.FailureStatus
 		project.Status.Conditions.SetCondition(corev1.Component{
 			Name:    "provision",
-			Message: "Unable to fulfil request, project name has already been claimed in the organization",
+			Message: "Unable to fulfil request, project name has already been projected in the organization",
 			Status:  corev1.FailureStatus,
 		})
 
-		return errors.New("failed to check if project is already claimed")
+		return errors.New("failed to check if project is already projected")
 	}
-	if claimed {
-		logger.Warn("attempting to claim gcp project which has already been provisioned")
+	if projected {
+		logger.Warn("attempting to project gcp project which has already been provisioned")
 
 		project.Status.Status = corev1.FailureStatus
 		project.Status.Conditions.SetCondition(corev1.Component{
 			Name:    "provision",
-			Message: "Project has already been claimed by another team in kore",
+			Message: "Project has already been projected by another team in kore",
 			Status:  corev1.FailureStatus,
 		})
 
@@ -108,7 +109,7 @@ func (t ctrl) EnsureUnclaimed(ctx context.Context, project *gcp.ProjectClaim) er
 }
 
 // EnsureOrganization is responsible for checking and retrieving the gcp org
-func (t ctrl) EnsureOrganization(ctx context.Context, project *gcp.ProjectClaim) (*gcp.Organization, error) {
+func (t ctrl) EnsureOrganization(ctx context.Context, project *gcp.Project) (*gcp.Organization, error) {
 	org := &gcp.Organization{}
 
 	key := types.NamespacedName{
@@ -143,7 +144,7 @@ func (t ctrl) EnsureOrganization(ctx context.Context, project *gcp.ProjectClaim)
 }
 
 // EnsureOrganizationCredentials is responsible for retrieving the credentials
-func (t ctrl) EnsureOrganizationCredentials(ctx context.Context, org *gcp.Organization, project *gcp.ProjectClaim) (*configv1.Secret, error) {
+func (t ctrl) EnsureOrganizationCredentials(ctx context.Context, org *gcp.Organization, project *gcp.Project) (*configv1.Secret, error) {
 	// @TODO we probably shouldn't rely on the parent name here
 	secret := &configv1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -205,14 +206,14 @@ func (t ctrl) EnsureOrganizationCredentials(ctx context.Context, org *gcp.Organi
 func (t ctrl) EnsureProject(ctx context.Context,
 	credentials *configv1.Secret,
 	org *gcp.Organization,
-	project *gcp.ProjectClaim) error {
+	project *gcp.Project) error {
 
 	logger := log.WithFields(log.Fields{
 		"name":      project.Name,
 		"namespace": project.Namespace,
 		"project":   project.Spec.ProjectName,
 	})
-	stage := "provision"
+	stage := "Provision GCP Project"
 	success := "GCP Project successfully provisioned"
 
 	// @step: create the client
@@ -367,6 +368,7 @@ func (t ctrl) EnsureProject(ctx context.Context,
 	if found {
 		project.Status.ProjectID = obj.ProjectId
 	}
+
 	if !found {
 		project.Status.Conditions.SetCondition(corev1.Component{
 			Name:    stage,
@@ -391,14 +393,14 @@ func (t ctrl) EnsureBilling(
 	ctx context.Context,
 	credentials *configv1.Secret,
 	organization *gcp.Organization,
-	project *gcp.ProjectClaim) error {
+	project *gcp.Project) error {
 
 	logger := log.WithFields(log.Fields{
 		"name":       project.Name,
 		"namespace":  project.Namespace,
 		"project_id": project.Status.ProjectID,
 	})
-	stage := "billing"
+	stage := "Associated Billing Account"
 
 	err := func() error {
 		client, err := cloudbilling.NewService(ctx, option.WithCredentialsJSON([]byte(credentials.Spec.Data["key"])))
@@ -470,35 +472,51 @@ func (t ctrl) BillingAccountName(path string) string {
 }
 
 // EnsureAPIs is responsible for ensuing the apis are enabled in the account
-func (t ctrl) EnsureAPIs(ctx context.Context, credentials *configv1.Secret, project *gcp.ProjectClaim) error {
-	stage := "iam"
+func (t ctrl) EnsureAPIs(ctx context.Context, credentials *configv1.Secret, project *gcp.Project) error {
+	stage := "GCP Account APIs"
 
 	logger := log.WithFields(log.Fields{
 		"name":      project.Name,
 		"namespace": project.Namespace,
 	})
 
-	client, err := servicemanagement.NewService(ctx, option.WithCredentialsJSON([]byte(credentials.Spec.Data["key"])))
-	if err != nil {
-		logger.WithError(err).Error("trying to create the service management client")
-
-		project.Status.Conditions.SetCondition(corev1.Component{
-			Name:    stage,
-			Detail:  err.Error(),
-			Message: "Failed to create the service management client, please check credentials",
-			Status:  corev1.FailureStatus,
-		})
-
-		return err
-	}
-
+	opt := option.WithCredentialsJSON([]byte(credentials.Spec.Data["key"]))
 	// @step: set the project id
 	id := project.Status.ProjectID
 	if id == "" {
 		id = project.Name
 	}
 
+	// @step: retrieve a list of enabled services
+	usage, err := serviceusage.NewService(ctx, opt)
+	if err != nil {
+		logger.WithError(err).Error("trying to create the service usage client")
+
+		return err
+	}
+	list, err := gcputils.ListEnabledAPIs(ctx, usage, id)
+	if err != nil {
+		logger.WithError(err).Error("trying to retrieve list of enabled services")
+
+		return err
+	}
+	logger.WithField(
+		"enabled", list,
+	).Debug("the following api are already enabled")
+
+	// create a client for enabling the apis
+	client, err := servicemanagement.NewService(ctx, opt)
+	if err != nil {
+		logger.WithError(err).Error("trying to create the service management client")
+
+		return err
+	}
+
 	for _, name := range t.GetRequiredAPI() {
+		if utils.Contains(name, list) {
+			continue
+		}
+
 		logger.WithField(
 			"api", name,
 		).Debug("attempting to enable the api in the project")
@@ -515,7 +533,6 @@ func (t ctrl) EnsureAPIs(ctx context.Context, credentials *configv1.Secret, proj
 
 			return err
 		}
-		logger.Debug("successfully enabled the api in the project")
 	}
 
 	project.Status.Conditions.SetCondition(corev1.Component{
@@ -527,13 +544,13 @@ func (t ctrl) EnsureAPIs(ctx context.Context, credentials *configv1.Secret, proj
 	return nil
 }
 
-func (t ctrl) GetServiceAccountName(project *gcp.ProjectClaim) string {
+func (t ctrl) GetServiceAccountName(project *gcp.Project) string {
 	return project.Status.ProjectID
 }
 
 // EnsureServiceAccount is responsible for creating the service account in the project
-func (t ctrl) EnsureServiceAccount(ctx context.Context, credentials *configv1.Secret, project *gcp.ProjectClaim) (*iam.ServiceAccount, error) {
-	stage := "iam"
+func (t ctrl) EnsureServiceAccount(ctx context.Context, credentials *configv1.Secret, project *gcp.Project) (*iam.ServiceAccount, error) {
+	stage := "GCP Service Accounts"
 
 	var sa *iam.ServiceAccount
 
@@ -649,9 +666,9 @@ func (t ctrl) EnsureServiceAccountKey(
 	credentials *configv1.Secret,
 	organization *gcp.Organization,
 	account *iam.ServiceAccount,
-	project *gcp.ProjectClaim) error {
+	project *gcp.Project) error {
 
-	stage := "permissions"
+	stage := "GCP Service Credentials"
 
 	logger := log.WithFields(log.Fields{
 		"account":   account.Email,
@@ -823,7 +840,7 @@ func (t ctrl) EnsureServiceAccountKey(
 // EnsureCredentialsAllocation is responsible for creating an allocation to the credentials
 func (t ctrl) EnsureCredentialsAllocation(
 	ctx context.Context,
-	project *gcp.ProjectClaim) error {
+	project *gcp.Project) error {
 
 	logger := log.WithFields(log.Fields{
 		"name":      project.Name,
@@ -847,7 +864,7 @@ func (t ctrl) EnsureCredentialsAllocation(
 			Summary: "Provides credentials to team GCP Project " + project.Spec.ProjectName,
 			Resource: corev1.Ownership{
 				Group:     gcp.SchemeGroupVersion.Group,
-				Kind:      "ProjectClaim",
+				Kind:      "Project",
 				Name:      project.Name,
 				Namespace: project.Namespace,
 				Version:   gcp.SchemeGroupVersion.Version,
@@ -869,7 +886,7 @@ func (t ctrl) EnsureCredentialsAllocation(
 	}
 
 	if _, err := kubernetes.CreateOrUpdate(ctx, t.mgr.GetClient(), allocation); err != nil {
-		logger.WithError(err).Error("trying to create the project claim allocation")
+		logger.WithError(err).Error("trying to create the project project allocation")
 
 		return err
 	}
@@ -884,7 +901,7 @@ func (t ctrl) EnsureDeleteOldestKey(
 	secret *configv1.Secret,
 	account *iam.ServiceAccount,
 	keys []*iam.ServiceAccountKey,
-	project *gcp.ProjectClaim) error {
+	project *gcp.Project) error {
 
 	logger := log.WithFields(log.Fields{
 		"account":   account.Email,
@@ -948,7 +965,7 @@ func (t ctrl) EnsureDeleteOldestKey(
 // EnsureCredentialsAllocationDeleted is responsible for removing the allocation
 func (t ctrl) EnsureCredentialsAllocationDeleted(
 	ctx context.Context,
-	project *gcp.ProjectClaim) error {
+	project *gcp.Project) error {
 
 	logger := log.WithFields(log.Fields{
 		"name":      project.Name,
@@ -970,7 +987,7 @@ func (t ctrl) EnsureCredentialsAllocationDeleted(
 	}
 
 	if err := kubernetes.DeleteIfExists(ctx, t.mgr.GetClient(), allocation); err != nil {
-		logger.WithError(err).Error("trying to delete the project claim allocation")
+		logger.WithError(err).Error("trying to delete the project project allocation")
 
 		return err
 	}
@@ -981,7 +998,7 @@ func (t ctrl) EnsureCredentialsAllocationDeleted(
 // EnsureCredentialsDeleted is responsible for deleting the credentials
 func (t ctrl) EnsureCredentialsDeleted(
 	ctx context.Context,
-	project *gcp.ProjectClaim) error {
+	project *gcp.Project) error {
 
 	logger := log.WithFields(log.Fields{
 		"name":      project.Name,
@@ -1018,7 +1035,7 @@ func (t ctrl) EnsureProjectDeleted(
 	ctx context.Context,
 	credentials *configv1.Secret,
 	org *gcp.Organization,
-	project *gcp.ProjectClaim) error {
+	project *gcp.Project) error {
 
 	logger := log.WithFields(log.Fields{
 		"name":       project.Name,
@@ -1096,7 +1113,7 @@ func (t ctrl) EnsureProjectDeleted(
 }
 
 // GetProjectCredentialsSecretName returns the secret name of the credentials for this project
-func (t ctrl) GetProjectCredentialsSecretName(project *gcp.ProjectClaim) string {
+func (t ctrl) GetProjectCredentialsSecretName(project *gcp.Project) string {
 	return fmt.Sprintf("gcp-%s", project.Name)
 }
 
@@ -1112,15 +1129,15 @@ func (t ctrl) GetRequiredAPI() []string {
 	}
 }
 
-// IsProjectClaimed checks if the project name has already been claimed by another team
-func (t ctrl) IsProjectClaimed(ctx context.Context, project *gcp.ProjectClaim) (bool, error) {
-	list := &gcp.ProjectClaimList{}
+// IsProjected checks if the project name has already been projected by another team
+func (t ctrl) IsProjected(ctx context.Context, project *gcp.Project) (bool, error) {
+	list := &gcp.ProjectList{}
 
 	if err := t.mgr.GetClient().List(ctx, list, client.InNamespace("")); err != nil {
 		return false, err
 	}
 
-	// @step: we iterate the list and look for any claims with the same name
+	// @step: we iterate the list and look for any projects with the same name
 	// but NOT in our namespace
 	for _, x := range list.Items {
 		if x.Namespace == project.Namespace && x.Name == project.Name {
@@ -1136,6 +1153,6 @@ func (t ctrl) IsProjectClaimed(ctx context.Context, project *gcp.ProjectClaim) (
 }
 
 // GetAllocationName returns the name we should use for the project allocation
-func (t ctrl) GetAllocationName(project *gcp.ProjectClaim) string {
+func (t ctrl) GetAllocationName(project *gcp.Project) string {
 	return fmt.Sprintf("gcp-%s", project.Name)
 }

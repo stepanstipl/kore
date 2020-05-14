@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package projectclaim
+package projects
 
 import (
 	"context"
@@ -40,7 +40,7 @@ func (t ctrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 	})
 	logger.Info("attempting to delete gcp project")
 
-	project := &gcp.ProjectClaim{}
+	project := &gcp.Project{}
 	if err := t.mgr.GetClient().Get(ctx, request.NamespacedName, project); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
@@ -115,7 +115,7 @@ func (t ctrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 		return reconcile.Result{}, nil
 	}()
 	if err != nil {
-		logger.WithError(err).Error("trying to reconcile the gcp project claim")
+		logger.WithError(err).Error("trying to reconcile the gcp project project")
 
 		project.Status.Status = corev1.FailureStatus
 	}
@@ -123,7 +123,7 @@ func (t ctrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 	if !result.Requeue && result.RequeueAfter <= 0 {
 		// @step: we can remove the finalizer now
 		if err := finalizer.Remove(project); err != nil {
-			logger.WithError(err).Error("trying to remove the finalizer gcp project claim")
+			logger.WithError(err).Error("trying to remove the finalizer gcp project project")
 
 			return reconcile.Result{}, err
 		}
@@ -133,7 +133,7 @@ func (t ctrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 
 	// @step: update the status of the resource
 	if err := t.mgr.GetClient().Status().Patch(ctx, project, client.MergeFrom(original)); err != nil {
-		logger.WithError(err).Error("trying to update resource status of gcp project claim")
+		logger.WithError(err).Error("trying to update resource status of gcp project project")
 
 		return reconcile.Result{}, err
 	}

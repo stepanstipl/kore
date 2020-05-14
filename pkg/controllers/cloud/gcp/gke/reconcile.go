@@ -26,7 +26,7 @@ import (
 	gcp "github.com/appvia/kore/pkg/apis/gcp/v1alpha1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
-	gcpcc "github.com/appvia/kore/pkg/controllers/cloud/gcp/projectclaim"
+	gcpcc "github.com/appvia/kore/pkg/controllers/cloud/gcp/projects"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
