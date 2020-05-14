@@ -33,6 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	k8s "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -187,4 +188,24 @@ func HasGroup(version metav1.GroupVersionResource) (bool, error) {
 	}
 
 	return false, nil
+}
+
+// MakeKubernetesConfig returns a rest.Config from the options
+func MakeKubernetesConfig(config KubernetesAPI) (*rest.Config, error) {
+	// @step: are we creating an in-cluster kubernetes client
+	if config.InCluster {
+		return rest.InClusterConfig()
+	}
+
+	if config.KubeConfig != "" {
+		return clientcmd.BuildConfigFromFlags("", config.KubeConfig)
+	}
+
+	return &rest.Config{
+		Host:        config.MasterAPIURL,
+		BearerToken: config.Token,
+		TLSClientConfig: rest.TLSClientConfig{
+			Insecure: config.SkipTLSVerify,
+		},
+	}, nil
 }

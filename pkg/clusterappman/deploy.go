@@ -23,6 +23,8 @@ import (
 	"time"
 
 	kcore "github.com/appvia/kore/pkg/apis/core/v1"
+	"github.com/appvia/kore/pkg/clusterapp"
+	"github.com/appvia/kore/pkg/clusterappman/status"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
@@ -54,10 +56,20 @@ type deployerImpl struct {
 	ClusterAppManImage string
 }
 
-// NewDeployer will start a deployment service for clusterappman
-func NewDeployer(clusterappmanImage string, cc client.Client) (Interface, error) {
+// NewLocalDeployer will enable a clusterappman deploy in the LOCAL kore kubernetes cluster
+func NewLocalDeployer(clusterappmanImage string) (Interface, error) {
+	// Get Kore's API server details for all local cluster deploys
+	apiCfg := status.GetLocalKoreClusterAPI()
+	if apiCfg == nil {
+		return nil, errors.New("no local configuration for local cluster has been set use - pkg/clusterappman/status.SetLocalKoreClusterAPI")
+	}
+	// get a client dynamically
+	client, _, err := clusterapp.GetKubeCfgAndControllerClient(*apiCfg)
+	if err != nil {
+		return nil, fmt.Errorf("error trying to create controller client for kore local cluster - %s", err)
+	}
 	return &deployerImpl{
-		ControllerClient:   cc,
+		ControllerClient:   client,
 		ClusterAppManImage: clusterappmanImage,
 	}, nil
 }
@@ -69,12 +81,19 @@ func (d deployerImpl) Run(ctx context.Context) error {
 	})
 
 	for {
-		_, err := Deploy(ctx, d.ControllerClient, logger, d.ClusterAppManImage)
+		components, err := Deploy(ctx, d.ControllerClient, logger, d.ClusterAppManImage)
 		if err != nil {
 			logger.Errorf("error deploying clusterappman - %s", err)
 		}
+		// now save the current status
+		err = status.SetLocalKoreClusterComponents(*components)
+		if err != nil {
+			logger.Errorf("error updating clusterappman status - %s", err)
+		}
+		// repeat until requested
 		if utils.Sleep(ctx, 1*time.Minute) {
 			logger.Print("exiting as requested")
+
 			return nil
 		}
 	}

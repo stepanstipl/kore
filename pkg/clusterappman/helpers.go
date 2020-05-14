@@ -36,7 +36,7 @@ import (
 
 // LoadAllManifests will load all the manifests defined here
 // This provides a simple testable entrypoint
-func LoadAllManifests(cc client.Client, ccCfg clusterapp.KubernetesAPI) error {
+func LoadAllManifests(cc client.Client, ccCfg kubernetes.KubernetesAPI) error {
 	for _, m := range mm {
 		ca, err := getClusterAppFromEmbeddedManifests(m, cc, ccCfg)
 		log.Infof("loading manifest for cluster app - %s", ca.Component.Name)
@@ -49,7 +49,7 @@ func LoadAllManifests(cc client.Client, ccCfg clusterapp.KubernetesAPI) error {
 	return nil
 }
 
-func getClusterAppFromEmbeddedManifests(m manifest, cc client.Client, ccCfg clusterapp.KubernetesAPI) (clusterapp.Instance, error) {
+func getClusterAppFromEmbeddedManifests(m manifest, cc client.Client, ccCfg kubernetes.KubernetesAPI) (clusterapp.Instance, error) {
 	// for all the embedded paths specified...
 	resfiles := make([]http.File, 0)
 	for _, manifestFile := range m.EmededManifests {

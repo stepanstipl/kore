@@ -22,6 +22,7 @@ import (
 	api "github.com/appvia/kore/pkg/apiserver"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/persistence"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
 )
 
 // Interface is the contract to the server
@@ -32,26 +33,12 @@ type Interface interface {
 	Stop(context.Context) error
 }
 
-// KubernetesAPI is the configuration for the kubernetes api
-type KubernetesAPI struct {
-	// InCluster indicates we are running in cluster
-	InCluster bool `json:"inCluster"`
-	// MasterAPIURL specifies the kube-apiserver url
-	MasterAPIURL string `json:"masterAPIUrl"`
-	// Token is kubernetes token to authenticate to the api
-	Token string `json:"token"`
-	// KubeConfig is the kubeconfig path
-	KubeConfig string
-	// SkipTLSVerify indicates we skip tls
-	SkipTLSVerify bool
-}
-
 // Config is the configuration of the various components
 type Config struct {
 	// APIServer is the config for the api server
 	APIServer api.Config `json:"apiServer"`
 	// Kubernetes is configuration for the api
-	Kubernetes KubernetesAPI `json:"kubernetes"`
+	Kubernetes kubernetes.KubernetesAPI `json:"kubernetes"`
 	// Kore is the configuration for the kore bridge
 	Kore kore.Config `json:"kore"`
 	// PersistenceMgr are the options for the persistence manager

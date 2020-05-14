@@ -19,7 +19,7 @@ package clusterappman
 import (
 	"context"
 
-	"github.com/appvia/kore/pkg/clusterapp"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
 )
 
 // Interface is the contract to the server
@@ -33,5 +33,5 @@ type Interface interface {
 // Config is the configuration of the various components
 type Config struct {
 	// Kubernetes is configuration for the api
-	Kubernetes clusterapp.KubernetesAPI `json:"kubernetes"`
+	Kubernetes kubernetes.KubernetesAPI `json:"kubernetes"`
 }

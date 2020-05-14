@@ -27,11 +27,13 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	kcore "github.com/appvia/kore/pkg/apis/core/v1"
 	korev1 "github.com/appvia/kore/pkg/apis/core/v1"
+	"github.com/appvia/kore/pkg/clusterappman/status"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	"k8s.io/apimachinery/pkg/api/meta"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	applicationv1beta "sigs.k8s.io/application/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -41,23 +43,6 @@ const (
 	// ClusterAppControllerComponentName is the reserved name for the Application controller
 	ClusterAppControllerComponentName string = "Application Controller"
 )
-
-var (
-	appControllerStatus bool
-	mu                  = &sync.Mutex{}
-)
-
-func getAppControllerStatus() bool {
-	mu.Lock()
-	defer mu.Unlock()
-	return appControllerStatus
-}
-
-func setAppControllerStatus(s bool) {
-	mu.Lock()
-	defer mu.Unlock()
-	appControllerStatus = s
-}
 
 // AppData is the input to create an app
 type AppData struct {
@@ -76,7 +61,7 @@ type Instance struct {
 	// client provides access to a kubernetes api
 	client client.Client
 	// allows the client to be re-created when waiting on new CRD types
-	kubeAPI KubernetesAPI
+	kubeAPI kubernetes.KubernetesAPI
 	// PreDeleteResources are the K8 objects created for deletion
 	PreDeleteResources []runtime.Object
 	// Resources are the K8 objects created for deployment / update
@@ -84,27 +69,142 @@ type Instance struct {
 	// ApplicationObject provides access to the application kind
 	ApplicationObject runtime.Object
 	// Kore standard component and status information
-	Component *kcore.Component
+	Component *korev1.Component
 	app       AppData
 	logger    *log.Entry
 }
 
-// NewAppFromManifestFiles creates a new cluster application
-func NewAppFromManifestFiles(cc client.Client, ccCfg KubernetesAPI, app AppData) (Instance, error) {
-	logger := log.WithFields(log.Fields{
+func getlogger() *log.Entry {
+	return log.WithFields(log.Fields{
 		"service": "clusterapp",
 	})
+}
+
+// NewFromChartKindsLabelsAndValuesInKoreCluster will create Kubernetes resources:
+// - in the same cluster as the kore-apiserver
+// - from a helm chart and values
+func NewFromChartKindsLabelsAndValuesInKoreCluster(chartApp ChartApp) (Instance, error) {
+	apiCFG := *status.GetLocalKoreClusterAPI()
+	// get a client dynamically
+	client, _, err := GetKubeCfgAndControllerClient(apiCFG)
+	if err != nil {
+		return Instance{}, err
+	}
+	return NewFromChartKindsLabelsAndValues(client, apiCFG, chartApp)
+}
+
+// NewFromChartKindsLabelsAndValues will create Kubernetes resources (in any cluster) from a helm chart and values
+func NewFromChartKindsLabelsAndValues(cc client.Client, ccCfg kubernetes.KubernetesAPI, chartApp ChartApp) (Instance, error) {
+
+	c := Instance{
+		client:    cc,
+		kubeAPI:   ccCfg,
+		Resources: make([]runtime.Object, 0),
+		logger:    getlogger(),
+		app: AppData{
+			Name:             chartApp.ReleaseName,
+			DefaultNamespace: chartApp.DefaultNamespace,
+		},
+		Component: &korev1.Component{
+			Name:    chartApp.ReleaseName,
+			Status:  korev1.PendingStatus,
+			Message: "Component is not yet deployed",
+		},
+	}
+
+	// Create any secret resources required
+	valuesFrom := []map[string]interface{}{}
+	if len(chartApp.SecretValues) > 0 {
+		hs, err := getHelmSecret(chartApp)
+		if err != nil {
+			return c, err
+		}
+		valuesFrom = append(valuesFrom, hs.ValuesRef)
+		c.Resources = append(c.Resources, hs.Secret)
+	}
+
+	var chartDef map[string]interface{}
+	var refDefined = false
+	var version string
+	if chartApp.Chart.ChartRepoRef != nil {
+		refDefined = true
+		chartDef = map[string]interface{}{
+			"repository": chartApp.Chart.ChartRepoRef.RepoURL,
+			"version":    chartApp.Chart.ChartRepoRef.Version,
+			"name":       chartApp.Chart.ChartRepoRef.ChartName,
+			"values":     chartApp.Values,
+		}
+		version = chartApp.Chart.ChartRepoRef.Version
+	}
+	if chartApp.Chart.ChartGitRef != nil {
+		if refDefined {
+			return c, errors.New("ambiguouse multiple references to chart cannot specify git and helm repos")
+		}
+		refDefined = true
+		chartDef = map[string]interface{}{
+			"git":  chartApp.Chart.ChartGitRef.GitRepo,
+			"ref":  chartApp.Chart.ChartGitRef.Ref,
+			"path": chartApp.Chart.ChartGitRef.Path,
+		}
+		version = chartApp.Chart.ChartGitRef.Ref
+	}
+	if !refDefined {
+		return c, errors.New("no reference to a chart")
+	}
+	// now create the helm CRD referencing any secret above:
+	helmRelease := &unstructured.Unstructured{Object: map[string]interface{}{
+		"apiVersion": "helm.fluxcd.io/v1",
+		"kind":       "HelmRelease",
+		"metadata": map[string]interface{}{
+			"name":      chartApp.ReleaseName,
+			"namespace": chartApp.DefaultNamespace,
+		},
+		"spec": map[string]interface{}{
+			"chart":      chartDef,
+			"valuesFrom": valuesFrom,
+			"values":     chartApp.Values,
+		},
+	}}
+	c.Resources = append(c.Resources, helmRelease)
+
+	// finally create a resource to monitor the readiness of the resources
+	c.ApplicationObject = &applicationv1beta.Application{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      chartApp.ReleaseName,
+			Namespace: chartApp.DefaultNamespace,
+			Labels: map[string]string{
+				"kore": "managed",
+			},
+		},
+		Spec: applicationv1beta.ApplicationSpec{
+			Selector: &v1.LabelSelector{
+				MatchLabels: chartApp.MatchLabels,
+			},
+			AssemblyPhase:       applicationv1beta.Pending,
+			ComponentGroupKinds: chartApp.Kinds,
+			Descriptor: applicationv1beta.Descriptor{
+				Description: chartApp.DescriptiveName,
+				Version:     version,
+			},
+		},
+	}
+
+	return c, nil
+}
+
+// NewAppFromManifestFiles creates a new cluster application
+func NewAppFromManifestFiles(cc client.Client, ccCfg kubernetes.KubernetesAPI, app AppData) (Instance, error) {
 	ca := Instance{
 		client:    cc,
 		kubeAPI:   ccCfg,
 		Resources: make([]runtime.Object, 0),
-		Component: &kcore.Component{
+		Component: &korev1.Component{
 			Name:    app.Name,
-			Status:  kcore.PendingStatus,
+			Status:  korev1.PendingStatus,
 			Message: "Component is not yet deployed",
 		},
 		app:    app,
-		logger: logger,
+		logger: getlogger(),
 	}
 	// for all the embedded paths specified...
 	for _, file := range app.Manifestfiles {
@@ -171,10 +271,18 @@ func (ca Instance) CreateOrUpdate(ctx context.Context, defaultNamepsace string) 
 	return nil
 }
 
+func (ca Instance) getAppControllerStatus() bool {
+	return status.GetAppControllerStatus(ca.kubeAPI)
+}
+
+func (ca Instance) setAppControllerStatus(s bool) {
+	status.SetAppControllerStatus(s, ca.kubeAPI)
+}
+
 // WaitForReadyOrTimeout will wait a reasonable time (defined in context) until a resource is ready
 // if the resource become ready, it will update the channel with the component (and status)
 // if there is any error or a timeout, it will update the channel with the details on the component
-func (ca Instance) WaitForReadyOrTimeout(ctx context.Context, respond chan<- *kcore.Component, wg *sync.WaitGroup) {
+func (ca Instance) WaitForReadyOrTimeout(ctx context.Context, respond chan<- *korev1.Component, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	err := func() error {
@@ -197,7 +305,7 @@ func (ca Instance) WaitForReadyOrTimeout(ctx context.Context, respond chan<- *kc
 	}()
 	if err != nil {
 		ca.logger.Errorf("error with %s", ca.Component.Name)
-		ca.Component.Status = kcore.Unknown
+		ca.Component.Status = korev1.Unknown
 		ca.Component.Message = fmt.Sprintf("An error occured deploying %s", ca.Component.Name)
 		ca.Component.Detail = fmt.Sprintf("The technical error is: %s", err)
 	}
@@ -300,7 +408,7 @@ func (ca Instance) waitOnApplicationStatus(ctx context.Context) error {
 func (ca Instance) getStatus(ctx context.Context) (err error) {
 	if ca.ApplicationObject == nil {
 		if ca.Component.Name == ClusterAppControllerComponentName {
-			if getAppControllerStatus() {
+			if ca.getAppControllerStatus() {
 				ca.Component.Message = "Application controller is operational"
 				ca.Component.Status = korev1.SuccessStatus
 			} else {
@@ -344,7 +452,7 @@ func (ca Instance) getStatus(ctx context.Context) (err error) {
 
 		}
 		for _, condition := range app.Status.Conditions {
-			setAppControllerStatus(true)
+			ca.setAppControllerStatus(true)
 			if condition.Type == applicationv1beta.Ready {
 				if condition.Status == "True" {
 					ca.Component.Status = korev1.SuccessStatus

@@ -29,6 +29,7 @@ import (
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/persistence"
 	"github.com/appvia/kore/pkg/server"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
@@ -58,7 +59,7 @@ func invoke(ctx *cli.Context) error {
 			MetricsPort:   ctx.Int("metrics-port"),
 			SwaggerUIPath: "./swagger-ui",
 		},
-		Kubernetes: server.KubernetesAPI{
+		Kubernetes: kubernetes.KubernetesAPI{
 			InCluster:    ctx.Bool("in-cluster"),
 			KubeConfig:   ctx.String("kubeconfig"),
 			MasterAPIURL: ctx.String("kube-api-server"),
