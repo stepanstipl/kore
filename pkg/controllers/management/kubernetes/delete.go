@@ -24,11 +24,11 @@ import (
 	"github.com/appvia/kore/pkg/controllers"
 
 	log "github.com/sirupsen/logrus"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 const (
+	// ComponentKubernetesCleanup is the cleanup stage name
 	ComponentKubernetesCleanup = "Kubernetes Clean-up"
 )
 
@@ -54,15 +54,16 @@ func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (rec
 	}()
 	if err != nil {
 		logger.WithError(err).Error("trying to delete the kubernetes resource")
+
 		object.Status.Status = corev1.DeleteFailedStatus
 	}
 
 	// @step: update the status of the resource
-	if err := a.mgr.GetClient().Status().Patch(ctx, object, client.MergeFrom(original)); err != nil {
+	if err := controllers.PatchStatus(ctx, a.mgr.GetClient(), object, original); err != nil {
 		logger.WithError(err).Error("trying to update the status of the resource")
 
 		return reconcile.Result{}, err
 	}
 
-	return result, nil
+	return result, err
 }

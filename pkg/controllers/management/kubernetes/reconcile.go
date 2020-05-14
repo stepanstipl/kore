@@ -213,7 +213,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 				Status:  corev1.FailureStatus,
 			})
 
-			return reconcile.Result{RequeueAfter: 2 * time.Minute}, err
+			return reconcile.Result{}, err
 		}
 
 		object.Status.Status = corev1.FailureStatus
@@ -222,12 +222,6 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			Message: "Service proxy is running and available",
 			Status:  corev1.SuccessStatus,
 		})
-
-		/*
-			if original.Status.Endpoint == "" {
-				return reconcile.Result{Requeue: true}, nil
-			}
-		*/
 
 		// @step: ensure all cluster components are deployed
 		components, err := a.EnsureClusterman(context.Background(), client, a.Config().ClusterAppManImage)
