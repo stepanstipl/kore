@@ -31,7 +31,7 @@ type UpdateSchema func(*runtime.Scheme) error
 // - from []byte with yaml defining kubernetes manifests
 // - yaml may contain "---" seperators and multiple manifest definitions
 // - provide a schema function to add any required schemas at run time
-func ParseK8sYaml(fileR []byte, fnUS UpdateSchema) ([]runtime.Object, error) {
+func ParseK8sYaml(fileR []byte) ([]runtime.Object, error) {
 	fileAsString := string(fileR[:])
 	sepYamlfiles := strings.Split(fileAsString, "---")
 	runtimeObjects := make([]runtime.Object, 0, len(sepYamlfiles))
@@ -39,11 +39,6 @@ func ParseK8sYaml(fileR []byte, fnUS UpdateSchema) ([]runtime.Object, error) {
 		if f == "\n" || f == "" {
 			// ignore empty cases
 			continue
-		}
-		// Ensure we know about all types first
-		if err := fnUS(scheme.Scheme); err != nil {
-
-			return nil, fmt.Errorf("error loading schemes for decoding - %s", err)
 		}
 		decode := scheme.Codecs.UniversalDeserializer().Decode
 		obj, _, err := decode([]byte(f), nil, nil)

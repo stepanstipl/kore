@@ -19,10 +19,15 @@ package kubernetes
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"net"
 	"net/http"
 	"strings"
 	"time"
+
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
+
+	kschema "github.com/appvia/kore/pkg/schema"
 
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 
@@ -67,7 +72,7 @@ func NewClientFromConfigSecret(secret *configv1.Secret) (k8s.Interface, error) {
 
 // NewRuntimeClientFromConfigSecret creates and returns a runtime client from configv1.Secret
 func NewRuntimeClientFromConfigSecret(secret *configv1.Secret) (client.Client, error) {
-	config := &rest.Config{
+	cfg := &rest.Config{
 		Host:        secret.Spec.Data["endpoint"],
 		BearerToken: secret.Spec.Data["token"],
 		TLSClientConfig: rest.TLSClientConfig{
@@ -75,12 +80,12 @@ func NewRuntimeClientFromConfigSecret(secret *configv1.Secret) (client.Client, e
 		},
 	}
 
-	return client.New(config, client.Options{})
+	return NewRuntimeClient(cfg)
 }
 
 // NewRuntimeClientFromSecret creates and returns a runtime client
 func NewRuntimeClientFromSecret(secret *core.Secret) (client.Client, error) {
-	config := &rest.Config{
+	cfg := &rest.Config{
 		Host:        string(secret.Data["endpoint"]),
 		BearerToken: string(secret.Data["token"]),
 		TLSClientConfig: rest.TLSClientConfig{
@@ -88,7 +93,34 @@ func NewRuntimeClientFromSecret(secret *core.Secret) (client.Client, error) {
 		},
 	}
 
-	return client.New(config, client.Options{})
+	return NewRuntimeClient(cfg)
+}
+
+// NewRuntimeClientForAPI will return a new controller-runtime client for the given Kubernetes API
+func NewRuntimeClientForAPI(k KubernetesAPI) (client.Client, error) {
+	cfg, err := MakeKubernetesConfig(k)
+	if err != nil {
+		return nil, fmt.Errorf("failed creating kubernetes config: %s", err)
+	}
+
+	return NewRuntimeClient(cfg)
+}
+
+func NewRuntimeClient(cfg *rest.Config) (client.Client, error) {
+	mapper, err := apiutil.NewDynamicRESTMapper(cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create mapper for client: %w", err)
+	}
+
+	c, err := client.New(cfg, client.Options{
+		Scheme: kschema.GetScheme(),
+		Mapper: mapper,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed creating kubernetes runtime client: %s", err)
+	}
+
+	return c, nil
 }
 
 // NewFromToken creates a kubernetes client from a endpoint and token

@@ -32,13 +32,14 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	rc "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // LoadAllManifests will load all the manifests defined here
 // This provides a simple testable entrypoint
-func LoadAllManifests(cc client.Client, ccCfg kubernetes.KubernetesAPI) error {
+func LoadAllManifests(cc rc.Client) error {
 	for _, m := range mm {
-		ca, err := getClusterAppFromEmbeddedManifests(m, cc, ccCfg)
+		ca, err := getClusterAppFromEmbeddedManifests(m, cc)
 		log.Infof("loading manifest for cluster app - %s", ca.Component.Name)
 		if err != nil {
 			return fmt.Errorf("failed to load %s manifests: %s", m.Name, err)
@@ -49,7 +50,7 @@ func LoadAllManifests(cc client.Client, ccCfg kubernetes.KubernetesAPI) error {
 	return nil
 }
 
-func getClusterAppFromEmbeddedManifests(m manifest, cc client.Client, ccCfg kubernetes.KubernetesAPI) (clusterapp.Instance, error) {
+func getClusterAppFromEmbeddedManifests(m manifest, cc rc.Client) (clusterapp.Instance, error) {
 	// for all the embedded paths specified...
 	resfiles := make([]http.File, 0)
 	for _, manifestFile := range m.EmededManifests {
@@ -78,7 +79,7 @@ func getClusterAppFromEmbeddedManifests(m manifest, cc client.Client, ccCfg kube
 		DeleteResfiles:   deleteResfiles,
 		Manifestfiles:    resfiles,
 	}
-	return clusterapp.NewAppFromManifestFiles(cc, ccCfg, app)
+	return clusterapp.NewAppFromManifestFiles(cc, app)
 }
 
 // GetStatus returns the status of all compoents deployed by ClusterAppMan

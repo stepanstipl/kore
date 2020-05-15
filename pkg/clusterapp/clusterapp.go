@@ -25,18 +25,18 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	rc "sigs.k8s.io/controller-runtime/pkg/client"
 
 	korev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/clusterappman/status"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
+	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/meta"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	applicationv1beta "sigs.k8s.io/application/api/v1beta1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -59,9 +59,7 @@ type AppData struct {
 // it provides facilities to manage a cluster app lifecycle
 type Instance struct {
 	// client provides access to a kubernetes api
-	client client.Client
-	// allows the client to be re-created when waiting on new CRD types
-	kubeAPI kubernetes.KubernetesAPI
+	client rc.Client
 	// PreDeleteResources are the K8 objects created for deletion
 	PreDeleteResources []runtime.Object
 	// Resources are the K8 objects created for deployment / update
@@ -80,25 +78,10 @@ func getlogger() *log.Entry {
 	})
 }
 
-// NewFromChartKindsLabelsAndValuesInKoreCluster will create Kubernetes resources:
-// - in the same cluster as the kore-apiserver
-// - from a helm chart and values
-func NewFromChartKindsLabelsAndValuesInKoreCluster(chartApp ChartApp) (Instance, error) {
-	apiCFG := *status.GetLocalKoreClusterAPI()
-	// get a client dynamically
-	client, _, err := GetKubeCfgAndControllerClient(apiCFG)
-	if err != nil {
-		return Instance{}, err
-	}
-	return NewFromChartKindsLabelsAndValues(client, apiCFG, chartApp)
-}
-
 // NewFromChartKindsLabelsAndValues will create Kubernetes resources (in any cluster) from a helm chart and values
-func NewFromChartKindsLabelsAndValues(cc client.Client, ccCfg kubernetes.KubernetesAPI, chartApp ChartApp) (Instance, error) {
-
+func NewFromChartKindsLabelsAndValues(cc rc.Client, chartApp ChartApp) (Instance, error) {
 	c := Instance{
 		client:    cc,
-		kubeAPI:   ccCfg,
 		Resources: make([]runtime.Object, 0),
 		logger:    getlogger(),
 		app: AppData{
@@ -132,7 +115,6 @@ func NewFromChartKindsLabelsAndValues(cc client.Client, ccCfg kubernetes.Kuberne
 			"repository": chartApp.Chart.ChartRepoRef.RepoURL,
 			"version":    chartApp.Chart.ChartRepoRef.Version,
 			"name":       chartApp.Chart.ChartRepoRef.ChartName,
-			"values":     chartApp.Values,
 		}
 		version = chartApp.Chart.ChartRepoRef.Version
 	}
@@ -193,10 +175,9 @@ func NewFromChartKindsLabelsAndValues(cc client.Client, ccCfg kubernetes.Kuberne
 }
 
 // NewAppFromManifestFiles creates a new cluster application
-func NewAppFromManifestFiles(cc client.Client, ccCfg kubernetes.KubernetesAPI, app AppData) (Instance, error) {
+func NewAppFromManifestFiles(cc rc.Client, app AppData) (Instance, error) {
 	ca := Instance{
 		client:    cc,
-		kubeAPI:   ccCfg,
 		Resources: make([]runtime.Object, 0),
 		Component: &korev1.Component{
 			Name:    app.Name,
@@ -213,7 +194,7 @@ func NewAppFromManifestFiles(cc client.Client, ccCfg kubernetes.KubernetesAPI, a
 			return ca, err
 		}
 		// Pass the yaml ([]bytes) and function (addAllToScheme) to create the runtim.Objects
-		apiObjs, err := kubernetes.ParseK8sYaml(fileBytes, addAllToScheme)
+		apiObjs, err := kubernetes.ParseK8sYaml(fileBytes)
 		if err != nil {
 			return ca, err
 		}
@@ -234,7 +215,7 @@ func NewAppFromManifestFiles(cc client.Client, ccCfg kubernetes.KubernetesAPI, a
 			return ca, err
 		}
 		// Pass the yaml ([]bytes) and function (addAllToScheme) to create the runtim.Objects
-		apiObjs, err := kubernetes.ParseK8sYaml(fileBytes, addAllToScheme)
+		apiObjs, err := kubernetes.ParseK8sYaml(fileBytes)
 		if err != nil {
 			return ca, err
 		}
@@ -272,11 +253,11 @@ func (ca Instance) CreateOrUpdate(ctx context.Context, defaultNamepsace string) 
 }
 
 func (ca Instance) getAppControllerStatus() bool {
-	return status.GetAppControllerStatus(ca.kubeAPI)
+	return status.GetAppControllerStatus(ca.client)
 }
 
 func (ca Instance) setAppControllerStatus(s bool) {
-	status.SetAppControllerStatus(s, ca.kubeAPI)
+	status.SetAppControllerStatus(s, ca.client)
 }
 
 // WaitForReadyOrTimeout will wait a reasonable time (defined in context) until a resource is ready
@@ -339,13 +320,11 @@ func (ca Instance) waitOnKindDeploy(ctx context.Context, object runtime.Object) 
 		ca.logger.Debug("kind not known, waiting for CRD to be known")
 		time.Sleep(10 * time.Second)
 
-		// Replace current client, hopefully Kind is now known
-		ca.client, _, err = GetKubeCfgAndControllerClient(ca.kubeAPI)
-		if err != nil {
-
-			// can't re-create API client from known config - should never happen
-			return fmt.Errorf("cannot recreate client from known config - %s ", err)
-		}
+		//if err := ca.client.Reload(); err != nil {
+		//
+		//	// can't re-create API client from known config - should never happen
+		//	return fmt.Errorf("cannot recreate client from known config - %s ", err)
+		//}
 	}
 }
 
@@ -392,14 +371,13 @@ func (ca Instance) waitOnApplicationStatus(ctx context.Context) error {
 			ca.logger.Debug("waiting for application kind to be known")
 			time.Sleep(10 * time.Second)
 
-			// Replace current client, hopefully Kind is now known
-			ca.logger.Debug("reloading client")
-			ca.client, _, err = GetKubeCfgAndControllerClient(ca.kubeAPI)
-			if err != nil {
-
-				// can't re-create API client from known config - should never happen
-				return fmt.Errorf("cannot recreate client from known config - %s ", err)
-			}
+			//// Replace current client, hopefully Kind is now known
+			//ca.logger.Debug("reloading client")
+			//if err := ca.client.Reload(); err != nil {
+			//
+			//	// can't re-create API client from known config - should never happen
+			//	return fmt.Errorf("cannot recreate client from known config - %s ", err)
+			//}
 		}
 	}
 }

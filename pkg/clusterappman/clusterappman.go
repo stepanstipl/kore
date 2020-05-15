@@ -22,24 +22,19 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	rc "sigs.k8s.io/controller-runtime/pkg/client"
 
 	kcore "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/clusterapp"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
 	kkube "github.com/appvia/kore/pkg/utils/kubernetes"
 
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	rc "sigs.k8s.io/controller-runtime/pkg/client"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
 	// KoreNamespace is the namespace where the clusterappmanager and repo are deployed
 	KoreNamespace string = "kore"
-	// ParamsConfigMap provides the customisations for deplpoyments carried out from here
-	ParamsConfigMap string = "kore-cluster-config"
-	// ParamsConfigKey is the configmap key used to store the parameters
-	ParamsConfigKey string = "clusterconfig"
 	// StatusCongigMap is the name of the configmap object used to store kore cluster status
 	StatusCongigMap string = "kore-cluster-status"
 	// StatusConfigMapComponentsKey is the key in the configmap used for all conditions
@@ -51,11 +46,8 @@ const (
 )
 
 type clusterappmanImpl struct {
-	// client is the kubernetes client to use
-	Client        kubernetes.Interface
 	RuntimeClient rc.Client
 	ClusterApps   []clusterapp.Instance
-	cfg           *rest.Config
 	kubeAPIConfig kkube.KubernetesAPI
 }
 
@@ -120,18 +112,12 @@ func New(config Config) (Interface, error) {
 	if err := config.IsValid(); err != nil {
 		return nil, err
 	}
-	var client kubernetes.Interface
-	cc, cfg, err := clusterapp.GetKubeCfgAndControllerClient(config.Kubernetes)
+
+	cc, err := kubernetes.NewRuntimeClientForAPI(config.Kubernetes)
 	if err != nil {
 		return nil, fmt.Errorf("failed creating controller-runtime client or config: %s", err)
 	}
-	client, err = kubernetes.NewForConfig(cfg)
-	if err != nil {
-		return nil, fmt.Errorf("failed creating kubernetes client: %s", err)
-	}
 	return &clusterappmanImpl{
-		Client:        client,
-		kubeAPIConfig: config.Kubernetes,
 		RuntimeClient: cc,
 	}, nil
 }
@@ -144,7 +130,7 @@ func (s clusterappmanImpl) Run(ctx context.Context) error {
 	logger.Info("attempting to reconcile the applications incluster")
 	// initialise clusterapps and parse all the manifests
 	logger.Info("loading manifests")
-	if err := LoadAllManifests(s.RuntimeClient, s.kubeAPIConfig); err != nil {
+	if err := LoadAllManifests(s.RuntimeClient); err != nil {
 		return fmt.Errorf("failed loading manifests - %s", err)
 	}
 	ticker := time.NewTicker(45 * time.Second)
@@ -232,14 +218,5 @@ func (s clusterappmanImpl) Deploy(ctx context.Context, logger *log.Entry) error 
 
 // Stop is responsible for trying to stop services
 func (s clusterappmanImpl) Stop(context.Context) error {
-	return nil
-}
-
-func (s clusterappmanImpl) UpgradeClient(options rc.Options) (err error) {
-	// TODO may need to make this thread safe!
-	s.RuntimeClient, err = rc.New(s.cfg, options)
-	if err != nil {
-		return err
-	}
 	return nil
 }

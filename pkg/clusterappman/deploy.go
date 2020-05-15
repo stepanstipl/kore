@@ -23,19 +23,17 @@ import (
 	"time"
 
 	kcore "github.com/appvia/kore/pkg/apis/core/v1"
-	"github.com/appvia/kore/pkg/clusterapp"
 	"github.com/appvia/kore/pkg/clusterappman/status"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
-	log "github.com/sirupsen/logrus"
 
+	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	rc "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -51,27 +49,17 @@ const (
 
 type deployerImpl struct {
 	// ControllerClient is the controller runtime client for deploying clusterappman
-	ControllerClient rc.Client
+	client rc.Client
 	// ClusterAppManImage is the container image to use for clusterappman
-	ClusterAppManImage string
+	clusterAppManImage string
 }
 
 // NewLocalDeployer will enable a clusterappman deploy in the LOCAL kore kubernetes cluster
-func NewLocalDeployer(clusterappmanImage string) (Interface, error) {
-	// Get Kore's API server details for all local cluster deploys
-	apiCfg := status.GetLocalKoreClusterAPI()
-	if apiCfg == nil {
-		return nil, errors.New("no local configuration for local cluster has been set use - pkg/clusterappman/status.SetLocalKoreClusterAPI")
-	}
-	// get a client dynamically
-	client, _, err := clusterapp.GetKubeCfgAndControllerClient(*apiCfg)
-	if err != nil {
-		return nil, fmt.Errorf("error trying to create controller client for kore local cluster - %s", err)
-	}
+func NewLocalDeployer(client client.Client, clusterappmanImage string) Interface {
 	return &deployerImpl{
-		ControllerClient:   client,
-		ClusterAppManImage: clusterappmanImage,
-	}, nil
+		client:             client,
+		clusterAppManImage: clusterappmanImage,
+	}
 }
 
 // Run is responsible for starting the deployment services and keeping them running
@@ -81,19 +69,15 @@ func (d deployerImpl) Run(ctx context.Context) error {
 	})
 
 	for {
-		components, err := Deploy(ctx, d.ControllerClient, logger, d.ClusterAppManImage)
+		components, err := Deploy(ctx, d.client, logger, d.clusterAppManImage)
 		if err != nil {
 			logger.Errorf("error deploying clusterappman - %s", err)
 		}
-		// now save the current status
-		err = status.SetLocalKoreClusterComponents(*components)
-		if err != nil {
-			logger.Errorf("error updating clusterappman status - %s", err)
-		}
-		// repeat until requested
-		if utils.Sleep(ctx, 1*time.Minute) {
-			logger.Print("exiting as requested")
 
+		status.SetAppManComponents(*components, d.client)
+
+		if utils.Sleep(ctx, 1*time.Minute) {
+			logger.Info("clusterappman deployer stopped")
 			return nil
 		}
 	}
@@ -219,15 +203,6 @@ func HasConfigMap(ctx context.Context, cc client.Client, name string) (bool, err
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: clusterappmanNamespace,
-		},
-	})
-}
-
-// NamespaceExists checks if the bootstrap job there
-func NamespaceExists(ctx context.Context, cc client.Client) (bool, error) {
-	return kubernetes.CheckIfExists(ctx, cc, &core.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: clusterappmanNamespace,
 		},
 	})
 }

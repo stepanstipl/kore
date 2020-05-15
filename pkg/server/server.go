@@ -22,7 +22,6 @@ import (
 
 	// controller imports
 	"github.com/appvia/kore/pkg/clusterappman"
-	"github.com/appvia/kore/pkg/clusterappman/status"
 	_ "github.com/appvia/kore/pkg/controllers/register"
 
 	// service provider imports
@@ -32,7 +31,6 @@ import (
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/persistence"
-	"github.com/appvia/kore/pkg/schema"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils/crds"
 	korek "github.com/appvia/kore/pkg/utils/kubernetes"
@@ -54,8 +52,8 @@ type serverImpl struct {
 	apicc apiserver.Interface
 	// cfg is the rest.Config for the clients
 	cfg *rest.Config
-	// rclient is the runtime client
-	rclient rc.Client
+	// client is the runtime client
+	client rc.Client
 }
 
 // New is responsible for creating the server container, effectively acting
@@ -65,9 +63,6 @@ func New(config Config) (Interface, error) {
 		return nil, err
 	}
 
-	var kc kubernetes.Interface
-	var cc rc.Client
-
 	// register the known types with the schame
 
 	// @step: create the various client
@@ -75,7 +70,7 @@ func New(config Config) (Interface, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed creating kubernetes config: %s", err)
 	}
-	kc, err = kubernetes.NewForConfig(cfg)
+	kc, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed creating kubernetes client: %s", err)
 	}
@@ -89,13 +84,13 @@ func New(config Config) (Interface, error) {
 		return nil, fmt.Errorf("failed to apply the kore crds: %s", err)
 	}
 
-	cc, err = rc.New(cfg, rc.Options{Scheme: schema.GetScheme()})
+	client, err := korek.NewRuntimeClientForAPI(config.Kubernetes)
 	if err != nil {
 		return nil, fmt.Errorf("failed creating runtime client: %s", err)
 	}
 
 	// @step: we need to create the data layer
-	storecc, err := store.New(kc, cc)
+	storecc, err := store.New(kc, client)
 	if err != nil {
 		return nil, fmt.Errorf("failed creating store api: %s", err)
 	}
@@ -126,15 +121,12 @@ func New(config Config) (Interface, error) {
 		return nil, fmt.Errorf("trying to create the apiserver: %s", err)
 	}
 
-	// save the kubeconfig for when we need to reuse it
-	status.SetLocalKoreClusterAPI(config.Kubernetes)
-
 	return &serverImpl{
 		apicc:   apisvr,
 		cfg:     cfg,
 		hubcc:   hubcc,
-		rclient: cc,
 		storecc: storecc,
+		client:  client,
 	}, nil
 }
 
@@ -178,15 +170,9 @@ func (s serverImpl) Run(ctx context.Context) error {
 	// TODO: create a kubernetes object for managing the kore cluster
 	//       see https://github.com/appvia/kore/issues/813
 	if s.hubcc.Config().ManagedDependencies {
-		apps, err := clusterappman.NewLocalDeployer(s.hubcc.Config().ClusterAppManImage)
-		if err != nil {
-			log.WithFields(log.Fields{
-				"error": err.Error(),
-				"name":  clusterappman.DeployerServiceName,
-			}).Fatal("failed to instanciate the clusterappman deployer")
-		}
+		deployer := clusterappman.NewLocalDeployer(s.client, s.hubcc.Config().ClusterAppManImage)
 		go func() {
-			err := apps.Run(ctx)
+			err := deployer.Run(ctx)
 			if err != nil {
 				log.WithFields(log.Fields{
 					"error": err.Error(),

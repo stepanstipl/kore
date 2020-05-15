@@ -19,19 +19,17 @@ package clusterapp
 import (
 	"context"
 	"errors"
-	"fmt"
-
-	yaml "github.com/ghodss/yaml"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/appvia/kore/pkg/utils/kubernetes"
+
+	"github.com/ghodss/yaml"
+	log "github.com/sirupsen/logrus"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/rest"
 	applicationv1beta "sigs.k8s.io/application/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -40,24 +38,6 @@ const (
 	// HelmKeyForSecrets is the key to use in secret data that contains a yaml file data
 	HelmKeyForSecrets = "values.yaml"
 )
-
-// GetKubeCfgAndControllerClient will return a new controller-runtime client and the cfg used to create it
-func GetKubeCfgAndControllerClient(k kubernetes.KubernetesAPI) (client.Client, *rest.Config, error) {
-	cfg, err := kubernetes.MakeKubernetesConfig(k)
-	if err != nil {
-		return nil, cfg, fmt.Errorf("failed creating kubernetes config: %s", err)
-	}
-
-	options, err := GetClientOptions()
-	if err != nil {
-		return nil, cfg, fmt.Errorf("failed getting client options (schemes): %s", err)
-	}
-	cc, err := client.New(cfg, options)
-	if err != nil {
-		return nil, cfg, fmt.Errorf("failed creating kubernetes runtime client: %s", err)
-	}
-	return cc, cfg, nil
-}
 
 func setMissingNamespace(namespace string, obj runtime.Object) error {
 	accessor, err := meta.Accessor(obj)

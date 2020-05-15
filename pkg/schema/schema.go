@@ -26,6 +26,9 @@ import (
 	gkev1alpha1 "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
+	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	apiextv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	applicationv1beta "sigs.k8s.io/application/api/v1beta1"
 
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -43,6 +46,9 @@ func init() {
 	hs = scheme.Scheme
 
 	builder := runtime.NewSchemeBuilder(
+		apiextv1.AddToScheme,
+		apiextv1beta1.AddToScheme,
+		applicationv1beta.AddToScheme,
 		accountsv1beta1.AddToScheme,
 		clustersv1.AddToScheme,
 		configv1.AddToScheme,

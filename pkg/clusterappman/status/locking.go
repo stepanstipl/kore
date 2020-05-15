@@ -17,14 +17,15 @@
 package status
 
 import (
-	"fmt"
 	"sync"
+
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kcore "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 )
 
-// Keep track of the status of the clsuterappman for a given cluster i.e.:
+// Keep track of the status of the clusterappman for a given cluster i.e.:
 // - the health of application controller
 // - the health of the helm controller
 type appmanStatus struct {
@@ -37,53 +38,29 @@ type appmanStatus struct {
 var (
 	mu = &sync.Mutex{}
 	// clusterAppControl the health by specific cluster
-	clusterAppManStatusByCluster = map[kubernetes.KubernetesAPI]appmanStatus{}
+	clusterAppManStatusByCluster = map[client.Client]appmanStatus{}
 	// koreClusterKubeAPICfg KubernetesAPI details as provided as flags when starting the kore-apiserver
 	koreClusterKubeAPICfg *kubernetes.KubernetesAPI
 )
 
-// GetLocalKoreClusterAPI will get the API server details used by the kore-apiserver
-func GetLocalKoreClusterAPI() *kubernetes.KubernetesAPI {
-	mu.Lock()
-	defer mu.Unlock()
-	return koreClusterKubeAPICfg
-}
-
-// SetLocalKoreClusterAPI sets the API details used for clusterapps in the Kore cluster
-func SetLocalKoreClusterAPI(apiCfg kubernetes.KubernetesAPI) {
-	mu.Lock()
-	defer mu.Unlock()
-	koreClusterKubeAPICfg = &apiCfg
-}
-
-// SetLocalKoreClusterComponents saves the clusterappman status for the local cluster
-func SetLocalKoreClusterComponents(components kcore.Components) error {
-	kubeCfg := GetLocalKoreClusterAPI()
-	if kubeCfg == nil {
-		return fmt.Errorf("the local kubernetes cluster config has not been set yet cannot set the status for unknown cluster api")
-	}
-	SetAppManComponents(components, *kubeCfg)
-
-	return nil
-}
-
 // SetAppManComponents will set the clusterappman component status for a given cluster
-func SetAppManComponents(clusterAppManConponents kcore.Components, kubeCfg kubernetes.KubernetesAPI) {
+func SetAppManComponents(clusterAppManComponents kcore.Components, client client.Client) {
+	mu.Lock()
 	defer mu.Unlock()
-	myAppmanStatus, ok := clusterAppManStatusByCluster[kubeCfg]
+	myAppmanStatus, ok := clusterAppManStatusByCluster[client]
 	if !ok {
 		myAppmanStatus = appmanStatus{
-			clusterAppManComponents: clusterAppManConponents,
+			clusterAppManComponents: clusterAppManComponents,
 		}
 	}
-	clusterAppManStatusByCluster[kubeCfg] = myAppmanStatus
+	clusterAppManStatusByCluster[client] = myAppmanStatus
 }
 
 // GetAppControllerStatus gets the application controller status for a given cluster
-func GetAppControllerStatus(kubeCfg kubernetes.KubernetesAPI) bool {
+func GetAppControllerStatus(client client.Client) bool {
 	mu.Lock()
 	defer mu.Unlock()
-	myAppmanStatus, ok := clusterAppManStatusByCluster[kubeCfg]
+	myAppmanStatus, ok := clusterAppManStatusByCluster[client]
 	if !ok {
 		return false
 	}
@@ -91,14 +68,14 @@ func GetAppControllerStatus(kubeCfg kubernetes.KubernetesAPI) bool {
 }
 
 // SetAppControllerStatus will update the application controller status for a given cluster
-func SetAppControllerStatus(s bool, kubeCfg kubernetes.KubernetesAPI) {
+func SetAppControllerStatus(s bool, client client.Client) {
 	mu.Lock()
 	defer mu.Unlock()
-	myAppmanStatus, ok := clusterAppManStatusByCluster[kubeCfg]
+	myAppmanStatus, ok := clusterAppManStatusByCluster[client]
 	if !ok {
 		myAppmanStatus = appmanStatus{
 			appControllerStatus: s,
 		}
 	}
-	clusterAppManStatusByCluster[kubeCfg] = myAppmanStatus
+	clusterAppManStatusByCluster[client] = myAppmanStatus
 }
