@@ -19,7 +19,6 @@ export default class SecurityRulePage extends React.Component {
   static getInitialProps = async ctx => {
     const api = await KoreApi.client(ctx)
     const rule = await api.security.GetSecurityRule(ctx.query.code)
-    console.log(rule)
     if (!rule && ctx.res) {
       /* eslint-disable-next-line require-atomic-updates */
       ctx.res.statusCode = 404

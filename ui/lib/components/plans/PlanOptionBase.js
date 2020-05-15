@@ -7,6 +7,7 @@ export default class PlanOptionBase extends React.Component {
     resourceType: PropTypes.string.isRequired,
     kind: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
+    plan: PropTypes.object.isRequired,
     property: PropTypes.object.isRequired,
     value: PropTypes.any,
     editable: PropTypes.bool,
@@ -63,6 +64,11 @@ export default class PlanOptionBase extends React.Component {
       return null
     }
     return valErrors.map((ve, i) => <Alert key={`${name}.valError.${i}`} type="error" message={ve.message} style={{ marginTop: '10px' }} />)
+  }
+
+  hasValidationErrors = name => {
+    const dotName = name.replace(/\[([0-9+])\]/g, '.$1')
+    return this.props.validationErrors && this.props.validationErrors.some(v => v.field.indexOf(dotName) === 0)
   }
   
 }

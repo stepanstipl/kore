@@ -195,6 +195,7 @@ class PlanForm extends React.Component {
               mode="manage"
               resourceType="cluster"
               kind={kind}
+              plan={planValues}
               key={property}
               name={property}
               property={schema.properties[property]}

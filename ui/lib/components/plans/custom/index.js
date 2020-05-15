@@ -1,4 +1,5 @@
 import PlanOptionClusterUsers from './PlanOptionClusterUsers'
+import PlanOptionEKSNodeGroups from './PlanOptionEKSNodeGroups'
 
 export default class CustomPlanOptionRegistry {
   static controls = {
@@ -11,6 +12,9 @@ export default class CustomPlanOptionRegistry {
       'EKS': {
         'clusterUsers': function clusterUsers(props) { 
           return <PlanOptionClusterUsers {...props} /> 
+        },
+        'nodeGroups': function nodeGroups(props) { 
+          return <PlanOptionEKSNodeGroups {...props} /> 
         }
       }
     }
