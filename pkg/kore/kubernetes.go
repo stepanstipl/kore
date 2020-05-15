@@ -25,9 +25,10 @@ import (
 	"github.com/appvia/kore/pkg/utils/validation"
 
 	log "github.com/sirupsen/logrus"
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
-// Cluster returns the clusters interface
+// Kubernetes returns the kubernetes interface
 type Kubernetes interface {
 	// Delete is used to delete a cluster from the kore
 	Delete(context.Context, string) (*clustersv1.Kubernetes, error)
@@ -97,7 +98,9 @@ func (c *kubernetesImpl) Get(ctx context.Context, name string) (*clustersv1.Kube
 		store.GetOptions.InTo(kubernetes),
 		store.GetOptions.WithName(name),
 	); err != nil {
-		log.WithError(err).Error("failed to retrieve the Kubernetes object")
+		if !kerrors.IsNotFound(err) {
+			log.WithError(err).Error("failed to retrieve the Kubernetes object")
+		}
 
 		return nil, err
 	}

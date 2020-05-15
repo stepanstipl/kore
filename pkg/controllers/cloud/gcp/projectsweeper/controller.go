@@ -14,33 +14,36 @@
  * limitations under the License.
  */
 
-package serviceproviders
+package projectsweeper
 
 import (
 	"context"
 	"time"
 
-	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
+	gcp "github.com/appvia/kore/pkg/apis/gcp/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/utils"
 
+	"github.com/patrickmn/go-cache"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 var _ controllers.Interface2 = &Controller{}
 
+// Controller is the controller for the projects
 type Controller struct {
 	kore.Interface
 	name   string
 	logger log.FieldLogger
 	mgr    manager.Manager
 	ctrl   controller.Controller
+	cache  *cache.Cache
 }
 
 func init() {
@@ -54,12 +57,12 @@ func init() {
 
 // NewController creates and returns a serviceproviders controller
 func NewController(logger log.FieldLogger) *Controller {
-	name := "serviceproviders"
+	name := "projectsweeper"
+
 	return &Controller{
-		name: name,
-		logger: logger.WithFields(log.Fields{
-			"controller": name,
-		}),
+		cache:  cache.New(30*time.Minute, 1*time.Minute),
+		logger: logger.WithFields(log.Fields{"controller": name}),
+		name:   name,
 	}
 }
 
@@ -70,7 +73,10 @@ func (c *Controller) Name() string {
 
 // ManagerOptions returns the manager options for the controller
 func (c *Controller) ManagerOptions() manager.Options {
-	return controllers.DefaultManagerOptions(c)
+	options := controllers.DefaultManagerOptions(c)
+	options.SyncPeriod = utils.DurationPtr(2 * time.Minute)
+
+	return options
 }
 
 // ControllerOptions returns the controller options
@@ -78,25 +84,21 @@ func (c *Controller) ControllerOptions() controller.Options {
 	return controllers.DefaultControllerOptions(c)
 }
 
+// RunWithDependencies is responsible for starting up the controller
 func (c *Controller) RunWithDependencies(ctx context.Context, mgr manager.Manager, ctrl controller.Controller, hi kore.Interface) error {
 	c.mgr = mgr
 	c.ctrl = ctrl
 	c.Interface = hi
 
-	if !c.Config().IsFeatureGateEnabled(kore.FeatureGateServices) {
-		c.logger.Debug("serviceproviders controller is disabled")
-		return nil
-	}
-
 	c.logger.Debug("controller has been started")
 
 	// @step: setup watches for the resources
 	if err := c.ctrl.Watch(
-		&source.Kind{Type: &servicesv1.ServiceProvider{}},
+		&source.Kind{Type: &gcp.Project{}},
 		&handler.EnqueueRequestForObject{},
-		&predicate.GenerationChangedPredicate{},
 	); err != nil {
-		c.logger.WithError(err).Error("failed to create watcher on ServiceProvider resource")
+		c.logger.WithError(err).Error("failed to create watcher on resource")
+
 		return err
 	}
 

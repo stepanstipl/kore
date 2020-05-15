@@ -17,57 +17,72 @@
 package v1alpha1
 
 import (
+	core "github.com/appvia/kore/pkg/apis/core/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// ProjectClaimSpec defines the desired state of ProjectClaim
+// ProjectSpec defines the desired state of ProjectClaim
 // +k8s:openapi-gen=true
-type ProjectClaimSpec struct {
-	// ProjectName is the name of the project to create
+type ProjectSpec struct {
+	// ProjectName is the name of the project to create. We do this internally so
+	// we can easily change the project name without changing the resource name
+	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
 	ProjectName string `json:"projectName"`
-	// Organization isthe GCP organization
+	// Organization is a reference to the gcp admin project to use
 	// +kubebuilder:validation:Required
-	Organization corev1.Ownership `json:"organization"`
+	Organization core.Ownership `json:"organization"`
+	// Labels are a set of labels on the project
+	// +kubebuilder:validation:Optional
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
-// ProjectClaimStatus defines the observed state of GCP Project
+// ProjectStatus defines the observed state of GCP Project
 // +k8s:openapi-gen=true
-type ProjectClaimStatus struct {
+type ProjectStatus struct {
 	// CredentialRef is the reference to the credentials secret
 	CredentialRef *v1.SecretReference `json:"credentialRef,omitempty"`
-	// Conditions is a set of components conditions
-	Conditions *corev1.Components `json:"conditions,omitempty"`
 	// ProjectID is the project id
 	ProjectID string `json:"projectID,omitempty"`
-	// ProjectRef is a reference to the underlying project
-	ProjectRef corev1.Ownership `json:"projectRef,omitempty"`
 	// Status provides a overall status
-	Status corev1.Status `json:"status,omitempty"`
+	Status core.Status `json:"status,omitempty"`
+	// Conditions is a set of components conditions
+	Conditions *core.Components `json:"conditions,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ProjectClaim is the Schema for the ProjectClaims API
+// Project is the Schema for the ProjectClaims API
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:path=projectclaims,scope=Namespaced
-type ProjectClaim struct {
+// +kubebuilder:resource:path=projects,scope=Namespaced
+type Project struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   ProjectClaimSpec   `json:"spec,omitempty"`
-	Status ProjectClaimStatus `json:"status,omitempty"`
+	Spec   ProjectSpec   `json:"spec,omitempty"`
+	Status ProjectStatus `json:"status,omitempty"`
+}
+
+// Ownership creates and returns an ownership reference
+func (p *Project) Ownership() corev1.Ownership {
+	return corev1.Ownership{
+		Group:     GroupVersion.Group,
+		Kind:      "Project",
+		Name:      p.Name,
+		Namespace: p.Namespace,
+		Version:   GroupVersion.Version,
+	}
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ProjectClaimList contains a list of ProjectClaim
-type ProjectClaimList struct {
+// ProjectList contains a list of ProjectClaim
+type ProjectList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []ProjectClaim `json:"items"`
+	Items           []Project `json:"items"`
 }

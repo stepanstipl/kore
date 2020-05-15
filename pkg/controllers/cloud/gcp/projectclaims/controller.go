@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package serviceproviders
+package projectclaims
 
 import (
 	"context"
 	"time"
 
-	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
+	gcp "github.com/appvia/kore/pkg/apis/gcp/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
 
@@ -35,6 +35,7 @@ import (
 
 var _ controllers.Interface2 = &Controller{}
 
+// Controller is the controller for the projectclaims
 type Controller struct {
 	kore.Interface
 	name   string
@@ -54,7 +55,8 @@ func init() {
 
 // NewController creates and returns a serviceproviders controller
 func NewController(logger log.FieldLogger) *Controller {
-	name := "serviceproviders"
+	name := "projectclaims"
+
 	return &Controller{
 		name: name,
 		logger: logger.WithFields(log.Fields{
@@ -83,20 +85,15 @@ func (c *Controller) RunWithDependencies(ctx context.Context, mgr manager.Manage
 	c.ctrl = ctrl
 	c.Interface = hi
 
-	if !c.Config().IsFeatureGateEnabled(kore.FeatureGateServices) {
-		c.logger.Debug("serviceproviders controller is disabled")
-		return nil
-	}
-
 	c.logger.Debug("controller has been started")
 
 	// @step: setup watches for the resources
 	if err := c.ctrl.Watch(
-		&source.Kind{Type: &servicesv1.ServiceProvider{}},
+		&source.Kind{Type: &gcp.ProjectClaim{}},
 		&handler.EnqueueRequestForObject{},
 		&predicate.GenerationChangedPredicate{},
 	); err != nil {
-		c.logger.WithError(err).Error("failed to create watcher on ServiceProvider resource")
+		c.logger.WithError(err).Error("failed to create watcher on resource")
 		return err
 	}
 

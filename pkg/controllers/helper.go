@@ -19,14 +19,17 @@ package controllers
 import (
 	"context"
 	"errors"
+	"reflect"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -144,4 +147,17 @@ func NewController(name string, mgr manager.Manager, src source.Source, fn recon
 	}
 
 	return ctrl, nil
+}
+
+// PatchStatus is used to patch the status if required
+func PatchStatus(ctx context.Context, cc client.Client, resource, original runtime.Object) error {
+	if !reflect.DeepEqual(resource, original) {
+		if err := cc.Status().Patch(ctx, resource, client.MergeFrom(original)); err != nil {
+			if !kerrors.IsNotFound(err) {
+				return err
+			}
+		}
+	}
+
+	return nil
 }

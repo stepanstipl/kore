@@ -58,9 +58,6 @@ type AccountsRule struct {
 	// +kubebuilder:validation:Required
 	// +listType=set
 	Plans []string `json:"plans"`
-	// Exact override any values in prefix and suffix uses that for the account name
-	// +kubebuilder:validation:Optional
-	Exact string `json:"exact,omitempty"`
 	// Suffix is the applied suffix
 	// +kubebuilder:validation:Optional
 	Suffix string `json:"suffix,omitempty"`
