@@ -133,7 +133,7 @@ func (s clusterappmanImpl) Run(ctx context.Context) error {
 	if err := LoadAllManifests(s.RuntimeClient); err != nil {
 		return fmt.Errorf("failed loading manifests - %s", err)
 	}
-	ticker := time.NewTicker(45 * time.Second)
+	ticker := time.NewTicker(10 * time.Second)
 	for {
 		select {
 		case <-ctx.Done():
@@ -156,6 +156,8 @@ func (s clusterappmanImpl) Deploy(ctx context.Context, logger *log.Entry) error 
 	var wg sync.WaitGroup
 	// component updates channel
 	ch := make(chan *kcore.Component, len(mm))
+	defer close(ch)
+
 	var cs = make([]*kcore.Component, len(mm))
 	var components kcore.Components = cs
 	for i, m := range mm {
@@ -164,32 +166,30 @@ func (s clusterappmanImpl) Deploy(ctx context.Context, logger *log.Entry) error 
 		if !ok {
 			return fmt.Errorf("failed creating all manifests as could not find manifest %s", m.Name)
 		}
-		deployCtx, cancel := context.WithTimeout(ctx, m.DeployTimeOut)
-		// make sure we run this cancel whatevs
-		defer cancel()
+
 		wg.Add(1)
-		// start a deployment thread:
-		logger.Infof("starting to wait for '%s' to become ready", ca.Component.Name)
-		go ca.WaitForReadyOrTimeout(deployCtx, ch, &wg)
+
+		go func() {
+			ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+			defer cancel()
+			ca.WaitForReadyOrTimeout(ctx, ch)
+			wg.Done()
+		}()
+
 		// Ensure we capture initial status
 		components[i] = ca.Component
 	}
 	// report initial component status' ahead of https://github.com/appvia/kore/issues/89
-	logger.Logger.Infof("saving initial status")
 	if err := createStatusConfig(ctx, s.RuntimeClient, components); err != nil {
 		return fmt.Errorf("error reporting status: %s", err)
 	}
-	logger.Infof("waiting for %d cluster apps", len(components))
+
 	wg.Wait()
-	logger.Debug("finished waiting for all cluster apps")
-	defer close(ch)
 
 	// now gather up all the component slices from channels now the routines are complete...
 	for i := range components {
 		// get the first component "status"
-		logger.Debugf("getting cluster app status %d of %d", i, len(components))
 		c := <-ch
-		logger.Debugf("received channel update %d for %s", i, c.Name)
 		// get the corresponding app
 		ca, ok := cas[c.Name]
 		// overwrite the component with the received updated "status"
@@ -209,7 +209,6 @@ func (s clusterappmanImpl) Deploy(ctx context.Context, logger *log.Entry) error 
 		}
 		cs[i] = ca.Component
 	}
-	logger.Logger.Infof("saving final status")
 	if err := createStatusConfig(ctx, s.RuntimeClient, components); err != nil {
 		return fmt.Errorf("error reporting status: %s", err)
 	}

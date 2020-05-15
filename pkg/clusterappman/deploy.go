@@ -68,6 +68,8 @@ func (d deployerImpl) Run(ctx context.Context) error {
 		"service": DeployerServiceName,
 	})
 
+	logger.Debugf("clusterappman using image %s", d.clusterAppManImage)
+
 	for {
 		components, err := Deploy(ctx, d.client, logger, d.clusterAppManImage)
 		if err != nil {
@@ -119,18 +121,14 @@ func Deploy(ctx context.Context, cc client.Client, logger *log.Entry, clusterApp
 	}
 
 	// @step: check if the kore cluster manager deployment exists
-	logger.Debugf("deploying clusterappman using image %s", clusterAppManImage)
 	if err := CreateOrUpdateClusterAppManDeployment(ctx, cc, clusterAppManImage); err != nil {
 		logger.WithError(err).Error("trying to create the cluster manager deployment")
 
 		return nil, err
 	}
-	logger.Debug("waiting for kore cluster manager deployment status to appear")
 
 	nctx, cancel := context.WithTimeout(ctx, 4*time.Minute)
 	defer cancel()
-
-	logger.Info("waiting for kore cluster manager to complete")
 
 	// @step: wait for the clusterappman deployment to complete
 	if err := WaitOnStatus(nctx, cc); err != nil {
@@ -138,8 +136,6 @@ func Deploy(ctx context.Context, cc client.Client, logger *log.Entry, clusterApp
 
 		return nil, err
 	}
-
-	logger.Info("kube clusterappman running, status available")
 
 	return GetStatus(ctx, cc)
 
@@ -246,29 +242,15 @@ func CreateClusterManClusterRoleBinding(ctx context.Context, cc client.Client) e
 // WaitOnStatus will wait until the status object exists
 // TODO: define a status object suitabvle for overall cluster status
 func WaitOnStatus(ctx context.Context, cc client.Client) error {
-	// WaitOnStatus checks the status of the job and if not successful returns the error
 	for {
-		select {
-		case <-ctx.Done():
-			return errors.New("context has been cancelled")
-		default:
-		}
-
-		err := func() error {
-			exists, err := StatusExists(ctx, cc)
-			if err != nil {
-				return err
-			}
-			if exists {
-				return nil
-			}
-
-			return errors.New("Kore cluster manager has not reported status yet")
-		}()
-		if err == nil {
+		exists, err := StatusExists(ctx, cc)
+		if err == nil && exists {
 			return nil
 		}
-		time.Sleep(10 * time.Second)
+
+		if utils.Sleep(ctx, 10*time.Second) {
+			return errors.New("waiting for clusterappman status timed out")
+		}
 	}
 }
 

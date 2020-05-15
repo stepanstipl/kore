@@ -22,10 +22,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"sync"
-	"time"
-
-	"github.com/appvia/kore/pkg/utils"
 
 	rc "sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -264,12 +260,9 @@ func (ca Instance) setAppControllerStatus(s bool) {
 // WaitForReadyOrTimeout will wait a reasonable time (defined in context) until a resource is ready
 // if the resource become ready, it will update the channel with the component (and status)
 // if there is any error or a timeout, it will update the channel with the details on the component
-func (ca Instance) WaitForReadyOrTimeout(ctx context.Context, respond chan<- *korev1.Component, wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func (ca Instance) WaitForReadyOrTimeout(ctx context.Context, respond chan<- *korev1.Component) {
 	err := func() error {
 		if ca.app.EnsureNamespace {
-			ca.logger.Infof("ensuring namespace %s exists", ca.app.DefaultNamespace)
 			if err := ensureNamespace(ctx, ca.client, ca.app.DefaultNamespace); err != nil {
 				return fmt.Errorf("failed creating namespace %s: %s", ca.app.DefaultNamespace, err)
 			}
@@ -279,14 +272,13 @@ func (ca Instance) WaitForReadyOrTimeout(ctx context.Context, respond chan<- *ko
 		}
 		ca.logger.Infof("Deployment complete for %s", ca.app.Name)
 
-		// here we handle channels and wait groups not errors so pass the timeout context on:
-		if err := ca.waitOnApplicationStatus(ctx); err != nil {
+		if err := ca.getStatus(ctx); err != nil {
 			return fmt.Errorf("error obtaining status - %s", err)
 		}
 		return nil
 	}()
 	if err != nil {
-		ca.logger.Errorf("error with %s: %w", ca.Component.Name, err)
+		ca.logger.Errorf("error with %s: %s", ca.Component.Name, err.Error())
 		ca.Component.Status = korev1.Unknown
 		ca.Component.Message = fmt.Sprintf("An error occured deploying %s", ca.Component.Name)
 		ca.Component.Detail = fmt.Sprintf("The technical error is: %s", err)
@@ -305,23 +297,14 @@ func (ca Instance) GetApplicationObjectName() string {
 }
 
 // waitOnStatus manages a timeout context when getting application status
-func (ca Instance) waitOnApplicationStatus(ctx context.Context) error {
-	for {
-		err := ca.getStatus(ctx)
-		if err != nil {
-			return err
-		}
+func (ca Instance) getApplicationStatus(ctx context.Context) error {
+	err := ca.getStatus(ctx)
+	if err != nil {
+		return err
+	}
 
-		if ca.Component.Status == korev1.SuccessStatus {
-			return nil
-		}
-
-		if utils.Sleep(ctx, 10*time.Second) {
-			ca.logger.Debugf("context waiting for '%s' timed out", ca.Component.Name)
-
-			// we just accept the last status - it's not an error
-			return nil
-		}
+	if ca.Component.Status == korev1.SuccessStatus {
+		return nil
 	}
 }
 
