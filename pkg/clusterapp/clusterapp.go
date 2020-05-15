@@ -277,7 +277,7 @@ func (ca Instance) WaitForReadyOrTimeout(ctx context.Context, respond chan<- *ko
 		if err := ca.CreateOrUpdate(ctx, ca.app.DefaultNamespace); err != nil {
 			return fmt.Errorf("failed to create or update '%s' deployment: %s", ca.app.Name, err)
 		}
-		ca.logger.Infof("Deployment complete for %s exists", ca.app.Name)
+		ca.logger.Infof("Deployment complete for %s", ca.app.Name)
 
 		// here we handle channels and wait groups not errors so pass the timeout context on:
 		if err := ca.waitOnApplicationStatus(ctx); err != nil {
@@ -286,7 +286,7 @@ func (ca Instance) WaitForReadyOrTimeout(ctx context.Context, respond chan<- *ko
 		return nil
 	}()
 	if err != nil {
-		ca.logger.Errorf("error with %s", ca.Component.Name)
+		ca.logger.Errorf("error with %s: %w", ca.Component.Name, err)
 		ca.Component.Status = korev1.Unknown
 		ca.Component.Message = fmt.Sprintf("An error occured deploying %s", ca.Component.Name)
 		ca.Component.Detail = fmt.Sprintf("The technical error is: %s", err)
