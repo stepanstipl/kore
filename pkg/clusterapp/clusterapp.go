@@ -25,6 +25,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/appvia/kore/pkg/utils"
+
 	rc "sigs.k8s.io/controller-runtime/pkg/client"
 
 	korev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -32,7 +34,6 @@ import (
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
-	"k8s.io/apimachinery/pkg/api/meta"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -239,7 +240,7 @@ func (ca Instance) CreateOrUpdate(ctx context.Context, defaultNamepsace string) 
 		objMeta := getObjMetaAndSetDefaultNamespace(res, defaultNamepsace)
 		// do not affect original object (we don't want to affect redeploy in loop)
 		resCopy := res.DeepCopyObject()
-		if err := ca.waitOnKindDeploy(ctx, resCopy); err != nil {
+		if _, err := kubernetes.CreateOrUpdate(ctx, ca.client, resCopy); err != nil {
 			return fmt.Errorf(
 				"can not deploy %s of kind %s to namespace %s - %s",
 				objMeta.Name,
@@ -293,41 +294,6 @@ func (ca Instance) WaitForReadyOrTimeout(ctx context.Context, respond chan<- *ko
 	respond <- ca.Component
 }
 
-// waitOnKindDeploy will deploy a object and not fail with unregistered Kind's until timeout
-func (ca Instance) waitOnKindDeploy(ctx context.Context, object runtime.Object) error {
-	for {
-		select {
-		case <-ctx.Done():
-			return errors.New("timeout")
-		default:
-		}
-		err := func() error {
-			if _, err := kubernetes.CreateOrUpdate(ctx, ca.client, object); err != nil {
-				return err
-			}
-			return nil
-		}()
-		if err == nil {
-
-			// deploy good, return now
-			return nil
-		}
-		if !meta.IsNoMatchError(err) {
-
-			// generic error and not just waiting for CRD's to be ready...
-			return err
-		}
-		ca.logger.Debug("kind not known, waiting for CRD to be known")
-		time.Sleep(10 * time.Second)
-
-		//if err := ca.client.Reload(); err != nil {
-		//
-		//	// can't re-create API client from known config - should never happen
-		//	return fmt.Errorf("cannot recreate client from known config - %s ", err)
-		//}
-	}
-}
-
 // GetApplicationObjectName will inspect the metadata and return the object name
 // will return error if not defined
 func (ca Instance) GetApplicationObjectName() string {
@@ -341,43 +307,20 @@ func (ca Instance) GetApplicationObjectName() string {
 // waitOnStatus manages a timeout context when getting application status
 func (ca Instance) waitOnApplicationStatus(ctx context.Context) error {
 	for {
-		select {
-		case <-ctx.Done():
-			ca.logger.Debugf("context waiting for '%s' timed out", ca.Component.Name)
-			// we just accept the last status - it's not an error
-
-			return nil
-		default:
-		}
 		err := ca.getStatus(ctx)
-		if err == nil {
-			if ca.Component.Status == korev1.SuccessStatus {
+		if err != nil {
+			return err
+		}
 
-				// Success
-				return nil
-			}
-			if ca.Component.Status == korev1.ErrorStatus {
-				// we'll see if this comes good - could be flapping
-				time.Sleep(10 * time.Second)
-			}
-		} else {
-			if !meta.IsNoMatchError(err) {
+		if ca.Component.Status == korev1.SuccessStatus {
+			return nil
+		}
 
-				// generic error and not just waiting for CRD's to be ready...
-				ca.logger.Debugf("error getting status for %s - %s", ca.Component.Name, err)
+		if utils.Sleep(ctx, 10*time.Second) {
+			ca.logger.Debugf("context waiting for '%s' timed out", ca.Component.Name)
 
-				return err
-			}
-			ca.logger.Debug("waiting for application kind to be known")
-			time.Sleep(10 * time.Second)
-
-			//// Replace current client, hopefully Kind is now known
-			//ca.logger.Debug("reloading client")
-			//if err := ca.client.Reload(); err != nil {
-			//
-			//	// can't re-create API client from known config - should never happen
-			//	return fmt.Errorf("cannot recreate client from known config - %s ", err)
-			//}
+			// we just accept the last status - it's not an error
+			return nil
 		}
 	}
 }
