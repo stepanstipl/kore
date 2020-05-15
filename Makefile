@@ -52,10 +52,16 @@ golang:
 
 generate-clusterappman-manifests:
 	@echo "--> Generating static manifests"
-	@cp ./hack/generate/manifests_vfsdata.go ./pkg/clusterappman/
-	@go generate ./pkg/clusterappman >/dev/null
+	@go generate -tags=dev ./pkg/clusterappman >/dev/null
 
-build: golang generate-clusterappman-manifests
+check-generate-clusterappman-manifests: generate-clusterappman-manifests
+	@if [ $$(git status --porcelain pkg/apiclient | wc -l) -gt 0 ]; then \
+		echo "There are local changes after running 'make generate-clusterappman-manifests'. Did you forget to run it?"; \
+		git status --porcelain pkg/apiclient; \
+		exit 1; \
+	fi
+
+build: golang
 	@echo "--> Compiling the project ($(VERSION))"
 	@mkdir -p bin
 	@for binary in kore kore-apiserver auth-proxy kore-clusterappman; do \
@@ -77,12 +83,12 @@ auth-proxy-image: golang
 	@echo "--> Build the auth-proxy docker image"
 	docker build -t ${REGISTRY}/${AUTHOR}/auth-proxy:${VERSION} -f images/Dockerfile.auth-proxy .
 
-kore-apiserver: golang generate-clusterappman-manifests
+kore-apiserver: golang
 	@echo "--> Compiling the kore-apiserver binary"
 	@mkdir -p bin
 	go build -ldflags "${LFLAGS}" -o bin/kore-apiserver cmd/kore-apiserver/*.go
 
-kore-clusterappman: golang generate-clusterappman-manifests
+kore-clusterappman: golang
 	@echo "--> Compiling the kore-clusterappman binary"
 	@mkdir -p bin
 	go build -ldflags "${LFLAGS}" -o bin/kore-clusterappman cmd/kore-clusterappman/*.go
@@ -353,7 +359,7 @@ golangci-lint:
 	@echo "--> Checking against the golangci-lint"
 	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run ./...
 
-check: generate-clusterappman-manifests
+check:
 	@echo "--> Running code checkers"
 	@$(MAKE) golang
 	@$(MAKE) gofmt
@@ -361,8 +367,9 @@ check: generate-clusterappman-manifests
 	@$(MAKE) spelling
 	@$(MAKE) vet
 	@$(MAKE) verify-licences
+	@$(MAKE) check-generate-clusterappman-manifests
 
-test: generate-clusterappman-manifests
+test:
 	@echo "--> Running the tests"
 	@go test --cover -v $(PACKAGES)
 
