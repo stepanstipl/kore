@@ -296,18 +296,6 @@ func (ca Instance) GetApplicationObjectName() string {
 	return metaObj.Name
 }
 
-// waitOnStatus manages a timeout context when getting application status
-func (ca Instance) getApplicationStatus(ctx context.Context) error {
-	err := ca.getStatus(ctx)
-	if err != nil {
-		return err
-	}
-
-	if ca.Component.Status == korev1.SuccessStatus {
-		return nil
-	}
-}
-
 //getStatus will update the ca.component.status from the ca.ApplicationObject conditions
 func (ca Instance) getStatus(ctx context.Context) (err error) {
 	if ca.ApplicationObject == nil {
