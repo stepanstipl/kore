@@ -4,9 +4,9 @@ import axios from 'axios'
 import Link from 'next/link'
 import Router from 'next/router'
 import Error from 'next/error'
-import { Typography, Card, List, Tag, Button, Avatar, Popconfirm, message, Select, Drawer, Badge, Alert, Icon, Modal, Dropdown, Menu } from 'antd'
+import { Typography, Card, List, Button, message, Drawer, Badge, Alert, Icon, Modal, Dropdown, Menu, Tabs, Divider } from 'antd'
 const { Paragraph, Text } = Typography
-const { Option } = Select
+const { TabPane } = Tabs
 import getConfig from 'next/config'
 const { publicRuntimeConfig } = getConfig()
 
@@ -14,20 +14,18 @@ import Breadcrumb from '../../lib/components/layout/Breadcrumb'
 import Cluster from '../../lib/components/teams/cluster/Cluster'
 import Service from '../../lib/components/teams/service/Service'
 import NamespaceClaim from '../../lib/components/teams/namespace/NamespaceClaim'
-import InviteLink from '../../lib/components/teams/InviteLink'
 import NamespaceClaimForm from '../../lib/components/teams/namespace/NamespaceClaimForm'
 import apiRequest from '../../lib/utils/api-request'
 import copy from '../../lib/utils/object-copy'
-import asyncForEach from '../../lib/utils/async-foreach'
 import apiPaths from '../../lib/utils/api-paths'
 import redirect from '../../lib/utils/redirect'
 import KoreApi from '../../lib/kore-api'
+import MembersTab from '../../lib/components/teams/members/MembersTab'
 
 class TeamDashboard extends React.Component {
   static propTypes = {
     invitation: PropTypes.bool,
     team: PropTypes.object.isRequired,
-    members: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
     clusters: PropTypes.object.isRequired,
     services: PropTypes.object.isRequired,
@@ -43,10 +41,9 @@ class TeamDashboard extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      members: props.members,
-      allUsers: [],
-      membersToAdd: [],
+      tabActiveKey: 'clusters',
       clusters: props.clusters,
+      memberCount: -1,
       services: props.services,
       createNamespace: false,
       namespaceClaims: props.namespaceClaims
@@ -57,15 +54,14 @@ class TeamDashboard extends React.Component {
     const name = ctx.query.name
     const api = await KoreApi.client(ctx)
     const getTeam = () => api.GetTeam(name)
-    const getTeamMembers = () => api.ListTeamMembers(name)
     const getTeamClusters = () => api.ListClusters(name)
     const getTeamServices = () => publicRuntimeConfig.featureGates['services'] ? api.ListServices(name) : {}
     const getNamespaceClaims = () => api.ListNamespaces(name)
     const getAvailable = () => api.ListAllocations(name, true)
 
-    return axios.all([getTeam(), getTeamMembers(), getTeamClusters(), getTeamServices(), getNamespaceClaims(), getAvailable()])
-      .then(axios.spread(function (team, members, clusters, services, namespaceClaims, available) {
-        return { team, members, clusters, services, namespaceClaims, available }
+    return axios.all([getTeam(), getTeamClusters(), getTeamServices(), getNamespaceClaims(), getAvailable()])
+      .then(axios.spread(function (team, clusters, services, namespaceClaims, available) {
+        return { team, clusters, services, namespaceClaims, available }
       }))
       .catch(err => {
         throw new Error(err.message)
@@ -84,74 +80,16 @@ class TeamDashboard extends React.Component {
     return teamDetails
   }
 
-  getAllUsers = async () => {
-    const users = await apiRequest(null, 'get', apiPaths.users)
-    if (users.items) {
-      return users.items.map(user => user.spec.username).filter(user => user !== 'admin')
-    }
-    return []
-  }
-
-  componentDidMount() {
-    return this.getAllUsers()
-      .then(users => {
-        const state = copy(this.state)
-        state.allUsers = users
-        this.setState(state)
-      })
-  }
-
   componentDidUpdate(prevProps) {
     const teamFound = Object.keys(this.props.team).length
     const prevTeamName = prevProps.team.metadata && prevProps.team.metadata.name
     if (teamFound && this.props.team.metadata.name !== prevTeamName) {
       const state = copy(this.state)
-      state.members = this.props.members
+      state.tabActiveKey = 'clusters'
       state.clusters = this.props.clusters
       state.services = this.props.services
       state.namespaceClaims = this.props.namespaceClaims
-      this.getAllUsers()
-        .then(users => {
-          state.allUsers = users
-          this.setState(state)
-        })
-    }
-  }
-
-  addTeamMembersUpdated = membersToAdd => {
-    const state = copy(this.state)
-    state.membersToAdd = membersToAdd
-    this.setState(state)
-  }
-
-  addTeamMembers = async () => {
-    const state = copy(this.state)
-    const members = state.members
-
-    await asyncForEach(this.state.membersToAdd, async member => {
-      await apiRequest(null, 'put', `${apiPaths.team(this.props.team.metadata.name).members}/${member}`)
-      message.success(`Team member added: ${member}`)
-      members.items.push(member)
-    })
-
-    state.membersToAdd = []
-    this.setState(state)
-  }
-
-  deleteTeamMember = member => {
-    return async () => {
-      const team = this.props.team.metadata.name
-      try {
-        await apiRequest(null, 'delete', `${apiPaths.team(team).members}/${member}`)
-        const state = copy(this.state)
-        const members = state.members
-        members.items = members.items.filter(m => m !== member)
-        this.setState(state)
-        message.success(`Team member removed: ${member}`)
-      } catch (err) {
-        console.error('Error removing team member', err)
-        message.error('Error removing team member, please try again.')
-      }
+      this.setState(state)
     }
   }
 
@@ -358,102 +296,23 @@ class TeamDashboard extends React.Component {
     )
   }
 
-  render() {
-    const { team, user, invitation } = this.props
-
-    if (Object.keys(team).length === 0) {
-      return <Error statusCode={404} />
-    }
-
-    const { members, namespaceClaims, allUsers, membersToAdd, createNamespace, clusters, services } = this.state
-    const teamMembers = ['ADD_USER', ...members.items]
-
-    const memberActions = member => {
-      const deleteAction = (
-        <Popconfirm
-          key="delete"
-          title="Are you sure you want to remove this user?"
-          onConfirm={this.deleteTeamMember(member)}
-          okText="Yes"
-          cancelText="No"
-        >
-          <a>Remove</a>
-        </Popconfirm>
-      )
-      if (member !== user.id) {
-        return [deleteAction]
-      }
-      return []
-    }
-
-    const membersAvailableToAdd = allUsers.filter(user => !members.items.includes(user))
+  clustersTabContent = () => {
+    const team = this.props.team
+    const { clusters, namespaceClaims, createNamespace } = this.state
     const hasActiveClusters = Boolean(clusters.items.filter(c => c.status && c.status.status === 'Success').length)
 
     return (
-      <div>
-        <div style={{ display: 'inline-block', width: '100%' }}>
-          <div style={{ float: 'left', marginTop: '8px' }}>
-            <Breadcrumb items={[{ text: team.spec.summary }]} />
-          </div>
-          <div style={{ float: 'right' }}>
-            <this.settingsMenu team={team} />
-          </div>
-        </div>
-        <Paragraph>
-          <Text strong>{team.spec.description}</Text>
-          <Text style={{ float: 'right' }}><Text strong>Team ID: </Text>{team.metadata.name}</Text>
-        </Paragraph>
-        {invitation ? (
-          <Alert
-            message="You have joined this team from an invitation"
-            type="info"
-            showIcon
-            style={{ marginBottom: '20px' }}
-          />
-        ) : null}
+      <>
         <Card
-          title={<div><Text style={{ marginRight: '10px' }}>Team members</Text><Badge style={{ backgroundColor: '#1890ff' }} count={members.items.length} /></div>}
-          style={{ marginBottom: '16px' }}
-          className="team-members"
-          extra={<InviteLink team={team.metadata.name} />}
-        >
-          <List
-            dataSource={teamMembers}
-            renderItem={m => {
-              if (m === 'ADD_USER') {
-                return <List.Item style={{ paddingTop: '0' }} actions={[<Button key="add" type="secondary" onClick={this.addTeamMembers}>Add</Button>]}>
-                  <List.Item.Meta
-                    title={
-                      <Select
-                        mode="multiple"
-                        placeholder="Add existing users to this team"
-                        onChange={this.addTeamMembersUpdated}
-                        style={{ width: '100%' }}
-                        value={membersToAdd}
-                      >
-                        {membersAvailableToAdd.map((user, idx) => (
-                          <Option key={idx} value={user}>{user}</Option>
-                        ))}
-                      </Select>
-                    }
-                  />
-                </List.Item>
-              } else {
-                return <List.Item actions={memberActions(m)}>
-                  <List.Item.Meta avatar={<Avatar icon="user" />} title={<Text>{m} {m === user.id ? <Tag>You</Tag>: null}</Text>} />
-                </List.Item>
-              }
-            }}
-          >
-          </List>
-        </Card>
-        <Card
-          title={<div><Text style={{ marginRight: '10px' }}>Clusters</Text><Badge style={{ backgroundColor: '#1890ff' }} count={clusters.items.filter(c => !c.deleted).length} /></div>}
-          style={{ marginBottom: '20px' }}
+          title={<div><Text style={{marginRight: '10px'}}>Clusters</Text><Badge style={{backgroundColor: '#1890ff'}}
+                                                                                count={clusters.items.filter(c => !c.deleted).length}/>
+          </div>}
+          style={{marginBottom: '20px'}}
           extra={
             <div>
               {hasActiveClusters ?
-                <Text style={{ marginRight: '20px' }}><a onClick={this.clusterAccess}><Icon type="eye" theme="twoTone" /> Access</a></Text> :
+                <Text style={{marginRight: '20px'}}><a onClick={this.clusterAccess}><Icon type="eye" theme="twoTone"/>
+                  Access</a></Text> :
                 null
               }
               <Button type="primary">
@@ -485,7 +344,6 @@ class TeamDashboard extends React.Component {
           >
           </List>
         </Card>
-
         <Card
           title={<div><Text style={{ marginRight: '10px' }}>Namespaces</Text><Badge style={{ backgroundColor: '#1890ff' }} count={namespaceClaims.items.filter(c => !c.deleted).length} /></div>}
           style={{ marginBottom: '20px' }}
@@ -508,7 +366,6 @@ class TeamDashboard extends React.Component {
           >
           </List>
         </Card>
-
         <Drawer
           title="Create namespace"
           placement="right"
@@ -519,6 +376,68 @@ class TeamDashboard extends React.Component {
         >
           <NamespaceClaimForm team={team.metadata.name} clusters={clusters} handleSubmit={this.handleNamespaceCreated} handleCancel={this.createNamespace(false)}/>
         </Drawer>
+      </>
+    )
+  }
+  getTabTitle = ({ title, count, icon }) => (
+    <span>
+      {title}
+      {count !== undefined && count !== -1 && <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={count} />}
+      {icon}
+    </span>
+  )
+
+  render() {
+    const { team, invitation } = this.props
+
+    if (Object.keys(team).length === 0) {
+      return <Error statusCode={404} />
+    }
+
+    const { membersCount, namespaceClaims, clusters, services, tabActiveKey } = this.state
+
+    return (
+      <div>
+        <div style={{ display: 'inline-block', width: '100%' }}>
+          <div style={{ float: 'left', marginTop: '8px' }}>
+            <Breadcrumb items={[{ text: team.spec.summary }]} />
+          </div>
+          <div style={{ float: 'right' }}>
+            <this.settingsMenu team={team} />
+          </div>
+        </div>
+        <Paragraph>
+          <Text strong>{team.spec.description}</Text>
+          <Text style={{ float: 'right' }}><Text strong>Team ID: </Text>{team.metadata.name}</Text>
+        </Paragraph>
+        {invitation ? (
+          <Alert
+            message="You have joined this team from an invitation"
+            type="info"
+            showIcon
+            style={{ marginBottom: '20px' }}
+          />
+        ) : null}
+
+        <Tabs activeKey={tabActiveKey} onChange={(key) => this.setState({ tabActiveKey: key })}>
+          <TabPane
+            key="clusters"
+            tab={
+              <span>
+                Clusters
+                <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={clusters.items.filter(c => !c.deleted).length} />
+              </span>
+            }>
+            <this.clustersTabContent />
+          </TabPane>
+
+          <TabPane key="members" tab={this.getTabTitle({ title: 'Members', count: this.state.memberCount })} forceRender={true}>
+            <MembersTab user={this.props.user} team={this.props.team} getMemberCount={(count) => this.setState({ memberCount: count })} />
+          </TabPane>
+          </TabPane>
+        </Tabs>
+
+        <Divider />
 
         {publicRuntimeConfig.featureGates['services'] ? (
           <Card
