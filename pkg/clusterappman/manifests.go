@@ -1,3 +1,5 @@
+// +build dev
+
 /**
  * Copyright 2020 Appvia Ltd <info@appvia.io>
  *
@@ -17,3 +19,8 @@
 //go:generate go run github.com/shurcooL/vfsgen/cmd/vfsgendev -source="github.com/appvia/kore/pkg/clusterappman".Manifests
 
 package clusterappman
+
+import "net/http"
+
+// Manifests contains project assets.
+var Manifests http.FileSystem = http.Dir("manifests")
