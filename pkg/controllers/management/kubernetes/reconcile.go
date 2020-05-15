@@ -216,7 +216,6 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			return reconcile.Result{}, err
 		}
 
-		object.Status.Status = corev1.FailureStatus
 		object.Status.Components.SetCondition(corev1.Component{
 			Name:    ComponentAPIAuthProxy,
 			Message: "Service proxy is running and available",
@@ -238,15 +237,19 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 			return reconcile.Result{RequeueAfter: 2 * time.Minute}, err
 		}
+
+		for _, component := range *components {
+			object.Status.Components.SetCondition(*component)
+			if component.Status != corev1.SuccessStatus {
+				return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+			}
+		}
+
 		object.Status.Components.SetCondition(corev1.Component{
 			Name:    ComponentClusterAppMan,
 			Message: "Cluster manager component is running and available",
 			Status:  corev1.SuccessStatus,
 		})
-		// Provide visibility of remote cluster apps
-		for _, component := range *components {
-			object.Status.Components.SetCondition(*component)
-		}
 
 		// @step: we start by reconcile the cluster admins if any
 		if len(object.Spec.ClusterUsers) > 0 {
