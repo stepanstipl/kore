@@ -17,6 +17,7 @@
 package create
 
 import (
+	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 	cmdutils "github.com/appvia/kore/pkg/cmd/utils"
 	"github.com/appvia/kore/pkg/kore"
 
@@ -26,6 +27,8 @@ import (
 // CreateAdminOptions is used to provision a team
 type CreateAdminOptions struct {
 	cmdutils.Factory
+
+	cmdutil.DefaultHandler
 	// Username is the username to add
 	Username string
 }
@@ -43,14 +46,11 @@ func NewCmdCreateAdmin(factory cmdutils.Factory) *cobra.Command {
 
 	flags := command.Flags()
 	flags.StringVarP(&o.Username, "username", "u", "", "The username of the person being added to the team")
+	flags.Bool("dry-run", false, "shows the resource but does not apply or create (defaults: false)")
+
 	cmdutils.MustMarkFlagRequired(command, "username")
 
 	return command
-}
-
-// Validate is called to validate the options
-func (o *CreateAdminOptions) Validate() error {
-	return nil
 }
 
 // Run implements the action

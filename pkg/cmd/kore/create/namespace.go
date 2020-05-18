@@ -24,6 +24,7 @@ import (
 	"github.com/appvia/kore/pkg/cmd/errors"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 	cmdutils "github.com/appvia/kore/pkg/cmd/utils"
+	"github.com/appvia/kore/pkg/utils/render"
 
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -52,6 +53,8 @@ $ kore get namespaceclaims -t <team>
 // NamespaceOptions is used to provision a team
 type NamespaceOptions struct {
 	cmdutil.Factory
+	// DryRun indicates we only dryrun the resource
+	DryRun bool
 	// Cluster is the cluster you are creating the namespace in
 	Cluster string
 	// Force is used to force an operation
@@ -76,7 +79,10 @@ func NewCmdCreateNamespace(factory cmdutil.Factory) *cobra.Command {
 		Run:     cmdutil.DefaultRunFunc(o),
 	}
 
-	command.Flags().StringVarP(&o.Cluster, "cluster", "c", "", "the name of the cluster you are creating the namespace on `NAME`")
+	flags := command.Flags()
+	flags.StringVarP(&o.Cluster, "cluster", "c", "", "the name of the cluster you are creating the namespace on `NAME`")
+	flags.BoolVar(&o.DryRun, "dry-run", false, "shows the resource but does not apply or create (defaults: false)")
+
 	cmdutils.MustMarkFlagRequired(command, "cluster")
 
 	// @step: add auto complete on the cluster name
@@ -135,6 +141,14 @@ func (o *NamespaceOptions) Run() error {
 				Name:      o.Cluster,
 			},
 		},
+	}
+
+	if o.DryRun {
+		return render.Render().
+			Writer(o.Writer()).
+			Format(render.FormatYAML).
+			Resource(render.FromStruct(namespace)).
+			Do()
 	}
 
 	return o.WaitForCreation(

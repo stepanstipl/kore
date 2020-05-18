@@ -24,6 +24,7 @@ import (
 	cmdutils "github.com/appvia/kore/pkg/cmd/utils"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
+	"github.com/appvia/kore/pkg/utils/render"
 
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -42,6 +43,8 @@ $ kore create username test -e test@appiva.io
 type CreateUserOptions struct {
 	cmdutils.Factory
 	cmdutils.DefaultHandler
+	// DryRun indicates we only dryrun the resources
+	DryRun bool
 	// Name is the username to add
 	Name string
 	// Email is the user email address
@@ -63,7 +66,10 @@ func NewCmdCreateUser(factory cmdutils.Factory) *cobra.Command {
 		Run:     cmdutils.DefaultRunFunc(o),
 	}
 
-	command.Flags().StringVarP(&o.Email, "email", "e", "", "an email address for the user `EMAIL`")
+	flags := command.Flags()
+	flags.StringVarP(&o.Email, "email", "e", "", "an email address for the user `EMAIL`")
+	flags.BoolVar(&o.DryRun, "dry-run", false, "shows the resource but does not apply or create (defaults: false)")
+
 	cmdutils.MustMarkFlagRequired(command, "email")
 
 	// @step: register the autocompletions
@@ -111,6 +117,14 @@ func (o *CreateUserOptions) Run() error {
 			Email:    o.Email,
 			Disabled: false,
 		},
+	}
+
+	if o.DryRun {
+		return render.Render().
+			Writer(o.Writer()).
+			Format(render.FormatYAML).
+			Resource(render.FromStruct(user)).
+			Do()
 	}
 
 	return o.WaitForCreation(

@@ -29,6 +29,7 @@ import (
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 	cmdutils "github.com/appvia/kore/pkg/cmd/utils"
+	"github.com/appvia/kore/pkg/utils/render"
 
 	"github.com/spf13/cobra"
 )
@@ -52,6 +53,8 @@ type CreateSecretOptions struct {
 	cmdutil.DefaultHandler
 	// Description is a summary for the secret is used for
 	Description string
+	// DryRun indicates we only dryrun the resources
+	DryRun bool
 	// EnvFile is a environment file to gen secret
 	EnvFile string
 	// File is file path to gen secret
@@ -89,6 +92,7 @@ func NewCmdCreateSecret(factory cmdutil.Factory) *cobra.Command {
 	flags.StringSliceVar(&o.Literals, "from-literal", []string{}, "adding a literal to the secret `KEY=NAME")
 	flags.StringVar(&o.File, "from-file", "", "builds a secret from the key reference `KEY=PATH`")
 	flags.StringVar(&o.File, "from-env-file", "", "builds a secret from the environment file, `KEY=PATH`")
+	flags.BoolVar(&o.DryRun, "dry-run", false, "shows the resource but does not apply or create (defaults: false)")
 
 	cmdutils.MustMarkFlagRequired(command, "description")
 
@@ -118,6 +122,14 @@ func (o *CreateSecretOptions) Run() error {
 
 	secret.Spec.Description = o.Description
 	secret.Spec.Type = o.Type
+
+	if o.DryRun {
+		return render.Render().
+			Writer(o.Writer()).
+			Format(render.FormatYAML).
+			Resource(render.FromStruct(secret)).
+			Do()
+	}
 
 	if !o.Force {
 		if found, err := o.ClientWithTeamResource(o.Team, o.Resources().MustLookup("secret")).Name(o.Name).Exists(); err != nil {

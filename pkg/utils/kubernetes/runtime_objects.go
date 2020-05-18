@@ -27,6 +27,32 @@ import (
 // UpdateSchema allows any schemas to be added at run time
 type UpdateSchema func(*runtime.Scheme) error
 
+// GetRuntimeKind returns the object kind
+func GetRuntimeKind(o runtime.Object) string {
+	return o.GetObjectKind().GroupVersionKind().Kind
+}
+
+// GetRuntimeName returns the runtime name
+func GetRuntimeName(o runtime.Object) string {
+	meta, err := GetMeta(o)
+	if err != nil {
+		return ""
+	}
+
+	return meta.Name
+}
+
+// GetRuntimeSelfLink returns the self link
+func GetRuntimeSelfLink(o runtime.Object) (string, error) {
+	meta, err := GetMeta(o)
+	if err != nil {
+		return "", err
+	}
+	gvk := o.GetObjectKind().GroupVersionKind()
+
+	return fmt.Sprintf("%s/%s/%s/%s", gvk.Group, gvk.Version, strings.ToLower(gvk.Kind), meta.Name), nil
+}
+
 // ParseK8sYaml creates multiple runtime.Objects
 // - from []byte with yaml defining kubernetes manifests
 // - yaml may contain "---" seperators and multiple manifest definitions
@@ -46,11 +72,12 @@ func ParseK8sYaml(fileR []byte, fnUS UpdateSchema) ([]runtime.Object, error) {
 			return nil, fmt.Errorf("error loading schemes for decoding - %s", err)
 		}
 		decode := scheme.Codecs.UniversalDeserializer().Decode
+
 		obj, _, err := decode([]byte(f), nil, nil)
 		if err != nil {
-
 			return nil, fmt.Errorf("error while decoding yaml object - %s", err)
 		}
+
 		runtimeObjects = append(runtimeObjects, obj)
 	}
 

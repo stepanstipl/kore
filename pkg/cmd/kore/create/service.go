@@ -102,7 +102,7 @@ func NewCmdCreateService(factory cmdutil.Factory) *cobra.Command {
 	flags.StringVarP(&o.Description, "description", "d", "", "a short description for the service `DESCRIPTION`")
 	flags.StringArrayVar(&o.PlanParams, "param", []string{}, "a series of key value pairs used to override plan parameters  `KEY=VALUE`")
 	flags.BoolVarP(&o.ShowTime, "show-time", "T", false, "shows the time it took to successfully provision a new service `BOOL`")
-	flags.BoolVarP(&o.DryRun, "dry-run", "", false, "if true it will print the service object and won't call the API `BOOL`")
+	flags.BoolVar(&o.DryRun, "dry-run", false, "shows the resource but does not apply or create (defaults: false)")
 
 	cmdutils.MustMarkFlagRequired(command, "plan")
 

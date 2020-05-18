@@ -24,16 +24,15 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/tidwall/sjson"
-
-	"github.com/appvia/kore/pkg/utils"
-
 	"github.com/appvia/kore/pkg/cmd/errors"
+	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/render"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"sigs.k8s.io/yaml"
 
 	"github.com/spf13/cobra"
+	"github.com/tidwall/sjson"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/yaml"
 )
 
 // RunHelp is shorthand for displaying the usage
@@ -116,6 +115,25 @@ func MustRegisterFlagCompletionFunc(
 	if err := cmd.RegisterFlagCompletionFunc(flagName, f); err != nil {
 		panic(err)
 	}
+}
+
+// RenderRuntimeObjectToYAML produces some yaml docs
+func RenderRuntimeObjectToYAML(list []runtime.Object, wr io.Writer) error {
+	for i := 0; i < len(list); i++ {
+		fmt.Fprintf(wr, "---\n")
+
+		err := render.Render().
+			Writer(wr).
+			Format(render.FormatYAML).
+			Resource(render.FromStruct(list[i])).
+			Do()
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // ParseDocument returns a collection of parsed documents and the api endpoints

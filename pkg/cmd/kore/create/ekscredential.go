@@ -20,16 +20,19 @@ import (
 	"fmt"
 	"strings"
 
+	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	confv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
 	"github.com/manifoldco/promptui"
 
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 // CreateEKSCredentialsOptions is used to provision a team
@@ -40,6 +43,8 @@ type CreateEKSCredentialsOptions struct {
 	Name string
 	// Description is a description of the credential
 	Description string
+	// DryRun indicates we only dryrun the resources
+	DryRun bool
 	// AccountID is the AWS numerical account ID
 	AccountID string
 	// AccessKeyID is the ID for the AWS access key
@@ -67,13 +72,14 @@ func NewCmdEKSCredentials(factory cmdutil.Factory) *cobra.Command {
 		Run:     cmdutil.DefaultRunFunc(o),
 	}
 
-	command.Flags().StringVarP(&o.Description, "description", "d", "", "the description of the credential")
-	command.Flags().StringVarP(&o.AccountID, "account-id", "i", "", "the AWS numerical account ID")
-	command.Flags().StringVarP(&o.AccessKeyID, "key-id", "k", "", "the AWS access key ID")
-	command.Flags().StringVarP(&o.SecretAccessKey, "secret-key", "s", "", "the AWS secret access key - will prompt if not provided")
-
-	command.Flags().StringArrayVarP(&o.AllocateToTeams, "allocate", "a", []string{}, "list of teams to allocate to, e.g. team1,team2")
-	command.Flags().BoolVar(&o.AllocateToAll, "all-teams", false, "make these credentials available to all teams in kore (if not set, you must create an allocation for these credentials for them to be usable)")
+	flags := command.Flags()
+	flags.StringVarP(&o.Description, "description", "d", "", "the description of the credential")
+	flags.StringVarP(&o.AccountID, "account-id", "i", "", "the AWS numerical account ID")
+	flags.StringVarP(&o.AccessKeyID, "key-id", "k", "", "the AWS access key ID")
+	flags.StringVarP(&o.SecretAccessKey, "secret-key", "s", "", "the AWS secret access key - will prompt if not provided")
+	flags.StringArrayVarP(&o.AllocateToTeams, "allocate", "a", []string{}, "list of teams to allocate to, e.g. team1,team2")
+	flags.BoolVar(&o.AllocateToAll, "all-teams", false, "make these credentials available to all teams in kore (if not set, you must create an allocation for these credentials for them to be usable)")
+	flags.BoolVar(&o.DryRun, "dry-run", false, "shows the resource but does not apply or create (defaults: false)")
 
 	cmdutil.MustMarkFlagRequired(command, "account-id")
 	cmdutil.MustMarkFlagRequired(command, "key-id")
@@ -83,14 +89,41 @@ func NewCmdEKSCredentials(factory cmdutil.Factory) *cobra.Command {
 
 // Run is responsible for creating the credentials
 func (o CreateEKSCredentialsOptions) Run() error {
-	found, err := o.ClientWithTeamResource(kore.HubAdminTeam, o.Resources().MustLookup("ekscredential")).Name(o.Name).Exists()
+	var resources []runtime.Object
+
+	secret, err := o.GenerateSecret()
 	if err != nil {
 		return err
 	}
-	if found {
-		return fmt.Errorf("%q already exists, please edit instead", o.Name)
+	resources = append(resources, secret)
+	resources = append(resources, o.GenerateCredentials())
+	resources = append(resources, o.GenerateAllocation())
+
+	if o.DryRun {
+		return cmdutil.RenderRuntimeObjectToYAML(resources, o.Writer())
 	}
 
+	for i := 0; i < len(resources); i++ {
+		resource := resources[i]
+		kind := strings.ToLower(kubernetes.GetRuntimeKind(resource))
+		name := kubernetes.GetRuntimeName(resource)
+
+		err := o.WaitForCreation(
+			o.ClientWithTeamResource(kore.HubAdminTeam, o.Resources().MustLookup(kind)).
+				Name(name).
+				Payload(resource),
+			o.NoWait,
+		)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// GenerateSecret pulls in and generates the secret
+func (o CreateEKSCredentialsOptions) GenerateSecret() (*configv1.Secret, error) {
 	if o.SecretAccessKey == "" {
 		runner := promptui.Prompt{
 			Label:   "Secret Access Key",
@@ -104,7 +137,7 @@ func (o CreateEKSCredentialsOptions) Run() error {
 		}
 		key, err := runner.Run()
 		if err != nil {
-			return err
+			return nil, err
 		}
 		o.SecretAccessKey = strings.TrimSpace(key)
 	}
@@ -129,19 +162,12 @@ func (o CreateEKSCredentialsOptions) Run() error {
 	}
 	secret.Encode()
 
-	o.Println("Storing credentials secret in Kore")
-	err = o.WaitForCreation(
-		o.ClientWithTeamResource(kore.HubAdminTeam, o.Resources().MustLookup("secret")).
-			Name(o.Name).
-			Payload(secret).
-			Result(&confv1.Secret{}),
-		o.NoWait,
-	)
-	if err != nil {
-		return fmt.Errorf("Error while creating credential secret: %s", err)
-	}
+	return secret, nil
+}
 
-	cred := &eks.EKSCredentials{
+// GenerateCredentials is responsible for producing a gkecredentials
+func (o *CreateEKSCredentialsOptions) GenerateCredentials() *eks.EKSCredentials {
+	return &eks.EKSCredentials{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "EKSCredentials",
 			APIVersion: eks.GroupVersion.String(),
@@ -158,29 +184,16 @@ func (o CreateEKSCredentialsOptions) Run() error {
 			},
 		},
 	}
+}
 
-	o.Println("Storing credentials in Kore")
-	err = o.WaitForCreation(
-		o.ClientWithTeamResource(kore.HubAdminTeam, o.Resources().MustLookup("ekscredential")).
-			Name(o.Name).
-			Payload(cred).
-			Result(&eks.EKSCredentials{}),
-		o.NoWait,
-	)
-	if err != nil {
-		return fmt.Errorf("Error while creating credential: %s", err)
-	}
-
-	if !o.AllocateToAll && len(o.AllocateToTeams) == 0 {
-		return nil
-	}
-
-	// Create allocation
+// GenerateAllocation is responsible for generating an allocation
+func (o *CreateEKSCredentialsOptions) GenerateAllocation() *configv1.Allocation {
 	teams := o.AllocateToTeams
 	if o.AllocateToAll {
 		teams = []string{"*"}
 	}
-	alloc := &confv1.Allocation{
+
+	return &confv1.Allocation{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Allocation",
 			APIVersion: confv1.GroupVersion.String(),
@@ -202,13 +215,4 @@ func (o CreateEKSCredentialsOptions) Run() error {
 			},
 		},
 	}
-
-	o.Println("Storing credential allocation in Kore")
-	return o.WaitForCreation(
-		o.ClientWithTeamResource(kore.HubAdminTeam, o.Resources().MustLookup("allocation")).
-			Name(o.Name).
-			Payload(alloc).
-			Result(&confv1.Allocation{}),
-		o.NoWait,
-	)
 }

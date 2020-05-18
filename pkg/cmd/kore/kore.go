@@ -89,7 +89,7 @@ func NewKoreCommand(streams cmdutil.Streams) (*cobra.Command, error) {
 	flags.StringP("output", "o", "table", "the output format of the resource ("+strings.Join(render.SupportedFormats(), ",")+")")
 	flags.BoolP("no-wait", "", false, "indicates if we should wait for resources to provision")
 	flags.BoolP("show-headers", "", true, "indicates we should display headers on table out (defaults: true)")
-	flags.BoolP("debug", "", false, "indicates we should use debug / trace logging (defaults: false)")
+	flags.Bool("debug", false, "indicates we should use debug / trace logging (defaults: false)")
 	flags.Bool("verbose", false, "enables verbose logging for debugging purposes (defaults: false)")
 
 	// @step: add all the commands to the root

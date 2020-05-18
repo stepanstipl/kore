@@ -21,6 +21,7 @@ import (
 
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
+	"github.com/appvia/kore/pkg/utils/render"
 
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,10 +31,12 @@ import (
 type CreateTeamOptions struct {
 	cmdutil.Factory
 	cmdutil.DefaultHandler
-	// Name is the name of the team
-	Name string
 	// Description is a description for it
 	Description string
+	// DryRun indicates we only dryrun the resources
+	DryRun bool
+	// Name is the name of the team
+	Name string
 	// NoWait indicates if we should wait for a resource to provision
 	NoWait bool
 }
@@ -51,7 +54,9 @@ func NewCmdCreateTeam(factory cmdutil.Factory) *cobra.Command {
 		Run:     cmdutil.DefaultRunFunc(o),
 	}
 
-	command.Flags().StringVarP(&o.Description, "description", "d", "", "the description of the team")
+	flags := command.Flags()
+	flags.StringVarP(&o.Description, "description", "d", "", "the description of the team")
+	flags.BoolVar(&o.DryRun, "dry-run", false, "shows the resource but does not apply or create (defaults: false)")
 
 	return command
 }
@@ -79,6 +84,14 @@ func (o CreateTeamOptions) Run() error {
 			Summary:     o.Name,
 			Description: o.Description,
 		},
+	}
+
+	if o.DryRun {
+		return render.Render().
+			Writer(o.Writer()).
+			Format(render.FormatYAML).
+			Resource(render.FromStruct(team)).
+			Do()
 	}
 
 	return o.WaitForCreation(

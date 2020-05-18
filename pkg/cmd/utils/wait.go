@@ -29,6 +29,7 @@ import (
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/client"
 	kutils "github.com/appvia/kore/pkg/utils"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
@@ -91,6 +92,7 @@ func (f *factory) WaitForDeletion(request client.RestInterface, name string, now
 }
 
 // WaitForCreation is used to wait for the resource to be created
+// @TODO clean this method up
 func (f *factory) WaitForCreation(request client.RestInterface, nowait bool) error {
 	// @step: retrieve the metav1.Object
 	mo, err := kutils.GetMetaObject(request.GetPayload())
@@ -99,13 +101,26 @@ func (f *factory) WaitForCreation(request client.RestInterface, nowait bool) err
 	}
 	name := mo.GetName()
 
+	// @step: retrieve the runtime payload as runtime.Object
+	obj, err := kutils.GetRuntimeObject(request.GetPayload())
+	if err != nil {
+		return err
+	}
+	gvk := obj.GetObjectKind().GroupVersionKind()
+	kind := gvk.Kind
+
 	// @step: check if the object already exists
 	found, err := request.Exists()
 	if err != nil {
 		return err
 	}
 	if found {
-		return fmt.Errorf("Resource %q already exists, please edit instead", name)
+		selflink, err := kubernetes.GetRuntimeSelfLink(obj)
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("Resource %q already exists, please edit instead", selflink)
 	}
 
 	// @step: attempt to create the resource in kore
@@ -141,13 +156,6 @@ func (f *factory) WaitForCreation(request client.RestInterface, nowait bool) err
 	}()
 
 	f.Println("Waiting for resource %q to provision (you can background with ctrl-c)", name)
-
-	obj, err := kutils.GetRuntimeObject(request.GetPayload())
-	if err != nil {
-		return err
-	}
-	gvk := obj.GetObjectKind().GroupVersionKind()
-	kind := gvk.Kind
 
 	u := &unstructured.Unstructured{}
 

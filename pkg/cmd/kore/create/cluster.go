@@ -22,8 +22,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/appvia/kore/pkg/utils/render"
-
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -31,6 +29,7 @@ import (
 	"github.com/appvia/kore/pkg/cmd/errors"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 	cmdutils "github.com/appvia/kore/pkg/cmd/utils"
+	"github.com/appvia/kore/pkg/utils/render"
 
 	"github.com/spf13/cobra"
 	"github.com/tidwall/sjson"
@@ -101,10 +100,10 @@ type CreateClusterOptions struct {
 	Namespaces []string
 	// NoWait indicates if we should wait for a resource to provision
 	NoWait bool
+	// DryRun indicates we only dryrun the resources
+	DryRun bool
 	// ShowTime indicate we should show the build time
 	ShowTime bool
-	// DryRun indicates that we should print the object instead of creating it
-	DryRun bool
 }
 
 // NewCmdCreateCluster returns the create cluster command
@@ -126,7 +125,7 @@ func NewCmdCreateCluster(factory cmdutil.Factory) *cobra.Command {
 	flags.StringArrayVar(&o.PlanParams, "param", []string{}, "a series of key value pairs used to override plan parameters  `KEY=VALUE`")
 	flags.StringSliceVar(&o.Namespaces, "namespaces", []string{}, "preprovision a collection namespaces on this cluster as well `NAMES`")
 	flags.BoolVarP(&o.ShowTime, "show-time", "T", false, "shows the time it took to successfully provision a new cluster `BOOL`")
-	flags.BoolVarP(&o.DryRun, "dry-run", "", false, "if true it will print the cluster object and won't call the API `BOOL`")
+	flags.BoolVar(&o.DryRun, "dry-run", false, "shows the resource but does not apply or create (defaults: false)")
 
 	cmdutils.MustMarkFlagRequired(command, "plan")
 
