@@ -29,7 +29,8 @@ class GCPProjectAutomationSettings extends React.Component {
   state = {
     dataLoading: true,
     submitting: false,
-    errorMessage: false
+    errorMessage: false,
+    emailValid: RequestCredentialAccessForm.ENABLED ? false : true
   }
 
   async fetchComponentData() {
@@ -116,7 +117,13 @@ class GCPProjectAutomationSettings extends React.Component {
   }
 
   disabledSave = () => {
-    if (this.state.submitting || !this.state.gcpManagementType || !this.state.gcpProjectAutomationType) {
+    if (this.state.submitting || !this.state.gcpManagementType) {
+      return true
+    }
+    if (this.state.gcpManagementType === 'EXISTING') {
+      return this.state.emailValid ? false : true
+    }
+    if (this.state.gcpManagementType === 'KORE' && !this.state.gcpProjectAutomationType) {
       return true
     }
     if (this.state.gcpProjectAutomationType === 'CUSTOM' && this.state.gcpProjectList.length === 0) {
@@ -130,10 +137,11 @@ class GCPProjectAutomationSettings extends React.Component {
     if (this.state.gcpManagementType === 'EXISTING') {
       // TODO - need to implement somewhere to store the request access email address
       if (this.state.accountManagement) {
-        // disable account management by deleting the CRD
+        // disable account management by deleting the CRD and Allocation
         try {
           const api = await KoreApi.client()
           await api.RemoveAccount(this.state.accountManagement.metadata.name)
+          await AllocationHelpers.removeAllocation(this.state.accountManagement)
           this.setState({
             submitting: false,
             accountManagement: false,
@@ -145,8 +153,12 @@ class GCPProjectAutomationSettings extends React.Component {
           message.success('Failed to save project automation settings')
           this.setState({ submitting: false, errorMessage: 'A problem occurred trying to save, please try again later.' })
         }
+        return
+      } else {
+        this.setState({ submitting: false })
+        message.success('Project automation settings saved')
+        return
       }
-      return
     }
     try {
       const api = await KoreApi.client()
@@ -157,8 +169,8 @@ class GCPProjectAutomationSettings extends React.Component {
         const accountMgtResource = this.generateAccountManagementResource(gcpOrg, gcpProjectList)
         await api.UpdateAccount(`am-${gcpOrg.metadata.name}`, accountMgtResource)
         await AllocationHelpers.storeAllocation({ resourceToAllocate: accountMgtResource })
+        this.setState({ submitting: false, accountManagement: accountMgtResource })
       })
-      this.setState({ submitting: false })
       message.success('Project automation settings saved')
     } catch (error) {
       console.error('Error saving project automation settings', error)
@@ -318,7 +330,7 @@ class GCPProjectAutomationSettings extends React.Component {
         </div>
         {gcpManagementType === 'KORE' && !gcpOrgsExist && <this.gcpOrgRequired />}
         {gcpManagementType === 'KORE' && gcpOrgsExist && <this.koreManagedProjectsSettings />}
-        {gcpManagementType === 'EXISTING' && <RequestCredentialAccessForm cloud="GKE" helpInModal={true} />}
+        {gcpManagementType === 'EXISTING' && <RequestCredentialAccessForm cloud="GKE" helpInModal={true} onChange={(errors) => this.setState({ emailValid: Boolean(!errors) })}  />}
         <Button style={{ marginTop: '20px', display: 'block' }} type="primary" loading={submitting} disabled={this.disabledSave()} onClick={this.saveSettings}>Save</Button>
       </>
     )

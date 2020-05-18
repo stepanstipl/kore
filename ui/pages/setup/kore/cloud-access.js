@@ -15,8 +15,8 @@ class CloudAccessPage extends React.Component {
   static propTypes = {
     gkeCredentialsList: PropTypes.array.isRequired,
     eksCredentialsList: PropTypes.array.isRequired,
-    gcpAccountManagement: PropTypes.object.isRequired,
-    awsAccountManagement: PropTypes.object.isRequired
+    gcpAccountManagement: PropTypes.object,
+    awsAccountManagement: PropTypes.object
   }
 
   static staticProps = {
