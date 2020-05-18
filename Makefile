@@ -50,13 +50,14 @@ golang:
 	@go version
 	@echo "GOFLAGS: $$GOFLAGS"
 
-generate-clusterappman-manifests:
-	@echo "--> Generating static manifests"
-	@go generate -tags=dev ./pkg/clusterappman >/dev/null
+generate-assets:
+	@echo "--> Generating assets"
+	@go generate ./pkg/kore/assets
+	@go generate -tags=dev ./pkg/kore/assets
 
-check-generate-clusterappman-manifests: generate-clusterappman-manifests
+check-generate-assets: generate-assets
 	@if [ $$(git status --porcelain pkg/apiclient | wc -l) -gt 0 ]; then \
-		echo "There are local changes after running 'make generate-clusterappman-manifests'. Did you forget to run it?"; \
+		echo "There are local changes after running 'make generate-assets'. Did you forget to run it?"; \
 		git status --porcelain pkg/apiclient; \
 		exit 1; \
 	fi
@@ -374,7 +375,7 @@ check:
 	@$(MAKE) spelling
 	@$(MAKE) vet
 	@$(MAKE) verify-licences
-	@$(MAKE) check-generate-clusterappman-manifests
+	@$(MAKE) check-generate-assets
 
 test:
 	@echo "--> Running the tests"

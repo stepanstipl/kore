@@ -2,7 +2,7 @@ Update manifests
 
 ```
 (
-cd pkg/clusterappman/manifests/flux
+cd pkg/kore/assets/applications/flux-helm-operator
 FLUX_VESION=v1.0.1
 
 for file in crds.yaml deployment.yaml namespace.yaml rbac.yaml ; do
