@@ -1,5 +1,7 @@
 import * as React from 'react'
-import { Card, Alert, Form, Input, Button } from 'antd'
+import { Card, Alert, Form, Input, Button, Select, Tag, Tooltip, Typography } from 'antd'
+const { Option } = Select
+const { Paragraph } = Typography
 import PropTypes from 'prop-types'
 import { set } from 'lodash'
 
@@ -10,6 +12,7 @@ import V1ObjectMeta from '../../kore-api/model/V1ObjectMeta'
 import PlanOption from './PlanOption'
 import FormErrorMessage from '../forms/FormErrorMessage'
 import canonical from '../../utils/canonical'
+import copy from '../../utils/object-copy'
 
 class PlanForm extends React.Component {
   static propTypes = {
@@ -18,7 +21,8 @@ class PlanForm extends React.Component {
     kind: PropTypes.string.isRequired,
     validationErrors: PropTypes.array,
     handleSubmit: PropTypes.func.isRequired,
-    handleValidationErrors: PropTypes.func.isRequired
+    handleValidationErrors: PropTypes.func.isRequired,
+    displayUnassociatedPlanWarning: PropTypes.bool
   }
 
   state = {
@@ -38,9 +42,16 @@ class PlanForm extends React.Component {
   }
 
   async fetchComponentData() {
-    const schema = await (await KoreApi.client()).GetPlanSchema(this.props.kind)
+    const api = await KoreApi.client()
+    const [ schema, accountManagementList ] = await Promise.all([
+      api.GetPlanSchema(this.props.kind),
+      api.ListAccounts()
+    ])
+
+    const accountManagement = accountManagementList.items.find(a => a.spec.provider === this.props.kind)
     this.setState({
       schema,
+      accountManagement,
       dataLoading: false
     })
   }
@@ -109,6 +120,34 @@ class PlanForm extends React.Component {
       const api = await KoreApi.client()
       const metadataName = this.getMetadataName(values)
       const planResult = await api.UpdatePlan(metadataName, this.generatePlanResource({ ...values, configuration: this.generatePlanConfiguration() }))
+
+      if (this.accountManagementRulesEnabled()) {
+        const accountMgtResource = copy(this.state.accountManagement)
+        const currentRule = this.props.data.gcpAutomatedProject ? accountMgtResource.spec.rules.find(r => r.name === this.props.data.gcpAutomatedProject.name) : null
+        if (values.gcpAutomatedProject) {
+          // add to the new rule
+          const addedToRule = accountMgtResource.spec.rules.find(r => r.name === values.gcpAutomatedProject)
+          if (addedToRule) {
+            addedToRule.plans.push(metadataName)
+            // remove from the existing rule if it's been changed
+            if (currentRule && currentRule.name !== values.gcpAutomatedProject) {
+              currentRule.plans = currentRule.plans.filter(p => p !== metadataName)
+            }
+            await api.UpdateAccount(`am-${accountMgtResource.spec.organization.name}`, accountMgtResource)
+            planResult.append = { gcpAutomatedProject: addedToRule }
+          } else {
+            console.error('Error occurred setting automated project, could not find rule with name', values.gcpAutomatedProject)
+          }
+        } else {
+          // remove from the existing rule, if one exists
+          if (currentRule) {
+            currentRule.plans = currentRule.plans.filter(p => p !== metadataName)
+            await api.UpdateAccount(`am-${accountMgtResource.spec.organization.name}`, accountMgtResource)
+            planResult.append = { gcpAutomatedProject: false }
+          }
+        }
+      }
+
       return await this.props.handleSubmit(planResult)
     } catch (err) {
       console.error('Error submitting form', err)
@@ -125,11 +164,64 @@ class PlanForm extends React.Component {
     this.props.form.validateFields(this._process)
   }
 
+  accountManagementRulesEnabled = () => Boolean(this.state.accountManagement && this.state.accountManagement.spec.rules)
+
+  allowAutomatedProjectSelectionClear = () => {
+    // only allow clearing of the automated project if it's a new selection or there's more than one plan in the rule
+    // a rule cannot be left with no plans
+    if (!this.props.data.gcpAutomatedProject) {
+      return true
+    }
+    const planRule = this.state.accountManagement.spec.rules.find(r => r.name === this.props.data.gcpAutomatedProject.name)
+    if (planRule.plans.length === 1) {
+      return false
+    }
+    return true
+  }
+
+  disableAutomatedProjectSelection = () => {
+    if (!this.props.data.gcpAutomatedProject) {
+      return false
+    }
+    const planRule = this.state.accountManagement.spec.rules.find(r => r.name === this.props.data.gcpAutomatedProject.name)
+    if (planRule.plans.length === 1) {
+      return true
+    }
+    return false
+  }
+
+  associateWithAccountManagement = () => {
+    // only give an option to associate if rules exist
+    if (!this.accountManagementRulesEnabled()) {
+      return null
+    }
+    const { data, form } = this.props
+    return (
+      <Card style={{ marginBottom: '20px' }}>
+        <Alert
+          message="Associate with Kore managed projects"
+          description="Make this plan available to teams using Kore managed projects."
+          type="info"
+          style={{ marginBottom: '20px' }}
+        />
+        <Form.Item label="GCP automated project" validateStatus={this.fieldError('gcpAutomatedProject') ? 'error' : ''} help={this.fieldError('gcpAutomatedProject') || 'Which GCP automated project this plan is associated with'}>
+          {form.getFieldDecorator('gcpAutomatedProject', {
+            initialValue: data && data.gcpAutomatedProject && data.gcpAutomatedProject.name
+          })(
+            <Select placeholder="GCP automated project" allowClear={this.allowAutomatedProjectSelectionClear()} disabled={this.disableAutomatedProjectSelection()}>
+              {this.state.accountManagement.spec.rules.map(rule => <Option key={rule.name} value={rule.name}>{rule.name} - {rule.description}</Option>)}
+            </Select>
+          )}
+        </Form.Item>
+      </Card>
+    )
+  }
+
   // Only show error after a field is touched.
   fieldError = fieldKey => this.props.form.isFieldTouched(fieldKey) && this.props.form.getFieldError(fieldKey)
 
   render() {
-    const { form, kind, data, validationErrors } = this.props
+    const { form, kind, data, validationErrors, displayUnassociatedPlanWarning } = this.props
     const { dataLoading, submitting, schema, planValues, formErrorMessage } = this.state
     const { getFieldDecorator, getFieldsError } = form
 
@@ -154,6 +246,17 @@ class PlanForm extends React.Component {
 
     return (
       <Form {...formConfig} onSubmit={this.handleSubmit}>
+        {data && data.gcpAutomatedProject && (
+          <Paragraph>GCP project automation: <Tooltip overlay="When using Kore managed GCP projects, clusters using this plan will provisioned inside this project type."><Tag style={{ marginLeft: '10px' }}>{data.gcpAutomatedProject.name}</Tag></Tooltip></Paragraph>
+        )}
+        {displayUnassociatedPlanWarning && (
+          <Alert
+            message="This plan not associated with any GCP automated projects and will not be available for teams to use. Set this below or go to Project automation settings to review this."
+            type="warning"
+            showIcon
+            style={{ marginBottom: '20px' }}
+          />
+        )}
 
         <FormErrorMessage message={formErrorMessage} />
 
@@ -181,6 +284,8 @@ class PlanForm extends React.Component {
             )}
           </Form.Item>
         </Card>
+
+        <this.associateWithAccountManagement />
 
         <Card style={{ marginBottom: '20px' }}>
           <Alert

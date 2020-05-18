@@ -89,13 +89,13 @@ class IndexPage extends React.Component {
 
     const CloudIntegrationWarning = () => cloudIntegrationMissing ? (
       <Alert
-        message="No cloud providers configured"
+        message="No cloud access configured"
         description={
           <div>
-            <Paragraph style={{ marginTop: '10px' }}>Without Cloud provider integrations Kore will be unable to create clusters for teams.</Paragraph>
+            <Paragraph style={{ marginTop: '10px' }}>Without Cloud provider access Kore will be unable to create clusters for teams.</Paragraph>
             <Button type="secondary">
-              <Link href="/configure/cloud">
-                <a>Go to cloud settings</a>
+              <Link href="/setup/kore/cloud-access">
+                <a>Go to cloud access setup</a>
               </Link>
             </Button>
           </div>

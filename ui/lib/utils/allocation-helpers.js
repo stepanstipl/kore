@@ -7,7 +7,6 @@ import config from '../../config'
 
 export default class AllocationHelpers {
   static getAllocationNameForResource = (resource) => {
-    // @TODO: Include kind in allocation name so they're predictabley-named but don't clash
     return resource.metadata.name
   }
 
@@ -43,7 +42,7 @@ export default class AllocationHelpers {
   }
 
   static getAllocationForResource = async (resource) => {
-    if (!resource || !resource.metadata || !resource.metadata.name) {
+    if (!resource || !resource.metadata || !resource.metadata.name || !resource.kind) {
       return null
     }
     return await (await KoreApi.client()).GetAllocation(config.kore.koreAdminTeamName, AllocationHelpers.getAllocationNameForResource(resource))

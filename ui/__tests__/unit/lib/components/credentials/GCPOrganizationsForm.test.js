@@ -12,6 +12,7 @@ describe('GCPOrganizationForm', () => {
     spec: { type: 'gcp-org' }
   }
   const gcpOrganization = {
+    kind: 'Organization',
     metadata: { name: 'gcp' },
     spec: { parentID: 'org-id', billingAccount: 'billing@example.com', account: 'org-cred' }
   }

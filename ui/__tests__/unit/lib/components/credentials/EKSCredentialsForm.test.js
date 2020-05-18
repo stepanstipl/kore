@@ -12,6 +12,7 @@ describe('EKSCredentialsForm', () => {
     spec: { type: 'eks-credential' }
   }
   const eksCredential = {
+    kind: 'EKSCredentials',
     metadata: { name: 'eks' },
     spec: { accountID: '1234567890', accessKeyID: '123', secretAccessKey: 'aws-account-cred' }
   }

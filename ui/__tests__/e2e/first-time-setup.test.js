@@ -2,7 +2,7 @@ const puppeteer = require('puppeteer')
 const { LoginPage } = require('./page-objects/login')
 const { IndexPage } = require('./page-objects/index')
 const { SetupKorePage } = require('./page-objects/setup-kore')
-const { SetupKoreCloudProvidersPage } = require('./page-objects/setup-kore-cloud-providers')
+const { SetupKoreCloudAccessPage } = require('./page-objects/setup-kore-cloud-access')
 const { SetupKoreCompletePage } = require('./page-objects/setup-kore-complete')
 
 const headless = process.env.SHOW_BROWSER !== 'true'
@@ -14,7 +14,7 @@ describe('First time login and setup', () => {
   let indexPage
   let setupKorePage
   let setupKoreCompletePage
-  let setupKoreCloudProvidersPage
+  let setupKoreCloudAccessPage
 
   beforeAll(async () => {
     console.log('creating browser')
@@ -27,7 +27,7 @@ describe('First time login and setup', () => {
     indexPage = new IndexPage(page)
     setupKorePage = new SetupKorePage(page)
     setupKoreCompletePage = new SetupKoreCompletePage(page)
-    setupKoreCloudProvidersPage = new SetupKoreCloudProvidersPage(page)
+    setupKoreCloudAccessPage = new SetupKoreCloudAccessPage(page)
   })
 
   afterAll(() => {
@@ -35,7 +35,7 @@ describe('First time login and setup', () => {
     browser.close()
   })
 
-  test('admin user logs in and sets up a cloud provider', async () => {
+  test('admin user logs in and sets up GCP cloud access', async () => {
     // admin user login
     await loginPage.visitPage()
     await loginPage.localUserLogin()
@@ -44,12 +44,16 @@ describe('First time login and setup', () => {
     setupKorePage.verifyPage()
     await setupKorePage.clickPrimaryButton()
 
-    // cloud provider setup
-    setupKoreCloudProvidersPage.verifyPage()
-    await setupKoreCloudProvidersPage.selectCloud('gcp')
-    await setupKoreCloudProvidersPage.enterGkeCredentials()
-    await setupKoreCloudProvidersPage.clickPrimaryButton({ waitForNav: false })
-    await setupKoreCloudProvidersPage.continueWithoutVerification()
+    // cloud access setup
+    setupKoreCloudAccessPage.verifyPage()
+    await setupKoreCloudAccessPage.selectCloud('gcp')
+    await setupKoreCloudAccessPage.selectKoreManagedGcpProjects()
+    await setupKoreCloudAccessPage.addGcpOrganization()
+    await setupKoreCloudAccessPage.nextStep()
+    await setupKoreCloudAccessPage.selectKoreManagedProjects('custom')
+    await setupKoreCloudAccessPage.setAutomatedProjectDefaults()
+    await setupKoreCloudAccessPage.save()
+    await setupKorePage.clickPrimaryButton()
 
     // kore setup complete
     setupKoreCompletePage.verifyPage()
