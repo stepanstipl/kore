@@ -59,7 +59,6 @@ run-cluster-checks() {
   local name=${1}
   announce "running cluster checks on cluster: ${name}"
   local units=(
-    clusterappman.bats
     clusterroles.bats
     clusterconfig.bats
     namespaces.bats

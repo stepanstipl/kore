@@ -71,8 +71,6 @@ func invoke(ctx *cli.Context) error {
 			Authenticators:             ctx.StringSlice("kore-authentication-plugin"),
 			CertificateAuthority:       ctx.String("certificate-authority"),
 			CertificateAuthorityKey:    ctx.String("certificate-authority-key"),
-			ClusterAppManImage:         ctx.String("clusterappman-image"),
-			ManagedDependencies:        ctx.Bool("enable-managed-dependencies"),
 			EnableClusterProviderCheck: ctx.Bool("enable-cluster-provider-check"),
 			FeatureGates:               featuresGates,
 			HMAC:                       ctx.String("kore-hmac"),

@@ -1,13 +1,3 @@
-# Clusterappman
-
-Clusterappman is a binary built as part of Kore that provides:
-1. Simple single deployment for bootstrapping Kore capabilities into kubernetes clusters
-1. A capability for reporting the status of all Kore provided components / **cluster apps** in a Kubernetes cluster (**coming soon** - see [appvia/kore/#89](https://github.com/appvia/kore/issues/89)
-
-`kore-clusterappman` is deployed automatically by the Kore API server in a new Kubernetes cluster after it is created.
-
-It is delivered as part of the Kore container.
-
 ## Kore Cluster Components
 
 Each Kore component that is deployed to a Kore managed Kubernetes cluster falls into the following categories:
@@ -31,12 +21,11 @@ Together these components will provide:
 - The ability to deploy further Upstream Kore Componets.
 - SSO using the Kore Auth Proxy
 
-#### Mainatining Embedded Kore Components
+#### Maintaining Embedded Kore Components
 
 To add or update an embedded Kore component:
-1. Update the files here: `pkg/clusterappman/manifests/...`. To ease of maintenance, we generate static code from these manifest files.
+1. Update the files here: `pkg/kore/assets/applications/...`. To ease of maintenance, we generate static code from these manifest files.
 1. Ensure a Kubernetes Application resource is created, see [Kubernetes Application](https://github.com/kubernetes-sigs/application#kubernetes-applications)
-1. Update the var (and array of manifest structures) called mm in `pkg/clusterappman/clusterappman.go`
 
 These will be deployed automatically after any Kore kubernetes cluster is built.
 
@@ -61,18 +50,3 @@ These are provided as a separate deployment Artefacts (not compiled as part of K
 As the defacto artefact format for Kubernetes manifests, we have decided to use [Helm Charts](https://helm.sh/)
 
 We plan to automatically reconcile these componets when issue [Reconcile Kubernetes Deployment Artefacts](https://github.com/appvia/kore/issues/87) is addressed.
-
-#### Adding an Upstream Component
-
-A chart compiled into the [kore-helm-repo](https://github.com/appvia/kore-helm-repo) with:
-- An upstream published chart at specified version
-- Any Kore customisations like static parameters or manifest updates
-- A mandated Kubernetes Application resource (to ensure monitoring)
-
-For any Clusterapp, the following simple steps add the capability:
-
-A chart for any required operator is added to the Helm Chart Repo
-A cluster app is defined in the clusterappman with:
-- A CRD is added to the embedded manifests, templated with the correct parameters from the params configmap
-- An application resource is included with manifests when in cluster resources are created by the relevant CRD operator
-- A jsonpath? or another way to monitor arbitrary CRD status when required

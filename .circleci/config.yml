@@ -121,7 +121,6 @@ e2e_job_template: &E2E_JOB_TEMPLATE
         name: Running the Kore API
         command: |
           export AUTH_PROXY_IMAGE="quay.io/appvia/auth-proxy:${CIRCLE_SHA1}"
-          export CLUSTERAPPMAN_IMAGE="quay.io/appvia/kore-apiserver:${CIRCLE_SHA1}"
           bin/kore-apiserver --disable-json-logging --verbose
         background: true
         environment:

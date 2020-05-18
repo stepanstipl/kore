@@ -65,7 +65,7 @@ check-generate-assets: generate-assets
 build: golang
 	@echo "--> Compiling the project ($(VERSION))"
 	@mkdir -p bin
-	@for binary in kore kore-apiserver auth-proxy kore-clusterappman; do \
+	@for binary in kore kore-apiserver auth-proxy; do \
 		echo "--> Building $${binary} binary" ; \
 		go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go || exit 1; \
 	done
@@ -88,11 +88,6 @@ kore-apiserver: golang
 	@echo "--> Compiling the kore-apiserver binary"
 	@mkdir -p bin
 	go build -ldflags "${LFLAGS}" -o bin/kore-apiserver cmd/kore-apiserver/*.go
-
-kore-clusterappman: golang
-	@echo "--> Compiling the kore-clusterappman binary"
-	@mkdir -p bin
-	go build -ldflags "${LFLAGS}" -o bin/kore-clusterappman cmd/kore-clusterappman/*.go
 
 docker-build:
 	@echo "--> Running docker"

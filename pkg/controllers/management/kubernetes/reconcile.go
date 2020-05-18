@@ -49,8 +49,6 @@ const (
 	ComponentClusterCreate = "Cluster Provisioned"
 	// ComponentAPIAuthProxy is the component name
 	ComponentAPIAuthProxy = "SSO Authentication"
-	// ComponentClusterAppMan is the component name for the Kore Cluster application manager
-	ComponentClusterAppMan = "Kore Cluster Manager"
 	// ComponentClusterUsers is the component name for Kore team users of this cluster
 	ComponentClusterUsers = "Kore Cluster Users"
 	// ComponentClusterRoles is the component name for inherited RBAC team roles
@@ -222,31 +220,6 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			Message: "Service proxy is running and available",
 			Status:  corev1.SuccessStatus,
 		})
-
-		// @step: ensure all cluster components are deployed
-		components, err := a.EnsureClusterman(context.Background(), client, a.Config().ClusterAppManImage)
-		if err != nil {
-			logger.WithError(err).Error("trying to provision the clusterappman service")
-
-			object.Status.Status = corev1.FailureStatus
-			object.Status.Components.SetCondition(corev1.Component{
-				Name:    ComponentClusterAppMan,
-				Message: "Kore failed to deploy kore Cluster Manager component",
-				Detail:  err.Error(),
-				Status:  corev1.FailureStatus,
-			})
-
-			return reconcile.Result{RequeueAfter: 2 * time.Minute}, err
-		}
-		object.Status.Components.SetCondition(corev1.Component{
-			Name:    ComponentClusterAppMan,
-			Message: "Cluster manager component is running and available",
-			Status:  corev1.SuccessStatus,
-		})
-		// Provide visibility of remote cluster apps
-		for _, component := range *components {
-			object.Status.Components.SetCondition(*component)
-		}
 
 		// @step: we start by reconcile the cluster admins if any
 		if len(object.Spec.ClusterUsers) > 0 {

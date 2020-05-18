@@ -121,10 +121,6 @@ type Config struct {
 	CertificateAuthority string `json:"certificate-authority,omitempty"`
 	// CertificateAuthorityKey is the path to the private key
 	CertificateAuthorityKey string `json:"certificate-authority-key,omitempty"`
-	// ClusterAppManImage is the image to use for cluster application management
-	ClusterAppManImage string `json:"cluster-app-man-image,omitempty"`
-	// ManagedDependencies will run clusterappman in the apiserver configured
-	ManagedDependencies bool `json:"enable-managed-dependencies"`
 	// DEX is the config required to configure dex
 	DEX DEX `json:"dex,omitempty"`
 	// EnableClusterProviderCheck indicate the k8s controller should check the status of the
