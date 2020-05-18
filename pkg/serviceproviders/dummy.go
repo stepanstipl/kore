@@ -68,6 +68,10 @@ func (d DummyFactory) RequiredCredentialTypes() []schema.GroupVersionKind {
 	return nil
 }
 
+func (d DummyFactory) DefaultProviders() []servicesv1.ServiceProvider {
+	return nil
+}
+
 var _ kore.ServiceProvider = Dummy{}
 
 type Dummy struct {
@@ -117,6 +121,10 @@ func (d Dummy) Plans() []servicesv1.ServicePlan {
 			},
 		},
 	}
+}
+
+func (d Dummy) AdminServices() []servicesv1.Service {
+	return nil
 }
 
 func (d Dummy) PlanJSONSchema(_, _ string) (string, error) {

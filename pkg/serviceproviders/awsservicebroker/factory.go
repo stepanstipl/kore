@@ -254,3 +254,7 @@ func (d ProviderFactory) RequiredCredentialTypes() []schema.GroupVersionKind {
 		},
 	}
 }
+
+func (d ProviderFactory) DefaultProviders() []servicesv1.ServiceProvider {
+	return nil
+}

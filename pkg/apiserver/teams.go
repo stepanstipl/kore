@@ -712,6 +712,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	ws.Route(
 		withAllErrors(ws.PUT("/{team}/services/{name}")).To(u.updateService).
 			Filter(filters.FeatureGateFilter(u.Config(), kore.FeatureGateServices)).
+			Filter(u.systemServiceFilter).
 			Doc("Creates or updates a service").
 			Operation("UpdateService").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
@@ -723,6 +724,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	ws.Route(
 		withAllNonValidationErrors(ws.DELETE("/{team}/services/{name}")).To(u.deleteService).
 			Filter(filters.FeatureGateFilter(u.Config(), kore.FeatureGateServices)).
+			Filter(u.systemServiceFilter).
 			Doc("Deletes a service").
 			Operation("DeleteService").
 			Param(ws.PathParameter("name", "Is the name of the service")).

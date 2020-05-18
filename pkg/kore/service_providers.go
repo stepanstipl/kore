@@ -51,6 +51,17 @@ func RegisterServiceProviderFactory(factory ServiceProviderFactory) {
 	serviceProviderFactories[factory.Type()] = factory
 }
 
+func ServiceProviderFactories() map[string]ServiceProviderFactory {
+	spfLock.Lock()
+	defer spfLock.Unlock()
+
+	res := make(map[string]ServiceProviderFactory, len(serviceProviderFactories))
+	for k, v := range serviceProviderFactories {
+		res[k] = v
+	}
+	return res
+}
+
 type ServiceProviderFactory interface {
 	// Type returns the service provider type
 	Type() string
@@ -62,6 +73,8 @@ type ServiceProviderFactory interface {
 	TearDownProvider(ServiceProviderContext, *servicesv1.ServiceProvider) (complete bool, err error)
 	// RequiredCredentialTypes returns with the required credential types
 	RequiredCredentialTypes() []schema.GroupVersionKind
+	// DefaultProviders returns with a list of providers which should be automatically installed
+	DefaultProviders() []servicesv1.ServiceProvider
 }
 
 type ServiceProviderContext struct {
@@ -105,6 +118,8 @@ type ServiceProvider interface {
 	Kinds() []servicesv1.ServiceKind
 	// Plans returns all default service plans for this provider
 	Plans() []servicesv1.ServicePlan
+	// AdminServices returns with the default admin services we need to install when the service provider is registered
+	AdminServices() []servicesv1.Service
 	// PlanJSONSchema returns the JSON schema for the given service kind and plan
 	PlanJSONSchema(kind string, plan string) (string, error)
 	// CredentialsJSONSchema returns the JSON schema for the credentials configuration

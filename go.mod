@@ -8,6 +8,7 @@ require (
 	github.com/apparentlymart/go-cidr v1.0.1
 	github.com/armon/go-proxyproto v0.0.0-20200108142055-f0b8253b1507
 	github.com/aws/aws-sdk-go v1.29.31
+	github.com/banzaicloud/k8s-objectmatcher v1.3.2
 	github.com/blevesearch/bleve v0.8.1
 	github.com/blevesearch/blevex v0.0.0-20190916190636-152f0fe5c040 // indirect
 	github.com/blevesearch/go-porterstemmer v1.0.2 // indirect
@@ -39,7 +40,6 @@ require (
 	github.com/go-openapi/swag v0.19.8
 	github.com/go-openapi/validate v0.19.7
 	github.com/go-swagger/go-swagger v0.23.0
-	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golangci/golangci-lint v1.23.7
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/uuid v1.1.1
@@ -50,7 +50,6 @@ require (
 	github.com/jinzhu/gorm v1.9.12
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/jpillora/backoff v1.0.0
-	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a // indirect
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/kubernetes-sigs/go-open-service-broker-client v0.0.0-20200323235047-56a01c84bf43
 	github.com/manifoldco/promptui v0.7.0
@@ -86,7 +85,6 @@ require (
 	gonum.org/v1/gonum v0.7.0 // indirect
 	google.golang.org/api v0.20.0
 	google.golang.org/grpc v1.27.0
-	gopkg.in/resty.v1 v1.12.0 // indirect
 	gopkg.in/yaml.v2 v2.2.8
 	k8s.io/api v0.18.2
 	k8s.io/apiextensions-apiserver v0.18.2

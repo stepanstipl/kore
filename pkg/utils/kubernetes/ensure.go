@@ -20,15 +20,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
-	appsv1 "k8s.io/api/apps/v1"
-
-	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -115,8 +113,8 @@ func PatchOrReplace(ctx context.Context, cc client.Client, object runtime.Object
 	// need to create or replace for deployments and services
 	gvk := object.GetObjectKind().GroupVersionKind()
 	log.Debugf("deciding if to delete first for kind %s", gvk.Kind)
-	switch gvk.Kind {
-	case "Service", "Deployment":
+	switch gvk.GroupKind().String() {
+	case "Service", "Deployment.apps":
 		// Try replace instead
 		object, err := CreateOrReplace(ctx, cc, object)
 		if err != nil {
@@ -160,7 +158,7 @@ func CreateOrReplace(ctx context.Context, cc client.Client, object runtime.Objec
 // TypeSpecificUpdate will update where relevant logic is required
 func TypeSpecificUpdate(ctx context.Context, cc client.Client, object runtime.Object) (bool, runtime.Object, error) {
 	gvk := object.GetObjectKind().GroupVersionKind()
-	switch gvk.Kind {
+	switch gvk.GroupKind().String() {
 	case "Service":
 		err := DeleteIfExists(ctx, cc, object)
 		if err != nil {
@@ -168,16 +166,8 @@ func TypeSpecificUpdate(ctx context.Context, cc client.Client, object runtime.Ob
 		}
 		// use existing create logic
 		return false, object, nil
-	case "Deployment":
-		deploy := object.(*appsv1.Deployment)
-		object, err := CreateOrUpdateDeployment(ctx, cc, deploy)
-		if err != nil {
-			return true, object, err
-		}
-		return true, object, nil
-	case "ConfigMap":
-		cm := object.(*corev1.ConfigMap)
-		object, err := CreateOrUpdateConfigMap(ctx, cc, cm)
+	case "Deployment.apps", "ConfigMap":
+		object, err := CreateOrForceUpdate(ctx, cc, object)
 		if err != nil {
 			return true, object, err
 		}
@@ -187,11 +177,36 @@ func TypeSpecificUpdate(ctx context.Context, cc client.Client, object runtime.Ob
 	}
 }
 
-// IsRevisionError checks if a revision issue
-func IsRevisionError(err error) bool {
-	if err == nil {
-		return false
+func CreateOrForceUpdate(ctx context.Context, cc client.Client, obj runtime.Object) (runtime.Object, error) {
+	if err := cc.Create(ctx, obj); err != nil {
+		if !kerrors.IsAlreadyExists(err) {
+			return nil, err
+		}
+
+		objMeta, err := meta.Accessor(obj)
+		if err != nil {
+			return nil, err
+		}
+
+		key := types.NamespacedName{
+			Namespace: objMeta.GetNamespace(),
+			Name:      objMeta.GetName(),
+		}
+		current := obj.DeepCopyObject()
+		if err := cc.Get(ctx, key, current); err != nil {
+			return nil, err
+		}
+
+		currentMeta, err := meta.Accessor(obj)
+		if err != nil {
+			return nil, err
+		}
+
+		objMeta.SetResourceVersion(currentMeta.GetResourceVersion())
+		objMeta.SetGeneration(currentMeta.GetGeneration())
+
+		return obj, cc.Update(ctx, obj)
 	}
 
-	return strings.Contains(err.Error(), "resourceVersion should not be set on objects to be created")
+	return obj, nil
 }

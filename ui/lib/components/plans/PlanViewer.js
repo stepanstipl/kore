@@ -75,18 +75,16 @@ class PlanViewer extends React.Component {
         if (schema.items.type !== 'array' && schema.items.type !== 'object') {
           return value.map((v, i) => <Tag key={i}>{v}</Tag>)
         }
-        return propertyDisplayValue(schema.items, value)
+        return value.map((v) => propertyDisplayValue(schema.items, v))
       }
       case 'object': {
-        return value.map((v, i) => (
-          <Table key={i} size="small" pagination={false} columns={columns} style={{ paddingBottom: i < value.length-1 ? '10px': '' }}
-            dataSource={Object.keys(schema.properties).map(p => ({
-              key: p,
-              property: propertyDisplayName(p),
-              value: v[p]
-            }))}
-          />
-        ))
+        return <Table size="small" pagination={false} columns={columns} style={{ paddingTop: '5px', paddingBottom: '5px' }}
+          dataSource={Object.keys(schema.properties).map(p => ({
+            key: p,
+            property: propertyDisplayName(p),
+            value: propertyDisplayValue(schema.properties[p], value[p])
+          }))}
+        />
       }
       default: return `${value}`
       }

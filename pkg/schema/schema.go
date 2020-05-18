@@ -26,16 +26,22 @@ import (
 	gkev1alpha1 "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
+	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	apiextv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	applicationv1beta "sigs.k8s.io/application/api/v1beta1"
 
 	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
 	kschema "k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
 var (
 	// hs is the schema for kore resources
 	hs *runtime.Scheme
+	// hsCoded is the Codec Factory for the schema
+	hsCodecFactory serializer.CodecFactory
 )
 
 func init() {
@@ -43,6 +49,9 @@ func init() {
 	hs = scheme.Scheme
 
 	builder := runtime.NewSchemeBuilder(
+		apiextv1.AddToScheme,
+		apiextv1beta1.AddToScheme,
+		applicationv1beta.AddToScheme,
 		accountsv1beta1.AddToScheme,
 		clustersv1.AddToScheme,
 		configv1.AddToScheme,
@@ -56,6 +65,8 @@ func init() {
 	if err := builder.AddToScheme(hs); err != nil {
 		log.WithError(err).Fatal("failed to register the schema")
 	}
+
+	hsCodecFactory = serializer.NewCodecFactory(hs)
 }
 
 // IsVersioned checks if the type is versioned in the scheme
@@ -87,4 +98,8 @@ func GetGroupKindVersion(object runtime.Object) (kschema.GroupVersionKind, bool,
 // GetScheme returns a copy of the scheme
 func GetScheme() *runtime.Scheme {
 	return hs
+}
+
+func GetCodecFactory() serializer.CodecFactory {
+	return hsCodecFactory
 }

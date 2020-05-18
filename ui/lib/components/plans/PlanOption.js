@@ -1,6 +1,7 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
 import { Form, Input, Checkbox, InputNumber, Select, Button, Card, Alert } from 'antd'
+const { TextArea } = Input
 import { startCase } from 'lodash'
 import CustomPlanOptionRegistry from './custom'
 import PlanOptionBase from './PlanOptionBase'
@@ -40,12 +41,12 @@ export default class PlanOption extends PlanOptionBase {
           {keys.map((key) =>
             <PlanOption
               {...this.props}
-              key={`${name}.${key}`} 
-              name={`${name}.${key}`} 
-              displayName={key} 
-              property={property.properties[key]} 
-              value={value[key]} 
-              onChange={onChange} 
+              key={`${name}.${key}`}
+              name={`${name}.${key}`}
+              displayName={key}
+              property={property.properties[key]}
+              value={value ? value[key] : null}
+              onChange={onChange}
             />
           )}
         </Card>
@@ -67,7 +68,11 @@ export default class PlanOption extends PlanOptionBase {
         {(() => {
           switch(property.type) {
           case 'string': {
-            return <Input value={value} readOnly={!editable} onChange={(e) => onChange(name, e.target.value)} />
+            if (property.format === 'multiline') {
+              return <TextArea value={value} readOnly={!editable} onChange={(e) => onChange(name, e.target.value)} rows='20' />
+            } else {
+              return <Input value={value} readOnly={!editable} onChange={(e) => onChange(name, e.target.value)} />
+            }
           }
           case 'boolean': {
             return <Checkbox checked={value} disabled={!editable} onChange={(e) => onChange(name, e.target.checked)} />
@@ -85,17 +90,17 @@ export default class PlanOption extends PlanOptionBase {
             } else {
               return (
                 <>
-                  {values.map((val, ind) => 
+                  {values.map((val, ind) =>
                     <React.Fragment key={`${name}[${ind}]`}>
-                      <PlanOption 
+                      <PlanOption
                         {...this.props}
-                        name={`${name}[${ind}]`} 
-                        property={property.items} 
-                        value={val} 
-                        onChange={onChange} 
+                        name={`${name}[${ind}]`}
+                        property={property.items}
+                        value={val}
+                        onChange={onChange}
                       />
                       <Button disabled={!editable} icon="delete" title={`Remove ${displayName} ${ind}`} onClick={() => onChange(name, this.removeFromArray(values, ind))}>
-                        {`Remove ${displayName} ${ind}`}                    
+                        {`Remove ${displayName} ${ind}`}
                       </Button>
                     </React.Fragment>
                   )}

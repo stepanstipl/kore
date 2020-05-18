@@ -18,12 +18,17 @@ package kubernetes
 
 import (
 	"context"
+	"fmt"
 	"time"
+
+	"github.com/appvia/kore/pkg/serviceproviders/application"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
+	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/controllers"
+	"github.com/appvia/kore/pkg/controllers/helpers"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
@@ -165,5 +170,65 @@ func (a k8sCtrl) EnsureFinalizerRemoved(object *clustersv1.Kubernetes) controlle
 		}
 
 		return reconcile.Result{}, nil
+	}
+}
+
+func (a k8sCtrl) GetClusterServices(ctx context.Context, cluster *clustersv1.Kubernetes) ([]servicesv1.Service, error) {
+	var services []servicesv1.Service
+	for _, appName := range []string{"kube-app-manager", "flux-helm-operator"} {
+		servicePlan, err := a.ServicePlans().Get(ctx, "app-"+appName)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get service plan %q: %w", "app-"+appName, err)
+		}
+
+		serviceOwnership := corev1.Ownership{
+			Group:     clustersv1.GroupVersion.Group,
+			Version:   clustersv1.GroupVersion.Version,
+			Kind:      "Cluster",
+			Namespace: cluster.Namespace,
+			Name:      cluster.Name,
+		}
+		services = append(services, application.CreateSystemServiceFromPlan(*servicePlan, serviceOwnership, cluster.Name+"-"+appName, cluster.Namespace))
+	}
+	return services, nil
+}
+
+// Services creates the cluster services
+func (a k8sCtrl) Services(ctrlCtx controllers.Context, cluster *clustersv1.Kubernetes) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		services, err := a.GetClusterServices(ctx, cluster)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+
+		for _, service := range services {
+			resource := corev1.MustGetOwnershipFromObject(&service)
+			cluster.Status.Components.SetCondition(corev1.Component{
+				Name:     service.Name,
+				Status:   corev1.PendingStatus,
+				Message:  "",
+				Detail:   "",
+				Resource: &resource,
+			})
+		}
+
+		return helpers.EnsureServices(
+			ctrlCtx,
+			services,
+			cluster,
+			cluster.Status.Components,
+		)
+	}
+}
+
+// RemoveServices deletes the cluster services
+func (a k8sCtrl) RemoveServices(ctrlCtx controllers.Context, cluster *clustersv1.Kubernetes) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		return helpers.DeleteServices(
+			ctrlCtx,
+			cluster.Namespace,
+			cluster,
+			cluster.Status.Components,
+		)
 	}
 }

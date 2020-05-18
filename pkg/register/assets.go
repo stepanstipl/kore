@@ -7161,6 +7161,36 @@ spec:
         spec:
           description: ServiceSpec defines the desired state of a service
           properties:
+            cluster:
+              description: Cluster contains the reference to the cluster where the
+                credentials will be saved as a secret
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
+            clusterNamespace:
+              description: ClusterNamespace is the target namespace in the cluster
+                where the secret will be created
+              type: string
             configuration:
               description: Configuration are the configuration values for this service
                 It will contain values from the plan + overrides by the user This

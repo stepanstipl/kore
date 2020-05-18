@@ -20,8 +20,3 @@ package server
 func (c Config) IsValid() error {
 	return nil
 }
-
-// IsValid checks the kubernetes configuration is valid
-func (k KubernetesAPI) IsValid() error {
-	return nil
-}

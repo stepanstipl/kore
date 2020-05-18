@@ -14,29 +14,18 @@
  * limitations under the License.
  */
 
-package server
+package kubernetes
 
-import (
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-)
-
-// makeKubernetesConfig returns a rest.Config from the options
-func makeKubernetesConfig(config KubernetesAPI) (*rest.Config, error) {
-	// @step: are we creating an in-cluster kubernetes client
-	if config.InCluster {
-		return rest.InClusterConfig()
-	}
-
-	if config.KubeConfig != "" {
-		return clientcmd.BuildConfigFromFlags("", config.KubeConfig)
-	}
-
-	return &rest.Config{
-		Host:        config.MasterAPIURL,
-		BearerToken: config.Token,
-		TLSClientConfig: rest.TLSClientConfig{
-			Insecure: config.SkipTLSVerify,
-		},
-	}, nil
+// KubernetesAPI is the configuration for the kubernetes api
+type KubernetesAPI struct {
+	// InCluster indicates we are running in cluster
+	InCluster bool
+	// MasterAPIURL specifies the kube-apiserver url
+	MasterAPIURL string
+	// Token is kubernetes token to authenticate to the api
+	Token string
+	// KubeConfig is the kubeconfig path
+	KubeConfig string
+	// SkipTLSVerify indicates we skip tls
+	SkipTLSVerify bool
 }

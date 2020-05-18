@@ -21,6 +21,8 @@ import (
 	"errors"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/controllers"
@@ -33,11 +35,16 @@ import (
 
 // Delete is responsible for deleting the cluster and all it's resources
 func (a *Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (reconcile.Result, error) {
-	a.logger.Debug("attempting to delete the cluster from the api")
+	logger := a.logger.WithFields(log.Fields{
+		"name":      cluster.Name,
+		"namespace": cluster.Namespace,
+	})
+
+	logger.Debug("attempting to delete the cluster from the api")
 
 	finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
 	if !finalizer.IsDeletionCandidate(cluster) {
-		a.logger.Debug("not ready for deletion yet")
+		logger.Debug("not ready for deletion yet")
 
 		return reconcile.Result{}, nil
 	}
@@ -45,7 +52,7 @@ func (a *Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (r
 
 	components, err := NewComponents()
 	if err != nil {
-		a.logger.WithError(err).Error("trying to create the components")
+		logger.WithError(err).Error("trying to create the components")
 
 		return reconcile.Result{}, err
 	}
@@ -68,7 +75,7 @@ func (a *Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (r
 		)
 	}()
 	if err != nil {
-		a.logger.WithError(err).Error("trying to delete the cluster")
+		logger.WithError(err).Error("trying to delete the cluster")
 
 		if controllers.IsCriticalError(err) {
 			cluster.Status.Status = corev1.FailureStatus
@@ -78,7 +85,7 @@ func (a *Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (r
 
 	if err := a.mgr.GetClient().Status().Patch(ctx, cluster, client.MergeFrom(original)); err != nil {
 		if !kerrors.IsNotFound(err) {
-			a.logger.WithError(err).Error("failed to update the cluster status")
+			logger.WithError(err).Error("failed to update the cluster status")
 
 			return reconcile.Result{}, err
 		}

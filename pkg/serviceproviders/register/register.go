@@ -18,6 +18,7 @@ package register
 
 import (
 	_ "github.com/appvia/kore/pkg/serviceproviders"
+	_ "github.com/appvia/kore/pkg/serviceproviders/application"
 	_ "github.com/appvia/kore/pkg/serviceproviders/awsservicebroker"
 	_ "github.com/appvia/kore/pkg/serviceproviders/openservicebroker"
 )

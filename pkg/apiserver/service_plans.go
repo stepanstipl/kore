@@ -17,8 +17,11 @@
 package apiserver
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/appvia/kore/pkg/kore/authentication"
 
 	"github.com/appvia/kore/pkg/apiserver/filters"
 
@@ -40,6 +43,26 @@ type servicePlansHandler struct {
 	DefaultHandler
 }
 
+func (p *servicePlansHandler) systemServicePlanFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
+	handleErrors(req, resp, func() error {
+		name := req.PathParameter("name")
+
+		servicePlan, err := p.ServicePlans().Get(req.Request.Context(), name)
+		if err != nil && err != kore.ErrNotFound {
+			return err
+		}
+
+		if servicePlan != nil && servicePlan.Annotations[kore.AnnotationSystem] == "true" {
+			resp.WriteHeader(http.StatusForbidden)
+			return nil
+		}
+
+		// @step: continue with the chain
+		chain.ProcessFilter(req, resp)
+		return nil
+	})
+}
+
 // Register is called by the api server on registration
 func (p *servicePlansHandler) Register(i kore.Interface, builder utils.PathBuilder) (*restful.WebService, error) {
 	path := builder.Add("serviceplans")
@@ -56,7 +79,7 @@ func (p *servicePlansHandler) Register(i kore.Interface, builder utils.PathBuild
 	ws.Path(path.Base())
 
 	ws.Route(
-		withAllNonValidationErrors(ws.GET("")).To(p.findServicePlans).
+		withAllNonValidationErrors(ws.GET("")).To(p.listServicePlans).
 			Doc("Returns all the available service plans").
 			Operation("ListServicePlans").
 			Param(ws.QueryParameter("kind", "Filters service plans for a specific kind")).
@@ -64,7 +87,7 @@ func (p *servicePlansHandler) Register(i kore.Interface, builder utils.PathBuild
 	)
 
 	ws.Route(
-		withAllNonValidationErrors(ws.GET("/{name}")).To(p.findServicePlan).
+		withAllNonValidationErrors(ws.GET("/{name}")).To(p.getServicePlan).
 			Doc("Returns a specific service plan").
 			Operation("GetServicePlan").
 			Param(ws.PathParameter("name", "The name of the service plan you wish to retrieve")).
@@ -75,6 +98,7 @@ func (p *servicePlansHandler) Register(i kore.Interface, builder utils.PathBuild
 	ws.Route(
 		withAllErrors(ws.PUT("/{name}")).To(p.updateServicePlan).
 			Filter(filters.Admin).
+			Filter(p.systemServicePlanFilter).
 			Doc("Creates or updates a service plan").
 			Operation("UpdateServicePlan").
 			Param(ws.PathParameter("name", "The name of the service plan you wish to create or update")).
@@ -85,6 +109,7 @@ func (p *servicePlansHandler) Register(i kore.Interface, builder utils.PathBuild
 	ws.Route(
 		withAllErrors(ws.DELETE("/{name}")).To(p.deleteServicePlan).
 			Filter(filters.Admin).
+			Filter(p.systemServicePlanFilter).
 			Doc("Deletes a service plan").
 			Operation("DeleteServicePLan").
 			Param(ws.PathParameter("name", "The name of the service plan you wish to delete")).
@@ -96,7 +121,7 @@ func (p *servicePlansHandler) Register(i kore.Interface, builder utils.PathBuild
 }
 
 // findServicePlan returns a specific service plan
-func (p servicePlansHandler) findServicePlan(req *restful.Request, resp *restful.Response) {
+func (p servicePlansHandler) getServicePlan(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		plan, err := p.ServicePlans().Get(req.Request.Context(), req.PathParameter("name"))
 		if err != nil {
@@ -108,25 +133,26 @@ func (p servicePlansHandler) findServicePlan(req *restful.Request, resp *restful
 }
 
 // findServicePlans returns all service plans in the kore
-func (p servicePlansHandler) findServicePlans(req *restful.Request, resp *restful.Response) {
+func (p servicePlansHandler) listServicePlans(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
-		res, err := p.ServicePlans().List(req.Request.Context())
+		user := authentication.MustGetIdentity(req.Request.Context())
+		kind := strings.ToLower(req.QueryParameter("kind"))
+
+		list, err := p.ServicePlans().ListFiltered(req.Request.Context(), func(plan servicesv1.ServicePlan) bool {
+			if kind != "" && plan.Kind != kind {
+				return false
+			}
+			if !user.IsGlobalAdmin() && plan.Annotations[kore.AnnotationSystem] == "true" {
+				return false
+			}
+
+			return true
+		})
 		if err != nil {
 			return err
 		}
 
-		kind := strings.ToLower(req.QueryParameter("kind"))
-		if kind != "" {
-			var items []servicesv1.ServicePlan
-			for _, x := range res.Items {
-				if strings.ToLower(x.Spec.Kind) == kind {
-					items = append(items, x)
-				}
-			}
-			res.Items = items
-		}
-
-		return resp.WriteHeaderAndEntity(http.StatusOK, res)
+		return resp.WriteHeaderAndEntity(http.StatusOK, list)
 	})
 }
 
@@ -140,6 +166,11 @@ func (p servicePlansHandler) updateServicePlan(req *restful.Request, resp *restf
 			return err
 		}
 		plan.Name = name
+
+		if plan.Annotations[kore.AnnotationSystem] != "" {
+			writeError(req, resp, fmt.Errorf("setting %q annotation is not allowed", kore.AnnotationSystem), http.StatusForbidden)
+			return nil
+		}
 
 		if err := p.ServicePlans().Update(req.Request.Context(), plan); err != nil {
 			return err

@@ -59,6 +59,8 @@ const (
 
 // Reconcile is the entrypoint for the reconciliation logic
 func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+	ctx := context.Background()
+
 	logger := log.WithFields(log.Fields{
 		"name":      request.NamespacedName.Name,
 		"namespace": request.NamespacedName.Namespace,
@@ -391,13 +393,18 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		object.Status.APIEndpoint = token.Spec.Data["endpoint"]
 		object.Status.CaCertificate = token.Spec.Data["ca.crt"]
 		//object.Status.Endpoint = a.APIHostname(object)
-		object.Status.Status = corev1.SuccessStatus
-
 		object.Status.Components.SetCondition(corev1.Component{
 			Name:    ComponentClusterCreate,
 			Message: "Cluster has been successfully provisioned",
 			Status:  corev1.SuccessStatus,
 		})
+
+		result, err := a.Services(controllers.NewContext(ctx, logger, a.mgr.GetClient(), a), object)(ctx)
+		if err != nil || result.Requeue || result.RequeueAfter > 0 {
+			return result, err
+		}
+
+		object.Status.Status = corev1.SuccessStatus
 
 		return reconcile.Result{RequeueAfter: 30 * time.Minute}, nil
 	}()

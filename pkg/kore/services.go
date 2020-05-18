@@ -44,6 +44,8 @@ type Services interface {
 	Get(context.Context, string) (*servicesv1.Service, error)
 	// List returns a list of services
 	List(context.Context) (*servicesv1.ServiceList, error)
+	// ListFiltered returns a list of services using the given filter.
+	ListFiltered(context.Context, func(servicesv1.Service) bool) (*servicesv1.ServiceList, error)
 	// Update is used to update a service
 	Update(context.Context, *servicesv1.Service) error
 }
@@ -95,6 +97,27 @@ func (s *servicesImpl) List(ctx context.Context) (*servicesv1.ServiceList, error
 		store.ListOptions.InNamespace(s.team),
 		store.ListOptions.InTo(list),
 	)
+}
+
+// ListFiltered returns a list of services using the given filter.
+// A service is included if the filter function returns true
+func (p servicesImpl) ListFiltered(ctx context.Context, filter func(plan servicesv1.Service) bool) (*servicesv1.ServiceList, error) {
+	res := []servicesv1.Service{}
+
+	servicesList, err := p.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, service := range servicesList.Items {
+		if filter(service) {
+			res = append(res, service)
+		}
+	}
+
+	servicesList.Items = res
+
+	return servicesList, nil
 }
 
 // Get returns a specific service
@@ -225,6 +248,11 @@ func (s *servicesImpl) validateConfiguration(ctx context.Context, service, exist
 	if plan.Spec.Kind != service.Spec.Kind {
 		return validation.NewError("%q failed validation", service.Name).
 			WithFieldErrorf("plan", validation.InvalidType, "service has kind %q, but plan has %q", service.Spec.Kind, plan.Spec.Kind)
+	}
+
+	if plan.Annotations[AnnotationSystem] == "true" {
+		return validation.NewError("%q failed validation", service.Name).
+			WithFieldError("plan", validation.InvalidType, "system plans can not be used to create new services")
 	}
 
 	planConfiguration := make(map[string]interface{})

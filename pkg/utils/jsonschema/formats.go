@@ -26,6 +26,7 @@ import (
 func init() {
 	gojsonschema.FormatCheckers.Add("hh:mm", hourMinuteChecker{})
 	gojsonschema.FormatCheckers.Add("1.2.3.4/16", cidrChecker{})
+	gojsonschema.FormatCheckers.Add("multiline", multilineStringChecker{})
 }
 
 type hourMinuteChecker struct{}
@@ -52,4 +53,12 @@ func (f cidrChecker) IsFormat(input interface{}) bool {
 
 	_, _, err := net.ParseCIDR(val)
 	return err == nil
+}
+
+type multilineStringChecker struct{}
+
+// IsFormat returns true if the input is a time in "hh:mm" format
+func (f multilineStringChecker) IsFormat(input interface{}) bool {
+	_, ok := input.(string)
+	return ok
 }

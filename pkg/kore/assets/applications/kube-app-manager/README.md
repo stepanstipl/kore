@@ -1,8 +1,9 @@
-## Updating application controller
+# Update manifests
 
 The project only maintain a dev image at this time.
 
-### Build the conatainer
+## Build the container
+
 The image referred to was generated from the source e.g.:
 ```
 APP_VERSION=v0.8.2
@@ -18,12 +19,18 @@ docker build -t quay.io/appvia/application-controller:${APP_VERSION} .
 docker push quay.io/appvia/application-controller:${APP_VERSION}
 ```
 
-### Update Manifests
-The manifests were taken from here (with the image updated as below):
-```
-APP_VERSION=v0.8.2
-curl -sSL https://raw.githubusercontent.com/kubernetes-sigs/application/${APP_VERSION}/deploy/kube-app-manager-aio.yaml > ./pkg/kore/assets/applications/kube-app-manager/kube-app-manager-aio.yaml
+## Update Manifests
 
-// edit the image to match our container:
-vi ./pkg/kore/assets/applications/kube-app-manager/kube-app-manager-aio.yaml
-```
+1. Download the manifests
+    ```
+    (
+        APP_VERSION=v0.8.2
+        curl -sSL "https://raw.githubusercontent.com/kubernetes-sigs/application/${APP_VERSION}/deploy/kube-app-manager-aio.yaml" > ./pkg/kore/assets/applications/kube-app-manager/kube-app-manager-aio.yaml
+    )
+    ```
+
+1. Replace the upstream image `quay.io/kubernetes-sigs/kube-app-manager:v0.8.1` with ours:
+
+    ```
+    image: quay.io/appvia/application-controller:v0.8.2
+    ```

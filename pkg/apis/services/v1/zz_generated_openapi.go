@@ -603,6 +603,19 @@ func schema_pkg_apis_services_v1_ServiceSpec(ref common.ReferenceCallback) commo
 							Format:      "",
 						},
 					},
+					"cluster": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Cluster contains the reference to the cluster where the credentials will be saved as a secret",
+							Ref:         ref("github.com/appvia/kore/pkg/apis/core/v1.Ownership"),
+						},
+					},
+					"clusterNamespace": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ClusterNamespace is the target namespace in the cluster where the secret will be created",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"configuration": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Configuration are the configuration values for this service It will contain values from the plan + overrides by the user This will provide a simple interface to calculate diffs between plan and service configuration",

@@ -173,6 +173,10 @@ func (p *Provider) Plans() []servicesv1.ServicePlan {
 	return p.servicePlans
 }
 
+func (p Provider) AdminServices() []servicesv1.Service {
+	return nil
+}
+
 func (p *Provider) PlanJSONSchema(kind string, planName string) (string, error) {
 	plan, found, err := p.planWithFilter(kind, planName, func(p providerPlan) bool { return p.schema != "" })
 	if err != nil {

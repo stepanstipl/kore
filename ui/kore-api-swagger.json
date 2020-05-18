@@ -7122,6 +7122,12 @@
         "plan"
       ],
       "properties": {
+        "cluster": {
+          "$ref": "#/definitions/v1.Ownership"
+        },
+        "clusterNamespace": {
+          "type": "string"
+        },
         "configuration": {
           "type": "object"
         },
@@ -7166,11 +7172,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
-        "issuer",
-        "clientScopes",
         "userClaims",
         "clientID",
-        "clientSecret"
+        "clientSecret",
+        "issuer",
+        "clientScopes"
       ],
       "properties": {
         "clientID": {

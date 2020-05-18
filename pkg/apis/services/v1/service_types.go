@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -47,6 +48,12 @@ type ServiceSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinLength=1
 	Plan string `json:"plan"`
+	// Cluster contains the reference to the cluster where the credentials will be saved as a secret
+	// +kubebuilder:validation:Required
+	Cluster corev1.Ownership `json:"cluster,omitempty"`
+	// ClusterNamespace is the target namespace in the cluster where the secret will be created
+	// +kubebuilder:validation:Required
+	ClusterNamespace string `json:"clusterNamespace,omitempty"`
 	// Configuration are the configuration values for this service
 	// It will contain values from the plan + overrides by the user
 	// This will provide a simple interface to calculate diffs between plan and service configuration
@@ -204,4 +211,24 @@ type ServiceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Service `json:"items"`
+}
+
+// PriorityServiceSlice is used for sorting services by the priority annotation
+// +k8s:openapi-gen=false
+// +kubebuilder:object:generate=false
+// +k8s:deepcopy-gen=false
+type PriorityServiceSlice []Service
+
+func (p PriorityServiceSlice) Len() int {
+	return len(p)
+}
+
+func (p PriorityServiceSlice) Less(i, j int) bool {
+	prioi, _ := strconv.Atoi(p[i].Annotations["kore.appvia.io/priority"])
+	prioj, _ := strconv.Atoi(p[j].Annotations["kore.appvia.io/priority"])
+	return prioi != 0 && (prioj == 0 || prioi < prioj)
+}
+
+func (p PriorityServiceSlice) Swap(i, j int) {
+	p[i], p[j] = p[j], p[i]
 }

@@ -131,3 +131,7 @@ func (d ProviderFactory) TearDownProvider(ctx kore.ServiceProviderContext, provi
 func (d ProviderFactory) RequiredCredentialTypes() []schema.GroupVersionKind {
 	return nil
 }
+
+func (d ProviderFactory) DefaultProviders() []servicesv1.ServiceProvider {
+	return nil
+}
