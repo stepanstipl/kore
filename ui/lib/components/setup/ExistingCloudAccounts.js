@@ -20,7 +20,7 @@ class ExistingCloudAccounts extends React.Component {
   state = {
     currentStep: 0,
     credsCount: 0,
-    emailValid: false
+    emailValid: RequestCredentialAccessForm.ENABLED ? false : true
   }
 
   stepsContentCreds = () => {

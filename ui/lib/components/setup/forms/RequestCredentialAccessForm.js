@@ -6,6 +6,8 @@ const { Paragraph } = Typography
 import { patterns } from '../../../utils/validation'
 
 class RequestCredentialAccessForm extends React.Component {
+  static ENABLED = false
+
   static propTypes = {
     form: PropTypes.object.isRequired,
     cloud: PropTypes.oneOf(['GKE', 'EKS']).isRequired,
@@ -16,19 +18,29 @@ class RequestCredentialAccessForm extends React.Component {
   cloudContent = {
     'GKE': {
       accountNoun: 'Project',
-      help: (
+      help: RequestCredentialAccessForm.ENABLED ? (
         <div>
           <p>When using Kore with existing GCP projects, you must allocate the project credentials to teams in order for them to provision clusters within those projects.</p>
           <p style={{ marginBottom: '0' }}>When a new team is created they may not have access to any project credentials, here you can provide an email address which will be displayed to a team in this situation, in order to request access to a GCP project through Kore.</p>
+        </div>
+      ) : (
+        <div>
+          <p>When using Kore with existing GCP projects, you must allocate the project credentials to teams in order for them to provision clusters within those projects.</p>
+          <p style={{ marginBottom: '0' }}>When a new team is created they may not have access to any project credentials. In this case, the user will be asked to contact the Kore administrator to setup the required access.</p>
         </div>
       )
     },
     'EKS': {
       accountNoun: 'Account',
-      help: (
+      help: RequestCredentialAccessForm.ENABLED ? (
         <div>
           <p>When using Kore with existing AWS accounts, you must allocate the account credentials to teams in order for them to provision clusters within those accounts.</p>
           <p style={{ marginBottom: '0' }}>When a new team is created they may not have access to any account credentials, here you can provide an email address which will be displayed to a team in this situation, in order to request access to an AWS account through Kore.</p>
+        </div>
+      ) : (
+        <div>
+          <p>When using Kore with existing AWS accounts, you must allocate the account credentials to teams in order for them to provision clusters within those accounts.</p>
+          <p style={{ marginBottom: '0' }}>When a new team is created they may not have access to any account credentials. In this case, the user will be asked to contact the Kore administrator to setup the required access.</p>
         </div>
       )
     }
@@ -68,21 +80,23 @@ class RequestCredentialAccessForm extends React.Component {
             />
           </>
         )}
-        <Form>
-          <Form.Item
-            labelAlign="left"
-            labelCol={{ span: 2 }}
-            wrapperCol={{ span: 8 }}
-            label="Email"
-            validateStatus={emailError ? 'error' : ''}
-            help={emailError || `Email for teams who need access to ${content.accountNoun.toLowerCase()} credentials`}
-            onChange={this.onChange}
-          >
-            {getFieldDecorator('email', { rules: [{ required: true, message: 'Please enter the email!' }, { ...patterns.email }] })(
-              <Input type="email" placeholder="Email address" />
-            )}
-          </Form.Item>
-        </Form>
+        {RequestCredentialAccessForm.ENABLED && (
+          <Form>
+            <Form.Item
+              labelAlign="left"
+              labelCol={{ span: 2 }}
+              wrapperCol={{ span: 8 }}
+              label="Email"
+              validateStatus={emailError ? 'error' : ''}
+              help={emailError || `Email for teams who need access to ${content.accountNoun.toLowerCase()} credentials`}
+              onChange={this.onChange}
+            >
+              {getFieldDecorator('email', { rules: [{ required: true, message: 'Please enter the email!' }, { ...patterns.email }] })(
+                <Input type="email" placeholder="Email address" />
+              )}
+            </Form.Item>
+          </Form>
+        )}
       </>
     )
   }
