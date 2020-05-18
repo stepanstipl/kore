@@ -57,6 +57,11 @@ setup() {
   [[ "$status" -eq 0 ]]
 }
 
+@test "We should see the eks nodegroup iam role disappear" {
+  runit "aws iam list-roles | jq '.Roles[].RoleName' -r | grep ${CLUSTER} || true"
+  [[ "$status" -eq 0 ]]
+}
+
 @test "We should able to delete the ${TEAM} eks credentials" {
   runit "${KORE} delete -f ${BASE_DIR}/${E2E_DIR}/eks-credentials.yml -t kore-admin"
   [[ "$status" -eq 0 ]]

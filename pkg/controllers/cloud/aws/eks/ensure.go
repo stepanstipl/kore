@@ -394,6 +394,31 @@ func (t *eksCtrl) EnsureDeletion(cluster *eks.EKS) controllers.EnsureFunc {
 	}
 }
 
+// EnsureRoleDeletion is responsible for deleting the IAM roles
+func (t *eksCtrl) EnsureRoleDeletion(cluster *eks.EKS) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		logger := log.WithFields(log.Fields{
+			"name":      cluster.Name,
+			"namespace": cluster.Namespace,
+		})
+		logger.Debug("attempting to delete the eks cluster role")
+
+		credentials, err := t.GetCredentials(ctx, cluster, cluster.Namespace)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		client := aws.NewIamClient(*credentials)
+
+		if err := client.DeleteEKSClutserRole(ctx, cluster.Name); err != nil {
+			logger.WithError(err).Error("trying to delete the eks cluster role")
+
+			return reconcile.Result{}, err
+		}
+
+		return reconcile.Result{}, nil
+	}
+}
+
 // EnsureSecretDeletion ensure the cluster secret is removed
 func (t *eksCtrl) EnsureSecretDeletion(cluster *eks.EKS) controllers.EnsureFunc {
 	return func(ctx context.Context) (reconcile.Result, error) {

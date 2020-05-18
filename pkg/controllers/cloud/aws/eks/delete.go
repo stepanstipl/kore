@@ -26,14 +26,11 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 // Delete is responsible for deleting the aws eks cluster
 func (t *eksCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
-	ctx := context.Background()
-
 	logger := log.WithFields(log.Fields{
 		"name":      request.NamespacedName.Name,
 		"namespace": request.NamespacedName.Namespace,
@@ -42,7 +39,7 @@ func (t *eksCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 
 	// @step: first we need to check if we have access to the credentials
 	resource := &eks.EKS{}
-	if err := t.mgr.GetClient().Get(ctx, request.NamespacedName, resource); err != nil {
+	if err := t.mgr.GetClient().Get(context.TODO(), request.NamespacedName, resource); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
@@ -56,11 +53,12 @@ func (t *eksCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 			t.EnsureDeletionStatus(resource),
 			t.EnsureNodeGroupsDeleted(resource),
 			t.EnsureDeletion(resource),
+			t.EnsureRoleDeletion(resource),
 			t.EnsureSecretDeletion(resource),
 		}
 
 		for _, handler := range operations {
-			result, err := handler(ctx)
+			result, err := handler(context.TODO())
 			if err != nil {
 				return reconcile.Result{}, err
 			}
@@ -83,8 +81,9 @@ func (t *eksCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 		logger.WithError(err).Error("attempting to delete the eks cluster")
 		resource.Status.Status = corev1.FailureStatus
 	}
+
 	// @step: we update always update the status before throwing any error
-	if err := t.mgr.GetClient().Status().Patch(ctx, resource, client.MergeFrom(original)); err != nil {
+	if err := controllers.PatchStatus(context.TODO(), t.mgr.GetClient(), resource, original); err != nil {
 		logger.WithError(err).Error("trying to update the resource status")
 
 		return reconcile.Result{}, err

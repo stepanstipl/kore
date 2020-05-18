@@ -197,8 +197,6 @@ func (c *clustersImpl) Update(ctx context.Context, cluster *clustersv1.Cluster) 
 
 // validateAccounting is responsible for checking if accounting
 func (c *clustersImpl) validateAccounting(ctx context.Context, cluster *clustersv1.Cluster) error {
-	fmt.Println("KIND", cluster.Spec.Credentials.Kind)
-
 	if cluster.Spec.Credentials.Kind != "AccountManagement" {
 		return nil
 	}

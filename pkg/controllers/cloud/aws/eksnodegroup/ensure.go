@@ -27,6 +27,7 @@ import (
 	ekscc "github.com/appvia/kore/pkg/controllers/cloud/aws/eks"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/cloud/aws"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	awseks "github.com/aws/aws-sdk-go/service/eks"
 	log "github.com/sirupsen/logrus"
@@ -282,5 +283,49 @@ func (n *ctrl) EnsureDeletion(group *eks.EKSNodeGroup) controllers.EnsureFunc {
 		}
 
 		return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+	}
+}
+
+// EnsureRoleDeletion ensures the nodegroup role is removed
+func (n *ctrl) EnsureRoleDeletion(group *eks.EKSNodeGroup) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		logger := log.WithFields(log.Fields{
+			"name":      group.Name,
+			"namespace": group.Namespace,
+		})
+		logger.Debug("attempting to delete eks nodegroup role")
+
+		credentials, err := n.GetCredentials(ctx, group, group.Namespace)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		client := aws.NewIamClient(*credentials)
+
+		if err := client.DeleteEKSNodeGroupRole(ctx, group.Name); err != nil {
+			logger.WithError(err).Error("trying to remove the nodegroup role")
+
+			return reconcile.Result{}, err
+		}
+
+		return reconcile.Result{}, nil
+	}
+}
+
+func (n *ctrl) EnsureRemoveFinalizer(group *eks.EKSNodeGroup) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		logger := log.WithFields(log.Fields{
+			"name":      group.Name,
+			"namespace": group.Namespace,
+		})
+		logger.Debug("attempting to delete eks nodegroup finalizer")
+
+		finalizer := kubernetes.NewFinalizer(n.mgr.GetClient(), finalizerName)
+		if err := finalizer.Remove(group); err != nil {
+			logger.WithError(err).Error("removing the finalizer from eks resource")
+
+			return reconcile.Result{}, err
+		}
+
+		return reconcile.Result{}, nil
 	}
 }

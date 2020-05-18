@@ -70,6 +70,11 @@ setup() {
   done
 }
 
+@test "We should find two iam policies related to the cluster" {
+  runit "aws iam list-roles 2>/dev/null | jq '.Roles[].RoleName' -r | grep ${CLUSTER}"
+  [[ "$status" -eq 0 ]]
+}
+
 @test "We should be able to generate the kubeconfig for the cluster" {
   runit "${KORE} kubeconfig -t ${TEAM}"
   [[ "$status" -eq 0 ]]

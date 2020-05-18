@@ -96,6 +96,59 @@ func (i *IamClient) GetARN() (string, error) {
 	return aws.StringValue(resp.User.Arn), nil
 }
 
+// GetEKSRoleName returns the name of a EKS iam role
+func (i *IamClient) GetEKSRoleName(prefix string) string {
+	return prefix + "-eks-cluster"
+}
+
+// GetEKSNodeGroupRoleName returns the role name
+func (i *IamClient) GetEKSNodeGroupRoleName(prefix string) string {
+	return prefix + "-eks-nodepool"
+}
+
+// DeleteEKSClutserRole is responsible for deleting the eks iam role
+func (i *IamClient) DeleteEKSClutserRole(ctx context.Context, prefix string) error {
+	return i.DeleteRole(ctx, i.GetEKSRoleName(prefix))
+}
+
+// DeleteEKSNodeGroupRole is responsible for removing any iam role associated to the nodegroup
+func (i *IamClient) DeleteEKSNodeGroupRole(ctx context.Context, prefix string) error {
+	return i.DeleteRole(ctx, i.GetEKSNodeGroupRoleName(prefix))
+}
+
+// DeleteRole is responsible for deleting a role
+func (i *IamClient) DeleteRole(ctx context.Context, rolename string) error {
+	role, err := i.RoleExists(ctx, rolename)
+	if err != nil {
+		return err
+	}
+	if role == nil {
+		return nil
+	}
+
+	list, err := i.svc.ListAttachedRolePoliciesWithContext(ctx, &iam.ListAttachedRolePoliciesInput{
+		RoleName: aws.String(rolename),
+	})
+	if err != nil {
+		return err
+	}
+	for _, x := range list.AttachedPolicies {
+		_, err := i.svc.DetachRolePolicyWithContext(ctx, &iam.DetachRolePolicyInput{
+			RoleName:  aws.String(rolename),
+			PolicyArn: x.PolicyArn,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = i.svc.DeleteRoleWithContext(ctx, &iam.DeleteRoleInput{
+		RoleName: aws.String(rolename),
+	})
+
+	return err
+}
+
 // EnsureEKSClusterRole will return the cluster role and the nodepool role
 func (i *IamClient) EnsureEKSClusterRole(ctx context.Context, prefix string) (*iam.Role, error) {
 	arn, err := i.GetARN()
@@ -107,8 +160,9 @@ func (i *IamClient) EnsureEKSClusterRole(ctx context.Context, prefix string) (*i
 		amazonEKSClusterPolicy,
 		amazonEKSServicePolicy,
 	}
+	roleName := i.GetEKSRoleName(prefix)
 
-	return i.EnsureRole(ctx, prefix+"-eks-cluster", policies, policy)
+	return i.EnsureRole(ctx, roleName, policies, policy)
 }
 
 // EnsureEKSNodePoolRole will create a nodepool eks role
@@ -118,8 +172,9 @@ func (i *IamClient) EnsureEKSNodePoolRole(ctx context.Context, prefix string) (*
 		amazonEC2ContainerRegistryReadOnly,
 		amazonEKSCNIPolicy,
 	}
+	name := i.GetEKSNodeGroupRoleName(prefix)
 
-	return i.EnsureRole(ctx, prefix+"-eks-nodepool", policies, nodeStsTrustPolicy)
+	return i.EnsureRole(ctx, name, policies, nodeStsTrustPolicy)
 }
 
 // EnsureRole is responsible for creating a role

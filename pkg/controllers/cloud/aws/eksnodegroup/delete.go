@@ -22,11 +22,9 @@ import (
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
-	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -55,6 +53,8 @@ func (n *ctrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 			[]controllers.EnsureFunc{
 				n.EnsureDeletionStatus(resource),
 				n.EnsureDeletion(resource),
+				n.EnsureRoleDeletion(resource),
+				n.EnsureRemoveFinalizer(resource),
 			},
 		)
 	}()
@@ -64,27 +64,11 @@ func (n *ctrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 	}
 
 	// @step: we update always update the status before throwing any error
-	if err := n.mgr.GetClient().Status().Patch(ctx, resource, client.MergeFrom(original)); err != nil {
+	if err := controllers.PatchStatus(ctx, n.mgr.GetClient(), resource, original); err != nil {
 		logger.WithError(err).Error("trying to update the resource status")
 
 		return reconcile.Result{}, err
 	}
 
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	if result.Requeue || result.RequeueAfter > 0 {
-		return result, nil
-	}
-
-	// @cool we can remove the finalizer now
-	finalizer := kubernetes.NewFinalizer(n.mgr.GetClient(), finalizerName)
-	if err := finalizer.Remove(resource); err != nil {
-		logger.WithError(err).Error("removing the finalizer from eks resource")
-
-		return reconcile.Result{}, err
-	}
-
-	return result, nil
+	return result, err
 }
