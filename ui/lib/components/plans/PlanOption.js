@@ -1,10 +1,16 @@
 import * as React from 'react'
+import PropTypes from 'prop-types'
 import { Form, Input, Checkbox, InputNumber, Select, Button, Card, Alert } from 'antd'
 import { startCase } from 'lodash'
 import CustomPlanOptionRegistry from './custom'
 import PlanOptionBase from './PlanOptionBase'
+import KeyMap from './custom/KeyMap'
 
 export default class PlanOption extends PlanOptionBase {
+  static propTypes = {
+    help: PropTypes.string,
+  }
+
   constructor(props) {
     super(props)
   }
@@ -23,36 +29,41 @@ export default class PlanOption extends PlanOptionBase {
 
     const onChange = this.props.onChange || (() => {})
 
-    const displayName = this.props.displayName || name
+    const displayName = this.props.displayName || startCase(name)
+    const help = this.props.help || this.describe(property)
 
     // Special handling for object types - represent as a card with a plan option for each property:
-    if (property.type === 'object') {
-      const keys = property.properties ? Object.keys(property.properties) : []
+    if (property.type === 'object' && property.properties) {
+      const keys = Object.keys(property.properties)
       return (
-        <Card size="small" title={startCase(displayName)}>
+        <Card size="small" title={displayName}>
           {keys.map((key) =>
             <PlanOption
-              mode={this.props.mode} 
-              team={this.props.team} 
-              resourceType={resourceType}
-              kind={kind}
+              {...this.props}
               key={`${name}.${key}`} 
               name={`${name}.${key}`} 
               displayName={key} 
               property={property.properties[key]} 
               value={value[key]} 
-              editable={editable} 
               onChange={onChange} 
-              validationErrors={this.props.validationErrors}
             />
           )}
         </Card>
       )
     }
 
+    // Special handling for 'key map' object types, represented in json schema as having no properties list and additionalProperties of type string
+    if (property.type === 'object' && property.additionalProperties && property.additionalProperties.type === 'string') {
+      return (
+        <Form.Item label={displayName} help={help}>
+          <KeyMap value={value} property={property} editable={editable} onChange={(v) => onChange(name, v)} />
+        </Form.Item>
+      )
+    }
+
     // Handle all other types:
     return (
-      <Form.Item label={startCase(displayName)} help={this.describe(property)}>
+      <Form.Item label={displayName} help={help}>
         {(() => {
           switch(property.type) {
           case 'string': {
@@ -77,26 +88,22 @@ export default class PlanOption extends PlanOptionBase {
                   {values.map((val, ind) => 
                     <React.Fragment key={`${name}[${ind}]`}>
                       <PlanOption 
-                        mode={this.props.mode} 
-                        team={this.props.team} 
-                        resourceType={resourceType}
-                        kind={kind}
+                        {...this.props}
                         name={`${name}[${ind}]`} 
                         property={property.items} 
                         value={val} 
-                        editable={editable} 
                         onChange={onChange} 
-                        validationErrors={this.props.validationErrors} />
-                      <Button disabled={!editable} icon="delete" title={`Remove ${startCase(displayName)} ${ind}`} onClick={() => onChange(name, this.removeFromArray(values, ind))}>
-                        {`Remove ${startCase(displayName)} ${ind}`}                    
+                      />
+                      <Button disabled={!editable} icon="delete" title={`Remove ${displayName} ${ind}`} onClick={() => onChange(name, this.removeFromArray(values, ind))}>
+                        {`Remove ${displayName} ${ind}`}                    
                       </Button>
                     </React.Fragment>
                   )}
                   {(values.length === 0) ?
-                    <Alert type="info" message={`No ${startCase(displayName)} currently defined.`}/>
+                    <Alert type="info" message={`No ${displayName} currently defined.`}/>
                     : null}
-                  <Button disabled={!editable} icon="plus" title={`Add new ${startCase(displayName)}`} onClick={() => onChange(name, this.addComplexItemToArray(property, values))}>
-                    {`Add new ${startCase(displayName)}`}
+                  <Button disabled={!editable} icon="plus" title={`Add new ${displayName}`} onClick={() => onChange(name, this.addComplexItemToArray(property, values))}>
+                    {`Add new ${displayName}`}
                   </Button>
                 </>
               )

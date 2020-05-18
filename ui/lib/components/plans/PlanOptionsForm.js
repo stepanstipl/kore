@@ -91,12 +91,14 @@ class PlanOptionsForm extends React.Component {
   }
 
   onValueChange(name, value) {
-    // Texture this back into a state update using the nifty lodash set function:
-    const newPlanValues = set({ ...this.state.planValues }, name, value)
-    this.setState({
-      planValues: newPlanValues
+    this.setState((state) => {
+      // Texture this back into a state update using the nifty lodash set function:
+      let newPlanValues = set({ ...state.planValues }, name, value)
+      this.props.onPlanChange && this.props.onPlanChange(newPlanValues)
+      return {
+        planValues: set({ ...state.planValues }, name, value)
+      }
     })
-    this.props.onPlanChange && this.props.onPlanChange(newPlanValues)
   }
 
   handleShowReadOnlyChange = (checked) => {
@@ -130,6 +132,7 @@ class PlanOptionsForm extends React.Component {
               team={this.props.team}
               resourceType={this.props.resourceType}
               kind={this.props.kind}
+              plan={this.state.planValues}
               key={name} 
               name={name} 
               property={this.state.schema.properties[name]} 
