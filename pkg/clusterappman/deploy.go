@@ -18,9 +18,11 @@ package clusterappman
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"strings"
 	"time"
+
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	kcore "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/clusterappman/status"
@@ -39,9 +41,7 @@ import (
 )
 
 const (
-	// clusterappmanNamespace is the namespace the clusterappmanager runs in
-	clusterappmanNamespace = KoreNamespace
-	// clusterappmanDeployment
+	clusterappmanNamespace  = KoreNamespace
 	clusterappmanDeployment = "kore-clusterappman"
 	// DeployerServiceName is the name used for logging when deploying clusterappman
 	DeployerServiceName = "clusterappman-deployer"
@@ -75,8 +75,9 @@ func (d deployerImpl) Run(ctx context.Context) error {
 		if err != nil {
 			logger.Errorf("error deploying clusterappman - %s", err)
 		}
-
-		status.SetAppManComponents(*components, d.client)
+		if components != nil {
+			status.SetAppManComponents(*components, d.client)
+		}
 
 		if utils.Sleep(ctx, 1*time.Minute) {
 			logger.Info("clusterappman deployer stopped")
@@ -127,26 +128,16 @@ func Deploy(ctx context.Context, cc client.Client, logger *log.Entry, clusterApp
 		return nil, err
 	}
 
-	nctx, cancel := context.WithTimeout(ctx, 4*time.Minute)
-	defer cancel()
-
-	// @step: wait for the clusterappman deployment to complete
-	if err := WaitOnStatus(nctx, cc); err != nil {
-		logger.WithError(err).Error("failed waiting for kore cluster manager status to complete")
-
-		return nil, err
-	}
-
 	return GetStatus(ctx, cc)
-
 }
 
 // CreateOrUpdateClusterAppManDeployment will reconcile the clusterappman deployment
 func CreateOrUpdateClusterAppManDeployment(ctx context.Context, cc client.Client, image string) error {
 	name := clusterappmanDeployment
-	if _, err := kubernetes.CreateOrUpdate(ctx, cc, &appsv1.Deployment{
+
+	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      clusterappmanDeployment,
+			Name:      name,
 			Namespace: clusterappmanNamespace,
 			Labels: map[string]string{
 				"name": name,
@@ -187,20 +178,77 @@ func CreateOrUpdateClusterAppManDeployment(ctx context.Context, cc client.Client
 				},
 			},
 		},
-	}); err != nil {
-		return err
 	}
-	return nil
-}
 
-// HasConfigMap checks if a configmap exists
-func HasConfigMap(ctx context.Context, cc client.Client, name string) (bool, error) {
-	return kubernetes.CheckIfExists(ctx, cc, &v1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: clusterappmanNamespace,
-		},
-	})
+	if strings.HasSuffix(image, ":dev") {
+		deployment.Spec.Template.Spec.Containers[0].Command = []string{
+			"sh", "-c", "time make kore-clusterappman && bin/kore-clusterappman",
+		}
+		deployment.Spec.Template.Spec.Containers[0].VolumeMounts = []v1.VolumeMount{
+			{
+				Name:      "kore",
+				MountPath: "/go/src/github.com/appvia/kore",
+			},
+			{
+				Name:      "gocache",
+				MountPath: "/root/.cache/go-build",
+			},
+		}
+
+		deployment.Spec.Template.Spec.Volumes = []v1.Volume{
+			{
+				Name: "kore",
+				VolumeSource: v1.VolumeSource{
+					HostPath: &v1.HostPathVolumeSource{
+						Path: "/go/src/github.com/appvia/kore",
+						Type: (*v1.HostPathType)(utils.StringPtr(string(v1.HostPathDirectory))),
+					},
+				},
+			},
+			{
+				Name: "gocache",
+				VolumeSource: v1.VolumeSource{
+					PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
+						ClaimName: name + "-gocache",
+					},
+				},
+			},
+		}
+
+		pvc := &v1.PersistentVolumeClaim{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "PersistentVolumeClaim",
+				APIVersion: v1.SchemeGroupVersion.String(),
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      name + "-gocache",
+				Namespace: clusterappmanNamespace,
+			},
+			Spec: v1.PersistentVolumeClaimSpec{
+				AccessModes: []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+				Resources: v1.ResourceRequirements{
+					Requests: v1.ResourceList{
+						v1.ResourceStorage: resource.MustParse("1Gi"),
+					},
+				},
+			},
+		}
+		exists, err := kubernetes.CheckIfExists(ctx, cc, pvc)
+		if err != nil {
+			return fmt.Errorf("failed to get persistent volume claim %q: %w", name+"-gocache", err)
+		}
+		if !exists {
+			if err := cc.Create(ctx, pvc); err != nil {
+				return fmt.Errorf("failed to create persistent volume claim %q: %w", name+"-gocache", err)
+			}
+		}
+	}
+
+	if _, err := kubernetes.CreateOrUpdate(ctx, cc, deployment); err != nil {
+		return fmt.Errorf("failed to create deployment %q: %w", name, err)
+	}
+
+	return nil
 }
 
 // EnsureNamespace creates a namespace for the clusterappmanager if required
@@ -237,24 +285,4 @@ func CreateClusterManClusterRoleBinding(ctx context.Context, cc client.Client) e
 		return fmt.Errorf("error tying to apply kore clusterappman clusterrole %q", err)
 	}
 	return nil
-}
-
-// WaitOnStatus will wait until the status object exists
-// TODO: define a status object suitabvle for overall cluster status
-func WaitOnStatus(ctx context.Context, cc client.Client) error {
-	for {
-		exists, err := StatusExists(ctx, cc)
-		if err == nil && exists {
-			return nil
-		}
-
-		if utils.Sleep(ctx, 10*time.Second) {
-			return errors.New("waiting for clusterappman status timed out")
-		}
-	}
-}
-
-// StatusExists checks if the status exists already
-func StatusExists(ctx context.Context, cc client.Client) (bool, error) {
-	return HasConfigMap(ctx, cc, StatusCongigMap)
 }

@@ -27,10 +27,7 @@ import (
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	applicationv1beta "sigs.k8s.io/application/api/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -67,54 +64,11 @@ func ensureNamespace(ctx context.Context, cc client.Client, name string) error {
 }
 
 func getObjMetaAndSetDefaultNamespace(obj runtime.Object, defaultNamepsace string) metav1.ObjectMeta {
-	objMeta := getObjMeta(obj)
+	objMeta, _ := kubernetes.GetMeta(obj)
 	if err := setMissingNamespace(defaultNamepsace, obj); err != nil {
 		log.Debugf("error setting namespace for %v - %s", obj, err)
 	}
 	return objMeta
-}
-
-func getObjMeta(obj runtime.Object) metav1.ObjectMeta {
-	metaObj := metav1.ObjectMeta{}
-	accessor, err := meta.Accessor(obj)
-	// TODO: error or not error
-	if err != nil {
-		if err != nil {
-			log.Errorf("error getting metadata for %v - %s", obj, err)
-		}
-		log.Debugf(
-			"got object %s/%s",
-			metaObj.Namespace,
-			metaObj.Name,
-		)
-	}
-	// TODO: this should be a pointer to the origonal data?
-	metaObj.Name = accessor.GetName()
-	metaObj.Namespace = accessor.GetNamespace()
-	metaObj.Labels = accessor.GetLabels()
-	return metaObj
-}
-
-func toUnstructuredObj(obj runtime.Object) (*unstructured.Unstructured, error) {
-	u := &unstructured.Unstructured{}
-	u.SetGroupVersionKind(schema.GroupVersionKind{
-		Version: obj.GetObjectKind().GroupVersionKind().Version,
-		Kind:    obj.GetObjectKind().GroupVersionKind().Kind,
-		Group:   obj.GetObjectKind().GroupVersionKind().Group,
-	})
-	objMeta := getObjMeta(obj)
-	u.SetName(objMeta.Name)
-	u.SetNamespace(objMeta.Namespace)
-	u.SetLabels(objMeta.Labels)
-	return u, nil
-}
-
-func fromUnstructuredApplication(us *unstructured.Unstructured) (*applicationv1beta.Application, error) {
-	app := &applicationv1beta.Application{}
-	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(us.Object, app); err != nil {
-		return nil, err
-	}
-	return app, nil
 }
 
 // createHelmSecrets creates a configmap for configuring the kore cluster manager

@@ -62,7 +62,7 @@ type Instance struct {
 	// Resources are the K8 objects created for deployment / update
 	Resources []runtime.Object
 	// ApplicationObject provides access to the application kind
-	ApplicationObject runtime.Object
+	ApplicationObject *applicationv1beta.Application
 	// Kore standard component and status information
 	Component *korev1.Component
 	app       AppData
@@ -190,7 +190,6 @@ func NewAppFromManifestFiles(cc rc.Client, app AppData) (Instance, error) {
 		if err != nil {
 			return ca, err
 		}
-		// Pass the yaml ([]bytes) and function (addAllToScheme) to create the runtim.Objects
 		apiObjs, err := kubernetes.ParseK8sYaml(fileBytes)
 		if err != nil {
 			return ca, err
@@ -201,7 +200,7 @@ func NewAppFromManifestFiles(cc rc.Client, app AppData) (Instance, error) {
 				if ca.ApplicationObject != nil {
 					return ca, fmt.Errorf("only one application kind per kore cluster app is supported in cluster app %s", app.Name)
 				}
-				ca.ApplicationObject = obj
+				ca.ApplicationObject = obj.(*applicationv1beta.Application)
 			}
 			ca.Resources = append(ca.Resources, obj)
 		}
@@ -286,16 +285,6 @@ func (ca Instance) WaitForReadyOrTimeout(ctx context.Context, respond chan<- *ko
 	respond <- ca.Component
 }
 
-// GetApplicationObjectName will inspect the metadata and return the object name
-// will return error if not defined
-func (ca Instance) GetApplicationObjectName() string {
-	if ca.ApplicationObject == nil {
-		return ""
-	}
-	metaObj := getObjMeta(ca.ApplicationObject)
-	return metaObj.Name
-}
-
 //getStatus will update the ca.component.status from the ca.ApplicationObject conditions
 func (ca Instance) getStatus(ctx context.Context) (err error) {
 	if ca.ApplicationObject == nil {
@@ -313,17 +302,8 @@ func (ca Instance) getStatus(ctx context.Context) (err error) {
 			ca.Component.Status = korev1.Unknown
 		}
 	} else {
-		// we need to check if the application CRD exists and get it's status'
-		// TODO uses kubebuilder client to get application type and resolve data...
-		// First pass just return if object exists?
-		us, err := toUnstructuredObj(ca.ApplicationObject)
-		if err != nil {
-
-			return fmt.Errorf("error trying to create an unstructured object from the application kind - %s", err)
-
-		}
-		ca.logger.Debugf("attempting to get status for %s", ca.GetApplicationObjectName())
-		exists, err := kubernetes.GetIfExists(ctx, ca.client, us)
+		ca.logger.Debugf("attempting to get status for %s", ca.ApplicationObject.Name)
+		exists, err := kubernetes.GetIfExists(ctx, ca.client, ca.ApplicationObject)
 		if err != nil {
 
 			return err
@@ -336,15 +316,10 @@ func (ca Instance) getStatus(ctx context.Context) (err error) {
 
 			return nil
 		}
-		// Marshall unstructure object back to application kind
-		app, err := fromUnstructuredApplication(us)
-		if err != nil {
 
-			return fmt.Errorf("error when trying to retrieve an application crd object from an untrustured type - %s", err)
+		ca.setAppControllerStatus(true)
 
-		}
-		for _, condition := range app.Status.Conditions {
-			ca.setAppControllerStatus(true)
+		for _, condition := range ca.ApplicationObject.Status.Conditions {
 			if condition.Type == applicationv1beta.Ready {
 				if condition.Status == "True" {
 					ca.Component.Status = korev1.SuccessStatus
