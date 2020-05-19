@@ -22,7 +22,6 @@ import (
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
-	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -31,15 +30,16 @@ import (
 
 // Delete is responsible for deleting the aws eks cluster
 func (t *eksCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
+	ctx := context.Background()
+
 	logger := log.WithFields(log.Fields{
 		"name":      request.NamespacedName.Name,
 		"namespace": request.NamespacedName.Namespace,
 	})
 	logger.Debug("attempting to delete eks cluster")
 
-	// @step: first we need to check if we have access to the credentials
 	resource := &eks.EKS{}
-	if err := t.mgr.GetClient().Get(context.TODO(), request.NamespacedName, resource); err != nil {
+	if err := t.mgr.GetClient().Get(ctx, request.NamespacedName, resource); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
@@ -49,33 +49,16 @@ func (t *eksCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 	original := resource.DeepCopy()
 
 	result, err := func() (reconcile.Result, error) {
-		operations := []controllers.EnsureFunc{
-			t.EnsureDeletionStatus(resource),
-			t.EnsureNodeGroupsDeleted(resource),
-			t.EnsureDeletion(resource),
-			t.EnsureRoleDeletion(resource),
-			t.EnsureSecretDeletion(resource),
-		}
-
-		for _, handler := range operations {
-			result, err := handler(context.TODO())
-			if err != nil {
-				return reconcile.Result{}, err
-			}
-			if result.Requeue || result.RequeueAfter > 0 {
-				return result, nil
-			}
-		}
-
-		// @cool we can remove the finalizer now
-		finalizer := kubernetes.NewFinalizer(t.mgr.GetClient(), finalizerName)
-		if err := finalizer.Remove(resource); err != nil {
-			logger.WithError(err).Error("removing the finalizer from eks resource")
-
-			return reconcile.Result{}, err
-		}
-
-		return reconcile.Result{}, nil
+		return controllers.DefaultEnsureHandler.Run(ctx,
+			[]controllers.EnsureFunc{
+				t.EnsureDeletionStatus(resource),
+				t.EnsureNodeGroupsDeleted(resource),
+				t.EnsureDeletion(resource),
+				t.EnsureRoleDeletion(resource),
+				t.EnsureSecretDeletion(resource),
+				t.EnsureFinalizerRemoved(resource),
+			},
+		)
 	}()
 	if err != nil {
 		logger.WithError(err).Error("attempting to delete the eks cluster")
@@ -83,14 +66,11 @@ func (t *eksCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 	}
 
 	// @step: we update always update the status before throwing any error
-	if err := controllers.PatchStatus(context.TODO(), t.mgr.GetClient(), resource, original); err != nil {
+	if err := controllers.PatchStatus(ctx, t.mgr.GetClient(), resource, original); err != nil {
 		logger.WithError(err).Error("trying to update the resource status")
 
 		return reconcile.Result{}, err
 	}
-	if err != nil {
-		return reconcile.Result{}, err
-	}
 
-	return result, nil
+	return result, err
 }

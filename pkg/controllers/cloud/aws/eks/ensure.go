@@ -28,6 +28,7 @@ import (
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/cloud/aws"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	awseks "github.com/aws/aws-sdk-go/service/eks"
 	log "github.com/sirupsen/logrus"
@@ -427,6 +428,22 @@ func (t *eksCtrl) EnsureSecretDeletion(cluster *eks.EKS) controllers.EnsureFunc 
 			t.mgr.GetClient(), cluster.Namespace, cluster.Name); err != nil {
 
 			return reconcile.Result{}, err
+		}
+
+		return reconcile.Result{}, nil
+	}
+}
+
+// EnsureFinalizerRemoved removes the finalizer now
+func (t *eksCtrl) EnsureFinalizerRemoved(cluster *eks.EKS) controllers.EnsureFunc {
+	client := t.mgr.GetClient()
+
+	return func(ctx context.Context) (reconcile.Result, error) {
+		finalizer := kubernetes.NewFinalizer(client, finalizerName)
+		if finalizer.IsDeletionCandidate(cluster) {
+			if err := finalizer.Remove(cluster); err != nil {
+				return reconcile.Result{}, err
+			}
 		}
 
 		return reconcile.Result{}, nil

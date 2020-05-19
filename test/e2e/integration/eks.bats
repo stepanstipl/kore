@@ -71,7 +71,7 @@ setup() {
 }
 
 @test "We should find two iam policies related to the cluster" {
-  runit "aws iam list-roles 2>/dev/null | jq '.Roles[].RoleName' -r | grep ${CLUSTER}"
+  runit "aws --profile ${AWS_PROFILE} iam list-roles | jq '.Roles[].RoleName' -r | grep ${CLUSTER}"
   [[ "$status" -eq 0 ]]
 }
 
