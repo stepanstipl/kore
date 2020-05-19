@@ -459,3 +459,7 @@ check-release-notes:
 
 generate-release-notes:
 	@go run ./hack/build/tools/awesome-release-logger/main.go -r -t ${VERSION} -notag -derivetag '-rc([0-9])*' -o CHANGELOG.md
+
+.PHONY: kind-dev
+kind-dev:
+	scripts/kind_dev.sh
