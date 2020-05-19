@@ -1,8 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { Input, Icon, Tooltip } from 'antd'
-import apiRequest from '../../utils/api-request'
-import apiPaths from '../../utils/api-paths'
+import KoreApi from '../../kore-api'
 import copy from '../../utils/object-copy'
 
 class InviteLink extends React.Component {
@@ -19,14 +18,19 @@ class InviteLink extends React.Component {
   }
 
   async fetchComponentData() {
-    const inviteLink = await apiRequest(null, 'get', apiPaths.team(this.props.team).generateInviteLink)
-    const state = copy(this.state)
-    if (typeof inviteLink !== 'string') {
-      state.dataError = true
+    try {
+      const inviteLink = await (await KoreApi.client()).GenerateInviteLink(this.props.team)
+      const state = copy(this.state)
+      if (typeof inviteLink !== 'string') {
+        state.dataError = true
+      }
+      state.inviteLink = inviteLink
+      state.dataLoading = false
+      this.setState(state)
+    } catch (err) {
+      console.error('Error generating invite link', err)
+      this.setState({ dataError: true })
     }
-    state.inviteLink = inviteLink
-    state.dataLoading = false
-    this.setState(state)
   }
 
   componentDidMount() {
@@ -35,10 +39,7 @@ class InviteLink extends React.Component {
 
   componentDidUpdate(prevProps) {
     if (prevProps.team !== this.props.team) {
-      const state = copy(this.state)
-      state.dataLoading = true
-      this.setState(state)
-
+      this.setState({ dataLoading: true })
       this.fetchComponentData()
     }
   }
@@ -65,7 +66,7 @@ class InviteLink extends React.Component {
   render() {
     const { inviteLink, tooltipText, iconColor, icon, dataLoading, dataError } = this.state
     const hideCopyButton = dataLoading || dataError
-    const copyValue = dataLoading ? 'Loading...' : dataError ? 'Error generating link' : inviteLink
+    const copyValue = dataLoading ? 'Loading...' : (dataError ? 'Error generating link' : inviteLink)
 
     return (
       <Input

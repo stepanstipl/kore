@@ -42,8 +42,9 @@ class MembersTab extends React.Component {
     }
   }
 
+  componentDidMountComplete = null
   componentDidMount() {
-    return this.fetchComponentData().then(data => {
+    this.componentDidMountComplete = this.fetchComponentData().then(data => {
       this.setState({ ...data, dataLoading: false })
     })
   }

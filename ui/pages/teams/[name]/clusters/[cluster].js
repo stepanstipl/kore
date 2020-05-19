@@ -234,7 +234,7 @@ class ClusterPage extends React.Component {
             <List.Item>
               <List.Item.Meta
                 avatar={<img src={clusterProviderIconSrcMap[cluster.spec.kind]} height="32px" />}
-                title={<Text>{cluster.spec.kind} <Text style={{ fontFamily: 'monospace', marginLeft: '15px' }}>{cluster.metadata.name}</Text></Text>}
+                title={<Text style={{ fontFamily: 'monospace' }}>{cluster.metadata.name}</Text>}
                 description={
                   <div>
                     <Text type='secondary'>Created {created}</Text>

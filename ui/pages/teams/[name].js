@@ -77,10 +77,7 @@ class TeamDashboard extends React.Component {
     const teamFound = Object.keys(this.props.team).length
     const prevTeamName = prevProps.team.metadata && prevProps.team.metadata.name
     if (teamFound && this.props.team.metadata.name !== prevTeamName) {
-      const state = copy(this.state)
-      state.tabActiveKey = 'clusters'
-      state.services = this.props.services
-      this.setState(state)
+      this.setState({ tabActiveKey: 'clusters', services: this.props.services })
     }
   }
 
@@ -103,8 +100,7 @@ class TeamDashboard extends React.Component {
   deleteTeam = async () => {
     try {
       const team = this.props.team.metadata.name
-      const api = await KoreApi.client()
-      await api.RemoveTeam(team)
+      await (await KoreApi.client()).RemoveTeam(team)
       this.props.teamRemoved(team)
       message.success(`Team "${team}" deleted`)
       return redirect({ router: Router, path: '/' })
@@ -115,20 +111,11 @@ class TeamDashboard extends React.Component {
   }
 
   deleteTeamConfirm = () => {
-    const { clusters } = this.state
-    if (clusters.items.length > 0) {
+    const { clusterCount } = this.state
+    if (clusterCount > 0) {
       return Modal.warning({
         title: 'Warning: team cannot be deleted',
-        content: (
-          <>
-            <Paragraph strong>The clusters must be deleted first</Paragraph>
-            <List
-              size="small"
-              dataSource={clusters.items}
-              renderItem={c => <List.Item>{c.spec.kind} <Text style={{ fontFamily: 'monospace', marginLeft: '15px' }}>{c.metadata.name}</Text></List.Item>}
-            />
-          </>
-        ),
+        content: 'The clusters must be deleted first',
         onOk() {}
       })
     }
