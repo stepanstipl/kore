@@ -4,8 +4,8 @@ module.exports = {
     'Pending': 'orange'
   },
   clusterProviderIconSrcMap: {
-    'GKE': '/static/images/GKE.png',
-    'EKS': '/static/images/EKS.png'
+    'GKE': '/static/images/GCP.png',
+    'EKS': '/static/images/AWS.png'
   },
   verifiedStatusMessageMap: {
     'Success': 'Verified',

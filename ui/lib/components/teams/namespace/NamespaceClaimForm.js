@@ -11,7 +11,7 @@ class NamespaceClaimForm extends React.Component {
   static propTypes = {
     form: PropTypes.any.isRequired,
     team: PropTypes.string.isRequired,
-    clusters: PropTypes.object.isRequired,
+    clusters: PropTypes.array.isRequired,
     handleSubmit: PropTypes.func.isRequired,
     handleCancel: PropTypes.func.isRequired
   }
@@ -49,7 +49,7 @@ class NamespaceClaimForm extends React.Component {
     return this.props.form.validateFields(async (err, values) => {
       if (!err) {
         try {
-          const cluster = this.props.clusters.items.find(c => c.metadata.name === values.cluster)
+          const cluster = this.props.clusters.find(c => c.metadata.name === values.cluster)
           const name = values.name
           const resourceName = `${cluster.metadata.name}-${name}`
 
@@ -138,10 +138,10 @@ class NamespaceClaimForm extends React.Component {
         <Form.Item label="Cluster" validateStatus={clusterError ? 'error' : ''} help={clusterError || ''}>
           {getFieldDecorator('cluster', {
             rules: [{ required: true, message: 'Please select the cluster!' }],
-            initialValue: clusters.items.length === 1 ? clusters.items[0].metadata.name : undefined
+            initialValue: clusters.length === 1 ? clusters[0].metadata.name : undefined
           })(
             <Select placeholder="Cluster">
-              {clusters.items.map(c => (
+              {clusters.map(c => (
                 <Select.Option key={c.metadata.name} value={c.metadata.name}>{c.metadata.name}</Select.Option>
               ))}
             </Select>

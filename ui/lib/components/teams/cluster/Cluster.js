@@ -1,19 +1,20 @@
 import PropTypes from 'prop-types'
 import moment from 'moment'
+import Link from 'next/link'
 import { List, Icon, Typography, Modal, Popconfirm, message, Tooltip } from 'antd'
 const { Text, Paragraph } = Typography
 
 import { clusterProviderIconSrcMap, inProgressStatusList } from '../../../utils/ui-helpers'
 import ResourceStatusTag from '../../resources/ResourceStatusTag'
 import AutoRefreshComponent from '../AutoRefreshComponent'
-import Link from 'next/link'
 
 class Cluster extends AutoRefreshComponent {
   static propTypes = {
     team: PropTypes.string.isRequired,
     cluster: PropTypes.object.isRequired,
     namespaceClaims: PropTypes.array.isRequired,
-    deleteCluster: PropTypes.func.isRequired
+    deleteCluster: PropTypes.func.isRequired,
+    handleCreateNamespace: PropTypes.func.isRequired
   }
 
   finalStateReached() {
@@ -55,7 +56,7 @@ class Cluster extends AutoRefreshComponent {
   }
 
   render() {
-    const { cluster, team } = this.props
+    const { cluster, team, namespaceClaims } = this.props
 
     if (cluster.deleted) {
       return null
@@ -95,14 +96,12 @@ class Cluster extends AutoRefreshComponent {
       <List.Item actions={actions()}>
         <List.Item.Meta
           avatar={<img src={clusterProviderIconSrcMap[cluster.spec.kind]} height="32px" />}
-          title={<Link href="/teams/[name]/clusters/[cluster]" as={`/teams/${team}/clusters/${cluster.metadata.name}`}><a><Text>{cluster.spec.kind} <Text style={{ fontFamily: 'monospace', marginLeft: '15px' }}>{cluster.metadata.name}</Text></Text></a></Link>}
-          description={
-            <div>
-              <Text type='secondary'>Created {created}</Text>
-              {deleted ? <Text type='secondary'><br/>Deleted {deleted}</Text> : null }
-            </div>
-          }
+          title={<Link href="/teams/[name]/clusters/[cluster]" as={`/teams/${team}/clusters/${cluster.metadata.name}`}><a><Text style={{ fontFamily: 'monospace' }}>{cluster.metadata.name}</Text></a></Link>}
         />
+        <div>
+          <Text type='secondary'>Created {created}</Text>
+          {deleted ? <Text type='secondary'><br/>Deleted {deleted}</Text> : null }
+        </div>
       </List.Item>
     )
   }

@@ -67,16 +67,11 @@ class NamespaceClaim extends AutoRefreshComponent {
 
     return (
       <List.Item actions={actions()}>
-        <List.Item.Meta
-          avatar={<Avatar icon="block" />}
-          title={<Text>{namespaceClaim.spec.name} <Text style={{ fontFamily: 'monospace', marginLeft: '15px' }}>{clusterName}</Text></Text>}
-          description={
-            <div>
-              <Text type='secondary'>Created {created}</Text>
-              {deleted ? <Text type='secondary'><br/>Deleted {deleted}</Text> : null }
-            </div>
-          }
-        />
+        <List.Item.Meta title={namespaceClaim.spec.name} />
+        <div>
+          <Text type='secondary'>Created {created}</Text>
+          {deleted && <Text type='secondary'><br/>Deleted {deleted}</Text>}
+        </div>
       </List.Item>
     )
   }
