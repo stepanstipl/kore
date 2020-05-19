@@ -19,6 +19,7 @@ package kore
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -56,7 +57,11 @@ type ServiceProviderFactory interface {
 	// JSONSchema returns the JSON schema for the provider's configuration
 	JSONSchema() string
 	// CreateProvider creates the provider
-	CreateProvider(servicesv1.ServiceProvider) (ServiceProvider, error)
+	CreateProvider(ServiceProviderContext, *servicesv1.ServiceProvider) (_ ServiceProvider, complete bool, _ error)
+	// TearDownProvider makes sure all provider resources are deleted
+	TearDownProvider(ServiceProviderContext, *servicesv1.ServiceProvider) (complete bool, err error)
+	// RequiredCredentialTypes returns with the required credential types
+	RequiredCredentialTypes() []schema.GroupVersionKind
 }
 
 type ServiceProviderContext struct {
@@ -133,9 +138,9 @@ type ServiceProviders interface {
 	// GetProviderForKind returns a service provider for the given service kind
 	GetProviderForKind(kind string) ServiceProvider
 	// Register registers a new provider
-	Register(context.Context, *servicesv1.ServiceProvider) (ServiceProvider, error)
+	Register(ServiceProviderContext, *servicesv1.ServiceProvider) (_ ServiceProvider, complete bool, _ error)
 	// Unregister removes the given provider
-	Unregister(context.Context, *servicesv1.ServiceProvider) error
+	Unregister(ServiceProviderContext, *servicesv1.ServiceProvider) (complete bool, _ error)
 }
 
 type serviceProvidersImpl struct {
@@ -172,6 +177,10 @@ func (p *serviceProvidersImpl) Update(ctx context.Context, provider *servicesv1.
 	}
 
 	if err := jsonschema.Validate(factory.JSONSchema(), "provider", provider.Spec.Configuration); err != nil {
+		return err
+	}
+
+	if err := p.validateCredentials(ctx, provider, factory); err != nil {
 		return err
 	}
 
@@ -258,18 +267,18 @@ func (p *serviceProvidersImpl) GetEditableProviderParams(ctx context.Context, te
 }
 
 // Register registers a new provider
-func (p *serviceProvidersImpl) Register(ctx context.Context, serviceProvider *servicesv1.ServiceProvider) (ServiceProvider, error) {
+func (p *serviceProvidersImpl) Register(ctx ServiceProviderContext, serviceProvider *servicesv1.ServiceProvider) (_ ServiceProvider, complete bool, _ error) {
 	p.providersLock.Lock()
 	defer p.providersLock.Unlock()
 
 	factory, ok := serviceProviderFactories[serviceProvider.Spec.Type]
 	if !ok {
-		return nil, fmt.Errorf("service provider type %q is invalid", serviceProvider.Spec.Type)
+		return nil, false, fmt.Errorf("service provider type %q is invalid", serviceProvider.Spec.Type)
 	}
 
-	provider, err := factory.CreateProvider(*serviceProvider)
-	if err != nil {
-		return nil, err
+	provider, complete, err := factory.CreateProvider(ctx, serviceProvider)
+	if err != nil || !complete {
+		return nil, complete, err
 	}
 
 	var supportedKinds []string
@@ -280,7 +289,7 @@ func (p *serviceProvidersImpl) Register(ctx context.Context, serviceProvider *se
 	for _, kind := range supportedKinds {
 		if p, registered := p.providers[kind]; registered {
 			if p.Name() != serviceProvider.Name {
-				return nil, fmt.Errorf("service kind is already registered by an other service provider: %s", p.Name())
+				return nil, false, fmt.Errorf("service kind is already registered by an other service provider: %s", p.Name())
 			}
 		}
 	}
@@ -289,7 +298,7 @@ func (p *serviceProvidersImpl) Register(ctx context.Context, serviceProvider *se
 	for kind, provider := range p.providers {
 		if provider.Name() == serviceProvider.Name && !utils.Contains(kind, supportedKinds) {
 			if err := p.unregisterKind(ctx, kind); err != nil {
-				return nil, err
+				return nil, false, err
 			}
 		}
 	}
@@ -302,18 +311,23 @@ func (p *serviceProvidersImpl) Register(ctx context.Context, serviceProvider *se
 		p.providers[kind] = provider
 	}
 
-	return provider, nil
+	return provider, true, nil
 }
 
 // Unregister removes the given provider
-func (p *serviceProvidersImpl) Unregister(ctx context.Context, serviceProvider *servicesv1.ServiceProvider) error {
+func (p *serviceProvidersImpl) Unregister(ctx ServiceProviderContext, serviceProvider *servicesv1.ServiceProvider) (complete bool, _ error) {
 	for _, kind := range serviceProvider.Status.SupportedKinds {
 		if err := p.unregisterKind(ctx, kind); err != nil {
-			return err
+			return false, err
 		}
 	}
 
-	return nil
+	factory, ok := serviceProviderFactories[serviceProvider.Spec.Type]
+	if !ok {
+		return false, fmt.Errorf("service provider type %q is invalid", serviceProvider.Spec.Type)
+	}
+
+	return factory.TearDownProvider(ctx, serviceProvider)
 }
 
 func (p *serviceProvidersImpl) unregisterKind(ctx context.Context, kind string) error {
@@ -345,4 +359,43 @@ func (p *serviceProvidersImpl) GetProviderForKind(kind string) ServiceProvider {
 	defer p.providersLock.RUnlock()
 
 	return p.providers[kind]
+}
+
+func (p *serviceProvidersImpl) validateCredentials(ctx context.Context, serviceProvider *servicesv1.ServiceProvider, factory ServiceProviderFactory) error {
+	expectedKinds := factory.RequiredCredentialTypes()
+	creds := serviceProvider.Spec.Credentials
+
+	if expectedKinds == nil {
+		if creds.Kind != "" {
+			return validation.NewError("service provider has failed validation").WithFieldError(
+				"credentials",
+				validation.InvalidType,
+				"should not be set as this service provider doesn't require credentials",
+			)
+		}
+		return nil
+	}
+
+	found := false
+	for _, gvk := range expectedKinds {
+		if creds.HasGroupVersionKind(gvk) {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		var expected []string
+		for _, gvk := range expectedKinds {
+			expected = append(expected, utils.FormatGroupVersionKind(gvk))
+		}
+		return validation.NewError("service provider has failed validation").WithFieldErrorf(
+			"credentials",
+			validation.InvalidType,
+			"should be one of: %s",
+			strings.Join(expected, ", "),
+		)
+	}
+
+	return nil
 }

@@ -20,6 +20,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/appvia/kore/pkg/kore"
+
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/controllers"
@@ -52,11 +54,20 @@ func (c *Controller) delete(
 	result, err := func() (reconcile.Result, error) {
 		if !serviceProvider.Status.Status.OneOf(corev1.DeletingStatus, corev1.DeleteFailedStatus, corev1.ErrorStatus) {
 			serviceProvider.Status.Status = corev1.DeletingStatus
+			serviceProvider.Status.Message = ""
 			return reconcile.Result{Requeue: true}, nil
 		}
 
-		if err := c.ServiceProviders().Unregister(ctx, serviceProvider); err != nil {
+		complete, err := c.ServiceProviders().Unregister(kore.ServiceProviderContext{
+			Context: ctx,
+			Logger:  logger,
+			Client:  c.mgr.GetClient(),
+		}, serviceProvider)
+		if err != nil {
 			return reconcile.Result{}, err
+		}
+		if !complete {
+			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 		}
 
 		return reconcile.Result{}, nil
@@ -75,6 +86,9 @@ func (c *Controller) delete(
 
 	if err == nil && !result.Requeue && result.RequeueAfter == 0 {
 		serviceProvider.Status.Status = corev1.DeletedStatus
+		serviceProvider.Status.Message = ""
+		// We haven't finished yet as we have to remove the finalizer in the last loop
+		result.Requeue = true
 	}
 
 	if err := c.mgr.GetClient().Status().Patch(ctx, serviceProvider, client.MergeFrom(original)); err != nil {
@@ -89,14 +103,5 @@ func (c *Controller) delete(
 		return reconcile.Result{}, err
 	}
 
-	// We haven't finished yet as we have to remove the finalizer in the last loop
-	if serviceProvider.Status.Status == corev1.DeletedStatus {
-		return reconcile.Result{Requeue: true}, nil
-	}
-
-	if result.Requeue || result.RequeueAfter > 0 {
-		return result, nil
-	}
-
-	return reconcile.Result{RequeueAfter: 30 * time.Second}, err
+	return result, nil
 }

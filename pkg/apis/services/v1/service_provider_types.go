@@ -52,6 +52,9 @@ type ServiceProviderSpec struct {
 	// +kubebuilder:validation:Type=object
 	// +kubebuilder:validation:Optional
 	Configuration *apiextv1.JSON `json:"configuration,omitempty"`
+	// Credentials is a reference to the credentials object to use
+	// +kubebuilder:validation:Optional
+	Credentials corev1.Ownership `json:"credentials,omitempty"`
 }
 
 func (s *ServiceProviderSpec) GetConfiguration(v interface{}) error {
@@ -88,6 +91,9 @@ type ServiceProviderStatus struct {
 	// Message is the description of the current status
 	// +kubebuilder:validation:Optional
 	Message string `json:"message,omitempty"`
+	// Components is a collection of component statuses
+	// +kubebuilder:validation:Optional
+	Components corev1.Components `json:"components,omitempty"`
 	// SupportedKinds contains all the supported service kinds
 	// +kubebuilder:validation:Optional
 	// +listType=set

@@ -20,6 +20,9 @@ type V1ServiceProviderSpec struct {
 	// configuration
 	Configuration interface{} `json:"configuration,omitempty"`
 
+	// credentials
+	Credentials *V1Ownership `json:"credentials,omitempty"`
+
 	// description
 	// Required: true
 	Description *string `json:"description"`
@@ -37,6 +40,10 @@ type V1ServiceProviderSpec struct {
 func (m *V1ServiceProviderSpec) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateCredentials(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateDescription(formats); err != nil {
 		res = append(res, err)
 	}
@@ -52,6 +59,24 @@ func (m *V1ServiceProviderSpec) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *V1ServiceProviderSpec) validateCredentials(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Credentials) { // not required
+		return nil
+	}
+
+	if m.Credentials != nil {
+		if err := m.Credentials.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("credentials")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 

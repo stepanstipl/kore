@@ -22,6 +22,7 @@ import (
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/kore"
 	osb "github.com/kubernetes-sigs/go-open-service-broker-client/v2"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 func init() {
@@ -102,23 +103,31 @@ func (d ProviderFactory) JSONSchema() string {
 	}`
 }
 
-func (d ProviderFactory) CreateProvider(serviceProvider servicesv1.ServiceProvider) (kore.ServiceProvider, error) {
+func (d ProviderFactory) CreateProvider(ctx kore.ServiceProviderContext, serviceProvider *servicesv1.ServiceProvider) (_ kore.ServiceProvider, complete bool, _ error) {
 	var config = osb.DefaultClientConfiguration()
 	config.Name = serviceProvider.Name
 
 	if err := serviceProvider.Spec.GetConfiguration(config); err != nil {
-		return nil, fmt.Errorf("failed to process service provider configuration: %w", err)
+		return nil, false, fmt.Errorf("failed to process service provider configuration: %w", err)
 	}
 
 	osbClient, err := osb.NewClient(config)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
 	provider, err := NewProvider(serviceProvider.Name, osbClient)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 
-	return provider, nil
+	return provider, true, nil
+}
+
+func (d ProviderFactory) TearDownProvider(ctx kore.ServiceProviderContext, provider *servicesv1.ServiceProvider) (complete bool, _ error) {
+	return true, nil
+}
+
+func (d ProviderFactory) RequiredCredentialTypes() []schema.GroupVersionKind {
+	return nil
 }
