@@ -4,7 +4,7 @@ import axios from 'axios'
 import Link from 'next/link'
 import Router from 'next/router'
 import Error from 'next/error'
-import { Typography, Card, List, Button, message, Drawer, Badge, Alert, Icon, Modal, Dropdown, Menu, Tabs, Divider } from 'antd'
+import { Typography, Card, List, Button, message, Badge, Alert, Icon, Modal, Dropdown, Menu, Tabs, Divider } from 'antd'
 const { Paragraph, Text } = Typography
 const { TabPane } = Tabs
 import getConfig from 'next/config'
@@ -41,6 +41,7 @@ class TeamDashboard extends React.Component {
       tabActiveKey: 'clusters',
       memberCount: -1,
       clusterCount: -1,
+      securityStatus: false,
       services: props.services,
     }
   }
@@ -153,14 +154,6 @@ class TeamDashboard extends React.Component {
             </a>
           </Link>
         </Menu.Item>
-        <Menu.Item key="security">
-          <Link href="/teams/[name]/security" as={`/teams/${team.metadata.name}/security`}>
-            <a>
-              <Icon type="lock" style={{ marginRight: '5px' }} />
-              Team security overview
-            </a>
-          </Link>
-        </Menu.Item>
         <Menu.Item key="delete" className="ant-btn-danger" onClick={this.deleteTeamConfirm}>
           <Icon type="delete" style={{ marginRight: '5px' }} />
           Delete team
@@ -225,6 +218,9 @@ class TeamDashboard extends React.Component {
           <TabPane key="members" tab={this.getTabTitle({ title: 'Members', count: this.state.memberCount })} forceRender={true}>
             <MembersTab user={this.props.user} team={this.props.team} getMemberCount={(count) => this.setState({ memberCount: count })} />
           </TabPane>
+
+          <TabPane key="security" tab={this.getTabTitle({ title: 'Security', icon: <SecurityStatusIcon status="Compliant" size="small" style={{ verticalAlign: 'middle' }} /> })} forceRender={true}>
+            <SecurityTab team={this.props.team} getOverviewStatus={(status) => this.setState({ securityStatus: status })} />
           </TabPane>
         </Tabs>
 
