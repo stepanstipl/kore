@@ -19,7 +19,12 @@ package cluster
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
+
+	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
+
+	"github.com/appvia/kore/pkg/serviceproviders/application"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -72,6 +77,20 @@ func (a *Controller) Components(cluster *clustersv1.Cluster, components *Compone
 			},
 		})
 
+		kubeAppManager, err := a.createService(ctx, cluster, "kube-app-manager")
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		kubeAppManagerV := components.Add(kubeAppManager)
+		components.Edge(v, kubeAppManagerV)
+
+		fluxHelmOperator, err := a.createService(ctx, cluster, "flux-helm-operator")
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		fluxHelmOperatorV := components.Add(fluxHelmOperator)
+		components.Edge(kubeAppManagerV, fluxHelmOperatorV)
+
 		return reconcile.Result{}, components.WalkFunc(func(co *Vertex) (bool, error) {
 			switch {
 			case utils.IsEqualType(co.Object, &gke.GKE{}):
@@ -83,6 +102,20 @@ func (a *Controller) Components(cluster *clustersv1.Cluster, components *Compone
 			return true, nil
 		})
 	}
+}
+
+func (a *Controller) createService(ctx context.Context, cluster *clustersv1.Cluster, name string) (*servicesv1.Service, error) {
+	servicePlan, err := a.ServicePlans().Get(ctx, "app-"+name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get service plan %q: %w", "app-"+name, err)
+	}
+	service := application.CreateSystemServiceFromPlan(
+		*servicePlan,
+		corev1.MustGetOwnershipFromObject(cluster),
+		cluster.Name+"-"+name,
+		cluster.Namespace,
+	)
+	return &service, nil
 }
 
 // Complete is used to complete or fill in components

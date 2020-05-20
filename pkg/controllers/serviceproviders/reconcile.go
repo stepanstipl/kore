@@ -22,8 +22,6 @@ import (
 	"sort"
 	"time"
 
-	"github.com/appvia/kore/pkg/controllers/helpers"
-
 	"github.com/appvia/kore/pkg/kore"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -133,7 +131,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 					resource := corev1.MustGetOwnershipFromObject(&service)
 					serviceProvider.Status.Components.SetCondition(corev1.Component{
-						Name:     service.Name,
+						Name:     "Service/" + service.Name,
 						Status:   corev1.PendingStatus,
 						Message:  "",
 						Detail:   "",
@@ -141,7 +139,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 					})
 				}
 
-				result, err := helpers.EnsureServices(
+				result, err := EnsureServices(
 					controllers.NewContext(ctx, logger, c.mgr.GetClient(), c),
 					adminServices,
 					serviceProvider,

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package helpers
+package serviceproviders
 
 import (
 	"fmt"
@@ -41,7 +41,7 @@ func EnsureServices(ctx controllers.Context, services []servicesv1.Service, owne
 	sort.Sort(sortedServices)
 
 	for _, service := range sortedServices {
-		components.SetStatus(service.Name, corev1.PendingStatus, "", "")
+		components.SetStatus("Service/"+service.Name, corev1.PendingStatus, "", "")
 
 		result, err := EnsureService(
 			ctx,
@@ -50,7 +50,7 @@ func EnsureServices(ctx controllers.Context, services []servicesv1.Service, owne
 			components,
 		)
 		if err != nil {
-			components.SetStatus(service.Name, corev1.ErrorStatus, err.Error(), "")
+			components.SetStatus("Service/"+service.Name, corev1.ErrorStatus, err.Error(), "")
 			return reconcile.Result{}, err
 		}
 		if result.Requeue || result.RequeueAfter > 0 {
@@ -86,7 +86,7 @@ func EnsureService(ctx controllers.Context, original *servicesv1.Service, owner 
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 	}
 
-	components.SetStatus(current.Name, current.Status.Status, current.Status.Message, "")
+	components.SetStatus("Service/"+current.Name, current.Status.Status, current.Status.Message, "")
 
 	patchResult, err := patch.NewPatchMaker(patchAnnotator).Calculate(
 		current,
@@ -134,7 +134,7 @@ func DeleteServices(ctx controllers.Context, team string, owner runtime.Object, 
 	sort.Sort(sort.Reverse(adminServices))
 
 	for _, service := range adminServices {
-		components.SetStatus(service.Name, corev1.DeletingStatus, "", "")
+		components.SetStatus("Service/"+service.Name, corev1.DeletingStatus, "", "")
 
 		result, err := DeleteService(
 			ctx,
@@ -143,7 +143,7 @@ func DeleteServices(ctx controllers.Context, team string, owner runtime.Object, 
 			components,
 		)
 		if err != nil {
-			components.SetStatus(service.Name, corev1.ErrorStatus, err.Error(), "")
+			components.SetStatus("Service/"+service.Name, corev1.ErrorStatus, err.Error(), "")
 			return reconcile.Result{}, err
 		}
 		if result.Requeue || result.RequeueAfter > 0 {
@@ -167,11 +167,11 @@ func DeleteService(ctx controllers.Context, service *servicesv1.Service, owner r
 	}
 
 	if !exists {
-		components.SetStatus(service.Name, corev1.DeletedStatus, "", "")
+		components.SetStatus("Service/"+service.Name, corev1.DeletedStatus, "", "")
 		return reconcile.Result{}, nil
 	}
 
-	components.SetStatus(service.Name, service.Status.Status, service.Status.Message, "")
+	components.SetStatus("Service/"+service.Name, service.Status.Status, service.Status.Message, "")
 
 	if service.DeletionTimestamp != nil {
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil

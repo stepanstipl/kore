@@ -20,8 +20,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/appvia/kore/pkg/controllers/helpers"
-
 	"github.com/appvia/kore/pkg/kore"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -60,7 +58,7 @@ func (c *Controller) delete(
 			return reconcile.Result{Requeue: true}, nil
 		}
 
-		result, err := helpers.DeleteServices(
+		result, err := DeleteServices(
 			controllers.NewContext(ctx, logger, c.mgr.GetClient(), c),
 			kore.HubAdminTeam,
 			serviceProvider,
