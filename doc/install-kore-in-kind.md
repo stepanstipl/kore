@@ -85,18 +85,30 @@
     make kind-image-dev
     ```
 
-1. Update `charts/my_values.yaml` and set `api.version` to `dev`
+1. Update `charts/my_values.yaml` and set `api.version` and/or `ui.version` to `dev`
 
 ### Useful commands
 
-1. Restart the API server
+#### Restart the API server
 
    ```
    kubectl -n kore rollout restart deployment kore-apiserver
    ```
 
-1. Tailing the API server logs
+#### Tail the API server logs
 
    ```
    kubectl -n kore logs -f -l name=kore-apiserver
+   ```
+
+#### Restart the UI
+
+   ```
+   kubectl -n kore rollout restart deployment kore-portal
+   ```
+
+#### Tail the UI logs
+
+   ```
+   kubectl -n kore logs -f -l name=kore-portal
    ```

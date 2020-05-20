@@ -121,6 +121,8 @@ kind-image-dev:
 	@echo "--> Building dev Docker image for Kind"
 	docker build -t ${REGISTRY}/${AUTHOR}/kore-apiserver:dev -f images/Dockerfile.kore-apiserver.dev images
 	kind load docker-image ${REGISTRY}/${AUTHOR}/kore-apiserver:dev --name kore
+	docker build -t ${REGISTRY}/${AUTHOR}/kore-ui:dev -f ui/Dockerfile.dev ui
+	kind load docker-image ${REGISTRY}/${AUTHOR}/kore-ui:dev --name kore
 
 push-images:
 	@echo "--> Pushing docker images"
