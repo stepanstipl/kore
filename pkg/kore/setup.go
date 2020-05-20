@@ -19,6 +19,7 @@ package kore
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -128,6 +129,51 @@ func (h hubImpl) Setup(ctx context.Context) error {
 			serviceProvider.Status.Message = "Initializing"
 			if err := h.ServiceProviders().Update(getAdminContext(ctx), &serviceProvider); err != nil {
 				return fmt.Errorf("failed to initialize service provider: %w", err)
+			}
+		}
+	}
+
+	// migrate the allocation names to be prefixed with the spec.resource name eg. planpoliy-default-gke
+	allocationList, err := h.Teams().Team(HubAdminTeam).Allocations().List(getAdminContext(ctx))
+	if err != nil {
+		return err
+	}
+
+	for _, allocation := range allocationList.Items {
+		if err != nil {
+			return err
+		}
+		logger := log.WithFields(log.Fields{
+			"name": allocation.ObjectMeta.Name,
+		})
+
+		if !strings.HasPrefix(allocation.ObjectMeta.Name, strings.ToLower(allocation.Spec.Resource.Kind)) {
+			newName := strings.ToLower(allocation.Spec.Resource.Kind) + "-" + allocation.ObjectMeta.Name
+
+			allocation, err := h.Teams().Team(HubAdminTeam).Allocations().Get(getAdminContext(ctx), newName)
+			if err == nil {
+				logger.Infof("allocation with name %s already exists, don't migrate to the new name, just delete the old one", newName)
+
+				if _, err := h.Teams().Team(HubAdminTeam).Allocations().Delete(getAdminContext(ctx), allocation.ObjectMeta.Name, true); err != nil {
+					logger.Errorf("error deleting allocation: %v", err)
+					return err
+				}
+			}
+			if err != nil {
+				logger.Infof("migrating allocation to new name: %s", newName)
+				newAllocation := allocation.DeepCopy()
+				newAllocation.ObjectMeta.Name = newName
+				newAllocation.ObjectMeta.SetResourceVersion("")
+
+				if err := h.Teams().Team(HubAdminTeam).Allocations().Update(getAdminContext(ctx), newAllocation, true); err != nil {
+					logger.Errorf("error creating allocation: %v", err)
+					return err
+				}
+
+				if _, err := h.Teams().Team(HubAdminTeam).Allocations().Delete(getAdminContext(ctx), allocation.ObjectMeta.Name, true); err != nil {
+					logger.Errorf("error deleting allocation: %v", err)
+					return err
+				}
 			}
 		}
 	}

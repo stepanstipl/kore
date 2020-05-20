@@ -11,10 +11,6 @@ import AllocationHelpers from '../../utils/allocation-helpers'
 
 class EKSCredentialsForm extends VerifiedAllocatedResourceForm {
 
-  state = {
-    replaceKey: false
-  }
-
   generateSecretResource = values => {
     const resource = new V1Secret()
     resource.setApiVersion('config.kore.appvia.io')

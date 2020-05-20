@@ -182,7 +182,7 @@ func (o *CreateGKECredentialsOptions) GenerateAllocation() *configv1.Allocation 
 			APIVersion: confv1.GroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      o.Name,
+			Name:      "gkecredentials-" + o.Name,
 			Namespace: kore.HubAdminTeam,
 		},
 		Spec: confv1.AllocationSpec{

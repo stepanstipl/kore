@@ -33,7 +33,7 @@ import (
 // Allocations is the interface to team allocations
 type Allocations interface {
 	// Delete is responsible for deleting an allocation
-	Delete(context.Context, string) (*configv1.Allocation, error)
+	Delete(context.Context, string, bool) (*configv1.Allocation, error)
 	// Exists check if an allocation exists
 	Exists(context.Context, string) (bool, error)
 	// IsPermitted checks if a resource is permitted access
@@ -120,7 +120,7 @@ func (a acaImpl) Exists(ctx context.Context, name string) (bool, error) {
 }
 
 // Delete is responsible for deleting an allocation
-func (a acaImpl) Delete(ctx context.Context, name string) (*configv1.Allocation, error) {
+func (a acaImpl) Delete(ctx context.Context, name string, allowReadonly bool) (*configv1.Allocation, error) {
 	logger := log.WithFields(log.Fields{
 		"name": name,
 		"team": a.team,
@@ -135,8 +135,10 @@ func (a acaImpl) Delete(ctx context.Context, name string) (*configv1.Allocation,
 		return nil, err
 	}
 
-	if object.Labels[corev1.LabelReadonly] == "true" {
-		return nil, validation.NewError("the allocation can not be deleted").WithFieldError(validation.FieldRoot, validation.ReadOnly, "allocation is read-only")
+	if !allowReadonly {
+		if object.Labels[corev1.LabelReadonly] == "true" {
+			return nil, validation.NewError("the allocation can not be deleted").WithFieldError(validation.FieldRoot, validation.ReadOnly, "allocation is read-only")
+		}
 	}
 
 	return object, a.Store().Client().Delete(ctx, store.DeleteOptions.From(object))

@@ -17,7 +17,7 @@
 load helper
 
 @test "Ensuring we have an allocation to build a cluster in GKE" {
-  runit "${KORE} get allocations -t ${TEAM} | grep ^gke"
+  runit "${KORE} get allocations -t ${TEAM} | grep ^gkecredentials-gke"
   [[ "$status" -eq 0 ]]
 }
 

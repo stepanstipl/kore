@@ -30,7 +30,7 @@ setup() {
 }
 
 @test "We should have an allocation for EKS credentials" {
-  runit "${KORE} get allocations aws -t ${TEAM}"
+  runit "${KORE} get allocations ekscredentials-aws -t ${TEAM}"
   [[ "$status" -eq 0 ]]
 }
 

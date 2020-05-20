@@ -30,7 +30,8 @@ class VerifiedAllocatedResourceForm extends React.Component {
       submitting: false,
       formErrorMessage: false,
       allocations,
-      inlineVerificationFailed: false
+      inlineVerificationFailed: false,
+      replaceKey: false
     }
   }
 
@@ -48,7 +49,6 @@ class VerifiedAllocatedResourceForm extends React.Component {
 
   onAllocationsChange = value => {
     this.setState({
-      ...this.state,
       allocations: value
     })
   }

@@ -7,7 +7,7 @@ import config from '../../config'
 
 export default class AllocationHelpers {
   static getAllocationNameForResource = (resource) => {
-    return resource.metadata.name
+    return `${resource.kind.toLowerCase()}-${resource.metadata.name}`
   }
 
   static generateAllocation = ({ resourceToAllocate, teams, name, summary }) => {
