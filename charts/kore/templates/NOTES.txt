@@ -2,8 +2,8 @@ Thank you for installing {{ .Chart.Name }}.
 
 To learn more about the release, try:
 
-  $ helm status {{ .Release.Name }}
-  $ helm get all {{ .Release.Name }}
+  $ helm status {{ .Release.Name }} -n {{ .Release.Namespace }}
+  $ helm get all {{ .Release.Name }} -n {{ .Release.Namespace }}
 
 {{ if or (eq .Values.api.serviceType "LoadBalancer") (eq .Values.ui.serviceType "LoadBalancer") }}
 One or more of your services are of type loadbalancer, get their addresses with:
