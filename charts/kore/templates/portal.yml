@@ -44,6 +44,7 @@ spec:
       containers:
       - name: {{ include "kore.name" . }}-portal
         image: {{ .Values.ui.image }}:{{ .Values.ui.version }}
+        imagePullPolicy: IfNotPresent
         ports:
         - name: http
           containerPort: 3000
@@ -93,6 +94,18 @@ spec:
         envFrom:
         - secretRef:
             name: {{ include "kore.name" . }}-idp
+        {{ if eq .Values.ui.version "dev" -}}
+        volumeMounts:
+        - name: kore
+          mountPath: /go/src/github.com/appvia/kore
+        {{- end }}
+      {{ if eq .Values.ui.version "dev" -}}
+      volumes:
+      - name: kore
+        hostPath:
+          path: /go/src/github.com/appvia/kore
+          type: Directory
+      {{- end }}
 
 ---
 apiVersion: v1

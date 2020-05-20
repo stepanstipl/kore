@@ -49,6 +49,7 @@ spec:
       containers:
       - name: {{ include "kore.name" . }}-apiserver
         image: {{ .Values.api.image }}:{{ .Values.api.version }}
+        imagePullPolicy: IfNotPresent
         ports:
           - name: http
             containerPort: 10080
