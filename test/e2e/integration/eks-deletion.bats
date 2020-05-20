@@ -58,7 +58,7 @@ setup() {
 }
 
 @test "We should see the eks nodegroup iam role disappear" {
-  runit "aws --profile ${AWS_PROFILE} iam list-roles | jq '.Roles[].RoleName' -r | grep ${CLUSTER} || true"
+  runit "aws --profile ${AWS_KORE_PROFILE} iam list-roles | jq '.Roles[].RoleName' -r | grep ${CLUSTER} || true"
   [[ "$status" -eq 0 ]]
 }
 

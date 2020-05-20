@@ -21,7 +21,7 @@ source test/e2e/environment.sh || exit 1
 export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID_QA}
 export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY_QA}
 export AWS_DEFAULT_REGION="eu-west-2"
-export AWS_PROFILE="kore-e2e"
+export AWS_KORE_PROFILE="kore-e2e"
 export CLUSTER="ci-${CIRCLE_BUILD_NUM:-$USER}"
 export E2E_DIR="e2eci"
 export KORE_API_URL=${KORE_API_PUBLIC_URL_QA:-"http://127.0.0.1:10080"}
@@ -86,9 +86,9 @@ EOF
 }
 
 create-aws-profile() {
-  aws configure --profile ${AWS_PROFILE} set aws_access_key_id ${AWS_ACCESS_KEY_ID}
-  aws configure --profile ${AWS_PROFILE} set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
-  aws configure --profile ${AWS_PROFILE} set default.region ${AWS_DEFAULT_REGION}
+  aws configure --profile ${AWS_KORE_PROFILE} set aws_access_key_id ${AWS_ACCESS_KEY_ID}
+  aws configure --profile ${AWS_KORE_PROFILE} set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
+  aws configure --profile ${AWS_KORE_PROFILE} set default.region ${AWS_DEFAULT_REGION}
 }
 
 enable-admin-user() {
