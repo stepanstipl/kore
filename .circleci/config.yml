@@ -104,7 +104,7 @@ e2e_job_template: &E2E_JOB_TEMPLATE
     - run:
         name: Installing tools
         command: |
-          sudo apt install -y bash bats curl jq
+          sudo apt install -y bash bats curl jq awscli
     - run:
         name: Installing kubectl
         command: |

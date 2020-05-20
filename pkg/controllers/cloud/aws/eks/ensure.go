@@ -28,6 +28,7 @@ import (
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/cloud/aws"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	awseks "github.com/aws/aws-sdk-go/service/eks"
 	log "github.com/sirupsen/logrus"
@@ -394,6 +395,31 @@ func (t *eksCtrl) EnsureDeletion(cluster *eks.EKS) controllers.EnsureFunc {
 	}
 }
 
+// EnsureRoleDeletion is responsible for deleting the IAM roles
+func (t *eksCtrl) EnsureRoleDeletion(cluster *eks.EKS) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		logger := log.WithFields(log.Fields{
+			"name":      cluster.Name,
+			"namespace": cluster.Namespace,
+		})
+		logger.Debug("attempting to delete the eks cluster role")
+
+		credentials, err := t.GetCredentials(ctx, cluster, cluster.Namespace)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		client := aws.NewIamClient(*credentials)
+
+		if err := client.DeleteEKSClutserRole(ctx, cluster.Name); err != nil {
+			logger.WithError(err).Error("trying to delete the eks cluster role")
+
+			return reconcile.Result{}, err
+		}
+
+		return reconcile.Result{}, nil
+	}
+}
+
 // EnsureSecretDeletion ensure the cluster secret is removed
 func (t *eksCtrl) EnsureSecretDeletion(cluster *eks.EKS) controllers.EnsureFunc {
 	return func(ctx context.Context) (reconcile.Result, error) {
@@ -402,6 +428,22 @@ func (t *eksCtrl) EnsureSecretDeletion(cluster *eks.EKS) controllers.EnsureFunc 
 			t.mgr.GetClient(), cluster.Namespace, cluster.Name); err != nil {
 
 			return reconcile.Result{}, err
+		}
+
+		return reconcile.Result{}, nil
+	}
+}
+
+// EnsureFinalizerRemoved removes the finalizer now
+func (t *eksCtrl) EnsureFinalizerRemoved(cluster *eks.EKS) controllers.EnsureFunc {
+	client := t.mgr.GetClient()
+
+	return func(ctx context.Context) (reconcile.Result, error) {
+		finalizer := kubernetes.NewFinalizer(client, finalizerName)
+		if finalizer.IsDeletionCandidate(cluster) {
+			if err := finalizer.Remove(cluster); err != nil {
+				return reconcile.Result{}, err
+			}
 		}
 
 		return reconcile.Result{}, nil
