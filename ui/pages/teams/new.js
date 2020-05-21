@@ -61,8 +61,8 @@ class NewTeamPage extends React.Component {
 
   addTeamMembers = async () => {
     const team = this.state.team.metadata.name
-    const members = state.members
     const state = copy(this.state)
+    const members = state.members
     let api = await KoreApi.client()
 
     await asyncForEach(this.state.membersToAdd, async member => {

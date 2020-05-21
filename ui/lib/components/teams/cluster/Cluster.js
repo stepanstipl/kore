@@ -93,7 +93,7 @@ class Cluster extends AutoRefreshComponent {
     }
 
     return (
-      <List.Item actions={actions()}>
+      <List.Item actions={actions()} style={{ paddingTop: 0 }}>
         <List.Item.Meta
           avatar={<img src={clusterProviderIconSrcMap[cluster.spec.kind]} height="32px" />}
           title={<Link href="/teams/[name]/clusters/[cluster]" as={`/teams/${team}/clusters/${cluster.metadata.name}`}><a><Text style={{ fontFamily: 'monospace' }}>{cluster.metadata.name}</Text></a></Link>}
