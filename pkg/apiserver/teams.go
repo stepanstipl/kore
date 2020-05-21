@@ -754,6 +754,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Returns(http.StatusNotFound, "the service credentials with the given name doesn't exist", nil).
 			Returns(http.StatusOK, "The requested service crendential details", servicesv1.ServiceCredentials{}),
 	)
+
 	ws.Route(
 		withAllErrors(ws.PUT("/{team}/servicecredentials/{name}")).To(u.updateServiceCredentials).
 			Filter(filters.FeatureGateFilter(u.Config(), kore.FeatureGateServices)).
@@ -904,19 +905,19 @@ func (u teamHandler) getTeamPlanDetails(req *restful.Request, resp *restful.Resp
 
 func (u teamHandler) getTeamServicePlanDetails(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
+		var schema string
 		servicePlan, err := u.ServicePlans().Get(req.Request.Context(), req.PathParameter("plan"))
 		if err != nil {
 			return err
 		}
+		schema = servicePlan.Spec.Schema
 
-		provider := u.ServiceProviders().GetProviderForKind(servicePlan.Spec.Kind)
-		if provider == nil {
-			return fmt.Errorf("provider not found for service kind %q", servicePlan.Spec.Kind)
-		}
-
-		schema, err := provider.PlanJSONSchema(servicePlan.Spec.Kind, servicePlan.PlanShortName())
-		if err != nil {
-			return err
+		if schema == "" {
+			kind, err := u.ServiceKinds().Get(req.Request.Context(), servicePlan.Spec.Kind)
+			if err != nil {
+				return err
+			}
+			schema = kind.Spec.Schema
 		}
 
 		servicePlanDetails := TeamServicePlan{

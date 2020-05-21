@@ -30,6 +30,7 @@ import (
 )
 
 // ServiceKinds is the interface to manage service kinds
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . ServiceKinds
 type ServiceKinds interface {
 	// Delete is used to delete a service kind in the kore
 	Delete(context.Context, string) (*servicesv1.ServiceKind, error)
@@ -37,6 +38,8 @@ type ServiceKinds interface {
 	Get(context.Context, string) (*servicesv1.ServiceKind, error)
 	// List returns the existing service kinds
 	List(context.Context) (*servicesv1.ServiceKindList, error)
+	// ListFiltered returns a list of service kinds using the given filter.
+	ListFiltered(context.Context, func(servicesv1.ServiceKind) bool) (*servicesv1.ServiceKindList, error)
 	// Has checks if a service kind exists
 	Has(context.Context, string) (bool, error)
 	// Update is responsible for updating a service kind
@@ -141,6 +144,27 @@ func (p serviceKindsImpl) List(ctx context.Context) (*servicesv1.ServiceKindList
 		store.ListOptions.InNamespace(HubNamespace),
 		store.ListOptions.InTo(kinds),
 	)
+}
+
+// ListFiltered returns a list of service kinds using the given filter.
+// A service kind is included if the filter function returns true
+func (p serviceKindsImpl) ListFiltered(ctx context.Context, filter func(plan servicesv1.ServiceKind) bool) (*servicesv1.ServiceKindList, error) {
+	var res []servicesv1.ServiceKind
+
+	serviceKindList, err := p.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, serviceKind := range serviceKindList.Items {
+		if filter(serviceKind) {
+			res = append(res, serviceKind)
+		}
+	}
+
+	serviceKindList.Items = res
+
+	return serviceKindList, nil
 }
 
 // Has checks if a service kind exists

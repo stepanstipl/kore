@@ -56,6 +56,9 @@ class V1ServicePlanSpec {
             if (data.hasOwnProperty('configuration')) {
                 obj['configuration'] = ApiClient.convertToType(data['configuration'], Object);
             }
+            if (data.hasOwnProperty('credentialSchema')) {
+                obj['credentialSchema'] = ApiClient.convertToType(data['credentialSchema'], 'String');
+            }
             if (data.hasOwnProperty('description')) {
                 obj['description'] = ApiClient.convertToType(data['description'], 'String');
             }
@@ -64,6 +67,12 @@ class V1ServicePlanSpec {
             }
             if (data.hasOwnProperty('labels')) {
                 obj['labels'] = ApiClient.convertToType(data['labels'], {'String': 'String'});
+            }
+            if (data.hasOwnProperty('providerData')) {
+                obj['providerData'] = ApiClient.convertToType(data['providerData'], 'String');
+            }
+            if (data.hasOwnProperty('schema')) {
+                obj['schema'] = ApiClient.convertToType(data['schema'], 'String');
             }
             if (data.hasOwnProperty('summary')) {
                 obj['summary'] = ApiClient.convertToType(data['summary'], 'String');
@@ -84,6 +93,19 @@ class V1ServicePlanSpec {
      */
     setConfiguration(configuration) {
         this['configuration'] = configuration;
+    }
+/**
+     * @return {String}
+     */
+    getCredentialSchema() {
+        return this.credentialSchema;
+    }
+
+    /**
+     * @param {String} credentialSchema
+     */
+    setCredentialSchema(credentialSchema) {
+        this['credentialSchema'] = credentialSchema;
     }
 /**
      * @return {String}
@@ -127,6 +149,32 @@ class V1ServicePlanSpec {
 /**
      * @return {String}
      */
+    getProviderData() {
+        return this.providerData;
+    }
+
+    /**
+     * @param {String} providerData
+     */
+    setProviderData(providerData) {
+        this['providerData'] = providerData;
+    }
+/**
+     * @return {String}
+     */
+    getSchema() {
+        return this.schema;
+    }
+
+    /**
+     * @param {String} schema
+     */
+    setSchema(schema) {
+        this['schema'] = schema;
+    }
+/**
+     * @return {String}
+     */
     getSummary() {
         return this.summary;
     }
@@ -146,6 +194,11 @@ class V1ServicePlanSpec {
 V1ServicePlanSpec.prototype['configuration'] = undefined;
 
 /**
+ * @member {String} credentialSchema
+ */
+V1ServicePlanSpec.prototype['credentialSchema'] = undefined;
+
+/**
  * @member {String} description
  */
 V1ServicePlanSpec.prototype['description'] = undefined;
@@ -159,6 +212,16 @@ V1ServicePlanSpec.prototype['kind'] = undefined;
  * @member {Object.<String, String>} labels
  */
 V1ServicePlanSpec.prototype['labels'] = undefined;
+
+/**
+ * @member {String} providerData
+ */
+V1ServicePlanSpec.prototype['providerData'] = undefined;
+
+/**
+ * @member {String} schema
+ */
+V1ServicePlanSpec.prototype['schema'] = undefined;
 
 /**
  * @member {String} summary

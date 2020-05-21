@@ -24,10 +24,11 @@ class V1alpha1ProjectClaimSpec {
      * Constructs a new <code>V1alpha1ProjectClaimSpec</code>.
      * @alias module:model/V1alpha1ProjectClaimSpec
      * @param organization {module:model/V1Ownership} 
+     * @param projectName {String} 
      */
-    constructor(organization) { 
+    constructor(organization, projectName) { 
         
-        V1alpha1ProjectClaimSpec.initialize(this, organization);
+        V1alpha1ProjectClaimSpec.initialize(this, organization, projectName);
     }
 
     /**
@@ -35,8 +36,9 @@ class V1alpha1ProjectClaimSpec {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, organization) { 
+    static initialize(obj, organization, projectName) { 
         obj['organization'] = organization;
+        obj['projectName'] = projectName;
     }
 
     /**

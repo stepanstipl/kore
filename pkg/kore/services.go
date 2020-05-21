@@ -20,11 +20,8 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"strings"
 
 	"github.com/appvia/kore/pkg/utils"
-
-	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 
 	"github.com/appvia/kore/pkg/utils/jsonschema"
 
@@ -37,6 +34,7 @@ import (
 )
 
 // Services returns the an interface for handling services
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Services
 type Services interface {
 	// Delete is used to delete a service
 	Delete(context.Context, string) (*servicesv1.Service, error)
@@ -209,17 +207,7 @@ func (s *servicesImpl) Update(ctx context.Context, service *servicesv1.Service) 
 			WithFieldErrorf("kind", validation.InvalidType, "%q is not enabled", service.Spec.Kind)
 	}
 
-	provider := s.serviceProviders.GetProviderForKind(service.Spec.Kind)
-	if provider == nil {
-		return validation.NewError("%q failed validation", service.Name).
-			WithFieldErrorf("kind", validation.InvalidType, "%q is not a known service kind", service.Spec.Kind)
-	}
-
-	if err := s.validateConfiguration(ctx, service, existing, provider); err != nil {
-		return err
-	}
-
-	if err := s.validateCredentials(ctx, service, provider); err != nil {
+	if err := s.validateConfiguration(ctx, service, existing); err != nil {
 		return err
 	}
 
@@ -229,7 +217,7 @@ func (s *servicesImpl) Update(ctx context.Context, service *servicesv1.Service) 
 	)
 }
 
-func (s *servicesImpl) validateConfiguration(ctx context.Context, service, existing *servicesv1.Service, provider ServiceProvider) error {
+func (s *servicesImpl) validateConfiguration(ctx context.Context, service, existing *servicesv1.Service) error {
 	plan, err := s.servicePlans.Get(ctx, service.Spec.Plan)
 	if err != nil {
 		if err == ErrNotFound {
@@ -265,9 +253,13 @@ func (s *servicesImpl) validateConfiguration(ctx context.Context, service, exist
 		return fmt.Errorf("failed to parse service configuration values: %s", err)
 	}
 
-	schema, err := provider.PlanJSONSchema(service.Spec.Kind, service.PlanShortName())
-	if err != nil {
-		return err
+	schema := plan.Spec.Schema
+	if schema == "" {
+		kind, err := s.ServiceKinds().Get(ctx, plan.Spec.Kind)
+		if err != nil {
+			return err
+		}
+		schema = kind.Spec.Schema
 	}
 
 	if schema == "" && !utils.ApiExtJSONEmpty(service.Spec.Configuration) {
@@ -307,71 +299,6 @@ func (s *servicesImpl) validateConfiguration(ctx context.Context, service, exist
 	}
 	if verr.HasErrors() {
 		return verr
-	}
-
-	return nil
-}
-
-func (s *servicesImpl) validateCredentials(ctx context.Context, service *servicesv1.Service, provider ServiceProvider) error {
-	expectedKinds, err := provider.RequiredCredentialTypes(service.Spec.Kind)
-	if err != nil {
-		return err
-	}
-
-	creds := service.Spec.Credentials
-
-	if expectedKinds == nil {
-		if creds.Kind != "" {
-			return validation.NewError("service has failed validation").WithFieldError(
-				"credentials",
-				validation.InvalidType,
-				"should not be set as this service kind doesn't require credentials",
-			)
-		}
-		return nil
-	}
-
-	found := false
-	for _, gvk := range expectedKinds {
-		if creds.HasGroupVersionKind(gvk) {
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		var expected []string
-		for _, gvk := range expectedKinds {
-			expected = append(expected, utils.FormatGroupVersionKind(gvk))
-		}
-		return validation.NewError("service has failed validation").WithFieldErrorf(
-			"credentials",
-			validation.InvalidType,
-			"should be one of: %s",
-			strings.Join(expected, ", "),
-		)
-	}
-
-	var alloc configv1.Allocation
-	credentialAllocations, err := s.Teams().Team(s.team).Allocations().ListAllocationsByType(
-		ctx, creds.Group, creds.Version, creds.Kind,
-	)
-	if err != nil {
-		return err
-	}
-	for _, a := range credentialAllocations.Items {
-		if a.Spec.Resource.Name == creds.Name {
-			alloc = a
-			break
-		}
-	}
-	if alloc.Name == "" {
-		return validation.NewError("service has failed validation").WithFieldErrorf(
-			"credentials",
-			validation.MustExist,
-			"%q does not exist or it is not assigned to the team",
-			creds.Name,
-		)
 	}
 
 	return nil

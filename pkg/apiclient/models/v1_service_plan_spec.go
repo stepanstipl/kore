@@ -20,6 +20,9 @@ type V1ServicePlanSpec struct {
 	// configuration
 	Configuration interface{} `json:"configuration,omitempty"`
 
+	// credential schema
+	CredentialSchema string `json:"credentialSchema,omitempty"`
+
 	// description
 	// Required: true
 	Description *string `json:"description"`
@@ -30,6 +33,12 @@ type V1ServicePlanSpec struct {
 
 	// labels
 	Labels map[string]string `json:"labels,omitempty"`
+
+	// provider data
+	ProviderData string `json:"providerData,omitempty"`
+
+	// schema
+	Schema string `json:"schema,omitempty"`
 
 	// summary
 	// Required: true

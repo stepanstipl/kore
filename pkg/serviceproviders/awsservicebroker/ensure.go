@@ -227,15 +227,13 @@ func (d ProviderFactory) ensureS3Bucket(sess *session.Session, config *ProviderC
 }
 
 func (d ProviderFactory) ensureHelmRelease(
-	ctx kore.ServiceProviderContext,
+	ctx kore.Context,
 	config *ProviderConfiguration,
 	name string,
 	awsAccessKeyID string,
 	awsSecretAccessKey string,
-) (clientSecret *v1.Secret, certsSecret *v1.Secret, complete bool, _ error) {
+) (complete bool, _ error) {
 	namespaceName := "kore-serviceprovider-" + name
-
-	client := ctx.Client
 
 	ns := &v1.Namespace{
 		TypeMeta: metav1.TypeMeta{
@@ -247,8 +245,8 @@ func (d ProviderFactory) ensureHelmRelease(
 		},
 	}
 
-	if err := kubernetes.EnsureNamespace(ctx, client, ns); err != nil {
-		return nil, nil, false, fmt.Errorf("failed to create namespace %q: %w", namespaceName, err)
+	if err := kubernetes.EnsureNamespace(ctx, ctx.Client(), ns); err != nil {
+		return false, fmt.Errorf("failed to create namespace %q: %w", namespaceName, err)
 	}
 
 	secretName := name + "-credentials"
@@ -269,9 +267,9 @@ func (d ProviderFactory) ensureHelmRelease(
 		},
 	}
 
-	_, err := kubernetes.CreateOrUpdate(ctx, client, secret)
+	_, err := kubernetes.CreateOrUpdate(ctx, ctx.Client(), secret)
 	if err != nil {
-		return nil, nil, false, fmt.Errorf("failed to create secret %q: %w", secretName, err)
+		return false, fmt.Errorf("failed to create secret %q: %w", secretName, err)
 	}
 
 	var chart map[string]interface{}
@@ -291,7 +289,7 @@ func (d ProviderFactory) ensureHelmRelease(
 			chart["ref"] = config.ChartRepositoryRef
 		}
 	default:
-		return nil, nil, false, fmt.Errorf("invalid chart repository type: %q", config.ChartRepositoryType)
+		return false, fmt.Errorf("invalid chart repository type: %q", config.ChartRepositoryType)
 	}
 
 	helmRelease := &unstructured.Unstructured{Object: map[string]interface{}{
@@ -320,19 +318,9 @@ func (d ProviderFactory) ensureHelmRelease(
 		},
 	}}
 
-	if _, err := kubernetes.CreateOrUpdate(ctx, client, helmRelease); err != nil {
-		return nil, nil, false, fmt.Errorf("failed to create Helm release %q: %w", name, err)
+	if _, err := kubernetes.CreateOrUpdate(ctx, ctx.Client(), helmRelease); err != nil {
+		return false, fmt.Errorf("failed to create Helm release %q: %w", name, err)
 	}
 
-	clientSecret, err = getServiceAccountToken(ctx, client, namespaceName, name+"-aws-servicebroker-client")
-	if err != nil || clientSecret == nil {
-		return nil, nil, false, err
-	}
-
-	certsSecret, err = getSecret(ctx, client, namespaceName, name+"-aws-servicebroker-cert")
-	if err != nil || certsSecret == nil {
-		return nil, nil, false, err
-	}
-
-	return clientSecret, certsSecret, true, nil
+	return true, nil
 }

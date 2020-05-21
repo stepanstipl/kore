@@ -22,8 +22,6 @@ import (
 	"fmt"
 	"strings"
 
-	kerrors "k8s.io/apimachinery/pkg/api/errors"
-
 	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/controllers"
@@ -60,9 +58,6 @@ func getServiceAccountToken(ctx context.Context, client client.Client, namespace
 		Name:      name,
 	}, sa)
 	if err != nil {
-		if kerrors.IsNotFound(err) {
-			return nil, nil
-		}
 		return nil, fmt.Errorf("failed to get serviceaccount %q: %w", name, err)
 	}
 	if len(sa.Secrets) <= 0 {
@@ -79,24 +74,21 @@ func getSecret(ctx context.Context, client client.Client, namespace, name string
 		Name:      name,
 	}, secret)
 	if err != nil {
-		if kerrors.IsNotFound(err) {
-			return nil, nil
-		}
 		return nil, fmt.Errorf("failed to get secret %q: %w", name, err)
 	}
 
 	return secret, nil
 }
 
-func getCredentials(ctx kore.ServiceProviderContext, serviceProvider *servicesv1.ServiceProvider) (awsAccessKeyID string, awsSecretAccessKey string, _ error) {
+func getCredentials(ctx kore.Context, serviceProvider *servicesv1.ServiceProvider) (awsAccessKeyID string, awsSecretAccessKey string, _ error) {
 	eksCredentials := &eksv1alpha1.EKSCredentials{}
-	err := ctx.Client.Get(ctx, serviceProvider.Spec.Credentials.NamespacedName(), eksCredentials)
+	err := ctx.Client().Get(ctx, serviceProvider.Spec.Credentials.NamespacedName(), eksCredentials)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to load the service provider credentials: %w", err)
 	}
 
 	if eksCredentials.Spec.CredentialsRef != nil {
-		secret, err := controllers.GetDecodedSecret(ctx, ctx.Client, eksCredentials.Spec.CredentialsRef)
+		secret, err := controllers.GetDecodedSecret(ctx, ctx.Client(), eksCredentials.Spec.CredentialsRef)
 		if err != nil {
 			return "", "", fmt.Errorf("failed to load the credentials secret: %w", err)
 		}

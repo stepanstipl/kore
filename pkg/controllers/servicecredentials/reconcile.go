@@ -18,8 +18,9 @@ package servicecredentials
 
 import (
 	"context"
-	"fmt"
 	"time"
+
+	"github.com/appvia/kore/pkg/kore"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
@@ -66,12 +67,12 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		return reconcile.Result{}, err
 	}
 
-	provider := c.ServiceProviders().GetProviderForKind(creds.Spec.Kind)
-	if provider == nil {
-		logger.Errorf("provider not found for service kind %q", creds.Spec.Kind)
+	spCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c)
+	provider, err := c.ServiceProviders().GetProviderForKind(spCtx, creds.Spec.Kind)
+	if err != nil {
 		creds.Status.Status = corev1.ErrorStatus
-		creds.Status.Message = fmt.Sprintf("provider not found for service kind %q", creds.Spec.Kind)
-		return reconcile.Result{Requeue: true}, nil
+		creds.Status.Message = err.Error()
+		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 	}
 
 	finalizer := kubernetes.NewFinalizer(c.mgr.GetClient(), finalizerName)

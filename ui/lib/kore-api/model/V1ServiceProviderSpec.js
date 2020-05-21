@@ -12,6 +12,7 @@
  */
 
 import ApiClient from '../ApiClient';
+import V1Ownership from './V1Ownership';
 
 /**
  * The V1ServiceProviderSpec model module.
@@ -56,6 +57,9 @@ class V1ServiceProviderSpec {
             if (data.hasOwnProperty('configuration')) {
                 obj['configuration'] = ApiClient.convertToType(data['configuration'], Object);
             }
+            if (data.hasOwnProperty('credentials')) {
+                obj['credentials'] = V1Ownership.constructFromObject(data['credentials']);
+            }
             if (data.hasOwnProperty('description')) {
                 obj['description'] = ApiClient.convertToType(data['description'], 'String');
             }
@@ -81,6 +85,19 @@ class V1ServiceProviderSpec {
      */
     setConfiguration(configuration) {
         this['configuration'] = configuration;
+    }
+/**
+     * @return {module:model/V1Ownership}
+     */
+    getCredentials() {
+        return this.credentials;
+    }
+
+    /**
+     * @param {module:model/V1Ownership} credentials
+     */
+    setCredentials(credentials) {
+        this['credentials'] = credentials;
     }
 /**
      * @return {String}
@@ -128,6 +145,11 @@ class V1ServiceProviderSpec {
  * @member {Object} configuration
  */
 V1ServiceProviderSpec.prototype['configuration'] = undefined;
+
+/**
+ * @member {module:model/V1Ownership} credentials
+ */
+V1ServiceProviderSpec.prototype['credentials'] = undefined;
 
 /**
  * @member {String} description

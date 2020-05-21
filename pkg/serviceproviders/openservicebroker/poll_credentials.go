@@ -32,12 +32,12 @@ import (
 )
 
 func (p *Provider) pollLastBindingOperation(
-	ctx kore.ServiceProviderContext,
+	ctx kore.Context,
 	service *servicesv1.Service,
 	creds *servicesv1.ServiceCredentials,
 	component *corev1.Component,
 ) (reconcile.Result, map[string]string, error) {
-	providerPlan, err := p.plan(service)
+	planProviderData, err := getServicePlanProviderData(ctx, service)
 	if err != nil {
 		return reconcile.Result{}, nil, err
 	}
@@ -47,13 +47,13 @@ func (p *Provider) pollLastBindingOperation(
 		return reconcile.Result{}, nil, err
 	}
 
-	ctx.Logger.WithField("operation", providerData.Operation).Debug("polling last bind operation from service broker")
+	ctx.Logger().WithField("operation", providerData.Operation).Debug("polling last bind operation from service broker")
 
 	resp, err := p.client.PollBindingLastOperation(&osb.BindingLastOperationRequest{
 		InstanceID:   service.Status.ProviderID,
 		BindingID:    creds.Status.ProviderID,
-		ServiceID:    utils.StringPtr(providerPlan.serviceID),
-		PlanID:       utils.StringPtr(providerPlan.osbPlan.ID),
+		ServiceID:    utils.StringPtr(planProviderData.ServiceID),
+		PlanID:       utils.StringPtr(planProviderData.PlanID),
 		OperationKey: providerData.Operation,
 	})
 	if err != nil {
@@ -64,7 +64,7 @@ func (p *Provider) pollLastBindingOperation(
 		return reconcile.Result{}, nil, handleError(component, "failed to poll last bind operation on the service broker", err)
 	}
 
-	ctx.Logger.WithField("response", resp).Debug("last bind operation response from service broker")
+	ctx.Logger().WithField("response", resp).Debug("last bind operation response from service broker")
 
 	component.Message = utils.StringValue(resp.Description)
 
@@ -77,7 +77,7 @@ func (p *Provider) pollLastBindingOperation(
 			return reconcile.Result{}, nil, nil
 		}
 
-		ctx.Logger.Debug("requesting binding details")
+		ctx.Logger().Debug("requesting binding details")
 		resp, err := p.client.GetBinding(&osb.GetBindingRequest{
 			InstanceID: service.Status.ProviderID,
 			BindingID:  creds.Status.ProviderID,

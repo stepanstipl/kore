@@ -103,7 +103,7 @@ func (c *Controller) delete(
 		serviceCreds.Status.Components.SetStatus(ComponentKubernetesSecret, corev1.DeletedStatus, "", "")
 
 		result, err := provider.DeleteCredentials(
-			kore.NewServiceProviderContext(ctx, logger, c.mgr.GetClient()),
+			kore.NewContext(ctx, logger, c.mgr.GetClient(), c),
 			service, serviceCreds,
 		)
 		if err != nil {

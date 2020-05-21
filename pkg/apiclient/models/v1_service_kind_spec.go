@@ -17,6 +17,9 @@ import (
 // swagger:model v1.ServiceKindSpec
 type V1ServiceKindSpec struct {
 
+	// credential schema
+	CredentialSchema string `json:"credentialSchema,omitempty"`
+
 	// description
 	Description string `json:"description,omitempty"`
 
@@ -32,6 +35,12 @@ type V1ServiceKindSpec struct {
 
 	// image URL
 	ImageURL string `json:"imageURL,omitempty"`
+
+	// provider data
+	ProviderData string `json:"providerData,omitempty"`
+
+	// schema
+	Schema string `json:"schema,omitempty"`
 
 	// summary
 	Summary string `json:"summary,omitempty"`

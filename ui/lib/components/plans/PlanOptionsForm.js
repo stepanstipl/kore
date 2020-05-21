@@ -71,7 +71,7 @@ class PlanOptionsForm extends React.Component {
       [schema, parameterEditable, planValues] = [planDetails.schema, planDetails.parameterEditable, planDetails.servicePlan.configuration]
       break
     case 'servicecredential':
-      schema = await (await KoreApi.client()).GetServiceCredentialSchemaForPlan(this.props.team.metadata.name, this.props.kind, this.props.plan)
+      schema = await (await KoreApi.client()).GetServiceCredentialSchema(this.props.team.metadata.name, this.props.plan)
       parameterEditable = { '*': true }
       planValues = {}
       break

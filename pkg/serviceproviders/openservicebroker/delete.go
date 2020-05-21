@@ -29,10 +29,10 @@ import (
 )
 
 func (p *Provider) Delete(
-	ctx kore.ServiceProviderContext,
+	ctx kore.Context,
 	service *servicesv1.Service,
 ) (reconcile.Result, error) {
-	providerPlan, err := p.plan(service)
+	planProviderData, err := getServicePlanProviderData(ctx, service)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -58,13 +58,13 @@ func (p *Provider) Delete(
 
 	component.Update(corev1.PendingStatus, "", "")
 
-	ctx.Logger.Debug("deprovisioning service with service broker")
+	ctx.Logger().Debug("deprovisioning service with service broker")
 
 	resp, err := p.client.DeprovisionInstance(&osb.DeprovisionRequest{
 		InstanceID:        service.Status.ProviderID,
 		AcceptsIncomplete: true,
-		ServiceID:         providerPlan.serviceID,
-		PlanID:            providerPlan.osbPlan.ID,
+		ServiceID:         planProviderData.ServiceID,
+		PlanID:            planProviderData.PlanID,
 	})
 	if err != nil {
 		if isHttpNotFound(err) {
@@ -74,7 +74,7 @@ func (p *Provider) Delete(
 		return reconcile.Result{}, handleError(component, "failed to call deprovision on the service broker", err)
 	}
 
-	ctx.Logger.WithField("response", resp).Debug("deprovision response from service broker")
+	ctx.Logger().WithField("response", resp).Debug("deprovision response from service broker")
 
 	if err := service.Status.SetProviderData(ProviderData{Operation: resp.OperationKey}); err != nil {
 		return reconcile.Result{}, err

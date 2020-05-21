@@ -36,7 +36,7 @@ import (
 )
 
 func (p Provider) Reconcile(
-	ctx kore.ServiceProviderContext,
+	ctx kore.Context,
 	service *servicesv1.Service,
 ) (reconcile.Result, error) {
 	config, err := getAppConfiguration(service)
@@ -138,7 +138,7 @@ func (p Provider) Reconcile(
 			continue
 		}
 
-		ctx.Logger.WithField("resource", kubernetes.MustGetRuntimeSelfLink(resource)).Debug("creating/updating application resource")
+		ctx.Logger().WithField("resource", kubernetes.MustGetRuntimeSelfLink(resource)).Debug("creating/updating application resource")
 		if err := ensureResource(ctx, clusterClient, resource.DeepCopyObject()); err != nil {
 			return reconcile.Result{}, err
 		}

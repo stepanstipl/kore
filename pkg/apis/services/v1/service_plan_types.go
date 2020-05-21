@@ -19,7 +19,6 @@ package v1
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -55,6 +54,16 @@ type ServicePlanSpec struct {
 	// +kubebuilder:validation:Type=object
 	// +kubebuilder:validation:Optional
 	Configuration *apiextv1.JSON `json:"configuration,omitempty"`
+	// Schema is the JSON schema for the plan
+	// +kubebuilder:validation:Optional
+	Schema string `json:"schema,omitempty"`
+	// CredentialSchema is the JSON schema for credentials created for service using this plan
+	// +kubebuilder:validation:Optional
+	CredentialSchema string `json:"credentialSchema,omitempty"`
+	// ProviderData is provider specific data
+	// +kubebuilder:validation:Type=object
+	// +kubebuilder:validation:Optional
+	ProviderData *apiextv1.JSON `json:"providerData,omitempty"`
 }
 
 func (s *ServicePlanSpec) GetConfiguration(v interface{}) error {
@@ -82,6 +91,31 @@ func (s *ServicePlanSpec) SetConfiguration(v interface{}) error {
 	return nil
 }
 
+func (s *ServicePlanSpec) GetProviderData(v interface{}) error {
+	if s.ProviderData == nil {
+		return nil
+	}
+
+	if err := json.Unmarshal(s.ProviderData.Raw, v); err != nil {
+		return fmt.Errorf("failed to unmarshal service plan data: %w", err)
+	}
+	return nil
+}
+
+func (s *ServicePlanSpec) SetProviderData(v interface{}) error {
+	if v == nil {
+		s.ProviderData = nil
+		return nil
+	}
+
+	raw, err := json.Marshal(v)
+	if err != nil {
+		return fmt.Errorf("failed to marshal service kind provider data: %w", err)
+	}
+	s.ProviderData = &apiextv1.JSON{Raw: raw}
+	return nil
+}
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // ServicePlan is a template for a service
@@ -92,24 +126,6 @@ type ServicePlan struct {
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	Spec ServicePlanSpec `json:"spec,omitempty"`
-}
-
-func NewServicePlan(name, namespace string) *ServicePlan {
-	return &ServicePlan{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       ServicePlanGVK.Kind,
-			APIVersion: GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-	}
-}
-
-// PlanShortName returns the plan name without the service kind prefix
-func (s ServicePlan) PlanShortName() string {
-	return strings.TrimPrefix(s.Name, s.Spec.Kind+"-")
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

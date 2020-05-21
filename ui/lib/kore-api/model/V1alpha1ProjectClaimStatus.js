@@ -13,6 +13,7 @@
 
 import ApiClient from '../ApiClient';
 import V1Component from './V1Component';
+import V1Ownership from './V1Ownership';
 import V1SecretReference from './V1SecretReference';
 
 /**
@@ -57,6 +58,9 @@ class V1alpha1ProjectClaimStatus {
             }
             if (data.hasOwnProperty('projectID')) {
                 obj['projectID'] = ApiClient.convertToType(data['projectID'], 'String');
+            }
+            if (data.hasOwnProperty('projectRef')) {
+                obj['projectRef'] = V1Ownership.constructFromObject(data['projectRef']);
             }
             if (data.hasOwnProperty('status')) {
                 obj['status'] = ApiClient.convertToType(data['status'], 'String');
@@ -105,6 +109,19 @@ class V1alpha1ProjectClaimStatus {
         this['projectID'] = projectID;
     }
 /**
+     * @return {module:model/V1Ownership}
+     */
+    getProjectRef() {
+        return this.projectRef;
+    }
+
+    /**
+     * @param {module:model/V1Ownership} projectRef
+     */
+    setProjectRef(projectRef) {
+        this['projectRef'] = projectRef;
+    }
+/**
      * @return {String}
      */
     getStatus() {
@@ -134,6 +151,11 @@ V1alpha1ProjectClaimStatus.prototype['credentialRef'] = undefined;
  * @member {String} projectID
  */
 V1alpha1ProjectClaimStatus.prototype['projectID'] = undefined;
+
+/**
+ * @member {module:model/V1Ownership} projectRef
+ */
+V1alpha1ProjectClaimStatus.prototype['projectRef'] = undefined;
 
 /**
  * @member {String} status

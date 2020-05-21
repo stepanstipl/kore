@@ -18,7 +18,6 @@ package serviceproviders
 
 import (
 	"context"
-	"fmt"
 	"sort"
 	"time"
 
@@ -70,12 +69,9 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		ensure := []controllers.EnsureFunc{
 			c.ensureFinalizer(serviceProvider, finalizer),
 			c.ensurePending(serviceProvider),
-			func(ctx context.Context) (reconcile.Result, error) {
-				provider, complete, err := c.ServiceProviders().Register(kore.ServiceProviderContext{
-					Context: ctx,
-					Logger:  logger,
-					Client:  c.mgr.GetClient(),
-				}, serviceProvider)
+			func(ctx context.Context) (result reconcile.Result, err error) {
+				spCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c)
+				complete, err := c.ServiceProviders().SetUp(spCtx, serviceProvider)
 				if err != nil {
 					return reconcile.Result{}, err
 				}
@@ -83,15 +79,25 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 					return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 				}
 
+				provider, err := c.ServiceProviders().Register(spCtx, serviceProvider)
+				if err != nil {
+					return reconcile.Result{}, err
+				}
+
+				catalog, err := c.ServiceProviders().Catalog(spCtx, serviceProvider)
+				if err != nil {
+					return reconcile.Result{}, err
+				}
+
 				var supportedKinds []string
-				for _, kind := range provider.Kinds() {
+				for _, kind := range catalog.Kinds {
 					supportedKinds = append(supportedKinds, kind.Name)
 				}
 				sort.Strings(supportedKinds)
 
 				serviceProvider.Status.SupportedKinds = supportedKinds
 
-				for _, kind := range provider.Kinds() {
+				for _, kind := range catalog.Kinds {
 					kind.Namespace = kore.HubNamespace
 					exists, err := kubernetes.CheckIfExists(ctx, c.mgr.GetClient(), &kind)
 					if err != nil {
@@ -105,8 +111,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 					}
 				}
 
-				for _, plan := range provider.Plans() {
-					plan.Name = fmt.Sprintf("%s-%s", plan.Spec.Kind, plan.Name)
+				for _, plan := range catalog.Plans {
 					plan.Namespace = kore.HubNamespace
 					exists, err := kubernetes.CheckIfExists(ctx, c.mgr.GetClient(), &plan)
 					if err != nil {
@@ -139,8 +144,8 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 					})
 				}
 
-				result, err := EnsureServices(
-					controllers.NewContext(ctx, logger, c.mgr.GetClient(), c),
+				result, err = EnsureServices(
+					kore.NewContext(ctx, logger, c.mgr.GetClient(), c),
 					adminServices,
 					serviceProvider,
 					serviceProvider.Status.Components,

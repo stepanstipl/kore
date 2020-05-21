@@ -123,25 +123,6 @@ func (h hubImpl) Setup(ctx context.Context) error {
 		}
 	}
 
-	serviceProviders, err := h.ServiceProviders().List(getAdminContext(ctx))
-	if err != nil {
-		return err
-	}
-
-	for _, serviceProvider := range serviceProviders.Items {
-		if err != nil {
-			if serviceProvider.Annotations == nil {
-				serviceProvider.Annotations = map[string]string{}
-			}
-			serviceProvider.Annotations[Label("initializedAt")] = time.Now().String()
-			serviceProvider.Status.Status = core.PendingStatus
-			serviceProvider.Status.Message = "Initializing"
-			if err := h.ServiceProviders().Update(getAdminContext(ctx), &serviceProvider); err != nil {
-				return fmt.Errorf("failed to initialize service provider: %w", err)
-			}
-		}
-	}
-
 	// migrate the allocation names to be prefixed with the spec.resource name eg. planpoliy-default-gke
 	allocationList, err := h.Teams().Team(HubAdminTeam).Allocations().List(getAdminContext(ctx))
 	if err != nil {

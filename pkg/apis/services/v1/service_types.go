@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -179,11 +178,6 @@ func (s Service) Ownership() corev1.Ownership {
 		Namespace: s.Namespace,
 		Name:      s.Name,
 	}
-}
-
-// PlanShortName returns the plan name without the service kind prefix
-func (s Service) PlanShortName() string {
-	return strings.TrimPrefix(s.Spec.Plan, s.Spec.Kind+"-")
 }
 
 // NeedsUpdate returns true if the plan or the configuration changed compared to the status
