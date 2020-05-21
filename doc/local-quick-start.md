@@ -40,7 +40,7 @@ Please ensure you have the following installed on your machine,
 
 ### Kind
 
-Please ensure if you are runing the local deployment you have the kind binary installed (https://kind.sigs.k8s.io/docs/user/quick-start/)
+Please ensure if you are running the local deployment you have the kind binary installed (https://kind.sigs.k8s.io/docs/user/quick-start/)
 
 ### Google Cloud account
 
