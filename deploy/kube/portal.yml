@@ -15,12 +15,15 @@ spec:
   selector:
     name: portal
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: portal
 spec:
   replicas: 2
+  selector:
+    matchLabels:
+      name: portal
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -38,7 +41,7 @@ spec:
         imagePullPolicy: Always
         envFrom:
           - secretRef:
-              name: auth 
+              name: auth
           - secretRef:
               name: portal
 ---
@@ -58,12 +61,15 @@ spec:
   selector:
     name: redis
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: redis
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      name: redis
   strategy:
     type: RollingUpdate
     rollingUpdate:

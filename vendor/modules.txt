@@ -265,7 +265,7 @@ github.com/goccy/go-yaml/lexer
 github.com/goccy/go-yaml/printer
 github.com/goccy/go-yaml/scanner
 github.com/goccy/go-yaml/token
-# github.com/gofrs/flock v0.7.0
+# github.com/gofrs/flock v0.7.1
 github.com/gofrs/flock
 # github.com/gogo/protobuf v1.3.1
 github.com/gogo/protobuf/proto
@@ -342,7 +342,7 @@ github.com/golangci/prealloc
 github.com/golangci/revgrep
 # github.com/golangci/unconvert v0.0.0-20180507085042-28b1c447d1f4
 github.com/golangci/unconvert
-# github.com/google/go-cmp v0.3.1
+# github.com/google/go-cmp v0.4.0
 github.com/google/go-cmp/cmp
 github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
@@ -392,7 +392,7 @@ github.com/hpcloud/tail/ratelimiter
 github.com/hpcloud/tail/util
 github.com/hpcloud/tail/watch
 github.com/hpcloud/tail/winfile
-# github.com/huandu/xstrings v1.2.1
+# github.com/huandu/xstrings v1.3.1
 github.com/huandu/xstrings
 # github.com/imdario/mergo v0.3.8
 github.com/imdario/mergo
@@ -436,7 +436,7 @@ github.com/kr/text
 github.com/kubernetes-sigs/go-open-service-broker-client/v2
 # github.com/kylelemons/godebug v1.1.0
 github.com/kylelemons/godebug/diff
-# github.com/lib/pq v1.2.0
+# github.com/lib/pq v1.3.0
 github.com/lib/pq
 github.com/lib/pq/hstore
 github.com/lib/pq/oid
@@ -685,7 +685,7 @@ go.opencensus.io/trace
 go.opencensus.io/trace/internal
 go.opencensus.io/trace/propagation
 go.opencensus.io/trace/tracestate
-# golang.org/x/crypto v0.0.0-20200311171314-f7b00557c8c4
+# golang.org/x/crypto v0.0.0-20200414173820-0848c9571904
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/ed25519

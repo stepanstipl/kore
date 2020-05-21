@@ -31,7 +31,7 @@ spec:
   storageClassName: {{ .Values.mysql.pvc.storageClass }}
   {{ end }}
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "kore.name" . }}-mysql
@@ -39,6 +39,9 @@ metadata:
 {{ include "kore.labels" . | indent 4}}
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      name: {{ include "kore.name" . }}-mysql
   strategy:
     type: RollingUpdate
     rollingUpdate:

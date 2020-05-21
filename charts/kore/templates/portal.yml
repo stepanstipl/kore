@@ -21,7 +21,7 @@ spec:
     name: {{ include "kore.name" . }}-portal
 
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "kore.name" . }}-portal
@@ -29,6 +29,9 @@ metadata:
 {{ include "kore.labels" . | indent 4}}
 spec:
   replicas: {{ .Values.ui.replicas }}
+  selector:
+    matchLabels:
+      name: {{ include "kore.name" . }}-portal
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -126,7 +129,7 @@ spec:
     name: {{ include "kore.name" . }}-redis
 
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "kore.name" . }}-redis
@@ -134,6 +137,9 @@ metadata:
 {{ include "kore.labels" . | indent 4}}
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      name: {{ include "kore.name" . }}-redis
   strategy:
     type: RollingUpdate
     rollingUpdate:

@@ -21,8 +21,29 @@ import (
 	"encoding/json"
 	"io"
 
+	jsonpatch "github.com/evanphx/json-patch"
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 )
+
+// MergeJSON is responsible for merging two structs
+func MergeJSON(src, dst interface{}) ([]byte, error) {
+	o, err := EncodeToJSON(dst)
+	if err != nil {
+		return nil, err
+	}
+
+	s, err := EncodeToJSON(src)
+	if err != nil {
+		return nil, err
+	}
+
+	patch, err := jsonpatch.CreateMergePatch(o, s)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonpatch.MergePatch(o, patch)
+}
 
 // EncodeToJSON encodes the struct to json
 func EncodeToJSON(in interface{}) ([]byte, error) {

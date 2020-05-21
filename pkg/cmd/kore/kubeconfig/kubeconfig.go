@@ -30,7 +30,7 @@ import (
 )
 
 const (
-	// KoreContextUser is the username to use in the kuberconfig
+	// KoreContextUser is the username to use in the kubeconfig
 	KoreContextUser = "kore"
 )
 
