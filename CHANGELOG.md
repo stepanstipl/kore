@@ -1,6 +1,37 @@
-## Release v0.2.0 - 2020-05-06
+## Release Candidate v0.2.0-rc2 - 2020-05-21
 
-TBC
+### Added
+
+- Security Overview of plans and clusters (https://github.com/appvia/kore/issues/437)
+- Cloud Services - AWS Broker (https://github.com/appvia/kore/issues/707)
+- Cloud Services - S3 (https://github.com/appvia/kore/issues/628)
+- Cloud Services - OSB Client (https://github.com/appvia/kore/issues/710)
+- Cloud Services - Service Credentials (https://github.com/appvia/kore/issues/644)
+- Cloud Services - Plans & Services (https://github.com/appvia/kore/issues/642)
+- GCP Account Management (https://github.com/appvia/kore/issues/650)
+- Support Multiple Clusters to Accounts - part of GCP Account Management (https://github.com/appvia/kore/issues/828)
+- Added verbosity flags to helm chart (https://github.com/appvia/kore/issues/815)
+- Added feature gate options to the helm chart (https://github.com/appvia/kore/issues/807)
+- Added the ability to lookup allocation on CLI (https://github.com/appvia/kore/issues/766)
+
+### Fixes
+- Cleaning up the EKS IAM Roles (https://github.com/appvia/kore/issues/820)
+- Validation around UI Inputs (EKS) (https://github.com/appvia/kore/issues/611)
+- Dryrun flag cleanup on Kore CLI (https://github.com/appvia/kore/issues/801)
+- Fixed issue with team securuity overview (https://github.com/appvia/kore/issues/817)
+- Added runtime-client and context to rules (https://github.com/appvia/kore/pull/785)
+- Fixed an issue in the Accounting update for GCP (https://github.com/appvia/kore/pull/805)
+- Fixed an issue with deletion block on namespaces (https://github.com/appvia/kore/issues/800)
+- Fixed logging format on security controller (https://github.com/appvia/kore/issues/796)
+- Fixed up the age format on kore cli to human readable (https://github.com/appvia/kore/issues/614)
+- Fixed an issue with streaming on the auth-proxy (https://github.com/appvia/kore/issues/704)
+- Fixed the overwriting of inbuilt plans (https://github.com/appvia/kore/issues/755)
+- Added a team check on the CLI (https://github.com/appvia/kore/pull/733)
+- Fixed bug in the create secret CLI (https://github.com/appvia/kore/issues/743)
+- Fixed up the EKS reconcilation controller to be state driven (https://github.com/appvia/kore/pull/576)
+- Renamed packages for store (https://github.com/appvia/kore/pull/719)
+- Fixed verbosity in the CLI config (https://github.com/appvia/kore/issues/697)
+- Fixed issue of local overwriting config (https://github.com/appvia/kore/issues/698)
 
 ## Release v0.1.0 - 2020-04-27
 
@@ -108,14 +139,14 @@ The first beta release of Kore delivers the following key themes:
 
 ## Release v0.0.23 - 2020-04-16
 This release targets being able to use Kore to create, manage and destroy EKS Kubernetes clusters in AWS, with
-all dependent resources managed (VPC, Subnets, node groups, etc). 
+all dependent resources managed (VPC, Subnets, node groups, etc).
 As this is the first formal release of Kore, it only shows the major features added since the previous pre-release alpha.
 ### Added
 - [Kore cluster automatically creates and uses dependent EKS objects](https://github.com/appvia/kore/issues/450)
   Creating an EKS cluster now creates the required VPC infrastructure.
 - [Kore deletes Kore-managed VPC infrastructure when deleting EKS cluster](https://github.com/appvia/kore/issues/492)
   Where Kore has created a VPC and subnets for an EKS cluster, it will now remove them when the cluster is deleted.
-- [Secured EKS Endpoints](https://github.com/appvia/kore/issues/514) 
+- [Secured EKS Endpoints](https://github.com/appvia/kore/issues/514)
 - [Proxy protocol annotation added to AWS Auth Proxy](https://github.com/appvia/kore/issues/505)
 - [Configure AWS EKS in the UI](https://github.com/appvia/kore/issues/488)
 - [Modify plan parameters when creating a cluster through UI](https://github.com/appvia/kore/issues/489)
