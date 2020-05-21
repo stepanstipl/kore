@@ -50,7 +50,7 @@ require (
 	github.com/jinzhu/gorm v1.9.12
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/jpillora/backoff v1.0.0
-	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a
+	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a // indirect
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/kubernetes-sigs/go-open-service-broker-client v0.0.0-20200323235047-56a01c84bf43
 	github.com/manifoldco/promptui v0.7.0
@@ -86,7 +86,7 @@ require (
 	gonum.org/v1/gonum v0.7.0 // indirect
 	google.golang.org/api v0.20.0
 	google.golang.org/grpc v1.27.0
-	gopkg.in/resty.v1 v1.12.0
+	gopkg.in/resty.v1 v1.12.0 // indirect
 	gopkg.in/yaml.v2 v2.2.8
 	k8s.io/api v0.18.2
 	k8s.io/apiextensions-apiserver v0.18.2
