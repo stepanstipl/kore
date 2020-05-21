@@ -1,37 +1,55 @@
-## Release Candidate v0.2.0-rc2 - 2020-05-21
+## Release v0.2.0 - 2020-05-30
+
+This release of Kore adds the following key features:
+
+- Security Overview of plans and clusters.
+- Cloud Services (including S3 and managed binding of services into cluster namespaces via Kore-provisioned secrets).
+- GCP Account Management - auto-creation of projects in a configurable way as teams request clusters.
+- Enhanced management of cluster plans/parameters to allow cluster users and EKS Node Groups to be managed easily through the UI.
 
 ### Added
 
-- Security Overview of plans and clusters (https://github.com/appvia/kore/issues/437)
-- Cloud Services - AWS Broker (https://github.com/appvia/kore/issues/707)
-- Cloud Services - S3 (https://github.com/appvia/kore/issues/628)
-- Cloud Services - OSB Client (https://github.com/appvia/kore/issues/710)
-- Cloud Services - Service Credentials (https://github.com/appvia/kore/issues/644)
-- Cloud Services - Plans & Services (https://github.com/appvia/kore/issues/642)
-- GCP Account Management (https://github.com/appvia/kore/issues/650)
-- Support Multiple Clusters to Accounts - part of GCP Account Management (https://github.com/appvia/kore/issues/828)
-- Added verbosity flags to helm chart (https://github.com/appvia/kore/issues/815)
-- Added feature gate options to the helm chart (https://github.com/appvia/kore/issues/807)
-- Added the ability to lookup allocation on CLI (https://github.com/appvia/kore/issues/766)
+- **Security Overview of plans and clusters**
+    - [Introduce Security Controller to scan plans and clusters](https://github.com/appvia/kore/issues/437)
+    - [UI visibility and overviews](https://github.com/appvia/kore/issues/436)
+- **Cloud Services**
+    - [AWS Broker](https://github.com/appvia/kore/issues/707)
+    - [S3](https://github.com/appvia/kore/issues/628)
+    - [Open Service Broker Client](https://github.com/appvia/kore/issues/710)
+    - [Service Credentials](https://github.com/appvia/kore/issues/644)
+    - [Plans & Services](https://github.com/appvia/kore/issues/642)
+- **GCP Account Management**
+    - [Update Kore GCP Account Management](https://github.com/appvia/kore/issues/648)
+    - [Add CLI support](https://github.com/appvia/kore/issues/649)
+    - [Add UI support](https://github.com/appvia/kore/issues/650)
+    - [Support Multiple Clusters in Accounts](https://github.com/appvia/kore/issues/828)
+- **Cluster / Plan Management UI Improvements**
+    - [Add cluster users custom control for GKE and EKS clusters](https://github.com/appvia/kore/issues/539) ([PR](https://github.com/appvia/kore/pull/823))
+    - [EKS Node Group management and validation](https://github.com/appvia/kore/pull/835)
+- **Other Additions**
+    - [Added verbosity flags to helm chart](https://github.com/appvia/kore/issues/815)
+    - [Added feature gate options to the helm chart](https://github.com/appvia/kore/issues/807)
+    - [Added the ability to lookup allocation on CLI](https://github.com/appvia/kore/issues/766)
 
 ### Fixes
-- Cleaning up the EKS IAM Roles (https://github.com/appvia/kore/issues/820)
-- Validation around UI Inputs (EKS) (https://github.com/appvia/kore/issues/611)
-- Dryrun flag cleanup on Kore CLI (https://github.com/appvia/kore/issues/801)
-- Fixed issue with team securuity overview (https://github.com/appvia/kore/issues/817)
-- Added runtime-client and context to rules (https://github.com/appvia/kore/pull/785)
-- Fixed an issue in the Accounting update for GCP (https://github.com/appvia/kore/pull/805)
-- Fixed an issue with deletion block on namespaces (https://github.com/appvia/kore/issues/800)
-- Fixed logging format on security controller (https://github.com/appvia/kore/issues/796)
-- Fixed up the age format on kore cli to human readable (https://github.com/appvia/kore/issues/614)
-- Fixed an issue with streaming on the auth-proxy (https://github.com/appvia/kore/issues/704)
-- Fixed the overwriting of inbuilt plans (https://github.com/appvia/kore/issues/755)
-- Added a team check on the CLI (https://github.com/appvia/kore/pull/733)
-- Fixed bug in the create secret CLI (https://github.com/appvia/kore/issues/743)
-- Fixed up the EKS reconciliation controller to be state driven (https://github.com/appvia/kore/pull/576)
-- Renamed packages for store (https://github.com/appvia/kore/pull/719)
-- Fixed verbosity in the CLI config (https://github.com/appvia/kore/issues/697)
-- Fixed issue of local overwriting config (https://github.com/appvia/kore/issues/698)
+- [Cleaning up the EKS IAM Roles](https://github.com/appvia/kore/issues/820)
+- [Dryrun flag cleanup on Kore CLI](https://github.com/appvia/kore/issues/801)
+- [Fixed an issue in the Accounting update for GCP](https://github.com/appvia/kore/pull/805)
+- [Fixed an issue with deletion block on namespaces](https://github.com/appvia/kore/issues/800)
+- [Fixed logging format on security controller](https://github.com/appvia/kore/issues/796)
+- [Fixed up the age format on kore cli to human readable](https://github.com/appvia/kore/issues/614)
+- [Fixed an issue with streaming on the auth-proxy](https://github.com/appvia/kore/issues/704)
+- [Fixed the overwriting of inbuilt plans](https://github.com/appvia/kore/issues/755)
+- [Added a team check on the CLI](https://github.com/appvia/kore/pull/733)
+- [Fixed bug in the create secret CLI](https://github.com/appvia/kore/issues/743)
+- [Fixed up the EKS reconciliation controller to be state driven](https://github.com/appvia/kore/pull/576)
+- [Renamed packages for store](https://github.com/appvia/kore/pull/719)
+- [Fixed verbosity in the CLI config](https://github.com/appvia/kore/issues/697)
+- [Fixed issue of local overwriting config](https://github.com/appvia/kore/issues/698)
+- [Added kind to allocation names to prevent allocation naming clashes](https://github.com/appvia/kore/issues/679)
+- [Fixed Kore UI setup wizard can't be completed for AWS](https://github.com/appvia/kore/issues/600)
+- [Fixed AWS EKS Nodegroup desired size should be validated](https://github.com/appvia/kore/issues/611)
+- [Fixed Minor: Panic getting cluster when not logged in](https://github.com/appvia/kore/issues/542)
 
 ## Release v0.1.0 - 2020-04-27
 
