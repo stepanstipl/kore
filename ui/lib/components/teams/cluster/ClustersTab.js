@@ -169,7 +169,7 @@ class ClustersTab extends React.Component {
 
     return (
       <>
-        <div style={{ marginBottom: '20px', display: 'block' }}>
+        <div>
           <Button type="primary">
             <Link href="/teams/[name]/clusters/new" as={`/teams/${team.metadata.name}/clusters/new`}>
               <a>New cluster</a>

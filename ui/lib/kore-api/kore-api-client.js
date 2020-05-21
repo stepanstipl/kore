@@ -149,6 +149,7 @@ class KoreApiClient {
   ListServices = (team) => this.apis.default.ListServices({ team })
   UpdateService = (team, name, service) => this.apis.default.UpdateService({ team, name, body: JSON.stringify(service) })
   GetService = (team, name) => this.apis.default.GetService({ team, name })
+  DeleteService = (team, name) => this.apis.default.DeleteService({ team, name })
   GetTeamServicePlanDetails = (team, plan) => this.apis.default.GetTeamServicePlanDetails({ team, plan })
   ListServiceKinds = (team) => this.apis.default.ListServiceKinds({ team })
   GetServiceCredentials = (team, name) => this.apis.default.GetServiceCredentials({ team, name })

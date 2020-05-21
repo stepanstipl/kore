@@ -1,23 +1,19 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import axios from 'axios'
 import Link from 'next/link'
 import Router from 'next/router'
 import Error from 'next/error'
-import { Typography, Card, List, Button, message, Badge, Alert, Icon, Modal, Dropdown, Menu, Tabs, Divider } from 'antd'
+import { Typography, Button, message, Badge, Alert, Icon, Modal, Dropdown, Menu, Tabs } from 'antd'
 const { Paragraph, Text } = Typography
 const { TabPane } = Tabs
 import getConfig from 'next/config'
 const { publicRuntimeConfig } = getConfig()
 
 import Breadcrumb from '../../lib/components/layout/Breadcrumb'
-import Service from '../../lib/components/teams/service/Service'
-import apiRequest from '../../lib/utils/api-request'
-import copy from '../../lib/utils/object-copy'
-import apiPaths from '../../lib/utils/api-paths'
 import redirect from '../../lib/utils/redirect'
 import KoreApi from '../../lib/kore-api'
 import ClustersTab from '../../lib/components/teams/cluster/ClustersTab'
+import ServicesTab from '../../lib/components/teams/service/ServicesTab'
 import MembersTab from '../../lib/components/teams/members/MembersTab'
 import SecurityTab from '../../lib/components/teams/security/SecurityTab'
 import SecurityStatusIcon from '../../lib/components/security/SecurityStatusIcon'
@@ -27,7 +23,6 @@ class TeamDashboard extends React.Component {
     invitation: PropTypes.bool,
     team: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
-    services: PropTypes.object.isRequired,
     teamRemoved: PropTypes.func.isRequired
   }
 
@@ -41,24 +36,20 @@ class TeamDashboard extends React.Component {
       tabActiveKey: 'clusters',
       memberCount: -1,
       clusterCount: -1,
-      securityStatus: false,
-      services: props.services,
+      serviceCount: -1,
+      securityStatus: false
     }
   }
 
   static async getTeamDetails(ctx) {
-    const name = ctx.query.name
-    const api = await KoreApi.client(ctx)
-    const getTeam = () => api.GetTeam(name)
-    const getTeamServices = () => publicRuntimeConfig.featureGates['services'] ? api.ListServices(name) : {}
-
-    return axios.all([getTeam(), getTeamServices()])
-      .then(axios.spread(function (team, services) {
-        return { team, services }
-      }))
-      .catch(err => {
-        throw new Error(err.message)
-      })
+    try {
+      const name = ctx.query.name
+      const api = await KoreApi.client(ctx)
+      const team = await api.GetTeam(name)
+      return { team }
+    } catch (err) {
+      throw new Error(err.message)
+    }
   }
 
   static getInitialProps = async ctx => {
@@ -77,23 +68,7 @@ class TeamDashboard extends React.Component {
     const teamFound = Object.keys(this.props.team).length
     const prevTeamName = prevProps.team.metadata && prevProps.team.metadata.name
     if (teamFound && this.props.team.metadata.name !== prevTeamName) {
-      this.setState({ tabActiveKey: 'clusters', services: this.props.services })
-    }
-  }
-
-  deleteService = async (name, done) => {
-    const team = this.props.team.metadata.name
-    try {
-      const state = copy(this.state)
-      const service = state.services.items.find(s => s.metadata.name === name)
-      await apiRequest(null, 'delete', `${apiPaths.team(team).services}/${service.metadata.name}`)
-      service.status.status = 'Deleting'
-      service.metadata.deletionTimestamp = new Date()
-      this.setState(state, done)
-      message.loading(`Service deletion requested: ${service.metadata.name}`)
-    } catch (err) {
-      console.error('Error deleting service', err)
-      message.error('Error deleting service, please try again.')
+      this.setState({ tabActiveKey: 'clusters' })
     }
   }
 
@@ -172,8 +147,6 @@ class TeamDashboard extends React.Component {
       return <Error statusCode={404} />
     }
 
-    const { namespaceClaims, services } = this.state
-
     return (
       <div>
         <div style={{ display: 'inline-block', width: '100%' }}>
@@ -188,6 +161,7 @@ class TeamDashboard extends React.Component {
           {team.spec.description ? <Text strong>{team.spec.description}</Text> : <Text style={{ fontStyle: 'italic' }} type="secondary">No description</Text> }
           <Text style={{ float: 'right' }}><Text strong>Team ID: </Text>{team.metadata.name}</Text>
         </Paragraph>
+
         {invitation ? (
           <Alert
             message="You have joined this team from an invitation"
@@ -202,6 +176,12 @@ class TeamDashboard extends React.Component {
             <ClustersTab user={this.props.user} team={this.props.team} getClusterCount={(count) => this.setState({ clusterCount: count })} />
           </TabPane>
 
+          {publicRuntimeConfig.featureGates['services'] && (
+            <TabPane key="services" tab={this.getTabTitle({ title: 'Cloud services', count: this.state.serviceCount })} forceRender={true}>
+              <ServicesTab user={this.props.user} team={this.props.team} getServiceCount={(count) => this.setState({ serviceCount: count })} />
+            </TabPane>
+          )}
+
           <TabPane key="members" tab={this.getTabTitle({ title: 'Members', count: this.state.memberCount })} forceRender={true}>
             <MembersTab user={this.props.user} team={this.props.team} getMemberCount={(count) => this.setState({ memberCount: count })} />
           </TabPane>
@@ -211,43 +191,6 @@ class TeamDashboard extends React.Component {
           </TabPane>
         </Tabs>
 
-        <Divider />
-
-        {publicRuntimeConfig.featureGates['services'] ? (
-          <Card
-            title={<div><Text style={{ marginRight: '10px' }}>Services</Text><Badge style={{ backgroundColor: '#1890ff' }} count={services.items.filter(c => !c.deleted).length} /></div>}
-            style={{ marginBottom: '20px' }}
-            extra={
-              <div>
-                <Button type="primary">
-                  <Link href="/teams/[name]/services/new" as={`/teams/${team.metadata.name}/services/new`}>
-                    <a>+ New</a>
-                  </Link>
-                </Button>
-              </div>
-            }
-          >
-            <List
-              dataSource={services.items}
-              renderItem={service => {
-                return (
-                  <Service
-                    team={team.metadata.name}
-                    service={service}
-                    namespaceClaims={namespaceClaims}
-                    deleteService={this.deleteService}
-                    handleUpdate={this.handleResourceUpdated('services')}
-                    handleDelete={this.handleResourceDeleted('services')}
-                    refreshMs={10000}
-                    propsResourceDataKey="service"
-                    resourceApiPath={`${apiPaths.team(team.metadata.name).services}/${service.metadata.name}`}
-                  />
-                )
-              }}
-            >
-            </List>
-          </Card>
-        ): null}
       </div>
     )
   }
