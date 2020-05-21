@@ -48,6 +48,7 @@ func NewCmdCreateLocal(factory cmdutils.Factory) *cobra.Command {
 		Use:     "local",
 		Short:   "Used to configure and run a local instance of Kore",
 		Example: "kore local configure",
+		Hidden:  true,
 		Run:     cmdutils.RunHelp,
 	}
 
