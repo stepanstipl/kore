@@ -150,7 +150,7 @@ func (h hubImpl) Setup(ctx context.Context) error {
 		if !strings.HasPrefix(allocation.ObjectMeta.Name, strings.ToLower(allocation.Spec.Resource.Kind)) {
 			newName := strings.ToLower(allocation.Spec.Resource.Kind) + "-" + allocation.ObjectMeta.Name
 
-			allocation, err := h.Teams().Team(HubAdminTeam).Allocations().Get(getAdminContext(ctx), newName)
+			_, err := h.Teams().Team(HubAdminTeam).Allocations().Get(getAdminContext(ctx), newName)
 			if err == nil {
 				logger.Infof("allocation with name %s already exists, don't migrate to the new name, just delete the old one", newName)
 
