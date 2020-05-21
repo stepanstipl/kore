@@ -1,7 +1,6 @@
 module github.com/appvia/kore
 
 require (
-	github.com/Masterminds/goutils v1.1.0 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/RoaringBitmap/roaring v0.4.21 // indirect
@@ -45,8 +44,6 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/heimdalr/dag v0.9.12
-	github.com/huandu/xstrings v1.2.1 // indirect
-	github.com/imdario/mergo v0.3.8 // indirect
 	github.com/jinzhu/gorm v1.9.12
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/jpillora/backoff v1.0.0
@@ -55,7 +52,6 @@ require (
 	github.com/manifoldco/promptui v0.7.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.2.2
 	github.com/mikefarah/yq/v3 v3.0.0-20200415014842-6f0a329331f9
-	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/mitchellh/gox v1.0.1
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.9.0
@@ -71,7 +67,7 @@ require (
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/spf13/cobra v1.0.0
 	github.com/steveyen/gtreap v0.0.0-20150807155958-0abe01ef9be2 // indirect
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.5.1
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/tcnksm/ghr v0.13.0
 	github.com/tecbot/gorocksdb v0.0.0-20191019123150-400c56251341 // indirect
@@ -79,19 +75,21 @@ require (
 	github.com/tidwall/sjson v1.1.1
 	github.com/urfave/cli/v2 v2.1.1
 	github.com/xeipuuv/gojsonschema v1.2.0
-	golang.org/x/crypto v0.0.0-20200311171314-f7b00557c8c4
+	golang.org/x/crypto v0.0.0-20200414173820-0848c9571904
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	gonum.org/v1/gonum v0.7.0 // indirect
 	google.golang.org/api v0.20.0
 	google.golang.org/grpc v1.27.0
 	gopkg.in/yaml.v2 v2.2.8
+	helm.sh/helm/v3 v3.2.1
 	k8s.io/api v0.18.2
 	k8s.io/apiextensions-apiserver v0.18.2
 	k8s.io/apimachinery v0.18.2
 	k8s.io/client-go v0.18.2
 	k8s.io/code-generator v0.18.2
 	k8s.io/kube-openapi v0.0.0-20200121204235-bf4fb3bd569c
+	rsc.io/letsencrypt v0.0.3 // indirect
 	sigs.k8s.io/application v0.8.2-0.20200209202752-a485a03cdc47
 	sigs.k8s.io/aws-iam-authenticator v0.5.0
 	sigs.k8s.io/controller-runtime v0.6.0
