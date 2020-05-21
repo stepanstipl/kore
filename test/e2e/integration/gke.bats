@@ -25,7 +25,7 @@ load helper
   if runit "${KORE} get clusters ${CLUSTER} -t ${TEAM}"; then
     skip
   else
-    runit "${KORE} create cluster -p gke-development -a gke ${CLUSTER} --show-time -t e2e"
+    runit "${KORE} create cluster -p gke-development -a gkecredentials-gke ${CLUSTER} --show-time -t e2e"
     [[ "$status" -eq 0 ]]
   fi
 }

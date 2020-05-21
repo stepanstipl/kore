@@ -37,7 +37,7 @@ setup() {
 @test "We should be able to build a cluster in EKS" {
   ${KORE} get cluster ${CLUSTER} -t ${TEAM} && skip
 
-  runit "${KORE} create cluster ${CLUSTER} -t ${TEAM} -a aws -p eks-development --no-wait"
+  runit "${KORE} create cluster ${CLUSTER} -t ${TEAM} -a ekscredentials-aws -p eks-development --no-wait"
   [[ "$status" -eq 0 ]]
 }
 
