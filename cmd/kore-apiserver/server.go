@@ -101,13 +101,13 @@ func invoke(ctx *cli.Context) error {
 		},
 	}
 
-	s, err := server.New(config)
+	c, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	s, err := server.New(c, config)
 	if err != nil {
 		return err
 	}
-
-	c, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	log.WithField("feature-gates", config.Kore.FeatureGates).Info("starting kore-apiserver")
 

@@ -90,10 +90,18 @@ func TestMultipleInformers(t *testing.T) {
 	}()
 
 	// @step: add the namespace and pod
-	_, err = client.CoreV1().Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "default"}})
+	_, err = client.CoreV1().Namespaces().Create(
+		context.Background(),
+		&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "default"}},
+		metav1.CreateOptions{},
+	)
 	require.NoError(t, err)
 
-	_, err = client.CoreV1().Pods("default").Create(&v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "test_pod"}})
+	_, err = client.CoreV1().Pods("default").Create(
+		context.Background(),
+		&v1.Pod{ObjectMeta: metav1.ObjectMeta{Name: "test_pod"}},
+		metav1.CreateOptions{},
+	)
 	require.NoError(t, err)
 
 	select {
@@ -128,7 +136,11 @@ func TestInformerCreate(t *testing.T) {
 	}()
 
 	// @step: add a namespace and check we get a update
-	ns, err := client.CoreV1().Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "default"}})
+	ns, err := client.CoreV1().Namespaces().Create(
+		context.Background(),
+		&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "default"}},
+		metav1.CreateOptions{},
+	)
 	require.NotNil(t, ns)
 	require.NoError(t, err)
 
@@ -174,14 +186,18 @@ func TestInformerUpdate(t *testing.T) {
 	defer inf.Stop()
 
 	// @step: add a namespace and check we get a update
-	ns, err := client.CoreV1().Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "default"}})
+	ns, err := client.CoreV1().Namespaces().Create(
+		context.Background(),
+		&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "default"}},
+		metav1.CreateOptions{},
+	)
 	require.NotNil(t, ns)
 	require.NoError(t, err)
 	ns.SetAnnotations(map[string]string{"test": "test"})
-	_, err = client.CoreV1().Namespaces().Update(ns)
+	_, err = client.CoreV1().Namespaces().Update(context.Background(), ns, metav1.UpdateOptions{})
 	require.NoError(t, err)
 	ns.SetAnnotations(map[string]string{"test": "test"})
-	_, err = client.CoreV1().Namespaces().Update(ns)
+	_, err = client.CoreV1().Namespaces().Update(context.Background(), ns, metav1.UpdateOptions{})
 	require.NoError(t, err)
 
 	select {
@@ -213,9 +229,13 @@ func TestInformerDelete(t *testing.T) {
 	defer inf.Stop()
 
 	// @step: add a namespace and check we get a update
-	_, err := client.CoreV1().Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "default"}})
+	_, err := client.CoreV1().Namespaces().Create(
+		context.Background(),
+		&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "default"}},
+		metav1.CreateOptions{},
+	)
 	require.NoError(t, err)
-	require.NoError(t, client.CoreV1().Namespaces().Delete("default", &metav1.DeleteOptions{}))
+	require.NoError(t, client.CoreV1().Namespaces().Delete(context.Background(), "default", metav1.DeleteOptions{}))
 
 	select {
 	case <-ctx.Done():

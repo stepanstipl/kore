@@ -69,14 +69,14 @@ func WaitForServiceAccountToken(client k8s.Interface, namespace, name string, ti
 			default:
 			}
 			if err := func() error {
-				sa, err := client.CoreV1().ServiceAccounts(namespace).Get(name, metav1.GetOptions{})
+				sa, err := client.CoreV1().ServiceAccounts(namespace).Get(ctx, name, metav1.GetOptions{})
 				if err != nil {
 					return err
 				}
 				if len(sa.Secrets) <= 0 {
 					return errors.New("no secrets")
 				}
-				secret, err = client.CoreV1().Secrets(namespace).Get(sa.Secrets[0].Name, metav1.GetOptions{})
+				secret, err = client.CoreV1().Secrets(namespace).Get(ctx, sa.Secrets[0].Name, metav1.GetOptions{})
 				if err != nil {
 					return err
 				}

@@ -151,7 +151,7 @@ func (p *bootImpl) DeployPodSecurityPolicies(ctx context.Context, client k8s.Int
 			},
 		},
 	}
-	if err := p.CreateClusterPodSecurityPolicy(&psp); err != nil {
+	if err := p.CreateClusterPodSecurityPolicy(ctx, &psp); err != nil {
 		return err
 	}
 
@@ -168,11 +168,11 @@ func (p *bootImpl) DeployPodSecurityPolicies(ctx context.Context, client k8s.Int
 			},
 		},
 	}
-	if err := p.CreateClusterRole(&role); err != nil {
+	if err := p.CreateClusterRole(ctx, &role); err != nil {
 		return err
 	}
 
-	return p.CreateClusterRoleBinding(&rbacv1.ClusterRoleBinding{
+	return p.CreateClusterRoleBinding(ctx, &rbacv1.ClusterRoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "default:psp",
 		},
@@ -197,8 +197,8 @@ func (p *bootImpl) DeployPodSecurityPolicies(ctx context.Context, client k8s.Int
 }
 
 // CreateClusterPodSecurityPolicy creates a psp in the cluster
-func (p *bootImpl) CreateClusterPodSecurityPolicy(policy *psp.PodSecurityPolicy) error {
-	if _, err := p.client.ExtensionsV1beta1().PodSecurityPolicies().Create(policy); err != nil {
+func (p *bootImpl) CreateClusterPodSecurityPolicy(ctx context.Context, policy *psp.PodSecurityPolicy) error {
+	if _, err := p.client.ExtensionsV1beta1().PodSecurityPolicies().Create(ctx, policy, metav1.CreateOptions{}); err != nil {
 		if kerrors.IsAlreadyExists(err) {
 			return nil
 		}
@@ -210,8 +210,8 @@ func (p *bootImpl) CreateClusterPodSecurityPolicy(policy *psp.PodSecurityPolicy)
 }
 
 // makeClusterRole is responsible creating a cluster role
-func (p *bootImpl) CreateClusterRole(role *rbacv1.ClusterRole) error {
-	if _, err := p.client.RbacV1().ClusterRoles().Create(role); err != nil {
+func (p *bootImpl) CreateClusterRole(ctx context.Context, role *rbacv1.ClusterRole) error {
+	if _, err := p.client.RbacV1().ClusterRoles().Create(ctx, role, metav1.CreateOptions{}); err != nil {
 		if kerrors.IsAlreadyExists(err) {
 			return nil
 		}
@@ -223,8 +223,8 @@ func (p *bootImpl) CreateClusterRole(role *rbacv1.ClusterRole) error {
 }
 
 // CreateClusterRoleBinding is responsible for cluster role binding
-func (p *bootImpl) CreateClusterRoleBinding(binding *rbacv1.ClusterRoleBinding) error {
-	if _, err := p.client.RbacV1().ClusterRoleBindings().Create(binding); err != nil {
+func (p *bootImpl) CreateClusterRoleBinding(ctx context.Context, binding *rbacv1.ClusterRoleBinding) error {
+	if _, err := p.client.RbacV1().ClusterRoleBindings().Create(ctx, binding, metav1.CreateOptions{}); err != nil {
 		if kerrors.IsAlreadyExists(err) {
 			return nil
 		}
@@ -236,33 +236,33 @@ func (p *bootImpl) CreateClusterRoleBinding(binding *rbacv1.ClusterRoleBinding) 
 }
 
 // CreateSysadminCredential is responsible for creating admin creds
-func (p *bootImpl) CreateSysadminCredential() (*corev1.Secret, error) {
+func (p *bootImpl) CreateSysadminCredential(ctx context.Context) (*corev1.Secret, error) {
 	// @step: check if the service account already exists
 	name := "kore-admin"
 	namespace := "kube-system"
 
-	_, err := p.client.CoreV1().ServiceAccounts(namespace).Get(name, metav1.GetOptions{})
+	_, err := p.client.CoreV1().ServiceAccounts(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		if !kerrors.IsNotFound(err) {
 			return nil, err
 		}
 
 		// @step: create the service account
-		if _, err := p.client.CoreV1().ServiceAccounts(namespace).Create(&corev1.ServiceAccount{
+		if _, err := p.client.CoreV1().ServiceAccounts(namespace).Create(ctx, &corev1.ServiceAccount{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      name,
 				Namespace: namespace,
 				Labels: map[string]string{
 					"kore.appvia.io/owner": "true",
 				},
-			}}); err != nil {
+			}}, metav1.CreateOptions{}); err != nil {
 
 			return nil, err
 		}
 	}
 
 	// @step: create the binding for the cluster admin role
-	if _, err := p.client.RbacV1().ClusterRoleBindings().Get(name, metav1.GetOptions{}); err != nil {
+	if _, err := p.client.RbacV1().ClusterRoleBindings().Get(ctx, name, metav1.GetOptions{}); err != nil {
 		if !kerrors.IsNotFound(err) {
 			return nil, err
 		}
@@ -284,7 +284,7 @@ func (p *bootImpl) CreateSysadminCredential() (*corev1.Secret, error) {
 			},
 		}
 
-		if _, err := p.client.RbacV1().ClusterRoleBindings().Create(binding); err != nil {
+		if _, err := p.client.RbacV1().ClusterRoleBindings().Create(ctx, binding, metav1.CreateOptions{}); err != nil {
 			return nil, err
 		}
 	}

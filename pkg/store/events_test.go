@@ -17,6 +17,7 @@
 package store
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -41,9 +42,13 @@ func TestAddNamespace(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	ns, err := s.client.CoreV1().Namespaces().Create(&v1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{Name: "test"},
-	})
+	ns, err := s.client.CoreV1().Namespaces().Create(
+		context.Background(),
+		&v1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{Name: "test"},
+		},
+		metav1.CreateOptions{},
+	)
 
 	require.NotNil(t, ns)
 	require.NoError(t, err)
@@ -71,11 +76,15 @@ func TestDeletedNamespace(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	ns, err := s.client.CoreV1().Namespaces().Create(&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "test"}})
+	ns, err := s.client.CoreV1().Namespaces().Create(
+		context.Background(),
+		&v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "test"}},
+		metav1.CreateOptions{},
+	)
 	require.NotNil(t, ns)
 	require.NoError(t, err)
 
-	err = s.client.CoreV1().Namespaces().Delete("test", &metav1.DeleteOptions{})
+	err = s.client.CoreV1().Namespaces().Delete(context.Background(), "test", metav1.DeleteOptions{})
 	require.NoError(t, err)
 
 	select {

@@ -17,6 +17,8 @@
 package server
 
 import (
+	"context"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	securityv1 "github.com/appvia/kore/pkg/apis/security/v1"
@@ -84,7 +86,7 @@ var (
 )
 
 // registerCustomResources is used to register the CRDs with the kubernetes api
-func registerCustomResources(cc client.Interface) error {
+func registerCustomResources(ctx context.Context, cc client.Interface) error {
 	isFiltered := func(crd *apiextensions.CustomResourceDefinition, list []schema.GroupVersionKind) bool {
 		for _, x := range list {
 			if x.Group == crd.Spec.Group && x.Version == crd.Spec.Version && x.Kind == crd.Spec.Names.Kind {
@@ -104,7 +106,7 @@ func registerCustomResources(cc client.Interface) error {
 		if isFiltered(x, filtered) {
 			continue
 		}
-		if err := crds.ApplyCustomResourceDefinition(cc, x); err != nil {
+		if err := crds.ApplyCustomResourceDefinition(ctx, cc, x); err != nil {
 			return err
 		}
 	}

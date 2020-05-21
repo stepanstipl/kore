@@ -110,7 +110,7 @@ func (b *bootstrapImpl) Run(ctx context.Context, cc client.Client) error {
 	logger.Debug("creating the kore-admin service account for cluster")
 
 	// @step: create or retrieve the kore-sysadmin secret token
-	creds, err := CreateSysadminCredential(cluster.Client)
+	creds, err := CreateSysadminCredential(ctx, cluster.Client)
 	if err != nil {
 		logger.WithError(err).Error("creating kore admin service account")
 
@@ -140,33 +140,33 @@ func (b *bootstrapImpl) Run(ctx context.Context, cc client.Client) error {
 }
 
 // CreateSysadminCredential will create a service account in remote cluster
-func CreateSysadminCredential(rc k8s.Interface) (*corev1.Secret, error) {
+func CreateSysadminCredential(ctx context.Context, rc k8s.Interface) (*corev1.Secret, error) {
 	// @step: check if the service account already exists
 	name := "kore-admin"
 	namespace := "kube-system"
 
-	_, err := rc.CoreV1().ServiceAccounts(namespace).Get(name, metav1.GetOptions{})
+	_, err := rc.CoreV1().ServiceAccounts(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		if !kerrors.IsNotFound(err) {
 			return nil, err
 		}
 
 		// @step: create the service account
-		if _, err := rc.CoreV1().ServiceAccounts(namespace).Create(&corev1.ServiceAccount{
+		if _, err := rc.CoreV1().ServiceAccounts(namespace).Create(ctx, &corev1.ServiceAccount{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      name,
 				Namespace: namespace,
 				Labels: map[string]string{
 					"kore.appvia.io/owner": "true",
 				},
-			}}); err != nil {
+			}}, metav1.CreateOptions{}); err != nil {
 
 			return nil, err
 		}
 	}
 
 	// @step: create the binding for the cluster admin role
-	if _, err := rc.RbacV1().ClusterRoleBindings().Get(name, metav1.GetOptions{}); err != nil {
+	if _, err := rc.RbacV1().ClusterRoleBindings().Get(ctx, name, metav1.GetOptions{}); err != nil {
 		if !kerrors.IsNotFound(err) {
 			return nil, err
 		}
@@ -188,7 +188,7 @@ func CreateSysadminCredential(rc k8s.Interface) (*corev1.Secret, error) {
 			},
 		}
 
-		if _, err := rc.RbacV1().ClusterRoleBindings().Create(binding); err != nil {
+		if _, err := rc.RbacV1().ClusterRoleBindings().Create(ctx, binding, metav1.CreateOptions{}); err != nil {
 			return nil, err
 		}
 	}
