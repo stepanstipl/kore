@@ -30,7 +30,7 @@ import (
 )
 
 func (p Provider) Delete(
-	ctx kore.ServiceProviderContext,
+	ctx kore.Context,
 	service *servicesv1.Service,
 ) (reconcile.Result, error) {
 	clusterClient, err := createClusterClient(ctx, service)
@@ -81,7 +81,7 @@ func (p Provider) Delete(
 		}
 
 		if resourceMeta.GetDeletionTimestamp() == nil {
-			ctx.Logger.WithField("resource", kubernetes.MustGetRuntimeSelfLink(resource)).Debug("deleting application resource")
+			ctx.Logger().WithField("resource", kubernetes.MustGetRuntimeSelfLink(resource)).Debug("deleting application resource")
 			if err := kubernetes.DeleteIfExists(ctx, clusterClient, resource); err != nil {
 				return reconcile.Result{}, fmt.Errorf("failed to delete %s: %w", kubernetes.MustGetRuntimeSelfLink(resource), err)
 			}

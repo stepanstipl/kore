@@ -58,7 +58,7 @@ func (c Controller) Delete(
 			return reconcile.Result{Requeue: true}, nil
 		}
 
-		return provider.Delete(kore.NewServiceProviderContext(ctx, logger, c.mgr.GetClient()), service)
+		return provider.Delete(kore.NewContext(ctx, logger, c.mgr.GetClient(), c), service)
 	}()
 
 	if err != nil {

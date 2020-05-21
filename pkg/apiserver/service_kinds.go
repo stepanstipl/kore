@@ -56,7 +56,7 @@ func (p *serviceKindsHandler) Register(i kore.Interface, builder utils.PathBuild
 	ws.Path(path.Base())
 
 	ws.Route(
-		withAllNonValidationErrors(ws.GET("")).To(p.findServiceKinds).
+		withAllNonValidationErrors(ws.GET("")).To(p.listServiceKinds).
 			Doc("Returns all the available service kinds").
 			Operation("ListServiceKinds").
 			Param(ws.QueryParameter("kind", "Filters service kinds for a specific kind")).
@@ -64,7 +64,7 @@ func (p *serviceKindsHandler) Register(i kore.Interface, builder utils.PathBuild
 	)
 
 	ws.Route(
-		withAllNonValidationErrors(ws.GET("/{name}")).To(p.findServiceKind).
+		withAllNonValidationErrors(ws.GET("/{name}")).To(p.getServiceKind).
 			Doc("Returns a specific service kind").
 			Operation("GetServiceKind").
 			Param(ws.PathParameter("name", "The name of the service kind you wish to retrieve")).
@@ -95,8 +95,8 @@ func (p *serviceKindsHandler) Register(i kore.Interface, builder utils.PathBuild
 	return ws, nil
 }
 
-// findServiceKind returns a specific service kind
-func (p serviceKindsHandler) findServiceKind(req *restful.Request, resp *restful.Response) {
+// getServiceKind returns a specific service kind
+func (p serviceKindsHandler) getServiceKind(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		kind, err := p.ServiceKinds().Get(req.Request.Context(), req.PathParameter("name"))
 		if err != nil {
@@ -107,8 +107,8 @@ func (p serviceKindsHandler) findServiceKind(req *restful.Request, resp *restful
 	})
 }
 
-// findServiceKinds returns all service kinds in the kore
-func (p serviceKindsHandler) findServiceKinds(req *restful.Request, resp *restful.Response) {
+// listServiceKinds returns all service kinds in the kore
+func (p serviceKindsHandler) listServiceKinds(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		res, err := p.ServiceKinds().List(req.Request.Context())
 		if err != nil {

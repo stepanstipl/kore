@@ -33,11 +33,16 @@ import (
 )
 
 // ServicePlans is the interface to manage service plans
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . ServicePlans
 type ServicePlans interface {
 	// Delete is used to delete a service plan in the kore
 	Delete(context.Context, string) (*servicesv1.ServicePlan, error)
 	// Get returns the service plan
 	Get(context.Context, string) (*servicesv1.ServicePlan, error)
+	// GetSchema returns the service plan schema
+	GetSchema(context.Context, string) (string, error)
+	// GetCredentialSchema returns the service credential schema for the given plan
+	GetCredentialSchema(context.Context, string) (string, error)
 	// List returns the existing service plans
 	List(context.Context) (*servicesv1.ServicePlanList, error)
 	// ListFiltered returns a list of service plans using the given filter.
@@ -85,15 +90,13 @@ func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePl
 		}
 	}
 
-	provider := p.ServiceProviders().GetProviderForKind(plan.Spec.Kind)
-	if provider == nil {
-		return validation.NewError("%q failed validation", plan.Name).
-			WithFieldErrorf("kind", validation.InvalidType, "%q is not a known service kind", plan.Spec.Kind)
-	}
-
-	schema, err := provider.PlanJSONSchema(plan.Spec.Kind, plan.PlanShortName())
-	if err != nil {
-		return err
+	schema := plan.Spec.Schema
+	if schema == "" {
+		kind, err := p.ServiceKinds().Get(ctx, plan.Spec.Kind)
+		if err != nil {
+			return err
+		}
+		schema = kind.Spec.Schema
 	}
 
 	if schema == "" && !utils.ApiExtJSONEmpty(plan.Spec.Configuration) {
@@ -186,6 +189,40 @@ func (p servicePlansImpl) Get(ctx context.Context, name string) (*servicesv1.Ser
 		store.GetOptions.WithName(name),
 		store.GetOptions.InTo(plan),
 	)
+}
+
+// GetSchema returns the service plan schema
+func (p servicePlansImpl) GetSchema(ctx context.Context, name string) (string, error) {
+	plan, err := p.Get(ctx, name)
+	if err != nil {
+		return "", err
+	}
+	if plan.Spec.Schema != "" {
+		return plan.Spec.Schema, nil
+	}
+
+	kind, err := p.ServiceKinds().Get(ctx, plan.Spec.Kind)
+	if err != nil {
+		return "", err
+	}
+	return kind.Spec.Schema, nil
+}
+
+// GetCredentialSchema returns the service credential schema for the given plan
+func (p servicePlansImpl) GetCredentialSchema(ctx context.Context, name string) (string, error) {
+	plan, err := p.Get(ctx, name)
+	if err != nil {
+		return "", err
+	}
+	if plan.Spec.CredentialSchema != "" {
+		return plan.Spec.CredentialSchema, nil
+	}
+
+	kind, err := p.ServiceKinds().Get(ctx, plan.Spec.Kind)
+	if err != nil {
+		return "", err
+	}
+	return kind.Spec.CredentialSchema, nil
 }
 
 // List returns the existing service plans

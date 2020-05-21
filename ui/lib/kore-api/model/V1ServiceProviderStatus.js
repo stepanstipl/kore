@@ -12,6 +12,7 @@
  */
 
 import ApiClient from '../ApiClient';
+import V1Component from './V1Component';
 
 /**
  * The V1ServiceProviderStatus model module.
@@ -47,6 +48,9 @@ class V1ServiceProviderStatus {
         if (data) {
             obj = obj || new V1ServiceProviderStatus();
 
+            if (data.hasOwnProperty('components')) {
+                obj['components'] = ApiClient.convertToType(data['components'], [V1Component]);
+            }
             if (data.hasOwnProperty('message')) {
                 obj['message'] = ApiClient.convertToType(data['message'], 'String');
             }
@@ -60,6 +64,19 @@ class V1ServiceProviderStatus {
         return obj;
     }
 
+/**
+     * @return {Array.<module:model/V1Component>}
+     */
+    getComponents() {
+        return this.components;
+    }
+
+    /**
+     * @param {Array.<module:model/V1Component>} components
+     */
+    setComponents(components) {
+        this['components'] = components;
+    }
 /**
      * @return {String}
      */
@@ -101,6 +118,11 @@ class V1ServiceProviderStatus {
     }
 
 }
+
+/**
+ * @member {Array.<module:model/V1Component>} components
+ */
+V1ServiceProviderStatus.prototype['components'] = undefined;
 
 /**
  * @member {String} message

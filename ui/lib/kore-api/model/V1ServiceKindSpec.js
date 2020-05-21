@@ -49,6 +49,9 @@ class V1ServiceKindSpec {
         if (data) {
             obj = obj || new V1ServiceKindSpec();
 
+            if (data.hasOwnProperty('credentialSchema')) {
+                obj['credentialSchema'] = ApiClient.convertToType(data['credentialSchema'], 'String');
+            }
             if (data.hasOwnProperty('description')) {
                 obj['description'] = ApiClient.convertToType(data['description'], 'String');
             }
@@ -64,6 +67,12 @@ class V1ServiceKindSpec {
             if (data.hasOwnProperty('imageURL')) {
                 obj['imageURL'] = ApiClient.convertToType(data['imageURL'], 'String');
             }
+            if (data.hasOwnProperty('providerData')) {
+                obj['providerData'] = ApiClient.convertToType(data['providerData'], 'String');
+            }
+            if (data.hasOwnProperty('schema')) {
+                obj['schema'] = ApiClient.convertToType(data['schema'], 'String');
+            }
             if (data.hasOwnProperty('summary')) {
                 obj['summary'] = ApiClient.convertToType(data['summary'], 'String');
             }
@@ -71,6 +80,19 @@ class V1ServiceKindSpec {
         return obj;
     }
 
+/**
+     * @return {String}
+     */
+    getCredentialSchema() {
+        return this.credentialSchema;
+    }
+
+    /**
+     * @param {String} credentialSchema
+     */
+    setCredentialSchema(credentialSchema) {
+        this['credentialSchema'] = credentialSchema;
+    }
 /**
      * @return {String}
      */
@@ -139,6 +161,32 @@ class V1ServiceKindSpec {
 /**
      * @return {String}
      */
+    getProviderData() {
+        return this.providerData;
+    }
+
+    /**
+     * @param {String} providerData
+     */
+    setProviderData(providerData) {
+        this['providerData'] = providerData;
+    }
+/**
+     * @return {String}
+     */
+    getSchema() {
+        return this.schema;
+    }
+
+    /**
+     * @param {String} schema
+     */
+    setSchema(schema) {
+        this['schema'] = schema;
+    }
+/**
+     * @return {String}
+     */
     getSummary() {
         return this.summary;
     }
@@ -151,6 +199,11 @@ class V1ServiceKindSpec {
     }
 
 }
+
+/**
+ * @member {String} credentialSchema
+ */
+V1ServiceKindSpec.prototype['credentialSchema'] = undefined;
 
 /**
  * @member {String} description
@@ -176,6 +229,16 @@ V1ServiceKindSpec.prototype['enabled'] = undefined;
  * @member {String} imageURL
  */
 V1ServiceKindSpec.prototype['imageURL'] = undefined;
+
+/**
+ * @member {String} providerData
+ */
+V1ServiceKindSpec.prototype['providerData'] = undefined;
+
+/**
+ * @member {String} schema
+ */
+V1ServiceKindSpec.prototype['schema'] = undefined;
 
 /**
  * @member {String} summary

@@ -1272,89 +1272,6 @@
         }
       }
     },
-    "/api/v1alpha1/servicecredentialschemas/{kind}": {
-      "get": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "summary": "Returns a specific service credential schema",
-        "operationId": "GetServiceCredentialSchemaForKind",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "The service kind",
-            "name": "kind",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Contains the service credential schema definition"
-          },
-          "401": {
-            "description": "If not authenticated"
-          },
-          "403": {
-            "description": "If authenticated but not authorized"
-          },
-          "500": {
-            "description": "A generic API error containing the cause of the error",
-            "schema": {
-              "$ref": "#/definitions/apiserver.Error"
-            }
-          }
-        }
-      }
-    },
-    "/api/v1alpha1/servicecredentialschemas/{kind}/{name}": {
-      "get": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "summary": "Returns a specific service credential schema",
-        "operationId": "GetServiceCredentialSchemaForPlan",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "The service kind",
-            "name": "kind",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "The service plan name",
-            "name": "name",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Contains the service credential schema definition"
-          },
-          "401": {
-            "description": "If not authenticated"
-          },
-          "403": {
-            "description": "If authenticated but not authorized"
-          },
-          "500": {
-            "description": "A generic API error containing the cause of the error",
-            "schema": {
-              "$ref": "#/definitions/apiserver.Error"
-            }
-          }
-        }
-      }
-    },
     "/api/v1alpha1/servicekinds": {
       "get": {
         "consumes": [
@@ -1727,7 +1644,7 @@
         }
       }
     },
-    "/api/v1alpha1/serviceplanschemas/{kind}": {
+    "/api/v1alpha1/serviceplans/{name}/credentialschema": {
       "get": {
         "consumes": [
           "application/json"
@@ -1735,26 +1652,32 @@
         "produces": [
           "application/json"
         ],
-        "summary": "Returns a specific service plan schema",
-        "operationId": "GetServicePlanSchemaForKind",
+        "summary": "Returns the JSON schema for the service credentials defined in the plan. If a plan doesn't have credential schema, it returns the JSON schema defined on the service kind",
+        "operationId": "GetServiceCredentialSchema",
         "parameters": [
           {
             "type": "string",
-            "description": "The service kind",
-            "name": "kind",
+            "description": "The name of the service plan",
+            "name": "name",
             "in": "path",
             "required": true
           }
         ],
         "responses": {
           "200": {
-            "description": "Contains the service plan schema definition"
+            "description": "Contains the service credential schema definition",
+            "schema": {
+              "$ref": "#/definitions/map%5Bstring%5Dinterface%20%7B%7D"
+            }
           },
           "401": {
             "description": "If not authenticated"
           },
           "403": {
             "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "the service plan with the given name doesn't exist"
           },
           "500": {
             "description": "A generic API error containing the cause of the error",
@@ -1765,7 +1688,7 @@
         }
       }
     },
-    "/api/v1alpha1/serviceplanschemas/{kind}/{name}": {
+    "/api/v1alpha1/serviceplans/{name}/schema": {
       "get": {
         "consumes": [
           "application/json"
@@ -1773,19 +1696,12 @@
         "produces": [
           "application/json"
         ],
-        "summary": "Returns a specific service plan schema",
-        "operationId": "GetServicePlanSchemaForPlan",
+        "summary": "Returns the JSON schema for the plan. If a plan doesn't have a schema, it returns the JSON schema defined on the service kind",
+        "operationId": "GetServicePlanSchema",
         "parameters": [
           {
             "type": "string",
-            "description": "The service kind",
-            "name": "kind",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "The service plan name",
+            "description": "The name of the service plan",
             "name": "name",
             "in": "path",
             "required": true
@@ -1793,13 +1709,19 @@
         ],
         "responses": {
           "200": {
-            "description": "Contains the service plan schema definition"
+            "description": "Contains the service schema definition",
+            "schema": {
+              "$ref": "#/definitions/map%5Bstring%5Dinterface%20%7B%7D"
+            }
           },
           "401": {
             "description": "If not authenticated"
           },
           "403": {
             "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "the service plan with the given name doesn't exist"
           },
           "500": {
             "description": "A generic API error containing the cause of the error",
@@ -5326,6 +5248,7 @@
         }
       }
     },
+    "map[string]interface {}": {},
     "types.Health": {
       "required": [
         "healthy"
@@ -6912,6 +6835,9 @@
         "enabled"
       ],
       "properties": {
+        "credentialSchema": {
+          "type": "string"
+        },
         "description": {
           "type": "string"
         },
@@ -6925,6 +6851,12 @@
           "type": "boolean"
         },
         "imageURL": {
+          "type": "string"
+        },
+        "providerData": {
+          "type": "string"
+        },
+        "schema": {
           "type": "string"
         },
         "summary": {
@@ -7008,6 +6940,9 @@
         "configuration": {
           "type": "object"
         },
+        "credentialSchema": {
+          "type": "string"
+        },
         "description": {
           "type": "string"
         },
@@ -7019,6 +6954,12 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "providerData": {
+          "type": "string"
+        },
+        "schema": {
+          "type": "string"
         },
         "summary": {
           "type": "string"

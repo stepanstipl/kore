@@ -37,6 +37,8 @@ type ProviderConfiguration struct {
 	S3BucketRegion string `json:"s3BucketRegion"`
 	// S3BucketKey is the path in the S3 bucket used to store the CloudFormation templates for the service plans
 	S3BucketKey string `json:"s3BucketKey"`
+	// DefaultPlanNames is a list of plans to use as default for each service kind in a format as `[kind]-[plan name]`
+	DefaultPlanNames []string
 }
 
 func DefaultProviderConfiguration() *ProviderConfiguration {

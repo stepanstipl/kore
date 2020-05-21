@@ -96,6 +96,24 @@ func (p *servicePlansHandler) Register(i kore.Interface, builder utils.PathBuild
 	)
 
 	ws.Route(
+		withAllNonValidationErrors(ws.GET("/{name}/schema")).To(p.getServicePlanSchema).
+			Doc("Returns the JSON schema for the plan. If a plan doesn't have a schema, it returns the JSON schema defined on the service kind").
+			Operation("GetServicePlanSchema").
+			Param(ws.PathParameter("name", "The name of the service plan")).
+			Returns(http.StatusNotFound, "the service plan with the given name doesn't exist", nil).
+			Returns(http.StatusOK, "Contains the service schema definition", map[string]interface{}{}),
+	)
+
+	ws.Route(
+		withAllNonValidationErrors(ws.GET("/{name}/credentialschema")).To(p.getServiceCredentialSchema).
+			Doc("Returns the JSON schema for the service credentials defined in the plan. If a plan doesn't have credential schema, it returns the JSON schema defined on the service kind").
+			Operation("GetServiceCredentialSchema").
+			Param(ws.PathParameter("name", "The name of the service plan")).
+			Returns(http.StatusNotFound, "the service plan with the given name doesn't exist", nil).
+			Returns(http.StatusOK, "Contains the service credential schema definition", map[string]interface{}{}),
+	)
+
+	ws.Route(
 		withAllErrors(ws.PUT("/{name}")).To(p.updateServicePlan).
 			Filter(filters.Admin).
 			Filter(p.systemServicePlanFilter).
@@ -120,7 +138,7 @@ func (p *servicePlansHandler) Register(i kore.Interface, builder utils.PathBuild
 	return ws, nil
 }
 
-// findServicePlan returns a specific service plan
+// getServicePlan returns a specific service plan
 func (p servicePlansHandler) getServicePlan(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		plan, err := p.ServicePlans().Get(req.Request.Context(), req.PathParameter("name"))
@@ -132,7 +150,41 @@ func (p servicePlansHandler) getServicePlan(req *restful.Request, resp *restful.
 	})
 }
 
-// findServicePlans returns all service plans in the kore
+// getServicePlan returns the schema for the given service plan
+func (p servicePlansHandler) getServicePlanSchema(req *restful.Request, resp *restful.Response) {
+	handleErrors(req, resp, func() error {
+		schema, err := p.ServicePlans().GetSchema(req.Request.Context(), req.PathParameter("name"))
+		if err != nil {
+			return err
+		}
+
+		resp.AddHeader("Content-Type", restful.MIME_JSON)
+		resp.WriteHeader(http.StatusOK)
+		if _, err := resp.Write([]byte(schema)); err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+// getServiceCredentialSchema returns the credential schema for the given service plan
+func (p servicePlansHandler) getServiceCredentialSchema(req *restful.Request, resp *restful.Response) {
+	handleErrors(req, resp, func() error {
+		schema, err := p.ServicePlans().GetCredentialSchema(req.Request.Context(), req.PathParameter("name"))
+		if err != nil {
+			return err
+		}
+
+		resp.AddHeader("Content-Type", restful.MIME_JSON)
+		resp.WriteHeader(http.StatusOK)
+		if _, err := resp.Write([]byte(schema)); err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+// listServicePlans returns all service plans in the kore
 func (p servicePlansHandler) listServicePlans(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		user := authentication.MustGetIdentity(req.Request.Context())

@@ -67,8 +67,8 @@ func (u teamHandler) listServiceCredentials(req *restful.Request, resp *restful.
 // getServiceCredentials returns service credentials from a team
 func (u teamHandler) getServiceCredentials(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
-		name := req.PathParameter("name")
 		team := req.PathParameter("team")
+		name := req.PathParameter("name")
 
 		list, err := u.Teams().Team(team).ServiceCredentials().Get(req.Request.Context(), name)
 		if err != nil {

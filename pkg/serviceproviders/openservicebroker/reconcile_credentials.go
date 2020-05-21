@@ -32,11 +32,11 @@ import (
 )
 
 func (p *Provider) ReconcileCredentials(
-	ctx kore.ServiceProviderContext,
+	ctx kore.Context,
 	service *servicesv1.Service,
 	creds *servicesv1.ServiceCredentials,
 ) (reconcile.Result, map[string]string, error) {
-	providerPlan, err := p.plan(service)
+	planProviderData, err := getServicePlanProviderData(ctx, service)
 	if err != nil {
 		return reconcile.Result{}, nil, err
 	}
@@ -71,14 +71,14 @@ func (p *Provider) ReconcileCredentials(
 		return reconcile.Result{}, nil, controllers.NewCriticalError(fmt.Errorf("failed to unmarshal service credentials configuration"))
 	}
 
-	ctx.Logger.Debug("calling bind on service broker")
+	ctx.Logger().Debug("calling bind on service broker")
 
 	bindRequest := &osb.BindRequest{
 		AcceptsIncomplete: true,
 		BindingID:         creds.Status.ProviderID,
 		InstanceID:        service.Status.ProviderID,
-		ServiceID:         providerPlan.serviceID,
-		PlanID:            providerPlan.osbPlan.ID,
+		ServiceID:         planProviderData.ServiceID,
+		PlanID:            planProviderData.PlanID,
 		Parameters:        config,
 	}
 
@@ -97,7 +97,7 @@ func (p *Provider) ReconcileCredentials(
 		"async":     resp.Async,
 	}
 
-	ctx.Logger.WithField("response", filteredResponse).Debug("bind response from service broker")
+	ctx.Logger().WithField("response", filteredResponse).Debug("bind response from service broker")
 
 	if err := creds.Status.SetProviderData(ProviderData{Operation: resp.OperationKey}); err != nil {
 		return reconcile.Result{}, nil, err

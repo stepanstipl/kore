@@ -22,11 +22,44 @@ import (
 	"net/http"
 	"reflect"
 
+	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
+	"github.com/appvia/kore/pkg/kore"
+
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/controllers"
 
 	osb "github.com/kubernetes-sigs/go-open-service-broker-client/v2"
 )
+
+func getServicePlanProviderData(ctx kore.Context, service *servicesv1.Service) (ServicePlanProviderData, error) {
+	plan, err := ctx.Kore().ServicePlans().Get(ctx, service.Spec.Plan)
+	if err != nil {
+		return ServicePlanProviderData{}, fmt.Errorf("failed to load the service plan %q: %w", service.Spec.Plan, err)
+	}
+	providerData := ServicePlanProviderData{}
+	if err := plan.Spec.GetProviderData(&providerData); err != nil {
+		return ServicePlanProviderData{}, err
+	}
+
+	if providerData.ServiceID != "" && providerData.PlanID != "" {
+		return providerData, nil
+	}
+
+	kind, err := ctx.Kore().ServiceKinds().Get(ctx, service.Spec.Kind)
+	if err != nil {
+		return ServicePlanProviderData{}, fmt.Errorf("failed to load the service kind %q: %w", service.Spec.Kind, err)
+	}
+
+	kindProviderData := ServiceKindProviderData{}
+	if err := kind.Spec.GetProviderData(&kindProviderData); err != nil {
+		return ServicePlanProviderData{}, err
+	}
+
+	return ServicePlanProviderData{
+		PlanID:    kindProviderData.DefaultPlanID,
+		ServiceID: kindProviderData.ServiceID,
+	}, nil
+}
 
 func bindingCredentialsToStringMap(credentials map[string]interface{}) (map[string]string, error) {
 	res := map[string]string{}

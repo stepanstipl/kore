@@ -23,7 +23,7 @@ class ServicesTab extends React.Component {
   async fetchComponentData() {
     try {
       let services = await (await KoreApi.client()).ListServices(this.props.team.metadata.name)
-      services = services.items.filter(s => !s.spec.cluster)
+      services = services.items.filter(s => !s.spec.cluster || !s.spec.cluster.name)
       this.props.getServiceCount && this.props.getServiceCount(services.length)
       return { services }
     } catch (err) {

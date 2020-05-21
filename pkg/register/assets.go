@@ -6799,6 +6799,10 @@ spec:
         spec:
           description: ServiceKindSpec defines the state of a service kind
           properties:
+            credentialSchema:
+              description: CredentialSchema is the JSON schema for credentials created
+                for service using this plan
+              type: string
             description:
               description: Description provides a summary of the service kind
               type: string
@@ -6807,13 +6811,21 @@ spec:
               minLength: 1
               type: string
             documentationURL:
-              description: '} refers to the documentation page for this service'
+              description: DocumentationURL refers to the documentation page for this
+                service
               type: string
             enabled:
               description: Enabled is true if the service kind can be used
               type: boolean
             imageURL:
               description: ImageURL is a thumbnail for the service kind
+              type: string
+            providerData:
+              description: ProviderData is provider specific data
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+            schema:
+              description: Schema is the JSON schema for the plan
               type: string
             summary:
               description: Summary provides a short title summary for the service
@@ -6891,6 +6903,10 @@ spec:
                 configuration
               type: object
               x-kubernetes-preserve-unknown-fields: true
+            credentialSchema:
+              description: CredentialSchema is the JSON schema for credentials created
+                for service using this plan
+              type: string
             description:
               description: Description provides a summary of the configuration provided
                 by this plan
@@ -6905,6 +6921,13 @@ spec:
                 type: string
               description: Labels is a collection of labels for this plan
               type: object
+            providerData:
+              description: ProviderData is provider specific data
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+            schema:
+              description: Schema is the JSON schema for the plan
+              type: string
             summary:
               description: Summary provides a short title summary for the plan
               minLength: 1

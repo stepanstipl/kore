@@ -319,15 +319,37 @@ func schema_pkg_apis_services_v1_ServiceKindSpec(ref common.ReferenceCallback) c
 					},
 					"documentationURL": {
 						SchemaProps: spec.SchemaProps{
-							Description: "} refers to the documentation page for this service",
+							Description: "DocumentationURL refers to the documentation page for this service",
 							Type:        []string{"string"},
 							Format:      "",
+						},
+					},
+					"schema": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Schema is the JSON schema for the plan",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"credentialSchema": {
+						SchemaProps: spec.SchemaProps{
+							Description: "CredentialSchema is the JSON schema for credentials created for service using this plan",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"providerData": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ProviderData is provider specific data",
+							Ref:         ref("k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"),
 						},
 					},
 				},
 				Required: []string{"enabled"},
 			},
 		},
+		Dependencies: []string{
+			"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"},
 	}
 }
 
@@ -416,6 +438,26 @@ func schema_pkg_apis_services_v1_ServicePlanSpec(ref common.ReferenceCallback) c
 					"configuration": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Configuration are the key+value pairs describing a service configuration",
+							Ref:         ref("k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"),
+						},
+					},
+					"schema": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Schema is the JSON schema for the plan",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"credentialSchema": {
+						SchemaProps: spec.SchemaProps{
+							Description: "CredentialSchema is the JSON schema for credentials created for service using this plan",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"providerData": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ProviderData is provider specific data",
 							Ref:         ref("k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"),
 						},
 					},

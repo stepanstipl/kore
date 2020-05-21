@@ -16,9 +16,33 @@
 
 package openservicebroker
 
-import osb "github.com/kubernetes-sigs/go-open-service-broker-client/v2"
+import (
+	osb "github.com/kubernetes-sigs/go-open-service-broker-client/v2"
+)
+
+type ProviderConfiguration struct {
+	osb.ClientConfiguration `json:",inline"`
+	// DefaultPlanNames is a list of plans to use as default for each service kind in a format as `[kind]-[plan name]`
+	DefaultPlanNames []string `json:"defaultPlanNames,omitempty"`
+	// AllowEmptyCredentialSchema will allow plans with empty credential schemas
+	AllowEmptyCredentialSchema bool `json:"allowEmptyCredentialSchema"`
+}
 
 // ProviderData will store the "operation" value returned from async operations
 type ProviderData struct {
 	Operation *osb.OperationKey `json:"operation,omitempty"`
+}
+
+type ServiceKindProviderData struct {
+	// ServiceID is the service kind identifier in the service provider
+	ServiceID string `json:"serviceID,omitempty"`
+	// DefaultPlanID is the default plan id which is used for user-created service plans
+	DefaultPlanID string `json:"defaultPlanID,omitempty"`
+}
+
+type ServicePlanProviderData struct {
+	// PlanID is the service plan identifier in the service provider
+	PlanID string `json:"planID,omitempty"`
+	// ServiceID is the service kind identifier in the service provider
+	ServiceID string `json:"serviceID,omitempty"`
 }

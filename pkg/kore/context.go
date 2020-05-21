@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-package controllers
+package kore
 
 import (
 	"context"
 	"time"
-
-	"github.com/appvia/kore/pkg/kore"
 
 	log "github.com/sirupsen/logrus"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -30,49 +28,54 @@ type Context interface {
 	context.Context
 	Logger() log.FieldLogger
 	Client() client.Client
-	Kore() kore.Interface
+	Kore() Interface
 }
 
 type contextImpl struct {
 	ctx    context.Context
 	logger log.FieldLogger
 	client client.Client
-	kore   kore.Interface
+	kore   Interface
 }
 
-func NewContext(ctx context.Context, logger log.FieldLogger, client client.Client, kore kore.Interface) Context {
+func (s contextImpl) Deadline() (deadline time.Time, ok bool) {
+	return s.ctx.Deadline()
+}
+
+func (s contextImpl) Done() <-chan struct{} {
+	return s.ctx.Done()
+}
+
+func (s contextImpl) Err() error {
+	return s.ctx.Err()
+}
+
+func (s contextImpl) Value(key interface{}) interface{} {
+	return s.ctx.Value(key)
+}
+
+func (s contextImpl) Logger() log.FieldLogger {
+	return s.logger
+}
+
+func (s contextImpl) Client() client.Client {
+	return s.client
+}
+
+func (s contextImpl) Kore() Interface {
+	return s.kore
+}
+
+func NewContext(
+	ctx context.Context,
+	logger log.FieldLogger,
+	client client.Client,
+	kore Interface,
+) Context {
 	return contextImpl{
 		ctx:    ctx,
 		logger: logger,
 		client: client,
 		kore:   kore,
 	}
-}
-
-func (c contextImpl) Deadline() (deadline time.Time, ok bool) {
-	return c.ctx.Deadline()
-}
-
-func (c contextImpl) Done() <-chan struct{} {
-	return c.ctx.Done()
-}
-
-func (c contextImpl) Err() error {
-	return c.ctx.Err()
-}
-
-func (c contextImpl) Value(key interface{}) interface{} {
-	return c.ctx.Value(key)
-}
-
-func (c contextImpl) Logger() log.FieldLogger {
-	return c.logger
-}
-
-func (c contextImpl) Client() client.Client {
-	return c.client
-}
-
-func (c contextImpl) Kore() kore.Interface {
-	return c.kore
 }

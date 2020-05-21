@@ -38,9 +38,9 @@ class ServicePlanForm extends React.Component {
   }
 
   async fetchComponentData() {
-    const schema = await (await KoreApi.client()).GetServicePlanSchemaForKind(this.props.kind)
+    const serviceKind = await (await KoreApi.client()).GetServiceKind(this.props.kind)
     this.setState({
-      schema,
+      schema: serviceKind.spec.schema,
       dataLoading: false
     })
   }

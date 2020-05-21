@@ -31,11 +31,11 @@ func init() {
 
 type ProviderFactory struct{}
 
-func (d ProviderFactory) Type() string {
+func (p ProviderFactory) Type() string {
 	return "osb"
 }
 
-func (d ProviderFactory) JSONSchema() string {
+func (p ProviderFactory) JSONSchema() string {
 	return `{
 		"$id": "https://appvia.io/schemas/serviceprovider/osb.json",
 		"$schema": "http://json-schema.org/draft-07/schema#",
@@ -103,32 +103,33 @@ func (d ProviderFactory) JSONSchema() string {
 	}`
 }
 
-func (d ProviderFactory) CreateProvider(ctx kore.ServiceProviderContext, serviceProvider *servicesv1.ServiceProvider) (_ kore.ServiceProvider, complete bool, _ error) {
-	var config = osb.DefaultClientConfiguration()
+func (p ProviderFactory) Create(ctx kore.Context, serviceProvider *servicesv1.ServiceProvider) (kore.ServiceProvider, error) {
+	var config = ProviderConfiguration{}
 	config.Name = serviceProvider.Name
 
-	if err := serviceProvider.Spec.GetConfiguration(config); err != nil {
-		return nil, false, fmt.Errorf("failed to process service provider configuration: %w", err)
+	if err := serviceProvider.Spec.GetConfiguration(&config); err != nil {
+		return nil, fmt.Errorf("failed to process service provider configuration: %w", err)
 	}
 
-	osbClient, err := osb.NewClient(config)
+	osbClient, err := osb.NewClient(&config.ClientConfiguration)
 	if err != nil {
-		return nil, false, err
+		return nil, err
 	}
 
-	provider, err := NewProvider(serviceProvider.Name, osbClient)
-	if err != nil {
-		return nil, false, err
-	}
+	provider := NewProvider(serviceProvider.Name, config, osbClient)
 
-	return provider, true, nil
+	return provider, nil
 }
 
-func (d ProviderFactory) TearDownProvider(ctx kore.ServiceProviderContext, provider *servicesv1.ServiceProvider) (complete bool, _ error) {
+func (p ProviderFactory) SetUp(ctx kore.Context, serviceProvider *servicesv1.ServiceProvider) (complete bool, _ error) {
 	return true, nil
 }
 
-func (d ProviderFactory) RequiredCredentialTypes() []schema.GroupVersionKind {
+func (p ProviderFactory) TearDown(ctx kore.Context, serviceProvider *servicesv1.ServiceProvider) (complete bool, _ error) {
+	return true, nil
+}
+
+func (p ProviderFactory) RequiredCredentialTypes() []schema.GroupVersionKind {
 	return nil
 }
 

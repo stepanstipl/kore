@@ -32,27 +32,27 @@ import (
 )
 
 func (p *Provider) pollLastOperation(
-	ctx kore.ServiceProviderContext,
+	ctx kore.Context,
 	service *servicesv1.Service,
 	component *corev1.Component,
 ) (reconcile.Result, error) {
-	providerPlan, err := p.plan(service)
+	planProviderData, err := getServicePlanProviderData(ctx, service)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	providerData := ProviderData{}
-	if err := service.Status.GetProviderData(&providerData); err != nil {
+	serviceProviderData := ProviderData{}
+	if err := service.Status.GetProviderData(&serviceProviderData); err != nil {
 		return reconcile.Result{}, err
 	}
 
-	ctx.Logger.WithField("operation", providerData.Operation).Debug("polling last operation from service broker")
+	ctx.Logger().WithField("operation", serviceProviderData.Operation).Debug("polling last operation from service broker")
 
 	resp, err := p.client.PollLastOperation(&osb.LastOperationRequest{
 		InstanceID:   service.Status.ProviderID,
-		ServiceID:    utils.StringPtr(providerPlan.serviceID),
-		PlanID:       utils.StringPtr(providerPlan.osbPlan.ID),
-		OperationKey: providerData.Operation,
+		ServiceID:    utils.StringPtr(planProviderData.ServiceID),
+		PlanID:       utils.StringPtr(planProviderData.PlanID),
+		OperationKey: serviceProviderData.Operation,
 	})
 	if err != nil {
 		if component.Name == ComponentDeprovision && isHttpNotFound(err) {
@@ -62,7 +62,7 @@ func (p *Provider) pollLastOperation(
 		return reconcile.Result{}, handleError(component, "failed to poll last operation on the service broker", err)
 	}
 
-	ctx.Logger.WithField("response", resp).Debug("last operation response from service broker")
+	ctx.Logger().WithField("response", resp).Debug("last operation response from service broker")
 
 	component.Message = utils.StringValue(resp.Description)
 

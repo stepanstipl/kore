@@ -46,43 +46,42 @@ func (p Provider) Name() string {
 	return p.name
 }
 
-func (p Provider) Kinds() []servicesv1.ServiceKind {
-	return []servicesv1.ServiceKind{
-		{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       servicesv1.ServiceKindGVK.Kind,
-				APIVersion: servicesv1.GroupVersion.String(),
+func (p Provider) Catalog(ctx kore.Context, provider *servicesv1.ServiceProvider) (kore.ServiceProviderCatalog, error) {
+	return kore.ServiceProviderCatalog{
+		Kinds: []servicesv1.ServiceKind{
+			{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       servicesv1.ServiceKindGVK.Kind,
+					APIVersion: servicesv1.GroupVersion.String(),
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      ServiceKindApp,
+					Namespace: kore.HubNamespace,
+				},
+				Spec: servicesv1.ServiceKindSpec{
+					DisplayName: "Kubernetes Application",
+					Summary:     "Kubernetes Application",
+					Enabled:     false,
+				},
 			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      ServiceKindApp,
-				Namespace: kore.HubNamespace,
-			},
-			Spec: servicesv1.ServiceKindSpec{
-				DisplayName: "Kubernetes Application",
-				Summary:     "Kubernetes Application",
-				Enabled:     false,
+			{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       servicesv1.ServiceKindGVK.Kind,
+					APIVersion: servicesv1.GroupVersion.String(),
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      ServiceKindHelmApp,
+					Namespace: kore.HubNamespace,
+				},
+				Spec: servicesv1.ServiceKindSpec{
+					DisplayName: "Kubernetes Helm Application",
+					Summary:     "Kubernetes Helm Application",
+					Enabled:     false,
+				},
 			},
 		},
-		{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       servicesv1.ServiceKindGVK.Kind,
-				APIVersion: servicesv1.GroupVersion.String(),
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      ServiceKindHelmApp,
-				Namespace: kore.HubNamespace,
-			},
-			Spec: servicesv1.ServiceKindSpec{
-				DisplayName: "Kubernetes Helm Application",
-				Summary:     "Kubernetes Helm Application",
-				Enabled:     false,
-			},
-		},
-	}
-}
-
-func (p Provider) Plans() []servicesv1.ServicePlan {
-	return p.plans
+		Plans: p.plans,
+	}, nil
 }
 
 func (p Provider) AdminServices() []servicesv1.Service {
@@ -100,10 +99,7 @@ func (p Provider) AdminServices() []servicesv1.Service {
 			continue
 		}
 
-		// A small hack to generate the final plan name
-		sp := servicePlan.DeepCopy()
-		sp.Name = sp.Spec.Kind + "-" + sp.Name
-		services = append(services, CreateSystemServiceFromPlan(*sp, cluster, servicePlan.Name, kore.HubAdminTeam))
+		services = append(services, CreateSystemServiceFromPlan(servicePlan, cluster, servicePlan.Name, kore.HubAdminTeam))
 	}
 	return services
 }
@@ -128,7 +124,7 @@ func (p Provider) RequiredCredentialTypes(_ string) ([]schema.GroupVersionKind, 
 }
 
 func (p Provider) ReconcileCredentials(
-	ctx kore.ServiceProviderContext,
+	ctx kore.Context,
 	service *servicesv1.Service,
 	creds *servicesv1.ServiceCredentials,
 ) (reconcile.Result, map[string]string, error) {
@@ -136,7 +132,7 @@ func (p Provider) ReconcileCredentials(
 }
 
 func (p Provider) DeleteCredentials(
-	ctx kore.ServiceProviderContext,
+	ctx kore.Context,
 	service *servicesv1.Service,
 	creds *servicesv1.ServiceCredentials,
 ) (reconcile.Result, error) {
