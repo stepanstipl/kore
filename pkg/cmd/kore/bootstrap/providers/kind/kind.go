@@ -189,7 +189,7 @@ func (p *providerImpl) Preflight(ctx context.Context) error {
 	}
 	p.path = path
 
-	path, err = exec.LookPath("docker")
+	_, err = exec.LookPath("docker")
 	if err != nil {
 		return errors.New("missing binary: docker in $PATH")
 	}
