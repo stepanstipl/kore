@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types'
 import moment from 'moment'
-import { List, Avatar, Icon, Typography, Popconfirm, message } from 'antd'
+import { List, Icon, Typography, Popconfirm, message } from 'antd'
 const { Text } = Typography
 
 import ResourceStatusTag from '../../resources/ResourceStatusTag'
@@ -40,7 +40,6 @@ class NamespaceClaim extends AutoRefreshComponent {
       return null
     }
 
-    const clusterName = namespaceClaim.spec.cluster.name
     const created = moment(namespaceClaim.metadata.creationTimestamp).fromNow()
     const deleted = namespaceClaim.metadata.deletionTimestamp ? moment(namespaceClaim.metadata.deletionTimestamp).fromNow() : false
 

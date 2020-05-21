@@ -13,8 +13,7 @@ class Cluster extends AutoRefreshComponent {
     team: PropTypes.string.isRequired,
     cluster: PropTypes.object.isRequired,
     namespaceClaims: PropTypes.array.isRequired,
-    deleteCluster: PropTypes.func.isRequired,
-    handleCreateNamespace: PropTypes.func.isRequired
+    deleteCluster: PropTypes.func.isRequired
   }
 
   finalStateReached() {
@@ -56,7 +55,7 @@ class Cluster extends AutoRefreshComponent {
   }
 
   render() {
-    const { cluster, team, namespaceClaims } = this.props
+    const { cluster, team } = this.props
 
     if (cluster.deleted) {
       return null
@@ -93,7 +92,7 @@ class Cluster extends AutoRefreshComponent {
     }
 
     return (
-      <List.Item actions={actions()} style={{ paddingTop: 0 }}>
+      <List.Item key={cluster.metadata.name} actions={actions()} style={{ paddingTop: 0 }}>
         <List.Item.Meta
           avatar={<img src={clusterProviderIconSrcMap[cluster.spec.kind]} height="32px" />}
           title={<Link href="/teams/[name]/clusters/[cluster]" as={`/teams/${team}/clusters/${cluster.metadata.name}`}><a><Text style={{ fontFamily: 'monospace' }}>{cluster.metadata.name}</Text></a></Link>}

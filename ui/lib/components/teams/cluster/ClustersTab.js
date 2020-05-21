@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import Link from 'next/link'
-import { Badge, Button, Card, Collapse, Divider, Drawer, Icon, List, message, Modal, Typography } from 'antd'
+import { Badge, Button, Collapse, Divider, Drawer, Icon, List, message, Modal, Typography } from 'antd'
 const { Paragraph, Text } = Typography
 const { Panel } = Collapse
 import getConfig from 'next/config'
@@ -24,6 +24,7 @@ class ClustersTab extends React.Component {
     dataLoading: true,
     clusters: [],
     namespaceClaims: [],
+    revealNamespaces: {},
     createNamespace: false
   }
 
@@ -37,8 +38,10 @@ class ClustersTab extends React.Component {
       ])
       clusters = clusters.items
       namespaceClaims = namespaceClaims.items
+      const revealNamespaces = {}
+      clusters.filter(cluster => namespaceClaims.filter(nc => nc.spec.cluster.name === cluster.metadata.name).length > 0).forEach(cluster => revealNamespaces[cluster.metadata.name] = true)
       this.props.getClusterCount && this.props.getClusterCount(clusters.length)
-      return { clusters, namespaceClaims }
+      return { clusters, namespaceClaims, revealNamespaces }
     } catch (err) {
       console.error('Unable to load data for clusters tab', err)
       return {}
@@ -69,8 +72,17 @@ class ClustersTab extends React.Component {
 
   handleResourceDeleted = resourceType => {
     return (name, done) => {
-      this.setState({ [resourceType]: this.state[resourceType].filter(r => r.metadata.name !== name) }, () => {
-        this.props.getClusterCount && this.props.getClusterCount(this.state.clusters.length)
+      const resourceList = copy(this.state[resourceType])
+      const resource = resourceList.find(r => r.metadata.name === name)
+      resource.deleted = true
+
+      const revealNamespaces = copy(this.state.revealNamespaces)
+      if (resourceType === 'namespaceClaims') {
+        revealNamespaces[resource.spec.cluster.name] = Boolean(resourceList.filter(nc => !nc.deleted && nc.spec.cluster.name === resource.spec.cluster.name).length)
+      }
+
+      this.setState({ [resourceType]: resourceList, revealNamespaces }, () => {
+        this.props.getClusterCount && this.props.getClusterCount(this.state.clusters.filter(c => !c.deleted).length)
         done()
       })
     }
@@ -95,9 +107,12 @@ class ClustersTab extends React.Component {
   createNamespace = value => () => this.setState({ createNamespace: value })
 
   handleNamespaceCreated = namespaceClaim => {
+    const revealNamespaces = copy(this.state.revealNamespaces)
+    revealNamespaces[namespaceClaim.spec.cluster.name] = true
     this.setState({
       namespaceClaims: this.state.namespaceClaims.concat([namespaceClaim]),
-      createNamespace: false
+      createNamespace: false,
+      revealNamespaces: revealNamespaces
     })
     message.loading(`Namespace "${namespaceClaim.spec.name}" requested on cluster "${namespaceClaim.spec.cluster.name}"`)
   }
@@ -116,6 +131,12 @@ class ClustersTab extends React.Component {
       console.error('Error deleting namespace', err)
       message.error('Error deleting namespace, please try again.')
     }
+  }
+
+  revealNamespaces = (clusterName) => (key) => {
+    const revealNamespaces = copy(this.state.revealNamespaces)
+    revealNamespaces[clusterName] = Boolean(key.length)
+    this.setState({ revealNamespaces })
   }
 
   clusterAccess = async () => {
@@ -161,11 +182,37 @@ class ClustersTab extends React.Component {
     })
   }
 
+  clusterNamespaceList = ({ namespaceClaims }) => {
+    const team = this.props.team.metadata.name
+    return (
+      <List
+        size="small"
+        style={{ marginTop: 0, marginBottom: 0 }}
+        dataSource={namespaceClaims}
+        renderItem={namespaceClaim =>
+          <NamespaceClaim
+            key={namespaceClaim.metadata.name}
+            team={team}
+            namespaceClaim={namespaceClaim}
+            deleteNamespace={this.deleteNamespace}
+            handleUpdate={this.handleResourceUpdated('namespaceClaims')}
+            handleDelete={this.handleResourceDeleted('namespaceClaims')}
+            refreshMs={15000}
+            propsResourceDataKey="namespaceClaim"
+            resourceApiPath={`/teams/${team}/namespaceclaims/${namespaceClaim.metadata.name}`}
+          />
+        }
+      >
+      </List>
+    )
+  }
+
   render() {
     const { team } = this.props
     const { dataLoading, clusters, namespaceClaims, createNamespace } = this.state
 
-    const hasActiveClusters = Boolean(clusters.filter(c => c.status && c.status.status === 'Success').length)
+    const hasActiveClusters = Boolean(clusters.filter(c => !c.deleted).length)
+    const hasSuccessfulClusters = Boolean(clusters.filter(c => c.status && c.status.status === 'Success').length)
 
     return (
       <>
@@ -175,7 +222,7 @@ class ClustersTab extends React.Component {
               <a>New cluster</a>
             </Link>
           </Button>
-          {hasActiveClusters && <Button style={{ marginLeft: '10px' }} type="primary" onClick={this.createNamespace(true)}>New namespace</Button>}
+          {!dataLoading && hasSuccessfulClusters && <Button style={{ marginLeft: '10px' }} type="primary" onClick={this.createNamespace(true)}>New namespace</Button>}
           {!dataLoading && hasActiveClusters && <Button style={{ float: 'right' }} type="link" onClick={this.clusterAccess}><Icon type="eye" />Access</Button>}
         </div>
 
@@ -185,17 +232,16 @@ class ClustersTab extends React.Component {
           <Icon type="loading" />
         ) : (
           <>
-            {clusters.length === 0 && <Paragraph type="secondary">No clusters found for this team</Paragraph>}
+            {!hasActiveClusters && <Paragraph type="secondary">No clusters found for this team</Paragraph>}
             {clusters.map(cluster => {
-              const filteredNamespaceClaims = (namespaceClaims || []).filter(nc => nc.spec.cluster.name === cluster.metadata.name && !nc.deleted)
+              const filteredNamespaceClaims = (namespaceClaims || []).filter(nc => nc.spec.cluster.name === cluster.metadata.name)
+              const activeNamespaces = filteredNamespaceClaims.filter(nc => !nc.deleted)
               return (
                 <>
                   <Cluster
-                    key={cluster.metadata.name}
                     team={team.metadata.name}
                     cluster={cluster}
-                    namespaceClaims={filteredNamespaceClaims}
-                    handleCreateNamespace={this.createNamespace(true)}
+                    namespaceClaims={activeNamespaces}
                     deleteCluster={this.deleteCluster}
                     handleUpdate={this.handleResourceUpdated('clusters')}
                     handleDelete={this.handleResourceDeleted('clusters')}
@@ -203,40 +249,21 @@ class ClustersTab extends React.Component {
                     propsResourceDataKey="cluster"
                     resourceApiPath={`/teams/${team.metadata.name}/clusters/${cluster.metadata.name}`}
                   />
-                  {filteredNamespaceClaims.length > 0 ? (
+                  {!cluster.deleted && (
                     <>
-                      <Collapse style={{ marginLeft: '50px' }} defaultActiveKey={['namespaces']}>
-                        <Panel header={<span>Namespaces <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={filteredNamespaceClaims.length} /></span>} key="namespaces">
-                          <List
-                            size="small"
-                            style={{ marginTop: 0, marginBottom: 0 }}
-                            dataSource={filteredNamespaceClaims}
-                            renderItem={namespaceClaim =>
-                              <NamespaceClaim
-                                team={team.metadata.name}
-                                namespaceClaim={namespaceClaim}
-                                deleteNamespace={this.deleteNamespace}
-                                handleUpdate={this.handleResourceUpdated('namespaceClaims')}
-                                handleDelete={this.handleResourceDeleted('namespaceClaims')}
-                                refreshMs={15000}
-                                propsResourceDataKey="namespaceClaim"
-                                resourceApiPath={`/teams/${team.metadata.name}/namespaceclaims/${namespaceClaim.metadata.name}`}
-                              />
-                            }
-                          >
-                          </List>
+                      <Collapse style={{ marginLeft: '50px' }} onChange={this.revealNamespaces(cluster.metadata.name)} activeKey={this.state.revealNamespaces[cluster.metadata.name] ? ['namespaces'] : []}>
+                        <Panel header={<span>Namespaces <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={activeNamespaces.length} /></span>} key="namespaces">
+                          {filteredNamespaceClaims.length > 0 && <this.clusterNamespaceList namespaceClaims={filteredNamespaceClaims} />}
                         </Panel>
                       </Collapse>
+                      <Divider />
                     </>
-                  ) : (
-                    <Paragraph style={{ marginLeft: '50px' }}>No namespaces</Paragraph>
                   )}
-                  <Divider />
                 </>
               )
             })}
 
-            {hasActiveClusters && (
+            {hasSuccessfulClusters && (
               <Drawer
                 title="Create namespace"
                 placement="right"
