@@ -51,6 +51,10 @@ fi
 
 kubectl config use-context kind-kore
 
-kubectl create ns kore
+if ! kubectl get ns kore; then
+  kubectl create ns kore
+fi
 
 make kind-image-dev
+
+helm upgrade -i --namespace kore kore ./charts/kore --wait -f ./charts/my_values.yaml
