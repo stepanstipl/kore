@@ -28,7 +28,7 @@
 - Fixed the overwriting of inbuilt plans (https://github.com/appvia/kore/issues/755)
 - Added a team check on the CLI (https://github.com/appvia/kore/pull/733)
 - Fixed bug in the create secret CLI (https://github.com/appvia/kore/issues/743)
-- Fixed up the EKS reconcilation controller to be state driven (https://github.com/appvia/kore/pull/576)
+- Fixed up the EKS reconciliation controller to be state driven (https://github.com/appvia/kore/pull/576)
 - Renamed packages for store (https://github.com/appvia/kore/pull/719)
 - Fixed verbosity in the CLI config (https://github.com/appvia/kore/issues/697)
 - Fixed issue of local overwriting config (https://github.com/appvia/kore/issues/698)
