@@ -110,8 +110,16 @@ type V1alpha1GKESpec struct {
 	// Required: true
 	Network *string `json:"network"`
 
+	// node pools
+	// Required: true
+	NodePools []*V1alpha1GKENodePool `json:"nodePools"`
+
 	// region
 	Region string `json:"region,omitempty"`
+
+	// release channel
+	// Required: true
+	ReleaseChannel *string `json:"releaseChannel"`
 
 	// services IP v4 cidr
 	// Required: true
@@ -226,6 +234,14 @@ func (m *V1alpha1GKESpec) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateNetwork(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateNodePools(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateReleaseChannel(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -486,6 +502,40 @@ func (m *V1alpha1GKESpec) validateMaxSize(formats strfmt.Registry) error {
 func (m *V1alpha1GKESpec) validateNetwork(formats strfmt.Registry) error {
 
 	if err := validate.Required("network", "body", m.Network); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *V1alpha1GKESpec) validateNodePools(formats strfmt.Registry) error {
+
+	if err := validate.Required("nodePools", "body", m.NodePools); err != nil {
+		return err
+	}
+
+	for i := 0; i < len(m.NodePools); i++ {
+		if swag.IsZero(m.NodePools[i]) { // not required
+			continue
+		}
+
+		if m.NodePools[i] != nil {
+			if err := m.NodePools[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("nodePools" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *V1alpha1GKESpec) validateReleaseChannel(formats strfmt.Registry) error {
+
+	if err := validate.Required("releaseChannel", "body", m.ReleaseChannel); err != nil {
 		return err
 	}
 

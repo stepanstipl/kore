@@ -38,7 +38,7 @@ func eksSampleData() map[string]interface{} {
 		"inheritTeamMembers":        false,
 		"privateIPV4Cidr":           "10.0.0.0/16",
 		"region":                    "eu-west-2",
-		"version":                   "1.2.3",
+		"version":                   "1.15",
 		"nodeGroups": []map[string]interface{}{
 			{
 				"instanceType": "t3.medium",
@@ -185,13 +185,24 @@ var _ = Describe("EKSPlanSchema", func() {
 				It("throws a validation error", func() {
 					Expect(validationErr).To(HaveOccurred())
 					Expect(validationErr.(*validation.Error).FieldErrors).To(HaveLen(1))
-					Expect(validationErr.Error()).To(ContainSubstring("defaultTeamRole: String length must be greater than or equal to 1"))
+					Expect(validationErr.Error()).To(ContainSubstring("defaultTeamRole must be one of the following: \"view\", \"edit\", \"admin\", \"cluster-admin\""))
+				})
+			})
+
+			When("defaultTeamRole is invalid", func() {
+				BeforeEach(func() {
+					data["defaultTeamRole"] = "notavalidrole"
+				})
+				It("throws a validation error", func() {
+					Expect(validationErr).To(HaveOccurred())
+					Expect(validationErr.(*validation.Error).FieldErrors).To(HaveLen(1))
+					Expect(validationErr.Error()).To(ContainSubstring("defaultTeamRole must be one of the following: \"view\", \"edit\", \"admin\", \"cluster-admin\""))
 				})
 			})
 
 			When("defaultTeamRole is not empty", func() {
 				BeforeEach(func() {
-					data["defaultTeamRole"] = "some role"
+					data["defaultTeamRole"] = "view"
 				})
 				It("doesn't throw an error", func() {
 					Expect(validationErr).ToNot(HaveOccurred())

@@ -88,7 +88,7 @@ var _ = Describe("GKE Autoscaling Rule", func() {
 
 			When("called with GKE kind and enableAutoscaler is false", func() {
 				It("should be non-compliant", func() {
-					plan.Spec.Configuration.Raw = []byte(`{"enableAutoscaler":false}`)
+					plan.Spec.Configuration.Raw = []byte(`{"nodePools":[{"enableAutoscaler":false}]}`)
 
 					result := scanner.ScanPlan(context.Background(), fake.NewFakeClient(), plan)
 					Expect(result.Spec.OverallStatus).To(Equal(securityv1.Warning))
@@ -97,7 +97,7 @@ var _ = Describe("GKE Autoscaling Rule", func() {
 
 			When("called with GKE kind and enableAutoscaler is true", func() {
 				It("should be compliant", func() {
-					plan.Spec.Configuration.Raw = []byte(`{"enableAutoscaler":true}`)
+					plan.Spec.Configuration.Raw = []byte(`{"nodePools":[{"enableAutoscaler":true}]}`)
 
 					result := scanner.ScanPlan(context.Background(), fake.NewFakeClient(), plan)
 					Expect(result.Spec.OverallStatus).To(Equal(securityv1.Compliant))

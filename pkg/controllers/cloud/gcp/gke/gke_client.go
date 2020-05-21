@@ -27,6 +27,7 @@ import (
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	"github.com/appvia/kore/pkg/utils"
 
+	"github.com/hashicorp/go-version"
 	log "github.com/sirupsen/logrus"
 	compute "google.golang.org/api/compute/v0.beta"
 	container "google.golang.org/api/container/v1beta1"
@@ -49,6 +50,21 @@ type gkeClient struct {
 	region string
 }
 
+// NodePoolOperation represents the possible operations which may be in process on a node pool.
+type NodePoolOperation string
+
+// NodePoolOperationCreating means a node pool is being created
+const NodePoolOperationCreating NodePoolOperation = "Creating"
+
+// NodePoolOperationUpdating means features of a node pool (size, auto-scale, image type, version) are being updated.
+const NodePoolOperationUpdating NodePoolOperation = "Updating"
+
+// NodePoolOperationDeleting means a node pool is being deleted
+const NodePoolOperationDeleting NodePoolOperation = "Deleting"
+
+// NodePoolOperationNone means no operation is being performed on node pools.
+const NodePoolOperationNone NodePoolOperation = "None"
+
 // NewClient returns a gcp client for us
 func NewClient(credentials *credentials, cluster *gke.GKE) (*gkeClient, error) {
 	options := option.WithCredentialsJSON([]byte(credentials.key))
@@ -66,6 +82,26 @@ func NewClient(credentials *credentials, cluster *gke.GKE) (*gkeClient, error) {
 	region := credentials.region
 	if region == "" {
 		region = cluster.Spec.Region
+	}
+
+	// @step: Ensure any old specs without node pools are upgraded to the new nodepool spec
+	if len(cluster.Spec.NodePools) == 0 {
+		// Create pool spec based on the deprecated fields and previous hard-coded
+		// defaults.
+		cluster.Spec.NodePools = []gke.GKENodePool{
+			{
+				Name:              "compute",
+				Version:           cluster.Spec.Version,
+				EnableAutoupgrade: cluster.Spec.EnableAutoupgrade,
+				EnableAutoscaler:  cluster.Spec.EnableAutoscaler,
+				EnableAutorepair:  cluster.Spec.EnableAutorepair,
+				MinSize:           1,
+				MaxSize:           cluster.Spec.MaxSize,
+				Size:              cluster.Spec.Size,
+				DiskSize:          cluster.Spec.DiskSize,
+				ImageType:         cluster.Spec.ImageType,
+			},
+		}
 	}
 
 	return &gkeClient{
@@ -218,30 +254,360 @@ func (g *gkeClient) Update(ctx context.Context) (bool, error) {
 	return true, nil
 }
 
+// UpdateNodePools is called to add, remove and update node pools in the cluster. Returns the operation
+// being performed and the name of the node pool being operated on, or NodePoolOperationNone if no
+// operation being performed.
+func (g *gkeClient) UpdateNodePools(ctx context.Context) (NodePoolOperation, string, error) {
+	logger := log.WithFields(log.Fields{
+		"name":      g.cluster.Name,
+		"namespace": g.cluster.Namespace,
+	})
+	logger.Info("checking if the cluster node pools require updating")
+
+	// @step: get the current state of the cluster
+	state, found, err := g.GetCluster(ctx)
+	if !found {
+		return NodePoolOperationNone, "", errors.New("cluster was not found")
+	}
+	if err != nil {
+		return NodePoolOperationNone, "", err
+	}
+
+	clusterPath := fmt.Sprintf("projects/%s/locations/%s/clusters/%s",
+		g.credentials.project,
+		g.region,
+		g.cluster.Name)
+
+	// Process node pools - additions
+	for _, nodePoolSpec := range g.cluster.Spec.NodePools {
+		nodePoolExists := false
+		for _, n := range state.NodePools {
+			if n.Name == nodePoolSpec.Name {
+				nodePoolExists = true
+			}
+		}
+
+		if !nodePoolExists {
+			err := g.createNodePool(ctx, clusterPath, &nodePoolSpec, logger)
+			if err != nil {
+				return NodePoolOperationNone, "", err
+			}
+			return NodePoolOperationCreating, nodePoolSpec.Name, nil
+		}
+	}
+
+	// Process node pools - removals and updates
+	for _, nodePool := range state.NodePools {
+		var nodePoolSpec *gke.GKENodePool = nil
+		for _, n := range g.cluster.Spec.NodePools {
+			if n.Name == nodePool.Name {
+				nodePoolSpec = &n
+			}
+		}
+
+		nodePoolLogger := logger.WithField("nodePool", nodePool.Name)
+		nodePoolPath := fmt.Sprintf("%s/nodePools/%s", clusterPath, nodePool.Name)
+
+		// Node pool removed from spec, request removal from GKE
+		if nodePoolSpec == nil {
+			err := g.deleteNodePool(ctx, nodePoolPath, nodePoolLogger)
+			if err != nil {
+				return NodePoolOperationNone, "", err
+			}
+			return NodePoolOperationDeleting, nodePool.Name, nil
+		}
+
+		// Node pool still in spec, check for updates:
+		updating, err := g.updateNodePool(ctx, nodePoolPath, nodePoolSpec, nodePool, nodePoolLogger)
+		if err != nil {
+			return NodePoolOperationNone, "", err
+		}
+		if updating {
+			return NodePoolOperationUpdating, nodePoolSpec.Name, nil
+		}
+	}
+
+	return NodePoolOperationNone, "", nil
+}
+
+func (g *gkeClient) createNodePool(ctx context.Context, clusterPath string, nodePoolSpec *gke.GKENodePool, logger *log.Entry) error {
+	// Node pool added to spec, request addition to GKE (or check if we already have)
+	nodePoolLogger := logger.WithField("nodePool", nodePoolSpec.Name)
+
+	req, err := g.CreateNodePoolDefinition(nodePoolSpec)
+	if err != nil {
+		nodePoolLogger.WithError(err).Error("trying to prepare create node pool definition")
+
+		return err
+	}
+
+	// @step: Check if already in operation
+	_, found, err := g.FindOperation(ctx, "CREATE_NODE_POOL", "kubernetes", g.cluster.Name)
+	if err != nil {
+		return err
+	}
+	if found {
+		nodePoolLogger.Debug("node pool creation still in progress")
+		return nil
+	}
+	nodePoolLogger.Info("Node pool added to spec, requesting addition to cluster")
+	// @step: request the node pool
+	_, err = g.ce.Projects.Locations.Clusters.NodePools.Create(clusterPath, req).Context(ctx).Do()
+	if err != nil {
+		nodePoolLogger.WithError(err).Error("trying to create node pool")
+
+		return err
+	}
+	nodePoolLogger.Debug("successfully requested the gke node pool to create")
+	return nil
+}
+
+func (g *gkeClient) deleteNodePool(ctx context.Context, nodePoolPath string, nodePoolLogger *log.Entry) error {
+	// @step: Check if already in operation
+	_, found, err := g.FindOperation(ctx, "DELETE_NODE_POOL", "kubernetes", g.cluster.Name)
+	if err != nil {
+		return err
+	}
+	if found {
+		nodePoolLogger.Debug("node pool deletion already in progress, not re-requesting")
+		return nil
+	}
+	// @step: delete the node pool
+	nodePoolLogger.Info("Node pool removed from spec, requesting removal from cluster")
+	_, err = g.ce.Projects.Locations.Clusters.NodePools.Delete(nodePoolPath).Context(ctx).Do()
+	if err != nil {
+		nodePoolLogger.WithError(err).Error("trying to delete node pool")
+
+		return err
+	}
+	nodePoolLogger.Debug("Successfully requested the node pool to delete")
+	return nil
+}
+
+func (g *gkeClient) updateNodePool(ctx context.Context, nodePoolPath string, nodePoolSpec *gke.GKENodePool, nodePool *container.NodePool, nodePoolLogger *log.Entry) (bool, error) {
+	updatePool := false
+	var err error
+	if g.cluster.Spec.ReleaseChannel == "" {
+		// Check versions if not following a release channel (the release channel will take care of the node
+		// pools if it is specified)
+
+		targetVersion := nodePoolSpec.Version
+		if targetVersion == "" {
+			// A blank target version means keep in sync with cluster, so use the cluster spec version.
+			targetVersion = g.cluster.Spec.Version
+		}
+
+		updatePool, err = UpgradeRequired(nodePool.Version, targetVersion)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	if !updatePool && nodePoolSpec.ImageType != nodePool.Config.ImageType {
+		updatePool = true
+	}
+
+	if updatePool {
+		err := g.requestNodePoolUpgrade(ctx, nodePoolPath, nodePoolSpec, nodePoolLogger)
+		if err != nil {
+			return false, err
+		}
+		return true, nil
+	}
+
+	// Check the auto-scale config is in sync.
+	if nodePoolSpec.EnableAutoscaler != nodePool.Autoscaling.Enabled || (nodePoolSpec.EnableAutoscaler && (nodePoolSpec.MinSize != nodePool.Autoscaling.MinNodeCount || nodePoolSpec.MaxSize != nodePool.Autoscaling.MaxNodeCount)) {
+		err := g.setNodePoolAutoscale(ctx, nodePoolPath, nodePoolSpec, nodePool, nodePoolLogger)
+		if err != nil {
+			return false, err
+		}
+		return true, nil
+	}
+
+	// If auto-scale is disabled, check the size is as desired.
+	if !nodePoolSpec.EnableAutoscaler && !nodePool.Autoscaling.Enabled && nodePoolSpec.Size != nodePool.InitialNodeCount {
+		err := g.setNodePoolSize(ctx, nodePoolPath, nodePoolSpec, nodePool, nodePoolLogger)
+		if err != nil {
+			return false, err
+		}
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (g *gkeClient) requestNodePoolUpgrade(ctx context.Context, nodePoolPath string, nodePoolSpec *gke.GKENodePool, nodePoolLogger *log.Entry) error {
+	// @step: Check if already in operation
+	_, found, err := g.FindOperation(ctx, "UPGRADE_NODES", "kubernetes", g.cluster.Name)
+	if err != nil {
+		return err
+	}
+	if found {
+		nodePoolLogger.Debug("node pool upgrade still in progress")
+		return nil
+	}
+
+	nodePoolLogger.Info("Node pool upgrade required to match spec - image type changed or version updated")
+
+	// @step: request upgrade / image type change
+	updateReq := &container.UpdateNodePoolRequest{
+		NodeVersion: nodePoolSpec.Version,
+		ImageType:   nodePoolSpec.ImageType,
+	}
+	_, err = g.ce.Projects.Locations.Clusters.NodePools.Update(nodePoolPath, updateReq).Context(ctx).Do()
+	if err != nil {
+		nodePoolLogger.WithError(err).Error("trying to update node pool")
+
+		return err
+	}
+	nodePoolLogger.Debug("Successfully requested the node pool update")
+	return nil
+}
+
+func (g *gkeClient) setNodePoolAutoscale(ctx context.Context, nodePoolPath string, nodePoolSpec *gke.GKENodePool, nodePool *container.NodePool, nodePoolLogger *log.Entry) error {
+	autoScale := func() *container.NodePoolAutoscaling {
+		if nodePoolSpec.EnableAutoscaler {
+			return &container.NodePoolAutoscaling{
+				Autoprovisioned: false,
+				Enabled:         true,
+				MaxNodeCount:    nodePoolSpec.MaxSize,
+				MinNodeCount:    nodePoolSpec.MinSize,
+			}
+		}
+		return &container.NodePoolAutoscaling{
+			Autoprovisioned: false,
+			Enabled:         false,
+		}
+	}()
+
+	nodePoolLogger.WithFields(log.Fields{
+		"current": nodePool.Autoscaling,
+		"spec":    autoScale,
+	}).Info("Node pool auto-scale configuration update required")
+
+	_, err := g.ce.Projects.Locations.Clusters.NodePools.SetAutoscaling(nodePoolPath, &container.SetNodePoolAutoscalingRequest{Autoscaling: autoScale}).Context(ctx).Do()
+	if err != nil {
+		nodePoolLogger.WithError(err).Error("trying to update node pool auto-scale configuration")
+
+		return err
+	}
+	nodePoolLogger.Debug("Successfully requested the node pool auto-scale configuration change")
+	return nil
+}
+
+func (g *gkeClient) setNodePoolSize(ctx context.Context, nodePoolPath string, nodePoolSpec *gke.GKENodePool, nodePool *container.NodePool, nodePoolLogger *log.Entry) error {
+	// @step: Check if already in operation
+	_, found, err := g.FindOperation(ctx, "SET_NODE_POOL_SIZE", "kubernetes", g.cluster.Name)
+	if err != nil {
+		return err
+	}
+	if found {
+		nodePoolLogger.Debug("node pool re-size still in progress")
+		return nil
+	}
+
+	nodePoolLogger.WithFields(log.Fields{
+		"currentSize": nodePool.InitialNodeCount,
+		"specSize":    nodePoolSpec.Size,
+	}).Info("Node pool size (non-auto-scale) update required")
+
+	_, err = g.ce.Projects.Locations.Clusters.NodePools.SetSize(nodePoolPath, &container.SetNodePoolSizeRequest{NodeCount: nodePoolSpec.Size}).Context(ctx).Do()
+	if err != nil {
+		nodePoolLogger.WithError(err).Error("trying to update node pool size")
+
+		return err
+	}
+	nodePoolLogger.Debug("Successfully requested the node pool size change")
+	return nil
+}
+
 // CreateUpdateDefinition returns a cluster update definition
 // @notes: so GKE will only handle one update at a time, so if the user makes a bunch of changes to the
 // spec we need to return the first change, update, requeue and do the next i guess.
 func (g *gkeClient) CreateUpdateDefinition(state *container.Cluster) (*container.UpdateClusterRequest, error) {
+	logger := log.WithFields(log.Fields{
+		"name":      g.cluster.Name,
+		"namespace": g.cluster.Namespace,
+	})
+
 	request := &container.UpdateClusterRequest{
 		ProjectId: g.credentials.project,
 		Update:    &container.ClusterUpdate{},
 	}
+
 	u := request.Update
 
-	if state.CurrentMasterVersion != g.cluster.Spec.Version {
-		u.DesiredMasterVersion = g.cluster.Spec.Version
+	// Update release channel if changed.
+	if state.ReleaseChannel.Channel != g.cluster.Spec.ReleaseChannel {
+		logger.WithFields(log.Fields{
+			"currentChannel": state.ReleaseChannel.Channel,
+			"specChannel":    g.cluster.Spec.ReleaseChannel,
+		}).Info("Release channel changed")
+
+		u.DesiredReleaseChannel = &container.ReleaseChannel{
+			Channel: g.cluster.Spec.ReleaseChannel,
+		}
 
 		return request, nil
 	}
-	if state.CurrentNodeVersion != g.cluster.Spec.Version {
-		u.DesiredNodeVersion = g.cluster.Spec.Version
-		// @TODO needs to be revisted if we support multiple nodepools in the future
-		u.DesiredNodePoolId = "compute"
 
-		return request, nil
+	// Manual version control only possible if not following a release channel
+	if g.cluster.Spec.ReleaseChannel == "" {
+		// Notes: Master version is *always* auto-upgraded by google, so whatever version is specified by the
+		// spec, we must only apply an upgrade if the spec requests a version AHEAD of the current master version,
+		// else it will 'flap' back and forth as we request downgrades then GCP re-upgrades the master.
+		upgrade, err := UpgradeRequired(state.CurrentMasterVersion, g.cluster.Spec.Version)
+		if err != nil {
+			return nil, err
+		}
+
+		if upgrade {
+			logger.WithFields(log.Fields{
+				"currVersion":    state.CurrentMasterVersion,
+				"desiredVersion": g.cluster.Spec.Version,
+			}).Debug("Master upgrade required")
+
+			u.DesiredMasterVersion = g.cluster.Spec.Version
+
+			return request, nil
+		}
 	}
 
 	return request, nil
+}
+
+// UpgradeRequired compares an actual GKE version (e.g. 1.15.1-gke.9) with a desired version
+// (e.g. 1.15, 1.15.1, 1.15.1-gke.9) and returns true if the desired represents a greater version
+// than the current. If the desired version is blank or one of the 'magic' values specified by
+// GKE (- or latest), it will always return false as these will only be used to set the initial
+// versions.
+func UpgradeRequired(current string, desired string) (bool, error) {
+	if desired == "" || desired == "-" || desired == "latest" {
+		return false, nil
+	}
+
+	desiredV, err := version.NewVersion(desired)
+	if err != nil {
+		return false, err
+	}
+	var currentV *version.Version
+	if !strings.Contains(desired, "-") && strings.Contains(current, "-") {
+		// Strip the GKE section from the current version as standard
+		// version semantics would mean 1.15.1-gke.9 is BEHIND 1.15.1
+		// whereas in GKE, the -suffix is used to denote a GKE version
+		// NOT a pre-release version.
+		currentV, err = version.NewVersion(current[0:strings.Index(current, "-")])
+		if err != nil {
+			return false, err
+		}
+	} else {
+		currentV, err = version.NewVersion(current)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	return desiredV.GreaterThan(currentV), nil
 }
 
 // CreateDefinition returns a cluster definition
@@ -259,6 +625,15 @@ func (g *gkeClient) CreateDefinition() (*container.CreateClusterRequest, error) 
 		Description:           cluster.Spec.Description,
 		InitialClusterVersion: cluster.Spec.Version,
 
+		ReleaseChannel: &container.ReleaseChannel{
+			Channel: func() string {
+				if cluster.Spec.ReleaseChannel == "" {
+					return "UNSPECIFIED"
+				}
+				return cluster.Spec.ReleaseChannel
+			}(),
+		},
+
 		AddonsConfig: &container.AddonsConfig{
 			CloudRunConfig: &container.CloudRunConfig{
 				Disabled: true,
@@ -271,7 +646,7 @@ func (g *gkeClient) CreateDefinition() (*container.CreateClusterRequest, error) 
 				Disabled: !cluster.Spec.EnableHTTPLoadBalancer,
 			},
 			HorizontalPodAutoscaling: &container.HorizontalPodAutoscaling{
-				Disabled: !cluster.Spec.EnableAutoscaler,
+				Disabled: !cluster.Spec.EnableHorizontalPodAutoscaler,
 			},
 			KubernetesDashboard: &container.KubernetesDashboard{
 				Disabled: true,
@@ -283,6 +658,7 @@ func (g *gkeClient) CreateDefinition() (*container.CreateClusterRequest, error) 
 
 		BinaryAuthorization:     &container.BinaryAuthorization{Enabled: false},
 		LegacyAbac:              &container.LegacyAbac{Enabled: false},
+		Network:                 cluster.Spec.Network,
 		NetworkPolicy:           &container.NetworkPolicy{Enabled: true, Provider: "CALICO"},
 		PodSecurityPolicyConfig: &container.PodSecurityPolicyConfig{Enabled: true},
 		Locations:               locations,
@@ -304,9 +680,9 @@ func (g *gkeClient) CreateDefinition() (*container.CreateClusterRequest, error) 
 
 		IpAllocationPolicy: &container.IPAllocationPolicy{
 			ClusterIpv4CidrBlock: cluster.Spec.ClusterIPV4Cidr,
-			CreateSubnetwork:     false,
 			ServicesIpv4Cidr:     cluster.Spec.ServicesIPV4Cidr,
-			SubnetworkName:       cluster.Spec.Subnetwork,
+			CreateSubnetwork:     false,
+			SubnetworkName:       "default",
 			UseIpAliases:         true,
 		},
 
@@ -322,41 +698,10 @@ func (g *gkeClient) CreateDefinition() (*container.CreateClusterRequest, error) 
 			}
 			return ""
 		}(),
+	}
 
-		NodePools: []*container.NodePool{
-			{
-				Name: "compute",
-				Autoscaling: &container.NodePoolAutoscaling{
-					Autoprovisioned: false,
-					Enabled:         cluster.Spec.EnableAutoscaler,
-					MaxNodeCount:    cluster.Spec.MaxSize,
-					MinNodeCount:    1,
-				},
-				Config: &container.NodeConfig{
-					DiskSizeGb:  cluster.Spec.DiskSize,
-					ImageType:   cluster.Spec.ImageType,
-					MachineType: cluster.Spec.MachineType,
-					OauthScopes: []string{
-						"https://www.googleapis.com/auth/compute",
-						"https://www.googleapis.com/auth/devstorage.read_only",
-						"https://www.googleapis.com/auth/logging.write",
-						"https://www.googleapis.com/auth/monitoring",
-					},
-					Preemptible: false,
-					Tags:        []string{cluster.Name},
-				},
-				InitialNodeCount: cluster.Spec.Size,
-				Locations:        locations,
-				Management: &container.NodeManagement{
-					AutoRepair:  cluster.Spec.EnableAutorepair,
-					AutoUpgrade: cluster.Spec.EnableAutoupgrade,
-				},
-				MaxPodsConstraint: &container.MaxPodsConstraint{
-					MaxPodsPerNode: 110,
-				},
-				Version: cluster.Spec.Version,
-			},
-		},
+	for _, nodePool := range cluster.Spec.NodePools {
+		resource.NodePools = append(resource.NodePools, g.PrepareNodePoolDefinition(&nodePool, locations))
 	}
 
 	resource.PrivateClusterConfig = &container.PrivateClusterConfig{}
@@ -392,6 +737,90 @@ func (g *gkeClient) CreateDefinition() (*container.CreateClusterRequest, error) 
 		ProjectId: g.credentials.project,
 		Cluster:   resource,
 	}, nil
+}
+
+// CreateNodePoolDefinition returns a node pool definition
+func (g *gkeClient) CreateNodePoolDefinition(nodePool *gke.GKENodePool) (*container.CreateNodePoolRequest, error) {
+	// @step: retrieve a list of location to place this node pool
+	locations, err := g.Locations()
+	if err != nil {
+		return nil, err
+	}
+
+	resource := g.PrepareNodePoolDefinition(nodePool, locations)
+	parentPath := fmt.Sprintf("projects/%s/locations/%s/clusters/%s",
+		g.credentials.project,
+		g.region,
+		g.cluster.Name)
+
+	return &container.CreateNodePoolRequest{
+		Parent:   parentPath,
+		NodePool: resource,
+	}, nil
+}
+
+// PrepareNodePoolDefinition translates our node pool spec into a GCP API node pool struct.
+func (g *gkeClient) PrepareNodePoolDefinition(nodePool *gke.GKENodePool, locations []string) *container.NodePool {
+	cluster := g.cluster
+
+	autoScale := func() *container.NodePoolAutoscaling {
+		if nodePool.EnableAutoscaler {
+			return &container.NodePoolAutoscaling{
+				Autoprovisioned: false,
+				Enabled:         true,
+				MaxNodeCount:    nodePool.MaxSize,
+				MinNodeCount:    nodePool.MinSize,
+			}
+		}
+		return &container.NodePoolAutoscaling{
+			Autoprovisioned: false,
+			Enabled:         false,
+		}
+	}()
+
+	return &container.NodePool{
+		Name:        nodePool.Name,
+		Autoscaling: autoScale,
+		Config: &container.NodeConfig{
+			DiskSizeGb:  nodePool.DiskSize,
+			ImageType:   nodePool.ImageType,
+			MachineType: nodePool.MachineType,
+			OauthScopes: []string{
+				"https://www.googleapis.com/auth/compute",
+				"https://www.googleapis.com/auth/devstorage.read_only",
+				"https://www.googleapis.com/auth/logging.write",
+				"https://www.googleapis.com/auth/monitoring",
+			},
+			Preemptible: nodePool.Preemptible,
+			Tags:        []string{cluster.Name},
+		},
+		InitialNodeCount: nodePool.Size,
+		Locations:        locations,
+		Management: &container.NodeManagement{
+			AutoRepair: nodePool.EnableAutorepair,
+			AutoUpgrade: func() bool {
+				// If a release channel is set, auto upgrade MUST be true.
+				if cluster.Spec.ReleaseChannel != "" {
+					return true
+				}
+				return nodePool.EnableAutoupgrade
+			}(),
+		},
+		MaxPodsConstraint: &container.MaxPodsConstraint{
+			MaxPodsPerNode: nodePool.MaxPodsPerNode,
+		},
+		Version: func() string {
+			// If a release channel is set, the version MUST be empty.
+			if cluster.Spec.ReleaseChannel != "" {
+				return ""
+			}
+			// If blank and not following release channel, use master version
+			if nodePool.Version == "" {
+				return cluster.Spec.Version
+			}
+			return nodePool.Version
+		}(),
+	}
 }
 
 // GetCluster returns a cluster config

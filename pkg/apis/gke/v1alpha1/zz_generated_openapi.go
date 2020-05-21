@@ -238,42 +238,14 @@ func schema_pkg_apis_gke_v1alpha1_GKESpec(ref common.ReferenceCallback) common.O
 					},
 					"version": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Version is the initial kubernetes version which the cluster should be configured with.",
+							Description: "Version is the kubernetes version which the cluster master should be configured with. '-' gives the current GKE default version, 'latest' gives most recent, 1.15 would be latest 1.15.x release, 1.15.1 would be the latest 1.15.1 release, and 1.15.1-gke.1 would be the exact specified version. Must be blank if following release channel.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
-					"size": {
+					"releaseChannel": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Size is the number of nodes per zone which should exist in the cluster.",
-							Type:        []string{"integer"},
-							Format:      "int64",
-						},
-					},
-					"maxSize": {
-						SchemaProps: spec.SchemaProps{
-							Description: "MaxSize assuming the autoscaler is enabled this is the maximum number nodes permitted",
-							Type:        []string{"integer"},
-							Format:      "int64",
-						},
-					},
-					"diskSize": {
-						SchemaProps: spec.SchemaProps{
-							Description: "DiskSize is the size of the disk used by the compute nodes.",
-							Type:        []string{"integer"},
-							Format:      "int64",
-						},
-					},
-					"imageType": {
-						SchemaProps: spec.SchemaProps{
-							Description: "ImageType is the operating image to use for the default compute pool.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"machineType": {
-						SchemaProps: spec.SchemaProps{
-							Description: "MachineType is the machine type which the default nodes pool should use.",
+							Description: "ReleaseChannel is the GKE release channel to follow, '' (to follow no channel), 'STABLE' (only battle-tested releases every few months), 'REGULAR' (stable releases every few weeks) or 'RAPID' (bleeding edge, not suitable for production workloads). If anything other than '', Version must be blank.",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -303,13 +275,6 @@ func schema_pkg_apis_gke_v1alpha1_GKESpec(ref common.ReferenceCallback) common.O
 							Format:      "",
 						},
 					},
-					"subnetwork": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Subnetwork is name of the GCP subnetwork which the cluster nodes should reside",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
 					"servicesIPV4Cidr": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ServicesIPV4Cidr is an optional network cidr configured for the cluster services",
@@ -328,27 +293,6 @@ func schema_pkg_apis_gke_v1alpha1_GKESpec(ref common.ReferenceCallback) common.O
 						SchemaProps: spec.SchemaProps{
 							Description: "ClusterIPV4Cidr is an optional network CIDR which is used to place the pod network on",
 							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"enableAutorepair": {
-						SchemaProps: spec.SchemaProps{
-							Description: "EnableAutorepair indicates if the cluster should be configured with auto repair is enabled",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"enableAutoscaler": {
-						SchemaProps: spec.SchemaProps{
-							Description: "EnableAutoscaler indicates if the cluster should be configured with cluster autoscaling turned on",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
-					"enableAutoupgrade": {
-						SchemaProps: spec.SchemaProps{
-							Description: "EnableAutoUpgrade indicates if the cluster should be configured with autograding enabled; meaning both nodes are masters are autoscaled scheduled to upgrade during your maintenance window.",
-							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
@@ -437,12 +381,93 @@ func schema_pkg_apis_gke_v1alpha1_GKESpec(ref common.ReferenceCallback) common.O
 							},
 						},
 					},
+					"nodePools": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "NodePools is the set of node pools for this cluster",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/appvia/kore/pkg/apis/gke/v1alpha1.GKENodePool"),
+									},
+								},
+							},
+						},
+					},
+					"size": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DEPRECATED: Set on node group instead, this property is now ignored. Size is the number of nodes per zone which should exist in the cluster.",
+							Type:        []string{"integer"},
+							Format:      "int64",
+						},
+					},
+					"maxSize": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DEPRECATED: Set on node group instead, this property is now ignored. MaxSize assuming the autoscaler is enabled this is the maximum number nodes permitted",
+							Type:        []string{"integer"},
+							Format:      "int64",
+						},
+					},
+					"diskSize": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DEPRECATED: Set on node group instead, this property is now ignored. DiskSize is the size of the disk used by the compute nodes.",
+							Type:        []string{"integer"},
+							Format:      "int64",
+						},
+					},
+					"imageType": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DEPRECATED: Set on node group instead, this property is now ignored. ImageType is the operating image to use for the default compute pool.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"machineType": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DEPRECATED: Set on node group instead, this property is now ignored. MachineType is the machine type which the default nodes pool should use.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"subnetwork": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DEPRECATED: This was always ignored. May be re-introduced in future. Subnetwork is name of the GCP subnetwork which the cluster nodes should reside -",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"enableAutoscaler": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DEPRECATED: Set on node group instead, this property is now ignored. EnableAutoscaler indicates if the cluster should be configured with cluster autoscaling turned on",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"enableAutoupgrade": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DEPRECATED: Set on node group instead, this property is now ignored. EnableAutoUpgrade indicates if the cluster should be configured with auto upgrading enabled; meaning both nodes are masters are scheduled to upgrade during your maintenance window.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"enableAutorepair": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DEPRECATED: Set on node group instead, this property is now ignored. EnableAutorepair indicates if the cluster should be configured with auto repair is enabled",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
 				},
-				Required: []string{"description", "version", "size", "maxSize", "diskSize", "imageType", "machineType", "authorizedMasterNetworks", "network", "subnetwork", "servicesIPV4Cidr", "clusterIPV4Cidr", "enableAutorepair", "enableAutoscaler", "enableAutoupgrade", "enableHorizontalPodAutoscaler", "enableHTTPLoadBalancer", "enableIstio", "enableShieldedNodes", "enableStackDriverLogging", "enableStackDriverMetrics", "enablePrivateEndpoint", "enablePrivateNetwork", "masterIPV4Cidr", "maintenanceWindow"},
+				Required: []string{"description", "version", "releaseChannel", "authorizedMasterNetworks", "network", "servicesIPV4Cidr", "clusterIPV4Cidr", "enableHorizontalPodAutoscaler", "enableHTTPLoadBalancer", "enableIstio", "enableShieldedNodes", "enableStackDriverLogging", "enableStackDriverMetrics", "enablePrivateEndpoint", "enablePrivateNetwork", "masterIPV4Cidr", "maintenanceWindow", "nodePools", "size", "maxSize", "diskSize", "imageType", "machineType", "subnetwork", "enableAutoscaler", "enableAutoupgrade", "enableAutorepair"},
 			},
 		},
 		Dependencies: []string{
-			"github.com/appvia/kore/pkg/apis/core/v1.Ownership", "github.com/appvia/kore/pkg/apis/gke/v1alpha1.AuthorizedNetwork"},
+			"github.com/appvia/kore/pkg/apis/core/v1.Ownership", "github.com/appvia/kore/pkg/apis/gke/v1alpha1.AuthorizedNetwork", "github.com/appvia/kore/pkg/apis/gke/v1alpha1.GKENodePool"},
 	}
 }
 
