@@ -21,7 +21,7 @@ spec:
     name: {{ include "kore.name" . }}-apiserver
 
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "kore.name" . }}-apiserver
@@ -29,6 +29,9 @@ metadata:
 {{ include "kore.labels" . | indent 4}}
 spec:
   replicas: {{ .Values.api.replicas }}
+  selector:
+    matchLabels:
+      name: {{ include "kore.name" . }}-apiserver
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -63,6 +66,16 @@ spec:
               name: {{ include "kore.name" . }}-idp
           - secretRef:
               name: {{ include "kore.name" . }}-api
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 10080
+          initialDelaySeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 10080
+          initialDelaySeconds: 30
         env:
           {{- if .Values.api.images.auth_proxy }}
           - name: AUTH_PROXY_IMAGE

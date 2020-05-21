@@ -66,6 +66,11 @@ type ErrInvalidParameter struct {
 	field, value, message string
 }
 
+// ErrTimeout indicate a operational timeout
+type ErrTimeout struct {
+	message string
+}
+
 func (e *ErrConflict) Error() string {
 	return fmt.Sprintf("conflict: %s", e.message)
 }
@@ -99,6 +104,15 @@ func IsError(err error, t interface{}) bool {
 // NewProfileInvalidError returns a profile invalid
 func NewProfileInvalidError(message, profile string) error {
 	return &ErrProfileInvalid{message: message, profile: profile}
+}
+
+func (e *ErrTimeout) Error() string {
+	return fmt.Sprintf("timed out: %s", e.message)
+}
+
+// NewTimeoutError returns a timeout
+func NewTimeoutError(message string) error {
+	return &ErrTimeout{message: message}
 }
 
 // NewResourceNotFound returns a error type

@@ -14,31 +14,23 @@
  * limitations under the License.
  */
 
-package alpha
+package bootstrap
 
 import (
-	"github.com/appvia/kore/pkg/cmd/kore/bootstrap"
-	"github.com/appvia/kore/pkg/cmd/kore/featuregates"
-	"github.com/appvia/kore/pkg/cmd/kore/patch"
+	"github.com/appvia/kore/pkg/cmd/kore/bootstrap/providers"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
-
-	"github.com/spf13/cobra"
 )
 
-// NewCmdAlpha creates and returns the alpha command
-func NewCmdAlpha(factory cmdutil.Factory) *cobra.Command {
-	command := &cobra.Command{
-		Use:                   "alpha",
-		DisableFlagsInUseLine: true,
-		Short:                 "Experimental services and operations",
-		Run:                   cmdutil.RunHelp,
-	}
+type providerLogger struct {
+	cmdutil.Factory
+}
 
-	command.AddCommand(
-		patch.NewCmdPatch(factory),
-		featuregates.NewCmdFeatureGates(factory),
-		bootstrap.NewCmdBootstrap(factory),
-	)
+// newProviderLogger provides a logger
+func newProviderLogger(factory cmdutil.Factory) providers.Logger {
+	return &providerLogger{Factory: factory}
+}
 
-	return command
+// Info prints a logging line from the provider
+func (p *providerLogger) Info(message string, args ...interface{}) {
+	p.Println("   ◉ "+message, args...)
 }
