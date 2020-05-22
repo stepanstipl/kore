@@ -39,17 +39,20 @@ type ServicePlanSpec struct {
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
 	Kind string `json:"kind"`
+	// DisplayName refers to the display name of the service type
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Optional
+	DisplayName string `json:"displayName,omitempty"`
 	// Labels is a collection of labels for this plan
 	// +kubebuilder:validation:Optional
 	Labels map[string]string `json:"labels,omitempty"`
-	// Description provides a summary of the configuration provided by this plan
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Required
-	Description string `json:"description"`
 	// Summary provides a short title summary for the plan
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
 	Summary string `json:"summary"`
+	// Description is a detailed description of the service plan
+	// +kubebuilder:validation:Optional
+	Description string `json:"description,omitempty"`
 	// Configuration are the key+value pairs describing a service configuration
 	// +kubebuilder:validation:Type=object
 	// +kubebuilder:validation:Optional

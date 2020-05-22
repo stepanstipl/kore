@@ -296,16 +296,16 @@ func schema_pkg_apis_services_v1_ServiceKindSpec(ref common.ReferenceCallback) c
 							Format:      "",
 						},
 					},
-					"description": {
+					"summary": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Description provides a summary of the service kind",
+							Description: "Summary provides a short title summary for the service kind",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
-					"summary": {
+					"description": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Summary provides a short title summary for the service kind",
+							Description: "Description is a detailed description of the service kind",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -345,7 +345,7 @@ func schema_pkg_apis_services_v1_ServiceKindSpec(ref common.ReferenceCallback) c
 						},
 					},
 				},
-				Required: []string{"enabled"},
+				Required: []string{"enabled", "summary"},
 			},
 		},
 		Dependencies: []string{
@@ -406,6 +406,13 @@ func schema_pkg_apis_services_v1_ServicePlanSpec(ref common.ReferenceCallback) c
 							Format:      "",
 						},
 					},
+					"displayName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DisplayName refers to the display name of the service type",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"labels": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Labels is a collection of labels for this plan",
@@ -421,16 +428,16 @@ func schema_pkg_apis_services_v1_ServicePlanSpec(ref common.ReferenceCallback) c
 							},
 						},
 					},
-					"description": {
+					"summary": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Description provides a summary of the configuration provided by this plan",
+							Description: "Summary provides a short title summary for the plan",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
-					"summary": {
+					"description": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Summary provides a short title summary for the plan",
+							Description: "Description is a detailed description of the service plan",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -462,7 +469,7 @@ func schema_pkg_apis_services_v1_ServicePlanSpec(ref common.ReferenceCallback) c
 						},
 					},
 				},
-				Required: []string{"kind", "description", "summary"},
+				Required: []string{"kind", "summary"},
 			},
 		},
 		Dependencies: []string{
@@ -528,16 +535,16 @@ func schema_pkg_apis_services_v1_ServiceProviderSpec(ref common.ReferenceCallbac
 							Format:      "",
 						},
 					},
-					"description": {
+					"summary": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Description provides a summary of the provider",
+							Description: "Summary provides a short title summary for the provider",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
-					"summary": {
+					"description": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Summary provides a short title summary for the provider",
+							Description: "Description is a detailed description of the service provider",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -555,7 +562,7 @@ func schema_pkg_apis_services_v1_ServiceProviderSpec(ref common.ReferenceCallbac
 						},
 					},
 				},
-				Required: []string{"type", "description", "summary"},
+				Required: []string{"type", "summary"},
 			},
 		},
 		Dependencies: []string{
@@ -647,13 +654,13 @@ func schema_pkg_apis_services_v1_ServiceSpec(ref common.ReferenceCallback) commo
 					},
 					"cluster": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Cluster contains the reference to the cluster where the credentials will be saved as a secret",
+							Description: "Cluster contains the reference to the cluster where the service will be created",
 							Ref:         ref("github.com/appvia/kore/pkg/apis/core/v1.Ownership"),
 						},
 					},
 					"clusterNamespace": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ClusterNamespace is the target namespace in the cluster where the secret will be created",
+							Description: "ClusterNamespace is the target namespace in the cluster where there the service will be created",
 							Type:        []string{"string"},
 							Format:      "",
 						},

@@ -43,12 +43,13 @@ type ServiceKindSpec struct {
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Optional
 	DisplayName string `json:"displayName,omitempty"`
-	// Description provides a summary of the service kind
+	// Summary provides a short title summary for the service kind
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Required
+	Summary string `json:"summary"`
+	// Description is a detailed description of the service kind
 	// +kubebuilder:validation:Optional
 	Description string `json:"description,omitempty"`
-	// Summary provides a short title summary for the service kind
-	// +kubebuilder:validation:Optional
-	Summary string `json:"summary,omitempty"`
 	// ImageURL is a thumbnail for the service kind
 	// +kubebuilder:validation:Optional
 	ImageURL string `json:"imageURL,omitempty"`

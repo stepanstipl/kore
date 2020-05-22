@@ -99,7 +99,7 @@ class PlanList extends ResourceList {
 
             {view ? (
               <Drawer
-                title={<><Title level={4}>{view.spec.description}</Title><Text>{view.spec.summary}</Text></>}
+                title={<><Title level={4}>{view.spec.summary}</Title><Text>{view.spec.description}</Text></>}
                 visible={Boolean(view)}
                 onClose={this.view(false)}
                 width={900}
@@ -114,7 +114,7 @@ class PlanList extends ResourceList {
 
             {edit ? (
               <Drawer
-                title={<><Title level={4}>{edit.spec.description}</Title><Text>{edit.spec.summary}</Text></>}
+                title={<><Title level={4}>{edit.spec.summary}</Title><Text>{edit.spec.description}</Text></>}
                 visible={Boolean(edit)}
                 onClose={this.processAndClearValidationErrors(this.edit(false))}
                 width={900}

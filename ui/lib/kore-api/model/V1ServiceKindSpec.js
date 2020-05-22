@@ -23,10 +23,11 @@ class V1ServiceKindSpec {
      * Constructs a new <code>V1ServiceKindSpec</code>.
      * @alias module:model/V1ServiceKindSpec
      * @param enabled {Boolean} 
+     * @param summary {String} 
      */
-    constructor(enabled) { 
+    constructor(enabled, summary) { 
         
-        V1ServiceKindSpec.initialize(this, enabled);
+        V1ServiceKindSpec.initialize(this, enabled, summary);
     }
 
     /**
@@ -34,8 +35,9 @@ class V1ServiceKindSpec {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, enabled) { 
+    static initialize(obj, enabled, summary) { 
         obj['enabled'] = enabled;
+        obj['summary'] = summary;
     }
 
     /**

@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/appvia/kore/pkg/utils"
 
@@ -94,6 +95,11 @@ func (p *Provider) Catalog(ctx kore.Context, serviceProvider *servicesv1.Service
 			return kore.ServiceProviderCatalog{}, fmt.Errorf("%q service name is invalid, must match %s", catalogService.Name, kore.ResourceNameFilter.String())
 		}
 
+		summary := catalogService.Description
+		if summary == "" {
+			summary = strings.Title(catalogService.Name)
+		}
+
 		serviceKind := servicesv1.ServiceKind{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       servicesv1.ServiceKindGVK.Kind,
@@ -105,8 +111,8 @@ func (p *Provider) Catalog(ctx kore.Context, serviceProvider *servicesv1.Service
 			},
 			Spec: servicesv1.ServiceKindSpec{
 				DisplayName:      getMetadataStringVal(catalogService.Metadata, MetadataKeyDisplayName, ""),
+				Summary:          summary,
 				Description:      getMetadataStringVal(catalogService.Metadata, MetadataKeyDescription, ""),
-				Summary:          catalogService.Description,
 				ImageURL:         getMetadataStringVal(catalogService.Metadata, MetadataKeyImageURL, ""),
 				DocumentationURL: getMetadataStringVal(catalogService.Metadata, MetadataKeyDocumentationURL, ""),
 			},
@@ -188,8 +194,9 @@ func parseCatalogPlan(service osb.Service, catalogPlan osb.Plan) (*servicesv1.Se
 		},
 		Spec: servicesv1.ServicePlanSpec{
 			Kind:             service.Name,
-			Summary:          fmt.Sprintf("%s service - %s plan", service.Name, catalogPlan.Name),
-			Description:      catalogPlan.Description,
+			DisplayName:      getMetadataStringVal(catalogPlan.Metadata, MetadataKeyDisplayName, ""),
+			Summary:          catalogPlan.Description,
+			Description:      getMetadataStringVal(catalogPlan.Metadata, MetadataKeyDescription, ""),
 			Schema:           schemaStr,
 			CredentialSchema: credentialsSchemaStr,
 		},

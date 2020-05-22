@@ -44,7 +44,7 @@ class ServiceOptionsForm extends React.Component {
     return () => {
       const selectedServicePlan = this.props.servicePlans.find(p => p.metadata.name === servicePlanName)
       Modal.info({
-        title: (<><Title level={4}>{selectedServicePlan.spec.description}</Title><Text>{selectedServicePlan.spec.summary}</Text></>),
+        title: (<><Title level={4}>{selectedServicePlan.spec.summary}</Title><Text>{selectedServicePlan.spec.description}</Text></>),
         content: <PlanViewer
           plan={selectedServicePlan}
           resourceType="service"
@@ -82,7 +82,7 @@ class ServiceOptionsForm extends React.Component {
           })(
             <Radio.Group onChange={this.onServicePlanChange}>
               {servicePlans.map((p, idx) => (
-                <Radio.Button key={idx} value={p.metadata.name}>{p.spec.description}</Radio.Button>
+                <Radio.Button key={idx} value={p.metadata.name}>{p.spec.displayName || p.spec.summary}</Radio.Button>
               ))}
             </Radio.Group>
           )}

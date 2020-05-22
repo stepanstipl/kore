@@ -6832,7 +6832,8 @@
     },
     "v1.ServiceKindSpec": {
       "required": [
-        "enabled"
+        "enabled",
+        "summary"
       ],
       "properties": {
         "credentialSchema": {
@@ -6933,7 +6934,6 @@
     "v1.ServicePlanSpec": {
       "required": [
         "kind",
-        "description",
         "summary"
       ],
       "properties": {
@@ -6944,6 +6944,9 @@
           "type": "string"
         },
         "description": {
+          "type": "string"
+        },
+        "displayName": {
           "type": "string"
         },
         "kind": {
@@ -7014,7 +7017,6 @@
     "v1.ServiceProviderSpec": {
       "required": [
         "type",
-        "description",
         "summary"
       ],
       "properties": {
@@ -7113,11 +7115,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
-        "userClaims",
         "clientID",
         "clientSecret",
         "issuer",
-        "clientScopes"
+        "clientScopes",
+        "userClaims"
       ],
       "properties": {
         "clientID": {
