@@ -191,7 +191,7 @@ func (p servicePlansHandler) listServicePlans(req *restful.Request, resp *restfu
 		kind := strings.ToLower(req.QueryParameter("kind"))
 
 		list, err := p.ServicePlans().ListFiltered(req.Request.Context(), func(plan servicesv1.ServicePlan) bool {
-			if kind != "" && plan.Kind != kind {
+			if kind != "" && plan.Spec.Kind != kind {
 				return false
 			}
 			if !user.IsGlobalAdmin() && plan.Annotations[kore.AnnotationSystem] == "true" {
