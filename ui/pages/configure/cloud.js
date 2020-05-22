@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { Alert, Tabs } from 'antd'
+import { Tabs } from 'antd'
 
 import Breadcrumb from '../../lib/components/layout/Breadcrumb'
 import GKECredentialsList from '../../lib/components/credentials/GKECredentialsList'
@@ -10,6 +10,9 @@ import PlanList from '../../lib/components/plans/PlanList'
 import PolicyList from '../../lib/components/policies/PolicyList'
 import GCPProjectAutomationSettings from '../../lib/components/setup/GCPProjectAutomationSettings'
 import CloudTabs from '../../lib/components/common/CloudTabs'
+import ServiceAdmin from '../../lib/components/services/ServiceAdmin'
+import getConfig from 'next/config'
+const { publicRuntimeConfig } = getConfig()
 
 class ConfigureCloudPage extends React.Component {
 
@@ -29,11 +32,6 @@ class ConfigureCloudPage extends React.Component {
     return (
       <>
         <Breadcrumb items={[{ text: 'Configure' }, { text: 'Cloud' }]} />
-        <Alert
-          message="Select the cloud provider to configure the settings"
-          type="info"
-          style={{ marginBottom: '20px' }}
-        />
         <CloudTabs defaultSelectedKey={selectedCloud} handleSelectCloud={this.handleSelectCloud}/>
         {selectedCloud === 'GCP' ? (
           <Tabs activeKey={gcpActiveKey} onChange={(key) => this.setState({ gcpActiveKey: key })} tabPosition="left" style={{ marginTop: '20px' }}>
@@ -43,14 +41,14 @@ class ConfigureCloudPage extends React.Component {
             <Tabs.TabPane tab="Project credentials" key="projects">
               <GKECredentialsList />
             </Tabs.TabPane>
-            <Tabs.TabPane tab="Plans" key="plans">
-              <PlanList kind="GKE" tabActiveKey={gcpActiveKey} />
-            </Tabs.TabPane>
-            <Tabs.TabPane tab="Policies" key="policies">
-              <PolicyList kind="GKE"/>
-            </Tabs.TabPane>
             <Tabs.TabPane tab="Project automation" key="project_automation">
               <GCPProjectAutomationSettings tabActiveKey={gcpActiveKey} setTabActiveKey={(key) => this.setState({ gcpActiveKey: key })} />
+            </Tabs.TabPane>
+            <Tabs.TabPane tab="Cluster Plans" key="plans">
+              <PlanList kind="GKE" tabActiveKey={gcpActiveKey} />
+            </Tabs.TabPane>
+            <Tabs.TabPane tab="Cluster Policies" key="policies">
+              <PolicyList kind="GKE"/>
             </Tabs.TabPane>
           </Tabs>
         ) : null}
@@ -59,12 +57,17 @@ class ConfigureCloudPage extends React.Component {
             <Tabs.TabPane tab="Account credentials" key="accounts">
               <EKSCredentialsList />
             </Tabs.TabPane>
-            <Tabs.TabPane tab="Plans" key="plans">
+            <Tabs.TabPane tab="Cluster Plans" key="plans">
               <PlanList kind="EKS" tabActiveKey={awsActiveKey} />
             </Tabs.TabPane>
-            <Tabs.TabPane tab="Policies" key="policies">
+            <Tabs.TabPane tab="Cluster Policies" key="policies">
               <PolicyList kind="EKS" />
             </Tabs.TabPane>
+            {!publicRuntimeConfig.featureGates['services'] ? null : 
+              <Tabs.TabPane tab="Cloud Services" key="services">
+                <ServiceAdmin cloud="AWS" />
+              </Tabs.TabPane>
+            }
           </Tabs>
         ) : null}
       </>

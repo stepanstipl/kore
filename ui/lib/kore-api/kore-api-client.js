@@ -88,6 +88,12 @@ class KoreApiClient {
   GetServicePlanSchemaForKind = (kind) => this.apis.default.GetServicePlanSchemaForKind({ kind })
   GetServicePlanSchemaForPlan = (kind, name) => this.apis.default.GetServicePlanSchemaForPlan({ kind, name })
 
+  // Services
+  ListServiceProviders = () => this.apis.default.ListServiceProviders()
+  ListServiceKinds = () => this.apis.default.ListServiceKinds()
+  GetServiceKind = (name) => this.apis.default.GetServiceKind({ name })
+  UpdateServiceKind = (name, kind) => this.apis.default.UpdateServiceKind({ name, body: kind })
+
   // Audit
   ListAuditEvents = () => this.apis.default.ListAuditEvents()
 

@@ -463,3 +463,6 @@ generate-release-notes:
 .PHONY: kind-dev
 kind-dev:
 	scripts/kind_dev.sh
+
+kind-dev-down:
+	kind delete cluster --name kore
