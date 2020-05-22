@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import { patterns } from '../../../utils/validation'
 import { Button, Form, Input, Alert, Select, Collapse } from 'antd'
 import KoreApi from '../../../kore-api'
-import PlanOptionsForm from '../../plans/PlanOptionsForm'
+import UsePlanForm from '../../plans/UsePlanForm'
 import V1ServiceCredentials from '../../../kore-api/model/V1ServiceCredentials'
 import V1ServiceCredentialsSpec from '../../../kore-api/model/V1ServiceCredentialsSpec'
 import { NewV1ObjectMeta, NewV1Ownership } from '../../../utils/model'
@@ -307,7 +307,7 @@ class ServiceCredentialForm extends React.Component {
         {servicePlan && this.state.planSchemaFound ? (
           <Collapse style={{ marginBottom: '24px' }} >
             <Collapse.Panel header="Customize service binding parameters" forceRender={true}>
-              <PlanOptionsForm
+              <UsePlanForm
                 team={this.props.team}
                 resourceType="servicecredential"
                 kind={servicePlan.spec.kind}

@@ -10,7 +10,7 @@ import PlanList from '../../lib/components/plans/PlanList'
 import PolicyList from '../../lib/components/policies/PolicyList'
 import GCPProjectAutomationSettings from '../../lib/components/setup/GCPProjectAutomationSettings'
 import CloudTabs from '../../lib/components/common/CloudTabs'
-import ServiceAdmin from '../../lib/components/services/ServiceAdmin'
+import CloudServiceAdmin from '../../lib/components/services/CloudServiceAdmin'
 import getConfig from 'next/config'
 const { publicRuntimeConfig } = getConfig()
 
@@ -65,7 +65,7 @@ class ConfigureCloudPage extends React.Component {
             </Tabs.TabPane>
             {!publicRuntimeConfig.featureGates['services'] ? null : 
               <Tabs.TabPane tab="Cloud Services" key="services">
-                <ServiceAdmin cloud="AWS" />
+                <CloudServiceAdmin cloud="AWS" />
               </Tabs.TabPane>
             }
           </Tabs>

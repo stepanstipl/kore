@@ -157,7 +157,7 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
     const value = this.props.value || []
     const selectedNodeGroup = selectedNodeGroupIndex >= 0 ? value[selectedNodeGroupIndex] : null
     const displayName = this.props.displayName || startCase(name)
-    const description = this.props.mode === 'manage' ? 'Set default node groups for clusters created from this plan' : 'Manage node groups for this cluster'
+    const description = this.props.manage ? 'Set default node groups for clusters created from this plan' : 'Manage node groups for this cluster'
 
     let instanceTypes = []
     let amiType = null

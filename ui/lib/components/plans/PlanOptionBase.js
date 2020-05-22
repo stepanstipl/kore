@@ -15,8 +15,9 @@ export default class PlanOptionBase extends React.Component {
     onChange: PropTypes.func,
     displayName: PropTypes.string,
     validationErrors: PropTypes.array,
-    mode: PropTypes.oneOf(['manage','use']), // mode=manage means we're editing a PLAN, mode=use means we're USING a plan e.g. to make/edit a cluster
-    team: PropTypes.object, // may be optionally used by custom plan option components to give richer interface when mode=use.
+    manage: PropTypes.bool, // manage means we're editing a PLAN, false/unspecified means we're USING a plan e.g. to make/edit a cluster
+    mode: PropTypes.oneOf(['create','view','edit']),
+    team: PropTypes.object, // may be optionally used by custom plan option components to give richer interface when manage=false.
   }
 
   describe = (property) => {
@@ -54,7 +55,7 @@ export default class PlanOptionBase extends React.Component {
     return values
   }
 
-  validationErrors = name => {
+  validationErrors = (name) => {
     if (!this.props.validationErrors) {
       return null
     }
@@ -66,7 +67,7 @@ export default class PlanOptionBase extends React.Component {
     return valErrors.map((ve, i) => <Alert key={`${name}.valError.${i}`} type="error" message={ve.message} style={{ marginTop: '10px' }} />)
   }
 
-  hasValidationErrors = name => {
+  hasValidationErrors = (name) => {
     const dotName = name.replace(/\[([0-9+])\]/g, '.$1')
     return this.props.validationErrors && this.props.validationErrors.some(v => v.field.indexOf(dotName) === 0)
   }

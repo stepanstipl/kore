@@ -1,12 +1,16 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
-import { Form, Input, Checkbox, InputNumber, Select, Button, Card, Alert } from 'antd'
+import { Form, Input, InputNumber, Select, Button, Card, Alert, Icon, Switch } from 'antd'
 const { TextArea } = Input
 import { startCase } from 'lodash'
 import CustomPlanOptionRegistry from './custom'
 import PlanOptionBase from './PlanOptionBase'
 import KeyMap from './custom/KeyMap'
+import ConstrainedDropdown from './custom/ConstrainedDropdown'
 
+/**
+ * PlanOption represents a single option on a plan form. Use Manage(Service/Cluster)PlanForm or UsePlanForm to manage/use a plan rather than using this directly.
+ */
 export default class PlanOption extends PlanOptionBase {
   static propTypes = {
     help: PropTypes.string,
@@ -70,12 +74,14 @@ export default class PlanOption extends PlanOptionBase {
           case 'string': {
             if (property.format === 'multiline') {
               return <TextArea value={value} readOnly={!editable} onChange={(e) => onChange(name, e.target.value)} rows='20' />
+            } else if (property.enum) {
+              return <ConstrainedDropdown readOnly={!editable} value={value} allowedValues={property.enum} onChange={(e) => onChange(name, e)} />
             } else {
               return <Input value={value} readOnly={!editable} onChange={(e) => onChange(name, e.target.value)} />
             }
           }
           case 'boolean': {
-            return <Checkbox checked={value} disabled={!editable} onChange={(e) => onChange(name, e.target.checked)} />
+            return <Switch checked={value} disabled={!editable} onChange={(v) => onChange(name, v)} checkedChildren={<Icon type="check" />} unCheckedChildren={<Icon type="close" />} />
           }
           case 'number': {
             return <InputNumber value={value} readOnly={!editable} onChange={(v) => onChange(name, v)} />

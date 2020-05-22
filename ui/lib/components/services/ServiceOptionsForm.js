@@ -6,7 +6,7 @@ const { Text, Title } = Typography
 const { Option } = Select
 
 import PlanViewer from '../plans/PlanViewer'
-import PlanOptionsForm from '../plans/PlanOptionsForm'
+import UsePlanForm from '../plans/UsePlanForm'
 
 class ServiceOptionsForm extends React.Component {
   static propTypes = {
@@ -106,7 +106,7 @@ class ServiceOptionsForm extends React.Component {
         {selectedServicePlan ? (
           <Collapse defaultActiveKey="plan">
             <Collapse.Panel key="plan" header="Customize service parameters">
-              <PlanOptionsForm
+              <UsePlanForm
                 team={this.props.team}
                 resourceType="service"
                 kind={selectedServiceKind}

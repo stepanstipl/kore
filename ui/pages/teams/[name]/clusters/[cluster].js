@@ -8,7 +8,7 @@ import getConfig from 'next/config'
 const { publicRuntimeConfig } = getConfig()
 import KoreApi from '../../../../lib/kore-api'
 import Breadcrumb from '../../../../lib/components/layout/Breadcrumb'
-import PlanOptionsForm from '../../../../lib/components/plans/PlanOptionsForm'
+import UsePlanForm from '../../../../lib/components/plans/UsePlanForm'
 import ComponentStatusTree from '../../../../lib/components/common/ComponentStatusTree'
 import ResourceStatusTag from '../../../../lib/components/resources/ResourceStatusTag'
 import { clusterProviderIconSrcMap } from '../../../../lib/utils/ui-helpers'
@@ -269,7 +269,7 @@ class ClusterPage extends React.Component {
                       </>
                     )}
                   </Form.Item>
-                  <PlanOptionsForm
+                  <UsePlanForm
                     team={team}
                     resourceType="cluster"
                     kind={cluster.spec.kind}

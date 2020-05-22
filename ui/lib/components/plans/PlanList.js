@@ -3,7 +3,7 @@ import { List, Alert, Icon, Drawer, Typography, Button } from 'antd'
 const { Title, Text } = Typography
 
 import PlanItem from './PlanItem'
-import PlanForm from './PlanForm'
+import ManageClusterPlanForm from './ManageClusterPlanForm'
 import ResourceList from '../resources/ResourceList'
 import PlanViewer from './PlanViewer'
 import KoreApi from '../../kore-api'
@@ -52,14 +52,9 @@ class PlanList extends ResourceList {
     }
   }
 
-  handleValidationErrors = validationErrors => {
-    this.setState({ validationErrors })
-  }
-
-  processAndClearValidationErrors = process => {
-    return args => {
+  processPlanCreateEdit = (process) => {
+    return (args) => {
       process && process(args)
-      this.handleValidationErrors(null)
     }
   }
 
@@ -77,7 +72,7 @@ class PlanList extends ResourceList {
   }
 
   render() {
-    const { resources, view, edit, add, validationErrors } = this.state
+    const { resources, view, edit, add } = this.state
 
     return (
       <>
@@ -101,7 +96,7 @@ class PlanList extends ResourceList {
               <Drawer
                 title={<><Title level={4}>{view.spec.summary}</Title><Text>{view.spec.description}</Text></>}
                 visible={Boolean(view)}
-                onClose={this.view(false)}
+                onClose={() => this.view(false)}
                 width={900}
               >
                 <PlanViewer
@@ -116,15 +111,14 @@ class PlanList extends ResourceList {
               <Drawer
                 title={<><Title level={4}>{edit.spec.summary}</Title><Text>{edit.spec.description}</Text></>}
                 visible={Boolean(edit)}
-                onClose={this.processAndClearValidationErrors(this.edit(false))}
+                onClose={() => this.edit(false)}
                 width={900}
               >
-                <PlanForm
+                <ManageClusterPlanForm
+                  mode="edit"
                   kind={this.props.kind}
                   data={edit}
-                  validationErrors={validationErrors}
-                  handleValidationErrors={this.handleValidationErrors}
-                  handleSubmit={this.processAndClearValidationErrors(this.handleEditSave)}
+                  handleSubmit={(args) => this.handleEditSave(args)}
                   displayUnassociatedPlanWarning={this.unassociatedPlanWarning(edit)}
                 />
               </Drawer>
@@ -134,14 +128,13 @@ class PlanList extends ResourceList {
               <Drawer
                 title={<Title level={4}>New {this.props.kind} plan</Title>}
                 visible={add}
-                onClose={this.processAndClearValidationErrors(this.add(false))}
+                onClose={() => this.add(false)}
                 width={900}
               >
-                <PlanForm
+                <ManageClusterPlanForm
+                  mode="create"
                   kind={this.props.kind}
-                  validationErrors={validationErrors}
-                  handleValidationErrors={this.handleValidationErrors}
-                  handleSubmit={this.processAndClearValidationErrors(this.handleAddSave)}
+                  handleSubmit={(args) => this.handleAddSave(args)}
                 />
               </Drawer>
             ) : null}
