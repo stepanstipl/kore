@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types'
 import moment from 'moment'
-import { List, Avatar, Icon, Typography, Popconfirm, message } from 'antd'
+import { List, Icon, Typography, Popconfirm, message } from 'antd'
 const { Text } = Typography
 
 import ResourceStatusTag from '../../resources/ResourceStatusTag'
@@ -40,7 +40,6 @@ class NamespaceClaim extends AutoRefreshComponent {
       return null
     }
 
-    const clusterName = namespaceClaim.spec.cluster.name
     const created = moment(namespaceClaim.metadata.creationTimestamp).fromNow()
     const deleted = namespaceClaim.metadata.deletionTimestamp ? moment(namespaceClaim.metadata.deletionTimestamp).fromNow() : false
 
@@ -67,16 +66,11 @@ class NamespaceClaim extends AutoRefreshComponent {
 
     return (
       <List.Item actions={actions()}>
-        <List.Item.Meta
-          avatar={<Avatar icon="block" />}
-          title={<Text>{namespaceClaim.spec.name} <Text style={{ fontFamily: 'monospace', marginLeft: '15px' }}>{clusterName}</Text></Text>}
-          description={
-            <div>
-              <Text type='secondary'>Created {created}</Text>
-              {deleted ? <Text type='secondary'><br/>Deleted {deleted}</Text> : null }
-            </div>
-          }
-        />
+        <List.Item.Meta title={namespaceClaim.spec.name} />
+        <div>
+          <Text type='secondary'>Created {created}</Text>
+          {deleted && <Text type='secondary'><br/>Deleted {deleted}</Text>}
+        </div>
       </List.Item>
     )
   }

@@ -77,13 +77,11 @@ class Service extends AutoRefreshComponent {
         <List.Item.Meta
           avatar={<Avatar icon="database" />}
           title={<Link href="/teams/[name]/services/[service]" as={`/teams/${team}/services/${service.metadata.name}`}><a><Text>{service.spec.kind} <Text style={{ fontFamily: 'monospace', marginLeft: '15px' }}>{service.metadata.name}</Text></Text></a></Link>}
-          description={
-            <div>
-              <Text type='secondary'>Created {created}</Text>
-              {deleted ? <Text type='secondary'><br/>Deleted {deleted}</Text> : null }
-            </div>
-          }
         />
+        <div>
+          <Text type='secondary'>Created {created}</Text>
+          {deleted ? <Text type='secondary'><br/>Deleted {deleted}</Text> : null }
+        </div>
       </List.Item>
     )
   }

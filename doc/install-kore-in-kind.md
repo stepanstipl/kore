@@ -71,6 +71,8 @@
 
 1. Install the Helm chart
 
+    Ensure you have helm v3 installed: https://github.com/helm/helm/releases
+
     ```
     helm install --namespace kore kore ./charts/kore --wait -f ./charts/my_values.yaml
     ```
