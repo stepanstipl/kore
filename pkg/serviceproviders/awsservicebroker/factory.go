@@ -101,6 +101,45 @@ func (d ProviderFactory) JSONSchema() string {
 			"s3BucketKey": {
 				"type": "string",
 				"default": "templates/latest/"
+			},
+			"allowEmptyCredentialSchema": {
+				"type": "boolean",
+				"default": false
+			},
+			"defaultPlans": {
+				"type": "array",
+				"items": {
+					"type": "string",
+					"minLength": 1
+				}
+			},
+			"includeKinds": {
+				"type": "array",
+				"items": {
+					"type": "string",
+					"minLength": 1
+				}
+			},
+			"excludeKinds": {
+				"type": "array",
+				"items": {
+					"type": "string",
+					"minLength": 1
+				}
+			},
+			"includePlans": {
+				"type": "array",
+				"items": {
+					"type": "string",
+					"minLength": 1
+				}
+			},
+			"excludePlans": {
+				"type": "array",
+				"items": {
+					"type": "string",
+					"minLength": 1
+				}
 			}
 		}
 	}`
@@ -127,8 +166,8 @@ func (d ProviderFactory) Create(ctx kore.Context, serviceProvider *servicesv1.Se
 
 	clientConfiguration := osb.DefaultClientConfiguration()
 	osbConfig := openservicebroker.ProviderConfiguration{
-		ClientConfiguration: *clientConfiguration,
-		DefaultPlanNames:    config.DefaultPlanNames,
+		ClientConfiguration:  *clientConfiguration,
+		CatalogConfiguration: config.CatalogConfiguration,
 	}
 
 	osbConfig.URL = fmt.Sprintf("https://%s-aws-servicebroker.kore-serviceprovider-%s.svc", serviceProvider.Name, serviceProvider.Name)
