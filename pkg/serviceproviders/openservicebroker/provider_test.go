@@ -339,7 +339,7 @@ var _ = Describe("Provider", func() {
 
 		When("a default plan doesn't have a schema", func() {
 			BeforeEach(func() {
-				providerConfig.DefaultPlanNames = []string{Service1Name + "-" + plan1Name}
+				providerConfig.DefaultPlans = []string{Service1Name + "-" + plan1Name}
 				plan := createPlan(plan1ID, plan1Name)
 				plan.Schemas.ServiceInstance = nil
 				service := createService(Service1ID, Service1Name, []osb.Plan{plan})
@@ -355,7 +355,7 @@ var _ = Describe("Provider", func() {
 
 		When("a default plan doesn't have a credentials schema", func() {
 			BeforeEach(func() {
-				providerConfig.DefaultPlanNames = []string{Service1Name + "-" + plan1Name}
+				providerConfig.DefaultPlans = []string{Service1Name + "-" + plan1Name}
 				plan := createPlan(plan1ID, plan1Name)
 				plan.Schemas.ServiceBinding = nil
 				service := createService(Service1ID, Service1Name, []osb.Plan{plan})
@@ -381,7 +381,7 @@ var _ = Describe("Provider", func() {
 
 		When("there are multiple default plans for the same service", func() {
 			BeforeEach(func() {
-				providerConfig.DefaultPlanNames = []string{Service1Name + "-" + plan1Name, Service1Name + "-" + plan2Name}
+				providerConfig.DefaultPlans = []string{Service1Name + "-" + plan1Name, Service1Name + "-" + plan2Name}
 			})
 
 			It("should error", func() {

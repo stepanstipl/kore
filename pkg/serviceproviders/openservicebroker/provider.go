@@ -83,6 +83,13 @@ func (p *Provider) Catalog(ctx kore.Context, serviceProvider *servicesv1.Service
 	}
 
 	for _, catalogService := range osbCatalog.Services {
+		if len(p.config.IncludeKinds) > 0 && !utils.Contains(catalogService.Name, p.config.IncludeKinds) {
+			continue
+		}
+		if utils.Contains(catalogService.Name, p.config.ExcludeKinds) {
+			continue
+		}
+
 		if !kore.ResourceNameFilter.MatchString(catalogService.Name) {
 			return kore.ServiceProviderCatalog{}, fmt.Errorf("%q service name is invalid, must match %s", catalogService.Name, kore.ResourceNameFilter.String())
 		}
@@ -116,7 +123,7 @@ func (p *Provider) Catalog(ctx kore.Context, serviceProvider *servicesv1.Service
 				return kore.ServiceProviderCatalog{}, err
 			}
 
-			if utils.Contains(servicePlan.Name, p.config.DefaultPlanNames) {
+			if utils.Contains(servicePlan.Name, p.config.DefaultPlans) {
 				if servicePlan.Spec.Schema == "" {
 					return kore.ServiceProviderCatalog{}, fmt.Errorf("%s plan does not have a schema for provisioning", servicePlan.Name)
 				}
@@ -133,6 +140,13 @@ func (p *Provider) Catalog(ctx kore.Context, serviceProvider *servicesv1.Service
 				providerData.DefaultPlanID = catalogPlan.ID
 				serviceKind.Spec.Schema = servicePlan.Spec.Schema
 				serviceKind.Spec.CredentialSchema = servicePlan.Spec.CredentialSchema
+			}
+
+			if len(p.config.IncludePlans) > 0 && !utils.Contains(servicePlan.Name, p.config.IncludePlans) {
+				continue
+			}
+			if utils.Contains(servicePlan.Name, p.config.ExcludePlans) {
+				continue
 			}
 
 			catalog.Plans = append(catalog.Plans, *servicePlan)

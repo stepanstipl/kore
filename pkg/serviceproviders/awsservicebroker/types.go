@@ -16,6 +16,8 @@
 
 package awsservicebroker
 
+import "github.com/appvia/kore/pkg/serviceproviders/openservicebroker"
+
 // ProviderConfiguration is the data type for the provider configuration
 type ProviderConfiguration struct {
 	ChartRepositoryType string `json:"chartRepositoryType"`
@@ -37,8 +39,8 @@ type ProviderConfiguration struct {
 	S3BucketRegion string `json:"s3BucketRegion"`
 	// S3BucketKey is the path in the S3 bucket used to store the CloudFormation templates for the service plans
 	S3BucketKey string `json:"s3BucketKey"`
-	// DefaultPlanNames is a list of plans to use as default for each service kind in a format as `[kind]-[plan name]`
-	DefaultPlanNames []string
+
+	openservicebroker.CatalogConfiguration `json:",inline"`
 }
 
 func DefaultProviderConfiguration() *ProviderConfiguration {

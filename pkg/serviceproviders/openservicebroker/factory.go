@@ -98,6 +98,45 @@ func (p ProviderFactory) JSONSchema() string {
 						}
 					}
 				}
+			},
+			"allowEmptyCredentialSchema": {
+				"type": "boolean",
+				"default": false
+			},
+			"defaultPlans": {
+				"type": "array",
+				"items": {
+					"type": "string",
+					"minLength": 1
+				}
+			},
+			"includeKinds": {
+				"type": "array",
+				"items": {
+					"type": "string",
+					"minLength": 1
+				}
+			},
+			"excludeKinds": {
+				"type": "array",
+				"items": {
+					"type": "string",
+					"minLength": 1
+				}
+			},
+			"includePlans": {
+				"type": "array",
+				"items": {
+					"type": "string",
+					"minLength": 1
+				}
+			},
+			"excludePlans": {
+				"type": "array",
+				"items": {
+					"type": "string",
+					"minLength": 1
+				}
 			}
 		}
 	}`
