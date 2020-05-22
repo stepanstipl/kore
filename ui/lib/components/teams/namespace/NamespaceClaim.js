@@ -65,7 +65,7 @@ class NamespaceClaim extends AutoRefreshComponent {
     }
 
     return (
-      <List.Item actions={actions()}>
+      <List.Item style={{ paddingTop: 0 }} actions={actions()}>
         <List.Item.Meta title={namespaceClaim.spec.name} />
         <div>
           <Text type='secondary'>Created {created}</Text>

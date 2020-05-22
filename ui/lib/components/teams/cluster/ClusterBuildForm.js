@@ -135,7 +135,7 @@ class ClusterBuildForm extends React.Component {
         message.loading('Cluster build requested...')
         return redirect({
           router: Router,
-          path: `/teams/${this.props.team.metadata.name}`
+          path: `/teams/${this.props.team.metadata.name}/clusters/${values.clusterName}`
         })
       } catch (err) {
         this.setState({

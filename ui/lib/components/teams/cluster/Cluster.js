@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 import moment from 'moment'
 import Link from 'next/link'
-import { List, Icon, Typography, Modal, Popconfirm, message, Tooltip } from 'antd'
+import { List, Icon, Typography, Modal, Popconfirm, message, Tag, Tooltip } from 'antd'
 const { Text, Paragraph } = Typography
 
 import { clusterProviderIconSrcMap, inProgressStatusList } from '../../../utils/ui-helpers'
@@ -12,6 +12,7 @@ class Cluster extends AutoRefreshComponent {
   static propTypes = {
     team: PropTypes.string.isRequired,
     cluster: PropTypes.object.isRequired,
+    plan: PropTypes.object.isRequired,
     namespaceClaims: PropTypes.array.isRequired,
     deleteCluster: PropTypes.func.isRequired
   }
@@ -55,7 +56,7 @@ class Cluster extends AutoRefreshComponent {
   }
 
   render() {
-    const { cluster, team } = this.props
+    const { cluster, team, plan } = this.props
 
     if (cluster.deleted) {
       return null
@@ -69,7 +70,7 @@ class Cluster extends AutoRefreshComponent {
       const status = cluster.status.status || 'Pending'
 
       actions.push((
-        <Link key="view" href="/teams/[name]/clusters/[cluster]" as={`/teams/${team}/clusters/${cluster.metadata.name}`}><a><Tooltip title="Cluster status details"><Icon type="info-circle" /></Tooltip></a></Link>
+        <Link key="view" href="/teams/[name]/clusters/[cluster]" as={`/teams/${team}/clusters/${cluster.metadata.name}`}><a><Tooltip title="Cluster details"><Icon type="info-circle" /></Tooltip></a></Link>
       ))
 
       if (!inProgressStatusList.includes(status)) {
@@ -92,10 +93,10 @@ class Cluster extends AutoRefreshComponent {
     }
 
     return (
-      <List.Item key={cluster.metadata.name} actions={actions()} style={{ paddingTop: 0 }}>
+      <List.Item key={cluster.metadata.name} actions={actions()} style={{ paddingTop: 0, paddingBottom: '5px' }}>
         <List.Item.Meta
           avatar={<img src={clusterProviderIconSrcMap[cluster.spec.kind]} height="32px" />}
-          title={<Link href="/teams/[name]/clusters/[cluster]" as={`/teams/${team}/clusters/${cluster.metadata.name}`}><a><Text style={{ fontFamily: 'monospace' }}>{cluster.metadata.name}</Text></a></Link>}
+          title={<><Link href="/teams/[name]/clusters/[cluster]" as={`/teams/${team}/clusters/${cluster.metadata.name}`}><a><Text style={{ marginRight: '15px', fontSize: '16px', textDecoration: 'underline' }}>{cluster.metadata.name}</Text></a></Link><Tag style={{ margin: 0 }}>{plan.spec.description}</Tag></>}
         />
         <div>
           <Text type='secondary'>Created {created}</Text>

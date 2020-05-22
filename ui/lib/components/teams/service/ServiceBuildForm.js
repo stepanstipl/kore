@@ -107,7 +107,7 @@ class ServiceBuildForm extends React.Component {
     return serviceResource
   }
 
-  getServiceCredentialsResource = (name, service, cluster, namespaceClaim) => {
+  getServiceCredentialsResource = (name, secretName, service, cluster, namespaceClaim) => {
     const serviceCredential = new V1ServiceCredentials()
     serviceCredential.setApiVersion('servicecredentials.services.kore.appvia.io/v1')
     serviceCredential.setKind('ServiceCredentials')
@@ -130,6 +130,7 @@ class ServiceBuildForm extends React.Component {
       namespace: this.props.team.metadata.name
     }))
     serviceCredentialSpec.setClusterNamespace(namespaceClaim.spec.name)
+    serviceCredentialSpec.setSecretName(secretName)
     serviceCredentialSpec.setConfiguration({})
 
     serviceCredential.setSpec(serviceCredentialSpec)
@@ -193,23 +194,24 @@ class ServiceBuildForm extends React.Component {
 
         if (this.state.bindingsToCreate.length > 0) {
           await asyncForEach(this.state.bindingsToCreate, async (bindingNamespace) => {
+            const namespaceClaim = this.state.namespaceClaims.items.find(ns => ns.metadata.name === bindingNamespace)
             try {
               const secretName = this.props.form.getFieldValue(`${bindingNamespace}-secretName`)
-              const namespaceClaim = this.state.namespaceClaims.items.find(ns => ns.metadata.name === bindingNamespace)
               const cluster = this.state.clusters.items.find(c => c.metadata.name === namespaceClaim.spec.cluster.name)
-              const resource = this.getServiceCredentialsResource(secretName, service, cluster, namespaceClaim)
-              await api.UpdateServiceCredentials(this.props.team.metadata.name, secretName, resource)
-              message.loading(`Service binding for namespace "${bindingNamespace}" requested...`)
+              const credentialName = `${cluster.metadata.name}-${namespaceClaim.spec.name}-${secretName}`
+              const resource = this.getServiceCredentialsResource(credentialName, secretName, service, cluster, namespaceClaim)
+              await api.UpdateServiceCredentials(this.props.team.metadata.name, credentialName, resource)
+              message.loading(`Service binding for namespace "${namespaceClaim.spec.name}" requested...`)
             } catch (error) {
               console.error('Error creating service binding', error)
-              message.error(`Failed to create service binding for namespace "${bindingNamespace}"`)
+              message.error(`Failed to create service binding for namespace "${namespaceClaim.spec.name}"`)
             }
           })
         }
 
         return redirect({
           router: Router,
-          path: `/teams/${this.props.team.metadata.name}?tab=services`
+          path: `/teams/${this.props.team.metadata.name}/services/${values.serviceName}`
         })
       } catch (err) {
         console.error('Error saving service', err)
@@ -247,7 +249,7 @@ class ServiceBuildForm extends React.Component {
     this.setState({ selectedServicePlan: plan })
     try {
       // check if there is a schema for the binding for the selected service kind/plan
-      const schema = await (await KoreApi.client()).GetServiceCredentialSchemaForPlan(this.props.team.metadata.name, this.state.selectedServiceKind, plan)
+      const schema = await (await KoreApi.client()).GetServiceCredentialSchema(plan)
       this.setState({ planSchemaFound: Boolean(schema) })
     } catch (err) {
       console.error('Error getting service credentials schema for plan', err)
@@ -294,7 +296,7 @@ class ServiceBuildForm extends React.Component {
     const { selectedCloud, serviceKinds, selectedServiceKind, selectedServicePlan, formErrorMessage, submitting, bindingSelectData, planSchemaFound } = this.state
     let filteredServiceKinds = []
     if (selectedCloud) {
-      filteredServiceKinds = serviceKinds.items.filter(sk => getKoreLabel(sk, 'platform') === selectedCloud)
+      filteredServiceKinds = serviceKinds.items.filter(sk => getKoreLabel(sk, 'platform') === selectedCloud && sk.spec.enabled)
     }
 
     let filteredServicePlans = []

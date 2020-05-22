@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types'
 import moment from 'moment'
-import { List, Icon, Typography, Popconfirm, message, Tooltip, Avatar } from 'antd'
+import { List, Icon, Typography, Popconfirm, message, Tooltip, Avatar, Tag } from 'antd'
 const { Text } = Typography
 
 import { inProgressStatusList } from '../../../utils/ui-helpers'
@@ -51,7 +51,7 @@ class Service extends AutoRefreshComponent {
       const status = service.status.status || 'Pending'
 
       actions.push((
-        <Link key="view" href="/teams/[name]/services/[service]" as={`/teams/${team}/services/${service.metadata.name}`}><a><Tooltip title="Service status details"><Icon type="info-circle" /></Tooltip></a></Link>
+        <Link key="view" href="/teams/[name]/services/[service]" as={`/teams/${team}/services/${service.metadata.name}`}><a><Tooltip title="Service details"><Icon type="info-circle" /></Tooltip></a></Link>
       ))
 
       if (!inProgressStatusList.includes(status)) {
@@ -74,10 +74,10 @@ class Service extends AutoRefreshComponent {
     }
 
     return (
-      <List.Item actions={actions()}>
+      <List.Item actions={actions()} style={{ paddingTop: 0, paddingBottom: '5px' }}>
         <List.Item.Meta
           avatar={serviceKind && serviceKind.spec.imageURL ? <Avatar src={serviceKind.spec.imageURL} /> : <Avatar icon="cloud-server" />}
-          title={<Link href="/teams/[name]/services/[service]" as={`/teams/${team}/services/${service.metadata.name}`}><a><Text>{service.spec.kind} <Text style={{ fontFamily: 'monospace', marginLeft: '15px' }}>{service.metadata.name}</Text></Text></a></Link>}
+          title={<><Link href="/teams/[name]/services/[service]" as={`/teams/${team}/services/${service.metadata.name}`}><a><Text style={{ marginRight: '15px', fontSize: '16px', textDecoration: 'underline' }}>{service.metadata.name}</Text></a></Link><Tag style={{ margin: 0 }}>{serviceKind.spec.displayName}</Tag></>}
         />
         <div>
           <Text type='secondary'>Created {created}</Text>

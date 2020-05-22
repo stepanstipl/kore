@@ -1,12 +1,14 @@
 import React from 'react'
 import Link from 'next/link'
+import moment from 'moment'
 import PropTypes from 'prop-types'
-import { Button, Divider, Icon, List, message, Typography } from 'antd'
-const { Paragraph } = Typography
+import { Button, Col, Divider, Icon, message, Row, Tooltip, Tag, Typography } from 'antd'
+const { Paragraph, Text } = Typography
 
 import KoreApi from '../../../kore-api'
 import copy from '../../../utils/object-copy'
 import Service from './Service'
+import { inProgressStatusList, statusColorMap, statusIconMap } from '../../../utils/ui-helpers'
 
 class ServicesTab extends React.Component {
 
@@ -18,20 +20,24 @@ class ServicesTab extends React.Component {
   state = {
     dataLoading: true,
     services: [],
-    serviceKinds: []
+    serviceKinds: [],
+    serviceCredentials: []
   }
 
   async fetchComponentData() {
     try {
+      const team = this.props.team.metadata.name
       const api = await KoreApi.client()
-      let [ services, serviceKinds ] = await Promise.all([
-        api.ListServices(this.props.team.metadata.name),
-        api.ListServiceKinds(this.props.team.metadata.name)
+      let [ services, serviceKinds, serviceCredentials ] = await Promise.all([
+        api.ListServices(team),
+        api.ListServiceKinds(team),
+        api.ListServiceCredentials(team)
       ])
       services = services.items.filter(s => !s.spec.cluster || !s.spec.cluster.name)
       serviceKinds = serviceKinds.items
+      serviceCredentials = serviceCredentials.items
       this.props.getServiceCount && this.props.getServiceCount(services.length)
-      return { services, serviceKinds }
+      return { services, serviceKinds, serviceCredentials }
     } catch (err) {
       console.error('Unable to load data for services tab', err)
       return {}
@@ -90,9 +96,30 @@ class ServicesTab extends React.Component {
     }
   }
 
+  serviceCredentialList = ({ serviceCredentials }) => {
+    return (
+      <Row style={{ marginLeft: '50px' }}>
+        <Col>
+          <Text strong style={{ marginRight: '8px' }}>Bindings: </Text>
+          {serviceCredentials.map(serviceCredential => {
+            const status = serviceCredential.status.status || 'Pending'
+            const created = moment(serviceCredential.metadata.creationTimestamp).fromNow()
+            return (
+              <span key={serviceCredential.metadata.name} style={{ marginRight: '5px' }}>
+                <Tooltip title={`Created ${created}`}>
+                  <Tag color={statusColorMap[status] || 'red'}>{serviceCredential.spec.cluster.name}/{serviceCredential.spec.clusterNamespace} {inProgressStatusList.includes(status) ? <Icon type="loading" /> : <Icon type={statusIconMap[status]} />}</Tag>
+                </Tooltip>
+              </span>
+            )
+          })}
+        </Col>
+      </Row>
+    )
+  }
+
   render() {
     const { team } = this.props
-    const { dataLoading, services, serviceKinds } = this.state
+    const { dataLoading, services, serviceKinds, serviceCredentials } = this.state
 
     const hasActiveServices =  Boolean(services.filter(c => !c.deleted).length)
 
@@ -111,26 +138,27 @@ class ServicesTab extends React.Component {
         ) : (
           <>
             {!hasActiveServices && <Paragraph type="secondary">No services found for this team</Paragraph>}
-            {services.length > 0 && (
-              <List
-                dataSource={services}
-                renderItem={service => {
-                  return (
-                    <Service
-                      team={team.metadata.name}
-                      service={service}
-                      serviceKind={serviceKinds.find(sk => sk.metadata.name === service.spec.kind)}
-                      deleteService={this.deleteService}
-                      handleUpdate={this.handleResourceUpdated('services')}
-                      handleDelete={this.handleResourceDeleted('services')}
-                      refreshMs={10000}
-                      propsResourceDataKey="service"
-                      resourceApiPath={`/teams/${team.metadata.name}/services/${service.metadata.name}`}
-                    />
-                  )
-                }}
-              />
-            )}
+
+            {services.map((service, idx) => {
+              const filteredServiceCredentials = (serviceCredentials || []).filter(sc => sc.spec.service.name === service.metadata.name)
+              return (
+                <React.Fragment key={service.metadata.name}>
+                  <Service
+                    team={team.metadata.name}
+                    service={service}
+                    serviceKind={serviceKinds.find(sk => sk.metadata.name === service.spec.kind)}
+                    deleteService={this.deleteService}
+                    handleUpdate={this.handleResourceUpdated('services')}
+                    handleDelete={this.handleResourceDeleted('services')}
+                    refreshMs={10000}
+                    propsResourceDataKey="service"
+                    resourceApiPath={`/teams/${team.metadata.name}/services/${service.metadata.name}`}
+                  />
+                  {!service.deleted && filteredServiceCredentials.length > 0 && this.serviceCredentialList({ serviceCredentials: filteredServiceCredentials })}
+                  {idx < services.length - 1 && <Divider />}
+                </React.Fragment>
+              )
+            })}
           </>
         )}
       </>
