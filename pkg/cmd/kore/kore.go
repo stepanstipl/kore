@@ -27,6 +27,7 @@ import (
 	"github.com/appvia/kore/pkg/cmd/kore/create"
 	"github.com/appvia/kore/pkg/cmd/kore/delete"
 	"github.com/appvia/kore/pkg/cmd/kore/edit"
+	"github.com/appvia/kore/pkg/cmd/kore/gen"
 	"github.com/appvia/kore/pkg/cmd/kore/get"
 	"github.com/appvia/kore/pkg/cmd/kore/kubeconfig"
 	"github.com/appvia/kore/pkg/cmd/kore/local"
@@ -99,6 +100,7 @@ func NewKoreCommand(streams cmdutil.Streams) (*cobra.Command, error) {
 		NewCmdCompletion(factory),
 		apply.NewCmdApply(factory),
 		get.NewCmdGet(factory),
+		gen.NewCmdGen(factory, root),
 		delete.NewCmdDelete(factory),
 		edit.NewCmdEdit(factory),
 		profiles.NewCmdProfiles(factory),
