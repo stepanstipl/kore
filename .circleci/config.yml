@@ -374,7 +374,7 @@ jobs:
             docker push ${KORE_UI_IMAGE}:${CIRCLE_TAG:-latest}
             docker push ${KORE_UI_IMAGE}:${CIRCLE_SHA1}
 
-  release-qa:
+  deploy-qa:
     docker:
       - image: alpine/helm:3.1.2
     steps:
@@ -392,6 +392,25 @@ jobs:
             export VERSION=${CIRCLE_SHA1}
             echo "Deploying to QA, version: ${VERSION}"
             hack/deploy-qa.sh
+
+  deploy-demo:
+    docker:
+      - image: alpine/helm:3.1.2
+    steps:
+      - checkout
+      - run:
+          name: Installing GNU
+          command: |
+            apk add bash coreutils curl --update
+      - kube-orb/install-kubeconfig:
+        kubeconfig: KUBECONFIG_DATA_DEMO
+      - run:
+          name: Deploying to Demo
+          command: |
+            export BUILD_ID=${CIRCLE_SHA1}
+            export VERSION=${CIRCLE_SHA1}
+            echo "Deploying to demo, version: ${VERSION}"
+            hack/deploy-demo.sh
 
   # This releases the local images for kore-apiserver and the auth-proxy; to
   # ensure we have a complete e2e
@@ -504,13 +523,24 @@ workflows:
           requires:
             - build-ui
             - test-ui
-      - release-qa:
+      - deploy-qa:
           filters:
             branches:
               only: master
           requires:
             - release
             - release-ui
+      - request-deploy-demo:
+          type: approval
+          requires:
+            - release
+            - release-ui
+      - deploy-demo:
+          filters:
+            branches:
+              only: master
+          requires:
+            - request-deploy-demo
 
   e2e_gke:
     when: << pipeline.parameters.enable_gke_e2e >>
