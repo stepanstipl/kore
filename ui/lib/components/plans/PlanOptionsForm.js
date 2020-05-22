@@ -16,8 +16,10 @@ class PlanOptionsForm extends React.Component {
     planValues: PropTypes.object,
     onPlanChange: PropTypes.func,
     validationErrors: PropTypes.array,
-    mode: PropTypes.oneOf(['create','edit','view']).isRequired
+    mode: PropTypes.oneOf(['create', 'edit', 'view']).isRequired,
+    schemaFound: PropTypes.func
   }
+
   static initialState = {
     dataLoading: true,
     schema: null,
@@ -78,6 +80,8 @@ class PlanOptionsForm extends React.Component {
     if (schema && typeof schema === 'string') {
       schema = JSON.parse(schema)
     }
+    
+    this.props.schemaFound && this.props.schemaFound(Boolean(schema))
 
     this.setState({
       ...this.state,

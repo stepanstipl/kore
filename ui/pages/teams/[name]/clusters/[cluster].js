@@ -128,10 +128,10 @@ class ClusterPage extends React.Component {
         }
       }, done)
 
-      message.loading(`Service Credential deletion requested: ${name}`)
+      message.loading(`Service binding deletion requested: ${name}`)
     } catch (err) {
-      console.error('Error deleting service credential', err)
-      message.error('Error deleting service credential, please try again.')
+      console.error('Error deleting service binding', err)
+      message.error('Error deleting service binding, please try again.')
     }
   }
 
@@ -153,7 +153,7 @@ class ClusterPage extends React.Component {
         }
       }
     })
-    message.loading(`Service credential "${serviceCredential.metadata.name}" requested`)
+    message.loading(`Service binding "${serviceCredential.metadata.name}" requested`)
   }
 
   componentDidMount = () => {
@@ -288,7 +288,7 @@ class ClusterPage extends React.Component {
         {publicRuntimeConfig.featureGates['services'] ? (
           <>
             <Drawer
-              title="Create service credential"
+              title="Create service binding"
               placement="right"
               closable={false}
               onClose={this.createServiceCredential(false)}
@@ -306,7 +306,7 @@ class ClusterPage extends React.Component {
             <Row type="flex" gutter={[16,16]}>
               <Col span={24} xl={24}>
                 <Card
-                  title={<div><Text style={{ marginRight: '10px' }}>Service credentials</Text><Badge style={{ backgroundColor: '#1890ff' }} count={serviceCredentials.items.filter(c => !c.deleted).length} /></div>}
+                  title={<div><Text style={{ marginRight: '10px' }}>Service bindings</Text><Badge style={{ backgroundColor: '#1890ff' }} count={serviceCredentials.items.filter(c => !c.deleted).length} /></div>}
                   style={{ marginBottom: '20px' }}
                   extra={
                     <div>

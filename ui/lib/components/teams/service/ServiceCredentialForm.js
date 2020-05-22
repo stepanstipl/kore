@@ -29,7 +29,8 @@ class ServiceCredentialForm extends React.Component {
       formErrorMessage: false,
       dataLoading: true,
       validationErrors: null,
-      config: null
+      config: null,
+      planSchemaFound: false
     }
   }
 
@@ -62,7 +63,7 @@ class ServiceCredentialForm extends React.Component {
         services: services || { items: [] },
         clusters: clusters || { items: [] },
         namespaceClaims: namespaceClaims || [],
-        servicePlan: servicePlan,
+        servicePlan,
         dataLoading: false
       })
 
@@ -153,7 +154,7 @@ class ServiceCredentialForm extends React.Component {
 
       try {
         const existing = await (await KoreApi.client()).GetServiceCredentials(this.props.team.metadata.name, name)
-        if (Object.keys(existing).length) {
+        if (existing) {
           return this.setState({
             submitting: false,
             formErrorMessage: `A service credential with the name "${name}" already exists`,
@@ -303,9 +304,9 @@ class ServiceCredentialForm extends React.Component {
             </Select>
           )}
         </Form.Item>
-        {servicePlan ? (
-          <Collapse style={{ marginBottom: '24px' }}>
-            <Collapse.Panel header="Customize service credential parameters">
+        {servicePlan && this.state.planSchemaFound ? (
+          <Collapse style={{ marginBottom: '24px' }} >
+            <Collapse.Panel header="Customize service binding parameters" forceRender={true}>
               <PlanOptionsForm
                 team={this.props.team}
                 resourceType="servicecredential"
@@ -314,6 +315,7 @@ class ServiceCredentialForm extends React.Component {
                 mode="create"
                 validationErrors={validationErrors}
                 onPlanChange={this.handleConfigurationUpdate}
+                schemaFound={(found) => this.setState({ planSchemaFound: found })}
               />
             </Collapse.Panel>
           </Collapse>

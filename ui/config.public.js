@@ -12,5 +12,6 @@ module.exports = {
   authOpenidCallbackUrl: config.auth.openid.callbackURL,
   gtmId: config.kore.gtmId,
   showPrototypes: config.kore.showPrototypes,
-  featureGates: config.kore.featureGates
+  featureGates: config.kore.featureGates,
+  cloudServiceProviderMap: config.cloudServiceProviderMap
 }
