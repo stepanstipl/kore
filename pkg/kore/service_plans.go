@@ -36,7 +36,7 @@ import (
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . ServicePlans
 type ServicePlans interface {
 	// Delete is used to delete a service plan in the kore
-	Delete(context.Context, string) (*servicesv1.ServicePlan, error)
+	Delete(ctx context.Context, name string, ignoreReadonly bool) (*servicesv1.ServicePlan, error)
 	// Get returns the service plan
 	Get(context.Context, string) (*servicesv1.ServicePlan, error)
 	// GetSchema returns the service plan schema
@@ -50,7 +50,7 @@ type ServicePlans interface {
 	// Has checks if a service plan exists
 	Has(context.Context, string) (bool, error)
 	// Update is responsible for updating a service plan
-	Update(context.Context, *servicesv1.ServicePlan) error
+	Update(ctx context.Context, plan *servicesv1.ServicePlan, ignoreReadonly bool) error
 	// GetEditablePlanParams returns with the editable service plan parameters for a specific team and service kind
 	GetEditablePlanParams(ctx context.Context, team string, clusterKind string) (map[string]bool, error)
 }
@@ -60,7 +60,7 @@ type servicePlansImpl struct {
 }
 
 // Update is responsible for updating a service plan
-func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePlan) error {
+func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePlan, ignoreReadonly bool) error {
 	if err := IsValidResourceName("plan", plan.Name); err != nil {
 		return err
 	}
@@ -80,11 +80,13 @@ func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePl
 		return err
 	}
 
-	if existing != nil && existing.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
-		return validation.NewError("the plan can not be updated").WithFieldError(validation.FieldRoot, validation.ReadOnly, "plan is read-only")
-	}
-	if plan.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
-		return validation.NewError("the plan can not be updated").WithFieldError(validation.FieldRoot, validation.ReadOnly, "read-only flag can not be set")
+	if !ignoreReadonly {
+		if existing != nil && existing.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
+			return validation.NewError("the plan can not be updated").WithFieldError(validation.FieldRoot, validation.ReadOnly, "plan is read-only")
+		}
+		if plan.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
+			return validation.NewError("the plan can not be updated").WithFieldError(validation.FieldRoot, validation.ReadOnly, "read-only flag can not be set")
+		}
 	}
 
 	if existing != nil {
@@ -138,7 +140,7 @@ func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePl
 }
 
 // Delete is used to delete a service plan in the kore
-func (p servicePlansImpl) Delete(ctx context.Context, name string) (*servicesv1.ServicePlan, error) {
+func (p servicePlansImpl) Delete(ctx context.Context, name string, ignoreReadonly bool) (*servicesv1.ServicePlan, error) {
 	plan := &servicesv1.ServicePlan{}
 	err := p.Store().Client().Get(ctx,
 		store.GetOptions.InNamespace(HubNamespace),
@@ -154,8 +156,10 @@ func (p servicePlansImpl) Delete(ctx context.Context, name string) (*servicesv1.
 		return nil, err
 	}
 
-	if plan.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
-		return nil, validation.NewError("the plan can not be deleted").WithFieldError(validation.FieldRoot, validation.ReadOnly, "policy is read-only")
+	if !ignoreReadonly {
+		if plan.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
+			return nil, validation.NewError("the plan can not be deleted").WithFieldError(validation.FieldRoot, validation.ReadOnly, "policy is read-only")
+		}
 	}
 
 	servicesWithPlan, err := p.getServicesWithPlan(ctx, name)

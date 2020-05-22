@@ -393,7 +393,7 @@ func (p *serviceProvidersImpl) unregisterKind(ctx context.Context, kind string) 
 		return fmt.Errorf("failed to get service plans: %w", err)
 	}
 	for _, plan := range plans.Items {
-		if _, err := p.ServicePlans().Delete(ctx, plan.Name); err != nil && err != ErrNotFound {
+		if _, err := p.ServicePlans().Delete(ctx, plan.Name, true); err != nil && err != ErrNotFound {
 			return fmt.Errorf("failed to delete service plan %q: %w", plan.Name, err)
 		}
 	}

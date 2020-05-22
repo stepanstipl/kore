@@ -18,8 +18,6 @@ package assets
 
 import (
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
-	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -29,8 +27,8 @@ func GetDefaultPlanPolicies() []*configv1.PlanPolicy {
 		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "default-gke",
-				Labels: map[string]string{
-					corev1.LabelReadonly: "true",
+				Annotations: map[string]string{
+					"kore.appvia.io/readonly": "true",
 				},
 			},
 			Spec: configv1.PlanPolicySpec{
@@ -53,8 +51,8 @@ func GetDefaultPlanPolicies() []*configv1.PlanPolicy {
 		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "default-eks",
-				Labels: map[string]string{
-					corev1.LabelReadonly: "true",
+				Annotations: map[string]string{
+					"kore.appvia.io/readonly": "true",
 				},
 			},
 			Spec: configv1.PlanPolicySpec{

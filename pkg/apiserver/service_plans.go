@@ -224,7 +224,7 @@ func (p servicePlansHandler) updateServicePlan(req *restful.Request, resp *restf
 			return nil
 		}
 
-		if err := p.ServicePlans().Update(req.Request.Context(), plan); err != nil {
+		if err := p.ServicePlans().Update(req.Request.Context(), plan, false); err != nil {
 			return err
 		}
 
@@ -237,7 +237,7 @@ func (p servicePlansHandler) deleteServicePlan(req *restful.Request, resp *restf
 	handleErrors(req, resp, func() error {
 		name := req.PathParameter("name")
 
-		plan, err := p.ServicePlans().Delete(req.Request.Context(), name)
+		plan, err := p.ServicePlans().Delete(req.Request.Context(), name, false)
 		if err != nil {
 			return err
 		}
