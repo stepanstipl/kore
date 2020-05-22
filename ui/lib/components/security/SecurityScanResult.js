@@ -1,6 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Card, Descriptions, List, Tooltip, Icon, Button, Collapse, Spin, message, Drawer } from 'antd'
+import { Card, Descriptions, List, Tooltip, Icon, Button, Collapse, message, Drawer } from 'antd'
 import moment from 'moment'
 import Link from 'next/link'
 import getConfig from 'next/config'
@@ -78,7 +78,7 @@ export default class SecurityScanResult extends React.Component {
           onClose={() => this.closeRule()}
           width={700}
         >
-          {loadingRule ? <div style={{ textAlign: 'center' }}><Spin /></div> : null}
+          {loadingRule ? <div style={{ textAlign: 'center' }}><Icon type="loading" /></div> : null}
           {ruleDetails !== null ? <SecurityRule rule={ruleDetails} /> : null}
         </Drawer>
         <Card title="Scan Details" style={{ marginBottom: '20px' }}>
@@ -101,7 +101,7 @@ export default class SecurityScanResult extends React.Component {
               <Collapse.Panel header={`Security status history for this ${result.spec.resource.kind.toLowerCase()}`}>
                 {historyLoading ? (
                   <div style={{ textAlign: 'center' }}>
-                    <Spin />
+                    <Icon type="loading" />
                   </div>
                 ) : null}
                 {history && !historyLoading ? (
