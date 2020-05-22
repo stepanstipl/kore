@@ -201,9 +201,9 @@ func (p servicePlansImpl) List(ctx context.Context) (*servicesv1.ServicePlanList
 // ListFiltered returns a list of service plans using the given filter.
 // A service plan is included if the filter function returns true
 func (p servicePlansImpl) ListFiltered(ctx context.Context, filter func(plan servicesv1.ServicePlan) bool) (*servicesv1.ServicePlanList, error) {
-	var res []servicesv1.ServicePlan
+	res := []servicesv1.ServicePlan{}
 
-	servicePlansList, err := p.ServicePlans().List(ctx)
+	servicePlansList, err := p.List(ctx)
 	if err != nil {
 		return nil, err
 	}

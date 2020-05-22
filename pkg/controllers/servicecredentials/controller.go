@@ -89,11 +89,6 @@ func (c *Controller) RunWithDependencies(ctx context.Context, mgr manager.Manage
 	c.ctrl = ctrl
 	c.Interface = hi
 
-	if !c.Config().IsFeatureGateEnabled(kore.FeatureGateServices) {
-		c.logger.Debug("servicecredentials controller is disabled")
-		return nil
-	}
-
 	c.logger.Debug("controller has been started")
 
 	// @step: setup watches for the resources

@@ -20,11 +20,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/appvia/kore/pkg/utils/kubernetes"
-
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
+
 	"github.com/appvia/kore/pkg/controllers"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 

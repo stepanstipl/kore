@@ -38,7 +38,7 @@ setup() {
 @test "We should see the status of the gke cluster change to deleting" {
   ${KORE} get cluster ${CLUSTER} -t ${TEAM} || skip
 
-  retry 10 "${KORE} get gkes ${CLUSTER} -t ${TEAM} -o json | jq '.status.status' | grep -i deleting"
+  retry 20 "${KORE} get gkes ${CLUSTER} -t ${TEAM} -o json | jq '.status.status' | grep -i deleting"
   [[ "$status" -eq 0 ]]
 }
 

@@ -50,13 +50,14 @@ golang:
 	@go version
 	@echo "GOFLAGS: $$GOFLAGS"
 
-generate-clusterappman-manifests:
-	@echo "--> Generating static manifests"
-	@go generate -tags=dev ./pkg/clusterappman >/dev/null
+generate-assets:
+	@echo "--> Generating assets"
+	@go generate ./pkg/kore/assets
+	@go generate -tags=dev ./pkg/kore/assets
 
-check-generate-clusterappman-manifests: generate-clusterappman-manifests
+check-generate-assets: generate-assets
 	@if [ $$(git status --porcelain pkg/apiclient | wc -l) -gt 0 ]; then \
-		echo "There are local changes after running 'make generate-clusterappman-manifests'. Did you forget to run it?"; \
+		echo "There are local changes after running 'make generate-assets'. Did you forget to run it?"; \
 		git status --porcelain pkg/apiclient; \
 		exit 1; \
 	fi
@@ -64,7 +65,7 @@ check-generate-clusterappman-manifests: generate-clusterappman-manifests
 build: golang
 	@echo "--> Compiling the project ($(VERSION))"
 	@mkdir -p bin
-	@for binary in kore kore-apiserver auth-proxy kore-clusterappman; do \
+	@for binary in kore kore-apiserver auth-proxy; do \
 		echo "--> Building $${binary} binary" ; \
 		go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go || exit 1; \
 	done
@@ -87,11 +88,6 @@ kore-apiserver: golang
 	@echo "--> Compiling the kore-apiserver binary"
 	@mkdir -p bin
 	go build -ldflags "${LFLAGS}" -o bin/kore-apiserver cmd/kore-apiserver/*.go
-
-kore-clusterappman: golang
-	@echo "--> Compiling the kore-clusterappman binary"
-	@mkdir -p bin
-	go build -ldflags "${LFLAGS}" -o bin/kore-clusterappman cmd/kore-clusterappman/*.go
 
 docker-build:
 	@echo "--> Running docker"
@@ -374,7 +370,7 @@ check:
 	@$(MAKE) spelling
 	@$(MAKE) vet
 	@$(MAKE) verify-licences
-	@$(MAKE) check-generate-clusterappman-manifests
+	@$(MAKE) check-generate-assets
 
 test:
 	@echo "--> Running the tests"

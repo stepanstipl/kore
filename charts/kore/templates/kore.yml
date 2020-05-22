@@ -72,10 +72,6 @@ spec:
           - name: BUILD_ID
             value: {{ .Values.api.build }}
           {{- end }}
-          {{- if .Values.api.images.clusterappman }}
-          - name: CLUSTERAPPMAN_IMAGE
-            value: {{ .Values.api.images.clusterappman }}
-          {{- end }}
           - name: KORE_ENABLE_MANAGED_DEPS
             value: "true"
           - name: KUBE_IN_CLUSTER

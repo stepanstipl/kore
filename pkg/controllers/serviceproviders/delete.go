@@ -58,6 +58,16 @@ func (c *Controller) delete(
 			return reconcile.Result{Requeue: true}, nil
 		}
 
+		result, err := DeleteServices(
+			controllers.NewContext(ctx, logger, c.mgr.GetClient(), c),
+			kore.HubAdminTeam,
+			serviceProvider,
+			serviceProvider.Status.Components,
+		)
+		if err != nil || result.Requeue || result.RequeueAfter > 0 {
+			return result, err
+		}
+
 		complete, err := c.ServiceProviders().Unregister(kore.ServiceProviderContext{
 			Context: ctx,
 			Logger:  logger,

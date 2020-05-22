@@ -6,7 +6,7 @@ RUN apk add --no-cache ca-certificates git make
 
 COPY . /go/src/github.com/appvia/kore
 
-RUN cd /go/src/github.com/appvia/kore && make kore-apiserver kore-clusterappman
+RUN cd /go/src/github.com/appvia/kore && make kore-apiserver
 
 FROM alpine:3.11
 

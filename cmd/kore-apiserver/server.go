@@ -25,6 +25,8 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/appvia/kore/pkg/utils/kubernetes"
+
 	"github.com/appvia/kore/pkg/apiserver"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/persistence"
@@ -58,7 +60,7 @@ func invoke(ctx *cli.Context) error {
 			MetricsPort:   ctx.Int("metrics-port"),
 			SwaggerUIPath: "./swagger-ui",
 		},
-		Kubernetes: server.KubernetesAPI{
+		Kubernetes: kubernetes.KubernetesAPI{
 			InCluster:    ctx.Bool("in-cluster"),
 			KubeConfig:   ctx.String("kubeconfig"),
 			MasterAPIURL: ctx.String("kube-api-server"),
@@ -71,8 +73,6 @@ func invoke(ctx *cli.Context) error {
 			Authenticators:             ctx.StringSlice("kore-authentication-plugin"),
 			CertificateAuthority:       ctx.String("certificate-authority"),
 			CertificateAuthorityKey:    ctx.String("certificate-authority-key"),
-			ClusterAppManImage:         ctx.String("clusterappman-image"),
-			ManagedDependencies:        ctx.Bool("enable-managed-dependencies"),
 			EnableClusterProviderCheck: ctx.Bool("enable-cluster-provider-check"),
 			FeatureGates:               featuresGates,
 			HMAC:                       ctx.String("kore-hmac"),

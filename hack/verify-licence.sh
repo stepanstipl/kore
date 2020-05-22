@@ -6,8 +6,8 @@
 BOILERPLATE=${BOILERPLATE:-"hack/boilerplate.go.txt"}
 BOILERPLATE_LENGTH=$(cat ${BOILERPLATE}| wc -l | xargs)
 EXCLUDE_FILES=(
-  ./hack/generate/manifests_vfsdata.go
-  ./pkg/clusterappman/manifests_tools.go
+  ./pkg/kore/assets/applications_vfsdata.go
+  ./pkg/kore/assets/tools.go
   ./pkg/tools/tools.go
   ./pkg/kore/assets/json_meta_schemas.go
 )

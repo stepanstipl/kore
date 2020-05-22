@@ -70,7 +70,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		ensure := []controllers.EnsureFunc{
 			c.ensureFinalizer(serviceProvider, finalizer),
 			c.ensurePending(serviceProvider),
-			func(ctx context.Context) (result reconcile.Result, err error) {
+			func(ctx context.Context) (reconcile.Result, error) {
 				provider, complete, err := c.ServiceProviders().Register(kore.ServiceProviderContext{
 					Context: ctx,
 					Logger:  logger,
@@ -118,6 +118,35 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 							return reconcile.Result{}, err
 						}
 					}
+				}
+
+				var adminServices []servicesv1.Service
+				for _, service := range provider.AdminServices() {
+					service.Namespace = kore.HubAdminTeam
+					if service.Annotations == nil {
+						service.Annotations = map[string]string{}
+					}
+					service.Annotations[kore.AnnotationSystem] = "true"
+					adminServices = append(adminServices, service)
+
+					resource := corev1.MustGetOwnershipFromObject(&service)
+					serviceProvider.Status.Components.SetCondition(corev1.Component{
+						Name:     "Service/" + service.Name,
+						Status:   corev1.PendingStatus,
+						Message:  "",
+						Detail:   "",
+						Resource: &resource,
+					})
+				}
+
+				result, err := EnsureServices(
+					controllers.NewContext(ctx, logger, c.mgr.GetClient(), c),
+					adminServices,
+					serviceProvider,
+					serviceProvider.Status.Components,
+				)
+				if err != nil || result.Requeue || result.RequeueAfter > 0 {
+					return result, err
 				}
 
 				return reconcile.Result{}, nil

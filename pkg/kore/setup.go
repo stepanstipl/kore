@@ -114,6 +114,15 @@ func (h hubImpl) Setup(ctx context.Context) error {
 		}
 	}
 
+	for _, providerFactory := range ServiceProviderFactories() {
+		for _, provider := range providerFactory.DefaultProviders() {
+			provider.Namespace = HubNamespace
+			if err := h.ServiceProviders().Update(getAdminContext(ctx), &provider); err != nil {
+				return err
+			}
+		}
+	}
+
 	serviceProviders, err := h.ServiceProviders().List(getAdminContext(ctx))
 	if err != nil {
 		return err

@@ -17,6 +17,7 @@
 package apiserver
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/appvia/kore/pkg/apiserver/filters"
@@ -37,6 +38,26 @@ type serviceProvidersHandler struct {
 	kore.Interface
 	// DefaultHandler implements default features
 	DefaultHandler
+}
+
+func (p *serviceProvidersHandler) systemServiceProviderFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
+	handleErrors(req, resp, func() error {
+		name := req.PathParameter("name")
+
+		serviceProvider, err := p.ServiceProviders().Get(req.Request.Context(), name)
+		if err != nil && err != kore.ErrNotFound {
+			return err
+		}
+
+		if serviceProvider != nil && serviceProvider.Annotations[kore.AnnotationSystem] == "true" {
+			resp.WriteHeader(http.StatusForbidden)
+			return nil
+		}
+
+		// @step: continue with the chain
+		chain.ProcessFilter(req, resp)
+		return nil
+	})
 }
 
 // Register is called by the api server on registration
@@ -74,6 +95,7 @@ func (p *serviceProvidersHandler) Register(i kore.Interface, builder utils.PathB
 	ws.Route(
 		withAllErrors(ws.PUT("/{name}")).To(p.updateServiceProvider).
 			Filter(filters.Admin).
+			Filter(p.systemServiceProviderFilter).
 			Doc("Creates or updates a service provider").
 			Operation("UpdateServiceProvider").
 			Param(ws.PathParameter("name", "The name of the service provider you wish to create or update")).
@@ -84,6 +106,7 @@ func (p *serviceProvidersHandler) Register(i kore.Interface, builder utils.PathB
 	ws.Route(
 		withAllErrors(ws.DELETE("/{name}")).To(p.deleteServiceProvider).
 			Filter(filters.Admin).
+			Filter(p.systemServiceProviderFilter).
 			Doc("Deletes a service provider").
 			Operation("DeleteServiceProvider").
 			Param(ws.PathParameter("name", "The name of the service provider you wish to delete")).
@@ -128,6 +151,11 @@ func (p serviceProvidersHandler) updateServiceProvider(req *restful.Request, res
 			return err
 		}
 		provider.Name = name
+
+		if provider.Annotations[kore.AnnotationSystem] != "" {
+			writeError(req, resp, fmt.Errorf("setting %q annotation is not allowed", kore.AnnotationSystem), http.StatusForbidden)
+			return nil
+		}
 
 		if err := p.ServiceProviders().Update(req.Request.Context(), provider); err != nil {
 			return err

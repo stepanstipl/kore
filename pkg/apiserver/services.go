@@ -17,19 +17,55 @@
 package apiserver
 
 import (
+	"fmt"
 	"net/http"
+
+	"github.com/appvia/kore/pkg/kore/authentication"
+
+	"github.com/appvia/kore/pkg/kore"
 
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 
 	restful "github.com/emicklei/go-restful"
 )
 
+func (u teamHandler) systemServiceFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
+	handleErrors(req, resp, func() error {
+		name := req.PathParameter("name")
+		team := req.PathParameter("team")
+
+		service, err := u.Teams().Team(team).Services().Get(req.Request.Context(), name)
+		if err != nil && err != kore.ErrNotFound {
+			return err
+		}
+
+		if service != nil && service.Annotations[kore.AnnotationSystem] == "true" {
+			resp.WriteHeader(http.StatusForbidden)
+			return nil
+		}
+
+		// @step: continue with the chain
+		chain.ProcessFilter(req, resp)
+		return nil
+	})
+}
+
 // listServices returns all the services from a team
 func (u teamHandler) listServices(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
 		team := req.PathParameter("team")
 
-		list, err := u.Teams().Team(team).Services().List(req.Request.Context())
+		var list *servicesv1.ServiceList
+		var err error
+
+		user := authentication.MustGetIdentity(req.Request.Context())
+		if user.IsGlobalAdmin() {
+			list, err = u.Teams().Team(team).Services().List(req.Request.Context())
+		} else {
+			list, err = u.Teams().Team(team).Services().ListFiltered(req.Request.Context(), func(service servicesv1.Service) bool {
+				return service.Annotations[kore.AnnotationSystem] != "true"
+			})
+		}
 		if err != nil {
 			return err
 		}
@@ -44,12 +80,12 @@ func (u teamHandler) getService(req *restful.Request, resp *restful.Response) {
 		name := req.PathParameter("name")
 		team := req.PathParameter("team")
 
-		list, err := u.Teams().Team(team).Services().Get(req.Request.Context(), name)
+		service, err := u.Teams().Team(team).Services().Get(req.Request.Context(), name)
 		if err != nil {
 			return err
 		}
 
-		return resp.WriteHeaderAndEntity(http.StatusOK, list)
+		return resp.WriteHeaderAndEntity(http.StatusOK, service)
 	})
 }
 
@@ -61,6 +97,11 @@ func (u teamHandler) updateService(req *restful.Request, resp *restful.Response)
 		service := &servicesv1.Service{}
 		if err := req.ReadEntity(service); err != nil {
 			return err
+		}
+
+		if service.Annotations[kore.AnnotationSystem] != "" {
+			writeError(req, resp, fmt.Errorf("setting %q annotation is not allowed", kore.AnnotationSystem), http.StatusForbidden)
+			return nil
 		}
 
 		if err := u.Teams().Team(team).Services().Update(req.Request.Context(), service); err != nil {
