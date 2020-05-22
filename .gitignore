@@ -2,6 +2,7 @@
 .idea
 1
 /bin/
+generated/
 cmd/cluster-controller
 demo.env
 deploy/crds
