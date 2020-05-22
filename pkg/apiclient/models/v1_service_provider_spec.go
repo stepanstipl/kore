@@ -24,8 +24,7 @@ type V1ServiceProviderSpec struct {
 	Credentials *V1Ownership `json:"credentials,omitempty"`
 
 	// description
-	// Required: true
-	Description *string `json:"description"`
+	Description string `json:"description,omitempty"`
 
 	// summary
 	// Required: true
@@ -41,10 +40,6 @@ func (m *V1ServiceProviderSpec) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateCredentials(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateDescription(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -75,15 +70,6 @@ func (m *V1ServiceProviderSpec) validateCredentials(formats strfmt.Registry) err
 			}
 			return err
 		}
-	}
-
-	return nil
-}
-
-func (m *V1ServiceProviderSpec) validateDescription(formats strfmt.Registry) error {
-
-	if err := validate.Required("description", "body", m.Description); err != nil {
-		return err
 	}
 
 	return nil

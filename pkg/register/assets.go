@@ -6804,7 +6804,7 @@ spec:
                 for service using this plan
               type: string
             description:
-              description: Description provides a summary of the service kind
+              description: Description is a detailed description of the service kind
               type: string
             displayName:
               description: DisplayName refers to the display name of the service type
@@ -6830,7 +6830,10 @@ spec:
             summary:
               description: Summary provides a short title summary for the service
                 kind
+              minLength: 1
               type: string
+          required:
+          - summary
           type: object
       type: object
   version: v1
@@ -6908,8 +6911,10 @@ spec:
                 for service using this plan
               type: string
             description:
-              description: Description provides a summary of the configuration provided
-                by this plan
+              description: Description is a detailed description of the service plan
+              type: string
+            displayName:
+              description: DisplayName refers to the display name of the service type
               minLength: 1
               type: string
             kind:
@@ -6933,7 +6938,6 @@ spec:
               minLength: 1
               type: string
           required:
-          - description
           - kind
           - summary
           type: object
@@ -7038,8 +7042,7 @@ spec:
               - version
               type: object
             description:
-              description: Description provides a summary of the provider
-              minLength: 1
+              description: Description is a detailed description of the service provider
               type: string
             summary:
               description: Summary provides a short title summary for the provider
@@ -7050,7 +7053,6 @@ spec:
               minLength: 1
               type: string
           required:
-          - description
           - summary
           - type
           type: object
@@ -7186,7 +7188,7 @@ spec:
           properties:
             cluster:
               description: Cluster contains the reference to the cluster where the
-                credentials will be saved as a secret
+                service will be created
               properties:
                 group:
                   description: Group is the api group
@@ -7212,7 +7214,7 @@ spec:
               type: object
             clusterNamespace:
               description: ClusterNamespace is the target namespace in the cluster
-                where the secret will be created
+                where there the service will be created
               type: string
             configuration:
               description: Configuration are the configuration values for this service

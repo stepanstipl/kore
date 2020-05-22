@@ -40,14 +40,13 @@ type ServiceProviderSpec struct {
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
 	Type string `json:"type"`
-	// Description provides a summary of the provider
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Required
-	Description string `json:"description"`
 	// Summary provides a short title summary for the provider
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
 	Summary string `json:"summary"`
+	// Description is a detailed description of the service provider
+	// +kubebuilder:validation:Optional
+	Description string `json:"description,omitempty"`
 	// Configuration are the key+value pairs describing a service provider
 	// +kubebuilder:validation:Type=object
 	// +kubebuilder:validation:Optional

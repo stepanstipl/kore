@@ -22,13 +22,12 @@ class V1ServicePlanSpec {
     /**
      * Constructs a new <code>V1ServicePlanSpec</code>.
      * @alias module:model/V1ServicePlanSpec
-     * @param description {String} 
      * @param kind {String} 
      * @param summary {String} 
      */
-    constructor(description, kind, summary) { 
+    constructor(kind, summary) { 
         
-        V1ServicePlanSpec.initialize(this, description, kind, summary);
+        V1ServicePlanSpec.initialize(this, kind, summary);
     }
 
     /**
@@ -36,8 +35,7 @@ class V1ServicePlanSpec {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, description, kind, summary) { 
-        obj['description'] = description;
+    static initialize(obj, kind, summary) { 
         obj['kind'] = kind;
         obj['summary'] = summary;
     }
@@ -61,6 +59,9 @@ class V1ServicePlanSpec {
             }
             if (data.hasOwnProperty('description')) {
                 obj['description'] = ApiClient.convertToType(data['description'], 'String');
+            }
+            if (data.hasOwnProperty('displayName')) {
+                obj['displayName'] = ApiClient.convertToType(data['displayName'], 'String');
             }
             if (data.hasOwnProperty('kind')) {
                 obj['kind'] = ApiClient.convertToType(data['kind'], 'String');
@@ -119,6 +120,19 @@ class V1ServicePlanSpec {
      */
     setDescription(description) {
         this['description'] = description;
+    }
+/**
+     * @return {String}
+     */
+    getDisplayName() {
+        return this.displayName;
+    }
+
+    /**
+     * @param {String} displayName
+     */
+    setDisplayName(displayName) {
+        this['displayName'] = displayName;
     }
 /**
      * @return {String}
@@ -202,6 +216,11 @@ V1ServicePlanSpec.prototype['credentialSchema'] = undefined;
  * @member {String} description
  */
 V1ServicePlanSpec.prototype['description'] = undefined;
+
+/**
+ * @member {String} displayName
+ */
+V1ServicePlanSpec.prototype['displayName'] = undefined;
 
 /**
  * @member {String} kind

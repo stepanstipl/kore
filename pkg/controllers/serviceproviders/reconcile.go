@@ -99,6 +99,19 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 				for _, kind := range catalog.Kinds {
 					kind.Namespace = kore.HubNamespace
+
+					existing := &servicesv1.ServiceKind{}
+					existing.SetGroupVersionKind(kind.GroupVersionKind())
+					existing.Name = kind.Name
+					existing.Namespace = kind.Namespace
+					exists, err := kubernetes.GetIfExists(ctx, c.mgr.GetClient(), existing)
+					if err != nil {
+						return reconcile.Result{}, err
+					}
+					if exists {
+						kind.Spec.Enabled = existing.Spec.Enabled
+					}
+
 					if _, err := kubernetes.CreateOrUpdate(ctx, c.mgr.GetClient(), &kind); err != nil {
 						return reconcile.Result{}, err
 					}

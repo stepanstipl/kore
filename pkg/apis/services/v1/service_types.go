@@ -47,11 +47,11 @@ type ServiceSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinLength=1
 	Plan string `json:"plan"`
-	// Cluster contains the reference to the cluster where the credentials will be saved as a secret
-	// +kubebuilder:validation:Required
+	// Cluster contains the reference to the cluster where the service will be created
+	// +kubebuilder:validation:Optional
 	Cluster corev1.Ownership `json:"cluster,omitempty"`
-	// ClusterNamespace is the target namespace in the cluster where the secret will be created
-	// +kubebuilder:validation:Required
+	// ClusterNamespace is the target namespace in the cluster where there the service will be created
+	// +kubebuilder:validation:Optional
 	ClusterNamespace string `json:"clusterNamespace,omitempty"`
 	// Configuration are the configuration values for this service
 	// It will contain values from the plan + overrides by the user

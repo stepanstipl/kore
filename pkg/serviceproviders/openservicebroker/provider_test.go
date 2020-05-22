@@ -119,6 +119,12 @@ func createService(id string, name string, plans []osb.Plan) osb.Service {
 		BindingsRetrievable:  true,
 		PlanUpdatable:        utils.BoolPtr(true),
 		Plans:                plans,
+		Metadata: map[string]interface{}{
+			"displayName":      name + " displayName",
+			"longDescription":  name + " longDescription",
+			"imageUrl":         name + " imageUrl",
+			"documentationUrl": name + " documentationUrl",
+		},
 	}
 }
 
@@ -139,6 +145,10 @@ func createPlan(id string, name string) osb.Plan {
 					Parameters: credsSchema(name),
 				},
 			},
+		},
+		Metadata: map[string]interface{}{
+			"displayName":     name + " displayName",
+			"longDescription": name + " longDescription",
 		},
 	}
 }
@@ -268,6 +278,42 @@ var _ = Describe("Provider", func() {
 		})
 
 		It("should create service plans from the catalog plans", func() {
+			Expect(catalog.Kinds[0]).To(Equal(servicesv1.ServiceKind{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "ServiceKind",
+					APIVersion: servicesv1.GroupVersion.String(),
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "service-1",
+					Namespace: kore.HubNamespace,
+				},
+				Spec: servicesv1.ServiceKindSpec{
+					DisplayName:      "service-1 displayName",
+					Summary:          "service-1 description",
+					Description:      "service-1 longDescription",
+					DocumentationURL: "service-1 documentationUrl",
+					ImageURL:         "service-1 imageUrl",
+					ProviderData:     &apiextv1.JSON{Raw: []byte(`{"serviceID":"service-1-uuid"}`)},
+				},
+			}))
+			Expect(catalog.Kinds[1]).To(Equal(servicesv1.ServiceKind{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "ServiceKind",
+					APIVersion: servicesv1.GroupVersion.String(),
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "service-2",
+					Namespace: kore.HubNamespace,
+				},
+				Spec: servicesv1.ServiceKindSpec{
+					DisplayName:      "service-2 displayName",
+					Summary:          "service-2 description",
+					Description:      "service-2 longDescription",
+					DocumentationURL: "service-2 documentationUrl",
+					ImageURL:         "service-2 imageUrl",
+					ProviderData:     &apiextv1.JSON{Raw: []byte(`{"serviceID":"service-2-uuid"}`)},
+				},
+			}))
 			Expect(catalog.Plans[0]).To(Equal(servicesv1.ServicePlan{
 				TypeMeta: metav1.TypeMeta{
 					Kind:       "ServicePlan",
@@ -279,8 +325,9 @@ var _ = Describe("Provider", func() {
 				},
 				Spec: servicesv1.ServicePlanSpec{
 					Kind:             "service-1",
-					Description:      "plan-1 description",
-					Summary:          "service-1 service - plan-1 plan",
+					DisplayName:      "plan-1 displayName",
+					Summary:          "plan-1 description",
+					Description:      "plan-1 longDescription",
 					Schema:           schema("plan-1"),
 					CredentialSchema: credsSchema("plan-1"),
 					Configuration:    &apiextv1.JSON{Raw: []byte(`{"plan-1-param":"plan-1-value"}`)},
@@ -298,8 +345,9 @@ var _ = Describe("Provider", func() {
 				},
 				Spec: servicesv1.ServicePlanSpec{
 					Kind:             "service-1",
-					Description:      "plan-2 description",
-					Summary:          "service-1 service - plan-2 plan",
+					DisplayName:      "plan-2 displayName",
+					Summary:          "plan-2 description",
+					Description:      "plan-2 longDescription",
 					Schema:           schema("plan-2"),
 					CredentialSchema: credsSchema("plan-2"),
 					Configuration:    &apiextv1.JSON{Raw: []byte(`{"plan-2-param":"plan-2-value"}`)},
@@ -317,8 +365,9 @@ var _ = Describe("Provider", func() {
 				},
 				Spec: servicesv1.ServicePlanSpec{
 					Kind:             "service-2",
-					Description:      "plan-3 description",
-					Summary:          "service-2 service - plan-3 plan",
+					DisplayName:      "plan-3 displayName",
+					Summary:          "plan-3 description",
+					Description:      "plan-3 longDescription",
 					Schema:           schema("plan-3"),
 					CredentialSchema: credsSchema("plan-3"),
 					Configuration:    &apiextv1.JSON{Raw: []byte(`{"plan-3-param":"plan-3-value"}`)},

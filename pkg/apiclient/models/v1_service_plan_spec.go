@@ -24,8 +24,10 @@ type V1ServicePlanSpec struct {
 	CredentialSchema string `json:"credentialSchema,omitempty"`
 
 	// description
-	// Required: true
-	Description *string `json:"description"`
+	Description string `json:"description,omitempty"`
+
+	// display name
+	DisplayName string `json:"displayName,omitempty"`
 
 	// kind
 	// Required: true
@@ -49,10 +51,6 @@ type V1ServicePlanSpec struct {
 func (m *V1ServicePlanSpec) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateDescription(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateKind(formats); err != nil {
 		res = append(res, err)
 	}
@@ -64,15 +62,6 @@ func (m *V1ServicePlanSpec) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *V1ServicePlanSpec) validateDescription(formats strfmt.Registry) error {
-
-	if err := validate.Required("description", "body", m.Description); err != nil {
-		return err
-	}
-
 	return nil
 }
 

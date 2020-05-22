@@ -43,7 +43,8 @@ type V1ServiceKindSpec struct {
 	Schema string `json:"schema,omitempty"`
 
 	// summary
-	Summary string `json:"summary,omitempty"`
+	// Required: true
+	Summary *string `json:"summary"`
 }
 
 // Validate validates this v1 service kind spec
@@ -51,6 +52,10 @@ func (m *V1ServiceKindSpec) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateEnabled(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateSummary(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -63,6 +68,15 @@ func (m *V1ServiceKindSpec) Validate(formats strfmt.Registry) error {
 func (m *V1ServiceKindSpec) validateEnabled(formats strfmt.Registry) error {
 
 	if err := validate.Required("enabled", "body", m.Enabled); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *V1ServiceKindSpec) validateSummary(formats strfmt.Registry) error {
+
+	if err := validate.Required("summary", "body", m.Summary); err != nil {
 		return err
 	}
 
