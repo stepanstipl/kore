@@ -51,20 +51,20 @@ $ kore get plans <name> -o yaml
 Examples:
 $ kore -t <myteam> create cluster dev --plan gke-development --allocation <allocation_name>
 
-# Create a cluster and provision some clusters on there as well
+Create a cluster and provision some clusters on there as well
 $ kore -t <myteam> create cluster dev --plan gke-development -a <name> --cluster=app1,app2
 
-# Check the status of the cluster
+Check the status of the cluster
 $ kore -t <myteam> get cluster dev -o yaml
 
-# You can override the plan parameters using the --param
+You can override the plan parameters using the --param
 $ kore -t <myteam> create cluster dev --param authProxyAllowedIPs.0=1.1.1.1/8
 $ kore -t <myteam> create cluster dev --param authProxyAllowedIPs='["1.1.1.1/32","2,2,2,2"]'
 
-# Or you can add via an index
+Or you can add via an index
 $ kore -t <myteam> create cluster dev --param authProxyAllowedIPs.-1=127.0.0.0/8
 
-# Alternatively you can use json directly
+Alternatively you can use json directly
 $ kore -t <myteam> create cluster dev --param nodeGroups.1'='{json}|[json]'
 
 Note if you only have the one allocation for a given cloud provider in your team you can

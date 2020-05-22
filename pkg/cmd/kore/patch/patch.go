@@ -36,13 +36,13 @@ var (
 Patch allows you to apply patches to the resource managed in kore to add or
 remove values from a resource.
 
-# Update the size in a cluster resource
+Update the size in a cluster resource
 $ kore alpha patch clusters test spec.configuration.size 1 [-t <team>]
 
-# Update the allowed subnets
+Update the allowed subnets
 $ kore alpha patch clusters test spec.configuration.authProxyAllowedIPs.-1 127.0.0.0/8 [-t team]
 
-# Remove the value
+Remove the value
 $ kore alpha patch clusters test spec.configuration.authProxyAllowedIPs.0
 `
 )

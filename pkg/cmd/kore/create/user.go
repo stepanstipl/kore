@@ -34,7 +34,7 @@ var (
 	userLongDesciption = `
 Provides the ability to provision a user in kore.
 
-# Create the test user
+Create the test user
 $ kore create username test -e test@appiva.io
 `
 )

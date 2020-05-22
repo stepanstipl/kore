@@ -51,7 +51,7 @@ $ kore get namespaceclaims
 Examples:
 $ kore -t <myteam> create servicecredentials db-creds --service my-database --cluster my-cluster --cluster-namespace dev
 
-# Check the status of the service credentials
+Check the status of the service credentials
 $ kore -t <myteam> get servicecredentials db-creds -o yaml
 `
 )

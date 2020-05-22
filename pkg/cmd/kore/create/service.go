@@ -50,13 +50,13 @@ $ kore get serviceplan <name> -o yaml
 Examples:
 $ kore -t <myteam> create service foo --plan some-plan
 
-# You can override the plan parameters using the --param
+You can override the plan parameters using the --param
 $ kore -t <myteam> create service foo --param configkey=value
 
-# You can using JSON values when setting a parameter
+You can using JSON values when setting a parameter
 $ kore -t <myteam> create service foo --param 'configlist=[1, 2, 3]'
 
-# Check the status of the service
+Check the status of the service
 $ kore -t <myteam> get service foo -o yaml
 `
 )

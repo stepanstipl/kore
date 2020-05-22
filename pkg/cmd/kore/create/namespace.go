@@ -38,10 +38,10 @@ retrieve the clusters you have available you can run:
 $ kore get clusters -t <team>
 
 Examples:
-# Create a namespace on cluster 'dev'
+Create a namespace on cluster 'dev'
 $ kore create namespace -c cluster -t <team>
 
-# Deleting a namespace on the cluster
+Deleting a namespace on the cluster
 $ kore delete namespaceclaim
 
 You can list the namespace you have already provisioned via

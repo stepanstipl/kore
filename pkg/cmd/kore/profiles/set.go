@@ -37,10 +37,10 @@ Paths are a dot delimited name where each token represents either an attribute
 name or a map key i.e. profiles.local.server
 
 Examples:
-# Set the server value of the local profile
+Set the server value of the local profile
 kore profile set profiles.local.server https://1.2.3.4
 
-# Set the default team for the profile
+Set the default team for the profile
 kore profile set current.team myteam
 `
 )

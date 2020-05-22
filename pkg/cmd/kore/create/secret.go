@@ -42,7 +42,7 @@ files and literals.
 $ kore create secret <name> -t <team> [options]
 
 Examples:
-# Create a secret from a file
+Create a secret from a file
 $ kore create secret gke --from-file=<key>=<filename>
 `
 )
