@@ -99,29 +99,19 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 				for _, kind := range catalog.Kinds {
 					kind.Namespace = kore.HubNamespace
-					exists, err := kubernetes.CheckIfExists(ctx, c.mgr.GetClient(), &kind)
-					if err != nil {
+					if _, err := kubernetes.CreateOrUpdate(ctx, c.mgr.GetClient(), &kind); err != nil {
 						return reconcile.Result{}, err
-					}
-
-					if !exists {
-						if err := c.mgr.GetClient().Create(ctx, &kind); err != nil {
-							return reconcile.Result{}, err
-						}
 					}
 				}
 
 				for _, plan := range catalog.Plans {
 					plan.Namespace = kore.HubNamespace
-					exists, err := kubernetes.CheckIfExists(ctx, c.mgr.GetClient(), &plan)
-					if err != nil {
-						return reconcile.Result{}, err
+					if plan.Annotations == nil {
+						plan.Annotations = map[string]string{}
 					}
-
-					if !exists {
-						if err := c.mgr.GetClient().Create(ctx, &plan); err != nil {
-							return reconcile.Result{}, err
-						}
+					plan.Annotations[kore.AnnotationReadOnly] = kore.AnnotationValueTrue
+					if _, err := kubernetes.CreateOrUpdate(ctx, c.mgr.GetClient(), &plan); err != nil {
+						return reconcile.Result{}, err
 					}
 				}
 
