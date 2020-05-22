@@ -50,7 +50,7 @@ class ServicesTab extends React.Component {
     const team = this.props.team.metadata.name
     try {
       const services = copy(this.state.services)
-      const service = services.items.find(s => s.metadata.name === name)
+      const service = services.find(s => s.metadata.name === name)
       await (await KoreApi.client()).DeleteService(team, service.metadata.name)
       service.status.status = 'Deleting'
       service.metadata.deletionTimestamp = new Date()
@@ -73,8 +73,12 @@ class ServicesTab extends React.Component {
 
   handleResourceDeleted = resourceType => {
     return (name, done) => {
-      this.setState({ [resourceType]: this.state[resourceType].filter(r => r.metadata.name !== name) }, () => {
-        this.props.getServiceCount && this.props.getServiceCount(this.state.clusters.length)
+      const resourceList = copy(this.state[resourceType])
+      const resource = resourceList.find(r => r.metadata.name === name)
+      resource.deleted = true
+
+      this.setState({ [resourceType]: resourceList }, () => {
+        this.props.getServiceCount && this.props.getServiceCount(this.state.services.filter(s => !s.deleted).length)
         done()
       })
     }
@@ -83,6 +87,8 @@ class ServicesTab extends React.Component {
   render() {
     const { team } = this.props
     const { dataLoading, services } = this.state
+
+    const hasActiveServices =  Boolean(services.filter(c => !c.deleted).length)
 
     return (
       <>
@@ -96,27 +102,30 @@ class ServicesTab extends React.Component {
 
         {dataLoading ? (
           <Icon type="loading" />
-        ) :
-          services.length === 0 ? <Paragraph type="secondary">No services found for this team</Paragraph> : (
-            <List
-              dataSource={services}
-              renderItem={service => {
-                return (
-                  <Service
-                    team={team.metadata.name}
-                    service={service}
-                    deleteService={this.deleteService}
-                    handleUpdate={this.handleResourceUpdated('services')}
-                    handleDelete={this.handleResourceDeleted('services')}
-                    refreshMs={10000}
-                    propsResourceDataKey="service"
-                    resourceApiPath={`/teams/${team.metadata.name}/services/${service.metadata.name}`}
-                  />
-                )
-              }}
-            />
-          )
-        }
+        ) : (
+          <>
+            {!hasActiveServices && <Paragraph type="secondary">No services found for this team</Paragraph>}
+            {services.length > 0 && (
+              <List
+                dataSource={services}
+                renderItem={service => {
+                  return (
+                    <Service
+                      team={team.metadata.name}
+                      service={service}
+                      deleteService={this.deleteService}
+                      handleUpdate={this.handleResourceUpdated('services')}
+                      handleDelete={this.handleResourceDeleted('services')}
+                      refreshMs={10000}
+                      propsResourceDataKey="service"
+                      resourceApiPath={`/teams/${team.metadata.name}/services/${service.metadata.name}`}
+                    />
+                  )
+                }}
+              />
+            )}
+          </>
+        )}
       </>
     )
   }

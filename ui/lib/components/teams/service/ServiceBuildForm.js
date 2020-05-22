@@ -106,7 +106,7 @@ class ServiceBuildForm extends React.Component {
         message.loading('Service build requested...')
         return redirect({
           router: Router,
-          path: `/teams/${this.props.team.metadata.name}`
+          path: `/teams/${this.props.team.metadata.name}?tab=services`
         })
       } catch (err) {
         this.setState({

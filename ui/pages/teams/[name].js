@@ -23,7 +23,8 @@ class TeamDashboard extends React.Component {
     invitation: PropTypes.bool,
     team: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
-    teamRemoved: PropTypes.func.isRequired
+    teamRemoved: PropTypes.func.isRequired,
+    tabActiveKey: PropTypes.string
   }
 
   static staticProps = {
@@ -33,7 +34,7 @@ class TeamDashboard extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      tabActiveKey: 'clusters',
+      tabActiveKey: this.props.tabActiveKey || 'clusters',
       memberCount: -1,
       clusterCount: -1,
       serviceCount: -1,
@@ -60,6 +61,9 @@ class TeamDashboard extends React.Component {
     }
     if (ctx.query.invitation === 'true') {
       teamDetails.invitation = true
+    }
+    if (ctx.query.tab) {
+      teamDetails.tabActiveKey = ctx.query.tab
     }
     return teamDetails
   }
@@ -172,7 +176,7 @@ class TeamDashboard extends React.Component {
         ) : null}
 
         <Tabs activeKey={this.state.tabActiveKey} onChange={(key) => this.setState({ tabActiveKey: key })} tabBarStyle={{ marginBottom: '20px' }}>
-          <TabPane key="clusters" tab={this.getTabTitle({ title: 'Clusters', count: this.state.clusterCount })}>
+          <TabPane key="clusters" tab={this.getTabTitle({ title: 'Clusters', count: this.state.clusterCount })} forceRender={true}>
             <ClustersTab user={this.props.user} team={this.props.team} getClusterCount={(count) => this.setState({ clusterCount: count })} />
           </TabPane>
 
