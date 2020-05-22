@@ -14,6 +14,7 @@
 import ApiClient from '../ApiClient';
 import V1Ownership from './V1Ownership';
 import V1alpha1AuthorizedNetwork from './V1alpha1AuthorizedNetwork';
+import V1alpha1GKENodePool from './V1alpha1GKENodePool';
 
 /**
  * The V1alpha1GKESpec model module.
@@ -46,14 +47,16 @@ class V1alpha1GKESpec {
      * @param masterIPV4Cidr {String} 
      * @param maxSize {Number} 
      * @param network {String} 
+     * @param nodePools {Array.<module:model/V1alpha1GKENodePool>} 
+     * @param releaseChannel {String} 
      * @param servicesIPV4Cidr {String} 
      * @param size {Number} 
      * @param subnetwork {String} 
      * @param version {String} 
      */
-    constructor(authorizedMasterNetworks, clusterIPV4Cidr, credentials, description, diskSize, enableAutorepair, enableAutoscaler, enableAutoupgrade, enableHTTPLoadBalancer, enableHorizontalPodAutoscaler, enableIstio, enablePrivateEndpoint, enablePrivateNetwork, enableShieldedNodes, enableStackDriverLogging, enableStackDriverMetrics, imageType, machineType, maintenanceWindow, masterIPV4Cidr, maxSize, network, servicesIPV4Cidr, size, subnetwork, version) { 
+    constructor(authorizedMasterNetworks, clusterIPV4Cidr, credentials, description, diskSize, enableAutorepair, enableAutoscaler, enableAutoupgrade, enableHTTPLoadBalancer, enableHorizontalPodAutoscaler, enableIstio, enablePrivateEndpoint, enablePrivateNetwork, enableShieldedNodes, enableStackDriverLogging, enableStackDriverMetrics, imageType, machineType, maintenanceWindow, masterIPV4Cidr, maxSize, network, nodePools, releaseChannel, servicesIPV4Cidr, size, subnetwork, version) { 
         
-        V1alpha1GKESpec.initialize(this, authorizedMasterNetworks, clusterIPV4Cidr, credentials, description, diskSize, enableAutorepair, enableAutoscaler, enableAutoupgrade, enableHTTPLoadBalancer, enableHorizontalPodAutoscaler, enableIstio, enablePrivateEndpoint, enablePrivateNetwork, enableShieldedNodes, enableStackDriverLogging, enableStackDriverMetrics, imageType, machineType, maintenanceWindow, masterIPV4Cidr, maxSize, network, servicesIPV4Cidr, size, subnetwork, version);
+        V1alpha1GKESpec.initialize(this, authorizedMasterNetworks, clusterIPV4Cidr, credentials, description, diskSize, enableAutorepair, enableAutoscaler, enableAutoupgrade, enableHTTPLoadBalancer, enableHorizontalPodAutoscaler, enableIstio, enablePrivateEndpoint, enablePrivateNetwork, enableShieldedNodes, enableStackDriverLogging, enableStackDriverMetrics, imageType, machineType, maintenanceWindow, masterIPV4Cidr, maxSize, network, nodePools, releaseChannel, servicesIPV4Cidr, size, subnetwork, version);
     }
 
     /**
@@ -61,7 +64,7 @@ class V1alpha1GKESpec {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, authorizedMasterNetworks, clusterIPV4Cidr, credentials, description, diskSize, enableAutorepair, enableAutoscaler, enableAutoupgrade, enableHTTPLoadBalancer, enableHorizontalPodAutoscaler, enableIstio, enablePrivateEndpoint, enablePrivateNetwork, enableShieldedNodes, enableStackDriverLogging, enableStackDriverMetrics, imageType, machineType, maintenanceWindow, masterIPV4Cidr, maxSize, network, servicesIPV4Cidr, size, subnetwork, version) { 
+    static initialize(obj, authorizedMasterNetworks, clusterIPV4Cidr, credentials, description, diskSize, enableAutorepair, enableAutoscaler, enableAutoupgrade, enableHTTPLoadBalancer, enableHorizontalPodAutoscaler, enableIstio, enablePrivateEndpoint, enablePrivateNetwork, enableShieldedNodes, enableStackDriverLogging, enableStackDriverMetrics, imageType, machineType, maintenanceWindow, masterIPV4Cidr, maxSize, network, nodePools, releaseChannel, servicesIPV4Cidr, size, subnetwork, version) { 
         obj['authorizedMasterNetworks'] = authorizedMasterNetworks;
         obj['clusterIPV4Cidr'] = clusterIPV4Cidr;
         obj['credentials'] = credentials;
@@ -84,6 +87,8 @@ class V1alpha1GKESpec {
         obj['masterIPV4Cidr'] = masterIPV4Cidr;
         obj['maxSize'] = maxSize;
         obj['network'] = network;
+        obj['nodePools'] = nodePools;
+        obj['releaseChannel'] = releaseChannel;
         obj['servicesIPV4Cidr'] = servicesIPV4Cidr;
         obj['size'] = size;
         obj['subnetwork'] = subnetwork;
@@ -170,8 +175,14 @@ class V1alpha1GKESpec {
             if (data.hasOwnProperty('network')) {
                 obj['network'] = ApiClient.convertToType(data['network'], 'String');
             }
+            if (data.hasOwnProperty('nodePools')) {
+                obj['nodePools'] = ApiClient.convertToType(data['nodePools'], [V1alpha1GKENodePool]);
+            }
             if (data.hasOwnProperty('region')) {
                 obj['region'] = ApiClient.convertToType(data['region'], 'String');
+            }
+            if (data.hasOwnProperty('releaseChannel')) {
+                obj['releaseChannel'] = ApiClient.convertToType(data['releaseChannel'], 'String');
             }
             if (data.hasOwnProperty('servicesIPV4Cidr')) {
                 obj['servicesIPV4Cidr'] = ApiClient.convertToType(data['servicesIPV4Cidr'], 'String');
@@ -492,6 +503,19 @@ class V1alpha1GKESpec {
         this['network'] = network;
     }
 /**
+     * @return {Array.<module:model/V1alpha1GKENodePool>}
+     */
+    getNodePools() {
+        return this.nodePools;
+    }
+
+    /**
+     * @param {Array.<module:model/V1alpha1GKENodePool>} nodePools
+     */
+    setNodePools(nodePools) {
+        this['nodePools'] = nodePools;
+    }
+/**
      * @return {String}
      */
     getRegion() {
@@ -503,6 +527,19 @@ class V1alpha1GKESpec {
      */
     setRegion(region) {
         this['region'] = region;
+    }
+/**
+     * @return {String}
+     */
+    getReleaseChannel() {
+        return this.releaseChannel;
+    }
+
+    /**
+     * @param {String} releaseChannel
+     */
+    setReleaseChannel(releaseChannel) {
+        this['releaseChannel'] = releaseChannel;
     }
 /**
      * @return {String}
@@ -688,9 +725,19 @@ V1alpha1GKESpec.prototype['maxSize'] = undefined;
 V1alpha1GKESpec.prototype['network'] = undefined;
 
 /**
+ * @member {Array.<module:model/V1alpha1GKENodePool>} nodePools
+ */
+V1alpha1GKESpec.prototype['nodePools'] = undefined;
+
+/**
  * @member {String} region
  */
 V1alpha1GKESpec.prototype['region'] = undefined;
+
+/**
+ * @member {String} releaseChannel
+ */
+V1alpha1GKESpec.prototype['releaseChannel'] = undefined;
 
 /**
  * @member {String} servicesIPV4Cidr

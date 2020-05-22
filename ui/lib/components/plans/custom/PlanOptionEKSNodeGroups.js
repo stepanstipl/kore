@@ -13,16 +13,6 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
   static AMI_TYPE_GENERAL = 'AL2_x86_64'
   static AMI_TYPE_GPU = 'AL2_x86_64_GPU'
 
-  static defaultNewNodeGroup = {
-    minSize: 1,
-    maxSize: 10,
-    desiredSize: 1,
-    amiType: PlanOptionEKSNodeGroups.AMI_TYPE_GENERAL,
-    instanceType: 't3.medium',
-    diskSize: 10,
-    name: '',
-  }
-
   // @TODO: Pull these from AWS
   static supportedInstanceTypes = {
     [PlanOptionEKSNodeGroups.AMI_TYPE_GENERAL]: [
@@ -51,18 +41,27 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
       return
     }
 
+    // Create the default from the defaults on the plan schema
+    const newNodeGroup = {}
+    const properties = this.props.property.items.properties
+    Object.keys(properties).forEach((k) => {
+      if (properties[k].default !== undefined) {
+        newNodeGroup[k] = properties[k].default
+      }
+    })
+
     // Need to handle the value being undefined in the case where this is a new plan or no
     // node groups are defined yet.
     let newValue
     if (this.props.value) {
-      newValue = [ ...this.props.value, { ...PlanOptionEKSNodeGroups.defaultNewNodeGroup } ]
+      newValue = [ ...this.props.value, newNodeGroup ]
     } else {
-      newValue = [ { ...PlanOptionEKSNodeGroups.defaultNewNodeGroup } ]
+      newValue = [ newNodeGroup ]
     }
 
     this.props.onChange(this.props.name, newValue)
 
-    // Open the draw to immediately edit the new node group:
+    // Open the drawer to immediately edit the new node group:
     this.setState({
       selectedNodeGroupIndex: newValue.length - 1
     })
@@ -154,22 +153,23 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
     const { name, editable, property, plan } = this.props
     const { selectedNodeGroupIndex } = this.state
 
-    const value = this.props.value || []
+    const value = this.props.value || property.default || []
     const selectedNodeGroup = selectedNodeGroupIndex >= 0 ? value[selectedNodeGroupIndex] : null
     const displayName = this.props.displayName || startCase(name)
     const description = this.props.manage ? 'Set default node groups for clusters created from this plan' : 'Manage node groups for this cluster'
 
     let instanceTypes = []
     let amiType = null
-    let releaseVersionSet = false
-    let ngNameClash = false
+    let releaseVersionSet = false, ngNameClash = false, nodeGroupCloseable = true
     if (selectedNodeGroup) {
       amiType = selectedNodeGroup.amiType || 'AL2_x86_64'
       instanceTypes = PlanOptionEKSNodeGroups.supportedInstanceTypes[amiType]
       releaseVersionSet = selectedNodeGroup.releaseVersion && selectedNodeGroup.releaseVersion.length > 0
       // we have duplicate names if another node group with a different index has the same name as this one
       ngNameClash = selectedNodeGroup.name && selectedNodeGroup.name.length > 0 && value.some((v, i) => i !== selectedNodeGroupIndex && v.name === selectedNodeGroup.name)
+      nodeGroupCloseable = !ngNameClash && selectedNodeGroup.name && selectedNodeGroup.name.length > 0
     }
+    
 
     return (
       <>
@@ -193,10 +193,13 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
           closable={!ngNameClash}
           maskClosable={!ngNameClash}
           onClose={() => this.closeNodeGroup()}
-          width={700}
+          width={800}
         >
           {!selectedNodeGroup ? null : (
             <>
+              <Form.Item>
+                <Button disabled={!nodeGroupCloseable} onClick={() => this.closeNodeGroup()}>{nodeGroupCloseable ? 'Close' : 'Node group not valid - correct errors'}</Button>
+              </Form.Item>
               <Collapse defaultActiveKey={['basics','compute','metadata']}>
                 <Collapse.Panel key="basics" header="Basic Configuration (name, sizing)">
                   <Form.Item label="Name" help="Unique name for this group within the cluster">
@@ -222,7 +225,7 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
                   </Form.Item>
                 </Collapse.Panel>
                 <Collapse.Panel key="compute" header="Compute Configuration (instance type, GPU or regular workload)">
-                  <Form.Item label="Compute Type" help="Whether this node group is for general purpose or GPU workloads">
+                  <Form.Item label={property.items.properties.amiType.title} help={property.items.properties.amiType.description}>
                     <Radio.Group value={amiType} onChange={(v) => this.setAmiType(selectedNodeGroupIndex, v.target.value)}>
                       <Radio value={PlanOptionEKSNodeGroups.AMI_TYPE_GENERAL}>General Purpose</Radio>
                       <Radio value={PlanOptionEKSNodeGroups.AMI_TYPE_GPU}>GPU</Radio>
@@ -231,7 +234,7 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
                   </Form.Item>
                   <Form.Item label="AWS AMI Version" help={!releaseVersionSet ? undefined : <><b>Must</b> be for Kubernetes <b>{plan.version}</b> and <b>{amiType === PlanOptionEKSNodeGroups.AMI_TYPE_GPU ? 'GPU' : 'general'}</b> workloads. Find <a target="_blank" rel="noopener noreferrer" href="https://docs.aws.amazon.com/eks/latest/userguide/eks-linux-ami-versions.html">supported versions</a> in AWS documentation.</>}>
                     <Checkbox disabled={!editable} checked={!releaseVersionSet} onChange={(v) => this.onReleaseVersionChecked(selectedNodeGroupIndex, v.target.checked)}/> Use latest (<b>recommended</b>)
-                    {!releaseVersionSet ? null : <Input value={selectedNodeGroup.releaseVersion} readOnly={!editable} onChange={(e) => this.setNodeGroupProperty(selectedNodeGroupIndex, 'releaseVersion', e.target.value)} />}
+                    {!releaseVersionSet ? null : <Input value={selectedNodeGroup.releaseVersion} placeholder={this.describe(property.items.properties.releaseVersion)} readOnly={!editable} onChange={(e) => this.setNodeGroupProperty(selectedNodeGroupIndex, 'releaseVersion', e.target.value)} />}
                     {this.validationErrors(`${name}[${selectedNodeGroupIndex}].releaseVersion`)}
                   </Form.Item>
                   <Form.Item label="AWS Instance Type">

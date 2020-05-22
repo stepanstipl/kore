@@ -109,8 +109,9 @@ export default class PlanOptionClusterUsers extends PlanOptionBase {
   }
 
   render() {
-    const { name, value, editable } = this.props
+    const { name, value, editable, property } = this.props
 
+    const valueOrDefault = value || property.default || []
     const displayName = this.props.displayName || startCase(name)
     const description = this.props.manage ? 'Set default users to be added to every cluster created from this plan' : 'Control which team members have access to this cluster'
     const roles = ['cluster-admin', 'admin', 'edit', 'view']
@@ -136,7 +137,7 @@ export default class PlanOptionClusterUsers extends PlanOptionBase {
         <Table 
           size="small" 
           pagination={false} 
-          dataSource={value} 
+          dataSource={valueOrDefault} 
           columns={columns} 
           rowKey={r => r.username}
           footer={!editable ? null : () => (

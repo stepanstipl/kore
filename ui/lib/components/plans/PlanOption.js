@@ -33,9 +33,9 @@ export default class PlanOption extends PlanOptionBase {
     }
 
     const onChange = this.props.onChange || (() => {})
-
-    const displayName = this.props.displayName || startCase(name)
+    const displayName = this.props.displayName || property.title || startCase(name)
     const help = this.props.help || this.describe(property)
+    const valueOrDefault = value !== undefined && value !== null ? value : property.default
 
     // Special handling for object types - represent as a card with a plan option for each property:
     if (property.type === 'object' && property.properties) {
@@ -47,7 +47,7 @@ export default class PlanOption extends PlanOptionBase {
               {...this.props}
               key={`${name}.${key}`}
               name={`${name}.${key}`}
-              displayName={key}
+              displayName={property.properties[key].title || startCase(key)} 
               property={property.properties[key]}
               value={value ? value[key] : null}
               onChange={onChange}
@@ -61,7 +61,7 @@ export default class PlanOption extends PlanOptionBase {
     if (property.type === 'object' && property.additionalProperties && property.additionalProperties.type === 'string') {
       return (
         <Form.Item label={displayName} help={help}>
-          <KeyMap value={value} property={property} editable={editable} onChange={(v) => onChange(name, v)} />
+          <KeyMap value={valueOrDefault} property={property} editable={editable} onChange={(v) => onChange(name, v)} />
         </Form.Item>
       )
     }
@@ -73,24 +73,24 @@ export default class PlanOption extends PlanOptionBase {
           switch(property.type) {
           case 'string': {
             if (property.format === 'multiline') {
-              return <TextArea value={value} readOnly={!editable} onChange={(e) => onChange(name, e.target.value)} rows='20' />
+              return <TextArea value={valueOrDefault} readOnly={!editable} onChange={(e) => onChange(name, e.target.value)} rows='20' />
             } else if (property.enum) {
-              return <ConstrainedDropdown readOnly={!editable} value={value} allowedValues={property.enum} onChange={(e) => onChange(name, e)} />
+              return <ConstrainedDropdown readOnly={!editable} value={valueOrDefault} allowedValues={property.enum} onChange={(e) => onChange(name, e)} />
             } else {
-              return <Input value={value} readOnly={!editable} onChange={(e) => onChange(name, e.target.value)} />
+              return <Input value={valueOrDefault} readOnly={!editable} pattern={property.pattern} onChange={(e) => onChange(name, e.target.value)} />
             }
           }
           case 'boolean': {
-            return <Switch checked={value} disabled={!editable} onChange={(v) => onChange(name, v)} checkedChildren={<Icon type="check" />} unCheckedChildren={<Icon type="close" />} />
+            return <Switch checked={valueOrDefault} disabled={!editable} onChange={(v) => onChange(name, v)} checkedChildren={<Icon type="check" />} unCheckedChildren={<Icon type="close" />} />
           }
           case 'number': {
-            return <InputNumber value={value} readOnly={!editable} onChange={(v) => onChange(name, v)} />
+            return <InputNumber value={valueOrDefault} readOnly={!editable} onChange={(v) => onChange(name, v)} />
           }
           case 'integer': {
-            return <InputNumber value={value} readOnly={!editable} onChange={(v) => onChange(name, v)} />
+            return <InputNumber value={valueOrDefault} readOnly={!editable} onChange={(v) => onChange(name, v)} />
           }
           case 'array': {
-            const values = value ? value : []
+            const values = valueOrDefault ? valueOrDefault : []
             if (property.items.type !== 'array' && property.items.type !== 'object') {
               return <Select mode="tags" tokenSeparators={[',']} value={values} disabled={!editable} onChange={(v) => onChange(name, v)} />
             } else {

@@ -25,6 +25,9 @@ export default class PlanOptionBase extends React.Component {
     if (property.description) {
       descriptionPieces.push(property.description)
     }
+    if (property.examples) {
+      descriptionPieces.push(`Examples: ${property.examples.join(', ')}`)
+    }
     if (property.format) {
       descriptionPieces.push(`Format: ${property.format}`)
     } else if (property.items && property.items.format) {
