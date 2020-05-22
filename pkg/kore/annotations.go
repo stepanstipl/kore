@@ -17,6 +17,9 @@
 package kore
 
 const (
-	AnnotationOwner  = "kore.appvia.io/owner"
-	AnnotationSystem = "kore.appvia.io/system"
+	AnnotationOwner      = "kore.appvia.io/owner"
+	AnnotationSystem     = "kore.appvia.io/system"
+	AnnotationReadOnly   = "kore.appvia.io/readonly"
+	AnnotationValueTrue  = "true"
+	AnnotationValueFalse = "false"
 )

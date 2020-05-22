@@ -80,6 +80,13 @@ func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePl
 		return err
 	}
 
+	if existing != nil && existing.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
+		return validation.NewError("the plan can not be updated").WithFieldError(validation.FieldRoot, validation.ReadOnly, "plan is read-only")
+	}
+	if plan.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
+		return validation.NewError("the plan can not be updated").WithFieldError(validation.FieldRoot, validation.ReadOnly, "read-only flag can not be set")
+	}
+
 	if existing != nil {
 		verr := validation.NewError("%q failed validation", plan.Name)
 		if existing.Spec.Kind != plan.Spec.Kind {
@@ -145,6 +152,10 @@ func (p servicePlansImpl) Delete(ctx context.Context, name string) (*servicesv1.
 		log.WithError(err).Error("failed to retrieve the service plan")
 
 		return nil, err
+	}
+
+	if plan.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
+		return nil, validation.NewError("the plan can not be deleted").WithFieldError(validation.FieldRoot, validation.ReadOnly, "policy is read-only")
 	}
 
 	servicesWithPlan, err := p.getServicesWithPlan(ctx, name)
