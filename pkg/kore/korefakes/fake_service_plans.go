@@ -10,11 +10,12 @@ import (
 )
 
 type FakeServicePlans struct {
-	DeleteStub        func(context.Context, string) (*v1.ServicePlan, error)
+	DeleteStub        func(context.Context, string, bool) (*v1.ServicePlan, error)
 	deleteMutex       sync.RWMutex
 	deleteArgsForCall []struct {
 		arg1 context.Context
 		arg2 string
+		arg3 bool
 	}
 	deleteReturns struct {
 		result1 *v1.ServicePlan
@@ -122,11 +123,12 @@ type FakeServicePlans struct {
 		result1 *v1.ServicePlanList
 		result2 error
 	}
-	UpdateStub        func(context.Context, *v1.ServicePlan) error
+	UpdateStub        func(context.Context, *v1.ServicePlan, bool) error
 	updateMutex       sync.RWMutex
 	updateArgsForCall []struct {
 		arg1 context.Context
 		arg2 *v1.ServicePlan
+		arg3 bool
 	}
 	updateReturns struct {
 		result1 error
@@ -138,17 +140,18 @@ type FakeServicePlans struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeServicePlans) Delete(arg1 context.Context, arg2 string) (*v1.ServicePlan, error) {
+func (fake *FakeServicePlans) Delete(arg1 context.Context, arg2 string, arg3 bool) (*v1.ServicePlan, error) {
 	fake.deleteMutex.Lock()
 	ret, specificReturn := fake.deleteReturnsOnCall[len(fake.deleteArgsForCall)]
 	fake.deleteArgsForCall = append(fake.deleteArgsForCall, struct {
 		arg1 context.Context
 		arg2 string
-	}{arg1, arg2})
-	fake.recordInvocation("Delete", []interface{}{arg1, arg2})
+		arg3 bool
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("Delete", []interface{}{arg1, arg2, arg3})
 	fake.deleteMutex.Unlock()
 	if fake.DeleteStub != nil {
-		return fake.DeleteStub(arg1, arg2)
+		return fake.DeleteStub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -163,17 +166,17 @@ func (fake *FakeServicePlans) DeleteCallCount() int {
 	return len(fake.deleteArgsForCall)
 }
 
-func (fake *FakeServicePlans) DeleteCalls(stub func(context.Context, string) (*v1.ServicePlan, error)) {
+func (fake *FakeServicePlans) DeleteCalls(stub func(context.Context, string, bool) (*v1.ServicePlan, error)) {
 	fake.deleteMutex.Lock()
 	defer fake.deleteMutex.Unlock()
 	fake.DeleteStub = stub
 }
 
-func (fake *FakeServicePlans) DeleteArgsForCall(i int) (context.Context, string) {
+func (fake *FakeServicePlans) DeleteArgsForCall(i int) (context.Context, string, bool) {
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
 	argsForCall := fake.deleteArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeServicePlans) DeleteReturns(result1 *v1.ServicePlan, result2 error) {
@@ -650,17 +653,18 @@ func (fake *FakeServicePlans) ListFilteredReturnsOnCall(i int, result1 *v1.Servi
 	}{result1, result2}
 }
 
-func (fake *FakeServicePlans) Update(arg1 context.Context, arg2 *v1.ServicePlan) error {
+func (fake *FakeServicePlans) Update(arg1 context.Context, arg2 *v1.ServicePlan, arg3 bool) error {
 	fake.updateMutex.Lock()
 	ret, specificReturn := fake.updateReturnsOnCall[len(fake.updateArgsForCall)]
 	fake.updateArgsForCall = append(fake.updateArgsForCall, struct {
 		arg1 context.Context
 		arg2 *v1.ServicePlan
-	}{arg1, arg2})
-	fake.recordInvocation("Update", []interface{}{arg1, arg2})
+		arg3 bool
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("Update", []interface{}{arg1, arg2, arg3})
 	fake.updateMutex.Unlock()
 	if fake.UpdateStub != nil {
-		return fake.UpdateStub(arg1, arg2)
+		return fake.UpdateStub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
@@ -675,17 +679,17 @@ func (fake *FakeServicePlans) UpdateCallCount() int {
 	return len(fake.updateArgsForCall)
 }
 
-func (fake *FakeServicePlans) UpdateCalls(stub func(context.Context, *v1.ServicePlan) error) {
+func (fake *FakeServicePlans) UpdateCalls(stub func(context.Context, *v1.ServicePlan, bool) error) {
 	fake.updateMutex.Lock()
 	defer fake.updateMutex.Unlock()
 	fake.UpdateStub = stub
 }
 
-func (fake *FakeServicePlans) UpdateArgsForCall(i int) (context.Context, *v1.ServicePlan) {
+func (fake *FakeServicePlans) UpdateArgsForCall(i int) (context.Context, *v1.ServicePlan, bool) {
 	fake.updateMutex.RLock()
 	defer fake.updateMutex.RUnlock()
 	argsForCall := fake.updateArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeServicePlans) UpdateReturns(result1 error) {

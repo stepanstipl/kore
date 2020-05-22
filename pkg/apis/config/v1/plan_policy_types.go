@@ -72,14 +72,14 @@ type PlanPolicy struct {
 }
 
 func (p PlanPolicy) CreateAllocation(teams []string) *Allocation {
-	labels := map[string]string{}
-	if p.Labels[corev1.LabelReadonly] == "true" {
-		labels[corev1.LabelReadonly] = "true"
+	annotations := map[string]string{}
+	if p.Annotations["kore.appvia.io/readonly"] == "true" {
+		annotations["kore.appvia.io/readonly"] = "true"
 	}
 	return &Allocation{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   "planpolicy-" + p.Name,
-			Labels: labels,
+			Name:        "planpolicy-" + p.Name,
+			Annotations: annotations,
 		},
 		Spec: AllocationSpec{
 			Name:    p.Name,
