@@ -82,16 +82,7 @@ func (c *clustersImpl) Delete(ctx context.Context, name string) (*clustersv1.Clu
 		return nil, err
 	}
 
-	delErr := c.Store().Client().Delete(ctx, store.DeleteOptions.From(original))
-
-	if delErr == nil {
-		if err := c.Security().ArchiveResourceScans(ctx, original.TypeMeta, original.ObjectMeta); err != nil {
-			// Log but continue in case of errors here - the cluster IS deleted.
-			log.WithError(err).Warning("error while archiving security scans for cluster")
-		}
-	}
-
-	return original, delErr
+	return original, c.Store().Client().Delete(ctx, store.DeleteOptions.From(original))
 }
 
 // List returns a list of clusters we have access to
