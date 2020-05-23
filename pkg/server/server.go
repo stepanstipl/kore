@@ -20,10 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	_ "github.com/appvia/kore/pkg/controllers/register"
-
-	// service provider imports
-	_ "github.com/appvia/kore/pkg/serviceproviders/register"
+	"github.com/appvia/kore/pkg/utils"
 
 	"github.com/appvia/kore/pkg/apiserver"
 	"github.com/appvia/kore/pkg/controllers"
@@ -32,6 +29,12 @@ import (
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils/crds"
 	korek "github.com/appvia/kore/pkg/utils/kubernetes"
+
+	// controller imports
+	_ "github.com/appvia/kore/pkg/controllers/register"
+
+	// service provider imports
+	_ "github.com/appvia/kore/pkg/serviceproviders/register"
 
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
@@ -42,39 +45,37 @@ import (
 )
 
 type serverImpl struct {
-	// storecc is the store interface
-	storecc store.Store
+	// config is the server configuration
+	config Config
 	// hubcc is the kore interface
 	hubcc kore.Interface
 	// apicc is the api interface
-	apicc apiserver.Interface
+	apiServer apiserver.Interface
 	// cfg is the rest.Config for the clients
-	cfg *rest.Config
+	restConfig *rest.Config
 	// client is the runtime client
 	client rc.Client
 }
 
 // New is responsible for creating the server container, effectively acting
 // as a controller to the other components
-func New(ctx context.Context, config Config) (Interface, error) {
+func New(ctx context.Context, config Config, persistenceMgr persistence.Interface) (Interface, error) {
 	if err := config.IsValid(); err != nil {
 		return nil, err
 	}
 
-	// register the known types with the schame
-
 	// @step: create the various client
-	cfg, err := korek.MakeKubernetesConfig(config.Kubernetes)
+	restConfig, err := korek.MakeKubernetesConfig(config.Kubernetes)
 	if err != nil {
 		return nil, fmt.Errorf("failed creating kubernetes config: %s", err)
 	}
-	kc, err := kubernetes.NewForConfig(cfg)
+	kc, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed creating kubernetes client: %s", err)
 	}
 
 	// @step: ensure we have the kore crds
-	crdc, err := crds.NewExtentionsAPIClient(cfg)
+	crdc, err := crds.NewExtentionsAPIClient(restConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create api extensions client: %s", err)
 	}
@@ -87,20 +88,21 @@ func New(ctx context.Context, config Config) (Interface, error) {
 		return nil, fmt.Errorf("failed creating runtime client: %s", err)
 	}
 
-	// @step: we need to create the data layer
 	storecc, err := store.New(kc, client)
 	if err != nil {
 		return nil, fmt.Errorf("failed creating store api: %s", err)
 	}
 
-	// @step: create the persistence service
-	persistenceMgr, err := persistence.New(persistence.Config{
-		Driver:        config.PersistenceMgr.Driver,
-		EnableLogging: config.PersistenceMgr.EnableLogging,
-		StoreURL:      config.PersistenceMgr.StoreURL,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("trying to create the user management service: %s", err)
+	if persistenceMgr == nil {
+		// @step: create the persistence service
+		persistenceMgr, err = persistence.New(persistence.Config{
+			Driver:        config.PersistenceMgr.Driver,
+			EnableLogging: config.PersistenceMgr.EnableLogging,
+			StoreURL:      config.PersistenceMgr.StoreURL,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("trying to create the user management service: %s", err)
+		}
 	}
 
 	// @step: we need to create the kore bridge / business logic
@@ -113,26 +115,36 @@ func New(ctx context.Context, config Config) (Interface, error) {
 		return nil, err
 	}
 
-	// @step: we need to create the apiserver
-	apisvr, err := apiserver.New(hubcc, config.APIServer)
-	if err != nil {
-		return nil, fmt.Errorf("trying to create the apiserver: %s", err)
+	var apiServer apiserver.Interface
+	if config.APIServer.Enabled {
+		if apiServer, err = apiserver.New(hubcc, config.APIServer); err != nil {
+			return nil, fmt.Errorf("trying to create the apiserver: %s", err)
+		}
 	}
 
 	return &serverImpl{
-		apicc:   apisvr,
-		cfg:     cfg,
-		hubcc:   hubcc,
-		storecc: storecc,
-		client:  client,
+		config:     config,
+		apiServer:  apiServer,
+		restConfig: restConfig,
+		hubcc:      hubcc,
+		client:     client,
 	}, nil
+}
+
+func (s serverImpl) enabledControllers() []controllers.RegisterInterface {
+	var res []controllers.RegisterInterface
+	for _, c := range controllers.GetControllers() {
+		if utils.Contains(c.Name(), s.config.Kore.Controllers) {
+			res = append(res, c)
+		}
+	}
+	return res
 }
 
 // Run is responsible for starting the services
 func (s serverImpl) Run(ctx context.Context) error {
-
 	// @step: we need to start the controllers
-	for _, ctrl := range controllers.GetControllers() {
+	for _, ctrl := range s.enabledControllers() {
 		go func(c controllers.RegisterInterface) {
 			log.WithFields(log.Fields{
 				"name": c.Name(),
@@ -140,7 +152,7 @@ func (s serverImpl) Run(ctx context.Context) error {
 
 			err := func() error {
 				if c2, ok := c.(controllers.Interface2); ok {
-					mgr, err := manager.New(s.cfg, c2.ManagerOptions())
+					mgr, err := manager.New(s.restConfig, c2.ManagerOptions())
 					if err != nil {
 						return err
 					}
@@ -153,7 +165,7 @@ func (s serverImpl) Run(ctx context.Context) error {
 					return c2.RunWithDependencies(ctx, mgr, ctrl, s.hubcc)
 				}
 
-				return c.Run(ctx, s.cfg, s.hubcc)
+				return c.Run(ctx, s.restConfig, s.hubcc)
 			}()
 			if err != nil {
 				log.WithFields(log.Fields{
@@ -166,14 +178,28 @@ func (s serverImpl) Run(ctx context.Context) error {
 
 	// @step: start the apiserver - @note this is not being started before
 	// the controllers are ready
-	if err := s.apicc.Run(ctx); err != nil {
-		return err
+	if s.config.APIServer.Enabled {
+		if err := s.apiServer.Run(ctx); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
 // Stop is responsible for trying to stop services
-func (s serverImpl) Stop(context.Context) error {
+func (s serverImpl) Stop(ctx context.Context) error {
+	if s.config.APIServer.Enabled {
+		if err := s.apiServer.Stop(ctx); err != nil {
+			log.WithError(err).Error("stopping the API server")
+		}
+	}
+
+	for _, ctrl := range s.enabledControllers() {
+		if err := ctrl.Stop(ctx); err != nil {
+			log.WithError(err).Errorf("stopping %s controller", ctrl.Name())
+		}
+	}
+
 	return nil
 }

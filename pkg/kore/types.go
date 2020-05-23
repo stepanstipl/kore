@@ -121,6 +121,8 @@ type Config struct {
 	CertificateAuthority string `json:"certificate-authority,omitempty"`
 	// CertificateAuthorityKey is the path to the private key
 	CertificateAuthorityKey string `json:"certificate-authority-key,omitempty"`
+	// Controllers is a list of controllers to enable
+	Controllers []string `json:controllers,omitempty`
 	// DEX is the config required to configure dex
 	DEX DEX `json:"dex,omitempty"`
 	// EnableClusterProviderCheck indicate the k8s controller should check the status of the
@@ -144,6 +146,8 @@ type Config struct {
 	PublicHubURL string `json:"public-kore-url,omitempty"`
 	// PublicAPIURL is the public url for the api
 	PublicAPIURL string `json:"public-api-url,omitempty"`
+	// RunSetup should be used on a single node to create internal Kore objects and run database migrations
+	RunSetup bool `json:"run-setup,omitempty"`
 	// LocalJWTPublicKey is the public key to use to verify JWTs if using the localjwt auth plugin
 	LocalJWTPublicKey string `json:"local-jwt-public-key,omitempty"`
 }

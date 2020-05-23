@@ -42,6 +42,8 @@ type Interface interface {
 
 // Config is the configuration for the api server
 type Config struct {
+	// Enabled is true if we should start the API server
+	Enabled bool `json:"enabled"`
 	// EnableDex indicates if the idp endpoints should be enabled
 	EnableDex bool `json:"enable-dex,omitempty"`
 	// Listen is the interface the api should bind on

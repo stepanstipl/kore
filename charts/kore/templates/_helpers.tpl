@@ -18,6 +18,7 @@ Common labels
 */}}
 {{- define "kore.labels" -}}
 helm.sh/chart: {{ include "kore.chart" . }}
+app.kubernetes.io/name: kore
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}

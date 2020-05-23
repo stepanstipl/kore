@@ -55,6 +55,7 @@ func invoke(ctx *cli.Context) error {
 	// @step: construct the server config
 	config := server.Config{
 		APIServer: apiserver.Config{
+			Enabled:       ctx.Bool("enable-api-server"),
 			EnableDex:     ctx.Bool("enable-dex"),
 			Listen:        ctx.String("listen"),
 			MetricsPort:   ctx.Int("metrics-port"),
@@ -73,6 +74,7 @@ func invoke(ctx *cli.Context) error {
 			Authenticators:             ctx.StringSlice("kore-authentication-plugin"),
 			CertificateAuthority:       ctx.String("certificate-authority"),
 			CertificateAuthorityKey:    ctx.String("certificate-authority-key"),
+			Controllers:                ctx.StringSlice("controllers"),
 			EnableClusterProviderCheck: ctx.Bool("enable-cluster-provider-check"),
 			FeatureGates:               featuresGates,
 			HMAC:                       ctx.String("kore-hmac"),
@@ -84,6 +86,7 @@ func invoke(ctx *cli.Context) error {
 			LocalJWTPublicKey:          ctx.String("local-jwt-public-key"),
 			PublicAPIURL:               ctx.String("api-public-url"),
 			PublicHubURL:               strings.TrimRight(ctx.String("ui-public-url"), "/"),
+			RunSetup:                   ctx.Bool("run-setup"),
 			DEX: kore.DEX{
 				EnabledDex:    ctx.Bool("enable-dex"),
 				PublicURL:     ctx.String("dex-public-url"),
@@ -104,7 +107,12 @@ func invoke(ctx *cli.Context) error {
 	c, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	s, err := server.New(c, config)
+	var s server.Interface
+	if ctx.Bool("bootstrap") {
+		s, err = server.NewBootstrap(c, config)
+	} else {
+		s, err = server.New(c, config, nil)
+	}
 	if err != nil {
 		return err
 	}

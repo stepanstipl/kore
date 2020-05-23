@@ -27,6 +27,12 @@ func Options() []cli.Flag {
 		//
 		// @related to the api server
 		//
+		&cli.BoolFlag{
+			Name:    "enable-api-server",
+			Usage:   "whether to start the HTTP API server",
+			Value:   true,
+			EnvVars: []string{"KORE_ENABLE_API_SERVER"},
+		},
 		&cli.StringFlag{
 			Name:    "listen",
 			Usage:   "the interface to bind the service to `INTERFACE`",
@@ -47,6 +53,21 @@ func Options() []cli.Flag {
 		//
 		// @related to the kore
 		//
+		&cli.BoolFlag{
+			Name:    "bootstrap",
+			Usage:   "used for bootstrapping Kore in a Kubernetes cluster for the first time",
+			EnvVars: []string{"KORE_BOOTSTRAP"},
+		},
+		&cli.BoolFlag{
+			Name:    "run-setup",
+			Usage:   "should be used on a single node to create internal Kore objects and run database migrations",
+			EnvVars: []string{"KORE_RUN_SETUP"},
+		},
+		&cli.StringSliceFlag{
+			Name:    "controllers",
+			Usage:   "list of controllers to start",
+			EnvVars: []string{"KORE_CONTROLLERS"},
+		},
 		&cli.StringFlag{
 			Name:    "admin-pass",
 			Usage:   "the superuser admin password used for first time access",

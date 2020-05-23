@@ -116,9 +116,11 @@ func New(sc store.Store, persistenceMgr persistence.Interface, config Config) (I
 		securityPersist: persistenceMgr.Security(),
 	}
 
-	// @step: call the setup code for the kore
-	if err := h.Setup(context.Background()); err != nil {
-		return nil, err
+	if config.RunSetup {
+		// @step: call the setup code for the kore
+		if err := h.Setup(context.Background()); err != nil {
+			return nil, err
+		}
 	}
 
 	return h, nil
