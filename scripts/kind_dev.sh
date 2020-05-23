@@ -5,8 +5,9 @@ set -eo pipefail
 usage() {
 cat <<EOF
 Usage: $(basename $0)
-  --recreate    if set the kind cluster will be recreated
-  -h|--help     display this usage menu
+  --cluster-only    if set only the kind cluster will be created
+  --recreate        if set the kind cluster will be recreated
+  -h|--help         display this usage menu
 EOF
   if [[ -n $@ ]]; then
     echo "[error] $@"
@@ -16,12 +17,14 @@ EOF
 }
 
 recreate=false
+cluster_only=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-  --recreate)    recreate=true;    shift 1; ;;
-  -h|--help)     usage;            ;;
-  *)                               shift 1; ;;
+  --cluster-only)    cluster_only=true;    shift 1; ;;
+  --recreate)        recreate=true;        shift 1; ;;
+  -h|--help)         usage;                ;;
+  *)                                       shift 1; ;;
   esac
 done
 
@@ -47,6 +50,10 @@ nodes:
       - hostPath: ${GOPATH}/src/github.com/appvia/kore
         containerPath: /go/src/github.com/appvia/kore
 EOF
+fi
+
+if [ "$cluster_only" = "true" ]; then
+  exit
 fi
 
 kubectl config use-context kind-kore
