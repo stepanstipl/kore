@@ -44,12 +44,12 @@ itself is provisioned from a predefined plan (a template). You can view the plan
 available to you via $ kore get plans. Once the cluster has been built the
 members of your team can gain access via running $ kore login.
 
+`
+	createClusterExamples = `
 Note: you retrieve a list of all the plans available to you via:
 
 $ kore get plans
 $ kore get plans <name> -o yaml
-
-Examples:
 
 $ kore -t <myteam> create cluster dev --plan gke-development --allocation <allocation_name>
 $ kore -t <myteam> create cluster dev --plan gke-development -a <name> --cluster=app1,app2
@@ -114,7 +114,7 @@ func NewCmdCreateCluster(factory cmdutil.Factory) *cobra.Command {
 		Use:     "cluster",
 		Short:   "Create a kubernetes cluster within the team",
 		Long:    createClusterLongDescription,
-		Example: "kore create cluster -a <allocation> -p <plan> [-t|--team]",
+		Example: createClusterExamples,
 		Run:     cmdutil.DefaultRunFunc(o),
 	}
 

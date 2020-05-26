@@ -40,7 +40,9 @@ var (
 	loginLongDescription = `
 Is used to authenticate yourself to the currently selected profile. Login
 performs an oauth2 authentication flow and retrieve your identity token.
+`
 
+	loginExamples = `
 $ kore login    # will login and update the current profile
 $ kore login local -a http://127.0.0.1:8080  # create a profile and login
 `
@@ -68,7 +70,7 @@ func NewCmdLogin(factory cmdutil.Factory) *cobra.Command {
 		Use:     "login",
 		Short:   "Authenticate yourself and retrieve a token for Appvia Kore",
 		Long:    loginLongDescription,
-		Example: "kore login [-a endpoint name]",
+		Example: loginExamples,
 		Run:     cmdutil.DefaultRunFunc(o),
 	}
 

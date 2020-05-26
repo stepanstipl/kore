@@ -38,11 +38,11 @@ var (
 	createSecretLongDescription = `
 Provides the ability to create secrets in the kore, from files, environments
 files and literals.
-
+`
+	createSecretExamples = `
 $ kore create secret <name> -t <team> [options]
 
-Examples:
-Create a secret from a file
+# Create a secret from a file
 $ kore create secret gke --from-file=<key>=<filename>
 `
 )
@@ -80,7 +80,7 @@ func NewCmdCreateSecret(factory cmdutil.Factory) *cobra.Command {
 	command := &cobra.Command{
 		Use:     "secret",
 		Short:   "Creates a secret in kore",
-		Example: "kore create secret <options> [-t team]",
+		Example: createSecretExamples,
 		Long:    createSecretLongDescription,
 		PreRunE: cmdutil.RequireName,
 		Run:     cmdutil.DefaultRunFunc(o),

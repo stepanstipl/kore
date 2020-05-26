@@ -25,7 +25,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var getLongDescription = `
+var (
+	getLongDescription = `
 Allows to you retrieve the resources from the kore api. The command format
 is <resource> [name]. When the optional name is not provided we will return
 a full listing of all the <resource>s from the API. Examples of resource types
@@ -35,14 +36,15 @@ You can list all the available resource via $ kore api-resources
 
 Though for a better experience all the resource are autocompletes for you.
 Take a look at $ kore completion for details
-
-Examples:
-List users:
+`
+	getExamples = `
+# List users:
 $ kore get users
 
-Get information about a specific user:
+#Get information about a specific user:
 $ kore get user admin [-o yaml]
 `
+)
 
 // GetOptions the are the options for a get command
 type GetOptions struct {
@@ -70,7 +72,7 @@ func NewCmdGet(factory cmdutil.Factory) *cobra.Command {
 		Use:     "get",
 		Short:   "Retrieve resources from the kore api",
 		Long:    getLongDescription,
-		Example: "kore get <resource> [name] [options]",
+		Example: getExamples,
 		Run:     cmdutil.DefaultRunFunc(o),
 
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {

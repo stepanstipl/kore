@@ -35,12 +35,13 @@ Sets an individual value in a kore configuration file
 
 Paths are a dot delimited name where each token represents either an attribute
 name or a map key i.e. profiles.local.server
+`
 
-Examples:
-Set the server value of the local profile
+	setExamples = `
+# Set the server value of the local profile
 kore profile set profiles.local.server https://1.2.3.4
 
-Set the default team for the profile
+# Set the default team for the profile
 kore profile set current.team myteam
 `
 )
@@ -60,7 +61,7 @@ func NewCmdProfilesSet(factory cmdutil.Factory) *cobra.Command {
 	command := &cobra.Command{
 		Use:     "set",
 		Short:   "allows you to set various options within the current selected profile",
-		Example: "kore profile use <name>",
+		Example: setExamples,
 		Long:    setLongDescription,
 		Run: func(cmd *cobra.Command, args []string) {
 			o.Path = cmd.Flags().Arg(0)
