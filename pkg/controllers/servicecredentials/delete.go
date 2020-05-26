@@ -82,7 +82,7 @@ func (c *Controller) delete(
 				APIVersion: k8scorev1.SchemeGroupVersion.String(),
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      serviceCreds.Name,
+				Name:      serviceCreds.SecretName(),
 				Namespace: serviceCreds.Spec.ClusterNamespace,
 			},
 		}

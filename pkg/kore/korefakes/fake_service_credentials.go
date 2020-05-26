@@ -52,10 +52,11 @@ type FakeServiceCredentials struct {
 		result1 string
 		result2 error
 	}
-	ListStub        func(context.Context) (*v1.ServiceCredentialsList, error)
+	ListStub        func(context.Context, ...func(credentials v1.ServiceCredentials) bool) (*v1.ServiceCredentialsList, error)
 	listMutex       sync.RWMutex
 	listArgsForCall []struct {
 		arg1 context.Context
+		arg2 []func(credentials v1.ServiceCredentials) bool
 	}
 	listReturns struct {
 		result1 *v1.ServiceCredentialsList
@@ -273,16 +274,17 @@ func (fake *FakeServiceCredentials) GetSchemaReturnsOnCall(i int, result1 string
 	}{result1, result2}
 }
 
-func (fake *FakeServiceCredentials) List(arg1 context.Context) (*v1.ServiceCredentialsList, error) {
+func (fake *FakeServiceCredentials) List(arg1 context.Context, arg2 ...func(credentials v1.ServiceCredentials) bool) (*v1.ServiceCredentialsList, error) {
 	fake.listMutex.Lock()
 	ret, specificReturn := fake.listReturnsOnCall[len(fake.listArgsForCall)]
 	fake.listArgsForCall = append(fake.listArgsForCall, struct {
 		arg1 context.Context
-	}{arg1})
-	fake.recordInvocation("List", []interface{}{arg1})
+		arg2 []func(credentials v1.ServiceCredentials) bool
+	}{arg1, arg2})
+	fake.recordInvocation("List", []interface{}{arg1, arg2})
 	fake.listMutex.Unlock()
 	if fake.ListStub != nil {
-		return fake.ListStub(arg1)
+		return fake.ListStub(arg1, arg2...)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -297,17 +299,17 @@ func (fake *FakeServiceCredentials) ListCallCount() int {
 	return len(fake.listArgsForCall)
 }
 
-func (fake *FakeServiceCredentials) ListCalls(stub func(context.Context) (*v1.ServiceCredentialsList, error)) {
+func (fake *FakeServiceCredentials) ListCalls(stub func(context.Context, ...func(credentials v1.ServiceCredentials) bool) (*v1.ServiceCredentialsList, error)) {
 	fake.listMutex.Lock()
 	defer fake.listMutex.Unlock()
 	fake.ListStub = stub
 }
 
-func (fake *FakeServiceCredentials) ListArgsForCall(i int) context.Context {
+func (fake *FakeServiceCredentials) ListArgsForCall(i int) (context.Context, []func(credentials v1.ServiceCredentials) bool) {
 	fake.listMutex.RLock()
 	defer fake.listMutex.RUnlock()
 	argsForCall := fake.listArgsForCall[i]
-	return argsForCall.arg1
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeServiceCredentials) ListReturns(result1 *v1.ServiceCredentialsList, result2 error) {

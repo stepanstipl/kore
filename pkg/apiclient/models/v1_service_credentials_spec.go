@@ -30,6 +30,9 @@ type V1ServiceCredentialsSpec struct {
 	// Required: true
 	Kind *string `json:"kind"`
 
+	// secret name
+	SecretName string `json:"secretName,omitempty"`
+
 	// service
 	Service *V1Ownership `json:"service,omitempty"`
 }

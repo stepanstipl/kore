@@ -75,7 +75,7 @@ class ServiceCredential extends AutoRefreshComponent {
           description={
             <>
               <div>
-                <Text>Cluster: <b>{serviceCredential.spec.cluster.name}</b>, namespace: <b>{serviceCredential.spec.clusterNamespace}</b></Text>
+                <Text>Cluster: <b>{serviceCredential.spec.cluster.name}</b>, namespace: <b>{serviceCredential.spec.clusterNamespace}</b>, secret name: <b>{serviceCredential.spec.secretName}</b></Text>
               </div>
               <div>
                 <Text type='secondary'>Created {created}</Text>

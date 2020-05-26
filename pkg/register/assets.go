@@ -6642,6 +6642,11 @@ spec:
               description: Kind refers to the service type
               minLength: 1
               type: string
+            secretName:
+              description: SecretName is the Kubernetes Secret's name that will contain
+                the service access information If not set the secret's name will default
+                to ` + "`" + `Name` + "`" + `
+              type: string
             service:
               description: Service contains the reference to the service object
               properties:

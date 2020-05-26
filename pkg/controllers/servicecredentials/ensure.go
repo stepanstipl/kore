@@ -129,7 +129,7 @@ func (c *Controller) ensureSecret(
 			return reconcile.Result{}, fmt.Errorf("failed to create client from cluster secret: %w", err)
 		}
 
-		exists, err := kubernetes.HasSecret(ctx, client, serviceCreds.Spec.ClusterNamespace, serviceCreds.Name)
+		exists, err := kubernetes.HasSecret(ctx, client, serviceCreds.Spec.ClusterNamespace, serviceCreds.SecretName())
 		if err != nil {
 			return reconcile.Result{}, fmt.Errorf("failed to get secret from cluster: %w", err)
 		}
@@ -164,7 +164,7 @@ func (c *Controller) ensureSecret(
 				APIVersion: k8scorev1.SchemeGroupVersion.String(),
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      serviceCreds.Name,
+				Name:      serviceCreds.SecretName(),
 				Namespace: serviceCreds.Spec.ClusterNamespace,
 			},
 			Type:       "generic",
