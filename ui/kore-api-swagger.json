@@ -6761,6 +6761,9 @@
         "kind": {
           "type": "string"
         },
+        "secretName": {
+          "type": "string"
+        },
         "service": {
           "$ref": "#/definitions/v1.Ownership"
         }

@@ -50,6 +50,10 @@ type ServiceCredentialsSpec struct {
 	// ClusterNamespace is the target namespace in the cluster where the secret will be created
 	// +kubebuilder:validation:Required
 	ClusterNamespace string `json:"clusterNamespace,omitempty"`
+	// SecretName is the Kubernetes Secret's name that will contain the service access information
+	// If not set the secret's name will default to `Name`
+	// +kubebuilder:validation:Optional
+	SecretName string `json:"secretName,omitempty"`
 	// Configuration are the configuration values for this service credentials
 	// It will be used by the service provider to provision the credentials
 	// +kubebuilder:validation:Type=object
@@ -153,6 +157,15 @@ func NewServiceCredentials(name, namespace string) *ServiceCredentials {
 			Namespace: namespace,
 		},
 	}
+}
+
+// SecretName returns with the Kubernetes Secret's name which will contain the service credential details
+func (s ServiceCredentials) SecretName() string {
+	if s.Spec.SecretName != "" {
+		return s.Spec.SecretName
+	}
+
+	return s.Name
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

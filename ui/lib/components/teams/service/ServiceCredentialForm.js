@@ -235,6 +235,7 @@ class ServiceCredentialForm extends React.Component {
 
     // Only show error after a field is touched.
     const nameError = isFieldTouched('name') && getFieldError('name')
+    const secretNameError = isFieldTouched('secretName') && getFieldError('secretName')
     const clusterError = isFieldTouched('cluster') && getFieldError('cluster')
     const serviceError = isFieldTouched('service') && getFieldError('service')
     const namespaceError = (isFieldTouched('cluster') || isFieldTouched('namespace')) && getFieldError('namespace')
@@ -264,7 +265,7 @@ class ServiceCredentialForm extends React.Component {
               { ...patterns.uriCompatible63CharMax }
             ]
           })(
-            <Input placeholder="Name" />,
+            <Input placeholder="Name" />
           )}
         </Form.Item>
         <Form.Item label="Service" validateStatus={serviceError ? 'error' : ''} help={serviceError || ''}>
@@ -301,6 +302,16 @@ class ServiceCredentialForm extends React.Component {
                 <Select.Option key={n.spec.name} value={n.spec.name}>{n.spec.name}</Select.Option>
               ))}
             </Select>
+          )}
+        </Form.Item>
+        <Form.Item label="SecretName" validateStatus={secretNameError ? 'error' : ''} help={secretNameError || ''}>
+          {getFieldDecorator('secretName', {
+            rules: [
+              { required: false },
+              { ...patterns.uriCompatible63CharMax }
+            ]
+          })(
+            <Input placeholder="SecretName" />
           )}
         </Form.Item>
         {servicePlan ? (
