@@ -23,7 +23,6 @@ import (
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	core "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/controllers"
-	ctrl "github.com/appvia/kore/pkg/controllers/management/kubernetes"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 	log "github.com/sirupsen/logrus"
@@ -119,41 +118,17 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			return reconcile.Result{RequeueAfter: 3 * time.Minute}, nil
 		}
 
-		// @step: check the overall status of the cluster
-		if cluster.Status.Status == core.PendingStatus {
-			resource.Status.Status = core.PendingStatus
-			resource.Status.Conditions = []core.Condition{{
-				Detail:  "cluster provisioning is still pending",
-				Message: "Cluster " + resource.Spec.Cluster.Name + " is still pending",
-			}}
-
-			return reconcile.Result{RequeueAfter: 3 * time.Minute}, nil
-		}
-
-		// @step: check the provisioning status
-		status, found := cluster.Status.Components.GetComponent(ctrl.ComponentClusterCreate)
-		if !found {
-			logger.Warn("cluster does not have a status on the provisioning yet")
-
-			resource.Status.Status = core.PendingStatus
-			resource.Status.Conditions = []core.Condition{{
-				Detail:  "cluster is pending, retrying later",
-				Message: "Cluster: " + resource.Spec.Cluster.Name + " is still pending",
-			}}
-
-			return reconcile.Result{RequeueAfter: 3 * time.Minute}, nil
-		}
-		switch status.Status {
+		switch cluster.Status.Status {
 		case core.PendingStatus:
-			logger.Warn("cluster provision is not successful yet, waiting")
+			logger.Warn("cluster is not ready yet, waiting")
 
 			resource.Status.Status = core.PendingStatus
 			resource.Status.Conditions = []core.Condition{{
-				Detail:  "cluster provisioning is still pending",
+				Detail:  "cluster is still pending",
 				Message: "Cluster " + resource.Spec.Cluster.Name + " is still pending",
 			}}
 
-			return reconcile.Result{RequeueAfter: 3 * time.Minute}, nil
+			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
 
 		case core.SuccessStatus, core.DeletingStatus:
 		default:
