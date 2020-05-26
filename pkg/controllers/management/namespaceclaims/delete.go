@@ -79,8 +79,7 @@ func (a *nsCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 		}
 
 		// @step: create a client from the cluster secret
-		client, err := controllers.CreateClientFromSecret(context.Background(), a.mgr.GetClient(),
-			resource.Spec.Cluster.Namespace, resource.Spec.Cluster.Name)
+		client, err := controllers.CreateClient(context.Background(), a.mgr.GetClient(), resource.Spec.Cluster)
 		if err != nil {
 			logger.WithError(err).Error("trying to create kubernetes client from secret")
 

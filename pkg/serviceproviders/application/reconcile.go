@@ -48,7 +48,7 @@ func (p Provider) Reconcile(
 		return reconcile.Result{}, controllers.NewCriticalError(errors.New("a cluster and namespace must be defined on the service"))
 	}
 
-	clusterClient, err := createClusterClient(ctx, service)
+	clusterClient, err := controllers.CreateClient(ctx, ctx.Client(), service.Spec.Cluster)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

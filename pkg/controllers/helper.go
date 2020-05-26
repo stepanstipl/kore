@@ -21,6 +21,8 @@ import (
 	"errors"
 	"reflect"
 
+	v1 "github.com/appvia/kore/pkg/apis/core/v1"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	"github.com/appvia/kore/pkg/kore"
@@ -89,13 +91,15 @@ func DeleteClusterCredentialsSecret(ctx context.Context, cc client.Client, names
 	return kubernetes.DeleteIfExists(ctx, cc, secret)
 }
 
-// CreateClientFromSecret is used to retrieve the secret and create a runtime client
-func CreateClientFromSecret(ctx context.Context, cc client.Client, namespace, name string) (client.Client, error) {
-	// @step: retrieve the credentials for the cluster
+func CreateClient(ctx context.Context, client client.Client, cluster v1.Ownership) (client.Client, error) {
+	if cluster.Name == "kore" && cluster.Namespace == kore.HubAdminTeam {
+		return client, nil
+	}
+
 	credentials := &configv1.Secret{}
-	if err := cc.Get(ctx, types.NamespacedName{
-		Name:      name,
-		Namespace: namespace,
+	if err := client.Get(ctx, types.NamespacedName{
+		Name:      cluster.Name,
+		Namespace: cluster.Namespace,
 	}, credentials); err != nil {
 		return nil, err
 	}

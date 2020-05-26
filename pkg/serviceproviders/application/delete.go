@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/appvia/kore/pkg/controllers"
+
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 
@@ -33,7 +35,7 @@ func (p Provider) Delete(
 	ctx kore.Context,
 	service *servicesv1.Service,
 ) (reconcile.Result, error) {
-	clusterClient, err := createClusterClient(ctx, service)
+	clusterClient, err := controllers.CreateClient(ctx, ctx.Client(), service.Spec.Cluster)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
