@@ -172,7 +172,6 @@ class ClustersTab extends React.Component {
                 </React.Fragment>
               )
             })}
-
           </>
         )}
       </>

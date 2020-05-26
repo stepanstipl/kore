@@ -14,27 +14,20 @@
  * limitations under the License.
  */
 
-package assets_test
+package assets
 
-import (
-	"github.com/appvia/kore/pkg/kore/assets"
-	"github.com/appvia/kore/pkg/utils/jsonschema"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-)
+import "fmt"
 
-var _ = Describe("Plans", func() {
-	It("All plans should be valid", func() {
-		plans := assets.GetDefaultPlans()
-
-		for _, plan := range plans {
-			schema, err := assets.GetClusterSchema(plan.Spec.Kind)
-			Expect(err).ToNot(HaveOccurred())
-
-			err = jsonschema.Validate(schema, plan.Name, plan.Spec.Configuration)
-			Expect(err).ToNot(HaveOccurred(), "%s plan is not valid: %s", plan.Name, err)
-
-		}
-	})
-
-})
+// GetClusterSchema returns with the JSON schema for the give cluster kind
+func GetClusterSchema(kind string) (string, error) {
+	switch kind {
+	case "Kore":
+		return KindPlanSchema, nil
+	case "GKE":
+		return GKEPlanSchema, nil
+	case "EKS":
+		return EKSPlanSchema, nil
+	default:
+		return "", fmt.Errorf("invalid cluster kind: %q", kind)
+	}
+}

@@ -97,6 +97,10 @@ func (a crCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	err = func() error {
 		// @step: we iterate the clusters and apply the roles
 		for _, cluster := range list.Items {
+			if cluster.Annotations[kore.AnnotationSystem] == kore.AnnotationValueTrue {
+				continue
+			}
+
 			logger := logger.WithFields(log.Fields{
 				"cluster": cluster.Name,
 				"team":    cluster.Namespace,

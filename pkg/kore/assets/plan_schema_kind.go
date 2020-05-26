@@ -14,27 +14,17 @@
  * limitations under the License.
  */
 
-package assets_test
+package assets
 
-import (
-	"github.com/appvia/kore/pkg/kore/assets"
-	"github.com/appvia/kore/pkg/utils/jsonschema"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-)
-
-var _ = Describe("Plans", func() {
-	It("All plans should be valid", func() {
-		plans := assets.GetDefaultPlans()
-
-		for _, plan := range plans {
-			schema, err := assets.GetClusterSchema(plan.Spec.Kind)
-			Expect(err).ToNot(HaveOccurred())
-
-			err = jsonschema.Validate(schema, plan.Name, plan.Spec.Configuration)
-			Expect(err).ToNot(HaveOccurred(), "%s plan is not valid: %s", plan.Name, err)
-
-		}
-	})
-
-})
+// KindPlanSchema is the JSON schema used to describe and validate EKS Plans
+const KindPlanSchema = `
+{
+	"$id": "https://appvia.io/schemas/eks/plan.json",
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"description": "EKS Cluster Plan Schema",
+	"type": "object",
+	"additionalProperties": false,
+	"properties": {
+	}
+}
+`

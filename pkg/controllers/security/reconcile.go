@@ -54,6 +54,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 	if err != nil {
 		return reconcile.Result{}, err
 	}
+
 	if !meta.GetDeletionTimestamp().IsZero() {
 		return c.Delete(t)
 	}

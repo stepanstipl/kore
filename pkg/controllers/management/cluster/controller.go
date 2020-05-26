@@ -88,9 +88,11 @@ func (a *Controller) RunWithDependencies(ctx context.Context, mgr manager.Manage
 	a.logger.Debug("controller has been started")
 
 	// @step: setup watches for the resources
-	if err := a.ctrl.Watch(&source.Kind{Type: &clustersv1.Cluster{}},
+	if err := a.ctrl.Watch(
+		&source.Kind{Type: &clustersv1.Cluster{}},
 		&handler.EnqueueRequestForObject{},
-		&predicate.GenerationChangedPredicate{}); err != nil {
+		predicate.GenerationChangedPredicate{},
+	); err != nil {
 
 		a.logger.WithError(err).Error("failed to create watcher on Cluster resource")
 

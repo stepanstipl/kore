@@ -879,18 +879,10 @@ func (u teamHandler) getTeamPlanDetails(req *restful.Request, resp *restful.Resp
 			return err
 		}
 
-		planDetails := TeamPlan{
-			Plan: plan.Spec,
-		}
-
-		// Get relevant schema:
-		switch plan.Spec.Kind {
-		case "GKE":
-			planDetails.Schema = assets.GKEPlanSchema
-		case "EKS":
-			planDetails.Schema = assets.EKSPlanSchema
-		default:
-			return fmt.Errorf("Cannot find schema for cluster type %v", plan.Spec.Kind)
+		schema, err := assets.GetClusterSchema(plan.Spec.Kind)
+		if err != nil {
+			writeError(req, resp, err, http.StatusNotFound)
+			return nil
 		}
 
 		paramsMap, err := u.Plans().GetEditablePlanParams(req.Request.Context(), req.PathParameter("team"), plan.Spec.Kind)
@@ -898,8 +890,11 @@ func (u teamHandler) getTeamPlanDetails(req *restful.Request, resp *restful.Resp
 			return err
 		}
 
-		planDetails.ParameterEditable = paramsMap
-		return resp.WriteHeaderAndEntity(http.StatusOK, planDetails)
+		return resp.WriteHeaderAndEntity(http.StatusOK, TeamPlan{
+			Plan:              plan.Spec,
+			Schema:            schema,
+			ParameterEditable: paramsMap,
+		})
 	})
 }
 
