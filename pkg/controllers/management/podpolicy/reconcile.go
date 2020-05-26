@@ -103,7 +103,7 @@ func (a pspCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			var failed int
 
 			_ = func() error {
-				client, err := controllers.CreateClientFromSecret(ctx, a.mgr.GetClient(), cluster.Namespace, cluster.Name)
+				client, err := controllers.CreateClient(ctx, a.mgr.GetClient(), corev1.MustGetOwnershipFromObject(&cluster))
 				if err != nil {
 					logger.WithError(err).Error("trying to create kubernetes client")
 
