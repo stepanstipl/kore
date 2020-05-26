@@ -85,8 +85,10 @@ func (a *k8sCtrl) Run(ctx context.Context, cfg *rest.Config, hi kore.Interface) 
 	}
 
 	// @step: setup watches for the resources
-	if err := ctrl.Watch(&source.Kind{Type: &clustersv1.Kubernetes{}},
-		&handler.EnqueueRequestForObject{}); err != nil {
+	if err := ctrl.Watch(
+		&source.Kind{Type: &clustersv1.Kubernetes{}},
+		&handler.EnqueueRequestForObject{},
+	); err != nil {
 
 		log.WithField("error", err.Error()).Error("failed to create watcher on resource")
 
@@ -94,17 +96,21 @@ func (a *k8sCtrl) Run(ctx context.Context, cfg *rest.Config, hi kore.Interface) 
 	}
 
 	// @step: watch for any changes to the teams, find all clusters they have an
-	err = ctrl.Watch(&source.Kind{Type: &orgv1.Team{}}, &handler.EnqueueRequestsFromMapFunc{
-		ToRequests: handler.ToRequestsFunc(func(o handler.MapObject) []reconcile.Request {
-			requests, err := ReconcileClusterRequests(ctx, mgr.GetClient(), o.Meta.GetName())
-			if err != nil {
-				log.Error(err, "failed to force reconcilation of clusters from trigger")
+	err = ctrl.Watch(
+		&source.Kind{Type: &orgv1.Team{}},
+		&handler.EnqueueRequestsFromMapFunc{
+			ToRequests: handler.ToRequestsFunc(func(o handler.MapObject) []reconcile.Request {
+				requests, err := ReconcileClusterRequests(ctx, mgr.GetClient(), o.Meta.GetName())
+				if err != nil {
+					log.Error(err, "failed to force reconcilation of clusters from trigger")
 
-				return []reconcile.Request{}
-			}
+					return []reconcile.Request{}
+				}
 
-			return requests
-		})})
+				return requests
+			}),
+		},
+	)
 	if err != nil {
 		return err
 	}

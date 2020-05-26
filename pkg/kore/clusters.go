@@ -37,6 +37,11 @@ import (
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
+const (
+	// ClusterKindKore is the default Cluster Kind for the cluster Kore is running in
+	ClusterKindKore = "Kore"
+)
+
 // Clusters returns the an interface for handling clusters
 type Clusters interface {
 	// Delete is used to delete a cluster
@@ -80,6 +85,10 @@ func (c *clustersImpl) Delete(ctx context.Context, name string) (*clustersv1.Clu
 		logger.WithError(err).Error("failed to retrieve the cluster")
 
 		return nil, err
+	}
+
+	if original.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
+		return nil, validation.NewError("the cluster can not be deleted").WithFieldError(validation.FieldRoot, validation.ReadOnly, "cluster is read-only")
 	}
 
 	return original, c.Store().Client().Delete(ctx, store.DeleteOptions.From(original))
@@ -135,6 +144,13 @@ func (c *clustersImpl) Update(ctx context.Context, cluster *clustersv1.Cluster) 
 	existing, err := c.Get(ctx, cluster.Name)
 	if err != nil && err != ErrNotFound {
 		return err
+	}
+
+	if existing != nil && existing.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
+		return validation.NewError("the cluster can not be updated").WithFieldError(validation.FieldRoot, validation.ReadOnly, "cluster is read-only")
+	}
+	if cluster.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
+		return validation.NewError("the cluster can not be updated").WithFieldError(validation.FieldRoot, validation.ReadOnly, "read-only flag can not be set")
 	}
 
 	if existing != nil {
@@ -306,17 +322,13 @@ func (c *clustersImpl) validateConfiguration(ctx context.Context, cluster *clust
 		return fmt.Errorf("failed to parse cluster configuration values: %s", err)
 	}
 
-	switch cluster.Spec.Kind {
-	case "GKE":
-		if err := jsonschema.Validate(assets.GKEPlanSchema, cluster.Name, clusterConfig); err != nil {
-			return err
-		}
-	case "EKS":
-		if err := jsonschema.Validate(assets.EKSPlanSchema, cluster.Name, clusterConfig); err != nil {
-			return err
-		}
-	default:
-		return fmt.Errorf("invalid cluster kind: %q", cluster.Spec.Kind)
+	schema, err := assets.GetClusterSchema(cluster.Spec.Kind)
+	if err != nil {
+		return err
+	}
+
+	if err := jsonschema.Validate(schema, cluster.Name, clusterConfig); err != nil {
+		return err
 	}
 
 	editableParams, err := c.plans.GetEditablePlanParams(ctx, c.team, cluster.Spec.Kind)

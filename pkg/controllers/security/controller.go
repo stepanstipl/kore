@@ -22,6 +22,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/appvia/kore/pkg/controllers/predicates"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	"github.com/appvia/kore/pkg/controllers"
@@ -118,7 +120,7 @@ func (c *Controller) RunWithDependencies(ctx context.Context, mgr manager.Manage
 	c.logger.Debug("controller has been started")
 
 	// @step: setup watches for the resources which we support security scanning for
-	if err := c.ctrl.Watch(c.srckind, &handler.EnqueueRequestForObject{}); err != nil {
+	if err := c.ctrl.Watch(c.srckind, &handler.EnqueueRequestForObject{}, predicates.SystemResourcePredicate{}); err != nil {
 		c.logger.WithError(err).Errorf("failed to create watcher on %s resource", c.kind)
 		return err
 	}

@@ -151,6 +151,10 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 		// @step: ensure the namespace claim exists
 		if err := kubernetes.EnsureNamespace(ctx, client, &corev1.Namespace{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Namespace",
+				APIVersion: corev1.SchemeGroupVersion.String(),
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:        resource.Spec.Name,
 				Labels:      resource.Spec.Labels,
@@ -166,6 +170,10 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		logger.Debug("ensuring the binding to the namespace admin exists")
 
 		binding := &rbacv1.RoleBinding{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "RoleBinding",
+				APIVersion: rbacv1.SchemeGroupVersion.String(),
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      RoleBindingName,
 				Namespace: resource.Spec.Name,

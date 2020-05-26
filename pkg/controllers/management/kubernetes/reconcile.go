@@ -59,6 +59,8 @@ const (
 
 // Reconcile is the entrypoint for the reconciliation logic
 func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+	ctx := context.Background()
+
 	logger := log.WithFields(log.Fields{
 		"name":      request.NamespacedName.Name,
 		"namespace": request.NamespacedName.Namespace,
@@ -67,7 +69,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 	// @step: retrieve the type from the api
 	object := &clustersv1.Kubernetes{}
-	if err := a.mgr.GetClient().Get(context.Background(), request.NamespacedName, object); err != nil {
+	if err := a.mgr.GetClient().Get(ctx, request.NamespacedName, object); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
@@ -77,10 +79,19 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 	// @step: keep the original object from api
 	original := object.DeepCopy()
-	finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
 
+	if object.Annotations[kore.AnnotationSystem] == kore.AnnotationValueTrue {
+		object.Status.Status = corev1.SuccessStatus
+		if err := a.mgr.GetClient().Status().Patch(ctx, object, client.MergeFrom(original)); err != nil {
+			logger.WithError(err).Error("failed to update the kubernetes cluster status")
+			return reconcile.Result{}, err
+		}
+		return reconcile.Result{}, nil
+	}
+
+	finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
 	if finalizer.IsDeletionCandidate(object) {
-		return a.Delete(context.Background(), object)
+		return a.Delete(ctx, object)
 	}
 
 	team := object.Namespace
@@ -92,7 +103,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		logger.Debugf("retrieving the cluster credentials from secret %s/%s", object.Namespace, object.Name)
 
 		// @step: retrieve the provider credentials secret
-		account, err := controllers.GetConfigSecret(context.Background(),
+		account, err := controllers.GetConfigSecret(ctx,
 			a.mgr.GetClient(),
 			object.Namespace,
 			object.Name)
@@ -137,7 +148,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 					return reconcile.Result{}, err
 				}
 
-				if found, err := kubernetes.GetIfExists(context.Background(), a.mgr.GetClient(), u); err != nil {
+				if found, err := kubernetes.GetIfExists(ctx, a.mgr.GetClient(), u); err != nil {
 					logger.WithError(err).Error("trying to get the cloud provider resource")
 
 					return reconcile.Result{}, err
@@ -156,7 +167,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 				// @check if the cloud provider has failed
 				if a.Config().EnableClusterProviderCheck {
-					ready, err := a.CheckProviderStatus(context.Background(), object)
+					ready, err := a.CheckProviderStatus(ctx, object)
 					if err != nil {
 						logger.WithError(err).Warn("error getting cluster provider status")
 
@@ -200,7 +211,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		// @TODO need to move this out into something else, but for now its cool
 		logger.Debug("ensure the api proxy service is provisioned")
 
-		if err := a.EnsureAPIService(context.Background(), client, object); err != nil {
+		if err := a.EnsureAPIService(ctx, client, object); err != nil {
 			logger.WithError(err).Error("trying to provision the api service")
 
 			object.Status.Status = corev1.FailureStatus
@@ -252,7 +263,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 				logger.WithField("name", name).Debug("ensuring the cluster role binding exists")
 
 				// @step: ensure the binding for the role exists
-				_, err = kubernetes.CreateOrUpdateManagedClusterRoleBinding(context.Background(), client, binding)
+				_, err = kubernetes.CreateOrUpdateManagedClusterRoleBinding(ctx, client, binding)
 				if err != nil {
 					logger.WithError(err).Error("trying to enforce the cluster role binding for cluster users")
 
@@ -276,7 +287,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			})
 		} else {
 			logger.Debug("removing any bindings for cluster users as non defined")
-			if err := kubernetes.DeleteBindingsWithPrefix(context.Background(), client, "kore:clusterusers:"); err != nil {
+			if err := kubernetes.DeleteBindingsWithPrefix(ctx, client, "kore:clusterusers:"); err != nil {
 				logger.WithError(err).Error("trying to delete any cluster user role bindings")
 
 				return reconcile.Result{}, err
@@ -311,7 +322,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 					},
 				}
 				// @step: retrieve a list of all the members in the team
-				members, err := a.Teams().Team(team).Members().List(context.Background())
+				members, err := a.Teams().Team(team).Members().List(ctx)
 				if err != nil {
 					logger.WithError(err).Error("trying to retrieve members of team")
 
@@ -339,7 +350,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 				}
 
 				// @step: ensure the binding for the role exists
-				_, err = kubernetes.CreateOrUpdateManagedClusterRoleBinding(context.Background(), client, binding)
+				_, err = kubernetes.CreateOrUpdateManagedClusterRoleBinding(ctx, client, binding)
 				if err != nil {
 					logger.WithError(err).Error("trying to enforce the cluster role binding for cluster users")
 
@@ -363,7 +374,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		} else {
 			logger.Debug("removing any inherited users reconcilation as inheritence is disabled")
 
-			if err := kubernetes.DeleteIfExists(context.Background(), client, &rbacv1.ClusterRoleBinding{
+			if err := kubernetes.DeleteIfExists(ctx, client, &rbacv1.ClusterRoleBinding{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "kore:team:inherited",
 				},
@@ -418,7 +429,7 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 	}
 
 	// @step: the resource has been reconcile, update the status
-	if err := a.mgr.GetClient().Status().Patch(context.Background(), object, client.MergeFrom(original)); err != nil {
+	if err := a.mgr.GetClient().Status().Patch(ctx, object, client.MergeFrom(original)); err != nil {
 		logger.WithError(err).Error("trying to update the kubernetes status")
 
 		return reconcile.Result{}, err

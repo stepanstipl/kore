@@ -5,7 +5,8 @@ module.exports = {
   },
   clusterProviderIconSrcMap: {
     'GKE': '/static/images/GCP.png',
-    'EKS': '/static/images/AWS.png'
+    'EKS': '/static/images/AWS.png',
+    'Kore': '/static/images/appvia-colour.svg'
   },
   verifiedStatusMessageMap: {
     'Success': 'Verified',
