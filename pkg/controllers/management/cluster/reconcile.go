@@ -64,6 +64,16 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 	}
 	original := cluster.DeepCopy()
 
+	if cluster.Name == "kore" && cluster.Namespace == kore.HubAdminTeam {
+		cluster.Status.Status = corev1.SuccessStatus
+		if err := a.mgr.GetClient().Status().Patch(ctx, cluster, client.MergeFrom(original)); err != nil {
+			logger.WithError(err).Error("trying to patch the cluster status")
+
+			return reconcile.Result{}, err
+		}
+		return reconcile.Result{}, nil
+	}
+
 	// @step: create the finalizer on the object and check if deleting
 	if !cluster.DeletionTimestamp.IsZero() {
 		return a.Delete(ctx, cluster)

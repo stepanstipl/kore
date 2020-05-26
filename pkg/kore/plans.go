@@ -21,12 +21,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/appvia/kore/pkg/kore/assets"
-	"github.com/appvia/kore/pkg/utils/jsonschema"
-
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
+	"github.com/appvia/kore/pkg/kore/assets"
 	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/store"
+	"github.com/appvia/kore/pkg/utils/jsonschema"
+	"github.com/appvia/kore/pkg/utils/validation"
 
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -38,12 +38,12 @@ type Plans interface {
 	Delete(context.Context, string) (*configv1.Plan, error)
 	// Get returns the class from the kore
 	Get(context.Context, string) (*configv1.Plan, error)
-	// List returns a list of classes
+	// List returns a list of plans
 	List(context.Context) (*configv1.PlanList, error)
 	// Has checks if a resource exists within an available class in the scope
 	Has(context.Context, string) (bool, error)
 	// Update is responsible for update a plan in the kore
-	Update(context.Context, *configv1.Plan) error
+	Update(ctx context.Context, plan *configv1.Plan, ignoreReadonly bool) error
 	// GetEditablePlanParams returns with the editable plan parameters for a specific team and cluster kind
 	GetEditablePlanParams(ctx context.Context, team string, clusterKind string) (map[string]bool, error)
 }
@@ -53,7 +53,7 @@ type plansImpl struct {
 }
 
 // Update is responsible for update a plan in the kore
-func (p plansImpl) Update(ctx context.Context, plan *configv1.Plan) error {
+func (p plansImpl) Update(ctx context.Context, plan *configv1.Plan, ignoreReadonly bool) error {
 	plan.Namespace = HubNamespace
 
 	user := authentication.MustGetIdentity(ctx)
@@ -63,20 +63,31 @@ func (p plansImpl) Update(ctx context.Context, plan *configv1.Plan) error {
 		return ErrUnauthorized
 	}
 
-	switch plan.Spec.Kind {
-	case "GKE":
-		if err := jsonschema.Validate(assets.GKEPlanSchema, "plan", plan.Spec.Configuration); err != nil {
+	if !ignoreReadonly {
+		original, err := p.Get(ctx, plan.Name)
+		if err != nil && err != ErrNotFound {
 			return err
 		}
-	case "EKS":
-		if err := jsonschema.Validate(assets.EKSPlanSchema, "plan", plan.Spec.Configuration); err != nil {
-			return err
+
+		if original != nil && original.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
+			return validation.NewError("the plan can not be updated").WithFieldError(validation.FieldRoot, validation.ReadOnly, "plan is read-only")
 		}
-	default:
-		return fmt.Errorf("invalid cluster kind: %q", plan.Spec.Kind)
+		if plan.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
+			return validation.NewError("the plan can not be updated").WithFieldError(validation.FieldRoot, validation.ReadOnly, "read-only flag can not be set")
+		}
 	}
 
-	err := p.Store().Client().Update(ctx,
+	schema, err := assets.GetClusterSchema(plan.Spec.Kind)
+	if err != nil {
+		return validation.NewError("cluster failed validation").
+			WithFieldError("kind", validation.InvalidType, err.Error())
+	}
+
+	if err := jsonschema.Validate(schema, "plan", plan.Spec.Configuration); err != nil {
+		return err
+	}
+
+	err = p.Store().Client().Update(ctx,
 		store.UpdateOptions.To(plan),
 		store.UpdateOptions.WithCreate(true),
 		store.UpdateOptions.WithForce(true),
@@ -112,6 +123,10 @@ func (p plansImpl) Delete(ctx context.Context, name string) (*configv1.Plan, err
 		log.WithError(err).Error("trying to retrieve plan in the kore")
 
 		return nil, err
+	}
+
+	if plan.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
+		return nil, validation.NewError("the plan can not be deleted").WithFieldError(validation.FieldRoot, validation.ReadOnly, "plan is read-only")
 	}
 
 	clustersWithPlan, err := p.getClustersWithPlan(ctx, name)
@@ -154,12 +169,26 @@ func (p plansImpl) Get(ctx context.Context, name string) (*configv1.Plan, error)
 
 // List returns a list of classes
 func (p plansImpl) List(ctx context.Context) (*configv1.PlanList, error) {
-	plans := &configv1.PlanList{}
+	planList := &configv1.PlanList{}
 
-	return plans, p.Store().Client().List(ctx,
+	err := p.Store().Client().List(ctx,
 		store.ListOptions.InNamespace(HubNamespace),
-		store.ListOptions.InTo(plans),
+		store.ListOptions.InTo(planList),
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	res := []configv1.Plan{}
+	for _, plan := range planList.Items {
+		if plan.Annotations[AnnotationSystem] == AnnotationValueTrue {
+			continue
+		}
+		res = append(res, plan)
+	}
+	planList.Items = res
+
+	return planList, nil
 }
 
 // Has checks if a resource exists within an available class in the scope

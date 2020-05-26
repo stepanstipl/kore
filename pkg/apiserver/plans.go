@@ -143,7 +143,7 @@ func (p plansHandler) updatePlan(req *restful.Request, resp *restful.Response) {
 		}
 		plan.Name = name
 
-		if err := p.Plans().Update(req.Request.Context(), plan); err != nil {
+		if err := p.Plans().Update(req.Request.Context(), plan, false); err != nil {
 			return err
 		}
 

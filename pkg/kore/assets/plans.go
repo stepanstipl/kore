@@ -33,6 +33,23 @@ func GetDefaultPlans() []*configv1.Plan {
 	return []*configv1.Plan{
 		{
 			ObjectMeta: metav1.ObjectMeta{
+				Name: "kore",
+				Annotations: map[string]string{
+					"kore.appvia.io/system":   "true",
+					"kore.appvia.io/readonly": "true",
+				},
+			},
+			Spec: configv1.PlanSpec{
+				Kind:        "Kore",
+				Summary:     "Default cluster plan for Kore",
+				Description: "Default cluster plan for Kore",
+				Configuration: apiextv1.JSON{
+					Raw: []byte(`{}`),
+				},
+			},
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{
 				Name: "gke-development",
 			},
 			Spec: configv1.PlanSpec{
