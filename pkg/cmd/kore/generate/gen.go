@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package gen
+package generate
 
 import (
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
@@ -25,10 +25,11 @@ import (
 // NewCmdGen creates and returns the gen command
 func NewCmdGen(factory cmdutil.Factory, root *cobra.Command) *cobra.Command {
 	command := &cobra.Command{
-		Use:    "gen",
-		Short:  "Gens one of more resources in kore",
-		Hidden: true,
-		Run:    cmdutil.RunHelp,
+		Use:     "generate",
+		Aliases: []string{"gen"},
+		Short:   "Generates one of more resources in kore",
+		Hidden:  true,
+		Run:     cmdutil.RunHelp,
 	}
 
 	command.AddCommand(
