@@ -55,6 +55,8 @@ type ClientService interface {
 
 	GetCluster(params *GetClusterParams, authInfo runtime.ClientAuthInfoWriter) (*GetClusterOK, error)
 
+	GetConfig(params *GetConfigParams, authInfo runtime.ClientAuthInfoWriter) (*GetConfigOK, error)
+
 	GetDefaultIDP(params *GetDefaultIDPParams, authInfo runtime.ClientAuthInfoWriter) (*GetDefaultIDPOK, error)
 
 	GetEKSCredentials(params *GetEKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*GetEKSCredentialsOK, error)
@@ -113,6 +115,8 @@ type ClientService interface {
 
 	ListClusters(params *ListClustersParams, authInfo runtime.ClientAuthInfoWriter) (*ListClustersOK, error)
 
+	ListConfig(params *ListConfigParams, authInfo runtime.ClientAuthInfoWriter) (*ListConfigOK, error)
+
 	ListEKSCredentials(params *ListEKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*ListEKSCredentialsOK, error)
 
 	ListGCPOrganizations(params *ListGCPOrganizationsParams, authInfo runtime.ClientAuthInfoWriter) (*ListGCPOrganizationsOK, error)
@@ -167,6 +171,8 @@ type ClientService interface {
 
 	RemoveCluster(params *RemoveClusterParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveClusterOK, error)
 
+	RemoveConfig(params *RemoveConfigParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveConfigOK, error)
+
 	RemoveGKECredential(params *RemoveGKECredentialParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveGKECredentialOK, error)
 
 	RemoveInvite(params *RemoveInviteParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveInviteOK, error)
@@ -188,6 +194,8 @@ type ClientService interface {
 	UpdateAllocation(params *UpdateAllocationParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateAllocationOK, error)
 
 	UpdateCluster(params *UpdateClusterParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateClusterOK, error)
+
+	UpdateConfig(params *UpdateConfigParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateConfigOK, error)
 
 	UpdateEKSCredentials(params *UpdateEKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateEKSCredentialsOK, error)
 
@@ -731,6 +739,41 @@ func (a *Client) GetCluster(params *GetClusterParams, authInfo runtime.ClientAut
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for GetCluster: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  GetConfig returns information related to the specific config name in kore
+*/
+func (a *Client) GetConfig(params *GetConfigParams, authInfo runtime.ClientAuthInfoWriter) (*GetConfigOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetConfigParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "GetConfig",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/configs/{config}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetConfigReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetConfigOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetConfig: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1745,6 +1788,41 @@ func (a *Client) ListClusters(params *ListClustersParams, authInfo runtime.Clien
 }
 
 /*
+  ListConfig returns all the configs in the kore
+*/
+func (a *Client) ListConfig(params *ListConfigParams, authInfo runtime.ClientAuthInfoWriter) (*ListConfigOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewListConfigParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "ListConfig",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/configs",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &ListConfigReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*ListConfigOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for ListConfig: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
   ListEKSCredentials is the used tor return a list of amazon e k s credentials which thhe team has access
 */
 func (a *Client) ListEKSCredentials(params *ListEKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*ListEKSCredentialsOK, error) {
@@ -2683,6 +2761,41 @@ func (a *Client) RemoveCluster(params *RemoveClusterParams, authInfo runtime.Cli
 }
 
 /*
+  RemoveConfig useds to delete a config from the kore
+*/
+func (a *Client) RemoveConfig(params *RemoveConfigParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveConfigOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewRemoveConfigParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "RemoveConfig",
+		Method:             "DELETE",
+		PathPattern:        "/api/v1alpha1/configs/{config}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &RemoveConfigReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*RemoveConfigOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for RemoveConfig: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
   RemoveGKECredential deletes a specific g k e credential from the team
 */
 func (a *Client) RemoveGKECredential(params *RemoveGKECredentialParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveGKECredentialOK, error) {
@@ -3063,6 +3176,41 @@ func (a *Client) UpdateCluster(params *UpdateClusterParams, authInfo runtime.Cli
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for UpdateCluster: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  UpdateConfig useds to create or update a config in the kore
+*/
+func (a *Client) UpdateConfig(params *UpdateConfigParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateConfigOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewUpdateConfigParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "UpdateConfig",
+		Method:             "PUT",
+		PathPattern:        "/api/v1alpha1/configs/{config}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &UpdateConfigReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*UpdateConfigOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for UpdateConfig: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

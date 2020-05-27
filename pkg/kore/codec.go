@@ -17,6 +17,7 @@
 package kore
 
 import (
+	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	securityv1 "github.com/appvia/kore/pkg/apis/security/v1"
@@ -417,4 +418,59 @@ func (c Convertor) FromSecurityResourceOverview(resource *model.SecurityResource
 		r.OpenIssueCounts[securityv1.RuleStatus(k)] = v
 	}
 	return r
+}
+
+// ToConfigModel converts from api to model
+func (c Convertor) ToConfigModel(config *configv1.Config) *model.Config {
+	confs := []model.ConfigItems{}
+	for k, v := range config.Spec.Values {
+		conf := model.ConfigItems{
+			Key:   k,
+			Value: v,
+		}
+		confs = append(confs, conf)
+	}
+
+	res := &model.Config{
+		Name:  config.Name,
+		Items: confs,
+	}
+
+	return res
+}
+
+// FromConfigModelList converts the list of configs
+func (c Convertor) FromConfigModelList(config []*model.Config) *configv1.ConfigList {
+	list := &configv1.ConfigList{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "ConfigList",
+		},
+		Items: make([]configv1.Config, len(config)),
+	}
+	for i := 0; i < len(config); i++ {
+		list.Items[i] = *c.FromConfigModel(config[i])
+	}
+
+	return list
+}
+
+// FromConfigModel converts the config user to api config
+func (c Convertor) FromConfigModel(config *model.Config) *configv1.Config {
+	values := make(map[string]string)
+	for _, ea := range config.Items {
+		values[ea.Key] = ea.Value
+	}
+	return &configv1.Config{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "Config",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: config.Name,
+		},
+		Spec: configv1.ConfigSpec{
+			Values: values,
+		},
+	}
 }

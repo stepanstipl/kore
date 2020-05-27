@@ -126,3 +126,11 @@ func (s *storeImpl) Stop() error {
 
 	return nil
 }
+
+// Configs returns the configs interface
+func (s *storeImpl) Configs() Configs {
+	return &configImpl{
+		Interface: s,
+		conn:      s.dbc,
+	}
+}

@@ -44,6 +44,16 @@ type FakeInterface struct {
 	configReturnsOnCall map[int]struct {
 		result1 *kore.Config
 	}
+	ConfigsStub        func() kore.Configs
+	configsMutex       sync.RWMutex
+	configsArgsForCall []struct {
+	}
+	configsReturns struct {
+		result1 kore.Configs
+	}
+	configsReturnsOnCall map[int]struct {
+		result1 kore.Configs
+	}
 	GetUserIdentityStub        func(context.Context, string) (authentication.Identity, bool, error)
 	getUserIdentityMutex       sync.RWMutex
 	getUserIdentityArgsForCall []struct {
@@ -386,6 +396,58 @@ func (fake *FakeInterface) ConfigReturnsOnCall(i int, result1 *kore.Config) {
 	}
 	fake.configReturnsOnCall[i] = struct {
 		result1 *kore.Config
+	}{result1}
+}
+
+func (fake *FakeInterface) Configs() kore.Configs {
+	fake.configsMutex.Lock()
+	ret, specificReturn := fake.configsReturnsOnCall[len(fake.configsArgsForCall)]
+	fake.configsArgsForCall = append(fake.configsArgsForCall, struct {
+	}{})
+	fake.recordInvocation("Configs", []interface{}{})
+	fake.configsMutex.Unlock()
+	if fake.ConfigsStub != nil {
+		return fake.ConfigsStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.configsReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeInterface) ConfigsCallCount() int {
+	fake.configsMutex.RLock()
+	defer fake.configsMutex.RUnlock()
+	return len(fake.configsArgsForCall)
+}
+
+func (fake *FakeInterface) ConfigsCalls(stub func() kore.Configs) {
+	fake.configsMutex.Lock()
+	defer fake.configsMutex.Unlock()
+	fake.ConfigsStub = stub
+}
+
+func (fake *FakeInterface) ConfigsReturns(result1 kore.Configs) {
+	fake.configsMutex.Lock()
+	defer fake.configsMutex.Unlock()
+	fake.ConfigsStub = nil
+	fake.configsReturns = struct {
+		result1 kore.Configs
+	}{result1}
+}
+
+func (fake *FakeInterface) ConfigsReturnsOnCall(i int, result1 kore.Configs) {
+	fake.configsMutex.Lock()
+	defer fake.configsMutex.Unlock()
+	fake.ConfigsStub = nil
+	if fake.configsReturnsOnCall == nil {
+		fake.configsReturnsOnCall = make(map[int]struct {
+			result1 kore.Configs
+		})
+	}
+	fake.configsReturnsOnCall[i] = struct {
+		result1 kore.Configs
 	}{result1}
 }
 
@@ -1296,6 +1358,8 @@ func (fake *FakeInterface) Invocations() map[string][][]interface{} {
 	defer fake.auditMutex.RUnlock()
 	fake.configMutex.RLock()
 	defer fake.configMutex.RUnlock()
+	fake.configsMutex.RLock()
+	defer fake.configsMutex.RUnlock()
 	fake.getUserIdentityMutex.RLock()
 	defer fake.getUserIdentityMutex.RUnlock()
 	fake.getUserIdentityByProviderMutex.RLock()

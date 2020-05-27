@@ -117,3 +117,13 @@ security_rule_results:
     status: Compliant
     message: Extra information 2
     checked_at: '2020-04-29 17:03:02'     
+configs:
+  - id: 1
+    name: example1
+config_items:
+  - item_id: 1
+    key: key
+    value: value
+  - item_id: 1
+    key: exkey
+    value: exval

@@ -42,6 +42,7 @@ func NewCmdCreate(factory cmdutil.Factory) *cobra.Command {
 		NewCmdCreateUser(factory),
 		NewCmdGKECredentials(factory),
 		NewCmdEKSCredentials(factory),
+		NewCmdCreateConfig(factory),
 	)
 
 	if factory.Config().FeatureGates[kore.FeatureGateServices] {

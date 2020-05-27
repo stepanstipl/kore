@@ -370,5 +370,14 @@ var (
 				{"Age", "metadata.creationTimestamp", "age"},
 			},
 		},
+		{
+			Name:         "config",
+			GroupVersion: configv1.GroupVersion.String(),
+			Kind:         "Config",
+			Scope:        GlobalScope,
+			Printer: []Column{
+				{"Name", "metadata.name", ""},
+			},
+		},
 	}
 )

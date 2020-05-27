@@ -28,6 +28,7 @@ func Migrations(db *gorm.DB) error {
 	db.AutoMigrate(Member{})
 	db.AutoMigrate(Team{})
 	db.AutoMigrate(User{})
+	db.AutoMigrate(Config{})
 
 	db.Model(&User{}).
 		AddIndex("idx_users_name", "username")
@@ -54,5 +55,9 @@ func Migrations(db *gorm.DB) error {
 	db.AutoMigrate(SecurityRuleResult{}).
 		AddForeignKey("scan_id", "security_scan_results(id)", "CASCADE", "RESTRICT")
 
+	db.AutoMigrate(ConfigItems{}).
+		AddForeignKey("item_id", "configs(id)", "CASCADE", "RESTRICT")
+
 	return nil
+
 }
