@@ -1,35 +1,30 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
 import { Typography, Row, Col, Card, Tag } from 'antd'
-const { Title, Paragraph, Text } = Typography
+const { Title, Paragraph } = Typography
 
 class CloudSelector extends React.Component {
+  static DEFAULT_ENABLED_CLOUDS = ['GKE', 'EKS']
+
   static propTypes = {
     selectedCloud: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]).isRequired,
     handleSelectCloud: PropTypes.func.isRequired,
-    credentials: PropTypes.object,
+    enabledCloudList: PropTypes.array,
     showCustom: PropTypes.bool
   }
 
-  selectCloud = cloud => () => this.props.handleSelectCloud(cloud)
+  selectCloud = cloud => () => {
+    if ((this.props.enabledCloudList || CloudSelector.DEFAULT_ENABLED_CLOUDS).includes(cloud)) {
+      this.props.handleSelectCloud(cloud)
+    }
+  }
 
   render() {
-    const { selectedCloud, credentials, showCustom } = this.props
+    const { selectedCloud, showCustom } = this.props
+    let enabledCloudList = this.props.enabledCloudList
 
-    const Credentials = ({ cloud }) => {
-      if (!credentials) {
-        return null
-      }
-      const credType = cloud === 'GKE' ? 'project' : 'account'
-      const cloudProviderCount = credentials[cloud].length
-      return (
-        <Paragraph style={{ textAlign: 'center', marginTop: '20px', marginBottom: '0' }}>
-          {cloudProviderCount > 0 ?
-            <Tag color="#87d068">{cloudProviderCount} {credType} credential{cloudProviderCount > 1 ? 's' : ''}</Tag> :
-            <Text type="warning">No credentials</Text>
-          }
-        </Paragraph>
-      )
+    if (!enabledCloudList) {
+      enabledCloudList = CloudSelector.DEFAULT_ENABLED_CLOUDS
     }
 
     const ComingSoon = () => (
@@ -44,28 +39,54 @@ class CloudSelector extends React.Component {
           <Card
             id="gcp"
             onClick={this.selectCloud('GKE')}
-            hoverable={true}
+            hoverable={enabledCloudList.includes('GKE')}
             className={ selectedCloud === 'GKE' ? 'cloud-card selected' : 'cloud-card' }
           >
-            <Paragraph className="logo">
-              <img src="/static/images/GCP.png" height="80px" />
-            </Paragraph>
-            <Paragraph className="name" strong>Google Cloud Platform</Paragraph>
-            <Credentials cloud="GKE" />
+            {enabledCloudList.includes('GKE') ? (
+              <>
+                <Paragraph className="logo">
+                  <img src="/static/images/GCP.png" height="80px" />
+                </Paragraph>
+                <Paragraph className="name" strong>Google Cloud Platform</Paragraph>
+              </>
+            ) : (
+              <>
+                <div className="unavailable">
+                  <Paragraph>
+                    <img src="/static/images/GCP.png" height="80px" />
+                  </Paragraph>
+                  <Paragraph strong style={{ textAlign: 'center', marginTop: '20px', marginBottom: '0' }}>Google Cloud Platform</Paragraph>
+                </div>
+                <ComingSoon />
+              </>
+            )}
           </Card>
         </Col>
         <Col span={6}>
           <Card
             id="aws"
             onClick={this.selectCloud('EKS')}
-            hoverable={true}
+            hoverable={enabledCloudList.includes('EKS')}
             className={ selectedCloud === 'EKS' ? 'cloud-card selected' : 'cloud-card' }
           >
-            <Paragraph className="logo">
-              <img src="/static/images/AWS.png" height="80px" />
-            </Paragraph>
-            <Paragraph className="name" strong>Amazon Web Services</Paragraph>
-            <Credentials cloud="EKS" />
+            {enabledCloudList.includes('EKS') ? (
+              <>
+                <Paragraph className="logo">
+                  <img src="/static/images/AWS.png" height="80px" />
+                </Paragraph>
+                <Paragraph className="name" strong>Amazon Web Services</Paragraph>
+              </>
+            ) : (
+              <>
+                <div className="unavailable">
+                  <Paragraph>
+                    <img src="/static/images/AWS.png" height="80px" />
+                  </Paragraph>
+                  <Paragraph strong style={{ textAlign: 'center', marginTop: '20px', marginBottom: '0' }}>Amazon Web Services</Paragraph>
+                </div>
+                <ComingSoon />
+              </>
+            )}
           </Card>
         </Col>
         <Col span={6}>

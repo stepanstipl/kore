@@ -283,7 +283,7 @@ class ServicePage extends React.Component {
         </Row>
 
         <Drawer
-          title="Create service credential"
+          title="Create service binding"
           placement="right"
           closable={false}
           onClose={this.createServiceCredential(false)}
@@ -300,7 +300,7 @@ class ServicePage extends React.Component {
         <Row type="flex" gutter={[16,16]}>
           <Col span={24} xl={24}>
             <Card
-              title={<div><Text style={{ marginRight: '10px' }}>Service credentials</Text><Badge style={{ backgroundColor: '#1890ff' }} count={serviceCredentials.items.filter(c => !c.deleted).length} /></div>}
+              title={<div><Text style={{ marginRight: '10px' }}>Service bindings</Text><Badge style={{ backgroundColor: '#1890ff' }} count={serviceCredentials.items.filter(c => !c.deleted).length} /></div>}
               style={{ marginBottom: '20px' }}
               extra={
                 <div>

@@ -1,8 +1,9 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
 
-import { Typography, Form, Card, Radio, Modal, Input, Collapse } from 'antd'
+import { Typography, Form, Modal, Input, Collapse, Select } from 'antd'
 const { Text, Title } = Typography
+const { Option } = Select
 
 import PlanViewer from '../plans/PlanViewer'
 import PlanOptionsForm from '../plans/PlanOptionsForm'
@@ -14,6 +15,7 @@ class ServiceOptionsForm extends React.Component {
     selectedServiceKind: PropTypes.string.isRequired,
     servicePlans: PropTypes.array.isRequired,
     teamServices: PropTypes.array.isRequired,
+    onServicePlanSelected: PropTypes.func,
     onServicePlanOverridden: PropTypes.func,
     validationErrors: PropTypes.array
   }
@@ -25,10 +27,11 @@ class ServiceOptionsForm extends React.Component {
     }
   }
 
-  onServicePlanChange = e => {
+  onServicePlanChange = (value) => {
     if (this.props.form.getFieldValue('serviceName')) {
-      this.props.form.setFieldsValue({ 'serviceName': this.generateServiceName(e.target.value) })
+      this.props.form.setFieldsValue({ 'serviceName': this.generateServiceName(value) })
     }
+    this.props.onServicePlanSelected && this.props.onServicePlanSelected(value)
   }
 
   generateServiceName = selectedServicePlan => {
@@ -75,21 +78,16 @@ class ServiceOptionsForm extends React.Component {
     }
 
     return (
-      <Card title="Service options">
-        <Form.Item label="ServicePlan">
+      <>
+        <Form.Item label="Service plan">
           {getFieldDecorator('servicePlan', {
             rules: [{ required: true, message: 'Please select your service plan!' }],
           })(
-            <Radio.Group onChange={this.onServicePlanChange}>
-              {servicePlans.map((p, idx) => (
-                <Radio.Button key={idx} value={p.metadata.name}>{p.spec.description}</Radio.Button>
-              ))}
-            </Radio.Group>
+            <Select onChange={this.onServicePlanChange} placeholder="Choose service plan">
+              {servicePlans.map(p => <Option key={p.metadata.name} value={p.metadata.name}>{p.spec.description}</Option>)}
+            </Select>
           )}
-          {selectedServicePlan ?
-            <a style={{ marginLeft: '20px' }} onClick={this.showServicePlanDetails(selectedServicePlan)}>View service plan details</a> :
-            null
-          }
+          {selectedServicePlan && <a onClick={this.showServicePlanDetails(selectedServicePlan)}>View service plan details</a>}
         </Form.Item>
         {selectedServicePlan ? (
           <Form.Item label="Service name">
@@ -106,8 +104,8 @@ class ServiceOptionsForm extends React.Component {
           </Form.Item>
         ) : null}
         {selectedServicePlan ? (
-          <Collapse>
-            <Collapse.Panel header="Customize service parameters">
+          <Collapse defaultActiveKey="plan">
+            <Collapse.Panel key="plan" header="Customize service parameters">
               <PlanOptionsForm
                 team={this.props.team}
                 resourceType="service"
@@ -120,7 +118,7 @@ class ServiceOptionsForm extends React.Component {
             </Collapse.Panel>
           </Collapse>
         ) : null}
-      </Card>
+      </>
     )
   }
 }

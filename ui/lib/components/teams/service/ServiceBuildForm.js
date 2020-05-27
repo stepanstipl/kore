@@ -1,16 +1,25 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
 import Router from 'next/router'
-import { Button, Form, message } from 'antd'
+import { Alert, Avatar, Button, Card, Checkbox, Col, Collapse, Form, Input, List, message, Row, Tag, Typography } from 'antd'
+const { Paragraph, Text } = Typography
+const { Panel } = Collapse
+import getConfig from 'next/config'
+const { publicRuntimeConfig } = getConfig()
 
 import redirect from '../../../utils/redirect'
-import ServiceKindSelector from '../../services/ServiceKindSelector'
+import CloudSelector from '../../common/CloudSelector'
 import ServiceOptionsForm from '../../services/ServiceOptionsForm'
+import IconTooltip from '../../utils/IconTooltip'
 import FormErrorMessage from '../../forms/FormErrorMessage'
 import KoreApi from '../../../kore-api'
+import asyncForEach from '../../../utils/async-foreach'
 import V1ServiceSpec from '../../../kore-api/model/V1ServiceSpec'
 import V1Service from '../../../kore-api/model/V1Service'
 import V1ObjectMeta from '../../../kore-api/model/V1ObjectMeta'
+import V1ServiceCredentials from '../../../kore-api/model/V1ServiceCredentials'
+import V1ServiceCredentialsSpec from '../../../kore-api/model/V1ServiceCredentialsSpec'
+import { NewV1ObjectMeta, NewV1Ownership } from '../../../utils/model'
 
 class ServiceBuildForm extends React.Component {
   static propTypes = {
@@ -28,32 +37,51 @@ class ServiceBuildForm extends React.Component {
       skipButtonText: this.props.skipButtonText || 'Skip',
       submitting: false,
       formErrorMessage: false,
+      selectedCloud: false,
       selectedServiceKind: '',
+      selectedServicePlan: false,
+      serviceProviders: [],
       dataLoading: true,
       servicePlanOverride: null,
-      validationErrors: null
+      validationErrors: null,
+      bindingsToCreate: [],
+      planSchemaFound: false
     }
   }
 
   async fetchComponentData() {
     const api = await KoreApi.client()
-    const [ serviceKinds, servicePlans ] = await Promise.all([
+    const [ serviceProviders, serviceKinds, servicePlans, clusters, namespaceClaims ] = await Promise.all([
+      api.ListServiceProviders(),
       api.ListServiceKinds(),
-      api.ListServicePlans()
+      api.ListServicePlans(),
+      api.ListClusters(this.props.team.metadata.name),
+      api.ListNamespaces(this.props.team.metadata.name)
     ])
-    return { serviceKinds, servicePlans }
+    const bindingsData = {}
+    namespaceClaims.items.forEach(ns => {
+      const cluster = clusters.items.find(c => c.metadata.name === ns.spec.cluster.name)
+      if (bindingsData[cluster.metadata.name]) {
+        bindingsData[cluster.metadata.name].children.push({ title: ns.spec.name, value: ns.metadata.name })
+      } else {
+        bindingsData[cluster.metadata.name] = {
+          title: cluster.metadata.name,
+          value: cluster.metadata.name,
+          selectable: false,
+          children: [{ title: ns.spec.name, value: ns.metadata.name }]
+        }
+      }
+    })
+    const bindingSelectData = Object.keys(bindingsData).map(bd => bindingsData[bd])
+    return { serviceProviders, serviceKinds, servicePlans, clusters, namespaceClaims, bindingSelectData }
   }
 
   componentDidMountComplete = null
   componentDidMount() {
     // Assign the promise chain to a variable so tests can wait for it to complete.
     this.componentDidMountComplete = Promise.resolve().then(async () => {
-      const { serviceKinds, servicePlans } = await this.fetchComponentData()
-      this.setState({
-        serviceKinds: serviceKinds,
-        servicePlans: servicePlans,
-        dataLoading: false
-      })
+      const data = await this.fetchComponentData()
+      this.setState({ ...data, dataLoading: false })
     })
   }
 
@@ -82,35 +110,113 @@ class ServiceBuildForm extends React.Component {
     return serviceResource
   }
 
-  handleSubmit = e => {
+  getServiceCredentialsResource = (name, service, cluster, namespaceClaim) => {
+    const serviceCredential = new V1ServiceCredentials()
+    serviceCredential.setApiVersion('servicecredentials.services.kore.appvia.io/v1')
+    serviceCredential.setKind('ServiceCredentials')
+    serviceCredential.setMetadata(NewV1ObjectMeta(name, this.props.team.metadata.name))
+
+    const serviceCredentialSpec = new V1ServiceCredentialsSpec()
+    serviceCredentialSpec.setKind(service.spec.kind)
+    serviceCredentialSpec.setService(NewV1Ownership({
+      group: service.apiVersion.split('/')[0],
+      version: service.apiVersion.split('/')[1],
+      kind: service.kind,
+      name: service.metadata.name,
+      namespace: this.props.team.metadata.name
+    }))
+    serviceCredentialSpec.setCluster(NewV1Ownership({
+      group: cluster.apiVersion.split('/')[0],
+      version: cluster.apiVersion.split('/')[1],
+      kind: cluster.kind,
+      name: cluster.metadata.name,
+      namespace: this.props.team.metadata.name
+    }))
+    serviceCredentialSpec.setClusterNamespace(namespaceClaim.spec.name)
+    serviceCredentialSpec.setConfiguration({})
+
+    serviceCredential.setSpec(serviceCredentialSpec)
+
+    return serviceCredential
+  }
+
+  hasNamespaceBindingErrors = async () => {
+    let namespaceBindingErrors = false
+
+    const fieldErrors = this.props.form.getFieldsError()
+    namespaceBindingErrors = Object.keys(fieldErrors).some(field => fieldErrors[field])
+
+    await asyncForEach(this.state.bindingsToCreate, async (b) => {
+      const secretName = this.props.form.getFieldValue(`${b}-secretName`)
+      if (!secretName) {
+        namespaceBindingErrors = true
+        this.props.form.setFields({
+          [`${b}-secretName`]: { errors: [new Error('Please enter the secret name or un-check namespace!')] }
+        })
+      } else {
+        try {
+          const existing = await (await KoreApi.client()).GetServiceCredentials(this.props.team.metadata.name, secretName)
+          console.log('checking existing credentials', existing)
+          if (existing) {
+            console.log('setting exsiting error on', `${b}-secretName`)
+            namespaceBindingErrors = true
+            this.props.form.setFields({
+              [`${b}-secretName`]: { value: secretName, errors: [new Error('A secret with this name already exists')] }
+            })
+          }
+        } catch (error) {
+          console.error('Error checking for existing service binding', error)
+        }
+      }
+    })
+
+    return namespaceBindingErrors
+  }
+
+  handleSubmit = async (e) => {
     e.preventDefault()
+
+    this.setState({ submitting: true, formErrorMessage: false })
+
+    const hasBindingErrors = await this.hasNamespaceBindingErrors()
+    if (hasBindingErrors) {
+      this.setState({ submitting: false, formErrorMessage: 'Validation failed' })
+      return
+    }
 
     this.serviceOptionsForm.props.form.validateFields(async (err, values) => {
       if (err) {
-        this.setState({
-          ...this.state,
-          formErrorMessage: 'Validation failed'
-        })
+        this.setState({ submitting: false, formErrorMessage: 'Validation failed' })
         return
       }
-      this.setState({
-        ...this.state,
-        submitting: true,
-        formErrorMessage: false
-      })
       try {
-        await (await KoreApi.client()).UpdateService(
-          this.props.team.metadata.name,
-          values.serviceName,
-          this.getServiceResource(values))
+        const api = await KoreApi.client()
+        const service = await api.UpdateService(this.props.team.metadata.name, values.serviceName, this.getServiceResource(values))
         message.loading('Service build requested...')
+
+        if (this.state.bindingsToCreate.length > 0) {
+          await asyncForEach(this.state.bindingsToCreate, async (bindingNamespace) => {
+            try {
+              const secretName = this.props.form.getFieldValue(`${bindingNamespace}-secretName`)
+              const namespaceClaim = this.state.namespaceClaims.items.find(ns => ns.metadata.name === bindingNamespace)
+              const cluster = this.state.clusters.items.find(c => c.metadata.name === namespaceClaim.spec.cluster.name)
+              const resource = this.getServiceCredentialsResource(secretName, service, cluster, namespaceClaim)
+              await api.UpdateServiceCredentials(this.props.team.metadata.name, secretName, resource)
+              message.loading(`Service binding for namespace "${bindingNamespace}" requested...`)
+            } catch (error) {
+              console.error('Error creating service binding', error)
+              message.error(`Failed to create service binding for namespace "${bindingNamespace}"`)
+            }
+          })
+        }
+
         return redirect({
           router: Router,
           path: `/teams/${this.props.team.metadata.name}?tab=services`
         })
       } catch (err) {
+        console.error('Error saving service', err)
         this.setState({
-          ...this.state,
           submitting: false,
           formErrorMessage: (err.fieldErrors && err.message) ? err.message : 'An error occurred requesting the service, please try again',
           validationErrors: err.fieldErrors // This will be undefined on non-validation errors, which is fine.
@@ -119,23 +225,58 @@ class ServiceBuildForm extends React.Component {
     })
   }
 
-  handleSelectKind = kind => {
+  handleSelectCloud = cloud => {
+    this.setState({
+      selectedCloud: cloud,
+      planOverride: null,
+      validationErrors: null
+    })
+  }
+
+  handleSelectKind = kind => async () => {
     this.setState({
       selectedServiceKind: kind,
+      selectedServicePlan: false,
       servicePlanOverride: null,
       validationErrors: null
     })
   }
 
   handleServicePlanOverride = servicePlanOverrides => {
-    this.setState({
-      servicePlanOverride: servicePlanOverrides
-    })
+    this.setState({ servicePlanOverride: servicePlanOverrides })
   }
 
-  serviceBuildForm = () => {
-    const { submitting, selectedServiceKind, formErrorMessage } = this.state
-    const filteredServicePlans = this.state.servicePlans.items.filter(p => p.spec.kind === selectedServiceKind)
+  handleServicePlanSelected = async (plan) => {
+    this.setState({ selectedServicePlan: plan })
+    try {
+      // check if there is a schema for the binding for the selected service kind/plan
+      const schema = await (await KoreApi.client()).GetServiceCredentialSchemaForPlan(this.props.team.metadata.name, this.state.selectedServiceKind, plan)
+      this.setState({ planSchemaFound: Boolean(schema) })
+    } catch (err) {
+      console.error('Error getting service credentials schema for plan', err)
+    }
+  }
+
+  onChange = (checked, value) => () => {
+    this.props.form.resetFields(`${value}-secretName`)
+    if (checked) {
+      this.setState({ bindingsToCreate: this.state.bindingsToCreate.concat([value]) })
+    } else {
+      this.setState({ bindingsToCreate: this.state.bindingsToCreate.filter(v => v !== value) })
+    }
+  }
+
+  disableButton = () => {
+    if (!this.state.selectedCloud || !this.state.selectedServiceKind) {
+      return true
+    }
+    return false
+  }
+
+  render() {
+    if (this.state.dataLoading || !this.props.team) {
+      return null
+    }
     const formConfig = {
       layout: 'horizontal',
       labelAlign: 'left',
@@ -152,41 +293,109 @@ class ServiceBuildForm extends React.Component {
       }
     }
 
-    return (
-      <Form {...formConfig} onSubmit={this.handleSubmit}>
-        <FormErrorMessage message={formErrorMessage} />
-        <ServiceOptionsForm
-          team={this.props.team}
-          selectedServiceKind={selectedServiceKind}
-          servicePlans={filteredServicePlans}
-          teamServices={this.props.teamServices}
-          onServicePlanOverridden={this.handleServicePlanOverride}
-          validationErrors={this.state.validationErrors}
-          wrappedComponentRef={inst => this.serviceOptionsForm = inst}
-        />
-        <Form.Item style={{ marginTop: '20px' }}>
-          <Button type="primary" htmlType="submit" loading={submitting}>
-            {this.state.submitButtonText}
-          </Button>
-        </Form.Item>
-      </Form>
-    )
-  }
-
-  render() {
-    if (this.state.dataLoading || !this.props.team) {
-      return null
+    const { getFieldDecorator } = this.props.form
+    const { selectedCloud, serviceProviders, serviceKinds, selectedServiceKind, selectedServicePlan, formErrorMessage, submitting, bindingSelectData, planSchemaFound } = this.state
+    let filteredServiceKinds = []
+    if (selectedCloud) {
+      const serviceProvider = serviceProviders.items.find(sp => sp.spec.type === publicRuntimeConfig.cloudServiceProviderMap[selectedCloud])
+      filteredServiceKinds = serviceKinds.items.filter(sk => serviceProvider.status.supportedKinds.includes(sk.metadata.name) && sk.spec.enabled)
     }
 
-    const { serviceKinds, selectedServiceKind } = this.state
+    let filteredServicePlans = []
+    if (selectedServiceKind) {
+      filteredServicePlans = this.state.servicePlans.items.filter(p => p.spec.kind === selectedServiceKind)
+    }
 
     return (
       <div>
-        <ServiceKindSelector
-          serviceKinds={serviceKinds}
-          selectedServiceKind={selectedServiceKind}
-          handleSelectKind={this.handleSelectKind} />
-        {selectedServiceKind ? <this.serviceBuildForm /> : null}
+        <CloudSelector showCustom={false} selectedCloud={selectedCloud} handleSelectCloud={this.handleSelectCloud} enabledCloudList={['EKS']}/>
+        {selectedCloud && (
+          <Form {...formConfig} onSubmit={this.handleSubmit}>
+            <Card style={{ marginBottom: '20px' }}>
+              <Alert
+                message="Cloud service"
+                description="Select the cloud service you would like to use."
+                type="info"
+                showIcon
+                style={{ marginBottom: '20px' }}
+              />
+              <List
+                style={{ marginBottom: '20px' }}
+                bordered={true}
+                dataSource={filteredServiceKinds}
+                renderItem={service => (
+                  <List.Item actions={service.metadata.name !== selectedServiceKind ? [<Button key="select" onClick={this.handleSelectKind(service.metadata.name)}>Select</Button>] : [<Tag key="selected">Selected</Tag>]}>
+                    <List.Item.Meta
+                      avatar={<Avatar src={service.spec.imageURL} />}
+                      title={<p>{service.spec.displayName || service.metadata.name} <IconTooltip icon="info-circle" text={service.spec.description} /></p>}
+                      description={service.spec.documentationURL ? <a target="_blank" rel="noopener noreferrer" href={service.spec.documentationURL}>{service.spec.documentationURL}</a> : ''}
+                    />
+                  </List.Item>
+                )}
+              />
+              <FormErrorMessage message={formErrorMessage} />
+              {selectedServiceKind && (
+                <ServiceOptionsForm
+                  team={this.props.team}
+                  selectedServiceKind={selectedServiceKind}
+                  servicePlans={filteredServicePlans}
+                  teamServices={this.props.teamServices}
+                  onServicePlanSelected={this.handleServicePlanSelected}
+                  onServicePlanOverridden={this.handleServicePlanOverride}
+                  validationErrors={this.state.validationErrors}
+                  wrappedComponentRef={inst => this.serviceOptionsForm = inst}
+                />
+              )}
+            </Card>
+            {selectedServicePlan && !planSchemaFound && bindingSelectData.length > 0 && (
+              <Collapse>
+                <Panel header="Optional: Create service bindings" key="bindings">
+                  <Alert
+                    message="Add service bindings for your already existing cluster namespaces, check the required namespaces below. Alternatively, this can also be done after your service is created"
+                    type="info"
+                    showIcon
+                    style={{ marginBottom: '20px' }}
+                  />
+
+                  {bindingSelectData.map(c => (
+                    <Row key={c.value} style={{ marginBottom: '10px', padding: '10px' }}>
+                      <Col>
+                        <Paragraph><Text strong>Cluster</Text><Text style={{ fontFamily: 'monospace', marginLeft: '10px' }}>{c.title}</Text></Paragraph>
+                        {c.children.map(ns => {
+                          const checked = this.state.bindingsToCreate.includes(ns.value)
+                          return (
+                            <Form.Item
+                              key={ns.value}
+                              colon={false}
+                              label={<Checkbox key={ns.value} onChange={(e) => this.onChange(e.target.checked, ns.value)()}>{ns.title}</Checkbox>}
+                              labelCol={{ span: 24 }}
+                              wrapperCol={{ span: 12 }}
+                            >
+                              {getFieldDecorator(`${ns.value}-secretName`, {
+                                rules: [
+                                  { required: checked, message: 'Please enter the secret name or un-check namespace!' },
+                                  { pattern: '^[a-z][a-z0-9-]{0,38}[a-z0-9]$', message: 'Name must consist of lower case alphanumeric characters or "-", it must start with a letter and end with an alphanumeric and must be no longer than 40 characters' },
+                                ]
+                              })(
+                                <Input disabled={!checked} placeholder="Secret name" />
+                              )}
+                            </Form.Item>
+                          )
+                        })}
+                      </Col>
+                    </Row>
+                  ))}
+
+                </Panel>
+              </Collapse>
+            )}
+            <Form.Item style={{ marginTop: '20px', marginBottom: 0 }}>
+              <Button type="primary" htmlType="submit" loading={submitting} disabled={this.disableButton()}>
+                {this.state.submitButtonText}
+              </Button>
+            </Form.Item>
+          </Form>
+        )}
       </div>
     )
   }

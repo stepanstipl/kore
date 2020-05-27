@@ -12,6 +12,7 @@ class Service extends AutoRefreshComponent {
   static propTypes = {
     team: PropTypes.string.isRequired,
     service: PropTypes.object.isRequired,
+    serviceKind: PropTypes.object,
     deleteService: PropTypes.func.isRequired
   }
 
@@ -36,7 +37,7 @@ class Service extends AutoRefreshComponent {
   }
 
   render() {
-    const { service, team } = this.props
+    const { service, serviceKind, team } = this.props
 
     if (service.deleted) {
       return null
@@ -75,7 +76,7 @@ class Service extends AutoRefreshComponent {
     return (
       <List.Item actions={actions()}>
         <List.Item.Meta
-          avatar={<Avatar icon="database" />}
+          avatar={serviceKind && serviceKind.spec.imageURL ? <Avatar src={serviceKind.spec.imageURL} /> : <Avatar icon="cloud-server" />}
           title={<Link href="/teams/[name]/services/[service]" as={`/teams/${team}/services/${service.metadata.name}`}><a><Text>{service.spec.kind} <Text style={{ fontFamily: 'monospace', marginLeft: '15px' }}>{service.metadata.name}</Text></Text></a></Link>}
         />
         <div>

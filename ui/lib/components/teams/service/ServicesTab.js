@@ -17,15 +17,21 @@ class ServicesTab extends React.Component {
 
   state = {
     dataLoading: true,
-    services: []
+    services: [],
+    serviceKinds: []
   }
 
   async fetchComponentData() {
     try {
-      let services = await (await KoreApi.client()).ListServices(this.props.team.metadata.name)
-      services = services.items.filter(s => !s.spec.cluster)
+      const api = await KoreApi.client()
+      let [ services, serviceKinds ] = await Promise.all([
+        api.ListServices(this.props.team.metadata.name),
+        api.ListServiceKinds(this.props.team.metadata.name)
+      ])
+      services = services.items
+      serviceKinds = serviceKinds.items
       this.props.getServiceCount && this.props.getServiceCount(services.length)
-      return { services }
+      return { services, serviceKinds }
     } catch (err) {
       console.error('Unable to load data for services tab', err)
       return {}
@@ -86,7 +92,7 @@ class ServicesTab extends React.Component {
 
   render() {
     const { team } = this.props
-    const { dataLoading, services } = this.state
+    const { dataLoading, services, serviceKinds } = this.state
 
     const hasActiveServices =  Boolean(services.filter(c => !c.deleted).length)
 
@@ -113,6 +119,7 @@ class ServicesTab extends React.Component {
                     <Service
                       team={team.metadata.name}
                       service={service}
+                      serviceKind={serviceKinds.find(sk => sk.metadata.name === service.spec.kind)}
                       deleteService={this.deleteService}
                       handleUpdate={this.handleResourceUpdated('services')}
                       handleDelete={this.handleResourceDeleted('services')}

@@ -237,7 +237,7 @@ class ClustersTab extends React.Component {
               const filteredNamespaceClaims = (namespaceClaims || []).filter(nc => nc.spec.cluster.name === cluster.metadata.name)
               const activeNamespaces = filteredNamespaceClaims.filter(nc => !nc.deleted)
               return (
-                <>
+                <React.Fragment key={cluster.metadata.name}>
                   <Cluster
                     team={team.metadata.name}
                     cluster={cluster}
@@ -259,7 +259,7 @@ class ClustersTab extends React.Component {
                       <Divider />
                     </>
                   )}
-                </>
+                </React.Fragment>
               )
             })}
 
