@@ -17,6 +17,10 @@
 package v1
 
 import (
+	"encoding/json"
+	"fmt"
+
+	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,18 +43,54 @@ type ServiceKindSpec struct {
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Optional
 	DisplayName string `json:"displayName,omitempty"`
-	// Description provides a summary of the service kind
+	// Summary provides a short title summary for the service kind
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Required
+	Summary string `json:"summary"`
+	// Description is a detailed description of the service kind
 	// +kubebuilder:validation:Optional
 	Description string `json:"description,omitempty"`
-	// Summary provides a short title summary for the service kind
-	// +kubebuilder:validation:Optional
-	Summary string `json:"summary,omitempty"`
 	// ImageURL is a thumbnail for the service kind
 	// +kubebuilder:validation:Optional
 	ImageURL string `json:"imageURL,omitempty"`
-	// } refers to the documentation page for this service
+	// DocumentationURL refers to the documentation page for this service
 	// +kubebuilder:validation:Optional
 	DocumentationURL string `json:"documentationURL,omitempty"`
+	// Schema is the JSON schema for the plan
+	// +kubebuilder:validation:Optional
+	Schema string `json:"schema,omitempty"`
+	// CredentialSchema is the JSON schema for credentials created for service using this plan
+	// +kubebuilder:validation:Optional
+	CredentialSchema string `json:"credentialSchema,omitempty"`
+	// ProviderData is provider specific data
+	// +kubebuilder:validation:Type=object
+	// +kubebuilder:validation:Optional
+	ProviderData *apiextv1.JSON `json:"providerData,omitempty"`
+}
+
+func (s *ServiceKindSpec) GetProviderData(v interface{}) error {
+	if s.ProviderData == nil {
+		return nil
+	}
+
+	if err := json.Unmarshal(s.ProviderData.Raw, v); err != nil {
+		return fmt.Errorf("failed to unmarshal service provider data: %w", err)
+	}
+	return nil
+}
+
+func (s *ServiceKindSpec) SetProviderData(v interface{}) error {
+	if v == nil {
+		s.ProviderData = nil
+		return nil
+	}
+
+	raw, err := json.Marshal(v)
+	if err != nil {
+		return fmt.Errorf("failed to marshal service kind provider data: %w", err)
+	}
+	s.ProviderData = &apiextv1.JSON{Raw: raw}
+	return nil
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

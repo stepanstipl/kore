@@ -49,15 +49,15 @@ func (d Factory) JSONSchema() string {
 	return ProviderSchema
 }
 
-func (d Factory) CreateProvider(ctx kore.ServiceProviderContext, provider *servicesv1.ServiceProvider) (_ kore.ServiceProvider, complete bool, _ error) {
+func (d Factory) Create(ctx kore.Context, provider *servicesv1.ServiceProvider) (kore.ServiceProvider, error) {
 	manifests, err := assets.Applications.Open("/")
 	if err != nil {
-		return nil, false, fmt.Errorf("failed to load application manifests: %w", err)
+		return nil, fmt.Errorf("failed to load application manifests: %w", err)
 	}
 
 	dirs, err := manifests.Readdir(-1)
 	if err != nil {
-		return nil, false, fmt.Errorf("failed to load application manifests: %w", err)
+		return nil, fmt.Errorf("failed to load application manifests: %w", err)
 	}
 
 	var plans []servicesv1.ServicePlan
@@ -65,15 +65,19 @@ func (d Factory) CreateProvider(ctx kore.ServiceProviderContext, provider *servi
 	for _, dirInfo := range dirs {
 		plan, err := d.createPlan(dirInfo)
 		if err != nil {
-			return nil, false, fmt.Errorf("failed to load application %q: %w", dirInfo.Name(), err)
+			return nil, fmt.Errorf("failed to load application %q: %w", dirInfo.Name(), err)
 		}
 		plans = append(plans, *plan)
 	}
 
-	return Provider{name: provider.Name, plans: plans}, true, nil
+	return Provider{name: provider.Name, plans: plans}, nil
 }
 
-func (d Factory) TearDownProvider(ctx kore.ServiceProviderContext, provider *servicesv1.ServiceProvider) (complete bool, _ error) {
+func (d Factory) SetUp(ctx kore.Context, provider *servicesv1.ServiceProvider) (complete bool, _ error) {
+	return true, nil
+}
+
+func (d Factory) TearDown(ctx kore.Context, provider *servicesv1.ServiceProvider) (complete bool, _ error) {
 	return true, nil
 }
 
@@ -164,7 +168,7 @@ func (d Factory) createPlan(info os.FileInfo) (*servicesv1.ServicePlan, error) {
 			APIVersion: servicesv1.GroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      info.Name(),
+			Name:      ServiceKindApp + "-" + info.Name(),
 			Namespace: "kore",
 			Annotations: map[string]string{
 				kore.AnnotationSystem: "true",

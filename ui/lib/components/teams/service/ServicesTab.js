@@ -28,7 +28,7 @@ class ServicesTab extends React.Component {
         api.ListServices(this.props.team.metadata.name),
         api.ListServiceKinds(this.props.team.metadata.name)
       ])
-      services = services.items
+      services = services.items.filter(s => !s.spec.cluster || !s.spec.cluster.name)
       serviceKinds = serviceKinds.items
       this.props.getServiceCount && this.props.getServiceCount(services.length)
       return { services, serviceKinds }

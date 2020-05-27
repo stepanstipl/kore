@@ -101,21 +101,99 @@ func (d ProviderFactory) JSONSchema() string {
 			"s3BucketKey": {
 				"type": "string",
 				"default": "templates/latest/"
+			},
+			"allowEmptyCredentialSchema": {
+				"type": "boolean",
+				"default": false
+			},
+			"defaultPlans": {
+				"type": "array",
+				"items": {
+					"type": "string",
+					"minLength": 1
+				}
+			},
+			"includeKinds": {
+				"type": "array",
+				"items": {
+					"type": "string",
+					"minLength": 1
+				}
+			},
+			"excludeKinds": {
+				"type": "array",
+				"items": {
+					"type": "string",
+					"minLength": 1
+				}
+			},
+			"includePlans": {
+				"type": "array",
+				"items": {
+					"type": "string",
+					"minLength": 1
+				}
+			},
+			"excludePlans": {
+				"type": "array",
+				"items": {
+					"type": "string",
+					"minLength": 1
+				}
 			}
 		}
 	}`
 }
 
-func (d ProviderFactory) CreateProvider(ctx kore.ServiceProviderContext, serviceProvider *servicesv1.ServiceProvider) (_ kore.ServiceProvider, complete bool, _ error) {
+func (d ProviderFactory) Create(ctx kore.Context, serviceProvider *servicesv1.ServiceProvider) (_ kore.ServiceProvider, _ error) {
 	var config = DefaultProviderConfiguration()
 
 	if err := serviceProvider.Spec.GetConfiguration(config); err != nil {
-		return nil, false, fmt.Errorf("failed to process aws-servicebroker configuration: %w", err)
+		return nil, fmt.Errorf("failed to process aws-servicebroker configuration: %w", err)
+	}
+
+	namespaceName := "kore-serviceprovider-" + serviceProvider.Name
+
+	clientSecret, err := getServiceAccountToken(ctx, ctx.Client(), namespaceName, serviceProvider.Name+"-aws-servicebroker-client")
+	if err != nil {
+		return nil, err
+	}
+
+	certsSecret, err := getSecret(ctx, ctx.Client(), namespaceName, serviceProvider.Name+"-aws-servicebroker-cert")
+	if err != nil {
+		return nil, err
+	}
+
+	clientConfiguration := osb.DefaultClientConfiguration()
+	osbConfig := openservicebroker.ProviderConfiguration{
+		ClientConfiguration:  *clientConfiguration,
+		CatalogConfiguration: config.CatalogConfiguration,
+	}
+
+	osbConfig.URL = fmt.Sprintf("https://%s-aws-servicebroker.kore-serviceprovider-%s.svc", serviceProvider.Name, serviceProvider.Name)
+	osbConfig.AuthConfig = &osb.AuthConfig{
+		BearerConfig: &osb.BearerConfig{Token: string(clientSecret.Data["token"])},
+	}
+	osbConfig.CAData = certsSecret.Data["ca.crt"]
+
+	osbClient, err := osb.NewClient(&osbConfig.ClientConfiguration)
+	if err != nil {
+		return nil, err
+	}
+
+	return openservicebroker.NewProvider(serviceProvider.Name, osbConfig, osbClient), nil
+}
+
+func (d ProviderFactory) SetUp(ctx kore.Context, serviceProvider *servicesv1.ServiceProvider) (complete bool, _ error) {
+	var config = DefaultProviderConfiguration()
+
+	if err := serviceProvider.Spec.GetConfiguration(config); err != nil {
+		return false, fmt.Errorf("failed to process aws-servicebroker configuration: %w", err)
 	}
 
 	awsAccessKeyID, awsSecretAccessKey, err := getCredentials(ctx, serviceProvider)
 	if err != nil {
-		return nil, false, err
+		return false, err
 	}
 
 	cfg := aws.NewConfig().
@@ -131,7 +209,7 @@ func (d ProviderFactory) CreateProvider(ctx kore.ServiceProviderContext, service
 			Message: "Failed to create or update DynamoDB table",
 			Detail:  err.Error(),
 		})
-		return nil, false, err
+		return false, err
 	}
 
 	serviceProvider.Status.Components.SetCondition(corev1.Component{Name: ComponentDynamoDB, Status: corev1.SuccessStatus})
@@ -144,13 +222,13 @@ func (d ProviderFactory) CreateProvider(ctx kore.ServiceProviderContext, service
 				Message: "Failed to create or update S3 bucket",
 				Detail:  err.Error(),
 			})
-			return nil, false, err
+			return false, err
 		}
 	}
 
 	serviceProvider.Status.Components.SetCondition(corev1.Component{Name: ComponentS3Bucket, Status: corev1.SuccessStatus})
 
-	clientSecret, certsSecret, complete, err := d.ensureHelmRelease(ctx, config, serviceProvider.Name, awsAccessKeyID, awsSecretAccessKey)
+	complete, err = d.ensureHelmRelease(ctx, config, serviceProvider.Name, awsAccessKeyID, awsSecretAccessKey)
 	if err != nil {
 		serviceProvider.Status.Components.SetCondition(corev1.Component{
 			Name:    ComponentHelmRelease,
@@ -158,45 +236,20 @@ func (d ProviderFactory) CreateProvider(ctx kore.ServiceProviderContext, service
 			Message: "Failed to deploy the aws-servicebroker Helm chart",
 			Detail:  err.Error(),
 		})
-		return nil, false, err
+		return false, err
 	}
 
 	if !complete {
 		serviceProvider.Status.Components.SetCondition(corev1.Component{Name: ComponentHelmRelease, Status: corev1.PendingStatus})
-		return nil, false, nil
+		return false, nil
 	}
 
 	serviceProvider.Status.Components.SetCondition(corev1.Component{Name: ComponentHelmRelease, Status: corev1.SuccessStatus})
 
-	osbConfig := osb.DefaultClientConfiguration()
-	osbConfig.URL = fmt.Sprintf("https://%s-aws-servicebroker.kore-serviceprovider-%s.svc", serviceProvider.Name, serviceProvider.Name)
-	osbConfig.AuthConfig = &osb.AuthConfig{
-		BearerConfig: &osb.BearerConfig{Token: string(clientSecret.Data["token"])},
-	}
-	osbConfig.CAData = certsSecret.Data["ca.crt"]
-
-	osbClient, err := osb.NewClient(osbConfig)
-	if err != nil {
-		return nil, false, err
-	}
-
-	provider, err := openservicebroker.NewProvider(serviceProvider.Name, osbClient)
-	if err != nil {
-		serviceProvider.Status.Components.SetCondition(corev1.Component{
-			Name:    ComponentProvider,
-			Status:  corev1.ErrorStatus,
-			Message: "Failed to initialize provider",
-			Detail:  err.Error(),
-		})
-		return nil, false, err
-	}
-
-	serviceProvider.Status.Components.SetCondition(corev1.Component{Name: ComponentProvider, Status: corev1.SuccessStatus})
-
-	return provider, true, nil
+	return true, nil
 }
 
-func (d ProviderFactory) TearDownProvider(ctx kore.ServiceProviderContext, serviceProvider *servicesv1.ServiceProvider) (complete bool, _ error) {
+func (d ProviderFactory) TearDown(ctx kore.Context, serviceProvider *servicesv1.ServiceProvider) (complete bool, _ error) {
 	var config = DefaultProviderConfiguration()
 
 	if err := serviceProvider.Spec.GetConfiguration(config); err != nil {

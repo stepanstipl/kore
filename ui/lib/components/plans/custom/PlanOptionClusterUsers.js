@@ -25,7 +25,7 @@ export default class PlanOptionClusterUsers extends PlanOptionBase {
     let allUsers = this.state.allUsers
     if (!allUsers) {
       this.setState({ loadingUsers: true })
-      if (this.props.mode === 'manage') {
+      if (this.props.manage) {
         allUsers = await (await KoreApi.client()).ListUsers()
         // all users and team members have different shaped return objects, so map them both to a plain array of usernames
         allUsers = allUsers.items.map((u) => u.spec.username)
@@ -112,7 +112,7 @@ export default class PlanOptionClusterUsers extends PlanOptionBase {
     const { name, value, editable } = this.props
 
     const displayName = this.props.displayName || startCase(name)
-    const description = this.props.mode === 'manage' ? 'Set default users to be added to every cluster created from this plan' : 'Control which team members have access to this cluster'
+    const description = this.props.manage ? 'Set default users to be added to every cluster created from this plan' : 'Control which team members have access to this cluster'
     const roles = ['cluster-admin', 'admin', 'edit', 'view']
     const columns = [
       { title: 'User', dataIndex: 'username', key: 'username', width: '45%' },

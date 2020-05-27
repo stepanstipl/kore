@@ -19,8 +19,6 @@ package kore
 import (
 	"context"
 
-	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-
 	"github.com/appvia/kore/pkg/utils/validation"
 
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
@@ -41,7 +39,7 @@ type PlanPolicies interface {
 	// Has checks if a plan policy
 	Has(context.Context, string) (bool, error)
 	// Update is responsible for updating a plan policy
-	Update(ctx context.Context, planPolicy *configv1.PlanPolicy, allowReadonly bool) error
+	Update(ctx context.Context, planPolicy *configv1.PlanPolicy, ignoreReadonly bool) error
 }
 
 type planPoliciesImpl struct {
@@ -49,7 +47,7 @@ type planPoliciesImpl struct {
 }
 
 // Update is responsible for updating a plan policy
-func (p planPoliciesImpl) Update(ctx context.Context, planPolicy *configv1.PlanPolicy, allowReadonly bool) error {
+func (p planPoliciesImpl) Update(ctx context.Context, planPolicy *configv1.PlanPolicy, ignoreReadonly bool) error {
 	planPolicy.Namespace = HubAdminTeam
 
 	// @TODO: check the user is admin or has kore permissions
@@ -60,16 +58,16 @@ func (p planPoliciesImpl) Update(ctx context.Context, planPolicy *configv1.PlanP
 		return ErrUnauthorized
 	}
 
-	if !allowReadonly {
+	if !ignoreReadonly {
 		original, err := p.Get(ctx, planPolicy.Name)
 		if err != nil && err != ErrNotFound {
 			return err
 		}
 
-		if original != nil && original.Labels[corev1.LabelReadonly] == "true" {
+		if original != nil && original.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
 			return validation.NewError("the plan policy can not be updated").WithFieldError(validation.FieldRoot, validation.ReadOnly, "policy is read-only")
 		}
-		if planPolicy.Labels[corev1.LabelReadonly] == "true" {
+		if planPolicy.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
 			return validation.NewError("the plan policy can not be updated").WithFieldError(validation.FieldRoot, validation.ReadOnly, "read-only flag can not be set")
 		}
 	}
@@ -102,7 +100,7 @@ func (p planPoliciesImpl) Delete(ctx context.Context, name string) (*configv1.Pl
 		return nil, err
 	}
 
-	if planPolicy.Labels[corev1.LabelReadonly] == "true" {
+	if planPolicy.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
 		return nil, validation.NewError("the plan policy can not be deleted").WithFieldError(validation.FieldRoot, validation.ReadOnly, "policy is read-only")
 	}
 

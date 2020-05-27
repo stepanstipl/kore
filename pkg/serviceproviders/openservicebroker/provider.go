@@ -20,6 +20,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strings"
+
+	"github.com/appvia/kore/pkg/utils"
 
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/kore"
@@ -28,11 +31,9 @@ import (
 
 	osb "github.com/kubernetes-sigs/go-open-service-broker-client/v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 const (
-	DefaultPlan                 = "kore-default"
 	MetadataKeyConfiguration    = "kore.appvia.io/configuration"
 	MetadataKeyDisplayName      = "displayName"
 	MetadataKeyImageURL         = "imageUrl"
@@ -47,94 +48,19 @@ const (
 
 var _ kore.ServiceProvider = &Provider{}
 
-type providerService struct {
-	osbService  osb.Service
-	defaultPlan *providerPlan
-	plans       map[string]providerPlan
-}
-
-type providerPlan struct {
-	osbPlan           osb.Plan
-	name              string
-	serviceID         string
-	schema            string
-	credentialsSchema string
-}
-
 type Provider struct {
-	name         string
-	client       osb.Client
-	servicePlans []servicesv1.ServicePlan
-	services     map[string]providerService
+	name   string
+	config ProviderConfiguration
+	client osb.Client
 }
 
 // NewProvider creates a new service provider which is backed by an Open Service Broker API compatible HTTP service
-func NewProvider(name string, client osb.Client) (*Provider, error) {
-	var plans []servicesv1.ServicePlan
-	services := map[string]providerService{}
-
-	catalog, err := client.GetCatalog()
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch catalog from service broker: %w", err)
-	}
-
-	if len(catalog.Services) == 0 {
-		return nil, fmt.Errorf("service broker returned an empty catalog")
-	}
-
-	for _, catalogService := range catalog.Services {
-		if !kore.ResourceNameFilter.MatchString(catalogService.Name) {
-			return nil, fmt.Errorf("%q service name is invalid, must match %s", catalogService.Name, kore.ResourceNameFilter.String())
-		}
-
-		service := providerService{
-			osbService: catalogService,
-			plans:      map[string]providerPlan{},
-		}
-
-		for _, catalogPlan := range catalogService.Plans {
-			if !kore.ResourceNameFilter.MatchString(catalogPlan.Name) {
-				return nil, fmt.Errorf("%q plan name is invalid, must match %s", catalogPlan.Name, kore.ResourceNameFilter.String())
-			}
-
-			servicePlan, schema, credentialsSchema, err := parseCatalogPlan(catalogService, catalogPlan)
-			if err != nil {
-				return nil, err
-			}
-
-			plan := providerPlan{
-				osbPlan:           catalogPlan,
-				name:              catalogPlan.Name,
-				serviceID:         catalogService.ID,
-				schema:            schema,
-				credentialsSchema: credentialsSchema,
-			}
-
-			if catalogPlan.Name == DefaultPlan {
-				service.defaultPlan = &plan
-
-				if schema == "" {
-					return nil, fmt.Errorf("%s-%s plan does not have a schema for provisioning", catalogService.Name, catalogPlan.Name)
-				}
-
-				if credentialsSchema == "" {
-					return nil, fmt.Errorf("%s-%s plan does not have a schema for bind", catalogService.Name, catalogPlan.Name)
-				}
-			} else {
-				plans = append(plans, *servicePlan)
-				service.plans[servicePlan.Name] = plan
-			}
-		}
-
-		services[catalogService.Name] = service
-	}
-
+func NewProvider(name string, config ProviderConfiguration, client osb.Client) *Provider {
 	return &Provider{
-		name:         name,
-		client:       client,
-		services:     services,
-		servicePlans: plans,
-	}, nil
+		name:   name,
+		config: config,
+		client: client,
+	}
 }
 
 func (p *Provider) Name() string {
@@ -145,154 +71,158 @@ func (p *Provider) Type() string {
 	return "openservicebroker"
 }
 
-func (p *Provider) Kinds() []servicesv1.ServiceKind {
-	var res []servicesv1.ServiceKind
-	for _, service := range p.services {
-		res = append(res, servicesv1.ServiceKind{
+func (p *Provider) Catalog(ctx kore.Context, serviceProvider *servicesv1.ServiceProvider) (kore.ServiceProviderCatalog, error) {
+	catalog := kore.ServiceProviderCatalog{}
+
+	osbCatalog, err := p.client.GetCatalog()
+	if err != nil {
+		return kore.ServiceProviderCatalog{}, fmt.Errorf("failed to fetch catalog from service broker: %w", err)
+	}
+
+	if len(osbCatalog.Services) == 0 {
+		return kore.ServiceProviderCatalog{}, fmt.Errorf("service broker returned an empty catalog")
+	}
+
+	for _, catalogService := range osbCatalog.Services {
+		if len(p.config.IncludeKinds) > 0 && !utils.Contains(catalogService.Name, p.config.IncludeKinds) {
+			continue
+		}
+		if utils.Contains(catalogService.Name, p.config.ExcludeKinds) {
+			continue
+		}
+
+		if !kore.ResourceNameFilter.MatchString(catalogService.Name) {
+			return kore.ServiceProviderCatalog{}, fmt.Errorf("%q service name is invalid, must match %s", catalogService.Name, kore.ResourceNameFilter.String())
+		}
+
+		summary := catalogService.Description
+		if summary == "" {
+			summary = strings.Title(catalogService.Name)
+		}
+
+		serviceKind := servicesv1.ServiceKind{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       servicesv1.ServiceKindGVK.Kind,
 				APIVersion: servicesv1.GroupVersion.String(),
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      service.osbService.Name,
+				Name:      catalogService.Name,
 				Namespace: kore.HubNamespace,
 			},
 			Spec: servicesv1.ServiceKindSpec{
-				Summary:          service.osbService.Description,
-				DisplayName:      getMetadataStringVal(service.osbService.Metadata, MetadataKeyDisplayName, ""),
-				Description:      getMetadataStringVal(service.osbService.Metadata, MetadataKeyDescription, ""),
-				ImageURL:         getMetadataStringVal(service.osbService.Metadata, MetadataKeyImageURL, ""),
-				DocumentationURL: getMetadataStringVal(service.osbService.Metadata, MetadataKeyDocumentationURL, ""),
+				DisplayName:      getMetadataStringVal(catalogService.Metadata, MetadataKeyDisplayName, ""),
+				Summary:          summary,
+				Description:      getMetadataStringVal(catalogService.Metadata, MetadataKeyDescription, ""),
+				ImageURL:         getMetadataStringVal(catalogService.Metadata, MetadataKeyImageURL, ""),
+				DocumentationURL: getMetadataStringVal(catalogService.Metadata, MetadataKeyDocumentationURL, ""),
 			},
-		})
-	}
-	return res
-}
+		}
+		providerData := ServiceKindProviderData{ServiceID: catalogService.ID}
 
-func (p *Provider) Plans() []servicesv1.ServicePlan {
-	return p.servicePlans
+		for _, catalogPlan := range catalogService.Plans {
+			if !kore.ResourceNameFilter.MatchString(catalogPlan.Name) {
+				return kore.ServiceProviderCatalog{}, fmt.Errorf("%q plan name is invalid, must match %s", catalogPlan.Name, kore.ResourceNameFilter.String())
+			}
+
+			servicePlan, err := parseCatalogPlan(catalogService, catalogPlan)
+			if err != nil {
+				return kore.ServiceProviderCatalog{}, err
+			}
+
+			if utils.Contains(servicePlan.Name, p.config.DefaultPlans) {
+				if servicePlan.Spec.Schema == "" {
+					return kore.ServiceProviderCatalog{}, fmt.Errorf("%s plan does not have a schema for provisioning", servicePlan.Name)
+				}
+				if !p.config.AllowEmptyCredentialSchema {
+					if catalogService.Bindable && (catalogPlan.Bindable == nil || *catalogPlan.Bindable) && servicePlan.Spec.CredentialSchema == "" {
+						return kore.ServiceProviderCatalog{}, fmt.Errorf("%s plan does not have a schema for bind", servicePlan.Name)
+					}
+				}
+
+				if providerData.DefaultPlanID != "" {
+					return kore.ServiceProviderCatalog{}, fmt.Errorf("there are multiple default plans for the same service: %s", serviceKind.Name)
+				}
+
+				providerData.DefaultPlanID = catalogPlan.ID
+				serviceKind.Spec.Schema = servicePlan.Spec.Schema
+				serviceKind.Spec.CredentialSchema = servicePlan.Spec.CredentialSchema
+			}
+
+			if len(p.config.IncludePlans) > 0 && !utils.Contains(servicePlan.Name, p.config.IncludePlans) {
+				continue
+			}
+			if utils.Contains(servicePlan.Name, p.config.ExcludePlans) {
+				continue
+			}
+
+			catalog.Plans = append(catalog.Plans, *servicePlan)
+		}
+
+		if err := serviceKind.Spec.SetProviderData(providerData); err != nil {
+			return kore.ServiceProviderCatalog{}, err
+		}
+
+		catalog.Kinds = append(catalog.Kinds, serviceKind)
+	}
+
+	return catalog, nil
 }
 
 func (p Provider) AdminServices() []servicesv1.Service {
 	return nil
 }
 
-func (p *Provider) PlanJSONSchema(kind string, planName string) (string, error) {
-	plan, found, err := p.planWithFilter(kind, planName, func(p providerPlan) bool { return p.schema != "" })
+func parseCatalogPlan(service osb.Service, catalogPlan osb.Plan) (*servicesv1.ServicePlan, error) {
+	schemaStr, err := getPlanSchema(catalogPlan)
 	if err != nil {
-		return "", err
-	}
-	if !found {
-		return "", nil
+		return nil, err
 	}
 
-	return plan.schema, nil
-
-}
-
-func (p *Provider) CredentialsJSONSchema(kind string, planName string) (string, error) {
-	plan, found, err := p.planWithFilter(kind, planName, func(p providerPlan) bool { return p.credentialsSchema != "" })
+	credentialsSchemaStr, err := getCredentialsSchema(catalogPlan)
 	if err != nil {
-		return "", err
-	}
-	if !found {
-		return "", nil
+		return nil, err
 	}
 
-	return plan.credentialsSchema, nil
-}
-
-func (p *Provider) RequiredCredentialTypes(kind string) ([]schema.GroupVersionKind, error) {
-	_, ok := p.services[kind]
-	if !ok {
-		return nil, fmt.Errorf("%q service kind is invalid", kind)
-	}
-	return nil, nil
-}
-
-func (p *Provider) plan(service *servicesv1.Service) (providerPlan, error) {
-	res, found, err := p.planWithFilter(service.Spec.Kind, service.PlanShortName(), nil)
-	if err != nil {
-		return providerPlan{}, err
-	}
-	if !found {
-		return providerPlan{}, fmt.Errorf("%q service must define a %q plan to create and use custom plans", service.Spec.Kind, DefaultPlan)
-	}
-
-	return res, nil
-}
-
-func (p *Provider) planWithFilter(kind, planName string, filter func(providerPlan) bool) (providerPlan, bool, error) {
-	service, ok := p.services[kind]
-	if !ok {
-		return providerPlan{}, false, fmt.Errorf("%q service kind is invalid", kind)
-	}
-
-	if planName != "" {
-		if plan, ok := service.plans[planName]; ok {
-			if filter == nil || filter(plan) {
-				return plan, true, nil
-			}
-		}
-	}
-
-	if service.defaultPlan != nil {
-		if filter == nil || filter(*service.defaultPlan) {
-			return *service.defaultPlan, true, nil
-		}
-	}
-
-	return providerPlan{}, false, nil
-}
-
-func parseCatalogPlan(service osb.Service, plan osb.Plan) (*servicesv1.ServicePlan, string, string, error) {
-	schemaStr, err := getPlanSchema(plan)
-	if err != nil {
-		return nil, "", "", err
-	}
-
-	credentialsSchemaStr, err := getCredentialsSchema(plan)
-	if err != nil {
-		return nil, "", "", err
-	}
-
-	res := &servicesv1.ServicePlan{
+	plan := &servicesv1.ServicePlan{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ServicePlan",
 			APIVersion: servicesv1.GroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      plan.Name,
+			Name:      service.Name + "-" + catalogPlan.Name,
 			Namespace: kore.HubNamespace,
 		},
 		Spec: servicesv1.ServicePlanSpec{
-			Kind:        service.Name,
-			Summary:     fmt.Sprintf("%s service - %s plan", service.Name, plan.Name),
-			Description: plan.Description,
+			Kind:             service.Name,
+			DisplayName:      getMetadataStringVal(catalogPlan.Metadata, MetadataKeyDisplayName, ""),
+			Summary:          catalogPlan.Description,
+			Description:      getMetadataStringVal(catalogPlan.Metadata, MetadataKeyDescription, ""),
+			Schema:           schemaStr,
+			CredentialSchema: credentialsSchemaStr,
 		},
 	}
 
 	configuration := map[string]interface{}{}
 
-	if rawConfiguration, hasConfig := plan.Metadata[MetadataKeyConfiguration]; hasConfig {
+	if rawConfiguration, hasConfig := catalogPlan.Metadata[MetadataKeyConfiguration]; hasConfig {
 		var ok bool
 		configuration, ok = rawConfiguration.(map[string]interface{})
 		if !ok {
-			return nil, "", "", fmt.Errorf("%s-%s plan has an invalid configuration, it must be an object", service.Name, plan.Name)
+			return nil, fmt.Errorf("%s-%s plan has an invalid configuration, it must be an object", service.Name, catalogPlan.Name)
 		}
 	}
 
 	if schemaStr != "" {
 		schema := &jsonschema.Schema{}
 		if err := json.Unmarshal([]byte(schemaStr), schema); err != nil {
-			return nil, "", "", fmt.Errorf("failed to unmarshal JSON schema: %w", err)
+			return nil, fmt.Errorf("failed to unmarshal JSON schema: %w", err)
 		}
 
 		for name, prop := range schema.Properties {
 			if _, isSet := configuration[name]; !isSet {
 				defaultValue, err := prop.ParseDefault()
 				if err != nil {
-					return nil, "", "", fmt.Errorf("invalid default value %v in JSON schema: %w", prop.Default, err)
+					return nil, fmt.Errorf("invalid default value %v in JSON schema: %w", prop.Default, err)
 				}
 				if defaultValue != nil {
 					configuration[name] = defaultValue
@@ -301,11 +231,18 @@ func parseCatalogPlan(service osb.Service, plan osb.Plan) (*servicesv1.ServicePl
 		}
 	}
 
-	if err := res.Spec.SetConfiguration(configuration); err != nil {
-		return nil, "", "", err
+	if err := plan.Spec.SetConfiguration(configuration); err != nil {
+		return nil, err
 	}
 
-	return res, schemaStr, credentialsSchemaStr, nil
+	if err := plan.Spec.SetProviderData(ServicePlanProviderData{
+		ServiceID: service.ID,
+		PlanID:    catalogPlan.ID,
+	}); err != nil {
+		return nil, err
+	}
+
+	return plan, nil
 }
 
 func getPlanSchema(plan osb.Plan) (string, error) {

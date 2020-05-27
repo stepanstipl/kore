@@ -298,7 +298,9 @@ class ServiceBuildForm extends React.Component {
     let filteredServiceKinds = []
     if (selectedCloud) {
       const serviceProvider = serviceProviders.items.find(sp => sp.spec.type === publicRuntimeConfig.cloudServiceProviderMap[selectedCloud])
-      filteredServiceKinds = serviceKinds.items.filter(sk => serviceProvider.status.supportedKinds.includes(sk.metadata.name) && sk.spec.enabled)
+      if (serviceProvider) {
+        filteredServiceKinds = serviceKinds.items.filter(sk => serviceProvider.status.supportedKinds.includes(sk.metadata.name) && sk.spec.enabled)
+      }
     }
 
     let filteredServicePlans = []

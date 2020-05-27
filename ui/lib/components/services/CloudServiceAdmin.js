@@ -1,10 +1,10 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
 import KoreApi from '../../kore-api'
-import ServiceProvider from './ServiceProvider'
 import { Alert, Icon } from 'antd'
+import ServiceKindList from './ServiceKindList'
 
-export default class ServiceAdmin extends React.Component {
+export default class CloudServiceAdmin extends React.Component {
   static propTypes = {
     cloud: PropTypes.string
   }
@@ -28,13 +28,18 @@ export default class ServiceAdmin extends React.Component {
   componentDidMount = () => {
     this.componentDidMountComplete = Promise.resolve().then(async () => {
       let provider = null
-      if (ServiceAdmin.BROKERS[this.props.cloud]) {
-        provider = await this.getServiceProvider(ServiceAdmin.BROKERS[this.props.cloud])
+      if (CloudServiceAdmin.BROKERS[this.props.cloud]) {
+        provider = await this.getServiceProvider(CloudServiceAdmin.BROKERS[this.props.cloud])
       }
       this.setState({
         loading: false, provider
       })
     })
+  }
+
+  filterKindsForProvider = (kind) => {
+    const { provider } = this.state
+    return provider.status.supportedKinds.indexOf(kind.metadata.name) > -1
   }
 
   render() {
@@ -43,7 +48,7 @@ export default class ServiceAdmin extends React.Component {
     return (
       <>
         {loading ? <Icon type="loading" /> : (
-          <>{!provider ? <Alert type="warning" message={`No provider available to provision ${cloud} cloud services`}/> : <ServiceProvider provider={provider} />}</>
+          <>{!provider ? <Alert type="warning" message={`No provider available to provision ${cloud} cloud services`}/> : <ServiceKindList filter={this.filterKindsForProvider} />}</>
         )}
       </>
     )

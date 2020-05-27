@@ -34,11 +34,14 @@ import (
 )
 
 // ServiceCredentials returns the an interface for handling service credentials
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . ServiceCredentials
 type ServiceCredentials interface {
 	// Delete is used to delete service credentials
 	Delete(context.Context, string) (*servicesv1.ServiceCredentials, error)
 	// Get returns a specific service credentials
 	Get(context.Context, string) (*servicesv1.ServiceCredentials, error)
+	// GetSchema returns the service credential schema
+	GetSchema(context.Context, string) (string, error)
 	// List returns a list of service credentials
 	List(context.Context) (*servicesv1.ServiceCredentialsList, error)
 	// Update is used to update service credentials
@@ -103,6 +106,34 @@ func (s *serviceCredentialsImpl) Get(ctx context.Context, name string) (*service
 	return serviceCredentials, nil
 }
 
+// GetSchema returns the service plan schema
+func (s *serviceCredentialsImpl) GetSchema(ctx context.Context, name string) (string, error) {
+	serviceCredentials, err := s.Get(ctx, name)
+	if err != nil {
+		return "", err
+	}
+
+	service, err := s.Teams().Team(serviceCredentials.Spec.Service.Namespace).Services().Get(ctx, serviceCredentials.Spec.Service.Name)
+	if err != nil {
+		return "", err
+	}
+
+	plan, err := s.ServicePlans().Get(ctx, service.Spec.Plan)
+	if err != nil {
+		return "", err
+	}
+	if plan.Spec.Schema != "" {
+		return plan.Spec.Schema, nil
+	}
+
+	kind, err := s.ServiceKinds().Get(ctx, plan.Spec.Kind)
+	if err != nil {
+		return "", err
+	}
+
+	return kind.Spec.Schema, nil
+}
+
 // Update is used to update service credentials
 func (s *serviceCredentialsImpl) Update(ctx context.Context, serviceCreds *servicesv1.ServiceCredentials) error {
 	existing, err := s.Get(ctx, serviceCreds.Name)
@@ -142,13 +173,7 @@ func (s *serviceCredentialsImpl) Update(ctx context.Context, serviceCreds *servi
 		return err
 	}
 
-	provider := s.serviceProviders.GetProviderForKind(serviceCreds.Spec.Kind)
-	if provider == nil {
-		return validation.NewError("%q failed validation", serviceCreds.Name).
-			WithFieldErrorf("kind", validation.InvalidType, "%q is not a known service kind", serviceCreds.Spec.Kind)
-	}
-
-	if err := s.validateConfiguration(ctx, service, serviceCreds, existing, provider); err != nil {
+	if err := s.validateConfiguration(ctx, service, serviceCreds, existing); err != nil {
 		return err
 	}
 
@@ -159,12 +184,11 @@ func (s *serviceCredentialsImpl) Update(ctx context.Context, serviceCreds *servi
 }
 
 func (s *serviceCredentialsImpl) validateConfiguration(
-	_ context.Context,
+	ctx context.Context,
 	service *servicesv1.Service,
 	serviceCreds, existing *servicesv1.ServiceCredentials,
-	provider ServiceProvider,
 ) error {
-	schema, err := provider.CredentialsJSONSchema(serviceCreds.Spec.Kind, service.PlanShortName())
+	schema, err := s.ServicePlans().GetCredentialSchema(ctx, service.Spec.Plan)
 	if err != nil {
 		return err
 	}

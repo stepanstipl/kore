@@ -52,6 +52,12 @@ class V1ServiceSpec {
         if (data) {
             obj = obj || new V1ServiceSpec();
 
+            if (data.hasOwnProperty('cluster')) {
+                obj['cluster'] = V1Ownership.constructFromObject(data['cluster']);
+            }
+            if (data.hasOwnProperty('clusterNamespace')) {
+                obj['clusterNamespace'] = ApiClient.convertToType(data['clusterNamespace'], 'String');
+            }
             if (data.hasOwnProperty('configuration')) {
                 obj['configuration'] = ApiClient.convertToType(data['configuration'], Object);
             }
@@ -68,6 +74,32 @@ class V1ServiceSpec {
         return obj;
     }
 
+/**
+     * @return {module:model/V1Ownership}
+     */
+    getCluster() {
+        return this.cluster;
+    }
+
+    /**
+     * @param {module:model/V1Ownership} cluster
+     */
+    setCluster(cluster) {
+        this['cluster'] = cluster;
+    }
+/**
+     * @return {String}
+     */
+    getClusterNamespace() {
+        return this.clusterNamespace;
+    }
+
+    /**
+     * @param {String} clusterNamespace
+     */
+    setClusterNamespace(clusterNamespace) {
+        this['clusterNamespace'] = clusterNamespace;
+    }
 /**
      * @return {Object}
      */
@@ -122,6 +154,16 @@ class V1ServiceSpec {
     }
 
 }
+
+/**
+ * @member {module:model/V1Ownership} cluster
+ */
+V1ServiceSpec.prototype['cluster'] = undefined;
+
+/**
+ * @member {String} clusterNamespace
+ */
+V1ServiceSpec.prototype['clusterNamespace'] = undefined;
 
 /**
  * @member {Object} configuration

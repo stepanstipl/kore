@@ -56,11 +56,15 @@ func (d DummyFactory) JSONSchema() string {
 	}`
 }
 
-func (d DummyFactory) CreateProvider(ctx kore.ServiceProviderContext, provider *servicesv1.ServiceProvider) (_ kore.ServiceProvider, complete bool, _ error) {
-	return Dummy{name: provider.Name}, true, nil
+func (d DummyFactory) Create(ctx kore.Context, serviceProvider *servicesv1.ServiceProvider) (kore.ServiceProvider, error) {
+	return Dummy{name: serviceProvider.Name}, nil
 }
 
-func (d DummyFactory) TearDownProvider(ctx kore.ServiceProviderContext, provider *servicesv1.ServiceProvider) (complete bool, _ error) {
+func (d DummyFactory) SetUp(_ kore.Context, _ *servicesv1.ServiceProvider) (complete bool, _ error) {
+	return true, nil
+}
+
+func (d DummyFactory) TearDown(_ kore.Context, _ *servicesv1.ServiceProvider) (complete bool, _ error) {
 	return true, nil
 }
 
@@ -82,7 +86,14 @@ func (d Dummy) Name() string {
 	return d.name
 }
 
-func (d Dummy) Kinds() []servicesv1.ServiceKind {
+func (d Dummy) Catalog(_ kore.Context, _ *servicesv1.ServiceProvider) (kore.ServiceProviderCatalog, error) {
+	return kore.ServiceProviderCatalog{
+		Plans: d.plans(),
+		Kinds: d.kinds(),
+	}, nil
+}
+
+func (d Dummy) kinds() []servicesv1.ServiceKind {
 	return []servicesv1.ServiceKind{
 		{
 			TypeMeta: metav1.TypeMeta{
@@ -102,7 +113,7 @@ func (d Dummy) Kinds() []servicesv1.ServiceKind {
 	}
 }
 
-func (d Dummy) Plans() []servicesv1.ServicePlan {
+func (d Dummy) plans() []servicesv1.ServicePlan {
 	return []servicesv1.ServicePlan{
 		{
 			TypeMeta: metav1.TypeMeta{
@@ -110,7 +121,7 @@ func (d Dummy) Plans() []servicesv1.ServicePlan {
 				APIVersion: servicesv1.GroupVersion.String(),
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "default",
+				Name:      "dummy-default",
 				Namespace: "kore",
 			},
 			Spec: servicesv1.ServicePlanSpec{
@@ -118,6 +129,38 @@ func (d Dummy) Plans() []servicesv1.ServicePlan {
 				Description:   "Used for testing",
 				Summary:       "This is a default dummy service plan",
 				Configuration: &v1beta1.JSON{Raw: []byte(`{"foo":"bar"}`)},
+				Schema: `{
+					"$id": "https://appvia.io/schemas/services/dummy/dummy.json",
+					"$schema": "http://json-schema.org/draft-07/schema#",
+					"description": "Dummy service plan schema",
+					"type": "object",
+					"additionalProperties": false,
+					"required": [
+						"foo"
+					],
+					"properties": {
+						"foo": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}`,
+				CredentialSchema: `{
+					"$id": "https://appvia.io/schemas/services/dummy/dummy-credentials.json",
+					"$schema": "http://json-schema.org/draft-07/schema#",
+					"description": "Dummy service plan credentials schema",
+					"type": "object",
+					"additionalProperties": false,
+					"required": [
+						"bar"
+					],
+					"properties": {
+						"bar": {
+							"type": "string",
+							"minLength": 1
+						}
+					}
+				}`,
 			},
 		},
 	}
@@ -127,64 +170,22 @@ func (d Dummy) AdminServices() []servicesv1.Service {
 	return nil
 }
 
-func (d Dummy) PlanJSONSchema(_, _ string) (string, error) {
-	return `{
-		"$id": "https://appvia.io/schemas/services/dummy/dummy.json",
-		"$schema": "http://json-schema.org/draft-07/schema#",
-		"description": "Dummy service plan schema",
-		"type": "object",
-		"additionalProperties": false,
-		"required": [
-			"foo"
-		],
-		"properties": {
-			"foo": {
-				"type": "string",
-				"minLength": 1
-			}
-		}
-	}`, nil
-}
-
-func (d Dummy) CredentialsJSONSchema(_, _ string) (string, error) {
-	return `{
-		"$id": "https://appvia.io/schemas/services/dummy/dummy-credentials.json",
-		"$schema": "http://json-schema.org/draft-07/schema#",
-		"description": "Dummy service plan credentials schema",
-		"type": "object",
-		"additionalProperties": false,
-		"required": [
-			"bar"
-		],
-		"properties": {
-			"bar": {
-				"type": "string",
-				"minLength": 1
-			}
-		}
-	}`, nil
-}
-
-func (d Dummy) RequiredCredentialTypes(_ string) ([]schema.GroupVersionKind, error) {
-	return nil, nil
-}
-
 func (d Dummy) Reconcile(
-	ctx kore.ServiceProviderContext,
+	ctx kore.Context,
 	service *servicesv1.Service,
 ) (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
 func (d Dummy) Delete(
-	ctx kore.ServiceProviderContext,
+	ctx kore.Context,
 	service *servicesv1.Service,
 ) (reconcile.Result, error) {
 	return reconcile.Result{}, nil
 }
 
 func (d Dummy) ReconcileCredentials(
-	ctx kore.ServiceProviderContext,
+	ctx kore.Context,
 	service *servicesv1.Service,
 	creds *servicesv1.ServiceCredentials,
 ) (reconcile.Result, map[string]string, error) {
@@ -195,7 +196,7 @@ func (d Dummy) ReconcileCredentials(
 }
 
 func (d Dummy) DeleteCredentials(
-	ctx kore.ServiceProviderContext,
+	ctx kore.Context,
 	service *servicesv1.Service,
 	creds *servicesv1.ServiceCredentials,
 ) (reconcile.Result, error) {

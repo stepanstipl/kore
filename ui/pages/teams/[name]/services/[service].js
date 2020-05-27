@@ -6,7 +6,7 @@ import { Typography, Collapse, Row, Col, List, Button, Form, Avatar, Card, Badge
 const { Text } = Typography
 import KoreApi from '../../../../lib/kore-api'
 import Breadcrumb from '../../../../lib/components/layout/Breadcrumb'
-import PlanOptionsForm from '../../../../lib/components/plans/PlanOptionsForm'
+import UsePlanForm from '../../../../lib/components/plans/UsePlanForm'
 import ComponentStatusTree from '../../../../lib/components/common/ComponentStatusTree'
 import ResourceStatusTag from '../../../../lib/components/resources/ResourceStatusTag'
 import copy from '../../../../lib/utils/object-copy'
@@ -266,7 +266,7 @@ class ServicePage extends React.Component {
                       </>
                     )}
                   </Form.Item>
-                  <PlanOptionsForm
+                  <UsePlanForm
                     team={team}
                     resourceType="service"
                     kind={service.spec.kind}

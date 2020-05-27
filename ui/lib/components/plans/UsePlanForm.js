@@ -1,13 +1,18 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
-import { Form, Checkbox } from 'antd'
 import { set } from 'lodash'
 
 import copy from '../../utils/object-copy'
-import PlanOption from './PlanOption'
 import KoreApi from '../../kore-api'
+import PlanViewEdit from './PlanViewEdit'
+import { Icon } from 'antd'
 
-class PlanOptionsForm extends React.Component {
+/**
+ * UsePlanForm is for *using* a plan to configure a cluster, service or service credential. 
+ * 
+ * To *manage* a plan (create, view, edit the plan itself), use Manage(Service/Cluster)PlanForm.
+ */
+class UsePlanForm extends React.Component {
   static propTypes = {
     team: PropTypes.object.isRequired,
     resourceType: PropTypes.oneOf(['cluster', 'service', 'servicecredential']).isRequired,
@@ -30,9 +35,9 @@ class PlanOptionsForm extends React.Component {
   constructor(props) {
     super(props)
     // Use passed-in plan values if we have them.
-    const planValues = this.props.planValues ? this.props.planValues : PlanOptionsForm.initialState.planValues
+    const planValues = this.props.planValues ? this.props.planValues : UsePlanForm.initialState.planValues
     this.state = { 
-      ...PlanOptionsForm.initialState,
+      ...UsePlanForm.initialState,
       planValues
     }
   }
@@ -45,11 +50,8 @@ class PlanOptionsForm extends React.Component {
   componentDidUpdateComplete = null
   componentDidUpdate(prevProps) {
     if (this.props.plan !== prevProps.plan || this.props.team !== prevProps.team) {
-      this.setState({ ...PlanOptionsForm.initialState })
+      this.setState({ ...UsePlanForm.initialState })
       this.componentDidUpdateComplete = this.fetchComponentData()
-    }
-    if (this.props.mode !== prevProps.mode) {
-      this.setState({ showReadOnly: this.props.mode === 'view' })
     }
     if (this.props.planValues !== prevProps.planValues) {
       this.setState({
@@ -71,7 +73,7 @@ class PlanOptionsForm extends React.Component {
       [schema, parameterEditable, planValues] = [planDetails.schema, planDetails.parameterEditable, planDetails.servicePlan.configuration]
       break
     case 'servicecredential':
-      schema = await (await KoreApi.client()).GetServiceCredentialSchemaForPlan(this.props.team.metadata.name, this.props.kind, this.props.plan)
+      schema = await (await KoreApi.client()).GetServiceCredentialSchema(this.props.team.metadata.name, this.props.plan)
       parameterEditable = { '*': true }
       planValues = {}
       break
@@ -88,8 +90,7 @@ class PlanOptionsForm extends React.Component {
       schema: schema || { properties:[] },
       parameterEditable: parameterEditable || {},
       // Overwrite plan values only if it's still set to the default value
-      planValues: this.state.planValues === PlanOptionsForm.initialState.planValues ? copy(planValues || {}) : this.state.planValues,
-      showReadOnly: this.props.mode === 'view',
+      planValues: this.state.planValues === UsePlanForm.initialState.planValues ? copy(planValues || {}) : this.state.planValues,
       dataLoading: false
     })
   }
@@ -105,52 +106,31 @@ class PlanOptionsForm extends React.Component {
     })
   }
 
-  handleShowReadOnlyChange = (checked) => {
-    this.setState({
-      showReadOnly: checked
-    })
-  }
-
   render() {
     if (this.state.dataLoading) {
       return (
-        <div>Loading plan details...</div>
+        <Icon type="loading" />
       )
     }
 
     return (
       <>
-        {this.props.mode !== 'view' && !this.state.parameterEditable['*'] ? (
-          <Form.Item label="Show read-only parameters">
-            <Checkbox onChange={(v) => this.handleShowReadOnlyChange(v.target.checked)} checked={this.state.showReadOnly} />
-          </Form.Item>
-        ): null}
-        {Object.keys(this.state.schema.properties).map((name) => {
-          const editable = this.props.mode !== 'view' &&
-            (this.state.parameterEditable['*'] === true || this.state.parameterEditable[name] === true) &&
-            (this.props.mode === 'create' || !this.state.schema.properties[name].immutable) // Disallow editing of params which can only be set at create time.
-
-          return (
-            <PlanOption 
-              mode="use"
-              team={this.props.team}
-              resourceType={this.props.resourceType}
-              kind={this.props.kind}
-              plan={this.state.planValues}
-              key={name} 
-              name={name} 
-              property={this.state.schema.properties[name]} 
-              value={this.state.planValues[name]}
-              hideNonEditable={!this.state.showReadOnly} 
-              editable={editable} 
-              onChange={(n, v) => this.onValueChange(n, v)}
-              validationErrors={this.props.validationErrors} />
-          )
-        })}
+        <PlanViewEdit
+          resourceType={this.props.resourceType}
+          mode={this.props.mode}
+          manage={false}
+          team={this.props.team}
+          kind={this.props.kind}
+          plan={this.state.planValues}
+          schema={this.state.schema} 
+          parameterEditable={this.state.parameterEditable} 
+          onPlanValueChange={(n, v) => this.onValueChange(n, v)}
+          validationErrors={this.props.validationErrors} 
+        />
       </>
     )
   }
 }
 
-export default PlanOptionsForm
+export default UsePlanForm
 

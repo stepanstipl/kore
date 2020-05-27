@@ -87,8 +87,8 @@ class KoreApiClient {
   ListServicePlans = (kind) => this.apis.default.ListServicePlans({ kind })
   GetServicePlan = (name) => this.apis.default.GetServicePlan({ name })
   UpdateServicePlan = (name, servicePlan) => this.apis.default.UpdateServicePlan({ name, body: JSON.stringify(servicePlan) })
-  GetServicePlanSchemaForKind = (kind) => this.apis.default.GetServicePlanSchemaForKind({ kind })
-  GetServicePlanSchemaForPlan = (kind, name) => this.apis.default.GetServicePlanSchemaForPlan({ kind, name })
+  DeleteServicePlan = (name) => this.apis.default.DeleteServicePLan({ name })
+  GetServicePlanSchema = (name) => this.apis.default.GetServicePlanSchema({ name })
 
   // Services
   ListServiceProviders = () => this.apis.default.ListServiceProviders()
@@ -163,7 +163,7 @@ class KoreApiClient {
   UpdateServiceCredentials = (team, name, serviceCredential) => this.apis.default.UpdateServiceCredentials({ team, name, body: JSON.stringify(serviceCredential) })
   ListServiceCredentials = (team, cluster, service) => this.apis.default.ListServiceCredentials({ team, cluster, service })
   DeleteServiceCredentials = (team, name) => this.apis.default.DeleteServiceCredentials({ team, name })
-  GetServiceCredentialSchemaForPlan = (team, kind, name) => this.apis.default.GetServiceCredentialSchemaForPlan({ team, kind, name })
+  GetServiceCredentialSchema = (team, name) => this.apis.default.GetServiceCredentialSchema({ team, name })
 }
 
 module.exports = KoreApiClient

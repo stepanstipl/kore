@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"strings"
 	"sync"
-	"time"
 
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/store"
@@ -32,7 +31,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -62,78 +60,44 @@ func ServiceProviderFactories() map[string]ServiceProviderFactory {
 	return res
 }
 
+type ServiceProviderCatalog struct {
+	Plans []servicesv1.ServicePlan
+	Kinds []servicesv1.ServiceKind
+}
+
 type ServiceProviderFactory interface {
 	// Type returns the service provider type
 	Type() string
 	// JSONSchema returns the JSON schema for the provider's configuration
 	JSONSchema() string
-	// CreateProvider creates the provider
-	CreateProvider(ServiceProviderContext, *servicesv1.ServiceProvider) (_ ServiceProvider, complete bool, _ error)
-	// TearDownProvider makes sure all provider resources are deleted
-	TearDownProvider(ServiceProviderContext, *servicesv1.ServiceProvider) (complete bool, err error)
+	// Create creates the provider
+	Create(Context, *servicesv1.ServiceProvider) (ServiceProvider, error)
+	// SetUp makes sure all provider dependencies are created
+	SetUp(Context, *servicesv1.ServiceProvider) (complete bool, _ error)
+	// TearDown makes sure all provider dependencies are deleted
+	TearDown(Context, *servicesv1.ServiceProvider) (complete bool, _ error)
 	// RequiredCredentialTypes returns with the required credential types
 	RequiredCredentialTypes() []schema.GroupVersionKind
 	// DefaultProviders returns with a list of providers which should be automatically installed
 	DefaultProviders() []servicesv1.ServiceProvider
 }
 
-type ServiceProviderContext struct {
-	Context context.Context
-	Logger  log.FieldLogger
-	Client  client.Client
-}
-
-func (s ServiceProviderContext) Deadline() (deadline time.Time, ok bool) {
-	return s.Context.Deadline()
-}
-
-func (s ServiceProviderContext) Done() <-chan struct{} {
-	return s.Context.Done()
-}
-
-func (s ServiceProviderContext) Err() error {
-	return s.Context.Err()
-}
-
-func (s ServiceProviderContext) Value(key interface{}) interface{} {
-	return s.Context.Value(key)
-}
-
-func NewServiceProviderContext(
-	ctx context.Context,
-	logger log.FieldLogger,
-	client client.Client,
-) ServiceProviderContext {
-	return ServiceProviderContext{
-		Context: ctx,
-		Logger:  logger,
-		Client:  client,
-	}
-}
-
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . ServiceProvider
 type ServiceProvider interface {
 	// Name returns a unique id for the service provider
 	Name() string
-	// Kinds returns a list of service kinds supported by this provider. All kinds must be unique
-	Kinds() []servicesv1.ServiceKind
-	// Plans returns all default service plans for this provider
-	Plans() []servicesv1.ServicePlan
 	// AdminServices returns with the default admin services we need to install when the service provider is registered
 	AdminServices() []servicesv1.Service
-	// PlanJSONSchema returns the JSON schema for the given service kind and plan
-	PlanJSONSchema(kind string, plan string) (string, error)
-	// CredentialsJSONSchema returns the JSON schema for the credentials configuration
-	CredentialsJSONSchema(kind string, plan string) (string, error)
-	// RequiredCredentialTypes returns with the required credential types
-	RequiredCredentialTypes(kind string) ([]schema.GroupVersionKind, error)
+	// Catalog returns with the service provider catalog. It's the provider's responsibility to load the catalog if required
+	Catalog(Context, *servicesv1.ServiceProvider) (ServiceProviderCatalog, error)
 	// Reconcile will create or update the service
-	Reconcile(ServiceProviderContext, *servicesv1.Service) (reconcile.Result, error)
+	Reconcile(Context, *servicesv1.Service) (reconcile.Result, error)
 	// Delete will delete the service
-	Delete(ServiceProviderContext, *servicesv1.Service) (reconcile.Result, error)
+	Delete(Context, *servicesv1.Service) (reconcile.Result, error)
 	// ReconcileCredentials will create or update the service credentials
-	ReconcileCredentials(ServiceProviderContext, *servicesv1.Service, *servicesv1.ServiceCredentials) (reconcile.Result, map[string]string, error)
+	ReconcileCredentials(Context, *servicesv1.Service, *servicesv1.ServiceCredentials) (reconcile.Result, map[string]string, error)
 	// DeleteCredentials will delete the service credentials
-	DeleteCredentials(ServiceProviderContext, *servicesv1.Service, *servicesv1.ServiceCredentials) (reconcile.Result, error)
+	DeleteCredentials(Context, *servicesv1.Service, *servicesv1.ServiceCredentials) (reconcile.Result, error)
 }
 
 // ServiceProviders is the interface to manage service providers
@@ -144,6 +108,8 @@ type ServiceProviders interface {
 	Get(context.Context, string) (*servicesv1.ServiceProvider, error)
 	// List returns the existing service providers
 	List(context.Context) (*servicesv1.ServiceProviderList, error)
+	// ListFiltered returns a list of service providers using the given filter.
+	ListFiltered(context.Context, func(servicesv1.ServiceProvider) bool) (*servicesv1.ServiceProviderList, error)
 	// Has checks if a service provider exists
 	Has(context.Context, string) (bool, error)
 	// Update is responsible for updating a service provider
@@ -151,17 +117,22 @@ type ServiceProviders interface {
 	// GetEditableProviderParams returns with the editable service provider parameters for a specific team and service kind
 	GetEditableProviderParams(ctx context.Context, team string, clusterKind string) (map[string]bool, error)
 	// GetProviderForKind returns a service provider for the given service kind
-	GetProviderForKind(kind string) ServiceProvider
-	// Register registers a new provider
-	Register(ServiceProviderContext, *servicesv1.ServiceProvider) (_ ServiceProvider, complete bool, _ error)
+	GetProviderForKind(ctx Context, kind string) (ServiceProvider, error)
+	// Register registers a new service provider
+	Register(ctx Context, serviceProvider *servicesv1.ServiceProvider) (ServiceProvider, error)
+	// SetUp makes sure the provider dependencies are created
+	SetUp(Context, *servicesv1.ServiceProvider) (complete bool, _ error)
+	// Catalog loads the service provider catalog
+	Catalog(Context, *servicesv1.ServiceProvider) (ServiceProviderCatalog, error)
 	// Unregister removes the given provider
-	Unregister(ServiceProviderContext, *servicesv1.ServiceProvider) (complete bool, _ error)
+	Unregister(Context, *servicesv1.ServiceProvider) (complete bool, _ error)
 }
 
 type serviceProvidersImpl struct {
 	Interface
-	providers     map[string]ServiceProvider
-	providersLock sync.RWMutex
+	providers       map[string]ServiceProvider
+	providersByKind map[string]ServiceProvider
+	providersLock   sync.Mutex
 }
 
 // Update is responsible for updating a service provider
@@ -266,6 +237,27 @@ func (p *serviceProvidersImpl) List(ctx context.Context) (*servicesv1.ServicePro
 	)
 }
 
+// ListFiltered returns a list of service providers using the given filter.
+// A service provider is included if the filter function returns true
+func (p *serviceProvidersImpl) ListFiltered(ctx context.Context, filter func(plan servicesv1.ServiceProvider) bool) (*servicesv1.ServiceProviderList, error) {
+	var res []servicesv1.ServiceProvider
+
+	serviceProvidersList, err := p.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, serviceProvider := range serviceProvidersList.Items {
+		if filter(serviceProvider) {
+			res = append(res, serviceProvider)
+		}
+	}
+
+	serviceProvidersList.Items = res
+
+	return serviceProvidersList, nil
+}
+
 // Has checks if a service provider exists
 func (p *serviceProvidersImpl) Has(ctx context.Context, name string) (bool, error) {
 	return p.Store().Client().Has(ctx,
@@ -281,68 +273,118 @@ func (p *serviceProvidersImpl) GetEditableProviderParams(ctx context.Context, te
 	return nil, nil
 }
 
-// Register registers a new provider
-func (p *serviceProvidersImpl) Register(ctx ServiceProviderContext, serviceProvider *servicesv1.ServiceProvider) (_ ServiceProvider, complete bool, _ error) {
+// Register registers a new service provider
+func (p *serviceProvidersImpl) Register(ctx Context, serviceProvider *servicesv1.ServiceProvider) (ServiceProvider, error) {
 	p.providersLock.Lock()
 	defer p.providersLock.Unlock()
 
+	return p.register(ctx, serviceProvider)
+}
+
+func (p *serviceProvidersImpl) register(ctx Context, serviceProvider *servicesv1.ServiceProvider) (ServiceProvider, error) {
 	factory, ok := serviceProviderFactories[serviceProvider.Spec.Type]
 	if !ok {
-		return nil, false, fmt.Errorf("service provider type %q is invalid", serviceProvider.Spec.Type)
+		log.WithField("serviceProvider", serviceProvider.Name).Warning("Service provider is not known, skipping registration")
+		return nil, fmt.Errorf("service provider type is not supported: %q", serviceProvider.Spec.Type)
 	}
 
-	provider, complete, err := factory.CreateProvider(ctx, serviceProvider)
-	if err != nil || !complete {
-		return nil, complete, err
-	}
-
-	var supportedKinds []string
-	for _, kind := range provider.Kinds() {
-		supportedKinds = append(supportedKinds, kind.Name)
-	}
-
-	for _, kind := range supportedKinds {
-		if p, registered := p.providers[kind]; registered {
-			if p.Name() != serviceProvider.Name {
-				return nil, false, fmt.Errorf("service kind is already registered by an other service provider: %s", p.Name())
-			}
-		}
-	}
-
-	// check for removed kinds
-	for kind, provider := range p.providers {
-		if provider.Name() == serviceProvider.Name && !utils.Contains(kind, supportedKinds) {
-			if err := p.unregisterKind(ctx, kind); err != nil {
-				return nil, false, err
-			}
-		}
+	provider, err := factory.Create(ctx, serviceProvider)
+	if err != nil {
+		return nil, err
 	}
 
 	if p.providers == nil {
 		p.providers = map[string]ServiceProvider{}
 	}
+	p.providers[serviceProvider.Name] = provider
 
-	for _, kind := range supportedKinds {
-		p.providers[kind] = provider
+	if p.providersByKind == nil {
+		p.providersByKind = map[string]ServiceProvider{}
+	}
+	for _, kind := range serviceProvider.Status.SupportedKinds {
+		p.providersByKind[kind] = provider
 	}
 
-	return provider, true, nil
+	return provider, nil
+}
+
+func (p *serviceProvidersImpl) SetUp(ctx Context, serviceProvider *servicesv1.ServiceProvider) (complete bool, _ error) {
+	spfLock.Lock()
+	factory, ok := serviceProviderFactories[serviceProvider.Spec.Type]
+	spfLock.Unlock()
+
+	if !ok {
+		return false, fmt.Errorf("unknown service provider type: %q", serviceProvider.Spec.Type)
+	}
+
+	return factory.SetUp(ctx, serviceProvider)
+}
+
+// Catalog loads the service provider catalog
+func (p *serviceProvidersImpl) Catalog(ctx Context, serviceProvider *servicesv1.ServiceProvider) (ServiceProviderCatalog, error) {
+	p.providersLock.Lock()
+	defer p.providersLock.Unlock()
+
+	provider, ok := p.providers[serviceProvider.Name]
+	if !ok {
+		var err error
+		if provider, err = p.register(ctx, serviceProvider); err != nil {
+			return ServiceProviderCatalog{}, err
+		}
+	}
+
+	catalog, err := provider.Catalog(ctx, serviceProvider)
+	if err != nil {
+		return ServiceProviderCatalog{}, err
+	}
+
+	var supportedKinds []string
+	for _, kind := range catalog.Kinds {
+		supportedKinds = append(supportedKinds, kind.Name)
+	}
+
+	for _, kind := range supportedKinds {
+		if rp, registered := p.providersByKind[kind]; registered {
+			if rp.Name() != serviceProvider.Name {
+				return ServiceProviderCatalog{}, fmt.Errorf("service kind is already registered by an other service provider: %s", rp.Name())
+			}
+		}
+	}
+
+	// check for removed kinds
+	for kind, rp := range p.providers {
+		if rp.Name() == serviceProvider.Name && !utils.Contains(kind, supportedKinds) {
+			if err := p.unregisterKind(ctx, kind); err != nil {
+				return ServiceProviderCatalog{}, err
+			}
+		}
+	}
+
+	return catalog, nil
 }
 
 // Unregister removes the given provider
-func (p *serviceProvidersImpl) Unregister(ctx ServiceProviderContext, serviceProvider *servicesv1.ServiceProvider) (complete bool, _ error) {
+func (p *serviceProvidersImpl) Unregister(ctx Context, serviceProvider *servicesv1.ServiceProvider) (complete bool, _ error) {
+	p.providersLock.Lock()
+	defer p.providersLock.Unlock()
+
 	for _, kind := range serviceProvider.Status.SupportedKinds {
 		if err := p.unregisterKind(ctx, kind); err != nil {
 			return false, err
 		}
 	}
 
+	delete(p.providers, serviceProvider.Name)
+
+	spfLock.Lock()
 	factory, ok := serviceProviderFactories[serviceProvider.Spec.Type]
+	spfLock.Unlock()
+
 	if !ok {
-		return false, fmt.Errorf("service provider type %q is invalid", serviceProvider.Spec.Type)
+		return false, fmt.Errorf("unknown service provider type: %q", serviceProvider.Spec.Type)
 	}
 
-	return factory.TearDownProvider(ctx, serviceProvider)
+	return factory.TearDown(ctx, serviceProvider)
 }
 
 func (p *serviceProvidersImpl) unregisterKind(ctx context.Context, kind string) error {
@@ -351,7 +393,7 @@ func (p *serviceProvidersImpl) unregisterKind(ctx context.Context, kind string) 
 		return fmt.Errorf("failed to get service plans: %w", err)
 	}
 	for _, plan := range plans.Items {
-		if _, err := p.ServicePlans().Delete(ctx, plan.Name); err != nil && err != ErrNotFound {
+		if _, err := p.ServicePlans().Delete(ctx, plan.Name, true); err != nil && err != ErrNotFound {
 			return fmt.Errorf("failed to delete service plan %q: %w", plan.Name, err)
 		}
 	}
@@ -361,19 +403,32 @@ func (p *serviceProvidersImpl) unregisterKind(ctx context.Context, kind string) 
 		return fmt.Errorf("failed to delete service kind: %w", err)
 	}
 
-	p.providersLock.Lock()
-	defer p.providersLock.Unlock()
-
-	delete(p.providers, kind)
+	delete(p.providersByKind, kind)
 
 	return nil
 }
 
-func (p *serviceProvidersImpl) GetProviderForKind(kind string) ServiceProvider {
-	p.providersLock.RLock()
-	defer p.providersLock.RUnlock()
+func (p *serviceProvidersImpl) GetProviderForKind(ctx Context, kind string) (ServiceProvider, error) {
+	p.providersLock.Lock()
+	defer p.providersLock.Unlock()
 
-	return p.providers[kind]
+	provider, ok := p.providersByKind[kind]
+	if ok {
+		return provider, nil
+	}
+
+	providerList, err := p.ServiceProviders().ListFiltered(ctx, func(provider servicesv1.ServiceProvider) bool {
+		return utils.Contains(kind, provider.Status.SupportedKinds)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(providerList.Items) == 0 {
+		return nil, fmt.Errorf("no available service provider for kind %q", kind)
+	}
+
+	return p.register(ctx, &providerList.Items[0])
 }
 
 func (p *serviceProvidersImpl) validateCredentials(ctx context.Context, serviceProvider *servicesv1.ServiceProvider, factory ServiceProviderFactory) error {

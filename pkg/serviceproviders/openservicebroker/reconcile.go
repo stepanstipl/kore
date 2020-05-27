@@ -34,10 +34,10 @@ import (
 )
 
 func (p *Provider) Reconcile(
-	ctx kore.ServiceProviderContext,
+	ctx kore.Context,
 	service *servicesv1.Service,
 ) (reconcile.Result, error) {
-	providerPlan, err := p.plan(service)
+	planProviderData, err := getServicePlanProviderData(ctx, service)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -77,13 +77,13 @@ func (p *Provider) Reconcile(
 		return reconcile.Result{}, controllers.NewCriticalError(fmt.Errorf("failed to unmarshal service configuration: %w", err))
 	}
 
-	ctx.Logger.Debug("provisioning service with service broker")
+	ctx.Logger().Debug("provisioning service with service broker")
 
 	resp, err := p.client.ProvisionInstance(&osb.ProvisionRequest{
 		InstanceID:        service.Status.ProviderID,
 		AcceptsIncomplete: true,
-		ServiceID:         providerPlan.serviceID,
-		PlanID:            providerPlan.osbPlan.ID,
+		ServiceID:         planProviderData.ServiceID,
+		PlanID:            planProviderData.PlanID,
 		OrganizationGUID:  "Kore",
 		SpaceGUID:         service.Namespace,
 		Context: map[string]interface{}{
@@ -95,7 +95,7 @@ func (p *Provider) Reconcile(
 		return reconcile.Result{}, handleError(component, "failed to call provision on the service broker", err)
 	}
 
-	ctx.Logger.WithField("response", resp).Debug("provisioning response from service broker")
+	ctx.Logger().WithField("response", resp).Debug("provisioning response from service broker")
 
 	if err := service.Status.SetProviderData(ProviderData{Operation: resp.OperationKey}); err != nil {
 		return reconcile.Result{}, err
@@ -110,10 +110,10 @@ func (p *Provider) Reconcile(
 }
 
 func (p *Provider) update(
-	ctx kore.ServiceProviderContext,
+	ctx kore.Context,
 	service *servicesv1.Service,
 ) (reconcile.Result, error) {
-	providerPlan, err := p.plan(service)
+	planProviderData, err := getServicePlanProviderData(ctx, service)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -148,13 +148,13 @@ func (p *Provider) update(
 		return reconcile.Result{}, controllers.NewCriticalError(fmt.Errorf("failed to unmarshal service configuration"))
 	}
 
-	ctx.Logger.Debug("updating service with service broker")
+	ctx.Logger().Debug("updating service with service broker")
 
 	resp, err := p.client.UpdateInstance(&osb.UpdateInstanceRequest{
 		InstanceID:        service.Status.ProviderID,
 		AcceptsIncomplete: true,
-		ServiceID:         providerPlan.serviceID,
-		PlanID:            utils.StringPtr(providerPlan.osbPlan.ID),
+		ServiceID:         planProviderData.ServiceID,
+		PlanID:            utils.StringPtr(planProviderData.PlanID),
 		Parameters:        config,
 		Context: map[string]interface{}{
 			"team": service.Namespace,
@@ -164,7 +164,7 @@ func (p *Provider) update(
 		return reconcile.Result{}, handleError(component, "failed to call update on the service broker", err)
 	}
 
-	ctx.Logger.WithField("response", resp).Debug("update response from service broker")
+	ctx.Logger().WithField("response", resp).Debug("update response from service broker")
 
 	if err := service.Status.SetProviderData(ProviderData{Operation: resp.OperationKey}); err != nil {
 		return reconcile.Result{}, err

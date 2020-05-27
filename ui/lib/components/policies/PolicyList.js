@@ -10,6 +10,7 @@ import KoreApi from '../../kore-api'
 import Policy from './Policy'
 import PolicyForm from './PolicyForm'
 import AllocationHelpers from '../../utils/allocation-helpers'
+import { isReadOnlyCRD } from '../../utils/crd-helpers'
 
 class PolicyList extends ResourceList {
   static propTypes = {
@@ -60,7 +61,7 @@ class PolicyList extends ResourceList {
 
   policyItem = (policy) => {
     const created = moment(policy.metadata.creationTimestamp).fromNow()
-    const readonly = policy.metadata.labels && policy.metadata.labels['kore.appvia.io/readonly']
+    const readonly = isReadOnlyCRD(policy)
     return (
       <List.Item key={policy.metadata.name} actions={[
         <Text key="view_policy"><a onClick={this.view(policy)}><Icon type="eye" theme="filled"/> View</a></Text>,

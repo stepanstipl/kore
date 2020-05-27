@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -48,11 +47,11 @@ type ServiceSpec struct {
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinLength=1
 	Plan string `json:"plan"`
-	// Cluster contains the reference to the cluster where the credentials will be saved as a secret
-	// +kubebuilder:validation:Required
+	// Cluster contains the reference to the cluster where the service will be created
+	// +kubebuilder:validation:Optional
 	Cluster corev1.Ownership `json:"cluster,omitempty"`
-	// ClusterNamespace is the target namespace in the cluster where the secret will be created
-	// +kubebuilder:validation:Required
+	// ClusterNamespace is the target namespace in the cluster where there the service will be created
+	// +kubebuilder:validation:Optional
 	ClusterNamespace string `json:"clusterNamespace,omitempty"`
 	// Configuration are the configuration values for this service
 	// It will contain values from the plan + overrides by the user
@@ -179,11 +178,6 @@ func (s Service) Ownership() corev1.Ownership {
 		Namespace: s.Namespace,
 		Name:      s.Name,
 	}
-}
-
-// PlanShortName returns the plan name without the service kind prefix
-func (s Service) PlanShortName() string {
-	return strings.TrimPrefix(s.Spec.Plan, s.Spec.Kind+"-")
 }
 
 // NeedsUpdate returns true if the plan or the configuration changed compared to the status

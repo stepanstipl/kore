@@ -94,17 +94,17 @@ func CreateSystemServiceFromPlan(servicePlan servicesv1.ServicePlan, cluster cor
 	}
 }
 
-func createClusterClient(ctx kore.ServiceProviderContext, service *servicesv1.Service) (client.Client, error) {
+func createClusterClient(ctx kore.Context, service *servicesv1.Service) (client.Client, error) {
 	if service.Spec.Cluster.Namespace == kore.HubAdminTeam && service.Spec.Cluster.Name == "kore" {
-		return ctx.Client, nil
+		return ctx.Client(), nil
 	} else {
 		clusterSecret, err := controllers.GetConfigSecret(ctx,
-			ctx.Client,
+			ctx.Client(),
 			service.Spec.Cluster.Namespace,
 			service.Spec.Cluster.Name)
 		if err != nil {
 			if kerrors.IsNotFound(err) {
-				ctx.Logger.Debug("cluster credentials are not yet available")
+				ctx.Logger().Debug("cluster credentials are not yet available")
 				return nil, nil
 			}
 			return nil, fmt.Errorf("failed to get cluster credentials: %w", err)
@@ -132,7 +132,7 @@ func compileResource(obj runtime.Object, params ResourceParams) (runtime.Object,
 	return koreschema.DecodeJSON(tmplBuf.Bytes())
 }
 
-func ensureResource(ctx kore.ServiceProviderContext, client client.Client, original runtime.Object) error {
+func ensureResource(ctx kore.Context, client client.Client, original runtime.Object) error {
 	var current runtime.Object
 	if koreschema.GetScheme().Recognizes(original.GetObjectKind().GroupVersionKind()) {
 		var err error
@@ -191,7 +191,7 @@ func ensureResource(ctx kore.ServiceProviderContext, client client.Client, origi
 		return nil
 	}
 
-	ctx.Logger.
+	ctx.Logger().
 		WithField("resource", kubernetes.MustGetRuntimeSelfLink(original)).
 		WithField("diff", string(patchResult.Patch)).
 		Debug("resource has changed")

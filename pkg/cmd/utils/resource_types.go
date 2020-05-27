@@ -319,6 +319,7 @@ var (
 			FeatureGate:  kore.FeatureGateServices,
 			Printer: []Column{
 				{"Name", "metadata.name", ""},
+				{"Title", "spec.displayName", ""},
 				{"Summary", "spec.summary", ""},
 				{"Enabled", "spec.enabled", ""},
 				{"Age", "metadata.creationTimestamp", "age"},
@@ -333,6 +334,7 @@ var (
 			FeatureGate:  kore.FeatureGateServices,
 			Printer: []Column{
 				{"Name", "metadata.name", ""},
+				{"Title", "spec.displayName", ""},
 				{"Summary", "spec.summary", ""},
 				{"Kind", "spec.kind", ""},
 				{"Age", "metadata.creationTimestamp", "age"},

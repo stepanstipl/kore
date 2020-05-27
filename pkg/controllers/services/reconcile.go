@@ -58,9 +58,11 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 	}
 	original := service.DeepCopy()
 
-	provider := c.ServiceProviders().GetProviderForKind(service.Spec.Kind)
-	if provider == nil {
-		logger.Debug("provider is not initialized yet")
+	spCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c)
+	provider, err := c.ServiceProviders().GetProviderForKind(spCtx, service.Spec.Kind)
+	if err != nil {
+		service.Status.Status = corev1.ErrorStatus
+		service.Status.Message = err.Error()
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 	}
 
@@ -74,7 +76,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 			c.EnsureFinalizer(logger, service, finalizer),
 			c.EnsureServicePending(logger, service),
 			func(ctx context.Context) (result reconcile.Result, err error) {
-				return provider.Reconcile(kore.NewServiceProviderContext(ctx, logger, c.mgr.GetClient()), service)
+				return provider.Reconcile(spCtx, service)
 			},
 		}
 

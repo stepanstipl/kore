@@ -60,7 +60,7 @@ class ResourceList extends React.Component {
   edit = resource => async () => this._setStateKey('edit', resource)
   add = enabled => async () => this._setStateKey('add', enabled)
 
-  handleEditSave = updated => {
+  handleEditSave = (updated) => {
     const editedName = this.state.edit.metadata.name
     this.setState({
       ...this.state,
@@ -85,7 +85,7 @@ class ResourceList extends React.Component {
     message.success(this.updatedMessage)
   }
 
-  handleAddSave = async created => {
+  handleAddSave = async (created) => {
     this.setState({
       ...this.state,
       add: false,

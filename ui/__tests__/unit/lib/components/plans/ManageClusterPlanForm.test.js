@@ -1,9 +1,9 @@
 import { mount } from 'enzyme'
 
-import PlanForm from '../../../../../lib/components/plans/PlanForm'
+import ManageClusterPlanForm from '../../../../../lib/components/plans/ManageClusterPlanForm'
 import ApiTestHelpers from '../../../../api-test-helpers'
 
-describe('PlanForm', () => {
+describe('ManageClusterPlanForm', () => {
   let props
   let form
   let apiScope
@@ -31,10 +31,10 @@ describe('PlanForm', () => {
         validateFields: jest.fn()
       },
       kind: 'GKE',
-      handleValidationErrors: jest.fn(),
-      handleSubmit: jest.fn()
+      handleSubmit: jest.fn(),
+      mode: 'edit'
     }
-    mount(<PlanForm wrappedComponentRef={component => form = component} {...props} />)
+    mount(<ManageClusterPlanForm wrappedComponentRef={component => form = component} {...props} />)
     await form.componentDidMountComplete
   })
 
@@ -99,7 +99,7 @@ describe('PlanForm', () => {
     })
   })
 
-  describe('#_process', () => {
+  describe('#process', () => {
     const planResource = {
       apiVersion: 'config.kore.appvia.io/v1',
       kind: 'Plan',
@@ -120,19 +120,18 @@ describe('PlanForm', () => {
     beforeEach(() => {
       form.setFormSubmitting = jest.fn()
       props.handleSubmit.mockClear()
-      props.handleValidationErrors.mockClear()
       form.state.planValues = planResource.spec.configuration
     })
 
     test('handles form validation errors', async () => {
-      await form._process('error', null)
+      await form.process('error', null)
       expect(form.setFormSubmitting).toHaveBeenCalledTimes(1)
       expect(form.setFormSubmitting.mock.calls[0]).toEqual([false, 'Validation failed'])
     })
 
     test('creates the resource and calls the wrapper component handleSubmit function', async () => {
       apiScope.put(`${ApiTestHelpers.basePath}/plans/test-plan`, planResource).reply(200, planResource)
-      await form._process(null, { description: 'Test plan', summary: 'Summary of plan' })
+      await form.process(null, { description: 'Test plan', summary: 'Summary of plan' })
       expect(props.handleSubmit).toHaveBeenCalledTimes(1)
       expect(props.handleSubmit.mock.calls[0]).toEqual([planResource])
       apiScope.done()
@@ -141,12 +140,10 @@ describe('PlanForm', () => {
     test('handles validation errors when creating the resource', async () => {
       const fieldErrors = [{ field: 'prop1', type: 'required', message: 'prop1 is required' }]
       apiScope.put(`${ApiTestHelpers.basePath}/plans/test-plan`, planResource).reply(400, { message: 'Validation errors', fieldErrors })
-      await form._process(null, { description: 'Test plan', summary: 'Summary of plan' })
+      await form.process(null, { description: 'Test plan', summary: 'Summary of plan' })
 
-      expect(props.handleValidationErrors).toHaveBeenCalledTimes(1)
-      expect(props.handleValidationErrors.mock.calls[0]).toEqual([fieldErrors])
       expect(form.setFormSubmitting).toHaveBeenCalledTimes(1)
-      expect(form.setFormSubmitting.mock.calls[0]).toEqual([false, 'Validation errors'])
+      expect(form.setFormSubmitting.mock.calls[0]).toEqual([false, 'Validation errors', fieldErrors])
       apiScope.done()
     })
   })

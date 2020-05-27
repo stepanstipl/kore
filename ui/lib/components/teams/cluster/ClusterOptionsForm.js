@@ -6,7 +6,7 @@ const { Paragraph, Text, Title } = Typography
 const { Option } = Select
 
 import PlanViewer from '../../plans/PlanViewer'
-import PlanOptionsForm from '../../plans/PlanOptionsForm'
+import UsePlanForm from '../../plans/UsePlanForm'
 import { patterns } from '../../../utils/validation'
 
 class ClusterOptionsForm extends React.Component {
@@ -163,7 +163,7 @@ class ClusterOptionsForm extends React.Component {
         {selectedPlan ? (
           <Collapse>
             <Collapse.Panel header="Customize cluster parameters">
-              <PlanOptionsForm
+              <UsePlanForm
                 team={this.props.team}
                 resourceType="cluster"
                 kind={selectedCloud}

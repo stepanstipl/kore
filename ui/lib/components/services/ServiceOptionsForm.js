@@ -6,7 +6,7 @@ const { Text, Title } = Typography
 const { Option } = Select
 
 import PlanViewer from '../plans/PlanViewer'
-import PlanOptionsForm from '../plans/PlanOptionsForm'
+import UsePlanForm from '../plans/UsePlanForm'
 
 class ServiceOptionsForm extends React.Component {
   static propTypes = {
@@ -47,7 +47,7 @@ class ServiceOptionsForm extends React.Component {
     return () => {
       const selectedServicePlan = this.props.servicePlans.find(p => p.metadata.name === servicePlanName)
       Modal.info({
-        title: (<><Title level={4}>{selectedServicePlan.spec.description}</Title><Text>{selectedServicePlan.spec.summary}</Text></>),
+        title: (<><Title level={4}>{selectedServicePlan.spec.summary}</Title><Text>{selectedServicePlan.spec.description}</Text></>),
         content: <PlanViewer
           plan={selectedServicePlan}
           resourceType="service"
@@ -84,7 +84,7 @@ class ServiceOptionsForm extends React.Component {
             rules: [{ required: true, message: 'Please select your service plan!' }],
           })(
             <Select onChange={this.onServicePlanChange} placeholder="Choose service plan">
-              {servicePlans.map(p => <Option key={p.metadata.name} value={p.metadata.name}>{p.spec.description}</Option>)}
+              {servicePlans.map(p => <Option key={p.metadata.name} value={p.metadata.name}>{p.spec.displayName || p.spec.summary}</Option>)}
             </Select>
           )}
           {selectedServicePlan && <a onClick={this.showServicePlanDetails(selectedServicePlan)}>View service plan details</a>}
@@ -106,7 +106,7 @@ class ServiceOptionsForm extends React.Component {
         {selectedServicePlan ? (
           <Collapse defaultActiveKey="plan">
             <Collapse.Panel key="plan" header="Customize service parameters">
-              <PlanOptionsForm
+              <UsePlanForm
                 team={this.props.team}
                 resourceType="service"
                 kind={selectedServiceKind}

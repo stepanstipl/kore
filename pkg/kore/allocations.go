@@ -49,7 +49,7 @@ type Allocations interface {
 	// ListAllocationsByType returns a list of all allocations shared to me, filtered by type
 	ListAllocationsByType(ctx context.Context, group, version, kind string) (*configv1.AllocationList, error)
 	// Update is responsible for updating / creating an allocation
-	Update(ctx context.Context, allocation *configv1.Allocation, allowReadonly bool) error
+	Update(ctx context.Context, allocation *configv1.Allocation, ignoreReadonly bool) error
 }
 
 // acaImpl is the allocations interface
@@ -120,7 +120,7 @@ func (a acaImpl) Exists(ctx context.Context, name string) (bool, error) {
 }
 
 // Delete is responsible for deleting an allocation
-func (a acaImpl) Delete(ctx context.Context, name string, allowReadonly bool) (*configv1.Allocation, error) {
+func (a acaImpl) Delete(ctx context.Context, name string, ignoreReadonly bool) (*configv1.Allocation, error) {
 	logger := log.WithFields(log.Fields{
 		"name": name,
 		"team": a.team,
@@ -135,8 +135,8 @@ func (a acaImpl) Delete(ctx context.Context, name string, allowReadonly bool) (*
 		return nil, err
 	}
 
-	if !allowReadonly {
-		if object.Labels[corev1.LabelReadonly] == "true" {
+	if !ignoreReadonly {
+		if object.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
 			return nil, validation.NewError("the allocation can not be deleted").WithFieldError(validation.FieldRoot, validation.ReadOnly, "allocation is read-only")
 		}
 	}
@@ -223,7 +223,7 @@ func (a acaImpl) List(ctx context.Context) (*configv1.AllocationList, error) {
 }
 
 // Update is responsible for updating / creating an allocation
-func (a acaImpl) Update(ctx context.Context, allocation *configv1.Allocation, allowReadonly bool) error {
+func (a acaImpl) Update(ctx context.Context, allocation *configv1.Allocation, ignoreReadonly bool) error {
 	logger := log.WithFields(log.Fields{
 		"group":              allocation.Spec.Resource.Group,
 		"kind":               allocation.Spec.Resource.Kind,
@@ -250,16 +250,16 @@ func (a acaImpl) Update(ctx context.Context, allocation *configv1.Allocation, al
 		return ErrNotAllowed{message: "you cannot allocate a resource which you do not own"}
 	}
 
-	if !allowReadonly {
+	if !ignoreReadonly {
 		original, err := a.Get(ctx, allocation.Name)
 		if err != nil && err != ErrNotFound {
 			return err
 		}
 
-		if original != nil && original.Labels[corev1.LabelReadonly] == "true" {
+		if original != nil && original.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
 			return validation.NewError("the allocation can not be updated").WithFieldError(validation.FieldRoot, validation.ReadOnly, "allocation is read-only")
 		}
-		if allocation.Labels[corev1.LabelReadonly] == "true" {
+		if allocation.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
 			return validation.NewError("the allocation can not be updated").WithFieldError(validation.FieldRoot, validation.ReadOnly, "read-only flag can not be set")
 		}
 	}

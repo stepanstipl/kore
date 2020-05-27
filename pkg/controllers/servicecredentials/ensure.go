@@ -139,7 +139,7 @@ func (c *Controller) ensureSecret(
 		}
 
 		result, credentials, err := provider.ReconcileCredentials(
-			kore.NewServiceProviderContext(ctx, logger, c.mgr.GetClient()),
+			kore.NewContext(ctx, logger, c.mgr.GetClient(), c),
 			service, serviceCreds,
 		)
 		if err != nil {

@@ -56,7 +56,7 @@ func (d ProviderFactory) deleteDynamoDBTable(sess *session.Session, config *Prov
 	return nil
 }
 
-func (d ProviderFactory) deleteHelmRelease(ctx kore.ServiceProviderContext, name string) (done bool, _ error) {
+func (d ProviderFactory) deleteHelmRelease(ctx kore.Context, name string) (done bool, _ error) {
 	namespaceName := "kore-serviceprovider-" + name
 
 	helmRelease := &unstructured.Unstructured{Object: map[string]interface{}{
@@ -68,13 +68,13 @@ func (d ProviderFactory) deleteHelmRelease(ctx kore.ServiceProviderContext, name
 		},
 	}}
 
-	exists, err := kubernetes.CheckIfExists(ctx, ctx.Client, helmRelease)
+	exists, err := kubernetes.CheckIfExists(ctx, ctx.Client(), helmRelease)
 	if err != nil {
 		return false, fmt.Errorf("failed to get HelmRelease %q: %w", name, err)
 	}
 
 	if exists {
-		err := kubernetes.DeleteIfExists(ctx, ctx.Client, helmRelease)
+		err := kubernetes.DeleteIfExists(ctx, ctx.Client(), helmRelease)
 		if err != nil {
 			return false, fmt.Errorf("failed to delete HelmRelease %q: %w", name, err)
 		}
@@ -92,7 +92,7 @@ func (d ProviderFactory) deleteHelmRelease(ctx kore.ServiceProviderContext, name
 		},
 	}
 
-	if err := kubernetes.DeleteIfExists(ctx, ctx.Client, ns); err != nil {
+	if err := kubernetes.DeleteIfExists(ctx, ctx.Client(), ns); err != nil {
 		return false, fmt.Errorf("failed to deleted namespace %q: %w", namespaceName, err)
 	}
 

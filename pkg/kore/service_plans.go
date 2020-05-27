@@ -33,11 +33,16 @@ import (
 )
 
 // ServicePlans is the interface to manage service plans
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . ServicePlans
 type ServicePlans interface {
 	// Delete is used to delete a service plan in the kore
-	Delete(context.Context, string) (*servicesv1.ServicePlan, error)
+	Delete(ctx context.Context, name string, ignoreReadonly bool) (*servicesv1.ServicePlan, error)
 	// Get returns the service plan
 	Get(context.Context, string) (*servicesv1.ServicePlan, error)
+	// GetSchema returns the service plan schema
+	GetSchema(context.Context, string) (string, error)
+	// GetCredentialSchema returns the service credential schema for the given plan
+	GetCredentialSchema(context.Context, string) (string, error)
 	// List returns the existing service plans
 	List(context.Context) (*servicesv1.ServicePlanList, error)
 	// ListFiltered returns a list of service plans using the given filter.
@@ -45,7 +50,7 @@ type ServicePlans interface {
 	// Has checks if a service plan exists
 	Has(context.Context, string) (bool, error)
 	// Update is responsible for updating a service plan
-	Update(context.Context, *servicesv1.ServicePlan) error
+	Update(ctx context.Context, plan *servicesv1.ServicePlan, ignoreReadonly bool) error
 	// GetEditablePlanParams returns with the editable service plan parameters for a specific team and service kind
 	GetEditablePlanParams(ctx context.Context, team string, clusterKind string) (map[string]bool, error)
 }
@@ -55,7 +60,7 @@ type servicePlansImpl struct {
 }
 
 // Update is responsible for updating a service plan
-func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePlan) error {
+func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePlan, ignoreReadonly bool) error {
 	if err := IsValidResourceName("plan", plan.Name); err != nil {
 		return err
 	}
@@ -75,6 +80,15 @@ func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePl
 		return err
 	}
 
+	if !ignoreReadonly {
+		if existing != nil && existing.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
+			return validation.NewError("the plan can not be updated").WithFieldError(validation.FieldRoot, validation.ReadOnly, "plan is read-only")
+		}
+		if plan.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
+			return validation.NewError("the plan can not be updated").WithFieldError(validation.FieldRoot, validation.ReadOnly, "read-only flag can not be set")
+		}
+	}
+
 	if existing != nil {
 		verr := validation.NewError("%q failed validation", plan.Name)
 		if existing.Spec.Kind != plan.Spec.Kind {
@@ -85,15 +99,13 @@ func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePl
 		}
 	}
 
-	provider := p.ServiceProviders().GetProviderForKind(plan.Spec.Kind)
-	if provider == nil {
-		return validation.NewError("%q failed validation", plan.Name).
-			WithFieldErrorf("kind", validation.InvalidType, "%q is not a known service kind", plan.Spec.Kind)
-	}
-
-	schema, err := provider.PlanJSONSchema(plan.Spec.Kind, plan.PlanShortName())
-	if err != nil {
-		return err
+	schema := plan.Spec.Schema
+	if schema == "" {
+		kind, err := p.ServiceKinds().Get(ctx, plan.Spec.Kind)
+		if err != nil {
+			return err
+		}
+		schema = kind.Spec.Schema
 	}
 
 	if schema == "" && !utils.ApiExtJSONEmpty(plan.Spec.Configuration) {
@@ -128,7 +140,7 @@ func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePl
 }
 
 // Delete is used to delete a service plan in the kore
-func (p servicePlansImpl) Delete(ctx context.Context, name string) (*servicesv1.ServicePlan, error) {
+func (p servicePlansImpl) Delete(ctx context.Context, name string, ignoreReadonly bool) (*servicesv1.ServicePlan, error) {
 	plan := &servicesv1.ServicePlan{}
 	err := p.Store().Client().Get(ctx,
 		store.GetOptions.InNamespace(HubNamespace),
@@ -142,6 +154,12 @@ func (p servicePlansImpl) Delete(ctx context.Context, name string) (*servicesv1.
 		log.WithError(err).Error("failed to retrieve the service plan")
 
 		return nil, err
+	}
+
+	if !ignoreReadonly {
+		if plan.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
+			return nil, validation.NewError("the plan can not be deleted").WithFieldError(validation.FieldRoot, validation.ReadOnly, "policy is read-only")
+		}
 	}
 
 	servicesWithPlan, err := p.getServicesWithPlan(ctx, name)
@@ -186,6 +204,40 @@ func (p servicePlansImpl) Get(ctx context.Context, name string) (*servicesv1.Ser
 		store.GetOptions.WithName(name),
 		store.GetOptions.InTo(plan),
 	)
+}
+
+// GetSchema returns the service plan schema
+func (p servicePlansImpl) GetSchema(ctx context.Context, name string) (string, error) {
+	plan, err := p.Get(ctx, name)
+	if err != nil {
+		return "", err
+	}
+	if plan.Spec.Schema != "" {
+		return plan.Spec.Schema, nil
+	}
+
+	kind, err := p.ServiceKinds().Get(ctx, plan.Spec.Kind)
+	if err != nil {
+		return "", err
+	}
+	return kind.Spec.Schema, nil
+}
+
+// GetCredentialSchema returns the service credential schema for the given plan
+func (p servicePlansImpl) GetCredentialSchema(ctx context.Context, name string) (string, error) {
+	plan, err := p.Get(ctx, name)
+	if err != nil {
+		return "", err
+	}
+	if plan.Spec.CredentialSchema != "" {
+		return plan.Spec.CredentialSchema, nil
+	}
+
+	kind, err := p.ServiceKinds().Get(ctx, plan.Spec.Kind)
+	if err != nil {
+		return "", err
+	}
+	return kind.Spec.CredentialSchema, nil
 }
 
 // List returns the existing service plans

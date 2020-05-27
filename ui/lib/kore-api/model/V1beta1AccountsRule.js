@@ -54,9 +54,6 @@ class V1beta1AccountsRule {
             if (data.hasOwnProperty('description')) {
                 obj['description'] = ApiClient.convertToType(data['description'], 'String');
             }
-            if (data.hasOwnProperty('exact')) {
-                obj['exact'] = ApiClient.convertToType(data['exact'], 'String');
-            }
             if (data.hasOwnProperty('labels')) {
                 obj['labels'] = ApiClient.convertToType(data['labels'], {'String': 'String'});
             }
@@ -88,19 +85,6 @@ class V1beta1AccountsRule {
      */
     setDescription(description) {
         this['description'] = description;
-    }
-/**
-     * @return {String}
-     */
-    getExact() {
-        return this.exact;
-    }
-
-    /**
-     * @param {String} exact
-     */
-    setExact(exact) {
-        this['exact'] = exact;
     }
 /**
      * @return {Object.<String, String>}
@@ -174,11 +158,6 @@ class V1beta1AccountsRule {
  * @member {String} description
  */
 V1beta1AccountsRule.prototype['description'] = undefined;
-
-/**
- * @member {String} exact
- */
-V1beta1AccountsRule.prototype['exact'] = undefined;
 
 /**
  * @member {Object.<String, String>} labels
