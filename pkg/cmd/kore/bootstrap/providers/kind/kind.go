@@ -29,6 +29,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/appvia/kore/pkg/client/config"
 	"github.com/appvia/kore/pkg/cmd/kore/bootstrap/providers"
 	"github.com/appvia/kore/pkg/utils"
 )
@@ -194,7 +195,7 @@ func (p *providerImpl) Stop(ctx context.Context, name string) error {
 func (p *providerImpl) Preflight(ctx context.Context) error {
 	path, err := exec.LookPath("kind")
 	if err != nil {
-		path = filepath.Join(os.ExpandEnv("${HOME}/bin"), "kind")
+		path = filepath.Join(filepath.Join(config.GetClientPath(), "build"), "kind")
 
 		found, err := utils.FileExists(path)
 		if err != nil {

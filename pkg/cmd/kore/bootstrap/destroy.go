@@ -18,8 +18,6 @@ package bootstrap
 
 import (
 	"context"
-	"fmt"
-	"os/exec"
 
 	"github.com/appvia/kore/pkg/cmd/kore/bootstrap/providers"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
@@ -66,7 +64,6 @@ func (o *DestroyOptions) Run() error {
 	o.Name = ClusterName
 
 	tasks := []TaskFunc{
-		o.EnsurePreflightChecks,
 		o.EnsureLocalKubernetesDeletion,
 	}
 	for _, x := range tasks {
@@ -76,22 +73,6 @@ func (o *DestroyOptions) Run() error {
 	}
 
 	return nil
-}
-
-// EnsurePreflightChecks is responsible for have everything moving forward
-func (o *DestroyOptions) EnsurePreflightChecks(ctx context.Context) error {
-	return (&Task{
-		Description: "Passed preflight checks for deployment",
-		Handler: func(ctx context.Context) error {
-			for _, x := range []string{o.Provider, Kubectl} {
-				if _, err := exec.LookPath(x); err != nil {
-					return fmt.Errorf("missing binary: %s in $PATH", x)
-				}
-			}
-
-			return nil
-		},
-	}).Run(ctx, o.Writer())
 }
 
 // EnsureLocalKubernetesDeletion is responsible for deleting the local instance

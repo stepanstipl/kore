@@ -16,9 +16,11 @@
 
 package config
 
-const (
+import "path/filepath"
+
+var (
 	// DefaultKoreConfigPath is the default path for the kore configuration file
-	DefaultKoreConfigPath = "${HOME}/.kore/config"
+	DefaultKoreConfigPath = filepath.Join("${HOME}", ".kore", "config")
 	// DefaultKoreConfigPathEnv is the default name of the env variable for config
 	DefaultKoreConfigPathEnv = "KORE_CONFIG"
 )
