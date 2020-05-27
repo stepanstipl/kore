@@ -18,7 +18,7 @@ import { inProgressStatusList } from '../../../../lib/utils/ui-helpers'
 import apiPaths from '../../../../lib/utils/api-paths'
 import ServiceCredential from '../../../../lib/components/teams/service/ServiceCredential'
 import ServiceCredentialForm from '../../../../lib/components/teams/service/ServiceCredentialForm'
-
+import ServicesTab from '../../../../lib/components/teams/service/ServicesTab'
 
 class ClusterPage extends React.Component {
   static propTypes = {
@@ -287,6 +287,12 @@ class ClusterPage extends React.Component {
 
         {publicRuntimeConfig.featureGates['services'] ? (
           <>
+            <Row type="flex" gutter={[16,16]}>
+              <Col span={24} xl={24}>
+                <ServicesTab user={this.props.user} team={this.props.team} getServiceCount={(count) => this.setState({ serviceCount: count })} inCluster={true} />
+              </Col>
+            </Row>
+
             <Drawer
               title="Create service binding"
               placement="right"

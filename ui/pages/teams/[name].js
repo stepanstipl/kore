@@ -182,7 +182,7 @@ class TeamDashboard extends React.Component {
 
           {!publicRuntimeConfig.featureGates['services'] ? null : (
             <TabPane key="services" tab={this.getTabTitle({ title: 'Cloud services', count: this.state.serviceCount })} forceRender={true}>
-              <ServicesTab user={this.props.user} team={this.props.team} getServiceCount={(count) => this.setState({ serviceCount: count })} />
+              <ServicesTab user={this.props.user} team={this.props.team} getServiceCount={(count) => this.setState({ serviceCount: count })} inCluster={false} />
             </TabPane>
           )}
 
