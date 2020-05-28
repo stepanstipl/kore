@@ -59,7 +59,8 @@ func (p *serviceKindsHandler) Register(i kore.Interface, builder utils.PathBuild
 		withAllNonValidationErrors(ws.GET("")).To(p.listServiceKinds).
 			Doc("Returns all the available service kinds").
 			Operation("ListServiceKinds").
-			Param(ws.QueryParameter("kind", "Filters service kinds for a specific kind")).
+			Param(ws.QueryParameter("platform", "Filters service kinds for a specific service platform")).
+			Param(ws.QueryParameter("enabled", "Filters service kinds for enabled/disabled status")).
 			Returns(http.StatusOK, "A list of service kinds", servicesv1.ServiceKindList{}),
 	)
 
@@ -110,7 +111,19 @@ func (p serviceKindsHandler) getServiceKind(req *restful.Request, resp *restful.
 // listServiceKinds returns all service kinds in the kore
 func (p serviceKindsHandler) listServiceKinds(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
-		res, err := p.ServiceKinds().List(req.Request.Context())
+		var filters []func(servicesv1.ServiceKind) bool
+		if platform := req.QueryParameter("platform"); platform != "" {
+			filters = append(filters, func(s servicesv1.ServiceKind) bool {
+				return s.Labels[kore.Label("platform")] == platform
+			})
+		}
+		if enabled := req.QueryParameter("enabled"); enabled != "" {
+			filters = append(filters, func(s servicesv1.ServiceKind) bool {
+				return s.Spec.Enabled == (enabled == "true")
+			})
+		}
+
+		res, err := p.ServiceKinds().List(req.Request.Context(), filters...)
 		if err != nil {
 			return err
 		}

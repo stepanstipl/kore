@@ -41,7 +41,6 @@ const (
 	ComponentDynamoDB    = "DynamoDB Table"
 	ComponentS3Bucket    = "S3 Bucket"
 	ComponentHelmRelease = "Helm Release"
-	ComponentProvider    = "Provider"
 )
 
 type ProviderFactory struct{}
@@ -150,6 +149,10 @@ func (d ProviderFactory) Create(ctx kore.Context, serviceProvider *servicesv1.Se
 
 	if err := serviceProvider.Spec.GetConfiguration(config); err != nil {
 		return nil, fmt.Errorf("failed to process aws-servicebroker configuration: %w", err)
+	}
+
+	config.PlatformMapping = map[string]string{
+		"*": "AWS",
 	}
 
 	namespaceName := "kore-serviceprovider-" + serviceProvider.Name

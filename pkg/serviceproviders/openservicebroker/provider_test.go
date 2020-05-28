@@ -206,6 +206,9 @@ var _ = Describe("Provider", func() {
 		logger.Out = GinkgoWriter
 
 		providerConfig = openservicebroker.ProviderConfiguration{}
+		providerConfig.PlatformMapping = map[string]string{
+			"*": "testplatform",
+		}
 
 		serviceProvider = servicesv1.NewServiceProvider("test", "testns")
 
@@ -286,6 +289,9 @@ var _ = Describe("Provider", func() {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "service-1",
 					Namespace: kore.HubNamespace,
+					Labels: map[string]string{
+						"kore.appvia.io/platform": "testplatform",
+					},
 				},
 				Spec: servicesv1.ServiceKindSpec{
 					DisplayName:      "service-1 displayName",
@@ -304,6 +310,9 @@ var _ = Describe("Provider", func() {
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      "service-2",
 					Namespace: kore.HubNamespace,
+					Labels: map[string]string{
+						"kore.appvia.io/platform": "testplatform",
+					},
 				},
 				Spec: servicesv1.ServiceKindSpec{
 					DisplayName:      "service-2 displayName",

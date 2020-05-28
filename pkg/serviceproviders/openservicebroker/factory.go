@@ -137,6 +137,11 @@ func (p ProviderFactory) JSONSchema() string {
 					"type": "string",
 					"minLength": 1
 				}
+			},
+			"platformMapping": {
+				"type": "object",
+				"minProperties": 1,
+				"additionalProperties": { "type": "string" }
 			}
 		}
 	}`
