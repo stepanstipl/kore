@@ -19,14 +19,11 @@ package kore
 import (
 	"context"
 
-	"github.com/appvia/kore/pkg/utils"
-
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
-
-	"github.com/appvia/kore/pkg/utils/jsonschema"
-
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/store"
+	"github.com/appvia/kore/pkg/utils"
+	"github.com/appvia/kore/pkg/utils/jsonschema"
 	"github.com/appvia/kore/pkg/utils/validation"
 
 	log "github.com/sirupsen/logrus"
@@ -42,8 +39,9 @@ type ServiceCredentials interface {
 	Get(context.Context, string) (*servicesv1.ServiceCredentials, error)
 	// GetSchema returns the service credential schema
 	GetSchema(context.Context, string) (string, error)
-	// List returns a list of service credentials
-	List(context.Context) (*servicesv1.ServiceCredentialsList, error)
+	// List returns a list of service credentials.
+	// The optional filter function can be used to include items only for which the function returns true
+	List(context.Context, ...func(credentials servicesv1.ServiceCredentials) bool) (*servicesv1.ServiceCredentialsList, error)
 	// Update is used to update service credentials
 	Update(context.Context, *servicesv1.ServiceCredentials) error
 }
@@ -77,13 +75,37 @@ func (s *serviceCredentialsImpl) Delete(ctx context.Context, name string) (*serv
 }
 
 // List returns a list of service credentials we have access to
-func (s *serviceCredentialsImpl) List(ctx context.Context) (*servicesv1.ServiceCredentialsList, error) {
+func (s *serviceCredentialsImpl) List(ctx context.Context, filters ...func(credentials servicesv1.ServiceCredentials) bool) (*servicesv1.ServiceCredentialsList, error) {
 	list := &servicesv1.ServiceCredentialsList{}
 
-	return list, s.Store().Client().List(ctx,
+	err := s.Store().Client().List(ctx,
 		store.ListOptions.InNamespace(s.team),
 		store.ListOptions.InTo(list),
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(filters) == 0 {
+		return list, nil
+	}
+
+	res := []servicesv1.ServiceCredentials{}
+	for _, sc := range list.Items {
+		if func() bool {
+			for _, filter := range filters {
+				if !filter(sc) {
+					return false
+				}
+			}
+			return true
+		}() {
+			res = append(res, sc)
+		}
+	}
+	list.Items = res
+
+	return list, nil
 }
 
 // Get returns specific service credentials
@@ -162,6 +184,20 @@ func (s *serviceCredentialsImpl) Update(ctx context.Context, serviceCreds *servi
 			"must be the same as the team name: %q",
 			s.team,
 		)
+	}
+
+	secretNameContenders, err := s.List(ctx, func(o servicesv1.ServiceCredentials) bool {
+		return o.Spec.Cluster.Equals(serviceCreds.Spec.Cluster) &&
+			o.Spec.ClusterNamespace == serviceCreds.Spec.ClusterNamespace &&
+			o.Spec.SecretName == serviceCreds.Spec.SecretName
+	})
+	if err != nil {
+		return err
+	}
+
+	if len(secretNameContenders.Items) > 0 {
+		return validation.NewError("%q failed validation", serviceCreds.Name).
+			WithFieldErrorf("secretName", validation.InvalidValue, "%q must be unique for the same cluster and namespace", serviceCreds.Spec.Kind)
 	}
 
 	service, err := s.validateService(ctx, serviceCreds)

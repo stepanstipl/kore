@@ -62,6 +62,9 @@ class V1ServiceCredentialsSpec {
             if (data.hasOwnProperty('kind')) {
                 obj['kind'] = ApiClient.convertToType(data['kind'], 'String');
             }
+            if (data.hasOwnProperty('secretName')) {
+                obj['secretName'] = ApiClient.convertToType(data['secretName'], 'String');
+            }
             if (data.hasOwnProperty('service')) {
                 obj['service'] = V1Ownership.constructFromObject(data['service']);
             }
@@ -122,6 +125,19 @@ class V1ServiceCredentialsSpec {
         this['kind'] = kind;
     }
 /**
+     * @return {String}
+     */
+    getSecretName() {
+        return this.secretName;
+    }
+
+    /**
+     * @param {String} secretName
+     */
+    setSecretName(secretName) {
+        this['secretName'] = secretName;
+    }
+/**
      * @return {module:model/V1Ownership}
      */
     getService() {
@@ -156,6 +172,11 @@ V1ServiceCredentialsSpec.prototype['configuration'] = undefined;
  * @member {String} kind
  */
 V1ServiceCredentialsSpec.prototype['kind'] = undefined;
+
+/**
+ * @member {String} secretName
+ */
+V1ServiceCredentialsSpec.prototype['secretName'] = undefined;
 
 /**
  * @member {module:model/V1Ownership} service

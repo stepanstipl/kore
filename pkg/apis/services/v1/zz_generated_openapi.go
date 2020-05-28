@@ -166,6 +166,13 @@ func schema_pkg_apis_services_v1_ServiceCredentialsSpec(ref common.ReferenceCall
 							Format:      "",
 						},
 					},
+					"secretName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "SecretName is the Kubernetes Secret's name that will contain the service access information If not set the secret's name will default to `Name`",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"configuration": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Configuration are the configuration values for this service credentials It will be used by the service provider to provision the credentials",

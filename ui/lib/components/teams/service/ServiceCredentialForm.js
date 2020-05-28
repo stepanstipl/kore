@@ -150,7 +150,7 @@ class ServiceCredentialForm extends React.Component {
       const cluster = clusters.items.find(c => c.metadata.name === values.cluster)
       const service = services.items.find(s => s.metadata.name === values.service)
       const namespaceClaim = namespaceClaims.items.find(n => n.spec.name === values.namespace)
-      const name = values.name
+      const name = `${values.cluster}-${values.namespace}-${values.secretName}`
 
       try {
         const existing = await (await KoreApi.client()).GetServiceCredentials(this.props.team.metadata.name, name)
@@ -187,6 +187,7 @@ class ServiceCredentialForm extends React.Component {
         namespace: this.props.team.metadata.name
       }))
       serviceCredentialSpec.setClusterNamespace(namespaceClaim.spec.name)
+      serviceCredentialSpec.setSecretName(values.secretName)
       serviceCredentialSpec.setConfiguration(config)
 
       serviceCredential.setSpec(serviceCredentialSpec)
@@ -235,7 +236,7 @@ class ServiceCredentialForm extends React.Component {
     }
 
     // Only show error after a field is touched.
-    const nameError = isFieldTouched('name') && getFieldError('name')
+    const secretNameError = isFieldTouched('secretName') && getFieldError('secretName')
     const clusterError = isFieldTouched('cluster') && getFieldError('cluster')
     const serviceError = isFieldTouched('service') && getFieldError('service')
     const namespaceError = (isFieldTouched('cluster') || isFieldTouched('namespace')) && getFieldError('namespace')
@@ -258,14 +259,14 @@ class ServiceCredentialForm extends React.Component {
     return (
       <Form {...formConfig} onSubmit={this.handleSubmit} style={{ marginBottom: '30px' }}>
         <FormErrorMessage />
-        <Form.Item label="Name" validateStatus={nameError ? 'error' : ''} help={nameError || ''}>
-          {getFieldDecorator('name', {
+        <Form.Item label="Secret Name" validateStatus={secretNameError ? 'error' : ''} help={secretNameError || ''}>
+          {getFieldDecorator('secretName', {
             rules: [
-              { required: true, message: 'Please enter the service credential name!' },
+              { required: true, message: 'Please enter the secret name!'  },
               { ...patterns.uriCompatible63CharMax }
             ]
           })(
-            <Input placeholder="Name" />,
+            <Input placeholder="The name of the Kubernetes Secret" />
           )}
         </Form.Item>
         <Form.Item label="Service" validateStatus={serviceError ? 'error' : ''} help={serviceError || ''}>
