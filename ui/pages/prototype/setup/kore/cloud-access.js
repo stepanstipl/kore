@@ -10,6 +10,8 @@ import KoreApi from '../../../../lib/kore-api'
 import GKECredentialsList from '../../../../lib/components/credentials/GKECredentialsList'
 import PlanViewer from '../../../../lib/components/plans/PlanViewer'
 import CloudSelector from '../../../../lib/components/common/CloudSelector'
+import getConfig from 'next/config'
+const { publicRuntimeConfig } = getConfig()
 
 // prototype components
 import GCPOrganizationsList from '../../../../lib/prototype/components/credentials/GCPOrganizationsList'
@@ -51,6 +53,7 @@ class CloudAccessPage extends React.Component {
 
   state = {
     selectedCloud: '',
+    selectedProvider: '',
     gcpManagementType: '',
     gcpProjectAutomationType: '',
     gcpProjectList: [],
@@ -98,11 +101,10 @@ class CloudAccessPage extends React.Component {
   }
 
   handleSelectCloud = cloud => {
-    if (this.state.selectedCloud !== cloud) {
-      const state = copy(this.state)
-      state.selectedCloud = cloud
-      this.setState(state)
-    }
+    this.setState({
+      selectedCloud: cloud,
+      selectedProvider: publicRuntimeConfig.clusterProviderMap[cloud]
+    })
   }
 
   selectGcpManagementType = e => this.setState({ gcpManagementType: e.target.value })
@@ -156,7 +158,7 @@ class CloudAccessPage extends React.Component {
 
   associatePlanContent = (projectCode) => {
     const project = this.state.gcpProjectList.find(p => p.code === projectCode)
-    const cloudPlans = this.state.plans.filter(p => p.spec.kind === this.state.selectedCloud)
+    const cloudPlans = this.state.plans.filter(p => p.spec.kind === this.state.selectedProvider)
     const unassociatedPlans = cloudPlans.filter(p => !project.plans.includes(p.metadata.name))
     if (unassociatedPlans.length === 0) {
       return (
@@ -241,7 +243,7 @@ class CloudAccessPage extends React.Component {
         <div style={{ marginTop: '20px', marginBottom: '20px' }}>
           <CloudSelector selectedCloud={selectedCloud} handleSelectCloud={this.handleSelectCloud} />
         </div>
-        { selectedCloud === 'GKE' ? (
+        { selectedCloud === 'GCP' ? (
           <Card>
 
             <div style={{ marginBottom: '15px' }}>
@@ -532,7 +534,7 @@ class CloudAccessPage extends React.Component {
           </Card>
         ) : null }
 
-        { selectedCloud === 'EKS' ? (
+        { selectedCloud === 'AWS' ? (
           <Card>
             <Alert
               message="Amazon Web Services"

@@ -18,7 +18,7 @@ import V1ObjectMeta from '../../../kore-api/model/V1ObjectMeta'
 import V1ServiceCredentials from '../../../kore-api/model/V1ServiceCredentials'
 import V1ServiceCredentialsSpec from '../../../kore-api/model/V1ServiceCredentialsSpec'
 import { NewV1ObjectMeta, NewV1Ownership } from '../../../utils/model'
-import { getKoreLabel } from '../../../utils/crd-helpers';
+import { getKoreLabel } from '../../../utils/crd-helpers'
 
 class ServiceBuildForm extends React.Component {
   static propTypes = {
@@ -304,7 +304,7 @@ class ServiceBuildForm extends React.Component {
 
     return (
       <div>
-        <CloudSelector showCustom={false} selectedCloud={selectedCloud} handleSelectCloud={this.handleSelectCloud} enabledCloudList={['EKS']}/>
+        <CloudSelector showCustom={false} selectedCloud={selectedCloud} handleSelectCloud={this.handleSelectCloud} enabledCloudList={['AWS']}/>
         {selectedCloud && (
           <Form {...formConfig} onSubmit={this.handleSubmit}>
             <Card style={{ marginBottom: '20px' }}>

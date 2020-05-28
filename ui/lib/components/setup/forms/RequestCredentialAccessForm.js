@@ -10,13 +10,13 @@ class RequestCredentialAccessForm extends React.Component {
 
   static propTypes = {
     form: PropTypes.object.isRequired,
-    cloud: PropTypes.oneOf(['GKE', 'EKS']).isRequired,
+    cloud: PropTypes.oneOf(['GCP', 'AWS']).isRequired,
     onChange: PropTypes.func,
     helpInModal: PropTypes.bool
   }
 
   cloudContent = {
-    'GKE': {
+    'GCP': {
       accountNoun: 'Project',
       help: RequestCredentialAccessForm.ENABLED ? (
         <div>
@@ -30,7 +30,7 @@ class RequestCredentialAccessForm extends React.Component {
         </div>
       )
     },
-    'EKS': {
+    'AWS': {
       accountNoun: 'Account',
       help: RequestCredentialAccessForm.ENABLED ? (
         <div>

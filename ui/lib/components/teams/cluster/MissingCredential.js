@@ -5,17 +5,17 @@ const { Paragraph, Text } = Typography
 
 const MissingCredential = ({ team, cloud }) => {
   const message = {
-    'GKE': 'GCP project access not found',
-    'EKS': 'AWS account access not found'
+    'GCP': 'GCP project access not found',
+    'AWS': 'AWS account access not found'
   }
   const description = {
-    'GKE': (
+    'GCP': (
       <>
         <Paragraph>This team does not have access to create clusters in any GCP projects. Please use the contact below to grant this team access to a GCP project.</Paragraph>
         <Text strong>Kore administrator</Text>
       </>
     ),
-    'EKS': (
+    'AWS': (
       <>
         <Paragraph>This team does not have access to create clusters in any AWS accounts. Please use the contact below to grant this team access to an AWS account.</Paragraph>
         <Text strong>Kore administrator</Text>

@@ -12,6 +12,8 @@ import KoreApi from '../../../kore-api'
 import V1ClusterSpec from '../../../kore-api/model/V1ClusterSpec'
 import V1Cluster from '../../../kore-api/model/V1Cluster'
 import V1ObjectMeta from '../../../kore-api/model/V1ObjectMeta'
+import getConfig from 'next/config'
+const { publicRuntimeConfig } = getConfig()
 
 class ClusterBuildForm extends React.Component {
   static propTypes = {
@@ -30,6 +32,7 @@ class ClusterBuildForm extends React.Component {
       submitting: false,
       formErrorMessage: false,
       selectedCloud: '',
+      selectedProvider: '',
       dataLoading: true,
       credentials: {},
       planOverride: null,
@@ -57,11 +60,11 @@ class ClusterBuildForm extends React.Component {
       const eksCredentials = (allocations.items || []).filter(a => a.spec.resource.kind === 'EKSCredentials')
       this.setState({
         credentials: {
-          GKE: {
+          GCP: {
             credentials: gkeCredentials,
             accountManagement: gcpAccountManagement
           },
-          EKS: {
+          AWS: {
             credentials: eksCredentials,
             accountManagement: undefined
           }
@@ -147,6 +150,7 @@ class ClusterBuildForm extends React.Component {
   handleSelectCloud = cloud => {
     this.setState({
       selectedCloud: cloud,
+      selectedProvider: publicRuntimeConfig.clusterProviderMap[cloud],
       planOverride: null,
       validationErrors: null
     })
@@ -159,8 +163,8 @@ class ClusterBuildForm extends React.Component {
   }
 
   clusterBuildForm = () => {
-    const { submitting, selectedCloud, formErrorMessage } = this.state
-    const filteredPlans = this.state.plans.items.filter(p => p.spec.kind === selectedCloud)
+    const { submitting, selectedCloud, selectedProvider, formErrorMessage } = this.state
+    const filteredPlans = this.state.plans.items.filter(p => p.spec.kind === selectedProvider)
     const filteredCredentials = this.state.credentials[selectedCloud].credentials
     const accountManagement = this.state.credentials[selectedCloud].accountManagement
     const formConfig = {
@@ -185,6 +189,7 @@ class ClusterBuildForm extends React.Component {
         <ClusterOptionsForm
           team={this.props.team}
           selectedCloud={selectedCloud}
+          selectedProvider={selectedProvider}
           credentials={filteredCredentials}
           accountManagement={accountManagement}
           plans={filteredPlans}

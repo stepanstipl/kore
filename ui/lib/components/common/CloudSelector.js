@@ -4,7 +4,7 @@ import { Typography, Row, Col, Card, Tag } from 'antd'
 const { Title, Paragraph } = Typography
 
 class CloudSelector extends React.Component {
-  static DEFAULT_ENABLED_CLOUDS = ['GKE', 'EKS']
+  static DEFAULT_ENABLED_CLOUDS = ['GCP', 'AWS']
 
   static propTypes = {
     selectedCloud: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]).isRequired,
@@ -38,11 +38,11 @@ class CloudSelector extends React.Component {
         <Col span={6}>
           <Card
             id="gcp"
-            onClick={this.selectCloud('GKE')}
-            hoverable={enabledCloudList.includes('GKE')}
-            className={ selectedCloud === 'GKE' ? 'cloud-card selected' : 'cloud-card' }
+            onClick={this.selectCloud('GCP')}
+            hoverable={enabledCloudList.includes('GCP')}
+            className={ selectedCloud === 'GCP' ? 'cloud-card selected' : 'cloud-card' }
           >
-            {enabledCloudList.includes('GKE') ? (
+            {enabledCloudList.includes('GCP') ? (
               <>
                 <Paragraph className="logo">
                   <img src="/static/images/GCP.png" height="80px" />
@@ -65,11 +65,11 @@ class CloudSelector extends React.Component {
         <Col span={6}>
           <Card
             id="aws"
-            onClick={this.selectCloud('EKS')}
-            hoverable={enabledCloudList.includes('EKS')}
-            className={ selectedCloud === 'EKS' ? 'cloud-card selected' : 'cloud-card' }
+            onClick={this.selectCloud('AWS')}
+            hoverable={enabledCloudList.includes('AWS')}
+            className={ selectedCloud === 'AWS' ? 'cloud-card selected' : 'cloud-card' }
           >
-            {enabledCloudList.includes('EKS') ? (
+            {enabledCloudList.includes('AWS') ? (
               <>
                 <Paragraph className="logo">
                   <img src="/static/images/AWS.png" height="80px" />

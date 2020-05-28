@@ -51,7 +51,7 @@ class ServiceForm extends React.Component {
   }]
 
   state = {
-    selectedCloud: 'EKS',
+    selectedCloud: 'AWS',
     selectedService: '',
     formErrorMessage: false
   }

@@ -14,6 +14,7 @@ class ClusterOptionsForm extends React.Component {
     form: PropTypes.any.isRequired,
     team: PropTypes.object.isRequired,
     selectedCloud: PropTypes.string.isRequired,
+    selectedProvider: PropTypes.string.isRequired,
     credentials: PropTypes.array.isRequired,
     accountManagement: PropTypes.object,
     plans: PropTypes.array.isRequired,
@@ -81,7 +82,7 @@ class ClusterOptionsForm extends React.Component {
 
   render() {
     const { getFieldDecorator, getFieldValue } = this.props.form
-    const { credentials, accountManagement, selectedCloud } = this.props
+    const { credentials, accountManagement, selectedCloud, selectedProvider } = this.props
     const selectedPlan = getFieldValue('plan')
 
     const checkForDuplicateName = (rule, value) => {
@@ -92,7 +93,7 @@ class ClusterOptionsForm extends React.Component {
       return Promise.reject('This name is already used!')
     }
 
-    const cloudAccountName = { 'GKE': 'Project', 'EKS': 'Account' }[selectedCloud]
+    const cloudAccountName = { 'GCP': 'Project', 'AWS': 'Account' }[selectedCloud]
 
     return (
       <Card title="Cluster options">
@@ -166,7 +167,7 @@ class ClusterOptionsForm extends React.Component {
               <UsePlanForm
                 team={this.props.team}
                 resourceType="cluster"
-                kind={selectedCloud}
+                kind={selectedProvider}
                 plan={selectedPlan}
                 validationErrors={this.props.validationErrors}
                 onPlanChange={this.onPlanOverridden}

@@ -32,9 +32,9 @@ class CloudSelector extends React.Component {
         <Col span={12}>
           <Card
             id="aws"
-            onClick={this.selectCloud('EKS')}
+            onClick={this.selectCloud('AWS')}
             hoverable={true}
-            className={ selectedCloud === 'EKS' ? 'cloud-card selected' : 'cloud-card' }
+            className={ selectedCloud === 'AWS' ? 'cloud-card selected' : 'cloud-card' }
           >
             <Paragraph className="logo" style={{ marginBottom: '0' }}>
               <img src="/static/images/AWS.png" height="80px" />
@@ -46,7 +46,7 @@ class CloudSelector extends React.Component {
           <Card
             id="gcp"
             hoverable={false}
-            className={ selectedCloud === 'GKE' ? 'cloud-card selected' : 'cloud-card' }
+            className={ selectedCloud === 'GCP' ? 'cloud-card selected' : 'cloud-card' }
           >
             <Paragraph className="logo" style={{ marginBottom: '0' }}>
               <img src="/static/images/GCP.png" height="80px" />
