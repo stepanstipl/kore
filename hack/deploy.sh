@@ -87,7 +87,7 @@ if ! helm upgrade kore ${CHART} \
   --set=api.ingress.hostname=${KORE_API_PUBLIC_URL##https://} \
   --set=api.ingress.tls_secret=kore-app-ingress \
   --set=api.replicas=2 \
-  --set=api.version=latest \
+  --set=api.version=${VERSION} \
   --set=idp.client_id=${KORE_IDP_CLIENT_ID} \
   --set=idp.client_secret=${KORE_IDP_CLIENT_SECRET} \
   --set=idp.server_url=${KORE_IDP_SERVER_URL} \
