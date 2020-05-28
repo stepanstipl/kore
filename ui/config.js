@@ -64,7 +64,4 @@ module.exports = {
     showPrototypes: process.env.NODE_ENV === 'development' || process.env.KORE_UI_SHOW_PROTOTYPES === 'true',
     featureGates: getFeatureGates()
   },
-  cloudServiceProviderMap: {
-    'EKS': 'aws-servicebroker'
-  }
 }

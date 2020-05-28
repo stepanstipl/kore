@@ -4,8 +4,6 @@ import Router from 'next/router'
 import { Alert, Avatar, Button, Card, Checkbox, Col, Collapse, Form, Input, List, message, Row, Tag, Typography } from 'antd'
 const { Paragraph, Text } = Typography
 const { Panel } = Collapse
-import getConfig from 'next/config'
-const { publicRuntimeConfig } = getConfig()
 
 import redirect from '../../../utils/redirect'
 import CloudSelector from '../../common/CloudSelector'
@@ -20,6 +18,7 @@ import V1ObjectMeta from '../../../kore-api/model/V1ObjectMeta'
 import V1ServiceCredentials from '../../../kore-api/model/V1ServiceCredentials'
 import V1ServiceCredentialsSpec from '../../../kore-api/model/V1ServiceCredentialsSpec'
 import { NewV1ObjectMeta, NewV1Ownership } from '../../../utils/model'
+import { getKoreLabel } from '../../../utils/crd-helpers';
 
 class ServiceBuildForm extends React.Component {
   static propTypes = {
@@ -40,7 +39,6 @@ class ServiceBuildForm extends React.Component {
       selectedCloud: false,
       selectedServiceKind: '',
       selectedServicePlan: false,
-      serviceProviders: [],
       dataLoading: true,
       servicePlanOverride: null,
       validationErrors: null,
@@ -51,8 +49,7 @@ class ServiceBuildForm extends React.Component {
 
   async fetchComponentData() {
     const api = await KoreApi.client()
-    const [ serviceProviders, serviceKinds, servicePlans, clusters, namespaceClaims ] = await Promise.all([
-      api.ListServiceProviders(),
+    const [ serviceKinds, servicePlans, clusters, namespaceClaims ] = await Promise.all([
       api.ListServiceKinds(),
       api.ListServicePlans(),
       api.ListClusters(this.props.team.metadata.name),
@@ -73,7 +70,7 @@ class ServiceBuildForm extends React.Component {
       }
     })
     const bindingSelectData = Object.keys(bindingsData).map(bd => bindingsData[bd])
-    return { serviceProviders, serviceKinds, servicePlans, clusters, namespaceClaims, bindingSelectData }
+    return { serviceKinds, servicePlans, clusters, namespaceClaims, bindingSelectData }
   }
 
   componentDidMountComplete = null
@@ -294,13 +291,10 @@ class ServiceBuildForm extends React.Component {
     }
 
     const { getFieldDecorator } = this.props.form
-    const { selectedCloud, serviceProviders, serviceKinds, selectedServiceKind, selectedServicePlan, formErrorMessage, submitting, bindingSelectData, planSchemaFound } = this.state
+    const { selectedCloud, serviceKinds, selectedServiceKind, selectedServicePlan, formErrorMessage, submitting, bindingSelectData, planSchemaFound } = this.state
     let filteredServiceKinds = []
     if (selectedCloud) {
-      const serviceProvider = serviceProviders.items.find(sp => sp.spec.type === publicRuntimeConfig.cloudServiceProviderMap[selectedCloud])
-      if (serviceProvider) {
-        filteredServiceKinds = serviceKinds.items.filter(sk => serviceProvider.status.supportedKinds.includes(sk.metadata.name) && sk.spec.enabled)
-      }
+      filteredServiceKinds = serviceKinds.items.filter(sk => getKoreLabel(sk, 'platform') === selectedCloud)
     }
 
     let filteredServicePlans = []
