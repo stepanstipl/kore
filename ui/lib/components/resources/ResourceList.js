@@ -2,8 +2,6 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { message } from 'antd'
 
-import copy from '../../utils/object-copy'
-
 class ResourceList extends React.Component {
 
   static propTypes = {
@@ -44,21 +42,19 @@ class ResourceList extends React.Component {
   }
 
   handleStatusUpdated = (updatedResource, done) => {
-    const state = copy(this.state)
-    const resource = state.resources.items.find(r => r.metadata.name === updatedResource.metadata.name)
-    resource.status = updatedResource.status
-    this.setState(state, done)
+    this.setState((state) => {
+      this.setState({
+        resources: {
+          ...state.resources,
+          items: state.resources.map((r) => r.metadata.name !== updatedResource.metadata.name ? r : { ...r, status: updatedResource.status })
+        }
+      })
+    }, done)
   }
 
-  _setStateKey = (key, data) => {
-    const state = copy(this.state)
-    state[key] = data ? data : false
-    this.setState(state)
-  }
-
-  view = resource => async () => this._setStateKey('view', resource)
-  edit = resource => async () => this._setStateKey('edit', resource)
-  add = enabled => async () => this._setStateKey('add', enabled)
+  view = (resource) => () => this.setState({ 'view': resource || false })
+  edit = (resource) => () => this.setState({ 'edit': resource || false })
+  add = (enabled) => () => this.setState({ 'add': enabled || false })
 
   handleEditSave = (updated) => {
     const editedName = this.state.edit.metadata.name

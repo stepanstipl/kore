@@ -96,7 +96,7 @@ class PlanList extends ResourceList {
               <Drawer
                 title={<><Title level={4}>{view.spec.summary}</Title><Text>{view.spec.description}</Text></>}
                 visible={Boolean(view)}
-                onClose={() => this.view(false)}
+                onClose={this.view(false)}
                 width={900}
               >
                 <PlanViewer
@@ -111,7 +111,7 @@ class PlanList extends ResourceList {
               <Drawer
                 title={<><Title level={4}>{edit.spec.summary}</Title><Text>{edit.spec.description}</Text></>}
                 visible={Boolean(edit)}
-                onClose={() => this.edit(false)}
+                onClose={this.edit(false)}
                 width={900}
               >
                 <ManageClusterPlanForm
@@ -128,7 +128,7 @@ class PlanList extends ResourceList {
               <Drawer
                 title={<Title level={4}>New {this.props.kind} plan</Title>}
                 visible={add}
-                onClose={() => this.add(false)}
+                onClose={this.add(false)}
                 width={900}
               >
                 <ManageClusterPlanForm
