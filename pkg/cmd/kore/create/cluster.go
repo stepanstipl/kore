@@ -44,38 +44,38 @@ itself is provisioned from a predefined plan (a template). You can view the plan
 available to you via $ kore get plans. Once the cluster has been built the
 members of your team can gain access via running $ kore login.
 
+`
+	createClusterExamples = `
 Note: you retrieve a list of all the plans available to you via:
+
 $ kore get plans
 $ kore get plans <name> -o yaml
 
-Examples:
 $ kore -t <myteam> create cluster dev --plan gke-development --allocation <allocation_name>
-
-# Create a cluster and provision some clusters on there as well
 $ kore -t <myteam> create cluster dev --plan gke-development -a <name> --cluster=app1,app2
 
-# Check the status of the cluster
+Check the status of the cluster
+
 $ kore -t <myteam> get cluster dev -o yaml
 
-# You can override the plan parameters using the --param
+You can override the plan parameters using the --param (examples below)
+
 $ kore -t <myteam> create cluster dev --param authProxyAllowedIPs.0=1.1.1.1/8
 $ kore -t <myteam> create cluster dev --param authProxyAllowedIPs='["1.1.1.1/32","2,2,2,2"]'
-
-# Or you can add via an index
 $ kore -t <myteam> create cluster dev --param authProxyAllowedIPs.-1=127.0.0.0/8
 
-# Alternatively you can use json directly
+Alternatively you can use json directly
+
 $ kore -t <myteam> create cluster dev --param nodeGroups.1'='{json}|[json]'
 
 Note if you only have the one allocation for a given cloud provider in your team you can
 forgo the the need to specify the credentials allocation (-a|--allocation) as they will be
 automatically provisioned for you.
 
-Now update your kubeconfig to use your team's provisioned cluster.
-$ kore kubeconfig -t <myteam>
+Now update your kubeconfig to use your team's provisioned cluster. This will modify your
+${HOME}/.kube/config. Now you can use 'kubectl' to interact with your team's cluster.
 
-This will modify your ${HOME}/.kube/config. Now you can use 'kubectl' to interact with your
-team's cluster.
+$ kore kubeconfig -t <myteam>
 `
 )
 
@@ -114,7 +114,7 @@ func NewCmdCreateCluster(factory cmdutil.Factory) *cobra.Command {
 		Use:     "cluster",
 		Short:   "Create a kubernetes cluster within the team",
 		Long:    createClusterLongDescription,
-		Example: "kore create cluster -a <allocation> -p <plan> [-t|--team]",
+		Example: createClusterExamples,
 		Run:     cmdutil.DefaultRunFunc(o),
 	}
 

@@ -33,7 +33,9 @@ import (
 var (
 	userLongDesciption = `
 Provides the ability to provision a user in kore.
+`
 
+	userExamples = `
 # Create the test user
 $ kore create username test -e test@appiva.io
 `
@@ -61,7 +63,7 @@ func NewCmdCreateUser(factory cmdutils.Factory) *cobra.Command {
 		Use:     "user",
 		Short:   "Adds to the user to kore",
 		Long:    userLongDesciption,
-		Example: "kore create user <username> -e <email> [-t team]",
+		Example: userExamples,
 		PreRunE: cmdutils.RequireName,
 		Run:     cmdutils.DefaultRunFunc(o),
 	}

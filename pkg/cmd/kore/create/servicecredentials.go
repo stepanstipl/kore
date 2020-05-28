@@ -19,18 +19,15 @@ package create
 import (
 	"time"
 
-	"github.com/appvia/kore/pkg/utils/render"
-
-	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
-
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/cmd/errors"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 	cmdutils "github.com/appvia/kore/pkg/cmd/utils"
+	"github.com/appvia/kore/pkg/utils/render"
 
 	"github.com/spf13/cobra"
+	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -38,18 +35,20 @@ var (
 	createServiceCredentialsLongDescription = `
 Provisions service credentials for the given service and saves them as a Kubernetes secret in the target cluster
 and namespace.
-
-To list the available services
+`
+	createServiceCredentialsExamples = `
+# To list the available services
 $ kore get services
 
-To list the available clusters
+# To list the available clusters
 $ kore get clusters
 
-To list the available namespaces
+# To list the available namespaces
 $ kore get namespaceclaims
 
-Examples:
-$ kore -t <myteam> create servicecredentials db-creds --service my-database --cluster my-cluster --cluster-namespace dev
+# Create a service credentials
+$ kore -t <myteam> create servicecredentials db-creds --service my-database \
+	--cluster my-cluster --cluster-namespace dev
 
 # Check the status of the service credentials
 $ kore -t <myteam> get servicecredentials db-creds -o yaml
@@ -87,7 +86,7 @@ func NewCmdCreateServiceCredentials(factory cmdutil.Factory) *cobra.Command {
 		Use:     "servicecredentials",
 		Short:   "Creates service credentials within the team",
 		Long:    createServiceCredentialsLongDescription,
-		Example: "kore create servicecredentials -s <service> -c <cluster> -n <cluster namespace> [-t|--team]",
+		Example: createServiceCredentialsExamples,
 		Run:     cmdutil.DefaultRunFunc(o),
 	}
 

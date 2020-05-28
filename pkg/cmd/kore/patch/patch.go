@@ -35,14 +35,16 @@ var (
 	longDescription = `
 Patch allows you to apply patches to the resource managed in kore to add or
 remove values from a resource.
+`
 
+	patchExamples = `
 # Update the size in a cluster resource
 $ kore alpha patch clusters test spec.configuration.size 1 [-t <team>]
 
 # Update the allowed subnets
 $ kore alpha patch clusters test spec.configuration.authProxyAllowedIPs.-1 127.0.0.0/8 [-t team]
 
-# Remove the value
+#Remove the value
 $ kore alpha patch clusters test spec.configuration.authProxyAllowedIPs.0
 `
 )
@@ -73,7 +75,7 @@ func NewCmdPatch(factory cmdutil.Factory) *cobra.Command {
 		Use:     "patch",
 		Short:   "Allows you to patch resource in kore",
 		Long:    longDescription,
-		Example: "kore alpha patch <resource> <name> <key> [value] [options]",
+		Example: patchExamples,
 
 		Run: func(cmd *cobra.Command, args []string) {
 			o.Key = cmd.Flags().Arg(2)

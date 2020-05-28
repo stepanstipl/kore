@@ -21,16 +21,12 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/appvia/kore/pkg/utils/render"
-
-	"github.com/appvia/kore/pkg/client"
-
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
-
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
+	"github.com/appvia/kore/pkg/client"
 	"github.com/appvia/kore/pkg/cmd/errors"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
-	cmdutils "github.com/appvia/kore/pkg/cmd/utils"
+	"github.com/appvia/kore/pkg/utils/render"
 
 	"github.com/spf13/cobra"
 	apiexts "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
@@ -42,12 +38,14 @@ var (
 Provides the ability to provision a service in the team. The service
 itself is created from a predefined service plan (a template). You can view the service plans
 available to you via $ kore get serviceplans.
-
+`
+	createServiceExamples = `
 Note: you can retrieve a list of all the service plans available to you via:
+
 $ kore get serviceplans
 $ kore get serviceplan <name> -o yaml
 
-Examples:
+# Create a service foo from plan some-plan
 $ kore -t <myteam> create service foo --plan some-plan
 
 # You can override the plan parameters using the --param
@@ -92,7 +90,7 @@ func NewCmdCreateService(factory cmdutil.Factory) *cobra.Command {
 		Use:     "service",
 		Short:   "Create a service within the team",
 		Long:    createServiceLongDescription,
-		Example: "kore create service -p <plan> [-t|--team]",
+		Example: createServiceExamples,
 		Run:     cmdutil.DefaultRunFunc(o),
 	}
 
@@ -104,9 +102,9 @@ func NewCmdCreateService(factory cmdutil.Factory) *cobra.Command {
 	flags.BoolVarP(&o.ShowTime, "show-time", "T", false, "shows the time it took to successfully provision a new service `BOOL`")
 	flags.BoolVar(&o.DryRun, "dry-run", false, "shows the resource but does not apply or create (defaults: false)")
 
-	cmdutils.MustMarkFlagRequired(command, "plan")
+	cmdutil.MustMarkFlagRequired(command, "plan")
 
-	cmdutils.MustRegisterFlagCompletionFunc(command, "plan", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.ShellCompDirective) {
+	cmdutil.MustRegisterFlagCompletionFunc(command, "plan", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.ShellCompDirective) {
 		suggestions, err := o.Resources().LookupResourceNames("serviceplan", "")
 		if err != nil {
 			return nil, cobra.ShellCompDirectiveError
@@ -179,7 +177,7 @@ func (o *CreateServiceOptions) Run() error {
 	return nil
 }
 
-// CreateServiceConfiguration is responsible for generating the service config
+// CreateService is responsible for generating the service config
 func (o *CreateServiceOptions) CreateService() (*servicesv1.Service, error) {
 	plan, err := o.GetPlan()
 	if err != nil {
@@ -231,7 +229,7 @@ func (o *CreateServiceOptions) GetPlan() (*servicesv1.ServicePlan, error) {
 		Error()
 }
 
-// GetAllocation retrieves the requested allocation
+// GetCredentialsAllocation retrieves the requested allocation
 func (o *CreateServiceOptions) GetCredentialsAllocation() (*configv1.Allocation, error) {
 	allocation := &configv1.Allocation{}
 

@@ -22,15 +22,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var longProfileDescription = `
+var (
+	longProfileDescription = `
 Profiles provide a means to store, configure and switch between multiple
 Appvia Kore instances from a single configuration. Alternatively, you might
 use profiles to use different identities (i.e. admin / user) to a single
 instance. These are automatically created for you via the $ kore login
 command or you can manually configure them via the $ kore profile configure.
+`
 
-Examples:
-
+	profileExamples = `
 $ kore profile                     # will show this help menu
 $ kore profile show                # will show the profile in use
 $ kore profile list                # will show all the profiles available to you
@@ -39,16 +40,17 @@ $ kore profile configure <name>    # allows you to configure a profile
 $ kore profile rm <name>           # removes a profile
 $ kore profile set <path> <value>  # set configuration values
 `
+)
 
 // NewCmdProfiles creates and returns the profiles command
 func NewCmdProfiles(factory cmdutil.Factory) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:                   "profiles",
-		Aliases:               []string{"profile"},
-		DisableFlagsInUseLine: true,
-		Long:                  longProfileDescription,
-		Short:                 "Manage profiles, allowing you switch, list and show profiles",
-		Run:                   cmdutil.RunHelp,
+		Use:     "profiles",
+		Aliases: []string{"profile"},
+		Example: profileExamples,
+		Long:    longProfileDescription,
+		Short:   "Manage profiles, allowing you switch, list and show profiles",
+		Run:     cmdutil.RunHelp,
 	}
 
 	cmd.AddCommand(

@@ -32,16 +32,18 @@ import (
 
 var (
 	createNamespaceLongDescription = `
-Provides the ability to create a namespace on a provisioned cluster. In order to
-retrieve the clusters you have available you can run:
+Provides the ability to create a namespace on a provisioned cluster
+`
+	createNamespaceExamples = `
+In order to retrieve the clusters you have available you can run
 
 $ kore get clusters -t <team>
 
 Examples:
-# Create a namespace on cluster 'dev'
-$ kore create namespace -c cluster -t <team>
 
-# Deleting a namespace on the cluster
+Below are exmaples of creating an deleting a namespace in kore.
+
+$ kore create namespace -c cluster -t <team>
 $ kore delete namespaceclaim
 
 You can list the namespace you have already provisioned via
@@ -75,7 +77,7 @@ func NewCmdCreateNamespace(factory cmdutil.Factory) *cobra.Command {
 		Use:     "namespace",
 		Short:   "Creates a namespace within a managed cluster",
 		Long:    createNamespaceLongDescription,
-		Example: "kore create namespace -u <cluster> [-t|--team]",
+		Example: createNamespaceExamples,
 		Run:     cmdutil.DefaultRunFunc(o),
 	}
 

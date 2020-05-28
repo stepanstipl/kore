@@ -21,9 +21,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/appvia/kore/pkg/kore"
-
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
+	"github.com/appvia/kore/pkg/kore"
 
 	"github.com/spf13/cobra"
 )
