@@ -1285,8 +1285,14 @@
         "parameters": [
           {
             "type": "string",
-            "description": "Filters service kinds for a specific kind",
-            "name": "kind",
+            "description": "Filters service kinds for a specific service platform",
+            "name": "platform",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Filters service kinds for enabled/disabled status",
+            "name": "enabled",
             "in": "query"
           }
         ],

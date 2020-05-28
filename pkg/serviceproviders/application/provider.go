@@ -56,6 +56,9 @@ func (p Provider) Catalog(ctx kore.Context, provider *servicesv1.ServiceProvider
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      ServiceKindApp,
 					Namespace: kore.HubNamespace,
+					Labels: map[string]string{
+						kore.Label("platform"): "Kubernetes",
+					},
 				},
 				Spec: servicesv1.ServiceKindSpec{
 					DisplayName: "Kubernetes Application",
@@ -72,6 +75,9 @@ func (p Provider) Catalog(ctx kore.Context, provider *servicesv1.ServiceProvider
 				ObjectMeta: metav1.ObjectMeta{
 					Name:      ServiceKindHelmApp,
 					Namespace: kore.HubNamespace,
+					Labels: map[string]string{
+						kore.Label("platform"): "Kubernetes",
+					},
 				},
 				Spec: servicesv1.ServiceKindSpec{
 					DisplayName: "Kubernetes Helm Application",

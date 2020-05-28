@@ -60,11 +60,16 @@ for the list service kinds operation typically these are written to a http.Reque
 */
 type ListServiceKindsParams struct {
 
-	/*Kind
-	  Filters service kinds for a specific kind
+	/*Enabled
+	  Filters service kinds for enabled/disabled status
 
 	*/
-	Kind *string
+	Enabled *string
+	/*Platform
+	  Filters service kinds for a specific service platform
+
+	*/
+	Platform *string
 
 	timeout    time.Duration
 	Context    context.Context
@@ -104,15 +109,26 @@ func (o *ListServiceKindsParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithKind adds the kind to the list service kinds params
-func (o *ListServiceKindsParams) WithKind(kind *string) *ListServiceKindsParams {
-	o.SetKind(kind)
+// WithEnabled adds the enabled to the list service kinds params
+func (o *ListServiceKindsParams) WithEnabled(enabled *string) *ListServiceKindsParams {
+	o.SetEnabled(enabled)
 	return o
 }
 
-// SetKind adds the kind to the list service kinds params
-func (o *ListServiceKindsParams) SetKind(kind *string) {
-	o.Kind = kind
+// SetEnabled adds the enabled to the list service kinds params
+func (o *ListServiceKindsParams) SetEnabled(enabled *string) {
+	o.Enabled = enabled
+}
+
+// WithPlatform adds the platform to the list service kinds params
+func (o *ListServiceKindsParams) WithPlatform(platform *string) *ListServiceKindsParams {
+	o.SetPlatform(platform)
+	return o
+}
+
+// SetPlatform adds the platform to the list service kinds params
+func (o *ListServiceKindsParams) SetPlatform(platform *string) {
+	o.Platform = platform
 }
 
 // WriteToRequest writes these params to a swagger request
@@ -123,16 +139,32 @@ func (o *ListServiceKindsParams) WriteToRequest(r runtime.ClientRequest, reg str
 	}
 	var res []error
 
-	if o.Kind != nil {
+	if o.Enabled != nil {
 
-		// query param kind
-		var qrKind string
-		if o.Kind != nil {
-			qrKind = *o.Kind
+		// query param enabled
+		var qrEnabled string
+		if o.Enabled != nil {
+			qrEnabled = *o.Enabled
 		}
-		qKind := qrKind
-		if qKind != "" {
-			if err := r.SetQueryParam("kind", qKind); err != nil {
+		qEnabled := qrEnabled
+		if qEnabled != "" {
+			if err := r.SetQueryParam("enabled", qEnabled); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	if o.Platform != nil {
+
+		// query param platform
+		var qrPlatform string
+		if o.Platform != nil {
+			qrPlatform = *o.Platform
+		}
+		qPlatform := qrPlatform
+		if qPlatform != "" {
+			if err := r.SetQueryParam("platform", qPlatform); err != nil {
 				return err
 			}
 		}

@@ -102,6 +102,7 @@ func NewCmdGet(factory cmdutil.Factory) *cobra.Command {
 
 	if factory.Config().FeatureGates[kore.FeatureGateServices] {
 		command.AddCommand(
+			NewCmdGetServiceKind(factory),
 			NewCmdGetServicePlan(factory),
 		)
 	}

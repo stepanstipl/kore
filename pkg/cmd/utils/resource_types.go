@@ -321,6 +321,7 @@ var (
 				{"Name", "metadata.name", ""},
 				{"Title", "spec.displayName", ""},
 				{"Summary", "spec.summary", ""},
+				{"Platform", "metadata.labels.kore\\.appvia\\.io/platform", ""},
 				{"Enabled", "spec.enabled", ""},
 				{"Age", "metadata.creationTimestamp", "age"},
 			},

@@ -100,6 +100,11 @@ func (p *Provider) Catalog(ctx kore.Context, serviceProvider *servicesv1.Service
 			summary = strings.Title(catalogService.Name)
 		}
 
+		platform := p.config.PlatformMapping[catalogService.Name]
+		if platform == "" {
+			platform = p.config.PlatformMapping["*"]
+		}
+
 		serviceKind := servicesv1.ServiceKind{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       servicesv1.ServiceKindGVK.Kind,
@@ -108,6 +113,9 @@ func (p *Provider) Catalog(ctx kore.Context, serviceProvider *servicesv1.Service
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      catalogService.Name,
 				Namespace: kore.HubNamespace,
+				Labels: map[string]string{
+					kore.Label("platform"): platform,
+				},
 			},
 			Spec: servicesv1.ServiceKindSpec{
 				DisplayName:      getMetadataStringVal(catalogService.Metadata, MetadataKeyDisplayName, ""),

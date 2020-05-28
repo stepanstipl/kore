@@ -37,9 +37,7 @@ type ServiceKinds interface {
 	// Get returns the service kind
 	Get(context.Context, string) (*servicesv1.ServiceKind, error)
 	// List returns the existing service kinds
-	List(context.Context) (*servicesv1.ServiceKindList, error)
-	// ListFiltered returns a list of service kinds using the given filter.
-	ListFiltered(context.Context, func(servicesv1.ServiceKind) bool) (*servicesv1.ServiceKindList, error)
+	List(context.Context, ...func(servicesv1.ServiceKind) bool) (*servicesv1.ServiceKindList, error)
 	// Has checks if a service kind exists
 	Has(context.Context, string) (bool, error)
 	// Update is responsible for updating a service kind
@@ -137,34 +135,37 @@ func (p serviceKindsImpl) Get(ctx context.Context, name string) (*servicesv1.Ser
 }
 
 // List returns the existing service kinds
-func (p serviceKindsImpl) List(ctx context.Context) (*servicesv1.ServiceKindList, error) {
-	kinds := &servicesv1.ServiceKindList{}
+func (p serviceKindsImpl) List(ctx context.Context, filters ...func(servicesv1.ServiceKind) bool) (*servicesv1.ServiceKindList, error) {
+	list := &servicesv1.ServiceKindList{}
 
-	return kinds, p.Store().Client().List(ctx,
+	err := p.Store().Client().List(ctx,
 		store.ListOptions.InNamespace(HubNamespace),
-		store.ListOptions.InTo(kinds),
+		store.ListOptions.InTo(list),
 	)
-}
-
-// ListFiltered returns a list of service kinds using the given filter.
-// A service kind is included if the filter function returns true
-func (p serviceKindsImpl) ListFiltered(ctx context.Context, filter func(plan servicesv1.ServiceKind) bool) (*servicesv1.ServiceKindList, error) {
-	var res []servicesv1.ServiceKind
-
-	serviceKindList, err := p.List(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, serviceKind := range serviceKindList.Items {
-		if filter(serviceKind) {
-			res = append(res, serviceKind)
-		}
+	if len(filters) == 0 {
+		return list, nil
 	}
 
-	serviceKindList.Items = res
+	res := []servicesv1.ServiceKind{}
+	for _, item := range list.Items {
+		if func() bool {
+			for _, filter := range filters {
+				if !filter(item) {
+					return false
+				}
+			}
+			return true
+		}() {
+			res = append(res, item)
+		}
+	}
+	list.Items = res
 
-	return serviceKindList, nil
+	return list, nil
 }
 
 // Has checks if a service kind exists
