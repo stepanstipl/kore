@@ -127,13 +127,13 @@ push-images:
 		docker push ${REGISTRY}/${AUTHOR}/$${name}:${VERSION} ; \
 	done
 
-package: 
+package:
 	@rm -rf ./release
 	@mkdir ./release
 	@$(MAKE) package-cli
 	@$(MAKE) package-helm
 	cd ./release && sha256sum * > kore.sha256sums
-	
+
 package-cli:
 	@echo "--> Compiling CLI static binaries"
 	CGO_ENABLED=0 go run github.com/mitchellh/gox -parallel=4 -arch="${CLI_ARCHITECTURES}" -os="${CLI_PLATFORMS}" -ldflags "-w ${LFLAGS}" -output=./release/{{.Dir}}-cli-{{.OS}}-{{.Arch}} ./cmd/kore/
@@ -360,7 +360,7 @@ spelling:
 
 golangci-lint:
 	@echo "--> Checking against the golangci-lint"
-	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --timeout 5m -j 2 ./...
+	time -v go run github.com/golangci/golangci-lint/cmd/golangci-lint run --timeout 5m -j 2 ./...
 
 check:
 	@echo "--> Running code checkers"
