@@ -2,6 +2,10 @@
 run:
   tests: false
 
+  skip-dirs:
+    - hack
+    - tests
+
 issues:
   exclude:
     - "not declared by package utf8"

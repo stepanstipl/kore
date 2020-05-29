@@ -127,13 +127,13 @@ push-images:
 		docker push ${REGISTRY}/${AUTHOR}/$${name}:${VERSION} ; \
 	done
 
-package: 
+package:
 	@rm -rf ./release
 	@mkdir ./release
 	@$(MAKE) package-cli
 	@$(MAKE) package-helm
 	cd ./release && sha256sum * > kore.sha256sums
-	
+
 package-cli:
 	@echo "--> Compiling CLI static binaries"
 	CGO_ENABLED=0 go run github.com/mitchellh/gox -parallel=4 -arch="${CLI_ARCHITECTURES}" -os="${CLI_PLATFORMS}" -ldflags "-w ${LFLAGS}" -output=./release/{{.Dir}}-cli-{{.OS}}-{{.Arch}} ./cmd/kore/

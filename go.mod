@@ -13,6 +13,7 @@ require (
 	github.com/blevesearch/blevex v0.0.0-20190916190636-152f0fe5c040 // indirect
 	github.com/blevesearch/go-porterstemmer v1.0.2 // indirect
 	github.com/blevesearch/segment v0.0.0-20160915185041-762005e7a34f // indirect
+	github.com/bombsimon/wsl/v2 v2.0.0 // indirect
 	github.com/client9/misspell v0.3.4
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/couchbase/vellum v0.0.0-20190829182332-ef2e028c01fd // indirect
@@ -40,7 +41,7 @@ require (
 	github.com/go-openapi/swag v0.19.8
 	github.com/go-openapi/validate v0.19.7
 	github.com/go-swagger/go-swagger v0.23.0
-	github.com/golangci/golangci-lint v1.23.7
+	github.com/golangci/golangci-lint v1.27.0
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/uuid v1.1.1
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
@@ -65,13 +66,14 @@ require (
 	github.com/prometheus/procfs v0.0.8 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20190728182440-6a916e37a237 // indirect
 	github.com/romanyx/polluter v1.2.2
+	github.com/securego/gosec v0.0.0-20200103095621-79fbf3af8d83 // indirect
 	github.com/shurcooL/httpfs v0.0.0-20190707220628-8d4bc4ba7749 // indirect
 	github.com/shurcooL/vfsgen v0.0.0-20181202132449-6a9ea43bcacd
 	github.com/sirupsen/logrus v1.5.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/spf13/cobra v1.0.0
 	github.com/steveyen/gtreap v0.0.0-20150807155958-0abe01ef9be2 // indirect
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.5.1
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/tcnksm/ghr v0.13.0
 	github.com/tecbot/gorocksdb v0.0.0-20191019123150-400c56251341 // indirect

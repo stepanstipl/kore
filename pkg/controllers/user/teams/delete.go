@@ -18,7 +18,6 @@ package teams
 
 import (
 	"context"
-	"fmt"
 
 	core "github.com/appvia/kore/pkg/apis/core/v1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
@@ -72,7 +71,7 @@ func (t teamController) Delete(ctx context.Context, request reconcile.Request, t
 		team.Status.Status = core.FailureStatus
 		team.Status.Conditions = []core.Condition{{
 			Detail:  err.Error(),
-			Message: fmt.Sprintf("Failed to remove the team due as all resources not removed"),
+			Message: "Failed to remove the team due as all resources not removed",
 		}}
 
 		return reconcile.Result{}, t.mgr.GetClient().Status().Update(ctx, team)
