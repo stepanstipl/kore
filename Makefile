@@ -360,7 +360,7 @@ spelling:
 
 golangci-lint:
 	@echo "--> Checking against the golangci-lint"
-	time -v go run github.com/golangci/golangci-lint/cmd/golangci-lint run --timeout 5m -j 2 ./...
+	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --timeout 5m -j 2 ./...
 
 check:
 	@echo "--> Running code checkers"
