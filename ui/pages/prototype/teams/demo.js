@@ -403,7 +403,7 @@ class TeamDashboard extends React.Component {
             <Breadcrumb items={[{ text: team.spec.summary }]} />
           </div>
           <div style={{ float: 'right' }}>
-            <this.settingsMenu team={team} />
+            {this.settingsMenu({ team })}
           </div>
         </div>
         <Paragraph>

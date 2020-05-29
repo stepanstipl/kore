@@ -253,7 +253,7 @@ class ClustersTab extends React.Component {
                     <>
                       <Collapse style={{ marginLeft: '50px' }} onChange={this.revealNamespaces(cluster.metadata.name)} activeKey={this.state.revealNamespaces[cluster.metadata.name] ? ['namespaces'] : []}>
                         <Panel header={<span>Namespaces <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={activeNamespaces.length} /></span>} key="namespaces">
-                          {filteredNamespaceClaims.length > 0 && <this.clusterNamespaceList namespaceClaims={filteredNamespaceClaims} />}
+                          {filteredNamespaceClaims.length > 0 && this.clusterNamespaceList({ namespaceClaims: filteredNamespaceClaims })}
                         </Panel>
                       </Collapse>
                       <Divider />

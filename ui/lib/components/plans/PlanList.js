@@ -12,8 +12,7 @@ class PlanList extends ResourceList {
 
   static propTypes = {
     kind: PropTypes.string,
-    style: PropTypes.object,
-    tabActiveKey: PropTypes.string.isRequired
+    style: PropTypes.object
   }
 
   createdMessage = `${this.props.kind} plan created successfully`
@@ -47,7 +46,7 @@ class PlanList extends ResourceList {
 
   componentDidUpdate(prevProps) {
     // reload data if coming back from another tab
-    if (prevProps.tabActiveKey !== this.props.tabActiveKey) {
+    if (prevProps.kind !== this.props.kind) {
       this.fetchComponentData().then(data => this.setState({ ...data }))
     }
   }

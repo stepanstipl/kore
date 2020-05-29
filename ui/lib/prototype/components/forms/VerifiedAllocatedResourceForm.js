@@ -200,7 +200,7 @@ class VerifiedAllocatedResourceForm extends React.Component {
         <Form {...formConfig} onSubmit={this.handleSubmit}>
           <FormErrorMessage message={formErrorMessage} />
 
-          <this.resourceFormFields />
+          {this.resourceFormFields()}
 
           <Card style={{ marginBottom: '20px' }}>
             <Alert

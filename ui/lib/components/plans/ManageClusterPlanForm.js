@@ -172,7 +172,7 @@ class ManageClusterPlanForm extends ManagePlanForm {
 
         {this.defaultFormHeader(formErrorMessage, mode, data)}
 
-        <this.associateWithAccountManagement />
+        {this.associateWithAccountManagement()}
       </>      
     )
   }
