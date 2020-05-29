@@ -22,7 +22,6 @@ class UsePlanForm extends React.Component {
     onPlanChange: PropTypes.func,
     validationErrors: PropTypes.array,
     mode: PropTypes.oneOf(['create', 'edit', 'view']).isRequired,
-    schemaFound: PropTypes.func
   }
 
   static initialState = {
@@ -82,8 +81,6 @@ class UsePlanForm extends React.Component {
     if (schema && typeof schema === 'string') {
       schema = JSON.parse(schema)
     }
-    
-    this.props.schemaFound && this.props.schemaFound(Boolean(schema))
 
     this.setState({
       ...this.state,

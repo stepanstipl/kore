@@ -1,7 +1,7 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
 import { patterns } from '../../../utils/validation'
-import { Button, Form, Input, Alert, Select, Collapse } from 'antd'
+import { Button, Form, Input, Alert, Select } from 'antd'
 import KoreApi from '../../../kore-api'
 import UsePlanForm from '../../plans/UsePlanForm'
 import V1ServiceCredentials from '../../../kore-api/model/V1ServiceCredentials'
@@ -30,7 +30,6 @@ class ServiceCredentialForm extends React.Component {
       dataLoading: true,
       validationErrors: null,
       config: null,
-      planSchemaFound: false
     }
   }
 
@@ -305,21 +304,16 @@ class ServiceCredentialForm extends React.Component {
             </Select>
           )}
         </Form.Item>
-        {servicePlan && this.state.planSchemaFound ? (
-          <Collapse style={{ marginBottom: '24px' }} >
-            <Collapse.Panel header="Customize service binding parameters" forceRender={true}>
-              <UsePlanForm
-                team={this.props.team}
-                resourceType="servicecredential"
-                kind={servicePlan.spec.kind}
-                plan={servicePlan.metadata.name}
-                mode="create"
-                validationErrors={validationErrors}
-                onPlanChange={this.handleConfigurationUpdate}
-                schemaFound={(found) => this.setState({ planSchemaFound: found })}
-              />
-            </Collapse.Panel>
-          </Collapse>
+        {servicePlan ? (
+          <UsePlanForm
+            team={this.props.team}
+            resourceType="servicecredential"
+            kind={servicePlan.spec.kind}
+            plan={servicePlan.metadata.name}
+            mode="create"
+            validationErrors={validationErrors}
+            onPlanChange={this.handleConfigurationUpdate}
+          />
         ) : null}
         <Form.Item>
           <Button type="primary" htmlType="submit" loading={submitting} disabled={this.disableButton(getFieldsError())}>Save</Button>

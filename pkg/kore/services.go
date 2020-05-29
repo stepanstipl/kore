@@ -21,12 +21,11 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/appvia/kore/pkg/utils"
-
-	"github.com/appvia/kore/pkg/utils/jsonschema"
-
+	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/store"
+	"github.com/appvia/kore/pkg/utils"
+	"github.com/appvia/kore/pkg/utils/jsonschema"
 	"github.com/appvia/kore/pkg/utils/validation"
 
 	log "github.com/sirupsen/logrus"
@@ -73,7 +72,9 @@ func (s *servicesImpl) Delete(ctx context.Context, name string) (*servicesv1.Ser
 		return nil, err
 	}
 
-	creds, err := s.Teams().Team(s.team).ServiceCredentials().List(ctx)
+	creds, err := s.Teams().Team(s.team).ServiceCredentials().List(ctx, func(s servicesv1.ServiceCredentials) bool {
+		return s.Spec.Service.Equals(corev1.MustGetOwnershipFromObject(original))
+	})
 	if err != nil {
 		logger.WithError(err).Error("failed to retrieve the service credentials")
 

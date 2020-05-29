@@ -40,7 +40,7 @@ type ServiceCredentials interface {
 	// GetSchema returns the service credential schema
 	GetSchema(context.Context, string) (string, error)
 	// List returns a list of service credentials.
-	// The optional filter function can be used to include items only for which the function returns true
+	// The optional filter functions can be used to include items only for which all functions return true
 	List(context.Context, ...func(credentials servicesv1.ServiceCredentials) bool) (*servicesv1.ServiceCredentialsList, error)
 	// Update is used to update service credentials
 	Update(context.Context, *servicesv1.ServiceCredentials) error
