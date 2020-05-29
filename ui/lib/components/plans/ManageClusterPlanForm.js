@@ -75,7 +75,7 @@ class ManageClusterPlanForm extends ManagePlanForm {
 
       if (this.accountManagementRulesEnabled()) {
         const accountMgtResource = copy(this.state.accountManagement)
-        const currentRule = this.props.data.gcpAutomatedProject ? accountMgtResource.spec.rules.find(r => r.name === this.props.data.gcpAutomatedProject.name) : null
+        const currentRule = this.props.data && this.props.data.gcpAutomatedProject ? accountMgtResource.spec.rules.find(r => r.name === this.props.data.gcpAutomatedProject.name) : null
         if (values.gcpAutomatedProject) {
           // add to the new rule
           const addedToRule = accountMgtResource.spec.rules.find(r => r.name === values.gcpAutomatedProject)
@@ -113,7 +113,7 @@ class ManageClusterPlanForm extends ManagePlanForm {
   allowAutomatedProjectSelectionClear = () => {
     // only allow clearing of the automated project if it's a new selection or there's more than one plan in the rule
     // a rule cannot be left with no plans
-    if (!this.props.data.gcpAutomatedProject) {
+    if (!this.props.data || !this.props.data.gcpAutomatedProject) {
       return true
     }
     const planRule = this.state.accountManagement.spec.rules.find(r => r.name === this.props.data.gcpAutomatedProject.name)
