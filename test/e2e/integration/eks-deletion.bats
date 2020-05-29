@@ -37,10 +37,7 @@ setup() {
 @test "We should see the kubernetes resource delete" {
   ${KORE} get kubernetes ${CLUSTER} -t ${TEAM} || skip
 
-  retry 20 "${KORE} get kubernetes ${CLUSTER} -t ${TEAM} -o json | jq '.status.status' | grep -i deleting"
-  [[ "$status" -eq 0 ]]
-
-  retry 30 "${KORE} get kubernetes ${CLUSTER} -t ${TEAM} 2>&1 | grep 'not found$'"
+  retry 50 "${KORE} get kubernetes ${CLUSTER} -t ${TEAM} 2>&1 | grep 'not found$'"
   [[ "$status" -eq 0 ]]
 }
 
