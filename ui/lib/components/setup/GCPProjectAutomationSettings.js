@@ -330,7 +330,7 @@ class GCPProjectAutomationSettings extends React.Component {
         </div>
         {gcpManagementType === 'KORE' && !gcpOrgsExist && <this.gcpOrgRequired />}
         {gcpManagementType === 'KORE' && gcpOrgsExist && <this.koreManagedProjectsSettings />}
-        {gcpManagementType === 'EXISTING' && <RequestCredentialAccessForm cloud="GKE" helpInModal={true} onChange={(errors) => this.setState({ emailValid: Boolean(!errors) })}  />}
+        {gcpManagementType === 'EXISTING' && <RequestCredentialAccessForm cloud="GCP" helpInModal={true} onChange={(errors) => this.setState({ emailValid: Boolean(!errors) })}  />}
         <Button style={{ marginTop: '20px', display: 'block' }} type="primary" loading={submitting} disabled={this.disabledSave()} onClick={this.saveSettings}>Save</Button>
       </>
     )

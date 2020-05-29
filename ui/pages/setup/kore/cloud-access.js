@@ -74,8 +74,8 @@ class CloudAccessPage extends React.Component {
         <div style={{ marginTop: '20px', marginBottom: '20px' }}>
           <CloudSelector selectedCloud={selectedCloud} handleSelectCloud={this.handleSelectCloud} />
         </div>
-        {selectedCloud === 'GKE' && <GCPSetup accountManagement={gcpAccountManagement} gkeCredentialsList={gkeCredentialsList} />}
-        {selectedCloud === 'EKS' && <AWSSetup />}
+        {selectedCloud === 'GCP' && <GCPSetup accountManagement={gcpAccountManagement} gkeCredentialsList={gkeCredentialsList} />}
+        {selectedCloud === 'AWS' && <AWSSetup />}
       </>
     )
   }

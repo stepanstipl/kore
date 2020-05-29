@@ -322,7 +322,7 @@ class ProjectAutomationSettings extends React.Component {
                               <div style={{ padding: '5px 0' }}>
 
                                 <Popover
-                                  content={this.associatePlanContent(project.code, 'GKE')}
+                                  content={this.associatePlanContent(project.code, 'GCP')}
                                   title={`${project.title}: Associate plans`}
                                   trigger="click"
                                   visible={associatePlanVisible === project.code}

@@ -78,8 +78,11 @@ export default class ServiceKindList extends React.Component {
 
   render() {
     const { kinds, loading } = this.state
-    if (loading && (!kinds || kinds.length === 0)) {
+    if (loading) {
       return <Icon type="loading" />
+    }
+    if (!kinds || kinds.length === 0) {
+      return <Alert type="warning" message="No services are available to provision" />
     }
     return (
       <>

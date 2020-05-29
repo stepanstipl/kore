@@ -33,6 +33,9 @@ type CatalogConfiguration struct {
 	IncludePlans []string `json:"includePlans,omitempty"`
 	// ExcludePlans is a list of service plan names (`[kind]-[plan name]`) to exclude from the catalog
 	ExcludePlans []string `json:"excludePlans,omitempty"`
+	// PlatformMapping is a list of service kind and platform name pairs, to map service kinds to service platforms
+	// You can use "*" as the service kind name to map all service kinds to a specific platform
+	PlatformMapping map[string]string `json:"platformMapping,omitempty"`
 }
 
 type ProviderConfiguration struct {

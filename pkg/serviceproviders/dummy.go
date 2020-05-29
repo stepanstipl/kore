@@ -103,6 +103,9 @@ func (d Dummy) kinds() []servicesv1.ServiceKind {
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "dummy",
 				Namespace: kore.HubNamespace,
+				Labels: map[string]string{
+					kore.Label("platform"): "Kore",
+				},
 			},
 			Spec: servicesv1.ServiceKindSpec{
 				DisplayName: "Dummy",
