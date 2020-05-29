@@ -46,7 +46,7 @@ class ResourceList extends React.Component {
       this.setState({
         resources: {
           ...state.resources,
-          items: state.resources.map((r) => r.metadata.name !== updatedResource.metadata.name ? r : { ...r, status: updatedResource.status })
+          items: state.resources.items.map((r) => r.metadata.name !== updatedResource.metadata.name ? r : { ...r, status: updatedResource.status })
         }
       })
     }, done)
