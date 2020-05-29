@@ -47,7 +47,7 @@ class SiderMenu extends React.Component {
           </span>
         }
       >
-        {menuItem({ key: 'configure_cloud', text: 'Cloud', link: '/configure/cloud', icon: 'cloud' })}
+        {menuItem({ key: 'configure_cloud', text: 'Cloud', href: '/configure/cloud/[[...cloud]]', link: '/configure/cloud', icon: 'cloud' })}
         {menuItem({ key: 'configure_users', text: 'Users', link: '/configure/users', icon: 'user' })}
         {/* Removed for now - only exposing services via the cloud page at the moment
         {!publicRuntimeConfig.featureGates['services'] ? null : 

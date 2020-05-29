@@ -396,9 +396,9 @@ class CloudAccessPage extends React.Component {
                                           {(plans || []).filter(p => project.plans.includes(p.metadata.name)).map((plan, i) => (
                                             <div key={i} style={{ padding: '5px 0' }}>
                                               <Text style={{ marginRight: '10px' }}>{plan.spec.description}</Text>
-                                              <this.IconTooltip icon="info-circle" text={plan.spec.summary} />
-                                              <this.IconTooltipButton icon="eye" text="View plan" onClick={this.showPlanDetails(plan)} />
-                                              <this.IconTooltipButton icon="delete" text="Unassociate plan" onClick={this.unassociatePlan(project.code, plan.metadata.name)} />
+                                              {this.IconTooltip({ icon:'info-circle', text: plan.spec.summary })}
+                                              {this.IconTooltipButton({ icon: 'eye', text: 'View plan', onClick: this.showPlanDetails(plan) })}
+                                              {this.IconTooltipButton({ icon: 'delete', text: 'Unassociate plan', onClick: this.unassociatePlan(project.code, plan.metadata.name) })}
                                             </div>
                                           ))}
                                           <div style={{ padding: '5px 0' }}>

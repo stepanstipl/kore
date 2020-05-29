@@ -224,7 +224,7 @@ class ClusterBuildForm extends React.Component {
           handleSelectCloud={this.handleSelectCloud} />
         {selectedCloud ? (
           filteredCredentials.length > 0 || accountManagement ?
-            <this.clusterBuildForm /> :
+            this.clusterBuildForm() :
             <MissingCredential team={this.props.team.metadata.name} cloud={selectedCloud} />
         ) : null}
       </div>

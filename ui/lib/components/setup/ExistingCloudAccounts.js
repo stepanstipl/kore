@@ -80,16 +80,16 @@ class ExistingCloudAccounts extends React.Component {
 
   render() {
     if (this.props.setupComplete) {
-      return <this.setupCompleteContent />
+      return this.setupCompleteContent()
     }
 
     return (
       <Card>
-        <this.stepsHeader />
+        {this.stepsHeader()}
         <Divider />
-        <this.stepContent />
+        {this.stepContent()}
         <Divider />
-        <this.stepsActions />
+        {this.stepsActions()}
       </Card>
     )
   }

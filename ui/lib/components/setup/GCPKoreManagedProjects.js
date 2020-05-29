@@ -280,11 +280,11 @@ class GCPKoreManagedProjects extends React.Component {
 
     return (
       <Card>
-        <this.stepsHeader />
+        {this.stepsHeader()}
         <Divider />
-        <this.stepContent />
+        {this.stepContent()}
         <Divider />
-        <this.stepsActions />
+        {this.stepsActions()}
       </Card>
     )
   }

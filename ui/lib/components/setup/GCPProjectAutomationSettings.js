@@ -1,9 +1,9 @@
 import React from 'react'
-import PropTypes from 'prop-types'
 import { Alert, Button, Icon, message, Modal, Radio, Typography } from 'antd'
 const { Paragraph, Text } = Typography
 import getConfig from 'next/config'
 const { publicRuntimeConfig } = getConfig()
+import Link from 'next/link'
 
 import GCPKoreManagedProjectsCustom from './GCPKoreManagedProjectsCustom'
 import RequestCredentialAccessForm from './forms/RequestCredentialAccessForm'
@@ -20,12 +20,6 @@ import copy from '../../utils/object-copy'
 import asyncForEach from '../../utils/async-foreach'
 
 class GCPProjectAutomationSettings extends React.Component {
-
-  static propTypes = {
-    tabActiveKey: PropTypes.string.isRequired,
-    setTabActiveKey: PropTypes.func.isRequired
-  }
-
   state = {
     dataLoading: true,
     submitting: false,
@@ -53,20 +47,12 @@ class GCPProjectAutomationSettings extends React.Component {
       gcpProjectAutomationType = (accountManagement.spec.rules || []).length === 0 ? 'CLUSTER' : 'CUSTOM'
       gcpProjectList = (accountManagement.spec.rules || []).map(rule => ({ code: canonical(rule.name), ...rule }))
     }
-
     return { plans, accountManagement, gcpManagementType, gcpProjectList, gcpProjectAutomationType, gcpOrgList }
   }
 
   componentDidMount() {
     return this.fetchComponentData()
       .then(data => this.setState({ ...data, dataLoading: false }))
-  }
-
-  componentDidUpdate(prevProps) {
-    // reload data if coming back from another tab
-    if (prevProps.tabActiveKey !== this.props.tabActiveKey) {
-      this.fetchComponentData().then(data => this.setState({ ...data }))
-    }
   }
 
   selectGcpManagementType = e => this.setState({ gcpManagementType: e.target.value })
@@ -259,7 +245,7 @@ class GCPProjectAutomationSettings extends React.Component {
       description={
         <div>
           <Paragraph style={{ marginTop: '10px' }}>No GCP organization credentials have been configured in Kore. Without these, Kore will be unable to managed GCP projects on your behalf.</Paragraph>
-          <Button type="secondary" onClick={() => this.props.setTabActiveKey('orgs')}>Setup organization credentials</Button>
+          <Link href="/configure/cloud/[[...cloud]]" as="/configure/cloud/GCP/orgs"><Button type="secondary">Setup organization credentials</Button></Link>
         </div>
       }
       type="warning"
@@ -328,8 +314,8 @@ class GCPProjectAutomationSettings extends React.Component {
             </Radio>
           </Radio.Group>
         </div>
-        {gcpManagementType === 'KORE' && !gcpOrgsExist && <this.gcpOrgRequired />}
-        {gcpManagementType === 'KORE' && gcpOrgsExist && <this.koreManagedProjectsSettings />}
+        {gcpManagementType === 'KORE' && !gcpOrgsExist && this.gcpOrgRequired()}
+        {gcpManagementType === 'KORE' && gcpOrgsExist && this.koreManagedProjectsSettings()}
         {gcpManagementType === 'EXISTING' && <RequestCredentialAccessForm cloud="GCP" helpInModal={true} onChange={(errors) => this.setState({ emailValid: Boolean(!errors) })}  />}
         <Button style={{ marginTop: '20px', display: 'block' }} type="primary" loading={submitting} disabled={this.disabledSave()} onClick={this.saveSettings}>Save</Button>
       </>

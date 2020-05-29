@@ -5,14 +5,14 @@ import { Tabs } from 'antd'
 class CloudTabs extends React.Component {
   static propTypes = {
     handleSelectCloud: PropTypes.func.isRequired,
-    defaultSelectedKey: PropTypes.string.isRequired
+    selectedKey: PropTypes.string.isRequired
   }
 
   render() {
-    const { handleSelectCloud, defaultSelectedKey } = this.props
+    const { handleSelectCloud, selectedKey } = this.props
 
     return (
-      <Tabs defaultActiveKey={defaultSelectedKey} onChange={handleSelectCloud}>
+      <Tabs activeKey={selectedKey} onChange={handleSelectCloud}>
         <Tabs.TabPane tab={
           <span>
             <img src="/static/images/GCP.png" height="40px" style={{ marginRight: '10px' }}/>

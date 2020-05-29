@@ -32,7 +32,7 @@ class ConfigureCloudPage extends React.Component {
           type="info"
           style={{ marginBottom: '20px' }}
         />
-        <CloudTabs defaultSelectedKey={selectedCloud} handleSelectCloud={this.handleSelectCloud}/>
+        <CloudTabs selectedKey={selectedCloud} handleSelectCloud={this.handleSelectCloud}/>
         {selectedCloud === 'GCP' ? (
           <Tabs defaultActiveKey={'project_automation'} tabPosition="left" style={{ marginTop: '20px' }}>
             <Tabs.TabPane tab="Organization credentials" key="orgs">

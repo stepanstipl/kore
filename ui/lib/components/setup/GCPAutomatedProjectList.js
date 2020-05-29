@@ -75,10 +75,10 @@ class GCPAutomatedProjectList extends React.Component {
   automatedProjectContent = ({ project }) => (
     <Row gutter={16}>
       <Col span={12}>
-        <this.automatedProjectNaming project={project} />
+        {this.automatedProjectNaming({ project })}
       </Col>
       <Col span={12}>
-        <this.automatedProjectPlans project={project} />
+        {this.automatedProjectPlans({ project })}
       </Col>
     </Row>
   )
@@ -141,7 +141,7 @@ class GCPAutomatedProjectList extends React.Component {
               title={<Text style={{ fontSize: '16px' }}>{project.name}</Text>}
               description={<Text>{project.description}</Text>}
             />
-            <this.automatedProjectContent project={project} />
+            {this.automatedProjectContent({ project })}
           </List.Item>
         )}
       />
