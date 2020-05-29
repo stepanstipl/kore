@@ -314,6 +314,27 @@ func schema_pkg_apis_config_v1_PlanPolicySpec(ref common.ReferenceCallback) comm
 				Description: "PlanPolicySpec defines Plan JSON Schema extensions",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"displayName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DisplayName is the display name of the plan policy",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"summary": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Summary provides a short summary for the plan policy",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Description provides detailed description of this plan policy",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"kind": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Kind refers to the cluster type this is a plan policy for",
@@ -334,20 +355,6 @@ func schema_pkg_apis_config_v1_PlanPolicySpec(ref common.ReferenceCallback) comm
 									},
 								},
 							},
-						},
-					},
-					"summary": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Summary provides a short title summary for the plan policy",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"description": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Description provides a detailed description of the plan policy",
-							Type:        []string{"string"},
-							Format:      "",
 						},
 					},
 					"properties": {
@@ -372,7 +379,7 @@ func schema_pkg_apis_config_v1_PlanPolicySpec(ref common.ReferenceCallback) comm
 						},
 					},
 				},
-				Required: []string{"kind", "summary", "description", "properties"},
+				Required: []string{"summary", "kind", "properties"},
 			},
 		},
 		Dependencies: []string{
@@ -428,6 +435,27 @@ func schema_pkg_apis_config_v1_PlanSpec(ref common.ReferenceCallback) common.Ope
 				Description: "PlanSpec defines the desired state of Plan",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"displayName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DisplayName is the display name of the plan",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"summary": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Summary provides a short summary for the plan",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Description provides detailed description of this plan",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"kind": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Resource refers to the resource type this is a plan for",
@@ -450,20 +478,6 @@ func schema_pkg_apis_config_v1_PlanSpec(ref common.ReferenceCallback) common.Ope
 							},
 						},
 					},
-					"description": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Description provides a summary of the configuration provided by this plan",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"summary": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Summary provides a short title summary for the plan",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
 					"configuration": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Configuration are the key+value pairs describing a cluster configuration",
@@ -471,7 +485,7 @@ func schema_pkg_apis_config_v1_PlanSpec(ref common.ReferenceCallback) common.Ope
 						},
 					},
 				},
-				Required: []string{"kind", "description", "summary", "configuration"},
+				Required: []string{"summary", "kind", "configuration"},
 			},
 		},
 		Dependencies: []string{

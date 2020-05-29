@@ -3911,8 +3911,11 @@ spec:
           description: PlanPolicySpec defines Plan JSON Schema extensions
           properties:
             description:
-              description: Description provides a detailed description of the plan
+              description: Description provides detailed description of this plan
                 policy
+              type: string
+            displayName:
+              description: DisplayName is the display name of the plan policy
               type: string
             kind:
               description: Kind refers to the cluster type this is a plan policy for
@@ -3952,7 +3955,7 @@ spec:
               - name
               x-kubernetes-list-type: map
             summary:
-              description: Summary provides a short title summary for the plan policy
+              description: Summary provides a short summary for the plan policy
               minLength: 1
               type: string
           required:
@@ -4061,9 +4064,10 @@ spec:
               type: object
               x-kubernetes-preserve-unknown-fields: true
             description:
-              description: Description provides a summary of the configuration provided
-                by this plan
-              minLength: 1
+              description: Description provides detailed description of this plan
+              type: string
+            displayName:
+              description: DisplayName is the display name of the plan
               type: string
             kind:
               description: Resource refers to the resource type this is a plan for
@@ -4075,12 +4079,11 @@ spec:
               description: Labels is a collection of labels for this plan
               type: object
             summary:
-              description: Summary provides a short title summary for the plan
+              description: Summary provides a short summary for the plan
               minLength: 1
               type: string
           required:
           - configuration
-          - description
           - kind
           - summary
           type: object
@@ -6813,7 +6816,6 @@ spec:
               type: string
             displayName:
               description: DisplayName refers to the display name of the service type
-              minLength: 1
               type: string
             documentationURL:
               description: DocumentationURL refers to the documentation page for this
@@ -6833,12 +6835,8 @@ spec:
               description: Schema is the JSON schema for the plan
               type: string
             summary:
-              description: Summary provides a short title summary for the service
-                kind
-              minLength: 1
+              description: Summary provides a short summary for the service kind
               type: string
-          required:
-          - summary
           type: object
       type: object
   version: v1
@@ -6919,18 +6917,12 @@ spec:
               description: Description is a detailed description of the service plan
               type: string
             displayName:
-              description: DisplayName refers to the display name of the service type
-              minLength: 1
+              description: DisplayName refers to the display name of the service plan
               type: string
             kind:
               description: Kind refers to the service type this is a plan for
               minLength: 1
               type: string
-            labels:
-              additionalProperties:
-                type: string
-              description: Labels is a collection of labels for this plan
-              type: object
             providerData:
               description: ProviderData is provider specific data
               type: object
@@ -6939,12 +6931,10 @@ spec:
               description: Schema is the JSON schema for the plan
               type: string
             summary:
-              description: Summary provides a short title summary for the plan
-              minLength: 1
+              description: Summary provides a short summary for the service plan
               type: string
           required:
           - kind
-          - summary
           type: object
       type: object
   version: v1
@@ -7049,16 +7039,17 @@ spec:
             description:
               description: Description is a detailed description of the service provider
               type: string
+            displayName:
+              description: DisplayName refers to the display name of the service provider
+              type: string
             summary:
-              description: Summary provides a short title summary for the provider
-              minLength: 1
+              description: Summary provides a short summary for the service provider
               type: string
             type:
               description: Type refers to the service provider type
               minLength: 1
               type: string
           required:
-          - summary
           - type
           type: object
         status:
@@ -7254,6 +7245,12 @@ spec:
               - namespace
               - version
               type: object
+            description:
+              description: Description is a detailed description of the service
+              type: string
+            displayName:
+              description: DisplayName refers to the display name of the service
+              type: string
             kind:
               description: Kind refers to the service type
               minLength: 1
@@ -7262,6 +7259,9 @@ spec:
               description: Plan is the name of the service plan which was used to
                 create this service
               minLength: 1
+              type: string
+            summary:
+              description: Summary provides a short summary for the service
               type: string
           required:
           - kind

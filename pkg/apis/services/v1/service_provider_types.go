@@ -36,17 +36,19 @@ var ServiceProviderGVK = schema.GroupVersionKind{
 // ServiceProviderSpec defines the desired state of a Service provider
 // +k8s:openapi-gen=true
 type ServiceProviderSpec struct {
+	// DisplayName refers to the display name of the service provider
+	// +kubebuilder:validation:Optional
+	DisplayName string `json:"displayName,omitempty"`
+	// Summary provides a short summary for the service provider
+	// +kubebuilder:validation:Optional
+	Summary string `json:"summary,omitempty"`
+	// Description is a detailed description of the service provider
+	// +kubebuilder:validation:Optional
+	Description string `json:"description,omitempty"`
 	// Type refers to the service provider type
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
 	Type string `json:"type"`
-	// Summary provides a short title summary for the provider
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Required
-	Summary string `json:"summary"`
-	// Description is a detailed description of the service provider
-	// +kubebuilder:validation:Optional
-	Description string `json:"description,omitempty"`
 	// Configuration are the key+value pairs describing a service provider
 	// +kubebuilder:validation:Type=object
 	// +kubebuilder:validation:Optional

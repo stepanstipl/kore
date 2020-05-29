@@ -59,7 +59,6 @@ func (p Provider) Catalog(ctx kore.Context, provider *servicesv1.ServiceProvider
 				},
 				Spec: servicesv1.ServiceKindSpec{
 					DisplayName: "Kubernetes Application",
-					Summary:     "Kubernetes Application",
 					Enabled:     false,
 					Schema:      AppSchema,
 				},
@@ -75,7 +74,6 @@ func (p Provider) Catalog(ctx kore.Context, provider *servicesv1.ServiceProvider
 				},
 				Spec: servicesv1.ServiceKindSpec{
 					DisplayName: "Kubernetes Helm Application",
-					Summary:     "Kubernetes Helm Application",
 					Enabled:     false,
 					Schema:      HelmAppSchema,
 				},

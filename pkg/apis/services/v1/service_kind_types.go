@@ -36,20 +36,18 @@ var ServiceKindGVK = schema.GroupVersionKind{
 // ServiceKindSpec defines the state of a service kind
 // +k8s:openapi-gen=true
 type ServiceKindSpec struct {
-	// Enabled is true if the service kind can be used
-	// +kubebuilder:validation:Optional
-	Enabled bool `json:"enabled"`
 	// DisplayName refers to the display name of the service type
-	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Optional
 	DisplayName string `json:"displayName,omitempty"`
-	// Summary provides a short title summary for the service kind
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Required
-	Summary string `json:"summary"`
+	// Summary provides a short summary for the service kind
+	// +kubebuilder:validation:Optional
+	Summary string `json:"summary,omitempty"`
 	// Description is a detailed description of the service kind
 	// +kubebuilder:validation:Optional
 	Description string `json:"description,omitempty"`
+	// Enabled is true if the service kind can be used
+	// +kubebuilder:validation:Optional
+	Enabled bool `json:"enabled"`
 	// ImageURL is a thumbnail for the service kind
 	// +kubebuilder:validation:Optional
 	ImageURL string `json:"imageURL,omitempty"`

@@ -289,13 +289,6 @@ func schema_pkg_apis_services_v1_ServiceKindSpec(ref common.ReferenceCallback) c
 				Description: "ServiceKindSpec defines the state of a service kind",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"enabled": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Enabled is true if the service kind can be used",
-							Type:        []string{"boolean"},
-							Format:      "",
-						},
-					},
 					"displayName": {
 						SchemaProps: spec.SchemaProps{
 							Description: "DisplayName refers to the display name of the service type",
@@ -305,7 +298,7 @@ func schema_pkg_apis_services_v1_ServiceKindSpec(ref common.ReferenceCallback) c
 					},
 					"summary": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Summary provides a short title summary for the service kind",
+							Description: "Summary provides a short summary for the service kind",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -314,6 +307,13 @@ func schema_pkg_apis_services_v1_ServiceKindSpec(ref common.ReferenceCallback) c
 						SchemaProps: spec.SchemaProps{
 							Description: "Description is a detailed description of the service kind",
 							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"enabled": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Enabled is true if the service kind can be used",
+							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
@@ -352,7 +352,7 @@ func schema_pkg_apis_services_v1_ServiceKindSpec(ref common.ReferenceCallback) c
 						},
 					},
 				},
-				Required: []string{"enabled", "summary"},
+				Required: []string{"enabled"},
 			},
 		},
 		Dependencies: []string{
@@ -406,38 +406,16 @@ func schema_pkg_apis_services_v1_ServicePlanSpec(ref common.ReferenceCallback) c
 				Description: "ServicePlanSpec defines the desired state of Service plan",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"kind": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Kind refers to the service type this is a plan for",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
 					"displayName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "DisplayName refers to the display name of the service type",
+							Description: "DisplayName refers to the display name of the service plan",
 							Type:        []string{"string"},
 							Format:      "",
-						},
-					},
-					"labels": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Labels is a collection of labels for this plan",
-							Type:        []string{"object"},
-							AdditionalProperties: &spec.SchemaOrBool{
-								Allows: true,
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Type:   []string{"string"},
-										Format: "",
-									},
-								},
-							},
 						},
 					},
 					"summary": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Summary provides a short title summary for the plan",
+							Description: "Summary provides a short summary for the service plan",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -445,6 +423,13 @@ func schema_pkg_apis_services_v1_ServicePlanSpec(ref common.ReferenceCallback) c
 					"description": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Description is a detailed description of the service plan",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind refers to the service type this is a plan for",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -476,7 +461,7 @@ func schema_pkg_apis_services_v1_ServicePlanSpec(ref common.ReferenceCallback) c
 						},
 					},
 				},
-				Required: []string{"kind", "summary"},
+				Required: []string{"kind"},
 			},
 		},
 		Dependencies: []string{
@@ -535,16 +520,16 @@ func schema_pkg_apis_services_v1_ServiceProviderSpec(ref common.ReferenceCallbac
 				Description: "ServiceProviderSpec defines the desired state of a Service provider",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"type": {
+					"displayName": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Type refers to the service provider type",
+							Description: "DisplayName refers to the display name of the service provider",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"summary": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Summary provides a short title summary for the provider",
+							Description: "Summary provides a short summary for the service provider",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -552,6 +537,13 @@ func schema_pkg_apis_services_v1_ServiceProviderSpec(ref common.ReferenceCallbac
 					"description": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Description is a detailed description of the service provider",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"type": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Type refers to the service provider type",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -569,7 +561,7 @@ func schema_pkg_apis_services_v1_ServiceProviderSpec(ref common.ReferenceCallbac
 						},
 					},
 				},
-				Required: []string{"type", "summary"},
+				Required: []string{"type"},
 			},
 		},
 		Dependencies: []string{
@@ -645,6 +637,27 @@ func schema_pkg_apis_services_v1_ServiceSpec(ref common.ReferenceCallback) commo
 				Description: "ServiceSpec defines the desired state of a service",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"displayName": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DisplayName refers to the display name of the service",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"summary": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Summary provides a short summary for the service",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"description": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Description is a detailed description of the service",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"kind": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Kind refers to the service type",

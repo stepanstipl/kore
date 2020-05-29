@@ -24,6 +24,16 @@ import (
 // PlanPolicySpec defines Plan JSON Schema extensions
 // +k8s:openapi-gen=true
 type PlanPolicySpec struct {
+	// DisplayName is the display name of the plan policy
+	// +kubebuilder:validation:Optional
+	DisplayName string `json:"displayName,omitempty"`
+	// Summary provides a short summary for the plan policy
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Required
+	Summary string `json:"summary"`
+	// Description provides detailed description of this plan policy
+	// +kubebuilder:validation:Optional
+	Description string `json:"description,omitempty"`
 	// Kind refers to the cluster type this is a plan policy for
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
@@ -31,13 +41,6 @@ type PlanPolicySpec struct {
 	// Labels is a collection of labels for this plan policy
 	// +kubebuilder:validation:Optional
 	Labels map[string]string `json:"labels,omitempty"`
-	// Summary provides a short title summary for the plan policy
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Required
-	Summary string `json:"summary"`
-	// Description provides a detailed description of the plan policy
-	// +kubebuilder:validation:Optional
-	Description string `json:"description"`
 	// Properties are the
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=1

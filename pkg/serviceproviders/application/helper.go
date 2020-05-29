@@ -85,6 +85,9 @@ func CreateSystemServiceFromPlan(servicePlan servicesv1.ServicePlan, cluster cor
 			},
 		},
 		Spec: servicesv1.ServiceSpec{
+			DisplayName:      servicePlan.Spec.DisplayName,
+			Summary:          servicePlan.Spec.Summary,
+			Description:      servicePlan.Spec.Description,
 			Kind:             servicePlan.Spec.Kind,
 			Plan:             servicePlan.Name,
 			Cluster:          cluster,

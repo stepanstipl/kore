@@ -37,7 +37,7 @@ const (
 	MetadataKeyConfiguration    = "kore.appvia.io/configuration"
 	MetadataKeyDisplayName      = "displayName"
 	MetadataKeyImageURL         = "imageUrl"
-	MetadataKeyDescription      = "longDescription"
+	MetadataKeyLongDescription  = "longDescription"
 	MetadataKeyDocumentationURL = "documentationUrl"
 	ComponentProvision          = "Provision"
 	ComponentUpdate             = "Update"
@@ -95,10 +95,12 @@ func (p *Provider) Catalog(ctx kore.Context, serviceProvider *servicesv1.Service
 			return kore.ServiceProviderCatalog{}, fmt.Errorf("%q service name is invalid, must match %s", catalogService.Name, kore.ResourceNameFilter.String())
 		}
 
-		summary := catalogService.Description
-		if summary == "" {
-			summary = strings.Title(catalogService.Name)
+		description := catalogService.Description
+		longDescription := getMetadataStringVal(catalogService.Metadata, MetadataKeyLongDescription, "")
+		if description != "" && longDescription != "" {
+			description = strings.TrimRight(description, "\n") + "\n\n"
 		}
+		description = description + longDescription
 
 		serviceKind := servicesv1.ServiceKind{
 			TypeMeta: metav1.TypeMeta{
@@ -111,8 +113,7 @@ func (p *Provider) Catalog(ctx kore.Context, serviceProvider *servicesv1.Service
 			},
 			Spec: servicesv1.ServiceKindSpec{
 				DisplayName:      getMetadataStringVal(catalogService.Metadata, MetadataKeyDisplayName, ""),
-				Summary:          summary,
-				Description:      getMetadataStringVal(catalogService.Metadata, MetadataKeyDescription, ""),
+				Description:      description,
 				ImageURL:         getMetadataStringVal(catalogService.Metadata, MetadataKeyImageURL, ""),
 				DocumentationURL: getMetadataStringVal(catalogService.Metadata, MetadataKeyDocumentationURL, ""),
 			},
@@ -196,7 +197,7 @@ func parseCatalogPlan(service osb.Service, catalogPlan osb.Plan) (*servicesv1.Se
 			Kind:             service.Name,
 			DisplayName:      getMetadataStringVal(catalogPlan.Metadata, MetadataKeyDisplayName, ""),
 			Summary:          catalogPlan.Description,
-			Description:      getMetadataStringVal(catalogPlan.Metadata, MetadataKeyDescription, ""),
+			Description:      getMetadataStringVal(catalogPlan.Metadata, MetadataKeyLongDescription, ""),
 			Schema:           schemaStr,
 			CredentialSchema: credentialsSchemaStr,
 		},

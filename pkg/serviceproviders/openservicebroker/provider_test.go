@@ -289,8 +289,7 @@ var _ = Describe("Provider", func() {
 				},
 				Spec: servicesv1.ServiceKindSpec{
 					DisplayName:      "service-1 displayName",
-					Summary:          "service-1 description",
-					Description:      "service-1 longDescription",
+					Description:      "service-1 description\n\nservice-1 longDescription",
 					DocumentationURL: "service-1 documentationUrl",
 					ImageURL:         "service-1 imageUrl",
 					ProviderData:     &apiextv1.JSON{Raw: []byte(`{"serviceID":"service-1-uuid"}`)},
@@ -307,8 +306,7 @@ var _ = Describe("Provider", func() {
 				},
 				Spec: servicesv1.ServiceKindSpec{
 					DisplayName:      "service-2 displayName",
-					Summary:          "service-2 description",
-					Description:      "service-2 longDescription",
+					Description:      "service-2 description\n\nservice-2 longDescription",
 					DocumentationURL: "service-2 documentationUrl",
 					ImageURL:         "service-2 imageUrl",
 					ProviderData:     &apiextv1.JSON{Raw: []byte(`{"serviceID":"service-2-uuid"}`)},

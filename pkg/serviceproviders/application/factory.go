@@ -100,7 +100,7 @@ func (d Factory) DefaultProviders() []servicesv1.ServiceProvider {
 			},
 			Spec: servicesv1.ServiceProviderSpec{
 				Type:          Type,
-				Summary:       "Kubernetes Application provider",
+				DisplayName:   "Kubernetes Application provider",
 				Description:   "The service provider will deploy one or more Kubernetes resources and an Application type for monitoring purposes",
 				Configuration: nil,
 			},
@@ -162,6 +162,21 @@ func (d Factory) createPlan(info os.FileInfo) (*servicesv1.ServicePlan, error) {
 		}
 	}
 
+	displayName := ""
+	description := ""
+	summary := fmt.Sprintf("%s application", info.Name())
+	if app != nil {
+		for _, info := range app.Spec.Info {
+			switch info.Name {
+			case "displayName":
+				displayName = info.Value
+			case "summary":
+				summary = info.Value
+			}
+		}
+		description = app.Spec.Descriptor.Description
+	}
+
 	plan := &servicesv1.ServicePlan{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ServicePlan",
@@ -176,9 +191,9 @@ func (d Factory) createPlan(info os.FileInfo) (*servicesv1.ServicePlan, error) {
 		},
 		Spec: servicesv1.ServicePlanSpec{
 			Kind:        ServiceKindApp,
-			Labels:      nil,
-			Description: fmt.Sprintf("%s application", info.Name()),
-			Summary:     fmt.Sprintf("%s application", info.Name()),
+			DisplayName: displayName,
+			Summary:     summary,
+			Description: description,
 		},
 	}
 

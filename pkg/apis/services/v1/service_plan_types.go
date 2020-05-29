@@ -35,24 +35,19 @@ var ServicePlanGVK = schema.GroupVersionKind{
 // ServicePlanSpec defines the desired state of Service plan
 // +k8s:openapi-gen=true
 type ServicePlanSpec struct {
+	// DisplayName refers to the display name of the service plan
+	// +kubebuilder:validation:Optional
+	DisplayName string `json:"displayName,omitempty"`
+	// Summary provides a short summary for the service plan
+	// +kubebuilder:validation:Optional
+	Summary string `json:"summary,omitempty"`
+	// Description is a detailed description of the service plan
+	// +kubebuilder:validation:Optional
+	Description string `json:"description,omitempty"`
 	// Kind refers to the service type this is a plan for
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
 	Kind string `json:"kind"`
-	// DisplayName refers to the display name of the service type
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Optional
-	DisplayName string `json:"displayName,omitempty"`
-	// Labels is a collection of labels for this plan
-	// +kubebuilder:validation:Optional
-	Labels map[string]string `json:"labels,omitempty"`
-	// Summary provides a short title summary for the plan
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Required
-	Summary string `json:"summary"`
-	// Description is a detailed description of the service plan
-	// +kubebuilder:validation:Optional
-	Description string `json:"description,omitempty"`
 	// Configuration are the key+value pairs describing a service configuration
 	// +kubebuilder:validation:Type=object
 	// +kubebuilder:validation:Optional

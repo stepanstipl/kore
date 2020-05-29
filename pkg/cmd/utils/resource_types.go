@@ -212,9 +212,9 @@ var (
 			Kind:         "Plan",
 			Scope:        GlobalScope,
 			Printer: []Column{
-				{"Resource", "metadata.name", ""},
+				{"Name", "metadata.name", ""},
+				{"Display Name", "spec.displayName", ""},
 				{"Summary", "spec.summary", ""},
-				{"Description", "spec.description", ""},
 				{"Kind", "spec.kind", ""},
 				{"Age", "metadata.creationTimestamp", "age"},
 			},
@@ -225,9 +225,9 @@ var (
 			Kind:         "PlanPolicy",
 			Scope:        GlobalScope,
 			Printer: []Column{
-				{"Resource", "metadata.name", ""},
+				{"Name", "metadata.name", ""},
+				{"Display Name", "spec.displayName", ""},
 				{"Summary", "spec.summary", ""},
-				{"Description", "spec.description", ""},
 				{"Age", "metadata.creationTimestamp", "age"},
 			},
 		},
@@ -304,6 +304,7 @@ var (
 			FeatureGate:  kore.FeatureGateServices,
 			Printer: []Column{
 				{"Name", "metadata.name", ""},
+				{"Display Name", "spec.displayName", ""},
 				{"Kind", "spec.kind", ""},
 				{"Plan", "spec.plan", ""},
 				{"Status", "status.status", ""},
@@ -319,8 +320,7 @@ var (
 			FeatureGate:  kore.FeatureGateServices,
 			Printer: []Column{
 				{"Name", "metadata.name", ""},
-				{"Title", "spec.displayName", ""},
-				{"Summary", "spec.summary", ""},
+				{"Display Name", "spec.displayName", ""},
 				{"Enabled", "spec.enabled", ""},
 				{"Age", "metadata.creationTimestamp", "age"},
 			},
@@ -334,7 +334,7 @@ var (
 			FeatureGate:  kore.FeatureGateServices,
 			Printer: []Column{
 				{"Name", "metadata.name", ""},
-				{"Title", "spec.displayName", ""},
+				{"Display Name", "spec.displayName", ""},
 				{"Summary", "spec.summary", ""},
 				{"Kind", "spec.kind", ""},
 				{"Age", "metadata.creationTimestamp", "age"},
@@ -352,6 +352,7 @@ var (
 				{"Service", "spec.service.name", ""},
 				{"Cluster", "spec.cluster.name", ""},
 				{"Namespace", "spec.clusterNamespace", ""},
+				{"Secret name", "spec.secretName", ""},
 				{"Age", "metadata.creationTimestamp", "age"},
 			},
 		},
@@ -363,8 +364,8 @@ var (
 			FeatureGate:  kore.FeatureGateServices,
 			Printer: []Column{
 				{"Name", "metadata.name", ""},
+				{"Display Name", "spec.displayName", ""},
 				{"Type", "spec.type", ""},
-				{"Summary", "spec.summary", ""},
 				{"Status", "status.status", ""},
 				{"Age", "metadata.creationTimestamp", "age"},
 			},

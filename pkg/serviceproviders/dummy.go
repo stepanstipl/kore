@@ -106,7 +106,7 @@ func (d Dummy) kinds() []servicesv1.ServiceKind {
 			},
 			Spec: servicesv1.ServiceKindSpec{
 				DisplayName: "Dummy",
-				Summary:     "Dummy service used for testing",
+				Description: "Dummy service kind used for testing",
 				Enabled:     true,
 			},
 		},

@@ -1,19 +1,19 @@
 apiVersion: app.k8s.io/v1beta1
 kind: Application
 metadata:
-  name: helm-operator
-  namespace: flux
+  name: kube-app-manager
+  namespace: application-system
 spec:
   info:
     - name: displayName
       type: Value
-      value: Helm Operator
+      value: Kubernetes Application Operator
     - name: summary
       type: Value
-      value: Operator allowing to declaratively manage Helm chart releases
+      value: Operator providing application level health checks
   componentKinds:
     - group: apps
       kind: Deployment
   selector:
     matchLabels:
-      app.kubernetes.io/name: flux-helm-operator
+      app.kubernetes.io/name: kube-app-manager

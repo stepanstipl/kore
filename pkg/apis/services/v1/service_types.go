@@ -39,6 +39,15 @@ var ServiceGVK = schema.GroupVersionKind{
 // ServiceSpec defines the desired state of a service
 // +k8s:openapi-gen=true
 type ServiceSpec struct {
+	// DisplayName refers to the display name of the service
+	// +kubebuilder:validation:Optional
+	DisplayName string `json:"displayName,omitempty"`
+	// Summary provides a short summary for the service
+	// +kubebuilder:validation:Optional
+	Summary string `json:"summary,omitempty"`
+	// Description is a detailed description of the service
+	// +kubebuilder:validation:Optional
+	Description string `json:"description,omitempty"`
 	// Kind refers to the service type
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
