@@ -17,8 +17,6 @@
 package serviceproviders
 
 import (
-	"k8s.io/apimachinery/pkg/runtime/schema"
-
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/kore"
 
@@ -66,10 +64,6 @@ func (d DummyFactory) SetUp(_ kore.Context, _ *servicesv1.ServiceProvider) (comp
 
 func (d DummyFactory) TearDown(_ kore.Context, _ *servicesv1.ServiceProvider) (complete bool, _ error) {
 	return true, nil
-}
-
-func (d DummyFactory) RequiredCredentialTypes() []schema.GroupVersionKind {
-	return nil
 }
 
 func (d DummyFactory) DefaultProviders() []servicesv1.ServiceProvider {

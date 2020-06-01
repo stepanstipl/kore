@@ -7041,6 +7041,10 @@ spec:
                         description: Name is the name of the secret
                         minLength: 1
                         type: string
+                      namespace:
+                        description: Name is the namespace of the secret
+                        minLength: 1
+                        type: string
                       optional:
                         description: Optional controls whether the secret with the
                           given key must exist
@@ -7054,32 +7058,6 @@ spec:
                 type: object
               type: array
               x-kubernetes-list-type: set
-            credentials:
-              description: Credentials is a reference to the credentials object to
-                use
-              properties:
-                group:
-                  description: Group is the api group
-                  type: string
-                kind:
-                  description: Kind is the name of the resource under the group
-                  type: string
-                name:
-                  description: Name is name of the resource
-                  type: string
-                namespace:
-                  description: Namespace is the location of the object
-                  type: string
-                version:
-                  description: Version is the group version
-                  type: string
-              required:
-              - group
-              - kind
-              - name
-              - namespace
-              - version
-              type: object
             description:
               description: Description is a detailed description of the service provider
               type: string
@@ -7283,6 +7261,10 @@ spec:
                         description: Name is the name of the secret
                         minLength: 1
                         type: string
+                      namespace:
+                        description: Name is the namespace of the secret
+                        minLength: 1
+                        type: string
                       optional:
                         description: Optional controls whether the secret with the
                           given key must exist
@@ -7296,32 +7278,6 @@ spec:
                 type: object
               type: array
               x-kubernetes-list-type: set
-            credentials:
-              description: Credentials is a reference to the credentials object to
-                use
-              properties:
-                group:
-                  description: Group is the api group
-                  type: string
-                kind:
-                  description: Kind is the name of the resource under the group
-                  type: string
-                name:
-                  description: Name is name of the resource
-                  type: string
-                namespace:
-                  description: Namespace is the location of the object
-                  type: string
-                version:
-                  description: Version is the group version
-                  type: string
-              required:
-              - group
-              - kind
-              - name
-              - namespace
-              - version
-              type: object
             kind:
               description: Kind refers to the service type
               minLength: 1

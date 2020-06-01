@@ -453,7 +453,6 @@ func (in *ServiceProviderSpec) DeepCopyInto(out *ServiceProviderSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-	out.Credentials = in.Credentials
 	return
 }
 
@@ -515,7 +514,6 @@ func (in *ServiceSpec) DeepCopyInto(out *ServiceSpec) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-	out.Credentials = in.Credentials
 	return
 }
 

@@ -31,9 +31,6 @@ type V1ServiceSpec struct {
 	// configuration from
 	ConfigurationFrom []*V1ConfigurationFromSource `json:"configurationFrom"`
 
-	// credentials
-	Credentials *V1Ownership `json:"credentials,omitempty"`
-
 	// kind
 	// Required: true
 	Kind *string `json:"kind"`
@@ -52,10 +49,6 @@ func (m *V1ServiceSpec) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateConfigurationFrom(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateCredentials(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -111,24 +104,6 @@ func (m *V1ServiceSpec) validateConfigurationFrom(formats strfmt.Registry) error
 			}
 		}
 
-	}
-
-	return nil
-}
-
-func (m *V1ServiceSpec) validateCredentials(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.Credentials) { // not required
-		return nil
-	}
-
-	if m.Credentials != nil {
-		if err := m.Credentials.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("credentials")
-			}
-			return err
-		}
 	}
 
 	return nil

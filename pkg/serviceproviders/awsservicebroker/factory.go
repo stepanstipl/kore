@@ -22,7 +22,6 @@ import (
 	"github.com/appvia/kore/pkg/utils/configuration"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/serviceproviders/openservicebroker"
@@ -31,7 +30,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	osb "github.com/kubernetes-sigs/go-open-service-broker-client/v2"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 func init() {
@@ -58,6 +56,10 @@ func (d ProviderFactory) JSONSchema() string {
 		"description": "This is a custom service provider for aws-servicebroker (https://github.com/awslabs/aws-servicebroker)",
 		"type": "object",
 		"additionalProperties": false,
+		"required": [
+			"aws_access_key_id",
+			"aws_secret_access_key"
+		],
 		"properties": {
 			"chartRepositoryType": {
 				"type": "string",
@@ -102,6 +104,14 @@ func (d ProviderFactory) JSONSchema() string {
 			"s3BucketKey": {
 				"type": "string",
 				"default": "templates/latest/"
+			},
+			"aws_access_key_id": {
+				"type": "string",
+				"minLength": 1
+			},
+			"aws_secret_access_key": {
+				"type": "string",
+				"minLength": 1
 			},
 			"allowEmptyCredentialSchema": {
 				"type": "boolean",
@@ -196,13 +206,8 @@ func (d ProviderFactory) SetUp(ctx kore.Context, serviceProvider *servicesv1.Ser
 		return false, fmt.Errorf("failed to process aws-servicebroker configuration: %w", err)
 	}
 
-	awsAccessKeyID, awsSecretAccessKey, err := getCredentials(ctx, serviceProvider)
-	if err != nil {
-		return false, err
-	}
-
 	cfg := aws.NewConfig().
-		WithCredentials(credentials.NewStaticCredentials(awsAccessKeyID, awsSecretAccessKey, "")).
+		WithCredentials(credentials.NewStaticCredentials(config.AWSAccessKeyID, config.AWSSecretAccessKey, "")).
 		WithRegion(config.Region)
 
 	sess := session.Must(session.NewSession(cfg))
@@ -233,7 +238,7 @@ func (d ProviderFactory) SetUp(ctx kore.Context, serviceProvider *servicesv1.Ser
 
 	serviceProvider.Status.Components.SetCondition(corev1.Component{Name: ComponentS3Bucket, Status: corev1.SuccessStatus})
 
-	complete, err = d.ensureHelmRelease(ctx, config, serviceProvider.Name, awsAccessKeyID, awsSecretAccessKey)
+	complete, err := d.ensureHelmRelease(ctx, config, serviceProvider.Name, config.AWSAccessKeyID, config.AWSSecretAccessKey)
 	if err != nil {
 		serviceProvider.Status.Components.SetCondition(corev1.Component{
 			Name:    ComponentHelmRelease,
@@ -277,13 +282,8 @@ func (d ProviderFactory) TearDown(ctx kore.Context, serviceProvider *servicesv1.
 
 	serviceProvider.Status.Components.SetCondition(corev1.Component{Name: ComponentHelmRelease, Status: corev1.DeletedStatus})
 
-	awsAccessKeyID, awsSecretAccessKey, err := getCredentials(ctx, serviceProvider)
-	if err != nil {
-		return false, err
-	}
-
 	cfg := aws.NewConfig().
-		WithCredentials(credentials.NewStaticCredentials(awsAccessKeyID, awsSecretAccessKey, "")).
+		WithCredentials(credentials.NewStaticCredentials(config.AWSAccessKeyID, config.AWSSecretAccessKey, "")).
 		WithRegion(config.Region)
 
 	sess := session.Must(session.NewSession(cfg))
@@ -301,16 +301,6 @@ func (d ProviderFactory) TearDown(ctx kore.Context, serviceProvider *servicesv1.
 	serviceProvider.Status.Components.SetCondition(corev1.Component{Name: ComponentDynamoDB, Status: corev1.DeletedStatus})
 
 	return true, nil
-}
-
-func (d ProviderFactory) RequiredCredentialTypes() []schema.GroupVersionKind {
-	return []schema.GroupVersionKind{
-		{
-			Group:   eksv1alpha1.GroupVersion.Group,
-			Version: eksv1alpha1.GroupVersion.Version,
-			Kind:    "EKSCredentials",
-		},
-	}
 }
 
 func (d ProviderFactory) DefaultProviders() []servicesv1.ServiceProvider {

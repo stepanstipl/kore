@@ -53,9 +53,6 @@ type ServiceProviderSpec struct {
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	ConfigurationFrom []corev1.ConfigurationFromSource `json:"configurationFrom,omitempty"`
-	// Credentials is a reference to the credentials object to use
-	// +kubebuilder:validation:Optional
-	Credentials corev1.Ownership `json:"credentials,omitempty"`
 }
 
 // ServiceProviderStatus defines the observed state of a service provider

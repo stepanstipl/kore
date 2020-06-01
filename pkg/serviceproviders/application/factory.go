@@ -30,7 +30,6 @@ import (
 	koreschema "github.com/appvia/kore/pkg/schema"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	appv1beta1 "sigs.k8s.io/application/api/v1beta1"
 )
 
@@ -79,10 +78,6 @@ func (d Factory) SetUp(ctx kore.Context, provider *servicesv1.ServiceProvider) (
 
 func (d Factory) TearDown(ctx kore.Context, provider *servicesv1.ServiceProvider) (complete bool, _ error) {
 	return true, nil
-}
-
-func (d Factory) RequiredCredentialTypes() []schema.GroupVersionKind {
-	return nil
 }
 
 func (d Factory) DefaultProviders() []servicesv1.ServiceProvider {

@@ -7072,9 +7072,6 @@
             "$ref": "#/definitions/v1.ConfigurationFromSource"
           }
         },
-        "credentials": {
-          "$ref": "#/definitions/v1.Ownership"
-        },
         "description": {
           "type": "string"
         },
@@ -7128,9 +7125,6 @@
           "items": {
             "$ref": "#/definitions/v1.ConfigurationFromSource"
           }
-        },
-        "credentials": {
-          "$ref": "#/definitions/v1.Ownership"
         },
         "kind": {
           "type": "string"

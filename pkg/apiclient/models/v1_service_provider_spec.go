@@ -25,9 +25,6 @@ type V1ServiceProviderSpec struct {
 	// configuration from
 	ConfigurationFrom []*V1ConfigurationFromSource `json:"configurationFrom"`
 
-	// credentials
-	Credentials *V1Ownership `json:"credentials,omitempty"`
-
 	// description
 	Description string `json:"description,omitempty"`
 
@@ -45,10 +42,6 @@ func (m *V1ServiceProviderSpec) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateConfigurationFrom(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateCredentials(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -86,24 +79,6 @@ func (m *V1ServiceProviderSpec) validateConfigurationFrom(formats strfmt.Registr
 			}
 		}
 
-	}
-
-	return nil
-}
-
-func (m *V1ServiceProviderSpec) validateCredentials(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.Credentials) { // not required
-		return nil
-	}
-
-	if m.Credentials != nil {
-		if err := m.Credentials.Validate(formats); err != nil {
-			if ve, ok := err.(*errors.Validation); ok {
-				return ve.ValidateName("credentials")
-			}
-			return err
-		}
 	}
 
 	return nil
