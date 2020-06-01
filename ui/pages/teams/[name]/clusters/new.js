@@ -51,7 +51,7 @@ class NewTeamClusterPage extends React.Component {
             { text: 'New cluster' }
           ]}
         />
-        <Title>New Cluster for {this.props.team.spec.summary}</Title>
+        <Title style={{ marginBottom: '40px' }}>New Cluster for {this.props.team.spec.summary}</Title>
         <ClusterBuildForm
           user={this.props.user}
           team={this.props.team}

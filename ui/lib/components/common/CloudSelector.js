@@ -1,7 +1,7 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
 import { Typography, Row, Col, Card, Tag } from 'antd'
-const { Title, Paragraph } = Typography
+const { Paragraph } = Typography
 
 class CloudSelector extends React.Component {
   static DEFAULT_ENABLED_CLOUDS = ['GCP', 'AWS']
@@ -9,8 +9,7 @@ class CloudSelector extends React.Component {
   static propTypes = {
     selectedCloud: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]).isRequired,
     handleSelectCloud: PropTypes.func.isRequired,
-    enabledCloudList: PropTypes.array,
-    showCustom: PropTypes.bool
+    enabledCloudList: PropTypes.array
   }
 
   selectCloud = cloud => () => {
@@ -20,7 +19,7 @@ class CloudSelector extends React.Component {
   }
 
   render() {
-    const { selectedCloud, showCustom } = this.props
+    const { selectedCloud } = this.props
     let enabledCloudList = this.props.enabledCloudList
 
     if (!enabledCloudList) {
@@ -34,8 +33,8 @@ class CloudSelector extends React.Component {
     )
 
     return (
-      <Row gutter={16} type="flex" justify="center" style={{ marginTop: '40px', marginBottom: '40px' }}>
-        <Col span={6}>
+      <Row gutter={16} type="flex" justify="center" style={{ marginTop: '10px', marginBottom: '40px' }}>
+        <Col span={8}>
           <Card
             id="gcp"
             onClick={this.selectCloud('GCP')}
@@ -62,7 +61,7 @@ class CloudSelector extends React.Component {
             )}
           </Card>
         </Col>
-        <Col span={6}>
+        <Col span={8}>
           <Card
             id="aws"
             onClick={this.selectCloud('AWS')}
@@ -89,7 +88,7 @@ class CloudSelector extends React.Component {
             )}
           </Card>
         </Col>
-        <Col span={6}>
+        <Col span={8}>
           <Card
             id="azure"
             hoverable={false}
@@ -104,20 +103,6 @@ class CloudSelector extends React.Component {
             <ComingSoon />
           </Card>
         </Col>
-        {showCustom ? (
-          <Col span={6}>
-            <Card
-              hoverable={false}
-              className={ selectedCloud === 'CUSTOM' ? 'cloud-card selected' : 'cloud-card' }
-            >
-              <div className="unavailable">
-                <Title level={3} style={{ paddingTop: '30px', height: '80px' }}>Custom</Title>
-                <Paragraph strong style={{ marginTop: '20px' }}>Bring your own cluster</Paragraph>
-              </div>
-              <ComingSoon />
-            </Card>
-          </Col>
-        ) : null}
       </Row>
     )
   }

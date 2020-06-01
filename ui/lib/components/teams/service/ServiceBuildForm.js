@@ -309,7 +309,7 @@ class ServiceBuildForm extends React.Component {
 
     return (
       <div>
-        <CloudSelector showCustom={false} selectedCloud={selectedCloud} handleSelectCloud={this.handleSelectCloud} enabledCloudList={['AWS']}/>
+        <CloudSelector selectedCloud={selectedCloud} handleSelectCloud={this.handleSelectCloud} enabledCloudList={['AWS']}/>
         <Form {...formConfig} onSubmit={this.handleSubmit}>
           {selectedCloud && (
             <>
@@ -368,7 +368,7 @@ class ServiceBuildForm extends React.Component {
                 )}
               </Card>
               {selectedServicePlan && !planSchemaFound && bindingSelectData.length > 0 && (
-                <Collapse>
+                <Collapse defaultActiveKey={['bindings']}>
                   <Panel header="Create service access" key="bindings">
                     <Alert
                       message="Add service access for your already existing cluster namespaces, check the required namespaces below. Alternatively, this can also be done after your service is created"

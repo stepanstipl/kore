@@ -185,7 +185,7 @@ class ClusterPage extends React.Component {
         }
       }, done)
 
-      message.loading(`Deletion of service access requested`)
+      message.loading('Deletion of service access requested')
     } catch (err) {
       console.error('Error deleting service access', err)
       message.error('Error deleting service access, please try again.')
