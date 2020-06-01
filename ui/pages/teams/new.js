@@ -3,12 +3,9 @@ import PropTypes from 'prop-types'
 import Link from 'next/link'
 import { Typography, Button, Card, List, Row, Col, Icon, Alert, message, Select, Tooltip } from 'antd'
 const { Title, Paragraph, Text } = Typography
-import getConfig from 'next/config'
-const { publicRuntimeConfig } = getConfig()
 
 import NewTeamForm from '../../lib/components/forms/NewTeamForm'
 import ClusterBuildForm from '../../lib/components/teams/cluster/ClusterBuildForm'
-import ServiceBuildForm from '../../lib/components/teams/service/ServiceBuildForm'
 import InviteLink from '../../lib/components/teams/InviteLink'
 import Breadcrumb from '../../lib/components/layout/Breadcrumb'
 import copy from '../../lib/utils/object-copy'
@@ -184,16 +181,6 @@ class NewTeamPage extends React.Component {
               />
             </Card>
 
-            {publicRuntimeConfig.featureGates['services'] ? (
-              <Card title="Create a service for your team" style={{ marginBottom: '30px', marginTop: '20px' }}>
-                <Alert message="Choose a service kind below to create a service" type="info" />
-                <ServiceBuildForm
-                  user={user}
-                  team={team}
-                  teamServices={[]}
-                />
-              </Card>
-            ) :null}
           </div>
         ) : null}
       </div>

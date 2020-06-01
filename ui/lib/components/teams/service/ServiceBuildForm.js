@@ -1,11 +1,9 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
-import Router from 'next/router'
-import { Alert, Button, Card, Checkbox, Col, Collapse, Form, Input, message, Row, Typography, Select } from 'antd'
+import { Alert, Button, Card, Checkbox, Col, Collapse, Form, Icon, Input, message, Row, Typography, Select } from 'antd'
 const { Paragraph, Text } = Typography
 const { Panel } = Collapse
 
-import redirect from '../../../utils/redirect'
 import CloudSelector from '../../common/CloudSelector'
 import ServiceOptionsForm from '../../services/ServiceOptionsForm'
 import FormErrorMessage from '../../forms/FormErrorMessage'
@@ -22,28 +20,29 @@ import { getKoreLabel } from '../../../utils/crd-helpers'
 class ServiceBuildForm extends React.Component {
   static propTypes = {
     form: PropTypes.any.isRequired,
-    skipButtonText: PropTypes.string,
     team: PropTypes.object.isRequired,
     teamServices: PropTypes.array.isRequired,
-    user: PropTypes.object.isRequired
+    handleSubmit: PropTypes.func.isRequired,
+    handleCancel: PropTypes.func.isRequired
+  }
+
+  static initialState = {
+    submitButtonText: 'Save',
+    submitting: false,
+    formErrorMessage: false,
+    selectedCloud: false,
+    selectedServiceKind: false,
+    selectedServicePlan: false,
+    dataLoading: true,
+    servicePlanOverride: null,
+    validationErrors: null,
+    bindingsToCreate: [],
+    planSchemaFound: false
   }
 
   constructor(props) {
     super(props)
-    this.state = {
-      submitButtonText: 'Save',
-      skipButtonText: this.props.skipButtonText || 'Skip',
-      submitting: false,
-      formErrorMessage: false,
-      selectedCloud: false,
-      selectedServiceKind: '',
-      selectedServicePlan: false,
-      dataLoading: true,
-      servicePlanOverride: null,
-      validationErrors: null,
-      bindingsToCreate: [],
-      planSchemaFound: false
-    }
+    this.state = ServiceBuildForm.initialState
   }
 
   async fetchComponentData() {
@@ -208,10 +207,7 @@ class ServiceBuildForm extends React.Component {
           })
         }
 
-        return redirect({
-          router: Router,
-          path: `/teams/${this.props.team.metadata.name}/services/${values.serviceName}`
-        })
+        return this.props.handleSubmit(service)
       } catch (err) {
         console.error('Error saving service', err)
         this.setState({
@@ -271,9 +267,15 @@ class ServiceBuildForm extends React.Component {
     return false
   }
 
+  cancel = () => {
+    this.props.form.resetFields()
+    this.setState(ServiceBuildForm.initialState)
+    this.props.handleCancel()
+  }
+
   render() {
     if (this.state.dataLoading || !this.props.team) {
-      return null
+      return <Icon type="loading" />
     }
     const formConfig = {
       layout: 'horizontal',
@@ -308,112 +310,115 @@ class ServiceBuildForm extends React.Component {
     return (
       <div>
         <CloudSelector showCustom={false} selectedCloud={selectedCloud} handleSelectCloud={this.handleSelectCloud} enabledCloudList={['AWS']}/>
-        {selectedCloud && (
-          <Form {...formConfig} onSubmit={this.handleSubmit}>
-            <Card style={{ marginBottom: '20px' }}>
-              <Alert
-                message="Cloud service"
-                description="Select the cloud service you would like to use."
-                type="info"
-                showIcon
-                style={{ marginBottom: '20px' }}
-              />
-
-              <Form.Item label="Service type">
-                {getFieldDecorator('serviceKind', {
-                  rules: [{ required: true, message: 'Please select your service type!' }],
-                })(
-                  <Select
-                    onChange={this.handleSelectKind}
-                    placeholder="Choose service type"
-                    showSearch
-                    optionFilterProp="children"
-                    filterOption={(input, option) =>
-                      option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-                    }
-                  >
-                    {filteredServiceKinds.map(k => <Select.Option key={k.metadata.name} value={k.metadata.name}>{k.spec.displayName || k.metadata.name}</Select.Option>)}
-                  </Select>
-                )}
-                {selectedServiceKind && (
-                  <Alert
-                    style={{ margin: '10px 0' }}
-                    type="info"
-                    message={selectedServiceKindObject.spec.displayName}
-                    description={<>
-                      <Paragraph>{selectedServiceKindObject.spec.description}</Paragraph>
-                      {Boolean(selectedServiceKindObject.spec.documentationURL) && (
-                        <Paragraph style={{ marginBottom: 0 }}>Documentation: <a target="_blank" rel="noopener noreferrer" href={selectedServiceKindObject.spec.documentationURL}>{selectedServiceKindObject.spec.documentationURL}</a></Paragraph>
-                      )}
-                    </>}
-                  />
-                )}
-              </Form.Item>
-
-              <FormErrorMessage message={formErrorMessage} />
-              {selectedServiceKind && (
-                <ServiceOptionsForm
-                  team={this.props.team}
-                  selectedServiceKind={selectedServiceKind}
-                  servicePlans={filteredServicePlans}
-                  teamServices={this.props.teamServices}
-                  onServicePlanSelected={this.handleServicePlanSelected}
-                  onServicePlanOverridden={this.handleServicePlanOverride}
-                  validationErrors={this.state.validationErrors}
-                  wrappedComponentRef={inst => this.serviceOptionsForm = inst}
+        <Form {...formConfig} onSubmit={this.handleSubmit}>
+          {selectedCloud && (
+            <>
+              <Card style={{ marginBottom: '20px' }}>
+                <Alert
+                  message="Cloud service"
+                  description="Select the cloud service you would like to use."
+                  type="info"
+                  showIcon
+                  style={{ marginBottom: '20px' }}
                 />
-              )}
-            </Card>
-            {selectedServicePlan && !planSchemaFound && bindingSelectData.length > 0 && (
-              <Collapse>
-                <Panel header="Optional: Create service bindings" key="bindings">
-                  <Alert
-                    message="Add service bindings for your already existing cluster namespaces, check the required namespaces below. Alternatively, this can also be done after your service is created"
-                    type="info"
-                    showIcon
-                    style={{ marginBottom: '20px' }}
+
+                <Form.Item label="Service type">
+                  {getFieldDecorator('serviceKind', {
+                    rules: [{ required: true, message: 'Please select your service type!' }],
+                  })(
+                    <Select
+                      onChange={this.handleSelectKind}
+                      placeholder="Choose service type"
+                      showSearch
+                      optionFilterProp="children"
+                      filterOption={(input, option) =>
+                        option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                      }
+                    >
+                      {filteredServiceKinds.map(k => <Select.Option key={k.metadata.name} value={k.metadata.name}>{k.spec.displayName || k.metadata.name}</Select.Option>)}
+                    </Select>
+                  )}
+                  {selectedServiceKind && (
+                    <Alert
+                      style={{ margin: '10px 0' }}
+                      type="info"
+                      message={selectedServiceKindObject.spec.displayName}
+                      description={<>
+                        <Paragraph>{selectedServiceKindObject.spec.description}</Paragraph>
+                        {Boolean(selectedServiceKindObject.spec.documentationURL) && (
+                          <Paragraph style={{ marginBottom: 0 }}>Documentation: <a target="_blank" rel="noopener noreferrer" href={selectedServiceKindObject.spec.documentationURL}>{selectedServiceKindObject.spec.documentationURL}</a></Paragraph>
+                        )}
+                      </>}
+                    />
+                  )}
+                </Form.Item>
+
+                <FormErrorMessage message={formErrorMessage} />
+                {selectedServiceKind && (
+                  <ServiceOptionsForm
+                    team={this.props.team}
+                    selectedServiceKind={selectedServiceKind}
+                    servicePlans={filteredServicePlans}
+                    teamServices={this.props.teamServices}
+                    onServicePlanSelected={this.handleServicePlanSelected}
+                    onServicePlanOverridden={this.handleServicePlanOverride}
+                    validationErrors={this.state.validationErrors}
+                    wrappedComponentRef={inst => this.serviceOptionsForm = inst}
                   />
+                )}
+              </Card>
+              {selectedServicePlan && !planSchemaFound && bindingSelectData.length > 0 && (
+                <Collapse>
+                  <Panel header="Optional: Create service bindings" key="bindings">
+                    <Alert
+                      message="Add service bindings for your already existing cluster namespaces, check the required namespaces below. Alternatively, this can also be done after your service is created"
+                      type="info"
+                      showIcon
+                      style={{ marginBottom: '20px' }}
+                    />
 
-                  {bindingSelectData.map(c => (
-                    <Row key={c.value} style={{ marginBottom: '10px', padding: '10px' }}>
-                      <Col>
-                        <Paragraph><Text strong>Cluster</Text><Text style={{ fontFamily: 'monospace', marginLeft: '10px' }}>{c.title}</Text></Paragraph>
-                        {c.children.map(ns => {
-                          const checked = this.state.bindingsToCreate.includes(ns.value)
-                          return (
-                            <Form.Item
-                              style={{ marginBottom: 0 }}
-                              key={ns.value}
-                              colon={false}
-                              label={<Checkbox key={ns.value} onChange={(e) => this.onChange(e.target.checked, ns.value)()}>{ns.title}</Checkbox>}
-                              labelCol={{ span: 24 }}
-                              wrapperCol={{ span: 12 }}
-                            >
-                              {getFieldDecorator(`${ns.value}-secretName`, {
-                                rules: [
-                                  { required: checked, message: 'Please enter the secret name or un-check namespace!' },
-                                  { pattern: '^[a-z][a-z0-9-]{0,38}[a-z0-9]$', message: 'Name must consist of lower case alphanumeric characters or "-", it must start with a letter and end with an alphanumeric and must be no longer than 40 characters' },
-                                ]
-                              })(
-                                <Input disabled={!checked} placeholder="Secret name" />
-                              )}
-                            </Form.Item>
-                          )
-                        })}
-                      </Col>
-                    </Row>
-                  ))}
+                    {bindingSelectData.map(c => (
+                      <Row key={c.value} style={{ marginBottom: '10px', padding: '10px' }}>
+                        <Col>
+                          <Paragraph><Text strong>Cluster</Text><Text style={{ fontFamily: 'monospace', marginLeft: '10px' }}>{c.title}</Text></Paragraph>
+                          {c.children.map(ns => {
+                            const checked = this.state.bindingsToCreate.includes(ns.value)
+                            return (
+                              <Form.Item
+                                style={{ marginBottom: 0 }}
+                                key={ns.value}
+                                colon={false}
+                                label={<Checkbox key={ns.value} onChange={(e) => this.onChange(e.target.checked, ns.value)()}>{ns.title}</Checkbox>}
+                                labelCol={{ span: 24 }}
+                                wrapperCol={{ span: 12 }}
+                              >
+                                {getFieldDecorator(`${ns.value}-secretName`, {
+                                  rules: [
+                                    { required: checked, message: 'Please enter the secret name or un-check namespace!' },
+                                    { pattern: '^[a-z][a-z0-9-]{0,38}[a-z0-9]$', message: 'Name must consist of lower case alphanumeric characters or "-", it must start with a letter and end with an alphanumeric and must be no longer than 40 characters' },
+                                  ]
+                                })(
+                                  <Input disabled={!checked} placeholder="Secret name" />
+                                )}
+                              </Form.Item>
+                            )
+                          })}
+                        </Col>
+                      </Row>
+                    ))}
 
-                </Panel>
-              </Collapse>
-            )}
-            <Form.Item style={{ marginTop: '20px', marginBottom: 0 }}>
-              <Button type="primary" htmlType="submit" loading={submitting} disabled={this.disableButton()}>
-                {this.state.submitButtonText}
-              </Button>
-            </Form.Item>
-          </Form>
-        )}
+                  </Panel>
+                </Collapse>
+              )}
+            </>
+          )}
+          <Form.Item style={{ marginTop: '20px', marginBottom: 0 }}>
+            <Button type="primary" htmlType="submit" loading={submitting} disabled={this.disableButton()}>
+              {this.state.submitButtonText}
+            </Button>
+            <Button type="link" onClick={this.cancel}>Cancel</Button>
+          </Form.Item>
+        </Form>
       </div>
     )
   }

@@ -1,13 +1,13 @@
 import React from 'react'
-import Link from 'next/link'
 import moment from 'moment'
 import PropTypes from 'prop-types'
-import { Button, Col, Divider, Icon, message, Row, Tooltip, Tag, Typography } from 'antd'
+import { Button, Col, Divider, Drawer, Icon, message, Row, Tooltip, Tag, Typography } from 'antd'
 const { Paragraph, Text } = Typography
 
 import KoreApi from '../../../kore-api'
 import copy from '../../../utils/object-copy'
 import Service from './Service'
+import ServiceBuildForm from './ServiceBuildForm'
 import { inProgressStatusList, statusColorMap, statusIconMap } from '../../../utils/ui-helpers'
 
 class ServicesTab extends React.Component {
@@ -21,7 +21,8 @@ class ServicesTab extends React.Component {
     dataLoading: true,
     services: [],
     serviceKinds: [],
-    serviceCredentials: []
+    serviceCredentials: [],
+    createNewService: false
   }
 
   async fetchComponentData() {
@@ -58,6 +59,36 @@ class ServicesTab extends React.Component {
     }
   }
 
+  refreshServiceCredentials = async (service) => {
+    let serviceCredentials = []
+    try {
+      const serviceCredentialsResult = await (await KoreApi.client()).ListServiceCredentials(this.props.team.metadata.name, undefined, service.metadata.name)
+      serviceCredentials = serviceCredentialsResult.items
+    } catch (error) {
+      console.error('Failed to get service credentials', error)
+    }
+    if (serviceCredentials.length > 0) {
+      const existingServiceCredentials = copy(this.state.serviceCredentials)
+      serviceCredentials.forEach(sc => {
+        const found = existingServiceCredentials.find(esc => esc.metadata.name === sc.metadata.name)
+        if (found) {
+          found.status = sc.status
+        } else {
+          existingServiceCredentials.push(sc)
+        }
+      })
+      this.setState({ serviceCredentials: existingServiceCredentials })
+    }
+  }
+
+  handleServiceCreated = async (service) => {
+    this.setState((state) => ({
+      createNewService: false,
+      services: [ ...state.services, service ]
+    }))
+    await this.refreshServiceCredentials(service)
+  }
+
   deleteService = async (name, done) => {
     const team = this.props.team.metadata.name
     try {
@@ -74,16 +105,20 @@ class ServicesTab extends React.Component {
     }
   }
 
-  handleResourceUpdated = resourceType => {
-    return (updatedResource, done) => {
+  handleResourceUpdated = (resourceType) => {
+    return async (updatedResource, done) => {
       const resourceList = copy(this.state[resourceType])
       const resource = resourceList.find(r => r.metadata.name === updatedResource.metadata.name)
       resource.status = updatedResource.status
       this.setState({ [resourceType]: resourceList }, done)
+
+      if (resourceType === 'services') {
+        await this.refreshServiceCredentials(updatedResource)
+      }
     }
   }
 
-  handleResourceDeleted = resourceType => {
+  handleResourceDeleted = (resourceType) => {
     return (name, done) => {
       const resourceList = copy(this.state[resourceType])
       const resource = resourceList.find(r => r.metadata.name === name)
@@ -119,17 +154,13 @@ class ServicesTab extends React.Component {
 
   render() {
     const { team } = this.props
-    const { dataLoading, services, serviceKinds, serviceCredentials } = this.state
+    const { dataLoading, services, serviceKinds, serviceCredentials, createNewService } = this.state
 
     const hasActiveServices =  Boolean(services.filter(c => !c.deleted).length)
 
     return (
       <>
-        <Button type="primary">
-          <Link href="/teams/[name]/services/new" as={`/teams/${team.metadata.name}/services/new`}>
-            <a>New service</a>
-          </Link>
-        </Button>
+        <Button type="primary" onClick={() => this.setState({ createNewService: true })}>New service</Button>
 
         <Divider />
 
@@ -155,12 +186,29 @@ class ServicesTab extends React.Component {
                     resourceApiPath={`/teams/${team.metadata.name}/services/${service.metadata.name}`}
                   />
                   {!service.deleted && filteredServiceCredentials.length > 0 && this.serviceCredentialList({ serviceCredentials: filteredServiceCredentials })}
-                  {idx < services.length - 1 && <Divider />}
+                  {!service.deleted && idx < services.length - 1 && <Divider />}
                 </React.Fragment>
               )
             })}
           </>
         )}
+
+        <Drawer
+          title="New cloud service"
+          visible={createNewService}
+          onClose={() => this.setState({ createNewService: false })}
+          width={900}
+        >
+          {createNewService && (
+            <ServiceBuildForm
+              team={team}
+              teamServices={services}
+              handleSubmit={this.handleServiceCreated}
+              handleCancel={() => this.setState({ createNewService: false })}
+            />
+          )}
+        </Drawer>
+
       </>
     )
   }
