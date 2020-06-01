@@ -1,14 +1,13 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
 import Router from 'next/router'
-import { Alert, Avatar, Button, Card, Checkbox, Col, Collapse, Form, Input, List, message, Row, Tag, Typography } from 'antd'
+import { Alert, Button, Card, Checkbox, Col, Collapse, Form, Input, message, Row, Typography, Select } from 'antd'
 const { Paragraph, Text } = Typography
 const { Panel } = Collapse
 
 import redirect from '../../../utils/redirect'
 import CloudSelector from '../../common/CloudSelector'
 import ServiceOptionsForm from '../../services/ServiceOptionsForm'
-import IconTooltip from '../../utils/IconTooltip'
 import FormErrorMessage from '../../forms/FormErrorMessage'
 import KoreApi from '../../../kore-api'
 import asyncForEach from '../../../utils/async-foreach'
@@ -232,7 +231,7 @@ class ServiceBuildForm extends React.Component {
     })
   }
 
-  handleSelectKind = kind => async () => {
+  handleSelectKind = (kind) => {
     this.setState({
       selectedServiceKind: kind,
       selectedServicePlan: false,
@@ -300,8 +299,10 @@ class ServiceBuildForm extends React.Component {
     }
 
     let filteredServicePlans = []
+    let selectedServiceKindObject = false
     if (selectedServiceKind) {
       filteredServicePlans = this.state.servicePlans.items.filter(p => p.spec.kind === selectedServiceKind)
+      selectedServiceKindObject = serviceKinds.items.find(sk => sk.metadata.name === selectedServiceKind)
     }
 
     return (
@@ -317,20 +318,38 @@ class ServiceBuildForm extends React.Component {
                 showIcon
                 style={{ marginBottom: '20px' }}
               />
-              <List
-                style={{ marginBottom: '20px' }}
-                bordered={true}
-                dataSource={filteredServiceKinds}
-                renderItem={service => (
-                  <List.Item actions={service.metadata.name !== selectedServiceKind ? [<Button key="select" onClick={this.handleSelectKind(service.metadata.name)}>Select</Button>] : [<Tag key="selected">Selected</Tag>]}>
-                    <List.Item.Meta
-                      avatar={<Avatar src={service.spec.imageURL} />}
-                      title={<p>{service.spec.displayName || service.metadata.name} <IconTooltip icon="info-circle" text={service.spec.description} /></p>}
-                      description={service.spec.documentationURL ? <a target="_blank" rel="noopener noreferrer" href={service.spec.documentationURL}>{service.spec.documentationURL}</a> : ''}
-                    />
-                  </List.Item>
+
+              <Form.Item label="Service type">
+                {getFieldDecorator('serviceKind', {
+                  rules: [{ required: true, message: 'Please select your service type!' }],
+                })(
+                  <Select
+                    onChange={this.handleSelectKind}
+                    placeholder="Choose service type"
+                    showSearch
+                    optionFilterProp="children"
+                    filterOption={(input, option) =>
+                      option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                    }
+                  >
+                    {filteredServiceKinds.map(k => <Select.Option key={k.metadata.name} value={k.metadata.name}>{k.spec.displayName || k.metadata.name}</Select.Option>)}
+                  </Select>
                 )}
-              />
+                {selectedServiceKind && (
+                  <Alert
+                    style={{ margin: '10px 0' }}
+                    type="info"
+                    message={selectedServiceKindObject.spec.displayName}
+                    description={<>
+                      <Paragraph>{selectedServiceKindObject.spec.description}</Paragraph>
+                      {Boolean(selectedServiceKindObject.spec.documentationURL) && (
+                        <Paragraph style={{ marginBottom: 0 }}>Documentation: <a target="_blank" rel="noopener noreferrer" href={selectedServiceKindObject.spec.documentationURL}>{selectedServiceKindObject.spec.documentationURL}</a></Paragraph>
+                      )}
+                    </>}
+                  />
+                )}
+              </Form.Item>
+
               <FormErrorMessage message={formErrorMessage} />
               {selectedServiceKind && (
                 <ServiceOptionsForm
@@ -363,6 +382,7 @@ class ServiceBuildForm extends React.Component {
                           const checked = this.state.bindingsToCreate.includes(ns.value)
                           return (
                             <Form.Item
+                              style={{ marginBottom: 0 }}
                               key={ns.value}
                               colon={false}
                               label={<Checkbox key={ns.value} onChange={(e) => this.onChange(e.target.checked, ns.value)()}>{ns.title}</Checkbox>}
