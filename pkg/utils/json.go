@@ -21,29 +21,8 @@ import (
 	"encoding/json"
 	"io"
 
-	jsonpatch "github.com/evanphx/json-patch"
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 )
-
-// MergeJSON is responsible for merging two structs
-func MergeJSON(src, dst interface{}) ([]byte, error) {
-	o, err := EncodeToJSON(dst)
-	if err != nil {
-		return nil, err
-	}
-
-	s, err := EncodeToJSON(src)
-	if err != nil {
-		return nil, err
-	}
-
-	patch, err := jsonpatch.CreateMergePatch(o, s)
-	if err != nil {
-		return nil, err
-	}
-
-	return jsonpatch.MergePatch(o, patch)
-}
 
 // EncodeToJSON encodes the struct to json
 func EncodeToJSON(in interface{}) ([]byte, error) {
@@ -64,6 +43,7 @@ func DecodeToJSON(data io.Reader, in interface{}) error {
 	return nil
 }
 
+// ApiExtJSONEquals checks if the json's are equal
 func ApiExtJSONEquals(j1, j2 *apiextv1.JSON) bool {
 	if ApiExtJSONEmpty(j1) && ApiExtJSONEmpty(j2) {
 		return true
@@ -76,6 +56,7 @@ func ApiExtJSONEquals(j1, j2 *apiextv1.JSON) bool {
 	return bytes.Equal(j1.Raw, j2.Raw)
 }
 
+// ApiExtJSONEmpty checks the context empty
 func ApiExtJSONEmpty(j *apiextv1.JSON) bool {
 	if j == nil {
 		return true

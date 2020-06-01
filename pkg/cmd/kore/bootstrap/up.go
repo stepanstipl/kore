@@ -82,14 +82,14 @@ func NewCmdBootstrapUp(factory cmdutil.Factory) *cobra.Command {
 		Use:     "up",
 		Short:   "Brings up kore on a local kubernetes cluster",
 		Long:    usage,
-		Example: "kore alpha bootstrap up <name> [options]",
+		Example: "kore alpha local up <name> [options]",
 		Run:     cmdutil.DefaultRunFunc(o),
 	}
 
 	flags := command.Flags()
 	flags.StringVar(&o.Provider, "provider", "kind", "local kubernetes provider to use `NAME`")
 	flags.StringVar(&o.Release, "release", version.Release, "chart version to use for deployment `VERSION`")
-	flags.StringVar(&o.ValuesFile, "values", "values.yaml", "path to the file container helm values `PATH`")
+	flags.StringVar(&o.ValuesFile, "values", os.ExpandEnv(filepath.Join("${HOME}", ".kore", "values.yaml")), "path to the file container helm values `PATH`")
 	flags.StringVar(&o.BinaryPath, "binary-path", filepath.Join(config.GetClientPath(), "build"), "path to place any downloaded binaries if requested `PATH`")
 	flags.BoolVar(&o.EnableDeploy, "enable-deploy", true, "indicates if we should deploy the kore application `BOOL`")
 	flags.BoolVar(&o.Wait, "wait", true, "indicates we wait for the deployment to complete `BOOL`")
@@ -265,9 +265,20 @@ func (o *UpOptions) EnsureHelm(ctx context.Context) error {
 					return err
 				}
 				if found {
-					o.HelmPath = path
+					// @step: we need to check the version of helm
+					args := []string{
+						"version",
+					}
 
-					return nil
+					combined, err := exec.CommandContext(ctx, "helm", args...).CombinedOutput()
+					if err != nil {
+						return fmt.Errorf("trying to check version of helm binary: %s", combined)
+					}
+					if strings.Contains(string(combined), "Version: v3") {
+						o.HelmPath = path
+
+						return nil
+					}
 				}
 
 				return o.EnsureHelmDownload(ctx)

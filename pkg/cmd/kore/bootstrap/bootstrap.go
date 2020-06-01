@@ -30,29 +30,29 @@ import (
 var (
 	usage = `
 Bootstrap provides an experimental means of bootstrapping a local Kore installation. At
-present the local installation use "kind" https://github.com/kubernetes-sigs/kind.
+present the local installation uses "kind" https://github.com/kubernetes-sigs/kind.
 
 Unless specified otherwise it will deploy an official tagged release from Github, though
 this can be overriden using the --release flag. Note the installation is performed via
-helm with a local values.yaml is generated in the directory; so if you wish to change
-any of the values post a installation can change this file and run the 'up' command.
+helm with a local ${HOME}/.kore/values.yaml generated in the directory. If you wish to change
+any of the values post installation, update the values.yaml file and re-run the 'up' command.
 
-Note, the local installtions data persistency is tied to the provider. For kind as long
+Note the data persistency is tied to the installation provider. For kind as long
 as the container is not delete the data is kept.
 `
 	examples = `
 # Provision a local kore instance called 'kore' (defaults to kind)
-$ kore alpha bootstrap up
+$ kore alpha local up
 
 # Override the release and use a local chart
-$ kore alpha bootstrap up --release ./charts
-$ kore alpha bootstrap up --release https://URL
+$ kore alpha local up --release ./charts
+$ kore alpha local up --release https://URL
 
 # Destroy the local installtion
-$ kore alpha bootstrap destroy
+$ kore alpha local destroy
 
 # To stop the local installed without deleting the data
-$ kore alpha bootstrap stop
+$ kore alpha local stop
 
 The application should be available on http://127.0.0.1:3000. You can provision the
 CLI via.
@@ -80,7 +80,7 @@ const (
 // NewCmdBootstrap creates and returns the delete command
 func NewCmdBootstrap(factory cmdutil.Factory) *cobra.Command {
 	command := &cobra.Command{
-		Use:     "bootstrap",
+		Use:     "local",
 		Short:   "Provides the provision of local installation for Kore for testing",
 		Long:    usage,
 		Example: examples,
