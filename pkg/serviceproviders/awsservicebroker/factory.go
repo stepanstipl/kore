@@ -19,6 +19,8 @@ package awsservicebroker
 import (
 	"fmt"
 
+	"github.com/appvia/kore/pkg/utils/configuration"
+
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
@@ -147,7 +149,7 @@ func (d ProviderFactory) JSONSchema() string {
 func (d ProviderFactory) Create(ctx kore.Context, serviceProvider *servicesv1.ServiceProvider) (_ kore.ServiceProvider, _ error) {
 	var config = DefaultProviderConfiguration()
 
-	if err := serviceProvider.Spec.GetConfiguration(config); err != nil {
+	if err := configuration.ParseObjectConfiguration(ctx, ctx.Client(), serviceProvider, config); err != nil {
 		return nil, fmt.Errorf("failed to process aws-servicebroker configuration: %w", err)
 	}
 
@@ -190,7 +192,7 @@ func (d ProviderFactory) Create(ctx kore.Context, serviceProvider *servicesv1.Se
 func (d ProviderFactory) SetUp(ctx kore.Context, serviceProvider *servicesv1.ServiceProvider) (complete bool, _ error) {
 	var config = DefaultProviderConfiguration()
 
-	if err := serviceProvider.Spec.GetConfiguration(config); err != nil {
+	if err := configuration.ParseObjectConfiguration(ctx, ctx.Client(), serviceProvider, config); err != nil {
 		return false, fmt.Errorf("failed to process aws-servicebroker configuration: %w", err)
 	}
 
@@ -255,7 +257,7 @@ func (d ProviderFactory) SetUp(ctx kore.Context, serviceProvider *servicesv1.Ser
 func (d ProviderFactory) TearDown(ctx kore.Context, serviceProvider *servicesv1.ServiceProvider) (complete bool, _ error) {
 	var config = DefaultProviderConfiguration()
 
-	if err := serviceProvider.Spec.GetConfiguration(config); err != nil {
+	if err := configuration.ParseObjectConfiguration(ctx, ctx.Client(), serviceProvider, config); err != nil {
 		return false, fmt.Errorf("failed to process aws-servicebroker configuration: %w", err)
 	}
 

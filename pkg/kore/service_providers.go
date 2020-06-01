@@ -22,6 +22,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/appvia/kore/pkg/utils/configuration"
+
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils"
@@ -162,7 +164,12 @@ func (p *serviceProvidersImpl) Update(ctx context.Context, provider *servicesv1.
 			WithFieldErrorf("type", validation.InvalidType, "%q is not a valid service provider type", provider.Spec.Type)
 	}
 
-	if err := jsonschema.Validate(factory.JSONSchema(), "provider", provider.Spec.Configuration); err != nil {
+	config := map[string]interface{}{}
+	if err := configuration.ParseObjectConfiguration(ctx, p.Store().RuntimeClient(), provider, &config); err != nil {
+		return fmt.Errorf("failed to parse service provider configuration: %s", err)
+	}
+
+	if err := jsonschema.Validate(factory.JSONSchema(), "provider", config); err != nil {
 		return err
 	}
 

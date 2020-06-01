@@ -7020,6 +7020,40 @@ spec:
                 provider
               type: object
               x-kubernetes-preserve-unknown-fields: true
+            configurationFrom:
+              description: ConfigurationFrom is a way to load configuration values
+                from alternative sources, e.g. from secrets The values from these
+                sources will override any existing keys defined in Configuration
+              items:
+                properties:
+                  name:
+                    description: Name is the name of the configuration parameter
+                    minLength: 1
+                    type: string
+                  secretKeyRef:
+                    description: SecretKeyRef is a reference to a key in a secret
+                    properties:
+                      key:
+                        description: Key is they data key in the secret
+                        minLength: 1
+                        type: string
+                      name:
+                        description: Name is the name of the secret
+                        minLength: 1
+                        type: string
+                      optional:
+                        description: Optional controls whether the secret with the
+                          given key must exist
+                        type: boolean
+                    required:
+                    - name
+                    type: object
+                required:
+                - name
+                - secretKeyRef
+                type: object
+              type: array
+              x-kubernetes-list-type: set
             credentials:
               description: Credentials is a reference to the credentials object to
                 use
@@ -7228,6 +7262,40 @@ spec:
                 service configuration
               type: object
               x-kubernetes-preserve-unknown-fields: true
+            configurationFrom:
+              description: ConfigurationFrom is a way to load configuration values
+                from alternative sources, e.g. from secrets The values from these
+                sources will override any existing keys defined in Configuration
+              items:
+                properties:
+                  name:
+                    description: Name is the name of the configuration parameter
+                    minLength: 1
+                    type: string
+                  secretKeyRef:
+                    description: SecretKeyRef is a reference to a key in a secret
+                    properties:
+                      key:
+                        description: Key is they data key in the secret
+                        minLength: 1
+                        type: string
+                      name:
+                        description: Name is the name of the secret
+                        minLength: 1
+                        type: string
+                      optional:
+                        description: Optional controls whether the secret with the
+                          given key must exist
+                        type: boolean
+                    required:
+                    - name
+                    type: object
+                required:
+                - name
+                - secretKeyRef
+                type: object
+              type: array
+              x-kubernetes-list-type: set
             credentials:
               description: Credentials is a reference to the credentials object to
                 use

@@ -17,9 +17,6 @@
 package v1
 
 import (
-	"encoding/json"
-	"fmt"
-
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -51,34 +48,14 @@ type ServiceProviderSpec struct {
 	// +kubebuilder:validation:Type=object
 	// +kubebuilder:validation:Optional
 	Configuration *apiextv1.JSON `json:"configuration,omitempty"`
+	// ConfigurationFrom is a way to load configuration values from alternative sources, e.g. from secrets
+	// The values from these sources will override any existing keys defined in Configuration
+	// +kubebuilder:validation:Optional
+	// +listType=set
+	ConfigurationFrom []corev1.ConfigurationFromSource `json:"configurationFrom,omitempty"`
 	// Credentials is a reference to the credentials object to use
 	// +kubebuilder:validation:Optional
 	Credentials corev1.Ownership `json:"credentials,omitempty"`
-}
-
-func (s *ServiceProviderSpec) GetConfiguration(v interface{}) error {
-	if s.Configuration == nil {
-		return nil
-	}
-
-	if err := json.Unmarshal(s.Configuration.Raw, v); err != nil {
-		return fmt.Errorf("failed to unmarshal service provider configuration: %w", err)
-	}
-	return nil
-}
-
-func (s *ServiceProviderSpec) SetConfiguration(v interface{}) error {
-	if v == nil {
-		s.Configuration = nil
-		return nil
-	}
-
-	raw, err := json.Marshal(v)
-	if err != nil {
-		return fmt.Errorf("failed to marshal service provider configuration: %w", err)
-	}
-	s.Configuration = &apiextv1.JSON{Raw: raw}
-	return nil
 }
 
 // ServiceProviderStatus defines the observed state of a service provider
@@ -124,6 +101,14 @@ func NewServiceProvider(name, namespace string) *ServiceProvider {
 			Namespace: namespace,
 		},
 	}
+}
+
+func (s ServiceProvider) GetConfiguration() *apiextv1.JSON {
+	return s.Spec.Configuration
+}
+
+func (s ServiceProvider) GetConfigurationFrom() []corev1.ConfigurationFromSource {
+	return s.Spec.ConfigurationFrom
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

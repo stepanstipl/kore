@@ -19,6 +19,8 @@ package openservicebroker
 import (
 	"fmt"
 
+	"github.com/appvia/kore/pkg/utils/configuration"
+
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/kore"
 	osb "github.com/kubernetes-sigs/go-open-service-broker-client/v2"
@@ -151,7 +153,7 @@ func (p ProviderFactory) Create(ctx kore.Context, serviceProvider *servicesv1.Se
 	var config = ProviderConfiguration{}
 	config.Name = serviceProvider.Name
 
-	if err := serviceProvider.Spec.GetConfiguration(&config); err != nil {
+	if err := configuration.ParseObjectConfiguration(ctx, ctx.Client(), serviceProvider, &config); err != nil {
 		return nil, fmt.Errorf("failed to process service provider configuration: %w", err)
 	}
 

@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/appvia/kore/pkg/utils/configuration"
+
 	"github.com/appvia/kore/pkg/kore"
 
 	"github.com/appvia/kore/pkg/utils"
@@ -73,7 +75,7 @@ func (p *Provider) Reconcile(
 	}
 
 	config := map[string]interface{}{}
-	if err := service.Spec.GetConfiguration(&config); err != nil {
+	if err := configuration.ParseObjectConfiguration(ctx, ctx.Client(), service, &config); err != nil {
 		return reconcile.Result{}, controllers.NewCriticalError(fmt.Errorf("failed to unmarshal service configuration: %w", err))
 	}
 
@@ -144,7 +146,7 @@ func (p *Provider) update(
 	}
 
 	config := map[string]interface{}{}
-	if err := service.Spec.GetConfiguration(&config); err != nil {
+	if err := configuration.ParseObjectConfiguration(ctx, ctx.Client(), service, &config); err != nil {
 		return reconcile.Result{}, controllers.NewCriticalError(fmt.Errorf("failed to unmarshal service configuration"))
 	}
 

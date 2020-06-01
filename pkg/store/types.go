@@ -22,6 +22,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/informers"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // Client is a raw runtime client
@@ -56,6 +57,8 @@ type Store interface {
 	Kind(string) Interface
 	// Namespace returns operations for a namespace
 	Namespace(string) Interface
+	// RuntimeClient returns with a runtime client
+	RuntimeClient() client.Client
 	// Stop releases the resources
 	Stop() error
 	// WatchResource adds a resource type to the store and listens for events
