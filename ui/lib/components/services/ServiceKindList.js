@@ -1,7 +1,8 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
+import { sortBy } from 'lodash'
 import KoreApi from '../../kore-api'
-import { Typography, List, Avatar, Alert, Tooltip, Switch, Icon } from 'antd'
+import { Typography, List, Avatar, Alert, Tooltip, Switch, Icon, message } from 'antd'
 import Link from 'next/link'
 const { Title, Text } = Typography
 
@@ -36,10 +37,17 @@ export default class ServiceKindList extends React.Component {
     })
   }
 
-  toggleKindEnabled = async (kind) => {
-    const api = await KoreApi.client()
-    await api.UpdateServiceKind(kind.metadata.name, { ...kind, spec: { ...kind.spec, enabled: !kind.spec.enabled } })
-    await this.loadKinds()
+  toggleKindEnabled = async (kind, enabled) => {
+    try {
+      const api = await KoreApi.client()
+      const serviceKindResult = await api.UpdateServiceKind(kind.metadata.name, { ...kind, spec: { ...kind.spec, enabled } })
+      this.setState({
+        kinds: sortBy(this.state.kinds.filter(k => k.metadata.name !== kind.metadata.name).concat([ serviceKindResult ]), k => k.spec.displayName.toLowerCase())
+      })
+      message.success(`${enabled ? 'Enabled' : 'Disabled'} service "${kind.spec.displayName}"`)
+    } catch (error) {
+      message.error(`Failed to ${enabled ? 'enable' : 'disable'} service "${kind.spec.displayName}", please try again.`)
+    }
   }
 
   renderKind = (kind) => {
@@ -61,7 +69,7 @@ export default class ServiceKindList extends React.Component {
 
     actions.push(
       <Text key="enable">
-        <Switch onChange={() => this.toggleKindEnabled(kind)} checked={kind.spec.enabled} checkedChildren={<Icon type="check" />} unCheckedChildren={<Icon type="close" />} />
+        <Switch onChange={(enabled) => this.toggleKindEnabled(kind, enabled)} checked={kind.spec.enabled} checkedChildren={<Icon type="check" />} unCheckedChildren={<Icon type="close" />} />
       </Text>
     )
 
