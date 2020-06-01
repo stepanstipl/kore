@@ -135,7 +135,7 @@ class ServicesTab extends React.Component {
     return (
       <Row style={{ marginLeft: '50px' }}>
         <Col>
-          <Text strong style={{ marginRight: '8px' }}>Bindings: </Text>
+          <Text strong style={{ marginRight: '8px' }}>Access: </Text>
           {serviceCredentials.map(serviceCredential => {
             const status = serviceCredential.status.status || 'Pending'
             const created = moment(serviceCredential.metadata.creationTimestamp).fromNow()

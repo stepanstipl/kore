@@ -140,10 +140,10 @@ class ServicePage extends React.Component {
         }
       }, done)
 
-      message.loading(`Service Credential deletion requested: ${name}`)
+      message.loading(`Service access deletion requested ${name}`)
     } catch (err) {
-      console.error('Error deleting service credential', err)
-      message.error('Error deleting service credential, please try again.')
+      console.error('Error deleting service access', err)
+      message.error('Error deleting service access, please try again.')
     }
   }
 
@@ -162,7 +162,7 @@ class ServicePage extends React.Component {
         serviceCredentials: [ ...state.serviceCredentials, serviceCredential ]
       }
     })
-    message.loading(`Service credential "${serviceCredential.metadata.name}" requested`)
+    message.loading(`Service access "${serviceCredential.metadata.name}" requested`)
   }
 
   onServiceConfigChanged = (updatedServiceParams) => {
@@ -260,10 +260,10 @@ class ServicePage extends React.Component {
 
         <Divider />
 
-        <Card title={<span>Service bindings {serviceCredentials && <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={serviceCredentials.filter(c => !c.deleted).length} />}</span>} extra={<Button type="primary" onClick={this.createServiceCredential(true)}>New binding</Button>}>
+        <Card title={<span>Service access {serviceCredentials && <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={serviceCredentials.filter(c => !c.deleted).length} />}</span>} extra={<Button type="primary" onClick={this.createServiceCredential(true)}>Add access</Button>}>
 
           {!serviceCredentials && <Icon type="loading" />}
-          {serviceCredentials && !hasActiveBindings && <Text type="secondary">No bindings found for this service</Text>}
+          {serviceCredentials && !hasActiveBindings && <Text type="secondary">No access found for this service</Text>}
           {serviceCredentials && (
             <List
               className="hide-empty-text"
@@ -289,7 +289,7 @@ class ServicePage extends React.Component {
           )}
 
           <Drawer
-            title="Create service binding"
+            title="Create service access"
             placement="right"
             closable={false}
             onClose={this.createServiceCredential(false)}

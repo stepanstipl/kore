@@ -42,7 +42,7 @@ class ServiceBuildForm extends React.Component {
 
   constructor(props) {
     super(props)
-    this.state = ServiceBuildForm.initialState
+    this.state = { ...ServiceBuildForm.initialState }
   }
 
   async fetchComponentData() {
@@ -269,7 +269,7 @@ class ServiceBuildForm extends React.Component {
 
   cancel = () => {
     this.props.form.resetFields()
-    this.setState(ServiceBuildForm.initialState)
+    this.setState({ ...ServiceBuildForm.initialState })
     this.props.handleCancel()
   }
 
@@ -369,9 +369,9 @@ class ServiceBuildForm extends React.Component {
               </Card>
               {selectedServicePlan && !planSchemaFound && bindingSelectData.length > 0 && (
                 <Collapse>
-                  <Panel header="Optional: Create service bindings" key="bindings">
+                  <Panel header="Create service access" key="bindings">
                     <Alert
-                      message="Add service bindings for your already existing cluster namespaces, check the required namespaces below. Alternatively, this can also be done after your service is created"
+                      message="Add service access for your already existing cluster namespaces, check the required namespaces below. Alternatively, this can also be done after your service is created"
                       type="info"
                       showIcon
                       style={{ marginBottom: '20px' }}

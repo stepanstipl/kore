@@ -23,13 +23,13 @@ class ServiceCredential extends AutoRefreshComponent {
     const { serviceCredential } = this.props
     const { status, deleted } = serviceCredential
     if (deleted) {
-      return message.success(`Service Credential successfully deleted: ${serviceCredential.metadata.name}`)
+      return message.success(`Service access successfully deleted for service "${serviceCredential.spec.service.name}"`)
     }
     if (status.status === 'Success') {
-      return message.success(`Service Credential successfully created: ${serviceCredential.metadata.name}`)
+      return message.success(`Service access successfully created for service "${serviceCredential.spec.service.name}"`)
     }
     if (status.status === 'Failure') {
-      return message.error(`Service Credential failed to create: ${serviceCredential.metadata.name}`)
+      return message.error(`Service access failed to create for service "${serviceCredential.spec.service.name}"`)
     }
   }
 
@@ -82,12 +82,12 @@ class ServiceCredential extends AutoRefreshComponent {
         const deleteAction = (
           <Popconfirm
             key="delete"
-            title={`Are you sure you want to delete ${serviceCredential.metadata.name}?`}
+            title={`Are you sure you want to delete access with secret name ${serviceCredential.spec.secretName}?`}
             onConfirm={this.deleteServiceCredential}
             okText="Yes"
             cancelText="No"
           >
-            <a><Tooltip title="Delete this service credential"><Icon type="delete" /></Tooltip></a>
+            <a><Tooltip title="Delete service access"><Icon type="delete" /></Tooltip></a>
           </Popconfirm>
         )
         actions.push(deleteAction)

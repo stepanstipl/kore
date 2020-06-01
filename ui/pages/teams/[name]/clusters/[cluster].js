@@ -185,15 +185,14 @@ class ClusterPage extends React.Component {
         }
       }, done)
 
-      message.loading(`Service binding deletion requested: ${name}`)
+      message.loading(`Deletion of service access requested`)
     } catch (err) {
-      console.error('Error deleting service binding', err)
-      message.error('Error deleting service binding, please try again.')
+      console.error('Error deleting service access', err)
+      message.error('Error deleting service access, please try again.')
     }
   }
 
   createServiceCredential = (value) => () => {
-    console.log('creating service credential', value)
     this.setState({ createServiceCredential: value })
   }
 
@@ -207,7 +206,7 @@ class ClusterPage extends React.Component {
         revealBindings
       }
     })
-    message.loading(`Service binding "${serviceCredential.metadata.name}" requested`)
+    message.loading(`Service access with secret name "${serviceCredential.spec.secretName}" requested`)
   }
 
   onClusterConfigChanged = (updatedClusterParams) => {
@@ -335,9 +334,9 @@ class ClusterPage extends React.Component {
                     <Collapse onChange={this.revealBindings(namespaceClaim.spec.name)} activeKey={this.state.revealBindings[namespaceClaim.spec.name] ? ['bindings'] : []}>
                       <Collapse.Panel
                         key="bindings"
-                        header={<span>Service bindings <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={activeServiceCredentials.length} /></span>}
+                        header={<span>Service access <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={activeServiceCredentials.length} /></span>}
                         extra={
-                          <Tooltip title="Add new service binding to this namespace">
+                          <Tooltip title="Add new service access for this namespace">
                             <Icon
                               type="plus"
                               onClick={e => {
@@ -350,7 +349,7 @@ class ClusterPage extends React.Component {
                       >
                         <List
                           size="small"
-                          locale={{ emptyText: 'No service bindings found' }}
+                          locale={{ emptyText: 'No service access found' }}
                           dataSource={filteredServiceCredentials}
                           renderItem={serviceCredential => (
                             <ServiceCredential
@@ -392,7 +391,7 @@ class ClusterPage extends React.Component {
 
           {this.servicesEnabled() && (
             <Drawer
-              title="Create service binding"
+              title="Create service access"
               placement="right"
               closable={false}
               onClose={this.createServiceCredential(false)}
