@@ -27,7 +27,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
-	psp "k8s.io/api/extensions/v1beta1"
+	psp "k8s.io/api/policy/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -198,7 +198,7 @@ func (p *bootImpl) DeployPodSecurityPolicies(ctx context.Context, client k8s.Int
 
 // CreateClusterPodSecurityPolicy creates a psp in the cluster
 func (p *bootImpl) CreateClusterPodSecurityPolicy(ctx context.Context, policy *psp.PodSecurityPolicy) error {
-	if _, err := p.client.ExtensionsV1beta1().PodSecurityPolicies().Create(ctx, policy, metav1.CreateOptions{}); err != nil {
+	if _, err := p.client.PolicyV1beta1().PodSecurityPolicies().Create(ctx, policy, metav1.CreateOptions{}); err != nil {
 		if kerrors.IsAlreadyExists(err) {
 			return nil
 		}
