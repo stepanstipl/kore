@@ -17,8 +17,8 @@ DataField.propTypes = {
     PropTypes.string,
     PropTypes.node
   ]),
-  labelColSpan: PropTypes.string,
-  valueColSpan: PropTypes.string,
+  labelColSpan: PropTypes.number,
+  valueColSpan: PropTypes.number,
   textProps: PropTypes.object,
   style: PropTypes.object
 }

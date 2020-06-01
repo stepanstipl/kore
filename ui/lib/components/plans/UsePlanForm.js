@@ -8,8 +8,8 @@ import PlanViewEdit from './PlanViewEdit'
 import { Icon } from 'antd'
 
 /**
- * UsePlanForm is for *using* a plan to configure a cluster, service or service credential. 
- * 
+ * UsePlanForm is for *using* a plan to configure a cluster, service or service credential.
+ *
  * To *manage* a plan (create, view, edit the plan itself), use Manage(Service/Cluster)PlanForm.
  */
 class UsePlanForm extends React.Component {
@@ -119,10 +119,10 @@ class UsePlanForm extends React.Component {
           team={this.props.team}
           kind={this.props.kind}
           plan={this.state.planValues}
-          schema={this.state.schema} 
-          parameterEditable={this.state.parameterEditable} 
+          schema={this.state.schema}
+          parameterEditable={this.state.parameterEditable}
           onPlanValueChange={(n, v) => this.onValueChange(n, v)}
-          validationErrors={this.props.validationErrors} 
+          validationErrors={this.props.validationErrors}
         />
       </>
     )

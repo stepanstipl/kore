@@ -1,9 +1,9 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import axios from 'axios'
 import moment from 'moment'
-import { Typography, Collapse, Row, Col, List, Button, Form, Avatar, Card, Badge, message, Drawer } from 'antd'
+import { Typography, Collapse, Icon, Row, Col, List, Button, Form, Divider, Card, Badge, message, Drawer, Tag } from 'antd'
 const { Text } = Typography
+
 import KoreApi from '../../../../lib/kore-api'
 import Breadcrumb from '../../../../lib/components/layout/Breadcrumb'
 import UsePlanForm from '../../../../lib/components/plans/UsePlanForm'
@@ -21,7 +21,7 @@ class ServicePage extends React.Component {
     team: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
     service: PropTypes.object.isRequired,
-    serviceCredentials: PropTypes.object.isRequired,
+    serviceKind: PropTypes.object.isRequired,
   }
 
   constructor(props) {
@@ -33,26 +33,51 @@ class ServicePage extends React.Component {
       serviceParams: props.service.spec.configuration,
       formErrorMessage: null,
       validationErrors: null,
-      serviceCredentials: props.serviceCredentials,
+      serviceCredentials: false,
       createServiceCredential: false
     }
   }
 
-  static getInitialProps = async ctx => {
+  static getInitialProps = async (ctx) => {
     const api = await KoreApi.client(ctx)
-    const { team, service, serviceCredentials } = await (axios.all([
+    let [ team, service, serviceKinds ] = await Promise.all([
       api.GetTeam(ctx.query.name),
       api.GetService(ctx.query.name, ctx.query.service),
-      api.ListServiceCredentials(ctx.query.name, '', ctx.query.service)
-    ]).then(axios.spread((team, service, serviceCredentials) => {
-      return { team, service, serviceCredentials }
-    })))
+      api.ListServiceKinds()
+    ])
 
     if ((!service || !team) && ctx.res) {
       /* eslint-disable-next-line require-atomic-updates */
       ctx.res.statusCode = 404
     }
-    return { team, service, serviceCredentials }
+    const serviceKind = serviceKinds.items.find(sk => sk.metadata.name === service.spec.kind)
+
+    return { team, service, serviceKind }
+  }
+
+  fetchComponentData = async () => {
+    const team = this.props.team.metadata.name
+    const service = this.props.service.metadata.name
+    const api = await KoreApi.client()
+    let [ serviceCredentials ] = await Promise.all([
+      api.ListServiceCredentials(team, null, service)
+    ])
+    serviceCredentials = serviceCredentials.items
+
+    return { serviceCredentials }
+  }
+
+  componentDidMount = () => {
+    this.startRefreshing()
+    this.fetchComponentData().then(data => {
+      this.setState({ ...data })
+    })
+  }
+
+  componentWillUnmount = () => {
+    if (this.interval) {
+      clearInterval(this.interval)
+    }
   }
 
   interval = null
@@ -81,10 +106,7 @@ class ServicePage extends React.Component {
     return (updatedResource, done) => {
       this.setState((state) => {
         return {
-          [resourceType]: {
-            ...state[resourceType],
-            items: state[resourceType].items.map(r => r.metadata.name !== updatedResource.metadata.name ? r : { ...r, status: updatedResource.status })
-          }
+          [resourceType]: state[resourceType].map(r => r.metadata.name !== updatedResource.metadata.name ? r : { ...r, status: updatedResource.status })
         }
       }, done)
     }
@@ -94,10 +116,7 @@ class ServicePage extends React.Component {
     return (name, done) => {
       this.setState((state) => {
         return {
-          [resourceType]: {
-            ...state[resourceType],
-            items: state[resourceType].items.map(r => r.metadata.name !== name ? r : { ...r, deleted: true })
-          }
+          [resourceType]: state[resourceType].map(r => r.metadata.name !== name ? r : { ...r, deleted: true })
         }
       }, done)
     }
@@ -110,17 +129,14 @@ class ServicePage extends React.Component {
 
       this.setState((state) => {
         return {
-          serviceCredentials: {
-            ...state.serviceCredentials,
-            items: state.serviceCredentials.items.map(r => r.metadata.name !== name ? r : {
-              ...r,
-              status: { ...r.status, status: 'Deleting' },
-              metadata: {
-                ...r.metadata,
-                deletionTimestamp: new Date()
-              }
-            })
-          }
+          serviceCredentials: state.serviceCredentials.map(r => r.metadata.name !== name ? r : {
+            ...r,
+            status: { ...r.status, status: 'Deleting' },
+            metadata: {
+              ...r.metadata,
+              deletionTimestamp: new Date()
+            }
+          })
         }
       }, done)
 
@@ -143,23 +159,10 @@ class ServicePage extends React.Component {
     this.setState((state) => {
       return {
         createServiceCredential: false,
-        serviceCredentials: {
-          ...state.serviceCredentials,
-          items: [ ...state.serviceCredentials.items, serviceCredential]
-        }
+        serviceCredentials: [ ...state.serviceCredentials, serviceCredential ]
       }
     })
     message.loading(`Service credential "${serviceCredential.metadata.name}" requested`)
-  }
-
-  componentDidMount = () => {
-    this.startRefreshing()
-  }
-
-  componentWillUnmount = () => {
-    if (this.interval) {
-      clearInterval(this.interval)
-    }
   }
 
   onServiceConfigChanged = (updatedServiceParams) => {
@@ -195,7 +198,6 @@ class ServicePage extends React.Component {
         formErrorMessage: null,
         editMode: false
       })
-      // await this.refreshService()
     } catch (err) {
       this.setState({
         saving: false,
@@ -206,7 +208,7 @@ class ServicePage extends React.Component {
   }
 
   render = () => {
-    const { team, user } = this.props
+    const { team, user, serviceKind } = this.props
     const { service, serviceCredentials, createServiceCredential } = this.state
     const created = moment(service.metadata.creationTimestamp).fromNow()
     const deleted = service.metadata.deletionTimestamp ? moment(service.metadata.deletionTimestamp).fromNow() : false
@@ -215,6 +217,8 @@ class ServicePage extends React.Component {
       layout: 'horizontal', labelAlign: 'left', hideRequiredMark: true,
       labelCol: { xs: 24, xl: 10 }, wrapperCol: { xs: 24, xl: 14 }
     }
+
+    const hasActiveBindings = serviceCredentials && Boolean(serviceCredentials.filter(c => !c.deleted).length)
 
     return (
       <div>
@@ -229,8 +233,13 @@ class ServicePage extends React.Component {
           <Col span={24} xl={12}>
             <List.Item>
               <List.Item.Meta
-                avatar={<Avatar icon="cloud" />}
-                title={<Text>{service.spec.kind} <Text style={{ fontFamily: 'monospace', marginLeft: '15px' }}>{service.metadata.name}</Text></Text>}
+                className="large-list-item"
+                title={
+                  <>
+                    <Text style={{ marginRight: '15px' }}>{service.metadata.name}</Text>
+                    <Tag style={{ fontSize: '16px', padding: '5px 9px' }}>{serviceKind.spec.displayName}</Tag>
+                  </>
+                }
                 description={
                   <div>
                     <Text type='secondary'>Created {created}</Text>
@@ -240,8 +249,8 @@ class ServicePage extends React.Component {
               />
             </List.Item>
           </Col>
-          <Col span={24} xl={12}>
-            <Collapse>
+          <Col span={24} xl={12} style={{ marginTop: '14px' }}>
+            <Collapse style={{ marginTop: '12px' }}>
               <Collapse.Panel header="Detailed Service Status" extra={(<ResourceStatusTag resourceStatus={service.status} />)}>
                 <ComponentStatusTree team={team} user={user} component={service} />
               </Collapse.Panel>
@@ -249,7 +258,57 @@ class ServicePage extends React.Component {
           </Col>
         </Row>
 
-        <Row type="flex" gutter={[16,16]} style={{ marginBottom: '12px' }}>
+        <Divider />
+
+        <Card title={<span>Service bindings {serviceCredentials && <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={serviceCredentials.filter(c => !c.deleted).length} />}</span>} extra={<Button type="primary" onClick={this.createServiceCredential(true)}>New binding</Button>}>
+
+          {!serviceCredentials && <Icon type="loading" />}
+          {serviceCredentials && !hasActiveBindings && <Text type="secondary">No bindings found for this service</Text>}
+          {serviceCredentials && (
+            <List
+              className="hide-empty-text"
+              locale={{ emptyText: <div/> }}
+              dataSource={serviceCredentials}
+              renderItem={serviceCredential => {
+                return (
+                  <ServiceCredential
+                    viewPerspective="service"
+                    team={team.metadata.name}
+                    serviceCredential={serviceCredential}
+                    serviceKind={serviceKind}
+                    deleteServiceCredential={this.deleteServiceCredential}
+                    handleUpdate={this.handleResourceUpdated('serviceCredentials')}
+                    handleDelete={this.handleResourceDeleted('serviceCredentials')}
+                    refreshMs={10000}
+                    propsResourceDataKey="serviceCredential"
+                    resourceApiPath={`${apiPaths.team(team.metadata.name).serviceCredentials}/${serviceCredential.metadata.name}`}
+                  />
+                )
+              }}
+            />
+          )}
+
+          <Drawer
+            title="Create service binding"
+            placement="right"
+            closable={false}
+            onClose={this.createServiceCredential(false)}
+            visible={createServiceCredential}
+            width={700}
+          >
+            {createServiceCredential &&
+              <ServiceCredentialForm
+                team={team}
+                creationSource="service"
+                services={[service]}
+                handleSubmit={this.handleServiceCredentialCreated}
+                handleCancel={this.createServiceCredential(false)}
+              />
+            }
+          </Drawer>
+        </Card>
+
+        <Row type="flex" gutter={[16,16]} style={{ marginTop: '20px' }}>
           <Col span={24} xl={24}>
             <Collapse>
               <Collapse.Panel header="Service Parameters">
@@ -261,7 +320,7 @@ class ServicePage extends React.Component {
                     ) : (
                       <>
                         <Button type="primary" icon="save" htmlType="submit" loading={this.state.saving} disabled={this.state.saving || serviceNotEditable}>Save</Button>
-                        &nbsp;
+                      &nbsp;
                         <Button icon="stop" htmlType="button" onClick={(e) => this.onCancelClick(e)}>Cancel</Button>
                       </>
                     )}
@@ -282,53 +341,6 @@ class ServicePage extends React.Component {
           </Col>
         </Row>
 
-        <Drawer
-          title="Create service binding"
-          placement="right"
-          closable={false}
-          onClose={this.createServiceCredential(false)}
-          visible={createServiceCredential}
-          width={700}
-        >
-          <ServiceCredentialForm
-            team={team}
-            services={{ items: [service] }}
-            handleSubmit={this.handleServiceCredentialCreated}
-            handleCancel={this.createServiceCredential(false)}
-          />
-        </Drawer>
-        <Row type="flex" gutter={[16,16]}>
-          <Col span={24} xl={24}>
-            <Card
-              title={<div><Text style={{ marginRight: '10px' }}>Service bindings</Text><Badge style={{ backgroundColor: '#1890ff' }} count={serviceCredentials.items.filter(c => !c.deleted).length} /></div>}
-              style={{ marginBottom: '20px' }}
-              extra={
-                <div>
-                  <Button type="primary" onClick={this.createServiceCredential(true)}>+ New</Button>
-                </div>
-              }
-            >
-              <List
-                dataSource={serviceCredentials.items}
-                renderItem={serviceCredential => {
-                  return (
-                    <ServiceCredential
-                      team={team.metadata.name}
-                      serviceCredential={serviceCredential}
-                      deleteServiceCredential={this.deleteServiceCredential}
-                      handleUpdate={this.handleResourceUpdated('serviceCredentials')}
-                      handleDelete={this.handleResourceDeleted('serviceCredentials')}
-                      refreshMs={10000}
-                      propsResourceDataKey="serviceCredential"
-                      resourceApiPath={`${apiPaths.team(team.metadata.name).serviceCredentials}/${serviceCredential.metadata.name}`}
-                    />
-                  )
-                }}
-              >
-              </List>
-            </Card>
-          </Col>
-        </Row>
       </div>
     )
   }

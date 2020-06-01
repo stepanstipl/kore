@@ -1,11 +1,11 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import axios from 'axios'
 import moment from 'moment'
-import { Typography, Collapse, Row, Col, List, Button, Form, Card, Badge, message, Drawer } from 'antd'
-const { Text } = Typography
+import { Divider, Typography, Collapse, Icon, Row, Col, List, Button, Form, Card, Badge, message, Drawer, Tooltip } from 'antd'
+const { Paragraph, Text } = Typography
 import getConfig from 'next/config'
 const { publicRuntimeConfig } = getConfig()
+
 import KoreApi from '../../../../lib/kore-api'
 import Breadcrumb from '../../../../lib/components/layout/Breadcrumb'
 import UsePlanForm from '../../../../lib/components/plans/UsePlanForm'
@@ -18,14 +18,15 @@ import { inProgressStatusList } from '../../../../lib/utils/ui-helpers'
 import apiPaths from '../../../../lib/utils/api-paths'
 import ServiceCredential from '../../../../lib/components/teams/service/ServiceCredential'
 import ServiceCredentialForm from '../../../../lib/components/teams/service/ServiceCredentialForm'
-
+import NamespaceClaim from '../../../../lib/components/teams/namespace/NamespaceClaim'
+import NamespaceClaimForm from '../../../../lib/components/teams/namespace/NamespaceClaimForm'
+import ClusterAccessInfo from '../../../../lib/components/teams/cluster/ClusterAccessInfo'
 
 class ClusterPage extends React.Component {
   static propTypes = {
     team: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
-    cluster: PropTypes.object.isRequired,
-    serviceCredentials: PropTypes.object.isRequired,
+    cluster: PropTypes.object.isRequired
   }
 
   constructor(props) {
@@ -33,30 +34,63 @@ class ClusterPage extends React.Component {
     this.state = {
       cluster: props.cluster,
       components: {},
+      namespaceClaims: false,
       editMode: false,
       clusterParams: props.cluster.spec.configuration,
       formErrorMessage: null,
       validationErrors: null,
-      serviceCredentials: props.serviceCredentials,
-      createServiceCredential: false
+      createNamespace: false,
+      serviceCredentials: false,
+      serviceKinds: false,
+      createServiceCredential: false,
+      revealBindings: {}
     }
   }
 
-  static getInitialProps = async ctx => {
+  static getInitialProps = async (ctx) => {
     const api = await KoreApi.client(ctx)
-    const { team, cluster, serviceCredentials } = await (axios.all([
+    let [ team, cluster ] = await Promise.all([
       api.GetTeam(ctx.query.name),
-      api.GetCluster(ctx.query.name, ctx.query.cluster),
-      publicRuntimeConfig.featureGates['services'] ? api.ListServiceCredentials(ctx.query.name, ctx.query.cluster, '') : Promise.resolve({ items: [] })
-    ]).then(axios.spread((team, cluster, serviceCredentials) => {
-      return { team, cluster, serviceCredentials }
-    })))
-
+      api.GetCluster(ctx.query.name, ctx.query.cluster)
+    ])
     if ((!cluster || !team) && ctx.res) {
       /* eslint-disable-next-line require-atomic-updates */
       ctx.res.statusCode = 404
     }
-    return { team, cluster, serviceCredentials }
+    return { team, cluster }
+  }
+
+  servicesEnabled = () => Boolean(publicRuntimeConfig.featureGates['services'])
+
+  fetchComponentData = async () => {
+    const team = this.props.team.metadata.name
+    const api = await KoreApi.client()
+    let [ namespaceClaims, serviceCredentials, serviceKinds ] = await Promise.all([
+      api.ListNamespaces(team),
+      this.servicesEnabled() ? api.ListServiceCredentials(team, this.state.cluster.metadata.name) : Promise.resolve({ items: false }),
+      this.servicesEnabled() ? api.ListServiceKinds() : Promise.resolve({ items: false })
+    ])
+    namespaceClaims = namespaceClaims.items.filter(ns => ns.spec.cluster.name === this.props.cluster.metadata.name)
+    serviceCredentials = serviceCredentials.items
+    serviceKinds = serviceKinds.items
+
+    const revealBindings = {}
+    this.servicesEnabled() && namespaceClaims.filter(nc => serviceCredentials.filter(sc => sc.spec.clusterNamespace === nc.spec.name).length > 0).forEach(nc => revealBindings[nc.spec.name] = true)
+
+    return { namespaceClaims, serviceCredentials, serviceKinds, revealBindings }
+  }
+
+  componentDidMount = () => {
+    this.startRefreshing()
+    this.fetchComponentData().then(data => {
+      this.setState({ ...data })
+    })
+  }
+
+  componentWillUnmount = () => {
+    if (this.interval) {
+      clearInterval(this.interval)
+    }
   }
 
   interval = null
@@ -85,10 +119,7 @@ class ClusterPage extends React.Component {
     return (updatedResource, done) => {
       this.setState((state) => {
         return {
-          [resourceType]: {
-            ...state[resourceType],
-            items: state[resourceType].items.map(r => r.metadata.name !== updatedResource.metadata.name ? r : { ...r, status: updatedResource.status })
-          }
+          [resourceType]: state[resourceType].map(r => r.metadata.name !== updatedResource.metadata.name ? r : { ...r, status: updatedResource.status })
         }
       }, done)
     }
@@ -97,13 +128,43 @@ class ClusterPage extends React.Component {
   handleResourceDeleted = resourceType => {
     return (name, done) => {
       this.setState((state) => {
+        const revealBindings = copy(state.revealBindings)
+        if (resourceType === 'serviceCredentials') {
+          const serviceCred = state.serviceCredentials.find(sc => sc.metadata.name === name)
+          revealBindings[serviceCred.spec.clusterNamespace] = Boolean(state.serviceCredentials.filter(sc => sc.metadata.name !== name && !sc.deleted && sc.spec.clusterNamespace === serviceCred.spec.clusterNamespace).length)
+        }
+
         return {
-          [resourceType]: {
-            ...state[resourceType],
-            items: state[resourceType].items.map(r => r.metadata.name !== name ? r : { ...r, deleted: true })
-          }
+          [resourceType]: state[resourceType].map(r => r.metadata.name !== name ? r : { ...r, deleted: true }),
+          revealBindings
         }
       }, done)
+    }
+  }
+
+  createNamespace = value => () => this.setState({ createNamespace: value })
+
+  handleNamespaceCreated = namespaceClaim => {
+    this.setState({
+      namespaceClaims: this.state.namespaceClaims.concat([namespaceClaim]),
+      createNamespace: false
+    })
+    message.loading(`Namespace "${namespaceClaim.spec.name}" requested on cluster "${namespaceClaim.spec.cluster.name}"`)
+  }
+
+  deleteNamespace = async (name, done) => {
+    const team = this.props.team.metadata.name
+    try {
+      const namespaceClaims = copy(this.state.namespaceClaims)
+      const namespaceClaim = namespaceClaims.find(nc => nc.metadata.name === name)
+      await (await KoreApi.client()).RemoveNamespace(team, namespaceClaim.metadata.name)
+      namespaceClaim.status.status = 'Deleting'
+      namespaceClaim.metadata.deletionTimestamp = new Date()
+      this.setState({ namespaceClaims }, done)
+      message.loading(`Namespace deletion requested: ${namespaceClaim.spec.name}`)
+    } catch (err) {
+      console.error('Error deleting namespace', err)
+      message.error('Error deleting namespace, please try again.')
     }
   }
 
@@ -111,20 +172,16 @@ class ClusterPage extends React.Component {
     const team = this.props.team.metadata.name
     try {
       await (await KoreApi.client()).DeleteServiceCredentials(team, name)
-
       this.setState((state) => {
         return {
-          serviceCredentials: {
-            ...state.serviceCredentials,
-            items: state.serviceCredentials.items.map(r => r.metadata.name !== name ? r : {
-              ...r,
-              status: { ...r.status, status: 'Deleting' },
-              metadata: {
-                ...r.metadata,
-                deletionTimestamp: new Date()
-              }
-            })
-          }
+          serviceCredentials: state.serviceCredentials.map(r => r.metadata.name !== name ? r : {
+            ...r,
+            status: { ...r.status, status: 'Deleting' },
+            metadata: {
+              ...r.metadata,
+              deletionTimestamp: new Date()
+            }
+          })
         }
       }, done)
 
@@ -135,35 +192,22 @@ class ClusterPage extends React.Component {
     }
   }
 
-  createServiceCredential = value => {
-    return () => {
-      this.setState({
-        createServiceCredential: value
-      })
-    }
+  createServiceCredential = (value) => () => {
+    console.log('creating service credential', value)
+    this.setState({ createServiceCredential: value })
   }
 
   handleServiceCredentialCreated = serviceCredential => {
     this.setState((state) => {
+      const revealBindings = copy(state.revealBindings)
+      revealBindings[serviceCredential.spec.clusterNamespace] = true
       return {
         createServiceCredential: false,
-        serviceCredentials: {
-          ...state.serviceCredentials,
-          items: [ ...state.serviceCredentials.items, serviceCredential]
-        }
+        serviceCredentials: [ ...state.serviceCredentials, serviceCredential ],
+        revealBindings
       }
     })
     message.loading(`Service binding "${serviceCredential.metadata.name}" requested`)
-  }
-
-  componentDidMount = () => {
-    this.startRefreshing()
-  }
-
-  componentWillUnmount = () => {
-    if (this.interval) {
-      clearInterval(this.interval)
-    }
   }
 
   onClusterConfigChanged = (updatedClusterParams) => {
@@ -199,7 +243,6 @@ class ClusterPage extends React.Component {
         formErrorMessage: null,
         editMode: false
       })
-      // await this.refreshCluster()
     } catch (err) {
       this.setState({
         saving: false,
@@ -209,9 +252,15 @@ class ClusterPage extends React.Component {
     }
   }
 
+  revealBindings = (namespaceName) => (key) => {
+    const revealBindings = copy(this.state.revealBindings)
+    revealBindings[namespaceName] = Boolean(key.length)
+    this.setState({ revealBindings })
+  }
+
   render = () => {
     const { team, user } = this.props
-    const { cluster, serviceCredentials, createServiceCredential } = this.state
+    const { cluster, namespaceClaims, serviceCredentials, serviceKinds, createServiceCredential } = this.state
     const created = moment(cluster.metadata.creationTimestamp).fromNow()
     const deleted = cluster.metadata.deletionTimestamp ? moment(cluster.metadata.deletionTimestamp).fromNow() : false
     const clusterNotEditable = !cluster || !cluster.status || inProgressStatusList.includes(cluster.status.status)
@@ -220,12 +269,14 @@ class ClusterPage extends React.Component {
       labelCol: { xs: 24, xl: 10 }, wrapperCol: { xs: 24, xl: 14 }
     }
 
+    const hasActiveNamespaces = namespaceClaims && Boolean(namespaceClaims.filter(c => !c.deleted).length)
+
     return (
       <div>
         <Breadcrumb
           items={[
             { text: team.spec.summary, href: '/teams/[name]', link: `/teams/${team.metadata.name}` },
-            { text: `Cluster: ${cluster.metadata.name}` }
+            { text: 'Cluster' }
           ]}
         />
 
@@ -233,8 +284,9 @@ class ClusterPage extends React.Component {
           <Col span={24} xl={12}>
             <List.Item>
               <List.Item.Meta
-                avatar={<img src={clusterProviderIconSrcMap[cluster.spec.kind]} height="32px" />}
-                title={<Text style={{ fontFamily: 'monospace' }}>{cluster.metadata.name}</Text>}
+                className="large-list-item"
+                avatar={<img src={clusterProviderIconSrcMap[cluster.spec.kind]} />}
+                title={cluster.metadata.name}
                 description={
                   <div>
                     <Text type='secondary'>Created {created}</Text>
@@ -242,9 +294,12 @@ class ClusterPage extends React.Component {
                   </div>
                 }
               />
+              <div>
+                <ClusterAccessInfo team={this.props.team} />
+              </div>
             </List.Item>
           </Col>
-          <Col span={24} xl={12}>
+          <Col span={24} xl={12} style={{ marginTop: '14px' }}>
             <Collapse style={{ marginTop: '12px' }}>
               <Collapse.Panel header="Detailed Cluster Status" extra={(<ResourceStatusTag resourceStatus={cluster.status} />)}>
                 <ComponentStatusTree team={team} user={user} component={cluster} />
@@ -252,7 +307,114 @@ class ClusterPage extends React.Component {
             </Collapse>
           </Col>
         </Row>
-        <Row type="flex" gutter={[16,16]} style={{ marginBottom: '12px' }}>
+
+        <Divider />
+
+        <Card title={<span>Namespaces {namespaceClaims && <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={namespaceClaims.filter(c => !c.deleted).length} />}</span>} extra={<Button type="primary" onClick={this.createNamespace(true)}>New namespace</Button>}>
+
+          {!namespaceClaims && <Icon type="loading" />}
+          {namespaceClaims && !hasActiveNamespaces && <Paragraph style={{ marginBottom: 0 }} type="secondary">No namespaces found for this cluster</Paragraph>}
+          {namespaceClaims && namespaceClaims.map((namespaceClaim, idx) => {
+            const filteredServiceCredentials = (serviceCredentials || []).filter(sc => sc.spec.clusterNamespace === namespaceClaim.spec.name)
+            const activeServiceCredentials = filteredServiceCredentials.filter(nc => !nc.deleted)
+            return (
+              <React.Fragment key={namespaceClaim.metadata.name}>
+                <NamespaceClaim
+                  key={namespaceClaim.metadata.name}
+                  team={team.metadata.name}
+                  namespaceClaim={namespaceClaim}
+                  deleteNamespace={this.deleteNamespace}
+                  handleUpdate={this.handleResourceUpdated('namespaceClaims')}
+                  handleDelete={this.handleResourceDeleted('namespaceClaims')}
+                  refreshMs={15000}
+                  propsResourceDataKey="namespaceClaim"
+                  resourceApiPath={`/teams/${team.metadata.name}/namespaceclaims/${namespaceClaim.metadata.name}`}
+                />
+                {!namespaceClaim.deleted && this.servicesEnabled() && (
+                  <>
+                    <Collapse onChange={this.revealBindings(namespaceClaim.spec.name)} activeKey={this.state.revealBindings[namespaceClaim.spec.name] ? ['bindings'] : []}>
+                      <Collapse.Panel
+                        key="bindings"
+                        header={<span>Service bindings <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={activeServiceCredentials.length} /></span>}
+                        extra={
+                          <Tooltip title="Add new service binding to this namespace">
+                            <Icon
+                              type="plus"
+                              onClick={e => {
+                                e.stopPropagation()
+                                this.createServiceCredential({ cluster, namespaceClaim })()
+                              }}
+                            />
+                          </Tooltip>
+                        }
+                      >
+                        <List
+                          size="small"
+                          locale={{ emptyText: 'No service bindings found' }}
+                          dataSource={filteredServiceCredentials}
+                          renderItem={serviceCredential => (
+                            <ServiceCredential
+                              viewPerspective="cluster"
+                              team={team.metadata.name}
+                              serviceCredential={serviceCredential}
+                              serviceKind={serviceKinds.find(kind => kind.metadata.name === serviceCredential.spec.kind)}
+                              deleteServiceCredential={this.deleteServiceCredential}
+                              handleUpdate={this.handleResourceUpdated('serviceCredentials')}
+                              handleDelete={this.handleResourceDeleted('serviceCredentials')}
+                              refreshMs={10000}
+                              propsResourceDataKey="serviceCredential"
+                              resourceApiPath={`${apiPaths.team(team.metadata.name).serviceCredentials}/${serviceCredential.metadata.name}`}
+                            />
+                          )}
+                        >
+                        </List>
+                      </Collapse.Panel>
+                    </Collapse>
+
+                    {idx < namespaceClaims.length - 1 && <Divider />}
+                  </>
+                )}
+
+              </React.Fragment>
+            )
+          })}
+
+          <Drawer
+            title="Create namespace"
+            placement="right"
+            closable={false}
+            onClose={this.createNamespace(false)}
+            visible={Boolean(this.state.createNamespace)}
+            width={700}
+          >
+            <NamespaceClaimForm team={team.metadata.name} cluster={cluster} handleSubmit={this.handleNamespaceCreated} handleCancel={this.createNamespace(false)}/>
+          </Drawer>
+
+          {this.servicesEnabled() && (
+            <Drawer
+              title="Create service binding"
+              placement="right"
+              closable={false}
+              onClose={this.createServiceCredential(false)}
+              visible={Boolean(createServiceCredential)}
+              width={700}
+            >
+              {Boolean(createServiceCredential) &&
+                <ServiceCredentialForm
+                  team={team}
+                  creationSource="namespace"
+                  clusters={ [createServiceCredential.cluster] }
+                  namespaceClaims={ [createServiceCredential.namespaceClaim]}
+                  handleSubmit={this.handleServiceCredentialCreated}
+                  handleCancel={this.createServiceCredential(false)}
+                />
+              }
+            </Drawer>
+          )}
+
+        </Card>
+
+        <Row type="flex" gutter={[16,16]} style={{ marginTop: '20px' }}>
           <Col span={24} xl={24}>
             <Collapse>
               <Collapse.Panel header="Cluster Parameters">
@@ -285,58 +447,6 @@ class ClusterPage extends React.Component {
           </Col>
         </Row>
 
-        {publicRuntimeConfig.featureGates['services'] ? (
-          <>
-            <Drawer
-              title="Create service binding"
-              placement="right"
-              closable={false}
-              onClose={this.createServiceCredential(false)}
-              visible={createServiceCredential}
-              width={700}
-            >
-              <ServiceCredentialForm
-                team={team}
-                clusters={{ items: [cluster] }}
-                handleSubmit={this.handleServiceCredentialCreated}
-                handleCancel={this.createServiceCredential(false)}
-              />
-            </Drawer>
-
-            <Row type="flex" gutter={[16,16]}>
-              <Col span={24} xl={24}>
-                <Card
-                  title={<div><Text style={{ marginRight: '10px' }}>Service bindings</Text><Badge style={{ backgroundColor: '#1890ff' }} count={serviceCredentials.items.filter(c => !c.deleted).length} /></div>}
-                  style={{ marginBottom: '20px' }}
-                  extra={
-                    <div>
-                      <Button type="primary" onClick={this.createServiceCredential(true)}>+ New</Button>
-                    </div>
-                  }
-                >
-                  <List
-                    dataSource={serviceCredentials.items}
-                    renderItem={serviceCredential => {
-                      return (
-                        <ServiceCredential
-                          team={team.metadata.name}
-                          serviceCredential={serviceCredential}
-                          deleteServiceCredential={this.deleteServiceCredential}
-                          handleUpdate={this.handleResourceUpdated('serviceCredentials')}
-                          handleDelete={this.handleResourceDeleted('serviceCredentials')}
-                          refreshMs={10000}
-                          propsResourceDataKey="serviceCredential"
-                          resourceApiPath={`${apiPaths.team(team.metadata.name).serviceCredentials}/${serviceCredential.metadata.name}`}
-                        />
-                      )
-                    }}
-                  >
-                  </List>
-                </Card>
-              </Col>
-            </Row>
-          </>
-        ): null}
       </div>
     )
   }
