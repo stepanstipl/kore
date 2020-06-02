@@ -20,6 +20,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/appvia/kore/pkg/controllers/predicates"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/controllers"
@@ -92,31 +94,36 @@ func (a *crCtrl) Run(ctx context.Context, cfg *rest.Config, hi kore.Interface) e
 	}
 
 	// @step: watch for changes to kubernetes clusters
-	err = ctrl.Watch(&source.Kind{Type: &clustersv1.Kubernetes{}}, &handler.EnqueueRequestsFromMapFunc{
-		ToRequests: handler.ToRequestsFunc(func(o handler.MapObject) []reconcile.Request {
-			list := &clustersv1.ManagedClusterRoleList{}
+	err = ctrl.Watch(
+		&source.Kind{Type: &clustersv1.Kubernetes{}},
+		&handler.EnqueueRequestsFromMapFunc{
+			ToRequests: handler.ToRequestsFunc(func(o handler.MapObject) []reconcile.Request {
+				list := &clustersv1.ManagedClusterRoleList{}
 
-			if err := a.Store().Client().List(context.Background(),
-				store.ListOptions.InAllNamespaces(),
-				store.ListOptions.InTo(list),
-			); err != nil {
-				log.WithError(err).Error("trying to retrieve a list of managed cluster roles")
+				if err := a.Store().Client().List(context.Background(),
+					store.ListOptions.InAllNamespaces(),
+					store.ListOptions.InTo(list),
+				); err != nil {
+					log.WithError(err).Error("trying to retrieve a list of managed cluster roles")
 
-				return []reconcile.Request{}
-			}
+					return []reconcile.Request{}
+				}
 
-			var items []reconcile.Request
-			for _, x := range list.Items {
-				items = append(items, reconcile.Request{
-					NamespacedName: types.NamespacedName{
-						Name:      x.Name,
-						Namespace: x.Namespace,
-					},
-				})
-			}
+				var items []reconcile.Request
+				for _, x := range list.Items {
+					items = append(items, reconcile.Request{
+						NamespacedName: types.NamespacedName{
+							Name:      x.Name,
+							Namespace: x.Namespace,
+						},
+					})
+				}
 
-			return items
-		})})
+				return items
+			}),
+		},
+		predicates.SystemResourcePredicate{},
+	)
 	if err != nil {
 		return err
 	}

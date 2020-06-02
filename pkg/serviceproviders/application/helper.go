@@ -30,12 +30,9 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
-	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
 	koreschema "github.com/appvia/kore/pkg/schema"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
-	kerrors "k8s.io/apimachinery/pkg/api/errors"
-
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -91,26 +88,6 @@ func CreateSystemServiceFromPlan(servicePlan servicesv1.ServicePlan, cluster cor
 			ClusterNamespace: clusterNamespace,
 			Configuration:    servicePlan.Spec.Configuration,
 		},
-	}
-}
-
-func createClusterClient(ctx kore.Context, service *servicesv1.Service) (client.Client, error) {
-	if service.Spec.Cluster.Namespace == kore.HubAdminTeam && service.Spec.Cluster.Name == "kore" {
-		return ctx.Client(), nil
-	} else {
-		clusterSecret, err := controllers.GetConfigSecret(ctx,
-			ctx.Client(),
-			service.Spec.Cluster.Namespace,
-			service.Spec.Cluster.Name)
-		if err != nil {
-			if kerrors.IsNotFound(err) {
-				ctx.Logger().Debug("cluster credentials are not yet available")
-				return nil, nil
-			}
-			return nil, fmt.Errorf("failed to get cluster credentials: %w", err)
-		}
-
-		return kubernetes.NewRuntimeClientFromConfigSecret(clusterSecret)
 	}
 }
 

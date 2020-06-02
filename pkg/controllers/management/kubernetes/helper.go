@@ -22,6 +22,8 @@ import (
 	"errors"
 	"text/template"
 
+	"github.com/appvia/kore/pkg/kore"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 	log "github.com/sirupsen/logrus"
@@ -68,7 +70,15 @@ func ReconcileClusterRequests(ctx context.Context, cc client.Client, team string
 		return []reconcile.Request{}, err
 	}
 
-	return ClustersToRequests(list.Items), nil
+	var res []clustersv1.Kubernetes
+	for _, item := range list.Items {
+		if item.Annotations[kore.AnnotationSystem] == kore.AnnotationValueTrue {
+			continue
+		}
+		res = append(res, item)
+	}
+
+	return ClustersToRequests(res), nil
 }
 
 // ClustersToRequests converts a collection of claims to requests

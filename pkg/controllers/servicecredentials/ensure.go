@@ -128,8 +128,7 @@ func (c *Controller) ensureSecret(
 	provider kore.ServiceProvider) controllers.EnsureFunc {
 	return func(ctx context.Context) (reconcile.Result, error) {
 		// @step: create client for the cluster credentials
-		client, err := controllers.CreateClientFromSecret(context.Background(), c.mgr.GetClient(),
-			serviceCreds.Spec.Cluster.Namespace, serviceCreds.Spec.Cluster.Name)
+		client, err := controllers.CreateClient(context.Background(), c.mgr.GetClient(), serviceCreds.Spec.Cluster)
 		if err != nil {
 			serviceCreds.Status.Components.SetCondition(corev1.Component{
 				Name:    ComponentKubernetesSecret,

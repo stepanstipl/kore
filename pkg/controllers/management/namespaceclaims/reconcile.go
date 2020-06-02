@@ -23,7 +23,6 @@ import (
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	core "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/controllers"
-	ctrl "github.com/appvia/kore/pkg/controllers/management/kubernetes"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 	log "github.com/sirupsen/logrus"
@@ -119,41 +118,17 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			return reconcile.Result{RequeueAfter: 3 * time.Minute}, nil
 		}
 
-		// @step: check the overall status of the cluster
-		if cluster.Status.Status == core.PendingStatus {
-			resource.Status.Status = core.PendingStatus
-			resource.Status.Conditions = []core.Condition{{
-				Detail:  "cluster provisioning is still pending",
-				Message: "Cluster " + resource.Spec.Cluster.Name + " is still pending",
-			}}
-
-			return reconcile.Result{RequeueAfter: 3 * time.Minute}, nil
-		}
-
-		// @step: check the provisioning status
-		status, found := cluster.Status.Components.GetComponent(ctrl.ComponentClusterCreate)
-		if !found {
-			logger.Warn("cluster does not have a status on the provisioning yet")
-
-			resource.Status.Status = core.PendingStatus
-			resource.Status.Conditions = []core.Condition{{
-				Detail:  "cluster is pending, retrying later",
-				Message: "Cluster: " + resource.Spec.Cluster.Name + " is still pending",
-			}}
-
-			return reconcile.Result{RequeueAfter: 3 * time.Minute}, nil
-		}
-		switch status.Status {
+		switch cluster.Status.Status {
 		case core.PendingStatus:
-			logger.Warn("cluster provision is not successful yet, waiting")
+			logger.Warn("cluster is not ready yet, waiting")
 
 			resource.Status.Status = core.PendingStatus
 			resource.Status.Conditions = []core.Condition{{
-				Detail:  "cluster provisioning is still pending",
+				Detail:  "cluster is still pending",
 				Message: "Cluster " + resource.Spec.Cluster.Name + " is still pending",
 			}}
 
-			return reconcile.Result{RequeueAfter: 3 * time.Minute}, nil
+			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
 
 		case core.SuccessStatus, core.DeletingStatus:
 		default:
@@ -167,8 +142,7 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		}
 
 		// @step: create credentials for the cluster
-		client, err := controllers.CreateClientFromSecret(context.Background(), a.mgr.GetClient(),
-			resource.Spec.Cluster.Namespace, resource.Spec.Cluster.Name)
+		client, err := controllers.CreateClient(context.Background(), a.mgr.GetClient(), resource.Spec.Cluster)
 		if err != nil {
 			logger.WithError(err).Error("trying to create client from cluster secret")
 
@@ -177,6 +151,10 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 		// @step: ensure the namespace claim exists
 		if err := kubernetes.EnsureNamespace(ctx, client, &corev1.Namespace{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Namespace",
+				APIVersion: corev1.SchemeGroupVersion.String(),
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:        resource.Spec.Name,
 				Labels:      resource.Spec.Labels,
@@ -192,6 +170,10 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		logger.Debug("ensuring the binding to the namespace admin exists")
 
 		binding := &rbacv1.RoleBinding{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "RoleBinding",
+				APIVersion: rbacv1.SchemeGroupVersion.String(),
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      RoleBindingName,
 				Namespace: resource.Spec.Name,

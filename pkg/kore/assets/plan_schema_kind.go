@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-package teams
+package assets
 
-import "strings"
-
-// IsProtected checks if the name if protected i.e cannot be used
-func IsProtected(name string) bool {
-	if strings.HasPrefix(name, "kube-") {
-		return true
+// KindPlanSchema is the JSON schema used to describe and validate EKS Plans
+const KindPlanSchema = `
+{
+	"$id": "https://appvia.io/schemas/eks/plan.json",
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"description": "EKS Cluster Plan Schema",
+	"type": "object",
+	"additionalProperties": false,
+	"properties": {
 	}
-	if strings.HasPrefix(name, "istio") {
-		return true
-	}
-
-	return false
 }
+`

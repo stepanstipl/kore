@@ -97,6 +97,10 @@ func (a crCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	err = func() error {
 		// @step: we iterate the clusters and apply the roles
 		for _, cluster := range list.Items {
+			if cluster.Annotations[kore.AnnotationSystem] == kore.AnnotationValueTrue {
+				continue
+			}
+
 			logger := logger.WithFields(log.Fields{
 				"cluster": cluster.Name,
 				"team":    cluster.Namespace,
@@ -104,7 +108,7 @@ func (a crCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 			logger.Debug("attempting to reconcile the managed role in cluster")
 
 			err := func() error {
-				client, err := controllers.CreateClientFromSecret(ctx, a.mgr.GetClient(), cluster.Namespace, cluster.Name)
+				client, err := controllers.CreateClient(ctx, a.mgr.GetClient(), corev1.MustGetOwnershipFromObject(&cluster))
 				if err != nil {
 					if kerrors.IsNotFound(err) {
 						logger.WithFields(log.Fields{

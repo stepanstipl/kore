@@ -22,8 +22,6 @@ import (
 	"strings"
 	"time"
 
-	corev1 "k8s.io/api/core/v1"
-
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	core "github.com/appvia/kore/pkg/apis/core/v1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
@@ -32,6 +30,9 @@ import (
 	"github.com/appvia/kore/pkg/store"
 
 	log "github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
+	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -81,7 +82,7 @@ func (h hubImpl) Setup(ctx context.Context) error {
 			return err
 		}
 		if !found {
-			if err := h.Plans().Update(getAdminContext(ctx), x); err != nil {
+			if err := h.Plans().Update(getAdminContext(ctx), x, true); err != nil {
 				return err
 			}
 		}
@@ -111,6 +112,54 @@ func (h hubImpl) Setup(ctx context.Context) error {
 			if err := h.Store().Client().Create(ctx, store.CreateOptions.From(&x)); err != nil {
 				return err
 			}
+		}
+	}
+
+	// @step: ensure we have the Kore cluster definition
+	cluster := &clustersv1.Cluster{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Cluster",
+			APIVersion: clustersv1.GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "kore",
+			Namespace: "kore-admin",
+			Annotations: map[string]string{
+				"kore.appvia.io/system":   "true",
+				"kore.appvia.io/readonly": "true",
+			},
+		},
+		Spec: clustersv1.ClusterSpec{
+			Kind:          "Kore",
+			Plan:          "kore",
+			Configuration: apiextv1.JSON{Raw: []byte(`{}`)},
+		},
+	}
+	if err := h.Store().Client().Create(ctx, store.CreateOptions.From(cluster)); err != nil {
+		if !kerrors.IsAlreadyExists(err) {
+			return fmt.Errorf("failed to create Kore cluster object: %w", err)
+		}
+	}
+
+	kubernetes := &clustersv1.Kubernetes{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Kubernetes",
+			APIVersion: clustersv1.GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "kore",
+			Namespace: "kore-admin",
+			Annotations: map[string]string{
+				"kore.appvia.io/system": "true",
+			},
+		},
+		Spec: clustersv1.KubernetesSpec{
+			Cluster: cluster.Ownership(),
+		},
+	}
+	if err := h.Store().Client().Create(ctx, store.CreateOptions.From(kubernetes)); err != nil {
+		if !kerrors.IsAlreadyExists(err) {
+			return fmt.Errorf("failed to create Kore kubernetes object: %w", err)
 		}
 	}
 

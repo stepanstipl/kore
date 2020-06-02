@@ -68,15 +68,12 @@ func (p planSchemasHandler) getPlanSchema(req *restful.Request, resp *restful.Re
 	handleErrors(req, resp, func() error {
 		kind := req.PathParameter("kind")
 
-		schema := ""
-		switch kind {
-		case "GKE":
-			schema = assets.GKEPlanSchema
-		case "EKS":
-			schema = assets.EKSPlanSchema
-		default:
-			return resp.WriteHeaderAndEntity(http.StatusNotFound, nil)
+		schema, err := assets.GetClusterSchema(kind)
+		if err != nil {
+			writeError(req, resp, err, http.StatusNotFound)
+			return nil
 		}
+
 		// This is ALWAYS json as we're returning json schema, so don't want
 		// to use normal content type negotiation.
 		resp.AddHeader("Content-Type", restful.MIME_JSON)

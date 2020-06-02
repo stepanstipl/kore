@@ -7,6 +7,7 @@ const { Text, Paragraph } = Typography
 import { clusterProviderIconSrcMap, inProgressStatusList } from '../../../utils/ui-helpers'
 import ResourceStatusTag from '../../resources/ResourceStatusTag'
 import AutoRefreshComponent from '../AutoRefreshComponent'
+import { isReadOnlyCRD } from '../../../utils/crd-helpers'
 
 class Cluster extends AutoRefreshComponent {
   static propTypes = {
@@ -73,7 +74,7 @@ class Cluster extends AutoRefreshComponent {
         <Link key="view" href="/teams/[name]/clusters/[cluster]" as={`/teams/${team}/clusters/${cluster.metadata.name}`}><a><Tooltip title="Cluster details"><Icon type="info-circle" /></Tooltip></a></Link>
       ))
 
-      if (!inProgressStatusList.includes(status)) {
+      if (!isReadOnlyCRD(cluster) && !inProgressStatusList.includes(status)) {
         const deleteAction = (
           <Popconfirm
             key="delete"
@@ -96,7 +97,7 @@ class Cluster extends AutoRefreshComponent {
       <List.Item key={cluster.metadata.name} actions={actions()} style={{ paddingTop: 0, paddingBottom: '5px' }}>
         <List.Item.Meta
           avatar={<img src={clusterProviderIconSrcMap[cluster.spec.kind]} height="32px" />}
-          title={<><Link href="/teams/[name]/clusters/[cluster]" as={`/teams/${team}/clusters/${cluster.metadata.name}`}><a><Text style={{ marginRight: '15px', fontSize: '16px', textDecoration: 'underline' }}>{cluster.metadata.name}</Text></a></Link><Tag style={{ margin: 0 }}>{plan.spec.description}</Tag></>}
+          title={<><Link href="/teams/[name]/clusters/[cluster]" as={`/teams/${team}/clusters/${cluster.metadata.name}`}><a><Text style={{ marginRight: '15px', fontSize: '16px', textDecoration: 'underline' }}>{cluster.metadata.name}</Text></a></Link>{ plan && <Tag style={{ margin: 0 }}>{plan.spec.description}</Tag> }</>}
         />
         <div>
           <Text type='secondary'>Created {created}</Text>

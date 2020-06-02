@@ -21,6 +21,7 @@ import ServiceCredentialForm from '../../../../lib/components/teams/service/Serv
 import NamespaceClaim from '../../../../lib/components/teams/namespace/NamespaceClaim'
 import NamespaceClaimForm from '../../../../lib/components/teams/namespace/NamespaceClaimForm'
 import ClusterAccessInfo from '../../../../lib/components/teams/cluster/ClusterAccessInfo'
+import { isReadOnlyCRD } from '../../../../lib/utils/crd-helpers'
 
 class ClusterPage extends React.Component {
   static propTypes = {
@@ -262,7 +263,7 @@ class ClusterPage extends React.Component {
     const { cluster, namespaceClaims, serviceCredentials, serviceKinds, createServiceCredential } = this.state
     const created = moment(cluster.metadata.creationTimestamp).fromNow()
     const deleted = cluster.metadata.deletionTimestamp ? moment(cluster.metadata.deletionTimestamp).fromNow() : false
-    const clusterNotEditable = !cluster || !cluster.status || inProgressStatusList.includes(cluster.status.status)
+    const clusterNotEditable = !cluster || isReadOnlyCRD(cluster) || !cluster.status || inProgressStatusList.includes(cluster.status.status)
     const editClusterFormConfig = {
       layout: 'horizontal', labelAlign: 'left', hideRequiredMark: true,
       labelCol: { xs: 24, xl: 10 }, wrapperCol: { xs: 24, xl: 14 }
