@@ -94,23 +94,23 @@
 #### Restart the API server
 
    ```
-   kubectl -n kore rollout restart deployment kore-apiserver
+   make kind-apiserver-reload
    ```
 
 #### Tail the API server logs
 
    ```
-   kubectl -n kore logs -f -l name=kore-apiserver
+   make kind-apiserver-logs
    ```
 
 #### Restart the UI
 
    ```
-   kubectl -n kore rollout restart deployment kore-portal
+   make kind-ui-reload
    ```
 
 #### Tail the UI logs
 
    ```
-   kubectl -n kore logs -f -l name=kore-portal
+   make kind-ui-logs
    ```

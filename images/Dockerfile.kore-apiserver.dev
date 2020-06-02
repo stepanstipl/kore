@@ -8,4 +8,4 @@ WORKDIR /go/src/github.com/appvia/kore
 
 VOLUME /root/.cache/go-build
 
-ENTRYPOINT [ "sh", "-c", "time make kore-apiserver && bin/kore-apiserver" ]
+ENTRYPOINT [ "sh", "-c", "bin/kore-apiserver-linux-amd64" ]

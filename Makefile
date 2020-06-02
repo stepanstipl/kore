@@ -457,8 +457,30 @@ generate-release-notes:
 	@go run ./hack/build/tools/awesome-release-logger/main.go -r -t ${VERSION} -notag -derivetag '-rc([0-9])*' -o CHANGELOG.md
 
 .PHONY: kind-dev
-kind-dev:
+kind-dev: kind-apiserver
 	scripts/kind_dev.sh
 
 kind-dev-down:
 	kind delete cluster --name kore
+
+kind-apiserver:
+	@echo "--> Compiling the kore-apiserver binary for kind"
+	@mkdir -p bin
+	GOOS=linux GOARCH=amd64 go build -ldflags "${LFLAGS}" -o bin/kore-apiserver-linux-amd64 cmd/kore-apiserver/*.go
+
+kind-apiserver-start:
+	@kubectl --context=kind-kore -n kore patch deployment kore-apiserver --patch '{"spec":{"replicas":1}}'
+
+kind-apiserver-stop:
+	@kubectl --context=kind-kore -n kore patch deployment kore-apiserver --patch '{"spec":{"replicas":0}}'
+
+kind-apiserver-reload: kind-apiserver-stop kind-apiserver kind-apiserver-start
+
+kind-apiserver-logs:
+	@while true; do kubectl --context=kind-kore -n kore logs -f -l name=kore-apiserver | cat; sleep 1; done
+
+kind-ui-reload:
+	kubectl --context=kind-kore -n kore rollout restart deployment kore-portal
+
+kind-ui-logs:
+	@while true; do kubectl --context=kind-kore -n kore logs -f -l name=kore-portal | cat; sleep 1; done
