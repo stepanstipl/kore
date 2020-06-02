@@ -168,6 +168,17 @@ func (c *Controller) ensureSecret(
 			return result, nil
 		}
 
+		if len(credentials) == 0 {
+			serviceCreds.Status.Components.SetCondition(corev1.Component{
+				Name:    ComponentProviderSecret,
+				Status:  corev1.ErrorStatus,
+				Message: "failed to request secret from service provider",
+				Detail:  "the service provider returned empty credentials",
+			})
+
+			return reconcile.Result{}, fmt.Errorf("the service provider returned empty credentials")
+		}
+
 		serviceCreds.Status.Components.SetStatus(ComponentProviderSecret, corev1.SuccessStatus, "", "")
 
 		secret := &k8scorev1.Secret{
