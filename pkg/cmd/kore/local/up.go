@@ -74,6 +74,8 @@ type UpOptions struct {
 	ValuesFile string
 	// Values a collection of values passed to the helm chart
 	Values map[string]interface{}
+	// Version is the release version to use
+	Version string
 }
 
 // NewCmdBootstrapUp creates and returns the bootstrap up command
@@ -90,7 +92,8 @@ func NewCmdBootstrapUp(factory cmdutil.Factory) *cobra.Command {
 
 	flags := command.Flags()
 	flags.StringVar(&o.Provider, "provider", "kind", "local kubernetes provider to use `NAME`")
-	flags.StringVar(&o.Release, "release", version.Tag, "chart version to use for deployment `VERSION`")
+	flags.StringVar(&o.Release, "release", version.Tag, "chart version to use for deployment `CHART`")
+	flags.StringVar(&o.Version, "version", version.Tag, "kore version to deployment into cluster `VERSION`")
 	flags.StringVar(&o.ValuesFile, "values", os.ExpandEnv(filepath.Join("${HOME}", ".kore", "values.yaml")), "path to the file container helm values `PATH`")
 	flags.StringVar(&o.BinaryPath, "binary-path", filepath.Join(config.GetClientPath(), "build"), "path to place any downloaded binaries if requested `PATH`")
 	flags.BoolVar(&o.EnableDeploy, "enable-deploy", true, "indicates if we should deploy the kore application `BOOL`")
@@ -164,7 +167,7 @@ func (o *UpOptions) EnsureHelmValues(ctx context.Context) error {
 		o.Println("First time running bootstrap, we need your IDP settings for OpenID")
 	}
 
-	o.Values, err = GetHelmValues(o.ValuesFile)
+	o.Values, err = o.GetHelmValues(o.ValuesFile)
 	if err != nil {
 		return err
 	}
@@ -178,7 +181,7 @@ func (o *UpOptions) EnsureHelmValues(ctx context.Context) error {
 					return err
 				}
 
-				return ioutil.WriteFile(o.ValuesFile, content, os.FileMode(0660))
+				return ioutil.WriteFile(o.ValuesFile, content, os.FileMode(0750))
 			},
 		}).Run(ctx, o.Writer()); err != nil {
 			return err

@@ -33,22 +33,28 @@ Bootstrap provides an experimental means of bootstrapping a local Kore installat
 present the local installation uses "kind" https://github.com/kubernetes-sigs/kind.
 
 Unless specified otherwise it will deploy an official tagged release from Github, though
-this can be overriden using the --release flag. Note the installation is performed via
+this can be overridden using the --release flag. Note the installation is performed via
 helm with a local ${HOME}/.kore/values.yaml generated in the directory. If you wish to change
 any of the values post installation, update the values.yaml file and re-run the 'up' command.
 
-Note the data persistency is tied to the installation provider. For kind as long
+Note the data persistence is tied to the installation provider. For kind as long
 as the container is not delete the data is kept.
 `
 	examples = `
 # Provision a local kore instance called 'kore' (defaults to kind)
 $ kore alpha local up
 
-# Override the release and use a local chart
-$ kore alpha local up --release ./charts
+# By default we will download the official tagged release; you can however override this
+# behaviour by using the --release and --version flags. Note, its best to leave these unless
+# you know explicitly know what you need to override.
+
+$ kore alpha local up --release ./charts/kore
 $ kore alpha local up --release https://URL
 
-# Destroy the local installtion
+# Override the version
+$ kore alpha local up --version latest --release ./charts/kore
+
+# Destroy the local installation
 $ kore alpha local destroy
 
 # To stop the local installed without deleting the data

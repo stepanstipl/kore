@@ -22,20 +22,19 @@ import (
 
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 	"github.com/appvia/kore/pkg/utils"
-	"github.com/appvia/kore/pkg/version"
 
 	"gopkg.in/yaml.v2"
 )
 
 // GetHelmValues returns returns or prompts for the values
-func GetHelmValues(path string) (map[string]interface{}, error) {
+func (o *UpOptions) GetHelmValues(path string) (map[string]interface{}, error) {
 	found, err := utils.FileExists(path)
 	if err != nil {
 		return nil, err
 	}
 	// @TODO we should probably check the params in the values file
 	if !found {
-		values := GetDefaultHelmValues()
+		values := o.GetDefaultHelmValues()
 
 		a := authInfoConfig{}
 
@@ -76,21 +75,21 @@ func GetHelmValues(path string) (map[string]interface{}, error) {
 }
 
 // GetDefaultHelmValues returns the default values for the chart
-func GetDefaultHelmValues() map[string]interface{} {
+func (o *UpOptions) GetDefaultHelmValues() map[string]interface{} {
 	return map[string]interface{}{
 		"api": map[string]interface{}{
 			"feature_gates": []string{"services=true"},
 			"hostPort":      10080,
 			"replicas":      1,
 			"serviceType":   "NodePort",
-			"version":       version.Tag,
+			"version":       o.Version,
 		},
 		"ui": map[string]interface{}{
 			"feature_gates": []string{"services=true"},
 			"hostPort":      3000,
 			"replicas":      1,
 			"serviceType":   "NodePort",
-			"version":       version.Tag,
+			"version":       o.Version,
 		},
 	}
 }
