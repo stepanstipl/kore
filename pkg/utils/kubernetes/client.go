@@ -25,11 +25,8 @@ import (
 	"strings"
 	"time"
 
-	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
-
-	kschema "github.com/appvia/kore/pkg/schema"
-
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
+	kschema "github.com/appvia/kore/pkg/schema"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -40,6 +37,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 )
 
 // New returns or creates a default client

@@ -7,8 +7,8 @@ CURRENT_TAG=$(shell git tag --points-at HEAD)
 DEPS=$(shell go list -f '{{range .TestImports}}{{.}} {{end}}' ./...)
 DOCKER_IMAGES ?= kore-apiserver auth-proxy
 GIT_SHA=$(shell git --no-pager describe --always --dirty)
-GIT_LAST_TAG_SHA=$(shell git rev-list --tags --max-count=1)
-GIT_LAST_TAG=$(shell git describe --match "v[0.9]*.[0-9]*.[0-9]*" --tags $(GIT_LAST_TAG_SHA))
+GIT_LAST_TAG_SHA=$(shell git rev-list --tags='v[0.9]*.[0-9]*.[0-9]*' --max-count=1)
+GIT_LAST_TAG=$(shell git describe --tags $(GIT_LAST_TAG_SHA))
 HUB_APIS_SHA=$(shell cd ../kore-apis && git log | head -n 1 | cut -d' ' -f2)
 GOVERSION ?= 1.12.7
 HARDWARE=$(shell uname -m)
@@ -36,7 +36,7 @@ else
 	# - note the version reported by --version always includes the git SHA
 	VERSION ?= $(GIT_LAST_TAG)
 endif
-LFLAGS ?= -X github.com/appvia/kore/pkg/version.GitSHA=${GIT_SHA} -X github.com/appvia/kore/pkg/version.Compiled=${BUILD_TIME} -X github.com/appvia/kore/pkg/version.Release=${VERSION}
+LFLAGS ?= -X github.com/appvia/kore/pkg/version.Tag=${GIT_LAST_TAG} -X github.com/appvia/kore/pkg/version.GitSHA=${GIT_SHA} -X github.com/appvia/kore/pkg/version.Compiled=${BUILD_TIME} -X github.com/appvia/kore/pkg/version.Release=${VERSION}
 CLI_PLATFORMS=darwin linux windows
 CLI_ARCHITECTURES=386 amd64
 export GOFLAGS = -mod=vendor

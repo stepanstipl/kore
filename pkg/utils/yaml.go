@@ -14,30 +14,22 @@
  * limitations under the License.
  */
 
-package kore
+package utils
 
 import (
-	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
-	"github.com/appvia/kore/pkg/version"
+	"bytes"
 
-	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
 )
 
-// NewCmdVersion creates and returns the version command
-func NewCmdVersion(factory cmdutil.Factory) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:                   "version",
-		DisableFlagsInUseLine: true,
-		Short:                 "Prints the version of the client",
+// ToYAML marshalls the struct to yaml
+func ToYAML(in interface{}) ([]byte, error) {
+	b := &bytes.Buffer{}
 
-		Run: func(cmd *cobra.Command, args []string) {
-			factory.Println("Client: %s (git+sha: %s), Tag: %s",
-				version.Release,
-				version.GitSHA,
-				version.Tag,
-			)
-		},
+	err := yaml.NewEncoder(b).Encode(in)
+	if err != nil {
+		return nil, err
 	}
 
-	return cmd
+	return b.Bytes(), nil
 }

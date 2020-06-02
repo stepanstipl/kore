@@ -25,8 +25,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// StopOptions are the options for bringing down the cluster
-type StopOptions struct {
+// DestroyOptions are the options for bringing down the cluster
+type DestroyOptions struct {
 	cmdutil.Factory
 	// Name is an optional name for the resource
 	Name string
@@ -36,15 +36,15 @@ type StopOptions struct {
 	logger providers.Logger
 }
 
-// NewCmdBootstrapStop creates and returns the bootstrap destroy command
-func NewCmdBootstrapStop(factory cmdutil.Factory) *cobra.Command {
-	o := &StopOptions{Factory: factory, logger: newProviderLogger(factory)}
+// NewCmdBootstrapDestroy creates and returns the bootstrap destroy command
+func NewCmdBootstrapDestroy(factory cmdutil.Factory) *cobra.Command {
+	o := &DestroyOptions{Factory: factory, logger: newProviderLogger(factory)}
 
 	command := &cobra.Command{
-		Use:     "stop",
-		Short:   "Shuts down the local cluster without losing any state",
+		Use:     "destroy",
+		Short:   "Brings down kore on a local kubernetes cluster",
 		Long:    usage,
-		Example: "kore alpha local stop <name> [options]",
+		Example: "kore alpha local destroy <name> [options]",
 		Run:     cmdutil.DefaultRunFunc(o),
 	}
 
@@ -55,16 +55,16 @@ func NewCmdBootstrapStop(factory cmdutil.Factory) *cobra.Command {
 }
 
 // Validate checks the options
-func (o *StopOptions) Validate() error {
+func (o *DestroyOptions) Validate() error {
 	return nil
 }
 
 // Run implements the action
-func (o *StopOptions) Run() error {
+func (o *DestroyOptions) Run() error {
 	o.Name = ClusterName
 
 	tasks := []TaskFunc{
-		o.EnsureStopped,
+		o.EnsureLocalKubernetesDeletion,
 	}
 	for _, x := range tasks {
 		if err := x(context.TODO()); err != nil {
@@ -75,8 +75,8 @@ func (o *StopOptions) Run() error {
 	return nil
 }
 
-// EnsureStopped is responsible for stopping the local instance
-func (o *StopOptions) EnsureStopped(ctx context.Context) error {
+// EnsureLocalKubernetesDeletion is responsible for deleting the local instance
+func (o *DestroyOptions) EnsureLocalKubernetesDeletion(ctx context.Context) error {
 	provider, err := GetProvider(o.Factory, o.Provider)
 	if err != nil {
 		return err
@@ -93,10 +93,10 @@ func (o *StopOptions) EnsureStopped(ctx context.Context) error {
 	}
 
 	return (&Task{
-		Header:      "Attempting to halt the local kubernetes cluster",
-		Description: "Stopping the local kubernetes cluster",
+		Header:      "Attempting to delete the local kubernetes cluster",
+		Description: "Removed the local kubernetes cluster",
 		Handler: func(ctx context.Context) error {
-			return provider.Stop(ctx, o.Name)
+			return provider.Destroy(ctx, o.Name)
 		},
 	}).Run(ctx, o.Writer())
 }

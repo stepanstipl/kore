@@ -13,7 +13,6 @@ require (
 	github.com/blevesearch/blevex v0.0.0-20190916190636-152f0fe5c040 // indirect
 	github.com/blevesearch/go-porterstemmer v1.0.2 // indirect
 	github.com/blevesearch/segment v0.0.0-20160915185041-762005e7a34f // indirect
-	github.com/bombsimon/wsl/v2 v2.0.0 // indirect
 	github.com/client9/misspell v0.3.4
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/couchbase/vellum v0.0.0-20190829182332-ef2e028c01fd // indirect
@@ -66,7 +65,6 @@ require (
 	github.com/prometheus/procfs v0.0.8 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20190728182440-6a916e37a237 // indirect
 	github.com/romanyx/polluter v1.2.2
-	github.com/securego/gosec v0.0.0-20200103095621-79fbf3af8d83 // indirect
 	github.com/shurcooL/httpfs v0.0.0-20190707220628-8d4bc4ba7749 // indirect
 	github.com/shurcooL/vfsgen v0.0.0-20181202132449-6a9ea43bcacd
 	github.com/sirupsen/logrus v1.5.0

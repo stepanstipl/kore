@@ -32,6 +32,20 @@ func ReadFileOrStdin(stdin io.Reader, path string) ([]byte, error) {
 	return ioutil.ReadFile(path)
 }
 
+// DirExists checks if the directory exists
+func DirExists(path string) (bool, error) {
+	stat, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return stat.IsDir(), nil
+}
+
 // FileExists checks if a file exists
 func FileExists(filename string) (bool, error) {
 	info, err := os.Stat(filename)

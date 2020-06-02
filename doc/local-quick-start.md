@@ -4,7 +4,7 @@ In this guide, we'll walk you through how to use the Appvia Kore CLI to set up a
 
 We'll showcase how Appvia Kore can give you a head start with setting up [clusters](https://www.redhat.com/en/topics/containers/what-is-a-kubernetes-cluster), team members and environments.
 
-**NOTE** The installation of Kore created by the `kore local` command in this quick start is suitable for testing and proof-of-concept work only. Bootstrapping a production installation of Kore is coming soon with [issue/340](https://github.com/appvia/kore/issues/340).
+**NOTE** The installation of Kore created by the `kore alpha local` command in this quick start is suitable for testing and proof-of-concept work only. Bootstrapping a production installation of Kore is coming soon with [issue/340](https://github.com/appvia/kore/issues/340).
 
 ## Kubernetes
 
@@ -37,6 +37,10 @@ Please ensure you have the following installed on your machine,
 
 - Docker: installation instructions can be found [here]([https://docs.docker.com/install/](https://docs.docker.com/install/))
 - Docker Compose: installation instructions can found [here](https://docs.docker.com/compose/install/)
+
+### Kind
+
+Please ensure if you are running the local deployment you have the kind binary installed (https://kind.sigs.k8s.io/docs/user/quick-start/)
 
 ### Google Cloud account
 
@@ -165,31 +169,13 @@ Make sure you fill in the OpenID endpoint as `https://[Auth0 domain]/`, includin
 Once you have everything, run,
 
 ```shell script
-./kore local configure
+./kore alpha local up
 # What are your Identity Broker details?
 # ✗ Client ID :
 # ...
 ```
 
-When configured correctly, you should see
-
-```shell script
-# ✅ A 'local' profile has been configured in ~/.kore/config
-```
-
-#### Start locally
-
-```shell script
-./kore local start
-# ...Starting Kore.
-# ...Kore is now started locally and is ready on http://127.0.0.1:10080
-```
-
-- Stop: To stop, run `./kore local stop`
-
-- Logs: To view local logs, run `./kore local logs`
-
-At this point, you can use the CLI as detailed below, and also browse to the Kore UI at http://127.0.0.1:3000/
+This should provision a local kubernetes installation and deploy the official helm release. Note, the helm values are kept locally in values.yaml
 
 ### Login as Admin with CLI
 
@@ -198,7 +184,7 @@ You now have to login to be able to create teams and provision environments.
 This will use our Auth0 set up for IDP. As you're the only user, you'll be assigned Admin privileges.
 
 ```shell script
-./kore login
+./kore login -a http//localhost:10080 local
 # Attempting to authenticate to Appvia Kore: http://127.0.0.1:10080 [local]
 # Successfully authenticated
 ```
@@ -224,8 +210,8 @@ To ensure the team was created,
 
 ### Enable Kore to Set up Team Environments on GKE
 
-We now need to give Kore the credentials it needs to build a cluster on our behalf. This command imports a set of credentials into kore 
-and allows your new team to use them to make clusters. 
+We now need to give Kore the credentials it needs to build a cluster on our behalf. This command imports a set of credentials into kore
+and allows your new team to use them to make clusters.
 
 We'll then use these to create a cluster to host our sandbox environment. You'll need the following details which you set up earlier:
 

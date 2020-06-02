@@ -14,30 +14,24 @@
  * limitations under the License.
  */
 
-package kore
+package utils
 
 import (
-	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
-	"github.com/appvia/kore/pkg/version"
-
-	"github.com/spf13/cobra"
+	"io"
 )
 
-// NewCmdVersion creates and returns the version command
-func NewCmdVersion(factory cmdutil.Factory) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:                   "version",
-		DisableFlagsInUseLine: true,
-		Short:                 "Prints the version of the client",
+type WriteCloser struct {
+	w io.Writer
+}
 
-		Run: func(cmd *cobra.Command, args []string) {
-			factory.Println("Client: %s (git+sha: %s), Tag: %s",
-				version.Release,
-				version.GitSHA,
-				version.Tag,
-			)
-		},
-	}
+func ToWriteCloser(w io.Writer) io.WriteCloser {
+	return &WriteCloser{w: w}
+}
 
-	return cmd
+func (w *WriteCloser) Write(p []byte) (n int, err error) {
+	return w.w.Write(p)
+}
+
+func (w *WriteCloser) Close() error {
+	return nil
 }

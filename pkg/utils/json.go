@@ -43,6 +43,7 @@ func DecodeToJSON(data io.Reader, in interface{}) error {
 	return nil
 }
 
+// ApiExtJSONEquals checks if the json's are equal
 func ApiExtJSONEquals(j1, j2 *apiextv1.JSON) bool {
 	if ApiExtJSONEmpty(j1) && ApiExtJSONEmpty(j2) {
 		return true
@@ -55,6 +56,7 @@ func ApiExtJSONEquals(j1, j2 *apiextv1.JSON) bool {
 	return bytes.Equal(j1.Raw, j2.Raw)
 }
 
+// ApiExtJSONEmpty checks the context empty
 func ApiExtJSONEmpty(j *apiextv1.JSON) bool {
 	if j == nil {
 		return true

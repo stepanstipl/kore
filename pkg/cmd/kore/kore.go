@@ -30,7 +30,6 @@ import (
 	"github.com/appvia/kore/pkg/cmd/kore/generate"
 	"github.com/appvia/kore/pkg/cmd/kore/get"
 	"github.com/appvia/kore/pkg/cmd/kore/kubeconfig"
-	"github.com/appvia/kore/pkg/cmd/kore/local"
 	"github.com/appvia/kore/pkg/cmd/kore/login"
 	"github.com/appvia/kore/pkg/cmd/kore/profiles"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
@@ -110,7 +109,6 @@ func NewKoreCommand(streams cmdutil.Streams) (*cobra.Command, error) {
 		apiresources.NewCmdAPIResources(factory),
 		NewCmdVersion(factory),
 		alpha.NewCmdAlpha(factory),
-		local.NewCmdCreateLocal(factory),
 	)
 
 	// @step: seriously cobra is pretty damn awesome

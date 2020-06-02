@@ -14,30 +14,24 @@
  * limitations under the License.
  */
 
-package kore
+package utils
 
 import (
-	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
-	"github.com/appvia/kore/pkg/version"
+	"testing"
 
-	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-// NewCmdVersion creates and returns the version command
-func NewCmdVersion(factory cmdutil.Factory) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:                   "version",
-		DisableFlagsInUseLine: true,
-		Short:                 "Prints the version of the client",
-
-		Run: func(cmd *cobra.Command, args []string) {
-			factory.Println("Client: %s (git+sha: %s), Tag: %s",
-				version.Release,
-				version.GitSHA,
-				version.Tag,
-			)
-		},
+func TestToYAML(t *testing.T) {
+	var item struct {
+		Hello string
+		World string
 	}
+	item.Hello = "hello"
+	item.World = "world"
 
-	return cmd
+	c, err := ToYAML(&item)
+	require.NoError(t, err)
+	assert.Equal(t, "hello: hello\nworld: world\n", string(c))
 }

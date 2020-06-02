@@ -18,6 +18,7 @@ package alpha
 
 import (
 	"github.com/appvia/kore/pkg/cmd/kore/featuregates"
+	"github.com/appvia/kore/pkg/cmd/kore/local"
 	"github.com/appvia/kore/pkg/cmd/kore/patch"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 
@@ -36,6 +37,7 @@ func NewCmdAlpha(factory cmdutil.Factory) *cobra.Command {
 	command.AddCommand(
 		patch.NewCmdPatch(factory),
 		featuregates.NewCmdFeatureGates(factory),
+		local.NewCmdBootstrap(factory),
 	)
 
 	return command

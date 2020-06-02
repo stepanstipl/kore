@@ -37,6 +37,11 @@ func GetClientConfigurationPath() string {
 	return path
 }
 
+// GetClientPath returns the base of the client configuration
+func GetClientPath() string {
+	return filepath.Dir(GetClientConfigurationPath())
+}
+
 // GetOrCreateClientConfiguration is responsible for retrieving the client configuration
 func GetOrCreateClientConfiguration() (*Config, error) {
 	path := GetClientConfigurationPath()

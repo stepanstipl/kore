@@ -14,30 +14,15 @@
  * limitations under the License.
  */
 
-package kore
+package utils
 
-import (
-	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
-	"github.com/appvia/kore/pkg/version"
+// CopyMap is used to copy a map
+func CopyMap(src map[string]interface{}) map[string]interface{} {
+	newMap := make(map[string]interface{})
 
-	"github.com/spf13/cobra"
-)
-
-// NewCmdVersion creates and returns the version command
-func NewCmdVersion(factory cmdutil.Factory) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:                   "version",
-		DisableFlagsInUseLine: true,
-		Short:                 "Prints the version of the client",
-
-		Run: func(cmd *cobra.Command, args []string) {
-			factory.Println("Client: %s (git+sha: %s), Tag: %s",
-				version.Release,
-				version.GitSHA,
-				version.Tag,
-			)
-		},
+	for key, value := range src {
+		newMap[key] = value
 	}
 
-	return cmd
+	return newMap
 }

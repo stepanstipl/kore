@@ -14,30 +14,31 @@
  * limitations under the License.
  */
 
-package kore
+package utils
 
 import (
-	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
-	"github.com/appvia/kore/pkg/version"
-
-	"github.com/spf13/cobra"
+	"bufio"
+	"io"
+	"log"
+	"strings"
 )
 
-// NewCmdVersion creates and returns the version command
-func NewCmdVersion(factory cmdutil.Factory) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:                   "version",
-		DisableFlagsInUseLine: true,
-		Short:                 "Prints the version of the client",
+// AskForConfirmation asks a question of the user
+func AskForConfirmation(stdin io.Reader) bool {
+	reader := bufio.NewReader(stdin)
 
-		Run: func(cmd *cobra.Command, args []string) {
-			factory.Println("Client: %s (git+sha: %s), Tag: %s",
-				version.Release,
-				version.GitSHA,
-				version.Tag,
-			)
-		},
+	for {
+		response, err := reader.ReadString('\n')
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		response = strings.ToLower(strings.TrimSpace(response))
+
+		if response == "y" || response == "yes" {
+			return true
+		} else if response == "n" || response == "no" {
+			return false
+		}
 	}
-
-	return cmd
 }
