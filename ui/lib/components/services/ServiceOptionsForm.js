@@ -82,7 +82,6 @@ class ServiceOptionsForm extends React.Component {
         <Form.Item label="Service plan">
           {getFieldDecorator('servicePlan', {
             rules: [{ required: true, message: 'Please select your service plan!' }],
-            initialValue: servicePlans.length === 1 ? servicePlans[0].metadata.name : undefined,
           })(
             <Select onChange={this.onServicePlanChange} placeholder="Choose service plan">
               {servicePlans.map(p => <Option key={p.metadata.name} value={p.metadata.name}>{p.spec.displayName || p.spec.summary}</Option>)}

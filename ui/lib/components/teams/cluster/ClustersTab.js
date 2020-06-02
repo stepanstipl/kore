@@ -168,7 +168,7 @@ class ClustersTab extends React.Component {
                     resourceApiPath={`/teams/${team.metadata.name}/clusters/${cluster.metadata.name}`}
                   />
                   {!cluster.deleted && filteredNamespaceClaims.length > 0 && this.clusterNamespaceList({ namespaceClaims: filteredNamespaceClaims })}
-                  {idx < clusters.length - 1 && <Divider />}
+                  {!cluster.deleted && idx < clusters.length - 1 && <Divider />}
                 </React.Fragment>
               )
             })}

@@ -16,7 +16,7 @@ class ServiceCredentialSnippet extends React.Component {
       <>
       <Tooltip key="snippet" title="See usage snippet"><Icon onClick={() => this.setState({ visible: true })} style={{ marginLeft: '5px', color: '#3d5b58' }} type="eye" /></Tooltip>
       <Modal
-        title="Service binding usage"
+        title="Service access usage"
         visible={this.state.visible}
         onCancel={() => this.setState({ visible: false })}
         footer={[<Button type="primary" key="ok" onClick={() => this.setState({ visible: false })}>Ok</Button>]}
@@ -24,7 +24,7 @@ class ServiceCredentialSnippet extends React.Component {
       >
         <div style={{ margin: '0 20px' }}>
           <Alert
-            message="You can use the service binding secret in a Kubernetes Pod template using the following snippet."
+            message="You can use the service access secret in a Kubernetes Pod template using the following snippet."
             type="info"
             showIcon
             style={{ marginBottom: '20px' }}

@@ -44,9 +44,7 @@ class TeamDashboard extends React.Component {
 
   static async getTeamDetails(ctx) {
     try {
-      const name = ctx.query.name
-      const api = await KoreApi.client(ctx)
-      const team = await api.GetTeam(name)
+      const team = await (await KoreApi.client(ctx)).GetTeam(ctx.query.name)
       return { team }
     } catch (err) {
       throw new Error(err.message)

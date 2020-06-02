@@ -136,7 +136,7 @@ class ServiceCredentialForm extends React.Component {
         if (existing) {
           return this.setState({
             submitting: false,
-            formErrorMessage: `A service credential on this namespace with secret name "${values.secretName}" already exists`,
+            formErrorMessage: `This namespace already contains a service access with secret name "${values.secretName}"`,
             validationErrors: null
           })
         }
@@ -179,7 +179,7 @@ class ServiceCredentialForm extends React.Component {
       } catch (err) {
         this.setState({
           submitting: false,
-          formErrorMessage: (err.fieldErrors && err.message) ? err.message : 'An error occurred creating the service credential, please try again',
+          formErrorMessage: (err.fieldErrors && err.message) ? err.message : 'An error occurred creating service access, please try again',
           validationErrors: err.fieldErrors // This will be undefined on non-validation errors, which is fine.
         })
       }

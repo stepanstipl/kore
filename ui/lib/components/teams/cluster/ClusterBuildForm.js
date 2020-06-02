@@ -218,10 +218,7 @@ class ClusterBuildForm extends React.Component {
 
     return (
       <div>
-        <CloudSelector
-          showCustom={false}
-          selectedCloud={selectedCloud}
-          handleSelectCloud={this.handleSelectCloud} />
+        <CloudSelector selectedCloud={selectedCloud} handleSelectCloud={this.handleSelectCloud} />
         {selectedCloud ? (
           filteredCredentials.length > 0 || accountManagement ?
             this.clusterBuildForm() :
