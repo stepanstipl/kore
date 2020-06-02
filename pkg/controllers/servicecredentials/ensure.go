@@ -86,6 +86,17 @@ func (c *Controller) ensureFinalizer(logger log.FieldLogger, serviceCreds *servi
 	}
 }
 
+func (c *Controller) EnsureActiveService(logger log.FieldLogger, service *servicesv1.Service) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		// @step: check the overall status of the service
+		if service.Status.Status != corev1.SuccessStatus {
+			logger.Debugf("service status is %s, waiting", service.Status.Status)
+			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+		}
+		return reconcile.Result{}, nil
+	}
+}
+
 func (c *Controller) EnsureActiveCluster(logger log.FieldLogger, serviceCreds *servicesv1.ServiceCredentials) controllers.EnsureFunc {
 	return func(ctx context.Context) (reconcile.Result, error) {
 		// @step: check the status of the cluster
@@ -103,6 +114,7 @@ func (c *Controller) EnsureActiveCluster(logger log.FieldLogger, serviceCreds *s
 
 		// @step: check the overall status of the cluster
 		if cluster.Status.Status != corev1.SuccessStatus {
+			logger.Debugf("cluster status is %s, waiting", cluster.Status.Status)
 			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
 		}
 		return reconcile.Result{}, nil
