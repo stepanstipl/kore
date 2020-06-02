@@ -1,4 +1,4 @@
-FROM node:12-alpine3.10
+FROM node:12-buster-slim
 
 ENV KORE_UI_SHOW_PROTOTYPES true
 
