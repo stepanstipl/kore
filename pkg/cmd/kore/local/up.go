@@ -18,6 +18,7 @@ package local
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -32,6 +33,7 @@ import (
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/httputils"
+	ksutils "github.com/appvia/kore/pkg/utils/kubernetes"
 	"github.com/appvia/kore/pkg/version"
 
 	"github.com/spf13/cobra"
@@ -396,6 +398,15 @@ func (o *UpOptions) EnsureKoreRelease(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
+
+			// @step: wait for kubernetes api
+			interval := 2 * time.Second
+			timeout := 60 * time.Second
+
+			if err := ksutils.WaitOnKubeAPI(ctx, client, interval, timeout); err != nil {
+				return errors.New("timed out waiting for the kubernetes api")
+			}
+
 			ns := &v1.Namespace{}
 			ns.Name = "kore"
 
