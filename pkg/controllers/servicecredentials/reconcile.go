@@ -62,8 +62,12 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 	// @step: retrieve the object from the api
 	service := &servicesv1.Service{}
 	if err := c.mgr.GetClient().Get(ctx, creds.Spec.Service.NamespacedName(), service); err != nil {
-		logger.WithError(err).Error("failed to retrieve service from api")
+		if kerrors.IsNotFound(err) {
+			logger.Debug("service does not exist")
+			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+		}
 
+		logger.WithError(err).Error("failed to retrieve service from api")
 		return reconcile.Result{}, err
 	}
 
@@ -84,6 +88,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		ensure := []controllers.EnsureFunc{
 			c.ensureFinalizer(logger, creds, finalizer),
 			c.ensurePending(logger, creds),
+			c.EnsureActiveService(logger, service),
 			c.EnsureActiveCluster(logger, creds),
 			c.ensureSecret(logger, service, creds, provider),
 		}
