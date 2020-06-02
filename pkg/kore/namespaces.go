@@ -18,6 +18,9 @@ package kore
 
 import (
 	"context"
+	"strings"
+
+	"github.com/appvia/kore/pkg/utils/validation"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	"github.com/appvia/kore/pkg/store"
@@ -51,6 +54,19 @@ func (n *nsImpl) Delete(ctx context.Context, name string) (*clustersv1.Namespace
 	original, err := n.Get(ctx, name)
 	if err != nil {
 		return nil, err
+	}
+
+	if IsNamespaceNameProtected(original.Spec.Name) {
+		return nil, validation.NewError("namespace can not be deleted").WithFieldError("name", validation.InvalidValue, "is a protected name or has a protected prefix")
+	}
+
+	exists, err := n.Teams().Exists(ctx, original.Spec.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	if exists {
+		return nil, validation.NewError("namespace can not be deleted").WithFieldError("name", validation.InvalidValue, "is a team namespace")
 	}
 
 	if err := n.Store().Client().Delete(ctx, store.DeleteOptions.From(original)); err != nil {
@@ -104,8 +120,34 @@ func (n *nsImpl) Update(ctx context.Context, namespace *clustersv1.NamespaceClai
 	}
 	namespace.Namespace = n.team
 
+	if IsNamespaceNameProtected(namespace.Spec.Name) {
+		return nil, validation.NewError("namespace can not be created").WithFieldError("name", validation.InvalidValue, "is a protected name or has a protected prefix")
+	}
+
+	exists, err := n.Teams().Exists(ctx, namespace.Spec.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	if exists {
+		return nil, validation.NewError("namespace can not be created").WithFieldError("name", validation.InvalidValue, "is a team namespace")
+	}
+
 	return namespace, n.Store().Client().Update(ctx,
 		store.UpdateOptions.To(namespace),
 		store.UpdateOptions.WithCreate(true),
 	)
+}
+
+func IsNamespaceNameProtected(name string) bool {
+	switch {
+	case name == "kore" || name == "default":
+		return true
+	case strings.HasPrefix(name, "kore-"):
+		return true
+	case strings.HasPrefix(name, "kube-"):
+		return true
+	default:
+		return false
+	}
 }

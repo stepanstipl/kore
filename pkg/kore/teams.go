@@ -68,8 +68,8 @@ func (t *teamsImpl) Delete(ctx context.Context, name string) error {
 	}
 
 	// @step: ensure the admin team can never be delete - oh my gosh
-	if name == HubAdminTeam {
-		return ErrNotAllowed{message: HubAdminTeam + " team cannot be deleted"}
+	if name == HubAdminTeam || name == HubDefaultTeam {
+		return ErrNotAllowed{message: name + " team cannot be deleted"}
 	}
 
 	// @step: retrieve the team
@@ -194,10 +194,10 @@ func (t *teamsImpl) Update(ctx context.Context, team *orgv1.Team) (*orgv1.Team, 
 				return nil, ErrUnauthorized
 			}
 		}
+	}
 
-		if !t.IsValidTeamName(team.Name) {
-			return nil, ErrNotAllowed{message: "name: " + team.Name + " cannot be used in the kore"}
-		}
+	if !IsValidTeamName(team.Name) {
+		return nil, ErrNotAllowed{message: "name: " + team.Name + " cannot be used in Kore"}
 	}
 
 	// @step: ensure the default and apply a timestamp for triggers
@@ -250,25 +250,19 @@ func (t *teamsImpl) Update(ctx context.Context, team *orgv1.Team) (*orgv1.Team, 
 	return DefaultConvertor.FromTeamModel(model), nil
 }
 
-// IsValidTeamName checks the team name is ok to use
-func (t *teamsImpl) IsValidTeamName(name string) bool {
-	if name == "kore-admin" {
-		return true
-	}
-	// @step: ensure the team name does not infridge on policy
-	for _, x := range []string{"kube-", "prometheus", "kore", "istio", "grafana", "olm", "default"} {
-		if strings.HasPrefix(name, x) {
-			return false
-		}
-	}
-
-	return true
-}
-
 // Team returns the team interface
 func (t *teamsImpl) Team(team string) Team {
 	return &tmImpl{
 		hubImpl: t.hubImpl,
 		team:    team,
 	}
+}
+
+// IsValidTeamName checks the team name is ok to use
+func IsValidTeamName(name string) bool {
+	if name == "kore-admin" || name == "kore-default" {
+		return true
+	}
+
+	return !IsNamespaceNameProtected(name)
 }

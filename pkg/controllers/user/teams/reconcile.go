@@ -65,7 +65,7 @@ func (t teamController) Reconcile(request reconcile.Request) (reconcile.Result, 
 
 	err := func() error {
 		// @step: check if the team name is protected - i.e. cannot be used
-		if IsProtected(team.Name) {
+		if !kore.IsValidTeamName(team.Name) {
 			logger.Warn("team name is protected and cannot be used")
 
 			team.Status.Status = core.FailureStatus
