@@ -4,7 +4,7 @@ In this guide, we'll walk you through how to use the Appvia Kore CLI to set up a
 
 We'll showcase how Appvia Kore can give you a head start with setting up [clusters](https://www.redhat.com/en/topics/containers/what-is-a-kubernetes-cluster), team members and environments.
 
-**NOTE** The installation of Kore created by the `kore alpha bootstrap` command in this quick start is suitable for testing and proof-of-concept work only. Bootstrapping a production installation of Kore is coming soon with [issue/340](https://github.com/appvia/kore/issues/340).
+**NOTE** The installation of Kore created by the `kore alpha local` command in this quick start is suitable for testing and proof-of-concept work only. Bootstrapping a production installation of Kore is coming soon with [issue/340](https://github.com/appvia/kore/issues/340).
 
 ## Kubernetes
 
@@ -169,7 +169,7 @@ Make sure you fill in the OpenID endpoint as `https://[Auth0 domain]/`, includin
 Once you have everything, run,
 
 ```shell script
-./kore alpha bootstrap up
+./kore alpha local up
 # What are your Identity Broker details?
 # ✗ Client ID :
 # ...

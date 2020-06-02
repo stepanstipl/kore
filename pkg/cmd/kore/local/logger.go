@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package bootstrap
+package local
 
 import (
 	"io"
 
-	"github.com/appvia/kore/pkg/cmd/kore/bootstrap/providers"
+	"github.com/appvia/kore/pkg/cmd/kore/local/providers"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 )
 

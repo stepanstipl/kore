@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package bootstrap
+package local
 
 import (
 	"context"

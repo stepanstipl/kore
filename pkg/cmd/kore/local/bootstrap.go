@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package bootstrap
+package local
 
 import (
 	"fmt"
 	"strings"
 
-	"github.com/appvia/kore/pkg/cmd/kore/bootstrap/providers"
-	"github.com/appvia/kore/pkg/cmd/kore/bootstrap/providers/kind"
+	"github.com/appvia/kore/pkg/cmd/kore/local/providers"
+	"github.com/appvia/kore/pkg/cmd/kore/local/providers/kind"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 
 	"github.com/spf13/cobra"

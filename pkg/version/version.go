@@ -24,7 +24,8 @@ import (
 
 var (
 	// Prog is the name of the product - changes so often best to use a global var
-	Prog   = "Appvia Kore"
+	Prog = "Appvia Kore"
+	// Author is the prog author
 	Author = "Appvia"
 	// Email is the default email
 	Email = "info@appvia.io"
@@ -36,6 +37,8 @@ var (
 	GitSHA = "no gitsha provided"
 	// Release is the releasing version
 	Release = "latest"
+	// Tag is the release tag of the build
+	Tag = ""
 )
 
 // Version returns the proxy version

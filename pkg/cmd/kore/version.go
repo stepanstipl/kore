@@ -31,7 +31,11 @@ func NewCmdVersion(factory cmdutil.Factory) *cobra.Command {
 		Short:                 "Prints the version of the client",
 
 		Run: func(cmd *cobra.Command, args []string) {
-			factory.Println("Client: %s (git+sha: %s)", version.Release, version.GitSHA)
+			factory.Println("Client: %s (git+sha: %s), Tag: %s",
+				version.Release,
+				version.GitSHA,
+				version.Tag,
+			)
 		},
 	}
 

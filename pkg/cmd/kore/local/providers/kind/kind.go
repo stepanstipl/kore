@@ -30,7 +30,7 @@ import (
 	"strings"
 
 	"github.com/appvia/kore/pkg/client/config"
-	"github.com/appvia/kore/pkg/cmd/kore/bootstrap/providers"
+	"github.com/appvia/kore/pkg/cmd/kore/local/providers"
 	"github.com/appvia/kore/pkg/utils"
 )
 
@@ -219,7 +219,7 @@ func (p *providerImpl) Preflight(ctx context.Context) error {
 			return err
 		}
 
-		if err := os.Chmod(path, os.FileMode(0555)); err != nil {
+		if err := os.Chmod(path, os.FileMode(0500)); err != nil {
 			return err
 		}
 	}

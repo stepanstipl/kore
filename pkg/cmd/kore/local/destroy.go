@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package bootstrap
+package local
 
 import (
 	"context"
 
-	"github.com/appvia/kore/pkg/cmd/kore/bootstrap/providers"
+	"github.com/appvia/kore/pkg/cmd/kore/local/providers"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 
 	"github.com/spf13/cobra"
@@ -44,7 +44,7 @@ func NewCmdBootstrapDestroy(factory cmdutil.Factory) *cobra.Command {
 		Use:     "destroy",
 		Short:   "Brings down kore on a local kubernetes cluster",
 		Long:    usage,
-		Example: "kore alpha bootstrap destroy <name> [options]",
+		Example: "kore alpha local destroy <name> [options]",
 		Run:     cmdutil.DefaultRunFunc(o),
 	}
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package bootstrap
+package local
 
 import (
 	"io/ioutil"
@@ -83,14 +83,14 @@ func GetDefaultHelmValues() map[string]interface{} {
 			"hostPort":      10080,
 			"replicas":      1,
 			"serviceType":   "NodePort",
-			"version":       version.Release,
+			"version":       version.Tag,
 		},
 		"ui": map[string]interface{}{
 			"feature_gates": []string{"services=true"},
 			"hostPort":      3000,
 			"replicas":      1,
 			"serviceType":   "NodePort",
-			"version":       version.Release,
+			"version":       version.Tag,
 		},
 	}
 }

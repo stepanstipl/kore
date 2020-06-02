@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package bootstrap
+package local
 
 import (
 	"context"
 
-	"github.com/appvia/kore/pkg/cmd/kore/bootstrap/providers"
+	"github.com/appvia/kore/pkg/cmd/kore/local/providers"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 
 	"github.com/spf13/cobra"
@@ -44,7 +44,7 @@ func NewCmdBootstrapStop(factory cmdutil.Factory) *cobra.Command {
 		Use:     "stop",
 		Short:   "Shuts down the local cluster without losing any state",
 		Long:    usage,
-		Example: "kore alpha bootstrap stop <name> [options]",
+		Example: "kore alpha local stop <name> [options]",
 		Run:     cmdutil.DefaultRunFunc(o),
 	}
 

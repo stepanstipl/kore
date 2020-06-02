@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package bootstrap
+package local
 
 import (
 	"context"
@@ -88,7 +88,7 @@ func NewCmdBootstrapUp(factory cmdutil.Factory) *cobra.Command {
 
 	flags := command.Flags()
 	flags.StringVar(&o.Provider, "provider", "kind", "local kubernetes provider to use `NAME`")
-	flags.StringVar(&o.Release, "release", version.Release, "chart version to use for deployment `VERSION`")
+	flags.StringVar(&o.Release, "release", version.Tag, "chart version to use for deployment `VERSION`")
 	flags.StringVar(&o.ValuesFile, "values", os.ExpandEnv(filepath.Join("${HOME}", ".kore", "values.yaml")), "path to the file container helm values `PATH`")
 	flags.StringVar(&o.BinaryPath, "binary-path", filepath.Join(config.GetClientPath(), "build"), "path to place any downloaded binaries if requested `PATH`")
 	flags.BoolVar(&o.EnableDeploy, "enable-deploy", true, "indicates if we should deploy the kore application `BOOL`")
@@ -270,11 +270,12 @@ func (o *UpOptions) EnsureHelm(ctx context.Context) error {
 						"version",
 					}
 
-					combined, err := exec.CommandContext(ctx, "helm", args...).CombinedOutput()
+					combined, err := exec.CommandContext(ctx, path, args...).CombinedOutput()
 					if err != nil {
 						return fmt.Errorf("trying to check version of helm binary: %s", combined)
 					}
-					if strings.Contains(string(combined), "Version: v3") {
+
+					if strings.Contains(string(combined), `Version:"v3`) {
 						o.HelmPath = path
 
 						return nil
