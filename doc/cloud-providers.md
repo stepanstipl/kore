@@ -11,7 +11,7 @@ Kore provides a consitent way to work with cloud providers as well as their secu
 Kore currently supports
 - GCP
 - AWS
-- Azure (Comming soon)
+- Azure (Coming soon)
 
 Within the cloud providers, we will support their relative Kubernetes service offerings: 
 - GKE
