@@ -81,36 +81,26 @@
 
 ## Local development
 
+Note: Only the API server runs in the Kubernetes cluster. You have to run the UI on your host, as it's really slow in Kind.
+
 1. Build the dev Docker image and load it into the Kind cluster:
 
     ```
     make kind-image-dev
     ```
 
-1. Update `charts/my_values.yaml` and set `api.version` and/or `ui.version` to `dev`
+1. Update `charts/my_values.yaml` and set `api.version` to `dev`.
 
 ### Useful commands
 
 #### Restart the API server
 
    ```
-   kubectl -n kore rollout restart deployment kore-apiserver
+   make kind-apiserver-reload
    ```
 
 #### Tail the API server logs
 
    ```
-   kubectl -n kore logs -f -l name=kore-apiserver
-   ```
-
-#### Restart the UI
-
-   ```
-   kubectl -n kore rollout restart deployment kore-portal
-   ```
-
-#### Tail the UI logs
-
-   ```
-   kubectl -n kore logs -f -l name=kore-portal
+   make kind-apiserver-logs
    ```
