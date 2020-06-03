@@ -1,19 +1,7 @@
-#!/bin/bash
+#!/bin/sh
 
-if [ ! -f ../demo.env ] ; then
-    echo "You could copy and edit the file:"
-    echo "    cp ../hack/compose/demo.env.tmpl ../demo.env"
-    echo "... or run bin/kore local configure"
-    exit 1
-fi
-source ../demo.env
-export \
-    KORE_IDP_CLIENT_ID \
-    KORE_IDP_CLIENT_SECRET \
-    KORE_IDP_SERVER_URL \
-    KORE_IDP_USER_CLAIMS \
-    KORE_IDP_CLIENT_SCOPES \
-    KORE_FEATURE_GATES \
-    KORE_UI_SHOW_PROTOTYPES
+set -euo pipefail
 
-npm start
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+${DIR}/run-with-env.sh npm start
