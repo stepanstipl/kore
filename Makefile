@@ -117,8 +117,6 @@ kind-image-dev:
 	@echo "--> Building dev Docker image for Kind"
 	docker build -t ${REGISTRY}/${AUTHOR}/kore-apiserver:dev -f images/Dockerfile.kore-apiserver.dev images
 	kind load docker-image ${REGISTRY}/${AUTHOR}/kore-apiserver:dev --name kore
-	docker build -t ${REGISTRY}/${AUTHOR}/kore-ui:dev -f ui/Dockerfile.dev ui
-	kind load docker-image ${REGISTRY}/${AUTHOR}/kore-ui:dev --name kore
 
 push-images:
 	@echo "--> Pushing docker images"
@@ -477,10 +475,4 @@ kind-apiserver-stop:
 kind-apiserver-reload: kind-apiserver-stop kind-apiserver kind-apiserver-start
 
 kind-apiserver-logs:
-	@while true; do kubectl --context=kind-kore -n kore logs -f -l name=kore-apiserver | cat; sleep 1; done
-
-kind-ui-reload:
-	kubectl --context=kind-kore -n kore rollout restart deployment kore-portal
-
-kind-ui-logs:
-	@while true; do kubectl --context=kind-kore -n kore logs -f -l name=kore-portal | cat; sleep 1; done
+	@while true; do kubectl --context=kind-kore -n kore logs -f -l name=kore-apiserver || true; sleep 1; done
