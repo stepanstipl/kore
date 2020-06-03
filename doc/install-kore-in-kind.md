@@ -1,4 +1,8 @@
-# How to install Kore in Kind using the Helm chart
+# How to develop localy using kind
+
+Kore depends on and manages it's dependencies in Kubernetes.
+
+This guide enables the use of Kind when testing kore localy.
 
 1. Install kind:
 
@@ -6,48 +10,22 @@
     GO111MODULE="on" go get sigs.k8s.io/kind@v0.8.1
     ```
 
-1. Create a Kind cluster:
-
-    ```
-    cat <<EOF | kind create cluster --name kore --config=-
-    kind: Cluster
-    apiVersion: kind.x-k8s.io/v1alpha4
-    nodes:
-      - role: control-plane
-        image: kindest/node:v1.15.11@sha256:6cc31f3533deb138792db2c7d1ffc36f7456a06f1db5556ad3b6927641016f50
-        extraPortMappings:
-          - containerPort: 3000
-            hostPort: 3000
-            protocol: TCP
-          - containerPort: 10080
-            hostPort: 10080
-            protocol: TCP
-        extraMounts:
-          - hostPath: ${GOPATH}/src/github.com/appvia/kore
-            containerPath: /go/src/github.com/appvia/kore
-    EOF
-    ```
-
-1. Make sure to use the kind context for kore:
-
-    ```
-    kubectl config use-context kind-kore
-    ```
-
-1. Create the kore namespace
-
-    ```
-    kubectl create ns kore
-    ```
-
 1. Create the `charts/my_values.yaml` file:
 
+    set IDP values e.g. see [here](local-quick-start.md#configure-auth0)
     ```
+    export KORE_IDP_CLIENT_ID=<your client id>
+    export KORE_IDP_CLIENT_SECRET=<your client secret>
+    export KORE_IDP_SERVER_URL=<your openid server url>
+    ```
+    create the helm values file:
+    ```
+    cat >> ./charts/my_values.yaml << EOF
     ---
     idp:
-      client_id: [...]
-      client_secret: [...]
-      server_url: [...]
+      client_id: ${KORE_IDP_CLIENT_ID:?'missing var'}
+      client_secret: ${KORE_IDP_CLIENT_SECRET:?'missing var'}
+      server_url: ${KORE_IDP_SERVER_URL:?'missing var'}
     api:
       endpoint:
         detect: false
@@ -56,6 +34,7 @@
       version: latest
       replicas: 1
       feature_gates: []
+      version: dev
     ui:
       endpoint:
         detect: false
@@ -64,20 +43,12 @@
       version: latest
       replicas: 1
       feature_gates: []
+      version: dev
      mysql:
        pvc:
          size: 1Gi
+    EOF
     ```
-
-1. Install the Helm chart
-
-    Ensure you have helm v3 installed: https://github.com/helm/helm/releases
-
-    ```
-    helm install --namespace kore kore ./charts/kore --wait -f ./charts/my_values.yaml
-    ```
-
-1. Navigate to http://localhost:3000 or run `kore login`
 
 ## Local development
 
@@ -86,20 +57,16 @@ Note: Only the API server runs in the Kubernetes cluster. You have to run the UI
 1. Build the dev Docker image and load it into the Kind cluster:
 
     ```
-    make kind-image-dev
+    make kind-dev
     ```
 
-1. Update `charts/my_values.yaml` and set `api.version` to `dev`.
-
-### Useful commands
-
-#### Restart the API server
+2. Re-build and reload api server changes:
 
    ```
    make kind-apiserver-reload
    ```
 
-#### Tail the API server logs
+3. Tail api server logs simply
 
    ```
    make kind-apiserver-logs
