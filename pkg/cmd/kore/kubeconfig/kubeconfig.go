@@ -20,6 +20,7 @@ import (
 	"errors"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	cmdutils "github.com/appvia/kore/pkg/cmd/utils"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 	"github.com/appvia/kore/pkg/utils/render"
@@ -134,6 +135,9 @@ func (o *KubeConfigOptions) WriteConfig(clusters *clustersv1.ClusterList, path s
 	}
 
 	for _, x := range clusters.Items {
+		if x.Status.Status == corev1.DeletingStatus {
+			continue
+		}
 		if x.Status.AuthProxyEndpoint == "" {
 			o.Println("SKIPPING CLUSTER: %s as it does not have an endpoint yet", x.Name)
 			continue
