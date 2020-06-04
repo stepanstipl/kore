@@ -274,13 +274,13 @@ func (o *CreateClusterOptions) CreateCluster() (*clustersv1.Cluster, error) {
 		return nil, err
 	}
 
-	config := string(plan.Spec.Configuration.Raw)
+	config := plan.Spec.Configuration.Raw
 	if config, err = cmdutil.PatchJSON(config, o.PlanParams); err != nil {
 		return nil, err
 	}
 
 	// @step: inject ourself as the cluster admin
-	config, err = sjson.Set(config, "clusterUsers", []clustersv1.ClusterUser{
+	config, err = sjson.SetBytes(config, "clusterUsers", []clustersv1.ClusterUser{
 		{
 			Username: userauth.Username,
 			Roles:    []string{"cluster-admin"},

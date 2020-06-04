@@ -7026,8 +7026,11 @@ spec:
                 sources will override any existing keys defined in Configuration
               items:
                 properties:
-                  name:
-                    description: Name is the name of the configuration parameter
+                  path:
+                    description: 'Path is the JSON path of the configuration parameter
+                      Examples: "field", "map_field.value", "array_field.0", "array_field.0.value"
+                      To append a value to an existing array: "array_field.-1" To
+                      reference a numeric key on a map: "map_field.:123.value"'
                     minLength: 1
                     type: string
                   secretKeyRef:
@@ -7053,7 +7056,7 @@ spec:
                     - name
                     type: object
                 required:
-                - name
+                - path
                 - secretKeyRef
                 type: object
               type: array
@@ -7246,8 +7249,11 @@ spec:
                 sources will override any existing keys defined in Configuration
               items:
                 properties:
-                  name:
-                    description: Name is the name of the configuration parameter
+                  path:
+                    description: 'Path is the JSON path of the configuration parameter
+                      Examples: "field", "map_field.value", "array_field.0", "array_field.0.value"
+                      To append a value to an existing array: "array_field.-1" To
+                      reference a numeric key on a map: "map_field.:123.value"'
                     minLength: 1
                     type: string
                   secretKeyRef:
@@ -7273,7 +7279,7 @@ spec:
                     - name
                     type: object
                 required:
-                - name
+                - path
                 - secretKeyRef
                 type: object
               type: array

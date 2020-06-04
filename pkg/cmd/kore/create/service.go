@@ -178,9 +178,9 @@ func (o *CreateServiceOptions) CreateService() (*servicesv1.Service, error) {
 		return nil, err
 	}
 
-	var configJSON string
+	var configJSON []byte
 	if plan.Spec.Configuration != nil {
-		configJSON = string(plan.Spec.Configuration.Raw)
+		configJSON = plan.Spec.Configuration.Raw
 	}
 
 	if configJSON, err = cmdutil.PatchJSON(configJSON, o.PlanParams); err != nil {

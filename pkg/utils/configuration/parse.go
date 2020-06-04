@@ -21,6 +21,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/appvia/kore/pkg/utils/jsonutils"
+
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 
 	"k8s.io/apimachinery/pkg/types"
@@ -95,11 +97,8 @@ func ParseConfiguration(
 		config = &apiextv1.JSON{Raw: []byte(`{}`)}
 	}
 
-	configData := map[string]interface{}{}
-
-	if err := json.Unmarshal(config.Raw, &configData); err != nil {
-		return fmt.Errorf("failed to unmarshal configuration: %w", err)
-	}
+	document := make([]byte, len(config.Raw))
+	copy(document, config.Raw)
 
 	cachedSecrets := cachedSecrets{}
 
@@ -136,19 +135,17 @@ func ParseConfiguration(
 				}
 			}
 
-			configData[cfs.Name] = string(value)
+			if document, err = jsonutils.SetJSONProperty(document, cfs.Path, value); err != nil {
+				return fmt.Errorf("%q is invalid: %w", cfs.Path, err)
+			}
 		default:
-			return fmt.Errorf("configuration source definition is invalid, reference is missing for %s", cfs.Name)
+			return fmt.Errorf("configuration source definition is invalid, reference is missing for %s", cfs.Path)
 		}
 	}
 
-	finalConfigBytes, err := json.Marshal(configData)
-	if err != nil {
-		return fmt.Errorf("failed to marshal configuration: %w", err)
-	}
-
-	if err := json.Unmarshal(finalConfigBytes, v); err != nil {
+	if err := json.Unmarshal(document, v); err != nil {
 		return fmt.Errorf("failed to unmarshal the configuration: %w", err)
 	}
+
 	return nil
 }

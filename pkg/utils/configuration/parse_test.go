@@ -18,6 +18,7 @@ package configuration_test
 
 import (
 	"context"
+	"encoding/base64"
 	"reflect"
 
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
@@ -59,8 +60,13 @@ type testObjectSpec struct {
 }
 
 type testConfig struct {
-	Param1 string `json:"param1"`
-	Param2 string `json:"param2"`
+	Param1     string                   `json:"param1"`
+	Param2     string                   `json:"param2"`
+	ParamMap   map[string]interface{}   `json:"param_map"`
+	ParamArray []map[string]interface{} `json:"param_array"`
+	ParamBool  bool                     `json:"param_bool"`
+	ParamInt   int                      `json:"param_int"`
+	ParamFloat float64                  `json:"param_float"`
 }
 
 var _ = Describe("ParseObjectConfiguration", func() {
@@ -68,24 +74,14 @@ var _ = Describe("ParseObjectConfiguration", func() {
 	var v *testConfig
 	var o *testObject
 	var parseErr error
+	var secretData map[string]string
 
 	BeforeEach(func() {
 		client = &controllersfakes.FakeClient{}
-		client.GetStub = func(ctx context.Context, name types.NamespacedName, object runtime.Object) error {
-			if name.Namespace == "testsecretns" && name.Name == "testsecret" {
-				secret := &configv1.Secret{
-					Spec: configv1.SecretSpec{
-						Data: map[string]string{
-							"secretkey1": "c2VjcmV0dmFsdWUx", // "secretvalue1"
-							"secretkey2": "c2VjcmV0dmFsdWUy", // "secretvalue2"
-						},
-					},
-				}
-				reflect.ValueOf(object).Elem().Set(reflect.ValueOf(secret).Elem())
-				return nil
-			}
 
-			return errors.NewNotFound(schema.GroupResource{Resource: "Secret"}, name.Name)
+		secretData = map[string]string{
+			"secretkey1": "secretvalue1",
+			"secretkey2": "secretvalue2",
 		}
 
 		v = &testConfig{}
@@ -98,7 +94,7 @@ var _ = Describe("ParseObjectConfiguration", func() {
 				Configuration: &apiextv1.JSON{Raw: []byte(`{"param1":"value1"}`)},
 				ConfigurationFrom: []corev1.ConfigurationFromSource{
 					{
-						Name: "param2",
+						Path: "param2",
 						SecretKeyRef: &corev1.OptionalSecretKeySelector{
 							SecretKeySelector: corev1.SecretKeySelector{
 								Name:      "testsecret",
@@ -115,6 +111,23 @@ var _ = Describe("ParseObjectConfiguration", func() {
 	})
 
 	JustBeforeEach(func() {
+		client.GetStub = func(ctx context.Context, name types.NamespacedName, object runtime.Object) error {
+			if name.Namespace == "testsecretns" && name.Name == "testsecret" {
+				secret := &configv1.Secret{
+					Spec: configv1.SecretSpec{
+						Data: map[string]string{},
+					},
+				}
+				for k, v := range secretData {
+					secret.Spec.Data[k] = base64.StdEncoding.EncodeToString([]byte(v))
+				}
+				reflect.ValueOf(object).Elem().Set(reflect.ValueOf(secret).Elem())
+				return nil
+			}
+
+			return errors.NewNotFound(schema.GroupResource{Resource: "Secret"}, name.Name)
+		}
+
 		logger := logrus.New()
 		logger.Out = GinkgoWriter
 		parseErr = configuration.ParseObjectConfiguration(context.Background(), client, o, v)
@@ -128,11 +141,25 @@ var _ = Describe("ParseObjectConfiguration", func() {
 		}))
 	})
 
+	When("the secret value is quoted string", func() {
+		BeforeEach(func() {
+			secretData["secretkey2"] = `"123"`
+		})
+
+		It("should set the string value", func() {
+			Expect(parseErr).ToNot(HaveOccurred())
+			Expect(v).To(Equal(&testConfig{
+				Param1: "value1",
+				Param2: "123",
+			}))
+		})
+	})
+
 	When("it loads multiple values from the same secret", func() {
 		BeforeEach(func() {
 			o.Spec.ConfigurationFrom = []corev1.ConfigurationFromSource{
 				{
-					Name: "param1",
+					Path: "param1",
 					SecretKeyRef: &corev1.OptionalSecretKeySelector{
 						SecretKeySelector: corev1.SecretKeySelector{
 							Name:      "testsecret",
@@ -143,7 +170,7 @@ var _ = Describe("ParseObjectConfiguration", func() {
 					},
 				},
 				{
-					Name: "param2",
+					Path: "param2",
 					SecretKeyRef: &corev1.OptionalSecretKeySelector{
 						SecretKeySelector: corev1.SecretKeySelector{
 							Name:      "testsecret",
@@ -163,6 +190,186 @@ var _ = Describe("ParseObjectConfiguration", func() {
 				Param2: "secretvalue2",
 			}))
 			Expect(client.GetCallCount()).To(Equal(1))
+		})
+	})
+
+	When("name defines a parameter on a map parameter", func() {
+		BeforeEach(func() {
+			o.Spec.ConfigurationFrom[0].Path = "param_map.value"
+		})
+
+		It("should set the value on the map", func() {
+			Expect(parseErr).ToNot(HaveOccurred())
+			Expect(v).To(Equal(&testConfig{
+				Param1: "value1",
+				ParamMap: map[string]interface{}{
+					"value": "secretvalue2",
+				},
+			}))
+		})
+	})
+
+	When("name defines a parameter on an array parameter", func() {
+		BeforeEach(func() {
+			o.Spec.ConfigurationFrom[0].Path = "param_array.0.value"
+		})
+
+		It("should set the value on the map", func() {
+			Expect(parseErr).ToNot(HaveOccurred())
+			Expect(v).To(Equal(&testConfig{
+				Param1: "value1",
+				ParamArray: []map[string]interface{}{
+					{
+						"value": "secretvalue2",
+					},
+				},
+			}))
+		})
+	})
+
+	When("the secret value is bool", func() {
+		BeforeEach(func() {
+			secretData["param_bool"] = `true`
+			o.Spec.ConfigurationFrom = []corev1.ConfigurationFromSource{
+				{
+					Path: "param_bool",
+					SecretKeyRef: &corev1.OptionalSecretKeySelector{
+						SecretKeySelector: corev1.SecretKeySelector{
+							Name:      "testsecret",
+							Namespace: "testsecretns",
+							Key:       "param_bool",
+						},
+					},
+				},
+			}
+		})
+
+		It("should set the bool value", func() {
+			Expect(parseErr).ToNot(HaveOccurred())
+			Expect(v).To(Equal(&testConfig{
+				Param1:    "value1",
+				ParamBool: true,
+			}))
+		})
+	})
+
+	When("the secret value is integer", func() {
+		BeforeEach(func() {
+			secretData["param_int"] = `123`
+			o.Spec.ConfigurationFrom = []corev1.ConfigurationFromSource{
+				{
+					Path: "param_int",
+					SecretKeyRef: &corev1.OptionalSecretKeySelector{
+						SecretKeySelector: corev1.SecretKeySelector{
+							Name:      "testsecret",
+							Namespace: "testsecretns",
+							Key:       "param_int",
+						},
+					},
+				},
+			}
+		})
+
+		It("should set the integer value", func() {
+			Expect(parseErr).ToNot(HaveOccurred())
+			Expect(v).To(Equal(&testConfig{
+				Param1:   "value1",
+				ParamInt: 123,
+			}))
+		})
+	})
+
+	When("the secret value is float", func() {
+		BeforeEach(func() {
+			secretData["param_float"] = `123.456`
+			o.Spec.ConfigurationFrom = []corev1.ConfigurationFromSource{
+				{
+					Path: "param_float",
+					SecretKeyRef: &corev1.OptionalSecretKeySelector{
+						SecretKeySelector: corev1.SecretKeySelector{
+							Name:      "testsecret",
+							Namespace: "testsecretns",
+							Key:       "param_float",
+						},
+					},
+				},
+			}
+		})
+
+		It("should set the float value", func() {
+			Expect(parseErr).ToNot(HaveOccurred())
+			Expect(v).To(Equal(&testConfig{
+				Param1:     "value1",
+				ParamFloat: 123.456,
+			}))
+		})
+	})
+
+	When("the secret value is a JSON object", func() {
+		BeforeEach(func() {
+			secretData["param_map"] = `{"foo": "bar"}`
+			o.Spec.ConfigurationFrom = []corev1.ConfigurationFromSource{
+				{
+					Path: "param_map",
+					SecretKeyRef: &corev1.OptionalSecretKeySelector{
+						SecretKeySelector: corev1.SecretKeySelector{
+							Name:      "testsecret",
+							Namespace: "testsecretns",
+							Key:       "param_map",
+						},
+					},
+				},
+			}
+		})
+
+		It("should set the map value", func() {
+			Expect(parseErr).ToNot(HaveOccurred())
+			Expect(v).To(Equal(&testConfig{
+				Param1: "value1",
+				ParamMap: map[string]interface{}{
+					"foo": "bar",
+				},
+			}))
+		})
+	})
+
+	When("the secret value is an array", func() {
+		BeforeEach(func() {
+			secretData["param_array"] = `[{"foo": "bar"}]`
+			o.Spec.ConfigurationFrom = []corev1.ConfigurationFromSource{
+				{
+					Path: "param_array",
+					SecretKeyRef: &corev1.OptionalSecretKeySelector{
+						SecretKeySelector: corev1.SecretKeySelector{
+							Name:      "testsecret",
+							Namespace: "testsecretns",
+							Key:       "param_array",
+						},
+					},
+				},
+			}
+		})
+
+		It("should set the array value", func() {
+			Expect(parseErr).ToNot(HaveOccurred())
+			Expect(v).To(Equal(&testConfig{
+				Param1: "value1",
+				ParamArray: []map[string]interface{}{
+					{
+						"foo": "bar",
+					},
+				},
+			}))
+		})
+	})
+
+	When("name defines a parameter on a non-map, non-array parameter", func() {
+		BeforeEach(func() {
+			o.Spec.ConfigurationFrom[0].Path = "param1.value"
+		})
+
+		It("should throw an error", func() {
+			Expect(parseErr).To(HaveOccurred())
 		})
 	})
 

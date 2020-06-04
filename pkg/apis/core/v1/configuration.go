@@ -17,10 +17,13 @@
 package v1
 
 type ConfigurationFromSource struct {
-	// Name is the name of the configuration parameter
+	// Path is the JSON path of the configuration parameter
+	// Examples: "field", "map_field.value", "array_field.0", "array_field.0.value"
+	// To append a value to an existing array: "array_field.-1"
+	// To reference a numeric key on a map: "map_field.:123.value"
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinLength=1
-	Name string `json:"name"`
+	Path string `json:"path"`
 	// SecretKeyRef is a reference to a key in a secret
 	// +kubebuilder:validation:Required
 	SecretKeyRef *OptionalSecretKeySelector `json:"secretKeyRef"`

@@ -5605,11 +5605,11 @@
     },
     "v1.ConfigurationFromSource": {
       "required": [
-        "name",
+        "path",
         "secretKeyRef"
       ],
       "properties": {
-        "name": {
+        "path": {
           "type": "string"
         },
         "secretKeyRef": {
@@ -6152,8 +6152,8 @@
     },
     "v1.OptionalSecretKeySelector": {
       "required": [
-        "key",
-        "name"
+        "name",
+        "key"
       ],
       "properties": {
         "key": {

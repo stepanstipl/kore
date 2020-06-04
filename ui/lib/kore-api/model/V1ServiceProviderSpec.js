@@ -12,7 +12,7 @@
  */
 
 import ApiClient from '../ApiClient';
-import V1Ownership from './V1Ownership';
+import V1ConfigurationFromSource from './V1ConfigurationFromSource';
 
 /**
  * The V1ServiceProviderSpec model module.
@@ -55,8 +55,8 @@ class V1ServiceProviderSpec {
             if (data.hasOwnProperty('configuration')) {
                 obj['configuration'] = ApiClient.convertToType(data['configuration'], Object);
             }
-            if (data.hasOwnProperty('credentials')) {
-                obj['credentials'] = V1Ownership.constructFromObject(data['credentials']);
+            if (data.hasOwnProperty('configurationFrom')) {
+                obj['configurationFrom'] = ApiClient.convertToType(data['configurationFrom'], [V1ConfigurationFromSource]);
             }
             if (data.hasOwnProperty('description')) {
                 obj['description'] = ApiClient.convertToType(data['description'], 'String');
@@ -85,17 +85,17 @@ class V1ServiceProviderSpec {
         this['configuration'] = configuration;
     }
 /**
-     * @return {module:model/V1Ownership}
+     * @return {Array.<module:model/V1ConfigurationFromSource>}
      */
-    getCredentials() {
-        return this.credentials;
+    getConfigurationFrom() {
+        return this.configurationFrom;
     }
 
     /**
-     * @param {module:model/V1Ownership} credentials
+     * @param {Array.<module:model/V1ConfigurationFromSource>} configurationFrom
      */
-    setCredentials(credentials) {
-        this['credentials'] = credentials;
+    setConfigurationFrom(configurationFrom) {
+        this['configurationFrom'] = configurationFrom;
     }
 /**
      * @return {String}
@@ -145,9 +145,9 @@ class V1ServiceProviderSpec {
 V1ServiceProviderSpec.prototype['configuration'] = undefined;
 
 /**
- * @member {module:model/V1Ownership} credentials
+ * @member {Array.<module:model/V1ConfigurationFromSource>} configurationFrom
  */
-V1ServiceProviderSpec.prototype['credentials'] = undefined;
+V1ServiceProviderSpec.prototype['configurationFrom'] = undefined;
 
 /**
  * @member {String} description

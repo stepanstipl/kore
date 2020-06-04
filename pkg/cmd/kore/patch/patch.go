@@ -17,9 +17,11 @@
 package patch
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
-	"strings"
+
+	"github.com/appvia/kore/pkg/utils/jsonutils"
 
 	"github.com/appvia/kore/pkg/client"
 	"github.com/appvia/kore/pkg/cmd/errors"
@@ -152,18 +154,18 @@ func (o *PatchOptions) Run() error {
 	}
 
 	// @step: apply the patch to the json
-	update, err := func() (string, error) {
+	update, err := func() ([]byte, error) {
 		if o.Value == "" {
-			return sjson.Delete(string(content), o.Key)
+			return sjson.DeleteBytes(content, o.Key)
 		}
 
-		return cmdutil.SetJSONProperty(string(content), o.Key, o.Value)
+		return jsonutils.SetJSONProperty(content, o.Key, o.Value)
 	}()
 	if err != nil {
 		return err
 	}
 
-	if err := json.NewDecoder(strings.NewReader(update)).Decode(u); err != nil {
+	if err := json.NewDecoder(bytes.NewReader(update)).Decode(u); err != nil {
 		return err
 	}
 

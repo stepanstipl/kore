@@ -21,15 +21,15 @@ import (
 	"io"
 	"io/ioutil"
 	"regexp"
-	"strconv"
 	"strings"
+
+	"github.com/appvia/kore/pkg/utils/jsonutils"
 
 	"github.com/appvia/kore/pkg/cmd/errors"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/render"
 
 	"github.com/spf13/cobra"
-	"github.com/tidwall/sjson"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/yaml"
@@ -206,7 +206,7 @@ func ConvertColumnsToRender(columns []Column) []render.PrinterColumnFunc {
 	return list
 }
 
-func PatchJSON(document string, cliValues []string) (string, error) {
+func PatchJSON(document []byte, cliValues []string) ([]byte, error) {
 	var parameterRegexp = regexp.MustCompile(`\s*=\s*`)
 
 	params := make(map[string]string)
@@ -215,43 +215,18 @@ func PatchJSON(document string, cliValues []string) (string, error) {
 		e := parameterRegexp.Split(strings.TrimSpace(x), 2)
 
 		if len(e) != 2 || e[0] == "" || e[1] == "" {
-			return "", errors.NewInvalidParamError("param", x)
+			return nil, errors.NewInvalidParamError("param", x)
 		}
 		params[e[0]] = e[1]
 	}
 
 	var err error
 	for key, value := range params {
-		if strings.HasPrefix(value, "{") || strings.HasPrefix(value, "[") {
-			document, err = sjson.SetRaw(document, key, value)
-			if err != nil {
-				return "", err
-			}
-		} else {
-			document, err = SetJSONProperty(document, key, value)
-			if err != nil {
-				return "", err
-			}
+		document, err = jsonutils.SetJSONProperty(document, key, value)
+		if err != nil {
+			return nil, err
 		}
 	}
 
 	return document, nil
-}
-
-func SetJSONProperty(document, key, value string) (string, error) {
-	return sjson.Set(document, key, func(v string) interface{} {
-		if val, err := strconv.ParseBool(v); err == nil {
-			return val
-		}
-		if val, err := strconv.ParseFloat(v, 64); err == nil {
-			return val
-		}
-		if val, err := strconv.ParseInt(v, 10, 64); err == nil {
-			return val
-		}
-		if val, err := strconv.Unquote(v); err == nil {
-			return val
-		}
-		return v
-	}(value))
 }

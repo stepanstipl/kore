@@ -138,12 +138,12 @@ $ kore create secret aws-broker \
           - redshift-custom
           - s3-custom
       configurationFrom:
-        - name: aws_access_key_id
+        - path: aws_access_key_id
           secretKeyRef:
             name: aws-broker
             namespace: kore-admin
             key: access_key_id
-        - name: aws_secret_access_key
+        - path: aws_secret_access_key
           secretKeyRef:
             name: aws-broker
             namespace: kore-admin

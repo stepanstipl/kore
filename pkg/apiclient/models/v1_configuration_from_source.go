@@ -17,9 +17,9 @@ import (
 // swagger:model v1.ConfigurationFromSource
 type V1ConfigurationFromSource struct {
 
-	// name
+	// path
 	// Required: true
-	Name *string `json:"name"`
+	Path *string `json:"path"`
 
 	// secret key ref
 	// Required: true
@@ -30,7 +30,7 @@ type V1ConfigurationFromSource struct {
 func (m *V1ConfigurationFromSource) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateName(formats); err != nil {
+	if err := m.validatePath(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -44,9 +44,9 @@ func (m *V1ConfigurationFromSource) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1ConfigurationFromSource) validateName(formats strfmt.Registry) error {
+func (m *V1ConfigurationFromSource) validatePath(formats strfmt.Registry) error {
 
-	if err := validate.Required("name", "body", m.Name); err != nil {
+	if err := validate.Required("path", "body", m.Path); err != nil {
 		return err
 	}
 
