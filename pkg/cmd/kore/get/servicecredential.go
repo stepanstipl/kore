@@ -49,11 +49,9 @@ type GetServiceCredentialOptions struct {
 func NewCmdGetServiceCredential(factory cmdutil.Factory) *cobra.Command {
 	o := &GetServiceCredentialOptions{Factory: factory}
 
-	resource := o.Resources().MustLookup("servicecredential")
-
 	command := &cobra.Command{
 		Use:     "servicecredential",
-		Aliases: []string{"servicecredentials", resource.ShortName},
+		Aliases: []string{"servicecredentials"},
 		Short:   "Returns all the service plans",
 		Example: "kore get servicecredential [NAME] [options]",
 		Run:     cmdutil.DefaultRunFunc(o),
