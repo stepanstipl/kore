@@ -476,3 +476,11 @@ kind-apiserver-reload: kind-apiserver-stop kind-apiserver kind-apiserver-start
 
 kind-apiserver-logs:
 	@while true; do kubectl --context=kind-kore -n kore logs -f -l name=kore-apiserver || true; sleep 1; done
+
+generate-crd-reference:
+	echo "Generating CRD reference documentation"
+	go run github.com/ahmetb/gen-crd-api-reference-docs \
+		-api-dir=./pkg/apis \
+		-config=./hack/crd-reference-doc-gen/config.json \
+		-template-dir=./hack/crd-reference-doc-gen/template \
+		-out-file=./generated/crd-reference/index.html
