@@ -17,6 +17,7 @@
 package aws
 
 import (
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 )
 
@@ -50,4 +51,17 @@ type VPC struct {
 	PublicIPV4EgressAddresses []string
 	// Cache of aws VPC
 	awsObj *ec2.Vpc
+}
+
+// ASGDetails is the information extracted from an ARN from an autoscaling group
+type ASGDetails struct {
+	Name string
+	ID   string
+	ARN  arn.ARN
+}
+
+// NodeGroupAutoScaler is the input for creating IAM roles and policies
+type NodeGroupAutoScaler struct {
+	NodeGroupName  string
+	AutoScalingARN string
 }
