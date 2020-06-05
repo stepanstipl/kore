@@ -51,6 +51,7 @@ api:
     - basicauth
     - admintoken
     - openid
+  auth_plugin_config: {}
   replicas: 2
 ui:
   feature_gates: []

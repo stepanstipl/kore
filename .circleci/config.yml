@@ -223,6 +223,8 @@ jobs:
           name: Integration testing API
           command: |
             make check-swagger-apiclient api-test
+          environment:
+            <<: *SERVICES_ENV
 
   release:
     environment:
