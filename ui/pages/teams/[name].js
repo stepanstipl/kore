@@ -53,7 +53,7 @@ class TeamDashboard extends React.Component {
 
   static getInitialProps = async ctx => {
     const teamDetails = await TeamDashboard.getTeamDetails(ctx)
-    if (Object.keys(teamDetails.team).length === 0 && ctx.res) {
+    if (!teamDetails.team && ctx.res) {
       /* eslint-disable-next-line require-atomic-updates */
       ctx.res.statusCode = 404
     }
@@ -67,9 +67,8 @@ class TeamDashboard extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    const teamFound = Object.keys(this.props.team).length
-    const prevTeamName = prevProps.team.metadata && prevProps.team.metadata.name
-    if (teamFound && this.props.team.metadata.name !== prevTeamName) {
+    const prevTeamName = prevProps.team && prevProps.team.metadata && prevProps.team.metadata.name
+    if (this.props.team && this.props.team.metadata.name !== prevTeamName) {
       this.setState({ tabActiveKey: 'clusters' })
     }
   }
@@ -145,7 +144,7 @@ class TeamDashboard extends React.Component {
   render() {
     const { team, invitation } = this.props
 
-    if (Object.keys(team).length === 0) {
+    if (!team) {
       return <Error statusCode={404} />
     }
 
