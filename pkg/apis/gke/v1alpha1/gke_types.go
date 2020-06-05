@@ -36,32 +36,18 @@ type GKESpec struct {
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
 	Description string `json:"description"`
-	// Version is the initial kubernetes version which the cluster should be
-	// configured with.
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Required
+	// Version is the kubernetes version which the cluster master should be
+	// configured with. '-' gives the current GKE default version, 'latest' gives most recent,
+	// 1.15 would be latest 1.15.x release, 1.15.1 would be the latest 1.15.1 release, and
+	// 1.15.1-gke.1 would be the exact specified version. Must be blank if following release channel.
+	// +kubebuilder:validation:Optional
 	Version string `json:"version"`
-	// Size is the number of nodes per zone which should exist in the cluster.
-	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:validation:Required
-	Size int64 `json:"size"`
-	// MaxSize assuming the autoscaler is enabled this is the maximum number
-	// nodes permitted
-	// +kubebuilder:validation:Minimum=2
-	// +kubebuilder:validation:Required
-	MaxSize int64 `json:"maxSize"`
-	// DiskSize is the size of the disk used by the compute nodes.
-	// +kubebuilder:validation:Minimum=100
-	// +kubebuilder:validation:Required
-	DiskSize int64 `json:"diskSize"`
-	// ImageType is the operating image to use for the default compute pool.
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Required
-	ImageType string `json:"imageType"`
-	// MachineType is the machine type which the default nodes pool should use.
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Required
-	MachineType string `json:"machineType"`
+	// ReleaseChannel is the GKE release channel to follow, '' (to follow no channel),
+	// 'STABLE' (only battle-tested releases every few months), 'REGULAR' (stable releases
+	// every few weeks) or 'RAPID' (bleeding edge, not suitable for production workloads). If anything other
+	// than '', Version must be blank.
+	// +kubebuilder:validation:Optional
+	ReleaseChannel string `json:"releaseChannel"`
 	// AuthorizedMasterNetworks is a collection of authorized networks which is
 	// permitted to speak to the kubernetes API, default to all if not provided.
 	// +kubebuilder:validation:Optional
@@ -72,11 +58,6 @@ type GKESpec struct {
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
 	Network string `json:"network"`
-	// Subnetwork is name of the GCP subnetwork which the cluster nodes
-	// should reside
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Required
-	Subnetwork string `json:"subnetwork"`
 	// ServicesIPV4Cidr is an optional network cidr configured for the cluster
 	// services
 	// +kubebuilder:validation:Optional
@@ -89,19 +70,6 @@ type GKESpec struct {
 	// pod network on
 	// +kubebuilder:validation:Optional
 	ClusterIPV4Cidr string `json:"clusterIPV4Cidr"`
-	// EnableAutorepair indicates if the cluster should be configured with
-	// auto repair is enabled
-	// +kubebuilder:validation:Optional
-	EnableAutorepair bool `json:"enableAutorepair"`
-	// EnableAutoscaler indicates if the cluster should be configured with
-	// cluster autoscaling turned on
-	// +kubebuilder:validation:Optional
-	EnableAutoscaler bool `json:"enableAutoscaler"`
-	// EnableAutoUpgrade indicates if the cluster should be configured with
-	// autograding enabled; meaning both nodes are masters are autoscaled scheduled
-	// to upgrade during your maintenance window.
-	// +kubebuilder:validation:Optional
-	EnableAutoupgrade bool `json:"enableAutoupgrade"`
 	// EnableHorizontalPodAutoscaler indicates if the cluster is configured with
 	// the horizontal pod autoscaler addon. This automatically adjusts the cpu and
 	// memory resources of pods in accordance with their demand. You should ensure
@@ -149,6 +117,43 @@ type GKESpec struct {
 	// Tags is a collection of tags related to the cluster type
 	// +kubebuilder:validation:Optional
 	Tags map[string]string `json:"tags,omitempty"`
+	// NodePools is the set of node pools for this cluster. Required unless ALL deprecated properties except subnetwork are set.
+	// +kubebuilder:validation:Optional
+	// +listType=set
+	NodePools []GKENodePool `json:"nodePools,omitempty"`
+
+	// DEPRECATED: Set on node group instead, this property is now ignored. Size is the number of nodes per zone which should exist in the cluster.
+	// +kubebuilder:validation:Optional
+	Size int64 `json:"size,omitempty"`
+	// DEPRECATED: Set on node group instead, this property is now ignored. MaxSize assuming the autoscaler is enabled this is the maximum number
+	// nodes permitted
+	// +kubebuilder:validation:Optional
+	MaxSize int64 `json:"maxSize,omitempty"`
+	// DEPRECATED: Set on node group instead, this property is now ignored. DiskSize is the size of the disk used by the compute nodes.
+	// +kubebuilder:validation:Optional
+	DiskSize int64 `json:"diskSize,omitempty"`
+	// DEPRECATED: Set on node group instead, this property is now ignored. ImageType is the operating image to use for the default compute pool.
+	// +kubebuilder:validation:Optional
+	ImageType string `json:"imageType,omitempty"`
+	// DEPRECATED: Set on node group instead, this property is now ignored. MachineType is the machine type which the default nodes pool should use.
+	// +kubebuilder:validation:Optional
+	MachineType string `json:"machineType,omitempty"`
+	// DEPRECATED: This was always ignored. May be re-introduced in future. Subnetwork is name of the GCP subnetwork which the cluster nodes
+	// should reside -
+	// +kubebuilder:validation:Optional
+	Subnetwork string `json:"subnetwork,omitempty"`
+	// DEPRECATED: Set on node group instead, this property is now ignored. EnableAutoscaler indicates if the cluster should be configured with
+	// cluster autoscaling turned on
+	// +kubebuilder:validation:Optional
+	EnableAutoscaler bool `json:"enableAutoscaler,omitempty"`
+	// DEPRECATED: Set on node group instead, this property is now ignored. EnableAutoUpgrade indicates if the cluster should be configured with
+	// auto upgrading enabled; meaning both nodes are masters are scheduled to upgrade during your maintenance window.
+	// +kubebuilder:validation:Optional
+	EnableAutoupgrade bool `json:"enableAutoupgrade,omitempty"`
+	// DEPRECATED: Set on node group instead, this property is now ignored. EnableAutorepair indicates if the cluster should be configured with
+	// auto repair is enabled
+	// +kubebuilder:validation:Optional
+	EnableAutorepair bool `json:"enableAutorepair,omitempty"`
 }
 
 // AuthorizedNetwork provides a definition for the authorized networks
@@ -157,6 +162,70 @@ type AuthorizedNetwork struct {
 	Name string `json:"name"`
 	// CIDR is the network range associated to this network
 	CIDR string `json:"cidr"`
+}
+
+// GKENodePool represents a node pool within a GKE cluster
+type GKENodePool struct {
+	// Name provides a descriptive name for this node pool - must be unique within cluster
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	Name string `json:"name"`
+	// EnableAutoscaler indicates if the node pool should be configured with
+	// autoscaling turned on
+	// +kubebuilder:validation:Optional
+	EnableAutoscaler bool `json:"enableAutoscaler"`
+	// EnableAutorepair indicates if the node pool should automatically repair failed nodes
+	// +kubebuilder:validation:Optional
+	EnableAutorepair bool `json:"enableAutorepair"`
+	// Version is the initial kubernetes version which the node group should be
+	// configured with. '-' gives the same version as the master, 'latest' gives most recent,
+	// 1.15 would be latest 1.15.x release, 1.15.1 would be the latest 1.15.1 release, and
+	// 1.15.1-gke.1 would be the exact specified version. Must be within 2 minor versions of
+	// the master version (e.g. master 1.16 supports node versios 1.14-1.16). If
+	// ReleaseChannel set on cluster, this must be blank.
+	// +kubebuilder:validation:Optional
+	Version string `json:"version"`
+	// EnableAutoUpgrade indicates if the node group should be configured with autograding
+	// enabled. This must be true if the cluster has ReleaseChannel set.
+	// +kubebuilder:validation:Optional
+	EnableAutoupgrade bool `json:"enableAutoupgrade"`
+	// Size is the number of nodes per zone which should exist in the cluster. If
+	// auto-scaling is enabled, this will be the initial size of the node pool.
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Required
+	Size int64 `json:"size"`
+	// MinSize assuming the autoscaler is enabled this is the maximum number
+	// nodes permitted
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Required
+	MinSize int64 `json:"minSize"`
+	// MaxSize assuming the autoscaler is enabled this is the maximum number
+	// nodes permitted
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Required
+	MaxSize int64 `json:"maxSize"`
+	// MaxPodsPerNode controls how many pods can be scheduled onto each node in this pool
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Optional
+	MaxPodsPerNode int64 `json:"maxPodsPerNode"`
+	// MachineType controls the type of nodes used in this node pool
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	MachineType string `json:"machineType"`
+	// ImageType controls the operating system image of nodes used in this node pool
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:MinLength=1
+	ImageType string `json:"imageType"`
+	// DiskSize is the size of the disk used by the compute nodes.
+	// +kubebuilder:validation:Minimum=10
+	// +kubebuilder:validation:Required
+	DiskSize int64 `json:"diskSize"`
+	// Preemptible controls whether to use pre-emptible nodes.
+	// +kubebuilder:validation:Optional
+	Preemptible bool `json:"preemptible"`
+	// Labels is a set of labels to help Kubernetes workloads find this group
+	// +kubebuilder:validation:Optional
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 // GKEStatus defines the observed state of GKE

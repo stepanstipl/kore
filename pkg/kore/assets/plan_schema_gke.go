@@ -28,11 +28,7 @@ const GKEPlanSchema = `
 		"authorizedMasterNetworks",
 		"authProxyAllowedIPs",
 		"description",
-		"diskSize",
 		"domain",
-		"enableAutoupgrade",
-		"enableAutorepair",
-		"enableAutoscaler",
 		"enableDefaultTrafficBlock",
 		"enableHTTPLoadBalancer",
 		"enableHorizontalPodAutoscaler",
@@ -42,15 +38,10 @@ const GKEPlanSchema = `
 		"enableShieldedNodes",
 		"enableStackDriverLogging",
 		"enableStackDriverMetrics",
-		"imageType",
 		"inheritTeamMembers",
-		"machineType",
 		"maintenanceWindow",
-		"maxSize",
 		"network",
 		"region",
-		"size",
-		"subnetwork",
 		"version"
 	],
 	"properties": {
@@ -78,6 +69,7 @@ const GKEPlanSchema = `
 			"minItems": 1
 		},
 		"authProxyAllowedIPs": {
+			"title": "Auth Proxy Allowed IP Ranges",
 			"type": "array",
 			"description": "The networks which are allowed to connect to this cluster (e.g. via kubectl).",
 			"items": {
@@ -85,10 +77,6 @@ const GKEPlanSchema = `
 				"format": "1.2.3.4/16"
 			},
 			"minItems": 1
-		},
-		"authProxyImage": {
-			"type": "string",
-			"description": "TBC"
 		},
 		"clusterUsers": {
 			"type": "array",
@@ -109,7 +97,8 @@ const GKEPlanSchema = `
 						"type": "array",
 						"items": {
 							"type": "string",
-							"minLength": 1
+							"minLength": 1,
+							"enum": [ "view", "edit", "admin", "cluster-admin" ]
 						},
 						"minItems": 1
 					}
@@ -118,34 +107,19 @@ const GKEPlanSchema = `
 		},
 		"defaultTeamRole": {
 			"type": "string",
-			"description": "The default role that team members have on this cluster."
+			"description": "The default role that team members have on this cluster.",
+			"enum": [ "view", "edit", "admin", "cluster-admin" ]
 		},
 		"description": {
 			"type": "string",
 			"description": "Meaningful description of this cluster.",
 			"minLength": 1
 		},
-		"diskSize": {
-			"type": "number",
-			"description": "The amount of storage provisioned on this cluster? Or on its nodes?",
-			"multipleOf": 1,
-			"minimum": 10,
-			"maximum": 65536
-		},
 		"domain": {
 			"type": "string",
 			"description": "The domain for this cluster.",
-			"minLength": 1
-		},
-		"enableAutoupgrade": {
-			"type": "boolean",
-			"description": "Enable to keep this cluster updated whenever new versions of Kubernetes are made available by GCP."
-		},
-		"enableAutorepair": {
-			"type": "boolean"
-		},
-		"enableAutoscaler": {
-			"type": "boolean"
+			"minLength": 1,
+			"immutable": true
 		},
 		"enableDefaultTrafficBlock": {
 			"type": "boolean"
@@ -154,90 +128,337 @@ const GKEPlanSchema = `
 			"type": "boolean"
 		},
 		"enableHorizontalPodAutoscaler": {
-			"type": "boolean"
+			"type": "boolean",
+			"immutable": true
 		},
 		"enableIstio": {
-			"type": "boolean"
+			"type": "boolean",
+			"immutable": true
 		},
 		"enablePrivateEndpoint": {
-			"type": "boolean"
+			"type": "boolean",
+			"immutable": true
 		},
 		"enablePrivateNetwork": {
-			"type": "boolean"
+			"type": "boolean",
+			"immutable": true
 		},
 		"enableShieldedNodes": {
-			"type": "boolean"
+			"type": "boolean",
+			"description": "Shielded nodes provide additional verifications of the node OS and VM, with enhanced rootkit and bootkit protection applied",
+			"immutable": true
 		},
 		"enableStackDriverLogging": {
-			"type": "boolean"
+			"type": "boolean",
+			"immutable": true
 		},
 		"enableStackDriverMetrics": {
-			"type": "boolean"
-		},
-		"imageType": {
-			"type": "string",
-			"minLength": 1
+			"type": "boolean",
+			"immutable": true
 		},
 		"inheritTeamMembers": {
 			"type": "boolean"
 		},
-		"machineType": {
-			"type": "string",
-			"description": "The type of nodes used for this cluster's node pool.",
-			"minLength": 1
-		},
 		"maintenanceWindow": {
 			"type": "string",
 			"description": "Time of day to allow maintenance operations to be performed by the cloud provider on this cluster.",
-			"format": "hh:mm"
-		},
-		"maxSize": {
-			"type": "number",
-			"description": "Maximum number of nodes? to allow for this cluster if auto-scaling enabled.",
-			"multipleOf": 1,
-			"minimum": 0
+			"format": "hh:mm",
+			"immutable": true
 		},
 		"network": {
 			"type": "string",
-			"minLength": 1
+			"minLength": 1,
+			"description": "The GCP network that this cluster should reside on. If specified, this network must exist.",
+			"immutable": true
+		},
+		"nodePools": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": [
+					"name",
+					"enableAutoscaler",
+					"enableAutoupgrade",
+					"enableAutorepair",
+					"version",
+					"size",
+					"machineType",
+					"imageType",
+					"diskSize"
+				],
+				"properties": {
+					"name": {
+						"type": "string",
+						"pattern": "^[a-z][-a-z0-9]{0,38}[a-z0-9]$",
+						"description": "Name of this node pool. Must be unique within the cluster.",
+						"immutable": true
+					},
+					"enableAutoupgrade": {
+						"type": "boolean",
+						"description": "Enable to update this node pool updated when new GKE versions are made available by GCP - must be enabled if a release channel is selected",
+						"default": true
+					},
+					"version": {
+						"type": "string",
+						"description": "Node pool version, blank to use same version as cluster (recommended); must be blank if cluster follows a release channel. Must be within 2 minor versions of the master version (e.g. for master version 1.16, this must be 1.14, 1.15 or 1.16) or 1 minor version if auto-upgrade enabled",
+						"pattern": "^($|latest|[0-9]+\\.[0-9]+($|\\.[0-9]+($|\\-gke\\.[0-9]+)))$",
+						"default": "",
+						"examples": [
+							"latest", "1.15 (latest 1.15.x-gke.y)", "1.15.1 (latest 1.15.1-gke.x)", "1.15.1-gke.6 (exact GKE version)"
+						]
+					},
+					"enableAutoscaler": {
+						"type": "boolean",
+						"default": true,
+						"description": "Add and remove nodes automatically based on load"
+					},
+					"enableAutorepair": {
+						"type": "boolean",
+						"default": true,
+						"description": "Automatically repair any failed nodes within this node pool."
+					},
+					"minSize": {
+						"type": "number",
+						"multipleOf": 1,
+						"minimum": 1,
+						"default": 1,
+						"description": "The minimum nodes this pool should contain (if auto-scale enabled)"
+					},
+					"maxSize": {
+						"type": "number",
+						"multipleOf": 1,
+						"minimum": 1,
+						"default": 10,
+						"description": "The maximum nodes this pool should contain (if auto-scale enabled)"
+					},
+					"size": {
+						"type": "number",
+						"multipleOf": 1,
+						"minimum": 1,
+						"default": 1,
+						"description": "How many nodes to build when provisioning this pool - if autoscaling enabled, this will be the initial size",
+						"immutable": true
+					},
+					"maxPodsPerNode": {
+						"type": "number",
+						"multipleOf": 1,
+						"description": "The maximum number of pods that can be scheduled onto each node of this pool",
+						"default": 110,
+						"maximum": 110,
+						"minimum": 8,
+						"immutable": true
+					},
+					"machineType": {
+						"type": "string",
+						"description": "The type of nodes used for this node pool",
+						"pattern": "^[a-z][0-9]\\-(micro|small|medium|standard\\-[0-9]+|highmem\\-[0-9]+|highcpu\\-[0-9]+|ultramem\\-[0-9]+|megamem\\-[0-9]+)$",
+						"default": "n1-standard-2",
+						"immutable": true
+					},
+					"imageType": {
+						"type": "string",
+						"enum": [ "COS", "COS_CONTAINERD", "UBUNTU", "UBUNTU_CONTAINERD", "WINDOWS_LTSC", "WINDOWS_SAC" ],
+						"description": "The image type used by the nodes",
+						"default": "COS"
+					},
+					"diskSize": {
+						"type": "number",
+						"description": "The amount of storage in GiB provisioned on the nodes in this group",
+						"multipleOf": 1,
+						"default": 100,
+						"minimum": 10,
+						"maximum": 65536,
+						"immutable": true
+					},
+					"preemptible": {
+						"type": "boolean",
+						"description": "Whether to use pre-emptible nodes (cheaper, but can and will be terminated at any time, use with care).",
+						"default": false,
+						"immutable": true
+					},
+					"labels": {
+						"type": "object",
+						"propertyNames": {
+						  "minLength": 1,
+						  "pattern": "^[a-zA-Z0-9\\-\\.\\_]+$"
+					    },
+						"additionalProperties": { "type": "string" },
+						"description": "A set of labels to help Kubernetes workloads find this group",
+						"default": {},
+						"immutable": true
+					}
+				},
+				"allOf": [
+					{
+						"$comment": "Require min/max sizes if auto-scale enabled",
+						"if": {
+							"properties": {
+								"enableAutoscaler": {
+									"const": true
+								}
+							}
+						},
+						"then": {
+							"properties": {
+								"minSize": {
+									"minimum": 1
+								},
+								"maxSize": {
+									"minimum": 1
+								}
+							},
+							"required": ["minSize", "maxSize"]
+						}
+					}
+				]
+			}
 		},
 		"region": {
 			"type": "string",
 			"minLength": 1,
+			"examples": ["europe-west2", "us-east1"],
 			"immutable": true
 		},
+		"releaseChannel": {
+			"type": "string",
+			"description": "Follow a GKE release channel to control the auto-upgrade of your cluster - if set, auto-upgrade will be true on all node groups",
+			"enum": ["REGULAR", "STABLE", "RAPID", ""]
+		},
+		"version": {
+			"type": "string",
+			"description": "Kubernetes version - must be blank if release channel specified.",
+			"pattern": "^($|-|latest|[0-9]+\\.[0-9]+($|\\.[0-9]+($|\\-gke\\.[0-9]+)))$",
+			"examples": [
+				"- (GKE default)", "1.15 (latest 1.15.x)", "1.15.1", "1.15.1-gke.6 (exact GKE patch version, not recommended)", "latest"
+			]
+		},
+
+		"diskSize": {
+			"deprecated": true,
+			"type": "number",
+			"description": "DEPRECATED: Set disk size on node pool instead",
+			"multipleOf": 1,
+			"minimum": 10,
+			"maximum": 65536
+		},
+		"enableAutoupgrade": {
+			"deprecated": true,
+			"description": "DEPRECATED: Set auto-upgrade on node pool instead",
+			"type": "boolean"
+		},
+		"enableAutorepair": {
+			"deprecated": true,
+			"description": "DEPRECATED: Set auto-repair on node pool instead",
+			"type": "boolean"
+		},
+		"enableAutoscaler": {
+			"deprecated": true,
+			"description": "DEPRECATED: Set auto-scale on node pool instead",
+			"type": "boolean"
+		},
+		"imageType": {
+			"deprecated": true,
+			"description": "DEPRECATED: Set image type on node pool instead",
+			"type": "string",
+			"minLength": 1
+		},
+		"machineType": {
+			"deprecated": true,
+			"description": "DEPRECATED: Set machine type on node pool instead",
+			"type": "string",
+			"minLength": 1
+		},
+		"maxSize": {
+			"deprecated": true,
+			"description": "DEPRECATED: Set max size on node pool instead",
+			"type": "number",
+			"multipleOf": 1,
+			"minimum": 0
+		},
 		"size": {
+			"deprecated": true,
+			"description": "DEPRECATED: Set size on node pool instead",
 			"type": "number",
 			"multipleOf": 1,
 			"minimum": 0
 		},
 		"subnetwork": {
-			"type": "string",
-			"minLength": 1
-		},
-		"version": {
-			"type": "string",
-			"description": "The Kubernetes version to deploy.",
-			"minLength": 1
+			"deprecated": true,
+			"description": "DEPRECATED: Unused",
+			"type": "string"
 		}
 	},
-	"if": {
-		"properties": {
-			"inheritTeamMembers": {
-				"const": true
+	"allOf": [
+		{
+			"$comment": "Require default team role if inherit team members set",
+			"if": {
+				"properties": {
+					"inheritTeamMembers": {
+						"const": true
+					}
+				},
+				"required": ["inheritTeamMembers"]
+			},
+			"then": {
+				"required": ["defaultTeamRole"]
 			}
 		},
-		"required": ["inheritTeamMembers"]
-	},
-	"then": {
-		"properties": {
-			"defaultTeamRole": {
-				"minLength": 1
+		{
+			"$comment": "If all deprecated fields not specified, make node pools and release channel required",
+			"if": {
+				"required": [
+					"diskSize", "enableAutoupgrade", "enableAutorepair", "enableAutoscaler", 
+					"imageType", "machineType", "maxSize", "size", "network", "version"
+				]
+			},
+			"then": {
+			},
+			"else": {
+				"properties": {
+					"nodePools": {
+						"minItems": 1
+					}
+				},
+				"required": [ "nodePools", "releaseChannel" ]
 			}
 		},
-		"required": ["defaultTeamRole"]
-	},
-	"else": {
-	}
+		{
+			"$comment": "Require auto-upgrade and no version on node pools if releaseChannel set, else require version if no release channel set",
+			"if": {
+				"properties": {
+					"releaseChannel": {
+						"const": ""
+					}
+				}
+			},
+			"then": {
+				"properties": {
+					"version": {
+						"pattern": "^(-|latest|[0-9]+\\.[0-9]+($|\\.[0-9]+($|\\-gke\\.[0-9]+)))$"
+					}
+				}
+			},
+			"else": {
+				"properties": {
+					"version": {
+						"const": ""
+					},
+					"nodePools": {
+						"items": {
+							"properties": {
+								"enableAutoupgrade": {
+									"const": true
+								},
+								"version": {
+									"const": ""
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	]
 }
 `

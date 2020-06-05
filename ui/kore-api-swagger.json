@@ -7124,11 +7124,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
+        "clientScopes",
+        "userClaims",
         "clientID",
         "clientSecret",
-        "issuer",
-        "clientScopes",
-        "userClaims"
+        "issuer"
       ],
       "properties": {
         "clientID": {
@@ -7992,24 +7992,85 @@
         }
       }
     },
+    "v1alpha1.GKENodePool": {
+      "required": [
+        "name",
+        "enableAutoscaler",
+        "enableAutorepair",
+        "version",
+        "enableAutoupgrade",
+        "size",
+        "minSize",
+        "maxSize",
+        "maxPodsPerNode",
+        "machineType",
+        "imageType",
+        "diskSize",
+        "preemptible"
+      ],
+      "properties": {
+        "diskSize": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "enableAutorepair": {
+          "type": "boolean"
+        },
+        "enableAutoscaler": {
+          "type": "boolean"
+        },
+        "enableAutoupgrade": {
+          "type": "boolean"
+        },
+        "imageType": {
+          "type": "string"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "machineType": {
+          "type": "string"
+        },
+        "maxPodsPerNode": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "maxSize": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "minSize": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string"
+        },
+        "preemptible": {
+          "type": "boolean"
+        },
+        "size": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
     "v1alpha1.GKESpec": {
       "required": [
         "credentials",
         "description",
         "version",
-        "size",
-        "maxSize",
-        "diskSize",
-        "imageType",
-        "machineType",
+        "releaseChannel",
         "authorizedMasterNetworks",
         "network",
-        "subnetwork",
         "servicesIPV4Cidr",
         "clusterIPV4Cidr",
-        "enableAutorepair",
-        "enableAutoscaler",
-        "enableAutoupgrade",
         "enableHorizontalPodAutoscaler",
         "enableHTTPLoadBalancer",
         "enableIstio",
@@ -8096,7 +8157,16 @@
         "network": {
           "type": "string"
         },
+        "nodePools": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1alpha1.GKENodePool"
+          }
+        },
         "region": {
+          "type": "string"
+        },
+        "releaseChannel": {
           "type": "string"
         },
         "servicesIPV4Cidr": {

@@ -5441,22 +5441,26 @@ spec:
               minLength: 1
               type: string
             diskSize:
-              description: DiskSize is the size of the disk used by the compute nodes.
+              description: 'DEPRECATED: Set on node group instead, this property is
+                now ignored. DiskSize is the size of the disk used by the compute
+                nodes.'
               format: int64
-              minimum: 100
               type: integer
             enableAutorepair:
-              description: EnableAutorepair indicates if the cluster should be configured
-                with auto repair is enabled
+              description: 'DEPRECATED: Set on node group instead, this property is
+                now ignored. EnableAutorepair indicates if the cluster should be configured
+                with auto repair is enabled'
               type: boolean
             enableAutoscaler:
-              description: EnableAutoscaler indicates if the cluster should be configured
-                with cluster autoscaling turned on
+              description: 'DEPRECATED: Set on node group instead, this property is
+                now ignored. EnableAutoscaler indicates if the cluster should be configured
+                with cluster autoscaling turned on'
               type: boolean
             enableAutoupgrade:
-              description: EnableAutoUpgrade indicates if the cluster should be configured
-                with autograding enabled; meaning both nodes are masters are autoscaled
-                scheduled to upgrade during your maintenance window.
+              description: 'DEPRECATED: Set on node group instead, this property is
+                now ignored. EnableAutoUpgrade indicates if the cluster should be
+                configured with auto upgrading enabled; meaning both nodes are masters
+                are scheduled to upgrade during your maintenance window.'
               type: boolean
             enableHTTPLoadBalancer:
               description: EnableHTTPLoadBalancer indicates if the cluster should
@@ -5499,14 +5503,14 @@ spec:
                 should be enabled for the cluster
               type: boolean
             imageType:
-              description: ImageType is the operating image to use for the default
-                compute pool.
-              minLength: 1
+              description: 'DEPRECATED: Set on node group instead, this property is
+                now ignored. ImageType is the operating image to use for the default
+                compute pool.'
               type: string
             machineType:
-              description: MachineType is the machine type which the default nodes
-                pool should use.
-              minLength: 1
+              description: 'DEPRECATED: Set on node group instead, this property is
+                now ignored. MachineType is the machine type which the default nodes
+                pool should use.'
               type: string
             maintenanceWindow:
               description: MaintenanceWindow is the maintenance window provided for
@@ -5519,34 +5523,137 @@ spec:
                 Note, this must be unique within the network.
               type: string
             maxSize:
-              description: MaxSize assuming the autoscaler is enabled this is the
-                maximum number nodes permitted
+              description: 'DEPRECATED: Set on node group instead, this property is
+                now ignored. MaxSize assuming the autoscaler is enabled this is the
+                maximum number nodes permitted'
               format: int64
-              minimum: 2
               type: integer
             network:
               description: Network is the GCP network the cluster reside on, which
                 have to be unique within the GCP project and created beforehand.
               minLength: 1
               type: string
+            nodePools:
+              description: NodePools is the set of node pools for this cluster. Required
+                unless ALL deprecated properties except subnetwork are set.
+              items:
+                description: GKENodePool represents a node pool within a GKE cluster
+                properties:
+                  diskSize:
+                    description: DiskSize is the size of the disk used by the compute
+                      nodes.
+                    format: int64
+                    minimum: 10
+                    type: integer
+                  enableAutorepair:
+                    description: EnableAutorepair indicates if the node pool should
+                      automatically repair failed nodes
+                    type: boolean
+                  enableAutoscaler:
+                    description: EnableAutoscaler indicates if the node pool should
+                      be configured with autoscaling turned on
+                    type: boolean
+                  enableAutoupgrade:
+                    description: EnableAutoUpgrade indicates if the node group should
+                      be configured with autograding enabled. This must be true if
+                      the cluster has ReleaseChannel set.
+                    type: boolean
+                  imageType:
+                    description: ImageType controls the operating system image of
+                      nodes used in this node pool
+                    minLength: 1
+                    type: string
+                  labels:
+                    additionalProperties:
+                      type: string
+                    description: Labels is a set of labels to help Kubernetes workloads
+                      find this group
+                    type: object
+                  machineType:
+                    description: MachineType controls the type of nodes used in this
+                      node pool
+                    minLength: 1
+                    type: string
+                  maxPodsPerNode:
+                    description: MaxPodsPerNode controls how many pods can be scheduled
+                      onto each node in this pool
+                    format: int64
+                    minimum: 1
+                    type: integer
+                  maxSize:
+                    description: MaxSize assuming the autoscaler is enabled this is
+                      the maximum number nodes permitted
+                    format: int64
+                    minimum: 1
+                    type: integer
+                  minSize:
+                    description: MinSize assuming the autoscaler is enabled this is
+                      the maximum number nodes permitted
+                    format: int64
+                    minimum: 1
+                    type: integer
+                  name:
+                    description: Name provides a descriptive name for this node pool
+                      - must be unique within cluster
+                    minLength: 1
+                    type: string
+                  preemptible:
+                    description: Preemptible controls whether to use pre-emptible
+                      nodes.
+                    type: boolean
+                  size:
+                    description: Size is the number of nodes per zone which should
+                      exist in the cluster. If auto-scaling is enabled, this will
+                      be the initial size of the node pool.
+                    format: int64
+                    minimum: 1
+                    type: integer
+                  version:
+                    description: Version is the initial kubernetes version which the
+                      node group should be configured with. '-' gives the same version
+                      as the master, 'latest' gives most recent, 1.15 would be latest
+                      1.15.x release, 1.15.1 would be the latest 1.15.1 release, and
+                      1.15.1-gke.1 would be the exact specified version. Must be within
+                      2 minor versions of the master version (e.g. master 1.16 supports
+                      node versios 1.14-1.16). If ReleaseChannel set on cluster, this
+                      must be blank.
+                    type: string
+                required:
+                - diskSize
+                - imageType
+                - machineType
+                - maxSize
+                - minSize
+                - name
+                - size
+                type: object
+              type: array
+              x-kubernetes-list-type: set
             region:
               description: Region is the gcp region you want the cluster to reside
               minLength: 1
+              type: string
+            releaseChannel:
+              description: ReleaseChannel is the GKE release channel to follow, ''
+                (to follow no channel), 'STABLE' (only battle-tested releases every
+                few months), 'REGULAR' (stable releases every few weeks) or 'RAPID'
+                (bleeding edge, not suitable for production workloads). If anything
+                other than '', Version must be blank.
               type: string
             servicesIPV4Cidr:
               description: ServicesIPV4Cidr is an optional network cidr configured
                 for the cluster services
               type: string
             size:
-              description: Size is the number of nodes per zone which should exist
-                in the cluster.
+              description: 'DEPRECATED: Set on node group instead, this property is
+                now ignored. Size is the number of nodes per zone which should exist
+                in the cluster.'
               format: int64
-              minimum: 1
               type: integer
             subnetwork:
-              description: Subnetwork is name of the GCP subnetwork which the cluster
-                nodes should reside
-              minLength: 1
+              description: 'DEPRECATED: This was always ignored. May be re-introduced
+                in future. Subnetwork is name of the GCP subnetwork which the cluster
+                nodes should reside -'
               type: string
             tags:
               additionalProperties:
@@ -5554,23 +5661,18 @@ spec:
               description: Tags is a collection of tags related to the cluster type
               type: object
             version:
-              description: Version is the initial kubernetes version which the cluster
-                should be configured with.
-              minLength: 1
+              description: Version is the kubernetes version which the cluster master
+                should be configured with. '-' gives the current GKE default version,
+                'latest' gives most recent, 1.15 would be latest 1.15.x release, 1.15.1
+                would be the latest 1.15.1 release, and 1.15.1-gke.1 would be the
+                exact specified version. Must be blank if following release channel.
               type: string
           required:
           - credentials
           - description
-          - diskSize
           - enableShieldedNodes
-          - imageType
-          - machineType
           - maintenanceWindow
-          - maxSize
           - network
-          - size
-          - subnetwork
-          - version
           type: object
         status:
           description: GKEStatus defines the observed state of GKE

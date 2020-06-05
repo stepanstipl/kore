@@ -121,6 +121,10 @@ spec:
             {{- end }}
           - name: KORE_AUTHENTICATION_PLUGINS
             value: {{ .Values.api.auth_plugins | join "," }}
+          {{- if .Values.api.auth_plugin_config.local_jwt_publickey }}
+          - name: KORE_LOCAL_JWT_PUBLIC_KEY
+            value: "{{ .Values.api.auth_plugin_config.local_jwt_publickey }}"
+          {{- end }}
           {{- if .Values.api.feature_gates }}
           - name: KORE_FEATURE_GATES
             value: "{{ join "," .Values.api.feature_gates }}"

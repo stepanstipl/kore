@@ -44,6 +44,7 @@ require (
 	github.com/golangci/golangci-lint v1.27.0
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/uuid v1.1.1
+	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/heimdalr/dag v0.9.12
 	github.com/huandu/xstrings v1.2.1 // indirect

@@ -478,6 +478,9 @@ kind-apiserver-reload: kind-apiserver-stop kind-apiserver kind-apiserver-start
 kind-apiserver-logs:
 	@while true; do kubectl --context=kind-kore -n kore logs -f -l name=kore-apiserver || true; sleep 1; done
 
+kind-api-test:
+	@export KORE_ADMIN_TOKEN="$(shell kubectl --context kind-kore -n kore get secret kore-api -o json | jq -r ".data.KORE_ADMIN_TOKEN" | base64 --decode)" && ${MAKE} run-api-test
+
 generate-crd-reference:
 	@if [ ! -d "${KORE_DOCS_PATH}" ]; then \
   		echo "${KORE_DOCS_PATH} directory does not exist"; \

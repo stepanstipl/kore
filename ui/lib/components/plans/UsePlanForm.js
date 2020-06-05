@@ -94,12 +94,19 @@ class UsePlanForm extends React.Component {
 
   onValueChange(name, value) {
     this.setState((state) => {
-      // Texture this back into a state update using the nifty lodash set function:
-      let newPlanValues = set({ ...state.planValues }, name, value)
-      this.props.onPlanChange && this.props.onPlanChange(newPlanValues)
-      return {
-        planValues: set({ ...state.planValues }, name, value)
+      let planValues = {
+        ...state.planValues
       }
+      if (value !== undefined) {
+        // Texture this back into a state update using the nifty lodash set function:
+        planValues = set(planValues, name, value)
+      } else {
+        // Property set to undefined, so remove it completely from the plan values.
+        delete planValues[name]
+      }
+      // Fire a copy of the plan values out if anyone is listening.
+      this.props.onPlanChange && this.props.onPlanChange({ ...planValues })
+      return { planValues }
     })
   }
 

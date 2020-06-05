@@ -89,7 +89,11 @@ func getApi() *apiclient.AppviaKore {
 
 // getAuthBuiltInAdmin gets a token for accessing the API as the built-in admin user.
 func getAuthBuiltInAdmin() runtime.ClientAuthInfoWriter {
-	return httptransport.BearerToken("password")
+	token := os.Getenv("KORE_ADMIN_TOKEN")
+	if token == "" {
+		token = "password"
+	}
+	return httptransport.BearerToken(token)
 }
 
 // getAuthAnon accesses the API as a non-logged-in user.

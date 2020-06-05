@@ -20,6 +20,7 @@ package apiserver_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -119,9 +120,6 @@ var _ = Describe("/security", func() {
 				"description":                   "This is a test cluster",
 				"diskSize":                      100,
 				"domain":                        "testing.appvia.io",
-				"enableAutoupgrade":             true,
-				"enableAutorepair":              true,
-				"enableAutoscaler":              true,
 				"enableDefaultTrafficBlock":     false,
 				"enableHTTPLoadBalancer":        true,
 				"enableHorizontalPodAutoscaler": true,
@@ -131,16 +129,29 @@ var _ = Describe("/security", func() {
 				"enableShieldedNodes":           true,
 				"enableStackDriverLogging":      true,
 				"enableStackDriverMetrics":      true,
-				"imageType":                     "COS",
 				"inheritTeamMembers":            true,
-				"machineType":                   "n1-standard-2",
 				"maintenanceWindow":             "03:00",
-				"maxSize":                       10,
 				"network":                       "default",
 				"region":                        "europe-west2",
-				"size":                          1,
-				"subnetwork":                    "default",
+				"releaseChannel":                "",
 				"version":                       "1.14.10-gke.24",
+				"nodePools": []map[string]interface{}{
+					{
+						"name":              "compute",
+						"enableAutoupgrade": true,
+						"version":           "",
+						"enableAutoscaler":  true,
+						"enableAutorepair":  true,
+						"minSize":           1,
+						"maxSize":           10,
+						"size":              1,
+						"maxPodsPerNode":    110,
+						"machineType":       "n1-standard-2",
+						"imageType":         "COS",
+						"diskSize":          100,
+						"preemptible":       false,
+					},
+				},
 			}
 
 			rawConfig, _ := json.Marshal(params)
@@ -164,13 +175,15 @@ var _ = Describe("/security", func() {
 				},
 			}
 			p := operations.NewUpdatePlanParams().WithName(planName).WithBody(plan)
-			_, _ = api.Operations.UpdatePlan(p, getAuth(TestUserAdmin))
+			_, err := api.Operations.UpdatePlan(p, getAuth(TestUserAdmin))
+			Expect(err).ToNot(HaveOccurred())
 			plan.Spec.Description = stringPrt("Updated description")
 			params["authProxyAllowedIPs"] = []string{"1.2.3.4/16"}
 			rawConfig, _ = json.Marshal(params)
 			plan.Spec.Configuration = apiextv1.JSON{Raw: rawConfig}
 			p = operations.NewUpdatePlanParams().WithName(planName).WithBody(plan)
-			_, _ = api.Operations.UpdatePlan(p, getAuth(TestUserAdmin))
+			_, err = api.Operations.UpdatePlan(p, getAuth(TestUserAdmin))
+			Expect(err).ToNot(HaveOccurred())
 
 			// Might take a little while for the scans to be produced as they're done by a background controller
 			params := security.NewListSecurityScansForResourceParams().
@@ -279,6 +292,8 @@ var _ = Describe("/security", func() {
 				resp, err := api.Security.ListSecurityScansForResource(params, getAuth(TestUserAdmin))
 				Expect(err).ToNot(HaveOccurred())
 				Expect(len(resp.Payload.Items)).To(Equal(2))
+				fmt.Printf("%+v", resp.Payload.Items[0].Spec)
+				fmt.Printf("%+v", resp.Payload.Items[1].Spec)
 				Expect(resp.Payload.Items[0].Spec.ArchivedAt).ToNot(Equal(""))
 				Expect(resp.Payload.Items[1].Spec.ArchivedAt).To(Equal(""))
 				Expect(len(resp.Payload.Items[0].Spec.Results)).To(Equal(0))

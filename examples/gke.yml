@@ -22,11 +22,7 @@ spec:
         name: default
     defaultTeamRole: "cluster-admin"
     description: "This is my test cluster"
-    diskSize: 100
     domain: example.appvia.io
-    enableAutorepair: true
-    enableAutoscaler: true
-    enableAutoupgrade: true
     enableHTTPLoadBalancer: true
     enableHorizontalPodAutoscaler: true
     enableIstio: false
@@ -36,13 +32,20 @@ spec:
     enableStackDriverLogging: true
     enableStackDriverMetrics: true
     enableDefaultTrafficBlock: false
-    imageType: COS
     inheritTeamMembers: true
-    machineType: n1-standard-2
     maintenanceWindow: "03:00"
-    maxSize: 10
     network: default
     region: europe-west2
-    size: 1
-    subnetwork: default
-    version: 1.14.10-gke.27
+    version: 1.15
+    nodePools: 
+      - name: compute
+        diskSize: 100
+        enableAutorepair: true
+        enableAutoscaler: true
+        enableAutoupgrade: true
+        imageType: COS
+        machineType: e2-small
+        preemptible: true
+        size: 1
+        minSize: 1
+        maxSize: 10

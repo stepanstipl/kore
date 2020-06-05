@@ -43,6 +43,8 @@ const (
 	ComponentClusterCreator = "Cluster Creator"
 	// ComponentClusterBootstrap is the component name for seting up cloud credentials
 	ComponentClusterBootstrap = "Cluster Initialize Access"
+	// NodePool is the name pattern for node pool components
+	ComponentNodePoolPattern = "Node Pool %s"
 )
 
 // Reconcile is the entrypoint for the reconciliation logic
@@ -134,7 +136,7 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 
 			logger.Debug("creating a new gke cluster in gcp")
 
-			if _, err = client.Create(ctx); err != nil {
+			if err = client.Create(ctx); err != nil {
 				logger.WithError(err).Error("attempting to create cluster")
 
 				resource.Status.Conditions.SetCondition(core.Component{
@@ -193,6 +195,57 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 			resource.Status.Status = core.PendingStatus
 
 			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+		}
+
+		// @step: add/remove any new node groups
+		nodePoolOperation, updatingNodePool, err := client.UpdateNodePools(ctx)
+		if err != nil {
+			logger.WithError(err).Error("attempting to update node pools")
+
+			return reconcile.Result{}, err
+		}
+		if nodePoolOperation != NodePoolOperationNone {
+			logger.WithField("nodePool", updatingNodePool).Debug("cluster is performing a node pool update")
+
+			resource.Status.Status = core.PendingStatus
+
+			resource.Status.Conditions.SetCondition(core.Component{
+				Name:    fmt.Sprintf(ComponentNodePoolPattern, updatingNodePool),
+				Message: fmt.Sprintf("%s node pool", nodePoolOperation),
+				Status: func() core.Status {
+					if nodePoolOperation == NodePoolOperationDeleting {
+						return core.DeletingStatus
+					}
+					return core.PendingStatus
+				}(),
+			})
+
+			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+		}
+
+		// @step: No node pool operations in progress, set all node pools conditions to success.
+		for _, nodePool := range resource.Spec.NodePools {
+			resource.Status.Conditions.SetCondition(core.Component{
+				Name:    fmt.Sprintf(ComponentNodePoolPattern, nodePool.Name),
+				Message: "Node pool ready",
+				Status:  core.SuccessStatus,
+			})
+		}
+
+		// @step: Set any now-deleted node pools to deleted.
+	OUTER:
+		for _, nodePoolStatus := range resource.Status.Conditions {
+			for _, nodePool := range resource.Spec.NodePools {
+				if fmt.Sprintf(ComponentNodePoolPattern, nodePool.Name) == nodePoolStatus.Name {
+					continue OUTER
+				}
+			}
+			// Not found, set status to deleted:
+			resource.Status.Conditions.SetCondition(core.Component{
+				Name:    nodePoolStatus.Name,
+				Message: "Node pool deleted",
+				Status:  core.DeletedStatus,
+			})
 		}
 
 		// @step: enable the cloud-nat is required
