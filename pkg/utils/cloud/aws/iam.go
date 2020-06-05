@@ -21,9 +21,11 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/pkg/errors"
 )
 
 // IamClient describes a aws session and Iam service
@@ -142,6 +144,34 @@ func (i *IamClient) GetARN() (string, error) {
 	}
 
 	return aws.StringValue(resp.User.Arn), nil
+}
+
+// EnsureIRSA will enable IRSA IAM Roles for Service Accounts for an EKS cluster
+func (i *IamClient) EnsureIRSA(clusterARN, oidcIssuer string) error {
+	parsedARN, err := arn.Parse(clusterARN)
+	if err != nil {
+		return errors.Wrapf(err, "unexpected invalid ARN: %q", clusterARN)
+	}
+	switch parsedARN.Partition {
+	case "aws", "aws-cn", "aws-us-gov":
+	default:
+		return fmt.Errorf("unknown EKS ARN: %q", clusterARN)
+	}
+	oidc, err := NewOpenIDConnectManager(i.svc, parsedARN.AccountID, oidcIssuer, parsedARN.Partition)
+	if err != nil {
+		return err
+	}
+	providerExists, err := oidc.CheckProviderExists()
+	if err != nil {
+		return err
+	}
+
+	if !providerExists {
+		if err := oidc.CreateProvider(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // GetEKSRoleName returns the name of a EKS iam role
