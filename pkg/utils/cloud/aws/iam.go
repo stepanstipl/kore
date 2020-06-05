@@ -73,6 +73,54 @@ const (
 	  }
 	`
 
+	autoscalerDiscoverASGAccessPolicy = `{
+		"Version": "2012-10-17",
+		"Statement": [
+			{
+				"Effect": "Allow",
+				"Action": [
+					"autoscaling:DescribeAutoScalingInstances",
+					"autoscaling:DescribeAutoScalingGroups",
+					"autoscaling:DescribeTags",
+					"autoscaling:DescribeLaunchConfigurations"
+				],
+				"Resource": "*"
+			}
+		]
+	}`
+
+	autoscalerNodeGroupAGSAccessPolicy = `{
+		"Version": "2012-10-17",
+		"Statement": [
+			{
+				"Effect": "Allow",
+				"Action": [
+					"autoscaling:SetDesiredCapacity",
+					"autoscaling:TerminateInstanceInAutoScalingGroup"
+				],
+				"Resource": "arn:aws:autoscaling:%s:%s:autoScalingGroup:%s:autoScalingGroupName/%s"
+			}
+		]
+	}`
+
+	autoscalerTrustPolicy = `{
+		"Version": "2012-10-17",
+		"Statement": [
+			{
+			"Effect": "Allow",
+			"Principal": {
+				"Federated": "arn:aws:iam::%s:oidc-provider/%s"
+			},
+			"Action": "sts:AssumeRoleWithWebIdentity",
+				"Condition": {
+					"StringEquals": {
+						"%s:sub": "system:serviceaccount:kube-system:cluster-autoscaler"
+					}
+				}
+			}
+		]
+	}`
+
 	// amazonEKSWorkerNodePolicy provides read-only access to Amazon EC2 Container Registry repositories.
 	amazonEKSWorkerNodePolicy          = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
 	amazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
