@@ -18,13 +18,16 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -57,6 +60,52 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		return reconcile.Result{}, err
 	}
 	original := service.DeepCopy()
+
+	if service.Spec.ClusterNamespace != "" && service.Annotations[kore.AnnotationSystem] != kore.AnnotationValueTrue {
+		team := service.Spec.Cluster.Namespace
+		namespaceName := fmt.Sprintf("%s-%s", service.Spec.Cluster.Name, service.Spec.ClusterNamespace)
+		namesplaceClaim := &clustersv1.NamespaceClaim{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      namespaceName,
+				Namespace: team,
+			},
+		}
+
+		// check if the namespace specified has a NamespaceClaim
+		found, err := kubernetes.GetIfExists(ctx, c.mgr.GetClient(), namesplaceClaim)
+		if err != nil {
+			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+		}
+		if !found {
+			// create NamespaceClaim
+			logger.Infof("creating NamespaceClaim for namespace: %s", service.Spec.ClusterNamespace)
+			namespaceClaim := &clustersv1.NamespaceClaim{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: clustersv1.GroupVersion.String(),
+					Kind:       "NamespaceClaim",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      namespaceName,
+					Namespace: team,
+				},
+				Spec: clustersv1.NamespaceClaimSpec{
+					Name: service.Spec.ClusterNamespace,
+					Cluster: corev1.Ownership{
+						Group:     clustersv1.GroupVersion.Group,
+						Version:   clustersv1.GroupVersion.Version,
+						Kind:      "Cluster",
+						Namespace: service.Spec.Cluster.Namespace,
+						Name:      service.Spec.Cluster.Name,
+					},
+				},
+			}
+
+			if _, err := kubernetes.CreateOrUpdate(ctx, c.mgr.GetClient(), namespaceClaim); err != nil {
+				logger.WithError(err).Error("trying to update or create the namespaceClaim")
+				return reconcile.Result{}, err
+			}
+		}
+	}
 
 	spCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c)
 	provider, err := c.ServiceProviders().GetProviderForKind(spCtx, service.Spec.Kind)
