@@ -51,11 +51,7 @@ var _ = Describe("/clusters", func() {
 			"authProxyAllowedIPs":           []string{"0.0.0.0/0"},
 			"defaultTeamRole":               "view",
 			"description":                   "This is a test cluster",
-			"diskSize":                      100,
 			"domain":                        "testing.appvia.io",
-			"enableAutoupgrade":             true,
-			"enableAutorepair":              true,
-			"enableAutoscaler":              true,
 			"enableDefaultTrafficBlock":     false,
 			"enableHTTPLoadBalancer":        true,
 			"enableHorizontalPodAutoscaler": true,
@@ -65,16 +61,29 @@ var _ = Describe("/clusters", func() {
 			"enableShieldedNodes":           true,
 			"enableStackDriverLogging":      true,
 			"enableStackDriverMetrics":      true,
-			"imageType":                     "COS",
 			"inheritTeamMembers":            true,
-			"machineType":                   "n1-standard-2",
 			"maintenanceWindow":             "03:00",
-			"maxSize":                       10,
 			"network":                       "default",
 			"region":                        "europe-west2",
-			"size":                          1,
-			"subnetwork":                    "default",
+			"releaseChannel":                "",
 			"version":                       "1.14.10-gke.24",
+			"nodePools": []map[string]interface{}{
+				{
+					"name":              "compute",
+					"enableAutoupgrade": true,
+					"version":           "",
+					"enableAutoscaler":  true,
+					"enableAutorepair":  true,
+					"minSize":           1,
+					"maxSize":           10,
+					"size":              1,
+					"maxPodsPerNode":    110,
+					"machineType":       "n1-standard-2",
+					"imageType":         "COS",
+					"diskSize":          100,
+					"preemptible":       false,
+				},
+			},
 		}
 	}
 
@@ -233,7 +242,7 @@ var _ = Describe("/clusters", func() {
 
 			When("the configuration contains an invalid parameter value", func() {
 				BeforeEach(func() {
-					configuration["diskSize"] = "this should be a number"
+					configuration["description"] = 1
 				})
 
 				It("should return 400", func() {
@@ -245,7 +254,7 @@ var _ = Describe("/clusters", func() {
 					Expect(err).To(BeAssignableToTypeOf(&operations.UpdateClusterBadRequest{}))
 					verr := err.(*operations.UpdateClusterBadRequest).Payload
 					Expect(verr.FieldErrors).To(HaveLen(1))
-					Expect(*verr.FieldErrors[0].Field).To(Equal("diskSize"))
+					Expect(*verr.FieldErrors[0].Field).To(Equal("description"))
 				})
 			})
 

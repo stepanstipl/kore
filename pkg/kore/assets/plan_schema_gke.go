@@ -41,10 +41,8 @@ const GKEPlanSchema = `
 		"inheritTeamMembers",
 		"maintenanceWindow",
 		"network",
-		"nodePools",
 		"region",
-		"version",
-		"releaseChannel"
+		"version"
 	],
 	"properties": {
 		"authorizedMasterNetworks": {
@@ -314,8 +312,7 @@ const GKEPlanSchema = `
 						}
 					}
 				]
-			},
-			"minItems": 1
+			}
 		},
 		"region": {
 			"type": "string",
@@ -335,6 +332,61 @@ const GKEPlanSchema = `
 			"examples": [
 				"- (GKE default)", "1.15 (latest 1.15.x)", "1.15.1", "1.15.1-gke.6 (exact GKE patch version, not recommended)", "latest"
 			]
+		},
+
+		"diskSize": {
+			"deprecated": true,
+			"type": "number",
+			"description": "DEPRECATED: Set disk size on node pool instead",
+			"multipleOf": 1,
+			"minimum": 10,
+			"maximum": 65536
+		},
+		"enableAutoupgrade": {
+			"deprecated": true,
+			"description": "DEPRECATED: Set auto-upgrade on node pool instead",
+			"type": "boolean"
+		},
+		"enableAutorepair": {
+			"deprecated": true,
+			"description": "DEPRECATED: Set auto-repair on node pool instead",
+			"type": "boolean"
+		},
+		"enableAutoscaler": {
+			"deprecated": true,
+			"description": "DEPRECATED: Set auto-scale on node pool instead",
+			"type": "boolean"
+		},
+		"imageType": {
+			"deprecated": true,
+			"description": "DEPRECATED: Set image type on node pool instead",
+			"type": "string",
+			"minLength": 1
+		},
+		"machineType": {
+			"deprecated": true,
+			"description": "DEPRECATED: Set machine type on node pool instead",
+			"type": "string",
+			"minLength": 1
+		},
+		"maxSize": {
+			"deprecated": true,
+			"description": "DEPRECATED: Set max size on node pool instead",
+			"type": "number",
+			"multipleOf": 1,
+			"minimum": 0
+		},
+		"size": {
+			"deprecated": true,
+			"description": "DEPRECATED: Set size on node pool instead",
+			"type": "number",
+			"multipleOf": 1,
+			"minimum": 0
+		},
+		"subnetwork": {
+			"deprecated": true,
+			"description": "DEPRECATED: Unused",
+			"type": "string"
 		}
 	},
 	"allOf": [
@@ -350,6 +402,25 @@ const GKEPlanSchema = `
 			},
 			"then": {
 				"required": ["defaultTeamRole"]
+			}
+		},
+		{
+			"$comment": "If all deprecated fields not specified, make node pools and release channel required",
+			"if": {
+				"required": [
+					"diskSize", "enableAutoupgrade", "enableAutorepair", "enableAutoscaler", 
+					"imageType", "machineType", "maxSize", "size", "network", "version"
+				]
+			},
+			"then": {
+			},
+			"else": {
+				"properties": {
+					"nodePools": {
+						"minItems": 1
+					}
+				},
+				"required": [ "nodePools", "releaseChannel" ]
 			}
 		},
 		{

@@ -388,7 +388,7 @@ func schema_pkg_apis_gke_v1alpha1_GKESpec(ref common.ReferenceCallback) common.O
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "NodePools is the set of node pools for this cluster",
+							Description: "NodePools is the set of node pools for this cluster. Required unless ALL deprecated properties are set.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -463,7 +463,7 @@ func schema_pkg_apis_gke_v1alpha1_GKESpec(ref common.ReferenceCallback) common.O
 						},
 					},
 				},
-				Required: []string{"description", "version", "releaseChannel", "authorizedMasterNetworks", "network", "servicesIPV4Cidr", "clusterIPV4Cidr", "enableHorizontalPodAutoscaler", "enableHTTPLoadBalancer", "enableIstio", "enableShieldedNodes", "enableStackDriverLogging", "enableStackDriverMetrics", "enablePrivateEndpoint", "enablePrivateNetwork", "masterIPV4Cidr", "maintenanceWindow", "nodePools", "size", "maxSize", "diskSize", "imageType", "machineType", "subnetwork", "enableAutoscaler", "enableAutoupgrade", "enableAutorepair"},
+				Required: []string{"description", "version", "releaseChannel", "authorizedMasterNetworks", "network", "servicesIPV4Cidr", "clusterIPV4Cidr", "enableHorizontalPodAutoscaler", "enableHTTPLoadBalancer", "enableIstio", "enableShieldedNodes", "enableStackDriverLogging", "enableStackDriverMetrics", "enablePrivateEndpoint", "enablePrivateNetwork", "masterIPV4Cidr", "maintenanceWindow"},
 			},
 		},
 		Dependencies: []string{

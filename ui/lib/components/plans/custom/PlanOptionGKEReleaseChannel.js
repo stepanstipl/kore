@@ -53,6 +53,7 @@ export default class PlanOptionGKEReleaseChannel extends PlanOptionBase {
     return (
       <Form.Item label={displayName} help={help}>
         <ConstrainedDropdown readOnly={!editable} value={valueOrDefault} allowedValues={releaseChannels} onChange={(e) => this.onChannelChange(e)} />
+        {this.validationErrors(name)}
       </Form.Item>
     )
   }

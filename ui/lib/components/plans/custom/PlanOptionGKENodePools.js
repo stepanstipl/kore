@@ -157,16 +157,6 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
       }
     })
 
-    // If plan specifies release channel, set the node pool versions appropriately, otherwise default
-    // to following the master version.
-    if (this.props.plan.releaseChannel && this.props.plan.releaseChannel !== '') {
-      newNodePool.version = ''
-      newNodePool.enableAutoupgrade = true
-    } else {
-      newNodePool.version = '-'
-      newNodePool.enableAutoupgrade = true
-    }
-
     // Need to handle the value being undefined in the case where this is a new plan or no
     // node pools are defined yet.
     let newValue
@@ -286,6 +276,7 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
             )
           }} />
           {!editable ? null : <Button onClick={this.addNodePool}>Add node pool</Button>}
+          {this.validationErrors(name)}
         </Form.Item>
         <Drawer
           title={`Node Pool ${selectedNodePool ? selectedNodePoolIndex + 1 : ''}`}
@@ -297,9 +288,6 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
         >
           {!selectedNodePool ? null : (
             <>
-              <Form.Item>
-                <Button disabled={!nodePoolCloseable} onClick={() => this.closeNodePool()}>{nodePoolCloseable ? 'Close' : 'Node pool not valid - please correct errors'}</Button>
-              </Form.Item>
               <Collapse defaultActiveKey={['basics','compute','metadata']}>
                 <Collapse.Panel key="basics" header="Basic Configuration (name, versions, sizing)">
                   <Form.Item label="Name" help="Unique name for this group within the cluster">
@@ -362,6 +350,9 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
                   <PlanOption {...this.props} displayName="Labels" help="Labels help kubernetes workloads find this group" name={`${name}[${selectedNodePoolIndex}].labels`} property={property.items.properties.labels} value={selectedNodePool.labels} onChange={(_, v) => this.setNodePoolProperty(selectedNodePoolIndex, 'labels', v)} />
                 </Collapse.Panel>
               </Collapse>
+              <Form.Item>
+                <Button type="primary" disabled={!nodePoolCloseable} onClick={() => this.closeNodePool()}>{nodePoolCloseable ? 'Close' : 'Node pool not valid - please correct errors'}</Button>
+              </Form.Item>
             </>
           )}
         </Drawer>

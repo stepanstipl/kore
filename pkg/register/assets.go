@@ -5534,7 +5534,8 @@ spec:
               minLength: 1
               type: string
             nodePools:
-              description: NodePools is the set of node pools for this cluster
+              description: NodePools is the set of node pools for this cluster. Required
+                unless ALL deprecated properties except subnetwork are set.
               items:
                 description: GKENodePool represents a node pool within a GKE cluster
                 properties:
@@ -5596,7 +5597,7 @@ spec:
                       - must be unique within cluster
                     minLength: 1
                     type: string
-                  preEmptible:
+                  preemptible:
                     description: Preemptible controls whether to use pre-emptible
                       nodes.
                     type: boolean
@@ -5626,7 +5627,6 @@ spec:
                 - name
                 - size
                 type: object
-              minItems: 1
               type: array
               x-kubernetes-list-type: set
             region:
@@ -5673,7 +5673,6 @@ spec:
           - enableShieldedNodes
           - maintenanceWindow
           - network
-          - nodePools
           type: object
         status:
           description: GKEStatus defines the observed state of GKE

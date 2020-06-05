@@ -29,10 +29,6 @@ class V1alpha1GKESpec {
      * @param clusterIPV4Cidr {String} 
      * @param credentials {module:model/V1Ownership} 
      * @param description {String} 
-     * @param diskSize {Number} 
-     * @param enableAutorepair {Boolean} 
-     * @param enableAutoscaler {Boolean} 
-     * @param enableAutoupgrade {Boolean} 
      * @param enableHTTPLoadBalancer {Boolean} 
      * @param enableHorizontalPodAutoscaler {Boolean} 
      * @param enableIstio {Boolean} 
@@ -41,22 +37,16 @@ class V1alpha1GKESpec {
      * @param enableShieldedNodes {Boolean} 
      * @param enableStackDriverLogging {Boolean} 
      * @param enableStackDriverMetrics {Boolean} 
-     * @param imageType {String} 
-     * @param machineType {String} 
      * @param maintenanceWindow {String} 
      * @param masterIPV4Cidr {String} 
-     * @param maxSize {Number} 
      * @param network {String} 
-     * @param nodePools {Array.<module:model/V1alpha1GKENodePool>} 
      * @param releaseChannel {String} 
      * @param servicesIPV4Cidr {String} 
-     * @param size {Number} 
-     * @param subnetwork {String} 
      * @param version {String} 
      */
-    constructor(authorizedMasterNetworks, clusterIPV4Cidr, credentials, description, diskSize, enableAutorepair, enableAutoscaler, enableAutoupgrade, enableHTTPLoadBalancer, enableHorizontalPodAutoscaler, enableIstio, enablePrivateEndpoint, enablePrivateNetwork, enableShieldedNodes, enableStackDriverLogging, enableStackDriverMetrics, imageType, machineType, maintenanceWindow, masterIPV4Cidr, maxSize, network, nodePools, releaseChannel, servicesIPV4Cidr, size, subnetwork, version) { 
+    constructor(authorizedMasterNetworks, clusterIPV4Cidr, credentials, description, enableHTTPLoadBalancer, enableHorizontalPodAutoscaler, enableIstio, enablePrivateEndpoint, enablePrivateNetwork, enableShieldedNodes, enableStackDriverLogging, enableStackDriverMetrics, maintenanceWindow, masterIPV4Cidr, network, releaseChannel, servicesIPV4Cidr, version) { 
         
-        V1alpha1GKESpec.initialize(this, authorizedMasterNetworks, clusterIPV4Cidr, credentials, description, diskSize, enableAutorepair, enableAutoscaler, enableAutoupgrade, enableHTTPLoadBalancer, enableHorizontalPodAutoscaler, enableIstio, enablePrivateEndpoint, enablePrivateNetwork, enableShieldedNodes, enableStackDriverLogging, enableStackDriverMetrics, imageType, machineType, maintenanceWindow, masterIPV4Cidr, maxSize, network, nodePools, releaseChannel, servicesIPV4Cidr, size, subnetwork, version);
+        V1alpha1GKESpec.initialize(this, authorizedMasterNetworks, clusterIPV4Cidr, credentials, description, enableHTTPLoadBalancer, enableHorizontalPodAutoscaler, enableIstio, enablePrivateEndpoint, enablePrivateNetwork, enableShieldedNodes, enableStackDriverLogging, enableStackDriverMetrics, maintenanceWindow, masterIPV4Cidr, network, releaseChannel, servicesIPV4Cidr, version);
     }
 
     /**
@@ -64,15 +54,11 @@ class V1alpha1GKESpec {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, authorizedMasterNetworks, clusterIPV4Cidr, credentials, description, diskSize, enableAutorepair, enableAutoscaler, enableAutoupgrade, enableHTTPLoadBalancer, enableHorizontalPodAutoscaler, enableIstio, enablePrivateEndpoint, enablePrivateNetwork, enableShieldedNodes, enableStackDriverLogging, enableStackDriverMetrics, imageType, machineType, maintenanceWindow, masterIPV4Cidr, maxSize, network, nodePools, releaseChannel, servicesIPV4Cidr, size, subnetwork, version) { 
+    static initialize(obj, authorizedMasterNetworks, clusterIPV4Cidr, credentials, description, enableHTTPLoadBalancer, enableHorizontalPodAutoscaler, enableIstio, enablePrivateEndpoint, enablePrivateNetwork, enableShieldedNodes, enableStackDriverLogging, enableStackDriverMetrics, maintenanceWindow, masterIPV4Cidr, network, releaseChannel, servicesIPV4Cidr, version) { 
         obj['authorizedMasterNetworks'] = authorizedMasterNetworks;
         obj['clusterIPV4Cidr'] = clusterIPV4Cidr;
         obj['credentials'] = credentials;
         obj['description'] = description;
-        obj['diskSize'] = diskSize;
-        obj['enableAutorepair'] = enableAutorepair;
-        obj['enableAutoscaler'] = enableAutoscaler;
-        obj['enableAutoupgrade'] = enableAutoupgrade;
         obj['enableHTTPLoadBalancer'] = enableHTTPLoadBalancer;
         obj['enableHorizontalPodAutoscaler'] = enableHorizontalPodAutoscaler;
         obj['enableIstio'] = enableIstio;
@@ -81,17 +67,11 @@ class V1alpha1GKESpec {
         obj['enableShieldedNodes'] = enableShieldedNodes;
         obj['enableStackDriverLogging'] = enableStackDriverLogging;
         obj['enableStackDriverMetrics'] = enableStackDriverMetrics;
-        obj['imageType'] = imageType;
-        obj['machineType'] = machineType;
         obj['maintenanceWindow'] = maintenanceWindow;
         obj['masterIPV4Cidr'] = masterIPV4Cidr;
-        obj['maxSize'] = maxSize;
         obj['network'] = network;
-        obj['nodePools'] = nodePools;
         obj['releaseChannel'] = releaseChannel;
         obj['servicesIPV4Cidr'] = servicesIPV4Cidr;
-        obj['size'] = size;
-        obj['subnetwork'] = subnetwork;
         obj['version'] = version;
     }
 

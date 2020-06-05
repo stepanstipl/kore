@@ -39,20 +39,16 @@ type V1alpha1GKESpec struct {
 	Description *string `json:"description"`
 
 	// disk size
-	// Required: true
-	DiskSize *int64 `json:"diskSize"`
+	DiskSize int64 `json:"diskSize,omitempty"`
 
 	// enable autorepair
-	// Required: true
-	EnableAutorepair *bool `json:"enableAutorepair"`
+	EnableAutorepair bool `json:"enableAutorepair,omitempty"`
 
 	// enable autoscaler
-	// Required: true
-	EnableAutoscaler *bool `json:"enableAutoscaler"`
+	EnableAutoscaler bool `json:"enableAutoscaler,omitempty"`
 
 	// enable autoupgrade
-	// Required: true
-	EnableAutoupgrade *bool `json:"enableAutoupgrade"`
+	EnableAutoupgrade bool `json:"enableAutoupgrade,omitempty"`
 
 	// enable HTTP load balancer
 	// Required: true
@@ -87,12 +83,10 @@ type V1alpha1GKESpec struct {
 	EnableStackDriverMetrics *bool `json:"enableStackDriverMetrics"`
 
 	// image type
-	// Required: true
-	ImageType *string `json:"imageType"`
+	ImageType string `json:"imageType,omitempty"`
 
 	// machine type
-	// Required: true
-	MachineType *string `json:"machineType"`
+	MachineType string `json:"machineType,omitempty"`
 
 	// maintenance window
 	// Required: true
@@ -103,15 +97,13 @@ type V1alpha1GKESpec struct {
 	MasterIPV4Cidr *string `json:"masterIPV4Cidr"`
 
 	// max size
-	// Required: true
-	MaxSize *int64 `json:"maxSize"`
+	MaxSize int64 `json:"maxSize,omitempty"`
 
 	// network
 	// Required: true
 	Network *string `json:"network"`
 
 	// node pools
-	// Required: true
 	NodePools []*V1alpha1GKENodePool `json:"nodePools"`
 
 	// region
@@ -126,12 +118,10 @@ type V1alpha1GKESpec struct {
 	ServicesIPV4Cidr *string `json:"servicesIPV4Cidr"`
 
 	// size
-	// Required: true
-	Size *int64 `json:"size"`
+	Size int64 `json:"size,omitempty"`
 
 	// subnetwork
-	// Required: true
-	Subnetwork *string `json:"subnetwork"`
+	Subnetwork string `json:"subnetwork,omitempty"`
 
 	// tags
 	Tags map[string]string `json:"tags,omitempty"`
@@ -162,22 +152,6 @@ func (m *V1alpha1GKESpec) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateDescription(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateDiskSize(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateEnableAutorepair(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateEnableAutoscaler(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateEnableAutoupgrade(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -213,23 +187,11 @@ func (m *V1alpha1GKESpec) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
-	if err := m.validateImageType(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateMachineType(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateMaintenanceWindow(formats); err != nil {
 		res = append(res, err)
 	}
 
 	if err := m.validateMasterIPV4Cidr(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateMaxSize(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -246,14 +208,6 @@ func (m *V1alpha1GKESpec) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateServicesIPV4Cidr(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateSize(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateSubnetwork(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -346,42 +300,6 @@ func (m *V1alpha1GKESpec) validateDescription(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1alpha1GKESpec) validateDiskSize(formats strfmt.Registry) error {
-
-	if err := validate.Required("diskSize", "body", m.DiskSize); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *V1alpha1GKESpec) validateEnableAutorepair(formats strfmt.Registry) error {
-
-	if err := validate.Required("enableAutorepair", "body", m.EnableAutorepair); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *V1alpha1GKESpec) validateEnableAutoscaler(formats strfmt.Registry) error {
-
-	if err := validate.Required("enableAutoscaler", "body", m.EnableAutoscaler); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *V1alpha1GKESpec) validateEnableAutoupgrade(formats strfmt.Registry) error {
-
-	if err := validate.Required("enableAutoupgrade", "body", m.EnableAutoupgrade); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (m *V1alpha1GKESpec) validateEnableHTTPLoadBalancer(formats strfmt.Registry) error {
 
 	if err := validate.Required("enableHTTPLoadBalancer", "body", m.EnableHTTPLoadBalancer); err != nil {
@@ -454,24 +372,6 @@ func (m *V1alpha1GKESpec) validateEnableStackDriverMetrics(formats strfmt.Regist
 	return nil
 }
 
-func (m *V1alpha1GKESpec) validateImageType(formats strfmt.Registry) error {
-
-	if err := validate.Required("imageType", "body", m.ImageType); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *V1alpha1GKESpec) validateMachineType(formats strfmt.Registry) error {
-
-	if err := validate.Required("machineType", "body", m.MachineType); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (m *V1alpha1GKESpec) validateMaintenanceWindow(formats strfmt.Registry) error {
 
 	if err := validate.Required("maintenanceWindow", "body", m.MaintenanceWindow); err != nil {
@@ -490,15 +390,6 @@ func (m *V1alpha1GKESpec) validateMasterIPV4Cidr(formats strfmt.Registry) error 
 	return nil
 }
 
-func (m *V1alpha1GKESpec) validateMaxSize(formats strfmt.Registry) error {
-
-	if err := validate.Required("maxSize", "body", m.MaxSize); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (m *V1alpha1GKESpec) validateNetwork(formats strfmt.Registry) error {
 
 	if err := validate.Required("network", "body", m.Network); err != nil {
@@ -510,8 +401,8 @@ func (m *V1alpha1GKESpec) validateNetwork(formats strfmt.Registry) error {
 
 func (m *V1alpha1GKESpec) validateNodePools(formats strfmt.Registry) error {
 
-	if err := validate.Required("nodePools", "body", m.NodePools); err != nil {
-		return err
+	if swag.IsZero(m.NodePools) { // not required
+		return nil
 	}
 
 	for i := 0; i < len(m.NodePools); i++ {
@@ -545,24 +436,6 @@ func (m *V1alpha1GKESpec) validateReleaseChannel(formats strfmt.Registry) error 
 func (m *V1alpha1GKESpec) validateServicesIPV4Cidr(formats strfmt.Registry) error {
 
 	if err := validate.Required("servicesIPV4Cidr", "body", m.ServicesIPV4Cidr); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *V1alpha1GKESpec) validateSize(formats strfmt.Registry) error {
-
-	if err := validate.Required("size", "body", m.Size); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *V1alpha1GKESpec) validateSubnetwork(formats strfmt.Registry) error {
-
-	if err := validate.Required("subnetwork", "body", m.Subnetwork); err != nil {
 		return err
 	}
 

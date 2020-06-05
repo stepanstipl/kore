@@ -197,9 +197,6 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
         >
           {!selectedNodeGroup ? null : (
             <>
-              <Form.Item>
-                <Button disabled={!nodeGroupCloseable} onClick={() => this.closeNodeGroup()}>{nodeGroupCloseable ? 'Close' : 'Node group not valid - correct errors'}</Button>
-              </Form.Item>
               <Collapse defaultActiveKey={['basics','compute','metadata']}>
                 <Collapse.Panel key="basics" header="Basic Configuration (name, sizing)">
                   <Form.Item label="Name" help="Unique name for this group within the cluster">
@@ -252,6 +249,9 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
                   <PlanOption {...this.props} displayName="SSH Security Groups" name={`${name}[${selectedNodeGroupIndex}].sshSourceSecurityGroups`} property={property.items.properties.sshSourceSecurityGroups} value={selectedNodeGroup.sshSourceSecurityGroups} onChange={(_, v) => this.setNodeGroupProperty(selectedNodeGroupIndex, 'sshSourceSecurityGroups', v)} />
                 </Collapse.Panel>
               </Collapse>
+              <Form.Item>
+                <Button type="primary" disabled={!nodeGroupCloseable} onClick={() => this.closeNodeGroup()}>{nodeGroupCloseable ? 'Close' : 'Node group not valid - correct errors'}</Button>
+              </Form.Item>
             </>
           )}
         </Drawer>

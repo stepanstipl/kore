@@ -32,13 +32,13 @@ class V1alpha1GKENodePool {
      * @param maxSize {Number} 
      * @param minSize {Number} 
      * @param name {String} 
-     * @param preEmptible {Boolean} 
+     * @param preemptible {Boolean} 
      * @param size {Number} 
      * @param version {String} 
      */
-    constructor(diskSize, enableAutorepair, enableAutoscaler, enableAutoupgrade, imageType, machineType, maxPodsPerNode, maxSize, minSize, name, preEmptible, size, version) { 
+    constructor(diskSize, enableAutorepair, enableAutoscaler, enableAutoupgrade, imageType, machineType, maxPodsPerNode, maxSize, minSize, name, preemptible, size, version) { 
         
-        V1alpha1GKENodePool.initialize(this, diskSize, enableAutorepair, enableAutoscaler, enableAutoupgrade, imageType, machineType, maxPodsPerNode, maxSize, minSize, name, preEmptible, size, version);
+        V1alpha1GKENodePool.initialize(this, diskSize, enableAutorepair, enableAutoscaler, enableAutoupgrade, imageType, machineType, maxPodsPerNode, maxSize, minSize, name, preemptible, size, version);
     }
 
     /**
@@ -46,7 +46,7 @@ class V1alpha1GKENodePool {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, diskSize, enableAutorepair, enableAutoscaler, enableAutoupgrade, imageType, machineType, maxPodsPerNode, maxSize, minSize, name, preEmptible, size, version) { 
+    static initialize(obj, diskSize, enableAutorepair, enableAutoscaler, enableAutoupgrade, imageType, machineType, maxPodsPerNode, maxSize, minSize, name, preemptible, size, version) { 
         obj['diskSize'] = diskSize;
         obj['enableAutorepair'] = enableAutorepair;
         obj['enableAutoscaler'] = enableAutoscaler;
@@ -57,7 +57,7 @@ class V1alpha1GKENodePool {
         obj['maxSize'] = maxSize;
         obj['minSize'] = minSize;
         obj['name'] = name;
-        obj['preEmptible'] = preEmptible;
+        obj['preemptible'] = preemptible;
         obj['size'] = size;
         obj['version'] = version;
     }
@@ -106,8 +106,8 @@ class V1alpha1GKENodePool {
             if (data.hasOwnProperty('name')) {
                 obj['name'] = ApiClient.convertToType(data['name'], 'String');
             }
-            if (data.hasOwnProperty('preEmptible')) {
-                obj['preEmptible'] = ApiClient.convertToType(data['preEmptible'], 'Boolean');
+            if (data.hasOwnProperty('preemptible')) {
+                obj['preemptible'] = ApiClient.convertToType(data['preemptible'], 'Boolean');
             }
             if (data.hasOwnProperty('size')) {
                 obj['size'] = ApiClient.convertToType(data['size'], 'Number');
@@ -265,15 +265,15 @@ class V1alpha1GKENodePool {
 /**
      * @return {Boolean}
      */
-    getPreEmptible() {
-        return this.preEmptible;
+    getPreemptible() {
+        return this.preemptible;
     }
 
     /**
-     * @param {Boolean} preEmptible
+     * @param {Boolean} preemptible
      */
-    setPreEmptible(preEmptible) {
-        this['preEmptible'] = preEmptible;
+    setPreemptible(preemptible) {
+        this['preemptible'] = preemptible;
     }
 /**
      * @return {Number}
@@ -360,9 +360,9 @@ V1alpha1GKENodePool.prototype['minSize'] = undefined;
 V1alpha1GKENodePool.prototype['name'] = undefined;
 
 /**
- * @member {Boolean} preEmptible
+ * @member {Boolean} preemptible
  */
-V1alpha1GKENodePool.prototype['preEmptible'] = undefined;
+V1alpha1GKENodePool.prototype['preemptible'] = undefined;
 
 /**
  * @member {Number} size

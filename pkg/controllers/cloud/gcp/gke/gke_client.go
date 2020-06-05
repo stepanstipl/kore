@@ -90,16 +90,20 @@ func NewClient(credentials *credentials, cluster *gke.GKE) (*gkeClient, error) {
 		// defaults.
 		cluster.Spec.NodePools = []gke.GKENodePool{
 			{
-				Name:              "compute",
+				// Previously hard coded defaults:
+				Name:           "compute",
+				MinSize:        1,
+				MaxPodsPerNode: 110,
+				// Deprecated properties moved into the node pool:
 				Version:           cluster.Spec.Version,
 				EnableAutoupgrade: cluster.Spec.EnableAutoupgrade,
 				EnableAutoscaler:  cluster.Spec.EnableAutoscaler,
 				EnableAutorepair:  cluster.Spec.EnableAutorepair,
-				MinSize:           1,
 				MaxSize:           cluster.Spec.MaxSize,
 				Size:              cluster.Spec.Size,
 				DiskSize:          cluster.Spec.DiskSize,
 				ImageType:         cluster.Spec.ImageType,
+				MachineType:       cluster.Spec.MachineType,
 			},
 		}
 	}
@@ -164,13 +168,24 @@ func (g *gkeClient) Delete(ctx context.Context) error {
 }
 
 // Create is used to create the cluster in gcp
-func (g *gkeClient) Create(ctx context.Context) (*container.Cluster, error) {
+func (g *gkeClient) Create(ctx context.Context) error {
 	logger := log.WithFields(log.Fields{
 		"cluster":   g.cluster.Name,
 		"namespace": g.cluster.Namespace,
 		"project":   g.credentials.project,
 		"region":    g.region,
 	})
+
+	// @step: looking for any ongoing operation
+	_, found, err := g.FindOperation(ctx, "CREATE_CLUSTER", "kubernetes", g.cluster.Name)
+	if err != nil {
+		return err
+	}
+	if found {
+		logger.Debug("Cluster creation still in progress")
+		return nil
+	}
+
 	logger.Info("attempting to create the gke cluster")
 
 	// @step: we create the definitions
@@ -178,34 +193,18 @@ func (g *gkeClient) Create(ctx context.Context) (*container.Cluster, error) {
 	if err != nil {
 		logger.WithError(err).Error("attempting to create the cluster definition")
 
-		return nil, err
+		return err
 	}
 
-	// @step: looking for any ongoing operation
-	_, found, err := g.FindOperation(ctx, "CREATE_CLUSTER", "kubernetes", g.cluster.Name)
-	if err != nil {
-		return nil, err
-	}
-	if !found {
-		// @step: we request the cluster
-		if _, err := g.CreateCluster(ctx, def); err != nil {
-			if err != nil {
-				logger.WithError(err).Error("attempting to request the cluster")
+	// @step: we request the cluster
+	if _, err := g.CreateCluster(ctx, def); err != nil {
+		if err != nil {
+			logger.WithError(err).Error("attempting to request the cluster")
 
-				return nil, err
-			}
+			return err
 		}
 	}
-
-	// @step: retrieve the state of the cluster via api
-	gc, _, err := g.GetCluster(ctx)
-	if err != nil {
-		logger.WithError(err).Error("retrieving gke cluster details")
-
-		return nil, err
-	}
-
-	return gc, nil
+	return nil
 }
 
 // Update is called to update the cluster
@@ -385,8 +384,6 @@ func (g *gkeClient) deleteNodePool(ctx context.Context, nodePoolPath string, nod
 }
 
 func (g *gkeClient) updateNodePool(ctx context.Context, nodePoolPath string, nodePoolSpec *gke.GKENodePool, nodePool *container.NodePool, nodePoolLogger *log.Entry) (bool, error) {
-	updatePool := false
-	var err error
 	if g.cluster.Spec.ReleaseChannel == "" {
 		// Check versions if not following a release channel (the release channel will take care of the node
 		// pools if it is specified)
@@ -397,18 +394,21 @@ func (g *gkeClient) updateNodePool(ctx context.Context, nodePoolPath string, nod
 			targetVersion = g.cluster.Spec.Version
 		}
 
-		updatePool, err = UpgradeRequired(nodePool.Version, targetVersion)
+		upgradeRequired, err := UpgradeRequired(nodePool.Version, targetVersion)
 		if err != nil {
 			return false, err
 		}
+		if upgradeRequired {
+			err := g.requestNodePoolUpgrade(ctx, nodePoolPath, targetVersion, nodePoolSpec.ImageType, nodePoolLogger)
+			if err != nil {
+				return false, err
+			}
+			return true, nil
+		}
 	}
 
-	if !updatePool && nodePoolSpec.ImageType != nodePool.Config.ImageType {
-		updatePool = true
-	}
-
-	if updatePool {
-		err := g.requestNodePoolUpgrade(ctx, nodePoolPath, nodePoolSpec, nodePoolLogger)
+	if nodePoolSpec.ImageType != nodePool.Config.ImageType {
+		err := g.requestNodePoolUpgrade(ctx, nodePoolPath, nodePoolSpec.Version, nodePoolSpec.ImageType, nodePoolLogger)
 		if err != nil {
 			return false, err
 		}
@@ -436,7 +436,7 @@ func (g *gkeClient) updateNodePool(ctx context.Context, nodePoolPath string, nod
 	return false, nil
 }
 
-func (g *gkeClient) requestNodePoolUpgrade(ctx context.Context, nodePoolPath string, nodePoolSpec *gke.GKENodePool, nodePoolLogger *log.Entry) error {
+func (g *gkeClient) requestNodePoolUpgrade(ctx context.Context, nodePoolPath string, version string, imageType string, nodePoolLogger *log.Entry) error {
 	// @step: Check if already in operation
 	_, found, err := g.FindOperation(ctx, "UPGRADE_NODES", "kubernetes", g.cluster.Name)
 	if err != nil {
@@ -447,12 +447,15 @@ func (g *gkeClient) requestNodePoolUpgrade(ctx context.Context, nodePoolPath str
 		return nil
 	}
 
-	nodePoolLogger.Info("Node pool upgrade required to match spec - image type changed or version updated")
+	nodePoolLogger.WithFields(log.Fields{
+		"version":   version,
+		"imageType": imageType,
+	}).Info("Node pool upgrade required to match spec - image type changed or version updated")
 
 	// @step: request upgrade / image type change
 	updateReq := &container.UpdateNodePoolRequest{
-		NodeVersion: nodePoolSpec.Version,
-		ImageType:   nodePoolSpec.ImageType,
+		NodeVersion: version,
+		ImageType:   imageType,
 	}
 	_, err = g.ce.Projects.Locations.Clusters.NodePools.Update(nodePoolPath, updateReq).Context(ctx).Do()
 	if err != nil {
@@ -537,8 +540,13 @@ func (g *gkeClient) CreateUpdateDefinition(state *container.Cluster) (*container
 
 	u := request.Update
 
-	// Update release channel if changed.
-	if state.ReleaseChannel.Channel != g.cluster.Spec.ReleaseChannel {
+	// Update release channel if changed. If the cluster was created with no release channel set in the
+	// spec sent to GKE, the 'ReleaseChannel' struct on the state can be nil, so need to guard for that.
+	stateChannel := ""
+	if state.ReleaseChannel != nil {
+		stateChannel = state.ReleaseChannel.Channel
+	}
+	if stateChannel != g.cluster.Spec.ReleaseChannel {
 		logger.WithFields(log.Fields{
 			"currentChannel": state.ReleaseChannel.Channel,
 			"specChannel":    g.cluster.Spec.ReleaseChannel,

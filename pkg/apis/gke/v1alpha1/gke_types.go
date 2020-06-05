@@ -117,44 +117,43 @@ type GKESpec struct {
 	// Tags is a collection of tags related to the cluster type
 	// +kubebuilder:validation:Optional
 	Tags map[string]string `json:"tags,omitempty"`
-	// NodePools is the set of node pools for this cluster
-	// +kubebuilder:validation:Required
-	// +kubebuilder:validation:MinItems=1
+	// NodePools is the set of node pools for this cluster. Required unless ALL deprecated properties except subnetwork are set.
+	// +kubebuilder:validation:Optional
 	// +listType=set
-	NodePools []GKENodePool `json:"nodePools"`
+	NodePools []GKENodePool `json:"nodePools,omitempty"`
 
 	// DEPRECATED: Set on node group instead, this property is now ignored. Size is the number of nodes per zone which should exist in the cluster.
 	// +kubebuilder:validation:Optional
-	Size int64 `json:"size"`
+	Size int64 `json:"size,omitempty"`
 	// DEPRECATED: Set on node group instead, this property is now ignored. MaxSize assuming the autoscaler is enabled this is the maximum number
 	// nodes permitted
 	// +kubebuilder:validation:Optional
-	MaxSize int64 `json:"maxSize"`
+	MaxSize int64 `json:"maxSize,omitempty"`
 	// DEPRECATED: Set on node group instead, this property is now ignored. DiskSize is the size of the disk used by the compute nodes.
 	// +kubebuilder:validation:Optional
-	DiskSize int64 `json:"diskSize"`
+	DiskSize int64 `json:"diskSize,omitempty"`
 	// DEPRECATED: Set on node group instead, this property is now ignored. ImageType is the operating image to use for the default compute pool.
 	// +kubebuilder:validation:Optional
-	ImageType string `json:"imageType"`
+	ImageType string `json:"imageType,omitempty"`
 	// DEPRECATED: Set on node group instead, this property is now ignored. MachineType is the machine type which the default nodes pool should use.
 	// +kubebuilder:validation:Optional
-	MachineType string `json:"machineType"`
+	MachineType string `json:"machineType,omitempty"`
 	// DEPRECATED: This was always ignored. May be re-introduced in future. Subnetwork is name of the GCP subnetwork which the cluster nodes
 	// should reside -
 	// +kubebuilder:validation:Optional
-	Subnetwork string `json:"subnetwork"`
+	Subnetwork string `json:"subnetwork,omitempty"`
 	// DEPRECATED: Set on node group instead, this property is now ignored. EnableAutoscaler indicates if the cluster should be configured with
 	// cluster autoscaling turned on
 	// +kubebuilder:validation:Optional
-	EnableAutoscaler bool `json:"enableAutoscaler"`
+	EnableAutoscaler bool `json:"enableAutoscaler,omitempty"`
 	// DEPRECATED: Set on node group instead, this property is now ignored. EnableAutoUpgrade indicates if the cluster should be configured with
 	// auto upgrading enabled; meaning both nodes are masters are scheduled to upgrade during your maintenance window.
 	// +kubebuilder:validation:Optional
-	EnableAutoupgrade bool `json:"enableAutoupgrade"`
+	EnableAutoupgrade bool `json:"enableAutoupgrade,omitempty"`
 	// DEPRECATED: Set on node group instead, this property is now ignored. EnableAutorepair indicates if the cluster should be configured with
 	// auto repair is enabled
 	// +kubebuilder:validation:Optional
-	EnableAutorepair bool `json:"enableAutorepair"`
+	EnableAutorepair bool `json:"enableAutorepair,omitempty"`
 }
 
 // AuthorizedNetwork provides a definition for the authorized networks
@@ -223,7 +222,7 @@ type GKENodePool struct {
 	DiskSize int64 `json:"diskSize"`
 	// Preemptible controls whether to use pre-emptible nodes.
 	// +kubebuilder:validation:Optional
-	Preemptible bool `json:"preEmptible"`
+	Preemptible bool `json:"preemptible"`
 	// Labels is a set of labels to help Kubernetes workloads find this group
 	// +kubebuilder:validation:Optional
 	Labels map[string]string `json:"labels,omitempty"`

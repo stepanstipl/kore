@@ -60,9 +60,9 @@ type V1alpha1GKENodePool struct {
 	// Required: true
 	Name *string `json:"name"`
 
-	// pre emptible
+	// preemptible
 	// Required: true
-	PreEmptible *bool `json:"preEmptible"`
+	Preemptible *bool `json:"preemptible"`
 
 	// size
 	// Required: true
@@ -117,7 +117,7 @@ func (m *V1alpha1GKENodePool) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
-	if err := m.validatePreEmptible(formats); err != nil {
+	if err := m.validatePreemptible(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -225,9 +225,9 @@ func (m *V1alpha1GKENodePool) validateName(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1alpha1GKENodePool) validatePreEmptible(formats strfmt.Registry) error {
+func (m *V1alpha1GKENodePool) validatePreemptible(formats strfmt.Registry) error {
 
-	if err := validate.Required("preEmptible", "body", m.PreEmptible); err != nil {
+	if err := validate.Required("preemptible", "body", m.Preemptible); err != nil {
 		return err
 	}
 

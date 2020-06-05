@@ -10,7 +10,7 @@ export default class PlanOptionGKEVersion extends PlanOptionBase {
     const { name, editable, property, value, plan } = this.props
 
     // Drop the version control all together if release channel set.
-    if (plan.releaseChannel !== '') {
+    if (plan.releaseChannel && plan.releaseChannel !== '') {
       return null
     }
 
@@ -30,6 +30,7 @@ export default class PlanOptionGKEVersion extends PlanOptionBase {
     return (
       <Form.Item label={displayName} help={help}>
         <Input value={valueOrDefault} readOnly={!editable} pattern={property.pattern} onChange={(e) => onChange(name, e.target.value)} />
+        {this.validationErrors(name)}
       </Form.Item>
     )
   }

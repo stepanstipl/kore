@@ -44,10 +44,18 @@ export default class ManagePlanForm extends React.Component {
   }
 
   onValueChange(name, value) {
-    // Texture this back into a state update using the nifty lodash set function:
-    const newPlanValues = set({ ...this.state.planValues }, name, value)
-    this.setState({
-      planValues: newPlanValues
+    this.setState((state) => {
+      let planValues = {
+        ...state.planValues
+      }
+      if (value !== undefined) {
+        // Texture this back into a state update using the nifty lodash set function:
+        planValues = set(planValues, name, value)
+      } else {
+        // Property set to undefined, so remove it completely from the plan values.
+        delete planValues[name]
+      }
+      return { planValues }
     })
   }
 

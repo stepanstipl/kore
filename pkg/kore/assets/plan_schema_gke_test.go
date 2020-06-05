@@ -70,6 +70,43 @@ func gkeSampleData() map[string]interface{} {
 	}
 }
 
+func gkeSampleDataDeprecated() map[string]interface{} {
+	return map[string]interface{}{
+		"authorizedMasterNetworks": []map[string]interface{}{
+			{
+				"name": "default",
+				"cidr": "0.0.0.0/0",
+			},
+		},
+		"authProxyAllowedIPs":           []string{"0.0.0.0/0"},
+		"description":                   "This is a test cluster",
+		"diskSize":                      100,
+		"domain":                        "testdomain",
+		"enableAutoupgrade":             true,
+		"enableAutorepair":              true,
+		"enableAutoscaler":              true,
+		"enableDefaultTrafficBlock":     false,
+		"enableHTTPLoadBalancer":        true,
+		"enableHorizontalPodAutoscaler": true,
+		"enableIstio":                   false,
+		"enablePrivateEndpoint":         false,
+		"enablePrivateNetwork":          false,
+		"enableShieldedNodes":           true,
+		"enableStackDriverLogging":      true,
+		"enableStackDriverMetrics":      true,
+		"imageType":                     "COS",
+		"inheritTeamMembers":            false,
+		"machineType":                   "n1-standard-2",
+		"maintenanceWindow":             "03:00",
+		"maxSize":                       10,
+		"network":                       "default",
+		"region":                        "europe-west2",
+		"size":                          1,
+		"subnetwork":                    "default",
+		"version":                       "1.14.10-gke.24",
+	}
+}
+
 var _ = Describe("GKEPlanSchema", func() {
 
 	Context("The schema document", func() {
@@ -103,6 +140,12 @@ var _ = Describe("GKEPlanSchema", func() {
 
 	It("should validate the test data successfully by default", func() {
 		data := gkeSampleData()
+		err := jsonschema.Validate(assets.GKEPlanSchema, "test", data)
+		Expect(err).ToNot(HaveOccurred())
+	})
+
+	It("should validate the deprecated data successfully by default", func() {
+		data := gkeSampleDataDeprecated()
 		err := jsonschema.Validate(assets.GKEPlanSchema, "test", data)
 		Expect(err).ToNot(HaveOccurred())
 	})
@@ -143,6 +186,7 @@ var _ = Describe("GKEPlanSchema", func() {
 		}, true),
 		Entry("authProxyAllowedIPs with no elements", "authProxyAllowedIPs", []string{}, true),
 		Entry("authProxyAllowedIPs with invalid value", "authProxyAllowedIPs", []string{"invalid"}, true),
+		Entry("nodePools with no elements", "nodePools", []map[string]interface{}{}, true),
 	)
 
 	DescribeTable("Validating individual nodePool parameters",

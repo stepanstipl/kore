@@ -136,7 +136,7 @@ func (t *gkeCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 
 			logger.Debug("creating a new gke cluster in gcp")
 
-			if _, err = client.Create(ctx); err != nil {
+			if err = client.Create(ctx); err != nil {
 				logger.WithError(err).Error("attempting to create cluster")
 
 				resource.Status.Conditions.SetCondition(core.Component{

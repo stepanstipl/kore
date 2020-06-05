@@ -58,9 +58,9 @@ class PlanViewer extends React.Component {
       key: 'value',
     }]
 
-    const propertyDisplayName = (name, description) => (
+    const propertyDisplayName = (name, description, deprecated) => (
       <>
-        <Text strong>{startCase(name)}</Text> {description ? <><br/><Text type="secondary">{description}</Text></> : null}
+        <Text strong>{!deprecated ? null : <Icon type="warning" twoToneColor="orange" theme="twoTone" />} {startCase(name)}</Text> {description ? <><br/><Text type="secondary">{description}</Text></> : null}
       </>
     )
 
@@ -78,25 +78,47 @@ class PlanViewer extends React.Component {
         return value.map((v) => propertyDisplayValue(schema.items, v))
       }
       case 'object': {
-        return <Table size="small" pagination={false} columns={columns} style={{ paddingTop: '5px', paddingBottom: '5px' }}
-          dataSource={Object.keys(schema.properties).map(p => ({
-            key: p,
-            property: propertyDisplayName(p),
-            value: propertyDisplayValue(schema.properties[p], value[p])
-          }))}
-        />
+        if (schema.properties) {
+          return <Table size="small" pagination={false} columns={columns} style={{ paddingTop: '5px', paddingBottom: '5px' }}
+            dataSource={Object.keys(schema.properties).map(p => ({
+              key: p,
+              property: propertyDisplayName(p),
+              value: propertyDisplayValue(schema.properties[p], value[p])
+            }))}
+          />
+        }
+        if (schema.additionalProperties && schema.additionalProperties.type === 'string') {
+          const keys = value ? Object.keys(value) : []
+          return <Table size="small" pagination={false} columns={columns} style={{ paddingTop: '5px', paddingBottom: '5px' }}
+            dataSource={keys.map(p => ({
+              key: p,
+              property: propertyDisplayName(p),
+              value: value[p]
+            }))}
+          />
+        }
+        return `${value}`
       }
       default: return `${value}`
       }
     }
 
-    const planValues = Object.keys(plan.spec.configuration).map(name => {
+    let hasDeprecated = false
+    let planValues = Object.keys(plan.spec.configuration).map(name => {
+      if (schema.properties[name].deprecated && plan.spec.configuration[name] !== undefined) {
+        hasDeprecated = true
+      }
       return {
         key: name,
-        property: propertyDisplayName(name, schema.properties[name].description),
-        value: propertyDisplayValue(schema.properties[name], plan.spec.configuration[name])
+        property: propertyDisplayName(name, schema.properties[name].description, schema.properties[name].deprecated),
+        value: propertyDisplayValue(schema.properties[name], plan.spec.configuration[name]),
+        deprecated: schema.properties[name].deprecated
       }
     })
+
+    if (!hasDeprecated) { 
+      planValues = planValues.filter((v) => !v.deprecated)
+    }
 
     return (
       <>
@@ -106,6 +128,14 @@ class PlanViewer extends React.Component {
         {displayUnassociatedPlanWarning && (
           <Alert
             message="This plan not associated with any GCP automated projects and will not be available for teams to use. Edit this plan or go to Project automation settings to review this."
+            type="warning"
+            showIcon
+            style={{ marginBottom: '20px' }}
+          />
+        )}
+        {!hasDeprecated ? null : (
+          <Alert 
+            message="This plan has values set on deprecated fields"
             type="warning"
             showIcon
             style={{ marginBottom: '20px' }}

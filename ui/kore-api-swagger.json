@@ -7124,11 +7124,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
-        "issuer",
         "clientScopes",
         "userClaims",
         "clientID",
-        "clientSecret"
+        "clientSecret",
+        "issuer"
       ],
       "properties": {
         "clientID": {
@@ -8006,7 +8006,7 @@
         "machineType",
         "imageType",
         "diskSize",
-        "preEmptible"
+        "preemptible"
       ],
       "properties": {
         "diskSize": {
@@ -8049,7 +8049,7 @@
         "name": {
           "type": "string"
         },
-        "preEmptible": {
+        "preemptible": {
           "type": "boolean"
         },
         "size": {
@@ -8080,17 +8080,7 @@
         "enablePrivateEndpoint",
         "enablePrivateNetwork",
         "masterIPV4Cidr",
-        "maintenanceWindow",
-        "nodePools",
-        "size",
-        "maxSize",
-        "diskSize",
-        "imageType",
-        "machineType",
-        "subnetwork",
-        "enableAutoscaler",
-        "enableAutoupgrade",
-        "enableAutorepair"
+        "maintenanceWindow"
       ],
       "properties": {
         "authorizedMasterNetworks": {
