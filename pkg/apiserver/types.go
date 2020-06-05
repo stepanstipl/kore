@@ -42,14 +42,20 @@ type Interface interface {
 
 // Config is the configuration for the api server
 type Config struct {
+	// EnableMetrics switches on the prometheus metrics
+	EnableMetrics bool `json:"enable-metrics,omitempty"`
+	// EnableProfiling switches on profilile
+	EnableProfiling bool `json:"enable-profiling,omitempty"`
+	// MetricsPort is the binding for metrics
+	MetricsPort int `json:"metrics-port,omitempty"`
+	// ProfilingPort is the binding for profiling
+	ProfilingPort int `json:"profiling-port,omitempty"`
 	// EnableDex indicates if the idp endpoints should be enabled
 	EnableDex bool `json:"enable-dex,omitempty"`
 	// Listen is the interface the api should bind on
 	Listen string `json:"listen,omitempty"`
 	// MetaStoreURL is the host url for the metadata store
 	MetaStoreURL string `json:"meta-store-url,omitempty"`
-	// MetricsPort is the port the metrics http server should be served
-	MetricsPort int `json:"metrics-port,omitempty"`
 	// PublicURL is the public url for the api
 	PublicURL string `json:"public-url,omitempty"`
 	// SwaggerUIPath is the path to the swagger-ui assets

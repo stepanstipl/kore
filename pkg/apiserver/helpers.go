@@ -21,11 +21,11 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/jinzhu/gorm"
-
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/validation"
+
 	restful "github.com/emicklei/go-restful"
+	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,6 +36,35 @@ func returnNotImplemented(req *restful.Request, wr *restful.Response) {
 	wr.WriteHeader(http.StatusNotImplemented)
 }
 */
+
+// withStandardErrors adds the standard internal server error (500) result to the route.
+func withStandardErrors(rb *restful.RouteBuilder) *restful.RouteBuilder {
+	return rb.
+		Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{})
+}
+
+// withValidationErrors adds the standard bad request (400) validation error result to the route.
+func withValidationErrors(rb *restful.RouteBuilder) *restful.RouteBuilder {
+	return rb.
+		Returns(http.StatusBadRequest, "Validation error of supplied parameters/body", validation.Error{})
+}
+
+// withAuthErrors adds the standard unauthenticated (401) and forbidden (403) results to the route.
+func withAuthErrors(rb *restful.RouteBuilder) *restful.RouteBuilder {
+	return rb.
+		Returns(http.StatusUnauthorized, "If not authenticated", nil).
+		Returns(http.StatusForbidden, "If authenticated but not authorized", nil)
+}
+
+// withAllErrors is a shorthand to add all standard, validation, and auth results to the route.
+func withAllErrors(rb *restful.RouteBuilder) *restful.RouteBuilder {
+	return withValidationErrors(withAuthErrors(withStandardErrors(rb)))
+}
+
+// withAllNonValidationErrors is a shorthand to add all standard and auth results to the route but not validation.
+func withAllNonValidationErrors(rb *restful.RouteBuilder) *restful.RouteBuilder {
+	return withAuthErrors(withStandardErrors(rb))
+}
 
 // newList provides an api list type
 func newList() *List {

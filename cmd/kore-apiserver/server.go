@@ -52,13 +52,15 @@ func invoke(ctx *cli.Context) error {
 		return err
 	}
 
-	// @step: construct the server config
 	config := server.Config{
 		APIServer: apiserver.Config{
-			EnableDex:     ctx.Bool("enable-dex"),
-			Listen:        ctx.String("listen"),
-			MetricsPort:   ctx.Int("metrics-port"),
-			SwaggerUIPath: "./swagger-ui",
+			EnableDex:       ctx.Bool("enable-dex"),
+			EnableMetrics:   ctx.Bool("enable-metrics"),
+			EnableProfiling: ctx.Bool("enable-profiling"),
+			Listen:          ctx.String("listen"),
+			MetricsPort:     ctx.Int("metrics-port"),
+			ProfilingPort:   ctx.Int("profiling-port"),
+			SwaggerUIPath:   "./swagger-ui",
 		},
 		Kubernetes: kubernetes.KubernetesAPI{
 			InCluster:    ctx.Bool("in-cluster"),

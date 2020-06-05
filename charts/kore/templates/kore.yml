@@ -44,7 +44,7 @@ spec:
         service: {{ include "kore.name" . }}-apiserver
 {{ include "kore.labels" . | indent 8}}
       annotations:
-        prometheus.io/port: {{ .Values.api.port | quote }}
+        prometheus.io/port: {{ .Values.api.metrics_port | quote }}
         prometheus.io/scheme: "http"
         prometheus.io/scrape: "true"
     spec:
@@ -59,6 +59,14 @@ spec:
             {{- if .Values.api.hostPort }}
             hostPort: {{ .Values.api.hostPort }}
             {{- end }}
+          {{- if .Values.api.enable_metrics }}
+          - name: metrics
+            containerPort: {{ .Values.api.metrics_port }}
+          {{- end }}
+          {{- if .Values.api.enable_profiling }}
+          - name: pprof
+            containerPort: {{ .Values.api.profiling_port }}
+          {{- end }}
         envFrom:
           - secretRef:
               name: {{ include "kore.name" . }}-mysql
@@ -119,6 +127,14 @@ spec:
           {{- end }}
           - name: VERBOSE
             value: "{{ .Values.api.verbose }}"
+          - name: ENABLE_PROFILING
+            value: "{{ .Values.api.enable_profiling }}"
+          - name: PROFILING_PORT
+            value: "{{ .Values.api.profiling_port }}"
+          - name: ENABLE_METRICS
+            value: "{{ .Values.api.enable_metrics }}"
+          - name: METRICS_PORT
+            value: "{{ .Values.api.metrics_port }}"
         volumeMounts:
         - name: ca
           readOnly: true

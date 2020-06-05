@@ -21,10 +21,13 @@ import (
 	"fmt"
 	"net/http"
 
+	// importing the profiling
+	_ "net/http/pprof"
+
 	"github.com/appvia/kore/pkg/apiserver/filters"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
-	"github.com/appvia/kore/pkg/utils/validation"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	restful "github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
@@ -40,43 +43,12 @@ type server struct {
 	store kore.Interface
 }
 
-// withStandardErrors adds the standard internal server error (500) result to the route.
-func withStandardErrors(rb *restful.RouteBuilder) *restful.RouteBuilder {
-	return rb.
-		Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{})
-}
-
-// withValidationErrors adds the standard bad request (400) validation error result to the route.
-func withValidationErrors(rb *restful.RouteBuilder) *restful.RouteBuilder {
-	return rb.
-		Returns(http.StatusBadRequest, "Validation error of supplied parameters/body", validation.Error{})
-}
-
-// withAuthErrors adds the standard unauthenticated (401) and forbidden (403) results to the route.
-func withAuthErrors(rb *restful.RouteBuilder) *restful.RouteBuilder {
-	return rb.
-		Returns(http.StatusUnauthorized, "If not authenticated", nil).
-		Returns(http.StatusForbidden, "If authenticated but not authorized", nil)
-}
-
-// withAllErrors is a shorthand to add all standard, validation, and auth results to the route.
-func withAllErrors(rb *restful.RouteBuilder) *restful.RouteBuilder {
-	return withValidationErrors(withAuthErrors(withStandardErrors(rb)))
-}
-
-// withAllNonValidationErrors is a shorthand to add all standard and auth results to the route but not validation.
-func withAllNonValidationErrors(rb *restful.RouteBuilder) *restful.RouteBuilder {
-	return withAuthErrors(withStandardErrors(rb))
-}
-
 // New returns a new api server for the kore
 func New(kore kore.Interface, config Config) (Interface, error) {
-	// @step: verify the configuration
 	if err := config.isValid(); err != nil {
 		return nil, fmt.Errorf("invalid api config: %s", err)
 	}
 
-	// @step: for now we can use the default container
 	c := restful.DefaultContainer
 	c.Filter(filters.DefaultMetrics.Filter)
 
@@ -152,8 +124,10 @@ func (h server) BaseURI() string {
 // Run starts the api up
 func (h *server) Run(ctx context.Context) error {
 	log.WithFields(log.Fields{
-		"listen":      h.Listen,
-		"tls_enabled": h.UseTLS(),
+		"enable_metrics":   h.EnableMetrics,
+		"enable_profiling": h.EnableProfiling,
+		"listen":           h.Listen,
+		"tls_enabled":      h.UseTLS(),
 	}).Info("starting the kore-apiserver")
 
 	// @step: setup the http handler
@@ -174,6 +148,36 @@ func (h *server) Run(ctx context.Context) error {
 			}).Fatal("failed to start the http server")
 		}
 	}()
+
+	if h.EnableMetrics {
+		go func() {
+			addr := fmt.Sprintf(":%d", h.MetricsPort)
+			s := &http.Server{Addr: addr, Handler: promhttp.Handler()}
+
+			if err := s.ListenAndServe(); err != nil {
+				if err != nil {
+					log.WithFields(log.Fields{
+						"error": err.Error(),
+					}).Fatal("failed to start the metrics http server")
+				}
+			}
+		}()
+	}
+
+	if h.EnableProfiling {
+		go func() {
+			addr := fmt.Sprintf(":%d", h.ProfilingPort)
+			s := &http.Server{Addr: addr, Handler: http.DefaultServeMux}
+
+			if err := s.ListenAndServe(); err != nil {
+				if err != nil {
+					log.WithFields(log.Fields{
+						"error": err.Error(),
+					}).Fatal("failed to start the profiling http server")
+				}
+			}
+		}()
+	}
 
 	return nil
 }
