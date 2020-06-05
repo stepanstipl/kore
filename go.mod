@@ -129,4 +129,6 @@ replace k8s.io/code-generator => github.com/appvia/kubernetes-code-generator v0.
 
 replace github.com/kubernetes-sigs/go-open-service-broker-client => github.com/appvia/go-open-service-broker-client v0.0.0-20200505172434-f28d621ea14e
 
+replace github.com/ahmetb/gen-crd-api-reference-docs => github.com/appvia/gen-crd-api-reference-docs v0.2.1-0.20200604183043-37e61fdd102c
+
 go 1.13

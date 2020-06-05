@@ -65,6 +65,8 @@ github.com/apparentlymart/go-cidr v1.0.1 h1:NmIwLZ/KdsjIUlhf+/Np40atNXm/+lZ5txfT
 github.com/apparentlymart/go-cidr v1.0.1/go.mod h1:EBcsNrHc3zQeuaeCeCtQruQm+n9/YjEn/vI25Lg7Gwc=
 github.com/appvia/dex v0.0.0-20191213161401-b147340b9bc0 h1:W6sgfeOkehcKYGMLATJ5utlC7RxgkiKexH1+Q4ZpMHo=
 github.com/appvia/dex v0.0.0-20191213161401-b147340b9bc0/go.mod h1:T4RBGFkIrCWQC9Dwv2gTVPtquf05t9hP8xraHTNIrc0=
+github.com/appvia/gen-crd-api-reference-docs v0.2.1-0.20200604183043-37e61fdd102c h1:DWJVokfxT7Be3Mc+LoqyfZnmeaBw4XnqHhTFliE9pEg=
+github.com/appvia/gen-crd-api-reference-docs v0.2.1-0.20200604183043-37e61fdd102c/go.mod h1:P/XzJ+c2+khJKNKABcm2biRwk2QAuwbLf8DlXuaL7WM=
 github.com/appvia/go-open-service-broker-client v0.0.0-20200505172434-f28d621ea14e h1:NK++OX0C8j47wuZJA9pHLUddwRbEOuW10VzllXKGp+o=
 github.com/appvia/go-open-service-broker-client v0.0.0-20200505172434-f28d621ea14e/go.mod h1:6U1cCvhdd4aLi6YlF66GgGlfZFDLE02GyRxTeOtB7Tg=
 github.com/appvia/kubernetes-code-generator v0.0.0-20200311145355-28f8f0159a26 h1:MtnMBmGdteBouNFE88aAkG265vUhpC5uADdPtT4Ie8c=
