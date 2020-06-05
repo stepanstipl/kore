@@ -20,7 +20,7 @@ github.com/PuerkitoBio/urlesc
 github.com/RoaringBitmap/roaring
 # github.com/Songmu/retry v0.1.0
 github.com/Songmu/retry
-# github.com/ahmetb/gen-crd-api-reference-docs v0.2.0
+# github.com/ahmetb/gen-crd-api-reference-docs v0.2.0 => github.com/appvia/gen-crd-api-reference-docs v0.2.1-0.20200604183043-37e61fdd102c
 github.com/ahmetb/gen-crd-api-reference-docs
 # github.com/apparentlymart/go-cidr v1.0.1
 github.com/apparentlymart/go-cidr/cidr

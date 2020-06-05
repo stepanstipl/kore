@@ -18,6 +18,7 @@ ROOT_DIR=${PWD}
 VETARGS ?= -asmdecl -atomic -bool -buildtags -copylocks -methods -nilfunc -printf -rangeloops -unsafeptr
 APIS ?= $(shell find pkg/apis -name "v*" -type d | sed -e 's/pkg\/apis\///' | sort | tr '\n' ' ')
 UNAME := $(shell uname)
+KORE_DOCS_PATH ?= ${GOPATH}/src/github.com/appvia/kore-docs
 ifeq ($(UNAME), Darwin)
 API_HOST_IN_DOCKER = host.docker.internal
 endif
@@ -478,9 +479,13 @@ kind-apiserver-logs:
 	@while true; do kubectl --context=kind-kore -n kore logs -f -l name=kore-apiserver || true; sleep 1; done
 
 generate-crd-reference:
+	@if [ ! -d "${KORE_DOCS_PATH}" ]; then \
+  		echo "${KORE_DOCS_PATH} directory does not exist"; \
+  		exit 1; \
+  	fi
 	echo "Generating CRD reference documentation"
 	go run github.com/ahmetb/gen-crd-api-reference-docs \
 		-api-dir=./pkg/apis \
 		-config=./hack/crd-reference-doc-gen/config.json \
 		-template-dir=./hack/crd-reference-doc-gen/template \
-		-out-file=./generated/crd-reference/index.html
+		-out-file="${KORE_DOCS_PATH}/content/_generated/kore_crd_reference.html"
