@@ -27,8 +27,9 @@ export default class ServiceKindPage extends React.Component {
       <>
         <Breadcrumb
           items={[
+            { text: 'Configure' },
             { text: 'Services', href: '/configure/services', link: '/configure/services' },
-            { text: `Service: ${displayName}` }
+            { text: displayName }
           ]}
         />
         <ServiceKindManage kind={details} />

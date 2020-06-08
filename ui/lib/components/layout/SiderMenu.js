@@ -3,6 +3,8 @@ import PropTypes from 'prop-types'
 import { Layout, Menu, Icon } from 'antd'
 const { Sider } = Layout
 const { SubMenu } = Menu
+import getConfig from 'next/config'
+const { publicRuntimeConfig } = getConfig()
 
 class SiderMenu extends React.Component {
   static propTypes = {
@@ -48,12 +50,10 @@ class SiderMenu extends React.Component {
         }
       >
         {menuItem({ key: 'configure_cloud', text: 'Cloud', href: '/configure/cloud/[[...cloud]]', link: '/configure/cloud', icon: 'cloud' })}
-        {menuItem({ key: 'configure_users', text: 'Users', link: '/configure/users', icon: 'user' })}
-        {/* Removed for now - only exposing services via the cloud page at the moment
-        {!publicRuntimeConfig.featureGates['services'] ? null : 
+        {!publicRuntimeConfig.featureGates['services'] ? null :
           menuItem({ key: 'configure_services', text: 'Services', link: '/configure/services', icon: 'cloud-server' })
-        } 
-        */}
+        }
+        {menuItem({ key: 'configure_users', text: 'Users', link: '/configure/users', icon: 'user' })}
       </SubMenu>
     ) : null
 

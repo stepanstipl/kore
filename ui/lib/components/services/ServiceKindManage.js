@@ -1,10 +1,10 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import KoreApi from '../../../lib/kore-api'
-import { Card, Typography, Icon, Switch, Tooltip, List, Avatar, Button, Drawer, Modal } from 'antd'
+import { Card, Divider, Typography, Icon, Switch, Tooltip, List, Avatar, Button, Drawer, Modal } from 'antd'
 import ManageServicePlanForm from '../../../lib/components/plans/ManageServicePlanForm'
 import { isReadOnlyCRD } from '../../utils/crd-helpers'
-const { Paragraph, Text, Title } = Typography
+const { Text, Title } = Typography
 
 export default class ServiceKindManage extends React.Component {
   static propTypes = {
@@ -84,8 +84,7 @@ export default class ServiceKindManage extends React.Component {
 
     return (
       <List.Item key={plan.metadata.name} actions={actions}>
-        <List.Item.Meta 
-          avatar={<Avatar icon="build" />} 
+        <List.Item.Meta
           title={displayName} 
           description={plan.spec.description} />
       </List.Item>
@@ -148,27 +147,26 @@ export default class ServiceKindManage extends React.Component {
             />
           )}
         </Drawer>
-        <Card 
-          title={displayName} 
-          style={{ marginBottom: '30px' }}
-          extra={(
+
+        <List.Item>
+          <List.Item.Meta
+            className="large-list-item"
+            avatar={kind && kind.spec.imageURL ? <Avatar src={kind.spec.imageURL} /> : <Avatar size={60} icon="cloud-server" />}
+            title={displayName}
+            description={kind.spec.description || 'No description'}
+          />
+          <div style={{ marginLeft: '30px' }}>
             <Tooltip placement="left" title={kind.spec.enabled ? 'This is available for teams to consume' : 'Teams cannot use this cloud service'}>
               <Switch loading={loading} onChange={() => this.toggleEnabled()} checked={kind.spec.enabled} checkedChildren="Enabled" unCheckedChildren="Disabled" />
             </Tooltip>
-          )}>
-          <Paragraph className="logo">
-            { kind.spec.imageURL ? (
-              <img src={kind.spec.imageURL} height="80px" />
-            ) : (
-              <Icon type="cloud-server" style={{ fontSize: '80px' }} theme="outlined" />
-            ) }
-          </Paragraph>
-          <Paragraph className="name" strong>{displayName}</Paragraph>
-          <Paragraph type="secondary">{kind.spec.description}</Paragraph>
-        </Card>
+          </div>
+        </List.Item>
+
+        <Divider />
+
         <Card 
-          title={`Plans for ${displayName}`} 
-          extra={kind.spec.schema ? <Button type="primary" onClick={this.createPlan}>+ New</Button> : null}>
+          title={`Plans for ${displayName}`}
+          extra={kind.spec.schema ? <Button type="primary" onClick={this.createPlan}>+ New plan</Button> : null}>
           <List dataSource={plans.items} renderItem={(plan) => this.renderPlan(plan)} />
         </Card>
       </>
