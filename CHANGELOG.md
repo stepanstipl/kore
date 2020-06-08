@@ -5,7 +5,8 @@ This release of Kore adds the following key features:
 - Security Overview of plans and clusters.
 - Cloud Services (including S3 and managed binding of services into cluster namespaces via Kore-provisioned secrets).
 - GCP Account Management - auto-creation of projects in a configurable way as teams request clusters.
-- Enhanced management of cluster plans/parameters to allow cluster users and EKS Node Groups to be managed easily through the UI.
+- GCP GKE Improvements - node pools, auto-scale/sizing re-configuration, release channels and versions are now fully supported.
+- Enhanced management of cluster plans/parameters to allow cluster users and node groups/pools to be managed easily through the UI.
 
 ### Added
 
@@ -26,6 +27,11 @@ This release of Kore adds the following key features:
 - **Cluster / Plan Management UI Improvements**
     - [Add cluster users custom control for GKE and EKS clusters](https://github.com/appvia/kore/issues/539) ([PR](https://github.com/appvia/kore/pull/823))
     - [EKS Node Group management and validation](https://github.com/appvia/kore/pull/835)
+- **GCP GKE Improvements**
+    - [GKE node pool support](https://github.com/appvia/kore/issues/539) - node pools can now be added, edited and removed on 
+      both new and existing clusters
+    - [GKE auto-scale, sizing, release channel and version management support](https://github.com/appvia/kore/pull/876) - these 
+      properties can now be set for new clusters and edited on existing ones.
 - **Other Additions**
     - [Added verbosity flags to helm chart](https://github.com/appvia/kore/issues/815)
     - [Added feature gate options to the helm chart](https://github.com/appvia/kore/issues/807)
