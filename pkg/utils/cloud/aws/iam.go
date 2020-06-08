@@ -178,6 +178,16 @@ func (i *IamClient) GetEKSNodeGroupRoleName(prefix string) string {
 	return prefix + "-eks-nodepool"
 }
 
+// GetEKSNodeGroupAutoscalingPolicyName returns a policy name for a nodegroup
+func (i *IamClient) GetEKSNodeGroupAutoscalingPolicyName(prefix string) string {
+	return prefix + "-eks-ng-autoscaling"
+}
+
+// GetNodeGroupAutoscalingPolicyArn returns a policy ARN name for a nodegroup
+func (i *IamClient) GetNodeGroupAutoscalingPolicyArn(accountID, prefix string) string {
+	return fmt.Sprintf("arn:aws:iam::%s:policy/%s", accountID, i.GetEKSNodeGroupAutoscalingPolicyName(prefix))
+}
+
 // DeleteEKSClutserRole is responsible for deleting the eks iam role
 func (i *IamClient) DeleteEKSClutserRole(ctx context.Context, prefix string) error {
 	return i.DeleteRole(ctx, i.GetEKSRoleName(prefix))
@@ -319,4 +329,92 @@ func (i *IamClient) RoleExists(ctx context.Context, name string) (*iam.Role, err
 	}
 
 	return resp.Role, nil
+}
+
+// EnsureClusterAutoscalingRole creates an IAM role for the Autoscaling workload and the relevant policies
+func (i *IamClient) EnsureClusterAutoscalingRole(ctx context.Context, clusterName string, nodegroupNames, asgArns []string) error {
+	if len(nodegroupNames) != len(asgArns) {
+		return fmt.Errorf("must supply the same amount of nodegroups and autoscaling groups identities for %s")
+	}
+	policies := []*iam.Policy{}
+
+	for in, ng := range nodegroupNames {
+		pol, err := i.EnsureNodeGroupAutoscalingPolicy(ctx, ng, asgArns[in])
+		if err != nil {
+			return fmt.Errorf("unable to create or update policy for nodegroup %s with asg %s", ng, asgArns[in])
+		}
+		policies = append(policies, pol)
+	}
+
+	i.EnsureRole()
+}
+
+// DeleteNodeGroupAutoscalingPolicy will delete a nodegroup Autoscaling policy
+func (i *IamClient) DeleteNodeGroupAutoscalingPolicy(ctx context.Context, nodeGroupName, asgArn string) error {
+	// Get ASG details from Auto Scaling Group ARN
+	asg, err := getASGDetailsFromArn(asgArn)
+	if err != nil {
+		return err
+	}
+	policyARN := i.GetNodeGroupAutoscalingPolicyArn(asg.ARN.AccountID, nodeGroupName)
+	exists, _, err := i.PolicyExists(policyARN)
+	if err != nil {
+		return err
+	}
+	if exists {
+		i.svc.DeletePolicy(&iam.DeletePolicyInput{
+			PolicyArn: aws.String(policyARN),
+		})
+		if err != nil {
+			return fmt.Errorf("unable to delete policy %s for nodepgroup %s - %s", policyARN, nodeGroupName, err)
+		}
+	}
+	return nil
+}
+
+// EnsureNodeGroupAutoscalingPolicy will create or update an access policy for a specific nodegroup
+func (i *IamClient) EnsureNodeGroupAutoscalingPolicy(ctx context.Context, nodeGroupName, asgArn string) (*iam.Policy, error) {
+
+	// Get ASG details from Auto Scaling Group ARN
+	asg, err := getASGDetailsFromArn(asgArn)
+	if err != nil {
+		return nil, err
+	}
+	policyARN := i.GetNodeGroupAutoscalingPolicyArn(asg.ARN.AccountID, nodeGroupName)
+	exists, p, err := i.PolicyExists(policyARN)
+	if err != nil {
+		return nil, err
+	}
+	policyName := i.GetEKSNodeGroupAutoscalingPolicyName(nodeGroupName)
+	if !exists {
+		// create the required policy for this nodegroup
+		po, err := i.svc.CreatePolicy(&iam.CreatePolicyInput{
+			Description:    aws.String(fmt.Sprint("A policy to enable autoscaling for the nodegroup %s with the autoscaling name %s", nodeGroupName, asg.Name)),
+			PolicyDocument: aws.String(fmt.Sprintf(autoscalerNodeGroupAGSAccessPolicy, asgArn)),
+			PolicyName:     aws.String(policyName),
+		})
+		if err != nil {
+			return nil, fmt.Errorf("error creating policy %s - %s", policyName)
+		}
+		p = po.Policy
+	}
+	return p, nil
+}
+
+// PolicyExists will determine if an AWS IAM policy exists and return the policy if it does
+func (i *IamClient) PolicyExists(policyARN string) (bool, *iam.Policy, error) {
+	// Get IAM policy
+	po, err := i.svc.GetPolicy(&iam.GetPolicyInput{
+		PolicyArn: aws.String(policyARN),
+	})
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case iam.ErrCodeNoSuchEntityException:
+				return false, nil, nil
+			}
+		}
+		return false, nil, err
+	}
+	return true, po.Policy, nil
 }
