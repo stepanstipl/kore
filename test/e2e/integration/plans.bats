@@ -37,7 +37,7 @@ load helper
   [[ "$status" -eq 0 ]]
 }
 
-@test "We should see a valid version in the gke plan" {
-  runit "${KORE} get plans gke-development -o json | jq '.spec.configuration.version' | grep gke"
+@test "We should see a valid release channel in the gke plan" {
+  runit "${KORE} get plans gke-development -o json | jq '.spec.configuration.releaseChannel' | egrep -i '(REGULAR|STABLE|RAPID|UNSPECIFIED)'"
   [[ "$status" -eq 0 ]]
 }
