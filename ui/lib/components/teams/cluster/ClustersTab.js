@@ -4,6 +4,9 @@ import moment from 'moment'
 import Link from 'next/link'
 import { Button, Col, Divider, Icon, message, Row, Tag, Tooltip, Typography } from 'antd'
 const { Paragraph, Text } = Typography
+import getConfig from 'next/config'
+const { publicRuntimeConfig } = getConfig()
+import { get } from 'lodash'
 
 import Cluster from './Cluster'
 import ClusterAccessInfo from './ClusterAccessInfo'
@@ -27,22 +30,28 @@ class ClustersTab extends React.Component {
     createNamespace: false
   }
 
+  servicesEnabled = () => Boolean(publicRuntimeConfig.featureGates['services'])
+
   async fetchComponentData () {
     try {
       const team = this.props.team.metadata.name
       const api = await KoreApi.client()
-      let [ clusters, namespaceClaims, plans ] = await Promise.all([
+      let [ clusters, namespaceClaims, plans, services ] = await Promise.all([
         api.ListClusters(team),
         api.ListNamespaces(team),
-        api.ListPlans()
+        api.ListPlans(),
+        this.servicesEnabled() ? api.ListServices(team) : Promise.resolve({ items: [] })
       ])
       clusters = clusters.items
       namespaceClaims = namespaceClaims.items
       plans = plans.items
+      services = services.items.filter(s => s.spec.cluster && s.spec.cluster.name && s.spec.kind !== 'app')
+
       const revealNamespaces = {}
       clusters.filter(cluster => namespaceClaims.filter(nc => nc.spec.cluster.name === cluster.metadata.name).length > 0).forEach(cluster => revealNamespaces[cluster.metadata.name] = true)
+
       this.props.getClusterCount && this.props.getClusterCount(clusters.length)
-      return { clusters, namespaceClaims, plans, revealNamespaces }
+      return { clusters, namespaceClaims, plans, services, revealNamespaces }
     } catch (err) {
       console.error('Unable to load data for clusters tab', err)
       return {}
@@ -105,30 +114,28 @@ class ClustersTab extends React.Component {
     }
   }
 
-  clusterNamespaceList = ({ namespaceClaims }) => {
-    return (
-      <Row style={{ marginLeft: '50px' }}>
-        <Col>
-          <Text strong style={{ marginRight: '8px' }}>Namespaces: </Text>
-          {namespaceClaims.map(namespaceClaim => {
-            const status = namespaceClaim.status.status || 'Pending'
-            const created = moment(namespaceClaim.metadata.creationTimestamp).fromNow()
-            return (
-              <span key={namespaceClaim.metadata.name} style={{ marginRight: '5px' }}>
-                <Tooltip title={`Created ${created}`}>
-                  <Tag color={statusColorMap[status] || 'red'}>{namespaceClaim.spec.name} {inProgressStatusList.includes(status) ? <Icon type="loading" /> : <Icon type={statusIconMap[status]} />}</Tag>
-                </Tooltip>
-              </span>
-            )
-          })}
-        </Col>
-      </Row>
-    )
-  }
+  clusterResourceList = ({ resources, resourceDisplayPropertyPath, title, style }) => (
+    <Row style={{ marginLeft: '50px', ...style }}>
+      <Col>
+        <Text strong style={{ marginRight: '8px' }}>{title}: </Text>
+        {resources.map(resource => {
+          const status = resource.status.status || 'Pending'
+          const created = moment(resource.metadata.creationTimestamp).fromNow()
+          return (
+            <span key={get(resource, resourceDisplayPropertyPath)} style={{ marginRight: '5px' }}>
+              <Tooltip title={`Created ${created}`}>
+                <Tag color={statusColorMap[status] || 'red'}>{get(resource, resourceDisplayPropertyPath)} {inProgressStatusList.includes(status) ? <Icon type="loading" /> : <Icon type={statusIconMap[status]} />}</Tag>
+              </Tooltip>
+            </span>
+          )
+        })}
+      </Col>
+    </Row>
+  )
 
   render() {
     const { team } = this.props
-    const { dataLoading, clusters, namespaceClaims, plans } = this.state
+    const { dataLoading, clusters, namespaceClaims, services, plans } = this.state
 
     const hasActiveClusters = Boolean(clusters.filter(c => !c.deleted).length)
 
@@ -151,15 +158,16 @@ class ClustersTab extends React.Component {
           <>
             {!hasActiveClusters && <Paragraph type="secondary">No clusters found for this team</Paragraph>}
             {clusters.map((cluster, idx) => {
-              const filteredNamespaceClaims = (namespaceClaims || []).filter(nc => nc.spec.cluster.name === cluster.metadata.name)
-              const activeNamespaces = filteredNamespaceClaims.filter(nc => !nc.deleted)
+              const clusterNamespaceClaims = (namespaceClaims || []).filter(nc => nc.spec.cluster.name === cluster.metadata.name)
+              const clusterApplicationServices = services.filter(s => s.spec.cluster.namespace === cluster.metadata.namespace && s.spec.cluster.name === cluster.metadata.name)
+
               return (
                 <React.Fragment key={cluster.metadata.name}>
                   <Cluster
                     team={team.metadata.name}
                     cluster={cluster}
                     plan={plans.find(plan => plan.metadata.name === cluster.spec.plan)}
-                    namespaceClaims={activeNamespaces}
+                    namespaceClaims={clusterNamespaceClaims}
                     deleteCluster={this.deleteCluster}
                     handleUpdate={this.handleResourceUpdated('clusters')}
                     handleDelete={this.handleResourceDeleted('clusters')}
@@ -167,7 +175,8 @@ class ClustersTab extends React.Component {
                     propsResourceDataKey="cluster"
                     resourceApiPath={`/teams/${team.metadata.name}/clusters/${cluster.metadata.name}`}
                   />
-                  {!cluster.deleted && filteredNamespaceClaims.length > 0 && this.clusterNamespaceList({ namespaceClaims: filteredNamespaceClaims })}
+                  {!cluster.deleted && clusterNamespaceClaims.length > 0 && this.clusterResourceList({ resources: namespaceClaims, resourceDisplayPropertyPath: 'spec.name', title: 'Namespaces' })}
+                  {!cluster.deleted && this.servicesEnabled() && clusterApplicationServices.length > 0 && this.clusterResourceList({ resources: clusterApplicationServices, resourceDisplayPropertyPath: 'metadata.name', title: 'Application services', style: { marginTop: '5px' } })}
                   {!cluster.deleted && idx < clusters.length - 1 && <Divider />}
                 </React.Fragment>
               )

@@ -7,13 +7,15 @@ import { inProgressStatusList } from '../../../utils/ui-helpers'
 import ResourceStatusTag from '../../resources/ResourceStatusTag'
 import AutoRefreshComponent from '../AutoRefreshComponent'
 import Link from 'next/link'
+import { getKoreLabel } from '../../../utils/crd-helpers'
 
 class Service extends AutoRefreshComponent {
   static propTypes = {
     team: PropTypes.string.isRequired,
     service: PropTypes.object.isRequired,
     serviceKind: PropTypes.object,
-    deleteService: PropTypes.func.isRequired
+    deleteService: PropTypes.func.isRequired,
+    style: PropTypes.object
   }
 
   finalStateReached() {
@@ -30,6 +32,10 @@ class Service extends AutoRefreshComponent {
     }
   }
 
+  isClusterService = () => {
+    return getKoreLabel(this.props.serviceKind, 'platform') === 'Kubernetes'
+  }
+
   deleteService = () => {
     this.props.deleteService(this.props.service.metadata.name, () => {
       this.startRefreshing()
@@ -37,11 +43,13 @@ class Service extends AutoRefreshComponent {
   }
 
   render() {
-    const { service, serviceKind, team } = this.props
+    const { service, serviceKind, team, style } = this.props
 
     if (service.deleted) {
       return null
     }
+
+    const styleOverrides = style || {}
 
     const created = moment(service.metadata.creationTimestamp).fromNow()
     const deleted = service.metadata.deletionTimestamp ? moment(service.metadata.deletionTimestamp).fromNow() : false
@@ -74,11 +82,17 @@ class Service extends AutoRefreshComponent {
     }
 
     return (
-      <List.Item actions={actions()} style={{ paddingTop: 0, paddingBottom: '5px' }}>
-        <List.Item.Meta
-          avatar={serviceKind && serviceKind.spec.imageURL ? <Avatar src={serviceKind.spec.imageURL} /> : <Avatar icon="cloud-server" />}
-          title={<><Link href="/teams/[name]/services/[service]" as={`/teams/${team}/services/${service.metadata.name}`}><a><Text style={{ marginRight: '15px', fontSize: '16px', textDecoration: 'underline' }}>{service.metadata.name}</Text></a></Link><Tag style={{ margin: 0 }}>{serviceKind.spec.displayName}</Tag></>}
-        />
+      <List.Item actions={actions()} style={{ ...styleOverrides }}>
+        {this.isClusterService() ? (
+          <List.Item.Meta
+            title={<><Text style={{ marginRight: '15px' }}>{service.metadata.name}</Text><Tag style={{ margin: 0 }}>{serviceKind.spec.displayName}</Tag></>}
+            description={<Text>Namespace: <Text strong>{service.spec.clusterNamespace}</Text></Text>} />
+        ) : (
+          <List.Item.Meta
+            avatar={serviceKind && serviceKind.spec.imageURL ? <Avatar src={serviceKind.spec.imageURL} /> : <Avatar icon="cloud-server" />}
+            title={<><Link href="/teams/[name]/services/[service]" as={`/teams/${team}/services/${service.metadata.name}`}><a><Text style={{ marginRight: '15px', fontSize: '16px', textDecoration: 'underline' }}>{service.metadata.name}</Text></a></Link><Tag style={{ margin: 0 }}>{serviceKind.spec.displayName}</Tag></>}
+          />
+        )}
         <div>
           <Text type='secondary'>Created {created}</Text>
           {deleted ? <Text type='secondary'><br/>Deleted {deleted}</Text> : null }

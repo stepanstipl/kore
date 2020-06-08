@@ -22,6 +22,8 @@ import NamespaceClaim from '../../../../lib/components/teams/namespace/Namespace
 import NamespaceClaimForm from '../../../../lib/components/teams/namespace/NamespaceClaimForm'
 import ClusterAccessInfo from '../../../../lib/components/teams/cluster/ClusterAccessInfo'
 import { isReadOnlyCRD } from '../../../../lib/utils/crd-helpers'
+import ClusterApplicationServiceForm from '../../../../lib/components/teams/cluster/applications/ClusterApplicationServiceForm'
+import Service from '../../../../lib/components/teams/service/Service'
 
 class ClusterPage extends React.Component {
   static propTypes = {
@@ -44,6 +46,9 @@ class ClusterPage extends React.Component {
       serviceCredentials: false,
       serviceKinds: false,
       createServiceCredential: false,
+      createApplicationService: false,
+      services: false,
+      applicationServices: false,
       revealBindings: {}
     }
   }
@@ -63,28 +68,47 @@ class ClusterPage extends React.Component {
 
   servicesEnabled = () => Boolean(publicRuntimeConfig.featureGates['services'])
 
-  fetchComponentData = async () => {
+  fetchCommonData = async () => {
+    if (this.servicesEnabled()) {
+      const serviceKinds = await (await KoreApi.client()).ListServiceKinds()
+      return { serviceKinds: serviceKinds.items }
+    }
+    return {}
+  }
+
+  fetchNamespacesData = async () => {
     const team = this.props.team.metadata.name
     const api = await KoreApi.client()
-    let [ namespaceClaims, serviceCredentials, serviceKinds ] = await Promise.all([
+    let [ namespaceClaims, serviceCredentials ] = await Promise.all([
       api.ListNamespaces(team),
-      this.servicesEnabled() ? api.ListServiceCredentials(team, this.state.cluster.metadata.name) : Promise.resolve({ items: false }),
-      this.servicesEnabled() ? api.ListServiceKinds() : Promise.resolve({ items: false })
+      this.servicesEnabled() ? api.ListServiceCredentials(team, this.state.cluster.metadata.name) : Promise.resolve({ items: [] }),
     ])
     namespaceClaims = namespaceClaims.items.filter(ns => ns.spec.cluster.name === this.props.cluster.metadata.name)
     serviceCredentials = serviceCredentials.items
-    serviceKinds = serviceKinds.items
 
     const revealBindings = {}
     this.servicesEnabled() && namespaceClaims.filter(nc => serviceCredentials.filter(sc => sc.spec.clusterNamespace === nc.spec.name).length > 0).forEach(nc => revealBindings[nc.spec.name] = true)
 
-    return { namespaceClaims, serviceCredentials, serviceKinds, revealBindings }
+    return { namespaceClaims, serviceCredentials, revealBindings }
+  }
+
+  fetchApplicationServicesData = async () => {
+    const team = this.props.team.metadata.name
+    let services = await (await KoreApi.client()).ListServices(team)
+    services = services.items.filter(s => s.spec.cluster && s.spec.cluster.name && s.spec.kind !== 'app')
+    const applicationServices = services.filter(s => s.spec.cluster.namespace === this.props.cluster.metadata.namespace && s.spec.cluster.name === this.props.cluster.metadata.name)
+
+    return { services, applicationServices }
   }
 
   componentDidMount = () => {
     this.startRefreshing()
-    this.fetchComponentData().then(data => {
+    this.fetchCommonData().then(data => {
       this.setState({ ...data })
+      this.fetchNamespacesData().then(data => this.setState({ ...data }))
+      if (this.servicesEnabled()) {
+        this.fetchApplicationServicesData().then(data => this.setState({ ...data }))
+      }
     })
   }
 
@@ -210,6 +234,35 @@ class ClusterPage extends React.Component {
     message.loading(`Service access with secret name "${serviceCredential.spec.secretName}" requested`)
   }
 
+  handleApplicationServiceCreated = async (applicationService) => {
+    this.setState((state) => {
+      return {
+        createApplicationService: false,
+        services: [ ...state.services, applicationService ],
+        applicationServices: [ ...state.applicationServices, applicationService ],
+      }
+    })
+    const commonData = await this.fetchCommonData()
+    const namespaceData = await this.fetchNamespacesData()
+    this.setState({ ...commonData, ...namespaceData })
+  }
+
+  deleteApplicationService = async (name, done) => {
+    const team = this.props.team.metadata.name
+    try {
+      const applicationServices = copy(this.state.applicationServices)
+      const applicationService = applicationServices.find(s => s.metadata.name === name)
+      await (await KoreApi.client()).DeleteService(team, applicationService.metadata.name)
+      applicationService.status.status = 'Deleting'
+      applicationService.metadata.deletionTimestamp = new Date()
+      this.setState({ applicationServices }, done)
+      message.loading(`Application service deletion requested: ${applicationService.metadata.name}`)
+    } catch (err) {
+      console.error('Error deleting application service', err)
+      message.error('Error deleting application service, please try again.')
+    }
+  }
+
   onClusterConfigChanged = (updatedClusterParams) => {
     this.setState({
       clusterParams: updatedClusterParams
@@ -258,9 +311,14 @@ class ClusterPage extends React.Component {
     this.setState({ revealBindings })
   }
 
+  getCardTitle = (title, resources) => (
+    <span>{title} {resources && <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={resources.filter(s => !s.deleted).length} />}</span>
+  )
+
   render = () => {
     const { team, user } = this.props
-    const { cluster, namespaceClaims, serviceCredentials, serviceKinds, createServiceCredential } = this.state
+    const { cluster, namespaceClaims, applicationServices, serviceCredentials, serviceKinds, createServiceCredential, createApplicationService } = this.state
+
     const created = moment(cluster.metadata.creationTimestamp).fromNow()
     const deleted = cluster.metadata.deletionTimestamp ? moment(cluster.metadata.deletionTimestamp).fromNow() : false
     const clusterNotEditable = !cluster || isReadOnlyCRD(cluster) || !cluster.status || inProgressStatusList.includes(cluster.status.status)
@@ -270,6 +328,7 @@ class ClusterPage extends React.Component {
     }
 
     const hasActiveNamespaces = namespaceClaims && Boolean(namespaceClaims.filter(c => !c.deleted).length)
+    const hasActiveApplicationServices = applicationServices && Boolean(applicationServices.filter(c => !c.deleted).length)
 
     return (
       <div>
@@ -310,8 +369,11 @@ class ClusterPage extends React.Component {
 
         <Divider />
 
-        <Card title={<span>Namespaces {namespaceClaims && <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={namespaceClaims.filter(c => !c.deleted).length} />}</span>} extra={<Button type="primary" onClick={this.createNamespace(true)}>New namespace</Button>}>
-
+        <Card
+          title={this.getCardTitle('Namespaces', namespaceClaims)}
+          extra={<Button type="primary" onClick={this.createNamespace(true)}>+ New namespace</Button>}
+          style={{ marginBottom: '20px' }}
+        >
           {!namespaceClaims && <Icon type="loading" />}
           {namespaceClaims && !hasActiveNamespaces && <Paragraph style={{ marginBottom: 0 }} type="secondary">No namespaces found for this cluster</Paragraph>}
           {namespaceClaims && namespaceClaims.map((namespaceClaim, idx) => {
@@ -335,9 +397,9 @@ class ClusterPage extends React.Component {
                     <Collapse onChange={this.revealBindings(namespaceClaim.spec.name)} activeKey={this.state.revealBindings[namespaceClaim.spec.name] ? ['bindings'] : []}>
                       <Collapse.Panel
                         key="bindings"
-                        header={<span>Service access <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={activeServiceCredentials.length} /></span>}
+                        header={<span>Cloud service access <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={activeServiceCredentials.length} /></span>}
                         extra={
-                          <Tooltip title="Add new service access for this namespace">
+                          <Tooltip title="Provide this namespace with access to a cloud service">
                             <Icon
                               type="plus"
                               onClick={e => {
@@ -350,7 +412,7 @@ class ClusterPage extends React.Component {
                       >
                         <List
                           size="small"
-                          locale={{ emptyText: 'No service access found' }}
+                          locale={{ emptyText: 'No cloud service access found' }}
                           dataSource={filteredServiceCredentials}
                           renderItem={serviceCredential => (
                             <ServiceCredential
@@ -371,7 +433,7 @@ class ClusterPage extends React.Component {
                       </Collapse.Panel>
                     </Collapse>
 
-                    {idx < namespaceClaims.length - 1 && <Divider />}
+                    {!namespaceClaim.deleted && idx < namespaceClaims.length - 1 && <Divider />}
                   </>
                 )}
 
@@ -414,38 +476,86 @@ class ClusterPage extends React.Component {
 
         </Card>
 
-        <Row type="flex" gutter={[16,16]} style={{ marginTop: '20px' }}>
-          <Col span={24} xl={24}>
-            <Collapse>
-              <Collapse.Panel header="Cluster Parameters">
-                <Form {...editClusterFormConfig} onSubmit={(e) => this.onSubmit(e)}>
-                  <FormErrorMessage message={this.state.formErrorMessage} />
-                  <Form.Item label="" colon={false}>
-                    {!this.state.editMode ? (
-                      <Button icon="edit" htmlType="button" disabled={clusterNotEditable} onClick={(e) => this.onEditClick(e)}>Edit</Button>
-                    ) : (
-                      <>
-                        <Button type="primary" icon="save" htmlType="submit" loading={this.state.saving} disabled={this.state.saving || clusterNotEditable}>Save</Button>
-                        &nbsp;
-                        <Button icon="stop" htmlType="button" onClick={(e) => this.onCancelClick(e)}>Cancel</Button>
-                      </>
-                    )}
-                  </Form.Item>
-                  <UsePlanForm
-                    team={team}
-                    resourceType="cluster"
-                    kind={cluster.spec.kind}
-                    plan={cluster.spec.plan}
-                    planValues={this.state.clusterParams}
-                    mode={this.state.editMode ? 'edit' : 'view'}
-                    validationErrors={this.state.validationErrors}
-                    onPlanChange={this.onClusterConfigChanged}
-                  />
-                </Form>
-              </Collapse.Panel>
-            </Collapse>
-          </Col>
-        </Row>
+        {this.servicesEnabled() && (
+          <>
+            <Card
+              title={this.getCardTitle('Application services', applicationServices)}
+              extra={<Button type="primary" onClick={() => this.setState({ createApplicationService: true })}>+ New application service</Button>}
+            >
+              {!applicationServices && <Icon type="loading" />}
+              {applicationServices && !hasActiveApplicationServices && <Text type="secondary">No service applications found for this cluster</Text>}
+              {applicationServices && (
+                <List
+                  className="hide-empty-text"
+                  locale={{ emptyText: <div/> }}
+                  dataSource={applicationServices}
+                  renderItem={service => (
+                    <Service
+                      team={team.metadata.name}
+                      service={service}
+                      serviceKind={serviceKinds.find(sk => sk.metadata.name === service.spec.kind)}
+                      deleteService={this.deleteApplicationService}
+                      handleUpdate={this.handleResourceUpdated('applicationServices')}
+                      handleDelete={this.handleResourceDeleted('applicationServices')}
+                      refreshMs={10000}
+                      propsResourceDataKey="service"
+                      resourceApiPath={`/teams/${team.metadata.name}/services/${service.metadata.name}`}
+                    />
+                  )}
+                />
+              )}
+            </Card>
+            <Drawer
+              title="Create cluster application service"
+              placement="right"
+              closable={false}
+              onClose={() => this.setState({ createApplicationService: false })}
+              visible={Boolean(createApplicationService)}
+              width={700}
+            >
+              {Boolean(createApplicationService) &&
+                <ClusterApplicationServiceForm
+                  team={team}
+                  cluster={cluster}
+                  teamServices={this.state.services}
+                  handleSubmit={this.handleApplicationServiceCreated}
+                  handleCancel={() => this.setState({ createApplicationService: false })}
+                />
+              }
+            </Drawer>
+          </>
+        )}
+
+        <Divider />
+
+        <Collapse>
+          <Collapse.Panel header="Cluster Parameters">
+            <Form {...editClusterFormConfig} onSubmit={(e) => this.onSubmit(e)}>
+              <FormErrorMessage message={this.state.formErrorMessage} />
+              <Form.Item label="" colon={false}>
+                {!this.state.editMode ? (
+                  <Button icon="edit" htmlType="button" disabled={clusterNotEditable} onClick={(e) => this.onEditClick(e)}>Edit</Button>
+                ) : (
+                  <>
+                    <Button type="primary" icon="save" htmlType="submit" loading={this.state.saving} disabled={this.state.saving || clusterNotEditable}>Save</Button>
+                    &nbsp;
+                    <Button icon="stop" htmlType="button" onClick={(e) => this.onCancelClick(e)}>Cancel</Button>
+                  </>
+                )}
+              </Form.Item>
+              <UsePlanForm
+                team={team}
+                resourceType="cluster"
+                kind={cluster.spec.kind}
+                plan={cluster.spec.plan}
+                planValues={this.state.clusterParams}
+                mode={this.state.editMode ? 'edit' : 'view'}
+                validationErrors={this.state.validationErrors}
+                onPlanChange={this.onClusterConfigChanged}
+              />
+            </Form>
+          </Collapse.Panel>
+        </Collapse>
 
       </div>
     )

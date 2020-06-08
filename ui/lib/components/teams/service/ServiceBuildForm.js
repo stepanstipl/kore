@@ -199,10 +199,10 @@ class ServiceBuildForm extends React.Component {
               const credentialName = `${cluster.metadata.name}-${namespaceClaim.spec.name}-${secretName}`
               const resource = this.getServiceCredentialsResource(credentialName, secretName, service, cluster, namespaceClaim)
               await api.UpdateServiceCredentials(this.props.team.metadata.name, credentialName, resource)
-              message.loading(`Service binding for namespace "${namespaceClaim.spec.name}" requested...`)
+              message.loading(`Service access for namespace "${namespaceClaim.spec.name}" requested...`)
             } catch (error) {
               console.error('Error creating service binding', error)
-              message.error(`Failed to create service binding for namespace "${namespaceClaim.spec.name}"`)
+              message.error(`Failed to create service access for namespace "${namespaceClaim.spec.name}"`)
             }
           })
         }

@@ -85,8 +85,10 @@ class ServicesTab extends React.Component {
     this.setState((state) => ({
       createNewService: false,
       services: [ ...state.services, service ]
-    }))
-    await this.refreshServiceCredentials(service)
+    }), async () => {
+      this.props.getServiceCount && this.props.getServiceCount(this.state.services.length)
+      await this.refreshServiceCredentials(service)
+    })
   }
 
   deleteService = async (name, done) => {
@@ -160,7 +162,7 @@ class ServicesTab extends React.Component {
 
     return (
       <>
-        <Button type="primary" onClick={() => this.setState({ createNewService: true })}>New service</Button>
+        <Button type="primary" onClick={() => this.setState({ createNewService: true })}>New cloud service</Button>
 
         <Divider />
 
@@ -184,6 +186,7 @@ class ServicesTab extends React.Component {
                     refreshMs={10000}
                     propsResourceDataKey="service"
                     resourceApiPath={`/teams/${team.metadata.name}/services/${service.metadata.name}`}
+                    style={{ paddingTop: 0, paddingBottom: '5px' }}
                   />
                   {!service.deleted && filteredServiceCredentials.length > 0 && this.serviceCredentialList({ serviceCredentials: filteredServiceCredentials })}
                   {!service.deleted && idx < services.length - 1 && <Divider />}
