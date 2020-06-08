@@ -75,7 +75,7 @@ const (
 	  }
 	`
 
-	autoscalerDiscoverASGAccessPolicy = `{
+	autoscalerNodeGroupAGSAccessPolicy = `{
 		"Version": "2012-10-17",
 		"Statement": [
 			{
@@ -87,13 +87,7 @@ const (
 					"autoscaling:DescribeLaunchConfigurations"
 				],
 				"Resource": "*"
-			}
-		]
-	}`
-
-	autoscalerNodeGroupAGSAccessPolicy = `{
-		"Version": "2012-10-17",
-		"Statement": [
+			},
 			{
 				"Effect": "Allow",
 				"Action": [
