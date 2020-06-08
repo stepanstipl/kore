@@ -35,6 +35,10 @@ const (
 	HubDefaultTeam = "kore-default"
 	// HubAdminTeam is the default kore admin team
 	HubAdminTeam = "kore-admin"
+	// HubSystem is the system namespace
+	HubSystem = "kore-system"
+	// HubOperators is the namespace for operators
+	HubOperators = "kore-operators"
 	// HubAdminUser is the default kore admin user
 	HubAdminUser = "admin"
 )
