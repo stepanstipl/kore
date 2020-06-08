@@ -80,6 +80,7 @@ class KoreApiClient {
   ListPlans = (kind) => this.apis.default.ListPlans({ kind })
   UpdatePlan = (name, plan) => this.apis.default.UpdatePlan({ name, body: JSON.stringify(plan) })
   GetPlanSchema = (kind) => this.apis.default.GetPlanSchema({ kind })
+  RemovePlan = (name) => this.apis.default.RemovePlan({ name })
 
   // Services
   ListServiceProviders = () => this.apis.default.ListServiceProviders()

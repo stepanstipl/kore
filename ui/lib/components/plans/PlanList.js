@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { List, Alert, Icon, Drawer, Typography, Button } from 'antd'
+import { List, Alert, Icon, Drawer, Typography, Button, Modal, message } from 'antd'
 const { Title, Text } = Typography
 
 import PlanItem from './PlanItem'
@@ -7,6 +7,7 @@ import ManageClusterPlanForm from './ManageClusterPlanForm'
 import ResourceList from '../resources/ResourceList'
 import PlanViewer from './PlanViewer'
 import KoreApi from '../../kore-api'
+import AllocationHelpers from '../../utils/allocation-helpers'
 
 class PlanList extends ResourceList {
 
@@ -70,6 +71,22 @@ class PlanList extends ResourceList {
     return false
   }
 
+  delete = (plan) => () => {
+    Modal.confirm({
+      title: `Are you sure you want to delete the plan ${plan.spec.description}?`,
+      content: 'This cannot be undone',
+      okText: 'Yes',
+      okType: 'danger',
+      cancelText: 'No',
+      onOk: async () => {
+        await AllocationHelpers.removeAllocation(plan)
+        await (await KoreApi.client()).RemovePlan(plan.metadata.name)
+        message.success(`Plan ${plan.spec.description} deleted`)
+        await this.refresh()
+      }
+    })
+  }
+
   render() {
     const { resources, view, edit, add } = this.state
 
@@ -87,7 +104,7 @@ class PlanList extends ResourceList {
           <>
             <List
               dataSource={resources.items}
-              renderItem={plan => <PlanItem plan={plan} viewPlan={this.view} editPlan={this.edit} displayUnassociatedPlanWarning={this.unassociatedPlanWarning(plan)} /> }
+              renderItem={plan => <PlanItem plan={plan} viewPlan={this.view} editPlan={this.edit} deletePlan={this.delete} displayUnassociatedPlanWarning={this.unassociatedPlanWarning(plan)} /> }
             >
             </List>
 

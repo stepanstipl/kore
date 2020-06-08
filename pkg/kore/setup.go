@@ -77,14 +77,8 @@ func (h hubImpl) Setup(ctx context.Context) error {
 
 	// @step: ensure some default plans
 	for _, x := range assets.GetDefaultPlans() {
-		found, err := h.Plans().Has(ctx, x.Name)
-		if err != nil {
+		if err := h.Plans().Update(getAdminContext(ctx), x, true); err != nil {
 			return err
-		}
-		if !found {
-			if err := h.Plans().Update(getAdminContext(ctx), x, true); err != nil {
-				return err
-			}
 		}
 	}
 	for _, x := range assets.GetDefaultPlanPolicies() {

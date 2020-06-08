@@ -51,6 +51,9 @@ func GetDefaultPlans() []*configv1.Plan {
 		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "gke-development",
+				Annotations: map[string]string{
+					"kore.appvia.io/readonly": "true",
+				},
 			},
 			Spec: configv1.PlanSpec{
 				Kind:        "GKE",
@@ -114,6 +117,9 @@ func GetDefaultPlans() []*configv1.Plan {
 		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "gke-production",
+				Annotations: map[string]string{
+					"kore.appvia.io/readonly": "true",
+				},
 			},
 			Spec: configv1.PlanSpec{
 				Kind:        "GKE",
@@ -177,6 +183,9 @@ func GetDefaultPlans() []*configv1.Plan {
 		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "eks-development",
+				Annotations: map[string]string{
+					"kore.appvia.io/readonly": "true",
+				},
 			},
 			Spec: configv1.PlanSpec{
 				Kind:        "EKS",
@@ -217,6 +226,9 @@ func GetDefaultPlans() []*configv1.Plan {
 		{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: "eks-production",
+				Annotations: map[string]string{
+					"kore.appvia.io/readonly": "true",
+				},
 			},
 			Spec: configv1.PlanSpec{
 				Kind:        "EKS",
