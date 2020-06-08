@@ -42,12 +42,6 @@ func schema_pkg_apis_monitoring_v1beta1_AlertSpec(ref common.ReferenceCallback) 
 				Description: "AlertSpec specifies the details of a alert",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"expiration": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Expiration is the time the silience will finish",
-							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
-						},
-					},
 					"event": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Event is the raw event payload",
@@ -55,18 +49,17 @@ func schema_pkg_apis_monitoring_v1beta1_AlertSpec(ref common.ReferenceCallback) 
 							Format:      "",
 						},
 					},
-					"archivedAt": {
+					"summary": {
 						SchemaProps: spec.SchemaProps{
-							Description: "ArchivedAt is indicates if the alert has been archived",
-							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
+							Description: "Summary is human readable summary for the alert",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 				},
-				Required: []string{"archivedAt"},
+				Required: []string{"summary"},
 			},
 		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
 	}
 }
 
@@ -77,11 +70,10 @@ func schema_pkg_apis_monitoring_v1beta1_AlertStatus(ref common.ReferenceCallback
 				Description: "AlertStatus is the status of the alert",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
-					"status": {
+					"archivedAt": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Status is the status of the alert",
-							Type:        []string{"string"},
-							Format:      "",
+							Description: "ArchivedAt is indicates if the alert has been archived",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
 						},
 					},
 					"detail": {
@@ -91,9 +83,25 @@ func schema_pkg_apis_monitoring_v1beta1_AlertStatus(ref common.ReferenceCallback
 							Format:      "",
 						},
 					},
+					"expiration": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Expiration is the time the silience will finish",
+							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Status is the status of the alert",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 				},
+				Required: []string{"archivedAt"},
 			},
 		},
+		Dependencies: []string{
+			"k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
 	}
 }
 

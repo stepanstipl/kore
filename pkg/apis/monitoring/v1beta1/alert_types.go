@@ -33,27 +33,30 @@ type Alert struct {
 // AlertSpec specifies the details of a alert
 // +k8s:openapi-gen=true
 type AlertSpec struct {
-	// Expiration is the time the silience will finish
-	// +kubebuilder:validation:Optional
-	Expiration metav1.Time `json:"expiration,omitempty"`
 	// Event is the raw event payload
 	// +kubebuilder:validation:Optional
 	Event string `json:"event,omitempty"`
-	// ArchivedAt is indicates if the alert has been archived
+	// Summary is human readable summary for the alert
 	// +kubebuilder:validation:Required
-	ArchivedAt metav1.Time `json:"archivedAt"`
+	Summary string `json:"summary"`
 }
 
 // AlertStatus is the status of the alert
 // +k8s:openapi-gen=true
 type AlertStatus struct {
-	// Status is the status of the alert
-	// +kubebuilder:validation:Optional
-	Status string `json:"status,omitempty"`
+	// ArchivedAt is indicates if the alert has been archived
+	// +kubebuilder:validation:Required
+	ArchivedAt metav1.Time `json:"archivedAt"`
 	// Detail provides a human readable message related to the current
 	// status of the alert
 	// +kubebuilder:validation:Optional
 	Detail string `json:"detail,omitempty"`
+	// Expiration is the time the silience will finish
+	// +kubebuilder:validation:Optional
+	Expiration metav1.Time `json:"expiration,omitempty"`
+	// Status is the status of the alert
+	// +kubebuilder:validation:Optional
+	Status string `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
