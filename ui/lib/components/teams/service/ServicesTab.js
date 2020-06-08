@@ -1,7 +1,7 @@
 import React from 'react'
 import moment from 'moment'
 import PropTypes from 'prop-types'
-import { Button, Col, Divider, Drawer, Icon, message, Row, Tooltip, Tag, Typography } from 'antd'
+import { Button, Col, Divider, Drawer, Icon, List, message, Modal, Row, Tooltip, Tag, Typography } from 'antd'
 const { Paragraph, Text } = Typography
 
 import KoreApi from '../../../kore-api'
@@ -107,6 +107,28 @@ class ServicesTab extends React.Component {
     }
   }
 
+  deleteServiceConfirm = async (name, done) => {
+    const serviceCredentials = this.state.serviceCredentials.filter(sc => sc.spec.service.name === name)
+    if (serviceCredentials.length > 0) {
+      return Modal.warning({
+        title: 'Warning: service cannot be deleted',
+        width: 600,
+        content: (
+          <div>
+            <Paragraph strong>The following cluster namespaces currently have access to the service, this access must be removed before the service can be deleted.</Paragraph>
+            <List
+              size="small"
+              dataSource={serviceCredentials}
+              renderItem={sc => <List.Item>{sc.spec.cluster.name} / {sc.spec.clusterNamespace}</List.Item>}
+            />
+          </div>
+        ),
+        onOk() {}
+      })
+    }
+    await this.deleteService(name, done)
+  }
+
   handleResourceUpdated = (resourceType) => {
     return async (updatedResource, done) => {
       const resourceList = copy(this.state[resourceType])
@@ -180,7 +202,7 @@ class ServicesTab extends React.Component {
                     team={team.metadata.name}
                     service={service}
                     serviceKind={serviceKinds.find(sk => sk.metadata.name === service.spec.kind)}
-                    deleteService={this.deleteService}
+                    deleteService={this.deleteServiceConfirm}
                     handleUpdate={this.handleResourceUpdated('services')}
                     handleDelete={this.handleResourceDeleted('services')}
                     refreshMs={10000}
