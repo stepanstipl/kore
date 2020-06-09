@@ -88,7 +88,7 @@ class SiderMenu extends React.Component {
           >
             {menuItem({ key: 'new_team', text: 'New team', link: '/teams/new', icon: 'plus-circle' })}
             {(userTeams).concat(otherTeams).map(t => (
-              menuItem({ key: t.metadata.name, text: t.spec.summary, href: '/teams/[name]', link: `/teams/${t.metadata.name}`, icon: 'team' })
+              menuItem({ key: t.metadata.name, text: t.spec.summary, href: '/teams/[name]/[tab]', link: `/teams/${t.metadata.name}/clusters`, icon: 'team' })
             ))}
           </SubMenu>
           {AdminMenu()}

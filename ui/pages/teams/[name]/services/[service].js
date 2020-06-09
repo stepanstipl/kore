@@ -225,7 +225,8 @@ class ServicePage extends React.Component {
         <Breadcrumb
           items={[
             { text: team.spec.summary, href: '/teams/[name]', link: `/teams/${team.metadata.name}` },
-            { text: `Service: ${service.metadata.name}` }
+            { text: 'Services', href: '/teams/[name]/[tab]', link: `/teams/${team.metadata.name}/services` },
+            { text: service.metadata.name }
           ]}
         />
 

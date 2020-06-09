@@ -332,7 +332,8 @@ class ClusterPage extends React.Component {
         <Breadcrumb
           items={[
             { text: team.spec.summary, href: '/teams/[name]', link: `/teams/${team.metadata.name}` },
-            { text: 'Cluster' }
+            { text: 'Clusters', href: '/teams/[name]/[tab]', link: `/teams/${team.metadata.name}/clusters` },
+            { text: cluster.metadata.name }
           ]}
         />
 
