@@ -3,8 +3,8 @@ import PropTypes from 'prop-types'
 import { Layout, Menu, Icon } from 'antd'
 const { Sider } = Layout
 const { SubMenu } = Menu
-import getConfig from 'next/config'
-const { publicRuntimeConfig } = getConfig()
+
+import { featureEnabled, KoreFeatures } from '../../utils/features'
 
 class SiderMenu extends React.Component {
   static propTypes = {
@@ -50,7 +50,7 @@ class SiderMenu extends React.Component {
         }
       >
         {menuItem({ key: 'configure_cloud', text: 'Cloud', href: '/configure/cloud/[[...cloud]]', link: '/configure/cloud', icon: 'cloud' })}
-        {!publicRuntimeConfig.featureGates['services'] ? null :
+        {featureEnabled(KoreFeatures.APPLICATION_SERVICES) ? null :
           menuItem({ key: 'configure_services', text: 'Services', link: '/configure/services', icon: 'cloud-server' })
         }
         {menuItem({ key: 'configure_users', text: 'Users', link: '/configure/users', icon: 'user' })}

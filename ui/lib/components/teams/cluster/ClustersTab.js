@@ -4,8 +4,6 @@ import moment from 'moment'
 import Link from 'next/link'
 import { Button, Col, Divider, Icon, message, Row, Tag, Tooltip, Typography } from 'antd'
 const { Paragraph, Text } = Typography
-import getConfig from 'next/config'
-const { publicRuntimeConfig } = getConfig()
 import { get } from 'lodash'
 
 import Cluster from './Cluster'
@@ -13,6 +11,7 @@ import ClusterAccessInfo from './ClusterAccessInfo'
 import KoreApi from '../../../kore-api'
 import copy from '../../../utils/object-copy'
 import { inProgressStatusList, statusColorMap, statusIconMap } from '../../../utils/ui-helpers'
+import { featureEnabled, KoreFeatures } from '../../../utils/features'
 
 class ClustersTab extends React.Component {
 
@@ -30,8 +29,6 @@ class ClustersTab extends React.Component {
     createNamespace: false
   }
 
-  servicesEnabled = () => Boolean(publicRuntimeConfig.featureGates['services'])
-
   async fetchComponentData () {
     try {
       const team = this.props.team.metadata.name
@@ -40,7 +37,7 @@ class ClustersTab extends React.Component {
         api.ListClusters(team),
         api.ListNamespaces(team),
         api.ListPlans(),
-        this.servicesEnabled() ? api.ListServices(team) : Promise.resolve({ items: [] })
+        featureEnabled(KoreFeatures.APPLICATION_SERVICES) ? api.ListServices(team) : Promise.resolve({ items: [] })
       ])
       clusters = clusters.items
       namespaceClaims = namespaceClaims.items
@@ -176,7 +173,7 @@ class ClustersTab extends React.Component {
                     resourceApiPath={`/teams/${team.metadata.name}/clusters/${cluster.metadata.name}`}
                   />
                   {!cluster.deleted && clusterNamespaceClaims.length > 0 && this.clusterResourceList({ resources: namespaceClaims, resourceDisplayPropertyPath: 'spec.name', title: 'Namespaces' })}
-                  {!cluster.deleted && this.servicesEnabled() && clusterApplicationServices.length > 0 && this.clusterResourceList({ resources: clusterApplicationServices, resourceDisplayPropertyPath: 'metadata.name', title: 'Application services', style: { marginTop: '5px' } })}
+                  {!cluster.deleted && featureEnabled(KoreFeatures.APPLICATION_SERVICES) && clusterApplicationServices.length > 0 && this.clusterResourceList({ resources: clusterApplicationServices, resourceDisplayPropertyPath: 'metadata.name', title: 'Application services', style: { marginTop: '5px' } })}
                   {!cluster.deleted && idx < clusters.length - 1 && <Divider />}
                 </React.Fragment>
               )
