@@ -20,6 +20,21 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	// AlertStatusActive indicates the alert is active
+	AlertStatusActive = "Active"
+	// AlertStatusDismissed indicates the alert is dismissed
+	AlertStatusDismissed = "Dismissed"
+	// AlertStatusOK indicates status is fine
+	AlertStatusOK = "OK"
+	// AlertStatusPending indicates the alert is pending
+	AlertStatusPending = "Pending"
+	// AlertStatusSilenced indicates an silenced status
+	AlertStatusSilenced = "Silenced"
+	// AlertStatusUnknown indicates an unknown status
+	AlertStatusUnknown = "Unknown"
+)
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // Alert contains the definition of a alert
