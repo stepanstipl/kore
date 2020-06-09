@@ -51,7 +51,7 @@ class ServiceCredentialForm extends React.Component {
           api.ListServices(team),
           api.ListServiceKinds()
         ])
-        services = services.items.filter(s => !s.spec.cluster || !s.spec.cluster.name)
+        services = services.items
         services = services.map(s => ({
           ...s,
           serviceKind: serviceKinds.items.find(sk => sk.metadata.name === s.spec.kind)
@@ -76,6 +76,10 @@ class ServiceCredentialForm extends React.Component {
         this.props.form.validateFields()
         break
       }
+      }
+
+      if (this.state.services.length === 1) {
+        await this.onServiceChange(this.state.services[0].metadata.name)
       }
     })
   }

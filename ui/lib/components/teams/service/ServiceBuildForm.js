@@ -21,6 +21,7 @@ class ServiceBuildForm extends React.Component {
   static propTypes = {
     form: PropTypes.any.isRequired,
     team: PropTypes.object.isRequired,
+    cluster: PropTypes.object.isRequired,
     teamServices: PropTypes.array.isRequired,
     handleSubmit: PropTypes.func.isRequired,
     handleCancel: PropTypes.func.isRequired
@@ -85,6 +86,7 @@ class ServiceBuildForm extends React.Component {
   }
 
   getServiceResource = (values) => {
+    const cluster = this.props.cluster
     const selectedServicePlan = this.state.servicePlans.items.find(p => p.metadata.name === values.servicePlan)
 
     const serviceResource = new V1Service()
@@ -99,6 +101,15 @@ class ServiceBuildForm extends React.Component {
     const serviceSpec = new V1ServiceSpec()
     serviceSpec.setKind(selectedServicePlan.spec.kind)
     serviceSpec.setPlan(selectedServicePlan.metadata.name)
+
+    serviceSpec.setCluster(NewV1Ownership({
+      group: cluster.apiVersion.split('/')[0],
+      version: cluster.apiVersion.split('/')[1],
+      kind: cluster.kind,
+      name: cluster.metadata.name,
+      namespace: this.props.team.metadata.name
+    }))
+
     if (this.state.servicePlanOverride) {
       serviceSpec.setConfiguration(this.state.servicePlanOverride)
     } else {

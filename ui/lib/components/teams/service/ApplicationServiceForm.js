@@ -2,15 +2,15 @@ import * as React from 'react'
 import PropTypes from 'prop-types'
 import { Alert, Button, Card, Checkbox, Form, Icon, Input, message, Select } from 'antd'
 
-import ServiceOptionsForm from '../../../services/ServiceOptionsForm'
-import FormErrorMessage from '../../../forms/FormErrorMessage'
-import KoreApi from '../../../../kore-api'
-import V1ServiceSpec from '../../../../kore-api/model/V1ServiceSpec'
-import V1Service from '../../../../kore-api/model/V1Service'
-import { NewV1ObjectMeta, NewV1Ownership } from '../../../../utils/model'
-import { getKoreLabel } from '../../../../utils/crd-helpers'
+import ServiceOptionsForm from '../../services/ServiceOptionsForm'
+import FormErrorMessage from '../../forms/FormErrorMessage'
+import KoreApi from '../../../kore-api'
+import V1ServiceSpec from '../../../kore-api/model/V1ServiceSpec'
+import V1Service from '../../../kore-api/model/V1Service'
+import { NewV1ObjectMeta, NewV1Ownership } from '../../../utils/model'
+import { getKoreLabel } from '../../../utils/crd-helpers'
 
-class ClusterApplicationServiceForm extends React.Component {
+class ApplicationServiceForm extends React.Component {
   static propTypes = {
     form: PropTypes.any.isRequired,
     team: PropTypes.object.isRequired,
@@ -32,7 +32,7 @@ class ClusterApplicationServiceForm extends React.Component {
     createNewNamespace: false
   }
 
-  state = { ...ClusterApplicationServiceForm.initialState }
+  state = { ...ApplicationServiceForm.initialState }
 
   async fetchComponentData() {
     const api = await KoreApi.client()
@@ -118,12 +118,12 @@ class ClusterApplicationServiceForm extends React.Component {
         }
 
         const service = await (await KoreApi.client()).UpdateService(this.props.team.metadata.name, values.serviceName, this.generateServiceResource(values))
-        message.loading('Cluster application service requested...')
+        message.loading('Application service requested...')
 
         return this.props.handleSubmit(service)
       } catch (err) {
         console.error('Error saving application service', err)
-        message.error('Error requesting cluster application service, please try again.')
+        message.error('Error requesting application service, please try again.')
         this.setState({
           submitting: false,
           formErrorMessage: (err.fieldErrors && err.message) ? err.message : 'An error occurred requesting the application service, please try again',
@@ -154,7 +154,7 @@ class ClusterApplicationServiceForm extends React.Component {
 
   cancel = () => {
     this.props.form.resetFields()
-    this.setState({ ...ClusterApplicationServiceForm.initialState })
+    this.setState({ ...ApplicationServiceForm.initialState })
     this.props.handleCancel()
   }
 
@@ -196,7 +196,7 @@ class ClusterApplicationServiceForm extends React.Component {
         <FormErrorMessage message={formErrorMessage} />
         <Card style={{ marginBottom: '20px' }}>
           <Alert
-            message="Cluster application service"
+            message="Application service"
             description="Select the service you would like to use."
             type="info"
             showIcon
@@ -273,6 +273,6 @@ class ClusterApplicationServiceForm extends React.Component {
   }
 }
 
-const WrappedClusterApplicationServiceForm = Form.create({ name: 'cluster_application' })(ClusterApplicationServiceForm)
+const WrappedApplicationServiceForm = Form.create({ name: 'cluster_application' })(ApplicationServiceForm)
 
-export default WrappedClusterApplicationServiceForm
+export default WrappedApplicationServiceForm

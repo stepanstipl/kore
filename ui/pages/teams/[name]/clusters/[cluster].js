@@ -1,8 +1,19 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import moment from 'moment'
-import { Divider, Typography, Collapse, Icon, Row, Col, List, Button, Form, Card, Badge, message, Drawer, Tooltip } from 'antd'
-const { Paragraph, Text } = Typography
+import {
+  Typography,
+  Collapse,
+  Row,
+  Col,
+  List,
+  Button,
+  Form,
+  Badge,
+  Tabs
+} from 'antd'
+const { Text } = Typography
+const { TabPane } = Tabs
 
 import KoreApi from '../../../../lib/kore-api'
 import Breadcrumb from '../../../../lib/components/layout/Breadcrumb'
@@ -14,41 +25,29 @@ import copy from '../../../../lib/utils/object-copy'
 import { featureEnabled, KoreFeatures } from '../../../../lib/utils/features'
 import FormErrorMessage from '../../../../lib/components/forms/FormErrorMessage'
 import { inProgressStatusList } from '../../../../lib/utils/ui-helpers'
-import apiPaths from '../../../../lib/utils/api-paths'
-import ServiceCredential from '../../../../lib/components/teams/service/ServiceCredential'
-import ServiceCredentialForm from '../../../../lib/components/teams/service/ServiceCredentialForm'
-import NamespaceClaim from '../../../../lib/components/teams/namespace/NamespaceClaim'
-import NamespaceClaimForm from '../../../../lib/components/teams/namespace/NamespaceClaimForm'
 import ClusterAccessInfo from '../../../../lib/components/teams/cluster/ClusterAccessInfo'
 import { isReadOnlyCRD } from '../../../../lib/utils/crd-helpers'
-import ClusterApplicationServiceForm from '../../../../lib/components/teams/cluster/applications/ClusterApplicationServiceForm'
-import Service from '../../../../lib/components/teams/service/Service'
+import ServicesTab from '../../../../lib/components/teams/service/ServicesTab'
+import NamespacesTab from '../../../../lib/components/teams/namespace/NamespacesTab'
 
 class ClusterPage extends React.Component {
   static propTypes = {
     team: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
-    cluster: PropTypes.object.isRequired
+    cluster: PropTypes.object.isRequired,
+    tabActiveKey: PropTypes.string
   }
 
   constructor(props) {
     super(props)
     this.state = {
+      tabActiveKey: this.props.tabActiveKey || 'namespaces',
       cluster: props.cluster,
       components: {},
-      namespaceClaims: false,
       editMode: false,
       clusterParams: props.cluster.spec.configuration,
       formErrorMessage: null,
-      validationErrors: null,
-      createNamespace: false,
-      serviceCredentials: false,
-      serviceKinds: false,
-      createServiceCredential: false,
-      createApplicationService: false,
-      services: false,
-      applicationServices: false,
-      revealBindings: {}
+      validationErrors: null
     }
   }
 
@@ -73,39 +72,10 @@ class ClusterPage extends React.Component {
     return {}
   }
 
-  fetchNamespacesData = async () => {
-    const team = this.props.team.metadata.name
-    const api = await KoreApi.client()
-    let [ namespaceClaims, serviceCredentials ] = await Promise.all([
-      api.ListNamespaces(team),
-      featureEnabled(KoreFeatures.SERVICES) ? api.ListServiceCredentials(team, this.state.cluster.metadata.name) : Promise.resolve({ items: [] }),
-    ])
-    namespaceClaims = namespaceClaims.items.filter(ns => ns.spec.cluster.name === this.props.cluster.metadata.name)
-    serviceCredentials = serviceCredentials.items
-
-    const revealBindings = {}
-    featureEnabled(KoreFeatures.SERVICES) && namespaceClaims.filter(nc => serviceCredentials.filter(sc => sc.spec.clusterNamespace === nc.spec.name).length > 0).forEach(nc => revealBindings[nc.spec.name] = true)
-
-    return { namespaceClaims, serviceCredentials, revealBindings }
-  }
-
-  fetchApplicationServicesData = async () => {
-    const team = this.props.team.metadata.name
-    let services = await (await KoreApi.client()).ListServices(team)
-    services = services.items.filter(s => s.spec.cluster && s.spec.cluster.name && s.spec.kind !== 'app')
-    const applicationServices = services.filter(s => s.spec.cluster.namespace === this.props.cluster.metadata.namespace && s.spec.cluster.name === this.props.cluster.metadata.name)
-
-    return { services, applicationServices }
-  }
-
   componentDidMount = () => {
     this.startRefreshing()
     this.fetchCommonData().then(data => {
       this.setState({ ...data })
-      this.fetchNamespacesData().then(data => this.setState({ ...data }))
-      if (featureEnabled(KoreFeatures.APPLICATION_SERVICES)) {
-        this.fetchApplicationServicesData().then(data => this.setState({ ...data }))
-      }
     })
   }
 
@@ -134,129 +104,6 @@ class ClusterPage extends React.Component {
       })
     } else {
       this.setState({ cluster: { ...this.state.cluster, deleted: true } })
-    }
-  }
-
-  handleResourceUpdated = resourceType => {
-    return (updatedResource, done) => {
-      this.setState((state) => {
-        return {
-          [resourceType]: state[resourceType].map(r => r.metadata.name !== updatedResource.metadata.name ? r : { ...r, status: updatedResource.status })
-        }
-      }, done)
-    }
-  }
-
-  handleResourceDeleted = resourceType => {
-    return (name, done) => {
-      this.setState((state) => {
-        const revealBindings = copy(state.revealBindings)
-        if (resourceType === 'serviceCredentials') {
-          const serviceCred = state.serviceCredentials.find(sc => sc.metadata.name === name)
-          revealBindings[serviceCred.spec.clusterNamespace] = Boolean(state.serviceCredentials.filter(sc => sc.metadata.name !== name && !sc.deleted && sc.spec.clusterNamespace === serviceCred.spec.clusterNamespace).length)
-        }
-
-        return {
-          [resourceType]: state[resourceType].map(r => r.metadata.name !== name ? r : { ...r, deleted: true }),
-          revealBindings
-        }
-      }, done)
-    }
-  }
-
-  createNamespace = value => () => this.setState({ createNamespace: value })
-
-  handleNamespaceCreated = namespaceClaim => {
-    this.setState({
-      namespaceClaims: this.state.namespaceClaims.concat([namespaceClaim]),
-      createNamespace: false
-    })
-    message.loading(`Namespace "${namespaceClaim.spec.name}" requested on cluster "${namespaceClaim.spec.cluster.name}"`)
-  }
-
-  deleteNamespace = async (name, done) => {
-    const team = this.props.team.metadata.name
-    try {
-      const namespaceClaims = copy(this.state.namespaceClaims)
-      const namespaceClaim = namespaceClaims.find(nc => nc.metadata.name === name)
-      await (await KoreApi.client()).RemoveNamespace(team, namespaceClaim.metadata.name)
-      namespaceClaim.status.status = 'Deleting'
-      namespaceClaim.metadata.deletionTimestamp = new Date()
-      this.setState({ namespaceClaims }, done)
-      message.loading(`Namespace deletion requested: ${namespaceClaim.spec.name}`)
-    } catch (err) {
-      console.error('Error deleting namespace', err)
-      message.error('Error deleting namespace, please try again.')
-    }
-  }
-
-  deleteServiceCredential = async (name, done) => {
-    const team = this.props.team.metadata.name
-    try {
-      await (await KoreApi.client()).DeleteServiceCredentials(team, name)
-      this.setState((state) => {
-        return {
-          serviceCredentials: state.serviceCredentials.map(r => r.metadata.name !== name ? r : {
-            ...r,
-            status: { ...r.status, status: 'Deleting' },
-            metadata: {
-              ...r.metadata,
-              deletionTimestamp: new Date()
-            }
-          })
-        }
-      }, done)
-
-      message.loading('Deletion of service access requested')
-    } catch (err) {
-      console.error('Error deleting service access', err)
-      message.error('Error deleting service access, please try again.')
-    }
-  }
-
-  createServiceCredential = (value) => () => {
-    this.setState({ createServiceCredential: value })
-  }
-
-  handleServiceCredentialCreated = serviceCredential => {
-    this.setState((state) => {
-      const revealBindings = copy(state.revealBindings)
-      revealBindings[serviceCredential.spec.clusterNamespace] = true
-      return {
-        createServiceCredential: false,
-        serviceCredentials: [ ...state.serviceCredentials, serviceCredential ],
-        revealBindings
-      }
-    })
-    message.loading(`Service access with secret name "${serviceCredential.spec.secretName}" requested`)
-  }
-
-  handleApplicationServiceCreated = async (applicationService) => {
-    this.setState((state) => {
-      return {
-        createApplicationService: false,
-        services: [ ...state.services, applicationService ],
-        applicationServices: [ ...state.applicationServices, applicationService ],
-      }
-    })
-    const commonData = await this.fetchCommonData()
-    const namespaceData = await this.fetchNamespacesData()
-    this.setState({ ...commonData, ...namespaceData })
-  }
-
-  deleteApplicationService = async (name, done) => {
-    const team = this.props.team.metadata.name
-    try {
-      const applicationServices = copy(this.state.applicationServices)
-      const applicationService = applicationServices.find(s => s.metadata.name === name)
-      await (await KoreApi.client()).DeleteService(team, applicationService.metadata.name)
-      applicationService.status.status = 'Deleting'
-      applicationService.metadata.deletionTimestamp = new Date()
-      this.setState({ applicationServices }, done)
-      message.loading(`Application service deletion requested: ${applicationService.metadata.name}`)
-    } catch (err) {
-      console.error('Error deleting application service', err)
-      message.error('Error deleting application service, please try again.')
     }
   }
 
@@ -302,19 +149,21 @@ class ClusterPage extends React.Component {
     }
   }
 
-  revealBindings = (namespaceName) => (key) => {
-    const revealBindings = copy(this.state.revealBindings)
-    revealBindings[namespaceName] = Boolean(key.length)
-    this.setState({ revealBindings })
-  }
-
   getCardTitle = (title, resources) => (
     <span>{title} {resources && <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={resources.filter(s => !s.deleted).length} />}</span>
   )
 
+  getTabTitle = ({ title, count, icon }) => (
+    <span>
+      {title}
+      {count !== undefined && count !== -1 && <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={count} />}
+      {icon}
+    </span>
+  )
+
   render = () => {
     const { team, user } = this.props
-    const { cluster, namespaceClaims, applicationServices, serviceCredentials, serviceKinds, createServiceCredential, createApplicationService } = this.state
+    const { cluster } = this.state
 
     const created = moment(cluster.metadata.creationTimestamp).fromNow()
     const deleted = cluster.metadata.deletionTimestamp ? moment(cluster.metadata.deletionTimestamp).fromNow() : false
@@ -323,9 +172,6 @@ class ClusterPage extends React.Component {
       layout: 'horizontal', labelAlign: 'left', hideRequiredMark: true,
       labelCol: { xs: 24, xl: 10 }, wrapperCol: { xs: 24, xl: 14 }
     }
-
-    const hasActiveNamespaces = namespaceClaims && Boolean(namespaceClaims.filter(c => !c.deleted).length)
-    const hasActiveApplicationServices = applicationServices && Boolean(applicationServices.filter(c => !c.deleted).length)
 
     return (
       <div>
@@ -365,169 +211,24 @@ class ClusterPage extends React.Component {
           </Col>
         </Row>
 
-        <Divider />
+        <Tabs activeKey={this.state.tabActiveKey} onChange={(key) => this.setState({ tabActiveKey: key })} tabBarStyle={{ marginBottom: '20px' }}>
+          <TabPane key="namespaces" tab={this.getTabTitle({ title: 'Namespaces', count: this.state.namespaceCount })} forceRender={true}>
+            <NamespacesTab user={this.props.user} team={this.props.team} cluster={this.props.cluster} onNamespaceCountChange={(count) => this.setState({ namespaceCount: count })} />
+          </TabPane>
 
-        <Card
-          title={this.getCardTitle('Namespaces', namespaceClaims)}
-          extra={<Button type="primary" onClick={this.createNamespace(true)}>+ New namespace</Button>}
-          style={{ marginBottom: '20px' }}
-        >
-          {!namespaceClaims && <Icon type="loading" />}
-          {namespaceClaims && !hasActiveNamespaces && <Paragraph style={{ marginBottom: 0 }} type="secondary">No namespaces found for this cluster</Paragraph>}
-          {namespaceClaims && namespaceClaims.map((namespaceClaim, idx) => {
-            const filteredServiceCredentials = (serviceCredentials || []).filter(sc => sc.spec.clusterNamespace === namespaceClaim.spec.name)
-            const activeServiceCredentials = filteredServiceCredentials.filter(nc => !nc.deleted)
-            return (
-              <React.Fragment key={namespaceClaim.metadata.name}>
-                <NamespaceClaim
-                  key={namespaceClaim.metadata.name}
-                  team={team.metadata.name}
-                  namespaceClaim={namespaceClaim}
-                  deleteNamespace={this.deleteNamespace}
-                  handleUpdate={this.handleResourceUpdated('namespaceClaims')}
-                  handleDelete={this.handleResourceDeleted('namespaceClaims')}
-                  refreshMs={15000}
-                  propsResourceDataKey="namespaceClaim"
-                  resourceApiPath={`/teams/${team.metadata.name}/namespaceclaims/${namespaceClaim.metadata.name}`}
-                />
-                {!namespaceClaim.deleted && featureEnabled(KoreFeatures.SERVICES) && (
-                  <>
-                    <Collapse onChange={this.revealBindings(namespaceClaim.spec.name)} activeKey={this.state.revealBindings[namespaceClaim.spec.name] ? ['bindings'] : []}>
-                      <Collapse.Panel
-                        key="bindings"
-                        header={<span>Cloud service access <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={activeServiceCredentials.length} /></span>}
-                        extra={
-                          <Tooltip title="Provide this namespace with access to a cloud service">
-                            <Icon
-                              type="plus"
-                              onClick={e => {
-                                e.stopPropagation()
-                                this.createServiceCredential({ cluster, namespaceClaim })()
-                              }}
-                            />
-                          </Tooltip>
-                        }
-                      >
-                        <List
-                          size="small"
-                          locale={{ emptyText: 'No cloud service access found' }}
-                          dataSource={filteredServiceCredentials}
-                          renderItem={serviceCredential => (
-                            <ServiceCredential
-                              viewPerspective="cluster"
-                              team={team.metadata.name}
-                              serviceCredential={serviceCredential}
-                              serviceKind={serviceKinds.find(kind => kind.metadata.name === serviceCredential.spec.kind)}
-                              deleteServiceCredential={this.deleteServiceCredential}
-                              handleUpdate={this.handleResourceUpdated('serviceCredentials')}
-                              handleDelete={this.handleResourceDeleted('serviceCredentials')}
-                              refreshMs={10000}
-                              propsResourceDataKey="serviceCredential"
-                              resourceApiPath={`${apiPaths.team(team.metadata.name).serviceCredentials}/${serviceCredential.metadata.name}`}
-                            />
-                          )}
-                        >
-                        </List>
-                      </Collapse.Panel>
-                    </Collapse>
-
-                    {!namespaceClaim.deleted && idx < namespaceClaims.length - 1 && <Divider />}
-                  </>
-                )}
-
-              </React.Fragment>
-            )
-          })}
-
-          <Drawer
-            title="Create namespace"
-            placement="right"
-            closable={false}
-            onClose={this.createNamespace(false)}
-            visible={Boolean(this.state.createNamespace)}
-            width={700}
-          >
-            <NamespaceClaimForm team={team.metadata.name} cluster={cluster} handleSubmit={this.handleNamespaceCreated} handleCancel={this.createNamespace(false)}/>
-          </Drawer>
-
-          {featureEnabled(KoreFeatures.SERVICES) && (
-            <Drawer
-              title="Create service access"
-              placement="right"
-              closable={false}
-              onClose={this.createServiceCredential(false)}
-              visible={Boolean(createServiceCredential)}
-              width={700}
-            >
-              {Boolean(createServiceCredential) &&
-                <ServiceCredentialForm
-                  team={team}
-                  creationSource="namespace"
-                  clusters={ [createServiceCredential.cluster] }
-                  namespaceClaims={ [createServiceCredential.namespaceClaim]}
-                  handleSubmit={this.handleServiceCredentialCreated}
-                  handleCancel={this.createServiceCredential(false)}
-                />
-              }
-            </Drawer>
+          {!featureEnabled(KoreFeatures.SERVICES) ? null : (
+            <TabPane key="services" tab={this.getTabTitle({ title: 'Cloud services', count: this.state.cloudServiceCount })} forceRender={true}>
+              <ServicesTab user={this.props.user} team={this.props.team} cluster={this.props.cluster} serviceType="cloud" getServiceCount={(count) => this.setState({ cloudServiceCount: count })} />
+            </TabPane>
           )}
 
-        </Card>
+          {!featureEnabled(KoreFeatures.APPLICATION_SERVICES) ? null : (
+            <TabPane key="application_services" tab={this.getTabTitle({ title: 'Application services', count: this.state.applicationServiceCount })} forceRender={true}>
+              <ServicesTab user={this.props.user} team={this.props.team} cluster={this.props.cluster} serviceType="application" getServiceCount={(count) => this.setState({ applicationServiceCount: count })} />
+            </TabPane>
+          )}
 
-        {featureEnabled(KoreFeatures.APPLICATION_SERVICES) && (
-          <>
-            <Card
-              title={this.getCardTitle('Application services', applicationServices)}
-              extra={<Button type="primary" onClick={() => this.setState({ createApplicationService: true })}>+ New application service</Button>}
-            >
-              {!applicationServices && <Icon type="loading" />}
-              {applicationServices && !hasActiveApplicationServices && <Text type="secondary">No service applications found for this cluster</Text>}
-              {applicationServices && (
-                <List
-                  className="hide-empty-text"
-                  locale={{ emptyText: <div/> }}
-                  dataSource={applicationServices}
-                  renderItem={service => (
-                    <Service
-                      team={team.metadata.name}
-                      service={service}
-                      serviceKind={serviceKinds.find(sk => sk.metadata.name === service.spec.kind)}
-                      deleteService={this.deleteApplicationService}
-                      handleUpdate={this.handleResourceUpdated('applicationServices')}
-                      handleDelete={this.handleResourceDeleted('applicationServices')}
-                      refreshMs={10000}
-                      propsResourceDataKey="service"
-                      resourceApiPath={`/teams/${team.metadata.name}/services/${service.metadata.name}`}
-                    />
-                  )}
-                />
-              )}
-            </Card>
-            <Drawer
-              title="Create cluster application service"
-              placement="right"
-              closable={false}
-              onClose={() => this.setState({ createApplicationService: false })}
-              visible={Boolean(createApplicationService)}
-              width={700}
-            >
-              {Boolean(createApplicationService) &&
-                <ClusterApplicationServiceForm
-                  team={team}
-                  cluster={cluster}
-                  teamServices={this.state.services}
-                  handleSubmit={this.handleApplicationServiceCreated}
-                  handleCancel={() => this.setState({ createApplicationService: false })}
-                />
-              }
-            </Drawer>
-          </>
-        )}
-
-        <Divider />
-
-        <Collapse>
-          <Collapse.Panel header="Cluster Parameters">
+          <TabPane key="settings" tab={this.getTabTitle({ title: 'Settings' })} forceRender={true}>
             <Form {...editClusterFormConfig} onSubmit={(e) => this.onSubmit(e)}>
               <FormErrorMessage message={this.state.formErrorMessage} />
               <Form.Item label="" colon={false}>
@@ -552,9 +253,8 @@ class ClusterPage extends React.Component {
                 onPlanChange={this.onClusterConfigChanged}
               />
             </Form>
-          </Collapse.Panel>
-        </Collapse>
-
+          </TabPane>
+        </Tabs>
       </div>
     )
   }

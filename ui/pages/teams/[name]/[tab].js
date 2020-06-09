@@ -10,9 +10,7 @@ const { TabPane } = Tabs
 import Breadcrumb from '../../../lib/components/layout/Breadcrumb'
 import redirect from '../../../lib/utils/redirect'
 import KoreApi from '../../../lib/kore-api'
-import { featureEnabled, KoreFeatures } from '../../../lib/utils/features'
 import ClustersTab from '../../../lib/components/teams/cluster/ClustersTab'
-import ServicesTab from '../../../lib/components/teams/service/ServicesTab'
 import MembersTab from '../../../lib/components/teams/members/MembersTab'
 import SecurityTab from '../../../lib/components/teams/security/SecurityTab'
 import SecurityStatusIcon from '../../../lib/components/security/SecurityStatusIcon'
@@ -36,7 +34,6 @@ class TeamDashboardTabPage extends React.Component {
       tabActiveKey: this.props.tabActiveKey,
       memberCount: -1,
       clusterCount: -1,
-      serviceCount: -1,
       securityStatus: false
     }
   }
@@ -180,12 +177,6 @@ class TeamDashboardTabPage extends React.Component {
           <TabPane key="clusters" tab={this.getTabTitle({ title: 'Clusters', count: this.state.clusterCount })} forceRender={true}>
             <ClustersTab user={this.props.user} team={this.props.team} getClusterCount={(count) => this.setState({ clusterCount: count })} />
           </TabPane>
-
-          {!featureEnabled(KoreFeatures.SERVICES) ? null : (
-            <TabPane key="services" tab={this.getTabTitle({ title: 'Cloud services', count: this.state.serviceCount })} forceRender={true}>
-              <ServicesTab user={this.props.user} team={this.props.team} getServiceCount={(count) => this.setState({ serviceCount: count })} />
-            </TabPane>
-          )}
 
           <TabPane key="members" tab={this.getTabTitle({ title: 'Members', count: this.state.memberCount })} forceRender={true}>
             <MembersTab user={this.props.user} team={this.props.team} getMemberCount={(count) => this.setState({ memberCount: count })} />

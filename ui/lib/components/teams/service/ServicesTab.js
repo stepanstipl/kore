@@ -8,12 +8,15 @@ import KoreApi from '../../../kore-api'
 import copy from '../../../utils/object-copy'
 import Service from './Service'
 import ServiceBuildForm from './ServiceBuildForm'
+import ApplicationServiceForm from './ApplicationServiceForm'
 import { inProgressStatusList, statusColorMap, statusIconMap } from '../../../utils/ui-helpers'
 
 class ServicesTab extends React.Component {
 
   static propTypes = {
     team: PropTypes.object.isRequired,
+    cluster: PropTypes.object.isRequired,
+    serviceType: PropTypes.oneOf('cloud', 'application').isRequired,
     getServiceCount: PropTypes.func
   }
 
@@ -34,9 +37,19 @@ class ServicesTab extends React.Component {
         api.ListServiceKinds(team),
         api.ListServiceCredentials(team)
       ])
-      services = services.items.filter(s => !s.spec.cluster || !s.spec.cluster.name)
-      serviceKinds = serviceKinds.items
+
+      switch (this.props.serviceType) {
+      case 'cloud':
+        serviceKinds = serviceKinds.items.filter(sk => sk.metadata.labels['kore.appvia.io/platform'] !== 'Kubernetes')
+        break
+      case 'application':
+        serviceKinds = serviceKinds.items.filter(sk => sk.metadata.labels['kore.appvia.io/platform'] === 'Kubernetes')
+        break
+      }
+
+      services = services.items.filter(s => Boolean(serviceKinds.find(sk => sk.metadata.name === s.spec.kind )) && s.spec.cluster.name === this.props.cluster.metadata.name)
       serviceCredentials = serviceCredentials.items
+
       this.props.getServiceCount && this.props.getServiceCount(services.length)
       return { services, serviceKinds, serviceCredentials }
     } catch (err) {
@@ -177,14 +190,14 @@ class ServicesTab extends React.Component {
   }
 
   render() {
-    const { team } = this.props
+    const { team, cluster, serviceType } = this.props
     const { dataLoading, services, serviceKinds, serviceCredentials, createNewService } = this.state
 
     const hasActiveServices =  Boolean(services.filter(c => !c.deleted).length)
 
     return (
       <>
-        <Button type="primary" onClick={() => this.setState({ createNewService: true })}>New cloud service</Button>
+        <Button type="primary" onClick={() => this.setState({ createNewService: true })}>New {serviceType} service</Button>
 
         <Divider />
 
@@ -219,21 +232,31 @@ class ServicesTab extends React.Component {
         )}
 
         <Drawer
-          title="New cloud service"
+          title={`New ${serviceType} service`}
           visible={createNewService}
           onClose={() => this.setState({ createNewService: false })}
           width={900}
         >
           {createNewService && (
-            <ServiceBuildForm
-              team={team}
-              teamServices={services}
-              handleSubmit={this.handleServiceCreated}
-              handleCancel={() => this.setState({ createNewService: false })}
-            />
+            serviceType === 'cloud' ? (
+              <ServiceBuildForm
+                team={team}
+                cluster={cluster}
+                teamServices={services}
+                handleSubmit={this.handleServiceCreated}
+                handleCancel={() => this.setState({ createNewService: false })}
+              />
+            ) : (
+              <ApplicationServiceForm
+                team={team}
+                cluster={cluster}
+                teamServices={this.state.services}
+                handleSubmit={this.handleServiceCreated}
+                handleCancel={() => this.setState({ createNewService: false })}
+              />
+            )
           )}
         </Drawer>
-
       </>
     )
   }
