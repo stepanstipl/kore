@@ -268,13 +268,6 @@ func schema_pkg_apis_gke_v1alpha1_GKESpec(ref common.ReferenceCallback) common.O
 							},
 						},
 					},
-					"network": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Network is the GCP network the cluster reside on, which have to be unique within the GCP project and created beforehand.",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
 					"servicesIPV4Cidr": {
 						SchemaProps: spec.SchemaProps{
 							Description: "ServicesIPV4Cidr is an optional network cidr configured for the cluster services",
@@ -388,7 +381,7 @@ func schema_pkg_apis_gke_v1alpha1_GKESpec(ref common.ReferenceCallback) common.O
 							},
 						},
 						SchemaProps: spec.SchemaProps{
-							Description: "NodePools is the set of node pools for this cluster. Required unless ALL deprecated properties are set.",
+							Description: "NodePools is the set of node pools for this cluster. Required unless ALL deprecated properties except subnetwork are set.",
 							Type:        []string{"array"},
 							Items: &spec.SchemaOrArray{
 								Schema: &spec.Schema{
@@ -462,8 +455,15 @@ func schema_pkg_apis_gke_v1alpha1_GKESpec(ref common.ReferenceCallback) common.O
 							Format:      "",
 						},
 					},
+					"network": {
+						SchemaProps: spec.SchemaProps{
+							Description: "DEPRECATED: Not used - now projects are created automatically, always use default. Network is the GCP network the cluster reside on, which have to be unique within the GCP project and created beforehand.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 				},
-				Required: []string{"description", "version", "releaseChannel", "authorizedMasterNetworks", "network", "servicesIPV4Cidr", "clusterIPV4Cidr", "enableHorizontalPodAutoscaler", "enableHTTPLoadBalancer", "enableIstio", "enableShieldedNodes", "enableStackDriverLogging", "enableStackDriverMetrics", "enablePrivateEndpoint", "enablePrivateNetwork", "masterIPV4Cidr", "maintenanceWindow"},
+				Required: []string{"description", "version", "releaseChannel", "authorizedMasterNetworks", "servicesIPV4Cidr", "clusterIPV4Cidr", "enableHorizontalPodAutoscaler", "enableHTTPLoadBalancer", "enableIstio", "enableShieldedNodes", "enableStackDriverLogging", "enableStackDriverMetrics", "enablePrivateEndpoint", "enablePrivateNetwork", "masterIPV4Cidr", "maintenanceWindow"},
 			},
 		},
 		Dependencies: []string{

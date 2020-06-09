@@ -100,8 +100,7 @@ type V1alpha1GKESpec struct {
 	MaxSize int64 `json:"maxSize,omitempty"`
 
 	// network
-	// Required: true
-	Network *string `json:"network"`
+	Network string `json:"network,omitempty"`
 
 	// node pools
 	NodePools []*V1alpha1GKENodePool `json:"nodePools"`
@@ -192,10 +191,6 @@ func (m *V1alpha1GKESpec) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateMasterIPV4Cidr(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateNetwork(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -384,15 +379,6 @@ func (m *V1alpha1GKESpec) validateMaintenanceWindow(formats strfmt.Registry) err
 func (m *V1alpha1GKESpec) validateMasterIPV4Cidr(formats strfmt.Registry) error {
 
 	if err := validate.Required("masterIPV4Cidr", "body", m.MasterIPV4Cidr); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *V1alpha1GKESpec) validateNetwork(formats strfmt.Registry) error {
-
-	if err := validate.Required("network", "body", m.Network); err != nil {
 		return err
 	}
 
