@@ -19,8 +19,9 @@ package kore
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
+
+	"github.com/appvia/kore/pkg/utils/configuration"
 
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/store"
@@ -30,7 +31,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -76,8 +76,6 @@ type ServiceProviderFactory interface {
 	SetUp(Context, *servicesv1.ServiceProvider) (complete bool, _ error)
 	// TearDown makes sure all provider dependencies are deleted
 	TearDown(Context, *servicesv1.ServiceProvider) (complete bool, _ error)
-	// RequiredCredentialTypes returns with the required credential types
-	RequiredCredentialTypes() []schema.GroupVersionKind
 	// DefaultProviders returns with a list of providers which should be automatically installed
 	DefaultProviders() []servicesv1.ServiceProvider
 }
@@ -162,11 +160,12 @@ func (p *serviceProvidersImpl) Update(ctx context.Context, provider *servicesv1.
 			WithFieldErrorf("type", validation.InvalidType, "%q is not a valid service provider type", provider.Spec.Type)
 	}
 
-	if err := jsonschema.Validate(factory.JSONSchema(), "provider", provider.Spec.Configuration); err != nil {
-		return err
+	config := map[string]interface{}{}
+	if err := configuration.ParseObjectConfiguration(ctx, p.Store().RuntimeClient(), provider, &config); err != nil {
+		return fmt.Errorf("failed to parse service provider configuration: %s", err)
 	}
 
-	if err := p.validateCredentials(ctx, provider, factory); err != nil {
+	if err := jsonschema.Validate(factory.JSONSchema(), "provider", config); err != nil {
 		return err
 	}
 
@@ -429,43 +428,4 @@ func (p *serviceProvidersImpl) GetProviderForKind(ctx Context, kind string) (Ser
 	}
 
 	return p.register(ctx, &providerList.Items[0])
-}
-
-func (p *serviceProvidersImpl) validateCredentials(ctx context.Context, serviceProvider *servicesv1.ServiceProvider, factory ServiceProviderFactory) error {
-	expectedKinds := factory.RequiredCredentialTypes()
-	creds := serviceProvider.Spec.Credentials
-
-	if expectedKinds == nil {
-		if creds.Kind != "" {
-			return validation.NewError("service provider has failed validation").WithFieldError(
-				"credentials",
-				validation.InvalidType,
-				"should not be set as this service provider doesn't require credentials",
-			)
-		}
-		return nil
-	}
-
-	found := false
-	for _, gvk := range expectedKinds {
-		if creds.HasGroupVersionKind(gvk) {
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		var expected []string
-		for _, gvk := range expectedKinds {
-			expected = append(expected, utils.FormatGroupVersionKind(gvk))
-		}
-		return validation.NewError("service provider has failed validation").WithFieldErrorf(
-			"credentials",
-			validation.InvalidType,
-			"should be one of: %s",
-			strings.Join(expected, ", "),
-		)
-	}
-
-	return nil
 }

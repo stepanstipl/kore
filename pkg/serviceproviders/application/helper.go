@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"html/template"
 
+	"github.com/appvia/kore/pkg/utils/configuration"
+
 	applicationv1beta "sigs.k8s.io/application/api/v1beta1"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -184,17 +186,17 @@ func ensureResource(ctx kore.Context, client client.Client, original runtime.Obj
 	return nil
 }
 
-func getAppConfiguration(service *servicesv1.Service) (*AppConfiguration, error) {
+func getAppConfiguration(ctx kore.Context, service *servicesv1.Service) (*AppConfiguration, error) {
 	switch service.Spec.Kind {
 	case ServiceKindApp:
 		config := &AppConfiguration{}
-		if err := service.Spec.GetConfiguration(config); err != nil {
+		if err := configuration.ParseObjectConfiguration(ctx, ctx.Client(), service, config); err != nil {
 			return nil, err
 		}
 		return config, nil
 	case ServiceKindHelmApp:
 		helmConfig := &HelmAppConfiguration{}
-		if err := service.Spec.GetConfiguration(helmConfig); err != nil {
+		if err := configuration.ParseObjectConfiguration(ctx, ctx.Client(), service, helmConfig); err != nil {
 			return nil, err
 		}
 

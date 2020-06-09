@@ -265,3 +265,8 @@ func (s *storeImpl) getWatchers(version schema.GroupVersionResource) []*Listener
 
 	return listeners
 }
+
+// RuntimeClient returns with the runtime client
+func (s *storeImpl) RuntimeClient() client.Client {
+	return s.runtime
+}

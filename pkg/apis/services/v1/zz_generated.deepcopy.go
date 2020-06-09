@@ -446,7 +446,13 @@ func (in *ServiceProviderSpec) DeepCopyInto(out *ServiceProviderSpec) {
 		*out = new(v1beta1.JSON)
 		(*in).DeepCopyInto(*out)
 	}
-	out.Credentials = in.Credentials
+	if in.ConfigurationFrom != nil {
+		in, out := &in.ConfigurationFrom, &out.ConfigurationFrom
+		*out = make([]corev1.ConfigurationFromSource, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	return
 }
 
@@ -501,7 +507,13 @@ func (in *ServiceSpec) DeepCopyInto(out *ServiceSpec) {
 		*out = new(v1beta1.JSON)
 		(*in).DeepCopyInto(*out)
 	}
-	out.Credentials = in.Credentials
+	if in.ConfigurationFrom != nil {
+		in, out := &in.ConfigurationFrom, &out.ConfigurationFrom
+		*out = make([]corev1.ConfigurationFromSource, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	return
 }
 

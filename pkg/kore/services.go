@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/appvia/kore/pkg/utils/configuration"
+
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/store"
@@ -250,7 +252,7 @@ func (s *servicesImpl) validateConfiguration(ctx context.Context, service, exist
 	}
 
 	serviceConfig := make(map[string]interface{})
-	if err := service.Spec.GetConfiguration(&serviceConfig); err != nil {
+	if err := configuration.ParseObjectConfiguration(ctx, s.Store().RuntimeClient(), service, &serviceConfig); err != nil {
 		return fmt.Errorf("failed to parse service configuration values: %s", err)
 	}
 
@@ -264,7 +266,9 @@ func (s *servicesImpl) validateConfiguration(ctx context.Context, service, exist
 	}
 
 	if schema == "" && !utils.ApiExtJSONEmpty(service.Spec.Configuration) {
-		if existing == nil || !utils.ApiExtJSONEquals(service.Spec.Configuration, existing.Spec.Configuration) {
+		if existing == nil ||
+			!utils.ApiExtJSONEquals(service.Spec.Configuration, existing.Spec.Configuration) ||
+			!reflect.DeepEqual(service.Spec.ConfigurationFrom, existing.Spec.ConfigurationFrom) {
 			return validation.NewError("%q failed validation", service.Name).
 				WithFieldErrorf(
 					"configuration",
@@ -275,7 +279,7 @@ func (s *servicesImpl) validateConfiguration(ctx context.Context, service, exist
 	}
 
 	if schema != "" {
-		if err := jsonschema.Validate(schema, "service", service.Spec.Configuration); err != nil {
+		if err := jsonschema.Validate(schema, "service", serviceConfig); err != nil {
 			return err
 		}
 	}

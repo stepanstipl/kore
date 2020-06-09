@@ -19,10 +19,11 @@ package openservicebroker
 import (
 	"fmt"
 
+	"github.com/appvia/kore/pkg/utils/configuration"
+
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/kore"
 	osb "github.com/kubernetes-sigs/go-open-service-broker-client/v2"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 func init() {
@@ -151,7 +152,7 @@ func (p ProviderFactory) Create(ctx kore.Context, serviceProvider *servicesv1.Se
 	var config = ProviderConfiguration{}
 	config.Name = serviceProvider.Name
 
-	if err := serviceProvider.Spec.GetConfiguration(&config); err != nil {
+	if err := configuration.ParseObjectConfiguration(ctx, ctx.Client(), serviceProvider, &config); err != nil {
 		return nil, fmt.Errorf("failed to process service provider configuration: %w", err)
 	}
 
@@ -171,10 +172,6 @@ func (p ProviderFactory) SetUp(ctx kore.Context, serviceProvider *servicesv1.Ser
 
 func (p ProviderFactory) TearDown(ctx kore.Context, serviceProvider *servicesv1.ServiceProvider) (complete bool, _ error) {
 	return true, nil
-}
-
-func (p ProviderFactory) RequiredCredentialTypes() []schema.GroupVersionKind {
-	return nil
 }
 
 func (d ProviderFactory) DefaultProviders() []servicesv1.ServiceProvider {

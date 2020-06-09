@@ -22,11 +22,6 @@ import (
 	"fmt"
 	"strings"
 
-	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
-	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
-	"github.com/appvia/kore/pkg/controllers"
-	"github.com/appvia/kore/pkg/kore"
-
 	"github.com/aws/aws-sdk-go/aws/awserr"
 
 	"k8s.io/apimachinery/pkg/types"
@@ -78,26 +73,4 @@ func getSecret(ctx context.Context, client client.Client, namespace, name string
 	}
 
 	return secret, nil
-}
-
-func getCredentials(ctx kore.Context, serviceProvider *servicesv1.ServiceProvider) (awsAccessKeyID string, awsSecretAccessKey string, _ error) {
-	eksCredentials := &eksv1alpha1.EKSCredentials{}
-	err := ctx.Client().Get(ctx, serviceProvider.Spec.Credentials.NamespacedName(), eksCredentials)
-	if err != nil {
-		return "", "", fmt.Errorf("failed to load the service provider credentials: %w", err)
-	}
-
-	if eksCredentials.Spec.CredentialsRef != nil {
-		secret, err := controllers.GetDecodedSecret(ctx, ctx.Client(), eksCredentials.Spec.CredentialsRef)
-		if err != nil {
-			return "", "", fmt.Errorf("failed to load the credentials secret: %w", err)
-		}
-		awsAccessKeyID = secret.Spec.Data["access_key_id"]
-		awsSecretAccessKey = secret.Spec.Data["access_secret_key"]
-	} else {
-		awsAccessKeyID = eksCredentials.Spec.AccessKeyID
-		awsSecretAccessKey = eksCredentials.Spec.SecretAccessKey
-	}
-
-	return
 }

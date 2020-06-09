@@ -39,7 +39,7 @@ func (p Provider) Reconcile(
 	ctx kore.Context,
 	service *servicesv1.Service,
 ) (reconcile.Result, error) {
-	config, err := getAppConfiguration(service)
+	config, err := getAppConfiguration(ctx, service)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

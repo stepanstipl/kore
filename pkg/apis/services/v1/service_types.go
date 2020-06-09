@@ -59,34 +59,11 @@ type ServiceSpec struct {
 	// +kubebuilder:validation:Type=object
 	// +kubebuilder:validation:Optional
 	Configuration *apiextv1.JSON `json:"configuration,omitempty"`
-	// Credentials is a reference to the credentials object to use
+	// ConfigurationFrom is a way to load configuration values from alternative sources, e.g. from secrets
+	// The values from these sources will override any existing keys defined in Configuration
 	// +kubebuilder:validation:Optional
-	Credentials corev1.Ownership `json:"credentials,omitempty"`
-}
-
-func (s *ServiceSpec) GetConfiguration(v interface{}) error {
-	if s.Configuration == nil {
-		return nil
-	}
-
-	if err := json.Unmarshal(s.Configuration.Raw, v); err != nil {
-		return fmt.Errorf("failed to unmarshal service configuration: %w", err)
-	}
-	return nil
-}
-
-func (s *ServiceSpec) SetConfiguration(v interface{}) error {
-	if v == nil {
-		s.Configuration = nil
-		return nil
-	}
-
-	raw, err := json.Marshal(v)
-	if err != nil {
-		return fmt.Errorf("failed to marshal service configuration: %w", err)
-	}
-	s.Configuration = &apiextv1.JSON{Raw: raw}
-	return nil
+	// +listType=set
+	ConfigurationFrom []corev1.ConfigurationFromSource `json:"configurationFrom,omitempty"`
 }
 
 // ServiceStatus defines the observed state of a service
@@ -196,6 +173,14 @@ func (s Service) NeedsUpdate() bool {
 	}
 
 	return !bytes.Equal(raw1, raw2)
+}
+
+func (s Service) GetConfiguration() *apiextv1.JSON {
+	return s.Spec.Configuration
+}
+
+func (s Service) GetConfigurationFrom() []corev1.ConfigurationFromSource {
+	return s.Spec.ConfigurationFrom
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

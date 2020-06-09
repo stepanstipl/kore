@@ -562,10 +562,22 @@ func schema_pkg_apis_services_v1_ServiceProviderSpec(ref common.ReferenceCallbac
 							Ref:         ref("k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"),
 						},
 					},
-					"credentials": {
+					"configurationFrom": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Credentials is a reference to the credentials object to use",
-							Ref:         ref("github.com/appvia/kore/pkg/apis/core/v1.Ownership"),
+							Description: "ConfigurationFrom is a way to load configuration values from alternative sources, e.g. from secrets The values from these sources will override any existing keys defined in Configuration",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/appvia/kore/pkg/apis/core/v1.ConfigurationFromSource"),
+									},
+								},
+							},
 						},
 					},
 				},
@@ -573,7 +585,7 @@ func schema_pkg_apis_services_v1_ServiceProviderSpec(ref common.ReferenceCallbac
 			},
 		},
 		Dependencies: []string{
-			"github.com/appvia/kore/pkg/apis/core/v1.Ownership", "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"},
+			"github.com/appvia/kore/pkg/apis/core/v1.ConfigurationFromSource", "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"},
 	}
 }
 
@@ -678,10 +690,22 @@ func schema_pkg_apis_services_v1_ServiceSpec(ref common.ReferenceCallback) commo
 							Ref:         ref("k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"),
 						},
 					},
-					"credentials": {
+					"configurationFrom": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
-							Description: "Credentials is a reference to the credentials object to use",
-							Ref:         ref("github.com/appvia/kore/pkg/apis/core/v1.Ownership"),
+							Description: "ConfigurationFrom is a way to load configuration values from alternative sources, e.g. from secrets The values from these sources will override any existing keys defined in Configuration",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/appvia/kore/pkg/apis/core/v1.ConfigurationFromSource"),
+									},
+								},
+							},
 						},
 					},
 				},
@@ -689,7 +713,7 @@ func schema_pkg_apis_services_v1_ServiceSpec(ref common.ReferenceCallback) commo
 			},
 		},
 		Dependencies: []string{
-			"github.com/appvia/kore/pkg/apis/core/v1.Ownership", "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"},
+			"github.com/appvia/kore/pkg/apis/core/v1.ConfigurationFromSource", "github.com/appvia/kore/pkg/apis/core/v1.Ownership", "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"},
 	}
 }
 

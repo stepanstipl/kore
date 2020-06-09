@@ -188,7 +188,7 @@ func (o *CreateServiceCredentialsOptions) CreateServiceCreds() (*servicesv1.Serv
 		return nil, err
 	}
 
-	configJSON, err := cmdutil.PatchJSON("{}", o.Params)
+	configJSON, err := cmdutil.PatchJSON([]byte("{}"), o.Params)
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +207,7 @@ func (o *CreateServiceCredentialsOptions) CreateServiceCreds() (*servicesv1.Serv
 			Service:          service.Ownership(),
 			Cluster:          cluster.Ownership(),
 			ClusterNamespace: o.Namespace,
-			Configuration:    &apiextv1.JSON{Raw: []byte(configJSON)},
+			Configuration:    &apiextv1.JSON{Raw: configJSON},
 		},
 	}
 
