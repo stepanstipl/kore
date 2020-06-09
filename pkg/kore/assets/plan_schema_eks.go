@@ -173,8 +173,7 @@ const EKSPlanSchema = `
 					"releaseVersion": {
 						"type": "string",
 						"description": "Blank to use latest (recommended), if set must be for same Kubernetes version as the top-level plan version and for the same AMI type as specified for this node group.",
-						"minLength": 1,
-						"pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+\\-[0-9]+$",
+						"pattern": "^($|[0-9]+\\.[0-9]+\\.[0-9]+\\-[0-9]+)$",
 						"examples": [
 							"1.16.8-20200507", "1.15.11-20200507"
 						],
