@@ -13,7 +13,7 @@ For now, download version:
     (
     cd pkg/kore/assets/applications/aws-autoscaler
     K8S_AUTOSCALER_VERSION=1.16.5
-    curl -sSL "https://raw.githubusercontent.com/kubernetes/autoscaler/cluster-autoscaler-${K8S_AUTOSCALER_VERSION}/cluster-autoscaler/cloudprovider/aws/examples/cluster-autoscaler-autodiscover.yaml" -o cluster-autoscaler-autodiscover.yaml
+    curl -sSL "https://raw.githubusercontent.com/kubernetes/autoscaler/cluster-autoscaler-${K8S_AUTOSCALER_VERSION}/cluster-autoscaler/cloudprovider/aws/examples/cluster-autoscaler-multi-asg.yaml" -o cluster-autoscaler-multi-asg.yaml
     )
     ```
 
@@ -33,7 +33,9 @@ For now, download version:
     ...
          command:
     ...
-            - --node-group-auto-discovery=asg:tag=k8s.io/cluster-autoscaler/enabled,k8s.io/cluster-autoscaler/{{ .ClusterName }}
+            {{- range $key, $value := .ASGs }}
+            - --nodes={{ $.value.Min }}:{{ $.value.Max }}:{{ $.value.Name }}
+            {{- end }}
           env:
             - name: AWS_REGION
               value: {{ .AwsRegion }}
