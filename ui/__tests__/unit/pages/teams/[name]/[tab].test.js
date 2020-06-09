@@ -1,6 +1,6 @@
 import { shallow } from 'enzyme'
 
-import TeamPage from '../../../../pages/teams/[name]'
+import TeamPage from '../../../../../pages/teams/[name]/[tab]'
 
 const props = {
   user: { id: 'jbloggs' },
@@ -12,7 +12,8 @@ const props = {
   teamRemoved: jest.fn(),
   config: {
     featureGates: {}
-  }
+  },
+  tabActiveKey: 'clusters'
 }
 
 describe('TeamPage', () => {
