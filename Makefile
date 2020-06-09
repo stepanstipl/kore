@@ -201,6 +201,14 @@ docker-swagger-validate:
 		quay.io/appvia/kore-apiserver-build:v0.0.1 \
 		make in-docker-swagger
 
+compose-db:
+	@docker-compose \
+		--file hack/compose/database.yml \
+		pull
+	@docker-compose \
+		--file hack/compose/database.yml \
+		up -d
+
 compose-up:
 	@docker-compose \
 		--file hack/compose/database.yml \
