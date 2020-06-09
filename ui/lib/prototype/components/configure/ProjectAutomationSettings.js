@@ -9,6 +9,7 @@ import PlanViewer from '../../../components/plans/PlanViewer'
 
 // prototype components
 import AutomatedProjectForm from './AutomatedProjectForm'
+import { successMessage } from '../../../utils/message'
 
 class ProjectAutomationSettings extends React.Component {
 

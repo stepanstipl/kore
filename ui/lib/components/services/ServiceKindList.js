@@ -4,7 +4,7 @@ import { sortBy } from 'lodash'
 import KoreApi from '../../kore-api'
 import { Alert, Avatar, Col, Icon, List, Row, Switch, Tooltip, Typography } from 'antd'
 import Link from 'next/link'
-import { successMessage } from '../../utils/message'
+import { successMessage, errorMessage } from '../../utils/message'
 const { Text, Title } = Typography
 import { featureEnabled, KoreFeatures } from '../../utils/features'
 import { isReadOnlyCRD } from '../../utils/crd-helpers'

@@ -9,7 +9,7 @@ import V1ServiceSpec from '../../../kore-api/model/V1ServiceSpec'
 import V1Service from '../../../kore-api/model/V1Service'
 import { NewV1ObjectMeta, NewV1Ownership } from '../../../utils/model'
 import { getKoreLabel } from '../../../utils/crd-helpers'
-import { errorMessage, loadingMessage } from '../../../../utils/message'
+import { errorMessage, loadingMessage } from '../../../utils/message'
 
 class ApplicationServiceForm extends React.Component {
   static propTypes = {

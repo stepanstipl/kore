@@ -8,7 +8,7 @@ import KoreApi from '../../../kore-api'
 import copy from '../../../utils/object-copy'
 import asyncForEach from '../../../utils/async-foreach'
 import InviteLink from '../InviteLink'
-import { successMessage } from '../../../utils/message'
+import { successMessage, errorMessage } from '../../../utils/message'
 
 class MembersTab extends React.Component {
 

@@ -18,6 +18,7 @@ export default class PlanOptionBase extends React.Component {
     manage: PropTypes.bool, // manage means we're editing a PLAN, false/unspecified means we're USING a plan e.g. to make/edit a cluster
     mode: PropTypes.oneOf(['create','view','edit']),
     team: PropTypes.object, // may be optionally used by custom plan option components to give richer interface when manage=false.
+    id: PropTypes.string,
   }
 
   describe = (property) => {

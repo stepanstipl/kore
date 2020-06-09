@@ -91,7 +91,7 @@ class VerifiedAllocatedResourceForm extends React.Component {
       setTimeout(async () => {
         const resourceResult = await this.getResource(resource.metadata.name)
         if (resourceResult.status.status === 'Success') {
-          successMessage({ content: 'Credentials verification successful', key: messageKey })
+          successMessage('Credentials verification successful', { key: messageKey })
           return await this.props.handleSubmit(resourceResult)
         }
         return await this.verify(resourceResult, tryCount + 1)

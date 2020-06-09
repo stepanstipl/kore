@@ -10,7 +10,7 @@ import Service from './Service'
 import ServiceBuildForm from './ServiceBuildForm'
 import ApplicationServiceForm from './ApplicationServiceForm'
 import { inProgressStatusList, statusColorMap, statusIconMap } from '../../../utils/ui-helpers'
-import { loadingMessage } from '../../../utils/message'
+import { loadingMessage, errorMessage } from '../../../utils/message'
 
 class ServicesTab extends React.Component {
 

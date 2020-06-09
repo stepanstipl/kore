@@ -84,6 +84,7 @@ class GKECredentialsList extends ResourceList {
                   editGKECredential={this.edit}
                   deleteGKECredential={this.delete}
                   handleUpdate={this.handleStatusUpdated}
+                  handleDelete={() => {}}
                   refreshMs={2000}
                   propsResourceDataKey="gkeCredentials"
                   resourceApiPath={`/teams/${publicRuntimeConfig.koreAdminTeamName}/gkecredentials/${gke.metadata.name}`}

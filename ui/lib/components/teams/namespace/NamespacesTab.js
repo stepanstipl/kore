@@ -8,7 +8,6 @@ import {
   Drawer,
   Icon,
   List,
-  message,
   Modal,
   Row,
   Tooltip,

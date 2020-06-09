@@ -37,11 +37,9 @@ export default class ManagePlanForm extends React.Component {
       if (this.props.mode === 'create' && !this.props.data) {
         // Copy default values into the plan values as a starting point.
         const planValues = {}
-        console.log(this.state.schema)
         const schemaProps = this.state.schema.properties
         Object.keys(schemaProps).forEach((prop) => {
           if (schemaProps[prop].default !== undefined) {
-            console.log('defaulting property', prop, schemaProps[prop].default)
             planValues[prop] = schemaProps[prop].default
           }
         })
@@ -220,7 +218,7 @@ export default class ManagePlanForm extends React.Component {
           <>
             <FormErrorMessage message={formErrorMessage} />
             <Form.Item>
-              <Button type="primary" htmlType="submit" loading={submitting} disabled={this.disableButton(getFieldsError())}>Save</Button>
+              <Button id="plan_save" type="primary" htmlType="submit" loading={submitting} disabled={this.disableButton(getFieldsError())}>Save</Button>
             </Form.Item>
           </>
         }

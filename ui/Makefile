@@ -16,6 +16,20 @@ test:
 	npm run lint
 	npm test
 
+test-e2e:
+	@echo "--> Running E2E Tests (headless)"
+	npm run test-e2e
+
+test-e2e-debug:
+	@echo "--> Running E2E Tests (non-headless)"
+	@export SHOW_BROWSER=true && npm run test-e2e
+
+kind-e2e:
+	@export KORE_ADMIN_PASS="$(shell kubectl --context kind-kore -n kore get secret kore-api -o json | jq -r ".data.KORE_ADMIN_PASS" | base64 --decode)" && ${MAKE} test-e2e
+
+kind-e2e-debug:
+	@export KORE_ADMIN_PASS="$(shell kubectl --context kind-kore -n kore get secret kore-api -o json | jq -r ".data.KORE_ADMIN_PASS" | base64 --decode)" && ${MAKE} test-e2e-debug
+
 update-swagger:
 	@echo "--> Updating unit test / auto-gen swagger (requires API to be running locally)"
 	@curl --retry 5 --retry-delay 5 --retry-connrefused -sSL http://127.0.0.1:10080/swagger.json | jq > ./kore-api-swagger.json

@@ -8,7 +8,7 @@ import { clusterProviderIconSrcMap, inProgressStatusList } from '../../../utils/
 import ResourceStatusTag from '../../resources/ResourceStatusTag'
 import AutoRefreshComponent from '../AutoRefreshComponent'
 import { isReadOnlyCRD } from '../../../utils/crd-helpers'
-import { successMessage } from '../../../utils/message'
+import { successMessage, errorMessage } from '../../../utils/message'
 
 class Cluster extends AutoRefreshComponent {
   static propTypes = {

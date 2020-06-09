@@ -8,7 +8,7 @@ import ResourceStatusTag from '../../resources/ResourceStatusTag'
 import AutoRefreshComponent from '../AutoRefreshComponent'
 import Link from 'next/link'
 import { getKoreLabel, isReadOnlyCRD } from '../../../utils/crd-helpers'
-import { successMessage } from '../../../utils/message'
+import { successMessage, errorMessage } from '../../../utils/message'
 
 class Service extends AutoRefreshComponent {
   static propTypes = {

@@ -40,7 +40,7 @@ export function warningMessage(message, opts) {
   return showMessage('warning', message, null, opts)
 }
 
-class messageOpts {
+export class messageOpts {
   /**
    * Duration to show the message in seconds, 0 for indefinite.
    */

@@ -1,38 +1,22 @@
-const puppeteer = require('puppeteer')
 const { LoginPage } = require('./page-objects/login')
 const { IndexPage } = require('./page-objects/index')
 const { SetupKorePage } = require('./page-objects/setup-kore')
 const { SetupKoreCloudAccessPage } = require('./page-objects/setup-kore-cloud-access')
 const { SetupKoreCompletePage } = require('./page-objects/setup-kore-complete')
 
-const headless = process.env.SHOW_BROWSER !== 'true'
+const page = global.page
 
 describe('First time login and setup', () => {
-  let browser
-  let page
-  let loginPage
-  let indexPage
-  let setupKorePage
-  let setupKoreCompletePage
-  let setupKoreCloudAccessPage
+  const loginPage = new LoginPage(page)
+  const indexPage = new IndexPage(page)
+  const setupKorePage = new SetupKorePage(page)
+  const setupKoreCompletePage = new SetupKoreCompletePage(page)
+  const setupKoreCloudAccessPage = new SetupKoreCloudAccessPage(page)
 
   beforeAll(async () => {
-    console.log('creating browser')
-    browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--start-maximized'],
-      headless
-    })
-    page = await browser.newPage()
-    loginPage = new LoginPage(page)
-    indexPage = new IndexPage(page)
-    setupKorePage = new SetupKorePage(page)
-    setupKoreCompletePage = new SetupKoreCompletePage(page)
-    setupKoreCloudAccessPage = new SetupKoreCloudAccessPage(page)
   })
 
   afterAll(() => {
-    console.log('closing browser')
-    browser.close()
   })
 
   test('admin user logs in and sets up GCP cloud access', async () => {
@@ -40,12 +24,20 @@ describe('First time login and setup', () => {
     await loginPage.visitPage()
     await loginPage.localUserLogin()
 
+    // If this is re-run, we don't go back to the setup. Check the URL and exit clean if
+    // not auto-redirected to the setup page.
+    // @TODO: Reset the environment as part of every test so this is re-runnable.
+    const currUrl = await page.url()
+    if (!currUrl.endsWith(setupKorePage.pagePath)) {
+      return
+    }
+
     // kore setup page
-    setupKorePage.verifyPage()
+    setupKorePage.verifyPageURL()
     await setupKorePage.clickPrimaryButton()
 
     // cloud access setup
-    setupKoreCloudAccessPage.verifyPage()
+    setupKoreCloudAccessPage.verifyPageURL()
     await setupKoreCloudAccessPage.selectCloud('gcp')
     await setupKoreCloudAccessPage.selectKoreManagedGcpProjects()
     await setupKoreCloudAccessPage.addGcpOrganization()
@@ -56,10 +48,10 @@ describe('First time login and setup', () => {
     await setupKorePage.clickPrimaryButton()
 
     // kore setup complete
-    setupKoreCompletePage.verifyPage()
+    setupKoreCompletePage.verifyPageURL()
     await setupKoreCompletePage.clickPrimaryButton()
 
     // main dashboard
-    indexPage.verifyPage()
-  }, 60000)
+    indexPage.verifyPageURL()
+  })
 })

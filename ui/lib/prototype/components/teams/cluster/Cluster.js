@@ -7,7 +7,7 @@ import { inProgressStatusList } from '../../../../utils/ui-helpers'
 import ResourceStatusTag from '../../../../components/resources/ResourceStatusTag'
 import AutoRefreshComponent from '../../../../components/teams/AutoRefreshComponent'
 import Link from 'next/link'
-import { successMessage } from '../../../../utils/message'
+import { successMessage, errorMessage } from '../../../../utils/message'
 
 const clusterProviderIconSrcMap = {
   'GKE': '/static/images/GKE.png',

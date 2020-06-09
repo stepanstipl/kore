@@ -14,19 +14,19 @@ class CloudTabs extends React.Component {
     return (
       <Tabs activeKey={selectedKey} onChange={handleSelectCloud}>
         <Tabs.TabPane tab={
-          <span>
+          <span id="tab-gcp">
             <img src="/static/images/GCP.png" height="40px" style={{ marginRight: '10px' }}/>
             Google Cloud Platform
           </span>
         } key="GCP" />
         <Tabs.TabPane tab={
-          <span>
+          <span id="tab-aws">
             <img src="/static/images/AWS.png" height="40px" style={{ marginRight: '15px' }} />
             Amazon Web Services
           </span>
         } key="AWS" />
         <Tabs.TabPane tab={
-          <span>
+          <span id="tab-azure">
             <img src="/static/images/Azure.svg" height="25px" style={{ marginRight: '15px' }} />
             Microsoft Azure (coming soon)
           </span>

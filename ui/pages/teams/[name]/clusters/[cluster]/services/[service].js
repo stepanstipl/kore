@@ -16,7 +16,7 @@ import apiPaths from '../../../../../../lib/utils/api-paths'
 import ServiceCredential from '../../../../../../lib/components/teams/service/ServiceCredential'
 import ServiceCredentialForm from '../../../../../../lib/components/teams/service/ServiceCredentialForm'
 import { isReadOnlyCRD } from '../../../../../../lib/utils/crd-helpers'
-import { errorMessage, loadingMessage } from '../../../../lib/utils/message'
+import { errorMessage, loadingMessage } from '../../../../../../lib/utils/message'
 
 class ServicePage extends React.Component {
   static propTypes = {
