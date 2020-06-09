@@ -36,13 +36,14 @@ class ApplicationServiceForm extends React.Component {
 
   async fetchComponentData() {
     const api = await KoreApi.client()
-    const [ serviceKinds, servicePlans, namespaceClaims ] = await Promise.all([
+    let [ serviceKinds, servicePlans, namespaceClaims ] = await Promise.all([
       api.ListServiceKinds(),
       api.ListServicePlans(),
       api.ListNamespaces(this.props.team.metadata.name)
     ])
-    serviceKinds.items = serviceKinds.items.filter(sk => getKoreLabel(sk, 'platform') === 'Kubernetes' && sk.spec.enabled)
-    namespaceClaims.items = namespaceClaims.items.filter(nc => nc.spec.cluster.name === this.props.cluster.metadata.name)
+    serviceKinds = serviceKinds.items.filter(sk => getKoreLabel(sk, 'platform') === 'Kubernetes' && sk.spec.enabled)
+    servicePlans = servicePlans.items
+    namespaceClaims = namespaceClaims.items.filter(nc => nc.spec.cluster.name === this.props.cluster.metadata.name)
     return { serviceKinds, servicePlans, namespaceClaims }
   }
 
@@ -52,12 +53,15 @@ class ApplicationServiceForm extends React.Component {
     this.componentDidMountComplete = Promise.resolve().then(async () => {
       const data = await this.fetchComponentData()
       this.setState({ ...data, dataLoading: false })
+      if (data.serviceKinds && data.serviceKinds.length === 1) {
+        this.handleSelectKind(data.serviceKinds[0].metadata.name)
+      }
     })
   }
 
   generateServiceResource = (values) => {
     const cluster = this.props.cluster
-    const selectedServicePlan = this.state.servicePlans.items.find(p => p.metadata.name === values.servicePlan)
+    const selectedServicePlan = this.state.servicePlans.find(p => p.metadata.name === values.servicePlan)
 
     const serviceResource = new V1Service()
     serviceResource.setApiVersion('services.compute.kore.appvia.io/v1')
@@ -188,7 +192,7 @@ class ApplicationServiceForm extends React.Component {
 
     let filteredServicePlans = []
     if (selectedServiceKind) {
-      filteredServicePlans = this.state.servicePlans.items.filter(p => p.spec.kind === selectedServiceKind)
+      filteredServicePlans = this.state.servicePlans.filter(p => p.spec.kind === selectedServiceKind)
     }
 
     return (
@@ -206,17 +210,17 @@ class ApplicationServiceForm extends React.Component {
           <Form.Item label="Service type">
             {getFieldDecorator('serviceKind', {
               rules: [{ required: true, message: 'Please select your service type!' }],
+              initialValue: selectedServiceKind
             })(
               <Select
                 onChange={this.handleSelectKind}
                 placeholder="Choose service type"
-                showSearch
                 optionFilterProp="children"
                 filterOption={(input, option) =>
                   option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
                 }
               >
-                {serviceKinds.items.map(k => <Select.Option key={k.metadata.name} value={k.metadata.name}>{k.spec.displayName || k.metadata.name}</Select.Option>)}
+                {serviceKinds.map(k => <Select.Option key={k.metadata.name} value={k.metadata.name}>{k.spec.displayName || k.metadata.name}</Select.Option>)}
               </Select>
             )}
           </Form.Item>
@@ -248,7 +252,7 @@ class ApplicationServiceForm extends React.Component {
               rules: [{ required: !createNewNamespace, message: 'Please select the target namespace!' }]
             })(
               <Select placeholder="Choose existing namespace" disabled={createNewNamespace}>
-                {namespaceClaims.items.map(nc => <Select.Option key={nc.spec.name} value={nc.spec.name}>{nc.spec.name}</Select.Option>)}
+                {namespaceClaims.map(nc => <Select.Option key={nc.spec.name} value={nc.spec.name}>{nc.spec.name}</Select.Option>)}
               </Select>
             )}
             <Checkbox onChange={(e) => this.createNewNamespace(e.target.checked)}>Create a new namespace</Checkbox>

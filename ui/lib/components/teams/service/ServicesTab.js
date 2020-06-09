@@ -16,7 +16,7 @@ class ServicesTab extends React.Component {
   static propTypes = {
     team: PropTypes.object.isRequired,
     cluster: PropTypes.object.isRequired,
-    serviceType: PropTypes.oneOf('cloud', 'application').isRequired,
+    serviceType: PropTypes.oneOf(['cloud', 'application']).isRequired,
     getServiceCount: PropTypes.func
   }
 
