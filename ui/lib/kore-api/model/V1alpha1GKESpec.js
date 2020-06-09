@@ -39,14 +39,13 @@ class V1alpha1GKESpec {
      * @param enableStackDriverMetrics {Boolean} 
      * @param maintenanceWindow {String} 
      * @param masterIPV4Cidr {String} 
-     * @param network {String} 
      * @param releaseChannel {String} 
      * @param servicesIPV4Cidr {String} 
      * @param version {String} 
      */
-    constructor(authorizedMasterNetworks, clusterIPV4Cidr, credentials, description, enableHTTPLoadBalancer, enableHorizontalPodAutoscaler, enableIstio, enablePrivateEndpoint, enablePrivateNetwork, enableShieldedNodes, enableStackDriverLogging, enableStackDriverMetrics, maintenanceWindow, masterIPV4Cidr, network, releaseChannel, servicesIPV4Cidr, version) { 
+    constructor(authorizedMasterNetworks, clusterIPV4Cidr, credentials, description, enableHTTPLoadBalancer, enableHorizontalPodAutoscaler, enableIstio, enablePrivateEndpoint, enablePrivateNetwork, enableShieldedNodes, enableStackDriverLogging, enableStackDriverMetrics, maintenanceWindow, masterIPV4Cidr, releaseChannel, servicesIPV4Cidr, version) { 
         
-        V1alpha1GKESpec.initialize(this, authorizedMasterNetworks, clusterIPV4Cidr, credentials, description, enableHTTPLoadBalancer, enableHorizontalPodAutoscaler, enableIstio, enablePrivateEndpoint, enablePrivateNetwork, enableShieldedNodes, enableStackDriverLogging, enableStackDriverMetrics, maintenanceWindow, masterIPV4Cidr, network, releaseChannel, servicesIPV4Cidr, version);
+        V1alpha1GKESpec.initialize(this, authorizedMasterNetworks, clusterIPV4Cidr, credentials, description, enableHTTPLoadBalancer, enableHorizontalPodAutoscaler, enableIstio, enablePrivateEndpoint, enablePrivateNetwork, enableShieldedNodes, enableStackDriverLogging, enableStackDriverMetrics, maintenanceWindow, masterIPV4Cidr, releaseChannel, servicesIPV4Cidr, version);
     }
 
     /**
@@ -54,7 +53,7 @@ class V1alpha1GKESpec {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, authorizedMasterNetworks, clusterIPV4Cidr, credentials, description, enableHTTPLoadBalancer, enableHorizontalPodAutoscaler, enableIstio, enablePrivateEndpoint, enablePrivateNetwork, enableShieldedNodes, enableStackDriverLogging, enableStackDriverMetrics, maintenanceWindow, masterIPV4Cidr, network, releaseChannel, servicesIPV4Cidr, version) { 
+    static initialize(obj, authorizedMasterNetworks, clusterIPV4Cidr, credentials, description, enableHTTPLoadBalancer, enableHorizontalPodAutoscaler, enableIstio, enablePrivateEndpoint, enablePrivateNetwork, enableShieldedNodes, enableStackDriverLogging, enableStackDriverMetrics, maintenanceWindow, masterIPV4Cidr, releaseChannel, servicesIPV4Cidr, version) { 
         obj['authorizedMasterNetworks'] = authorizedMasterNetworks;
         obj['clusterIPV4Cidr'] = clusterIPV4Cidr;
         obj['credentials'] = credentials;
@@ -69,7 +68,6 @@ class V1alpha1GKESpec {
         obj['enableStackDriverMetrics'] = enableStackDriverMetrics;
         obj['maintenanceWindow'] = maintenanceWindow;
         obj['masterIPV4Cidr'] = masterIPV4Cidr;
-        obj['network'] = network;
         obj['releaseChannel'] = releaseChannel;
         obj['servicesIPV4Cidr'] = servicesIPV4Cidr;
         obj['version'] = version;

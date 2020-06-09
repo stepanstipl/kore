@@ -40,7 +40,6 @@ const GKEPlanSchema = `
 		"enableStackDriverMetrics",
 		"inheritTeamMembers",
 		"maintenanceWindow",
-		"network",
 		"region",
 		"version"
 	],
@@ -163,12 +162,6 @@ const GKEPlanSchema = `
 			"type": "string",
 			"description": "Time of day to allow maintenance operations to be performed by the cloud provider on this cluster.",
 			"format": "hh:mm",
-			"immutable": true
-		},
-		"network": {
-			"type": "string",
-			"minLength": 1,
-			"description": "The GCP network that this cluster should reside on. If specified, this network must exist.",
 			"immutable": true
 		},
 		"nodePools": {
@@ -387,6 +380,13 @@ const GKEPlanSchema = `
 			"deprecated": true,
 			"description": "DEPRECATED: Unused",
 			"type": "string"
+		},
+		"network": {
+			"deprecated": true,
+			"description": "DEPRECATED: It is not supported to specify a custom network. This property will be ignored.",
+			"type": "string",
+			"minLength": 1,
+			"immutable": true
 		}
 	},
 	"allOf": [
@@ -409,7 +409,7 @@ const GKEPlanSchema = `
 			"if": {
 				"required": [
 					"diskSize", "enableAutoupgrade", "enableAutorepair", "enableAutoscaler", 
-					"imageType", "machineType", "maxSize", "size", "network", "version"
+					"imageType", "machineType", "maxSize", "size", "version"
 				]
 			},
 			"then": {

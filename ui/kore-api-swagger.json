@@ -8108,7 +8108,6 @@
         "version",
         "releaseChannel",
         "authorizedMasterNetworks",
-        "network",
         "servicesIPV4Cidr",
         "clusterIPV4Cidr",
         "enableHorizontalPodAutoscaler",

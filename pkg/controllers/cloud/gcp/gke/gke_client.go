@@ -664,9 +664,11 @@ func (g *gkeClient) CreateDefinition() (*container.CreateClusterRequest, error) 
 			},
 		},
 
-		BinaryAuthorization:     &container.BinaryAuthorization{Enabled: false},
-		LegacyAbac:              &container.LegacyAbac{Enabled: false},
-		Network:                 cluster.Spec.Network,
+		BinaryAuthorization: &container.BinaryAuthorization{Enabled: false},
+		LegacyAbac:          &container.LegacyAbac{Enabled: false},
+		// Deprecated setting network to non-default values until we support creating networks
+		// Network:               cluster.Spec.Network,
+		Network:                 "default",
 		NetworkPolicy:           &container.NetworkPolicy{Enabled: true, Provider: "CALICO"},
 		PodSecurityPolicyConfig: &container.PodSecurityPolicyConfig{Enabled: true},
 		Locations:               locations,

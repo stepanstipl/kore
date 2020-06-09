@@ -5529,9 +5529,9 @@ spec:
               format: int64
               type: integer
             network:
-              description: Network is the GCP network the cluster reside on, which
-                have to be unique within the GCP project and created beforehand.
-              minLength: 1
+              description: 'DEPRECATED: Not used - now projects are created automatically,
+                always use default. Network is the GCP network the cluster reside
+                on, which have to be unique within the GCP project and created beforehand.'
               type: string
             nodePools:
               description: NodePools is the set of node pools for this cluster. Required
@@ -5672,7 +5672,6 @@ spec:
           - description
           - enableShieldedNodes
           - maintenanceWindow
-          - network
           type: object
         status:
           description: GKEStatus defines the observed state of GKE

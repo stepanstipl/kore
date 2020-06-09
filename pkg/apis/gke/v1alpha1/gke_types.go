@@ -53,11 +53,6 @@ type GKESpec struct {
 	// +kubebuilder:validation:Optional
 	// +listType=set
 	AuthorizedMasterNetworks []*AuthorizedNetwork `json:"authorizedMasterNetworks"`
-	// Network is the GCP network the cluster reside on, which have
-	// to be unique within the GCP project and created beforehand.
-	// +kubebuilder:validation:MinLength=1
-	// +kubebuilder:validation:Required
-	Network string `json:"network"`
 	// ServicesIPV4Cidr is an optional network cidr configured for the cluster
 	// services
 	// +kubebuilder:validation:Optional
@@ -154,6 +149,10 @@ type GKESpec struct {
 	// auto repair is enabled
 	// +kubebuilder:validation:Optional
 	EnableAutorepair bool `json:"enableAutorepair,omitempty"`
+	// DEPRECATED: Not used - now projects are created automatically, always use default.
+	// Network is the GCP network the cluster reside on, which have to be unique within the GCP project and created beforehand.
+	// +kubebuilder:validation:Optional
+	Network string `json:"network,omitempty"`
 }
 
 // AuthorizedNetwork provides a definition for the authorized networks

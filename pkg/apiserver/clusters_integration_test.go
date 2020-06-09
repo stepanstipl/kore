@@ -63,7 +63,6 @@ var _ = Describe("/clusters", func() {
 			"enableStackDriverMetrics":      true,
 			"inheritTeamMembers":            true,
 			"maintenanceWindow":             "03:00",
-			"network":                       "default",
 			"region":                        "europe-west2",
 			"releaseChannel":                "",
 			"version":                       "1.14.10-gke.24",
