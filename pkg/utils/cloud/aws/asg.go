@@ -21,16 +21,47 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/autoscaling"
 )
 
-type asgDetails struct {
-	Name string
-	ID   string
-	ARN  arn.ARN
+// ASGClient allows interactioin with AWS ASG apis
+type ASGClient struct {
+	// session is the AWS session
+	session *session.Session
+	// svc is the iam service
+	svc *autoscaling.AutoScaling
 }
 
-func getASGDetailsFromArn(asgARN string) (*asgDetails, error) {
-	a := &asgDetails{}
+// NewASGClient will create a new ASGClient
+func NewASGClient(session *session.Session) *ASGClient {
+	return &ASGClient{session: session, svc: autoscaling.New(session)}
+}
+
+// GetASGFromName will talk to the AWS api to get an autoscaling group ARN
+func (a *ASGClient) GetASGFromName(asgName string) (*autoscaling.Group, error) {
+	asgo, err := a.svc.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
+		AutoScalingGroupNames: []*string{
+			&asgName,
+		},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("unable to list autoscaling groups - %s", err)
+	}
+	count := len(asgo.AutoScalingGroups)
+	switch {
+	case count < 1:
+		return nil, fmt.Errorf("cannot find autoscaling group from name %s", asgName)
+	case count > 1:
+		return nil, fmt.Errorf("ambiguouse autoscaling group from name %s", asgName)
+	default:
+	}
+	return asgo.AutoScalingGroups[0], nil
+}
+
+// GetASGDetailsFromArn get the asg name and id from a ARN
+func GetASGDetailsFromArn(asgARN string) (*ASGDetails, error) {
+	a := &ASGDetails{}
 	pa, err := arn.Parse(asgARN)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing aws arn from autoscaling group arn %s - %s", asgARN, err)
@@ -42,7 +73,7 @@ func getASGDetailsFromArn(asgARN string) (*asgDetails, error) {
 	}
 	a.ID = items[1]
 	nameitems := strings.Split(items[2], "/")
-	if len(items) != 2 {
+	if len(nameitems) != 2 {
 		return nil, fmt.Errorf("cannot parse asg resource name from arn resource name field %s", items[2])
 	}
 	a.Name = nameitems[1]
