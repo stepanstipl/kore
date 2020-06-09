@@ -308,38 +308,36 @@ class ServicePage extends React.Component {
           </Drawer>
         </Card>
 
-        <Row type="flex" gutter={[16,16]} style={{ marginTop: '20px' }}>
-          <Col span={24} xl={24}>
-            <Collapse>
-              <Collapse.Panel header="Service Parameters">
-                <Form {...editServiceFormConfig} onSubmit={(e) => this.onSubmit(e)}>
-                  <FormErrorMessage message={this.state.formErrorMessage} />
-                  <Form.Item label="" colon={false}>
-                    {!this.state.editMode ? (
-                      <Button icon="edit" htmlType="button" disabled={serviceNotEditable} onClick={(e) => this.onEditClick(e)}>Edit</Button>
-                    ) : (
-                      <>
-                        <Button type="primary" icon="save" htmlType="submit" loading={this.state.saving} disabled={this.state.saving || serviceNotEditable}>Save</Button>
-                      &nbsp;
-                        <Button icon="stop" htmlType="button" onClick={(e) => this.onCancelClick(e)}>Cancel</Button>
-                      </>
-                    )}
-                  </Form.Item>
-                  <UsePlanForm
-                    team={team}
-                    resourceType="service"
-                    kind={service.spec.kind}
-                    plan={service.spec.plan}
-                    planValues={this.state.serviceParams}
-                    mode={this.state.editMode ? 'edit' : 'view'}
-                    validationErrors={this.state.validationErrors}
-                    onPlanChange={this.onServiceConfigChanged}
-                  />
-                </Form>
-              </Collapse.Panel>
-            </Collapse>
-          </Col>
-        </Row>
+        <Divider />
+
+        <Collapse>
+          <Collapse.Panel header="Service Parameters">
+            <Form {...editServiceFormConfig} onSubmit={(e) => this.onSubmit(e)}>
+              <FormErrorMessage message={this.state.formErrorMessage} />
+              <Form.Item label="" colon={false}>
+                {!this.state.editMode ? (
+                  <Button icon="edit" htmlType="button" disabled={serviceNotEditable} onClick={(e) => this.onEditClick(e)}>Edit</Button>
+                ) : (
+                  <>
+                    <Button type="primary" icon="save" htmlType="submit" loading={this.state.saving} disabled={this.state.saving || serviceNotEditable}>Save</Button>
+                  &nbsp;
+                    <Button icon="stop" htmlType="button" onClick={(e) => this.onCancelClick(e)}>Cancel</Button>
+                  </>
+                )}
+              </Form.Item>
+              <UsePlanForm
+                team={team}
+                resourceType="service"
+                kind={service.spec.kind}
+                plan={service.spec.plan}
+                planValues={this.state.serviceParams}
+                mode={this.state.editMode ? 'edit' : 'view'}
+                validationErrors={this.state.validationErrors}
+                onPlanChange={this.onServiceConfigChanged}
+              />
+            </Form>
+          </Collapse.Panel>
+        </Collapse>
 
       </div>
     )
