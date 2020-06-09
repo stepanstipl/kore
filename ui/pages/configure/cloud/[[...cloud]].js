@@ -12,8 +12,7 @@ import PolicyList from '../../../lib/components/policies/PolicyList'
 import GCPProjectAutomationSettings from '../../../lib/components/setup/GCPProjectAutomationSettings'
 import CloudTabs from '../../../lib/components/common/CloudTabs'
 import CloudServiceAdmin from '../../../lib/components/services/CloudServiceAdmin'
-import getConfig from 'next/config'
-const { publicRuntimeConfig } = getConfig()
+import { featureEnabled, KoreFeatures } from '../../../lib/utils/features'
 
 export default class ConfigureCloudPage extends React.Component {
   static propTypes = {
@@ -96,7 +95,7 @@ export default class ConfigureCloudPage extends React.Component {
             <Tabs.TabPane tab="Cluster Policies" key="policies">
               <PolicyList kind="EKS" />
             </Tabs.TabPane>
-            {!publicRuntimeConfig.featureGates['services'] ? null : 
+            {!featureEnabled(KoreFeatures.SERVICES) ? null :
               <Tabs.TabPane tab="Cloud Services" key="services">
                 <CloudServiceAdmin cloud="AWS" />
               </Tabs.TabPane>

@@ -2,9 +2,9 @@ import * as React from 'react'
 import PropTypes from 'prop-types'
 import { sortBy } from 'lodash'
 import KoreApi from '../../kore-api'
-import { Typography, List, Avatar, Alert, Tooltip, Switch, Icon, message } from 'antd'
+import { Alert, Avatar, Col, Icon, List, message, Row, Switch, Tooltip, Typography } from 'antd'
 import Link from 'next/link'
-const { Title, Text } = Typography
+const { Text, Title } = Typography
 
 export default class ServiceKindList extends React.Component {
   static propTypes = {
@@ -25,12 +25,10 @@ export default class ServiceKindList extends React.Component {
   }
 
   loadKinds = async () => {
-    const { filter } = this.props
     this.setState({ loading: true })
     let kinds = await (await KoreApi.client()).ListServiceKinds()
-    if (filter) { 
-      kinds.items = kinds.items.filter(filter)
-    }
+    // TODO: use a more general way of hiding the kore internal service kind "app", using a label or annotation
+    kinds.items = kinds.items.filter(k => k.metadata.name !== 'app')
     this.setState({
       loading: false, 
       kinds: kinds.items
@@ -89,17 +87,26 @@ export default class ServiceKindList extends React.Component {
     if (loading) {
       return <Icon type="loading" />
     }
-    if (!kinds || kinds.length === 0) {
-      return <Alert type="warning" message="No services are available to provision" />
+    let filteredKinds = kinds
+    if (this.props.filter) {
+      filteredKinds = filteredKinds.filter(this.props.filter)
+    }
+    if (!filteredKinds || filteredKinds.length === 0) {
+      return <Alert type="warning" message="No matching services can be found." />
     }
     return (
-      <>
-        <Title level={4}>Enabled Services</Title>
-        <List dataSource={kinds.filter((k) => k.spec.enabled)} renderItem={(kind) => this.renderKind(kind)} />
-        <Title level={4} style={{ marginTop: '30px' }}>Disabled Services</Title>
-        <Alert type="warning" message="These services need to be enabled before teams can consume them"/>
-        <List dataSource={kinds.filter((k) => !k.spec.enabled)} renderItem={(kind) => this.renderKind(kind)} />
-      </>
+      <Row type="flex" gutter={[24,24]}>
+        <Col span={24} xl={12}>
+          <Title level={4}>Enabled Services</Title>
+          <Alert style={{ marginBottom: '10px' }} type="info" message="These services are currently available to teams."/>
+          <List dataSource={filteredKinds.filter((k) => k.spec.enabled)} renderItem={(kind) => this.renderKind(kind)} />
+        </Col>
+        <Col span={24} xl={12}>
+          <Title level={4}>Disabled Services</Title>
+          <Alert style={{ marginBottom: '10px' }} type="warning" message="These services need to be enabled before teams can consume them."/>
+          <List dataSource={filteredKinds.filter((k) => !k.spec.enabled)} renderItem={(kind) => this.renderKind(kind)} />
+        </Col>
+      </Row>
     )
   }
 }

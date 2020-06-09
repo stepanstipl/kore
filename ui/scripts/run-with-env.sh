@@ -8,7 +8,7 @@ done
 
 export KORE_API_TOKEN=$(kubectl --context kind-kore -n kore get secret kore-api -o json | jq -r ".data.KORE_ADMIN_TOKEN" | base64 --decode)
 
-export KORE_FEATURE_GATES="services=true"
+export KORE_FEATURE_GATES="services=true,application_services=true"
 export KORE_UI_SHOW_PROTOTYPES=true
 
 exec "$@"

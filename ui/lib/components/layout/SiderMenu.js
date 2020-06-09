@@ -4,6 +4,8 @@ import { Layout, Menu, Icon } from 'antd'
 const { Sider } = Layout
 const { SubMenu } = Menu
 
+import { featureEnabled, KoreFeatures } from '../../utils/features'
+
 class SiderMenu extends React.Component {
   static propTypes = {
     hide: PropTypes.bool.isRequired,
@@ -48,12 +50,10 @@ class SiderMenu extends React.Component {
         }
       >
         {menuItem({ key: 'configure_cloud', text: 'Cloud', href: '/configure/cloud/[[...cloud]]', link: '/configure/cloud', icon: 'cloud' })}
-        {menuItem({ key: 'configure_users', text: 'Users', link: '/configure/users', icon: 'user' })}
-        {/* Removed for now - only exposing services via the cloud page at the moment
-        {!publicRuntimeConfig.featureGates['services'] ? null : 
+        {featureEnabled(KoreFeatures.APPLICATION_SERVICES) ? null :
           menuItem({ key: 'configure_services', text: 'Services', link: '/configure/services', icon: 'cloud-server' })
-        } 
-        */}
+        }
+        {menuItem({ key: 'configure_users', text: 'Users', link: '/configure/users', icon: 'user' })}
       </SubMenu>
     ) : null
 

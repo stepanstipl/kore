@@ -3,8 +3,6 @@ import PropTypes from 'prop-types'
 import moment from 'moment'
 import { Divider, Typography, Collapse, Icon, Row, Col, List, Button, Form, Card, Badge, message, Drawer, Tooltip } from 'antd'
 const { Paragraph, Text } = Typography
-import getConfig from 'next/config'
-const { publicRuntimeConfig } = getConfig()
 
 import KoreApi from '../../../../lib/kore-api'
 import Breadcrumb from '../../../../lib/components/layout/Breadcrumb'
@@ -13,6 +11,7 @@ import ComponentStatusTree from '../../../../lib/components/common/ComponentStat
 import ResourceStatusTag from '../../../../lib/components/resources/ResourceStatusTag'
 import { clusterProviderIconSrcMap } from '../../../../lib/utils/ui-helpers'
 import copy from '../../../../lib/utils/object-copy'
+import { featureEnabled, KoreFeatures } from '../../../../lib/utils/features'
 import FormErrorMessage from '../../../../lib/components/forms/FormErrorMessage'
 import { inProgressStatusList } from '../../../../lib/utils/ui-helpers'
 import apiPaths from '../../../../lib/utils/api-paths'
@@ -66,10 +65,8 @@ class ClusterPage extends React.Component {
     return { team, cluster }
   }
 
-  servicesEnabled = () => Boolean(publicRuntimeConfig.featureGates['services'])
-
   fetchCommonData = async () => {
-    if (this.servicesEnabled()) {
+    if (featureEnabled(KoreFeatures.SERVICES)) {
       const serviceKinds = await (await KoreApi.client()).ListServiceKinds()
       return { serviceKinds: serviceKinds.items }
     }
@@ -81,13 +78,13 @@ class ClusterPage extends React.Component {
     const api = await KoreApi.client()
     let [ namespaceClaims, serviceCredentials ] = await Promise.all([
       api.ListNamespaces(team),
-      this.servicesEnabled() ? api.ListServiceCredentials(team, this.state.cluster.metadata.name) : Promise.resolve({ items: [] }),
+      featureEnabled(KoreFeatures.SERVICES) ? api.ListServiceCredentials(team, this.state.cluster.metadata.name) : Promise.resolve({ items: [] }),
     ])
     namespaceClaims = namespaceClaims.items.filter(ns => ns.spec.cluster.name === this.props.cluster.metadata.name)
     serviceCredentials = serviceCredentials.items
 
     const revealBindings = {}
-    this.servicesEnabled() && namespaceClaims.filter(nc => serviceCredentials.filter(sc => sc.spec.clusterNamespace === nc.spec.name).length > 0).forEach(nc => revealBindings[nc.spec.name] = true)
+    featureEnabled(KoreFeatures.SERVICES) && namespaceClaims.filter(nc => serviceCredentials.filter(sc => sc.spec.clusterNamespace === nc.spec.name).length > 0).forEach(nc => revealBindings[nc.spec.name] = true)
 
     return { namespaceClaims, serviceCredentials, revealBindings }
   }
@@ -106,7 +103,7 @@ class ClusterPage extends React.Component {
     this.fetchCommonData().then(data => {
       this.setState({ ...data })
       this.fetchNamespacesData().then(data => this.setState({ ...data }))
-      if (this.servicesEnabled()) {
+      if (featureEnabled(KoreFeatures.APPLICATION_SERVICES)) {
         this.fetchApplicationServicesData().then(data => this.setState({ ...data }))
       }
     })
@@ -345,7 +342,7 @@ class ClusterPage extends React.Component {
               <List.Item.Meta
                 className="large-list-item"
                 avatar={<img src={clusterProviderIconSrcMap[cluster.spec.kind]} />}
-                title={cluster.metadata.name}
+                title={<Text style={{ marginTop: '15px', display: 'block' }}>{cluster.metadata.name}</Text>}
                 description={
                   <div>
                     <Text type='secondary'>Created {created}</Text>
@@ -392,7 +389,7 @@ class ClusterPage extends React.Component {
                   propsResourceDataKey="namespaceClaim"
                   resourceApiPath={`/teams/${team.metadata.name}/namespaceclaims/${namespaceClaim.metadata.name}`}
                 />
-                {!namespaceClaim.deleted && this.servicesEnabled() && (
+                {!namespaceClaim.deleted && featureEnabled(KoreFeatures.SERVICES) && (
                   <>
                     <Collapse onChange={this.revealBindings(namespaceClaim.spec.name)} activeKey={this.state.revealBindings[namespaceClaim.spec.name] ? ['bindings'] : []}>
                       <Collapse.Panel
@@ -452,7 +449,7 @@ class ClusterPage extends React.Component {
             <NamespaceClaimForm team={team.metadata.name} cluster={cluster} handleSubmit={this.handleNamespaceCreated} handleCancel={this.createNamespace(false)}/>
           </Drawer>
 
-          {this.servicesEnabled() && (
+          {featureEnabled(KoreFeatures.SERVICES) && (
             <Drawer
               title="Create service access"
               placement="right"
@@ -476,7 +473,7 @@ class ClusterPage extends React.Component {
 
         </Card>
 
-        {this.servicesEnabled() && (
+        {featureEnabled(KoreFeatures.APPLICATION_SERVICES) && (
           <>
             <Card
               title={this.getCardTitle('Application services', applicationServices)}
