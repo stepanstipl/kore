@@ -17,6 +17,8 @@
 package serviceproviders
 
 import (
+	"strings"
+
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/kore"
 
@@ -28,6 +30,40 @@ import (
 func init() {
 	kore.RegisterServiceProviderFactory(DummyFactory{})
 }
+
+const dummySchema = `{
+	"$id": "https://appvia.io/schemas/services/dummy/dummy.json",
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"description": "Dummy service plan schema",
+	"type": "object",
+	"additionalProperties": false,
+	"required": [
+		"foo"
+	],
+	"properties": {
+		"foo": {
+			"type": "string",
+			"minLength": 1
+		}
+	}
+}`
+
+const dummyCredentialSchema = `{
+	"$id": "https://appvia.io/schemas/services/dummy/dummy-credentials.json",
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"description": "Dummy service plan credentials schema",
+	"type": "object",
+	"additionalProperties": false,
+	"required": [
+		"bar"
+	],
+	"properties": {
+		"bar": {
+			"type": "string",
+			"minLength": 1
+		}
+	}
+}`
 
 type DummyFactory struct{}
 
@@ -88,79 +124,132 @@ func (d Dummy) Catalog(_ kore.Context, _ *servicesv1.ServiceProvider) (kore.Serv
 }
 
 func (d Dummy) kinds() []servicesv1.ServiceKind {
-	return []servicesv1.ServiceKind{
-		{
+	var serviceKinds []servicesv1.ServiceKind
+
+	for _, platform := range []string{"AWS", "GCP", "Azure", "Kubernetes"} {
+		serviceKinds = append(serviceKinds, servicesv1.ServiceKind{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       servicesv1.ServiceKindGVK.Kind,
 				APIVersion: servicesv1.GroupVersion.String(),
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "dummy",
+				Name:      "dummy-" + strings.ToLower(platform),
 				Namespace: kore.HubNamespace,
 				Labels: map[string]string{
-					kore.Label("platform"): "Kore",
+					kore.Label("platform"): platform,
 				},
 			},
 			Spec: servicesv1.ServiceKindSpec{
-				DisplayName: "Dummy",
-				Summary:     "Dummy service used for testing",
-				Enabled:     true,
+				DisplayName:          platform + " Dummy",
+				Summary:              platform + " dummy service kind used for testing",
+				Enabled:              true,
+				ServiceAccessEnabled: true,
+				Schema:               dummySchema,
+				CredentialSchema:     dummyCredentialSchema,
 			},
-		},
+		})
+
+		serviceKinds = append(serviceKinds, servicesv1.ServiceKind{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       servicesv1.ServiceKindGVK.Kind,
+				APIVersion: servicesv1.GroupVersion.String(),
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "dummy-" + strings.ToLower(platform) + "-no-schema",
+				Namespace: kore.HubNamespace,
+				Labels: map[string]string{
+					kore.Label("platform"): platform,
+				},
+			},
+			Spec: servicesv1.ServiceKindSpec{
+				DisplayName:          platform + " Dummy (no schema)",
+				Summary:              platform + " dummy service kind used for testing",
+				Enabled:              true,
+				ServiceAccessEnabled: true,
+			},
+		})
+
+		serviceKinds = append(serviceKinds, servicesv1.ServiceKind{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       servicesv1.ServiceKindGVK.Kind,
+				APIVersion: servicesv1.GroupVersion.String(),
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "dummy-" + strings.ToLower(platform) + "-no-creds-schema",
+				Namespace: kore.HubNamespace,
+				Labels: map[string]string{
+					kore.Label("platform"): platform,
+				},
+			},
+			Spec: servicesv1.ServiceKindSpec{
+				DisplayName:          platform + " Dummy (no creds schema)",
+				Summary:              platform + " dummy service kind used for testing",
+				Enabled:              true,
+				ServiceAccessEnabled: true,
+				Schema:               dummySchema,
+			},
+		})
+
+		serviceKinds = append(serviceKinds, servicesv1.ServiceKind{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       servicesv1.ServiceKindGVK.Kind,
+				APIVersion: servicesv1.GroupVersion.String(),
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "dummy-" + strings.ToLower(platform) + "-no-access",
+				Namespace: kore.HubNamespace,
+				Labels: map[string]string{
+					kore.Label("platform"): platform,
+				},
+			},
+			Spec: servicesv1.ServiceKindSpec{
+				DisplayName:          platform + " Dummy (no access)",
+				Summary:              platform + " dummy service kind used for testing",
+				Enabled:              true,
+				ServiceAccessEnabled: false,
+				Schema:               dummySchema,
+			},
+		})
 	}
+
+	return serviceKinds
 }
 
 func (d Dummy) plans() []servicesv1.ServicePlan {
-	return []servicesv1.ServicePlan{
-		{
+	var servicePlans []servicesv1.ServicePlan
+
+	for _, serviceKind := range d.kinds() {
+		servicePlan := servicesv1.ServicePlan{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       "ServicePlan",
 				APIVersion: servicesv1.GroupVersion.String(),
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "dummy-default",
+				Name:      serviceKind.Name + "-default",
 				Namespace: "kore",
 			},
 			Spec: servicesv1.ServicePlanSpec{
-				Kind:          "dummy",
-				Description:   "Used for testing",
-				Summary:       "This is a default dummy service plan",
-				Configuration: &v1beta1.JSON{Raw: []byte(`{"foo":"bar"}`)},
-				Schema: `{
-					"$id": "https://appvia.io/schemas/services/dummy/dummy.json",
-					"$schema": "http://json-schema.org/draft-07/schema#",
-					"description": "Dummy service plan schema",
-					"type": "object",
-					"additionalProperties": false,
-					"required": [
-						"foo"
-					],
-					"properties": {
-						"foo": {
-							"type": "string",
-							"minLength": 1
-						}
-					}
-				}`,
-				CredentialSchema: `{
-					"$id": "https://appvia.io/schemas/services/dummy/dummy-credentials.json",
-					"$schema": "http://json-schema.org/draft-07/schema#",
-					"description": "Dummy service plan credentials schema",
-					"type": "object",
-					"additionalProperties": false,
-					"required": [
-						"bar"
-					],
-					"properties": {
-						"bar": {
-							"type": "string",
-							"minLength": 1
-						}
-					}
-				}`,
+				Kind:        serviceKind.Name,
+				DisplayName: "Default",
+				Summary:     serviceKind.Labels[kore.Label("platform")] + " dummy service plan used for testing",
+				Description: "Testing, testing, 1, 2, 3",
 			},
-		},
+		}
+		if serviceKind.Spec.Schema != "" {
+			servicePlan.Spec.Configuration = &v1beta1.JSON{Raw: []byte(`{"foo":"bar"}`)}
+		}
+		servicePlans = append(servicePlans, servicePlan)
+
+		if serviceKind.Spec.ServiceAccessEnabled {
+			servicePlanNoAccess := servicePlan.DeepCopy()
+			servicePlanNoAccess.Name = serviceKind.Name + "-no-service-access"
+			servicePlanNoAccess.Spec.DisplayName = "No service access"
+			servicePlanNoAccess.Spec.ServiceAccessDisabled = true
+			servicePlans = append(servicePlans, *servicePlanNoAccess)
+		}
 	}
+
+	return servicePlans
 }
 
 func (d Dummy) AdminServices() []servicesv1.Service {
