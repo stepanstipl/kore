@@ -76,6 +76,7 @@ func (p *serviceKindsHandler) Register(i kore.Interface, builder utils.PathBuild
 	ws.Route(
 		withAllErrors(ws.PUT("/{name}")).To(p.updateServiceKind).
 			Filter(filters.Admin).
+			Filter(p.readOnlyServiceKindFilter).
 			Doc("Creates or updates a service kind").
 			Operation("UpdateServiceKind").
 			Param(ws.PathParameter("name", "The name of the service kind you wish to create or update")).
@@ -94,6 +95,26 @@ func (p *serviceKindsHandler) Register(i kore.Interface, builder utils.PathBuild
 	)
 
 	return ws, nil
+}
+
+func (p serviceKindsHandler) readOnlyServiceKindFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
+	handleErrors(req, resp, func() error {
+		name := req.PathParameter("name")
+
+		serviceKind, err := p.ServiceKinds().Get(req.Request.Context(), name)
+		if err != nil && err != kore.ErrNotFound {
+			return err
+		}
+
+		if serviceKind != nil && serviceKind.Annotations[kore.AnnotationReadOnly] == "true" {
+			resp.WriteHeader(http.StatusForbidden)
+			return nil
+		}
+
+		// @step: continue with the chain
+		chain.ProcessFilter(req, resp)
+		return nil
+	})
 }
 
 // getServiceKind returns a specific service kind
