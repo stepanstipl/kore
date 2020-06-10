@@ -72,6 +72,10 @@ type EKSNodeGroupSpec struct {
 	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html
 	// +kubebuilder:validation:Required
 	EC2SSHKey string `json:"eC2SSHKey"`
+	// EnableAutoscaler indicates if the node pool should be configured with
+	// autoscaling turned on
+	// +kubebuilder:validation:Optional
+	EnableAutoscaler bool `json:"enableAutoscaler"`
 	// Credentials is a reference to an AWSCredentials object to use for authentication
 	// +kubebuilder:validation:Required
 	// +k8s:openapi-gen=false
