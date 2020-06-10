@@ -416,8 +416,15 @@ func schema_pkg_apis_eks_v1alpha1_EKSNodeGroupSpec(ref common.ReferenceCallback)
 							Format:      "",
 						},
 					},
+					"enableAutoscaler": {
+						SchemaProps: spec.SchemaProps{
+							Description: "EnableAutoscaler indicates if the node pool should be configured with autoscaling turned on",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
 				},
-				Required: []string{"amiType", "diskSize", "desiredSize", "maxSize", "minSize", "subnets", "region", "eC2SSHKey"},
+				Required: []string{"amiType", "diskSize", "desiredSize", "maxSize", "minSize", "subnets", "region", "eC2SSHKey", "enableAutoscaler"},
 			},
 		},
 		Dependencies: []string{
