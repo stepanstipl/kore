@@ -42,6 +42,7 @@ info "deploying the ingress controller to ${ENVIRONMENT} environment"
 
 cat <<EOF > values.yaml
 api:
+  enable_profiling: true
   ingress:
     annotations:
       kubernetes.io/ingress.class: nginx
