@@ -1,10 +1,11 @@
 import PropTypes from 'prop-types'
 import moment from 'moment'
-import { List, Avatar, Icon, Typography, message, Tooltip } from 'antd'
+import { List, Avatar, Icon, Typography, Tooltip } from 'antd'
 const { Text } = Typography
 
 import ResourceVerificationStatus from '../resources/ResourceVerificationStatus'
 import AutoRefreshComponent from '../teams/AutoRefreshComponent'
+import { successMessage, errorMessage } from '../../utils/message'
 
 class EKSCredentials extends AutoRefreshComponent {
   static propTypes = {
@@ -25,10 +26,10 @@ class EKSCredentials extends AutoRefreshComponent {
     const { eksCredentials } = this.props
     const { status } = eksCredentials
     if (status.status === 'Success') {
-      return message.success(`AWS credentials for account "${eksCredentials.spec.accountID}" verified successfully`)
+      return successMessage(`AWS credentials for account "${eksCredentials.spec.accountID}" verified successfully`)
     }
     if (status.status === 'Failure') {
-      return message.error(`AWS credentials for account "${eksCredentials.spec.accountID}" could not be verified`)
+      return errorMessage(`AWS credentials for account "${eksCredentials.spec.accountID}" could not be verified`)
     }
   }
 

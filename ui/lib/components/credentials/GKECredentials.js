@@ -1,10 +1,11 @@
 import PropTypes from 'prop-types'
 import moment from 'moment'
-import { List, Avatar, Icon, Typography, message, Tooltip } from 'antd'
+import { List, Avatar, Icon, Typography, Tooltip } from 'antd'
 const { Text } = Typography
 
 import ResourceVerificationStatus from '../resources/ResourceVerificationStatus'
 import AutoRefreshComponent from '../teams/AutoRefreshComponent'
+import { successMessage, errorMessage } from '../../utils/message'
 
 class GKECredentials extends AutoRefreshComponent {
   static propTypes = {
@@ -25,15 +26,15 @@ class GKECredentials extends AutoRefreshComponent {
     const { gkeCredentials } = this.props
     const { status } = gkeCredentials
     if (status.status === 'Success') {
-      return message.success(`GCP credentials for project "${gkeCredentials.spec.project}" verified successfully`)
+      return successMessage(`GCP credentials for project "${gkeCredentials.spec.project}" verified successfully`)
     }
     if (status.status === 'Failure') {
-      return message.error(`GCP credentials for project "${gkeCredentials.spec.project}" could not be verified`)
+      return errorMessage(`GCP credentials for project "${gkeCredentials.spec.project}" could not be verified`)
     }
   }
 
   render() {
-    const { gkeCredentials, editGKECredential, allTeams } = this.props
+    const { gkeCredentials, editGKECredential, deleteGKECredential, allTeams } = this.props
     const created = moment(gkeCredentials.metadata.creationTimestamp).fromNow()
 
     const displayAllocations = () => {
@@ -45,9 +46,10 @@ class GKECredentials extends AutoRefreshComponent {
     }
 
     return (
-      <List.Item key={gkeCredentials.metadata.name} actions={[
+      <List.Item id={`gkecreds_${gkeCredentials.metadata.name}`} key={gkeCredentials.metadata.name} actions={[
         <ResourceVerificationStatus key="verification_status" resourceStatus={gkeCredentials.status} />,
-        <Text key="show_creds"><a onClick={editGKECredential(gkeCredentials)}><Icon type="edit" theme="filled"/> Edit</a></Text>
+        <Text key="delete_creds"><a id={`gkecreds_del_${gkeCredentials.metadata.name}`} onClick={deleteGKECredential(gkeCredentials)}><Icon type="delete" theme="filled"/> Delete</a></Text>,
+        <Text key="show_creds"><a id={`gkecreds_edit_${gkeCredentials.metadata.name}`} onClick={editGKECredential(gkeCredentials)}><Icon type="edit" theme="filled"/> Edit</a></Text>
       ]}>
         <List.Item.Meta
           avatar={<Avatar icon="project" />}

@@ -1,11 +1,12 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Alert, Button, Card, Col, Icon, List, message, Modal, Popover, Row, Typography } from 'antd'
+import { Alert, Button, Card, Col, Icon, List, Modal, Popover, Row, Typography } from 'antd'
 const { Paragraph, Text, Title } = Typography
 
 import PlanViewer from '../plans/PlanViewer'
 import IconTooltip from '../utils/IconTooltip'
 import DataField from '../utils/DataField'
+import { successMessage } from '../../utils/message'
 
 class GCPAutomatedProjectList extends React.Component {
 
@@ -36,7 +37,7 @@ class GCPAutomatedProjectList extends React.Component {
     const project = this.props.automatedProjectList.find(p => p.code === projectCode)
     project.plans.push(plan)
     this.props.handleChange(projectCode, 'plans')(project.plans)
-    message.success('Plan associated')
+    successMessage('Plan associated')
   }
 
   closeAssociatePlans = () => this.setState({ associatePlanVisible: false })
@@ -69,7 +70,7 @@ class GCPAutomatedProjectList extends React.Component {
     const project = this.props.automatedProjectList.find(p => p.code === projectCode)
     const updatedPlans = project.plans.filter(p => p !== plan)
     this.props.handleChange(projectCode, 'plans')(updatedPlans)
-    message.success('Plan unassociated')
+    successMessage('Plan unassociated')
   }
 
   automatedProjectContent = ({ project }) => (

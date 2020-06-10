@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import Link from 'next/link'
-import { Typography, Button, Card, List, Row, Col, Icon, Alert, message, Select, Tooltip } from 'antd'
+import { Typography, Button, Card, List, Row, Col, Icon, Alert, Select, Tooltip } from 'antd'
 const { Title, Paragraph, Text } = Typography
 
 import NewTeamForm from '../../lib/components/forms/NewTeamForm'
@@ -11,6 +11,7 @@ import Breadcrumb from '../../lib/components/layout/Breadcrumb'
 import copy from '../../lib/utils/object-copy'
 import asyncForEach from '../../lib/utils/async-foreach'
 import KoreApi from '../../lib/kore-api'
+import { successMessage, errorMessage } from '../../lib/utils/message'
 
 class NewTeamPage extends React.Component {
   static propTypes = {
@@ -64,7 +65,7 @@ class NewTeamPage extends React.Component {
 
     await asyncForEach(this.state.membersToAdd, async member => {
       await api.AddTeamMember(team, member)
-      message.success(`Team member added: ${member}`)
+      successMessage(`Team member added: ${member}`)
       members.push(member)
     })
 
@@ -86,10 +87,10 @@ class NewTeamPage extends React.Component {
         const state = copy(this.state)
         state.members = state.members.filter(m => m !== member)
         this.setState(state)
-        message.success(`Team member removed: ${member}`)
+        successMessage(`Team member removed: ${member}`)
       } catch (err) {
         console.error('Error removing team member', err)
-        message.error('Error removing team member, please try again.')
+        errorMessage('Error removing team member, please try again.')
       }
     }
   }

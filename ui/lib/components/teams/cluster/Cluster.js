@@ -1,13 +1,14 @@
 import PropTypes from 'prop-types'
 import moment from 'moment'
 import Link from 'next/link'
-import { List, Icon, Typography, Modal, Popconfirm, message, Tag, Tooltip } from 'antd'
+import { List, Icon, Typography, Modal, Popconfirm, Tag, Tooltip } from 'antd'
 const { Text, Paragraph } = Typography
 
 import { clusterProviderIconSrcMap, inProgressStatusList } from '../../../utils/ui-helpers'
 import ResourceStatusTag from '../../resources/ResourceStatusTag'
 import AutoRefreshComponent from '../AutoRefreshComponent'
 import { isReadOnlyCRD } from '../../../utils/crd-helpers'
+import { successMessage } from '../../../utils/message'
 
 class Cluster extends AutoRefreshComponent {
   static propTypes = {
@@ -22,13 +23,13 @@ class Cluster extends AutoRefreshComponent {
     const { cluster } = this.props
     const { status, deleted } = cluster
     if (deleted) {
-      return message.success(`Cluster successfully deleted: ${cluster.metadata.name}`)
+      return successMessage(`Cluster successfully deleted: ${cluster.metadata.name}`)
     }
     if (status.status === 'Success') {
-      return message.success(`Cluster successfully created: ${cluster.metadata.name}`)
+      return successMessage(`Cluster successfully created: ${cluster.metadata.name}`)
     }
     if (status.status === 'Failure') {
-      return message.error(`Cluster failed to create: ${cluster.metadata.name}`)
+      return errorMessage(`Cluster failed to create: ${cluster.metadata.name}`)
     }
   }
 

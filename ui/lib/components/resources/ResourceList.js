@@ -1,6 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { message } from 'antd'
+import { successMessage } from '../../utils/message'
 
 class ResourceList extends React.Component {
 
@@ -43,12 +43,12 @@ class ResourceList extends React.Component {
 
   handleStatusUpdated = (updatedResource, done) => {
     this.setState((state) => {
-      this.setState({
+      return {
         resources: {
           ...state.resources,
           items: state.resources.items.map((r) => r.metadata.name !== updatedResource.metadata.name ? r : { ...r, status: updatedResource.status })
         }
-      })
+      }
     }, done)
   }
 
@@ -58,39 +58,40 @@ class ResourceList extends React.Component {
 
   handleEditSave = (updated) => {
     const editedName = this.state.edit.metadata.name
-    this.setState({
-      ...this.state,
-      edit: false,
-      resources: {
-        items: this.state.resources.items.map(resource => {
-          if (resource.metadata.name === editedName) {
-            return {
-              ...resource,
-              spec: updated.spec,
-              allocation: updated.allocation,
-              status: {
-                ...resource.status, status: 'Pending'
-              },
-              ...updated.append
+    this.setState((state) => {
+      return {
+        edit: false,
+        resources: {
+          items: state.resources.items.map(resource => {
+            if (resource.metadata.name === editedName) {
+              return {
+                ...resource,
+                spec: updated.spec,
+                allocation: updated.allocation,
+                status: {
+                  ...resource.status, status: 'Pending'
+                },
+                ...updated.append
+              }
             }
-          }
-          return resource
-        })
+            return resource
+          })
+        }
       }
     })
-    message.success(this.updatedMessage)
+    successMessage(this.updatedMessage)
   }
 
   handleAddSave = async (created) => {
+    const newItems = this.state.resources.items.concat([ created ])
     this.setState({
-      ...this.state,
       add: false,
       resources: {
-        items: this.state.resources.items.concat([ created ])
+        items: newItems
       }
     })
-    this.props.getResourceItemList && this.props.getResourceItemList(this.state.resources.items)
-    message.success(this.createdMessage)
+    this.props.getResourceItemList && this.props.getResourceItemList(newItems)
+    successMessage(this.createdMessage)
   }
 }
 

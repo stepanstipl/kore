@@ -109,7 +109,7 @@ class GKECredentialsForm extends VerifiedAllocatedResourceForm {
             rules: [{ required: true, message: 'Please enter your project name!' }],
             initialValue: data && data.spec.project
           })(
-            <Input placeholder="Project" />,
+            <Input placeholder="Project" name="project" />,
           )}
         </Form.Item>
 
@@ -121,7 +121,7 @@ class GKECredentialsForm extends VerifiedAllocatedResourceForm {
               style={{ marginTop: '10px' }}
             />
             <Form.Item label="Replace key">
-              <Checkbox onChange={(e) => this.setState({ replaceKey: e.target.checked })}></Checkbox>
+              <Checkbox id="gke_credentials_replace_key" onChange={(e) => this.setState({ replaceKey: e.target.checked })}></Checkbox>
             </Form.Item>
           </>
         ) : null}
@@ -132,7 +132,7 @@ class GKECredentialsForm extends VerifiedAllocatedResourceForm {
               {form.getFieldDecorator('account', {
                 rules: [{ required: true, message: 'Please enter your Service Account key!' }]
               })(
-                <Input.TextArea autoSize={{ minRows: 4, maxRows: 10  }} placeholder="Service Account JSON" />,
+                <Input.TextArea name="service_account_json" autoSize={{ minRows: 4, maxRows: 10  }} placeholder="Service Account JSON" />,
               )}
             </Form.Item>
           </>

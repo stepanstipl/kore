@@ -3,8 +3,9 @@ import PropTypes from 'prop-types'
 import canonical from '../../utils/canonical'
 import copy from '../../utils/object-copy'
 import Team from '../../crd/Team'
-import { Button, Form, Input, Alert, message, Typography } from 'antd'
+import { Button, Form, Input, Alert, Typography } from 'antd'
 import KoreApi from '../../kore-api'
+import { successMessage } from '../../utils/message'
 
 const { Paragraph, Text } = Typography
 
@@ -68,7 +69,7 @@ class NewTeamForm extends React.Component {
           const state = copy(this.state)
           state.submitting = false
           this.setState(state)
-          message.success('Team created')
+          successMessage('Team created')
         } else {
           const state = copy(this.state)
           state.submitting = false

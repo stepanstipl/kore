@@ -28,6 +28,7 @@ import ServiceCredential from '../service/ServiceCredential'
 import apiPaths from '../../../utils/api-paths'
 import NamespaceClaimForm from './NamespaceClaimForm'
 import ServiceCredentialForm from '../../../../lib/components/teams/service/ServiceCredentialForm'
+import { loadingMessage, errorMessage } from '../../../utils/message'
 
 class NamespacesTab extends React.Component {
 
@@ -130,13 +131,13 @@ class NamespacesTab extends React.Component {
         revealBindings
       }
     })
-    message.loading(`Service access with secret name "${serviceCredential.spec.secretName}" requested`)
+    loadingMessage(`Service access with secret name "${serviceCredential.spec.secretName}" requested`)
   }
 
   deleteNamespace = async (name, done) => {
     const team = this.props.team.metadata.name
     try {
-      message.loading(`Namespace deletion requested: ${name}`)
+      loadingMessage(`Namespace deletion requested: ${name}`)
       await (await KoreApi.client()).RemoveNamespace(team, name)
       this.setState((state) => {
         const namespaceClaims = copy(state.namespaceClaims)
@@ -147,7 +148,7 @@ class NamespacesTab extends React.Component {
       }, done)
     } catch (err) {
       console.error('Error deleting namespace', err)
-      message.error('Error deleting namespace, please try again.')
+      errorMessage('Error deleting namespace, please try again.')
     }
   }
 
@@ -186,10 +187,10 @@ class NamespacesTab extends React.Component {
         }
       }, done)
 
-      message.loading('Deletion of service access requested')
+      loadingMessage('Deletion of service access requested')
     } catch (err) {
       console.error('Error deleting service access', err)
-      message.error('Error deleting service access, please try again.')
+      errorMessage('Error deleting service access, please try again.')
     }
   }
 

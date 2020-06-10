@@ -1,12 +1,13 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
-import { message, Typography, Form, Card, Alert, Button, Input } from 'antd'
+import { Typography, Form, Card, Alert, Button, Input } from 'antd'
 const { Paragraph, Text } = Typography
 
 import canonical from '../../../utils/canonical'
 import ResourceVerificationStatus from '../../../components/resources/ResourceVerificationStatus'
 import FormErrorMessage from '../../../components/forms/FormErrorMessage'
 import AllocationHelpers from '../../../utils/allocation-helpers'
+import { successMessage, loadingMessage, errorMessage } from '../../../utils/message'
 
 class VerifiedAllocatedResourceForm extends React.Component {
   static propTypes = {
@@ -64,10 +65,10 @@ class VerifiedAllocatedResourceForm extends React.Component {
     const messageKey = 'verify'
     tryCount = tryCount || 0
     if (tryCount === 0) {
-      message.loading({ content: 'Verifying credentials', key: messageKey, duration: 0 })
+      loadingMessage('Verifying credentials', { key: messageKey, duration: 0 })
     }
     if (tryCount === 3) {
-      message.error({ content: 'Credentials verification failed', key: messageKey })
+      errorMessage('Credentials verification failed', { key: messageKey })
       this.setState({
         ...this.state,
         inlineVerificationFailed: true,
@@ -89,7 +90,7 @@ class VerifiedAllocatedResourceForm extends React.Component {
       setTimeout(async () => {
         const resourceResult = await this.getResource(resource.metadata.name)
         if (resourceResult.status.status === 'Success') {
-          message.success({ content: 'Credentials verification successful', key: messageKey })
+          successMessage({ content: 'Credentials verification successful', key: messageKey })
           return await this.props.handleSubmit(resourceResult)
         }
         return await this.verify(resourceResult, tryCount + 1)

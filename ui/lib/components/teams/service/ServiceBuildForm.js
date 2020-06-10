@@ -1,6 +1,6 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
-import { Alert, Button, Card, Checkbox, Col, Collapse, Form, Icon, Input, message, Row, Typography, Select } from 'antd'
+import { Alert, Button, Card, Checkbox, Col, Collapse, Form, Icon, Input, Row, Typography, Select } from 'antd'
 const { Paragraph, Text } = Typography
 const { Panel } = Collapse
 
@@ -16,6 +16,7 @@ import V1ServiceCredentials from '../../../kore-api/model/V1ServiceCredentials'
 import V1ServiceCredentialsSpec from '../../../kore-api/model/V1ServiceCredentialsSpec'
 import { NewV1ObjectMeta, NewV1Ownership } from '../../../utils/model'
 import { getKoreLabel } from '../../../utils/crd-helpers'
+import { errorMessage, loadingMessage } from '../../../utils/message'
 
 class ServiceBuildForm extends React.Component {
   static propTypes = {
@@ -199,7 +200,7 @@ class ServiceBuildForm extends React.Component {
       try {
         const api = await KoreApi.client()
         const service = await api.UpdateService(this.props.team.metadata.name, values.serviceName, this.getServiceResource(values))
-        message.loading('Service build requested...')
+        loadingMessage('Service build requested...')
 
         if (this.state.bindingsToCreate.length > 0) {
           await asyncForEach(this.state.bindingsToCreate, async (bindingNamespace) => {
@@ -210,10 +211,10 @@ class ServiceBuildForm extends React.Component {
               const credentialName = `${cluster.metadata.name}-${namespaceClaim.spec.name}-${secretName}`
               const resource = this.getServiceCredentialsResource(credentialName, secretName, service, cluster, namespaceClaim)
               await api.UpdateServiceCredentials(this.props.team.metadata.name, credentialName, resource)
-              message.loading(`Service access for namespace "${namespaceClaim.spec.name}" requested...`)
+              loadingMessage(`Service access for namespace "${namespaceClaim.spec.name}" requested...`)
             } catch (error) {
               console.error('Error creating service binding', error)
-              message.error(`Failed to create service access for namespace "${namespaceClaim.spec.name}"`)
+              errorMessage(`Failed to create service access for namespace "${namespaceClaim.spec.name}"`)
             }
           })
         }

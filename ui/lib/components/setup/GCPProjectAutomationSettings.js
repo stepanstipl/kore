@@ -1,5 +1,5 @@
 import React from 'react'
-import { Alert, Button, Icon, message, Modal, Radio, Typography } from 'antd'
+import { Alert, Button, Icon, Modal, Radio, Typography } from 'antd'
 const { Paragraph, Text } = Typography
 import getConfig from 'next/config'
 const { publicRuntimeConfig } = getConfig()
@@ -18,6 +18,7 @@ import KoreApi from '../../kore-api'
 import canonical from '../../utils/canonical'
 import copy from '../../utils/object-copy'
 import asyncForEach from '../../utils/async-foreach'
+import { successMessage } from '../../utils/message'
 
 class GCPProjectAutomationSettings extends React.Component {
   state = {
@@ -133,16 +134,16 @@ class GCPProjectAutomationSettings extends React.Component {
             accountManagement: false,
             gcpProjectList: []
           })
-          message.success('Project automation settings saved')
+          successMessage('Project automation settings saved')
         } catch (err) {
           console.error('Error saving project automation settings', err)
-          message.success('Failed to save project automation settings')
+          successMessage('Failed to save project automation settings')
           this.setState({ submitting: false, errorMessage: 'A problem occurred trying to save, please try again later.' })
         }
         return
       } else {
         this.setState({ submitting: false })
-        message.success('Project automation settings saved')
+        successMessage('Project automation settings saved')
         return
       }
     }
@@ -157,10 +158,10 @@ class GCPProjectAutomationSettings extends React.Component {
         await AllocationHelpers.storeAllocation({ resourceToAllocate: accountMgtResource })
         this.setState({ submitting: false, accountManagement: accountMgtResource })
       })
-      message.success('Project automation settings saved')
+      successMessage('Project automation settings saved')
     } catch (error) {
       console.error('Error saving project automation settings', error)
-      message.success('Failed to save project automation settings')
+      successMessage('Failed to save project automation settings')
       this.setState({ submitting: false, errorMessage: 'A problem occurred trying to save, please try again later.' })
     }
   }
@@ -172,7 +173,7 @@ class GCPProjectAutomationSettings extends React.Component {
     this.setState({
       gcpProjectList: this.state.gcpProjectList.concat([{ code, plans: [], ...project }]),
     })
-    message.success('GCP automated project added')
+    successMessage('GCP automated project added')
   }
 
   handleGcpProjectDeleted = (code) => {
@@ -180,7 +181,7 @@ class GCPProjectAutomationSettings extends React.Component {
       this.setState({
         gcpProjectList: this.state.gcpProjectList.filter(p => p.code !== code)
       })
-      message.success('GCP automated project removed')
+      successMessage('GCP automated project removed')
     }
   }
 

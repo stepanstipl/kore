@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { List, Alert, Icon, Drawer, Typography, Button, Modal, message } from 'antd'
+import { List, Alert, Icon, Drawer, Typography, Button, Modal } from 'antd'
 const { Title, Text } = Typography
 
 import PlanItem from './PlanItem'
@@ -8,6 +8,7 @@ import ResourceList from '../resources/ResourceList'
 import PlanViewer from './PlanViewer'
 import KoreApi from '../../kore-api'
 import AllocationHelpers from '../../utils/allocation-helpers'
+import { successMessage, errorMessage, loadingMessage } from '../../utils/message'
 
 class PlanList extends ResourceList {
 
@@ -79,9 +80,16 @@ class PlanList extends ResourceList {
       okType: 'danger',
       cancelText: 'No',
       onOk: async () => {
-        await AllocationHelpers.removeAllocation(plan)
-        await (await KoreApi.client()).RemovePlan(plan.metadata.name)
-        message.success(`Plan ${plan.spec.description} deleted`)
+        const key = loadingMessage(`Deleting allocations for plan ${plan.spec.description}`, { duration: 0 })
+        try {
+          await AllocationHelpers.removeAllocation(plan)
+          loadingMessage(`Deleting plan ${plan.spec.description}`, { key, duration: 0 })
+          await (await KoreApi.client()).RemovePlan(plan.metadata.name)
+          successMessage(`${plan.spec.description} plan deleted`, { key })
+        } catch (err) {
+          console.error(err)
+          errorMessage(`Error deleting plan ${plan.spec.description}`, { key })
+        }
         await this.refresh()
       }
     })
@@ -89,6 +97,19 @@ class PlanList extends ResourceList {
 
   render() {
     const { resources, view, edit, add } = this.state
+    const drawerVisible = Boolean(view || edit || add)
+    let drawerTitle = null
+    let drawerClose = () => {}
+    if (view) {
+      drawerTitle = <><Title level={4}>{view.spec.summary}</Title><Text>{view.spec.description}</Text></>
+      drawerClose = this.view(false)
+    } else if (edit) {
+      drawerTitle = <><Title level={4}>{edit.spec.summary}</Title><Text>{edit.spec.description}</Text></>
+      drawerClose = this.edit(false)
+    } else if (add) {
+      drawerTitle = <Title level={4}>New {this.props.kind} plan</Title>
+      drawerClose = this.add(false)
+    }
 
     return (
       <>
@@ -100,60 +121,45 @@ class PlanList extends ResourceList {
           style={{ marginBottom: '20px' }}
         />
         <Button type="primary" onClick={this.add(true)} style={{ display: 'block', marginBottom: '20px' }}>+ New</Button>
+
+        <Drawer
+          title={drawerTitle}
+          visible={drawerVisible}
+          onClose={drawerClose}
+          width={900}>
+          {!view ? null : 
+            <PlanViewer
+              plan={view}
+              resourceType="cluster"
+              displayUnassociatedPlanWarning={this.unassociatedPlanWarning(view)}
+            />
+          }
+          {!edit ? null :
+            <ManageClusterPlanForm
+              mode="edit"
+              kind={this.props.kind}
+              data={edit}
+              handleSubmit={(args) => this.handleEditSave(args)}
+              displayUnassociatedPlanWarning={this.unassociatedPlanWarning(edit)}
+            />
+          }
+          {!add ? null : 
+            <ManageClusterPlanForm
+              mode="create"
+              kind={this.props.kind}
+              handleSubmit={(args) => this.handleAddSave(args)}
+            />
+          }
+        </Drawer>
+
         {!resources ? <Icon type="loading" /> : (
           <>
             <List
+              id="gkeplans_list"
               dataSource={resources.items}
               renderItem={plan => <PlanItem plan={plan} viewPlan={this.view} editPlan={this.edit} deletePlan={this.delete} displayUnassociatedPlanWarning={this.unassociatedPlanWarning(plan)} /> }
             >
             </List>
-
-            {view ? (
-              <Drawer
-                title={<><Title level={4}>{view.spec.summary}</Title><Text>{view.spec.description}</Text></>}
-                visible={Boolean(view)}
-                onClose={this.view(false)}
-                width={900}
-              >
-                <PlanViewer
-                  plan={view}
-                  resourceType="cluster"
-                  displayUnassociatedPlanWarning={this.unassociatedPlanWarning(view)}
-                />
-              </Drawer>
-            ) : null}
-
-            {edit ? (
-              <Drawer
-                title={<><Title level={4}>{edit.spec.summary}</Title><Text>{edit.spec.description}</Text></>}
-                visible={Boolean(edit)}
-                onClose={this.edit(false)}
-                width={900}
-              >
-                <ManageClusterPlanForm
-                  mode="edit"
-                  kind={this.props.kind}
-                  data={edit}
-                  handleSubmit={(args) => this.handleEditSave(args)}
-                  displayUnassociatedPlanWarning={this.unassociatedPlanWarning(edit)}
-                />
-              </Drawer>
-            ) : null}
-
-            {add ? (
-              <Drawer
-                title={<Title level={4}>New {this.props.kind} plan</Title>}
-                visible={add}
-                onClose={this.add(false)}
-                width={900}
-              >
-                <ManageClusterPlanForm
-                  mode="create"
-                  kind={this.props.kind}
-                  handleSubmit={(args) => this.handleAddSave(args)}
-                />
-              </Drawer>
-            ) : null}
           </>
         )}
       </>

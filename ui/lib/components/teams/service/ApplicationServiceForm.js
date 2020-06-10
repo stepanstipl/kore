@@ -1,6 +1,6 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
-import { Alert, Button, Card, Checkbox, Form, Icon, Input, message, Select } from 'antd'
+import { Alert, Button, Card, Checkbox, Form, Icon, Input, Select } from 'antd'
 
 import ServiceOptionsForm from '../../services/ServiceOptionsForm'
 import FormErrorMessage from '../../forms/FormErrorMessage'
@@ -9,6 +9,7 @@ import V1ServiceSpec from '../../../kore-api/model/V1ServiceSpec'
 import V1Service from '../../../kore-api/model/V1Service'
 import { NewV1ObjectMeta, NewV1Ownership } from '../../../utils/model'
 import { getKoreLabel } from '../../../utils/crd-helpers'
+import { errorMessage, loadingMessage } from '../../../../utils/message'
 
 class ApplicationServiceForm extends React.Component {
   static propTypes = {
@@ -107,14 +108,14 @@ class ApplicationServiceForm extends React.Component {
 
     this.validatedFormsFields(async (err, values) => {
       if (err) {
-        message.error('Validation failed')
+        errorMessage('Validation failed')
         this.setState({ submitting: false, formErrorMessage: 'Validation failed' })
         return
       }
       try {
         const existing = await (await KoreApi.client()).GetService(this.props.team.metadata.name, values.serviceName)
         if (existing) {
-          message.error('Validation failed')
+          errorMessage('Validation failed')
           return this.setState({
             submitting: false,
             formErrorMessage: `A service with the name "${values.serviceName}" already exists in this team.`
@@ -122,12 +123,12 @@ class ApplicationServiceForm extends React.Component {
         }
 
         const service = await (await KoreApi.client()).UpdateService(this.props.team.metadata.name, values.serviceName, this.generateServiceResource(values))
-        message.loading('Application service requested...')
+        loadingMessage('Application service requested...')
 
         return this.props.handleSubmit(service)
       } catch (err) {
         console.error('Error saving application service', err)
-        message.error('Error requesting application service, please try again.')
+        errorMessage('Error requesting application service, please try again.')
         this.setState({
           submitting: false,
           formErrorMessage: (err.fieldErrors && err.message) ? err.message : 'An error occurred requesting the application service, please try again',

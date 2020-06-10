@@ -2,8 +2,9 @@ import * as React from 'react'
 import PropTypes from 'prop-types'
 import { sortBy } from 'lodash'
 import KoreApi from '../../kore-api'
-import { Alert, Avatar, Col, Icon, List, message, Row, Switch, Tooltip, Typography } from 'antd'
+import { Alert, Avatar, Col, Icon, List, Row, Switch, Tooltip, Typography } from 'antd'
 import Link from 'next/link'
+import { successMessage } from '../../utils/message'
 const { Text, Title } = Typography
 import { featureEnabled, KoreFeatures } from '../../utils/features'
 import { isReadOnlyCRD } from '../../utils/crd-helpers'
@@ -50,9 +51,9 @@ export default class ServiceKindList extends React.Component {
       this.setState({
         kinds: sortBy(this.state.kinds.filter(k => k.metadata.name !== kind.metadata.name).concat([ serviceKindResult ]), k => k.spec.displayName.toLowerCase())
       })
-      message.success(`${enabled ? 'Enabled' : 'Disabled'} service "${kind.spec.displayName}"`)
+      successMessage(`${enabled ? 'Enabled' : 'Disabled'} service "${kind.spec.displayName}"`)
     } catch (error) {
-      message.error(`Failed to ${enabled ? 'enable' : 'disable'} service "${kind.spec.displayName}", please try again.`)
+      errorMessage(`Failed to ${enabled ? 'enable' : 'disable'} service "${kind.spec.displayName}", please try again.`)
     }
   }
 

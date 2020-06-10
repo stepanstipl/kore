@@ -1,7 +1,7 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
 import Router from 'next/router'
-import { Button, Form, message } from 'antd'
+import { Button, Form } from 'antd'
 
 import redirect from '../../../utils/redirect'
 import CloudSelector from '../../common/CloudSelector'
@@ -13,6 +13,7 @@ import V1ClusterSpec from '../../../kore-api/model/V1ClusterSpec'
 import V1Cluster from '../../../kore-api/model/V1Cluster'
 import V1ObjectMeta from '../../../kore-api/model/V1ObjectMeta'
 import getConfig from 'next/config'
+import { loadingMessage } from '../../../utils/message'
 const { publicRuntimeConfig } = getConfig()
 
 class ClusterBuildForm extends React.Component {
@@ -132,7 +133,7 @@ class ClusterBuildForm extends React.Component {
           values.clusterName,
           this.getClusterResource(values)
         )
-        message.loading('Cluster build requested...')
+        loadingMessage('Cluster build requested...')
         return redirect({
           router: Router,
           path: `/teams/${this.props.team.metadata.name}/clusters/${values.clusterName}`

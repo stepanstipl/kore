@@ -1,5 +1,5 @@
 import React from 'react'
-import { Alert, Card, Typography, Tooltip, Icon, Row, Col, Button, Form, Input, Radio, List, Drawer, Popover, Modal, message } from 'antd'
+import { Alert, Card, Typography, Tooltip, Icon, Row, Col, Button, Form, Input, Radio, List, Drawer, Popover, Modal } from 'antd'
 const { Title, Text, Paragraph } = Typography
 
 import KoreApi from '../../../kore-api'
@@ -56,7 +56,7 @@ class ProjectAutomationSettings extends React.Component {
       this.setState({
         gcpProjectList: this.state.gcpProjectList.filter(p => p.code !== code)
       })
-      message.success('GCP automated project removed')
+      successMessage('GCP automated project removed')
     }
   }
 
@@ -88,7 +88,7 @@ class ProjectAutomationSettings extends React.Component {
       const gcpProjectList = copy(this.state.gcpProjectList)
       gcpProjectList.find(p => p.code === projectCode).plans.push(plan)
       this.setState({ gcpProjectList })
-      message.success('Plan associated')
+      successMessage('Plan associated')
     }
   }
 
@@ -124,7 +124,7 @@ class ProjectAutomationSettings extends React.Component {
       const project = gcpProjectList.find(p => p.code === projectCode)
       project.plans = project.plans.filter(p => p !== plan)
       this.setState({ gcpProjectList })
-      message.success('Plan unassociated')
+      successMessage('Plan unassociated')
     }
   }
 
@@ -138,7 +138,7 @@ class ProjectAutomationSettings extends React.Component {
       gcpProjectList: this.state.gcpProjectList.concat([{ code, plans: [], ...project }]),
       addProject: false
     })
-    message.success('GCP automated project added')
+    successMessage('GCP automated project added')
   }
 
   infoModal = ({ title, content }) => {

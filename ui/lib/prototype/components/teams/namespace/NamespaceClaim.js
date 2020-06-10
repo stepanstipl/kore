@@ -1,10 +1,11 @@
 import PropTypes from 'prop-types'
 import moment from 'moment'
-import { List, Avatar, Icon, Typography, Popconfirm, message } from 'antd'
+import { List, Avatar, Icon, Typography, Popconfirm } from 'antd'
 const { Text } = Typography
 
 import ResourceStatusTag from '../../../../components/resources/ResourceStatusTag'
 import AutoRefreshComponent from '../../../../components/teams/AutoRefreshComponent'
+import { successMessage, errorMessage } from '../../../../utils/message'
 
 class NamespaceClaim extends AutoRefreshComponent {
   static propTypes = {
@@ -17,13 +18,13 @@ class NamespaceClaim extends AutoRefreshComponent {
     const { namespaceClaim } = this.props
     const { spec, status, deleted } = namespaceClaim
     if (deleted) {
-      return message.success(`Namespace "${spec.name}" successfully deleted`)
+      return successMessage(`Namespace "${spec.name}" successfully deleted`)
     }
     if (status.status === 'Success') {
-      return message.success(`Namespace "${spec.name}" created on cluster "${spec.cluster.name}"`)
+      return successMessage(`Namespace "${spec.name}" created on cluster "${spec.cluster.name}"`)
     }
     if (status.status === 'Failure') {
-      return message.error(`Namespace "${spec.name}" failed to create on cluster "${spec.cluster.name}"`)
+      return errorMessage(`Namespace "${spec.name}" failed to create on cluster "${spec.cluster.name}"`)
     }
   }
 
