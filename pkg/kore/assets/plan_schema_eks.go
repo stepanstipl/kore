@@ -172,6 +172,11 @@ const EKSPlanSchema = `
 						"minimum": 1,
 						"default": 10
 					},
+					"enableAutoscaler": {
+						"type": "boolean",
+						"default": true,
+						"description": "Will enable the cluster autoscaler to scale this specific nodegroup",
+					}
 					"name": {
 						"type": "string",
 						"minLength": 1
