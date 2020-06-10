@@ -54,7 +54,7 @@ class ServiceCredential extends AutoRefreshComponent {
     if (this.props.viewPerspective === 'service') {
       return (
         <>
-          <Text>Cluster: <Link href="/teams/[name]/clusters/[cluster]" as={`/teams/${this.props.team}/clusters/${serviceCredential.spec.cluster.name}`}><a style={{ textDecoration: 'underline' }}>{serviceCredential.spec.cluster.name}</a></Link></Text>
+          <Text>Cluster: <Link href="/teams/[name]/clusters/[cluster]/[tab]" as={`/teams/${this.props.team}/clusters/${serviceCredential.spec.cluster.name}/namespaces`}><a style={{ textDecoration: 'underline' }}>{serviceCredential.spec.cluster.name}</a></Link></Text>
           <Divider type="vertical" />
           <Text>namespace: <Text strong>{serviceCredential.spec.clusterNamespace}</Text></Text>
           <Divider type="vertical" />

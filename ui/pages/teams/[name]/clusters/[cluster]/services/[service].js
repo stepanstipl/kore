@@ -228,8 +228,8 @@ class ServicePage extends React.Component {
           items={[
             { text: team.spec.summary, href: '/teams/[name]', link: `/teams/${team.metadata.name}` },
             { text: 'Clusters', href: '/teams/[name]/[tab]', link: `/teams/${team.metadata.name}/clusters` },
-            { text: cluster.metadata.name, href: '/teams/[name]/clusters/[cluster]', link: `/teams/${team.metadata.name}/clusters/${cluster.metadata.name}` },
-            { text: 'Services', href: '/teams/[name]/[tab]', link: `/teams/${team.metadata.name}/services` },
+            { text: cluster.metadata.name, href: '/teams/[name]/clusters/[cluster]/[tab]', link: `/teams/${team.metadata.name}/clusters/${cluster.metadata.name}/namespaces` },
+            { text: 'Services', href: '/teams/[name]/clusters/[cluster]/[tab]', link: `/teams/${team.metadata.name}/clusters/${cluster.metadata.name}/services` },
             { text: service.metadata.name }
           ]}
         />
