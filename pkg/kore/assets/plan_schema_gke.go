@@ -65,7 +65,10 @@ const GKEPlanSchema = `
 					}
 				}
 			},
-			"minItems": 1
+			"minItems": 1,
+			"default": [
+				{ "name": "default", "cidr": "0.0.0.0/0" }
+			]
 		},
 		"authProxyAllowedIPs": {
 			"title": "Auth Proxy Allowed IP Ranges",
@@ -75,7 +78,8 @@ const GKEPlanSchema = `
 				"type": "string",
 				"format": "1.2.3.4/16"
 			},
-			"minItems": 1
+			"minItems": 1,
+			"default": [ "0.0.0.0/0" ]
 		},
 		"clusterUsers": {
 			"type": "array",
@@ -107,7 +111,8 @@ const GKEPlanSchema = `
 		"defaultTeamRole": {
 			"type": "string",
 			"description": "The default role that team members have on this cluster.",
-			"enum": [ "view", "edit", "admin", "cluster-admin" ]
+			"enum": [ "view", "edit", "admin", "cluster-admin" ],
+			"default": "view"
 		},
 		"description": {
 			"type": "string",
@@ -118,51 +123,62 @@ const GKEPlanSchema = `
 			"type": "string",
 			"description": "The domain for this cluster.",
 			"minLength": 1,
-			"immutable": true
+			"default": "default"
 		},
 		"enableDefaultTrafficBlock": {
-			"type": "boolean"
+			"type": "boolean",
+			"default": false
 		},
 		"enableHTTPLoadBalancer": {
-			"type": "boolean"
+			"type": "boolean",
+			"default": true
 		},
 		"enableHorizontalPodAutoscaler": {
 			"type": "boolean",
-			"immutable": true
+			"immutable": true,
+			"default": true
 		},
 		"enableIstio": {
 			"type": "boolean",
-			"immutable": true
+			"immutable": true,
+			"default": false
 		},
 		"enablePrivateEndpoint": {
 			"type": "boolean",
-			"immutable": true
+			"immutable": true,
+			"default": false
 		},
 		"enablePrivateNetwork": {
 			"type": "boolean",
-			"immutable": true
+			"immutable": true,
+			"default": false
 		},
 		"enableShieldedNodes": {
 			"type": "boolean",
 			"description": "Shielded nodes provide additional verifications of the node OS and VM, with enhanced rootkit and bootkit protection applied",
-			"immutable": true
+			"immutable": true,
+			"default": true
 		},
 		"enableStackDriverLogging": {
 			"type": "boolean",
-			"immutable": true
+			"immutable": true,
+			"default": true
 		},
 		"enableStackDriverMetrics": {
 			"type": "boolean",
-			"immutable": true
+			"immutable": true,
+			"default": true
 		},
 		"inheritTeamMembers": {
-			"type": "boolean"
+			"type": "boolean",
+			"default": true
 		},
 		"maintenanceWindow": {
 			"type": "string",
 			"description": "Time of day to allow maintenance operations to be performed by the cloud provider on this cluster.",
 			"format": "hh:mm",
-			"immutable": true
+			"immutable": true,
+			"default": "03:00"
 		},
 		"nodePools": {
 			"type": "array",
@@ -316,7 +332,8 @@ const GKEPlanSchema = `
 		"releaseChannel": {
 			"type": "string",
 			"description": "Follow a GKE release channel to control the auto-upgrade of your cluster - if set, auto-upgrade will be true on all node groups",
-			"enum": ["REGULAR", "STABLE", "RAPID", ""]
+			"enum": ["REGULAR", "STABLE", "RAPID", ""],
+			"default": "REGULAR"
 		},
 		"version": {
 			"type": "string",
@@ -324,7 +341,8 @@ const GKEPlanSchema = `
 			"pattern": "^($|-|latest|[0-9]+\\.[0-9]+($|\\.[0-9]+($|\\-gke\\.[0-9]+)))$",
 			"examples": [
 				"- (GKE default)", "1.15 (latest 1.15.x)", "1.15.1", "1.15.1-gke.6 (exact GKE patch version, not recommended)", "latest"
-			]
+			],
+			"default": ""
 		},
 
 		"diskSize": {

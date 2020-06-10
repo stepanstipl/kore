@@ -44,8 +44,8 @@ class GKECredentialsList extends ResourceList {
       okType: 'danger',
       cancelText: 'No',
       onOk: async () => {
+        const key = loadingMessage('Deleting allocations for credential', { duration: 0 })
         try {
-          const key = loadingMessage('Deleting allocations for credential', { duration: 0 })
           await AllocationHelpers.removeAllocation(cred)
           loadingMessage('Deleting credential', { key, duration: 0 })
           await (await KoreApi.client()).RemoveGKECredential(publicRuntimeConfig.koreAdminTeamName, cred.metadata.name)

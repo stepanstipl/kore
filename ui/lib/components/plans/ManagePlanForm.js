@@ -34,6 +34,19 @@ export default class ManagePlanForm extends React.Component {
   componentDidMountComplete = null
   componentDidMount() {
     this.componentDidMountComplete = this.fetchComponentData().then(() => {
+      if (this.props.mode === 'create' && !this.props.data) {
+        // Copy default values into the plan values as a starting point.
+        const planValues = {}
+        console.log(this.state.schema)
+        const schemaProps = this.state.schema.properties
+        Object.keys(schemaProps).forEach((prop) => {
+          if (schemaProps[prop].default !== undefined) {
+            console.log('defaulting property', prop, schemaProps[prop].default)
+            planValues[prop] = schemaProps[prop].default
+          }
+        })
+        this.setState({ planValues })
+      }
       // To disabled submit button at the beginning.
       this.props.form.validateFields()
     })
