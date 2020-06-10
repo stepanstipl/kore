@@ -45,7 +45,7 @@ class ServiceCredential extends AutoRefreshComponent {
       return (
         <>
           {serviceKind && <><Tag style={{ margin: 0 }}>{serviceKind.spec.displayName}</Tag><Divider type="vertical" /></>}
-          <Link href="/teams/[name]/services/[service]" as={`/teams/${this.props.team}/services/${serviceCredential.spec.service.name}`}><a style={{ textDecoration: 'underline' }}>{serviceCredential.spec.service.name}</a></Link>
+          <Link href="/teams/[name]/clusters/[cluster]/services/[service]" as={`/teams/${this.props.team}/clusters/${this.props.cluster.metadata.name}/services/${serviceCredential.spec.service.name}`}><a style={{ textDecoration: 'underline' }}>{serviceCredential.spec.service.name}</a></Link>
           <Divider type="vertical" />
           <Text>Secret name: <Text copyable style={{ fontWeight: 'normal', fontStyle: 'italic' }}>{serviceCredential.spec.secretName}</Text><ServiceCredentialSnippet serviceCredential={serviceCredential} /></Text>
         </>

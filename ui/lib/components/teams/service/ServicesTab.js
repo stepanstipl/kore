@@ -213,6 +213,7 @@ class ServicesTab extends React.Component {
                 <React.Fragment key={service.metadata.name}>
                   <Service
                     team={team.metadata.name}
+                    cluster={cluster}
                     service={service}
                     serviceKind={serviceKinds.find(sk => sk.metadata.name === service.spec.kind)}
                     deleteService={this.deleteServiceConfirm}

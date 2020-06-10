@@ -311,6 +311,7 @@ class NamespacesTab extends React.Component {
                               <ServiceCredential
                                 viewPerspective="cluster"
                                 team={team.metadata.name}
+                                cluster={cluster}
                                 serviceCredential={serviceCredential}
                                 serviceKind={serviceKinds.find(kind => kind.metadata.name === serviceCredential.spec.kind)}
                                 deleteServiceCredential={this.deleteServiceCredential}

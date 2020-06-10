@@ -4,21 +4,22 @@ import moment from 'moment'
 import { Typography, Collapse, Icon, Row, Col, List, Button, Form, Divider, Card, Badge, message, Drawer, Tag } from 'antd'
 const { Text } = Typography
 
-import KoreApi from '../../../../lib/kore-api'
-import Breadcrumb from '../../../../lib/components/layout/Breadcrumb'
-import UsePlanForm from '../../../../lib/components/plans/UsePlanForm'
-import ComponentStatusTree from '../../../../lib/components/common/ComponentStatusTree'
-import ResourceStatusTag from '../../../../lib/components/resources/ResourceStatusTag'
-import copy from '../../../../lib/utils/object-copy'
-import FormErrorMessage from '../../../../lib/components/forms/FormErrorMessage'
-import { inProgressStatusList } from '../../../../lib/utils/ui-helpers'
-import apiPaths from '../../../../lib/utils/api-paths'
-import ServiceCredential from '../../../../lib/components/teams/service/ServiceCredential'
-import ServiceCredentialForm from '../../../../lib/components/teams/service/ServiceCredentialForm'
+import KoreApi from '../../../../../../lib/kore-api/index'
+import Breadcrumb from '../../../../../../lib/components/layout/Breadcrumb'
+import UsePlanForm from '../../../../../../lib/components/plans/UsePlanForm'
+import ComponentStatusTree from '../../../../../../lib/components/common/ComponentStatusTree'
+import ResourceStatusTag from '../../../../../../lib/components/resources/ResourceStatusTag'
+import copy from '../../../../../../lib/utils/object-copy'
+import FormErrorMessage from '../../../../../../lib/components/forms/FormErrorMessage'
+import { inProgressStatusList } from '../../../../../../lib/utils/ui-helpers'
+import apiPaths from '../../../../../../lib/utils/api-paths'
+import ServiceCredential from '../../../../../../lib/components/teams/service/ServiceCredential'
+import ServiceCredentialForm from '../../../../../../lib/components/teams/service/ServiceCredentialForm'
 
 class ServicePage extends React.Component {
   static propTypes = {
     team: PropTypes.object.isRequired,
+    cluster: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
     service: PropTypes.object.isRequired,
     serviceKind: PropTypes.object.isRequired,
@@ -40,8 +41,9 @@ class ServicePage extends React.Component {
 
   static getInitialProps = async (ctx) => {
     const api = await KoreApi.client(ctx)
-    let [ team, service, serviceKinds ] = await Promise.all([
+    let [ team, cluster, service, serviceKinds ] = await Promise.all([
       api.GetTeam(ctx.query.name),
+      api.GetCluster(ctx.query.name, ctx.query.cluster),
       api.GetService(ctx.query.name, ctx.query.service),
       api.ListServiceKinds()
     ])
@@ -52,7 +54,7 @@ class ServicePage extends React.Component {
     }
     const serviceKind = serviceKinds.items.find(sk => sk.metadata.name === service.spec.kind)
 
-    return { team, service, serviceKind }
+    return { team, cluster, service, serviceKind }
   }
 
   fetchComponentData = async () => {
@@ -208,7 +210,7 @@ class ServicePage extends React.Component {
   }
 
   render = () => {
-    const { team, user, serviceKind } = this.props
+    const { team, cluster, user, serviceKind } = this.props
     const { service, serviceCredentials, createServiceCredential } = this.state
     const created = moment(service.metadata.creationTimestamp).fromNow()
     const deleted = service.metadata.deletionTimestamp ? moment(service.metadata.deletionTimestamp).fromNow() : false
@@ -225,6 +227,8 @@ class ServicePage extends React.Component {
         <Breadcrumb
           items={[
             { text: team.spec.summary, href: '/teams/[name]', link: `/teams/${team.metadata.name}` },
+            { text: 'Clusters', href: '/teams/[name]/[tab]', link: `/teams/${team.metadata.name}/clusters` },
+            { text: cluster.metadata.name, href: '/teams/[name]/clusters/[cluster]', link: `/teams/${team.metadata.name}/clusters/${cluster.metadata.name}` },
             { text: 'Services', href: '/teams/[name]/[tab]', link: `/teams/${team.metadata.name}/services` },
             { text: service.metadata.name }
           ]}
