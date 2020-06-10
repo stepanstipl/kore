@@ -291,7 +291,6 @@ func (i *IamClient) EnsureRole(ctx context.Context, name string, policies []stri
 	}
 
 	for _, x := range policies {
-		fmt.Printf("checking for policy %s - ", x)
 		found := func() bool {
 			for _, j := range lresp.AttachedPolicies {
 				if aws.StringValue(j.PolicyArn) == x {
@@ -303,7 +302,6 @@ func (i *IamClient) EnsureRole(ctx context.Context, name string, policies []stri
 		}()
 
 		if !found {
-			fmt.Printf("attaching policy %s to %s - ", x, *role.RoleName)
 			_, err := i.svc.AttachRolePolicyWithContext(ctx, &iam.AttachRolePolicyInput{
 				PolicyArn: aws.String(x),
 				RoleName:  role.RoleName,
