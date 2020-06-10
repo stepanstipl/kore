@@ -59,6 +59,9 @@ func (p Provider) Catalog(ctx kore.Context, provider *servicesv1.ServiceProvider
 					Labels: map[string]string{
 						kore.Label("platform"): "Kubernetes",
 					},
+					Annotations: map[string]string{
+						kore.AnnotationSystem: kore.AnnotationValueTrue,
+					},
 				},
 				Spec: servicesv1.ServiceKindSpec{
 					DisplayName:          "Kubernetes Application",

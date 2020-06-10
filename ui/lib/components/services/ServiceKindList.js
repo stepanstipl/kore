@@ -5,6 +5,7 @@ import KoreApi from '../../kore-api'
 import { Alert, Avatar, Col, Icon, List, message, Row, Switch, Tooltip, Typography } from 'antd'
 import Link from 'next/link'
 const { Text, Title } = Typography
+import { featureEnabled, KoreFeatures } from '../../utils/features'
 
 export default class ServiceKindList extends React.Component {
   static propTypes = {
@@ -27,10 +28,14 @@ export default class ServiceKindList extends React.Component {
   loadKinds = async () => {
     this.setState({ loading: true })
     let kinds = await (await KoreApi.client()).ListServiceKinds()
-    // TODO: use a more general way of hiding the kore internal service kind "app", using a label or annotation
-    kinds.items = kinds.items.filter(k => k.metadata.name !== 'app')
+    kinds.items = kinds.items.filter(k => !k.metadata.annotations || k.metadata.annotations['kore.appvia.io/system'] !== 'true')
+
+    if (!featureEnabled(KoreFeatures.APPLICATION_SERVICES)) {
+      kinds.items = kinds.items.filter(k => !k.metadata.labels || k.metadata.labels['kore.appvia.io/platform'] !== 'Kubernetes')
+    }
+
     this.setState({
-      loading: false, 
+      loading: false,
       kinds: kinds.items
     })
   }
@@ -50,7 +55,7 @@ export default class ServiceKindList extends React.Component {
 
   renderKind = (kind) => {
     const actions = []
-    
+
     if (kind.spec.enabled) {
       actions.push(
         <Text key="manage">
@@ -74,9 +79,9 @@ export default class ServiceKindList extends React.Component {
     const avatar = kind.spec.imageURL ? <Avatar src={kind.spec.imageURL} /> : <Avatar icon="cloud-server" />
     return (
       <List.Item key={kind.metadata.name} actions={actions}>
-        <List.Item.Meta 
-          avatar={avatar} 
-          title={kind.spec.displayName} 
+        <List.Item.Meta
+          avatar={avatar}
+          title={kind.spec.displayName}
           description={kind.spec.description} />
       </List.Item>
     )

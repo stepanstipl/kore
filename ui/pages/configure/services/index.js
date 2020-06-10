@@ -28,8 +28,8 @@ export default class ServiceIndexPage extends React.Component {
     return (
       <>
         <Breadcrumb items={[{ text: 'Configure' }, { text: 'Services' }]}/>
-        <Alert 
-          type="info" 
+        <Alert
+          type="info"
           message="Services"
           description="Enabling services allows teams to provision additional resources, either from cloud providers or directly into their clusters. Each service type can be enabled or disabled, and selecting 'Manage' allows control over the plans for a specific service."
           style={{ marginBottom: '20px' }}
