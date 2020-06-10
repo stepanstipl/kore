@@ -20,7 +20,8 @@ import (
 type V1ServiceSpec struct {
 
 	// cluster
-	Cluster *V1Ownership `json:"cluster,omitempty"`
+	// Required: true
+	Cluster *V1Ownership `json:"cluster"`
 
 	// cluster namespace
 	ClusterNamespace string `json:"clusterNamespace,omitempty"`
@@ -68,8 +69,8 @@ func (m *V1ServiceSpec) Validate(formats strfmt.Registry) error {
 
 func (m *V1ServiceSpec) validateCluster(formats strfmt.Registry) error {
 
-	if swag.IsZero(m.Cluster) { // not required
-		return nil
+	if err := validate.Required("cluster", "body", m.Cluster); err != nil {
+		return err
 	}
 
 	if m.Cluster != nil {

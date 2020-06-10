@@ -54,13 +54,9 @@ class ServiceBuildForm extends React.Component {
       api.ListClusters(this.props.team.metadata.name),
       api.ListNamespaces(this.props.team.metadata.name)
     ])
+    const { cluster } = this.props
     const bindingsData = {}
-    namespaceClaims.items.forEach((ns) => {
-      const cluster = clusters.items.find(c => c.metadata.name === ns.spec.cluster.name)
-      // In case a namespace claim exists without a cluster, no-op if no cluster exists:
-      if (!cluster) {
-        return
-      }
+    namespaceClaims.items.filter(nc => nc.spec.cluster.name === cluster.metadata.name).forEach((ns) => {
       if (bindingsData[cluster.metadata.name]) {
         bindingsData[cluster.metadata.name].children.push({ title: ns.spec.name, value: ns.metadata.name })
       } else {

@@ -20,6 +20,9 @@ import (
 	"regexp"
 	"time"
 
+	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
+
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/cmd/errors"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
@@ -69,6 +72,10 @@ type CreateServiceOptions struct {
 	Team string
 	// PlanParams is a collection of service plan configuration overrides
 	PlanParams []string
+	// Cluster is the name of the cluster this service belongs to
+	Cluster string
+	// Namespace is the target namespace in the cluster
+	Namespace string
 	// NoWait indicates if we should wait for a service to provision
 	NoWait bool
 	// ShowTime indicate we should show the build time
@@ -91,12 +98,15 @@ func NewCmdCreateService(factory cmdutil.Factory) *cobra.Command {
 
 	flags := command.Flags()
 	flags.StringVarP(&o.Plan, "plan", "p", "", "plan which this service will be templated from `NAME`")
+	flags.StringVarP(&o.Cluster, "cluster", "c", "", "cluster which this service belongs to `CLUSTER_NAME`")
+	flags.StringVarP(&o.Namespace, "namespace", "n", "", "target namespace in the cluster `NAMESPACE`")
 	flags.StringVarP(&o.Description, "description", "d", "", "a short description for the service `DESCRIPTION`")
 	flags.StringArrayVar(&o.PlanParams, "param", []string{}, "a series of key value pairs used to override plan parameters  `KEY=VALUE`")
 	flags.BoolVarP(&o.ShowTime, "show-time", "T", false, "shows the time it took to successfully provision a new service `BOOL`")
 	flags.BoolVar(&o.DryRun, "dry-run", false, "shows the resource but does not apply or create (defaults: false)")
 
 	cmdutil.MustMarkFlagRequired(command, "plan")
+	cmdutil.MustMarkFlagRequired(command, "cluster")
 
 	cmdutil.MustRegisterFlagCompletionFunc(command, "plan", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.ShellCompDirective) {
 		suggestions, err := o.Resources().LookupResourceNames("serviceplan", "")
@@ -197,9 +207,17 @@ func (o *CreateServiceOptions) CreateService() (*servicesv1.Service, error) {
 			Namespace: o.Team,
 		},
 		Spec: servicesv1.ServiceSpec{
-			Kind:          plan.Spec.Kind,
-			Plan:          plan.Name,
-			Configuration: &apiexts.JSON{Raw: []byte(configJSON)},
+			Kind: plan.Spec.Kind,
+			Plan: plan.Name,
+			Cluster: corev1.Ownership{
+				Group:     clustersv1.GroupVersion.Group,
+				Version:   clustersv1.GroupVersion.Version,
+				Kind:      "Cluster",
+				Namespace: o.Team,
+				Name:      o.Cluster,
+			},
+			ClusterNamespace: o.Namespace,
+			Configuration:    &apiexts.JSON{Raw: []byte(configJSON)},
 		},
 	}
 

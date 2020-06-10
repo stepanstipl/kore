@@ -7404,6 +7404,7 @@ spec:
               minLength: 1
               type: string
           required:
+          - cluster
           - kind
           - plan
           type: object

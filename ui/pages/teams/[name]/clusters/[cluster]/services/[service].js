@@ -308,6 +308,7 @@ class ServicePage extends React.Component {
                     team={team}
                     creationSource="service"
                     services={[service]}
+                    clusters={[cluster]}
                     handleSubmit={this.handleServiceCredentialCreated}
                     handleCancel={this.createServiceCredential(false)}
                   />

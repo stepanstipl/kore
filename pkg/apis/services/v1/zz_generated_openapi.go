@@ -723,7 +723,7 @@ func schema_pkg_apis_services_v1_ServiceSpec(ref common.ReferenceCallback) commo
 						},
 					},
 				},
-				Required: []string{"kind", "plan"},
+				Required: []string{"kind", "plan", "cluster"},
 			},
 		},
 		Dependencies: []string{

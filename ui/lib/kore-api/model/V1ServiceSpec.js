@@ -24,12 +24,13 @@ class V1ServiceSpec {
     /**
      * Constructs a new <code>V1ServiceSpec</code>.
      * @alias module:model/V1ServiceSpec
+     * @param cluster {module:model/V1Ownership} 
      * @param kind {String} 
      * @param plan {String} 
      */
-    constructor(kind, plan) { 
+    constructor(cluster, kind, plan) { 
         
-        V1ServiceSpec.initialize(this, kind, plan);
+        V1ServiceSpec.initialize(this, cluster, kind, plan);
     }
 
     /**
@@ -37,7 +38,8 @@ class V1ServiceSpec {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, kind, plan) { 
+    static initialize(obj, cluster, kind, plan) { 
+        obj['cluster'] = cluster;
         obj['kind'] = kind;
         obj['plan'] = plan;
     }

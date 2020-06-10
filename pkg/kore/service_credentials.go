@@ -183,7 +183,7 @@ func (s *serviceCredentialsImpl) Update(ctx context.Context, serviceCreds *servi
 			WithFieldErrorf("service", validation.NotAllowed, "%q does not support service access", service.Name)
 	}
 
-	if err := s.validateCluster(ctx, serviceCreds); err != nil {
+	if err := s.validateCluster(ctx, service, serviceCreds); err != nil {
 		return err
 	}
 
@@ -305,7 +305,15 @@ func (s *serviceCredentialsImpl) validateService(ctx context.Context, serviceCre
 	return service, nil
 }
 
-func (s *serviceCredentialsImpl) validateCluster(ctx context.Context, serviceCreds *servicesv1.ServiceCredentials) error {
+func (s *serviceCredentialsImpl) validateCluster(ctx context.Context, service *servicesv1.Service, serviceCreds *servicesv1.ServiceCredentials) error {
+	if serviceCreds.Spec.Cluster.Name == "" {
+		return validation.NewError("%q failed validation", serviceCreds.Name).WithFieldError(
+			"cluster.name",
+			validation.Required,
+			"must be set",
+		)
+	}
+
 	if serviceCreds.Spec.Cluster.Namespace != serviceCreds.Namespace {
 		return validation.NewError("%q failed validation", serviceCreds.Name).WithFieldErrorf(
 			"cluster.namespace",
@@ -334,5 +342,14 @@ func (s *serviceCredentialsImpl) validateCluster(ctx context.Context, serviceCre
 			)
 		}
 	}
+
+	if !service.Spec.Cluster.Equals(serviceCreds.Spec.Cluster) {
+		return validation.NewError("%q failed validation", serviceCreds.Name).WithFieldError(
+			"cluster",
+			validation.InvalidValue,
+			"you are not allowed to create service access in this cluster",
+		)
+	}
+
 	return nil
 }

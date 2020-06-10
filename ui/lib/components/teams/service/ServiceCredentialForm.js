@@ -47,6 +47,7 @@ class ServiceCredentialForm extends React.Component {
       const api = await KoreApi.client()
       switch (this.props.creationSource) {
       case 'namespace': {
+        const namespace = this.props.namespaceClaims[0]
         let [services, serviceKinds] = await Promise.all([
           api.ListServices(team),
           api.ListServiceKinds()
@@ -57,7 +58,7 @@ class ServiceCredentialForm extends React.Component {
           ...s,
           serviceKind: serviceKinds.items.find(sk => sk.metadata.name === s.spec.kind)
         }))
-        services = services.filter(s => s.status.serviceAccessEnabled)
+        services = services.filter(s => s.spec.cluster.name === namespace.spec.cluster.name && s.status.serviceAccessEnabled)
 
         this.setState({ services, dataLoading: false })
         this.props.form.validateFields()
@@ -65,7 +66,7 @@ class ServiceCredentialForm extends React.Component {
       }
       case 'service': {
         let [clusters, namespaceClaims, serviceKinds] = await Promise.all([
-          api.ListClusters(team),
+          this.props.clusters && this.props.clusters.length > 0 ? Promise.resolve( { items: this.props.clusters }) : api.ListClusters(team),
           api.ListNamespaces(team),
           api.ListServiceKinds()
         ])

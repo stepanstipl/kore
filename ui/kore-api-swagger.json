@@ -7115,7 +7115,8 @@
     "v1.ServiceSpec": {
       "required": [
         "kind",
-        "plan"
+        "plan",
+        "cluster"
       ],
       "properties": {
         "cluster": {
