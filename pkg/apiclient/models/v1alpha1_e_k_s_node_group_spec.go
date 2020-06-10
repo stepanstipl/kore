@@ -40,6 +40,10 @@ type V1alpha1EKSNodeGroupSpec struct {
 	// Required: true
 	EC2SSHKey *string `json:"eC2SSHKey"`
 
+	// enable autoscaler
+	// Required: true
+	EnableAutoscaler *bool `json:"enableAutoscaler"`
+
 	// instance type
 	InstanceType string `json:"instanceType,omitempty"`
 
@@ -100,6 +104,10 @@ func (m *V1alpha1EKSNodeGroupSpec) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateEC2SSHKey(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateEnableAutoscaler(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -191,6 +199,15 @@ func (m *V1alpha1EKSNodeGroupSpec) validateDiskSize(formats strfmt.Registry) err
 func (m *V1alpha1EKSNodeGroupSpec) validateEC2SSHKey(formats strfmt.Registry) error {
 
 	if err := validate.Required("eC2SSHKey", "body", m.EC2SSHKey); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *V1alpha1EKSNodeGroupSpec) validateEnableAutoscaler(formats strfmt.Registry) error {
+
+	if err := validate.Required("enableAutoscaler", "body", m.EnableAutoscaler); err != nil {
 		return err
 	}
 

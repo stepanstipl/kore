@@ -6153,8 +6153,8 @@
     },
     "v1.OptionalSecretKeySelector": {
       "required": [
-        "name",
-        "key"
+        "key",
+        "name"
       ],
       "properties": {
         "key": {
@@ -7691,6 +7691,7 @@
         "subnets",
         "region",
         "eC2SSHKey",
+        "enableAutoscaler",
         "credentials"
       ],
       "properties": {
@@ -7713,6 +7714,9 @@
         },
         "eC2SSHKey": {
           "type": "string"
+        },
+        "enableAutoscaler": {
+          "type": "boolean"
         },
         "instanceType": {
           "type": "string"
