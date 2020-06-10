@@ -313,6 +313,28 @@ func (i *IamClient) EnsureRole(ctx context.Context, name string, policies []stri
 			}
 		}
 	}
+	// Ensure the reverse - we must remove any policies that are not specified
+	for _, ap := range lresp.AttachedPolicies {
+		found := func() bool {
+			for _, p := range policies {
+				if aws.StringValue(ap.PolicyArn) == p {
+					return true
+				}
+			}
+
+			return false
+		}()
+
+		if !found {
+			_, err := i.svc.DetachRolePolicyWithContext(ctx, &iam.DetachRolePolicyInput{
+				PolicyArn: ap.PolicyArn,
+				RoleName:  role.RoleName,
+			})
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
 
 	return role, nil
 }
