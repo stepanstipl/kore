@@ -393,6 +393,8 @@ jobs:
             export VERSION=${CIRCLE_SHA1}
             echo "Deploying to QA, version: ${VERSION}"
             hack/deploy-qa.sh
+      - slack/notify-on-failure:
+        only_for_branches: master
 
   deploy-demo:
     docker:
@@ -412,6 +414,8 @@ jobs:
             export VERSION=${CIRCLE_SHA1}
             echo "Deploying to demo, version: ${VERSION}"
             hack/deploy-demo.sh
+      - slack/notify-on-failure:
+        only_for_branches: master
 
   # This releases the local images for kore-apiserver and the auth-proxy; to
   # ensure we have a complete e2e
