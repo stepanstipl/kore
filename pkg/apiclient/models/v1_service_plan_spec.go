@@ -42,6 +42,9 @@ type V1ServicePlanSpec struct {
 	// schema
 	Schema string `json:"schema,omitempty"`
 
+	// service access disabled
+	ServiceAccessDisabled bool `json:"serviceAccessDisabled,omitempty"`
+
 	// summary
 	// Required: true
 	Summary *string `json:"summary"`

@@ -263,55 +263,59 @@ class ServicePage extends React.Component {
           </Col>
         </Row>
 
-        <Divider />
+        {service.status.serviceAccessEnabled ? (
+          <>
+            <Divider />
 
-        <Card title={<span>Service access {serviceCredentials && <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={serviceCredentials.filter(c => !c.deleted).length} />}</span>} extra={<Button type="primary" onClick={this.createServiceCredential(true)}>Add access</Button>}>
+            <Card title={<span>Service access {serviceCredentials && <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={serviceCredentials.filter(c => !c.deleted).length} />}</span>} extra={<Button type="primary" onClick={this.createServiceCredential(true)}>Add access</Button>}>
 
-          {!serviceCredentials && <Icon type="loading" />}
-          {serviceCredentials && !hasActiveBindings && <Text type="secondary">No access found for this service</Text>}
-          {serviceCredentials && (
-            <List
-              className="hide-empty-text"
-              locale={{ emptyText: <div/> }}
-              dataSource={serviceCredentials}
-              renderItem={serviceCredential => {
-                return (
-                  <ServiceCredential
-                    viewPerspective="service"
-                    team={team.metadata.name}
-                    serviceCredential={serviceCredential}
-                    serviceKind={serviceKind}
-                    deleteServiceCredential={this.deleteServiceCredential}
-                    handleUpdate={this.handleResourceUpdated('serviceCredentials')}
-                    handleDelete={this.handleResourceDeleted('serviceCredentials')}
-                    refreshMs={10000}
-                    propsResourceDataKey="serviceCredential"
-                    resourceApiPath={`${apiPaths.team(team.metadata.name).serviceCredentials}/${serviceCredential.metadata.name}`}
+              {!serviceCredentials && <Icon type="loading" />}
+              {serviceCredentials && !hasActiveBindings && <Text type="secondary">No access found for this service</Text>}
+              {serviceCredentials && (
+                <List
+                  className="hide-empty-text"
+                  locale={{ emptyText: <div/> }}
+                  dataSource={serviceCredentials}
+                  renderItem={serviceCredential => {
+                    return (
+                      <ServiceCredential
+                        viewPerspective="service"
+                        team={team.metadata.name}
+                        serviceCredential={serviceCredential}
+                        serviceKind={serviceKind}
+                        deleteServiceCredential={this.deleteServiceCredential}
+                        handleUpdate={this.handleResourceUpdated('serviceCredentials')}
+                        handleDelete={this.handleResourceDeleted('serviceCredentials')}
+                        refreshMs={10000}
+                        propsResourceDataKey="serviceCredential"
+                        resourceApiPath={`${apiPaths.team(team.metadata.name).serviceCredentials}/${serviceCredential.metadata.name}`}
+                      />
+                    )
+                  }}
+                />
+              )}
+
+              <Drawer
+                title="Create service access"
+                placement="right"
+                closable={false}
+                onClose={this.createServiceCredential(false)}
+                visible={createServiceCredential}
+                width={700}
+              >
+                {createServiceCredential &&
+                  <ServiceCredentialForm
+                    team={team}
+                    creationSource="service"
+                    services={[service]}
+                    handleSubmit={this.handleServiceCredentialCreated}
+                    handleCancel={this.createServiceCredential(false)}
                   />
-                )
-              }}
-            />
-          )}
-
-          <Drawer
-            title="Create service access"
-            placement="right"
-            closable={false}
-            onClose={this.createServiceCredential(false)}
-            visible={createServiceCredential}
-            width={700}
-          >
-            {createServiceCredential &&
-              <ServiceCredentialForm
-                team={team}
-                creationSource="service"
-                services={[service]}
-                handleSubmit={this.handleServiceCredentialCreated}
-                handleCancel={this.createServiceCredential(false)}
-              />
-            }
-          </Drawer>
-        </Card>
+                }
+              </Drawer>
+            </Card>
+          </>
+        ) : null }
 
         <Divider />
 

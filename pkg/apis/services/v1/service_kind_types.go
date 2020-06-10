@@ -39,6 +39,9 @@ type ServiceKindSpec struct {
 	// Enabled is true if the service kind can be used
 	// +kubebuilder:validation:Optional
 	Enabled bool `json:"enabled"`
+	// ServiceAccessEnabled is true if the service provider can create service access for this service kind
+	// +kubebuilder:validation:Optional
+	ServiceAccessEnabled bool `json:"serviceAccessEnabled"`
 	// DisplayName refers to the display name of the service type
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Optional

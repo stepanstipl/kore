@@ -118,11 +118,12 @@ func (p *Provider) Catalog(ctx kore.Context, serviceProvider *servicesv1.Service
 				},
 			},
 			Spec: servicesv1.ServiceKindSpec{
-				DisplayName:      getMetadataStringVal(catalogService.Metadata, MetadataKeyDisplayName, ""),
-				Summary:          summary,
-				Description:      getMetadataStringVal(catalogService.Metadata, MetadataKeyDescription, ""),
-				ImageURL:         getMetadataStringVal(catalogService.Metadata, MetadataKeyImageURL, ""),
-				DocumentationURL: getMetadataStringVal(catalogService.Metadata, MetadataKeyDocumentationURL, ""),
+				ServiceAccessEnabled: catalogService.Bindable,
+				DisplayName:          getMetadataStringVal(catalogService.Metadata, MetadataKeyDisplayName, ""),
+				Summary:              summary,
+				Description:          getMetadataStringVal(catalogService.Metadata, MetadataKeyDescription, ""),
+				ImageURL:             getMetadataStringVal(catalogService.Metadata, MetadataKeyImageURL, ""),
+				DocumentationURL:     getMetadataStringVal(catalogService.Metadata, MetadataKeyDocumentationURL, ""),
 			},
 		}
 		providerData := ServiceKindProviderData{ServiceID: catalogService.ID}
@@ -201,12 +202,13 @@ func parseCatalogPlan(service osb.Service, catalogPlan osb.Plan) (*servicesv1.Se
 			Namespace: kore.HubNamespace,
 		},
 		Spec: servicesv1.ServicePlanSpec{
-			Kind:             service.Name,
-			DisplayName:      getMetadataStringVal(catalogPlan.Metadata, MetadataKeyDisplayName, ""),
-			Summary:          catalogPlan.Description,
-			Description:      getMetadataStringVal(catalogPlan.Metadata, MetadataKeyDescription, ""),
-			Schema:           schemaStr,
-			CredentialSchema: credentialsSchemaStr,
+			Kind:                  service.Name,
+			DisplayName:           getMetadataStringVal(catalogPlan.Metadata, MetadataKeyDisplayName, ""),
+			Summary:               catalogPlan.Description,
+			Description:           getMetadataStringVal(catalogPlan.Metadata, MetadataKeyDescription, ""),
+			Schema:                schemaStr,
+			CredentialSchema:      credentialsSchemaStr,
+			ServiceAccessDisabled: catalogPlan.Bindable != nil && !*catalogPlan.Bindable,
 		},
 	}
 

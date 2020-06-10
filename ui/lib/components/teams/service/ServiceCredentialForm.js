@@ -51,11 +51,14 @@ class ServiceCredentialForm extends React.Component {
           api.ListServices(team),
           api.ListServiceKinds()
         ])
+
         services = services.items
         services = services.map(s => ({
           ...s,
           serviceKind: serviceKinds.items.find(sk => sk.metadata.name === s.spec.kind)
         }))
+        services = services.filter(s => s.status.serviceAccessEnabled)
+
         this.setState({ services, dataLoading: false })
         this.props.form.validateFields()
         break

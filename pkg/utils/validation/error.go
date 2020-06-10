@@ -127,4 +127,6 @@ const (
 	InvalidType ErrorCode = "invalidType"
 	// InvalidValue error indicates that the given value is invalid
 	InvalidValue ErrorCode = "invalidValue"
+	// NotAllowed error indicates that the given value is not allowed
+	NotAllowed ErrorCode = "notAllowed"
 )

@@ -6933,6 +6933,10 @@ spec:
             schema:
               description: Schema is the JSON schema for the plan
               type: string
+            serviceAccessEnabled:
+              description: ServiceAccessEnabled is true if the service provider can
+                create service access for this service kind
+              type: boolean
             summary:
               description: Summary provides a short title summary for the service
                 kind
@@ -7039,6 +7043,11 @@ spec:
             schema:
               description: Schema is the JSON schema for the plan
               type: string
+            serviceAccessDisabled:
+              description: ServiceAccessDisabled is true if service access is disabled
+                for services using this plan It only has an effect if service access
+                is enabled on the service kind
+              type: boolean
             summary:
               description: Summary provides a short title summary for the plan
               minLength: 1
@@ -7465,6 +7474,10 @@ spec:
             providerID:
               description: ProviderID is the service identifier in the service provider
               type: string
+            serviceAccessEnabled:
+              description: ServiceAccessEnabled is true if service access is enabled
+                for this service
+              type: boolean
             status:
               description: Status is the overall status of the service
               type: string

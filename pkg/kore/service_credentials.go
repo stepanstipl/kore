@@ -158,6 +158,35 @@ func (s *serviceCredentialsImpl) GetSchema(ctx context.Context, name string) (st
 
 // Update is used to update service credentials
 func (s *serviceCredentialsImpl) Update(ctx context.Context, serviceCreds *servicesv1.ServiceCredentials) error {
+	service, err := s.validateService(ctx, serviceCreds)
+	if err != nil {
+		return err
+	}
+
+	serviceKind, err := s.ServiceKinds().Get(ctx, serviceCreds.Spec.Kind)
+	if err != nil {
+		return err
+	}
+
+	if !serviceKind.Spec.ServiceAccessEnabled {
+		return validation.NewError("%q failed validation", serviceCreds.Name).
+			WithFieldErrorf("kind", validation.NotAllowed, "%q does not support service access", serviceKind.Name)
+	}
+
+	servicePlan, err := s.ServicePlans().Get(ctx, service.Spec.Plan)
+	if err != nil {
+		return err
+	}
+
+	if servicePlan.Spec.ServiceAccessDisabled {
+		return validation.NewError("%q failed validation", serviceCreds.Name).
+			WithFieldErrorf("service", validation.NotAllowed, "%q does not support service access", service.Name)
+	}
+
+	if err := s.validateCluster(ctx, serviceCreds); err != nil {
+		return err
+	}
+
 	existing, err := s.Get(ctx, serviceCreds.Name)
 	if err != nil && err != ErrNotFound {
 		return err
@@ -198,15 +227,6 @@ func (s *serviceCredentialsImpl) Update(ctx context.Context, serviceCreds *servi
 	if len(secretNameContenders.Items) > 0 {
 		return validation.NewError("%q failed validation", serviceCreds.Name).
 			WithFieldErrorf("secretName", validation.InvalidValue, "%q must be unique for the same cluster and namespace", serviceCreds.Spec.Kind)
-	}
-
-	service, err := s.validateService(ctx, serviceCreds)
-	if err != nil {
-		return err
-	}
-
-	if err := s.validateCluster(ctx, serviceCreds); err != nil {
-		return err
 	}
 
 	if err := s.validateConfiguration(ctx, service, serviceCreds, existing); err != nil {

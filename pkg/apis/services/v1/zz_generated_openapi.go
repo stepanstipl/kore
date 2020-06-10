@@ -296,6 +296,13 @@ func schema_pkg_apis_services_v1_ServiceKindSpec(ref common.ReferenceCallback) c
 							Format:      "",
 						},
 					},
+					"serviceAccessEnabled": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ServiceAccessEnabled is true if the service provider can create service access for this service kind",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
 					"displayName": {
 						SchemaProps: spec.SchemaProps{
 							Description: "DisplayName refers to the display name of the service type",
@@ -352,7 +359,7 @@ func schema_pkg_apis_services_v1_ServiceKindSpec(ref common.ReferenceCallback) c
 						},
 					},
 				},
-				Required: []string{"enabled", "summary"},
+				Required: []string{"enabled", "serviceAccessEnabled", "summary"},
 			},
 		},
 		Dependencies: []string{
@@ -410,6 +417,13 @@ func schema_pkg_apis_services_v1_ServicePlanSpec(ref common.ReferenceCallback) c
 						SchemaProps: spec.SchemaProps{
 							Description: "Kind refers to the service type this is a plan for",
 							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"serviceAccessDisabled": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ServiceAccessDisabled is true if service access is disabled for services using this plan It only has an effect if service access is enabled on the service kind",
+							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
@@ -775,6 +789,13 @@ func schema_pkg_apis_services_v1_ServiceStatus(ref common.ReferenceCallback) com
 						SchemaProps: spec.SchemaProps{
 							Description: "Configuration are the applied configuration values for this service",
 							Ref:         ref("k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"),
+						},
+					},
+					"serviceAccessEnabled": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ServiceAccessEnabled is true if service access is enabled for this service",
+							Type:        []string{"boolean"},
+							Format:      "",
 						},
 					},
 				},

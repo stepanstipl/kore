@@ -39,6 +39,10 @@ type ServicePlanSpec struct {
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
 	Kind string `json:"kind"`
+	// ServiceAccessDisabled is true if service access is disabled for services using this plan
+	// It only has an effect if service access is enabled on the service kind
+	// +kubebuilder:validation:Optional
+	ServiceAccessDisabled bool `json:"serviceAccessDisabled,omitempty"`
 	// DisplayName refers to the display name of the service type
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Optional

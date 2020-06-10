@@ -322,6 +322,18 @@ class ServiceBuildForm extends React.Component {
       selectedServiceKindObject = serviceKinds.items.find(sk => sk.metadata.name === selectedServiceKind)
     }
 
+    let selectedServicePlanObject = false
+    if (selectedServiceKind && selectedServicePlan) {
+      selectedServicePlanObject = filteredServicePlans.find(sp => sp.metadata.name === selectedServicePlan)
+    }
+
+    const showCredentialsForm = selectedServiceKindObject
+      && selectedServiceKindObject.spec.serviceAccessEnabled
+      && selectedServicePlanObject
+      && !selectedServicePlanObject.spec.serviceAccessDisabled
+      && !planSchemaFound
+      && bindingSelectData.length > 0
+
     return (
       <div>
         <CloudSelector selectedCloud={selectedCloud} handleSelectCloud={this.handleSelectCloud} enabledCloudList={['AWS']}/>
@@ -382,7 +394,7 @@ class ServiceBuildForm extends React.Component {
                   />
                 )}
               </Card>
-              {selectedServicePlan && !planSchemaFound && bindingSelectData.length > 0 && (
+              {showCredentialsForm && (
                 <Collapse defaultActiveKey={['bindings']}>
                   <Panel header="Create service access" key="bindings">
                     <Alert

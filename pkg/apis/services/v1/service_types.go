@@ -92,6 +92,9 @@ type ServiceStatus struct {
 	// +kubebuilder:validation:Type=object
 	// +kubebuilder:validation:Optional
 	Configuration *apiextv1.JSON `json:"configuration,omitempty"`
+	// ServiceAccessEnabled is true if service access is enabled for this service
+	// +kubebuilder:validation:Optional
+	ServiceAccessEnabled bool `json:"serviceAccessEnabled,omitempty"`
 }
 
 func (s *ServiceStatus) GetProviderData(v interface{}) error {
