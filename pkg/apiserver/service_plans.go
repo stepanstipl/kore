@@ -43,7 +43,7 @@ type servicePlansHandler struct {
 	DefaultHandler
 }
 
-func (p *servicePlansHandler) systemServicePlanFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
+func (p *servicePlansHandler) readOnlyPlanFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
 	handleErrors(req, resp, func() error {
 		name := req.PathParameter("name")
 
@@ -52,7 +52,7 @@ func (p *servicePlansHandler) systemServicePlanFilter(req *restful.Request, resp
 			return err
 		}
 
-		if servicePlan != nil && servicePlan.Annotations[kore.AnnotationSystem] == "true" {
+		if servicePlan != nil && servicePlan.Annotations[kore.AnnotationReadOnly] == "true" {
 			resp.WriteHeader(http.StatusForbidden)
 			return nil
 		}
@@ -116,7 +116,7 @@ func (p *servicePlansHandler) Register(i kore.Interface, builder utils.PathBuild
 	ws.Route(
 		withAllErrors(ws.PUT("/{name}")).To(p.updateServicePlan).
 			Filter(filters.Admin).
-			Filter(p.systemServicePlanFilter).
+			Filter(p.readOnlyPlanFilter).
 			Doc("Creates or updates a service plan").
 			Operation("UpdateServicePlan").
 			Param(ws.PathParameter("name", "The name of the service plan you wish to create or update")).
@@ -127,7 +127,7 @@ func (p *servicePlansHandler) Register(i kore.Interface, builder utils.PathBuild
 	ws.Route(
 		withAllErrors(ws.DELETE("/{name}")).To(p.deleteServicePlan).
 			Filter(filters.Admin).
-			Filter(p.systemServicePlanFilter).
+			Filter(p.readOnlyPlanFilter).
 			Doc("Deletes a service plan").
 			Operation("DeleteServicePLan").
 			Param(ws.PathParameter("name", "The name of the service plan you wish to delete")).
@@ -219,8 +219,8 @@ func (p servicePlansHandler) updateServicePlan(req *restful.Request, resp *restf
 		}
 		plan.Name = name
 
-		if plan.Annotations[kore.AnnotationSystem] != "" {
-			writeError(req, resp, fmt.Errorf("setting %q annotation is not allowed", kore.AnnotationSystem), http.StatusForbidden)
+		if plan.Annotations[kore.AnnotationReadOnly] != "" {
+			writeError(req, resp, fmt.Errorf("setting %q annotation is not allowed", kore.AnnotationReadOnly), http.StatusForbidden)
 			return nil
 		}
 

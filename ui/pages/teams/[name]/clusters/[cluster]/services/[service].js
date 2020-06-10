@@ -15,6 +15,7 @@ import { inProgressStatusList } from '../../../../../../lib/utils/ui-helpers'
 import apiPaths from '../../../../../../lib/utils/api-paths'
 import ServiceCredential from '../../../../../../lib/components/teams/service/ServiceCredential'
 import ServiceCredentialForm from '../../../../../../lib/components/teams/service/ServiceCredentialForm'
+import { isReadOnlyCRD } from '../../../../../../lib/utils/crd-helpers'
 
 class ServicePage extends React.Component {
   static propTypes = {
@@ -214,7 +215,7 @@ class ServicePage extends React.Component {
     const { service, serviceCredentials, createServiceCredential } = this.state
     const created = moment(service.metadata.creationTimestamp).fromNow()
     const deleted = service.metadata.deletionTimestamp ? moment(service.metadata.deletionTimestamp).fromNow() : false
-    const serviceNotEditable = !service || !service.status || inProgressStatusList.includes(service.status.status)
+    const serviceNotEditable = !service || isReadOnlyCRD(service) || !service.status || inProgressStatusList.includes(service.status.status)
     const editServiceFormConfig = {
       layout: 'horizontal', labelAlign: 'left', hideRequiredMark: true,
       labelCol: { xs: 24, xl: 10 }, wrapperCol: { xs: 24, xl: 14 }

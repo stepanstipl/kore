@@ -40,7 +40,7 @@ type serviceProvidersHandler struct {
 	DefaultHandler
 }
 
-func (p *serviceProvidersHandler) systemServiceProviderFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
+func (p *serviceProvidersHandler) readOnlyServiceProviderFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
 	handleErrors(req, resp, func() error {
 		name := req.PathParameter("name")
 
@@ -49,7 +49,7 @@ func (p *serviceProvidersHandler) systemServiceProviderFilter(req *restful.Reque
 			return err
 		}
 
-		if serviceProvider != nil && serviceProvider.Annotations[kore.AnnotationSystem] == "true" {
+		if serviceProvider != nil && serviceProvider.Annotations[kore.AnnotationReadOnly] == "true" {
 			resp.WriteHeader(http.StatusForbidden)
 			return nil
 		}
@@ -95,7 +95,7 @@ func (p *serviceProvidersHandler) Register(i kore.Interface, builder utils.PathB
 	ws.Route(
 		withAllErrors(ws.PUT("/{name}")).To(p.updateServiceProvider).
 			Filter(filters.Admin).
-			Filter(p.systemServiceProviderFilter).
+			Filter(p.readOnlyServiceProviderFilter).
 			Doc("Creates or updates a service provider").
 			Operation("UpdateServiceProvider").
 			Param(ws.PathParameter("name", "The name of the service provider you wish to create or update")).
@@ -106,7 +106,7 @@ func (p *serviceProvidersHandler) Register(i kore.Interface, builder utils.PathB
 	ws.Route(
 		withAllErrors(ws.DELETE("/{name}")).To(p.deleteServiceProvider).
 			Filter(filters.Admin).
-			Filter(p.systemServiceProviderFilter).
+			Filter(p.readOnlyServiceProviderFilter).
 			Doc("Deletes a service provider").
 			Operation("DeleteServiceProvider").
 			Param(ws.PathParameter("name", "The name of the service provider you wish to delete")).
@@ -152,8 +152,8 @@ func (p serviceProvidersHandler) updateServiceProvider(req *restful.Request, res
 		}
 		provider.Name = name
 
-		if provider.Annotations[kore.AnnotationSystem] != "" {
-			writeError(req, resp, fmt.Errorf("setting %q annotation is not allowed", kore.AnnotationSystem), http.StatusForbidden)
+		if provider.Annotations[kore.AnnotationReadOnly] != "" {
+			writeError(req, resp, fmt.Errorf("setting %q annotation is not allowed", kore.AnnotationReadOnly), http.StatusForbidden)
 			return nil
 		}
 

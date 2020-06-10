@@ -134,7 +134,8 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 					if service.Annotations == nil {
 						service.Annotations = map[string]string{}
 					}
-					service.Annotations[kore.AnnotationSystem] = "true"
+					service.Annotations[kore.AnnotationSystem] = kore.AnnotationValueTrue
+					service.Annotations[kore.AnnotationReadOnly] = kore.AnnotationValueTrue
 					adminServices = append(adminServices, service)
 
 					resource := corev1.MustGetOwnershipFromObject(&service)
