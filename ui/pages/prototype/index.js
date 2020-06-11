@@ -18,6 +18,10 @@ const prototypeList = [{
   title: 'Cloud services for teams',
   description: 'Team dashboard with cloud service provisioning',
   path: '/prototype/teams/demo'
+}, {
+  title: 'Team costs',
+  description: 'Page showing cloud costs for a team, select "Team costs" from the settings downdown in the top-right corner',
+  path: '/prototype/teams/costs-demo'
 }]
 
 const PrototypeIndex = () => (
