@@ -130,6 +130,11 @@ func NewIamClient(credentials Credentials) *IamClient {
 	return &IamClient{session: session, svc: iam.New(session)}
 }
 
+// NewIamClientFromSession from current session
+func NewIamClientFromSession(session *session.Session) *IamClient {
+	return &IamClient{session: session, svc: iam.New(session)}
+}
+
 // GetARN returns the ARN from the client
 func (i *IamClient) GetARN() (string, error) {
 	resp, err := i.svc.GetUser(&iam.GetUserInput{})
@@ -138,6 +143,15 @@ func (i *IamClient) GetARN() (string, error) {
 	}
 
 	return aws.StringValue(resp.User.Arn), nil
+}
+
+// GetAccountNameFromARN will return the account ID from an ARN
+func (i *IamClient) GetAccountNameFromARN(resARN string) (string, error) {
+	parsedARN, err := arn.Parse(resARN)
+	if err != nil {
+		return "", errors.Wrapf(err, "unexpected invalid ARN: %q", resARN)
+	}
+	return parsedARN.AccountID, nil
 }
 
 // EnsureIRSA will enable IRSA IAM Roles for Service Accounts for an EKS cluster
