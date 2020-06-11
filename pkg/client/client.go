@@ -109,6 +109,10 @@ func (a *apiClient) HandleRequest(method string) RestInterface {
 			return a.ferror
 		}
 
+		if a.cfg.CurrentProfile == "" {
+			return cerrors.NewProfileInvalidError("missing selected profile", a.cfg.CurrentProfile)
+		}
+
 		if a.cfg.GetCurrentServer().Endpoint == "" {
 			return cerrors.NewProfileInvalidError("missing endpoint", a.cfg.CurrentProfile)
 		}
@@ -217,7 +221,7 @@ func (a *apiClient) MakeRequest(method, url string) (*http.Response, error) {
 	case auth.OIDC != nil:
 		request.Header.Set("Authorization", "Bearer "+auth.OIDC.IDToken)
 	case auth.Token != nil:
-		request.Header.Set("Authorization:", "Bearer "+*auth.Token)
+		request.Header.Set("Authorization", "Bearer "+*auth.Token)
 	case auth.BasicAuth != nil:
 		request.SetBasicAuth(auth.BasicAuth.Username, auth.BasicAuth.Password)
 	}
