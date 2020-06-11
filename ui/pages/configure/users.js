@@ -5,9 +5,7 @@ const { Text } = Typography
 import getConfig from 'next/config'
 const { publicRuntimeConfig } = getConfig()
 
-import apiRequest from '../../lib/utils/api-request'
-import apiPaths from '../../lib/utils/api-paths'
-import copy from '../../lib/utils/object-copy'
+import KoreApi from '../../lib/kore-api'
 import Breadcrumb from '../../lib/components/layout/Breadcrumb'
 
 class ConfigureUsersPage extends React.Component {
@@ -27,22 +25,24 @@ class ConfigureUsersPage extends React.Component {
     adminOnly: true
   }
 
-  static getInitialProps = async (ctx) => {
-    const users = await apiRequest(ctx, 'get', apiPaths.users)
-    const adminTeamMembers = await apiRequest(ctx, 'get', apiPaths.team(publicRuntimeConfig.koreAdminTeamName).members)
-    return {
-      users: users.items,
-      admins: adminTeamMembers.items
-    }
+  static getInitialProps = async () => {
+    const api = await KoreApi.client()
+    let [ users, admins ] = await Promise.all([
+      api.ListUsers(),
+      api.ListTeamMembers(publicRuntimeConfig.koreAdminTeamName)
+    ])
+    users = users.items
+    admins = admins.items
+    return { users, admins }
   }
 
   makeAdmin = (username) => {
     return async () => {
       try {
-        await apiRequest(null, 'put', `${apiPaths.team(publicRuntimeConfig.koreAdminTeamName).members}/${username}`)
-        const state = copy(this.state)
-        state.admins.push(username)
-        this.setState(state)
+        await (await KoreApi.client()).AddTeamMember(publicRuntimeConfig.koreAdminTeamName, username)
+        this.setState(state => ({
+          admins: [ ...state.admins, username ]
+        }))
         message.success(`${username} is now admin`)
       } catch (err) {
         console.error('Error trying to make admin')
@@ -54,13 +54,13 @@ class ConfigureUsersPage extends React.Component {
   revokeAdmin = (username) => {
     return async () => {
       try {
-        await apiRequest(null, 'delete', `${apiPaths.team(publicRuntimeConfig.kore.koreAdminTeamName).members}/${username}`)
-        const state = copy(this.state)
-        state.admins = state.admins.filter(m => m !== username)
-        this.setState(state)
+        await (await KoreApi.client()).RemoveTeamMember(publicRuntimeConfig.koreAdminTeamName, username)
+        this.setState(state => ({
+          admins: state.admins.filter(m => m !== username)
+        }))
         message.success(`${username} is no longer admin`)
       } catch (err) {
-        console.error('Error trying to revoke admin')
+        console.error('Error trying to revoke admin', err)
         message.error(`Failed to revoke admin from user ${username}`)
       }
     }
