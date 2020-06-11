@@ -3,7 +3,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   annotaions:
-    eks.amazonaws.com/role-arn: {{ .AutoscalingRoleARN }}
+    eks.amazonaws.com/role-arn: "{{ .AutoscalingRoleARN }}"
   labels:
     k8s-addon: cluster-autoscaler.addons.k8s.io
     k8s-app: cluster-autoscaler
@@ -131,7 +131,7 @@ spec:
     spec:
       serviceAccountName: cluster-autoscaler
       containers:
-        - image: {{ .AutoScalingImage }}
+        - image: "{{ .AutoScalingImage }}"
           name: cluster-autoscaler
           resources:
             limits:
@@ -147,12 +147,12 @@ spec:
             - --cloud-provider=aws
             - --skip-nodes-with-local-storage=false
             - --expander=least-waste
-            {{- range $key, $value := .ASGs }}
+            #{{- range $key, $value := .ASGs }}
             - --nodes={{ $.value.Min }}:{{ $.value.Max }}:{{ $.value.Name }}
-            {{- end }}
+            #{{- end }}
           env:
             - name: AWS_REGION
-              value: {{ .AwsRegion }}
+              value: "{{ .AwsRegion }}"
           volumeMounts:
             - name: ssl-certs
               mountPath: /etc/ssl/certs/ca-certificates.crt
