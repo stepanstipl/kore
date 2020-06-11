@@ -121,7 +121,7 @@ class ServicesTab extends React.Component {
   }
 
   deleteServiceConfirm = async (name, done) => {
-    const serviceCredentials = this.state.serviceCredentials.filter(sc => sc.spec.service.name === name)
+    const serviceCredentials = this.state.serviceCredentials.filter(sc => !sc.deleted && sc.spec.service.name === name)
     if (serviceCredentials.length > 0) {
       return Modal.warning({
         title: 'Warning: service cannot be deleted',
