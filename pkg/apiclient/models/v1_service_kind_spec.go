@@ -42,6 +42,10 @@ type V1ServiceKindSpec struct {
 	// schema
 	Schema string `json:"schema,omitempty"`
 
+	// service access enabled
+	// Required: true
+	ServiceAccessEnabled *bool `json:"serviceAccessEnabled"`
+
 	// summary
 	// Required: true
 	Summary *string `json:"summary"`
@@ -52,6 +56,10 @@ func (m *V1ServiceKindSpec) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateEnabled(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateServiceAccessEnabled(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -68,6 +76,15 @@ func (m *V1ServiceKindSpec) Validate(formats strfmt.Registry) error {
 func (m *V1ServiceKindSpec) validateEnabled(formats strfmt.Registry) error {
 
 	if err := validate.Required("enabled", "body", m.Enabled); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *V1ServiceKindSpec) validateServiceAccessEnabled(formats strfmt.Registry) error {
+
+	if err := validate.Required("serviceAccessEnabled", "body", m.ServiceAccessEnabled); err != nil {
 		return err
 	}
 

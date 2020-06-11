@@ -75,6 +75,9 @@ class V1ServicePlanSpec {
             if (data.hasOwnProperty('schema')) {
                 obj['schema'] = ApiClient.convertToType(data['schema'], 'String');
             }
+            if (data.hasOwnProperty('serviceAccessDisabled')) {
+                obj['serviceAccessDisabled'] = ApiClient.convertToType(data['serviceAccessDisabled'], 'Boolean');
+            }
             if (data.hasOwnProperty('summary')) {
                 obj['summary'] = ApiClient.convertToType(data['summary'], 'String');
             }
@@ -187,6 +190,19 @@ class V1ServicePlanSpec {
         this['schema'] = schema;
     }
 /**
+     * @return {Boolean}
+     */
+    getServiceAccessDisabled() {
+        return this.serviceAccessDisabled;
+    }
+
+    /**
+     * @param {Boolean} serviceAccessDisabled
+     */
+    setServiceAccessDisabled(serviceAccessDisabled) {
+        this['serviceAccessDisabled'] = serviceAccessDisabled;
+    }
+/**
      * @return {String}
      */
     getSummary() {
@@ -241,6 +257,11 @@ V1ServicePlanSpec.prototype['providerData'] = undefined;
  * @member {String} schema
  */
 V1ServicePlanSpec.prototype['schema'] = undefined;
+
+/**
+ * @member {Boolean} serviceAccessDisabled
+ */
+V1ServicePlanSpec.prototype['serviceAccessDisabled'] = undefined;
 
 /**
  * @member {String} summary

@@ -2,15 +2,15 @@ import * as React from 'react'
 import PropTypes from 'prop-types'
 import { Alert, Button, Card, Checkbox, Form, Icon, Input, message, Select } from 'antd'
 
-import ServiceOptionsForm from '../../../services/ServiceOptionsForm'
-import FormErrorMessage from '../../../forms/FormErrorMessage'
-import KoreApi from '../../../../kore-api'
-import V1ServiceSpec from '../../../../kore-api/model/V1ServiceSpec'
-import V1Service from '../../../../kore-api/model/V1Service'
-import { NewV1ObjectMeta, NewV1Ownership } from '../../../../utils/model'
-import { getKoreLabel } from '../../../../utils/crd-helpers'
+import ServiceOptionsForm from '../../services/ServiceOptionsForm'
+import FormErrorMessage from '../../forms/FormErrorMessage'
+import KoreApi from '../../../kore-api'
+import V1ServiceSpec from '../../../kore-api/model/V1ServiceSpec'
+import V1Service from '../../../kore-api/model/V1Service'
+import { NewV1ObjectMeta, NewV1Ownership } from '../../../utils/model'
+import { getKoreLabel } from '../../../utils/crd-helpers'
 
-class ClusterApplicationServiceForm extends React.Component {
+class ApplicationServiceForm extends React.Component {
   static propTypes = {
     form: PropTypes.any.isRequired,
     team: PropTypes.object.isRequired,
@@ -32,17 +32,18 @@ class ClusterApplicationServiceForm extends React.Component {
     createNewNamespace: false
   }
 
-  state = { ...ClusterApplicationServiceForm.initialState }
+  state = { ...ApplicationServiceForm.initialState }
 
   async fetchComponentData() {
     const api = await KoreApi.client()
-    const [ serviceKinds, servicePlans, namespaceClaims ] = await Promise.all([
+    let [ serviceKinds, servicePlans, namespaceClaims ] = await Promise.all([
       api.ListServiceKinds(),
       api.ListServicePlans(),
       api.ListNamespaces(this.props.team.metadata.name)
     ])
-    serviceKinds.items = serviceKinds.items.filter(sk => getKoreLabel(sk, 'platform') === 'Kubernetes' && sk.spec.enabled)
-    namespaceClaims.items = namespaceClaims.items.filter(nc => nc.spec.cluster.name === this.props.cluster.metadata.name)
+    serviceKinds = serviceKinds.items.filter(sk => getKoreLabel(sk, 'platform') === 'Kubernetes' && sk.spec.enabled)
+    servicePlans = servicePlans.items
+    namespaceClaims = namespaceClaims.items.filter(nc => nc.spec.cluster.name === this.props.cluster.metadata.name)
     return { serviceKinds, servicePlans, namespaceClaims }
   }
 
@@ -52,12 +53,15 @@ class ClusterApplicationServiceForm extends React.Component {
     this.componentDidMountComplete = Promise.resolve().then(async () => {
       const data = await this.fetchComponentData()
       this.setState({ ...data, dataLoading: false })
+      if (data.serviceKinds && data.serviceKinds.length === 1) {
+        this.handleSelectKind(data.serviceKinds[0].metadata.name)
+      }
     })
   }
 
   generateServiceResource = (values) => {
     const cluster = this.props.cluster
-    const selectedServicePlan = this.state.servicePlans.items.find(p => p.metadata.name === values.servicePlan)
+    const selectedServicePlan = this.state.servicePlans.find(p => p.metadata.name === values.servicePlan)
 
     const serviceResource = new V1Service()
     serviceResource.setApiVersion('services.compute.kore.appvia.io/v1')
@@ -118,12 +122,12 @@ class ClusterApplicationServiceForm extends React.Component {
         }
 
         const service = await (await KoreApi.client()).UpdateService(this.props.team.metadata.name, values.serviceName, this.generateServiceResource(values))
-        message.loading('Cluster application service requested...')
+        message.loading('Application service requested...')
 
         return this.props.handleSubmit(service)
       } catch (err) {
         console.error('Error saving application service', err)
-        message.error('Error requesting cluster application service, please try again.')
+        message.error('Error requesting application service, please try again.')
         this.setState({
           submitting: false,
           formErrorMessage: (err.fieldErrors && err.message) ? err.message : 'An error occurred requesting the application service, please try again',
@@ -154,7 +158,7 @@ class ClusterApplicationServiceForm extends React.Component {
 
   cancel = () => {
     this.props.form.resetFields()
-    this.setState({ ...ClusterApplicationServiceForm.initialState })
+    this.setState({ ...ApplicationServiceForm.initialState })
     this.props.handleCancel()
   }
 
@@ -188,7 +192,7 @@ class ClusterApplicationServiceForm extends React.Component {
 
     let filteredServicePlans = []
     if (selectedServiceKind) {
-      filteredServicePlans = this.state.servicePlans.items.filter(p => p.spec.kind === selectedServiceKind)
+      filteredServicePlans = this.state.servicePlans.filter(p => p.spec.kind === selectedServiceKind)
     }
 
     return (
@@ -196,7 +200,7 @@ class ClusterApplicationServiceForm extends React.Component {
         <FormErrorMessage message={formErrorMessage} />
         <Card style={{ marginBottom: '20px' }}>
           <Alert
-            message="Cluster application service"
+            message="Application service"
             description="Select the service you would like to use."
             type="info"
             showIcon
@@ -206,17 +210,17 @@ class ClusterApplicationServiceForm extends React.Component {
           <Form.Item label="Service type">
             {getFieldDecorator('serviceKind', {
               rules: [{ required: true, message: 'Please select your service type!' }],
+              initialValue: selectedServiceKind
             })(
               <Select
                 onChange={this.handleSelectKind}
                 placeholder="Choose service type"
-                showSearch
                 optionFilterProp="children"
                 filterOption={(input, option) =>
                   option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
                 }
               >
-                {serviceKinds.items.map(k => <Select.Option key={k.metadata.name} value={k.metadata.name}>{k.spec.displayName || k.metadata.name}</Select.Option>)}
+                {serviceKinds.map(k => <Select.Option key={k.metadata.name} value={k.metadata.name}>{k.spec.displayName || k.metadata.name}</Select.Option>)}
               </Select>
             )}
           </Form.Item>
@@ -248,7 +252,7 @@ class ClusterApplicationServiceForm extends React.Component {
               rules: [{ required: !createNewNamespace, message: 'Please select the target namespace!' }]
             })(
               <Select placeholder="Choose existing namespace" disabled={createNewNamespace}>
-                {namespaceClaims.items.map(nc => <Select.Option key={nc.spec.name} value={nc.spec.name}>{nc.spec.name}</Select.Option>)}
+                {namespaceClaims.map(nc => <Select.Option key={nc.spec.name} value={nc.spec.name}>{nc.spec.name}</Select.Option>)}
               </Select>
             )}
             <Checkbox onChange={(e) => this.createNewNamespace(e.target.checked)}>Create a new namespace</Checkbox>
@@ -273,6 +277,6 @@ class ClusterApplicationServiceForm extends React.Component {
   }
 }
 
-const WrappedClusterApplicationServiceForm = Form.create({ name: 'cluster_application' })(ClusterApplicationServiceForm)
+const WrappedApplicationServiceForm = Form.create({ name: 'cluster_application' })(ApplicationServiceForm)
 
-export default WrappedClusterApplicationServiceForm
+export default WrappedApplicationServiceForm

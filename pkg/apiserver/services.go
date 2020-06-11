@@ -29,7 +29,7 @@ import (
 	restful "github.com/emicklei/go-restful"
 )
 
-func (u teamHandler) systemServiceFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
+func (u teamHandler) readonlyServiceFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
 	handleErrors(req, resp, func() error {
 		name := req.PathParameter("name")
 		team := req.PathParameter("team")
@@ -39,7 +39,7 @@ func (u teamHandler) systemServiceFilter(req *restful.Request, resp *restful.Res
 			return err
 		}
 
-		if service != nil && service.Annotations[kore.AnnotationSystem] == "true" {
+		if service != nil && service.Annotations[kore.AnnotationReadOnly] == "true" {
 			resp.WriteHeader(http.StatusForbidden)
 			return nil
 		}
@@ -99,8 +99,8 @@ func (u teamHandler) updateService(req *restful.Request, resp *restful.Response)
 			return err
 		}
 
-		if service.Annotations[kore.AnnotationSystem] != "" {
-			writeError(req, resp, fmt.Errorf("setting %q annotation is not allowed", kore.AnnotationSystem), http.StatusForbidden)
+		if service.Annotations[kore.AnnotationReadOnly] != "" {
+			writeError(req, resp, fmt.Errorf("setting %q annotation is not allowed", kore.AnnotationReadOnly), http.StatusForbidden)
 			return nil
 		}
 

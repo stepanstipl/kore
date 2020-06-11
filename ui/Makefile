@@ -70,12 +70,12 @@ compose-logs:
 
 run:
 	@$(MAKE) compose
-	@./scripts/run-dev.sh
+	@./scripts/run-with-env.sh npm run dev
 
 run-prod:
 	@$(MAKE) build
 	@$(MAKE) compose
-	@./scripts/run-prod.sh
+	@./scripts/run-with-env.sh npm start
 
 run-docker:
 	@$(MAKE) docker

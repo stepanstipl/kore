@@ -20,6 +20,7 @@ const (
 	AnnotationOwner      = "kore.appvia.io/owner"
 	AnnotationSystem     = "kore.appvia.io/system"
 	AnnotationReadOnly   = "kore.appvia.io/readonly"
+	AnnotationPriority   = "kore.appvia.io/priority"
 	AnnotationValueTrue  = "true"
 	AnnotationValueFalse = "false"
 )

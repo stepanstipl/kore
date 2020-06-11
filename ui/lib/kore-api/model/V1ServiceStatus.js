@@ -66,6 +66,9 @@ class V1ServiceStatus {
             if (data.hasOwnProperty('providerID')) {
                 obj['providerID'] = ApiClient.convertToType(data['providerID'], 'String');
             }
+            if (data.hasOwnProperty('serviceAccessEnabled')) {
+                obj['serviceAccessEnabled'] = ApiClient.convertToType(data['serviceAccessEnabled'], 'Boolean');
+            }
             if (data.hasOwnProperty('status')) {
                 obj['status'] = ApiClient.convertToType(data['status'], 'String');
             }
@@ -152,6 +155,19 @@ class V1ServiceStatus {
         this['providerID'] = providerID;
     }
 /**
+     * @return {Boolean}
+     */
+    getServiceAccessEnabled() {
+        return this.serviceAccessEnabled;
+    }
+
+    /**
+     * @param {Boolean} serviceAccessEnabled
+     */
+    setServiceAccessEnabled(serviceAccessEnabled) {
+        this['serviceAccessEnabled'] = serviceAccessEnabled;
+    }
+/**
      * @return {String}
      */
     getStatus() {
@@ -196,6 +212,11 @@ V1ServiceStatus.prototype['providerData'] = undefined;
  * @member {String} providerID
  */
 V1ServiceStatus.prototype['providerID'] = undefined;
+
+/**
+ * @member {Boolean} serviceAccessEnabled
+ */
+V1ServiceStatus.prototype['serviceAccessEnabled'] = undefined;
 
 /**
  * @member {String} status

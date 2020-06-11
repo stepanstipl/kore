@@ -48,8 +48,8 @@ type ServiceSpec struct {
 	// +kubebuilder:validation:MinLength=1
 	Plan string `json:"plan"`
 	// Cluster contains the reference to the cluster where the service will be created
-	// +kubebuilder:validation:Optional
-	Cluster corev1.Ownership `json:"cluster,omitempty"`
+	// +kubebuilder:validation:Required
+	Cluster corev1.Ownership `json:"cluster"`
 	// ClusterNamespace is the target namespace in the cluster where there the service will be created
 	// +kubebuilder:validation:Optional
 	ClusterNamespace string `json:"clusterNamespace,omitempty"`
@@ -92,6 +92,9 @@ type ServiceStatus struct {
 	// +kubebuilder:validation:Type=object
 	// +kubebuilder:validation:Optional
 	Configuration *apiextv1.JSON `json:"configuration,omitempty"`
+	// ServiceAccessEnabled is true if service access is enabled for this service
+	// +kubebuilder:validation:Optional
+	ServiceAccessEnabled bool `json:"serviceAccessEnabled,omitempty"`
 }
 
 func (s *ServiceStatus) GetProviderData(v interface{}) error {

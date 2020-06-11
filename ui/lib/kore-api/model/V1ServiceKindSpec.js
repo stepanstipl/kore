@@ -23,11 +23,12 @@ class V1ServiceKindSpec {
      * Constructs a new <code>V1ServiceKindSpec</code>.
      * @alias module:model/V1ServiceKindSpec
      * @param enabled {Boolean} 
+     * @param serviceAccessEnabled {Boolean} 
      * @param summary {String} 
      */
-    constructor(enabled, summary) { 
+    constructor(enabled, serviceAccessEnabled, summary) { 
         
-        V1ServiceKindSpec.initialize(this, enabled, summary);
+        V1ServiceKindSpec.initialize(this, enabled, serviceAccessEnabled, summary);
     }
 
     /**
@@ -35,8 +36,9 @@ class V1ServiceKindSpec {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, enabled, summary) { 
+    static initialize(obj, enabled, serviceAccessEnabled, summary) { 
         obj['enabled'] = enabled;
+        obj['serviceAccessEnabled'] = serviceAccessEnabled;
         obj['summary'] = summary;
     }
 
@@ -74,6 +76,9 @@ class V1ServiceKindSpec {
             }
             if (data.hasOwnProperty('schema')) {
                 obj['schema'] = ApiClient.convertToType(data['schema'], 'String');
+            }
+            if (data.hasOwnProperty('serviceAccessEnabled')) {
+                obj['serviceAccessEnabled'] = ApiClient.convertToType(data['serviceAccessEnabled'], 'Boolean');
             }
             if (data.hasOwnProperty('summary')) {
                 obj['summary'] = ApiClient.convertToType(data['summary'], 'String');
@@ -187,6 +192,19 @@ class V1ServiceKindSpec {
         this['schema'] = schema;
     }
 /**
+     * @return {Boolean}
+     */
+    getServiceAccessEnabled() {
+        return this.serviceAccessEnabled;
+    }
+
+    /**
+     * @param {Boolean} serviceAccessEnabled
+     */
+    setServiceAccessEnabled(serviceAccessEnabled) {
+        this['serviceAccessEnabled'] = serviceAccessEnabled;
+    }
+/**
      * @return {String}
      */
     getSummary() {
@@ -241,6 +259,11 @@ V1ServiceKindSpec.prototype['providerData'] = undefined;
  * @member {String} schema
  */
 V1ServiceKindSpec.prototype['schema'] = undefined;
+
+/**
+ * @member {Boolean} serviceAccessEnabled
+ */
+V1ServiceKindSpec.prototype['serviceAccessEnabled'] = undefined;
 
 /**
  * @member {String} summary

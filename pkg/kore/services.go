@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"reflect"
 
+	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+
 	"github.com/appvia/kore/pkg/utils/configuration"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -165,6 +167,27 @@ func (s *servicesImpl) Update(ctx context.Context, service *servicesv1.Service) 
 		)
 	}
 
+	if err := s.validateCluster(ctx, service); err != nil {
+		return err
+	}
+
+	serviceKind, err := s.ServiceKinds().Get(ctx, service.Spec.Kind)
+	if err != nil {
+		return err
+	}
+
+	if serviceKind.Labels[Label("platform")] == "Kubernetes" {
+		if service.Spec.ClusterNamespace == "" {
+			return validation.NewError("service has failed validation").
+				WithFieldError("clusterNamespace", validation.Required, "must be set")
+		}
+	} else {
+		if service.Spec.ClusterNamespace != "" {
+			return validation.NewError("service has failed validation").
+				WithFieldError("clusterNamespace", validation.NotAllowed, "should not be set for this service type")
+		}
+	}
+
 	existing, err := s.Get(ctx, service.Name)
 	if err != nil && err != ErrNotFound {
 		return err
@@ -306,5 +329,46 @@ func (s *servicesImpl) validateConfiguration(ctx context.Context, service, exist
 		return verr
 	}
 
+	return nil
+}
+
+func (s *servicesImpl) validateCluster(ctx context.Context, service *servicesv1.Service) error {
+	if service.Spec.Cluster.Name == "" {
+		return validation.NewError("%q failed validation", service.Name).WithFieldError(
+			"cluster.name",
+			validation.Required,
+			"must be set",
+		)
+	}
+
+	if service.Spec.Cluster.Namespace != service.Namespace {
+		return validation.NewError("%q failed validation", service.Name).WithFieldErrorf(
+			"cluster.namespace",
+			validation.InvalidValue,
+			"must be the same as the team name: %q",
+			s.team,
+		)
+	}
+
+	if !service.Spec.Cluster.HasGroupVersionKind(clustersv1.ClusterGroupVersionKind) {
+		return validation.NewError("%q failed validation", service.Name).WithFieldErrorf(
+			"cluster",
+			validation.InvalidValue,
+			"must have type of %s",
+			clustersv1.ClusterGroupVersionKind,
+		)
+	}
+
+	_, err := s.Teams().Team(s.team).Clusters().Get(ctx, service.Spec.Cluster.Name)
+	if err != nil {
+		if err == ErrNotFound {
+			return validation.NewError("%q failed validation", service.Name).WithFieldErrorf(
+				"cluster",
+				validation.MustExist,
+				"%q cluster does not exist",
+				service.Spec.Cluster.Name,
+			)
+		}
+	}
 	return nil
 }

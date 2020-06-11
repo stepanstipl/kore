@@ -11,7 +11,6 @@ import ClusterAccessInfo from './ClusterAccessInfo'
 import KoreApi from '../../../kore-api'
 import copy from '../../../utils/object-copy'
 import { inProgressStatusList, statusColorMap, statusIconMap } from '../../../utils/ui-helpers'
-import { featureEnabled, KoreFeatures } from '../../../utils/features'
 
 class ClustersTab extends React.Component {
 
@@ -25,30 +24,27 @@ class ClustersTab extends React.Component {
     clusters: [],
     namespaceClaims: [],
     plans: [],
-    revealNamespaces: {},
-    createNamespace: false
+    revealNamespaces: {}
   }
 
   async fetchComponentData () {
     try {
       const team = this.props.team.metadata.name
       const api = await KoreApi.client()
-      let [ clusters, namespaceClaims, plans, services ] = await Promise.all([
+      let [ clusters, namespaceClaims, plans ] = await Promise.all([
         api.ListClusters(team),
         api.ListNamespaces(team),
-        api.ListPlans(),
-        featureEnabled(KoreFeatures.APPLICATION_SERVICES) ? api.ListServices(team) : Promise.resolve({ items: [] })
+        api.ListPlans()
       ])
       clusters = clusters.items
       namespaceClaims = namespaceClaims.items
       plans = plans.items
-      services = services.items.filter(s => s.spec.cluster && s.spec.cluster.name && s.spec.kind !== 'app')
 
       const revealNamespaces = {}
       clusters.filter(cluster => namespaceClaims.filter(nc => nc.spec.cluster.name === cluster.metadata.name).length > 0).forEach(cluster => revealNamespaces[cluster.metadata.name] = true)
 
       this.props.getClusterCount && this.props.getClusterCount(clusters.length)
-      return { clusters, namespaceClaims, plans, services, revealNamespaces }
+      return { clusters, namespaceClaims, plans, revealNamespaces }
     } catch (err) {
       console.error('Unable to load data for clusters tab', err)
       return {}
@@ -132,7 +128,7 @@ class ClustersTab extends React.Component {
 
   render() {
     const { team } = this.props
-    const { dataLoading, clusters, namespaceClaims, services, plans } = this.state
+    const { dataLoading, clusters, namespaceClaims, plans } = this.state
 
     const hasActiveClusters = Boolean(clusters.filter(c => !c.deleted).length)
 
@@ -156,7 +152,6 @@ class ClustersTab extends React.Component {
             {!hasActiveClusters && <Paragraph type="secondary">No clusters found for this team</Paragraph>}
             {clusters.map((cluster, idx) => {
               const clusterNamespaceClaims = (namespaceClaims || []).filter(nc => nc.spec.cluster.name === cluster.metadata.name)
-              const clusterApplicationServices = services.filter(s => s.spec.cluster.namespace === cluster.metadata.namespace && s.spec.cluster.name === cluster.metadata.name)
 
               return (
                 <React.Fragment key={cluster.metadata.name}>
@@ -172,8 +167,7 @@ class ClustersTab extends React.Component {
                     propsResourceDataKey="cluster"
                     resourceApiPath={`/teams/${team.metadata.name}/clusters/${cluster.metadata.name}`}
                   />
-                  {!cluster.deleted && clusterNamespaceClaims.length > 0 && this.clusterResourceList({ resources: namespaceClaims, resourceDisplayPropertyPath: 'spec.name', title: 'Namespaces' })}
-                  {!cluster.deleted && featureEnabled(KoreFeatures.APPLICATION_SERVICES) && clusterApplicationServices.length > 0 && this.clusterResourceList({ resources: clusterApplicationServices, resourceDisplayPropertyPath: 'metadata.name', title: 'Application services', style: { marginTop: '5px' } })}
+                  {!cluster.deleted && clusterNamespaceClaims.length > 0 && this.clusterResourceList({ resources: clusterNamespaceClaims, resourceDisplayPropertyPath: 'spec.name', title: 'Namespaces' })}
                   {!cluster.deleted && idx < clusters.length - 1 && <Divider />}
                 </React.Fragment>
               )

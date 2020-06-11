@@ -158,7 +158,8 @@ func (p servicePlansImpl) Delete(ctx context.Context, name string, ignoreReadonl
 
 	if !ignoreReadonly {
 		if plan.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
-			return nil, validation.NewError("the plan can not be deleted").WithFieldError(validation.FieldRoot, validation.ReadOnly, "policy is read-only")
+			return nil, validation.NewError("the service plan can not be deleted").
+				WithFieldError(validation.FieldRoot, validation.ReadOnly, "service plan is read-only")
 		}
 	}
 

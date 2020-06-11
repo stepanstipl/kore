@@ -6876,6 +6876,7 @@
     "v1.ServiceKindSpec": {
       "required": [
         "enabled",
+        "serviceAccessEnabled",
         "summary"
       ],
       "properties": {
@@ -6902,6 +6903,9 @@
         },
         "schema": {
           "type": "string"
+        },
+        "serviceAccessEnabled": {
+          "type": "boolean"
         },
         "summary": {
           "type": "string"
@@ -7007,6 +7011,9 @@
         "schema": {
           "type": "string"
         },
+        "serviceAccessDisabled": {
+          "type": "boolean"
+        },
         "summary": {
           "type": "string"
         }
@@ -7108,7 +7115,8 @@
     "v1.ServiceSpec": {
       "required": [
         "kind",
-        "plan"
+        "plan",
+        "cluster"
       ],
       "properties": {
         "cluster": {
@@ -7157,6 +7165,9 @@
         "providerID": {
           "type": "string"
         },
+        "serviceAccessEnabled": {
+          "type": "boolean"
+        },
         "status": {
           "type": "string"
         }
@@ -7164,11 +7175,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
-        "clientScopes",
-        "userClaims",
         "clientID",
         "clientSecret",
-        "issuer"
+        "issuer",
+        "clientScopes",
+        "userClaims"
       ],
       "properties": {
         "clientID": {

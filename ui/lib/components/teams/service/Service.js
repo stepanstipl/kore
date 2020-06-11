@@ -7,11 +7,12 @@ import { inProgressStatusList } from '../../../utils/ui-helpers'
 import ResourceStatusTag from '../../resources/ResourceStatusTag'
 import AutoRefreshComponent from '../AutoRefreshComponent'
 import Link from 'next/link'
-import { getKoreLabel } from '../../../utils/crd-helpers'
+import { getKoreLabel, isReadOnlyCRD } from '../../../utils/crd-helpers'
 
 class Service extends AutoRefreshComponent {
   static propTypes = {
     team: PropTypes.string.isRequired,
+    cluster: PropTypes.object.isRequired,
     service: PropTypes.object.isRequired,
     serviceKind: PropTypes.object,
     deleteService: PropTypes.func.isRequired,
@@ -32,7 +33,7 @@ class Service extends AutoRefreshComponent {
     }
   }
 
-  isClusterService = () => {
+  isApplicationService = () => {
     return getKoreLabel(this.props.serviceKind, 'platform') === 'Kubernetes'
   }
 
@@ -43,7 +44,7 @@ class Service extends AutoRefreshComponent {
   }
 
   render() {
-    const { service, serviceKind, team, style } = this.props
+    const { service, serviceKind, team, cluster, style } = this.props
 
     if (service.deleted) {
       return null
@@ -57,12 +58,13 @@ class Service extends AutoRefreshComponent {
     const actions = () => {
       const actions = []
       const status = service.status.status || 'Pending'
+      const readonly = isReadOnlyCRD(service)
 
       actions.push((
-        <Link key="view" href="/teams/[name]/services/[service]" as={`/teams/${team}/services/${service.metadata.name}`}><a><Tooltip title="Service details"><Icon type="info-circle" /></Tooltip></a></Link>
+        <Link key="view" href="/teams/[name]/clusters/[cluster]/services/[service]" as={`/teams/${team}/clusters/${cluster.metadata.name}/services/${service.metadata.name}`}><a><Tooltip title="Service details"><Icon type="info-circle" /></Tooltip></a></Link>
       ))
 
-      if (!inProgressStatusList.includes(status)) {
+      if (!readonly && !inProgressStatusList.includes(status)) {
         const deleteAction = (
           <Popconfirm
             key="delete"
@@ -83,14 +85,15 @@ class Service extends AutoRefreshComponent {
 
     return (
       <List.Item actions={actions()} style={{ ...styleOverrides }}>
-        {this.isClusterService() ? (
+        {this.isApplicationService() ? (
           <List.Item.Meta
+            avatar={serviceKind && serviceKind.spec.imageURL ? <Avatar src={serviceKind.spec.imageURL} /> : <Avatar icon="cloud-server" />}
             title={<><Text style={{ marginRight: '15px' }}>{service.metadata.name}</Text><Tag style={{ margin: 0 }}>{serviceKind.spec.displayName}</Tag></>}
             description={<Text>Namespace: <Text strong>{service.spec.clusterNamespace}</Text></Text>} />
         ) : (
           <List.Item.Meta
             avatar={serviceKind && serviceKind.spec.imageURL ? <Avatar src={serviceKind.spec.imageURL} /> : <Avatar icon="cloud-server" />}
-            title={<><Link href="/teams/[name]/services/[service]" as={`/teams/${team}/services/${service.metadata.name}`}><a><Text style={{ marginRight: '15px', fontSize: '16px', textDecoration: 'underline' }}>{service.metadata.name}</Text></a></Link><Tag style={{ margin: 0 }}>{serviceKind.spec.displayName}</Tag></>}
+            title={<><Link href="/teams/[name]/clusters/[cluster]/services/[service]" as={`/teams/${team}/clusters/${cluster.metadata.name}/services/${service.metadata.name}`}><a><Text style={{ marginRight: '15px', fontSize: '16px', textDecoration: 'underline' }}>{service.metadata.name}</Text></a></Link><Tag style={{ margin: 0 }}>{serviceKind.spec.displayName}</Tag></>}
           />
         )}
         <div>

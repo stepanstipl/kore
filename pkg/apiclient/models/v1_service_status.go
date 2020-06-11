@@ -36,6 +36,9 @@ type V1ServiceStatus struct {
 	// provider ID
 	ProviderID string `json:"providerID,omitempty"`
 
+	// service access enabled
+	ServiceAccessEnabled bool `json:"serviceAccessEnabled,omitempty"`
+
 	// status
 	Status string `json:"status,omitempty"`
 }

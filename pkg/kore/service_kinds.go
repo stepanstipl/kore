@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"strings"
 
+	"k8s.io/apimachinery/pkg/api/equality"
+
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils/validation"
@@ -59,7 +61,23 @@ func (p serviceKindsImpl) Update(ctx context.Context, kind *servicesv1.ServiceKi
 			WithFieldErrorf("namespace", validation.InvalidValue, "must be %q", HubNamespace)
 	}
 
-	err := p.Store().Client().Update(ctx,
+	existing, err := p.Get(ctx, kind.Name)
+	if err != nil && err != ErrNotFound {
+		return err
+	}
+
+	if existing == nil {
+		return ErrNotAllowed{message: "creating a new service kind is not allowed"}
+	}
+
+	existing.Spec.Enabled = kind.Spec.Enabled
+
+	if !equality.Semantic.DeepEqual(existing.Spec, kind.Spec) {
+		return validation.NewError("%q failed validation", kind.Name).
+			WithFieldErrorf(validation.FieldRoot, validation.NotAllowed, "only the enabled field can be modified")
+	}
+
+	err = p.Store().Client().Update(ctx,
 		store.UpdateOptions.To(kind),
 		store.UpdateOptions.WithCreate(true),
 		store.UpdateOptions.WithForce(true),

@@ -32,7 +32,6 @@ describe('TeamPage', () => {
         tabActiveKey: 'clusters',
         memberCount: -1,
         clusterCount: -1,
-        serviceCount: -1,
         securityStatus: false
       })
     })

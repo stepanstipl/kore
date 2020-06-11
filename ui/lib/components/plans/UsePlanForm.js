@@ -35,7 +35,7 @@ class UsePlanForm extends React.Component {
     super(props)
     // Use passed-in plan values if we have them.
     const planValues = this.props.planValues ? this.props.planValues : UsePlanForm.initialState.planValues
-    this.state = { 
+    this.state = {
       ...UsePlanForm.initialState,
       planValues
     }
@@ -72,7 +72,7 @@ class UsePlanForm extends React.Component {
       [schema, parameterEditable, planValues] = [planDetails.schema, planDetails.parameterEditable, planDetails.servicePlan.configuration]
       break
     case 'servicecredential':
-      schema = await (await KoreApi.client()).GetServiceCredentialSchema(this.props.team.metadata.name, this.props.plan)
+      schema = await (await KoreApi.client()).GetServiceCredentialSchema(this.props.plan)
       parameterEditable = { '*': true }
       planValues = {}
       break

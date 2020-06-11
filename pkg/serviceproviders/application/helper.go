@@ -79,8 +79,9 @@ func CreateSystemServiceFromPlan(servicePlan servicesv1.ServicePlan, cluster cor
 			Name:      name,
 			Namespace: namespace,
 			Annotations: map[string]string{
-				kore.Label("priority"): priority,
-				kore.AnnotationSystem:  "true",
+				kore.AnnotationPriority: priority,
+				kore.AnnotationSystem:   kore.AnnotationValueTrue,
+				kore.AnnotationReadOnly: kore.AnnotationValueTrue,
 			},
 		},
 		Spec: servicesv1.ServiceSpec{

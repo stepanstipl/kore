@@ -119,8 +119,8 @@ func (h hubImpl) Setup(ctx context.Context) error {
 			Name:      "kore",
 			Namespace: "kore-admin",
 			Annotations: map[string]string{
-				"kore.appvia.io/system":   "true",
-				"kore.appvia.io/readonly": "true",
+				AnnotationSystem:   AnnotationValueTrue,
+				AnnotationReadOnly: AnnotationValueTrue,
 			},
 		},
 		Spec: clustersv1.ClusterSpec{
@@ -144,7 +144,7 @@ func (h hubImpl) Setup(ctx context.Context) error {
 			Name:      "kore",
 			Namespace: "kore-admin",
 			Annotations: map[string]string{
-				"kore.appvia.io/system": "true",
+				AnnotationSystem: AnnotationValueTrue,
 			},
 		},
 		Spec: clustersv1.KubernetesSpec{
@@ -160,6 +160,11 @@ func (h hubImpl) Setup(ctx context.Context) error {
 	for _, providerFactory := range ServiceProviderFactories() {
 		for _, provider := range providerFactory.DefaultProviders() {
 			provider.Namespace = HubNamespace
+			if provider.Annotations == nil {
+				provider.Annotations = map[string]string{}
+			}
+			provider.Annotations[AnnotationSystem] = AnnotationValueTrue
+			provider.Annotations[AnnotationReadOnly] = AnnotationValueTrue
 			if err := h.ServiceProviders().Update(getAdminContext(ctx), &provider); err != nil {
 				return err
 			}

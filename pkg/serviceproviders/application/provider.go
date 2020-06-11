@@ -59,12 +59,16 @@ func (p Provider) Catalog(ctx kore.Context, provider *servicesv1.ServiceProvider
 					Labels: map[string]string{
 						kore.Label("platform"): "Kubernetes",
 					},
+					Annotations: map[string]string{
+						kore.AnnotationReadOnly: kore.AnnotationValueTrue,
+					},
 				},
 				Spec: servicesv1.ServiceKindSpec{
-					DisplayName: "Kubernetes Application",
-					Summary:     "Kubernetes Application",
-					Enabled:     false,
-					Schema:      AppSchema,
+					DisplayName:          "Kubernetes Application",
+					Summary:              "Kubernetes Application",
+					Enabled:              false,
+					ServiceAccessEnabled: false,
+					Schema:               AppSchema,
 				},
 			},
 			{
@@ -80,10 +84,11 @@ func (p Provider) Catalog(ctx kore.Context, provider *servicesv1.ServiceProvider
 					},
 				},
 				Spec: servicesv1.ServiceKindSpec{
-					DisplayName: "Kubernetes Helm Application",
-					Summary:     "Kubernetes Helm Application",
-					Enabled:     false,
-					Schema:      HelmAppSchema,
+					DisplayName:          "Kubernetes Helm Application",
+					Summary:              "Kubernetes Helm Application",
+					Enabled:              false,
+					ServiceAccessEnabled: false,
+					Schema:               HelmAppSchema,
 				},
 			},
 		},

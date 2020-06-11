@@ -4,21 +4,23 @@ import moment from 'moment'
 import { Typography, Collapse, Icon, Row, Col, List, Button, Form, Divider, Card, Badge, message, Drawer, Tag } from 'antd'
 const { Text } = Typography
 
-import KoreApi from '../../../../lib/kore-api'
-import Breadcrumb from '../../../../lib/components/layout/Breadcrumb'
-import UsePlanForm from '../../../../lib/components/plans/UsePlanForm'
-import ComponentStatusTree from '../../../../lib/components/common/ComponentStatusTree'
-import ResourceStatusTag from '../../../../lib/components/resources/ResourceStatusTag'
-import copy from '../../../../lib/utils/object-copy'
-import FormErrorMessage from '../../../../lib/components/forms/FormErrorMessage'
-import { inProgressStatusList } from '../../../../lib/utils/ui-helpers'
-import apiPaths from '../../../../lib/utils/api-paths'
-import ServiceCredential from '../../../../lib/components/teams/service/ServiceCredential'
-import ServiceCredentialForm from '../../../../lib/components/teams/service/ServiceCredentialForm'
+import KoreApi from '../../../../../../lib/kore-api/index'
+import Breadcrumb from '../../../../../../lib/components/layout/Breadcrumb'
+import UsePlanForm from '../../../../../../lib/components/plans/UsePlanForm'
+import ComponentStatusTree from '../../../../../../lib/components/common/ComponentStatusTree'
+import ResourceStatusTag from '../../../../../../lib/components/resources/ResourceStatusTag'
+import copy from '../../../../../../lib/utils/object-copy'
+import FormErrorMessage from '../../../../../../lib/components/forms/FormErrorMessage'
+import { inProgressStatusList } from '../../../../../../lib/utils/ui-helpers'
+import apiPaths from '../../../../../../lib/utils/api-paths'
+import ServiceCredential from '../../../../../../lib/components/teams/service/ServiceCredential'
+import ServiceCredentialForm from '../../../../../../lib/components/teams/service/ServiceCredentialForm'
+import { isReadOnlyCRD } from '../../../../../../lib/utils/crd-helpers'
 
 class ServicePage extends React.Component {
   static propTypes = {
     team: PropTypes.object.isRequired,
+    cluster: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
     service: PropTypes.object.isRequired,
     serviceKind: PropTypes.object.isRequired,
@@ -40,8 +42,9 @@ class ServicePage extends React.Component {
 
   static getInitialProps = async (ctx) => {
     const api = await KoreApi.client(ctx)
-    let [ team, service, serviceKinds ] = await Promise.all([
+    let [ team, cluster, service, serviceKinds ] = await Promise.all([
       api.GetTeam(ctx.query.name),
+      api.GetCluster(ctx.query.name, ctx.query.cluster),
       api.GetService(ctx.query.name, ctx.query.service),
       api.ListServiceKinds()
     ])
@@ -52,7 +55,7 @@ class ServicePage extends React.Component {
     }
     const serviceKind = serviceKinds.items.find(sk => sk.metadata.name === service.spec.kind)
 
-    return { team, service, serviceKind }
+    return { team, cluster, service, serviceKind }
   }
 
   fetchComponentData = async () => {
@@ -208,11 +211,11 @@ class ServicePage extends React.Component {
   }
 
   render = () => {
-    const { team, user, serviceKind } = this.props
+    const { team, cluster, user, serviceKind } = this.props
     const { service, serviceCredentials, createServiceCredential } = this.state
     const created = moment(service.metadata.creationTimestamp).fromNow()
     const deleted = service.metadata.deletionTimestamp ? moment(service.metadata.deletionTimestamp).fromNow() : false
-    const serviceNotEditable = !service || !service.status || inProgressStatusList.includes(service.status.status)
+    const serviceNotEditable = !service || isReadOnlyCRD(service) || !service.status || inProgressStatusList.includes(service.status.status)
     const editServiceFormConfig = {
       layout: 'horizontal', labelAlign: 'left', hideRequiredMark: true,
       labelCol: { xs: 24, xl: 10 }, wrapperCol: { xs: 24, xl: 14 }
@@ -225,7 +228,9 @@ class ServicePage extends React.Component {
         <Breadcrumb
           items={[
             { text: team.spec.summary, href: '/teams/[name]', link: `/teams/${team.metadata.name}` },
-            { text: 'Services', href: '/teams/[name]/[tab]', link: `/teams/${team.metadata.name}/services` },
+            { text: 'Clusters', href: '/teams/[name]/[tab]', link: `/teams/${team.metadata.name}/clusters` },
+            { text: cluster.metadata.name, href: '/teams/[name]/clusters/[cluster]/[tab]', link: `/teams/${team.metadata.name}/clusters/${cluster.metadata.name}/namespaces` },
+            { text: 'Services', href: '/teams/[name]/clusters/[cluster]/[tab]', link: `/teams/${team.metadata.name}/clusters/${cluster.metadata.name}/services` },
             { text: service.metadata.name }
           ]}
         />
@@ -259,55 +264,60 @@ class ServicePage extends React.Component {
           </Col>
         </Row>
 
-        <Divider />
+        {service.status.serviceAccessEnabled ? (
+          <>
+            <Divider />
 
-        <Card title={<span>Service access {serviceCredentials && <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={serviceCredentials.filter(c => !c.deleted).length} />}</span>} extra={<Button type="primary" onClick={this.createServiceCredential(true)}>Add access</Button>}>
+            <Card title={<span>Service access {serviceCredentials && <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={serviceCredentials.filter(c => !c.deleted).length} />}</span>} extra={<Button type="primary" onClick={this.createServiceCredential(true)}>Add access</Button>}>
 
-          {!serviceCredentials && <Icon type="loading" />}
-          {serviceCredentials && !hasActiveBindings && <Text type="secondary">No access found for this service</Text>}
-          {serviceCredentials && (
-            <List
-              className="hide-empty-text"
-              locale={{ emptyText: <div/> }}
-              dataSource={serviceCredentials}
-              renderItem={serviceCredential => {
-                return (
-                  <ServiceCredential
-                    viewPerspective="service"
-                    team={team.metadata.name}
-                    serviceCredential={serviceCredential}
-                    serviceKind={serviceKind}
-                    deleteServiceCredential={this.deleteServiceCredential}
-                    handleUpdate={this.handleResourceUpdated('serviceCredentials')}
-                    handleDelete={this.handleResourceDeleted('serviceCredentials')}
-                    refreshMs={10000}
-                    propsResourceDataKey="serviceCredential"
-                    resourceApiPath={`${apiPaths.team(team.metadata.name).serviceCredentials}/${serviceCredential.metadata.name}`}
+              {!serviceCredentials && <Icon type="loading" />}
+              {serviceCredentials && !hasActiveBindings && <Text type="secondary">No access found for this service</Text>}
+              {serviceCredentials && (
+                <List
+                  className="hide-empty-text"
+                  locale={{ emptyText: <div/> }}
+                  dataSource={serviceCredentials}
+                  renderItem={serviceCredential => {
+                    return (
+                      <ServiceCredential
+                        viewPerspective="service"
+                        team={team.metadata.name}
+                        serviceCredential={serviceCredential}
+                        serviceKind={serviceKind}
+                        deleteServiceCredential={this.deleteServiceCredential}
+                        handleUpdate={this.handleResourceUpdated('serviceCredentials')}
+                        handleDelete={this.handleResourceDeleted('serviceCredentials')}
+                        refreshMs={10000}
+                        propsResourceDataKey="serviceCredential"
+                        resourceApiPath={`${apiPaths.team(team.metadata.name).serviceCredentials}/${serviceCredential.metadata.name}`}
+                      />
+                    )
+                  }}
+                />
+              )}
+
+              <Drawer
+                title="Create service access"
+                placement="right"
+                closable={false}
+                onClose={this.createServiceCredential(false)}
+                visible={createServiceCredential}
+                width={700}
+              >
+                {createServiceCredential &&
+                  <ServiceCredentialForm
+                    team={team}
+                    creationSource="service"
+                    services={[service]}
+                    clusters={[cluster]}
+                    handleSubmit={this.handleServiceCredentialCreated}
+                    handleCancel={this.createServiceCredential(false)}
                   />
-                )
-              }}
-            />
-          )}
-
-          <Drawer
-            title="Create service access"
-            placement="right"
-            closable={false}
-            onClose={this.createServiceCredential(false)}
-            visible={createServiceCredential}
-            width={700}
-          >
-            {createServiceCredential &&
-              <ServiceCredentialForm
-                team={team}
-                creationSource="service"
-                services={[service]}
-                handleSubmit={this.handleServiceCredentialCreated}
-                handleCancel={this.createServiceCredential(false)}
-              />
-            }
-          </Drawer>
-        </Card>
+                }
+              </Drawer>
+            </Card>
+          </>
+        ) : null }
 
         <Divider />
 

@@ -21,6 +21,7 @@ class ServiceBuildForm extends React.Component {
   static propTypes = {
     form: PropTypes.any.isRequired,
     team: PropTypes.object.isRequired,
+    cluster: PropTypes.object.isRequired,
     teamServices: PropTypes.array.isRequired,
     handleSubmit: PropTypes.func.isRequired,
     handleCancel: PropTypes.func.isRequired
@@ -53,13 +54,9 @@ class ServiceBuildForm extends React.Component {
       api.ListClusters(this.props.team.metadata.name),
       api.ListNamespaces(this.props.team.metadata.name)
     ])
+    const { cluster } = this.props
     const bindingsData = {}
-    namespaceClaims.items.forEach((ns) => {
-      const cluster = clusters.items.find(c => c.metadata.name === ns.spec.cluster.name)
-      // In case a namespace claim exists without a cluster, no-op if no cluster exists:
-      if (!cluster) {
-        return
-      }
+    namespaceClaims.items.filter(nc => nc.spec.cluster.name === cluster.metadata.name).forEach((ns) => {
       if (bindingsData[cluster.metadata.name]) {
         bindingsData[cluster.metadata.name].children.push({ title: ns.spec.name, value: ns.metadata.name })
       } else {
@@ -85,6 +82,7 @@ class ServiceBuildForm extends React.Component {
   }
 
   getServiceResource = (values) => {
+    const cluster = this.props.cluster
     const selectedServicePlan = this.state.servicePlans.items.find(p => p.metadata.name === values.servicePlan)
 
     const serviceResource = new V1Service()
@@ -99,6 +97,15 @@ class ServiceBuildForm extends React.Component {
     const serviceSpec = new V1ServiceSpec()
     serviceSpec.setKind(selectedServicePlan.spec.kind)
     serviceSpec.setPlan(selectedServicePlan.metadata.name)
+
+    serviceSpec.setCluster(NewV1Ownership({
+      group: cluster.apiVersion.split('/')[0],
+      version: cluster.apiVersion.split('/')[1],
+      kind: cluster.kind,
+      name: cluster.metadata.name,
+      namespace: this.props.team.metadata.name
+    }))
+
     if (this.state.servicePlanOverride) {
       serviceSpec.setConfiguration(this.state.servicePlanOverride)
     } else {
@@ -311,6 +318,18 @@ class ServiceBuildForm extends React.Component {
       selectedServiceKindObject = serviceKinds.items.find(sk => sk.metadata.name === selectedServiceKind)
     }
 
+    let selectedServicePlanObject = false
+    if (selectedServiceKind && selectedServicePlan) {
+      selectedServicePlanObject = filteredServicePlans.find(sp => sp.metadata.name === selectedServicePlan)
+    }
+
+    const showCredentialsForm = selectedServiceKindObject
+      && selectedServiceKindObject.spec.serviceAccessEnabled
+      && selectedServicePlanObject
+      && !selectedServicePlanObject.spec.serviceAccessDisabled
+      && !planSchemaFound
+      && bindingSelectData.length > 0
+
     return (
       <div>
         <CloudSelector selectedCloud={selectedCloud} handleSelectCloud={this.handleSelectCloud} enabledCloudList={['AWS']}/>
@@ -371,7 +390,7 @@ class ServiceBuildForm extends React.Component {
                   />
                 )}
               </Card>
-              {selectedServicePlan && !planSchemaFound && bindingSelectData.length > 0 && (
+              {showCredentialsForm && (
                 <Collapse defaultActiveKey={['bindings']}>
                   <Panel header="Create service access" key="bindings">
                     <Alert

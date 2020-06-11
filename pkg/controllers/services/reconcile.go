@@ -115,6 +115,18 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 	}
 
+	serviceKind, err := c.ServiceKinds().Get(ctx, service.Spec.Kind)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	servicePlan, err := c.ServicePlans().Get(ctx, service.Spec.Plan)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	service.Status.ServiceAccessEnabled = serviceKind.Spec.ServiceAccessEnabled && !servicePlan.Spec.ServiceAccessDisabled
+
 	finalizer := kubernetes.NewFinalizer(c.mgr.GetClient(), finalizerName)
 	if finalizer.IsDeletionCandidate(service) {
 		return c.Delete(ctx, logger, service, finalizer, provider)
