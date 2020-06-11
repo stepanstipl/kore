@@ -9,7 +9,7 @@ export class ConfigureCloudGCPClusterPlans extends ConfigureCloudPage {
 
   async openTab() {
     await this.selectCloud('gcp')
-    await this.selectSubTab('Cluster Plans')
+    await this.selectSubTab('Cluster Plans', 'GCP/plans')
   }
 
   async view(name) {

@@ -18,6 +18,7 @@ class EKSCredentialsList extends ResourceList {
 
   createdMessage = 'AWS account credentials created successfully'
   updatedMessage = 'AWS account credentials updated successfully'
+  deletedMessage = 'AWS account credentials deleted successfully'
 
   async fetchComponentData() {
     const api = await KoreApi.client()
@@ -45,7 +46,7 @@ class EKSCredentialsList extends ResourceList {
           showIcon
           style={{ marginBottom: '20px' }}
         />
-        <Button type="primary" onClick={this.add(true)} style={{ display: 'block', marginBottom: '20px' }}>+ New</Button>
+        <Button id="add" type="primary" onClick={this.add(true)} style={{ display: 'block', marginBottom: '20px' }}>+ New</Button>
         {!resources ? <Icon type="loading" /> : (
           <>
             <List

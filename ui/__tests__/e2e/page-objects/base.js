@@ -38,6 +38,7 @@ export class BasePage {
     await Promise.all(notifs.map(async (n) => {
       try {
         await n.click()
+        await waitForDrawerOpenClose(this.p)
       } catch (err) {
         // Sometimes these randomly go out of scope while we're clicking, ignore errors
         // in that case.
@@ -55,7 +56,6 @@ export class BasePage {
 
   async visitPage(query = '') {
     try {
-      console.log(`goto [${testUrl}${this.pagePath}${query}]`)
       await this.p.goto(`${testUrl}${this.pagePath}${query}`)
       await this.p.waitForSelector('body')
     } catch (error) {

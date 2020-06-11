@@ -39,7 +39,7 @@ describe('Configure Cloud - GCP', () => {
 
     it('adds a new project credential', async () => {
       await gkeProjCredsPage.add()
-      await gkeProjCredsPage.populateNew(testCred)
+      await gkeProjCredsPage.populate(testCred)
       await gkeProjCredsPage.save()
       await expect(page).toMatch('GCP project credentials created successfully')
     })
@@ -50,14 +50,14 @@ describe('Configure Cloud - GCP', () => {
 
     it('edits a project credential with a new description', async () => {
       await gkeProjCredsPage.edit(testCred.name, testCred.project)
-      await gkeProjCredsPage.populateEdit({ summary: 'summary2' })
+      await gkeProjCredsPage.populate({ summary: 'summary2' })
       await gkeProjCredsPage.save()
       await expect(page).toMatch('GCP project credentials updated successfully')
     })
 
     it('edits a project credential with a new key', async () => {
       await gkeProjCredsPage.edit(testCred.name, testCred.project)
-      await gkeProjCredsPage.populateEdit({ json: 'sheep' })
+      await gkeProjCredsPage.replaceKey('sheep')
       await gkeProjCredsPage.save()
       await expect(page).toMatch('GCP project credentials updated successfully')
     })

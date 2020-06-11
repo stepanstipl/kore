@@ -9,7 +9,7 @@ export class ConfigureCloudGCPProjects extends ConfigureCloudPage {
 
   async openTab() {
     await this.selectCloud('gcp')
-    await this.selectSubTab('Project credentials')
+    await this.selectSubTab('Project credentials', 'GCP/projects')
   }
 
   /**
@@ -31,24 +31,20 @@ export class ConfigureCloudGCPProjects extends ConfigureCloudPage {
     await expect(this.p).toMatch(`GCP project: ${project}`)
   }
 
-  async populateNew({ name, summary, project, json }) {
-    await this.p.type('input#gke_credentials_name', name)
-    await this.p.type('input#gke_credentials_summary', summary)
-    await this.p.type('input#gke_credentials_project', project)
-    await this.p.type('textarea#gke_credentials_account', json)
-  }
-
-  async populateEdit({ name, summary, project, json }) {
-    clearFillTextInput(this.p, 'gke_credentials_project', project)
-    clearFillTextInput(this.p, 'gke_credentials_name', name)
-    clearFillTextInput(this.p, 'gke_credentials_summary', summary)
-
-    if (json) {
-      await this.p.type('input#gke_credentials_replace_key',' ')
-      // Wait for service account text field to be shown:
-      await expect(this.p).toMatch('Service Account JSON')
+  async populate({ name, summary, project, json }) {
+    await clearFillTextInput(this.p, 'gke_credentials_name', name)
+    await clearFillTextInput(this.p, 'gke_credentials_summary', summary)
+    await clearFillTextInput(this.p, 'gke_credentials_project', project)
+    if (json !== undefined) {
       await this.p.type('textarea#gke_credentials_account', json)
     }
+  }
+
+  async replaceKey(json) {
+    await this.p.type('input#gke_credentials_replace_key',' ')
+    // Wait for service account text field to be shown:
+    await expect(this.p).toMatch('Service Account JSON')
+    await this.p.type('textarea#gke_credentials_account', json)
   }
 
   async save() {

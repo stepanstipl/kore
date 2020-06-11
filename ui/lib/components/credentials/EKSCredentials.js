@@ -46,9 +46,9 @@ class EKSCredentials extends AutoRefreshComponent {
     }
 
     return (
-      <List.Item key={eksCredentials.metadata.name} actions={[
+      <List.Item id={`ekscreds_${eksCredentials.metadata.name}`} key={eksCredentials.metadata.name} actions={[
         <ResourceVerificationStatus key="verification_status" resourceStatus={eksCredentials.status} />,
-        <Text key="show_creds"><a onClick={editEKSCredentials(eksCredentials)}><Icon type="edit" theme="filled"/> Edit</a></Text>
+        <Text key="show_creds"><a id={`ekscreds_edit_${eksCredentials.metadata.name}`} onClick={editEKSCredentials(eksCredentials)}><Icon type="edit" theme="filled"/> Edit</a></Text>
       ]}>
         <List.Item.Meta
           avatar={<Avatar icon="amazon" />}
