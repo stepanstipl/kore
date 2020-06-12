@@ -50,32 +50,6 @@ describe('ManageClusterPlanForm', () => {
     })
   })
 
-  describe('#generatePlanConfiguration', () => {
-    test('sets default false for boolean properties', () => {
-      const config = form.generatePlanConfiguration()
-      expect(config).toEqual({ bool1: false, bool2: false })
-    })
-
-    test('includes user configured values', () => {
-      form.state.planValues = {
-        string1: 'hello',
-        number1: 123
-      }
-      const config = form.generatePlanConfiguration()
-      expect(config).toEqual({ bool1: false, bool2: false, string1: 'hello', number1: 123 })
-    })
-
-    test('user configured values override default boolean values', () => {
-      form.state.planValues = {
-        bool1: true,
-        string1: 'hello',
-        number1: 123
-      }
-      const config = form.generatePlanConfiguration()
-      expect(config).toEqual({ bool1: true, bool2: false, string1: 'hello', number1: 123 })
-    })
-  })
-
   describe('#handleSubmit', () => {
     let event
     beforeEach(() => {

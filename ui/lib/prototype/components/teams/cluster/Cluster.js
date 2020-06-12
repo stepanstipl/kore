@@ -1,12 +1,13 @@
 import PropTypes from 'prop-types'
 import moment from 'moment'
-import { List, Icon, Typography, Modal, Popconfirm, message, Tooltip } from 'antd'
+import { List, Icon, Typography, Modal, Popconfirm, Tooltip } from 'antd'
 const { Text, Paragraph } = Typography
 
 import { inProgressStatusList } from '../../../../utils/ui-helpers'
 import ResourceStatusTag from '../../../../components/resources/ResourceStatusTag'
 import AutoRefreshComponent from '../../../../components/teams/AutoRefreshComponent'
 import Link from 'next/link'
+import { successMessage, errorMessage } from '../../../../utils/message'
 
 const clusterProviderIconSrcMap = {
   'GKE': '/static/images/GKE.png',
@@ -25,13 +26,13 @@ class Cluster extends AutoRefreshComponent {
     const { cluster } = this.props
     const { status, deleted } = cluster
     if (deleted) {
-      return message.success(`Cluster successfully deleted: ${cluster.metadata.name}`)
+      return successMessage(`Cluster successfully deleted: ${cluster.metadata.name}`)
     }
     if (status.status === 'Success') {
-      return message.success(`Cluster successfully created: ${cluster.metadata.name}`)
+      return successMessage(`Cluster successfully created: ${cluster.metadata.name}`)
     }
     if (status.status === 'Failure') {
-      return message.error(`Cluster failed to create: ${cluster.metadata.name}`)
+      return errorMessage(`Cluster failed to create: ${cluster.metadata.name}`)
     }
   }
 

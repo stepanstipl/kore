@@ -4,7 +4,7 @@ import axios from 'axios'
 import Link from 'next/link'
 import Router from 'next/router'
 import Error from 'next/error'
-import { Typography, Card, List, Tag, Button, Avatar, Popconfirm, message, Select, Drawer, Badge, Alert, Icon, Modal, Dropdown, Menu, Tabs } from 'antd'
+import { Typography, Card, List, Tag, Button, Avatar, Popconfirm, Select, Drawer, Badge, Alert, Icon, Modal, Dropdown, Menu, Tabs } from 'antd'
 const { Paragraph, Text } = Typography
 const { Option } = Select
 const { TabPane } = Tabs
@@ -27,6 +27,7 @@ import TeamData from '../../../lib/prototype/utils/dummy-team-data'
 import Cluster from '../../../lib/prototype/components/teams/cluster/Cluster'
 import NamespaceClaim from '../../../lib/prototype/components/teams/namespace/NamespaceClaim'
 import ServiceForm from '../../../lib/prototype/components/teams/service/ServiceForm'
+import { successMessage, errorMessage, loadingMessage } from '../../../lib/utils/message'
 
 class TeamDashboard extends React.Component {
   static propTypes = {
@@ -140,7 +141,7 @@ class TeamDashboard extends React.Component {
 
     await asyncForEach(this.state.membersToAdd, async member => {
       await apiRequest(null, 'put', `${apiPaths.team(this.props.team.metadata.name).members}/${member}`)
-      message.success(`Team member added: ${member}`)
+      successMessage(`Team member added: ${member}`)
       members.items.push(member)
     })
 
@@ -157,10 +158,10 @@ class TeamDashboard extends React.Component {
         const members = state.members
         members.items = members.items.filter(m => m !== member)
         this.setState(state)
-        message.success(`Team member removed: ${member}`)
+        successMessage(`Team member removed: ${member}`)
       } catch (err) {
         console.error('Error removing team member', err)
-        message.error('Error removing team member, please try again.')
+        errorMessage('Error removing team member, please try again.')
       }
     }
   }
@@ -192,10 +193,10 @@ class TeamDashboard extends React.Component {
       cluster.status.status = 'Deleting'
       cluster.metadata.deletionTimestamp = new Date()
       this.setState(state, done)
-      message.loading(`Cluster deletion requested: ${cluster.metadata.name}`)
+      loadingMessage(`Cluster deletion requested: ${cluster.metadata.name}`)
     } catch (err) {
       console.error('Error deleting cluster', err)
-      message.error('Error deleting cluster, please try again.')
+      errorMessage('Error deleting cluster, please try again.')
     }
   }
 
@@ -212,7 +213,7 @@ class TeamDashboard extends React.Component {
     state.createNamespace = false
     state.namespaceClaims.items.push(namespaceClaim)
     this.setState(state)
-    message.loading(`Namespace "${namespaceClaim.spec.name}" requested on cluster "${namespaceClaim.spec.cluster.name}"`)
+    loadingMessage(`Namespace "${namespaceClaim.spec.name}" requested on cluster "${namespaceClaim.spec.cluster.name}"`)
   }
 
   deleteNamespace = async (name, done) => {
@@ -224,10 +225,10 @@ class TeamDashboard extends React.Component {
       namespaceClaim.status.status = 'Deleting'
       namespaceClaim.metadata.deletionTimestamp = new Date()
       this.setState(state, done)
-      message.loading(`Namespace deletion requested: ${namespaceClaim.spec.name}`)
+      loadingMessage(`Namespace deletion requested: ${namespaceClaim.spec.name}`)
     } catch (err) {
       console.error('Error deleting namespace', err)
-      message.error('Error deleting namespace, please try again.')
+      errorMessage('Error deleting namespace, please try again.')
     }
   }
 
@@ -244,11 +245,11 @@ class TeamDashboard extends React.Component {
     state.createCloudService = false
     state.cloudServices.push(cloudService)
     this.setState(state)
-    message.loading(`Cloud service "${cloudService.name}" requested.`)
+    loadingMessage(`Cloud service "${cloudService.name}" requested.`)
   }
 
   deleteCloudService = (name, plan) => () => {
-    message.success(`Cloud service deleted: ${name}`)
+    successMessage(`Cloud service deleted: ${name}`)
     this.setState({ cloudServices: copy(this.state.cloudServices).filter(s => `${s.name}_${s.plan}` !== `${name}_${plan}`) })
   }
 
@@ -301,11 +302,11 @@ class TeamDashboard extends React.Component {
       const api = await KoreApi.client()
       await api.RemoveTeam(team)
       this.props.teamRemoved(team)
-      message.success(`Team "${team}" deleted`)
+      successMessage(`Team "${team}" deleted`)
       return redirect({ router: Router, path: '/' })
     } catch (err) {
       console.log('Error deleting team', err)
-      message.error('Team could not be deleted, please try again later')
+      errorMessage('Team could not be deleted, please try again later')
     }
   }
 

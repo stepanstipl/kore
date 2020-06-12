@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import moment from 'moment'
 import Link from 'next/link'
-import { Button, Col, Divider, Icon, message, Row, Tag, Tooltip, Typography } from 'antd'
+import { Button, Col, Divider, Icon, Row, Tag, Tooltip, Typography } from 'antd'
 const { Paragraph, Text } = Typography
 import { get } from 'lodash'
 
@@ -11,6 +11,7 @@ import ClusterAccessInfo from './ClusterAccessInfo'
 import KoreApi from '../../../kore-api'
 import copy from '../../../utils/object-copy'
 import { inProgressStatusList, statusColorMap, statusIconMap } from '../../../utils/ui-helpers'
+import { errorMessage, loadingMessage } from '../../../utils/message'
 
 class ClustersTab extends React.Component {
 
@@ -100,10 +101,10 @@ class ClustersTab extends React.Component {
       cluster.status.status = 'Deleting'
       cluster.metadata.deletionTimestamp = new Date()
       this.setState({ clusters }, done)
-      message.loading(`Cluster deletion requested: ${cluster.metadata.name}`)
+      loadingMessage(`Cluster deletion requested: ${cluster.metadata.name}`)
     } catch (err) {
       console.error('Error deleting cluster', err)
-      message.error('Error deleting cluster, please try again.')
+      errorMessage('Error deleting cluster, please try again.')
     }
   }
 

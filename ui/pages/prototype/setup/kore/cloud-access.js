@@ -1,6 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
-import { Typography, Card, Alert, Divider, Tooltip, Radio, List, Icon, Steps, Button, Row, Col, Modal , Drawer, Form, Input, Popover, Result, message } from 'antd'
+import { Typography, Card, Alert, Divider, Tooltip, Radio, List, Icon, Steps, Button, Row, Col, Modal , Drawer, Form, Input, Popover, Result } from 'antd'
 const { Title, Text, Paragraph } = Typography
 const { Step } = Steps
 
@@ -16,6 +16,7 @@ const { publicRuntimeConfig } = getConfig()
 // prototype components
 import GCPOrganizationsList from '../../../../lib/prototype/components/credentials/GCPOrganizationsList'
 import AutomatedProjectForm from '../../../../lib/prototype/components/configure/AutomatedProjectForm'
+import { successMessage } from '../../../../lib/utils/message'
 
 class CloudAccessPage extends React.Component {
 
@@ -115,7 +116,7 @@ class CloudAccessPage extends React.Component {
       this.setState({
         gcpProjectList: this.state.gcpProjectList.filter(p => p.code !== code)
       })
-      message.success('GCP automated project removed')
+      successMessage('GCP automated project removed')
     }
   }
 
@@ -150,7 +151,7 @@ class CloudAccessPage extends React.Component {
       const gcpProjectList = copy(this.state.gcpProjectList)
       gcpProjectList.find(p => p.code === projectCode).plans.push(plan)
       this.setState({ gcpProjectList })
-      message.success('Plan associated')
+      successMessage('Plan associated')
     }
   }
 
@@ -186,7 +187,7 @@ class CloudAccessPage extends React.Component {
       const project = gcpProjectList.find(p => p.code === projectCode)
       project.plans = project.plans.filter(p => p !== plan)
       this.setState({ gcpProjectList })
-      message.success('Plan unassociated')
+      successMessage('Plan unassociated')
     }
   }
 
@@ -200,7 +201,7 @@ class CloudAccessPage extends React.Component {
       gcpProjectList: this.state.gcpProjectList.concat([{ code, plans: [], ...project }]),
       addProject: false
     })
-    message.success('GCP automated project added')
+    successMessage('GCP automated project added')
   }
 
   IconTooltip = ({ icon, text }) => (

@@ -35,7 +35,7 @@ const supportedMachineTypes = {
   },
   'general1': {
     'name': 'General Purpose (1st gen)',
-    'about': 'General purpose machines offer slightly lower performance per vCPU than 2nd gen and 3.75GB (standard), 0.9GB (highcpu), or 6.5GB (highmem) memory per vCPU',
+    'about': 'First generation machines offer slightly lower performance per vCPU than 2nd gen and 3.75GB (standard), 0.9GB (highcpu), or 6.5GB (highmem) memory per vCPU',
     'flavours': {
       'n1': {
         '_about': 'N1 - General',
@@ -138,7 +138,7 @@ function getMachineType(family, flavour, type, cpus) {
 
 export default class PlanOptionGKENodePools extends PlanOptionBase {
   state = {
-    selectedNodePoolIndex: -1
+    selectedIndex: -1
   }
 
   addNodePool = () => {
@@ -170,7 +170,7 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
 
     // Open the drawer to immediately edit the new node pool:
     this.setState({
-      selectedNodePoolIndex: newValue.length - 1
+      selectedIndex: newValue.length - 1
     })
   }
 
@@ -186,7 +186,7 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
       cancelText: 'No',
       onOk: () => {
         this.setState({
-          selectedNodePoolIndex: -1
+          selectedIndex: -1
         })
     
         this.props.onChange(
@@ -210,46 +210,47 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
 
   viewEditNodePool = (idx) => {
     this.setState({
-      selectedNodePoolIndex: idx
+      selectedIndex: idx
     })
   }
 
   closeNodePool = () => {
     this.setState({
-      selectedNodePoolIndex: -1
+      selectedIndex: -1
     })
   }
 
   nodePoolActions = (idx, editable) => {
     const actions = [
-      <a key="viewedit" onClick={() => this.viewEditNodePool(idx)}><Icon type={editable ? 'edit' : 'eye'}></Icon></a>
+      <a id={`plan_nodepool_${idx}_viewedit`} key="viewedit" onClick={() => this.viewEditNodePool(idx)}><Icon type={editable ? 'edit' : 'eye'}></Icon></a>
     ]
     
     // Only show delete if we have more than one node pool
     if (editable && this.props.value && this.props.value.length > 1) {
-      actions.push(<a key="delete" onClick={() => this.removeNodePool(idx)}><Icon type="delete"></Icon></a>)
+      actions.push(<a id={`plan_nodepool_${idx}_del`} key="delete" onClick={() => this.removeNodePool(idx)}><Icon type="delete"></Icon></a>)
     }
     return actions
   }
 
   render() {
     const { name, editable, property, plan } = this.props
-    const { selectedNodePoolIndex } = this.state
+    const { selectedIndex } = this.state
+    const id_prefix = 'plan_nodepool'
 
     const value = this.props.value || property.default || []
-    const selectedNodePool = selectedNodePoolIndex >= 0 ? value[selectedNodePoolIndex] : null
+    const selected = selectedIndex >= 0 ? value[selectedIndex] : null
     const displayName = this.props.displayName || startCase(name)
     const description = this.props.manage ? 'Default node pools for clusters created from this plan' : null
 
     let ngNameClash = false, versionFollowMaster = false, nodePoolCloseable = true
     let allMachineTypes = null, selectedMachineTypeFamilyInfo = null
-    if (selectedNodePool) {
+    if (selected) {
       // we have duplicate names if another node pool with a different index has the same name as this one
-      ngNameClash = selectedNodePool.name && selectedNodePool.name.length > 0 && value.some((v, i) => i !== selectedNodePoolIndex && v.name === selectedNodePool.name)
-      versionFollowMaster = !selectedNodePool.version || selectedNodePool.version === ''
-      nodePoolCloseable = !ngNameClash && selectedNodePool.name && selectedNodePool.name.match(property.items.properties.name.pattern)
+      ngNameClash = selected.name && selected.name.length > 0 && value.some((v, i) => i !== selectedIndex && v.name === selected.name)
+      versionFollowMaster = !selected.version || selected.version === ''
+      nodePoolCloseable = !ngNameClash && selected.name && selected.name.match(property.items.properties.name.pattern)
       allMachineTypes = getSupportedMachineTypes()
-      selectedMachineTypeFamilyInfo = supportedMachineTypes[allMachineTypes.index[selectedNodePool.machineType][0]].about
+      selectedMachineTypeFamilyInfo = supportedMachineTypes[allMachineTypes.index[selected.machineType][0]].about
     }
 
     let followingReleaseChannel = false
@@ -257,14 +258,15 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
       followingReleaseChannel = true
     }
 
+
     return (
       <>
         <Form.Item label={displayName} help={description}>
-          <List dataSource={value} renderItem={(ng, idx) => {
+          <List id={`${id_prefix}s`} dataSource={value} renderItem={(ng, idx) => {
             return (
               <List.Item actions={this.nodePoolActions(idx, editable)}>
                 <List.Item.Meta 
-                  title={<a onClick={() => this.viewEditNodePool(idx)}>{`Node Pool ${idx + 1} (${ng.name})`}</a>} 
+                  title={<a id={`${id_prefix}_${idx}_viewedittitle`} onClick={() => this.viewEditNodePool(idx)}>{`Node Pool ${idx + 1} (${ng.name})`}</a>} 
                   description={ng.enableAutoscaler ? 
                     `Size per zone: min=${ng.minSize} initial=${ng.size} max=${ng.maxSize} | Node type: ${ng.machineType}`
                     :
@@ -275,26 +277,26 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
               </List.Item>
             )
           }} />
-          {!editable ? null : <Button onClick={this.addNodePool}>Add node pool</Button>}
+          {!editable ? null : <Button id={`${id_prefix}_add`} onClick={this.addNodePool}>Add node pool</Button>}
           {this.validationErrors(name)}
         </Form.Item>
         <Drawer
-          title={`Node Pool ${selectedNodePool ? selectedNodePoolIndex + 1 : ''}`}
-          visible={Boolean(selectedNodePool)}
+          title={`Node Pool ${selected ? selectedIndex + 1 : ''}`}
+          visible={Boolean(selected)}
           closable={nodePoolCloseable}
           maskClosable={nodePoolCloseable}
           onClose={() => this.closeNodePool()}
           width={800}
         >
-          {!selectedNodePool ? null : (
+          {!selected ? null : (
             <>
               <Collapse defaultActiveKey={['basics','compute','metadata']}>
                 <Collapse.Panel key="basics" header="Basic Configuration (name, versions, sizing)">
                   <Form.Item label="Name" help="Unique name for this group within the cluster">
-                    <Input pattern={property.items.properties.name.pattern} value={selectedNodePool.name} onChange={(e) => this.setNodePoolProperty(selectedNodePoolIndex, 'name', e.target.value)} readOnly={!editable} />
-                    {this.validationErrors(`${name}[${selectedNodePoolIndex}].name`)}
+                    <Input id={`${id_prefix}_name`} pattern={property.items.properties.name.pattern} value={selected.name} onChange={(e) => this.setNodePoolProperty(selectedIndex, 'name', e.target.value)} readOnly={!editable} />
+                    {this.validationErrors(`${name}[${selectedIndex}].name`)}
                     {!ngNameClash ? null : <Alert type="error" message="This name is already used by another node pool, it must be changed." />}
-                    {selectedNodePool.name && selectedNodePool.name.match(property.items.properties.name.pattern) ? null : <Alert type="error" message="Name must be minimum 2, maximum 40 alpha-numeric characters and hyphens" />}
+                    {selected.name && selected.name.match(property.items.properties.name.pattern) ? null : <Alert type="error" message="Name must be minimum 2, maximum 40 alpha-numeric characters and hyphens" />}
                   </Form.Item>
                   {followingReleaseChannel ? (
                     <Form.Item label="Version" help="Set the Kubernetes version for this node pool">
@@ -303,55 +305,55 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
                   ) : (
                     <>
                       <Form.Item label="Auto-upgrade" help="Allow GCP to automatically upgrade nodes in this pool (recommended)">
-                        <Switch checked={selectedNodePool.enableAutoupgrade} disabled={!editable || followingReleaseChannel} onChange={(v) => this.setNodePoolProperty(selectedNodePoolIndex, 'enableAutoupgrade', v)} checkedChildren={<Icon type="check" />} unCheckedChildren={<Icon type="close" />} />
+                        <Switch id={`${id_prefix}_enableAutoupgrade`} checked={selected.enableAutoupgrade} disabled={!editable || followingReleaseChannel} onChange={(v) => this.setNodePoolProperty(selectedIndex, 'enableAutoupgrade', v)} checkedChildren={<Icon type="check" />} unCheckedChildren={<Icon type="close" />} />
                       </Form.Item>
                       <Form.Item label="Version" help="Set the Kubernetes version for this node pool">
-                        <Checkbox checked={versionFollowMaster} onChange={(e) => this.setNodePoolProperty(selectedNodePoolIndex, 'version', e.target.checked ? '' : plan.version)} disabled={!editable} /> Same as master (recommended)
+                        <Checkbox id={`${id_prefix}_versionFollowMaster`} checked={versionFollowMaster} onChange={(e) => this.setNodePoolProperty(selectedIndex, 'version', e.target.checked ? '' : plan.version)} disabled={!editable} /> Same as master (recommended)
                         {versionFollowMaster ? null : (
                           <>
-                            <Input pattern={property.items.properties.version.pattern} value={selectedNodePool.version} readOnly={!editable} onChange={(e) => this.setNodePoolProperty(selectedNodePoolIndex, 'version', e.target.value)} />
+                            <Input id={`${id_prefix}_version`} pattern={property.items.properties.version.pattern} value={selected.version} readOnly={!editable} onChange={(e) => this.setNodePoolProperty(selectedIndex, 'version', e.target.value)} />
                           </>
                         )}
                       </Form.Item>
                     </>
                   )}
-                  <PlanOption {...this.props} displayName="Auto-scale" name={`${name}[${selectedNodePoolIndex}].enableAutoscaler`} property={property.items.properties.enableAutoscaler} value={selectedNodePool.enableAutoscaler} onChange={(_, v) => this.setNodePoolProperty(selectedNodePoolIndex, 'enableAutoscaler', v)} />
+                  <PlanOption id={`${id_prefix}_enableAutoscaler`} {...this.props} displayName="Auto-scale" name={`${name}[${selectedIndex}].enableAutoscaler`} property={property.items.properties.enableAutoscaler} value={selected.enableAutoscaler} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'enableAutoscaler', v)} />
                   <Form.Item label="Pool size per zone">
                     <Descriptions layout="horizontal" size="small">
-                      {!selectedNodePool.enableAutoscaler ? null : <Descriptions.Item label="Minimum">
-                        <InputNumber value={selectedNodePool.minSize} size="small" min={property.items.properties.minSize.minimum} max={selectedNodePool.maxSize} readOnly={!editable} onChange={(v) => this.setNodePoolProperty(selectedNodePoolIndex, 'minSize', v)} />
-                        {this.validationErrors(`${name}[${selectedNodePoolIndex}].minSize`)}
+                      {!selected.enableAutoscaler ? null : <Descriptions.Item label="Minimum">
+                        <InputNumber id={`${id_prefix}_minSize`} value={selected.minSize} size="small" min={property.items.properties.minSize.minimum} max={selected.maxSize} readOnly={!editable} onChange={(v) => this.setNodePoolProperty(selectedIndex, 'minSize', v)} />
+                        {this.validationErrors(`${name}[${selectedIndex}].minSize`)}
                       </Descriptions.Item>}
-                      <Descriptions.Item label={selectedNodePool.enableAutoscaler ? 'Initial Size' : null}>
-                        <InputNumber value={selectedNodePool.size} size="small" min={selectedNodePool.enableAutoscaler ? selectedNodePool.minSize : 1} max={selectedNodePool.enableAutoscaler ? selectedNodePool.maxSize : 99999} readOnly={!editable} onChange={(v) => this.setNodePoolProperty(selectedNodePoolIndex, 'size', v)} />
-                        {this.validationErrors(`${name}[${selectedNodePoolIndex}].size`)}
+                      <Descriptions.Item label={selected.enableAutoscaler ? 'Initial Size' : null}>
+                        <InputNumber id={`${id_prefix}_size`} value={selected.size} size="small" min={selected.enableAutoscaler ? selected.minSize : 1} max={selected.enableAutoscaler ? selected.maxSize : 99999} readOnly={!editable} onChange={(v) => this.setNodePoolProperty(selectedIndex, 'size', v)} />
+                        {this.validationErrors(`${name}[${selectedIndex}].size`)}
                       </Descriptions.Item>
-                      {!selectedNodePool.enableAutoscaler ? null : <Descriptions.Item label="Maximum">
-                        <InputNumber value={selectedNodePool.maxSize} size="small" min={selectedNodePool.minSize} readOnly={!editable} onChange={(v) => this.setNodePoolProperty(selectedNodePoolIndex, 'maxSize', v)} />
-                        {this.validationErrors(`${name}[${selectedNodePoolIndex}].maxSize`)}
+                      {!selected.enableAutoscaler ? null : <Descriptions.Item label="Maximum">
+                        <InputNumber id={`${id_prefix}_maxSize`} value={selected.maxSize} size="small" min={selected.minSize} readOnly={!editable} onChange={(v) => this.setNodePoolProperty(selectedIndex, 'maxSize', v)} />
+                        {this.validationErrors(`${name}[${selectedIndex}].maxSize`)}
                       </Descriptions.Item>}
                     </Descriptions>
                   </Form.Item>
-                  <PlanOption {...this.props} displayName="Max pods per node" name={`${name}[${selectedNodePoolIndex}].maxPodsPerNode`} property={property.items.properties.maxPodsPerNode} value={selectedNodePool.maxPodsPerNode} onChange={(_, v) => this.setNodePoolProperty(selectedNodePoolIndex, 'maxPodsPerNode', v)} />
+                  <PlanOption id={`${id_prefix}_maxPodsPerNode`} {...this.props} displayName="Max pods per node" name={`${name}[${selectedIndex}].maxPodsPerNode`} property={property.items.properties.maxPodsPerNode} value={selected.maxPodsPerNode} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'maxPodsPerNode', v)} />
                 </Collapse.Panel>
                 <Collapse.Panel key="compute" header="Compute Configuration (machine type, disk size, image type, auto-repair)">
                   <Form.Item label="Image Type" help={<>For help choosing an image type, see <a target="_blank" rel="noopener noreferrer" href="https://cloud.google.com/kubernetes-engine/docs/concepts/node-images">the GCP documentation</a></>}>
-                    <ConstrainedDropdown allowedValues={imageTypes} value={selectedNodePool.imageType} onChange={(v) => this.setNodePoolProperty(selectedNodePoolIndex, 'imageType', v)} />
+                    <ConstrainedDropdown id={`${id_prefix}_imageType`} allowedValues={imageTypes} value={selected.imageType} onChange={(v) => this.setNodePoolProperty(selectedIndex, 'imageType', v)} />
                   </Form.Item>
-                  <Form.Item label="GCP Machine Type" help={`${selectedNodePool.machineType}`}>
-                    <Cascader style={{ width: '100%' }} disabled={!editable} options={allMachineTypes.options} value={allMachineTypes.index[selectedNodePool.machineType]} onChange={(v) => this.setNodePoolProperty(selectedNodePoolIndex, 'machineType', v[3] )} />
+                  <Form.Item label="GCP Machine Type" help={`${selected.machineType}`}>
+                    <Cascader id={`${id_prefix}_machineType`} style={{ width: '100%' }} disabled={!editable} options={allMachineTypes.options} value={allMachineTypes.index[selected.machineType]} onChange={(v) => this.setNodePoolProperty(selectedIndex, 'machineType', v[3] )} />
                     {!selectedMachineTypeFamilyInfo ? null : <Paragraph type="secondary" style={{ lineHeight: '20px' }}>{selectedMachineTypeFamilyInfo}</Paragraph>}
                   </Form.Item>
-                  <PlanOption {...this.props} displayName="Instance Root Disk Size (GiB)" name={`${name}[${selectedNodePoolIndex}].diskSize`} property={property.items.properties.diskSize} value={selectedNodePool.diskSize} onChange={(_, v) => this.setNodePoolProperty(selectedNodePoolIndex, 'diskSize', v)} />
-                  <PlanOption {...this.props} displayName="Auto-repair" name={`${name}[${selectedNodePoolIndex}].enableAutorepair`} property={property.items.properties.enableAutorepair} value={selectedNodePool.enableAutorepair} onChange={(_, v) => this.setNodePoolProperty(selectedNodePoolIndex, 'enableAutorepair', v)} />
-                  <PlanOption {...this.props} displayName="Pre-emptible" name={`${name}[${selectedNodePoolIndex}].preemptible`} property={property.items.properties.preemptible} value={selectedNodePool.preemptible} onChange={(_, v) => this.setNodePoolProperty(selectedNodePoolIndex, 'preemptible', v)} />
+                  <PlanOption id={`${id_prefix}_diskSize`} {...this.props} displayName="Instance Root Disk Size (GiB)" name={`${name}[${selectedIndex}].diskSize`} property={property.items.properties.diskSize} value={selected.diskSize} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'diskSize', v)} />
+                  <PlanOption id={`${id_prefix}_enableAutorepair`} {...this.props} displayName="Auto-repair" name={`${name}[${selectedIndex}].enableAutorepair`} property={property.items.properties.enableAutorepair} value={selected.enableAutorepair} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'enableAutorepair', v)} />
+                  <PlanOption id={`${id_prefix}_preemptible`} {...this.props} displayName="Pre-emptible" name={`${name}[${selectedIndex}].preemptible`} property={property.items.properties.preemptible} value={selected.preemptible} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'preemptible', v)} />
                 </Collapse.Panel>
                 <Collapse.Panel key="metadata" header="Labels">
-                  <PlanOption {...this.props} displayName="Labels" help="Labels help kubernetes workloads find this group" name={`${name}[${selectedNodePoolIndex}].labels`} property={property.items.properties.labels} value={selectedNodePool.labels} onChange={(_, v) => this.setNodePoolProperty(selectedNodePoolIndex, 'labels', v)} />
+                  <PlanOption id={`${id_prefix}_labels`} {...this.props} displayName="Labels" help="Labels help kubernetes workloads find this group" name={`${name}[${selectedIndex}].labels`} property={property.items.properties.labels} value={selected.labels} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'labels', v)} />
                 </Collapse.Panel>
               </Collapse>
               <Form.Item>
-                <Button type="primary" disabled={!nodePoolCloseable} onClick={() => this.closeNodePool()}>{nodePoolCloseable ? 'Close' : 'Node pool not valid - please correct errors'}</Button>
+                <Button id={`${id_prefix}_close`} type="primary" disabled={!nodePoolCloseable} onClick={() => this.closeNodePool()}>{nodePoolCloseable ? 'Close' : 'Node pool not valid - please correct errors'}</Button>
               </Form.Item>
             </>
           )}

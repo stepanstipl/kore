@@ -65,43 +65,45 @@ export default class ConfigureCloudPage extends React.Component {
       <>
         <Breadcrumb items={[{ text: 'Configure' }, { text: 'Cloud' }]} />
         <CloudTabs selectedKey={selectedCloud} handleSelectCloud={this.handleSelectCloud}/>
-        {selectedCloud === 'GCP' ? (
-          <Tabs activeKey={activeKeys['GCP']} onChange={(key) => this.handleSelectKey('GCP', key)} destroyInactiveTabPane={true} tabPosition="left" style={{ marginTop: '20px' }}>
-            <Tabs.TabPane tab="Organization credentials" key="orgs">
-              <GCPOrganizationsList autoAllocateToAllTeams={true} />
-            </Tabs.TabPane>
-            <Tabs.TabPane tab="Project credentials" key="projects">
-              <GKECredentialsList />
-            </Tabs.TabPane>
-            <Tabs.TabPane tab="Project automation" key="project_automation">
-              <GCPProjectAutomationSettings />
-            </Tabs.TabPane>
-            <Tabs.TabPane tab="Cluster Plans" key="plans">
-              <PlanList kind="GKE" />
-            </Tabs.TabPane>
-            <Tabs.TabPane tab="Cluster Policies" key="policies">
-              <PolicyList kind="GKE"/>
-            </Tabs.TabPane>
-          </Tabs>
-        ) : null}
-        {selectedCloud === 'AWS' ? (
-          <Tabs activeKey={activeKeys['AWS']} onChange={(key) => this.handleSelectKey('AWS', key)} destroyInactiveTabPane={true} tabPosition="left" style={{ marginTop: '20px' }}>
-            <Tabs.TabPane tab="Account credentials" key="accounts">
-              <EKSCredentialsList />
-            </Tabs.TabPane>
-            <Tabs.TabPane tab="Cluster Plans" key="plans">
-              <PlanList kind="EKS" />
-            </Tabs.TabPane>
-            <Tabs.TabPane tab="Cluster Policies" key="policies">
-              <PolicyList kind="EKS" />
-            </Tabs.TabPane>
-            {!featureEnabled(KoreFeatures.SERVICES) ? null :
-              <Tabs.TabPane tab="Cloud Services" key="services">
-                <CloudServiceAdmin cloud="AWS" />
+        <div id="cloud_subtabs">
+          {selectedCloud === 'GCP' ? (
+            <Tabs activeKey={activeKeys['GCP']} onChange={(key) => this.handleSelectKey('GCP', key)} destroyInactiveTabPane={true} tabPosition="left" style={{ marginTop: '20px' }}>
+              <Tabs.TabPane tab="Organization credentials" key="orgs">
+                <GCPOrganizationsList autoAllocateToAllTeams={true} />
               </Tabs.TabPane>
-            }
-          </Tabs>
-        ) : null}
+              <Tabs.TabPane tab="Project credentials" key="projects">
+                <GKECredentialsList />
+              </Tabs.TabPane>
+              <Tabs.TabPane tab="Project automation" key="project_automation">
+                <GCPProjectAutomationSettings />
+              </Tabs.TabPane>
+              <Tabs.TabPane tab="Cluster Plans" key="plans">
+                <PlanList kind="GKE" />
+              </Tabs.TabPane>
+              <Tabs.TabPane tab="Cluster Policies" key="policies">
+                <PolicyList kind="GKE"/>
+              </Tabs.TabPane>
+            </Tabs>
+          ) : null}
+          {selectedCloud === 'AWS' ? (
+            <Tabs activeKey={activeKeys['AWS']} onChange={(key) => this.handleSelectKey('AWS', key)} destroyInactiveTabPane={true} tabPosition="left" style={{ marginTop: '20px' }}>
+              <Tabs.TabPane tab="Account credentials" key="accounts">
+                <EKSCredentialsList />
+              </Tabs.TabPane>
+              <Tabs.TabPane tab="Cluster Plans" key="plans">
+                <PlanList kind="EKS" />
+              </Tabs.TabPane>
+              <Tabs.TabPane tab="Cluster Policies" key="policies">
+                <PolicyList kind="EKS" />
+              </Tabs.TabPane>
+              {!featureEnabled(KoreFeatures.SERVICES) ? null :
+                <Tabs.TabPane tab="Cloud Services" key="services">
+                  <CloudServiceAdmin cloud="AWS" />
+                </Tabs.TabPane>
+              }
+            </Tabs>
+          ) : null}
+        </div>
       </>
     )
   }

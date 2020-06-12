@@ -62,6 +62,8 @@ export default class PlanOption extends PlanOptionBase {
       )
     }
 
+    const id = this.props.id || `plan_input_${name}`
+
     // Special handling for 'key map' object types, represented in json schema as having no properties list and additionalProperties of type string
     if (property.type === 'object' && property.additionalProperties && property.additionalProperties.type === 'string') {
       return (
@@ -78,26 +80,26 @@ export default class PlanOption extends PlanOptionBase {
           switch(property.type) {
           case 'string': {
             if (property.format === 'multiline') {
-              return <TextArea value={valueOrDefault} readOnly={!editable} onChange={(e) => onChange(name, e.target.value)} rows='20' />
+              return <TextArea id={id} value={valueOrDefault} readOnly={!editable} onChange={(e) => onChange(name, e.target.value)} rows='20' />
             } else if (property.enum) {
-              return <ConstrainedDropdown readOnly={!editable} value={valueOrDefault} allowedValues={property.enum} onChange={(e) => onChange(name, e)} />
+              return <ConstrainedDropdown id={id} readOnly={!editable} value={valueOrDefault} allowedValues={property.enum} onChange={(e) => onChange(name, e)} />
             } else {
-              return <Input value={valueOrDefault} readOnly={!editable} pattern={property.pattern} onChange={(e) => onChange(name, e.target.value)} />
+              return <Input id={id} value={valueOrDefault} readOnly={!editable} pattern={property.pattern} onChange={(e) => onChange(name, e.target.value)} />
             }
           }
           case 'boolean': {
-            return <Switch checked={valueOrDefault} disabled={!editable} onChange={(v) => onChange(name, v)} checkedChildren={<Icon type="check" />} unCheckedChildren={<Icon type="close" />} />
+            return <Switch id={id} checked={valueOrDefault} disabled={!editable} onChange={(v) => onChange(name, v)} checkedChildren={<Icon type="check" />} unCheckedChildren={<Icon type="close" />} />
           }
           case 'number': {
-            return <InputNumber value={valueOrDefault} readOnly={!editable} onChange={(v) => onChange(name, v)} />
+            return <InputNumber id={id} value={valueOrDefault} readOnly={!editable} onChange={(v) => onChange(name, v)} />
           }
           case 'integer': {
-            return <InputNumber value={valueOrDefault} readOnly={!editable} onChange={(v) => onChange(name, v)} />
+            return <InputNumber id={id} value={valueOrDefault} readOnly={!editable} onChange={(v) => onChange(name, v)} />
           }
           case 'array': {
             const values = valueOrDefault ? valueOrDefault : []
             if (property.items.type !== 'array' && property.items.type !== 'object') {
-              return <Select mode="tags" tokenSeparators={[',']} value={values} disabled={!editable} onChange={(v) => onChange(name, v)} />
+              return <Select id={id} mode="tags" tokenSeparators={[',']} value={values} disabled={!editable} onChange={(v) => onChange(name, v)} />
             } else {
               return (
                 <>
@@ -118,7 +120,7 @@ export default class PlanOption extends PlanOptionBase {
                   {(values.length === 0) ?
                     <Alert type="info" message={`No ${displayName} currently defined.`}/>
                     : null}
-                  <Button disabled={!editable} icon="plus" title={`Add new ${displayName}`} onClick={() => onChange(name, this.addComplexItemToArray(property, values))}>
+                  <Button id={`${id}_add`} disabled={!editable} icon="plus" title={`Add new ${displayName}`} onClick={() => onChange(name, this.addComplexItemToArray(property, values))}>
                     {`Add new ${displayName}`}
                   </Button>
                 </>
@@ -135,7 +137,7 @@ export default class PlanOption extends PlanOptionBase {
           <Alert 
             message={(
               <>
-                This property is deprecated. See below for instructions. <Button onClick={() => onChange(name, undefined)}>Unset &amp; hide</Button>
+                This property is deprecated. See below for instructions. <Button id={`${id}_removedeprecated`} onClick={() => onChange(name, undefined)}>Unset &amp; hide</Button>
               </>
             )}
             type="warning"

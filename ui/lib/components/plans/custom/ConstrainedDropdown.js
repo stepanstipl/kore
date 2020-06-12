@@ -8,10 +8,11 @@ export default class ConstrainedDropdown extends React.Component {
     value: PropTypes.string,
     allowedValues: PropTypes.array.isRequired,
     onChange: PropTypes.func.isRequired,
+    id: PropTypes.string
   }
 
   render() {
-    const { value, readOnly } = this.props
+    const { value, readOnly, id } = this.props
     let { allowedValues } = this.props
     // Support a list of strings or a list of { value: 'x', display: 'y' } objects:
     if (allowedValues.length > 0 && (typeof allowedValues[0])==='string') {
@@ -19,7 +20,7 @@ export default class ConstrainedDropdown extends React.Component {
     }
 
     return (
-      <Select value={value} disabled={readOnly} defaultValue={null} onChange={this.props.onChange} style={{ width: '100%' }}>
+      <Select id={id} value={value} disabled={readOnly} defaultValue={null} onChange={this.props.onChange} style={{ width: '100%' }}>
         {allowedValues.map((allowedValue) => <Select.Option key={allowedValue.value} value={allowedValue.value}>{allowedValue.display ? allowedValue.display : allowedValue.value}</Select.Option>)}
       </Select>
     )

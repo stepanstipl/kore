@@ -1,11 +1,12 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Typography, message } from 'antd'
+import { Typography } from 'antd'
 const { Title } = Typography
 
 import KoreApi from '../../../../../../../lib/kore-api'
 import Breadcrumb from '../../../../../../../lib/components/layout/Breadcrumb'
 import SecurityScanResult from '../../../../../../../lib/components/security/SecurityScanResult'
+import { errorMessage } from '../../../../../../../lib/utils/message'
 
 export default class SecurityResourcePage extends React.Component {
   static propTypes = {
@@ -41,7 +42,7 @@ export default class SecurityResourcePage extends React.Component {
     } catch (err) {
       console.error('Error loading history', err)
       this.setState({ historyLoading: false })
-      message.error(`Failed to load history for resource ${resource.name}`)
+      errorMessage(`Failed to load history for resource ${resource.name}`)
     }
   }
 

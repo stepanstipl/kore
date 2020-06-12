@@ -33,7 +33,7 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
   }
 
   state = {
-    selectedNodeGroupIndex: -1,
+    selectedIndex: -1,
   }
 
   addNodeGroup = () => {
@@ -63,7 +63,7 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
 
     // Open the drawer to immediately edit the new node group:
     this.setState({
-      selectedNodeGroupIndex: newValue.length - 1
+      selectedIndex: newValue.length - 1
     })
   }
 
@@ -79,7 +79,7 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
       cancelText: 'No',
       onOk: () => {
         this.setState({
-          selectedNodeGroupIndex: -1
+          selectedIndex: -1
         })
     
         this.props.onChange(
@@ -127,130 +127,131 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
 
   viewEditNodeGroup = (idx) => {
     this.setState({
-      selectedNodeGroupIndex: idx
+      selectedIndex: idx
     })
   }
 
   closeNodeGroup = () => {
     this.setState({
-      selectedNodeGroupIndex: -1
+      selectedIndex: -1
     })
   }
 
   nodeGroupActions = (idx, editable) => {
     const actions = [
-      <a key="viewedit" onClick={() => this.viewEditNodeGroup(idx)}><Icon type={editable ? 'edit' : 'eye'}></Icon></a>
+      <a id={`plan_nodegroup_${idx}_viewedit`} key="viewedit" onClick={() => this.viewEditNodeGroup(idx)}><Icon type={editable ? 'edit' : 'eye'}></Icon></a>
     ]
     
     // Only show delete if we have more than one node group
     if (editable && this.props.value && this.props.value.length > 1) {
-      actions.push(<a key="delete" onClick={() => this.removeNodeGroup(idx)}><Icon type="delete"></Icon></a>)
+      actions.push(<a id={`plan_nodegroup_${idx}_del`} key="delete" onClick={() => this.removeNodeGroup(idx)}><Icon type="delete"></Icon></a>)
     }
     return actions
   }
 
   render() {
     const { name, editable, property, plan } = this.props
-    const { selectedNodeGroupIndex } = this.state
+    const { selectedIndex } = this.state
+    const id_prefix = 'plan_nodegroup'
 
     const value = this.props.value || property.default || []
-    const selectedNodeGroup = selectedNodeGroupIndex >= 0 ? value[selectedNodeGroupIndex] : null
+    const selected = selectedIndex >= 0 ? value[selectedIndex] : null
     const displayName = this.props.displayName || startCase(name)
     const description = this.props.manage ? 'Set default node groups for clusters created from this plan' : 'Manage node groups for this cluster'
 
     let instanceTypes = []
     let amiType = null
     let releaseVersionSet = false, ngNameClash = false, nodeGroupCloseable = true
-    if (selectedNodeGroup) {
-      amiType = selectedNodeGroup.amiType || 'AL2_x86_64'
+    if (selected) {
+      amiType = selected.amiType || 'AL2_x86_64'
       instanceTypes = PlanOptionEKSNodeGroups.supportedInstanceTypes[amiType]
-      releaseVersionSet = selectedNodeGroup.releaseVersion && selectedNodeGroup.releaseVersion.length > 0
+      releaseVersionSet = selected.releaseVersion && selected.releaseVersion.length > 0
       // we have duplicate names if another node group with a different index has the same name as this one
-      ngNameClash = selectedNodeGroup.name && selectedNodeGroup.name.length > 0 && value.some((v, i) => i !== selectedNodeGroupIndex && v.name === selectedNodeGroup.name)
-      nodeGroupCloseable = !ngNameClash && selectedNodeGroup.name && selectedNodeGroup.name.length > 0
+      ngNameClash = selected.name && selected.name.length > 0 && value.some((v, i) => i !== selectedIndex && v.name === selected.name)
+      nodeGroupCloseable = !ngNameClash && selected.name && selected.name.length > 0
     }
-    
 
     return (
       <>
         <Form.Item label={displayName} help={description}>
-          <List dataSource={value} renderItem={(ng, idx) => {
+          <List id={`${id_prefix}s`} dataSource={value} renderItem={(ng, idx) => {
             return (
               <List.Item actions={this.nodeGroupActions(idx, editable)}>
                 <List.Item.Meta 
-                  title={<a onClick={() => this.viewEditNodeGroup(idx)}>{`Node Group ${idx + 1} (${ng.name})`}</a>} 
+                  title={<a id={`${id_prefix}_${idx}_viewedittitle`} onClick={() => this.viewEditNodeGroup(idx)}>{`Node Group ${idx + 1} (${ng.name})`}</a>} 
                   description={`Size: min=${ng.minSize} max=${ng.maxSize} desired=${ng.desiredSize} | Node type: ${ng.instanceType}`} 
                 />
                 {!this.hasValidationErrors(`${name}[${idx}]`) ? null : <Alert type="error" message="Validation errors - please edit and resolve" />}
               </List.Item>
             )
           }} />
-          {!editable ? null : <Button onClick={this.addNodeGroup}>Add node group</Button>}
+          {!editable ? null : <Button id={`${id_prefix}_add`} onClick={this.addNodeGroup}>Add node group</Button>}
         </Form.Item>
         <Drawer
-          title={`Node Group ${selectedNodeGroup ? selectedNodeGroupIndex + 1 : ''}`}
-          visible={Boolean(selectedNodeGroup)}
+          title={`Node Group ${selected ? selectedIndex + 1 : ''}`}
+          visible={Boolean(selected)}
           closable={!ngNameClash}
           maskClosable={!ngNameClash}
           onClose={() => this.closeNodeGroup()}
           width={800}
         >
-          {!selectedNodeGroup ? null : (
+          {!selected ? null : (
             <>
               <Collapse defaultActiveKey={['basics','compute','metadata']}>
                 <Collapse.Panel key="basics" header="Basic Configuration (name, sizing)">
                   <Form.Item label="Name" help="Unique name for this group within the cluster">
-                    <Input value={selectedNodeGroup.name} onChange={(e) => this.setNodeGroupProperty(selectedNodeGroupIndex, 'name', e.target.value)} readOnly={!editable} />
-                    {this.validationErrors(`${name}[${selectedNodeGroupIndex}].name`)}
+                    <Input id={`${id_prefix}_name`} value={selected.name} onChange={(e) => this.setNodeGroupProperty(selectedIndex, 'name', e.target.value)} readOnly={!editable} />
+                    {this.validationErrors(`${name}[${selectedIndex}].name`)}
                     {!ngNameClash ? null : <Alert type="error" message="This name is already used by another node group, it must be changed." />}
+                    {selected.name && selected.name.length > 0 ? null : <Alert type="error" message="Name must be set" />}
                   </Form.Item>
                   <Form.Item label="Group Size">
                     <Descriptions layout="horizontal" size="small">
                       <Descriptions.Item label="Minimum">
-                        <InputNumber value={selectedNodeGroup.minSize} size="small" min={property.items.properties.minSize.minimum} max={selectedNodeGroup.maxSize} readOnly={!editable} onChange={(v) => this.setNodeGroupProperty(selectedNodeGroupIndex, 'minSize', v)} />
-                        {this.validationErrors(`${name}[${selectedNodeGroupIndex}].minSize`)}
+                        <InputNumber id={`${id_prefix}_minSize`} value={selected.minSize} size="small" min={property.items.properties.minSize.minimum} max={selected.maxSize} readOnly={!editable} onChange={(v) => this.setNodeGroupProperty(selectedIndex, 'minSize', v)} />
+                        {this.validationErrors(`${name}[${selectedIndex}].minSize`)}
                       </Descriptions.Item>
                       <Descriptions.Item label="Desired">
-                        <InputNumber value={selectedNodeGroup.desiredSize} size="small" min={selectedNodeGroup.minSize} max={selectedNodeGroup.maxSize} readOnly={!editable} onChange={(v) => this.setNodeGroupProperty(selectedNodeGroupIndex, 'desiredSize', v)} />
-                        {this.validationErrors(`${name}[${selectedNodeGroupIndex}].desiredSize`)}
+                        <InputNumber id={`${id_prefix}_desiredSize`} value={selected.desiredSize} size="small" min={selected.minSize} max={selected.maxSize} readOnly={!editable} onChange={(v) => this.setNodeGroupProperty(selectedIndex, 'desiredSize', v)} />
+                        {this.validationErrors(`${name}[${selectedIndex}].desiredSize`)}
                       </Descriptions.Item>
                       <Descriptions.Item label="Maximum">
-                        <InputNumber value={selectedNodeGroup.maxSize} size="small" min={selectedNodeGroup.minSize} readOnly={!editable} onChange={(v) => this.setNodeGroupProperty(selectedNodeGroupIndex, 'maxSize', v)} />
-                        {this.validationErrors(`${name}[${selectedNodeGroupIndex}].maxSize`)}
+                        <InputNumber id={`${id_prefix}_maxSize`} value={selected.maxSize} size="small" min={selected.minSize} readOnly={!editable} onChange={(v) => this.setNodeGroupProperty(selectedIndex, 'maxSize', v)} />
+                        {this.validationErrors(`${name}[${selectedIndex}].maxSize`)}
                       </Descriptions.Item>
                     </Descriptions>
                   </Form.Item>
                 </Collapse.Panel>
                 <Collapse.Panel key="compute" header="Compute Configuration (instance type, GPU or regular workload)">
                   <Form.Item label={property.items.properties.amiType.title} help={property.items.properties.amiType.description}>
-                    <Radio.Group value={amiType} onChange={(v) => this.setAmiType(selectedNodeGroupIndex, v.target.value)}>
+                    <Radio.Group id={`${id_prefix}_amiType`} value={amiType} onChange={(v) => this.setAmiType(selectedIndex, v.target.value)}>
                       <Radio value={PlanOptionEKSNodeGroups.AMI_TYPE_GENERAL}>General Purpose</Radio>
                       <Radio value={PlanOptionEKSNodeGroups.AMI_TYPE_GPU}>GPU</Radio>
                     </Radio.Group>
-                    {this.validationErrors(`${name}[${selectedNodeGroupIndex}].amiType`)}
+                    {this.validationErrors(`${name}[${selectedIndex}].amiType`)}
                   </Form.Item>
                   <Form.Item label="AWS AMI Version" help={!releaseVersionSet ? undefined : <><b>Must</b> be for Kubernetes <b>{plan.version}</b> and <b>{amiType === PlanOptionEKSNodeGroups.AMI_TYPE_GPU ? 'GPU' : 'general'}</b> workloads. Find <a target="_blank" rel="noopener noreferrer" href="https://docs.aws.amazon.com/eks/latest/userguide/eks-linux-ami-versions.html">supported versions</a> in AWS documentation.</>}>
-                    <Checkbox disabled={!editable} checked={!releaseVersionSet} onChange={(v) => this.onReleaseVersionChecked(selectedNodeGroupIndex, v.target.checked)}/> Use latest (<b>recommended</b>)
-                    {!releaseVersionSet ? null : <Input value={selectedNodeGroup.releaseVersion} placeholder={this.describe(property.items.properties.releaseVersion)} readOnly={!editable} onChange={(e) => this.setNodeGroupProperty(selectedNodeGroupIndex, 'releaseVersion', e.target.value)} />}
-                    {this.validationErrors(`${name}[${selectedNodeGroupIndex}].releaseVersion`)}
+                    <Checkbox id={`${id_prefix}_releaseVersion_latest`} disabled={!editable} checked={!releaseVersionSet} onChange={(v) => this.onReleaseVersionChecked(selectedIndex, v.target.checked)}/> Use latest (<b>recommended</b>)
+                    {!releaseVersionSet ? null : <Input id={`${id_prefix}_releaseVersion_custom`} value={selected.releaseVersion} placeholder={this.describe(property.items.properties.releaseVersion)} readOnly={!editable} onChange={(e) => this.setNodeGroupProperty(selectedIndex, 'releaseVersion', e.target.value)} />}
+                    {this.validationErrors(`${name}[${selectedIndex}].releaseVersion`)}
                   </Form.Item>
                   <Form.Item label="AWS Instance Type">
-                    <ConstrainedDropdown allowedValues={instanceTypes} value={selectedNodeGroup.instanceType} onChange={(v) => this.setNodeGroupProperty(selectedNodeGroupIndex, 'instanceType', v)} />
-                    {this.validationErrors(`${name}[${selectedNodeGroupIndex}].instanceType`)}
+                    <ConstrainedDropdown id={`${id_prefix}_instanceType`} allowedValues={instanceTypes} value={selected.instanceType} onChange={(v) => this.setNodeGroupProperty(selectedIndex, 'instanceType', v)} />
+                    {this.validationErrors(`${name}[${selectedIndex}].instanceType`)}
                   </Form.Item>
-                  <PlanOption {...this.props} displayName="Instance Root Disk Size (GiB)" name={`${name}[${selectedNodeGroupIndex}].diskSize`} property={property.items.properties.diskSize} value={selectedNodeGroup.diskSize} onChange={(_, v) => this.setNodeGroupProperty(selectedNodeGroupIndex, 'diskSize', v)} />
+                  <PlanOption {...this.props} id={`${id_prefix}_instanceType`} displayName="Instance Root Disk Size (GiB)" name={`${name}[${selectedIndex}].diskSize`} property={property.items.properties.diskSize} value={selected.diskSize} onChange={(_, v) => this.setNodeGroupProperty(selectedIndex, 'diskSize', v)} />
                 </Collapse.Panel>
                 <Collapse.Panel key="metadata" header="Metadata (labels, tags, etc)">
-                  <PlanOption {...this.props} displayName="Labels" help="Labels help kubernetes workloads find this group" name={`${name}[${selectedNodeGroupIndex}].labels`} property={property.items.properties.labels} value={selectedNodeGroup.labels} onChange={(_, v) => this.setNodeGroupProperty(selectedNodeGroupIndex, 'labels', v)} />
-                  <PlanOption {...this.props} displayName="Tags" help="AWS tags to apply to the node group" name={`${name}[${selectedNodeGroupIndex}].tags`} property={property.items.properties.tags} value={selectedNodeGroup.tags} onChange={(_, v) => this.setNodeGroupProperty(selectedNodeGroupIndex, 'tags', v)} />
+                  <PlanOption {...this.props} id={`${id_prefix}_labels`} displayName="Labels" help="Labels help kubernetes workloads find this group" name={`${name}[${selectedIndex}].labels`} property={property.items.properties.labels} value={selected.labels} onChange={(_, v) => this.setNodeGroupProperty(selectedIndex, 'labels', v)} />
+                  <PlanOption {...this.props} id={`${id_prefix}_tags`} displayName="Tags" help="AWS tags to apply to the node group" name={`${name}[${selectedIndex}].tags`} property={property.items.properties.tags} value={selected.tags} onChange={(_, v) => this.setNodeGroupProperty(selectedIndex, 'tags', v)} />
                 </Collapse.Panel>
                 <Collapse.Panel key="ssh" header="SSH Connectivity (keys, security groups)">
-                  <PlanOption {...this.props} displayName="EC2 SSH Key" name={`${name}[${selectedNodeGroupIndex}].eC2SSHKey`} property={property.items.properties.eC2SSHKey} value={selectedNodeGroup.eC2SSHKey} onChange={(_, v) => this.setNodeGroupProperty(selectedNodeGroupIndex, 'eC2SSHKey', v)} />
-                  <PlanOption {...this.props} displayName="SSH Security Groups" name={`${name}[${selectedNodeGroupIndex}].sshSourceSecurityGroups`} property={property.items.properties.sshSourceSecurityGroups} value={selectedNodeGroup.sshSourceSecurityGroups} onChange={(_, v) => this.setNodeGroupProperty(selectedNodeGroupIndex, 'sshSourceSecurityGroups', v)} />
+                  <PlanOption {...this.props} id={`${id_prefix}_eC2SSHKey`} displayName="EC2 SSH Key" name={`${name}[${selectedIndex}].eC2SSHKey`} property={property.items.properties.eC2SSHKey} value={selected.eC2SSHKey} onChange={(_, v) => this.setNodeGroupProperty(selectedIndex, 'eC2SSHKey', v)} />
+                  <PlanOption {...this.props} id={`${id_prefix}_sshSourceSecurityGroups`} displayName="SSH Security Groups" name={`${name}[${selectedIndex}].sshSourceSecurityGroups`} property={property.items.properties.sshSourceSecurityGroups} value={selected.sshSourceSecurityGroups} onChange={(_, v) => this.setNodeGroupProperty(selectedIndex, 'sshSourceSecurityGroups', v)} />
                 </Collapse.Panel>
               </Collapse>
               <Form.Item>
-                <Button type="primary" disabled={!nodeGroupCloseable} onClick={() => this.closeNodeGroup()}>{nodeGroupCloseable ? 'Close' : 'Node group not valid - correct errors'}</Button>
+                <Button type="primary" id={`${id_prefix}_close`} disabled={!nodeGroupCloseable} onClick={() => this.closeNodeGroup()}>{nodeGroupCloseable ? 'Close' : 'Node group not valid - correct errors'}</Button>
               </Form.Item>
             </>
           )}

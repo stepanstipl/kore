@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { Typography, List, Button, Drawer, Alert, Icon } from 'antd'
+import { Typography, List, Button, Drawer, Alert, Icon, Modal } from 'antd'
 const { Title } = Typography
 import getConfig from 'next/config'
 const { publicRuntimeConfig } = getConfig()
@@ -9,6 +9,7 @@ import EKSCredentialsForm from './EKSCredentialsForm'
 import EKSCredentials from './EKSCredentials'
 import KoreApi from '../../kore-api'
 import AllocationHelpers from '../../utils/allocation-helpers'
+import { loadingMessage, successMessage, errorMessage } from '../../utils/message'
 
 class EKSCredentialsList extends ResourceList {
 
@@ -18,6 +19,8 @@ class EKSCredentialsList extends ResourceList {
 
   createdMessage = 'AWS account credentials created successfully'
   updatedMessage = 'AWS account credentials updated successfully'
+  deletedMessage = 'AWS account credentials deleted successfully'
+  deleteFailedMessage = 'Error deleting AWS account credentials'
 
   async fetchComponentData() {
     const api = await KoreApi.client()
@@ -33,6 +36,29 @@ class EKSCredentialsList extends ResourceList {
     return { resources: eksCredentials, allTeams }
   }
 
+  delete = (cred) => () => {
+    Modal.confirm({
+      title: `Are you sure you want to delete the credentials ${cred.spec.accountID}?`,
+      content: 'This cannot be undone',
+      okText: 'Yes',
+      okType: 'danger',
+      cancelText: 'No',
+      onOk: async () => {
+        const key = loadingMessage('Deleting allocations for credential', { duration: 0 })
+        try {
+          await AllocationHelpers.removeAllocation(cred)
+          loadingMessage('Deleting credential', { key, duration: 0 })
+          await (await KoreApi.client()).DeleteEKSCredentials(publicRuntimeConfig.koreAdminTeamName, cred.metadata.name)
+          successMessage(this.deletedMessage, { key })
+        } catch (err) {
+          console.error(err)
+          errorMessage(this.deleteFailedMessage, { key })
+        }
+        await this.refresh()
+      }
+    })
+  }
+
   render() {
     const { resources, allTeams, edit, add } = this.state
 
@@ -45,7 +71,7 @@ class EKSCredentialsList extends ResourceList {
           showIcon
           style={{ marginBottom: '20px' }}
         />
-        <Button type="primary" onClick={this.add(true)} style={{ display: 'block', marginBottom: '20px' }}>+ New</Button>
+        <Button id="add" type="primary" onClick={this.add(true)} style={{ display: 'block', marginBottom: '20px' }}>+ New</Button>
         {!resources ? <Icon type="loading" /> : (
           <>
             <List
@@ -55,7 +81,9 @@ class EKSCredentialsList extends ResourceList {
                   eksCredentials={eks}
                   allTeams={allTeams.items}
                   editEKSCredentials={this.edit}
+                  deleteEKSCredentials={this.delete}
                   handleUpdate={this.handleStatusUpdated}
+                  handleDelete={() => {}}
                   refreshMs={2000}
                   propsResourceDataKey="eksCredentials"
                   resourceApiPath={`/teams/${publicRuntimeConfig.koreAdminTeamName}/ekscredentials/${eks.metadata.name}`}

@@ -124,7 +124,7 @@ class EKSCredentialsForm extends VerifiedAllocatedResourceForm {
               style={{ marginTop: '10px' }}
             />
             <Form.Item label="Replace access key">
-              <Checkbox onChange={(e) => this.setState({ replaceKey: e.target.checked })}></Checkbox>
+              <Checkbox id="eks_credentials_replace_key" onChange={(e) => this.setState({ replaceKey: e.target.checked })}></Checkbox>
             </Form.Item>
           </>
         ) : null}

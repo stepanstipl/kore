@@ -1,7 +1,7 @@
 import React from 'react'
 import moment from 'moment'
 import PropTypes from 'prop-types'
-import { Button, Col, Divider, Drawer, Icon, List, message, Modal, Row, Tooltip, Tag, Typography } from 'antd'
+import { Button, Col, Divider, Drawer, Icon, List, Modal, Row, Tooltip, Tag, Typography } from 'antd'
 const { Paragraph, Text } = Typography
 
 import KoreApi from '../../../kore-api'
@@ -10,6 +10,7 @@ import Service from './Service'
 import ServiceBuildForm from './ServiceBuildForm'
 import ApplicationServiceForm from './ApplicationServiceForm'
 import { inProgressStatusList, statusColorMap, statusIconMap } from '../../../utils/ui-helpers'
+import { loadingMessage, errorMessage } from '../../../utils/message'
 
 class ServicesTab extends React.Component {
 
@@ -113,10 +114,10 @@ class ServicesTab extends React.Component {
       service.status.status = 'Deleting'
       service.metadata.deletionTimestamp = new Date()
       this.setState({ services }, done)
-      message.loading(`Service deletion requested: ${service.metadata.name}`)
+      loadingMessage(`Service deletion requested: ${service.metadata.name}`)
     } catch (err) {
       console.error('Error deleting service', err)
-      message.error('Error deleting service, please try again.')
+      errorMessage('Error deleting service, please try again.')
     }
   }
 

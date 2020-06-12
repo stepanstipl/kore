@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import Link from 'next/link'
-import { Alert, Button, Card, Divider, Icon, message, Radio, Result, Steps, Typography } from 'antd'
+import { Alert, Button, Card, Divider, Icon, Radio, Result, Steps, Typography } from 'antd'
 const { Paragraph, Text } = Typography
 const { Step } = Steps
 
@@ -18,6 +18,7 @@ import V1ObjectMeta from '../../kore-api/model/V1ObjectMeta'
 import V1Ownership from '../../kore-api/model/V1Ownership'
 import V1beta1AccountsRule from '../../kore-api/model/V1beta1AccountsRule'
 import AllocationHelpers from '../../utils/allocation-helpers'
+import { successMessage } from '../../utils/message'
 
 class GCPKoreManagedProjects extends React.Component {
 
@@ -73,7 +74,7 @@ class GCPKoreManagedProjects extends React.Component {
     this.setState({
       gcpProjectList: this.state.gcpProjectList.concat([{ code, plans: [], ...project }]),
     })
-    message.success('GCP automated project added')
+    successMessage('GCP automated project added')
   }
 
   handleGcpProjectDeleted = (code) => {
@@ -81,7 +82,7 @@ class GCPKoreManagedProjects extends React.Component {
       this.setState({
         gcpProjectList: this.state.gcpProjectList.filter(p => p.code !== code)
       })
-      message.success('GCP automated project removed')
+      successMessage('GCP automated project removed')
     }
   }
 

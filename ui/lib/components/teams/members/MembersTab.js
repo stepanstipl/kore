@@ -1,6 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Avatar, Button, Col, Divider, Icon, List, message, Popconfirm, Row, Select, Tag, Typography } from 'antd'
+import { Avatar, Button, Col, Divider, Icon, List, Popconfirm, Row, Select, Tag, Typography } from 'antd'
 const { Text } = Typography
 const { Option } = Select
 
@@ -8,6 +8,7 @@ import KoreApi from '../../../kore-api'
 import copy from '../../../utils/object-copy'
 import asyncForEach from '../../../utils/async-foreach'
 import InviteLink from '../InviteLink'
+import { successMessage, errorMessage } from '../../../utils/message'
 
 class MembersTab extends React.Component {
 
@@ -65,13 +66,13 @@ class MembersTab extends React.Component {
       await asyncForEach(this.state.membersToAdd, async member => {
         await api.AddTeamMember(this.props.team.metadata.name, member)
         members.push(member)
-        message.success(`Team member added: ${member}`)
+        successMessage(`Team member added: ${member}`)
       })
       this.props.getMemberCount && this.props.getMemberCount(members.length)
       this.setState({ members, membersToAdd: [] })
     } catch (err) {
       console.error('Error adding team member', err)
-      message.error('Error adding team members, please try again.')
+      errorMessage('Error adding team members, please try again.')
     }
   }
 
@@ -84,10 +85,10 @@ class MembersTab extends React.Component {
         members = members.filter(m => m !== member)
         this.props.getMemberCount && this.props.getMemberCount(members.length)
         this.setState({ members })
-        message.success(`Team member removed: ${member}`)
+        successMessage(`Team member removed: ${member}`)
       } catch (err) {
         console.error('Error removing team member', err)
-        message.error('Error removing team member, please try again.')
+        errorMessage('Error removing team member, please try again.')
       }
     }
   }

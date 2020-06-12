@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { Typography, List, Button, Drawer, Alert, Icon } from 'antd'
+import { Typography, List, Button, Drawer, Alert, Icon, Modal } from 'antd'
 const { Title } = Typography
 import getConfig from 'next/config'
 const { publicRuntimeConfig } = getConfig()
@@ -9,6 +9,7 @@ import ResourceList from '../resources/ResourceList'
 import GKECredentialsForm from './GKECredentialsForm'
 import KoreApi from '../../kore-api'
 import AllocationHelpers from '../../utils/allocation-helpers'
+import { errorMessage, successMessage, loadingMessage } from '../../utils/message'
 
 class GKECredentialsList extends ResourceList {
 
@@ -18,6 +19,8 @@ class GKECredentialsList extends ResourceList {
 
   createdMessage = 'GCP project credentials created successfully'
   updatedMessage = 'GCP project credentials updated successfully'
+  deletedMessage = 'GCP project credentials deleted successfully'
+  deleteFailedMessage = 'Error deleting GCP project credentials'
 
   async fetchComponentData() {
     const api = await KoreApi.client()
@@ -31,6 +34,29 @@ class GKECredentialsList extends ResourceList {
       gke.allocation = AllocationHelpers.findAllocationForResource(allAllocations, gke)
     })
     return { resources: gkeCredentials, allTeams }
+  }
+
+  delete = (cred) => () => {
+    Modal.confirm({
+      title: `Are you sure you want to delete the credentials ${cred.spec.project}?`,
+      content: 'This cannot be undone',
+      okText: 'Yes',
+      okType: 'danger',
+      cancelText: 'No',
+      onOk: async () => {
+        const key = loadingMessage('Deleting allocations for credential', { duration: 0 })
+        try {
+          await AllocationHelpers.removeAllocation(cred)
+          loadingMessage('Deleting credential', { key, duration: 0 })
+          await (await KoreApi.client()).RemoveGKECredential(publicRuntimeConfig.koreAdminTeamName, cred.metadata.name)
+          successMessage(this.deletedMessage, { key })
+        } catch (err) {
+          console.error(err)
+          errorMessage(this.deleteFailedMessage, { key })
+        }
+        await this.refresh()
+      }
+    })
   }
 
   render() {
@@ -49,13 +75,16 @@ class GKECredentialsList extends ResourceList {
         {!resources ? <Icon type="loading" /> : (
           <>
             <List
+              id="gkecreds_list"
               dataSource={resources.items}
               renderItem={gke =>
                 <GKECredentials
                   gkeCredentials={gke}
                   allTeams={allTeams.items}
                   editGKECredential={this.edit}
+                  deleteGKECredential={this.delete}
                   handleUpdate={this.handleStatusUpdated}
+                  handleDelete={() => {}}
                   refreshMs={2000}
                   propsResourceDataKey="gkeCredentials"
                   resourceApiPath={`/teams/${publicRuntimeConfig.koreAdminTeamName}/gkecredentials/${gke.metadata.name}`}

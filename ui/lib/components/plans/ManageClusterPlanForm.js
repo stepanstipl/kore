@@ -56,13 +56,6 @@ class ManageClusterPlanForm extends ManagePlanForm {
     return planResource
   }
 
-  generatePlanConfiguration = () => {
-    const properties = this.state.schema.properties
-    const defaultConfiguration = {}
-    Object.keys(properties).forEach(p => properties[p].type === 'boolean' ? defaultConfiguration[p] = false : null)
-    return { ...defaultConfiguration, ...this.state.planValues }
-  }
-
   process = async (err, values) => {
     if (err) {
       this.setFormSubmitting(false, 'Validation failed')
@@ -71,7 +64,7 @@ class ManageClusterPlanForm extends ManagePlanForm {
     try {
       const api = await KoreApi.client()
       const metadataName = this.getMetadataName(values)
-      const planResult = await api.UpdatePlan(metadataName, this.generatePlanResource({ ...values, configuration: this.generatePlanConfiguration() }))
+      const planResult = await api.UpdatePlan(metadataName, this.generatePlanResource({ ...values, configuration: { ...this.state.planValues } }))
 
       if (this.accountManagementRulesEnabled()) {
         const accountMgtResource = copy(this.state.accountManagement)

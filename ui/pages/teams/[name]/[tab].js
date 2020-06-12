@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import Link from 'next/link'
 import Router from 'next/router'
 import Error from 'next/error'
-import { Typography, Button, message, Badge, Alert, Icon, Modal, Dropdown, Menu, Tabs } from 'antd'
+import { Typography, Button, Badge, Alert, Icon, Modal, Dropdown, Menu, Tabs } from 'antd'
 const { Paragraph, Text } = Typography
 const { TabPane } = Tabs
 
@@ -14,6 +14,7 @@ import ClustersTab from '../../../lib/components/teams/cluster/ClustersTab'
 import MembersTab from '../../../lib/components/teams/members/MembersTab'
 import SecurityTab from '../../../lib/components/teams/security/SecurityTab'
 import SecurityStatusIcon from '../../../lib/components/security/SecurityStatusIcon'
+import { successMessage, errorMessage } from '../../../lib/utils/message'
 
 class TeamDashboardTabPage extends React.Component {
   static propTypes = {
@@ -79,11 +80,11 @@ class TeamDashboardTabPage extends React.Component {
       const team = this.props.team.metadata.name
       await (await KoreApi.client()).RemoveTeam(team)
       this.props.teamRemoved(team)
-      message.success(`Team "${team}" deleted`)
+      successMessage(`Team "${team}" deleted`)
       return redirect({ router: Router, path: '/' })
     } catch (err) {
       console.log('Error deleting team', err)
-      message.error('Team could not be deleted, please try again later')
+      errorMessage('Team could not be deleted, please try again later')
     }
   }
 

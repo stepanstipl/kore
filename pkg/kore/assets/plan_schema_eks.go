@@ -42,7 +42,8 @@ const EKSPlanSchema = `
 			"items": {
 				"type": "string",
 				"format": "1.2.3.4/16"
-			}
+			},
+			"default": [ "0.0.0.0/0" ]
 		},
 		"authProxyAllowedIPs": {
 			"title": "Auth Proxy Allowed IP Ranges",
@@ -52,7 +53,8 @@ const EKSPlanSchema = `
 				"type": "string",
 				"format": "1.2.3.4/16"
 			},
-			"minItems": 1
+			"minItems": 1,
+			"default": [ "0.0.0.0/0" ]
 		},
 		"clusterUsers": {
 			"type": "array",
@@ -84,7 +86,8 @@ const EKSPlanSchema = `
 		"defaultTeamRole": {
 			"type": "string",
 			"description": "The default role that team members have on this cluster.",
-			"enum": [ "view", "edit", "admin", "cluster-admin" ]
+			"enum": [ "view", "edit", "admin", "cluster-admin" ],
+			"default": "view"
 		},
 		"description": {
 			"type": "string",
@@ -94,13 +97,16 @@ const EKSPlanSchema = `
 		"domain": {
 			"type": "string",
 			"description": "The domain for this cluster.",
-			"minLength": 1
+			"minLength": 1,
+			"default": "default"
 		},
 		"enableDefaultTrafficBlock": {
-			"type": "boolean"
+			"type": "boolean",
+			"default": false
 		},
 		"inheritTeamMembers": {
-			"type": "boolean"
+			"type": "boolean",
+			"default": true
 		},
 		"nodeGroups": {
 			"type": "array",
@@ -209,7 +215,8 @@ const EKSPlanSchema = `
 			"type": "string",
 			"description": "The range of IPv4 addresses for your EKS cluster in CIDR block format",
 			"format": "1.2.3.4/16",
-			"immutable": true
+			"immutable": true,
+			"default": "10.0.0.0/16"
 		},
 		"region": {
 			"type": "string",

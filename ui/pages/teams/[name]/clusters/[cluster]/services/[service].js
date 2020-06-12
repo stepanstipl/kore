@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import moment from 'moment'
-import { Typography, Collapse, Icon, Row, Col, List, Button, Form, Divider, Card, Badge, message, Drawer, Tag } from 'antd'
+import { Typography, Collapse, Icon, Row, Col, List, Button, Form, Divider, Card, Badge, Drawer, Tag } from 'antd'
 const { Text } = Typography
 
 import KoreApi from '../../../../../../lib/kore-api/index'
@@ -16,6 +16,7 @@ import apiPaths from '../../../../../../lib/utils/api-paths'
 import ServiceCredential from '../../../../../../lib/components/teams/service/ServiceCredential'
 import ServiceCredentialForm from '../../../../../../lib/components/teams/service/ServiceCredentialForm'
 import { isReadOnlyCRD } from '../../../../../../lib/utils/crd-helpers'
+import { errorMessage, loadingMessage } from '../../../../../../lib/utils/message'
 
 class ServicePage extends React.Component {
   static propTypes = {
@@ -143,10 +144,10 @@ class ServicePage extends React.Component {
         }
       }, done)
 
-      message.loading(`Service access deletion requested ${name}`)
+      loadingMessage(`Service access deletion requested ${name}`)
     } catch (err) {
       console.error('Error deleting service access', err)
-      message.error('Error deleting service access, please try again.')
+      errorMessage('Error deleting service access, please try again.')
     }
   }
 
@@ -165,7 +166,7 @@ class ServicePage extends React.Component {
         serviceCredentials: [ ...state.serviceCredentials, serviceCredential ]
       }
     })
-    message.loading(`Service access "${serviceCredential.metadata.name}" requested`)
+    loadingMessage(`Service access "${serviceCredential.metadata.name}" requested`)
   }
 
   onServiceConfigChanged = (updatedServiceParams) => {

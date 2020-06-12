@@ -1,20 +1,20 @@
 const { BasePage } = require('./base')
+const config = require('../config')
 
 export class LoginPage extends BasePage {
-
-  constructor(page) {
-    super(page)
+  constructor(p) {
+    super(p)
     this.pagePath = '/login'
   }
 
   async localUserLogin() {
-    await this.page.click('#local-user-login')
-    await this.page.waitFor('#login-form')
-    await this.page.type('#login_login', 'admin')
-    await this.page.type('#login_password', 'password')
+    await this.p.click('#local-user-login')
+    await this.p.waitFor('#login-form')
+    await this.p.type('#login_login', 'admin')
+    await this.p.type('#login_password', config.adminPass)
     const [response] = await Promise.all([
-      this.page.waitForNavigation(),
-      this.page.click('#submit'),
+      this.p.waitForNavigation(),
+      this.p.click('#submit'),
     ])
     expect(response.ok()).toBeTruthy()
   }

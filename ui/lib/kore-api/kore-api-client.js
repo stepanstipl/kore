@@ -122,12 +122,14 @@ class KoreApiClient {
   ListGKECredentials = (team) => this.apis.default.ListGKECredentials({ team })
   GetGKECredential = (team, name) => this.apis.default.GetGKECredential({ team, name })
   UpdateGKECredential = (team, name, resource) => this.apis.default.UpdateGKECredential({ team, name, body: JSON.stringify(resource) })
+  RemoveGKECredential = (team, name) => this.apis.default.RemoveGKECredential({ team, name })
   ListGCPOrganizations = (team) => this.apis.default.ListGCPOrganizations({ team })
   GetGCPOrganization = (team, name) => this.apis.default.GetGCPOrganization({ team, name })
   UpdateGCPOrganization = (team, name, org) => this.apis.default.UpdateGCPOrganization({ team, name, body: JSON.stringify(org) })
   ListEKSCredentials = (team) => this.apis.default.ListEKSCredentials({ team })
   GetEKSCredentials = (team, name) => this.apis.default.GetEKSCredentials({ team, name })
   UpdateEKSCredentials = (team, name, resource) => this.apis.default.UpdateEKSCredentials({ team, name, body: JSON.stringify(resource) })
+  DeleteEKSCredentials = (team, name) => this.apis.default.DeleteEKSCredentials({ team, name })
 
   // Teams
   GetTeam = (team) => this.apis.default.GetTeam({ team })

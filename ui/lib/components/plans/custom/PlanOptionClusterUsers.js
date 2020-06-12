@@ -119,7 +119,7 @@ export default class PlanOptionClusterUsers extends PlanOptionBase {
       { title: 'User', dataIndex: 'username', key: 'username', width: '45%' },
       { title: 'Roles', dataIndex: 'roles', key: 'tags', width: '45%', render: function renderRoles(userRoles, r) { 
         return (
-          <Select mode="multiple" value={userRoles}  onChange={(selectedRoles) => this.setUserRoles(r.username, selectedRoles)}>
+          <Select id={`plan_input_${name}_${r.username}_roles`} mode="multiple" value={userRoles}  onChange={(selectedRoles) => this.setUserRoles(r.username, selectedRoles)}>
             {!editable ? null : roles.map((role) => userRoles.indexOf(role) === -1 ? <Select.Option key={role} value={role}>{role}</Select.Option> : null)}
           </Select>
         )
@@ -128,7 +128,7 @@ export default class PlanOptionClusterUsers extends PlanOptionBase {
         if (!editable) {
           return null
         }
-        return <><div style={{ textAlign: 'right' }}><a onClick={() => this.removeUser(r.username)}><Icon type="delete" title="Delete" /></a></div></>
+        return <><div style={{ textAlign: 'right' }}><a id={`plan_input_${name}_${r.username}_remove`} onClick={() => this.removeUser(r.username)}><Icon type="delete" title="Delete" /></a></div></>
       }.bind(this) },
     ]
 
@@ -142,6 +142,7 @@ export default class PlanOptionClusterUsers extends PlanOptionBase {
           rowKey={r => r.username}
           footer={!editable ? null : () => (
             <Select
+              id={`plan_input_${name}_adduser`} 
               mode="single" showSearch={true}
               placeholder="Start typing username to find users to add"
               onSearch={this.searchUsers}

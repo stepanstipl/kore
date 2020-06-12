@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types'
 import moment from 'moment'
-import { message, Avatar, List, Alert, Icon, Drawer, Typography, Button, Tooltip, Modal } from 'antd'
+import { Avatar, List, Alert, Icon, Drawer, Typography, Button, Tooltip, Modal } from 'antd'
 const { Title, Text, Paragraph } = Typography
 import getConfig from 'next/config'
 const { publicRuntimeConfig } = getConfig()
@@ -11,6 +11,7 @@ import Policy from './Policy'
 import PolicyForm from './PolicyForm'
 import AllocationHelpers from '../../utils/allocation-helpers'
 import { isReadOnlyCRD } from '../../utils/crd-helpers'
+import { successMessage } from '../../utils/message'
 
 class PolicyList extends ResourceList {
   static propTypes = {
@@ -40,7 +41,7 @@ class PolicyList extends ResourceList {
       onOk: async () => {
         await AllocationHelpers.removeAllocation(policy)
         await (await KoreApi.client()).RemovePlanPolicy(policy.metadata.name)
-        message.success(`Policy ${policy.spec.description} deleted`)
+        successMessage(`Policy ${policy.spec.description} deleted`)
         await this.refresh()
       }
     })

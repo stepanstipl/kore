@@ -1,13 +1,14 @@
 import PropTypes from 'prop-types'
 import Link from 'next/link'
 import moment from 'moment'
-import { Divider, List, Icon, Typography, Popconfirm, message, Tooltip, Tag } from 'antd'
+import { Divider, List, Icon, Typography, Popconfirm, Tooltip, Tag } from 'antd'
 const { Text } = Typography
 
 import ServiceCredentialSnippet from './ServiceCredentialSnippet'
 import { inProgressStatusList } from '../../../utils/ui-helpers'
 import ResourceStatusTag from '../../resources/ResourceStatusTag'
 import AutoRefreshComponent from '../AutoRefreshComponent'
+import { successMessage, errorMessage } from '../../../utils/message'
 
 class ServiceCredential extends AutoRefreshComponent {
   static propTypes = {
@@ -23,13 +24,13 @@ class ServiceCredential extends AutoRefreshComponent {
     const { serviceCredential } = this.props
     const { status, deleted } = serviceCredential
     if (deleted) {
-      return message.success(`Service access successfully deleted for service "${serviceCredential.spec.service.name}"`)
+      return successMessage(`Service access successfully deleted for service "${serviceCredential.spec.service.name}"`)
     }
     if (status.status === 'Success') {
-      return message.success(`Service access successfully created for service "${serviceCredential.spec.service.name}"`)
+      return successMessage(`Service access successfully created for service "${serviceCredential.spec.service.name}"`)
     }
     if (status.status === 'Failure') {
-      return message.error(`Service access failed to create for service "${serviceCredential.spec.service.name}"`)
+      return errorMessage(`Service access failed to create for service "${serviceCredential.spec.service.name}"`)
     }
   }
 

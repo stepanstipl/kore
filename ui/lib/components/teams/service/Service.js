@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types'
 import moment from 'moment'
-import { List, Icon, Typography, Popconfirm, message, Tooltip, Avatar, Tag } from 'antd'
+import { List, Icon, Typography, Popconfirm, Tooltip, Avatar, Tag } from 'antd'
 const { Text } = Typography
 
 import { inProgressStatusList } from '../../../utils/ui-helpers'
@@ -8,6 +8,7 @@ import ResourceStatusTag from '../../resources/ResourceStatusTag'
 import AutoRefreshComponent from '../AutoRefreshComponent'
 import Link from 'next/link'
 import { getKoreLabel, isReadOnlyCRD } from '../../../utils/crd-helpers'
+import { successMessage, errorMessage } from '../../../utils/message'
 
 class Service extends AutoRefreshComponent {
   static propTypes = {
@@ -23,13 +24,13 @@ class Service extends AutoRefreshComponent {
     const { service } = this.props
     const { status, deleted } = service
     if (deleted) {
-      return message.success(`Service successfully deleted: ${service.metadata.name}`)
+      return successMessage(`Service successfully deleted: ${service.metadata.name}`)
     }
     if (status.status === 'Success') {
-      return message.success(`Service successfully created: ${service.metadata.name}`)
+      return successMessage(`Service successfully created: ${service.metadata.name}`)
     }
     if (status.status === 'Failure') {
-      return message.error(`Service failed to create: ${service.metadata.name}`)
+      return errorMessage(`Service failed to create: ${service.metadata.name}`)
     }
   }
 

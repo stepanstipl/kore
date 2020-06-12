@@ -1,6 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Card, Descriptions, List, Tooltip, Icon, Button, Collapse, message, Drawer } from 'antd'
+import { Card, Descriptions, List, Tooltip, Icon, Button, Collapse, Drawer } from 'antd'
 import moment from 'moment'
 import Link from 'next/link'
 import getConfig from 'next/config'
@@ -9,6 +9,7 @@ const { publicRuntimeConfig } = getConfig()
 import SecurityStatusIcon from './SecurityStatusIcon'
 import KoreApi from '../../kore-api'
 import SecurityRule from './SecurityRule'
+import { errorMessage } from '../../utils/message'
 
 export default class SecurityScanResult extends React.Component {
   static propTypes = {
@@ -35,12 +36,12 @@ export default class SecurityScanResult extends React.Component {
         ruleDetails: rule
       })
       if (!rule) {
-        message.error(`Rule ${ruleCode} not found, cannot show details`)
+        errorMessage(`Rule ${ruleCode} not found, cannot show details`)
       }
     } catch (err) {
       this.setState({ loadingRule: false })
       console.error(`Failed to load details of rule ${ruleCode}`, err)
-      message.error(`Failed to load details of rule ${ruleCode}`)
+      errorMessage(`Failed to load details of rule ${ruleCode}`)
     }
   }
 

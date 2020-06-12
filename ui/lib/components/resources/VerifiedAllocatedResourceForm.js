@@ -1,12 +1,13 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
-import { message, Typography, Form, Card, Alert, Button, Input, Select } from 'antd'
+import { Typography, Form, Card, Alert, Button, Input, Select } from 'antd'
 const { Paragraph, Text } = Typography
 
 import canonical from '../../utils/canonical'
 import ResourceVerificationStatus from './ResourceVerificationStatus'
 import FormErrorMessage from '../forms/FormErrorMessage'
 import AllocationHelpers from '../../utils/allocation-helpers'
+import { successMessage, loadingMessage, errorMessage } from '../../utils/message'
 
 class VerifiedAllocatedResourceForm extends React.Component {
   static propTypes = {
@@ -65,10 +66,10 @@ class VerifiedAllocatedResourceForm extends React.Component {
     const messageKey = 'verify'
     tryCount = tryCount || 0
     if (tryCount === 0) {
-      message.loading({ content: 'Verifying credentials', key: messageKey, duration: 0 })
+      loadingMessage('Verifying credentials', { key: messageKey, duration: 0 })
     }
     if (tryCount === 3) {
-      message.error({ content: 'Credentials verification failed', key: messageKey })
+      errorMessage('Credentials verification failed', { key: messageKey })
       this.setState({
         ...this.state,
         inlineVerificationFailed: true,
@@ -90,7 +91,7 @@ class VerifiedAllocatedResourceForm extends React.Component {
       setTimeout(async () => {
         const resourceResult = await this.getResource(resource.metadata.name)
         if (resourceResult.status.status === 'Success') {
-          message.success({ content: 'Credentials verification successful', key: messageKey })
+          successMessage('Credentials verification successful', { key: messageKey })
           return await this.props.handleSubmit(resourceResult)
         }
         return await this.verify(resourceResult, tryCount + 1)
@@ -198,7 +199,7 @@ class VerifiedAllocatedResourceForm extends React.Component {
           />
         ) : null}
 
-        <Form {...formConfig} onSubmit={this.handleSubmit}>
+        <Form {...formConfig} name="resource_form" onSubmit={this.handleSubmit}>
           <FormErrorMessage message={formErrorMessage} />
 
           {this.resourceFormFields()}
@@ -215,7 +216,7 @@ class VerifiedAllocatedResourceForm extends React.Component {
                 rules: [{ required: true, message: 'Please enter the name!' }],
                 initialValue: data && data.allocation && data.allocation.spec.name
               })(
-                <Input placeholder="Name" />,
+                <Input name="name" placeholder="Name" />,
               )}
             </Form.Item>
             <Form.Item label="Description" validateStatus={this.fieldError('summary') ? 'error' : ''} help={this.fieldError('summary') || nameSection.descriptionHelp}>
@@ -223,7 +224,7 @@ class VerifiedAllocatedResourceForm extends React.Component {
                 rules: [{ required: true, message: 'Please enter the description!' }],
                 initialValue: data && data.allocation && data.allocation.spec.summary
               })(
-                <Input placeholder="Description" />,
+                <Input name="description" placeholder="Description" />,
               )}
             </Form.Item>
           </Card>
@@ -252,6 +253,7 @@ class VerifiedAllocatedResourceForm extends React.Component {
                       style={{ width: '100%' }}
                       placeholder={noAllocation ? 'No teams' : 'All teams'}
                       onChange={this.onAllocationsChange}
+                      name="allocation"
                     >
                       {allTeams.items.map(t => (
                         <Select.Option key={t.metadata.name} value={t.metadata.name}>{t.spec.summary}</Select.Option>

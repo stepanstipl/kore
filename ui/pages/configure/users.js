@@ -1,12 +1,13 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Typography, List, Avatar, Tag, message } from 'antd'
+import { Typography, List, Avatar, Tag } from 'antd'
 const { Text } = Typography
 import getConfig from 'next/config'
 const { publicRuntimeConfig } = getConfig()
 
 import KoreApi from '../../lib/kore-api'
 import Breadcrumb from '../../lib/components/layout/Breadcrumb'
+import { successMessage, errorMessage } from '../../lib/utils/message'
 
 class ConfigureUsersPage extends React.Component {
   static propTypes = {
@@ -43,10 +44,10 @@ class ConfigureUsersPage extends React.Component {
         this.setState(state => ({
           admins: [ ...state.admins, username ]
         }))
-        message.success(`${username} is now admin`)
+        successMessage(`${username} is now admin`)
       } catch (err) {
         console.error('Error trying to make admin')
-        message.error(`Failed to make ${username} admin`)
+        errorMessage(`Failed to make ${username} admin`)
       }
     }
   }
@@ -58,10 +59,10 @@ class ConfigureUsersPage extends React.Component {
         this.setState(state => ({
           admins: state.admins.filter(m => m !== username)
         }))
-        message.success(`${username} is no longer admin`)
+        successMessage(`${username} is no longer admin`)
       } catch (err) {
         console.error('Error trying to revoke admin', err)
-        message.error(`Failed to revoke admin from user ${username}`)
+        errorMessage(`Failed to revoke admin from user ${username}`)
       }
     }
   }

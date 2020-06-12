@@ -1,10 +1,11 @@
 import PropTypes from 'prop-types'
 import moment from 'moment'
-import { List, Avatar, Icon, Typography, message, Tooltip } from 'antd'
+import { List, Avatar, Icon, Typography, Tooltip } from 'antd'
 const { Text } = Typography
 
 import ResourceVerificationStatus from '../resources/ResourceVerificationStatus'
 import AutoRefreshComponent from '../teams/AutoRefreshComponent'
+import { successMessage, errorMessage } from '../../utils/message'
 
 class GCPOrganization extends AutoRefreshComponent {
   static propTypes = {
@@ -25,10 +26,10 @@ class GCPOrganization extends AutoRefreshComponent {
     const { organization } = this.props
     const { allocation, status } = organization
     if (status.status === 'Success') {
-      return message.success(`GCP organization "${allocation.spec.name}" created successfully`)
+      return successMessage(`GCP organization "${allocation.spec.name}" created successfully`)
     }
     if (status.status === 'Failure') {
-      return message.error(`GCP organization "${allocation.spec.name}" failed to be created`)
+      return errorMessage(`GCP organization "${allocation.spec.name}" failed to be created`)
     }
   }
 
