@@ -25,6 +25,7 @@ import (
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/controllers"
+	"github.com/appvia/kore/pkg/controllers/helpers"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
@@ -58,7 +59,7 @@ func (c *Controller) delete(
 			return reconcile.Result{Requeue: true}, nil
 		}
 
-		result, err := DeleteServices(
+		result, err := helpers.DeleteServices(
 			kore.NewContext(ctx, logger, c.mgr.GetClient(), c),
 			kore.HubAdminTeam,
 			serviceProvider,
