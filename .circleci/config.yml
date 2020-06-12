@@ -185,6 +185,25 @@ jobs:
 
     docker:
       - image: circleci/golang:1.14
+
+    steps:
+      - checkout
+      - run:
+          name: Build
+          command: |
+            make build
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - bin
+
+  test:
+    environment:
+      GOFLAGS: "-mod=vendor"
+      USE_GIT_VERSION: "true"
+
+    docker:
+      - image: circleci/golang:1.14
       - name: database
         image: mariadb:bionic
         environment:
@@ -202,16 +221,8 @@ jobs:
             TEST_USERS_DATABASE_URL: "root:pass@tcp(database:3306)/kore?parseTime=true"
           command: |
             make test
-      - run:
-          name: Build
-          command: |
-            make build
-      - persist_to_workspace:
-          root: ~/project
-          paths:
-            - bin
 
-  check-apis:
+  test-api:
     environment:
       GOFLAGS: "-mod=vendor"
       USE_GIT_VERSION: "true"
@@ -222,17 +233,12 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Checking generated API resources
-          command: |
-            make check-apis
-      - run:
           command: |
             make kore-apiserver
             bin/kore-apiserver --verbose
           background: true
           environment:
             <<: *SERVICES_ENV
-
       - run:
           name: Checking swagger
           command: |
@@ -243,7 +249,22 @@ jobs:
           command: |
             make check-swagger-apiclient api-test
           environment:
-            <<: *SERVICES_ENV
+            <<: *SERVICES_ENV      
+
+  check-apis:
+    environment:
+      GOFLAGS: "-mod=vendor"
+      USE_GIT_VERSION: "true"
+
+    docker:
+      - image: circleci/golang:1.14
+
+    steps:
+      - checkout
+      - run:
+          name: Checking generated API resources
+          command: |
+            make check-apis
 
   release:
     environment:
@@ -311,40 +332,40 @@ jobs:
             keys:
               - ui-node-v1-{{ checksum "ui/package-lock.json" }}
               - ui-node-v1-
-      - restore_cache:
-            keys:
-              - ui-next-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
-              - ui-next-v1-{{ .Branch }}-
-              - ui-next-v1-
       - run:
           name: Installing UI dependencies
           working_directory: ~/project/ui
           command: |
-            make prep
+            make dependencies
       - save_cache:
             paths:
               - ui/node_modules
             key: ui-node-v1-{{ checksum "ui/package-lock.json" }}
       - run:
-          name: Testing UI
-          working_directory: ~/project/ui
-          command: |
-            make test
-      - run:
           name: Building UI
           working_directory: ~/project/ui
           command: |
             make build
-      - save_cache:
-            paths:
-              - ui/.next/cache
-            key: ui-next-v1-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
-      - persist_to_workspace:
-          root: ~/project
-          paths:
-            - ui/.next
 
   test-ui:
+    docker:
+      - image: circleci/node:12
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - restore_cache:
+            keys:
+              - ui-node-v1-{{ checksum "ui/package-lock.json" }}
+      - run:
+          name: Testing UI
+          working_directory: ~/project/ui
+          command: |
+            # Restore node modules only if we've not got a cache hit.
+            [[ -d node_modules ]] || make dependencies
+            make test
+
+  test-ui-e2e:
     docker:
       - image: circleci/node:12
       - *SERVICES_ETCD
@@ -355,6 +376,23 @@ jobs:
 
     steps:
       - checkout
+      - restore_cache:
+            keys:
+              - ui-node-v1-{{ checksum "ui/package-lock.json" }}
+      - run:
+          name: Running kore-ui
+          working_directory: ~/project/ui
+          command: |
+            # Restore node modules only if we've not got a cache hit.
+            [[ -d node_modules ]] || make dependencies
+            make build
+            npm start
+          background: true
+          environment:
+            KORE_BASE_URL: http://localhost:3000
+            KORE_API_URL: http://localhost:10080/api/v1alpha1
+            KORE_API_TOKEN: password
+            REDIS_URL: redis://redis:6379
       - run:
           name: Install Headless Chrome dependencies
           command: ./ui/scripts/install-e2e-deps.sh
@@ -367,25 +405,6 @@ jobs:
           background: true
           environment:
             <<: *SERVICES_ENV
-      - restore_cache:
-            keys:
-              - ui-node-v1-{{ checksum "ui/package-lock.json" }}
-              - ui-node-v1-
-      - run:
-          name: Running kore-ui
-          working_directory: ~/project/ui
-          command: |
-            # Restore node modules only if we've not got a cache hit.
-            [[ -d node_modules ]] || make prep
-            # Copy built UI into source tree from shared workspace
-            cp -R /tmp/workspace/ui/.next .
-            npm start
-          background: true
-          environment:
-            KORE_BASE_URL: http://localhost:3000
-            KORE_API_URL: http://localhost:10080/api/v1alpha1
-            KORE_API_TOKEN: password
-            REDIS_URL: redis://redis:6379
       - run:
           name: Waiting for API and UI
           command: |
@@ -495,6 +514,14 @@ workflows:
           filters:
             tags:
               only: /^v.*$/
+      - test:
+          filters:
+            tags:
+              only: /^v.*$/
+      - test-api:
+          filters:
+            tags:
+              only: /^v.*$/
       - check-apis:
           filters:
             tags:
@@ -503,6 +530,8 @@ workflows:
           requires:
             - check
             - build
+            - test
+            - test-api
             - check-apis
           filters:
             branches:
@@ -545,6 +574,8 @@ workflows:
           requires:
             - check
             - build
+            - test
+            - test-api
             - check-apis
             - check-release-notes
             - e2e_eks
@@ -559,9 +590,12 @@ workflows:
             tags:
               only: /^v.*$/
       - test-ui:
+          filters:
+            tags:
+              only: /^v.*$/
+      - test-ui-e2e:
           requires:
             - build
-            - build-ui
           filters:
             tags:
               only: /^v.*$/
@@ -574,6 +608,7 @@ workflows:
           requires:
             - build-ui
             - test-ui
+            - test-ui-e2e
       - deploy-qa:
           filters:
             branches:

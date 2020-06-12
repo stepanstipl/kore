@@ -5,7 +5,7 @@ VERSION ?= latest
 
 default: build
 
-prep: 
+dependencies: 
 	@echo "--> Preparing"
 	npm install
 
