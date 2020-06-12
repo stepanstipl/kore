@@ -19,16 +19,15 @@ class Cluster extends AutoRefreshComponent {
     deleteCluster: PropTypes.func.isRequired
   }
 
-  finalStateReached() {
+  finalStateReached({ state, deleted }) {
     const { cluster } = this.props
-    const { status, deleted } = cluster
     if (deleted) {
       return successMessage(`Cluster successfully deleted: ${cluster.metadata.name}`)
     }
-    if (status.status === 'Success') {
+    if (state === AutoRefreshComponent.FINAL_STATES.SUCCESS) {
       return successMessage(`Cluster successfully created: ${cluster.metadata.name}`)
     }
-    if (status.status === 'Failure') {
+    if (state === AutoRefreshComponent.FINAL_STATES.FAILURE) {
       return errorMessage(`Cluster failed to create: ${cluster.metadata.name}`)
     }
   }

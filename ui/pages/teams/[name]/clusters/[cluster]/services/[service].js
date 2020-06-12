@@ -117,12 +117,10 @@ class ServicePage extends React.Component {
   }
 
   handleResourceDeleted = resourceType => {
-    return (name, done) => {
-      this.setState((state) => {
-        return {
-          [resourceType]: state[resourceType].map(r => r.metadata.name !== name ? r : { ...r, deleted: true })
-        }
-      }, done)
+    return (name) => {
+      this.setState((state) => ({
+        [resourceType]: state[resourceType].filter(r => r.metadata.name !== name)
+      }))
     }
   }
 
@@ -222,7 +220,7 @@ class ServicePage extends React.Component {
       labelCol: { xs: 24, xl: 10 }, wrapperCol: { xs: 24, xl: 14 }
     }
 
-    const hasActiveBindings = serviceCredentials && Boolean(serviceCredentials.filter(c => !c.deleted).length)
+    const hasServiceCredentials = serviceCredentials && Boolean(serviceCredentials.length)
 
     return (
       <div>
@@ -237,7 +235,7 @@ class ServicePage extends React.Component {
         />
 
         <Row type="flex" gutter={[16,16]}>
-          <Col span={24} xl={12}>
+          <Col span={24} xl={12} style={{ marginTop: '18px' }}>
             <List.Item>
               <List.Item.Meta
                 className="large-list-item"
@@ -271,15 +269,13 @@ class ServicePage extends React.Component {
 
             <Card title={<span>Service access {serviceCredentials && <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={serviceCredentials.filter(c => !c.deleted).length} />}</span>} extra={<Button type="primary" onClick={this.createServiceCredential(true)}>Add access</Button>}>
 
-              {!serviceCredentials && <Icon type="loading" />}
-              {serviceCredentials && !hasActiveBindings && <Text type="secondary">No access found for this service</Text>}
-              {serviceCredentials && (
-                <List
-                  className="hide-empty-text"
-                  locale={{ emptyText: <div/> }}
-                  dataSource={serviceCredentials}
-                  renderItem={serviceCredential => {
-                    return (
+              {!serviceCredentials ? <Icon type="loading" /> : (
+                hasServiceCredentials ? (
+                  <List
+                    className="hide-empty-text"
+                    locale={{ emptyText: <div/> }}
+                    dataSource={serviceCredentials}
+                    renderItem={serviceCredential => (
                       <ServiceCredential
                         viewPerspective="service"
                         team={team.metadata.name}
@@ -288,13 +284,15 @@ class ServicePage extends React.Component {
                         deleteServiceCredential={this.deleteServiceCredential}
                         handleUpdate={this.handleResourceUpdated('serviceCredentials')}
                         handleDelete={this.handleResourceDeleted('serviceCredentials')}
-                        refreshMs={10000}
+                        refreshMs={2000}
                         propsResourceDataKey="serviceCredential"
                         resourceApiPath={`${apiPaths.team(team.metadata.name).serviceCredentials}/${serviceCredential.metadata.name}`}
                       />
-                    )
-                  }}
-                />
+                    )}
+                  />
+                ) : (
+                  <Text type="secondary">No access found for this service</Text>
+                )
               )}
 
               <Drawer
@@ -355,4 +353,5 @@ class ServicePage extends React.Component {
     )
   }
 }
+
 export default ServicePage

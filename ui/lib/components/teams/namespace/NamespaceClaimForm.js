@@ -8,6 +8,7 @@ import Generic from '../../../crd/Generic'
 import apiRequest from '../../../utils/api-request'
 import apiPaths from '../../../utils/api-paths'
 import { patterns } from '../../../utils/validation'
+import { loadingMessage } from '../../../utils/message'
 
 class NamespaceClaimForm extends React.Component {
   static propTypes = {
@@ -85,6 +86,7 @@ class NamespaceClaimForm extends React.Component {
         const state = copy(this.state)
         state.submitting = false
         this.setState(state)
+        loadingMessage(`Namespace "${name}" requested`)
         await this.props.handleSubmit(nsClaimResult)
       } catch (err) {
         console.error('Error submitting form', err)

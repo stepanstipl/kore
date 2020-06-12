@@ -22,14 +22,16 @@ class GCPOrganization extends AutoRefreshComponent {
     }
   }
 
-  finalStateReached() {
+  finalStateReached({ state, deleted }) {
     const { organization } = this.props
-    const { allocation, status } = organization
-    if (status.status === 'Success') {
-      return successMessage(`GCP organization "${allocation.spec.name}" created successfully`)
+    if (deleted) {
+      return successMessage(`GCP organization "${organization.allocation.spec.name}" deleted`)
     }
-    if (status.status === 'Failure') {
-      return errorMessage(`GCP organization "${allocation.spec.name}" failed to be created`)
+    if (state === AutoRefreshComponent.FINAL_STATES.SUCCESS) {
+      return successMessage(`GCP organization "${organization.allocation.spec.name}" created successfully`)
+    }
+    if (state === AutoRefreshComponent.FINAL_STATES.FAILURE) {
+      return errorMessage(`GCP organization "${organization.allocation.spec.name}" failed to be created`)
     }
   }
 

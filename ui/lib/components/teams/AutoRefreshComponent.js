@@ -21,21 +21,32 @@ class AutoRefreshComponent extends React.Component {
     handleDelete: PropTypes.func.isRequired
   }
 
-  FINAL_STATES = ['Success', 'Failure']
+  static FINAL_STATES = {
+    SUCCESS: 'Success',
+    FAILURE: 'Failure'
+  }
 
-  isFinalState() {
+  getFinalState() {
     const stateResource = this.props[this.props.propsResourceDataKey]
     const status = stateResource.status && stateResource.status.status
-    return this.FINAL_STATES.includes(status)
+    console.log('AutoRefreshComponent | getFinalState', status)
+
+    return Object.keys(AutoRefreshComponent.FINAL_STATES)
+      .map(k => AutoRefreshComponent.FINAL_STATES[k] === status ? status : false)
+      .find(k => k)
   }
 
-  isDeleted() {
-    return this.props[this.props.propsResourceDataKey].deleted
-  }
-
-  checkClearInterval() {
-    if (this.isDeleted() || this.isFinalState()) {
-      this.finalStateReached && this.finalStateReached()
+  resourceUpdated(params) {
+    params = params || {}
+    if (params.deleted) {
+      console.log('AutoRefreshComponent | resource deleted')
+      this.finalStateReached && this.finalStateReached({ deleted: true })
+      return clearInterval(this.interval)
+    }
+    const finalState = this.getFinalState()
+    console.log('AutoRefreshComponent | resource updated', finalState)
+    if (finalState) {
+      this.finalStateReached && this.finalStateReached({ state: finalState })
       clearInterval(this.interval)
     }
   }
@@ -45,18 +56,21 @@ class AutoRefreshComponent extends React.Component {
     return resourceData
   }
 
+  refreshResource = async () => {
+    const resourceName = this.props[this.props.propsResourceDataKey].metadata.name
+    const resourceData = await this.fetchResource()
+    console.log('AutoRefreshComponent | refreshResource', resourceName, resourceData)
+    if (Object.keys(resourceData).length === 0) {
+      this.resourceUpdated({ deleted: true })
+      this.props.handleDelete(resourceName)
+    } else {
+      this.props.handleUpdate(resourceData, () => this.resourceUpdated())
+    }
+  }
+
   startRefreshing() {
-    if (!this.isFinalState() && !this.isDeleted()) {
-      this.interval = setInterval(async () => {
-        const resourceName = this.props[this.props.propsResourceDataKey].metadata.name
-        const resourceData = await this.fetchResource()
-        if (Object.keys(resourceData).length === 0) {
-          resourceData.deleted = true
-          this.props.handleDelete(resourceName, () => this.checkClearInterval())
-        } else {
-          this.props.handleUpdate(resourceData, () => this.checkClearInterval())
-        }
-      }, this.props.refreshMs)
+    if (!this.getFinalState()) {
+      this.interval = setInterval(this.refreshResource, this.props.refreshMs)
     }
   }
 

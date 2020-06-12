@@ -1,26 +1,21 @@
 import React from 'react'
-import moment from 'moment'
 import PropTypes from 'prop-types'
 import {
   Button,
-  Col,
   Divider,
   Drawer,
   Icon,
   List,
   Modal,
-  Row,
   Tooltip,
-  Tag,
   Typography,
   Collapse,
   Badge
 } from 'antd'
-const { Paragraph, Text } = Typography
+const { Paragraph } = Typography
 
 import KoreApi from '../../../kore-api'
 import copy from '../../../utils/object-copy'
-import { inProgressStatusList, statusColorMap, statusIconMap } from '../../../utils/ui-helpers'
 import { featureEnabled, KoreFeatures } from '../../../utils/features'
 import NamespaceClaim from './NamespaceClaim'
 import ServiceCredential from '../service/ServiceCredential'
@@ -153,7 +148,7 @@ class NamespacesTab extends React.Component {
 
   deleteNamespaceConfirm = async (name, done) => {
     const namespaceClaim = this.state.namespaceClaims.find(nc => nc.metadata.name === name)
-    const serviceCredentials = this.state.serviceCredentials.filter(sc => !sc.deleted && sc.spec.clusterNamespace === namespaceClaim.spec.name)
+    const serviceCredentials = this.state.serviceCredentials.filter(sc => sc.spec.clusterNamespace === namespaceClaim.spec.name)
     if (serviceCredentials.length > 0) {
       return Modal.warning({
         title: 'Warning: namespace cannot be deleted',
@@ -193,56 +188,30 @@ class NamespacesTab extends React.Component {
     }
   }
 
-  handleResourceUpdated = resourceType => {
+  handleResourceUpdated = (resourceType) => {
     return async (updatedResource, done) => {
-      this.setState((state) => {
-        return {
-          [resourceType]: state[resourceType].map(r => r.metadata.name !== updatedResource.metadata.name ? r : { ...r, status: updatedResource.status })
-        }
-      }, done)
+      this.setState((state) => ({
+        [resourceType]: state[resourceType].map(r => r.metadata.name !== updatedResource.metadata.name ? r : { ...r, status: updatedResource.status })
+      }), done)
 
       await this.refreshServiceCredentials()
     }
   }
 
-  handleResourceDeleted = resourceType => {
-    return (name, done) => {
+  handleResourceDeleted = (resourceType) => {
+    return (name) => {
       this.setState((state) => {
         const revealBindings = copy(state.revealBindings)
         if (resourceType === 'serviceCredentials') {
           const serviceCred = state.serviceCredentials.find(sc => sc.metadata.name === name)
-          revealBindings[serviceCred.spec.clusterNamespace] = Boolean(state.serviceCredentials.filter(sc => sc.metadata.name !== name && !sc.deleted && sc.spec.clusterNamespace === serviceCred.spec.clusterNamespace).length)
+          revealBindings[serviceCred.spec.clusterNamespace] = Boolean(state.serviceCredentials.filter(sc => sc.metadata.name !== name && sc.spec.clusterNamespace === serviceCred.spec.clusterNamespace).length)
         }
         return {
-          [resourceType]: state[resourceType].map(r => r.metadata.name !== name ? r : { ...r, deleted: true }),
+          [resourceType]: state[resourceType].filter(r => r.metadata.name !== name),
           revealBindings
         }
-      }, () => {
-        this.props.onNamespaceCountChange && this.props.onNamespaceCountChange(this.state.namespaceClaims.filter(s => !s.deleted).length)
-        done
-      })
+      }, () => this.props.onNamespaceCountChange && this.props.onNamespaceCountChange(this.state.namespaceClaims.length))
     }
-  }
-
-  serviceCredentialList = ({ serviceCredentials }) => {
-    return (
-      <Row style={{ marginLeft: '50px' }}>
-        <Col>
-          <Text strong style={{ marginRight: '8px' }}>Access: </Text>
-          {serviceCredentials.map(serviceCredential => {
-            const status = serviceCredential.status.status || 'Pending'
-            const created = moment(serviceCredential.metadata.creationTimestamp).fromNow()
-            return (
-              <span key={serviceCredential.metadata.name} style={{ marginRight: '5px' }}>
-                <Tooltip title={`Created ${created}`}>
-                  <Tag color={statusColorMap[status] || 'red'}>{serviceCredential.spec.cluster.name}/{serviceCredential.spec.clusterNamespace} {inProgressStatusList.includes(status) ? <Icon type="loading" /> : <Icon type={statusIconMap[status]} />}</Tag>
-                </Tooltip>
-              </span>
-            )
-          })}
-        </Col>
-      </Row>
-    )
   }
 
   revealBindings = (namespaceName) => (key) => {
@@ -255,7 +224,7 @@ class NamespacesTab extends React.Component {
     const { team, cluster } = this.props
     const { dataLoading, namespaceClaims, serviceKinds, serviceCredentials, showNamespaceClaimForm, showServiceCredentialForm } = this.state
 
-    const hasActiveNamespaces =  Boolean(namespaceClaims.filter(c => !c.deleted).length)
+    const hasNamespaces =  Boolean(namespaceClaims.length)
 
     return (
       <>
@@ -267,11 +236,10 @@ class NamespacesTab extends React.Component {
           <Icon type="loading" />
         ) : (
           <>
-            {!hasActiveNamespaces && <Paragraph type="secondary">No namespaces found for this team</Paragraph>}
+            {!hasNamespaces && <Paragraph type="secondary">No namespaces found for this team</Paragraph>}
 
-            {namespaceClaims && namespaceClaims.map((namespaceClaim, idx) => {
+            {namespaceClaims.map((namespaceClaim, idx) => {
               const filteredServiceCredentials = (serviceCredentials || []).filter(sc => sc.spec.clusterNamespace === namespaceClaim.spec.name)
-              const activeServiceCredentials = filteredServiceCredentials.filter(nc => !nc.deleted)
               return (
                 <React.Fragment key={namespaceClaim.metadata.name}>
                   <NamespaceClaim
@@ -281,16 +249,16 @@ class NamespacesTab extends React.Component {
                     deleteNamespace={this.deleteNamespaceConfirm}
                     handleUpdate={this.handleResourceUpdated('namespaceClaims')}
                     handleDelete={this.handleResourceDeleted('namespaceClaims')}
-                    refreshMs={15000}
+                    refreshMs={2000}
                     propsResourceDataKey="namespaceClaim"
                     resourceApiPath={`/teams/${team.metadata.name}/namespaceclaims/${namespaceClaim.metadata.name}`}
                   />
-                  {!namespaceClaim.deleted && featureEnabled(KoreFeatures.SERVICES) && (
+                  {featureEnabled(KoreFeatures.SERVICES) && (
                     <>
                       <Collapse onChange={this.revealBindings(namespaceClaim.spec.name)} activeKey={this.state.revealBindings[namespaceClaim.spec.name] ? ['bindings'] : []}>
                         <Collapse.Panel
                           key="bindings"
-                          header={<span>Cloud service access <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={activeServiceCredentials.length} /></span>}
+                          header={<span>Cloud service access <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={filteredServiceCredentials.length} /></span>}
                           extra={
                             <Tooltip title="Provide this namespace with access to a cloud service">
                               <Icon
@@ -317,7 +285,7 @@ class NamespacesTab extends React.Component {
                                 deleteServiceCredential={this.deleteServiceCredential}
                                 handleUpdate={this.handleResourceUpdated('serviceCredentials')}
                                 handleDelete={this.handleResourceDeleted('serviceCredentials')}
-                                refreshMs={10000}
+                                refreshMs={2000}
                                 propsResourceDataKey="serviceCredential"
                                 resourceApiPath={`${apiPaths.team(team.metadata.name).serviceCredentials}/${serviceCredential.metadata.name}`}
                               />
@@ -327,7 +295,7 @@ class NamespacesTab extends React.Component {
                         </Collapse.Panel>
                       </Collapse>
 
-                      {!namespaceClaim.deleted && idx < namespaceClaims.length - 1 && <Divider />}
+                      {idx < namespaceClaims.length - 1 && <Divider />}
                     </>
                   )}
 

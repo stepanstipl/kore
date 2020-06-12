@@ -122,7 +122,7 @@ class ServicesTab extends React.Component {
   }
 
   deleteServiceConfirm = async (name, done) => {
-    const serviceCredentials = this.state.serviceCredentials.filter(sc => !sc.deleted && sc.spec.service.name === name)
+    const serviceCredentials = this.state.serviceCredentials.filter(sc => sc.spec.service.name === name)
     if (serviceCredentials.length > 0) {
       return Modal.warning({
         title: 'Warning: service cannot be deleted',
@@ -157,15 +157,10 @@ class ServicesTab extends React.Component {
   }
 
   handleResourceDeleted = (resourceType) => {
-    return (name, done) => {
-      const resourceList = copy(this.state[resourceType])
-      const resource = resourceList.find(r => r.metadata.name === name)
-      resource.deleted = true
-
-      this.setState({ [resourceType]: resourceList }, () => {
-        this.props.getServiceCount && this.props.getServiceCount(this.state.services.filter(s => !s.deleted).length)
-        done()
-      })
+    return (name) => {
+      this.setState(state => ({
+        [resourceType]: state[resourceType].filter(r => r.metadata.name !== name)
+      }), () => this.props.getServiceCount && this.props.getServiceCount(this.state.services.length))
     }
   }
 
@@ -194,7 +189,7 @@ class ServicesTab extends React.Component {
     const { team, cluster, serviceType } = this.props
     const { dataLoading, services, serviceKinds, serviceCredentials, createNewService } = this.state
 
-    const hasActiveServices =  Boolean(services.filter(c => !c.deleted).length)
+    const hasServices =  Boolean(services.length)
 
     return (
       <>
@@ -206,7 +201,7 @@ class ServicesTab extends React.Component {
           <Icon type="loading" />
         ) : (
           <>
-            {!hasActiveServices && <Paragraph type="secondary">No services found for this team</Paragraph>}
+            {!hasServices && <Paragraph type="secondary">No services found for this team</Paragraph>}
 
             {services.map((service, idx) => {
               const filteredServiceCredentials = (serviceCredentials || []).filter(sc => sc.spec.service.name === service.metadata.name)
@@ -220,13 +215,13 @@ class ServicesTab extends React.Component {
                     deleteService={this.deleteServiceConfirm}
                     handleUpdate={this.handleResourceUpdated('services')}
                     handleDelete={this.handleResourceDeleted('services')}
-                    refreshMs={10000}
+                    refreshMs={5000}
                     propsResourceDataKey="service"
                     resourceApiPath={`/teams/${team.metadata.name}/services/${service.metadata.name}`}
                     style={{ paddingTop: 0, paddingBottom: '5px' }}
                   />
-                  {!service.deleted && filteredServiceCredentials.length > 0 && this.serviceCredentialList({ serviceCredentials: filteredServiceCredentials })}
-                  {!service.deleted && idx < services.length - 1 && <Divider />}
+                  {filteredServiceCredentials.length > 0 && this.serviceCredentialList({ serviceCredentials: filteredServiceCredentials })}
+                  {idx < services.length - 1 && <Divider />}
                 </React.Fragment>
               )
             })}
