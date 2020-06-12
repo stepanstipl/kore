@@ -5,10 +5,12 @@ set -o nounset
 set -o pipefail
 
 address=${1?'expected address'}
-for i in {1..10} ; do
+maxtries=${2:-50}
+
+for  i in {1..10} ; do
     ret=0
     curl \
-        --retry 50 \
+        --retry $maxtries \
         --retry-delay 3 \
         --retry-connrefused \
         -sSL ${address} >/dev/null 2>&1 || ret=$?

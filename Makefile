@@ -262,7 +262,7 @@ api-wait:
 
 ui-wait:
 	@echo "--> Waiting for UI..."
-	@hack/bin/http_test.sh http://127.0.0.1:3000
+	@hack/bin/http_test.sh http://127.0.0.1:3000 100
 
 compose-down:
 	@echo "--> Removing the test environment"
