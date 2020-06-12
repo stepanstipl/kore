@@ -23,6 +23,7 @@ import (
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
+	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
@@ -31,6 +32,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -166,4 +168,53 @@ func (a k8sCtrl) EnsureFinalizerRemoved(object *clustersv1.Kubernetes) controlle
 
 		return reconcile.Result{}, nil
 	}
+}
+
+/*
+func (a k8sCtrl) EnsureProviderWorkloadsRemoved(object *clustersv1.Kubernetes) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+
+	}
+}
+*/
+
+// EnsureProviderWorkloads creates all the in cluster services that should be managed for the provider cluster
+func (a k8sCtrl) EnsureProviderWorkloads(c context.Context, resource *clustersv1.Kubernetes) (reconcile.Result, error) {
+	logger := log.WithFields(log.Fields{
+		"name":      resource.Name,
+		"namespace": resource.Namespace,
+		"provider":  resource.Spec.Provider.Kind,
+	})
+	ctx := kore.NewContext(c, logger, a.mgr.GetClient(), a.Interface)
+
+	logger.Debug("obtaining workloads specific to the cloud provider")
+
+	key := types.NamespacedName{
+		Namespace: resource.Spec.Provider.Namespace,
+		Name:      resource.Spec.Provider.Name,
+	}
+
+	switch resource.Spec.Provider.Kind {
+	case "EKS":
+		p := &eks.EKS{}
+
+		if err := a.mgr.GetClient().Get(ctx, key, p); err != nil {
+			logger.WithError(err).Error("trying to retrieve the eks cluster from api")
+		}
+
+		// now ensure all the EKS components are deployed...
+		awsas, err := newAwsAutoscaler(ctx, *p, resource)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		required, err := awsas.IsRequired()
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		if required {
+			logger.Debug("ensuring aws autoscaler is enabled")
+			return awsas.Ensure()
+		}
+	}
+	return reconcile.Result{}, nil
 }
