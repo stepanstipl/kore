@@ -217,7 +217,7 @@ class ServicesTab extends React.Component {
                     handleDelete={this.handleResourceDeleted('services')}
                     refreshMs={5000}
                     propsResourceDataKey="service"
-                    resourceApiPath={`/teams/${team.metadata.name}/services/${service.metadata.name}`}
+                    resourceApiRequest={async () => await (await KoreApi.client()).GetService(team.metadata.name, service.metadata.name)}
                     style={{ paddingTop: 0, paddingBottom: '5px' }}
                   />
                   {filteredServiceCredentials.length > 0 && this.serviceCredentialList({ serviceCredentials: filteredServiceCredentials })}

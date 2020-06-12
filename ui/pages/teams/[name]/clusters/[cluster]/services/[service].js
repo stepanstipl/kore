@@ -12,7 +12,6 @@ import ResourceStatusTag from '../../../../../../lib/components/resources/Resour
 import copy from '../../../../../../lib/utils/object-copy'
 import FormErrorMessage from '../../../../../../lib/components/forms/FormErrorMessage'
 import { inProgressStatusList } from '../../../../../../lib/utils/ui-helpers'
-import apiPaths from '../../../../../../lib/utils/api-paths'
 import ServiceCredential from '../../../../../../lib/components/teams/service/ServiceCredential'
 import ServiceCredentialForm from '../../../../../../lib/components/teams/service/ServiceCredentialForm'
 import { isReadOnlyCRD } from '../../../../../../lib/utils/crd-helpers'
@@ -286,7 +285,7 @@ class ServicePage extends React.Component {
                         handleDelete={this.handleResourceDeleted('serviceCredentials')}
                         refreshMs={2000}
                         propsResourceDataKey="serviceCredential"
-                        resourceApiPath={`${apiPaths.team(team.metadata.name).serviceCredentials}/${serviceCredential.metadata.name}`}
+                        resourceApiRequest={async () => await (await KoreApi.client()).GetServiceCredentials(team.metadata.name, serviceCredential.metadata.name)}
                       />
                     )}
                   />

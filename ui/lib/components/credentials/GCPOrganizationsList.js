@@ -53,7 +53,7 @@ class GCPOrganizationsList extends ResourceList {
                   handleUpdate={this.handleStatusUpdated}
                   refreshMs={2000}
                   propsResourceDataKey="organization"
-                  resourceApiPath={`/teams/${publicRuntimeConfig.koreAdminTeamName}/organizations/${org.metadata.name}`}
+                  resourceApiRequest={async () => await (await KoreApi.client()).GetGCPOrganization(publicRuntimeConfig.koreAdminTeamName, org.metadata.name)}
                 />
               }
             >

@@ -22,12 +22,8 @@ class GKECredentials extends AutoRefreshComponent {
     }
   }
 
-  finalStateReached({ state, deleted }) {
-    console.log('GKECredentials | finalStateReached', state)
+  finalStateReached({ state }) {
     const { gkeCredentials } = this.props
-    if (deleted) {
-      return successMessage(`GCP credentials for project "${gkeCredentials.spec.project}" deleted`)
-    }
     if (state === AutoRefreshComponent.FINAL_STATES.SUCCESS) {
       return successMessage(`GCP credentials for project "${gkeCredentials.spec.project}" verified successfully`)
     }

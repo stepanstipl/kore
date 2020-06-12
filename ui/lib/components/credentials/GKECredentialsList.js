@@ -87,7 +87,7 @@ class GKECredentialsList extends ResourceList {
                   handleDelete={() => {}}
                   refreshMs={2000}
                   propsResourceDataKey="gkeCredentials"
-                  resourceApiPath={`/teams/${publicRuntimeConfig.koreAdminTeamName}/gkecredentials/${gke.metadata.name}`}
+                  resourceApiRequest={async () => await (await KoreApi.client()).GetGKECredential(publicRuntimeConfig.koreAdminTeamName, gke.metadata.name)}
                 />
               }
             >

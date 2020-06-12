@@ -86,7 +86,7 @@ class EKSCredentialsList extends ResourceList {
                   handleDelete={() => {}}
                   refreshMs={2000}
                   propsResourceDataKey="eksCredentials"
-                  resourceApiPath={`/teams/${publicRuntimeConfig.koreAdminTeamName}/ekscredentials/${eks.metadata.name}`}
+                  resourceApiRequest={async () => await (await KoreApi.client()).GetEKSCredentials(publicRuntimeConfig.koreAdminTeamName, eks.metadata.name)}
                 />
               }
             >

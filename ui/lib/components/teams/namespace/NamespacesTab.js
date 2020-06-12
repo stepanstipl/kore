@@ -19,7 +19,6 @@ import copy from '../../../utils/object-copy'
 import { featureEnabled, KoreFeatures } from '../../../utils/features'
 import NamespaceClaim from './NamespaceClaim'
 import ServiceCredential from '../service/ServiceCredential'
-import apiPaths from '../../../utils/api-paths'
 import NamespaceClaimForm from './NamespaceClaimForm'
 import ServiceCredentialForm from '../../../../lib/components/teams/service/ServiceCredentialForm'
 import { loadingMessage, errorMessage } from '../../../utils/message'
@@ -251,7 +250,7 @@ class NamespacesTab extends React.Component {
                     handleDelete={this.handleResourceDeleted('namespaceClaims')}
                     refreshMs={2000}
                     propsResourceDataKey="namespaceClaim"
-                    resourceApiPath={`/teams/${team.metadata.name}/namespaceclaims/${namespaceClaim.metadata.name}`}
+                    resourceApiRequest={async () => await (await KoreApi.client()).GetNamespace(team.metadata.name, namespaceClaim.metadata.name)}
                   />
                   {featureEnabled(KoreFeatures.SERVICES) && (
                     <>
@@ -287,7 +286,7 @@ class NamespacesTab extends React.Component {
                                 handleDelete={this.handleResourceDeleted('serviceCredentials')}
                                 refreshMs={2000}
                                 propsResourceDataKey="serviceCredential"
-                                resourceApiPath={`${apiPaths.team(team.metadata.name).serviceCredentials}/${serviceCredential.metadata.name}`}
+                                resourceApiRequest={async () => await (await KoreApi.client()).GetServiceCredentials(team.metadata.name, serviceCredential.metadata.name)}
                               />
                             )}
                           >

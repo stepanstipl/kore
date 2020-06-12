@@ -150,6 +150,7 @@ class KoreApiClient {
   RemoveCluster = (team, name) => this.apis.default.RemoveCluster({ team, name })
   GetCluster = (team, name) => this.apis.default.GetCluster({ team, name })
   ListNamespaces = (team) => this.apis.default.ListNamespaces({ team })
+  GetNamespace = (team, name) => this.apis.default.GetNamespace({ team, name })
   RemoveNamespace = (team, name) => this.apis.default.RemoveNamespace({ team, name })
   GetTeamPlanDetails = (team, plan) => this.apis.default.GetTeamPlanDetails({ team, plan })
   UpdateTeamSecret = (team, name, secret) => this.apis.default.UpdateTeamSecret({ team, name, body: JSON.stringify(secret) })

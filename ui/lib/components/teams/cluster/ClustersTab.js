@@ -152,7 +152,7 @@ class ClustersTab extends React.Component {
                     handleDelete={this.handleResourceDeleted('clusters')}
                     refreshMs={10000}
                     propsResourceDataKey="cluster"
-                    resourceApiPath={`/teams/${team.metadata.name}/clusters/${cluster.metadata.name}`}
+                    resourceApiRequest={async () => await (await KoreApi.client()).GetCluster(team.metadata.name, cluster.metadata.name)}
                   />
                   {clusterNamespaceClaims.length > 0 && this.clusterResourceList({ resources: clusterNamespaceClaims, resourceDisplayPropertyPath: 'spec.name', title: 'Namespaces' })}
                   {idx < clusters.length - 1 && <Divider />}

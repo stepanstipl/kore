@@ -23,11 +23,8 @@ class EKSCredentials extends AutoRefreshComponent {
     }
   }
 
-  finalStateReached({ state, deleted }) {
+  finalStateReached({ state }) {
     const { eksCredentials } = this.props
-    if (deleted) {
-      return successMessage(`AWS credentials for account "${eksCredentials.spec.accountID}" deleted`)
-    }
     if (state === AutoRefreshComponent.FINAL_STATES.SUCCESS) {
       return successMessage(`AWS credentials for account "${eksCredentials.spec.accountID}" verified successfully`)
     }

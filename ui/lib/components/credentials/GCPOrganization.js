@@ -22,11 +22,8 @@ class GCPOrganization extends AutoRefreshComponent {
     }
   }
 
-  finalStateReached({ state, deleted }) {
+  finalStateReached({ state }) {
     const { organization } = this.props
-    if (deleted) {
-      return successMessage(`GCP organization "${organization.allocation.spec.name}" deleted`)
-    }
     if (state === AutoRefreshComponent.FINAL_STATES.SUCCESS) {
       return successMessage(`GCP organization "${organization.allocation.spec.name}" created successfully`)
     }
