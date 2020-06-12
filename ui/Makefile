@@ -5,14 +5,16 @@ VERSION ?= latest
 
 default: build
 
+prep: 
+	@echo "--> Preparing"
+	npm install
+
 build:
 	@echo "--> Building"
-	npm install
 	npm run build
 
 test:
 	@echo "--> Testing"
-	npm install
 	npm run lint
 	npm test
 
