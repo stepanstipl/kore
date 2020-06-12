@@ -46,6 +46,7 @@ func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (rec
 		return controllers.DefaultEnsureHandler.Run(ctx,
 			[]controllers.EnsureFunc{
 				a.EnsureDeleteStatus(object),
+				a.EnsureProviderWorkloadDependenciesRemoved(object),
 				a.EnsureServiceDeletion(object),
 				a.EnsureSecretDeletion(object),
 				a.EnsureFinalizerRemoved(object),

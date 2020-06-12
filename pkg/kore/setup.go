@@ -75,7 +75,7 @@ func (h hubImpl) Setup(ctx context.Context) error {
 		}
 	}
 
-	// @step: ensure some default plans
+	// @step: ensure some default cluster plans
 	for _, x := range assets.GetDefaultPlans() {
 		if err := h.Plans().Update(getAdminContext(ctx), x, true); err != nil {
 			return err
