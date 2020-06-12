@@ -1,5 +1,5 @@
 import { ConfigureCloudPage } from '../configure-cloud'
-import { waitForDrawerOpenClose, clearFillTextInput } from '../../../utils'
+import { waitForDrawerOpenClose, clearFillTextInput, modalYes } from '../../../utils'
 
 export class ConfigureCloudAWSAccounts extends ConfigureCloudPage {
   constructor(p) {
@@ -52,4 +52,11 @@ export class ConfigureCloudAWSAccounts extends ConfigureCloudPage {
     await waitForDrawerOpenClose(this.p)
   }
 
+  async delete(name) {
+    await this.p.click(`a#ekscreds_del_${name}`)
+  }
+
+  async confirmDelete() {
+    await modalYes(this.p, 'Are you sure you want to delete the credentials')
+  }
 }

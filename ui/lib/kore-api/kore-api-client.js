@@ -129,6 +129,7 @@ class KoreApiClient {
   ListEKSCredentials = (team) => this.apis.default.ListEKSCredentials({ team })
   GetEKSCredentials = (team, name) => this.apis.default.GetEKSCredentials({ team, name })
   UpdateEKSCredentials = (team, name, resource) => this.apis.default.UpdateEKSCredentials({ team, name, body: JSON.stringify(resource) })
+  DeleteEKSCredentials = (team, name) => this.apis.default.DeleteEKSCredentials({ team, name })
 
   // Teams
   GetTeam = (team) => this.apis.default.GetTeam({ team })

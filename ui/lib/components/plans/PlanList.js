@@ -120,7 +120,7 @@ class PlanList extends ResourceList {
           showIcon
           style={{ marginBottom: '20px' }}
         />
-        <Button type="primary" onClick={this.add(true)} style={{ display: 'block', marginBottom: '20px' }}>+ New</Button>
+        <Button id="add" type="primary" onClick={this.add(true)} style={{ display: 'block', marginBottom: '20px' }}>+ New</Button>
 
         <Drawer
           title={drawerTitle}
@@ -155,7 +155,7 @@ class PlanList extends ResourceList {
         {!resources ? <Icon type="loading" /> : (
           <>
             <List
-              id="gkeplans_list"
+              id="plans_list"
               dataSource={resources.items}
               renderItem={plan => <PlanItem plan={plan} viewPlan={this.view} editPlan={this.edit} deletePlan={this.delete} displayUnassociatedPlanWarning={this.unassociatedPlanWarning(plan)} /> }
             >

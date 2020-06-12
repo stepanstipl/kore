@@ -23,18 +23,18 @@ class PlanItem extends React.Component {
     if (this.props.displayUnassociatedPlanWarning) {
       actions.push(<IconTooltip key="warning" icon="warning" color="orange" text="This plan not associated with any GCP automated projects and will not be available for teams to use. Edit this plan or go to Project automation settings to review this."/>)
     }
-    actions.push(<Text key="view_plan"><a id={`gkeplans_view_${this.props.plan.metadata.name}`} onClick={this.props.viewPlan(this.props.plan)}><Icon type="eye" theme="filled"/> View</a></Text>)
+    actions.push(<Text key="view_plan"><a id={`plans_view_${this.props.plan.metadata.name}`} onClick={this.props.viewPlan(this.props.plan)}><Icon type="eye" theme="filled"/> View</a></Text>)
     actions.push(
       <Text key="edit_plan">
         <Tooltip title="Edit this plan">
-          <a id={`gkeplans_edit_${this.props.plan.metadata.name}`} onClick={readonly ? () => warningMessage('Read Only', { description: 'This plan is read-only. Create a new plan if this built-in plan does not meet your needs.' }) : this.props.editPlan(this.props.plan)} style={{ color: readonly ? 'lightgray' : null }}><Icon type="edit" theme="filled"/> Edit</a>
+          <a id={`plans_edit_${this.props.plan.metadata.name}`} onClick={readonly ? () => warningMessage('Read Only', { description: 'This plan is read-only. Create a new plan if this built-in plan does not meet your needs.' }) : this.props.editPlan(this.props.plan)} style={{ color: readonly ? 'lightgray' : null }}><Icon type="edit" theme="filled"/> Edit</a>
         </Tooltip>
       </Text>
     )
     actions.push(
       <Text key="delete_plan">
         <Tooltip title="Delete this plan">
-          <a id={`gkeplans_delete_${this.props.plan.metadata.name}`} onClick={readonly ? () => warningMessage('Read Only', { description: 'This plan is read-only and cannot be deleted. To prevent teams using this plan, remove the allocation.' }) : this.props.deletePlan(this.props.plan)} style={{ color: readonly ? 'lightgray' : null }}><Icon type="delete" theme="filled"/> Delete</a>
+          <a id={`plans_delete_${this.props.plan.metadata.name}`} onClick={readonly ? () => warningMessage('Read Only', { description: 'This plan is read-only and cannot be deleted. To prevent teams using this plan, remove the allocation.' }) : this.props.deletePlan(this.props.plan)} style={{ color: readonly ? 'lightgray' : null }}><Icon type="delete" theme="filled"/> Delete</a>
         </Tooltip>
       </Text>
     )

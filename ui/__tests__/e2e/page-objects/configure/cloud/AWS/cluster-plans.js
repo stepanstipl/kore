@@ -1,15 +1,15 @@
 import { ConfigureCloudPage } from '../configure-cloud'
-import { clearFillTextInput, modalYes, waitForDrawerOpenClose, setSwitch } from '../../../utils'
+import { clearFillTextInput, modalYes, waitForDrawerOpenClose } from '../../../utils'
 
-export class ConfigureCloudGCPClusterPlans extends ConfigureCloudPage {
+export class ConfigureCloudAWSClusterPlans extends ConfigureCloudPage {
   constructor(p) {
     super(p)
-    this.pagePath = '/configure/cloud/GCP/plans'
+    this.pagePath = '/configure/cloud/AWS/plans'
   }
 
   async openTab() {
-    await this.selectCloud('gcp')
-    await this.selectSubTab('Cluster Plans', 'GCP/plans')
+    await this.selectCloud('aws')
+    await this.selectSubTab('Cluster Plans', 'AWS/plans')
   }
 
   async listLoaded() {
@@ -39,37 +39,37 @@ export class ConfigureCloudGCPClusterPlans extends ConfigureCloudPage {
     await waitForDrawerOpenClose(this.p)
   }
 
-  async populatePlan({ description, name, planDescription, region }) {
+  async populatePlan({ description, name, planDescription, region, version }) {
     await clearFillTextInput(this.p, 'plan_summary', description)
     await clearFillTextInput(this.p, 'plan_description', name)
     await clearFillTextInput(this.p, 'plan_input_description', planDescription)
     await clearFillTextInput(this.p, 'plan_input_region', region)
+    await clearFillTextInput(this.p, 'plan_input_version', version)
   }
 
-  async addNodePool() {
-    await this.p.click('button#plan_nodepool_add')
+  async addNodeGroup() {
+    await this.p.click('button#plan_nodegroup_add')
     await waitForDrawerOpenClose(this.p)
   }
 
-  async viewEditNodePool(idx) {
-    await this.p.click(`a#plan_nodepool_${idx}_viewedit`)
+  async viewEditNodeGroup(idx) {
+    await this.p.click(`a#plan_nodegroup_${idx}_viewedit`)
     await waitForDrawerOpenClose(this.p)
   }
 
-  async populateNodePool({ name, enableAutoscaler, minSize, size, maxSize }) {
-    await clearFillTextInput(this.p, 'plan_nodepool_name', name)
-    await setSwitch(this.p, 'plan_nodepool_enableAutoscaler', enableAutoscaler)
-    await clearFillTextInput(this.p, 'plan_nodepool_minSize', minSize)
-    await clearFillTextInput(this.p, 'plan_nodepool_size', size)
-    await clearFillTextInput(this.p, 'plan_nodepool_maxSize', maxSize)
+  async populateNodeGroup({ name, minSize, desiredSize, maxSize }) {
+    await clearFillTextInput(this.p, 'plan_nodegroup_name', name)
+    await clearFillTextInput(this.p, 'plan_nodegroup_minSize', minSize)
+    await clearFillTextInput(this.p, 'plan_nodegroup_desiredSize', desiredSize)
+    await clearFillTextInput(this.p, 'plan_nodegroup_maxSize', maxSize)
   }
 
-  async closeNodePoolDisabled() {
-    return (await this.p.$('button#plan_nodepool_close[disabled]')) !== null
+  async closeNodeGroupDisabled() {
+    return (await this.p.$('button#plan_nodegroup_close[disabled]')) !== null
   }
 
-  async closeNodePool() {
-    await this.p.click('button#plan_nodepool_close')
+  async closeNodeGroup() {
+    await this.p.click('button#plan_nodegroup_close')
     await waitForDrawerOpenClose(this.p)
   }
 

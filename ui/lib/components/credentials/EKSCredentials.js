@@ -11,7 +11,8 @@ class EKSCredentials extends AutoRefreshComponent {
   static propTypes = {
     eksCredentials: PropTypes.object.isRequired,
     allTeams: PropTypes.array.isRequired,
-    editEKSCredentials: PropTypes.func.isRequired
+    editEKSCredentials: PropTypes.func.isRequired,
+    deleteEKSCredentials: PropTypes.func.isRequired
   }
 
   componentDidUpdate(prevProps) {
@@ -34,7 +35,7 @@ class EKSCredentials extends AutoRefreshComponent {
   }
 
   render() {
-    const { eksCredentials, editEKSCredentials, allTeams } = this.props
+    const { eksCredentials, editEKSCredentials, deleteEKSCredentials, allTeams } = this.props
     const created = moment(eksCredentials.metadata.creationTimestamp).fromNow()
 
     const displayAllocations = () => {
@@ -48,6 +49,7 @@ class EKSCredentials extends AutoRefreshComponent {
     return (
       <List.Item id={`ekscreds_${eksCredentials.metadata.name}`} key={eksCredentials.metadata.name} actions={[
         <ResourceVerificationStatus key="verification_status" resourceStatus={eksCredentials.status} />,
+        <Text key="delete_creds"><a id={`ekscreds_del_${eksCredentials.metadata.name}`} onClick={deleteEKSCredentials(eksCredentials)}><Icon type="delete" theme="filled"/> Delete</a></Text>,
         <Text key="show_creds"><a id={`ekscreds_edit_${eksCredentials.metadata.name}`} onClick={editEKSCredentials(eksCredentials)}><Icon type="edit" theme="filled"/> Edit</a></Text>
       ]}>
         <List.Item.Meta
@@ -55,8 +57,8 @@ class EKSCredentials extends AutoRefreshComponent {
           title={
             <>
               <Text style={{ display: 'inline', marginRight: '15px', fontSize: '20px', fontWeight: '600' }}>{eksCredentials.spec.accountID}</Text>
-              <Text style={{ marginRight: '5px' }}>{eksCredentials.allocation.spec.name}</Text>
-              <Tooltip title={eksCredentials.allocation.spec.summary}>
+              <Text style={{ marginRight: '5px' }}>{eksCredentials.allocation ? eksCredentials.allocation.spec.name : null}</Text>
+              <Tooltip title={eksCredentials.allocation ? eksCredentials.allocation.spec.summary : null}>
                 <Icon type="info-circle" theme="twoTone" />
               </Tooltip>
             </>

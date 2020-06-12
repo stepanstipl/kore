@@ -85,8 +85,7 @@ describe('Configure Cloud - GCP', () => {
       await cloudPage.closeAllNotifications()
       await waitForDrawerOpenClose(page)
       await gkeClusterPlansPage.openTab()
-      // Wait for plans to load
-      await page.waitForSelector('#gkeplans_list', { timeout: 1000 })
+      await gkeClusterPlansPage.listLoaded()
     })
 
     beforeEach(async () => {
@@ -116,6 +115,7 @@ describe('Configure Cloud - GCP', () => {
 
     it('creates a new plan using default values', async () => {
       await gkeClusterPlansPage.new()
+      await expect(page).toMatch('New GKE plan')
       await gkeClusterPlansPage.populatePlan(testPlan)
       await gkeClusterPlansPage.addNodePool()
       await gkeClusterPlansPage.populateNodePool({ name: 'compute' })
