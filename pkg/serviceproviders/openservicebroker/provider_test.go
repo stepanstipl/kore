@@ -17,12 +17,14 @@
 package openservicebroker_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/appvia/kore/pkg/kore/korefakes"
+	"github.com/tidwall/gjson"
 
 	"github.com/appvia/kore/pkg/controllers/controllersfakes"
 
@@ -66,7 +68,7 @@ const (
 var Operation = osb.OperationKey("test-op")
 
 func schema(name string) string {
-	return fmt.Sprintf(`
+	schema := fmt.Sprintf(`
 		{
 			"$id": "https://test.appvia.io/schemas/plan.json",
 			"$schema": "http://json-schema.org/draft-07/schema#",
@@ -81,14 +83,20 @@ func schema(name string) string {
 					"type": "string",
 					"minLength": 1,
 					"default": "%s-value"
+				},
+				"%s-param2": {
+					"type": "string"
 				}
 			}
-		}`, name, name, name,
+		}`, name, name, name, name,
 	)
+	res := bytes.NewBuffer([]byte{})
+	_ = json.Compact(res, []byte(schema))
+	return res.String()
 }
 
 func credsSchema(name string) string {
-	return fmt.Sprintf(`
+	schema := fmt.Sprintf(`
 		{
 			"$id": "https://test.appvia.io/schemas/credentials.json",
 			"$schema": "http://json-schema.org/draft-07/schema#",
@@ -107,6 +115,9 @@ func credsSchema(name string) string {
 			}
 		}`, name, name, name,
 	)
+	res := bytes.NewBuffer([]byte{})
+	_ = json.Compact(res, []byte(schema))
+	return res.String()
 }
 
 func createService(id string, name string, plans []osb.Plan) osb.Service {
@@ -491,6 +502,69 @@ var _ = Describe("Provider", func() {
 
 			It("should error", func() {
 				Expect(catalogErr).To(MatchError("service-1-plan-1 plan has an invalid configuration, it must be an object"))
+			})
+		})
+
+		When("there is a default value override for the schema", func() {
+			BeforeEach(func() {
+				providerConfig.PlanConfigurationOverrides = map[string][]openservicebroker.PlanConfigurationOverride{
+					"*": {
+						{
+							Name:  "plan-1-param",
+							Value: "new-value",
+						},
+					},
+				}
+			})
+
+			It("should set the default value on the schema", func() {
+				Expect(gjson.Get(catalog.Plans[0].Spec.Schema, "properties.plan-1-param.default").String()).To(Equal("new-value"))
+				Expect(gjson.Get(catalog.Plans[0].Spec.Schema, "properties.plan-1-param.const").String()).To(Equal(""))
+			})
+
+			It("leave required as is", func() {
+				Expect(gjson.Get(catalog.Plans[0].Spec.Schema, "required").String()).To(Equal(`["plan-1-param"]`))
+			})
+		})
+
+		When("there is a const value override for the schema", func() {
+			BeforeEach(func() {
+				providerConfig.PlanConfigurationOverrides = map[string][]openservicebroker.PlanConfigurationOverride{
+					"*": {
+						{
+							Name:  "plan-1-param",
+							Value: "new-value",
+							Const: true,
+						},
+					},
+				}
+			})
+
+			It("should set the default and const value on the schema", func() {
+				Expect(gjson.Get(catalog.Plans[0].Spec.Schema, "properties.plan-1-param.default").String()).To(Equal("new-value"))
+				Expect(gjson.Get(catalog.Plans[0].Spec.Schema, "properties.plan-1-param.const").String()).To(Equal("new-value"))
+			})
+
+			It("leave required as is", func() {
+				Expect(gjson.Get(catalog.Plans[0].Spec.Schema, "required").String()).To(Equal(`["plan-1-param"]`))
+			})
+		})
+
+		When("there is a required value override for the schema", func() {
+			BeforeEach(func() {
+				providerConfig.PlanConfigurationOverrides = map[string][]openservicebroker.PlanConfigurationOverride{
+					"*": {
+						{
+							Name:     "plan-1-param2",
+							Value:    "new-value",
+							Required: utils.BoolPtr(true),
+						},
+					},
+				}
+			})
+
+			It("should update required", func() {
+				Expect(gjson.Get(catalog.Plans[0].Spec.Schema, "required").String()).To(Equal(`["plan-1-param","plan-1-param2"]`))
 			})
 		})
 	})

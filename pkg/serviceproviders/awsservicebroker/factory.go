@@ -19,6 +19,8 @@ package awsservicebroker
 import (
 	"fmt"
 
+	"github.com/appvia/kore/pkg/utils"
+
 	"github.com/appvia/kore/pkg/utils/configuration"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -165,6 +167,29 @@ func (d ProviderFactory) Create(ctx kore.Context, serviceProvider *servicesv1.Se
 
 	config.PlatformMapping = map[string]string{
 		"*": "AWS",
+	}
+
+	config.PlanConfigurationOverrides = map[string][]openservicebroker.PlanConfigurationOverride{
+		"*": {
+			{
+				Name:     "target_account_id",
+				Value:    "{{ .cluster.status.providerData.awsAccountID }}",
+				Const:    true,
+				Required: utils.BoolPtr(true),
+			},
+			{
+				Name:     "target_role_name",
+				Value:    config.AWSIAMRoleName,
+				Const:    true,
+				Required: utils.BoolPtr(true),
+			},
+			{
+				Name:     "VpcId",
+				Value:    "{{ .cluster.status.providerData.vpc.vpcID }}",
+				Const:    true,
+				Required: utils.BoolPtr(true),
+			},
+		},
 	}
 
 	namespaceName := "kore-serviceprovider-" + serviceProvider.Name

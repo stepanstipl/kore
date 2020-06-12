@@ -279,13 +279,9 @@ func (s *servicesImpl) validateConfiguration(ctx context.Context, service, exist
 		return fmt.Errorf("failed to parse service configuration values: %s", err)
 	}
 
-	schema := plan.Spec.Schema
-	if schema == "" {
-		kind, err := s.ServiceKinds().Get(ctx, plan.Spec.Kind)
-		if err != nil {
-			return err
-		}
-		schema = kind.Spec.Schema
+	schema, err := s.ServicePlans().GetSchemaForCluster(ctx, service.Spec.Plan, service.Spec.Cluster.Namespace, service.Spec.Cluster.Name)
+	if err != nil {
+		return err
 	}
 
 	if schema == "" && !utils.ApiExtJSONEmpty(service.Spec.Configuration) {

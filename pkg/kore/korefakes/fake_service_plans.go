@@ -82,6 +82,22 @@ type FakeServicePlans struct {
 		result1 string
 		result2 error
 	}
+	GetSchemaForClusterStub        func(context.Context, string, string, string) (string, error)
+	getSchemaForClusterMutex       sync.RWMutex
+	getSchemaForClusterArgsForCall []struct {
+		arg1 context.Context
+		arg2 string
+		arg3 string
+		arg4 string
+	}
+	getSchemaForClusterReturns struct {
+		result1 string
+		result2 error
+	}
+	getSchemaForClusterReturnsOnCall map[int]struct {
+		result1 string
+		result2 error
+	}
 	HasStub        func(context.Context, string) (bool, error)
 	hasMutex       sync.RWMutex
 	hasArgsForCall []struct {
@@ -462,6 +478,72 @@ func (fake *FakeServicePlans) GetSchemaReturnsOnCall(i int, result1 string, resu
 	}{result1, result2}
 }
 
+func (fake *FakeServicePlans) GetSchemaForCluster(arg1 context.Context, arg2 string, arg3 string, arg4 string) (string, error) {
+	fake.getSchemaForClusterMutex.Lock()
+	ret, specificReturn := fake.getSchemaForClusterReturnsOnCall[len(fake.getSchemaForClusterArgsForCall)]
+	fake.getSchemaForClusterArgsForCall = append(fake.getSchemaForClusterArgsForCall, struct {
+		arg1 context.Context
+		arg2 string
+		arg3 string
+		arg4 string
+	}{arg1, arg2, arg3, arg4})
+	fake.recordInvocation("GetSchemaForCluster", []interface{}{arg1, arg2, arg3, arg4})
+	fake.getSchemaForClusterMutex.Unlock()
+	if fake.GetSchemaForClusterStub != nil {
+		return fake.GetSchemaForClusterStub(arg1, arg2, arg3, arg4)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	fakeReturns := fake.getSchemaForClusterReturns
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeServicePlans) GetSchemaForClusterCallCount() int {
+	fake.getSchemaForClusterMutex.RLock()
+	defer fake.getSchemaForClusterMutex.RUnlock()
+	return len(fake.getSchemaForClusterArgsForCall)
+}
+
+func (fake *FakeServicePlans) GetSchemaForClusterCalls(stub func(context.Context, string, string, string) (string, error)) {
+	fake.getSchemaForClusterMutex.Lock()
+	defer fake.getSchemaForClusterMutex.Unlock()
+	fake.GetSchemaForClusterStub = stub
+}
+
+func (fake *FakeServicePlans) GetSchemaForClusterArgsForCall(i int) (context.Context, string, string, string) {
+	fake.getSchemaForClusterMutex.RLock()
+	defer fake.getSchemaForClusterMutex.RUnlock()
+	argsForCall := fake.getSchemaForClusterArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
+}
+
+func (fake *FakeServicePlans) GetSchemaForClusterReturns(result1 string, result2 error) {
+	fake.getSchemaForClusterMutex.Lock()
+	defer fake.getSchemaForClusterMutex.Unlock()
+	fake.GetSchemaForClusterStub = nil
+	fake.getSchemaForClusterReturns = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeServicePlans) GetSchemaForClusterReturnsOnCall(i int, result1 string, result2 error) {
+	fake.getSchemaForClusterMutex.Lock()
+	defer fake.getSchemaForClusterMutex.Unlock()
+	fake.GetSchemaForClusterStub = nil
+	if fake.getSchemaForClusterReturnsOnCall == nil {
+		fake.getSchemaForClusterReturnsOnCall = make(map[int]struct {
+			result1 string
+			result2 error
+		})
+	}
+	fake.getSchemaForClusterReturnsOnCall[i] = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeServicePlans) Has(arg1 context.Context, arg2 string) (bool, error) {
 	fake.hasMutex.Lock()
 	ret, specificReturn := fake.hasReturnsOnCall[len(fake.hasArgsForCall)]
@@ -728,6 +810,8 @@ func (fake *FakeServicePlans) Invocations() map[string][][]interface{} {
 	defer fake.getEditablePlanParamsMutex.RUnlock()
 	fake.getSchemaMutex.RLock()
 	defer fake.getSchemaMutex.RUnlock()
+	fake.getSchemaForClusterMutex.RLock()
+	defer fake.getSchemaForClusterMutex.RUnlock()
 	fake.hasMutex.RLock()
 	defer fake.hasMutex.RUnlock()
 	fake.listMutex.RLock()

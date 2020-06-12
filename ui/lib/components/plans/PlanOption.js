@@ -40,7 +40,8 @@ export default class PlanOption extends PlanOptionBase {
     const onChange = this.props.onChange || (() => {})
     const displayName = this.props.displayName || property.title || startCase(name)
     const help = this.props.help || this.describe(property)
-    const valueOrDefault = value !== undefined && value !== null ? value : property.default
+    const defaultValue = property.const !== undefined && property.const !== null ? property.const : property.default
+    const valueOrDefault = value !== undefined && value !== null ? value : defaultValue
 
     // Special handling for object types - represent as a card with a plan option for each property:
     if (property.type === 'object' && property.properties) {
@@ -52,7 +53,7 @@ export default class PlanOption extends PlanOptionBase {
               {...this.props}
               key={`${name}.${key}`}
               name={`${name}.${key}`}
-              displayName={property.properties[key].title || startCase(key)} 
+              displayName={property.properties[key].title || startCase(key)}
               property={property.properties[key]}
               value={value ? value[key] : null}
               onChange={onChange}
@@ -134,7 +135,7 @@ export default class PlanOption extends PlanOptionBase {
         })()}
         {this.validationErrors(name)}
         {!property.deprecated || !this.props.manage ? null : (
-          <Alert 
+          <Alert
             message={(
               <>
                 This property is deprecated. See below for instructions. <Button id={`${id}_removedeprecated`} onClick={() => onChange(name, undefined)}>Unset &amp; hide</Button>

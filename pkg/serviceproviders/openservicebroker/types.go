@@ -36,6 +36,20 @@ type CatalogConfiguration struct {
 	// PlatformMapping is a list of service kind and platform name pairs, to map service kinds to service platforms
 	// You can use "*" as the service kind name to map all service kinds to a specific platform
 	PlatformMapping map[string]string `json:"platformMapping,omitempty"`
+	// PlanConfigurationOverrides is a way to override configuration parameters in plans
+	// For each plan you can set a list of overrides. You can use "*" as the plan name to override parameters for all plans
+	PlanConfigurationOverrides map[string][]PlanConfigurationOverride `json:"platConfigurationOverrides,omitempty"`
+}
+
+type PlanConfigurationOverride struct {
+	// Name is the name of the configuration parameter we want to override
+	Name string `json:"name"`
+	// Value is the parameter value we want to set
+	Value interface{} `json:"value"`
+	// Const if true we will set a const value on the schema
+	Const bool `json:"const,omitempty"`
+	// Required should be set if you wish to override the required status of the parameter
+	Required *bool `json:"required,omitempty"`
 }
 
 type ProviderConfiguration struct {

@@ -52,27 +52,28 @@ export default class PlanViewEdit extends React.Component {
         {Object.keys(schema.properties).map((name) => {
           const editable = mode !== 'view' &&
             (parameterEditable['*'] === true || parameterEditable[name] === true) &&
+            (schema.properties[name].const === undefined || schema.properties[name].const === null) &&
             (mode === 'create' || manage || !schema.properties[name].immutable) // Disallow editing of params which can only be set at create time when in 'use' mode
 
           return (
-            <PlanOption 
+            <PlanOption
               manage={manage}
               mode={mode}
               team={team}
               resourceType={resourceType}
               kind={kind}
               plan={plan}
-              key={name} 
-              name={name} 
-              property={schema.properties[name]} 
+              key={name}
+              name={name}
+              property={schema.properties[name]}
               value={plan[name]}
-              hideNonEditable={!showReadOnly} 
-              editable={editable} 
+              hideNonEditable={!showReadOnly}
+              editable={editable}
               onChange={(n, v) => onPlanValueChange(n, v)}
               validationErrors={validationErrors} />
           )
         })}
       </>
-    )    
+    )
   }
 }

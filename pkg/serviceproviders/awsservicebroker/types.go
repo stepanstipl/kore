@@ -43,6 +43,8 @@ type ProviderConfiguration struct {
 	AWSAccessKeyID string `json:"aws_access_key_id"`
 	// AWSSecretAccessKey is the AWS secret access key
 	AWSSecretAccessKey string `json:"aws_secret_access_key"`
+	// AWSIAMRoleName is the IAM role name to assume when provisiong resources
+	AWSIAMRoleName string `json:"aws_iam_role_name"`
 
 	openservicebroker.CatalogConfiguration `json:",inline"`
 }
@@ -57,5 +59,6 @@ func DefaultProviderConfiguration() *ProviderConfiguration {
 		S3BucketName:        "awsservicebroker",
 		S3BucketRegion:      "us-east-1",
 		S3BucketKey:         "templates/latest/",
+		AWSIAMRoleName:      "AwsServiceBroker",
 	}
 }

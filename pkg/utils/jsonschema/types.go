@@ -19,58 +19,74 @@ package jsonschema
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 // Schema is the JSON schema object
 type Schema struct {
-	Properties map[string]Property `json:"properties"`
+	Properties map[string]*Property `json:"properties"`
 }
 
 // Property is an object property
 type Property struct {
 	Default     interface{}   `json:"default"`
+	Const       interface{}   `json:"const"`
 	Description string        `json:"description"`
 	Title       string        `json:"title"`
 	Type        string        `json:"type"`
 	Enum        []interface{} `json:"enum"`
 }
 
+func (p Property) ParseConst() (interface{}, error) {
+	return p.parseValue(p.Const)
+}
+
 func (p Property) ParseDefault() (interface{}, error) {
-	if p.Default == nil {
+	return p.parseValue(p.Default)
+}
+func (p Property) parseValue(value interface{}) (interface{}, error) {
+	if value == nil {
 		return nil, nil
+	}
+
+	// Check if the value is a complete template expression ("{{ ... }}") and return it without type checking
+	if val, ok := value.(string); ok {
+		if strings.HasPrefix(val, "{{") && strings.HasSuffix(val, "}}") {
+			return val, nil
+		}
 	}
 
 	switch p.Type {
 	case "string":
-		if val, ok := p.Default.(string); ok {
+		if val, ok := value.(string); ok {
 			return val, nil
 		}
-		return fmt.Sprintf("%v", p.Default), nil
+		return fmt.Sprintf("%v", value), nil
 	case "boolean":
-		if val, ok := p.Default.(bool); ok {
+		if val, ok := value.(bool); ok {
 			return val, nil
 		}
-		val, err := strconv.ParseBool(fmt.Sprintf("%v", p.Default))
+		val, err := strconv.ParseBool(fmt.Sprintf("%v", value))
 		return val, err
 	case "integer":
-		if val, ok := p.Default.(int64); ok {
+		if val, ok := value.(int64); ok {
 			return val, nil
 		}
-		if val, ok := p.Default.(float64); ok {
+		if val, ok := value.(float64); ok {
 			return int64(val), nil
 		}
-		val, err := strconv.ParseInt(fmt.Sprintf("%v", p.Default), 10, 64)
+		val, err := strconv.ParseInt(fmt.Sprintf("%v", value), 10, 64)
 		return val, err
 	case "number":
-		if val, ok := p.Default.(int64); ok {
+		if val, ok := value.(int64); ok {
 			return val, nil
 		}
-		if val, ok := p.Default.(float64); ok {
+		if val, ok := value.(float64); ok {
 			return val, nil
 		}
-		val, err := strconv.ParseFloat(fmt.Sprintf("%v", p.Default), 64)
+		val, err := strconv.ParseFloat(fmt.Sprintf("%v", value), 64)
 		return val, err
 	default:
-		return p.Default, nil
+		return value, nil
 	}
 }

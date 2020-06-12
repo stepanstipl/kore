@@ -17,11 +17,14 @@
 package kore
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"strings"
+	"text/template"
 
 	"github.com/appvia/kore/pkg/utils"
+	"github.com/appvia/kore/pkg/utils/jsonutils"
 
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/store"
@@ -41,6 +44,8 @@ type ServicePlans interface {
 	Get(context.Context, string) (*servicesv1.ServicePlan, error)
 	// GetSchema returns the service plan schema
 	GetSchema(context.Context, string) (string, error)
+	// GetSchemaForCluster returns the service plan schema generated for the given cluster
+	GetSchemaForCluster(ctx context.Context, servicePlanName, team, clusterName string) (string, error)
 	// GetCredentialSchema returns the service credential schema for the given plan
 	GetCredentialSchema(context.Context, string) (string, error)
 	// List returns the existing service plans
@@ -222,6 +227,39 @@ func (p servicePlansImpl) GetSchema(ctx context.Context, name string) (string, e
 		return "", err
 	}
 	return kind.Spec.Schema, nil
+}
+
+// GetSchemaForCluster returns the service plan schema generated for the given cluster
+func (p servicePlansImpl) GetSchemaForCluster(ctx context.Context, servicePlanName, team, clusterName string) (string, error) {
+	cluster, err := p.Teams().Team(team).Clusters().Get(ctx, clusterName)
+	if err != nil {
+		return "", err
+	}
+
+	schema, err := p.GetSchema(ctx, servicePlanName)
+	if err != nil {
+		return "", err
+	}
+
+	tmpl, err := template.New("schema").Parse(schema)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse plan schema: %w", err)
+	}
+
+	clusterObj, err := jsonutils.ToMap(cluster)
+	if err != nil {
+		return "", fmt.Errorf("failed to encode cluster: %w", err)
+	}
+
+	tmplBuf := bytes.NewBuffer(make([]byte, 0, 16384))
+	params := map[string]interface{}{
+		"cluster": clusterObj,
+	}
+	if err := tmpl.Execute(tmplBuf, params); err != nil {
+		return "", fmt.Errorf("failed to compile plan schema: %w", err)
+	}
+
+	return tmplBuf.String(), nil
 }
 
 // GetCredentialSchema returns the service credential schema for the given plan
