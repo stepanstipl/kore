@@ -48,6 +48,14 @@ type EKSVPCSpec struct {
 // These values are discovered from infrastructure AFTER a create
 // It is provided as a convienece for caching values
 type Infra struct {
+	// VpcID is the identifier of the VPC
+	VpcID string `json:"vpcID,omitempty"`
+	// AvailabilityZoneIDs is the list of AZ ids
+	// +listType=set
+	AvailabilityZoneIDs []string `json:"availabilityZoneIDs,omitempty"`
+	// AvailabilityZoneIDs is the list of AZ names
+	// +listType=set
+	AvailabilityZoneNames []string `json:"availabilityZoneNames,omitempty"`
 	// PrivateSubnetIds is a list of subnet IDs to use for the worker nodes
 	// +listType=set
 	PrivateSubnetIDs []string `json:"privateSubnetIDs,omitempty"`

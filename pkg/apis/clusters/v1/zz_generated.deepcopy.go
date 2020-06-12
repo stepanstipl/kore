@@ -24,6 +24,7 @@ import (
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	apicorev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	v1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -119,6 +120,11 @@ func (in *ClusterStatus) DeepCopyInto(out *ClusterStatus) {
 				(*in).DeepCopyInto(*out)
 			}
 		}
+	}
+	if in.ProviderData != nil {
+		in, out := &in.ProviderData, &out.ProviderData
+		*out = new(v1beta1.JSON)
+		(*in).DeepCopyInto(*out)
 	}
 	return
 }

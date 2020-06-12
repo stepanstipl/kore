@@ -105,6 +105,7 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 				p.Complete(cluster, components),
 				a.Complete(cluster, components),
 				a.Apply(cluster, components),
+				p.SetProviderData(cluster, components),
 				a.Cleanup(cluster, components),
 				a.SetClusterStatus(cluster, components),
 			},

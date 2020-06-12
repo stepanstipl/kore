@@ -18,6 +18,8 @@ package cluster
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"strings"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
@@ -71,7 +73,7 @@ func (e *eksComponents) Components(cluster *clustersv1.Cluster, components *Comp
 	}
 }
 
-// CompleteClusterComponents is used to fill in the resources if required
+// Complete is used to fill in the resources if required
 func (e *eksComponents) Complete(cluster *clustersv1.Cluster, components *Components) controllers.EnsureFunc {
 	return func(ctx context.Context) (reconcile.Result, error) {
 		var vpc *eks.EKSVPC
@@ -130,5 +132,55 @@ func (e *eksComponents) Complete(cluster *clustersv1.Cluster, components *Compon
 
 			return true, nil
 		})
+	}
+}
+
+// SetProviderData saves the provider data on the cluster
+func (e *eksComponents) SetProviderData(cluster *clustersv1.Cluster, components *Components) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		providerData := map[string]interface{}{}
+		if err := cluster.Status.GetProviderData(&providerData); err != nil {
+			return reconcile.Result{}, err
+		}
+
+		// @step: retrieve the credentials
+		eksCreds := &eks.EKSCredentials{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      cluster.Spec.Credentials.Name,
+				Namespace: cluster.Spec.Credentials.Namespace,
+			},
+		}
+		found, err := kubernetes.GetIfExists(ctx, e.mgr.GetClient(), eksCreds)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		if !found {
+			return reconcile.Result{}, fmt.Errorf("eks credentials: (%s/%s) not found", cluster.Spec.Credentials.Namespace, cluster.Spec.Credentials.Name)
+		}
+
+		providerData["awsAccountID"] = eksCreds.Spec.AccountID
+
+		if err := components.WalkFunc(func(v *Vertex) (bool, error) {
+			switch {
+			case utils.IsEqualType(v.Object, &eks.EKSVPC{}):
+				vpc := v.Object.(*eks.EKSVPC)
+				vpcJSON, err := json.Marshal(vpc.Status.Infra)
+				if err != nil {
+					return false, err
+				}
+				vpcData := map[string]interface{}{}
+				if err := json.Unmarshal(vpcJSON, &vpcData); err != nil {
+					return false, err
+				}
+
+				providerData["vpc"] = vpcData
+			}
+
+			return true, nil
+		}); err != nil {
+			return reconcile.Result{}, err
+		}
+
+		return reconcile.Result{}, cluster.Status.SetProviderData(providerData)
 	}
 }

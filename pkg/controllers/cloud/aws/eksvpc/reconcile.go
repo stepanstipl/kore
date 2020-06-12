@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/appvia/kore/pkg/utils"
+
 	core "github.com/appvia/kore/pkg/apis/core/v1"
 	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
@@ -144,7 +146,7 @@ func (t *eksvpcCtrl) Reconcile(request reconcile.Request) (reconcile.Result, err
 			logger.Debug("creating or discovering a vpc in aws")
 		}
 		// Ensure this only reports if it exists when all resources exist or ensure update works
-		ready, err := client.Ensure()
+		ready, vpc, err := client.Ensure()
 		if err != nil {
 			logger.WithError(err).Error("failed to create or update the EKS VPC")
 
@@ -159,10 +161,32 @@ func (t *eksvpcCtrl) Reconcile(request reconcile.Request) (reconcile.Result, err
 			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 		}
 
-		resource.Status.Infra.SecurityGroupIDs = []string{client.VPC.ControlPlaneSecurityGroupID}
-		resource.Status.Infra.PublicSubnetIDs = client.VPC.PublicSubnetIDs
-		resource.Status.Infra.PrivateSubnetIDs = client.VPC.PrivateSubnetIDs
-		resource.Status.Infra.PublicIPV4EgressAddresses = client.VPC.PublicIPV4EgressAddresses
+		resource.Status.Infra.VpcID = *vpc.VPC.VpcId
+		resource.Status.Infra.SecurityGroupIDs = []string{vpc.ControlPlaneSecurityGroupID}
+
+		resource.Status.Infra.PublicSubnetIDs = nil
+		for _, subnet := range vpc.PublicSubnets {
+			resource.Status.Infra.PublicSubnetIDs = append(resource.Status.Infra.PublicSubnetIDs, utils.StringValue(subnet.SubnetId))
+		}
+
+		resource.Status.Infra.PrivateSubnetIDs = nil
+		for _, subnet := range vpc.PrivateSubnets {
+			resource.Status.Infra.PrivateSubnetIDs = append(resource.Status.Infra.PrivateSubnetIDs, utils.StringValue(subnet.SubnetId))
+		}
+
+		resource.Status.Infra.AvailabilityZoneIDs = nil
+		resource.Status.Infra.AvailabilityZoneNames = nil
+		for _, subnet := range vpc.PublicSubnets {
+			resource.Status.Infra.AvailabilityZoneIDs = append(resource.Status.Infra.AvailabilityZoneIDs, utils.StringValue(subnet.AvailabilityZoneId))
+			resource.Status.Infra.AvailabilityZoneNames = append(resource.Status.Infra.AvailabilityZoneNames, utils.StringValue(subnet.AvailabilityZone))
+		}
+
+		resource.Status.Infra.PublicIPV4EgressAddresses = nil
+		for _, gw := range vpc.NATGateways {
+			for _, gwa := range gw.NatGatewayAddresses {
+				resource.Status.Infra.PublicIPV4EgressAddresses = append(resource.Status.Infra.PublicIPV4EgressAddresses, utils.StringValue(gwa.PublicIp))
+			}
+		}
 
 		// @step: update the state as provisioned
 		resource.Status.Conditions.SetCondition(core.Component{

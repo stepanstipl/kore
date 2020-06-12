@@ -200,11 +200,17 @@ func schema_pkg_apis_clusters_v1_ClusterStatus(ref common.ReferenceCallback) com
 							Format:      "",
 						},
 					},
+					"providerData": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ProviderData is provider specific data",
+							Ref:         ref("k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"),
+						},
+					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/appvia/kore/pkg/apis/core/v1.Component"},
+			"github.com/appvia/kore/pkg/apis/core/v1.Component", "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1.JSON"},
 	}
 }
 
