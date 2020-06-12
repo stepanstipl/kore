@@ -148,7 +148,7 @@ spec:
             - --skip-nodes-with-local-storage=false
             - --expander=least-waste
             #{{- range $key, $value := .ASGs }}
-            - --nodes={{ $.value.Min }}:{{ $.value.Max }}:{{ $.value.Name }}
+            - --nodes={{ $value.Min }}:{{ $value.Max }}:{{ $key }}
             #{{- end }}
           env:
             - name: AWS_REGION
