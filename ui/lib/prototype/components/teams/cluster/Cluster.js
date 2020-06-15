@@ -22,7 +22,7 @@ class Cluster extends AutoRefreshComponent {
     deleteCluster: PropTypes.func.isRequired
   }
 
-  finalStateReached() {
+  stableStateReached() {
     const { cluster } = this.props
     const { status, deleted } = cluster
     if (deleted) {

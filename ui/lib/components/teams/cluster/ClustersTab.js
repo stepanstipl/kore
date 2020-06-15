@@ -151,6 +151,7 @@ class ClustersTab extends React.Component {
                     handleUpdate={this.handleResourceUpdated('clusters')}
                     handleDelete={this.handleResourceDeleted('clusters')}
                     refreshMs={10000}
+                    stableRefreshMs={60000}
                     propsResourceDataKey="cluster"
                     resourceApiRequest={async () => await (await KoreApi.client()).GetCluster(team.metadata.name, cluster.metadata.name)}
                   />

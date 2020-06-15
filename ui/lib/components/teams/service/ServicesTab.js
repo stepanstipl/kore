@@ -216,6 +216,7 @@ class ServicesTab extends React.Component {
                     handleUpdate={this.handleResourceUpdated('services')}
                     handleDelete={this.handleResourceDeleted('services')}
                     refreshMs={5000}
+                    stableRefreshMs={60000}
                     propsResourceDataKey="service"
                     resourceApiRequest={async () => await (await KoreApi.client()).GetService(team.metadata.name, service.metadata.name)}
                     style={{ paddingTop: 0, paddingBottom: '5px' }}

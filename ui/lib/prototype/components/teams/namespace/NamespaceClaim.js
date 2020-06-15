@@ -14,7 +14,7 @@ class NamespaceClaim extends AutoRefreshComponent {
     deleteNamespace: PropTypes.func.isRequired
   }
 
-  finalStateReached() {
+  stableStateReached() {
     const { namespaceClaim } = this.props
     const { spec, status, deleted } = namespaceClaim
     if (deleted) {
