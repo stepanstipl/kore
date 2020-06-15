@@ -67,7 +67,7 @@ export default class ServiceKindManage extends React.Component {
 
   renderPlan = (plan) => {
     const readonly = isReadOnlyCRD(plan)
-    const displayName = plan.spec.displayName || plan.spec.summary 
+    const displayName = plan.spec.displayName || plan.spec.summary
     const actions = [
       <Text key="view"><a onClick={() => this.viewPlan(plan)}><Icon type="eye" theme="filled"/> View</a></Text>,
       <Text key="edit">
@@ -85,14 +85,14 @@ export default class ServiceKindManage extends React.Component {
     return (
       <List.Item key={plan.metadata.name} actions={actions}>
         <List.Item.Meta
-          title={displayName} 
+          title={displayName}
           description={plan.spec.description} />
       </List.Item>
     )
   }
 
   createPlan = () => {
-    this.setState({ selectedPlan: { metadata: {}, spec: { summary: 'New plan', description: 'New plan' } }, selectedPlanMode: 'create' })
+    this.setState({ selectedPlan: null, selectedPlanMode: 'create' })
   }
 
   viewPlan = (plan) => {
@@ -132,20 +132,18 @@ export default class ServiceKindManage extends React.Component {
     const displayName = kind.spec.displayName || kind.metadata.name
     return (
       <>
-        <Drawer 
-          visible={Boolean(selectedPlan)} 
-          onClose={() => this.closePlan()} 
+        <Drawer
+          visible={Boolean(selectedPlan) || selectedPlanMode === 'create'}
+          onClose={() => this.closePlan()}
           title={!selectedPlan ? '' : <><Title level={4}>Plan: {selectedPlan.spec.summary}</Title></>}
           width={900}>
-          {!selectedPlan ? null : (
-            <ManageServicePlanForm
-              mode={selectedPlanMode}
-              resourceType="service"
-              kind={kind.metadata.name}
-              data={selectedPlan}
-              handleSubmit={() => this.planUpdated()}
-            />
-          )}
+          <ManageServicePlanForm
+            mode={selectedPlanMode}
+            resourceType="service"
+            kind={kind.metadata.name}
+            data={selectedPlan}
+            handleSubmit={() => this.planUpdated()}
+          />
         </Drawer>
 
         <List.Item>
@@ -164,7 +162,7 @@ export default class ServiceKindManage extends React.Component {
 
         <Divider />
 
-        <Card 
+        <Card
           title={`Plans for ${displayName}`}
           extra={kind.spec.schema ? <Button type="primary" onClick={this.createPlan}>+ New plan</Button> : null}>
           <List dataSource={plans.items} renderItem={(plan) => this.renderPlan(plan)} />
