@@ -97,6 +97,8 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Doc("Used to verify and handle the team invitation generated links").
 			Operation("InvitationSubmit").
 			Param(ws.PathParameter("token", "The generated base64 invitation token which was provided from the team")).
+			// As there's no body, need to explicitly say we consume any MIME type. Arguably a go-restful bug:
+			Consumes(restful.MIME_JSON, "*/*").
 			Returns(http.StatusOK, "Indicates the generated link is valid and the user has been granted access", types.TeamInvitationResponse{}).
 			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)

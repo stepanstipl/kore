@@ -1,22 +1,14 @@
-const axios = require('axios')
 const Router = require('express').Router
-const apiPaths = require('../../lib/utils/api-paths')
 
-function processTeamInvitation(koreApiUrl) {
+function processTeamInvitation(KoreApi) {
   return async (req, res) => {
     const token = req.params.token
-    const options = {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${req.session.passport.user.id_token}`
-      }
-    }
     try {
-      const url = koreApiUrl + apiPaths.useTeamInvitation(token)
-      const invitationResponse = await axios.put(url, undefined, options)
+      const api = await KoreApi.client({ id_token: req.session.passport.user.id_token })
+      const invitationResponse = await api.InvitationSubmit(token)
       let redirectTo = '/'
-      if (invitationResponse.data.team) {
-        redirectTo = `/teams/${invitationResponse.data.team}?invitation=true`
+      if (invitationResponse.team) {
+        redirectTo = `/teams/${invitationResponse.team}?invitation=true`
       }
       return res.redirect(redirectTo)
     } catch (err) {
@@ -34,9 +26,9 @@ function persistPath(req, res, next) {
   next()
 }
 
-function initRouter({ ensureAuthenticated, ensureUserCurrent, koreApiUrl }) {
+function initRouter({ ensureAuthenticated, ensureUserCurrent, KoreApi }) {
   const router = Router()
-  router.get('/process/teams/invitation/:token', persistPath, ensureAuthenticated, ensureUserCurrent, processTeamInvitation(koreApiUrl))
+  router.get('/process/teams/invitation/:token', persistPath, ensureAuthenticated, ensureUserCurrent, processTeamInvitation(KoreApi))
   return router
 }
 
