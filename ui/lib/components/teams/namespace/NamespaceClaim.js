@@ -14,17 +14,16 @@ class NamespaceClaim extends AutoRefreshComponent {
     deleteNamespace: PropTypes.func.isRequired
   }
 
-  finalStateReached() {
+  finalStateReached({ state, deleted }) {
     const { namespaceClaim } = this.props
-    const { spec, status, deleted } = namespaceClaim
     if (deleted) {
-      return successMessage(`Namespace "${spec.name}" successfully deleted`)
+      return successMessage(`Namespace "${namespaceClaim.spec.name}" deleted`)
     }
-    if (status.status === 'Success') {
-      return successMessage(`Namespace "${spec.name}" created on cluster "${spec.cluster.name}"`)
+    if (state === AutoRefreshComponent.FINAL_STATES.SUCCESS) {
+      return successMessage(`Namespace "${namespaceClaim.spec.name}" created`)
     }
-    if (status.status === 'Failure') {
-      return errorMessage(`Namespace "${spec.name}" failed to create on cluster "${spec.cluster.name}"`)
+    if (state === AutoRefreshComponent.FINAL_STATES.FAILURE) {
+      return errorMessage(`Namespace "${namespaceClaim.spec.name}" failed be to created`)
     }
   }
 

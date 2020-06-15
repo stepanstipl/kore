@@ -24,8 +24,7 @@ class ClustersTab extends React.Component {
     dataLoading: true,
     clusters: [],
     namespaceClaims: [],
-    plans: [],
-    revealNamespaces: {}
+    plans: []
   }
 
   async fetchComponentData () {
@@ -41,11 +40,8 @@ class ClustersTab extends React.Component {
       namespaceClaims = namespaceClaims.items
       plans = plans.items
 
-      const revealNamespaces = {}
-      clusters.filter(cluster => namespaceClaims.filter(nc => nc.spec.cluster.name === cluster.metadata.name).length > 0).forEach(cluster => revealNamespaces[cluster.metadata.name] = true)
-
       this.props.getClusterCount && this.props.getClusterCount(clusters.length)
-      return { clusters, namespaceClaims, plans, revealNamespaces }
+      return { clusters, namespaceClaims, plans }
     } catch (err) {
       console.error('Unable to load data for clusters tab', err)
       return {}
@@ -74,21 +70,11 @@ class ClustersTab extends React.Component {
     }
   }
 
-  handleResourceDeleted = resourceType => {
-    return (name, done) => {
-      const resourceList = copy(this.state[resourceType])
-      const resource = resourceList.find(r => r.metadata.name === name)
-      resource.deleted = true
-
-      const revealNamespaces = copy(this.state.revealNamespaces)
-      if (resourceType === 'namespaceClaims') {
-        revealNamespaces[resource.spec.cluster.name] = Boolean(resourceList.filter(nc => !nc.deleted && nc.spec.cluster.name === resource.spec.cluster.name).length)
-      }
-
-      this.setState({ [resourceType]: resourceList, revealNamespaces }, () => {
-        this.props.getClusterCount && this.props.getClusterCount(this.state.clusters.filter(c => !c.deleted).length)
-        done()
-      })
+  handleResourceDeleted = (resourceType) => {
+    return (name) => {
+      this.setState(state => ({
+        [resourceType]: state[resourceType].filter(r => r.metadata.name !== name)
+      }), () => this.props.getClusterCount && this.props.getClusterCount(this.state.clusters.length))
     }
   }
 
@@ -131,7 +117,7 @@ class ClustersTab extends React.Component {
     const { team } = this.props
     const { dataLoading, clusters, namespaceClaims, plans } = this.state
 
-    const hasActiveClusters = Boolean(clusters.filter(c => !c.deleted).length)
+    const hasClusters = Boolean(clusters.length)
 
     return (
       <>
@@ -141,7 +127,7 @@ class ClustersTab extends React.Component {
               <a>New cluster</a>
             </Link>
           </Button>
-          {!dataLoading && hasActiveClusters && <ClusterAccessInfo buttonStyle={{ float: 'right' }} team={this.props.team} />}
+          {!dataLoading && hasClusters && <ClusterAccessInfo buttonStyle={{ float: 'right' }} team={this.props.team} />}
         </div>
 
         <Divider />
@@ -150,7 +136,7 @@ class ClustersTab extends React.Component {
           <Icon type="loading" />
         ) : (
           <>
-            {!hasActiveClusters && <Paragraph type="secondary">No clusters found for this team</Paragraph>}
+            {!hasClusters && <Paragraph type="secondary">No clusters found for this team</Paragraph>}
             {clusters.map((cluster, idx) => {
               const clusterNamespaceClaims = (namespaceClaims || []).filter(nc => nc.spec.cluster.name === cluster.metadata.name)
 
@@ -166,10 +152,10 @@ class ClustersTab extends React.Component {
                     handleDelete={this.handleResourceDeleted('clusters')}
                     refreshMs={10000}
                     propsResourceDataKey="cluster"
-                    resourceApiPath={`/teams/${team.metadata.name}/clusters/${cluster.metadata.name}`}
+                    resourceApiRequest={async () => await (await KoreApi.client()).GetCluster(team.metadata.name, cluster.metadata.name)}
                   />
-                  {!cluster.deleted && clusterNamespaceClaims.length > 0 && this.clusterResourceList({ resources: clusterNamespaceClaims, resourceDisplayPropertyPath: 'spec.name', title: 'Namespaces' })}
-                  {!cluster.deleted && idx < clusters.length - 1 && <Divider />}
+                  {clusterNamespaceClaims.length > 0 && this.clusterResourceList({ resources: clusterNamespaceClaims, resourceDisplayPropertyPath: 'spec.name', title: 'Namespaces' })}
+                  {idx < clusters.length - 1 && <Divider />}
                 </React.Fragment>
               )
             })}

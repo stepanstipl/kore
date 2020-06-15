@@ -22,13 +22,12 @@ class GKECredentials extends AutoRefreshComponent {
     }
   }
 
-  finalStateReached() {
+  finalStateReached({ state }) {
     const { gkeCredentials } = this.props
-    const { status } = gkeCredentials
-    if (status.status === 'Success') {
+    if (state === AutoRefreshComponent.FINAL_STATES.SUCCESS) {
       return successMessage(`GCP credentials for project "${gkeCredentials.spec.project}" verified successfully`)
     }
-    if (status.status === 'Failure') {
+    if (state === AutoRefreshComponent.FINAL_STATES.FAILURE) {
       return errorMessage(`GCP credentials for project "${gkeCredentials.spec.project}" could not be verified`)
     }
   }

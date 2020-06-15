@@ -20,16 +20,15 @@ class Service extends AutoRefreshComponent {
     style: PropTypes.object
   }
 
-  finalStateReached() {
+  finalStateReached({ state, deleted }) {
     const { service } = this.props
-    const { status, deleted } = service
     if (deleted) {
       return successMessage(`Service successfully deleted: ${service.metadata.name}`)
     }
-    if (status.status === 'Success') {
+    if (state === AutoRefreshComponent.FINAL_STATES.SUCCESS) {
       return successMessage(`Service successfully created: ${service.metadata.name}`)
     }
-    if (status.status === 'Failure') {
+    if (state === AutoRefreshComponent.FINAL_STATES.FAILURE) {
       return errorMessage(`Service failed to create: ${service.metadata.name}`)
     }
   }
