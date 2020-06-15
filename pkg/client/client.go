@@ -25,6 +25,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -58,7 +59,7 @@ type apiClient struct {
 	// result is what we decode into
 	result interface{}
 	// queryparams are a collection of query parameters
-	queryparams []string
+	queryparams url.Values
 }
 
 var (
@@ -172,7 +173,7 @@ func (a *apiClient) MakeDefaultURL() (string, error) {
 	// @step: we add the path elements and the queries together
 	uri := strings.Join(append([]string{baseuri}, paths...), "/")
 	if len(a.queryparams) > 0 {
-		uri = fmt.Sprintf("%s?%s", uri, strings.Join(a.queryparams, "&"))
+		uri = fmt.Sprintf("%s?%s", uri, a.queryparams.Encode())
 	}
 
 	return uri, nil
@@ -189,9 +190,8 @@ func (a *apiClient) MakeEndpointURL() (string, error) {
 
 	// @step: add the query params if any to the url
 	if len(a.queryparams) > 0 {
-		uri = fmt.Sprintf("?%s", strings.Join(a.queryparams, "&"))
+		uri = fmt.Sprintf("%s?%s", uri, a.queryparams.Encode())
 	}
-
 	return uri, nil
 }
 
@@ -374,9 +374,10 @@ func (a *apiClient) Parameters(params ...ParameterFunc) RestInterface {
 		if param.IsPath {
 			a.parameters[param.Name] = param.Value
 		} else {
-			a.queryparams = append(a.queryparams,
-				fmt.Sprintf("%s=%s", param.Name, param.Value),
-			)
+			if a.queryparams == nil {
+				a.queryparams = url.Values{}
+			}
+			a.queryparams.Add(param.Name, param.Value)
 		}
 	}
 
