@@ -221,6 +221,7 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
                       </Descriptions.Item>
                     </Descriptions>
                   </Form.Item>
+                  <PlanOption id={`${id_prefix}_enableAutoscaler`} {...this.props} displayName="Enable Automatic Autoscaling" name={`${name}[${selectedIndex}].enableAutoscaler`} property={property.items.properties.enableAutoscaler} value={selected.enableAutoscaler} onChange={(_, v) => this.setNodeGroupProperty(selectedIndex, 'enableAutoscaler', v)} />
                 </Collapse.Panel>
                 <Collapse.Panel key="compute" header="Compute Configuration (instance type, GPU or regular workload)">
                   <Form.Item label={property.items.properties.amiType.title} help={property.items.properties.amiType.description}>
