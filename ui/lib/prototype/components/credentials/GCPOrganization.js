@@ -22,7 +22,7 @@ class GCPOrganization extends AutoRefreshComponent {
     }
   }
 
-  finalStateReached() {
+  stableStateReached() {
     const { organization } = this.props
     const { allocation, status } = organization
     if (status.status === 'Success') {

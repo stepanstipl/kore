@@ -23,12 +23,12 @@ class EKSCredentials extends AutoRefreshComponent {
     }
   }
 
-  finalStateReached({ state }) {
+  stableStateReached({ state }) {
     const { eksCredentials } = this.props
-    if (state === AutoRefreshComponent.FINAL_STATES.SUCCESS) {
+    if (state === AutoRefreshComponent.STABLE_STATES.SUCCESS) {
       return successMessage(`AWS credentials for account "${eksCredentials.spec.accountID}" verified successfully`)
     }
-    if (state === AutoRefreshComponent.FINAL_STATES.FAILURE) {
+    if (state === AutoRefreshComponent.STABLE_STATES.FAILURE) {
       return errorMessage(`AWS credentials for account "${eksCredentials.spec.accountID}" could not be verified`)
     }
   }

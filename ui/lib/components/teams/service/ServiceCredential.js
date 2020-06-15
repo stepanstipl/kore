@@ -20,15 +20,15 @@ class ServiceCredential extends AutoRefreshComponent {
     deleteServiceCredential: PropTypes.func.isRequired
   }
 
-  finalStateReached({ state, deleted }) {
+  stableStateReached({ state, deleted }) {
     const { serviceCredential } = this.props
     if (deleted) {
       return successMessage(`Service access successfully deleted for service "${serviceCredential.spec.service.name}"`)
     }
-    if (state === ServiceCredential.FINAL_STATES.SUCCESS) {
+    if (state === ServiceCredential.STABLE_STATES.SUCCESS) {
       return successMessage(`Service access successfully created for service "${serviceCredential.spec.service.name}"`)
     }
-    if (state === ServiceCredential.FINAL_STATES.FAILURE) {
+    if (state === ServiceCredential.STABLE_STATES.FAILURE) {
       return errorMessage(`Service access failed to create for service "${serviceCredential.spec.service.name}"`)
     }
   }
