@@ -1657,9 +1657,6 @@ spec:
                 vpcID:
                   description: VpcID is the identifier of the VPC
                   type: string
-              required:
-              - availabilityZoneIDs
-              - availabilityZoneNames
               type: object
             status:
               description: Status provides a overall status

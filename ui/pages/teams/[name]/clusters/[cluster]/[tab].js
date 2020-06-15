@@ -258,13 +258,14 @@ class ClusterPage extends React.Component {
               </Form.Item>
               <UsePlanForm
                 team={team}
+                cluster={cluster}
                 resourceType="cluster"
                 kind={cluster.spec.kind}
                 plan={cluster.spec.plan}
                 planValues={this.state.clusterParams}
                 mode={this.state.editMode ? 'edit' : 'view'}
                 validationErrors={this.state.validationErrors}
-                onPlanChange={this.onClusterConfigChanged}
+                onPlanValuesChange={this.onClusterConfigChanged}
               />
             </Form>
           </TabPane>

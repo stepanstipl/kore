@@ -28,7 +28,7 @@ class ApplicationServiceForm extends React.Component {
     selectedServiceKind: false,
     selectedServicePlan: false,
     dataLoading: true,
-    servicePlanOverride: null,
+    planValues: null,
     validationErrors: null,
     createNewNamespace: false
   }
@@ -82,11 +82,7 @@ class ApplicationServiceForm extends React.Component {
       name: cluster.metadata.name,
       namespace: this.props.team.metadata.name
     }))
-    if (this.state.servicePlanOverride) {
-      serviceSpec.setConfiguration(this.state.servicePlanOverride)
-    } else {
-      serviceSpec.setConfiguration({ ...selectedServicePlan.spec.configuration })
-    }
+    serviceSpec.setConfiguration(this.state.planValues)
 
     serviceResource.setSpec(serviceSpec)
     return serviceResource
@@ -141,13 +137,13 @@ class ApplicationServiceForm extends React.Component {
   handleSelectKind = (kind) => {
     this.setState({
       selectedServiceKind: kind,
-      servicePlanOverride: null,
+      planValues: null,
       validationErrors: null
     })
   }
 
-  handleServicePlanOverride = servicePlanOverrides => {
-    this.setState({ servicePlanOverride: servicePlanOverrides })
+  setPlanValues = planValues => {
+    this.setState({ planValues })
   }
 
   disableButton = () => {
@@ -229,11 +225,12 @@ class ApplicationServiceForm extends React.Component {
           {selectedServiceKind && (
             <ServiceOptionsForm
               team={this.props.team}
+              cluster={this.props.cluster}
               selectedServiceKind={selectedServiceKind}
               servicePlans={filteredServicePlans}
               teamServices={this.props.teamServices}
               onServicePlanSelected={(selectedServicePlan) => this.setState({ selectedServicePlan })}
-              onServicePlanOverridden={this.handleServicePlanOverride}
+              onPlanValuesChange={this.setPlanValues}
               validationErrors={this.state.validationErrors}
               wrappedComponentRef={inst => this.serviceOptionsForm = inst}
             />

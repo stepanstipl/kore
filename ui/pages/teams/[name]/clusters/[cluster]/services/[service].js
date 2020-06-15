@@ -307,7 +307,7 @@ class ServicePage extends React.Component {
                     team={team}
                     creationSource="service"
                     services={[service]}
-                    clusters={[cluster]}
+                    cluster={cluster}
                     handleSubmit={this.handleServiceCredentialCreated}
                     handleCancel={this.createServiceCredential(false)}
                   />
@@ -336,13 +336,14 @@ class ServicePage extends React.Component {
               </Form.Item>
               <UsePlanForm
                 team={team}
+                cluster={cluster}
                 resourceType="service"
                 kind={service.spec.kind}
                 plan={service.spec.plan}
                 planValues={this.state.serviceParams}
                 mode={this.state.editMode ? 'edit' : 'view'}
                 validationErrors={this.state.validationErrors}
-                onPlanChange={this.onServiceConfigChanged}
+                onPlanValuesChange={this.onServiceConfigChanged}
               />
             </Form>
           </Collapse.Panel>

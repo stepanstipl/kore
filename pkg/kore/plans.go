@@ -45,7 +45,7 @@ type Plans interface {
 	// Update is responsible for update a plan in the kore
 	Update(ctx context.Context, plan *configv1.Plan, ignoreReadonly bool) error
 	// GetEditablePlanParams returns with the editable plan parameters for a specific team and cluster kind
-	GetEditablePlanParams(ctx context.Context, team string, clusterKind string) (map[string]bool, error)
+	GetEditablePlanParams(ctx context.Context, team string, clusterKind string) ([]string, error)
 }
 
 type plansImpl struct {
@@ -200,7 +200,7 @@ func (p plansImpl) Has(ctx context.Context, name string) (bool, error) {
 	)
 }
 
-func (p plansImpl) GetEditablePlanParams(ctx context.Context, team string, clusterKind string) (map[string]bool, error) {
+func (p plansImpl) GetEditablePlanParams(ctx context.Context, team string, clusterKind string) ([]string, error) {
 	editableParams := map[string]bool{}
 	planPolicyAllocations, err := p.Teams().Team(team).Allocations().ListAllocationsByType(
 		ctx, "config.kore.appvia.io", "v1", "PlanPolicy",
@@ -229,7 +229,13 @@ func (p plansImpl) GetEditablePlanParams(ctx context.Context, team string, clust
 		}
 	}
 
-	return editableParams, nil
+	var res []string
+	for p, editable := range editableParams {
+		if editable {
+			res = append(res, p)
+		}
+	}
+	return res, nil
 }
 
 func (p plansImpl) getClustersWithPlan(ctx context.Context, clusterName string) ([]string, error) {

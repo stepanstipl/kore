@@ -340,7 +340,7 @@ func (c *clustersImpl) validateConfiguration(ctx context.Context, cluster *clust
 
 	for paramName, paramValue := range clusterConfig {
 		if !reflect.DeepEqual(paramValue, planConfiguration[paramName]) {
-			if !editableParams[paramName] {
+			if !utils.Contains(paramName, editableParams) {
 				verr.AddFieldErrorf(paramName, validation.ReadOnly, "can not be changed")
 			}
 		}

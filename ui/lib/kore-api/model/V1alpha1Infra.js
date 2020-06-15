@@ -47,6 +47,12 @@ class V1alpha1Infra {
         if (data) {
             obj = obj || new V1alpha1Infra();
 
+            if (data.hasOwnProperty('availabilityZoneIDs')) {
+                obj['availabilityZoneIDs'] = ApiClient.convertToType(data['availabilityZoneIDs'], ['String']);
+            }
+            if (data.hasOwnProperty('availabilityZoneNames')) {
+                obj['availabilityZoneNames'] = ApiClient.convertToType(data['availabilityZoneNames'], ['String']);
+            }
             if (data.hasOwnProperty('ipv4EgressAddresses')) {
                 obj['ipv4EgressAddresses'] = ApiClient.convertToType(data['ipv4EgressAddresses'], ['String']);
             }
@@ -59,10 +65,39 @@ class V1alpha1Infra {
             if (data.hasOwnProperty('securityGroupIDs')) {
                 obj['securityGroupIDs'] = ApiClient.convertToType(data['securityGroupIDs'], ['String']);
             }
+            if (data.hasOwnProperty('vpcID')) {
+                obj['vpcID'] = ApiClient.convertToType(data['vpcID'], 'String');
+            }
         }
         return obj;
     }
 
+/**
+     * @return {Array.<String>}
+     */
+    getAvailabilityZoneIDs() {
+        return this.availabilityZoneIDs;
+    }
+
+    /**
+     * @param {Array.<String>} availabilityZoneIDs
+     */
+    setAvailabilityZoneIDs(availabilityZoneIDs) {
+        this['availabilityZoneIDs'] = availabilityZoneIDs;
+    }
+/**
+     * @return {Array.<String>}
+     */
+    getAvailabilityZoneNames() {
+        return this.availabilityZoneNames;
+    }
+
+    /**
+     * @param {Array.<String>} availabilityZoneNames
+     */
+    setAvailabilityZoneNames(availabilityZoneNames) {
+        this['availabilityZoneNames'] = availabilityZoneNames;
+    }
 /**
      * @return {Array.<String>}
      */
@@ -115,8 +150,31 @@ class V1alpha1Infra {
     setSecurityGroupIDs(securityGroupIDs) {
         this['securityGroupIDs'] = securityGroupIDs;
     }
+/**
+     * @return {String}
+     */
+    getVpcID() {
+        return this.vpcID;
+    }
+
+    /**
+     * @param {String} vpcID
+     */
+    setVpcID(vpcID) {
+        this['vpcID'] = vpcID;
+    }
 
 }
+
+/**
+ * @member {Array.<String>} availabilityZoneIDs
+ */
+V1alpha1Infra.prototype['availabilityZoneIDs'] = undefined;
+
+/**
+ * @member {Array.<String>} availabilityZoneNames
+ */
+V1alpha1Infra.prototype['availabilityZoneNames'] = undefined;
 
 /**
  * @member {Array.<String>} ipv4EgressAddresses
@@ -137,6 +195,11 @@ V1alpha1Infra.prototype['publicSubnetIDs'] = undefined;
  * @member {Array.<String>} securityGroupIDs
  */
 V1alpha1Infra.prototype['securityGroupIDs'] = undefined;
+
+/**
+ * @member {String} vpcID
+ */
+V1alpha1Infra.prototype['vpcID'] = undefined;
 
 
 

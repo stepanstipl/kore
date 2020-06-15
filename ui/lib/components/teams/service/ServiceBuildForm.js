@@ -36,7 +36,7 @@ class ServiceBuildForm extends React.Component {
     selectedServiceKind: false,
     selectedServicePlan: false,
     dataLoading: true,
-    servicePlanOverride: null,
+    planValues: null,
     validationErrors: null,
     bindingsToCreate: [],
     planSchemaFound: false
@@ -107,11 +107,7 @@ class ServiceBuildForm extends React.Component {
       namespace: this.props.team.metadata.name
     }))
 
-    if (this.state.servicePlanOverride) {
-      serviceSpec.setConfiguration(this.state.servicePlanOverride)
-    } else {
-      serviceSpec.setConfiguration({ ...selectedServicePlan.spec.configuration })
-    }
+    serviceSpec.setConfiguration(this.state.planValues)
 
     serviceResource.setSpec(serviceSpec)
     return serviceResource
@@ -243,20 +239,20 @@ class ServiceBuildForm extends React.Component {
     this.setState({
       selectedServiceKind: kind,
       selectedServicePlan: false,
-      servicePlanOverride: null,
+      planValues: null,
       validationErrors: null
     })
   }
 
-  handleServicePlanOverride = servicePlanOverrides => {
-    this.setState({ servicePlanOverride: servicePlanOverrides })
+  setPlanValues = planValues => {
+    this.setState({ planValues })
   }
 
   handleServicePlanSelected = async (plan) => {
     this.setState({ selectedServicePlan: plan })
     try {
       // check if there is a schema for the binding for the selected service kind/plan
-      const schema = await (await KoreApi.client()).GetServiceCredentialSchema(plan)
+      const schema = (await (await KoreApi.client()).GetServicePlanDetails(plan, this.props.team.metadata.name, this.props.cluster.metadata.name)).schema
       this.setState({ planSchemaFound: Boolean(schema) })
     } catch (err) {
       console.error('Error getting service credentials schema for plan', err)
@@ -381,11 +377,12 @@ class ServiceBuildForm extends React.Component {
                 {selectedServiceKind && (
                   <ServiceOptionsForm
                     team={this.props.team}
+                    cluster={this.props.cluster}
                     selectedServiceKind={selectedServiceKind}
                     servicePlans={filteredServicePlans}
                     teamServices={this.props.teamServices}
                     onServicePlanSelected={this.handleServicePlanSelected}
-                    onServicePlanOverridden={this.handleServicePlanOverride}
+                    onPlanValuesChange={this.setPlanValues}
                     validationErrors={this.state.validationErrors}
                     wrappedComponentRef={inst => this.serviceOptionsForm = inst}
                   />

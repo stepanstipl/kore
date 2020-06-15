@@ -81,15 +81,13 @@ type ClientService interface {
 
 	GetService(params *GetServiceParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceOK, error)
 
-	GetServiceCredentialSchema(params *GetServiceCredentialSchemaParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceCredentialSchemaOK, error)
-
 	GetServiceCredentials(params *GetServiceCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceCredentialsOK, error)
 
 	GetServiceKind(params *GetServiceKindParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceKindOK, error)
 
 	GetServicePlan(params *GetServicePlanParams, authInfo runtime.ClientAuthInfoWriter) (*GetServicePlanOK, error)
 
-	GetServicePlanSchema(params *GetServicePlanSchemaParams, authInfo runtime.ClientAuthInfoWriter) (*GetServicePlanSchemaOK, error)
+	GetServicePlanDetails(params *GetServicePlanDetailsParams, authInfo runtime.ClientAuthInfoWriter) (*GetServicePlanDetailsOK, error)
 
 	GetServiceProvider(params *GetServiceProviderParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceProviderOK, error)
 
@@ -100,8 +98,6 @@ type ClientService interface {
 	GetTeamSecret(params *GetTeamSecretParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamSecretOK, error)
 
 	GetTeamSecurityOverview(params *GetTeamSecurityOverviewParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamSecurityOverviewOK, error)
-
-	GetTeamServicePlanDetails(params *GetTeamServicePlanDetailsParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamServicePlanDetailsOK, error)
 
 	GetUser(params *GetUserParams, authInfo runtime.ClientAuthInfoWriter) (*GetUserOK, error)
 
@@ -1189,41 +1185,6 @@ func (a *Client) GetService(params *GetServiceParams, authInfo runtime.ClientAut
 }
 
 /*
-  GetServiceCredentialSchema returns the JSON schema for the service credentials defined in the plan if a plan doesn t have credential schema it returns the JSON schema defined on the service kind
-*/
-func (a *Client) GetServiceCredentialSchema(params *GetServiceCredentialSchemaParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceCredentialSchemaOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewGetServiceCredentialSchemaParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "GetServiceCredentialSchema",
-		Method:             "GET",
-		PathPattern:        "/api/v1alpha1/serviceplans/{name}/credentialschema",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &GetServiceCredentialSchemaReader{formats: a.formats},
-		AuthInfo:           authInfo,
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*GetServiceCredentialSchemaOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetServiceCredentialSchema: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
   GetServiceCredentials returns the requsted service credentials
 */
 func (a *Client) GetServiceCredentials(params *GetServiceCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*GetServiceCredentialsOK, error) {
@@ -1329,23 +1290,23 @@ func (a *Client) GetServicePlan(params *GetServicePlanParams, authInfo runtime.C
 }
 
 /*
-  GetServicePlanSchema returns the JSON schema for the plan if a plan doesn t have a schema it returns the JSON schema defined on the service kind
+  GetServicePlanDetails returns all the service plan details which is required for using this service plan in the given context
 */
-func (a *Client) GetServicePlanSchema(params *GetServicePlanSchemaParams, authInfo runtime.ClientAuthInfoWriter) (*GetServicePlanSchemaOK, error) {
+func (a *Client) GetServicePlanDetails(params *GetServicePlanDetailsParams, authInfo runtime.ClientAuthInfoWriter) (*GetServicePlanDetailsOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewGetServicePlanSchemaParams()
+		params = NewGetServicePlanDetailsParams()
 	}
 
 	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "GetServicePlanSchema",
+		ID:                 "GetServicePlanDetails",
 		Method:             "GET",
-		PathPattern:        "/api/v1alpha1/serviceplans/{name}/schema",
+		PathPattern:        "/api/v1alpha1/serviceplans/{name}/details",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
-		Reader:             &GetServicePlanSchemaReader{formats: a.formats},
+		Reader:             &GetServicePlanDetailsReader{formats: a.formats},
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
@@ -1353,13 +1314,13 @@ func (a *Client) GetServicePlanSchema(params *GetServicePlanSchemaParams, authIn
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*GetServicePlanSchemaOK)
+	success, ok := result.(*GetServicePlanDetailsOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetServicePlanSchema: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for GetServicePlanDetails: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -1535,41 +1496,6 @@ func (a *Client) GetTeamSecurityOverview(params *GetTeamSecurityOverviewParams, 
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for GetTeamSecurityOverview: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
-  GetTeamServicePlanDetails returns the plan the JSON schema of the plan and what what parameters are allowed to be edited by this team when using the plan
-*/
-func (a *Client) GetTeamServicePlanDetails(params *GetTeamServicePlanDetailsParams, authInfo runtime.ClientAuthInfoWriter) (*GetTeamServicePlanDetailsOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewGetTeamServicePlanDetailsParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "GetTeamServicePlanDetails",
-		Method:             "GET",
-		PathPattern:        "/api/v1alpha1/teams/{team}/serviceplans/{plan}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &GetTeamServicePlanDetailsReader{formats: a.formats},
-		AuthInfo:           authInfo,
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*GetTeamServicePlanDetailsOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetTeamServicePlanDetails: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

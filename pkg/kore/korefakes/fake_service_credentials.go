@@ -38,20 +38,6 @@ type FakeServiceCredentials struct {
 		result1 *v1.ServiceCredentials
 		result2 error
 	}
-	GetSchemaStub        func(context.Context, string) (string, error)
-	getSchemaMutex       sync.RWMutex
-	getSchemaArgsForCall []struct {
-		arg1 context.Context
-		arg2 string
-	}
-	getSchemaReturns struct {
-		result1 string
-		result2 error
-	}
-	getSchemaReturnsOnCall map[int]struct {
-		result1 string
-		result2 error
-	}
 	ListStub        func(context.Context, ...func(credentials v1.ServiceCredentials) bool) (*v1.ServiceCredentialsList, error)
 	listMutex       sync.RWMutex
 	listArgsForCall []struct {
@@ -210,70 +196,6 @@ func (fake *FakeServiceCredentials) GetReturnsOnCall(i int, result1 *v1.ServiceC
 	}{result1, result2}
 }
 
-func (fake *FakeServiceCredentials) GetSchema(arg1 context.Context, arg2 string) (string, error) {
-	fake.getSchemaMutex.Lock()
-	ret, specificReturn := fake.getSchemaReturnsOnCall[len(fake.getSchemaArgsForCall)]
-	fake.getSchemaArgsForCall = append(fake.getSchemaArgsForCall, struct {
-		arg1 context.Context
-		arg2 string
-	}{arg1, arg2})
-	fake.recordInvocation("GetSchema", []interface{}{arg1, arg2})
-	fake.getSchemaMutex.Unlock()
-	if fake.GetSchemaStub != nil {
-		return fake.GetSchemaStub(arg1, arg2)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	fakeReturns := fake.getSchemaReturns
-	return fakeReturns.result1, fakeReturns.result2
-}
-
-func (fake *FakeServiceCredentials) GetSchemaCallCount() int {
-	fake.getSchemaMutex.RLock()
-	defer fake.getSchemaMutex.RUnlock()
-	return len(fake.getSchemaArgsForCall)
-}
-
-func (fake *FakeServiceCredentials) GetSchemaCalls(stub func(context.Context, string) (string, error)) {
-	fake.getSchemaMutex.Lock()
-	defer fake.getSchemaMutex.Unlock()
-	fake.GetSchemaStub = stub
-}
-
-func (fake *FakeServiceCredentials) GetSchemaArgsForCall(i int) (context.Context, string) {
-	fake.getSchemaMutex.RLock()
-	defer fake.getSchemaMutex.RUnlock()
-	argsForCall := fake.getSchemaArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
-}
-
-func (fake *FakeServiceCredentials) GetSchemaReturns(result1 string, result2 error) {
-	fake.getSchemaMutex.Lock()
-	defer fake.getSchemaMutex.Unlock()
-	fake.GetSchemaStub = nil
-	fake.getSchemaReturns = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeServiceCredentials) GetSchemaReturnsOnCall(i int, result1 string, result2 error) {
-	fake.getSchemaMutex.Lock()
-	defer fake.getSchemaMutex.Unlock()
-	fake.GetSchemaStub = nil
-	if fake.getSchemaReturnsOnCall == nil {
-		fake.getSchemaReturnsOnCall = make(map[int]struct {
-			result1 string
-			result2 error
-		})
-	}
-	fake.getSchemaReturnsOnCall[i] = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
-}
-
 func (fake *FakeServiceCredentials) List(arg1 context.Context, arg2 ...func(credentials v1.ServiceCredentials) bool) (*v1.ServiceCredentialsList, error) {
 	fake.listMutex.Lock()
 	ret, specificReturn := fake.listReturnsOnCall[len(fake.listArgsForCall)]
@@ -406,8 +328,6 @@ func (fake *FakeServiceCredentials) Invocations() map[string][][]interface{} {
 	defer fake.deleteMutex.RUnlock()
 	fake.getMutex.RLock()
 	defer fake.getMutex.RUnlock()
-	fake.getSchemaMutex.RLock()
-	defer fake.getSchemaMutex.RUnlock()
 	fake.listMutex.RLock()
 	defer fake.listMutex.RUnlock()
 	fake.updateMutex.RLock()

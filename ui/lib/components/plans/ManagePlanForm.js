@@ -8,8 +8,8 @@ import canonical from '../../utils/canonical'
 import PlanViewEdit from './PlanViewEdit'
 
 /**
- * ManagePlanForm is an abstract base for *managing* a plan itself (i.e. viewing, editing or creating PLANS). 
- * 
+ * ManagePlanForm is an abstract base for *managing* a plan itself (i.e. viewing, editing or creating PLANS).
+ *
  * To *use* a plan to create/manage a resource, use UsePlanForm.
  */
 export default class ManagePlanForm extends React.Component {
@@ -208,13 +208,13 @@ export default class ManagePlanForm extends React.Component {
             kind={kind}
             plan={planValues}
             schema={schema}
-            parameterEditable={{ '*': true }} // everything editable when managing plans
+            editableParams={['*']} // everything editable when managing plans
             onPlanValueChange={(n, v) => this.onValueChange(n, v)}
             validationErrors={validationErrors}
           />
         </Card>
-        
-        {mode === 'view' ? null : 
+
+        {mode === 'view' ? null :
           <>
             <FormErrorMessage message={formErrorMessage} />
             <Form.Item>

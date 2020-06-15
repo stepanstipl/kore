@@ -16,7 +16,7 @@ export default class PlanViewEdit extends React.Component {
     kind: PropTypes.string.isRequired,
     plan: PropTypes.object.isRequired,
     schema: PropTypes.object.isRequired,
-    parameterEditable: PropTypes.object.isRequired,
+    editableParams: PropTypes.array.isRequired,
     onPlanValueChange: PropTypes.func,
     validationErrors: PropTypes.array
   }
@@ -39,11 +39,11 @@ export default class PlanViewEdit extends React.Component {
   }
 
   render() {
-    const { resourceType, mode, manage, team, kind, plan, schema, parameterEditable, onPlanValueChange, validationErrors } = this.props
+    const { resourceType, mode, manage, team, kind, plan, schema, editableParams, onPlanValueChange, validationErrors } = this.props
     const { showReadOnly } = this.state
     return (
       <>
-        {mode !== 'view' && !parameterEditable['*'] ? (
+        {mode !== 'view' && !editableParams.includes('*') ? (
           <Form.Item label="Show read-only parameters">
             <Checkbox onChange={(v) => this.setState({ showReadOnly: v.target.checked })} checked={showReadOnly} />
           </Form.Item>
@@ -51,7 +51,7 @@ export default class PlanViewEdit extends React.Component {
 
         {Object.keys(schema.properties).map((name) => {
           const editable = mode !== 'view' &&
-            (parameterEditable['*'] === true || parameterEditable[name] === true) &&
+            (editableParams.includes('*') || editableParams.includes(name)) &&
             (schema.properties[name].const === undefined || schema.properties[name].const === null) &&
             (mode === 'create' || manage || !schema.properties[name].immutable) // Disallow editing of params which can only be set at create time when in 'use' mode
 

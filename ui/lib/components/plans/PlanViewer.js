@@ -31,7 +31,7 @@ class PlanViewer extends React.Component {
       schema = await (await KoreApi.client()).GetPlanSchema(this.props.plan.spec.kind)
       break
     case 'service':
-      schema = await (await KoreApi.client()).GetServicePlanSchema(this.props.plan.metadata.name)
+      schema = (await (await KoreApi.client()).GetServicePlanDetails(this.props.plan.metadata.name)).schema
       break
     }
     this.setState({
@@ -116,7 +116,7 @@ class PlanViewer extends React.Component {
       }
     })
 
-    if (!hasDeprecated) { 
+    if (!hasDeprecated) {
       planValues = planValues.filter((v) => !v.deprecated)
     }
 
@@ -134,7 +134,7 @@ class PlanViewer extends React.Component {
           />
         )}
         {!hasDeprecated ? null : (
-          <Alert 
+          <Alert
             message="This plan has values set on deprecated fields"
             type="warning"
             showIcon

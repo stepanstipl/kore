@@ -679,17 +679,6 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Returns(http.StatusNotFound, "Team or plan doesn't exist", nil),
 	)
 
-	// Team-specific service plan details
-	ws.Route(
-		withAllNonValidationErrors(ws.GET("/{team}/serviceplans/{plan}")).To(u.getTeamServicePlanDetails).
-			Operation("GetTeamServicePlanDetails").
-			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
-			Param(ws.PathParameter("plan", "Is name the of the service plan you're interested in")).
-			Doc("Returns the plan, the JSON schema of the plan, and what what parameters are allowed to be edited by this team when using the plan").
-			Returns(http.StatusOK, "Contains details of the plan", TeamServicePlan{}).
-			Returns(http.StatusNotFound, "Team or service plan doesn't exist", nil),
-	)
-
 	// Team services
 
 	ws.Route(
@@ -887,45 +876,15 @@ func (u teamHandler) getTeamPlanDetails(req *restful.Request, resp *restful.Resp
 			return nil
 		}
 
-		paramsMap, err := u.Plans().GetEditablePlanParams(req.Request.Context(), req.PathParameter("team"), plan.Spec.Kind)
+		editableParams, err := u.Plans().GetEditablePlanParams(req.Request.Context(), req.PathParameter("team"), plan.Spec.Kind)
 		if err != nil {
 			return err
 		}
 
 		return resp.WriteHeaderAndEntity(http.StatusOK, TeamPlan{
-			Plan:              plan.Spec,
-			Schema:            schema,
-			ParameterEditable: paramsMap,
+			Plan:           plan.Spec,
+			Schema:         schema,
+			EditableParams: editableParams,
 		})
-	})
-}
-
-func (u teamHandler) getTeamServicePlanDetails(req *restful.Request, resp *restful.Response) {
-	handleErrors(req, resp, func() error {
-		var schema string
-		servicePlan, err := u.ServicePlans().Get(req.Request.Context(), req.PathParameter("plan"))
-		if err != nil {
-			return err
-		}
-		schema = servicePlan.Spec.Schema
-
-		if schema == "" {
-			kind, err := u.ServiceKinds().Get(req.Request.Context(), servicePlan.Spec.Kind)
-			if err != nil {
-				return err
-			}
-			schema = kind.Spec.Schema
-		}
-
-		servicePlanDetails := TeamServicePlan{
-			ServicePlan: servicePlan.Spec,
-			Schema:      schema,
-			// TODO: set the editable parameters when we add service plan policies
-			ParameterEditable: map[string]bool{
-				"*": true,
-			},
-		}
-
-		return resp.WriteHeaderAndEntity(http.StatusOK, servicePlanDetails)
 	})
 }

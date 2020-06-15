@@ -63,6 +63,9 @@ class V1ClusterStatus {
             if (data.hasOwnProperty('message')) {
                 obj['message'] = ApiClient.convertToType(data['message'], 'String');
             }
+            if (data.hasOwnProperty('providerData')) {
+                obj['providerData'] = ApiClient.convertToType(data['providerData'], 'String');
+            }
             if (data.hasOwnProperty('status')) {
                 obj['status'] = ApiClient.convertToType(data['status'], 'String');
             }
@@ -138,6 +141,19 @@ class V1ClusterStatus {
 /**
      * @return {String}
      */
+    getProviderData() {
+        return this.providerData;
+    }
+
+    /**
+     * @param {String} providerData
+     */
+    setProviderData(providerData) {
+        this['providerData'] = providerData;
+    }
+/**
+     * @return {String}
+     */
     getStatus() {
         return this.status;
     }
@@ -175,6 +191,11 @@ V1ClusterStatus.prototype['components'] = undefined;
  * @member {String} message
  */
 V1ClusterStatus.prototype['message'] = undefined;
+
+/**
+ * @member {String} providerData
+ */
+V1ClusterStatus.prototype['providerData'] = undefined;
 
 /**
  * @member {String} status

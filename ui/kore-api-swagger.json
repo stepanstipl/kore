@@ -1650,7 +1650,7 @@
         }
       }
     },
-    "/api/v1alpha1/serviceplans/{name}/credentialschema": {
+    "/api/v1alpha1/serviceplans/{name}/details": {
       "get": {
         "consumes": [
           "application/json"
@@ -1658,8 +1658,8 @@
         "produces": [
           "application/json"
         ],
-        "summary": "Returns the JSON schema for the service credentials defined in the plan. If a plan doesn't have credential schema, it returns the JSON schema defined on the service kind",
-        "operationId": "GetServiceCredentialSchema",
+        "summary": "Returns all the service plan details which is required for using this service plan in the given context",
+        "operationId": "GetServicePlanDetails",
         "parameters": [
           {
             "type": "string",
@@ -1667,57 +1667,25 @@
             "name": "name",
             "in": "path",
             "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Contains the service credential schema definition",
-            "schema": {
-              "$ref": "#/definitions/map%5Bstring%5Dinterface%20%7B%7D"
-            }
           },
-          "401": {
-            "description": "If not authenticated"
-          },
-          "403": {
-            "description": "If authenticated but not authorized"
-          },
-          "404": {
-            "description": "the service plan with the given name doesn't exist"
-          },
-          "500": {
-            "description": "A generic API error containing the cause of the error",
-            "schema": {
-              "$ref": "#/definitions/apiserver.Error"
-            }
-          }
-        }
-      }
-    },
-    "/api/v1alpha1/serviceplans/{name}/schema": {
-      "get": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "summary": "Returns the JSON schema for the plan. If a plan doesn't have a schema, it returns the JSON schema defined on the service kind",
-        "operationId": "GetServicePlanSchema",
-        "parameters": [
           {
             "type": "string",
-            "description": "The name of the service plan",
-            "name": "name",
-            "in": "path",
-            "required": true
+            "description": "The name of the team which intends to use this plan",
+            "name": "team",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The name of the cluster where the service would be created",
+            "name": "cluster",
+            "in": "query"
           }
         ],
         "responses": {
           "200": {
-            "description": "Contains the service schema definition",
+            "description": "Contains the service plan details",
             "schema": {
-              "$ref": "#/definitions/map%5Bstring%5Dinterface%20%7B%7D"
+              "$ref": "#/definitions/kore.ServicePlanDetails"
             }
           },
           "401": {
@@ -4588,57 +4556,6 @@
         }
       }
     },
-    "/api/v1alpha1/teams/{team}/serviceplans/{plan}": {
-      "get": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "summary": "Returns the plan, the JSON schema of the plan, and what what parameters are allowed to be edited by this team when using the plan",
-        "operationId": "GetTeamServicePlanDetails",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "Is the name of the team you are acting within",
-            "name": "team",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "Is name the of the service plan you're interested in",
-            "name": "plan",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Contains details of the plan",
-            "schema": {
-              "$ref": "#/definitions/apiserver.TeamServicePlan"
-            }
-          },
-          "401": {
-            "description": "If not authenticated"
-          },
-          "403": {
-            "description": "If authenticated but not authorized"
-          },
-          "404": {
-            "description": "Team or service plan doesn't exist"
-          },
-          "500": {
-            "description": "A generic API error containing the cause of the error",
-            "schema": {
-              "$ref": "#/definitions/apiserver.Error"
-            }
-          }
-        }
-      }
-    },
     "/api/v1alpha1/teams/{team}/services": {
       "get": {
         "consumes": [
@@ -5218,13 +5135,13 @@
     "apiserver.TeamPlan": {
       "required": [
         "schema",
-        "parameterEditable"
+        "editableParams"
       ],
       "properties": {
-        "parameterEditable": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "boolean"
+        "editableParams": {
+          "type": "array",
+          "items": {
+            "type": "string"
           }
         },
         "plan": {
@@ -5235,27 +5152,54 @@
         }
       }
     },
-    "apiserver.TeamServicePlan": {
+    "kore.ServicePlanDetails": {
       "required": [
-        "schema",
-        "parameterEditable"
+        "summary",
+        "kind",
+        "editableParams"
       ],
       "properties": {
-        "parameterEditable": {
+        "configuration": {
+          "type": "string"
+        },
+        "credentialSchema": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "editableParams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "kind": {
+          "type": "string"
+        },
+        "labels": {
           "type": "object",
           "additionalProperties": {
-            "type": "boolean"
+            "type": "string"
           }
+        },
+        "providerData": {
+          "type": "string"
         },
         "schema": {
           "type": "string"
         },
-        "servicePlan": {
-          "$ref": "#/definitions/v1.ServicePlanSpec"
+        "serviceAccessDisabled": {
+          "type": "boolean"
+        },
+        "summary": {
+          "type": "string"
         }
       }
     },
-    "map[string]interface {}": {},
     "types.Health": {
       "required": [
         "healthy"
@@ -5547,6 +5491,9 @@
           }
         },
         "message": {
+          "type": "string"
+        },
+        "providerData": {
           "type": "string"
         },
         "status": {
@@ -7176,11 +7123,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
-        "clientID",
-        "clientSecret",
         "issuer",
         "clientScopes",
-        "userClaims"
+        "userClaims",
+        "clientID",
+        "clientSecret"
       ],
       "properties": {
         "clientID": {
@@ -8266,6 +8213,18 @@
     },
     "v1alpha1.Infra": {
       "properties": {
+        "availabilityZoneIDs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "availabilityZoneNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "ipv4EgressAddresses": {
           "type": "array",
           "items": {
@@ -8289,6 +8248,9 @@
           "items": {
             "type": "string"
           }
+        },
+        "vpcID": {
+          "type": "string"
         }
       }
     },

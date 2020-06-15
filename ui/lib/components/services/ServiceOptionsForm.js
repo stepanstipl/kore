@@ -12,11 +12,12 @@ class ServiceOptionsForm extends React.Component {
   static propTypes = {
     form: PropTypes.any.isRequired,
     team: PropTypes.object.isRequired,
+    cluster: PropTypes.object.isRequired,
     selectedServiceKind: PropTypes.string.isRequired,
     servicePlans: PropTypes.array.isRequired,
     teamServices: PropTypes.array.isRequired,
     onServicePlanSelected: PropTypes.func,
-    onServicePlanOverridden: PropTypes.func,
+    onPlanValuesChange: PropTypes.func,
     validationErrors: PropTypes.array
   }
 
@@ -58,9 +59,9 @@ class ServiceOptionsForm extends React.Component {
     }
   }
 
-  onServicePlanOverridden = paramValues => {
-    if (this.props.onServicePlanOverridden) {
-      this.props.onServicePlanOverridden(paramValues)
+  onPlanValuesChange = paramValues => {
+    if (this.props.onPlanValuesChange) {
+      this.props.onPlanValuesChange(paramValues)
     }
   }
 
@@ -108,11 +109,12 @@ class ServiceOptionsForm extends React.Component {
             <Collapse.Panel key="plan" header="Customize service parameters">
               <UsePlanForm
                 team={this.props.team}
+                cluster={this.props.cluster}
                 resourceType="service"
                 kind={selectedServiceKind}
                 plan={selectedServicePlan}
                 validationErrors={this.props.validationErrors}
-                onPlanChange={this.onServicePlanOverridden}
+                onPlanValuesChange={this.onPlanValuesChange}
                 mode="create"
               />
             </Collapse.Panel>
