@@ -40,11 +40,11 @@ type ProviderConfiguration struct {
 	// S3BucketKey is the path in the S3 bucket used to store the CloudFormation templates for the service plans
 	S3BucketKey string `json:"s3BucketKey"`
 	// AWSAccessKeyID is the AWS access key id
-	AWSAccessKeyID string `json:"aws_access_key_id"`
+	AWSAccessKeyID string `json:"awsAccessKeyID"`
 	// AWSSecretAccessKey is the AWS secret access key
-	AWSSecretAccessKey string `json:"aws_secret_access_key"`
+	AWSSecretAccessKey string `json:"awsSecretAccessKey"`
 	// AWSIAMRoleName is the IAM role name to assume when provisiong resources
-	AWSIAMRoleName string `json:"aws_iam_role_name"`
+	AWSIAMRoleName string `json:"awsIAMRoleName"`
 
 	openservicebroker.CatalogConfiguration `json:",inline"`
 }
@@ -59,6 +59,6 @@ func DefaultProviderConfiguration() *ProviderConfiguration {
 		S3BucketName:        "awsservicebroker",
 		S3BucketRegion:      "us-east-1",
 		S3BucketKey:         "templates/latest/",
-		AWSIAMRoleName:      "AwsServiceBroker",
+		AWSIAMRoleName:      "aws-service-broker",
 	}
 }

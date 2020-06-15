@@ -22,6 +22,10 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/aws/aws-sdk-go/service/sts"
+
+	"github.com/aws/aws-sdk-go/service/iam"
+
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
@@ -33,6 +37,79 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
+
+func (d ProviderFactory) ensureIAMRole(sess *session.Session, config *ProviderConfiguration) error {
+	stsClient := sts.New(sess)
+	identity, err := stsClient.GetCallerIdentity(&sts.GetCallerIdentityInput{})
+	if err != nil {
+		return fmt.Errorf("failed to get AWS caller identity: %w", err)
+	}
+
+	iamClient := iam.New(sess)
+
+	roleExists := true
+	role, err := iamClient.GetRole(&iam.GetRoleInput{RoleName: aws.String(config.AWSIAMRoleName)})
+	if err != nil {
+		if !isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") && !isAWSErrRequestFailureStatusCode(err, http.StatusNotFound) {
+			return fmt.Errorf("failed to get IAM role %q: %w", config.AWSIAMRoleName, err)
+		}
+		roleExists = false
+	}
+
+	if roleExists {
+		managed := false
+		for _, tag := range role.Role.Tags {
+			if aws.StringValue(tag.Key) == "kore.appvia.io/managed" && aws.StringValue(tag.Value) == "true" {
+				managed = true
+				break
+			}
+		}
+
+		if !managed {
+			return nil
+		}
+	}
+
+	trustPolicy := IAMRoleTrustPolicy(aws.StringValue(identity.Account))
+
+	if !roleExists {
+		_, err := iamClient.CreateRole(&iam.CreateRoleInput{
+			RoleName:                 aws.String(config.AWSIAMRoleName),
+			Description:              aws.String("IAM role used by aws-servicebroker to provision services"),
+			AssumeRolePolicyDocument: aws.String(trustPolicy),
+			Tags: []*iam.Tag{
+				{
+					Key:   aws.String("kore.appvia.io/managed"),
+					Value: aws.String("true"),
+				},
+			},
+		})
+		if err != nil {
+			return fmt.Errorf("failed to create IAM role %q: %w", config.AWSIAMRoleName, err)
+		}
+	} else if aws.StringValue(role.Role.AssumeRolePolicyDocument) != trustPolicy {
+		_, err := iamClient.UpdateAssumeRolePolicy(&iam.UpdateAssumeRolePolicyInput{
+			RoleName:       aws.String(config.AWSIAMRoleName),
+			PolicyDocument: aws.String(trustPolicy),
+		})
+		if err != nil {
+			return fmt.Errorf("failed to update IAM role %q: %w", config.AWSIAMRoleName, err)
+		}
+	}
+
+	rolePolicy := IAMRolePolicy(aws.StringValue(identity.Account), config.Region)
+
+	_, err = iamClient.PutRolePolicy(&iam.PutRolePolicyInput{
+		RoleName:       aws.String(config.AWSIAMRoleName),
+		PolicyName:     aws.String("Main"),
+		PolicyDocument: aws.String(rolePolicy),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to add policy to IAM role %q: %w", config.AWSIAMRoleName, err)
+	}
+
+	return nil
+}
 
 func (d ProviderFactory) ensureDynamoDBTable(sess *session.Session, config *ProviderConfiguration) error {
 	ddbClient := dynamodb.New(sess, &aws.Config{Region: aws.String(config.Region)})
