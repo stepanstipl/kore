@@ -1953,7 +1953,8 @@
     "/api/v1alpha1/teams/invitation/{token}": {
       "put": {
         "consumes": [
-          "application/json"
+          "application/json",
+          "*/*"
         ],
         "produces": [
           "application/json"

@@ -1,13 +1,11 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import axios from 'axios'
 import { Typography } from 'antd'
 const { Title } = Typography
 
 import Breadcrumb from '../../../../lib/components/layout/Breadcrumb'
 import ClusterBuildForm from '../../../../lib/components/teams/cluster/ClusterBuildForm'
-import apiRequest from '../../../../lib/utils/api-request'
-import apiPaths from '../../../../lib/utils/api-paths'
+import KoreApi from '../../../../lib/kore-api'
 
 class NewTeamClusterPage extends React.Component {
   static propTypes = {
@@ -20,18 +18,18 @@ class NewTeamClusterPage extends React.Component {
     title: 'New team cluster'
   }
 
-  static async getPageData({ req, res, query }) {
-    const name = query.name
-    const getTeam = () => apiRequest({ req, res }, 'get', apiPaths.team(name).self)
-    const getTeamClusters = () => apiRequest({ req, res }, 'get', apiPaths.team(name).clusters)
-
-    return axios.all([getTeam(), getTeamClusters()])
-      .then(axios.spread(function (team, clusters) {
-        return { team, clusters }
-      }))
-      .catch(err => {
-        throw new Error(err.message)
-      })
+  static async getPageData({ query }) {
+    const teamName = query.name
+    try {
+      const api = await KoreApi.client()
+      const [ team, clusters ] = await Promise.all([
+        api.GetTeam(teamName),
+        api.ListClusters(teamName)
+      ])
+      return { team, clusters }
+    } catch (err) {
+      throw new Error(err.message)
+    }
   }
 
   static getInitialProps = async (ctx) => {

@@ -1,4 +1,5 @@
 const Router = require('express').Router
+const config = require('../../config')
 
 function postLoginLocalUser(authService) {
   return async (req, res) => {
@@ -13,7 +14,7 @@ function postLoginLocalUser(authService) {
           return res.status(500).send()
         }
         req.session.localUser = true
-        req.session.passport.user.id_token = authService.koreApi.token
+        req.session.passport.user.id_token = config.api.token
         req.session.save(err => {
           if (err) {
             console.error('Error trying to save session after user login', err)

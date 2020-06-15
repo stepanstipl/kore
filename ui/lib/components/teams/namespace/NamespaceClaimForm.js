@@ -3,10 +3,10 @@ import PropTypes from 'prop-types'
 import { Button, Form, Input } from 'antd'
 
 import FormErrorMessage from '../../forms/FormErrorMessage'
-import copy from '../../../utils/object-copy'
-import Generic from '../../../crd/Generic'
-import apiRequest from '../../../utils/api-request'
-import apiPaths from '../../../utils/api-paths'
+import KoreApi from '../../../kore-api'
+import V1NamespaceClaim from '../../../kore-api/model/V1NamespaceClaim'
+import V1NamespaceClaimSpec from '../../../kore-api/model/V1NamespaceClaimSpec'
+import { NewV1ObjectMeta, NewV1Ownership } from '../../../utils/model'
 import { patterns } from '../../../utils/validation'
 import { loadingMessage } from '../../../utils/message'
 
@@ -41,6 +41,32 @@ class NamespaceClaimForm extends React.Component {
     this.props.handleCancel()
   }
 
+  getMetadataName = (values) => `${this.props.cluster.metadata.name}-${values.name}`
+
+  generateNamespaceClaimResource = (values) => {
+    const cluster = this.props.cluster
+    const resource = new V1NamespaceClaim()
+    resource.setApiVersion('namespaceclaims.clusters.compute.kore.appvia.io/v1alpha1')
+    resource.setKind('NamespaceClaim')
+
+    resource.setMetadata(NewV1ObjectMeta(this.getMetadataName(values), this.props.team))
+
+    const spec = new V1NamespaceClaimSpec()
+    spec.setName(values.name)
+
+    const [ group, version ] = cluster.apiVersion.split('/')
+    spec.setCluster(NewV1Ownership({
+      group,
+      version,
+      kind: cluster.kind,
+      name: cluster.metadata.name,
+      namespace: this.props.team
+    }))
+    resource.setSpec(spec)
+
+    return resource
+  }
+
   handleSubmit = e => {
     e.preventDefault()
 
@@ -48,52 +74,26 @@ class NamespaceClaimForm extends React.Component {
 
     return this.props.form.validateFields(async (err, values) => {
       if (err) {
-        this.setState({ submitting: false, formErrorMessage: 'Validation failed' })
+        return this.setState({ submitting: false, formErrorMessage: 'Validation failed' })
       }
 
       try {
-        const cluster = this.props.cluster
-        const name = values.name
-        const resourceName = `${cluster.metadata.name}-${name}`
-
-        const existingNc = await apiRequest(null, 'get', `${apiPaths.team(this.props.team).namespaceClaims}/${resourceName}`)
-        if (Object.keys(existingNc).length) {
-          const state = copy(this.state)
-          state.submitting = false
-          state.formErrorMessage = `A namespace with the name "${name}" already exists on cluster "${cluster.metadata.name}"`
-          return this.setState(state)
+        const resourceName = this.getMetadataName(values)
+        const existingNc = await (await KoreApi.client()).GetNamespace(this.props.team, resourceName)
+        if (existingNc) {
+          return this.setState({
+            submitting: false,
+            formErrorMessage:`A namespace with the name "${values.name}" already exists on cluster "${this.props.cluster.metadata.name}"`
+          })
         }
-
-        const [ group, version ] = cluster.apiVersion.split('/')
-        const spec = {
-          name,
-          cluster: {
-            group,
-            version,
-            kind: cluster.kind,
-            name: cluster.metadata.name,
-            namespace: this.props.team
-          }
-        }
-        const nsClaimResource = Generic({
-          apiVersion: 'namespaceclaims.clusters.compute.kore.appvia.io/v1alpha1',
-          kind: 'NamespaceClaim',
-          name: resourceName,
-          spec
-        })
-        const nsClaimResult = await apiRequest(null, 'put', `${apiPaths.team(this.props.team).namespaceClaims}/${resourceName}`, nsClaimResource)
+        const nsClaimResult = await (await KoreApi.client()).UpdateNamespace(this.props.team, resourceName, this.generateNamespaceClaimResource(values))
         this.props.form.resetFields()
-        const state = copy(this.state)
-        state.submitting = false
-        this.setState(state)
-        loadingMessage(`Namespace "${name}" requested`)
+        this.setState({ submitting: false })
+        loadingMessage(`Namespace "${values.name}" requested`)
         await this.props.handleSubmit(nsClaimResult)
       } catch (err) {
         console.error('Error submitting form', err)
-        const state = copy(this.state)
-        state.submitting = false
-        state.formErrorMessage = 'An error occurred creating the namespace, please try again'
-        this.setState(state)
+        this.setState({ submitting: false, formErrorMessage: 'An error occurred creating the namespace, please try again' })
       }
     })
   }

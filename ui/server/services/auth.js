@@ -1,24 +1,20 @@
-const axios = require('axios')
-const IDPClient = require('../../lib/crd/IDPClient')
-const IDP = require('../../lib/crd/IDP')
-const copy = require('../../lib/utils/object-copy')
-const apiPaths = require('../../lib/utils/api-paths')
+const config = require('../../config')
 
 class AuthService {
-  constructor(koreApi, baseUrl) {
-    this.koreApi = koreApi
-    this.baseUrl = baseUrl
-    this.requestOptions = {
-      headers: {
-        'Authorization': `Bearer ${koreApi.token}`
-      }
-    }
+  constructor(KoreApi) {
+    this.KoreApi = KoreApi
+  }
+
+  async getApiClient(basicAuth = null) {
+    const token = basicAuth === null ? config.api.token : null
+    const api = await this.KoreApi.client({ id_token: token, basicAuth })
+    return api
   }
 
   async getDefaultConfiguredIdp() {
     try {
-      const result = await axios.get(this.koreApi.url + apiPaths.idp.default, this.requestOptions)
-      return result.data
+      const result = await (await this.getApiClient()).GetDefaultIDP()
+      return result
     } catch (err) {
       if (err.response && err.response.status === 404) {
         return null
@@ -28,9 +24,41 @@ class AuthService {
     }
   }
 
+  generateIDPClientResource() {
+    // it's not currently possible to use models from lib/kore-api/model
+    // this is due to it using the import syntax which cannot be used on the server-side
+    return {
+      apiVersion: 'core.kore.appvia.io/v1',
+      kind: 'IDPClient',
+      metadata: {
+        name: 'default'
+      },
+      spec: {
+        displayName: 'Kore UI',
+        secret: config.auth.openid.clientSecret,
+        id: config.auth.openid.clientID,
+        redirectURIs: [`${config.kore.baseUrl}/auth/callback`]
+      }
+    }
+
+  }
+
+  generateIDPResource(spec) {
+    // it's not currently possible to use models from lib/kore-api/model
+    // this is due to it using the import syntax which cannot be used on the server-side
+    return {
+      apiVersion: 'core.kore.appvia.io/v1',
+      kind: 'IDP',
+      metadata: {
+        name: 'default'
+      },
+      spec
+    }
+  }
+
   async setAuthClient() {
     try {
-      await axios.put(`${this.koreApi.url}${apiPaths.idp.clients}/kore-ui`, IDPClient, this.requestOptions)
+      await (await this.getApiClient()).UpdateIDPClient('kore-ui', this.generateIDPClientResource())
       console.log('Auth client created successfully')
     } catch (err) {
       console.error('Error setting auth client from API', err)
@@ -42,11 +70,9 @@ class AuthService {
     try {
       const spec = {
         displayName,
-        config: {}
+        config: { [name]: config }
       }
-      spec.config[name] = config
-      const idp = IDP(spec)
-      await axios.put(`${this.koreApi.url}${apiPaths.idp.configured}/default`, idp, this.requestOptions)
+      await (await this.getApiClient()).UpdateIDP('default', this.generateIDPResource(spec))
     } catch (err) {
       console.error('Error setting configured auth provider from API', err)
       return Promise.reject(err)
@@ -55,14 +81,15 @@ class AuthService {
 
   async authenticateLocalUser({ username, password }) {
     try {
-      const options = copy(this.requestOptions)
-      options.auth = { username, password }
-      const result = await axios.get(this.koreApi.url + apiPaths.whoAmI, options)
-      return result.data
+      const basicAuth = Buffer.from(`${username}:${password}`).toString('base64')
+      const result = await (await this.getApiClient(basicAuth)).WhoAmI()
+      console.log('result', result)
+      return result
     } catch (err) {
       if (err.response && err.response.status === 401) {
         return Promise.reject({ status: 401 })
       }
+      console.log('Error authenticating local user', err)
       return Promise.reject({ status: 500 })
     }
   }

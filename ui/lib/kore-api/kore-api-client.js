@@ -71,6 +71,13 @@ class KoreApiClient {
 
   // @TODO: Auto-generate these?
 
+  // IDP
+  GetDefaultIDP = () => this.apis.default.GetDefaultIDP()
+  UpdateIDP = (name, idp) => this.apis.default.UpdateIDP({ name, body: JSON.stringify(idp) })
+  UpdateIDPClient = (name, idpClient) => this.apis.default.UpdateIDPClient({ name, body: JSON.stringify(idpClient) })
+
+  WhoAmI = () => this.apis.default.WhoAmI()
+
   // Users
   ListUsers = () => this.apis.default.ListUsers()
   ListUserTeams = (user) => this.apis.default.ListUserTeams({ user })
@@ -131,6 +138,9 @@ class KoreApiClient {
   UpdateEKSCredentials = (team, name, resource) => this.apis.default.UpdateEKSCredentials({ team, name, body: JSON.stringify(resource) })
   DeleteEKSCredentials = (team, name) => this.apis.default.DeleteEKSCredentials({ team, name })
 
+  // Invitation
+  InvitationSubmit = (token) => this.apis.default.InvitationSubmit({ token })
+
   // Teams
   GetTeam = (team) => this.apis.default.GetTeam({ team })
   RemoveTeam = (team) => this.apis.default.RemoveTeam({ team })
@@ -151,6 +161,7 @@ class KoreApiClient {
   GetCluster = (team, name) => this.apis.default.GetCluster({ team, name })
   ListNamespaces = (team) => this.apis.default.ListNamespaces({ team })
   GetNamespace = (team, name) => this.apis.default.GetNamespace({ team, name })
+  UpdateNamespace = (team, name, namespace) => this.apis.default.UpdateNamespace({ team, name, body: JSON.stringify(namespace) })
   RemoveNamespace = (team, name) => this.apis.default.RemoveNamespace({ team, name })
   GetTeamPlanDetails = (team, plan) => this.apis.default.GetTeamPlanDetails({ team, plan })
   UpdateTeamSecret = (team, name, secret) => this.apis.default.UpdateTeamSecret({ team, name, body: JSON.stringify(secret) })

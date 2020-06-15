@@ -1622,7 +1622,7 @@ func (a *Client) InvitationSubmit(params *InvitationSubmitParams, authInfo runti
 		Method:             "PUT",
 		PathPattern:        "/api/v1alpha1/teams/invitation/{token}",
 		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"*/*", "application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &InvitationSubmitReader{formats: a.formats},
