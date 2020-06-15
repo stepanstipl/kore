@@ -221,6 +221,11 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
                       </Descriptions.Item>
                     </Descriptions>
                   </Form.Item>
+                  <Form.Item label="Cluster Autoscaler">
+                    <Descriptions.Item label="Autoscaling">
+                      <Checkbox id={`${id_prefix}_enableAutoscaler`} value={selected.enableAutoscaler} readOnly={!editable} onChange={(v) => this.setNodeGroupProperty(selectedIndex, v.target.checked)} />
+                    </Descriptions.Item>
+                  </Form.Item>
                 </Collapse.Panel>
                 <Collapse.Panel key="compute" header="Compute Configuration (instance type, GPU or regular workload)">
                   <Form.Item label={property.items.properties.amiType.title} help={property.items.properties.amiType.description}>
