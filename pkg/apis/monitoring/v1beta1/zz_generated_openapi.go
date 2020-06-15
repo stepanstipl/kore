@@ -119,6 +119,13 @@ func schema_pkg_apis_monitoring_v1beta1_RuleSpec(ref common.ReferenceCallback) c
 							Format:      "",
 						},
 					},
+					"source": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Source is the provider of the rule i.e. prometheus, or a named source",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"summary": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Summary is a summary of the rule",
@@ -158,7 +165,7 @@ func schema_pkg_apis_monitoring_v1beta1_RuleSpec(ref common.ReferenceCallback) c
 						},
 					},
 				},
-				Required: []string{"severity", "summary", "alerts", "rawRule", "resource"},
+				Required: []string{"severity", "source", "summary", "alerts", "rawRule", "resource"},
 			},
 		},
 		Dependencies: []string{

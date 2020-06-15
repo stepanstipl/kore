@@ -38,6 +38,10 @@ type RuleSpec struct {
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
 	Severity string `json:"severity"`
+	// Source is the provider of the rule i.e. prometheus, or a named source
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Required
+	Source string `json:"source"`
 	// Summary is a summary of the rule
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
