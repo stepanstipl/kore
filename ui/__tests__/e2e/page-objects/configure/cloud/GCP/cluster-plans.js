@@ -1,7 +1,7 @@
-import { ConfigureCloudPage } from '../configure-cloud'
-import { clearFillTextInput, modalYes, waitForDrawerOpenClose, setSwitch } from '../../../utils'
+import { ConfigureCloudClusterPlansBase } from '../cluster-plans-base'
+import { clearFillTextInput, waitForDrawerOpenClose, setSwitch } from '../../../utils'
 
-export class ConfigureCloudGCPClusterPlans extends ConfigureCloudPage {
+export class ConfigureCloudGCPClusterPlans extends ConfigureCloudClusterPlansBase {
   constructor(p) {
     super(p)
     this.pagePath = '/configure/cloud/GCP/plans'
@@ -10,33 +10,6 @@ export class ConfigureCloudGCPClusterPlans extends ConfigureCloudPage {
   async openTab() {
     await this.selectCloud('gcp')
     await this.selectSubTab('Cluster Plans', 'GCP/plans')
-  }
-
-  async listLoaded() {
-    await this.p.waitForSelector('#plans_list', { timeout: 1000 })
-  }
-
-  async view(name) {
-    await this.p.click(`a#plans_view_${name}`)
-    await waitForDrawerOpenClose(this.p)
-  }
-
-  async edit(name) {
-    await this.p.click(`a#plans_edit_${name}`)
-    await waitForDrawerOpenClose(this.p)
-  }
-
-  async delete(name) {
-    await this.p.click(`a#plans_delete_${name}`)
-  }
-
-  async confirmDelete() {
-    await modalYes(this.p, 'Are you sure you want to delete the plan')
-  }
-
-  async new() {
-    await this.p.click('button#add')
-    await waitForDrawerOpenClose(this.p)
   }
 
   async populatePlan({ description, name, planDescription, region }) {
@@ -70,11 +43,6 @@ export class ConfigureCloudGCPClusterPlans extends ConfigureCloudPage {
 
   async closeNodePool() {
     await this.p.click('button#plan_nodepool_close')
-    await waitForDrawerOpenClose(this.p)
-  }
-
-  async save() {
-    await this.p.click('button#plan_save')
     await waitForDrawerOpenClose(this.p)
   }
 }

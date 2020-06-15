@@ -188,7 +188,7 @@ class PolicyForm extends React.Component {
         </Card>
 
         <Form.Item>
-          <Button type="primary" htmlType="submit" loading={submitting} disabled={this.disableButton(getFieldsError())}>Save</Button>
+          <Button id="policy_save" type="primary" htmlType="submit" loading={submitting} disabled={this.disableButton(getFieldsError())}>Save</Button>
         </Form.Item>
       </Form>
     )

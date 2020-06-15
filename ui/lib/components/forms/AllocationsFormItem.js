@@ -64,12 +64,13 @@ export default class AllocationsFormItem extends React.Component {
     const mode = this.getAllocateMode()
     return (
       <Form.Item label="Allocate to teams" help={this.getHelp()} required={true}>
-        <Radio.Group onChange={(e) => this.onAllocateModeChange(e.target.value)} value={mode}>
+        <Radio.Group id="allocate_to" onChange={(e) => this.onAllocateModeChange(e.target.value)} value={mode}>
           <Radio value="all">All</Radio>
           <Radio value="specified">Specified teams</Radio>
         </Radio.Group>
         {mode !== 'all' ? (
           <Select
+            id="allocate_teams"
             mode="multiple"
             style={{ width: '100%' }}
             value={this.props.allocatedTeams.filter((t) => t !== '*')}

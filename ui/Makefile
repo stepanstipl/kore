@@ -5,13 +5,17 @@ VERSION ?= latest
 
 default: build
 
-dependencies: 
+deps: 
 	@echo "--> Preparing"
 	npm install
 
 build:
 	@echo "--> Building"
 	npm run build
+
+check:
+	@echo "--> Checking"
+	npm run lint
 
 test:
 	@echo "--> Testing"
@@ -47,12 +51,11 @@ check-kore-autogen:
 generate-kore-models:
 	@echo "--> Updating kore API models"
 	@rm -r lib/kore-api/model/*.js
-	@docker run --rm -v ${PWD}/:/local openapitools/openapi-generator-cli generate \
+	@docker run --rm -v $$(pwd):/local -e JAVA_OPTS="-Xmx1024M -DloggerPath=conf/log4j.properties -DmodelDocs=false -DmodelTests=false -Dmodels" openapitools/openapi-generator-cli generate \
 		-i /local/kore-api-swagger.json \
 		-g javascript \
 		-o /local/lib/ \
-		-p sourceFolder=kore-api,emitModelMethods=true,usePromises=true \
-		-DmodelDocs=false -DmodelTests=false -Dmodels
+		-p sourceFolder=kore-api,emitModelMethods=true,usePromises=true
 
 check-kore-models:
 	@if [ $$(git status --porcelain ./lib/kore-api/model | wc -l) -gt 0 ]; then \
