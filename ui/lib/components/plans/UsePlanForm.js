@@ -6,6 +6,7 @@ import copy from '../../utils/object-copy'
 import KoreApi from '../../kore-api'
 import PlanViewEdit from './PlanViewEdit'
 import { Icon } from 'antd'
+import { errorMessage } from '../../utils/message'
 
 /**
  * UsePlanForm is for *using* a plan to configure a cluster, service or service credential.
@@ -61,23 +62,30 @@ class UsePlanForm extends React.Component {
   }
 
   async fetchComponentData() {
+    this.setState({ dataLoading: true })
+
     let planDetails, schema, editableParams, planValues
 
-    switch (this.props.resourceType) {
-    case 'cluster':
-      planDetails = await (await KoreApi.client()).GetTeamPlanDetails(this.props.team.metadata.name, this.props.plan);
-      [schema, editableParams, planValues] = [planDetails.schema, planDetails.editableParams, planDetails.plan.configuration]
-      break
-    case 'service':
-      planDetails = await (await KoreApi.client()).GetServicePlanDetails(this.props.plan, this.props.team.metadata.name, this.props.cluster.metadata.name);
-      [schema, editableParams, planValues] = [planDetails.schema, planDetails.editableParams, planDetails.configuration]
-      break
-    case 'servicecredential':
-      planDetails = await (await KoreApi.client()).GetServicePlanDetails(this.props.plan, this.props.team.metadata.name, this.props.cluster.metadata.name);
-      schema = planDetails.credentialSchema
-      editableParams = ['*']
-      planValues = {}
-      break
+    try {
+      switch (this.props.resourceType) {
+      case 'cluster':
+        planDetails = await (await KoreApi.client()).GetTeamPlanDetails(this.props.team.metadata.name, this.props.plan);
+        [schema, editableParams, planValues] = [planDetails.schema, planDetails.editableParams, planDetails.plan.configuration]
+        break
+      case 'service':
+        planDetails = await (await KoreApi.client()).GetServicePlanDetails(this.props.plan, this.props.team.metadata.name, this.props.cluster.metadata.name);
+        [schema, editableParams, planValues] = [planDetails.schema, planDetails.editableParams, planDetails.configuration]
+        break
+      case 'servicecredential':
+        planDetails = await (await KoreApi.client()).GetServicePlanDetails(this.props.plan, this.props.team.metadata.name, this.props.cluster.metadata.name)
+        schema = planDetails.credentialSchema
+        editableParams = ['*']
+        planValues = {}
+        break
+      }
+    } catch (err) {
+      errorMessage(`Failed to load plan: ${err}`)
+      return
     }
 
     if (schema && typeof schema === 'string') {
