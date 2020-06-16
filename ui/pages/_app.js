@@ -10,6 +10,10 @@ const { Header, Content, Footer } = Layout
 import getConfig from 'next/config'
 const { publicRuntimeConfig } = getConfig()
 
+// style imports
+import 'antd/dist/antd.less'
+import '../assets/styles.less'
+
 import User from '../lib/components/layout/User'
 import SiderMenu from '../lib/components/layout/SiderMenu'
 import redirect from '../lib/utils/redirect'
@@ -18,7 +22,6 @@ import copy from '../lib/utils/object-copy'
 import OrgService from '../server/services/org'
 import userExpired from '../server/lib/user-expired'
 import gtag from '../lib/utils/gtag'
-import '../assets/styles.less'
 
 Router.events.on('routeChangeComplete', url => {
   gtag.pageView(url)
