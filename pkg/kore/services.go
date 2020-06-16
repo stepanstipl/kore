@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"reflect"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 
 	"github.com/appvia/kore/pkg/utils/configuration"
@@ -238,6 +240,12 @@ func (s *servicesImpl) Update(ctx context.Context, service *servicesv1.Service) 
 		return err
 	}
 
+	if service.Spec.ClusterNamespace != "" {
+		if err := s.ensureNamespaceClaim(ctx, service); err != nil {
+			return err
+		}
+	}
+
 	return s.Store().Client().Update(ctx,
 		store.UpdateOptions.To(service),
 		store.UpdateOptions.WithCreate(true),
@@ -360,16 +368,52 @@ func (s *servicesImpl) validateCluster(ctx context.Context, service *servicesv1.
 		)
 	}
 
-	_, err := s.Teams().Team(s.team).Clusters().Get(ctx, service.Spec.Cluster.Name)
+	cluster, err := s.Teams().Team(s.team).Clusters().Get(ctx, service.Spec.Cluster.Name)
 	if err != nil {
 		if err == ErrNotFound {
-			return validation.NewError("%q failed validation", service.Name).WithFieldErrorf(
+			return nil, validation.NewError("%q failed validation", service.Name).WithFieldErrorf(
 				"cluster",
 				validation.MustExist,
 				"%q cluster does not exist",
 				service.Spec.Cluster.Name,
 			)
 		}
+		return nil, err
 	}
+	return cluster, nil
+}
+
+func (s *servicesImpl) ensureNamespaceClaim(ctx context.Context, service *servicesv1.Service) error {
+	name := fmt.Sprintf("%s-%s", service.Spec.Cluster.Name, service.Spec.ClusterNamespace)
+
+	exists := true
+	namespaceClaim, err := s.Teams().Team(s.team).NamespaceClaims().Get(ctx, name)
+	if err != nil {
+		if !kerrors.IsNotFound(err) && err != ErrNotFound {
+			return err
+		}
+		exists = false
+	}
+	if !exists {
+		namespaceClaim = &clustersv1.NamespaceClaim{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: clustersv1.GroupVersion.String(),
+				Kind:       "NamespaceClaim",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      name,
+				Namespace: s.team,
+			},
+			Spec: clustersv1.NamespaceClaimSpec{
+				Name:    service.Spec.ClusterNamespace,
+				Cluster: service.Spec.Cluster,
+			},
+		}
+
+		if _, err := s.Teams().Team(s.team).NamespaceClaims().Update(ctx, namespaceClaim); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
