@@ -14,28 +14,25 @@
  * limitations under the License.
  */
 
-package kubernetes
+package helpers
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
+	"context"
+
+	"github.com/appvia/kore/pkg/utils/kubernetes"
+
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-type Object interface {
-	runtime.Object
-	metav1.Object
-}
+func EnsureOwnerReference(ctx context.Context, cl client.Client, object kubernetes.Object, owner kubernetes.Object) (reconcile.Result, error) {
+	original := object.DeepCopyObject()
 
-// KubernetesAPI is the configuration for the kubernetes api
-type KubernetesAPI struct {
-	// InCluster indicates we are running in cluster
-	InCluster bool
-	// MasterAPIURL specifies the kube-apiserver url
-	MasterAPIURL string
-	// Token is kubernetes token to authenticate to the api
-	Token string
-	// KubeConfig is the kubeconfig path
-	KubeConfig string
-	// SkipTLSVerify indicates we skip tls
-	SkipTLSVerify bool
+	kubernetes.EnsureOwnerReference(object, owner, true)
+
+	if err := cl.Patch(ctx, object, client.MergeFrom(original)); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	return reconcile.Result{Requeue: true}, nil
 }

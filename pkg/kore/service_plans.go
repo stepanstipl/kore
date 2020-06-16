@@ -107,12 +107,13 @@ func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePl
 		}
 	}
 
+	kind, err := p.ServiceKinds().Get(ctx, plan.Spec.Kind)
+	if err != nil {
+		return fmt.Errorf("failed to get service kind %q: %w", plan.Spec.Kind, err)
+	}
+
 	schema := plan.Spec.Schema
 	if schema == "" {
-		kind, err := p.ServiceKinds().Get(ctx, plan.Spec.Kind)
-		if err != nil {
-			return fmt.Errorf("failed to get service kind %q: %w", plan.Spec.Kind, err)
-		}
 		schema = kind.Spec.Schema
 	}
 

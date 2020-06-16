@@ -98,9 +98,9 @@ func (p Provider) Catalog(ctx kore.Context, provider *servicesv1.ServiceProvider
 
 func (p Provider) AdminServices() []servicesv1.Service {
 	cluster := corev1.Ownership{
-		Group:     clustersv1.ClusterGroupVersionKind.Group,
-		Version:   clustersv1.ClusterGroupVersionKind.Version,
-		Kind:      clustersv1.ClusterGroupVersionKind.Kind,
+		Group:     clustersv1.ClusterGVK.Group,
+		Version:   clustersv1.ClusterGVK.Version,
+		Kind:      clustersv1.ClusterGVK.Kind,
 		Namespace: "kore-admin",
 		Name:      "kore",
 	}

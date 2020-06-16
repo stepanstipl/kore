@@ -99,6 +99,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 				serviceProvider.Status.SupportedKinds = supportedKinds
 
+				kinds := map[string]*servicesv1.ServiceKind{}
 				for _, kind := range catalog.Kinds {
 					kind.Namespace = kore.HubNamespace
 
@@ -114,17 +115,24 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 						kind.Spec.Enabled = existing.Spec.Enabled
 					}
 
+					kubernetes.EnsureOwnerReference(&kind, serviceProvider, true)
+
 					if _, err := kubernetes.CreateOrUpdate(ctx, c.mgr.GetClient(), &kind); err != nil {
 						return reconcile.Result{}, fmt.Errorf("failed to create or update service kind %q: %w", kind.Name, err)
 					}
+
+					kinds[kind.Name] = kind.DeepCopy()
 				}
 
 				for _, plan := range catalog.Plans {
+					kubernetes.EnsureOwnerReference(&plan, kinds[plan.Spec.Kind], true)
+
 					plan.Namespace = kore.HubNamespace
 					if plan.Annotations == nil {
 						plan.Annotations = map[string]string{}
 					}
 					plan.Annotations[kore.AnnotationReadOnly] = kore.AnnotationValueTrue
+
 					if _, err := kubernetes.CreateOrUpdate(ctx, c.mgr.GetClient(), &plan); err != nil {
 						return reconcile.Result{}, fmt.Errorf("failed to create or update service plan %q: %w", plan.Name, err)
 					}

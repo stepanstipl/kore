@@ -18,6 +18,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -36,7 +37,7 @@ const (
 )
 
 // Reconcile is the entrypoint for the reconciliation logic
-func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult reconcile.Result, reconcileError error) {
 	ctx := context.Background()
 
 	logger := c.logger.WithFields(log.Fields{
@@ -57,25 +58,27 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 	}
 	original := service.DeepCopy()
 
-	spCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c)
-	provider, err := c.ServiceProviders().GetProviderForKind(spCtx, service.Spec.Kind)
+	defer func() {
+		if err := c.mgr.GetClient().Status().Patch(ctx, service, client.MergeFrom(original)); err != nil {
+			logger.WithError(err).Error("failed to update the service status")
+			reconcileResult = reconcile.Result{}
+			reconcileError = err
+		}
+	}()
+
+	koreCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c)
+
+	provider, err := c.ServiceProviders().GetProviderForKind(koreCtx, service.Spec.Kind)
 	if err != nil {
+		if err == kore.ErrNotFound {
+			service.Status.Status = corev1.ErrorStatus
+			service.Status.Message = fmt.Sprintf("There is no service provider for kind %q", service.Spec.Kind)
+			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+		}
 		service.Status.Status = corev1.ErrorStatus
 		service.Status.Message = err.Error()
-		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
-	}
-
-	serviceKind, err := c.ServiceKinds().Get(ctx, service.Spec.Kind)
-	if err != nil {
 		return reconcile.Result{}, err
 	}
-
-	servicePlan, err := c.ServicePlans().Get(ctx, service.Spec.Plan)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	service.Status.ServiceAccessEnabled = serviceKind.Spec.ServiceAccessEnabled && !servicePlan.Spec.ServiceAccessDisabled
 
 	finalizer := kubernetes.NewFinalizer(c.mgr.GetClient(), finalizerName)
 	if finalizer.IsDeletionCandidate(service) {
@@ -84,10 +87,11 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 	result, err := func() (reconcile.Result, error) {
 		ensure := []controllers.EnsureFunc{
-			c.EnsureFinalizer(logger, service, finalizer),
 			c.EnsureServicePending(logger, service),
+			c.EnsureDependencies(logger, service),
+			c.EnsureFinalizer(logger, service, finalizer),
 			func(ctx context.Context) (result reconcile.Result, err error) {
-				return provider.Reconcile(spCtx, service)
+				return provider.Reconcile(koreCtx, service)
 			},
 		}
 
@@ -105,38 +109,25 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 	if err != nil {
 		logger.WithError(err).Error("failed to reconcile the service")
+
+		service.Status.Status = corev1.ErrorStatus
+		service.Status.Message = err.Error()
+
 		if controllers.IsCriticalError(err) {
 			service.Status.Status = corev1.FailureStatus
-			service.Status.Message = err.Error()
-		}
-	}
-
-	if err == nil && !result.Requeue && result.RequeueAfter == 0 {
-		service.Status.Plan = service.Spec.Plan
-		service.Status.Configuration = service.Spec.Configuration
-		service.Status.Status = corev1.SuccessStatus
-	}
-
-	if err := c.mgr.GetClient().Status().Patch(ctx, service, client.MergeFrom(original)); err != nil {
-		logger.WithError(err).Error("failed to update the service status")
-
-		return reconcile.Result{}, err
-	}
-
-	if err != nil {
-		if controllers.IsCriticalError(err) {
 			return reconcile.Result{}, nil
 		}
-		return reconcile.Result{}, err
-	}
 
-	if service.Status.Status == corev1.SuccessStatus {
-		return reconcile.Result{}, nil
+		return reconcile.Result{}, err
 	}
 
 	if result.Requeue || result.RequeueAfter > 0 {
 		return result, nil
 	}
 
-	return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+	service.Status.Status = corev1.SuccessStatus
+	service.Status.Plan = service.Spec.Plan
+	service.Status.Configuration = service.Spec.Configuration
+
+	return reconcile.Result{}, nil
 }

@@ -27,7 +27,6 @@ import (
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	"github.com/appvia/kore/pkg/kore/assets"
-	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/jsonschema"
@@ -64,15 +63,9 @@ type clustersImpl struct {
 func (c *clustersImpl) Delete(ctx context.Context, name string) (*clustersv1.Cluster, error) {
 	// @TODO check whether the user is an admin in the team
 
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsMember(c.team) && !user.IsGlobalAdmin() {
-		return nil, NewErrNotAllowed("must be global admin or a team member")
-	}
-
 	logger := log.WithFields(log.Fields{
 		"cluster": name,
 		"team":    c.team,
-		"user":    user.Username(),
 	})
 	logger.Info("attempting to delete the cluster")
 
@@ -111,11 +104,6 @@ func (c *clustersImpl) List(ctx context.Context) (*clustersv1.ClusterList, error
 
 // Get returns a specific cluster
 func (c *clustersImpl) Get(ctx context.Context, name string) (*clustersv1.Cluster, error) {
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsMember(c.team) && !user.IsGlobalAdmin() {
-		return nil, NewErrNotAllowed("must be global admin or a team member")
-	}
-
 	cluster := &clustersv1.Cluster{}
 
 	if err := c.Store().Client().Get(ctx,
@@ -136,11 +124,6 @@ func (c *clustersImpl) Get(ctx context.Context, name string) (*clustersv1.Cluste
 
 // Update is used to update the cluster
 func (c *clustersImpl) Update(ctx context.Context, cluster *clustersv1.Cluster) error {
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsMember(c.team) && !user.IsGlobalAdmin() {
-		return NewErrNotAllowed("must be global admin or a team member")
-	}
-
 	existing, err := c.Get(ctx, cluster.Name)
 	if err != nil && err != ErrNotFound {
 		return err

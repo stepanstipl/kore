@@ -287,3 +287,8 @@ func EmptyUser(username string) *orgv1.User {
 		Spec: orgv1.UserSpec{Username: username},
 	}
 }
+
+// IsSystemResource returns true if the given Kubernetes object is managed by Kore
+func IsSystemResource(object metav1.Object) bool {
+	return object.GetAnnotations()[AnnotationSystem] == AnnotationValueTrue
+}

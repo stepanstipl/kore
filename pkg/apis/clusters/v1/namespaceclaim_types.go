@@ -20,7 +20,15 @@ import (
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
+
+// NamespaceClaimGVK is the GVK for a NamespaceClaim
+var NamespaceClaimGVK = schema.GroupVersionKind{
+	Group:   GroupVersion.Group,
+	Version: GroupVersion.Version,
+	Kind:    "NamespaceClaim",
+}
 
 // NamespaceClaimSpec defines the desired state of NamespaceClaim
 // +k8s:openapi-gen=true

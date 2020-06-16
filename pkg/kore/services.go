@@ -170,7 +170,8 @@ func (s *servicesImpl) Update(ctx context.Context, service *servicesv1.Service) 
 		)
 	}
 
-	if err := s.validateCluster(ctx, service); err != nil {
+	_, err := s.validateCluster(ctx, service)
+	if err != nil {
 		return err
 	}
 
@@ -341,9 +342,9 @@ func (s *servicesImpl) validateConfiguration(ctx context.Context, service, exist
 	return nil
 }
 
-func (s *servicesImpl) validateCluster(ctx context.Context, service *servicesv1.Service) error {
+func (s *servicesImpl) validateCluster(ctx context.Context, service *servicesv1.Service) (*clustersv1.Cluster, error) {
 	if service.Spec.Cluster.Name == "" {
-		return validation.NewError("%q failed validation", service.Name).WithFieldError(
+		return nil, validation.NewError("%q failed validation", service.Name).WithFieldError(
 			"cluster.name",
 			validation.Required,
 			"must be set",
@@ -351,7 +352,7 @@ func (s *servicesImpl) validateCluster(ctx context.Context, service *servicesv1.
 	}
 
 	if service.Spec.Cluster.Namespace != service.Namespace {
-		return validation.NewError("%q failed validation", service.Name).WithFieldErrorf(
+		return nil, validation.NewError("%q failed validation", service.Name).WithFieldErrorf(
 			"cluster.namespace",
 			validation.InvalidValue,
 			"must be the same as the team name: %q",
@@ -359,12 +360,12 @@ func (s *servicesImpl) validateCluster(ctx context.Context, service *servicesv1.
 		)
 	}
 
-	if !service.Spec.Cluster.HasGroupVersionKind(clustersv1.ClusterGroupVersionKind) {
-		return validation.NewError("%q failed validation", service.Name).WithFieldErrorf(
+	if !service.Spec.Cluster.HasGroupVersionKind(clustersv1.ClusterGVK) {
+		return nil, validation.NewError("%q failed validation", service.Name).WithFieldErrorf(
 			"cluster",
 			validation.InvalidValue,
 			"must have type of %s",
-			clustersv1.ClusterGroupVersionKind,
+			clustersv1.ClusterGVK,
 		)
 	}
 

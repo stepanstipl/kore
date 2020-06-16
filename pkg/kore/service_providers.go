@@ -423,7 +423,7 @@ func (p *serviceProvidersImpl) GetProviderForKind(ctx Context, kind string) (Ser
 	}
 
 	if len(providerList.Items) == 0 {
-		return nil, fmt.Errorf("no available service provider for kind %q", kind)
+		return nil, ErrNotFound
 	}
 
 	return p.register(ctx, &providerList.Items[0])

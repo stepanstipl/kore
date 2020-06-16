@@ -19,7 +19,6 @@ package servicecredentials
 import (
 	"context"
 	"fmt"
-	"time"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
@@ -31,7 +30,6 @@ import (
 	k8scorev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -54,14 +52,12 @@ func (c *Controller) delete(
 		return reconcile.Result{}, nil
 	}
 
-	original := serviceCreds.DeepCopyObject()
+	if !serviceCreds.Status.Status.OneOf(corev1.DeletingStatus, corev1.DeleteFailedStatus, corev1.ErrorStatus) {
+		serviceCreds.Status.Status = corev1.DeletingStatus
+		return reconcile.Result{Requeue: true}, nil
+	}
 
 	result, err := func() (reconcile.Result, error) {
-		if !serviceCreds.Status.Status.OneOf(corev1.DeletingStatus, corev1.DeleteFailedStatus, corev1.ErrorStatus) {
-			serviceCreds.Status.Status = corev1.DeletingStatus
-			return reconcile.Result{Requeue: true}, nil
-		}
-
 		// @step: create client for the cluster credentials
 		client, err := controllers.CreateClient(context.Background(), c.mgr.GetClient(), serviceCreds.Spec.Cluster)
 		if err != nil {
@@ -131,33 +127,18 @@ func (c *Controller) delete(
 
 		if controllers.IsCriticalError(err) {
 			serviceCreds.Status.Status = corev1.DeleteFailedStatus
-		}
-	}
-
-	if err == nil && !result.Requeue && result.RequeueAfter == 0 {
-		serviceCreds.Status.Status = corev1.DeletedStatus
-	}
-
-	if err := c.mgr.GetClient().Status().Patch(ctx, serviceCreds, client.MergeFrom(original)); err != nil {
-		logger.WithError(err).Error("failed to update the service credentials status")
-		return reconcile.Result{}, err
-	}
-
-	if err != nil {
-		if controllers.IsCriticalError(err) {
 			return reconcile.Result{}, nil
 		}
-		return reconcile.Result{}, err
-	}
 
-	// We haven't finished yet as we have to remove the finalizer in the last loop
-	if serviceCreds.Status.Status == corev1.DeletedStatus {
-		return reconcile.Result{Requeue: true}, nil
+		return reconcile.Result{}, err
 	}
 
 	if result.Requeue || result.RequeueAfter > 0 {
 		return result, nil
 	}
 
-	return reconcile.Result{RequeueAfter: 30 * time.Second}, err
+	serviceCreds.Status.Status = corev1.DeletedStatus
+
+	// We haven't finished yet as we have to remove the finalizer in the last loop
+	return reconcile.Result{Requeue: true}, nil
 }

@@ -18,6 +18,9 @@ package kore
 
 import (
 	"context"
+	"fmt"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
@@ -203,6 +206,10 @@ func (s *serviceCredentialsImpl) Update(ctx context.Context, serviceCreds *servi
 		return err
 	}
 
+	if err := s.ensureNamespaceClaim(ctx, serviceCreds); err != nil {
+		return err
+	}
+
 	return s.Store().Client().Update(ctx,
 		store.UpdateOptions.To(serviceCreds),
 		store.UpdateOptions.WithCreate(true),
@@ -293,12 +300,12 @@ func (s *serviceCredentialsImpl) validateCluster(ctx context.Context, service *s
 		)
 	}
 
-	if !serviceCreds.Spec.Cluster.HasGroupVersionKind(clustersv1.ClusterGroupVersionKind) {
+	if !serviceCreds.Spec.Cluster.HasGroupVersionKind(clustersv1.ClusterGVK) {
 		return validation.NewError("%q failed validation", serviceCreds.Name).WithFieldErrorf(
 			"cluster",
 			validation.InvalidValue,
 			"must have type of %s",
-			clustersv1.ClusterGroupVersionKind,
+			clustersv1.ClusterGVK,
 		)
 	}
 
@@ -319,6 +326,41 @@ func (s *serviceCredentialsImpl) validateCluster(ctx context.Context, service *s
 			validation.InvalidValue,
 			"you are not allowed to create service access in this cluster",
 		)
+	}
+
+	return nil
+}
+
+func (s *serviceCredentialsImpl) ensureNamespaceClaim(ctx context.Context, serviceCreds *servicesv1.ServiceCredentials) error {
+	name := fmt.Sprintf("%s-%s", serviceCreds.Spec.Cluster.Name, serviceCreds.Spec.ClusterNamespace)
+
+	exists := true
+	namespaceClaim, err := s.Teams().Team(s.team).NamespaceClaims().Get(ctx, name)
+	if err != nil {
+		if !kerrors.IsNotFound(err) && err != ErrNotFound {
+			return err
+		}
+		exists = false
+	}
+	if !exists {
+		namespaceClaim = &clustersv1.NamespaceClaim{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: clustersv1.GroupVersion.String(),
+				Kind:       "NamespaceClaim",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      name,
+				Namespace: s.team,
+			},
+			Spec: clustersv1.NamespaceClaimSpec{
+				Name:    serviceCreds.Spec.ClusterNamespace,
+				Cluster: serviceCreds.Spec.Cluster,
+			},
+		}
+
+		if _, err := s.Teams().Team(s.team).NamespaceClaims().Update(ctx, namespaceClaim); err != nil {
+			return err
+		}
 	}
 
 	return nil
