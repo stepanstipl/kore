@@ -4,7 +4,7 @@ import { Collapse, Typography } from 'antd'
 const { Paragraph, Text, Title } = Typography
 
 import Breadcrumb from '../../../../../lib/components/layout/Breadcrumb'
-import MonthlyCostTables from '../../../../../lib/prototype/components/costs/MonthlyCostTables'
+import TeamMonthlyCostTable from '../../../../../lib/prototype/components/costs/TeamMonthlyCostTable'
 
 class TeamCostsHistory extends React.Component {
 
@@ -22,13 +22,13 @@ class TeamCostsHistory extends React.Component {
 
         <Collapse bordered={false}>
           <Collapse.Panel className="enlarged-header" header="May 2020" extra={<Text>£765.43</Text>}>
-            <MonthlyCostTables />
+            <TeamMonthlyCostTable />
           </Collapse.Panel>
           <Collapse.Panel className="enlarged-header" header="April 2020" extra={<Text>£734.14</Text>}>
-            <MonthlyCostTables />
+            <TeamMonthlyCostTable />
           </Collapse.Panel>
           <Collapse.Panel className="enlarged-header" header="March 2020" extra={<Text>£695.97</Text>}>
-            <MonthlyCostTables />
+            <TeamMonthlyCostTable />
           </Collapse.Panel>
         </Collapse>
       </>

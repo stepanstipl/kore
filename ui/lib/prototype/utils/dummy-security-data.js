@@ -1,83 +1,79 @@
-const dummyEvents = [
-  { 
-    'id': '1', 
-    'level': 'info', 
-    'headline': 'Plan \'gke-development\' has PSP enabled', 
-    'ruleSummary': 'PSP-01-CheckPlanPSP',
-    'ruleID': '/security/rules/1', 
-    'description': 'Pod Security Policy is recommended to ensure that workloads within a cluster cannot be run as a privileged user. This check ensures that a plan is configured to enable PSP on all clusters created using that plan.',
-    'resourceType': 'plan', 
-    'resourceID': 'example-plan' 
-  },
-  { 
-    'id': '2', 
-    'level': 'warn', 
-    'headline': 'Plan \'gke-production\' does not specify PSP enabled', 
-    'ruleSummary': 'PSP-01-CheckPlanPSP',
-    'ruleID': '/security/rules/1', 
-    'description': 'Pod Security Policy is recommended to ensure that workloads within a cluster cannot be run as a privileged user. This check ensures that a plan is configured to enable PSP on all clusters created using that plan.',
-    'resourceType': 'plan', 
-    'resourceID': 'example-plan' 
-  },
-  { 
-    'id': '3', 
-    'level': 'critical', 
-    'headline': 'Plan \'eks-development\' has PSP disabled', 
-    'ruleSummary': 'PSP-01-CheckPlanPSP',
-    'ruleID': '/security/rules/1', 
-    'description': 'Pod Security Policy is recommended to ensure that workloads within a cluster cannot be run as a privileged user. This check ensures that a plan is configured to enable PSP on all clusters created using that plan.',
-    'resourceType': 'plan', 
-    'resourceID': 'example-plan' 
-  },
-]
-
+/* eslint-disable quotes */
 const dummyOverview = {
-  'status': {
-    'critical': 3,
-    'warn': 32,
-    'info': 20
+  "kind": "SecurityOverview",
+  "apiVersion": "security.kore.appvia.io/v1",
+  "metadata": {
+    "name": "overview",
+    "creationTimestamp": null
   },
-  'overallStatus': 'critical',
-  'teamSummary': [
-    { 
-      'name': 'Example Team 1', 
-      'overallStatus': 'critical',   
-      'status': {
-        'critical': 1,
-        'warn': 0,
-        'info': 2
-      }
+  "spec": {
+    "openIssueCounts": {
+      "Failure": 3,
+      "Warning": 32,
+      "Compliant": 20,
     },
-    { 
-      'name': 'Example Team 2', 
-      'overallStatus': 'info',   
-      'status': {
-        'critical': 0,
-        'warn': 0,
-        'info': 15
+    "resources": [
+      {
+        "resource": {
+          "group": "clusters.compute.kore.appvia.io",
+          "version": "v1",
+          "kind": "Cluster",
+          "namespace": "example-team",
+          "name": "example-cluster-1"
+        },
+        "lastChecked": "2020-06-17T07:08:17Z",
+        "overallStatus": "Failure",
+        "openIssueCounts": {
+          "Failure": 1,
+          "Compliant": 2
+        }
+      },
+      {
+        "resource": {
+          "group": "clusters.compute.kore.appvia.io",
+          "version": "v1",
+          "kind": "Cluster",
+          "namespace": "example-team",
+          "name": "example-cluster-2"
+        },
+        "lastChecked": "2020-06-12T15:06:34Z",
+        "overallStatus": "Compliant",
+        "openIssueCounts": {
+          "Compliant": 15
+        }
+      },
+      {
+        "resource": {
+          "group": "config.kore.appvia.io",
+          "version": "v1",
+          "kind": "Plan",
+          "namespace": "kore",
+          "name": "example-plan-1"
+        },
+        "lastChecked": "2020-06-17T05:46:43Z",
+        "overallStatus": "Warning",
+        "openIssueCounts": {
+          "Warning": 12
+        }
+      },
+      {
+        "resource": {
+          "group": "config.kore.appvia.io",
+          "version": "v1",
+          "kind": "Plan",
+          "namespace": "kore",
+          "name": "example-plan-2"
+        },
+        "lastChecked": "2020-06-17T05:46:43Z",
+        "overallStatus": "Failure",
+        "openIssueCounts": {
+          "Failure": 2,
+          "Warning": 20,
+          "Compliant": 2
+        }
       }
-    },
-  ],
-  'planSummary': [
-    {
-      'name': 'Example Plan 1',
-      'overallStatus': 'warn',   
-      'status': {
-        'critical': 0,
-        'warn': 12,
-        'info': 0
-      }
-    },
-    {
-      'name': 'Example Plan 2',
-      'overallStatus': 'critical',   
-      'status': {
-        'critical': 2,
-        'warn': 20,
-        'info': 3
-      }
-    },
-  ]
+    ]
+  }
 }
 
 const dummyRules = [
@@ -93,7 +89,6 @@ const dummyRules = [
 class SecurityData {
   static overview = dummyOverview
   static rules = dummyRules
-  static events = dummyEvents
 }
 
 export default SecurityData
