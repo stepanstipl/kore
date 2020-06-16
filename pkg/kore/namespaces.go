@@ -32,7 +32,7 @@ import (
 // NamespaceClaims is the interface to the class namespace claims
 type NamespaceClaims interface {
 	// Delete is used to delete a namespace claim in the kore
-	Delete(context.Context, string) (*clustersv1.NamespaceClaim, error)
+	Delete(context.Context, string, ...DeleteOptionFunc) (*clustersv1.NamespaceClaim, error)
 	// Get returns the class from the kore
 	Get(context.Context, string) (*clustersv1.NamespaceClaim, error)
 	// List returns a list of classes
@@ -50,7 +50,9 @@ type nsImpl struct {
 }
 
 // Delete is used to delete a namespace claim in the kore
-func (n *nsImpl) Delete(ctx context.Context, name string) (*clustersv1.NamespaceClaim, error) {
+func (n *nsImpl) Delete(ctx context.Context, name string, o ...DeleteOptionFunc) (*clustersv1.NamespaceClaim, error) {
+	opts := ResolveDeleteOptions(o)
+
 	original, err := n.Get(ctx, name)
 	if err != nil {
 		return nil, err
@@ -69,7 +71,7 @@ func (n *nsImpl) Delete(ctx context.Context, name string) (*clustersv1.Namespace
 		return nil, validation.NewError("namespace can not be deleted").WithFieldError("name", validation.InvalidValue, "is a team namespace")
 	}
 
-	if err := n.Store().Client().Delete(ctx, store.DeleteOptions.From(original)); err != nil {
+	if err := n.Store().Client().Delete(ctx, append(opts.StoreOptions(), store.DeleteOptions.From(original))...); err != nil {
 		log.WithError(err).Error("trying to delete the namespace claim")
 
 		return nil, err

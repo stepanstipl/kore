@@ -138,3 +138,14 @@ func writeError(req *restful.Request, resp *restful.Response, err error, code in
 		log.WithError(err).Error("failed to respond to request")
 	}
 }
+
+func parseDeleteOpts(req *restful.Request) []kore.DeleteOptionFunc {
+	cascade := req.QueryParameter("cascade")
+
+	var opts []kore.DeleteOptionFunc
+	if cascade == "true" {
+		opts = append(opts, kore.DeleteOptionCascade(true))
+	}
+
+	return opts
+}

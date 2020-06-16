@@ -44,7 +44,7 @@ const (
 // Clusters returns the an interface for handling clusters
 type Clusters interface {
 	// Delete is used to delete a cluster
-	Delete(context.Context, string) (*clustersv1.Cluster, error)
+	Delete(context.Context, string, ...DeleteOptionFunc) (*clustersv1.Cluster, error)
 	// Get returns a specific cluster
 	Get(context.Context, string) (*clustersv1.Cluster, error)
 	// List returns a list of clusters we have access to
@@ -60,7 +60,9 @@ type clustersImpl struct {
 }
 
 // Delete is used to delete a cluster
-func (c *clustersImpl) Delete(ctx context.Context, name string) (*clustersv1.Cluster, error) {
+func (c *clustersImpl) Delete(ctx context.Context, name string, o ...DeleteOptionFunc) (*clustersv1.Cluster, error) {
+	opts := ResolveDeleteOptions(o)
+
 	// @TODO check whether the user is an admin in the team
 
 	logger := log.WithFields(log.Fields{
@@ -84,7 +86,7 @@ func (c *clustersImpl) Delete(ctx context.Context, name string) (*clustersv1.Clu
 		return nil, validation.NewError("the cluster can not be deleted").WithFieldError(validation.FieldRoot, validation.ReadOnly, "cluster is read-only")
 	}
 
-	return original, c.Store().Client().Delete(ctx, store.DeleteOptions.From(original))
+	return original, c.Store().Client().Delete(ctx, append(opts.StoreOptions(), store.DeleteOptions.From(original))...)
 }
 
 // List returns a list of clusters we have access to

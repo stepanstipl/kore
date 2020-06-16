@@ -10,12 +10,12 @@ import (
 )
 
 type FakeServicePlans struct {
-	DeleteStub        func(context.Context, string, bool) (*v1.ServicePlan, error)
+	DeleteStub        func(context.Context, string, ...kore.DeleteOptionFunc) (*v1.ServicePlan, error)
 	deleteMutex       sync.RWMutex
 	deleteArgsForCall []struct {
 		arg1 context.Context
 		arg2 string
-		arg3 bool
+		arg3 []kore.DeleteOptionFunc
 	}
 	deleteReturns struct {
 		result1 *v1.ServicePlan
@@ -113,18 +113,18 @@ type FakeServicePlans struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeServicePlans) Delete(arg1 context.Context, arg2 string, arg3 bool) (*v1.ServicePlan, error) {
+func (fake *FakeServicePlans) Delete(arg1 context.Context, arg2 string, arg3 ...kore.DeleteOptionFunc) (*v1.ServicePlan, error) {
 	fake.deleteMutex.Lock()
 	ret, specificReturn := fake.deleteReturnsOnCall[len(fake.deleteArgsForCall)]
 	fake.deleteArgsForCall = append(fake.deleteArgsForCall, struct {
 		arg1 context.Context
 		arg2 string
-		arg3 bool
+		arg3 []kore.DeleteOptionFunc
 	}{arg1, arg2, arg3})
 	fake.recordInvocation("Delete", []interface{}{arg1, arg2, arg3})
 	fake.deleteMutex.Unlock()
 	if fake.DeleteStub != nil {
-		return fake.DeleteStub(arg1, arg2, arg3)
+		return fake.DeleteStub(arg1, arg2, arg3...)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -139,13 +139,13 @@ func (fake *FakeServicePlans) DeleteCallCount() int {
 	return len(fake.deleteArgsForCall)
 }
 
-func (fake *FakeServicePlans) DeleteCalls(stub func(context.Context, string, bool) (*v1.ServicePlan, error)) {
+func (fake *FakeServicePlans) DeleteCalls(stub func(context.Context, string, ...kore.DeleteOptionFunc) (*v1.ServicePlan, error)) {
 	fake.deleteMutex.Lock()
 	defer fake.deleteMutex.Unlock()
 	fake.DeleteStub = stub
 }
 
-func (fake *FakeServicePlans) DeleteArgsForCall(i int) (context.Context, string, bool) {
+func (fake *FakeServicePlans) DeleteArgsForCall(i int) (context.Context, string, []kore.DeleteOptionFunc) {
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
 	argsForCall := fake.deleteArgsForCall[i]

@@ -14,6 +14,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 )
 
 // NewRemoveClusterParams creates a new RemoveClusterParams object
@@ -60,6 +61,11 @@ for the remove cluster operation typically these are written to a http.Request
 */
 type RemoveClusterParams struct {
 
+	/*Cascade
+	  If true then all objects owned by this object will be deleted too.
+
+	*/
+	Cascade *bool
 	/*Name
 	  Is the name of the cluster
 
@@ -109,6 +115,17 @@ func (o *RemoveClusterParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithCascade adds the cascade to the remove cluster params
+func (o *RemoveClusterParams) WithCascade(cascade *bool) *RemoveClusterParams {
+	o.SetCascade(cascade)
+	return o
+}
+
+// SetCascade adds the cascade to the remove cluster params
+func (o *RemoveClusterParams) SetCascade(cascade *bool) {
+	o.Cascade = cascade
+}
+
 // WithName adds the name to the remove cluster params
 func (o *RemoveClusterParams) WithName(name string) *RemoveClusterParams {
 	o.SetName(name)
@@ -138,6 +155,22 @@ func (o *RemoveClusterParams) WriteToRequest(r runtime.ClientRequest, reg strfmt
 		return err
 	}
 	var res []error
+
+	if o.Cascade != nil {
+
+		// query param cascade
+		var qrCascade bool
+		if o.Cascade != nil {
+			qrCascade = *o.Cascade
+		}
+		qCascade := swag.FormatBool(qrCascade)
+		if qCascade != "" {
+			if err := r.SetQueryParam("cascade", qCascade); err != nil {
+				return err
+			}
+		}
+
+	}
 
 	// path param name
 	if err := r.SetPathParam("name", o.Name); err != nil {

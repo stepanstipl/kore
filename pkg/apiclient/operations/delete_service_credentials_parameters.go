@@ -14,6 +14,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 )
 
 // NewDeleteServiceCredentialsParams creates a new DeleteServiceCredentialsParams object
@@ -60,6 +61,11 @@ for the delete service credentials operation typically these are written to a ht
 */
 type DeleteServiceCredentialsParams struct {
 
+	/*Cascade
+	  If true then all objects owned by this object will be deleted too.
+
+	*/
+	Cascade *bool
 	/*Name
 	  Is the name of the service credentials
 
@@ -109,6 +115,17 @@ func (o *DeleteServiceCredentialsParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithCascade adds the cascade to the delete service credentials params
+func (o *DeleteServiceCredentialsParams) WithCascade(cascade *bool) *DeleteServiceCredentialsParams {
+	o.SetCascade(cascade)
+	return o
+}
+
+// SetCascade adds the cascade to the delete service credentials params
+func (o *DeleteServiceCredentialsParams) SetCascade(cascade *bool) {
+	o.Cascade = cascade
+}
+
 // WithName adds the name to the delete service credentials params
 func (o *DeleteServiceCredentialsParams) WithName(name string) *DeleteServiceCredentialsParams {
 	o.SetName(name)
@@ -138,6 +155,22 @@ func (o *DeleteServiceCredentialsParams) WriteToRequest(r runtime.ClientRequest,
 		return err
 	}
 	var res []error
+
+	if o.Cascade != nil {
+
+		// query param cascade
+		var qrCascade bool
+		if o.Cascade != nil {
+			qrCascade = *o.Cascade
+		}
+		qCascade := swag.FormatBool(qrCascade)
+		if qCascade != "" {
+			if err := r.SetQueryParam("cascade", qCascade); err != nil {
+				return err
+			}
+		}
+
+	}
 
 	// path param name
 	if err := r.SetPathParam("name", o.Name); err != nil {

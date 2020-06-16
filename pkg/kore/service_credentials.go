@@ -37,7 +37,7 @@ import (
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . ServiceCredentials
 type ServiceCredentials interface {
 	// Delete is used to delete service credentials
-	Delete(context.Context, string) (*servicesv1.ServiceCredentials, error)
+	Delete(context.Context, string, ...DeleteOptionFunc) (*servicesv1.ServiceCredentials, error)
 	// Get returns a specific service credentials
 	Get(context.Context, string) (*servicesv1.ServiceCredentials, error)
 	// List returns a list of service credentials.
@@ -54,7 +54,9 @@ type serviceCredentialsImpl struct {
 }
 
 // Delete is used to delete service credentials
-func (s *serviceCredentialsImpl) Delete(ctx context.Context, name string) (*servicesv1.ServiceCredentials, error) {
+func (s *serviceCredentialsImpl) Delete(ctx context.Context, name string, o ...DeleteOptionFunc) (*servicesv1.ServiceCredentials, error) {
+	opts := ResolveDeleteOptions(o)
+
 	logger := log.WithFields(log.Fields{
 		"serviceCredentials": name,
 		"team":               s.team,
@@ -72,7 +74,7 @@ func (s *serviceCredentialsImpl) Delete(ctx context.Context, name string) (*serv
 		return nil, err
 	}
 
-	return original, s.Store().Client().Delete(ctx, store.DeleteOptions.From(original))
+	return original, s.Store().Client().Delete(ctx, append(opts.StoreOptions(), store.DeleteOptions.From(original))...)
 }
 
 // List returns a list of service credentials we have access to

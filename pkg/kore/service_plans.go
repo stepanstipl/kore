@@ -48,7 +48,7 @@ type ServicePlanDetails struct {
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . ServicePlans
 type ServicePlans interface {
 	// Delete is used to delete a service plan in the kore
-	Delete(ctx context.Context, name string, ignoreReadonly bool) (*servicesv1.ServicePlan, error)
+	Delete(context.Context, string, ...DeleteOptionFunc) (*servicesv1.ServicePlan, error)
 	// Get returns the service plan
 	Get(context.Context, string) (*servicesv1.ServicePlan, error)
 	// GetDetails returns information about a service plan in the given team/cluster etc. context
@@ -149,7 +149,9 @@ func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePl
 }
 
 // Delete is used to delete a service plan in the kore
-func (p servicePlansImpl) Delete(ctx context.Context, name string, ignoreReadonly bool) (*servicesv1.ServicePlan, error) {
+func (p servicePlansImpl) Delete(ctx context.Context, name string, o ...DeleteOptionFunc) (*servicesv1.ServicePlan, error) {
+	opts := ResolveDeleteOptions(o)
+
 	plan := &servicesv1.ServicePlan{}
 	err := p.Store().Client().Get(ctx,
 		store.GetOptions.InNamespace(HubNamespace),
@@ -165,7 +167,7 @@ func (p servicePlansImpl) Delete(ctx context.Context, name string, ignoreReadonl
 		return nil, err
 	}
 
-	if !ignoreReadonly {
+	if !opts.IgnoreReadOnly {
 		if plan.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
 			return nil, validation.NewError("the service plan can not be deleted").
 				WithFieldError(validation.FieldRoot, validation.ReadOnly, "service plan is read-only")
@@ -190,7 +192,7 @@ func (p servicePlansImpl) Delete(ctx context.Context, name string, ignoreReadonl
 		)
 	}
 
-	if err := p.Store().Client().Delete(ctx, store.DeleteOptions.From(plan)); err != nil {
+	if err := p.Store().Client().Delete(ctx, append(opts.StoreOptions(), store.DeleteOptions.From(plan))...); err != nil {
 		log.WithError(err).Error("failed to delete the service plan")
 
 		return nil, err

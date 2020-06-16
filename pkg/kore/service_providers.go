@@ -100,7 +100,7 @@ type ServiceProvider interface {
 // ServiceProviders is the interface to manage service providers
 type ServiceProviders interface {
 	// Delete is used to delete a service provider in the kore
-	Delete(context.Context, string) (*servicesv1.ServiceProvider, error)
+	Delete(context.Context, string, ...DeleteOptionFunc) (*servicesv1.ServiceProvider, error)
 	// Get returns the service provider
 	Get(context.Context, string) (*servicesv1.ServiceProvider, error)
 	// List returns the existing service providers
@@ -183,7 +183,9 @@ func (p *serviceProvidersImpl) Update(ctx context.Context, provider *servicesv1.
 }
 
 // Delete is used to delete a service provider in the kore
-func (p *serviceProvidersImpl) Delete(ctx context.Context, name string) (*servicesv1.ServiceProvider, error) {
+func (p *serviceProvidersImpl) Delete(ctx context.Context, name string, o ...DeleteOptionFunc) (*servicesv1.ServiceProvider, error) {
+	opts := ResolveDeleteOptions(o)
+
 	provider := &servicesv1.ServiceProvider{}
 	err := p.Store().Client().Get(ctx,
 		store.GetOptions.InNamespace(HubNamespace),
@@ -199,7 +201,7 @@ func (p *serviceProvidersImpl) Delete(ctx context.Context, name string) (*servic
 		return nil, err
 	}
 
-	if err := p.Store().Client().Delete(ctx, store.DeleteOptions.From(provider)); err != nil {
+	if err := p.Store().Client().Delete(ctx, append(opts.StoreOptions(), store.DeleteOptions.From(provider))...); err != nil {
 		log.WithError(err).Error("failed to delete the service provider")
 
 		return nil, err
@@ -391,7 +393,7 @@ func (p *serviceProvidersImpl) unregisterKind(ctx context.Context, kind string) 
 		return fmt.Errorf("failed to get service plans: %w", err)
 	}
 	for _, plan := range plans.Items {
-		if _, err := p.ServicePlans().Delete(ctx, plan.Name, true); err != nil && err != ErrNotFound {
+		if _, err := p.ServicePlans().Delete(ctx, plan.Name, DeleteOptionIgnoreReadOnly(true)); err != nil && err != ErrNotFound {
 			return fmt.Errorf("failed to delete service plan %q: %w", plan.Name, err)
 		}
 	}

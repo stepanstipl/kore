@@ -10,11 +10,12 @@ import (
 )
 
 type FakeServiceCredentials struct {
-	DeleteStub        func(context.Context, string) (*v1.ServiceCredentials, error)
+	DeleteStub        func(context.Context, string, ...kore.DeleteOptionFunc) (*v1.ServiceCredentials, error)
 	deleteMutex       sync.RWMutex
 	deleteArgsForCall []struct {
 		arg1 context.Context
 		arg2 string
+		arg3 []kore.DeleteOptionFunc
 	}
 	deleteReturns struct {
 		result1 *v1.ServiceCredentials
@@ -68,17 +69,18 @@ type FakeServiceCredentials struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeServiceCredentials) Delete(arg1 context.Context, arg2 string) (*v1.ServiceCredentials, error) {
+func (fake *FakeServiceCredentials) Delete(arg1 context.Context, arg2 string, arg3 ...kore.DeleteOptionFunc) (*v1.ServiceCredentials, error) {
 	fake.deleteMutex.Lock()
 	ret, specificReturn := fake.deleteReturnsOnCall[len(fake.deleteArgsForCall)]
 	fake.deleteArgsForCall = append(fake.deleteArgsForCall, struct {
 		arg1 context.Context
 		arg2 string
-	}{arg1, arg2})
-	fake.recordInvocation("Delete", []interface{}{arg1, arg2})
+		arg3 []kore.DeleteOptionFunc
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("Delete", []interface{}{arg1, arg2, arg3})
 	fake.deleteMutex.Unlock()
 	if fake.DeleteStub != nil {
-		return fake.DeleteStub(arg1, arg2)
+		return fake.DeleteStub(arg1, arg2, arg3...)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -93,17 +95,17 @@ func (fake *FakeServiceCredentials) DeleteCallCount() int {
 	return len(fake.deleteArgsForCall)
 }
 
-func (fake *FakeServiceCredentials) DeleteCalls(stub func(context.Context, string) (*v1.ServiceCredentials, error)) {
+func (fake *FakeServiceCredentials) DeleteCalls(stub func(context.Context, string, ...kore.DeleteOptionFunc) (*v1.ServiceCredentials, error)) {
 	fake.deleteMutex.Lock()
 	defer fake.deleteMutex.Unlock()
 	fake.DeleteStub = stub
 }
 
-func (fake *FakeServiceCredentials) DeleteArgsForCall(i int) (context.Context, string) {
+func (fake *FakeServiceCredentials) DeleteArgsForCall(i int) (context.Context, string, []kore.DeleteOptionFunc) {
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
 	argsForCall := fake.deleteArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeServiceCredentials) DeleteReturns(result1 *v1.ServiceCredentials, result2 error) {

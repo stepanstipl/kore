@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/appvia/kore/pkg/apiserver/params"
+
 	"github.com/appvia/kore/pkg/apiserver/filters"
 
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
@@ -110,6 +112,7 @@ func (p *serviceProvidersHandler) Register(i kore.Interface, builder utils.PathB
 			Doc("Deletes a service provider").
 			Operation("DeleteServiceProvider").
 			Param(ws.PathParameter("name", "The name of the service provider you wish to delete")).
+			Param(params.DeleteCascade()).
 			Returns(http.StatusNotFound, "the service provider with the given name doesn't exist", nil).
 			Returns(http.StatusOK, "Contains the service provider definition", servicesv1.ServiceProvider{}),
 	)
@@ -170,7 +173,7 @@ func (p serviceProvidersHandler) deleteServiceProvider(req *restful.Request, res
 	handleErrors(req, resp, func() error {
 		name := req.PathParameter("name")
 
-		provider, err := p.ServiceProviders().Delete(req.Request.Context(), name)
+		provider, err := p.ServiceProviders().Delete(req.Request.Context(), name, parseDeleteOpts(req)...)
 		if err != nil {
 			return err
 		}

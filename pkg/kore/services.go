@@ -43,7 +43,7 @@ import (
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Services
 type Services interface {
 	// Delete is used to delete a service
-	Delete(context.Context, string) (*servicesv1.Service, error)
+	Delete(context.Context, string, ...DeleteOptionFunc) (*servicesv1.Service, error)
 	// Get returns a specific service
 	Get(context.Context, string) (*servicesv1.Service, error)
 	// List returns a list of services
@@ -61,7 +61,9 @@ type servicesImpl struct {
 }
 
 // Delete is used to delete a service
-func (s *servicesImpl) Delete(ctx context.Context, name string) (*servicesv1.Service, error) {
+func (s *servicesImpl) Delete(ctx context.Context, name string, o ...DeleteOptionFunc) (*servicesv1.Service, error) {
+	opts := ResolveDeleteOptions(o)
+
 	logger := log.WithFields(log.Fields{
 		"service": name,
 		"team":    s.team,
@@ -92,7 +94,7 @@ func (s *servicesImpl) Delete(ctx context.Context, name string) (*servicesv1.Ser
 		return nil, fmt.Errorf("the service can not be deleted, please delete all service credentials first")
 	}
 
-	return original, s.Store().Client().Delete(ctx, store.DeleteOptions.From(original))
+	return original, s.Store().Client().Delete(ctx, append(opts.StoreOptions(), store.DeleteOptions.From(original))...)
 }
 
 // List returns a list of services we have access to

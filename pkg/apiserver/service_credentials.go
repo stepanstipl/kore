@@ -90,7 +90,7 @@ func (u teamHandler) deleteServiceCredentials(req *restful.Request, resp *restfu
 		name := req.PathParameter("name")
 		team := req.PathParameter("team")
 
-		object, err := u.Teams().Team(team).ServiceCredentials().Delete(ctx, name)
+		object, err := u.Teams().Team(team).ServiceCredentials().Delete(ctx, name, parseDeleteOpts(req)...)
 		if err != nil {
 			return err
 		}

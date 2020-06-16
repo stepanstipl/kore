@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/appvia/kore/pkg/apiserver/params"
+
 	"github.com/appvia/kore/pkg/apiserver/filters"
 
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
@@ -90,6 +92,7 @@ func (p *serviceKindsHandler) Register(i kore.Interface, builder utils.PathBuild
 			Doc("Deletes a service kind").
 			Operation("DeleteServiceKind").
 			Param(ws.PathParameter("name", "The name of the service kind you wish to delete")).
+			Param(params.DeleteCascade()).
 			Returns(http.StatusNotFound, "the service kind with the given name doesn't exist", nil).
 			Returns(http.StatusOK, "Contains the service kind definition", servicesv1.ServiceKind{}),
 	)

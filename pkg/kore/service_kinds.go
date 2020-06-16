@@ -35,7 +35,7 @@ import (
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . ServiceKinds
 type ServiceKinds interface {
 	// Delete is used to delete a service kind in the kore
-	Delete(context.Context, string) (*servicesv1.ServiceKind, error)
+	Delete(context.Context, string, ...DeleteOptionFunc) (*servicesv1.ServiceKind, error)
 	// Get returns the service kind
 	Get(context.Context, string) (*servicesv1.ServiceKind, error)
 	// List returns the existing service kinds
@@ -92,7 +92,9 @@ func (p serviceKindsImpl) Update(ctx context.Context, kind *servicesv1.ServiceKi
 }
 
 // Delete is used to delete a service kind in the kore
-func (p serviceKindsImpl) Delete(ctx context.Context, name string) (*servicesv1.ServiceKind, error) {
+func (p serviceKindsImpl) Delete(ctx context.Context, name string, o ...DeleteOptionFunc) (*servicesv1.ServiceKind, error) {
+	opts := ResolveDeleteOptions(o)
+
 	kind := &servicesv1.ServiceKind{}
 	err := p.Store().Client().Get(ctx,
 		store.GetOptions.InNamespace(HubNamespace),
@@ -126,7 +128,7 @@ func (p serviceKindsImpl) Delete(ctx context.Context, name string) (*servicesv1.
 		)
 	}
 
-	if err := p.Store().Client().Delete(ctx, store.DeleteOptions.From(kind)); err != nil {
+	if err := p.Store().Client().Delete(ctx, append(opts.StoreOptions(), store.DeleteOptions.From(kind))...); err != nil {
 		log.WithError(err).Error("failed to delete the service kind")
 
 		return nil, err

@@ -10,11 +10,12 @@ import (
 )
 
 type FakeServiceKinds struct {
-	DeleteStub        func(context.Context, string) (*v1.ServiceKind, error)
+	DeleteStub        func(context.Context, string, ...kore.DeleteOptionFunc) (*v1.ServiceKind, error)
 	deleteMutex       sync.RWMutex
 	deleteArgsForCall []struct {
 		arg1 context.Context
 		arg2 string
+		arg3 []kore.DeleteOptionFunc
 	}
 	deleteReturns struct {
 		result1 *v1.ServiceKind
@@ -82,17 +83,18 @@ type FakeServiceKinds struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeServiceKinds) Delete(arg1 context.Context, arg2 string) (*v1.ServiceKind, error) {
+func (fake *FakeServiceKinds) Delete(arg1 context.Context, arg2 string, arg3 ...kore.DeleteOptionFunc) (*v1.ServiceKind, error) {
 	fake.deleteMutex.Lock()
 	ret, specificReturn := fake.deleteReturnsOnCall[len(fake.deleteArgsForCall)]
 	fake.deleteArgsForCall = append(fake.deleteArgsForCall, struct {
 		arg1 context.Context
 		arg2 string
-	}{arg1, arg2})
-	fake.recordInvocation("Delete", []interface{}{arg1, arg2})
+		arg3 []kore.DeleteOptionFunc
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("Delete", []interface{}{arg1, arg2, arg3})
 	fake.deleteMutex.Unlock()
 	if fake.DeleteStub != nil {
-		return fake.DeleteStub(arg1, arg2)
+		return fake.DeleteStub(arg1, arg2, arg3...)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -107,17 +109,17 @@ func (fake *FakeServiceKinds) DeleteCallCount() int {
 	return len(fake.deleteArgsForCall)
 }
 
-func (fake *FakeServiceKinds) DeleteCalls(stub func(context.Context, string) (*v1.ServiceKind, error)) {
+func (fake *FakeServiceKinds) DeleteCalls(stub func(context.Context, string, ...kore.DeleteOptionFunc) (*v1.ServiceKind, error)) {
 	fake.deleteMutex.Lock()
 	defer fake.deleteMutex.Unlock()
 	fake.DeleteStub = stub
 }
 
-func (fake *FakeServiceKinds) DeleteArgsForCall(i int) (context.Context, string) {
+func (fake *FakeServiceKinds) DeleteArgsForCall(i int) (context.Context, string, []kore.DeleteOptionFunc) {
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
 	argsForCall := fake.deleteArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeServiceKinds) DeleteReturns(result1 *v1.ServiceKind, result2 error) {

@@ -119,7 +119,7 @@ func (u teamHandler) deleteService(req *restful.Request, resp *restful.Response)
 		name := req.PathParameter("name")
 		team := req.PathParameter("team")
 
-		object, err := u.Teams().Team(team).Services().Delete(ctx, name)
+		object, err := u.Teams().Team(team).Services().Delete(ctx, name, parseDeleteOpts(req)...)
 		if err != nil {
 			return err
 		}
