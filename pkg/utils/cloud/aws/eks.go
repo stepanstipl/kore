@@ -295,6 +295,18 @@ func (c *Client) CreateNodeGroup(ctx context.Context, group *eksv1alpha1.EKSNode
 		return err
 	}
 	if !existing {
+		scalingConfig := &eks.NodegroupScalingConfig{
+			DesiredSize: aws.Int64(group.Spec.DesiredSize),
+			MaxSize:     aws.Int64(group.Spec.MaxSize),
+			MinSize:     aws.Int64(group.Spec.MinSize),
+		}
+		// If we're not auto-scaling, we need to keep the min and max the same as desired to
+		// force the size to be managed by kore - else any manual node group scale up/downs
+		// directly in AWS will simply be undone by kore.
+		if !group.Spec.EnableAutoscaler {
+			scalingConfig.MaxSize = scalingConfig.DesiredSize
+			scalingConfig.MinSize = scalingConfig.DesiredSize
+		}
 		input := &eks.CreateNodegroupInput{
 			AmiType:       aws.String(group.Spec.AMIType),
 			ClusterName:   aws.String(group.Spec.Cluster.Name),
@@ -304,11 +316,7 @@ func (c *Client) CreateNodeGroup(ctx context.Context, group *eksv1alpha1.EKSNode
 			NodegroupName: aws.String(group.Name),
 			Subnets:       aws.StringSlice(group.Spec.Subnets),
 			Version:       aws.String(group.Spec.Version),
-			ScalingConfig: &eks.NodegroupScalingConfig{
-				DesiredSize: aws.Int64(group.Spec.DesiredSize),
-				MaxSize:     aws.Int64(group.Spec.MaxSize),
-				MinSize:     aws.Int64(group.Spec.MinSize),
-			},
+			ScalingConfig: scalingConfig,
 		}
 		if group.Spec.EC2SSHKey != "" {
 			input.RemoteAccess = &eks.RemoteAccessConfig{
@@ -397,18 +405,35 @@ func (c *Client) UpdateNodeGroup(ctx context.Context, group *eksv1alpha1.EKSNode
 		return true, nil
 	}
 
-	// @TODO we need to investigate autoscale and see if setting the desired size effects this
-	if aws.Int64Value(state.ScalingConfig.MinSize) != group.Spec.MinSize ||
-		aws.Int64Value(state.ScalingConfig.MaxSize) != group.Spec.MaxSize ||
-		aws.Int64Value(state.ScalingConfig.DesiredSize) != group.Spec.DesiredSize {
+	maxSize := group.Spec.MaxSize
+	minSize := group.Spec.MinSize
+	desiredSize := group.Spec.DesiredSize
+	if !group.Spec.EnableAutoscaler {
+		// If we're not auto-scaling, we need to keep the min and max the same as desired to
+		// force the size to be managed by kore - else any manual node group scale up/downs
+		// directly in AWS will simply be undone by kore.
+		maxSize = group.Spec.DesiredSize
+		minSize = group.Spec.DesiredSize
+	} else {
+		// If we are auto-scaling, we should leave the desired size well alone! Don't want
+		// to be fighting with the auto-scaler no matter what our spec says... this leaves
+		// a VERY small window between retrieving the state above and setting the state below
+		// where if an auto-scale happens and our spec has a changed max/min size at the same
+		// time, you'd get a slightly odd result here where we might set an old desired size.
+		// But it's a very small window indeed, and will sort itself out fairly promptly.
+		desiredSize = aws.Int64Value(state.ScalingConfig.DesiredSize)
+	}
+	if aws.Int64Value(state.ScalingConfig.MinSize) != minSize ||
+		aws.Int64Value(state.ScalingConfig.MaxSize) != maxSize ||
+		aws.Int64Value(state.ScalingConfig.DesiredSize) != desiredSize {
 
 		if _, err := c.svc.UpdateNodegroupConfigWithContext(ctx, &awseks.UpdateNodegroupConfigInput{
 			ClusterName:   aws.String(group.Spec.Cluster.Name),
 			NodegroupName: aws.String(group.Name),
 			ScalingConfig: &awseks.NodegroupScalingConfig{
-				DesiredSize: aws.Int64(group.Spec.DesiredSize),
-				MinSize:     aws.Int64(group.Spec.MinSize),
-				MaxSize:     aws.Int64(group.Spec.MaxSize),
+				DesiredSize: aws.Int64(desiredSize),
+				MinSize:     aws.Int64(minSize),
+				MaxSize:     aws.Int64(maxSize),
 			},
 		}); err != nil {
 			return false, err

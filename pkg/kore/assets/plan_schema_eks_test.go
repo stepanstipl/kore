@@ -41,12 +41,13 @@ func eksSampleData() map[string]interface{} {
 		"version":                   "1.15",
 		"nodeGroups": []map[string]interface{}{
 			{
-				"instanceType": "t3.medium",
-				"diskSize":     10,
-				"name":         "group1",
-				"desiredSize":  1,
-				"minSize":      1,
-				"maxSize":      10,
+				"instanceType":     "t3.medium",
+				"diskSize":         10,
+				"name":             "group1",
+				"enableAutoscaler": false,
+				"desiredSize":      1,
+				"minSize":          1,
+				"maxSize":          10,
 				"tags": map[string]string{
 					"tag1": "value1",
 				},

@@ -324,7 +324,7 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
                         <InputNumber id={`${id_prefix}_minSize`} value={selected.minSize} size="small" min={property.items.properties.minSize.minimum} max={selected.maxSize} readOnly={!editable} onChange={(v) => this.setNodePoolProperty(selectedIndex, 'minSize', v)} />
                         {this.validationErrors(`${name}[${selectedIndex}].minSize`)}
                       </Descriptions.Item>}
-                      <Descriptions.Item label={selected.enableAutoscaler ? 'Initial Size' : null}>
+                      <Descriptions.Item label={selected.enableAutoscaler ? 'Initial' : null}>
                         <InputNumber id={`${id_prefix}_size`} value={selected.size} size="small" min={selected.enableAutoscaler ? selected.minSize : 1} max={selected.enableAutoscaler ? selected.maxSize : 99999} readOnly={!editable} onChange={(v) => this.setNodePoolProperty(selectedIndex, 'size', v)} />
                         {this.validationErrors(`${name}[${selectedIndex}].size`)}
                       </Descriptions.Item>
