@@ -44,8 +44,8 @@ const clustersData = [
   ] }
 ]
 
-const MonthlyCostTables = () => (
+const TeamMonthlyCostTable = () => (
   <Table style={{ marginTop: '10px', marginBottom: '20px' }} showHeader={true} pagination={false} columns={columns('£204.62')} dataSource={clustersData} />
 )
 
-export default MonthlyCostTables
+export default TeamMonthlyCostTable
