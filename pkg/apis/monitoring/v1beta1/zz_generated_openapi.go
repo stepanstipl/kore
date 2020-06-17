@@ -42,6 +42,28 @@ func schema_pkg_apis_monitoring_v1beta1_AlertSpec(ref common.ReferenceCallback) 
 				Description: "AlertSpec specifies the details of a alert",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"alertID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "AlertID is a unique identifier for this alert instance",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"labels": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Labels is a collection of labels on the alert",
+							Type:        []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
 					"event": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Event is the raw event payload",
@@ -85,8 +107,14 @@ func schema_pkg_apis_monitoring_v1beta1_AlertStatus(ref common.ReferenceCallback
 					},
 					"expiration": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Expiration is the time the silience will finish",
+							Description: "Expiration is the time the silence will finish",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
+						},
+					},
+					"rule": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Rule is a reference to the rule the alert is based on",
+							Ref:         ref("github.com/appvia/kore/pkg/apis/monitoring/v1beta1.Rule"),
 						},
 					},
 					"status": {
@@ -97,11 +125,10 @@ func schema_pkg_apis_monitoring_v1beta1_AlertStatus(ref common.ReferenceCallback
 						},
 					},
 				},
-				Required: []string{"archivedAt"},
 			},
 		},
 		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
+			"github.com/appvia/kore/pkg/apis/monitoring/v1beta1.Rule", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
 	}
 }
 
@@ -112,6 +139,13 @@ func schema_pkg_apis_monitoring_v1beta1_RuleSpec(ref common.ReferenceCallback) c
 				Description: "RuleSpec specifies the details of a alert rule",
 				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
+					"ruleID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "RuleID is a unique identifier for this rule",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"severity": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Severity is the importance of the rule",
@@ -133,24 +167,6 @@ func schema_pkg_apis_monitoring_v1beta1_RuleSpec(ref common.ReferenceCallback) c
 							Format:      "",
 						},
 					},
-					"alerts": {
-						VendorExtensible: spec.VendorExtensible{
-							Extensions: spec.Extensions{
-								"x-kubernetes-list-type": "set",
-							},
-						},
-						SchemaProps: spec.SchemaProps{
-							Description: "Alerts is a collection of alerts related to the rule",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Ref: ref("github.com/appvia/kore/pkg/apis/monitoring/v1beta1.Alert"),
-									},
-								},
-							},
-						},
-					},
 					"rawRule": {
 						SchemaProps: spec.SchemaProps{
 							Description: "RawRule is the underlying rule definition",
@@ -165,10 +181,10 @@ func schema_pkg_apis_monitoring_v1beta1_RuleSpec(ref common.ReferenceCallback) c
 						},
 					},
 				},
-				Required: []string{"severity", "source", "summary", "alerts", "rawRule", "resource"},
+				Required: []string{"severity", "source", "summary", "rawRule", "resource"},
 			},
 		},
 		Dependencies: []string{
-			"github.com/appvia/kore/pkg/apis/core/v1.Ownership", "github.com/appvia/kore/pkg/apis/monitoring/v1beta1.Alert"},
+			"github.com/appvia/kore/pkg/apis/core/v1.Ownership"},
 	}
 }

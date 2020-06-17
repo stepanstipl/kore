@@ -23,16 +23,10 @@ import (
 const (
 	// AlertStatusActive indicates the alert is active
 	AlertStatusActive = "Active"
-	// AlertStatusDismissed indicates the alert is dismissed
-	AlertStatusDismissed = "Dismissed"
 	// AlertStatusOK indicates status is fine
 	AlertStatusOK = "OK"
-	// AlertStatusPending indicates the alert is pending
-	AlertStatusPending = "Pending"
 	// AlertStatusSilenced indicates an silenced status
 	AlertStatusSilenced = "Silenced"
-	// AlertStatusUnknown indicates an unknown status
-	AlertStatusUnknown = "Unknown"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -48,6 +42,11 @@ type Alert struct {
 // AlertSpec specifies the details of a alert
 // +k8s:openapi-gen=true
 type AlertSpec struct {
+	// AlertID is a unique identifier for this alert instance
+	AlertID string `json:"alertID,omitempty"`
+	// Labels is a collection of labels on the alert
+	// +kubebuilder:validation:Optional
+	Labels map[string]string `json:"labels,omitempty"`
 	// Event is the raw event payload
 	// +kubebuilder:validation:Optional
 	Event string `json:"event,omitempty"`
@@ -60,17 +59,15 @@ type AlertSpec struct {
 // +k8s:openapi-gen=true
 type AlertStatus struct {
 	// ArchivedAt is indicates if the alert has been archived
-	// +kubebuilder:validation:Required
-	ArchivedAt metav1.Time `json:"archivedAt"`
+	ArchivedAt metav1.Time `json:"archivedAt,omitempty"`
 	// Detail provides a human readable message related to the current
 	// status of the alert
-	// +kubebuilder:validation:Optional
 	Detail string `json:"detail,omitempty"`
-	// Expiration is the time the silience will finish
-	// +kubebuilder:validation:Optional
+	// Expiration is the time the silence will finish
 	Expiration metav1.Time `json:"expiration,omitempty"`
+	// Rule is a reference to the rule the alert is based on
+	Rule *Rule `json:"rule,omitempty"`
 	// Status is the status of the alert
-	// +kubebuilder:validation:Optional
 	Status string `json:"status,omitempty"`
 }
 

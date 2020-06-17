@@ -34,6 +34,10 @@ type Rule struct {
 // RuleSpec specifies the details of a alert rule
 // +k8s:openapi-gen=true
 type RuleSpec struct {
+	// RuleID is a unique identifier for this rule
+	// +kubebuilder:validation:MinLength=1
+	// +kubebuilder:validation:Required
+	RuleID string `json:"ruleID,omitempty"`
 	// Severity is the importance of the rule
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
@@ -46,10 +50,6 @@ type RuleSpec struct {
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
 	Summary string `json:"summary"`
-	// Alerts is a collection of alerts related to the rule
-	// +kubebuilder:validation:Optional
-	// +listType=set
-	Alerts []*Alert `json:"alerts"`
 	// RawRule is the underlying rule definition
 	// +kubebuilder:validation:Required
 	RawRule string `json:"rawRule"`
