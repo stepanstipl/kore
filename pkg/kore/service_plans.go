@@ -54,9 +54,8 @@ type ServicePlans interface {
 	// GetDetails returns information about a service plan in the given team/cluster etc. context
 	GetDetails(ctx context.Context, name, team, clusterName string) (ServicePlanDetails, error)
 	// List returns the existing service plans
-	List(context.Context) (*servicesv1.ServicePlanList, error)
-	// ListFiltered returns a list of service plans using the given filter.
-	ListFiltered(context.Context, func(servicesv1.ServicePlan) bool) (*servicesv1.ServicePlanList, error)
+	// The optional filter functions can be used to include items only for which all functions return true
+	List(context.Context, ...func(plan servicesv1.ServicePlan) bool) (*servicesv1.ServicePlanList, error)
 	// Has checks if a service plan exists
 	Has(context.Context, string) (bool, error)
 	// Update is responsible for updating a service plan
@@ -219,34 +218,37 @@ func (p servicePlansImpl) Get(ctx context.Context, name string) (*servicesv1.Ser
 }
 
 // List returns the existing service plans
-func (p servicePlansImpl) List(ctx context.Context) (*servicesv1.ServicePlanList, error) {
-	plans := &servicesv1.ServicePlanList{}
+func (p servicePlansImpl) List(ctx context.Context, filters ...func(servicesv1.ServicePlan) bool) (*servicesv1.ServicePlanList, error) {
+	list := &servicesv1.ServicePlanList{}
 
-	return plans, p.Store().Client().List(ctx,
+	err := p.Store().Client().List(ctx,
 		store.ListOptions.InNamespace(HubNamespace),
-		store.ListOptions.InTo(plans),
+		store.ListOptions.InTo(list),
 	)
-}
-
-// ListFiltered returns a list of service plans using the given filter.
-// A service plan is included if the filter function returns true
-func (p servicePlansImpl) ListFiltered(ctx context.Context, filter func(plan servicesv1.ServicePlan) bool) (*servicesv1.ServicePlanList, error) {
-	res := []servicesv1.ServicePlan{}
-
-	servicePlansList, err := p.List(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, servicePlan := range servicePlansList.Items {
-		if filter(servicePlan) {
-			res = append(res, servicePlan)
-		}
+	if len(filters) == 0 {
+		return list, nil
 	}
 
-	servicePlansList.Items = res
+	res := []servicesv1.ServicePlan{}
+	for _, item := range list.Items {
+		if func() bool {
+			for _, filter := range filters {
+				if !filter(item) {
+					return false
+				}
+			}
+			return true
+		}() {
+			res = append(res, item)
+		}
+	}
+	list.Items = res
 
-	return servicePlansList, nil
+	return list, nil
 }
 
 // Has checks if a service plan exists

@@ -167,7 +167,7 @@ func EnsureService(ctx kore.Context, original *servicesv1.Service, owner runtime
 
 // DeleteServices will remove services and return reconcile status
 func DeleteServices(ctx kore.Context, team string, owner runtime.Object, components corev1.Components) (reconcile.Result, error) {
-	adminServicesList, err := ctx.Kore().Teams().Team(team).Services().ListFiltered(ctx, func(service servicesv1.Service) bool {
+	adminServicesList, err := ctx.Kore().Teams().Team(team).Services().List(ctx, func(service servicesv1.Service) bool {
 		return service.Annotations[kore.AnnotationOwner] == kubernetes.MustGetRuntimeSelfLink(owner)
 	})
 	if err != nil {

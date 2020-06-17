@@ -36,7 +36,8 @@ type NamespaceClaims interface {
 	// Get returns the class from the kore
 	Get(context.Context, string) (*clustersv1.NamespaceClaim, error)
 	// List returns a list of classes
-	List(context.Context) (*clustersv1.NamespaceClaimList, error)
+	// The optional filter functions can be used to include items only for which all functions return true
+	List(context.Context, ...func(clustersv1.NamespaceClaim) bool) (*clustersv1.NamespaceClaimList, error)
 	// Has checks if a resource exists
 	Has(context.Context, string) (bool, error)
 	// Update is responsible for update a namespace claim in the kore
@@ -92,13 +93,37 @@ func (n *nsImpl) Get(ctx context.Context, name string) (*clustersv1.NamespaceCla
 }
 
 // List returns a list of classes
-func (n *nsImpl) List(ctx context.Context) (*clustersv1.NamespaceClaimList, error) {
+func (n *nsImpl) List(ctx context.Context, filters ...func(clustersv1.NamespaceClaim) bool) (*clustersv1.NamespaceClaimList, error) {
 	list := &clustersv1.NamespaceClaimList{}
 
-	return list, n.Store().Client().List(ctx,
+	err := n.Store().Client().List(ctx,
 		store.ListOptions.InNamespace(n.team),
 		store.ListOptions.InTo(list),
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(filters) == 0 {
+		return list, nil
+	}
+
+	res := []clustersv1.NamespaceClaim{}
+	for _, item := range list.Items {
+		if func() bool {
+			for _, filter := range filters {
+				if !filter(item) {
+					return false
+				}
+			}
+			return true
+		}() {
+			res = append(res, item)
+		}
+	}
+	list.Items = res
+
+	return list, nil
 }
 
 // Has checks if a resource exists

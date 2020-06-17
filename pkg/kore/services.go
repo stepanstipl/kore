@@ -47,9 +47,8 @@ type Services interface {
 	// Get returns a specific service
 	Get(context.Context, string) (*servicesv1.Service, error)
 	// List returns a list of services
-	List(context.Context) (*servicesv1.ServiceList, error)
-	// ListFiltered returns a list of services using the given filter.
-	ListFiltered(context.Context, func(servicesv1.Service) bool) (*servicesv1.ServiceList, error)
+	// The optional filter functions can be used to include items only for which all functions return true
+	List(context.Context, ...func(servicesv1.Service) bool) (*servicesv1.ServiceList, error)
 	// Update is used to update a service
 	Update(context.Context, *servicesv1.Service) error
 }
@@ -98,34 +97,37 @@ func (s *servicesImpl) Delete(ctx context.Context, name string, o ...DeleteOptio
 }
 
 // List returns a list of services we have access to
-func (s *servicesImpl) List(ctx context.Context) (*servicesv1.ServiceList, error) {
+func (s *servicesImpl) List(ctx context.Context, filters ...func(servicesv1.Service) bool) (*servicesv1.ServiceList, error) {
 	list := &servicesv1.ServiceList{}
 
-	return list, s.Store().Client().List(ctx,
+	err := s.Store().Client().List(ctx,
 		store.ListOptions.InNamespace(s.team),
 		store.ListOptions.InTo(list),
 	)
-}
-
-// ListFiltered returns a list of services using the given filter.
-// A service is included if the filter function returns true
-func (p servicesImpl) ListFiltered(ctx context.Context, filter func(plan servicesv1.Service) bool) (*servicesv1.ServiceList, error) {
-	res := []servicesv1.Service{}
-
-	servicesList, err := p.List(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, service := range servicesList.Items {
-		if filter(service) {
-			res = append(res, service)
-		}
+	if len(filters) == 0 {
+		return list, nil
 	}
 
-	servicesList.Items = res
+	res := []servicesv1.Service{}
+	for _, item := range list.Items {
+		if func() bool {
+			for _, filter := range filters {
+				if !filter(item) {
+					return false
+				}
+			}
+			return true
+		}() {
+			res = append(res, item)
+		}
+	}
+	list.Items = res
 
-	return servicesList, nil
+	return list, nil
 }
 
 // Get returns a specific service

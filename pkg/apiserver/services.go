@@ -62,7 +62,7 @@ func (u teamHandler) listServices(req *restful.Request, resp *restful.Response) 
 		if user.IsGlobalAdmin() {
 			list, err = u.Teams().Team(team).Services().List(req.Request.Context())
 		} else {
-			list, err = u.Teams().Team(team).Services().ListFiltered(req.Request.Context(), func(service servicesv1.Service) bool {
+			list, err = u.Teams().Team(team).Services().List(req.Request.Context(), func(service servicesv1.Service) bool {
 				return service.Annotations[kore.AnnotationSystem] != "true"
 			})
 		}

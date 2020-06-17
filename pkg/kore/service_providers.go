@@ -104,9 +104,8 @@ type ServiceProviders interface {
 	// Get returns the service provider
 	Get(context.Context, string) (*servicesv1.ServiceProvider, error)
 	// List returns the existing service providers
-	List(context.Context) (*servicesv1.ServiceProviderList, error)
-	// ListFiltered returns a list of service providers using the given filter.
-	ListFiltered(context.Context, func(servicesv1.ServiceProvider) bool) (*servicesv1.ServiceProviderList, error)
+	// The optional filter functions can be used to include items only for which all functions return true
+	List(context.Context, ...func(servicesv1.ServiceProvider) bool) (*servicesv1.ServiceProviderList, error)
 	// Has checks if a service provider exists
 	Has(context.Context, string) (bool, error)
 	// Update is responsible for updating a service provider
@@ -228,34 +227,37 @@ func (p *serviceProvidersImpl) Get(ctx context.Context, name string) (*servicesv
 }
 
 // List returns the existing service providers
-func (p *serviceProvidersImpl) List(ctx context.Context) (*servicesv1.ServiceProviderList, error) {
-	providers := &servicesv1.ServiceProviderList{}
+func (p *serviceProvidersImpl) List(ctx context.Context, filters ...func(servicesv1.ServiceProvider) bool) (*servicesv1.ServiceProviderList, error) {
+	list := &servicesv1.ServiceProviderList{}
 
-	return providers, p.Store().Client().List(ctx,
+	err := p.Store().Client().List(ctx,
 		store.ListOptions.InNamespace(HubNamespace),
-		store.ListOptions.InTo(providers),
+		store.ListOptions.InTo(list),
 	)
-}
-
-// ListFiltered returns a list of service providers using the given filter.
-// A service provider is included if the filter function returns true
-func (p *serviceProvidersImpl) ListFiltered(ctx context.Context, filter func(plan servicesv1.ServiceProvider) bool) (*servicesv1.ServiceProviderList, error) {
-	var res []servicesv1.ServiceProvider
-
-	serviceProvidersList, err := p.List(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, serviceProvider := range serviceProvidersList.Items {
-		if filter(serviceProvider) {
-			res = append(res, serviceProvider)
-		}
+	if len(filters) == 0 {
+		return list, nil
 	}
 
-	serviceProvidersList.Items = res
+	res := []servicesv1.ServiceProvider{}
+	for _, item := range list.Items {
+		if func() bool {
+			for _, filter := range filters {
+				if !filter(item) {
+					return false
+				}
+			}
+			return true
+		}() {
+			res = append(res, item)
+		}
+	}
+	list.Items = res
 
-	return serviceProvidersList, nil
+	return list, nil
 }
 
 // Has checks if a service provider exists
@@ -388,7 +390,7 @@ func (p *serviceProvidersImpl) Unregister(ctx Context, serviceProvider *services
 }
 
 func (p *serviceProvidersImpl) unregisterKind(ctx context.Context, kind string) error {
-	plans, err := p.ServicePlans().ListFiltered(ctx, func(x servicesv1.ServicePlan) bool { return x.Spec.Kind == kind })
+	plans, err := p.ServicePlans().List(ctx, func(x servicesv1.ServicePlan) bool { return x.Spec.Kind == kind })
 	if err != nil {
 		return fmt.Errorf("failed to get service plans: %w", err)
 	}
@@ -417,7 +419,7 @@ func (p *serviceProvidersImpl) GetProviderForKind(ctx Context, kind string) (Ser
 		return provider, nil
 	}
 
-	providerList, err := p.ServiceProviders().ListFiltered(ctx, func(provider servicesv1.ServiceProvider) bool {
+	providerList, err := p.List(ctx, func(provider servicesv1.ServiceProvider) bool {
 		return utils.Contains(kind, provider.Status.SupportedKinds)
 	})
 	if err != nil {

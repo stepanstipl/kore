@@ -39,6 +39,7 @@ type ServiceKinds interface {
 	// Get returns the service kind
 	Get(context.Context, string) (*servicesv1.ServiceKind, error)
 	// List returns the existing service kinds
+	// The optional filter functions can be used to include items only for which all functions return true
 	List(context.Context, ...func(servicesv1.ServiceKind) bool) (*servicesv1.ServiceKindList, error)
 	// Has checks if a service kind exists
 	Has(context.Context, string) (bool, error)

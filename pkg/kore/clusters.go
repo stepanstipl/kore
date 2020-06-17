@@ -48,7 +48,8 @@ type Clusters interface {
 	// Get returns a specific cluster
 	Get(context.Context, string) (*clustersv1.Cluster, error)
 	// List returns a list of clusters we have access to
-	List(context.Context) (*clustersv1.ClusterList, error)
+	// The optional filter functions can be used to include items only for which all functions return true
+	List(context.Context, ...func(clustersv1.Cluster) bool) (*clustersv1.ClusterList, error)
 	// Update is used to update the cluster
 	Update(context.Context, *clustersv1.Cluster) error
 }
@@ -90,18 +91,37 @@ func (c *clustersImpl) Delete(ctx context.Context, name string, o ...DeleteOptio
 }
 
 // List returns a list of clusters we have access to
-func (c *clustersImpl) List(ctx context.Context) (*clustersv1.ClusterList, error) {
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsMember(c.team) && !user.IsGlobalAdmin() {
-		return nil, NewErrNotAllowed("must be global admin or a team member")
-	}
-
+func (c *clustersImpl) List(ctx context.Context, filters ...func(clustersv1.Cluster) bool) (*clustersv1.ClusterList, error) {
 	list := &clustersv1.ClusterList{}
 
-	return list, c.Store().Client().List(ctx,
+	err := c.Store().Client().List(ctx,
 		store.ListOptions.InNamespace(c.team),
 		store.ListOptions.InTo(list),
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(filters) == 0 {
+		return list, nil
+	}
+
+	res := []clustersv1.Cluster{}
+	for _, item := range list.Items {
+		if func() bool {
+			for _, filter := range filters {
+				if !filter(item) {
+					return false
+				}
+			}
+			return true
+		}() {
+			res = append(res, item)
+		}
+	}
+	list.Items = res
+
+	return list, nil
 }
 
 // Get returns a specific cluster

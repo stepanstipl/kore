@@ -94,16 +94,16 @@ func (s *serviceCredentialsImpl) List(ctx context.Context, filters ...func(crede
 	}
 
 	res := []servicesv1.ServiceCredentials{}
-	for _, sc := range list.Items {
+	for _, item := range list.Items {
 		if func() bool {
 			for _, filter := range filters {
-				if !filter(sc) {
+				if !filter(item) {
 					return false
 				}
 			}
 			return true
 		}() {
-			res = append(res, sc)
+			res = append(res, item)
 		}
 	}
 	list.Items = res

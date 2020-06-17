@@ -176,7 +176,7 @@ func (p servicePlansHandler) listServicePlans(req *restful.Request, resp *restfu
 		user := authentication.MustGetIdentity(req.Request.Context())
 		kind := strings.ToLower(req.QueryParameter("kind"))
 
-		list, err := p.ServicePlans().ListFiltered(req.Request.Context(), func(plan servicesv1.ServicePlan) bool {
+		list, err := p.ServicePlans().List(req.Request.Context(), func(plan servicesv1.ServicePlan) bool {
 			if kind != "" && plan.Spec.Kind != kind {
 				return false
 			}
