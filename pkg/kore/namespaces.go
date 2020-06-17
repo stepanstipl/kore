@@ -18,7 +18,14 @@ package kore
 
 import (
 	"context"
+	"fmt"
 	"strings"
+
+	v1 "github.com/appvia/kore/pkg/apis/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	"github.com/appvia/kore/pkg/utils/validation"
 
@@ -31,6 +38,8 @@ import (
 
 // NamespaceClaims is the interface to the class namespace claims
 type NamespaceClaims interface {
+	// CheckDelete verifies whether the namespace claim can be deleted
+	CheckDelete(context.Context, *clustersv1.NamespaceClaim, ...DeleteOptionFunc) error
 	// Delete is used to delete a namespace claim in the kore
 	Delete(context.Context, string, ...DeleteOptionFunc) (*clustersv1.NamespaceClaim, error)
 	// Get returns the class from the kore
@@ -42,12 +51,60 @@ type NamespaceClaims interface {
 	Has(context.Context, string) (bool, error)
 	// Update is responsible for update a namespace claim in the kore
 	Update(context.Context, *clustersv1.NamespaceClaim) (*clustersv1.NamespaceClaim, error)
+	// CreateForCluster creates a namespace claim for a cluster and namespace, if it doesn't already exist
+	CreateForCluster(ctx context.Context, cluster v1.Ownership, clusterNamespace string) error
 }
 
 type nsImpl struct {
 	*hubImpl
 	// team is the team
 	team string
+}
+
+// CheckDelete verifies whether the cluster can be deleted
+func (n *nsImpl) CheckDelete(ctx context.Context, namespaceClaim *clustersv1.NamespaceClaim, o ...DeleteOptionFunc) error {
+	opts := ResolveDeleteOptions(o)
+
+	if IsNamespaceNameProtected(namespaceClaim.Spec.Name) {
+		return NewErrNotAllowed("the namespace name is a protected or has a protected prefix")
+	}
+
+	exists, err := n.Teams().Exists(ctx, namespaceClaim.Spec.Name)
+	if err != nil {
+		return fmt.Errorf("failed to load team: %w", err)
+	}
+
+	if exists {
+		return NewErrNotAllowed("it is a team namespace")
+	}
+
+	if !opts.Cascade {
+		var dependents []kubernetes.DependentReference
+		services, err := n.Teams().Team(n.team).Services().List(ctx, func(s servicesv1.Service) bool { return kubernetes.HasOwnerReference(&s, namespaceClaim) })
+		if err != nil {
+			return fmt.Errorf("failed to list services: %w", err)
+		}
+		for _, item := range services.Items {
+			dependents = append(dependents, kubernetes.DependentReferenceFromObject(&item))
+		}
+
+		serviceCredentials, err := n.Teams().Team(n.team).ServiceCredentials().List(ctx, func(sc servicesv1.ServiceCredentials) bool { return kubernetes.HasOwnerReference(&sc, namespaceClaim) })
+		if err != nil {
+			return fmt.Errorf("failed to list service credentials: %w", err)
+		}
+		for _, item := range serviceCredentials.Items {
+			dependents = append(dependents, kubernetes.DependentReferenceFromObject(&item))
+		}
+
+		if len(dependents) > 0 {
+			return validation.ErrDependencyViolation{
+				Message:    "the following objects need to be deleted first",
+				Dependents: dependents,
+			}
+		}
+	}
+
+	return nil
 }
 
 // Delete is used to delete a namespace claim in the kore
@@ -59,17 +116,8 @@ func (n *nsImpl) Delete(ctx context.Context, name string, o ...DeleteOptionFunc)
 		return nil, err
 	}
 
-	if IsNamespaceNameProtected(original.Spec.Name) {
-		return nil, validation.NewError("namespace can not be deleted").WithFieldError("name", validation.InvalidValue, "is a protected name or has a protected prefix")
-	}
-
-	exists, err := n.Teams().Exists(ctx, original.Spec.Name)
-	if err != nil {
+	if err := opts.Check(original, func(o ...DeleteOptionFunc) error { return n.CheckDelete(ctx, original, o...) }); err != nil {
 		return nil, err
-	}
-
-	if exists {
-		return nil, validation.NewError("namespace can not be deleted").WithFieldError("name", validation.InvalidValue, "is a team namespace")
 	}
 
 	if err := n.Store().Client().Delete(ctx, append(opts.StoreOptions(), store.DeleteOptions.From(original))...); err != nil {
@@ -177,4 +225,39 @@ func IsNamespaceNameProtected(name string) bool {
 	default:
 		return false
 	}
+}
+
+// CreateForCluster creates a namespace claim for a cluster and namespace, if it doesn't already exist
+func (n *nsImpl) CreateForCluster(ctx context.Context, cluster v1.Ownership, clusterNamespace string) error {
+	name := fmt.Sprintf("%s-%s", cluster.Name, clusterNamespace)
+
+	exists, err := n.Has(ctx, name)
+	if err != nil || exists {
+		return err
+	}
+
+	if exists {
+		return nil
+	}
+
+	namespaceClaim := &clustersv1.NamespaceClaim{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: clustersv1.GroupVersion.String(),
+			Kind:       "NamespaceClaim",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: n.team,
+		},
+		Spec: clustersv1.NamespaceClaimSpec{
+			Name:    clusterNamespace,
+			Cluster: cluster,
+		},
+	}
+
+	if _, err := n.Update(ctx, namespaceClaim); err != nil {
+		return err
+	}
+
+	return nil
 }

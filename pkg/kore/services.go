@@ -22,13 +22,12 @@ import (
 	"fmt"
 	"reflect"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 
 	"github.com/appvia/kore/pkg/utils/configuration"
 
-	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils"
@@ -42,6 +41,8 @@ import (
 // Services returns the an interface for handling services
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Services
 type Services interface {
+	// CheckDelete verifies whether the service can be deleted
+	CheckDelete(ctx context.Context, service *servicesv1.Service, o ...DeleteOptionFunc) error
 	// Delete is used to delete a service
 	Delete(context.Context, string, ...DeleteOptionFunc) (*servicesv1.Service, error)
 	// Get returns a specific service
@@ -57,6 +58,31 @@ type servicesImpl struct {
 	*hubImpl
 	// team is the name
 	team string
+}
+
+// CheckDelete verifies whether the service can be deleted
+func (s *servicesImpl) CheckDelete(ctx context.Context, service *servicesv1.Service, o ...DeleteOptionFunc) error {
+	opts := ResolveDeleteOptions(o)
+
+	if !opts.Cascade {
+		var dependents []kubernetes.DependentReference
+		serviceCredentials, err := s.Teams().Team(s.team).ServiceCredentials().List(ctx, func(sc servicesv1.ServiceCredentials) bool { return kubernetes.HasOwnerReference(&sc, service) })
+		if err != nil {
+			return fmt.Errorf("failed to list service credentials: %w", err)
+		}
+		for _, item := range serviceCredentials.Items {
+			dependents = append(dependents, kubernetes.DependentReferenceFromObject(&item))
+		}
+
+		if len(dependents) > 0 {
+			return validation.ErrDependencyViolation{
+				Message:    "the following objects need to be deleted first",
+				Dependents: dependents,
+			}
+		}
+	}
+
+	return nil
 }
 
 // Delete is used to delete a service
@@ -80,17 +106,8 @@ func (s *servicesImpl) Delete(ctx context.Context, name string, o ...DeleteOptio
 		return nil, err
 	}
 
-	creds, err := s.Teams().Team(s.team).ServiceCredentials().List(ctx, func(s servicesv1.ServiceCredentials) bool {
-		return s.Spec.Service.Equals(corev1.MustGetOwnershipFromObject(original))
-	})
-	if err != nil {
-		logger.WithError(err).Error("failed to retrieve the service credentials")
-
+	if err := opts.Check(original, func(o ...DeleteOptionFunc) error { return s.CheckDelete(ctx, original, o...) }); err != nil {
 		return nil, err
-	}
-
-	if creds != nil && len(creds.Items) > 0 {
-		return nil, fmt.Errorf("the service can not be deleted, please delete all service credentials first")
 	}
 
 	return original, s.Store().Client().Delete(ctx, append(opts.StoreOptions(), store.DeleteOptions.From(original))...)
@@ -246,7 +263,9 @@ func (s *servicesImpl) Update(ctx context.Context, service *servicesv1.Service) 
 	}
 
 	if service.Spec.ClusterNamespace != "" {
-		if err := s.ensureNamespaceClaim(ctx, service); err != nil {
+		if err := s.Teams().Team(service.Spec.Cluster.Namespace).NamespaceClaims().CreateForCluster(
+			ctx, service.Spec.Cluster, service.Spec.ClusterNamespace,
+		); err != nil {
 			return err
 		}
 	}
@@ -386,39 +405,4 @@ func (s *servicesImpl) validateCluster(ctx context.Context, service *servicesv1.
 		return nil, err
 	}
 	return cluster, nil
-}
-
-func (s *servicesImpl) ensureNamespaceClaim(ctx context.Context, service *servicesv1.Service) error {
-	name := fmt.Sprintf("%s-%s", service.Spec.Cluster.Name, service.Spec.ClusterNamespace)
-
-	exists := true
-	namespaceClaim, err := s.Teams().Team(s.team).NamespaceClaims().Get(ctx, name)
-	if err != nil {
-		if !kerrors.IsNotFound(err) && err != ErrNotFound {
-			return err
-		}
-		exists = false
-	}
-	if !exists {
-		namespaceClaim = &clustersv1.NamespaceClaim{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: clustersv1.GroupVersion.String(),
-				Kind:       "NamespaceClaim",
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      name,
-				Namespace: s.team,
-			},
-			Spec: clustersv1.NamespaceClaimSpec{
-				Name:    service.Spec.ClusterNamespace,
-				Cluster: service.Spec.Cluster,
-			},
-		}
-
-		if _, err := s.Teams().Team(s.team).NamespaceClaims().Update(ctx, namespaceClaim); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }

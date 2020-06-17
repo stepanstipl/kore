@@ -14,6 +14,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 )
 
 // NewRemoveTeamParams creates a new RemoveTeamParams object
@@ -60,6 +61,11 @@ for the remove team operation typically these are written to a http.Request
 */
 type RemoveTeamParams struct {
 
+	/*Cascade
+	  If true then all objects owned by this object will be deleted too.
+
+	*/
+	Cascade *bool
 	/*Team
 	  Is the name of the team you are acting within
 
@@ -104,6 +110,17 @@ func (o *RemoveTeamParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithCascade adds the cascade to the remove team params
+func (o *RemoveTeamParams) WithCascade(cascade *bool) *RemoveTeamParams {
+	o.SetCascade(cascade)
+	return o
+}
+
+// SetCascade adds the cascade to the remove team params
+func (o *RemoveTeamParams) SetCascade(cascade *bool) {
+	o.Cascade = cascade
+}
+
 // WithTeam adds the team to the remove team params
 func (o *RemoveTeamParams) WithTeam(team string) *RemoveTeamParams {
 	o.SetTeam(team)
@@ -122,6 +139,22 @@ func (o *RemoveTeamParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Re
 		return err
 	}
 	var res []error
+
+	if o.Cascade != nil {
+
+		// query param cascade
+		var qrCascade bool
+		if o.Cascade != nil {
+			qrCascade = *o.Cascade
+		}
+		qCascade := swag.FormatBool(qrCascade)
+		if qCascade != "" {
+			if err := r.SetQueryParam("cascade", qCascade); err != nil {
+				return err
+			}
+		}
+
+	}
 
 	// path param team
 	if err := r.SetPathParam("team", o.Team); err != nil {

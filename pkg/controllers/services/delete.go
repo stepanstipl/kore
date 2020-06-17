@@ -18,6 +18,9 @@ package services
 
 import (
 	"context"
+	"time"
+
+	"github.com/appvia/kore/pkg/utils/validation"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/controllers"
@@ -50,6 +53,16 @@ func (c Controller) Delete(
 	if !service.Status.Status.OneOf(corev1.DeletingStatus, corev1.DeleteFailedStatus, corev1.ErrorStatus) {
 		service.Status.Status = corev1.DeletingStatus
 		return reconcile.Result{Requeue: true}, nil
+	}
+
+	if err := c.Teams().Team(service.Namespace).Services().CheckDelete(ctx, service); err != nil {
+		if dv, ok := err.(validation.ErrDependencyViolation); ok {
+			service.Status.Message = dv.Error()
+			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+		}
+		service.Status.Status = corev1.ErrorStatus
+		service.Status.Message = err.Error()
+		return reconcile.Result{}, err
 	}
 
 	result, err := provider.Delete(kore.NewContext(ctx, logger, c.mgr.GetClient(), c), service)

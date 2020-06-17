@@ -73,8 +73,8 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		return reconcile.Result{}, nil
 	}
 
-	// @step: create the finalizer on the object and check if deleting
-	if !cluster.DeletionTimestamp.IsZero() {
+	finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
+	if finalizer.IsDeletionCandidate(cluster) {
 		return a.Delete(ctx, cluster)
 	}
 
@@ -158,11 +158,13 @@ func (a *Controller) SetPending(cluster *clustersv1.Cluster) controllers.EnsureF
 			return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
 		}
 
-		if cluster.Status.Status != corev1.PendingStatus {
+		if cluster.Status.Status == "" {
 			cluster.Status.Status = corev1.PendingStatus
-
 			return reconcile.Result{Requeue: true}, nil
 		}
+
+		cluster.Status.Status = corev1.PendingStatus
+		cluster.Status.Message = ""
 
 		return reconcile.Result{}, nil
 	}

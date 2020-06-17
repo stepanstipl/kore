@@ -140,27 +140,25 @@ class NamespacesTab extends React.Component {
         return { namespaceClaims }
       }, done)
     } catch (err) {
+      if (err.statusCode === 409 && err.dependents) {
+        return Modal.warning({
+          title: 'The namespace can not be deleted',
+          content: (
+            <div>
+              <Paragraph strong>Error: {err.message}</Paragraph>
+              <List
+                size="small"
+                dataSource={err.dependents}
+                renderItem={d => <List.Item>{d.kind}: {d.name}</List.Item>}
+              />
+            </div>
+          ),
+          onOk() {}
+        })
+      }
       console.error('Error deleting namespace', err)
       errorMessage('Error deleting namespace, please try again.')
     }
-  }
-
-  deleteNamespaceConfirm = async (name, done) => {
-    const namespaceClaim = this.state.namespaceClaims.find(nc => nc.metadata.name === name)
-    const serviceCredentials = this.state.serviceCredentials.filter(sc => sc.spec.clusterNamespace === namespaceClaim.spec.name)
-    if (serviceCredentials.length > 0) {
-      return Modal.warning({
-        title: 'Warning: namespace cannot be deleted',
-        width: 600,
-        content: (
-          <div>
-            <Paragraph strong>All service accesses must be removed before the namespace can be deleted.</Paragraph>
-          </div>
-        ),
-        onOk() {}
-      })
-    }
-    await this.deleteNamespace(name, done)
   }
 
   deleteServiceCredential = async (name, done) => {
@@ -245,7 +243,7 @@ class NamespacesTab extends React.Component {
                     key={namespaceClaim.metadata.name}
                     team={team.metadata.name}
                     namespaceClaim={namespaceClaim}
-                    deleteNamespace={this.deleteNamespaceConfirm}
+                    deleteNamespace={this.deleteNamespace}
                     handleUpdate={this.handleResourceUpdated('namespaceClaims')}
                     handleDelete={this.handleResourceDeleted('namespaceClaims')}
                     refreshMs={2000}

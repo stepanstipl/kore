@@ -2088,6 +2088,12 @@
             "name": "team",
             "in": "path",
             "required": true
+          },
+          {
+            "type": "boolean",
+            "description": "If true then all objects owned by this object will be deleted too.",
+            "name": "cascade",
+            "in": "query"
           }
         ],
         "responses": {

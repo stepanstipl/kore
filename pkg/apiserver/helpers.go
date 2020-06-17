@@ -110,6 +110,8 @@ func handleError(req *restful.Request, resp *restful.Response, err error) {
 		code = http.StatusForbidden
 	case validation.Error, *validation.Error:
 		code = http.StatusBadRequest
+	case validation.ErrDependencyViolation, *validation.ErrDependencyViolation:
+		code = http.StatusConflict
 	}
 
 	if err == gorm.ErrRecordNotFound {
@@ -126,6 +128,8 @@ func handleError(req *restful.Request, resp *restful.Response, err error) {
 func writeError(req *restful.Request, resp *restful.Response, err error, code int) {
 	switch err.(type) {
 	case validation.Error, *validation.Error:
+		// Error can be directly serialized to json so just return that.
+	case validation.ErrDependencyViolation, *validation.ErrDependencyViolation:
 		// Error can be directly serialized to json so just return that.
 	default:
 		err = newError(err.Error()).

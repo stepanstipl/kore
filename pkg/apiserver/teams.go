@@ -139,6 +139,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Doc("Used to delete a team from the kore").
 			Operation("RemoveTeam").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(params.DeleteCascade()).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", orgv1.Team{}).
 			Returns(http.StatusNotFound, "Team does not exist", nil).
 			Returns(http.StatusNotAcceptable, "Indicates you cannot delete the team for one or more reasons", Error{}).
@@ -819,7 +820,7 @@ func (u teamHandler) findTeamAudit(req *restful.Request, resp *restful.Response)
 // deleteTeam is responsible for deleting a team from the kore
 func (u teamHandler) deleteTeam(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
-		err := u.Teams().Delete(req.Request.Context(), req.PathParameter("team"))
+		err := u.Teams().Delete(req.Request.Context(), req.PathParameter("team"), parseDeleteOpts(req)...)
 		if err != nil {
 			return err
 		}

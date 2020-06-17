@@ -17,8 +17,11 @@
 package kore
 
 import (
+	"fmt"
+
 	"github.com/appvia/kore/pkg/persistence"
 	"github.com/appvia/kore/pkg/store"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -33,6 +36,7 @@ func WithUsersService(v persistence.Interface) optionsFunc {
 
 // DeleteOptions controls how to delete objects
 type DeleteOptions struct {
+	SkipCheck      bool
 	IgnoreReadOnly bool
 	Cascade        bool
 }
@@ -43,6 +47,22 @@ func (d DeleteOptions) StoreOptions() []store.DeleteOptionFunc {
 		opts = append(opts, store.DeleteOptions.PropagationPolicy(metav1.DeletePropagationForeground))
 	}
 	return opts
+}
+
+func (d DeleteOptions) Check(object kubernetes.Object, f func(o ...DeleteOptionFunc) error) error {
+	if d.SkipCheck {
+		return nil
+	}
+
+	if !d.IgnoreReadOnly && IsReadOnlyResource(object) {
+		return NewErrNotAllowed(fmt.Sprintf("%q is read-only and can not be deleted", object.GetName()))
+	}
+
+	return f(d.Copy)
+}
+
+func (d DeleteOptions) Copy(opts *DeleteOptions) {
+	*opts = d
 }
 
 // ResolveDeleteOptions will apply all delete option modifiers and returns with the delete options
@@ -70,5 +90,12 @@ func DeleteOptionIgnoreReadOnly(ignoreReadonly bool) DeleteOptionFunc {
 func DeleteOptionCascade(cascade bool) DeleteOptionFunc {
 	return func(opts *DeleteOptions) {
 		opts.Cascade = cascade
+	}
+}
+
+// DeleteOptionSkipCheck controls whether the delete checks should be skipped
+func DeleteOptionSkipCheck(skipCheck bool) DeleteOptionFunc {
+	return func(opts *DeleteOptions) {
+		opts.SkipCheck = skipCheck
 	}
 }

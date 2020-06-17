@@ -94,19 +94,19 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 		return reconcile.Result{}, err
 	}
 
-	if service.Status.Status != corev1.SuccessStatus {
-		creds.Status.Status = corev1.PendingStatus
-		creds.Status.Message = fmt.Sprintf("Service %q is not ready", creds.Spec.Service.Name)
-		return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+	finalizer := kubernetes.NewFinalizer(c.mgr.GetClient(), finalizerName)
+	if finalizer.IsDeletionCandidate(creds) {
+		return c.delete(ctx, logger, service, creds, finalizer, provider)
 	}
 
 	if !kore.IsSystemResource(creds) && !kubernetes.HasOwnerReferenceWithKind(creds, servicesv1.ServiceGVK) {
 		return helpers.EnsureOwnerReference(ctx, c.mgr.GetClient(), creds, service)
 	}
 
-	finalizer := kubernetes.NewFinalizer(c.mgr.GetClient(), finalizerName)
-	if finalizer.IsDeletionCandidate(creds) {
-		return c.delete(ctx, logger, service, creds, finalizer, provider)
+	if service.Status.Status != corev1.SuccessStatus {
+		creds.Status.Status = corev1.PendingStatus
+		creds.Status.Message = fmt.Sprintf("Service %q is not ready", creds.Spec.Service.Name)
+		return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
 	}
 
 	result, err := func() (reconcile.Result, error) {

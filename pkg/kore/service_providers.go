@@ -26,6 +26,7 @@ import (
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/configuration"
 	"github.com/appvia/kore/pkg/utils/jsonschema"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
 	"github.com/appvia/kore/pkg/utils/validation"
 
 	log "github.com/sirupsen/logrus"
@@ -99,6 +100,8 @@ type ServiceProvider interface {
 
 // ServiceProviders is the interface to manage service providers
 type ServiceProviders interface {
+	// CheckDelete verifies whether the service providercan be deleted
+	CheckDelete(ctx context.Context, serviceProvider *servicesv1.ServiceProvider, o ...DeleteOptionFunc) error
 	// Delete is used to delete a service provider in the kore
 	Delete(context.Context, string, ...DeleteOptionFunc) (*servicesv1.ServiceProvider, error)
 	// Get returns the service provider
@@ -181,6 +184,41 @@ func (p *serviceProvidersImpl) Update(ctx context.Context, provider *servicesv1.
 	return nil
 }
 
+// CheckDelete verifies whether the service provider can be deleted
+func (p *serviceProvidersImpl) CheckDelete(ctx context.Context, serviceProvider *servicesv1.ServiceProvider, o ...DeleteOptionFunc) error {
+	opts := ResolveDeleteOptions(o)
+
+	if !opts.Cascade {
+		var dependents []kubernetes.DependentReference
+
+		teamList, err := p.Teams().List(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to list teams: %w", err)
+		}
+
+		for _, team := range teamList.Items {
+			services, err := p.Teams().Team(team.Name).Services().List(ctx, func(s servicesv1.Service) bool {
+				return utils.Contains(s.Spec.Kind, serviceProvider.Status.SupportedKinds)
+			})
+			if err != nil {
+				return fmt.Errorf("failed to list services: %w", err)
+			}
+			for _, item := range services.Items {
+				dependents = append(dependents, kubernetes.DependentReferenceFromObject(&item))
+			}
+		}
+
+		if len(dependents) > 0 {
+			return validation.ErrDependencyViolation{
+				Message:    "the following objects need to be deleted first",
+				Dependents: dependents,
+			}
+		}
+	}
+
+	return nil
+}
+
 // Delete is used to delete a service provider in the kore
 func (p *serviceProvidersImpl) Delete(ctx context.Context, name string, o ...DeleteOptionFunc) (*servicesv1.ServiceProvider, error) {
 	opts := ResolveDeleteOptions(o)
@@ -197,6 +235,10 @@ func (p *serviceProvidersImpl) Delete(ctx context.Context, name string, o ...Del
 		}
 		log.WithError(err).Error("failed to retrieve the service provider")
 
+		return nil, err
+	}
+
+	if err := opts.Check(provider, func(o ...DeleteOptionFunc) error { return p.CheckDelete(ctx, provider, o...) }); err != nil {
 		return nil, err
 	}
 
@@ -356,7 +398,7 @@ func (p *serviceProvidersImpl) Catalog(ctx Context, serviceProvider *servicesv1.
 	// check for removed kinds
 	for kind, rp := range p.providers {
 		if rp.Name() == serviceProvider.Name && !utils.Contains(kind, supportedKinds) {
-			if err := p.unregisterKind(ctx, kind); err != nil {
+			if err := p.unregisterKind(ctx, kind, false); err != nil {
 				return ServiceProviderCatalog{}, fmt.Errorf("failed to unregister service kind %q: %w", kind, err)
 			}
 		}
@@ -371,7 +413,7 @@ func (p *serviceProvidersImpl) Unregister(ctx Context, serviceProvider *services
 	defer p.providersLock.Unlock()
 
 	for _, kind := range serviceProvider.Status.SupportedKinds {
-		if err := p.unregisterKind(ctx, kind); err != nil {
+		if err := p.unregisterKind(ctx, kind, true); err != nil {
 			return false, err
 		}
 	}
@@ -389,18 +431,18 @@ func (p *serviceProvidersImpl) Unregister(ctx Context, serviceProvider *services
 	return factory.TearDown(ctx, serviceProvider)
 }
 
-func (p *serviceProvidersImpl) unregisterKind(ctx context.Context, kind string) error {
+func (p *serviceProvidersImpl) unregisterKind(ctx context.Context, kind string, skipCheck bool) error {
 	plans, err := p.ServicePlans().List(ctx, func(x servicesv1.ServicePlan) bool { return x.Spec.Kind == kind })
 	if err != nil {
 		return fmt.Errorf("failed to get service plans: %w", err)
 	}
 	for _, plan := range plans.Items {
-		if _, err := p.ServicePlans().Delete(ctx, plan.Name, DeleteOptionIgnoreReadOnly(true)); err != nil && err != ErrNotFound {
+		if _, err := p.ServicePlans().Delete(ctx, plan.Name, DeleteOptionSkipCheck(skipCheck)); err != nil && err != ErrNotFound {
 			return fmt.Errorf("failed to delete service plan %q: %w", plan.Name, err)
 		}
 	}
 
-	_, err = p.ServiceKinds().Delete(ctx, kind)
+	_, err = p.ServiceKinds().Delete(ctx, kind, DeleteOptionSkipCheck(skipCheck))
 	if err != nil && err != ErrNotFound {
 		return fmt.Errorf("failed to delete service kind: %w", err)
 	}

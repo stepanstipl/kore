@@ -24,6 +24,9 @@ import (
 	"reflect"
 	"strings"
 
+	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	"github.com/appvia/kore/pkg/kore/assets"
@@ -43,6 +46,8 @@ const (
 
 // Clusters returns the an interface for handling clusters
 type Clusters interface {
+	// CheckDelete verifies whether the cluster can be deleted
+	CheckDelete(context.Context, *clustersv1.Cluster, ...DeleteOptionFunc) error
 	// Delete is used to delete a cluster
 	Delete(context.Context, string, ...DeleteOptionFunc) (*clustersv1.Cluster, error)
 	// Get returns a specific cluster
@@ -58,6 +63,39 @@ type clustersImpl struct {
 	*hubImpl
 	// team is the name
 	team string
+}
+
+// CheckDelete verifies whether the cluster can be deleted
+func (c *clustersImpl) CheckDelete(ctx context.Context, cluster *clustersv1.Cluster, o ...DeleteOptionFunc) error {
+	opts := ResolveDeleteOptions(o)
+
+	if !opts.Cascade {
+		var dependents []kubernetes.DependentReference
+		services, err := c.Teams().Team(c.team).Services().List(ctx, func(s servicesv1.Service) bool { return kubernetes.HasOwnerReference(&s, cluster) })
+		if err != nil {
+			return fmt.Errorf("failed to list services: %w", err)
+		}
+		for _, item := range services.Items {
+			dependents = append(dependents, kubernetes.DependentReferenceFromObject(&item))
+		}
+
+		namespaceClaims, err := c.Teams().Team(c.team).NamespaceClaims().List(ctx, func(nc clustersv1.NamespaceClaim) bool { return kubernetes.HasOwnerReference(&nc, cluster) })
+		if err != nil {
+			return fmt.Errorf("failed to list namespace claims: %w", err)
+		}
+		for _, item := range namespaceClaims.Items {
+			dependents = append(dependents, kubernetes.DependentReferenceFromObject(&item))
+		}
+
+		if len(dependents) > 0 {
+			return validation.ErrDependencyViolation{
+				Message:    "the following objects need to be deleted first",
+				Dependents: dependents,
+			}
+		}
+	}
+
+	return nil
 }
 
 // Delete is used to delete a cluster
@@ -83,8 +121,8 @@ func (c *clustersImpl) Delete(ctx context.Context, name string, o ...DeleteOptio
 		return nil, err
 	}
 
-	if original.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
-		return nil, validation.NewError("the cluster can not be deleted").WithFieldError(validation.FieldRoot, validation.ReadOnly, "cluster is read-only")
+	if err := opts.Check(original, func(o ...DeleteOptionFunc) error { return c.CheckDelete(ctx, original, o...) }); err != nil {
+		return nil, err
 	}
 
 	return original, c.Store().Client().Delete(ctx, append(opts.StoreOptions(), store.DeleteOptions.From(original))...)

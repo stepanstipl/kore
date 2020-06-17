@@ -4,7 +4,8 @@ import KoreApi from '../../../lib/kore-api'
 import { Card, Divider, Typography, Icon, Switch, Tooltip, List, Avatar, Button, Drawer, Modal } from 'antd'
 import ManageServicePlanForm from '../../../lib/components/plans/ManageServicePlanForm'
 import { isReadOnlyCRD } from '../../utils/crd-helpers'
-const { Text, Title } = Typography
+import { errorMessage } from '../../utils/message'
+const { Text, Title, Paragraph } = Typography
 
 export default class ServiceKindManage extends React.Component {
   static propTypes = {
@@ -111,9 +112,29 @@ export default class ServiceKindManage extends React.Component {
       okType: 'danger',
       cancelText: 'No',
       onOk: async () => {
-        const api = await KoreApi.client()
-        await api.DeleteServicePlan(plan.metadata.name)
-        await this.refreshPlans()
+        try {
+          const api = await KoreApi.client()
+          await api.DeleteServicePlan(plan.metadata.name)
+          await this.refreshPlans()
+        } catch (err) {
+          if (err.statusCode === 409 && err.dependents) {
+            return Modal.warning({
+              title: 'The service plan can not be deleted',
+              content: (
+                <div>
+                  <Paragraph strong>Error: {err.message}</Paragraph>
+                  <List
+                    size="small"
+                    dataSource={err.dependents}
+                    renderItem={d => <List.Item>{d.kind}: {d.name}</List.Item>}
+                  />
+                </div>
+              ),
+              onOk() {}
+            })
+          }
+          errorMessage('Error deleting service plan, please try again.')
+        }
       }
     })
   }

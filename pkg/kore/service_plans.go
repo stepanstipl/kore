@@ -25,13 +25,12 @@ import (
 	"strings"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
-	"github.com/appvia/kore/pkg/utils/jsonutils"
-
-	"github.com/appvia/kore/pkg/utils"
-
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/store"
+	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/jsonschema"
+	"github.com/appvia/kore/pkg/utils/jsonutils"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
 	"github.com/appvia/kore/pkg/utils/validation"
 
 	log "github.com/sirupsen/logrus"
@@ -47,6 +46,8 @@ type ServicePlanDetails struct {
 // ServicePlans is the interface to manage service plans
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . ServicePlans
 type ServicePlans interface {
+	// CheckDelete verifies whether the service plan can be deleted
+	CheckDelete(context.Context, *servicesv1.ServicePlan, ...DeleteOptionFunc) error
 	// Delete is used to delete a service plan in the kore
 	Delete(context.Context, string, ...DeleteOptionFunc) (*servicesv1.ServicePlan, error)
 	// Get returns the service plan
@@ -147,6 +148,41 @@ func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePl
 	return nil
 }
 
+// CheckDelete verifies whether the service plan can be deleted
+func (p servicePlansImpl) CheckDelete(ctx context.Context, servicePlan *servicesv1.ServicePlan, o ...DeleteOptionFunc) error {
+	opts := ResolveDeleteOptions(o)
+
+	if !opts.Cascade {
+		var dependents []kubernetes.DependentReference
+
+		teamList, err := p.Teams().List(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to list teams: %w", err)
+		}
+
+		for _, team := range teamList.Items {
+			services, err := p.Teams().Team(team.Name).Services().List(ctx, func(s servicesv1.Service) bool {
+				return s.Spec.Plan == servicePlan.Name
+			})
+			if err != nil {
+				return fmt.Errorf("failed to list services: %w", err)
+			}
+			for _, item := range services.Items {
+				dependents = append(dependents, kubernetes.DependentReferenceFromObject(&item))
+			}
+		}
+
+		if len(dependents) > 0 {
+			return validation.ErrDependencyViolation{
+				Message:    "the following objects need to be deleted first",
+				Dependents: dependents,
+			}
+		}
+	}
+
+	return nil
+}
+
 // Delete is used to delete a service plan in the kore
 func (p servicePlansImpl) Delete(ctx context.Context, name string, o ...DeleteOptionFunc) (*servicesv1.ServicePlan, error) {
 	opts := ResolveDeleteOptions(o)
@@ -166,29 +202,8 @@ func (p servicePlansImpl) Delete(ctx context.Context, name string, o ...DeleteOp
 		return nil, err
 	}
 
-	if !opts.IgnoreReadOnly {
-		if plan.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
-			return nil, validation.NewError("the service plan can not be deleted").
-				WithFieldError(validation.FieldRoot, validation.ReadOnly, "service plan is read-only")
-		}
-	}
-
-	servicesWithPlan, err := p.getServicesWithPlan(ctx, name)
-	if err != nil {
+	if err := opts.Check(plan, func(o ...DeleteOptionFunc) error { return p.CheckDelete(ctx, plan, o...) }); err != nil {
 		return nil, err
-	}
-	if len(servicesWithPlan) > 0 {
-		if len(servicesWithPlan) <= 5 {
-			return nil, fmt.Errorf(
-				"the service plan can not be deleted as there are %d services using it: %s",
-				len(servicesWithPlan),
-				strings.Join(servicesWithPlan, ", "),
-			)
-		}
-		return nil, fmt.Errorf(
-			"the service plan can not be deleted as there are %d services using it",
-			len(servicesWithPlan),
-		)
 	}
 
 	if err := p.Store().Client().Delete(ctx, append(opts.StoreOptions(), store.DeleteOptions.From(plan))...); err != nil {
@@ -352,27 +367,4 @@ func (p servicePlansImpl) compileTemplate(content string, cluster *clustersv1.Cl
 	}
 
 	return tmplBuf.String(), nil
-}
-
-func (p servicePlansImpl) getServicesWithPlan(ctx context.Context, clusterName string) ([]string, error) {
-	var res []string
-
-	teamList, err := p.Teams().List(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, team := range teamList.Items {
-		servicesList, err := p.Teams().Team(team.Name).Services().List(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, service := range servicesList.Items {
-			if service.Spec.Plan == clusterName {
-				res = append(res, fmt.Sprintf("%s/%s", team.Name, service.Name))
-			}
-		}
-	}
-
-	return res, nil
 }

@@ -21,6 +21,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/appvia/kore/pkg/utils/validation"
+
 	log "github.com/sirupsen/logrus"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
@@ -42,12 +44,6 @@ func (a *Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (r
 
 	logger.Debug("attempting to delete the cluster from the api")
 
-	finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
-	if !finalizer.IsDeletionCandidate(cluster) {
-		logger.Debug("not ready for deletion yet")
-
-		return reconcile.Result{}, nil
-	}
 	original := cluster.DeepCopyObject()
 
 	components, err := NewComponents()
@@ -66,6 +62,7 @@ func (a *Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (r
 		return controllers.DefaultEnsureHandler.Run(ctx,
 			[]controllers.EnsureFunc{
 				a.Deleting(cluster),
+				a.CheckDelete(cluster),
 				p.Components(cluster, components),
 				a.Components(cluster, components),
 				a.Load(cluster, components),
@@ -97,6 +94,7 @@ func (a *Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (r
 // Deleting ensures the state of the cluster is set to pending if not
 func (a *Controller) Deleting(cluster *clustersv1.Cluster) controllers.EnsureFunc {
 	return func(ctx context.Context) (reconcile.Result, error) {
+		cluster.Status.Message = ""
 
 		switch cluster.Status.Status {
 		case corev1.SuccessStatus, corev1.FailureStatus, corev1.PendingStatus, "":
@@ -110,6 +108,20 @@ func (a *Controller) Deleting(cluster *clustersv1.Cluster) controllers.EnsureFun
 
 		// else the cluster is not in a state to delete yet
 		return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+	}
+}
+
+// CheckDelete checks whether the cluster can be deleted
+func (a *Controller) CheckDelete(cluster *clustersv1.Cluster) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		if err := a.Teams().Team(cluster.Namespace).Clusters().CheckDelete(ctx, cluster); err != nil {
+			if dv, ok := err.(validation.ErrDependencyViolation); ok {
+				cluster.Status.Message = dv.Error()
+				return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+			}
+			return reconcile.Result{}, err
+		}
+		return reconcile.Result{}, nil
 	}
 }
 

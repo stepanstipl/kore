@@ -10,6 +10,19 @@ import (
 )
 
 type FakeServiceKinds struct {
+	CheckDeleteStub        func(context.Context, *v1.ServiceKind, ...kore.DeleteOptionFunc) error
+	checkDeleteMutex       sync.RWMutex
+	checkDeleteArgsForCall []struct {
+		arg1 context.Context
+		arg2 *v1.ServiceKind
+		arg3 []kore.DeleteOptionFunc
+	}
+	checkDeleteReturns struct {
+		result1 error
+	}
+	checkDeleteReturnsOnCall map[int]struct {
+		result1 error
+	}
 	DeleteStub        func(context.Context, string, ...kore.DeleteOptionFunc) (*v1.ServiceKind, error)
 	deleteMutex       sync.RWMutex
 	deleteArgsForCall []struct {
@@ -81,6 +94,68 @@ type FakeServiceKinds struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *FakeServiceKinds) CheckDelete(arg1 context.Context, arg2 *v1.ServiceKind, arg3 ...kore.DeleteOptionFunc) error {
+	fake.checkDeleteMutex.Lock()
+	ret, specificReturn := fake.checkDeleteReturnsOnCall[len(fake.checkDeleteArgsForCall)]
+	fake.checkDeleteArgsForCall = append(fake.checkDeleteArgsForCall, struct {
+		arg1 context.Context
+		arg2 *v1.ServiceKind
+		arg3 []kore.DeleteOptionFunc
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("CheckDelete", []interface{}{arg1, arg2, arg3})
+	fake.checkDeleteMutex.Unlock()
+	if fake.CheckDeleteStub != nil {
+		return fake.CheckDeleteStub(arg1, arg2, arg3...)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.checkDeleteReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeServiceKinds) CheckDeleteCallCount() int {
+	fake.checkDeleteMutex.RLock()
+	defer fake.checkDeleteMutex.RUnlock()
+	return len(fake.checkDeleteArgsForCall)
+}
+
+func (fake *FakeServiceKinds) CheckDeleteCalls(stub func(context.Context, *v1.ServiceKind, ...kore.DeleteOptionFunc) error) {
+	fake.checkDeleteMutex.Lock()
+	defer fake.checkDeleteMutex.Unlock()
+	fake.CheckDeleteStub = stub
+}
+
+func (fake *FakeServiceKinds) CheckDeleteArgsForCall(i int) (context.Context, *v1.ServiceKind, []kore.DeleteOptionFunc) {
+	fake.checkDeleteMutex.RLock()
+	defer fake.checkDeleteMutex.RUnlock()
+	argsForCall := fake.checkDeleteArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+}
+
+func (fake *FakeServiceKinds) CheckDeleteReturns(result1 error) {
+	fake.checkDeleteMutex.Lock()
+	defer fake.checkDeleteMutex.Unlock()
+	fake.CheckDeleteStub = nil
+	fake.checkDeleteReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeServiceKinds) CheckDeleteReturnsOnCall(i int, result1 error) {
+	fake.checkDeleteMutex.Lock()
+	defer fake.checkDeleteMutex.Unlock()
+	fake.CheckDeleteStub = nil
+	if fake.checkDeleteReturnsOnCall == nil {
+		fake.checkDeleteReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.checkDeleteReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
 }
 
 func (fake *FakeServiceKinds) Delete(arg1 context.Context, arg2 string, arg3 ...kore.DeleteOptionFunc) (*v1.ServiceKind, error) {
@@ -404,6 +479,8 @@ func (fake *FakeServiceKinds) UpdateReturnsOnCall(i int, result1 error) {
 func (fake *FakeServiceKinds) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.checkDeleteMutex.RLock()
+	defer fake.checkDeleteMutex.RUnlock()
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
 	fake.getMutex.RLock()

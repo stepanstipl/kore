@@ -288,6 +288,11 @@ func EmptyUser(username string) *orgv1.User {
 	}
 }
 
+// IsReadOnlyResource returns true if the given Kubernetes object is read-only
+func IsReadOnlyResource(object metav1.Object) bool {
+	return object.GetAnnotations()[AnnotationReadOnly] == AnnotationValueTrue
+}
+
 // IsSystemResource returns true if the given Kubernetes object is managed by Kore
 func IsSystemResource(object metav1.Object) bool {
 	return object.GetAnnotations()[AnnotationSystem] == AnnotationValueTrue

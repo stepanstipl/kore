@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import Link from 'next/link'
 import Router from 'next/router'
 import Error from 'next/error'
-import { Typography, Button, Badge, Alert, Icon, Modal, Dropdown, Menu, Tabs } from 'antd'
+import { Typography, Button, Badge, Alert, Icon, Modal, Dropdown, Menu, Tabs, List } from 'antd'
 const { Paragraph, Text } = Typography
 const { TabPane } = Tabs
 
@@ -83,21 +83,28 @@ class TeamDashboardTabPage extends React.Component {
       successMessage(`Team "${team}" deleted`)
       return redirect({ router: Router, path: '/' })
     } catch (err) {
+      if (err.statusCode === 409 && err.dependents) {
+        return Modal.warning({
+          title: 'The team can not be deleted',
+          content: (
+            <div>
+              <Paragraph strong>Error: {err.message}</Paragraph>
+              <List
+                size="small"
+                dataSource={err.dependents}
+                renderItem={d => <List.Item>{d.kind}: {d.name}</List.Item>}
+              />
+            </div>
+          ),
+          onOk() {}
+        })
+      }
       console.log('Error deleting team', err)
       errorMessage('Team could not be deleted, please try again later')
     }
   }
 
   deleteTeamConfirm = () => {
-    const { clusterCount } = this.state
-    if (clusterCount > 0) {
-      return Modal.warning({
-        title: 'Warning: team cannot be deleted',
-        content: 'The clusters must be deleted first',
-        onOk() {}
-      })
-    }
-
     Modal.confirm({
       title: 'Are you sure you want to delete this team?',
       content: 'This cannot be undone',

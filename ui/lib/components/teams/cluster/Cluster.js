@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types'
 import moment from 'moment'
 import Link from 'next/link'
-import { List, Icon, Typography, Modal, Popconfirm, Tag, Tooltip } from 'antd'
-const { Text, Paragraph } = Typography
+import { List, Icon, Typography, Popconfirm, Tag, Tooltip } from 'antd'
+const { Text } = Typography
 
 import { clusterProviderIconSrcMap, inProgressStatusList } from '../../../utils/ui-helpers'
 import ResourceStatusTag from '../../resources/ResourceStatusTag'
@@ -33,24 +33,6 @@ class Cluster extends AutoRefreshComponent {
   }
 
   deleteCluster = () => {
-    const { namespaceClaims } = this.props
-    if (namespaceClaims.length > 0) {
-      return Modal.warning({
-        title: 'Warning: cluster cannot be deleted',
-        content: (
-          <div>
-            <Paragraph strong>The cluster namespaces must be deleted first</Paragraph>
-            <List
-              size="small"
-              dataSource={namespaceClaims}
-              renderItem={ns => <List.Item>{ns.spec.name}</List.Item>}
-            />
-          </div>
-        ),
-        onOk() {}
-      })
-    }
-
     this.props.deleteCluster(this.props.cluster.metadata.name, () => {
       this.startRefreshing()
     })
