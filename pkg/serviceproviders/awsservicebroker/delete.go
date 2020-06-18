@@ -30,7 +30,54 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/iam"
 )
+
+func (d ProviderFactory) deleteIAMRole(sess *session.Session, config *ProviderConfiguration) error {
+	iamClient := iam.New(sess)
+
+	roleExists := true
+	role, err := iamClient.GetRole(&iam.GetRoleInput{RoleName: aws.String(config.AWSIAMRoleName)})
+	if err != nil {
+		if !isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") && !isAWSErrRequestFailureStatusCode(err, http.StatusNotFound) {
+			return fmt.Errorf("failed to get IAM role %q: %w", config.AWSIAMRoleName, err)
+		}
+		roleExists = false
+	}
+
+	if !roleExists {
+		return nil
+	}
+
+	managed := false
+	for _, tag := range role.Role.Tags {
+		if aws.StringValue(tag.Key) == "kore.appvia.io/managed" && aws.StringValue(tag.Value) == "true" {
+			managed = true
+			break
+		}
+	}
+
+	if !managed {
+		return nil
+	}
+
+	_, err = iamClient.DeleteRolePolicy(&iam.DeleteRolePolicyInput{
+		RoleName:   aws.String(config.AWSIAMRoleName),
+		PolicyName: aws.String("Main"),
+	})
+	if err != nil {
+		if !isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") && !isAWSErrRequestFailureStatusCode(err, http.StatusNotFound) {
+			return fmt.Errorf("failed to delete policy on  IAM role %q: %w", config.AWSIAMRoleName, err)
+		}
+	}
+
+	_, err = iamClient.DeleteRole(&iam.DeleteRoleInput{RoleName: aws.String(config.AWSIAMRoleName)})
+	if err != nil {
+		return fmt.Errorf("failed to delete IAM role %q: %w", config.AWSIAMRoleName, err)
+	}
+
+	return nil
+}
 
 func (d ProviderFactory) deleteDynamoDBTable(sess *session.Session, config *ProviderConfiguration) error {
 	ddbClient := dynamodb.New(sess, &aws.Config{Region: aws.String(config.Region)})

@@ -1614,6 +1614,18 @@ spec:
               description: Infra provides a cache of values discovered from infrastructure
                 k8s:openapi-gen=false
               properties:
+                availabilityZoneIDs:
+                  description: AvailabilityZoneIDs is the list of AZ ids
+                  items:
+                    type: string
+                  type: array
+                  x-kubernetes-list-type: set
+                availabilityZoneNames:
+                  description: AvailabilityZoneIDs is the list of AZ names
+                  items:
+                    type: string
+                  type: array
+                  x-kubernetes-list-type: set
                 ipv4EgressAddresses:
                   description: PublicIPV4EgressAddresses provides the source addresses
                     for traffic coming from the cluster - can provide input for securing
@@ -1642,6 +1654,9 @@ spec:
                     type: string
                   type: array
                   x-kubernetes-list-type: set
+                vpcID:
+                  description: VpcID is the identifier of the VPC
+                  type: string
               type: object
             status:
               description: Status provides a overall status
@@ -1825,6 +1840,10 @@ spec:
             message:
               description: Message is the description of the current status
               type: string
+            providerData:
+              description: ProviderData is provider specific data
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
             status:
               description: Status is the overall status of the cluster
               type: string

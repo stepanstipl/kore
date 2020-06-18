@@ -39,47 +39,20 @@ type FakeServicePlans struct {
 		result1 *v1.ServicePlan
 		result2 error
 	}
-	GetCredentialSchemaStub        func(context.Context, string) (string, error)
-	getCredentialSchemaMutex       sync.RWMutex
-	getCredentialSchemaArgsForCall []struct {
-		arg1 context.Context
-		arg2 string
-	}
-	getCredentialSchemaReturns struct {
-		result1 string
-		result2 error
-	}
-	getCredentialSchemaReturnsOnCall map[int]struct {
-		result1 string
-		result2 error
-	}
-	GetEditablePlanParamsStub        func(context.Context, string, string) (map[string]bool, error)
-	getEditablePlanParamsMutex       sync.RWMutex
-	getEditablePlanParamsArgsForCall []struct {
+	GetDetailsStub        func(context.Context, string, string, string) (kore.ServicePlanDetails, error)
+	getDetailsMutex       sync.RWMutex
+	getDetailsArgsForCall []struct {
 		arg1 context.Context
 		arg2 string
 		arg3 string
+		arg4 string
 	}
-	getEditablePlanParamsReturns struct {
-		result1 map[string]bool
+	getDetailsReturns struct {
+		result1 kore.ServicePlanDetails
 		result2 error
 	}
-	getEditablePlanParamsReturnsOnCall map[int]struct {
-		result1 map[string]bool
-		result2 error
-	}
-	GetSchemaStub        func(context.Context, string) (string, error)
-	getSchemaMutex       sync.RWMutex
-	getSchemaArgsForCall []struct {
-		arg1 context.Context
-		arg2 string
-	}
-	getSchemaReturns struct {
-		result1 string
-		result2 error
-	}
-	getSchemaReturnsOnCall map[int]struct {
-		result1 string
+	getDetailsReturnsOnCall map[int]struct {
+		result1 kore.ServicePlanDetails
 		result2 error
 	}
 	HasStub        func(context.Context, string) (bool, error)
@@ -269,195 +242,68 @@ func (fake *FakeServicePlans) GetReturnsOnCall(i int, result1 *v1.ServicePlan, r
 	}{result1, result2}
 }
 
-func (fake *FakeServicePlans) GetCredentialSchema(arg1 context.Context, arg2 string) (string, error) {
-	fake.getCredentialSchemaMutex.Lock()
-	ret, specificReturn := fake.getCredentialSchemaReturnsOnCall[len(fake.getCredentialSchemaArgsForCall)]
-	fake.getCredentialSchemaArgsForCall = append(fake.getCredentialSchemaArgsForCall, struct {
-		arg1 context.Context
-		arg2 string
-	}{arg1, arg2})
-	fake.recordInvocation("GetCredentialSchema", []interface{}{arg1, arg2})
-	fake.getCredentialSchemaMutex.Unlock()
-	if fake.GetCredentialSchemaStub != nil {
-		return fake.GetCredentialSchemaStub(arg1, arg2)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	fakeReturns := fake.getCredentialSchemaReturns
-	return fakeReturns.result1, fakeReturns.result2
-}
-
-func (fake *FakeServicePlans) GetCredentialSchemaCallCount() int {
-	fake.getCredentialSchemaMutex.RLock()
-	defer fake.getCredentialSchemaMutex.RUnlock()
-	return len(fake.getCredentialSchemaArgsForCall)
-}
-
-func (fake *FakeServicePlans) GetCredentialSchemaCalls(stub func(context.Context, string) (string, error)) {
-	fake.getCredentialSchemaMutex.Lock()
-	defer fake.getCredentialSchemaMutex.Unlock()
-	fake.GetCredentialSchemaStub = stub
-}
-
-func (fake *FakeServicePlans) GetCredentialSchemaArgsForCall(i int) (context.Context, string) {
-	fake.getCredentialSchemaMutex.RLock()
-	defer fake.getCredentialSchemaMutex.RUnlock()
-	argsForCall := fake.getCredentialSchemaArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
-}
-
-func (fake *FakeServicePlans) GetCredentialSchemaReturns(result1 string, result2 error) {
-	fake.getCredentialSchemaMutex.Lock()
-	defer fake.getCredentialSchemaMutex.Unlock()
-	fake.GetCredentialSchemaStub = nil
-	fake.getCredentialSchemaReturns = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeServicePlans) GetCredentialSchemaReturnsOnCall(i int, result1 string, result2 error) {
-	fake.getCredentialSchemaMutex.Lock()
-	defer fake.getCredentialSchemaMutex.Unlock()
-	fake.GetCredentialSchemaStub = nil
-	if fake.getCredentialSchemaReturnsOnCall == nil {
-		fake.getCredentialSchemaReturnsOnCall = make(map[int]struct {
-			result1 string
-			result2 error
-		})
-	}
-	fake.getCredentialSchemaReturnsOnCall[i] = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeServicePlans) GetEditablePlanParams(arg1 context.Context, arg2 string, arg3 string) (map[string]bool, error) {
-	fake.getEditablePlanParamsMutex.Lock()
-	ret, specificReturn := fake.getEditablePlanParamsReturnsOnCall[len(fake.getEditablePlanParamsArgsForCall)]
-	fake.getEditablePlanParamsArgsForCall = append(fake.getEditablePlanParamsArgsForCall, struct {
+func (fake *FakeServicePlans) GetDetails(arg1 context.Context, arg2 string, arg3 string, arg4 string) (kore.ServicePlanDetails, error) {
+	fake.getDetailsMutex.Lock()
+	ret, specificReturn := fake.getDetailsReturnsOnCall[len(fake.getDetailsArgsForCall)]
+	fake.getDetailsArgsForCall = append(fake.getDetailsArgsForCall, struct {
 		arg1 context.Context
 		arg2 string
 		arg3 string
-	}{arg1, arg2, arg3})
-	fake.recordInvocation("GetEditablePlanParams", []interface{}{arg1, arg2, arg3})
-	fake.getEditablePlanParamsMutex.Unlock()
-	if fake.GetEditablePlanParamsStub != nil {
-		return fake.GetEditablePlanParamsStub(arg1, arg2, arg3)
+		arg4 string
+	}{arg1, arg2, arg3, arg4})
+	fake.recordInvocation("GetDetails", []interface{}{arg1, arg2, arg3, arg4})
+	fake.getDetailsMutex.Unlock()
+	if fake.GetDetailsStub != nil {
+		return fake.GetDetailsStub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	fakeReturns := fake.getEditablePlanParamsReturns
+	fakeReturns := fake.getDetailsReturns
 	return fakeReturns.result1, fakeReturns.result2
 }
 
-func (fake *FakeServicePlans) GetEditablePlanParamsCallCount() int {
-	fake.getEditablePlanParamsMutex.RLock()
-	defer fake.getEditablePlanParamsMutex.RUnlock()
-	return len(fake.getEditablePlanParamsArgsForCall)
+func (fake *FakeServicePlans) GetDetailsCallCount() int {
+	fake.getDetailsMutex.RLock()
+	defer fake.getDetailsMutex.RUnlock()
+	return len(fake.getDetailsArgsForCall)
 }
 
-func (fake *FakeServicePlans) GetEditablePlanParamsCalls(stub func(context.Context, string, string) (map[string]bool, error)) {
-	fake.getEditablePlanParamsMutex.Lock()
-	defer fake.getEditablePlanParamsMutex.Unlock()
-	fake.GetEditablePlanParamsStub = stub
+func (fake *FakeServicePlans) GetDetailsCalls(stub func(context.Context, string, string, string) (kore.ServicePlanDetails, error)) {
+	fake.getDetailsMutex.Lock()
+	defer fake.getDetailsMutex.Unlock()
+	fake.GetDetailsStub = stub
 }
 
-func (fake *FakeServicePlans) GetEditablePlanParamsArgsForCall(i int) (context.Context, string, string) {
-	fake.getEditablePlanParamsMutex.RLock()
-	defer fake.getEditablePlanParamsMutex.RUnlock()
-	argsForCall := fake.getEditablePlanParamsArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+func (fake *FakeServicePlans) GetDetailsArgsForCall(i int) (context.Context, string, string, string) {
+	fake.getDetailsMutex.RLock()
+	defer fake.getDetailsMutex.RUnlock()
+	argsForCall := fake.getDetailsArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
 }
 
-func (fake *FakeServicePlans) GetEditablePlanParamsReturns(result1 map[string]bool, result2 error) {
-	fake.getEditablePlanParamsMutex.Lock()
-	defer fake.getEditablePlanParamsMutex.Unlock()
-	fake.GetEditablePlanParamsStub = nil
-	fake.getEditablePlanParamsReturns = struct {
-		result1 map[string]bool
+func (fake *FakeServicePlans) GetDetailsReturns(result1 kore.ServicePlanDetails, result2 error) {
+	fake.getDetailsMutex.Lock()
+	defer fake.getDetailsMutex.Unlock()
+	fake.GetDetailsStub = nil
+	fake.getDetailsReturns = struct {
+		result1 kore.ServicePlanDetails
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeServicePlans) GetEditablePlanParamsReturnsOnCall(i int, result1 map[string]bool, result2 error) {
-	fake.getEditablePlanParamsMutex.Lock()
-	defer fake.getEditablePlanParamsMutex.Unlock()
-	fake.GetEditablePlanParamsStub = nil
-	if fake.getEditablePlanParamsReturnsOnCall == nil {
-		fake.getEditablePlanParamsReturnsOnCall = make(map[int]struct {
-			result1 map[string]bool
+func (fake *FakeServicePlans) GetDetailsReturnsOnCall(i int, result1 kore.ServicePlanDetails, result2 error) {
+	fake.getDetailsMutex.Lock()
+	defer fake.getDetailsMutex.Unlock()
+	fake.GetDetailsStub = nil
+	if fake.getDetailsReturnsOnCall == nil {
+		fake.getDetailsReturnsOnCall = make(map[int]struct {
+			result1 kore.ServicePlanDetails
 			result2 error
 		})
 	}
-	fake.getEditablePlanParamsReturnsOnCall[i] = struct {
-		result1 map[string]bool
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeServicePlans) GetSchema(arg1 context.Context, arg2 string) (string, error) {
-	fake.getSchemaMutex.Lock()
-	ret, specificReturn := fake.getSchemaReturnsOnCall[len(fake.getSchemaArgsForCall)]
-	fake.getSchemaArgsForCall = append(fake.getSchemaArgsForCall, struct {
-		arg1 context.Context
-		arg2 string
-	}{arg1, arg2})
-	fake.recordInvocation("GetSchema", []interface{}{arg1, arg2})
-	fake.getSchemaMutex.Unlock()
-	if fake.GetSchemaStub != nil {
-		return fake.GetSchemaStub(arg1, arg2)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	fakeReturns := fake.getSchemaReturns
-	return fakeReturns.result1, fakeReturns.result2
-}
-
-func (fake *FakeServicePlans) GetSchemaCallCount() int {
-	fake.getSchemaMutex.RLock()
-	defer fake.getSchemaMutex.RUnlock()
-	return len(fake.getSchemaArgsForCall)
-}
-
-func (fake *FakeServicePlans) GetSchemaCalls(stub func(context.Context, string) (string, error)) {
-	fake.getSchemaMutex.Lock()
-	defer fake.getSchemaMutex.Unlock()
-	fake.GetSchemaStub = stub
-}
-
-func (fake *FakeServicePlans) GetSchemaArgsForCall(i int) (context.Context, string) {
-	fake.getSchemaMutex.RLock()
-	defer fake.getSchemaMutex.RUnlock()
-	argsForCall := fake.getSchemaArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
-}
-
-func (fake *FakeServicePlans) GetSchemaReturns(result1 string, result2 error) {
-	fake.getSchemaMutex.Lock()
-	defer fake.getSchemaMutex.Unlock()
-	fake.GetSchemaStub = nil
-	fake.getSchemaReturns = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeServicePlans) GetSchemaReturnsOnCall(i int, result1 string, result2 error) {
-	fake.getSchemaMutex.Lock()
-	defer fake.getSchemaMutex.Unlock()
-	fake.GetSchemaStub = nil
-	if fake.getSchemaReturnsOnCall == nil {
-		fake.getSchemaReturnsOnCall = make(map[int]struct {
-			result1 string
-			result2 error
-		})
-	}
-	fake.getSchemaReturnsOnCall[i] = struct {
-		result1 string
+	fake.getDetailsReturnsOnCall[i] = struct {
+		result1 kore.ServicePlanDetails
 		result2 error
 	}{result1, result2}
 }
@@ -722,12 +568,8 @@ func (fake *FakeServicePlans) Invocations() map[string][][]interface{} {
 	defer fake.deleteMutex.RUnlock()
 	fake.getMutex.RLock()
 	defer fake.getMutex.RUnlock()
-	fake.getCredentialSchemaMutex.RLock()
-	defer fake.getCredentialSchemaMutex.RUnlock()
-	fake.getEditablePlanParamsMutex.RLock()
-	defer fake.getEditablePlanParamsMutex.RUnlock()
-	fake.getSchemaMutex.RLock()
-	defer fake.getSchemaMutex.RUnlock()
+	fake.getDetailsMutex.RLock()
+	defer fake.getDetailsMutex.RUnlock()
 	fake.hasMutex.RLock()
 	defer fake.hasMutex.RUnlock()
 	fake.listMutex.RLock()

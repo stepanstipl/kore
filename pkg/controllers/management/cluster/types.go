@@ -30,6 +30,8 @@ type ClusterProviderComponents interface {
 	Components(cluster *clustersv1.Cluster, components *Components) controllers.EnsureFunc
 	// Complete is used to complete any components from existing before applying
 	Complete(cluster *clustersv1.Cluster, components *Components) controllers.EnsureFunc
+	// SetProviderData saves the provider data on the cluster
+	SetProviderData(cluster *clustersv1.Cluster, components *Components) controllers.EnsureFunc
 }
 
 // Components is a wrapper for the cluster components

@@ -17,10 +17,15 @@
 package openservicebroker
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/tidwall/gjson"
+
+	"github.com/tidwall/sjson"
 
 	"github.com/appvia/kore/pkg/utils"
 
@@ -133,7 +138,7 @@ func (p *Provider) Catalog(ctx kore.Context, serviceProvider *servicesv1.Service
 				return kore.ServiceProviderCatalog{}, fmt.Errorf("%q plan name is invalid, must match %s", catalogPlan.Name, kore.ResourceNameFilter.String())
 			}
 
-			servicePlan, err := parseCatalogPlan(catalogService, catalogPlan)
+			servicePlan, err := p.parseCatalogPlan(catalogService, catalogPlan)
 			if err != nil {
 				return kore.ServiceProviderCatalog{}, err
 			}
@@ -181,7 +186,7 @@ func (p Provider) AdminServices() []servicesv1.Service {
 	return nil
 }
 
-func parseCatalogPlan(service osb.Service, catalogPlan osb.Plan) (*servicesv1.ServicePlan, error) {
+func (p Provider) parseCatalogPlan(service osb.Service, catalogPlan osb.Plan) (*servicesv1.ServicePlan, error) {
 	schemaStr, err := getPlanSchema(catalogPlan)
 	if err != nil {
 		return nil, err
@@ -222,14 +227,38 @@ func parseCatalogPlan(service osb.Service, catalogPlan osb.Plan) (*servicesv1.Se
 		}
 	}
 
-	if schemaStr != "" {
+	if plan.Spec.Schema != "" {
+		var required utils.StringSet
+		required, _ = utils.StringSliceFrom(gjson.Get(plan.Spec.Schema, "required").Value())
+
+		for _, override := range p.config.PlanConfigurationOverrides["*"] {
+			plan.Spec.Schema = overrideSchemaProperty(plan.Spec.Schema, &required, override)
+		}
+
+		for _, override := range p.config.PlanConfigurationOverrides[plan.Name] {
+			plan.Spec.Schema = overrideSchemaProperty(plan.Spec.Schema, &required, override)
+		}
+
+		plan.Spec.Schema, _ = sjson.Set(plan.Spec.Schema, "required", required)
+	}
+
+	if plan.Spec.Schema != "" {
 		schema := &jsonschema.Schema{}
-		if err := json.Unmarshal([]byte(schemaStr), schema); err != nil {
+		if err := json.Unmarshal([]byte(plan.Spec.Schema), schema); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal JSON schema: %w", err)
 		}
 
 		for name, prop := range schema.Properties {
 			if _, isSet := configuration[name]; !isSet {
+				constValue, err := prop.ParseConst()
+				if err != nil {
+					return nil, fmt.Errorf("invalid const value %v in JSON schema: %w", prop.Const, err)
+				}
+				if constValue != nil {
+					configuration[name] = constValue
+					continue
+				}
+
 				defaultValue, err := prop.ParseDefault()
 				if err != nil {
 					return nil, fmt.Errorf("invalid default value %v in JSON schema: %w", prop.Default, err)
@@ -253,6 +282,19 @@ func parseCatalogPlan(service osb.Service, catalogPlan osb.Plan) (*servicesv1.Se
 	}
 
 	return plan, nil
+}
+
+func overrideSchemaProperty(schema string, required *utils.StringSet, override PlanConfigurationOverride) string {
+	if gjson.Get(schema, "properties."+override.Name).Exists() {
+		schema, _ = sjson.Set(schema, "properties."+override.Name+".default", override.Value)
+		if override.Const {
+			schema, _ = sjson.Set(schema, "properties."+override.Name+".const", override.Value)
+		}
+		if override.Required != nil {
+			required.MemberIf(override.Name, *override.Required)
+		}
+	}
+	return schema
 }
 
 func getPlanSchema(plan osb.Plan) (string, error) {
@@ -291,7 +333,13 @@ func parseSchema(subject string, val interface{}) (string, error) {
 	if err := jsonschema.Validate(assets.JSONSchemaDraft07, fmt.Sprintf("%s schema", subject), schema); err != nil {
 		return "", err
 	}
-	return schema, nil
+
+	buf := bytes.NewBuffer(make([]byte, 0, len(schema)))
+	if err := json.Compact(buf, []byte(schema)); err != nil {
+		return "", fmt.Errorf("%s has an invalid schema: %w", subject, err)
+	}
+
+	return buf.String(), nil
 }
 
 func getMetadataStringVal(metadata map[string]interface{}, key, def string) string {

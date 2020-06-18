@@ -8,11 +8,11 @@ describe('ClusterBuildForm', () => {
   let form
   let apiScope
 
-  let plans = { 
+  let plans = {
     items: [
       { spec: { kind: 'GKE' }, metadata: { name: 'GKE Development' } },
       { spec: { kind: 'GKE' }, metadata: { name: 'GKE Production' } }
-    ] 
+    ]
   }
   let allocations = [
     { spec: { resource: { kind: 'GKECredentials' } }, metadata: { name: 'GKE' } },
@@ -64,6 +64,7 @@ describe('ClusterBuildForm', () => {
   describe('#getClusterResource', () => {
     it('should return a configured cluster object when given valid values', () => {
       form.handleSelectCloud('GCP')
+      form.setPlanValues({})
       const cluster = form.getClusterResource({ credential: 'GKE', plan: plans.items[0].metadata.name, clusterName: 'abc-test-cluster' })
       expect(cluster).toBeDefined()
     })

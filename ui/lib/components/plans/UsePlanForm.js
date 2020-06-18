@@ -6,6 +6,7 @@ import copy from '../../utils/object-copy'
 import KoreApi from '../../kore-api'
 import PlanViewEdit from './PlanViewEdit'
 import { Icon } from 'antd'
+import { errorMessage } from '../../utils/message'
 
 /**
  * UsePlanForm is for *using* a plan to configure a cluster, service or service credential.
@@ -15,11 +16,12 @@ import { Icon } from 'antd'
 class UsePlanForm extends React.Component {
   static propTypes = {
     team: PropTypes.object.isRequired,
+    cluster: PropTypes.object,
     resourceType: PropTypes.oneOf(['cluster', 'service', 'servicecredential']).isRequired,
     kind: PropTypes.string.isRequired,
     plan: PropTypes.string.isRequired,
     planValues: PropTypes.object,
-    onPlanChange: PropTypes.func,
+    onPlanValuesChange: PropTypes.func,
     validationErrors: PropTypes.array,
     mode: PropTypes.oneOf(['create', 'edit', 'view']).isRequired,
   }
@@ -27,7 +29,7 @@ class UsePlanForm extends React.Component {
   static initialState = {
     dataLoading: true,
     schema: null,
-    parameterEditable: {},
+    editableParams: [],
     planValues: {},
   }
 
@@ -60,22 +62,30 @@ class UsePlanForm extends React.Component {
   }
 
   async fetchComponentData() {
-    let planDetails, schema, parameterEditable, planValues
+    this.setState({ dataLoading: true })
 
-    switch (this.props.resourceType) {
-    case 'cluster':
-      planDetails = await (await KoreApi.client()).GetTeamPlanDetails(this.props.team.metadata.name, this.props.plan);
-      [schema, parameterEditable, planValues] = [planDetails.schema, planDetails.parameterEditable, planDetails.plan.configuration]
-      break
-    case 'service':
-      planDetails = await (await KoreApi.client()).GetTeamServicePlanDetails(this.props.team.metadata.name, this.props.plan);
-      [schema, parameterEditable, planValues] = [planDetails.schema, planDetails.parameterEditable, planDetails.servicePlan.configuration]
-      break
-    case 'servicecredential':
-      schema = await (await KoreApi.client()).GetServiceCredentialSchema(this.props.plan)
-      parameterEditable = { '*': true }
-      planValues = {}
-      break
+    let planDetails, schema, editableParams, planValues
+
+    try {
+      switch (this.props.resourceType) {
+      case 'cluster':
+        planDetails = await (await KoreApi.client()).GetTeamPlanDetails(this.props.team.metadata.name, this.props.plan);
+        [schema, editableParams, planValues] = [planDetails.schema, planDetails.editableParams, planDetails.plan.configuration]
+        break
+      case 'service':
+        planDetails = await (await KoreApi.client()).GetServicePlanDetails(this.props.plan, this.props.team.metadata.name, this.props.cluster.metadata.name);
+        [schema, editableParams, planValues] = [planDetails.schema, planDetails.editableParams, planDetails.configuration]
+        break
+      case 'servicecredential':
+        planDetails = await (await KoreApi.client()).GetServicePlanDetails(this.props.plan, this.props.team.metadata.name, this.props.cluster.metadata.name)
+        schema = planDetails.credentialSchema
+        editableParams = ['*']
+        planValues = {}
+        break
+      }
+    } catch (err) {
+      errorMessage(`Failed to load plan: ${err}`)
+      return
     }
 
     if (schema && typeof schema === 'string') {
@@ -85,11 +95,13 @@ class UsePlanForm extends React.Component {
     this.setState({
       ...this.state,
       schema: schema || { properties:[] },
-      parameterEditable: parameterEditable || {},
+      editableParams: editableParams || [],
       // Overwrite plan values only if it's still set to the default value
       planValues: this.state.planValues === UsePlanForm.initialState.planValues ? copy(planValues || {}) : this.state.planValues,
       dataLoading: false
     })
+
+    this.props.onPlanValuesChange && this.props.onPlanValuesChange({ ...this.state.planValues })
   }
 
   onValueChange(name, value) {
@@ -105,7 +117,7 @@ class UsePlanForm extends React.Component {
         delete planValues[name]
       }
       // Fire a copy of the plan values out if anyone is listening.
-      this.props.onPlanChange && this.props.onPlanChange({ ...planValues })
+      this.props.onPlanValuesChange && this.props.onPlanValuesChange({ ...planValues })
       return { planValues }
     })
   }
@@ -127,7 +139,7 @@ class UsePlanForm extends React.Component {
           kind={this.props.kind}
           plan={this.state.planValues}
           schema={this.state.schema}
-          parameterEditable={this.state.parameterEditable}
+          editableParams={this.state.editableParams}
           onPlanValueChange={(n, v) => this.onValueChange(n, v)}
           validationErrors={this.props.validationErrors}
         />

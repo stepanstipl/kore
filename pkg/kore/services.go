@@ -18,6 +18,7 @@ package kore
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
 
@@ -269,8 +270,13 @@ func (s *servicesImpl) validateConfiguration(ctx context.Context, service, exist
 			WithFieldError("plan", validation.InvalidType, "system plans can not be used to create new services")
 	}
 
+	planDetails, err := s.ServicePlans().GetDetails(ctx, plan.Name, s.team, service.Spec.Cluster.Name)
+	if err != nil {
+		return err
+	}
+
 	planConfiguration := make(map[string]interface{})
-	if err := plan.Spec.GetConfiguration(&planConfiguration); err != nil {
+	if err := planDetails.GetConfiguration(&planConfiguration); err != nil {
 		return fmt.Errorf("failed to parse plan configuration values: %s", err)
 	}
 
@@ -279,16 +285,9 @@ func (s *servicesImpl) validateConfiguration(ctx context.Context, service, exist
 		return fmt.Errorf("failed to parse service configuration values: %s", err)
 	}
 
-	schema := plan.Spec.Schema
-	if schema == "" {
-		kind, err := s.ServiceKinds().Get(ctx, plan.Spec.Kind)
-		if err != nil {
-			return err
-		}
-		schema = kind.Spec.Schema
-	}
+	log.WithField("serviceConfig", serviceConfig).Debug("SERVICE VALIDATE")
 
-	if schema == "" && !utils.ApiExtJSONEmpty(service.Spec.Configuration) {
+	if planDetails.Schema == "" && !utils.ApiExtJSONEmpty(service.Spec.Configuration) {
 		if existing == nil ||
 			!utils.ApiExtJSONEquals(service.Spec.Configuration, existing.Spec.Configuration) ||
 			!reflect.DeepEqual(service.Spec.ConfigurationFrom, existing.Spec.ConfigurationFrom) {
@@ -301,26 +300,28 @@ func (s *servicesImpl) validateConfiguration(ctx context.Context, service, exist
 		}
 	}
 
-	if schema != "" {
-		if err := jsonschema.Validate(schema, "service", serviceConfig); err != nil {
+	schema := &jsonschema.Schema{}
+	if planDetails.Schema != "" {
+		if err := jsonschema.Validate(planDetails.Schema, "service", serviceConfig); err != nil {
 			return err
 		}
-	}
-
-	editableParams, err := s.servicePlans.GetEditablePlanParams(ctx, s.team, service.Spec.Kind)
-	if err != nil {
-		return err
-	}
-
-	if editableParams["*"] {
-		return nil
+		if err := json.Unmarshal([]byte(planDetails.Schema), schema); err != nil {
+			return err
+		}
 	}
 
 	verr := validation.NewError("%q failed validation", service.Name)
 
 	for paramName, paramValue := range serviceConfig {
+		schemaProperty := schema.Properties[paramName]
+
+		// If a const value changes in the schema, we have to allow users to migrate their objects
+		if schemaProperty != nil && schemaProperty.Const != nil {
+			continue
+		}
+
 		if !reflect.DeepEqual(paramValue, planConfiguration[paramName]) {
-			if !editableParams[paramName] {
+			if !utils.Contains(paramName, planDetails.EditableParams) {
 				verr.AddFieldErrorf(paramName, validation.ReadOnly, "can not be changed")
 			}
 		}

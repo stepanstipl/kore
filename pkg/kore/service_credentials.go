@@ -37,8 +37,6 @@ type ServiceCredentials interface {
 	Delete(context.Context, string) (*servicesv1.ServiceCredentials, error)
 	// Get returns a specific service credentials
 	Get(context.Context, string) (*servicesv1.ServiceCredentials, error)
-	// GetSchema returns the service credential schema
-	GetSchema(context.Context, string) (string, error)
 	// List returns a list of service credentials.
 	// The optional filter functions can be used to include items only for which all functions return true
 	List(context.Context, ...func(credentials servicesv1.ServiceCredentials) bool) (*servicesv1.ServiceCredentialsList, error)
@@ -126,34 +124,6 @@ func (s *serviceCredentialsImpl) Get(ctx context.Context, name string) (*service
 	}
 
 	return serviceCredentials, nil
-}
-
-// GetSchema returns the service plan schema
-func (s *serviceCredentialsImpl) GetSchema(ctx context.Context, name string) (string, error) {
-	serviceCredentials, err := s.Get(ctx, name)
-	if err != nil {
-		return "", err
-	}
-
-	service, err := s.Teams().Team(serviceCredentials.Spec.Service.Namespace).Services().Get(ctx, serviceCredentials.Spec.Service.Name)
-	if err != nil {
-		return "", err
-	}
-
-	plan, err := s.ServicePlans().Get(ctx, service.Spec.Plan)
-	if err != nil {
-		return "", err
-	}
-	if plan.Spec.Schema != "" {
-		return plan.Spec.Schema, nil
-	}
-
-	kind, err := s.ServiceKinds().Get(ctx, plan.Spec.Kind)
-	if err != nil {
-		return "", err
-	}
-
-	return kind.Spec.Schema, nil
 }
 
 // Update is used to update service credentials
@@ -244,12 +214,12 @@ func (s *serviceCredentialsImpl) validateConfiguration(
 	service *servicesv1.Service,
 	serviceCreds, existing *servicesv1.ServiceCredentials,
 ) error {
-	schema, err := s.ServicePlans().GetCredentialSchema(ctx, service.Spec.Plan)
+	planDetails, err := s.ServicePlans().GetDetails(ctx, service.Spec.Plan, s.team, service.Spec.Cluster.Name)
 	if err != nil {
 		return err
 	}
 
-	if schema == "" && !utils.ApiExtJSONEmpty(serviceCreds.Spec.Configuration) {
+	if planDetails.CredentialSchema == "" && !utils.ApiExtJSONEmpty(serviceCreds.Spec.Configuration) {
 		if existing == nil || !utils.ApiExtJSONEquals(serviceCreds.Spec.Configuration, existing.Spec.Configuration) {
 			return validation.NewError("%q failed validation", serviceCreds.Name).
 				WithFieldErrorf(
@@ -260,9 +230,9 @@ func (s *serviceCredentialsImpl) validateConfiguration(
 		}
 	}
 
-	if schema != "" {
+	if planDetails.CredentialSchema != "" {
 		if err := jsonschema.Validate(
-			schema,
+			planDetails.CredentialSchema,
 			"configuration",
 			serviceCreds.Spec.Configuration,
 		); err != nil {

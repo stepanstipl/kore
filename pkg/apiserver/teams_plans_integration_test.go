@@ -100,8 +100,8 @@ var _ = Describe("GET /teams/{team}/plans/{plan} (GetTeamPlanDetails)", func() {
 			if err != nil {
 				Expect(err).ToNot(HaveOccurred())
 			}
-			Expect(*&resp.Payload.ParameterEditable).To(BeAssignableToTypeOf(map[string]bool{}))
-			Expect(*&resp.Payload.ParameterEditable).ToNot(Equal(map[string]bool{}))
+			Expect(*&resp.Payload.EditableParams).To(BeAssignableToTypeOf([]string{}))
+			Expect(*&resp.Payload.EditableParams).ToNot(Equal([]string{}))
 		})
 	})
 })

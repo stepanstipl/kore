@@ -15,6 +15,12 @@ import (
 // swagger:model v1alpha1.Infra
 type V1alpha1Infra struct {
 
+	// availability zone i ds
+	AvailabilityZoneIDs []string `json:"availabilityZoneIDs"`
+
+	// availability zone names
+	AvailabilityZoneNames []string `json:"availabilityZoneNames"`
+
 	// ipv4 egress addresses
 	IPV4EgressAddresses []string `json:"ipv4EgressAddresses"`
 
@@ -26,6 +32,9 @@ type V1alpha1Infra struct {
 
 	// security group i ds
 	SecurityGroupIDs []string `json:"securityGroupIDs"`
+
+	// vpc ID
+	VpcID string `json:"vpcID,omitempty"`
 }
 
 // Validate validates this v1alpha1 infra

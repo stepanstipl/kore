@@ -94,12 +94,11 @@ class KoreApiClient {
   ListServiceKinds = () => this.apis.default.ListServiceKinds()
   ListServicePlans = (kind) => this.apis.default.ListServicePlans({ kind })
   GetServicePlan = (name) => this.apis.default.GetServicePlan({ name })
+  GetServicePlanDetails = (name, team, cluster) => this.apis.default.GetServicePlanDetails({ name, team, cluster })
   UpdateServicePlan = (name, servicePlan) => this.apis.default.UpdateServicePlan({ name, body: JSON.stringify(servicePlan) })
   DeleteServicePlan = (name) => this.apis.default.DeleteServicePLan({ name })
-  GetServicePlanSchema = (name) => this.apis.default.GetServicePlanSchema({ name })
   GetServiceKind = (name) => this.apis.default.GetServiceKind({ name })
   UpdateServiceKind = (name, kind) => this.apis.default.UpdateServiceKind({ name, body: kind })
-  GetServiceCredentialSchema = (name) => this.apis.default.GetServiceCredentialSchema({ name })
 
   // Audit
   ListAuditEvents = () => this.apis.default.ListAuditEvents()
@@ -114,7 +113,7 @@ class KoreApiClient {
     GetSecurityRule: (code) => this.apis.security.GetSecurityRule({ code })
   }
 
-  // Policies 
+  // Policies
   ListPlanPolicies = (kind) => this.apis.default.ListPlanPolicies({ kind })
   GetPlanPolicy = (name) => this.apis.default.GetPlanPolicy({ name })
   UpdatePlanPolicy = (name, plan) => this.apis.default.UpdatePlanPolicy({ name, body: JSON.stringify(plan) })
@@ -170,7 +169,6 @@ class KoreApiClient {
   UpdateService = (team, name, service) => this.apis.default.UpdateService({ team, name, body: JSON.stringify(service) })
   GetService = (team, name) => this.apis.default.GetService({ team, name })
   DeleteService = (team, name) => this.apis.default.DeleteService({ team, name })
-  GetTeamServicePlanDetails = (team, plan) => this.apis.default.GetTeamServicePlanDetails({ team, plan })
   GetServiceCredentials = (team, name) => this.apis.default.GetServiceCredentials({ team, name })
   UpdateServiceCredentials = (team, name, serviceCredential) => this.apis.default.UpdateServiceCredentials({ team, name, body: JSON.stringify(serviceCredential) })
   ListServiceCredentials = (team, cluster, service) => this.apis.default.ListServiceCredentials({ team, cluster, service })

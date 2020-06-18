@@ -20,6 +20,10 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/appvia/kore/pkg/client"
+
+	"github.com/appvia/kore/pkg/kore"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 
@@ -183,14 +187,23 @@ func (o *CreateServiceOptions) Run() error {
 
 // CreateService is responsible for generating the service config
 func (o *CreateServiceOptions) CreateService() (*servicesv1.Service, error) {
-	plan, err := o.GetPlan()
+	planDetails := &kore.ServicePlanDetails{}
+	err := o.ClientWithEndpoint("/serviceplans/{name}/details").
+		Name(o.Plan).
+		Parameters(
+			client.QueryParameter("team", o.Team),
+			client.QueryParameter("cluster", o.Cluster),
+		).
+		Result(planDetails).
+		Get().
+		Error()
 	if err != nil {
 		return nil, err
 	}
 
 	var configJSON []byte
-	if plan.Spec.Configuration != nil {
-		configJSON = plan.Spec.Configuration.Raw
+	if planDetails.Configuration != nil {
+		configJSON = planDetails.Configuration.Raw
 	}
 
 	if configJSON, err = cmdutil.PatchJSON(configJSON, o.PlanParams); err != nil {
@@ -207,8 +220,8 @@ func (o *CreateServiceOptions) CreateService() (*servicesv1.Service, error) {
 			Namespace: o.Team,
 		},
 		Spec: servicesv1.ServiceSpec{
-			Kind: plan.Spec.Kind,
-			Plan: plan.Name,
+			Kind: planDetails.Kind,
+			Plan: o.Plan,
 			Cluster: corev1.Ownership{
 				Group:     clustersv1.GroupVersion.Group,
 				Version:   clustersv1.GroupVersion.Version,
@@ -222,15 +235,4 @@ func (o *CreateServiceOptions) CreateService() (*servicesv1.Service, error) {
 	}
 
 	return service, nil
-}
-
-// GetPlan retrieves the requested service plan
-func (o *CreateServiceOptions) GetPlan() (*servicesv1.ServicePlan, error) {
-	plan := &servicesv1.ServicePlan{}
-
-	return plan, o.ClientWithResource(o.Resources().MustLookup("serviceplan")).
-		Name(o.Plan).
-		Result(plan).
-		Get().
-		Error()
 }

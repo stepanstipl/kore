@@ -17,6 +17,9 @@
 package v1
 
 import (
+	"encoding/json"
+	"fmt"
+
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -81,6 +84,37 @@ type ClusterStatus struct {
 	// Message is the description of the current status
 	// +kubebuilder:validation:Optional
 	Message string `json:"message,omitempty"`
+	// ProviderData is provider specific data
+	// +kubebuilder:validation:Type=object
+	// +kubebuilder:validation:Optional
+	ProviderData *apiextv1.JSON `json:"providerData,omitempty"`
+}
+
+// GetProviderData unmarshals the provider data into the target object
+func (c *ClusterStatus) GetProviderData(v interface{}) error {
+	if c.ProviderData == nil {
+		return nil
+	}
+
+	if err := json.Unmarshal(c.ProviderData.Raw, v); err != nil {
+		return fmt.Errorf("failed to unmarshal cluster provider data: %w", err)
+	}
+	return nil
+}
+
+// SetProviderData marshals the given object as provider data
+func (c *ClusterStatus) SetProviderData(v interface{}) error {
+	if v == nil {
+		c.ProviderData = nil
+		return nil
+	}
+
+	raw, err := json.Marshal(v)
+	if err != nil {
+		return fmt.Errorf("failed to marshal cluster provider data: %w", err)
+	}
+	c.ProviderData = &apiextv1.JSON{Raw: raw}
+	return nil
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

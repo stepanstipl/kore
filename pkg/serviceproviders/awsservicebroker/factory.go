@@ -17,7 +17,10 @@
 package awsservicebroker
 
 import (
+	"bytes"
 	"fmt"
+
+	"github.com/appvia/kore/pkg/utils"
 
 	"github.com/appvia/kore/pkg/utils/configuration"
 
@@ -38,6 +41,7 @@ func init() {
 
 const (
 	S3BucketTagImported  = "kore.appvia.io/initialized"
+	ComponentIAMRole     = "IAM Role"
 	ComponentDynamoDB    = "DynamoDB Table"
 	ComponentS3Bucket    = "S3 Bucket"
 	ComponentHelmRelease = "Helm Release"
@@ -57,8 +61,8 @@ func (d ProviderFactory) JSONSchema() string {
 		"type": "object",
 		"additionalProperties": false,
 		"required": [
-			"aws_access_key_id",
-			"aws_secret_access_key"
+			"awsAccessKeyID",
+			"awsSecretAccessKey"
 		],
 		"properties": {
 			"chartRepositoryType": {
@@ -105,13 +109,18 @@ func (d ProviderFactory) JSONSchema() string {
 				"type": "string",
 				"default": "templates/latest/"
 			},
-			"aws_access_key_id": {
+			"awsAccessKeyID": {
 				"type": "string",
 				"minLength": 1
 			},
-			"aws_secret_access_key": {
+			"awsSecretAccessKey": {
 				"type": "string",
 				"minLength": 1
+			},
+			"awsIAMRoleName": {
+				"type": "string",
+				"minLength": 1,
+				"default": "aws-service-broker"
 			},
 			"allowEmptyCredentialSchema": {
 				"type": "boolean",
@@ -159,12 +168,41 @@ func (d ProviderFactory) JSONSchema() string {
 func (d ProviderFactory) Create(ctx kore.Context, serviceProvider *servicesv1.ServiceProvider) (_ kore.ServiceProvider, _ error) {
 	var config = DefaultProviderConfiguration()
 
+	// Migrate deprecated field values
+	if serviceProvider.Spec.Configuration != nil {
+		serviceProvider.Spec.Configuration.Raw = bytes.ReplaceAll(serviceProvider.Spec.Configuration.Raw, []byte("aws_access_key_id"), []byte("awsAccessKeyID"))
+		serviceProvider.Spec.Configuration.Raw = bytes.ReplaceAll(serviceProvider.Spec.Configuration.Raw, []byte("aws_secret_access_key"), []byte("awsSecretAccessKey"))
+	}
+
 	if err := configuration.ParseObjectConfiguration(ctx, ctx.Client(), serviceProvider, config); err != nil {
 		return nil, fmt.Errorf("failed to process aws-servicebroker configuration: %w", err)
 	}
 
 	config.PlatformMapping = map[string]string{
 		"*": "AWS",
+	}
+
+	config.PlanConfigurationOverrides = map[string][]openservicebroker.PlanConfigurationOverride{
+		"*": {
+			{
+				Name:     "target_account_id",
+				Value:    "{{ .cluster.status.providerData.awsAccountID }}",
+				Const:    true,
+				Required: utils.BoolPtr(true),
+			},
+			{
+				Name:     "target_role_name",
+				Value:    config.AWSIAMRoleName,
+				Const:    true,
+				Required: utils.BoolPtr(true),
+			},
+			{
+				Name:     "VpcId",
+				Value:    "{{ .cluster.status.providerData.vpc.vpcID }}",
+				Const:    true,
+				Required: utils.BoolPtr(true),
+			},
+		},
 	}
 
 	namespaceName := "kore-serviceprovider-" + serviceProvider.Name
@@ -211,6 +249,16 @@ func (d ProviderFactory) SetUp(ctx kore.Context, serviceProvider *servicesv1.Ser
 		WithRegion(config.Region)
 
 	sess := session.Must(session.NewSession(cfg))
+
+	if err := d.ensureIAMRole(sess, config); err != nil {
+		serviceProvider.Status.Components.SetCondition(corev1.Component{
+			Name:    ComponentIAMRole,
+			Status:  corev1.ErrorStatus,
+			Message: "Failed to create IAM role",
+			Detail:  err.Error(),
+		})
+		return false, err
+	}
 
 	if err := d.ensureDynamoDBTable(sess, config); err != nil {
 		serviceProvider.Status.Components.SetCondition(corev1.Component{
@@ -293,6 +341,16 @@ func (d ProviderFactory) TearDown(ctx kore.Context, serviceProvider *servicesv1.
 			Name:    ComponentDynamoDB,
 			Status:  corev1.ErrorStatus,
 			Message: "Failed to delete DynamoDB table",
+			Detail:  err.Error(),
+		})
+		return false, err
+	}
+
+	if err := d.deleteIAMRole(sess, config); err != nil {
+		serviceProvider.Status.Components.SetCondition(corev1.Component{
+			Name:    ComponentIAMRole,
+			Status:  corev1.ErrorStatus,
+			Message: "Failed to delete IAM role",
 			Detail:  err.Error(),
 		})
 		return false, err

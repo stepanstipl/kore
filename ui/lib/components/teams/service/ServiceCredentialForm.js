@@ -16,7 +16,7 @@ class ServiceCredentialForm extends React.Component {
     form: PropTypes.any.isRequired,
     creationSource: PropTypes.oneOf(['namespace', 'service']).isRequired,
     team: PropTypes.object.isRequired,
-    clusters: PropTypes.array,
+    cluster: PropTypes.object.isRequired,
     namespaceClaims: PropTypes.array,
     services: PropTypes.array,
     handleSubmit: PropTypes.func.isRequired,
@@ -26,7 +26,6 @@ class ServiceCredentialForm extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      clusters: props.clusters,
       services: props.services,
       namespaceClaims: props.namespaceClaims,
       servicePlan: null,
@@ -65,18 +64,12 @@ class ServiceCredentialForm extends React.Component {
         break
       }
       case 'service': {
-        let [clusters, namespaceClaims, serviceKinds] = await Promise.all([
-          this.props.clusters && this.props.clusters.length > 0 ? Promise.resolve( { items: this.props.clusters }) : api.ListClusters(team),
+        let [namespaceClaims, serviceKinds] = await Promise.all([
           api.ListNamespaces(team),
           api.ListServiceKinds()
         ])
-        clusters = clusters.items.filter(cluster => namespaceClaims.items.filter(ns => ns.spec.cluster.name === cluster.metadata.name).length > 0)
-        if (clusters.length === 1) {
-          namespaceClaims = namespaceClaims.items.filter(nc => nc.spec.cluster.name === clusters[0].metadata.name)
-        } else {
-          namespaceClaims = namespaceClaims.items
-        }
-        this.setState({ clusters, namespaceClaims, serviceKinds, dataLoading: false })
+        namespaceClaims = namespaceClaims.items.filter(nc => nc.spec.cluster.name === this.props.cluster.metadata.name)
+        this.setState({ namespaceClaims, serviceKinds, dataLoading: false })
         this.props.form.validateFields()
         break
       }
@@ -100,11 +93,6 @@ class ServiceCredentialForm extends React.Component {
     this.props.handleCancel()
   }
 
-  onClusterChange = () => {
-    this.props.form.resetFields(['namespace'])
-    this.props.form.validateFields()
-  }
-
   onServiceChange = async (serviceName) => {
     const service = this.state.services.find(s => s.metadata.name === serviceName)
 
@@ -122,7 +110,7 @@ class ServiceCredentialForm extends React.Component {
   handleSubmit = e => {
     e.preventDefault()
 
-    const { clusters, services, namespaceClaims, config } = this.state
+    const { services, namespaceClaims, config } = this.state
 
     this.setState({
       submitting: true,
@@ -134,8 +122,8 @@ class ServiceCredentialForm extends React.Component {
         return this.setState({ submitting: false })
       }
 
+      const cluster = this.props.cluster
       const service = services.length === 1 ? services[0] : services.find(s => s.metadata.name === values.service)
-      const cluster = clusters.length === 1 ? clusters[0] : clusters.find(c => c.metadata.name === values.cluster)
       const namespaceClaim = namespaceClaims.length === 1 ? namespaceClaims[0] : namespaceClaims.find(n => n.spec.name === values.namespace)
       const name = `${cluster.metadata.name}-${namespaceClaim.spec.name}-${values.secretName}`
 
@@ -196,10 +184,9 @@ class ServiceCredentialForm extends React.Component {
 
   createFromNamespace = () => {
     const { getFieldDecorator } = this.props.form
-    const { services, clusters, namespaceClaims } = this.state
+    const { services, namespaceClaims } = this.state
 
     const namespace = namespaceClaims[0].spec.name
-    const cluster = clusters[0].metadata.name
 
     return (
       <>
@@ -208,7 +195,6 @@ class ServiceCredentialForm extends React.Component {
           description={
             <>
               <Paragraph>A secret with the chosen name will be populated in the namespace. The secret will contain credentials that can be used to access the service from within the namespace.</Paragraph>
-              <DataField label="Cluster" value={cluster}/>
               <DataField label="Namespace" value={namespace}/>
             </>
           }
@@ -248,12 +234,12 @@ class ServiceCredentialForm extends React.Component {
 
   createFromService = () => {
     const { getFieldDecorator } = this.props.form
-    const { clusters, namespaceClaims } = this.state
+    const { namespaceClaims } = this.state
 
     return (
       <>
         <Alert
-          message="Choose the cluster and namespace"
+          message="Choose the namespace"
           description={
             <Paragraph>A secret with the chosen name will be populated in the namespace. The secret will contain credentials that can be used to access the service from within the namespace.</Paragraph>
           }
@@ -262,25 +248,13 @@ class ServiceCredentialForm extends React.Component {
           style={{ marginBottom: '20px' }}
         />
 
-        <Form.Item label="Cluster" validateStatus={this.fieldError('cluster') ? 'error' : ''} help={this.fieldError('cluster') || ''}>
-          {getFieldDecorator('cluster', {
-            rules: [{ required: true, message: 'Please select the cluster!' }],
-            initialValue: clusters.length === 1 ? clusters[0].metadata.name : undefined
-          })(
-            <Select placeholder="Cluster" onChange={this.onClusterChange}>
-              {clusters.map(c => (
-                <Select.Option key={c.metadata.name} value={c.metadata.name}>{c.metadata.name}</Select.Option>
-              ))}
-            </Select>
-          )}
-        </Form.Item>
         <Form.Item label="Namespace" validateStatus={this.fieldError('namespace') ? 'error' : ''} help={this.fieldError('namespace') || ''}>
           {getFieldDecorator('namespace', {
             rules: [{ required: true, message: 'Please select the namespace!' }],
             initialValue: namespaceClaims.length === 1 ? namespaceClaims[0].spec.name : undefined
           })(
             <Select placeholder="Namespace">
-              {namespaceClaims.filter(nc => nc.spec.cluster.name === this.props.form.getFieldValue('cluster')).map(n => (
+              {namespaceClaims.filter(nc => nc.spec.cluster.name === this.props.cluster.metadata.name).map(n => (
                 <Select.Option key={n.spec.name} value={n.spec.name}>{n.spec.name}</Select.Option>
               ))}
             </Select>
@@ -325,12 +299,13 @@ class ServiceCredentialForm extends React.Component {
         {servicePlan && (
           <UsePlanForm
             team={this.props.team}
+            cluster={this.props.cluster}
             resourceType="servicecredential"
             kind={servicePlan.spec.kind}
             plan={servicePlan.metadata.name}
             mode="create"
             validationErrors={validationErrors}
-            onPlanChange={this.handleConfigurationUpdate}
+            onPlanValuesChange={this.handleConfigurationUpdate}
           />
         )}
 

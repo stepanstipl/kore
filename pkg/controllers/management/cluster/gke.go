@@ -138,6 +138,13 @@ func (g *gkeComponents) Complete(cluster *clustersv1.Cluster, components *Compon
 	}
 }
 
+// SetProviderData saves the provider data on the cluster
+func (g *gkeComponents) SetProviderData(cluster *clustersv1.Cluster, components *Components) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		return reconcile.Result{}, nil
+	}
+}
+
 // IsAccountManaged checks if accounting is switched on
 func IsAccountManaged(owner corev1.Ownership) bool {
 	if owner.Group != accounts.GroupVersion.Group {

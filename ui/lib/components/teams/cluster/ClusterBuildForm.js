@@ -36,7 +36,7 @@ class ClusterBuildForm extends React.Component {
       selectedProvider: '',
       dataLoading: true,
       credentials: {},
-      planOverride: null,
+      planValues: null,
       validationErrors: null
     }
   }
@@ -97,11 +97,7 @@ class ClusterBuildForm extends React.Component {
     const clusterSpec = new V1ClusterSpec()
     clusterSpec.setKind(selectedPlan.spec.kind)
     clusterSpec.setPlan(selectedPlan.metadata.name)
-    if (this.state.planOverride) {
-      clusterSpec.setConfiguration(this.state.planOverride)
-    } else {
-      clusterSpec.setConfiguration({ ...selectedPlan.spec.configuration })
-    }
+    clusterSpec.setConfiguration(this.state.planValues)
     clusterSpec.setCredentials({ ...selectedCredential.spec.resource })
 
     // Add current user as cluster admin to plan config, if no cluster users specified:
@@ -152,15 +148,13 @@ class ClusterBuildForm extends React.Component {
     this.setState({
       selectedCloud: cloud,
       selectedProvider: publicRuntimeConfig.clusterProviderMap[cloud],
-      planOverride: null,
+      planValues: null,
       validationErrors: null
     })
   }
 
-  handlePlanOverride = planOverrides => {
-    this.setState({
-      planOverride: planOverrides
-    })
+  setPlanValues = planValues => {
+    this.setState({ planValues })
   }
 
   clusterBuildForm = () => {
@@ -195,7 +189,7 @@ class ClusterBuildForm extends React.Component {
           accountManagement={accountManagement}
           plans={filteredPlans}
           teamClusters={this.props.teamClusters}
-          onPlanOverridden={this.handlePlanOverride}
+          onPlanValuesChange={this.setPlanValues}
           validationErrors={this.state.validationErrors}
           wrappedComponentRef={inst => this.clusterOptionsForm = inst}
         />

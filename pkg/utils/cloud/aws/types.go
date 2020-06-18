@@ -39,16 +39,8 @@ type VPC struct {
 	Name string
 	// Region is the AWS region of the VPC
 	Region string
-	// PublicSubnetIDs are the amazon IDs of all subnets created or discovered
-	PublicSubnetIDs []string
-	// PrivateSubnetIDs are the amazon IDs of all subnets created or discovered
-	PrivateSubnetIDs []string
-	// ControlPlaneSecurityGroupID are the amazon IDs required for the control plane
-	ControlPlaneSecurityGroupID string
 	// Tags - how to find resources
 	Tags map[string]string
-	// PublicIPV4EgressAddresses provides the source addresses for traffic coming from the cluster
-	PublicIPV4EgressAddresses []string
 	// Cache of aws VPC
 	awsObj *ec2.Vpc
 }
@@ -64,4 +56,13 @@ type ASGDetails struct {
 type NodeGroupAutoScaler struct {
 	NodeGroupName  string
 	AutoScalingARN string
+}
+
+// VPCResult contains all relevant information about the created VPC
+type VPCResult struct {
+	VPC                         *ec2.Vpc
+	PublicSubnets               []*ec2.Subnet
+	PrivateSubnets              []*ec2.Subnet
+	NATGateways                 []*ec2.NatGateway
+	ControlPlaneSecurityGroupID string
 }

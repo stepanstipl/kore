@@ -19,7 +19,7 @@ class ClusterOptionsForm extends React.Component {
     accountManagement: PropTypes.object,
     plans: PropTypes.array.isRequired,
     teamClusters: PropTypes.array.isRequired,
-    onPlanOverridden: PropTypes.func,
+    onPlanValuesChange: PropTypes.func,
     validationErrors: PropTypes.array
   }
 
@@ -64,9 +64,9 @@ class ClusterOptionsForm extends React.Component {
     }
   }
 
-  onPlanOverridden = paramValues => {
-    if (this.props.onPlanOverridden) {
-      this.props.onPlanOverridden(paramValues)
+  onPlanValuesChange = paramValues => {
+    if (this.props.onPlanValuesChange) {
+      this.props.onPlanValuesChange(paramValues)
     }
   }
 
@@ -170,7 +170,7 @@ class ClusterOptionsForm extends React.Component {
                 kind={selectedProvider}
                 plan={selectedPlan}
                 validationErrors={this.props.validationErrors}
-                onPlanChange={this.onPlanOverridden}
+                onPlanValuesChange={this.onPlanValuesChange}
                 mode="create"
               />
             </Collapse.Panel>

@@ -33,6 +33,9 @@ type V1ClusterStatus struct {
 	// message
 	Message string `json:"message,omitempty"`
 
+	// provider data
+	ProviderData string `json:"providerData,omitempty"`
+
 	// status
 	Status string `json:"status,omitempty"`
 }

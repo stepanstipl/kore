@@ -29,19 +29,6 @@ func Contains(v string, l []string) bool {
 	return false
 }
 
-// RemoveItem removes a value from a slice
-func RemoveItem(v string, list []string) []string {
-	var a []string
-
-	for _, x := range list {
-		if x != v {
-			a = append(a, x)
-		}
-	}
-
-	return a
-}
-
 // ChunkBy breaks a slice into chunks
 func ChunkBy(items []string, chunkSize int) (chunks [][]string) {
 	for chunkSize < len(items) {
@@ -74,4 +61,63 @@ func StringsSorted(list []string) []string {
 	sort.Strings(v)
 
 	return v
+}
+
+func StringSliceFrom(v interface{}) ([]string, bool) {
+	if v == nil {
+		return nil, true
+	}
+
+	switch vt := v.(type) {
+	case []string:
+		return vt, true
+	case []interface{}:
+		var res []string
+		for _, e := range vt {
+			s, ok := e.(string)
+			if !ok {
+				return nil, false
+			}
+			res = append(res, s)
+		}
+		return res, true
+	default:
+		return nil, false
+	}
+}
+
+type StringSet []string
+
+func (s *StringSet) Add(v string) {
+	for _, e := range *s {
+		if e == v {
+			return
+		}
+	}
+	*s = append(*s, v)
+}
+
+func (s *StringSet) Remove(v string) {
+	for i, e := range *s {
+		if e == v {
+			*s = append((*s)[0:i], (*s)[i+1:]...)
+		}
+	}
+}
+
+func (s *StringSet) MemberIf(v string, cond bool) {
+	if cond {
+		s.Add(v)
+	} else {
+		s.Remove(v)
+	}
+}
+
+func (s *StringSet) Contains(v string) bool {
+	for _, e := range *s {
+		if e == v {
+			return true
+		}
+	}
+	return false
 }

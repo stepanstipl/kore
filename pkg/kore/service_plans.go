@@ -17,9 +17,15 @@
 package kore
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"html/template"
 	"strings"
+
+	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	"github.com/appvia/kore/pkg/utils/jsonutils"
 
 	"github.com/appvia/kore/pkg/utils"
 
@@ -32,6 +38,12 @@ import (
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
+// ServicePlanDetails contains information about a service plan in the given team/cluster etc. context
+type ServicePlanDetails struct {
+	servicesv1.ServicePlanSpec `json:",inline"`
+	EditableParams             []string `json:"editableParams"`
+}
+
 // ServicePlans is the interface to manage service plans
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . ServicePlans
 type ServicePlans interface {
@@ -39,10 +51,8 @@ type ServicePlans interface {
 	Delete(ctx context.Context, name string, ignoreReadonly bool) (*servicesv1.ServicePlan, error)
 	// Get returns the service plan
 	Get(context.Context, string) (*servicesv1.ServicePlan, error)
-	// GetSchema returns the service plan schema
-	GetSchema(context.Context, string) (string, error)
-	// GetCredentialSchema returns the service credential schema for the given plan
-	GetCredentialSchema(context.Context, string) (string, error)
+	// GetDetails returns information about a service plan in the given team/cluster etc. context
+	GetDetails(ctx context.Context, name, team, clusterName string) (ServicePlanDetails, error)
 	// List returns the existing service plans
 	List(context.Context) (*servicesv1.ServicePlanList, error)
 	// ListFiltered returns a list of service plans using the given filter.
@@ -51,8 +61,6 @@ type ServicePlans interface {
 	Has(context.Context, string) (bool, error)
 	// Update is responsible for updating a service plan
 	Update(ctx context.Context, plan *servicesv1.ServicePlan, ignoreReadonly bool) error
-	// GetEditablePlanParams returns with the editable service plan parameters for a specific team and service kind
-	GetEditablePlanParams(ctx context.Context, team string, clusterKind string) (map[string]bool, error)
 }
 
 type servicePlansImpl struct {
@@ -207,40 +215,6 @@ func (p servicePlansImpl) Get(ctx context.Context, name string) (*servicesv1.Ser
 	)
 }
 
-// GetSchema returns the service plan schema
-func (p servicePlansImpl) GetSchema(ctx context.Context, name string) (string, error) {
-	plan, err := p.Get(ctx, name)
-	if err != nil {
-		return "", err
-	}
-	if plan.Spec.Schema != "" {
-		return plan.Spec.Schema, nil
-	}
-
-	kind, err := p.ServiceKinds().Get(ctx, plan.Spec.Kind)
-	if err != nil {
-		return "", err
-	}
-	return kind.Spec.Schema, nil
-}
-
-// GetCredentialSchema returns the service credential schema for the given plan
-func (p servicePlansImpl) GetCredentialSchema(ctx context.Context, name string) (string, error) {
-	plan, err := p.Get(ctx, name)
-	if err != nil {
-		return "", err
-	}
-	if plan.Spec.CredentialSchema != "" {
-		return plan.Spec.CredentialSchema, nil
-	}
-
-	kind, err := p.ServiceKinds().Get(ctx, plan.Spec.Kind)
-	if err != nil {
-		return "", err
-	}
-	return kind.Spec.CredentialSchema, nil
-}
-
 // List returns the existing service plans
 func (p servicePlansImpl) List(ctx context.Context) (*servicesv1.ServicePlanList, error) {
 	plans := &servicesv1.ServicePlanList{}
@@ -281,10 +255,98 @@ func (p servicePlansImpl) Has(ctx context.Context, name string) (bool, error) {
 	)
 }
 
-// GetEditablePlanParams returns with the editable service plan parameters for a specific team and service kind
-func (p servicePlansImpl) GetEditablePlanParams(ctx context.Context, team string, clusterKind string) (map[string]bool, error) {
-	// TODO: read this from the allocated service plan policies
-	return map[string]bool{"*": true}, nil
+// GetDetails returns information about a service plan in the given team/cluster etc. context
+func (p servicePlansImpl) GetDetails(ctx context.Context, name, team, clusterName string) (ServicePlanDetails, error) {
+	plan, err := p.Get(ctx, name)
+	if err != nil {
+		return ServicePlanDetails{}, err
+	}
+
+	kind, err := p.ServiceKinds().Get(ctx, plan.Spec.Kind)
+	if err != nil {
+		return ServicePlanDetails{}, err
+	}
+
+	if plan.Spec.Schema == "" {
+		plan.Spec.Schema = kind.Spec.Schema
+	}
+
+	if plan.Spec.CredentialSchema == "" {
+		plan.Spec.CredentialSchema = kind.Spec.CredentialSchema
+	}
+
+	if team != "" && clusterName != "" {
+		cluster, err := p.Teams().Team(team).Clusters().Get(ctx, clusterName)
+		if err != nil {
+			return ServicePlanDetails{}, err
+		}
+
+		if plan.Spec.Schema != "" {
+			var err error
+			if plan.Spec.Schema, err = p.compileTemplate(plan.Spec.Schema, cluster); err != nil {
+				return ServicePlanDetails{}, err
+			}
+		}
+
+		if plan.Spec.CredentialSchema != "" {
+			var err error
+			if plan.Spec.CredentialSchema, err = p.compileTemplate(plan.Spec.CredentialSchema, cluster); err != nil {
+				return ServicePlanDetails{}, err
+			}
+		}
+
+		if plan.Spec.Configuration != nil {
+			compiledConfigBytes, err := p.compileTemplate(string(plan.Spec.Configuration.Raw), cluster)
+			if err != nil {
+				return ServicePlanDetails{}, err
+			}
+			plan.Spec.Configuration.Raw = []byte(compiledConfigBytes)
+		}
+	}
+
+	var editableParams []string
+	if plan.Spec.Schema != "" {
+		schema := &jsonschema.Schema{}
+		if err := json.Unmarshal([]byte(plan.Spec.Schema), schema); err != nil {
+			return ServicePlanDetails{}, err
+		}
+		for name, prop := range schema.Properties {
+			if prop.Const != nil {
+				continue
+			}
+
+			editableParams = append(editableParams, name)
+		}
+	}
+
+	return ServicePlanDetails{
+		ServicePlanSpec: plan.Spec,
+		EditableParams:  editableParams,
+	}, nil
+}
+
+// GetSchemaForCluster returns the service plan schema generated for the given cluster
+func (p servicePlansImpl) compileTemplate(content string, cluster *clustersv1.Cluster) (string, error) {
+	tmpl, err := template.New("content").Parse(content)
+	if err != nil {
+		return "", err
+	}
+	tmpl.Option("missingkey=error")
+
+	clusterObj, err := jsonutils.ToMap(cluster)
+	if err != nil {
+		return "", fmt.Errorf("failed to encode cluster: %w", err)
+	}
+
+	tmplBuf := bytes.NewBuffer(make([]byte, 0, 16384))
+	params := map[string]interface{}{
+		"cluster": clusterObj,
+	}
+	if err := tmpl.Execute(tmplBuf, params); err != nil {
+		return "", err
+	}
+
+	return tmplBuf.String(), nil
 }
 
 func (p servicePlansImpl) getServicesWithPlan(ctx context.Context, clusterName string) ([]string, error) {

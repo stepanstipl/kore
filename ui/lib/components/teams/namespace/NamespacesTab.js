@@ -328,7 +328,7 @@ class NamespacesTab extends React.Component {
             <ServiceCredentialForm
               team={team}
               creationSource="namespace"
-              clusters={ [cluster] }
+              cluster={cluster}
               namespaceClaims={ [showServiceCredentialForm.namespaceClaim]}
               handleSubmit={this.handleServiceCredentialCreated}
               handleCancel={ () => this.setState({ showServiceCredentialForm: false }) }

@@ -23,12 +23,12 @@ class ApiserverTeamPlan {
     /**
      * Constructs a new <code>ApiserverTeamPlan</code>.
      * @alias module:model/ApiserverTeamPlan
-     * @param parameterEditable {Object.<String, Boolean>} 
+     * @param editableParams {Array.<String>} 
      * @param schema {String} 
      */
-    constructor(parameterEditable, schema) { 
+    constructor(editableParams, schema) { 
         
-        ApiserverTeamPlan.initialize(this, parameterEditable, schema);
+        ApiserverTeamPlan.initialize(this, editableParams, schema);
     }
 
     /**
@@ -36,8 +36,8 @@ class ApiserverTeamPlan {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, parameterEditable, schema) { 
-        obj['parameterEditable'] = parameterEditable;
+    static initialize(obj, editableParams, schema) { 
+        obj['editableParams'] = editableParams;
         obj['schema'] = schema;
     }
 
@@ -52,8 +52,8 @@ class ApiserverTeamPlan {
         if (data) {
             obj = obj || new ApiserverTeamPlan();
 
-            if (data.hasOwnProperty('parameterEditable')) {
-                obj['parameterEditable'] = ApiClient.convertToType(data['parameterEditable'], {'String': 'Boolean'});
+            if (data.hasOwnProperty('editableParams')) {
+                obj['editableParams'] = ApiClient.convertToType(data['editableParams'], ['String']);
             }
             if (data.hasOwnProperty('plan')) {
                 obj['plan'] = V1PlanSpec.constructFromObject(data['plan']);
@@ -66,17 +66,17 @@ class ApiserverTeamPlan {
     }
 
 /**
-     * @return {Object.<String, Boolean>}
+     * @return {Array.<String>}
      */
-    getParameterEditable() {
-        return this.parameterEditable;
+    getEditableParams() {
+        return this.editableParams;
     }
 
     /**
-     * @param {Object.<String, Boolean>} parameterEditable
+     * @param {Array.<String>} editableParams
      */
-    setParameterEditable(parameterEditable) {
-        this['parameterEditable'] = parameterEditable;
+    setEditableParams(editableParams) {
+        this['editableParams'] = editableParams;
     }
 /**
      * @return {module:model/V1PlanSpec}
@@ -108,9 +108,9 @@ class ApiserverTeamPlan {
 }
 
 /**
- * @member {Object.<String, Boolean>} parameterEditable
+ * @member {Array.<String>} editableParams
  */
-ApiserverTeamPlan.prototype['parameterEditable'] = undefined;
+ApiserverTeamPlan.prototype['editableParams'] = undefined;
 
 /**
  * @member {module:model/V1PlanSpec} plan
