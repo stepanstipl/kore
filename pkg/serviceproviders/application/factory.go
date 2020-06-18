@@ -69,6 +69,8 @@ func (d Factory) Create(ctx kore.Context, provider *servicesv1.ServiceProvider) 
 		plans = append(plans, *plan)
 	}
 
+	plans = append(plans, GetDefaultPlans()...)
+
 	return Provider{name: provider.Name, plans: plans}, nil
 }
 

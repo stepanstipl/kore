@@ -14,25 +14,25 @@
  * limitations under the License.
  */
 
-package assets_test
+package application_test
 
 import (
 	"fmt"
 
 	v1 "github.com/appvia/kore/pkg/apis/services/v1"
-	"github.com/appvia/kore/pkg/kore/assets"
 	"github.com/appvia/kore/pkg/serviceproviders/application"
 	"github.com/appvia/kore/pkg/utils/jsonschema"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("ServicePlans", func() {
 	It("All plans should be valid", func() {
-		plans := assets.GetDefaultServicePlans()
+		plans := application.GetDefaultPlans()
 
 		for _, plan := range plans {
-			schema, err := func(p *v1.ServicePlan) (string, error) {
+			schema, err := func(p v1.ServicePlan) (string, error) {
 				switch p.Spec.Kind {
 				case application.ServiceKindHelmApp:
 					return application.HelmAppSchema, nil

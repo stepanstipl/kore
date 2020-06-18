@@ -14,28 +14,27 @@
  * limitations under the License.
  */
 
-package assets
+package application
 
 import (
 	servicev1 "github.com/appvia/kore/pkg/apis/services/v1"
-
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-/*
- * Add any services here that are dependencies or Kore features and not provided as embedded manifests
- */
 
 const (
 	// HelmAppClusterAutoscaler is the plan name for instances of the cluster autoscaler
 	HelmAppClusterAutoscaler = "helm-app-cluster-autoscaler"
 )
 
-// GetDefaultServicePlans returns a collection of plans for the resources
-func GetDefaultServicePlans() []*servicev1.ServicePlan {
-	return []*servicev1.ServicePlan{
+// GetDefaultPlans returns a collection of plans for the resources
+func GetDefaultPlans() []servicev1.ServicePlan {
+	return []servicev1.ServicePlan{
 		{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "ServicePlan",
+				APIVersion: servicev1.GroupVersion.String(),
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      HelmAppClusterAutoscaler,
 				Namespace: "kore",
