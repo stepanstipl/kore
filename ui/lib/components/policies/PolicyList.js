@@ -11,7 +11,7 @@ import Policy from './Policy'
 import PolicyForm from './PolicyForm'
 import AllocationHelpers from '../../utils/allocation-helpers'
 import { isReadOnlyCRD } from '../../utils/crd-helpers'
-import { successMessage } from '../../utils/message'
+import { successMessage, warningMessage } from '../../utils/message'
 
 class PolicyList extends ResourceList {
   static propTypes = {
@@ -65,15 +65,15 @@ class PolicyList extends ResourceList {
     const readonly = isReadOnlyCRD(policy)
     return (
       <List.Item key={policy.metadata.name} actions={[
-        <Text key="view_policy"><a onClick={this.view(policy)}><Icon type="eye" theme="filled"/> View</a></Text>,
+        <Text key="view_policy"><a id={`policy_view_${policy.metadata.name}`} onClick={this.view(policy)}><Icon type="eye" theme="filled"/> View</a></Text>,
         <Text key="edit_policy">
-          <Tooltip title={readonly ? 'Read-only' : 'Edit this policy'}>
-            <a onClick={readonly ? () => {} : this.edit(policy)} style={{ color: readonly ? 'lightgray' : null }}><Icon type="edit" theme="filled"/> Edit</a>
+          <Tooltip title="Edit this policy">
+            <a id={`policy_edit_${policy.metadata.name}`} onClick={readonly ? () => warningMessage('Read Only', { description: 'This policy is read-only. Create a new policy to further restrict or allow changes.' }) : this.edit(policy)} style={{ color: readonly ? 'lightgray' : null }}><Icon type="edit" theme="filled"/> Edit</a>
           </Tooltip>
         </Text>,
         <Text key="delete_policy">
-          <Tooltip title={readonly ? 'Read-only' : 'Delete this policy'}>
-            <a onClick={readonly ? () => {} : this.delete(policy)} style={{ color: readonly ? 'lightgray' : null }}><Icon type="delete" theme="filled"/> Delete</a>
+          <Tooltip title="Delete this policy">
+            <a id={`policy_delete_${policy.metadata.name}`} onClick={readonly ? () => warningMessage('Read Only', { description: 'This policy is read-only and cannot be deleted. Create a new policy to further restrict or allow changes.' }) : this.delete(policy)} style={{ color: readonly ? 'lightgray' : null }}><Icon type="delete" theme="filled"/> Delete</a>
           </Tooltip>
         </Text>
       ]}>
@@ -89,6 +89,19 @@ class PolicyList extends ResourceList {
 
   render() {
     const { resources, view, edit, add } = this.state
+    const drawerVisible = Boolean(view || edit || add)
+    let drawerTitle = null
+    let drawerClose = () => {}
+    if (view) {
+      drawerTitle = <><Title level={4}>{view.spec.summary}</Title><Text>{view.spec.description}</Text></>
+      drawerClose = this.view(false)
+    } else if (edit) {
+      drawerTitle = <><Title level={4}>{edit.spec.summary}</Title><Text>{edit.spec.description}</Text></>
+      drawerClose = this.edit(false)
+    } else if (add) {
+      drawerTitle = <Title level={4}>New {this.props.kind} policy</Title>
+      drawerClose = this.add(false)
+    }
 
     return (
       <>
@@ -99,57 +112,41 @@ class PolicyList extends ResourceList {
           showIcon
           style={{ marginBottom: '20px' }}
         />
-        <Button type="primary" onClick={this.add(true)} style={{ display: 'block', marginBottom: '20px' }}>+ New</Button>
+        <Button id="add" type="primary" onClick={this.add(true)} style={{ display: 'block', marginBottom: '20px' }}>+ New</Button>
+
+        <Drawer
+          title={drawerTitle}
+          visible={drawerVisible}
+          onClose={drawerClose}
+          width={900}>
+          {!view ? null : 
+            <>
+              <Paragraph style={{ textAlign: 'center' }}>{this.describeAllocation(view.allocation)}</Paragraph>
+              <Policy policy={view} mode="view" />
+            </>
+          }
+          {!edit ? null :
+            <PolicyForm
+              kind={this.props.kind}
+              policy={edit}
+              handleSubmit={this.handleEditSave}
+            />
+          }
+          {!add ? null : 
+            <PolicyForm
+              kind={this.props.kind}
+              policy={{ spec: { kind: this.props.kind, properties: [] } }}
+              handleSubmit={this.handleAddSave}
+            />
+          }
+        </Drawer>
+
         {!resources ? <Icon type="loading" /> : (
-          <>
-            <List
-              dataSource={resources.items}
-              renderItem={policy => this.policyItem(policy)}
-            >
-            </List>
-
-            {view ? (
-              <Drawer
-                title={<><Title level={4}>{view.spec.summary}</Title><Text>{view.spec.description}</Text></>}
-                visible={Boolean(view)}
-                onClose={this.view(false)}
-                width={900}
-              >
-                <Paragraph style={{ textAlign: 'center' }}>{this.describeAllocation(view.allocation)}</Paragraph>
-                <Policy policy={view} mode="view" />
-              </Drawer>
-            ) : null}
-
-            {edit ? (
-              <Drawer
-                title={<><Title level={4}>{edit.spec.summary}</Title><Text>{edit.spec.description}</Text></>}
-                visible={Boolean(edit)}
-                onClose={this.edit(false)}
-                width={900}
-              >
-                <PolicyForm
-                  kind={this.props.kind}
-                  policy={edit}
-                  handleSubmit={this.handleEditSave}
-                />
-              </Drawer>
-            ) : null}
-
-            {add ? (
-              <Drawer
-                title={<Title level={4}>New {this.props.kind} policy</Title>}
-                visible={add}
-                onClose={this.add(false)}
-                width={900}
-              >
-                <PolicyForm
-                  kind={this.props.kind}
-                  policy={{ spec: { kind: this.props.kind, properties: [] } }}
-                  handleSubmit={this.handleAddSave}
-                />
-              </Drawer>
-            ) : null}            
-          </>
+          <List
+            id="policy_list"
+            dataSource={resources.items}
+            renderItem={policy => this.policyItem(policy)}
+          />
         )}
       </>
     )

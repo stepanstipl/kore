@@ -326,8 +326,6 @@ jobs:
       - image: circleci/node:12
     steps:
       - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
       - restore_cache:
             keys:
               - ui-node-v1-{{ checksum "ui/package-lock.json" }}
@@ -336,7 +334,7 @@ jobs:
           name: Installing UI dependencies
           working_directory: ~/project/ui
           command: |
-            make dependencies
+            make deps
       - save_cache:
             paths:
               - ui/node_modules
@@ -352,8 +350,6 @@ jobs:
       - image: circleci/node:12
     steps:
       - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
       - restore_cache:
             keys:
               - ui-node-v1-{{ checksum "ui/package-lock.json" }}
@@ -362,7 +358,7 @@ jobs:
           working_directory: ~/project/ui
           command: |
             # Restore node modules only if we've not got a cache hit.
-            [[ -d node_modules ]] || make dependencies
+            [[ -d node_modules ]] || make deps
             make test
 
   test-ui-e2e:
@@ -384,7 +380,7 @@ jobs:
           working_directory: ~/project/ui
           command: |
             # Restore node modules only if we've not got a cache hit.
-            [[ -d node_modules ]] || make dependencies
+            [[ -d node_modules ]] || make deps
             make build
             npm start
           background: true

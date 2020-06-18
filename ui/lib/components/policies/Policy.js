@@ -76,18 +76,18 @@ export default class Policy extends React.Component {
   propertyAllowUpdate = (name) => {
     const policyProperty = this.props.policy.spec.properties.find((p) => p.name === name)
     if (policyProperty && policyProperty.allowUpdate) {
-      return <Icon style={{ fontSize: '1.5em' }} type="check-circle" theme="twoTone" twoToneColor="#52c41a" onClick={() => this.handleClick(name, 'allowUpdate', false)}/>
+      return <Icon id={`policy_${name}_allow`} style={{ fontSize: '1.5em' }} type="check-circle" theme="twoTone" twoToneColor="#52c41a" onClick={() => this.handleClick(name, 'allowUpdate', false)}/>
     } else {
-      return <Icon style={{ fontSize: '1.5em' }} type="question-circle" theme="twoTone" twoToneColor="lightgray" onClick={() => this.handleClick(name, 'allowUpdate', true)} />      
+      return <Icon id={`policy_${name}_allow`} style={{ fontSize: '1.5em' }} type="question-circle" theme="twoTone" twoToneColor="lightgray" onClick={() => this.handleClick(name, 'allowUpdate', true)} />      
     }
   }
 
   propertyDisallowUpdate = (name) => {
     const policyProperty = this.props.policy.spec.properties.find((p) => p.name === name)
     if (policyProperty && policyProperty.disallowUpdate) {
-      return <Icon style={{ fontSize: '1.5em' }} type="close-circle" theme="twoTone" twoToneColor="red" onClick={() => this.handleClick(name, 'disallowUpdate', false)} />
+      return <Icon id={`policy_${name}_disallow`} style={{ fontSize: '1.5em' }} type="close-circle" theme="twoTone" twoToneColor="red" onClick={() => this.handleClick(name, 'disallowUpdate', false)} />
     } else {
-      return <Icon style={{ fontSize: '1.5em' }} type="question-circle" theme="twoTone" twoToneColor="lightgray" onClick={() => this.handleClick(name, 'disallowUpdate', true)}/>      
+      return <Icon id={`policy_${name}_disallow`} style={{ fontSize: '1.5em' }} type="question-circle" theme="twoTone" twoToneColor="lightgray" onClick={() => this.handleClick(name, 'disallowUpdate', true)}/>      
     }
   }
 
@@ -96,16 +96,16 @@ export default class Policy extends React.Component {
     const defaultAllow = false
     if (policyProperty) {
       if (policyProperty.disallowUpdate) {
-        return <Tooltip placement="left" title="Changes explicitly denied by this policy, this cannot be changed by another policy"><Icon style={{ fontSize: '1.5em' }} type="close-circle" theme="twoTone" twoToneColor="red" /></Tooltip>
+        return <Tooltip id={`policy_${name}_result_tt`} placement="left" title="Changes explicitly denied by this policy, this cannot be changed by another policy"><Icon id={`policy_${name}_result`} style={{ fontSize: '1.5em' }} type="close-circle" theme="twoTone" twoToneColor="red" /></Tooltip>
       }
       if (policyProperty.allowUpdate) {
-        return <Tooltip placement="left" title="Changes explicitly allowed by this policy, but another policy could still disallow edits"><Icon style={{ fontSize: '1.5em' }} type="check-circle" theme="twoTone" twoToneColor="#52c41a" /></Tooltip>
+        return <Tooltip id={`policy_${name}_result_tt`} placement="left" title="Changes explicitly allowed by this policy, but another policy could still disallow edits"><Icon id={`policy_${name}_result`} style={{ fontSize: '1.5em' }} type="check-circle" theme="twoTone" twoToneColor="#52c41a" /></Tooltip>
       }
     }
     if (defaultAllow) {
-      return <Tooltip placement="left" title="Changes will be allowed by default, but another policy could disallow edits"><Icon style={{ fontSize: '1.5em' }} type="check-circle" theme="twoTone" twoToneColor="silver" /></Tooltip>
+      return <Tooltip id={`policy_${name}_result_tt`} placement="left" title="Changes will be allowed by default, but another policy could disallow edits"><Icon id={`policy_${name}_result`} style={{ fontSize: '1.5em' }} type="check-circle" theme="twoTone" twoToneColor="silver" /></Tooltip>
     }
-    return <Tooltip placement="left" title="Changes will be denied by default, but another policy could allow edits"><Icon style={{ fontSize: '1.5em' }} type="close-circle" theme="twoTone" twoToneColor="silver" /></Tooltip>
+    return <Tooltip id={`policy_${name}_result_tt`} placement="left" title="Changes will be denied by default, but another policy could allow edits"><Icon id={`policy_${name}_result`} style={{ fontSize: '1.5em' }} type="close-circle" theme="twoTone" twoToneColor="silver" /></Tooltip>
   }
 
   render() {

@@ -1,7 +1,9 @@
+const { waitForDrawerOpenClose } = require('./page-objects/utils')
 const { ConfigureCloudPage } = require('./page-objects/configure/cloud/configure-cloud')
 const { ConfigureCloudAWSAccounts } = require('./page-objects/configure/cloud/AWS/accounts')
 const { ConfigureCloudAWSClusterPlans } = require('./page-objects/configure/cloud/AWS/cluster-plans')
-const { waitForDrawerOpenClose } = require('./page-objects/utils')
+const { ConfigureCloudAWSClusterPolicies } = require('./page-objects/configure/cloud/AWS/cluster-policies')
+const { ConfigureCloudClusterPoliciesBase } = require('./page-objects/configure/cloud/cluster-policies-base')
 
 const page = global.page
 
@@ -159,4 +161,91 @@ describe('Configure Cloud - AWS', () => {
       await expect(page).toMatch(`${testPlan.name} plan deleted`)
     })
   })
+
+  describe('Cluster Policies', () => {
+    const policiesPage = new ConfigureCloudAWSClusterPolicies(page)
+    const testPolicy = {
+      name: `testpolicy-${Math.random().toString(36).substr(2, 5)}`,
+      description: 'Test policy for testing'
+    }
+
+    beforeAll(async () => {
+      // In case of gruff from previous tests, wait a beat before starting.
+      await cloudPage.closeAllNotifications()
+      await waitForDrawerOpenClose(page)
+      await policiesPage.openTab()
+      await policiesPage.listLoaded()
+    })
+
+    beforeEach(async () => {
+      await policiesPage.closeAllNotifications()
+    })
+
+    it('has the correct URL', () => {
+      policiesPage.verifyPageURL()
+    })
+
+    it('views an existing policy', async () => {
+      await policiesPage.view('default-eks')
+      // Check a random thing to ensure the plan is being displayed.
+      await expect(page).toMatch('Authorized Master Networks')
+      await policiesPage.closeDrawer()
+    })
+
+    it('does not allow editing of a read-only policy', async () => {
+      await policiesPage.edit('default-eks')
+      await expect(page).toMatch('This policy is read-only')
+    })
+
+    it('does not allow deleting of a read-only policy', async () => {
+      await policiesPage.delete('default-eks')
+      await expect(page).toMatch('This policy is read-only and cannot be deleted')
+    })
+
+    it('creates a new policy', async () => {
+      await policiesPage.new()
+      await expect(page).toMatch('New EKS policy')
+      await policiesPage.populate(testPolicy)
+      await policiesPage.togglePolicyAllow('clusterUsers')
+      await policiesPage.togglePolicyDisallow('domain')
+      await policiesPage.checkPolicyResult('clusterUsers', ConfigureCloudClusterPoliciesBase.RESULT_EXPLICIT_ALLOW)
+      await policiesPage.checkPolicyResult('domain', ConfigureCloudClusterPoliciesBase.RESULT_EXPLICIT_DENY)
+      await policiesPage.checkPolicyResult('description', ConfigureCloudClusterPoliciesBase.RESULT_DEFAULT_DENY)
+
+      // Both deny + allow = deny:
+      await policiesPage.togglePolicyAllow('authorizedMasterNetworks')
+      await policiesPage.togglePolicyDisallow('authorizedMasterNetworks')
+      await policiesPage.checkPolicyResult('authorizedMasterNetworks', ConfigureCloudClusterPoliciesBase.RESULT_EXPLICIT_DENY)
+
+      await policiesPage.save()
+      await expect(page).toMatch('Policy created successfully')
+    })
+
+    it('updates an existing policy', async () => {
+      await policiesPage.edit(testPolicy.name)
+      await policiesPage.populate({ description: 'Updated Policy Description' })
+      await policiesPage.togglePolicyAllow('clusterUsers')
+      await policiesPage.checkPolicyResult('clusterUsers', ConfigureCloudClusterPoliciesBase.RESULT_DEFAULT_DENY)
+
+      await policiesPage.save()
+      await expect(page).toMatch('Policy saved successfully')
+    })
+
+    it('views the updated policy', async () => {
+      await policiesPage.view(testPolicy.name)
+      await policiesPage.checkPolicyResult('domain', ConfigureCloudClusterPoliciesBase.RESULT_EXPLICIT_DENY)
+      await policiesPage.checkPolicyResult('description', ConfigureCloudClusterPoliciesBase.RESULT_DEFAULT_DENY)
+      await policiesPage.checkPolicyResult('authorizedMasterNetworks', ConfigureCloudClusterPoliciesBase.RESULT_EXPLICIT_DENY)
+      await policiesPage.checkPolicyResult('clusterUsers', ConfigureCloudClusterPoliciesBase.RESULT_DEFAULT_DENY)
+      await policiesPage.closeDrawer()
+    })
+
+    it('allows deleting of a non-read-only policy', async () => {
+      await policiesPage.delete(testPolicy.name)
+      await policiesPage.confirmDelete()
+      await expect(page).toMatch('Policy Updated Policy Description deleted')
+    })
+
+  })
+
 })
