@@ -12,12 +12,16 @@ const prototypeList = [{
   path: '/prototype/configure/cloud'
 }, {
   title: 'Team costs',
-  description: 'Page showing cloud costs for a team, select "Team costs" from the settings downdown in the top-right corner',
-  path: '/prototype/teams/costs-demo'
+  description: 'Page showing cloud costs for a team, select "Team costs" from the settings dropdown in the top-right corner',
+  path: '/prototype/teams/proto'
 }, {
   title: 'Organisation reports',
   description: 'Adding a reports section for org-level security and costs reports. This would be accessed from a "Reports" link on left-side menu.',
   path: '/prototype/reports'
+}, {
+  title: 'Team notification settings',
+  description: 'Page showing notification settings for a team, select "Notifications settings" from the settings dropdown in the top-right corner',
+  path: '/prototype/teams/proto'
 }]
 
 const PrototypeIndex = () => (

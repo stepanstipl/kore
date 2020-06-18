@@ -121,6 +121,14 @@ class CostsDemoTeamDashboardPage extends React.Component {
             </a>
           </Link>
         </Menu.Item>
+        <Menu.Item key="notifications">
+          <Link href="/prototype/teams/demo/settings/notifications">
+            <a>
+              <Icon type="notification" style={{ marginRight: '5px' }} />
+              Notifications settings
+            </a>
+          </Link>
+        </Menu.Item>
         <Menu.Item key="audit">
           <Link href="/teams/[name]/audit" as={`/teams/${team.metadata.name}/audit`}>
             <a>
