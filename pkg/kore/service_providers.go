@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/appvia/kore/pkg/kore/assets"
 	"github.com/appvia/kore/pkg/utils/configuration"
 
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
@@ -356,6 +357,13 @@ func (p *serviceProvidersImpl) Catalog(ctx Context, serviceProvider *servicesv1.
 			if err := p.unregisterKind(ctx, kind); err != nil {
 				return ServiceProviderCatalog{}, err
 			}
+		}
+	}
+
+	// @step: ensure default kore embedded service plans (e.g. for applications)
+	for _, x := range assets.GetDefaultServicePlans() {
+		if err := p.ServicePlans().Update(ctx, x, true); err != nil {
+			return ServiceProviderCatalog{}, err
 		}
 	}
 

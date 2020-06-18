@@ -10,6 +10,7 @@ EXCLUDE_FILES=(
   ./pkg/kore/assets/tools.go
   ./pkg/tools/tools.go
   ./pkg/kore/assets/json_meta_schemas.go
+  ./pkg/utils/cloud/aws/iam_test.go
 )
 
 if [[ -z "${BOILERPLATE_LENGTH}" ]]; then

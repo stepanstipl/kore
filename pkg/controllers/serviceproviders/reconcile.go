@@ -26,6 +26,7 @@ import (
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/controllers"
+	"github.com/appvia/kore/pkg/controllers/helpers"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
@@ -148,7 +149,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 					})
 				}
 
-				result, err = EnsureServices(
+				result, err = helpers.EnsureServices(
 					kore.NewContext(ctx, logger, c.mgr.GetClient(), c),
 					adminServices,
 					serviceProvider,

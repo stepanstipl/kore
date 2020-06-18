@@ -14,23 +14,67 @@
  * limitations under the License.
  */
 
-package serviceproviders
+package helpers
 
 import (
 	"fmt"
 	"sort"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
+	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/serviceproviders/application"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
+// GetServiceFromPlanNameAndValues will obtain a service
+func GetServiceFromPlanNameAndValues(ctx kore.Context, planName string, kubeCluster *clustersv1.Kubernetes, clusterNamespace string, values map[string]interface{}) (*servicesv1.Service, error) {
+	servicePlan, err := ctx.Kore().ServicePlans().Get(ctx, planName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get service plan %q: %w", planName, err)
+	}
+	ownerCluster := corev1.MustGetOwnershipFromObject(kubeCluster)
+	config := getEmptyConfigFromPlan(servicePlan)
+	// Populate default configuration from plan
+	if err := servicePlan.Spec.GetConfiguration(config); err != nil {
+		return nil, err
+	}
+	setConfigValues(config, values)
+	// Set config back
+	if err := servicePlan.Spec.SetConfiguration(config); err != nil {
+		return nil, err
+	}
+
+	return &servicesv1.Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Service",
+			APIVersion: servicesv1.GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      planName,
+			Namespace: kubeCluster.Namespace,
+			Annotations: map[string]string{
+				kore.AnnotationSystem: "true",
+			},
+		},
+		Spec: servicesv1.ServiceSpec{
+			Kind:             servicePlan.Spec.Kind,
+			Plan:             servicePlan.Name,
+			Cluster:          ownerCluster,
+			ClusterNamespace: clusterNamespace,
+			Configuration:    servicePlan.Spec.Configuration,
+		},
+	}, nil
+}
+
+// EnsureServices will create or update services and return reconciliation info
 func EnsureServices(ctx kore.Context, services []servicesv1.Service, owner runtime.Object, components corev1.Components) (reconcile.Result, error) {
 	sortedServices := servicesv1.PriorityServiceSlice(make([]servicesv1.Service, 0, len(services)))
 	for _, s := range services {
@@ -59,6 +103,7 @@ func EnsureServices(ctx kore.Context, services []servicesv1.Service, owner runti
 	return reconcile.Result{}, nil
 }
 
+// EnsureService will create or update a service and return reconciliation info
 func EnsureService(ctx kore.Context, original *servicesv1.Service, owner runtime.Object, components corev1.Components) (reconcile.Result, error) {
 	if original.Annotations == nil {
 		original.Annotations = map[string]string{}
@@ -83,7 +128,6 @@ func EnsureService(ctx kore.Context, original *servicesv1.Service, owner runtime
 		}
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 	}
-
 	components.SetStatus("Service/"+current.Name, current.Status.Status, current.Status.Message, "")
 
 	patchResult, err := patch.NewPatchMaker(patchAnnotator).Calculate(
@@ -93,6 +137,7 @@ func EnsureService(ctx kore.Context, original *servicesv1.Service, owner runtime
 		patch.IgnoreVolumeClaimTemplateTypeMetaAndStatus(),
 	)
 	if err != nil {
+
 		return reconcile.Result{}, err
 	}
 
@@ -120,6 +165,7 @@ func EnsureService(ctx kore.Context, original *servicesv1.Service, owner runtime
 	return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 }
 
+// DeleteServices will remove services and return reconcile status
 func DeleteServices(ctx kore.Context, team string, owner runtime.Object, components corev1.Components) (reconcile.Result, error) {
 	adminServicesList, err := ctx.Kore().Teams().Team(team).Services().ListFiltered(ctx, func(service servicesv1.Service) bool {
 		return service.Annotations[kore.AnnotationOwner] == kubernetes.MustGetRuntimeSelfLink(owner)
@@ -152,6 +198,7 @@ func DeleteServices(ctx kore.Context, team string, owner runtime.Object, compone
 	return reconcile.Result{}, nil
 }
 
+// DeleteService will remove a service and return reconcile status
 func DeleteService(ctx kore.Context, service *servicesv1.Service, owner runtime.Object, components corev1.Components) (reconcile.Result, error) {
 	if service.Annotations[kore.AnnotationOwner] != kubernetes.MustGetRuntimeSelfLink(owner) {
 		return reconcile.Result{}, fmt.Errorf("the service can not be deleted as it doesn't belong to %s", kubernetes.MustGetRuntimeSelfLink(owner))
@@ -180,4 +227,25 @@ func DeleteService(ctx kore.Context, service *servicesv1.Service, owner runtime.
 	}
 
 	return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+}
+
+func getEmptyConfigFromPlan(servicePlan *servicesv1.ServicePlan) interface{} {
+	switch servicePlan.Spec.Kind {
+	case application.ServiceKindApp:
+		return &application.AppConfiguration{}
+	case application.ServiceKindHelmApp:
+		return &application.HelmAppConfiguration{}
+	default:
+		return nil
+	}
+}
+
+func setConfigValues(config interface{}, values map[string]interface{}) {
+	// Set the strongly types values dependant on type
+	switch configWithValues := config.(type) {
+	case *application.AppConfiguration:
+		configWithValues.Values = values
+	case *application.HelmAppConfiguration:
+		configWithValues.Values = values
+	}
 }

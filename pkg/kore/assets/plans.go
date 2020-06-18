@@ -212,6 +212,7 @@ func GetDefaultPlans() []*configv1.Plan {
 								"name": "default",
 								"instanceType": "t3.medium",
 								"diskSize": 10,
+								"enableAutoscaler": true,
 								"minSize": 1,
 								"desiredSize": 1,
 								"maxSize": 10
@@ -255,6 +256,7 @@ func GetDefaultPlans() []*configv1.Plan {
 								"name": "default",
 								"instanceType": "c4.xlarge",
 								"diskSize": 10,
+								"enableAutoscaler": true,
 								"minSize": 3,
 								"desiredSize": 3,
 								"maxSize": 12

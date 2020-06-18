@@ -1310,6 +1310,10 @@ spec:
                 for SSH communication with the worker nodes in the managed node group
                 https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html
               type: string
+            enableAutoscaler:
+              description: EnableAutoscaler indicates if the node pool should be configured
+                with autoscaling turned on
+              type: boolean
             instanceType:
               description: InstanceType is the EC2 machine type
               type: string

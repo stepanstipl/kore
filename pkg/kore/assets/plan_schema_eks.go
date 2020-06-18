@@ -117,8 +117,6 @@ const EKSPlanSchema = `
 					"desiredSize",
 					"diskSize",
 					"instanceType",
-					"maxSize",
-					"minSize",
 					"name"
 				],
 				"properties": {
@@ -164,13 +162,20 @@ const EKSPlanSchema = `
 						"type": "number",
 						"multipleOf": 1,
 						"minimum": 1,
-						"default": 1
+						"default": 1,
+						"description": "The minimum nodes this group should contain (if auto-scale enabled)"
 					},
 					"maxSize": {
 						"type": "number",
 						"multipleOf": 1,
 						"minimum": 1,
-						"default": 10
+						"default": 10,
+						"description": "The maximum nodes this group should contain (if auto-scale enabled)"
+					},
+					"enableAutoscaler": {
+						"type": "boolean",
+						"default": true,
+						"description": "Will enable the cluster autoscaler to scale this specific nodegroup"
 					},
 					"name": {
 						"type": "string",
@@ -207,7 +212,30 @@ const EKSPlanSchema = `
 						"additionalProperties": { "type": "string" },
 						"default": {}
 					}
-				}
+				},
+				"allOf": [
+					{
+						"$comment": "Require min/max sizes if auto-scale enabled",
+						"if": {
+							"properties": {
+								"enableAutoscaler": {
+									"const": true
+								}
+							}
+						},
+						"then": {
+							"properties": {
+								"minSize": {
+									"minimum": 1
+								},
+								"maxSize": {
+									"minimum": 1
+								}
+							},
+							"required": ["minSize", "maxSize"]
+						}
+					}
+				]
 			},
 			"minItems": 1
 		},
