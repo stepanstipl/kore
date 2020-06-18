@@ -196,6 +196,7 @@ func (a *apiClient) MakeEndpointURL() (string, error) {
 	if len(a.queryparams) > 0 {
 		uri = fmt.Sprintf("%s?%s", uri, a.queryparams.Encode())
 	}
+
 	return uri, nil
 }
 
