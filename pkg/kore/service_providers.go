@@ -21,12 +21,10 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/appvia/kore/pkg/kore/assets"
-	"github.com/appvia/kore/pkg/utils/configuration"
-
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils"
+	"github.com/appvia/kore/pkg/utils/configuration"
 	"github.com/appvia/kore/pkg/utils/jsonschema"
 	"github.com/appvia/kore/pkg/utils/validation"
 
@@ -290,7 +288,7 @@ func (p *serviceProvidersImpl) register(ctx Context, serviceProvider *servicesv1
 
 	provider, err := factory.Create(ctx, serviceProvider)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create service provider: %w", err)
 	}
 
 	if p.providers == nil {
@@ -329,13 +327,13 @@ func (p *serviceProvidersImpl) Catalog(ctx Context, serviceProvider *servicesv1.
 	if !ok {
 		var err error
 		if provider, err = p.register(ctx, serviceProvider); err != nil {
-			return ServiceProviderCatalog{}, err
+			return ServiceProviderCatalog{}, fmt.Errorf("failed to register service provider: %w", err)
 		}
 	}
 
 	catalog, err := provider.Catalog(ctx, serviceProvider)
 	if err != nil {
-		return ServiceProviderCatalog{}, err
+		return ServiceProviderCatalog{}, fmt.Errorf("failed to fetch service catalog from service provider: %w", err)
 	}
 
 	var supportedKinds []string
@@ -355,15 +353,8 @@ func (p *serviceProvidersImpl) Catalog(ctx Context, serviceProvider *servicesv1.
 	for kind, rp := range p.providers {
 		if rp.Name() == serviceProvider.Name && !utils.Contains(kind, supportedKinds) {
 			if err := p.unregisterKind(ctx, kind); err != nil {
-				return ServiceProviderCatalog{}, err
+				return ServiceProviderCatalog{}, fmt.Errorf("failed to unregister service kind %q: %w", kind, err)
 			}
-		}
-	}
-
-	// @step: ensure default kore embedded service plans (e.g. for applications)
-	for _, x := range assets.GetDefaultServicePlans() {
-		if err := p.ServicePlans().Update(ctx, x, true); err != nil {
-			return ServiceProviderCatalog{}, err
 		}
 	}
 

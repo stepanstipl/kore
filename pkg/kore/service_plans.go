@@ -77,7 +77,7 @@ func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePl
 
 	existing, err := p.Get(ctx, plan.Name)
 	if err != nil && err != ErrNotFound {
-		return err
+		return fmt.Errorf("failed to get plan %q: %w", plan.Name, err)
 	}
 
 	if !ignoreReadonly {
@@ -103,7 +103,7 @@ func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePl
 	if schema == "" {
 		kind, err := p.ServiceKinds().Get(ctx, plan.Spec.Kind)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to get service kind %q: %w", plan.Spec.Kind, err)
 		}
 		schema = kind.Spec.Schema
 	}

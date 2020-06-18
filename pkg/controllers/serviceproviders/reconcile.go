@@ -18,6 +18,7 @@ package serviceproviders
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"time"
 
@@ -74,7 +75,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 				spCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c)
 				complete, err := c.ServiceProviders().SetUp(spCtx, serviceProvider)
 				if err != nil {
-					return reconcile.Result{}, err
+					return reconcile.Result{}, fmt.Errorf("failed to set up service provider: %w", err)
 				}
 				if !complete {
 					return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
@@ -82,12 +83,12 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 				provider, err := c.ServiceProviders().Register(spCtx, serviceProvider)
 				if err != nil {
-					return reconcile.Result{}, err
+					return reconcile.Result{}, fmt.Errorf("failed to register service provider: %w", err)
 				}
 
 				catalog, err := c.ServiceProviders().Catalog(spCtx, serviceProvider)
 				if err != nil {
-					return reconcile.Result{}, err
+					return reconcile.Result{}, fmt.Errorf("failed to load service catalog: %w", err)
 				}
 
 				var supportedKinds []string
@@ -107,14 +108,14 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 					existing.Namespace = kind.Namespace
 					exists, err := kubernetes.GetIfExists(ctx, c.mgr.GetClient(), existing)
 					if err != nil {
-						return reconcile.Result{}, err
+						return reconcile.Result{}, fmt.Errorf("failed to retrieve service kind %q: %w", kind.Name, err)
 					}
 					if exists {
 						kind.Spec.Enabled = existing.Spec.Enabled
 					}
 
 					if _, err := kubernetes.CreateOrUpdate(ctx, c.mgr.GetClient(), &kind); err != nil {
-						return reconcile.Result{}, err
+						return reconcile.Result{}, fmt.Errorf("failed to create or update service kind %q: %w", kind.Name, err)
 					}
 				}
 
@@ -125,7 +126,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 					}
 					plan.Annotations[kore.AnnotationReadOnly] = kore.AnnotationValueTrue
 					if _, err := kubernetes.CreateOrUpdate(ctx, c.mgr.GetClient(), &plan); err != nil {
-						return reconcile.Result{}, err
+						return reconcile.Result{}, fmt.Errorf("failed to create or update service plan %q: %w", plan.Name, err)
 					}
 				}
 

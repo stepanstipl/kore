@@ -25,7 +25,7 @@ import (
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers/helpers"
 	"github.com/appvia/kore/pkg/kore"
-	"github.com/appvia/kore/pkg/kore/assets"
+	"github.com/appvia/kore/pkg/serviceproviders/application"
 	awsutils "github.com/appvia/kore/pkg/utils/cloud/aws"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -79,7 +79,7 @@ func (a *awsAutoScaler) Delete() (reconcile.Result, error) {
 		}
 	}
 	a.kubeCluster.Status.Components.SetCondition(corev1.Component{
-		Name:    "Service/" + assets.HelmAppClusterAutoscaler,
+		Name:    "Service/" + application.HelmAppClusterAutoscaler,
 		Message: "Autoscaler and AWS roles are being deleted",
 		Status:  corev1.DeletingStatus,
 	})
@@ -141,7 +141,7 @@ func (a *awsAutoScaler) Ensure() (reconcile.Result, error) {
 		}
 	}
 	a.kubeCluster.Status.Components.SetCondition(corev1.Component{
-		Name:    "Service/" + assets.HelmAppClusterAutoscaler,
+		Name:    "Service/" + application.HelmAppClusterAutoscaler,
 		Message: "Autoscaler is being provisioned",
 		Status:  corev1.PendingStatus,
 	})
@@ -227,7 +227,7 @@ func (a *awsAutoScaler) Ensure() (reconcile.Result, error) {
 	// TODO: select a planwith the correct version
 	awsAutoScalerService, err := helpers.GetServiceFromPlanNameAndValues(
 		a.ctx,
-		assets.HelmAppClusterAutoscaler,
+		application.HelmAppClusterAutoscaler,
 		a.kubeCluster,
 		"kube-system",
 		map[string]interface{}{
