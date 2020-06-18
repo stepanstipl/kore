@@ -15,6 +15,10 @@ const redisClient = redis.createClient({ url: config.session.url })
 
 const nextjsPath = config.kore.showPrototypes ? '*' : /^((?!\/prototype).)*$/
 
+if (config.disableAnimations) {
+  console.log('Animations disabled - unset KORE_UI_DISABLE_ANIMATIONS to restore.')
+}
+
 app.prepare().then(() => {
   const server = express()
 

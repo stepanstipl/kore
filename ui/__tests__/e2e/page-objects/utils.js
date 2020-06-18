@@ -4,7 +4,7 @@ export async function clearFillTextInput(pg, id, value) {
   if (value === undefined) {
     return
   }
-  const input = await pg.$(`input#${id}`)
+  const input = await pg.waitForSelector(`input#${id}`)
   await input.click({ clickCount: 3 })
   await input.type(value.toString())
 }

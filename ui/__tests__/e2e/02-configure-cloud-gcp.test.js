@@ -1,4 +1,3 @@
-const { waitForDrawerOpenClose } = require('./page-objects/utils')
 const { ConfigureCloudPage } = require('./page-objects/configure/cloud/configure-cloud')
 const { ConfigureCloudGCPProjects } = require('./page-objects/configure/cloud/GCP/projects')
 const { ConfigureCloudGCPClusterPlans } = require('./page-objects/configure/cloud/GCP/cluster-plans')
@@ -85,7 +84,6 @@ describe('Configure Cloud - GCP', () => {
     beforeAll(async () => {
       // In case of gruff from previous tests, wait a beat before starting.
       await cloudPage.closeAllNotifications()
-      await waitForDrawerOpenClose(page)
       await clusterPlansPage.openTab()
       await clusterPlansPage.listLoaded()
     })
@@ -170,7 +168,6 @@ describe('Configure Cloud - GCP', () => {
     beforeAll(async () => {
       // In case of gruff from previous tests, wait a beat before starting.
       await cloudPage.closeAllNotifications()
-      await waitForDrawerOpenClose(page)
       await policiesPage.openTab()
       await policiesPage.listLoaded()
     })

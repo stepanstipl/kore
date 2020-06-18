@@ -12,6 +12,7 @@ export class ConfigureCloudPage extends BasePage {
     if (currUrl.toLowerCase().indexOf(`/configure/cloud/${name.toLowerCase()}/`) > -1 || (name.toLowerCase() === 'gcp' && currUrl.endsWith('/configure/cloud'))) {
       return
     }
+    await this.p.waitFor(100)
     await Promise.all([
       this.p.waitForNavigation(),
       this.p.click(`#tab-${name}`)
@@ -28,6 +29,7 @@ export class ConfigureCloudPage extends BasePage {
     if (currUrl.endsWith(`/configure/cloud/${urlName}`) || (urlName === 'GCP/orgs' && currUrl.endsWith('/configure/cloud/'))) {
       return
     }
+    await this.p.waitFor(100)
     await Promise.all([
       this.p.waitForNavigation(),
       subTab[0].click()
