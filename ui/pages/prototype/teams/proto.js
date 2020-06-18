@@ -16,6 +16,7 @@ import { successMessage, errorMessage } from '../../../lib/utils/message'
 // prototype imports
 import TeamData from '../../../lib/prototype/utils/dummy-team-data'
 import ClustersTab from '../../../lib/prototype/components/teams/cluster/ClustersTab'
+import Notifications from '../../../lib/prototype/components/teams/Notifications'
 
 class CostsDemoTeamDashboardPage extends React.Component {
   static propTypes = {
@@ -114,7 +115,7 @@ class CostsDemoTeamDashboardPage extends React.Component {
     const menu = (
       <Menu>
         <Menu.Item key="costs">
-          <Link href="/prototype/teams/demo/costs">
+          <Link href="/prototype/teams/proto/costs">
             <a>
               <Icon type="pound" style={{ marginRight: '5px' }} />
               Team costs
@@ -122,7 +123,7 @@ class CostsDemoTeamDashboardPage extends React.Component {
           </Link>
         </Menu.Item>
         <Menu.Item key="notifications">
-          <Link href="/prototype/teams/demo/settings/notifications">
+          <Link href="/prototype/teams/proto/settings/notifications">
             <a>
               <Icon type="notification" style={{ marginRight: '5px' }} />
               Notifications settings
@@ -144,10 +145,9 @@ class CostsDemoTeamDashboardPage extends React.Component {
       </Menu>
     )
     return (
-      <Dropdown overlay={menu}>
+      <Dropdown trigger={['click']} overlay={menu}>
         <Button>
-          <Icon type="setting" style={{ marginRight: '10px' }} />
-          <Icon type="down" />
+          <Icon type="setting" />
         </Button>
       </Dropdown>
     )
@@ -174,8 +174,11 @@ class CostsDemoTeamDashboardPage extends React.Component {
           <div style={{ float: 'left', marginTop: '8px' }}>
             <Breadcrumb items={[{ text: team.spec.summary }]} />
           </div>
-          <div style={{ float: 'right' }}>
-            {this.settingsMenu({ team })}
+          <div style={{ float: 'right', marginRight: '0' }}>
+            <Notifications />
+            <div style={{ marginLeft: '15px', display: 'inline' }}>
+              {this.settingsMenu({ team })}
+            </div>
           </div>
         </div>
         <Paragraph>
