@@ -64,15 +64,7 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 	}
 	original := cluster.DeepCopy()
 
-	if cluster.Annotations[kore.AnnotationSystem] == kore.AnnotationValueTrue {
-		cluster.Status.Status = corev1.SuccessStatus
-		if err := a.mgr.GetClient().Status().Patch(ctx, cluster, client.MergeFrom(original)); err != nil {
-			logger.WithError(err).Error("failed to update the cluster status")
-			return reconcile.Result{}, err
-		}
-		return reconcile.Result{}, nil
-	}
-
+	// @step: create the finalizer on the object and check if deleting
 	finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
 	if finalizer.IsDeletionCandidate(cluster) {
 		return a.Delete(ctx, cluster)
@@ -135,6 +127,12 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 // AddFinalizer ensures the finalizer is on the resource
 func (a *Controller) AddFinalizer(cluster *clustersv1.Cluster) controllers.EnsureFunc {
 	return func(ctx context.Context) (reconcile.Result, error) {
+
+		// No-op for the system cluster for now:
+		if cluster.Annotations[kore.AnnotationSystem] == kore.AnnotationValueTrue {
+			return reconcile.Result{}, nil
+		}
+
 		finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
 		if finalizer.NeedToAdd(cluster) {
 			if err := finalizer.Add(cluster); err != nil {
@@ -300,6 +298,12 @@ func (a *Controller) Cleanup(cluster *clustersv1.Cluster, components *Components
 		// - we find any components which are no longer referenced and we delete
 		// - we update the status of the component and we requeue
 		// - if the component has been removed we can delete it
+
+		// No-op for the system cluster for now - until we're creating ALL kore components
+		// in here, this isn't safe for the kore cluster:
+		if cluster.Annotations[kore.AnnotationSystem] == kore.AnnotationValueTrue {
+			return reconcile.Result{}, nil
+		}
 
 		for i := 0; i < len(cluster.Status.Components); i++ {
 			required, err := IsComponentReferenced(cluster.Status.Components[i], components)

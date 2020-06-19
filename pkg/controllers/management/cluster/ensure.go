@@ -31,6 +31,7 @@ import (
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/schema"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
@@ -70,6 +71,11 @@ func (a *Controller) Load(cluster *clustersv1.Cluster, components *Components) c
 // Components is used to generate common components
 func (a *Controller) Components(cluster *clustersv1.Cluster, components *Components) controllers.EnsureFunc {
 	return func(ctx context.Context) (reconcile.Result, error) {
+		// No-op for the system cluster for now:
+		if cluster.Annotations[kore.AnnotationSystem] == kore.AnnotationValueTrue {
+			return reconcile.Result{}, nil
+		}
+
 		v := components.Add(&clustersv1.Kubernetes{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      cluster.Name,

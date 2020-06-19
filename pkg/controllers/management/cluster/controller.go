@@ -147,6 +147,8 @@ func (a *Controller) Provider(kind string) (ClusterProviderComponents, error) {
 		return &gkeComponents{Controller: a}, nil
 	case "eks":
 		return &eksComponents{Controller: a}, nil
+	case "kore":
+		return &koreComponents{Controller: a}, nil
 	default:
 		return nil, errors.New("unsupported cloud provider")
 	}
