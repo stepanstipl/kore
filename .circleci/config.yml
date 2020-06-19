@@ -231,6 +231,8 @@ jobs:
       *SERVICES
 
     steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
       - checkout
       - run:
           command: |
@@ -244,6 +246,14 @@ jobs:
           command: |
             make swagger-json
             make swagger-validate
+      - run:
+          name: Checking UI auto-gen
+          working_directory: ~/project/ui
+          command: |
+            # Now we've updated the swagger from the live API, we can check 
+            # that the kore autogen in the UI project is up to date as well.
+            # Doesn't fit here logically but does in terms of efficiency.
+            make check-kore-autogen
       - run:
           name: Integration testing API
           command: |
