@@ -42,15 +42,13 @@ export class ConfigureCloudClusterPoliciesBase extends ConfigureCloudPage {
     await this.p.click(`#policy_${name}_disallow`)
   }
 
-  static RESULT_EXPLICIT_DENY = 'Changes explicitly denied by this policy'
-  static RESULT_EXPLICIT_ALLOW = 'Changes explicitly allowed by this policy'
-  static RESULT_DEFAULT_DENY = 'Changes will be denied by default'
-  static RESULT_DEFAULT_ALLOW = 'Changes will be allowed by default'
+  static RESULT_EXPLICIT_DENY = '.anticon-close-circle'
+  static RESULT_EXPLICIT_ALLOW = '.anticon-check-circle'
+  static RESULT_DEFAULT_DENY = '.anticon-close-square'
+  static RESULT_DEFAULT_ALLOW = '.anticon-check-square'
 
   async checkPolicyResult(name, expected) {
-    await this.p.hover(`#policy_${name}_result`)
-    const tt = await this.p.waitForSelector(`#policy_${name}_result_tt`)
-    await expect(tt).toMatch(expected)
+    await this.p.waitForSelector(`#policy_${name}_result${expected}`)
   }
 
   async save() {

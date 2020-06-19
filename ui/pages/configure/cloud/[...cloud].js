@@ -51,11 +51,11 @@ export default class ConfigureCloudPage extends React.Component {
   }
 
   handleSelectCloud = cloud => {
-    Router.push('/configure/cloud/[[...cloud]]', `/configure/cloud/${cloud}/${this.props.activeKeys[cloud]}`)
+    Router.push('/configure/cloud/[...cloud]', `/configure/cloud/${cloud}/${this.props.activeKeys[cloud]}`)
   }
 
   handleSelectKey = (cloud, key) => {
-    Router.push('/configure/cloud/[[...cloud]]', `/configure/cloud/${cloud}/${key}`)
+    Router.push('/configure/cloud/[...cloud]', `/configure/cloud/${cloud}/${key}`)
   }
 
   render() {

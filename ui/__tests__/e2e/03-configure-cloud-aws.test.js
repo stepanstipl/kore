@@ -1,4 +1,3 @@
-const { waitForDrawerOpenClose } = require('./page-objects/utils')
 const { ConfigureCloudPage } = require('./page-objects/configure/cloud/configure-cloud')
 const { ConfigureCloudAWSAccounts } = require('./page-objects/configure/cloud/AWS/accounts')
 const { ConfigureCloudAWSClusterPlans } = require('./page-objects/configure/cloud/AWS/cluster-plans')
@@ -88,7 +87,6 @@ describe('Configure Cloud - AWS', () => {
     beforeAll(async () => {
       // In case of gruff from previous tests, wait a beat before starting.
       await cloudPage.closeAllNotifications()
-      await waitForDrawerOpenClose(page)
       await awsClusterPlansPage.openTab()
       await awsClusterPlansPage.listLoaded()
     })
@@ -172,7 +170,6 @@ describe('Configure Cloud - AWS', () => {
     beforeAll(async () => {
       // In case of gruff from previous tests, wait a beat before starting.
       await cloudPage.closeAllNotifications()
-      await waitForDrawerOpenClose(page)
       await policiesPage.openTab()
       await policiesPage.listLoaded()
     })

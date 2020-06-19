@@ -103,9 +103,9 @@ export default class Policy extends React.Component {
       }
     }
     if (defaultAllow) {
-      return <Tooltip id={`policy_${name}_result_tt`} placement="left" title="Changes will be allowed by default, but another policy could disallow edits"><Icon id={`policy_${name}_result`} style={{ fontSize: '1.5em' }} type="check-circle" theme="twoTone" twoToneColor="silver" /></Tooltip>
+      return <Tooltip id={`policy_${name}_result_tt`} placement="left" title="Changes will be allowed by default, but another policy could disallow edits"><Icon id={`policy_${name}_result`} style={{ fontSize: '1.5em' }} type="check-square" theme="twoTone" twoToneColor="silver" /></Tooltip>
     }
-    return <Tooltip id={`policy_${name}_result_tt`} placement="left" title="Changes will be denied by default, but another policy could allow edits"><Icon id={`policy_${name}_result`} style={{ fontSize: '1.5em' }} type="close-circle" theme="twoTone" twoToneColor="silver" /></Tooltip>
+    return <Tooltip id={`policy_${name}_result_tt`} placement="left" title="Changes will be denied by default, but another policy could allow edits"><Icon id={`policy_${name}_result`} style={{ fontSize: '1.5em' }} type="close-square" theme="twoTone" twoToneColor="silver" /></Tooltip>
   }
 
   render() {

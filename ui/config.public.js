@@ -13,5 +13,6 @@ module.exports = {
   gtmId: config.kore.gtmId,
   showPrototypes: config.kore.showPrototypes,
   featureGates: config.kore.featureGates,
-  clusterProviderMap: config.clusterProviderMap
+  clusterProviderMap: config.clusterProviderMap,
+  disableAnimations: config.disableAnimations
 }

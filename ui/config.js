@@ -67,5 +67,6 @@ module.exports = {
   clusterProviderMap: {
     'AWS': 'EKS',
     'GCP': 'GKE'
-  }
+  },
+  disableAnimations: process.env.KORE_UI_DISABLE_ANIMATIONS === 'true'
 }

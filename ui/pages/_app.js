@@ -181,6 +181,21 @@ class MyApp extends App {
           <title>{props.title || 'Appvia Kore'}</title>
           <meta charSet="utf-8"/>
           <meta name="viewport" content="initial-scale=1.0, width=device-width"/>
+          {!publicRuntimeConfig.disableAnimations ? null : (
+            <style type="text/css" dangerouslySetInnerHTML={{
+              __html: `
+                *, *::after, *::before {
+                  transition-delay: 0s !important;
+                  transition-duration: 0s !important;
+                  animation-delay: -0.0001s !important;
+                  animation-duration: 0s !important;
+                  animation-play-state: paused !important;
+                  caret-color: transparent !important;
+                  color-adjust: exact !important;
+                }
+              `
+            }} />
+          )}
         </Head>
         <Layout style={{ minHeight:'100vh' }}>
           <Header className='top-header'>

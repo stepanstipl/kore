@@ -4,5 +4,5 @@ module.exports = {
   // Use longer timeout if we're showing the browser:
   timeout: process.env.SHOW_BROWSER !== 'true' ? 15000 : 60000,
   expectTimeout: 1000,
-  drawerOpenClosePause: 500
+  drawerOpenClosePause: 75
 }

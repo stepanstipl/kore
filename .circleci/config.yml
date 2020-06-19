@@ -385,6 +385,7 @@ jobs:
             npm start
           background: true
           environment:
+            KORE_UI_DISABLE_ANIMATIONS: 'true'
             KORE_BASE_URL: http://localhost:3000
             KORE_API_URL: http://localhost:10080/api/v1alpha1
             KORE_API_TOKEN: password

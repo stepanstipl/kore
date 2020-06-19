@@ -246,7 +246,7 @@ class GCPProjectAutomationSettings extends React.Component {
       description={
         <div>
           <Paragraph style={{ marginTop: '10px' }}>No GCP organization credentials have been configured in Kore. Without these, Kore will be unable to managed GCP projects on your behalf.</Paragraph>
-          <Link href="/configure/cloud/[[...cloud]]" as="/configure/cloud/GCP/orgs"><Button type="secondary">Setup organization credentials</Button></Link>
+          <Link href="/configure/cloud/[...cloud]" as="/configure/cloud/GCP/orgs"><Button type="secondary">Setup organization credentials</Button></Link>
         </div>
       }
       type="warning"
