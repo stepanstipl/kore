@@ -1,7 +1,6 @@
 import { mount } from 'enzyme'
 import NewTeamForm from '../../../../../lib/components/forms/NewTeamForm'
 import copy from '../../../../../lib/utils/object-copy'
-import Team from '../../../../../lib/crd/Team'
 import ApiTestHelpers from '../../../../api-test-helpers'
 
 describe('NewTeamForm', () => {
@@ -102,10 +101,15 @@ describe('NewTeamForm', () => {
     })
 
     it('submits when the form is valid', async () => {
-      const team = Team('abc', {
-        summary: 'ABC',
-        description: 'ABC team'
-      })
+      const team = {
+        metadata: {
+          name: 'abc'
+        },
+        spec: {
+          summary: 'ABC',
+          description: 'ABC team'
+        }
+      }
 
       apiScope = (ApiTestHelpers.getScope())
         .get(`${ApiTestHelpers.basePath}/teams/abc`).reply(404)

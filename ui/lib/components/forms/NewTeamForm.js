@@ -1,13 +1,16 @@
-import * as React from 'react'
+import React from 'react'
 import PropTypes from 'prop-types'
 import canonical from '../../utils/canonical'
 import copy from '../../utils/object-copy'
-import Team from '../../crd/Team'
 import { Button, Form, Input, Alert, Typography } from 'antd'
+const { Paragraph, Text } = Typography
+
 import KoreApi from '../../kore-api'
 import { successMessage } from '../../utils/message'
-
-const { Paragraph, Text } = Typography
+import V1Team from '../../kore-api/model/V1Team'
+import V1TeamSpec from '../../kore-api/model/V1TeamSpec'
+import { NewV1ObjectMeta } from '../../utils/model'
+import FormErrorMessage from './FormErrorMessage'
 
 class NewTeamForm extends React.Component {
   static propTypes = {
@@ -17,12 +20,9 @@ class NewTeamForm extends React.Component {
     team: PropTypes.any
   }
 
-  constructor(props) {
-    super(props)
-    this.state = {
-      submitting: false,
-      formErrorMessage: false,
-    }
+  state = {
+    submitting: false,
+    formErrorMessage: false
   }
 
   componentDidMount() {
@@ -30,45 +30,50 @@ class NewTeamForm extends React.Component {
     this.props.form.validateFields()
   }
 
-  disableButton = fieldsError => {
+  disableButton = (fieldsError) => {
     if (this.state.submitting) {
       return true
     }
     return Object.keys(fieldsError).some(field => fieldsError[field])
   }
 
+  generateTeamResource = (values) => {
+    const resource = new V1Team()
+    resource.setMetadata(NewV1ObjectMeta(canonical(values.teamName)))
+
+    const spec = new V1TeamSpec()
+    spec.setSummary(values.teamName.trim())
+    spec.setDescription(values.teamDescription.trim())
+
+    resource.setSpec(spec)
+
+    return resource
+  }
+
   handleSubmit = e => {
     e.preventDefault()
 
     this.setState({
-      ...this.state,
       submitting: true,
       formErrorMessage: false
     })
 
     return this.props.form.validateFields(async (err, values) => {
       if (err) {
-        this.setState({
-          ...this.state,
+        return this.setState({
           submitting: false,
           formErrorMessage: 'Validation failed'
         })
-        return
       }
+
       const canonicalTeamName = canonical(values.teamName)
-      const spec = {
-        summary: values.teamName.trim(),
-        description: values.teamDescription.trim()
-      }
       try {
         const api = await KoreApi.client()
         const checkTeam = await api.GetTeam(canonicalTeamName)
         if (!checkTeam) {
-          const team = await api.UpdateTeam(canonicalTeamName, Team(canonicalTeamName, spec))
+          const team = await api.UpdateTeam(canonicalTeamName, this.generateTeamResource(values))
           await this.props.handleTeamCreated(team)
-          const state = copy(this.state)
-          state.submitting = false
-          this.setState(state)
+          this.setState({ submitting: false })
           successMessage('Team created')
         } else {
           const state = copy(this.state)
@@ -77,17 +82,19 @@ class NewTeamForm extends React.Component {
           this.setState(state)
         }
       } catch (err) {
-        //console.error('Error submitting form', err)
-        const state = copy(this.state)
-        state.submitting = false
-        state.formErrorMessage = 'An error occurred creating the team, please try again'
-        this.setState(state)
+        console.error('Error submitting form', err)
+        this.setState({
+          submitting: false,
+          formErrorMessage: 'An error occurred creating the team, please try again'
+        })
       }
     })
   }
 
+  fieldError = (name) => this.props.form.isFieldTouched(name) && this.props.form.getFieldError(name)
+
   render() {
-    const { getFieldDecorator, getFieldsError, getFieldError, isFieldTouched, getFieldValue } = this.props.form
+    const { getFieldDecorator, getFieldsError, getFieldValue } = this.props.form
     const formConfig = {
       layout: 'horizontal',
       labelAlign: 'left',
@@ -102,36 +109,17 @@ class NewTeamForm extends React.Component {
       }
     }
 
-    // Only show error after a field is touched.
-    const teamNameError = isFieldTouched('teamName') && getFieldError('teamName')
-    const teamDescriptionError = isFieldTouched('teamDescription') && getFieldError('teamDescription')
-
-    const FormErrorMessage = () => {
-      if (this.state.formErrorMessage) {
-        return (
-          <Alert
-            message={this.state.formErrorMessage}
-            type="error"
-            showIcon
-            closable
-            style={{ marginBottom: '20px' }}
-          />
-        )
-      }
-      return null
-    }
-
     return (
       <Form {...formConfig} onSubmit={this.handleSubmit} style={{ marginBottom: '20px' }}>
-        <FormErrorMessage />
-        <Form.Item label="Team name" validateStatus={teamNameError ? 'error' : ''} help={teamNameError || ''}>
+        <FormErrorMessage message={this.state.formErrorMessage} />
+        <Form.Item label="Team name" validateStatus={this.fieldError('teamName') ? 'error' : ''} help={this.fieldError('teamName') || ''}>
           {getFieldDecorator('teamName', {
             rules: [{ required: true, message: 'Please enter your team name!' }],
           })(
             <Input placeholder="Team name" disabled={!!this.props.team} />,
           )}
         </Form.Item>
-        <Form.Item label="Team description" validateStatus={teamDescriptionError ? 'error' : ''} help={teamDescriptionError || ''}>
+        <Form.Item label="Team description" validateStatus={this.fieldError('teamDescription') ? 'error' : ''} help={this.fieldError('teamDescription') || ''}>
           {getFieldDecorator('teamDescription', {
             rules: [{ required: true, message: 'Please enter your team description!' }],
           })(
