@@ -4,7 +4,9 @@ import V1Ownership from '../kore-api/model/V1Ownership'
 const NewV1ObjectMeta = (name, namespace) => {
   const meta = new V1ObjectMeta()
   meta.setName(name)
-  meta.setNamespace(namespace)
+  if (namespace) {
+    meta.setNamespace(namespace)
+  }
   return meta
 }
 
