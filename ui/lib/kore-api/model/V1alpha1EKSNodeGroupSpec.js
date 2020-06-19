@@ -28,14 +28,15 @@ class V1alpha1EKSNodeGroupSpec {
      * @param desiredSize {Number} 
      * @param diskSize {Number} 
      * @param eC2SSHKey {String} 
+     * @param enableAutoscaler {Boolean} 
      * @param maxSize {Number} 
      * @param minSize {Number} 
      * @param region {String} 
      * @param subnets {Array.<String>} 
      */
-    constructor(amiType, credentials, desiredSize, diskSize, eC2SSHKey, maxSize, minSize, region, subnets) { 
+    constructor(amiType, credentials, desiredSize, diskSize, eC2SSHKey, enableAutoscaler, maxSize, minSize, region, subnets) { 
         
-        V1alpha1EKSNodeGroupSpec.initialize(this, amiType, credentials, desiredSize, diskSize, eC2SSHKey, maxSize, minSize, region, subnets);
+        V1alpha1EKSNodeGroupSpec.initialize(this, amiType, credentials, desiredSize, diskSize, eC2SSHKey, enableAutoscaler, maxSize, minSize, region, subnets);
     }
 
     /**
@@ -43,12 +44,13 @@ class V1alpha1EKSNodeGroupSpec {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, amiType, credentials, desiredSize, diskSize, eC2SSHKey, maxSize, minSize, region, subnets) { 
+    static initialize(obj, amiType, credentials, desiredSize, diskSize, eC2SSHKey, enableAutoscaler, maxSize, minSize, region, subnets) { 
         obj['amiType'] = amiType;
         obj['credentials'] = credentials;
         obj['desiredSize'] = desiredSize;
         obj['diskSize'] = diskSize;
         obj['eC2SSHKey'] = eC2SSHKey;
+        obj['enableAutoscaler'] = enableAutoscaler;
         obj['maxSize'] = maxSize;
         obj['minSize'] = minSize;
         obj['region'] = region;
@@ -83,6 +85,9 @@ class V1alpha1EKSNodeGroupSpec {
             }
             if (data.hasOwnProperty('eC2SSHKey')) {
                 obj['eC2SSHKey'] = ApiClient.convertToType(data['eC2SSHKey'], 'String');
+            }
+            if (data.hasOwnProperty('enableAutoscaler')) {
+                obj['enableAutoscaler'] = ApiClient.convertToType(data['enableAutoscaler'], 'Boolean');
             }
             if (data.hasOwnProperty('instanceType')) {
                 obj['instanceType'] = ApiClient.convertToType(data['instanceType'], 'String');
@@ -195,6 +200,19 @@ class V1alpha1EKSNodeGroupSpec {
      */
     setEC2SSHKey(eC2SSHKey) {
         this['eC2SSHKey'] = eC2SSHKey;
+    }
+/**
+     * @return {Boolean}
+     */
+    getEnableAutoscaler() {
+        return this.enableAutoscaler;
+    }
+
+    /**
+     * @param {Boolean} enableAutoscaler
+     */
+    setEnableAutoscaler(enableAutoscaler) {
+        this['enableAutoscaler'] = enableAutoscaler;
     }
 /**
      * @return {String}
@@ -358,6 +376,11 @@ V1alpha1EKSNodeGroupSpec.prototype['diskSize'] = undefined;
  * @member {String} eC2SSHKey
  */
 V1alpha1EKSNodeGroupSpec.prototype['eC2SSHKey'] = undefined;
+
+/**
+ * @member {Boolean} enableAutoscaler
+ */
+V1alpha1EKSNodeGroupSpec.prototype['enableAutoscaler'] = undefined;
 
 /**
  * @member {String} instanceType

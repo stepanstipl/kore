@@ -2,6 +2,7 @@ NAME=kore-ui
 AUTHOR ?= appvia
 REGISTRY=quay.io
 VERSION ?= latest
+OPENAPIGEN_VERSION=v4.3.1
 
 default: build
 
@@ -51,11 +52,15 @@ check-kore-autogen:
 generate-kore-models:
 	@echo "--> Updating kore API models"
 	@rm -r lib/kore-api/model/*.js
-	@docker run --rm -v $$(pwd):/local -e JAVA_OPTS="-Xmx1024M -DloggerPath=conf/log4j.properties -DmodelDocs=false -DmodelTests=false -Dmodels" openapitools/openapi-generator-cli generate \
+	@docker create -v /local --name src openapitools/openapi-generator-cli:${OPENAPIGEN_VERSION} /bin/true
+	@docker cp $$(pwd)/kore-api-swagger.json src:/local/kore-api-swagger.json
+	@docker run --rm --volumes-from src -e JAVA_OPTS="-Xmx1024M -DloggerPath=conf/log4j.properties -DmodelDocs=false -DmodelTests=false -Dmodels" openapitools/openapi-generator-cli:${OPENAPIGEN_VERSION} generate \
 		-i /local/kore-api-swagger.json \
 		-g javascript \
 		-o /local/lib/ \
 		-p sourceFolder=kore-api,emitModelMethods=true,usePromises=true
+	@docker cp src:/local/lib/kore-api $$(pwd)/lib
+	@docker rm src
 
 check-kore-models:
 	@if [ $$(git status --porcelain ./lib/kore-api/model | wc -l) -gt 0 ]; then \
