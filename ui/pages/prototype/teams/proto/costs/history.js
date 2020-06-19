@@ -11,11 +11,11 @@ class TeamCostsHistory extends React.Component {
   render() {
     return (
       <>
-        <Breadcrumb items={[{ text: 'Demo' }, { text: 'Team costs history' }]}/>
+        <Breadcrumb items={[{ text: 'Proto' }, { text: 'Team costs history' }]}/>
 
         <Title level={3}>Historical team costs</Title>
         <Paragraph>
-          <Link href="/prototype/teams/demo/costs">
+          <Link href="/prototype/teams/proto/costs">
             <a style={{ fontSize: '14px', textDecoration: 'underline' }}>See current cost</a>
           </Link>
         </Paragraph>

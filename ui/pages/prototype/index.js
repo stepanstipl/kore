@@ -16,11 +16,11 @@ const prototypeList = [{
   path: '/prototype/teams/proto'
 }, {
   title: 'Organisation reports',
-  description: 'Adding a reports section for org-level security and costs reports. This would be accessed from a "Reports" link on left-side menu.',
+  description: 'Adding a reports section for org-level security and costs reports. This would be accessed from a "Reports" link on left-side menu',
   path: '/prototype/reports'
 }, {
-  title: 'Team notification settings',
-  description: 'Page showing notification settings for a team, select "Notifications settings" from the settings dropdown in the top-right corner',
+  title: 'Team notifications',
+  description: 'Notifications and settings for teams. For settings, select "Notifications settings" from the settings dropdown in the top-right corner',
   path: '/prototype/teams/proto'
 }]
 

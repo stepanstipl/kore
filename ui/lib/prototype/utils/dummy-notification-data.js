@@ -1,3 +1,5 @@
+const moment = require('moment')
+
 const integrations = {
   items: [
     {
@@ -27,7 +29,7 @@ const integrations = {
   ]
 }
 
-const notifications = {
+const eventNotifications = {
   items: [
     {
       metadata: {
@@ -87,9 +89,45 @@ const notifications = {
   ]
 }
 
+const notifications = {
+  items: [
+    {
+      event: 'CLUSTER_DELETED',
+      detail: 'example-cluster-1',
+      creationTimestamp: moment().subtract(10, 'minutes').format(),
+      acknowledged: false
+    },
+    {
+      event: 'CLUSTER_CREATED',
+      detail: 'example-cluster-2',
+      creationTimestamp: moment().subtract(31, 'minutes').format(),
+      acknowledged: false
+    },
+    {
+      event: 'SERVICE_CREATED',
+      detail: 'Amazon SQS proto-message-queue',
+      creationTimestamp: moment().subtract(45, 'minutes').format(),
+      acknowledged: true
+    },
+    {
+      event: 'SERVICE_CREATED',
+      detail: 'Amazon S3 proto-bucket',
+      creationTimestamp: moment().subtract(1, 'hour').format(),
+      acknowledged: false
+    },
+    {
+      event: 'SERVICE_CREATED',
+      detail: 'Amazon SQS proto-message-queue2',
+      creationTimestamp: moment().subtract(2, 'hours').format(),
+      acknowledged: true
+    }
+  ]
+}
+
 class TeamNotificationData {
-  static notifications = notifications
+  static eventNotifications = eventNotifications
   static integrations = integrations
+  static notifications = notifications
 }
 
 export default TeamNotificationData

@@ -31,7 +31,7 @@ class EventNotificationsTab extends React.Component {
   componentDidMount() {
     this.setState({
       dataLoading: false,
-      notifications: TeamNotificationData.notifications.items,
+      notifications: TeamNotificationData.eventNotifications.items,
       integrations: TeamNotificationData.integrations.items
     })
   }
@@ -44,7 +44,7 @@ class EventNotificationsTab extends React.Component {
 
   notificationsCreated = (notificationList) => {
     this.setState(state => ({
-      notifications: [ ...state.notifications, ...notificationList ],
+      notifications: [ ...state.eventNotifications, ...notificationList ],
       newNotification: false
     }))
   }
@@ -95,7 +95,7 @@ class EventNotificationsTab extends React.Component {
 
   deleteNotification = (notification) => () => {
     this.setState(state => ({
-      notifications: state.notifications.filter(n => n.metadata.name !== notification.metadata.name)
+      notifications: state.eventNotifications.filter(n => n.metadata.name !== notification.metadata.name)
     }), () => successMessage('Notification deleted'))
   }
 
