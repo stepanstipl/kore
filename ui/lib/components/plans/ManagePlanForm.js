@@ -19,7 +19,8 @@ export default class ManagePlanForm extends React.Component {
     kind: PropTypes.string.isRequired,
     handleSubmit: PropTypes.func.isRequired,
     mode: PropTypes.oneOf(['create', 'edit', 'view']).isRequired,
-    resourceType: PropTypes.oneOf(['service','cluster']).isRequired
+    resourceType: PropTypes.oneOf(['service','cluster']).isRequired,
+    showCosts: PropTypes.bool,
   }
 
   state = {
@@ -27,6 +28,7 @@ export default class ManagePlanForm extends React.Component {
     submitting: false,
     schema: null,
     planValues: this.props.data && this.props.data.spec.configuration || {},
+    metadata: {},
     formErrorMessage: false,
     validationErrors: []
   }
@@ -52,6 +54,11 @@ export default class ManagePlanForm extends React.Component {
 
   async fetchComponentData() {
     throw 'Must be overridden to populate planValues and schema in state'
+  }
+
+  async checkFetchMetadata(planValues) {
+    // Can be optionally overridden to return metadata to support plan rendering, e.g.
+    // costs, drop down values, etc.
   }
 
   onValueChange(name, value) {
@@ -164,7 +171,7 @@ export default class ManagePlanForm extends React.Component {
   }
 
   render() {
-    const { form, kind, data, mode } = this.props
+    const { form, kind, data, mode, showCosts } = this.props
     const { dataLoading, submitting, schema, planValues, formErrorMessage, validationErrors } = this.state
     const { getFieldsError } = form
     const resourceType = this.resourceType()
@@ -211,6 +218,7 @@ export default class ManagePlanForm extends React.Component {
             editableParams={['*']} // everything editable when managing plans
             onPlanValueChange={(n, v) => this.onValueChange(n, v)}
             validationErrors={validationErrors}
+            showCosts={showCosts}
           />
         </Card>
 

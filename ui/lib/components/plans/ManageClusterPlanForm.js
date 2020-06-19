@@ -9,6 +9,7 @@ import V1PlanSpec from '../../kore-api/model/V1PlanSpec'
 import V1ObjectMeta from '../../kore-api/model/V1ObjectMeta'
 import copy from '../../utils/object-copy'
 import ManagePlanForm from './ManagePlanForm'
+import ClusterPlanMetadataService from '../../utils/cluster-plan-metadata'
 
 /**
  * ManageClusterPlanForm is for *managing* a cluster plan.
@@ -23,7 +24,7 @@ class ManageClusterPlanForm extends ManagePlanForm {
   async fetchComponentData() {
     const { kind } = this.props
     const api = await KoreApi.client()
-    const [ schema, accountManagementList ] = await Promise.all([
+    const [ schema, accountManagementList, metadataRegions, metadataVersions, metadataInstances ] = await Promise.all([
       api.GetPlanSchema(kind),
       api.ListAccounts()
     ])
@@ -33,6 +34,43 @@ class ManageClusterPlanForm extends ManagePlanForm {
       accountManagement,
       dataLoading: false
     })
+  }
+
+  async checkFetchMetadata(oldPlanValues, newPlanValues) {
+    const { kind, mode, showPrices } = this.props
+    oldPlanValues = oldPlanValues || {}
+    newPlanValues = newPlanValues || {}
+    const metadataChecks = []
+
+    // Load regions if not already loaded and creating/editing plan:
+    if (this.state.metadata.regions === [] && mode !== 'view') {
+      metadataChecks.push(async () => {
+        const regions = await ClusterPlanMetadataService.getRegions(kind)
+        this.setState((state) => ({ metadata: { ...state.metadata, regions } }))
+      })
+    }
+
+    // If region set (and changed), reload the regional metadata:
+    if (newPlanValues.region && newPlanValues.region !== oldPlanValues.region) {
+      if (mode !== 'view') {
+        metadataChecks.push(async () => {
+          const versions = await ClusterPlanMetadataService.getVersions(kind, newPlanValues.region)
+          this.setState((state) => ({ metadata: { ...state.metadata, versions } }))
+        })
+      }
+      if (mode !== 'view' || (mode === 'view' && showPrices)) {
+        metadataChecks.push(async () => {
+          const products = await ClusterPlanMetadataService.getProducts(kind, newPlanValues.region)
+          this.setState((state) => ({ metadata: { ...state.metadata, products } }))
+        })
+      }
+    }
+
+    if (metadataChecks.length > 0) {
+      this.setState((state) => ({ loadingMetadata: true }))
+      await Promise.all(metadataChecks)
+      this.setState((state) => ({ loadingMetadata: false }))
+    }
   }
 
   generatePlanResource = (values) => {

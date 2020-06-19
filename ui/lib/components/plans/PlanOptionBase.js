@@ -19,6 +19,8 @@ export default class PlanOptionBase extends React.Component {
     mode: PropTypes.oneOf(['create','view','edit']),
     team: PropTypes.object, // may be optionally used by custom plan option components to give richer interface when manage=false.
     id: PropTypes.string,
+    metadata: PropTypes.object, // may be optionally used when (e.g.) showing costs or (e.g.) limiting drop down values.
+    showCosts: PropTypes.bool, // may be optionally used in custom planoption components to show/hide cost data.
   }
 
   describe = (property) => {

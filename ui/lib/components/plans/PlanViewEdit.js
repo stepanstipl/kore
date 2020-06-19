@@ -18,11 +18,14 @@ export default class PlanViewEdit extends React.Component {
     schema: PropTypes.object.isRequired,
     editableParams: PropTypes.array.isRequired,
     onPlanValueChange: PropTypes.func,
-    validationErrors: PropTypes.array
+    validationErrors: PropTypes.array,
+    metadata: PropTypes.object,
+    showCosts: PropTypes.bool
   }
 
   state = {
-    showReadOnly: false
+    showReadOnly: false,
+    planMetadata: null
   }
 
   constructor(props) {
@@ -39,7 +42,7 @@ export default class PlanViewEdit extends React.Component {
   }
 
   render() {
-    const { resourceType, mode, manage, team, kind, plan, schema, editableParams, onPlanValueChange, validationErrors } = this.props
+    const { resourceType, mode, manage, team, kind, plan, schema, editableParams, onPlanValueChange, validationErrors, metadata, showCosts } = this.props
     const { showReadOnly } = this.state
     return (
       <>
@@ -70,7 +73,9 @@ export default class PlanViewEdit extends React.Component {
               hideNonEditable={!showReadOnly}
               editable={editable}
               onChange={(n, v) => onPlanValueChange(n, v)}
-              validationErrors={validationErrors} />
+              validationErrors={validationErrors}
+              metadata={metadata}
+              showCosts={showCosts} />
           )
         })}
       </>

@@ -1,0 +1,12 @@
+apiVersion: app.k8s.io/v1beta1
+kind: Application
+metadata:
+  name: cloudinfo
+  namespace: cloudinfo
+spec:
+  componentKinds:
+    - group: apps
+      kind: Deployment
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cloudinfo

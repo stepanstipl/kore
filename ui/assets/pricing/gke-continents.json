@@ -1,0 +1,99 @@
+[
+    {
+        "name": "Australia",
+        "regions": [
+            {
+                "id": "australia-southeast1",
+                "name": "Asia Pacific (Sydney)"
+            }
+        ]
+    },
+    {
+        "name": "Europe",
+        "regions": [
+            {
+                "id": "europe-west1",
+                "name": "EU (Belgium)"
+            },
+            {
+                "id": "europe-west3",
+                "name": "EU (Frankfurt)"
+            },
+            {
+                "id": "europe-west4",
+                "name": "EU (Netherlands)"
+            },
+            {
+                "id": "europe-north1",
+                "name": "EU (Finland)"
+            },
+            {
+                "id": "europe-west2",
+                "name": "EU (London)"
+            }
+        ]
+    },
+    {
+        "name": "North America",
+        "regions": [
+            {
+                "id": "us-east4",
+                "name": "US East (Northern Virginia)"
+            },
+            {
+                "id": "us-west2",
+                "name": "US West (Los Angeles)"
+            },
+            {
+                "id": "us-west1",
+                "name": "US West (Oregon)"
+            },
+            {
+                "id": "northamerica-northeast1",
+                "name": "Canada (Montréal)"
+            },
+            {
+                "id": "us-east1",
+                "name": "US East (South Carolina)"
+            },
+            {
+                "id": "us-central1",
+                "name": "US Central (Iowa)"
+            }
+        ]
+    },
+    {
+        "name": "Asia",
+        "regions": [
+            {
+                "id": "asia-south1",
+                "name": "Asia Pacific (Mumbai)"
+            },
+            {
+                "id": "asia-east2",
+                "name": "Asia Pacific (Hong Kong)"
+            },
+            {
+                "id": "asia-east1",
+                "name": "Asia Pacific (Taiwan)"
+            },
+            {
+                "id": "asia-northeast1",
+                "name": "Asia Pacific (Tokyo)"
+            },
+            {
+                "id": "asia-southeast1",
+                "name": "Asia Pacific (Singapore)"
+            }
+        ]
+    },
+    {
+        "name": "South America",
+        "regions": [
+            {
+                "id": "southamerica-east1",
+                "name": "South America (São Paulo)"
+            }
+        ]
+    }
+]

@@ -115,6 +115,71 @@ func GetDefaultPlans() []*configv1.Plan {
 		},
 		{
 			ObjectMeta: metav1.ObjectMeta{
+				Name: "gke-budget",
+				Annotations: map[string]string{
+					"kore.appvia.io/readonly": "true",
+				},
+			},
+			Spec: configv1.PlanSpec{
+				Kind:        "GKE",
+				Summary:     "GKE cluster using small pre-emptible nodes - use with care, useful for testing",
+				Description: "GKE Budget Cluster",
+				Labels: map[string]string{
+					Label("environment"): "dev",
+					Label("kind"):        "GKE",
+					Label("plural"):      "gkes",
+				},
+				Configuration: apiextv1.JSON{
+					Raw: []byte(`
+						{
+							"authorizedMasterNetworks": [
+								{
+									"name": "default",
+									"cidr": "0.0.0.0/0"
+								}
+                            ],
+							"authProxyAllowedIPs":           ["0.0.0.0/0"],
+							"defaultTeamRole":               "view",
+							"description":                   "GKE budget cluster",
+							"domain":                        "default",
+							"enableDefaultTrafficBlock":     false,
+							"enableHTTPLoadBalancer":        true,
+							"enableHorizontalPodAutoscaler": true,
+							"enableIstio":                   false,
+							"enablePrivateEndpoint":         false,
+							"enablePrivateNetwork":          false,
+							"enableShieldedNodes":           true,
+							"enableStackDriverLogging":      true,
+							"enableStackDriverMetrics":      true,
+							"inheritTeamMembers":            true,
+							"maintenanceWindow":             "03:00",
+							"region":                        "europe-west2",
+							"version":                       "",
+							"releaseChannel":                "REGULAR",
+							"nodePools": [
+								{
+									"name":                          "compute",
+									"enableAutoupgrade":             true,
+									"version":                       "",
+									"enableAutoscaler":              true,
+									"enableAutorepair":              true,
+									"minSize":                       1,
+									"maxSize":                       3,
+									"size":                          1,
+									"maxPodsPerNode":                32,
+									"machineType":                   "e2-small",
+									"imageType":                     "COS",
+									"diskSize":                      20,
+									"preemptible":                   true
+								}
+							]
+						}`,
+					),
+				},
+			},
+		},
+		{
+			ObjectMeta: metav1.ObjectMeta{
 				Name: "gke-production",
 				Annotations: map[string]string{
 					"kore.appvia.io/readonly": "true",
