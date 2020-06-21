@@ -1,0 +1,22 @@
+---
+apiVersion: services.kore.appvia.io/v1
+kind: ServicePlan
+metadata:
+  name: helm-app-kore-monitoring
+  namespace: kore
+spec:
+  kind: helm-app
+  summary: Kore Monitoring
+  displayName: Kore Cluster Monitoring
+  description: Managaed Cluster Monitoring
+  configuration:
+    source:
+      helm:
+        url: https://storage.googleapis.com/kore-charts/charts
+        name: kore-monitoring
+        version: 0.0.2
+    resourceKinds:
+      - group: apps
+        kind: Deploymnent
+      - group: ""
+        kind: Service

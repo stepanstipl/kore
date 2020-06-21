@@ -19,12 +19,14 @@ package kore
 import (
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
+	monitoring "github.com/appvia/kore/pkg/apis/monitoring/v1beta1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	securityv1 "github.com/appvia/kore/pkg/apis/security/v1"
 	"github.com/appvia/kore/pkg/persistence/model"
 	"github.com/appvia/kore/pkg/security"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 var (
@@ -32,6 +34,7 @@ var (
 	DefaultConvertor Convertor
 )
 
+// Convertor is used to convert the models
 type Convertor struct{}
 
 // ToUserModel converts from api to model
@@ -180,6 +183,120 @@ func (c Convertor) FromUserModel(user *model.User) *orgv1.User {
 	}
 }
 
+// FromAlertModel converts the rule model
+func (c Convertor) FromAlertModel(alert *model.Alert) *monitoring.Alert {
+	o := &monitoring.Alert{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: monitoring.SchemeGroupVersion.String(),
+			Kind:       "Alert",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:              alert.Rule.Name,
+			Namespace:         alert.Rule.Team.Name,
+			CreationTimestamp: metav1.NewTime(alert.CreatedAt),
+			UID:               types.UID(alert.UID),
+			Annotations: map[string]string{
+				"fingerprint": alert.Fingerprint,
+			},
+		},
+		Spec: monitoring.AlertSpec{
+			Event:   alert.RawAlert,
+			Summary: alert.Summary,
+		},
+		Status: monitoring.AlertStatus{
+			Status: alert.Status,
+			Detail: alert.StatusMessage,
+		},
+	}
+	if len(alert.Labels) > 0 {
+		o.Spec.Labels = make(map[string]string)
+		for _, x := range alert.Labels {
+			o.Spec.Labels[x.Name] = x.Value
+		}
+	}
+
+	if alert.Rule != nil {
+		o.Status.Rule = c.FromAlertRuleModel(alert.Rule)
+	}
+	if alert.ArchivedAt != nil {
+		o.Status.ArchivedAt = metav1.NewTime(*alert.ArchivedAt)
+	}
+	if alert.Expiration != nil {
+		o.Status.Expiration = metav1.NewTime(*alert.Expiration)
+	}
+
+	return o
+}
+
+// FromAlertRuleModel converts the rule model
+func (c Convertor) FromAlertRuleModel(rule *model.AlertRule) *monitoring.Rule {
+	o := &monitoring.Rule{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: monitoring.SchemeGroupVersion.String(),
+			Kind:       "Rule",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:              rule.Name,
+			Namespace:         rule.Team.Name,
+			CreationTimestamp: metav1.NewTime(rule.CreatedAt),
+		},
+		Spec: monitoring.RuleSpec{
+			Severity: rule.Severity,
+			Source:   rule.Source,
+			Summary:  rule.Summary,
+			RawRule:  rule.RawRule,
+			Resource: corev1.Ownership{
+				Group:     rule.ResourceGroup,
+				Version:   rule.ResourceVersion,
+				Kind:      rule.ResourceKind,
+				Namespace: rule.ResourceNamespace,
+				Name:      rule.ResourceName,
+			},
+		},
+	}
+
+	return o
+}
+
+// ToAlert converst the alert model
+func (c Convertor) ToAlert(m *monitoring.Alert) *model.Alert {
+	o := &model.Alert{
+		Fingerprint:   m.GetAnnotations()["fingerprint"],
+		RawAlert:      m.Spec.Event,
+		Status:        m.Status.Status,
+		StatusMessage: m.Status.Detail,
+		Summary:       m.Spec.Summary,
+	}
+	if !m.Status.Expiration.IsZero() {
+		o.Expiration = &m.Status.Expiration.Time
+	}
+	for k, v := range m.Spec.Labels {
+		o.Labels = append(o.Labels, model.AlertLabel{Name: k, Value: v})
+	}
+
+	return o
+}
+
+// ToAlertRule convert the api to the model
+func (c Convertor) ToAlertRule(o *monitoring.Rule) *model.AlertRule {
+	m := &model.AlertRule{
+		Name:     o.Name,
+		RawRule:  o.Spec.RawRule,
+		Source:   o.Spec.Source,
+		Severity: o.Spec.Severity,
+		Summary:  o.Spec.Summary,
+		ResourceReference: model.ResourceReference{
+			ResourceGroup:     o.Spec.Resource.Group,
+			ResourceVersion:   o.Spec.Resource.Version,
+			ResourceKind:      o.Spec.Resource.Kind,
+			ResourceNamespace: o.Spec.Resource.Namespace,
+			ResourceName:      o.Spec.Resource.Name,
+		},
+	}
+
+	return m
+}
+
 // FromUsersModelList returns a list of users
 func (c Convertor) FromUsersModelList(users []*model.User) *orgv1.UserList {
 	list := &orgv1.UserList{
@@ -194,6 +311,40 @@ func (c Convertor) FromUsersModelList(users []*model.User) *orgv1.UserList {
 	}
 
 	return list
+}
+
+// FromAlertsRuleModelList return a list of rules
+func (c Convertor) FromAlertsRuleModelList(rules []*model.AlertRule) (*monitoring.RuleList, error) {
+	list := &monitoring.RuleList{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "RuleList",
+		},
+		Items: make([]monitoring.Rule, len(rules)),
+	}
+
+	for i, x := range rules {
+		list.Items[i] = *c.FromAlertRuleModel(x)
+	}
+
+	return list, nil
+}
+
+// FromAlertsModelList return a list of alerts
+func (c Convertor) FromAlertsModelList(alerts []*model.Alert) (*monitoring.AlertList, error) {
+	list := &monitoring.AlertList{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "AlertList",
+		},
+		Items: make([]monitoring.Alert, len(alerts)),
+	}
+
+	for i, x := range alerts {
+		list.Items[i] = *c.FromAlertModel(x)
+	}
+
+	return list, nil
 }
 
 // ToTeamModel converts from api to model
@@ -375,6 +526,7 @@ func (c Convertor) FromSecurityRule(rule security.Rule) securityv1.SecurityRule 
 	}
 }
 
+// FromSecurityOverview converts the security overview model
 func (c Convertor) FromSecurityOverview(overview *model.SecurityOverview) securityv1.SecurityOverview {
 	o := securityv1.SecurityOverview{
 		TypeMeta: metav1.TypeMeta{
@@ -401,6 +553,7 @@ func (c Convertor) FromSecurityOverview(overview *model.SecurityOverview) securi
 	return o
 }
 
+// FromSecurityResourceOverview converst from the model to api
 func (c Convertor) FromSecurityResourceOverview(resource *model.SecurityResourceOverview) securityv1.SecurityResourceOverview {
 	r := securityv1.SecurityResourceOverview{
 		Resource: corev1.Ownership{

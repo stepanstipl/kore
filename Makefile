@@ -90,6 +90,10 @@ kore-apiserver: golang
 	@mkdir -p bin
 	go build -ldflags "${LFLAGS}" -o bin/kore-apiserver cmd/kore-apiserver/*.go
 
+kore-apiserver-image: golang
+	@echo "--> Compiling the kore-apiserver image"
+	docker build -t ${REGISTRY}/${AUTHOR}/kore-apiserver:${VERSION} -f images/Dockerfile.kore-apiserver .
+
 docker-build:
 	@echo "--> Running docker"
 	docker run --rm \
@@ -177,7 +181,7 @@ swagger-validate:
 swagger-apiclient:
 	@$(MAKE) swagger-json
 	@echo "--> Creating API client based on the swagger definition"
-	@rm -rf pkg/apiclient/*
+	@rm -r pkg/apiclient/* >/dev/null || true
 	@go run github.com/go-swagger/go-swagger/cmd/swagger generate client -q -f swagger.json -c pkg/apiclient -m pkg/apiclient/models
 
 check-swagger-apiclient: swagger-apiclient
@@ -474,6 +478,12 @@ kind-apiserver:
 	@echo "--> Compiling the kore-apiserver binary for kind"
 	@mkdir -p bin
 	GOOS=linux GOARCH=amd64 go build -ldflags "${LFLAGS}" -o bin/kore-apiserver-linux-amd64 cmd/kore-apiserver/*.go
+
+kind-apiserver-image:
+	@echo "--> Compiling the kore-apiserver and loading into kind"
+	@${MAKE} VERSION=${USER} docker
+	kind load docker-image ${REGISTRY}/${AUTHOR}/kore-apiserver:${USER} --name kore
+	kubectl --context kind-kore -n kore rollout restart deployment kore-apiserver
 
 kind-apiserver-start:
 	@kubectl --context=kind-kore -n kore patch deployment kore-apiserver --patch '{"spec":{"replicas":1}}'

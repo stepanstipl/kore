@@ -78,6 +78,16 @@ func (a *nsCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 			return reconcile.Result{}, err
 		}
 		if !found {
+			if err := finalizer.Remove(resource); err != nil {
+				resource.Status.Status = corev1.FailureStatus
+				resource.Status.Conditions = []corev1.Condition{{
+					Detail:  err.Error(),
+					Message: "Failed to remove the finalizer",
+				}}
+
+				return reconcile.Result{}, err
+			}
+
 			return reconcile.Result{}, nil
 		}
 

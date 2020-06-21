@@ -49,6 +49,8 @@ var (
 	// ResourceNameFilter is a filter that all resource names MUST comply with
 	// https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
 	ResourceNameFilter = regexp.MustCompile(`^[a-z][a-z0-9]*(-[a-z0-9]+)*$`)
+	// ResourceAPIFilter defines a api version filter
+	ResourceAPIFilter = regexp.MustCompile(`^[a-z\/].*\/v[a-z0-9].*$`)
 )
 
 // Interface is the contract between the api and store
@@ -56,10 +58,14 @@ var (
 type Interface interface {
 	// Accounts is the accounting interface
 	Accounts() Accounts
+	// AlertRules() AlertRules
+	AlertRules() AlertRules
 	// Audit returns the audit interface
 	Audit() Audit
 	// Config returns the kore configure
 	Config() *Config
+	// CertificateAuthority returns the CA
+	CertificateAuthority() []byte
 	// Invitations returns the invitations interface
 	Invitations() Invitations
 	// GetUserIdenity returns the idenity if any of the a user

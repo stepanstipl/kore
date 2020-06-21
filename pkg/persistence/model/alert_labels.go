@@ -14,5 +14,14 @@
  * limitations under the License.
  */
 
-// Package projectclaim provides the project builder code
-package projectclaim
+package model
+
+// AlertLabel defines collection of labels for a alert
+type AlertLabel struct {
+	// AlertID is the id of the alert the label is associated
+	AlertID uint64
+	// Name is the name of the value
+	Name string `sql:"DEFAULT:null"`
+	// Value is label value
+	Value string `sql:"DEFAULT:null"`
+}

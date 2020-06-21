@@ -78,6 +78,7 @@ func (p Provider) Delete(
 
 		if resourceMeta.GetDeletionTimestamp() == nil {
 			ctx.Logger().WithField("resource", kubernetes.MustGetRuntimeSelfLink(resource)).Debug("deleting application resource")
+
 			if err := kubernetes.DeleteIfExists(ctx, clusterClient, resource); err != nil {
 				return reconcile.Result{}, fmt.Errorf("failed to delete %s: %w", kubernetes.MustGetRuntimeSelfLink(resource), err)
 			}

@@ -32,6 +32,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
+// Delete is responsible for removing the service
 func (c Controller) Delete(
 	ctx context.Context,
 	logger log.FieldLogger,
@@ -41,12 +42,13 @@ func (c Controller) Delete(
 ) (reconcile.Result, error) {
 	logger.Debug("attempting to delete service from the api")
 
-	if service.Status.Status == corev1.DeletedStatus {
-		err := finalizer.Remove(service)
-		if err != nil {
+	if service.Status.Status == corev1.DeletedStatus || service.GetAnnotations()[kore.Label("finalize")] == "false" {
+		if err := finalizer.Remove(service); err != nil {
 			logger.WithError(err).Error("failed to remove the finalizer from the service")
+
 			return reconcile.Result{}, err
 		}
+
 		return reconcile.Result{}, nil
 	}
 

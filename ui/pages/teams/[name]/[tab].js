@@ -9,6 +9,7 @@ import KoreApi from '../../../lib/kore-api'
 import ClustersTab from '../../../lib/components/teams/cluster/ClustersTab'
 import MembersTab from '../../../lib/components/teams/members/MembersTab'
 import SecurityTab from '../../../lib/components/teams/security/SecurityTab'
+import MonitoringTab from '../../../lib/components/teams/monitoring/MonitoringTab'
 import SecurityStatusIcon from '../../../lib/components/security/SecurityStatusIcon'
 import TeamHeader from '../../../lib/components/teams/TeamHeader'
 import TextWithCount from '../../../lib/components/utils/TextWithCount'
@@ -103,6 +104,10 @@ class TeamDashboardTabPage extends React.Component {
 
           <TabPane key="security" tab={<TextWithCount title="Security" icon={<SecurityStatusIcon status="Compliant" size="small" style={{ verticalAlign: 'middle' }} />} />} forceRender={true}>
             <SecurityTab team={this.props.team} getOverviewStatus={(status) => this.setState({ securityStatus: status })} />
+          </TabPane>
+
+          <TabPane key="monitoring" tab={this.getTabTitle({ title: 'Monitoring  ', icon: <Icon type="monitor"/> })} forceRender={true}>
+            <MonitoringTab user={this.props.user} team={this.props.team} />
           </TabPane>
         </Tabs>
 

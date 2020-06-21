@@ -1380,6 +1380,912 @@
         }
       }
     },
+    "/api/v1alpha1/monitoring/alerts": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "monitoring"
+        ],
+        "summary": "Returns all available alerts currently in kore",
+        "operationId": "ListAlerts",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The alert to filter the results by",
+            "name": "status",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The number of historical records to retrieve",
+            "name": "history",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "A label to filter the alert by",
+            "name": "label",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Indicates to we only want the latest alert status",
+            "name": "latest",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Listing of the alert statuses in kore",
+            "schema": {
+              "$ref": "#/definitions/v1beta1.AlertList"
+            }
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/monitoring/alerts/resource/{group}/{version}/{kind}/{namespace}/{resource}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "monitoring"
+        ],
+        "summary": "Used to retrieve the alerts on a resource",
+        "operationId": "ListResourceAlerts",
+        "parameters": [
+          {
+            "description": "The definition of the alert being created or updated",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1beta1.Alert"
+            }
+          },
+          {
+            "type": "string",
+            "description": "Is the group of the kind",
+            "name": "group",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the version of the kind",
+            "name": "version",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the kind of the resource",
+            "name": "kind",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the namespace of the resource",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the name of the resource",
+            "name": "resource",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The producer of the alerting rule",
+            "name": "source",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The alert to filter the results by",
+            "name": "status",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The alert has been successfully stored",
+            "schema": {
+              "$ref": "#/definitions/v1beta1.AlertList"
+            }
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/monitoring/alerts/status": {
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "monitoring"
+        ],
+        "summary": "Used to store an alert in kore",
+        "operationId": "UpdateAlert",
+        "parameters": [
+          {
+            "description": "The definition of the alert being created or updated",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1beta1.Alert"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The alert has been successfully stored"
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/monitoring/rules": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "monitoring"
+        ],
+        "summary": "Returns all available rules currently in kore",
+        "operationId": "ListRules",
+        "responses": {
+          "200": {
+            "description": "Listing of the rules in kore",
+            "schema": {
+              "$ref": "#/definitions/v1beta1.RuleList"
+            }
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/monitoring/rules/{group}/{version}/{kind}/{namespace}/{resource}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "monitoring"
+        ],
+        "summary": "Get all the on a specific resource in kore",
+        "operationId": "GetRules",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the group of the kind",
+            "name": "group",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the version of the kind",
+            "name": "version",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the kind of the resource",
+            "name": "kind",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the namespace of the resource",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the name of the resource",
+            "name": "resource",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The producer of the alerting rule",
+            "name": "source",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The rule has been deleted",
+            "schema": {
+              "$ref": "#/definitions/v1beta1.Rule"
+            }
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "monitoring"
+        ],
+        "summary": "Deletes all the rules on a specific resource",
+        "operationId": "DeleteResourceRules",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the group of the kind",
+            "name": "group",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the version of the kind",
+            "name": "version",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the kind of the resource",
+            "name": "kind",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the namespace of the resource",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the name of the resource",
+            "name": "resource",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The producer of the alerting rule",
+            "name": "source",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The rules have been deleted"
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/monitoring/rules/{group}/{version}/{kind}/{namespace}/{resource}/{name}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "monitoring"
+        ],
+        "summary": "Returns the definition of a rule in kore",
+        "operationId": "GetRule",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the group of the kind",
+            "name": "group",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the version of the kind",
+            "name": "version",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the kind of the resource",
+            "name": "kind",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the namespace of the resource",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the name of the resource",
+            "name": "resource",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the name of the alerting rule",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The definition of the monitoring rule",
+            "schema": {
+              "$ref": "#/definitions/v1beta1.Rule"
+            }
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "monitoring"
+        ],
+        "summary": "Updates or creates a rule in kore",
+        "operationId": "UpdateRule",
+        "parameters": [
+          {
+            "description": "The specification for a rule in the kore",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1beta1.Rule"
+            }
+          },
+          {
+            "type": "string",
+            "description": "Is the group of the kind",
+            "name": "group",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the version of the kind",
+            "name": "version",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the kind of the resource",
+            "name": "kind",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the namespace of the resource",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the name of the resource",
+            "name": "resource",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the name of the alerting rule",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The rule has been deleted",
+            "schema": {
+              "$ref": "#/definitions/v1beta1.Rule"
+            }
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "monitoring"
+        ],
+        "summary": "Deletes a rule and all history from a resource",
+        "operationId": "DeleteRule",
+        "parameters": [
+          {
+            "description": "The specification for a rule in the kore",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1beta1.Rule"
+            }
+          },
+          {
+            "type": "string",
+            "description": "Is the group of the kind",
+            "name": "group",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the version of the kind",
+            "name": "version",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the kind of the resource",
+            "name": "kind",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the namespace of the resource",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the name of the resource",
+            "name": "resource",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the name of the alerting rule",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The rule has been deleted",
+            "schema": {
+              "$ref": "#/definitions/v1beta1.Rule"
+            }
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/monitoring/rules/{group}/{version}/{kind}/{namespace}/{resource}/{name}/purge": {
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "monitoring"
+        ],
+        "summary": "Purges the history of alerts or a given rule",
+        "operationId": "PurgeRuleAlerts",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the group of the kind",
+            "name": "group",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the version of the kind",
+            "name": "version",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the kind of the resource",
+            "name": "kind",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the namespace of the resource",
+            "name": "namespace",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the name of the resource",
+            "name": "resource",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the name of the alerting rule",
+            "name": "name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The duration to keep i.e. 1h 24d",
+            "name": "duration",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The history has been purged"
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/monitoring/teams/{team}/alerts": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "monitoring"
+        ],
+        "summary": "Returns all available alerts currently in kore",
+        "operationId": "ListTeamAlerts",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team the alerts reside",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The number of historical records to retrieve",
+            "name": "history",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The alert to filter the results by",
+            "name": "status",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Indicates to we only want the latest alert status",
+            "name": "latest",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Listing of the alert statuses in kore",
+            "schema": {
+              "$ref": "#/definitions/v1beta1.AlertList"
+            }
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/monitoring/teams/{team}/rules": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "monitoring"
+        ],
+        "summary": "Returns all available rules related to the team resources",
+        "operationId": "ListTeamRules",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team the alerts reside",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The number of historical records to retrieve",
+            "name": "history",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The alert to filter the results by",
+            "name": "status",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of the rules",
+            "schema": {
+              "$ref": "#/definitions/v1beta1.AlertList"
+            }
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
     "/api/v1alpha1/planpolicies": {
       "get": {
         "consumes": [

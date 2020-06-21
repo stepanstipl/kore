@@ -35,6 +35,7 @@ func (y YAMLMap) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return []byte(strconv.Quote(string(yamlData))), nil
 }
 

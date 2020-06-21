@@ -30,6 +30,8 @@ import (
 	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+        "k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -42,6 +44,27 @@ func (a k8sCtrl) EnsureCloudProvider(object *clustersv1.Kubernetes) controllers.
 
 		return reconcile.Result{}, nil
 	}
+}
+
+// EnsureKoreNamespaces is responsible for ensuring the namespace are present
+func (a k8sCtrl) EnsureKoreNamespaces(ctx context.Context, client client.Client) error {
+	for _, name := range []string{kore.HubNamespace, kore.HubSystem, kore.HubOperators} {
+		ns := &v1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: name,
+				Annotations: map[string]string{
+					kore.Label("owned"): "true",
+				},
+			},
+		}
+
+		if err := kubernetes.EnsureNamespace(ctx, client, ns); err != nil {
+			return err
+		}
+	}
+
+	return nil
+
 }
 
 // EnsureDeleteStatus is responsible for ensure the status is set to deleting

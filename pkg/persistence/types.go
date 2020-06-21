@@ -43,6 +43,10 @@ type Config struct {
 
 // Interface defines the interface to the db store
 type Interface interface {
+	// Alerts returns the alerts interface
+	Alerts() Alerts
+	// AlertRules returns the alert rules interface
+	AlertRules() AlertRules
 	// Audit returns the audit interface
 	Audit() Audit
 	// Identities returns the identities interface
@@ -73,12 +77,13 @@ type Audit interface {
 	Stop() error
 }
 
+// Find is an action interface
 type Find interface {
 	// Do performs the query and returns the results
 	Do() ([]*model.AuditEvent, error)
 }
 
-// RecordEntry defines a interface for adding a entry
+// Log defines a interface for adding a entry
 type Log interface {
 	// Event is responsible for entering the record into the audit
 	Event(string)

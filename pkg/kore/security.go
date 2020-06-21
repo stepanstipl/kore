@@ -25,10 +25,10 @@ import (
 	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/persistence"
 	"github.com/appvia/kore/pkg/security"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // Security represents the interface to the top-level Kore Security service.
@@ -215,19 +215,18 @@ func (s *securityImpl) userPermitted(ctx context.Context, owningTeam string) err
 		log.WithField(
 			"username", user.Username(),
 		).Warn("user trying to access the security logs")
+
 		return NewErrNotAllowed("Must be global admin")
 	}
 
 	// Check if user in team which owns this resource
-	for _, t := range user.Teams() {
-		if t == owningTeam {
-			// Permitted as team member
-			return nil
-		}
+	if user.IsMember(owningTeam) {
+		return nil
 	}
 
 	log.WithField(
 		"username", user.Username(),
 	).Warn("user trying to access the security logs")
+
 	return NewErrNotAllowed("Must be global admin or in team which owns this resource")
 }

@@ -22,6 +22,7 @@ import (
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
+	monitoringv1beta1 "github.com/appvia/kore/pkg/apis/monitoring/v1beta1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/kore"
@@ -39,6 +40,32 @@ var (
 			Printer: []Column{
 				{"Name", "metadata.name", ""},
 				{"Provider", "spec.provider", ""},
+				{"Age", "metadata.creationTimestamp", "age"},
+			},
+		},
+		{
+			Name:         "rule",
+			APIName:      "monitoring/rules",
+			GroupVersion: monitoringv1beta1.SchemeGroupVersion.String(),
+			Kind:         "Rule",
+			Scope:        GlobalScope,
+			Printer: []Column{
+				{"Name", "metadata.name", ""},
+				{"Age", "metadata.creationTimestamp", "age"},
+			},
+		},
+		{
+			Name:         "alert",
+			APIName:      "monitoring/alerts",
+			GroupVersion: monitoringv1beta1.SchemeGroupVersion.String(),
+			Kind:         "Alert",
+			Scope:        DualScope,
+			ShortName:    "alerts",
+			Printer: []Column{
+				{"Name", "metadata.name", ""},
+				{"Resource", "spec.resource.name", ""},
+				{"Kind", "spec.resource.kind", ""},
+				{"Status", "spec.alerts.0.status.status", ""},
 				{"Age", "metadata.creationTimestamp", "age"},
 			},
 		},

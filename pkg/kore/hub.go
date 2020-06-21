@@ -19,6 +19,7 @@ package kore
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"time"
 
 	"github.com/appvia/kore/pkg/costs"
@@ -33,6 +34,8 @@ import (
 
 // hubImpl is the implementation for the kore api
 type hubImpl struct {
+	// caAuthority is the certificate authority for kore
+	caAuthority []byte
 	// config is the configuration of the kore
 	config *Config
 	// store is the access layer / kubernetes api
@@ -41,6 +44,8 @@ type hubImpl struct {
 	accounts Accounts
 	// idp is the idp implementation
 	idp *idpImpl
+	// alerting is the alerts implementation
+	alerting AlertRules
 	// invitations handles generated links
 	invitations Invitations
 	// teams is the teams implementation
@@ -88,6 +93,12 @@ func New(sc store.Store, persistenceMgr persistence.Interface, config Config) (I
 		config.HMAC = utils.Random(32)
 	}
 
+	// @step: read the ca
+	authority, err := ioutil.ReadFile(config.CertificateAuthority)
+	if err != nil {
+		return nil, err
+	}
+
 	// @step: create a signer for client certificates
 	signer, err := certificates.NewSignerFromFiles(
 		config.CertificateAuthority,
@@ -99,14 +110,14 @@ func New(sc store.Store, persistenceMgr persistence.Interface, config Config) (I
 		return nil, err
 	}
 
-	// @step: enable the open
-
 	h := &hubImpl{
-		config: &config,
-		store:  sc,
-		signer: signer,
+		caAuthority: authority,
+		config:      &config,
+		store:       sc,
+		signer:      signer,
 	}
 	h.accounts = &accountsImpl{Interface: h}
+	h.alerting = &alertsImpl{Interface: h}
 	h.idp = &idpImpl{Interface: h}
 	h.invitations = &ivImpl{Interface: h}
 	h.plans = &plansImpl{Interface: h}
@@ -134,13 +145,18 @@ func New(sc store.Store, persistenceMgr persistence.Interface, config Config) (I
 	return h, nil
 }
 
+// CertificateAuthority returns the ca pem authority
+func (h *hubImpl) CertificateAuthority() []byte {
+	return h.caAuthority
+}
+
 // SignedClientCertificate is used to generate a client certificate
 func (h hubImpl) SignedClientCertificate(identity, team string) ([]byte, []byte, error) {
 	logger := log.WithFields(log.Fields{
 		"identity": identity,
 		"team":     team,
 	})
-	logger.Info("generating a client certificate for remote cluster")
+	logger.Debug("generating a client certificate for remote cluster")
 
 	cert, key, err := h.signer.GenerateClient(identity, team, 24*365*time.Hour)
 	if err != nil {
@@ -158,7 +174,7 @@ func (h hubImpl) SignedServerCertificate(hosts []string, duration time.Duration)
 		"duration": duration.String(),
 		"hosts":    hosts,
 	})
-	logger.Info("generating a server certificate")
+	logger.Debug("generating a server certificate")
 
 	cert, key, err := h.signer.GenerateServer(hosts, duration)
 	if err != nil {
@@ -173,6 +189,11 @@ func (h hubImpl) SignedServerCertificate(hosts []string, duration time.Duration)
 // Accounts return the account implementation
 func (h *hubImpl) Accounts() Accounts {
 	return h.accounts
+}
+
+// AlertRules returns the alerting implementation
+func (h *hubImpl) AlertRules() AlertRules {
+	return h.alerting
 }
 
 // Audit returns the auditor

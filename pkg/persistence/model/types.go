@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-package projectclaim
+package model
 
-const (
-	// ExpiryKey hold the expiration key
-	ExpiryKey = "expires"
-	// ProjectIDKey is the name of the project
-	ProjectIDKey = "project_id"
-	// ProjectNameKey holds the project name
-	ProjectNameKey = "project"
-	// ServiceAccountKey is the private key service account key
-	ServiceAccountKey = "key"
-	// ServiceAccountKeyID is the key used for the key id
-	ServiceAccountKeyID = "key_id"
-)
+// ResourceReference is the reference to the resource type - i.e. cluster, team, projectclaim etc
+type ResourceReference struct {
+	// ResourceGroup is the group of the resource
+	ResourceGroup string `sql:"DEFAULT:''"`
+	// ResourceVersion is the version of the resource
+	ResourceVersion string `sql:"DEFAULT:''"`
+	// ResourceKind is the kind of the resource
+	ResourceKind string `sql:"DEFAULT:''"`
+	// ResourceNamespace is the namespace of the resource
+	ResourceNamespace string `sql:"DEFAULT:''"`
+	// ResourceName is the name of the resource
+	ResourceName string `sql:"DEFAULT:''"`
+}
