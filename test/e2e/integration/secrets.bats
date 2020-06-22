@@ -19,7 +19,7 @@ load helper
 @test "We should be able to create a secret" {
   runit "${KORE} create secret test --from-literal=hello=world -d test -t ${TEAM} --force"
   [[ "$status" -eq 0 ]]
-  runit "${KORE} get secret test -o yaml| grep hello:"
+  runit "${KORE} get secret test -o yaml -t ${TEAM} | grep hello:"
   [[ "$status" -eq 0 ]]
 }
 
