@@ -2,9 +2,6 @@ import { Form } from 'antd'
 import PropTypes from 'prop-types'
 
 import KoreApi from '../../kore-api'
-import V1ServicePlan from '../../kore-api/model/V1ServicePlan'
-import V1ServicePlanSpec from '../../kore-api/model/V1ServicePlanSpec'
-import V1ObjectMeta from '../../kore-api/model/V1ObjectMeta'
 import canonical from '../../utils/canonical'
 import ManagePlanForm from './ManagePlanForm'
 
@@ -40,28 +37,6 @@ class ManageServicePlanForm extends ManagePlanForm {
     return (data && data.metadata && data.metadata.name) || `${kind}-${canonical(values.summary)}`
   }
 
-  generateServicePlanResource = values => {
-    const metadataName = this.getMetadataName(values)
-
-    const servicePlanResource = new V1ServicePlan()
-    servicePlanResource.setApiVersion('services.kore.appvia.io/v1')
-    servicePlanResource.setKind('ServicePlan')
-
-    const meta = new V1ObjectMeta()
-    meta.setName(metadataName)
-    meta.setNamespace('kore')
-    servicePlanResource.setMetadata(meta)
-
-    const spec = new V1ServicePlanSpec()
-    spec.setKind(this.props.kind)
-    spec.setDescription(values.description)
-    spec.setSummary(values.summary)
-    spec.setConfiguration(values.configuration)
-    servicePlanResource.setSpec(spec)
-
-    return servicePlanResource
-  }
-
   generateServicePlanConfiguration = () => {
     const properties = this.state.schema.properties
     const defaultConfiguration = {}
@@ -76,8 +51,10 @@ class ManageServicePlanForm extends ManagePlanForm {
     }
     try {
       const api = await KoreApi.client()
-      const metadataName = this.getMetadataName(values)
-      const servicePlanResult = await api.UpdateServicePlan(metadataName, this.generateServicePlanResource({ ...values, configuration: this.generateServicePlanConfiguration() }))
+      const resourceName = this.getMetadataName(values)
+      const valuesWithConfig = { ...values, configuration: this.generateServicePlanConfiguration() }
+      const servicePlanResource = KoreApi.resources().generateServicePlanResource(this.props.kind, resourceName, valuesWithConfig)
+      const servicePlanResult = await api.UpdateServicePlan(resourceName, servicePlanResource)
       this.setFormSubmitting(false, null, [])
       return await this.props.handleSubmit(servicePlanResult)
     } catch (err) {

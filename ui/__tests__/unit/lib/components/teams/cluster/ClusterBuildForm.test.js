@@ -61,15 +61,6 @@ describe('ClusterBuildForm', () => {
     })
   })
 
-  describe('#getClusterResource', () => {
-    it('should return a configured cluster object when given valid values', () => {
-      form.handleSelectCloud('GCP')
-      form.setPlanValues({})
-      const cluster = form.getClusterResource({ credential: 'GKE', plan: plans.items[0].metadata.name, clusterName: 'abc-test-cluster' })
-      expect(cluster).toBeDefined()
-    })
-  })
-
   describe('#handleSubmit', () => {
     // @TODO: Test handleSubmit and validation.
 

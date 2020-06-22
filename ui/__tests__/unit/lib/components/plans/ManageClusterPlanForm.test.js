@@ -43,13 +43,6 @@ describe('ManageClusterPlanForm', () => {
     apiScope.done()
   })
 
-  describe('#generatePlanResource', () => {
-    test('returns a configured Plan object when given valid values', () => {
-      const plan = form.generatePlanResource({ description: 'Plan description', summary: 'Plan summary', configuration: { planProperty: 'value' } })
-      expect(plan).toBeDefined()
-    })
-  })
-
   describe('#handleSubmit', () => {
     let event
     beforeEach(() => {

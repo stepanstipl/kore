@@ -6,9 +6,6 @@ const { Paragraph } = Typography
 import KoreApi from '../../../kore-api'
 import DataField from '../../../components/utils/DataField'
 import UsePlanForm from '../../plans/UsePlanForm'
-import V1ServiceCredentials from '../../../kore-api/model/V1ServiceCredentials'
-import V1ServiceCredentialsSpec from '../../../kore-api/model/V1ServiceCredentialsSpec'
-import { NewV1ObjectMeta, NewV1Ownership } from '../../../utils/model'
 import FormErrorMessage from '../../forms/FormErrorMessage'
 
 class ServiceCredentialForm extends React.Component {
@@ -122,13 +119,14 @@ class ServiceCredentialForm extends React.Component {
         return this.setState({ submitting: false })
       }
 
+      const team = this.props.team.metadata.name
       const cluster = this.props.cluster
       const service = services.length === 1 ? services[0] : services.find(s => s.metadata.name === values.service)
       const namespaceClaim = namespaceClaims.length === 1 ? namespaceClaims[0] : namespaceClaims.find(n => n.spec.name === values.namespace)
       const name = `${cluster.metadata.name}-${namespaceClaim.spec.name}-${values.secretName}`
 
       try {
-        const existing = await (await KoreApi.client()).GetServiceCredentials(this.props.team.metadata.name, name)
+        const existing = await (await KoreApi.client()).GetServiceCredentials(team, name)
         if (existing) {
           return this.setState({
             submitting: false,
@@ -140,35 +138,12 @@ class ServiceCredentialForm extends React.Component {
         // TODO: we should differentiate between 404 and other errors
       }
 
-      const serviceCredential = new V1ServiceCredentials()
-      serviceCredential.setApiVersion('servicecredentials.services.kore.appvia.io/v1')
-      serviceCredential.setKind('ServiceCredentials')
-      serviceCredential.setMetadata(NewV1ObjectMeta(name, this.props.team.metadata.name))
-
-      const serviceCredentialSpec = new V1ServiceCredentialsSpec()
-      serviceCredentialSpec.setKind(service.spec.kind)
-      serviceCredentialSpec.setService(NewV1Ownership({
-        group: service.apiVersion.split('/')[0],
-        version: service.apiVersion.split('/')[1],
-        kind: service.kind,
-        name: service.metadata.name,
-        namespace: this.props.team.metadata.name
-      }))
-      serviceCredentialSpec.setCluster(NewV1Ownership({
-        group: cluster.apiVersion.split('/')[0],
-        version: cluster.apiVersion.split('/')[1],
-        kind: cluster.kind,
-        name: cluster.metadata.name,
-        namespace: this.props.team.metadata.name
-      }))
-      serviceCredentialSpec.setClusterNamespace(namespaceClaim.spec.name)
-      serviceCredentialSpec.setSecretName(values.secretName)
-      serviceCredentialSpec.setConfiguration(config)
-
-      serviceCredential.setSpec(serviceCredentialSpec)
+      const serviceCredsResource = KoreApi.resources()
+        .team(team)
+        .generateServiceCredentialsResource(name, values.secretName, config, service, cluster, namespaceClaim.spec.name)
 
       try {
-        const result = await (await KoreApi.client()).UpdateServiceCredentials(this.props.team.metadata.name, name, serviceCredential)
+        const result = await (await KoreApi.client()).UpdateServiceCredentials(team, name, serviceCredsResource)
         this.props.form.resetFields()
         this.setState({ submitting: false })
         await this.props.handleSubmit(result)

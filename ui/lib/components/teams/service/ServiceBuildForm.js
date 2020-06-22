@@ -8,12 +8,6 @@ import ServiceOptionsForm from '../../services/ServiceOptionsForm'
 import FormErrorMessage from '../../forms/FormErrorMessage'
 import KoreApi from '../../../kore-api'
 import asyncForEach from '../../../utils/async-foreach'
-import V1ServiceSpec from '../../../kore-api/model/V1ServiceSpec'
-import V1Service from '../../../kore-api/model/V1Service'
-import V1ObjectMeta from '../../../kore-api/model/V1ObjectMeta'
-import V1ServiceCredentials from '../../../kore-api/model/V1ServiceCredentials'
-import V1ServiceCredentialsSpec from '../../../kore-api/model/V1ServiceCredentialsSpec'
-import { NewV1ObjectMeta, NewV1Ownership } from '../../../utils/model'
 import { getKoreLabel } from '../../../utils/crd-helpers'
 import { errorMessage, loadingMessage } from '../../../utils/message'
 import getConfig from 'next/config'
@@ -87,65 +81,13 @@ class ServiceBuildForm extends React.Component {
   }
 
   getServiceResource = (values) => {
+    const team = this.props.team.metadata.name
     const cluster = this.props.cluster
     const selectedServicePlan = this.state.servicePlans.items.find(p => p.metadata.name === values.servicePlan)
 
-    const serviceResource = new V1Service()
-    serviceResource.setApiVersion('services.compute.kore.appvia.io/v1')
-    serviceResource.setKind('Service')
-
-    const meta = new V1ObjectMeta()
-    meta.setName(values.serviceName)
-    meta.setNamespace(this.props.team.metadata.name)
-    serviceResource.setMetadata(meta)
-
-    const serviceSpec = new V1ServiceSpec()
-    serviceSpec.setKind(selectedServicePlan.spec.kind)
-    serviceSpec.setPlan(selectedServicePlan.metadata.name)
-
-    serviceSpec.setCluster(NewV1Ownership({
-      group: cluster.apiVersion.split('/')[0],
-      version: cluster.apiVersion.split('/')[1],
-      kind: cluster.kind,
-      name: cluster.metadata.name,
-      namespace: this.props.team.metadata.name
-    }))
-
-    serviceSpec.setConfiguration(this.state.planValues)
-
-    serviceResource.setSpec(serviceSpec)
-    return serviceResource
-  }
-
-  getServiceCredentialsResource = (name, secretName, service, cluster, namespaceClaim) => {
-    const serviceCredential = new V1ServiceCredentials()
-    serviceCredential.setApiVersion('servicecredentials.services.kore.appvia.io/v1')
-    serviceCredential.setKind('ServiceCredentials')
-    serviceCredential.setMetadata(NewV1ObjectMeta(name, this.props.team.metadata.name))
-
-    const serviceCredentialSpec = new V1ServiceCredentialsSpec()
-    serviceCredentialSpec.setKind(service.spec.kind)
-    serviceCredentialSpec.setService(NewV1Ownership({
-      group: service.apiVersion.split('/')[0],
-      version: service.apiVersion.split('/')[1],
-      kind: service.kind,
-      name: service.metadata.name,
-      namespace: this.props.team.metadata.name
-    }))
-    serviceCredentialSpec.setCluster(NewV1Ownership({
-      group: cluster.apiVersion.split('/')[0],
-      version: cluster.apiVersion.split('/')[1],
-      kind: cluster.kind,
-      name: cluster.metadata.name,
-      namespace: this.props.team.metadata.name
-    }))
-    serviceCredentialSpec.setClusterNamespace(namespaceClaim.spec.name)
-    serviceCredentialSpec.setSecretName(secretName)
-    serviceCredentialSpec.setConfiguration({})
-
-    serviceCredential.setSpec(serviceCredentialSpec)
-
-    return serviceCredential
+    return KoreApi.resources()
+      .team(team)
+      .generateServiceResource(cluster, values, selectedServicePlan, this.state.planValues)
   }
 
   hasNamespaceBindingErrors = async () => {
@@ -164,9 +106,7 @@ class ServiceBuildForm extends React.Component {
       } else {
         try {
           const existing = await (await KoreApi.client()).GetServiceCredentials(this.props.team.metadata.name, secretName)
-          console.log('checking existing credentials', existing)
           if (existing) {
-            console.log('setting exsiting error on', `${b}-secretName`)
             namespaceBindingErrors = true
             this.props.form.setFields({
               [`${b}-secretName`]: { value: secretName, errors: [new Error('A secret with this name already exists')] }
@@ -198,8 +138,9 @@ class ServiceBuildForm extends React.Component {
         return
       }
       try {
+        const team = this.props.team.metadata.name
         const api = await KoreApi.client()
-        const service = await api.UpdateService(this.props.team.metadata.name, values.serviceName, this.getServiceResource(values))
+        const service = await api.UpdateService(team, values.serviceName, this.getServiceResource(values))
         loadingMessage('Service build requested...')
 
         if (this.state.bindingsToCreate.length > 0) {
@@ -209,8 +150,10 @@ class ServiceBuildForm extends React.Component {
               const secretName = this.props.form.getFieldValue(`${bindingNamespace}-secretName`)
               const cluster = this.state.clusters.items.find(c => c.metadata.name === namespaceClaim.spec.cluster.name)
               const credentialName = `${cluster.metadata.name}-${namespaceClaim.spec.name}-${secretName}`
-              const resource = this.getServiceCredentialsResource(credentialName, secretName, service, cluster, namespaceClaim)
-              await api.UpdateServiceCredentials(this.props.team.metadata.name, credentialName, resource)
+              const serviceCredsResource = KoreApi.resources()
+                .team(team)
+                .generateServiceCredentialsResource(credentialName, secretName, {}, service, cluster, namespaceClaim.spec.name)
+              await api.UpdateServiceCredentials(team, credentialName, serviceCredsResource)
               loadingMessage(`Service access for namespace "${namespaceClaim.spec.name}" requested...`)
             } catch (error) {
               console.error('Error creating service binding', error)

@@ -46,20 +46,6 @@ describe('GCPOrganizationForm', () => {
     apiScope.done()
   })
 
-  describe('#generateSecretResource', () => {
-    it('returns a configured Secret object', () => {
-      const secret = form.generateSecretResource({ name: 'gcp', parentID: 'appvia', account: 'gcp-cred' })
-      expect(secret).toBeDefined()
-    })
-  })
-
-  describe('#generateGCPOrganizationResource', () => {
-    it('returns a configured Organization object when given valid values', () => {
-      const gcpOrg = form.generateGCPOrganizationResource({ name: 'gcp', parentID: 'org-id', billingAccount: 'billing@example.com' })
-      expect(gcpOrg).toBeDefined()
-    })
-  })
-
   describe('#getResource', () => {
     beforeEach(() => {
       apiScope

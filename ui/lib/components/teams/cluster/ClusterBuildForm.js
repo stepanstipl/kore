@@ -9,9 +9,6 @@ import MissingCredential from './MissingCredential'
 import ClusterOptionsForm from './ClusterOptionsForm'
 import FormErrorMessage from '../../forms/FormErrorMessage'
 import KoreApi from '../../../kore-api'
-import V1ClusterSpec from '../../../kore-api/model/V1ClusterSpec'
-import V1Cluster from '../../../kore-api/model/V1Cluster'
-import V1ObjectMeta from '../../../kore-api/model/V1ObjectMeta'
 import getConfig from 'next/config'
 import { loadingMessage } from '../../../utils/message'
 const { publicRuntimeConfig } = getConfig()
@@ -77,41 +74,20 @@ class ClusterBuildForm extends React.Component {
   }
 
   getClusterResource = (values) => {
+    const team = this.props.team.metadata.name
+    const selectedPlan = this.state.plans.items.find(p => p.metadata.name === values.plan)
+
     let selectedCredential
     if (values.credential) {
       selectedCredential = this.state.credentials[this.state.selectedCloud].credentials.find(p => p.metadata.name === values.credential)
     } else {
       selectedCredential = this.state.credentials[this.state.selectedCloud].accountManagement
     }
-    const selectedPlan = this.state.plans.items.find(p => p.metadata.name === values.plan)
+    const credentials = selectedCredential.spec.resource
 
-    const clusterResource = new V1Cluster()
-    clusterResource.setApiVersion('clusters.compute.kore.appvia.io/v1')
-    clusterResource.setKind('Cluster')
-
-    const meta = new V1ObjectMeta()
-    meta.setName(values.clusterName)
-    meta.setNamespace(this.props.team.metadata.name)
-    clusterResource.setMetadata(meta)
-
-    const clusterSpec = new V1ClusterSpec()
-    clusterSpec.setKind(selectedPlan.spec.kind)
-    clusterSpec.setPlan(selectedPlan.metadata.name)
-    clusterSpec.setConfiguration(this.state.planValues)
-    clusterSpec.setCredentials({ ...selectedCredential.spec.resource })
-
-    // Add current user as cluster admin to plan config, if no cluster users specified:
-    if (!(clusterSpec.configuration['clusterUsers'])) {
-      clusterSpec.configuration['clusterUsers'] = [
-        {
-          username: this.props.user.id,
-          roles: ['cluster-admin']
-        }
-      ]
-    }
-
-    clusterResource.setSpec(clusterSpec)
-    return clusterResource
+    return KoreApi.resources()
+      .team(team)
+      .generateClusterResource(this.props.user.id, values, selectedPlan, this.state.planValues, credentials)
   }
 
   handleSubmit = e => {

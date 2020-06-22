@@ -46,22 +46,6 @@ describe('EKSCredentialsForm', () => {
     apiScope.done()
   })
 
-  describe('#generateSecretResource', () => {
-    it('returns a configured Secret object', () => {
-      const secret = form.generateSecretResource({ name: 'eks', accessKeyID: 'access-key', secretAccessKey: 'secret-key' })
-      expect(secret).toBeDefined()
-      expect(secret.spec.data.access_key_id).toBe(btoa('access-key'))
-      expect(secret.spec.data.access_secret_key).toBe(btoa('secret-key'))
-    })
-  })
-
-  describe('#generateEKSCredentialsResource', () => {
-    it('returns a configured EKSCredentials object when given valid values', () => {
-      const eksCredential = form.generateEKSCredentialsResource({ name: 'eks', accountID: '1234567890', accessKeyID: '123', secretAccessKey: 'aws-account-cred' })
-      expect(eksCredential).toBeDefined()
-    })
-  })
-
   describe('#getResource', () => {
     beforeEach(() => {
       apiScope

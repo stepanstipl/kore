@@ -7,11 +7,6 @@ import Link from 'next/link'
 
 import GCPKoreManagedProjectsCustom from './GCPKoreManagedProjectsCustom'
 import RequestCredentialAccessForm from './forms/RequestCredentialAccessForm'
-import V1beta1AccountManagement from '../../kore-api/model/V1beta1AccountManagement'
-import V1beta1AccountManagementSpec from '../../kore-api/model/V1beta1AccountManagementSpec'
-import V1ObjectMeta from '../../kore-api/model/V1ObjectMeta'
-import V1Ownership from '../../kore-api/model/V1Ownership'
-import V1beta1AccountsRule from '../../kore-api/model/V1beta1AccountsRule'
 import AllocationHelpers from '../../utils/allocation-helpers'
 import FormErrorMessage from '../forms/FormErrorMessage'
 import KoreApi from '../../kore-api'
@@ -59,49 +54,6 @@ class GCPProjectAutomationSettings extends React.Component {
   selectGcpManagementType = e => this.setState({ gcpManagementType: e.target.value })
 
   selectGcpProjectAutomationType = e => this.setState({ gcpProjectAutomationType: e.target.value })
-
-  generateAccountManagementResource = (gcpOrgResource, gcpProjectList) => {
-    const resource = new V1beta1AccountManagement()
-    resource.setApiVersion('accounts.kore.appvia.io/v1beta1')
-    resource.setKind('AccountManagement')
-
-    const meta = new V1ObjectMeta()
-    meta.setName(`am-${gcpOrgResource.metadata.name}`)
-    meta.setNamespace('kore-admin')
-    if (this.state.accountManagement) {
-      meta.setResourceVersion(this.state.accountManagement.metadata.resourceVersion)
-    }
-    resource.setMetadata(meta)
-
-    const spec = new V1beta1AccountManagementSpec()
-    spec.setProvider('GKE')
-
-    const owner = new V1Ownership()
-    const groupVersion = gcpOrgResource.apiVersion.split('/')
-    owner.setGroup(groupVersion[0])
-    owner.setVersion(groupVersion[1])
-    owner.setKind(gcpOrgResource.kind)
-    owner.setName(gcpOrgResource.metadata.name)
-    owner.setNamespace(gcpOrgResource.metadata.namespace)
-    spec.setOrganization(owner)
-
-    if (gcpProjectList) {
-      const rules = gcpProjectList.map(project => {
-        const rule = new V1beta1AccountsRule()
-        rule.setName(project.name)
-        rule.setDescription(project.description)
-        rule.setPrefix(project.prefix)
-        rule.setSuffix(project.suffix)
-        rule.setPlans(project.plans)
-        return rule
-      })
-      spec.setRules(rules)
-    }
-
-    resource.setSpec(spec)
-
-    return resource
-  }
 
   disabledSave = () => {
     if (this.state.submitting || !this.state.gcpManagementType) {
@@ -153,7 +105,8 @@ class GCPProjectAutomationSettings extends React.Component {
       // each GCP org will use the same settings
       await asyncForEach(this.state.gcpOrgList, async (gcpOrg) => {
         const gcpProjectList = this.state.gcpProjectAutomationType === 'CUSTOM' ? this.state.gcpProjectList : false
-        const accountMgtResource = this.generateAccountManagementResource(gcpOrg, gcpProjectList)
+        const resourceVersion = this.state.accountManagement && this.state.accountManagement.metadata.resourceVersion
+        const accountMgtResource = KoreApi.resources().generateAccountManagementResource(gcpOrg, gcpProjectList, resourceVersion)
         await api.UpdateAccount(`am-${gcpOrg.metadata.name}`, accountMgtResource)
         await AllocationHelpers.storeAllocation({ resourceToAllocate: accountMgtResource })
         this.setState({ submitting: false, accountManagement: accountMgtResource })

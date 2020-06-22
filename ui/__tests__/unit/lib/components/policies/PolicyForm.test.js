@@ -60,13 +60,6 @@ describe('PolicyForm', () => {
     apiScope.done()
   })
 
-  describe('#generatePolicyResource', () => {
-    test('returns a configured Policy object when given valid values', () => {
-      const plan = form.generatePolicyResource({ description: 'Policy description', summary: 'Policy name', properties: [{}] })
-      expect(plan).toBeDefined()
-    })
-  })
-
   describe('#handleSubmit', () => {
     let event
     beforeEach(() => {

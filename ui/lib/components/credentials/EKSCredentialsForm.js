@@ -1,77 +1,33 @@
-import V1alpha1EKSCredentials from '../../kore-api/model/V1alpha1EKSCredentials'
-import V1alpha1EKSCredentialsSpec from '../../kore-api/model/V1alpha1EKSCredentialsSpec'
-import V1ObjectMeta from '../../kore-api/model/V1ObjectMeta'
-import V1Secret from '../../kore-api/model/V1Secret'
-import V1SecretSpec from '../../kore-api/model/V1SecretSpec'
-import V1SecretReference from '../../kore-api/model/V1SecretReference'
+import { Form, Input, Alert, Card, Checkbox } from 'antd'
+
 import VerifiedAllocatedResourceForm from '../resources/VerifiedAllocatedResourceForm'
 import KoreApi from '../../kore-api'
-import { Form, Input, Alert, Card, Checkbox } from 'antd'
 import AllocationHelpers from '../../utils/allocation-helpers'
 
 class EKSCredentialsForm extends VerifiedAllocatedResourceForm {
 
-  generateSecretResource = values => {
-    const resource = new V1Secret()
-    resource.setApiVersion('config.kore.appvia.io')
-    resource.setKind('Secret')
-
-    const meta = new V1ObjectMeta()
-    meta.setName(this.getMetadataName(values))
-    meta.setNamespace(this.props.team)
-    resource.setMetadata(meta)
-
-    const spec = new V1SecretSpec()
-    spec.setType('aws-credentials')
-    spec.setDescription(`AWS account ${values.accountID} credential`)
-    spec.setData({
-      access_key_id: btoa(values.accessKeyID),
-      access_secret_key: btoa(values.secretAccessKey)
-    })
-    resource.setSpec(spec)
-
-    return resource
-  }
-
-  generateEKSCredentialsResource = values => {
-    const name = this.getMetadataName(values)
-    const resource = new V1alpha1EKSCredentials()
-    resource.setApiVersion('aws.compute.kore.appvia.io/v1alpha1')
-    resource.setKind('EKSCredentials')
-
-    const meta = new V1ObjectMeta()
-    meta.setName(name)
-    meta.setNamespace(this.props.team)
-    resource.setMetadata(meta)
-
-    const spec = new V1alpha1EKSCredentialsSpec()
-    spec.setAccountID(values.accountID)
-
-    const secret = new V1SecretReference()
-    secret.setName(name)
-    secret.setNamespace(this.props.team)
-    spec.setCredentialsRef(secret)
-
-    resource.setSpec(spec)
-
-    return resource
-  }
-
-  getResource = async metadataName => {
+  getResource = async (metadataName) => {
     const api = await KoreApi.client()
     const eksCredentialsResult = await api.GetEKSCredentials(this.props.team, metadataName)
     eksCredentialsResult.allocation = await AllocationHelpers.getAllocationForResource(eksCredentialsResult)
     return eksCredentialsResult
   }
 
-  putResource = async values => {
+  putResource = async (values) => {
     const api = await KoreApi.client()
-    const metadataName = this.getMetadataName(values)
+    values.name = this.getMetadataName(values)
+    const secretName = values.name
+    const teamResources = KoreApi.resources().team(this.props.team)
     if (!this.props.data || this.state.replaceKey) {
-      await api.UpdateTeamSecret(this.props.team, metadataName, this.generateSecretResource(values))
+      const secretData = {
+        access_key_id: btoa(values.accessKeyID),
+        access_secret_key: btoa(values.secretAccessKey)
+      }
+      const secretResource = teamResources.generateSecretResource(secretName, 'aws-credentials', `AWS account ${values.accountID} credential`, secretData)
+      await api.UpdateTeamSecret(this.props.team, secretName, secretResource)
     }
-    const eksCredResource = this.generateEKSCredentialsResource(values)
-    const eksResult = await api.UpdateEKSCredentials(this.props.team, metadataName, eksCredResource)
+    const eksCredResource = teamResources.generateEKSCredentialsResource(values, secretName)
+    const eksResult = await api.UpdateEKSCredentials(this.props.team, values.name, eksCredResource)
     eksResult.allocation = await this.storeAllocation(eksCredResource, values)
     return eksResult
   }
