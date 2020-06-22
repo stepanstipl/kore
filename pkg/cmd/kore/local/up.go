@@ -108,7 +108,7 @@ func NewCmdBootstrapUp(factory cmdutil.Factory) *cobra.Command {
 	flags.BoolVar(&o.Wait, "wait", true, "indicates we wait for the deployment to complete `BOOL`")
 	flags.BoolVar(&o.Force, "force", false, "indicates we should force any changes `BOOL`")
 
-	flags.MarkHidden("disable-ui")
+	_ = flags.MarkHidden("disable-ui")
 
 	return command
 }

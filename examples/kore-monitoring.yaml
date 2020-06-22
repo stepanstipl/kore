@@ -12,11 +12,52 @@ spec:
   configuration:
     source:
       helm:
-        url: https://storage.googleapis.com/kore-charts/charts
+        url: https://storage.googleapis.com/kore-charts
         name: kore-monitoring
-        version: 0.0.2
+        version: 0.0.1
     resourceKinds:
       - group: apps
         kind: Deploymnent
+      - group: ""
+        kind: Service
+---
+apiVersion: services.kore.appvia.io/v1
+kind: Service
+metadata:
+  name: kore-monitoring
+  namespace: kore-admin
+  annotations:
+    kore.appvia.io/ignore: "true"
+spec:
+  kind: helm-app
+  summary: Kore Monitoring
+  description: Kore Monitoring Operator
+  plan: helm-app-kore-monitoring
+  cluster:
+    group: clusters.compute.kore.appvia.io
+    kind: Cluster
+    name: kore
+    namespace: kore-admin
+    version: v1
+  clusterNamespace: kore
+  configuration:
+    source:
+      helm:
+        url: https://storage.googleapis.com/kore-charts
+        name: kore-monitoring
+        version: 0.0.1
+    values: |+
+      prometheus-operator:
+        enabled: false
+      monitoring-operator:
+        fullnameOverride: kore-monitor
+        controller:
+          enabled: true
+          features: [kore]
+        operator:
+          enabled: false
+    resourceKinds:
+      - group: apps
+        kind: Deployment
       - group: ""
         kind: Service
