@@ -48,6 +48,7 @@ run-generic-checks() {
       whoami.bats
       teams.bats
       plans.bats
+      secrets.bats
   )
   for unit in ${units[@]}; do
     bats ${BATS_OPTIONS} ${unit} || exit 1
