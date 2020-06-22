@@ -123,7 +123,7 @@ class KoreApiClient {
     ListTeamAlerts: (team) => this.apis.monitoring.ListTeamAlerts({ team: team }),
     ListTeamRules: (team) => this.apis.monitoring.ListTeamRules({ team: team }),
     SilenceAlert: (uid, comment, duration) => this.apis.monitoring.SilenceAlert({ uid: uid, expire: duration }),
-    UnsilenceAlert: (uid) => this.apis.monitoring.UnsilenceAlert({ uid: uid})
+    UnsilenceAlert: (uid) => this.apis.monitoring.UnsilenceAlert({ uid: uid })
   }
 
   // Metadata

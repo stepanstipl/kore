@@ -1,16 +1,9 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Divider, Icon, Tooltip, Alert, Table, Row, Col, Card } from 'antd'
-import inflect from 'inflect'
-import Link from 'next/link'
-import getConfig from 'next/config'
+import { Divider, Row, Col, Card } from 'antd'
 
 import MonitoringStatistic from './MonitoringStatistic'
 import MonitoringTable from './MonitoringTable'
-import MonitoringTimeline from './MonitoringTimeline'
-
-const { publicRuntimeConfig } = getConfig()
-const { Meta } = Card;
 
 export default class MonitoringOverview extends React.Component {
   static propTypes = {

@@ -1,7 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { Tag } from 'antd'
-import { filter } from 'lodash'
 
 export default class MonitoringSummary extends React.Component {
   static propTypes = {
@@ -9,13 +8,13 @@ export default class MonitoringSummary extends React.Component {
   }
 
   static filtered = [
-    "alertname",
-    "endpoint",
-    "fstype",
-    "job",
-    "prometheus",
-    "service",
-    "severity",
+    'alertname',
+    'endpoint',
+    'fstype',
+    'job',
+    'prometheus',
+    'service',
+    'severity',
   ]
 
   filterOnLabels = (labels) => {
@@ -26,10 +25,10 @@ export default class MonitoringSummary extends React.Component {
     }
 
     for (const [key, value] of Object.entries(labels.spec.labels)) {
-        if (MonitoringSummary.filtered.includes(key)) {
-            continue
-        }
-        list[key] = value
+      if (MonitoringSummary.filtered.includes(key)) {
+        continue
+      }
+      list[key] = value
     }
 
     return list
@@ -39,13 +38,13 @@ export default class MonitoringSummary extends React.Component {
     const labels = this.filterOnLabels(this.props.record)
 
     return (
-        <div>
-            {this.props.record.spec.summary}<br/>
-            <Tag color="green">team={this.props.record.metadata.namespace}</Tag>
-            <Tag color="green">kind={this.props.record.status.rule.spec.resource.kind}</Tag>
-            <Tag color="green">name={this.props.record.status.rule.spec.resource.name}</Tag>
-            {Object.keys(labels).map(key => <Tag color="green">{key}={labels[key]}</Tag>)}
-        </div>
+      <div>
+        {this.props.record.spec.summary}<br/>
+        <Tag color="green">team={this.props.record.metadata.namespace}</Tag>
+        <Tag color="green">kind={this.props.record.status.rule.spec.resource.kind}</Tag>
+        <Tag color="green">name={this.props.record.status.rule.spec.resource.name}</Tag>
+        {Object.keys(labels).map(key => <Tag key="{key}" color="green">{key}={labels[key]}</Tag>)}
+      </div>
     )
   }
 }

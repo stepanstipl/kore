@@ -42,7 +42,7 @@ export default class MonitoringStatistic extends React.Component {
           <Statistic
             title={this.props.description}
             value={count}
-            valueStyle={{ color: (count > 0 ? color : 'green')}}
+            valueStyle={{ color: (count > 0 ? color : 'green') }}
             prefix={<Icon type="alert" />}
             suffix=""
           />
