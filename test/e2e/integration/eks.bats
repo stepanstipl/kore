@@ -110,9 +110,26 @@ setup() {
 }
 
 @test "We should see the number of nodes change when I update the desired state" {
+  if ${KORE} get eksnodegroup ${CLUSTER}-default -t ${TEAM} -o json | jq '.spec.enableAutoscaler' | grep true; then
+    skip "autoscaling is enabled"
+  fi
   runit "${KORE} alpha patch cluster ${CLUSTER} spec.configuration.nodeGroups.0.desiredSize 2 -t ${TEAM}"
   [[ "$status" -eq 0 ]]
   retry 60 "${KUBECTL} --context=${CLUSTER} get nodes --no-headers | grep Ready | wc -l | grep 2"
+  [[ "$status" -eq 0 ]]
+}
+
+@test "If autoscaling is enabled in the cluster we should see the deployment" {
+  deployment="helm-app-cluster-autoscaler-aws-cluster-autoscaler"
+
+  if ${KORE} get eksnodegroup ${CLUSTER}-default -t ${TEAM} -o json | jq '.spec.enableAutoscaler' | grep "false"; then
+    skip "autoscaling is not enabled on eksnodegroup"
+  fi
+  runit "${KUBECTL} --context=${CLUSTER} -n kube-system get deployment ${deployment}"
+  [[ "$status" -eq 0 ]]
+  runit "${KUBECTL} --context=${CLUSTER} -n kube-system get deployment ${deployment}"
+  [[ "$status" -eq 0 ]]
+  runit "${KUBECTL} --context=${CLUSTER} -n kube-system get deployment ${deployment} | grep 1/1"
   [[ "$status" -eq 0 ]]
 }
 
