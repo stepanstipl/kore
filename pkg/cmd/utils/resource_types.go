@@ -63,9 +63,10 @@ var (
 			ShortName:    "alerts",
 			Printer: []Column{
 				{"Name", "metadata.name", ""},
-				{"Resource", "spec.resource.name", ""},
-				{"Kind", "spec.resource.kind", ""},
-				{"Status", "spec.alerts.0.status.status", ""},
+				{"Summary", "spec.summary", ""},
+				{"Resource", "status.rule.spec.resource.name", ""},
+				{"Kind", "status.rule.spec.resource.kind", ""},
+				{"Status", "status.status", ""},
 				{"Age", "metadata.creationTimestamp", "age"},
 			},
 		},

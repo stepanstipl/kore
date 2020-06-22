@@ -85,10 +85,10 @@ func (o *GetAlertOptions) Run() error {
 	}
 
 	if o.AllTeams {
-		resp = o.ClientWithEndpoint("/monitoring/rules").Parameters(params...)
+		resp = o.ClientWithEndpoint("/monitoring/alerts").Parameters(params...)
 	} else {
 		params = append(params, client.PathParameter("team", o.Team))
-		resp = o.ClientWithEndpoint("/monitoring/teams/{team}/rules").Parameters(params...)
+		resp = o.ClientWithEndpoint("/monitoring/teams/{team}/alerts").Parameters(params...)
 	}
 	if err := resp.Get().Error(); err != nil {
 		return err

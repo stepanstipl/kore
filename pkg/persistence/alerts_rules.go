@@ -70,26 +70,13 @@ func (i *arulesImpl) DeleteBy(ctx context.Context, filters ...ListFunc) error {
 		return errors.New("no filters defined for deletion of alert rule rules")
 	}
 
-	terms := ApplyListOptions(filters...)
-	query := i.conn.
-		Model(&model.AlertRule{}).
-		Select("i.*").
-		Table("alert_rules i").
-		Joins("JOIN teams t ON t.id = i.team_id")
-
-	if terms.HasTeam() {
-		query = query.Where("t.name = ?", terms.GetTeam())
-	}
-
-	// @TODO needs fixing up
-	list := []*model.AlertRule{}
-	err := query.Find(&list).Error
+	list, err := i.makeListQuery(ctx, filters...)
 	if err != nil {
-		return err
+		return err.Error
 	}
 
-	for _, x := range list {
-		if err := i.conn.Model(&model.AlertRule{}).Delete(x).Error; err != nil {
+	for x := 0; x < len(list); x++ {
+		if err := i.conn.Model(&model.AlertRule{}).Delete(&list[x]).Error; err != nil {
 			return err
 		}
 	}

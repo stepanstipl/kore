@@ -44,9 +44,11 @@ export default class MonitoringTable extends React.Component {
             passHref
             href="/docs"
           >
-            <a><Tooltip placement="left" title="View the definition of this rule">
-              <Icon type="info-circle" />  {text}
-            </Tooltip></a>
+            <a>
+              <Tooltip placement="top" title="View the definition of this rule">
+                <Icon type="info-circle" />  {text}
+              </Tooltip>
+            </a>
           </Link>
         )
     },
@@ -57,13 +59,28 @@ export default class MonitoringTable extends React.Component {
         render: (text, record) => <MonitoringSummary record={record}/>
     },
     {
-        title: 'Actions',
+        title: 'State',
         render: (text, record) => (
           <>
-          <Button type="primary" shape="round"> Silence</Button>
+            <Tooltip placement="top" title="The current state of the alert">
+              <Tag color="green"><Icon type="info-circle" />  {record.status.status}</Tag>
+            </Tooltip>
           </>
         )
     },
+    /*
+    {
+        title: 'Actions',
+        render: (text, record) => (
+          <>
+          {record.status.status == "Silenced"
+            ? <Button type="primary" shape="round"> Unsilence</Button>
+            : <Button type="primary" shape="round"> Silence</Button>
+          }
+          </>
+        )
+    },
+    */
   ]
 
   filterOnRules = (alerts) => {
@@ -104,7 +121,7 @@ export default class MonitoringTable extends React.Component {
         <Table
             dataSource={resources}
             columns={MonitoringTable.columns}
-            expandedRowRender={record => <MonitoringAlert rule={record}/> }
+            //expandedRowRender={record => <MonitoringAlert rule={record}/> }
         />
       </>
     )

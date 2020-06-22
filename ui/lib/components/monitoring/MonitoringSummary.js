@@ -44,7 +44,6 @@ export default class MonitoringSummary extends React.Component {
             <Tag color="green">team={this.props.record.metadata.namespace}</Tag>
             <Tag color="green">kind={this.props.record.status.rule.spec.resource.kind}</Tag>
             <Tag color="green">name={this.props.record.status.rule.spec.resource.name}</Tag>
-            <Tag color="green">status={this.props.record.status.status}</Tag>
             {Object.keys(labels).map(key => <Tag color="green">{key}={labels[key]}</Tag>)}
         </div>
     )
