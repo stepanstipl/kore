@@ -125,6 +125,10 @@ setup() {
   if ${KORE} get eksnodegroup ${CLUSTER}-default -t ${TEAM} -o json | jq '.spec.enableAutoscaler' | grep "false"; then
     skip "autoscaling is not enabled on eksnodegroup"
   fi
+
+  # @TODO NEEDS TO BE FIXED
+  skip "while the helm services controller is reviewed"
+
   runit "${KUBECTL} --context=${CLUSTER} -n kube-system get deployment ${deployment}"
   [[ "$status" -eq 0 ]]
   runit "${KUBECTL} --context=${CLUSTER} -n kube-system get deployment ${deployment}"
