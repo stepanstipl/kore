@@ -345,7 +345,7 @@ func (i *alertsImpl) Preload(v ...string) Alerts {
 	return i
 }
 
-// Transaction sets the connection transation
+// Transaction sets the connection transaction
 func (i *alertsImpl) Transaction(tx *gorm.DB) Alerts {
 	i.conn = tx
 	i.transaction = true

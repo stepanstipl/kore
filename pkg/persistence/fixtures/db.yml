@@ -70,18 +70,21 @@ alert_rules:
     raw_rule: "{}"
 alerts:
   - id: 1
+    uid: 19488346-b470-11ea-9b41-9cb6d0d6cd20
     created_at: '2020-04-29 17:03:00'
     status: OK
     rule_id: 1
     archived_at: NULL
     raw_alert: "{}"
   - id: 2
+    uid: 19488346-b470-11ea-9b41-9cb6d0d6cd21
     created_at: '2020-04-29 17:03:00'
     status: OK
     rule_id: 2
     archived_at: '2020-04-29 17:04:00'
     raw_alert: "{}"
   - id: 3
+    uid: 19488346-b470-11ea-9b41-9cb6d0d6cd22
     created_at: '2020-04-29 17:04:01'
     status: Active
     rule_id: 2

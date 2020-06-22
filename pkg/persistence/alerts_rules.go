@@ -38,7 +38,7 @@ type AlertRules interface {
 	List(context.Context, ...ListFunc) ([]*model.AlertRule, error)
 	// Preload allows for the consumer to select the preloaded fields
 	Preload(...string) AlertRules
-	// Transaction set the db transation
+	// Transaction set the db transaction
 	Transaction(*gorm.DB) AlertRules
 	// Update updates or creates and alert rule rules
 	Update(context.Context, *model.AlertRule) error

@@ -258,7 +258,7 @@ func (c Convertor) FromAlertRuleModel(rule *model.AlertRule) *monitoring.Rule {
 	return o
 }
 
-// ToAlert converst the alert model
+// ToAlert converts the alert model
 func (c Convertor) ToAlert(m *monitoring.Alert) *model.Alert {
 	o := &model.Alert{
 		Fingerprint:   m.GetAnnotations()["fingerprint"],
@@ -553,7 +553,7 @@ func (c Convertor) FromSecurityOverview(overview *model.SecurityOverview) securi
 	return o
 }
 
-// FromSecurityResourceOverview converst from the model to api
+// FromSecurityResourceOverview converts from the model to api
 func (c Convertor) FromSecurityResourceOverview(resource *model.SecurityResourceOverview) securityv1.SecurityResourceOverview {
 	r := securityv1.SecurityResourceOverview{
 		Resource: corev1.Ownership{
