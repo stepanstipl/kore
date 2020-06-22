@@ -1546,6 +1546,110 @@
         }
       }
     },
+    "/api/v1alpha1/monitoring/alerts/silence/{uid}": {
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "monitoring"
+        ],
+        "summary": "Used to silence an alert in kore",
+        "operationId": "SilenceAlert",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The unique identifer for the alert",
+            "name": "uid",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The message added to the alert when silencing it",
+            "name": "comment",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "The duration the alert will be silenced",
+            "name": "expire",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The alert has been successfully silenced"
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "monitoring"
+        ],
+        "summary": "Used to remove the silence from an alert in kore",
+        "operationId": "UnsilenceAlert",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The unique identifer for the alert",
+            "name": "uid",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The alert has been successfully restored"
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
     "/api/v1alpha1/monitoring/alerts/status": {
       "put": {
         "consumes": [

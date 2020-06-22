@@ -47,6 +47,10 @@ type ClientService interface {
 
 	PurgeRuleAlerts(params *PurgeRuleAlertsParams, authInfo runtime.ClientAuthInfoWriter) (*PurgeRuleAlertsOK, error)
 
+	SilenceAlert(params *SilenceAlertParams, authInfo runtime.ClientAuthInfoWriter) (*SilenceAlertOK, error)
+
+	UnsilenceAlert(params *UnsilenceAlertParams, authInfo runtime.ClientAuthInfoWriter) (*UnsilenceAlertOK, error)
+
 	UpdateAlert(params *UpdateAlertParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateAlertOK, error)
 
 	UpdateRule(params *UpdateRuleParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateRuleOK, error)
@@ -401,6 +405,76 @@ func (a *Client) PurgeRuleAlerts(params *PurgeRuleAlertsParams, authInfo runtime
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for PurgeRuleAlerts: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  SilenceAlert useds to silence an alert in kore
+*/
+func (a *Client) SilenceAlert(params *SilenceAlertParams, authInfo runtime.ClientAuthInfoWriter) (*SilenceAlertOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewSilenceAlertParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "SilenceAlert",
+		Method:             "PUT",
+		PathPattern:        "/api/v1alpha1/monitoring/alerts/silence/{uid}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &SilenceAlertReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*SilenceAlertOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for SilenceAlert: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  UnsilenceAlert useds to remove the silence from an alert in kore
+*/
+func (a *Client) UnsilenceAlert(params *UnsilenceAlertParams, authInfo runtime.ClientAuthInfoWriter) (*UnsilenceAlertOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewUnsilenceAlertParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "UnsilenceAlert",
+		Method:             "DELETE",
+		PathPattern:        "/api/v1alpha1/monitoring/alerts/silence/{uid}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &UnsilenceAlertReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*UnsilenceAlertOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for UnsilenceAlert: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

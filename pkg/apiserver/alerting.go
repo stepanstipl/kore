@@ -184,6 +184,28 @@ func (a *alertsHandler) Register(i kore.Interface, builder utils.PathBuilder) (*
 	)
 
 	ws.Route(
+		withAllErrors(ws.PUT("/alerts/silence/{uid}")).To(a.silenceAlert).
+			Filter(filters.DefaultMembersHandler.Filter).
+			Doc("Used to silence an alert in kore").
+			Metadata(restfulspec.KeyOpenAPITags, tags).
+			Param(ws.PathParameter("uid", "The unique identifer for the alert")).
+			Param(ws.QueryParameter("comment", "The message added to the alert when silencing it")).
+			Param(ws.QueryParameter("expire", "The duration the alert will be silenced")).
+			Operation("SilenceAlert").
+			Returns(http.StatusOK, "The alert has been successfully silenced", nil),
+	)
+
+	ws.Route(
+		withAllErrors(ws.DELETE("/alerts/silence/{uid}")).To(a.unsilenceAlert).
+			Filter(filters.DefaultMembersHandler.Filter).
+			Doc("Used to remove the silence from an alert in kore").
+			Metadata(restfulspec.KeyOpenAPITags, tags).
+			Param(ws.PathParameter("uid", "The unique identifer for the alert")).
+			Operation("UnsilenceAlert").
+			Returns(http.StatusOK, "The alert has been successfully restored", nil),
+	)
+
+	ws.Route(
 		withAllErrors(ws.GET("/alerts/resource/{group}/{version}/{kind}/{namespace}/{resource}")).To(a.findAlertsOnResource).
 			Filter(filters.Admin).
 			Doc("Used to retrieve the alerts on a resource").
@@ -226,6 +248,18 @@ func (a *alertsHandler) Register(i kore.Interface, builder utils.PathBuilder) (*
 	)
 
 	return ws, nil
+}
+
+func (a *alertsHandler) silenceAlert(req *restful.Request, resp *restful.Response) {
+	handleErrors(req, resp, func() error {
+		return nil
+	})
+}
+
+func (a *alertsHandler) unsilenceAlert(req *restful.Request, resp *restful.Response) {
+	handleErrors(req, resp, func() error {
+		return nil
+	})
 }
 
 func (a *alertsHandler) findAlertsOnResource(req *restful.Request, resp *restful.Response) {
