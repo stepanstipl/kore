@@ -12,7 +12,7 @@ export default class MonitoringStatistic extends React.Component {
   }
 
   filterByStatus = (alerts) => {
-    var count = 0
+    let count = 0
 
     if (!alerts) {
       return 0
@@ -33,21 +33,19 @@ export default class MonitoringStatistic extends React.Component {
   }
 
   render() {
-    const { alerts, color } = this.props
+    const { alerts, color, description } = this.props
     const count = this.filterByStatus(alerts)
 
     return (
-      <>
-        <Card>
-          <Statistic
-            title={this.props.description}
-            value={count}
-            valueStyle={{ color: (count > 0 ? color : 'green') }}
-            prefix={<Icon type="alert" />}
-            suffix=""
-          />
-        </Card>
-      </>
+      <Card>
+        <Statistic
+          title={description}
+          value={count}
+          valueStyle={{ color: (count > 0 ? color : 'green') }}
+          prefix={<Icon type="alert" />}
+          suffix=""
+        />
+      </Card>
     )
   }
 }
