@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/appvia/kore/pkg/client/config"
+	"github.com/appvia/kore/pkg/cmd/kore/local/providers"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/httputils"
@@ -66,6 +67,8 @@ type UpOptions struct {
 	ContextName string
 	// EnableDeploy indicates we should deploy the application
 	EnableDeploy bool
+	// DisableUI indicates we deploy without an UI
+	DisableUI bool
 	// Force indicates we should force any changes
 	Force bool
 	// FlagsChanged is a list of flags which changed
@@ -101,8 +104,11 @@ func NewCmdBootstrapUp(factory cmdutil.Factory) *cobra.Command {
 	flags.StringVar(&o.ValuesFile, "values", os.ExpandEnv(filepath.Join(utils.UserHomeDir(), ".kore", "values.yaml")), "path to the file container helm values `PATH`")
 	flags.StringVar(&o.BinaryPath, "binary-path", filepath.Join(config.GetClientPath(), "build"), "path to place any downloaded binaries if requested `PATH`")
 	flags.BoolVar(&o.EnableDeploy, "enable-deploy", true, "indicates if we should deploy the kore application `BOOL`")
+	flags.BoolVar(&o.DisableUI, "disable-ui", false, "indicates the kore ui is not deployed `BOOL`")
 	flags.BoolVar(&o.Wait, "wait", true, "indicates we wait for the deployment to complete `BOOL`")
 	flags.BoolVar(&o.Force, "force", false, "indicates we should force any changes `BOOL`")
+
+	flags.MarkHidden("disable-ui")
 
 	return command
 }
@@ -216,7 +222,9 @@ func (o *UpOptions) EnsureLocalKubernetes(ctx context.Context) error {
 		Header:      "Attempting to build the local kubernetes cluster",
 		Description: "Provisioned a local kubernetes cluster",
 		Handler: func(ctx context.Context) error {
-			if err := provider.Create(ctx, o.Name); err != nil {
+			if err := provider.Create(ctx, o.Name, providers.CreateOptions{
+				DisableUI: o.DisableUI,
+			}); err != nil {
 				return err
 			}
 

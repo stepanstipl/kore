@@ -28,28 +28,11 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"text/template"
 
 	"github.com/appvia/kore/pkg/client/config"
 	"github.com/appvia/kore/pkg/cmd/kore/local/providers"
 	"github.com/appvia/kore/pkg/utils"
-)
-
-var (
-	// KindConfiguration is the configuration for kind
-	KindConfiguration = `
-apiVersion: kind.x-k8s.io/v1alpha4
-kind: Cluster
-nodes:
-- role: control-plane
-  image: kindest/node:v1.15.11@sha256:6cc31f3533deb138792db2c7d1ffc36f7456a06f1db5556ad3b6927641016f50
-  extraPortMappings:
-  - containerPort: 3000
-    hostPort: 3000
-    protocol: TCP
-  - containerPort: 10080
-    hostPort: 10080
-    protocol: TCP
-`
 )
 
 const (
@@ -61,6 +44,40 @@ type providerImpl struct {
 	providers.Logger
 	// path is the file path to the kind binary
 	path string
+}
+
+var (
+	// KindConfiguration is the kind configuration
+	KindConfiguration = `
+apiVersion: kind.x-k8s.io/v1alpha4
+kind: Cluster
+nodes:
+- role: control-plane
+  image: kindest/node:v1.15.11@sha256:6cc31f3533deb138792db2c7d1ffc36f7456a06f1db5556ad3b6927641016f50
+  extraPortMappings:
+	{{- if not .DisableUI }}
+  - containerPort: 3000
+    hostPort: 3000
+    protocol: TCP
+	{{- end }}
+  - containerPort: 10080
+    hostPort: 10080
+    protocol: TCP
+`
+)
+
+// GetKindConfiguration returns the kind config
+func GetKindConfiguration(options providers.CreateOptions) (string, error) {
+	tmpl, err := template.New("main").Parse(KindConfiguration)
+	if err != nil {
+		return "", err
+	}
+	b := &bytes.Buffer{}
+	if err := tmpl.Execute(b, options); err != nil {
+		return "", err
+	}
+
+	return b.String(), nil
 }
 
 // New creates and returns a kind provider
@@ -88,7 +105,7 @@ func (p *providerImpl) Destroy(ctx context.Context, name string) error {
 }
 
 // Create is responsible for provisioning a kind cluster
-func (p *providerImpl) Create(ctx context.Context, name string) error {
+func (p *providerImpl) Create(ctx context.Context, name string, options providers.CreateOptions) error {
 	found, err := p.Has(ctx, name)
 	if err != nil {
 		return err
@@ -114,7 +131,12 @@ func (p *providerImpl) Create(ctx context.Context, name string) error {
 		return err
 	}
 
-	if _, err := io.WriteString(stdin, KindConfiguration); err != nil {
+	config, err := GetKindConfiguration(options)
+	if err != nil {
+		return err
+	}
+
+	if _, err := io.WriteString(stdin, config); err != nil {
 		return err
 	}
 	stdin.Close()
