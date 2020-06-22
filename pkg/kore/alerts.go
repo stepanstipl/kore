@@ -18,7 +18,6 @@ package kore
 
 import (
 	"context"
-	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -552,24 +551,6 @@ func (a *alertsImpl) userPermitted(ctx context.Context, resource corev1.Ownershi
 		}).Warn("user trying to access alerts not permitted")
 
 		return NewErrNotAllowed("must be global admin or in team which owns this resource")
-	}
-
-	return nil
-}
-
-func (a *alertsImpl) isValidResource(owner corev1.Ownership) error {
-	fields := map[string]string{
-		"group":     owner.Group,
-		"version":   owner.Version,
-		"kind":      owner.Kind,
-		"namespace": owner.Namespace,
-		"name":      owner.Name,
-	}
-
-	for k, v := range fields {
-		if v == "" {
-			return fmt.Errorf("%s field in ownership is not defined", k)
-		}
 	}
 
 	return nil

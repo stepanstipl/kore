@@ -107,10 +107,10 @@ func (a *Alert) HasLabel(key, value string) bool {
 
 // BeforeCreate is called pre creation
 func (a *Alert) BeforeCreate(scope *gorm.Scope) error {
-	scope.SetColumn("UID", uuid.NewV4().String())
+	_ = scope.SetColumn("UID", uuid.NewV4().String())
 
 	if a.Status == "" {
-		scope.SetColumn("Status", AlertStatusOK)
+		_ = scope.SetColumn("Status", AlertStatusOK)
 	}
 
 	return nil
