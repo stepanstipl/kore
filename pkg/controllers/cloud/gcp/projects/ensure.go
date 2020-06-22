@@ -827,6 +827,14 @@ func (t ctrl) EnsureServiceAccountKey(
 		return nil
 	}()
 	if err != nil {
+		// @TODO quick hack to sort the error in a SA not being here - we need to
+		// fix up the controller to allow reconcile.Result{} instead
+		if strings.Contains(err.Error(), "does not exist") {
+			logger.WithError(err).Error("service account is not available yet")
+
+			return err
+		}
+
 		project.Status.Conditions.SetCondition(corev1.Component{
 			Name:    stage,
 			Detail:  err.Error(),
