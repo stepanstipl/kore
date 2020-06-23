@@ -115,16 +115,21 @@ func (o *UpOptions) GetHelmValues(path string) (map[string]interface{}, error) {
 
 // GetDefaultHelmValues returns the default values for the chart
 func (o *UpOptions) GetDefaultHelmValues() map[string]interface{} {
+	features := []string{
+		"application_services=true",
+		"services=true",
+	}
+
 	return map[string]interface{}{
 		"api": map[string]interface{}{
-			"feature_gates": []string{"services=true"},
+			"feature_gates": features,
 			"hostPort":      10080,
 			"replicas":      1,
 			"serviceType":   "NodePort",
 			"version":       o.Version,
 		},
 		"ui": map[string]interface{}{
-			"feature_gates": []string{"services=true"},
+			"feature_gates": features,
 			"hostPort":      3000,
 			"replicas":      1,
 			"serviceType":   "NodePort",
