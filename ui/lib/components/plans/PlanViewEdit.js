@@ -9,7 +9,7 @@ import PlanOption from './PlanOption'
  */
 export default class PlanViewEdit extends React.Component {
   static propTypes = {
-    resourceType: PropTypes.oneOf(['cluster', 'service', 'servicecredential']).isRequired,
+    resourceType: PropTypes.oneOf(['cluster', 'service', 'servicecredential', 'monitoring']).isRequired,
     mode: PropTypes.oneOf(['create','edit','view']).isRequired,
     manage: PropTypes.bool,
     team: PropTypes.object,

@@ -17,7 +17,7 @@ class UsePlanForm extends React.Component {
   static propTypes = {
     team: PropTypes.object.isRequired,
     cluster: PropTypes.object,
-    resourceType: PropTypes.oneOf(['cluster', 'service', 'servicecredential']).isRequired,
+    resourceType: PropTypes.oneOf(['cluster', 'service', 'servicecredential', 'monitoring']).isRequired,
     kind: PropTypes.string.isRequired,
     plan: PropTypes.string.isRequired,
     planValues: PropTypes.object,
@@ -79,6 +79,12 @@ class UsePlanForm extends React.Component {
       case 'servicecredential':
         planDetails = await (await KoreApi.client()).GetServicePlanDetails(this.props.plan, this.props.team.metadata.name, this.props.cluster.metadata.name)
         schema = planDetails.credentialSchema
+        editableParams = ['*']
+        planValues = {}
+        break
+      case 'monitoring':
+        planDetails = await (await KoreApi.client()).GetServicePlan(this.props.plan)
+        schema = planDetails.metadata.annotations['helm.values.schema']
         editableParams = ['*']
         planValues = {}
         break
