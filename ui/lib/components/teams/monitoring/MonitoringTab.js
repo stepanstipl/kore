@@ -11,20 +11,26 @@ export default class MonitoringTab extends React.Component {
     getOverviewStatus: PropTypes.func
   }
 
+  static REFRESH_MS = 30000
+
   state = {
     dataLoading: true,
   }
 
   async fetchComponentData() {
-    const api = await KoreApi.client()
-    const alerts = await api.monitoring.ListTeamAlerts(this.props.team.metadata.name)
-
+    const alerts = await (await KoreApi.client()).monitoring.ListTeamAlerts(this.props.team.metadata.name)
     return { alerts }
+  }
+
+  refreshData = async () => {
+    const data = await this.fetchComponentData()
+    this.setState({ ...data })
   }
 
   componentDidMount() {
     return this.fetchComponentData().then(data => {
       this.setState({ ...data, dataLoading: false })
+      this.interval = setInterval(this.refreshData, MonitoringTab.REFRESH_MS)
     })
   }
 
@@ -35,13 +41,17 @@ export default class MonitoringTab extends React.Component {
     }
   }
 
+  componentWillUnmount() {
+    clearInterval(this.interval)
+  }
+
   render() {
     if (this.state.dataLoading) {
       return <Icon type="loading" />
     }
 
     return (
-      <MonitoringOverview alerts={this.state.alerts} />
+      <MonitoringOverview alerts={this.state.alerts} refreshData={this.refreshData} />
     )
   }
 }

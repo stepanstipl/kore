@@ -1,45 +1,19 @@
 import React from 'react'
-import { Card, Col, Divider, Icon, Row } from 'antd'
+import PropTypes from 'prop-types'
+import { Card, Col, Divider, Row } from 'antd'
 
 import MonitoringStatistic from './MonitoringStatistic'
 import MonitoringTable from './MonitoringTable'
-import KoreApi from '../../kore-api'
 
 export default class MonitoringOverview extends React.Component {
 
-  static REFRESH_MS = 30000
-
-  state = {
-    dataLoading: true
-  }
-
-  async fetchComponentData() {
-    const alerts = await (await KoreApi.client()).monitoring.ListLatestAlerts()
-    return { alerts }
-  }
-
-  refreshData = async () => {
-    const data = await this.fetchComponentData()
-    this.setState({ ...data })
-  }
-
-  componentDidMount() {
-    this.fetchComponentData().then(data => {
-      this.setState({ ...data, dataLoading: false })
-      this.interval = setInterval(this.refreshData, MonitoringOverview.REFRESH_MS)
-    })
-  }
-
-  componentWillUnmount() {
-    clearInterval(this.interval)
+  static propTypes = {
+    alerts: PropTypes.array.isRequired,
+    refreshData: PropTypes.func
   }
 
   render() {
-    const { alerts, dataLoading } = this.state
-
-    if (dataLoading) {
-      return <Icon type="loading" />
-    }
+    const { alerts, refreshData } = this.props
 
     return (
       <>
@@ -86,7 +60,7 @@ export default class MonitoringOverview extends React.Component {
             alerts={alerts}
             severity={['Critical', 'Warning']}
             status={['Active', 'Silenced']}
-            refreshData={this.refreshData}
+            refreshData={refreshData}
           />
         </Card>
         <Divider />
