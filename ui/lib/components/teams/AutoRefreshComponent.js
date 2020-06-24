@@ -81,6 +81,9 @@ class AutoRefreshComponent extends React.Component {
     if (this.getStableState() && !this.props.stableRefreshMs) {
       return
     }
+    if (this.interval) {
+      clearInterval(this.interval)
+    }
     this.interval = setInterval(this.refreshResource, this.getStableState() ? this.props.stableRefreshMs : this.props.refreshMs)
   }
 
