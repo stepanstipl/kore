@@ -15,34 +15,34 @@ export default class MonitoringSummary extends React.Component {
     'prometheus',
     'service',
     'severity',
+    'rule_group'
   ]
 
-  filterOnLabels = (labels) => {
-    var list = {}
-
-    if (!labels) {
+  filterOnLabels = () => {
+    if (!this.props.record) {
       return {}
     }
 
-    for (const [key, value] of Object.entries(labels.spec.labels)) {
-      if (MonitoringSummary.filtered.includes(key)) {
-        continue
-      }
-      list[key] = value
-    }
+    const labels = this.props.record.spec.labels
+    const processedLabels = {}
 
-    return list
+    Object.keys(labels)
+      .filter(labelKey => !MonitoringSummary.filtered.includes(labelKey))
+      .forEach(labelKey => processedLabels[labelKey] = labels[labelKey])
+
+    return processedLabels
   }
 
   render() {
-    const labels = this.filterOnLabels(this.props.record)
+    const { record } = this.props
+    const labels = this.filterOnLabels()
 
     return (
       <div>
-        {this.props.record.spec.summary}<br/>
-        <Tag color="green">team={this.props.record.metadata.namespace}</Tag>
-        <Tag color="green">kind={this.props.record.status.rule.spec.resource.kind}</Tag>
-        <Tag color="green">name={this.props.record.status.rule.spec.resource.name}</Tag>
+        {record.spec.summary}<br/>
+        <Tag color="green">team={record.metadata.namespace}</Tag>
+        <Tag color="green">kind={record.status.rule.spec.resource.kind}</Tag>
+        <Tag color="green">name={record.status.rule.spec.resource.name}</Tag>
         {Object.keys(labels).map(key => <Tag key={key} color="green">{key}={labels[key]}</Tag>)}
       </div>
     )

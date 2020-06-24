@@ -11,30 +11,19 @@ export default class MonitoringStatistic extends React.Component {
     status: PropTypes.string.isRequired,
   }
 
-  filterByStatus = (alerts) => {
-    let count = 0
-
-    if (!alerts) {
+  filterByStatus = () => {
+    if (!this.props.alerts) {
       return 0
     }
 
-    alerts.items.forEach(resource => {
-      if (this.props.severity) {
-        if (this.props.severity !== resource.status.rule.spec.severity) {
-          return
-        }
-      }
-      if (resource.status.status === this.props.status) {
-        count++
-      }
-    })
-
-    return count
+    const filtered = this.props.alerts.items
+      .filter(alert => (!this.props.severity || alert.status.rule.spec.severity === this.props.severity) && alert.status.status === this.props.status)
+    return filtered.length
   }
 
   render() {
-    const { alerts, color, description } = this.props
-    const count = this.filterByStatus(alerts)
+    const { color, description } = this.props
+    const count = this.filterByStatus()
 
     return (
       <Card>

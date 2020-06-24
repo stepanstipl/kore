@@ -1,5 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
+import moment from 'moment'
 import PropTypes from 'prop-types'
 import { Form, Icon, Input, Modal, Table, Tag, Tooltip } from 'antd'
 
@@ -48,6 +49,7 @@ export default class MonitoringTable extends React.Component {
       title: 'Triggered',
       dataIndex: 'metadata.creationTimestamp',
       key: 'triggered',
+      render: (text) => moment(text).format('DD/MM/YYYY HH:mm:ss')
     },
     {
       title: 'Rule Name',

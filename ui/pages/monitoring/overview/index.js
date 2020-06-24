@@ -5,7 +5,7 @@ import Breadcrumb from '../../../lib/components/layout/Breadcrumb'
 import MonitoringOverview from '../../../lib/components/monitoring/MonitoringOverview'
 import KoreApi from '../../../lib/kore-api'
 
-export default class MonitoringPage extends React.Component {
+export default class MonitoringOverviewPage extends React.Component {
 
   static staticProps = {
     title: 'Monitoring Overview',
@@ -31,7 +31,7 @@ export default class MonitoringPage extends React.Component {
   componentDidMount() {
     this.fetchComponentData().then(data => {
       this.setState({ ...data, dataLoading: false })
-      this.interval = setInterval(this.refreshData, MonitoringPage.REFRESH_MS)
+      this.interval = setInterval(this.refreshData, MonitoringOverviewPage.REFRESH_MS)
     })
   }
 

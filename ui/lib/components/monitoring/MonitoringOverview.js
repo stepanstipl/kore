@@ -8,7 +8,7 @@ import MonitoringTable from './MonitoringTable'
 export default class MonitoringOverview extends React.Component {
 
   static propTypes = {
-    alerts: PropTypes.array.isRequired,
+    alerts: PropTypes.object.isRequired,
     refreshData: PropTypes.func
   }
 

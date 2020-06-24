@@ -39,7 +39,7 @@ export default class ConfigureMonitoringPage extends React.Component {
 
   state = {
     service: this.props.service,
-    serviceConfig: this.props.service && JsYaml.safeLoad(this.props.service.spec.configuration.values),
+    serviceConfig: (this.props.service && this.props.service.spec.configuration.values) ? JsYaml.safeLoad(this.props.service.spec.configuration.values) : {},
     submitting: false,
     validationErrors: [],
     formErrorMessage: false
@@ -115,10 +115,11 @@ export default class ConfigureMonitoringPage extends React.Component {
       namespace: publicRuntimeConfig.koreAdminTeamName
     }))
     serviceSpec.setClusterNamespace(ConfigureMonitoringPage.KORE_CLUSTER_NAMESPACE)
-    serviceSpec.setConfiguration({
-      ...this.props.servicePlan.spec.configuration,
-      values: JsYaml.safeDump(this.state.serviceConfig)
-    })
+    const config = { ...this.props.servicePlan.spec.configuration }
+    if (Object.keys(this.state.serviceConfig).length > 0) {
+      config.values = JsYaml.safeDump(this.state.serviceConfig)
+    }
+    serviceSpec.setConfiguration(config)
     serviceResource.setSpec(serviceSpec)
 
     return serviceResource

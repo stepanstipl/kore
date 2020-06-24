@@ -65,12 +65,10 @@ export default class MonitoringRulesTable extends React.Component {
     const { rules } = this.props
 
     return (
-      <>
-        <Table
-          dataSource={rules.items}
-          columns={MonitoringRulesTable.columns}
-        />
-      </>
+      <Table
+        dataSource={rules.items}
+        columns={MonitoringRulesTable.columns}
+      />
     )
   }
 }
