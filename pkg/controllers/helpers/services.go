@@ -35,7 +35,7 @@ import (
 )
 
 // GetServiceFromPlanNameAndValues will obtain a service
-func GetServiceFromPlanNameAndValues(ctx kore.Context, planName string, kubeCluster *clustersv1.Kubernetes, clusterNamespace string, values map[string]interface{}) (*servicesv1.Service, error) {
+func GetServiceFromPlanNameAndValues(ctx kore.Context, planName, serviceName string, kubeCluster *clustersv1.Kubernetes, clusterNamespace string, values map[string]interface{}) (*servicesv1.Service, error) {
 	servicePlan, err := ctx.Kore().ServicePlans().Get(ctx, planName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get service plan %q: %w", planName, err)
@@ -58,7 +58,7 @@ func GetServiceFromPlanNameAndValues(ctx kore.Context, planName string, kubeClus
 			APIVersion: servicesv1.GroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      planName,
+			Name:      serviceName,
 			Namespace: kubeCluster.Namespace,
 			Annotations: map[string]string{
 				kore.AnnotationSystem: "true",

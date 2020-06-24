@@ -228,6 +228,7 @@ func (a *awsAutoScaler) Ensure() (reconcile.Result, error) {
 	awsAutoScalerService, err := helpers.GetServiceFromPlanNameAndValues(
 		a.ctx,
 		application.HelmAppClusterAutoscaler,
+		a.eks.Name+"-autoscaler",
 		a.kubeCluster,
 		"kube-system",
 		map[string]interface{}{
