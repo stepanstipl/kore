@@ -16,6 +16,42 @@
 
 package kubernetes
 
+import (
+	"fmt"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+)
+
+// Object is a Kubernetes object
+type Object interface {
+	runtime.Object
+	metav1.Object
+}
+
+// DependentReference is an object reference to a dependent object in the same namespace
+type DependentReference struct {
+	// API version of the dependent
+	APIVersion string `json:"apiVersion"`
+	// Kind of the dependent
+	Kind string `json:"kind"`
+	// Name of the dependent
+	Name string `json:"name"`
+}
+
+func (d DependentReference) String() string {
+	return fmt.Sprintf("%s/%s/%s", d.APIVersion, d.Kind, d.Name)
+}
+
+// DependentReferenceFromObject creates a DependentReference from the given object
+func DependentReferenceFromObject(o Object) DependentReference {
+	return DependentReference{
+		APIVersion: o.GetObjectKind().GroupVersionKind().GroupVersion().String(),
+		Kind:       o.GetObjectKind().GroupVersionKind().Kind,
+		Name:       o.GetName(),
+	}
+}
+
 // KubernetesAPI is the configuration for the kubernetes api
 type KubernetesAPI struct {
 	// InCluster indicates we are running in cluster

@@ -268,13 +268,22 @@ func (a *apiClient) HandleResponse(resp *http.Response) error {
 
 func (a *apiClient) decodeError(resp *http.Response, apiError *apiserver.Error) {
 	if resp.Body != nil {
-		if resp.StatusCode == http.StatusBadRequest {
+		switch resp.StatusCode {
+		case http.StatusBadRequest:
 			vError := &validation.Error{}
 			if err := a.MakeResult(resp, vError); err != nil {
 				log.WithError(err).Debug("response can not be decoded into a validation error")
 				return
 			}
 			apiError.Message = vError.Error()
+			return
+		case http.StatusConflict:
+			err := &validation.ErrDependencyViolation{}
+			if err := a.MakeResult(resp, err); err != nil {
+				log.WithError(err).Debug("response can not be decoded into a dependency validation error")
+				return
+			}
+			apiError.Message = err.Error()
 			return
 		}
 

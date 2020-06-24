@@ -24,10 +24,12 @@ import (
 	"reflect"
 	"strings"
 
+	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	"github.com/appvia/kore/pkg/kore/assets"
-	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/jsonschema"
@@ -44,12 +46,15 @@ const (
 
 // Clusters returns the an interface for handling clusters
 type Clusters interface {
+	// CheckDelete verifies whether the cluster can be deleted
+	CheckDelete(context.Context, *clustersv1.Cluster, ...DeleteOptionFunc) error
 	// Delete is used to delete a cluster
-	Delete(context.Context, string) (*clustersv1.Cluster, error)
+	Delete(context.Context, string, ...DeleteOptionFunc) (*clustersv1.Cluster, error)
 	// Get returns a specific cluster
 	Get(context.Context, string) (*clustersv1.Cluster, error)
 	// List returns a list of clusters we have access to
-	List(context.Context) (*clustersv1.ClusterList, error)
+	// The optional filter functions can be used to include items only for which all functions return true
+	List(context.Context, ...func(clustersv1.Cluster) bool) (*clustersv1.ClusterList, error)
 	// Update is used to update the cluster
 	Update(context.Context, *clustersv1.Cluster) error
 }
@@ -60,19 +65,48 @@ type clustersImpl struct {
 	team string
 }
 
-// Delete is used to delete a cluster
-func (c *clustersImpl) Delete(ctx context.Context, name string) (*clustersv1.Cluster, error) {
-	// @TODO check whether the user is an admin in the team
+// CheckDelete verifies whether the cluster can be deleted
+func (c *clustersImpl) CheckDelete(ctx context.Context, cluster *clustersv1.Cluster, o ...DeleteOptionFunc) error {
+	opts := ResolveDeleteOptions(o)
 
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsMember(c.team) && !user.IsGlobalAdmin() {
-		return nil, NewErrNotAllowed("must be global admin or a team member")
+	if !opts.Cascade {
+		var dependents []kubernetes.DependentReference
+		services, err := c.Teams().Team(c.team).Services().List(ctx, func(s servicesv1.Service) bool { return kubernetes.HasOwnerReference(&s, cluster) })
+		if err != nil {
+			return fmt.Errorf("failed to list services: %w", err)
+		}
+		for _, item := range services.Items {
+			dependents = append(dependents, kubernetes.DependentReferenceFromObject(&item))
+		}
+
+		namespaceClaims, err := c.Teams().Team(c.team).NamespaceClaims().List(ctx, func(nc clustersv1.NamespaceClaim) bool { return kubernetes.HasOwnerReference(&nc, cluster) })
+		if err != nil {
+			return fmt.Errorf("failed to list namespace claims: %w", err)
+		}
+		for _, item := range namespaceClaims.Items {
+			dependents = append(dependents, kubernetes.DependentReferenceFromObject(&item))
+		}
+
+		if len(dependents) > 0 {
+			return validation.ErrDependencyViolation{
+				Message:    "the following objects need to be deleted first",
+				Dependents: dependents,
+			}
+		}
 	}
+
+	return nil
+}
+
+// Delete is used to delete a cluster
+func (c *clustersImpl) Delete(ctx context.Context, name string, o ...DeleteOptionFunc) (*clustersv1.Cluster, error) {
+	opts := ResolveDeleteOptions(o)
+
+	// @TODO check whether the user is an admin in the team
 
 	logger := log.WithFields(log.Fields{
 		"cluster": name,
 		"team":    c.team,
-		"user":    user.Username(),
 	})
 	logger.Info("attempting to delete the cluster")
 
@@ -87,35 +121,49 @@ func (c *clustersImpl) Delete(ctx context.Context, name string) (*clustersv1.Clu
 		return nil, err
 	}
 
-	if original.Annotations[AnnotationReadOnly] == AnnotationValueTrue {
-		return nil, validation.NewError("the cluster can not be deleted").WithFieldError(validation.FieldRoot, validation.ReadOnly, "cluster is read-only")
+	if err := opts.Check(original, func(o ...DeleteOptionFunc) error { return c.CheckDelete(ctx, original, o...) }); err != nil {
+		return nil, err
 	}
 
-	return original, c.Store().Client().Delete(ctx, store.DeleteOptions.From(original))
+	return original, c.Store().Client().Delete(ctx, append(opts.StoreOptions(), store.DeleteOptions.From(original))...)
 }
 
 // List returns a list of clusters we have access to
-func (c *clustersImpl) List(ctx context.Context) (*clustersv1.ClusterList, error) {
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsMember(c.team) && !user.IsGlobalAdmin() {
-		return nil, NewErrNotAllowed("must be global admin or a team member")
-	}
-
+func (c *clustersImpl) List(ctx context.Context, filters ...func(clustersv1.Cluster) bool) (*clustersv1.ClusterList, error) {
 	list := &clustersv1.ClusterList{}
 
-	return list, c.Store().Client().List(ctx,
+	err := c.Store().Client().List(ctx,
 		store.ListOptions.InNamespace(c.team),
 		store.ListOptions.InTo(list),
 	)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(filters) == 0 {
+		return list, nil
+	}
+
+	res := []clustersv1.Cluster{}
+	for _, item := range list.Items {
+		if func() bool {
+			for _, filter := range filters {
+				if !filter(item) {
+					return false
+				}
+			}
+			return true
+		}() {
+			res = append(res, item)
+		}
+	}
+	list.Items = res
+
+	return list, nil
 }
 
 // Get returns a specific cluster
 func (c *clustersImpl) Get(ctx context.Context, name string) (*clustersv1.Cluster, error) {
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsMember(c.team) && !user.IsGlobalAdmin() {
-		return nil, NewErrNotAllowed("must be global admin or a team member")
-	}
-
 	cluster := &clustersv1.Cluster{}
 
 	if err := c.Store().Client().Get(ctx,
@@ -136,11 +184,6 @@ func (c *clustersImpl) Get(ctx context.Context, name string) (*clustersv1.Cluste
 
 // Update is used to update the cluster
 func (c *clustersImpl) Update(ctx context.Context, cluster *clustersv1.Cluster) error {
-	user := authentication.MustGetIdentity(ctx)
-	if !user.IsMember(c.team) && !user.IsGlobalAdmin() {
-		return NewErrNotAllowed("must be global admin or a team member")
-	}
-
 	existing, err := c.Get(ctx, cluster.Name)
 	if err != nil && err != ErrNotFound {
 		return err

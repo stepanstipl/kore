@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import moment from 'moment'
 import Link from 'next/link'
-import { Button, Col, Divider, Icon, Row, Tag, Tooltip, Typography } from 'antd'
+import { Button, Col, Divider, Icon, Row, Tag, Tooltip, Typography, Modal, List } from 'antd'
 const { Paragraph, Text } = Typography
 import { get } from 'lodash'
 
@@ -89,7 +89,22 @@ class ClustersTab extends React.Component {
       this.setState({ clusters }, done)
       loadingMessage(`Cluster deletion requested: ${cluster.metadata.name}`)
     } catch (err) {
-      console.error('Error deleting cluster', err)
+      if (err.statusCode === 409 && err.dependents) {
+        return Modal.warning({
+          title: 'The cluster can not be deleted',
+          content: (
+            <div>
+              <Paragraph strong>Error: {err.message}</Paragraph>
+              <List
+                size="small"
+                dataSource={err.dependents}
+                renderItem={d => <List.Item>{d.kind}: {d.name}</List.Item>}
+              />
+            </div>
+          ),
+          onOk() {}
+        })
+      }
       errorMessage('Error deleting cluster, please try again.')
     }
   }

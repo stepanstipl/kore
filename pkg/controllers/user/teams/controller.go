@@ -34,6 +34,7 @@ import (
 )
 
 type teamController struct {
+	kore.Interface
 	// mgr is the controller manager
 	mgr manager.Manager
 	// stopCh is the stop channel
@@ -52,7 +53,9 @@ func (t *teamController) Name() string {
 }
 
 // Run starts the controller
-func (t *teamController) Run(ctx context.Context, cfg *rest.Config, _ kore.Interface) error {
+func (t *teamController) Run(ctx context.Context, cfg *rest.Config, hi kore.Interface) error {
+	t.Interface = hi
+
 	logger := log.WithFields(log.Fields{
 		"controller": t.Name(),
 	})

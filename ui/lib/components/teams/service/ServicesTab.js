@@ -116,31 +116,25 @@ class ServicesTab extends React.Component {
       this.setState({ services }, done)
       loadingMessage(`Service deletion requested: ${service.metadata.name}`)
     } catch (err) {
+      if (err.statusCode === 409 && err.dependents) {
+        return Modal.warning({
+          title: 'The service can not be deleted',
+          content: (
+            <div>
+              <Paragraph strong>Error: {err.message}</Paragraph>
+              <List
+                size="small"
+                dataSource={err.dependents}
+                renderItem={d => <List.Item>{d.kind}: {d.name}</List.Item>}
+              />
+            </div>
+          ),
+          onOk() {}
+        })
+      }
       console.error('Error deleting service', err)
       errorMessage('Error deleting service, please try again.')
     }
-  }
-
-  deleteServiceConfirm = async (name, done) => {
-    const serviceCredentials = this.state.serviceCredentials.filter(sc => sc.spec.service.name === name)
-    if (serviceCredentials.length > 0) {
-      return Modal.warning({
-        title: 'Warning: service cannot be deleted',
-        width: 600,
-        content: (
-          <div>
-            <Paragraph strong>The following cluster namespaces currently have access to the service, this access must be removed before the service can be deleted.</Paragraph>
-            <List
-              size="small"
-              dataSource={serviceCredentials}
-              renderItem={sc => <List.Item>{sc.spec.cluster.name} / {sc.spec.clusterNamespace}</List.Item>}
-            />
-          </div>
-        ),
-        onOk() {}
-      })
-    }
-    await this.deleteService(name, done)
   }
 
   handleResourceUpdated = (resourceType) => {
@@ -212,7 +206,7 @@ class ServicesTab extends React.Component {
                     cluster={cluster}
                     service={service}
                     serviceKind={serviceKinds.find(sk => sk.metadata.name === service.spec.kind)}
-                    deleteService={this.deleteServiceConfirm}
+                    deleteService={this.deleteService}
                     handleUpdate={this.handleResourceUpdated('services')}
                     handleDelete={this.handleResourceDeleted('services')}
                     refreshMs={5000}

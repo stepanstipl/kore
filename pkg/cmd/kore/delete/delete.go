@@ -40,6 +40,8 @@ type DeleteOptions struct {
 	Resource string
 	// Team string
 	Team string
+	// Cascade if true, cascade the deletion of the resources managed by this resource
+	Cascade bool
 }
 
 // NewCmdDelete creates and returns the delete command
@@ -74,6 +76,7 @@ func NewCmdDelete(factory cmdutil.Factory) *cobra.Command {
 	}
 
 	command.Flags().StringSliceVarP(&o.Paths, "file", "f", []string{}, "path to file containing resource definition/s ('-' for stdin) `PATH`")
+	command.Flags().BoolVar(&o.Cascade, "cascade", false, "if true, cascade the deletion of the resources managed by this resource")
 
 	command.AddCommand(
 		NewCmdDeleteAdmin(factory),
@@ -97,6 +100,10 @@ func (o *DeleteOptions) Run() error {
 	request := o.ClientWithResource(resource).Name(o.Name)
 	if resource.IsTeamScoped() {
 		request.Team(o.Team)
+	}
+
+	if o.Cascade {
+		request.Parameters(client.QueryParameter("cascade", "true"))
 	}
 
 	return o.WaitForDeletion(request, o.Name, o.NoWait)
@@ -166,6 +173,10 @@ func (o *DeleteOptions) DeleteByPath() error {
 			request := o.ClientWithResource(resource).Name(name)
 			if x.Resource.IsTeamScoped() {
 				request.Team(o.Team)
+			}
+
+			if o.Cascade {
+				request.Parameters(client.QueryParameter("cascade", "true"))
 			}
 
 			endpoint := fmt.Sprintf("%s/%s", groupversion, name)

@@ -34,7 +34,7 @@ import (
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . ServiceCredentials
 type ServiceCredentials interface {
 	// Delete is used to delete service credentials
-	Delete(context.Context, string) (*servicesv1.ServiceCredentials, error)
+	Delete(context.Context, string, ...DeleteOptionFunc) (*servicesv1.ServiceCredentials, error)
 	// Get returns a specific service credentials
 	Get(context.Context, string) (*servicesv1.ServiceCredentials, error)
 	// List returns a list of service credentials.
@@ -51,7 +51,9 @@ type serviceCredentialsImpl struct {
 }
 
 // Delete is used to delete service credentials
-func (s *serviceCredentialsImpl) Delete(ctx context.Context, name string) (*servicesv1.ServiceCredentials, error) {
+func (s *serviceCredentialsImpl) Delete(ctx context.Context, name string, o ...DeleteOptionFunc) (*servicesv1.ServiceCredentials, error) {
+	opts := ResolveDeleteOptions(o)
+
 	logger := log.WithFields(log.Fields{
 		"serviceCredentials": name,
 		"team":               s.team,
@@ -69,7 +71,7 @@ func (s *serviceCredentialsImpl) Delete(ctx context.Context, name string) (*serv
 		return nil, err
 	}
 
-	return original, s.Store().Client().Delete(ctx, store.DeleteOptions.From(original))
+	return original, s.Store().Client().Delete(ctx, append(opts.StoreOptions(), store.DeleteOptions.From(original))...)
 }
 
 // List returns a list of service credentials we have access to
@@ -89,16 +91,16 @@ func (s *serviceCredentialsImpl) List(ctx context.Context, filters ...func(crede
 	}
 
 	res := []servicesv1.ServiceCredentials{}
-	for _, sc := range list.Items {
+	for _, item := range list.Items {
 		if func() bool {
 			for _, filter := range filters {
-				if !filter(sc) {
+				if !filter(item) {
 					return false
 				}
 			}
 			return true
 		}() {
-			res = append(res, sc)
+			res = append(res, item)
 		}
 	}
 	list.Items = res
@@ -185,10 +187,11 @@ func (s *serviceCredentialsImpl) Update(ctx context.Context, serviceCreds *servi
 		)
 	}
 
-	secretNameContenders, err := s.List(ctx, func(o servicesv1.ServiceCredentials) bool {
-		return o.Spec.Cluster.Equals(serviceCreds.Spec.Cluster) &&
-			o.Spec.ClusterNamespace == serviceCreds.Spec.ClusterNamespace &&
-			o.Spec.SecretName == serviceCreds.Spec.SecretName
+	secretNameContenders, err := s.List(ctx, func(sc servicesv1.ServiceCredentials) bool {
+		return sc.Name != serviceCreds.Name &&
+			sc.Spec.Cluster.Equals(serviceCreds.Spec.Cluster) &&
+			sc.Spec.ClusterNamespace == serviceCreds.Spec.ClusterNamespace &&
+			sc.Spec.SecretName == serviceCreds.Spec.SecretName
 	})
 	if err != nil {
 		return err
@@ -200,6 +203,12 @@ func (s *serviceCredentialsImpl) Update(ctx context.Context, serviceCreds *servi
 	}
 
 	if err := s.validateConfiguration(ctx, service, serviceCreds, existing); err != nil {
+		return err
+	}
+
+	if err := s.Teams().Team(serviceCreds.Spec.Cluster.Namespace).NamespaceClaims().CreateForCluster(
+		ctx, serviceCreds.Spec.Cluster, serviceCreds.Spec.ClusterNamespace,
+	); err != nil {
 		return err
 	}
 
@@ -293,12 +302,12 @@ func (s *serviceCredentialsImpl) validateCluster(ctx context.Context, service *s
 		)
 	}
 
-	if !serviceCreds.Spec.Cluster.HasGroupVersionKind(clustersv1.ClusterGroupVersionKind) {
+	if !serviceCreds.Spec.Cluster.HasGroupVersionKind(clustersv1.ClusterGVK) {
 		return validation.NewError("%q failed validation", serviceCreds.Name).WithFieldErrorf(
 			"cluster",
 			validation.InvalidValue,
 			"must have type of %s",
-			clustersv1.ClusterGroupVersionKind,
+			clustersv1.ClusterGVK,
 		)
 	}
 

@@ -19,7 +19,8 @@ package kore
 import (
 	"context"
 	"fmt"
-	"strings"
+
+	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	"k8s.io/apimachinery/pkg/api/equality"
 
@@ -34,11 +35,14 @@ import (
 // ServiceKinds is the interface to manage service kinds
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . ServiceKinds
 type ServiceKinds interface {
+	// CheckDelete verifies whether the service kind can be deleted
+	CheckDelete(context.Context, *servicesv1.ServiceKind, ...DeleteOptionFunc) error
 	// Delete is used to delete a service kind in the kore
-	Delete(context.Context, string) (*servicesv1.ServiceKind, error)
+	Delete(context.Context, string, ...DeleteOptionFunc) (*servicesv1.ServiceKind, error)
 	// Get returns the service kind
 	Get(context.Context, string) (*servicesv1.ServiceKind, error)
 	// List returns the existing service kinds
+	// The optional filter functions can be used to include items only for which all functions return true
 	List(context.Context, ...func(servicesv1.ServiceKind) bool) (*servicesv1.ServiceKindList, error)
 	// Has checks if a service kind exists
 	Has(context.Context, string) (bool, error)
@@ -91,8 +95,45 @@ func (p serviceKindsImpl) Update(ctx context.Context, kind *servicesv1.ServiceKi
 	return nil
 }
 
+// CheckDelete verifies whether the service kind can be deleted
+func (p serviceKindsImpl) CheckDelete(ctx context.Context, serviceKind *servicesv1.ServiceKind, o ...DeleteOptionFunc) error {
+	opts := ResolveDeleteOptions(o)
+
+	if !opts.Cascade {
+		var dependents []kubernetes.DependentReference
+
+		teamList, err := p.Teams().List(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to list teams: %w", err)
+		}
+
+		for _, team := range teamList.Items {
+			services, err := p.Teams().Team(team.Name).Services().List(ctx, func(s servicesv1.Service) bool {
+				return s.Spec.Kind == serviceKind.Name
+			})
+			if err != nil {
+				return fmt.Errorf("failed to list services: %w", err)
+			}
+			for _, item := range services.Items {
+				dependents = append(dependents, kubernetes.DependentReferenceFromObject(&item))
+			}
+		}
+
+		if len(dependents) > 0 {
+			return validation.ErrDependencyViolation{
+				Message:    "the following objects need to be deleted first",
+				Dependents: dependents,
+			}
+		}
+	}
+
+	return nil
+}
+
 // Delete is used to delete a service kind in the kore
-func (p serviceKindsImpl) Delete(ctx context.Context, name string) (*servicesv1.ServiceKind, error) {
+func (p serviceKindsImpl) Delete(ctx context.Context, name string, o ...DeleteOptionFunc) (*servicesv1.ServiceKind, error) {
+	opts := ResolveDeleteOptions(o)
+
 	kind := &servicesv1.ServiceKind{}
 	err := p.Store().Client().Get(ctx,
 		store.GetOptions.InNamespace(HubNamespace),
@@ -108,25 +149,11 @@ func (p serviceKindsImpl) Delete(ctx context.Context, name string) (*servicesv1.
 		return nil, err
 	}
 
-	servicesWithKind, err := p.getServicesWithKind(ctx, name)
-	if err != nil {
+	if err := opts.Check(kind, func(o ...DeleteOptionFunc) error { return p.CheckDelete(ctx, kind, o...) }); err != nil {
 		return nil, err
 	}
-	if len(servicesWithKind) > 0 {
-		if len(servicesWithKind) <= 5 {
-			return nil, fmt.Errorf(
-				"the service kind can not be deleted as there are %d services using it: %s",
-				len(servicesWithKind),
-				strings.Join(servicesWithKind, ", "),
-			)
-		}
-		return nil, fmt.Errorf(
-			"the service kind can not be deleted as there are %d services using it",
-			len(servicesWithKind),
-		)
-	}
 
-	if err := p.Store().Client().Delete(ctx, store.DeleteOptions.From(kind)); err != nil {
+	if err := p.Store().Client().Delete(ctx, append(opts.StoreOptions(), store.DeleteOptions.From(kind))...); err != nil {
 		log.WithError(err).Error("failed to delete the service kind")
 
 		return nil, err
@@ -193,27 +220,4 @@ func (p serviceKindsImpl) Has(ctx context.Context, name string) (bool, error) {
 		store.HasOptions.From(&servicesv1.ServiceKind{}),
 		store.HasOptions.WithName(name),
 	)
-}
-
-func (p serviceKindsImpl) getServicesWithKind(ctx context.Context, kind string) ([]string, error) {
-	var res []string
-
-	teamList, err := p.Teams().List(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, team := range teamList.Items {
-		servicesList, err := p.Teams().Team(team.Name).Services().List(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, service := range servicesList.Items {
-			if service.Spec.Kind == kind {
-				res = append(res, fmt.Sprintf("%s/%s", team.Name, service.Name))
-			}
-		}
-	}
-
-	return res, nil
 }

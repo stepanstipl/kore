@@ -18,6 +18,9 @@ package namespaceclaims
 
 import (
 	"context"
+	"time"
+
+	"github.com/appvia/kore/pkg/utils/validation"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -76,6 +79,19 @@ func (a *nsCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 		}
 		if !found {
 			return reconcile.Result{}, nil
+		}
+
+		if err := a.Teams().Team(resource.Namespace).NamespaceClaims().CheckDelete(context.Background(), resource); err != nil {
+			resource.Status.Conditions = []corev1.Condition{{
+				Detail:  err.Error(),
+				Message: "Failed to delete namespaceclaim",
+			}}
+			if _, ok := err.(validation.ErrDependencyViolation); ok {
+				return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+			}
+
+			resource.Status.Status = corev1.ErrorStatus
+			return reconcile.Result{}, err
 		}
 
 		// @step: create a client from the cluster secret

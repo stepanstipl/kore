@@ -22,11 +22,12 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/appvia/kore/pkg/utils/kubernetes"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 
 	"github.com/appvia/kore/pkg/utils/configuration"
 
-	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils"
@@ -40,14 +41,15 @@ import (
 // Services returns the an interface for handling services
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Services
 type Services interface {
+	// CheckDelete verifies whether the service can be deleted
+	CheckDelete(ctx context.Context, service *servicesv1.Service, o ...DeleteOptionFunc) error
 	// Delete is used to delete a service
-	Delete(context.Context, string) (*servicesv1.Service, error)
+	Delete(context.Context, string, ...DeleteOptionFunc) (*servicesv1.Service, error)
 	// Get returns a specific service
 	Get(context.Context, string) (*servicesv1.Service, error)
 	// List returns a list of services
-	List(context.Context) (*servicesv1.ServiceList, error)
-	// ListFiltered returns a list of services using the given filter.
-	ListFiltered(context.Context, func(servicesv1.Service) bool) (*servicesv1.ServiceList, error)
+	// The optional filter functions can be used to include items only for which all functions return true
+	List(context.Context, ...func(servicesv1.Service) bool) (*servicesv1.ServiceList, error)
 	// Update is used to update a service
 	Update(context.Context, *servicesv1.Service) error
 }
@@ -58,8 +60,35 @@ type servicesImpl struct {
 	team string
 }
 
+// CheckDelete verifies whether the service can be deleted
+func (s *servicesImpl) CheckDelete(ctx context.Context, service *servicesv1.Service, o ...DeleteOptionFunc) error {
+	opts := ResolveDeleteOptions(o)
+
+	if !opts.Cascade {
+		var dependents []kubernetes.DependentReference
+		serviceCredentials, err := s.Teams().Team(s.team).ServiceCredentials().List(ctx, func(sc servicesv1.ServiceCredentials) bool { return kubernetes.HasOwnerReference(&sc, service) })
+		if err != nil {
+			return fmt.Errorf("failed to list service credentials: %w", err)
+		}
+		for _, item := range serviceCredentials.Items {
+			dependents = append(dependents, kubernetes.DependentReferenceFromObject(&item))
+		}
+
+		if len(dependents) > 0 {
+			return validation.ErrDependencyViolation{
+				Message:    "the following objects need to be deleted first",
+				Dependents: dependents,
+			}
+		}
+	}
+
+	return nil
+}
+
 // Delete is used to delete a service
-func (s *servicesImpl) Delete(ctx context.Context, name string) (*servicesv1.Service, error) {
+func (s *servicesImpl) Delete(ctx context.Context, name string, o ...DeleteOptionFunc) (*servicesv1.Service, error) {
+	opts := ResolveDeleteOptions(o)
+
 	logger := log.WithFields(log.Fields{
 		"service": name,
 		"team":    s.team,
@@ -77,51 +106,45 @@ func (s *servicesImpl) Delete(ctx context.Context, name string) (*servicesv1.Ser
 		return nil, err
 	}
 
-	creds, err := s.Teams().Team(s.team).ServiceCredentials().List(ctx, func(s servicesv1.ServiceCredentials) bool {
-		return s.Spec.Service.Equals(corev1.MustGetOwnershipFromObject(original))
-	})
-	if err != nil {
-		logger.WithError(err).Error("failed to retrieve the service credentials")
-
+	if err := opts.Check(original, func(o ...DeleteOptionFunc) error { return s.CheckDelete(ctx, original, o...) }); err != nil {
 		return nil, err
 	}
 
-	if creds != nil && len(creds.Items) > 0 {
-		return nil, fmt.Errorf("the service can not be deleted, please delete all service credentials first")
-	}
-
-	return original, s.Store().Client().Delete(ctx, store.DeleteOptions.From(original))
+	return original, s.Store().Client().Delete(ctx, append(opts.StoreOptions(), store.DeleteOptions.From(original))...)
 }
 
 // List returns a list of services we have access to
-func (s *servicesImpl) List(ctx context.Context) (*servicesv1.ServiceList, error) {
+func (s *servicesImpl) List(ctx context.Context, filters ...func(servicesv1.Service) bool) (*servicesv1.ServiceList, error) {
 	list := &servicesv1.ServiceList{}
 
-	return list, s.Store().Client().List(ctx,
+	err := s.Store().Client().List(ctx,
 		store.ListOptions.InNamespace(s.team),
 		store.ListOptions.InTo(list),
 	)
-}
-
-// ListFiltered returns a list of services using the given filter.
-// A service is included if the filter function returns true
-func (p servicesImpl) ListFiltered(ctx context.Context, filter func(plan servicesv1.Service) bool) (*servicesv1.ServiceList, error) {
-	res := []servicesv1.Service{}
-
-	servicesList, err := p.List(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, service := range servicesList.Items {
-		if filter(service) {
-			res = append(res, service)
-		}
+	if len(filters) == 0 {
+		return list, nil
 	}
 
-	servicesList.Items = res
+	res := []servicesv1.Service{}
+	for _, item := range list.Items {
+		if func() bool {
+			for _, filter := range filters {
+				if !filter(item) {
+					return false
+				}
+			}
+			return true
+		}() {
+			res = append(res, item)
+		}
+	}
+	list.Items = res
 
-	return servicesList, nil
+	return list, nil
 }
 
 // Get returns a specific service
@@ -168,7 +191,8 @@ func (s *servicesImpl) Update(ctx context.Context, service *servicesv1.Service) 
 		)
 	}
 
-	if err := s.validateCluster(ctx, service); err != nil {
+	_, err := s.validateCluster(ctx, service)
+	if err != nil {
 		return err
 	}
 
@@ -236,6 +260,14 @@ func (s *servicesImpl) Update(ctx context.Context, service *servicesv1.Service) 
 
 	if err := s.validateConfiguration(ctx, service, existing); err != nil {
 		return err
+	}
+
+	if service.Spec.ClusterNamespace != "" {
+		if err := s.Teams().Team(service.Spec.Cluster.Namespace).NamespaceClaims().CreateForCluster(
+			ctx, service.Spec.Cluster, service.Spec.ClusterNamespace,
+		); err != nil {
+			return err
+		}
 	}
 
 	return s.Store().Client().Update(ctx,
@@ -333,9 +365,9 @@ func (s *servicesImpl) validateConfiguration(ctx context.Context, service, exist
 	return nil
 }
 
-func (s *servicesImpl) validateCluster(ctx context.Context, service *servicesv1.Service) error {
+func (s *servicesImpl) validateCluster(ctx context.Context, service *servicesv1.Service) (*clustersv1.Cluster, error) {
 	if service.Spec.Cluster.Name == "" {
-		return validation.NewError("%q failed validation", service.Name).WithFieldError(
+		return nil, validation.NewError("%q failed validation", service.Name).WithFieldError(
 			"cluster.name",
 			validation.Required,
 			"must be set",
@@ -343,7 +375,7 @@ func (s *servicesImpl) validateCluster(ctx context.Context, service *servicesv1.
 	}
 
 	if service.Spec.Cluster.Namespace != service.Namespace {
-		return validation.NewError("%q failed validation", service.Name).WithFieldErrorf(
+		return nil, validation.NewError("%q failed validation", service.Name).WithFieldErrorf(
 			"cluster.namespace",
 			validation.InvalidValue,
 			"must be the same as the team name: %q",
@@ -351,25 +383,26 @@ func (s *servicesImpl) validateCluster(ctx context.Context, service *servicesv1.
 		)
 	}
 
-	if !service.Spec.Cluster.HasGroupVersionKind(clustersv1.ClusterGroupVersionKind) {
-		return validation.NewError("%q failed validation", service.Name).WithFieldErrorf(
+	if !service.Spec.Cluster.HasGroupVersionKind(clustersv1.ClusterGVK) {
+		return nil, validation.NewError("%q failed validation", service.Name).WithFieldErrorf(
 			"cluster",
 			validation.InvalidValue,
 			"must have type of %s",
-			clustersv1.ClusterGroupVersionKind,
+			clustersv1.ClusterGVK,
 		)
 	}
 
-	_, err := s.Teams().Team(s.team).Clusters().Get(ctx, service.Spec.Cluster.Name)
+	cluster, err := s.Teams().Team(s.team).Clusters().Get(ctx, service.Spec.Cluster.Name)
 	if err != nil {
 		if err == ErrNotFound {
-			return validation.NewError("%q failed validation", service.Name).WithFieldErrorf(
+			return nil, validation.NewError("%q failed validation", service.Name).WithFieldErrorf(
 				"cluster",
 				validation.MustExist,
 				"%q cluster does not exist",
 				service.Spec.Cluster.Name,
 			)
 		}
+		return nil, err
 	}
-	return nil
+	return cluster, nil
 }

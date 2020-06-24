@@ -21,6 +21,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/appvia/kore/pkg/apiserver/params"
+
 	"github.com/appvia/kore/pkg/kore/authentication"
 
 	"github.com/appvia/kore/pkg/apiserver/filters"
@@ -124,6 +126,7 @@ func (p *servicePlansHandler) Register(i kore.Interface, builder utils.PathBuild
 			Doc("Deletes a service plan").
 			Operation("DeleteServicePLan").
 			Param(ws.PathParameter("name", "The name of the service plan you wish to delete")).
+			Param(params.DeleteCascade()).
 			Returns(http.StatusNotFound, "the service plan with the given name doesn't exist", nil).
 			Returns(http.StatusOK, "Contains the service plan definition", servicesv1.ServicePlan{}),
 	)
@@ -173,7 +176,7 @@ func (p servicePlansHandler) listServicePlans(req *restful.Request, resp *restfu
 		user := authentication.MustGetIdentity(req.Request.Context())
 		kind := strings.ToLower(req.QueryParameter("kind"))
 
-		list, err := p.ServicePlans().ListFiltered(req.Request.Context(), func(plan servicesv1.ServicePlan) bool {
+		list, err := p.ServicePlans().List(req.Request.Context(), func(plan servicesv1.ServicePlan) bool {
 			if kind != "" && plan.Spec.Kind != kind {
 				return false
 			}
@@ -220,7 +223,7 @@ func (p servicePlansHandler) deleteServicePlan(req *restful.Request, resp *restf
 	handleErrors(req, resp, func() error {
 		name := req.PathParameter("name")
 
-		plan, err := p.ServicePlans().Delete(req.Request.Context(), name, false)
+		plan, err := p.ServicePlans().Delete(req.Request.Context(), name, parseDeleteOpts(req)...)
 		if err != nil {
 			return err
 		}

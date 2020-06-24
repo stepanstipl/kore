@@ -20,6 +20,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/appvia/kore/pkg/utils/validation"
+
 	"github.com/appvia/kore/pkg/kore"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -29,7 +31,6 @@ import (
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -50,15 +51,23 @@ func (c *Controller) delete(
 		return reconcile.Result{}, nil
 	}
 
-	original := serviceProvider.DeepCopyObject()
+	if !serviceProvider.Status.Status.OneOf(corev1.DeletingStatus, corev1.DeleteFailedStatus, corev1.ErrorStatus) {
+		serviceProvider.Status.Status = corev1.DeletingStatus
+		serviceProvider.Status.Message = ""
+		return reconcile.Result{Requeue: true}, nil
+	}
+
+	if err := c.ServiceProviders().CheckDelete(ctx, serviceProvider); err != nil {
+		if dv, ok := err.(validation.ErrDependencyViolation); ok {
+			serviceProvider.Status.Message = dv.Error()
+			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+		}
+		serviceProvider.Status.Status = corev1.ErrorStatus
+		serviceProvider.Status.Message = err.Error()
+		return reconcile.Result{}, err
+	}
 
 	result, err := func() (reconcile.Result, error) {
-		if !serviceProvider.Status.Status.OneOf(corev1.DeletingStatus, corev1.DeleteFailedStatus, corev1.ErrorStatus) {
-			serviceProvider.Status.Status = corev1.DeletingStatus
-			serviceProvider.Status.Message = ""
-			return reconcile.Result{Requeue: true}, nil
-		}
-
 		result, err := helpers.DeleteServices(
 			kore.NewContext(ctx, logger, c.mgr.GetClient(), c),
 			kore.HubAdminTeam,
@@ -88,27 +97,19 @@ func (c *Controller) delete(
 
 		if controllers.IsCriticalError(err) {
 			serviceProvider.Status.Status = corev1.DeleteFailedStatus
-		}
-	}
-
-	if err == nil && !result.Requeue && result.RequeueAfter == 0 {
-		serviceProvider.Status.Status = corev1.DeletedStatus
-		serviceProvider.Status.Message = ""
-		// We haven't finished yet as we have to remove the finalizer in the last loop
-		result.Requeue = true
-	}
-
-	if err := c.mgr.GetClient().Status().Patch(ctx, serviceProvider, client.MergeFrom(original)); err != nil {
-		logger.WithError(err).Error("failed to update the service provider status")
-		return reconcile.Result{}, err
-	}
-
-	if err != nil {
-		if controllers.IsCriticalError(err) {
 			return reconcile.Result{}, nil
 		}
+
 		return reconcile.Result{}, err
 	}
 
-	return result, nil
+	if result.Requeue || result.RequeueAfter > 0 {
+		return result, nil
+	}
+
+	serviceProvider.Status.Status = corev1.DeletedStatus
+	serviceProvider.Status.Message = ""
+
+	// We haven't finished yet as we have to remove the finalizer in the last loop
+	return reconcile.Result{Requeue: true}, nil
 }

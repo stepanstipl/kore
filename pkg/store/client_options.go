@@ -17,6 +17,7 @@
 package store
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -49,6 +50,13 @@ var DeleteOptions DeleteOptionsType
 func (d DeleteOptionsType) From(value runtime.Object) DeleteOptionFunc {
 	return func(r *rclient) {
 		r.value = value
+	}
+}
+
+// PropagationPolicy sets the delete propagation policy
+func (d DeleteOptionsType) PropagationPolicy(propagationPolicy metav1.DeletionPropagation) DeleteOptionFunc {
+	return func(r *rclient) {
+		r.propagationPolicy = propagationPolicy
 	}
 }
 

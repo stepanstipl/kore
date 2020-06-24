@@ -22,19 +22,25 @@ import (
 	"strings"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/appvia/kore/pkg/utils/kubernetes"
+	"github.com/appvia/kore/pkg/utils/validation"
+
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils"
 
 	log "github.com/sirupsen/logrus"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Teams is the kore api teams interface
 type Teams interface {
+	// CheckDelete verifies whether the team can be deleted
+	CheckDelete(context.Context, *orgv1.Team, ...DeleteOptionFunc) error
 	// Delete removes the team from the kore
-	Delete(context.Context, string) error
+	Delete(context.Context, string, ...DeleteOptionFunc) error
 	// Exists checks if the team exists
 	Exists(context.Context, string) (bool, error)
 	// Get returns the team from the kore
@@ -52,80 +58,90 @@ type teamsImpl struct {
 	*hubImpl
 }
 
-// Delete removes the team from the kore
-func (t *teamsImpl) Delete(ctx context.Context, name string) error {
-	// @step: retrieve the user from context
-	user := authentication.MustGetIdentity(ctx)
-
-	// @step: one has to be a team member or the global admin
-	if !user.IsMember(name) && !user.IsGlobalAdmin() {
-		log.WithFields(log.Fields{
-			"team": name,
-			"user": user.Username(),
-		}).Warn("user attempting to delete a team not a member of")
-
-		return ErrUnauthorized
-	}
+// CheckDelete verifies whether the team can be deleted
+func (t *teamsImpl) CheckDelete(ctx context.Context, team *orgv1.Team, o ...DeleteOptionFunc) error {
+	opts := ResolveDeleteOptions(o)
 
 	// @step: ensure the admin team can never be delete - oh my gosh
-	if name == HubAdminTeam || name == HubDefaultTeam {
-		return ErrNotAllowed{message: name + " team cannot be deleted"}
+	if team.Name == HubAdminTeam || team.Name == HubDefaultTeam {
+		return ErrNotAllowed{message: team.Name + " team cannot be deleted"}
 	}
 
+	if !opts.Cascade {
+		var dependents []kubernetes.DependentReference
+
+		clusters, err := t.Team(team.Name).Clusters().List(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to list services: %w", err)
+		}
+		for _, item := range clusters.Items {
+			dependents = append(dependents, kubernetes.DependentReferenceFromObject(&item))
+		}
+
+		if len(dependents) > 0 {
+			return validation.ErrDependencyViolation{
+				Message:    "the following objects need to be deleted first",
+				Dependents: dependents,
+			}
+		}
+	}
+
+	return nil
+}
+
+// Delete removes the team from the kore
+func (t *teamsImpl) Delete(ctx context.Context, name string, o ...DeleteOptionFunc) error {
+	opts := ResolveDeleteOptions(o)
+
 	// @step: retrieve the team
-	team, err := t.persistenceMgr.Teams().Get(ctx, name)
+	teamRecord, err := t.persistenceMgr.Teams().Get(ctx, name)
 	if err != nil {
 		return err
 	}
-	// we need to check if the team has any resources under it
-	// if so we thrown back a error saying these must be deleted
-	// else we can go ahead and remove the team
 
-	// @step: check if the team has any resources
-	resources, err := t.Team(name).Clusters().List(ctx)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"team": name,
-		}).Warn("failed checking for team clusters")
-
-		return fmt.Errorf("failed checking for team clusters: %s", err)
+	team := &orgv1.Team{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: HubNamespace,
+		},
 	}
 
-	if len(resources.Items) > 0 {
-		log.WithFields(log.Fields{
-			"team": name,
-		}).Warn("attempting to delete a team whom has cluster")
-
-		return ErrNotAllowed{message: "all team resources must be deleted before team can be removed"}
+	if err := opts.Check(team, func(o ...DeleteOptionFunc) error { return t.CheckDelete(ctx, team, o...) }); err != nil {
+		return err
 	}
 
-	// @step: check if the team has any allocations to other teams
+	if opts.Cascade {
+		clusters, err := t.Team(name).Clusters().List(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to list clusters: %w", err)
+		}
+
+		for _, cluster := range clusters.Items {
+			if _, err := t.Team(name).Clusters().Delete(ctx, cluster.Name, DeleteOptionCascade(true)); err != nil {
+				return err
+			}
+		}
+	}
+
 	log.WithFields(log.Fields{
 		"team": name,
 	}).Info("deleting the team from the kore")
 
 	// @step: delete in the db
-	if err := t.persistenceMgr.Teams().Delete(ctx, team); err != nil {
+	if err := t.persistenceMgr.Teams().Delete(ctx, teamRecord); err != nil {
 		log.WithError(err).Error("trying to delete the team in kore")
 
 		return err
 	}
 
-	tm := &orgv1.Team{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      team.Name,
-			Namespace: HubNamespace,
-		},
-	}
-
-	return t.Store().Client().Delete(ctx, store.DeleteOptions.From(tm))
+	return t.Store().Client().Delete(ctx, store.DeleteOptions.From(team))
 }
 
 // Get returns the team from the kore
 func (t *teamsImpl) Get(ctx context.Context, name string) (*orgv1.Team, error) {
 	model, err := t.persistenceMgr.Teams().Get(ctx, name)
 	if err != nil {
-		log.WithField("name", name).WithError(err).Error("trying to retrieve the user")
+		log.WithField("name", name).WithError(err).Error("trying to retrieve the team")
 
 		return nil, err
 	}

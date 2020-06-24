@@ -38,8 +38,8 @@ class KoreApiClient {
           ensureRefreshFromServer: true
         })
       }
-      if (err.response && err.response.status === 400 && err.response.body) {
-        throw err.response.body
+      if (err.response && (err.response.status === 400 || err.response.status === 409) && err.response.body) {
+        throw { ...err.response.body, statusCode: err.response.status }
       }
       // @TODO: Handle validation errors (400) and forbidden (403)
       throw err

@@ -27,8 +27,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-// GroupVersion is the GVK for a Cluster
-var ClusterGroupVersionKind = schema.GroupVersionKind{
+// ClusterGVK is the GVK for a Cluster
+var ClusterGVK = schema.GroupVersionKind{
 	Group:   GroupVersion.Group,
 	Version: GroupVersion.Version,
 	Kind:    "Cluster",

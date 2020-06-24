@@ -14,6 +14,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 )
 
 // NewDeleteServiceProviderParams creates a new DeleteServiceProviderParams object
@@ -60,6 +61,11 @@ for the delete service provider operation typically these are written to a http.
 */
 type DeleteServiceProviderParams struct {
 
+	/*Cascade
+	  If true then all objects owned by this object will be deleted too.
+
+	*/
+	Cascade *bool
 	/*Name
 	  The name of the service provider you wish to delete
 
@@ -104,6 +110,17 @@ func (o *DeleteServiceProviderParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithCascade adds the cascade to the delete service provider params
+func (o *DeleteServiceProviderParams) WithCascade(cascade *bool) *DeleteServiceProviderParams {
+	o.SetCascade(cascade)
+	return o
+}
+
+// SetCascade adds the cascade to the delete service provider params
+func (o *DeleteServiceProviderParams) SetCascade(cascade *bool) {
+	o.Cascade = cascade
+}
+
 // WithName adds the name to the delete service provider params
 func (o *DeleteServiceProviderParams) WithName(name string) *DeleteServiceProviderParams {
 	o.SetName(name)
@@ -122,6 +139,22 @@ func (o *DeleteServiceProviderParams) WriteToRequest(r runtime.ClientRequest, re
 		return err
 	}
 	var res []error
+
+	if o.Cascade != nil {
+
+		// query param cascade
+		var qrCascade bool
+		if o.Cascade != nil {
+			qrCascade = *o.Cascade
+		}
+		qCascade := swag.FormatBool(qrCascade)
+		if qCascade != "" {
+			if err := r.SetQueryParam("cascade", qCascade); err != nil {
+				return err
+			}
+		}
+
+	}
 
 	// path param name
 	if err := r.SetPathParam("name", o.Name); err != nil {

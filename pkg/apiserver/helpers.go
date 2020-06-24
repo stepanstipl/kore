@@ -110,6 +110,8 @@ func handleError(req *restful.Request, resp *restful.Response, err error) {
 		code = http.StatusForbidden
 	case validation.Error, *validation.Error:
 		code = http.StatusBadRequest
+	case validation.ErrDependencyViolation, *validation.ErrDependencyViolation:
+		code = http.StatusConflict
 	}
 
 	if err == gorm.ErrRecordNotFound {
@@ -127,6 +129,8 @@ func writeError(req *restful.Request, resp *restful.Response, err error, code in
 	switch err.(type) {
 	case validation.Error, *validation.Error:
 		// Error can be directly serialized to json so just return that.
+	case validation.ErrDependencyViolation, *validation.ErrDependencyViolation:
+		// Error can be directly serialized to json so just return that.
 	default:
 		err = newError(err.Error()).
 			WithCode(code).
@@ -137,4 +141,15 @@ func writeError(req *restful.Request, resp *restful.Response, err error, code in
 	if err := resp.WriteHeaderAndEntity(code, err); err != nil {
 		log.WithError(err).Error("failed to respond to request")
 	}
+}
+
+func parseDeleteOpts(req *restful.Request) []kore.DeleteOptionFunc {
+	cascade := req.QueryParameter("cascade")
+
+	var opts []kore.DeleteOptionFunc
+	if cascade == "true" {
+		opts = append(opts, kore.DeleteOptionCascade(true))
+	}
+
+	return opts
 }

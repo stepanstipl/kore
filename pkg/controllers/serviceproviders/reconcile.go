@@ -41,7 +41,7 @@ const (
 )
 
 // Reconcile is the entrypoint for the reconciliation logic
-func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult reconcile.Result, reconcileError error) {
 	ctx := context.Background()
 
 	logger := c.logger.WithFields(log.Fields{
@@ -61,6 +61,15 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		return reconcile.Result{}, err
 	}
 	original := serviceProvider.DeepCopy()
+
+	defer func() {
+		if err := c.mgr.GetClient().Status().Patch(ctx, serviceProvider, client.MergeFrom(original)); err != nil {
+			logger.WithError(err).Error("failed to update the service provider status")
+
+			reconcileResult = reconcile.Result{}
+			reconcileError = err
+		}
+	}()
 
 	finalizer := kubernetes.NewFinalizer(c.mgr.GetClient(), finalizerName)
 	if finalizer.IsDeletionCandidate(serviceProvider) {
@@ -99,6 +108,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 				serviceProvider.Status.SupportedKinds = supportedKinds
 
+				kinds := map[string]*servicesv1.ServiceKind{}
 				for _, kind := range catalog.Kinds {
 					kind.Namespace = kore.HubNamespace
 
@@ -114,17 +124,24 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 						kind.Spec.Enabled = existing.Spec.Enabled
 					}
 
+					kubernetes.EnsureOwnerReference(&kind, serviceProvider, true)
+
 					if _, err := kubernetes.CreateOrUpdate(ctx, c.mgr.GetClient(), &kind); err != nil {
 						return reconcile.Result{}, fmt.Errorf("failed to create or update service kind %q: %w", kind.Name, err)
 					}
+
+					kinds[kind.Name] = kind.DeepCopy()
 				}
 
 				for _, plan := range catalog.Plans {
+					kubernetes.EnsureOwnerReference(&plan, kinds[plan.Spec.Kind], true)
+
 					plan.Namespace = kore.HubNamespace
 					if plan.Annotations == nil {
 						plan.Annotations = map[string]string{}
 					}
 					plan.Annotations[kore.AnnotationReadOnly] = kore.AnnotationValueTrue
+
 					if _, err := kubernetes.CreateOrUpdate(ctx, c.mgr.GetClient(), &plan); err != nil {
 						return reconcile.Result{}, fmt.Errorf("failed to create or update service plan %q: %w", plan.Name, err)
 					}
@@ -184,26 +201,18 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 		if controllers.IsCriticalError(err) {
 			serviceProvider.Status.Status = corev1.FailureStatus
-		}
-	}
-
-	if err == nil && !result.Requeue && result.RequeueAfter == 0 {
-		serviceProvider.Status.Status = corev1.SuccessStatus
-		serviceProvider.Status.Message = ""
-	}
-
-	if err := c.mgr.GetClient().Status().Patch(ctx, serviceProvider, client.MergeFrom(original)); err != nil {
-		logger.WithError(err).Error("failed to update the service provider status")
-
-		return reconcile.Result{}, err
-	}
-
-	if err != nil {
-		if controllers.IsCriticalError(err) {
 			return reconcile.Result{}, nil
 		}
+
 		return reconcile.Result{}, err
 	}
+
+	if result.Requeue || result.RequeueAfter > 0 {
+		return result, nil
+	}
+
+	serviceProvider.Status.Status = corev1.SuccessStatus
+	serviceProvider.Status.Message = ""
 
 	return result, nil
 }

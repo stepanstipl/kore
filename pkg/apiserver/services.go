@@ -62,7 +62,7 @@ func (u teamHandler) listServices(req *restful.Request, resp *restful.Response) 
 		if user.IsGlobalAdmin() {
 			list, err = u.Teams().Team(team).Services().List(req.Request.Context())
 		} else {
-			list, err = u.Teams().Team(team).Services().ListFiltered(req.Request.Context(), func(service servicesv1.Service) bool {
+			list, err = u.Teams().Team(team).Services().List(req.Request.Context(), func(service servicesv1.Service) bool {
 				return service.Annotations[kore.AnnotationSystem] != "true"
 			})
 		}
@@ -119,7 +119,7 @@ func (u teamHandler) deleteService(req *restful.Request, resp *restful.Response)
 		name := req.PathParameter("name")
 		team := req.PathParameter("team")
 
-		object, err := u.Teams().Team(team).Services().Delete(ctx, name)
+		object, err := u.Teams().Team(team).Services().Delete(ctx, name, parseDeleteOpts(req)...)
 		if err != nil {
 			return err
 		}

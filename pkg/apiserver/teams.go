@@ -23,6 +23,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/appvia/kore/pkg/apiserver/params"
+
 	"github.com/appvia/kore/pkg/apiserver/filters"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
@@ -137,6 +139,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Doc("Used to delete a team from the kore").
 			Operation("RemoveTeam").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(params.DeleteCascade()).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", orgv1.Team{}).
 			Returns(http.StatusNotFound, "Team does not exist", nil).
 			Returns(http.StatusNotAcceptable, "Indicates you cannot delete the team for one or more reasons", Error{}).
@@ -320,6 +323,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Operation("RemoveNamespace").
 			Param(ws.PathParameter("name", "Is name the of the namespace claim you are acting upon")).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(params.DeleteCascade()).
 			Returns(http.StatusOK, "Contains the former definition from the kore", clustersv1.NamespaceClaim{}).
 			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
 	)
@@ -422,6 +426,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Operation("RemoveCluster").
 			Param(ws.PathParameter("name", "Is the name of the cluster")).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(params.DeleteCascade()).
 			Returns(http.StatusNotFound, "the cluster with the given name doesn't exist", nil).
 			Returns(http.StatusOK, "Contains the former cluster definition from the kore", clustersv1.Cluster{}),
 	)
@@ -720,6 +725,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Operation("DeleteService").
 			Param(ws.PathParameter("name", "Is the name of the service")).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(params.DeleteCascade()).
 			Returns(http.StatusNotFound, "the service with the given name doesn't exist", nil).
 			Returns(http.StatusOK, "Contains the former service definition from the kore", servicesv1.Service{}),
 	)
@@ -764,6 +770,7 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Operation("DeleteServiceCredentials").
 			Param(ws.PathParameter("name", "Is the name of the service credentials")).
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(params.DeleteCascade()).
 			Returns(http.StatusNotFound, "the service credentials with the given name doesn't exist", nil).
 			Returns(http.StatusOK, "Contains the former service credentials definition", servicesv1.ServiceCredentials{}),
 	)
@@ -813,7 +820,7 @@ func (u teamHandler) findTeamAudit(req *restful.Request, resp *restful.Response)
 // deleteTeam is responsible for deleting a team from the kore
 func (u teamHandler) deleteTeam(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
-		err := u.Teams().Delete(req.Request.Context(), req.PathParameter("team"))
+		err := u.Teams().Delete(req.Request.Context(), req.PathParameter("team"), parseDeleteOpts(req)...)
 		if err != nil {
 			return err
 		}

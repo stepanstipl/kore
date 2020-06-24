@@ -52,6 +52,8 @@ type rclient struct {
 	withPatch bool
 	// withForceApply indicates we should force apply the updates
 	withForceApply bool
+	// propagationPolicy sets the delete propagation policy
+	propagationPolicy metav1.DeletionPropagation
 }
 
 // Get is responsible for retrieving an object from the api / index
@@ -175,7 +177,12 @@ func (r *rclient) Delete(ctx context.Context, options ...DeleteOptionFunc) error
 		return errors.New("no value has been set")
 	}
 
-	return r.client.Delete(ctx, r.value)
+	var opts []client.DeleteOption
+	if r.propagationPolicy != "" {
+		opts = append(opts, client.PropagationPolicy(r.propagationPolicy))
+	}
+
+	return r.client.Delete(ctx, r.value, opts...)
 }
 
 // DeleteAll is responsible for deleting a series of objects
@@ -196,6 +203,9 @@ func (r *rclient) DeleteAll(ctx context.Context, options ...DeleteAllOptionFunc)
 	}
 	if len(r.index.query.Labels) > 0 {
 		opts = append(opts, client.MatchingLabels(r.index.query.Labels))
+	}
+	if r.propagationPolicy != "" {
+		opts = append(opts, client.PropagationPolicy(r.propagationPolicy))
 	}
 	if _, err := r.updateQueryFromObject(r.value); err != nil {
 		return err

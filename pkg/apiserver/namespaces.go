@@ -78,7 +78,7 @@ func (u teamHandler) deleteNamespace(req *restful.Request, resp *restful.Respons
 		team := req.PathParameter("team")
 		name := req.PathParameter("name")
 
-		original, err := u.Teams().Team(team).NamespaceClaims().Delete(req.Request.Context(), name)
+		original, err := u.Teams().Team(team).NamespaceClaims().Delete(req.Request.Context(), name, parseDeleteOpts(req)...)
 		if err != nil {
 			return err
 		}

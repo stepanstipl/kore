@@ -20,6 +20,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/appvia/kore/pkg/controllers/helpers"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	core "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/controllers"
@@ -95,30 +97,53 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			return reconcile.Result{}, nil
 		}
 
-		// @step: check the status of the cluster
-		cluster := &clustersv1.Kubernetes{}
+		if !kore.IsSystemResource(resource) && !kubernetes.HasOwnerReferenceWithKind(resource, clustersv1.ClusterGVK) {
+			cluster := &clustersv1.Cluster{}
+			if err := a.mgr.GetClient().Get(context.Background(), types.NamespacedName{
+				Name:      resource.Spec.Cluster.Name,
+				Namespace: resource.Spec.Cluster.Namespace,
+			}, cluster); err != nil {
+				if !kerrors.IsNotFound(err) {
+					logger.WithError(err).Error("failed to retrieve cluster")
+
+					return reconcile.Result{}, err
+				}
+
+				resource.Status.Status = core.PendingStatus
+				resource.Status.Conditions = []core.Condition{{
+					Detail:  "cluster does not exist",
+					Message: "No cluster: " + resource.Spec.Cluster.Name + " exists for this team",
+				}}
+
+				return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+			}
+
+			result, err := helpers.EnsureOwnerReference(ctx, a.mgr.GetClient(), resource, cluster)
+			if err != nil || result.Requeue || result.RequeueAfter > 0 {
+				return result, err
+			}
+		}
+
+		kubernetesObj := &clustersv1.Kubernetes{}
 		if err := a.mgr.GetClient().Get(context.Background(), types.NamespacedName{
 			Name:      resource.Spec.Cluster.Name,
 			Namespace: resource.Spec.Cluster.Namespace,
-		}, cluster); err != nil {
+		}, kubernetesObj); err != nil {
 			if !kerrors.IsNotFound(err) {
-				logger.WithError(err).Error("Trying to retrieve the cluster")
+				logger.WithError(err).Error("failed to retrieve the kubernetes object")
 
 				return reconcile.Result{}, err
 			}
 
-			// @checkpoint the cluster is not available yet
 			resource.Status.Status = core.PendingStatus
 			resource.Status.Conditions = []core.Condition{{
-				Detail:  "cluster does not exist",
-				Message: "No cluster: " + resource.Spec.Cluster.Name + " exists for this team",
+				Message: "Cluster " + resource.Spec.Cluster.Name + " is still pending",
 			}}
 
-			// @TODO we probably need a way of escaping this loop?
-			return reconcile.Result{RequeueAfter: 3 * time.Minute}, nil
+			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
 		}
 
-		switch cluster.Status.Status {
+		switch kubernetesObj.Status.Status {
 		case core.PendingStatus:
 			logger.Warn("cluster is not ready yet, waiting")
 
@@ -221,7 +246,7 @@ func (a *nsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		return reconcile.Result{}, nil
 	}()
 	if err != nil {
-		logger.WithError(err).Error("trying to reconcile the nameresource claim")
+		logger.WithError(err).Error("trying to reconcile the namespace claim")
 
 		resource.Status.Status = core.FailureStatus
 		resource.Status.Conditions = []core.Condition{{

@@ -16,7 +16,9 @@
 
 package kore
 
-import "errors"
+import (
+	"errors"
+)
 
 var (
 	// ErrOnRevision indicates the object is older than the revision in source.

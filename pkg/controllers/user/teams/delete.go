@@ -18,8 +18,11 @@ package teams
 
 import (
 	"context"
+	"time"
 
-	core "github.com/appvia/kore/pkg/apis/core/v1"
+	"github.com/appvia/kore/pkg/utils/validation"
+
+	korecorev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
@@ -40,6 +43,20 @@ func (t teamController) Delete(ctx context.Context, request reconcile.Request, t
 	}
 
 	log.WithFields(fields).Info("handling the deletion of the team resource")
+
+	if err := t.Teams().CheckDelete(ctx, team); err != nil {
+		team.Status.Conditions = []korecorev1.Condition{{
+			Detail:  err.Error(),
+			Message: "Failed to delete team",
+		}}
+
+		if _, ok := err.(validation.ErrDependencyViolation); ok {
+			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+		}
+
+		team.Status.Status = korecorev1.ErrorStatus
+		return reconcile.Result{}, err
+	}
 
 	err := func() error {
 		// @step: we first check if the team namespace is there
@@ -68,8 +85,8 @@ func (t teamController) Delete(ctx context.Context, request reconcile.Request, t
 		fields["error"] = err.Error()
 		log.WithFields(fields).Error("failed to reconcile deletion of team")
 
-		team.Status.Status = core.FailureStatus
-		team.Status.Conditions = []core.Condition{{
+		team.Status.Status = korecorev1.FailureStatus
+		team.Status.Conditions = []korecorev1.Condition{{
 			Detail:  err.Error(),
 			Message: "Failed to remove the team due as all resources not removed",
 		}}

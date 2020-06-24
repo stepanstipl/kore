@@ -21,12 +21,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/appvia/kore/pkg/controllers/helpers"
+
 	"github.com/appvia/kore/pkg/kore"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/types"
 
 	log "github.com/sirupsen/logrus"
 
@@ -81,41 +82,6 @@ func (c *Controller) ensureFinalizer(logger log.FieldLogger, serviceCreds *servi
 				return reconcile.Result{}, fmt.Errorf("failed to set the finalizer: %w", err)
 			}
 			return reconcile.Result{Requeue: true}, nil
-		}
-		return reconcile.Result{}, nil
-	}
-}
-
-func (c *Controller) EnsureActiveService(logger log.FieldLogger, service *servicesv1.Service) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
-		// @step: check the overall status of the service
-		if service.Status.Status != corev1.SuccessStatus {
-			logger.Debugf("service status is %s, waiting", service.Status.Status)
-			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
-		}
-		return reconcile.Result{}, nil
-	}
-}
-
-func (c *Controller) EnsureActiveCluster(logger log.FieldLogger, serviceCreds *servicesv1.ServiceCredentials) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
-		// @step: check the status of the cluster
-		cluster := &clustersv1.Cluster{}
-		if err := c.mgr.GetClient().Get(context.Background(), types.NamespacedName{
-			Name:      serviceCreds.Spec.Cluster.Name,
-			Namespace: serviceCreds.Spec.Cluster.Namespace,
-		}, cluster); err != nil {
-			if kerrors.IsNotFound(err) {
-				logger.Debug("cluster does not exist")
-				return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
-			}
-			return reconcile.Result{}, err
-		}
-
-		// @step: check the overall status of the cluster
-		if cluster.Status.Status != corev1.SuccessStatus {
-			logger.Debugf("cluster status is %s, waiting", cluster.Status.Status)
-			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
 		}
 		return reconcile.Result{}, nil
 	}
@@ -205,6 +171,47 @@ func (c *Controller) ensureSecret(
 		}
 
 		serviceCreds.Status.Components.SetStatus(ComponentKubernetesSecret, corev1.SuccessStatus, "", "")
+
+		return reconcile.Result{}, nil
+	}
+}
+
+func (c *Controller) EnsureDependencies(
+	logger log.FieldLogger,
+	serviceCredentials *servicesv1.ServiceCredentials,
+) controllers.EnsureFunc {
+	return func(ctx context.Context) (reconcile.Result, error) {
+		cluster, err := c.Teams().Team(serviceCredentials.Spec.Cluster.Namespace).Clusters().Get(context.Background(), serviceCredentials.Spec.Cluster.Name)
+		if err != nil {
+			if err == kore.ErrNotFound {
+				serviceCredentials.Status.Status = corev1.PendingStatus
+				serviceCredentials.Status.Message = fmt.Sprintf("Cluster %q does not exist", serviceCredentials.Spec.Cluster.Name)
+				return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+			}
+			return reconcile.Result{}, err
+		}
+
+		if cluster.Status.Status != corev1.SuccessStatus {
+			serviceCredentials.Status.Status = corev1.PendingStatus
+			serviceCredentials.Status.Message = fmt.Sprintf("Cluster %q is not ready", serviceCredentials.Spec.Cluster.Name)
+			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+		}
+
+		if !kore.IsSystemResource(serviceCredentials) && !kubernetes.HasOwnerReferenceWithKind(serviceCredentials, clustersv1.NamespaceClaimGVK) {
+			name := fmt.Sprintf("%s-%s", serviceCredentials.Spec.Cluster.Name, serviceCredentials.Spec.ClusterNamespace)
+
+			namespaceClaim, err := c.Teams().Team(serviceCredentials.Namespace).NamespaceClaims().Get(ctx, name)
+			if err != nil {
+				if kerrors.IsNotFound(err) || err == kore.ErrNotFound {
+					serviceCredentials.Status.Status = corev1.PendingStatus
+					serviceCredentials.Status.Message = fmt.Sprintf("Namespace claim does not exist for namespace %q", serviceCredentials.Spec.ClusterNamespace)
+					return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+				}
+				return reconcile.Result{}, err
+			}
+
+			return helpers.EnsureOwnerReference(ctx, c.mgr.GetClient(), serviceCredentials, namespaceClaim)
+		}
 
 		return reconcile.Result{}, nil
 	}

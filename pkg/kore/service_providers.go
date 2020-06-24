@@ -26,6 +26,7 @@ import (
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/configuration"
 	"github.com/appvia/kore/pkg/utils/jsonschema"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
 	"github.com/appvia/kore/pkg/utils/validation"
 
 	log "github.com/sirupsen/logrus"
@@ -99,14 +100,15 @@ type ServiceProvider interface {
 
 // ServiceProviders is the interface to manage service providers
 type ServiceProviders interface {
+	// CheckDelete verifies whether the service providercan be deleted
+	CheckDelete(ctx context.Context, serviceProvider *servicesv1.ServiceProvider, o ...DeleteOptionFunc) error
 	// Delete is used to delete a service provider in the kore
-	Delete(context.Context, string) (*servicesv1.ServiceProvider, error)
+	Delete(context.Context, string, ...DeleteOptionFunc) (*servicesv1.ServiceProvider, error)
 	// Get returns the service provider
 	Get(context.Context, string) (*servicesv1.ServiceProvider, error)
 	// List returns the existing service providers
-	List(context.Context) (*servicesv1.ServiceProviderList, error)
-	// ListFiltered returns a list of service providers using the given filter.
-	ListFiltered(context.Context, func(servicesv1.ServiceProvider) bool) (*servicesv1.ServiceProviderList, error)
+	// The optional filter functions can be used to include items only for which all functions return true
+	List(context.Context, ...func(servicesv1.ServiceProvider) bool) (*servicesv1.ServiceProviderList, error)
 	// Has checks if a service provider exists
 	Has(context.Context, string) (bool, error)
 	// Update is responsible for updating a service provider
@@ -182,8 +184,45 @@ func (p *serviceProvidersImpl) Update(ctx context.Context, provider *servicesv1.
 	return nil
 }
 
+// CheckDelete verifies whether the service provider can be deleted
+func (p *serviceProvidersImpl) CheckDelete(ctx context.Context, serviceProvider *servicesv1.ServiceProvider, o ...DeleteOptionFunc) error {
+	opts := ResolveDeleteOptions(o)
+
+	if !opts.Cascade {
+		var dependents []kubernetes.DependentReference
+
+		teamList, err := p.Teams().List(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to list teams: %w", err)
+		}
+
+		for _, team := range teamList.Items {
+			services, err := p.Teams().Team(team.Name).Services().List(ctx, func(s servicesv1.Service) bool {
+				return utils.Contains(s.Spec.Kind, serviceProvider.Status.SupportedKinds)
+			})
+			if err != nil {
+				return fmt.Errorf("failed to list services: %w", err)
+			}
+			for _, item := range services.Items {
+				dependents = append(dependents, kubernetes.DependentReferenceFromObject(&item))
+			}
+		}
+
+		if len(dependents) > 0 {
+			return validation.ErrDependencyViolation{
+				Message:    "the following objects need to be deleted first",
+				Dependents: dependents,
+			}
+		}
+	}
+
+	return nil
+}
+
 // Delete is used to delete a service provider in the kore
-func (p *serviceProvidersImpl) Delete(ctx context.Context, name string) (*servicesv1.ServiceProvider, error) {
+func (p *serviceProvidersImpl) Delete(ctx context.Context, name string, o ...DeleteOptionFunc) (*servicesv1.ServiceProvider, error) {
+	opts := ResolveDeleteOptions(o)
+
 	provider := &servicesv1.ServiceProvider{}
 	err := p.Store().Client().Get(ctx,
 		store.GetOptions.InNamespace(HubNamespace),
@@ -199,7 +238,11 @@ func (p *serviceProvidersImpl) Delete(ctx context.Context, name string) (*servic
 		return nil, err
 	}
 
-	if err := p.Store().Client().Delete(ctx, store.DeleteOptions.From(provider)); err != nil {
+	if err := opts.Check(provider, func(o ...DeleteOptionFunc) error { return p.CheckDelete(ctx, provider, o...) }); err != nil {
+		return nil, err
+	}
+
+	if err := p.Store().Client().Delete(ctx, append(opts.StoreOptions(), store.DeleteOptions.From(provider))...); err != nil {
 		log.WithError(err).Error("failed to delete the service provider")
 
 		return nil, err
@@ -226,34 +269,37 @@ func (p *serviceProvidersImpl) Get(ctx context.Context, name string) (*servicesv
 }
 
 // List returns the existing service providers
-func (p *serviceProvidersImpl) List(ctx context.Context) (*servicesv1.ServiceProviderList, error) {
-	providers := &servicesv1.ServiceProviderList{}
+func (p *serviceProvidersImpl) List(ctx context.Context, filters ...func(servicesv1.ServiceProvider) bool) (*servicesv1.ServiceProviderList, error) {
+	list := &servicesv1.ServiceProviderList{}
 
-	return providers, p.Store().Client().List(ctx,
+	err := p.Store().Client().List(ctx,
 		store.ListOptions.InNamespace(HubNamespace),
-		store.ListOptions.InTo(providers),
+		store.ListOptions.InTo(list),
 	)
-}
-
-// ListFiltered returns a list of service providers using the given filter.
-// A service provider is included if the filter function returns true
-func (p *serviceProvidersImpl) ListFiltered(ctx context.Context, filter func(plan servicesv1.ServiceProvider) bool) (*servicesv1.ServiceProviderList, error) {
-	var res []servicesv1.ServiceProvider
-
-	serviceProvidersList, err := p.List(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, serviceProvider := range serviceProvidersList.Items {
-		if filter(serviceProvider) {
-			res = append(res, serviceProvider)
-		}
+	if len(filters) == 0 {
+		return list, nil
 	}
 
-	serviceProvidersList.Items = res
+	res := []servicesv1.ServiceProvider{}
+	for _, item := range list.Items {
+		if func() bool {
+			for _, filter := range filters {
+				if !filter(item) {
+					return false
+				}
+			}
+			return true
+		}() {
+			res = append(res, item)
+		}
+	}
+	list.Items = res
 
-	return serviceProvidersList, nil
+	return list, nil
 }
 
 // Has checks if a service provider exists
@@ -352,7 +398,7 @@ func (p *serviceProvidersImpl) Catalog(ctx Context, serviceProvider *servicesv1.
 	// check for removed kinds
 	for kind, rp := range p.providers {
 		if rp.Name() == serviceProvider.Name && !utils.Contains(kind, supportedKinds) {
-			if err := p.unregisterKind(ctx, kind); err != nil {
+			if err := p.unregisterKind(ctx, kind, false); err != nil {
 				return ServiceProviderCatalog{}, fmt.Errorf("failed to unregister service kind %q: %w", kind, err)
 			}
 		}
@@ -367,7 +413,7 @@ func (p *serviceProvidersImpl) Unregister(ctx Context, serviceProvider *services
 	defer p.providersLock.Unlock()
 
 	for _, kind := range serviceProvider.Status.SupportedKinds {
-		if err := p.unregisterKind(ctx, kind); err != nil {
+		if err := p.unregisterKind(ctx, kind, true); err != nil {
 			return false, err
 		}
 	}
@@ -385,18 +431,18 @@ func (p *serviceProvidersImpl) Unregister(ctx Context, serviceProvider *services
 	return factory.TearDown(ctx, serviceProvider)
 }
 
-func (p *serviceProvidersImpl) unregisterKind(ctx context.Context, kind string) error {
-	plans, err := p.ServicePlans().ListFiltered(ctx, func(x servicesv1.ServicePlan) bool { return x.Spec.Kind == kind })
+func (p *serviceProvidersImpl) unregisterKind(ctx context.Context, kind string, skipCheck bool) error {
+	plans, err := p.ServicePlans().List(ctx, func(x servicesv1.ServicePlan) bool { return x.Spec.Kind == kind })
 	if err != nil {
 		return fmt.Errorf("failed to get service plans: %w", err)
 	}
 	for _, plan := range plans.Items {
-		if _, err := p.ServicePlans().Delete(ctx, plan.Name, true); err != nil && err != ErrNotFound {
+		if _, err := p.ServicePlans().Delete(ctx, plan.Name, DeleteOptionSkipCheck(skipCheck)); err != nil && err != ErrNotFound {
 			return fmt.Errorf("failed to delete service plan %q: %w", plan.Name, err)
 		}
 	}
 
-	_, err = p.ServiceKinds().Delete(ctx, kind)
+	_, err = p.ServiceKinds().Delete(ctx, kind, DeleteOptionSkipCheck(skipCheck))
 	if err != nil && err != ErrNotFound {
 		return fmt.Errorf("failed to delete service kind: %w", err)
 	}
@@ -415,7 +461,7 @@ func (p *serviceProvidersImpl) GetProviderForKind(ctx Context, kind string) (Ser
 		return provider, nil
 	}
 
-	providerList, err := p.ServiceProviders().ListFiltered(ctx, func(provider servicesv1.ServiceProvider) bool {
+	providerList, err := p.List(ctx, func(provider servicesv1.ServiceProvider) bool {
 		return utils.Contains(kind, provider.Status.SupportedKinds)
 	})
 	if err != nil {
@@ -423,7 +469,7 @@ func (p *serviceProvidersImpl) GetProviderForKind(ctx Context, kind string) (Ser
 	}
 
 	if len(providerList.Items) == 0 {
-		return nil, fmt.Errorf("no available service provider for kind %q", kind)
+		return nil, ErrNotFound
 	}
 
 	return p.register(ctx, &providerList.Items[0])

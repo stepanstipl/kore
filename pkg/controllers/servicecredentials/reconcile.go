@@ -18,7 +18,10 @@ package servicecredentials
 
 import (
 	"context"
+	"fmt"
 	"time"
+
+	"github.com/appvia/kore/pkg/controllers/helpers"
 
 	"github.com/appvia/kore/pkg/kore"
 
@@ -38,7 +41,7 @@ const (
 )
 
 // Reconcile is the entrypoint for the reconciliation logic
-func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult reconcile.Result, reconcileError error) {
 	ctx := context.Background()
 
 	logger := c.logger.WithFields(log.Fields{
@@ -59,24 +62,36 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 	}
 	original := creds.DeepCopy()
 
-	// @step: retrieve the object from the api
-	service := &servicesv1.Service{}
-	if err := c.mgr.GetClient().Get(ctx, creds.Spec.Service.NamespacedName(), service); err != nil {
-		if kerrors.IsNotFound(err) {
-			logger.Debug("service does not exist")
+	defer func() {
+		if err := c.mgr.GetClient().Status().Patch(ctx, creds, client.MergeFrom(original)); err != nil {
+			logger.WithError(err).Error("failed to update the service credentials status")
+			reconcileResult = reconcile.Result{}
+			reconcileError = err
+		}
+	}()
+
+	koreCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c)
+
+	provider, err := c.ServiceProviders().GetProviderForKind(koreCtx, creds.Spec.Kind)
+	if err != nil {
+		if err == kore.ErrNotFound {
+			creds.Status.Status = corev1.ErrorStatus
+			creds.Status.Message = fmt.Sprintf("There is no service provider for kind %q", creds.Spec.Kind)
 			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
 		}
-
-		logger.WithError(err).Error("failed to retrieve service from api")
+		creds.Status.Status = corev1.ErrorStatus
+		creds.Status.Message = err.Error()
 		return reconcile.Result{}, err
 	}
 
-	spCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c)
-	provider, err := c.ServiceProviders().GetProviderForKind(spCtx, creds.Spec.Kind)
+	service, err := c.Teams().Team(creds.Spec.Service.Namespace).Services().Get(ctx, creds.Spec.Service.Name)
 	if err != nil {
-		creds.Status.Status = corev1.ErrorStatus
-		creds.Status.Message = err.Error()
-		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+		if err == kore.ErrNotFound {
+			creds.Status.Status = corev1.PendingStatus
+			creds.Status.Message = fmt.Sprintf("Service %q does not exist", creds.Spec.Service.Name)
+			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+		}
+		return reconcile.Result{}, err
 	}
 
 	finalizer := kubernetes.NewFinalizer(c.mgr.GetClient(), finalizerName)
@@ -84,12 +99,21 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		return c.delete(ctx, logger, service, creds, finalizer, provider)
 	}
 
+	if !kore.IsSystemResource(creds) && !kubernetes.HasOwnerReferenceWithKind(creds, servicesv1.ServiceGVK) {
+		return helpers.EnsureOwnerReference(ctx, c.mgr.GetClient(), creds, service)
+	}
+
+	if service.Status.Status != corev1.SuccessStatus {
+		creds.Status.Status = corev1.PendingStatus
+		creds.Status.Message = fmt.Sprintf("Service %q is not ready", creds.Spec.Service.Name)
+		return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+	}
+
 	result, err := func() (reconcile.Result, error) {
 		ensure := []controllers.EnsureFunc{
-			c.ensureFinalizer(logger, creds, finalizer),
 			c.ensurePending(logger, creds),
-			c.EnsureActiveService(logger, service),
-			c.EnsureActiveCluster(logger, creds),
+			c.EnsureDependencies(logger, creds),
+			c.ensureFinalizer(logger, creds, finalizer),
 			c.ensureSecret(logger, service, creds, provider),
 		}
 
@@ -113,33 +137,17 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 		if controllers.IsCriticalError(err) {
 			creds.Status.Status = corev1.FailureStatus
-		}
-	}
-
-	if err == nil && !result.Requeue && result.RequeueAfter == 0 {
-		creds.Status.Status = corev1.SuccessStatus
-	}
-
-	if err := c.mgr.GetClient().Status().Patch(ctx, creds, client.MergeFrom(original)); err != nil {
-		logger.WithError(err).Error("failed to update the service credentials status")
-
-		return reconcile.Result{}, err
-	}
-
-	if err != nil {
-		if controllers.IsCriticalError(err) {
 			return reconcile.Result{}, nil
 		}
-		return reconcile.Result{}, err
-	}
 
-	if creds.Status.Status == corev1.SuccessStatus {
-		return reconcile.Result{}, nil
+		return reconcile.Result{}, err
 	}
 
 	if result.Requeue || result.RequeueAfter > 0 {
 		return result, nil
 	}
 
-	return reconcile.Result{RequeueAfter: 5 * time.Second}, nil
+	creds.Status.Status = corev1.SuccessStatus
+
+	return reconcile.Result{}, nil
 }
