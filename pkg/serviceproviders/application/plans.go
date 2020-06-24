@@ -25,6 +25,8 @@ import (
 const (
 	// HelmAppClusterAutoscaler is the plan name for instances of the cluster autoscaler
 	HelmAppClusterAutoscaler = "helm-app-cluster-autoscaler"
+	// HelmAppCloudInfo is the plan name for instances of cloudinfo, used by the costs engine.
+	HelmAppCloudInfo = "cloudinfo"
 )
 
 // GetDefaultPlans returns a collection of plans for the resources
@@ -66,6 +68,48 @@ func GetDefaultPlans() []servicev1.ServicePlan {
 							"matchLabels": {
 								"app.kubernetes.io/name": "aws-cluster-autoscaler",
 								"app.kubernetes.io/instance": "cluster-autoscaler"
+							}
+						}
+					}`),
+				},
+			},
+		},
+		{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "ServicePlan",
+				APIVersion: servicev1.GroupVersion.String(),
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      HelmAppCloudInfo,
+				Namespace: "kore",
+				Annotations: map[string]string{
+					"kore.appvia.io/system":   "true",
+					"kore.appvia.io/readonly": "true",
+				},
+			},
+			Spec: servicev1.ServicePlanSpec{
+				Kind:        "helm-app",
+				Summary:     "Cloudinfo plan",
+				Description: "Cloudinfo Plan",
+				Configuration: &apiextv1.JSON{
+					Raw: []byte(`{
+						"source": {
+							"helm": {
+								"url": "https://kubernetes-charts.banzaicloud.com/",
+								"name": "cloudinfo",
+								"version": "0.7.1"
+							}
+						},
+						"resourceKinds": [
+							{
+								"group": "apps",
+								"kind": "Deployment"
+							}
+						],
+						"resourceSelector": {
+							"matchLabels": {
+								"app.kubernetes.io/name": "cloudinfo",
+								"app.kubernetes.io/instance": "cloudinfo"
 							}
 						}
 					}`),

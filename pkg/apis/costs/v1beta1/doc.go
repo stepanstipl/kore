@@ -14,20 +14,7 @@
  * limitations under the License.
  */
 
-package kore
-
-const (
-	// FeatureGateServices enables the managed services
-	FeatureGateServices            = "services"
-	FeatureGateCosts               = "costs"
-	FeatureGateApplicationServices = "application_services"
-)
-
-// DefaultFeatureGates returns the existing feature gates with the default statuses
-func DefaultFeatureGates() map[string]bool {
-	return map[string]bool{
-		FeatureGateServices:            false,
-		FeatureGateCosts:            true,
-		FeatureGateApplicationServices: false,
-	}
-}
+// Package v1beta1 contains API Schema definitions for the cost v1beta1 API group
+// +k8s:deepcopy-gen=package,register
+// +groupName=costs.kore.appvia.io
+package v1beta1

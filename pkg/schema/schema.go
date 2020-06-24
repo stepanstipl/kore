@@ -21,11 +21,13 @@ import (
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
+	costsv1beta1 "github.com/appvia/kore/pkg/apis/costs/v1beta1"
 	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	gcpv1alpha1 "github.com/appvia/kore/pkg/apis/gcp/v1alpha1"
 	gkev1alpha1 "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
+
 	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	apiextv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	applicationv1beta "sigs.k8s.io/application/api/v1beta1"
@@ -61,6 +63,7 @@ func init() {
 		gkev1alpha1.AddToScheme,
 		orgv1.AddToScheme,
 		servicesv1.AddToScheme,
+		costsv1beta1.AddToScheme,
 	)
 	if err := builder.AddToScheme(hs); err != nil {
 		log.WithError(err).Fatal("failed to register the schema")

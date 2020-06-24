@@ -79,27 +79,3 @@ type PlanList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []Plan `json:"items"`
 }
-
-type PlanMetadataRegion struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
-}
-
-type PlanMetadataContinent struct {
-	Name    string               `json:"name"`
-	Regions []PlanMetadataRegion `json:"regions"`
-}
-
-type PriceType string
-
-const OnDemand PriceType = "OnDemand"
-const Spot PriceType = "Spot"
-const PreEmptible PriceType = "PreEmptible"
-
-type PlanMetadataInstanceType struct {
-	Category string                `json:"category"`
-	Type     string                `json:"type"`
-	Prices   map[PriceType]float64 `json:"prices"`
-	Cpus     float64               `json:"cpusPerVm"`
-	Mem      float64               `json:"memPerVm"`
-}

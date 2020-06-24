@@ -51,7 +51,7 @@ check-kore-autogen:
 
 generate-kore-models:
 	@echo "--> Updating kore API models"
-	@rm -r lib/kore-api/model/*.js
+	@rm -r lib/kore-api/model/*.js > /dev/null || true
 	@docker create -v /local --name src openapitools/openapi-generator-cli:${OPENAPIGEN_VERSION} /bin/true
 	@docker cp $$(pwd)/kore-api-swagger.json src:/local/kore-api-swagger.json
 	@docker run --rm --volumes-from src -e JAVA_OPTS="-Xmx1024M -DloggerPath=conf/log4j.properties -DmodelDocs=false -DmodelTests=false -Dmodels" openapitools/openapi-generator-cli:${OPENAPIGEN_VERSION} generate \

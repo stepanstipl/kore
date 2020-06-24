@@ -20,6 +20,7 @@ import (
 	accountsv1beta1 "github.com/appvia/kore/pkg/apis/accounts/v1beta1"
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
+	costsv1 "github.com/appvia/kore/pkg/apis/costs/v1beta1"
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	gke "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
@@ -362,6 +363,20 @@ var (
 			Kind:         "ServiceProvider",
 			Scope:        GlobalScope,
 			FeatureGate:  kore.FeatureGateServices,
+			Printer: []Column{
+				{"Name", "metadata.name", ""},
+				{"Type", "spec.type", ""},
+				{"Summary", "spec.summary", ""},
+				{"Status", "status.status", ""},
+				{"Age", "metadata.creationTimestamp", "age"},
+			},
+		},
+		{
+			Name:         "cost",
+			GroupVersion: costsv1.GroupVersion.String(),
+			Kind:         "Cost",
+			Scope:        GlobalScope,
+			FeatureGate:  kore.FeatureGateCosts,
 			Printer: []Column{
 				{"Name", "metadata.name", ""},
 				{"Type", "spec.type", ""},

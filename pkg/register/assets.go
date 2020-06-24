@@ -22,6 +22,7 @@
 // deploy/crds/config.kore.appvia.io_secrets.yaml
 // deploy/crds/core.kore.appvia.io_idp.yaml
 // deploy/crds/core.kore.appvia.io_oidclient.yaml
+// deploy/crds/costs.kore.appvia.io_costs.yaml
 // deploy/crds/gcp.compute.kore.appvia.io_organizations.yaml
 // deploy/crds/gcp.compute.kore.appvia.io_projectclaims.yaml
 // deploy/crds/gcp.compute.kore.appvia.io_projects.yaml
@@ -4643,6 +4644,173 @@ func crdsCoreKoreAppviaIo_oidclientYaml() (*asset, error) {
 	return a, nil
 }
 
+var _crdsCostsKoreAppviaIo_costsYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: costs.costs.kore.appvia.io
+spec:
+  group: costs.kore.appvia.io
+  names:
+    kind: Cost
+    listKind: CostList
+    plural: costs
+    singular: cost
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: Cost is the Schema for the cost API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: CostSpec defines the desired state of cost management
+          properties:
+            billingCredentials:
+              additionalProperties:
+                description: SecretReference represents a Secret Reference. It has
+                  enough information to retrieve secret in any namespace
+                properties:
+                  name:
+                    description: Name is unique within a namespace to reference a
+                      secret resource.
+                    type: string
+                  namespace:
+                    description: Namespace defines the space within which the secret
+                      name must be unique.
+                    type: string
+                type: object
+              description: BillingCredentials specifies a map of cloud provider to
+                credentials for retrieving specific billing details from the providers.
+                Adding a credential for a provider here enables billing integration
+                for that provider.
+              type: object
+            enabled:
+              description: Enabled enables or disables the cost management feature
+                in kore.
+              type: boolean
+            infoCredentials:
+              additionalProperties:
+                description: SecretReference represents a Secret Reference. It has
+                  enough information to retrieve secret in any namespace
+                properties:
+                  name:
+                    description: Name is unique within a namespace to reference a
+                      secret resource.
+                    type: string
+                  namespace:
+                    description: Namespace defines the space within which the secret
+                      name must be unique.
+                    type: string
+                type: object
+              description: InfoCredentials specifies a map of cloud provider to credentials
+                for retrieving generic pricing metadata from the providers. Adding
+                a credential for a provider here enables metadata delivery for that
+                provider.
+              type: object
+          type: object
+        status:
+          description: CostStatus defines the observed state of a cost management
+            service
+          properties:
+            components:
+              description: Components is a collection of component statuses
+              items:
+                description: Component the state of a component of the resource
+                properties:
+                  detail:
+                    description: Detail is additional details on the error is any
+                    type: string
+                  message:
+                    description: Message is a human readable message on the status
+                      of the component
+                    type: string
+                  name:
+                    description: Name is the name of the component
+                    type: string
+                  resource:
+                    description: Resource is a reference to the resource
+                    properties:
+                      group:
+                        description: Group is the api group
+                        type: string
+                      kind:
+                        description: Kind is the name of the resource under the group
+                        type: string
+                      name:
+                        description: Name is name of the resource
+                        type: string
+                      namespace:
+                        description: Namespace is the location of the object
+                        type: string
+                      version:
+                        description: Version is the group version
+                        type: string
+                    required:
+                    - group
+                    - kind
+                    - name
+                    - namespace
+                    - version
+                    type: object
+                  status:
+                    description: Status is the status of the component
+                    type: string
+                type: object
+              type: array
+            message:
+              description: Message is the description of the current status
+              type: string
+            status:
+              description: Status is the overall status of the service
+              type: string
+          type: object
+      type: object
+  version: v1beta1
+  versions:
+  - name: v1beta1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsCostsKoreAppviaIo_costsYamlBytes() ([]byte, error) {
+	return _crdsCostsKoreAppviaIo_costsYaml, nil
+}
+
+func crdsCostsKoreAppviaIo_costsYaml() (*asset, error) {
+	bytes, err := crdsCostsKoreAppviaIo_costsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/costs.kore.appvia.io_costs.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _crdsGcpComputeKoreAppviaIo_organizationsYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -7609,6 +7777,7 @@ var _bindata = map[string]func() (*asset, error){
 	"crds/config.kore.appvia.io_secrets.yaml":                             crdsConfigKoreAppviaIo_secretsYaml,
 	"crds/core.kore.appvia.io_idp.yaml":                                   crdsCoreKoreAppviaIo_idpYaml,
 	"crds/core.kore.appvia.io_oidclient.yaml":                             crdsCoreKoreAppviaIo_oidclientYaml,
+	"crds/costs.kore.appvia.io_costs.yaml":                                crdsCostsKoreAppviaIo_costsYaml,
 	"crds/gcp.compute.kore.appvia.io_organizations.yaml":                  crdsGcpComputeKoreAppviaIo_organizationsYaml,
 	"crds/gcp.compute.kore.appvia.io_projectclaims.yaml":                  crdsGcpComputeKoreAppviaIo_projectclaimsYaml,
 	"crds/gcp.compute.kore.appvia.io_projects.yaml":                       crdsGcpComputeKoreAppviaIo_projectsYaml,
@@ -7693,6 +7862,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"config.kore.appvia.io_secrets.yaml":                             {crdsConfigKoreAppviaIo_secretsYaml, map[string]*bintree{}},
 		"core.kore.appvia.io_idp.yaml":                                   {crdsCoreKoreAppviaIo_idpYaml, map[string]*bintree{}},
 		"core.kore.appvia.io_oidclient.yaml":                             {crdsCoreKoreAppviaIo_oidclientYaml, map[string]*bintree{}},
+		"costs.kore.appvia.io_costs.yaml":                                {crdsCostsKoreAppviaIo_costsYaml, map[string]*bintree{}},
 		"gcp.compute.kore.appvia.io_organizations.yaml":                  {crdsGcpComputeKoreAppviaIo_organizationsYaml, map[string]*bintree{}},
 		"gcp.compute.kore.appvia.io_projectclaims.yaml":                  {crdsGcpComputeKoreAppviaIo_projectclaimsYaml, map[string]*bintree{}},
 		"gcp.compute.kore.appvia.io_projects.yaml":                       {crdsGcpComputeKoreAppviaIo_projectsYaml, map[string]*bintree{}},
