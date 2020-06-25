@@ -1,3 +1,7 @@
+## Release v0.2.1 - 2020-06-25
+
+Bugfix release to enable [GSuite token refresh to work for Kore CLI](https://github.com/appvia/kore/issues/999)
+
 ## Release v0.2.0 - 2020-05-30
 
 This release of Kore adds the following key features:
