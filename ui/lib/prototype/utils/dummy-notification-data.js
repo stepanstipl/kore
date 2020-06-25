@@ -64,14 +64,6 @@ const eventNotifications = {
     },
     {
       metadata: {
-        name: 'cluster-deleted'
-      },
-      spec: {
-        event: 'CLUSTER_DELETED'
-      }
-    },
-    {
-      metadata: {
         name: 'service-created'
       },
       spec: {

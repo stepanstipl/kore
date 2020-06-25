@@ -44,7 +44,7 @@ class EventNotificationsTab extends React.Component {
 
   notificationsCreated = (notificationList) => {
     this.setState(state => ({
-      notifications: [ ...state.eventNotifications, ...notificationList ],
+      notifications: [ ...state.notifications, ...notificationList ],
       newNotification: false
     }))
   }
@@ -95,7 +95,7 @@ class EventNotificationsTab extends React.Component {
 
   deleteNotification = (notification) => () => {
     this.setState(state => ({
-      notifications: state.eventNotifications.filter(n => n.metadata.name !== notification.metadata.name)
+      notifications: state.notifications.filter(n => n.metadata.name !== notification.metadata.name)
     }), () => successMessage('Notification deleted'))
   }
 
