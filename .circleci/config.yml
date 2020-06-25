@@ -539,8 +539,6 @@ workflows:
             tags:
               only: /^v.*$/
       - check-release-notes:
-          requires:
-            - release
           filters:
             branches:
               ignore: /.*/
