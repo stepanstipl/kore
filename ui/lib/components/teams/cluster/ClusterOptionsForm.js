@@ -163,7 +163,7 @@ class ClusterOptionsForm extends React.Component {
         ) : null}
         {selectedPlan ? (
           <Collapse>
-            <Collapse.Panel header="Customize cluster parameters">
+            <Collapse.Panel header="Customize cluster parameters" forceRender={true}>
               <UsePlanForm
                 team={this.props.team}
                 resourceType="cluster"
