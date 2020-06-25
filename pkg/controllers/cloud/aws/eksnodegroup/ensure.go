@@ -17,9 +17,10 @@
 package eksnodegroup
 
 import (
-	"context"
 	"errors"
 	"time"
+
+	"github.com/appvia/kore/pkg/kore"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
@@ -37,7 +38,7 @@ import (
 
 // EnsureNodeGroupIsPending is responsible for setting the resource to a pending state
 func (n *ctrl) EnsureNodeGroupIsPending(group *eks.EKSNodeGroup) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		if group.Status.Status != corev1.PendingStatus {
 			group.Status.Status = corev1.PendingStatus
 
@@ -50,7 +51,7 @@ func (n *ctrl) EnsureNodeGroupIsPending(group *eks.EKSNodeGroup) controllers.Ens
 
 // EnsureClusterReady is responsible for checking the EKS cluster is ready
 func (n *ctrl) EnsureClusterReady(group *eks.EKSNodeGroup) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 
 		logger := log.WithFields(log.Fields{
 			"name":      group.Name,
@@ -64,7 +65,7 @@ func (n *ctrl) EnsureClusterReady(group *eks.EKSNodeGroup) controllers.EnsureFun
 		}
 
 		cluster := &eks.EKS{}
-		if err := n.mgr.GetClient().Get(ctx, key, cluster); err != nil {
+		if err := ctx.Client().Get(ctx, key, cluster); err != nil {
 			logger.WithError(err).Error("trying to retrieve the cluster status")
 
 			return reconcile.Result{}, err
@@ -83,7 +84,7 @@ func (n *ctrl) EnsureClusterReady(group *eks.EKSNodeGroup) controllers.EnsureFun
 
 // EnsureNodeRole is responsible for ensuring the IAM role is there
 func (n *ctrl) EnsureNodeRole(group *eks.EKSNodeGroup, credentials *aws.Credentials) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		logger := log.WithFields(log.Fields{
 			"name":      group.Name,
 			"namespace": group.Namespace,
@@ -112,7 +113,7 @@ func (n *ctrl) EnsureNodeRole(group *eks.EKSNodeGroup, credentials *aws.Credenti
 
 // EnsureNodeGroup is responsible for making sure the nodegroup is provisioned
 func (n *ctrl) EnsureNodeGroup(client *aws.Client, group *eks.EKSNodeGroup) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		logger := log.WithFields(log.Fields{
 			"name":      group.Name,
 			"namespace": group.Namespace,
@@ -212,7 +213,7 @@ func (n *ctrl) EnsureNodeGroup(client *aws.Client, group *eks.EKSNodeGroup) cont
 
 // EnsureDeletionStatus makes sure the resource is set to deleting
 func (n *ctrl) EnsureDeletionStatus(group *eks.EKSNodeGroup) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		if group.Status.Status != corev1.DeletingStatus {
 			group.Status.Status = corev1.DeletingStatus
 
@@ -225,7 +226,7 @@ func (n *ctrl) EnsureDeletionStatus(group *eks.EKSNodeGroup) controllers.EnsureF
 
 // EnsureDeletion ensures the nodegroup is deleting
 func (n *ctrl) EnsureDeletion(group *eks.EKSNodeGroup) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		logger := log.WithFields(log.Fields{
 			"name":      group.Name,
 			"namespace": group.Namespace,
@@ -288,7 +289,7 @@ func (n *ctrl) EnsureDeletion(group *eks.EKSNodeGroup) controllers.EnsureFunc {
 
 // EnsureRoleDeletion ensures the nodegroup role is removed
 func (n *ctrl) EnsureRoleDeletion(group *eks.EKSNodeGroup) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		logger := log.WithFields(log.Fields{
 			"name":      group.Name,
 			"namespace": group.Namespace,
@@ -312,14 +313,14 @@ func (n *ctrl) EnsureRoleDeletion(group *eks.EKSNodeGroup) controllers.EnsureFun
 }
 
 func (n *ctrl) EnsureRemoveFinalizer(group *eks.EKSNodeGroup) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		logger := log.WithFields(log.Fields{
 			"name":      group.Name,
 			"namespace": group.Namespace,
 		})
 		logger.Debug("attempting to delete eks nodegroup finalizer")
 
-		finalizer := kubernetes.NewFinalizer(n.mgr.GetClient(), finalizerName)
+		finalizer := kubernetes.NewFinalizer(ctx.Client(), finalizerName)
 		if err := finalizer.Remove(group); err != nil {
 			logger.WithError(err).Error("removing the finalizer from eks resource")
 

@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
-	"github.com/appvia/kore/pkg/kore/assets"
 	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils/jsonschema"
@@ -77,17 +76,17 @@ func (p plansImpl) Update(ctx context.Context, plan *configv1.Plan, ignoreReadon
 		}
 	}
 
-	schema, err := assets.GetClusterSchema(plan.Spec.Kind)
-	if err != nil {
+	clusterProvider, exists := GetClusterProvider(plan.Spec.Kind)
+	if !exists {
 		return validation.NewError("cluster failed validation").
-			WithFieldError("kind", validation.InvalidType, err.Error())
+			WithFieldError("kind", validation.InvalidType, "unknown cluster provider type")
 	}
 
-	if err := jsonschema.Validate(schema, "plan", plan.Spec.Configuration); err != nil {
+	if err := jsonschema.Validate(clusterProvider.PlanJSONSchema(), "plan", plan.Spec.Configuration); err != nil {
 		return err
 	}
 
-	err = p.Store().Client().Update(ctx,
+	err := p.Store().Client().Update(ctx,
 		store.UpdateOptions.To(plan),
 		store.UpdateOptions.WithCreate(true),
 		store.UpdateOptions.WithForce(true),

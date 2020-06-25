@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/appvia/kore/pkg/kore"
+
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	gcp "github.com/appvia/kore/pkg/apis/gcp/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
@@ -64,8 +66,9 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		return c.Delete(request)
 	}
 
+	koreCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c)
 	result, err := func() (reconcile.Result, error) {
-		return controllers.DefaultEnsureHandler.Run(ctx,
+		return controllers.DefaultEnsureHandler.Run(koreCtx,
 			[]controllers.EnsureFunc{
 				c.EnsureFinalizer(claim),
 				c.EnsurePending(claim),
@@ -103,10 +106,8 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 // EnsureFinalizer ensures the resource has the finalizer
 func (c *Controller) EnsureFinalizer(claim *gcp.ProjectClaim) controllers.EnsureFunc {
-	client := c.mgr.GetClient()
-
-	return func(ctx context.Context) (reconcile.Result, error) {
-		f := kubernetes.NewFinalizer(client, finalizerName)
+	return func(ctx kore.Context) (reconcile.Result, error) {
+		f := kubernetes.NewFinalizer(ctx.Client(), finalizerName)
 		if f.NeedToAdd(claim) {
 			if err := f.Add(claim); err != nil {
 				return reconcile.Result{}, err
@@ -121,7 +122,7 @@ func (c *Controller) EnsureFinalizer(claim *gcp.ProjectClaim) controllers.Ensure
 
 // EnsurePending ensures the resource is pending
 func (c *Controller) EnsurePending(claim *gcp.ProjectClaim) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		if claim.Status.Status != corev1.PendingStatus {
 			claim.Status.Status = corev1.PendingStatus
 
@@ -136,7 +137,7 @@ func (c *Controller) EnsurePending(claim *gcp.ProjectClaim) controllers.EnsureFu
 func (c *Controller) EnsureProjectUnclaimed(claim *gcp.ProjectClaim) controllers.EnsureFunc {
 	cc := c.mgr.GetClient()
 
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		// @step: ensure no claim exists outside of the team
 		list := &gcp.ProjectList{}
 		if err := cc.List(ctx, list, client.InNamespace("")); err != nil {
@@ -165,9 +166,7 @@ func (c *Controller) EnsureProjectUnclaimed(claim *gcp.ProjectClaim) controllers
 
 // EnsureProject is responsible for provisioning a project none created
 func (c *Controller) EnsureProject(claim *gcp.ProjectClaim) controllers.EnsureFunc {
-	client := c.mgr.GetClient()
-
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		// @step: check if a project exists already
 		project := &gcp.Project{
 			ObjectMeta: metav1.ObjectMeta{
@@ -176,7 +175,7 @@ func (c *Controller) EnsureProject(claim *gcp.ProjectClaim) controllers.EnsureFu
 			},
 		}
 
-		found, err := kubernetes.GetIfExists(ctx, client, project)
+		found, err := kubernetes.GetIfExists(ctx, ctx.Client(), project)
 		if err != nil {
 			c.logger.WithError(err).Error("trying to check for project existence")
 
@@ -187,7 +186,7 @@ func (c *Controller) EnsureProject(claim *gcp.ProjectClaim) controllers.EnsureFu
 			project.Spec.ProjectName = claim.Spec.ProjectName
 			project.Spec.Organization = claim.Spec.Organization
 
-			if _, err := kubernetes.CreateOrUpdate(ctx, client, project); err != nil {
+			if _, err := kubernetes.CreateOrUpdate(ctx, ctx.Client(), project); err != nil {
 				c.logger.WithError(err).Error("trying to create the project")
 
 				return reconcile.Result{}, err

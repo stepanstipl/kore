@@ -59,13 +59,13 @@ const (
 
 // Reconcile is the entrypoint for the reconciliation logic
 func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	ctx := context.Background()
-
 	logger := log.WithFields(log.Fields{
 		"name":      request.NamespacedName.Name,
 		"namespace": request.NamespacedName.Namespace,
 	})
 	logger.Debug("attempting to reconcile the kubernetes cluster")
+
+	ctx := kore.NewContext(context.Background(), logger, a.mgr.GetClient(), a)
 
 	// @step: retrieve the type from the api
 	object := &clustersv1.Kubernetes{}

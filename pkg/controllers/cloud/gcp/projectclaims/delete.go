@@ -19,6 +19,8 @@ package projectclaims
 import (
 	"context"
 
+	"github.com/appvia/kore/pkg/kore"
+
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	gcp "github.com/appvia/kore/pkg/apis/gcp/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
@@ -56,8 +58,9 @@ func (c *Controller) Delete(request reconcile.Request) (reconcile.Result, error)
 		return reconcile.Result{}, nil
 	}
 
+	koreCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c)
 	result, err := func() (reconcile.Result, error) {
-		return controllers.DefaultEnsureHandler.Run(ctx,
+		return controllers.DefaultEnsureHandler.Run(koreCtx,
 			[]controllers.EnsureFunc{
 				c.EnsureDeleting(claim),
 				c.EnsureFinalizerRemoved(claim),
@@ -92,7 +95,7 @@ func (c *Controller) Delete(request reconcile.Request) (reconcile.Result, error)
 
 // EnsureDeleting ensures the resource is deleting
 func (c *Controller) EnsureDeleting(claim *gcp.ProjectClaim) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		if claim.Status.Status != corev1.DeletingStatus {
 			claim.Status.Status = corev1.DeletingStatus
 
@@ -105,10 +108,8 @@ func (c *Controller) EnsureDeleting(claim *gcp.ProjectClaim) controllers.EnsureF
 
 // EnsureFinalizerRemoved removes the finalizer
 func (c *Controller) EnsureFinalizerRemoved(claim *gcp.ProjectClaim) controllers.EnsureFunc {
-	client := c.mgr.GetClient()
-
-	return func(ctx context.Context) (reconcile.Result, error) {
-		f := kubernetes.NewFinalizer(client, finalizerName)
+	return func(ctx kore.Context) (reconcile.Result, error) {
+		f := kubernetes.NewFinalizer(ctx.Client(), finalizerName)
 
 		if f.IsDeletionCandidate(claim) {
 			return reconcile.Result{}, f.Remove(claim)

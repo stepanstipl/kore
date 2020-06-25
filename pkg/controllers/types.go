@@ -78,4 +78,4 @@ type StatusWriter interface {
 }
 
 // EnsureFunc defines a method to ensure a state
-type EnsureFunc func(context.Context) (reconcile.Result, error)
+type EnsureFunc func(kore.Context) (reconcile.Result, error)

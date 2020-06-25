@@ -87,16 +87,16 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 
 	result, err := func() (reconcile.Result, error) {
 		ensure := []controllers.EnsureFunc{
-			c.EnsureServicePending(logger, service),
-			c.EnsureDependencies(logger, service),
-			c.EnsureFinalizer(logger, service, finalizer),
-			func(ctx context.Context) (result reconcile.Result, err error) {
-				return provider.Reconcile(koreCtx, service)
+			c.EnsureServicePending(service),
+			c.EnsureDependencies(service),
+			c.EnsureFinalizer(service, finalizer),
+			func(ctx kore.Context) (result reconcile.Result, err error) {
+				return provider.Reconcile(ctx, service)
 			},
 		}
 
 		for _, handler := range ensure {
-			result, err := handler(ctx)
+			result, err := handler(koreCtx)
 			if err != nil {
 				return reconcile.Result{}, err
 			}

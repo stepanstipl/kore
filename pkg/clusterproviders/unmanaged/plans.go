@@ -14,27 +14,30 @@
  * limitations under the License.
  */
 
-package assets_test
+package unmanaged
 
 import (
-	"github.com/appvia/kore/pkg/kore/assets"
-	"github.com/appvia/kore/pkg/utils/jsonschema"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
+	apiextv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var _ = Describe("Plans", func() {
-	It("All plans should be valid", func() {
-		plans := assets.GetDefaultPlans()
-
-		for _, plan := range plans {
-			schema, err := assets.GetClusterSchema(plan.Spec.Kind)
-			Expect(err).ToNot(HaveOccurred())
-
-			err = jsonschema.Validate(schema, plan.Name, plan.Spec.Configuration)
-			Expect(err).ToNot(HaveOccurred(), "%s plan is not valid: %s", plan.Name, err)
-
-		}
-	})
-
-})
+var plans = []configv1.Plan{
+	{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "kore",
+			Annotations: map[string]string{
+				"kore.appvia.io/system":   "true",
+				"kore.appvia.io/readonly": "true",
+			},
+		},
+		Spec: configv1.PlanSpec{
+			Kind:        Kind,
+			Summary:     "Default cluster plan for Kore",
+			Description: "Default cluster plan for Kore",
+			Configuration: apiextv1.JSON{
+				Raw: []byte(`{}`),
+			},
+		},
+	},
+}

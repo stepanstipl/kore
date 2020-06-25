@@ -36,6 +36,7 @@ import (
 )
 
 // Teams is the kore api teams interface
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Teams
 type Teams interface {
 	// CheckDelete verifies whether the team can be deleted
 	CheckDelete(context.Context, *orgv1.Team, ...DeleteOptionFunc) error

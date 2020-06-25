@@ -14,17 +14,14 @@
  * limitations under the License.
  */
 
-package assets
+package unmanaged
 
-// KindPlanSchema is the JSON schema used to describe and validate EKS Plans
-const KindPlanSchema = `
-{
+const schema = `{
 	"$id": "https://appvia.io/schemas/eks/plan.json",
 	"$schema": "http://json-schema.org/draft-07/schema#",
 	"description": "EKS Cluster Plan Schema",
 	"type": "object",
 	"additionalProperties": false,
-	"properties": {
-	}
+	"properties": {}
 }
 `

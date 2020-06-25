@@ -37,7 +37,6 @@ import (
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/apiserver/types"
 	"github.com/appvia/kore/pkg/kore"
-	"github.com/appvia/kore/pkg/kore/assets"
 	"github.com/appvia/kore/pkg/utils"
 
 	restful "github.com/emicklei/go-restful"
@@ -877,9 +876,9 @@ func (u teamHandler) getTeamPlanDetails(req *restful.Request, resp *restful.Resp
 			return err
 		}
 
-		schema, err := assets.GetClusterSchema(plan.Spec.Kind)
-		if err != nil {
-			writeError(req, resp, err, http.StatusNotFound)
+		clusterProvider, exists := kore.GetClusterProvider(plan.Spec.Kind)
+		if !exists {
+			writeError(req, resp, fmt.Errorf("unknown cluster provider type %q", plan.Spec.Kind), http.StatusNotFound)
 			return nil
 		}
 
@@ -890,7 +889,7 @@ func (u teamHandler) getTeamPlanDetails(req *restful.Request, resp *restful.Resp
 
 		return resp.WriteHeaderAndEntity(http.StatusOK, TeamPlan{
 			Plan:           plan.Spec,
-			Schema:         schema,
+			Schema:         clusterProvider.PlanJSONSchema(),
 			EditableParams: editableParams,
 		})
 	})

@@ -14,31 +14,37 @@
  * limitations under the License.
  */
 
-package controllers
+package eks
 
 import (
+	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	"github.com/appvia/kore/pkg/kore"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-var (
-	DefaultEnsureHandler = EnsureRunner{}
-)
+const Kind = "EKS"
 
-// EnsureRunner provides a wrapper for running ensure funcs
-type EnsureRunner struct{}
+func init() {
+	kore.RegisterClusterProvider(Provider{})
+}
 
-// Run is a generic handler for running the ensure methods
-func (e *EnsureRunner) Run(ctx kore.Context, ensures []EnsureFunc) (reconcile.Result, error) {
-	for _, x := range ensures {
-		result, err := x(ctx)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		if result.Requeue || result.RequeueAfter > 0 {
-			return result, nil
-		}
-	}
+type Provider struct {
+}
 
-	return reconcile.Result{}, nil
+func (p Provider) Type() string {
+	return Kind
+}
+
+// PlanJSONSchema returns the JSON schema for the plans belonging to this cluster
+func (p Provider) PlanJSONSchema() string {
+	return schema
+}
+
+// DefaultPlans returns with the built-in default plans for the cluster provider
+func (p Provider) DefaultPlans() []configv1.Plan {
+	return plans
+}
+
+// DefaultPlanPolicy returns with the built-in default plan policy
+func (p Provider) DefaultPlanPolicy() *configv1.PlanPolicy {
+	return &planPolicy
 }

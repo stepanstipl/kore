@@ -80,9 +80,8 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 		ensure := []controllers.EnsureFunc{
 			c.ensureFinalizer(serviceProvider, finalizer),
 			c.ensurePending(serviceProvider),
-			func(ctx context.Context) (result reconcile.Result, err error) {
-				spCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c)
-				complete, err := c.ServiceProviders().SetUp(spCtx, serviceProvider)
+			func(ctx kore.Context) (result reconcile.Result, err error) {
+				complete, err := c.ServiceProviders().SetUp(ctx, serviceProvider)
 				if err != nil {
 					return reconcile.Result{}, fmt.Errorf("failed to set up service provider: %w", err)
 				}
@@ -90,12 +89,12 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 					return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 				}
 
-				provider, err := c.ServiceProviders().Register(spCtx, serviceProvider)
+				provider, err := c.ServiceProviders().Register(ctx, serviceProvider)
 				if err != nil {
 					return reconcile.Result{}, fmt.Errorf("failed to register service provider: %w", err)
 				}
 
-				catalog, err := c.ServiceProviders().Catalog(spCtx, serviceProvider)
+				catalog, err := c.ServiceProviders().Catalog(ctx, serviceProvider)
 				if err != nil {
 					return reconcile.Result{}, fmt.Errorf("failed to load service catalog: %w", err)
 				}
@@ -181,8 +180,9 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 			},
 		}
 
+		koreCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c)
 		for _, handler := range ensure {
-			result, err := handler(ctx)
+			result, err := handler(koreCtx)
 			if err != nil {
 				return reconcile.Result{}, err
 			}

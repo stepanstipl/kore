@@ -31,7 +31,6 @@ import (
 
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/kore"
-	"github.com/appvia/kore/pkg/kore/assets"
 	"github.com/appvia/kore/pkg/utils/jsonschema"
 
 	osb "github.com/kubernetes-sigs/go-open-service-broker-client/v2"
@@ -330,7 +329,7 @@ func parseSchema(subject string, val interface{}) (string, error) {
 		return "", fmt.Errorf("%s has an invalid schema", subject)
 	}
 
-	if err := jsonschema.Validate(assets.JSONSchemaDraft07, fmt.Sprintf("%s schema", subject), schema); err != nil {
+	if err := jsonschema.Validate(jsonschema.MetaSchemaDraft07, fmt.Sprintf("%s schema", subject), schema); err != nil {
 		return "", err
 	}
 

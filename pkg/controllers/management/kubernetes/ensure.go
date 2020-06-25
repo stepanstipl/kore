@@ -17,7 +17,6 @@
 package kubernetes
 
 import (
-	"context"
 	"time"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
@@ -38,7 +37,7 @@ import (
 
 // EnsureCloudProvider is responsible for checking the cloud provider
 func (a k8sCtrl) EnsureCloudProvider(object *clustersv1.Kubernetes) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		if !kore.IsProviderBacked(object) {
 			return reconcile.Result{}, nil
 		}
@@ -49,7 +48,7 @@ func (a k8sCtrl) EnsureCloudProvider(object *clustersv1.Kubernetes) controllers.
 
 // EnsureDeleteStatus is responsible for ensure the status is set to deleting
 func (a k8sCtrl) EnsureDeleteStatus(object *clustersv1.Kubernetes) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		if object.Status.Status != corev1.DeletingStatus {
 			object.Status.Status = corev1.DeletingStatus
 
@@ -63,7 +62,7 @@ func (a k8sCtrl) EnsureDeleteStatus(object *clustersv1.Kubernetes) controllers.E
 // EnsureServiceDeletion is responsible for cleanup the resources in the cluster
 // @note: at present this is only done for EKS as GKE performs it's own cleanup
 func (a k8sCtrl) EnsureServiceDeletion(object *clustersv1.Kubernetes) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		logger := log.WithFields(log.Fields{
 			"name":      object.Name,
 			"namespace": object.Namespace,
@@ -79,7 +78,7 @@ func (a k8sCtrl) EnsureServiceDeletion(object *clustersv1.Kubernetes) controller
 
 		result, err := func() (reconcile.Result, error) {
 			// @step: retrieve the provider credentials secret
-			token, err := controllers.GetConfigSecret(ctx, a.mgr.GetClient(), object.Namespace, object.Name)
+			token, err := controllers.GetConfigSecret(ctx, ctx.Client(), object.Namespace, object.Name)
 			if err != nil {
 				if kerrors.IsNotFound(err) {
 					return reconcile.Result{}, nil
@@ -138,9 +137,9 @@ func (a k8sCtrl) EnsureServiceDeletion(object *clustersv1.Kubernetes) controller
 
 // EnsureSecretDeletion is responsible for deletion the admin token
 func (a k8sCtrl) EnsureSecretDeletion(object *clustersv1.Kubernetes) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		// @step: we should delete the secert from api
-		if err := kubernetes.DeleteIfExists(ctx, a.mgr.GetClient(), &configv1.Secret{
+		if err := kubernetes.DeleteIfExists(ctx, ctx.Client(), &configv1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      object.Name,
 				Namespace: object.Namespace,
@@ -157,9 +156,9 @@ func (a k8sCtrl) EnsureSecretDeletion(object *clustersv1.Kubernetes) controllers
 
 // EnsureFinalizerRemoved removes the finalizer now
 func (a k8sCtrl) EnsureFinalizerRemoved(object *clustersv1.Kubernetes) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		// @cool we can remove the finalizer now
-		finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
+		finalizer := kubernetes.NewFinalizer(ctx.Client(), finalizerName)
 		if finalizer.IsDeletionCandidate(object) {
 			if err := finalizer.Remove(object); err != nil {
 				return reconcile.Result{}, err
@@ -171,15 +170,13 @@ func (a k8sCtrl) EnsureFinalizerRemoved(object *clustersv1.Kubernetes) controlle
 }
 
 func (a k8sCtrl) EnsureProviderWorkloadDependenciesRemoved(resource *clustersv1.Kubernetes) controllers.EnsureFunc {
-	return func(c context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		// remove all workloads dependencies required for any cloud provider
 		logger := log.WithFields(log.Fields{
 			"name":      resource.Name,
 			"namespace": resource.Namespace,
 			"provider":  resource.Spec.Provider.Kind,
 		})
-
-		ctx := kore.NewContext(c, logger, a.mgr.GetClient(), a.Interface)
 
 		logger.Debug("obtaining workloads specific to the cloud provider")
 
@@ -192,7 +189,7 @@ func (a k8sCtrl) EnsureProviderWorkloadDependenciesRemoved(resource *clustersv1.
 		case "EKS":
 			p := &eks.EKS{}
 
-			if err := a.mgr.GetClient().Get(ctx, key, p); err != nil {
+			if err := ctx.Client().Get(ctx, key, p); err != nil {
 				logger.WithError(err).Error("trying to retrieve the eks cluster from api")
 			}
 
@@ -217,13 +214,12 @@ func (a k8sCtrl) EnsureProviderWorkloadDependenciesRemoved(resource *clustersv1.
 }
 
 // EnsureProviderWorkloads creates all the in cluster services that should be managed for the provider cluster
-func (a k8sCtrl) EnsureProviderWorkloads(c context.Context, resource *clustersv1.Kubernetes) (reconcile.Result, error) {
+func (a k8sCtrl) EnsureProviderWorkloads(ctx kore.Context, resource *clustersv1.Kubernetes) (reconcile.Result, error) {
 	logger := log.WithFields(log.Fields{
 		"name":      resource.Name,
 		"namespace": resource.Namespace,
 		"provider":  resource.Spec.Provider.Kind,
 	})
-	ctx := kore.NewContext(c, logger, a.mgr.GetClient(), a.Interface)
 
 	logger.Debug("obtaining workloads specific to the cloud provider")
 
@@ -236,7 +232,7 @@ func (a k8sCtrl) EnsureProviderWorkloads(c context.Context, resource *clustersv1
 	case "EKS":
 		p := &eks.EKS{}
 
-		if err := a.mgr.GetClient().Get(ctx, key, p); err != nil {
+		if err := ctx.Client().Get(ctx, key, p); err != nil {
 			logger.WithError(err).Error("trying to retrieve the eks cluster from api")
 		}
 

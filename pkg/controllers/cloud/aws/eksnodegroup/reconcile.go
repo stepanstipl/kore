@@ -21,6 +21,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/appvia/kore/pkg/kore"
+
 	core "github.com/appvia/kore/pkg/apis/core/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
@@ -102,7 +104,8 @@ func (n *ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 			return reconcile.Result{}, err
 		}
 
-		return controllers.DefaultEnsureHandler.Run(ctx,
+		koreCtx := kore.NewContext(ctx, logger, n.mgr.GetClient(), n)
+		return controllers.DefaultEnsureHandler.Run(koreCtx,
 			[]controllers.EnsureFunc{
 				n.EnsureNodeGroupIsPending(resource),
 				n.EnsureClusterReady(resource),

@@ -18,8 +18,6 @@ package cluster
 
 import (
 	"context"
-	"errors"
-	"strings"
 	"time"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
@@ -138,16 +136,4 @@ func (a *Controller) Stop(context.Context) error {
 	a.logger.Info("attempting to stop the controller")
 
 	return nil
-}
-
-// Provider returns the cloud provider for the cluster type
-func (a *Controller) Provider(kind string) (ClusterProviderComponents, error) {
-	switch strings.ToLower(kind) {
-	case "gke":
-		return &gkeComponents{Controller: a}, nil
-	case "eks":
-		return &eksComponents{Controller: a}, nil
-	default:
-		return nil, errors.New("unsupported cloud provider")
-	}
 }

@@ -20,9 +20,8 @@ import (
 	"context"
 	"fmt"
 
+	_ "github.com/appvia/kore/pkg/clusterproviders/register"
 	_ "github.com/appvia/kore/pkg/controllers/register"
-
-	// service provider imports
 	_ "github.com/appvia/kore/pkg/serviceproviders/register"
 
 	"github.com/appvia/kore/pkg/apiserver"

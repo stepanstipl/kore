@@ -17,8 +17,9 @@
 package serviceproviders
 
 import (
-	"context"
 	"fmt"
+
+	"github.com/appvia/kore/pkg/kore"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
@@ -29,7 +30,7 @@ import (
 )
 
 func (c *Controller) ensurePending(serviceProvider *servicesv1.ServiceProvider) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		if serviceProvider.Status.Status == "" {
 			serviceProvider.Status.Status = corev1.PendingStatus
 			return reconcile.Result{Requeue: true}, nil
@@ -44,7 +45,7 @@ func (c *Controller) ensurePending(serviceProvider *servicesv1.ServiceProvider) 
 }
 
 func (c *Controller) ensureFinalizer(serviceProvider *servicesv1.ServiceProvider, finalizer *kubernetes.Finalizer) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		if finalizer.NeedToAdd(serviceProvider) {
 			err := finalizer.Add(serviceProvider)
 			if err != nil {

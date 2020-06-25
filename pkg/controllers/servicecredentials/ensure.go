@@ -29,8 +29,6 @@ import (
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -41,8 +39,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func (c *Controller) ensurePending(logger log.FieldLogger, serviceCreds *servicesv1.ServiceCredentials) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+func (c *Controller) ensurePending(serviceCreds *servicesv1.ServiceCredentials) controllers.EnsureFunc {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		if serviceCreds.Status.Status == "" {
 			c.resetStatus(serviceCreds)
 			return reconcile.Result{Requeue: true}, nil
@@ -74,8 +72,8 @@ func (c *Controller) resetStatus(serviceCreds *servicesv1.ServiceCredentials) {
 	}
 }
 
-func (c *Controller) ensureFinalizer(logger log.FieldLogger, serviceCreds *servicesv1.ServiceCredentials, finalizer *kubernetes.Finalizer) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+func (c *Controller) ensureFinalizer(serviceCreds *servicesv1.ServiceCredentials, finalizer *kubernetes.Finalizer) controllers.EnsureFunc {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		if finalizer.NeedToAdd(serviceCreds) {
 			err := finalizer.Add(serviceCreds)
 			if err != nil {
@@ -88,11 +86,10 @@ func (c *Controller) ensureFinalizer(logger log.FieldLogger, serviceCreds *servi
 }
 
 func (c *Controller) ensureSecret(
-	logger log.FieldLogger,
 	service *servicesv1.Service,
 	serviceCreds *servicesv1.ServiceCredentials,
 	provider kore.ServiceProvider) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		// @step: create client for the cluster credentials
 		client, err := controllers.CreateClient(context.Background(), c.mgr.GetClient(), serviceCreds.Spec.Cluster)
 		if err != nil {
@@ -115,10 +112,7 @@ func (c *Controller) ensureSecret(
 			return reconcile.Result{}, nil
 		}
 
-		result, credentials, err := provider.ReconcileCredentials(
-			kore.NewContext(ctx, logger, c.mgr.GetClient(), c),
-			service, serviceCreds,
-		)
+		result, credentials, err := provider.ReconcileCredentials(ctx, service, serviceCreds)
 		if err != nil {
 			serviceCreds.Status.Components.SetCondition(corev1.Component{
 				Name:    ComponentProviderSecret,
@@ -176,11 +170,8 @@ func (c *Controller) ensureSecret(
 	}
 }
 
-func (c *Controller) EnsureDependencies(
-	logger log.FieldLogger,
-	serviceCredentials *servicesv1.ServiceCredentials,
-) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+func (c *Controller) EnsureDependencies(serviceCredentials *servicesv1.ServiceCredentials) controllers.EnsureFunc {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		cluster, err := c.Teams().Team(serviceCredentials.Spec.Cluster.Namespace).Clusters().Get(context.Background(), serviceCredentials.Spec.Cluster.Name)
 		if err != nil {
 			if err == kore.ErrNotFound {

@@ -17,22 +17,17 @@
 package cluster
 
 import (
-	"context"
 	"errors"
-	"fmt"
 
-	accounts "github.com/appvia/kore/pkg/apis/accounts/v1beta1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
-	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // SetClusterRevision set the revision annotation on the resource
@@ -105,36 +100,6 @@ func SetRuntimeNamespace(object runtime.Object, namespace string) {
 	}
 }
 
-// FindAccountManagement returns the account management
-func FindAccountManagement(ctx context.Context, cc client.Client, owner corev1.Ownership) (*accounts.AccountManagement, error) {
-	account := &accounts.AccountManagement{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      owner.Name,
-			Namespace: owner.Namespace,
-		},
-	}
-	found, err := kubernetes.GetIfExists(ctx, cc, account)
-	if err != nil {
-		return nil, err
-	}
-	if !found {
-		return nil, fmt.Errorf("accounting resource %q does not exist", owner.Name)
-	}
-
-	return account, nil
-}
-
-// FindAccountingRule matches the account rule
-func FindAccountingRule(account *accounts.AccountManagement, plan string) (*accounts.AccountsRule, bool) {
-	for _, x := range account.Spec.Rules {
-		if utils.Contains(plan, x.Plans) {
-			return x, true
-		}
-	}
-
-	return nil, false
-}
-
 // ComponentToUnstructured converts the component to a runtime reference
 func ComponentToUnstructured(component *corev1.Component) *unstructured.Unstructured {
 	u := &unstructured.Unstructured{}
@@ -150,18 +115,13 @@ func ComponentToUnstructured(component *corev1.Component) *unstructured.Unstruct
 }
 
 // IsComponentReferenced checks if the component is required
-func IsComponentReferenced(component *corev1.Component, components *Components) (bool, error) {
-	list, err := components.Walk()
-	if err != nil {
-		return false, err
-	}
-
-	for _, x := range list {
+func IsComponentReferenced(component *corev1.Component, components *kore.ClusterComponents) (bool, error) {
+	for _, c := range *components {
 		resource := component.Resource
 		if resource == nil {
 			return false, controllers.NewCriticalError(errors.New("resource is nil"))
 		}
-		if kore.IsOwner(x.Object, *resource) {
+		if kore.IsOwner(c.Object, *resource) {
 			return true, nil
 		}
 	}

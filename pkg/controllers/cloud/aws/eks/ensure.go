@@ -17,7 +17,6 @@
 package eks
 
 import (
-	"context"
 	"encoding/base64"
 	"fmt"
 	"time"
@@ -38,7 +37,7 @@ import (
 
 // EnsureResourcePending ensures the resource is pending
 func (t *eksCtrl) EnsureResourcePending(cluster *eks.EKS) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		if cluster.Status.Status != corev1.PendingStatus {
 			cluster.Status.Status = corev1.PendingStatus
 
@@ -53,7 +52,7 @@ func (t *eksCtrl) EnsureResourcePending(cluster *eks.EKS) controllers.EnsureFunc
 func (t *eksCtrl) EnsureClusterCreation(client *aws.Client, cluster *eks.EKS) controllers.EnsureFunc {
 	component := ComponentClusterCreator
 
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		logger := log.WithFields(log.Fields{
 			"name":      cluster.Name,
 			"namespace": cluster.Namespace,
@@ -116,7 +115,7 @@ func (t *eksCtrl) EnsureClusterCreation(client *aws.Client, cluster *eks.EKS) co
 
 // EnsureClusterInSync is responsible for ensuring the cluster is insync
 func (t *eksCtrl) EnsureClusterInSync(client *aws.Client, cluster *eks.EKS) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		logger := log.WithFields(log.Fields{
 			"name":      cluster.Name,
 			"namespace": cluster.Namespace,
@@ -191,7 +190,7 @@ func (t *eksCtrl) EnsureClusterInSync(client *aws.Client, cluster *eks.EKS) cont
 
 // EnsureClusterBootstrap ensures the cluster is correctly bootstrapped
 func (t *eksCtrl) EnsureClusterBootstrap(client *aws.Client, cluster *eks.EKS) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		logger := log.WithFields(log.Fields{
 			"name":      cluster.Name,
 			"namespace": cluster.Namespace,
@@ -212,7 +211,7 @@ func (t *eksCtrl) EnsureClusterBootstrap(client *aws.Client, cluster *eks.EKS) c
 			return reconcile.Result{}, err
 		}
 
-		if err := boot.Run(ctx, t.mgr.GetClient()); err != nil {
+		if err := boot.Run(ctx, ctx.Client()); err != nil {
 			logger.WithError(err).Error("trying to bootstrap eks cluster")
 
 			return reconcile.Result{}, err
@@ -230,7 +229,7 @@ func (t *eksCtrl) EnsureClusterBootstrap(client *aws.Client, cluster *eks.EKS) c
 
 // EnsureClusterRoles ensures we have the cluster IAM roles
 func (t *eksCtrl) EnsureClusterRoles(cluster *eks.EKS) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		logger := log.WithFields(log.Fields{
 			"name":      cluster.Name,
 			"namespace": cluster.Namespace,
@@ -275,7 +274,7 @@ func (t *eksCtrl) EnsureClusterRoles(cluster *eks.EKS) controllers.EnsureFunc {
 
 // EnsureDeletionStatus ensures the resource is in a deleting state
 func (t *eksCtrl) EnsureDeletionStatus(cluster *eks.EKS) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		// @step: lets update the status of the resource to deleting
 		if cluster.Status.Status != corev1.DeletingStatus {
 			cluster.Status.Status = corev1.DeletingStatus
@@ -289,7 +288,7 @@ func (t *eksCtrl) EnsureDeletionStatus(cluster *eks.EKS) controllers.EnsureFunc 
 
 // EnsureNodeGroupsDeleted ensures all nodegroup referencing me have been deleted
 func (t *eksCtrl) EnsureNodeGroupsDeleted(cluster *eks.EKS) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		logger := log.WithFields(log.Fields{
 			"name":      cluster.Name,
 			"namespace": cluster.Namespace,
@@ -324,7 +323,7 @@ func (t *eksCtrl) EnsureNodeGroupsDeleted(cluster *eks.EKS) controllers.EnsureFu
 
 // EnsureDeletion is responsible for deleting the actual cluster
 func (t *eksCtrl) EnsureDeletion(cluster *eks.EKS) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		logger := log.WithFields(log.Fields{
 			"name":      cluster.Name,
 			"namespace": cluster.Namespace,
@@ -397,7 +396,7 @@ func (t *eksCtrl) EnsureDeletion(cluster *eks.EKS) controllers.EnsureFunc {
 
 // EnsureRoleDeletion is responsible for deleting the IAM roles
 func (t *eksCtrl) EnsureRoleDeletion(cluster *eks.EKS) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		logger := log.WithFields(log.Fields{
 			"name":      cluster.Name,
 			"namespace": cluster.Namespace,
@@ -422,7 +421,7 @@ func (t *eksCtrl) EnsureRoleDeletion(cluster *eks.EKS) controllers.EnsureFunc {
 
 // EnsureSecretDeletion ensure the cluster secret is removed
 func (t *eksCtrl) EnsureSecretDeletion(cluster *eks.EKS) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		// @step: we can now delete the sysadmin token now
 		if err := controllers.DeleteClusterCredentialsSecret(ctx,
 			t.mgr.GetClient(), cluster.Namespace, cluster.Name); err != nil {
@@ -436,10 +435,8 @@ func (t *eksCtrl) EnsureSecretDeletion(cluster *eks.EKS) controllers.EnsureFunc 
 
 // EnsureFinalizerRemoved removes the finalizer now
 func (t *eksCtrl) EnsureFinalizerRemoved(cluster *eks.EKS) controllers.EnsureFunc {
-	client := t.mgr.GetClient()
-
-	return func(ctx context.Context) (reconcile.Result, error) {
-		finalizer := kubernetes.NewFinalizer(client, finalizerName)
+	return func(ctx kore.Context) (reconcile.Result, error) {
+		finalizer := kubernetes.NewFinalizer(ctx.Client(), finalizerName)
 		if finalizer.IsDeletionCandidate(cluster) {
 			if err := finalizer.Remove(cluster); err != nil {
 				return reconcile.Result{}, err
