@@ -154,7 +154,7 @@ func (l *loginHandler) authorizerHandler(req *restful.Request, resp *restful.Res
 		"scopes":       strings.Join(l.Config().IDPClientScopes, ","),
 	}).Info("providing authorization redirect to identity service")
 
-	http.Redirect(resp.ResponseWriter, req.Request, l.oidcConfig.AuthCodeURL(state), http.StatusTemporaryRedirect)
+	http.Redirect(resp.ResponseWriter, req.Request, l.oidcConfig.AuthCodeURL(state, oauth2.AccessTypeOffline), http.StatusTemporaryRedirect)
 }
 
 // callbackHandler is responsible for handling the callback
