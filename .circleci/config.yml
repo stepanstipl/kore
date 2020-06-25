@@ -183,6 +183,7 @@ jobs:
       GOFLAGS: "-mod=vendor"
       USE_GIT_VERSION: "true"
 
+    resource_class: large
     docker:
       - image: circleci/golang:1.14
 
@@ -202,6 +203,7 @@ jobs:
       GOFLAGS: "-mod=vendor"
       USE_GIT_VERSION: "true"
 
+    resource_class: large
     docker:
       - image: circleci/golang:1.14
       - name: database
@@ -227,6 +229,7 @@ jobs:
       GOFLAGS: "-mod=vendor"
       USE_GIT_VERSION: "true"
 
+    resource_class: large
     docker:
       *SERVICES
 
@@ -266,6 +269,7 @@ jobs:
       GOFLAGS: "-mod=vendor"
       USE_GIT_VERSION: "true"
 
+    resource_class: large
     docker:
       - image: circleci/golang:1.14
 
@@ -372,6 +376,7 @@ jobs:
             make test
 
   test-ui-e2e:
+    resource_class: xlarge
     docker:
       - image: circleci/node:12
       - *SERVICES_ETCD
