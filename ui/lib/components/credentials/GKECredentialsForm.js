@@ -99,17 +99,17 @@ class GKECredentialsForm extends VerifiedAllocatedResourceForm {
     return (
       <Card style={{ marginBottom: '20px' }}>
         <Alert
-          message="Project name and service account"
+          message="Project and service account"
           description="Retrieve these values from your GCP project. Providing these gives Kore the ability to create clusters within the project."
           type="info"
           style={{ marginBottom: '20px' }}
         />
-        <Form.Item label="Project name" validateStatus={this.fieldError('project') ? 'error' : ''} help={this.fieldError('project') || 'The GCP project that Kore will be able to build clusters within.'}>
+        <Form.Item label="Project ID" validateStatus={this.fieldError('project') ? 'error' : ''} help={this.fieldError('project') || 'The GCP project ID that Kore will be able to build clusters within.'}>
           {form.getFieldDecorator('project', {
-            rules: [{ required: true, message: 'Please enter your project name!' }],
+            rules: [{ required: true, message: 'Please enter your project ID!' }],
             initialValue: data && data.spec.project
           })(
-            <Input placeholder="Project" name="project" />,
+            <Input placeholder="Project ID" name="project" />,
           )}
         </Form.Item>
 
