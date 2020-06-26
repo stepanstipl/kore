@@ -24,6 +24,7 @@ import (
 )
 
 // Object is a Kubernetes object
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Object
 type Object interface {
 	runtime.Object
 	metav1.Object
