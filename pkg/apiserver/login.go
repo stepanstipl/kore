@@ -52,6 +52,8 @@ type loginHandler struct {
 	DefaultHandler
 }
 
+const googleAuthURL = "https://accounts.google.com"
+
 // @TODO Quick and dirty - the while this needs to be polished up
 
 // Register is responsible for handling the registration
@@ -82,12 +84,24 @@ func (l *loginHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 		}
 
 		// Configure an OpenID Connect aware OAuth2 client.
+		scopes := append([]string{oidc.ScopeOpenID}, l.Config().IDPClientScopes...)
+		if strings.HasPrefix(l.Config().IDPServerURL, googleAuthURL) {
+			// Remove offline scope if present as it causes failures on google.
+			scopes = func() (ret []string) {
+				for _, s := range scopes {
+					if s != oidc.ScopeOfflineAccess {
+						ret = append(ret, s)
+					}
+				}
+				return
+			}()
+		}
 		l.oidcConfig = &oauth2.Config{
 			ClientID:     l.Config().IDPClientID,
 			ClientSecret: l.Config().IDPClientSecret,
 			RedirectURL:  redirect,
 			Endpoint:     provider.Endpoint(),
-			Scopes:       append([]string{oidc.ScopeOpenID}, l.Config().IDPClientScopes...),
+			Scopes:       scopes,
 		}
 
 		l.verifier = provider.Verifier(&oidc.Config{ClientID: l.Config().IDPClientID})
@@ -154,7 +168,15 @@ func (l *loginHandler) authorizerHandler(req *restful.Request, resp *restful.Res
 		"scopes":       strings.Join(l.Config().IDPClientScopes, ","),
 	}).Info("providing authorization redirect to identity service")
 
-	http.Redirect(resp.ResponseWriter, req.Request, l.oidcConfig.AuthCodeURL(state, oauth2.AccessTypeOffline), http.StatusTemporaryRedirect)
+	var authCodeURL string
+	if strings.HasPrefix(l.Config().IDPServerURL, googleAuthURL) {
+		// Google has different ideas about how to request a refresh token.
+		authCodeURL = l.oidcConfig.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
+	} else {
+		authCodeURL = l.oidcConfig.AuthCodeURL(state)
+	}
+
+	http.Redirect(resp.ResponseWriter, req.Request, authCodeURL, http.StatusTemporaryRedirect)
 }
 
 // callbackHandler is responsible for handling the callback

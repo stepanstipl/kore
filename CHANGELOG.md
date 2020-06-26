@@ -1,3 +1,7 @@
+## Release v0.2.2 - 2020-06-26
+
+Bugfix release to enable [GSuite token refresh to continue to work for Kore CLI after first login](https://github.com/appvia/kore/issues/1006)
+
 ## Release v0.2.1 - 2020-06-25
 
 Bugfix release to enable [GSuite token refresh to work for Kore CLI](https://github.com/appvia/kore/issues/999)
