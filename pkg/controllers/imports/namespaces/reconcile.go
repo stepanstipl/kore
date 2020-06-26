@@ -19,8 +19,10 @@ package namespaces
 import (
 	"context"
 	"fmt"
+	"time"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
@@ -41,6 +43,7 @@ var (
 		"kore",
 		"kore-operators",
 		"kore-system",
+		"kube-node-lease",
 		"kube-public",
 		"kube-system",
 	}
@@ -71,10 +74,14 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 	var errorCounter int
 
 	for i := 0; i < len(list.Items); i++ {
-		// @step: for now we bypass any clusters in the kore namespace
-		if list.Items[i].Namespace == kore.HubNamespace {
+		// @step: for now we bypass any clusters in the kore-admin namespace
+		if list.Items[i].Namespace == kore.HubAdminTeam {
 			continue
 		}
+		if list.Items[i].Status.Status != corev1.SuccessStatus {
+			continue
+		}
+
 		l := logger.WithFields(log.Fields{
 			"cluster": list.Items[i].Name,
 		})
@@ -128,6 +135,9 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 				kore.Label("import"): "true",
 			}
 			labels := list.Items[i].GetLabels()
+			if labels == nil {
+				labels = make(map[string]string)
+			}
 			labels["owned"] = "true"
 
 			o.Spec = clustersv1.NamespaceClaimSpec{
@@ -136,6 +146,10 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 				Labels:      labels,
 				Name:        nlist.Items[k].Name,
 			}
+			l.WithField(
+				"namespace", nlist.Items[k].Name,
+			).Info("attempting to import the namespaceclaim from cluster")
+
 			if _, err := kubernetes.CreateOrUpdate(ctx, cc, o); err != nil {
 				l.WithField(
 					"namespace", list.Items[i].Name,
@@ -151,5 +165,5 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		logger.Warn("encountered errors trying to import the namespaces, will retry")
 	}
 
-	return reconcile.Result{}, nil
+	return reconcile.Result{RequeueAfter: 60 * time.Second}, nil
 }

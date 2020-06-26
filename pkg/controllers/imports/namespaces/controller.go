@@ -71,9 +71,9 @@ func (a *Controller) Name() string {
 
 // ManagerOptions returns the manager options for the controller
 func (a *Controller) ManagerOptions() manager.Options {
-	resync := 5 * time.Minute
+	resync := 2 * time.Minute
 	options := controllers.DefaultManagerOptions(a)
-	options.RetryPeriod = &resync
+	options.SyncPeriod = &resync
 
 	return options
 }
