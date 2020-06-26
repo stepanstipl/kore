@@ -27,7 +27,7 @@ function apiProxy(koreApiUrl) {
       }
       const message = (err.response && err.response.data && err.response.data.message) || err.message
       console.error(`Error making request to API with path ${apiUrlPath}`, status, message)
-      return res.status(status).send()
+      return res.status(status).send({ message })
     }
   }
 }

@@ -26,7 +26,7 @@ export class ConfigureCloudPage extends BasePage {
     }
     // Check if we're already on the right page/tab (or the default page/tab is what we want)
     const currUrl = await this.p.url()
-    if (currUrl.endsWith(`/configure/cloud/${urlName}`) || (urlName === 'GCP/orgs' && currUrl.endsWith('/configure/cloud/'))) {
+    if (currUrl.endsWith(`/configure/cloud/${urlName}`) || (urlName === 'GCP/orgs' && currUrl.endsWith('/configure/cloud'))) {
       return
     }
     await this.p.waitFor(100)

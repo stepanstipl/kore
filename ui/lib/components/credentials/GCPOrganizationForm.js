@@ -85,7 +85,7 @@ class GCPOrganizationForm extends VerifiedAllocatedResourceForm {
               style={{ marginTop: '10px' }}
             />
             <Form.Item label="Replace key">
-              <Checkbox id="gcp_org_replace_key" onChange={(e) => this.setState({ replaceKey: e.target.checked })} />
+              <Checkbox id="gcporg_replace_key" onChange={(e) => this.setState({ replaceKey: e.target.checked })} />
             </Form.Item>
           </>
         ) : null}

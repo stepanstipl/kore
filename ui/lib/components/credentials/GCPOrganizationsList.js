@@ -1,4 +1,4 @@
-import { Typography, List, Button, Drawer, Icon, Alert } from 'antd'
+import { Typography, List, Button, Drawer, Icon, Alert, Modal } from 'antd'
 const { Title } = Typography
 import getConfig from 'next/config'
 const { publicRuntimeConfig } = getConfig()
@@ -8,11 +8,14 @@ import ResourceList from '../resources/ResourceList'
 import GCPOrganizationForm from './GCPOrganizationForm'
 import KoreApi from '../../kore-api'
 import AllocationHelpers from '../../utils/allocation-helpers'
+import { errorMessage, loadingMessage, successMessage } from '../../utils/message'
 
 class GCPOrganizationsList extends ResourceList {
 
   createdMessage = 'GCP organization created successfully'
   updatedMessage = 'GCP organization updated successfully'
+  deletedMessage = 'GCP organization deleted successfully'
+  deleteFailedMessage = 'Error deleting GCP organization'
 
   async fetchComponentData() {
     const api = await KoreApi.client()
@@ -26,6 +29,33 @@ class GCPOrganizationsList extends ResourceList {
       org.allocation = AllocationHelpers.findAllocationForResource(allAllocations, org)
     })
     return { resources: gcpOrganizations, allTeams }
+  }
+
+  delete = (gcpOrg) => () => {
+    Modal.confirm({
+      title: `Are you sure you want to delete the GCP Organization "${gcpOrg.spec.parentID}"?`,
+      content: 'This cannot be undone',
+      okText: 'Yes',
+      okType: 'danger',
+      cancelText: 'No',
+      onOk: async () => {
+        const key = loadingMessage('Deleting allocations for organization', { duration: 0 })
+        try {
+          await AllocationHelpers.removeAllocation(gcpOrg)
+          loadingMessage('Deleting organization', { key, duration: 0 })
+          await (await KoreApi.client()).DeleteGCPOrganization(publicRuntimeConfig.koreAdminTeamName, gcpOrg.metadata.name)
+          successMessage(this.deletedMessage, { key })
+        } catch (err) {
+          console.log('Error deleting org', err.statusCode, err.response)
+          let msg = this.deleteFailedMessage
+          if (err.statusCode === 403) {
+            msg += `: ${err.response.body.message}`
+          }
+          errorMessage(msg, { key, duration: 10 })
+        }
+        await this.refresh()
+      }
+    })
   }
 
   render() {
@@ -50,7 +80,9 @@ class GCPOrganizationsList extends ResourceList {
                   organization={org}
                   allTeams={allTeams.items}
                   editOrganization={this.edit}
+                  deleteOrganization={this.delete}
                   handleUpdate={this.handleStatusUpdated}
+                  handleDelete={() => {}}
                   refreshMs={2000}
                   propsResourceDataKey="organization"
                   resourceApiRequest={async () => await (await KoreApi.client()).GetGCPOrganization(publicRuntimeConfig.koreAdminTeamName, org.metadata.name)}

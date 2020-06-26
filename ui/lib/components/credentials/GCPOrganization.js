@@ -11,7 +11,8 @@ class GCPOrganization extends AutoRefreshComponent {
   static propTypes = {
     organization: PropTypes.object.isRequired,
     allTeams: PropTypes.array.isRequired,
-    editOrganization: PropTypes.func.isRequired
+    editOrganization: PropTypes.func.isRequired,
+    deleteOrganization: PropTypes.func.isRequired
   }
 
   componentDidUpdate(prevProps) {
@@ -33,7 +34,7 @@ class GCPOrganization extends AutoRefreshComponent {
   }
 
   render() {
-    const { organization, editOrganization, allTeams } = this.props
+    const { organization, editOrganization, deleteOrganization, allTeams } = this.props
     const created = moment(organization.metadata.creationTimestamp).fromNow()
 
     const displayAllocations = () => {
@@ -45,9 +46,10 @@ class GCPOrganization extends AutoRefreshComponent {
     }
 
     return (
-      <List.Item key={organization.metadata.name} actions={[
+      <List.Item id={`gcporg_${organization.metadata.name}`} key={organization.metadata.name} actions={[
         <ResourceVerificationStatus key="verification_status" resourceStatus={organization.status} />,
-        <Text key="edit"><a onClick={editOrganization(organization)}><Icon type="edit" theme="filled"/> Edit</a></Text>
+        <Text key="delete_org"><a id={`gcporg_del_${organization.metadata.name}`}  onClick={deleteOrganization(organization)}><Icon type="delete" theme="filled"/> Delete</a></Text>,
+        <Text key="edit"><a id={`gcporg_edit_${organization.metadata.name}`} onClick={editOrganization(organization)}><Icon type="edit" theme="filled"/> Edit</a></Text>
       ]}>
         <List.Item.Meta
           avatar={<Avatar icon="cloud" />}
