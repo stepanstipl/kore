@@ -40,6 +40,9 @@ import (
 	_ "github.com/appvia/kore/pkg/controllers/management/namespaceclaims"
 	_ "github.com/appvia/kore/pkg/controllers/management/podpolicy"
 
+	// import the controllers
+	_ "github.com/appvia/kore/pkg/controllers/imports/namespaces"
+
 	// import secret controllers
 	_ "github.com/appvia/kore/pkg/controllers/secrets/gcp"
 	_ "github.com/appvia/kore/pkg/controllers/secrets/generic"
