@@ -73,6 +73,10 @@ func (f *factory) refreshToken() {
 					auth.OIDC.AccessToken = refresh.AccessToken
 					auth.OIDC.IDToken = refresh.IDToken
 					_ = f.UpdateConfig()
+					log.Debug("id-token refreshed successfully")
+				} else {
+					log.WithError(err).Debug("error refreshing id-token")
+					log.Warn("Failed to refresh your access token, please run kore login")
 				}
 			}
 		}
