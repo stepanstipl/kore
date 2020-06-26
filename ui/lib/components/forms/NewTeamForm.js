@@ -7,9 +7,6 @@ const { Paragraph, Text } = Typography
 
 import KoreApi from '../../kore-api'
 import { successMessage } from '../../utils/message'
-import V1Team from '../../kore-api/model/V1Team'
-import V1TeamSpec from '../../kore-api/model/V1TeamSpec'
-import { NewV1ObjectMeta } from '../../utils/model'
 import FormErrorMessage from './FormErrorMessage'
 
 class NewTeamForm extends React.Component {
@@ -37,19 +34,6 @@ class NewTeamForm extends React.Component {
     return Object.keys(fieldsError).some(field => fieldsError[field])
   }
 
-  generateTeamResource = (values) => {
-    const resource = new V1Team()
-    resource.setMetadata(NewV1ObjectMeta(canonical(values.teamName)))
-
-    const spec = new V1TeamSpec()
-    spec.setSummary(values.teamName.trim())
-    spec.setDescription(values.teamDescription.trim())
-
-    resource.setSpec(spec)
-
-    return resource
-  }
-
   handleSubmit = e => {
     e.preventDefault()
 
@@ -71,7 +55,7 @@ class NewTeamForm extends React.Component {
         const api = await KoreApi.client()
         const checkTeam = await api.GetTeam(canonicalTeamName)
         if (!checkTeam) {
-          const team = await api.UpdateTeam(canonicalTeamName, this.generateTeamResource(values))
+          const team = await api.UpdateTeam(canonicalTeamName, KoreApi.resources().generateTeamResource(values))
           await this.props.handleTeamCreated(team)
           this.setState({ submitting: false })
           successMessage('Team created')

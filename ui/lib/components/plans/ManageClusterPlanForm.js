@@ -4,9 +4,6 @@ const { Paragraph } = Typography
 import PropTypes from 'prop-types'
 
 import KoreApi from '../../kore-api'
-import V1Plan from '../../kore-api/model/V1Plan'
-import V1PlanSpec from '../../kore-api/model/V1PlanSpec'
-import V1ObjectMeta from '../../kore-api/model/V1ObjectMeta'
 import copy from '../../utils/object-copy'
 import ManagePlanForm from './ManagePlanForm'
 
@@ -35,27 +32,6 @@ class ManageClusterPlanForm extends ManagePlanForm {
     })
   }
 
-  generatePlanResource = (values) => {
-    const metadataName = this.getMetadataName(values)
-
-    const planResource = new V1Plan()
-    planResource.setApiVersion('config.kore.appvia.io/v1')
-    planResource.setKind('Plan')
-
-    const meta = new V1ObjectMeta()
-    meta.setName(metadataName)
-    planResource.setMetadata(meta)
-
-    const spec = new V1PlanSpec()
-    spec.setKind(this.props.kind)
-    spec.setDescription(values.description)
-    spec.setSummary(values.summary)
-    spec.setConfiguration(values.configuration)
-    planResource.setSpec(spec)
-
-    return planResource
-  }
-
   process = async (err, values) => {
     if (err) {
       this.setFormSubmitting(false, 'Validation failed')
@@ -63,8 +39,9 @@ class ManageClusterPlanForm extends ManagePlanForm {
     }
     try {
       const api = await KoreApi.client()
-      const metadataName = this.getMetadataName(values)
-      const planResult = await api.UpdatePlan(metadataName, this.generatePlanResource({ ...values, configuration: { ...this.state.planValues } }))
+      values.name = this.getMetadataName(values)
+      const planResource = KoreApi.resources().generatePlanResource(this.props.kind, { ...values, configuration: { ...this.state.planValues } })
+      const planResult = await api.UpdatePlan(values.name, planResource)
 
       if (this.accountManagementRulesEnabled()) {
         const accountMgtResource = copy(this.state.accountManagement)
@@ -73,10 +50,10 @@ class ManageClusterPlanForm extends ManagePlanForm {
           // add to the new rule
           const addedToRule = accountMgtResource.spec.rules.find(r => r.name === values.gcpAutomatedProject)
           if (addedToRule) {
-            addedToRule.plans.push(metadataName)
+            addedToRule.plans.push(values.name)
             // remove from the existing rule if it's been changed
             if (currentRule && currentRule.name !== values.gcpAutomatedProject) {
-              currentRule.plans = currentRule.plans.filter(p => p !== metadataName)
+              currentRule.plans = currentRule.plans.filter(p => p !== values.name)
             }
             await api.UpdateAccount(`am-${accountMgtResource.spec.organization.name}`, accountMgtResource)
             planResult.append = { gcpAutomatedProject: addedToRule }
@@ -86,7 +63,7 @@ class ManageClusterPlanForm extends ManagePlanForm {
         } else {
           // remove from the existing rule, if one exists
           if (currentRule) {
-            currentRule.plans = currentRule.plans.filter(p => p !== metadataName)
+            currentRule.plans = currentRule.plans.filter(p => p !== values.name)
             await api.UpdateAccount(`am-${accountMgtResource.spec.organization.name}`, accountMgtResource)
             planResult.append = { gcpAutomatedProject: false }
           }

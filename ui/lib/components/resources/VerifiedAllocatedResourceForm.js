@@ -107,7 +107,7 @@ class VerifiedAllocatedResourceForm extends React.Component {
     })
   }
 
-  getMetadataName = values => {
+  getMetadataName = (values) => {
     const data = this.props.data
     return (data && data.metadata && data.metadata.name) || canonical(values.name)
   }

@@ -1,44 +1,9 @@
 import KoreApi from '../kore-api'
-import V1Allocation from '../kore-api/model/V1Allocation'
-import V1AllocationSpec from '../kore-api/model/V1AllocationSpec'
-import V1ObjectMeta from '../kore-api/model/V1ObjectMeta'
-import V1Ownership from '../kore-api/model/V1Ownership'
 import config from '../../config' 
 
 export default class AllocationHelpers {
   static getAllocationNameForResource = (resource) => {
     return `${resource.kind.toLowerCase()}-${resource.metadata.name}`
-  }
-
-  static generateAllocation = ({ resourceToAllocate, teams, name, summary }) => {
-    if (!resourceToAllocate) {
-      throw 'Must specify resourceToAllocate'
-    }
-    const resource = new V1Allocation()
-    resource.setApiVersion('config.kore.appvia.io/v1')
-    resource.setKind('Allocation')
-
-    const meta = new V1ObjectMeta()
-    meta.setName(AllocationHelpers.getAllocationNameForResource(resourceToAllocate))
-    meta.setNamespace(config.kore.koreAdminTeamName)
-    resource.setMetadata(meta)
-
-    const spec = new V1AllocationSpec()
-    spec.setName(name ? name : resourceToAllocate.metadata.name)
-    spec.setSummary(summary ? summary : `Allocation of ${resourceToAllocate.metadata.name}`)
-    spec.setTeams(teams && teams.length > 0 ? teams : ['*'])
-
-    const resGroupVersion = resourceToAllocate.apiVersion.split('/')
-    const owner = new V1Ownership()
-    owner.setGroup(resGroupVersion[0])
-    owner.setVersion(resGroupVersion[1])
-    owner.setKind(resourceToAllocate.kind)
-    owner.setName(resourceToAllocate.metadata.name)
-    owner.setNamespace(resourceToAllocate.metadata.namespace)
-    spec.setResource(owner)
-
-    resource.setSpec(spec)
-    return resource
   }
 
   static getAllocationForResource = async (resource) => {
@@ -70,8 +35,10 @@ export default class AllocationHelpers {
   }
 
   static storeAllocation = async ({ resourceToAllocate, teams, name, summary }) => {
-    const allocation = AllocationHelpers.generateAllocation({ resourceToAllocate, teams, name, summary })
-    return await (await KoreApi.client()).UpdateAllocation(config.kore.koreAdminTeamName, allocation.metadata.name, allocation)
+    const resourceName = AllocationHelpers.getAllocationNameForResource(resourceToAllocate)
+    const allocationResource = KoreApi.resources().generateAllocationResource(resourceName, resourceToAllocate, teams, name, summary)
+
+    return await (await KoreApi.client()).UpdateAllocation(config.kore.koreAdminTeamName, allocationResource.metadata.name, allocationResource)
   }
 
   static removeAllocation = async (resourceToDeallocate) => {

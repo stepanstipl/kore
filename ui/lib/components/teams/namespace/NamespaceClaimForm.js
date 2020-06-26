@@ -4,9 +4,6 @@ import { Button, Form, Input } from 'antd'
 
 import FormErrorMessage from '../../forms/FormErrorMessage'
 import KoreApi from '../../../kore-api'
-import V1NamespaceClaim from '../../../kore-api/model/V1NamespaceClaim'
-import V1NamespaceClaimSpec from '../../../kore-api/model/V1NamespaceClaimSpec'
-import { NewV1ObjectMeta, NewV1Ownership } from '../../../utils/model'
 import { patterns } from '../../../utils/validation'
 import { loadingMessage } from '../../../utils/message'
 
@@ -43,30 +40,6 @@ class NamespaceClaimForm extends React.Component {
 
   getMetadataName = (values) => `${this.props.cluster.metadata.name}-${values.name}`
 
-  generateNamespaceClaimResource = (values) => {
-    const cluster = this.props.cluster
-    const resource = new V1NamespaceClaim()
-    resource.setApiVersion('namespaceclaims.clusters.compute.kore.appvia.io/v1alpha1')
-    resource.setKind('NamespaceClaim')
-
-    resource.setMetadata(NewV1ObjectMeta(this.getMetadataName(values), this.props.team))
-
-    const spec = new V1NamespaceClaimSpec()
-    spec.setName(values.name)
-
-    const [ group, version ] = cluster.apiVersion.split('/')
-    spec.setCluster(NewV1Ownership({
-      group,
-      version,
-      kind: cluster.kind,
-      name: cluster.metadata.name,
-      namespace: this.props.team
-    }))
-    resource.setSpec(spec)
-
-    return resource
-  }
-
   handleSubmit = e => {
     e.preventDefault()
 
@@ -86,7 +59,8 @@ class NamespaceClaimForm extends React.Component {
             formErrorMessage:`A namespace with the name "${values.name}" already exists on cluster "${this.props.cluster.metadata.name}"`
           })
         }
-        const nsClaimResult = await (await KoreApi.client()).UpdateNamespace(this.props.team, resourceName, this.generateNamespaceClaimResource(values))
+        const nsClaimResource = KoreApi.resources().team(this.props.team).generateNamespaceClaimResource(this.props.cluster, resourceName, values)
+        const nsClaimResult = await (await KoreApi.client()).UpdateNamespace(this.props.team, resourceName, nsClaimResource)
         this.props.form.resetFields()
         this.setState({ submitting: false })
         loadingMessage(`Namespace "${values.name}" requested`)

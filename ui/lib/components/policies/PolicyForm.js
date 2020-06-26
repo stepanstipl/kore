@@ -1,13 +1,8 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
 import { Card, Alert, Form, Input, Button } from 'antd'
-import getConfig from 'next/config'
-const { publicRuntimeConfig } = getConfig()
 
 import KoreApi from '../../kore-api'
-import V1PlanPolicy from '../../kore-api/model/V1PlanPolicy'
-import V1PlanPolicySpec from '../../kore-api/model/V1PlanPolicySpec'
-import V1ObjectMeta from '../../kore-api/model/V1ObjectMeta'
 import FormErrorMessage from '../forms/FormErrorMessage'
 import canonical from '../../utils/canonical'
 import Policy from './Policy'
@@ -44,15 +39,11 @@ class PolicyForm extends React.Component {
   }
 
   onPolicyChange = (updatedPolicy) => {
-    this.setState({
-      policy: updatedPolicy
-    })
+    this.setState({ policy: updatedPolicy })
   }
 
   onAllocationChange = (updatedAllocation) => {
-    this.setState({
-      allocatedTeams: updatedAllocation
-    })
+    this.setState({ allocatedTeams: updatedAllocation })
   }
 
   disableButton = fieldsError => {
@@ -74,28 +65,6 @@ class PolicyForm extends React.Component {
     return (policy && policy.metadata && policy.metadata.name) || canonical(values.summary)
   }
 
-  generatePolicyResource = (values) => {
-    const metadataName = this.getMetadataName(values)
-
-    const resource = new V1PlanPolicy()
-    resource.setApiVersion('config.kore.appvia.io/v1')
-    resource.setKind('PlanPolicy')
-
-    const meta = new V1ObjectMeta()
-    meta.setName(metadataName)
-    meta.setNamespace(publicRuntimeConfig.koreAdminTeamName)
-    resource.setMetadata(meta)
-
-    const spec = new V1PlanPolicySpec()
-    spec.setKind(this.props.kind)
-    spec.setDescription(values.description)
-    spec.setSummary(values.summary)
-    spec.setProperties(values.properties)
-    resource.setSpec(spec)
-
-    return resource
-  }
-
   _process = async (err, values) => {
     if (err) {
       this.setFormSubmitting(false, 'Validation failed')
@@ -106,10 +75,11 @@ class PolicyForm extends React.Component {
       return
     }
     try {
+      values.name = this.getMetadataName(values)
       const api = await KoreApi.client()
-      const policy = this.generatePolicyResource({ ...values, properties: this.state.policy.spec.properties })
-      const result = await api.UpdatePlanPolicy(policy.getMetadata().getName(), policy)
-      result.allocation = await AllocationHelpers.storeAllocation({ resourceToAllocate: policy, teams: this.state.allocatedTeams })
+      const policyResource = KoreApi.resources().generatePolicyResource(this.props.kind, { ...values, properties: this.state.policy.spec.properties })
+      const result = await api.UpdatePlanPolicy(values.name, policyResource)
+      result.allocation = await AllocationHelpers.storeAllocation({ resourceToAllocate: policyResource, teams: this.state.allocatedTeams })
       return await this.props.handleSubmit(result)
     } catch (err) {
       console.log(err)

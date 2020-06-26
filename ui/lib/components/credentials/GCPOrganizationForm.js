@@ -1,62 +1,10 @@
 import * as React from 'react'
 import VerifiedAllocatedResourceForm from '../resources/VerifiedAllocatedResourceForm'
-import V1alpha1Organization from '../../kore-api/model/V1alpha1Organization'
-import V1ObjectMeta from '../../kore-api/model/V1ObjectMeta'
-import V1Secret from '../../kore-api/model/V1Secret'
-import V1SecretSpec from '../../kore-api/model/V1SecretSpec'
-import V1SecretReference from '../../kore-api/model/V1SecretReference'
-import V1alpha1OrganizationSpec from '../../kore-api/model/V1alpha1OrganizationSpec'
 import KoreApi from '../../kore-api'
 import { Form, Input, Alert, Card } from 'antd'
 import AllocationHelpers from '../../utils/allocation-helpers'
 
 class GCPOrganizationForm extends VerifiedAllocatedResourceForm {
-
-  generateSecretResource = values => {
-    const resource = new V1Secret()
-    resource.setApiVersion('config.kore.appvia.io')
-    resource.setKind('Secret')
-
-    const meta = new V1ObjectMeta()
-    meta.setName(this.getMetadataName(values))
-    meta.setNamespace(this.props.team)
-    resource.setMetadata(meta)
-
-    const spec = new V1SecretSpec()
-    spec.setType('gcp-org')
-    spec.setDescription(`GCP admin project Service Account for ${values.parentID}`)
-    spec.setData({ key: btoa(values.account) })
-    resource.setSpec(spec)
-
-    return resource
-  }
-
-  generateGCPOrganizationResource = values => {
-    const name = this.getMetadataName(values)
-    const resource = new V1alpha1Organization()
-    resource.setApiVersion('gcp.compute.kore.appvia.io/v1alpha1')
-    resource.setKind('Organization')
-
-    const meta = new V1ObjectMeta()
-    meta.setName(name)
-    meta.setNamespace(this.props.team)
-    resource.setMetadata(meta)
-
-    const spec = new V1alpha1OrganizationSpec()
-    spec.setParentType('organization')
-    spec.setParentID(values.parentID)
-    spec.setBillingAccount(values.billingAccount)
-    spec.setServiceAccount('kore')
-
-    const secret = new V1SecretReference()
-    secret.setName(name)
-    secret.setNamespace(this.props.team)
-    spec.setCredentialsRef(secret)
-
-    resource.setSpec(spec)
-
-    return resource
-  }
 
   getResource = async metadataName => {
     const api = await KoreApi.client()
@@ -67,13 +15,17 @@ class GCPOrganizationForm extends VerifiedAllocatedResourceForm {
 
   putResource = async values => {
     const api = await KoreApi.client()
-    const metadataName = this.getMetadataName(values)
+    values.name = this.getMetadataName(values)
+    const secretName = values.name
+    const teamResources = KoreApi.resources().team(this.props.team)
     if (!this.props.data) {
-      await api.UpdateTeamSecret(this.props.team, metadataName, this.generateSecretResource(values))
+      const secretData = { key: btoa(values.account) }
+      const secretResource = teamResources.generateSecretResource(secretName, 'gcp-org', `GCP admin project Service Account for ${values.parentID}`, secretData)
+      await api.UpdateTeamSecret(this.props.team, secretName, secretResource)
     }
-    const gcpOrg = this.generateGCPOrganizationResource(values)
-    const gcpOrgResult = await api.UpdateGCPOrganization(this.props.team, metadataName, gcpOrg)
-    gcpOrgResult.allocation = await this.storeAllocation(gcpOrg, values)
+    const gcpOrgResource = teamResources.generateGCPOrganizationResource(values, secretName)
+    const gcpOrgResult = await api.UpdateGCPOrganization(this.props.team, values.name, gcpOrgResource)
+    gcpOrgResult.allocation = await this.storeAllocation(gcpOrgResource, values)
     return gcpOrgResult
   }
 

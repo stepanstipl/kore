@@ -5,9 +5,6 @@ import { Alert, Button, Card, Checkbox, Form, Icon, Input, Select } from 'antd'
 import ServiceOptionsForm from '../../services/ServiceOptionsForm'
 import FormErrorMessage from '../../forms/FormErrorMessage'
 import KoreApi from '../../../kore-api'
-import V1ServiceSpec from '../../../kore-api/model/V1ServiceSpec'
-import V1Service from '../../../kore-api/model/V1Service'
-import { NewV1ObjectMeta, NewV1Ownership } from '../../../utils/model'
 import { getKoreLabel } from '../../../utils/crd-helpers'
 import { errorMessage, loadingMessage } from '../../../utils/message'
 
@@ -60,32 +57,14 @@ class ApplicationServiceForm extends React.Component {
     })
   }
 
-  generateServiceResource = (values) => {
+  getServiceResource = (values) => {
+    const team = this.props.team.metadata.name
     const cluster = this.props.cluster
     const selectedServicePlan = this.state.servicePlans.find(p => p.metadata.name === values.servicePlan)
 
-    const serviceResource = new V1Service()
-    serviceResource.setApiVersion('services.compute.kore.appvia.io/v1')
-    serviceResource.setKind('Service')
-
-    serviceResource.setMetadata(NewV1ObjectMeta(values.serviceName, this.props.team.metadata.name))
-
-    const serviceSpec = new V1ServiceSpec()
-    serviceSpec.setKind(selectedServicePlan.spec.kind)
-    serviceSpec.setPlan(selectedServicePlan.metadata.name)
-    serviceSpec.setClusterNamespace(values.createNamespace || values.namespace)
-
-    serviceSpec.setCluster(NewV1Ownership({
-      group: cluster.apiVersion.split('/')[0],
-      version: cluster.apiVersion.split('/')[1],
-      kind: cluster.kind,
-      name: cluster.metadata.name,
-      namespace: this.props.team.metadata.name
-    }))
-    serviceSpec.setConfiguration(this.state.planValues)
-
-    serviceResource.setSpec(serviceSpec)
-    return serviceResource
+    return KoreApi.resources()
+      .team(team)
+      .generateServiceResource(cluster, values, selectedServicePlan, this.state.planValues)
   }
 
   validatedFormsFields = (callback) => {
@@ -118,7 +97,7 @@ class ApplicationServiceForm extends React.Component {
           })
         }
 
-        const service = await (await KoreApi.client()).UpdateService(this.props.team.metadata.name, values.serviceName, this.generateServiceResource(values))
+        const service = await (await KoreApi.client()).UpdateService(this.props.team.metadata.name, values.serviceName, this.getServiceResource(values))
         loadingMessage('Application service requested...')
 
         return this.props.handleSubmit(service)

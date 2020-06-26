@@ -46,21 +46,6 @@ describe('GKECredentialsForm', () => {
     apiScope.done()
   })
 
-  describe('#generateSecretResource', () => {
-    it('returns a configured Secret object', () => {
-      const secret = form.generateSecretResource({ name: 'gke', project: 'project-id', account: 'gke-cred' })
-      expect(secret).toBeDefined()
-      expect(secret.spec.data.service_account_key).toBe(btoa('gke-cred'))
-    })
-  })
-
-  describe('#generateGKECredentialsResource', () => {
-    it('returns a configured GKECredentials object when given valid values', () => {
-      const gkeCredential = form.generateGKECredentialsResource({ name: 'gke', project: 'project-id', account: 'gke-service-account-cred' })
-      expect(gkeCredential).toBeDefined()
-    })
-  })
-
   describe('#getResource', () => {
     beforeEach(() => {
       apiScope

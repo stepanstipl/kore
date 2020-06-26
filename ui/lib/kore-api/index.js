@@ -8,6 +8,7 @@ class KoreApi {
   static spec = null
   static basePath = null
   static swaggerUrl = null
+  static _resources = null
 
   /** 
    * Returns a client for accessing the Kore API. If this can be run server-side, you must
@@ -67,6 +68,18 @@ class KoreApi {
     // seem to matter how it's changed, it's still considered non-atomic, incorrectly:
     KoreApi.spec = (await Swagger(KoreApi.swaggerUrl)).spec // eslint-disable-line require-atomic-updates
     return KoreApi.spec
+  }
+
+  /**
+   * Returns an instance of the resources class, with helper methods for using the models
+   */
+  static resources = () => {
+    if (KoreApi._resources) {
+      return KoreApi._resources
+    }
+    const KoreApiResources = require('./kore-api-resources').default
+    KoreApi._resources = new KoreApiResources()
+    return KoreApi._resources
   }
 }
 

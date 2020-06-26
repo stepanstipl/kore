@@ -102,6 +102,8 @@ describe('NewTeamForm', () => {
 
     it('submits when the form is valid', async () => {
       const team = {
+        apiVersion: 'config.kore.appvia.io/v1',
+        kind: 'Team',
         metadata: {
           name: 'abc'
         },
