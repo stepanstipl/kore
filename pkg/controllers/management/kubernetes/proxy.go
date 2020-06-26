@@ -290,10 +290,6 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 			Labels: map[string]string{
 				"name": name,
 			},
-			Annotations: map[string]string{
-				"prometheus.io/port":   "8080",
-				"prometheus.io/scrape": "true",
-			},
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: &replicas,
@@ -306,6 +302,10 @@ func (a k8sCtrl) EnsureAPIService(ctx context.Context, cc client.Client, cluster
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
 						"name": name,
+					},
+					Annotations: map[string]string{
+						"prometheus.io/port":   "8080",
+						"prometheus.io/scrape": "true",
 					},
 				},
 				Spec: v1.PodSpec{

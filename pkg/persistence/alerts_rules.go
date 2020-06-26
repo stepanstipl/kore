@@ -71,12 +71,12 @@ func (i *arulesImpl) DeleteBy(ctx context.Context, filters ...ListFunc) error {
 	}
 
 	list, err := i.makeListQuery(ctx, filters...)
-	if err != nil {
+	if err.Error != nil {
 		return err.Error
 	}
 
 	for x := 0; x < len(list); x++ {
-		if err := i.conn.Model(&model.AlertRule{}).Delete(&list[x]).Error; err != nil {
+		if err := i.conn.Delete(&list[x]).Error; err != nil {
 			return err
 		}
 	}

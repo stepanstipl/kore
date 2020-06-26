@@ -17,10 +17,13 @@
 package metrics
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/appvia/kore/pkg/cmd/auth-proxy/filters"
 	"github.com/prometheus/client_golang/prometheus"
+
+	"github.com/felixge/httpsnoop"
 )
 
 var (
@@ -30,17 +33,18 @@ var (
 			Help: "The total number http requests processed",
 		},
 	)
-	httpErrorCounter = prometheus.NewCounter(
+	httpCodeCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "http_error_total",
+			Name: "http_request_code",
 			Help: "The total number of errors in requests",
 		},
+		[]string{"code"},
 	)
 )
 
 func init() {
 	prometheus.MustRegister(httpRequestCounter)
-	prometheus.MustRegister(httpErrorCounter)
+	prometheus.MustRegister(httpCodeCounter)
 }
 
 type metricsImpl struct{}
@@ -53,9 +57,8 @@ func New() filters.Middleware {
 func (m *metricsImpl) Serve(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		httpRequestCounter.Inc()
-		next.ServeHTTP(w, req)
 
-		// @TODO we need to wrap the response writer to get the code
-
+		m := httpsnoop.CaptureMetrics(next, w, req)
+		httpCodeCounter.WithLabelValues(fmt.Sprintf("%d", m.Code)).Inc()
 	})
 }

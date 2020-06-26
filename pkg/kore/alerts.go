@@ -324,10 +324,10 @@ func (a *alertsImpl) DeleteResourceRules(ctx context.Context, resource corev1.Ow
 
 	return a.Persist().AlertRules().DeleteBy(ctx,
 		persistence.Filter.WithAlertSource(source),
-		persistence.Filter.WithName(resource.Name),
 		persistence.Filter.WithNamespace(resource.Namespace),
 		persistence.Filter.WithResourceGroup(resource.Group),
 		persistence.Filter.WithResourceKind(resource.Kind),
+		persistence.Filter.WithResourceName(resource.Name),
 		persistence.Filter.WithResourceVersion(resource.Version),
 		persistence.Filter.WithTeam(resource.Namespace),
 	)

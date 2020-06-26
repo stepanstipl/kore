@@ -80,7 +80,7 @@ export default class MonitoringTable extends React.Component {
       render: (text, record) => (
         <>
           <Tooltip placement="top" title="The current state of the alert">
-            <Tag color="green"><Icon type="info-circle" style={{ marginRight: '5px' }}/>{record.status.status}</Tag>
+            <Tag color="orange"><Icon type="info-circle" style={{ marginRight: '5px' }}/>{record.status.status}</Tag>
           </Tooltip>
         </>
       )

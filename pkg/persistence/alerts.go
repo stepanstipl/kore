@@ -73,14 +73,7 @@ func (i *alertsImpl) DeleteBy(ctx context.Context, filters ...ListFunc) error {
 		return errors.New("no filters defined for deletion of alerts")
 	}
 
-	query := i.conn.
-		Model(&model.Alert{}).
-		Select("i.*").
-		Table("alerts i")
-
-	// @TODO needs fixing up
-	list := []*model.Alert{}
-	err := query.Find(&list).Error
+	list, err := i.List(ctx, filters...)
 	if err != nil {
 		return err
 	}
