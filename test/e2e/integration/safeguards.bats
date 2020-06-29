@@ -29,7 +29,7 @@ setup() {
 @test "We should not be able to delete the cluster if a namespace exists" {
   runit "${KORE} create namespace -c ${CLUSTER} ingress -t ${TEAM}"
   [[ "$status" -eq 0 ]]
-  runit "${KORE} delete teams ${TEAM} 2>&1 | grep 'all team resources must be deleted'"
+  runit "${KORE} delete teams ${TEAM} 2>&1 | grep 'the following objects need to be deleted first'"
   [[ "$status" -eq 0 ]]
   runit "${KORE} delete namespaceclaims ${CLUSTER}-ingress -t ${TEAM}"
   [[ "$status" -eq 0 ]]
