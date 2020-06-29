@@ -52,16 +52,16 @@ describe('ManageClusterPlanForm', () => {
       form.handleSubmit(event)
     })
 
-    test('prevents default', () => {
+    it('prevents default', () => {
       expect(event.preventDefault).toHaveBeenCalledTimes(1)
     })
 
-    test('sets form submitting in state', () => {
+    it('sets form submitting in state', () => {
       expect(form.setFormSubmitting).toHaveBeenCalledTimes(1)
       expect(form.setFormSubmitting.mock.calls[0]).toEqual([])
     })
 
-    test('validates fields', () => {
+    it('validates fields', () => {
       expect(props.form.validateFields).toHaveBeenCalledTimes(1)
     })
   })
@@ -90,13 +90,13 @@ describe('ManageClusterPlanForm', () => {
       form.state.planValues = planResource.spec.configuration
     })
 
-    test('handles form validation errors', async () => {
+    it('handles form validation errors', async () => {
       await form.process('error', null)
       expect(form.setFormSubmitting).toHaveBeenCalledTimes(1)
       expect(form.setFormSubmitting.mock.calls[0]).toEqual([false, 'Validation failed'])
     })
 
-    test('creates the resource and calls the wrapper component handleSubmit function', async () => {
+    it('creates the resource and calls the wrapper component handleSubmit function', async () => {
       apiScope.put(`${ApiTestHelpers.basePath}/plans/test-plan`, planResource).reply(200, planResource)
       await form.process(null, { description: 'Test plan', summary: 'Summary of plan' })
       expect(props.handleSubmit).toHaveBeenCalledTimes(1)
@@ -104,7 +104,7 @@ describe('ManageClusterPlanForm', () => {
       apiScope.done()
     })
 
-    test('handles validation errors when creating the resource', async () => {
+    it('handles validation errors when creating the resource', async () => {
       const fieldErrors = [{ field: 'prop1', type: 'required', message: 'prop1 is required' }]
       apiScope.put(`${ApiTestHelpers.basePath}/plans/test-plan`, planResource).reply(400, { message: 'Validation errors', fieldErrors })
       await form.process(null, { description: 'Test plan', summary: 'Summary of plan' })

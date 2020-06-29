@@ -41,7 +41,7 @@ export class ConfigureCloudGCPProjects extends ConfigureCloudPage {
   }
 
   async replaceKey(json) {
-    await this.p.type('input#gke_credentials_replace_key',' ')
+    await this.p.type('input#gke_credentials_replace_key', ' ')
     // Wait for service account text field to be shown:
     await expect(this.p).toMatch('Service Account JSON')
     await this.p.type('textarea#gke_credentials_account', json)

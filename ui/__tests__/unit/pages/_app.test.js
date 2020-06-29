@@ -50,7 +50,7 @@ describe('App', () => {
       })
 
       describe('CSR::no request present', () => {
-        test('makes request to get user session', async () => {
+        it('makes request to get user session', async () => {
           axios.get.mockResolvedValue({ data: sessionUser })
 
           const userSession = await App.getUserSession({ asPath: '/requested-path' })

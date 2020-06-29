@@ -11,7 +11,8 @@ class GKECredentials extends AutoRefreshComponent {
   static propTypes = {
     gkeCredentials: PropTypes.object.isRequired,
     allTeams: PropTypes.array.isRequired,
-    editGKECredential: PropTypes.func.isRequired
+    editGKECredential: PropTypes.func.isRequired,
+    deleteGKECredential: PropTypes.func.isRequired
   }
 
   componentDidUpdate(prevProps) {

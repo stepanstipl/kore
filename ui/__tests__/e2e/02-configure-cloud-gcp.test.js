@@ -1,4 +1,5 @@
 const { ConfigureCloudPage } = require('./page-objects/configure/cloud/configure-cloud')
+const { ConfigureCloudGCPOrgs } = require('./page-objects/configure/cloud/GCP/organizations')
 const { ConfigureCloudGCPProjects } = require('./page-objects/configure/cloud/GCP/projects')
 const { ConfigureCloudGCPClusterPlans } = require('./page-objects/configure/cloud/GCP/cluster-plans')
 const { ConfigureCloudGCPClusterPolicies } = require('./page-objects/configure/cloud/GCP/cluster-policies')
@@ -14,6 +15,80 @@ describe('Configure Cloud - GCP', () => {
     await cloudPage.visitPage()
     cloudPage.verifyPageURL()
     await cloudPage.selectCloud('gcp')
+  })
+
+  describe('Organizations', () => {
+    const orgsPage = new ConfigureCloudGCPOrgs(page)
+    const testOrg = {
+      // Randomise name of test org.
+      name: `testorg-${Math.random().toString(36).substr(2, 5)}`,
+      summary: 'a summary',
+      parentID: '1234567890',
+      billingAccount: 'BILL-1234-ABCD',
+      json: 'crocodile'
+    }
+
+    beforeAll(async () => {
+      await orgsPage.openTab()
+    })
+
+    beforeEach(async () => {
+      await orgsPage.closeAllNotifications()
+    })
+
+    it('has the correct URL', () => {
+      orgsPage.verifyPageURL()
+    })
+
+    it('adds a new organization', async () => {
+      // I can't find a way to skip all the tests in a block using an async check
+      // so this is required in each test, to skip if the GCP org is already configured
+      // this would only happen when running locally, not on CI
+      if (await orgsPage.orgConfigured()) {
+        return
+      }
+      await orgsPage.add()
+      await orgsPage.populate(testOrg)
+      await orgsPage.save()
+      await expect(page).toMatch('GCP organization created successfully')
+    })
+
+    it('shows the organization', async () => {
+      if (await orgsPage.orgConfigured()) {
+        return
+      }
+      await orgsPage.checkOrgListed(testOrg.name)
+    })
+
+    it('edits the organization with a new description', async () => {
+      if (await orgsPage.orgConfigured()) {
+        return
+      }
+      await orgsPage.edit(testOrg.name, testOrg.parentID)
+      await orgsPage.populate({ summary: 'summary2' })
+      await orgsPage.save()
+      await expect(page).toMatch('GCP organization updated successfully')
+    })
+
+    it('edits a project credential with a new key', async () => {
+      if (await orgsPage.orgConfigured()) {
+        return
+      }
+      await orgsPage.edit(testOrg.name, testOrg.parentID)
+      await orgsPage.replaceKey('chicken')
+      await orgsPage.save()
+      await expect(page).toMatch('GCP organization updated successfully')
+    })
+
+    it('allows the organization to be deleted', async () => {
+      if (await orgsPage.orgConfigured()) {
+        return
+      }
+      await orgsPage.delete(testOrg.name)
+      await orgsPage.confirmDelete()
+      await expect(page).toMatch('GCP organization deleted successfully')
+    })
+
   })
 
   describe('Project Credentials', () => {

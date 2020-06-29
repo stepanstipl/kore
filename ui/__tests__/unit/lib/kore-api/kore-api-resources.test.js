@@ -9,7 +9,7 @@ describe('KoreApiResources', () => {
   })
 
   describe('#generatePlanResource', () => {
-    test('generates expected resource', () => {
+    it('generates expected resource', () => {
       const values = {
         name: 'my-plan',
         summary: 'Plan summary',
@@ -32,7 +32,7 @@ describe('KoreApiResources', () => {
   })
 
   describe('#generatePolicyResource', () => {
-    test('generates expected resource', () => {
+    it('generates expected resource', () => {
       const values = {
         name: 'my-policy',
         summary: 'Policy summary',
@@ -55,7 +55,7 @@ describe('KoreApiResources', () => {
   })
 
   describe('#generateServicePlanResource', () => {
-    test('generates expected resource', () => {
+    it('generates expected resource', () => {
       const values = {
         name: 'My service plan',
         summary: 'Policy summary',
@@ -88,7 +88,7 @@ describe('KoreApiResources', () => {
       }
     }
 
-    test('generates expected resource, with GCP org only', () => {
+    it('generates expected resource, with GCP org only', () => {
       const accountMgt = koreApiResources.generateAccountManagementResource(gcpOrg)
       expect(accountMgt).toBeDefined()
       expect(accountMgt.apiVersion).toBe('accounts.kore.appvia.io/v1beta1')
@@ -107,7 +107,7 @@ describe('KoreApiResources', () => {
       })
     })
 
-    test('generates expected resource with project rules', () => {
+    it('generates expected resource with project rules', () => {
       const gcpProjectList = [{
         name: 'Not prod',
         description: 'Not prod account',
@@ -127,7 +127,7 @@ describe('KoreApiResources', () => {
       expect(accountMgt.spec.rules).toEqual(gcpProjectList)
     })
 
-    test('sets resourceVersion if specified', () => {
+    it('sets resourceVersion if specified', () => {
       const accountMgt = koreApiResources.generateAccountManagementResource(gcpOrg, [], '123')
       expect(accountMgt).toBeDefined()
       expect(accountMgt.metadata.resourceVersion).toBe('123')
@@ -144,7 +144,7 @@ describe('KoreApiResources', () => {
       }
     }
 
-    test('generates expected resource', () => {
+    it('generates expected resource', () => {
       const resourceName = 'allocatedkind-my-resource'
       const teams = ['*']
       const name = 'My resource'
@@ -170,7 +170,7 @@ describe('KoreApiResources', () => {
   })
 
   describe('#generateTeamResource', () => {
-    test('generates expected resource', () => {
+    it('generates expected resource', () => {
       const values = {
         teamName: 'Team 1',
         teamDescription: 'This is the first team'
@@ -192,7 +192,7 @@ describe('KoreApiResources', () => {
       secretAccessKey: 'secret-key'
     }
 
-    test('generates expected resource', () => {
+    it('generates expected resource', () => {
       const secret = koreApiResources.generateSecretResource('team1', 'my-secret', 'secret-type', 'Super secret', data)
       expect(secret).toBeDefined()
       expect(secret.apiVersion).toBe('config.kore.appvia.io')
@@ -204,7 +204,7 @@ describe('KoreApiResources', () => {
       expect(secret.spec.data).toEqual(data)
     })
 
-    test('works when using the team wrapper', () => {
+    it('works when using the team wrapper', () => {
       const secret = koreApiResources.team('team1').generateSecretResource('my-secret', 'secret-type', 'Super secret', data)
       expect(secret).toBeDefined()
     })
@@ -216,7 +216,7 @@ describe('KoreApiResources', () => {
       accountID: '1234567890'
     }
 
-    test('generates expected resource', () => {
+    it('generates expected resource', () => {
       const eksCredential = koreApiResources.generateEKSCredentialsResource('team1', values, 'my-secret')
       expect(eksCredential).toBeDefined()
       expect(eksCredential.apiVersion).toBe('aws.compute.kore.appvia.io/v1alpha1')
@@ -227,7 +227,7 @@ describe('KoreApiResources', () => {
       expect(eksCredential.spec.credentialsRef).toEqual({ name: 'my-secret', namespace: 'team1' })
     })
 
-    test('works when using the team wrapper', () => {
+    it('works when using the team wrapper', () => {
       const eksCredential = koreApiResources.team('team1').generateEKSCredentialsResource('team1', values, 'my-secret')
       expect(eksCredential).toBeDefined()
     })
@@ -236,7 +236,7 @@ describe('KoreApiResources', () => {
   describe('#generateGKECredentialsResource', () => {
     const values = { project: 'my-project' }
 
-    test('generates expected resource', () => {
+    it('generates expected resource', () => {
       const gkeCredential = koreApiResources.generateGKECredentialsResource('team1', values, 'my-secret')
       expect(gkeCredential).toBeDefined()
       expect(gkeCredential.apiVersion).toBe('gke.compute.kore.appvia.io/v1alpha1')
@@ -247,7 +247,7 @@ describe('KoreApiResources', () => {
       expect(gkeCredential.spec.credentialsRef).toEqual({ name: 'my-secret', namespace: 'team1' })
     })
 
-    test('works when using the team wrapper', () => {
+    it('works when using the team wrapper', () => {
       const gkeCredential = koreApiResources.team('team1').generateGKECredentialsResource('team1', values, 'my-secret')
       expect(gkeCredential).toBeDefined()
     })
@@ -260,7 +260,7 @@ describe('KoreApiResources', () => {
       billingAccount: 'ABC-124'
     }
 
-    test('generates expected resource', () => {
+    it('generates expected resource', () => {
       const gcpOrg = koreApiResources.generateGCPOrganizationResource('team1', values, 'my-secret')
       expect(gcpOrg).toBeDefined()
       expect(gcpOrg.apiVersion).toBe('gcp.compute.kore.appvia.io/v1alpha1')
@@ -272,7 +272,7 @@ describe('KoreApiResources', () => {
       expect(gcpOrg.spec.credentialsRef).toEqual({ name: 'my-secret', namespace: 'team1' })
     })
 
-    test('works when using the team wrapper', () => {
+    it('works when using the team wrapper', () => {
       const gcpOrg = koreApiResources.team('team1').generateGCPOrganizationResource('team1', values, 'my-secret')
       expect(gcpOrg).toBeDefined()
     })
@@ -292,7 +292,7 @@ describe('KoreApiResources', () => {
     }
     const credentials = 'some-creds'
 
-    test('generates expected resource', () => {
+    it('generates expected resource', () => {
       const cluster = koreApiResources.generateClusterResource('team1', user, values, plan, planValues, credentials)
       expect(cluster).toBeDefined()
       expect(cluster.apiVersion).toBe('clusters.compute.kore.appvia.io/v1')
@@ -305,7 +305,7 @@ describe('KoreApiResources', () => {
       expect(cluster.spec.credentials).toEqual(credentials)
     })
 
-    test('works when using the team wrapper', () => {
+    it('works when using the team wrapper', () => {
       const cluster = koreApiResources.team('team1').generateClusterResource(user, values, plan, planValues, credentials)
       expect(cluster).toBeDefined()
     })
@@ -323,7 +323,7 @@ describe('KoreApiResources', () => {
       name: 'my-namespace'
     }
 
-    test('generates expected resource', () => {
+    it('generates expected resource', () => {
       const namespaceClaim = koreApiResources.generateNamespaceClaimResource('team1', cluster, resourceName, values)
       expect(namespaceClaim).toBeDefined()
       expect(namespaceClaim.apiVersion).toBe('namespaceclaims.clusters.compute.kore.appvia.io/v1alpha1')
@@ -343,7 +343,7 @@ describe('KoreApiResources', () => {
 
     })
 
-    test('works when using the team wrapper', () => {
+    it('works when using the team wrapper', () => {
       const namespaceClaim = koreApiResources.team('team1').generateNamespaceClaimResource(cluster, resourceName, values)
       expect(namespaceClaim).toBeDefined()
     })
@@ -368,7 +368,7 @@ describe('KoreApiResources', () => {
       a: 1, b: 2
     }
 
-    test('generates expected resource', () => {
+    it('generates expected resource', () => {
       const service = koreApiResources.generateServiceResource('team1', cluster, values, plan, planValues)
       expect(service).toBeDefined()
       expect(service.apiVersion).toBe('services.compute.kore.appvia.io/v1')
@@ -390,14 +390,14 @@ describe('KoreApiResources', () => {
       })
     })
 
-    test('sets cluster namespace as a new namespace, if specified', () => {
+    it('sets cluster namespace as a new namespace, if specified', () => {
       const values2 = { ...values, createNamespace: 'new-namespace' }
       const service = koreApiResources.generateServiceResource('team1', cluster, values2, plan, planValues)
       expect(service).toBeDefined()
       expect(service.spec.clusterNamespace).toBe(values2.createNamespace)
     })
 
-    test('works when using the team wrapper', () => {
+    it('works when using the team wrapper', () => {
       const service = koreApiResources.team('team1').generateServiceResource(cluster, values, plan, planValues)
       expect(service).toBeDefined()
     })
@@ -423,7 +423,7 @@ describe('KoreApiResources', () => {
     }
     const clusterNamespace = 'my-namespace'
 
-    test('generates expected resource', () => {
+    it('generates expected resource', () => {
       const serviceCred = koreApiResources.generateServiceCredentialsResource('team1', name, secretName, config, service, cluster, clusterNamespace)
       expect(serviceCred).toBeDefined()
       expect(serviceCred.apiVersion).toBe('servicecredentials.services.kore.appvia.io/v1')
@@ -454,7 +454,7 @@ describe('KoreApiResources', () => {
 
     })
 
-    test('works when using the team wrapper', () => {
+    it('works when using the team wrapper', () => {
       const serviceCred = koreApiResources.team('team1').generateServiceCredentialsResource(name, secretName, config, service, cluster, clusterNamespace)
       expect(serviceCred).toBeDefined()
     })

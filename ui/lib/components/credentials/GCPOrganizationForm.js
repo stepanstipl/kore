@@ -1,7 +1,7 @@
 import * as React from 'react'
 import VerifiedAllocatedResourceForm from '../resources/VerifiedAllocatedResourceForm'
 import KoreApi from '../../kore-api'
-import { Form, Input, Alert, Card } from 'antd'
+import { Checkbox, Form, Input, Alert, Card } from 'antd'
 import AllocationHelpers from '../../utils/allocation-helpers'
 
 class GCPOrganizationForm extends VerifiedAllocatedResourceForm {
@@ -18,7 +18,7 @@ class GCPOrganizationForm extends VerifiedAllocatedResourceForm {
     values.name = this.getMetadataName(values)
     const secretName = values.name
     const teamResources = KoreApi.resources().team(this.props.team)
-    if (!this.props.data) {
+    if (!this.props.data || this.state.replaceKey) {
       const secretData = { key: btoa(values.account) }
       const secretResource = teamResources.generateSecretResource(secretName, 'gcp-org', `GCP admin project Service Account for ${values.parentID}`, secretData)
       await api.UpdateTeamSecret(this.props.team, secretName, secretResource)
@@ -51,6 +51,7 @@ class GCPOrganizationForm extends VerifiedAllocatedResourceForm {
 
   resourceFormFields = () => {
     const { form, data } = this.props
+    const { replaceKey } = this.state
     return (
       <Card style={{ marginBottom: '20px' }}>
         <Alert
@@ -75,21 +76,30 @@ class GCPOrganizationForm extends VerifiedAllocatedResourceForm {
             <Input placeholder="Billing account" />,
           )}
         </Form.Item>
-        <Form.Item label="Service Account JSON" labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} validateStatus={this.fieldError('account') ? 'error' : ''} help={this.fieldError('account') || Boolean(data) || 'The Service Account key in JSON format, with project creation permissions.'}>
-          {!data ? (
-            form.getFieldDecorator('account', {
-              rules: [{ required: true, message: 'Please enter your Service Account!' }]
-            })(
-              <Input.TextArea autoSize={{ minRows: 4, maxRows: 10  }} placeholder="Service Account JSON" />,
-            )
-          ) : (
+
+        {data ? (
+          <>
             <Alert
               message="For security reasons, the Service Account key is not shown after creation of the organization credential"
               type="warning"
-              style={{ marginBottom: '-20px', marginTop: '10px' }}
+              style={{ marginTop: '10px' }}
             />
-          )}
-        </Form.Item>
+            <Form.Item label="Replace key">
+              <Checkbox id="gcporg_replace_key" onChange={(e) => this.setState({ replaceKey: e.target.checked })} />
+            </Form.Item>
+          </>
+        ) : null}
+
+        {!data || replaceKey ? (
+          <Form.Item label="Service Account JSON" labelCol={{ span: 24 }} wrapperCol={{ span: 24 }} validateStatus={this.fieldError('account') ? 'error' : ''} help={this.fieldError('account') || Boolean(data) || 'The Service Account key in JSON format, with project creation permissions.'}>
+            {form.getFieldDecorator('account', {
+              rules: [{ required: true, message: 'Please enter your Service Account!' }]
+            })(
+              <Input.TextArea autoSize={{ minRows: 4, maxRows: 10  }} placeholder="Service Account JSON" />,
+            )}
+          </Form.Item>
+        ) : null}
+
       </Card>
     )
   }

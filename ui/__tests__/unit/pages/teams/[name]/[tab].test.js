@@ -27,7 +27,7 @@ describe('TeamPage', () => {
 
   describe('#constructor', () => {
 
-    test('sets initial state', () => {
+    it('sets initial state', () => {
       expect(teamPage.state).toEqual({
         tabActiveKey: 'clusters',
         memberCount: -1,

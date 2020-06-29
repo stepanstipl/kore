@@ -32,7 +32,7 @@ describe('MembersTab', () => {
     apiScope.done()
   })
 
-  test('sets up initial state', () => {
+  it('sets up initial state', () => {
     expect(membersTab.state).toEqual({
       dataLoading: false,
       members: initialMembers,
@@ -41,7 +41,7 @@ describe('MembersTab', () => {
     })
   })
 
-  test('updates member count', () => {
+  it('updates member count', () => {
     expect(props.getMemberCount).toHaveBeenCalledTimes(1)
     expect(props.getMemberCount.mock.calls[0]).toEqual([ 3 ])
   })
@@ -54,7 +54,7 @@ describe('MembersTab', () => {
       props.getMemberCount.mockClear()
     })
 
-    test('makes api request to add each member, sets state and updates member count', async () => {
+    it('makes api request to add each member, sets state and updates member count', async () => {
       membersTab.state.membersToAdd = ['one', 'two']
       await membersTab.addTeamMembers()
 
@@ -72,7 +72,7 @@ describe('MembersTab', () => {
       props.getMemberCount.mockClear()
     })
 
-    test('makes api request to remove the member, sets state and updates member count', async () => {
+    it('makes api request to remove the member, sets state and updates member count', async () => {
       await membersTab.deleteTeamMember('bob')()
 
       apiScope.done()

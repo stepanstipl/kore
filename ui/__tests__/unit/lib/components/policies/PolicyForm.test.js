@@ -69,16 +69,16 @@ describe('PolicyForm', () => {
       form.handleSubmit(event)
     })
 
-    test('prevents default', () => {
+    it('prevents default', () => {
       expect(event.preventDefault).toHaveBeenCalledTimes(1)
     })
 
-    test('sets form submitting in state', () => {
+    it('sets form submitting in state', () => {
       expect(form.setFormSubmitting).toHaveBeenCalledTimes(1)
       expect(form.setFormSubmitting.mock.calls[0]).toEqual([])
     })
 
-    test('validates fields', () => {
+    it('validates fields', () => {
       expect(props.form.validateFields).toHaveBeenCalledTimes(1)
     })
   })
@@ -108,13 +108,13 @@ describe('PolicyForm', () => {
       form.state.allocatedTeams = ['*']
     })
 
-    test('handles form validation errors', async () => {
+    it('handles form validation errors', async () => {
       await form._process('error', null)
       expect(form.setFormSubmitting).toHaveBeenCalledTimes(1)
       expect(form.setFormSubmitting.mock.calls[0]).toEqual([false, 'Validation failed'])
     })
 
-    test('creates the resource and calls the wrapper component handleSubmit function', async () => {
+    it('creates the resource and calls the wrapper component handleSubmit function', async () => {
       apiScope.put(`${ApiTestHelpers.basePath}/planpolicies/allow-gke-node-type-changes`).reply(200, policyResource)
       apiScope.put(`${ApiTestHelpers.basePath}/teams/kore-admin/allocations/planpolicy-allow-gke-node-type-changes`).reply(200)
       await form._process(null, { summary: 'Allow GKE node type changes', description: 'Description of policy' })

@@ -1,9 +1,11 @@
-const { BasePage } = require('./base')
+import { BasePage } from './base'
+import { ConfigureCloudGCPOrgs } from './configure/cloud/GCP/organizations'
 
 export class SetupKoreCloudAccessPage extends BasePage {
   constructor(p) {
     super(p)
     this.pagePath = '/setup/kore/cloud-access'
+    this.orgsPage = new ConfigureCloudGCPOrgs(p)
   }
 
   async selectCloud(name) {
@@ -14,24 +16,18 @@ export class SetupKoreCloudAccessPage extends BasePage {
     await this.p.click('.use-kore-managed-projects')
   }
 
+  /**
+   * Select the manage projects type
+   * @param type Either "cluster" or "custom"
+   */
   async selectKoreManagedProjects(type) {
-    // cluster or custom
     await this.p.click(`.automated-projects-${type}`)
   }
 
-  async addGcpOrganization() {
-    await this.p.waitFor('.new-gcp-organization')
-    await this.p.click('.new-gcp-organization')
-    await this.p.waitFor('#gcp_organization_parentID')
-    await this.p.type('#gcp_organization_parentID', 'test-org')
-    await this.p.type('#gcp_organization_billingAccount', 'BILL-1234')
-    await this.p.type('#gcp_organization_account', 'invalid service account JSON')
-    await this.p.type('#gcp_organization_name', 'Test org')
-    await this.p.type('#gcp_organization_summary', 'Org used by automated test')
-    await Promise.all([
-      this.p.waitFor('#gcp_organization_parentID', { hidden: true }),
-      this.p.click('#save')
-    ])
+  async addGcpOrganization(testOrg) {
+    await this.orgsPage.add()
+    await this.orgsPage.populate(testOrg)
+    await this.orgsPage.save()
   }
 
   async nextStep() {
