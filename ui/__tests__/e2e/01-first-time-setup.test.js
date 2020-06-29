@@ -25,7 +25,7 @@ describe('First time login and Kore setup - GCP', () => {
   }
 
   describe('Kore setup', () => {
-    test('admin user logs in and sets up GCP cloud access', async () => {
+    it('admin user logs in and sets up GCP cloud access', async () => {
       // admin user login
       await loginPage.visitPage()
       await loginPage.localUserLogin()
@@ -74,11 +74,11 @@ describe('First time login and Kore setup - GCP', () => {
       await orgsPage.openTab()
     })
 
-    test('has the correct URL', () => {
+    it('has the correct URL', () => {
       orgsPage.verifyPageURL()
     })
 
-    test('allows the configured org to be deleted', async () => {
+    it('allows the configured org to be deleted', async () => {
       if (await orgsPage.orgConfigured()) {
         return
       }

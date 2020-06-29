@@ -36,11 +36,11 @@ describe('Configure Cloud - GCP', () => {
       await orgsPage.closeAllNotifications()
     })
 
-    test('has the correct URL', () => {
+    it('has the correct URL', () => {
       orgsPage.verifyPageURL()
     })
 
-    test('adds a new organization', async () => {
+    it('adds a new organization', async () => {
       // I can't find a way to skip all the tests in a block using an async check
       // so this is required in each test, to skip if the GCP org is already configured
       // this would only happen when running locally, not on CI
@@ -53,14 +53,14 @@ describe('Configure Cloud - GCP', () => {
       await expect(page).toMatch('GCP organization created successfully')
     })
 
-    test('shows the organization', async () => {
+    it('shows the organization', async () => {
       if (await orgsPage.orgConfigured()) {
         return
       }
       await orgsPage.checkOrgListed(testOrg.name)
     })
 
-    test('edits the organization with a new description', async () => {
+    it('edits the organization with a new description', async () => {
       if (await orgsPage.orgConfigured()) {
         return
       }
@@ -70,7 +70,7 @@ describe('Configure Cloud - GCP', () => {
       await expect(page).toMatch('GCP organization updated successfully')
     })
 
-    test('edits a project credential with a new key', async () => {
+    it('edits a project credential with a new key', async () => {
       if (await orgsPage.orgConfigured()) {
         return
       }
@@ -80,7 +80,7 @@ describe('Configure Cloud - GCP', () => {
       await expect(page).toMatch('GCP organization updated successfully')
     })
 
-    test('allows the organization to be deleted', async () => {
+    it('allows the organization to be deleted', async () => {
       if (await orgsPage.orgConfigured()) {
         return
       }
@@ -109,36 +109,36 @@ describe('Configure Cloud - GCP', () => {
       await projCredsPage.closeAllNotifications()
     })
 
-    test('has the correct URL', () => {
+    it('has the correct URL', () => {
       projCredsPage.verifyPageURL()
     })
 
-    test('adds a new project credential', async () => {
+    it('adds a new project credential', async () => {
       await projCredsPage.add()
       await projCredsPage.populate(testCred)
       await projCredsPage.save()
       await expect(page).toMatch('GCP project credentials created successfully')
     })
 
-    test('shows project credentials', async () => {
+    it('shows project credentials', async () => {
       await projCredsPage.checkCredentialListed(testCred.name)
     })
 
-    test('edits a project credential with a new description', async () => {
+    it('edits a project credential with a new description', async () => {
       await projCredsPage.edit(testCred.name, testCred.project)
       await projCredsPage.populate({ summary: 'summary2' })
       await projCredsPage.save()
       await expect(page).toMatch('GCP project credentials updated successfully')
     })
 
-    test('edits a project credential with a new key', async () => {
+    it('edits a project credential with a new key', async () => {
       await projCredsPage.edit(testCred.name, testCred.project)
       await projCredsPage.replaceKey('sheep')
       await projCredsPage.save()
       await expect(page).toMatch('GCP project credentials updated successfully')
     })
 
-    test('allows credentials to be deleted', async () => {
+    it('allows credentials to be deleted', async () => {
       await projCredsPage.delete(testCred.name)
       await projCredsPage.confirmDelete()
       await expect(page).toMatch('GCP project credentials deleted successfully')
@@ -167,28 +167,28 @@ describe('Configure Cloud - GCP', () => {
       await clusterPlansPage.closeAllNotifications()
     })
 
-    test('has the correct URL', () => {
+    it('has the correct URL', () => {
       clusterPlansPage.verifyPageURL()
     })
 
-    test('views an existing plan', async () => {
+    it('views an existing plan', async () => {
       await clusterPlansPage.view('gke-development')
       // Check a random thing to ensure the plan is being displayed.
       await expect(page).toMatch('Authorized Master Networks')
       await clusterPlansPage.closeDrawer()
     })
 
-    test('does not allow editing of a read-only plan', async () => {
+    it('does not allow editing of a read-only plan', async () => {
       await clusterPlansPage.edit('gke-development')
       await expect(page).toMatch('This plan is read-only')
     })
 
-    test('does not allow deleting of a read-only plan', async () => {
+    it('does not allow deleting of a read-only plan', async () => {
       await clusterPlansPage.delete('gke-development')
       await expect(page).toMatch('This plan is read-only and cannot be deleted')
     })
 
-    test('creates a new plan using default values', async () => {
+    it('creates a new plan using default values', async () => {
       await clusterPlansPage.new()
       await expect(page).toMatch('New GKE plan')
       await clusterPlansPage.populatePlan(testPlan)
@@ -199,7 +199,7 @@ describe('Configure Cloud - GCP', () => {
       await expect(page).toMatch('GKE plan created successfully')
     })
 
-    test('edits an existing plan', async () => {
+    it('edits an existing plan', async () => {
       await clusterPlansPage.edit(testPlan.name)
       await clusterPlansPage.populatePlan({ region: 'europe-west1' })
       await clusterPlansPage.addNodePool()
@@ -216,7 +216,7 @@ describe('Configure Cloud - GCP', () => {
       await expect(page).toMatch('GKE plan updated successfully')
     })
 
-    test('edits an existing node pool', async () => {
+    it('edits an existing node pool', async () => {
       await clusterPlansPage.edit(testPlan.name)
       await clusterPlansPage.viewEditNodePool(1)
       await clusterPlansPage.populateNodePool({ enableAutoscaler: false, size: 10 })
@@ -225,7 +225,7 @@ describe('Configure Cloud - GCP', () => {
       await expect(page).toMatch('GKE plan updated successfully')
     })
 
-    test('allows deleting of a non-read-only plan', async () => {
+    it('allows deleting of a non-read-only plan', async () => {
       await clusterPlansPage.delete(testPlan.name)
       await clusterPlansPage.confirmDelete()
       await expect(page).toMatch(`${testPlan.name} plan deleted`)
@@ -251,28 +251,28 @@ describe('Configure Cloud - GCP', () => {
       await policiesPage.closeAllNotifications()
     })
 
-    test('has the correct URL', () => {
+    it('has the correct URL', () => {
       policiesPage.verifyPageURL()
     })
 
-    test('views an existing policy', async () => {
+    it('views an existing policy', async () => {
       await policiesPage.view('default-gke')
       // Check a random thing to ensure the plan is being displayed.
       await expect(page).toMatch('Authorized Master Networks')
       await policiesPage.closeDrawer()
     })
 
-    test('does not allow editing of a read-only policy', async () => {
+    it('does not allow editing of a read-only policy', async () => {
       await policiesPage.edit('default-gke')
       await expect(page).toMatch('This policy is read-only')
     })
 
-    test('does not allow deleting of a read-only policy', async () => {
+    it('does not allow deleting of a read-only policy', async () => {
       await policiesPage.delete('default-gke')
       await expect(page).toMatch('This policy is read-only and cannot be deleted')
     })
 
-    test('creates a new policy', async () => {
+    it('creates a new policy', async () => {
       await policiesPage.new()
       await expect(page).toMatch('New GKE policy')
       await policiesPage.populate(testPolicy)
@@ -291,7 +291,7 @@ describe('Configure Cloud - GCP', () => {
       await expect(page).toMatch('Policy created successfully')
     })
 
-    test('updates an existing policy', async () => {
+    it('updates an existing policy', async () => {
       await policiesPage.edit(testPolicy.name)
       await policiesPage.populate({ description: 'Updated Policy Description' })
       await policiesPage.togglePolicyAllow('clusterUsers')
@@ -301,7 +301,7 @@ describe('Configure Cloud - GCP', () => {
       await expect(page).toMatch('Policy saved successfully')
     })
 
-    test('views the updated policy', async () => {
+    it('views the updated policy', async () => {
       await policiesPage.view(testPolicy.name)
       await policiesPage.checkPolicyResult('domain', ConfigureCloudClusterPoliciesBase.RESULT_EXPLICIT_DENY)
       await policiesPage.checkPolicyResult('description', ConfigureCloudClusterPoliciesBase.RESULT_DEFAULT_DENY)
@@ -310,7 +310,7 @@ describe('Configure Cloud - GCP', () => {
       await policiesPage.closeDrawer()
     })
 
-    test('allows deleting of a non-read-only policy', async () => {
+    it('allows deleting of a non-read-only policy', async () => {
       await policiesPage.delete(testPolicy.name)
       await policiesPage.confirmDelete()
       await expect(page).toMatch('Policy Updated Policy Description deleted')
