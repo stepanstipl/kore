@@ -60,9 +60,11 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 
 	defer func() {
 		if err := c.mgr.GetClient().Status().Patch(ctx, service, client.MergeFrom(original)); err != nil {
-			logger.WithError(err).Error("failed to update the service status")
-			reconcileResult = reconcile.Result{}
-			reconcileError = err
+			if !kerrors.IsNotFound(err) {
+				logger.WithError(err).Error("failed to update the service status")
+				reconcileResult = reconcile.Result{}
+				reconcileError = err
+			}
 		}
 	}()
 
