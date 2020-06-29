@@ -17,7 +17,19 @@ export class ConfigureCloudGCPOrgs extends ConfigureCloudPage {
   }
 
   /**
-   * Checks if the org is listed
+   * checks if any org is configured
+   */
+  async orgConfigured() {
+    try {
+      await this.p.waitForSelector('.ant-list-items', { timeout: 2000 })
+      return true
+    } catch(err) {
+      return false
+    }
+  }
+
+  /**
+   * Checks if an specific org is listed
    */
   async checkOrgListed(name) {
     await expect(this.p).toMatchElement(`#gcporg_${name}`)

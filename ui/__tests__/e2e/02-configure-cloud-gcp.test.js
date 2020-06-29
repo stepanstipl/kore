@@ -41,6 +41,12 @@ describe('Configure Cloud - GCP', () => {
     })
 
     test('adds a new organization', async () => {
+      // I can't find a way to skip all the tests in a block using an async check
+      // so this is required in each test, to skip if the GCP org is already configured
+      // this would only happen when running locally, not on CI
+      if (await orgsPage.orgConfigured()) {
+        return
+      }
       await orgsPage.add()
       await orgsPage.populate(testOrg)
       await orgsPage.save()
@@ -48,10 +54,16 @@ describe('Configure Cloud - GCP', () => {
     })
 
     test('shows the organization', async () => {
+      if (await orgsPage.orgConfigured()) {
+        return
+      }
       await orgsPage.checkOrgListed(testOrg.name)
     })
 
     test('edits the organization with a new description', async () => {
+      if (await orgsPage.orgConfigured()) {
+        return
+      }
       await orgsPage.edit(testOrg.name, testOrg.parentID)
       await orgsPage.populate({ summary: 'summary2' })
       await orgsPage.save()
@@ -59,6 +71,9 @@ describe('Configure Cloud - GCP', () => {
     })
 
     test('edits a project credential with a new key', async () => {
+      if (await orgsPage.orgConfigured()) {
+        return
+      }
       await orgsPage.edit(testOrg.name, testOrg.parentID)
       await orgsPage.replaceKey('chicken')
       await orgsPage.save()
@@ -66,6 +81,9 @@ describe('Configure Cloud - GCP', () => {
     })
 
     test('allows the organization to be deleted', async () => {
+      if (await orgsPage.orgConfigured()) {
+        return
+      }
       await orgsPage.delete(testOrg.name)
       await orgsPage.confirmDelete()
       await expect(page).toMatch('GCP organization deleted successfully')

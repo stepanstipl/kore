@@ -19,14 +19,16 @@ class GCPOrganizationsList extends ResourceList {
 
   async fetchComponentData() {
     const api = await KoreApi.client()
-    const [ allTeams, gcpOrganizations, allAllocations ] = await Promise.all([
+    const [ allTeams, gcpOrganizations, allAllocations, accountList ] = await Promise.all([
       api.ListTeams(),
       api.ListGCPOrganizations(publicRuntimeConfig.koreAdminTeamName),
-      api.ListAllocations(publicRuntimeConfig.koreAdminTeamName)
+      api.ListAllocations(publicRuntimeConfig.koreAdminTeamName),
+      api.ListAccounts()
     ])
     allTeams.items = allTeams.items.filter(t => !publicRuntimeConfig.ignoreTeams.includes(t.metadata.name))
     gcpOrganizations.items.forEach(org => {
       org.allocation = AllocationHelpers.findAllocationForResource(allAllocations, org)
+      org.accountManagement = accountList.items.find(a => a.metadata.name === `am-${org.metadata.name}`)
     })
     return { resources: gcpOrganizations, allTeams }
   }
@@ -39,10 +41,18 @@ class GCPOrganizationsList extends ResourceList {
       okType: 'danger',
       cancelText: 'No',
       onOk: async () => {
-        const key = loadingMessage('Deleting allocations for organization', { duration: 0 })
+        const key = loadingMessage('Deleting', { duration: 0 })
         try {
+          if (gcpOrg.accountManagement) {
+            loadingMessage('Deleting allocations for organization account management', { key })
+            await AllocationHelpers.removeAllocation(gcpOrg.accountManagement)
+            loadingMessage('Deleting account management', { key })
+            await (await KoreApi.client()).RemoveAccount(gcpOrg.accountManagement.metadata.name)
+          }
+
+          loadingMessage('Deleting allocations for organization', { key })
           await AllocationHelpers.removeAllocation(gcpOrg)
-          loadingMessage('Deleting organization', { key, duration: 0 })
+          loadingMessage('Deleting organization', { key })
           await (await KoreApi.client()).DeleteGCPOrganization(publicRuntimeConfig.koreAdminTeamName, gcpOrg.metadata.name)
           successMessage(this.deletedMessage, { key })
         } catch (err) {
