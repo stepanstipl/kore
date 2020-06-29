@@ -1,3 +1,7 @@
+## Release v0.2.3 - 2020-06-29
+
+Bugfix release to enable [Namespaces not appearing on cluster page](https://github.com/appvia/kore/issues/1016)
+
 ## Release v0.2.2 - 2020-06-26
 
 Bugfix release to enable [GSuite token refresh to continue to work for Kore CLI after first login](https://github.com/appvia/kore/issues/1006)

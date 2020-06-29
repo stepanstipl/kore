@@ -53,7 +53,7 @@ class NamespacesTab extends React.Component {
       const api = await KoreApi.client()
       let [ namespaceClaims, serviceKinds, serviceCredentials ] = await Promise.all([
         api.ListNamespaces(team.metadata.name),
-        api.ListServiceKinds(team),
+        featureEnabled(KoreFeatures.SERVICES) ? api.ListServiceKinds(team) : Promise.resolve({ items: [] }),
         featureEnabled(KoreFeatures.SERVICES) ? api.ListServiceCredentials(team.metadata.name, cluster.metadata.name) : Promise.resolve({ items: [] }),
       ])
       namespaceClaims = namespaceClaims.items.filter(ns => ns.spec.cluster.name === cluster.metadata.name)
