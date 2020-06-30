@@ -1374,6 +1374,13 @@ spec:
         status:
           description: EKSNodeGroupStatus defines the observed state of EKSNodeGroup
           properties:
+            autoScalingGroupNames:
+              description: AutoScalingGroupName is the name of the Auto Scaling Groups
+                belonging to this node group
+              items:
+                type: string
+              type: array
+              x-kubernetes-list-type: set
             conditions:
               description: Conditions is the status of the components
               items:

@@ -312,6 +312,11 @@ func (in *EKSNodeGroupStatus) DeepCopyInto(out *EKSNodeGroupStatus) {
 			}
 		}
 	}
+	if in.AutoScalingGroupNames != nil {
+		in, out := &in.AutoScalingGroupNames, &out.AutoScalingGroupNames
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 

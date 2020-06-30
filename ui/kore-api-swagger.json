@@ -8026,6 +8026,12 @@
     },
     "v1alpha1.EKSNodeGroupStatus": {
       "properties": {
+        "autoScalingGroupNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "conditions": {
           "type": "array",
           "items": {

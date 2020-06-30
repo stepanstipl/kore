@@ -89,6 +89,9 @@ type EKSNodeGroupStatus struct {
 	Conditions core.Components `json:"conditions,omitempty"`
 	// NodeIAMRole is the IAM role assumed by the worker nodes themselves
 	NodeIAMRole string `json:"nodeIAMRole,omitempty"`
+	// AutoScalingGroupName is the name of the Auto Scaling Groups belonging to this node group
+	// +listType=set
+	AutoScalingGroupNames []string `json:"autoScalingGroupNames,omitempty"`
 	// Status provides a overall status
 	Status core.Status `json:"status,omitempty"`
 }

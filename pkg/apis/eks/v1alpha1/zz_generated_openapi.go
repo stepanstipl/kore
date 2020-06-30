@@ -459,6 +459,25 @@ func schema_pkg_apis_eks_v1alpha1_EKSNodeGroupStatus(ref common.ReferenceCallbac
 							Format:      "",
 						},
 					},
+					"autoScalingGroupNames": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "AutoScalingGroupName is the name of the Auto Scaling Groups belonging to this node group",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Status provides a overall status",
