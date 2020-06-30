@@ -19,6 +19,10 @@ package aws
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/url"
+
+	"github.com/aws/aws-sdk-go/service/sts"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -35,6 +39,8 @@ type IamClient struct {
 	session *session.Session
 	// svc is the iam service
 	svc *iam.IAM
+	// accountID is the AWS account ID
+	accountID string
 }
 
 const (
@@ -76,7 +82,7 @@ const (
 	  }
 	`
 
-	autoscalerNodeGroupAGSAccessPolicy = `{
+	clusterAutoscalerNodeGroupAGSAccessPolicy = `{
 		"Version": "2012-10-17",
 		"Statement": [
 			{
@@ -85,7 +91,8 @@ const (
 					"autoscaling:DescribeAutoScalingInstances",
 					"autoscaling:DescribeAutoScalingGroups",
 					"autoscaling:DescribeTags",
-					"autoscaling:DescribeLaunchConfigurations"
+					"autoscaling:DescribeLaunchConfigurations",
+					"ec2:DescribeLaunchTemplateVersions"
 				],
 				"Resource": "*"
 			},
@@ -95,12 +102,15 @@ const (
 					"autoscaling:SetDesiredCapacity",
 					"autoscaling:TerminateInstanceInAutoScalingGroup"
 				],
-				"Resource": "%s"
+				"Resource": "*",
+				"Condition": {
+					"StringEquals": { "autoscaling:ResourceTag/k8s.io/cluster-autoscaler/%s": "owned" }
+				}
 			}
 		]
 	}`
 
-	autoscalerTrustPolicy = `{
+	clusterAutoscalerTrustPolicy = `{
 		"Version": "2012-10-17",
 		"Statement": [
 			{
@@ -134,6 +144,21 @@ func NewIamClient(credentials Credentials) *IamClient {
 // NewIamClientFromSession from current session
 func NewIamClientFromSession(session *session.Session) *IamClient {
 	return &IamClient{session: session, svc: iam.New(session)}
+}
+
+func (i *IamClient) GetAWSAccountID() (string, error) {
+	if i.accountID != "" {
+		return i.accountID, nil
+	}
+
+	stsClient := sts.New(i.session)
+	identity, err := stsClient.GetCallerIdentity(&sts.GetCallerIdentityInput{})
+	if err != nil {
+		return "", fmt.Errorf("failed to get AWS caller identity: %w", err)
+	}
+	i.accountID = *identity.Account
+
+	return i.accountID, nil
 }
 
 // GetARN returns the ARN from the client
@@ -216,23 +241,8 @@ func (i *IamClient) GetEKSNodeGroupRoleName(prefix string) string {
 	return prefix + "-eks-nodepool"
 }
 
-// GetEKSNodeGroupAutoscalingPolicyName returns a policy name for a nodegroup
-func (i *IamClient) GetEKSNodeGroupAutoscalingPolicyName(prefix string) string {
-	return prefix + "-eks-ng-autoscaling"
-}
-
-// GetNodeGroupAutoscalingPolicyArn returns a policy ARN name for a nodegroup
-func (i *IamClient) GetNodeGroupAutoscalingPolicyArn(accountID, prefix string) string {
-	return fmt.Sprintf("arn:aws:iam::%s:policy/%s", accountID, i.GetEKSNodeGroupAutoscalingPolicyName(prefix))
-}
-
-// GetNodeGroupAutoscalingRoleName returns an IAM Role name for the autoscaller
-func (i *IamClient) GetNodeGroupAutoscalingRoleName(prefix string) string {
-	return prefix + "-eks-autoscaling"
-}
-
-// DeleteEKSClutserRole is responsible for deleting the eks iam role
-func (i *IamClient) DeleteEKSClutserRole(ctx context.Context, prefix string) error {
+// DeleteEKSClusterRole is responsible for deleting the eks iam role
+func (i *IamClient) DeleteEKSClusterRole(ctx context.Context, prefix string) error {
 	return i.DeleteRole(ctx, i.GetEKSRoleName(prefix))
 }
 
@@ -301,6 +311,117 @@ func (i *IamClient) EnsureEKSNodePoolRole(ctx context.Context, prefix string) (*
 	name := i.GetEKSNodeGroupRoleName(prefix)
 
 	return i.EnsureRole(ctx, name, policies, nodeStsTrustPolicy)
+}
+
+// EnsureIAMRoleWithEmbeddedPolicy creates an IAM role with an embedded policy
+func (i *IamClient) EnsureIAMRoleWithEmbeddedPolicy(name, description, trustPolicy, rolePolicy string) (*iam.Role, error) {
+	var role *iam.Role
+
+	roleExists := true
+	roleOutput, err := i.svc.GetRole(&iam.GetRoleInput{RoleName: aws.String(name)})
+	if err != nil {
+		if !IsAWSErr(err, iam.ErrCodeNoSuchEntityException, "") && !IsAWSErrRequestFailureStatusCode(err, http.StatusNotFound) {
+			return nil, fmt.Errorf("failed to get IAM role %q: %w", name, err)
+		}
+		roleExists = false
+	}
+
+	if roleExists {
+		role = roleOutput.Role
+		managed := true
+		for _, tag := range roleOutput.Role.Tags {
+			if aws.StringValue(tag.Key) == "kore.appvia.io/managed" && aws.StringValue(tag.Value) == "false" {
+				managed = false
+				break
+			}
+		}
+
+		if !managed {
+			return role, nil
+		}
+	}
+
+	if !roleExists {
+		roleOutput, err := i.svc.CreateRole(&iam.CreateRoleInput{
+			RoleName:                 aws.String(name),
+			Description:              aws.String(description),
+			AssumeRolePolicyDocument: aws.String(trustPolicy),
+			Tags: []*iam.Tag{
+				{
+					Key:   aws.String("kore.appvia.io/managed"),
+					Value: aws.String("true"),
+				},
+			},
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to create IAM role %q: %w", name, err)
+		}
+		role = roleOutput.Role
+	} else if aws.StringValue(roleOutput.Role.AssumeRolePolicyDocument) != trustPolicy {
+		_, err := i.svc.UpdateAssumeRolePolicy(&iam.UpdateAssumeRolePolicyInput{
+			RoleName:       aws.String(name),
+			PolicyDocument: aws.String(trustPolicy),
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to update IAM role %q: %w", name, err)
+		}
+	}
+
+	_, err = i.svc.PutRolePolicy(&iam.PutRolePolicyInput{
+		RoleName:       aws.String(name),
+		PolicyName:     aws.String("Main"),
+		PolicyDocument: aws.String(rolePolicy),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to add policy to IAM role %q: %w", name, err)
+	}
+
+	return role, nil
+}
+
+// DeleteIAMRoleWithEmbeddedPolicy deletes an IAM role which has one embedded policy called "Main"
+func (i *IamClient) DeleteIAMRoleWithEmbeddedPolicy(name string) error {
+	roleExists := true
+	role, err := i.svc.GetRole(&iam.GetRoleInput{RoleName: aws.String(name)})
+	if err != nil {
+		if !IsAWSErr(err, iam.ErrCodeNoSuchEntityException, "") && !IsAWSErrRequestFailureStatusCode(err, http.StatusNotFound) {
+			return fmt.Errorf("failed to get IAM role %q: %w", name, err)
+		}
+		roleExists = false
+	}
+
+	if !roleExists {
+		return nil
+	}
+
+	managed := false
+	for _, tag := range role.Role.Tags {
+		if aws.StringValue(tag.Key) == "kore.appvia.io/managed" && aws.StringValue(tag.Value) == "true" {
+			managed = true
+			break
+		}
+	}
+
+	if !managed {
+		return nil
+	}
+
+	_, err = i.svc.DeleteRolePolicy(&iam.DeleteRolePolicyInput{
+		RoleName:   aws.String(name),
+		PolicyName: aws.String("Main"),
+	})
+	if err != nil {
+		if !IsAWSErr(err, iam.ErrCodeNoSuchEntityException, "") && !IsAWSErrRequestFailureStatusCode(err, http.StatusNotFound) {
+			return fmt.Errorf("failed to delete policy on  IAM role %q: %w", name, err)
+		}
+	}
+
+	_, err = i.svc.DeleteRole(&iam.DeleteRoleInput{RoleName: aws.String(name)})
+	if err != nil {
+		return fmt.Errorf("failed to delete IAM role %q: %w", name, err)
+	}
+
+	return nil
 }
 
 // EnsureRole is responsible for creating a role
@@ -395,94 +516,35 @@ func (i *IamClient) RoleExists(ctx context.Context, name string) (*iam.Role, err
 	return resp.Role, nil
 }
 
-// DeleteClusterAutoscalerRoleAndPolicies will remove all IAM objetcs relating to this clusters autoscaler
-func (i *IamClient) DeleteClusterAutoscalerRoleAndPolicies(ctx context.Context, clusterName string, ngNames []string, accountID string) error {
-	ar := i.GetNodeGroupAutoscalingRoleName(clusterName)
-
-	// Delete role first
-	err := i.DeleteRole(ctx, ar)
-	if err != nil {
-
-		return fmt.Errorf("unable to delete role %s for cluster autoscaler - %s", ar, err)
-	}
-	// Delete unused policies
-	for _, ngName := range ngNames {
-		err := i.DeleteNodeGroupAutoscalingPolicy(ctx, ngName, accountID)
-		if err != nil {
-
-			return fmt.Errorf("unable to delete policy for nodegroup %s for cluster %s - %s", ngName, clusterName, err)
-		}
-	}
-	return nil
+func (i *IamClient) getClusterAutoscalerRoleName(clusterName string) string {
+	return clusterName + "-eks-autoscaling"
 }
 
-// EnsureClusterAutoscalingRoleAndPolicies creates an IAM role for the Autoscaling workload and the relevant policies
-func (i *IamClient) EnsureClusterAutoscalingRoleAndPolicies(ctx context.Context, clusterName, accountID, oidcProvider string, ngas []NodeGroupAutoScaler) (*iam.Role, error) {
-	polARNs := []string{}
+// DeleteClusterAutoscalerRole will delete the cluster autoscaling IAM role
+func (i *IamClient) DeleteClusterAutoscalerRole(clusterName string) error {
+	name := i.getClusterAutoscalerRoleName(clusterName)
 
-	for _, nga := range ngas {
-		pol, err := i.EnsureNodeGroupAutoscalingPolicy(ctx, nga.NodeGroupName, nga.AutoScalingARN)
-		if err != nil {
-			return nil, fmt.Errorf("unable to create or update policy for nodegroup %s with asg ARN %s - %s", nga.NodeGroupName, nga.AutoScalingARN, err)
-		}
-		polARNs = append(polARNs, *pol.Arn)
-	}
-	// create role with policies and sts document.
-	stsPol := fmt.Sprintf(autoscalerTrustPolicy, accountID, oidcProvider, oidcProvider)
-
-	roleName := i.GetNodeGroupAutoscalingRoleName(clusterName)
-	role, err := i.EnsureRole(ctx, roleName, polARNs, stsPol)
-	if err != nil {
-		return nil, fmt.Errorf("cannot create role %s for cluster %s required for autoscaling group - %s", roleName, clusterName, err)
-	}
-	return role, nil
+	return i.DeleteIAMRoleWithEmbeddedPolicy(name)
 }
 
-// DeleteNodeGroupAutoscalingPolicy will delete a nodegroup Autoscaling policy
-func (i *IamClient) DeleteNodeGroupAutoscalingPolicy(ctx context.Context, nodeGroupName, accountID string) error {
-	policyARN := i.GetNodeGroupAutoscalingPolicyArn(accountID, nodeGroupName)
-	exists, _, err := i.PolicyExists(policyARN)
-	if err != nil {
-		return err
-	}
-	if exists {
-		_, err := i.svc.DeletePolicy(&iam.DeletePolicyInput{
-			PolicyArn: aws.String(policyARN),
-		})
-		if err != nil {
-			return fmt.Errorf("unable to delete policy %s for nodepgroup %s - %s", policyARN, nodeGroupName, err)
-		}
-	}
-	return nil
-}
+// EnsureClusterAutoscalerRole creates an IAM role for the cluster autoscaler
+func (i *IamClient) EnsureClusterAutoscalerRole(clusterName, oidcProvider string) (*iam.Role, error) {
+	name := i.getClusterAutoscalerRoleName(clusterName)
 
-// EnsureNodeGroupAutoscalingPolicy will create or update an access policy for a specific nodegroup
-func (i *IamClient) EnsureNodeGroupAutoscalingPolicy(ctx context.Context, nodeGroupName, asgArn string) (*iam.Policy, error) {
-
-	// Get ASG details from Auto Scaling Group ARN
-	asg, err := GetASGDetailsFromArn(asgArn)
+	accountID, err := i.GetAWSAccountID()
 	if err != nil {
 		return nil, err
 	}
-	policyARN := i.GetNodeGroupAutoscalingPolicyArn(asg.ARN.AccountID, nodeGroupName)
-	exists, p, err := i.PolicyExists(policyARN)
-	if err != nil {
-		return nil, err
-	}
-	policyName := i.GetEKSNodeGroupAutoscalingPolicyName(nodeGroupName)
-	if !exists {
-		// create the required policy for this nodegroup
-		po, err := i.svc.CreatePolicy(&iam.CreatePolicyInput{
-			Description:    aws.String(fmt.Sprintf("A policy to enable autoscaling for the nodegroup %s with the autoscaling name %s", nodeGroupName, asg.Name)),
-			PolicyDocument: aws.String(fmt.Sprintf(autoscalerNodeGroupAGSAccessPolicy, asgArn)),
-			PolicyName:     aws.String(policyName),
-		})
-		if err != nil {
-			return nil, fmt.Errorf("error creating policy %s - %s", policyName, err)
-		}
-		p = po.Policy
-	}
-	return p, nil
+
+	issuerURL, _ := url.Parse(oidcProvider)
+	hostPath := issuerURL.Hostname() + issuerURL.Path
+
+	return i.EnsureIAMRoleWithEmbeddedPolicy(
+		name,
+		fmt.Sprintf("IAM role for %q Kore cluster used by the autoscaler", clusterName),
+		fmt.Sprintf(clusterAutoscalerTrustPolicy, accountID, hostPath, hostPath),
+		fmt.Sprintf(clusterAutoscalerNodeGroupAGSAccessPolicy, clusterName),
+	)
 }
 
 // PolicyExists will determine if an AWS IAM policy exists and return the policy if it does

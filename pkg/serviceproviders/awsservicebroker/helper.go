@@ -18,33 +18,13 @@ package awsservicebroker
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"strings"
-
-	"github.com/aws/aws-sdk-go/aws/awserr"
 
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	corev1 "k8s.io/api/core/v1"
 )
-
-func isAWSErr(err error, code string, message string) bool {
-	var awsErr awserr.Error
-	if errors.As(err, &awsErr) {
-		return awsErr.Code() == code && strings.Contains(awsErr.Message(), message)
-	}
-	return false
-}
-
-func isAWSErrRequestFailureStatusCode(err error, statusCode int) bool {
-	var awsErr awserr.RequestFailure
-	if errors.As(err, &awsErr) {
-		return awsErr.StatusCode() == statusCode
-	}
-	return false
-}
 
 func getServiceAccountToken(ctx context.Context, client client.Client, namespace, name string) (_ *corev1.Secret, _ error) {
 	sa := &corev1.ServiceAccount{}

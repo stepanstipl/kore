@@ -190,6 +190,11 @@ func (t *eksCtrl) EnsureClusterOIDCProvider(client *aws.Client, cluster *eks.EKS
 			return reconcile.Result{}, fmt.Errorf("error getting cluster details for %s: %q", cluster.Name, err)
 		}
 
+		if awsEks.Identity == nil || awsEks.Identity.Oidc == nil || awsEks.Identity.Oidc.Issuer == nil {
+			ctx.Logger().Debug("OIDC Issuer URL is not available on the cluster yet")
+			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+		}
+
 		awsIAM := aws.NewIamClientFromSession(client.Sess)
 		if err := awsIAM.EnsureOIDCProvider(*awsEks.Arn, *awsEks.Identity.Oidc.Issuer); err != nil {
 			return reconcile.Result{}, fmt.Errorf("error setting up OIDC provider for cluster: %q", err)
@@ -443,7 +448,7 @@ func (t *eksCtrl) EnsureRoleDeletion(cluster *eks.EKS) controllers.EnsureFunc {
 		}
 		client := aws.NewIamClient(*credentials)
 
-		if err := client.DeleteEKSClutserRole(ctx, cluster.Name); err != nil {
+		if err := client.DeleteEKSClusterRole(ctx, cluster.Name); err != nil {
 			logger.WithError(err).Error("trying to delete the eks cluster role")
 
 			return reconcile.Result{}, err

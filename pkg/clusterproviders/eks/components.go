@@ -21,6 +21,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/appvia/kore/pkg/controllers/helpers"
+	"github.com/appvia/kore/pkg/serviceproviders/application"
+	awsutils "github.com/appvia/kore/pkg/utils/cloud/aws"
+
+	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/kore"
@@ -53,9 +59,11 @@ func (p Provider) SetComponents(ctx kore.Context, cluster *clustersv1.Cluster, c
 
 	config := string(cluster.Spec.Configuration.Raw)
 
-	if groups := gjson.Get(config, "nodeGroups"); groups.Exists() && groups.IsArray() {
-		groups.ForEach(func(key, value gjson.Result) bool {
+	enableAutoscaler := false
 
+	if groups := gjson.Get(config, "nodeGroups"); groups.Exists() && groups.IsArray() {
+		var err error
+		groups.ForEach(func(key, value gjson.Result) bool {
 			if name := value.Get("name"); name.Exists() {
 				groupName := cluster.Name + "-" + name.String()
 
@@ -66,6 +74,14 @@ func (p Provider) SetComponents(ctx kore.Context, cluster *clustersv1.Cluster, c
 					},
 				}
 
+				if err = kubernetes.PatchSpec(eksNodeGroup, []byte(value.Raw)); err != nil {
+					return false
+				}
+
+				if eksNodeGroup.Spec.EnableAutoscaler {
+					enableAutoscaler = true
+				}
+
 				components.Add(eksNodeGroup, eks)
 
 				kubernetesObj.Dependencies = append(kubernetesObj.Dependencies, eksNodeGroup)
@@ -73,6 +89,31 @@ func (p Provider) SetComponents(ctx kore.Context, cluster *clustersv1.Cluster, c
 
 			return true
 		})
+		if err != nil {
+			return err
+		}
+	}
+
+	if enableAutoscaler {
+		helmOperatorName := cluster.Name + "-flux-helm-operator"
+		helmOperatorService := components.Find(func(comp kore.ClusterComponent) bool {
+			if service, ok := comp.Object.(*servicesv1.Service); ok {
+				return service.Name == helmOperatorName
+			}
+			return false
+		})
+		if helmOperatorService == nil {
+			return fmt.Errorf("%q service can not be found", helmOperatorName)
+		}
+
+		autoscalerService := &servicesv1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      cluster.Name + "-autoscaler",
+				Namespace: cluster.Namespace,
+			},
+		}
+
+		components.Add(autoscalerService, helmOperatorService)
 	}
 
 	return nil
@@ -90,7 +131,18 @@ func (p Provider) BeforeComponentsUpdate(ctx kore.Context, cluster *clustersv1.C
 	}
 	vpc := vpcComponent.Object.(*eksv1alpha1.EKSVPC)
 
+	eksComponent := components.Find(func(comp kore.ClusterComponent) bool {
+		_, ok := comp.Object.(*eksv1alpha1.EKS)
+		return ok
+	})
+	if eksComponent == nil {
+		panic("EKS object not found in cluster components")
+	}
+	eks := eksComponent.Object.(*eksv1alpha1.EKS)
+
 	config := cluster.Spec.Configuration.Raw
+
+	var autoScalingNodeGroups []map[string]interface{}
 
 	for _, c := range *components {
 		switch o := c.Object.(type) {
@@ -133,10 +185,65 @@ func (p Provider) BeforeComponentsUpdate(ctx kore.Context, cluster *clustersv1.C
 				}
 			}
 
+			if o.Spec.EnableAutoscaler {
+				for _, name := range o.Status.AutoScalingGroupNames {
+					autoScalingNodeGroups = append(autoScalingNodeGroups, map[string]interface{}{
+						"minSize": o.Spec.MinSize,
+						"maxSize": o.Spec.MaxSize,
+						"name":    name,
+					})
+				}
+			}
+
 			o.Spec.Cluster = cluster.Ownership()
 			o.Spec.Credentials = cluster.Spec.Credentials
 			o.Spec.Region = vpc.Spec.Region
 			o.Spec.Subnets = vpc.Status.Infra.PrivateSubnetIDs
+		case *servicesv1.Service:
+			switch o.Name {
+			case cluster.Name + "-autoscaler":
+				koreEKS := helpers.NewKoreEKS(ctx, eks)
+				creds, err := koreEKS.GetCredentials(cluster.Namespace)
+				if err != nil {
+					return err
+				}
+
+				iam := awsutils.NewIamClient(*creds)
+				role, err := iam.EnsureClusterAutoscalerRole(cluster.Name, eks.Status.OIDCProviderURL)
+				if err != nil {
+					return err
+				}
+
+				o.Spec.Cluster = cluster.Ownership()
+				o.Spec.ClusterNamespace = "kube-system"
+
+				if o.Annotations == nil {
+					o.Annotations = map[string]string{}
+				}
+				o.Annotations[kore.AnnotationSystem] = kore.AnnotationValueTrue
+
+				values := map[string]interface{}{
+					"cloud-provider": "aws",
+					"image": map[string]interface{}{
+						"tag": "v1.16.4",
+					},
+					"awsRegion": eks.Spec.Region,
+					"rbac": map[string]interface{}{
+						"create": true,
+						"serviceAccount": map[string]interface{}{
+							"name": "cluster-autoscaler",
+						},
+						"serviceAccountAnnotations": map[string]interface{}{
+							"eks.amazonaws.com/role-arn": *role.Arn,
+						},
+					},
+					"autoscalingGroups": autoScalingNodeGroups,
+				}
+
+				if err := helpers.ApplyServicePlanToAppService(ctx, o, application.HelmAppClusterAutoscaler, values); err != nil {
+					return err
+				}
+			}
 		}
 	}
 

@@ -27,7 +27,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
-	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/kore"
@@ -37,44 +36,27 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-// GetServiceFromPlanNameAndValues will obtain a service
-func GetServiceFromPlanNameAndValues(ctx kore.Context, planName, serviceName string, kubeCluster *clustersv1.Kubernetes, clusterNamespace string, values map[string]interface{}) (*servicesv1.Service, error) {
+func ApplyServicePlanToAppService(ctx kore.Context, service *servicesv1.Service, planName string, values map[string]interface{}) error {
 	servicePlan, err := ctx.Kore().ServicePlans().Get(ctx, planName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get service plan %q: %w", planName, err)
-	}
-	ownerCluster := corev1.MustGetOwnershipFromObject(kubeCluster)
-	config := getEmptyConfigFromPlan(servicePlan)
-	// Populate default configuration from plan
-	if err := servicePlan.Spec.GetConfiguration(config); err != nil {
-		return nil, err
-	}
-	setConfigValues(config, values)
-	// Set config back
-	if err := servicePlan.Spec.SetConfiguration(config); err != nil {
-		return nil, err
+		return fmt.Errorf("failed to get service plan %q: %w", planName, err)
 	}
 
-	return &servicesv1.Service{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Service",
-			APIVersion: servicesv1.GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      serviceName,
-			Namespace: kubeCluster.Namespace,
-			Annotations: map[string]string{
-				kore.AnnotationSystem: "true",
-			},
-		},
-		Spec: servicesv1.ServiceSpec{
-			Kind:             servicePlan.Spec.Kind,
-			Plan:             servicePlan.Name,
-			Cluster:          ownerCluster,
-			ClusterNamespace: clusterNamespace,
-			Configuration:    servicePlan.Spec.Configuration,
-		},
-	}, nil
+	service.Spec.Kind = servicePlan.Spec.Kind
+	service.Spec.Plan = servicePlan.Name
+
+	config := getEmptyConfigFromPlan(servicePlan)
+	if err := servicePlan.Spec.GetConfiguration(config); err != nil {
+		return err
+	}
+
+	setConfigValues(config, values)
+
+	if err := servicePlan.Spec.SetConfiguration(config); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // EnsureServices will create or update services and return reconciliation info

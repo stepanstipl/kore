@@ -218,6 +218,15 @@ func (a *Controller) applyComponent(ctx context.Context, cluster *clustersv1.Clu
 	if !comp.Exists || GetClusterRevision(comp.Object) != cluster.ResourceVersion {
 		SetClusterRevision(comp.Object, cluster.ResourceVersion)
 
+		annotations := comp.Object.GetAnnotations()
+		if annotations == nil {
+			annotations = map[string]string{}
+		}
+		annotations[kore.AnnotationSystem] = kore.AnnotationValueTrue
+		annotations[kore.AnnotationReadOnly] = kore.AnnotationValueTrue
+
+		comp.Object.SetAnnotations(annotations)
+
 		if _, err := kubernetes.CreateOrUpdate(ctx, a.mgr.GetClient(), comp.Object); err != nil {
 			return reconcile.Result{}, err
 		}
@@ -284,8 +293,6 @@ func (a *Controller) Cleanup(cluster *clustersv1.Cluster, components *kore.Clust
 			// @step: set the resource to deleting
 			if statusComponent.Status != corev1.DeletingStatus {
 				statusComponent.Status = corev1.DeletingStatus
-
-				return reconcile.Result{Requeue: true}, nil
 			}
 
 			u := ComponentToUnstructured(statusComponent)
@@ -295,7 +302,7 @@ func (a *Controller) Cleanup(cluster *clustersv1.Cluster, components *kore.Clust
 				return reconcile.Result{}, err
 			}
 			if !found {
-				cluster.Status.Components.RemoveComponent(cluster.Status.Components[i].Name)
+				cluster.Status.Components.RemoveComponent(statusComponent.Name)
 
 				continue
 			}
@@ -316,6 +323,8 @@ func (a *Controller) Cleanup(cluster *clustersv1.Cluster, components *kore.Clust
 				cluster.Status.Status = corev1.FailureStatus
 				statusComponent.Status = corev1.DeleteFailedStatus
 			}
+
+			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 		}
 
 		return reconcile.Result{}, nil

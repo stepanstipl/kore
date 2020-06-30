@@ -22,9 +22,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/aws/aws-sdk-go/service/sts"
+	awsutils "github.com/appvia/kore/pkg/utils/cloud/aws"
 
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go/service/sts"
 
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
@@ -45,70 +45,15 @@ func (d ProviderFactory) ensureIAMRole(sess *session.Session, config *ProviderCo
 		return fmt.Errorf("failed to get AWS caller identity: %w", err)
 	}
 
-	iamClient := iam.New(sess)
+	iamClient := awsutils.NewIamClientFromSession(sess)
 
-	roleExists := true
-	role, err := iamClient.GetRole(&iam.GetRoleInput{RoleName: aws.String(config.AWSIAMRoleName)})
-	if err != nil {
-		if !isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") && !isAWSErrRequestFailureStatusCode(err, http.StatusNotFound) {
-			return fmt.Errorf("failed to get IAM role %q: %w", config.AWSIAMRoleName, err)
-		}
-		roleExists = false
-	}
-
-	if roleExists {
-		managed := false
-		for _, tag := range role.Role.Tags {
-			if aws.StringValue(tag.Key) == "kore.appvia.io/managed" && aws.StringValue(tag.Value) == "true" {
-				managed = true
-				break
-			}
-		}
-
-		if !managed {
-			return nil
-		}
-	}
-
-	trustPolicy := IAMRoleTrustPolicy(aws.StringValue(identity.Account))
-
-	if !roleExists {
-		_, err := iamClient.CreateRole(&iam.CreateRoleInput{
-			RoleName:                 aws.String(config.AWSIAMRoleName),
-			Description:              aws.String("IAM role used by aws-servicebroker to provision services"),
-			AssumeRolePolicyDocument: aws.String(trustPolicy),
-			Tags: []*iam.Tag{
-				{
-					Key:   aws.String("kore.appvia.io/managed"),
-					Value: aws.String("true"),
-				},
-			},
-		})
-		if err != nil {
-			return fmt.Errorf("failed to create IAM role %q: %w", config.AWSIAMRoleName, err)
-		}
-	} else if aws.StringValue(role.Role.AssumeRolePolicyDocument) != trustPolicy {
-		_, err := iamClient.UpdateAssumeRolePolicy(&iam.UpdateAssumeRolePolicyInput{
-			RoleName:       aws.String(config.AWSIAMRoleName),
-			PolicyDocument: aws.String(trustPolicy),
-		})
-		if err != nil {
-			return fmt.Errorf("failed to update IAM role %q: %w", config.AWSIAMRoleName, err)
-		}
-	}
-
-	rolePolicy := IAMRolePolicy(aws.StringValue(identity.Account), config.Region)
-
-	_, err = iamClient.PutRolePolicy(&iam.PutRolePolicyInput{
-		RoleName:       aws.String(config.AWSIAMRoleName),
-		PolicyName:     aws.String("Main"),
-		PolicyDocument: aws.String(rolePolicy),
-	})
-	if err != nil {
-		return fmt.Errorf("failed to add policy to IAM role %q: %w", config.AWSIAMRoleName, err)
-	}
-
-	return nil
+	_, err = iamClient.EnsureIAMRoleWithEmbeddedPolicy(
+		config.AWSIAMRoleName,
+		"IAM role used by aws-servicebroker to provision services",
+		IAMRoleTrustPolicy(aws.StringValue(identity.Account)),
+		IAMRolePolicy(aws.StringValue(identity.Account), config.Region),
+	)
+	return err
 }
 
 func (d ProviderFactory) ensureDynamoDBTable(sess *session.Session, config *ProviderConfiguration) error {
@@ -117,7 +62,7 @@ func (d ProviderFactory) ensureDynamoDBTable(sess *session.Session, config *Prov
 	exists := true
 	_, err := ddbClient.DescribeTable(&dynamodb.DescribeTableInput{TableName: aws.String(config.TableName)})
 	if err != nil {
-		if !isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "") && !isAWSErrRequestFailureStatusCode(err, http.StatusNotFound) {
+		if !awsutils.IsAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "") && !awsutils.IsAWSErrRequestFailureStatusCode(err, http.StatusNotFound) {
 			return fmt.Errorf("failed to describe DynamoDB table %q: %w", config.TableName, err)
 		}
 		exists = false
@@ -195,7 +140,7 @@ func (d ProviderFactory) ensureS3Bucket(sess *session.Session, config *ProviderC
 		Bucket: aws.String(config.S3BucketName),
 	})
 	if err != nil {
-		if !isAWSErr(err, s3.ErrCodeNoSuchBucket, "") && !isAWSErrRequestFailureStatusCode(err, http.StatusNotFound) {
+		if !awsutils.IsAWSErr(err, s3.ErrCodeNoSuchBucket, "") && !awsutils.IsAWSErrRequestFailureStatusCode(err, http.StatusNotFound) {
 			return fmt.Errorf("failed to get S3 bucket %s: %w", config.S3BucketName, err)
 		}
 		exists = false
@@ -206,7 +151,7 @@ func (d ProviderFactory) ensureS3Bucket(sess *session.Session, config *ProviderC
 			Bucket: aws.String(config.S3BucketName),
 		})
 		if err != nil {
-			if !isAWSErrRequestFailureStatusCode(err, http.StatusNotFound) {
+			if !awsutils.IsAWSErrRequestFailureStatusCode(err, http.StatusNotFound) {
 				return fmt.Errorf("failed to get tag for S3 bucket %s: %w", config.S3BucketName, err)
 			}
 		}
@@ -245,7 +190,7 @@ func (d ProviderFactory) ensureS3Bucket(sess *session.Session, config *ProviderC
 				Bucket: aws.String(config.S3BucketName),
 				Key:    obj.Key,
 			})
-			if err != nil && !isAWSErr(err, s3.ErrCodeNoSuchKey, "") && !isAWSErrRequestFailureStatusCode(err, http.StatusNotFound) {
+			if err != nil && !awsutils.IsAWSErr(err, s3.ErrCodeNoSuchKey, "") && !awsutils.IsAWSErrRequestFailureStatusCode(err, http.StatusNotFound) {
 				return fmt.Errorf("failed to download S3 file %q, %w", *obj.Key, err)
 			}
 
