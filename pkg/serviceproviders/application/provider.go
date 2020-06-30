@@ -19,6 +19,8 @@ package application
 import (
 	"fmt"
 
+	"github.com/appvia/kore/pkg/utils"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 
@@ -105,9 +107,11 @@ func (p Provider) AdminServices() []servicesv1.Service {
 		Name:      "kore",
 	}
 
+	providerDeps := []string{"app-kube-app-manager", "app-flux-helm-operator"}
+
 	var services []servicesv1.Service
 	for _, servicePlan := range p.plans {
-		if servicePlan.Annotations[kore.AnnotationSystem] != "true" {
+		if !utils.Contains(servicePlan.Name, providerDeps) {
 			continue
 		}
 

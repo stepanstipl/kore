@@ -17,9 +17,12 @@
 package helpers
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"time"
+
+	"github.com/appvia/kore/pkg/schema"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -75,7 +78,7 @@ func GetServiceFromPlanNameAndValues(ctx kore.Context, planName, serviceName str
 }
 
 // EnsureServices will create or update services and return reconciliation info
-func EnsureServices(ctx kore.Context, services []servicesv1.Service, owner runtime.Object, components corev1.Components) (reconcile.Result, error) {
+func EnsureServices(ctx kore.Context, services []servicesv1.Service, owner runtime.Object, components *corev1.Components) (reconcile.Result, error) {
 	sortedServices := servicesv1.PriorityServiceSlice(make([]servicesv1.Service, 0, len(services)))
 	for _, s := range services {
 		sortedServices = append(sortedServices, s)
@@ -83,7 +86,11 @@ func EnsureServices(ctx kore.Context, services []servicesv1.Service, owner runti
 	sort.Sort(sortedServices)
 
 	for _, service := range sortedServices {
-		components.SetStatus("Service/"+service.Name, corev1.PendingStatus, "", "")
+		gvk, found, err := schema.GetGroupKindVersion(&service)
+		if err != nil || !found {
+			panic(errors.New("resource GVK not found for service objects"))
+		}
+		service.GetObjectKind().SetGroupVersionKind(gvk)
 
 		result, err := EnsureService(
 			ctx,
@@ -100,11 +107,56 @@ func EnsureServices(ctx kore.Context, services []servicesv1.Service, owner runti
 		}
 	}
 
+	// Delete the removed services
+	for _, comp := range *components {
+		if comp.Resource == nil {
+			continue
+		}
+
+		serviceExists := func() bool {
+			for _, service := range sortedServices {
+				if comp.Resource.Equals(corev1.MustGetOwnershipFromObject(&service)) {
+					return true
+				}
+			}
+			return false
+		}()
+		if serviceExists {
+			continue
+		}
+
+		service := &servicesv1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      comp.Resource.Name,
+				Namespace: comp.Resource.Namespace,
+				Annotations: map[string]string{
+					kore.AnnotationOwner: kubernetes.MustGetRuntimeSelfLink(owner),
+				},
+			},
+		}
+
+		res, err := DeleteService(ctx, service, owner, components)
+		if err != nil || res.Requeue || res.RequeueAfter > 0 {
+			return res, err
+		}
+
+		components.RemoveComponent("Service/" + service.Name)
+	}
+
 	return reconcile.Result{}, nil
 }
 
 // EnsureService will create or update a service and return reconciliation info
-func EnsureService(ctx kore.Context, original *servicesv1.Service, owner runtime.Object, components corev1.Components) (reconcile.Result, error) {
+func EnsureService(ctx kore.Context, original *servicesv1.Service, owner runtime.Object, components *corev1.Components) (reconcile.Result, error) {
+	resource := corev1.MustGetOwnershipFromObject(original)
+	components.SetCondition(corev1.Component{
+		Name:     "Service/" + original.Name,
+		Status:   corev1.PendingStatus,
+		Message:  "",
+		Detail:   "",
+		Resource: &resource,
+	})
+
 	if original.Annotations == nil {
 		original.Annotations = map[string]string{}
 	}
@@ -166,7 +218,7 @@ func EnsureService(ctx kore.Context, original *servicesv1.Service, owner runtime
 }
 
 // DeleteServices will remove services and return reconcile status
-func DeleteServices(ctx kore.Context, team string, owner runtime.Object, components corev1.Components) (reconcile.Result, error) {
+func DeleteServices(ctx kore.Context, team string, owner runtime.Object, components *corev1.Components) (reconcile.Result, error) {
 	adminServicesList, err := ctx.Kore().Teams().Team(team).Services().List(ctx, func(service servicesv1.Service) bool {
 		return service.Annotations[kore.AnnotationOwner] == kubernetes.MustGetRuntimeSelfLink(owner)
 	})
@@ -199,7 +251,7 @@ func DeleteServices(ctx kore.Context, team string, owner runtime.Object, compone
 }
 
 // DeleteService will remove a service and return reconcile status
-func DeleteService(ctx kore.Context, service *servicesv1.Service, owner runtime.Object, components corev1.Components) (reconcile.Result, error) {
+func DeleteService(ctx kore.Context, service *servicesv1.Service, owner runtime.Object, components *corev1.Components) (reconcile.Result, error) {
 	if service.Annotations[kore.AnnotationOwner] != kubernetes.MustGetRuntimeSelfLink(owner) {
 		return reconcile.Result{}, fmt.Errorf("the service can not be deleted as it doesn't belong to %s", kubernetes.MustGetRuntimeSelfLink(owner))
 	}

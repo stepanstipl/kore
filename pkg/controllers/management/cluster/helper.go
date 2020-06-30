@@ -17,11 +17,7 @@
 package cluster
 
 import (
-	"errors"
-
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-	"github.com/appvia/kore/pkg/controllers"
-	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -92,14 +88,6 @@ func IsDeleting(object runtime.Object) bool {
 	return !mo.GetDeletionTimestamp().IsZero()
 }
 
-// SetRuntimeNamespace is used to apply the namespace
-func SetRuntimeNamespace(object runtime.Object, namespace string) {
-	mo, ok := object.(metav1.Object)
-	if ok {
-		mo.SetNamespace(namespace)
-	}
-}
-
 // ComponentToUnstructured converts the component to a runtime reference
 func ComponentToUnstructured(component *corev1.Component) *unstructured.Unstructured {
 	u := &unstructured.Unstructured{}
@@ -112,19 +100,4 @@ func ComponentToUnstructured(component *corev1.Component) *unstructured.Unstruct
 	u.SetName(component.Resource.Name)
 
 	return u
-}
-
-// IsComponentReferenced checks if the component is required
-func IsComponentReferenced(component *corev1.Component, components *kore.ClusterComponents) (bool, error) {
-	for _, c := range *components {
-		resource := component.Resource
-		if resource == nil {
-			return false, controllers.NewCriticalError(errors.New("resource is nil"))
-		}
-		if kore.IsOwner(c.Object, *resource) {
-			return true, nil
-		}
-	}
-
-	return false, nil
 }

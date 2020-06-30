@@ -140,11 +140,6 @@ func (a *awsAutoScaler) Ensure() (reconcile.Result, error) {
 			return reconcile.Result{}, err
 		}
 	}
-	a.kubeCluster.Status.Components.SetCondition(corev1.Component{
-		Name:    "Service/" + application.HelmAppClusterAutoscaler,
-		Message: "Autoscaler is being provisioned",
-		Status:  corev1.PendingStatus,
-	})
 
 	if len(*a.nodeGroups) < 1 {
 
@@ -252,7 +247,7 @@ func (a *awsAutoScaler) Ensure() (reconcile.Result, error) {
 		return reconcile.Result{}, err
 	}
 
-	return helpers.EnsureService(a.ctx, awsAutoScalerService, a.kubeCluster, a.kubeCluster.Status.Components)
+	return helpers.EnsureService(a.ctx, awsAutoScalerService, a.kubeCluster, &a.kubeCluster.Status.Components)
 }
 
 func (a *awsAutoScaler) updateCluster() error {

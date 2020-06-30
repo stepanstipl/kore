@@ -269,22 +269,26 @@ func (a *Controller) Cleanup(cluster *clustersv1.Cluster, components *kore.Clust
 		// - if the component has been removed we can delete it
 
 		for i := 0; i < len(cluster.Status.Components); i++ {
-			required, err := IsComponentReferenced(cluster.Status.Components[i], components)
-			if err != nil {
-				return reconcile.Result{}, err
+			statusComponent := cluster.Status.Components[i]
+			if statusComponent.Resource == nil {
+				continue
 			}
-			if required {
+
+			comp := components.Find(func(comp kore.ClusterComponent) bool {
+				return kore.IsOwner(comp.Object, *statusComponent.Resource)
+			})
+			if comp != nil {
 				continue
 			}
 
 			// @step: set the resource to deleting
-			if cluster.Status.Components[i].Status != corev1.DeletingStatus {
-				cluster.Status.Components[i].Status = corev1.DeletingStatus
+			if statusComponent.Status != corev1.DeletingStatus {
+				statusComponent.Status = corev1.DeletingStatus
 
 				return reconcile.Result{Requeue: true}, nil
 			}
 
-			u := ComponentToUnstructured(cluster.Status.Components[i])
+			u := ComponentToUnstructured(statusComponent)
 
 			found, err := kubernetes.GetIfExists(ctx, a.mgr.GetClient(), u)
 			if err != nil {
@@ -310,7 +314,7 @@ func (a *Controller) Cleanup(cluster *clustersv1.Cluster, components *kore.Clust
 
 			if status == corev1.DeleteFailedStatus {
 				cluster.Status.Status = corev1.FailureStatus
-				cluster.Status.Components[i].Status = corev1.DeleteFailedStatus
+				statusComponent.Status = corev1.DeleteFailedStatus
 			}
 		}
 
