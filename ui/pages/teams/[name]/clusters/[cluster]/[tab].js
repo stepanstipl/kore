@@ -10,14 +10,13 @@ import {
   List,
   Button,
   Form,
-  Badge,
   Tabs
 } from 'antd'
 const { Text } = Typography
 const { TabPane } = Tabs
 
 import KoreApi from '../../../../../lib/kore-api'
-import Breadcrumb from '../../../../../lib/components/layout/Breadcrumb'
+import TeamHeader from '../../../../../lib/components/teams/TeamHeader'
 import UsePlanForm from '../../../../../lib/components/plans/UsePlanForm'
 import ComponentStatusTree from '../../../../../lib/components/common/ComponentStatusTree'
 import ResourceStatusTag from '../../../../../lib/components/resources/ResourceStatusTag'
@@ -30,13 +29,15 @@ import ClusterAccessInfo from '../../../../../lib/components/teams/cluster/Clust
 import { isReadOnlyCRD } from '../../../../../lib/utils/crd-helpers'
 import ServicesTab from '../../../../../lib/components/teams/service/ServicesTab'
 import NamespacesTab from '../../../../../lib/components/teams/namespace/NamespacesTab'
+import TextWithCount from '../../../../../lib/components/utils/TextWithCount'
 
 class ClusterPage extends React.Component {
   static propTypes = {
     team: PropTypes.object.isRequired,
     user: PropTypes.object.isRequired,
     cluster: PropTypes.object.isRequired,
-    tabActiveKey: PropTypes.string
+    tabActiveKey: PropTypes.string,
+    teamRemoved: PropTypes.func.isRequired
   }
 
   constructor(props) {
@@ -163,20 +164,8 @@ class ClusterPage extends React.Component {
     }
   }
 
-  getCardTitle = (title, resources) => (
-    <span>{title} {resources && <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={resources.filter(s => !s.deleted).length} />}</span>
-  )
-
-  getTabTitle = ({ title, count, icon }) => (
-    <span>
-      {title}
-      {count !== undefined && count !== -1 && <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={count} />}
-      {icon}
-    </span>
-  )
-
   render = () => {
-    const { team, user } = this.props
+    const { team, user, teamRemoved } = this.props
     const { cluster } = this.state
 
     const created = moment(cluster.metadata.creationTimestamp).fromNow()
@@ -188,16 +177,13 @@ class ClusterPage extends React.Component {
     }
 
     return (
-      <div>
-        <Breadcrumb
-          items={[
-            { text: team.spec.summary, href: '/teams/[name]', link: `/teams/${team.metadata.name}` },
-            { text: 'Clusters', href: '/teams/[name]/[tab]', link: `/teams/${team.metadata.name}/clusters` },
-            { text: cluster.metadata.name }
-          ]}
-        />
+      <>
+        <TeamHeader team={team} breadcrumbExt={[
+          { text: 'Clusters', href: '/teams/[name]/[tab]', link: `/teams/${team.metadata.name}/clusters` },
+          { text: cluster.metadata.name }
+        ]} teamRemoved={teamRemoved} />
 
-        <Row type="flex" gutter={[16,16]}>
+        <Row type="flex" gutter={[16,16]} style={{ marginTop: '-20px' }}>
           <Col span={24} xl={12}>
             <List.Item>
               <List.Item.Meta
@@ -217,7 +203,7 @@ class ClusterPage extends React.Component {
             </List.Item>
           </Col>
           <Col span={24} xl={12} style={{ marginTop: '14px' }}>
-            <Collapse style={{ marginTop: '12px' }}>
+            <Collapse style={{ marginTop: '12px', marginBottom: '20px' }}>
               <Collapse.Panel header="Detailed Cluster Status" extra={(<ResourceStatusTag resourceStatus={cluster.status} />)}>
                 <ComponentStatusTree team={team} user={user} component={cluster} />
               </Collapse.Panel>
@@ -226,23 +212,23 @@ class ClusterPage extends React.Component {
         </Row>
 
         <Tabs activeKey={this.state.tabActiveKey} onChange={(key) => this.handleTabChange(key)} tabBarStyle={{ marginBottom: '20px' }}>
-          <TabPane key="namespaces" tab={this.getTabTitle({ title: 'Namespaces', count: this.state.namespaceCount })} forceRender={true}>
+          <TabPane key="namespaces" tab={<TextWithCount title="Namespaces" count={this.state.namespaceCount} />} forceRender={true}>
             <NamespacesTab user={this.props.user} team={this.props.team} cluster={this.props.cluster} onNamespaceCountChange={(count) => this.setState({ namespaceCount: count })} />
           </TabPane>
 
           {!featureEnabled(KoreFeatures.SERVICES) ? null : (
-            <TabPane key="services" tab={this.getTabTitle({ title: 'Cloud services', count: this.state.cloudServiceCount })} forceRender={true}>
+            <TabPane key="services" tab={<TextWithCount title="Cloud services" count={this.state.cloudServiceCount} />} forceRender={true}>
               <ServicesTab user={this.props.user} team={this.props.team} cluster={this.props.cluster} serviceType="cloud" getServiceCount={(count) => this.setState({ cloudServiceCount: count })} />
             </TabPane>
           )}
 
           {!featureEnabled(KoreFeatures.APPLICATION_SERVICES) ? null : (
-            <TabPane key="application-services" tab={this.getTabTitle({ title: 'Application services', count: this.state.applicationServiceCount })} forceRender={true}>
+            <TabPane key="application-services" tab={<TextWithCount title="Application services" count={this.state.applicationServiceCount} />} forceRender={true}>
               <ServicesTab user={this.props.user} team={this.props.team} cluster={this.props.cluster} serviceType="application" getServiceCount={(count) => this.setState({ applicationServiceCount: count })} />
             </TabPane>
           )}
 
-          <TabPane key="settings" tab={this.getTabTitle({ title: 'Settings' })} forceRender={true}>
+          <TabPane key="settings" tab="Settings" forceRender={true}>
             <Form {...editClusterFormConfig} onSubmit={(e) => this.onSubmit(e)}>
               <FormErrorMessage message={this.state.formErrorMessage} />
               <Form.Item label="" colon={false}>
@@ -270,7 +256,7 @@ class ClusterPage extends React.Component {
             </Form>
           </TabPane>
         </Tabs>
-      </div>
+      </>
     )
   }
 }
