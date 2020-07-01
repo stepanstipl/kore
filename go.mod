@@ -40,6 +40,7 @@ require (
 	github.com/go-openapi/strfmt v0.19.5
 	github.com/go-openapi/swag v0.19.8
 	github.com/go-openapi/validate v0.19.7
+	github.com/go-resty/resty/v2 v2.3.0
 	github.com/go-swagger/go-swagger v0.23.0
 	github.com/golang/mock v1.3.1 // indirect
 	github.com/golangci/golangci-lint v1.27.0
@@ -90,7 +91,9 @@ require (
 	gonum.org/v1/gonum v0.7.0 // indirect
 	google.golang.org/api v0.20.0
 	google.golang.org/grpc v1.27.0
+	gopkg.in/inf.v0 v0.9.1
 	gopkg.in/yaml.v2 v2.2.8
+	gotest.tools v2.2.0+incompatible
 	k8s.io/api v0.18.2
 	k8s.io/apiextensions-apiserver v0.18.2
 	k8s.io/apimachinery v0.18.2

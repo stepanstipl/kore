@@ -31,10 +31,6 @@ type ClientService interface {
 
 	EstimateServicePlanCost(params *EstimateServicePlanCostParams, authInfo runtime.ClientAuthInfoWriter) (*EstimateServicePlanCostOK, error)
 
-	GetMetadataInstances(params *GetMetadataInstancesParams, authInfo runtime.ClientAuthInfoWriter) (*GetMetadataInstancesOK, error)
-
-	GetMetadataRegions(params *GetMetadataRegionsParams, authInfo runtime.ClientAuthInfoWriter) (*GetMetadataRegionsOK, error)
-
 	SetTransport(transport runtime.ClientTransport)
 }
 
@@ -105,76 +101,6 @@ func (a *Client) EstimateServicePlanCost(params *EstimateServicePlanCostParams, 
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for EstimateServicePlanCost: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
-  GetMetadataInstances returns prices and instance types for a given region of a given cloud provider
-*/
-func (a *Client) GetMetadataInstances(params *GetMetadataInstancesParams, authInfo runtime.ClientAuthInfoWriter) (*GetMetadataInstancesOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewGetMetadataInstancesParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "GetMetadataInstances",
-		Method:             "GET",
-		PathPattern:        "/api/v1alpha1/costestimates/metadata/{cloud}/regions/{region}/instances",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &GetMetadataInstancesReader{formats: a.formats},
-		AuthInfo:           authInfo,
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*GetMetadataInstancesOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetMetadataInstances: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
-  GetMetadataRegions returns regions
-*/
-func (a *Client) GetMetadataRegions(params *GetMetadataRegionsParams, authInfo runtime.ClientAuthInfoWriter) (*GetMetadataRegionsOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewGetMetadataRegionsParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "GetMetadataRegions",
-		Method:             "GET",
-		PathPattern:        "/api/v1alpha1/costestimates/metadata/{cloud}/regions",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &GetMetadataRegionsReader{formats: a.formats},
-		AuthInfo:           authInfo,
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*GetMetadataRegionsOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetMetadataRegions: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

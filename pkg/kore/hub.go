@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/appvia/kore/pkg/costs"
 	"github.com/appvia/kore/pkg/persistence"
 	"github.com/appvia/kore/pkg/security"
 	"github.com/appvia/kore/pkg/store"
@@ -66,6 +67,8 @@ type hubImpl struct {
 	security Security
 	// configs provides the ability to store key value pairs
 	configs Configs
+	// costs is the costs implementation
+	costs costs.Costs
 }
 
 // New returns a new instance of the kore bridge
@@ -118,6 +121,7 @@ func New(sc store.Store, persistenceMgr persistence.Interface, config Config) (I
 		securityPersist: persistenceMgr.Security(),
 	}
 	h.configs = &configImpl{hubImpl: h}
+	h.costs = costs.New(&config.Costs)
 
 	// @step: call the setup code for the kore
 	if err := h.Setup(context.Background()); err != nil {
@@ -237,4 +241,8 @@ func (h hubImpl) Persist() persistence.Interface {
 
 func (h hubImpl) Configs() Configs {
 	return h.configs
+}
+
+func (h hubImpl) Costs() costs.Costs {
+	return h.costs
 }

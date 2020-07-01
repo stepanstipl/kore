@@ -59,6 +59,13 @@ func NewEstimateServicePlanCostParamsWithHTTPClient(client *http.Client) *Estima
 for the estimate service plan cost operation typically these are written to a http.Request
 */
 type EstimateServicePlanCostParams struct {
+
+	/*Body
+	  The specification for the plan you want estimating
+
+	*/
+	Body *models.V1ServicePlan
+
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
@@ -95,6 +102,17 @@ func (o *EstimateServicePlanCostParams) WithHTTPClient(client *http.Client) *Est
 // SetHTTPClient adds the HTTPClient to the estimate service plan cost params
 func (o *EstimateServicePlanCostParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
+}
+
+// WithBody adds the body to the estimate service plan cost params
+func (o *EstimateServicePlanCostParams) WithBody(body *models.V1ServicePlan) *EstimateServicePlanCostParams {
+	o.SetBody(body)
+	return o
+}
+
+// SetBody adds the body to the estimate service plan cost params
+func (o *EstimateServicePlanCostParams) SetBody(body *models.V1ServicePlan) {
+	o.Body = body
 }
 
 // WriteToRequest writes these params to a swagger request

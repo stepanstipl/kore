@@ -461,107 +461,6 @@
         }
       }
     },
-    "/api/v1alpha1/costestimates/metadata/{cloud}/regions": {
-      "get": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "tags": [
-          "costestimates"
-        ],
-        "summary": "Returns regions",
-        "operationId": "GetMetadataRegions",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "The cloud provider to retrieve regions for",
-            "name": "cloud",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "A list of all the regions organised by continent",
-            "schema": {
-              "$ref": "#/definitions/v1beta1.ContinentList"
-            }
-          },
-          "401": {
-            "description": "If not authenticated"
-          },
-          "403": {
-            "description": "If authenticated but not authorized"
-          },
-          "404": {
-            "description": "cloud doesn't exist"
-          },
-          "500": {
-            "description": "A generic API error containing the cause of the error",
-            "schema": {
-              "$ref": "#/definitions/apiserver.Error"
-            }
-          }
-        }
-      }
-    },
-    "/api/v1alpha1/costestimates/metadata/{cloud}/regions/{region}/instances": {
-      "get": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "tags": [
-          "costestimates"
-        ],
-        "summary": "Returns prices and instance types for a given region of a given cloud provider",
-        "operationId": "GetMetadataInstances",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "The cloud provider to retrieve instance types/prices for",
-            "name": "cloud",
-            "in": "path",
-            "required": true
-          },
-          {
-            "type": "string",
-            "description": "The region to retrieve instance types/prices for",
-            "name": "region",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "A list of instance types with their pricing",
-            "schema": {
-              "$ref": "#/definitions/v1beta1.InstanceTypeList"
-            }
-          },
-          "401": {
-            "description": "If not authenticated"
-          },
-          "403": {
-            "description": "If authenticated but not authorized"
-          },
-          "404": {
-            "description": "cloud or region doesn't exist"
-          },
-          "500": {
-            "description": "A generic API error containing the cause of the error",
-            "schema": {
-              "$ref": "#/definitions/apiserver.Error"
-            }
-          }
-        }
-      }
-    },
     "/api/v1alpha1/costestimates/service": {
       "post": {
         "consumes": [
@@ -575,6 +474,17 @@
         ],
         "summary": "Returns the estimated cost of the supplied service plan",
         "operationId": "EstimateServicePlanCost",
+        "parameters": [
+          {
+            "description": "The specification for the plan you want estimating",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.ServicePlan"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "An estimate of the costs for the service plan",
@@ -888,6 +798,569 @@
             }
           },
           "default": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/korefeatures": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "korefeatures"
+        ],
+        "summary": "Returns a list of features",
+        "operationId": "ListFeatures",
+        "responses": {
+          "200": {
+            "description": "A list of all features known to the system",
+            "schema": {
+              "$ref": "#/definitions/v1.KoreFeatureList"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/korefeatures/{name}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "korefeatures"
+        ],
+        "summary": "Returns a specific feature",
+        "operationId": "GetFeature",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of the feature you wish to retrieve",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the feature definition",
+            "schema": {
+              "$ref": "#/definitions/v1.KoreFeature"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "the feature with the given name doesn't exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "korefeatures"
+        ],
+        "summary": "Used to create or update a feature",
+        "operationId": "UpdateFeature",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of the feature you wish to create or update",
+            "name": "name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "The specification for the feature you are creating or updating",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.KoreFeature"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the feature definition",
+            "schema": {
+              "$ref": "#/definitions/v1.KoreFeature"
+            }
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "korefeatures"
+        ],
+        "summary": "Used to delete a feature",
+        "operationId": "RemoveFeature",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of the feature you wish to delete",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the feature definition",
+            "schema": {
+              "$ref": "#/definitions/v1.KoreFeature"
+            }
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "the feature with the given name doesn't exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/metadata/cloud/{cloud}/regions": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "metadata"
+        ],
+        "summary": "Returns regions for a cloud",
+        "operationId": "GetCloudRegions",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The cloud provider to retrieve regions for",
+            "name": "cloud",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of all the regions organised by continent",
+            "schema": {
+              "$ref": "#/definitions/v1beta1.ContinentList"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "cloud doesn't exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/metadata/cloud/{cloud}/regions/{region}/nodetypes": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "metadata"
+        ],
+        "summary": "Returns node types (with prices) for a given region of a given cloud provider",
+        "operationId": "GetCloudNodeTypes",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The cloud provider to retrieve instance types/prices for",
+            "name": "cloud",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The region to retrieve instance types/prices for",
+            "name": "region",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of instance types with their pricing",
+            "schema": {
+              "$ref": "#/definitions/v1beta1.InstanceTypeList"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "cloud or region doesn't exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/metadata/cloud/{cloud}/regions/{region}/zones": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "metadata"
+        ],
+        "summary": "Returns supported AZs for a given region of a given cloud provider",
+        "operationId": "GetCloudRegionZones",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The cloud provider to retrieve for",
+            "name": "cloud",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The region to retrieve for",
+            "name": "region",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of supported availability zones",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "cloud or region doesn't exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/metadata/k8s/{provider}/regions": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "metadata"
+        ],
+        "summary": "Returns regions for a kubernetes provider",
+        "operationId": "GetKubernetesRegions",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The kubernetes provider to retrieve regions for",
+            "name": "provider",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of all the regions organised by continent",
+            "schema": {
+              "$ref": "#/definitions/v1beta1.ContinentList"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "provider doesn't exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/metadata/k8s/{provider}/regions/{region}/instances": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "metadata"
+        ],
+        "summary": "Returns node types (with prices) for a given region of a given kubernetes provider",
+        "operationId": "GetKubernetesNodeTypes",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The kubernetes provider to retrieve instance types/prices for",
+            "name": "provider",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The region to retrieve instance types/prices for",
+            "name": "region",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of instance types with their pricing",
+            "schema": {
+              "$ref": "#/definitions/v1beta1.InstanceTypeList"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "provider or region doesn't exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/metadata/k8s/{provider}/regions/{region}/versions": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "metadata"
+        ],
+        "summary": "Returns supported Kubernetes versions for a given region of a given kubernetes provider",
+        "operationId": "GetKubernetesVersions",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The kubernetes provider to retrieve for",
+            "name": "provider",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The region to retrieve for",
+            "name": "region",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of supported kubernetes versions",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "provider or region doesn't exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/metadata/k8s/{provider}/regions/{region}/zones": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "metadata"
+        ],
+        "summary": "Returns supported AZs for a given region of a given kubernetes provider",
+        "operationId": "GetKubernetesRegionZones",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The kubernetes provider to retrieve for",
+            "name": "provider",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The region to retrieve for",
+            "name": "region",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of supported availability zones",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "provider or region doesn't exist"
+          },
+          "500": {
             "description": "A generic API error containing the cause of the error",
             "schema": {
               "$ref": "#/definitions/apiserver.Error"
@@ -7663,11 +8136,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
+        "clientID",
+        "clientSecret",
         "issuer",
         "clientScopes",
-        "userClaims",
-        "clientID",
-        "clientSecret"
+        "userClaims"
       ],
       "properties": {
         "clientID": {
