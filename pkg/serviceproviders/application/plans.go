@@ -64,8 +64,7 @@ func GetDefaultPlans() []servicev1.ServicePlan {
 						],
 						"resourceSelector": {
 							"matchLabels": {
-								"app.kubernetes.io/name": "aws-cluster-autoscaler",
-								"app.kubernetes.io/instance": "cluster-autoscaler"
+								"app.kubernetes.io/name": "aws-cluster-autoscaler"
 							}
 						}
 					}`),
