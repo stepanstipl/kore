@@ -19,6 +19,8 @@ package kubernetes
 import (
 	"context"
 
+	"github.com/appvia/kore/pkg/kore"
+
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	"github.com/appvia/kore/pkg/controllers"
@@ -42,8 +44,9 @@ func (a k8sCtrl) Delete(ctx context.Context, object *clustersv1.Kubernetes) (rec
 
 	original := object.DeepCopy()
 
+	koreCtx := kore.NewContext(ctx, logger, a.mgr.GetClient(), a)
 	result, err := func() (reconcile.Result, error) {
-		return controllers.DefaultEnsureHandler.Run(ctx,
+		return controllers.DefaultEnsureHandler.Run(koreCtx,
 			[]controllers.EnsureFunc{
 				a.EnsureDeleteStatus(object),
 				a.EnsureProviderWorkloadDependenciesRemoved(object),

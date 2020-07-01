@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package assets
+package eks
 
-// EKSPlanSchema is the JSON schema used to describe and validate EKS Plans
-const EKSPlanSchema = `
+const schema = `
 {
 	"$id": "https://appvia.io/schemas/eks/plan.json",
 	"$schema": "http://json-schema.org/draft-07/schema#",

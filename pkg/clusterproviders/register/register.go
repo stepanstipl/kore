@@ -14,20 +14,10 @@
  * limitations under the License.
  */
 
-package assets
+package register
 
-import "fmt"
-
-// GetClusterSchema returns with the JSON schema for the give cluster kind
-func GetClusterSchema(kind string) (string, error) {
-	switch kind {
-	case "Kore":
-		return KindPlanSchema, nil
-	case "GKE":
-		return GKEPlanSchema, nil
-	case "EKS":
-		return EKSPlanSchema, nil
-	default:
-		return "", fmt.Errorf("invalid cluster kind: %q", kind)
-	}
-}
+import (
+	_ "github.com/appvia/kore/pkg/clusterproviders/eks"
+	_ "github.com/appvia/kore/pkg/clusterproviders/gke"
+	_ "github.com/appvia/kore/pkg/clusterproviders/unmanaged"
+)

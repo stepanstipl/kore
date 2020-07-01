@@ -19,6 +19,8 @@ package eks
 import (
 	"context"
 
+	"github.com/appvia/kore/pkg/kore"
+
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
@@ -107,8 +109,9 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 			t.EnsureClusterBootstrap(client, resource),
 		}
 
+		koreCtx := kore.NewContext(ctx, logger, t.mgr.GetClient(), t)
 		for _, handler := range ensure {
-			result, err := handler(ctx)
+			result, err := handler(koreCtx)
 			if err != nil {
 				return reconcile.Result{}, err
 			}

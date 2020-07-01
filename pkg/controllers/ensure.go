@@ -17,8 +17,7 @@
 package controllers
 
 import (
-	"context"
-
+	"github.com/appvia/kore/pkg/kore"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -30,7 +29,7 @@ var (
 type EnsureRunner struct{}
 
 // Run is a generic handler for running the ensure methods
-func (e *EnsureRunner) Run(ctx context.Context, ensures []EnsureFunc) (reconcile.Result, error) {
+func (e *EnsureRunner) Run(ctx kore.Context, ensures []EnsureFunc) (reconcile.Result, error) {
 	for _, x := range ensures {
 		result, err := x(ctx)
 		if err != nil {

@@ -64,9 +64,11 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 
 	defer func() {
 		if err := c.mgr.GetClient().Status().Patch(ctx, creds, client.MergeFrom(original)); err != nil {
-			logger.WithError(err).Error("failed to update the service credentials status")
-			reconcileResult = reconcile.Result{}
-			reconcileError = err
+			if !kerrors.IsNotFound(err) {
+				logger.WithError(err).Error("failed to update the service credentials status")
+				reconcileResult = reconcile.Result{}
+				reconcileError = err
+			}
 		}
 	}()
 
@@ -111,14 +113,14 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 
 	result, err := func() (reconcile.Result, error) {
 		ensure := []controllers.EnsureFunc{
-			c.ensurePending(logger, creds),
-			c.EnsureDependencies(logger, creds),
-			c.ensureFinalizer(logger, creds, finalizer),
-			c.ensureSecret(logger, service, creds, provider),
+			c.ensurePending(creds),
+			c.EnsureDependencies(creds),
+			c.ensureFinalizer(creds, finalizer),
+			c.ensureSecret(service, creds, provider),
 		}
 
 		for _, handler := range ensure {
-			result, err := handler(ctx)
+			result, err := handler(koreCtx)
 			if err != nil {
 				return reconcile.Result{}, err
 			}

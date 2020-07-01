@@ -17,11 +17,11 @@
 package apiserver
 
 import (
+	"fmt"
 	"net/http"
 
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	"github.com/appvia/kore/pkg/kore"
-	"github.com/appvia/kore/pkg/kore/assets"
 	"github.com/appvia/kore/pkg/utils"
 
 	restful "github.com/emicklei/go-restful"
@@ -68,9 +68,9 @@ func (p planSchemasHandler) getPlanSchema(req *restful.Request, resp *restful.Re
 	handleErrors(req, resp, func() error {
 		kind := req.PathParameter("kind")
 
-		schema, err := assets.GetClusterSchema(kind)
-		if err != nil {
-			writeError(req, resp, err, http.StatusNotFound)
+		clusterProvider, exists := kore.GetClusterProvider(kind)
+		if !exists {
+			writeError(req, resp, fmt.Errorf("unknown cluster provider type %q", kind), http.StatusNotFound)
 			return nil
 		}
 
@@ -78,7 +78,7 @@ func (p planSchemasHandler) getPlanSchema(req *restful.Request, resp *restful.Re
 		// to use normal content type negotiation.
 		resp.AddHeader("Content-Type", restful.MIME_JSON)
 		resp.WriteHeader(http.StatusOK)
-		if _, err := resp.Write([]byte(schema)); err != nil {
+		if _, err := resp.Write([]byte(clusterProvider.PlanJSONSchema())); err != nil {
 			return err
 		}
 		return nil

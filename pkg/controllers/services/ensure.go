@@ -17,7 +17,6 @@
 package services
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -29,8 +28,6 @@ import (
 
 	"github.com/appvia/kore/pkg/kore"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -41,8 +38,8 @@ import (
 )
 
 // EnsureServicePending ensures the service has a pending status
-func (c *Controller) EnsureServicePending(logger log.FieldLogger, service *servicesv1.Service) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+func (c *Controller) EnsureServicePending(service *servicesv1.Service) controllers.EnsureFunc {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		if service.Status.Status == "" {
 			service.Status.Status = corev1.PendingStatus
 			return reconcile.Result{Requeue: true}, nil
@@ -56,12 +53,12 @@ func (c *Controller) EnsureServicePending(logger log.FieldLogger, service *servi
 }
 
 // EnsureFinalizer ensures the service has a finalizer
-func (c *Controller) EnsureFinalizer(logger log.FieldLogger, service *servicesv1.Service, finalizer *kubernetes.Finalizer) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+func (c *Controller) EnsureFinalizer(service *servicesv1.Service, finalizer *kubernetes.Finalizer) controllers.EnsureFunc {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		if finalizer.NeedToAdd(service) {
 			err := finalizer.Add(service)
 			if err != nil {
-				logger.WithError(err).Error("failed to set the finalizer")
+				ctx.Logger().WithError(err).Error("failed to set the finalizer")
 				return reconcile.Result{}, err
 			}
 			return reconcile.Result{Requeue: true}, nil
@@ -70,11 +67,8 @@ func (c *Controller) EnsureFinalizer(logger log.FieldLogger, service *servicesv1
 	}
 }
 
-func (c *Controller) EnsureDependencies(
-	logger log.FieldLogger,
-	service *servicesv1.Service,
-) controllers.EnsureFunc {
-	return func(ctx context.Context) (reconcile.Result, error) {
+func (c *Controller) EnsureDependencies(service *servicesv1.Service) controllers.EnsureFunc {
+	return func(ctx kore.Context) (reconcile.Result, error) {
 		serviceKind, err := c.ServiceKinds().Get(ctx, service.Spec.Kind)
 		if err != nil {
 			if err == kore.ErrNotFound {
@@ -108,7 +102,7 @@ func (c *Controller) EnsureDependencies(
 				return reconcile.Result{}, err
 			}
 
-			return helpers.EnsureOwnerReference(ctx, c.mgr.GetClient(), service, cluster)
+			return helpers.EnsureOwnerReference(ctx, ctx.Client(), service, cluster)
 		}
 
 		if service.Spec.ClusterNamespace != "" && !kore.IsSystemResource(service) && !kubernetes.HasOwnerReferenceWithKind(service, clustersv1.NamespaceClaimGVK) {
@@ -124,7 +118,7 @@ func (c *Controller) EnsureDependencies(
 				return reconcile.Result{}, err
 			}
 
-			return helpers.EnsureOwnerReference(ctx, c.mgr.GetClient(), service, namespaceClaim)
+			return helpers.EnsureOwnerReference(ctx, ctx.Client(), service, namespaceClaim)
 		}
 
 		return reconcile.Result{}, nil

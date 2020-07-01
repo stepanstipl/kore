@@ -19,6 +19,8 @@ package eksnodegroup
 import (
 	"context"
 
+	"github.com/appvia/kore/pkg/kore"
+
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
@@ -48,8 +50,9 @@ func (n *ctrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 	}
 	original := resource.DeepCopy()
 
+	koreCtx := kore.NewContext(ctx, logger, n.mgr.GetClient(), n)
 	result, err := func() (reconcile.Result, error) {
-		return controllers.DefaultEnsureHandler.Run(ctx,
+		return controllers.DefaultEnsureHandler.Run(koreCtx,
 			[]controllers.EnsureFunc{
 				n.EnsureDeletionStatus(resource),
 				n.EnsureDeletion(resource),

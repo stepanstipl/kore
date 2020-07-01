@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package assets
+package jsonschema
 
-// JSONSchemaDraft07 is the meta schema for the JSON Schema Draft 07 definition
-const JSONSchemaDraft07 = `
+// MetaSchemaDraft07 is the meta schema for the JSON Schema Draft 07 definition
+const MetaSchemaDraft07 = `
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "$id": "http://json-schema.org/draft-07/schema#",

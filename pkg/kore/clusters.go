@@ -29,7 +29,6 @@ import (
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
-	"github.com/appvia/kore/pkg/kore/assets"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/jsonschema"
@@ -45,6 +44,7 @@ const (
 )
 
 // Clusters returns the an interface for handling clusters
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Clusters
 type Clusters interface {
 	// CheckDelete verifies whether the cluster can be deleted
 	CheckDelete(context.Context, *clustersv1.Cluster, ...DeleteOptionFunc) error
@@ -365,12 +365,12 @@ func (c *clustersImpl) validateConfiguration(ctx context.Context, cluster *clust
 		return fmt.Errorf("failed to parse cluster configuration values: %s", err)
 	}
 
-	schema, err := assets.GetClusterSchema(cluster.Spec.Kind)
-	if err != nil {
-		return err
+	clusterProvider, exists := GetClusterProvider(cluster.Spec.Kind)
+	if !exists {
+		return fmt.Errorf("unknown cluster provider type %q", cluster.Spec.Kind)
 	}
 
-	if err := jsonschema.Validate(schema, cluster.Name, clusterConfig); err != nil {
+	if err := jsonschema.Validate(clusterProvider.PlanJSONSchema(), cluster.Name, clusterConfig); err != nil {
 		return err
 	}
 

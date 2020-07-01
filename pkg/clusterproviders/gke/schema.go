@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package assets
+package gke
 
-// GKEPlanSchema is the JSON schema used to describe and validate GKE Plans
-const GKEPlanSchema = `
+const schema = `
 {
 	"$id": "https://appvia.io/schemas/gke/plan.json",
 	"$schema": "http://json-schema.org/draft-07/schema#",

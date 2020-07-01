@@ -75,22 +75,25 @@ func (h hubImpl) Setup(ctx context.Context) error {
 		}
 	}
 
-	// @step: ensure some default cluster plans
-	for _, x := range assets.GetDefaultPlans() {
-		if err := h.Plans().Update(getAdminContext(ctx), x, true); err != nil {
-			return err
-		}
-	}
-	for _, x := range assets.GetDefaultPlanPolicies() {
-		if err := h.PlanPolicies().Update(getAdminContext(ctx), x, true); err != nil {
-			return err
-		}
-		allocation := x.CreateAllocation([]string{"*"})
-		if err := h.Teams().Team(HubAdminTeam).Allocations().Update(getAdminContext(ctx), allocation, true); err != nil {
-			return err
+	for _, clusterProvider := range ClusterProviders() {
+		for _, plan := range clusterProvider.DefaultPlans() {
+			if err := h.Plans().Update(getAdminContext(ctx), &plan, true); err != nil {
+				return err
+			}
 		}
 
+		if planPolicy := clusterProvider.DefaultPlanPolicy(); planPolicy != nil {
+			if err := h.PlanPolicies().Update(getAdminContext(ctx), planPolicy, true); err != nil {
+				return err
+			}
+
+			allocation := planPolicy.CreateAllocation([]string{"*"})
+			if err := h.Teams().Team(HubAdminTeam).Allocations().Update(getAdminContext(ctx), allocation, true); err != nil {
+				return err
+			}
+		}
 	}
+
 	for _, x := range assets.GetDefaultClusterRoles() {
 		x.Namespace = HubAdminTeam
 

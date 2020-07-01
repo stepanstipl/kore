@@ -47,7 +47,7 @@ type Test struct {
 	Cancel       context.CancelFunc
 	Client       *controllersfakes.FakeClient
 	StatusClient *controllersfakes.FakeStatusWriter
-	Objects      []runtime.Object
+	Objects      []kubernetes.Object
 	Controller   *controllersfakes.FakeController
 	Manager      *controllersfakes.FakeManager
 	Kore         *korefakes.FakeInterface
@@ -64,20 +64,19 @@ func NewTest(ctx context.Context) *Test {
 	test.Client.StatusReturns(test.StatusClient)
 	test.Client.GetStub = func(_ context.Context, name types.NamespacedName, object runtime.Object) error {
 		for _, o := range test.Objects {
-			meta, err := kubernetes.GetMeta(o)
-			if err != nil {
-				panic(err)
-			}
 			if reflect.TypeOf(o) == reflect.TypeOf(object) {
-				if meta.Name == name.Name && meta.Namespace == name.Namespace {
-					if meta.Labels[LabelGetError] != "" {
-						return errors.New(meta.Labels[LabelGetError])
+				if o.GetName() == name.Name && o.GetNamespace() == name.Namespace {
+					if o.GetLabels()[LabelGetError] != "" {
+						return errors.New(o.GetLabels()[LabelGetError])
 					}
-					reflect.ValueOf(object).Elem().Set(reflect.ValueOf(o).Elem())
+					res := o.DeepCopyObject()
+					res.GetObjectKind().SetGroupVersionKind(object.GetObjectKind().GroupVersionKind())
+					reflect.ValueOf(object).Elem().Set(reflect.ValueOf(res).Elem())
 					return nil
 				}
 			}
 		}
+
 		gr := schema.GroupResource{
 			Group:    object.GetObjectKind().GroupVersionKind().Group,
 			Resource: object.GetObjectKind().GroupVersionKind().Kind,

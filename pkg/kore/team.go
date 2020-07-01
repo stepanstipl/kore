@@ -17,6 +17,7 @@
 package kore
 
 // Team is the contract to a team
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Team
 type Team interface {
 	// Allocations returns the team allocation interface
 	Allocations() Allocations
