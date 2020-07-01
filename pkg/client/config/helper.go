@@ -23,6 +23,7 @@ import (
 
 	"github.com/appvia/kore/pkg/utils"
 
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
 
@@ -45,6 +46,9 @@ func GetClientPath() string {
 // GetOrCreateClientConfiguration is responsible for retrieving the client configuration
 func GetOrCreateClientConfiguration() (*Config, error) {
 	path := GetClientConfigurationPath()
+	log.WithField(
+		"path", path,
+	).Debug("using kore configration file")
 
 	// @step: check the file exists else create it
 	if found, err := utils.FileExists(path); err != nil {

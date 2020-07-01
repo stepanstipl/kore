@@ -1,3 +1,7 @@
+## Release v0.2.4 - 2020-06-29
+
+Bugfix fixing kubeconfig path for kore cli on windows [Kubeconfig Paths](https://github.com/appvia/kore/pull/1022)
+
 ## Release v0.2.3 - 2020-06-29
 
 Bugfix release to enable [Namespaces not appearing on cluster page](https://github.com/appvia/kore/issues/1016)
@@ -40,9 +44,9 @@ This release of Kore adds the following key features:
     - [Add cluster users custom control for GKE and EKS clusters](https://github.com/appvia/kore/issues/539) ([PR](https://github.com/appvia/kore/pull/823))
     - [EKS Node Group management and validation](https://github.com/appvia/kore/pull/835)
 - **GCP GKE Improvements**
-    - [GKE node pool support](https://github.com/appvia/kore/issues/539) - node pools can now be added, edited and removed on 
+    - [GKE node pool support](https://github.com/appvia/kore/issues/539) - node pools can now be added, edited and removed on
       both new and existing clusters
-    - [GKE auto-scale, sizing, release channel and version management support](https://github.com/appvia/kore/pull/876) - these 
+    - [GKE auto-scale, sizing, release channel and version management support](https://github.com/appvia/kore/pull/876) - these
       properties can now be set for new clusters and edited on existing ones.
 - **Other Additions**
     - [Added verbosity flags to helm chart](https://github.com/appvia/kore/issues/815)
