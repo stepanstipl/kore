@@ -5,7 +5,7 @@ import { Typography, Collapse, Icon, Row, Col, List, Button, Form, Divider, Card
 const { Text } = Typography
 
 import KoreApi from '../../../../../../lib/kore-api/index'
-import Breadcrumb from '../../../../../../lib/components/layout/Breadcrumb'
+import TeamHeader from '../../../../../../lib/components/teams/TeamHeader'
 import UsePlanForm from '../../../../../../lib/components/plans/UsePlanForm'
 import ComponentStatusTree from '../../../../../../lib/components/common/ComponentStatusTree'
 import ResourceStatusTag from '../../../../../../lib/components/resources/ResourceStatusTag'
@@ -24,6 +24,7 @@ class ServicePage extends React.Component {
     user: PropTypes.object.isRequired,
     service: PropTypes.object.isRequired,
     serviceKind: PropTypes.object.isRequired,
+    teamRemoved: PropTypes.func.isRequired
   }
 
   constructor(props) {
@@ -209,7 +210,7 @@ class ServicePage extends React.Component {
   }
 
   render = () => {
-    const { team, cluster, user, serviceKind } = this.props
+    const { team, cluster, user, serviceKind, teamRemoved } = this.props
     const { service, serviceCredentials, createServiceCredential } = this.state
     const created = moment(service.metadata.creationTimestamp).fromNow()
     const deleted = service.metadata.deletionTimestamp ? moment(service.metadata.deletionTimestamp).fromNow() : false
@@ -222,19 +223,16 @@ class ServicePage extends React.Component {
     const hasServiceCredentials = serviceCredentials && Boolean(serviceCredentials.length)
 
     return (
-      <div>
-        <Breadcrumb
-          items={[
-            { text: team.spec.summary, href: '/teams/[name]', link: `/teams/${team.metadata.name}` },
-            { text: 'Clusters', href: '/teams/[name]/[tab]', link: `/teams/${team.metadata.name}/clusters` },
-            { text: cluster.metadata.name, href: '/teams/[name]/clusters/[cluster]/[tab]', link: `/teams/${team.metadata.name}/clusters/${cluster.metadata.name}/namespaces` },
-            { text: 'Services', href: '/teams/[name]/clusters/[cluster]/[tab]', link: `/teams/${team.metadata.name}/clusters/${cluster.metadata.name}/services` },
-            { text: service.metadata.name }
-          ]}
-        />
+      <>
+        <TeamHeader team={team} breadcrumbExt={[
+          { text: 'Clusters', href: '/teams/[name]/[tab]', link: `/teams/${team.metadata.name}/clusters` },
+          { text: cluster.metadata.name, href: '/teams/[name]/clusters/[cluster]/[tab]', link: `/teams/${team.metadata.name}/clusters/${cluster.metadata.name}/namespaces` },
+          { text: 'Services', href: '/teams/[name]/clusters/[cluster]/[tab]', link: `/teams/${team.metadata.name}/clusters/${cluster.metadata.name}/services` },
+          { text: service.metadata.name }
+        ]} teamRemoved={teamRemoved} />
 
         <Row type="flex" gutter={[16,16]}>
-          <Col span={24} xl={12} style={{ marginTop: '18px' }}>
+          <Col span={24} xl={12}>
             <List.Item>
               <List.Item.Meta
                 className="large-list-item"
@@ -253,7 +251,7 @@ class ServicePage extends React.Component {
               />
             </List.Item>
           </Col>
-          <Col span={24} xl={12} style={{ marginTop: '14px' }}>
+          <Col span={24} xl={12}>
             <Collapse style={{ marginTop: '12px' }}>
               <Collapse.Panel header="Detailed Service Status" extra={(<ResourceStatusTag resourceStatus={service.status} />)}>
                 <ComponentStatusTree team={team} user={user} component={service} />
@@ -349,7 +347,7 @@ class ServicePage extends React.Component {
           </Collapse.Panel>
         </Collapse>
 
-      </div>
+      </>
     )
   }
 }

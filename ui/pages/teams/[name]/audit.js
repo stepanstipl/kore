@@ -2,14 +2,15 @@ import React from 'react'
 import axios from 'axios'
 import PropTypes from 'prop-types'
 
-import Breadcrumb from '../../../lib/components/layout/Breadcrumb'
 import AuditViewer from '../../../lib/components/common/AuditViewer'
+import TeamHeader from '../../../lib/components/teams/TeamHeader'
 import KoreApi from '../../../lib/kore-api'
 
 class TeamAuditPage extends React.Component {
   static propTypes = {
     team: PropTypes.object.isRequired,
     events: PropTypes.array.isRequired,
+    teamRemoved: PropTypes.func.isRequired
   }
 
   state = {
@@ -45,18 +46,13 @@ class TeamAuditPage extends React.Component {
   }
 
   render() {
-    const teamName = this.props.team.metadata.name
+    const { team, teamRemoved } = this.props
 
     return (
-      <div>
-        <Breadcrumb
-          items={[
-            { text: this.props.team.spec.summary, href: '/teams/[name]', link: `/teams/${teamName}` },
-            { text: 'Team Audit Viewer' }
-          ]}
-        />
+      <>
+        <TeamHeader team={team} breadcrumbExt={[{ text: 'Team Audit Viewer' }]} teamRemoved={teamRemoved} />
         <AuditViewer items={this.state.events} />
-      </div>
+      </>
     )
   }
 }

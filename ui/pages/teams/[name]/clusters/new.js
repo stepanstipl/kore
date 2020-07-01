@@ -1,9 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Typography } from 'antd'
-const { Title } = Typography
 
-import Breadcrumb from '../../../../lib/components/layout/Breadcrumb'
+import TeamHeader from '../../../../lib/components/teams/TeamHeader'
 import ClusterBuildForm from '../../../../lib/components/teams/cluster/ClusterBuildForm'
 import KoreApi from '../../../../lib/kore-api'
 
@@ -11,7 +9,8 @@ class NewTeamClusterPage extends React.Component {
   static propTypes = {
     user: PropTypes.object.isRequired,
     team: PropTypes.object.isRequired,
-    clusters: PropTypes.object.isRequired
+    clusters: PropTypes.object.isRequired,
+    teamRemoved: PropTypes.func.isRequired
   }
 
   static staticProps = {
@@ -38,26 +37,22 @@ class NewTeamClusterPage extends React.Component {
   }
 
   render() {
-    const teamName = this.props.team.metadata.name
-    const teamClusters = this.props.clusters.items
+    const { user, team, teamRemoved, clusters } = this.props
 
     return (
-      <div>
-        <Breadcrumb
-          items={[
-            { text: this.props.team.spec.summary, href: '/teams/[name]', link: `/teams/${teamName}` },
-            { text: 'Clusters', href: '/teams/[name]/[tab]', link: `/teams/${teamName}/clusters` },
-            { text: 'New cluster' }
-          ]}
-        />
-        <Title style={{ marginBottom: '40px' }}>New Cluster for {this.props.team.spec.summary}</Title>
+      <>
+        <TeamHeader team={team} breadcrumbExt={[
+          { text: 'Clusters', href: '/teams/[name]/[tab]', link: `/teams/${team.metadata.name}/clusters` },
+          { text: 'New cluster' }
+        ]} teamRemoved={teamRemoved} />
+
         <ClusterBuildForm
-          user={this.props.user}
-          team={this.props.team}
-          teamClusters={teamClusters}
+          user={user}
+          team={team}
+          teamClusters={clusters.items}
           skipButtonText="Cancel"
         />
-      </div>
+      </>
     )
   }
 }
