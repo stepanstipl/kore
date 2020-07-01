@@ -37,9 +37,9 @@ type ResourceSelector struct {
 // HelmAppSource is the Helm app source. Either a Git or a Helm repository
 type HelmAppSource struct {
 	// GitRepository describes a Helm chart sourced from Git
-	GitRepository *GitRepository `json:"git,inline"`
+	GitRepository *GitRepository `json:"git,omitempty"`
 	// HelmRepository describes a Helm chart sourced from a Helm repository
-	HelmRepository *HelmRepository `json:"helm,inline"`
+	HelmRepository *HelmRepository `json:"helm,omitempty"`
 }
 
 // GitRepository describes a Helm chart sourced from Git.
