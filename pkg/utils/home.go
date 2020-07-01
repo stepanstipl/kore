@@ -14,33 +14,22 @@
  * limitations under the License.
  */
 
-package kubernetes
+package utils
 
 import (
 	"os"
-	"path"
-
-	"github.com/appvia/kore/pkg/utils"
+	"runtime"
 )
 
-// GetKubeConfigPath return the path for kubeconig
-func GetKubeConfigPath() string {
-	return func() string {
-		p := os.ExpandEnv(os.Getenv("$KUBECONFIG"))
-		if p != "" {
-			return p
+// UserHomeDir returns the homedir - taken from viper
+func UserHomeDir() string {
+	if runtime.GOOS == "windows" {
+		home := os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
+		if home == "" {
+			home = os.Getenv("USERPROFILE")
 		}
-
-		return os.ExpandEnv(path.Join(utils.UserHomeDir(), ".kube", "config"))
-	}()
-}
-
-// GetOrCreateKubeConfig is used to retrieve the kubeconfig path
-func GetOrCreateKubeConfig() (string, error) {
-	_, err := utils.EnsureFileExists(GetKubeConfigPath())
-	if err != nil {
-		return "", err
+		return home
 	}
 
-	return GetKubeConfigPath(), nil
+	return os.Getenv("HOME")
 }

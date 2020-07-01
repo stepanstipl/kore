@@ -16,11 +16,15 @@
 
 package config
 
-import "path/filepath"
+import (
+	"path/filepath"
+
+	"github.com/appvia/kore/pkg/utils"
+)
 
 var (
 	// DefaultKoreConfigPath is the default path for the kore configuration file
-	DefaultKoreConfigPath = filepath.Join("${HOME}", ".kore", "config")
+	DefaultKoreConfigPath = filepath.Join(utils.UserHomeDir(), ".kore", "config")
 	// DefaultKoreConfigPathEnv is the default name of the env variable for config
 	DefaultKoreConfigPathEnv = "KORE_CONFIG"
 )

@@ -94,7 +94,7 @@ func NewCmdBootstrapUp(factory cmdutil.Factory) *cobra.Command {
 	flags.StringVar(&o.Provider, "provider", "kind", "local kubernetes provider to use `NAME`")
 	flags.StringVar(&o.Release, "release", version.Tag, "chart version to use for deployment `CHART`")
 	flags.StringVar(&o.Version, "version", version.Tag, "kore version to deployment into cluster `VERSION`")
-	flags.StringVar(&o.ValuesFile, "values", os.ExpandEnv(filepath.Join("${HOME}", ".kore", "values.yaml")), "path to the file container helm values `PATH`")
+	flags.StringVar(&o.ValuesFile, "values", os.ExpandEnv(filepath.Join(utils.UserHomeDir(), ".kore", "values.yaml")), "path to the file container helm values `PATH`")
 	flags.StringVar(&o.BinaryPath, "binary-path", filepath.Join(config.GetClientPath(), "build"), "path to place any downloaded binaries if requested `PATH`")
 	flags.BoolVar(&o.EnableDeploy, "enable-deploy", true, "indicates if we should deploy the kore application `BOOL`")
 	flags.BoolVar(&o.Wait, "wait", true, "indicates we wait for the deployment to complete `BOOL`")
