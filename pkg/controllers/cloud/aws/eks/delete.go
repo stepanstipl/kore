@@ -52,11 +52,19 @@ func (t *eksCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
 
 	koreCtx := kore.NewContext(ctx, logger, t.mgr.GetClient(), t)
 	result, err := func() (reconcile.Result, error) {
+		client, err := t.GetClusterClient(ctx, resource)
+		if err != nil {
+			logger.WithError(err).Error("trying to create eks cluster client")
+
+			return reconcile.Result{}, err
+		}
+
 		return controllers.DefaultEnsureHandler.Run(koreCtx,
 			[]controllers.EnsureFunc{
 				t.EnsureDeletionStatus(resource),
 				t.EnsureNodeGroupsDeleted(resource),
-				t.EnsureDeletion(resource),
+				t.EnsureClusterOIDCProviderDeletion(client, resource),
+				t.EnsureDeletion(client, resource),
 				t.EnsureRoleDeletion(resource),
 				t.EnsureSecretDeletion(resource),
 				t.EnsureFinalizerRemoved(resource),

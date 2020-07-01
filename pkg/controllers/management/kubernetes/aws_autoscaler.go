@@ -89,12 +89,7 @@ func (a *awsAutoScaler) Delete() (reconcile.Result, error) {
 		return reconcile.Result{}, fmt.Errorf("No autoscaling groups with autoscaling enabled sepecifed for cluster %s", a.cluster.Name)
 	}
 	// Get an the kore EKS AWS client
-	koreEKS := helpers.NewKoreEKS(
-		a.ctx,
-		&a.eks,
-		a.ctx.Client(),
-		a.ctx.Kore(),
-		a.ctx.Logger())
+	koreEKS := helpers.NewKoreEKS(a.ctx, &a.eks)
 
 	awsClient, err := koreEKS.GetClusterClient()
 	if err != nil {
@@ -110,7 +105,7 @@ func (a *awsAutoScaler) Delete() (reconcile.Result, error) {
 
 	// Now enable the OIDC provider for the cluster
 	awsIAM := awsutils.NewIamClientFromSession(awsClient.Sess)
-	accountID, err := awsIAM.GetAccountNameFromARN(*awsEks.Arn)
+	accountID, err := awsIAM.GetAccountIDFromARN(*awsEks.Arn)
 	if err != nil {
 
 		return reconcile.Result{}, fmt.Errorf("error getting account ID from AWS EKS cluster - %s", err)
@@ -146,12 +141,7 @@ func (a *awsAutoScaler) Ensure() (reconcile.Result, error) {
 		return reconcile.Result{}, fmt.Errorf("No autoscaling groups with autoscaling enabled sepecifed for cluster %s", a.cluster.Name)
 	}
 	// Get an the kore EKS AWS client
-	koreEKS := helpers.NewKoreEKS(
-		a.ctx,
-		&a.eks,
-		a.ctx.Client(),
-		a.ctx.Kore(),
-		a.ctx.Logger())
+	koreEKS := helpers.NewKoreEKS(a.ctx, &a.eks)
 
 	awsClient, err := koreEKS.GetClusterClient()
 	if err != nil {
@@ -168,11 +158,8 @@ func (a *awsAutoScaler) Ensure() (reconcile.Result, error) {
 	// Now enable the OIDC provider for the cluster
 	awsIAM := awsutils.NewIamClientFromSession(awsClient.Sess)
 	awsASG := awsutils.NewASGClient(awsClient.Sess)
-	if err := awsIAM.EnsureIRSA(*awsEks.Arn, *awsEks.Identity.Oidc.Issuer); err != nil {
 
-		return reconcile.Result{}, fmt.Errorf("error setting up identity for cluster - %s", err)
-	}
-	accountID, err := awsIAM.GetAccountNameFromARN(*awsEks.Arn)
+	accountID, err := awsIAM.GetAccountIDFromARN(*awsEks.Arn)
 	if err != nil {
 
 		return reconcile.Result{}, fmt.Errorf("error getting account ID from AWS EKS cluster - %s", err)

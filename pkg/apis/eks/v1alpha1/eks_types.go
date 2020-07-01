@@ -63,8 +63,12 @@ type EKSStatus struct {
 	CACertificate string `json:"caCertificate,omitempty"`
 	// Endpoint is the endpoint of the cluster
 	Endpoint string `json:"endpoint,omitempty"`
+	// ARN is the AWS ARN of the EKS cluster resource
+	ARN string `json:"arn,omitempty"`
 	// RoleARN is the role ARN which provides permissions to EKS
 	RoleARN string `json:"roleARN,omitempty"`
+	// OIDCProviderURL is the OIDC provider URL (used for providing IAM roles for service accounts)
+	OIDCProviderURL string `json:"oidcProviderURL,omitempty"`
 	// Status provides a overall status
 	Status core.Status `json:"status,omitempty"`
 }

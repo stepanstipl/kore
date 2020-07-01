@@ -36,7 +36,7 @@ const (
 func TestEnsureIRSA(t *testing.T) {
 	test.SkipTestIfEnvNotSet(testIam, t)
 	iamClient := getIamClientFromEnv()
-	err := iamClient.EnsureIRSA(os.Getenv("KORETEST_CLUSTER_ARN"), os.Getenv("KORETEST_CLUSTER_OIDC_URL"))
+	err := iamClient.EnsureOIDCProvider(os.Getenv("KORETEST_CLUSTER_ARN"), os.Getenv("KORETEST_CLUSTER_OIDC_URL"))
 	require.NoError(t, err)
 }
 

@@ -107,50 +107,41 @@ func NewEKSClientFromVPC(c *VPCClient, clusterName string) *Client {
 	}
 }
 
-// Exists checks if a cluster exists
-func (c *Client) Exists(ctx context.Context) (exists bool, err error) {
-	_, err = c.svc.DescribeClusterWithContext(ctx, &awseks.DescribeClusterInput{
+// GetIfExists checks if a cluster exists and returns it
+func (c *Client) GetIfExists(ctx context.Context) (*awseks.Cluster, bool, error) {
+	out, err := c.svc.DescribeClusterWithContext(ctx, &awseks.DescribeClusterInput{
 		Name: aws.String(c.clusterName),
 	})
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case eks.ErrCodeResourceNotFoundException:
-				return false, nil
+				return nil, false, nil
 			default:
-				return false, err
+				return nil, false, err
 			}
 		} else {
-			return false, err
+			return nil, false, err
 		}
 	}
 
-	return true, nil
+	return out.Cluster, true, nil
 }
 
 // Create creates an EKS cluster
-func (c *Client) Create(ctx context.Context) error {
+func (c *Client) Create(ctx context.Context) (*eks.Cluster, error) {
 	logger := log.WithFields(log.Fields{
 		"name":      c.cluster.Name,
 		"namespace": c.cluster.Namespace,
 	})
 	logger.Debug("attempting to create the eks cluster")
 
-	// @step: we should check if the cluster already exist
-	existing, err := c.Exists(ctx)
+	output, err := c.svc.CreateClusterWithContext(ctx, c.createClusterInput())
 	if err != nil {
-		logger.WithError(err).Error("trying to check for the eks cluster")
-
-		return err
-	}
-	if !existing {
-		_, err := c.svc.CreateClusterWithContext(ctx, c.createClusterInput())
-		if err != nil {
-			return err
-		}
+		return nil, err
 	}
 
-	return nil
+	return output.Cluster, err
 }
 
 // Delete is responsible for deleting the eks cluster

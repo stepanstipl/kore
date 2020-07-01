@@ -24,7 +24,6 @@ import (
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/kore"
-	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 	"github.com/tidwall/gjson"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -170,10 +169,9 @@ func (p Provider) SetProviderData(ctx kore.Context, cluster *clustersv1.Cluster,
 	providerData["awsAccountID"] = eksCreds.Spec.AccountID
 
 	for _, c := range *components {
-		switch {
-		case utils.IsEqualType(c.Object, &eksv1alpha1.EKSVPC{}):
-			vpc := c.Object.(*eksv1alpha1.EKSVPC)
-			vpcJSON, err := json.Marshal(vpc.Status.Infra)
+		switch o := c.Object.(type) {
+		case *eksv1alpha1.EKSVPC:
+			vpcJSON, err := json.Marshal(o.Status.Infra)
 			if err != nil {
 				return err
 			}
@@ -183,6 +181,13 @@ func (p Provider) SetProviderData(ctx kore.Context, cluster *clustersv1.Cluster,
 			}
 
 			providerData["vpc"] = vpcData
+		case *eksv1alpha1.EKS:
+			eksData := map[string]interface{}{
+				"arn":             o.Status.ARN,
+				"roleARN":         o.Status.RoleARN,
+				"oidcProviderURL": o.Status.OIDCProviderURL,
+			}
+			providerData["eks"] = eksData
 		}
 	}
 

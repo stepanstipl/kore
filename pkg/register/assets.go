@@ -984,6 +984,9 @@ spec:
         status:
           description: EKSStatus defines the observed state of EKS cluster
           properties:
+            arn:
+              description: ARN is the AWS ARN of the EKS cluster resource
+              type: string
             caCertificate:
               description: CACertificate is the certificate for this cluster
               type: string
@@ -1034,6 +1037,10 @@ spec:
               type: array
             endpoint:
               description: Endpoint is the endpoint of the cluster
+              type: string
+            oidcProviderURL:
+              description: OIDCProviderURL is the OIDC provider URL (used for providing
+                IAM roles for service accounts)
               type: string
             roleARN:
               description: RoleARN is the role ARN which provides permissions to EKS

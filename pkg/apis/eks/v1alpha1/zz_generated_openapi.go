@@ -620,9 +620,23 @@ func schema_pkg_apis_eks_v1alpha1_EKSStatus(ref common.ReferenceCallback) common
 							Format:      "",
 						},
 					},
+					"arn": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ARN is the AWS ARN of the EKS cluster resource",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"roleARN": {
 						SchemaProps: spec.SchemaProps{
 							Description: "RoleARN is the role ARN which provides permissions to EKS",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"oidcProviderURL": {
+						SchemaProps: spec.SchemaProps{
+							Description: "OIDCProviderURL is the OIDC provider URL (used for providing IAM roles for service accounts)",
 							Type:        []string{"string"},
 							Format:      "",
 						},

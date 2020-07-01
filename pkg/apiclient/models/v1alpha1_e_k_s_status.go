@@ -18,6 +18,9 @@ import (
 // swagger:model v1alpha1.EKSStatus
 type V1alpha1EKSStatus struct {
 
+	// arn
+	Arn string `json:"arn,omitempty"`
+
 	// ca certificate
 	CaCertificate string `json:"caCertificate,omitempty"`
 
@@ -26,6 +29,9 @@ type V1alpha1EKSStatus struct {
 
 	// endpoint
 	Endpoint string `json:"endpoint,omitempty"`
+
+	// oidc provider URL
+	OidcProviderURL string `json:"oidcProviderURL,omitempty"`
 
 	// role a r n
 	RoleARN string `json:"roleARN,omitempty"`

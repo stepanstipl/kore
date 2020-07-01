@@ -146,8 +146,8 @@ func (i *IamClient) GetARN() (string, error) {
 	return aws.StringValue(resp.User.Arn), nil
 }
 
-// GetAccountNameFromARN will return the account ID from an ARN
-func (i *IamClient) GetAccountNameFromARN(resARN string) (string, error) {
+// GetAccountIDFromARN will return the account ID from an ARN
+func (i *IamClient) GetAccountIDFromARN(resARN string) (string, error) {
 	parsedARN, err := arn.Parse(resARN)
 	if err != nil {
 		return "", errors.Wrapf(err, "unexpected invalid ARN: %q", resARN)
@@ -155,32 +155,55 @@ func (i *IamClient) GetAccountNameFromARN(resARN string) (string, error) {
 	return parsedARN.AccountID, nil
 }
 
-// EnsureIRSA will enable IRSA IAM Roles for Service Accounts for an EKS cluster
-func (i *IamClient) EnsureIRSA(clusterARN, oidcIssuerURL string) error {
+func (i *IamClient) createOpenIDConnectManager(clusterARN, oidcIssuerURL string) (*OpenIDConnectManager, error) {
 	parsedARN, err := arn.Parse(clusterARN)
 	if err != nil {
-		return errors.Wrapf(err, "unexpected invalid ARN: %q", clusterARN)
+		return nil, errors.Wrapf(err, "unexpected invalid ARN: %q", clusterARN)
 	}
 	switch parsedARN.Partition {
 	case "aws", "aws-cn", "aws-us-gov":
 	default:
-		return fmt.Errorf("unknown EKS ARN: %q", clusterARN)
+		return nil, fmt.Errorf("unknown EKS ARN: %q", clusterARN)
 	}
-	oidc, err := NewOpenIDConnectManager(i.svc, parsedARN.AccountID, oidcIssuerURL, parsedARN.Partition)
+	return NewOpenIDConnectManager(i.svc, parsedARN.AccountID, oidcIssuerURL, parsedARN.Partition)
+}
+
+// EnsureOIDCProvider will create an OIDC provider to enable IAM Roles for Service Accounts for an EKS cluster
+func (i *IamClient) EnsureOIDCProvider(clusterARN, oidcIssuerURL string) error {
+	oidc, err := i.createOpenIDConnectManager(clusterARN, oidcIssuerURL)
 	if err != nil {
 		return err
 	}
+
+	providerExists, err := oidc.CheckProviderExists()
+	if err != nil {
+		return err
+	}
+
+	if providerExists {
+		return nil
+	}
+
+	return oidc.CreateProvider()
+}
+
+// DeleteOIDCProvider will delete the OIDC provider which was used by the EKS cluster
+func (i *IamClient) DeleteOIDCProvider(clusterARN, oidcIssuerURL string) error {
+	oidc, err := i.createOpenIDConnectManager(clusterARN, oidcIssuerURL)
+	if err != nil {
+		return err
+	}
+
 	providerExists, err := oidc.CheckProviderExists()
 	if err != nil {
 		return err
 	}
 
 	if !providerExists {
-		if err := oidc.CreateProvider(); err != nil {
-			return err
-		}
+		return nil
 	}
-	return nil
+
+	return oidc.DeleteProvider()
 }
 
 // GetEKSRoleName returns the name of a EKS iam role
