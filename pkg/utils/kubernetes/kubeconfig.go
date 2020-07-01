@@ -18,6 +18,7 @@ package kubernetes
 
 import (
 	"os"
+	"path"
 
 	"github.com/appvia/kore/pkg/utils"
 )
@@ -30,7 +31,7 @@ func GetKubeConfigPath() string {
 			return p
 		}
 
-		return os.ExpandEnv("${HOME}/.kube/config")
+		return os.ExpandEnv(path.Join("${HOME}", ".kube", "config"))
 	}()
 }
 
