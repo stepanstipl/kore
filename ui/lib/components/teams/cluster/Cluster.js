@@ -65,21 +65,26 @@ class Cluster extends AutoRefreshComponent {
             okText="Yes"
             cancelText="No"
           >
-            <a><Tooltip title="Delete this cluster"><Icon type="delete" /></Tooltip></a>
+            <a id={`cluster_delete_${cluster.metadata.name}`}><Tooltip title="Delete this cluster"><Icon type="delete" /></Tooltip></a>
           </Popconfirm>
         )
         actions.push(deleteAction)
       }
 
-      actions.push(<ResourceStatusTag resourceStatus={cluster.status} />)
+      actions.push(<ResourceStatusTag id={`cluster_status_${cluster.metadata.name}`} resourceStatus={cluster.status} />)
       return actions
     }
 
     return (
-      <List.Item key={cluster.metadata.name} actions={actions()} style={{ paddingTop: 0, paddingBottom: '5px' }}>
+      <List.Item id={`cluster_${cluster.metadata.name}`} key={cluster.metadata.name} actions={actions()} style={{ paddingTop: 0, paddingBottom: '5px' }}>
         <List.Item.Meta
           avatar={<img src={clusterProviderIconSrcMap[cluster.spec.kind]} style={{ maxHeight:32, maxWidth: 32 }} />}
-          title={<><Link href="/teams/[name]/clusters/[cluster]/[tab]" as={`/teams/${team}/clusters/${cluster.metadata.name}/namespaces`}><a><Text style={{ marginRight: '15px', fontSize: '16px', textDecoration: 'underline' }}>{cluster.metadata.name}</Text></a></Link>{ plan && <Tag style={{ margin: 0 }}>{plan.spec.description}</Tag> }</>}
+          title={<>
+            <Link href="/teams/[name]/clusters/[cluster]/[tab]" as={`/teams/${team}/clusters/${cluster.metadata.name}/namespaces`}>
+              <a><Text style={{ marginRight: '15px', fontSize: '16px', textDecoration: 'underline' }}>{cluster.metadata.name}</Text></a>
+            </Link>
+            { plan && <Tag id={`cluster_plan_${cluster.metadata.name}`} style={{ margin: 0 }}>{plan.spec.description}</Tag> }
+          </>}
         />
         <div>
           <Text type='secondary'>Created {created}</Text>

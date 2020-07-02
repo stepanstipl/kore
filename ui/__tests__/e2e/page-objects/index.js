@@ -5,4 +5,12 @@ export class IndexPage extends BasePage {
     super(p)
     this.pagePath = '/'
   }
+
+  async checkForMenuLink(text) {
+    await expect(this.p).toMatchElement('#sider a', { text })
+  }
+
+  async clickMenuLink(text) {
+    await expect(this.p).toClick('#sider a', { text })
+  }
 }

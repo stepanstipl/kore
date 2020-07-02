@@ -114,7 +114,7 @@ class NewTeamForm extends React.Component {
         <Alert
           message={
             <div>
-              <Paragraph>The team ID is: <Text strong>{canonical(getFieldValue('teamName') || '')}</Text></Paragraph>
+              <Paragraph>The team ID is: <Text id="team_id" strong>{canonical(getFieldValue('teamName') || '')}</Text></Paragraph>
               <Paragraph style={{ marginBottom: '0' }}>This is how your team will appear when using the Kore CLI.</Paragraph>
             </div>
           }
@@ -122,7 +122,7 @@ class NewTeamForm extends React.Component {
         />
         {!this.props.team ? (
           <Form.Item style={{ marginTop: '20px' }}>
-            <Button type="primary" htmlType="submit" loading={this.state.submitting} disabled={this.disableButton(getFieldsError())}>Save</Button>
+            <Button id="save" type="primary" htmlType="submit" loading={this.state.submitting} disabled={this.disableButton(getFieldsError())}>Save</Button>
           </Form.Item>
         ) : null}
       </Form>

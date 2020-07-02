@@ -111,7 +111,7 @@ class NewTeamPage extends React.Component {
           handleTeamCreated={this.handleTeamCreated}
         />
         {team ? (
-          <div>
+          <div id="created_team">
             <Alert
               message={
                 <div>

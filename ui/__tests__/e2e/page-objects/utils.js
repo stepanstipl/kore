@@ -53,6 +53,16 @@ export async function modalYes(pg, textToCheck) {
   await waitForDrawerOpenClose(pg)
 }
 
+export async function popConfirmYes(pg, textToCheck) {
+  if (textToCheck) {
+    await expect(pg).toMatch(textToCheck)
+  }
+  // tiny wait as otherwise puppeteer thinks the button is too small to click on
+  // see https://github.com/puppeteer/puppeteer/blob/6474edb9ba5ab6637361198b574dc64529eef26b/src/common/JSHandle.ts#L433
+  await pg.waitFor(100)
+  await expect(pg).toClick('.ant-popover-buttons .ant-btn-primary', { text: 'Yes' })
+}
+
 /**
  * The drawer open/close animation can take a short while before elements are clickable. 
  * Call this to wait for the drawer to complete opening/closing.

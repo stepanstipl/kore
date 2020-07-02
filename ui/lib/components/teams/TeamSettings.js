@@ -68,15 +68,15 @@ class TeamSettings extends React.Component {
             </a>
           </Link>
         </Menu.Item>
-        <Menu.Item key="delete" className="ant-btn-danger" onClick={this.deleteTeamConfirm}>
+        <Menu.Item key="delete" id="delete_team" className="ant-btn-danger" onClick={this.deleteTeamConfirm}>
           <Icon type="delete" style={{ marginRight: '5px' }} />
           Delete team
         </Menu.Item>
       </Menu>
     )
     return (
-      <Dropdown overlay={menu}>
-        <Button>
+      <Dropdown trigger={['click']} overlay={menu}>
+        <Button id="team_settings">
           <Icon type="setting" style={{ marginRight: '10px' }} />
           <Icon type="down" />
         </Button>

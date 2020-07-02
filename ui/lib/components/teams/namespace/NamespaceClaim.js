@@ -55,18 +55,18 @@ class NamespaceClaim extends AutoRefreshComponent {
             okText="Yes"
             cancelText="No"
           >
-            <a><Icon type="delete" /></a>
+            <a id={`namespace_delete_${namespaceClaim.spec.name}`}><Icon type="delete" /></a>
           </Popconfirm>
         )
         actions.push(deleteAction)
       }
-      actions.push(<ResourceStatusTag resourceStatus={namespaceClaim.status} />)
+      actions.push(<ResourceStatusTag id={`namespace_status_${namespaceClaim.spec.name}`} resourceStatus={namespaceClaim.status} />)
       return actions
     }
 
     return (
-      <List.Item style={{ paddingTop: 0 }} actions={actions()}>
-        <List.Item.Meta style={{ marginLeft: '5px' }} title={namespaceClaim.spec.name} />
+      <List.Item className="namespace" id={`namespace_${namespaceClaim.spec.name}`} style={{ paddingTop: 0 }} actions={actions()}>
+        <List.Item.Meta style={{ marginLeft: '5px' }} title={<span>{namespaceClaim.spec.name}</span>} />
         <div>
           <Text type='secondary'>Created {created}</Text>
           {deleted && <Text type='secondary'><br/>Deleted {deleted}</Text>}

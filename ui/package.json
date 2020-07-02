@@ -5,7 +5,9 @@
     "dev": "nodemon",
     "test": "jest --verbose --testPathPattern __tests__/unit",
     "test-watch": "npm test -- --watch",
-    "test-e2e": "jest --verbose --preset jest-puppeteer --testSequencer ./__tests__/e2e/sequencer.js --runInBand --testMatch **/__tests__/e2e/*.test.js",
+    "test-e2e": "jest --verbose --preset jest-puppeteer --testSequencer ./__tests__/e2e/sequencer.js --runInBand --testMatch **/__tests__/e2e/*.test.js --testPathIgnorePatterns nightly",
+    "test-e2e-nightly-gke": "jest --verbose --preset jest-puppeteer --testSequencer ./__tests__/e2e/sequencer.js --runInBand --testMatch **/__tests__/e2e/nightly/gke.test.js",
+    "test-e2e-nightly-eks": "jest --verbose --preset jest-puppeteer --testSequencer ./__tests__/e2e/sequencer.js --runInBand --testMatch **/__tests__/e2e/nightly/eks.test.js",
     "build": "next build",
     "start": "NODE_ENV=production node server/index.js",
     "lint": "eslint ."

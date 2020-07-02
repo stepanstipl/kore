@@ -86,6 +86,7 @@ class SiderMenu extends React.Component {
 
     return (
       <Sider
+        id="sider"
         collapsible
         collapsed={siderCollapsed}
         onCollapse={this.onSiderCollapse}

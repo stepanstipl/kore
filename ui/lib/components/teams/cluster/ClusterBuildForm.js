@@ -179,7 +179,7 @@ class ClusterBuildForm extends React.Component {
           wrappedComponentRef={inst => this.clusterOptionsForm = inst}
         />
         <Form.Item style={{ marginTop: '20px' }}>
-          <Button type="primary" htmlType="submit" loading={submitting}>
+          <Button id="save" type="primary" htmlType="submit" loading={submitting}>
             {this.state.submitButtonText}
           </Button>
         </Form.Item>

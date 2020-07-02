@@ -190,7 +190,7 @@ class ClusterPage extends React.Component {
               <List.Item.Meta
                 className="large-list-item"
                 avatar={<img src={clusterProviderIconSrcMap[cluster.spec.kind]} />}
-                title={<Text style={{ marginTop: '15px', display: 'block' }}>{cluster.metadata.name}</Text>}
+                title={<Text id="cluster_name" style={{ marginTop: '15px', display: 'block' }}>{cluster.metadata.name}</Text>}
                 description={
                   <div>
                     <Text type='secondary'>Created {created}</Text>
@@ -205,7 +205,7 @@ class ClusterPage extends React.Component {
           </Col>
           <Col span={24} xl={12} style={{ marginTop: '14px' }}>
             <Collapse style={{ marginTop: '12px', marginBottom: '20px' }}>
-              <Collapse.Panel header="Detailed Cluster Status" extra={(<ResourceStatusTag resourceStatus={cluster.status} />)}>
+              <Collapse.Panel header="Detailed Cluster Status" extra={(<ResourceStatusTag id="cluster_status" resourceStatus={cluster.status} />)}>
                 <ComponentStatusTree team={team} user={user} component={cluster} />
               </Collapse.Panel>
             </Collapse>

@@ -31,11 +31,39 @@ test-e2e-debug:
 	@echo "--> Running E2E Tests (non-headless)"
 	@export SHOW_BROWSER=true && npm run test-e2e
 
+test-e2e-nightly-gke:
+	@echo "--> Running nightly E2E Tests for GKE (headless)"
+	@export SHOW_BROWSER=false && npm run test-e2e-nightly-gke
+
+test-e2e-nightly-gke-debug:
+	@echo "--> Running nightly E2E Tests for GKE (non-headless)"
+	@export SHOW_BROWSER=true && npm run test-e2e-nightly-gke
+
+test-e2e-nightly-eks:
+	@echo "--> Running nightly E2E Tests for EKS (headless)"
+	@export SHOW_BROWSER=false && npm run test-e2e-nightly-eks
+
+test-e2e-nightly-eks-debug:
+	@echo "--> Running nightly E2E Tests for EKS (non-headless)"
+	@export SHOW_BROWSER=true && npm run test-e2e-nightly-eks
+
 kind-e2e:
 	@export KORE_ADMIN_PASS="$(shell kubectl --context kind-kore -n kore get secret kore-api -o json | jq -r ".data.KORE_ADMIN_PASS" | base64 --decode)" && ${MAKE} test-e2e
 
 kind-e2e-debug:
 	@export KORE_ADMIN_PASS="$(shell kubectl --context kind-kore -n kore get secret kore-api -o json | jq -r ".data.KORE_ADMIN_PASS" | base64 --decode)" && ${MAKE} test-e2e-debug
+
+kind-e2e-nightly-gke:
+	@export KORE_ADMIN_PASS="$(shell kubectl --context kind-kore -n kore get secret kore-api -o json | jq -r ".data.KORE_ADMIN_PASS" | base64 --decode)" && ${MAKE} test-e2e-nightly-gke
+
+kind-e2e-nightly-gke-debug:
+	@export KORE_ADMIN_PASS="$(shell kubectl --context kind-kore -n kore get secret kore-api -o json | jq -r ".data.KORE_ADMIN_PASS" | base64 --decode)" && ${MAKE} test-e2e-nightly-gke-debug
+
+kind-e2e-nightly-eks:
+	@export KORE_ADMIN_PASS="$(shell kubectl --context kind-kore -n kore get secret kore-api -o json | jq -r ".data.KORE_ADMIN_PASS" | base64 --decode)" && ${MAKE} test-e2e-nightly-eks
+
+kind-e2e-nightly-eks-debug:
+	@export KORE_ADMIN_PASS="$(shell kubectl --context kind-kore -n kore get secret kore-api -o json | jq -r ".data.KORE_ADMIN_PASS" | base64 --decode)" && ${MAKE} test-e2e-nightly-eks-debug
 
 update-swagger:
 	@echo "--> Updating unit test / auto-gen swagger (requires API to be running locally)"

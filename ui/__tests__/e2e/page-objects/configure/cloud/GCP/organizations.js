@@ -29,7 +29,7 @@ export class ConfigureCloudGCPOrgs extends ConfigureCloudPage {
   }
 
   /**
-   * Checks if an specific org is listed
+   * Checks if a specific org is listed
    */
   async checkOrgListed(name) {
     await expect(this.p).toMatchElement(`#gcporg_${name}`)

@@ -106,7 +106,7 @@ class NamespaceClaimForm extends React.Component {
           )}
         </Form.Item>
         <Form.Item>
-          <Button type="primary" htmlType="submit" loading={submitting} disabled={this.disableButton(getFieldsError())}>Save</Button>
+          <Button id="save" type="primary" htmlType="submit" loading={submitting} disabled={this.disableButton(getFieldsError())}>Save</Button>
           <Button type="link" onClick={this.cancel}>Cancel</Button>
         </Form.Item>
       </Form>

@@ -3,12 +3,12 @@ import { statusColorMap, inProgressStatusList } from '../../utils/ui-helpers'
 import { Icon, Tag, Popover, Timeline, Typography } from 'antd'
 const { Text, Paragraph } = Typography
 
-const ResourceStatusTag = ({ resourceStatus }) => {
+const ResourceStatusTag = ({ resourceStatus, id }) => {
   const status = resourceStatus.status || 'Pending'
   const components = resourceStatus.components
   const conditions = resourceStatus.conditions
 
-  const statusTag = <Tag color={statusColorMap[status] || 'red'}>{inProgressStatusList.includes(status) ? <Icon type="loading" /> : null} {status}</Tag>
+  const statusTag = <Tag id={id} color={statusColorMap[status] || 'red'}>{inProgressStatusList.includes(status) ? <Icon type="loading" style={{ marginRight: '5px' }} /> : null}{status}</Tag>
 
   if (components) {
     return (
@@ -53,7 +53,8 @@ const ResourceStatusTag = ({ resourceStatus }) => {
 }
 
 ResourceStatusTag.propTypes = {
-  resourceStatus: PropTypes.object.isRequired
+  resourceStatus: PropTypes.object.isRequired,
+  id: PropTypes.string
 }
 
 export default ResourceStatusTag

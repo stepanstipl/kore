@@ -142,7 +142,7 @@ class NamespacesTab extends React.Component {
     } catch (err) {
       if (err.statusCode === 409 && err.dependents) {
         return Modal.warning({
-          title: 'The namespace can not be deleted',
+          title: 'The namespace cannot be deleted',
           content: (
             <div>
               <Paragraph strong>Error: {err.message}</Paragraph>
@@ -233,7 +233,7 @@ class NamespacesTab extends React.Component {
           <Icon type="loading" />
         ) : (
           <>
-            {!hasNamespaces && <Paragraph type="secondary">No namespaces found for this team</Paragraph>}
+            {!hasNamespaces && <Paragraph type="secondary">No namespaces found for this cluster</Paragraph>}
 
             {namespaceClaims.map((namespaceClaim, idx) => {
               const filteredServiceCredentials = (serviceCredentials || []).filter(sc => sc.spec.clusterNamespace === namespaceClaim.spec.name)

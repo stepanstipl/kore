@@ -91,7 +91,7 @@ class ClustersTab extends React.Component {
     } catch (err) {
       if (err.statusCode === 409 && err.dependents) {
         return Modal.warning({
-          title: 'The cluster can not be deleted',
+          title: 'The cluster cannot be deleted',
           content: (
             <div>
               <Paragraph strong>Error: {err.message}</Paragraph>
@@ -170,7 +170,9 @@ class ClustersTab extends React.Component {
                     propsResourceDataKey="cluster"
                     resourceApiRequest={async () => await (await KoreApi.client()).GetCluster(team.metadata.name, cluster.metadata.name)}
                   />
-                  {clusterNamespaceClaims.length > 0 && this.clusterResourceList({ resources: clusterNamespaceClaims, resourceDisplayPropertyPath: 'spec.name', title: 'Namespaces' })}
+                  <div id={`cluster_namespaces_${cluster.metadata.name}`}>
+                    {clusterNamespaceClaims.length > 0 && this.clusterResourceList({ resources: clusterNamespaceClaims, resourceDisplayPropertyPath: 'spec.name', title: 'Namespaces' })}
+                  </div>
                   {idx < clusters.length - 1 && <Divider />}
                 </React.Fragment>
               )
