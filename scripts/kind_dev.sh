@@ -25,6 +25,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+PROJECT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"/.. >/dev/null 2>&1 && pwd )"
+
 if [ "$recreate" = "true" ]; then
   kind delete cluster --name kore
 fi
@@ -41,7 +43,7 @@ nodes:
         hostPort: 10080
         protocol: TCP
     extraMounts:
-      - hostPath: ${GOPATH}/src/github.com/appvia/kore
+      - hostPath: $PROJECT_DIR
         containerPath: /go/src/github.com/appvia/kore
 EOF
 fi
@@ -52,6 +54,6 @@ if ! kubectl get ns kore; then
   kubectl create ns kore
 fi
 
-make kind-image-dev
+make -C "$PROJECT_DIR" kind-image-dev
 
-helm upgrade -i --namespace kore kore ./charts/kore --wait -f ./charts/my_values.yaml
+helm upgrade -i --namespace kore kore "$PROJECT_DIR/charts/kore" --wait -f "$PROJECT_DIR/charts/my_values.yaml"
