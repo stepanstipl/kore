@@ -82,6 +82,8 @@ github.com/aws/aws-sdk-go v1.29.31 h1:y4lIvJf88grxomd/caxacLrNFIz2U3jld9vHElK/Fh
 github.com/aws/aws-sdk-go v1.29.31/go.mod h1:1KvfttTE3SPKMpo8g2c6jL3ZKfXtFvKscTgahTma5Xg=
 github.com/banzaicloud/k8s-objectmatcher v1.3.2 h1:HhXkOWg4xmAW203p3G4Av9ylUfkUJF1+8MK90XQAaJw=
 github.com/banzaicloud/k8s-objectmatcher v1.3.2/go.mod h1:j+N22VwgVfa0ajVtNxOz2G72aSOL21lpB7qV2GDrr/I=
+github.com/banzaicloud/k8s-objectmatcher v1.3.3 h1:Bqiaa1v4PgWfVNfDHnCABm02U4cWQrRDZ8EVWzYCqNk=
+github.com/banzaicloud/k8s-objectmatcher v1.3.3/go.mod h1:j+N22VwgVfa0ajVtNxOz2G72aSOL21lpB7qV2GDrr/I=
 github.com/beevik/etree v1.1.0 h1:T0xke/WvNtMoCqgzPhkX2r4rjY3GDZFi+FjpRZY2Jbs=
 github.com/beevik/etree v1.1.0/go.mod h1:r8Aw8JqVegEf0w2fDnATrX9VpkMcyFeM0FhwO62wh+A=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=

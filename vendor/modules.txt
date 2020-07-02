@@ -84,7 +84,7 @@ github.com/aws/aws-sdk-go/service/s3/internal/arn
 github.com/aws/aws-sdk-go/service/servicecatalog
 github.com/aws/aws-sdk-go/service/sts
 github.com/aws/aws-sdk-go/service/sts/stsiface
-# github.com/banzaicloud/k8s-objectmatcher v1.3.2
+# github.com/banzaicloud/k8s-objectmatcher v1.3.3
 github.com/banzaicloud/k8s-objectmatcher/patch
 # github.com/beevik/etree v1.1.0
 github.com/beevik/etree

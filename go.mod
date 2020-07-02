@@ -9,7 +9,7 @@ require (
 	github.com/apparentlymart/go-cidr v1.0.1
 	github.com/armon/go-proxyproto v0.0.0-20200108142055-f0b8253b1507
 	github.com/aws/aws-sdk-go v1.29.31
-	github.com/banzaicloud/k8s-objectmatcher v1.3.2
+	github.com/banzaicloud/k8s-objectmatcher v1.3.3
 	github.com/blevesearch/bleve v0.8.1
 	github.com/blevesearch/blevex v0.0.0-20190916190636-152f0fe5c040 // indirect
 	github.com/blevesearch/go-porterstemmer v1.0.2 // indirect
