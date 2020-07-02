@@ -35,7 +35,6 @@ import (
 	"github.com/appvia/kore/pkg/kore"
 	koreschema "github.com/appvia/kore/pkg/schema"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
-	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -142,49 +141,16 @@ func ensureResource(ctx kore.Context, client client.Client, original runtime.Obj
 		return fmt.Errorf("failed to get resource %q: %w", kubernetes.MustGetRuntimeSelfLink(current), err)
 	}
 
-	patchAnnotator := patch.NewAnnotator(kore.Label("last-applied"))
-
-	if !exists {
-		if err := patchAnnotator.SetLastAppliedAnnotation(original); err != nil {
-			return err
-		}
-		if err := client.Create(ctx, original); err != nil {
-			return fmt.Errorf("failed to create resource %q: %w", kubernetes.MustGetRuntimeSelfLink(original), err)
-		}
-		return nil
+	if exists {
+		// The runtime client doesn't set the GVK on the result object
+		current.GetObjectKind().SetGroupVersionKind(original.GetObjectKind().GroupVersionKind())
 	}
 
-	// GKE seems to return the object without kind and apiVersion
-	current.GetObjectKind().SetGroupVersionKind(original.GetObjectKind().GroupVersionKind())
-
-	patchResult, err := patch.NewPatchMaker(patchAnnotator).Calculate(
-		current,
-		original,
-		patch.IgnoreStatusFields(),
-		patch.IgnoreVolumeClaimTemplateTypeMetaAndStatus(),
-	)
-	if err != nil {
-		return err
+	updated, err := kubernetes.UpdateIfChangedSinceLastUpdate(ctx, client, original, current)
+	if updated {
+		ctx.Logger().WithField("resource", kubernetes.MustGetRuntimeSelfLink(original)).Debug("resource has changed")
 	}
-
-	if patchResult.IsEmpty() {
-		return nil
-	}
-
-	ctx.Logger().
-		WithField("resource", kubernetes.MustGetRuntimeSelfLink(original)).
-		WithField("diff", string(patchResult.Patch)).
-		Debug("resource has changed")
-
-	if err := patchAnnotator.SetLastAppliedAnnotation(original); err != nil {
-		return err
-	}
-
-	if _, err := kubernetes.CreateOrUpdate(ctx, client, original); err != nil {
-		return fmt.Errorf("failed to update resource %q: %w", kubernetes.MustGetRuntimeSelfLink(original), err)
-	}
-
-	return nil
+	return err
 }
 
 func getAppConfiguration(ctx kore.Context, service *servicesv1.Service) (*AppConfiguration, error) {

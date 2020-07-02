@@ -70,7 +70,10 @@ func NewTest(ctx context.Context) *Test {
 						return errors.New(o.GetLabels()[LabelGetError])
 					}
 					res := o.DeepCopyObject()
-					res.GetObjectKind().SetGroupVersionKind(object.GetObjectKind().GroupVersionKind())
+
+					// The runtime client doesn't set the GVK on the result object, so we shouldn't either
+					res.GetObjectKind().SetGroupVersionKind(schema.EmptyObjectKind.GroupVersionKind())
+
 					reflect.ValueOf(object).Elem().Set(reflect.ValueOf(res).Elem())
 					return nil
 				}

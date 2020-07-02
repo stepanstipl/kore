@@ -26,16 +26,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-// SetClusterRevision set the revision annotation on the resource
-func SetClusterRevision(object runtime.Object, revision string) {
-	kubernetes.SetRuntimeAnnotation(object, ClusterRevisionName, revision)
-}
-
-// GetClusterRevision retrieve the revision from the resource
-func GetClusterRevision(object runtime.Object) string {
-	return kubernetes.GetRuntimeAnnotation(object, ClusterRevisionName)
-}
-
 // GetObjectStatus attempts to inspect the resource for a status
 func GetObjectStatus(object runtime.Object) (corev1.Status, error) {
 	var status corev1.Status

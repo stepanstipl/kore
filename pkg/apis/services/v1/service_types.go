@@ -66,6 +66,20 @@ type ServiceSpec struct {
 	ConfigurationFrom []corev1.ConfigurationFromSource `json:"configurationFrom,omitempty"`
 }
 
+func (s *ServiceSpec) SetConfiguration(v interface{}) error {
+	if v == nil {
+		s.Configuration = nil
+		return nil
+	}
+
+	raw, err := json.Marshal(v)
+	if err != nil {
+		return fmt.Errorf("failed to marshal service configuration: %w", err)
+	}
+	s.Configuration = &apiextv1.JSON{Raw: raw}
+	return nil
+}
+
 // ServiceStatus defines the observed state of a service
 // +k8s:openapi-gen=true
 type ServiceStatus struct {

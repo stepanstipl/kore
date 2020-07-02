@@ -38,11 +38,6 @@ const (
 	finalizerName = "cluster.clusters.kore.appvia.io"
 )
 
-var (
-	// ClusterRevisionName is the annotation name
-	ClusterRevisionName = kore.Label("clusterRevision")
-)
-
 // Reconcile is the entrypoint for the reconciliation logic
 func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	ctx := context.Background()
@@ -194,7 +189,7 @@ func (a *Controller) Apply(cluster *clustersv1.Cluster, components *kore.Cluster
 	}
 }
 
-func (a *Controller) applyComponent(ctx context.Context, cluster *clustersv1.Cluster, comp *kore.ClusterComponent) (reconcile.Result, error) {
+func (a *Controller) applyComponent(ctx kore.Context, cluster *clustersv1.Cluster, comp *kore.ClusterComponent) (reconcile.Result, error) {
 	condition, found := cluster.Status.Components.GetComponent(comp.ComponentName())
 	if !found {
 		condition = &corev1.Component{
@@ -211,27 +206,25 @@ func (a *Controller) applyComponent(ctx context.Context, cluster *clustersv1.Clu
 	logger := a.logger.WithFields(log.Fields{
 		"component": comp.ComponentName(),
 		"condition": condition.Status,
-		"existing":  comp.Exists,
+		"existing":  comp.Exists(),
 	})
 	logger.Debug("attempting to reconciling the component")
 
-	if !comp.Exists || GetClusterRevision(comp.Object) != cluster.ResourceVersion {
-		SetClusterRevision(comp.Object, cluster.ResourceVersion)
+	annotations := comp.Object.GetAnnotations()
+	if annotations == nil {
+		annotations = map[string]string{}
+	}
+	annotations[kore.AnnotationReadOnly] = kore.AnnotationValueTrue
 
-		annotations := comp.Object.GetAnnotations()
-		if annotations == nil {
-			annotations = map[string]string{}
-		}
-		annotations[kore.AnnotationSystem] = kore.AnnotationValueTrue
-		annotations[kore.AnnotationReadOnly] = kore.AnnotationValueTrue
+	comp.Object.SetAnnotations(annotations)
 
-		comp.Object.SetAnnotations(annotations)
-
-		if _, err := kubernetes.CreateOrUpdate(ctx, a.mgr.GetClient(), comp.Object); err != nil {
-			return reconcile.Result{}, err
-		}
-
-		return reconcile.Result{Requeue: true}, nil
+	updated, err := comp.Update(ctx)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if updated {
+		ctx.Logger().WithField("component", kubernetes.MustGetRuntimeSelfLink(comp.Object)).Debug("component has changed")
+		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 	}
 
 	// @check if the resource is ready to reconcile

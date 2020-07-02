@@ -22,17 +22,15 @@ import (
 	"sort"
 	"time"
 
-	"github.com/appvia/kore/pkg/schema"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/schema"
 	"github.com/appvia/kore/pkg/serviceproviders/application"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
-	"github.com/banzaicloud/k8s-objectmatcher/patch"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
@@ -45,18 +43,25 @@ func ApplyServicePlanToAppService(ctx kore.Context, service *servicesv1.Service,
 	service.Spec.Kind = servicePlan.Spec.Kind
 	service.Spec.Plan = servicePlan.Name
 
-	config := getEmptyConfigFromPlan(servicePlan)
-	if err := servicePlan.Spec.GetConfiguration(config); err != nil {
-		return err
+	switch servicePlan.Spec.Kind {
+	case application.ServiceKindApp:
+		config := &application.AppConfiguration{}
+		if err := servicePlan.Spec.GetConfiguration(config); err != nil {
+			return err
+		}
+		config.Values = values
+		return service.Spec.SetConfiguration(config)
+
+	case application.ServiceKindHelmApp:
+		config := &application.HelmAppConfiguration{}
+		if err := servicePlan.Spec.GetConfiguration(config); err != nil {
+			return err
+		}
+		config.Values = values
+		return service.Spec.SetConfiguration(config)
+	default:
+		panic(fmt.Errorf("method called with invalid service kind: %s", servicePlan.Spec.Kind))
 	}
-
-	setConfigValues(config, values)
-
-	if err := servicePlan.Spec.SetConfiguration(config); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // EnsureServices will create or update services and return reconciliation info
@@ -150,53 +155,28 @@ func EnsureService(ctx kore.Context, original *servicesv1.Service, owner runtime
 		return reconcile.Result{}, fmt.Errorf("failed to get service %q: %w", current.Name, err)
 	}
 
-	patchAnnotator := patch.NewAnnotator(kore.Label("last-applied"))
+	if exists {
+		components.SetStatus("Service/"+current.Name, current.Status.Status, current.Status.Message, "")
+	}
 
-	if !exists {
-		if err := patchAnnotator.SetLastAppliedAnnotation(original); err != nil {
-			return reconcile.Result{}, err
-		}
-		original.Status.Status = corev1.PendingStatus
-		if err := ctx.Client().Create(ctx, original); err != nil {
-			return reconcile.Result{}, fmt.Errorf("failed to create service %q: %w", original.Name, err)
-		}
+	updated, err := kubernetes.UpdateIfChangedSinceLastUpdate(ctx, ctx.Client(), original, current)
+	if err != nil {
+		return reconcile.Result{}, fmt.Errorf("failed to update %q service: %w", original.Name, err)
+	}
+
+	if updated {
+		ctx.Logger().WithField("service", original.Name).Debug("service has changed")
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 	}
-	components.SetStatus("Service/"+current.Name, current.Status.Status, current.Status.Message, "")
 
-	patchResult, err := patch.NewPatchMaker(patchAnnotator).Calculate(
-		current,
-		original,
-		patch.IgnoreStatusFields(),
-		patch.IgnoreVolumeClaimTemplateTypeMetaAndStatus(),
-	)
-	if err != nil {
-
-		return reconcile.Result{}, err
+	switch current.Status.Status {
+	case corev1.SuccessStatus:
+		return reconcile.Result{}, nil
+	case corev1.ErrorStatus, corev1.FailureStatus:
+		return reconcile.Result{}, fmt.Errorf("%q admin service has an error status", current.Name)
+	default:
+		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 	}
-
-	if patchResult.IsEmpty() {
-		switch current.Status.Status {
-		case corev1.SuccessStatus:
-			return reconcile.Result{}, nil
-		case corev1.ErrorStatus, corev1.FailureStatus:
-			return reconcile.Result{}, fmt.Errorf("%q admin service has an error status", current.Name)
-		default:
-			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
-		}
-	}
-
-	ctx.Logger().WithField("diff", string(patchResult.Patch)).Debug("service has changed")
-
-	if err := patchAnnotator.SetLastAppliedAnnotation(original); err != nil {
-		return reconcile.Result{}, err
-	}
-
-	if _, err := kubernetes.CreateOrUpdate(ctx, ctx.Client(), original); err != nil {
-		return reconcile.Result{}, fmt.Errorf("failed to update admin service %q: %w", original.Name, err)
-	}
-
-	return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 }
 
 // DeleteServices will remove services and return reconcile status
@@ -261,25 +241,4 @@ func DeleteService(ctx kore.Context, service *servicesv1.Service, owner runtime.
 	}
 
 	return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
-}
-
-func getEmptyConfigFromPlan(servicePlan *servicesv1.ServicePlan) interface{} {
-	switch servicePlan.Spec.Kind {
-	case application.ServiceKindApp:
-		return &application.AppConfiguration{}
-	case application.ServiceKindHelmApp:
-		return &application.HelmAppConfiguration{}
-	default:
-		return nil
-	}
-}
-
-func setConfigValues(config interface{}, values map[string]interface{}) {
-	// Set the strongly types values dependant on type
-	switch configWithValues := config.(type) {
-	case *application.AppConfiguration:
-		configWithValues.Values = values
-	case *application.HelmAppConfiguration:
-		configWithValues.Values = values
-	}
 }

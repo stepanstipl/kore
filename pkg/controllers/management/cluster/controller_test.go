@@ -24,8 +24,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/appvia/kore/pkg/utils/kubernetes"
-
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
@@ -33,7 +31,9 @@ import (
 	clusterctrl "github.com/appvia/kore/pkg/controllers/management/cluster"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/kore/korefakes"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
 
+	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
@@ -94,14 +94,23 @@ var _ = Describe("Cluster Controller", func() {
 			},
 		})
 
-		test.Objects = append(test.Objects, &clustersv1.Kubernetes{
+		kub := &clustersv1.Kubernetes{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:        "testName",
 				Namespace:   "testNamespace",
-				Annotations: map[string]string{kore.Label("clusterRevision"): cluster.ResourceVersion},
+				Annotations: map[string]string{"kore.appvia.io/readonly": "true"},
+			},
+			Spec: clustersv1.KubernetesSpec{
+				Cluster:  cluster.Ownership(),
+				Provider: corev1.MustGetOwnershipFromObject(compProvider),
 			},
 			Status: clustersv1.KubernetesStatus{Status: corev1.SuccessStatus},
-		})
+		}
+
+		patchAnnotator := patch.NewAnnotator("kore.appvia.io/last-applied")
+		_ = patchAnnotator.SetLastAppliedAnnotation(kub)
+
+		test.Objects = append(test.Objects, kub)
 	}
 
 	var givenKubeAppManagerExists = func() {
@@ -117,14 +126,19 @@ var _ = Describe("Cluster Controller", func() {
 			},
 		})
 
-		test.Objects = append(test.Objects, &servicesv1.Service{
+		service := &servicesv1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:        "testName-kube-app-manager",
 				Namespace:   "testNamespace",
-				Annotations: map[string]string{kore.Label("clusterRevision"): cluster.ResourceVersion},
+				Annotations: map[string]string{"kore.appvia.io/readonly": "true"},
 			},
 			Status: servicesv1.ServiceStatus{Status: corev1.SuccessStatus},
-		})
+		}
+
+		patchAnnotator := patch.NewAnnotator("kore.appvia.io/last-applied")
+		_ = patchAnnotator.SetLastAppliedAnnotation(service)
+
+		test.Objects = append(test.Objects, service)
 	}
 
 	var givenHelmOperatorExists = func() {
@@ -140,14 +154,19 @@ var _ = Describe("Cluster Controller", func() {
 			},
 		})
 
-		test.Objects = append(test.Objects, &servicesv1.Service{
+		service := &servicesv1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:        "testName-flux-helm-operator",
 				Namespace:   "testNamespace",
-				Annotations: map[string]string{kore.Label("clusterRevision"): cluster.ResourceVersion},
+				Annotations: map[string]string{"kore.appvia.io/readonly": "true"},
 			},
 			Status: servicesv1.ServiceStatus{Status: corev1.SuccessStatus},
-		})
+		}
+
+		patchAnnotator := patch.NewAnnotator("kore.appvia.io/last-applied")
+		_ = patchAnnotator.SetLastAppliedAnnotation(service)
+
+		test.Objects = append(test.Objects, service)
 	}
 
 	var givenCompAppExists = func() {
@@ -164,7 +183,12 @@ var _ = Describe("Cluster Controller", func() {
 		})
 
 		compApp.Status.Status = corev1.SuccessStatus
-		compApp.Annotations = map[string]string{kore.Label("clusterRevision"): cluster.ResourceVersion}
+
+		compApp.Annotations = map[string]string{
+			"kore.appvia.io/readonly": "true",
+		}
+		patchAnnotator := patch.NewAnnotator("kore.appvia.io/last-applied")
+		_ = patchAnnotator.SetLastAppliedAnnotation(compApp)
 
 		test.Objects = append(test.Objects, compApp)
 	}
@@ -183,7 +207,11 @@ var _ = Describe("Cluster Controller", func() {
 		})
 
 		compProvider.Status.Status = corev1.SuccessStatus
-		compProvider.Annotations = map[string]string{kore.Label("clusterRevision"): cluster.ResourceVersion}
+		compProvider.Annotations = map[string]string{
+			"kore.appvia.io/readonly": "true",
+		}
+		patchAnnotator := patch.NewAnnotator("kore.appvia.io/last-applied")
+		_ = patchAnnotator.SetLastAppliedAnnotation(compProvider)
 
 		test.Objects = append(test.Objects, compProvider)
 	}
@@ -197,14 +225,24 @@ var _ = Describe("Cluster Controller", func() {
 		kore.RegisterClusterProvider(provider)
 
 		compProvider = &servicesv1.Service{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Service",
+				APIVersion: servicesv1.GroupVersion.String(),
+			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "comp-provider",
+				Name:      "comp-provider",
+				Namespace: "testNamespace",
 			},
 		}
 
 		compApp = &servicesv1.Service{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Service",
+				APIVersion: servicesv1.GroupVersion.String(),
+			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name: "comp-app",
+				Name:      "comp-app",
+				Namespace: "testNamespace",
 			},
 		}
 
@@ -376,7 +414,7 @@ var _ = Describe("Cluster Controller", func() {
 				obj := &servicesv1.Service{}
 				test.ExpectCreate(0, obj)
 				Expect(obj.Name).To(Equal("comp-provider"))
-				Expect(obj.Annotations[kore.Label("clusterRevision")]).To(Equal(cluster.ResourceVersion))
+				Expect(obj.Annotations[kore.Label("last-applied")]).ToNot(Equal(""))
 
 				Expect(test.Client.CreateCallCount()).To(Equal(1))
 			})
