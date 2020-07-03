@@ -1,0 +1,71 @@
+---  
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudinfo
+  namespace: kore-costs
+  labels:
+    name: cloudinfo
+    app.kubernetes.io/name: "kore-costs"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: cloudinfo
+      app.kubernetes.io/name: "kore-costs"
+  template:
+    metadata:
+      labels:
+        name: cloudinfo
+        app.kubernetes.io/name: "kore-costs"
+    spec:
+      containers:
+        - name: cloudinfo
+          image: banzaicloud/cloudinfo:0.12.1
+          args: ["cloudinfo", "--scrape=true", "--config=/etc/cloudinfo/config.yaml", "--listen-address=0.0.0.0:8000", "--metrics-address=0.0.0.0:9000"]
+          volumeMounts:
+            - name: config
+              mountPath: /etc/cloudinfo/config.yaml
+              subPath: config.yaml
+              readOnly: true
+          env:
+            - name: VAULT_SKIP_VERIFY
+              value: "true"
+          envFrom:
+            - secretRef:
+                name: cloudinfo
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+            - name: metrics
+              containerPort: 9000
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: http
+      volumes:
+        - name: config
+          secret:
+            secretName: cloudinfo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloudinfo
+  namespace: kore-costs
+  labels:
+    name: cloudinfo
+    app.kubernetes.io/name: "kore-costs"
+spec:
+  type: ClusterIP
+  ports:
+    - name: cloudinfo
+      port: 80
+      targetPort: 8000
+  selector:
+    name: cloudinfo
