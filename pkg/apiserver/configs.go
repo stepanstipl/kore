@@ -52,39 +52,37 @@ func (v *configsHandler) Register(i kore.Interface, builder utils.PathBuilder) (
 	ws.Path(path)
 
 	ws.Route(
-		ws.GET("").To(v.listConfig).
-			Doc("Returns all the configs in the kore").
+		withAllNonValidationErrors(ws.GET("").To(v.listConfig)).
+			Doc("Returns all configs").
 			Operation("ListConfig").
-			Returns(http.StatusOK, "A list of all the config values in the kore", configv1.ConfigList{}).
-			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
+			Returns(http.StatusOK, "A list of all the config values", configv1.ConfigList{}),
 	)
 
 	ws.Route(
 		withAllNonValidationErrors(ws.GET("/{config}").To(v.getConfig)).
-			Doc("Return information related to the specific config name in kore").
+			Doc("Return information related to the specific config name").
 			Operation("GetConfig").
 			Param(ws.PathParameter("config", "The name of the config you wish to retrieve")).
-			Returns(http.StatusOK, "A list of all the config in the kore", configv1.Config{}).
+			Returns(http.StatusOK, "Returns the specific config specified", configv1.Config{}).
 			Returns(http.StatusNotFound, "config does not exist", nil),
 	)
 
 	ws.Route(
 		withAllErrors(ws.PUT("/{config}")).To(v.updateConfig).
-			Doc("Used to create or update a config in the kore").
+			Doc("Used to create or update a config").
 			Operation("UpdateConfig").
-			Param(ws.PathParameter("config", "The name of the config you are updating or creating in the kore")).
-			Reads(configv1.Config{}, "The specification for a config in the kore").
-			Returns(http.StatusOK, "Contains the config definition from the kore", configv1.Config{}).
+			Param(ws.PathParameter("config", "The name of the config you are updating or creating")).
+			Reads(configv1.Config{}, "The specification for a config").
+			Returns(http.StatusOK, "Contains the config definition", configv1.Config{}).
 			Returns(http.StatusNotFound, "config does not exist", nil),
 	)
 
 	ws.Route(
-		ws.DELETE("/{config}").To(v.deleteConfig).
-			Doc("Used to delete a config from the kore").
+		withAllNonValidationErrors(ws.DELETE("/{config}").To(v.deleteConfig)).
+			Doc("Used to delete a config").
 			Operation("RemoveConfig").
-			Param(ws.PathParameter("config", "The name of the config you are deleting from the kore")).
-			Returns(http.StatusOK, "Contains the former config definition from the kore", configv1.Config{}).
-			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
+			Param(ws.PathParameter("config", "The name of the config you are deleting")).
+			Returns(http.StatusOK, "Contains the former config definition", configv1.Config{}),
 	)
 
 	return ws, nil

@@ -72,7 +72,7 @@ func NewUpdateConfigOK() *UpdateConfigOK {
 
 /*UpdateConfigOK handles this case with default header values.
 
-Contains the config definition from the kore
+Contains the config definition
 */
 type UpdateConfigOK struct {
 	Payload *models.V1Config

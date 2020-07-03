@@ -66,7 +66,7 @@ func NewGetConfigOK() *GetConfigOK {
 
 /*GetConfigOK handles this case with default header values.
 
-A list of all the config in the kore
+Returns the specific config specified
 */
 type GetConfigOK struct {
 	Payload *models.V1Config

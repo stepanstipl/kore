@@ -743,7 +743,7 @@ func (a *Client) GetCluster(params *GetClusterParams, authInfo runtime.ClientAut
 }
 
 /*
-  GetConfig returns information related to the specific config name in kore
+  GetConfig returns information related to the specific config name
 */
 func (a *Client) GetConfig(params *GetConfigParams, authInfo runtime.ClientAuthInfoWriter) (*GetConfigOK, error) {
 	// TODO: Validate the params before sending
@@ -1788,7 +1788,7 @@ func (a *Client) ListClusters(params *ListClustersParams, authInfo runtime.Clien
 }
 
 /*
-  ListConfig returns all the configs in the kore
+  ListConfig returns all configs
 */
 func (a *Client) ListConfig(params *ListConfigParams, authInfo runtime.ClientAuthInfoWriter) (*ListConfigOK, error) {
 	// TODO: Validate the params before sending
@@ -2761,7 +2761,7 @@ func (a *Client) RemoveCluster(params *RemoveClusterParams, authInfo runtime.Cli
 }
 
 /*
-  RemoveConfig useds to delete a config from the kore
+  RemoveConfig useds to delete a config
 */
 func (a *Client) RemoveConfig(params *RemoveConfigParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveConfigOK, error) {
 	// TODO: Validate the params before sending
@@ -3180,7 +3180,7 @@ func (a *Client) UpdateCluster(params *UpdateClusterParams, authInfo runtime.Cli
 }
 
 /*
-  UpdateConfig useds to create or update a config in the kore
+  UpdateConfig useds to create or update a config
 */
 func (a *Client) UpdateConfig(params *UpdateConfigParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateConfigOK, error) {
 	// TODO: Validate the params before sending

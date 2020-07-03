@@ -61,7 +61,7 @@ for the remove config operation typically these are written to a http.Request
 type RemoveConfigParams struct {
 
 	/*Config
-	  The name of the config you are deleting from the kore
+	  The name of the config you are deleting
 
 	*/
 	Config string

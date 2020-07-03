@@ -29,6 +29,18 @@ func (o *RemoveConfigReader) ReadResponse(response runtime.ClientResponse, consu
 			return nil, err
 		}
 		return result, nil
+	case 401:
+		result := NewRemoveConfigUnauthorized()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 403:
+		result := NewRemoveConfigForbidden()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	case 500:
 		result := NewRemoveConfigInternalServerError()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
@@ -48,7 +60,7 @@ func NewRemoveConfigOK() *RemoveConfigOK {
 
 /*RemoveConfigOK handles this case with default header values.
 
-Contains the former config definition from the kore
+Contains the former config definition
 */
 type RemoveConfigOK struct {
 	Payload *models.V1Config
@@ -70,6 +82,48 @@ func (o *RemoveConfigOK) readResponse(response runtime.ClientResponse, consumer 
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
 		return err
 	}
+
+	return nil
+}
+
+// NewRemoveConfigUnauthorized creates a RemoveConfigUnauthorized with default headers values
+func NewRemoveConfigUnauthorized() *RemoveConfigUnauthorized {
+	return &RemoveConfigUnauthorized{}
+}
+
+/*RemoveConfigUnauthorized handles this case with default header values.
+
+If not authenticated
+*/
+type RemoveConfigUnauthorized struct {
+}
+
+func (o *RemoveConfigUnauthorized) Error() string {
+	return fmt.Sprintf("[DELETE /api/v1alpha1/configs/{config}][%d] removeConfigUnauthorized ", 401)
+}
+
+func (o *RemoveConfigUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
+// NewRemoveConfigForbidden creates a RemoveConfigForbidden with default headers values
+func NewRemoveConfigForbidden() *RemoveConfigForbidden {
+	return &RemoveConfigForbidden{}
+}
+
+/*RemoveConfigForbidden handles this case with default header values.
+
+If authenticated but not authorized
+*/
+type RemoveConfigForbidden struct {
+}
+
+func (o *RemoveConfigForbidden) Error() string {
+	return fmt.Sprintf("[DELETE /api/v1alpha1/configs/{config}][%d] removeConfigForbidden ", 403)
+}
+
+func (o *RemoveConfigForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	return nil
 }

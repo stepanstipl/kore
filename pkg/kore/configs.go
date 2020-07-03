@@ -26,11 +26,11 @@ import (
 )
 
 // Configs is the kore api configs interface
-//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Configsc
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Configs
 type Configs interface {
 	// Delete removes a config from the kore
 	Delete(context.Context, string) (*configv1.Config, error)
-	// Exist checks if the config exists
+	// Exists checks if the config exists
 	Exists(context.Context, string) (bool, error)
 	// Get returns the config from the kore
 	Get(context.Context, string) (*configv1.Config, error)
@@ -61,12 +61,10 @@ func (v *configImpl) Delete(ctx context.Context, key string) (*configv1.Config, 
 		return nil, err
 	}
 
-	// @TODO add an entry into the audit log
-
 	return DefaultConvertor.FromConfigModel(u), nil
 }
 
-// Exist checks if the config exists
+// Exists checks if the config exists
 func (v *configImpl) Exists(ctx context.Context, key string) (bool, error) {
 	return v.persistenceMgr.Configs().Exists(ctx, key)
 }

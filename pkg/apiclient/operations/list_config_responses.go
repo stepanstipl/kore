@@ -29,6 +29,18 @@ func (o *ListConfigReader) ReadResponse(response runtime.ClientResponse, consume
 			return nil, err
 		}
 		return result, nil
+	case 401:
+		result := NewListConfigUnauthorized()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
+	case 403:
+		result := NewListConfigForbidden()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	case 500:
 		result := NewListConfigInternalServerError()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
@@ -48,7 +60,7 @@ func NewListConfigOK() *ListConfigOK {
 
 /*ListConfigOK handles this case with default header values.
 
-A list of all the config values in the kore
+A list of all the config values
 */
 type ListConfigOK struct {
 	Payload *models.V1ConfigList
@@ -70,6 +82,48 @@ func (o *ListConfigOK) readResponse(response runtime.ClientResponse, consumer ru
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
 		return err
 	}
+
+	return nil
+}
+
+// NewListConfigUnauthorized creates a ListConfigUnauthorized with default headers values
+func NewListConfigUnauthorized() *ListConfigUnauthorized {
+	return &ListConfigUnauthorized{}
+}
+
+/*ListConfigUnauthorized handles this case with default header values.
+
+If not authenticated
+*/
+type ListConfigUnauthorized struct {
+}
+
+func (o *ListConfigUnauthorized) Error() string {
+	return fmt.Sprintf("[GET /api/v1alpha1/configs][%d] listConfigUnauthorized ", 401)
+}
+
+func (o *ListConfigUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	return nil
+}
+
+// NewListConfigForbidden creates a ListConfigForbidden with default headers values
+func NewListConfigForbidden() *ListConfigForbidden {
+	return &ListConfigForbidden{}
+}
+
+/*ListConfigForbidden handles this case with default header values.
+
+If authenticated but not authorized
+*/
+type ListConfigForbidden struct {
+}
+
+func (o *ListConfigForbidden) Error() string {
+	return fmt.Sprintf("[GET /api/v1alpha1/configs][%d] listConfigForbidden ", 403)
+}
+
+func (o *ListConfigForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	return nil
 }

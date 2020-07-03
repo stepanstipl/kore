@@ -55,21 +55,17 @@ func (v configImpl) Delete(ctx context.Context, config *model.Config) (*model.Co
 
 	q := v.conn
 
-	if config.Name != "" {
-		q = q.Where("name = ?", config.Name)
-	}
-
 	return config, q.Delete(&model.Config{}).Error
 }
 
 // Exists check if config exists
 func (v configImpl) Exists(ctx context.Context, name string) (bool, error) {
 	if _, err := v.Get(ctx, name); err != nil {
-		if !gorm.IsRecordNotFoundError(err) {
-			return false, err
+		if gorm.IsRecordNotFoundError(err) {
+			return false, nil
 		}
 
-		return false, nil
+		return false, err
 	}
 
 	return true, nil
@@ -105,7 +101,7 @@ func (v configImpl) List(ctx context.Context, opts ...ListFunc) ([]*model.Config
 		return nil, err
 	}
 
-	return list, q.Preload("Items").Find(&list).Error
+	return list, nil
 }
 
 // // Update updates a config in the store

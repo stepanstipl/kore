@@ -18,11 +18,13 @@ package create
 
 import (
 	"fmt"
+	"regexp"
+	"strings"
 
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
+	"github.com/appvia/kore/pkg/cmd/errors"
 	cmdutils "github.com/appvia/kore/pkg/cmd/utils"
 	"github.com/appvia/kore/pkg/kore"
-	"github.com/appvia/kore/pkg/utils/render"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/spf13/cobra"
@@ -33,9 +35,9 @@ var (
 Provides the ability to create a key value pair in kore's config.
 
 # Create the key value pair
-$ kore create config <name> -k <key> -v <value>
+$ kore create config <name> --keyval <key>=<value>
 # Create multiple key value pairs
-$ kore create config <name> -k <key> -v <value> -k <key2> -v <value2>
+$ kore create config <name> --keyval <key>=<value> --keyval <key>=<value>
 `
 )
 
@@ -43,14 +45,10 @@ $ kore create config <name> -k <key> -v <value> -k <key2> -v <value2>
 type CreateConfigOptions struct {
 	cmdutils.Factory
 	cmdutils.DefaultHandler
-	// Name is the username to add
+	// Name is the config name
 	Name string
-	// Keys is the list of keys provided for a name
-	Keys []string
-	// Keys is the list of values provided for a name
-	Values []string
-	// DryRun indicates we only dryrun the resources
-	DryRun bool
+	// KeyVals is the list of keys provided for a name
+	KeyVals []string
 }
 
 // NewCmdCreateConfig returns the create user command
@@ -61,19 +59,16 @@ func NewCmdCreateConfig(factory cmdutils.Factory) *cobra.Command {
 		Use:     "config",
 		Short:   "Adds new config to kore",
 		Long:    configLongDesciption,
-		Example: "kore create config <name> -k <key> -v <value>",
+		Example: "kore create config --keyval <key>=<value>",
 		PreRunE: cmdutils.RequireName,
 		Run:     cmdutils.DefaultRunFunc(o),
 	}
 
 	flags := command.Flags()
 
-	flags.StringSliceVarP(&o.Keys, "key", "k", []string{}, "key to compliment a name")
-	flags.StringSliceVarP(&o.Values, "value", "v", []string{}, "value to compliment a name")
-	flags.BoolVar(&o.DryRun, "dry-run", false, "shows the resource but does not apply or create (defaults: false)")
+	flags.StringSliceVar(&o.KeyVals, "keyval", []string{}, "Config key value pair `KEY=VALUE`")
 
-	cmdutils.MustMarkFlagRequired(command, "key")
-	cmdutils.MustMarkFlagRequired(command, "value")
+	cmdutils.MustMarkFlagRequired(command, "keyval")
 
 	return command
 }
@@ -88,13 +83,17 @@ func (o *CreateConfigOptions) Run() error {
 		return fmt.Errorf("%q already exists, please edit instead", o.Name)
 	}
 
-	pairs := make(map[string]string)
-	if len(o.Keys) == len(o.Values) {
-		for i := range o.Keys {
-			pairs[o.Keys[i]] = o.Values[i]
+	match := regexp.MustCompile("^.*=.*$")
+	for _, x := range o.KeyVals {
+		if !match.MatchString(x) {
+			return errors.NewInvalidParamError("config", x)
 		}
-	} else {
-		return fmt.Errorf("Invalid key values pairs inputted")
+	}
+
+	pairs := make(map[string]string)
+	for _, pair := range o.KeyVals {
+		items := strings.Split(pair, "=")
+		pairs[items[0]] = items[1]
 	}
 	config := &configv1.Config{
 		TypeMeta: metav1.TypeMeta{
@@ -108,14 +107,6 @@ func (o *CreateConfigOptions) Run() error {
 		Spec: configv1.ConfigSpec{
 			Values: pairs,
 		},
-	}
-
-	if o.DryRun {
-		return render.Render().
-			Writer(o.Writer()).
-			Format(render.FormatYAML).
-			Resource(render.FromStruct(config)).
-			Do()
 	}
 
 	return o.ClientWithResource(o.Resources().MustLookup("config")).

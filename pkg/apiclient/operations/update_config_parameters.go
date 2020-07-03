@@ -63,12 +63,12 @@ for the update config operation typically these are written to a http.Request
 type UpdateConfigParams struct {
 
 	/*Body
-	  The specification for a config in the kore
+	  The specification for a config
 
 	*/
 	Body *models.V1Config
 	/*Config
-	  The name of the config you are updating or creating in the kore
+	  The name of the config you are updating or creating
 
 	*/
 	Config string
