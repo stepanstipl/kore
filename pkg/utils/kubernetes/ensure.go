@@ -164,7 +164,7 @@ func CreateOrReplace(ctx context.Context, cc client.Client, object runtime.Objec
 func TypeSpecificUpdate(ctx context.Context, cc client.Client, object runtime.Object) (bool, runtime.Object, error) {
 	gvk := object.GetObjectKind().GroupVersionKind()
 	switch gvk.GroupKind().String() {
-	case "Service":
+	case "Service", "Application.app.k8s.io":
 		err := DeleteIfExists(ctx, cc, object)
 		if err != nil {
 			return true, object, err
