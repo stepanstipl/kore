@@ -248,6 +248,271 @@
         }
       }
     },
+    "/api/v1alpha1/costestimates/cluster": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "costestimates"
+        ],
+        "summary": "Returns the estimated cost of the supplied cluster plan",
+        "operationId": "EstimateClusterPlanCost",
+        "responses": {
+          "200": {
+            "description": "An estimate of the costs for the cluster plan",
+            "schema": {
+              "$ref": "#/definitions/v1beta1.CostEstimate"
+            }
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/costestimates/metadata/{cloud}/regions": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "costestimates"
+        ],
+        "summary": "Returns regions",
+        "operationId": "GetMetadataRegions",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The cloud provider to retrieve regions for",
+            "name": "cloud",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of all the regions organised by continent",
+            "schema": {
+              "$ref": "#/definitions/v1beta1.ContinentList"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "cloud doesn't exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/costestimates/metadata/{cloud}/regions/{region}/instances": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "costestimates"
+        ],
+        "summary": "Returns prices and instance types for a given region of a given cloud provider",
+        "operationId": "GetMetadataInstances",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The cloud provider to retrieve instance types/prices for",
+            "name": "cloud",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "The region to retrieve instance types/prices for",
+            "name": "region",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of instance types with their pricing",
+            "schema": {
+              "$ref": "#/definitions/v1beta1.InstanceTypeList"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "cloud or region doesn't exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/costestimates/service": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "costestimates"
+        ],
+        "summary": "Returns the estimated cost of the supplied service plan",
+        "operationId": "EstimateServicePlanCost",
+        "responses": {
+          "200": {
+            "description": "An estimate of the costs for the service plan",
+            "schema": {
+              "$ref": "#/definitions/v1beta1.CostEstimate"
+            }
+          },
+          "400": {
+            "description": "Validation error of supplied parameters/body",
+            "schema": {
+              "$ref": "#/definitions/validation.Error"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/costs": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "costs"
+        ],
+        "summary": "Returns a list of actual costs",
+        "operationId": "ListCosts",
+        "responses": {
+          "200": {
+            "description": "A list of all costs known to the system",
+            "schema": {
+              "$ref": "#/definitions/v1beta1.CostList"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/costs/{name}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "costs"
+        ],
+        "summary": "Gets a specific cost",
+        "operationId": "GetCost",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of the cost to retrieve",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cost found",
+            "schema": {
+              "$ref": "#/definitions/v1beta1.Cost"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "Cost doesn't exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
     "/api/v1alpha1/idp/clients/{name}": {
       "put": {
         "consumes": [
@@ -5202,8 +5467,8 @@
     },
     "kore.ServicePlanDetails": {
       "required": [
-        "summary",
         "kind",
+        "summary",
         "editableParams"
       ],
       "properties": {
@@ -6148,8 +6413,8 @@
     },
     "v1.OptionalSecretKeySelector": {
       "required": [
-        "key",
-        "name"
+        "name",
+        "key"
       ],
       "properties": {
         "key": {
@@ -7171,11 +7436,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
-        "issuer",
-        "clientScopes",
         "userClaims",
         "clientID",
-        "clientSecret"
+        "clientSecret",
+        "issuer",
+        "clientScopes"
       ],
       "properties": {
         "clientID": {
@@ -8578,6 +8843,191 @@
           "type": "string"
         },
         "suffix": {
+          "type": "string"
+        }
+      }
+    },
+    "v1beta1.Continent": {
+      "required": [
+        "name",
+        "regions"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "regions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1.Region"
+          }
+        }
+      }
+    },
+    "v1beta1.ContinentList": {
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1.Continent"
+          }
+        }
+      }
+    },
+    "v1beta1.Cost": {
+      "properties": {
+        "cost": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "costElements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1.CostElement"
+          }
+        },
+        "from": {
+          "type": "string"
+        },
+        "preparedAt": {
+          "type": "string"
+        },
+        "resource": {
+          "$ref": "#/definitions/v1.Ownership"
+        },
+        "team": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        }
+      }
+    },
+    "v1beta1.CostElement": {
+      "properties": {
+        "cost": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "v1beta1.CostEstimate": {
+      "properties": {
+        "costElements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1.CostEstimateElement"
+          }
+        },
+        "maxCost": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "minCost": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "preparedAt": {
+          "type": "string"
+        },
+        "typicalCost": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "v1beta1.CostEstimateElement": {
+      "properties": {
+        "maxCost": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "minCost": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string"
+        },
+        "typicalCost": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "v1beta1.CostList": {
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1.Cost"
+          }
+        }
+      }
+    },
+    "v1beta1.InstanceType": {
+      "required": [
+        "category",
+        "name",
+        "prices",
+        "mCpus",
+        "mem"
+      ],
+      "properties": {
+        "category": {
+          "type": "string"
+        },
+        "mCpus": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "mem": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string"
+        },
+        "prices": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "v1beta1.InstanceTypeList": {
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1.InstanceType"
+          }
+        }
+      }
+    },
+    "v1beta1.Region": {
+      "required": [
+        "id",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
           "type": "string"
         }
       }

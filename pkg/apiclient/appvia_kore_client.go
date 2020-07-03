@@ -10,6 +10,8 @@ import (
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 
+	"github.com/appvia/kore/pkg/apiclient/costestimates"
+	"github.com/appvia/kore/pkg/apiclient/costs"
 	"github.com/appvia/kore/pkg/apiclient/operations"
 	securityops "github.com/appvia/kore/pkg/apiclient/security"
 )
@@ -56,6 +58,8 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *AppviaKore
 
 	cli := new(AppviaKore)
 	cli.Transport = transport
+	cli.Costestimates = costestimates.New(transport, formats)
+	cli.Costs = costs.New(transport, formats)
 	cli.Operations = operations.New(transport, formats)
 	cli.Security = securityops.New(transport, formats)
 	return cli
@@ -102,6 +106,10 @@ func (cfg *TransportConfig) WithSchemes(schemes []string) *TransportConfig {
 
 // AppviaKore is a client for appvia kore
 type AppviaKore struct {
+	Costestimates costestimates.ClientService
+
+	Costs costs.ClientService
+
 	Operations operations.ClientService
 
 	Security securityops.ClientService
@@ -112,6 +120,8 @@ type AppviaKore struct {
 // SetTransport changes the transport on the client and all its subresources
 func (c *AppviaKore) SetTransport(transport runtime.ClientTransport) {
 	c.Transport = transport
+	c.Costestimates.SetTransport(transport)
+	c.Costs.SetTransport(transport)
 	c.Operations.SetTransport(transport)
 	c.Security.SetTransport(transport)
 }
