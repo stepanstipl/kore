@@ -18,6 +18,7 @@ package schema
 
 import (
 	accountsv1beta1 "github.com/appvia/kore/pkg/apis/accounts/v1beta1"
+	awsv1alpha1 "github.com/appvia/kore/pkg/apis/aws/v1alpha1"
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -56,6 +57,7 @@ func init() {
 		clustersv1.AddToScheme,
 		configv1.AddToScheme,
 		corev1.AddToScheme,
+		awsv1alpha1.AddToScheme,
 		eksv1alpha1.AddToScheme,
 		gcpv1alpha1.AddToScheme,
 		gkev1alpha1.AddToScheme,
