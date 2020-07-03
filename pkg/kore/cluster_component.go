@@ -19,6 +19,8 @@ package kore
 import (
 	"fmt"
 
+	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+
 	"github.com/appvia/kore/pkg/schema"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
@@ -34,6 +36,10 @@ type ClusterComponent struct {
 	Dependencies []kubernetes.Object
 	// IsProvider should mark a single component which is responsible for provisioning the cluster
 	IsProvider bool
+	// Absent should be set to true if the component should be deleted
+	Absent bool
+	// AfterDelete will be called after the component was deleted
+	AfterDelete func(ctx Context, cluster *clustersv1.Cluster, components *ClusterComponents) error
 }
 
 // ComponentID returns with a unique component id

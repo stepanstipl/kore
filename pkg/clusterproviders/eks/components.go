@@ -94,27 +94,30 @@ func (p Provider) SetComponents(ctx kore.Context, cluster *clustersv1.Cluster, c
 		}
 	}
 
-	if enableAutoscaler {
-		helmOperatorName := cluster.Name + "-flux-helm-operator"
-		helmOperatorService := components.Find(func(comp kore.ClusterComponent) bool {
-			if service, ok := comp.Object.(*servicesv1.Service); ok {
-				return service.Name == helmOperatorName
-			}
-			return false
-		})
-		if helmOperatorService == nil {
-			return fmt.Errorf("%q service can not be found", helmOperatorName)
+	helmOperatorName := cluster.Name + "-flux-helm-operator"
+	helmOperatorService := components.Find(func(comp kore.ClusterComponent) bool {
+		if service, ok := comp.Object.(*servicesv1.Service); ok {
+			return service.Name == helmOperatorName
 		}
-
-		autoscalerService := &servicesv1.Service{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      cluster.Name + "-autoscaler",
-				Namespace: cluster.Namespace,
-			},
-		}
-
-		components.Add(autoscalerService, helmOperatorService)
+		return false
+	})
+	if helmOperatorService == nil {
+		return fmt.Errorf("%q service can not be found", helmOperatorName)
 	}
+
+	autoscalerService := &servicesv1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      cluster.Name + "-autoscaler",
+			Namespace: cluster.Namespace,
+		},
+	}
+
+	components.AddComponent(&kore.ClusterComponent{
+		Object:       autoscalerService,
+		Dependencies: []kubernetes.Object{helmOperatorService},
+		Absent:       !enableAutoscaler,
+		AfterDelete:  p.deleteAutoScalerRole,
+	})
 
 	return nil
 }
@@ -299,4 +302,28 @@ func (p Provider) SetProviderData(ctx kore.Context, cluster *clustersv1.Cluster,
 	}
 
 	return cluster.Status.SetProviderData(providerData)
+}
+
+func (p Provider) deleteAutoScalerRole(ctx kore.Context, cluster *clustersv1.Cluster, components *kore.ClusterComponents) error {
+	eksComponent := components.Find(func(comp kore.ClusterComponent) bool {
+		_, ok := comp.Object.(*eksv1alpha1.EKS)
+		return ok
+	})
+	if eksComponent == nil {
+		panic("EKS object not found in cluster components")
+	}
+	eks := eksComponent.Object.(*eksv1alpha1.EKS)
+
+	koreEKS := helpers.NewKoreEKS(ctx, eks)
+	creds, err := koreEKS.GetCredentials(cluster.Namespace)
+	if err != nil {
+		return err
+	}
+
+	iam := awsutils.NewIamClient(*creds)
+	if err := iam.DeleteClusterAutoscalerRole(cluster.Name); err != nil {
+		return err
+	}
+
+	return nil
 }

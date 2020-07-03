@@ -179,6 +179,10 @@ func (a *Controller) Apply(cluster *clustersv1.Cluster, components *kore.Cluster
 		// is not yet successful we wait and requeue. If the resource has failed, we throw
 		// a critical failure and stop
 		for _, comp := range *components {
+			if comp.Absent {
+				continue
+			}
+
 			result, err := a.applyComponent(ctx, cluster, comp)
 			if err != nil || result.Requeue || result.RequeueAfter > 0 {
 				return result, err
@@ -265,10 +269,22 @@ func (a *Controller) applyComponent(ctx kore.Context, cluster *clustersv1.Cluste
 func (a *Controller) Cleanup(cluster *clustersv1.Cluster, components *kore.ClusterComponents) controllers.EnsureFunc {
 	return func(ctx kore.Context) (reconcile.Result, error) {
 		// @logic:
-		// - we iterate the component statues
-		// - we find any components which are no longer referenced and we delete
-		// - we update the status of the component and we requeue
-		// - if the component has been removed we can delete it
+		// - we remove any absent components first in reverse dependency order
+		// - we find any components which are no longer referenced in status and we delete those too
+
+		for i := len(*components) - 1; i >= 0; i-- {
+			comp := (*components)[i]
+			if !comp.Absent {
+				continue
+			}
+
+			result, err := a.removeComponent(ctx, cluster, components, comp)
+			if err != nil || result.Requeue || result.RequeueAfter > 0 {
+				return result, err
+			}
+
+			cluster.Status.Components.RemoveComponent(comp.ComponentName())
+		}
 
 		for i := 0; i < len(cluster.Status.Components); i++ {
 			statusComponent := cluster.Status.Components[i]
@@ -283,41 +299,12 @@ func (a *Controller) Cleanup(cluster *clustersv1.Cluster, components *kore.Clust
 				continue
 			}
 
-			// @step: set the resource to deleting
-			if statusComponent.Status != corev1.DeletingStatus {
-				statusComponent.Status = corev1.DeletingStatus
+			res, err := a.removeComponent(ctx, cluster, components, comp)
+			if err != nil || res.Requeue || res.RequeueAfter > 0 {
+				return res, err
 			}
 
-			u := ComponentToUnstructured(statusComponent)
-
-			found, err := kubernetes.GetIfExists(ctx, a.mgr.GetClient(), u)
-			if err != nil {
-				return reconcile.Result{}, err
-			}
-			if !found {
-				cluster.Status.Components.RemoveComponent(statusComponent.Name)
-
-				continue
-			}
-
-			if !IsDeleting(u) {
-				if err := kubernetes.DeleteIfExists(ctx, a.mgr.GetClient(), u); err != nil {
-					return reconcile.Result{}, err
-				}
-			}
-
-			// @check if the resource is ready to reconcile
-			status, err := GetObjectStatus(u)
-			if err != nil {
-				return reconcile.Result{}, err
-			}
-
-			if status == corev1.DeleteFailedStatus {
-				cluster.Status.Status = corev1.FailureStatus
-				statusComponent.Status = corev1.DeleteFailedStatus
-			}
-
-			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+			cluster.Status.Components.RemoveComponent(statusComponent.Name)
 		}
 
 		return reconcile.Result{}, nil
