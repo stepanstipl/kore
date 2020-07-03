@@ -750,7 +750,7 @@ spec:
         - --enable-leader-election
         command:
         - /kube-app-manager
-        image: quay.io/appvia/application-controller:v0.8.2
+        image: quay.io/appvia/application-controller:v0.8.3
         imagePullPolicy: IfNotPresent
         name: kube-app-manager
         resources:
