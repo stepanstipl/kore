@@ -147,8 +147,15 @@ func (p Provider) Reconcile(
 				}
 			case applicationv1beta.Ready:
 				if condition.Status == "True" {
+					// The Application status will be healthy even if there are no monitored resources, so we have to
+					// explicitly check ComponentsReady for "0/0"
+					if app.Status.ComponentsReady == "0/0" {
+						return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+					}
+
 					service.Status.Status = corev1.SuccessStatus
 					service.Status.Message = condition.Message
+
 					// We will actively monitor the application status and update the service
 					return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
 				} else {
