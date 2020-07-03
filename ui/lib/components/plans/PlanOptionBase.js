@@ -19,6 +19,7 @@ export default class PlanOptionBase extends React.Component {
     mode: PropTypes.oneOf(['create','view','edit']),
     team: PropTypes.object, // may be optionally used by custom plan option components to give richer interface when manage=false.
     id: PropTypes.string,
+    disableCustom: PropTypes.bool, // set to true to force not using a custom control
   }
 
   describe = (property) => {

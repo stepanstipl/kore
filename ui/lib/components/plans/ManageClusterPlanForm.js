@@ -16,6 +16,7 @@ class ManageClusterPlanForm extends ManagePlanForm {
   }
 
   resourceType = () => 'cluster'
+  estimateSupported = () => true
 
   async fetchComponentData() {
     const { kind } = this.props

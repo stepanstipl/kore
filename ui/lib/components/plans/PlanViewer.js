@@ -5,6 +5,7 @@ const { Paragraph, Text } = Typography
 import { startCase } from 'lodash'
 
 import KoreApi from '../../kore-api'
+import { featureEnabled, KoreFeatures } from '../../utils/features'
 
 class PlanViewer extends React.Component {
 
@@ -16,7 +17,8 @@ class PlanViewer extends React.Component {
 
   state = {
     dataLoading: true,
-    schema: null
+    schema: null,
+    costEstimate: null
   }
 
   componentDidMountComplete = null
@@ -25,10 +27,14 @@ class PlanViewer extends React.Component {
   }
 
   async fetchComponentData() {
-    let schema
+    let schema, costEstimate
+    const api = await KoreApi.client()
     switch (this.props.resourceType) {
     case 'cluster':
-      schema = await (await KoreApi.client()).GetPlanSchema(this.props.plan.spec.kind)
+      schema = await api.GetPlanSchema(this.props.plan.spec.kind)
+      if (featureEnabled(KoreFeatures.COSTS)) {
+        costEstimate = await api.costestimates.EstimateClusterPlanCost(this.props.plan)
+      }
       break
     case 'service':
       schema = (await (await KoreApi.client()).GetServicePlanDetails(this.props.plan.metadata.name)).schema
@@ -36,6 +42,7 @@ class PlanViewer extends React.Component {
     }
     this.setState({
       schema: schema || { properties:[] },
+      costEstimate,
       dataLoading: false
     })
   }

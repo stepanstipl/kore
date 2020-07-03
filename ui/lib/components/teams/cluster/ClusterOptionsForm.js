@@ -8,6 +8,7 @@ const { Option } = Select
 import PlanViewer from '../../plans/PlanViewer'
 import UsePlanForm from '../../plans/UsePlanForm'
 import { patterns } from '../../../utils/validation'
+import CostEstimate from '../../costs/CostEstimate'
 
 class ClusterOptionsForm extends React.Component {
   static propTypes = {
@@ -24,7 +25,8 @@ class ClusterOptionsForm extends React.Component {
   }
 
   state = {
-    cloudAccountType: 'KORE'
+    cloudAccountType: 'KORE',
+    planValuesForEstimate: null
   }
 
   componentDidUpdate(prevProps) {
@@ -68,6 +70,7 @@ class ClusterOptionsForm extends React.Component {
     if (this.props.onPlanValuesChange) {
       this.props.onPlanValuesChange(paramValues)
     }
+    this.setState({ planValuesForEstimate: paramValues })
   }
 
   availablePlans = () => {
@@ -163,6 +166,14 @@ class ClusterOptionsForm extends React.Component {
         ) : null}
         {selectedPlan ? (
           <Collapse>
+            <Collapse.Panel header="Cluster running cost estimate">
+              <CostEstimate 
+                planValues={this.state.planValuesForEstimate}
+                resourceType="cluster"
+                kind={selectedProvider}
+                estimateInit={true}
+              />
+            </Collapse.Panel>
             <Collapse.Panel header="Customize cluster parameters" forceRender={true}>
               <UsePlanForm
                 team={this.props.team}
