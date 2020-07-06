@@ -18,7 +18,7 @@ package gke
 
 const schema = `
 {
-	"$id": "https://appvia.io/schemas/gke/plan.json",
+	"$id": "https://appvia.io/kore/schemas/gke/plan.json",
 	"$schema": "http://json-schema.org/draft-07/schema#",
 	"description": "GKE Cluster Plan Schema",
 	"type": "object",
