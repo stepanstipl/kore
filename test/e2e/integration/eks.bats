@@ -57,7 +57,7 @@ setup() {
 }
 
 @test "We should see the cluster go successful" {
-  retry 60 "${KORE} get cluster ${CLUSTER} -t ${TEAM} -o json | jq '.status.status' | grep -i success"
+  retry 120 "${KORE} get cluster ${CLUSTER} -t ${TEAM} -o json | jq '.status.status' | grep -i success"
   [[ "$status" -eq 0 ]]
 }
 
