@@ -165,21 +165,32 @@ func (i *arulesImpl) Update(ctx context.Context, iv *model.AlertRule) error {
 					return err
 				}
 
-				return tx.
+				err = tx.
 					Set("gorm:save_associations", false).
 					Save(&model.Alert{
 						RuleID:  iv.ID,
-						Summary: "none",
+						Summary: "",
 						Status:  model.AlertStatusOK,
 					}).
 					Error
+				if err != nil {
+					return err
+				}
+
+				for _, label := range iv.Labels {
+					label.RuleID = iv.ID
+					if err := tx.Save(label).Error; err != nil {
+						return err
+					}
+				}
 			}
 
-			return err
+			return nil
 		}
 		iv.ID = entity.ID
 
 		return tx.
+			Set("gorm:save_associations", false).
 			Where("id = ?", iv.ID).
 			Save(iv).
 			Error
@@ -206,6 +217,7 @@ func (i *arulesImpl) makeListQuery(ctx context.Context, opts ...ListFunc) ([]*mo
 
 	q := Preload(i.load, i.conn).
 		Preload("Team").
+		Preload("Labels").
 		Select("i.*").
 		Table("alert_rules i").
 		Joins("LEFT JOIN teams t ON t.id = i.team_id").

@@ -208,6 +208,7 @@ func (c Convertor) FromAlertModel(alert *model.Alert) *monitoring.Alert {
 			Detail: alert.StatusMessage,
 		},
 	}
+
 	if len(alert.Labels) > 0 {
 		o.Spec.Labels = make(map[string]string)
 		for _, x := range alert.Labels {
@@ -239,6 +240,7 @@ func (c Convertor) FromAlertRuleModel(rule *model.AlertRule) *monitoring.Rule {
 			Name:              rule.Name,
 			Namespace:         rule.Team.Name,
 			CreationTimestamp: metav1.NewTime(rule.CreatedAt),
+			Labels:            make(map[string]string),
 		},
 		Spec: monitoring.RuleSpec{
 			Severity: rule.Severity,
@@ -253,6 +255,9 @@ func (c Convertor) FromAlertRuleModel(rule *model.AlertRule) *monitoring.Rule {
 				Name:      rule.ResourceName,
 			},
 		},
+	}
+	for _, label := range rule.Labels {
+		o.Labels[label.Name] = label.Value
 	}
 
 	return o
@@ -293,6 +298,12 @@ func (c Convertor) ToAlertRule(o *monitoring.Rule) *model.AlertRule {
 			ResourceName:      o.Spec.Resource.Name,
 		},
 	}
+
+	var labels []model.RuleLabel
+	for k, v := range o.GetLabels() {
+		labels = append(labels, model.RuleLabel{Name: k, Value: v})
+	}
+	m.Labels = labels
 
 	return m
 }

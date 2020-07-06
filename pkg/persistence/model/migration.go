@@ -50,6 +50,9 @@ func Migrations(db *gorm.DB) error {
 		AddIndex("idx_alert_rules", fields...).
 		AddForeignKey("team_id", "teams(id)", "CASCADE", "RESTRICT")
 
+	db.AutoMigrate(&RuleLabel{}).
+		AddForeignKey("rule_id", "alert_rules(id)", "CASCADE", "RESTRICT")
+
 	db.AutoMigrate(&Alert{}).
 		AddForeignKey("rule_id", "alert_rules(id)", "CASCADE", "RESTRICT")
 

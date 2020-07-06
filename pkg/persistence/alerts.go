@@ -115,6 +115,7 @@ func (i *alertsImpl) List(ctx context.Context, opts ...ListFunc) ([]*model.Alert
 		Preload("Labels").
 		Preload("Rule").
 		Preload("Rule.Team").
+		Preload("Rule.Labels").
 		Select("i.*").
 		Table("alerts i").
 		Joins("JOIN alert_rules r ON r.id = i.rule_id").

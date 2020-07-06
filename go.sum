@@ -1374,8 +1374,6 @@ k8s.io/kube-openapi v0.0.0-20200121204235-bf4fb3bd569c h1:/KUFqjjqAcY4Us6luF5RDN
 k8s.io/kube-openapi v0.0.0-20200121204235-bf4fb3bd569c/go.mod h1:GRQhZsXIAJ1xR0C9bd8UpWHZ5plfAS9fzPjJuQ6JL3E=
 k8s.io/kubernetes v1.13.0 h1:qTfB+u5M92k2fCCCVP2iuhgwwSOv1EkAkvQY1tQODD8=
 k8s.io/kubernetes v1.13.0/go.mod h1:ocZa8+6APFNC2tX1DZASIbocyYT5jHzqFVsY5aoB7Jk=
-k8s.io/kubernetes v1.18.3 h1:6qtm8v3z+OwYm2SnsTxYUtGCsIbGBZ/Dh9yER+aNIoI=
-k8s.io/kubernetes v1.18.4 h1:AYtJ24PIT91P1K8ekCrvay8LK8WctWhC5+NI0HZ8sqE=
 k8s.io/sample-controller v0.0.0-20190425173525-f9c23632fb31/go.mod h1:GHuOX/EqRZMKxNeVbZW7O0e9A6QsqDjruyOD0k49uVc=
 k8s.io/utils v0.0.0-20190221042446-c2654d5206da/go.mod h1:8k8uAuAQ0rXslZKaEWd0c3oVhZz7sSzSiPnVZayjIX0=
 k8s.io/utils v0.0.0-20190801114015-581e00157fb1/go.mod h1:sZAwmy6armz5eXlNoLmJcl4F1QuKu7sr+mFQ0byX7Ew=

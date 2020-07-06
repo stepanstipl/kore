@@ -50,7 +50,6 @@ class SiderMenu extends React.Component {
         }
       >
         {menuItem({ key: 'configure_cloud', text: 'Cloud', href: '/configure/cloud/[[...cloud]]', link: '/configure/cloud', icon: 'cloud' })}
-        {menuItem({ key: 'configure_monitoring', text: 'Monitoring', link: '/configure/monitoring', icon: 'cloud-server' })}
         {!featureEnabled(KoreFeatures.APPLICATION_SERVICES) ? null :
           menuItem({ key: 'configure_services', text: 'Services', link: '/configure/services', icon: 'cloud-server' })
         }

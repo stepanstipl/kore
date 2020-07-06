@@ -43,4 +43,16 @@ type AlertRule struct {
 	Alerts []Alert `gorm:"foreignkey:RuleID"`
 	// Raw holds the raw payload from the alerting event
 	RawRule string `sql:"type:varchar(8192);DEFAULT:''"`
+	// Labels is a collection of labels on the alert
+	Labels []RuleLabel `gorm:"foreignkey:RuleID"`
+}
+
+// RuleLabel defines the structure for the rule
+type RuleLabel struct {
+	// RuleID is the id of the rule the label is associated
+	RuleID uint64
+	// Name is the name of the value
+	Name string `sql:"DEFAULT:null"`
+	// Value is label value
+	Value string `sql:"DEFAULT:null"`
 }

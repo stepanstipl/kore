@@ -54,20 +54,7 @@ export default class MonitoringTable extends React.Component {
     {
       title: 'Rule Name',
       dataIndex: 'status.rule.metadata.name',
-      key: 'name',
-      render: (text) => (
-        <Link
-          key="view"
-          passHref
-          href="/docs"
-        >
-          <a>
-            <Tooltip placement="top" title="View the definition of this rule">
-              <Icon type="info-circle" />  {text}
-            </Tooltip>
-          </a>
-        </Link>
-      )
+      key: 'name'
     },
     {
       title: 'Summary',
