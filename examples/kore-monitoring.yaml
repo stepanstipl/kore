@@ -24,18 +24,39 @@ spec:
         url: https://storage.googleapis.com/kore-charts
         name: kore-monitoring
         version: 0.0.1
-    values: |+
-      prometheus-operator:
-        enabled: false
-      monitoring-operator:
-        fullnameOverride: kore-monitor
-        controller:
-          enabled: true
-          features: [kore]
-        operator:
-          enabled: false
     resourceKinds:
       - group: apps
         kind: Deployment
       - group: ""
         kind: Service
+    values: |+
+      prometheus-operator:
+        enabled: false
+      monitoring-operator:
+        fullnameOverride: kore-monitor
+        operator:
+          enabled: false
+        controller:
+          enabled: true
+          features: [kore]
+          config: |+
+            # This values are mapped to https://github.com/appvia/charts/blob/master/prometheus-operator/values.yaml#L100
+            alertmanager:
+              config:
+                route:
+                  group_wait: 30s
+                  group_interval: 5m
+                  receiver: monitoring-operator
+                  routes:
+                    - match:
+                        alertname: Watchdog
+                      receiver: 'null'
+                receivers:
+                  - name: 'null'
+                  - name: monitoring-operator
+                    webhook_configs:
+                      - send_resolved: true
+                        url: http://kore-monitoring-webhooks.kore-system.svc.cluster.local/apis/v1beta1/webhooks/alert
+                        http_config:
+                          tls_config:
+                            insecure_skip_verify: true
