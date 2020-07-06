@@ -18,6 +18,9 @@ package register
 
 import (
 	// importing the aws controllers
+	_ "github.com/appvia/kore/pkg/controllers/cloud/aws/awsaccount"
+	_ "github.com/appvia/kore/pkg/controllers/cloud/aws/awsaccountclaims"
+	_ "github.com/appvia/kore/pkg/controllers/cloud/aws/awsorganization"
 	_ "github.com/appvia/kore/pkg/controllers/cloud/aws/credentials"
 	_ "github.com/appvia/kore/pkg/controllers/cloud/aws/eks"
 	_ "github.com/appvia/kore/pkg/controllers/cloud/aws/eksnodegroup"
