@@ -30,16 +30,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	configLongDesciption = `
-Provides the ability to create a key value pair in kore's config.
-
-# Create the key value pair
-$ kore create config <name> --keyval <key>=<value>
-# Create multiple key value pairs
-$ kore create config <name> --keyval <key>=<value> --keyval <key>=<value>
+var createConfigLongDescription = `
+Provides the ability to create a named configuration object, which contains one or more key-value pairs.
 `
-)
+
+var createConfigExamples = `
+Create a configuration object with a single key-value pair:
+
+$ kore create config myconfig --keyval param1=value1
+
+Create a configuration object with multiple key-value pairs:
+
+$ kore create config myconfig --keyval param1=value1 --keyval param2=value2
+`
 
 // CreateConfigOptions is used to provision a team
 type CreateConfigOptions struct {
@@ -56,10 +59,10 @@ func NewCmdCreateConfig(factory cmdutils.Factory) *cobra.Command {
 	o := &CreateConfigOptions{Factory: factory}
 
 	command := &cobra.Command{
-		Use:     "config",
+		Use:     "config <NAME>",
 		Short:   "Adds new config to kore",
-		Long:    configLongDesciption,
-		Example: "kore create config --keyval <key>=<value>",
+		Long:    createConfigLongDescription,
+		Example: createConfigExamples,
 		PreRunE: cmdutils.RequireName,
 		Run:     cmdutils.DefaultRunFunc(o),
 	}
@@ -83,7 +86,7 @@ func (o *CreateConfigOptions) Run() error {
 		return fmt.Errorf("%q already exists, please edit instead", o.Name)
 	}
 
-	match := regexp.MustCompile("^.*=.*$")
+	match := regexp.MustCompile("^.+?=.*$")
 	for _, x := range o.KeyVals {
 		if !match.MatchString(x) {
 			return errors.NewInvalidParamError("config", x)
@@ -92,7 +95,7 @@ func (o *CreateConfigOptions) Run() error {
 
 	pairs := make(map[string]string)
 	for _, pair := range o.KeyVals {
-		items := strings.Split(pair, "=")
+		items := strings.SplitN(pair, "=", 2)
 		pairs[items[0]] = items[1]
 	}
 	config := &configv1.Config{
