@@ -130,7 +130,7 @@ metadata:
       }
 spec:
   kind: helm-app
-  summary: Managaed Cluster Monitoring
+  summary: Managed Cluster Monitoring
   displayName: Kore Cluster Monitoring
   description: |
     Kore Monitoring service provides a monitoring stack used to ensure the health of the clusters and the services

@@ -223,7 +223,7 @@ func (c Convertor) FromAlertModel(alert *model.Alert) *monitoring.Alert {
 		o.Status.ArchivedAt = metav1.NewTime(*alert.ArchivedAt)
 	}
 	if alert.Expiration != nil {
-		o.Status.Expiration = metav1.NewTime(*alert.Expiration)
+		o.Status.SilencedUntil = metav1.NewTime(*alert.Expiration)
 	}
 
 	return o
@@ -272,8 +272,8 @@ func (c Convertor) ToAlert(m *monitoring.Alert) *model.Alert {
 		StatusMessage: m.Status.Detail,
 		Summary:       m.Spec.Summary,
 	}
-	if !m.Status.Expiration.IsZero() {
-		o.Expiration = &m.Status.Expiration.Time
+	if !m.Status.SilencedUntil.IsZero() {
+		o.Expiration = &m.Status.SilencedUntil.Time
 	}
 	for k, v := range m.Spec.Labels {
 		o.Labels = append(o.Labels, model.AlertLabel{Name: k, Value: v})

@@ -71,20 +71,6 @@ func (c *Finalizer) Remove(resource Finalizable) error {
 // IsDeletionCandidate checks if the resource is a candidate for deletion
 func (c *Finalizer) IsDeletionCandidate(resource Finalizable) bool {
 	return resource.GetDeletionTimestamp() != nil && c.getIndex(resource) != -1
-	/*
-		if resource.GetDeletionTimestamp() != nil {
-			return false
-		}
-		index := c.getIndex(resource)
-		if index < 0 {
-			return false
-		}
-
-		length := len(resource.GetFinalizers())
-
-		// i.e. if we are the last finalizer
-		return c.getIndex(resource) == (length - 1)
-	*/
 }
 
 // NeedToAdd checks if the resource should have but does not have the finalizer

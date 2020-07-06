@@ -112,7 +112,7 @@ func (in *AlertSpec) DeepCopy() *AlertSpec {
 func (in *AlertStatus) DeepCopyInto(out *AlertStatus) {
 	*out = *in
 	in.ArchivedAt.DeepCopyInto(&out.ArchivedAt)
-	in.Expiration.DeepCopyInto(&out.Expiration)
+	in.SilencedUntil.DeepCopyInto(&out.SilencedUntil)
 	if in.Rule != nil {
 		in, out := &in.Rule, &out.Rule
 		*out = new(Rule)

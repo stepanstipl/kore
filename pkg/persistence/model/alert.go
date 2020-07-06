@@ -54,7 +54,7 @@ type Alert struct {
 	ArchivedAt *time.Time `sql:"DEFAULT:null"`
 	// Labels is a collection of labels on the alert
 	Labels []AlertLabel `gorm:"foreignkey:AlertID"`
-	// Expiration is the experation time of the expiry
+	// Expiration is time the alert silence will expire
 	Expiration *time.Time
 	// Fingerprint is a unique code for this alert from producer
 	Fingerprint string

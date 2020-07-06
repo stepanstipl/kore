@@ -105,9 +105,9 @@ func schema_pkg_apis_monitoring_v1beta1_AlertStatus(ref common.ReferenceCallback
 							Format:      "",
 						},
 					},
-					"expiration": {
+					"silencedUntil": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Expiration is the time the silence will finish",
+							Description: "SilencedUntil is the time the silence will finish",
 							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
 						},
 					},

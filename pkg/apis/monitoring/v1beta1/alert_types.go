@@ -63,8 +63,8 @@ type AlertStatus struct {
 	// Detail provides a human readable message related to the current
 	// status of the alert
 	Detail string `json:"detail,omitempty"`
-	// Expiration is the time the silence will finish
-	Expiration metav1.Time `json:"expiration,omitempty"`
+	// SilencedUntil is the time the silence will finish
+	SilencedUntil metav1.Time `json:"silencedUntil,omitempty"`
 	// Rule is a reference to the rule the alert is based on
 	Rule *Rule `json:"rule,omitempty"`
 	// Status is the status of the alert

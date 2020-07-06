@@ -6098,10 +6098,6 @@ spec:
               description: Detail provides a human readable message related to the
                 current status of the alert
               type: string
-            expiration:
-              description: Expiration is the time the silence will finish
-              format: date-time
-              type: string
             rule:
               description: Rule is a reference to the rule the alert is based on
               properties:
@@ -6176,6 +6172,10 @@ spec:
                   - summary
                   type: object
               type: object
+            silencedUntil:
+              description: SilencedUntil is the time the silence will finish
+              format: date-time
+              type: string
             status:
               description: Status is the status of the alert
               type: string
