@@ -16,7 +16,6 @@ import ComponentStatusTree from '../../../lib/components/common/ComponentStatusT
 import { errorMessage, loadingMessage, successMessage } from '../../../lib/utils/message'
 import V1Service from '../../../lib/kore-api/model/V1Service'
 import V1ServiceSpec from '../../../lib/kore-api/model/V1ServiceSpec'
-import { NewV1Ownership, NewV1ObjectMeta } from '../../../lib/utils/model'
 import copy from '../../../lib/utils/object-copy'
 import FormErrorMessage from '../../../lib/components/forms/FormErrorMessage'
 
