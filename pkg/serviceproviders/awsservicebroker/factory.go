@@ -55,7 +55,7 @@ func (d ProviderFactory) Type() string {
 
 func (d ProviderFactory) JSONSchema() string {
 	return `{
-		"$id": "https://appvia.io/schemas/serviceprovider/aws-servicebroker.json",
+		"$id": "https://appvia.io/kore/schemas/serviceprovider/aws-servicebroker.json",
 		"$schema": "http://json-schema.org/draft-07/schema#",
 		"description": "This is a custom service provider for aws-servicebroker (https://github.com/awslabs/aws-servicebroker)",
 		"type": "object",

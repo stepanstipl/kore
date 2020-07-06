@@ -32,7 +32,7 @@ func init() {
 }
 
 const dummySchema = `{
-	"$id": "https://appvia.io/schemas/services/dummy/dummy.json",
+	"$id": "https://appvia.io/kore/schemas/services/dummy/dummy.json",
 	"$schema": "http://json-schema.org/draft-07/schema#",
 	"description": "Dummy service plan schema",
 	"type": "object",
@@ -49,7 +49,7 @@ const dummySchema = `{
 }`
 
 const dummyCredentialSchema = `{
-	"$id": "https://appvia.io/schemas/services/dummy/dummy-credentials.json",
+	"$id": "https://appvia.io/kore/schemas/services/dummy/dummy-credentials.json",
 	"$schema": "http://json-schema.org/draft-07/schema#",
 	"description": "Dummy service plan credentials schema",
 	"type": "object",
@@ -73,7 +73,7 @@ func (d DummyFactory) Type() string {
 
 func (d DummyFactory) JSONSchema() string {
 	return `{
-		"$id": "https://appvia.io/schemas/serviceprovider/dummy.json",
+		"$id": "https://appvia.io/kore/schemas/serviceprovider/dummy.json",
 		"$schema": "http://json-schema.org/draft-07/schema#",
 		"description": "Dummy service plan schema",
 		"type": "object",

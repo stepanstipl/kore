@@ -37,8 +37,6 @@ var plans = []configv1.Plan{
 			Description: "GKE Development Cluster",
 			Labels: map[string]string{
 				kore.Label("environment"): "dev",
-				kore.Label("kind"):        Kind,
-				kore.Label("plural"):      "gkes",
 			},
 			Configuration: apiextv1.JSON{
 				Raw: []byte(`{
@@ -100,8 +98,6 @@ var plans = []configv1.Plan{
 			Description: "GKE Production Cluster",
 			Labels: map[string]string{
 				kore.Label("environment"): "production",
-				kore.Label("kind"):        Kind,
-				kore.Label("plural"):      "gkes",
 			},
 			Configuration: apiextv1.JSON{
 				Raw: []byte(`{
