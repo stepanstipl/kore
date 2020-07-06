@@ -27,6 +27,7 @@ import (
 
 	"github.com/appvia/kore/pkg/apiserver/filters"
 
+	aws "github.com/appvia/kore/pkg/apis/aws/v1alpha1"
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
@@ -552,6 +553,66 @@ func (u *teamHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 			Doc("Is used to delete a managed gcp organization").
 			Operation("DeleteGCPOrganization").
 			Returns(http.StatusOK, "Contains the former team definition from the kore", gcp.Organization{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	// AWS Account Claims
+
+	ws.Route(
+		ws.GET("/{team}/awsaccountclaims").To(u.findAWSAccountClaims).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Doc("Is the used to return a list of AWS accounts which thhe team has access").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", aws.AWSAccountClaimList{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.GET("/{team}/awsaccountclaims/{name}").To(u.findAWSAccountClaim).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the resource you are acting on")).
+			Doc("Is the used tor return a list of AWS Accounts which thhe team has access").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", aws.AWSAccountClaim{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	// AWS Organization
+
+	ws.Route(
+		ws.GET("/{team}/awsorganizations").To(u.findAWSOrganizations).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Doc("Is the used tor return a list of aws organizations").
+			Operation("ListAWSOrganizations").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", aws.AWSOrganizationList{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.GET("/{team}/awsorganizations/{name}").To(u.findAWSOrganization).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the resource you are acting on")).
+			Doc("Is the used tor return a specific aws organization").
+			Operation("GetAWSOrganization").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", aws.AWSOrganization{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+	ws.Route(
+		ws.PUT("/{team}/awsorganizations/{name}").To(u.updateAWSOrganization).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the resource you are acting on")).
+			Operation("UpdateAWSOrganization").
+			Reads(aws.AWSOrganization{}, "The definition for AWS organization").
+			Doc("Is used to provision or update a aws organization").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", aws.AWSOrganization{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.DELETE("/{team}/awsorganizations/{name}").To(u.deleteAWSOrganization).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the resource you are acting on")).
+			Doc("Is used to delete a managed gcp organization").
+			Operation("DeleteAWSOrganization").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", aws.AWSOrganization{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 
