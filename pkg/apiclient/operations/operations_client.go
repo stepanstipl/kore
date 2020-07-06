@@ -29,6 +29,8 @@ type Client struct {
 type ClientService interface {
 	AddTeamMember(params *AddTeamMemberParams, authInfo runtime.ClientAuthInfoWriter) (*AddTeamMemberOK, error)
 
+	DeleteAWSOrganization(params *DeleteAWSOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteAWSOrganizationOK, error)
+
 	DeleteEKSCredentials(params *DeleteEKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteEKSCredentialsOK, error)
 
 	DeleteGCPOrganization(params *DeleteGCPOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteGCPOrganizationOK, error)
@@ -48,6 +50,8 @@ type ClientService interface {
 	GenerateInviteLink(params *GenerateInviteLinkParams, authInfo runtime.ClientAuthInfoWriter) (*GenerateInviteLinkOK, error)
 
 	GenerateInviteLinkForUser(params *GenerateInviteLinkForUserParams, authInfo runtime.ClientAuthInfoWriter) (*GenerateInviteLinkForUserOK, error)
+
+	GetAWSOrganization(params *GetAWSOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*GetAWSOrganizationOK, error)
 
 	GetAccount(params *GetAccountParams, authInfo runtime.ClientAuthInfoWriter) (*GetAccountOK, error)
 
@@ -106,6 +110,8 @@ type ClientService interface {
 	InvitationSubmit(params *InvitationSubmitParams, authInfo runtime.ClientAuthInfoWriter) (*InvitationSubmitOK, error)
 
 	InviteUser(params *InviteUserParams, authInfo runtime.ClientAuthInfoWriter) (*InviteUserOK, error)
+
+	ListAWSOrganizations(params *ListAWSOrganizationsParams, authInfo runtime.ClientAuthInfoWriter) (*ListAWSOrganizationsOK, error)
 
 	ListAccounts(params *ListAccountsParams, authInfo runtime.ClientAuthInfoWriter) (*ListAccountsOK, error)
 
@@ -189,6 +195,8 @@ type ClientService interface {
 
 	RemoveUser(params *RemoveUserParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveUserOK, error)
 
+	UpdateAWSOrganization(params *UpdateAWSOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateAWSOrganizationOK, error)
+
 	UpdateAccount(params *UpdateAccountParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateAccountOK, error)
 
 	UpdateAllocation(params *UpdateAllocationParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateAllocationOK, error)
@@ -232,6 +240,10 @@ type ClientService interface {
 	WhoAmI(params *WhoAmIParams, authInfo runtime.ClientAuthInfoWriter) (*WhoAmIOK, error)
 
 	DeleteEKSVPC(params *DeleteEKSVPCParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteEKSVPCOK, error)
+
+	FindAWSAccountClaim(params *FindAWSAccountClaimParams, authInfo runtime.ClientAuthInfoWriter) (*FindAWSAccountClaimOK, error)
+
+	FindAWSAccountClaims(params *FindAWSAccountClaimsParams, authInfo runtime.ClientAuthInfoWriter) (*FindAWSAccountClaimsOK, error)
 
 	FindEKS(params *FindEKSParams, authInfo runtime.ClientAuthInfoWriter) (*FindEKSOK, error)
 
@@ -287,6 +299,40 @@ func (a *Client) AddTeamMember(params *AddTeamMemberParams, authInfo runtime.Cli
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for AddTeamMember: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
+}
+
+/*
+  DeleteAWSOrganization is used to delete a managed gcp organization
+*/
+func (a *Client) DeleteAWSOrganization(params *DeleteAWSOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteAWSOrganizationOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewDeleteAWSOrganizationParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "DeleteAWSOrganization",
+		Method:             "DELETE",
+		PathPattern:        "/api/v1alpha1/teams/{team}/awsorganizations/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &DeleteAWSOrganizationReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*DeleteAWSOrganizationOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*DeleteAWSOrganizationDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
 /*
@@ -635,6 +681,40 @@ func (a *Client) GenerateInviteLinkForUser(params *GenerateInviteLinkForUserPara
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for GenerateInviteLinkForUser: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
+}
+
+/*
+  GetAWSOrganization is the used tor return a specific aws organization
+*/
+func (a *Client) GetAWSOrganization(params *GetAWSOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*GetAWSOrganizationOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetAWSOrganizationParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "GetAWSOrganization",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/awsorganizations/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetAWSOrganizationReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetAWSOrganizationOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*GetAWSOrganizationDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
 /*
@@ -1645,6 +1725,40 @@ func (a *Client) InviteUser(params *InviteUserParams, authInfo runtime.ClientAut
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for InviteUser: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
+}
+
+/*
+  ListAWSOrganizations is the used tor return a list of aws organizations
+*/
+func (a *Client) ListAWSOrganizations(params *ListAWSOrganizationsParams, authInfo runtime.ClientAuthInfoWriter) (*ListAWSOrganizationsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewListAWSOrganizationsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "ListAWSOrganizations",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/awsorganizations",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &ListAWSOrganizationsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*ListAWSOrganizationsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*ListAWSOrganizationsDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
 /*
@@ -3075,6 +3189,40 @@ func (a *Client) RemoveUser(params *RemoveUserParams, authInfo runtime.ClientAut
 }
 
 /*
+  UpdateAWSOrganization is used to provision or update a aws organization
+*/
+func (a *Client) UpdateAWSOrganization(params *UpdateAWSOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateAWSOrganizationOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewUpdateAWSOrganizationParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "UpdateAWSOrganization",
+		Method:             "PUT",
+		PathPattern:        "/api/v1alpha1/teams/{team}/awsorganizations/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &UpdateAWSOrganizationReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*UpdateAWSOrganizationOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*UpdateAWSOrganizationDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
   UpdateAccount useds to create or update a account in the kore
 */
 func (a *Client) UpdateAccount(params *UpdateAccountParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateAccountOK, error) {
@@ -3835,6 +3983,74 @@ func (a *Client) DeleteEKSVPC(params *DeleteEKSVPCParams, authInfo runtime.Clien
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*DeleteEKSVPCDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  FindAWSAccountClaim is the used tor return a list of a w s accounts which thhe team has access
+*/
+func (a *Client) FindAWSAccountClaim(params *FindAWSAccountClaimParams, authInfo runtime.ClientAuthInfoWriter) (*FindAWSAccountClaimOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewFindAWSAccountClaimParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "findAWSAccountClaim",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/awsaccountclaims/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &FindAWSAccountClaimReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*FindAWSAccountClaimOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*FindAWSAccountClaimDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  FindAWSAccountClaims is the used to return a list of a w s accounts which thhe team has access
+*/
+func (a *Client) FindAWSAccountClaims(params *FindAWSAccountClaimsParams, authInfo runtime.ClientAuthInfoWriter) (*FindAWSAccountClaimsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewFindAWSAccountClaimsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "findAWSAccountClaims",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/awsaccountclaims",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &FindAWSAccountClaimsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*FindAWSAccountClaimsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*FindAWSAccountClaimsDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

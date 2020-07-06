@@ -3265,6 +3265,249 @@
         }
       }
     },
+    "/api/v1alpha1/teams/{team}/awsaccountclaims": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Is the used to return a list of AWS accounts which thhe team has access",
+        "operationId": "findAWSAccountClaims",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former team definition from the kore",
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.AWSAccountClaimList"
+            }
+          },
+          "default": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/teams/{team}/awsaccountclaims/{name}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Is the used tor return a list of AWS Accounts which thhe team has access",
+        "operationId": "findAWSAccountClaim",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name the of the resource you are acting on",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former team definition from the kore",
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.AWSAccountClaim"
+            }
+          },
+          "default": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/teams/{team}/awsorganizations": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Is the used tor return a list of aws organizations",
+        "operationId": "ListAWSOrganizations",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former team definition from the kore",
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.AWSOrganizationList"
+            }
+          },
+          "default": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/teams/{team}/awsorganizations/{name}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Is the used tor return a specific aws organization",
+        "operationId": "GetAWSOrganization",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name the of the resource you are acting on",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former team definition from the kore",
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.AWSOrganization"
+            }
+          },
+          "default": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Is used to provision or update a aws organization",
+        "operationId": "UpdateAWSOrganization",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name the of the resource you are acting on",
+            "name": "name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "The definition for AWS organization",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.AWSOrganization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former team definition from the kore",
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.AWSOrganization"
+            }
+          },
+          "default": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Is used to delete a managed gcp organization",
+        "operationId": "DeleteAWSOrganization",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name the of the resource you are acting on",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former team definition from the kore",
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.AWSOrganization"
+            }
+          },
+          "default": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
     "/api/v1alpha1/teams/{team}/clusters": {
       "get": {
         "consumes": [
@@ -6123,8 +6366,8 @@
     },
     "kore.ServicePlanDetails": {
       "required": [
-        "summary",
         "kind",
+        "summary",
         "editableParams"
       ],
       "properties": {
@@ -7206,8 +7449,8 @@
     },
     "v1.OptionalSecretKeySelector": {
       "required": [
-        "name",
-        "key"
+        "key",
+        "name"
       ],
       "properties": {
         "key": {
@@ -8229,11 +8472,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
+        "clientScopes",
+        "userClaims",
         "clientID",
         "clientSecret",
-        "issuer",
-        "clientScopes",
-        "userClaims"
+        "issuer"
       ],
       "properties": {
         "clientID": {
@@ -8544,6 +8787,174 @@
           "items": {
             "$ref": "#/definitions/v1.Condition"
           }
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "v1alpha1.AWSAccountClaim": {
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1alpha1.AccountClaimSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/v1alpha1.AccountClaimStatus"
+        }
+      }
+    },
+    "v1alpha1.AWSAccountClaimList": {
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1alpha1.AWSAccountClaim"
+          }
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ListMeta"
+        }
+      }
+    },
+    "v1alpha1.AWSOrganization": {
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1alpha1.AWSOrganizationSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/v1alpha1.AWSOrganizationStatus"
+        }
+      }
+    },
+    "v1alpha1.AWSOrganizationList": {
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1alpha1.AWSOrganization"
+          }
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ListMeta"
+        }
+      }
+    },
+    "v1alpha1.AWSOrganizationSpec": {
+      "required": [
+        "ssoUser",
+        "ouName",
+        "region",
+        "roleARN",
+        "credentialsRef"
+      ],
+      "properties": {
+        "credentialsRef": {
+          "$ref": "#/definitions/v1.SecretReference"
+        },
+        "ouName": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        },
+        "roleARN": {
+          "type": "string"
+        },
+        "ssoUser": {
+          "$ref": "#/definitions/v1alpha1.SSOUser"
+        }
+      }
+    },
+    "v1alpha1.AWSOrganizationStatus": {
+      "properties": {
+        "accountID": {
+          "type": "string"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.Component"
+          }
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "v1alpha1.AccountClaimSpec": {
+      "required": [
+        "accountName",
+        "organization"
+      ],
+      "properties": {
+        "accountName": {
+          "type": "string"
+        },
+        "organization": {
+          "$ref": "#/definitions/v1.Ownership"
+        }
+      }
+    },
+    "v1alpha1.AccountClaimStatus": {
+      "properties": {
+        "accountID": {
+          "type": "string"
+        },
+        "accountRef": {
+          "$ref": "#/definitions/v1.Ownership"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.Component"
+          }
+        },
+        "credentialRef": {
+          "$ref": "#/definitions/v1.SecretReference"
         },
         "status": {
           "type": "string"
@@ -9558,6 +9969,24 @@
           "$ref": "#/definitions/v1.Ownership"
         },
         "status": {
+          "type": "string"
+        }
+      }
+    },
+    "v1alpha1.SSOUser": {
+      "required": [
+        "email",
+        "firstName",
+        "lastName"
+      ],
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "firstName": {
+          "type": "string"
+        },
+        "lastName": {
           "type": "string"
         }
       }
