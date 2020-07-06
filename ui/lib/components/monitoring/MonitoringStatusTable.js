@@ -1,14 +1,8 @@
 import React from 'react'
-import Link from 'next/link'
-import moment from 'moment'
 import PropTypes from 'prop-types'
-import { Form, Icon, Input, Modal, Table, Tag, Tooltip } from 'antd'
+import { Icon, Table, Tag, Tooltip } from 'antd'
 
-import MonitoringSummary from './MonitoringSummary'
 import MonitoringTable from './MonitoringTable'
-import KoreApi from '../../kore-api'
-import FormErrorMessage from '../forms/FormErrorMessage'
-import { errorMessage, successMessage } from '../../utils/message'
 
 export default class MonitoringStatusTable extends React.Component {
   static propTypes = {
@@ -42,7 +36,7 @@ export default class MonitoringStatusTable extends React.Component {
       title: 'Summary',
       dataIndex: 'category',
       key: 'category',
-      render: (text, record) => (
+      render: (text) => (
         <>
           <span>{MonitoringStatusTable.summaries[text]}</span>
         </>
@@ -68,7 +62,7 @@ export default class MonitoringStatusTable extends React.Component {
     var filtered = []
     var matches = new Map()
 
-    this.props.alerts.items.map((record, index) => {
+    this.props.alerts.items.map((record) => {
       if ((this.props.severity || []).includes(record.status.rule.spec.severity)) {
 
         if ((this.props.status || []).includes(record.status.status)) {
@@ -111,7 +105,7 @@ export default class MonitoringStatusTable extends React.Component {
           rowKey={(a) => a.category}
           dataSource={this.filterOnRules()}
           columns={this.columns}
-          expandedRowRender={a => <MonitoringTable alerts={{'items': a.alerts}} severity={['Critical', 'Warning']} status={['Active', 'Silenced']}/> }
+          expandedRowRender={a => <MonitoringTable alerts={{ 'items': a.alerts }} severity={['Critical', 'Warning']} status={['Active', 'Silenced']}/> }
         />
       </>
     )

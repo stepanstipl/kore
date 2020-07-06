@@ -90,14 +90,15 @@ export default class ConfigureMonitoringPage extends React.Component {
   }
 
   generateServiceResource = () => {
-    const cluster = this.props.cluster
+    //const cluster = this.props.cluster
     const service = this.state.service
 
     const serviceResource = new V1Service()
     serviceResource.setApiVersion('services.kore.appvia.io/v1')
     serviceResource.setKind('Service')
 
-    const meta = NewV1ObjectMeta(ConfigureMonitoringPage.KORE_MONITORING_SERVICE_NAME, publicRuntimeConfig.koreAdminTeamName)
+    const meta = {}
+    //const meta = NewV1ObjectMeta(ConfigureMonitoringPage.KORE_MONITORING_SERVICE_NAME, publicRuntimeConfig.koreAdminTeamName)
     if (service) {
       meta.setResourceVersion(service.metadata.resourceVersion)
     }
@@ -106,6 +107,7 @@ export default class ConfigureMonitoringPage extends React.Component {
     const serviceSpec = new V1ServiceSpec()
     serviceSpec.setKind(ConfigureMonitoringPage.KORE_MONITORING_SERVICE_KIND)
     serviceSpec.setPlan(ConfigureMonitoringPage.KORE_MONITORING_SERVICE_PLAN_NAME)
+    /*
     serviceSpec.setCluster(NewV1Ownership({
       group: cluster.apiVersion.split('/')[0],
       version: cluster.apiVersion.split('/')[1],
@@ -113,6 +115,7 @@ export default class ConfigureMonitoringPage extends React.Component {
       name: cluster.metadata.name,
       namespace: publicRuntimeConfig.koreAdminTeamName
     }))
+    */
     serviceSpec.setClusterNamespace(ConfigureMonitoringPage.KORE_CLUSTER_NAMESPACE)
     const config = { ...this.props.servicePlan.spec.configuration }
     if (Object.keys(this.state.serviceConfig).length > 0) {
