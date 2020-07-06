@@ -26,8 +26,8 @@ class ConfigureUsersPage extends React.Component {
     adminOnly: true
   }
 
-  static getInitialProps = async () => {
-    const api = await KoreApi.client()
+  static getInitialProps = async (ctx) => {
+    const api = await KoreApi.client(ctx)
     let [ users, admins ] = await Promise.all([
       api.ListUsers(),
       api.ListTeamMembers(publicRuntimeConfig.koreAdminTeamName)
