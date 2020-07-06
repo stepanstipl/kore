@@ -23,23 +23,25 @@ import (
 	"os"
 	"testing"
 
+	"github.com/appvia/kore/pkg/utils/cloud/aws/test"
+
 	"github.com/stretchr/testify/require"
+)
+
+const (
+	testIam = "IAM"
 )
 
 // TestEnsureIRSA will test that we can create the IAM association with a known test cluster...
 func TestEnsureIRSA(t *testing.T) {
-	if !doAWSE2ETest() {
-		t.Skip("skipping test - requires KORETEST_AWSE2E to run")
-	}
+	test.SkipTestIfEnvNotSet(testIam, t)
 	iamClient := getIamClientFromEnv()
 	err := iamClient.EnsureIRSA(os.Getenv("KORETEST_CLUSTER_ARN"), os.Getenv("KORETEST_CLUSTER_OIDC_URL"))
 	require.NoError(t, err)
 }
 
 func TestEnsureClusterAutoscalingRoleAndPolicies(t *testing.T) {
-	if !doAWSE2ETest() {
-		t.Skip("skipping test - requires KORETEST_AWSE2E to run")
-	}
+	test.SkipTestIfEnvNotSet(testIam, t)
 	iamClient := getIamClientFromEnv()
 
 	ngas := []NodeGroupAutoScaler{
@@ -59,7 +61,7 @@ func TestEnsureClusterAutoscalingRoleAndPolicies(t *testing.T) {
 	role, err := iamClient.EnsureClusterAutoscalingRoleAndPolicies(
 		context.Background(),
 		os.Getenv("KORETEST_CLUSTERNAME"),
-		os.Getenv("KORETEST_AWS_ACCOUNTID"),
+		test.AccountID,
 		oidcIssuer,
 		ngas,
 	)
@@ -69,12 +71,8 @@ func TestEnsureClusterAutoscalingRoleAndPolicies(t *testing.T) {
 
 func getIamClientFromEnv() *IamClient {
 	return NewIamClient(Credentials{
-		AccessKeyID:     os.Getenv("AWS_ACCESS_KEY_ID"),
-		SecretAccessKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
-		AccountID:       os.Getenv("KORETEST_AWS_ACCOUNTID"),
+		AccessKeyID:     test.AccessKeyID,
+		SecretAccessKey: test.SecretAccessKey,
+		AccountID:       test.AccountID,
 	})
-}
-
-func doAWSE2ETest() bool {
-	return (os.Getenv("KORETEST_AWSE2E") == "true")
 }

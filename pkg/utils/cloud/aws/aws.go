@@ -17,11 +17,14 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 
 	version "github.com/appvia/kore/pkg/version"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	awscreds "github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -62,4 +65,16 @@ func getNewSession(creds Credentials, region string) *session.Session {
 	})
 
 	return s
+}
+
+// Returns true if the error matches all these conditions:
+//  * err is of type awserr.Error
+//  * Error.Code() matches code
+//  * Error.Message() contains message
+func isAWSErr(err error, code string, message string) bool {
+	var awsErr awserr.Error
+	if errors.As(err, &awsErr) {
+		return awsErr.Code() == code && strings.Contains(awsErr.Message(), message)
+	}
+	return false
 }
