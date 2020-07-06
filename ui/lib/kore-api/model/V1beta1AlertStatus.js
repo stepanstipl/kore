@@ -54,11 +54,11 @@ class V1beta1AlertStatus {
             if (data.hasOwnProperty('detail')) {
                 obj['detail'] = ApiClient.convertToType(data['detail'], 'String');
             }
-            if (data.hasOwnProperty('expiration')) {
-                obj['expiration'] = ApiClient.convertToType(data['expiration'], 'String');
-            }
             if (data.hasOwnProperty('rule')) {
                 obj['rule'] = V1beta1Rule.constructFromObject(data['rule']);
+            }
+            if (data.hasOwnProperty('silencedUntil')) {
+                obj['silencedUntil'] = ApiClient.convertToType(data['silencedUntil'], 'String');
             }
             if (data.hasOwnProperty('status')) {
                 obj['status'] = ApiClient.convertToType(data['status'], 'String');
@@ -94,19 +94,6 @@ class V1beta1AlertStatus {
         this['detail'] = detail;
     }
 /**
-     * @return {String}
-     */
-    getExpiration() {
-        return this.expiration;
-    }
-
-    /**
-     * @param {String} expiration
-     */
-    setExpiration(expiration) {
-        this['expiration'] = expiration;
-    }
-/**
      * @return {module:model/V1beta1Rule}
      */
     getRule() {
@@ -118,6 +105,19 @@ class V1beta1AlertStatus {
      */
     setRule(rule) {
         this['rule'] = rule;
+    }
+/**
+     * @return {String}
+     */
+    getSilencedUntil() {
+        return this.silencedUntil;
+    }
+
+    /**
+     * @param {String} silencedUntil
+     */
+    setSilencedUntil(silencedUntil) {
+        this['silencedUntil'] = silencedUntil;
     }
 /**
      * @return {String}
@@ -146,14 +146,14 @@ V1beta1AlertStatus.prototype['archivedAt'] = undefined;
 V1beta1AlertStatus.prototype['detail'] = undefined;
 
 /**
- * @member {String} expiration
- */
-V1beta1AlertStatus.prototype['expiration'] = undefined;
-
-/**
  * @member {module:model/V1beta1Rule} rule
  */
 V1beta1AlertStatus.prototype['rule'] = undefined;
+
+/**
+ * @member {String} silencedUntil
+ */
+V1beta1AlertStatus.prototype['silencedUntil'] = undefined;
 
 /**
  * @member {String} status

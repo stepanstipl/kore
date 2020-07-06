@@ -22,11 +22,11 @@ type V1beta1AlertStatus struct {
 	// detail
 	Detail string `json:"detail,omitempty"`
 
-	// expiration
-	Expiration string `json:"expiration,omitempty"`
-
 	// rule
 	Rule *V1beta1Rule `json:"rule,omitempty"`
+
+	// silenced until
+	SilencedUntil string `json:"silencedUntil,omitempty"`
 
 	// status
 	Status string `json:"status,omitempty"`
