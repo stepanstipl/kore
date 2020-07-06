@@ -12,9 +12,9 @@ import { errorMessage, successMessage } from '../../utils/message'
 export default class MonitoringTable extends React.Component {
   static propTypes = {
     alerts: PropTypes.object.isRequired,
+    refreshData: PropTypes.func,
     severity: PropTypes.array,
     status: PropTypes.array,
-    refreshData: PropTypes.func
   }
 
   static silenceAlertInitialState = {
@@ -23,6 +23,13 @@ export default class MonitoringTable extends React.Component {
     silenceAlertError: false,
     silenceAlertComment: undefined,
     silenceAlertDuration: undefined
+  }
+
+  static severity = {
+    'Warning': 'orange',
+    'Critical': 'red',
+    'Silenced': 'blue',
+    'OK': 'green',
   }
 
   state = {
@@ -39,7 +46,7 @@ export default class MonitoringTable extends React.Component {
       sortDirections: ['descend'],
       render: (text) => (
         <>
-          <Tag key="middle" color={text === 'Critical' ? 'red' : 'orange'}>
+          <Tag key="middle" color={MonitoringTable.severity[text]}>
             {text}
           </Tag>
         </>
@@ -54,7 +61,8 @@ export default class MonitoringTable extends React.Component {
     {
       title: 'Rule Name',
       dataIndex: 'status.rule.metadata.name',
-      key: 'name'
+      key: 'name',
+      width: 150
     },
     {
       title: 'Summary',
@@ -72,6 +80,7 @@ export default class MonitoringTable extends React.Component {
         </>
       )
     },
+    /*
     {
       title: 'Actions',
       render: (text, record) => (
@@ -80,6 +89,7 @@ export default class MonitoringTable extends React.Component {
           : <a style={{ textDecoration: 'underline' }} onClick={() => this.setState({ silenceAlert: record })}> Silence</a>
       )
     }
+    */
   ]
 
   unsilenceAlert = (alert) => () => {
@@ -145,9 +155,11 @@ export default class MonitoringTable extends React.Component {
     if (!this.props.alerts) {
       return []
     }
+
     const filtered = this.props.alerts.items.filter(a =>
       (this.props.severity || []).includes(a.status.rule.spec.severity) && (this.props.status || []).includes(a.status.status)
     )
+
     return filtered
   }
 
@@ -159,7 +171,7 @@ export default class MonitoringTable extends React.Component {
           rowKey={(record) => record.metadata.uid}
           dataSource={this.filterOnRules()}
           columns={this.columns}
-          //expandedRowRender={record => <MonitoringAlert rule={record}/> }
+          pagination={{ pageSize: 100 }}
         />
         {this.renderSilenceAlertModal()}
       </>

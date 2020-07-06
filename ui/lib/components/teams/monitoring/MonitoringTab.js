@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import { Icon } from 'antd'
 
 import KoreApi from '../../../kore-api'
-import MonitoringOverview from '../../monitoring/MonitoringOverview'
+import MonitoringDashboard from '../../monitoring/MonitoringDashboard'
 
 export default class MonitoringTab extends React.Component {
   static propTypes = {
@@ -11,7 +11,7 @@ export default class MonitoringTab extends React.Component {
     getOverviewStatus: PropTypes.func
   }
 
-  static REFRESH_MS = 30000
+  static REFRESH_MS = 10000
 
   state = {
     dataLoading: true,
@@ -51,7 +51,7 @@ export default class MonitoringTab extends React.Component {
     }
 
     return (
-      <MonitoringOverview alerts={this.state.alerts} refreshData={this.refreshData} />
+      <MonitoringDashboard alerts={this.state.alerts} refreshData={this.refreshData} />
     )
   }
 }
