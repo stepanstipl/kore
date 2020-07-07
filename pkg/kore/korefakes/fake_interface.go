@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/appvia/kore/pkg/costs"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/persistence"
@@ -53,6 +54,26 @@ type FakeInterface struct {
 	}
 	configsReturnsOnCall map[int]struct {
 		result1 kore.Configs
+	}
+	CostsStub        func() costs.Costs
+	costsMutex       sync.RWMutex
+	costsArgsForCall []struct {
+	}
+	costsReturns struct {
+		result1 costs.Costs
+	}
+	costsReturnsOnCall map[int]struct {
+		result1 costs.Costs
+	}
+	FeaturesStub        func() kore.KoreFeatures
+	featuresMutex       sync.RWMutex
+	featuresArgsForCall []struct {
+	}
+	featuresReturns struct {
+		result1 kore.KoreFeatures
+	}
+	featuresReturnsOnCall map[int]struct {
+		result1 kore.KoreFeatures
 	}
 	GetUserIdentityStub        func(context.Context, string) (authentication.Identity, bool, error)
 	getUserIdentityMutex       sync.RWMutex
@@ -448,6 +469,110 @@ func (fake *FakeInterface) ConfigsReturnsOnCall(i int, result1 kore.Configs) {
 	}
 	fake.configsReturnsOnCall[i] = struct {
 		result1 kore.Configs
+	}{result1}
+}
+
+func (fake *FakeInterface) Costs() costs.Costs {
+	fake.costsMutex.Lock()
+	ret, specificReturn := fake.costsReturnsOnCall[len(fake.costsArgsForCall)]
+	fake.costsArgsForCall = append(fake.costsArgsForCall, struct {
+	}{})
+	fake.recordInvocation("Costs", []interface{}{})
+	fake.costsMutex.Unlock()
+	if fake.CostsStub != nil {
+		return fake.CostsStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.costsReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeInterface) CostsCallCount() int {
+	fake.costsMutex.RLock()
+	defer fake.costsMutex.RUnlock()
+	return len(fake.costsArgsForCall)
+}
+
+func (fake *FakeInterface) CostsCalls(stub func() costs.Costs) {
+	fake.costsMutex.Lock()
+	defer fake.costsMutex.Unlock()
+	fake.CostsStub = stub
+}
+
+func (fake *FakeInterface) CostsReturns(result1 costs.Costs) {
+	fake.costsMutex.Lock()
+	defer fake.costsMutex.Unlock()
+	fake.CostsStub = nil
+	fake.costsReturns = struct {
+		result1 costs.Costs
+	}{result1}
+}
+
+func (fake *FakeInterface) CostsReturnsOnCall(i int, result1 costs.Costs) {
+	fake.costsMutex.Lock()
+	defer fake.costsMutex.Unlock()
+	fake.CostsStub = nil
+	if fake.costsReturnsOnCall == nil {
+		fake.costsReturnsOnCall = make(map[int]struct {
+			result1 costs.Costs
+		})
+	}
+	fake.costsReturnsOnCall[i] = struct {
+		result1 costs.Costs
+	}{result1}
+}
+
+func (fake *FakeInterface) Features() kore.KoreFeatures {
+	fake.featuresMutex.Lock()
+	ret, specificReturn := fake.featuresReturnsOnCall[len(fake.featuresArgsForCall)]
+	fake.featuresArgsForCall = append(fake.featuresArgsForCall, struct {
+	}{})
+	fake.recordInvocation("Features", []interface{}{})
+	fake.featuresMutex.Unlock()
+	if fake.FeaturesStub != nil {
+		return fake.FeaturesStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.featuresReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeInterface) FeaturesCallCount() int {
+	fake.featuresMutex.RLock()
+	defer fake.featuresMutex.RUnlock()
+	return len(fake.featuresArgsForCall)
+}
+
+func (fake *FakeInterface) FeaturesCalls(stub func() kore.KoreFeatures) {
+	fake.featuresMutex.Lock()
+	defer fake.featuresMutex.Unlock()
+	fake.FeaturesStub = stub
+}
+
+func (fake *FakeInterface) FeaturesReturns(result1 kore.KoreFeatures) {
+	fake.featuresMutex.Lock()
+	defer fake.featuresMutex.Unlock()
+	fake.FeaturesStub = nil
+	fake.featuresReturns = struct {
+		result1 kore.KoreFeatures
+	}{result1}
+}
+
+func (fake *FakeInterface) FeaturesReturnsOnCall(i int, result1 kore.KoreFeatures) {
+	fake.featuresMutex.Lock()
+	defer fake.featuresMutex.Unlock()
+	fake.FeaturesStub = nil
+	if fake.featuresReturnsOnCall == nil {
+		fake.featuresReturnsOnCall = make(map[int]struct {
+			result1 kore.KoreFeatures
+		})
+	}
+	fake.featuresReturnsOnCall[i] = struct {
+		result1 kore.KoreFeatures
 	}{result1}
 }
 
@@ -1360,6 +1485,10 @@ func (fake *FakeInterface) Invocations() map[string][][]interface{} {
 	defer fake.configMutex.RUnlock()
 	fake.configsMutex.RLock()
 	defer fake.configsMutex.RUnlock()
+	fake.costsMutex.RLock()
+	defer fake.costsMutex.RUnlock()
+	fake.featuresMutex.RLock()
+	defer fake.featuresMutex.RUnlock()
 	fake.getUserIdentityMutex.RLock()
 	defer fake.getUserIdentityMutex.RUnlock()
 	fake.getUserIdentityByProviderMutex.RLock()

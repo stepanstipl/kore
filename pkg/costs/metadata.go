@@ -79,9 +79,7 @@ func (m *metadataImpl) Regions(cloud string) (*costsv1.ContinentList, error) {
 		return nil, nil
 	}
 	result := &costsv1.ContinentList{}
-	for _, continent := range continents {
-		result.Items = append(result.Items, continent)
-	}
+	result.Items = append(result.Items, continents...)
 	return result, nil
 }
 
@@ -98,9 +96,7 @@ func (m *metadataImpl) InstanceTypes(cloud string, region string) (*costsv1.Inst
 		return nil, nil
 	}
 	result := &costsv1.InstanceTypeList{}
-	for _, instanceType := range instanceTypes {
-		result.Items = append(result.Items, instanceType)
-	}
+	result.Items = append(result.Items, instanceTypes...)
 	return result, nil
 }
 

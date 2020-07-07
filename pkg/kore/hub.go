@@ -69,6 +69,8 @@ type hubImpl struct {
 	configs Configs
 	// costs is the costs implementation
 	costs costs.Costs
+	// features is the features implementation
+	features KoreFeatures
 }
 
 // New returns a new instance of the kore bridge
@@ -122,6 +124,7 @@ func New(sc store.Store, persistenceMgr persistence.Interface, config Config) (I
 	}
 	h.configs = &configImpl{hubImpl: h}
 	h.costs = costs.New(&config.Costs)
+	h.features = &koreFeaturesImpl{store: h.store}
 
 	// @step: call the setup code for the kore
 	if err := h.Setup(context.Background()); err != nil {
@@ -245,4 +248,8 @@ func (h hubImpl) Configs() Configs {
 
 func (h hubImpl) Costs() costs.Costs {
 	return h.costs
+}
+
+func (h hubImpl) Features() KoreFeatures {
+	return h.features
 }

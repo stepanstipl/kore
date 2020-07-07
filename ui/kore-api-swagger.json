@@ -433,6 +433,17 @@
         ],
         "summary": "Returns the estimated cost of the supplied cluster plan",
         "operationId": "EstimateClusterPlanCost",
+        "parameters": [
+          {
+            "description": "The specification for the plan you want estimating",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.Plan"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "An estimate of the costs for the cluster plan",
@@ -6754,6 +6765,88 @@
         }
       }
     },
+    "v1.KoreFeature": {
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1.KoreFeatureSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/v1.KoreFeatureStatus"
+        }
+      }
+    },
+    "v1.KoreFeatureList": {
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.KoreFeature"
+          }
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ListMeta"
+        }
+      }
+    },
+    "v1.KoreFeatureSpec": {
+      "required": [
+        "enabled",
+        "featureType",
+        "configuration"
+      ],
+      "properties": {
+        "configuration": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "featureType": {
+          "type": "string"
+        }
+      }
+    },
+    "v1.KoreFeatureStatus": {
+      "properties": {
+        "components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.Component"
+          }
+        },
+        "message": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
     "v1.Kubernetes": {
       "properties": {
         "apiVersion": {
@@ -7113,8 +7206,8 @@
     },
     "v1.OptionalSecretKeySelector": {
       "required": [
-        "key",
-        "name"
+        "name",
+        "key"
       ],
       "properties": {
         "key": {

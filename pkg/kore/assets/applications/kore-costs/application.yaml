@@ -11,8 +11,6 @@ spec:
       kind: Deployment
     - group: v1
       kind: Service
-    - group: v1
-      kind: Secret
   selector:
     matchLabels:
       app.kubernetes.io/name: "kore-costs"

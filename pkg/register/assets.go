@@ -18,6 +18,7 @@
 // deploy/crds/clusters.compute.kore.appvia.io_namespacepolicy.yaml
 // deploy/crds/config.kore.appvia.io_allocations.yaml
 // deploy/crds/config.kore.appvia.io_configs.yaml
+// deploy/crds/config.kore.appvia.io_korefeatures.yaml
 // deploy/crds/config.kore.appvia.io_planpolicies.yaml
 // deploy/crds/config.kore.appvia.io_plans.yaml
 // deploy/crds/config.kore.appvia.io_secrets.yaml
@@ -3982,6 +3983,146 @@ func crdsConfigKoreAppviaIo_configsYaml() (*asset, error) {
 	return a, nil
 }
 
+var _crdsConfigKoreAppviaIo_korefeaturesYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: korefeatures.config.kore.appvia.io
+spec:
+  group: config.kore.appvia.io
+  names:
+    kind: KoreFeature
+    listKind: KoreFeatureList
+    plural: korefeatures
+    singular: korefeature
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: KoreFeature is the Schema for a kore feature
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: KoreFeatureSpec defines the desired state of the feature
+          properties:
+            configuration:
+              additionalProperties:
+                type: string
+              description: Configuration represents the key-value pairs to configure
+                this feature
+              type: object
+            enabled:
+              description: Enabled identifies if this feature is enabled or not
+              type: boolean
+            featureType:
+              description: Feature identifies which feature this is
+              type: string
+          required:
+          - configuration
+          - enabled
+          - featureType
+          type: object
+        status:
+          description: KoreFeatureStatus defines the observed status of a feature
+          properties:
+            components:
+              description: Components is a collection of component statuses
+              items:
+                description: Component the state of a component of the resource
+                properties:
+                  detail:
+                    description: Detail is additional details on the error is any
+                    type: string
+                  message:
+                    description: Message is a human readable message on the status
+                      of the component
+                    type: string
+                  name:
+                    description: Name is the name of the component
+                    type: string
+                  resource:
+                    description: Resource is a reference to the resource
+                    properties:
+                      group:
+                        description: Group is the api group
+                        type: string
+                      kind:
+                        description: Kind is the name of the resource under the group
+                        type: string
+                      name:
+                        description: Name is name of the resource
+                        type: string
+                      namespace:
+                        description: Namespace is the location of the object
+                        type: string
+                      version:
+                        description: Version is the group version
+                        type: string
+                    required:
+                    - group
+                    - kind
+                    - name
+                    - namespace
+                    - version
+                    type: object
+                  status:
+                    description: Status is the status of the component
+                    type: string
+                type: object
+              type: array
+            message:
+              description: Message is the description of the current status
+              type: string
+            status:
+              description: Status is overall status of the feature
+              type: string
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsConfigKoreAppviaIo_korefeaturesYamlBytes() ([]byte, error) {
+	return _crdsConfigKoreAppviaIo_korefeaturesYaml, nil
+}
+
+func crdsConfigKoreAppviaIo_korefeaturesYaml() (*asset, error) {
+	bytes, err := crdsConfigKoreAppviaIo_korefeaturesYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/config.kore.appvia.io_korefeatures.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _crdsConfigKoreAppviaIo_planpoliciesYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -7712,6 +7853,7 @@ var _bindata = map[string]func() (*asset, error){
 	"crds/clusters.compute.kore.appvia.io_namespacepolicy.yaml":           crdsClustersComputeKoreAppviaIo_namespacepolicyYaml,
 	"crds/config.kore.appvia.io_allocations.yaml":                         crdsConfigKoreAppviaIo_allocationsYaml,
 	"crds/config.kore.appvia.io_configs.yaml":                             crdsConfigKoreAppviaIo_configsYaml,
+	"crds/config.kore.appvia.io_korefeatures.yaml":                        crdsConfigKoreAppviaIo_korefeaturesYaml,
 	"crds/config.kore.appvia.io_planpolicies.yaml":                        crdsConfigKoreAppviaIo_planpoliciesYaml,
 	"crds/config.kore.appvia.io_plans.yaml":                               crdsConfigKoreAppviaIo_plansYaml,
 	"crds/config.kore.appvia.io_secrets.yaml":                             crdsConfigKoreAppviaIo_secretsYaml,
@@ -7797,6 +7939,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"clusters.compute.kore.appvia.io_namespacepolicy.yaml":           {crdsClustersComputeKoreAppviaIo_namespacepolicyYaml, map[string]*bintree{}},
 		"config.kore.appvia.io_allocations.yaml":                         {crdsConfigKoreAppviaIo_allocationsYaml, map[string]*bintree{}},
 		"config.kore.appvia.io_configs.yaml":                             {crdsConfigKoreAppviaIo_configsYaml, map[string]*bintree{}},
+		"config.kore.appvia.io_korefeatures.yaml":                        {crdsConfigKoreAppviaIo_korefeaturesYaml, map[string]*bintree{}},
 		"config.kore.appvia.io_planpolicies.yaml":                        {crdsConfigKoreAppviaIo_planpoliciesYaml, map[string]*bintree{}},
 		"config.kore.appvia.io_plans.yaml":                               {crdsConfigKoreAppviaIo_plansYaml, map[string]*bintree{}},
 		"config.kore.appvia.io_secrets.yaml":                             {crdsConfigKoreAppviaIo_secretsYaml, map[string]*bintree{}},

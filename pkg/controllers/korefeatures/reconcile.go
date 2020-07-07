@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-package services
+package features
 
 import (
 	"context"
 	"fmt"
-	"time"
 
+	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/controllers"
+	"github.com/appvia/kore/pkg/controllers/helpers"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
+
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -33,76 +35,82 @@ import (
 )
 
 const (
-	finalizerName = "services.kore.appvia.io"
+	finalizerName = "config.kore.appvia.io"
 )
 
-// Reconcile is the entrypoint for the reconciliation logic
+// Reconcile is responsible for handling the scanning of a kind
 func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult reconcile.Result, reconcileError error) {
 	ctx := context.Background()
 
 	logger := c.logger.WithFields(log.Fields{
-		"name":      request.NamespacedName.Name,
-		"namespace": request.NamespacedName.Namespace,
+		"name":      request.Name,
+		"namespace": request.Namespace,
 	})
-	logger.Debug("attempting to reconcile the service")
+	logger.Debug("attempting to reconcile feature")
 
 	// @step: retrieve the object from the api
-	service := &servicesv1.Service{}
-	if err := c.mgr.GetClient().Get(ctx, request.NamespacedName, service); err != nil {
+	feature := &configv1.KoreFeature{}
+	if err := c.mgr.GetClient().Get(ctx, request.NamespacedName, feature); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
-		logger.WithError(err).Error("failed to retrieve service from api")
+		logger.WithError(err).Error("failed to retrieve feature from api")
 
 		return reconcile.Result{}, err
 	}
-	original := service.DeepCopy()
+	original := feature.DeepCopy()
 
-	logger = logger.WithField("service", service.Name)
+	logger = logger.WithField("feature", feature.Name)
 
 	defer func() {
-		if err := c.mgr.GetClient().Status().Patch(ctx, service, client.MergeFrom(original)); err != nil {
+		if err := c.mgr.GetClient().Status().Patch(ctx, feature, client.MergeFrom(original)); err != nil {
 			if !kerrors.IsNotFound(err) {
-				logger.WithError(err).Error("failed to update the service status")
+				logger.WithError(err).Error("failed to update the feature status")
 				reconcileResult = reconcile.Result{}
 				reconcileError = err
 			}
 		}
 	}()
 
-	koreCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c)
-
-	provider, err := c.ServiceProviders().GetProviderForKind(koreCtx, service.Spec.Kind)
-	if err != nil {
-		if err == kore.ErrNotFound {
-			service.Status.Status = corev1.ErrorStatus
-			service.Status.Message = fmt.Sprintf("There is no service provider for kind %q", service.Spec.Kind)
-			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
-		}
-		service.Status.Status = corev1.ErrorStatus
-		service.Status.Message = err.Error()
-		return reconcile.Result{}, err
-	}
-
 	finalizer := kubernetes.NewFinalizer(c.mgr.GetClient(), finalizerName)
-	if finalizer.IsDeletionCandidate(service) {
-		return c.Delete(ctx, logger, service, finalizer, provider)
+	if finalizer.IsDeletionCandidate(feature) {
+		return c.delete(ctx, logger, feature, finalizer)
 	}
 
 	result, err := func() (reconcile.Result, error) {
 		ensure := []controllers.EnsureFunc{
-			c.EnsureServicePending(service),
-			c.EnsureDependencies(service),
-			c.EnsureFinalizer(service, finalizer),
+			c.ensureFinalizer(feature, finalizer),
+			c.ensurePending(feature),
 			func(ctx kore.Context) (result reconcile.Result, err error) {
-				return provider.Reconcile(ctx, service)
+				var services []servicesv1.Service
+				switch feature.Spec.FeatureType {
+				case configv1.KoreFeatureCosts:
+					services, err = c.getCostsServices(ctx, feature)
+					if err != nil {
+						return reconcile.Result{}, err
+					}
+				default:
+					return reconcile.Result{}, fmt.Errorf("Unknown feature type %s", feature.Spec.FeatureType)
+				}
+
+				result, err = helpers.EnsureServices(
+					kore.NewContext(ctx, logger, c.mgr.GetClient(), c.kore),
+					services,
+					feature,
+					&feature.Status.Components,
+				)
+				if err != nil || result.Requeue || result.RequeueAfter > 0 {
+					return result, err
+				}
+
+				return reconcile.Result{}, nil
 			},
 		}
 
-		for ind, handler := range ensure {
+		koreCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c.kore)
+		for _, handler := range ensure {
 			result, err := handler(koreCtx)
 			if err != nil {
-				logger.WithError(err).WithField("handlerIndex", ind).Error("failure reconciling handler for service")
 				return reconcile.Result{}, err
 			}
 			if result.Requeue || result.RequeueAfter > 0 {
@@ -113,13 +121,13 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 	}()
 
 	if err != nil {
-		logger.WithError(err).Error("failed to reconcile the service")
+		logger.WithError(err).Error("failed to reconcile the feature")
 
-		service.Status.Status = corev1.ErrorStatus
-		service.Status.Message = err.Error()
+		feature.Status.Status = corev1.ErrorStatus
+		feature.Status.Message = err.Error()
 
 		if controllers.IsCriticalError(err) {
-			service.Status.Status = corev1.FailureStatus
+			feature.Status.Status = corev1.FailureStatus
 			return reconcile.Result{}, nil
 		}
 
@@ -130,9 +138,8 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 		return result, nil
 	}
 
-	service.Status.Status = corev1.SuccessStatus
-	service.Status.Plan = service.Spec.Plan
-	service.Status.Configuration = service.Spec.Configuration
+	feature.Status.Status = corev1.SuccessStatus
+	feature.Status.Message = ""
 
-	return reconcile.Result{}, nil
+	return result, nil
 }

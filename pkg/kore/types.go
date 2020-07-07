@@ -92,6 +92,8 @@ type Interface interface {
 	Configs() Configs
 	// Costs returns the costs business logic layer
 	Costs() costs.Costs
+	// Features returns the kore feature control layer
+	Features() KoreFeatures
 }
 
 // DEX is the configuration required to setup identity providers

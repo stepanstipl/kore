@@ -49,13 +49,7 @@ func (p Provider) Delete(
 		return reconcile.Result{}, err
 	}
 
-	compiledResources, err := config.CompileResources(ResourceParams{
-		Release: Release{
-			Name:      service.Name,
-			Namespace: service.Spec.ClusterNamespace,
-		},
-		Values: config.Values,
-	})
+	compiledResources, err := config.CompileResources(NewResourceParams(service, config))
 	if err != nil {
 		return reconcile.Result{}, err
 	}

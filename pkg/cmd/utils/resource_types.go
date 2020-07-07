@@ -379,5 +379,17 @@ var (
 				{"Name", "metadata.name", ""},
 			},
 		},
+		{
+			Name:         "korefeature",
+			GroupVersion: configv1.GroupVersion.String(),
+			Kind:         "KoreFeature",
+			Scope:        GlobalScope,
+			Printer: []Column{
+				{"Name", "metadata.name", ""},
+				{"Type", "spec.featureType", ""},
+				{"Status", "status.status", ""},
+				{"Age", "metadata.creationTimestamp", "age"},
+			},
+		},
 	}
 )

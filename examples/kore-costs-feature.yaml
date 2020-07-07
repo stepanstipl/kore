@@ -1,0 +1,12 @@
+---
+apiVersion: config.kore.appvia.io/v1
+kind: KoreFeature
+metadata:
+  name: kore-costs
+  namespace: kore
+spec:
+  featureType: kore-costs
+  enabled: true
+  configuration:
+    gcp_credentials: kore-admin/gcp-appvia
+    aws_credentials: kore-admin/aws-appvia

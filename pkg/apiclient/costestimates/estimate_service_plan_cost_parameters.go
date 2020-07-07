@@ -14,12 +14,14 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+
+	"github.com/appvia/kore/pkg/apiclient/models"
 )
 
 // NewEstimateServicePlanCostParams creates a new EstimateServicePlanCostParams object
 // with the default values initialized.
 func NewEstimateServicePlanCostParams() *EstimateServicePlanCostParams {
-
+	var ()
 	return &EstimateServicePlanCostParams{
 
 		timeout: cr.DefaultTimeout,
@@ -29,7 +31,7 @@ func NewEstimateServicePlanCostParams() *EstimateServicePlanCostParams {
 // NewEstimateServicePlanCostParamsWithTimeout creates a new EstimateServicePlanCostParams object
 // with the default values initialized, and the ability to set a timeout on a request
 func NewEstimateServicePlanCostParamsWithTimeout(timeout time.Duration) *EstimateServicePlanCostParams {
-
+	var ()
 	return &EstimateServicePlanCostParams{
 
 		timeout: timeout,
@@ -39,7 +41,7 @@ func NewEstimateServicePlanCostParamsWithTimeout(timeout time.Duration) *Estimat
 // NewEstimateServicePlanCostParamsWithContext creates a new EstimateServicePlanCostParams object
 // with the default values initialized, and the ability to set a context for a request
 func NewEstimateServicePlanCostParamsWithContext(ctx context.Context) *EstimateServicePlanCostParams {
-
+	var ()
 	return &EstimateServicePlanCostParams{
 
 		Context: ctx,
@@ -49,7 +51,7 @@ func NewEstimateServicePlanCostParamsWithContext(ctx context.Context) *EstimateS
 // NewEstimateServicePlanCostParamsWithHTTPClient creates a new EstimateServicePlanCostParams object
 // with the default values initialized, and the ability to set a custom HTTPClient for a request
 func NewEstimateServicePlanCostParamsWithHTTPClient(client *http.Client) *EstimateServicePlanCostParams {
-
+	var ()
 	return &EstimateServicePlanCostParams{
 		HTTPClient: client,
 	}
@@ -122,6 +124,12 @@ func (o *EstimateServicePlanCostParams) WriteToRequest(r runtime.ClientRequest, 
 		return err
 	}
 	var res []error
+
+	if o.Body != nil {
+		if err := r.SetBodyParam(o.Body); err != nil {
+			return err
+		}
+	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
