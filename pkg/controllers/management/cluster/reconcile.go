@@ -38,11 +38,6 @@ const (
 	finalizerName = "cluster.clusters.kore.appvia.io"
 )
 
-var (
-	// ClusterRevisionName is the annotation name
-	ClusterRevisionName = kore.Label("clusterRevision")
-)
-
 // Reconcile is the entrypoint for the reconciliation logic
 func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	ctx := context.Background()
@@ -184,6 +179,10 @@ func (a *Controller) Apply(cluster *clustersv1.Cluster, components *kore.Cluster
 		// is not yet successful we wait and requeue. If the resource has failed, we throw
 		// a critical failure and stop
 		for _, comp := range *components {
+			if comp.Absent {
+				continue
+			}
+
 			result, err := a.applyComponent(ctx, cluster, comp)
 			if err != nil || result.Requeue || result.RequeueAfter > 0 {
 				return result, err
@@ -194,7 +193,7 @@ func (a *Controller) Apply(cluster *clustersv1.Cluster, components *kore.Cluster
 	}
 }
 
-func (a *Controller) applyComponent(ctx context.Context, cluster *clustersv1.Cluster, comp *kore.ClusterComponent) (reconcile.Result, error) {
+func (a *Controller) applyComponent(ctx kore.Context, cluster *clustersv1.Cluster, comp *kore.ClusterComponent) (reconcile.Result, error) {
 	condition, found := cluster.Status.Components.GetComponent(comp.ComponentName())
 	if !found {
 		condition = &corev1.Component{
@@ -211,18 +210,25 @@ func (a *Controller) applyComponent(ctx context.Context, cluster *clustersv1.Clu
 	logger := a.logger.WithFields(log.Fields{
 		"component": comp.ComponentName(),
 		"condition": condition.Status,
-		"existing":  comp.Exists,
+		"existing":  comp.Exists(),
 	})
 	logger.Debug("attempting to reconciling the component")
 
-	if !comp.Exists || GetClusterRevision(comp.Object) != cluster.ResourceVersion {
-		SetClusterRevision(comp.Object, cluster.ResourceVersion)
+	annotations := comp.Object.GetAnnotations()
+	if annotations == nil {
+		annotations = map[string]string{}
+	}
+	annotations[kore.AnnotationReadOnly] = kore.AnnotationValueTrue
 
-		if _, err := kubernetes.CreateOrUpdate(ctx, a.mgr.GetClient(), comp.Object); err != nil {
-			return reconcile.Result{}, err
-		}
+	comp.Object.SetAnnotations(annotations)
 
-		return reconcile.Result{Requeue: true}, nil
+	updated, err := comp.Update(ctx)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	if updated {
+		ctx.Logger().WithField("component", kubernetes.MustGetRuntimeSelfLink(comp.Object)).Debug("component has changed")
+		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 	}
 
 	// @check if the resource is ready to reconcile
@@ -263,55 +269,42 @@ func (a *Controller) applyComponent(ctx context.Context, cluster *clustersv1.Clu
 func (a *Controller) Cleanup(cluster *clustersv1.Cluster, components *kore.ClusterComponents) controllers.EnsureFunc {
 	return func(ctx kore.Context) (reconcile.Result, error) {
 		// @logic:
-		// - we iterate the component statues
-		// - we find any components which are no longer referenced and we delete
-		// - we update the status of the component and we requeue
-		// - if the component has been removed we can delete it
+		// - we remove any absent components first in reverse dependency order
+		// - we find any components which are no longer referenced in status and we delete those too
+
+		for i := len(*components) - 1; i >= 0; i-- {
+			comp := (*components)[i]
+			if !comp.Absent {
+				continue
+			}
+
+			result, err := a.removeComponent(ctx, cluster, components, comp)
+			if err != nil || result.Requeue || result.RequeueAfter > 0 {
+				return result, err
+			}
+
+			cluster.Status.Components.RemoveComponent(comp.ComponentName())
+		}
 
 		for i := 0; i < len(cluster.Status.Components); i++ {
-			required, err := IsComponentReferenced(cluster.Status.Components[i], components)
-			if err != nil {
-				return reconcile.Result{}, err
-			}
-			if required {
+			statusComponent := cluster.Status.Components[i]
+			if statusComponent.Resource == nil {
 				continue
 			}
 
-			// @step: set the resource to deleting
-			if cluster.Status.Components[i].Status != corev1.DeletingStatus {
-				cluster.Status.Components[i].Status = corev1.DeletingStatus
-
-				return reconcile.Result{Requeue: true}, nil
-			}
-
-			u := ComponentToUnstructured(cluster.Status.Components[i])
-
-			found, err := kubernetes.GetIfExists(ctx, a.mgr.GetClient(), u)
-			if err != nil {
-				return reconcile.Result{}, err
-			}
-			if !found {
-				cluster.Status.Components.RemoveComponent(cluster.Status.Components[i].Name)
-
+			comp := components.Find(func(comp kore.ClusterComponent) bool {
+				return kore.IsOwner(comp.Object, *statusComponent.Resource)
+			})
+			if comp != nil {
 				continue
 			}
 
-			if !IsDeleting(u) {
-				if err := kubernetes.DeleteIfExists(ctx, a.mgr.GetClient(), u); err != nil {
-					return reconcile.Result{}, err
-				}
+			res, err := a.removeComponent(ctx, cluster, components, comp)
+			if err != nil || res.Requeue || res.RequeueAfter > 0 {
+				return res, err
 			}
 
-			// @check if the resource is ready to reconcile
-			status, err := GetObjectStatus(u)
-			if err != nil {
-				return reconcile.Result{}, err
-			}
-
-			if status == corev1.DeleteFailedStatus {
-				cluster.Status.Status = corev1.FailureStatus
-				cluster.Status.Components[i].Status = corev1.DeleteFailedStatus
-			}
+			cluster.Status.Components.RemoveComponent(statusComponent.Name)
 		}
 
 		return reconcile.Result{}, nil

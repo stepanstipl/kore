@@ -459,6 +459,25 @@ func schema_pkg_apis_eks_v1alpha1_EKSNodeGroupStatus(ref common.ReferenceCallbac
 							Format:      "",
 						},
 					},
+					"autoScalingGroupNames": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
+						SchemaProps: spec.SchemaProps{
+							Description: "AutoScalingGroupName is the name of the Auto Scaling Groups belonging to this node group",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Status provides a overall status",
@@ -601,9 +620,23 @@ func schema_pkg_apis_eks_v1alpha1_EKSStatus(ref common.ReferenceCallback) common
 							Format:      "",
 						},
 					},
+					"arn": {
+						SchemaProps: spec.SchemaProps{
+							Description: "ARN is the AWS ARN of the EKS cluster resource",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"roleARN": {
 						SchemaProps: spec.SchemaProps{
 							Description: "RoleARN is the role ARN which provides permissions to EKS",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"oidcProviderURL": {
+						SchemaProps: spec.SchemaProps{
+							Description: "OIDCProviderURL is the OIDC provider URL (used for providing IAM roles for service accounts)",
 							Type:        []string{"string"},
 							Format:      "",
 						},

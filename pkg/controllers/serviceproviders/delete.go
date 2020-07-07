@@ -72,7 +72,7 @@ func (c *Controller) delete(
 			kore.NewContext(ctx, logger, c.mgr.GetClient(), c),
 			kore.HubAdminTeam,
 			serviceProvider,
-			serviceProvider.Status.Components,
+			&serviceProvider.Status.Components,
 		)
 		if err != nil || result.Requeue || result.RequeueAfter > 0 {
 			return result, err

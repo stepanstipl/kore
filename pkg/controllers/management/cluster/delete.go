@@ -129,7 +129,7 @@ func (a *Controller) Remove(cluster *clustersv1.Cluster, components *kore.Cluste
 		// - we wait for it to be delete and then to move to the next
 
 		for i := len(*components) - 1; i >= 0; i-- {
-			result, err := a.removeComponent(ctx, cluster, (*components)[i])
+			result, err := a.removeComponent(ctx, cluster, components, (*components)[i])
 			if err != nil || result.Requeue || result.RequeueAfter > 0 {
 				return result, err
 			}
@@ -142,7 +142,14 @@ func (a *Controller) Remove(cluster *clustersv1.Cluster, components *kore.Cluste
 	}
 }
 
-func (a *Controller) removeComponent(ctx context.Context, cluster *clustersv1.Cluster, comp *kore.ClusterComponent) (reconcile.Result, error) {
+func (a *Controller) removeComponent(
+	ctx kore.Context, cluster *clustersv1.Cluster, components *kore.ClusterComponents, comp *kore.ClusterComponent,
+) (reconcile.Result, error) {
+	statusComp, exists := cluster.Status.Components.GetComponent(comp.ComponentName())
+	if !exists || statusComp.Status == corev1.DeletedStatus {
+		return reconcile.Result{}, nil
+	}
+
 	a.logger.WithField(
 		"resource", comp.ComponentName(),
 	).Debug("attempting to delete the resource from the cluster")
@@ -158,6 +165,12 @@ func (a *Controller) removeComponent(ctx context.Context, cluster *clustersv1.Cl
 		return reconcile.Result{}, err
 	}
 	if !found {
+		if comp.AfterDelete != nil {
+			if err := comp.AfterDelete(ctx, cluster, components); err != nil {
+				return reconcile.Result{}, err
+			}
+		}
+
 		condition.Status = corev1.DeletedStatus
 
 		return reconcile.Result{}, nil

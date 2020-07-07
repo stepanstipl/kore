@@ -20,10 +20,6 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/appvia/kore/pkg/schema"
-
-	"github.com/appvia/kore/pkg/utils/kubernetes"
-
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
@@ -68,87 +64,6 @@ func ClusterProviders() map[string]ClusterProvider {
 		res[k] = v
 	}
 	return res
-}
-
-type ClusterComponents []*ClusterComponent
-
-// Add adds a cluster component
-func (c *ClusterComponents) Add(object kubernetes.Object, dependencies ...kubernetes.Object) {
-	c.AddComponent(&ClusterComponent{
-		Object:       object,
-		Dependencies: dependencies,
-	})
-}
-
-// AddComponent adds a cluster component
-func (c *ClusterComponents) AddComponent(comp *ClusterComponent) {
-	// @step: we always ensure we have a kind on the resource
-	gvk, found, err := schema.GetGroupKindVersion(comp.Object)
-	if err != nil || !found {
-		panic(fmt.Errorf("resource GVK not found for %s (%T)", comp.Object.GetName(), comp.Object))
-	}
-	comp.Object.GetObjectKind().SetGroupVersionKind(gvk)
-
-	*c = append(*c, comp)
-}
-
-// Find returns with the first components where the selector function returns true
-func (c *ClusterComponents) Find(f func(comp ClusterComponent) bool) *ClusterComponent {
-	for _, comp := range *c {
-		if f(*comp) {
-			return comp
-		}
-	}
-	return nil
-}
-
-// Sort sorts the cluster components in a dependency order
-// It returns an error if a circular reference is found
-func (c *ClusterComponents) Sort() error {
-	resolver := kubernetes.NewDependencyResolver()
-	for _, comp := range *c {
-		resolver.AddNode(comp, comp.Dependencies...)
-	}
-	sorted, err := resolver.Resolve()
-	if err != nil {
-		return err
-	}
-
-	var res ClusterComponents
-	for _, comp := range sorted {
-		res = append(res, comp.(*ClusterComponent))
-	}
-
-	*c = res
-	return nil
-}
-
-// ClusterComponent is a Kubernetes Object with optional dependencies
-type ClusterComponent struct {
-	kubernetes.Object
-	// Dependencies should return the dependencies for this component
-	Dependencies []kubernetes.Object
-	// Exists is set if the resource exists already
-	Exists bool
-	// IsProvider should mark a single component which is responsible for provisioning the cluster
-	IsProvider bool
-}
-
-// ComponentID returns with a unique component id
-func (c ClusterComponent) ComponentID() string {
-	gvk := c.GetObjectKind().GroupVersionKind()
-	return fmt.Sprintf("%s/%s/%s/%s/%s",
-		gvk.Group,
-		gvk.Version,
-		gvk.Kind,
-		c.GetNamespace(),
-		c.GetName(),
-	)
-}
-
-// ComponentName returns with the component's display name
-func (c ClusterComponent) ComponentName() string {
-	return fmt.Sprintf("%s/%s", c.GetObjectKind().GroupVersionKind().Kind, c.GetName())
 }
 
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . ClusterProvider

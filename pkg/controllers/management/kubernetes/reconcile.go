@@ -89,6 +89,10 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 		return reconcile.Result{}, nil
 	}
 
+	// Remove deprecated components
+	object.Status.Components.RemoveComponent("Service/helm-app-cluster-autoscaler")
+	object.Status.Components.RemoveComponent("Service/" + object.Name + "-autoscaler")
+
 	finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
 	if finalizer.IsDeletionCandidate(object) {
 		return a.Delete(ctx, object)
@@ -397,15 +401,6 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			})
 		} else {
 			logger.Debug("skipping default network policy and feature is disabled")
-		}
-
-		// Deploy any in cluster services required
-		if result, err := a.EnsureProviderWorkloads(ctx, object); err != nil {
-			logger.WithError(err).Error("trying to provision in cluster services")
-
-			return result, err
-		} else if result.Requeue {
-			return result, nil
 		}
 
 		object.Status.APIEndpoint = token.Spec.Data["endpoint"]

@@ -90,7 +90,7 @@ func (p Provider) BeforeComponentsUpdate(ctx kore.Context, cluster *clustersv1.C
 
 		case *gcpv1alpha1.ProjectClaim:
 			// @step: we never touch the project claim under these circumstances
-			if comp.Exists {
+			if comp.Exists() {
 				continue
 			}
 

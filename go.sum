@@ -82,6 +82,8 @@ github.com/aws/aws-sdk-go v1.29.31 h1:y4lIvJf88grxomd/caxacLrNFIz2U3jld9vHElK/Fh
 github.com/aws/aws-sdk-go v1.29.31/go.mod h1:1KvfttTE3SPKMpo8g2c6jL3ZKfXtFvKscTgahTma5Xg=
 github.com/banzaicloud/k8s-objectmatcher v1.3.2 h1:HhXkOWg4xmAW203p3G4Av9ylUfkUJF1+8MK90XQAaJw=
 github.com/banzaicloud/k8s-objectmatcher v1.3.2/go.mod h1:j+N22VwgVfa0ajVtNxOz2G72aSOL21lpB7qV2GDrr/I=
+github.com/banzaicloud/k8s-objectmatcher v1.3.3 h1:Bqiaa1v4PgWfVNfDHnCABm02U4cWQrRDZ8EVWzYCqNk=
+github.com/banzaicloud/k8s-objectmatcher v1.3.3/go.mod h1:j+N22VwgVfa0ajVtNxOz2G72aSOL21lpB7qV2GDrr/I=
 github.com/beevik/etree v1.1.0 h1:T0xke/WvNtMoCqgzPhkX2r4rjY3GDZFi+FjpRZY2Jbs=
 github.com/beevik/etree v1.1.0/go.mod h1:r8Aw8JqVegEf0w2fDnATrX9VpkMcyFeM0FhwO62wh+A=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
@@ -1389,6 +1391,8 @@ rsc.io/pdf v0.1.1/go.mod h1:n8OzWcQ6Sp37PL01nO98y4iUCRdTGarVfzxY20ICaU4=
 sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.0.7/go.mod h1:PHgbrJT7lCHcxMU+mDHEm+nx46H4zuuHZkDP6icnhu0=
 sigs.k8s.io/application v0.8.2-0.20200209202752-a485a03cdc47 h1:h+pFvyYfvsgbq0rHMchXpnGXA8ko5x01sPfS88q2R0c=
 sigs.k8s.io/application v0.8.2-0.20200209202752-a485a03cdc47/go.mod h1:TftfA3P98/8CKo9zv1wXBw44C7xqtb+Rzc/ZcTwpVPk=
+sigs.k8s.io/application v0.8.3 h1:5UETobiVhxTkKn3pIESImXiMNmSg3VkM5+JvmYGDPko=
+sigs.k8s.io/application v0.8.3/go.mod h1:Mv+ht9RE/QNtITYCzRbt3XTIN6t6so6cInmiyg6wOIg=
 sigs.k8s.io/aws-iam-authenticator v0.5.0 h1:Lq6dfqNR0W0pU33QmhS9SwCFNnjB5yMG8+hnVekB7UE=
 sigs.k8s.io/aws-iam-authenticator v0.5.0/go.mod h1:hGGN2wp01A1NU/88s8Wjfa3nY5bZYdeZn1aAAb8j1SI=
 sigs.k8s.io/controller-runtime v0.4.0 h1:wATM6/m+3w8lj8FXNaO6Fs/rq/vqoOjO1Q116Z9NPsg=

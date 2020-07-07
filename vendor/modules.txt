@@ -84,7 +84,7 @@ github.com/aws/aws-sdk-go/service/s3/internal/arn
 github.com/aws/aws-sdk-go/service/servicecatalog
 github.com/aws/aws-sdk-go/service/sts
 github.com/aws/aws-sdk-go/service/sts/stsiface
-# github.com/banzaicloud/k8s-objectmatcher v1.3.2
+# github.com/banzaicloud/k8s-objectmatcher v1.3.3
 github.com/banzaicloud/k8s-objectmatcher/patch
 # github.com/beevik/etree v1.1.0
 github.com/beevik/etree
@@ -1331,7 +1331,7 @@ mvdan.cc/interfacer/check
 mvdan.cc/lint
 # mvdan.cc/unparam v0.0.0-20190720180237-d51796306d8f
 mvdan.cc/unparam/check
-# sigs.k8s.io/application v0.8.2-0.20200209202752-a485a03cdc47
+# sigs.k8s.io/application v0.8.3
 sigs.k8s.io/application/api/v1beta1
 # sigs.k8s.io/aws-iam-authenticator v0.5.0
 sigs.k8s.io/aws-iam-authenticator/pkg/arn

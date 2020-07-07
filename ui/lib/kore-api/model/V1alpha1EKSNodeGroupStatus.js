@@ -48,6 +48,9 @@ class V1alpha1EKSNodeGroupStatus {
         if (data) {
             obj = obj || new V1alpha1EKSNodeGroupStatus();
 
+            if (data.hasOwnProperty('autoScalingGroupNames')) {
+                obj['autoScalingGroupNames'] = ApiClient.convertToType(data['autoScalingGroupNames'], ['String']);
+            }
             if (data.hasOwnProperty('conditions')) {
                 obj['conditions'] = ApiClient.convertToType(data['conditions'], [V1Component]);
             }
@@ -61,6 +64,19 @@ class V1alpha1EKSNodeGroupStatus {
         return obj;
     }
 
+/**
+     * @return {Array.<String>}
+     */
+    getAutoScalingGroupNames() {
+        return this.autoScalingGroupNames;
+    }
+
+    /**
+     * @param {Array.<String>} autoScalingGroupNames
+     */
+    setAutoScalingGroupNames(autoScalingGroupNames) {
+        this['autoScalingGroupNames'] = autoScalingGroupNames;
+    }
 /**
      * @return {Array.<module:model/V1Component>}
      */
@@ -102,6 +118,11 @@ class V1alpha1EKSNodeGroupStatus {
     }
 
 }
+
+/**
+ * @member {Array.<String>} autoScalingGroupNames
+ */
+V1alpha1EKSNodeGroupStatus.prototype['autoScalingGroupNames'] = undefined;
 
 /**
  * @member {Array.<module:model/V1Component>} conditions

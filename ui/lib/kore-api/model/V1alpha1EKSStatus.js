@@ -48,6 +48,9 @@ class V1alpha1EKSStatus {
         if (data) {
             obj = obj || new V1alpha1EKSStatus();
 
+            if (data.hasOwnProperty('arn')) {
+                obj['arn'] = ApiClient.convertToType(data['arn'], 'String');
+            }
             if (data.hasOwnProperty('caCertificate')) {
                 obj['caCertificate'] = ApiClient.convertToType(data['caCertificate'], 'String');
             }
@@ -56,6 +59,9 @@ class V1alpha1EKSStatus {
             }
             if (data.hasOwnProperty('endpoint')) {
                 obj['endpoint'] = ApiClient.convertToType(data['endpoint'], 'String');
+            }
+            if (data.hasOwnProperty('oidcProviderURL')) {
+                obj['oidcProviderURL'] = ApiClient.convertToType(data['oidcProviderURL'], 'String');
             }
             if (data.hasOwnProperty('roleARN')) {
                 obj['roleARN'] = ApiClient.convertToType(data['roleARN'], 'String');
@@ -67,6 +73,19 @@ class V1alpha1EKSStatus {
         return obj;
     }
 
+/**
+     * @return {String}
+     */
+    getArn() {
+        return this.arn;
+    }
+
+    /**
+     * @param {String} arn
+     */
+    setArn(arn) {
+        this['arn'] = arn;
+    }
 /**
      * @return {String}
      */
@@ -109,6 +128,19 @@ class V1alpha1EKSStatus {
 /**
      * @return {String}
      */
+    getOidcProviderURL() {
+        return this.oidcProviderURL;
+    }
+
+    /**
+     * @param {String} oidcProviderURL
+     */
+    setOidcProviderURL(oidcProviderURL) {
+        this['oidcProviderURL'] = oidcProviderURL;
+    }
+/**
+     * @return {String}
+     */
     getRoleARN() {
         return this.roleARN;
     }
@@ -136,6 +168,11 @@ class V1alpha1EKSStatus {
 }
 
 /**
+ * @member {String} arn
+ */
+V1alpha1EKSStatus.prototype['arn'] = undefined;
+
+/**
  * @member {String} caCertificate
  */
 V1alpha1EKSStatus.prototype['caCertificate'] = undefined;
@@ -149,6 +186,11 @@ V1alpha1EKSStatus.prototype['conditions'] = undefined;
  * @member {String} endpoint
  */
 V1alpha1EKSStatus.prototype['endpoint'] = undefined;
+
+/**
+ * @member {String} oidcProviderURL
+ */
+V1alpha1EKSStatus.prototype['oidcProviderURL'] = undefined;
 
 /**
  * @member {String} roleARN

@@ -18,8 +18,6 @@
 package aws
 
 import (
-	"context"
-	"net/url"
 	"os"
 	"testing"
 
@@ -36,37 +34,8 @@ const (
 func TestEnsureIRSA(t *testing.T) {
 	test.SkipTestIfEnvNotSet(testIam, t)
 	iamClient := getIamClientFromEnv()
-	err := iamClient.EnsureIRSA(os.Getenv("KORETEST_CLUSTER_ARN"), os.Getenv("KORETEST_CLUSTER_OIDC_URL"))
+	err := iamClient.EnsureOIDCProvider(os.Getenv("KORETEST_CLUSTER_ARN"), os.Getenv("KORETEST_CLUSTER_OIDC_URL"))
 	require.NoError(t, err)
-}
-
-func TestEnsureClusterAutoscalingRoleAndPolicies(t *testing.T) {
-	test.SkipTestIfEnvNotSet(testIam, t)
-	iamClient := getIamClientFromEnv()
-
-	ngas := []NodeGroupAutoScaler{
-		{
-			AutoScalingARN: os.Getenv("KORETEST_NG_1_AUTOSCALING_ARN"),
-			NodeGroupName:  os.Getenv("KORETEST_NG_1_NAME"),
-		},
-		{
-			AutoScalingARN: os.Getenv("KORETEST_NG_2_AUTOSCALING_ARN"),
-			NodeGroupName:  os.Getenv("KORETEST_NG_2_NAME"),
-		},
-	}
-
-	issuerURL, _ := url.Parse(os.Getenv("KORETEST_CLUSTER_OIDC_URL"))
-	oidcIssuer := issuerURL.Hostname() + issuerURL.Path
-
-	role, err := iamClient.EnsureClusterAutoscalingRoleAndPolicies(
-		context.Background(),
-		os.Getenv("KORETEST_CLUSTERNAME"),
-		test.AccountID,
-		oidcIssuer,
-		ngas,
-	)
-	require.NoError(t, err)
-	require.NotNil(t, role)
 }
 
 func getIamClientFromEnv() *IamClient {

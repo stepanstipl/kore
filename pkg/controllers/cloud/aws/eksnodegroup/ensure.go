@@ -191,9 +191,15 @@ func (n *ctrl) EnsureNodeGroup(client *aws.Client, group *eks.EKSNodeGroup) cont
 				Message: "EKS Nodegroup has been provisioned",
 				Status:  corev1.SuccessStatus,
 			})
+
+			if state.Resources != nil {
+				group.Status.AutoScalingGroupNames = nil
+				for _, asg := range state.Resources.AutoScalingGroups {
+					group.Status.AutoScalingGroupNames = append(group.Status.AutoScalingGroupNames, *asg.Name)
+				}
+			}
 		}
 
-		// @step: we need to check the current state against the
 		updating, err := client.UpdateNodeGroup(ctx, group)
 		if err != nil {
 			logger.WithError(err).Error("trying to update the eks nodegroup")

@@ -21,10 +21,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/appvia/kore/pkg/controllers"
-
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
+	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
@@ -84,31 +83,6 @@ func (p Provider) Reconcile(
 		app = compiledResources.Application().DeepCopy()
 	}
 
-	if app != nil {
-		exists, err := kubernetes.GetIfExists(ctx, clusterClient, app)
-		if err != nil {
-			if !utils.IsMissingKind(err) {
-				return reconcile.Result{}, fmt.Errorf("failed to get application %q: %w", app.Name, err)
-			}
-		}
-
-		if exists {
-			for _, condition := range app.Status.Conditions {
-				if condition.Type == applicationv1beta.Ready {
-					if condition.Status == "True" {
-						service.Status.Status = corev1.SuccessStatus
-						service.Status.Message = condition.Message
-						// We will actively monitor the application status and update the service
-						return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
-					} else {
-						service.Status.Status = corev1.PendingStatus
-						service.Status.Message = condition.Message
-					}
-				}
-			}
-		}
-	}
-
 	providerData := &ProviderData{}
 	if err := service.Status.GetProviderData(providerData); err != nil {
 		return reconcile.Result{}, err
@@ -154,10 +128,39 @@ func (p Provider) Reconcile(
 		return reconcile.Result{}, nil
 	}
 
-	for _, condition := range app.Status.Conditions {
-		if condition.Type == applicationv1beta.Error {
-			if condition.Status == "True" {
-				return reconcile.Result{}, errors.New(condition.Message)
+	appExists, err := kubernetes.GetIfExists(ctx, clusterClient, app)
+	if err != nil {
+		if !utils.IsMissingKind(err) {
+			return reconcile.Result{}, fmt.Errorf("failed to get application %q: %w", app.Name, err)
+		}
+	}
+
+	service.Status.Status = corev1.PendingStatus
+	service.Status.Message = ""
+
+	if appExists {
+		for _, condition := range app.Status.Conditions {
+			switch condition.Type {
+			case applicationv1beta.Error:
+				if condition.Status == "True" {
+					return reconcile.Result{}, errors.New(condition.Message)
+				}
+			case applicationv1beta.Ready:
+				if condition.Status == "True" {
+					// The Application status will be healthy even if there are no monitored resources, so we have to
+					// explicitly check ComponentsReady for "0/0"
+					if app.Status.ComponentsReady == "0/0" {
+						return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+					}
+
+					service.Status.Status = corev1.SuccessStatus
+					service.Status.Message = condition.Message
+
+					// We will actively monitor the application status and update the service
+					return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+				} else {
+					service.Status.Message = condition.Message
+				}
 			}
 		}
 	}

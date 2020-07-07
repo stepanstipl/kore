@@ -17,11 +17,9 @@
 package helpers
 
 import (
-	"context"
 	"errors"
 	"fmt"
 
-	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
@@ -29,8 +27,6 @@ import (
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/cloud/aws"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
-
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // KoreEKS can provide reuse for read only operations with EKS objects across our controllers
@@ -41,10 +37,9 @@ type KoreEKS struct {
 }
 
 // NewKoreEKS creates a reusable EKS object across multiple controllers
-func NewKoreEKS(ctx context.Context, resource *eks.EKS, client client.Client, iface kore.Interface, logger log.FieldLogger) *KoreEKS {
-	kc := kore.NewContext(ctx, logger, client, iface)
+func NewKoreEKS(ctx kore.Context, resource *eks.EKS) *KoreEKS {
 	return &KoreEKS{
-		ctx:      kc,
+		ctx:      ctx,
 		resource: resource,
 	}
 }

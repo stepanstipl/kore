@@ -107,50 +107,41 @@ func NewEKSClientFromVPC(c *VPCClient, clusterName string) *Client {
 	}
 }
 
-// Exists checks if a cluster exists
-func (c *Client) Exists(ctx context.Context) (exists bool, err error) {
-	_, err = c.svc.DescribeClusterWithContext(ctx, &awseks.DescribeClusterInput{
+// GetIfExists checks if a cluster exists and returns it
+func (c *Client) GetIfExists(ctx context.Context) (*awseks.Cluster, bool, error) {
+	out, err := c.svc.DescribeClusterWithContext(ctx, &awseks.DescribeClusterInput{
 		Name: aws.String(c.clusterName),
 	})
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
 			case eks.ErrCodeResourceNotFoundException:
-				return false, nil
+				return nil, false, nil
 			default:
-				return false, err
+				return nil, false, err
 			}
 		} else {
-			return false, err
+			return nil, false, err
 		}
 	}
 
-	return true, nil
+	return out.Cluster, true, nil
 }
 
 // Create creates an EKS cluster
-func (c *Client) Create(ctx context.Context) error {
+func (c *Client) Create(ctx context.Context) (*eks.Cluster, error) {
 	logger := log.WithFields(log.Fields{
 		"name":      c.cluster.Name,
 		"namespace": c.cluster.Namespace,
 	})
 	logger.Debug("attempting to create the eks cluster")
 
-	// @step: we should check if the cluster already exist
-	existing, err := c.Exists(ctx)
+	output, err := c.svc.CreateClusterWithContext(ctx, c.createClusterInput())
 	if err != nil {
-		logger.WithError(err).Error("trying to check for the eks cluster")
-
-		return err
-	}
-	if !existing {
-		_, err := c.svc.CreateClusterWithContext(ctx, c.createClusterInput())
-		if err != nil {
-			return err
-		}
+		return nil, err
 	}
 
-	return nil
+	return output.Cluster, err
 }
 
 // Delete is responsible for deleting the eks cluster
@@ -422,6 +413,13 @@ func (c *Client) UpdateNodeGroup(ctx context.Context, group *eksv1alpha1.EKSNode
 		// time, you'd get a slightly odd result here where we might set an old desired size.
 		// But it's a very small window indeed, and will sort itself out fairly promptly.
 		desiredSize = aws.Int64Value(state.ScalingConfig.DesiredSize)
+
+		// We have to make sure the desired size is always within min and max
+		if desiredSize < minSize {
+			desiredSize = minSize
+		} else if desiredSize > maxSize {
+			desiredSize = maxSize
+		}
 	}
 	if aws.Int64Value(state.ScalingConfig.MinSize) != minSize ||
 		aws.Int64Value(state.ScalingConfig.MaxSize) != maxSize ||

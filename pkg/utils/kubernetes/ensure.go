@@ -21,6 +21,11 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/appvia/kore/pkg/utils/jsonutils"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
+
+	"github.com/banzaicloud/k8s-objectmatcher/patch"
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -159,7 +164,7 @@ func CreateOrReplace(ctx context.Context, cc client.Client, object runtime.Objec
 func TypeSpecificUpdate(ctx context.Context, cc client.Client, object runtime.Object) (bool, runtime.Object, error) {
 	gvk := object.GetObjectKind().GroupVersionKind()
 	switch gvk.GroupKind().String() {
-	case "Service":
+	case "Service", "Application.app.k8s.io":
 		err := DeleteIfExists(ctx, cc, object)
 		if err != nil {
 			return true, object, err
@@ -209,4 +214,70 @@ func CreateOrForceUpdate(ctx context.Context, cc client.Client, obj runtime.Obje
 	}
 
 	return obj, nil
+}
+
+// UpdateIfChangedSinceLastUpdate updates the object only if the object data has changed since we've last applied it
+// The last applied data will be saved in the `kore.appvia.io/last-applied` annotation and it will be used for comparison.
+func UpdateIfChangedSinceLastUpdate(ctx context.Context, client client.Client, object, existing runtime.Object) (bool, error) {
+	patchAnnotator := patch.NewAnnotator("kore.appvia.io/last-applied")
+	var patchResult *patch.PatchResult
+
+	if existing != nil {
+		var err error
+		patchResult, err = patch.NewPatchMaker(patchAnnotator).Calculate(
+			existing,
+			object,
+			patch.IgnoreStatusFields(),
+			// This is an ugly hack to compare the spec.configuration field as raw JSON strings
+			// The strategic merge patch throws an error for some non-existing struct fields, in this case for the JSON struct:
+			// > Failed to generate strategic merge patch: unable to find api field in struct JSON for the json field "resourceSelector"
+			compareFieldAsRawJSON("spec.configuration"),
+		)
+		if err != nil {
+			return false, err
+		}
+	}
+
+	if patchResult == nil || !patchResult.IsEmpty() {
+		if err := patchAnnotator.SetLastAppliedAnnotation(object); err != nil {
+			return false, err
+		}
+
+		if _, err := CreateOrUpdate(ctx, client, object); err != nil {
+			return false, err
+		}
+
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func compareFieldAsRawJSON(path string) patch.CalculateOption {
+	return func(current, modified []byte) ([]byte, []byte, error) {
+		var err error
+		var compacted []byte
+
+		val := gjson.GetBytes(current, path)
+		if val.Exists() {
+			if compacted, err = jsonutils.Compact([]byte(val.Raw)); err != nil {
+				return nil, nil, err
+			}
+			if current, err = sjson.SetBytes(current, path, string(compacted)); err != nil {
+				return nil, nil, err
+			}
+		}
+
+		val = gjson.GetBytes(modified, path)
+		if val.Exists() {
+			if compacted, err = jsonutils.Compact([]byte(val.Raw)); err != nil {
+				return nil, nil, err
+			}
+			if modified, err = sjson.SetBytes(modified, path, string(compacted)); err != nil {
+				return nil, nil, err
+			}
+		}
+
+		return current, modified, nil
+	}
 }

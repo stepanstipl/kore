@@ -18,6 +18,9 @@ import (
 // swagger:model v1alpha1.EKSNodeGroupStatus
 type V1alpha1EKSNodeGroupStatus struct {
 
+	// auto scaling group names
+	AutoScalingGroupNames []string `json:"autoScalingGroupNames"`
+
 	// conditions
 	Conditions []*V1Component `json:"conditions"`
 

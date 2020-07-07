@@ -41,8 +41,7 @@ func (a *Controller) Load(cluster *clustersv1.Cluster, components *kore.ClusterC
 		for _, comp := range *components {
 			comp.Object.SetNamespace(cluster.Namespace)
 
-			var err error
-			if comp.Exists, err = kubernetes.GetIfExists(ctx, ctx.Client(), comp.Object); err != nil {
+			if err := comp.Load(ctx); err != nil {
 				return reconcile.Result{}, err
 			}
 		}
@@ -62,13 +61,13 @@ func (a *Controller) setComponents(cluster *clustersv1.Cluster, components *kore
 
 		components.Add(kubernetesObj)
 
-		kubeAppManager, err := a.createService(ctx, cluster, "kube-app-manager")
+		kubeAppManager, err := a.createService(ctx, cluster, kore.AppAppManager)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
 		components.Add(kubeAppManager, kubernetesObj)
 
-		fluxHelmOperator, err := a.createService(ctx, cluster, "flux-helm-operator")
+		fluxHelmOperator, err := a.createService(ctx, cluster, kore.AppHelmOperator)
 		if err != nil {
 			return reconcile.Result{}, err
 		}

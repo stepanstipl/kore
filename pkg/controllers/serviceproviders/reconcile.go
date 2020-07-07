@@ -155,22 +155,13 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 					service.Annotations[kore.AnnotationSystem] = kore.AnnotationValueTrue
 					service.Annotations[kore.AnnotationReadOnly] = kore.AnnotationValueTrue
 					adminServices = append(adminServices, service)
-
-					resource := corev1.MustGetOwnershipFromObject(&service)
-					serviceProvider.Status.Components.SetCondition(corev1.Component{
-						Name:     "Service/" + service.Name,
-						Status:   corev1.PendingStatus,
-						Message:  "",
-						Detail:   "",
-						Resource: &resource,
-					})
 				}
 
 				result, err = helpers.EnsureServices(
 					kore.NewContext(ctx, logger, c.mgr.GetClient(), c),
 					adminServices,
 					serviceProvider,
-					serviceProvider.Status.Components,
+					&serviceProvider.Status.Components,
 				)
 				if err != nil || result.Requeue || result.RequeueAfter > 0 {
 					return result, err

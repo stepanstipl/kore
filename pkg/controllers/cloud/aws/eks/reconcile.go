@@ -38,6 +38,8 @@ const (
 	finalizerName = "eks.compute.kore.appvia.io"
 	// ComponentClusterCreator is the name of the component for the UI
 	ComponentClusterCreator = "Cluster Creator"
+	// ComponentOIDCProvider is the component for the OIDC provider
+	ComponentOIDCProvider = "OIDC Provider"
 	// ComponentClusterBootstrap is the component name for seting up cloud credentials
 	ComponentClusterBootstrap = "Cluster Initialize Access"
 )
@@ -81,6 +83,7 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 	if resource.Status.Conditions == nil {
 		resource.Status.Conditions = corev1.Components{}
 	}
+	resource.Status.Status = corev1.PendingStatus
 
 	result, err := func() (reconcile.Result, error) {
 		// @step: add the finalizer if require
@@ -105,6 +108,7 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 			t.EnsureResourcePending(resource),
 			t.EnsureClusterRoles(resource),
 			t.EnsureClusterCreation(client, resource),
+			t.EnsureClusterOIDCProvider(client, resource),
 			t.EnsureClusterInSync(client, resource),
 			t.EnsureClusterBootstrap(client, resource),
 		}
@@ -127,6 +131,11 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 
 		resource.Status.Status = corev1.FailureStatus
 	}
+
+	if err == nil && !result.Requeue && result.RequeueAfter == 0 {
+		resource.Status.Status = corev1.SuccessStatus
+	}
+
 	// @step: we update always update the status before throwing any error
 	if err := t.mgr.GetClient().Status().Patch(ctx, resource, client.MergeFrom(original)); err != nil {
 		logger.WithError(err).Error("updating the status of eks cluster")
@@ -139,12 +148,8 @@ func (t *eksCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error)
 
 // GetClusterClient returns a EKS cluster client
 func (t *eksCtrl) GetClusterClient(ctx context.Context, resource *eksv1alpha1.EKS) (*aws.Client, error) {
-	e := helpers.NewKoreEKS(
-		ctx,
-		resource,
-		t.mgr.GetClient(),
-		t.Interface,
-		t.GetLoggerFromRes(resource))
+	koreCtx := kore.NewContext(ctx, t.GetLoggerFromRes(resource), t.mgr.GetClient(), t.Interface)
+	e := helpers.NewKoreEKS(koreCtx, resource)
 
 	c, err := e.GetClusterClient()
 	if err != nil {
@@ -161,10 +166,6 @@ func (t *eksCtrl) GetClusterClient(ctx context.Context, resource *eksv1alpha1.EK
 
 // GetCredentials returns the cloud credential
 func (t *eksCtrl) GetCredentials(ctx context.Context, cluster *eksv1alpha1.EKS, team string) (*aws.Credentials, error) {
-	return helpers.NewKoreEKS(
-		ctx,
-		cluster,
-		t.mgr.GetClient(),
-		t.Interface,
-		t.GetLoggerFromRes(cluster)).GetCredentials(cluster.Namespace)
+	koreCtx := kore.NewContext(ctx, t.GetLoggerFromRes(cluster), t.mgr.GetClient(), t.Interface)
+	return helpers.NewKoreEKS(koreCtx, cluster).GetCredentials(cluster.Namespace)
 }
