@@ -55,7 +55,7 @@ func (o *UpOptions) UpdateHelmValues(path string) error {
 		return err
 	}
 
-	if bytes.Compare(current, updated) != 0 {
+	if !bytes.Equal(current, updated) {
 		return ioutil.WriteFile(path, updated, os.FileMode(0750))
 	}
 
