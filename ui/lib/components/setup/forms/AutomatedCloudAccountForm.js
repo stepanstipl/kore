@@ -7,10 +7,12 @@ import FormErrorMessage from '../../forms/FormErrorMessage'
 import IconTooltip from '../../utils/IconTooltip'
 import { patterns } from '../../../utils/validation'
 
-class GCPAutomatedProjectForm extends React.Component {
+class AutomatedCloudAccountForm extends React.Component {
   static propTypes = {
     form: PropTypes.object.isRequired,
     data: PropTypes.object,
+    alertTitle: PropTypes.string.isRequired,
+    alertDescription: PropTypes.string.isRequired,
     handleSubmit: PropTypes.func.isRequired,
     handleCancel: PropTypes.func.isRequired,
   }
@@ -77,8 +79,8 @@ class GCPAutomatedProjectForm extends React.Component {
             <Alert
               style={{ marginBottom: '10px' }}
               showIcon={true}
-              message="Project naming"
-              description="The GCP project will name using the optional prefix and suffix specified below, along with the team ID."
+              message={this.props.alertTitle}
+              description={this.props.alertDescription}
             />
             <Form.Item style={{ marginRight: '-40px' }} labelCol={{ span: 16 }} label="Prefix" validateStatus={this.fieldError('prefix') ? 'error' : ''} help={this.fieldError('prefix') ? <IconTooltip icon="close-circle" color="red" text={this.fieldError('prefix')} /> : ''}>
               {getFieldDecorator('prefix', { rules: [{ ...patterns.uriCompatible10CharMax }], initialValue: (data && data.prefix) || 'kore' })(
@@ -107,6 +109,6 @@ class GCPAutomatedProjectForm extends React.Component {
   }
 }
 
-const WrappedGCPAutomatedProjectForm = Form.create({ name: 'gcp_automated_project_form' })(GCPAutomatedProjectForm)
+const WrappedAutomatedCloudAccountForm = Form.create({ name: 'automated_cloud_account_form' })(AutomatedCloudAccountForm)
 
-export default WrappedGCPAutomatedProjectForm
+export default WrappedAutomatedCloudAccountForm

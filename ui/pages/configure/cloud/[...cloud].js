@@ -10,7 +10,7 @@ import EKSCredentialsList from '../../../lib/components/credentials/EKSCredentia
 import AWSOrganizationsList from '../../../lib/components/credentials/AWSOrganizationsList'
 import PlanList from '../../../lib/components/plans/PlanList'
 import PolicyList from '../../../lib/components/policies/PolicyList'
-import GCPProjectAutomationSettings from '../../../lib/components/setup/GCPProjectAutomationSettings'
+import CloudAccountAutomationSettings from '../../../lib/components/setup/CloudAccountAutomationSettings'
 import CloudTabs from '../../../lib/components/common/CloudTabs'
 import CloudServiceAdmin from '../../../lib/components/services/CloudServiceAdmin'
 import { featureEnabled, KoreFeatures } from '../../../lib/utils/features'
@@ -76,7 +76,7 @@ export default class ConfigureCloudPage extends React.Component {
                 <GKECredentialsList />
               </Tabs.TabPane>
               <Tabs.TabPane tab="Project automation" key="project_automation">
-                <GCPProjectAutomationSettings />
+                <CloudAccountAutomationSettings provider="GKE" cloudOrgsApiMethod="ListGCPOrganizations" cloud="GCP" accountNoun="project" />
               </Tabs.TabPane>
               <Tabs.TabPane tab="Cluster Plans" key="plans">
                 <PlanList kind="GKE" />
@@ -93,6 +93,9 @@ export default class ConfigureCloudPage extends React.Component {
               </Tabs.TabPane>
               <Tabs.TabPane tab="Account credentials" key="accounts">
                 <EKSCredentialsList />
+              </Tabs.TabPane>
+              <Tabs.TabPane tab="Account automation" key="account-automation">
+                <CloudAccountAutomationSettings provider="EKS" cloudOrgsApiMethod="ListAWSOrganizations" cloud="AWS" accountNoun="account" />
               </Tabs.TabPane>
               <Tabs.TabPane tab="Cluster Plans" key="plans">
                 <PlanList kind="EKS" />

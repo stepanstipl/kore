@@ -68,5 +68,19 @@ module.exports = {
     'AWS': 'EKS',
     'GCP': 'GKE'
   },
+  cloudAccountAutomation: {
+    notprod: {
+      defaultPlans: {
+        'AWS': ['eks-development'],
+        'GCP': ['gke-development'],
+      }
+    },
+    prod: {
+      defaultPlans: {
+        'AWS': ['eks-production'],
+        'GCP': ['gke-production'],
+      }
+    }
+  },
   disableAnimations: process.env.KORE_UI_DISABLE_ANIMATIONS === 'true'
 }

@@ -1,20 +1,27 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Button, Card, Divider, Steps } from 'antd'
+import Link from 'next/link'
+import { Button, Card, Divider, Icon, Result, Steps, Typography } from 'antd'
+const { Paragraph } = Typography
 const { Step } = Steps
+import { pluralize, titleize } from 'inflect'
 
 import RequestCredentialAccessForm from './forms/RequestCredentialAccessForm'
+import GKECredentialsList from '../credentials/GKECredentialsList'
+import EKSCredentialsList from '../credentials/EKSCredentialsList'
 
 class ExistingCloudAccounts extends React.Component {
 
   static propTypes = {
+    cloud: PropTypes.oneOf(['GCP', 'AWS']),
+    accountNoun: PropTypes.string.isRequired,
     setupComplete: PropTypes.bool.isRequired,
     handleSetupComplete: PropTypes.func.isRequired
   }
 
   steps = [
     { id: 'CREDS', title: 'Credentials', contentFn: 'stepsContentCreds', completeFn: 'stepsCompleteCreds'  },
-    { id: 'ACCESS', title: 'Account access', contentFn: 'stepsContentAccess', completeFn: 'stepsCompleteAccess'  }
+    { id: 'ACCESS', title: `${titleize(this.props.accountNoun)} access`, contentFn: 'stepsContentAccess', completeFn: 'stepsCompleteAccess'  }
   ]
 
   state = {
@@ -23,13 +30,27 @@ class ExistingCloudAccounts extends React.Component {
     emailValid: RequestCredentialAccessForm.ENABLED ? false : true
   }
 
-  stepsContentCreds = () => {
-    throw new Error('stepsContentCreds must be implemented')
-  }
+  stepsContentCreds = () => (
+    <>
+      <Paragraph style={{ fontSize: '16px', fontWeight: '600' }}>Add one or more {this.props.cloud} {this.props.accountNoun} credentials</Paragraph>
+      {this.props.cloud === 'GCP' && <GKECredentialsList getResourceItemList={this.setCredsCount} />}
+      {this.props.cloud === 'AWS' && <EKSCredentialsList getResourceItemList={this.setCredsCount} />}
+    </>
+  )
 
-  setupCompleteContent = () => {
-    throw new Error('setupCompleteContent must be implemented')
-  }
+  setupCompleteContent = () => (
+    <Card>
+      <Result
+        status="success"
+        title="Setup complete!"
+        subTitle={`Kore will use existing ${this.props.cloud} ${pluralize(this.props.accountNoun)} that it's given access to`}
+        extra={<Link href="/setup/kore/complete"><Button type="primary" key="continue">Continue</Button></Link>}
+      >
+        <Paragraph><Icon type="check-circle" theme="twoTone" twoToneColor="#52c41a" /> {this.props.cloud} {this.props.accountNoun} credentials</Paragraph>
+        <Paragraph style={{ marginBottom: '0' }}><Icon type="check-circle" theme="twoTone" twoToneColor="#52c41a" /> {titleize(this.props.accountNoun)} access guidance</Paragraph>
+      </Result>
+    </Card>
+  )
 
   nextStep() {
     const currentStep = this.state.currentStep + 1

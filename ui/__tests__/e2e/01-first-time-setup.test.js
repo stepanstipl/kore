@@ -49,8 +49,8 @@ describe('First time login and Kore setup - GCP', () => {
       await setupKoreCloudAccessPage.addGcpOrganization(testOrg)
       await expect(page).toMatch('GCP organization created successfully')
       await setupKoreCloudAccessPage.nextStep()
-      await setupKoreCloudAccessPage.selectKoreManagedProjects('custom')
-      await setupKoreCloudAccessPage.setAutomatedProjectDefaults()
+      await setupKoreCloudAccessPage.selectKoreManagedAccounts('custom')
+      await setupKoreCloudAccessPage.setAutomatedAccountDefaults()
       await setupKoreCloudAccessPage.save()
       await setupKorePage.clickPrimaryButton()
 
@@ -79,7 +79,8 @@ describe('First time login and Kore setup - GCP', () => {
     })
 
     it('allows the configured org to be deleted', async () => {
-      if (await orgsPage.orgConfigured()) {
+      const orgConfigured = await orgsPage.orgConfigured()
+      if (!orgConfigured) {
         return
       }
       await orgsPage.checkOrgListed(testOrg.name)
