@@ -44,17 +44,6 @@ var (
 			},
 		},
 		{
-			Name:         "rule",
-			APIName:      "monitoring/rules",
-			GroupVersion: monitoringv1beta1.SchemeGroupVersion.String(),
-			Kind:         "Rule",
-			Scope:        GlobalScope,
-			Printer: []Column{
-				{"Name", "metadata.name", ""},
-				{"Age", "metadata.creationTimestamp", "age"},
-			},
-		},
-		{
 			Name:         "alert",
 			APIName:      "monitoring/alerts",
 			GroupVersion: monitoringv1beta1.SchemeGroupVersion.String(),
@@ -65,6 +54,7 @@ var (
 				{"Name", "metadata.name", ""},
 				{"Resource", "status.rule.spec.resource.name", ""},
 				{"Kind", "status.rule.spec.resource.kind", ""},
+				{"Detail", "spec.summary", ""},
 				{"Status", "status.status", ""},
 				{"Age", "metadata.creationTimestamp", "age"},
 			},

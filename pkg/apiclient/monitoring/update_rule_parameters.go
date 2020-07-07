@@ -66,7 +66,7 @@ type UpdateRuleParams struct {
 	  The specification for a rule in the kore
 
 	*/
-	Body *models.V1beta1Rule
+	Body *models.V1beta1AlertRule
 	/*Group
 	  Is the group of the kind
 
@@ -137,13 +137,13 @@ func (o *UpdateRuleParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithBody adds the body to the update rule params
-func (o *UpdateRuleParams) WithBody(body *models.V1beta1Rule) *UpdateRuleParams {
+func (o *UpdateRuleParams) WithBody(body *models.V1beta1AlertRule) *UpdateRuleParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the update rule params
-func (o *UpdateRuleParams) SetBody(body *models.V1beta1Rule) {
+func (o *UpdateRuleParams) SetBody(body *models.V1beta1AlertRule) {
 	o.Body = body
 }
 

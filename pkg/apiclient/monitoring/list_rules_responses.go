@@ -69,20 +69,20 @@ func NewListRulesOK() *ListRulesOK {
 Listing of the rules in kore
 */
 type ListRulesOK struct {
-	Payload *models.V1beta1RuleList
+	Payload *models.V1beta1AlertRuleList
 }
 
 func (o *ListRulesOK) Error() string {
 	return fmt.Sprintf("[GET /api/v1alpha1/monitoring/rules][%d] listRulesOK  %+v", 200, o.Payload)
 }
 
-func (o *ListRulesOK) GetPayload() *models.V1beta1RuleList {
+func (o *ListRulesOK) GetPayload() *models.V1beta1AlertRuleList {
 	return o.Payload
 }
 
 func (o *ListRulesOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1beta1RuleList)
+	o.Payload = new(models.V1beta1AlertRuleList)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

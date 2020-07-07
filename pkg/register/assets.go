@@ -29,8 +29,8 @@
 // deploy/crds/gcp.compute.kore.appvia.io_projects.yaml
 // deploy/crds/gke.compute.kore.appvia.io_gkecredentials.yaml
 // deploy/crds/gke.compute.kore.appvia.io_gkes.yaml
+// deploy/crds/monitoring.kore.appvia.io_alertrules.yaml
 // deploy/crds/monitoring.kore.appvia.io_alerts.yaml
-// deploy/crds/monitoring.kore.appvia.io_rules.yaml
 // deploy/crds/org.kore.appvia.io_auditevents.yaml
 // deploy/crds/org.kore.appvia.io_members.yaml
 // deploy/crds/org.kore.appvia.io_teaminvitations.yaml
@@ -6033,6 +6033,124 @@ func crdsGkeComputeKoreAppviaIo_gkesYaml() (*asset, error) {
 	return a, nil
 }
 
+var _crdsMonitoringKoreAppviaIo_alertrulesYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: alertrules.monitoring.kore.appvia.io
+spec:
+  group: monitoring.kore.appvia.io
+  names:
+    kind: AlertRule
+    listKind: AlertRuleList
+    plural: alertrules
+    singular: alertrule
+  preserveUnknownFields: false
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      description: AlertRule contains the definition of a alert rule
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: AlertRuleSpec specifies the details of a alert rule
+          properties:
+            rawRule:
+              description: RawRule is the underlying rule definition
+              type: string
+            resource:
+              description: Resource is the resource the alert is for
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
+            ruleID:
+              description: AlertID is a unique identifier for this rule
+              minLength: 1
+              type: string
+            severity:
+              description: Severity is the importance of the rule
+              minLength: 1
+              type: string
+            source:
+              description: Source is the provider of the rule i.e. prometheus, or
+                a named source
+              minLength: 1
+              type: string
+            summary:
+              description: Summary is a summary of the rule
+              minLength: 1
+              type: string
+          required:
+          - rawRule
+          - resource
+          - severity
+          - source
+          - summary
+          type: object
+      type: object
+  version: v1beta1
+  versions:
+  - name: v1beta1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsMonitoringKoreAppviaIo_alertrulesYamlBytes() ([]byte, error) {
+	return _crdsMonitoringKoreAppviaIo_alertrulesYaml, nil
+}
+
+func crdsMonitoringKoreAppviaIo_alertrulesYaml() (*asset, error) {
+	bytes, err := crdsMonitoringKoreAppviaIo_alertrulesYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/monitoring.kore.appvia.io_alertrules.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _crdsMonitoringKoreAppviaIo_alertsYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -6116,7 +6234,7 @@ spec:
                 metadata:
                   type: object
                 spec:
-                  description: RuleSpec specifies the details of a alert rule
+                  description: AlertRuleSpec specifies the details of a alert rule
                   properties:
                     rawRule:
                       description: RawRule is the underlying rule definition
@@ -6148,7 +6266,7 @@ spec:
                       - version
                       type: object
                     ruleID:
-                      description: RuleID is a unique identifier for this rule
+                      description: AlertID is a unique identifier for this rule
                       minLength: 1
                       type: string
                     severity:
@@ -6205,124 +6323,6 @@ func crdsMonitoringKoreAppviaIo_alertsYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "crds/monitoring.kore.appvia.io_alerts.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _crdsMonitoringKoreAppviaIo_rulesYaml = []byte(`
----
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
-metadata:
-  annotations:
-    controller-gen.kubebuilder.io/version: v0.2.5
-  creationTimestamp: null
-  name: rules.monitoring.kore.appvia.io
-spec:
-  group: monitoring.kore.appvia.io
-  names:
-    kind: Rule
-    listKind: RuleList
-    plural: rules
-    singular: rule
-  preserveUnknownFields: false
-  scope: Namespaced
-  validation:
-    openAPIV3Schema:
-      description: Rule contains the definition of a alert rule
-      properties:
-        apiVersion:
-          description: 'APIVersion defines the versioned schema of this representation
-            of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
-          type: string
-        kind:
-          description: 'Kind is a string value representing the REST resource this
-            object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
-          type: string
-        metadata:
-          type: object
-        spec:
-          description: RuleSpec specifies the details of a alert rule
-          properties:
-            rawRule:
-              description: RawRule is the underlying rule definition
-              type: string
-            resource:
-              description: Resource is the resource the alert is for
-              properties:
-                group:
-                  description: Group is the api group
-                  type: string
-                kind:
-                  description: Kind is the name of the resource under the group
-                  type: string
-                name:
-                  description: Name is name of the resource
-                  type: string
-                namespace:
-                  description: Namespace is the location of the object
-                  type: string
-                version:
-                  description: Version is the group version
-                  type: string
-              required:
-              - group
-              - kind
-              - name
-              - namespace
-              - version
-              type: object
-            ruleID:
-              description: RuleID is a unique identifier for this rule
-              minLength: 1
-              type: string
-            severity:
-              description: Severity is the importance of the rule
-              minLength: 1
-              type: string
-            source:
-              description: Source is the provider of the rule i.e. prometheus, or
-                a named source
-              minLength: 1
-              type: string
-            summary:
-              description: Summary is a summary of the rule
-              minLength: 1
-              type: string
-          required:
-          - rawRule
-          - resource
-          - severity
-          - source
-          - summary
-          type: object
-      type: object
-  version: v1beta1
-  versions:
-  - name: v1beta1
-    served: true
-    storage: true
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
-`)
-
-func crdsMonitoringKoreAppviaIo_rulesYamlBytes() ([]byte, error) {
-	return _crdsMonitoringKoreAppviaIo_rulesYaml, nil
-}
-
-func crdsMonitoringKoreAppviaIo_rulesYaml() (*asset, error) {
-	bytes, err := crdsMonitoringKoreAppviaIo_rulesYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "crds/monitoring.kore.appvia.io_rules.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -8160,8 +8160,8 @@ var _bindata = map[string]func() (*asset, error){
 	"crds/gcp.compute.kore.appvia.io_projects.yaml":                       crdsGcpComputeKoreAppviaIo_projectsYaml,
 	"crds/gke.compute.kore.appvia.io_gkecredentials.yaml":                 crdsGkeComputeKoreAppviaIo_gkecredentialsYaml,
 	"crds/gke.compute.kore.appvia.io_gkes.yaml":                           crdsGkeComputeKoreAppviaIo_gkesYaml,
+	"crds/monitoring.kore.appvia.io_alertrules.yaml":                      crdsMonitoringKoreAppviaIo_alertrulesYaml,
 	"crds/monitoring.kore.appvia.io_alerts.yaml":                          crdsMonitoringKoreAppviaIo_alertsYaml,
-	"crds/monitoring.kore.appvia.io_rules.yaml":                           crdsMonitoringKoreAppviaIo_rulesYaml,
 	"crds/org.kore.appvia.io_auditevents.yaml":                            crdsOrgKoreAppviaIo_auditeventsYaml,
 	"crds/org.kore.appvia.io_members.yaml":                                crdsOrgKoreAppviaIo_membersYaml,
 	"crds/org.kore.appvia.io_teaminvitations.yaml":                        crdsOrgKoreAppviaIo_teaminvitationsYaml,
@@ -8248,8 +8248,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"gcp.compute.kore.appvia.io_projects.yaml":                       {crdsGcpComputeKoreAppviaIo_projectsYaml, map[string]*bintree{}},
 		"gke.compute.kore.appvia.io_gkecredentials.yaml":                 {crdsGkeComputeKoreAppviaIo_gkecredentialsYaml, map[string]*bintree{}},
 		"gke.compute.kore.appvia.io_gkes.yaml":                           {crdsGkeComputeKoreAppviaIo_gkesYaml, map[string]*bintree{}},
+		"monitoring.kore.appvia.io_alertrules.yaml":                      {crdsMonitoringKoreAppviaIo_alertrulesYaml, map[string]*bintree{}},
 		"monitoring.kore.appvia.io_alerts.yaml":                          {crdsMonitoringKoreAppviaIo_alertsYaml, map[string]*bintree{}},
-		"monitoring.kore.appvia.io_rules.yaml":                           {crdsMonitoringKoreAppviaIo_rulesYaml, map[string]*bintree{}},
 		"org.kore.appvia.io_auditevents.yaml":                            {crdsOrgKoreAppviaIo_auditeventsYaml, map[string]*bintree{}},
 		"org.kore.appvia.io_members.yaml":                                {crdsOrgKoreAppviaIo_membersYaml, map[string]*bintree{}},
 		"org.kore.appvia.io_teaminvitations.yaml":                        {crdsOrgKoreAppviaIo_teaminvitationsYaml, map[string]*bintree{}},

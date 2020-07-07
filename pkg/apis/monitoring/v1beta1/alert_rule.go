@@ -24,17 +24,17 @@ import (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// Rule contains the definition of a alert rule
-type Rule struct {
+// AlertRule contains the definition of a alert rule
+type AlertRule struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              RuleSpec `json:"spec,omitempty"`
+	Spec              AlertRuleSpec `json:"spec,omitempty"`
 }
 
-// RuleSpec specifies the details of a alert rule
+// AlertRuleSpec specifies the details of a alert rule
 // +k8s:openapi-gen=true
-type RuleSpec struct {
-	// RuleID is a unique identifier for this rule
+type AlertRuleSpec struct {
+	// AlertID is a unique identifier for this rule
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
 	RuleID string `json:"ruleID,omitempty"`
@@ -60,9 +60,9 @@ type RuleSpec struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// RuleList contains a list of rules
-type RuleList struct {
+// AlertRuleList contains a list of rules
+type AlertRuleList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Rule `json:"items"`
+	Items           []AlertRule `json:"items"`
 }

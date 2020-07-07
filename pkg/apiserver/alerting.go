@@ -64,7 +64,7 @@ func (a *alertsHandler) Register(i kore.Interface, builder utils.PathBuilder) (*
 			Doc("Returns all available rules currently in kore").
 			Metadata(restfulspec.KeyOpenAPITags, tags).
 			Operation("ListRules").
-			Returns(http.StatusOK, "Listing of the rules in kore", monitoring.RuleList{}),
+			Returns(http.StatusOK, "Listing of the rules in kore", monitoring.AlertRuleList{}),
 	)
 
 	ws.Route(
@@ -79,7 +79,7 @@ func (a *alertsHandler) Register(i kore.Interface, builder utils.PathBuilder) (*
 			Param(ws.PathParameter("resource", "Is the name of the resource")).
 			Param(ws.QueryParameter("source", "The producer of the alerting rule")).
 			Operation("GetRules").
-			Returns(http.StatusOK, "The rule has been deleted", monitoring.Rule{}),
+			Returns(http.StatusOK, "The rule has been deleted", monitoring.AlertRule{}),
 	)
 
 	ws.Route(
@@ -94,13 +94,13 @@ func (a *alertsHandler) Register(i kore.Interface, builder utils.PathBuilder) (*
 			Param(ws.PathParameter("resource", "Is the name of the resource")).
 			Param(ws.PathParameter("name", "Is the name of the alerting rule")).
 			Operation("GetRule").
-			Returns(http.StatusOK, "The definition of the monitoring rule", monitoring.Rule{}),
+			Returns(http.StatusOK, "The definition of the monitoring rule", monitoring.AlertRule{}),
 	)
 
 	ws.Route(
 		withAllErrors(ws.PUT("/rules/{group}/{version}/{kind}/{namespace}/{resource}/{name}")).To(a.updateRule).
 			Filter(filters.Admin).
-			Reads(monitoring.Rule{}, "The specification for a rule in the kore").
+			Reads(monitoring.AlertRule{}, "The specification for a rule in the kore").
 			Doc("Updates or creates a rule in kore").
 			Metadata(restfulspec.KeyOpenAPITags, tags).
 			Param(ws.PathParameter("group", "Is the group of the kind")).
@@ -110,7 +110,7 @@ func (a *alertsHandler) Register(i kore.Interface, builder utils.PathBuilder) (*
 			Param(ws.PathParameter("resource", "Is the name of the resource")).
 			Param(ws.PathParameter("name", "Is the name of the alerting rule")).
 			Operation("UpdateRule").
-			Returns(http.StatusOK, "The rule has been deleted", monitoring.Rule{}),
+			Returns(http.StatusOK, "The rule has been deleted", monitoring.AlertRule{}),
 	)
 
 	ws.Route(
@@ -131,7 +131,7 @@ func (a *alertsHandler) Register(i kore.Interface, builder utils.PathBuilder) (*
 	ws.Route(
 		withAllErrors(ws.DELETE("/rules/{group}/{version}/{kind}/{namespace}/{resource}/{name}")).To(a.deleteRule).
 			Filter(filters.Admin).
-			Reads(monitoring.Rule{}, "The specification for a rule in the kore").
+			Reads(monitoring.AlertRule{}, "The specification for a rule in the kore").
 			Doc("Deletes a rule and all history from a resource").
 			Metadata(restfulspec.KeyOpenAPITags, tags).
 			Param(ws.PathParameter("group", "Is the group of the kind")).
@@ -141,7 +141,7 @@ func (a *alertsHandler) Register(i kore.Interface, builder utils.PathBuilder) (*
 			Param(ws.PathParameter("resource", "Is the name of the resource")).
 			Param(ws.PathParameter("name", "Is the name of the alerting rule")).
 			Operation("DeleteRule").
-			Returns(http.StatusOK, "The rule has been deleted", monitoring.Rule{}),
+			Returns(http.StatusOK, "The rule has been deleted", monitoring.AlertRule{}),
 	)
 
 	ws.Route(
@@ -418,7 +418,7 @@ func (a *alertsHandler) deleteRule(req *restful.Request, resp *restful.Response)
 		ctx := req.Request.Context()
 		name := req.PathParameter("name")
 
-		model := &monitoring.Rule{}
+		model := &monitoring.AlertRule{}
 		if err := req.ReadEntity(model); err != nil {
 			return err
 		}
@@ -532,7 +532,7 @@ func (a *alertsHandler) findAllAlerts(req *restful.Request, resp *restful.Respon
 // updateRule is responsible for updating or creating a rule
 func (a *alertsHandler) updateRule(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
-		model := &monitoring.Rule{}
+		model := &monitoring.AlertRule{}
 		if err := req.ReadEntity(model); err != nil {
 			return err
 		}

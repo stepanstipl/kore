@@ -54,8 +54,7 @@ func NewCmdGetAlert(factory cmdutil.Factory) *cobra.Command {
 	}
 
 	flags := command.Flags()
-	flags.BoolVar(&o.AllTeams, "all-teams", false, "return the alerts across all teams (must be admin)")
-	flags.BoolVarP(&o.AllAlerts, "all", "a", false, "returns all alerts event those ok")
+	flags.BoolVar(&o.AllTeams, "all-teams", false, "list all the alerts across all teams (must be admin)")
 
 	return command
 }

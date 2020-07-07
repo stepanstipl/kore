@@ -12,7 +12,7 @@
  */
 
 import ApiClient from '../ApiClient';
-import V1beta1Rule from './V1beta1Rule';
+import V1beta1AlertRule from './V1beta1AlertRule';
 
 /**
  * The V1beta1AlertStatus model module.
@@ -55,7 +55,7 @@ class V1beta1AlertStatus {
                 obj['detail'] = ApiClient.convertToType(data['detail'], 'String');
             }
             if (data.hasOwnProperty('rule')) {
-                obj['rule'] = V1beta1Rule.constructFromObject(data['rule']);
+                obj['rule'] = V1beta1AlertRule.constructFromObject(data['rule']);
             }
             if (data.hasOwnProperty('silencedUntil')) {
                 obj['silencedUntil'] = ApiClient.convertToType(data['silencedUntil'], 'String');
@@ -94,14 +94,14 @@ class V1beta1AlertStatus {
         this['detail'] = detail;
     }
 /**
-     * @return {module:model/V1beta1Rule}
+     * @return {module:model/V1beta1AlertRule}
      */
     getRule() {
         return this.rule;
     }
 
     /**
-     * @param {module:model/V1beta1Rule} rule
+     * @param {module:model/V1beta1AlertRule} rule
      */
     setRule(rule) {
         this['rule'] = rule;
@@ -146,7 +146,7 @@ V1beta1AlertStatus.prototype['archivedAt'] = undefined;
 V1beta1AlertStatus.prototype['detail'] = undefined;
 
 /**
- * @member {module:model/V1beta1Rule} rule
+ * @member {module:model/V1beta1AlertRule} rule
  */
 V1beta1AlertStatus.prototype['rule'] = undefined;
 

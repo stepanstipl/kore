@@ -80,19 +80,19 @@ type AlertRules interface {
 	// ListAlerts returns all the alerts in kore
 	ListAlerts(ctx context.Context, options ListAlertOptions) (*monitoring.AlertList, error)
 	// ListRules returns all the rules in kore
-	ListRules(ctx context.Context, options ListAlertOptions) (*monitoring.RuleList, error)
+	ListRules(ctx context.Context, options ListAlertOptions) (*monitoring.AlertRuleList, error)
 	// DeleteRule is responsible for deleting a rule on a resource and all alert statuses thereafter
-	DeleteRule(ctx context.Context, rule *monitoring.Rule) (*monitoring.Rule, error)
+	DeleteRule(ctx context.Context, rule *monitoring.AlertRule) (*monitoring.AlertRule, error)
 	// DeleteResourceRules is responsible for deleting all rules on a resource
 	DeleteResourceRules(ctx context.Context, resource corev1.Ownership, source string) error
 	// GetRule returns a specific rule
-	GetRule(ctx context.Context, name string, resource corev1.Ownership) (*monitoring.Rule, error)
+	GetRule(ctx context.Context, name string, resource corev1.Ownership) (*monitoring.AlertRule, error)
 	// PurgeHistory removes the history an a rule
-	PurgeHistory(ctx context.Context, rule *monitoring.Rule, keep time.Duration) error
+	PurgeHistory(ctx context.Context, rule *monitoring.AlertRule, keep time.Duration) error
 	// SilenceRule is responsible for suspending any alerts on a rule
-	SilencedRule(ctx context.Context, rule monitoring.Rule, message string, duration time.Duration) error
+	SilencedRule(ctx context.Context, rule monitoring.AlertRule, message string, duration time.Duration) error
 	// UpdateRule is responsible for updating or creating a rule on a resource
-	UpdateRule(ctx context.Context, rule *monitoring.Rule) (*monitoring.Rule, error)
+	UpdateRule(ctx context.Context, rule *monitoring.AlertRule) (*monitoring.AlertRule, error)
 	// UpdateAlert is responsible for updating the status of a rule
 	UpdateAlert(ctx context.Context, rule *monitoring.Alert) error
 }
@@ -179,7 +179,7 @@ func (a *alertsImpl) ListAlerts(ctx context.Context, options ListAlertOptions) (
 }
 
 // GetRule returns a specific rule
-func (a *alertsImpl) GetRule(ctx context.Context, name string, resource corev1.Ownership) (*monitoring.Rule, error) {
+func (a *alertsImpl) GetRule(ctx context.Context, name string, resource corev1.Ownership) (*monitoring.AlertRule, error) {
 	// @step: check the ownership
 	if err := IsOwnershipValid(resource); err != nil {
 		return nil, validation.NewError("rule has failed validation").WithFieldError(
@@ -210,7 +210,7 @@ func (a *alertsImpl) GetRule(ctx context.Context, name string, resource corev1.O
 }
 
 // ListRules returns the rules in kore
-func (a *alertsImpl) ListRules(ctx context.Context, options ListAlertOptions) (*monitoring.RuleList, error) {
+func (a *alertsImpl) ListRules(ctx context.Context, options ListAlertOptions) (*monitoring.AlertRuleList, error) {
 	user := authentication.MustGetIdentity(ctx)
 
 	// @step: input validation
@@ -260,7 +260,7 @@ func (a *alertsImpl) ListRules(ctx context.Context, options ListAlertOptions) (*
 }
 
 // DeleteRule is responsible for deleting a rule on a resource and all alert statuses thereafter
-func (a *alertsImpl) DeleteRule(ctx context.Context, rule *monitoring.Rule) (*monitoring.Rule, error) {
+func (a *alertsImpl) DeleteRule(ctx context.Context, rule *monitoring.AlertRule) (*monitoring.AlertRule, error) {
 	// @step: ensure the ownership is valid
 	if err := IsOwnershipValid(rule.Spec.Resource); err != nil {
 		return nil, validation.NewError("rule has failed validation").WithFieldError(
@@ -334,7 +334,7 @@ func (a *alertsImpl) DeleteResourceRules(ctx context.Context, resource corev1.Ow
 }
 
 // SilenceRule is responsible for suspending any alerts on a rule
-func (a *alertsImpl) SilencedRule(ctx context.Context, rule monitoring.Rule, message string, duration time.Duration) error {
+func (a *alertsImpl) SilencedRule(ctx context.Context, rule monitoring.AlertRule, message string, duration time.Duration) error {
 	if message == "" {
 		return ErrNotAllowed{message: "you must specify a reason for silence"}
 	}
@@ -385,7 +385,7 @@ func (a *alertsImpl) SilencedRule(ctx context.Context, rule monitoring.Rule, mes
 }
 
 // UpdateRule is responsible for updating or creating a rule on a resource
-func (a *alertsImpl) UpdateRule(ctx context.Context, rule *monitoring.Rule) (*monitoring.Rule, error) {
+func (a *alertsImpl) UpdateRule(ctx context.Context, rule *monitoring.AlertRule) (*monitoring.AlertRule, error) {
 	logger := log.WithFields(log.Fields{
 		"group":    rule.Spec.Resource.Group,
 		"name":     rule.Name,
@@ -433,7 +433,7 @@ func (a *alertsImpl) UpdateRule(ctx context.Context, rule *monitoring.Rule) (*mo
 }
 
 // PurgeHistory is responsible for purging the history of an alert
-func (a *alertsImpl) PurgeHistory(ctx context.Context, rule *monitoring.Rule, keep time.Duration) error {
+func (a *alertsImpl) PurgeHistory(ctx context.Context, rule *monitoring.AlertRule, keep time.Duration) error {
 	logger := log.WithFields(log.Fields{
 		"name":      rule.Name,
 		"namespace": rule.Namespace,
@@ -562,7 +562,7 @@ func ValidateSourceName(name string) bool {
 }
 
 // ValidateRule is used to check the inputs on a rule
-func (a *alertsImpl) ValidateRule(ctx context.Context, o *monitoring.Rule) error {
+func (a *alertsImpl) ValidateRule(ctx context.Context, o *monitoring.AlertRule) error {
 	if o.Name == "" {
 		return validation.NewError("rule failed validation").WithFieldError(
 			"metadata.name", validation.Required, "name must exists")

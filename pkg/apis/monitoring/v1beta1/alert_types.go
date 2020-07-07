@@ -66,7 +66,7 @@ type AlertStatus struct {
 	// SilencedUntil is the time the silence will finish
 	SilencedUntil metav1.Time `json:"silencedUntil,omitempty"`
 	// Rule is a reference to the rule the alert is based on
-	Rule *Rule `json:"rule,omitempty"`
+	Rule *AlertRule `json:"rule,omitempty"`
 	// Status is the status of the alert
 	Status string `json:"status,omitempty"`
 }

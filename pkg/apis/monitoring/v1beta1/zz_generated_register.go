@@ -60,8 +60,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&Alert{},
 		&AlertList{},
-		&Rule{},
-		&RuleList{},
+		&AlertRule{},
+		&AlertRuleList{},
 	)
 	// AddToGroupVersion allows the serialization of client types like ListOptions.
 	v1.AddToGroupVersion(scheme, SchemeGroupVersion)

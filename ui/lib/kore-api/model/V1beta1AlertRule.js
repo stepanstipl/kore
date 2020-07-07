@@ -12,23 +12,22 @@
  */
 
 import ApiClient from '../ApiClient';
-import V1ListMeta from './V1ListMeta';
-import V1beta1Rule from './V1beta1Rule';
+import V1ObjectMeta from './V1ObjectMeta';
+import V1beta1AlertRuleSpec from './V1beta1AlertRuleSpec';
 
 /**
- * The V1beta1RuleList model module.
- * @module model/V1beta1RuleList
+ * The V1beta1AlertRule model module.
+ * @module model/V1beta1AlertRule
  * @version 0.0.1
  */
-class V1beta1RuleList {
+class V1beta1AlertRule {
     /**
-     * Constructs a new <code>V1beta1RuleList</code>.
-     * @alias module:model/V1beta1RuleList
-     * @param items {Array.<module:model/V1beta1Rule>} 
+     * Constructs a new <code>V1beta1AlertRule</code>.
+     * @alias module:model/V1beta1AlertRule
      */
-    constructor(items) { 
+    constructor() { 
         
-        V1beta1RuleList.initialize(this, items);
+        V1beta1AlertRule.initialize(this);
     }
 
     /**
@@ -36,32 +35,31 @@ class V1beta1RuleList {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, items) { 
-        obj['items'] = items;
+    static initialize(obj) { 
     }
 
     /**
-     * Constructs a <code>V1beta1RuleList</code> from a plain JavaScript object, optionally creating a new instance.
+     * Constructs a <code>V1beta1AlertRule</code> from a plain JavaScript object, optionally creating a new instance.
      * Copies all relevant properties from <code>data</code> to <code>obj</code> if supplied or a new instance if not.
      * @param {Object} data The plain JavaScript object bearing properties of interest.
-     * @param {module:model/V1beta1RuleList} obj Optional instance to populate.
-     * @return {module:model/V1beta1RuleList} The populated <code>V1beta1RuleList</code> instance.
+     * @param {module:model/V1beta1AlertRule} obj Optional instance to populate.
+     * @return {module:model/V1beta1AlertRule} The populated <code>V1beta1AlertRule</code> instance.
      */
     static constructFromObject(data, obj) {
         if (data) {
-            obj = obj || new V1beta1RuleList();
+            obj = obj || new V1beta1AlertRule();
 
             if (data.hasOwnProperty('apiVersion')) {
                 obj['apiVersion'] = ApiClient.convertToType(data['apiVersion'], 'String');
-            }
-            if (data.hasOwnProperty('items')) {
-                obj['items'] = ApiClient.convertToType(data['items'], [V1beta1Rule]);
             }
             if (data.hasOwnProperty('kind')) {
                 obj['kind'] = ApiClient.convertToType(data['kind'], 'String');
             }
             if (data.hasOwnProperty('metadata')) {
-                obj['metadata'] = V1ListMeta.constructFromObject(data['metadata']);
+                obj['metadata'] = V1ObjectMeta.constructFromObject(data['metadata']);
+            }
+            if (data.hasOwnProperty('spec')) {
+                obj['spec'] = V1beta1AlertRuleSpec.constructFromObject(data['spec']);
             }
         }
         return obj;
@@ -83,19 +81,6 @@ class V1beta1RuleList {
         this['apiVersion'] = apiVersion;
     }
 /**
-     * @return {Array.<module:model/V1beta1Rule>}
-     */
-    getItems() {
-        return this.items;
-    }
-
-    /**
-     * @param {Array.<module:model/V1beta1Rule>} items
-     */
-    setItems(items) {
-        this['items'] = items;
-    }
-/**
      * Returns Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
      * @return {String}
      */
@@ -111,17 +96,30 @@ class V1beta1RuleList {
         this['kind'] = kind;
     }
 /**
-     * @return {module:model/V1ListMeta}
+     * @return {module:model/V1ObjectMeta}
      */
     getMetadata() {
         return this.metadata;
     }
 
     /**
-     * @param {module:model/V1ListMeta} metadata
+     * @param {module:model/V1ObjectMeta} metadata
      */
     setMetadata(metadata) {
         this['metadata'] = metadata;
+    }
+/**
+     * @return {module:model/V1beta1AlertRuleSpec}
+     */
+    getSpec() {
+        return this.spec;
+    }
+
+    /**
+     * @param {module:model/V1beta1AlertRuleSpec} spec
+     */
+    setSpec(spec) {
+        this['spec'] = spec;
     }
 
 }
@@ -130,28 +128,28 @@ class V1beta1RuleList {
  * APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
  * @member {String} apiVersion
  */
-V1beta1RuleList.prototype['apiVersion'] = undefined;
-
-/**
- * @member {Array.<module:model/V1beta1Rule>} items
- */
-V1beta1RuleList.prototype['items'] = undefined;
+V1beta1AlertRule.prototype['apiVersion'] = undefined;
 
 /**
  * Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
  * @member {String} kind
  */
-V1beta1RuleList.prototype['kind'] = undefined;
+V1beta1AlertRule.prototype['kind'] = undefined;
 
 /**
- * @member {module:model/V1ListMeta} metadata
+ * @member {module:model/V1ObjectMeta} metadata
  */
-V1beta1RuleList.prototype['metadata'] = undefined;
+V1beta1AlertRule.prototype['metadata'] = undefined;
+
+/**
+ * @member {module:model/V1beta1AlertRuleSpec} spec
+ */
+V1beta1AlertRule.prototype['spec'] = undefined;
 
 
 
 
 
 
-export default V1beta1RuleList;
+export default V1beta1AlertRule;
 

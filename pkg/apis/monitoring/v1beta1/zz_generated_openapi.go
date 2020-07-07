@@ -29,9 +29,66 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/appvia/kore/pkg/apis/monitoring/v1beta1.AlertSpec":   schema_pkg_apis_monitoring_v1beta1_AlertSpec(ref),
-		"github.com/appvia/kore/pkg/apis/monitoring/v1beta1.AlertStatus": schema_pkg_apis_monitoring_v1beta1_AlertStatus(ref),
-		"github.com/appvia/kore/pkg/apis/monitoring/v1beta1.RuleSpec":    schema_pkg_apis_monitoring_v1beta1_RuleSpec(ref),
+		"github.com/appvia/kore/pkg/apis/monitoring/v1beta1.AlertRuleSpec": schema_pkg_apis_monitoring_v1beta1_AlertRuleSpec(ref),
+		"github.com/appvia/kore/pkg/apis/monitoring/v1beta1.AlertSpec":     schema_pkg_apis_monitoring_v1beta1_AlertSpec(ref),
+		"github.com/appvia/kore/pkg/apis/monitoring/v1beta1.AlertStatus":   schema_pkg_apis_monitoring_v1beta1_AlertStatus(ref),
+	}
+}
+
+func schema_pkg_apis_monitoring_v1beta1_AlertRuleSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "AlertRuleSpec specifies the details of a alert rule",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"ruleID": {
+						SchemaProps: spec.SchemaProps{
+							Description: "AlertID is a unique identifier for this rule",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"severity": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Severity is the importance of the rule",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"source": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Source is the provider of the rule i.e. prometheus, or a named source",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"summary": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Summary is a summary of the rule",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"rawRule": {
+						SchemaProps: spec.SchemaProps{
+							Description: "RawRule is the underlying rule definition",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"resource": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Resource is the resource the alert is for",
+							Ref:         ref("github.com/appvia/kore/pkg/apis/core/v1.Ownership"),
+						},
+					},
+				},
+				Required: []string{"severity", "source", "summary", "rawRule", "resource"},
+			},
+		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/core/v1.Ownership"},
 	}
 }
 
@@ -114,7 +171,7 @@ func schema_pkg_apis_monitoring_v1beta1_AlertStatus(ref common.ReferenceCallback
 					"rule": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Rule is a reference to the rule the alert is based on",
-							Ref:         ref("github.com/appvia/kore/pkg/apis/monitoring/v1beta1.Rule"),
+							Ref:         ref("github.com/appvia/kore/pkg/apis/monitoring/v1beta1.AlertRule"),
 						},
 					},
 					"status": {
@@ -128,63 +185,6 @@ func schema_pkg_apis_monitoring_v1beta1_AlertStatus(ref common.ReferenceCallback
 			},
 		},
 		Dependencies: []string{
-			"github.com/appvia/kore/pkg/apis/monitoring/v1beta1.Rule", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
-	}
-}
-
-func schema_pkg_apis_monitoring_v1beta1_RuleSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "RuleSpec specifies the details of a alert rule",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"ruleID": {
-						SchemaProps: spec.SchemaProps{
-							Description: "RuleID is a unique identifier for this rule",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"severity": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Severity is the importance of the rule",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"source": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Source is the provider of the rule i.e. prometheus, or a named source",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"summary": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Summary is a summary of the rule",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"rawRule": {
-						SchemaProps: spec.SchemaProps{
-							Description: "RawRule is the underlying rule definition",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"resource": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Resource is the resource the alert is for",
-							Ref:         ref("github.com/appvia/kore/pkg/apis/core/v1.Ownership"),
-						},
-					},
-				},
-				Required: []string{"severity", "source", "summary", "rawRule", "resource"},
-			},
-		},
-		Dependencies: []string{
-			"github.com/appvia/kore/pkg/apis/core/v1.Ownership"},
+			"github.com/appvia/kore/pkg/apis/monitoring/v1beta1.AlertRule", "k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
 	}
 }

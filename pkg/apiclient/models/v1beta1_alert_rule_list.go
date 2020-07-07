@@ -14,17 +14,17 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// V1beta1RuleList v1beta1 rule list
+// V1beta1AlertRuleList v1beta1 alert rule list
 //
-// swagger:model v1beta1.RuleList
-type V1beta1RuleList struct {
+// swagger:model v1beta1.AlertRuleList
+type V1beta1AlertRuleList struct {
 
 	// APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
 	APIVersion string `json:"apiVersion,omitempty"`
 
 	// items
 	// Required: true
-	Items []*V1beta1Rule `json:"items"`
+	Items []*V1beta1AlertRule `json:"items"`
 
 	// Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
 	Kind string `json:"kind,omitempty"`
@@ -33,8 +33,8 @@ type V1beta1RuleList struct {
 	Metadata *V1ListMeta `json:"metadata,omitempty"`
 }
 
-// Validate validates this v1beta1 rule list
-func (m *V1beta1RuleList) Validate(formats strfmt.Registry) error {
+// Validate validates this v1beta1 alert rule list
+func (m *V1beta1AlertRuleList) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateItems(formats); err != nil {
@@ -51,7 +51,7 @@ func (m *V1beta1RuleList) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1beta1RuleList) validateItems(formats strfmt.Registry) error {
+func (m *V1beta1AlertRuleList) validateItems(formats strfmt.Registry) error {
 
 	if err := validate.Required("items", "body", m.Items); err != nil {
 		return err
@@ -76,7 +76,7 @@ func (m *V1beta1RuleList) validateItems(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1beta1RuleList) validateMetadata(formats strfmt.Registry) error {
+func (m *V1beta1AlertRuleList) validateMetadata(formats strfmt.Registry) error {
 
 	if swag.IsZero(m.Metadata) { // not required
 		return nil
@@ -95,7 +95,7 @@ func (m *V1beta1RuleList) validateMetadata(formats strfmt.Registry) error {
 }
 
 // MarshalBinary interface implementation
-func (m *V1beta1RuleList) MarshalBinary() ([]byte, error) {
+func (m *V1beta1AlertRuleList) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -103,8 +103,8 @@ func (m *V1beta1RuleList) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *V1beta1RuleList) UnmarshalBinary(b []byte) error {
-	var res V1beta1RuleList
+func (m *V1beta1AlertRuleList) UnmarshalBinary(b []byte) error {
+	var res V1beta1AlertRuleList
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

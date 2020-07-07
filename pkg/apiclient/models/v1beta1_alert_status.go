@@ -23,7 +23,7 @@ type V1beta1AlertStatus struct {
 	Detail string `json:"detail,omitempty"`
 
 	// rule
-	Rule *V1beta1Rule `json:"rule,omitempty"`
+	Rule *V1beta1AlertRule `json:"rule,omitempty"`
 
 	// silenced until
 	SilencedUntil string `json:"silencedUntil,omitempty"`

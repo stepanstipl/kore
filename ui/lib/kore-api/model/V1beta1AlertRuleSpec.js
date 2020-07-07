@@ -15,14 +15,14 @@ import ApiClient from '../ApiClient';
 import V1Ownership from './V1Ownership';
 
 /**
- * The V1beta1RuleSpec model module.
- * @module model/V1beta1RuleSpec
+ * The V1beta1AlertRuleSpec model module.
+ * @module model/V1beta1AlertRuleSpec
  * @version 0.0.1
  */
-class V1beta1RuleSpec {
+class V1beta1AlertRuleSpec {
     /**
-     * Constructs a new <code>V1beta1RuleSpec</code>.
-     * @alias module:model/V1beta1RuleSpec
+     * Constructs a new <code>V1beta1AlertRuleSpec</code>.
+     * @alias module:model/V1beta1AlertRuleSpec
      * @param rawRule {String} 
      * @param resource {module:model/V1Ownership} 
      * @param severity {String} 
@@ -31,7 +31,7 @@ class V1beta1RuleSpec {
      */
     constructor(rawRule, resource, severity, source, summary) { 
         
-        V1beta1RuleSpec.initialize(this, rawRule, resource, severity, source, summary);
+        V1beta1AlertRuleSpec.initialize(this, rawRule, resource, severity, source, summary);
     }
 
     /**
@@ -48,15 +48,15 @@ class V1beta1RuleSpec {
     }
 
     /**
-     * Constructs a <code>V1beta1RuleSpec</code> from a plain JavaScript object, optionally creating a new instance.
+     * Constructs a <code>V1beta1AlertRuleSpec</code> from a plain JavaScript object, optionally creating a new instance.
      * Copies all relevant properties from <code>data</code> to <code>obj</code> if supplied or a new instance if not.
      * @param {Object} data The plain JavaScript object bearing properties of interest.
-     * @param {module:model/V1beta1RuleSpec} obj Optional instance to populate.
-     * @return {module:model/V1beta1RuleSpec} The populated <code>V1beta1RuleSpec</code> instance.
+     * @param {module:model/V1beta1AlertRuleSpec} obj Optional instance to populate.
+     * @return {module:model/V1beta1AlertRuleSpec} The populated <code>V1beta1AlertRuleSpec</code> instance.
      */
     static constructFromObject(data, obj) {
         if (data) {
-            obj = obj || new V1beta1RuleSpec();
+            obj = obj || new V1beta1AlertRuleSpec();
 
             if (data.hasOwnProperty('rawRule')) {
                 obj['rawRule'] = ApiClient.convertToType(data['rawRule'], 'String');
@@ -164,37 +164,37 @@ class V1beta1RuleSpec {
 /**
  * @member {String} rawRule
  */
-V1beta1RuleSpec.prototype['rawRule'] = undefined;
+V1beta1AlertRuleSpec.prototype['rawRule'] = undefined;
 
 /**
  * @member {module:model/V1Ownership} resource
  */
-V1beta1RuleSpec.prototype['resource'] = undefined;
+V1beta1AlertRuleSpec.prototype['resource'] = undefined;
 
 /**
  * @member {String} ruleID
  */
-V1beta1RuleSpec.prototype['ruleID'] = undefined;
+V1beta1AlertRuleSpec.prototype['ruleID'] = undefined;
 
 /**
  * @member {String} severity
  */
-V1beta1RuleSpec.prototype['severity'] = undefined;
+V1beta1AlertRuleSpec.prototype['severity'] = undefined;
 
 /**
  * @member {String} source
  */
-V1beta1RuleSpec.prototype['source'] = undefined;
+V1beta1AlertRuleSpec.prototype['source'] = undefined;
 
 /**
  * @member {String} summary
  */
-V1beta1RuleSpec.prototype['summary'] = undefined;
+V1beta1AlertRuleSpec.prototype['summary'] = undefined;
 
 
 
 
 
 
-export default V1beta1RuleSpec;
+export default V1beta1AlertRuleSpec;
 

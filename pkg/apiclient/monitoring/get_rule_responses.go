@@ -69,20 +69,20 @@ func NewGetRuleOK() *GetRuleOK {
 The definition of the monitoring rule
 */
 type GetRuleOK struct {
-	Payload *models.V1beta1Rule
+	Payload *models.V1beta1AlertRule
 }
 
 func (o *GetRuleOK) Error() string {
 	return fmt.Sprintf("[GET /api/v1alpha1/monitoring/rules/{group}/{version}/{kind}/{namespace}/{resource}/{name}][%d] getRuleOK  %+v", 200, o.Payload)
 }
 
-func (o *GetRuleOK) GetPayload() *models.V1beta1Rule {
+func (o *GetRuleOK) GetPayload() *models.V1beta1AlertRule {
 	return o.Payload
 }
 
 func (o *GetRuleOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1beta1Rule)
+	o.Payload = new(models.V1beta1AlertRule)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

@@ -66,7 +66,7 @@ type DeleteRuleParams struct {
 	  The specification for a rule in the kore
 
 	*/
-	Body *models.V1beta1Rule
+	Body *models.V1beta1AlertRule
 	/*Group
 	  Is the group of the kind
 
@@ -137,13 +137,13 @@ func (o *DeleteRuleParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithBody adds the body to the delete rule params
-func (o *DeleteRuleParams) WithBody(body *models.V1beta1Rule) *DeleteRuleParams {
+func (o *DeleteRuleParams) WithBody(body *models.V1beta1AlertRule) *DeleteRuleParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the delete rule params
-func (o *DeleteRuleParams) SetBody(body *models.V1beta1Rule) {
+func (o *DeleteRuleParams) SetBody(body *models.V1beta1AlertRule) {
 	o.Body = body
 }
 

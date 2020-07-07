@@ -91,7 +91,7 @@ var (
 		{
 			Group:   monitoring.GroupVersion.Group,
 			Version: monitoring.GroupVersion.Version,
-			Kind:    "Rule",
+			Kind:    "AlertRule",
 		},
 	}
 )

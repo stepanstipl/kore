@@ -11,10 +11,10 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// V1beta1Rule v1beta1 rule
+// V1beta1AlertRule v1beta1 alert rule
 //
-// swagger:model v1beta1.Rule
-type V1beta1Rule struct {
+// swagger:model v1beta1.AlertRule
+type V1beta1AlertRule struct {
 
 	// APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
 	APIVersion string `json:"apiVersion,omitempty"`
@@ -26,11 +26,11 @@ type V1beta1Rule struct {
 	Metadata *V1ObjectMeta `json:"metadata,omitempty"`
 
 	// spec
-	Spec *V1beta1RuleSpec `json:"spec,omitempty"`
+	Spec *V1beta1AlertRuleSpec `json:"spec,omitempty"`
 }
 
-// Validate validates this v1beta1 rule
-func (m *V1beta1Rule) Validate(formats strfmt.Registry) error {
+// Validate validates this v1beta1 alert rule
+func (m *V1beta1AlertRule) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateMetadata(formats); err != nil {
@@ -47,7 +47,7 @@ func (m *V1beta1Rule) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1beta1Rule) validateMetadata(formats strfmt.Registry) error {
+func (m *V1beta1AlertRule) validateMetadata(formats strfmt.Registry) error {
 
 	if swag.IsZero(m.Metadata) { // not required
 		return nil
@@ -65,7 +65,7 @@ func (m *V1beta1Rule) validateMetadata(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1beta1Rule) validateSpec(formats strfmt.Registry) error {
+func (m *V1beta1AlertRule) validateSpec(formats strfmt.Registry) error {
 
 	if swag.IsZero(m.Spec) { // not required
 		return nil
@@ -84,7 +84,7 @@ func (m *V1beta1Rule) validateSpec(formats strfmt.Registry) error {
 }
 
 // MarshalBinary interface implementation
-func (m *V1beta1Rule) MarshalBinary() ([]byte, error) {
+func (m *V1beta1AlertRule) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -92,8 +92,8 @@ func (m *V1beta1Rule) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *V1beta1Rule) UnmarshalBinary(b []byte) error {
-	var res V1beta1Rule
+func (m *V1beta1AlertRule) UnmarshalBinary(b []byte) error {
+	var res V1beta1AlertRule
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

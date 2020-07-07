@@ -12,10 +12,10 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// V1beta1RuleSpec v1beta1 rule spec
+// V1beta1AlertRuleSpec v1beta1 alert rule spec
 //
-// swagger:model v1beta1.RuleSpec
-type V1beta1RuleSpec struct {
+// swagger:model v1beta1.AlertRuleSpec
+type V1beta1AlertRuleSpec struct {
 
 	// raw rule
 	// Required: true
@@ -41,8 +41,8 @@ type V1beta1RuleSpec struct {
 	Summary *string `json:"summary"`
 }
 
-// Validate validates this v1beta1 rule spec
-func (m *V1beta1RuleSpec) Validate(formats strfmt.Registry) error {
+// Validate validates this v1beta1 alert rule spec
+func (m *V1beta1AlertRuleSpec) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateRawRule(formats); err != nil {
@@ -71,7 +71,7 @@ func (m *V1beta1RuleSpec) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1beta1RuleSpec) validateRawRule(formats strfmt.Registry) error {
+func (m *V1beta1AlertRuleSpec) validateRawRule(formats strfmt.Registry) error {
 
 	if err := validate.Required("rawRule", "body", m.RawRule); err != nil {
 		return err
@@ -80,7 +80,7 @@ func (m *V1beta1RuleSpec) validateRawRule(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1beta1RuleSpec) validateResource(formats strfmt.Registry) error {
+func (m *V1beta1AlertRuleSpec) validateResource(formats strfmt.Registry) error {
 
 	if err := validate.Required("resource", "body", m.Resource); err != nil {
 		return err
@@ -98,7 +98,7 @@ func (m *V1beta1RuleSpec) validateResource(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1beta1RuleSpec) validateSeverity(formats strfmt.Registry) error {
+func (m *V1beta1AlertRuleSpec) validateSeverity(formats strfmt.Registry) error {
 
 	if err := validate.Required("severity", "body", m.Severity); err != nil {
 		return err
@@ -107,7 +107,7 @@ func (m *V1beta1RuleSpec) validateSeverity(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1beta1RuleSpec) validateSource(formats strfmt.Registry) error {
+func (m *V1beta1AlertRuleSpec) validateSource(formats strfmt.Registry) error {
 
 	if err := validate.Required("source", "body", m.Source); err != nil {
 		return err
@@ -116,7 +116,7 @@ func (m *V1beta1RuleSpec) validateSource(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1beta1RuleSpec) validateSummary(formats strfmt.Registry) error {
+func (m *V1beta1AlertRuleSpec) validateSummary(formats strfmt.Registry) error {
 
 	if err := validate.Required("summary", "body", m.Summary); err != nil {
 		return err
@@ -126,7 +126,7 @@ func (m *V1beta1RuleSpec) validateSummary(formats strfmt.Registry) error {
 }
 
 // MarshalBinary interface implementation
-func (m *V1beta1RuleSpec) MarshalBinary() ([]byte, error) {
+func (m *V1beta1AlertRuleSpec) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -134,8 +134,8 @@ func (m *V1beta1RuleSpec) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *V1beta1RuleSpec) UnmarshalBinary(b []byte) error {
-	var res V1beta1RuleSpec
+func (m *V1beta1AlertRuleSpec) UnmarshalBinary(b []byte) error {
+	var res V1beta1AlertRuleSpec
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

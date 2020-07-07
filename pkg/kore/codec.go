@@ -230,8 +230,8 @@ func (c Convertor) FromAlertModel(alert *model.Alert) *monitoring.Alert {
 }
 
 // FromAlertRuleModel converts the rule model
-func (c Convertor) FromAlertRuleModel(rule *model.AlertRule) *monitoring.Rule {
-	o := &monitoring.Rule{
+func (c Convertor) FromAlertRuleModel(rule *model.AlertRule) *monitoring.AlertRule {
+	o := &monitoring.AlertRule{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: monitoring.SchemeGroupVersion.String(),
 			Kind:       "Rule",
@@ -242,7 +242,7 @@ func (c Convertor) FromAlertRuleModel(rule *model.AlertRule) *monitoring.Rule {
 			CreationTimestamp: metav1.NewTime(rule.CreatedAt),
 			Labels:            make(map[string]string),
 		},
-		Spec: monitoring.RuleSpec{
+		Spec: monitoring.AlertRuleSpec{
 			Severity: rule.Severity,
 			Source:   rule.Source,
 			Summary:  rule.Summary,
@@ -283,7 +283,7 @@ func (c Convertor) ToAlert(m *monitoring.Alert) *model.Alert {
 }
 
 // ToAlertRule convert the api to the model
-func (c Convertor) ToAlertRule(o *monitoring.Rule) *model.AlertRule {
+func (c Convertor) ToAlertRule(o *monitoring.AlertRule) *model.AlertRule {
 	m := &model.AlertRule{
 		Name:     o.Name,
 		RawRule:  o.Spec.RawRule,
@@ -325,13 +325,13 @@ func (c Convertor) FromUsersModelList(users []*model.User) *orgv1.UserList {
 }
 
 // FromAlertsRuleModelList return a list of rules
-func (c Convertor) FromAlertsRuleModelList(rules []*model.AlertRule) (*monitoring.RuleList, error) {
-	list := &monitoring.RuleList{
+func (c Convertor) FromAlertsRuleModelList(rules []*model.AlertRule) (*monitoring.AlertRuleList, error) {
+	list := &monitoring.AlertRuleList{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "v1",
 			Kind:       "RuleList",
 		},
-		Items: make([]monitoring.Rule, len(rules)),
+		Items: make([]monitoring.AlertRule, len(rules)),
 	}
 
 	for i, x := range rules {
