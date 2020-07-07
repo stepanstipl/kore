@@ -17,23 +17,58 @@
 package local
 
 import (
+	"bytes"
 	"io/ioutil"
 	"os"
 
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 	"github.com/appvia/kore/pkg/utils"
 
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 )
+
+// UpdateHelmValues is used to update the inline values
+func (o *UpOptions) UpdateHelmValues(path string) error {
+	// @step: get the current content
+	current, err := ioutil.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	// make a copy of original
+	values := make([]byte, len(current))
+	copy(values, current)
+
+	// @step: iterate through any changes
+	updated, err := func() ([]byte, error) {
+		if utils.Contains("release", o.FlagsChanged) {
+			for _, x := range []string{"api.version", "ui.version"} {
+				values, err = UpdateYAML(values, x, o.Release)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+
+		return values, nil
+	}()
+	if err != nil {
+		return err
+	}
+
+	if bytes.Compare(current, updated) != 0 {
+		return ioutil.WriteFile(path, updated, os.FileMode(0750))
+	}
+
+	return nil
+}
 
 // GetHelmValues returns returns or prompts for the values
 func (o *UpOptions) GetHelmValues(path string) (map[string]interface{}, error) {
 	found, err := utils.FileExists(path)
 	if err != nil {
 		return nil, err
-	}
-	// @TODO we should probably check the params in the values file
-	if !found {
+
+	} else if !found {
 		values := o.GetDefaultHelmValues()
 
 		a := authInfoConfig{}
@@ -53,6 +88,10 @@ func (o *UpOptions) GetHelmValues(path string) (map[string]interface{}, error) {
 		}
 
 		return values, nil
+	} else {
+		if err := o.UpdateHelmValues(path); err != nil {
+			return nil, err
+		}
 	}
 
 	// @step: we read in the values.yml

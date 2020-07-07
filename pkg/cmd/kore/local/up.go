@@ -66,6 +66,8 @@ type UpOptions struct {
 	EnableDeploy bool
 	// Force indicates we should force any changes
 	Force bool
+	// FlagsChanged is a list of flags which changed
+	FlagsChanged []string
 	// HelmPath is the path to the helm binary
 	HelmPath string
 	// Wait indicates we wait for the deployment to finish

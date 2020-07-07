@@ -17,9 +17,14 @@
 package local
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
+
+	"github.com/tidwall/sjson"
+	"sigs.k8s.io/yaml"
 )
 
 const (
@@ -62,4 +67,30 @@ func (t *Task) Run(ctx context.Context, w io.Writer) error {
 	}
 
 	return err
+}
+
+// UpdateYAML is responsible for updating the values in the values.yml
+// We could probably break this out to lib methods - but for now keep it here
+func UpdateYAML(content []byte, path string, value interface{}) ([]byte, error) {
+	values := make(map[string]interface{})
+
+	if err := yaml.Unmarshal(content, &values); err != nil {
+		return nil, err
+	}
+
+	b := &bytes.Buffer{}
+	if err := json.NewEncoder(b).Encode(values); err != nil {
+		return nil, err
+	}
+	v, err := sjson.Set(b.String(), path, value)
+	if err != nil {
+		return nil, err
+	}
+
+	values = make(map[string]interface{})
+	if err := json.NewDecoder(bytes.NewReader([]byte(v))).Decode(&values); err != nil {
+		return nil, err
+	}
+
+	return yaml.Marshal(&values)
 }
