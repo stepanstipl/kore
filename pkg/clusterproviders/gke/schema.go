@@ -214,7 +214,7 @@ const schema = `
 								"effect": {
 									"type": "string",
 									"enum": [ "NoSchedule", "PreferNoSchedule", "NoExecute", "NoEffect" ],
-									"description": "The choosen effect of the taint",
+									"description": "The chosen effect of the taint",
 									"default": "NoSchedule",
 									"immutable": true
 								}

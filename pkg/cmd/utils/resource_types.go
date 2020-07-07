@@ -18,6 +18,7 @@ package utils
 
 import (
 	accountsv1beta1 "github.com/appvia/kore/pkg/apis/accounts/v1beta1"
+	aksv1alpha1 "github.com/appvia/kore/pkg/apis/aks/v1alpha1"
 	aws "github.com/appvia/kore/pkg/apis/aws/v1alpha1"
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
@@ -56,7 +57,33 @@ var (
 				{"Resource", "status.rule.spec.resource.name", ""},
 				{"Kind", "status.rule.spec.resource.kind", ""},
 				{"Detail", "spec.summary", ""},
+			},
+		},
+		{
+			Name:         "aks",
+			APIName:      "aks",
+			GroupVersion: aksv1alpha1.GroupVersion.String(),
+			Kind:         "AKS",
+			Scope:        TeamScope,
+			Printer: []Column{
+				{"Name", "metadata.name", ""},
+				{"Credentials", "spec.credentials.name", ""},
+				{"Cluster", "spec.cluster.name", ""},
+				{"Version", "spec.version", ""},
+				{"Region", "spec.region", ""},
 				{"Status", "status.status", ""},
+				{"Age", "metadata.creationTimestamp", "age"},
+			},
+		},
+		{
+			Name:         "akscredential",
+			GroupVersion: aksv1alpha1.GroupVersion.String(),
+			Kind:         "AKSCredentials",
+			Scope:        TeamScope,
+			Printer: []Column{
+				{"Name", "metadata.name", ""},
+				{"Status", "status.status", ""},
+				{"Verified", "status.verified", ""},
 				{"Age", "metadata.creationTimestamp", "age"},
 			},
 		},

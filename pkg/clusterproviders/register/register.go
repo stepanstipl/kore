@@ -17,6 +17,7 @@
 package register
 
 import (
+	_ "github.com/appvia/kore/pkg/clusterproviders/aks"
 	_ "github.com/appvia/kore/pkg/clusterproviders/eks"
 	_ "github.com/appvia/kore/pkg/clusterproviders/gke"
 	_ "github.com/appvia/kore/pkg/clusterproviders/unmanaged"

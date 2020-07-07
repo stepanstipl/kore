@@ -1,6 +1,8 @@
 // Code generated for package register by go-bindata DO NOT EDIT. (@generated)
 // sources:
 // deploy/crds/accounts.kore.appvia.io_accountmanagement.yaml
+// deploy/crds/aks.compute.kore.appvia.io_aks.yaml
+// deploy/crds/aks.compute.kore.appvia.io_akscredentials.yaml
 // deploy/crds/apps.kore.appvia.io_appdeployments.yaml
 // deploy/crds/apps.kore.appvia.io_installplans.yaml
 // deploy/crds/aws.compute.kore.appvia.io_eks.yaml
@@ -262,6 +264,534 @@ func crdsAccountsKoreAppviaIo_accountmanagementYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "crds/accounts.kore.appvia.io_accountmanagement.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsAksComputeKoreAppviaIo_aksYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: aks.aks.compute.kore.appvia.io
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.description
+    description: A description of the AKS cluster
+    name: Description
+    type: string
+  - JSONPath: .status.endpoint
+    description: The endpoint of the AKS cluster
+    name: Endpoint
+    type: string
+  - JSONPath: .status.status
+    description: The overall status of AKS cluster
+    name: Status
+    type: string
+  group: aks.compute.kore.appvia.io
+  names:
+    kind: AKS
+    listKind: AKSList
+    plural: aks
+    singular: aks
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: AKS is the schema for an AKS cluster object
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: AKSSpec defines the desired state of an AKS cluster
+          properties:
+            agentPoolProfiles:
+              description: AgentPoolProfiles is the set of node pools for this cluster.
+              items:
+                description: AgentPoolProfile represents a node pool within a GKE
+                  cluster
+                properties:
+                  count:
+                    description: Count is the number of nodes
+                    format: int64
+                    minimum: 1
+                    type: integer
+                  enableAutoScaling:
+                    description: EnableAutoScaling indicates if the node pool should
+                      be configured with autoscaling turned on
+                    type: boolean
+                  maxCount:
+                    description: MaxCount assuming the autoscaler is enabled this
+                      is the maximum number nodes permitted
+                    format: int64
+                    minimum: 1
+                    type: integer
+                  maxPods:
+                    description: MaxPods controls how many pods can be scheduled onto
+                      each node in this pool
+                    format: int64
+                    minimum: 1
+                    type: integer
+                  minCount:
+                    description: MinCount assuming the autoscaler is enabled this
+                      is the maximum number nodes permitted
+                    format: int64
+                    minimum: 1
+                    type: integer
+                  mode:
+                    description: Mode Type of the node pool. System node pools serve
+                      the primary purpose of hosting critical system pods such as
+                      CoreDNS and tunnelfront. User node pools serve the primary purpose
+                      of hosting your application pods.
+                    type: string
+                  name:
+                    description: Name provides a descriptive name for this node pool
+                      - must be unique within cluster
+                    minLength: 1
+                    type: string
+                  nodeImageVersion:
+                    description: NodeImageVersion is the initial kubernetes version
+                      which the node group should be configured with.
+                    type: string
+                  nodeLabels:
+                    additionalProperties:
+                      type: string
+                    description: NodeLabels is a set of labels to help Kubernetes
+                      workloads find this group
+                    type: object
+                  nodeTaints:
+                    description: NodeTaints are a collection of kubernetes taints
+                      applied to the node on provisioning
+                    items:
+                      description: NodeTaint is the structure of a taint on a nodepool
+                        https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+                      properties:
+                        effect:
+                          description: Effect is desired action on the taint
+                          type: string
+                        key:
+                          description: Key provides the key definition for this tainer
+                          type: string
+                        value:
+                          description: Value is arbitrary value for this taint to
+                            compare
+                          type: string
+                      type: object
+                    type: array
+                  osDiskSizeGB:
+                    description: OsDiskSizeGB is the size of the disk used by the
+                      compute nodes.
+                    format: int64
+                    minimum: 10
+                    type: integer
+                  osType:
+                    description: OsType controls the operating system image of nodes
+                      used in this node pool
+                    enum:
+                    - Linux
+                    - Windows
+                    minLength: 1
+                    type: string
+                  vmSize:
+                    description: VMSize controls the type of nodes used in this node
+                      pool
+                    minLength: 1
+                    type: string
+                required:
+                - count
+                - maxCount
+                - minCount
+                - mode
+                - name
+                - osDiskSizeGB
+                - osType
+                - vmSize
+                type: object
+              minItems: 1
+              type: array
+              x-kubernetes-list-type: set
+            authorizedIPRanges:
+              description: AuthorizedIPRanges are IP ranges to whitelist for incoming
+                traffic to the API servers
+              items:
+                type: string
+              type: array
+              x-kubernetes-list-type: set
+            cluster:
+              description: Cluster refers to the cluster this object belongs to
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
+            credentials:
+              description: Credentials is a reference to the AKS credentials object
+                to use
+              properties:
+                group:
+                  description: Group is the api group
+                  type: string
+                kind:
+                  description: Kind is the name of the resource under the group
+                  type: string
+                name:
+                  description: Name is name of the resource
+                  type: string
+                namespace:
+                  description: Namespace is the location of the object
+                  type: string
+                version:
+                  description: Version is the group version
+                  type: string
+              required:
+              - group
+              - kind
+              - name
+              - namespace
+              - version
+              type: object
+            description:
+              description: Description provides a short summary / description of the
+                cluster.
+              minLength: 1
+              type: string
+            dnsPrefix:
+              description: DNSPrefix is the DNS prefix for the cluster Must contain
+                between 3 and 45 characters, and can contain only letters, numbers,
+                and hyphens. It must start with a letter and must end with a letter
+                or a number.
+              minLength: 1
+              type: string
+            enablePodSecurityPolicy:
+              description: EnablePodSecurityPolicy indicates whether Pod Security
+                Policies should be enabled Note that this also requires role based
+                access control to be enabled. This feature is currently in preview
+                and PodSecurityPolicyPreview for namespace Microsoft.ContainerService
+                must be enabled.
+              type: boolean
+            enablePrivateCluster:
+              description: EnablePrivateCluster controls whether the Kubernetes API
+                is only exposed on the private network
+              type: boolean
+            kubernetesVersion:
+              description: KubernetesVersion is the Kubernetes version
+              type: string
+            linuxProfile:
+              description: LinuxProfile is the configuration for Linux VMs
+              properties:
+                adminUsername:
+                  description: AdminUsername is the admin username for Linux VMs
+                  type: string
+                sshPublicKeys:
+                  description: SSHPublicKeys is a list of public SSH keys to allow
+                    to connect to the Linux VMs
+                  items:
+                    type: string
+                  type: array
+                  x-kubernetes-list-type: set
+              required:
+              - adminUsername
+              - sshPublicKeys
+              type: object
+            location:
+              description: Location is the location where the AKS cluster should be
+                created
+              minLength: 1
+              type: string
+            networkPlugin:
+              description: NetworkPlugin is the network plugin to use for networking.
+                "azure" or "kubenet"
+              enum:
+              - azure
+              - kubenet
+              type: string
+            networkPolicy:
+              description: NetworkPolicy is the network policy to use for networking.
+                "", "azure" or "calico"
+              enum:
+              - azure
+              - calico
+              type: string
+            windowsProfile:
+              description: WindowsProfile is the configuration for Windows VMs
+              properties:
+                adminPassword:
+                  description: AdminPassword is the admin password for Windows VMs
+                  type: string
+                adminUsername:
+                  description: AdminUsername is the admin username for Windows VMs
+                  type: string
+              required:
+              - adminPassword
+              - adminUsername
+              type: object
+          required:
+          - agentPoolProfiles
+          - credentials
+          - description
+          - dnsPrefix
+          - location
+          - networkPlugin
+          type: object
+        status:
+          description: AKSStatus defines the observed state of an AKS cluster
+          properties:
+            caCertificate:
+              description: CACertificate is the certificate for this cluster
+              type: string
+            components:
+              description: Components is the status of the components
+              items:
+                description: Component the state of a component of the resource
+                properties:
+                  detail:
+                    description: Detail is additional details on the error is any
+                    type: string
+                  message:
+                    description: Message is a human readable message on the status
+                      of the component
+                    type: string
+                  name:
+                    description: Name is the name of the component
+                    type: string
+                  resource:
+                    description: Resource is a reference to the resource
+                    properties:
+                      group:
+                        description: Group is the api group
+                        type: string
+                      kind:
+                        description: Kind is the name of the resource under the group
+                        type: string
+                      name:
+                        description: Name is name of the resource
+                        type: string
+                      namespace:
+                        description: Namespace is the location of the object
+                        type: string
+                      version:
+                        description: Version is the group version
+                        type: string
+                    required:
+                    - group
+                    - kind
+                    - name
+                    - namespace
+                    - version
+                    type: object
+                  status:
+                    description: Status is the status of the component
+                    type: string
+                type: object
+              type: array
+            endpoint:
+              description: Endpoint is the endpoint of the cluster
+              type: string
+            message:
+              description: Message is the status message
+              type: string
+            status:
+              description: Status provides the overall status
+              type: string
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsAksComputeKoreAppviaIo_aksYamlBytes() ([]byte, error) {
+	return _crdsAksComputeKoreAppviaIo_aksYaml, nil
+}
+
+func crdsAksComputeKoreAppviaIo_aksYaml() (*asset, error) {
+	bytes, err := crdsAksComputeKoreAppviaIo_aksYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/aks.compute.kore.appvia.io_aks.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _crdsAksComputeKoreAppviaIo_akscredentialsYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: akscredentials.aks.compute.kore.appvia.io
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.subscriptionID
+    description: Azure Subscription ID
+    name: Subscription ID
+    type: string
+  - JSONPath: .spec.tenantID
+    description: Azure Tenant ID
+    name: Tenant ID
+    type: string
+  - JSONPath: .status.verified
+    description: Indicates is the credentials have been verified
+    name: Verified
+    type: string
+  group: aks.compute.kore.appvia.io
+  names:
+    kind: AKSCredentials
+    listKind: AKSCredentialsList
+    plural: akscredentials
+    singular: akscredentials
+  preserveUnknownFields: false
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: AKSCredentials are used for storing Azure credentials needed to
+        create AKS clusters
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: AKSCredentialsSpec defines the desired state of AKSCredentials
+          properties:
+            clientID:
+              description: ClientID is the Azure client ID
+              minLength: 1
+              type: string
+            credentialsRef:
+              description: CredentialsRef is a reference to the credentials used to
+                create clusters
+              properties:
+                name:
+                  description: Name is unique within a namespace to reference a secret
+                    resource.
+                  type: string
+                namespace:
+                  description: Namespace defines the space within which the secret
+                    name must be unique.
+                  type: string
+              type: object
+            subscriptionID:
+              description: SubscriptionID is the Azure Subscription ID
+              minLength: 1
+              type: string
+            tenantID:
+              description: TenantID is the Azure Tenant ID
+              minLength: 1
+              type: string
+          required:
+          - clientID
+          - subscriptionID
+          - tenantID
+          type: object
+        status:
+          description: AKSCredentialsStatus defines the observed state of AKSCredentials
+          properties:
+            conditions:
+              description: Conditions is a collection of potential issues
+              items:
+                description: Condition is a reason why something failed
+                properties:
+                  detail:
+                    description: Detail is a actual error which might contain technical
+                      reference
+                    type: string
+                  message:
+                    description: Message is a human readable message
+                    type: string
+                required:
+                - detail
+                - message
+                type: object
+              type: array
+              x-kubernetes-list-type: set
+            status:
+              description: Status provides a overall status
+              type: string
+            verified:
+              description: Verified checks that the credentials are ok and valid
+              type: boolean
+          type: object
+      type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsAksComputeKoreAppviaIo_akscredentialsYamlBytes() ([]byte, error) {
+	return _crdsAksComputeKoreAppviaIo_akscredentialsYaml, nil
+}
+
+func crdsAksComputeKoreAppviaIo_akscredentialsYaml() (*asset, error) {
+	bytes, err := crdsAksComputeKoreAppviaIo_akscredentialsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/aks.compute.kore.appvia.io_akscredentials.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -8687,6 +9217,8 @@ func AssetNames() []string {
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() (*asset, error){
 	"crds/accounts.kore.appvia.io_accountmanagement.yaml":                 crdsAccountsKoreAppviaIo_accountmanagementYaml,
+	"crds/aks.compute.kore.appvia.io_aks.yaml":                            crdsAksComputeKoreAppviaIo_aksYaml,
+	"crds/aks.compute.kore.appvia.io_akscredentials.yaml":                 crdsAksComputeKoreAppviaIo_akscredentialsYaml,
 	"crds/apps.kore.appvia.io_appdeployments.yaml":                        crdsAppsKoreAppviaIo_appdeploymentsYaml,
 	"crds/apps.kore.appvia.io_installplans.yaml":                          crdsAppsKoreAppviaIo_installplansYaml,
 	"crds/aws.compute.kore.appvia.io_eks.yaml":                            crdsAwsComputeKoreAppviaIo_eksYaml,
@@ -8778,6 +9310,8 @@ type bintree struct {
 var _bintree = &bintree{nil, map[string]*bintree{
 	"crds": {nil, map[string]*bintree{
 		"accounts.kore.appvia.io_accountmanagement.yaml":                 {crdsAccountsKoreAppviaIo_accountmanagementYaml, map[string]*bintree{}},
+		"aks.compute.kore.appvia.io_aks.yaml":                            {crdsAksComputeKoreAppviaIo_aksYaml, map[string]*bintree{}},
+		"aks.compute.kore.appvia.io_akscredentials.yaml":                 {crdsAksComputeKoreAppviaIo_akscredentialsYaml, map[string]*bintree{}},
 		"apps.kore.appvia.io_appdeployments.yaml":                        {crdsAppsKoreAppviaIo_appdeploymentsYaml, map[string]*bintree{}},
 		"apps.kore.appvia.io_installplans.yaml":                          {crdsAppsKoreAppviaIo_installplansYaml, map[string]*bintree{}},
 		"aws.compute.kore.appvia.io_eks.yaml":                            {crdsAwsComputeKoreAppviaIo_eksYaml, map[string]*bintree{}},

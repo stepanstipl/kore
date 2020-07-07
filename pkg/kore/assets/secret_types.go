@@ -61,6 +61,12 @@ var (
 		Name:   "kubernetes",
 		Fields: []string{"ca.crt", "endpoint", "token"},
 	}
+
+	// AzureSecret holds Azure API credentials
+	AzureSecret = SecretTypes{
+		Name:   "azure-credentials",
+		Fields: []string{"client_secret"},
+	}
 )
 
 // GetSecretTypeOrGeneric returns the secret type
@@ -78,6 +84,7 @@ func GetSecretTypeOrGeneric(name string) SecretTypes {
 func SupportedSecretTypes() []SecretTypes {
 	return []SecretTypes{
 		AWSCredentialsSecret,
+		AzureSecret,
 		GCPOrganizationalSecret,
 		GCPProjectSecret,
 		GenericSecret,

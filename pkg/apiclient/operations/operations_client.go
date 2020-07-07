@@ -29,6 +29,8 @@ type Client struct {
 type ClientService interface {
 	AddTeamMember(params *AddTeamMemberParams, authInfo runtime.ClientAuthInfoWriter) (*AddTeamMemberOK, error)
 
+	DeleteAKSCredentials(params *DeleteAKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteAKSCredentialsOK, error)
+
 	DeleteAWSOrganization(params *DeleteAWSOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteAWSOrganizationOK, error)
 
 	DeleteEKSCredentials(params *DeleteEKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteEKSCredentialsOK, error)
@@ -50,6 +52,8 @@ type ClientService interface {
 	GenerateInviteLink(params *GenerateInviteLinkParams, authInfo runtime.ClientAuthInfoWriter) (*GenerateInviteLinkOK, error)
 
 	GenerateInviteLinkForUser(params *GenerateInviteLinkForUserParams, authInfo runtime.ClientAuthInfoWriter) (*GenerateInviteLinkForUserOK, error)
+
+	GetAKSCredentials(params *GetAKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*GetAKSCredentialsOK, error)
 
 	GetAWSOrganization(params *GetAWSOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*GetAWSOrganizationOK, error)
 
@@ -110,6 +114,8 @@ type ClientService interface {
 	InvitationSubmit(params *InvitationSubmitParams, authInfo runtime.ClientAuthInfoWriter) (*InvitationSubmitOK, error)
 
 	InviteUser(params *InviteUserParams, authInfo runtime.ClientAuthInfoWriter) (*InviteUserOK, error)
+
+	ListAKSCredentials(params *ListAKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*ListAKSCredentialsOK, error)
 
 	ListAWSOrganizations(params *ListAWSOrganizationsParams, authInfo runtime.ClientAuthInfoWriter) (*ListAWSOrganizationsOK, error)
 
@@ -195,6 +201,8 @@ type ClientService interface {
 
 	RemoveUser(params *RemoveUserParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveUserOK, error)
 
+	UpdateAKSCredentials(params *UpdateAKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateAKSCredentialsOK, error)
+
 	UpdateAWSOrganization(params *UpdateAWSOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateAWSOrganizationOK, error)
 
 	UpdateAccount(params *UpdateAccountParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateAccountOK, error)
@@ -261,6 +269,10 @@ type ClientService interface {
 
 	FindProjectClaims(params *FindProjectClaimsParams, authInfo runtime.ClientAuthInfoWriter) (*FindProjectClaimsOK, error)
 
+	GetAKS(params *GetAKSParams, authInfo runtime.ClientAuthInfoWriter) (*GetAKSOK, error)
+
+	ListAKS(params *ListAKSParams, authInfo runtime.ClientAuthInfoWriter) (*ListAKSOK, error)
+
 	UpdateEKSVPC(params *UpdateEKSVPCParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateEKSVPCOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
@@ -299,6 +311,40 @@ func (a *Client) AddTeamMember(params *AddTeamMemberParams, authInfo runtime.Cli
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for AddTeamMember: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
+}
+
+/*
+  DeleteAKSCredentials is used to delete a a k s credentials
+*/
+func (a *Client) DeleteAKSCredentials(params *DeleteAKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteAKSCredentialsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewDeleteAKSCredentialsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "DeleteAKSCredentials",
+		Method:             "DELETE",
+		PathPattern:        "/api/v1alpha1/teams/{team}/akscredentials/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &DeleteAKSCredentialsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*DeleteAKSCredentialsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*DeleteAKSCredentialsDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
 /*
@@ -681,6 +727,40 @@ func (a *Client) GenerateInviteLinkForUser(params *GenerateInviteLinkForUserPara
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for GenerateInviteLinkForUser: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
+}
+
+/*
+  GetAKSCredentials is the used tor return a list of a k s credentials which the team has access
+*/
+func (a *Client) GetAKSCredentials(params *GetAKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*GetAKSCredentialsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetAKSCredentialsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "GetAKSCredentials",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/akscredentials/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetAKSCredentialsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetAKSCredentialsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*GetAKSCredentialsDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
 /*
@@ -1725,6 +1805,40 @@ func (a *Client) InviteUser(params *InviteUserParams, authInfo runtime.ClientAut
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for InviteUser: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
+}
+
+/*
+  ListAKSCredentials is the used tor return a list of azure a k s credentials which thhe team has access
+*/
+func (a *Client) ListAKSCredentials(params *ListAKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*ListAKSCredentialsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewListAKSCredentialsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "ListAKSCredentials",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/akscredentials",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &ListAKSCredentialsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*ListAKSCredentialsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*ListAKSCredentialsDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
 /*
@@ -3189,6 +3303,40 @@ func (a *Client) RemoveUser(params *RemoveUserParams, authInfo runtime.ClientAut
 }
 
 /*
+  UpdateAKSCredentials is used to provision or update a k s credentials
+*/
+func (a *Client) UpdateAKSCredentials(params *UpdateAKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateAKSCredentialsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewUpdateAKSCredentialsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "UpdateAKSCredentials",
+		Method:             "PUT",
+		PathPattern:        "/api/v1alpha1/teams/{team}/akscredentials/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &UpdateAKSCredentialsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*UpdateAKSCredentialsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*UpdateAKSCredentialsDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
   UpdateAWSOrganization is used to provision or update a aws organization
 */
 func (a *Client) UpdateAWSOrganization(params *UpdateAWSOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateAWSOrganizationOK, error) {
@@ -4323,6 +4471,74 @@ func (a *Client) FindProjectClaims(params *FindProjectClaimsParams, authInfo run
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*FindProjectClaimsDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  GetAKS is the used to return the a k s cluster which the team has access
+*/
+func (a *Client) GetAKS(params *GetAKSParams, authInfo runtime.ClientAuthInfoWriter) (*GetAKSOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetAKSParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "getAKS",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/aks/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetAKSReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetAKSOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*GetAKSDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  ListAKS is the used to return a list of a k s clusters which thhe team has access
+*/
+func (a *Client) ListAKS(params *ListAKSParams, authInfo runtime.ClientAuthInfoWriter) (*ListAKSOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewListAKSParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "listAKS",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/aks",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &ListAKSReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*ListAKSOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*ListAKSDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

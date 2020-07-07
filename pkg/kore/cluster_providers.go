@@ -76,7 +76,7 @@ type ClusterProvider interface {
 	DefaultPlans() []configv1.Plan
 	// DefaultPlanPolicy returns with the built-in default plan policy
 	DefaultPlanPolicy() *configv1.PlanPolicy
-	// SetComponents adds all povider-specific cluster components and updates dependencies if required
+	// SetComponents adds all provider-specific cluster components and updates dependencies if required
 	SetComponents(Context, *clustersv1.Cluster, *ClusterComponents) error
 	// BeforeComponentsUpdate runs after the components are loaded but before updated
 	// The cluster components will be provided in dependency order
