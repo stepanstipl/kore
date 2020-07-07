@@ -98,7 +98,9 @@ type AccountClienter interface {
 	// IsAccountReady will determine if the account provisioning is ready
 	IsAccountReady(provisionRecordID string) (bool, error)
 	// EnsureInitialAccess will ensure access to the account
-	EnsureInitialAccess() error
+	EnsureInitialAccessCreated() error
+	// IsInitialAccessReady checks if initial access is working
+	IsInitialAccessReady() (bool, error)
 	// WaitForInitialAccess is used to wait for the account to be created
 	WaitForInitialAccess(ctx context.Context) error
 	// DoAccountCredentialsExist will create or update any missing accounts
@@ -131,6 +133,11 @@ type AccountClient struct {
 
 // Ensure we implement the public interface
 var _ AccountClienter = (*AccountClient)(nil)
+
+// NewAccountClientFromCredsAndRole will create a client
+func NewAccountClientFromCredsAndRole(creds Credentials, roleARN, region string, a Account) *AccountClient {
+	return NewAccountClientFromSessionAndRole(getNewSession(creds, region), roleARN, region, a)
+}
 
 // NewAccountClientFromSessionAndRole will create a client
 func NewAccountClientFromSessionAndRole(s *session.Session, roleARN, region string, a Account) *AccountClient {
@@ -371,7 +378,8 @@ func (a *AccountClient) IsAccountReady(provisionRecordID string) (bool, error) {
 
 		return false, err
 	}
-	switch *pro.RecordDetail.Status {
+	log.Debugf("account provisioning status: %s", aws.StringValue(pro.RecordDetail.Status))
+	switch aws.StringValue(pro.RecordDetail.Status) {
 	case servicecatalog.RecordStatusSucceeded:
 
 		return true, nil
@@ -380,13 +388,14 @@ func (a *AccountClient) IsAccountReady(provisionRecordID string) (bool, error) {
 
 		return false, fmt.Errorf("account provisioning failed - %v", pro.RecordDetail.RecordErrors)
 	default:
+		log.Debugf("unknown account provisioning status: %s", aws.StringValue(pro.RecordDetail.Status))
 	}
 
 	return false, nil
 }
 
-// EnsureInitialAccess will ensure access to the account
-func (a *AccountClient) EnsureInitialAccess() error {
+// EnsureInitialAccessCreated will ensure access to the account
+func (a *AccountClient) EnsureInitialAccessCreated() error {
 	cfSvc := a.getCfSvc()
 	accountExists, err := a.Exists()
 	if err != nil {
@@ -495,6 +504,16 @@ func (a *AccountClient) WaitForInitialAccess(ctx context.Context) error {
 
 		time.Sleep(15 * time.Second)
 	}
+}
+
+// IsInitialAccessReady will discover if the stacksets have deployed initial access
+func (a *AccountClient) IsInitialAccessReady() (bool, error) {
+	err := a.updateAccountIDIfRequired()
+	if err != nil {
+		return false, err
+	}
+
+	return a.isInitialAccessReady()
 }
 
 // DoAccountCredentialsExist will create or update any missing accounts

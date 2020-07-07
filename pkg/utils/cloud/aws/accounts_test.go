@@ -77,19 +77,19 @@ func TestEnsureInitialAccess(t *testing.T) {
 	td := getTestDataForAccountClient(t)
 	td.account.NewAccountName = "notpresent"
 	a := NewAccountClientFromSessionAndRole(td.session, td.roleARN, td.newRegion, td.account)
-	err := a.EnsureInitialAccess()
+	err := a.EnsureInitialAccessCreated()
 	require.Error(t, err)
 
 	// Test bad OU Name
 	td = getTestDataForAccountClient(t)
 	td.account.ManagedOrganizationalUnit = "notpresent"
 	a = NewAccountClientFromSessionAndRole(td.session, td.roleARN, td.newRegion, td.account)
-	err = a.EnsureInitialAccess()
+	err = a.EnsureInitialAccessCreated()
 	require.Error(t, err)
 
 	// Test with valid data
 	a = getAccountClientForTest(t)
-	err = a.EnsureInitialAccess()
+	err = a.EnsureInitialAccessCreated()
 	require.NoError(t, err)
 }
 
