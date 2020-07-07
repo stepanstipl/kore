@@ -5733,7 +5733,8 @@ spec:
                           description: Key provides the key definition for this tainer
                           type: string
                         value:
-                          description: Value is arbitary value for this taint to compare
+                          description: Value is arbitrary value for this taint to
+                            compare
                           type: string
                       type: object
                     type: array

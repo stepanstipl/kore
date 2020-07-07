@@ -235,7 +235,7 @@ type GKENodePool struct {
 type NodeTaint struct {
 	// Key provides the key definition for this tainer
 	Key string `json:"key,omitempty"`
-	// Value is arbitary value for this taint to compare
+	// Value is arbitrary value for this taint to compare
 	Value string `json:"value,omitempty"`
 	// Effect is desired action on the taint
 	Effect string `json:"effect,omitempty"`
