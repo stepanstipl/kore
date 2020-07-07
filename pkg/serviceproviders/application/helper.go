@@ -65,7 +65,7 @@ func CreateSystemServiceFromPlan(servicePlan servicesv1.ServicePlan, cluster cor
 	}
 
 	var priority string
-	if servicePlan.Name == "app-kube-app-manager" {
+	if servicePlan.Name == "app-"+kore.AppAppManager {
 		priority = "1"
 	}
 

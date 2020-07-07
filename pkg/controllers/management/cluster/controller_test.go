@@ -115,20 +115,20 @@ var _ = Describe("Cluster Controller", func() {
 
 	var givenKubeAppManagerExists = func() {
 		cluster.Status.Components.SetCondition(corev1.Component{
-			Name:   "Service/testName-kube-app-manager",
+			Name:   "Service/testName-" + kore.AppAppManager,
 			Status: corev1.SuccessStatus,
 			Resource: &corev1.Ownership{
 				Group:     "services.kore.appvia.io",
 				Version:   "v1",
 				Kind:      "Service",
 				Namespace: "testNamespace",
-				Name:      "testName-kube-app-manager",
+				Name:      "testName-" + kore.AppAppManager,
 			},
 		})
 
 		service := &servicesv1.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:        "testName-kube-app-manager",
+				Name:        "testName-" + kore.AppAppManager,
 				Namespace:   "testNamespace",
 				Annotations: map[string]string{"kore.appvia.io/readonly": "true"},
 			},
@@ -143,20 +143,20 @@ var _ = Describe("Cluster Controller", func() {
 
 	var givenHelmOperatorExists = func() {
 		cluster.Status.Components.SetCondition(corev1.Component{
-			Name:   "Service/testName-flux-helm-operator",
+			Name:   "Service/testName-" + kore.AppHelmOperator,
 			Status: corev1.SuccessStatus,
 			Resource: &corev1.Ownership{
 				Group:     "services.kore.appvia.io",
 				Version:   "v1",
 				Kind:      "Service",
 				Namespace: "testNamespace",
-				Name:      "testName-flux-helm-operator",
+				Name:      "testName-" + kore.AppHelmOperator,
 			},
 		})
 
 		service := &servicesv1.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:        "testName-flux-helm-operator",
+				Name:        "testName-" + kore.AppHelmOperator,
 				Namespace:   "testNamespace",
 				Annotations: map[string]string{"kore.appvia.io/readonly": "true"},
 			},
@@ -253,7 +253,7 @@ var _ = Describe("Cluster Controller", func() {
 			})
 
 			helmOperatorComp := components.Find(func(comp kore.ClusterComponent) bool {
-				return strings.HasSuffix(comp.Object.GetName(), "-flux-helm-operator")
+				return strings.HasSuffix(comp.Object.GetName(), "-"+kore.AppHelmOperator)
 			})
 
 			components.AddComponent(&kore.ClusterComponent{

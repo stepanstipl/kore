@@ -107,7 +107,7 @@ func (p Provider) AdminServices() []servicesv1.Service {
 		Name:      "kore",
 	}
 
-	providerDeps := []string{"app-kube-app-manager", "app-flux-helm-operator"}
+	providerDeps := []string{"app-" + kore.AppAppManager, "app-" + kore.AppHelmOperator}
 
 	var services []servicesv1.Service
 	for _, servicePlan := range p.plans {

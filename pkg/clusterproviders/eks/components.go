@@ -94,7 +94,7 @@ func (p Provider) SetComponents(ctx kore.Context, cluster *clustersv1.Cluster, c
 		}
 	}
 
-	helmOperatorName := cluster.Name + "-flux-helm-operator"
+	helmOperatorName := cluster.Name + "-" + kore.AppHelmOperator
 	helmOperatorService := components.Find(func(comp kore.ClusterComponent) bool {
 		if service, ok := comp.Object.(*servicesv1.Service); ok {
 			return service.Name == helmOperatorName
