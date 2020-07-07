@@ -154,6 +154,10 @@ class KoreApiClient {
   GetEKSCredentials = (team, name) => this.apis.default.GetEKSCredentials({ team, name })
   UpdateEKSCredentials = (team, name, resource) => this.apis.default.UpdateEKSCredentials({ team, name, body: JSON.stringify(resource) })
   DeleteEKSCredentials = (team, name) => this.apis.default.DeleteEKSCredentials({ team, name })
+  ListAWSOrganizations = (team) => Promise.resolve({ items: [] }) // this.apis.default.ListAWSOrganizations({ team })
+  GetAWSOrganizations = (team, name) => this.apis.default.GetAWSOrganizations({ team, name })
+  UpdateAWSOrganizations = (team, name, org) => this.apis.default.UpdateAWSOrganizations({ team, name, body: JSON.stringify(org) })
+  DeleteAWSOrganization = (team, name) => this.apis.default.DeleteAWSOrganization({ team, name })
 
   // Invitation
   InvitationSubmit = (token) => this.apis.default.InvitationSubmit({ token })

@@ -106,7 +106,7 @@ class GCPProjectAutomationSettings extends React.Component {
       await asyncForEach(this.state.gcpOrgList, async (gcpOrg) => {
         const gcpProjectList = this.state.gcpProjectAutomationType === 'CUSTOM' ? this.state.gcpProjectList : false
         const resourceVersion = this.state.accountManagement && this.state.accountManagement.metadata.resourceVersion
-        const accountMgtResource = KoreApi.resources().generateAccountManagementResource(gcpOrg, gcpProjectList, resourceVersion)
+        const accountMgtResource = KoreApi.resources().generateAccountManagementResource('GKE', gcpOrg, gcpProjectList, resourceVersion)
         await api.UpdateAccount(`am-${gcpOrg.metadata.name}`, accountMgtResource)
         await AllocationHelpers.storeAllocation({ resourceToAllocate: accountMgtResource })
         this.setState({ submitting: false, accountManagement: accountMgtResource })

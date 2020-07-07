@@ -87,9 +87,10 @@ describe('KoreApiResources', () => {
         namespace: 'team1'
       }
     }
+    const provider = 'GKE'
 
     it('generates expected resource, with GCP org only', () => {
-      const accountMgt = koreApiResources.generateAccountManagementResource(gcpOrg)
+      const accountMgt = koreApiResources.generateAccountManagementResource(provider, gcpOrg)
       expect(accountMgt).toBeDefined()
       expect(accountMgt.apiVersion).toBe('accounts.kore.appvia.io/v1beta1')
       expect(accountMgt.kind).toBe('AccountManagement')
@@ -121,16 +122,23 @@ describe('KoreApiResources', () => {
         suffix: 'prod',
         plans: ['gke-production']
       }]
-      const accountMgt = koreApiResources.generateAccountManagementResource(gcpOrg, gcpProjectList)
+      const accountMgt = koreApiResources.generateAccountManagementResource(provider, gcpOrg, gcpProjectList)
       expect(accountMgt).toBeDefined()
       expect(accountMgt.spec.rules).toHaveLength(2)
       expect(accountMgt.spec.rules).toEqual(gcpProjectList)
     })
 
     it('sets resourceVersion if specified', () => {
-      const accountMgt = koreApiResources.generateAccountManagementResource(gcpOrg, [], '123')
+      const accountMgt = koreApiResources.generateAccountManagementResource(provider, gcpOrg, [], '123')
       expect(accountMgt).toBeDefined()
       expect(accountMgt.metadata.resourceVersion).toBe('123')
+    })
+
+    it('sets provider', () => {
+      const provider = 'EKS'
+      const accountMgt = koreApiResources.generateAccountManagementResource(provider, gcpOrg)
+      expect(accountMgt).toBeDefined()
+      expect(accountMgt.spec.provider).toBe(provider)
     })
   })
 
