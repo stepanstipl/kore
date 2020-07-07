@@ -5719,6 +5719,24 @@ spec:
                     format: int64
                     minimum: 1
                     type: integer
+                  taints:
+                    description: Taints are a collection of kubernetes taints applied
+                      to the node on provisioning
+                    items:
+                      description: NodeTaint is the structure of a taint on a nodepool
+                        https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+                      properties:
+                        effect:
+                          description: Effect is desired action on the taint
+                          type: string
+                        key:
+                          description: Key provides the key definition for this tainer
+                          type: string
+                        value:
+                          description: Value is arbitary value for this taint to compare
+                          type: string
+                      type: object
+                    type: array
                   version:
                     description: Version is the initial kubernetes version which the
                       node group should be configured with. '-' gives the same version

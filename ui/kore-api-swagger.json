@@ -8611,6 +8611,12 @@
           "type": "integer",
           "format": "int64"
         },
+        "taints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1alpha1.NodeTaint"
+          }
+        },
         "version": {
           "type": "string"
         }
@@ -8802,6 +8808,19 @@
           }
         },
         "vpcID": {
+          "type": "string"
+        }
+      }
+    },
+    "v1alpha1.NodeTaint": {
+      "properties": {
+        "effect": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "value": {
           "type": "string"
         }
       }

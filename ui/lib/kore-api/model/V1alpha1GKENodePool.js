@@ -12,6 +12,7 @@
  */
 
 import ApiClient from '../ApiClient';
+import V1alpha1NodeTaint from './V1alpha1NodeTaint';
 
 /**
  * The V1alpha1GKENodePool model module.
@@ -111,6 +112,9 @@ class V1alpha1GKENodePool {
             }
             if (data.hasOwnProperty('size')) {
                 obj['size'] = ApiClient.convertToType(data['size'], 'Number');
+            }
+            if (data.hasOwnProperty('taints')) {
+                obj['taints'] = ApiClient.convertToType(data['taints'], [V1alpha1NodeTaint]);
             }
             if (data.hasOwnProperty('version')) {
                 obj['version'] = ApiClient.convertToType(data['version'], 'String');
@@ -289,6 +293,19 @@ class V1alpha1GKENodePool {
         this['size'] = size;
     }
 /**
+     * @return {Array.<module:model/V1alpha1NodeTaint>}
+     */
+    getTaints() {
+        return this.taints;
+    }
+
+    /**
+     * @param {Array.<module:model/V1alpha1NodeTaint>} taints
+     */
+    setTaints(taints) {
+        this['taints'] = taints;
+    }
+/**
      * @return {String}
      */
     getVersion() {
@@ -368,6 +385,11 @@ V1alpha1GKENodePool.prototype['preemptible'] = undefined;
  * @member {Number} size
  */
 V1alpha1GKENodePool.prototype['size'] = undefined;
+
+/**
+ * @member {Array.<module:model/V1alpha1NodeTaint>} taints
+ */
+V1alpha1GKENodePool.prototype['taints'] = undefined;
 
 /**
  * @member {String} version

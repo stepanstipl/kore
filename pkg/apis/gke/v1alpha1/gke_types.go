@@ -225,6 +225,20 @@ type GKENodePool struct {
 	// Labels is a set of labels to help Kubernetes workloads find this group
 	// +kubebuilder:validation:Optional
 	Labels map[string]string `json:"labels,omitempty"`
+	// Taints are a collection of kubernetes taints applied to the node on provisioning
+	// +kubebuilder:validation:Optional
+	Taints []NodeTaint `json:"taints,omitempty"`
+}
+
+// NodeTaint is the structure of a taint on a nodepool
+// https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+type NodeTaint struct {
+	// Key provides the key definition for this tainer
+	Key string `json:"key,omitempty"`
+	// Value is arbitary value for this taint to compare
+	Value string `json:"value,omitempty"`
+	// Effect is desired action on the taint
+	Effect string `json:"effect,omitempty"`
 }
 
 // GKEStatus defines the observed state of GKE
