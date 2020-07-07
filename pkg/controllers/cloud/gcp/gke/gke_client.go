@@ -297,7 +297,7 @@ func (g *gkeClient) UpdateNodePools(ctx context.Context) (NodePoolOperation, str
 
 	// Process node pools - removals and updates
 	for _, nodePool := range state.NodePools {
-		var nodePoolSpec *gke.GKENodePool = nil
+		var nodePoolSpec *gke.GKENodePool
 		for _, n := range g.cluster.Spec.NodePools {
 			if n.Name == nodePool.Name {
 				nodePoolSpec = &n
@@ -794,6 +794,7 @@ func (g *gkeClient) PrepareNodePoolDefinition(nodePool *gke.GKENodePool, locatio
 		Config: &container.NodeConfig{
 			DiskSizeGb:  nodePool.DiskSize,
 			ImageType:   nodePool.ImageType,
+			Labels:      nodePool.Labels,
 			MachineType: nodePool.MachineType,
 			OauthScopes: []string{
 				"https://www.googleapis.com/auth/compute",

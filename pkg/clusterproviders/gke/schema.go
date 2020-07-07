@@ -425,7 +425,7 @@ const schema = `
 			"$comment": "If all deprecated fields not specified, make node pools and release channel required",
 			"if": {
 				"required": [
-					"diskSize", "enableAutoupgrade", "enableAutorepair", "enableAutoscaler", 
+					"diskSize", "enableAutoupgrade", "enableAutorepair", "enableAutoscaler",
 					"imageType", "machineType", "maxSize", "size", "version"
 				]
 			},
