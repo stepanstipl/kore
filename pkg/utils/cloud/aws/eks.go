@@ -413,6 +413,13 @@ func (c *Client) UpdateNodeGroup(ctx context.Context, group *eksv1alpha1.EKSNode
 		// time, you'd get a slightly odd result here where we might set an old desired size.
 		// But it's a very small window indeed, and will sort itself out fairly promptly.
 		desiredSize = aws.Int64Value(state.ScalingConfig.DesiredSize)
+
+		// We have to make sure the desired size is always within min and max
+		if desiredSize < minSize {
+			desiredSize = minSize
+		} else if desiredSize > maxSize {
+			desiredSize = maxSize
+		}
 	}
 	if aws.Int64Value(state.ScalingConfig.MinSize) != minSize ||
 		aws.Int64Value(state.ScalingConfig.MaxSize) != maxSize ||
