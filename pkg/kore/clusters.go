@@ -325,7 +325,7 @@ func (c *clustersImpl) validateCredentials(ctx context.Context, cluster *cluster
 		)
 	}
 
-	supported := []string{"EKSCredentials", "GKECredentials", "AccountManagement"}
+	supported := []string{"AKSCredentials", "EKSCredentials", "GKECredentials", "AccountManagement"}
 	if !utils.Contains(alloc.Spec.Resource.Kind, supported) {
 		return validation.NewError("cluster has failed validation").WithFieldErrorf(
 			"credentials",

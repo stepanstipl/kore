@@ -14,22 +14,18 @@
  * limitations under the License.
  */
 
-package utils
+package aks
 
 import (
-	"github.com/go-openapi/inflect"
+	"net/http"
+
+	"github.com/Azure/go-autorest/autorest"
 )
 
-func init() {
-	inflect.AddUncountable("aks")
-	inflect.AddUncountable("eks")
-	inflect.AddUncountable("kubernetes")
+func isNotFound(resp autorest.Response) bool {
+	return responseHasStatusCode(resp, http.StatusNotFound)
 }
 
-func Singularize(word string) string {
-	return inflect.Singularize(word)
-}
-
-func Pluralize(word string) string {
-	return inflect.Pluralize(word)
+func responseHasStatusCode(resp autorest.Response, statusCode int) bool {
+	return resp.Response != nil && resp.Response.StatusCode == statusCode
 }

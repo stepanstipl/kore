@@ -14,22 +14,7 @@
  * limitations under the License.
  */
 
-package utils
-
-import (
-	"github.com/go-openapi/inflect"
-)
-
-func init() {
-	inflect.AddUncountable("aks")
-	inflect.AddUncountable("eks")
-	inflect.AddUncountable("kubernetes")
-}
-
-func Singularize(word string) string {
-	return inflect.Singularize(word)
-}
-
-func Pluralize(word string) string {
-	return inflect.Pluralize(word)
-}
+// Package v1alpha1 contains API Schema definitions for the gke v1alpha1 API group
+// +k8s:deepcopy-gen=package,register
+// +groupName=aks.compute.kore.appvia.io
+package v1alpha1

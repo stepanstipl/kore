@@ -18,6 +18,10 @@ package kore
 
 // Cloud returns a collection of cloud providers
 type Cloud interface {
+	// AKS returns the AKS interface
+	AKS() AKS
+	// AKSCredentials manages credentials used to create AKS clusters
+	AKSCredentials() AKSCredentials
 	// GCP returns the gcp interface
 	GCP() GCP
 	// GKE returns the GKE interface
@@ -31,7 +35,6 @@ type Cloud interface {
 	// EKSCredentials provides acces to the eks's credentials
 	EKSCredentials() EKSCredentials
 	// EKSNodeGroup provides access to an eks nodegroup
-	// TODO make this part of a cluser?
 	EKSNodeGroup() EKSNodeGroup
 }
 
@@ -39,6 +42,16 @@ type cloudImpl struct {
 	*hubImpl
 	// team is the requesting team
 	team string
+}
+
+// AKS retuens a AKS interface implementation
+func (c *cloudImpl) AKS() AKS {
+	return &aksImpl{cloudImpl: c, team: c.team}
+}
+
+// AKSCredentials returns an AKSCredentials implementation
+func (c *cloudImpl) AKSCredentials() AKSCredentials {
+	return &aksCredsImpl{cloudImpl: c, team: c.team}
 }
 
 // GCP returns the gcp interface

@@ -36,7 +36,7 @@ type KubernetesSpec struct {
 	AuthProxyAllowedIPs []string `json:"authProxyAllowedIPs,omitempty"`
 	// Cluster refers to the cluster this object belongs to
 	// +kubebuilder:validation:Required
-	Cluster corev1.Ownership `json:"cluster,omitempty"`
+	Cluster corev1.Ownership `json:"cluster,omitempty" jsonschema:"-"`
 	// ClusterUsers is a collection of users from the team whom have
 	// permissions across the cluster
 	// +kubebuilder:validation:Optional
@@ -57,7 +57,7 @@ type KubernetesSpec struct {
 	InheritTeamMembers bool `json:"inheritTeamMembers,omitempty"`
 	// Provider is the cloud cluster provider type for this kubernetes
 	// +kubebuilder:validation:Optional
-	Provider corev1.Ownership `json:"provider,omitempty"`
+	Provider corev1.Ownership `json:"provider,omitempty" jsonschema:"-"`
 }
 
 // ClusterUser defines a user and their role in the cluster

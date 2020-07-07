@@ -14,22 +14,16 @@
  * limitations under the License.
  */
 
-package utils
+package aks
 
 import (
-	"github.com/go-openapi/inflect"
+	aksv1alpha1 "github.com/appvia/kore/pkg/apis/aks/v1alpha1"
+	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 )
 
-func init() {
-	inflect.AddUncountable("aks")
-	inflect.AddUncountable("eks")
-	inflect.AddUncountable("kubernetes")
-}
-
-func Singularize(word string) string {
-	return inflect.Singularize(word)
-}
-
-func Pluralize(word string) string {
-	return inflect.Pluralize(word)
+// Configuration is the AKS cluster configuration
+//go:generate go run -mod=vendor github.com/appvia/kore/cmd/jsonschema-gen
+type Configuration struct {
+	aksv1alpha1.AKSSpec
+	clustersv1.KubernetesSpec
 }
