@@ -17,6 +17,7 @@
 // deploy/crds/clusters.compute.kore.appvia.io_namespaceclaims.yaml
 // deploy/crds/clusters.compute.kore.appvia.io_namespacepolicy.yaml
 // deploy/crds/config.kore.appvia.io_allocations.yaml
+// deploy/crds/config.kore.appvia.io_configs.yaml
 // deploy/crds/config.kore.appvia.io_planpolicies.yaml
 // deploy/crds/config.kore.appvia.io_plans.yaml
 // deploy/crds/config.kore.appvia.io_secrets.yaml
@@ -3908,6 +3909,79 @@ func crdsConfigKoreAppviaIo_allocationsYaml() (*asset, error) {
 	return a, nil
 }
 
+var _crdsConfigKoreAppviaIo_configsYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: configs.config.kore.appvia.io
+spec:
+  group: config.kore.appvia.io
+  names:
+    kind: Config
+    listKind: ConfigList
+    plural: configs
+    singular: config
+  preserveUnknownFields: false
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      description: Config is the Schema for the Configs API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: ConfigSpec defines the desired state of Config
+          properties:
+            values:
+              additionalProperties:
+                type: string
+              type: object
+          required:
+          - values
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsConfigKoreAppviaIo_configsYamlBytes() ([]byte, error) {
+	return _crdsConfigKoreAppviaIo_configsYaml, nil
+}
+
+func crdsConfigKoreAppviaIo_configsYaml() (*asset, error) {
+	bytes, err := crdsConfigKoreAppviaIo_configsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/config.kore.appvia.io_configs.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _crdsConfigKoreAppviaIo_planpoliciesYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -7618,6 +7692,7 @@ var _bindata = map[string]func() (*asset, error){
 	"crds/clusters.compute.kore.appvia.io_namespaceclaims.yaml":           crdsClustersComputeKoreAppviaIo_namespaceclaimsYaml,
 	"crds/clusters.compute.kore.appvia.io_namespacepolicy.yaml":           crdsClustersComputeKoreAppviaIo_namespacepolicyYaml,
 	"crds/config.kore.appvia.io_allocations.yaml":                         crdsConfigKoreAppviaIo_allocationsYaml,
+	"crds/config.kore.appvia.io_configs.yaml":                             crdsConfigKoreAppviaIo_configsYaml,
 	"crds/config.kore.appvia.io_planpolicies.yaml":                        crdsConfigKoreAppviaIo_planpoliciesYaml,
 	"crds/config.kore.appvia.io_plans.yaml":                               crdsConfigKoreAppviaIo_plansYaml,
 	"crds/config.kore.appvia.io_secrets.yaml":                             crdsConfigKoreAppviaIo_secretsYaml,
@@ -7702,6 +7777,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"clusters.compute.kore.appvia.io_namespaceclaims.yaml":           {crdsClustersComputeKoreAppviaIo_namespaceclaimsYaml, map[string]*bintree{}},
 		"clusters.compute.kore.appvia.io_namespacepolicy.yaml":           {crdsClustersComputeKoreAppviaIo_namespacepolicyYaml, map[string]*bintree{}},
 		"config.kore.appvia.io_allocations.yaml":                         {crdsConfigKoreAppviaIo_allocationsYaml, map[string]*bintree{}},
+		"config.kore.appvia.io_configs.yaml":                             {crdsConfigKoreAppviaIo_configsYaml, map[string]*bintree{}},
 		"config.kore.appvia.io_planpolicies.yaml":                        {crdsConfigKoreAppviaIo_planpoliciesYaml, map[string]*bintree{}},
 		"config.kore.appvia.io_plans.yaml":                               {crdsConfigKoreAppviaIo_plansYaml, map[string]*bintree{}},
 		"config.kore.appvia.io_secrets.yaml":                             {crdsConfigKoreAppviaIo_secretsYaml, map[string]*bintree{}},

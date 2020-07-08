@@ -87,6 +87,8 @@ type Interface interface {
 	Security() Security
 	// Persist returns the access layer for the non-Kubernetes data store
 	Persist() persistence.Interface
+	// Config returns the config interface
+	Configs() Configs
 }
 
 // DEX is the configuration required to setup identity providers

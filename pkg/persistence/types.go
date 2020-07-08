@@ -59,6 +59,8 @@ type Interface interface {
 	Teams() Teams
 	// Users returns the users interface
 	Users() Users
+	// Config returns the config interface
+	Configs() Configs
 }
 
 // Audit is the interface to the audit service
