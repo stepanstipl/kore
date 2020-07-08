@@ -18,14 +18,18 @@ package kore
 
 const (
 	// FeatureGateServices enables the managed services
-	FeatureGateServices            = "services"
+	FeatureGateServices = "services"
+	// FeatureGateApplicationServices enabled the applications service section
 	FeatureGateApplicationServices = "application_services"
+	// FeatureMonitoringServices allows for kore monitoring to be enabled
+	FeatureMonitoringServices = "monitioring_services"
 )
 
 // DefaultFeatureGates returns the existing feature gates with the default statuses
 func DefaultFeatureGates() map[string]bool {
 	return map[string]bool{
-		FeatureGateServices:            false,
 		FeatureGateApplicationServices: false,
+		FeatureGateServices:            false,
+		FeatureMonitoringServices:      false,
 	}
 }

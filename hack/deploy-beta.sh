@@ -27,7 +27,7 @@ export ENVIRONMENT="${ENVIRONMENT:-"beta"}"
 export BUILD_ID=${BUILD_ID:-${VERSION}}
 
 export KORE_API_PUBLIC_URL=${KORE_API_PUBLIC_URL_BETA}
-export KORE_FEATURE_GATES="[services=true,application_services=true]"
+export KORE_FEATURE_GATES="[services=true,application_services=true,monitoring_services=true]"
 export KORE_UI_PUBLIC_URL=${KORE_UI_PUBLIC_URL_BETA}
 export KORE_UI_SHOW_PROTOTYPES=true
 export KORE_VERBOSE=true
