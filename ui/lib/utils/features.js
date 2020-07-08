@@ -2,9 +2,10 @@ import getConfig from 'next/config'
 const { publicRuntimeConfig } = getConfig()
 
 export const KoreFeatures = {
-  SERVICES: 'services',
   APPLICATION_SERVICES: 'application_services',
-  COSTS: 'costs'
+  COSTS: 'costs',
+  MONITORING_SERVICES: 'monitoring_services',
+  SERVICES: 'services'
 }
 
 export function featureEnabled(feature) {

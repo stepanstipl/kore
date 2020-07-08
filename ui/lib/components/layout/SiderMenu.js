@@ -106,7 +106,9 @@ class SiderMenu extends React.Component {
             ))}
           </SubMenu>
           {AdminMenu()}
-          {MonitoringMenu()}
+          {!featureEnabled(KoreFeatures.MONITORING_SERVICES) ? null :
+          MonitoringMenu()
+          }
           {AuditMenu()}
           {isAdmin ? (
             <SubMenu key="security"

@@ -61,7 +61,7 @@ export default class MonitoringTable extends React.Component {
       title: 'Rule Name',
       dataIndex: 'status.rule.metadata.name',
       key: 'name',
-      width: 150
+      width: 200
     },
     {
       title: 'Summary',

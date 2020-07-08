@@ -7133,8 +7133,8 @@
     },
     "kore.ServicePlanDetails": {
       "required": [
-        "summary",
         "kind",
+        "summary",
         "editableParams"
       ],
       "properties": {
