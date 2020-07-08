@@ -47,6 +47,8 @@ import (
 const (
 	// helmVersion is the version of helm to download
 	helmVersion = "v3.2.1"
+	// valueFilePerms is the file permissions on the values.yaml
+	valueFilePerms = os.FileMode(0600)
 )
 
 // UpOptions are the options for bootstrapping
@@ -183,7 +185,7 @@ func (o *UpOptions) EnsureHelmValues(ctx context.Context) error {
 					return err
 				}
 
-				return ioutil.WriteFile(o.ValuesFile, content, os.FileMode(0750))
+				return ioutil.WriteFile(o.ValuesFile, content, valueFilePerms)
 			},
 		}).Run(ctx, o.Writer()); err != nil {
 			return err

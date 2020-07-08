@@ -56,7 +56,7 @@ func (o *UpOptions) UpdateHelmValues(path string) error {
 	}
 
 	if !bytes.Equal(current, updated) {
-		return ioutil.WriteFile(path, updated, os.FileMode(0750))
+		return ioutil.WriteFile(path, updated, valueFilePerms)
 	}
 
 	return nil
