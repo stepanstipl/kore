@@ -19,15 +19,15 @@ package gke
 import (
 	"fmt"
 
-	accountsv1beta1 "github.com/appvia/kore/pkg/apis/accounts/v1beta1"
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	gcpv1alpha1 "github.com/appvia/kore/pkg/apis/gcp/v1alpha1"
 	gkev1alpha1 "github.com/appvia/kore/pkg/apis/gke/v1alpha1"
+	"github.com/appvia/kore/pkg/clusterproviders"
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
-	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -46,7 +46,7 @@ func (p Provider) SetComponents(ctx kore.Context, cluster *clustersv1.Cluster, c
 	gke := &gkev1alpha1.GKE{ObjectMeta: meta}
 	var gkeDependencies []kubernetes.Object
 
-	if isAccountManaged(cluster.Spec.Credentials) {
+	if clusterproviders.IsAccountManaged(cluster.Spec.Credentials) {
 		projectClaim := &gcpv1alpha1.ProjectClaim{ObjectMeta: meta}
 		components.Add(projectClaim)
 		gkeDependencies = []kubernetes.Object{projectClaim}
@@ -75,7 +75,7 @@ func (p Provider) BeforeComponentsUpdate(ctx kore.Context, cluster *clustersv1.C
 
 			o.Spec.Cluster = cluster.Ownership()
 
-			switch isAccountManaged(cluster.Spec.Credentials) {
+			switch clusterproviders.IsAccountManaged(cluster.Spec.Credentials) {
 			case true:
 				o.Spec.Credentials = corev1.Ownership{
 					Group:     gcpv1alpha1.GroupVersion.Group,
@@ -95,7 +95,7 @@ func (p Provider) BeforeComponentsUpdate(ctx kore.Context, cluster *clustersv1.C
 			}
 
 			// @step: we find the matching account rule
-			mgmt, err := findAccountManagement(ctx, cluster.Spec.Credentials)
+			mgmt, err := clusterproviders.FindAccountManagement(ctx, cluster.Spec.Credentials)
 			if err != nil {
 				return err
 			}
@@ -109,7 +109,7 @@ func (p Provider) BeforeComponentsUpdate(ctx kore.Context, cluster *clustersv1.C
 
 			switch len(mgmt.Spec.Rules) > 0 {
 			case true:
-				rule, found := findAccountingRule(mgmt, cluster.Spec.Plan)
+				rule, found := clusterproviders.FindAccountingRule(mgmt, cluster.Spec.Plan)
 				if !found {
 					return controllers.NewCriticalError(
 						fmt.Errorf("no account rule matching plan: %q exist", cluster.Spec.Plan),
@@ -141,46 +141,4 @@ func (p Provider) BeforeComponentsUpdate(ctx kore.Context, cluster *clustersv1.C
 // The cluster components will be provided in dependency order
 func (p Provider) SetProviderData(kore.Context, *clustersv1.Cluster, *kore.ClusterComponents) error {
 	return nil
-}
-
-func isAccountManaged(owner corev1.Ownership) bool {
-	if owner.Group != accountsv1beta1.GroupVersion.Group {
-		return false
-	}
-	if owner.Version != accountsv1beta1.GroupVersion.Version {
-		return false
-	}
-	if owner.Kind != "AccountManagement" {
-		return false
-	}
-
-	return true
-}
-
-func findAccountManagement(ctx kore.Context, owner corev1.Ownership) (*accountsv1beta1.AccountManagement, error) {
-	account := &accountsv1beta1.AccountManagement{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      owner.Name,
-			Namespace: owner.Namespace,
-		},
-	}
-	found, err := kubernetes.GetIfExists(ctx, ctx.Client(), account)
-	if err != nil {
-		return nil, err
-	}
-	if !found {
-		return nil, fmt.Errorf("accounting resource %q does not exist", owner.Name)
-	}
-
-	return account, nil
-}
-
-func findAccountingRule(account *accountsv1beta1.AccountManagement, plan string) (*accountsv1beta1.AccountsRule, bool) {
-	for _, x := range account.Spec.Rules {
-		if utils.Contains(plan, x.Plans) {
-			return x, true
-		}
-	}
-
-	return nil, false
 }
