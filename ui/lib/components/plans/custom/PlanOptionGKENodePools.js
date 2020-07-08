@@ -6,6 +6,7 @@ import { startCase } from 'lodash'
 import PlanOptionBase from '../PlanOptionBase'
 import ConstrainedDropdown from './ConstrainedDropdown'
 import PlanOption from '../PlanOption'
+import copy from '../../../utils/object-copy'
 
 // @TODO: Pull these from GCP
 const supportedMachineTypes = {
@@ -153,7 +154,7 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
     const properties = this.props.property.items.properties
     Object.keys(properties).forEach((k) => {
       if (properties[k].default !== undefined) {
-        newNodePool[k] = properties[k].default
+        newNodePool[k] = copy(properties[k].default)
       }
     })
 

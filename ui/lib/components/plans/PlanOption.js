@@ -46,17 +46,22 @@ export default class PlanOption extends PlanOptionBase {
     // Special handling for object types - represent as a card with a plan option for each property:
     if (property.type === 'object' && property.properties) {
       const keys = Object.keys(property.properties)
+      const objOnChange = (n, v) => {
+        const newVal = value ? {...value, [n]: v } : { [n]: v }
+        onChange(name, newVal)
+      }
       return (
         <Card size="small" title={displayName}>
           {keys.map((key) =>
             <PlanOption
               {...this.props}
+              id={`${name}.${key}`}
               key={`${name}.${key}`}
               name={`${name}.${key}`}
               displayName={property.properties[key].title || startCase(key)}
               property={property.properties[key]}
               value={value ? value[key] : null}
-              onChange={onChange}
+              onChange={(_, v) => objOnChange(key, v)}
             />
           )}
         </Card>
@@ -102,6 +107,11 @@ export default class PlanOption extends PlanOptionBase {
             if (property.items.type !== 'array' && property.items.type !== 'object') {
               return <Select id={id} mode="tags" tokenSeparators={[',']} value={values} disabled={!editable} onChange={(v) => onChange(name, v)} />
             } else {
+              const arrOnChange = (i, v) => {
+                const newValues = [...values]
+                newValues[i] = v
+                onChange(name, newValues)
+              }
               return (
                 <>
                   {values.map((val, ind) =>
@@ -111,7 +121,7 @@ export default class PlanOption extends PlanOptionBase {
                         name={`${name}[${ind}]`}
                         property={property.items}
                         value={val}
-                        onChange={onChange}
+                        onChange={(_, v) => arrOnChange(ind, v)}
                       />
                       <Button disabled={!editable} icon="delete" title={`Remove ${displayName} ${ind}`} onClick={() => onChange(name, this.removeFromArray(values, ind))}>
                         {`Remove ${displayName} ${ind}`}

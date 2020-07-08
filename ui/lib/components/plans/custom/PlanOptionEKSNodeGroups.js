@@ -1,9 +1,11 @@
 import * as React from 'react'
 import { Form, Icon, List, Button, Drawer, Input, Descriptions, InputNumber, Checkbox, Collapse, Radio, Modal, Alert } from 'antd'
 import { startCase } from 'lodash'
+
 import PlanOptionBase from '../PlanOptionBase'
 import ConstrainedDropdown from './ConstrainedDropdown'
 import PlanOption from '../PlanOption'
+import copy from '../../../utils/object-copy'
 
 export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
   constructor(props) {
@@ -46,7 +48,7 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
     const properties = this.props.property.items.properties
     Object.keys(properties).forEach((k) => {
       if (properties[k].default !== undefined) {
-        newNodeGroup[k] = properties[k].default
+        newNodeGroup[k] = copy(properties[k].default)
       }
     })
 
