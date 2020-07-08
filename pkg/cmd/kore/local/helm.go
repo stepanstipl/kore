@@ -40,9 +40,9 @@ func (o *UpOptions) UpdateHelmValues(path string) error {
 
 	// @step: iterate through any changes
 	updated, err := func() ([]byte, error) {
-		if utils.Contains("release", o.FlagsChanged) {
+		if utils.Contains("version", o.FlagsChanged) {
 			for _, x := range []string{"api.version", "ui.version"} {
-				values, err = UpdateYAML(values, x, o.Release)
+				values, err = UpdateYAML(values, x, o.Version)
 				if err != nil {
 					return nil, err
 				}

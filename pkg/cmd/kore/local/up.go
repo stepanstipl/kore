@@ -372,9 +372,18 @@ func (o *UpOptions) EnsureKoreRelease(ctx context.Context) error {
 	}
 
 	return (&Task{
-		Header:      fmt.Sprintf("Attempting to deploy the Kore release %s", o.Release),
+		Header:      fmt.Sprintf("Attempting to deploy the Kore release %s", o.Version),
 		Description: "Deployed the Kore release into the cluster",
 		Handler: func(ctx context.Context) error {
+			logger := newProviderLogger(o.Factory)
+
+			switch o.Release == version.Tag {
+			case true:
+				logger.Info("Using the official helm chart for deployment")
+			default:
+				logger.Infof("Using the helm release: %s for deployment", o.Release)
+			}
+
 			release, err := func() (string, error) {
 				if strings.HasPrefix(o.Release, "http") {
 					return o.Release, nil
