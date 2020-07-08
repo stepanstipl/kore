@@ -17,6 +17,7 @@ class IndexPage extends React.Component {
     gkeCredentials: PropTypes.object,
     gcpOrganizations: PropTypes.object,
     eksCredentials: PropTypes.object,
+    awsOrganizations: PropTypes.object,
     version: PropTypes.string
   }
 
@@ -34,15 +35,17 @@ class IndexPage extends React.Component {
     let gkeCredentials
     let gcpOrganizations
     let eksCredentials
+    let awsOrganizations
 
     if (user.isAdmin) {
-      [ allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations, eksCredentials ] = await Promise.all([
+      [ allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations, eksCredentials, awsOrganizations ] = await Promise.all([
         api.ListTeams(),
         api.ListUsers(),
         api.ListTeamMembers(publicRuntimeConfig.koreAdminTeamName),
         api.ListGKECredentials(publicRuntimeConfig.koreAdminTeamName),
         api.ListGCPOrganizations(publicRuntimeConfig.koreAdminTeamName),
-        api.ListEKSCredentials(publicRuntimeConfig.koreAdminTeamName)
+        api.ListEKSCredentials(publicRuntimeConfig.koreAdminTeamName),
+        api.ListAWSOrganizations(publicRuntimeConfig.koreAdminTeamName),
       ])
     } else {
       [ allTeams, allUsers ] = await Promise.all([
@@ -52,7 +55,7 @@ class IndexPage extends React.Component {
     }
 
     allTeams.items = (allTeams.items || []).filter(t => !publicRuntimeConfig.ignoreTeams.includes(t.metadata.name))
-    return { allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations, eksCredentials }
+    return { allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations, eksCredentials, awsOrganizations }
   }
 
   static getInitialProps = async (ctx) => {
@@ -61,7 +64,7 @@ class IndexPage extends React.Component {
   }
 
   render() {
-    const { user, allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations, eksCredentials, version } = this.props
+    const { user, allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations, eksCredentials, awsOrganizations, version } = this.props
     const userTeams = (user.teams.userTeams || []).filter(t => !publicRuntimeConfig.ignoreTeams.includes(t.metadata.name))
     const noUserTeamsExist = userTeams.length === 0
     const gcpCredsMissing = (gkeCredentials && gkeCredentials.items.length === 0) && (gcpOrganizations && gcpOrganizations.items.length === 0)
@@ -163,10 +166,10 @@ class IndexPage extends React.Component {
                           <Text strong>Google Cloud Platform</Text>
                         </span>
                         <br/>
-                        <Text style={{ display: 'inline-block', marginTop: '10px' }}>Organizations / Projects</Text>
+                        <Text style={{ display: 'inline-block', marginTop: '10px' }}>Organization / Projects</Text>
                       </>
                     }
-                    value={gcpOrganizations.items.length + ' / ' + gkeCredentials.items.length}
+                    valueRender={() => <>{gcpOrganizations.items.length === 0 ? <Icon type="exclamation-circle" theme="twoTone" twoToneColor="orange"  /> : <Icon type="check-circle" theme="twoTone" twoToneColor="#52c41a" />}<Text> / {gkeCredentials.items.length}</Text></>}
                     style={{ textAlign: 'center' }}
                     valueStyle={{ color: cloudIntegrationMissing ? 'orange' : '' }}
                   />
@@ -180,10 +183,11 @@ class IndexPage extends React.Component {
                           <Text strong>Amazon Web Services</Text>
                         </span>
                         <br/>
-                        <Text style={{ display: 'inline-block', marginTop: '10px' }}>Accounts</Text>
+                        <Text style={{ display: 'inline-block', marginTop: '10px' }}>Organization / Accounts</Text>
                       </>
                     }
-                    value={eksCredentials.items.length}
+                    valueRender={() => <>{awsOrganizations.items.length === 0 ? <Icon type="exclamation-circle" theme="twoTone" twoToneColor="orange"  /> : <Icon type="check-circle" theme="twoTone" twoToneColor="#52c41a" />}<Text> / {eksCredentials.items.length}</Text></>}
+                    value={awsOrganizations.items.length + ' / ' + eksCredentials.items.length}
                     style={{ textAlign: 'center' }}
                     valueStyle={{ color: cloudIntegrationMissing ? 'orange' : '' }}
                   />
