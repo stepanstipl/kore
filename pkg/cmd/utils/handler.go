@@ -25,6 +25,7 @@ import (
 	"github.com/appvia/kore/pkg/utils"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 // RunHandler is the run hanler
@@ -71,6 +72,18 @@ func DefaultRunFunc(o RunHandler) func(*cobra.Command, []string) {
 			utils.SetReflectedField("Name", cmd.Flags().Arg(1), o)
 		} else if utils.HasReflectField("Name", o) {
 			utils.SetReflectedField("Name", cmd.Flags().Arg(0), o)
+		}
+
+		// @step: some handler require they know the diff between flags set and defaults
+		if utils.HasReflectField("FlagsChanged", o) {
+			var changed []string
+
+			cmd.Flags().Visit(func(f *pflag.Flag) {
+				if f.Changed {
+					changed = append(changed, f.Name)
+				}
+			})
+			utils.SetReflectedField("FlagsChanged", changed, o)
 		}
 
 		o.CheckError(o.Validate())

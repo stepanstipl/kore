@@ -47,6 +47,8 @@ import (
 const (
 	// helmVersion is the version of helm to download
 	helmVersion = "v3.2.1"
+	// valueFilePerms is the file permissions on the values.yaml
+	valueFilePerms = os.FileMode(0600)
 )
 
 // UpOptions are the options for bootstrapping
@@ -66,6 +68,8 @@ type UpOptions struct {
 	EnableDeploy bool
 	// Force indicates we should force any changes
 	Force bool
+	// FlagsChanged is a list of flags which changed
+	FlagsChanged []string
 	// HelmPath is the path to the helm binary
 	HelmPath string
 	// Wait indicates we wait for the deployment to finish
@@ -181,7 +185,7 @@ func (o *UpOptions) EnsureHelmValues(ctx context.Context) error {
 					return err
 				}
 
-				return ioutil.WriteFile(o.ValuesFile, content, os.FileMode(0750))
+				return ioutil.WriteFile(o.ValuesFile, content, valueFilePerms)
 			},
 		}).Run(ctx, o.Writer()); err != nil {
 			return err
@@ -368,9 +372,18 @@ func (o *UpOptions) EnsureKoreRelease(ctx context.Context) error {
 	}
 
 	return (&Task{
-		Header:      fmt.Sprintf("Attempting to deploy the Kore release %s", o.Release),
+		Header:      fmt.Sprintf("Attempting to deploy the Kore release %s", o.Version),
 		Description: "Deployed the Kore release into the cluster",
 		Handler: func(ctx context.Context) error {
+			logger := newProviderLogger(o.Factory)
+
+			switch o.Release == version.Tag {
+			case true:
+				logger.Info("Using the official helm chart for deployment")
+			default:
+				logger.Infof("Using the helm release: %s for deployment", o.Release)
+			}
+
 			release, err := func() (string, error) {
 				if strings.HasPrefix(o.Release, "http") {
 					return o.Release, nil
