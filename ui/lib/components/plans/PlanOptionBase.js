@@ -49,7 +49,10 @@ export default class PlanOptionBase extends React.Component {
       return values
     }
     let newItem = {}
-    Object.keys(property.items.properties).forEach((p) => newItem[p] = null)
+    Object.keys(property.items.properties).forEach((p) => {
+      const prop = property.items.properties[p]
+      newItem[p] = prop.const !== undefined && prop.const !== null ? prop.const : prop.default
+    })
     values.push(newItem)
     return values
   }

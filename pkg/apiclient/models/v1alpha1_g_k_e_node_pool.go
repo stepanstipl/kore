@@ -6,6 +6,8 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"strconv"
+
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -68,6 +70,9 @@ type V1alpha1GKENodePool struct {
 	// Required: true
 	Size *int64 `json:"size"`
 
+	// taints
+	Taints []*V1alpha1NodeTaint `json:"taints"`
+
 	// version
 	// Required: true
 	Version *string `json:"version"`
@@ -122,6 +127,10 @@ func (m *V1alpha1GKENodePool) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateSize(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateTaints(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -238,6 +247,31 @@ func (m *V1alpha1GKENodePool) validateSize(formats strfmt.Registry) error {
 
 	if err := validate.Required("size", "body", m.Size); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (m *V1alpha1GKENodePool) validateTaints(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Taints) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Taints); i++ {
+		if swag.IsZero(m.Taints[i]) { // not required
+			continue
+		}
+
+		if m.Taints[i] != nil {
+			if err := m.Taints[i].Validate(formats); err != nil {
+				if ve, ok := err.(*errors.Validation); ok {
+					return ve.ValidateName("taints" + "." + strconv.Itoa(i))
+				}
+				return err
+			}
+		}
+
 	}
 
 	return nil

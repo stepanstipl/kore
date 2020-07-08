@@ -295,6 +295,40 @@ const schema = `
 						"description": "A set of labels to help Kubernetes workloads find this group",
 						"default": {},
 						"immutable": true
+					},
+					"taints": {
+						"type": "array",
+						"description": "A collection of kubernetes taints to add on the nodes.",
+						"default": [],
+						"immutable": true,
+						"items": {
+							"type": "object",
+							"additionalProperties": false,
+							"required": [
+								"effect",
+								"key",
+								"value"
+							],
+							"properties": {
+								"key": {
+									"type": "string",
+									"minLength": 1,
+									"immutable": true
+								},
+								"value": {
+									"type": "string",
+									"minLength": 1,
+									"immutable": true
+								},
+								"effect": {
+									"type": "string",
+									"enum": [ "NoSchedule", "PreferNoSchedule", "NoExecute", "NoEffect" ],
+									"description": "The choosen effect of the taint",
+									"default": "NoSchedule",
+									"immutable": true
+								}
+							}
+						}
 					}
 				},
 				"allOf": [

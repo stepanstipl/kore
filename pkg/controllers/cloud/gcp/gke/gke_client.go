@@ -65,6 +65,16 @@ const NodePoolOperationDeleting NodePoolOperation = "Deleting"
 // NodePoolOperationNone means no operation is being performed on node pools.
 const NodePoolOperationNone NodePoolOperation = "None"
 
+var (
+	// NodeTaints is a conversion of taints to gke values for them
+	NodeTaints = map[string]string{
+		"NoEffect":         "EFFECT_UNSPECIFIED",
+		"NoExecute":        "NO_EXECUTE",
+		"NoSchedule":       "NO_SCHEDULE",
+		"PreferNoSchedule": "PREFER_NO_SCHEDULE",
+	}
+)
+
 // NewClient returns a gcp client for us
 func NewClient(credentials *credentials, cluster *gke.GKE) (*gkeClient, error) {
 	options := option.WithCredentialsJSON([]byte(credentials.key))
@@ -788,6 +798,15 @@ func (g *gkeClient) PrepareNodePoolDefinition(nodePool *gke.GKENodePool, locatio
 		}
 	}()
 
+	var taints []*container.NodeTaint
+	for _, x := range nodePool.Taints {
+		taints = append(taints, &container.NodeTaint{
+			Key:    x.Key,
+			Effect: NodeTaints[x.Effect],
+			Value:  x.Value,
+		})
+	}
+
 	return &container.NodePool{
 		Name:        nodePool.Name,
 		Autoscaling: autoScale,
@@ -804,6 +823,7 @@ func (g *gkeClient) PrepareNodePoolDefinition(nodePool *gke.GKENodePool, locatio
 			},
 			Preemptible: nodePool.Preemptible,
 			Tags:        []string{cluster.Name},
+			Taints:      taints,
 		},
 		InitialNodeCount: nodePool.Size,
 		Locations:        locations,
