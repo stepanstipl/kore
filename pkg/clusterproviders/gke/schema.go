@@ -321,12 +321,10 @@ const schema = `
 									"immutable": true
 								},
 								"effect": {
-									"type": "array",
-									"items": {
-										"type": "string",
-										"minLength": 1,
-										"enum": [ "NoSchedule", "PreferNoSchedule", "NoExecute", "NoEffect" ]
-									},
+									"type": "string",
+									"enum": [ "NoSchedule", "PreferNoSchedule", "NoExecute", "NoEffect" ],
+									"description": "The choosen effect of the taint",
+									"default": "NoSchedule",
 									"immutable": true
 								}
 							}

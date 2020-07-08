@@ -118,10 +118,10 @@ function getSupportedMachineTypeFlavours(family, index) {
 
 function getSupportedMachineTypeTypes(family, flavour, index) {
   return Object.keys(supportedMachineTypes[family].flavours[flavour]).filter((k) => !k.startsWith('_')).map(
-    (k) => { 
+    (k) => {
       return {
-        value: k, 
-        label: startCase(k), 
+        value: k,
+        label: startCase(k),
         children: supportedMachineTypes[family].flavours[flavour][k].map((cpus) => {
           const mt = getMachineType(family, flavour, k, cpus)
           index[mt] = [family, flavour, k, mt]
@@ -188,9 +188,9 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
         this.setState({
           selectedIndex: -1
         })
-    
+
         this.props.onChange(
-          this.props.name, 
+          this.props.name,
           this.props.value.filter((_, i) => i !== idx)
         )
       }
@@ -203,7 +203,7 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
     }
 
     this.props.onChange(
-      this.props.name, 
+      this.props.name,
       this.props.value.map((ng, i) => i !== idx ? ng : { ...ng, [property]: value })
     )
   }
@@ -224,7 +224,7 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
     const actions = [
       <a id={`plan_nodepool_${idx}_viewedit`} key="viewedit" onClick={() => this.viewEditNodePool(idx)}><Icon type={editable ? 'edit' : 'eye'}></Icon></a>
     ]
-    
+
     // Only show delete if we have more than one node pool
     if (editable && this.props.value && this.props.value.length > 1) {
       actions.push(<a id={`plan_nodepool_${idx}_del`} key="delete" onClick={() => this.removeNodePool(idx)}><Icon type="delete"></Icon></a>)
@@ -265,9 +265,9 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
           <List id={`${id_prefix}s`} dataSource={value} renderItem={(ng, idx) => {
             return (
               <List.Item actions={this.nodePoolActions(idx, editable)}>
-                <List.Item.Meta 
-                  title={<a id={`${id_prefix}_${idx}_viewedittitle`} onClick={() => this.viewEditNodePool(idx)}>{`Node Pool ${idx + 1} (${ng.name})`}</a>} 
-                  description={ng.enableAutoscaler ? 
+                <List.Item.Meta
+                  title={<a id={`${id_prefix}_${idx}_viewedittitle`} onClick={() => this.viewEditNodePool(idx)}>{`Node Pool ${idx + 1} (${ng.name})`}</a>}
+                  description={ng.enableAutoscaler ?
                     `Size per zone: min=${ng.minSize} initial=${ng.size} max=${ng.maxSize} | Node type: ${ng.machineType}`
                     :
                     `Size per zone: ${ng.size} | Node type: ${ng.machineType}`
@@ -348,8 +348,9 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
                   <PlanOption id={`${id_prefix}_enableAutorepair`} {...this.props} displayName="Auto-repair" name={`${name}[${selectedIndex}].enableAutorepair`} property={property.items.properties.enableAutorepair} value={selected.enableAutorepair} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'enableAutorepair', v)} />
                   <PlanOption id={`${id_prefix}_preemptible`} {...this.props} displayName="Pre-emptible" name={`${name}[${selectedIndex}].preemptible`} property={property.items.properties.preemptible} value={selected.preemptible} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'preemptible', v)} />
                 </Collapse.Panel>
-                <Collapse.Panel key="metadata" header="Labels">
+                <Collapse.Panel key="metadata" header="Labels & Taints">
                   <PlanOption id={`${id_prefix}_labels`} {...this.props} displayName="Labels" help="Labels help kubernetes workloads find this group" name={`${name}[${selectedIndex}].labels`} property={property.items.properties.labels} value={selected.labels} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'labels', v)} />
+                  <PlanOption id={`${id_prefix}_taints`} {...this.props} displayName="Taints" help="Taints help kubernetes make scheduling decisions against nodepools" name={`${name}[${selectedIndex}].taints`} property={property.items.properties.taints} value={selected.taints} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'taints', v)} />
                 </Collapse.Panel>
               </Collapse>
               <Form.Item>
