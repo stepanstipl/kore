@@ -47,7 +47,7 @@ export default class PlanOption extends PlanOptionBase {
     if (property.type === 'object' && property.properties) {
       const keys = Object.keys(property.properties)
       const objOnChange = (n, v) => {
-        const newVal = value ? {...value, [n]: v } : { [n]: v }
+        const newVal = value ? { ...value, [n]: v } : { [n]: v }
         onChange(name, newVal)
       }
       return (
