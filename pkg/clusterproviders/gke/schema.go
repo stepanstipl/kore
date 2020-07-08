@@ -305,8 +305,8 @@ const schema = `
 							"type": "object",
 							"additionalProperties": false,
 							"required": [
+								"effect",
 								"key",
-								"operator",
 								"value"
 							],
 							"properties": {
