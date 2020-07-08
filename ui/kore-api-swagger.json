@@ -1716,7 +1716,7 @@
           "200": {
             "description": "Listing of the rules in kore",
             "schema": {
-              "$ref": "#/definitions/v1beta1.RuleList"
+              "$ref": "#/definitions/v1beta1.AlertRuleList"
             }
           },
           "400": {
@@ -1800,7 +1800,7 @@
           "200": {
             "description": "The rule has been deleted",
             "schema": {
-              "$ref": "#/definitions/v1beta1.Rule"
+              "$ref": "#/definitions/v1beta1.AlertRule"
             }
           },
           "400": {
@@ -1964,7 +1964,7 @@
           "200": {
             "description": "The definition of the monitoring rule",
             "schema": {
-              "$ref": "#/definitions/v1beta1.Rule"
+              "$ref": "#/definitions/v1beta1.AlertRule"
             }
           },
           "400": {
@@ -2006,7 +2006,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1beta1.Rule"
+              "$ref": "#/definitions/v1beta1.AlertRule"
             }
           },
           {
@@ -2056,7 +2056,7 @@
           "200": {
             "description": "The rule has been deleted",
             "schema": {
-              "$ref": "#/definitions/v1beta1.Rule"
+              "$ref": "#/definitions/v1beta1.AlertRule"
             }
           },
           "400": {
@@ -2098,7 +2098,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/v1beta1.Rule"
+              "$ref": "#/definitions/v1beta1.AlertRule"
             }
           },
           {
@@ -2148,7 +2148,7 @@
           "200": {
             "description": "The rule has been deleted",
             "schema": {
-              "$ref": "#/definitions/v1beta1.Rule"
+              "$ref": "#/definitions/v1beta1.AlertRule"
             }
           },
           "400": {
@@ -10677,6 +10677,163 @@
           "type": "string"
         },
         "suffix": {
+          "type": "string"
+        }
+      }
+    },
+    "v1beta1.Alert": {
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1beta1.AlertSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/v1beta1.AlertStatus"
+        }
+      }
+    },
+    "v1beta1.AlertList": {
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1.Alert"
+          }
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ListMeta"
+        }
+      }
+    },
+    "v1beta1.AlertRule": {
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1beta1.AlertRuleSpec"
+        }
+      }
+    },
+    "v1beta1.AlertRuleList": {
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1.AlertRule"
+          }
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ListMeta"
+        }
+      }
+    },
+    "v1beta1.AlertRuleSpec": {
+      "required": [
+        "severity",
+        "source",
+        "summary",
+        "rawRule",
+        "resource"
+      ],
+      "properties": {
+        "rawRule": {
+          "type": "string"
+        },
+        "resource": {
+          "$ref": "#/definitions/v1.Ownership"
+        },
+        "ruleID": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        }
+      }
+    },
+    "v1beta1.AlertSpec": {
+      "required": [
+        "summary"
+      ],
+      "properties": {
+        "alertID": {
+          "type": "string"
+        },
+        "event": {
+          "type": "string"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "summary": {
+          "type": "string"
+        }
+      }
+    },
+    "v1beta1.AlertStatus": {
+      "properties": {
+        "archivedAt": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        },
+        "rule": {
+          "$ref": "#/definitions/v1beta1.AlertRule"
+        },
+        "silencedUntil": {
+          "type": "string"
+        },
+        "status": {
           "type": "string"
         }
       }

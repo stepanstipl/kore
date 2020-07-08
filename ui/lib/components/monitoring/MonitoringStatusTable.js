@@ -69,17 +69,18 @@ export default class MonitoringStatusTable extends React.Component {
 
           var category = record.status.rule.metadata.labels['category']
           if (category !== null) {
-            if (matches[category] === undefined) {
+            if (!matches.has(category)) {
               matches.set(category, {
                 'alerts': [record],
                 'count': 1,
                 'status': record.status.rule.spec.severity,
               })
             } else {
-              matches[category]['count'] += 1
-              matches[category]['alerts'].push(record)
+              var e = matches.get(category)
+              e['count'] += 1
+              e['alerts'].push(record)
               if (record.status.rule.spec.severity === 'Critical') {
-                matches[category]['status'] = record.status.rule.spec.severity
+                e['status'] = record.status.rule.spec.severity
               }
             }
           }

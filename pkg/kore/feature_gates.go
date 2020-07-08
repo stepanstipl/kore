@@ -22,7 +22,7 @@ const (
 	// FeatureGateApplicationServices enabled the applications service section
 	FeatureGateApplicationServices = "application_services"
 	// FeatureMonitoringServices allows for kore monitoring to be enabled
-	FeatureMonitoringServices = "monitioring_services"
+	FeatureMonitoringServices = "monitoring_services"
 )
 
 // DefaultFeatureGates returns the existing feature gates with the default statuses

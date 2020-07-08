@@ -136,7 +136,7 @@ func (c *AppviaKore) SetTransport(transport runtime.ClientTransport) {
 	c.Costs.SetTransport(transport)
 	c.Korefeatures.SetTransport(transport)
 	c.Metadata.SetTransport(transport)
-	c.Monitoring.SetTransport(transport)	
+	c.Monitoring.SetTransport(transport)
 	c.Operations.SetTransport(transport)
 	c.Security.SetTransport(transport)
 }

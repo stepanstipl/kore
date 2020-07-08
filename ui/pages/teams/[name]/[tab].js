@@ -9,6 +9,7 @@ const { TabPane } = Tabs
 
 import Breadcrumb from '../../../lib/components/layout/Breadcrumb'
 import redirect from '../../../lib/utils/redirect'
+import { featureEnabled, KoreFeatures } from '../../../lib/utils/features'
 import KoreApi from '../../../lib/kore-api'
 import ClustersTab from '../../../lib/components/teams/cluster/ClustersTab'
 import MembersTab from '../../../lib/components/teams/members/MembersTab'
@@ -188,9 +189,11 @@ class TeamDashboardTabPage extends React.Component {
             <SecurityTab team={this.props.team} getOverviewStatus={(status) => this.setState({ securityStatus: status })} />
           </TabPane>
 
-          <TabPane key="monitoring" tab={this.getTabTitle({ title: 'Monitoring  ', icon: <Icon type="monitor"/> })} forceRender={true}>
-            <MonitoringTab user={this.props.user} team={this.props.team} />
-          </TabPane>
+          {!featureEnabled(KoreFeatures.MONITORING_SERVICES) ? null : (
+            <TabPane key="monitoring" tab={this.getTabTitle({ title: 'Monitoring  ', icon: <Icon type="monitor"/> })} forceRender={true}>
+              <MonitoringTab user={this.props.user} team={this.props.team} />
+            </TabPane>
+          )}
         </Tabs>
       </div>
     )

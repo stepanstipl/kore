@@ -1,7 +1,6 @@
 import React from 'react'
-import Link from 'next/link'
 import PropTypes from 'prop-types'
-import { Icon, Tooltip, Table, Tag } from 'antd'
+import { Table, Tag } from 'antd'
 
 export default class MonitoringRulesTable extends React.Component {
   static propTypes = {
@@ -25,17 +24,6 @@ export default class MonitoringRulesTable extends React.Component {
       title: 'Rule',
       dataIndex: 'metadata.name',
       key: 'name',
-      render: (text) => (
-        <Link
-          key='view'
-          passHref
-          href='/docs'
-        >
-          <a><Tooltip placement='left' title='View the definition of this rule'>
-            <Icon type='info-circle' />  {text}
-          </Tooltip></a>
-        </Link>
-      )
     },
     {
       title: 'Summary',
@@ -46,18 +34,6 @@ export default class MonitoringRulesTable extends React.Component {
       title: 'Team/Resource',
       dataIndex: 'spec.resource.kind',
       key: 'resource.kind',
-      render: (text, record) => (
-        <Link
-          key="view_cluster"
-          href='/teams/{text}/[record.spec.resource.kind]/namespaces'
-        >
-          <a>
-            <Tooltip placement="left" title="View the resourc">
-              {record.spec.resource.namespace}/{record.spec.resource.kind}
-            </Tooltip>
-          </a>
-        </Link>
-      )
     },
   ]
 

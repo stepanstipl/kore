@@ -34,7 +34,7 @@ type AlertRule struct {
 // AlertRuleSpec specifies the details of a alert rule
 // +k8s:openapi-gen=true
 type AlertRuleSpec struct {
-	// AlertID is a unique identifier for this rule
+	// RuleID is a unique identifier for this rule
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
 	RuleID string `json:"ruleID,omitempty"`

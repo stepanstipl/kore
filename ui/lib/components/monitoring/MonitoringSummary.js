@@ -36,7 +36,6 @@ export default class MonitoringSummary extends React.Component {
   render() {
     const { record } = this.props
     const labels = this.filterOnLabels()
-    console.log(record)
 
     return (
       <div>

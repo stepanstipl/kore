@@ -29,6 +29,9 @@ spec:
         kind: Deployment
       - group: ""
         kind: Service
+    resourceSelector:
+      matchLabels:
+        app.kubernetes.io/name: monitoring-operator
     values: |+
       prometheus-operator:
         enabled: false

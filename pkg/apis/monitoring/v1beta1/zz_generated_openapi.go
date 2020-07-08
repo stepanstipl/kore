@@ -44,7 +44,7 @@ func schema_pkg_apis_monitoring_v1beta1_AlertRuleSpec(ref common.ReferenceCallba
 				Properties: map[string]spec.Schema{
 					"ruleID": {
 						SchemaProps: spec.SchemaProps{
-							Description: "AlertID is a unique identifier for this rule",
+							Description: "RuleID is a unique identifier for this rule",
 							Type:        []string{"string"},
 							Format:      "",
 						},

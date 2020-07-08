@@ -223,7 +223,7 @@ func (l *loginHandler) callbackHandler(req *restful.Request, resp *restful.Respo
 
 	hcode, err := func() (int, error) {
 		// @step: exchange the authorization code with the identity provider
-		otoken, err := l.oidcConfig.Exchange(req.Request.Context(), code, oauth2.AccessTypeOffline)
+		otoken, err := l.oidcConfig.Exchange(req.Request.Context(), code)
 		if err != nil {
 			log.WithError(err).Error("trying to exchange the token to the idp")
 

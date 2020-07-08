@@ -6099,7 +6099,7 @@ spec:
               - version
               type: object
             ruleID:
-              description: AlertID is a unique identifier for this rule
+              description: RuleID is a unique identifier for this rule
               minLength: 1
               type: string
             severity:
@@ -6266,7 +6266,7 @@ spec:
                       - version
                       type: object
                     ruleID:
-                      description: AlertID is a unique identifier for this rule
+                      description: RuleID is a unique identifier for this rule
                       minLength: 1
                       type: string
                     severity:
