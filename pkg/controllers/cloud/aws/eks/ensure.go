@@ -25,6 +25,7 @@ import (
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
+	awsc "github.com/appvia/kore/pkg/controllers/cloud/aws"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/cloud/aws"
@@ -290,7 +291,7 @@ func (t *eksCtrl) EnsureClusterRoles(cluster *eks.EKS) controllers.EnsureFunc {
 		logger.Debug("attempting to ensure the iam role for the eks cluster")
 
 		// @step: first we need to check if we have access to the credentials
-		creds, err := t.GetCredentials(ctx, cluster, cluster.Namespace)
+		creds, err := awsc.GetCredentials(ctx, cluster.Namespace, cluster.Spec.Credentials)
 		if err != nil {
 			logger.WithError(err).Error("trying to retrieve cloud credentials")
 
@@ -301,6 +302,15 @@ func (t *eksCtrl) EnsureClusterRoles(cluster *eks.EKS) controllers.EnsureFunc {
 			})
 
 			return reconcile.Result{}, err
+		}
+		if creds == nil {
+			cluster.Status.Conditions.SetCondition(corev1.Component{
+				Name:    ComponentClusterCreator,
+				Message: "Awaiting for account creation and credentials",
+				Status:  corev1.PendingStatus,
+			})
+
+			return reconcile.Result{Requeue: true}, nil
 		}
 
 		// @step: we need to ensure the iam role for the cluster is there
@@ -383,6 +393,20 @@ func (t *eksCtrl) EnsureDeletion(client *aws.Client, cluster *eks.EKS) controlle
 		})
 		logger.Debug("attempting to delete the eks cluster")
 
+		// @step: retrieve the cloud credentials
+		creds, err := awsc.GetCredentials(ctx, cluster.Namespace, cluster.Spec.Credentials)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+
+		// @step: create a cloud client for us
+		client, err := aws.NewEKSClient(creds, cluster)
+		if err != nil {
+			logger.WithError(err).Error("trying to create eks client")
+
+			return reconcile.Result{}, err
+		}
+
 		// @step: check if the cluster exists
 		_, found, err := client.GetIfExists(ctx)
 		if err != nil {
@@ -442,7 +466,7 @@ func (t *eksCtrl) EnsureRoleDeletion(cluster *eks.EKS) controllers.EnsureFunc {
 		})
 		logger.Debug("attempting to delete the eks cluster role")
 
-		credentials, err := t.GetCredentials(ctx, cluster, cluster.Namespace)
+		credentials, err := awsc.GetCredentials(ctx, cluster.Namespace, cluster.Spec.Credentials)
 		if err != nil {
 			return reconcile.Result{}, err
 		}

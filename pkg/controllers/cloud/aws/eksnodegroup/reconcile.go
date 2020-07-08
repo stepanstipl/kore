@@ -18,8 +18,6 @@ package eksnodegroup
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
 	"github.com/appvia/kore/pkg/kore"
 
@@ -27,12 +25,12 @@ import (
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
+	awsc "github.com/appvia/kore/pkg/controllers/cloud/aws"
 	aws "github.com/appvia/kore/pkg/utils/cloud/aws"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -45,11 +43,11 @@ const (
 
 // Reconcile is responsible for reconciling the eks nodegroup
 func (n *ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	ctx := context.Background()
 	logger := log.WithFields(log.Fields{
 		"name":      request.NamespacedName.Name,
 		"namespace": request.NamespacedName.Namespace,
 	})
+	ctx := kore.NewContext(context.Background(), logger, n.mgr.GetClient(), n)
 	logger.Debug("attempting to reconcile aws eks cluster nodegroup")
 
 	resource := &eks.EKSNodeGroup{}
@@ -85,7 +83,7 @@ func (n *ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 		}
 
 		// @step: retrieve the cloud credentials for the aws account
-		creds, err := n.GetCredentials(ctx, resource, resource.Namespace)
+		creds, err := awsc.GetCredentials(ctx, resource.Namespace, resource.Spec.Credentials)
 		if err != nil {
 			resource.Status.Conditions.SetCondition(corev1.Component{
 				Name:    ComponentClusterNodegroupCreator,
@@ -94,6 +92,16 @@ func (n *ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 			})
 
 			return reconcile.Result{}, err
+		}
+		if creds == nil {
+			resource.Status.Conditions.SetCondition(corev1.Component{
+				Name:    ComponentClusterNodegroupCreator,
+				Message: "Awaiting new AWS account credentials",
+				Status:  corev1.PendingStatus,
+			})
+
+			// Account creds are not ready, we need to wait...
+			return reconcile.Result{Requeue: true}, nil
 		}
 
 		// @step: retrieve the eke client for us
@@ -104,8 +112,7 @@ func (n *ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 			return reconcile.Result{}, err
 		}
 
-		koreCtx := kore.NewContext(ctx, logger, n.mgr.GetClient(), n)
-		return controllers.DefaultEnsureHandler.Run(koreCtx,
+		return controllers.DefaultEnsureHandler.Run(ctx,
 			[]controllers.EnsureFunc{
 				n.EnsureNodeGroupIsPending(resource),
 				n.EnsureClusterReady(resource),
@@ -130,12 +137,21 @@ func (n *ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 }
 
 // GetClusterClient returns a EKS cluster client
-func (n *ctrl) GetClusterClient(ctx context.Context, resource *eks.EKSNodeGroup) (*aws.Client, error) {
-	creds, err := n.GetCredentials(ctx, resource, resource.Namespace)
+func (n *ctrl) GetClusterClient(ctx kore.Context, resource *eks.EKSNodeGroup) (*aws.Client, error) {
+	creds, err := awsc.GetCredentials(ctx, resource.Namespace, resource.Spec.Credentials)
 	if err != nil {
 		resource.Status.Conditions.SetCondition(corev1.Component{
 			Name:    ComponentClusterNodegroupCreator,
 			Message: "You do not have permission to the credentials",
+			Status:  corev1.FailureStatus,
+		})
+
+		return nil, err
+	}
+	if creds == nil {
+		resource.Status.Conditions.SetCondition(corev1.Component{
+			Name:    ComponentClusterNodegroupCreator,
+			Message: "account credentials are not available",
 			Status:  corev1.FailureStatus,
 		})
 
@@ -155,57 +171,4 @@ func (n *ctrl) GetClusterClient(ctx context.Context, resource *eks.EKSNodeGroup)
 	}
 
 	return client, nil
-}
-
-// GetCredentials returns the cloud credential
-func (n *ctrl) GetCredentials(ctx context.Context, ng *eks.EKSNodeGroup, team string) (*aws.Credentials, error) {
-	// @step: is the team permitted access to this credentials
-	permitted, err := n.Teams().Team(team).Allocations().IsPermitted(ctx, ng.Spec.Credentials)
-	if err != nil {
-		log.WithError(err).Error("attempting to check for permission on credentials")
-
-		return nil, fmt.Errorf("attempting to check for permission on credentials")
-	}
-
-	if !permitted {
-		log.Warn("trying to build eks cluster unallocated permissions")
-
-		return nil, errors.New("you do not have permissions to the eks credentials")
-	}
-
-	// @step: retrieve the credentials
-	eksCreds := &eks.EKSCredentials{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      ng.Spec.Credentials.Name,
-			Namespace: ng.Spec.Credentials.Namespace,
-		},
-	}
-	found, err := kubernetes.GetIfExists(ctx, n.mgr.GetClient(), eksCreds)
-	if err != nil {
-		return nil, err
-	}
-	if !found {
-		return nil, fmt.Errorf("eks credentials: (%s/%s) not found", ng.Spec.Credentials.Namespace, ng.Spec.Credentials.Name)
-	}
-
-	// for backwards-compatibility, use the creds set on the EKSCredentials resource, if they exist
-	if eksCreds.Spec.SecretAccessKey != "" && eksCreds.Spec.AccessKeyID != "" {
-		return &aws.Credentials{
-			AccountID:       eksCreds.Spec.AccountID,
-			AccessKeyID:     eksCreds.Spec.AccessKeyID,
-			SecretAccessKey: eksCreds.Spec.SecretAccessKey,
-		}, nil
-	}
-
-	// @step: we need to grab the secret
-	secret, err := controllers.GetDecodedSecret(ctx, n.mgr.GetClient(), eksCreds.Spec.CredentialsRef)
-	if err != nil {
-		return nil, err
-	}
-
-	return &aws.Credentials{
-		AccountID:       eksCreds.Spec.AccountID,
-		AccessKeyID:     secret.Spec.Data["access_key_id"],
-		SecretAccessKey: secret.Spec.Data["access_secret_key"],
-	}, nil
 }

@@ -254,7 +254,6 @@ func (t *awsCtrl) EnsureAccessFromMasterRole(
 		"namespace": account.Namespace,
 	})
 	err := client.EnsureInitialAccessCreated()
-
 	if err != nil {
 		logger.Warnf("unable to ensure account access provisioned for %s - %s", account.Spec.AccountName, err)
 
@@ -262,10 +261,10 @@ func (t *awsCtrl) EnsureAccessFromMasterRole(
 			Name:    ComponentAccountMasterAccess,
 			Detail:  err.Error(),
 			Message: "Problem when deploying access to account",
-			Status:  corev1.FailureStatus,
+			Status:  corev1.WarningStatus,
 		})
 
-		return false, err
+		return false, nil
 	}
 
 	ready, err := client.IsInitialAccessReady()
@@ -452,8 +451,13 @@ func (t *awsCtrl) IsAccountAlreadyUsed(ctx context.Context, account *awsv1alpha1
 			continue
 		}
 
-		if x.Spec.AccountName == account.Spec.AccountName || x.Status.AccountID == account.Status.AccountID {
+		if x.Spec.AccountName == account.Spec.AccountName {
 			return true, nil
+		}
+		if account.Status.AccountID != "" {
+			if x.Status.AccountID == account.Status.AccountID {
+				return true, nil
+			}
 		}
 	}
 

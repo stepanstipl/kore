@@ -25,6 +25,7 @@ import (
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
+	awsc "github.com/appvia/kore/pkg/controllers/cloud/aws"
 	ekscc "github.com/appvia/kore/pkg/controllers/cloud/aws/eks"
 	"github.com/appvia/kore/pkg/utils"
 	"github.com/appvia/kore/pkg/utils/cloud/aws"
@@ -239,9 +240,13 @@ func (n *ctrl) EnsureDeletion(group *eks.EKSNodeGroup) controllers.EnsureFunc {
 		})
 		logger.Debug("attempting to delete eks nodegroup")
 
-		creds, err := n.GetCredentials(ctx, group, group.Namespace)
+		creds, err := awsc.GetCredentials(ctx, group.Namespace, group.Spec.Credentials)
 		if err != nil {
 			return reconcile.Result{}, err
+		}
+		if creds == nil {
+
+			return reconcile.Result{}, errors.New("unable to delete nodegroup as account credentials no longer present")
 		}
 
 		// @step: create a cloud client for us
@@ -302,9 +307,13 @@ func (n *ctrl) EnsureRoleDeletion(group *eks.EKSNodeGroup) controllers.EnsureFun
 		})
 		logger.Debug("attempting to delete eks nodegroup role")
 
-		credentials, err := n.GetCredentials(ctx, group, group.Namespace)
+		credentials, err := awsc.GetCredentials(ctx, group.Namespace, group.Spec.Credentials)
 		if err != nil {
 			return reconcile.Result{}, err
+		}
+		if credentials == nil {
+
+			return reconcile.Result{}, errors.New("unable to delete nodegroup role as account credentials no longer present")
 		}
 		client := aws.NewIamClient(*credentials)
 
