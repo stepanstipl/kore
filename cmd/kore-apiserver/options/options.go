@@ -273,5 +273,13 @@ func Options() []cli.Flag {
 			Usage:   "Indicates we should enable the prometheus metrics `BOOL`",
 			EnvVars: []string{"ENABLE_METRICS"},
 		},
+
+		// @related to costs
+		&cli.StringFlag{
+			Name:    "cloud-info-url",
+			Usage:   "the url for the cloud info service `URL`",
+			Value:   "http://cloudinfo.kore-costs.svc.cluster.local/",
+			EnvVars: []string{"CLOUD_INFO_URL"},
+		},
 	}
 }

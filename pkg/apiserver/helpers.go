@@ -122,6 +122,18 @@ func handleError(req *restful.Request, resp *restful.Response, err error) {
 		code = http.StatusNotFound
 	}
 
+	// Log any internal server errors so we know they're happening
+	// and can add more specific handling if appropriate
+	if code == http.StatusInternalServerError {
+		log.WithFields(log.Fields{
+			"code":   code,
+			"ip":     req.Request.RemoteAddr,
+			"method": req.Request.Method,
+			"query":  req.Request.URL.RawQuery,
+			"uri":    req.Request.RequestURI,
+		}).WithError(err).Warn("unhandled error on HTTP request")
+	}
+
 	writeError(req, resp, err, code)
 }
 

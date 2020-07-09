@@ -18,9 +18,10 @@ package application
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"html/template"
+	"text/template"
 
 	"github.com/appvia/kore/pkg/utils/configuration"
 
@@ -43,11 +44,23 @@ import (
 type ResourceParams struct {
 	Release Release
 	Values  map[string]interface{}
+	Secrets map[string]interface{}
 }
 
 type Release struct {
 	Name      string
 	Namespace string
+}
+
+func NewResourceParams(service *servicesv1.Service, config *AppConfiguration) ResourceParams {
+	return ResourceParams{
+		Release: Release{
+			Name:      service.Name,
+			Namespace: service.Spec.ClusterNamespace,
+		},
+		Values:  config.Values,
+		Secrets: config.Secrets,
+	}
 }
 
 func CreateSystemServiceFromPlan(servicePlan servicesv1.ServicePlan, cluster corev1.Ownership, name, namespace string) servicesv1.Service {
@@ -96,19 +109,36 @@ func CreateSystemServiceFromPlan(servicePlan servicesv1.ServicePlan, cluster cor
 func compileResource(obj runtime.Object, params ResourceParams) (runtime.Object, error) {
 	document, err := json.Marshal(obj)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to marshal object %w", err)
 	}
 
-	tmpl, err := template.New("document").Parse(string(document))
+	tmpl, err := template.
+		New("document").
+		Funcs(template.FuncMap{
+			"json": func(v interface{}) interface{} {
+				val, _ := json.Marshal(v)
+				return string(val)
+			},
+			"jsonb64": func(v interface{}) interface{} {
+				val, _ := json.Marshal(v)
+				return base64.StdEncoding.EncodeToString(val)
+			},
+		}).
+		Parse(string(document))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse document as template %w", err)
 	}
 	tmplBuf := bytes.NewBuffer(make([]byte, 0, 16384))
 	if err := tmpl.Execute(tmplBuf, params); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to apply templating %w", err)
 	}
 
-	return koreschema.DecodeJSON(tmplBuf.Bytes())
+	o, err := koreschema.DecodeJSON(tmplBuf.Bytes())
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode templated output %v %w", tmplBuf.String(), err)
+	}
+
+	return o, nil
 }
 
 func ensureResource(ctx kore.Context, client client.Client, original runtime.Object) error {

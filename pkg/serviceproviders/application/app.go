@@ -19,6 +19,7 @@ package application
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -33,7 +34,9 @@ type AppConfiguration struct {
 	// Resources is the list of Kubernetes resources to deploy
 	Resources Resources `json:"resources"`
 	// Values are parameters for the resource templates, which can be referenced as {{ .Values.foo }}
-	Values YAMLMap `json:"values"`
+	Values YAMLMap `json:"values,omitempty"`
+	// Secrets are parameters provided using ConfigurationFrom for the resource templates, which can be referenced as {{ .Secrets.foo }}
+	Secrets map[string]interface{} `json:"secrets,omitempty"`
 }
 
 func (c *AppConfiguration) CompileResources(params ResourceParams) (Resources, error) {
@@ -41,7 +44,7 @@ func (c *AppConfiguration) CompileResources(params ResourceParams) (Resources, e
 	for _, r := range c.Resources {
 		compiled, err := compileResource(r.DeepCopyObject(), params)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("compiling resource %v failed: %w", r, err)
 		}
 		compiledResources = append(compiledResources, compiled)
 	}

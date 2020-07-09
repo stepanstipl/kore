@@ -135,6 +135,11 @@ type ServicePlan struct {
 	Spec ServicePlanSpec `json:"spec,omitempty"`
 }
 
+// GetConfiguration retrieves the configuration of this service plan
+func (s *ServicePlan) GetConfiguration() *apiextv1.JSON {
+	return s.Spec.Configuration
+}
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // ServicePlanList contains a list of service plans

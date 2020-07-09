@@ -14,12 +14,14 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+
+	"github.com/appvia/kore/pkg/apiclient/models"
 )
 
 // NewEstimateClusterPlanCostParams creates a new EstimateClusterPlanCostParams object
 // with the default values initialized.
 func NewEstimateClusterPlanCostParams() *EstimateClusterPlanCostParams {
-
+	var ()
 	return &EstimateClusterPlanCostParams{
 
 		timeout: cr.DefaultTimeout,
@@ -29,7 +31,7 @@ func NewEstimateClusterPlanCostParams() *EstimateClusterPlanCostParams {
 // NewEstimateClusterPlanCostParamsWithTimeout creates a new EstimateClusterPlanCostParams object
 // with the default values initialized, and the ability to set a timeout on a request
 func NewEstimateClusterPlanCostParamsWithTimeout(timeout time.Duration) *EstimateClusterPlanCostParams {
-
+	var ()
 	return &EstimateClusterPlanCostParams{
 
 		timeout: timeout,
@@ -39,7 +41,7 @@ func NewEstimateClusterPlanCostParamsWithTimeout(timeout time.Duration) *Estimat
 // NewEstimateClusterPlanCostParamsWithContext creates a new EstimateClusterPlanCostParams object
 // with the default values initialized, and the ability to set a context for a request
 func NewEstimateClusterPlanCostParamsWithContext(ctx context.Context) *EstimateClusterPlanCostParams {
-
+	var ()
 	return &EstimateClusterPlanCostParams{
 
 		Context: ctx,
@@ -49,7 +51,7 @@ func NewEstimateClusterPlanCostParamsWithContext(ctx context.Context) *EstimateC
 // NewEstimateClusterPlanCostParamsWithHTTPClient creates a new EstimateClusterPlanCostParams object
 // with the default values initialized, and the ability to set a custom HTTPClient for a request
 func NewEstimateClusterPlanCostParamsWithHTTPClient(client *http.Client) *EstimateClusterPlanCostParams {
-
+	var ()
 	return &EstimateClusterPlanCostParams{
 		HTTPClient: client,
 	}
@@ -59,6 +61,13 @@ func NewEstimateClusterPlanCostParamsWithHTTPClient(client *http.Client) *Estima
 for the estimate cluster plan cost operation typically these are written to a http.Request
 */
 type EstimateClusterPlanCostParams struct {
+
+	/*Body
+	  The specification for the plan you want estimating
+
+	*/
+	Body *models.V1Plan
+
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
@@ -97,6 +106,17 @@ func (o *EstimateClusterPlanCostParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithBody adds the body to the estimate cluster plan cost params
+func (o *EstimateClusterPlanCostParams) WithBody(body *models.V1Plan) *EstimateClusterPlanCostParams {
+	o.SetBody(body)
+	return o
+}
+
+// SetBody adds the body to the estimate cluster plan cost params
+func (o *EstimateClusterPlanCostParams) SetBody(body *models.V1Plan) {
+	o.Body = body
+}
+
 // WriteToRequest writes these params to a swagger request
 func (o *EstimateClusterPlanCostParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -104,6 +124,12 @@ func (o *EstimateClusterPlanCostParams) WriteToRequest(r runtime.ClientRequest, 
 		return err
 	}
 	var res []error
+
+	if o.Body != nil {
+		if err := r.SetBodyParam(o.Body); err != nil {
+			return err
+		}
+	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)

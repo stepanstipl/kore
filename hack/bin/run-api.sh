@@ -24,7 +24,8 @@ export \
     KORE_IDP_SERVER_URL \
     KORE_IDP_USER_CLAIMS \
     KORE_IDP_CLIENT_SCOPES \
-    KORE_FEATURE_GATES
+    KORE_FEATURE_GATES \
+    CLOUD_INFO_URL
 
 ./bin/kore-apiserver \
     ${KUBE_CONFIG_FLAG} \

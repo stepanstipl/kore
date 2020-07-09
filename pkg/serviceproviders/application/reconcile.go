@@ -55,13 +55,7 @@ func (p Provider) Reconcile(
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 	}
 
-	compiledResources, err := config.CompileResources(ResourceParams{
-		Release: Release{
-			Name:      service.Name,
-			Namespace: service.Spec.ClusterNamespace,
-		},
-		Values: config.Values,
-	})
+	compiledResources, err := config.CompileResources(NewResourceParams(service, config))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -112,7 +106,7 @@ func (p Provider) Reconcile(
 			continue
 		}
 
-		ctx.Logger().WithField("resource", kubernetes.MustGetRuntimeSelfLink(resource)).Debug("creating/updating application resource")
+		ctx.Logger().WithField("resource", kubernetes.MustGetRuntimeSelfLink(resource)).Trace("creating/updating application resource")
 		if err := ensureResource(ctx, clusterClient, resource.DeepCopyObject()); err != nil {
 			return reconcile.Result{}, err
 		}

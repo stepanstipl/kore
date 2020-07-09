@@ -181,6 +181,7 @@ func (d Factory) createPlan(info os.FileInfo) (*servicesv1.ServicePlan, error) {
 
 	if err := plan.Spec.SetConfiguration(AppConfiguration{
 		Resources: resources,
+		Secrets:   map[string]interface{}{},
 	}); err != nil {
 		return nil, err
 	}

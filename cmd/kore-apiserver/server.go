@@ -25,6 +25,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/appvia/kore/pkg/costs"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	"github.com/appvia/kore/pkg/apiserver"
@@ -94,6 +95,9 @@ func invoke(ctx *cli.Context) error {
 				GRPCCaCrt:     ctx.String("dex-grpc-ca-crt"),
 				GRPCClientCrt: ctx.String("dex-grpc-client-crt"),
 				GRPCClientKey: ctx.String("dex-grpc-client-key"),
+			},
+			Costs: costs.Config{
+				CloudinfoURL: ctx.String("cloud-info-url"),
 			},
 		},
 		PersistenceMgr: persistence.Config{

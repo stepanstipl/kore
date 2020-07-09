@@ -21,8 +21,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"strings"
+	"text/template"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"

@@ -55,4 +55,7 @@ import (
 
 	// importing the security controllers
 	_ "github.com/appvia/kore/pkg/controllers/security"
+
+	// import the feature controllers
+	_ "github.com/appvia/kore/pkg/controllers/korefeatures"
 )

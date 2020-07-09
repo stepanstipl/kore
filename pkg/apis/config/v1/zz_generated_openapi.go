@@ -32,6 +32,11 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/appvia/kore/pkg/apis/config/v1.Allocation":         schema_pkg_apis_config_v1_Allocation(ref),
 		"github.com/appvia/kore/pkg/apis/config/v1.AllocationSpec":     schema_pkg_apis_config_v1_AllocationSpec(ref),
 		"github.com/appvia/kore/pkg/apis/config/v1.AllocationStatus":   schema_pkg_apis_config_v1_AllocationStatus(ref),
+		"github.com/appvia/kore/pkg/apis/config/v1.Config":             schema_pkg_apis_config_v1_Config(ref),
+		"github.com/appvia/kore/pkg/apis/config/v1.ConfigSpec":         schema_pkg_apis_config_v1_ConfigSpec(ref),
+		"github.com/appvia/kore/pkg/apis/config/v1.KoreFeature":        schema_pkg_apis_config_v1_KoreFeature(ref),
+		"github.com/appvia/kore/pkg/apis/config/v1.KoreFeatureSpec":    schema_pkg_apis_config_v1_KoreFeatureSpec(ref),
+		"github.com/appvia/kore/pkg/apis/config/v1.KoreFeatureStatus":  schema_pkg_apis_config_v1_KoreFeatureStatus(ref),
 		"github.com/appvia/kore/pkg/apis/config/v1.Plan":               schema_pkg_apis_config_v1_Plan(ref),
 		"github.com/appvia/kore/pkg/apis/config/v1.PlanPolicy":         schema_pkg_apis_config_v1_PlanPolicy(ref),
 		"github.com/appvia/kore/pkg/apis/config/v1.PlanPolicyProperty": schema_pkg_apis_config_v1_PlanPolicyProperty(ref),
@@ -181,6 +186,202 @@ func schema_pkg_apis_config_v1_AllocationStatus(ref common.ReferenceCallback) co
 		},
 		Dependencies: []string{
 			"github.com/appvia/kore/pkg/apis/core/v1.Condition"},
+	}
+}
+
+func schema_pkg_apis_config_v1_Config(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "Config is the Schema for the Configs API",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/appvia/kore/pkg/apis/config/v1.ConfigSpec"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/config/v1.ConfigSpec", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_config_v1_ConfigSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "ConfigSpec defines the desired state of Config",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"values": {
+						SchemaProps: spec.SchemaProps{
+							Type: []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"values"},
+			},
+		},
+	}
+}
+
+func schema_pkg_apis_config_v1_KoreFeature(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "KoreFeature is the Schema for a kore feature",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"kind": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"apiVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"metadata": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"),
+						},
+					},
+					"spec": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/appvia/kore/pkg/apis/config/v1.KoreFeatureSpec"),
+						},
+					},
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Ref: ref("github.com/appvia/kore/pkg/apis/config/v1.KoreFeatureStatus"),
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/config/v1.KoreFeatureSpec", "github.com/appvia/kore/pkg/apis/config/v1.KoreFeatureStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+	}
+}
+
+func schema_pkg_apis_config_v1_KoreFeatureSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "KoreFeatureSpec defines the desired state of the feature",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"enabled": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Enabled identifies if this feature is enabled or not",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"featureType": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Feature identifies which feature this is",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"configuration": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Configuration represents the key-value pairs to configure this feature",
+							Type:        []string{"object"},
+							AdditionalProperties: &spec.SchemaOrBool{
+								Allows: true,
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
+				},
+				Required: []string{"enabled", "featureType", "configuration"},
+			},
+		},
+	}
+}
+
+func schema_pkg_apis_config_v1_KoreFeatureStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Description: "KoreFeatureStatus defines the observed status of a feature",
+				Type:        []string{"object"},
+				Properties: map[string]spec.Schema{
+					"status": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Status is overall status of the feature",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"message": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Message is the description of the current status",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"components": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Components is a collection of component statuses",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Ref: ref("github.com/appvia/kore/pkg/apis/core/v1.Component"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		Dependencies: []string{
+			"github.com/appvia/kore/pkg/apis/core/v1.Component"},
 	}
 }
 

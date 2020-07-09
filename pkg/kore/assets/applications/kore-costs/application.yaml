@@ -1,0 +1,16 @@
+apiVersion: app.k8s.io/v1beta1
+kind: Application
+metadata:
+  name: kore-costs
+  namespace: kore-costs
+  labels:
+      app.kubernetes.io/name: "kore-costs"
+spec:
+  componentKinds:
+    - group: apps
+      kind: Deployment
+    - group: v1
+      kind: Service
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: "kore-costs"

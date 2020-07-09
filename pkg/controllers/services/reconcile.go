@@ -58,6 +58,8 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 	}
 	original := service.DeepCopy()
 
+	logger = logger.WithField("service", service.Name)
+
 	defer func() {
 		if err := c.mgr.GetClient().Status().Patch(ctx, service, client.MergeFrom(original)); err != nil {
 			if !kerrors.IsNotFound(err) {
@@ -97,9 +99,10 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 			},
 		}
 
-		for _, handler := range ensure {
+		for ind, handler := range ensure {
 			result, err := handler(koreCtx)
 			if err != nil {
+				logger.WithError(err).WithField("handlerIndex", ind).Error("failure reconciling handler for service")
 				return reconcile.Result{}, err
 			}
 			if result.Requeue || result.RequeueAfter > 0 {

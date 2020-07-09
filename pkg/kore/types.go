@@ -21,6 +21,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/appvia/kore/pkg/costs"
 	"github.com/appvia/kore/pkg/kore/authentication"
 	"github.com/appvia/kore/pkg/persistence"
 	"github.com/appvia/kore/pkg/persistence/model"
@@ -89,6 +90,10 @@ type Interface interface {
 	Persist() persistence.Interface
 	// Config returns the config interface
 	Configs() Configs
+	// Costs returns the costs business logic layer
+	Costs() costs.Costs
+	// Features returns the kore feature control layer
+	Features() KoreFeatures
 }
 
 // DEX is the configuration required to setup identity providers
@@ -148,4 +153,6 @@ type Config struct {
 	PublicAPIURL string `json:"public-api-url,omitempty"`
 	// LocalJWTPublicKey is the public key to use to verify JWTs if using the localjwt auth plugin
 	LocalJWTPublicKey string `json:"local-jwt-public-key,omitempty"`
+	// Costs is the configuration for the costs engine
+	Costs costs.Config `json:"costs,omitempty"`
 }
