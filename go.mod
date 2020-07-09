@@ -11,6 +11,7 @@ require (
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/RoaringBitmap/roaring v0.4.21 // indirect
 	github.com/ahmetb/gen-crd-api-reference-docs v0.2.0
+	github.com/alecthomas/jsonschema v0.0.0-20200530073317-71f438968921
 	github.com/apparentlymart/go-cidr v1.0.1
 	github.com/armon/go-proxyproto v0.0.0-20200108142055-f0b8253b1507
 	github.com/aws/aws-sdk-go v1.29.31
