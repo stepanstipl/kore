@@ -18,6 +18,7 @@ package application
 
 import (
 	"bytes"
+	"crypto/sha1"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -116,12 +117,31 @@ func compileResource(obj runtime.Object, params ResourceParams) (runtime.Object,
 		New("document").
 		Funcs(template.FuncMap{
 			"json": func(v interface{}) interface{} {
-				val, _ := json.Marshal(v)
+				val, err := json.Marshal(v)
+				if err != nil {
+					return ""
+				}
 				return string(val)
 			},
 			"jsonb64": func(v interface{}) interface{} {
-				val, _ := json.Marshal(v)
+				val, err := json.Marshal(v)
+				if err != nil {
+					return ""
+				}
 				return base64.StdEncoding.EncodeToString(val)
+			},
+			"sha1": func(v interface{}) interface{} {
+				val, err := json.Marshal(v)
+				if err != nil {
+					return ""
+				}
+				h := sha1.New()
+				_, err = h.Write(val)
+				if err != nil {
+					return ""
+				}
+				bs := h.Sum(nil)
+				return base64.StdEncoding.EncodeToString(bs)
 			},
 		}).
 		Parse(string(document))

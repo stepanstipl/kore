@@ -20,19 +20,17 @@ spec:
     spec:
       containers:
         - name: cloudinfo
-          image: banzaicloud/cloudinfo:0.13.0
-          args: ["cloudinfo", "--scrape=true", "--config=/etc/cloudinfo/config.yaml", "--listen-address=0.0.0.0:8000", "--metrics-address=0.0.0.0:9000"]
+          image: quay.io/appvia/cloudinfo:0.13.0-patch1
+          args: ["cloudinfo", "--scrape=true", "--config=/etc/cloudinfo/secrets/config.yaml", "--listen-address=0.0.0.0:8000", "--metrics-address=0.0.0.0:9000"]
           volumeMounts:
-            - name: config
-              mountPath: /etc/cloudinfo/config.yaml
-              subPath: config.yaml
+            - name: secretconfig
+              mountPath: /etc/cloudinfo/secrets
               readOnly: true
           env:
             - name: VAULT_SKIP_VERIFY
               value: "true"
-          envFrom:
-            - secretRef:
-                name: cloudinfo
+            - name: SECRET_HASH
+              value: "{{ sha1 .Secrets }}"
           ports:
             - name: http
               containerPort: 8000
@@ -48,7 +46,7 @@ spec:
               path: /status
               port: http
       volumes:
-        - name: config
+        - name: secretconfig
           secret:
             secretName: cloudinfo
 ---
