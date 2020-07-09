@@ -43,141 +43,32 @@ const schema = `
 		"version"
 	],
 	"properties": {
-		"authorizedMasterNetworks": {
-			"type": "array",
-			"description": "The networks which are allowed to access the master control plane.",
-			"items": {
-				"type": "object",
-				"additionalProperties": false,
-				"required": [
-					"name",
-					"cidr"
-				],
-				"properties": {
-					"name": {
-						"type": "string",
-						"minLength": 1
-					},
-					"cidr": {
-						"type": "string",
-						"format": "1.2.3.4/16"
-					}
-				}
-			},
-			"minItems": 1,
-			"default": [
-				{ "name": "default", "cidr": "0.0.0.0/0" }
-			]
-		},
-		"authProxyAllowedIPs": {
-			"title": "Auth Proxy Allowed IP Ranges",
-			"type": "array",
-			"description": "The networks which are allowed to connect to this cluster (e.g. via kubectl).",
-			"items": {
-				"type": "string",
-				"format": "1.2.3.4/16"
-			},
-			"minItems": 1,
-			"default": [ "0.0.0.0/0" ]
-		},
-		"clusterUsers": {
-			"type": "array",
-			"description": "Users who should be allowed to access this cluster.",
-			"items": {
-				"type": "object",
-				"additionalProperties": false,
-				"required": [
-					"username",
-					"roles"
-				],
-				"properties": {
-					"username": {
-						"type": "string",
-						"minLength": 1
-					},
-					"roles": {
-						"type": "array",
-						"items": {
-							"type": "string",
-							"minLength": 1,
-							"enum": [ "view", "edit", "admin", "cluster-admin" ]
-						},
-						"minItems": 1
-					}
-				}
-			}
-		},
-		"defaultTeamRole": {
-			"type": "string",
-			"description": "The default role that team members have on this cluster.",
-			"enum": [ "view", "edit", "admin", "cluster-admin" ],
-			"default": "view"
-		},
 		"description": {
 			"type": "string",
 			"description": "Meaningful description of this cluster.",
 			"minLength": 1
 		},
-		"domain": {
+		"region": {
 			"type": "string",
-			"description": "The domain for this cluster.",
 			"minLength": 1,
-			"default": "default"
+			"description": "Geographical location for this cluster",
+			"examples": ["europe-west2", "us-east1"],
+			"immutable": true
 		},
-		"enableDefaultTrafficBlock": {
-			"type": "boolean",
-			"default": false
-		},
-		"enableHTTPLoadBalancer": {
-			"type": "boolean",
-			"default": true
-		},
-		"enableHorizontalPodAutoscaler": {
-			"type": "boolean",
-			"immutable": true,
-			"default": true
-		},
-		"enableIstio": {
-			"type": "boolean",
-			"immutable": true,
-			"default": false
-		},
-		"enablePrivateEndpoint": {
-			"type": "boolean",
-			"immutable": true,
-			"default": false
-		},
-		"enablePrivateNetwork": {
-			"type": "boolean",
-			"immutable": true,
-			"default": false
-		},
-		"enableShieldedNodes": {
-			"type": "boolean",
-			"description": "Shielded nodes provide additional verifications of the node OS and VM, with enhanced rootkit and bootkit protection applied",
-			"immutable": true,
-			"default": true
-		},
-		"enableStackDriverLogging": {
-			"type": "boolean",
-			"immutable": true,
-			"default": true
-		},
-		"enableStackDriverMetrics": {
-			"type": "boolean",
-			"immutable": true,
-			"default": true
-		},
-		"inheritTeamMembers": {
-			"type": "boolean",
-			"default": true
-		},
-		"maintenanceWindow": {
+		"releaseChannel": {
 			"type": "string",
-			"description": "Time of day to allow maintenance operations to be performed by the cloud provider on this cluster.",
-			"format": "hh:mm",
-			"immutable": true,
-			"default": "03:00"
+			"description": "Follow a GKE release channel to control the auto-upgrade of your cluster - if set, auto-upgrade will be true on all node groups",
+			"enum": ["REGULAR", "STABLE", "RAPID", ""],
+			"default": "REGULAR"
+		},
+		"version": {
+			"type": "string",
+			"description": "Kubernetes version - must be blank if release channel specified.",
+			"pattern": "^($|-|latest|[0-9]+\\.[0-9]+($|\\.[0-9]+($|\\-gke\\.[0-9]+)))$",
+			"examples": [
+				"- (GKE default)", "1.15 (latest 1.15.x)", "1.15.1", "1.15.1-gke.6 (exact GKE patch version, not recommended)", "latest"
+			],
+			"default": ""
 		},
 		"nodePools": {
 			"type": "array",
@@ -356,27 +247,139 @@ const schema = `
 				]
 			}
 		},
-		"region": {
+		"defaultTeamRole": {
 			"type": "string",
+			"description": "The role that team members will have on this cluster if 'inherit team members' enabled",
+			"enum": [ "view", "edit", "admin", "cluster-admin" ],
+			"default": "view"
+		},
+		"inheritTeamMembers": {
+			"type": "boolean",
+			"description": "Whether team members will all have access to this cluster by default",
+			"default": true
+		},
+		"clusterUsers": {
+			"type": "array",
+			"description": "Users who should be allowed to access this cluster, will override any default role set above for these users",
+			"items": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": [
+					"username",
+					"roles"
+				],
+				"properties": {
+					"username": {
+						"type": "string",
+						"minLength": 1
+					},
+					"roles": {
+						"type": "array",
+						"items": {
+							"type": "string",
+							"minLength": 1,
+							"enum": [ "view", "edit", "admin", "cluster-admin" ]
+						},
+						"minItems": 1
+					}
+				}
+			}
+		},
+		"domain": {
+			"type": "string",
+			"description": "The domain for this cluster.",
 			"minLength": 1,
-			"examples": ["europe-west2", "us-east1"],
-			"immutable": true
+			"default": "default"
 		},
-		"releaseChannel": {
+		"authorizedMasterNetworks": {
+			"type": "array",
+			"description": "The networks which are allowed to access the master control plane.",
+			"items": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": [
+					"name",
+					"cidr"
+				],
+				"properties": {
+					"name": {
+						"type": "string",
+						"minLength": 1
+					},
+					"cidr": {
+						"type": "string",
+						"format": "1.2.3.4/16"
+					}
+				}
+			},
+			"minItems": 1,
+			"default": [
+				{ "name": "default", "cidr": "0.0.0.0/0" }
+			]
+		},
+		"authProxyAllowedIPs": {
+			"title": "Auth Proxy Allowed IP Ranges",
+			"type": "array",
+			"description": "The networks which are allowed to connect to this cluster (e.g. via kubectl).",
+			"items": {
+				"type": "string",
+				"format": "1.2.3.4/16"
+			},
+			"minItems": 1,
+			"default": [ "0.0.0.0/0" ]
+		},
+		"enableDefaultTrafficBlock": {
+			"type": "boolean",
+			"default": false
+		},
+		"enablePrivateNetwork": {
+			"type": "boolean",
+			"immutable": true,
+			"default": false
+		},
+		"enablePrivateEndpoint": {
+			"type": "boolean",
+			"immutable": true,
+			"default": false
+		},
+		"enableHTTPLoadBalancer": {
+			"type": "boolean",
+			"default": true
+		},
+		"enableHorizontalPodAutoscaler": {
+			"type": "boolean",
+			"immutable": true,
+			"default": true
+		},
+		"enableIstio": {
+			"type": "boolean",
+			"immutable": true,
+			"default": false
+		},
+		"enableShieldedNodes": {
+			"type": "boolean",
+			"description": "Shielded nodes provide additional verifications of the node OS and VM, with enhanced rootkit and bootkit protection applied",
+			"immutable": true,
+			"default": true
+		},
+		"enableStackDriverLogging": {
+			"type": "boolean",
+			"immutable": true,
+			"default": true
+		},
+		"enableStackDriverMetrics": {
+			"type": "boolean",
+			"immutable": true,
+			"default": true
+		},
+		"maintenanceWindow": {
 			"type": "string",
-			"description": "Follow a GKE release channel to control the auto-upgrade of your cluster - if set, auto-upgrade will be true on all node groups",
-			"enum": ["REGULAR", "STABLE", "RAPID", ""],
-			"default": "REGULAR"
+			"description": "Time of day to allow maintenance operations to be performed by the cloud provider on this cluster.",
+			"format": "hh:mm",
+			"immutable": true,
+			"default": "03:00"
 		},
-		"version": {
-			"type": "string",
-			"description": "Kubernetes version - must be blank if release channel specified.",
-			"pattern": "^($|-|latest|[0-9]+\\.[0-9]+($|\\.[0-9]+($|\\-gke\\.[0-9]+)))$",
-			"examples": [
-				"- (GKE default)", "1.15 (latest 1.15.x)", "1.15.1", "1.15.1-gke.6 (exact GKE patch version, not recommended)", "latest"
-			],
-			"default": ""
-		},
+
 
 		"diskSize": {
 			"deprecated": true,
