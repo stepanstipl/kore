@@ -161,12 +161,19 @@ func (e *estimatesImpl) GetNodePoolEstimate(cloud string, region string, nodePoo
 		return nil, validation.NewError("plan not valid").
 			WithFieldErrorf(fmt.Sprintf("nodePool.%s.priceType", nodePool.Name), validation.InvalidValue, "no price of type %s available for %s in %s - this price type may not be available in this region", priceType, nodePool.MachineType, region)
 	}
-	return &costsv1.CostEstimateElement{
+	estimate := &costsv1.CostEstimateElement{
 		Name:        fmt.Sprintf("Node Pool %s", nodePool.Name),
-		MinCost:     nodePool.MinSize * nodePrice * zoneMultiplier,
-		MaxCost:     nodePool.MaxSize * nodePrice * zoneMultiplier,
 		TypicalCost: nodePool.Size * nodePrice * zoneMultiplier,
-	}, nil
+	}
+	if nodePool.AutoScale {
+		estimate.MinCost = nodePool.MinSize * nodePrice * zoneMultiplier
+		estimate.MaxCost = nodePool.MaxSize * nodePrice * zoneMultiplier
+	} else {
+		estimate.MinCost = estimate.TypicalCost
+		estimate.MaxCost = estimate.TypicalCost
+	}
+
+	return estimate, nil
 }
 
 func (*estimatesImpl) GetServiceEstimate(planSpec *servicesv1.ServicePlanSpec) (*costsv1.CostEstimate, error) {

@@ -32,6 +32,7 @@ type nodePool struct {
 	DiskSize    int64
 	MachineType string
 	Spot        bool
+	AutoScale   bool
 }
 
 type planParamNames struct {
@@ -43,6 +44,7 @@ type planParamNames struct {
 	DiskSize    string
 	MachineType string
 	Spot        string
+	AutoScale   string
 }
 
 func parsePlanConfig(planSpec *configv1.PlanSpec) (map[string]interface{}, error) {
@@ -71,6 +73,7 @@ func getNodePools(provider string, planConfig map[string]interface{}) ([]nodePoo
 			MinSize:     int64(pool[paramNames.MinSize].(float64)),
 			MaxSize:     int64(pool[paramNames.MaxSize].(float64)),
 			DiskSize:    int64(pool[paramNames.DiskSize].(float64)),
+			AutoScale:   pool[paramNames.AutoScale].(bool),
 			MachineType: pool[paramNames.MachineType].(string),
 		}
 		if paramNames.Spot != "" {
@@ -96,6 +99,7 @@ func getPlanParamNames(provider string) (planParamNames, error) {
 			DiskSize:    "diskSize",
 			MachineType: "machineType",
 			Spot:        "preemptible",
+			AutoScale:   "enableAutoscaler",
 		}, nil
 	case providerAWS:
 		return planParamNames{
@@ -107,6 +111,7 @@ func getPlanParamNames(provider string) (planParamNames, error) {
 			DiskSize:    "diskSize",
 			MachineType: "instanceType",
 			Spot:        "",
+			AutoScale:   "enableAutoscaler",
 		}, nil
 	}
 	return planParamNames{}, fmt.Errorf("cannot determine plan parameter names for provider %s", provider)
