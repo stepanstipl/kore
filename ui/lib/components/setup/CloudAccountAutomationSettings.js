@@ -117,8 +117,9 @@ class CloudAccountAutomationSettings extends React.Component {
       await asyncForEach(this.state.cloudOrgList, async (cloudOrg) => {
         const cloudAccountList = this.state.cloudAccountAutomationType === 'CUSTOM' ? this.state.cloudAccountList : false
         const resourceVersion = this.state.accountManagement && this.state.accountManagement.metadata.resourceVersion
-        const accountMgtResource = KoreApi.resources().generateAccountManagementResource(this.props.provider, cloudOrg, cloudAccountList, resourceVersion)
-        await api.UpdateAccount(`am-${cloudOrg.metadata.name}`, accountMgtResource)
+        const resourceName = `am-${this.props.cloud.toLowerCase()}`
+        const accountMgtResource = KoreApi.resources().generateAccountManagementResource(resourceName, this.props.provider, cloudOrg, cloudAccountList, resourceVersion)
+        await api.UpdateAccount(resourceName, accountMgtResource)
         await AllocationHelpers.storeAllocation({ resourceToAllocate: accountMgtResource })
         this.setState({ submitting: false, accountManagement: accountMgtResource })
       })

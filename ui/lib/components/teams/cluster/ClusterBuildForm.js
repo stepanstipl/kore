@@ -53,9 +53,11 @@ class ClusterBuildForm extends React.Component {
     // Assign the promise chain to a variable so tests can wait for it to complete.
     this.componentDidMountComplete = Promise.resolve().then(async () => {
       const { allocations, plans } = await this.fetchComponentData()
-      const gcpAccountManagement = (allocations.items || []).find(a => a.spec.resource.kind === 'AccountManagement')
       const gkeCredentials = (allocations.items || []).filter(a => a.spec.resource.kind === 'GKECredentials')
       const eksCredentials = (allocations.items || []).filter(a => a.spec.resource.kind === 'EKSCredentials')
+      // use the predictable name of the AccountManagement resource that is allocated to filter the allocations
+      const gcpAccountManagement = (allocations.items || []).find(a => a.spec.resource.kind === 'AccountManagement' && a.spec.resource.name === 'am-gcp')
+      const awsAccountManagement = (allocations.items || []).find(a => a.spec.resource.kind === 'AccountManagement' && a.spec.resource.name === 'am-aws')
       this.setState({
         credentials: {
           GCP: {
@@ -64,7 +66,7 @@ class ClusterBuildForm extends React.Component {
           },
           AWS: {
             credentials: eksCredentials,
-            accountManagement: undefined
+            accountManagement: awsAccountManagement
           }
         },
         plans: plans,

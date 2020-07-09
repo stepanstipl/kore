@@ -17,10 +17,10 @@ class NewTeamClusterPage extends React.Component {
     title: 'New team cluster'
   }
 
-  static async getPageData({ query }) {
-    const teamName = query.name
+  static async getPageData(ctx) {
+    const teamName = ctx.query.name
     try {
-      const api = await KoreApi.client()
+      const api = await KoreApi.client(ctx)
       const [ team, clusters ] = await Promise.all([
         api.GetTeam(teamName),
         api.ListClusters(teamName)

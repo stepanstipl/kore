@@ -13,7 +13,7 @@ const KoreTeamCloudIntegration = ({ cloud, accountNoun, value, onChange, disable
   }, {
     value: 'EXISTING',
     title: `Use existing ${pluralize(accountNoun)}`,
-    description: `Kore teams will use existing ${cloud} ${pluralize(accountNoun)} that it&apos;s given access to`,
+    description: `Kore teams will use existing ${cloud} ${pluralize(accountNoun)} that it's given access to`,
     className: 'use-existing-projects'
   }]
 

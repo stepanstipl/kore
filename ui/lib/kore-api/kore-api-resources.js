@@ -97,12 +97,12 @@ export default class KoreApiResources {
     return resource
   }
 
-  generateAccountManagementResource(provider, orgResource, accountList, resourceVersion) {
+  generateAccountManagementResource(resourceName, provider, orgResource, accountList, resourceVersion) {
     const resource = this.newResource({
       type: 'V1beta1AccountManagement',
       apiVersion: 'accounts.kore.appvia.io/v1beta1',
       kind: 'AccountManagement',
-      name: `am-${orgResource.metadata.name}`,
+      name: resourceName,
       namespace: publicRuntimeConfig.koreAdminTeamName,
       resourceVersion
     })
@@ -268,7 +268,7 @@ export default class KoreApiResources {
   generateAWSOrganizationResource(team, values, secretName) {
     const resource = this.newResource({
       type: 'V1alpha1AWSOrganization',
-      apiVersion: 'gcp.compute.kore.appvia.io/v1alpha1',
+      apiVersion: 'aws.org.kore.appvia.io/v1alpha1',
       kind: 'AWSOrganization',
       name: values.name,
       namespace: team
@@ -277,11 +277,11 @@ export default class KoreApiResources {
     const spec = new models.V1alpha1OrganizationSpec()
     spec.setOuName(values.ouName)
     spec.setRegion(values.region)
-    spec.setRoleArn(values.RoleArn)
+    spec.setRoleARN(values.roleARN)
     spec.setSsoUser({
       firstName: values.ssoUserFirstName,
       lastName: values.ssoUserLastName,
-      emailAddress: values.ssoUserEmailAddress,
+      email: values.ssoUserEmailAddress,
     })
     spec.setCredentialsRef(this.newV1SecretReference(secretName, team))
     resource.setSpec(spec)

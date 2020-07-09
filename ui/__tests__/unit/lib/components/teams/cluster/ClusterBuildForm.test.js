@@ -15,9 +15,10 @@ describe('ClusterBuildForm', () => {
     ]
   }
   let allocations = [
-    { spec: { resource: { kind: 'GKECredentials' } }, metadata: { name: 'GKE' } },
-    { spec: { resource: { kind: 'EKSCredentials' } }, metadata: { name: 'EKS' } },
-    { spec: { resource: { kind: 'AccountManagement' } }, metadata: { name: 'GCP' } },
+    { spec: { resource: { kind: 'GKECredentials' } }, metadata: { name: 'gke' } },
+    { spec: { resource: { kind: 'EKSCredentials' } }, metadata: { name: 'eks' } },
+    { spec: { resource: { kind: 'AccountManagement', name: 'am-gcp' } }, metadata: { name: 'accountmanagement-gcp' } },
+    { spec: { resource: { kind: 'AccountManagement', name: 'am-aws' } }, metadata: { name: 'accountmanagement-aws' } },
   ]
 
   beforeEach(async () => {
@@ -57,7 +58,7 @@ describe('ClusterBuildForm', () => {
       expect(form.state.credentials.GCP.credentials).toEqual([{ ...allocations[0] }])
       expect(form.state.credentials.GCP.accountManagement).toEqual({ ...allocations[2] })
       expect(form.state.credentials.AWS.credentials).toEqual([{ ...allocations[1] }])
-      expect(form.state.credentials.AWS.accountManagement).toEqual(undefined)
+      expect(form.state.credentials.AWS.accountManagement).toEqual({ ...allocations[3] })
     })
   })
 

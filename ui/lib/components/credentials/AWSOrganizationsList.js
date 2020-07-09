@@ -35,7 +35,7 @@ class AWSOrganizationsList extends ResourceList {
 
   delete = (awsOrg) => () => {
     Modal.confirm({
-      title: `Are you sure you want to delete the AWS Organization "${awsOrg.spec.parentID}"?`,
+      title: `Are you sure you want to delete the AWS Organization "${awsOrg.spec.ouName}"?`,
       content: 'This cannot be undone',
       okText: 'Yes',
       okType: 'danger',
@@ -53,7 +53,7 @@ class AWSOrganizationsList extends ResourceList {
           loadingMessage('Deleting allocations for organization', { key })
           await AllocationHelpers.removeAllocation(awsOrg)
           loadingMessage('Deleting organization', { key })
-          await (await KoreApi.client()).DeleteGCPOrganization(publicRuntimeConfig.koreAdminTeamName, awsOrg.metadata.name)
+          await (await KoreApi.client()).DeleteAWSOrganization(publicRuntimeConfig.koreAdminTeamName, awsOrg.metadata.name)
           successMessage(this.deletedMessage, { key })
         } catch (err) {
           console.log('Error deleting org', err.statusCode, err.response)

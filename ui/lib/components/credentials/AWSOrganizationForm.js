@@ -1,7 +1,8 @@
 import * as React from 'react'
 import VerifiedAllocatedResourceForm from '../resources/VerifiedAllocatedResourceForm'
 import KoreApi from '../../kore-api'
-import { Checkbox, Form, Input, Alert, Card } from 'antd'
+import { Checkbox, Form, Input, Alert, Card, Select } from 'antd'
+const { Option } = Select
 import AllocationHelpers from '../../utils/allocation-helpers'
 
 class AWSOrganizationForm extends VerifiedAllocatedResourceForm {
@@ -19,7 +20,10 @@ class AWSOrganizationForm extends VerifiedAllocatedResourceForm {
     const secretName = values.name
     const teamResources = KoreApi.resources().team(this.props.team)
     if (!this.props.data || this.state.replaceKey) {
-      const secretData = { key: btoa(values.account) }
+      const secretData = {
+        access_key_id: btoa(values.accessKeyID),
+        access_secret_key: btoa(values.secretAccessKey)
+      }
       const secretResource = teamResources.generateSecretResource(secretName, 'aws-org', `AWS creds for control tower in OU ${values.ouName}`, secretData)
       await api.UpdateTeamSecret(this.props.team, secretName, secretResource)
     }
@@ -64,9 +68,11 @@ class AWSOrganizationForm extends VerifiedAllocatedResourceForm {
           <Form.Item label="Organization Unit name" validateStatus={this.fieldError('ouName') ? 'error' : ''} help={this.fieldError('ouName') || 'The name of the parent Organizational Unit (OU) to use for provisioning accounts'}>
             {form.getFieldDecorator('ouName', {
               rules: [{ required: true, message: 'Please enter the Organization Unit name!' }],
-              initialValue: data && data.spec.ouName
+              initialValue: (data && data.spec.ouName) || 'Custom'
             })(
-              <Input placeholder="Organization Unit name" />,
+              <Select>
+                <Option value="Custom">Custom</Option>
+              </Select>,
             )}
           </Form.Item>
           <Form.Item label="Region" validateStatus={this.fieldError('region') ? 'error' : ''} help={this.fieldError('region') || 'The region where Control Tower is enabled in the master account'}>
@@ -77,10 +83,10 @@ class AWSOrganizationForm extends VerifiedAllocatedResourceForm {
               <Input placeholder="Region" />,
             )}
           </Form.Item>
-          <Form.Item label="Role" validateStatus={this.fieldError('region') ? 'error' : ''} help={this.fieldError('roleArn') || 'The role to assume when provisioning accounts'}>
-            {form.getFieldDecorator('roleArn', {
-              rules: [{ required: true, message: 'Please enter the role!' }],
-              initialValue: data && data.spec.roleArn
+          <Form.Item label="Role ARN" validateStatus={this.fieldError('roleARN') ? 'error' : ''} help={this.fieldError('roleARN') || 'The role to assume when provisioning accounts'}>
+            {form.getFieldDecorator('roleARN', {
+              rules: [{ required: true, message: 'Please enter the role ARN!' }],
+              initialValue: data && data.spec.roleARN
             })(
               <Input placeholder="Role ARN" />,
             )}
@@ -135,7 +141,7 @@ class AWSOrganizationForm extends VerifiedAllocatedResourceForm {
           <Form.Item label="First name" validateStatus={this.fieldError('ssoUserFirstName') ? 'error' : ''} help={this.fieldError('ssoUserFirstName') || ''}>
             {form.getFieldDecorator('ssoUserFirstName', {
               rules: [{ required: true, message: 'Please enter the first name!' }],
-              initialValue: data && data.spec.ssoUserFirstName
+              initialValue: data && data.spec.ssoUser.firstName
             })(
               <Input placeholder="First name" />,
             )}
@@ -143,7 +149,7 @@ class AWSOrganizationForm extends VerifiedAllocatedResourceForm {
           <Form.Item label="Last name" validateStatus={this.fieldError('ssoUserLastName') ? 'error' : ''} help={this.fieldError('ssoUserLastName') || ''}>
             {form.getFieldDecorator('ssoUserLastName', {
               rules: [{ required: true, message: 'Please enter the last name!' }],
-              initialValue: data && data.spec.ssoUserLastName
+              initialValue: data && data.spec.ssoUser.lastName
             })(
               <Input placeholder="Last name" />,
             )}
@@ -151,7 +157,7 @@ class AWSOrganizationForm extends VerifiedAllocatedResourceForm {
           <Form.Item label="Email address" validateStatus={this.fieldError('ssoUserEmailAddress') ? 'error' : ''} help={this.fieldError('ssoUserEmailAddress') || ''}>
             {form.getFieldDecorator('ssoUserEmailAddress', {
               rules: [{ required: true, message: 'Please enter the email address!' }],
-              initialValue: data && data.spec.ssoUserEmailAddress
+              initialValue: data && data.spec.ssoUser.email
             })(
               <Input placeholder="Email address" />,
             )}

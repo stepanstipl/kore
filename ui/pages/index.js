@@ -68,7 +68,7 @@ class IndexPage extends React.Component {
     const userTeams = (user.teams.userTeams || []).filter(t => !publicRuntimeConfig.ignoreTeams.includes(t.metadata.name))
     const noUserTeamsExist = userTeams.length === 0
     const gcpCredsMissing = (gkeCredentials && gkeCredentials.items.length === 0) && (gcpOrganizations && gcpOrganizations.items.length === 0)
-    const awsCredsMissing = eksCredentials && eksCredentials.items.length === 0
+    const awsCredsMissing = eksCredentials && eksCredentials.items.length === 0 && (awsOrganizations && awsOrganizations.items.length === 0)
     const cloudIntegrationMissing = gcpCredsMissing && awsCredsMissing
 
     const NoTeamInfoAlert = () => noUserTeamsExist ? (
