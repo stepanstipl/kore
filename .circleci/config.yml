@@ -107,7 +107,6 @@ e2e_job_template: &E2E_JOB_TEMPLATE
   environment:
     ENABLE_EKS_E2E: << parameters.enable_eks >>
     ENABLE_GKE_E2E: << parameters.enable_gke >>
-    GOFLAGS: "-mod=vendor"
     KORE_ADMIN_TOKEN: "password"
     KORE_API_PUBLIC_URL_QA: << parameters.host >>
 
@@ -165,7 +164,6 @@ e2e_job_template: &E2E_JOB_TEMPLATE
 jobs:
   check:
     environment:
-      GOFLAGS: "-mod=vendor"
       USE_GIT_VERSION: "true"
 
     docker:
@@ -180,7 +178,6 @@ jobs:
 
   build:
     environment:
-      GOFLAGS: "-mod=vendor"
       USE_GIT_VERSION: "true"
 
     resource_class: large
@@ -200,7 +197,6 @@ jobs:
 
   test:
     environment:
-      GOFLAGS: "-mod=vendor"
       USE_GIT_VERSION: "true"
 
     resource_class: large
@@ -226,7 +222,6 @@ jobs:
 
   test-api:
     environment:
-      GOFLAGS: "-mod=vendor"
       USE_GIT_VERSION: "true"
 
     resource_class: large
@@ -253,7 +248,7 @@ jobs:
           name: Checking UI auto-gen
           working_directory: ~/project/ui
           command: |
-            # Now we've updated the swagger from the live API, we can check 
+            # Now we've updated the swagger from the live API, we can check
             # that the kore autogen in the UI project is up to date as well.
             # Doesn't fit here logically but does in terms of efficiency.
             make check-kore-autogen
@@ -262,11 +257,10 @@ jobs:
           command: |
             make check-swagger-apiclient api-test
           environment:
-            <<: *SERVICES_ENV      
+            <<: *SERVICES_ENV
 
   check-apis:
     environment:
-      GOFLAGS: "-mod=vendor"
       USE_GIT_VERSION: "true"
 
     resource_class: large
@@ -281,9 +275,6 @@ jobs:
             make check-apis
 
   release:
-    environment:
-      GOFLAGS: "-mod=vendor"
-
     docker:
       - image: circleci/golang:1.14
 
@@ -301,9 +292,6 @@ jobs:
             VERSION=${CIRCLE_SHA1} make push-images
 
   check-release-notes:
-    environment:
-      GOFLAGS: "-mod=vendor"
-
     docker:
       - image: circleci/golang:1.14
 
@@ -314,9 +302,6 @@ jobs:
             VERSION=${CIRCLE_TAG} make check-release-notes
 
   publish-release:
-    environment:
-      GOFLAGS: "-mod=vendor"
-
     docker:
       - image: circleci/golang:1.14
 
