@@ -21,20 +21,20 @@ export default class CostBreakdown extends React.Component {
     let formatter = null
     let basisWarn = null
     switch (basis) {
-      case 'month': {
-        formatter = formatMonthlyCost
-        basisWarn = <>Based on an average 730 hour month. Sustained usage discounts (if available) are <b>not included</b> in this monthly cost estimation</>
-        break
-      }
-      case 'day': {
-        formatter = formatDailyCost
-        basisWarn = <>Sustained usage discounts (if available) are <b>not included</b> in this daily cost estimation</>
-        break
-      }
-      case 'hour': {
-        formatter = formatHourlyCost
-        break
-      }
+    case 'month': {
+      formatter = formatMonthlyCost
+      basisWarn = <>Based on an average 730 hour month. Sustained usage discounts (if available) are <b>not included</b> in this monthly cost estimation</>
+      break
+    }
+    case 'day': {
+      formatter = formatDailyCost
+      basisWarn = <>Sustained usage discounts (if available) are <b>not included</b> in this daily cost estimation</>
+      break
+    }
+    case 'hour': {
+      formatter = formatHourlyCost
+      break
+    }
     }
     const columns = []
     columns.push({ title: 'Component', dataIndex: 'component', key: 'component', width: '40%' })

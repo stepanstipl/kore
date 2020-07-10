@@ -1,7 +1,6 @@
 import * as React from 'react'
 import { Form, Typography } from 'antd'
 const { Paragraph } = Typography
-import { startCase } from 'lodash'
 
 import PlanOptionBase from '../PlanOptionBase'
 import ConstrainedDropdown from './ConstrainedDropdown'
@@ -38,10 +37,8 @@ export default class PlanOptionGKEReleaseChannel extends PlanOptionBase {
   }
 
   render() {
-    const { name, editable, property, value } = this.props
-
-    const displayName = this.props.displayName || property.title || startCase(name)
-    const valueOrDefault = value !== undefined && value !== null ? value : property.default
+    const { name, editable } = this.props
+    const { displayName, valueOrDefault, id } = this.prepCommonProps(this.props)
 
     const help = (
       <>
@@ -52,7 +49,7 @@ export default class PlanOptionGKEReleaseChannel extends PlanOptionBase {
 
     return (
       <Form.Item label={displayName} help={help}>
-        <ConstrainedDropdown readOnly={!editable} value={valueOrDefault} allowedValues={releaseChannels} onChange={(e) => this.onChannelChange(e)} />
+        <ConstrainedDropdown id={id} readOnly={!editable} value={valueOrDefault} allowedValues={releaseChannels} onChange={(e) => this.onChannelChange(e)} />
         {this.validationErrors(name)}
       </Form.Item>
     )

@@ -1,22 +1,18 @@
 import * as React from 'react'
 import { Form, Typography, Input } from 'antd'
 const { Paragraph } = Typography
-import { startCase } from 'lodash'
 
 import PlanOptionBase from '../PlanOptionBase'
 
 export default class PlanOptionGKEVersion extends PlanOptionBase {
   render() {
-    const { name, editable, property, value, plan } = this.props
+    const { name, editable, property, plan } = this.props
+    const { onChange, displayName, valueOrDefault, id } = this.prepCommonProps(this.props)
 
     // Drop the version control all together if release channel set.
     if (plan.releaseChannel && plan.releaseChannel !== '') {
       return null
     }
-
-    const onChange = this.props.onChange || (() => {})
-    const displayName = this.props.displayName || property.title || startCase(name)
-    const valueOrDefault = value !== undefined && value !== null ? value : property.default
 
     const help = (
       <>
@@ -29,7 +25,7 @@ export default class PlanOptionGKEVersion extends PlanOptionBase {
 
     return (
       <Form.Item label={displayName} help={help}>
-        <Input value={valueOrDefault} readOnly={!editable} pattern={property.pattern} onChange={(e) => onChange(name, e.target.value)} />
+        <Input id={id} value={valueOrDefault} readOnly={!editable} pattern={property.pattern} onChange={(e) => onChange(name, e.target.value)} />
         {this.validationErrors(name)}
       </Form.Item>
     )

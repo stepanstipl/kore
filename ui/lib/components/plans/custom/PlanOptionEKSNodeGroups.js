@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { Form, Icon, List, Button, Drawer, Input, Descriptions, InputNumber, Checkbox, Collapse, Radio, Modal, Alert } from 'antd'
-import { startCase } from 'lodash'
 
 import PlanOptionBase from '../PlanOptionBase'
 import PlanOption from '../PlanOption'
@@ -132,12 +131,10 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
 
   render() {
     const { name, editable, property, plan } = this.props
+    const { displayName, valueOrDefault } = this.prepCommonProps(this.props, [])
     const { selectedIndex } = this.state
     const id_prefix = 'plan_nodegroup'
-
-    const value = this.props.value || property.default || []
-    const selected = selectedIndex >= 0 ? value[selectedIndex] : null
-    const displayName = this.props.displayName || startCase(name)
+    const selected = selectedIndex >= 0 ? valueOrDefault[selectedIndex] : null
     const description = this.props.manage ? 'Set default node groups for clusters created from this plan' : 'Manage node groups for this cluster'
 
     let amiType = null
@@ -146,7 +143,7 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
       amiType = selected.amiType || 'AL2_x86_64'
       releaseVersionSet = selected.releaseVersion && selected.releaseVersion.length > 0
       // we have duplicate names if another node group with a different index has the same name as this one
-      ngNameClash = selected.name && selected.name.length > 0 && value.some((v, i) => i !== selectedIndex && v.name === selected.name)
+      ngNameClash = selected.name && selected.name.length > 0 && valueOrDefault.some((v, i) => i !== selectedIndex && v.name === selected.name)
       nodeGroupCloseable = !ngNameClash && selected.name && selected.name.length > 0
       instanceTypeFilter = amiType === PlanOptionEKSNodeGroups.AMI_TYPE_GENERAL ? (c) => c !== 'GPU instance' : (c) => c === 'GPU instance'
     }
@@ -154,7 +151,7 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
     return (
       <>
         <Form.Item label={displayName} help={description}>
-          <List id={`${id_prefix}s`} dataSource={value} renderItem={(ng, idx) => {
+          <List id={`${id_prefix}s`} dataSource={valueOrDefault} renderItem={(ng, idx) => {
             return (
               <List.Item actions={this.nodeGroupActions(idx, editable)}>
                 <List.Item.Meta 
@@ -221,7 +218,6 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
                     {!releaseVersionSet ? null : <Input id={`${id_prefix}_releaseVersion_custom`} value={selected.releaseVersion} placeholder={this.describe(property.items.properties.releaseVersion)} readOnly={!editable} onChange={(e) => this.setNodeGroupProperty(selectedIndex, 'releaseVersion', e.target.value)} />}
                     {this.validationErrors(`${name}[${selectedIndex}].releaseVersion`)}
                   </Form.Item>
-                  {amiType}
                   <PlanOptionClusterMachineType filterCategories={instanceTypeFilter} id={`${id_prefix}_instanceType`} {...this.props} displayName="AWS Instance Type" name={`${name}[${selectedIndex}].instanceType`} property={property.items.properties.instanceType} value={selected.instanceType} onChange={(_, v) => this.setNodeGroupProperty(selectedIndex, 'instanceType', v )} nodePriceSet={(prices) => this.setState({ prices })} />
                   <PlanOption {...this.props} id={`${id_prefix}_instanceType`} displayName="Instance Root Disk Size (GiB)" name={`${name}[${selectedIndex}].diskSize`} property={property.items.properties.diskSize} value={selected.diskSize} onChange={(_, v) => this.setNodeGroupProperty(selectedIndex, 'diskSize', v)} />
                 </Collapse.Panel>

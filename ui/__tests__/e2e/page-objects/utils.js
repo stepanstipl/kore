@@ -9,6 +9,18 @@ export async function clearFillTextInput(pg, id, value) {
   await input.type(value.toString())
 }
 
+export async function setCascader(pg, id, values) {
+  if (values === undefined || values.length === 0) {
+    return
+  }
+  const input = await pg.waitForSelector(`input#${id}`)
+  await input.click()
+  for (let x = 0; x < values.length; x++) {
+    const menuItem = await pg.waitForSelector(`li.ant-cascader-menu-item[title='${values[x]}'`)
+    await menuItem.click()
+  }
+}
+
 export async function setSwitch(pg, id, setOn) {
   if (setOn === undefined) {
     return

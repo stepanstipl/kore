@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { Form, Cascader, Icon } from 'antd'
-import { startCase } from 'lodash'
 
 import PlanOptionBase from '../PlanOptionBase'
 import KoreApi from '../../../kore-api'
@@ -53,7 +52,8 @@ export default class PlanOptionClusterRegion extends PlanOptionBase {
   }
 
   render() {
-    const { name, editable, property, value } = this.props
+    const { name, editable } = this.props
+    const { onChange, displayName, help, valueOrDefault, id } = this.prepCommonProps(this.props)
     const { regions, regionIndex, loadingRegions } = this.state
 
     if (loadingRegions) {
@@ -64,13 +64,6 @@ export default class PlanOptionClusterRegion extends PlanOptionBase {
     if (!regions) {
       return <PlanOption {...this.props} disableCustom={true} />
     }
-
-    const onChange = this.props.onChange || (() => {})
-    const displayName = this.props.displayName || property.title || startCase(name)
-    const help = this.props.help || this.describe(property)
-    const defaultValue = property.const !== undefined && property.const !== null ? property.const : property.default
-    const valueOrDefault = value !== undefined && value !== null ? value : defaultValue
-    const id = this.props.id || `plan_input_${name}`
 
     const selectedRegion = valueOrDefault ? regionIndex[valueOrDefault] : null
 

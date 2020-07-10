@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { Form, Icon, List, Button, Drawer, Input, Descriptions, InputNumber, Collapse, Modal, Alert, Switch, Checkbox } from 'antd'
-import { startCase } from 'lodash'
 
 import copy from '../../../utils/object-copy'
 import PlanOptionBase from '../PlanOptionBase'
@@ -118,18 +117,16 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
 
   render() {
     const { name, editable, property, plan } = this.props
+    const { displayName, valueOrDefault } = this.prepCommonProps(this.props, [])
     const { selectedIndex, prices } = this.state
     const id_prefix = 'plan_nodepool'
-
-    const value = this.props.value || property.default || []
-    const selected = selectedIndex >= 0 ? value[selectedIndex] : null
-    const displayName = this.props.displayName || startCase(name)
+    const selected = selectedIndex >= 0 ? valueOrDefault[selectedIndex] : null
     const description = this.props.manage ? 'Default node pools for clusters created from this plan' : null
 
     let ngNameClash = false, versionFollowMaster = false, nodePoolCloseable = true
     if (selected) {
       // we have duplicate names if another node pool with a different index has the same name as this one
-      ngNameClash = selected.name && selected.name.length > 0 && value.some((v, i) => i !== selectedIndex && v.name === selected.name)
+      ngNameClash = selected.name && selected.name.length > 0 && valueOrDefault.some((v, i) => i !== selectedIndex && v.name === selected.name)
       versionFollowMaster = !selected.version || selected.version === ''
       nodePoolCloseable = !ngNameClash && selected.name && selected.name.match(property.items.properties.name.pattern)
     }
@@ -142,7 +139,7 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
     return (
       <>
         <Form.Item label={displayName} help={description}>
-          <List id={`${id_prefix}s`} dataSource={value} renderItem={(ng, idx) => {
+          <List id={`${id_prefix}s`} dataSource={valueOrDefault} renderItem={(ng, idx) => {
             return (
               <List.Item actions={this.nodePoolActions(idx, editable)}>
                 <List.Item.Meta
@@ -217,7 +214,7 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
                   <NodePoolCost 
                     prices={prices} 
                     nodePool={selected} 
-                    help={<>Adjust pool size, machine type and pre-emptible to see the cost impacts. No <a href="https://cloud.google.com/compute/docs/sustained-use-discounts" target="_blank">sustained use discounts</a> are included in this estimate.</>} 
+                    help={<>Adjust pool size, machine type and pre-emptible to see the cost impacts. No <a href="https://cloud.google.com/compute/docs/sustained-use-discounts" target="_blank" rel="noopener noreferrer">sustained use discounts</a> are included in this estimate.</>} 
                     zoneMultiplier={3} 
                     priceType={selected.preemptible ? 'PreEmptible' : null} 
                   />

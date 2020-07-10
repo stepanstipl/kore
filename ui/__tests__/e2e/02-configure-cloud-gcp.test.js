@@ -153,7 +153,7 @@ describe('Configure Cloud - GCP', () => {
       name: `testplan-${Math.random().toString(36).substr(2, 5)}`,
       description: 'Test plan for testing',
       planDescription: 'A plan description',
-      region: 'europe-west2'
+      region: ['Europe', 'EU (London) - europe-west2']
     }
 
     beforeAll(async () => {
@@ -201,7 +201,7 @@ describe('Configure Cloud - GCP', () => {
 
     it('edits an existing plan', async () => {
       await clusterPlansPage.edit(testPlan.name)
-      await clusterPlansPage.populatePlan({ region: 'europe-west1' })
+      await clusterPlansPage.populatePlan({ region: ['North America','US Central (Iowa) - us-central1'] })
       await clusterPlansPage.addNodePool()
       // No node pool name, close should be disabled:
       expect(await clusterPlansPage.closeNodePoolDisabled()).toBeTruthy()

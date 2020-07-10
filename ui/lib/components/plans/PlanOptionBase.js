@@ -1,6 +1,7 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
 import { Alert } from 'antd'
+import { startCase } from 'lodash'
 
 export default class PlanOptionBase extends React.Component {
   static propTypes = {
@@ -79,5 +80,15 @@ export default class PlanOptionBase extends React.Component {
     const dotName = name.replace(/\[([0-9+])\]/g, '.$1')
     return this.props.validationErrors && this.props.validationErrors.some(v => v.field.indexOf(dotName) === 0)
   }
-  
+
+  prepCommonProps = (props, defaultIfNoDefault = undefined) => {
+    const { property, value, name } = props
+    const onChange = props.onChange || (() => {})
+    const displayName = props.displayName || property.title || startCase(name)
+    const help = props.help || this.describe(property)
+    const defaultValue = (property.const !== undefined && property.const !== null ? property.const : property.default) || defaultIfNoDefault
+    const valueOrDefault = value !== undefined && value !== null ? value : defaultValue
+    const id = props.id || `plan_input_${name}`
+    return { onChange, displayName, help, defaultValue, valueOrDefault, id }
+  }
 }

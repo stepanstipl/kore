@@ -7,7 +7,7 @@ export default class NodePoolCost extends React.Component {
   static propTypes = {
     prices: PropTypes.object,
     nodePool: PropTypes.object,
-    help: PropTypes.string.isRequired,
+    help: PropTypes.oneOfType([PropTypes.object, PropTypes.string]).isRequired,
     zoneMultiplier: PropTypes.number,
     priceType: PropTypes.string,
   }

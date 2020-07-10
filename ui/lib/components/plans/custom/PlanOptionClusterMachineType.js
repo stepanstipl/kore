@@ -1,11 +1,11 @@
 import * as React from 'react'
 import PropTypes from 'prop-types'
 import { Form, Cascader, Icon, Alert } from 'antd'
-import { startCase } from 'lodash'
 
 import PlanOptionBase from '../PlanOptionBase'
 import KoreApi from '../../../kore-api'
 import PlanOption from '../PlanOption'
+import { formatHourlyCost } from '../../../utils/cost-formatters'
 
 
 const FAMILY_INFO = {
@@ -90,6 +90,13 @@ export default class PlanOptionClusterMachineType extends PlanOptionBase {
     })
   }
 
+  componentDidUpdate = () => {
+    const { valueOrDefault } = this.prepCommonProps(this.props)
+    if (this.state.typeIndex && this.state.typeIndex[valueOrDefault] && this.state.extInfo === null) {
+      this.setExtInfo(this.state.typeIndex[valueOrDefault])
+    }    
+  }
+
   mapTypes(typeInfo, provider) {
     if (!typeInfo) {
       return { types: null, typeIndex: null }
@@ -130,7 +137,7 @@ export default class PlanOptionClusterMachineType extends PlanOptionBase {
       }
       family.children.push({
         value: instType.name,
-        label: `${instType.name} | ${instType.mCpus/1000}CPU${instType.mCpus > 1000 ? 's' : ''} | ${instType.mem/1000.0}GB | $${(instType.prices.OnDemand / 1000000).toFixed(3)}/hr`,
+        label: `${instType.name} | ${instType.mCpus/1000}CPU${instType.mCpus > 1000 ? 's' : ''} | ${instType.mem/1000.0}GB ${instType.prices ? ' | ' + formatHourlyCost(instType.prices.OnDemand) : '' }`,
         mCpus: instType.mCpus,
         mem: instType.mem,
         prices: instType.prices
@@ -180,7 +187,8 @@ export default class PlanOptionClusterMachineType extends PlanOptionBase {
   }
 
   render() {
-    const { name, editable, property, value, nodePriceSet } = this.props
+    const { name, editable, nodePriceSet } = this.props
+    const { displayName, valueOrDefault, id } = this.prepCommonProps(this.props)
     const { types, typeIndex, priceIndex, loadingInstances, noRegion, extInfo } = this.state
 
     if (loadingInstances) {
@@ -201,16 +209,7 @@ export default class PlanOptionClusterMachineType extends PlanOptionBase {
       return <PlanOption {...this.props} disableCustom={true} />
     }
 
-    const displayName = this.props.displayName || property.title || startCase(name)
-    // const help = this.props.help || this.describe(property)
-    const defaultValue = property.const !== undefined && property.const !== null ? property.const : property.default
-    const valueOrDefault = value !== undefined && value !== null ? value : defaultValue
-    const id = this.props.id || `plan_input_${name}`
-
     const selectedInstType = valueOrDefault && typeIndex[valueOrDefault] ? [...typeIndex[valueOrDefault]] : null
-    if (!extInfo) {
-      this.setExtInfo(selectedInstType)
-    }
 
     const onChange = (v) => {
       if (this.props.onChange){

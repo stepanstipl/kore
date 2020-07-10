@@ -1,5 +1,5 @@
 import { ConfigureCloudClusterPlansBase } from '../cluster-plans-base'
-import { clearFillTextInput, waitForDrawerOpenClose, setSwitch } from '../../../utils'
+import { clearFillTextInput, waitForDrawerOpenClose, setSwitch, setCascader } from '../../../utils'
 
 export class ConfigureCloudGCPClusterPlans extends ConfigureCloudClusterPlansBase {
   constructor(p) {
@@ -16,7 +16,7 @@ export class ConfigureCloudGCPClusterPlans extends ConfigureCloudClusterPlansBas
     await clearFillTextInput(this.p, 'plan_summary', description)
     await clearFillTextInput(this.p, 'plan_description', name)
     await clearFillTextInput(this.p, 'plan_input_description', planDescription)
-    await clearFillTextInput(this.p, 'plan_input_region', region)
+    await setCascader(this.p, 'plan_input_region', region)
   }
 
   async addNodePool() {
