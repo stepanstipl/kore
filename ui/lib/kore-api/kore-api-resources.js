@@ -264,7 +264,6 @@ export default class KoreApiResources {
     return resource
   }
 
-  // TODO: complete and test
   generateAWSOrganizationResource(team, values, secretName) {
     const resource = this.newResource({
       type: 'V1alpha1AWSOrganization',
@@ -274,7 +273,7 @@ export default class KoreApiResources {
       namespace: team
     })
 
-    const spec = new models.V1alpha1OrganizationSpec()
+    const spec = new models.V1alpha1AWSOrganizationSpec()
     spec.setOuName(values.ouName)
     spec.setRegion(values.region)
     spec.setRoleARN(values.roleARN)

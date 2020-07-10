@@ -24,7 +24,7 @@ class AWSOrganizationForm extends VerifiedAllocatedResourceForm {
         access_key_id: btoa(values.accessKeyID),
         access_secret_key: btoa(values.secretAccessKey)
       }
-      const secretResource = teamResources.generateSecretResource(secretName, 'aws-org', `AWS creds for control tower in OU ${values.ouName}`, secretData)
+      const secretResource = teamResources.generateSecretResource(secretName, 'aws-credentials', `AWS creds for control tower in OU ${values.ouName}`, secretData)
       await api.UpdateTeamSecret(this.props.team, secretName, secretResource)
     }
     const awsOrgResource = teamResources.generateAWSOrganizationResource(values, secretName)
