@@ -1,5 +1,7 @@
 module github.com/appvia/kore
 
+go 1.14
+
 require (
 	github.com/Azure/azure-sdk-for-go v44.0.0+incompatible
 	github.com/Azure/go-autorest/autorest v0.11.0
@@ -54,6 +56,7 @@ require (
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/huandu/xstrings v1.2.1 // indirect
+	github.com/idubinskiy/schematyper v0.0.0-20190118213059-f71b40dac30d
 	github.com/imdario/mergo v0.3.8 // indirect
 	github.com/jinzhu/gorm v1.9.12
 	github.com/jmhodges/levigo v1.0.0 // indirect
@@ -82,7 +85,7 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
 	github.com/steveyen/gtreap v0.0.0-20150807155958-0abe01ef9be2 // indirect
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.6.1
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/tcnksm/ghr v0.13.0
 	github.com/tecbot/gorocksdb v0.0.0-20191019123150-400c56251341 // indirect
@@ -121,4 +124,4 @@ replace github.com/kubernetes-sigs/go-open-service-broker-client => github.com/a
 
 replace github.com/ahmetb/gen-crd-api-reference-docs => github.com/appvia/gen-crd-api-reference-docs v0.2.1-0.20200604183043-37e61fdd102c
 
-go 1.14
+replace github.com/idubinskiy/schematyper => github.com/appvia/schematyper v0.0.0-20200710151743-82d7f6f07f29

@@ -57,6 +57,11 @@ github.com/Songmu/retry
 # github.com/ahmetb/gen-crd-api-reference-docs v0.2.0 => github.com/appvia/gen-crd-api-reference-docs v0.2.1-0.20200604183043-37e61fdd102c
 ## explicit
 github.com/ahmetb/gen-crd-api-reference-docs
+# github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
+github.com/alecthomas/template
+github.com/alecthomas/template/parse
+# github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d
+github.com/alecthomas/units
 # github.com/apparentlymart/go-cidr v1.0.1
 ## explicit
 github.com/apparentlymart/go-cidr/cidr
@@ -245,6 +250,8 @@ github.com/fatih/color
 github.com/felixge/httpsnoop
 # github.com/fsnotify/fsnotify v1.4.9
 github.com/fsnotify/fsnotify
+# github.com/gedex/inflector v0.0.0-20170307190818-16278e9db813
+github.com/gedex/inflector
 # github.com/ghodss/yaml v1.0.0
 ## explicit
 github.com/ghodss/yaml
@@ -491,6 +498,11 @@ github.com/hpcloud/tail/winfile
 # github.com/huandu/xstrings v1.2.1
 ## explicit
 github.com/huandu/xstrings
+# github.com/idubinskiy/schematyper v0.0.0-20190118213059-f71b40dac30d => github.com/appvia/schematyper v0.0.0-20200710151743-82d7f6f07f29
+## explicit
+github.com/idubinskiy/schematyper
+github.com/idubinskiy/schematyper/schemas
+github.com/idubinskiy/schematyper/stringset
 # github.com/imdario/mergo v0.3.8
 ## explicit
 github.com/imdario/mergo
@@ -739,7 +751,7 @@ github.com/spf13/viper
 github.com/steveyen/gtreap
 # github.com/stretchr/objx v0.2.0
 github.com/stretchr/objx
-# github.com/stretchr/testify v1.5.1
+# github.com/stretchr/testify v1.6.1
 ## explicit
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/mock
@@ -1056,6 +1068,8 @@ google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
+# gopkg.in/alecthomas/kingpin.v2 v2.2.6
+gopkg.in/alecthomas/kingpin.v2
 # gopkg.in/fsnotify.v1 v1.4.7
 gopkg.in/fsnotify.v1
 # gopkg.in/inf.v0 v0.9.1
@@ -1549,3 +1563,4 @@ sourcegraph.com/sqs/pbtypes
 # k8s.io/code-generator => github.com/appvia/kubernetes-code-generator v0.0.0-20200311145355-28f8f0159a26
 # github.com/kubernetes-sigs/go-open-service-broker-client => github.com/appvia/go-open-service-broker-client v0.0.0-20200505172434-f28d621ea14e
 # github.com/ahmetb/gen-crd-api-reference-docs => github.com/appvia/gen-crd-api-reference-docs v0.2.1-0.20200604183043-37e61fdd102c
+# github.com/idubinskiy/schematyper => github.com/appvia/schematyper v0.0.0-20200710151743-82d7f6f07f29
