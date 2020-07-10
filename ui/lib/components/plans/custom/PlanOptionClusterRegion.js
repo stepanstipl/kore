@@ -19,9 +19,8 @@ export default class PlanOptionClusterRegion extends PlanOptionBase {
     this.componentDidMountComplete = Promise.resolve().then(async() => {
       this.setState({ loadingRegions: true })
       const provider = this.props.kind
-      const api = await KoreApi.client()
       try {
-        const regionInfo = await api.metadata.GetKubernetesRegions(provider)
+        const regionInfo = await (await KoreApi.client()).metadata.GetKubernetesRegions(provider)
         const { regions, regionIndex } = this.mapRegions(regionInfo)
         this.setState({ loadingRegions: false, regions, regionIndex })
       } catch (err) {

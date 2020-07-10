@@ -1,6 +1,7 @@
 import * as React from 'react'
-import { Table, Switch } from 'antd'
+import { Table, Radio, Typography } from 'antd'
 import PropTypes from 'prop-types'
+import { formatMonthlyCost, formatDailyCost, formatHourlyCost } from '../../utils/cost-formatters'
 
 export default class CostBreakdown extends React.Component {
   static propTypes = {
@@ -8,17 +9,33 @@ export default class CostBreakdown extends React.Component {
     style: PropTypes.object
   }
   state = {
-    monthly: true
+    basis: 'month'
   }
 
   render() {
     const { costs, style } = this.props
-    const { monthly } = this.state
+    const { basis } = this.state
     if (!costs || !costs.costElements || costs.costElements.length === 0) {
       return null
     }
-    const currFormatter = new Intl.NumberFormat(undefined, { maximumSignificantDigits: monthly ? 4 : 3 }).format
-    const formatter = !monthly ? (c) => `$${currFormatter(c/1000000)}/hr` : (c) => `$${currFormatter((c*730.5)/1000000)}/mo`
+    let formatter = null
+    let basisWarn = null
+    switch (basis) {
+      case 'month': {
+        formatter = formatMonthlyCost
+        basisWarn = <>Based on an average 730 hour month. Sustained usage discounts (if available) are <b>not included</b> in this monthly cost estimation</>
+        break
+      }
+      case 'day': {
+        formatter = formatDailyCost
+        basisWarn = <>Sustained usage discounts (if available) are <b>not included</b> in this daily cost estimation</>
+        break
+      }
+      case 'hour': {
+        formatter = formatHourlyCost
+        break
+      }
+    }
     const columns = []
     columns.push({ title: 'Component', dataIndex: 'component', key: 'component', width: '40%' })
     columns.push({ title: 'Minimum', dataIndex: 'minCost', key: 'minCost', width: '20%' })
@@ -36,7 +53,16 @@ export default class CostBreakdown extends React.Component {
         pagination={false} 
         dataSource={rows} 
         columns={columns} 
-        footer={() => <>Cost basis: <Switch className="double-on-switch" checkedChildren="Monthly" unCheckedChildren="Hourly" onChange={(c) => this.setState({ monthly: c })} defaultChecked={true} /></>} 
+        footer={() => (
+          <>
+            <Radio.Group size="small" buttonStyle="solid" onChange={(e) => this.setState({ basis: e.target.value })} defaultValue="month">
+              <Radio.Button value="hour">Hourly</Radio.Button>
+              <Radio.Button value="day">Daily</Radio.Button>
+              <Radio.Button value="month">Monthly</Radio.Button>
+            </Radio.Group>
+            {basisWarn ? <Typography.Paragraph type="secondary" style={{ paddingTop: '10px' }}>{basisWarn}</Typography.Paragraph> : null}
+          </>
+        )} 
       />
     )
   }

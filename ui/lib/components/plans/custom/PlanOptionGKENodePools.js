@@ -204,7 +204,7 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
                         <InputNumber id={`${id_prefix}_minSize`} value={selected.minSize} size="small" min={property.items.properties.minSize.minimum} max={selected.maxSize} readOnly={!editable} onChange={(v) => this.setNodePoolProperty(selectedIndex, 'minSize', v)} />
                         {this.validationErrors(`${name}[${selectedIndex}].minSize`)}
                       </Descriptions.Item>}
-                      <Descriptions.Item label={selected.enableAutoscaler ? 'Initial Size' : null}>
+                      <Descriptions.Item label={selected.enableAutoscaler ? 'Initial size' : null}>
                         <InputNumber id={`${id_prefix}_size`} value={selected.size} size="small" min={selected.enableAutoscaler ? selected.minSize : 1} max={selected.enableAutoscaler ? selected.maxSize : 99999} readOnly={!editable} onChange={(v) => this.setNodePoolProperty(selectedIndex, 'size', v)} />
                         {this.validationErrors(`${name}[${selectedIndex}].size`)}
                       </Descriptions.Item>
@@ -214,7 +214,13 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
                       </Descriptions.Item>}
                     </Descriptions>
                   </Form.Item>
-                  <NodePoolCost prices={prices} nodePool={selected} help="Adjust pool size, machine type and pre-emptible to see the cost impacts" zoneMultiplier={3} priceType={selected.preemptible ? 'PreEmptible' : null} />
+                  <NodePoolCost 
+                    prices={prices} 
+                    nodePool={selected} 
+                    help={<>Adjust pool size, machine type and pre-emptible to see the cost impacts. No <a href="https://cloud.google.com/compute/docs/sustained-use-discounts" target="_blank">sustained use discounts</a> are included in this estimate.</>} 
+                    zoneMultiplier={3} 
+                    priceType={selected.preemptible ? 'PreEmptible' : null} 
+                  />
                   <PlanOption id={`${id_prefix}_maxPodsPerNode`} {...this.props} displayName="Max pods per node" name={`${name}[${selectedIndex}].maxPodsPerNode`} property={property.items.properties.maxPodsPerNode} value={selected.maxPodsPerNode} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'maxPodsPerNode', v)} />
                 </Collapse.Panel>
                 <Collapse.Panel key="compute" header="Compute Configuration (machine type, disk size, image type, auto-repair)">
@@ -225,6 +231,19 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
                   <PlanOption id={`${id_prefix}_diskSize`} {...this.props} displayName="Instance Root Disk Size (GiB)" name={`${name}[${selectedIndex}].diskSize`} property={property.items.properties.diskSize} value={selected.diskSize} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'diskSize', v)} />
                   <PlanOption id={`${id_prefix}_enableAutorepair`} {...this.props} displayName="Auto-repair" name={`${name}[${selectedIndex}].enableAutorepair`} property={property.items.properties.enableAutorepair} value={selected.enableAutorepair} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'enableAutorepair', v)} />
                   <PlanOption id={`${id_prefix}_preemptible`} {...this.props} displayName="Pre-emptible" name={`${name}[${selectedIndex}].preemptible`} property={property.items.properties.preemptible} value={selected.preemptible} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'preemptible', v)} />
+                  {!selected.preemptible ? null : 
+                    <Alert type="warning" message={
+                      <>
+                        Pre-emptible nodes deliver significant cost savings but <b>can and will be destroyed</b> at any time, at 
+                        minimum once per 24 hour period.
+                        <br/><br/>
+                        Auto-repair will attempt to re-create nodes when this happens, but capacity to create new pre-emptible 
+                        nodes is never guaranteed thus your pool may be smaller than your specified minimum size at times.
+                        <br/><br/>
+                        Ensure you understand the impact of this on your workloads before enabling.
+                      </>
+                    }/>
+                  }
                 </Collapse.Panel>
                 <Collapse.Panel key="metadata" header="Labels & Taints">
                   <PlanOption id={`${id_prefix}_labels`} {...this.props} displayName="Labels" help="Labels help kubernetes workloads find this group" name={`${name}[${selectedIndex}].labels`} property={property.items.properties.labels} value={selected.labels} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'labels', v)} />

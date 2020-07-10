@@ -22,6 +22,13 @@ export default class CostEstimate extends React.Component {
     if (prevProps.planValues !== this.props.planValues) {
       this.setState({ planValuesChangedSinceEstimate: true })
     }
+
+    // Prepare an initial estimate on update if the parent component has enabled estimate-on-init, we've got 
+    // plan values, we don't yet have an estimate, and we haven't got an error already (so we don't endlessly 
+    // loop this on an error case)... phew!
+    if (this.props.estimateInit && this.props.planValues && !this.state.estimate && !this.state.estimateError) {
+      this.estimate()
+    }
   }
 
   estimate = async () => {
@@ -44,9 +51,6 @@ export default class CostEstimate extends React.Component {
 
   render() {
     const { estimate, planValuesChangedSinceEstimate, estimateError } = this.state
-    if (!estimate && !estimateError && this.props.estimateInit && this.props.planValues) {
-      this.estimate()
-    }
     return (
       <>
         <CostBreakdown costs={estimate} style={{ marginBottom: '20px' }} />

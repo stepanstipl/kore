@@ -1,22 +1,23 @@
 import * as React from 'react'
 import { Table } from 'antd'
 import PropTypes from 'prop-types'
+import { formatHourlyCost, formatDailyCost, formatMonthlyCost } from '../../utils/cost-formatters'
 
 export default class CostTable extends React.Component {
   static propTypes = {
     costs: PropTypes.object.isRequired,
     hideHourly: PropTypes.bool,
+    hideDaily: PropTypes.bool,
     hideMonthly: PropTypes.bool,
     alwaysShowHeader: PropTypes.bool,
     style: PropTypes.object
   }
 
   render() {
-    const { costs, hideHourly, hideMonthly, alwaysShowHeader, style } = this.props
+    const { costs, hideHourly, hideDaily, hideMonthly, alwaysShowHeader, style } = this.props
     if (!costs) {
       return null
     }
-    const formatter = new Intl.NumberFormat(undefined, { maximumSignificantDigits: 3 }).format
     const columns = []
     let showHeader = true
     if (costs.minCost === costs.maxCost && costs.minCost === costs.typicalCost) {
@@ -29,10 +30,13 @@ export default class CostTable extends React.Component {
     }
     const rows = []
     if (!hideHourly) {
-      rows.push({ key: 'hourly', minCost: `$${formatter(costs.minCost/1000000)}/hr`, typicalCost: `$${formatter(costs.typicalCost/1000000)}/hr`, maxCost: `$${formatter(costs.maxCost/1000000)}/hr` })
+      rows.push({ key: 'hourly', minCost: formatHourlyCost(costs.minCost), typicalCost: formatHourlyCost(costs.typicalCost), maxCost: formatHourlyCost(costs.maxCost) })
+    }
+    if (!hideDaily) {
+      rows.push({ key: 'daily', minCost: formatDailyCost(costs.minCost), typicalCost: formatDailyCost(costs.typicalCost), maxCost: formatDailyCost(costs.maxCost) })
     }
     if (!hideMonthly) {
-      rows.push({ key: 'monthly', minCost: `$${formatter((costs.minCost*730.5)/1000000)}/mo`, typicalCost: `$${formatter((costs.typicalCost*730.5)/1000000)}/mo`, maxCost: `$${formatter((costs.maxCost*730.5)/1000000)}/mo` })
+      rows.push({ key: 'monthly', minCost: formatMonthlyCost(costs.minCost), typicalCost: formatMonthlyCost(costs.typicalCost), maxCost: formatMonthlyCost(costs.maxCost) })
     }
     return <Table style={style} size="small" showHeader={showHeader} pagination={false} dataSource={rows} columns={columns} />
   }

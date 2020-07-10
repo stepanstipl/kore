@@ -144,7 +144,6 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
     let releaseVersionSet = false, ngNameClash = false, nodeGroupCloseable = true, instanceTypeFilter = null
     if (selected) {
       amiType = selected.amiType || 'AL2_x86_64'
-      // instanceTypes = PlanOptionEKSNodeGroups.supportedInstanceTypes[amiType]
       releaseVersionSet = selected.releaseVersion && selected.releaseVersion.length > 0
       // we have duplicate names if another node group with a different index has the same name as this one
       ngNameClash = selected.name && selected.name.length > 0 && value.some((v, i) => i !== selectedIndex && v.name === selected.name)
@@ -197,7 +196,7 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
                         <InputNumber id={`${id_prefix}_minSize`} value={selected.minSize} size="small" min={property.items.properties.minSize.minimum} max={selected.maxSize} readOnly={!editable} onChange={(v) => this.setNodeGroupProperty(selectedIndex, 'minSize', v)} />
                         {this.validationErrors(`${name}[${selectedIndex}].minSize`)}
                       </Descriptions.Item>}
-                      <Descriptions.Item label={selected.enableAutoscaler ? 'Initial Size' : null}>
+                      <Descriptions.Item label={selected.enableAutoscaler ? 'Initial size' : null}>
                         <InputNumber id={`${id_prefix}_desiredSize`} value={selected.desiredSize} size="small" min={selected.enableAutoscaler ? selected.minSize : 1} max={selected.enableAutoscaler ? selected.maxSize : undefined} readOnly={!editable} onChange={(v) => this.setNodeGroupProperty(selectedIndex, 'desiredSize', v)} />
                         {this.validationErrors(`${name}[${selectedIndex}].desiredSize`)}
                       </Descriptions.Item>
