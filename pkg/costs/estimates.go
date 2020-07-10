@@ -56,6 +56,9 @@ const (
 
 func (e *estimatesImpl) GetClusterEstimate(planSpec *configv1.PlanSpec) (*costsv1.CostEstimate, error) {
 	// Load costing info for the provider in question
+	if !e.metadata.PricesAvailable() {
+		return nil, validation.NewError("pricing information not available, please ensure Kore Costs feature has been enabled and configured")
+	}
 
 	cloud := getCloudForClusterProvider(planSpec.Kind)
 	if cloud == "" {
@@ -94,7 +97,7 @@ func (e *estimatesImpl) GetClusterEstimate(planSpec *configv1.PlanSpec) (*costsv
 		return nil, err
 	}
 	estimate.CostElements = append(estimate.CostElements, costsv1.CostEstimateElement{
-		Name:        "Kore Authentication Load Balancer",
+		Name:        "Authentication Load Balancer",
 		MinCost:     exposedServiceCost,
 		MaxCost:     exposedServiceCost,
 		TypicalCost: exposedServiceCost,

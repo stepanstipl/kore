@@ -73,6 +73,7 @@ var _ = Describe("Costs - Estimates", func() {
 	var m costsfakes.FakeMetadata
 	BeforeEach(func() {
 		m = costsfakes.FakeMetadata{}
+		m.PricesAvailableReturns(true)
 		m.KubernetesControlPlaneCostReturns(100000, nil)
 		m.KubernetesExposedServiceCostReturns(25000, nil)
 		e = costs.NewEstimates(&m)

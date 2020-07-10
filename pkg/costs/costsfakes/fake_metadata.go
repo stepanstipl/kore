@@ -105,6 +105,16 @@ type FakeMetadata struct {
 		result1 string
 		result2 error
 	}
+	PricesAvailableStub        func() bool
+	pricesAvailableMutex       sync.RWMutex
+	pricesAvailableArgsForCall []struct {
+	}
+	pricesAvailableReturns struct {
+		result1 bool
+	}
+	pricesAvailableReturnsOnCall map[int]struct {
+		result1 bool
+	}
 	RegionZonesStub        func(string, string) ([]string, error)
 	regionZonesMutex       sync.RWMutex
 	regionZonesArgsForCall []struct {
@@ -575,6 +585,58 @@ func (fake *FakeMetadata) MapProviderToCloudReturnsOnCall(i int, result1 string,
 	}{result1, result2}
 }
 
+func (fake *FakeMetadata) PricesAvailable() bool {
+	fake.pricesAvailableMutex.Lock()
+	ret, specificReturn := fake.pricesAvailableReturnsOnCall[len(fake.pricesAvailableArgsForCall)]
+	fake.pricesAvailableArgsForCall = append(fake.pricesAvailableArgsForCall, struct {
+	}{})
+	fake.recordInvocation("PricesAvailable", []interface{}{})
+	fake.pricesAvailableMutex.Unlock()
+	if fake.PricesAvailableStub != nil {
+		return fake.PricesAvailableStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.pricesAvailableReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeMetadata) PricesAvailableCallCount() int {
+	fake.pricesAvailableMutex.RLock()
+	defer fake.pricesAvailableMutex.RUnlock()
+	return len(fake.pricesAvailableArgsForCall)
+}
+
+func (fake *FakeMetadata) PricesAvailableCalls(stub func() bool) {
+	fake.pricesAvailableMutex.Lock()
+	defer fake.pricesAvailableMutex.Unlock()
+	fake.PricesAvailableStub = stub
+}
+
+func (fake *FakeMetadata) PricesAvailableReturns(result1 bool) {
+	fake.pricesAvailableMutex.Lock()
+	defer fake.pricesAvailableMutex.Unlock()
+	fake.PricesAvailableStub = nil
+	fake.pricesAvailableReturns = struct {
+		result1 bool
+	}{result1}
+}
+
+func (fake *FakeMetadata) PricesAvailableReturnsOnCall(i int, result1 bool) {
+	fake.pricesAvailableMutex.Lock()
+	defer fake.pricesAvailableMutex.Unlock()
+	fake.PricesAvailableStub = nil
+	if fake.pricesAvailableReturnsOnCall == nil {
+		fake.pricesAvailableReturnsOnCall = make(map[int]struct {
+			result1 bool
+		})
+	}
+	fake.pricesAvailableReturnsOnCall[i] = struct {
+		result1 bool
+	}{result1}
+}
+
 func (fake *FakeMetadata) RegionZones(arg1 string, arg2 string) ([]string, error) {
 	fake.regionZonesMutex.Lock()
 	ret, specificReturn := fake.regionZonesReturnsOnCall[len(fake.regionZonesArgsForCall)]
@@ -719,6 +781,8 @@ func (fake *FakeMetadata) Invocations() map[string][][]interface{} {
 	defer fake.kubernetesVersionsMutex.RUnlock()
 	fake.mapProviderToCloudMutex.RLock()
 	defer fake.mapProviderToCloudMutex.RUnlock()
+	fake.pricesAvailableMutex.RLock()
+	defer fake.pricesAvailableMutex.RUnlock()
 	fake.regionZonesMutex.RLock()
 	defer fake.regionZonesMutex.RUnlock()
 	fake.regionsMutex.RLock()

@@ -18,6 +18,7 @@ package costs
 
 import (
 	"fmt"
+	"time"
 
 	costsv1 "github.com/appvia/kore/pkg/apis/costs/v1beta1"
 )
@@ -45,17 +46,39 @@ type Metadata interface {
 	// KubernetesExposedServiceCost retrieves the price in microdollars per hour of an exposed service (i.e.
 	// HTTP load balancer)
 	KubernetesExposedServiceCost(cloud string, region string) (int64, error)
+	// PricesAvailable identifies if the metadata service can supply pricing info currently
+	PricesAvailable() bool
 }
 
 // NewMetadata creates a new instance of the metadata API
 func NewMetadata(cloudinfo Cloudinfo) Metadata {
 	return &metadataImpl{
-		cloudinfo,
+		cloudinfo:          cloudinfo,
+		cloudinfoAvailable: false,
 	}
 }
 
 type metadataImpl struct {
-	cloudinfo Cloudinfo
+	cloudinfo          Cloudinfo
+	cloudinfoAvailable bool
+	cloudinfoCheckDue  time.Time
+}
+
+func (m *metadataImpl) info() Cloudinfo {
+	// Check every 30 seconds if cloudinfo is available.
+	if m.cloudinfoCheckDue.IsZero() || m.cloudinfoCheckDue.Before(time.Now()) {
+		m.cloudinfoAvailable = m.cloudinfo.Ready()
+		m.cloudinfoCheckDue = time.Now().Add(30 * time.Second)
+	}
+	if m.cloudinfoAvailable {
+		return m.cloudinfo
+	}
+	return &staticData{}
+}
+
+func (m *metadataImpl) PricesAvailable() bool {
+	_ = m.info()
+	return m.cloudinfoAvailable
 }
 
 func (m *metadataImpl) Clouds() ([]string, error) {
@@ -71,7 +94,7 @@ func (m *metadataImpl) MapProviderToCloud(provider string) (string, error) {
 }
 
 func (m *metadataImpl) Regions(cloud string) (*costsv1.ContinentList, error) {
-	continents, err := m.cloudinfo.KubernetesRegions(cloud)
+	continents, err := m.info().KubernetesRegions(cloud)
 	if err != nil {
 		return nil, err
 	}
@@ -84,11 +107,11 @@ func (m *metadataImpl) Regions(cloud string) (*costsv1.ContinentList, error) {
 }
 
 func (m *metadataImpl) RegionZones(cloud string, region string) ([]string, error) {
-	return m.cloudinfo.KubernetesRegionAZs(cloud, region)
+	return m.info().KubernetesRegionAZs(cloud, region)
 }
 
 func (m *metadataImpl) InstanceTypes(cloud string, region string) (*costsv1.InstanceTypeList, error) {
-	instanceTypes, err := m.cloudinfo.KubernetesInstanceTypes(cloud, region)
+	instanceTypes, err := m.info().KubernetesInstanceTypes(cloud, region)
 	if err != nil {
 		return nil, err
 	}
@@ -101,11 +124,11 @@ func (m *metadataImpl) InstanceTypes(cloud string, region string) (*costsv1.Inst
 }
 
 func (m *metadataImpl) InstanceType(cloud string, region string, instanceType string) (*costsv1.InstanceType, error) {
-	return m.cloudinfo.KubernetesInstanceType(cloud, region, instanceType)
+	return m.info().KubernetesInstanceType(cloud, region, instanceType)
 }
 
 func (m *metadataImpl) KubernetesVersions(cloud string, region string) ([]string, error) {
-	return m.cloudinfo.KubernetesVersions(cloud, region)
+	return m.info().KubernetesVersions(cloud, region)
 }
 
 func (m *metadataImpl) KubernetesControlPlaneCost(cloud string, region string) (int64, error) {
