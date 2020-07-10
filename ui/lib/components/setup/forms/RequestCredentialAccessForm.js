@@ -6,11 +6,10 @@ const { Paragraph } = Typography
 import { patterns } from '../../../utils/validation'
 
 class RequestCredentialAccessForm extends React.Component {
-  static ENABLED = false
-
   static propTypes = {
     form: PropTypes.object.isRequired,
     cloud: PropTypes.oneOf(['GCP', 'AWS']).isRequired,
+    data: PropTypes.object,
     onChange: PropTypes.func,
     helpInModal: PropTypes.bool
   }
@@ -18,35 +17,25 @@ class RequestCredentialAccessForm extends React.Component {
   cloudContent = {
     'GCP': {
       accountNoun: 'Project',
-      help: RequestCredentialAccessForm.ENABLED ? (
+      help: (
         <div>
           <p>When using Kore with existing GCP projects, you must allocate the project credentials to teams in order for them to provision clusters within those projects.</p>
           <p style={{ marginBottom: '0' }}>When a new team is created they may not have access to any project credentials, here you can provide an email address which will be displayed to a team in this situation, in order to request access to a GCP project through Kore.</p>
-        </div>
-      ) : (
-        <div>
-          <p>When using Kore with existing GCP projects, you must allocate the project credentials to teams in order for them to provision clusters within those projects.</p>
-          <p style={{ marginBottom: '0' }}>When a new team is created they may not have access to any project credentials. In this case, the user will be asked to contact the Kore administrator to setup the required access.</p>
         </div>
       )
     },
     'AWS': {
       accountNoun: 'Account',
-      help: RequestCredentialAccessForm.ENABLED ? (
+      help: (
         <div>
           <p>When using Kore with existing AWS accounts, you must allocate the account credentials to teams in order for them to provision clusters within those accounts.</p>
           <p style={{ marginBottom: '0' }}>When a new team is created they may not have access to any account credentials, here you can provide an email address which will be displayed to a team in this situation, in order to request access to an AWS account through Kore.</p>
-        </div>
-      ) : (
-        <div>
-          <p>When using Kore with existing AWS accounts, you must allocate the account credentials to teams in order for them to provision clusters within those accounts.</p>
-          <p style={{ marginBottom: '0' }}>When a new team is created they may not have access to any account credentials. In this case, the user will be asked to contact the Kore administrator to setup the required access.</p>
         </div>
       )
     }
   }
 
-  onChange = () => this.props.onChange && this.props.onChange(this.props.form.getFieldError('email'))
+  onChange = () => this.props.onChange && this.props.onChange(this.props.form.getFieldValue('email'), this.props.form.getFieldError('email'))
 
   projectCredentialAccessHelp = () => {
     Modal.info({
@@ -58,7 +47,7 @@ class RequestCredentialAccessForm extends React.Component {
   }
 
   render() {
-    const { form, helpInModal } = this.props
+    const { form, helpInModal, data } = this.props
     const { getFieldDecorator, isFieldTouched, getFieldError } = form
     const content = this.cloudContent[this.props.cloud]
 
@@ -80,23 +69,24 @@ class RequestCredentialAccessForm extends React.Component {
             />
           </>
         )}
-        {RequestCredentialAccessForm.ENABLED && (
-          <Form>
-            <Form.Item
-              labelAlign="left"
-              labelCol={{ span: 2 }}
-              wrapperCol={{ span: 8 }}
-              label="Email"
-              validateStatus={emailError ? 'error' : ''}
-              help={emailError || `Email for teams who need access to ${content.accountNoun.toLowerCase()} credentials`}
-              onChange={this.onChange}
-            >
-              {getFieldDecorator('email', { rules: [{ required: true, message: 'Please enter the email!' }, { ...patterns.email }] })(
-                <Input type="email" placeholder="Email address" />
-              )}
-            </Form.Item>
-          </Form>
-        )}
+        <Form>
+          <Form.Item
+            labelAlign="left"
+            labelCol={{ span: 2 }}
+            wrapperCol={{ span: 8 }}
+            label="Email"
+            validateStatus={emailError ? 'error' : ''}
+            help={emailError || `Email for teams who need access to ${content.accountNoun.toLowerCase()} credentials`}
+            onChange={this.onChange}
+          >
+            {getFieldDecorator('email', {
+              rules: [{ required: true, message: 'Please enter the email!' }, { ...patterns.email }],
+              initialValue: data && data.email
+            })(
+              <Input type="email" placeholder="Email address" />
+            )}
+          </Form.Item>
+        </Form>
       </>
     )
   }

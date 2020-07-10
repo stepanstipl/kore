@@ -178,6 +178,20 @@ export default class KoreApiResources {
     return resource
   }
 
+  generateConfigResource(name, values) {
+    const resource = this.newResource({
+      type: 'V1Config',
+      apiVersion: 'config.kore.appvia.io/v1',
+      kind: 'Config',
+      name
+    })
+
+    const spec = new models.V1ConfigSpec()
+    spec.setValues(values)
+    resource.setSpec(spec)
+    return resource
+  }
+
   team(team) {
     return {
       generateSecretResource: (name, secretType, description, data) => this.generateSecretResource(team, name, secretType, description, data),
