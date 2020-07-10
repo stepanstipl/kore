@@ -42,9 +42,7 @@ require (
 	github.com/go-openapi/validate v0.19.7
 	github.com/go-resty/resty/v2 v2.3.0
 	github.com/go-swagger/go-swagger v0.23.0
-	github.com/golang/mock v1.3.1 // indirect
 	github.com/golangci/golangci-lint v1.27.0
-	github.com/google/addlicense v0.0.0-20200109101052-9fa18aaf59fb // indirect
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/uuid v1.1.1
 	github.com/hashicorp/go-version v1.2.0
@@ -91,9 +89,7 @@ require (
 	gonum.org/v1/gonum v0.7.0 // indirect
 	google.golang.org/api v0.20.0
 	google.golang.org/grpc v1.27.0
-	gopkg.in/inf.v0 v0.9.1
 	gopkg.in/yaml.v2 v2.2.8
-	gotest.tools v2.2.0+incompatible
 	k8s.io/api v0.18.2
 	k8s.io/apiextensions-apiserver v0.18.2
 	k8s.io/apimachinery v0.18.2
@@ -104,31 +100,9 @@ require (
 	sigs.k8s.io/aws-iam-authenticator v0.5.0
 	sigs.k8s.io/controller-runtime v0.6.0
 	sigs.k8s.io/controller-tools v0.2.5
-	sigs.k8s.io/kind v0.6.0 // indirect
 	sigs.k8s.io/yaml v1.2.0
 )
 
-// Pinned to kubernetes-1.16.4
-// replace (
-// 	k8s.io/api => k8s.io/api v0.0.0-20190918195907-bd6ac527cfd2
-// 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20190918201827-3de75813f604
-// 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20190817020851-f2f3a405f61d
-// 	k8s.io/client-go => k8s.io/client-go v0.0.0-20190918200256-06eb1244587a
-// 	k8s.io/cloud-provider => k8s.io/cloud-provider v0.0.0-20190918203125-ae665f80358a
-// )
-
-replace (
-	git.apache.org/thrift.git => github.com/apache/thrift v0.0.0-20180902110319-2566ecd5d999
-	github.com/coreos/prometheus-operator => github.com/coreos/prometheus-operator v0.31.1
-	// Pinned to v2.10.0 (kubernetes-1.14.1) so https://proxy.golang.org can
-	// resolve it correctly.
-	github.com/prometheus/prometheus => github.com/prometheus/prometheus v1.8.2-0.20190525122359-d20e84d0fb64
-)
-
-replace github.com/operator-framework/operator-sdk => github.com/operator-framework/operator-sdk v0.11.0
-
-// Use appvia dex fork
-//replace github.com/dexidp/dex => github.com/appvia/dex v0.0.0-20191216122359-b147340
 // TODO: use github hosted dex
 replace github.com/dexidp/dex => github.com/appvia/dex v0.0.0-20191213161401-b147340b9bc0
 
@@ -139,4 +113,4 @@ replace github.com/kubernetes-sigs/go-open-service-broker-client => github.com/a
 
 replace github.com/ahmetb/gen-crd-api-reference-docs => github.com/appvia/gen-crd-api-reference-docs v0.2.1-0.20200604183043-37e61fdd102c
 
-go 1.13
+go 1.14
