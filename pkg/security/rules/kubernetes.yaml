@@ -1,5 +1,5 @@
 ---
-- name: Authentication Proxy CIDR
+- name: Auth Proxy IP Ranges
   code: AUTHIP-01
   status: warning
   description: |
