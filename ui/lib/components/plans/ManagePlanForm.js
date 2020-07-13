@@ -218,7 +218,7 @@ export default class ManagePlanForm extends React.Component {
           </Card>
         )}
 
-        <Card style={{ marginBottom: '20px' }}>
+        <Card style={{ marginBottom: '20px' }} id="plan_config">
           {mode === 'view' ? null : <Alert
             message="Plan configuration"
             description="Set the plan configuration"

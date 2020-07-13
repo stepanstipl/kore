@@ -13,6 +13,7 @@ export class ConfigureCloudAWSClusterPlans extends ConfigureCloudClusterPlansBas
   }
 
   async populatePlan({ description, name, planDescription, region, version }) {
+    await this.viewPlanConfig()
     await clearFillTextInput(this.p, 'plan_summary', description)
     await clearFillTextInput(this.p, 'plan_description', name)
     await clearFillTextInput(this.p, 'plan_input_description', planDescription)
@@ -26,6 +27,8 @@ export class ConfigureCloudAWSClusterPlans extends ConfigureCloudClusterPlansBas
   }
 
   async viewEditNodeGroup(idx) {
+    await this.viewPlanConfig()
+    await waitForDrawerOpenClose(this.p)
     await this.p.click(`a#plan_nodegroup_${idx}_viewedit`)
     await waitForDrawerOpenClose(this.p)
   }
