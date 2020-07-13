@@ -57,7 +57,8 @@ const (
 func (e *estimatesImpl) GetClusterEstimate(planSpec *configv1.PlanSpec) (*costsv1.CostEstimate, error) {
 	// Load costing info for the provider in question
 	if !e.metadata.PricesAvailable() {
-		return nil, validation.NewError("pricing information not available, please ensure Kore Costs feature has been enabled and configured")
+		return nil, validation.NewError("pricing information not available, please ensure Kore Costs feature has been enabled and configured").
+			WithFieldError("prices", validation.MustExist, "prices metadata not available")
 	}
 
 	cloud := getCloudForClusterProvider(planSpec.Kind)
@@ -75,6 +76,14 @@ func (e *estimatesImpl) GetClusterEstimate(planSpec *configv1.PlanSpec) (*costsv
 	if !ok || region == "" {
 		// Cost estimation not supported until a region is selected
 		return nil, validation.NewError("plan not valid").WithFieldError("region", validation.Required, "region required to produce estimate")
+	}
+	nodePools, err := getNodePools(planSpec.Kind, planConfiguration)
+	if err != nil {
+		return nil, err
+	}
+	if len(nodePools) == 0 {
+		// Cost estimation not supported until at least one node pool is selected
+		return nil, validation.NewError("plan not valid").WithFieldError("nodePools", validation.Required, "at least one node pool required to produce estimate")
 	}
 
 	estimate := &costsv1.CostEstimate{}
@@ -104,11 +113,6 @@ func (e *estimatesImpl) GetClusterEstimate(planSpec *configv1.PlanSpec) (*costsv
 	})
 
 	// Add node pool costs
-	nodePools, err := getNodePools(planSpec.Kind, planConfiguration)
-	if err != nil {
-		return nil, err
-	}
-
 	zoneMultiplier := int64(1)
 	if planSpec.Kind == providerGCP {
 		// GKE is hard-coded currently to deploy for all zones in a region, so get the zones for the region

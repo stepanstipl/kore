@@ -171,7 +171,6 @@ class ClusterOptionsForm extends React.Component {
                 planValues={this.state.planValuesForEstimate}
                 resourceType="cluster"
                 kind={selectedProvider}
-                estimateInit={true}
               />
             </Collapse.Panel>
             <Collapse.Panel header="Customize cluster parameters" forceRender={true}>

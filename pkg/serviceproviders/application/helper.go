@@ -116,32 +116,32 @@ func compileResource(obj runtime.Object, params ResourceParams) (runtime.Object,
 	tmpl, err := template.
 		New("document").
 		Funcs(template.FuncMap{
-			"json": func(v interface{}) interface{} {
+			"json": func(v interface{}) (interface{}, error) {
 				val, err := json.Marshal(v)
 				if err != nil {
-					return ""
+					return nil, err
 				}
-				return string(val)
+				return string(val), nil
 			},
-			"jsonb64": func(v interface{}) interface{} {
+			"jsonb64": func(v interface{}) (interface{}, error) {
 				val, err := json.Marshal(v)
 				if err != nil {
-					return ""
+					return nil, err
 				}
-				return base64.StdEncoding.EncodeToString(val)
+				return base64.StdEncoding.EncodeToString(val), nil
 			},
-			"sha1": func(v interface{}) interface{} {
+			"sha1": func(v interface{}) (interface{}, error) {
 				val, err := json.Marshal(v)
 				if err != nil {
-					return ""
+					return nil, err
 				}
 				h := sha1.New()
 				_, err = h.Write(val)
 				if err != nil {
-					return ""
+					return nil, err
 				}
 				bs := h.Sum(nil)
-				return base64.StdEncoding.EncodeToString(bs)
+				return base64.StdEncoding.EncodeToString(bs), nil
 			},
 		}).
 		Parse(string(document))

@@ -6,14 +6,15 @@ import { formatMonthlyCost, formatDailyCost, formatHourlyCost } from '../../util
 export default class CostBreakdown extends React.Component {
   static propTypes = {
     costs: PropTypes.object,
-    style: PropTypes.object
+    style: PropTypes.object,
+    loading: PropTypes.bool
   }
   state = {
     basis: 'month'
   }
 
   render() {
-    const { costs, style } = this.props
+    const { costs, style, loading } = this.props
     const { basis } = this.state
     if (!costs || !costs.costElements || costs.costElements.length === 0) {
       return null
@@ -48,6 +49,7 @@ export default class CostBreakdown extends React.Component {
     rows.push({ key: 'Total', component: <><b>Total</b></>, minCost: formatter(costs.minCost), typicalCost: formatter(costs.typicalCost), maxCost: formatter(costs.maxCost) })
     return (
       <Table 
+        loading={loading}
         style={style} 
         size="small" 
         pagination={false} 

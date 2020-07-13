@@ -209,7 +209,12 @@ export default class ManagePlanForm extends React.Component {
               type="success"
               style={{ marginBottom: '20px' }}
             />
-            <CostEstimate planValues={planValues} resourceType={resourceType} kind={kind} estimateInit={mode!=='create'} />
+            <CostEstimate 
+              planValues={planValues} 
+              resourceType={resourceType} 
+              kind={kind} 
+              noPriceDataError="Pricing information is not available. Please check that the Kore Costs feature has been configured and enabled."
+            />
           </Card>
         )}
 
