@@ -35,11 +35,16 @@ import (
 func New() Scanner {
 	scanner := NewEmpty()
 
-	// Register default built-in security rules. Further rules can be added using
-	// RegisterRule if required.
-	scanner.RegisterRule(&AuthProxyIPRangeRule{})
-	scanner.RegisterRule(&GKEAutoscaling{})
-	scanner.RegisterRule(&GKEAutorepair{})
+	o, err := NewEmbeddedRules()
+	if err != nil {
+		log.WithError(err).Fatal("trying to create the embedded ruleset")
+
+		return scanner
+	}
+
+	for _, x := range o.List() {
+		scanner.RegisterRule(x)
+	}
 
 	return scanner
 }

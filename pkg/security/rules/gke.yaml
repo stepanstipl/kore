@@ -1,0 +1,311 @@
+---
+- name: GKE Pod Auto-scaling
+  code: GKE-HPA
+  status: warning
+  description: |
+    ## Overview
+
+    This rule checks the setting of the horizontal pod auto-scaler
+
+    ## Details
+
+    The horizontal pod auto-scaler in GKE allows the control-plane to
+    dynamically scale your replicas bases on the runtime requirements.
+
+    ## Impact
+
+    Switching the service off services removes the feature for the
+    control plane to manage the replicas based on demand.
+
+  rule: |
+    package security
+
+    default msg = "Horizontal Pod Autoscaler is enabled"
+
+    plan[msg] {
+      input.kind == "Plan"
+      input.spec.kind == "GKE"
+      not input.spec.configuration.enableHorizontalPodAutoscaler
+      msg := "Horizontal Pod Autoscaler is disabled in the plan"
+    }
+
+- name: GKE Shielded Nodes
+  code: GKE-SHD-01
+  status: warning
+  description: |
+    ## Overview
+
+    This rule checks the GKE shielded nodes settings
+
+    ## Details
+
+    Shielded GKE Nodes are built on top of Compute Engine Shielded VMs.
+    When Shielded GKE Nodes is enabled, the GKE master uses a cryptographic
+    check to verify that every node in your cluster is a virtual machine
+    running in Google's data center. This limits the ability of an attacker
+    to impersonate a node in your cluster.
+
+    ## Impact
+
+    Switched this feature off reduces the overall security of the cluster.
+
+  rule: |
+    package security
+
+    default msg = "Shielded nodes enabled"
+
+    plan[msg] {
+      input.kind == "Plan"
+      input.spec.kind == "GKE"
+      not input.spec.configuration.enableShieldedNodes
+      msg := "Shielded nodes option has been disabled"
+    }
+- name: GKE Release Channel
+  code: GKE-VSR-01
+  status: warning
+  description: |
+    ## Overview
+
+    This rule checks the GKE channel version
+
+    ## Details
+
+    GKE provides releases via release channels for Kubernetes, allowing it to
+    manage the control plane version of a stream of tested version. It's
+    recommended you stay within the recommended REGULAR or STABLE release
+    channels.
+
+    ## Impact
+
+    The cluster is being built off non-recommended release channel.
+
+  rule: |
+    package security
+
+    default msg = "Using recommended release channel"
+
+    plan[msg] {
+      input.kind == "Plan"
+      input.spec.kind == "GKE"
+      channel := input.spec.configuration.releaseChannel
+      channel != "REGULAR"
+      channel != "STABLE"
+      msg := "Not using recommended GKE version channel"
+    }
+
+- name: GKE Version
+  code: GKE-VER-02
+  status: warning
+  description: |
+    ## Overview
+
+    This rule checks the GKE version options
+
+    ## Details
+
+    GKE provides releases via release channels. Its recommended you use the
+    channels (REGULAR, STABLE) rather then rely on fixed versions as you GCP
+    can take care of the upgrade paths and patching on your behalf.
+
+    ## Impact
+
+    Specifying a specific GKE version places operational responsibility on i
+    yourself to perform updates and patching.
+
+  rule: |
+    package security
+
+    default msg = "GKE cluster version using release channel"
+
+    plan[msg] {
+      input.kind == "Plan"
+      input.spec.kind == "GKE"
+      version := input.spec.configuration.version
+      version != ""
+      msg := "GKE cluster has a specific version set"
+    }
+
+- name: GKE Private Networking
+  code: GKE-NET-01
+  status: warning
+  description: |
+    ## Overview
+
+    This rule checks the GKE private networking options
+
+    ## Details
+
+    GKE private networking removes external addresses from the worker nodes.
+    Which means we need to create a private peering connection between the
+    GKE control plane and the worker nodes via the masterIPV4Cidr setting.
+    Note this option is fine, but it does incur the penalty that when creating
+    the clusters any cluster built on the same network MUST ensure the master
+    cidr subnet is unique within the network and does not overlap.
+
+    ## Impact
+
+    When creating cluster which reside on the same project network, the user
+    is responsible for ensure the master cidr does not overlap with another
+    cidr on that network.
+
+  rule: |
+    package security
+
+    default msg = "GKE Private networking is disabled"
+
+    plan[msg] {
+      input.kind == "Plan"
+      input.spec.kind == "GKE"
+      input.spec.configuration.enablePrivateNetwork == true
+      msg := "GKE Private networking is switched on"
+    }
+
+- name: GKE Autoscaling
+  code: GKE-03
+  status: warning
+  description: |
+    ## Overview
+
+    This rule checks the status of the auto repair on the GKE plans or clusters.
+
+    ## Details
+
+    Autoscaling on GKE permits the control plan to scaling the compute resources
+    up and down as runtime requirements changes i.e. increased load.
+
+    ## Impact
+
+    Note having this setting enabled means workloads might not be scaled
+    accordingly to the demand.
+
+  rule: |
+    package security
+
+    default msg = "GKE Autoscaling is enabled on all node pools"
+
+    plan[msg] {
+      input.kind == "Plan"
+      input.spec.kind = "GKE"
+      input.spec.configuration.nodePools[_].enableAutoscaler = false
+      msg := "GKE Autoscaling is disabled on one or more node pools"
+    }
+
+    cluster[msg] {
+      input.kind == "Cluster"
+      input.spec.kind = "GKE"
+      input.spec.configuration.nodePools[_].enableAutoscaler = false
+      msg := "GKE Autoscaling is disable on one or more node pools"
+    }
+
+- name: GKE Auto Repair
+  code: GKE-04
+  status: warning
+  description: |
+    ## Overview
+
+    This rule checks the status of the auto repair on the GKE plans or clusters.
+
+    ## Details
+
+    Auto repair on GKE permits the control plan to automatically replace nodes
+    which have failed the kubernetes health checks.
+
+    ## Impact
+
+    Not having this enabled means you may have unschedulable nodes or nodes with
+    health concerned.
+
+  rule: |
+    package security
+
+    default msg = "GKE Auto Repair is enabled on all node pools"
+
+    plan[msg] {
+      input.kind == "Plan"
+      input.spec.kind = "GKE"
+      input.spec.configuration.nodePools[_].enableAutorepair = false
+      msg := "GKE Auto Repair is disabled on one or more node pools"
+    }
+
+    cluster[msg] {
+      input.kind == "Cluster"
+      input.spec.kind = "GKE"
+      input.spec.configuration.nodePools[_].enableAutorepair = false
+      msg := "GKE Auto Repair is disable on one or more node pools"
+    }
+
+- name: GKE Nodepool Version
+  code: GKE-05
+  status: warning
+  description: |
+    ## Overview
+
+    This rule checks the status of nodepool versions
+
+    ## Details
+
+    Although technically possible to change, you should probably retain the
+    same kubernetes sames on nodepools as with controlplane.
+
+    ## Impact
+
+    There is no major impact created by the rule, it's more best practice to
+    keep the versions inline and allow the controlplane to take care of
+    kubernetes versions.
+  rule: |
+    package security
+
+    default msg = "GKE Nodepool Version"
+
+    plan[msg] {
+      input.kind == "Plan"
+      input.spec.kind = "GKE"
+      version := input.spec.configuration.nodePools[_].version
+      version != ""
+      msg := "GKE Nodepool plan has specific kubernetes version set"
+    }
+
+    cluster[msg] {
+      input.kind == "Cluster"
+      input.spec.kind = "GKE"
+      version := input.spec.configuration.nodePools[_].version
+      version != ""
+      msg := "GKE Nodepool has specific kubernetes version set"
+    }
+
+- name: GKE Nodepool Max Pods
+  code: GKE-06
+  status: warning
+  description: |
+    ## Overview
+
+    This rule checks the size of the max pods per nodes.
+
+    ## Details
+
+    Setting this value too low could under utilize the workers nodes. The
+    expected default is 110 pods per node.
+
+    ## Impact
+
+    Could leave the scheduler unable to schedule nodes of a under utilized
+    worker node.
+
+  rule: |
+    package security
+
+    default msg = "GKE Nodepool Max Pods"
+
+    plan[msg] {
+      input.kind == "Plan"
+      input.spec.kind = "GKE"
+      input.spec.configuration.nodePools[_].maxPodsPerNode < 110
+      msg := "GKE Nodepool max pods is low"
+    }
+
+    cluster[msg] {
+      input.kind == "Cluster"
+      input.spec.kind = "GKE"
+      input.spec.configuration.nodePools[_].maxPodsPerNode < 110
+      msg := "GKE Nodepool max pods is low"
+    }
