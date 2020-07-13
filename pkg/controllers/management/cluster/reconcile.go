@@ -187,6 +187,10 @@ func (a *Controller) Apply(cluster *clustersv1.Cluster, components *kore.Cluster
 			if err != nil || result.Requeue || result.RequeueAfter > 0 {
 				return result, err
 			}
+
+			if comp.OnSuccess != nil {
+				comp.OnSuccess(ctx, cluster, comp, components)
+			}
 		}
 
 		return reconcile.Result{}, nil

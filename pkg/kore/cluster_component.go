@@ -38,8 +38,10 @@ type ClusterComponent struct {
 	IsProvider bool
 	// Absent should be set to true if the component should be deleted
 	Absent bool
+	// OnSuccess will be called after the component was successfully reconciled
+	OnSuccess func(Context, *clustersv1.Cluster, *ClusterComponent, *ClusterComponents)
 	// AfterDelete will be called after the component was deleted
-	AfterDelete func(ctx Context, cluster *clustersv1.Cluster, components *ClusterComponents) error
+	AfterDelete func(Context, *clustersv1.Cluster, *ClusterComponent, *ClusterComponents) error
 }
 
 // ComponentID returns with a unique component id

@@ -364,7 +364,7 @@ func (p Provider) SetProviderData(ctx kore.Context, cluster *clustersv1.Cluster,
 	return cluster.Status.SetProviderData(providerData)
 }
 
-func (p Provider) deleteAutoScalerRole(ctx kore.Context, cluster *clustersv1.Cluster, components *kore.ClusterComponents) error {
+func (p Provider) deleteAutoScalerRole(ctx kore.Context, cluster *clustersv1.Cluster, _ *kore.ClusterComponent, components *kore.ClusterComponents) error {
 	eksComponent := components.Find(func(comp kore.ClusterComponent) bool {
 		_, ok := comp.Object.(*eksv1alpha1.EKS)
 		return ok
