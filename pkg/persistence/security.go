@@ -113,6 +113,7 @@ func (s *securityImpl) ListScans(ctx context.Context, latestOnly bool, opts ...L
 
 	var list []*model.SecurityScanResult
 	err := q.Find(&list).Error
+
 	return list, err
 }
 

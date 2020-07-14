@@ -36,21 +36,51 @@ func Migrations(db *gorm.DB) error {
 	db.Model(&Team{}).
 		AddIndex("idx_teams_name", "name")
 
+	fields := []string{
+		"resource_kind",
+		"resource_group",
+		"resource_version",
+		"resource_namespace",
+		"resource_name",
+		"name",
+	}
+
+	db.AutoMigrate(&AlertRule{}).
+		AddUniqueIndex("idx_alert_rules_unq", fields...).
+		AddIndex("idx_alert_rules", fields...).
+		AddForeignKey("team_id", "teams(id)", "CASCADE", "RESTRICT")
+
+	db.AutoMigrate(&RuleLabel{}).
+		AddForeignKey("rule_id", "alert_rules(id)", "CASCADE", "RESTRICT")
+
+	db.AutoMigrate(&Alert{}).
+		AddForeignKey("rule_id", "alert_rules(id)", "CASCADE", "RESTRICT")
+
+	db.AutoMigrate(&AlertLabel{}).
+		AddForeignKey("alert_id", "alerts(id)", "CASCADE", "RESTRICT")
+
 	db.Model(&Member{}).
 		AddForeignKey("user_id", "users(id)", "CASCADE", "RESTRICT").
 		AddForeignKey("team_id", "teams(id)", "CASCADE", "RESTRICT")
 
 	db.Model(&Identity{}).
-		AddForeignKey("user_id", "users(id)", "CASCADE", "RESTRICT").
-		AddIndex("idx_identity_provider")
+		AddForeignKey("user_id", "users(id)", "CASCADE", "RESTRICT")
 
 	db.AutoMigrate(Invitation{}).
 		AddForeignKey("user_id", "users(id)", "CASCADE", "RESTRICT").
 		AddForeignKey("team_id", "teams(id)", "CASCADE", "RESTRICT")
 
 	db.AutoMigrate(SecurityScanResult{}).
-		AddIndex("idx_scan_identity", "resource_kind", "resource_group", "resource_version", "resource_namespace", "resource_name", "archived_at").
-		AddIndex("idx_scan_team", "owning_team", "archived_at")
+		AddIndex("idx_scan_identity",
+			"resource_kind",
+			"resource_group",
+			"resource_version",
+			"resource_namespace",
+			"resource_name",
+			"archived_at").
+		AddIndex("idx_scan_team",
+			"owning_team",
+			"archived_at")
 
 	db.AutoMigrate(SecurityRuleResult{}).
 		AddForeignKey("scan_id", "security_scan_results(id)", "CASCADE", "RESTRICT")

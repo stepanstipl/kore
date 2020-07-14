@@ -64,6 +64,22 @@ func New(config Config) (Interface, error) {
 	return &storeImpl{dbc: db, config: config}, nil
 }
 
+// Alerts returns the alerts interface
+func (s *storeImpl) Alerts() Alerts {
+	return &alertsImpl{
+		Interface: s,
+		conn:      s.dbc,
+	}
+}
+
+// AlertRules returns the alerts interface
+func (s *storeImpl) AlertRules() AlertRules {
+	return &arulesImpl{
+		Interface: s,
+		conn:      s.dbc,
+	}
+}
+
 // Audit returns the audit interface
 func (s *storeImpl) Audit() Audit {
 	return s

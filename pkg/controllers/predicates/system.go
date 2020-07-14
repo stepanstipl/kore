@@ -44,5 +44,6 @@ func (s SystemResourcePredicate) Generic(e event.GenericEvent) bool {
 
 func (s SystemResourcePredicate) shouldProcess(meta metav1.Object) bool {
 	annotations := meta.GetAnnotations()
+
 	return annotations[kore.AnnotationSystem] != kore.AnnotationValueTrue
 }

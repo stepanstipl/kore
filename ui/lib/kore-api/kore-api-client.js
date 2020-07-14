@@ -113,6 +113,19 @@ class KoreApiClient {
     GetSecurityRule: (code) => this.apis.security.GetSecurityRule({ code })
   }
 
+  // Monitoring
+  monitoring = {
+    ListLatest: () => this.apis.monitoring.ListRules({ latest: true }),
+    ListRules: () => this.apis.monitoring.ListRules(),
+    ListAlerts: () => this.apis.monitoring.ListAlerts(),
+    ListLatestAlerts: () => this.apis.monitoring.ListAlerts({ latest: true }),
+    ListResourceRules: (group, version, kind, namespace, resource, name) => this.apis.monitoring.GetRules({ group, version, kind, namespace, resource, name }),
+    ListTeamAlerts: (team) => this.apis.monitoring.ListTeamAlerts({ team: team }),
+    ListTeamRules: (team) => this.apis.monitoring.ListTeamRules({ team: team }),
+    SilenceAlert: (uid, comment, duration) => this.apis.monitoring.SilenceAlert({ uid, comment, expire: duration }),
+    UnsilenceAlert: (uid) => this.apis.monitoring.UnsilenceAlert({ uid })
+  }
+
   // Metadata
   metadata = {
     GetCloudRegions: (cloud) => this.apis.metadata.GetCloudRegions({ cloud }),

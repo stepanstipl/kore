@@ -208,6 +208,9 @@ github.com/evanphx/json-patch
 ## explicit
 # github.com/fatih/color v1.9.0
 github.com/fatih/color
+# github.com/felixge/httpsnoop v1.0.0
+## explicit
+github.com/felixge/httpsnoop
 # github.com/fsnotify/fsnotify v1.4.9
 github.com/fsnotify/fsnotify
 # github.com/ghodss/yaml v1.0.0
@@ -660,6 +663,9 @@ github.com/russellhaering/goxmldsig/types
 github.com/russross/blackfriday/v2
 # github.com/ryancurrah/gomodguard v1.0.4
 github.com/ryancurrah/gomodguard
+# github.com/satori/go.uuid v1.2.0
+## explicit
+github.com/satori/go.uuid
 # github.com/securego/gosec/v2 v2.3.0
 github.com/securego/gosec/v2
 github.com/securego/gosec/v2/rules

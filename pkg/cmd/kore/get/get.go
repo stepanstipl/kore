@@ -70,7 +70,6 @@ func NewCmdGet(factory cmdutil.Factory) *cobra.Command {
 
 	command := &cobra.Command{
 		Use:     "get",
-		Short:   "Retrieve resources from the kore api",
 		Long:    getLongDescription,
 		Example: getExamples,
 		Run:     cmdutil.DefaultRunFunc(o),
@@ -78,7 +77,7 @@ func NewCmdGet(factory cmdutil.Factory) *cobra.Command {
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 			switch len(args) {
 			case 0:
-				return append(possible, "admin"), cobra.ShellCompDirectiveNoFileComp
+				return possible, cobra.ShellCompDirectiveNoFileComp
 			case 1:
 				suggestions, err := o.Resources().LookupResourceNames(cmd.Flags().Arg(0), cmdutil.GetTeam(cmd))
 				if err != nil {
@@ -99,6 +98,7 @@ func NewCmdGet(factory cmdutil.Factory) *cobra.Command {
 
 	command.AddCommand(
 		NewCmdGetAdmin(factory),
+		NewCmdGetAlert(factory),
 		NewCmdGetAudit(factory),
 	)
 

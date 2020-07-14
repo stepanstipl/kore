@@ -49,7 +49,7 @@ class SiderMenu extends React.Component {
           </span>
         }
       >
-        {menuItem({ key: 'configure_cloud', text: 'Cloud', href: '/configure/cloud', link: '/configure/cloud', icon: 'cloud' })}
+        {menuItem({ key: 'configure_cloud', text: 'Cloud', href: '/configure/cloud/[[...cloud]]', link: '/configure/cloud', icon: 'cloud' })}
         {!featureEnabled(KoreFeatures.APPLICATION_SERVICES) ? null :
           menuItem({ key: 'configure_services', text: 'Services', link: '/configure/services', icon: 'cloud-server' })
         }
@@ -67,6 +67,20 @@ class SiderMenu extends React.Component {
         }
       >
         {menuItem({ key: 'audit_log', text: 'Events', link: '/audit', icon: 'table' })}
+      </SubMenu>
+    ) : null
+
+    const MonitoringMenu = () => isAdmin ? (
+      <SubMenu key="monitoring"
+        title={
+          <span>
+            <Icon type="file-protect" theme="outlined" />
+            <span>Monitoring</span>
+          </span>
+        }
+      >
+        {menuItem({ key: 'alerts', text: 'Overview', link: '/monitoring/overview', icon: 'global' })}
+        {menuItem({ key: 'rules', text: 'Rules', link: '/monitoring/rules', icon: 'schedule' })}
       </SubMenu>
     ) : null
 
@@ -92,6 +106,9 @@ class SiderMenu extends React.Component {
             ))}
           </SubMenu>
           {AdminMenu()}
+          {!featureEnabled(KoreFeatures.MONITORING_SERVICES) ? null :
+            MonitoringMenu()
+          }
           {AuditMenu()}
           {isAdmin ? (
             <SubMenu key="security"

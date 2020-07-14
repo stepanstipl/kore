@@ -17,6 +17,7 @@
 package clusterconfig
 
 import (
+	"bytes"
 	"context"
 	"time"
 
@@ -27,12 +28,14 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	core "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 // Reconcile ensure the cluste has it's configuration
+// @TODO need to convert this controller over to using ensurefunc and the new controller interface
 func (t ccCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	logger := log.WithFields(log.Fields{
 		"name":      request.NamespacedName.Name,
@@ -52,87 +55,63 @@ func (t ccCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 		return reconcile.Result{}, nil
 	}
 
-	// @step: ensure the cluster has a configuration
-	logger.Debug("checking for the cluster credentials secret")
+	client := t.mgr.GetClient()
+	koreURL := "http://kore-apiserver.svc.kore.cluster.local:10080"
+	portalURL := "http://kore-portal.svc.kore.cluster.local:3000"
 
-	credentials, err := controllers.GetClusterCredentialsSecret(ctx,
-		t.mgr.GetClient(),
-		cluster.Namespace,
-		cluster.Name)
+	if request.Namespace != kore.HubAdminTeam {
+		koreURL = t.Config().PublicAPIURL
+		portalURL = t.Config().PublicHubURL
 
-	if err != nil {
-		if !kerrors.IsNotFound(err) {
-			logger.WithError(err).Error("trying retrieve the cluster credentials")
+		credentials, err := controllers.GetClusterCredentialsSecret(ctx,
+			t.mgr.GetClient(),
+			cluster.Namespace,
+			cluster.Name)
+
+		if err != nil {
+			if !kerrors.IsNotFound(err) {
+				return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
+			}
 
 			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
 		}
-		logger.Debug("no credentials secret found, perhaps not ready yet")
 
-		return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
-	}
+		// @step: create a kubernetes client for the cluster
+		client, err = kubernetes.NewRuntimeClientFromConfigSecret(credentials)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
 
-	// @step: create a kubernetes client for the cluster
-	client, err := kubernetes.NewRuntimeClientFromConfigSecret(credentials)
-	if err != nil {
-		logger.WithError(err).Error("trying to create a cluster client")
+		// @step: check if the api is available
+		kc, err := kubernetes.NewClientFromConfigSecret(credentials)
+		if err != nil {
+			logger.WithError(err).Error("trying to create kubernetes client for cluster")
 
-		return reconcile.Result{}, err
-	}
+			return reconcile.Result{RequeueAfter: 2 * time.Minute}, nil
+		}
 
-	// @step: check if the api is available
-	kc, err := kubernetes.NewClientFromConfigSecret(credentials)
-	if err != nil {
-		logger.WithError(err).Error("trying to create kubernetes client for cluster")
+		logger.Debug("checking if the kubernetes api is available yet, else waiting")
 
-		return reconcile.Result{RequeueAfter: 2 * time.Minute}, nil
-	}
+		// @step wait for the api to become available
+		if err := kubernetes.WaitOnKubeAPI(ctx, kc, 5*time.Second, 20*time.Second); err != nil {
+			logger.Debug("kubernetes api for cluster have't come up yet, forging into background")
 
-	logger.Debug("checking if the kubernetes api is available yet, else waiting")
-
-	// @step wait for the api to become available
-	if err := kubernetes.WaitOnKubeAPI(ctx, kc, 5*time.Second, 20*time.Second); err != nil {
-		logger.Debug("kubernetes api for cluster have't come up yet, forging into background")
-
-		return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
-	}
-
-	logger.Debug("checking if the kore namespace exists in the remote cluster")
-
-	// @step: ensure the namespace is there
-	for _, namespace := range []string{kore.HubNamespace} {
-		if err := client.Create(context.Background(), &core.Namespace{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: namespace,
-				Labels: map[string]string{
-					kore.Label("owned"): "true",
-				},
-			},
-		}); err != nil {
-			logger.WithField("namespace", namespace).Debug("kore namespace already exists, skipping")
-
-			if !kerrors.IsAlreadyExists(err) {
-				logger.WithError(err).Error("trying to create the kore namespace")
-			}
+			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
 		}
 	}
 
-	logger.Debug("creating the configuration secret in the remote cluster")
-
-	// @step: ensure there is a client certificate for us
-	secretName := "kore-config"
-	found, err := kubernetes.HasSecret(ctx, client, kore.HubNamespace, secretName)
+	// @step: ensure the namespace is there
+	found, err := kubernetes.CheckIfExists(ctx, client, &v1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{Name: kore.HubNamespace},
+	})
 	if err != nil {
-		logger.WithError(err).Error("trying to check for kore configuration secret")
-
 		return reconcile.Result{}, err
 	}
-	// @TODO we need to check if the secret exists, then check the client certificate
-	// and if near expiration we need to rotate it.
-	if found {
-		logger.Debug("skipping kore configuration as cluster already has configuration")
-
-		return reconcile.Result{}, nil
+	if !found {
+		return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
 	}
+
+	logger.Debug("creating the configuration secret in the remote cluster")
 
 	config := &core.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -140,34 +119,117 @@ func (t ccCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 			Namespace: kore.HubNamespace,
 		},
 		Data: map[string][]byte{
-			"api-url":        []byte(t.Config().PublicAPIURL),
-			"idp-server-url": []byte(t.Config().IDPServerURL),
-			"domain":         []byte(cluster.Spec.Domain),
-			"hub-url":        []byte(t.Config().PublicHubURL),
+			"ca":            []byte(t.CertificateAuthority()),
+			"client_id":     []byte(t.Config().IDPClientID),
+			"cluster":       []byte(cluster.Name),
+			"discovery-url": []byte(t.Config().IDPServerURL),
+			"domain":        []byte(cluster.Spec.Domain),
+			"kore-url":      []byte(koreURL),
+			"portal-url":    []byte(portalURL),
+			"provider":      []byte(cluster.Spec.Provider.Kind),
+			"team":          []byte(cluster.Namespace),
 		},
 	}
-	logger.Debug("adding the client configuration to the cluster")
 
-	// @step: create a client certificate for the cluster to call back with
-	if t.Config().HasCertificateAuthority() {
-		cert, key, err := t.SignedClientCertificate(cluster.Name, cluster.Namespace)
-		if err != nil {
-			logger.WithError(err).Error("generating a client certificate for cluster")
+	// @step: ensure there is a client certificate for us
+	current := &core.Secret{}
+	current.Namespace = kore.HubNamespace
+	current.Name = "kore-config"
 
-			return reconcile.Result{}, err
-		}
+	createConfigSecret := false
 
-		config.Data["tls.crt"] = []byte(string(cert))
-		config.Data["tls.key"] = []byte(string(key))
-	}
-
-	if _, err := kubernetes.CreateOrUpdateSecret(context.Background(), client, config); err != nil {
-		logger.WithError(err).Error("trying to place the cluster configutation")
+	found, err = kubernetes.GetIfExists(ctx, client, current)
+	if err != nil {
+		logger.WithError(err).Error("trying to check for kore configuration secret")
 
 		return reconcile.Result{}, err
 	}
+	if !found {
+		createConfigSecret = true
+	}
+	// @TODO we need to check if the secret exists, then check the client certificate
+	// and if near expiration we need to rotate it.
+	if found {
+		logger.Debug("skipping kore configuration as cluster already has configuration")
 
-	logger.Debug("sucessfully added the cluster client configuration to cluster")
+		// @step: check we have all the fields
+		asExpected := func() bool {
+			for name, expected := range config.Data {
+				value, found := current.Data[name]
+				if !found || !bytes.Equal(value, expected) {
+					return false
+				}
+			}
+
+			return true
+		}()
+		if !asExpected {
+			createConfigSecret = true
+		}
+	}
+
+	if createConfigSecret {
+		logger.Debug("adding the client configuration to the cluster")
+
+		// @step: create a client certificate for the cluster to call back with
+		if t.Config().HasCertificateAuthority() {
+			cert, key, err := t.SignedClientCertificate(cluster.Name, cluster.Namespace)
+			if err != nil {
+				logger.WithError(err).Error("generating a client certificate for cluster")
+
+				return reconcile.Result{}, err
+			}
+			config.Data["tls.crt"] = []byte(string(cert))
+			config.Data["tls.key"] = []byte(string(key))
+		}
+
+		if _, err := kubernetes.CreateOrUpdateSecret(context.Background(), client, config); err != nil {
+			logger.WithError(err).Error("trying to place the cluster configuration")
+
+			return reconcile.Result{}, err
+		}
+		logger.Debug("successfully added the cluster client configuration to cluster")
+	}
+
+	// @step: ensure the tls for services - we can remove this once we've sorted our the
+	// dns for clusters and we can default to using cert-manager
+	found, err = kubernetes.CheckIfNamespaceExists(ctx, client, kore.HubSystem)
+	if err != nil {
+		logger.WithError(err).Error("trying to check for namespace")
+
+		return reconcile.Result{}, err
+	}
+	if !found {
+		logger.Warn("namespace is not available yet")
+
+		return reconcile.Result{RequeueAfter: 20 * time.Second}, nil
+	}
+
+	serverTLS := &v1.Secret{}
+	serverTLS.Namespace = kore.HubSystem
+	serverTLS.Name = "kore-server-tls"
+
+	if exists, err := kubernetes.CheckIfExists(ctx, client, serverTLS); err != nil {
+		logger.WithError(err).Error("trying to check for the server tls certificate")
+
+		return reconcile.Result{}, err
+	} else if !exists {
+		cert, key, err := t.SignedClientCertificate("server-tls", cluster.Namespace)
+		if err != nil {
+			logger.WithError(err).Error("generating a server certificate for cluster")
+
+			return reconcile.Result{}, err
+		}
+		serverTLS.Data = make(map[string][]byte)
+		serverTLS.Data["tls.crt"] = []byte(string(cert))
+		serverTLS.Data["tls.key"] = []byte(string(key))
+
+		if _, err := kubernetes.CreateOrUpdate(ctx, client, serverTLS); err != nil {
+			logger.WithError(err).Error("trying to create the server tls certificate")
+
+			return reconcile.Result{}, err
+		}
+	}
 
 	return reconcile.Result{}, nil
 }

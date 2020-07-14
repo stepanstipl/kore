@@ -14,6 +14,7 @@ import (
 	"github.com/appvia/kore/pkg/apiclient/costs"
 	"github.com/appvia/kore/pkg/apiclient/korefeatures"
 	"github.com/appvia/kore/pkg/apiclient/metadata"
+	"github.com/appvia/kore/pkg/apiclient/monitoring"
 	"github.com/appvia/kore/pkg/apiclient/operations"
 	securityops "github.com/appvia/kore/pkg/apiclient/security"
 )
@@ -64,6 +65,7 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *AppviaKore
 	cli.Costs = costs.New(transport, formats)
 	cli.Korefeatures = korefeatures.New(transport, formats)
 	cli.Metadata = metadata.New(transport, formats)
+	cli.Monitoring = monitoring.New(transport, formats)
 	cli.Operations = operations.New(transport, formats)
 	cli.Security = securityops.New(transport, formats)
 	return cli
@@ -118,6 +120,8 @@ type AppviaKore struct {
 
 	Metadata metadata.ClientService
 
+	Monitoring monitoring.ClientService
+
 	Operations operations.ClientService
 
 	Security securityops.ClientService
@@ -132,6 +136,7 @@ func (c *AppviaKore) SetTransport(transport runtime.ClientTransport) {
 	c.Costs.SetTransport(transport)
 	c.Korefeatures.SetTransport(transport)
 	c.Metadata.SetTransport(transport)
+	c.Monitoring.SetTransport(transport)
 	c.Operations.SetTransport(transport)
 	c.Security.SetTransport(transport)
 }

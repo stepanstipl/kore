@@ -29,7 +29,7 @@ var (
 type ListFuncs struct{}
 
 // WithID sets the id
-func (q ListFuncs) WithID(id int) ListFunc {
+func (q ListFuncs) WithID(id uint64) ListFunc {
 	return func(o *ListOptions) {
 		o.Fields["id"] = id
 	}
@@ -67,6 +67,13 @@ func (q ListFuncs) WithDuration(since time.Duration) ListFunc {
 func (q ListFuncs) WithTeam(v string) ListFunc {
 	return func(o *ListOptions) {
 		o.Fields["team"] = v
+	}
+}
+
+// WithStatus sets the status
+func (q ListFuncs) WithStatus(v string) ListFunc {
+	return func(o *ListOptions) {
+		o.Fields["status"] = v
 	}
 }
 
@@ -126,6 +133,13 @@ func (q ListFuncs) WithName(v string) ListFunc {
 	}
 }
 
+// WithResourceName sets the resource name
+func (q ListFuncs) WithResourceName(v string) ListFunc {
+	return func(o *ListOptions) {
+		o.Fields["resource.name"] = v
+	}
+}
+
 // WithNamespace sets the namespace
 func (q ListFuncs) WithNamespace(v string) ListFunc {
 	return func(o *ListOptions) {
@@ -141,5 +155,89 @@ func (q ListFuncs) WithIdentity(group string, version string, kind string, names
 		o.Fields["kind"] = kind
 		o.Fields["namespace"] = namespace
 		o.Fields["name"] = name
+	}
+}
+
+// WithResourceGroup set the resource group
+func (q ListFuncs) WithResourceGroup(v string) ListFunc {
+	return func(o *ListOptions) {
+		o.Fields["group"] = v
+	}
+}
+
+// WithResourceVersion set the resource group
+func (q ListFuncs) WithResourceVersion(v string) ListFunc {
+	return func(o *ListOptions) {
+		o.Fields["version"] = v
+	}
+}
+
+// WithResourceKind set the resource group
+func (q ListFuncs) WithResourceKind(v string) ListFunc {
+	return func(o *ListOptions) {
+		o.Fields["kind"] = v
+	}
+}
+
+// WithAlertLatest sets the latest flag on the search
+func (q ListFuncs) WithAlertLatest() ListFunc {
+	return func(o *ListOptions) {
+		o.Fields["alert.latest"] = true
+	}
+}
+
+// WithAlertHistory sets the history on the search
+func (q ListFuncs) WithAlertHistory(v int) ListFunc {
+	return func(o *ListOptions) {
+		o.Fields["alert.history"] = v
+	}
+}
+
+// WithAlertSource sets the source on the search
+func (q ListFuncs) WithAlertSource(v string) ListFunc {
+	return func(o *ListOptions) {
+		o.Fields["alert.source"] = v
+	}
+}
+
+// WithAlertFingerprint sets the source on the search
+func (q ListFuncs) WithAlertFingerprint(v string) ListFunc {
+	return func(o *ListOptions) {
+		o.Fields["alert.fingerprint"] = v
+	}
+}
+
+// WithAlertUID sets the source on the search
+func (q ListFuncs) WithAlertUID(v string) ListFunc {
+	return func(o *ListOptions) {
+		o.Fields["alert.uid"] = v
+	}
+}
+
+// WithAlertStatus sets the status flag on the search
+func (q ListFuncs) WithAlertStatus(v []string) ListFunc {
+	return func(o *ListOptions) {
+		o.Fields["alert.status"] = v
+	}
+}
+
+// WithAlertLabels sets the status flag on the search
+func (q ListFuncs) WithAlertLabels(v []string) ListFunc {
+	return func(o *ListOptions) {
+		o.Fields["alert.labels"] = v
+	}
+}
+
+// WithAlertSeverity sets the severity flag on the search
+func (q ListFuncs) WithAlertSeverity(v string) ListFunc {
+	return func(o *ListOptions) {
+		o.Fields["alert.severity"] = v
+	}
+}
+
+// WithRuleID sets the severity flag on the search
+func (q ListFuncs) WithRuleID(v uint64) ListFunc {
+	return func(o *ListOptions) {
+		o.Fields["alert.rule_id"] = v
 	}
 }

@@ -17,6 +17,8 @@
 package filters
 
 import (
+	"fmt"
+
 	restful "github.com/emicklei/go-restful"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -46,7 +48,21 @@ var (
 			Help: "The total number of http requests which have not been successful",
 		},
 	)
+	httpCodeCounter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "http_request_code_total",
+			Help: "The total number of http broken down by http code",
+		},
+		[]string{"code"},
+	)
 )
+
+func init() {
+	prometheus.MustRegister(httpRequestAverageHistogram)
+	prometheus.MustRegister(httpRequestCounter)
+	prometheus.MustRegister(httpRequestErrorCounter)
+	prometheus.MustRegister(httpCodeCounter)
+}
 
 // Filter is a logging filter for the api server
 func (l Metrics) Filter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
@@ -60,6 +76,7 @@ func (l Metrics) Filter(req *restful.Request, resp *restful.Response, chain *res
 		if resp.StatusCode() < 200 || resp.StatusCode() > 399 {
 			httpRequestErrorCounter.Inc()
 		}
+		httpCodeCounter.WithLabelValues(fmt.Sprintf("%d", resp.StatusCode())).Inc()
 	}()
 
 	chain.ProcessFilter(req, resp)

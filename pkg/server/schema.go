@@ -20,6 +20,7 @@ import (
 	"context"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	monitoring "github.com/appvia/kore/pkg/apis/monitoring/v1beta1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	securityv1 "github.com/appvia/kore/pkg/apis/security/v1"
 	"github.com/appvia/kore/pkg/register"
@@ -81,6 +82,16 @@ var (
 			Group:   securityv1.GroupVersion.Group,
 			Version: securityv1.GroupVersion.Version,
 			Kind:    "SecurityScanResultList",
+		},
+		{
+			Group:   monitoring.GroupVersion.Group,
+			Version: monitoring.GroupVersion.Version,
+			Kind:    "Alert",
+		},
+		{
+			Group:   monitoring.GroupVersion.Group,
+			Version: monitoring.GroupVersion.Version,
+			Kind:    "AlertRule",
 		},
 	}
 )

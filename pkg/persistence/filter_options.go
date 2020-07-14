@@ -99,6 +99,20 @@ func (l *ListOptions) GetInt(k string) int {
 	return 0
 }
 
+// GetUint64 converts the type
+func (l *ListOptions) GetUint64(k string) uint64 {
+	v, found := l.Fields[k]
+	if found {
+		if s, ok := v.(uint64); ok {
+			return s
+		}
+
+		return 0
+	}
+
+	return 0
+}
+
 // GetBool returns the boolean
 func (l *ListOptions) GetBool(k string) bool {
 	v, found := l.Fields[k]
@@ -128,6 +142,11 @@ func (l *ListOptions) HasName() bool {
 	return l.Has("name")
 }
 
+// HasResourceName checks the name
+func (l *ListOptions) HasResourceName() bool {
+	return l.Has("resource.name")
+}
+
 // HasNamespace checks the namespace
 func (l *ListOptions) HasNamespace() bool {
 	return l.Has("namespace")
@@ -151,6 +170,51 @@ func (l *ListOptions) HasDuration() bool {
 // HasTeam checks the team
 func (l *ListOptions) HasTeam() bool {
 	return l.Has("team")
+}
+
+// HasAlertLatest checks of the alert latest
+func (l *ListOptions) HasAlertLatest() bool {
+	return l.Has("alert.latest")
+}
+
+// HasAlertHistory checks of the alert history
+func (l *ListOptions) HasAlertHistory() bool {
+	return l.Has("alert.history")
+}
+
+// HasAlertSource checks of the alert source
+func (l *ListOptions) HasAlertSource() bool {
+	return l.Has("alert.source")
+}
+
+// HasAlertFingerprint checks of the alert source
+func (l *ListOptions) HasAlertFingerprint() bool {
+	return l.Has("alert.fingerprint")
+}
+
+// HasAlertUID checks of the alert source
+func (l *ListOptions) HasAlertUID() bool {
+	return l.Has("alert.uid")
+}
+
+// HasAlertStatus checks of the alert status
+func (l *ListOptions) HasAlertStatus() bool {
+	return l.Has("alert.status")
+}
+
+// HasAlertLabels checks of the alert status
+func (l *ListOptions) HasAlertLabels() bool {
+	return l.Has("alert.labels")
+}
+
+// HasRuleID checks for a rule id
+func (l *ListOptions) HasRuleID() bool {
+	return l.Has("alert.rule_id")
+}
+
+// HasAlertSeverity checks of the alert severity
+func (l *ListOptions) HasAlertSeverity() bool {
+	return l.Has("alert.severity")
 }
 
 // HasNotTeam checks the team
@@ -208,14 +272,19 @@ func (l *ListOptions) HasVersion() bool {
 	return l.Has("version")
 }
 
+// HasStatus checks if version set
+func (l *ListOptions) HasStatus() bool {
+	return l.Has("status")
+}
+
 // HasKind checks if kind set
 func (l *ListOptions) HasKind() bool {
 	return l.Has("kind")
 }
 
 // GetID gets the id
-func (l *ListOptions) GetID() int {
-	return l.GetInt("id")
+func (l *ListOptions) GetID() uint64 {
+	return l.GetUint64("id")
 }
 
 // GetNotNames gets the name
@@ -226,6 +295,11 @@ func (l *ListOptions) GetNotNames() []string {
 // GetName gets the name
 func (l *ListOptions) GetName() string {
 	return l.GetString("name")
+}
+
+// GetResourceName gets the name
+func (l *ListOptions) GetResourceName() string {
+	return l.GetString("resource.name")
 }
 
 // GetNamespace gets the namespace
@@ -301,4 +375,49 @@ func (l *ListOptions) GetTeamID() int {
 // GetUser gets the user
 func (l *ListOptions) GetUser() string {
 	return l.GetString("user")
+}
+
+// GetStatus gets the user
+func (l *ListOptions) GetStatus() string {
+	return l.GetString("status")
+}
+
+// GetAlertHistory returns the alert history
+func (l *ListOptions) GetAlertHistory() int {
+	return l.GetInt("alert.history")
+}
+
+// GetAlertSource returns the alert source
+func (l *ListOptions) GetAlertSource() string {
+	return l.GetString("alert.source")
+}
+
+// GetAlertFingerprint returns the alert source
+func (l *ListOptions) GetAlertFingerprint() string {
+	return l.GetString("alert.fingerprint")
+}
+
+// GetAlertUID returns the alert source
+func (l *ListOptions) GetAlertUID() string {
+	return l.GetString("alert.uid")
+}
+
+// GetAlertStatus returns the alert status
+func (l *ListOptions) GetAlertStatus() []string {
+	return l.GetStringSlice("alert.status")
+}
+
+// GetAlertLabels returns the alert status
+func (l *ListOptions) GetAlertLabels() []string {
+	return l.GetStringSlice("alert.labels")
+}
+
+// GetAlertSeverity returns the alert severity
+func (l *ListOptions) GetAlertSeverity() string {
+	return l.GetString("alert.severity")
+}
+
+// GetRuleID returns the rule id
+func (l *ListOptions) GetRuleID() uint64 {
+	return l.GetUint64("alert.rule_id")
 }

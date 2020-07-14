@@ -211,6 +211,13 @@ func (a k8sCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			return reconcile.Result{}, err
 		}
 
+		// @step: ensure the system namespace
+		if err := a.EnsureKoreNamespaces(ctx, client); err != nil {
+			logger.WithError(err).Error("trying to create system namespaces")
+
+			return reconcile.Result{}, err
+		}
+
 		// @step: ensure the kube-api proxy is deployed
 		// @TODO need to move this out into something else, but for now its cool
 		logger.Debug("ensure the api proxy service is provisioned")

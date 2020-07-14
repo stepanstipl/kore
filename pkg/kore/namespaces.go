@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	v1 "github.com/appvia/kore/pkg/apis/core/v1"
+	"github.com/appvia/kore/pkg/kore/authentication"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
@@ -189,13 +190,15 @@ func (n *nsImpl) Has(ctx context.Context, name string) (bool, error) {
 
 // Update is responsible for update a namespace claim in the kore
 func (n *nsImpl) Update(ctx context.Context, namespace *clustersv1.NamespaceClaim) (*clustersv1.NamespaceClaim, error) {
+	user := authentication.MustGetIdentity(ctx)
+
 	// @step: ensure it's for cluster we own
 	if namespace.Spec.Cluster.Namespace != n.team {
 		return nil, ErrNotAllowed{message: "namespace must exist in a cluster you own"}
 	}
 	namespace.Namespace = n.team
 
-	if IsNamespaceNameProtected(namespace.Spec.Name) {
+	if !user.IsGlobalAdmin() && IsNamespaceNameProtected(namespace.Spec.Name) {
 		return nil, validation.NewError("namespace can not be created").WithFieldError("name", validation.InvalidValue, "is a protected name or has a protected prefix")
 	}
 
@@ -214,6 +217,7 @@ func (n *nsImpl) Update(ctx context.Context, namespace *clustersv1.NamespaceClai
 	)
 }
 
+// IsNamespaceNameProtected checks if the namespace is permitted - i.e. doesn't overlap with a kore or kube namespace
 func IsNamespaceNameProtected(name string) bool {
 	switch {
 	case name == "kore" || name == "default":

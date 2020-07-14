@@ -20,12 +20,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/appvia/kore/pkg/controllers/predicates"
-
+	clusterv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
-
-	clusterv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/rest"
@@ -81,7 +78,6 @@ func (a *ccCtrl) Run(ctx context.Context, cfg *rest.Config, hi kore.Interface) e
 	if err := ctrl.Watch(
 		&source.Kind{Type: &clusterv1.Kubernetes{}},
 		&handler.EnqueueRequestForObject{},
-		predicates.SystemResourcePredicate{},
 	); err != nil {
 		log.WithError(err).Error("failed to create watcher on resource")
 

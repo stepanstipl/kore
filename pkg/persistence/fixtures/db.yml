@@ -33,6 +33,9 @@ teams:
   - id: 5
     name: no_workspaces
     description: no_workspaces
+  - id: 6
+    name: alert_team
+    description: alerts
 members:
   - team_id: 2
     user_id: 1
@@ -40,6 +43,63 @@ members:
     user_id: 1
   - team_id: 3
     user_id: 2
+alert_rules:
+  - id: 1
+    name: TargetDown
+    severity: critical
+    source: prometheus
+    resource_group: clusters.kore.appvia.io
+    resource_version: v1
+    resource_kind: Cluster
+    resource_name: test
+    resource_namespace: test
+    team_id: 6
+    created_at: '2020-04-29 17:03:00'
+    raw_rule: "{}"
+  - id: 2
+    name: PodDown
+    severity: critical
+    source: prometheus
+    resource_group: clusters.kore.appvia.io
+    resource_version: v1
+    resource_kind: Cluster
+    resource_name: test
+    resource_namespace: test
+    team_id: 6
+    created_at: '2020-04-29 17:03:00'
+    raw_rule: "{}"
+alerts:
+  - id: 1
+    uid: 19488346-b470-11ea-9b41-9cb6d0d6cd20
+    created_at: '2020-04-29 17:03:00'
+    status: OK
+    rule_id: 1
+    archived_at: NULL
+    raw_alert: "{}"
+  - id: 2
+    uid: 19488346-b470-11ea-9b41-9cb6d0d6cd21
+    created_at: '2020-04-29 17:03:00'
+    status: OK
+    rule_id: 2
+    archived_at: '2020-04-29 17:04:00'
+    raw_alert: "{}"
+  - id: 3
+    uid: 19488346-b470-11ea-9b41-9cb6d0d6cd22
+    created_at: '2020-04-29 17:04:01'
+    status: Active
+    rule_id: 2
+    archived_at: NULL
+    raw_alert: "{}"
+alert_labels:
+  - alert_id: 2
+    name: test
+    value: test
+  - alert_id: 3
+    name: job
+    value: kubelet
+  - alert_id: 3
+    name: namespace
+    value: test
 security_scan_results:
   - id: 1
     resource_group: example.kore.appvia.io
@@ -104,7 +164,7 @@ security_rule_results:
     rule_code: EXAMPLE-002
     status: Warning
     message: Extra information 2
-    checked_at: '2020-04-29 17:03:02'   
+    checked_at: '2020-04-29 17:03:02'
   - id: 30
     scan_id: 3
     rule_code: EXAMPLE-001
@@ -116,7 +176,7 @@ security_rule_results:
     rule_code: EXAMPLE-002
     status: Compliant
     message: Extra information 2
-    checked_at: '2020-04-29 17:03:02'     
+    checked_at: '2020-04-29 17:03:02'
 configs:
   - id: 1
     name: example1

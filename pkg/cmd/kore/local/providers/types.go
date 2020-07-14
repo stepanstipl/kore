@@ -31,10 +31,16 @@ type Logger interface {
 	Stdout() io.Writer
 }
 
+// CreateOptions are configurable for the provider creation
+type CreateOptions struct {
+	// DisableUI indicates the UI is disabled
+	DisableUI bool
+}
+
 // Interface is the contract for a provider
 type Interface interface {
 	// Create is responsible for starting the cluster
-	Create(ctx context.Context, name string) error
+	Create(ctx context.Context, name string, options CreateOptions) error
 	// Destroy is responsible for destroy the cluster
 	Destroy(ctx context.Context, name string) error
 	// Export is responsible for exporting the kubeconfig

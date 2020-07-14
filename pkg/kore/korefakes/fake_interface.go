@@ -25,6 +25,16 @@ type FakeInterface struct {
 	accountsReturnsOnCall map[int]struct {
 		result1 kore.Accounts
 	}
+	AlertRulesStub        func() kore.AlertRules
+	alertRulesMutex       sync.RWMutex
+	alertRulesArgsForCall []struct {
+	}
+	alertRulesReturns struct {
+		result1 kore.AlertRules
+	}
+	alertRulesReturnsOnCall map[int]struct {
+		result1 kore.AlertRules
+	}
 	AuditStub        func() kore.Audit
 	auditMutex       sync.RWMutex
 	auditArgsForCall []struct {
@@ -34,6 +44,16 @@ type FakeInterface struct {
 	}
 	auditReturnsOnCall map[int]struct {
 		result1 kore.Audit
+	}
+	CertificateAuthorityStub        func() []byte
+	certificateAuthorityMutex       sync.RWMutex
+	certificateAuthorityArgsForCall []struct {
+	}
+	certificateAuthorityReturns struct {
+		result1 []byte
+	}
+	certificateAuthorityReturnsOnCall map[int]struct {
+		result1 []byte
 	}
 	ConfigStub        func() *kore.Config
 	configMutex       sync.RWMutex
@@ -316,6 +336,58 @@ func (fake *FakeInterface) AccountsReturnsOnCall(i int, result1 kore.Accounts) {
 	}{result1}
 }
 
+func (fake *FakeInterface) AlertRules() kore.AlertRules {
+	fake.alertRulesMutex.Lock()
+	ret, specificReturn := fake.alertRulesReturnsOnCall[len(fake.alertRulesArgsForCall)]
+	fake.alertRulesArgsForCall = append(fake.alertRulesArgsForCall, struct {
+	}{})
+	fake.recordInvocation("AlertRules", []interface{}{})
+	fake.alertRulesMutex.Unlock()
+	if fake.AlertRulesStub != nil {
+		return fake.AlertRulesStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.alertRulesReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeInterface) AlertRulesCallCount() int {
+	fake.alertRulesMutex.RLock()
+	defer fake.alertRulesMutex.RUnlock()
+	return len(fake.alertRulesArgsForCall)
+}
+
+func (fake *FakeInterface) AlertRulesCalls(stub func() kore.AlertRules) {
+	fake.alertRulesMutex.Lock()
+	defer fake.alertRulesMutex.Unlock()
+	fake.AlertRulesStub = stub
+}
+
+func (fake *FakeInterface) AlertRulesReturns(result1 kore.AlertRules) {
+	fake.alertRulesMutex.Lock()
+	defer fake.alertRulesMutex.Unlock()
+	fake.AlertRulesStub = nil
+	fake.alertRulesReturns = struct {
+		result1 kore.AlertRules
+	}{result1}
+}
+
+func (fake *FakeInterface) AlertRulesReturnsOnCall(i int, result1 kore.AlertRules) {
+	fake.alertRulesMutex.Lock()
+	defer fake.alertRulesMutex.Unlock()
+	fake.AlertRulesStub = nil
+	if fake.alertRulesReturnsOnCall == nil {
+		fake.alertRulesReturnsOnCall = make(map[int]struct {
+			result1 kore.AlertRules
+		})
+	}
+	fake.alertRulesReturnsOnCall[i] = struct {
+		result1 kore.AlertRules
+	}{result1}
+}
+
 func (fake *FakeInterface) Audit() kore.Audit {
 	fake.auditMutex.Lock()
 	ret, specificReturn := fake.auditReturnsOnCall[len(fake.auditArgsForCall)]
@@ -365,6 +437,58 @@ func (fake *FakeInterface) AuditReturnsOnCall(i int, result1 kore.Audit) {
 	}
 	fake.auditReturnsOnCall[i] = struct {
 		result1 kore.Audit
+	}{result1}
+}
+
+func (fake *FakeInterface) CertificateAuthority() []byte {
+	fake.certificateAuthorityMutex.Lock()
+	ret, specificReturn := fake.certificateAuthorityReturnsOnCall[len(fake.certificateAuthorityArgsForCall)]
+	fake.certificateAuthorityArgsForCall = append(fake.certificateAuthorityArgsForCall, struct {
+	}{})
+	fake.recordInvocation("CertificateAuthority", []interface{}{})
+	fake.certificateAuthorityMutex.Unlock()
+	if fake.CertificateAuthorityStub != nil {
+		return fake.CertificateAuthorityStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.certificateAuthorityReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeInterface) CertificateAuthorityCallCount() int {
+	fake.certificateAuthorityMutex.RLock()
+	defer fake.certificateAuthorityMutex.RUnlock()
+	return len(fake.certificateAuthorityArgsForCall)
+}
+
+func (fake *FakeInterface) CertificateAuthorityCalls(stub func() []byte) {
+	fake.certificateAuthorityMutex.Lock()
+	defer fake.certificateAuthorityMutex.Unlock()
+	fake.CertificateAuthorityStub = stub
+}
+
+func (fake *FakeInterface) CertificateAuthorityReturns(result1 []byte) {
+	fake.certificateAuthorityMutex.Lock()
+	defer fake.certificateAuthorityMutex.Unlock()
+	fake.CertificateAuthorityStub = nil
+	fake.certificateAuthorityReturns = struct {
+		result1 []byte
+	}{result1}
+}
+
+func (fake *FakeInterface) CertificateAuthorityReturnsOnCall(i int, result1 []byte) {
+	fake.certificateAuthorityMutex.Lock()
+	defer fake.certificateAuthorityMutex.Unlock()
+	fake.CertificateAuthorityStub = nil
+	if fake.certificateAuthorityReturnsOnCall == nil {
+		fake.certificateAuthorityReturnsOnCall = make(map[int]struct {
+			result1 []byte
+		})
+	}
+	fake.certificateAuthorityReturnsOnCall[i] = struct {
+		result1 []byte
 	}{result1}
 }
 
@@ -1479,8 +1603,12 @@ func (fake *FakeInterface) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.accountsMutex.RLock()
 	defer fake.accountsMutex.RUnlock()
+	fake.alertRulesMutex.RLock()
+	defer fake.alertRulesMutex.RUnlock()
 	fake.auditMutex.RLock()
 	defer fake.auditMutex.RUnlock()
+	fake.certificateAuthorityMutex.RLock()
+	defer fake.certificateAuthorityMutex.RUnlock()
 	fake.configMutex.RLock()
 	defer fake.configMutex.RUnlock()
 	fake.configsMutex.RLock()

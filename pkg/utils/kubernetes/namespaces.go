@@ -21,10 +21,19 @@ import (
 	"errors"
 
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+// CheckIfNamespaceExists checks if the namespace exists
+func CheckIfNamespaceExists(ctx context.Context, client client.Client, name string) (bool, error) {
+	ns := &v1.Namespace{}
+	ns.Name = name
+
+	return CheckIfExists(ctx, client, ns)
+}
 
 // EnsureNamespace makes sure the namespace exists
 func EnsureNamespace(ctx context.Context, cc client.Client, namespace *corev1.Namespace) error {

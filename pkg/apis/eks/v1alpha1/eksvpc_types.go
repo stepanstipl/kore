@@ -22,10 +22,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type EKSVPCApplier interface {
-	ApplyEKSVPC(*EKSVPC)
-}
-
 // EKSVPCSpec defines the desired state of EKSVPC
 // +k8s:openapi-gen=true
 type EKSVPCSpec struct {

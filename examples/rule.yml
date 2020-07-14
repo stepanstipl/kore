@@ -1,0 +1,32 @@
+---
+apiVersion: monitoring.kore.appvia.io/v1beta1
+kind: Rule
+metadata:
+  name: PrometheusMissingRuleEvaluations
+  namespace: kore-admin
+spec:
+  summary: |
+    Prometheus is missing rule evaluations due to slow rule group evaluation
+  rawRule: |
+    {
+      "state": "inactive",
+      "name": "PrometheusMissingRuleEvaluations",
+      "query": "increase(prometheus_rule_group_iterations_missed_total{job=\"prometheus-prometheus-oper-prometheus\",namespace=\"kore\"}[5m]) > 0",
+      "duration": 900,
+      "labels": {
+        "severity": "warning"
+      },
+      "annotations": {
+        "description": "Prometheus {{$labels.namespace}}/{{$labels.pod}} has missed {{ printf \"%.0f\" $value }} rule group evaluations in the last 5m.",
+        "summary": "Prometheus is missing rule evaluations due to slow rule group evaluation."
+      },
+      "alerts": [],
+      "health": "ok",
+      "type": "alerting"
+    }
+  resource:
+    group: clusters.compute.kore.appvia.io
+    version: v1
+    kind: Cluster
+    namespace: kore-admin
+    name: kore

@@ -72,6 +72,7 @@ class ClusterPage extends React.Component {
       const serviceKinds = await (await KoreApi.client()).ListServiceKinds()
       return { serviceKinds: serviceKinds.items }
     }
+
     return {}
   }
 
