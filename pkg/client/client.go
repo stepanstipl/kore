@@ -52,6 +52,8 @@ type apiClient struct {
 	endpoint string
 	// hc is the http client to use
 	hc *http.Client
+	// profile is the name of the profile to use
+	profile string
 	// parameters hold the parameters for the request
 	parameters map[string]string
 	// payload is the outbound payload
@@ -72,8 +74,9 @@ var (
 
 // cc provides a wrapper around th config
 type cc struct {
-	cfg *config.Config
-	hc  *http.Client
+	cfg     *config.Config
+	hc      *http.Client
+	profile string
 }
 
 // New creates and returns an API client
@@ -82,7 +85,7 @@ func New(c *config.Config) (Interface, error) {
 		return nil, errors.New("no client configuration")
 	}
 
-	return &cc{cfg: c, hc: DefaultHTTPClient}, nil
+	return &cc{cfg: c, hc: DefaultHTTPClient, profile: c.CurrentProfile}, nil
 }
 
 // HTTPClient sets the http client
@@ -92,13 +95,30 @@ func (c *cc) HTTPClient(hc *http.Client) Interface {
 	return c
 }
 
+// OverrideProfile sets the default profile to use
+func (c *cc) OverrideProfile(name string) Interface {
+	c.profile = name
+
+	return c
+}
+
+// CurrentProfile returns the current profile
+func (c *cc) CurrentProfile() string {
+	return c.profile
+}
+
 // Request creates a request instance
 func (c *cc) Request() RestInterface {
 	return &apiClient{
 		cfg:        c.cfg,
 		hc:         c.hc,
 		parameters: make(map[string]string),
+		profile:    c.profile,
 	}
+}
+
+func (a *apiClient) Profile() string {
+	return a.profile
 }
 
 // HandleRequest is responsible for handling the request chain
@@ -109,12 +129,19 @@ func (a *apiClient) HandleRequest(method string) RestInterface {
 			return a.ferror
 		}
 
-		if a.cfg.CurrentProfile == "" {
-			return cerrors.NewProfileInvalidError("missing selected profile", a.cfg.CurrentProfile)
+		// @step: check we have the endpoint
+		profile, found := a.cfg.Profiles[a.Profile()]
+		if !found {
+			return cerrors.ErrMissingProfile
 		}
+		server, found := a.cfg.Servers[profile.Server]
+		if !found {
+			return cerrors.NewProfileInvalidError("missing profile server", a.Profile())
+		}
+		endpoint := server.Endpoint
 
-		if a.cfg.GetCurrentServer().Endpoint == "" {
-			return cerrors.NewProfileInvalidError("missing endpoint", a.cfg.CurrentProfile)
+		if endpoint == "" {
+			return cerrors.NewProfileInvalidError("missing endpoint", a.Profile())
 		}
 
 		// @step: we generate the uri from the parameter
@@ -123,17 +150,17 @@ func (a *apiClient) HandleRequest(method string) RestInterface {
 			return err
 		}
 		log.WithFields(log.Fields{
-			"endpoint": a.cfg.GetCurrentServer().Endpoint,
+			"endpoint": endpoint,
 			"method":   method,
 			"uri":      uri,
 		}).Debug("making request to kore api")
 
 		// @step: we generate the fully qualifies url
-		endpoint := fmt.Sprintf("%s/%s", a.cfg.GetCurrentServer().Endpoint, uri)
+		ep := fmt.Sprintf("%s/%s", endpoint, uri)
 
 		// @step: we make the request
 		now := time.Now()
-		resp, err := a.MakeRequest(method, endpoint)
+		resp, err := a.MakeRequest(method, ep)
 		if err != nil {
 			return err
 		}
@@ -217,12 +244,14 @@ func (a *apiClient) MakeRequest(method, url string) (*http.Response, error) {
 	request.Header.Set("X-Client-Version", version.Release)
 
 	// @step: add the authentication from profile
-	auth := a.cfg.GetCurrentAuthInfo()
+	auth := a.cfg.AuthInfos[a.Profile()]
 	switch {
+	case auth == nil:
+		return nil, cerrors.NewProfileInvalidError("missing authenication profile", a.Profile())
 	case auth.OIDC != nil:
 		request.Header.Set("Authorization", "Bearer "+auth.OIDC.IDToken)
 	case auth.Token != nil:
-		request.Header.Set("Authorization", "Bearer "+*auth.Token)
+		request.Header.Set("Authorization:", "Bearer "+*auth.Token)
 	case auth.BasicAuth != nil:
 		request.SetBasicAuth(auth.BasicAuth.Username, auth.BasicAuth.Password)
 	}

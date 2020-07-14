@@ -56,6 +56,7 @@ func NewKoreCommand(streams cmdutil.Streams) (*cobra.Command, error) {
 	if err != nil {
 		return nil, err
 	}
+	profile := cfg.CurrentProfile
 
 	// @step: create a factory for the commands
 	factory, err := cmdutil.NewFactory(client, streams, cfg)
@@ -79,18 +80,30 @@ func NewKoreCommand(streams cmdutil.Streams) (*cobra.Command, error) {
 				log.SetLevel(log.TraceLevel)
 			}
 
-			log.WithField("profile", cfg.CurrentProfile).Debug("running with the selected profile")
+			// @notes: not entire sure how to structure this - because we are using flags
+			// defaults which might be altered by the flags themselves
+			if cmd.Flags().Changed("profile") {
+				profile = cmdutil.GetFlagString(root, "profile")
+				// we only need to set the flag if the --team has not been set
+				if !cmd.Flags().Changed("team") {
+					cmd.Flags().Set("team", cfg.GetProfile(profile).Team)
+				}
+				client.OverrideProfile(profile)
+			}
+
+			log.WithField("profile", profile).Debug("running with the selected profile")
 		},
 	}
 
 	flags := root.PersistentFlags()
 	flags.Bool("force", false, "is used to force an operation to happen (defaults: false)")
-	flags.StringP("team", "t", cfg.GetCurrentProfile().Team, "the team you are operating within")
+	flags.StringP("team", "t", cfg.GetProfile(cfg.CurrentProfile).Team, "the team you are operating within")
 	flags.StringP("output", "o", "table", "the output format of the resource ("+strings.Join(render.SupportedFormats(), ",")+")")
 	flags.BoolP("no-wait", "", false, "indicates if we should wait for resources to provision")
 	flags.BoolP("show-headers", "", true, "indicates we should display headers on table out (defaults: true)")
 	flags.Bool("debug", false, "indicates we should use debug / trace logging (defaults: false)")
 	flags.Bool("verbose", false, "enables verbose logging for debugging purposes (defaults: false)")
+	flags.String("profile", cfg.CurrentProfile, "allows you to explicitly set the selected profile")
 
 	// @step: add all the commands to the root
 	root.AddCommand(
@@ -123,6 +136,10 @@ func NewKoreCommand(streams cmdutil.Streams) (*cobra.Command, error) {
 
 	cmdutil.MustRegisterFlagCompletionFunc(root, "output", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return render.SupportedFormats(), cobra.ShellCompDirectiveDefault
+	})
+
+	cmdutil.MustRegisterFlagCompletionFunc(root, "profile", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return cfg.ListProfiles(), cobra.ShellCompDirectiveDefault
 	})
 
 	return root, nil

@@ -59,6 +59,18 @@ func DefaultRunFunc(o RunHandler) func(*cobra.Command, []string) {
 		utils.SetReflectedField("Output", GetFlagString(cmd, "output"), o)
 		utils.SetReflectedField("Headers", GetFlagBool(cmd, "show-headers"), o)
 
+		// @step: some handler require they know the diff between flags set and defaults
+		if utils.HasReflectField("FlagsChanged", o) {
+			var changed []string
+
+			cmd.Flags().Visit(func(f *pflag.Flag) {
+				if f.Changed {
+					changed = append(changed, f.Name)
+				}
+			})
+			utils.SetReflectedField("FlagsChanged", changed, o)
+		}
+
 		err := utils.SetAndValidateReflectedField("Team", GetFlagString(cmd, "team"), o, checkTeam(o, o.Config()))
 		o.CheckError(err)
 
@@ -72,18 +84,6 @@ func DefaultRunFunc(o RunHandler) func(*cobra.Command, []string) {
 			utils.SetReflectedField("Name", cmd.Flags().Arg(1), o)
 		} else if utils.HasReflectField("Name", o) {
 			utils.SetReflectedField("Name", cmd.Flags().Arg(0), o)
-		}
-
-		// @step: some handler require they know the diff between flags set and defaults
-		if utils.HasReflectField("FlagsChanged", o) {
-			var changed []string
-
-			cmd.Flags().Visit(func(f *pflag.Flag) {
-				if f.Changed {
-					changed = append(changed, f.Name)
-				}
-			})
-			utils.SetReflectedField("FlagsChanged", changed, o)
 		}
 
 		o.CheckError(o.Validate())
@@ -117,9 +117,9 @@ func checkTeam(factory Factory, cfg *config.Config) func(value interface{}) erro
 		}
 		if !exists {
 			// Let's check whether the current profile has a non-existing team and remove it
-			if cfg.GetCurrentProfile().Team == team {
+			if cfg.GetProfile(factory.Client().CurrentProfile()).Team == team {
 				errStr := fmt.Sprintf("team %q does not exist, please update your profile using\n$ kore profiles set current.team <EXISTING TEAM>", team)
-				cfg.GetCurrentProfile().Team = ""
+				cfg.GetProfile(factory.Client().CurrentProfile()).Team = ""
 				if err := config.UpdateConfig(cfg, config.GetClientConfigurationPath()); err != nil {
 					errStr = errStr + "\n" + err.Error()
 				}

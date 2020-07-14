@@ -36,6 +36,16 @@ func (f *fake) HTTPClient(*http.Client) client.Interface {
 	return f
 }
 
+// OverrideProfile does nothing here
+func (f *fake) OverrideProfile(string) client.Interface {
+	return f
+}
+
+// CurrentProfile returns the current profile
+func (f *fake) CurrentProfile() string {
+	return ""
+}
+
 // Body returns the body if any
 func (f *fake) Body() io.Reader {
 	b := &bytes.Buffer{}

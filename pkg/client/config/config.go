@@ -87,33 +87,27 @@ func (c *Config) ListProfiles() []string {
 	return list
 }
 
-// GetCurrentProfile returns the current profile
-func (c *Config) GetCurrentProfile() *Profile {
-	profile, found := c.Profiles[c.CurrentProfile]
-	if !found {
+// GetProfile returns the profile
+func (c *Config) GetProfile(name string) *Profile {
+	if !c.HasProfile(name) {
 		return &Profile{}
 	}
 
-	return profile
+	return c.Profiles[name]
 }
 
-// GetCurrentServer returns the server in the context
-func (c *Config) GetCurrentServer() *Server {
-	ct := c.Profiles[c.CurrentProfile]
-	if ct == nil {
-		return &Server{}
-	}
-	s := c.Servers[ct.Server]
-	if s == nil {
+// GetServer returns the endpoint for the profile
+func (c *Config) GetServer(name string) *Server {
+	if !c.HasProfile(name) {
 		return &Server{}
 	}
 
-	return s
+	return c.Servers[c.Profiles[name].Server]
 }
 
-// GetCurrentAuthInfo returns the current auth
-func (c *Config) GetCurrentAuthInfo() *AuthInfo {
-	ct := c.Profiles[c.CurrentProfile]
+// GetAuthInfo returns the auth for a profile
+func (c *Config) GetAuthInfo(name string) *AuthInfo {
+	ct := c.Profiles[name]
 	if ct == nil {
 		return &AuthInfo{}
 	}
@@ -152,11 +146,11 @@ func (c *Config) AddAuthInfo(name string, auth *AuthInfo) {
 }
 
 // HasValidProfile checks we have a current context
-func (c *Config) HasValidProfile() error {
-	if c.CurrentProfile == "" {
+func (c *Config) HasValidProfile(name string) error {
+	if name == "" {
 		return errors.New("no profile selected")
 	}
-	if !c.HasServer(c.GetCurrentProfile().Server) {
+	if !c.HasServer(c.Profiles[name].Server) {
 		return errors.New("profile does not have a server endpoint")
 	}
 

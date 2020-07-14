@@ -55,7 +55,7 @@ func NewFactory(client client.Interface, streams Streams, config *config.Config)
 }
 
 func (f *factory) refreshToken() {
-	auth := f.cfg.GetCurrentAuthInfo()
+	auth := f.cfg.GetAuthInfo(f.client.CurrentProfile())
 	if auth.OIDC != nil {
 		// @step: has the access token expired
 		token, err := utils.NewClaimsFromRawToken(auth.OIDC.IDToken)
@@ -81,6 +81,11 @@ func (f *factory) refreshToken() {
 			}
 		}
 	}
+}
+
+// Client returns the underlying client
+func (f *factory) Client() client.Interface {
+	return f.client
 }
 
 // ClientWithEndpoint returns the api client with a specific endpoint
