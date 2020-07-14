@@ -95,7 +95,7 @@ class ExistingCloudAccounts extends React.Component {
 
   stepsContentAccess = () => {
     return (
-      <RequestCredentialAccessForm cloud="AWS" onChange={(errors) => this.setState({ emailValid: Boolean(!errors) })} />
+      <RequestCredentialAccessForm cloud={this.props.cloud} onChange={(errors) => this.setState({ emailValid: Boolean(!errors) })} />
     )
   }
 
