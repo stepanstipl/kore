@@ -62,7 +62,7 @@ func TestAlertsList(t *testing.T) {
 	require.NotEmpty(t, v)
 	require.Equal(t, 1, len(v))
 
-	v = makeAlertList(t, Filter.WithStatus("Active"))
+	v = makeAlertList(t, Filter.WithAlertStatus([]string{"Active"}))
 	require.NotEmpty(t, v)
 	require.Equal(t, 1, len(v))
 }
@@ -87,7 +87,7 @@ func TestAlertsListByLabels(t *testing.T) {
 
 	v, err = store.Alerts().List(context.Background(),
 		Filter.WithAlertLabels([]string{"job=kubelet"}),
-		Filter.WithStatus("Active"),
+		Filter.WithAlertStatus([]string{"Active"}),
 	)
 	require.NoError(t, err)
 	require.NotNil(t, v)
@@ -115,7 +115,7 @@ func TestAlertsListByStatus(t *testing.T) {
 
 	v = makeAlertList(t,
 		List.WithTeam("alert_team"),
-		List.WithStatus(model.AlertStatusActive),
+		Filter.WithAlertStatus([]string{"Active"}),
 	)
 	assert.NotEmpty(t, v)
 	assert.Equal(t, 1, len(v))
@@ -141,7 +141,7 @@ func TestAlertsListByIdentity(t *testing.T) {
 		Filter.WithResourceKind("Cluster"),
 		Filter.WithNamespace("test"),
 		Filter.WithResourceName("test"),
-		Filter.WithStatus("Active"),
+		Filter.WithAlertStatus([]string{"Active"}),
 	)
 	require.NotEmpty(t, v)
 	require.Equal(t, 1, len(v))
@@ -194,7 +194,7 @@ func TestAlertsUpdate(t *testing.T) {
 	a, _ := store.Alerts().Get(ctx, Filter.WithName(name), Filter.WithAlertLatest())
 	require.Equal(t, "Active", a.Status)
 
-	l, _ := store.Alerts().List(ctx, Filter.WithName(name), Filter.WithStatus("Active"))
+	l, _ := store.Alerts().List(ctx, Filter.WithName(name), Filter.WithAlertStatus([]string{"Active"}))
 	require.NotEmpty(t, l)
 	require.Equal(t, 1, len(l))
 
