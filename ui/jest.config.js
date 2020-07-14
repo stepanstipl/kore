@@ -8,6 +8,7 @@ module.exports = {
     '<rootDir>/__tests__/e2e/page-objects'
   ],
   moduleNameMapper: {
-    '\\.(css|less)$': '<rootDir>/__mocks__/styleMock.js'
+    '\\.(css|less)$': '<rootDir>/__mocks__/styleMock.js',
+    './request-interceptor': '<rootDir>/__mocks__/requestInterceptorMock.js'
   }
 }
