@@ -3,9 +3,11 @@ import PropTypes from 'prop-types'
 import { Alert, Table, Icon, Tag, Tooltip, Typography, Collapse } from 'antd'
 const { Paragraph, Text } = Typography
 import { startCase } from 'lodash'
+import { pluralize, titleize } from 'inflect'
 
 import KoreApi from '../../kore-api'
 import CostBreakdown from '../costs/CostBreakdown'
+import { getPlanCloudInfo } from '../../utils/plans'
 
 class PlanViewer extends React.Component {
   static propTypes = {
@@ -20,6 +22,8 @@ class PlanViewer extends React.Component {
     schema: null,
     costEstimate: null
   }
+
+  planCloudInfo = getPlanCloudInfo(this.props.plan.spec.kind)
 
   componentDidMountComplete = null
   componentDidMount() {
@@ -133,12 +137,12 @@ class PlanViewer extends React.Component {
 
     return (
       <>
-        {plan.gcpAutomatedProject && (
-          <Paragraph>GCP project automation: <Tooltip overlay="When using Kore managed GCP projects, clusters using this plan will provisioned inside this project type."><Tag style={{ marginLeft: '10px' }}>{plan.gcpAutomatedProject.name}</Tag></Tooltip></Paragraph>
+        {plan.automatedCloudAccount && (
+          <Paragraph>{this.planCloudInfo.cloud} {this.planCloudInfo.accountNoun} automation: <Tooltip overlay={`When using Kore managed ${this.planCloudInfo.cloud} ${pluralize(this.planCloudInfo.accountNoun)}, clusters using this plan will provisioned inside this ${this.planCloudInfo.accountNoun} type.`}><Tag style={{ marginLeft: '10px' }}>{plan.automatedCloudAccount.name}</Tag></Tooltip></Paragraph>
         )}
         {displayUnassociatedPlanWarning && (
           <Alert
-            message="This plan not associated with any GCP automated projects and will not be available for teams to use. Edit this plan or go to Project automation settings to review this."
+            message={`This plan not associated with any ${this.planCloudInfo.cloud} automated ${pluralize(this.planCloudInfo.accountNoun)} and will not be available for teams to use. Edit this plan or go to ${titleize(this.planCloudInfo.accountNoun)} automation settings to review this.`}
             type="warning"
             showIcon
             style={{ marginBottom: '20px' }}
@@ -149,7 +153,7 @@ class PlanViewer extends React.Component {
             <Collapse.Panel header="Cost Estimate">
               <CostBreakdown costs={costEstimate} />
             </Collapse.Panel>
-          </Collapse> 
+          </Collapse>
         ): null}
         {!hasDeprecated ? null : (
           <Alert

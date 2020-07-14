@@ -37,7 +37,7 @@ class PlanList extends ResourceList {
       planList.items = planList.items.map(plan => {
         (accountManagement.spec.rules || []).forEach(rule => rule.plans.forEach(rulePlan => {
           if (rulePlan === plan.metadata.name) {
-            plan = { ...plan, gcpAutomatedProject: rule }
+            plan = { ...plan, automatedCloudAccount: rule }
           }
         }))
         return plan
@@ -66,7 +66,7 @@ class PlanList extends ResourceList {
     if (!this.state.accountManagement.spec.rules) {
       return false
     }
-    if (!plan.gcpAutomatedProject) {
+    if (!plan.automatedCloudAccount) {
       return true
     }
     return false

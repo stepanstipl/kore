@@ -1,11 +1,13 @@
+import PropTypes from 'prop-types'
 import { Card, Alert, Form, Select, Tag, Tooltip, Typography } from 'antd'
 const { Option } = Select
 const { Paragraph } = Typography
-import PropTypes from 'prop-types'
+import { pluralize, titleize } from 'inflect'
 
 import KoreApi from '../../kore-api'
 import copy from '../../utils/object-copy'
 import ManagePlanForm from './ManagePlanForm'
+import { getPlanCloudInfo } from '../../utils/plans'
 
 /**
  * ManageClusterPlanForm is for *managing* a cluster plan.
@@ -17,6 +19,8 @@ class ManageClusterPlanForm extends ManagePlanForm {
 
   resourceType = () => 'cluster'
   estimateSupported = () => true
+
+  planCloudInfo = getPlanCloudInfo(this.props.kind)
 
   async fetchComponentData() {
     const { kind } = this.props
@@ -46,27 +50,27 @@ class ManageClusterPlanForm extends ManagePlanForm {
 
       if (this.accountManagementRulesEnabled()) {
         const accountMgtResource = copy(this.state.accountManagement)
-        const currentRule = this.props.data && this.props.data.gcpAutomatedProject ? accountMgtResource.spec.rules.find(r => r.name === this.props.data.gcpAutomatedProject.name) : null
-        if (values.gcpAutomatedProject) {
+        const currentRule = this.props.data && this.props.data.automatedCloudAccount ? accountMgtResource.spec.rules.find(r => r.name === this.props.data.automatedCloudAccount.name) : null
+        if (values.automatedCloudAccount) {
           // add to the new rule
-          const addedToRule = accountMgtResource.spec.rules.find(r => r.name === values.gcpAutomatedProject)
+          const addedToRule = accountMgtResource.spec.rules.find(r => r.name === values.automatedCloudAccount)
           if (addedToRule) {
             addedToRule.plans.push(values.name)
             // remove from the existing rule if it's been changed
-            if (currentRule && currentRule.name !== values.gcpAutomatedProject) {
+            if (currentRule && currentRule.name !== values.automatedCloudAccount) {
               currentRule.plans = currentRule.plans.filter(p => p !== values.name)
             }
-            await api.UpdateAccount(`am-${accountMgtResource.spec.organization.name}`, accountMgtResource)
-            planResult.append = { gcpAutomatedProject: addedToRule }
+            await api.UpdateAccount(accountMgtResource.metadata.name, accountMgtResource)
+            planResult.append = { automatedCloudAccount: addedToRule }
           } else {
-            console.error('Error occurred setting automated project, could not find rule with name', values.gcpAutomatedProject)
+            console.error(`Error occurred setting automated ${this.planCloudInfo.accountNoun}, could not find rule with name`, values.automatedCloudAccount)
           }
         } else {
           // remove from the existing rule, if one exists
           if (currentRule) {
             currentRule.plans = currentRule.plans.filter(p => p !== values.name)
-            await api.UpdateAccount(`am-${accountMgtResource.spec.organization.name}`, accountMgtResource)
-            planResult.append = { gcpAutomatedProject: false }
+            await api.UpdateAccount(accountMgtResource.metadata.name, accountMgtResource)
+            planResult.append = { automatedCloudAccount: false }
           }
         }
       }
@@ -84,10 +88,10 @@ class ManageClusterPlanForm extends ManagePlanForm {
   allowAutomatedProjectSelectionClear = () => {
     // only allow clearing of the automated project if it's a new selection or there's more than one plan in the rule
     // a rule cannot be left with no plans
-    if (!this.props.data || !this.props.data.gcpAutomatedProject) {
+    if (!this.props.data || !this.props.data.automatedCloudAccount) {
       return true
     }
-    const planRule = this.state.accountManagement.spec.rules.find(r => r.name === this.props.data.gcpAutomatedProject.name)
+    const planRule = this.state.accountManagement.spec.rules.find(r => r.name === this.props.data.automatedCloudAccount.name)
     if (planRule.plans.length === 1) {
       return false
     }
@@ -107,16 +111,16 @@ class ManageClusterPlanForm extends ManagePlanForm {
     return (
       <Card style={{ marginBottom: '20px' }}>
         <Alert
-          message="Associate with Kore managed projects"
-          description="Make this plan available to teams using Kore managed projects."
+          message={`Associate with Kore managed ${pluralize(this.planCloudInfo.accountNoun)}`}
+          description={`Make this plan available to teams using Kore managed ${pluralize(this.planCloudInfo.accountNoun)}.`}
           type="info"
           style={{ marginBottom: '20px' }}
         />
-        <Form.Item label="GCP automated project" validateStatus={this.fieldError('gcpAutomatedProject') ? 'error' : ''} help={this.fieldError('gcpAutomatedProject') || 'Which GCP automated project this plan is associated with'}>
-          {form.getFieldDecorator('gcpAutomatedProject', {
-            initialValue: data && data.gcpAutomatedProject && data.gcpAutomatedProject.name
+        <Form.Item label={`${this.planCloudInfo.cloud} automated ${this.planCloudInfo.accountNoun}`} validateStatus={this.fieldError('automatedCloudAccount') ? 'error' : ''} help={this.fieldError('automatedCloudAccount') || `Which ${this.planCloudInfo.cloud} automated ${this.planCloudInfo.accountNoun} this plan is associated with`}>
+          {form.getFieldDecorator('automatedCloudAccount', {
+            initialValue: data && data.automatedCloudAccount && data.automatedCloudAccount.name
           })(
-            <Select placeholder="GCP automated project" allowClear={this.allowAutomatedProjectSelectionClear()} disabled={this.disableAutomatedProjectSelection()}>
+            <Select placeholder={`${this.planCloudInfo.cloud} automated ${this.planCloudInfo.accountNoun}`} allowClear={this.allowAutomatedProjectSelectionClear()} disabled={this.disableAutomatedProjectSelection()}>
               {this.state.accountManagement.spec.rules.map(rule => <Option key={rule.name} value={rule.name}>{rule.name} - {rule.description}</Option>)}
             </Select>
           )}
@@ -129,12 +133,12 @@ class ManageClusterPlanForm extends ManagePlanForm {
     const { displayUnassociatedPlanWarning } = this.props
     return (
       <>
-        {data && data.gcpAutomatedProject && (
-          <Paragraph>GCP project automation: <Tooltip overlay="When using Kore managed GCP projects, clusters using this plan will provisioned inside this project type."><Tag style={{ marginLeft: '10px' }}>{data.gcpAutomatedProject.name}</Tag></Tooltip></Paragraph>
+        {data && data.automatedCloudAccount && (
+          <Paragraph>{this.planCloudInfo.cloud} {this.planCloudInfo.accountNoun} automation: <Tooltip overlay={`When using Kore managed ${this.planCloudInfo.cloud} ${pluralize(this.planCloudInfo.accountNoun)}, clusters using this plan will provisioned inside this ${this.planCloudInfo.accountNoun} type.`}><Tag style={{ marginLeft: '10px' }}>{data.automatedCloudAccount.name}</Tag></Tooltip></Paragraph>
         )}
         {displayUnassociatedPlanWarning && (
           <Alert
-            message="This plan not associated with any GCP automated projects and will not be available for teams to use. Set this below or go to Project automation settings to review this."
+            message={`This plan not associated with any ${this.planCloudInfo.cloud} automated ${pluralize(this.planCloudInfo.accountNoun)} and will not be available for teams to use. Set this below or go to ${titleize(this.planCloudInfo.accountNoun)} automation settings to review this.`}
             type="warning"
             showIcon
             style={{ marginBottom: '20px' }}

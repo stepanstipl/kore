@@ -68,6 +68,10 @@ module.exports = {
     'AWS': 'EKS',
     'GCP': 'GKE'
   },
+  clusterProviderCloudMap: {
+    'GKE': { cloud: 'GCP', accountNoun: 'project' },
+    'EKS': { cloud: 'AWS', accountNoun: 'account' }
+  },
   cloudAccountAutomation: {
     notprod: {
       defaultPlans: {
