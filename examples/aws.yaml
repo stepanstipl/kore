@@ -1,0 +1,90 @@
+---
+apiVersion: config.kore.appvia.io/v1
+kind: Secret
+metadata:
+  name: aws
+  namespace: kore-admin
+spec:
+  data:
+    access_key_id: "base64 encoded key id"
+    access_secret_key: "base64 encoded secret key"
+  description: AWS Origanization
+  type: aws-credentials
+---
+apiVersion: aws.org.kore.appvia.io/v1alpha1
+kind: AWSOrganization
+metadata:
+  name: my-org
+spec:
+  ssoUser:
+    # See "SSO User details" https://github.com/appvia/kore/issues/1065
+    email: mr.aws.sso@myorg.com
+    firstName: Kore
+    lastName: Kore
+  # This is the AWS organization service "Organizational Unit" where all AWS Accounts will be created
+  ouName: Custom
+  # This is the AWS region where the "Control Tower" services are enabled
+  region: eu-west-1
+  # Thi si the AWS iam role with permissions to the Control Tower API's
+  roleARN: arn:aws:iam::123456789:role/kore-accounts-admin-role
+  credentialsRef:
+    name: aws
+    namespace: kore-admin
+---
+apiVersion: accounts.kore.appvia.io/v1beta1
+kind: AccountManagement
+metadata:
+  # This name is a convention used by the user interface
+  name: am-aws
+spec:
+  provider: EKS
+  managed: true
+  organization:
+    group: aws.org.kore.appvia.io
+    version: v1alpha1
+    kind: AWSOrganization
+    namespace: kore-admin
+    name: my-org
+  rules:
+    - name: prod
+      plans:
+        - eks-production
+      prefix: "kore-"
+    - name: dev
+      plans:
+        - eks-development
+      prefix: "kore-"
+---
+apiVersion: config.kore.appvia.io/v1
+kind: Allocation
+metadata:
+  # This is currently a convention for this name for the UI
+  # see https://github.com/appvia/kore/issues/1066
+  name: am-aws
+spec:
+  name: EKS Accounts Provisioning
+  summary: Provides the details around AWS account provisioning for the team
+  resource:
+    group: accounts.kore.appvia.io
+    version: v1beta1
+    kind: AccountManagement
+    namespace: kore-admin
+    name: aws
+  teams:
+    - "*"
+---
+apiVersion: config.kore.appvia.io/v1
+kind: Allocation
+metadata:
+  name: aws-org
+spec:
+  name: AWS Organization
+  summary: Provides the details around AWS account provisioning for the team
+  resource:
+    group: aws.org.kore.appvia.io
+    version: v1alpha1
+    kind: AWSOrganization
+    namespace: kore-admin
+    name: my-org
+  teams:
+    - "*"

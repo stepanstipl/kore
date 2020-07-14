@@ -6,8 +6,7 @@ import getConfig from 'next/config'
 const { publicRuntimeConfig } = getConfig()
 
 import CloudSelector from '../../../lib/components/common/CloudSelector'
-import AWSSetup from '../../../lib/components/setup/AWSSetup'
-import GCPSetup from '../../../lib/components/setup/GCPSetup'
+import CloudSetup from '../../../lib/components/setup/CloudSetup'
 import KoreApi from '../../../lib/kore-api'
 
 class CloudAccessPage extends React.Component {
@@ -55,10 +54,10 @@ class CloudAccessPage extends React.Component {
     selectedCloud: false
   }
 
-  handleSelectCloud = cloud => this.setState({ selectedCloud: cloud })
+  handleSelectCloud = (cloud) => this.setState({ selectedCloud: cloud })
 
   render() {
-    const { gcpAccountManagement, gkeCredentialsList } = this.props
+    const { gcpAccountManagement, gkeCredentialsList, awsAccountManagement, eksCredentialsList } = this.props
     const { selectedCloud } = this.state
 
     return (
@@ -74,8 +73,8 @@ class CloudAccessPage extends React.Component {
         <div style={{ marginTop: '20px', marginBottom: '20px' }}>
           <CloudSelector selectedCloud={selectedCloud} handleSelectCloud={this.handleSelectCloud} />
         </div>
-        {selectedCloud === 'GCP' && <GCPSetup accountManagement={gcpAccountManagement} gkeCredentialsList={gkeCredentialsList} />}
-        {selectedCloud === 'AWS' && <AWSSetup />}
+        {selectedCloud === 'GCP' && <CloudSetup provider="GKE" cloud="GCP" accountNoun="project" accountManagement={gcpAccountManagement} credentialsList={gkeCredentialsList} />}
+        {selectedCloud === 'AWS' && <CloudSetup provider="EKS" cloud="AWS" accountNoun="account" accountManagement={awsAccountManagement} credentialsList={eksCredentialsList} />}
       </>
     )
   }

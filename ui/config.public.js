@@ -14,5 +14,7 @@ module.exports = {
   showPrototypes: config.kore.showPrototypes,
   featureGates: config.kore.featureGates,
   clusterProviderMap: config.clusterProviderMap,
-  disableAnimations: config.disableAnimations
+  clusterProviderCloudMap: config.clusterProviderCloudMap,
+  cloudAccountAutomation: config.cloudAccountAutomation,
+  disableAnimations: config.disableAnimations,
 }

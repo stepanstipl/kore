@@ -163,9 +163,3 @@ func (t *eksCtrl) GetClusterClient(ctx context.Context, resource *eksv1alpha1.EK
 	}
 	return c, nil
 }
-
-// GetCredentials returns the cloud credential
-func (t *eksCtrl) GetCredentials(ctx context.Context, cluster *eksv1alpha1.EKS, team string) (*aws.Credentials, error) {
-	koreCtx := kore.NewContext(ctx, t.GetLoggerFromRes(cluster), t.mgr.GetClient(), t.Interface)
-	return helpers.NewKoreEKS(koreCtx, cluster).GetCredentials(cluster.Namespace)
-}

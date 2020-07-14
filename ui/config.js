@@ -68,5 +68,23 @@ module.exports = {
     'AWS': 'EKS',
     'GCP': 'GKE'
   },
+  clusterProviderCloudMap: {
+    'GKE': { cloud: 'GCP', accountNoun: 'project' },
+    'EKS': { cloud: 'AWS', accountNoun: 'account' }
+  },
+  cloudAccountAutomation: {
+    notprod: {
+      defaultPlans: {
+        'AWS': ['eks-development'],
+        'GCP': ['gke-development'],
+      }
+    },
+    prod: {
+      defaultPlans: {
+        'AWS': ['eks-production'],
+        'GCP': ['gke-production'],
+      }
+    }
+  },
   disableAnimations: process.env.KORE_UI_DISABLE_ANIMATIONS === 'true'
 }

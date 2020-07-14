@@ -18,6 +18,7 @@ package utils
 
 import (
 	accountsv1beta1 "github.com/appvia/kore/pkg/apis/accounts/v1beta1"
+	aws "github.com/appvia/kore/pkg/apis/aws/v1alpha1"
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
@@ -252,6 +253,17 @@ var (
 			Name:         "organization",
 			GroupVersion: gke.GroupVersion.String(),
 			Kind:         "Organization",
+			Scope:        TeamScope,
+			Printer: []Column{
+				{"Name", "metadata.name", ""},
+				{"Status", "status.status", ""},
+				{"Age", "metadata.creationTimestamp", "age"},
+			},
+		},
+		{
+			Name:         "awsorganization",
+			GroupVersion: aws.GroupVersion.String(),
+			Kind:         "AWSOrganization",
 			Scope:        TeamScope,
 			Printer: []Column{
 				{"Name", "metadata.name", ""},

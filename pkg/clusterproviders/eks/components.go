@@ -21,16 +21,21 @@ import (
 	"fmt"
 	"strings"
 
+	awsv1alpha1 "github.com/appvia/kore/pkg/apis/aws/v1alpha1"
+	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
+	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
+	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
+	"github.com/appvia/kore/pkg/clusterproviders"
+	"github.com/appvia/kore/pkg/controllers"
+	awsc "github.com/appvia/kore/pkg/controllers/cloud/aws"
 	"github.com/appvia/kore/pkg/controllers/helpers"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/serviceproviders/application"
 	awsutils "github.com/appvia/kore/pkg/utils/cloud/aws"
-
-	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
-
-	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
-	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
-	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
+
+	log "github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -49,12 +54,20 @@ func (p Provider) SetComponents(ctx kore.Context, cluster *clustersv1.Cluster, c
 
 	eksVPC := &eksv1alpha1.EKSVPC{ObjectMeta: meta}
 	eks := &eksv1alpha1.EKS{ObjectMeta: meta}
+	eksVPCDependencies := []kubernetes.Object{}
+	if clusterproviders.IsAccountManaged(cluster.Spec.Credentials) {
+		accountClaim := &awsv1alpha1.AWSAccountClaim{ObjectMeta: meta}
+		components.Add(accountClaim)
+		eksVPCDependencies = append(eksVPCDependencies, accountClaim)
+	}
 
-	components.Add(eksVPC)
+	components.Add(eksVPC, eksVPCDependencies...)
 	components.AddComponent(&kore.ClusterComponent{
-		Object:       eks,
-		Dependencies: []kubernetes.Object{eksVPC},
-		IsProvider:   true,
+		Object: eks,
+		Dependencies: []kubernetes.Object{
+			eksVPC,
+		},
+		IsProvider: true,
 	})
 
 	config := string(cluster.Spec.Configuration.Raw)
@@ -154,7 +167,7 @@ func (p Provider) BeforeComponentsUpdate(ctx kore.Context, cluster *clustersv1.C
 				return err
 			}
 			o.Spec.Cluster = cluster.Ownership()
-			o.Spec.Credentials = cluster.Spec.Credentials
+			o.Spec.Credentials = p.getNewCredentialFromCluster(cluster)
 
 		case *eksv1alpha1.EKS:
 			if err := kubernetes.PatchSpec(o, config); err != nil {
@@ -162,7 +175,7 @@ func (p Provider) BeforeComponentsUpdate(ctx kore.Context, cluster *clustersv1.C
 			}
 
 			o.Spec.Cluster = cluster.Ownership()
-			o.Spec.Credentials = cluster.Spec.Credentials
+			o.Spec.Credentials = p.getNewCredentialFromCluster(cluster)
 			o.Spec.Region = vpc.Spec.Region
 			o.Spec.SecurityGroupIDs = vpc.Status.Infra.SecurityGroupIDs
 			o.Spec.SubnetIDs = vpc.Status.Infra.PrivateSubnetIDs
@@ -199,21 +212,72 @@ func (p Provider) BeforeComponentsUpdate(ctx kore.Context, cluster *clustersv1.C
 			}
 
 			o.Spec.Cluster = cluster.Ownership()
-			o.Spec.Credentials = cluster.Spec.Credentials
+			o.Spec.Credentials = p.getNewCredentialFromCluster(cluster)
 			o.Spec.Region = vpc.Spec.Region
 			o.Spec.Subnets = vpc.Status.Infra.PrivateSubnetIDs
+
+		case *awsv1alpha1.AWSAccountClaim:
+			// @step: we never touch the aws account object claim under these circumstances
+			if c.Exists() {
+				continue
+			}
+
+			// @step: we find the matching account rule
+			mgmt, err := clusterproviders.FindAccountManagement(ctx, cluster.Spec.Credentials)
+			if err != nil {
+				return err
+			}
+			o.Spec.Organization = corev1.Ownership{
+				Group:     awsv1alpha1.GroupVersion.Group,
+				Kind:      "AWSOrganization",
+				Name:      mgmt.Spec.Organization.Name,
+				Namespace: mgmt.Spec.Organization.Namespace,
+				Version:   awsv1alpha1.GroupVersion.Version,
+			}
+
+			switch len(mgmt.Spec.Rules) > 0 {
+			case true:
+				rule, found := clusterproviders.FindAccountingRule(mgmt, cluster.Spec.Plan)
+				if !found {
+					return controllers.NewCriticalError(
+						fmt.Errorf("no account rule matching plan: %q exist", cluster.Spec.Plan),
+					)
+				}
+
+				// @step: we derive the account name from the rule
+				name := cluster.Namespace
+				if rule.Suffix != "" {
+					name = fmt.Sprintf("%s-%s", name, rule.Suffix)
+				}
+				if rule.Prefix != "" {
+					name = fmt.Sprintf("%s-%s", rule.Prefix, name)
+				}
+
+				o.Spec.AccountName = name
+			}
+
 		case *servicesv1.Service:
 			switch o.Name {
 			case cluster.Name + "-autoscaler":
-				koreEKS := helpers.NewKoreEKS(ctx, eks)
-				creds, err := koreEKS.GetCredentials(cluster.Namespace)
+				if eks.Status.Status != corev1.SuccessStatus {
+
+					// for now...
+					return nil
+				}
+				creds, err := awsc.GetCredentials(ctx, vpc.Namespace, eks.Spec.Credentials)
 				if err != nil {
+
 					return err
+				}
+				if creds == nil {
+
+					return fmt.Errorf("aws account credentials not available after eks is created")
 				}
 
 				iam := awsutils.NewIamClient(*creds)
 				role, err := iam.EnsureClusterAutoscalerRole(cluster.Name, eks.Status.OIDCProviderURL)
 				if err != nil {
+
 					return err
 				}
 
@@ -258,25 +322,21 @@ func (p Provider) BeforeComponentsUpdate(ctx kore.Context, cluster *clustersv1.C
 func (p Provider) SetProviderData(ctx kore.Context, cluster *clustersv1.Cluster, components *kore.ClusterComponents) error {
 	providerData := map[string]interface{}{}
 	if err := cluster.Status.GetProviderData(&providerData); err != nil {
+
 		return err
 	}
-
-	// @step: retrieve the credentials
-	eksCreds := &eksv1alpha1.EKSCredentials{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      cluster.Spec.Credentials.Name,
-			Namespace: cluster.Spec.Credentials.Namespace,
-		},
-	}
-	found, err := kubernetes.GetIfExists(ctx, ctx.Client(), eksCreds)
+	creds, err := awsc.GetCredentials(ctx, cluster.Namespace, p.getNewCredentialFromCluster(cluster))
 	if err != nil {
+
 		return err
 	}
-	if !found {
-		return fmt.Errorf("eks credentials: (%s/%s) not found", cluster.Spec.Credentials.Namespace, cluster.Spec.Credentials.Name)
+	if creds == nil {
+
+		// Account creds are not ready, we need to wait...
+		return nil
 	}
 
-	providerData["awsAccountID"] = eksCreds.Spec.AccountID
+	providerData["awsAccountID"] = creds.AccountID
 
 	for _, c := range *components {
 		switch o := c.Object.(type) {
@@ -313,11 +373,15 @@ func (p Provider) deleteAutoScalerRole(ctx kore.Context, cluster *clustersv1.Clu
 		panic("EKS object not found in cluster components")
 	}
 	eks := eksComponent.Object.(*eksv1alpha1.EKS)
-
-	koreEKS := helpers.NewKoreEKS(ctx, eks)
-	creds, err := koreEKS.GetCredentials(cluster.Namespace)
+	creds, err := awsc.GetCredentials(ctx, cluster.Namespace, eks.Spec.Credentials)
 	if err != nil {
 		return err
+	}
+	if creds == nil {
+
+		// Account credentials not available - nothing we can do
+		log.Warnf("unable to delete cluster autoscaler roles as credential is no longer available")
+		return nil
 	}
 
 	iam := awsutils.NewIamClient(*creds)
@@ -326,4 +390,20 @@ func (p Provider) deleteAutoScalerRole(ctx kore.Context, cluster *clustersv1.Clu
 	}
 
 	return nil
+}
+
+func (p Provider) getNewCredentialFromCluster(cluster *clustersv1.Cluster) corev1.Ownership {
+	switch clusterproviders.IsAccountManaged(cluster.Spec.Credentials) {
+	case true:
+		return corev1.Ownership{
+			Group:     awsv1alpha1.GroupVersion.Group,
+			Version:   awsv1alpha1.GroupVersion.Version,
+			Kind:      "AWSAccountClaim",
+			Namespace: cluster.Namespace,
+			Name:      cluster.Name,
+		}
+	default:
+		return cluster.Spec.Credentials
+	}
+
 }

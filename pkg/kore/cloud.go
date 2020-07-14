@@ -18,6 +18,8 @@ package kore
 
 // Cloud returns a collection of cloud providers
 type Cloud interface {
+	// AWS returns the aws interface
+	AWS() AWS
 	// GCP returns the gcp interface
 	GCP() GCP
 	// GKE returns the GKE interface
@@ -39,6 +41,11 @@ type cloudImpl struct {
 	*hubImpl
 	// team is the requesting team
 	team string
+}
+
+// AWS returns the aws interface
+func (c *cloudImpl) AWS() AWS {
+	return &awsImpl{cloudImpl: c, team: c.team}
 }
 
 // GCP returns the gcp interface

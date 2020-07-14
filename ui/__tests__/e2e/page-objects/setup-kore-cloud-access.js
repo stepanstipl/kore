@@ -17,11 +17,11 @@ export class SetupKoreCloudAccessPage extends BasePage {
   }
 
   /**
-   * Select the manage projects type
+   * Select the managed accounts type
    * @param type Either "cluster" or "custom"
    */
-  async selectKoreManagedProjects(type) {
-    await this.p.click(`.automated-projects-${type}`)
+  async selectKoreManagedAccounts(type) {
+    await this.p.click(`.automated-accounts-${type}`)
   }
 
   async addGcpOrganization(testOrg) {
@@ -39,7 +39,7 @@ export class SetupKoreCloudAccessPage extends BasePage {
     await this.p.waitFor('.kore-managed-setup-complete')
   }
 
-  async setAutomatedProjectDefaults() {
+  async setAutomatedAccountDefaults() {
     await this.p.waitFor('.set-kore-defaults')
     await this.p.click('.set-kore-defaults')
   }

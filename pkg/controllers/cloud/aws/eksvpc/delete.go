@@ -23,6 +23,8 @@ import (
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
+	awsc "github.com/appvia/kore/pkg/controllers/cloud/aws"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/cloud/aws"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
@@ -34,13 +36,13 @@ import (
 
 // Delete is responsible for deleting the aws eks cluster
 func (t *eksvpcCtrl) Delete(request reconcile.Request) (reconcile.Result, error) {
-	ctx := context.Background()
-
 	logger := log.WithFields(log.Fields{
 		"name":      request.NamespacedName.Name,
 		"namespace": request.NamespacedName.Namespace,
 		"team":      request.NamespacedName.Name,
 	})
+	ctx := kore.NewContext(context.Background(), logger, t.mgr.GetClient(), t.Interface)
+
 	logger.Info("attempting to delete eks vpc")
 
 	resource := &eksv1alpha1.EKSVPC{}
@@ -56,7 +58,7 @@ func (t *eksvpcCtrl) Delete(request reconcile.Request) (reconcile.Result, error)
 	finalizer := kubernetes.NewFinalizer(t.mgr.GetClient(), finalizerName)
 
 	result, err := func() (reconcile.Result, error) {
-		creds, err := t.GetCredentials(ctx, resource, request.NamespacedName.Namespace)
+		creds, err := awsc.GetCredentials(ctx, request.NamespacedName.Namespace, resource.Spec.Credentials)
 		if err != nil {
 			logger.WithError(err).Error("trying to retrieve the credentials")
 

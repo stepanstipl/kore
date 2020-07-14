@@ -7,9 +7,10 @@ import Breadcrumb from '../../../lib/components/layout/Breadcrumb'
 import GKECredentialsList from '../../../lib/components/credentials/GKECredentialsList'
 import GCPOrganizationsList from '../../../lib/components/credentials/GCPOrganizationsList'
 import EKSCredentialsList from '../../../lib/components/credentials/EKSCredentialsList'
+import AWSOrganizationsList from '../../../lib/components/credentials/AWSOrganizationsList'
 import PlanList from '../../../lib/components/plans/PlanList'
 import PolicyList from '../../../lib/components/policies/PolicyList'
-import GCPProjectAutomationSettings from '../../../lib/components/setup/GCPProjectAutomationSettings'
+import CloudAccountAutomationSettings from '../../../lib/components/setup/CloudAccountAutomationSettings'
 import CloudTabs from '../../../lib/components/common/CloudTabs'
 import CloudServiceAdmin from '../../../lib/components/services/CloudServiceAdmin'
 import { featureEnabled, KoreFeatures } from '../../../lib/utils/features'
@@ -24,7 +25,7 @@ export default class ConfigureCloudPage extends React.Component {
     selectedCloud: 'GCP',
     activeKeys: {
       'GCP': 'orgs',
-      'AWS': 'accounts'
+      'AWS': 'orgs'
     }
   }
 
@@ -50,7 +51,7 @@ export default class ConfigureCloudPage extends React.Component {
     }
   }
 
-  handleSelectCloud = cloud => {
+  handleSelectCloud = (cloud) => {
     Router.push('/configure/cloud/[...cloud]', `/configure/cloud/${cloud}/${this.props.activeKeys[cloud]}`)
   }
 
@@ -75,7 +76,7 @@ export default class ConfigureCloudPage extends React.Component {
                 <GKECredentialsList />
               </Tabs.TabPane>
               <Tabs.TabPane tab="Project automation" key="project_automation">
-                <GCPProjectAutomationSettings />
+                <CloudAccountAutomationSettings provider="GKE" cloudOrgsApiMethod="ListGCPOrganizations" cloud="GCP" accountNoun="project" />
               </Tabs.TabPane>
               <Tabs.TabPane tab="Cluster Plans" key="plans">
                 <PlanList kind="GKE" />
@@ -87,8 +88,14 @@ export default class ConfigureCloudPage extends React.Component {
           ) : null}
           {selectedCloud === 'AWS' ? (
             <Tabs activeKey={activeKeys['AWS']} onChange={(key) => this.handleSelectKey('AWS', key)} destroyInactiveTabPane={true} tabPosition="left" style={{ marginTop: '20px' }}>
+              <Tabs.TabPane tab="Organization credentials" key="orgs">
+                <AWSOrganizationsList autoAllocateToAllTeams={true} />
+              </Tabs.TabPane>
               <Tabs.TabPane tab="Account credentials" key="accounts">
                 <EKSCredentialsList />
+              </Tabs.TabPane>
+              <Tabs.TabPane tab="Account automation" key="account-automation">
+                <CloudAccountAutomationSettings provider="EKS" cloudOrgsApiMethod="ListAWSOrganizations" cloud="AWS" accountNoun="account" />
               </Tabs.TabPane>
               <Tabs.TabPane tab="Cluster Plans" key="plans">
                 <PlanList kind="EKS" />

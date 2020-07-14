@@ -97,30 +97,30 @@ export default class KoreApiResources {
     return resource
   }
 
-  generateAccountManagementResource(gcpOrgResource, gcpProjectList, resourceVersion) {
+  generateAccountManagementResource(resourceName, provider, orgResource, accountList, resourceVersion) {
     const resource = this.newResource({
       type: 'V1beta1AccountManagement',
       apiVersion: 'accounts.kore.appvia.io/v1beta1',
       kind: 'AccountManagement',
-      name: `am-${gcpOrgResource.metadata.name}`,
+      name: resourceName,
       namespace: publicRuntimeConfig.koreAdminTeamName,
       resourceVersion
     })
 
     const spec = new models.V1beta1AccountManagementSpec()
-    spec.setProvider('GKE')
+    spec.setProvider(provider)
 
-    const [ group, version ] = gcpOrgResource.apiVersion.split('/')
+    const [ group, version ] = orgResource.apiVersion.split('/')
     spec.setOrganization(this.newV1Ownership({
       group,
       version,
-      kind: gcpOrgResource.kind,
-      name: gcpOrgResource.metadata.name,
-      namespace: gcpOrgResource.metadata.namespace
+      kind: orgResource.kind,
+      name: orgResource.metadata.name,
+      namespace: orgResource.metadata.namespace
     }))
 
-    if (gcpProjectList) {
-      const rules = gcpProjectList.map(project => {
+    if (accountList) {
+      const rules = accountList.map(project => {
         const rule = new models.V1beta1AccountsRule()
         rule.setName(project.name)
         rule.setDescription(project.description)
@@ -184,6 +184,7 @@ export default class KoreApiResources {
       generateEKSCredentialsResource: (values, secretName) => this.generateEKSCredentialsResource(team, values, secretName),
       generateGKECredentialsResource: (values, secretName) => this.generateGKECredentialsResource(team, values, secretName),
       generateGCPOrganizationResource: (values, secretName) => this.generateGCPOrganizationResource(team, values, secretName),
+      generateAWSOrganizationResource: (values, secretName) => this.generateAWSOrganizationResource(team, values, secretName),
       generateClusterResource: (user, values, plan, planValues, credentials) => this.generateClusterResource(team, user, values, plan, planValues, credentials),
       generateNamespaceClaimResource: (cluster, resourceName, values) => this.generateNamespaceClaimResource(team, cluster, resourceName, values),
       generateServiceResource: (cluster, values, plan, planValues) => this.generateServiceResource(team, cluster, values, plan, planValues),
@@ -257,6 +258,30 @@ export default class KoreApiResources {
     spec.setParentID(values.parentID)
     spec.setBillingAccount(values.billingAccount)
     spec.setServiceAccount('kore')
+    spec.setCredentialsRef(this.newV1SecretReference(secretName, team))
+    resource.setSpec(spec)
+
+    return resource
+  }
+
+  generateAWSOrganizationResource(team, values, secretName) {
+    const resource = this.newResource({
+      type: 'V1alpha1AWSOrganization',
+      apiVersion: 'aws.org.kore.appvia.io/v1alpha1',
+      kind: 'AWSOrganization',
+      name: values.name,
+      namespace: team
+    })
+
+    const spec = new models.V1alpha1AWSOrganizationSpec()
+    spec.setOuName(values.ouName)
+    spec.setRegion(values.region)
+    spec.setRoleARN(values.roleARN)
+    spec.setSsoUser({
+      firstName: values.ssoUserFirstName,
+      lastName: values.ssoUserLastName,
+      email: values.ssoUserEmailAddress,
+    })
     spec.setCredentialsRef(this.newV1SecretReference(secretName, team))
     resource.setSpec(spec)
 

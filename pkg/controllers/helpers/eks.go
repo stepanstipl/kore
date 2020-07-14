@@ -18,15 +18,11 @@ package helpers
 
 import (
 	"errors"
-	"fmt"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	eks "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
-	"github.com/appvia/kore/pkg/controllers"
+	awsc "github.com/appvia/kore/pkg/controllers/cloud/aws"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/cloud/aws"
-	"github.com/appvia/kore/pkg/utils/kubernetes"
 )
 
 // KoreEKS can provide reuse for read only operations with EKS objects across our controllers
@@ -47,9 +43,12 @@ func NewKoreEKS(ctx kore.Context, resource *eks.EKS) *KoreEKS {
 // GetClusterClient returns a EKS cluster client
 func (a *KoreEKS) GetClusterClient() (*aws.Client, error) {
 	// @step: first we need to check if we have access to the credentials
-	creds, err := a.GetCredentials(a.resource.Namespace)
+	creds, err := awsc.GetCredentials(a.ctx, a.resource.Namespace, a.resource.Spec.Credentials)
 	if err != nil {
 		return nil, err
+	}
+	if creds == nil {
+		return nil, errors.New("unbaled to access credentials - should always check before getting client")
 	}
 
 	client, err := aws.NewEKSClient(creds, a.resource)
@@ -58,57 +57,4 @@ func (a *KoreEKS) GetClusterClient() (*aws.Client, error) {
 	}
 
 	return client, nil
-}
-
-// GetCredentials returns the cloud credential
-func (a *KoreEKS) GetCredentials(team string) (*aws.Credentials, error) {
-	// @step: is the team permitted access to this credentials
-	permitted, err := a.ctx.Kore().Teams().Team(team).Allocations().IsPermitted(a.ctx, a.resource.Spec.Credentials)
-	if err != nil {
-		a.ctx.Logger().WithError(err).Error("attempting to check for permission on credentials")
-
-		return nil, fmt.Errorf("attempting to check for permission on credentials")
-	}
-
-	if !permitted {
-		a.ctx.Logger().Warn("trying to build eks cluster unallocated permissions")
-
-		return nil, errors.New("you do not have permissions to the eks credentials")
-	}
-
-	// @step: retrieve the credentials
-	eksCreds := &eks.EKSCredentials{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      a.resource.Spec.Credentials.Name,
-			Namespace: a.resource.Spec.Credentials.Namespace,
-		},
-	}
-	found, err := kubernetes.GetIfExists(a.ctx, a.ctx.Client(), eksCreds)
-	if err != nil {
-		return nil, err
-	}
-	if !found {
-		return nil, fmt.Errorf("eks credentials: (%s/%s) not found", a.resource.Spec.Credentials.Namespace, a.resource.Spec.Credentials.Name)
-	}
-
-	// for backwards-compatibility, use the creds set on the EKSCredentials resource, if they exist
-	if eksCreds.Spec.SecretAccessKey != "" && eksCreds.Spec.AccessKeyID != "" {
-		return &aws.Credentials{
-			AccountID:       eksCreds.Spec.AccountID,
-			AccessKeyID:     eksCreds.Spec.AccessKeyID,
-			SecretAccessKey: eksCreds.Spec.SecretAccessKey,
-		}, nil
-	}
-
-	// @step: we need to grab the secret
-	secret, err := controllers.GetDecodedSecret(a.ctx, a.ctx.Client(), eksCreds.Spec.CredentialsRef)
-	if err != nil {
-		return nil, err
-	}
-
-	return &aws.Credentials{
-		AccountID:       eksCreds.Spec.AccountID,
-		AccessKeyID:     secret.Spec.Data["access_key_id"],
-		SecretAccessKey: secret.Spec.Data["access_secret_key"],
-	}, nil
 }
