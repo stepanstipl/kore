@@ -55,9 +55,12 @@ class ClusterBuildForm extends React.Component {
       const { allocations, plans } = await this.fetchComponentData()
       const gkeCredentials = (allocations.items || []).filter(a => a.spec.resource.kind === 'GKECredentials')
       const eksCredentials = (allocations.items || []).filter(a => a.spec.resource.kind === 'EKSCredentials')
+      const aksCredentials = (allocations.items || []).filter(a => a.spec.resource.kind === 'AKSCredentials')
+
       // use the predictable name of the AccountManagement resource that is allocated to filter the allocations
       const gcpAccountManagement = (allocations.items || []).find(a => a.spec.resource.kind === 'AccountManagement' && a.spec.resource.name === 'am-gcp')
       const awsAccountManagement = (allocations.items || []).find(a => a.spec.resource.kind === 'AccountManagement' && a.spec.resource.name === 'am-aws')
+
       this.setState({
         credentials: {
           GCP: {
@@ -67,6 +70,10 @@ class ClusterBuildForm extends React.Component {
           AWS: {
             credentials: eksCredentials,
             accountManagement: awsAccountManagement
+          },
+          Azure: {
+            credentials: aksCredentials,
+            accountManagement: undefined
           }
         },
         plans: plans,

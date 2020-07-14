@@ -66,7 +66,8 @@ module.exports = {
   },
   clusterProviderMap: {
     'AWS': 'EKS',
-    'GCP': 'GKE'
+    'GCP': 'GKE',
+    'Azure': 'AKS'
   },
   clusterProviderCloudMap: {
     'GKE': { cloud: 'GCP', accountNoun: 'project' },
