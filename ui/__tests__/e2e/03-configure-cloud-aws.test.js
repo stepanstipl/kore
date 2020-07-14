@@ -80,7 +80,7 @@ describe('Configure Cloud - AWS', () => {
       name: `testplan-${Math.random().toString(36).substr(2, 5)}`,
       description: 'Test plan for testing',
       planDescription: 'A plan description',
-      region: 'eu-west-2',
+      region: [ 'Europe', 'EU (London) - eu-west-2' ],
       version: '1.15'
     }
 
@@ -129,7 +129,7 @@ describe('Configure Cloud - AWS', () => {
 
     it('edits an existing plan', async () => {
       await awsClusterPlansPage.edit(testPlan.name)
-      await awsClusterPlansPage.populatePlan({ region: 'eu-west-1' })
+      await awsClusterPlansPage.populatePlan({ region: ['North America','US East (Ohio) - us-east-2'] })
       await awsClusterPlansPage.addNodeGroup()
       // No name, close should be disabled:
       expect(await awsClusterPlansPage.closeNodeGroupDisabled()).toBeTruthy()

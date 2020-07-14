@@ -113,6 +113,23 @@ class KoreApiClient {
     GetSecurityRule: (code) => this.apis.security.GetSecurityRule({ code })
   }
 
+  // Metadata
+  metadata = {
+    GetCloudRegions: (cloud) => this.apis.metadata.GetCloudRegions({ cloud }),
+    GetCloudRegionZones: (cloud, region) => this.apis.metadata.GetCloudRegionZones({ cloud, region }),
+    GetCloudNodeTypes: (cloud, region) => this.apis.metadata.GetCloudNodeTypes({ cloud, region }),
+    GetKubernetesRegions: (provider) => this.apis.metadata.GetKubernetesRegions({ provider }),
+    GetKubernetesRegionZones: (provider, region) => this.apis.metadata.GetKubernetesRegionZones({ provider, region }),
+    GetKubernetesNodeTypes: (provider, region) => this.apis.metadata.GetKubernetesNodeTypes({ provider, region }),
+    GetKubernetesVersions: (provider, region) => this.apis.metadata.GetKubernetesVersions({ provider, region }),
+  }
+
+  // Costs
+  costestimates = {
+    EstimateClusterPlanCost: (plan) => this.apis.costestimates.EstimateClusterPlanCost({ body: JSON.stringify(plan) }),
+    EstimateServicePlanCost: (plan) => this.apis.costestimates.EstimateServicePlanCost({ body: JSON.stringify(plan) })
+  }
+
   // Policies
   ListPlanPolicies = (kind) => this.apis.default.ListPlanPolicies({ kind })
   GetPlanPolicy = (name) => this.apis.default.GetPlanPolicy({ name })

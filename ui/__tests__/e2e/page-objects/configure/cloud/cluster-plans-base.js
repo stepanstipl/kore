@@ -33,4 +33,10 @@ export class ConfigureCloudClusterPlansBase extends ConfigureCloudPage {
     await this.p.click('button#plan_save')
     await waitForDrawerOpenClose(this.p)
   }
+
+  async viewPlanConfig() {
+    await this.p.evaluate(() => {
+      document.querySelector('#plan_config').scrollIntoView()
+    })
+  }
 }

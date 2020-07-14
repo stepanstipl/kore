@@ -3,7 +3,8 @@ const { publicRuntimeConfig } = getConfig()
 
 export const KoreFeatures = {
   SERVICES: 'services',
-  APPLICATION_SERVICES: 'application_services'
+  APPLICATION_SERVICES: 'application_services',
+  COSTS: 'costs'
 }
 
 export function featureEnabled(feature) {

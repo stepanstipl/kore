@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Form, Select, Table, Icon } from 'antd'
-import { startCase, debounce } from 'lodash'
+import { debounce } from 'lodash'
 import PlanOptionBase from '../PlanOptionBase'
 import KoreApi from '../../../kore-api'
 
@@ -109,12 +109,9 @@ export default class PlanOptionClusterUsers extends PlanOptionBase {
   }
 
   render() {
-    const { name, value, editable, property } = this.props
-
-    const valueOrDefault = value || property.default || []
-    const displayName = this.props.displayName || startCase(name)
-    const description = this.props.manage ? 'Set default users to be added to every cluster created from this plan' : 'Control which team members have access to this cluster'
-    const roles = ['cluster-admin', 'admin', 'edit', 'view']
+    const { name, editable, property } = this.props
+    const { displayName, valueOrDefault, help } = this.prepCommonProps(this.props, [])
+    const roles = property.enum
     const columns = [
       { title: 'User', dataIndex: 'username', key: 'username', width: '45%' },
       { title: 'Roles', dataIndex: 'roles', key: 'tags', width: '45%', render: function renderRoles(userRoles, r) { 
@@ -133,7 +130,7 @@ export default class PlanOptionClusterUsers extends PlanOptionBase {
     ]
 
     return (
-      <Form.Item label={displayName} help={description}>
+      <Form.Item label={displayName} help={help}>
         <Table 
           size="small" 
           pagination={false} 

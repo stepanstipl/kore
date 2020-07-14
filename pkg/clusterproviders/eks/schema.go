@@ -35,77 +35,25 @@ const schema = `
 		"version"
 	],
 	"properties": {
-		"authorizedMasterNetworks": {
-			"type": "array",
-			"description": "A collection of network cidr allowed to speak the EKS control plan",
-			"items": {
-				"type": "string",
-				"format": "1.2.3.4/16"
-			},
-			"default": [ "0.0.0.0/0" ]
-		},
-		"authProxyAllowedIPs": {
-			"title": "Auth Proxy Allowed IP Ranges",
-			"type": "array",
-			"description": "The networks which are allowed to connect to this cluster (e.g. via kubectl).",
-			"items": {
-				"type": "string",
-				"format": "1.2.3.4/16"
-			},
-			"minItems": 1,
-			"default": [ "0.0.0.0/0" ]
-		},
-		"clusterUsers": {
-			"type": "array",
-			"description": "Users who should be allowed to access this cluster.",
-			"items": {
-				"type": "object",
-				"additionalProperties": false,
-				"required": [
-					"username",
-					"roles"
-				],
-				"properties": {
-					"username": {
-						"type": "string",
-						"minLength": 1
-					},
-					"roles": {
-						"type": "array",
-						"items": {
-							"type": "string",
-							"minLength": 1,
-							"enum": [ "view", "edit", "admin", "cluster-admin" ]
-						},
-						"minItems": 1
-					}
-				}
-			}
-		},
-		"defaultTeamRole": {
-			"type": "string",
-			"description": "The default role that team members have on this cluster.",
-			"enum": [ "view", "edit", "admin", "cluster-admin" ],
-			"default": "view"
-		},
 		"description": {
 			"type": "string",
 			"description": "Meaningful description of this cluster.",
 			"minLength": 1
 		},
-		"domain": {
+		"region": {
 			"type": "string",
-			"description": "The domain for this cluster.",
-			"minLength": 1,
-			"default": "default"
+			"description": "The AWS region in which this cluster will reside",
+			"examples": [ "eu-west-2", "us-east-1" ],
+			"pattern": "^(us(-gov)?|ap|ca|cn|eu|sa)-(central|(north|south)?(east|west)?)-\\d$",
+			"immutable": true
 		},
-		"enableDefaultTrafficBlock": {
-			"type": "boolean",
-			"default": false
-		},
-		"inheritTeamMembers": {
-			"type": "boolean",
-			"default": true
+		"version": {
+			"type": "string",
+			"description": "The Kubernetes version to deploy.",
+			"pattern": "^[0-9]+\\.[0-9]+$",
+			"examples": [
+				"1.15", "1.16"
+			]
 		},
 		"nodeGroups": {
 			"type": "array",
@@ -245,20 +193,73 @@ const schema = `
 			"immutable": true,
 			"default": "10.0.0.0/16"
 		},
-		"region": {
+		"defaultTeamRole": {
 			"type": "string",
-			"description": "The AWS region in which this cluster will reside",
-			"examples": [ "eu-west-2", "us-east-1" ],
-			"pattern": "^(us(-gov)?|ap|ca|cn|eu|sa)-(central|(north|south)?(east|west)?)-\\d$",
-			"immutable": true
+			"description": "The role that team members will have on this cluster if 'inherit team members' enabled",
+			"enum": [ "view", "edit", "admin", "cluster-admin" ],
+			"default": "view"
 		},
-		"version": {
+		"inheritTeamMembers": {
+			"type": "boolean",
+			"description": "Whether team members will all have access to this cluster by default",
+			"default": true
+		},
+		"clusterUsers": {
+			"type": "array",
+			"description": "Users who should be allowed to access this cluster, will override any default role set above for these users",
+			"items": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": [
+					"username",
+					"roles"
+				],
+				"properties": {
+					"username": {
+						"type": "string",
+						"minLength": 1
+					},
+					"roles": {
+						"type": "array",
+						"items": {
+							"type": "string",
+							"minLength": 1,
+							"enum": [ "view", "edit", "admin", "cluster-admin" ]
+						},
+						"minItems": 1
+					}
+				}
+			}
+		},
+		"domain": {
 			"type": "string",
-			"description": "The Kubernetes version to deploy.",
-			"pattern": "^[0-9]+\\.[0-9]+$",
-			"examples": [
-				"1.15", "1.16"
-			]
+			"description": "The domain for this cluster.",
+			"minLength": 1,
+			"default": "default"
+		},
+		"authorizedMasterNetworks": {
+			"type": "array",
+			"description": "A collection of network cidr allowed to speak the EKS control plan",
+			"items": {
+				"type": "string",
+				"format": "1.2.3.4/16"
+			},
+			"default": [ "0.0.0.0/0" ]
+		},
+		"authProxyAllowedIPs": {
+			"title": "Auth Proxy Allowed IP Ranges",
+			"type": "array",
+			"description": "The networks which are allowed to connect to this cluster (e.g. via kubectl).",
+			"items": {
+				"type": "string",
+				"format": "1.2.3.4/16"
+			},
+			"minItems": 1,
+			"default": [ "0.0.0.0/0" ]
+		},
+		"enableDefaultTrafficBlock": {
+			"type": "boolean",
+			"default": false
 		}
 	},
 	"if": {

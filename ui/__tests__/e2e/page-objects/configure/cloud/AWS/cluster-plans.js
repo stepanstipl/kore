@@ -1,5 +1,5 @@
 import { ConfigureCloudClusterPlansBase } from '../cluster-plans-base'
-import { clearFillTextInput, waitForDrawerOpenClose } from '../../../utils'
+import { clearFillTextInput, waitForDrawerOpenClose, setCascader } from '../../../utils'
 
 export class ConfigureCloudAWSClusterPlans extends ConfigureCloudClusterPlansBase {
   constructor(p) {
@@ -13,10 +13,11 @@ export class ConfigureCloudAWSClusterPlans extends ConfigureCloudClusterPlansBas
   }
 
   async populatePlan({ description, name, planDescription, region, version }) {
+    await this.viewPlanConfig()
     await clearFillTextInput(this.p, 'plan_summary', description)
     await clearFillTextInput(this.p, 'plan_description', name)
     await clearFillTextInput(this.p, 'plan_input_description', planDescription)
-    await clearFillTextInput(this.p, 'plan_input_region', region)
+    await setCascader(this.p, 'plan_input_region', region)
     await clearFillTextInput(this.p, 'plan_input_version', version)
   }
 
@@ -26,6 +27,8 @@ export class ConfigureCloudAWSClusterPlans extends ConfigureCloudClusterPlansBas
   }
 
   async viewEditNodeGroup(idx) {
+    await this.viewPlanConfig()
+    await waitForDrawerOpenClose(this.p)
     await this.p.click(`a#plan_nodegroup_${idx}_viewedit`)
     await waitForDrawerOpenClose(this.p)
   }

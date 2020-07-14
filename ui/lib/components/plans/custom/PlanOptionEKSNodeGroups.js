@@ -1,11 +1,11 @@
 import * as React from 'react'
 import { Form, Icon, List, Button, Drawer, Input, Descriptions, InputNumber, Checkbox, Collapse, Radio, Modal, Alert } from 'antd'
-import { startCase } from 'lodash'
 
 import PlanOptionBase from '../PlanOptionBase'
-import ConstrainedDropdown from './ConstrainedDropdown'
 import PlanOption from '../PlanOption'
 import copy from '../../../utils/object-copy'
+import NodePoolCost from '../../costs/NodePoolCost'
+import PlanOptionClusterMachineType from './PlanOptionClusterMachineType'
 
 export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
   constructor(props) {
@@ -15,27 +15,9 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
   static AMI_TYPE_GENERAL = 'AL2_x86_64'
   static AMI_TYPE_GPU = 'AL2_x86_64_GPU'
 
-  // @TODO: Pull these from AWS
-  static supportedInstanceTypes = {
-    [PlanOptionEKSNodeGroups.AMI_TYPE_GENERAL]: [
-      't3.micro', 't3.small', 't3.medium', 't3.large', 't3.xlarge', 't3.2xlarge',
-      't3a.micro', 't3a.small', 't3a.medium', 't3a.large', 't3a.xlarge', 't3a.2xlarge',
-      'm5.large', 'm5.xlarge', 'm5.2xlarge', 'm5.4xlarge', 'm5.8xlarge', 'm5.12xlarge',
-      'm5a.large', 'm5a.xlarge', 'm5a.2xlarge', 'm5a.4xlarge',
-      'c5.large', 'c5.xlarge', 'c5.2xlarge', 'c5.4xlarge', 'c5.9xlarge',
-      'r5.large', 'r5.xlarge', 'r5.2xlarge', 'r5.4xlarge',
-      'r5a.large', 'r5a.xlarge', 'r5a.2xlarge', 'r5a.4xlarge',
-    ],
-    [PlanOptionEKSNodeGroups.AMI_TYPE_GPU]: [
-      'g4dn.xlarge', 'g4dn.2xlarge', 'g4dn.4xlarge', 'g4dn.8xlarge', 'g4dn.12xlarge',
-      'p2.xlarge', 'p2.8xlarge', 'p2.16xlarge',
-      'p3.2xlarge', 'p3.8xlarge', 'p3.16xlarge',
-      'p3dn.24xlarge',
-    ],
-  }
-
   state = {
     selectedIndex: -1,
+    prices: null
   }
 
   addNodeGroup = () => {
@@ -128,15 +110,11 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
   }
 
   viewEditNodeGroup = (idx) => {
-    this.setState({
-      selectedIndex: idx
-    })
+    this.setState({ selectedIndex: idx, prices: null })
   }
 
   closeNodeGroup = () => {
-    this.setState({
-      selectedIndex: -1
-    })
+    this.setState({ selectedIndex: -1, prices: null })
   }
 
   nodeGroupActions = (idx, editable) => {
@@ -153,30 +131,27 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
 
   render() {
     const { name, editable, property, plan } = this.props
+    const { displayName, valueOrDefault } = this.prepCommonProps(this.props, [])
     const { selectedIndex } = this.state
     const id_prefix = 'plan_nodegroup'
-
-    const value = this.props.value || property.default || []
-    const selected = selectedIndex >= 0 ? value[selectedIndex] : null
-    const displayName = this.props.displayName || startCase(name)
+    const selected = selectedIndex >= 0 ? valueOrDefault[selectedIndex] : null
     const description = this.props.manage ? 'Set default node groups for clusters created from this plan' : 'Manage node groups for this cluster'
 
-    let instanceTypes = []
     let amiType = null
-    let releaseVersionSet = false, ngNameClash = false, nodeGroupCloseable = true
+    let releaseVersionSet = false, ngNameClash = false, nodeGroupCloseable = true, instanceTypeFilter = null
     if (selected) {
       amiType = selected.amiType || 'AL2_x86_64'
-      instanceTypes = PlanOptionEKSNodeGroups.supportedInstanceTypes[amiType]
       releaseVersionSet = selected.releaseVersion && selected.releaseVersion.length > 0
       // we have duplicate names if another node group with a different index has the same name as this one
-      ngNameClash = selected.name && selected.name.length > 0 && value.some((v, i) => i !== selectedIndex && v.name === selected.name)
+      ngNameClash = selected.name && selected.name.length > 0 && valueOrDefault.some((v, i) => i !== selectedIndex && v.name === selected.name)
       nodeGroupCloseable = !ngNameClash && selected.name && selected.name.length > 0
+      instanceTypeFilter = amiType === PlanOptionEKSNodeGroups.AMI_TYPE_GENERAL ? (c) => c !== 'GPU instance' : (c) => c === 'GPU instance'
     }
 
     return (
       <>
         <Form.Item label={displayName} help={description}>
-          <List id={`${id_prefix}s`} dataSource={value} renderItem={(ng, idx) => {
+          <List id={`${id_prefix}s`} dataSource={valueOrDefault} renderItem={(ng, idx) => {
             return (
               <List.Item actions={this.nodeGroupActions(idx, editable)}>
                 <List.Item.Meta 
@@ -191,7 +166,7 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
               </List.Item>
             )
           }} />
-          {!editable ? null : <Button id={`${id_prefix}_add`} onClick={this.addNodeGroup}>Add node group</Button>}
+          {!editable ? null : <Button id={`${id_prefix}_add`} onClick={this.addNodeGroup} disabled={!(plan.region)}>Add node group {plan.region ? null : '(choose region first)'}</Button>}
         </Form.Item>
         <Drawer
           title={`Node Group ${selected ? selectedIndex + 1 : ''}`}
@@ -218,7 +193,7 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
                         <InputNumber id={`${id_prefix}_minSize`} value={selected.minSize} size="small" min={property.items.properties.minSize.minimum} max={selected.maxSize} readOnly={!editable} onChange={(v) => this.setNodeGroupProperty(selectedIndex, 'minSize', v)} />
                         {this.validationErrors(`${name}[${selectedIndex}].minSize`)}
                       </Descriptions.Item>}
-                      <Descriptions.Item label={selected.enableAutoscaler ? 'Initial' : null}>
+                      <Descriptions.Item label={selected.enableAutoscaler ? 'Initial size' : null}>
                         <InputNumber id={`${id_prefix}_desiredSize`} value={selected.desiredSize} size="small" min={selected.enableAutoscaler ? selected.minSize : 1} max={selected.enableAutoscaler ? selected.maxSize : undefined} readOnly={!editable} onChange={(v) => this.setNodeGroupProperty(selectedIndex, 'desiredSize', v)} />
                         {this.validationErrors(`${name}[${selectedIndex}].desiredSize`)}
                       </Descriptions.Item>
@@ -228,6 +203,7 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
                       </Descriptions.Item>}
                     </Descriptions>
                   </Form.Item>
+                  <NodePoolCost prices={this.state.prices} nodePool={selected} help="Adjust group size and instance type to see the cost impacts" />
                 </Collapse.Panel>
                 <Collapse.Panel key="compute" header="Compute Configuration (instance type, GPU or regular workload)">
                   <Form.Item label={property.items.properties.amiType.title} help={property.items.properties.amiType.description}>
@@ -242,10 +218,7 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
                     {!releaseVersionSet ? null : <Input id={`${id_prefix}_releaseVersion_custom`} value={selected.releaseVersion} placeholder={this.describe(property.items.properties.releaseVersion)} readOnly={!editable} onChange={(e) => this.setNodeGroupProperty(selectedIndex, 'releaseVersion', e.target.value)} />}
                     {this.validationErrors(`${name}[${selectedIndex}].releaseVersion`)}
                   </Form.Item>
-                  <Form.Item label="AWS Instance Type">
-                    <ConstrainedDropdown id={`${id_prefix}_instanceType`} allowedValues={instanceTypes} value={selected.instanceType} onChange={(v) => this.setNodeGroupProperty(selectedIndex, 'instanceType', v)} />
-                    {this.validationErrors(`${name}[${selectedIndex}].instanceType`)}
-                  </Form.Item>
+                  <PlanOptionClusterMachineType filterCategories={instanceTypeFilter} id={`${id_prefix}_instanceType`} {...this.props} displayName="AWS Instance Type" name={`${name}[${selectedIndex}].instanceType`} property={property.items.properties.instanceType} value={selected.instanceType} onChange={(_, v) => this.setNodeGroupProperty(selectedIndex, 'instanceType', v )} nodePriceSet={(prices) => this.setState({ prices })} />
                   <PlanOption {...this.props} id={`${id_prefix}_instanceType`} displayName="Instance Root Disk Size (GiB)" name={`${name}[${selectedIndex}].diskSize`} property={property.items.properties.diskSize} value={selected.diskSize} onChange={(_, v) => this.setNodeGroupProperty(selectedIndex, 'diskSize', v)} />
                 </Collapse.Panel>
                 <Collapse.Panel key="metadata" header="Metadata (labels, tags, etc)">

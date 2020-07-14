@@ -1,22 +1,24 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Alert, Table, Icon, Tag, Tooltip, Typography } from 'antd'
+import { Alert, Table, Icon, Tag, Tooltip, Typography, Collapse } from 'antd'
 const { Paragraph, Text } = Typography
 import { startCase } from 'lodash'
 
 import KoreApi from '../../kore-api'
+import CostBreakdown from '../costs/CostBreakdown'
 
 class PlanViewer extends React.Component {
-
   static propTypes = {
     plan: PropTypes.object.isRequired,
     resourceType: PropTypes.oneOf(['cluster', 'service']).isRequired,
-    displayUnassociatedPlanWarning: PropTypes.bool
+    displayUnassociatedPlanWarning: PropTypes.bool,
+    hideCostEstimate: PropTypes.bool
   }
 
   state = {
     dataLoading: true,
-    schema: null
+    schema: null,
+    costEstimate: null
   }
 
   componentDidMountComplete = null
@@ -25,10 +27,18 @@ class PlanViewer extends React.Component {
   }
 
   async fetchComponentData() {
-    let schema
+    let schema, costEstimate
+    const api = await KoreApi.client()
     switch (this.props.resourceType) {
     case 'cluster':
-      schema = await (await KoreApi.client()).GetPlanSchema(this.props.plan.spec.kind)
+      schema = await api.GetPlanSchema(this.props.plan.spec.kind)
+      if (!this.props.hideCostEstimate) {
+        try {
+          costEstimate = await api.costestimates.EstimateClusterPlanCost(this.props.plan)
+        } catch {
+          // Ignore failure to get a cost estimate, we just won't display it.
+        }
+      }
       break
     case 'service':
       schema = (await (await KoreApi.client()).GetServicePlanDetails(this.props.plan.metadata.name)).schema
@@ -36,13 +46,14 @@ class PlanViewer extends React.Component {
     }
     this.setState({
       schema: schema || { properties:[] },
+      costEstimate,
       dataLoading: false
     })
   }
 
   render() {
-    const { plan, displayUnassociatedPlanWarning } = this.props
-    const { schema, dataLoading } = this.state
+    const { plan, displayUnassociatedPlanWarning, hideCostEstimate } = this.props
+    const { schema, dataLoading, costEstimate } = this.state
 
     if (dataLoading) {
       return null
@@ -133,6 +144,13 @@ class PlanViewer extends React.Component {
             style={{ marginBottom: '20px' }}
           />
         )}
+        {costEstimate && !hideCostEstimate ? (
+          <Collapse style={{ marginBottom: '20px' }}>
+            <Collapse.Panel header="Cost Estimate">
+              <CostBreakdown costs={costEstimate} />
+            </Collapse.Panel>
+          </Collapse> 
+        ): null}
         {!hasDeprecated ? null : (
           <Alert
             message="This plan has values set on deprecated fields"

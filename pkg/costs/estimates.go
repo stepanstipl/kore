@@ -56,6 +56,10 @@ const (
 
 func (e *estimatesImpl) GetClusterEstimate(planSpec *configv1.PlanSpec) (*costsv1.CostEstimate, error) {
 	// Load costing info for the provider in question
+	if !e.metadata.PricesAvailable() {
+		return nil, validation.NewError("pricing information not available, please ensure Kore Costs feature has been enabled and configured").
+			WithFieldError("prices", validation.MustExist, "prices metadata not available")
+	}
 
 	cloud := getCloudForClusterProvider(planSpec.Kind)
 	if cloud == "" {
@@ -72,6 +76,14 @@ func (e *estimatesImpl) GetClusterEstimate(planSpec *configv1.PlanSpec) (*costsv
 	if !ok || region == "" {
 		// Cost estimation not supported until a region is selected
 		return nil, validation.NewError("plan not valid").WithFieldError("region", validation.Required, "region required to produce estimate")
+	}
+	nodePools, err := getNodePools(planSpec.Kind, planConfiguration)
+	if err != nil {
+		return nil, err
+	}
+	if len(nodePools) == 0 {
+		// Cost estimation not supported until at least one node pool is selected
+		return nil, validation.NewError("plan not valid").WithFieldError("nodePools", validation.Required, "at least one node pool required to produce estimate")
 	}
 
 	estimate := &costsv1.CostEstimate{}
@@ -94,18 +106,13 @@ func (e *estimatesImpl) GetClusterEstimate(planSpec *configv1.PlanSpec) (*costsv
 		return nil, err
 	}
 	estimate.CostElements = append(estimate.CostElements, costsv1.CostEstimateElement{
-		Name:        "Kore Authentication Load Balancer",
+		Name:        "Authentication Load Balancer",
 		MinCost:     exposedServiceCost,
 		MaxCost:     exposedServiceCost,
 		TypicalCost: exposedServiceCost,
 	})
 
 	// Add node pool costs
-	nodePools, err := getNodePools(planSpec.Kind, planConfiguration)
-	if err != nil {
-		return nil, err
-	}
-
 	zoneMultiplier := int64(1)
 	if planSpec.Kind == providerGCP {
 		// GKE is hard-coded currently to deploy for all zones in a region, so get the zones for the region
@@ -161,12 +168,19 @@ func (e *estimatesImpl) GetNodePoolEstimate(cloud string, region string, nodePoo
 		return nil, validation.NewError("plan not valid").
 			WithFieldErrorf(fmt.Sprintf("nodePool.%s.priceType", nodePool.Name), validation.InvalidValue, "no price of type %s available for %s in %s - this price type may not be available in this region", priceType, nodePool.MachineType, region)
 	}
-	return &costsv1.CostEstimateElement{
+	estimate := &costsv1.CostEstimateElement{
 		Name:        fmt.Sprintf("Node Pool %s", nodePool.Name),
-		MinCost:     nodePool.MinSize * nodePrice * zoneMultiplier,
-		MaxCost:     nodePool.MaxSize * nodePrice * zoneMultiplier,
 		TypicalCost: nodePool.Size * nodePrice * zoneMultiplier,
-	}, nil
+	}
+	if nodePool.AutoScale {
+		estimate.MinCost = nodePool.MinSize * nodePrice * zoneMultiplier
+		estimate.MaxCost = nodePool.MaxSize * nodePrice * zoneMultiplier
+	} else {
+		estimate.MinCost = estimate.TypicalCost
+		estimate.MaxCost = estimate.TypicalCost
+	}
+
+	return estimate, nil
 }
 
 func (*estimatesImpl) GetServiceEstimate(planSpec *servicesv1.ServicePlanSpec) (*costsv1.CostEstimate, error) {

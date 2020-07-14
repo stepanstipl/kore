@@ -34,12 +34,13 @@ func eksSamplePlan() map[string]interface{} {
 		"region": "eu-west-2",
 		"nodeGroups": []map[string]interface{}{
 			{
-				"instanceType": "t3.medium",
-				"diskSize":     10,
-				"name":         "group1",
-				"desiredSize":  6,
-				"minSize":      3,
-				"maxSize":      30,
+				"instanceType":     "t3.medium",
+				"diskSize":         10,
+				"name":             "group1",
+				"desiredSize":      6,
+				"minSize":          3,
+				"maxSize":          30,
+				"enableAutoscaler": true,
 			},
 		},
 	}
@@ -50,12 +51,13 @@ func gkeSamplePlan() map[string]interface{} {
 		"region": "europe-west2",
 		"nodePools": []map[string]interface{}{
 			{
-				"machineType": "n1-standard-2",
-				"diskSize":    10,
-				"name":        "compute1",
-				"size":        5,
-				"minSize":     2,
-				"maxSize":     7,
+				"machineType":      "n1-standard-2",
+				"diskSize":         10,
+				"name":             "compute1",
+				"size":             5,
+				"minSize":          2,
+				"maxSize":          7,
+				"enableAutoscaler": true,
 			},
 		},
 	}
@@ -71,6 +73,7 @@ var _ = Describe("Costs - Estimates", func() {
 	var m costsfakes.FakeMetadata
 	BeforeEach(func() {
 		m = costsfakes.FakeMetadata{}
+		m.PricesAvailableReturns(true)
 		m.KubernetesControlPlaneCostReturns(100000, nil)
 		m.KubernetesExposedServiceCostReturns(25000, nil)
 		e = costs.NewEstimates(&m)

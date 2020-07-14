@@ -22,6 +22,7 @@ import (
 	"fmt"
 
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
+	"github.com/appvia/kore/pkg/utils/validation"
 )
 
 type nodePool struct {
@@ -32,6 +33,7 @@ type nodePool struct {
 	DiskSize    int64
 	MachineType string
 	Spot        bool
+	AutoScale   bool
 }
 
 type planParamNames struct {
@@ -43,6 +45,7 @@ type planParamNames struct {
 	DiskSize    string
 	MachineType string
 	Spot        string
+	AutoScale   string
 }
 
 func parsePlanConfig(planSpec *configv1.PlanSpec) (map[string]interface{}, error) {
@@ -51,6 +54,21 @@ func parsePlanConfig(planSpec *configv1.PlanSpec) (map[string]interface{}, error
 		return nil, fmt.Errorf("failed to parse plan configuration values: %s", err)
 	}
 	return planConfiguration, nil
+}
+
+func nodePoolValError(npInd int, field string, msg string) error {
+	return validation.NewError("plan not valid").WithFieldError(
+		fmt.Sprintf("nodePool[%v].%s", npInd, field),
+		validation.InvalidValue,
+		msg)
+}
+
+func parseNodePoolIntProperty(pool map[string]interface{}, paramName string, npInd int, msg string) (int64, error) {
+	val, ok := pool[paramName].(float64)
+	if !ok {
+		return 0, nodePoolValError(npInd, paramName, msg)
+	}
+	return int64(val), nil
 }
 
 func getNodePools(provider string, planConfig map[string]interface{}) ([]nodePool, error) {
@@ -65,17 +83,37 @@ func getNodePools(provider string, planConfig map[string]interface{}) ([]nodePoo
 	nodePools := make([]nodePool, len(pools))
 	for i, p := range pools {
 		pool := p.(map[string]interface{})
-		nodePools[i] = nodePool{
-			Name:        pool[paramNames.Name].(string),
-			Size:        int64(pool[paramNames.Size].(float64)),
-			MinSize:     int64(pool[paramNames.MinSize].(float64)),
-			MaxSize:     int64(pool[paramNames.MaxSize].(float64)),
-			DiskSize:    int64(pool[paramNames.DiskSize].(float64)),
-			MachineType: pool[paramNames.MachineType].(string),
+		nodePools[i] = nodePool{}
+		ok := false
+		var err error
+		if nodePools[i].Name, ok = pool[paramNames.Name].(string); !ok {
+			return nil, nodePoolValError(i, paramNames.Name, "all node pools must have a name to produce estimate")
+		}
+		if nodePools[i].Size, err = parseNodePoolIntProperty(pool, paramNames.Size, i, "all node pools must have a size to produce estimate"); err != nil {
+			return nil, err
+		}
+		if nodePools[i].DiskSize, err = parseNodePoolIntProperty(pool, paramNames.DiskSize, i, "invalid disk size"); err != nil {
+			return nil, err
+		}
+		if nodePools[i].AutoScale, ok = pool[paramNames.AutoScale].(bool); !ok {
+			return nil, nodePoolValError(i, paramNames.AutoScale, "invalid auto-scale")
+		}
+		if nodePools[i].MachineType, ok = pool[paramNames.MachineType].(string); !ok {
+			return nil, nodePoolValError(i, paramNames.MachineType, "invalid machine type")
+		}
+		if nodePools[i].AutoScale {
+			if nodePools[i].MinSize, err = parseNodePoolIntProperty(pool, paramNames.MinSize, i, "node pools must have a min size to produce estimate with auto-scale enabled"); err != nil {
+				return nil, err
+			}
+			if nodePools[i].MaxSize, err = parseNodePoolIntProperty(pool, paramNames.MaxSize, i, "node pools must have a max size to produce estimate with auto-scale enabled"); err != nil {
+				return nil, err
+			}
 		}
 		if paramNames.Spot != "" {
 			if pool[paramNames.Spot] != nil {
-				nodePools[i].Spot = pool[paramNames.Spot].(bool)
+				if nodePools[i].Spot, ok = pool[paramNames.Spot].(bool); !ok {
+					return nil, nodePoolValError(i, paramNames.Spot, "invalid spot")
+				}
 			} else {
 				nodePools[i].Spot = false
 			}
@@ -96,6 +134,7 @@ func getPlanParamNames(provider string) (planParamNames, error) {
 			DiskSize:    "diskSize",
 			MachineType: "machineType",
 			Spot:        "preemptible",
+			AutoScale:   "enableAutoscaler",
 		}, nil
 	case providerAWS:
 		return planParamNames{
@@ -107,6 +146,7 @@ func getPlanParamNames(provider string) (planParamNames, error) {
 			DiskSize:    "diskSize",
 			MachineType: "instanceType",
 			Spot:        "",
+			AutoScale:   "enableAutoscaler",
 		}, nil
 	}
 	return planParamNames{}, fmt.Errorf("cannot determine plan parameter names for provider %s", provider)

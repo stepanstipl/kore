@@ -1,97 +1,12 @@
 import * as React from 'react'
-import { Form, Icon, List, Button, Drawer, Input, Descriptions, InputNumber, Collapse, Modal, Alert, Switch, Cascader, Typography, Checkbox } from 'antd'
-const { Paragraph } = Typography
-import { startCase } from 'lodash'
+import { Form, Icon, List, Button, Drawer, Input, Descriptions, InputNumber, Collapse, Modal, Alert, Switch, Checkbox } from 'antd'
 
+import copy from '../../../utils/object-copy'
 import PlanOptionBase from '../PlanOptionBase'
 import ConstrainedDropdown from './ConstrainedDropdown'
 import PlanOption from '../PlanOption'
-import copy from '../../../utils/object-copy'
-
-// @TODO: Pull these from GCP
-const supportedMachineTypes = {
-  'general2': {
-    'name': 'General Purpose (2nd gen)',
-    'about': 'General purpose machines offer specified number of vCPUs and 4GB (standard), 1GB (highcpu), or 8GB (highmem) memory per vCPU',
-    'flavours': {
-      'n2': {
-        '_about': 'N2 - General',
-        'standard': ['2', '4', '8', '16', '32', '48', '64', '80'],
-        'highmem': ['2', '4', '8', '16', '32', '48', '64', '80'],
-        'highcpu': ['2', '4', '8', '16', '32', '48', '64', '80']
-      },
-      'n2d': {
-        '_about': 'N2D - AMD EPYC Rome Processors',
-        'standard': ['2', '4', '8', '16', '32', '48', '64', '80', '96', '128', '224'],
-        'highmem': ['2', '4', '8', '16', '32', '48', '64', '80', '96', '128', '224'],
-        'highcpu': ['2', '4', '8', '16', '32', '48', '64', '80', '96', '128', '224']
-      },
-      'e2': {
-        '_about': 'E2 - Cost-optimized',
-        'standard': ['2', '4', '8', '16'],
-        'highmem': ['2', '4', '8', '16'],
-        'highcpu': ['2', '4', '8', '16']
-      }
-    }
-  },
-  'general1': {
-    'name': 'General Purpose (1st gen)',
-    'about': 'First generation machines offer slightly lower performance per vCPU than 2nd gen and 3.75GB (standard), 0.9GB (highcpu), or 6.5GB (highmem) memory per vCPU',
-    'flavours': {
-      'n1': {
-        '_about': 'N1 - General',
-        'standard': ['2', '4', '8', '16', '32', '48', '64', '96'],
-        'highmem': ['2', '4', '8', '16', '32', '48', '64', '96'],
-        'highcpu': ['2', '4', '8', '16', '32', '48', '64', '96']
-      }
-    }
-  },
-  'sharedcore': {
-    'name': 'Shared Core',
-    'about': 'Shared Core machines are cost-optimized for low usage workloads with the specified share of a vCPU and small amounts of memory. Very small instances (such as e2-micro and f1-micro) are unlikely to work well and are not recommended.',
-    'flavours': {
-      'e2': {
-        '_about': 'E2 - Cost-optimized, dual virtual core',
-        'micro': ['0.25 (not recommended)'],
-        'small': ['0.5'],
-        'medium': ['1'],
-      },
-      'f1': {
-        '_about': 'F1 - Older generation, single virtual core',
-        'micro': ['0.2 (not recommended)']
-      },
-      'g1': {
-        '_about': 'G1 - Older generation, single virtual core',
-        'small': ['0.5']
-      }
-    }
-  },
-  'compute': {
-    'name': 'Compute Optimized',
-    'about': 'Compute-optimized machines offer highest performance per core and 4GB memory per vCPU',
-    'flavours': {
-      'c2': {
-        '_about': 'C2',
-        'standard': ['2', '4', '8', '16', '30', '60']
-      }
-    }
-  },
-  'memory': {
-    'name': 'Memory Optimized',
-    'about': 'Memory-optimized machines offer large amounts of memory per vCPU',
-    'flavours': {
-      'm2': {
-        '_about': 'M2 - sustained use contract only, 5TB-11TB total memory',
-        'ultramem': ['208', '416']
-      },
-      'm1': {
-        '_about': 'M1 - Older generation, 15-24GB memory per vCPU',
-        'ultramem': ['40', '80', '160'],
-        'megamem': ['96']
-      }
-    }
-  }
-}
+import PlanOptionClusterMachineType from './PlanOptionClusterMachineType'
+import NodePoolCost from '../../costs/NodePoolCost'
 
 // @TODO: Pull these from GCP
 const imageTypes = [
@@ -103,43 +18,10 @@ const imageTypes = [
   { value: 'WINDOWS_SAC', display: 'Windows (semi-annual channel)' }
 ]
 
-function getSupportedMachineTypes() {
-  const index = {}
-  const options = Object.keys(supportedMachineTypes).map(
-    (k) => ({ value: k, label: supportedMachineTypes[k].name, children: getSupportedMachineTypeFlavours(k, index) })
-  )
-  return { index, options }
-}
-
-function getSupportedMachineTypeFlavours(family, index) {
-  return Object.keys(supportedMachineTypes[family].flavours).map(
-    (k) => ({ value: k, label: supportedMachineTypes[family].flavours[k]._about || k.toUpperCase(), children: getSupportedMachineTypeTypes(family, k, index) })
-  )
-}
-
-function getSupportedMachineTypeTypes(family, flavour, index) {
-  return Object.keys(supportedMachineTypes[family].flavours[flavour]).filter((k) => !k.startsWith('_')).map(
-    (k) => {
-      return {
-        value: k,
-        label: startCase(k),
-        children: supportedMachineTypes[family].flavours[flavour][k].map((cpus) => {
-          const mt = getMachineType(family, flavour, k, cpus)
-          index[mt] = [family, flavour, k, mt]
-          return { value: mt, label: `${cpus} vCPUs` }
-        })
-      }
-    }
-  )
-}
-
-function getMachineType(family, flavour, type, cpus) {
-  return family === 'sharedcore' ? `${flavour}-${type}`.toLowerCase() : `${flavour}-${type}-${cpus}`.toLowerCase()
-}
-
 export default class PlanOptionGKENodePools extends PlanOptionBase {
   state = {
-    selectedIndex: -1
+    selectedIndex: -1,
+    prices: null
   }
 
   addNodePool = () => {
@@ -210,15 +92,11 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
   }
 
   viewEditNodePool = (idx) => {
-    this.setState({
-      selectedIndex: idx
-    })
+    this.setState({ selectedIndex: idx, prices: null })
   }
 
   closeNodePool = () => {
-    this.setState({
-      selectedIndex: -1
-    })
+    this.setState({ selectedIndex: -1, prices: null })
   }
 
   nodePoolActions = (idx, editable) => {
@@ -233,25 +111,24 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
     return actions
   }
 
+  setPrices = (prices) => {
+    this.setState({ prices })
+  }
+
   render() {
     const { name, editable, property, plan } = this.props
-    const { selectedIndex } = this.state
+    const { displayName, valueOrDefault } = this.prepCommonProps(this.props, [])
+    const { selectedIndex, prices } = this.state
     const id_prefix = 'plan_nodepool'
-
-    const value = this.props.value || property.default || []
-    const selected = selectedIndex >= 0 ? value[selectedIndex] : null
-    const displayName = this.props.displayName || startCase(name)
+    const selected = selectedIndex >= 0 ? valueOrDefault[selectedIndex] : null
     const description = this.props.manage ? 'Default node pools for clusters created from this plan' : null
 
     let ngNameClash = false, versionFollowMaster = false, nodePoolCloseable = true
-    let allMachineTypes = null, selectedMachineTypeFamilyInfo = null
     if (selected) {
       // we have duplicate names if another node pool with a different index has the same name as this one
-      ngNameClash = selected.name && selected.name.length > 0 && value.some((v, i) => i !== selectedIndex && v.name === selected.name)
+      ngNameClash = selected.name && selected.name.length > 0 && valueOrDefault.some((v, i) => i !== selectedIndex && v.name === selected.name)
       versionFollowMaster = !selected.version || selected.version === ''
       nodePoolCloseable = !ngNameClash && selected.name && selected.name.match(property.items.properties.name.pattern)
-      allMachineTypes = getSupportedMachineTypes()
-      selectedMachineTypeFamilyInfo = supportedMachineTypes[allMachineTypes.index[selected.machineType][0]].about
     }
 
     let followingReleaseChannel = false
@@ -259,11 +136,10 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
       followingReleaseChannel = true
     }
 
-
     return (
       <>
         <Form.Item label={displayName} help={description}>
-          <List id={`${id_prefix}s`} dataSource={value} renderItem={(ng, idx) => {
+          <List id={`${id_prefix}s`} dataSource={valueOrDefault} renderItem={(ng, idx) => {
             return (
               <List.Item actions={this.nodePoolActions(idx, editable)}>
                 <List.Item.Meta
@@ -278,7 +154,7 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
               </List.Item>
             )
           }} />
-          {!editable ? null : <Button id={`${id_prefix}_add`} onClick={this.addNodePool}>Add node pool</Button>}
+          {!editable ? null : <Button id={`${id_prefix}_add`} onClick={this.addNodePool} disabled={!(plan.region)}>Add node pool {plan.region ? null : '(choose region first)'}</Button>}
           {this.validationErrors(name)}
         </Form.Item>
         <Drawer
@@ -325,7 +201,7 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
                         <InputNumber id={`${id_prefix}_minSize`} value={selected.minSize} size="small" min={property.items.properties.minSize.minimum} max={selected.maxSize} readOnly={!editable} onChange={(v) => this.setNodePoolProperty(selectedIndex, 'minSize', v)} />
                         {this.validationErrors(`${name}[${selectedIndex}].minSize`)}
                       </Descriptions.Item>}
-                      <Descriptions.Item label={selected.enableAutoscaler ? 'Initial' : null}>
+                      <Descriptions.Item label={selected.enableAutoscaler ? 'Initial size' : null}>
                         <InputNumber id={`${id_prefix}_size`} value={selected.size} size="small" min={selected.enableAutoscaler ? selected.minSize : 1} max={selected.enableAutoscaler ? selected.maxSize : 99999} readOnly={!editable} onChange={(v) => this.setNodePoolProperty(selectedIndex, 'size', v)} />
                         {this.validationErrors(`${name}[${selectedIndex}].size`)}
                       </Descriptions.Item>
@@ -335,19 +211,36 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
                       </Descriptions.Item>}
                     </Descriptions>
                   </Form.Item>
+                  <NodePoolCost 
+                    prices={prices} 
+                    nodePool={selected} 
+                    help={<>Adjust pool size, machine type and pre-emptible to see the cost impacts. No <a href="https://cloud.google.com/compute/docs/sustained-use-discounts" target="_blank" rel="noopener noreferrer">sustained use discounts</a> are included in this estimate.</>} 
+                    zoneMultiplier={3} 
+                    priceType={selected.preemptible ? 'PreEmptible' : null} 
+                  />
                   <PlanOption id={`${id_prefix}_maxPodsPerNode`} {...this.props} displayName="Max pods per node" name={`${name}[${selectedIndex}].maxPodsPerNode`} property={property.items.properties.maxPodsPerNode} value={selected.maxPodsPerNode} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'maxPodsPerNode', v)} />
                 </Collapse.Panel>
                 <Collapse.Panel key="compute" header="Compute Configuration (machine type, disk size, image type, auto-repair)">
                   <Form.Item label="Image Type" help={<>For help choosing an image type, see <a target="_blank" rel="noopener noreferrer" href="https://cloud.google.com/kubernetes-engine/docs/concepts/node-images">the GCP documentation</a></>}>
                     <ConstrainedDropdown id={`${id_prefix}_imageType`} allowedValues={imageTypes} value={selected.imageType} onChange={(v) => this.setNodePoolProperty(selectedIndex, 'imageType', v)} />
                   </Form.Item>
-                  <Form.Item label="GCP Machine Type" help={`${selected.machineType}`}>
-                    <Cascader id={`${id_prefix}_machineType`} style={{ width: '100%' }} disabled={!editable} options={allMachineTypes.options} value={allMachineTypes.index[selected.machineType]} onChange={(v) => this.setNodePoolProperty(selectedIndex, 'machineType', v[3] )} />
-                    {!selectedMachineTypeFamilyInfo ? null : <Paragraph type="secondary" style={{ lineHeight: '20px' }}>{selectedMachineTypeFamilyInfo}</Paragraph>}
-                  </Form.Item>
+                  <PlanOptionClusterMachineType id={`${id_prefix}_machineType`} {...this.props} displayName="GCP Machine Type" name={`${name}[${selectedIndex}].machineType`} property={property.items.properties.machineType} value={selected.machineType} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'machineType', v )} nodePriceSet={(prices) => this.setState({ prices })} />
                   <PlanOption id={`${id_prefix}_diskSize`} {...this.props} displayName="Instance Root Disk Size (GiB)" name={`${name}[${selectedIndex}].diskSize`} property={property.items.properties.diskSize} value={selected.diskSize} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'diskSize', v)} />
                   <PlanOption id={`${id_prefix}_enableAutorepair`} {...this.props} displayName="Auto-repair" name={`${name}[${selectedIndex}].enableAutorepair`} property={property.items.properties.enableAutorepair} value={selected.enableAutorepair} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'enableAutorepair', v)} />
                   <PlanOption id={`${id_prefix}_preemptible`} {...this.props} displayName="Pre-emptible" name={`${name}[${selectedIndex}].preemptible`} property={property.items.properties.preemptible} value={selected.preemptible} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'preemptible', v)} />
+                  {!selected.preemptible ? null : 
+                    <Alert type="warning" message={
+                      <>
+                        Pre-emptible nodes deliver significant cost savings but <b>can and will be destroyed</b> at any time, at 
+                        minimum once per 24 hour period.
+                        <br/><br/>
+                        Auto-repair will attempt to re-create nodes when this happens, but capacity to create new pre-emptible 
+                        nodes is never guaranteed thus your pool may be smaller than your specified minimum size at times.
+                        <br/><br/>
+                        Ensure you understand the impact of this on your workloads before enabling.
+                      </>
+                    }/>
+                  }
                 </Collapse.Panel>
                 <Collapse.Panel key="metadata" header="Labels & Taints">
                   <PlanOption id={`${id_prefix}_labels`} {...this.props} displayName="Labels" help="Labels help kubernetes workloads find this group" name={`${name}[${selectedIndex}].labels`} property={property.items.properties.labels} value={selected.labels} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'labels', v)} />

@@ -6,6 +6,7 @@ import { set } from 'lodash'
 import FormErrorMessage from '../forms/FormErrorMessage'
 import canonical from '../../utils/canonical'
 import PlanViewEdit from './PlanViewEdit'
+import CostEstimate from '../costs/CostEstimate'
 
 /**
  * ManagePlanForm is an abstract base for *managing* a plan itself (i.e. viewing, editing or creating PLANS).
@@ -28,7 +29,7 @@ export default class ManagePlanForm extends React.Component {
     schema: null,
     planValues: this.props.data && this.props.data.spec.configuration || {},
     formErrorMessage: false,
-    validationErrors: []
+    validationErrors: [],
   }
 
   componentDidMountComplete = null
@@ -54,6 +55,12 @@ export default class ManagePlanForm extends React.Component {
     throw 'Must be overridden to populate planValues and schema in state'
   }
 
+  /** 
+   * estimateSupported should return true in an overriding class where
+   * cost estimates are supported for that provider.
+   */
+  estimateSupported = () => false
+
   onValueChange(name, value) {
     this.setState((state) => {
       let planValues = {
@@ -66,7 +73,7 @@ export default class ManagePlanForm extends React.Component {
         // Property set to undefined, so remove it completely from the plan values.
         delete planValues[name]
       }
-      return { planValues }
+      return { planValues, planValuesChangedSinceEstimate: true }
     })
   }
 
@@ -194,7 +201,24 @@ export default class ManagePlanForm extends React.Component {
 
         {this.formHeader(formErrorMessage, mode, data)}
 
-        <Card style={{ marginBottom: '20px' }}>
+        {!this.estimateSupported() ? null : (
+          <Card style={{ marginBottom: '20px' }}>
+            <Alert
+              message="Cost Estimate"
+              description={<>See an <b>approximate</b> cost estimate for usage of this plan</>}
+              type="success"
+              style={{ marginBottom: '20px' }}
+            />
+            <CostEstimate 
+              planValues={planValues} 
+              resourceType={resourceType} 
+              kind={kind} 
+              noPriceDataError="Pricing information is not available. Please check that the Kore Costs feature has been configured and enabled."
+            />
+          </Card>
+        )}
+
+        <Card style={{ marginBottom: '20px' }} id="plan_config">
           {mode === 'view' ? null : <Alert
             message="Plan configuration"
             description="Set the plan configuration"

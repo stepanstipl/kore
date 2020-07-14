@@ -21,7 +21,9 @@ export default class PlanOption extends PlanOptionBase {
   }
 
   render() {
-    const { resourceType, kind, name, property, value, editable, hideNonEditable } = this.props
+    const { resourceType, kind, name, property, value, editable, hideNonEditable, disableCustom } = this.props
+    const { onChange, displayName, help, valueOrDefault, id } = this.prepCommonProps(this.props)
+
     if (!editable && hideNonEditable) {
       return null
     }
@@ -31,17 +33,13 @@ export default class PlanOption extends PlanOptionBase {
       return null
     }
 
-    // Switch out to a custom option if we have one
-    const customControl = CustomPlanOptionRegistry.getCustomPlanOption(resourceType, kind, name, this.props)
-    if (customControl) {
-      return customControl
+    if (!disableCustom) {
+      // Switch out to a custom option if we have one
+      const customControl = CustomPlanOptionRegistry.getCustomPlanOption(resourceType, kind, name, this.props)
+      if (customControl) {
+        return customControl
+      }
     }
-
-    const onChange = this.props.onChange || (() => {})
-    const displayName = this.props.displayName || property.title || startCase(name)
-    const help = this.props.help || this.describe(property)
-    const defaultValue = property.const !== undefined && property.const !== null ? property.const : property.default
-    const valueOrDefault = value !== undefined && value !== null ? value : defaultValue
 
     // Special handling for object types - represent as a card with a plan option for each property:
     if (property.type === 'object' && property.properties) {
@@ -67,8 +65,6 @@ export default class PlanOption extends PlanOptionBase {
         </Card>
       )
     }
-
-    const id = this.props.id || `plan_input_${name}`
 
     // Special handling for 'key map' object types, represented in json schema as having no properties list and additionalProperties of type string
     if (property.type === 'object' && property.additionalProperties && property.additionalProperties.type === 'string') {

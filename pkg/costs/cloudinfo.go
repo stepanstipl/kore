@@ -27,6 +27,7 @@ import (
 
 // Cloudinfo provides an abstracted interface to the cloudinfo service
 type Cloudinfo interface {
+	Ready() bool
 	KubernetesRegions(cloud string) ([]costsv1.Continent, error)
 	KubernetesRegionAZs(cloud string, region string) ([]string, error)
 	KubernetesInstanceTypes(cloud string, region string) ([]costsv1.InstanceType, error)
@@ -64,6 +65,15 @@ func (c *cloudinfoImpl) providerServiceRegionURL(cloud string, region string) (s
 		return "", err
 	}
 	return fmt.Sprintf("%sapi/v1/providers/%s/services/%s/regions/%s", c.url, cloudinfCloud, service, region), nil
+}
+
+func (c *cloudinfoImpl) Ready() bool {
+	client := resty.New()
+	resp, err := client.R().Get(fmt.Sprintf("%sstatus", c.url))
+	if err != nil {
+		return false
+	}
+	return resp.StatusCode() >= 200 && resp.StatusCode() < 400
 }
 
 func (c *cloudinfoImpl) KubernetesRegions(cloud string) ([]costsv1.Continent, error) {
