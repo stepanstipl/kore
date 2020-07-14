@@ -97,7 +97,7 @@ type AccountClienter interface {
 	WaitForAccountAvailable(ctx context.Context, provisionRecordID string) error
 	// IsAccountReady will determine if the account provisioning is ready
 	IsAccountReady(provisionRecordID string) (bool, error)
-	// EnsureInitialAccess will ensure access to the account
+	// EnsureInitialAccessCreated will ensure access to the account
 	EnsureInitialAccessCreated() error
 	// IsInitialAccessReady checks if initial access is working
 	IsInitialAccessReady() (bool, error)

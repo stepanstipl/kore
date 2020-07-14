@@ -137,7 +137,7 @@ func (t *awsCtrl) EnsureOrganization(ctx context.Context, account *awsv1alpha1.A
 	return org, nil
 }
 
-// EnsureAWSOrganization is responsible for ensuring the AWS Organisation is valid
+// EnsureAWSAccountProvisioned is responsible for ensuring the AWS Organisation is valid
 func (t *awsCtrl) EnsureAWSAccountProvisioned(
 	ctx context.Context,
 	account *awsv1alpha1.AWSAccount,
@@ -149,7 +149,7 @@ func (t *awsCtrl) EnsureAWSAccountProvisioned(
 		"namespace": account.Namespace,
 	})
 
-	// @step: check the accounct exists
+	// @step: check the account exists
 	client := aws.NewAccountClientFromCredsAndRole(*creds, org.Spec.RoleARN, org.Spec.Region, aws.Account{
 		AccountEmail:              t.DeriveAccountEmail(org, account),
 		ManagedOrganizationalUnit: org.Spec.OuName,
@@ -403,7 +403,7 @@ func (t *awsCtrl) EnsureCredentialsAllocation(
 			Namespace: account.Namespace,
 		},
 		Spec: configv1.AllocationSpec{
-			Name:    "aws-" + account.Name,
+			Name:    name,
 			Summary: "Provides credentials to team AWS Account " + account.Spec.AccountName,
 			Resource: corev1.Ownership{
 				Group:     awsv1alpha1.GroupVersion.Group,
@@ -466,10 +466,10 @@ func (t *awsCtrl) IsAccountAlreadyUsed(ctx context.Context, account *awsv1alpha1
 
 // GetAllocationName returns the name we should use for the account allocation
 func (t *awsCtrl) GetAllocationName(account *awsv1alpha1.AWSAccount) string {
-	return fmt.Sprintf("aws-%s", account.Name)
+	return fmt.Sprintf("awsaccount-%s", account.Name)
 }
 
-// GetProjectCredentialsSecretName returns the secret name of the credentials for this project
+// GetAccountCredentialsSecretName returns the secret name of the credentials for this project
 func (t *awsCtrl) GetAccountCredentialsSecretName(account *awsv1alpha1.AWSAccount) string {
 	return fmt.Sprintf("aws-%s", account.Name)
 }
