@@ -17,8 +17,6 @@
 package kubernetes
 
 import (
-	"encoding/json"
-	"os"
 	"strings"
 	"testing"
 
@@ -57,8 +55,6 @@ func TestPatch(t *testing.T) {
 	}
 	for _, c := range cases {
 		assert.NoError(t, PatchHelper(c.Object, c.Field, strings.NewReader(c.Patch)))
-		json.NewEncoder(os.Stdout).Encode(c.Expected)
-		json.NewEncoder(os.Stdout).Encode(c.Object)
 		assert.Equal(t, c.Expected, c.Object)
 	}
 }

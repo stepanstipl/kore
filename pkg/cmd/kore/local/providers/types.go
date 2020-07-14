@@ -33,6 +33,8 @@ type Logger interface {
 
 // CreateOptions are configurable for the provider creation
 type CreateOptions struct {
+	// AskConfirmation indicates we prompt before downloading assets
+	AskConfirmation bool
 	// DisableUI indicates the UI is disabled
 	DisableUI bool
 }

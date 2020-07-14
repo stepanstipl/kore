@@ -29,10 +29,13 @@ import (
 	"runtime"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/appvia/kore/pkg/client/config"
 	"github.com/appvia/kore/pkg/cmd/kore/local/providers"
 	"github.com/appvia/kore/pkg/utils"
+
+	"github.com/spf13/cobra"
 )
 
 const (
@@ -44,6 +47,8 @@ type providerImpl struct {
 	providers.Logger
 	// path is the file path to the kind binary
 	path string
+	// options are the configurables
+	options providers.CreateOptions
 }
 
 var (
@@ -65,6 +70,20 @@ nodes:
     protocol: TCP
 `
 )
+
+var (
+	// kindVersion is the version of kind image
+	kindVersion = "kindest/node:v1.15.11@sha256:6cc31f3533deb138792db2c7d1ffc36f7456a06f1db5556ad3b6927641016f50"
+	// loadedImages is a collection of images to load after creating the cluster
+	loadedImages []string
+)
+
+// AddProviderFlags allows kind to all some provider specific flags
+func AddProviderFlags(cmd *cobra.Command) {
+	flags := cmd.Flags()
+	flags.StringVar(&kindVersion, "kind-image", kindVersion, "the version of the kind image to use")
+	flags.StringSliceVar(&loadedImages, "kind-load-image", []string{}, "collection of images to load after creating cluster")
+}
 
 // GetKindConfiguration returns the kind config
 func GetKindConfiguration(options providers.CreateOptions) (string, error) {
@@ -145,7 +164,7 @@ func (p *providerImpl) Create(ctx context.Context, name string, options provider
 		return fmt.Errorf("%s", combined)
 	}
 
-	return nil
+	return p.ensureImages(ctx, name)
 }
 
 // Export is responsible for exporting the kind kubeconfig
@@ -230,10 +249,12 @@ func (p *providerImpl) Preflight(ctx context.Context) error {
 		}
 
 		p.Info("Kind binary not found in $PATH")
-		p.Infof("Download: %s (%s) (y/N)? ", getReleaseURL(), path)
 
-		if ok := utils.AskForConfirmation(os.Stdin); !ok {
-			return errors.New(`missing binary: "kind" in $PATH`)
+		if p.options.AskConfirmation {
+			p.Infof("Download: %s (%s) (y/N)? ", getReleaseURL(), path)
+			if ok := utils.AskForConfirmation(os.Stdin); !ok {
+				return errors.New(`missing binary: "kind" in $PATH`)
+			}
 		}
 		p.Info("Attempting to download the kind binary")
 
@@ -267,7 +288,39 @@ func (p *providerImpl) ensureRunning(ctx context.Context, name string) error {
 		return err
 	}
 
-	return exec.CommandContext(ctx, path, args...).Run()
+	if err := exec.CommandContext(ctx, path, args...).Run(); err != nil {
+		return err
+	}
+
+	return p.ensureImages(ctx, name)
+}
+
+func (p *providerImpl) ensureImages(ctx context.Context, name string) error {
+	if len(loadedImages) == 0 {
+		return nil
+	}
+
+	for _, image := range loadedImages {
+		p.Info("Attempting to load docker image: %s into cluster", image)
+
+		err := utils.RetryWithTimeout(ctx, 2*time.Minute, 5*time.Second, func() (bool, error) {
+			args := []string{
+				"load",
+				"docker-image", image,
+				"--name", name,
+			}
+			if err := exec.CommandContext(ctx, p.path, args...).Run(); err != nil {
+				return false, nil
+			}
+
+			return true, nil
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func getReleaseURL() string {

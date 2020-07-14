@@ -75,23 +75,23 @@ load helper
   [[ "$status" -eq 0 ]]
 }
 
-@test "We should to create a user called e2e" {
-  runit "${KORE} create user --email e2e@appvia.io e2e@appvia.io"
+@test "We should to create a user called tester" {
+  runit "${KORE} create user --email tester@appvia.io tester@appvia.io"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should be able to add the user to the admin group" {
-  runit "${KORE} create admin -u e2e@appvia.io"
+  runit "${KORE} create admin -u tester@appvia.io"
   [[ "$status" -eq 0 ]]
-  runit "${KORE} get admin | grep ^e2e@appvia.io"
+  runit "${KORE} get admin | grep ^tester@appvia.io"
   [[ "$status" -eq 0 ]]
 }
 
 @test "We should be able to delete the user from admin group" {
-  runit "${KORE} delete admin -u e2e@appvia.io"
+  runit "${KORE} delete admin -u tester@appvia.io"
   [[ "$status" -eq 0 ]]
-  runit "${KORE} get admin | grep ^e2e@appvia.io || true"
+  runit "${KORE} get admin | grep ^tester@appvia.io || true"
   [[ "$status" -eq 0 ]]
-  runit "${KORE} delete user e2e@appvia.io"
+  runit "${KORE} delete user tester@appvia.io"
   [[ "$status" -eq 0 ]]
 }

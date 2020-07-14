@@ -69,6 +69,8 @@ type UpOptions struct {
 	EnableDeploy bool
 	// DisableUI indicates we deploy without an UI
 	DisableUI bool
+	// DeploymentTimeout is the amount of time we will wait for deployment
+	DeploymentTimeout time.Duration
 	// Force indicates we should force any changes
 	Force bool
 	// FlagsChanged is a list of flags which changed
@@ -79,8 +81,10 @@ type UpOptions struct {
 	Wait bool
 	// ValuesFile is the file containing the configurable values
 	ValuesFile string
-	// Values a collection of values passed to the helm chart
+	// Values for helm chart
 	Values map[string]interface{}
+	// HelmValues a collection of values passed to the helm chart
+	HelmValues []string
 	// Version is the release version to use
 	Version string
 }
@@ -105,8 +109,13 @@ func NewCmdBootstrapUp(factory cmdutil.Factory) *cobra.Command {
 	flags.StringVar(&o.BinaryPath, "binary-path", filepath.Join(config.GetClientPath(), "build"), "path to place any downloaded binaries if requested `PATH`")
 	flags.BoolVar(&o.EnableDeploy, "enable-deploy", true, "indicates if we should deploy the kore application `BOOL`")
 	flags.BoolVar(&o.DisableUI, "disable-ui", false, "indicates the kore ui is not deployed `BOOL`")
+	flags.DurationVar(&o.DeploymentTimeout, "deployment-timeout", 5*time.Minute, "amount of time to wait for a successful deployment `DURATION`")
+	flags.StringSliceVar(&o.HelmValues, "set", []string{}, "a collection of path=value used to update the helm values `KEYPAIR`")
 	flags.BoolVar(&o.Wait, "wait", true, "indicates we wait for the deployment to complete `BOOL`")
 	flags.BoolVar(&o.Force, "force", false, "indicates we should force any changes `BOOL`")
+
+	// @step: add the provider specific options to the command line
+	AddProviderFlags(command)
 
 	return command
 }
@@ -180,20 +189,18 @@ func (o *UpOptions) EnsureHelmValues(ctx context.Context) error {
 		return err
 	}
 
-	if !found {
-		if err := (&Task{
-			Description: fmt.Sprintf("Persisting the values to local file: %s", o.ValuesFile),
-			Handler: func(ctx context.Context) error {
-				content, err := utils.ToYAML(&o.Values)
-				if err != nil {
-					return err
-				}
+	if err := (&Task{
+		Description: fmt.Sprintf("Persisting the values to local file: %q", o.ValuesFile),
+		Handler: func(ctx context.Context) error {
+			content, err := utils.ToYAML(&o.Values)
+			if err != nil {
+				return err
+			}
 
-				return ioutil.WriteFile(o.ValuesFile, content, valueFilePerms)
-			},
-		}).Run(ctx, o.Writer()); err != nil {
-			return err
-		}
+			return ioutil.WriteFile(o.ValuesFile, content, valueFilePerms)
+		},
+	}).Run(ctx, o.Writer()); err != nil {
+		return err
 	}
 
 	return nil
@@ -221,7 +228,8 @@ func (o *UpOptions) EnsureLocalKubernetes(ctx context.Context) error {
 		Description: "Provisioned a local kubernetes cluster",
 		Handler: func(ctx context.Context) error {
 			if err := provider.Create(ctx, o.Name, providers.CreateOptions{
-				DisableUI: o.DisableUI,
+				AskConfirmation: !o.Force,
+				DisableUI:       o.DisableUI,
 			}); err != nil {
 				return err
 			}
@@ -331,11 +339,15 @@ func (o *UpOptions) EnsureHelmDownload(ctx context.Context) error {
 	// @step: request permission from the user
 	logger := newProviderLogger(o.Factory)
 	logger.Info("Helm binary not found in $PATH")
-	logger.Infof("Download %s (%s) y/N? ", release, path)
 
-	permitted := utils.AskForConfirmation(os.Stdin)
-	if !permitted {
-		return fmt.Errorf("missing: %q not found in $PATH", "helm")
+	if o.Force {
+		logger.Info("Downloading %s (%s)", release, path)
+	} else {
+		logger.Infof("Download %s (%s) y/N? ", release, path)
+
+		if !utils.AskForConfirmation(os.Stdin) {
+			return fmt.Errorf("missing: %q not found in $PATH", "helm")
+		}
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Minute)
@@ -378,7 +390,7 @@ func (o *UpOptions) EnsureKoreRelease(ctx context.Context) error {
 	}
 
 	return (&Task{
-		Header:      fmt.Sprintf("Attempting to deploy the Kore release %s", o.Version),
+		Header:      fmt.Sprintf("Attempting to deploy the Kore release %q", o.Version),
 		Description: "Deployed the Kore release into the cluster",
 		Handler: func(ctx context.Context) error {
 			logger := newProviderLogger(o.Factory)
@@ -387,7 +399,7 @@ func (o *UpOptions) EnsureKoreRelease(ctx context.Context) error {
 			case true:
 				logger.Info("Using the official helm chart for deployment")
 			default:
-				logger.Infof("Using the helm release: %s for deployment", o.Release)
+				logger.Info("Using the helm release: %s for deployment", o.Release)
 			}
 
 			release, err := func() (string, error) {
@@ -464,7 +476,7 @@ func (o *UpOptions) EnsureUP(ctx context.Context) error {
 	if !o.EnableDeploy || !o.Wait {
 		return nil
 	}
-	timeout := 5 * time.Minute
+	timeout := o.DeploymentTimeout
 	interval := 2 * time.Second
 
 	return (&Task{
