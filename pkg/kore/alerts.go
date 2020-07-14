@@ -90,7 +90,7 @@ type AlertRules interface {
 	// PurgeHistory removes the history an a rule
 	PurgeHistory(ctx context.Context, rule *monitoring.AlertRule, keep time.Duration) error
 	// SilenceRule is responsible for suspending any alerts on a rule
-	SilencedRule(ctx context.Context, rule monitoring.AlertRule, message string, duration time.Duration) error
+	SilenceRule(ctx context.Context, rule monitoring.AlertRule, message string, duration time.Duration) error
 	// UpdateRule is responsible for updating or creating a rule on a resource
 	UpdateRule(ctx context.Context, rule *monitoring.AlertRule) (*monitoring.AlertRule, error)
 	// UpdateAlert is responsible for updating the status of a rule
@@ -334,7 +334,7 @@ func (a *alertsImpl) DeleteResourceRules(ctx context.Context, resource corev1.Ow
 }
 
 // SilenceRule is responsible for suspending any alerts on a rule
-func (a *alertsImpl) SilencedRule(ctx context.Context, rule monitoring.AlertRule, message string, duration time.Duration) error {
+func (a *alertsImpl) SilenceRule(ctx context.Context, rule monitoring.AlertRule, message string, duration time.Duration) error {
 	if message == "" {
 		return ErrNotAllowed{message: "you must specify a reason for silence"}
 	}
@@ -501,7 +501,7 @@ func (a *alertsImpl) UpdateAlert(ctx context.Context, alert *monitoring.Alert) e
 
 	rulemodel, err := a.Persist().AlertRules().Get(ctx, filters...)
 	if err != nil {
-		logger.WithError(err).Error("trying to rule of the alert")
+		logger.WithError(err).Error("trying to retrieve the alerting rule")
 
 		if persistence.IsNotFound(err) {
 			return ErrNotFound

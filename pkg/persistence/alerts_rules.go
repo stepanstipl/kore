@@ -247,9 +247,6 @@ func (i *arulesImpl) makeListQuery(ctx context.Context, opts ...ListFunc) ([]*mo
 			return db.Order("created_at DESC")
 		}).Preload("Alerts.Labels").Find(&list)
 	}
-	if terms.HasStatus() {
-		q = q.Where("a.status = ?", terms.GetStatus())
-	}
 	if terms.HasAlertStatus() {
 		q = q.Where("a.status IN (?)", terms.GetAlertStatus())
 	}

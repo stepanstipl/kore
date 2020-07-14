@@ -25,6 +25,8 @@ import (
 const (
 	// HelmAppClusterAutoscaler is the plan name for instances of the cluster autoscaler
 	HelmAppClusterAutoscaler = "helm-app-cluster-autoscaler"
+	// HelmAppKoreMonitoring is the plan name of the kore monitoring plan
+	HelmAppKoreMonitoring = "helm-app-kore-monitoring"
 )
 
 // GetDefaultPlans returns a collection of plans for the resources
@@ -65,6 +67,48 @@ func GetDefaultPlans() []servicev1.ServicePlan {
 						"resourceSelector": {
 							"matchLabels": {
 								"app.kubernetes.io/name": "aws-cluster-autoscaler"
+							}
+						}
+					}`),
+				},
+			},
+		},
+		{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "ServicePlan",
+				APIVersion: servicev1.GroupVersion.String(),
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      HelmAppKoreMonitoring,
+				Namespace: "kore",
+				Annotations: map[string]string{
+					"kore.appvia.io/system":   "true",
+					"kore.appvia.io/readonly": "true",
+				},
+			},
+			Spec: servicev1.ServicePlanSpec{
+				Kind:        "helm-app",
+				Summary:     "Managed Cluster Monitoring",
+				DisplayName: "Kore Cluster Monitoring",
+				Description: "Kore Monitoring service provides a monitoring stack used to ensure the health of the clusters and the services",
+				Configuration: &apiextv1.JSON{
+					Raw: []byte(`{
+						"source": {
+							"helm": {
+								"url": "https://storage.googleapis.com/kore-charts",
+								"name": "kore-monitoring",
+								"version": "0.0.1"
+							}
+						},
+						"resourceKinds": [
+							{
+								"group": "apps",
+								"kind": "Deployment"
+							}
+						],
+						"resourceSelector": {
+							"matchLabels": {
+								"app.kubernetes.io/name": "monitoring-operator"
 							}
 						}
 					}`),

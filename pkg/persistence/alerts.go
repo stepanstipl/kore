@@ -129,9 +129,6 @@ func (i *alertsImpl) List(ctx context.Context, opts ...ListFunc) ([]*model.Alert
 	if terms.HasAlertStatus() {
 		statuses = terms.GetAlertStatus()
 	}
-	if terms.HasStatus() {
-		statuses = []string{terms.GetStatus()}
-	}
 	if len(statuses) > 0 {
 		q = q.Where("i.status IN (?)", statuses)
 	}
@@ -167,9 +164,6 @@ func (i *alertsImpl) List(ctx context.Context, opts ...ListFunc) ([]*model.Alert
 	}
 	if terms.HasAlertLatest() {
 		q = q.Where("archived_at IS NULL")
-	}
-	if terms.HasStatus() {
-		q = q.Where("i.status IN (?)", statuses)
 	}
 	if terms.HasAlertSource() {
 		q = q.Where("r.source = ?", terms.GetAlertSource())

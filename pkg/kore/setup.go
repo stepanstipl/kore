@@ -25,7 +25,6 @@ import (
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	core "github.com/appvia/kore/pkg/apis/core/v1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
-	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/kore/assets"
 	"github.com/appvia/kore/pkg/persistence/model"
 	"github.com/appvia/kore/pkg/store"
@@ -93,11 +92,6 @@ func (h hubImpl) Setup(ctx context.Context) error {
 				return err
 			}
 		}
-	}
-
-	// @step: create any default service plans
-	if err := h.ensureServicePlans(ctx); err != nil {
-		return err
 	}
 
 	for _, x := range assets.GetDefaultClusterRoles() {
@@ -325,33 +319,6 @@ func (h hubImpl) ensureNamespace(ctx context.Context, namespace string) error {
 			},
 		}),
 	)
-}
-
-// ensureServicePlans is used to inject a default service plan is not there
-func (h hubImpl) ensureServicePlans(ctx context.Context) error {
-	list, err := assets.GetDefaultServicePlans()
-	if err != nil {
-		return err
-	}
-
-	for _, plan := range list {
-		found, err := h.Store().Client().Has(ctx,
-			store.HasOptions.From(&servicesv1.ServicePlan{}),
-			store.HasOptions.InNamespace(plan.Namespace),
-			store.HasOptions.WithName(plan.Name),
-		)
-		if err != nil {
-			return err
-		}
-
-		if !found {
-			if err := h.Store().Client().Create(ctx, store.CreateOptions.From(plan)); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
 }
 
 func (h hubImpl) ensureHubIDPClientExists(ctx context.Context) error {
