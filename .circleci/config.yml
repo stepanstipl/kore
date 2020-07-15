@@ -546,7 +546,7 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v([0-9]+)\.([0-9]+)\.([0-9]+)($|-rc([0-9]+))$/
+              only: /^v([0-9]+)\.([0-9]+)\.([0-9]+)($|-rc([0-9]+)|-beta([0-9]+)|-alpha([0-9]+))$/
       - e2e_gke:
           enable_gke: true
           requires:
@@ -555,7 +555,7 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v([0-9]+)\.([0-9]+)\.([0-9]+)($|-rc([0-9]+))$/
+              only: /^v([0-9]+)\.([0-9]+)\.([0-9]+)($|-rc([0-9]+)|-beta([0-9]+)|-alpha([0-9]+))$/
       - e2e_eks:
           enable_eks: true
           requires:
@@ -564,7 +564,7 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v([0-9]+)\.([0-9]+)\.([0-9]+)($|-rc([0-9]+))$/
+              only: /^v([0-9]+)\.([0-9]+)\.([0-9]+)($|-rc([0-9]+)|-beta([0-9]+)|-alpha([0-9]+))$/
       - publish-release:
           requires:
             - check
