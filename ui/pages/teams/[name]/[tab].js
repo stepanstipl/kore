@@ -1,22 +1,18 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import Link from 'next/link'
 import Router from 'next/router'
 import Error from 'next/error'
-import { Typography, Button, Badge, Alert, Icon, Modal, Dropdown, Menu, Tabs } from 'antd'
-const { Paragraph, Text } = Typography
+import { Alert, Icon, Tabs } from 'antd'
 const { TabPane } = Tabs
 
-import Breadcrumb from '../../../lib/components/layout/Breadcrumb'
-import redirect from '../../../lib/utils/redirect'
-import { featureEnabled, KoreFeatures } from '../../../lib/utils/features'
 import KoreApi from '../../../lib/kore-api'
 import ClustersTab from '../../../lib/components/teams/cluster/ClustersTab'
 import MembersTab from '../../../lib/components/teams/members/MembersTab'
 import SecurityTab from '../../../lib/components/teams/security/SecurityTab'
 import MonitoringTab from '../../../lib/components/teams/monitoring/MonitoringTab'
 import SecurityStatusIcon from '../../../lib/components/security/SecurityStatusIcon'
-import { successMessage, errorMessage } from '../../../lib/utils/message'
+import TeamHeader from '../../../lib/components/teams/TeamHeader'
+import TextWithCount from '../../../lib/components/utils/TextWithCount'
 
 class TeamDashboardTabPage extends React.Component {
   static propTypes = {
@@ -77,95 +73,16 @@ class TeamDashboardTabPage extends React.Component {
     Router.push('/teams/[name]/[tab]', `/teams/${this.props.team.metadata.name}/${key}`)
   }
 
-  deleteTeam = async () => {
-    try {
-      const team = this.props.team.metadata.name
-      await (await KoreApi.client()).RemoveTeam(team)
-      this.props.teamRemoved(team)
-      successMessage(`Team "${team}" deleted`)
-      return redirect({ router: Router, path: '/' })
-    } catch (err) {
-      console.log('Error deleting team', err)
-      errorMessage('Team could not be deleted, please try again later')
-    }
-  }
-
-  deleteTeamConfirm = () => {
-    const { clusterCount } = this.state
-    if (clusterCount > 0) {
-      return Modal.warning({
-        title: 'Warning: team cannot be deleted',
-        content: 'The clusters must be deleted first',
-        onOk() {}
-      })
-    }
-
-    Modal.confirm({
-      title: 'Are you sure you want to delete this team?',
-      content: 'This cannot be undone',
-      okText: 'Yes',
-      okType: 'danger',
-      cancelText: 'No',
-      onOk: this.deleteTeam
-    })
-  }
-
-  settingsMenu = ({ team }) => {
-    const menu = (
-      <Menu>
-        <Menu.Item key="audit">
-          <Link href="/teams/[name]/audit" as={`/teams/${team.metadata.name}/audit`}>
-            <a>
-              <Icon type="table" style={{ marginRight: '5px' }} />
-              Team audit viewer
-            </a>
-          </Link>
-        </Menu.Item>
-        <Menu.Item key="delete" className="ant-btn-danger" onClick={this.deleteTeamConfirm}>
-          <Icon type="delete" style={{ marginRight: '5px' }} />
-          Delete team
-        </Menu.Item>
-      </Menu>
-    )
-    return (
-      <Dropdown overlay={menu}>
-        <Button>
-          <Icon type="setting" style={{ marginRight: '10px' }} />
-          <Icon type="down" />
-        </Button>
-      </Dropdown>
-    )
-  }
-
-  getTabTitle = ({ title, count, icon }) => (
-    <span>
-      {title}
-      {count !== undefined && count !== -1 && <Badge showZero={true} style={{ marginLeft: '10px', backgroundColor: '#1890ff' }} count={count} />}
-      {icon}
-    </span>
-  )
-
   render() {
-    const { team, invitation } = this.props
+    const { team, invitation, teamRemoved } = this.props
 
     if (!team) {
       return <Error statusCode={404} />
     }
 
     return (
-      <div>
-        <div style={{ display: 'inline-block', width: '100%' }}>
-          <div style={{ float: 'left', marginTop: '8px' }}>
-            <Breadcrumb items={[{ text: team.spec.summary }]} />
-          </div>
-          <div style={{ float: 'right' }}>
-            {this.settingsMenu({ team })}
-          </div>
-        </div>
-        <Paragraph>
-          {team.spec.description ? <Text strong>{team.spec.description}</Text> : <Text style={{ fontStyle: 'italic' }} type="secondary">No description</Text> }
-          <Text style={{ float: 'right' }}><Text strong>Team ID: </Text>{team.metadata.name}</Text>
-        </Paragraph>
+      <>
+        <TeamHeader team={team} teamRemoved={teamRemoved} />
 
         {invitation ? (
           <Alert
@@ -177,25 +94,24 @@ class TeamDashboardTabPage extends React.Component {
         ) : null}
 
         <Tabs activeKey={this.state.tabActiveKey} onChange={(key) => this.handleTabChange(key)} tabBarStyle={{ marginBottom: '20px' }}>
-          <TabPane key="clusters" tab={this.getTabTitle({ title: 'Clusters', count: this.state.clusterCount })} forceRender={true}>
+          <TabPane key="clusters" tab={<TextWithCount title="Clusters" count={this.state.clusterCount} />} forceRender={true}>
             <ClustersTab user={this.props.user} team={this.props.team} getClusterCount={(count) => this.setState({ clusterCount: count })} />
           </TabPane>
 
-          <TabPane key="members" tab={this.getTabTitle({ title: 'Members', count: this.state.memberCount })} forceRender={true}>
+          <TabPane key="members" tab={<TextWithCount title="Members" count={this.state.memberCount} />} forceRender={true}>
             <MembersTab user={this.props.user} team={this.props.team} getMemberCount={(count) => this.setState({ memberCount: count })} />
           </TabPane>
 
-          <TabPane key="security" tab={this.getTabTitle({ title: 'Security', icon: <SecurityStatusIcon status="Compliant" size="small" style={{ verticalAlign: 'middle' }} /> })} forceRender={true}>
+          <TabPane key="security" tab={<TextWithCount title="Security" icon={<SecurityStatusIcon status="Compliant" size="small" style={{ verticalAlign: 'middle' }} />} />} forceRender={true}>
             <SecurityTab team={this.props.team} getOverviewStatus={(status) => this.setState({ securityStatus: status })} />
           </TabPane>
 
-          {!featureEnabled(KoreFeatures.MONITORING_SERVICES) ? null : (
-            <TabPane key="monitoring" tab={this.getTabTitle({ title: 'Monitoring  ', icon: <Icon type="monitor"/> })} forceRender={true}>
-              <MonitoringTab user={this.props.user} team={this.props.team} />
-            </TabPane>
-          )}
+          <TabPane key="monitoring" tab={<TextWithCount title="Monitoring" icon={<Icon type="monitor"/>} />} forceRender={true}>
+            <MonitoringTab user={this.props.user} team={this.props.team} />
+          </TabPane>
         </Tabs>
-      </div>
+
+      </>
     )
   }
 }
