@@ -17,7 +17,12 @@
 package get
 
 import (
-	"github.com/appvia/kore/pkg/cmd/errors"
+	"errors"
+	"fmt"
+	"net/url"
+
+	"github.com/appvia/kore/pkg/client"
+	cmderrors "github.com/appvia/kore/pkg/cmd/errors"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/render"
@@ -59,6 +64,8 @@ type GetOptions struct {
 	Output string
 	// Headers indicates no headers on the table output
 	Headers bool
+	// Raw URI to request from the server
+	Raw string
 }
 
 // NewCmdGet creates and returns the get command
@@ -96,6 +103,9 @@ func NewCmdGet(factory cmdutil.Factory) *cobra.Command {
 		},
 	}
 
+	flags := command.Flags()
+	flags.StringVar(&o.Raw, "raw", "", "Raw URI to request from the server")
+
 	command.AddCommand(
 		NewCmdGetAdmin(factory),
 		NewCmdGetAlert(factory),
@@ -115,8 +125,12 @@ func NewCmdGet(factory cmdutil.Factory) *cobra.Command {
 
 // Validate is used to validate the options
 func (o *GetOptions) Validate() error {
-	if o.Resource == "" {
-		return errors.ErrMissingResource
+	if o.Resource == "" && o.Raw == "" {
+		return cmderrors.ErrMissingResource
+	}
+
+	if o.Raw != "" && (o.Resource != "" || o.Name != "") {
+		return errors.New("when --raw is set, no arguments should be used")
 	}
 
 	return nil
@@ -124,6 +138,10 @@ func (o *GetOptions) Validate() error {
 
 // Run implements the action
 func (o *GetOptions) Run() error {
+	if o.Raw != "" {
+		return o.runRaw()
+	}
+
 	// @step: lookup the resource from the cache
 	resource, err := o.Resources().Lookup(o.Resource)
 	if err != nil {
@@ -132,7 +150,7 @@ func (o *GetOptions) Run() error {
 
 	// @step: if the resource if team space, lets ensure we have the team selector
 	if resource.IsTeamScoped() && o.Team == "" {
-		return errors.ErrTeamMissing
+		return cmderrors.ErrTeamMissing
 	}
 
 	// @step: we need to construct the request
@@ -169,4 +187,33 @@ func (o *GetOptions) Run() error {
 	}
 
 	return display.Do()
+}
+
+func (o *GetOptions) runRaw() error {
+	if o.Output != render.FormatJSON && o.Output != render.FormatYAML {
+		o.Output = render.FormatJSON
+	}
+
+	u, err := url.Parse(o.Raw)
+	if err != nil {
+		return fmt.Errorf("raw url is invalid")
+	}
+
+	var params []client.ParameterFunc
+	for key, values := range u.Query() {
+		for _, value := range values {
+			params = append(params, client.QueryParameter(key, value))
+		}
+	}
+
+	resp := o.ClientWithEndpoint(u.Path).Parameters(params...).Get()
+	if err := resp.Error(); err != nil {
+		return err
+	}
+
+	return render.Render().
+		Writer(o.Writer()).
+		Resource(render.FromReader(resp.Body())).
+		Format(o.Output).
+		Do()
 }
