@@ -5,10 +5,11 @@
 [![License: Apache-2.0](https://img.shields.io/github/license/appvia/kore?style=for-the-badge&color=%23D1374D)](https://github.com/appvia/kore/blob/master/LICENSE)
 
 ## Kubernetes for Teams via Appvia Kore
-- **Cluster provisioning** provides secure and consistent provisioning of kubernetes environments for teams.
+- **Cluster provisioning** provides secure and consistent provisioning of Kubernetes environments for teams.
 - **Accounts & Account Users** provides a single source for access and control across the estate.
 - **Plans and Templates** allows the administrators to define the type and shape of resources for teams to consume.
-- **Managed Access Controls** Provides a central means to manage and configure roles, policies and permissions across the estate.
+- **Service Catalogue** allows teams to self serve for pre-approved cloud services and helm charts easily.
+- **Managed Access Controls** provides a central means to manage and configure roles, policies and permissions across the estate.
 
 ## Contents
 - [Local Quick Start](#local-quick-start)
@@ -17,6 +18,10 @@
 - [The DevOps](#the-devops)
 - [Architecture](#architecture)
 - [Cloud Providers](doc/cloud-providers.md)
+
+## Video Walkthrough
+
+Watch a [demo of Kore created in April 2020 on our YouTube channel](https://youtu.be/gVC3LsWE2h4).
 
 ## Local Quick Start
 
