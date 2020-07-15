@@ -115,13 +115,20 @@ class CloudAccountAutomationSettings extends React.Component {
       // create AccountManagement and Allocation CRDs, for each cloud Org
       // each cloud org will use the same settings
       await asyncForEach(this.state.cloudOrgList, async (cloudOrg) => {
-        const cloudAccountList = this.state.cloudAccountAutomationType === 'CUSTOM' ? this.state.cloudAccountList : false
+        let cloudAccountList = this.state.cloudAccountAutomationType === 'CUSTOM' ? copy(this.state.cloudAccountList) : false
+        cloudAccountList = cloudAccountList
+          // remove rules with no plans associated
+          .filter(cloudAccount => cloudAccount.plans.length > 0)
+          // remove non-existent plans from rules
+          .map(cloudAccount => {
+            return { ...cloudAccount, plans: cloudAccount.plans.filter(p => this.state.plans.map(p => p.metadata.name).includes(p)) }
+          })
         const resourceVersion = this.state.accountManagement && this.state.accountManagement.metadata.resourceVersion
         const resourceName = `am-${this.props.cloud.toLowerCase()}`
         const accountMgtResource = KoreApi.resources().generateAccountManagementResource(resourceName, this.props.provider, cloudOrg, cloudAccountList, resourceVersion)
         await api.UpdateAccount(resourceName, accountMgtResource)
         await AllocationHelpers.storeAllocation({ resourceToAllocate: accountMgtResource })
-        this.setState({ submitting: false, accountManagement: accountMgtResource })
+        this.setState({ submitting: false, accountManagement: accountMgtResource, cloudAccountList })
       })
       successMessage(`${titleize(this.props.accountNoun)} automation settings saved`)
     } catch (error) {
