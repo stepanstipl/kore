@@ -1,0 +1,147 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "A role that grants access to the kore user to provision member accounts.",
+    "Parameters": {
+        "KoreUserArnParameter": {
+            "Type": "String",
+            "Description": "This should detail the source account and user",
+            "MinLength": 10
+        },
+        "KoreMasterRoleNameParameter": {
+            "Type": "String",
+            "Description": "This will be the resulting role name in the master account",
+            "MinLength": 5
+        }
+    },
+    "Resources": {
+        "KoreAccountsAdminRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": [
+                                    { "Ref" : "KoreUserArnParameter" }
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "RoleName": { "Ref" : "KoreMasterRoleNameParameter" },
+                "ManagedPolicyArns": [],
+                "Policies": [
+                    {
+                        "PolicyName": "KoreCloudFormation",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "cloudformation:DescribeStackSet",
+                                        "cloudformation:CreateStackSet",
+                                        "cloudformation:UpdateStackSet"
+                                    ],
+                                    "Resource": "arn:aws:cloudformation:*:*:stackset/kore-admin-role-for-member-accounts:*"
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "cloudformation:CreateStackInstances",
+                                        "cloudformation:ListStackInstances"
+                                    ],
+                                    "Resource": "arn:aws:cloudformation:*:*:stack/StackSet-kore-admin-role-for-member-accounts-*"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "PolicyName": "KoreControlTower",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "organizations:ListRoots",
+                                        "organizations:ListAccounts",
+                                        "organizations:ListOrganizationalUnitsForParent",
+                                        "servicecatalog:ListPortfolios",
+                                        "servicecatalog:ListLaunchPaths",
+                                        "servicecatalog:SearchProducts",
+                                        "servicecatalog:AssociatePrincipalWithPortfolio",
+                                        "servicecatalog:DescribeProduct",
+                                        "servicecatalog:ProvisionProduct",
+                                        "servicecatalog:DescribeRecord",
+                                        "sts:AssumeRole"
+                                    ],
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "PolicyName": "KoreAccountFactory",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Sid": "AWSControlTowerAccountFactoryAccess",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "sso:GetProfile",
+                                        "sso:CreateProfile",
+                                        "sso:UpdateProfile",
+                                        "sso:AssociateProfile",
+                                        "sso:CreateApplicationInstance",
+                                        "sso:GetSSOStatus",
+                                        "sso:GetTrust",
+                                        "sso:CreateTrust",
+                                        "sso:UpdateTrust",
+                                        "sso:GetPeregrineStatus",
+                                        "sso:GetApplicationInstance",
+                                        "sso:ListDirectoryAssociations",
+                                        "sso:ListPermissionSets",
+                                        "sso:GetPermissionSet",
+                                        "sso:ProvisionApplicationInstanceForAWSAccount",
+                                        "sso:ProvisionApplicationProfileForAWSAccountInstance",
+                                        "sso:ProvisionSAMLProvider",
+                                        "sso:ListProfileAssociations",
+                                        "sso-directory:ListMembersInGroup",
+                                        "sso-directory:AddMemberToGroup",
+                                        "sso-directory:SearchGroups",
+                                        "sso-directory:SearchGroupsWithGroupName",
+                                        "sso-directory:SearchUsers",
+                                        "sso-directory:CreateUser",
+                                        "sso-directory:DescribeGroups",
+                                        "sso-directory:DescribeDirectory",
+                                        "sso-directory:GetUserPoolInfo",
+                                        "controltower:CreateManagedAccount",
+                                        "controltower:DescribeManagedAccount",
+                                        "controltower:DeregisterManagedAccount",
+                                        "s3:GetObject",
+                                        "organizations:describeOrganization",
+                                        "sso:DescribeRegisteredRegions"
+                                    ],
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "Outputs": {
+        "KoreAccountsAdminRole": {
+            "Description": "This is the ARN to supply to kore",
+            "Value": { "Fn::GetAtt": [ "KoreAccountsAdminRole", "Arn" ] }
+        }
+    }
+}
