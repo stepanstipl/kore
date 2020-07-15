@@ -65,7 +65,7 @@ var (
 	// AzureSecret holds Azure API credentials
 	AzureSecret = SecretTypes{
 		Name:   "azure-credentials",
-		Fields: []string{"client_secret"},
+		Fields: []string{"subscription_id", "tenant_id", "client_id", "client_secret"},
 	}
 )
 
