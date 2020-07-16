@@ -37,7 +37,7 @@ func (u teamHandler) addGKECredentialsRoutes(ws *restful.WebService) {
 	ws.Route(
 		ws.GET("/{team}/gkecredentials/{name}").To(u.findGKECredientals).
 			Doc("Returns a specific GKE Credential to which the team has access").
-			Operation("GetGKECredential").
+			Operation("GetGKECredentials").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", gke.GKECredentials{}).
@@ -47,7 +47,7 @@ func (u teamHandler) addGKECredentialsRoutes(ws *restful.WebService) {
 	ws.Route(
 		ws.PUT("/{team}/gkecredentials/{name}").To(u.updateGKECredientals).
 			Doc("Creates or updates a specific GKE Credential to which the team has access").
-			Operation("UpdateGKECredential").
+			Operation("UpdateGKECredentials").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
 			Reads(gke.GKECredentials{}, "The definition for GKE Credentials").
@@ -58,7 +58,7 @@ func (u teamHandler) addGKECredentialsRoutes(ws *restful.WebService) {
 	ws.Route(
 		ws.DELETE("/{team}/gkecredentials/{name}").To(u.deleteGKECredientals).
 			Doc("Deletes a specific GKE Credential from the team").
-			Operation("RemoveGKECredential").
+			Operation("DeleteGKECredentials").
 			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
 			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
 			Returns(http.StatusOK, "Contains the former team definition from the kore", gke.GKECredentials{}).

@@ -8,7 +8,7 @@ import { pluralize, titleize } from 'inflect'
 import IconTooltip from '../utils/IconTooltip'
 import { isReadOnlyCRD } from '../../utils/crd-helpers'
 import { warningMessage } from '../../utils/message'
-import { getPlanCloudInfo } from '../../utils/plans'
+import { getProviderCloudInfo } from '../../utils/cloud'
 
 class PlanItem extends React.Component {
   static propTypes = {
@@ -19,13 +19,13 @@ class PlanItem extends React.Component {
     displayUnassociatedPlanWarning: PropTypes.bool.isRequired
   }
 
-  planCloudInfo = getPlanCloudInfo(this.props.plan.spec.kind)
+  cloudInfo = getProviderCloudInfo(this.props.plan.spec.kind)
 
   actions = () => {
     const readonly = isReadOnlyCRD(this.props.plan)
     const actions = []
     if (this.props.displayUnassociatedPlanWarning) {
-      actions.push(<IconTooltip key="warning" icon="warning" color="orange" text={`This plan not associated with any ${this.planCloudInfo.cloud} automated ${pluralize(this.planCloudInfo.accountNoun)} and will not be available for teams to use. Edit this plan or go to ${titleize(this.planCloudInfo.accountNoun)} automation settings to review this.`}/>)
+      actions.push(<IconTooltip key="warning" icon="warning" color="orange" text={`This plan not associated with any ${this.cloudInfo.cloud} automated ${pluralize(this.cloudInfo.accountNoun)} and will not be available for teams to use. Edit this plan or go to ${titleize(this.cloudInfo.accountNoun)} automation settings to review this.`}/>)
     }
     actions.push(<Text key="view_plan"><a id={`plans_view_${this.props.plan.metadata.name}`} onClick={this.props.viewPlan(this.props.plan)}><Icon type="eye" theme="filled"/> View</a></Text>)
     actions.push(

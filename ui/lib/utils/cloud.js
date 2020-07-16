@@ -1,6 +1,6 @@
 import getConfig from 'next/config'
 const { publicRuntimeConfig } = getConfig()
 
-export function getPlanCloudInfo(planKind) {
+export function getProviderCloudInfo(planKind) {
   return publicRuntimeConfig.clusterProviderCloudMap[planKind]
 }

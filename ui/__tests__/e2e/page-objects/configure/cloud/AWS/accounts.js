@@ -17,8 +17,9 @@ export class ConfigureCloudAWSAccounts extends ConfigureCloudPage {
   }
 
   async add() {
-    await this.p.click('button#add')
+    await expect(this.p).toClick('button', { text: '+ New' })
     await waitForDrawerOpenClose(this.p)
+    await expect(this.p).toMatch('New AWS account')
   }
 
   async edit(name, accountID) {

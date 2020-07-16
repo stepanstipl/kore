@@ -37,6 +37,8 @@ type ClientService interface {
 
 	DeleteGCPOrganization(params *DeleteGCPOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteGCPOrganizationOK, error)
 
+	DeleteGKECredentials(params *DeleteGKECredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteGKECredentialsOK, error)
+
 	DeleteService(params *DeleteServiceParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteServiceOK, error)
 
 	DeleteServiceCredentials(params *DeleteServiceCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteServiceCredentialsOK, error)
@@ -73,7 +75,7 @@ type ClientService interface {
 
 	GetGKE(params *GetGKEParams, authInfo runtime.ClientAuthInfoWriter) (*GetGKEOK, error)
 
-	GetGKECredential(params *GetGKECredentialParams, authInfo runtime.ClientAuthInfoWriter) (*GetGKECredentialOK, error)
+	GetGKECredentials(params *GetGKECredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*GetGKECredentialsOK, error)
 
 	GetHealth(params *GetHealthParams, authInfo runtime.ClientAuthInfoWriter) (*GetHealthOK, error)
 
@@ -185,8 +187,6 @@ type ClientService interface {
 
 	RemoveConfig(params *RemoveConfigParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveConfigOK, error)
 
-	RemoveGKECredential(params *RemoveGKECredentialParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveGKECredentialOK, error)
-
 	RemoveInvite(params *RemoveInviteParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveInviteOK, error)
 
 	RemoveNamespace(params *RemoveNamespaceParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveNamespaceOK, error)
@@ -217,7 +217,7 @@ type ClientService interface {
 
 	UpdateGCPOrganization(params *UpdateGCPOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateGCPOrganizationOK, error)
 
-	UpdateGKECredential(params *UpdateGKECredentialParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateGKECredentialOK, error)
+	UpdateGKECredentials(params *UpdateGKECredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateGKECredentialsOK, error)
 
 	UpdateIDP(params *UpdateIDPParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateIDPOK, error)
 
@@ -447,6 +447,41 @@ func (a *Client) DeleteGCPOrganization(params *DeleteGCPOrganizationParams, auth
 	// unexpected success response
 	unexpectedSuccess := result.(*DeleteGCPOrganizationDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  DeleteGKECredentials deletes a specific g k e credential from the team
+*/
+func (a *Client) DeleteGKECredentials(params *DeleteGKECredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteGKECredentialsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewDeleteGKECredentialsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "DeleteGKECredentials",
+		Method:             "DELETE",
+		PathPattern:        "/api/v1alpha1/teams/{team}/gkecredentials/{name}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &DeleteGKECredentialsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*DeleteGKECredentialsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for DeleteGKECredentials: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -1075,23 +1110,23 @@ func (a *Client) GetGKE(params *GetGKEParams, authInfo runtime.ClientAuthInfoWri
 }
 
 /*
-  GetGKECredential returns a specific g k e credential to which the team has access
+  GetGKECredentials returns a specific g k e credential to which the team has access
 */
-func (a *Client) GetGKECredential(params *GetGKECredentialParams, authInfo runtime.ClientAuthInfoWriter) (*GetGKECredentialOK, error) {
+func (a *Client) GetGKECredentials(params *GetGKECredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*GetGKECredentialsOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewGetGKECredentialParams()
+		params = NewGetGKECredentialsParams()
 	}
 
 	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "GetGKECredential",
+		ID:                 "GetGKECredentials",
 		Method:             "GET",
 		PathPattern:        "/api/v1alpha1/teams/{team}/gkecredentials/{name}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
-		Reader:             &GetGKECredentialReader{formats: a.formats},
+		Reader:             &GetGKECredentialsReader{formats: a.formats},
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
@@ -1099,13 +1134,13 @@ func (a *Client) GetGKECredential(params *GetGKECredentialParams, authInfo runti
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*GetGKECredentialOK)
+	success, ok := result.(*GetGKECredentialsOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetGKECredential: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for GetGKECredentials: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -3024,41 +3059,6 @@ func (a *Client) RemoveConfig(params *RemoveConfigParams, authInfo runtime.Clien
 }
 
 /*
-  RemoveGKECredential deletes a specific g k e credential from the team
-*/
-func (a *Client) RemoveGKECredential(params *RemoveGKECredentialParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveGKECredentialOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewRemoveGKECredentialParams()
-	}
-
-	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "RemoveGKECredential",
-		Method:             "DELETE",
-		PathPattern:        "/api/v1alpha1/teams/{team}/gkecredentials/{name}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &RemoveGKECredentialReader{formats: a.formats},
-		AuthInfo:           authInfo,
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	})
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*RemoveGKECredentialOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for RemoveGKECredential: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
   RemoveInvite useds to remove a user invitation for the team
 */
 func (a *Client) RemoveInvite(params *RemoveInviteParams, authInfo runtime.ClientAuthInfoWriter) (*RemoveInviteOK, error) {
@@ -3579,23 +3579,23 @@ func (a *Client) UpdateGCPOrganization(params *UpdateGCPOrganizationParams, auth
 }
 
 /*
-  UpdateGKECredential creates or updates a specific g k e credential to which the team has access
+  UpdateGKECredentials creates or updates a specific g k e credential to which the team has access
 */
-func (a *Client) UpdateGKECredential(params *UpdateGKECredentialParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateGKECredentialOK, error) {
+func (a *Client) UpdateGKECredentials(params *UpdateGKECredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateGKECredentialsOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewUpdateGKECredentialParams()
+		params = NewUpdateGKECredentialsParams()
 	}
 
 	result, err := a.transport.Submit(&runtime.ClientOperation{
-		ID:                 "UpdateGKECredential",
+		ID:                 "UpdateGKECredentials",
 		Method:             "PUT",
 		PathPattern:        "/api/v1alpha1/teams/{team}/gkecredentials/{name}",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
-		Reader:             &UpdateGKECredentialReader{formats: a.formats},
+		Reader:             &UpdateGKECredentialsReader{formats: a.formats},
 		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
@@ -3603,13 +3603,13 @@ func (a *Client) UpdateGKECredential(params *UpdateGKECredentialParams, authInfo
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*UpdateGKECredentialOK)
+	success, ok := result.(*UpdateGKECredentialsOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for UpdateGKECredential: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for UpdateGKECredentials: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

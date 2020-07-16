@@ -5502,7 +5502,7 @@
           "application/json"
         ],
         "summary": "Returns a specific GKE Credential to which the team has access",
-        "operationId": "GetGKECredential",
+        "operationId": "GetGKECredentials",
         "parameters": [
           {
             "type": "string",
@@ -5542,7 +5542,7 @@
           "application/json"
         ],
         "summary": "Creates or updates a specific GKE Credential to which the team has access",
-        "operationId": "UpdateGKECredential",
+        "operationId": "UpdateGKECredentials",
         "parameters": [
           {
             "type": "string",
@@ -5591,7 +5591,7 @@
           "application/json"
         ],
         "summary": "Deletes a specific GKE Credential from the team",
-        "operationId": "RemoveGKECredential",
+        "operationId": "DeleteGKECredentials",
         "parameters": [
           {
             "type": "string",
@@ -7619,8 +7619,8 @@
     },
     "kore.ServicePlanDetails": {
       "required": [
-        "kind",
         "summary",
+        "kind",
         "editableParams"
       ],
       "properties": {
@@ -9725,11 +9725,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
-        "clientScopes",
         "userClaims",
         "clientID",
         "clientSecret",
-        "issuer"
+        "issuer",
+        "clientScopes"
       ],
       "properties": {
         "clientID": {

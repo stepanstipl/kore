@@ -162,9 +162,9 @@ class KoreApiClient {
 
   // Credentials
   ListGKECredentials = (team) => this.apis.default.ListGKECredentials({ team })
-  GetGKECredential = (team, name) => this.apis.default.GetGKECredential({ team, name })
-  UpdateGKECredential = (team, name, resource) => this.apis.default.UpdateGKECredential({ team, name, body: JSON.stringify(resource) })
-  RemoveGKECredential = (team, name) => this.apis.default.RemoveGKECredential({ team, name })
+  GetGKECredentials = (team, name) => this.apis.default.GetGKECredentials({ team, name })
+  UpdateGKECredentials = (team, name, resource) => this.apis.default.UpdateGKECredentials({ team, name, body: JSON.stringify(resource) })
+  DeleteGKECredentials = (team, name) => this.apis.default.DeleteGKECredentials({ team, name })
   ListGCPOrganizations = (team) => this.apis.default.ListGCPOrganizations({ team })
   GetGCPOrganization = (team, name) => this.apis.default.GetGCPOrganization({ team, name })
   UpdateGCPOrganization = (team, name, org) => this.apis.default.UpdateGCPOrganization({ team, name, body: JSON.stringify(org) })
@@ -177,6 +177,10 @@ class KoreApiClient {
   GetAWSOrganization = (team, name) => this.apis.default.GetAWSOrganization({ team, name })
   UpdateAWSOrganization = (team, name, org) => this.apis.default.UpdateAWSOrganization({ team, name, body: JSON.stringify(org) })
   DeleteAWSOrganization = (team, name) => this.apis.default.DeleteAWSOrganization({ team, name })
+  ListAKSCredentials = (team) => this.apis.default.ListAKSCredentials({ team })
+  GetAKSCredentials = (team, name) => this.apis.default.GetAKSCredentials({ team, name })
+  UpdateAKSCredentials = (team, name, resource) => this.apis.default.UpdateAKSCredentials({ team, name, body: JSON.stringify(resource) })
+  DeleteAKSCredentials = (team, name) => this.apis.default.DeleteAKSCredentials({ team, name })
 
   // Invitation
   InvitationSubmit = (token) => this.apis.default.InvitationSubmit({ token })

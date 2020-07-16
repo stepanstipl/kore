@@ -70,8 +70,9 @@ module.exports = {
     'Azure': 'AKS'
   },
   clusterProviderCloudMap: {
-    'GKE': { cloud: 'GCP', accountNoun: 'project' },
-    'EKS': { cloud: 'AWS', accountNoun: 'account' }
+    'GKE': { cloud: 'GCP', cloudLong: 'Google Cloud Platform', accountNoun: 'project', credentialsIdentifierKey: 'project' },
+    'EKS': { cloud: 'AWS', cloudLong: 'Amazon Web Services', accountNoun: 'account', credentialsIdentifierKey: 'accountID' },
+    'AKS': { cloud: 'Azure', cloudLong: 'Microsoft Azure', accountNoun: 'subscription', credentialsIdentifierKey: 'subscriptionID' },
   },
   cloudAccountAutomation: {
     notprod: {

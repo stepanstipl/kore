@@ -15,8 +15,8 @@ class EKSCredentialsForm extends VerifiedAllocatedResourceForm {
 
   putResource = async (values) => {
     const api = await KoreApi.client()
-    values.name = this.getMetadataName(values)
-    const secretName = values.name
+    const resourceName = this.getMetadataName(values)
+    const secretName = resourceName
     const teamResources = KoreApi.resources().team(this.props.team)
     if (!this.props.data || this.state.replaceKey) {
       const secretData = {
@@ -26,7 +26,7 @@ class EKSCredentialsForm extends VerifiedAllocatedResourceForm {
       const secretResource = teamResources.generateSecretResource(secretName, 'aws-credentials', `AWS account ${values.accountID} credential`, secretData)
       await api.UpdateTeamSecret(this.props.team, secretName, secretResource)
     }
-    const eksCredResource = teamResources.generateEKSCredentialsResource(values, secretName)
+    const eksCredResource = teamResources.generateEKSCredentialsResource(resourceName, values, secretName)
     const eksResult = await api.UpdateEKSCredentials(this.props.team, values.name, eksCredResource)
     eksResult.allocation = await this.storeAllocation(eksCredResource, values)
     return eksResult
