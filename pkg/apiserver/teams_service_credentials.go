@@ -20,9 +20,59 @@ import (
 	"net/http"
 
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
+	"github.com/appvia/kore/pkg/apiserver/filters"
+	"github.com/appvia/kore/pkg/apiserver/params"
+	"github.com/appvia/kore/pkg/kore"
 
 	restful "github.com/emicklei/go-restful"
 )
+
+func (u teamHandler) addServiceCredentialRoutes(ws *restful.WebService) {
+	ws.Route(
+		withAllNonValidationErrors(ws.GET("/{team}/servicecredentials")).To(u.listServiceCredentials).
+			Filter(filters.FeatureGateFilter(u.Config(), kore.FeatureGateServices)).
+			Doc("Lists all service credentials for a team").
+			Operation("ListServiceCredentials").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.QueryParameter("cluster", "Is the name of the cluster you are filtering for")).
+			Param(ws.QueryParameter("service", "Is the name of the service you are filtering for")).
+			Returns(http.StatusOK, "List of all service credentials for a team", servicesv1.ServiceCredentials{}),
+	)
+
+	ws.Route(
+		withAllNonValidationErrors(ws.GET("/{team}/servicecredentials/{name}")).To(u.getServiceCredentials).
+			Filter(filters.FeatureGateFilter(u.Config(), kore.FeatureGateServices)).
+			Doc("Returns the requsted service credentials").
+			Operation("GetServiceCredentials").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name of the service credentials")).
+			Returns(http.StatusNotFound, "the service credentials with the given name doesn't exist", nil).
+			Returns(http.StatusOK, "The requested service crendential details", servicesv1.ServiceCredentials{}),
+	)
+
+	ws.Route(
+		withAllErrors(ws.PUT("/{team}/servicecredentials/{name}")).To(u.updateServiceCredentials).
+			Filter(filters.FeatureGateFilter(u.Config(), kore.FeatureGateServices)).
+			Doc("Creates or updates service credentials").
+			Operation("UpdateServiceCredentials").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the service credentials")).
+			Reads(servicesv1.ServiceCredentials{}, "The definition for the service credentials").
+			Returns(http.StatusOK, "The service credentail details", servicesv1.ServiceCredentials{}),
+	)
+
+	ws.Route(
+		withAllNonValidationErrors(ws.DELETE("/{team}/servicecredentials/{name}")).To(u.deleteServiceCredentials).
+			Filter(filters.FeatureGateFilter(u.Config(), kore.FeatureGateServices)).
+			Doc("Deletes the given service credentials").
+			Operation("DeleteServiceCredentials").
+			Param(ws.PathParameter("name", "Is the name of the service credentials")).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(params.DeleteCascade()).
+			Returns(http.StatusNotFound, "the service credentials with the given name doesn't exist", nil).
+			Returns(http.StatusOK, "Contains the former service credentials definition", servicesv1.ServiceCredentials{}),
+	)
+}
 
 // listServiceCredentials returns all the service credentials from a team
 func (u teamHandler) listServiceCredentials(req *restful.Request, resp *restful.Response) {

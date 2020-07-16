@@ -24,6 +24,48 @@ import (
 	restful "github.com/emicklei/go-restful"
 )
 
+func (u teamHandler) addGKECredentialsRoutes(ws *restful.WebService) {
+	ws.Route(
+		ws.GET("/{team}/gkecredentials").To(u.findGKECredientalss).
+			Doc("Returns a list of GKE Credentials to which the team has access").
+			Operation("ListGKECredentials").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Returns(http.StatusOK, "Contains the former team definition from the kore", gke.GKECredentialsList{}).
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.GET("/{team}/gkecredentials/{name}").To(u.findGKECredientals).
+			Doc("Returns a specific GKE Credential to which the team has access").
+			Operation("GetGKECredential").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
+			Returns(http.StatusOK, "Contains the former team definition from the kore", gke.GKECredentials{}).
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.PUT("/{team}/gkecredentials/{name}").To(u.updateGKECredientals).
+			Doc("Creates or updates a specific GKE Credential to which the team has access").
+			Operation("UpdateGKECredential").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
+			Reads(gke.GKECredentials{}, "The definition for GKE Credentials").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", gke.GKECredentials{}).
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.DELETE("/{team}/gkecredentials/{name}").To(u.deleteGKECredientals).
+			Doc("Deletes a specific GKE Credential from the team").
+			Operation("RemoveGKECredential").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the GKE cluster you are acting upon")).
+			Returns(http.StatusOK, "Contains the former team definition from the kore", gke.GKECredentials{}).
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
+	)
+}
+
 // findGKECredientalss returns all the clusters under the team
 func (u teamHandler) findGKECredientalss(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {

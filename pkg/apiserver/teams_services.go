@@ -20,14 +20,60 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/appvia/kore/pkg/kore/authentication"
-
-	"github.com/appvia/kore/pkg/kore"
-
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
+	"github.com/appvia/kore/pkg/apiserver/filters"
+	"github.com/appvia/kore/pkg/apiserver/params"
+	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/kore/authentication"
 
 	restful "github.com/emicklei/go-restful"
 )
+
+func (u teamHandler) addServiceRoutes(ws *restful.WebService) {
+	ws.Route(
+		withAllNonValidationErrors(ws.GET("/{team}/services")).To(u.listServices).
+			Filter(filters.FeatureGateFilter(u.Config(), kore.FeatureGateServices)).
+			Doc("Lists all services for a team").
+			Operation("ListServices").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Returns(http.StatusOK, "List of all services for a team", servicesv1.ServiceList{}),
+	)
+
+	ws.Route(
+		withAllNonValidationErrors(ws.GET("/{team}/services/{name}")).To(u.getService).
+			Filter(filters.FeatureGateFilter(u.Config(), kore.FeatureGateServices)).
+			Doc("Returns a service").
+			Operation("GetService").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name of the service")).
+			Returns(http.StatusNotFound, "the service with the given name doesn't exist", nil).
+			Returns(http.StatusOK, "The requested service details", servicesv1.Service{}),
+	)
+	ws.Route(
+		withAllErrors(ws.PUT("/{team}/services/{name}")).To(u.updateService).
+			Filter(filters.FeatureGateFilter(u.Config(), kore.FeatureGateServices)).
+			Filter(u.readonlyServiceFilter).
+			Doc("Creates or updates a service").
+			Operation("UpdateService").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the service")).
+			Reads(servicesv1.Service{}, "The definition for the service").
+			Returns(http.StatusOK, "The service details", servicesv1.Service{}),
+	)
+
+	ws.Route(
+		withAllNonValidationErrors(ws.DELETE("/{team}/services/{name}")).To(u.deleteService).
+			Filter(filters.FeatureGateFilter(u.Config(), kore.FeatureGateServices)).
+			Filter(u.readonlyServiceFilter).
+			Doc("Deletes a service").
+			Operation("DeleteService").
+			Param(ws.PathParameter("name", "Is the name of the service")).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(params.DeleteCascade()).
+			Returns(http.StatusNotFound, "the service with the given name doesn't exist", nil).
+			Returns(http.StatusOK, "Contains the former service definition from the kore", servicesv1.Service{}),
+	)
+}
 
 func (u teamHandler) readonlyServiceFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
 	handleErrors(req, resp, func() error {

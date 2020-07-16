@@ -20,8 +20,50 @@ import (
 	"net/http"
 
 	aws "github.com/appvia/kore/pkg/apis/aws/v1alpha1"
+
 	restful "github.com/emicklei/go-restful"
 )
+
+func (u teamHandler) addAWSOrganizationRoutes(ws *restful.WebService) {
+	ws.Route(
+		ws.GET("/{team}/awsorganizations").To(u.findAWSOrganizations).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Doc("Is the used tor return a list of aws organizations").
+			Operation("ListAWSOrganizations").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", aws.AWSOrganizationList{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.GET("/{team}/awsorganizations/{name}").To(u.findAWSOrganization).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the resource you are acting on")).
+			Doc("Is the used tor return a specific aws organization").
+			Operation("GetAWSOrganization").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", aws.AWSOrganization{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+	ws.Route(
+		ws.PUT("/{team}/awsorganizations/{name}").To(u.updateAWSOrganization).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the resource you are acting on")).
+			Operation("UpdateAWSOrganization").
+			Reads(aws.AWSOrganization{}, "The definition for AWS organization").
+			Doc("Is used to provision or update a aws organization").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", aws.AWSOrganization{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.DELETE("/{team}/awsorganizations/{name}").To(u.deleteAWSOrganization).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the resource you are acting on")).
+			Doc("Is used to delete a managed gcp organization").
+			Operation("DeleteAWSOrganization").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", aws.AWSOrganization{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+}
 
 // findOrganizations returns a list of credential claims
 func (u teamHandler) findAWSOrganizations(req *restful.Request, resp *restful.Response) {

@@ -24,6 +24,48 @@ import (
 	restful "github.com/emicklei/go-restful"
 )
 
+func (u teamHandler) addTeamSecretRoutes(ws *restful.WebService) {
+	ws.Route(
+		ws.GET("/{team}/secrets").To(u.findTeamSecrets).
+			Operation("ListTeamSecrets").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Doc("Used to return all the secrets within the team").
+			Returns(http.StatusOK, "Contains the definition for the resource", configv1.Secret{}).
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.GET("/{team}/secrets/{name}").To(u.findTeamSecret).
+			Operation("GetTeamSecret").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the secert in the name")).
+			Doc("Used to retrieve the secret from the team").
+			Returns(http.StatusOK, "Contains the definition for the resource", configv1.Secret{}).
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.PUT("/{team}/secrets/{name}").To(u.updateTeamSecret).
+			Operation("UpdateTeamSecret").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of secret you are creating / updating")).
+			Doc("Used to update the secret in the team").
+			Reads(configv1.Secret{}, "The definition for the secret you are creating or updating").
+			Returns(http.StatusOK, "Contains updated definition of the secret", configv1.Secret{}).
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.DELETE("/{team}/secrets/{name}").To(u.deleteTeamSecret).
+			Operation("DeleteTeamSecret").
+			Param(ws.PathParameter("name", "Is name the of the secret you are acting upon")).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Doc("Used to delete the secret from team").
+			Returns(http.StatusOK, "Contains the former definition of the secret", configv1.Secret{}).
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
+	)
+}
+
 // updateTeamSecret is used to add a secret to the team
 func (u teamHandler) updateTeamSecret(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {

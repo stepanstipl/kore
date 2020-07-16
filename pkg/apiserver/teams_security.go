@@ -19,8 +19,20 @@ package apiserver
 import (
 	"net/http"
 
+	securityv1 "github.com/appvia/kore/pkg/apis/security/v1"
+
 	restful "github.com/emicklei/go-restful"
 )
+
+func (u teamHandler) addTeamSecurityRoutes(ws *restful.WebService) {
+	ws.Route(
+		withAllNonValidationErrors(ws.GET("/{team}/security")).To(u.getTeamSecurityOverview).
+			Doc("Returns an overview of the security posture for resources owned by this team").
+			Operation("GetTeamSecurityOverview").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Returns(http.StatusOK, "The requested security overview", securityv1.SecurityOverview{}),
+	)
+}
 
 func (t *teamHandler) getTeamSecurityOverview(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {

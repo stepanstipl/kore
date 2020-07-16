@@ -20,9 +20,54 @@ import (
 	"net/http"
 
 	aks "github.com/appvia/kore/pkg/apis/aks/v1alpha1"
+	"github.com/appvia/kore/pkg/apiserver/filters"
 
 	restful "github.com/emicklei/go-restful"
 )
+
+func (u teamHandler) addAKSCredentialsRoutes(ws *restful.WebService) {
+	ws.Route(
+		ws.GET("/{team}/akscredentials").To(u.listAKSCredentials).
+			Operation("ListAKSCredentials").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Doc("Is the used tor return a list of Azure AKS credentials which thhe team has access").
+			Returns(http.StatusOK, "Contains the definitions of the AKS credentials", aks.AKSCredentialsList{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.GET("/{team}/akscredentials/{name}").To(u.getAKSCredentials).
+			Operation("GetAKSCredentials").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the AKS Credentials you are acting upon")).
+			Doc("Is the used tor return a list of AKS Credentials which the team has access").
+			Returns(http.StatusOK, "Contains the former team definition", aks.AKSCredentials{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.PUT("/{team}/akscredentials/{name}").To(u.updateAKSCredentials).
+			Operation("UpdateAKSCredentials").
+			Filter(filters.Admin).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the AKS credentials you are acting upon")).
+			Reads(aks.AKSCredentials{}, "The definition for AKS Credentials").
+			Doc("Is used to provision or update AKS credentials").
+			Returns(http.StatusOK, "Contains the final definition", aks.AKSCredentials{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.DELETE("/{team}/akscredentials/{name}").To(u.deleteAKSCredentials).
+			Operation("DeleteAKSCredentials").
+			Filter(filters.Admin).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the AKS credentials you are acting upon")).
+			Doc("Is used to delete a AKS credentials").
+			Returns(http.StatusOK, "Contains the former AKS credentials", aks.AKSCredentials{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+}
 
 // listAKSCredentials returns all the AKS credentials under the team
 func (u teamHandler) listAKSCredentials(req *restful.Request, resp *restful.Response) {

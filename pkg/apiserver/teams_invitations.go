@@ -22,11 +22,78 @@ import (
 	"net/http"
 	"time"
 
+	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/appvia/kore/pkg/apiserver/types"
-
 	"github.com/appvia/kore/pkg/kore"
+
 	restful "github.com/emicklei/go-restful"
 )
+
+func (u teamHandler) addInvitationRoutes(ws *restful.WebService) {
+	// Invite Submission
+	ws.Route(
+		ws.PUT("/invitation/{token}").To(u.invitationSubmit).
+			Doc("Used to verify and handle the team invitation generated links").
+			Operation("InvitationSubmit").
+			Param(ws.PathParameter("token", "The generated base64 invitation token which was provided from the team")).
+			// As there's no body, need to explicitly say we consume any MIME type. Arguably a go-restful bug:
+			Consumes(restful.MIME_JSON, "*/*").
+			Returns(http.StatusOK, "Indicates the generated link is valid and the user has been granted access", types.TeamInvitationResponse{}).
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
+	)
+
+	// Team Invitations
+	ws.Route(
+		ws.GET("/{team}/invites/user").To(u.listInvites).
+			Doc("Used to return a list of all the users whom have pending invitations").
+			Operation("ListInvites").
+			Param(ws.PathParameter("team", "The name of the team you are pulling the invitations for")).
+			Returns(http.StatusOK, "A list of users whom have an invitation for the team", orgv1.TeamInvitationList{}).
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.PUT("/{team}/invites/user/{user}").To(u.inviteUser).
+			Doc("Used to create an invitation for the team").
+			Operation("InviteUser").
+			Param(ws.PathParameter("team", "The name of the team you are creating an invition")).
+			Param(ws.PathParameter("user", "The name of the username of the user the invitation is for")).
+			Param(ws.QueryParameter("expire", "The expiration of the generated link").DefaultValue("1h")).
+			Returns(http.StatusOK, "Indicates the team invitation for the user has been successful", nil).
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.DELETE("/{team}/invites/user/{user}").To(u.removeInvite).
+			Doc("Used to remove a user invitation for the team").
+			Operation("RemoveInvite").
+			Param(ws.PathParameter("team", "The name of the team you are deleting the invitation")).
+			Param(ws.PathParameter("user", "The username of the user whos invitation you are removing")).
+			Returns(http.StatusOK, "Indicates the team invitation has been successful removed", nil).
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
+	)
+
+	// Invitation Links
+	ws.Route(
+		ws.GET("/{team}/invites/generate").To(u.inviteLink).
+			Doc("Used to generate a link which provides automatic membership of the team").
+			Operation("GenerateInviteLink").
+			Param(ws.PathParameter("team", "The name of the team you are creating an invition link")).
+			Param(ws.QueryParameter("expire", "The expiration of the generated link").DefaultValue("1h")).
+			Returns(http.StatusOK, "A generated URI which can be used to join a team", "").
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.GET("/{team}/invites/generate/{user}").To(u.inviteLinkByUser).
+			Doc("Used to generate for a specific user to join a team").
+			Operation("GenerateInviteLinkForUser").
+			Param(ws.PathParameter("team", "The name of the team you are creating an invition link")).
+			Param(ws.PathParameter("user", "The username of the user the link should be limited for")).
+			Returns(http.StatusOK, "A generated URI which users can use to join the team", "").
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
+	)
+}
 
 // invitationSubmit is called to handle the submission of a generated link from the UI
 func (u teamHandler) invitationSubmit(req *restful.Request, resp *restful.Response) {

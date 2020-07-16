@@ -24,6 +24,46 @@ import (
 	restful "github.com/emicklei/go-restful"
 )
 
+func (u teamHandler) addAllocationsRoutes(ws *restful.WebService) {
+	ws.Route(
+		ws.GET("/{team}/allocations").To(u.findAllocations).
+			Doc("Used to return a list of all the allocations in the team").
+			Operation("ListAllocations").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.QueryParameter("assigned", "Retrieves all allocations which have been assigned to you")).
+			Returns(http.StatusOK, "Contains the former team definition from the kore", configv1.AllocationList{}).
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
+	)
+	ws.Route(
+		ws.GET("/{team}/allocations/{name}").To(u.findAllocation).
+			Doc("Used to return an allocation within the team").
+			Operation("GetAllocation").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is the name of the allocation you wish to return")).
+			Returns(http.StatusOK, "Contains the former team definition from the kore", configv1.Allocation{}).
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
+	)
+	ws.Route(
+		ws.PUT("/{team}/allocations/{name}").To(u.updateAllocation).
+			Doc("Used to create/update an allocation within the team.").
+			Operation("UpdateAllocation").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is the name of the allocation you wish to update")).
+			Reads(configv1.Allocation{}, "The definition of the Allocation").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", configv1.Allocation{}).
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
+	)
+	ws.Route(
+		ws.DELETE("/{team}/allocations/{name}").To(u.deleteAllocation).
+			Doc("Remove an allocation from a team").
+			Operation("RemoveAllocation").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is the name of the allocation you wish to delete")).
+			Returns(http.StatusOK, "Contains the former team definition from the kore", configv1.Allocation{}).
+			Returns(http.StatusInternalServerError, "A generic API error containing the cause of the error", Error{}),
+	)
+}
+
 // findAllocations returns a list of the teams in the allocation
 func (u teamHandler) findAllocations(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
