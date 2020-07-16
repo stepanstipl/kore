@@ -24,8 +24,8 @@ import (
 )
 
 type Component interface {
-	Reconcile(ctx kore.Context) (reconcile.Result, error)
-	Delete(ctx kore.Context) (reconcile.Result, error)
+	Reconcile(kore.Context) (reconcile.Result, error)
+	Delete(kore.Context) (reconcile.Result, error)
 }
 
 type ComponentWithStatus interface {
@@ -68,7 +68,7 @@ func (c Components) reconcile(ctx kore.Context, object kubernetes.ObjectWithStat
 	object.SetStatus(corev1.PendingStatus, "")
 
 	for _, comp := range c {
-		c.initComponent(comp, object.StatusComponents(), corev1.PendingStatus)
+		c.initComponent(comp, object, corev1.PendingStatus)
 
 		res, err := comp.Reconcile(ctx)
 
@@ -100,7 +100,7 @@ func (c Components) delete(ctx kore.Context, object kubernetes.ObjectWithStatus)
 	for i := startDeleteFrom; i >= 0; i-- {
 		comp := c[i]
 
-		c.initComponent(comp, object.StatusComponents(), corev1.DeletingStatus)
+		c.initComponent(comp, object, corev1.DeletingStatus)
 
 		res, err := comp.Delete(ctx)
 
@@ -116,56 +116,62 @@ func (c Components) delete(ctx kore.Context, object kubernetes.ObjectWithStatus)
 	return reconcile.Result{}, nil
 }
 
-func (c Components) initComponent(comp Component, statuses *corev1.Components, defaultStatus corev1.Status) {
-	if compWithStatus, ok := comp.(ComponentWithStatus); ok {
-		if _, exists := statuses.GetComponent(compWithStatus.ComponentName()); !exists {
-			statuses.SetCondition(corev1.Component{
-				Name: compWithStatus.ComponentName(),
-			})
+func (c Components) initComponent(comp Component, object kubernetes.Object, defaultStatus corev1.Status) {
+	if o, ok := object.(kubernetes.ObjectWithStatusComponents); ok {
+		if compWithStatus, ok := comp.(ComponentWithStatus); ok {
+			if _, exists := o.StatusComponents().GetComponent(compWithStatus.ComponentName()); !exists {
+				o.StatusComponents().SetCondition(corev1.Component{
+					Name: compWithStatus.ComponentName(),
+				})
+			}
+
+			compRef, _ := o.StatusComponents().GetComponent(compWithStatus.ComponentName())
+			compRef.Status = defaultStatus
+			compRef.Message = ""
+			compRef.Detail = ""
+
+			compWithStatus.SetComponent(compRef)
 		}
-
-		compRef, _ := statuses.GetComponent(compWithStatus.ComponentName())
-		compRef.Status = defaultStatus
-		compRef.Message = ""
-		compRef.Detail = ""
-
-		compWithStatus.SetComponent(compRef)
 	}
 }
 
 func (c Components) setComponentStatusFromResult(
 	object kubernetes.ObjectWithStatus, comp Component, successStatus corev1.Status, res reconcile.Result, err error,
 ) {
-	if compWithStatus, ok := comp.(ComponentWithStatus); ok {
-		if err != nil {
-			if IsCriticalError(err) {
-				object.StatusComponents().SetStatus(
-					compWithStatus.ComponentName(), corev1.FailureStatus, "failed to reconcile", err.Error(),
+	if o, ok := object.(kubernetes.ObjectWithStatusComponents); ok {
+		if compWithStatus, ok := comp.(ComponentWithStatus); ok {
+			if err != nil {
+				if IsCriticalError(err) {
+					o.StatusComponents().SetStatus(
+						compWithStatus.ComponentName(), corev1.FailureStatus, "failed to reconcile", err.Error(),
+					)
+					return
+				}
+
+				o.StatusComponents().SetStatus(
+					compWithStatus.ComponentName(), corev1.ErrorStatus, "failed to reconcile", err.Error(),
 				)
 				return
 			}
 
-			object.StatusComponents().SetStatus(
-				compWithStatus.ComponentName(), corev1.ErrorStatus, "failed to reconcile", err.Error(),
-			)
-			return
-		}
-
-		if !res.Requeue && res.RequeueAfter == 0 {
-			object.StatusComponents().SetStatus(
-				compWithStatus.ComponentName(), successStatus, "", "",
-			)
+			if !res.Requeue && res.RequeueAfter == 0 {
+				o.StatusComponents().SetStatus(
+					compWithStatus.ComponentName(), successStatus, "", "",
+				)
+			}
 		}
 	}
 }
 
 func (c Components) isDeleted(ctx kore.Context, object kubernetes.ObjectWithStatus, comp Component) (bool, error) {
-	if compWithStatus, ok := comp.(ComponentWithStatus); ok {
-		status, exists := object.StatusComponents().GetComponent(compWithStatus.ComponentName())
-		if !exists {
-			return false, nil
+	if o, ok := object.(kubernetes.ObjectWithStatusComponents); ok {
+		if compWithStatus, ok := comp.(ComponentWithStatus); ok {
+			status, exists := o.StatusComponents().GetComponent(compWithStatus.ComponentName())
+			if !exists {
+				return false, nil
+			}
+			return status.Status == corev1.DeletedStatus, nil
 		}
-		return status.Status == corev1.DeletedStatus, nil
 	}
 
 	if compWithDeletionStatus, ok := comp.(ComponentWithDeletionStatus); ok {
@@ -173,4 +179,26 @@ func (c Components) isDeleted(ctx kore.Context, object kubernetes.ObjectWithStat
 	}
 
 	return false, nil
+}
+
+// ReconcileCompFunc is a function which implements the Component interface but only has logic for Reconcile
+type ReconcileCompFunc func(kore.Context) (reconcile.Result, error)
+
+func (f ReconcileCompFunc) Reconcile(ctx kore.Context) (reconcile.Result, error) {
+	return f(ctx)
+}
+
+func (f ReconcileCompFunc) Delete(_ kore.Context) (reconcile.Result, error) {
+	return reconcile.Result{}, nil
+}
+
+// DeleteCompFunc is a function which implements the Component interface but only has logic for Delete
+type DeleteCompFunc func(kore.Context) (reconcile.Result, error)
+
+func (f DeleteCompFunc) Reconcile(_ kore.Context) (reconcile.Result, error) {
+	return reconcile.Result{}, nil
+}
+
+func (f DeleteCompFunc) Delete(ctx kore.Context) (reconcile.Result, error) {
+	return f(ctx)
 }

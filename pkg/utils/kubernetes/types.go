@@ -37,6 +37,10 @@ type ObjectWithStatus interface {
 	Object
 	GetStatus() (status corev1.Status, message string)
 	SetStatus(status corev1.Status, message string)
+}
+
+type ObjectWithStatusComponents interface {
+	Object
 	StatusComponents() *corev1.Components
 }
 
