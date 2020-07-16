@@ -86,7 +86,7 @@ func NewKoreCommand(streams cmdutil.Streams) (*cobra.Command, error) {
 				profile = cmdutil.GetFlagString(root, "profile")
 				// we only need to set the flag if the --team has not been set
 				if !cmd.Flags().Changed("team") {
-					cmd.Flags().Set("team", cfg.GetProfile(profile).Team)
+					_ = cmd.Flags().Set("team", cfg.GetProfile(profile).Team)
 				}
 				client.OverrideProfile(profile)
 			}
