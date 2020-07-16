@@ -39,7 +39,7 @@ class PlanViewer extends React.Component {
       if (!this.props.hideCostEstimate) {
         try {
           costEstimate = await api.costestimates.EstimateClusterPlanCost(this.props.plan)
-        } catch {
+        } catch (err) {
           // Ignore failure to get a cost estimate, we just won't display it.
         }
       }
