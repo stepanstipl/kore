@@ -13,7 +13,8 @@ export const patterns = {
     message: 'Must consist of lower case alphanumeric characters or "-", it must start with a letter and end with an alphanumeric and must be no longer than 63 characters'
   },
   email: {
-    pattern: '^[^\s@]+@[^\s@]+\.[^\s@]+$',
+    // double backslash as it seems to be escaped otherwise
+    pattern: '^[^\\s@]+@[^\\s@]+\.[^\\s@]+$',
     message: 'Must be a valid email address'
   }
 }

@@ -55,7 +55,7 @@ func (v configImpl) Delete(ctx context.Context, config *model.Config) (*model.Co
 
 	q := v.conn
 
-	return config, q.Delete(&model.Config{}).Error
+	return config, q.Delete(config).Error
 }
 
 // Exists check if config exists

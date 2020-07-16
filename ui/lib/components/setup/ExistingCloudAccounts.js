@@ -9,6 +9,9 @@ import { pluralize, titleize } from 'inflect'
 import RequestCredentialAccessForm from './forms/RequestCredentialAccessForm'
 import GKECredentialsList from '../credentials/GKECredentialsList'
 import EKSCredentialsList from '../credentials/EKSCredentialsList'
+import FormErrorMessage from '../forms/FormErrorMessage'
+import KoreApi from '../../kore-api'
+import { errorMessage } from '../../utils/message'
 
 class ExistingCloudAccounts extends React.Component {
 
@@ -27,7 +30,21 @@ class ExistingCloudAccounts extends React.Component {
   state = {
     currentStep: 0,
     credsCount: 0,
-    emailValid: RequestCredentialAccessForm.ENABLED ? false : true
+    email: undefined,
+    emailValid: false,
+    submitting: false,
+    errorMessage: false
+  }
+
+  async fetchComponentData() {
+    const cloudConfig = await (await KoreApi.client()).GetConfig(this.props.cloud)
+    const email = cloudConfig.spec && cloudConfig.spec.values.requestAccessEmail
+    const emailValid = email ? true : false
+    return { email, emailValid }
+  }
+
+  componentDidMount() {
+    this.fetchComponentData().then(data => this.setState({ ...data }))
   }
 
   stepsContentCreds = () => (
@@ -62,9 +79,18 @@ class ExistingCloudAccounts extends React.Component {
     this.setState({ currentStep })
   }
 
-  setupComplete = () => {
-    this.setState({ setupComplete: true })
-    this.props.handleSetupComplete()
+  setupComplete = async () => {
+    this.setState({ submitting: true })
+    try {
+      const config = { requestAccessEmail: this.state.email }
+      await (await KoreApi.client()).UpdateConfig(this.props.cloud, KoreApi.resources().generateConfigResource(this.props.cloud, config))
+      this.setState({ submitting: false })
+      this.props.handleSetupComplete()
+    } catch (err) {
+      console.error(`Error saving ${this.props.cloud} existing ${this.props.accountNoun} settings`, err)
+      errorMessage(`Failed to save ${this.props.cloud} existing ${this.props.accountNoun} settings`)
+      this.setState({ submitting: false, errorMessage: 'A problem occurred trying to save, please try again later.' })
+    }
   }
 
   stepsHeader = () => (
@@ -76,7 +102,7 @@ class ExistingCloudAccounts extends React.Component {
   stepsActions = () => (
     <div className="steps-action">
       {this.state.currentStep < this.steps.length - 1 && <Button type="primary" disabled={!this[this.steps[this.state.currentStep].completeFn]()} onClick={() => this.nextStep()}>Next</Button>}
-      {this.state.currentStep === this.steps.length - 1 && <Button type="primary" disabled={!this[this.steps[this.state.currentStep].completeFn]()} onClick={this.props.handleSetupComplete}>Save</Button>}
+      {this.state.currentStep === this.steps.length - 1 && <Button type="primary" loading={this.state.submitting} disabled={!this[this.steps[this.state.currentStep].completeFn]()} onClick={this.setupComplete}>Save</Button>}
       {this.state.currentStep > 0 && <Button style={{ marginLeft: 8 }} onClick={() => this.prevStep()}>Previous</Button>}
     </div>
   )
@@ -95,7 +121,11 @@ class ExistingCloudAccounts extends React.Component {
 
   stepsContentAccess = () => {
     return (
-      <RequestCredentialAccessForm cloud={this.props.cloud} onChange={(errors) => this.setState({ emailValid: Boolean(!errors) })} />
+      <RequestCredentialAccessForm
+        cloud={this.props.cloud}
+        data={{ email: this.state.email }}
+        onChange={(email, errors) => this.setState({ email, emailValid: Boolean(!errors) })}
+      />
     )
   }
 
@@ -108,6 +138,7 @@ class ExistingCloudAccounts extends React.Component {
       <Card>
         {this.stepsHeader()}
         <Divider />
+        <FormErrorMessage message={this.state.errorMessage} />
         {this.stepContent()}
         <Divider />
         {this.stepsActions()}

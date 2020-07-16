@@ -31,15 +31,17 @@ class CloudAccountAutomationSettings extends React.Component {
     dataLoading: true,
     submitting: false,
     errorMessage: false,
-    emailValid: RequestCredentialAccessForm.ENABLED ? false : true
+    email: undefined,
+    emailValid: false
   }
 
   async fetchComponentData() {
     const api = await KoreApi.client()
-    const [ plansList, accountManagementList, cloudOrgs ] = await Promise.all([
+    const [ plansList, accountManagementList, cloudOrgs, cloudConfig ] = await Promise.all([
       api.ListPlans(this.props.provider),
       api.ListAccounts(),
-      api[this.props.cloudOrgsApiMethod](publicRuntimeConfig.koreAdminTeamName)
+      api[this.props.cloudOrgsApiMethod](publicRuntimeConfig.koreAdminTeamName),
+      api.GetConfig(this.props.cloud)
     ])
 
     const plans = plansList.items
@@ -54,7 +56,9 @@ class CloudAccountAutomationSettings extends React.Component {
       cloudAccountAutomationType = (accountManagement.spec.rules || []).length === 0 ? 'CLUSTER' : 'CUSTOM'
       cloudAccountList = (accountManagement.spec.rules || []).map(rule => ({ code: canonical(rule.name), ...rule }))
     }
-    return { plans, accountManagement, cloudManagementType, cloudAccountList, cloudAccountAutomationType, cloudOrgList }
+    const email = cloudConfig && cloudConfig.spec.values.requestAccessEmail
+    const emailValid = email ? true : false
+    return { plans, accountManagement, cloudManagementType, cloudAccountList, cloudAccountAutomationType, cloudOrgList, email, emailValid }
   }
 
   componentDidMount() {
@@ -85,29 +89,33 @@ class CloudAccountAutomationSettings extends React.Component {
   saveSettings = async () => {
     this.setState({ submitting: true, errorMessage: false })
     if (this.state.cloudManagementType === 'EXISTING') {
-      // TODO - need to implement somewhere to store the request access email address
-      if (this.state.accountManagement) {
-        // disable account management by deleting the CRD and Allocation
-        try {
-          const api = await KoreApi.client()
+      try {
+        const api = await KoreApi.client()
+        const config = { requestAccessEmail: this.state.email }
+        await api.UpdateConfig(this.props.cloud, KoreApi.resources().generateConfigResource(this.props.cloud, config))
+
+        if (this.state.accountManagement) {
+          // disable account management by deleting the CRD and Allocation
           await api.RemoveAccount(this.state.accountManagement.metadata.name)
           await AllocationHelpers.removeAllocation(this.state.accountManagement)
           this.setState({
             submitting: false,
+            cloudAccountAutomationType: false,
             accountManagement: false,
             cloudAccountList: []
           })
-          successMessage(`${titleize(this.props.accountNoun)} automation settings saved`)
-        } catch (err) {
-          console.error(`Error saving ${this.props.accountNoun} automation settings`, err)
-          errorMessage(`Failed to save ${this.props.accountNoun} automation settings`)
-          this.setState({ submitting: false, errorMessage: 'A problem occurred trying to save, please try again later.' })
+          return successMessage(`${titleize(this.props.accountNoun)} automation settings saved`)
+        } else {
+          this.setState({ submitting: false })
+          return successMessage(`${titleize(this.props.accountNoun)} automation settings saved`)
         }
-        return
-      } else {
-        this.setState({ submitting: false })
-        successMessage(`${titleize(this.props.accountNoun)} automation settings saved`)
-        return
+      } catch (err) {
+        console.error(`Error saving ${this.props.accountNoun} automation settings`, err)
+        errorMessage(`Failed to save ${this.props.accountNoun} automation settings`)
+        return this.setState({
+          submitting: false,
+          errorMessage: 'A problem occurred trying to save, please try again later.'
+        })
       }
     }
     try {
@@ -227,7 +235,7 @@ class CloudAccountAutomationSettings extends React.Component {
   )
 
   render() {
-    const { dataLoading, cloudManagementType, submitting, errorMessage, cloudOrgList } = this.state
+    const { dataLoading, cloudManagementType, submitting, errorMessage, cloudOrgList, email } = this.state
     if (dataLoading) {
       return <Icon type="loading" />
     }
@@ -247,7 +255,14 @@ class CloudAccountAutomationSettings extends React.Component {
 
         {cloudManagementType === 'KORE' && !cloudOrgsExist && this.cloudOrgRequired()}
         {cloudManagementType === 'KORE' && cloudOrgsExist && this.koreManagedAccountSettings()}
-        {cloudManagementType === 'EXISTING' && <RequestCredentialAccessForm cloud={this.props.cloud} helpInModal={true} onChange={(errors) => this.setState({ emailValid: Boolean(!errors) })} />}
+        {cloudManagementType === 'EXISTING' ? (
+          <RequestCredentialAccessForm
+            data={{ email }}
+            cloud={this.props.cloud}
+            helpInModal={true}
+            onChange={(email, errors) => this.setState({ email, emailValid: Boolean(!errors) })}
+          />
+        ) : null}
         <Button style={{ marginTop: '20px', display: 'block' }} type="primary" loading={submitting} disabled={this.disabledSave()} onClick={this.saveSettings}>Save</Button>
       </>
     )
