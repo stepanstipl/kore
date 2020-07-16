@@ -18,6 +18,10 @@ parameters:
     type: boolean
     default: false
 
+  enable_aks_e2e:
+    type: boolean
+    default: false
+
 #
 # Templates ---
 #
@@ -100,6 +104,9 @@ e2e_job_template: &E2E_JOB_TEMPLATE
     enable_gke:
       type: boolean
       default: false
+    enable_aks:
+      type: boolean
+      default: false
     host:
       type: string
       default: http://127.0.0.1:10080
@@ -107,6 +114,7 @@ e2e_job_template: &E2E_JOB_TEMPLATE
   environment:
     ENABLE_EKS_E2E: << parameters.enable_eks >>
     ENABLE_GKE_E2E: << parameters.enable_gke >>
+    ENABLE_AKS_E2E: << parameters.enable_aks >>
     KORE_ADMIN_TOKEN: "password"
     KORE_API_PUBLIC_URL_QA: << parameters.host >>
 
@@ -154,7 +162,8 @@ e2e_job_template: &E2E_JOB_TEMPLATE
           test/e2e/check-suite.sh \
             --enable-e2e-user ${KORE_E2E_USER} \
             --enable-gke ${ENABLE_GKE_E2E} \
-            --enable-eks ${ENABLE_EKS_E2E}
+            --enable-eks ${ENABLE_EKS_E2E} \
+            --enable-aks ${ENABLE_AKS_E2E}
     - slack/notify-on-failure:
         only_for_branches: master
 #
@@ -498,6 +507,9 @@ jobs:
   e2e_eks:
     <<: *E2E_JOB_TEMPLATE
 
+  e2e_aks:
+    <<: *E2E_JOB_TEMPLATE
+
 workflows:
   version: 2.1
   workflow:
@@ -565,6 +577,15 @@ workflows:
               ignore: /.*/
             tags:
               only: /^v([0-9]+)\.([0-9]+)\.([0-9]+)($|-rc([0-9]+)|-beta([0-9]+)|-alpha([0-9]+))$/
+      - e2e_aks:
+          enable_aks: true
+          requires:
+            - e2e-images
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v([0-9]+)\.([0-9]+)\.([0-9]+)($|-rc([0-9]+)|-beta([0-9]+)|-alpha([0-9]+))$/
       - publish-release:
           requires:
             - check
@@ -575,6 +596,7 @@ workflows:
             - check-release-notes
             - e2e_eks
             - e2e_gke
+            - e2e_aks
           filters:
             branches:
               ignore: /.*/
@@ -640,6 +662,16 @@ workflows:
           enable_eks: true
           requires:
             - e2e-images
+
+  e2e_aks:
+    when: << pipeline.parameters.enable_aks_e2e >>
+    jobs:
+      - e2e-images
+      - e2e_aks:
+          enable_aks: true
+          requires:
+            - e2e-images
+
   nightly:
     triggers:
       - schedule:
@@ -656,5 +688,9 @@ workflows:
             - e2e-images
       - e2e_eks:
           enable_eks: true
+          requires:
+            - e2e-images
+      - e2e_aks:
+          enable_aks: true
           requires:
             - e2e-images

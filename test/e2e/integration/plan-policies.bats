@@ -16,18 +16,22 @@
 #
 load helper
 
-@test "We should find polcies for eks and gke" {
+@test "We should find policies for all custer providers" {
   runit "${KORE} get planpolicies"
   [[ "$status" -eq 0 ]]
   runit "${KORE} get planpolicies gke-default"
   [[ "$status" -eq 0 ]]
   runit "${KORE} get planpolicies eks-default"
   [[ "$status" -eq 0 ]]
+  runit "${KORE} get planpolicies aks-default"
+  [[ "$status" -eq 0 ]]
 }
 
 @test "We should see the default policies are allocated to all teams" {
-  runit "${KORE} get allocations planpolicy-default-eks -t ${TEAM}"  
+  runit "${KORE} get allocations planpolicy-default-eks -t ${TEAM}"
   [[ "$status" -eq 0 ]]
-  runit "${KORE} get allocations planpolicy-default-gke -t ${TEAM}"  
+  runit "${KORE} get allocations planpolicy-default-gke -t ${TEAM}"
+  [[ "$status" -eq 0 ]]
+  runit "${KORE} get allocations planpolicy-default-aks -t ${TEAM}"
   [[ "$status" -eq 0 ]]
 }

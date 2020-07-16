@@ -31,6 +31,11 @@ load helper
   [[ "$status" -eq 0 ]]
 }
 
+@test "We should have a plan policy for aks" {
+  runit "${KORE} get planpolicies default-aks"
+  [[ "$status" -eq 0 ]]
+}
+
 @test "We should be not able to create a cluster from a parameter not permitted" {
   runit "${KORE} create cluster ${CLUSTER} --plan-param '{\"enableIstio\": \"true\"}' -t ${TEAM}"
   [[ "$status" -eq 0 ]]
