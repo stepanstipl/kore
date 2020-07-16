@@ -72,6 +72,14 @@ type AKSCredentials struct {
 	Status AKSCredentialsStatus `json:"status,omitempty"`
 }
 
+func (in *AKSCredentials) GetStatus() (status corev1.Status, message string) {
+	return in.Status.Status, ""
+}
+
+func (in *AKSCredentials) SetStatus(status corev1.Status, _ string) {
+	in.Status.Status = status
+}
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // AKSCredentialsList contains a list of AKSCredentials

@@ -36,6 +36,7 @@ import (
 
 	// import the azure controllers
 	_ "github.com/appvia/kore/pkg/controllers/cloud/azure/aks"
+	_ "github.com/appvia/kore/pkg/controllers/cloud/azure/akscredentials"
 
 	// importing the management controller
 	_ "github.com/appvia/kore/pkg/controllers/management/cluster"
