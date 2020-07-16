@@ -1,5 +1,35 @@
 # cloud.google.com/go v0.38.0
 cloud.google.com/go/compute/metadata
+# github.com/Azure/azure-sdk-for-go v44.0.0+incompatible
+## explicit
+github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2020-06-01/containerservice
+github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2019-05-01/resources
+github.com/Azure/azure-sdk-for-go/version
+# github.com/Azure/go-autorest v14.2.0+incompatible
+github.com/Azure/go-autorest
+# github.com/Azure/go-autorest/autorest v0.11.0
+## explicit
+github.com/Azure/go-autorest/autorest
+github.com/Azure/go-autorest/autorest/azure
+# github.com/Azure/go-autorest/autorest/adal v0.9.0
+github.com/Azure/go-autorest/autorest/adal
+# github.com/Azure/go-autorest/autorest/azure/auth v0.5.0
+## explicit
+github.com/Azure/go-autorest/autorest/azure/auth
+# github.com/Azure/go-autorest/autorest/azure/cli v0.4.0
+github.com/Azure/go-autorest/autorest/azure/cli
+# github.com/Azure/go-autorest/autorest/date v0.3.0
+github.com/Azure/go-autorest/autorest/date
+# github.com/Azure/go-autorest/autorest/to v0.4.0
+## explicit
+github.com/Azure/go-autorest/autorest/to
+# github.com/Azure/go-autorest/autorest/validation v0.3.0
+## explicit
+github.com/Azure/go-autorest/autorest/validation
+# github.com/Azure/go-autorest/logger v0.2.0
+github.com/Azure/go-autorest/logger
+# github.com/Azure/go-autorest/tracing v0.6.0
+github.com/Azure/go-autorest/tracing
 # github.com/BurntSushi/toml v0.3.1
 github.com/BurntSushi/toml
 # github.com/Djarvur/go-err113 v0.0.0-20200410182137-af658d038157
@@ -27,6 +57,11 @@ github.com/Songmu/retry
 # github.com/ahmetb/gen-crd-api-reference-docs v0.2.0 => github.com/appvia/gen-crd-api-reference-docs v0.2.1-0.20200604183043-37e61fdd102c
 ## explicit
 github.com/ahmetb/gen-crd-api-reference-docs
+# github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
+github.com/alecthomas/template
+github.com/alecthomas/template/parse
+# github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d
+github.com/alecthomas/units
 # github.com/apparentlymart/go-cidr v1.0.1
 ## explicit
 github.com/apparentlymart/go-cidr/cidr
@@ -185,6 +220,8 @@ github.com/dexidp/dex/pkg/log
 # github.com/dgrijalva/jwt-go v3.2.0+incompatible
 ## explicit
 github.com/dgrijalva/jwt-go
+# github.com/dimchansky/utfbom v1.1.0
+github.com/dimchansky/utfbom
 # github.com/edsrzf/mmap-go v1.0.0
 github.com/edsrzf/mmap-go
 # github.com/emicklei/go-restful v2.11.1+incompatible
@@ -213,6 +250,8 @@ github.com/fatih/color
 github.com/felixge/httpsnoop
 # github.com/fsnotify/fsnotify v1.4.9
 github.com/fsnotify/fsnotify
+# github.com/gedex/inflector v0.0.0-20170307190818-16278e9db813
+github.com/gedex/inflector
 # github.com/ghodss/yaml v1.0.0
 ## explicit
 github.com/ghodss/yaml
@@ -459,6 +498,11 @@ github.com/hpcloud/tail/winfile
 # github.com/huandu/xstrings v1.2.1
 ## explicit
 github.com/huandu/xstrings
+# github.com/idubinskiy/schematyper v0.0.0-20190118213059-f71b40dac30d => github.com/appvia/schematyper v0.0.0-20200710151743-82d7f6f07f29
+## explicit
+github.com/idubinskiy/schematyper
+github.com/idubinskiy/schematyper/schemas
+github.com/idubinskiy/schematyper/stringset
 # github.com/imdario/mergo v0.3.8
 ## explicit
 github.com/imdario/mergo
@@ -707,7 +751,7 @@ github.com/spf13/viper
 github.com/steveyen/gtreap
 # github.com/stretchr/objx v0.2.0
 github.com/stretchr/objx
-# github.com/stretchr/testify v1.5.1
+# github.com/stretchr/testify v1.6.1
 ## explicit
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/mock
@@ -792,21 +836,23 @@ go.opencensus.io/trace
 go.opencensus.io/trace/internal
 go.opencensus.io/trace/propagation
 go.opencensus.io/trace/tracestate
-# golang.org/x/crypto v0.0.0-20200311171314-f7b00557c8c4
+# golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 ## explicit
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/ed25519
 golang.org/x/crypto/ed25519/internal/edwards25519
 golang.org/x/crypto/pbkdf2
+golang.org/x/crypto/pkcs12
+golang.org/x/crypto/pkcs12/internal/rc2
 golang.org/x/crypto/scrypt
 golang.org/x/crypto/ssh/terminal
-# golang.org/x/mod v0.2.0
+# golang.org/x/mod v0.3.0
 golang.org/x/mod/internal/lazyregexp
 golang.org/x/mod/modfile
 golang.org/x/mod/module
 golang.org/x/mod/semver
-# golang.org/x/net v0.0.0-20200513185701-a91f0712d120
+# golang.org/x/net v0.0.0-20200625001655-4c5254603344
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
 golang.org/x/net/html
@@ -827,7 +873,7 @@ golang.org/x/oauth2/google
 golang.org/x/oauth2/internal
 golang.org/x/oauth2/jws
 golang.org/x/oauth2/jwt
-# golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
+# golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 golang.org/x/sync/errgroup
 # golang.org/x/sys v0.0.0-20200413165638-669c56c373c4
 golang.org/x/sys/unix
@@ -857,7 +903,8 @@ golang.org/x/text/width
 # golang.org/x/time v0.0.0-20191024005414-555d28b269f0
 ## explicit
 golang.org/x/time/rate
-# golang.org/x/tools v0.0.0-20200502202811-ed308ab3e770
+# golang.org/x/tools v0.0.0-20200707134715-9e0a013e855f
+## explicit
 golang.org/x/tools/go/analysis
 golang.org/x/tools/go/analysis/passes/asmdecl
 golang.org/x/tools/go/analysis/passes/assign
@@ -918,6 +965,7 @@ golang.org/x/tools/internal/gocommand
 golang.org/x/tools/internal/gopathwalk
 golang.org/x/tools/internal/imports
 golang.org/x/tools/internal/packagesinternal
+golang.org/x/tools/internal/typesinternal
 # golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 golang.org/x/xerrors
 golang.org/x/xerrors/internal
@@ -1020,6 +1068,8 @@ google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
+# gopkg.in/alecthomas/kingpin.v2 v2.2.6
+gopkg.in/alecthomas/kingpin.v2
 # gopkg.in/fsnotify.v1 v1.4.7
 gopkg.in/fsnotify.v1
 # gopkg.in/inf.v0 v0.9.1
@@ -1513,3 +1563,4 @@ sourcegraph.com/sqs/pbtypes
 # k8s.io/code-generator => github.com/appvia/kubernetes-code-generator v0.0.0-20200311145355-28f8f0159a26
 # github.com/kubernetes-sigs/go-open-service-broker-client => github.com/appvia/go-open-service-broker-client v0.0.0-20200505172434-f28d621ea14e
 # github.com/ahmetb/gen-crd-api-reference-docs => github.com/appvia/gen-crd-api-reference-docs v0.2.1-0.20200604183043-37e61fdd102c
+# github.com/idubinskiy/schematyper => github.com/appvia/schematyper v0.0.0-20200710151743-82d7f6f07f29

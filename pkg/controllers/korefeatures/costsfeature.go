@@ -70,6 +70,29 @@ func (c *Controller) getCostsServices(koreCtx kore.Context, config *configv1.Kor
 			"access_secret_key")
 	}
 
+	if config.Spec.Configuration["azure_credentials"] != "" {
+		service.Spec.ConfigurationFrom = addSecret(
+			service.Spec.ConfigurationFrom,
+			config.Spec.Configuration["azure_credentials"],
+			"secrets.azure_subscription_id",
+			"subscription_id")
+		service.Spec.ConfigurationFrom = addSecret(
+			service.Spec.ConfigurationFrom,
+			config.Spec.Configuration["azure_credentials"],
+			"secrets.azure_tenant_id",
+			"tenant_id")
+		service.Spec.ConfigurationFrom = addSecret(
+			service.Spec.ConfigurationFrom,
+			config.Spec.Configuration["azure_credentials"],
+			"secrets.azure_client_id",
+			"client_id")
+		service.Spec.ConfigurationFrom = addSecret(
+			service.Spec.ConfigurationFrom,
+			config.Spec.Configuration["azure_credentials"],
+			"secrets.azure_client_secret",
+			"client_secret")
+	}
+
 	return []v1.Service{service}, nil
 }
 

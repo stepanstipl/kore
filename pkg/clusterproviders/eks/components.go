@@ -40,7 +40,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// SetComponents adds all povider-specific cluster components and updates dependencies if required
+// SetComponents adds all provider-specific cluster components and updates dependencies if required
 func (p Provider) SetComponents(ctx kore.Context, cluster *clustersv1.Cluster, components *kore.ClusterComponents) error {
 	kubernetesObj := components.Find(func(comp kore.ClusterComponent) bool {
 		_, ok := comp.Object.(*clustersv1.Kubernetes)
@@ -364,7 +364,7 @@ func (p Provider) SetProviderData(ctx kore.Context, cluster *clustersv1.Cluster,
 	return cluster.Status.SetProviderData(providerData)
 }
 
-func (p Provider) deleteAutoScalerRole(ctx kore.Context, cluster *clustersv1.Cluster, components *kore.ClusterComponents) error {
+func (p Provider) deleteAutoScalerRole(ctx kore.Context, cluster *clustersv1.Cluster, _ *kore.ClusterComponent, components *kore.ClusterComponents) error {
 	eksComponent := components.Find(func(comp kore.ClusterComponent) bool {
 		_, ok := comp.Object.(*eksv1alpha1.EKS)
 		return ok

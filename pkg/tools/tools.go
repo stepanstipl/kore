@@ -8,6 +8,7 @@ import (
 	_ "github.com/go-bindata/go-bindata/go-bindata"
 	_ "github.com/go-swagger/go-swagger/cmd/swagger"
 	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
+	_ "github.com/idubinskiy/schematyper"
 	_ "github.com/maxbrunsfeld/counterfeiter/v6"
 	_ "github.com/mikefarah/yq/v3"
 	_ "github.com/mitchellh/gox"

@@ -166,7 +166,7 @@ func (a *Controller) removeComponent(
 	}
 	if !found {
 		if comp.AfterDelete != nil {
-			if err := comp.AfterDelete(ctx, cluster, components); err != nil {
+			if err := comp.AfterDelete(ctx, cluster, comp, components); err != nil {
 				return reconcile.Result{}, err
 			}
 		}

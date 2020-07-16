@@ -4052,6 +4052,249 @@
         }
       }
     },
+    "/api/v1alpha1/teams/{team}/aks": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Is the used to return a list of AKS clusters which thhe team has access",
+        "operationId": "listAKS",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the definitions of the AKS clusters",
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.AKSList"
+            }
+          },
+          "default": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/teams/{team}/aks/{name}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Is the used to return the AKS cluster which the team has access",
+        "operationId": "getAKS",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name the of the AKS cluster you are acting upon",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the definition of the AKS cluster",
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.AKS"
+            }
+          },
+          "default": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/teams/{team}/akscredentials": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Is the used tor return a list of Azure AKS credentials which thhe team has access",
+        "operationId": "ListAKSCredentials",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the definitions of the AKS credentials",
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.AKSCredentialsList"
+            }
+          },
+          "default": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/teams/{team}/akscredentials/{name}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Is the used tor return a list of AKS Credentials which the team has access",
+        "operationId": "GetAKSCredentials",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name the of the AKS Credentials you are acting upon",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former team definition",
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.AKSCredentials"
+            }
+          },
+          "default": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Is used to provision or update AKS credentials",
+        "operationId": "UpdateAKSCredentials",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name the of the AKS credentials you are acting upon",
+            "name": "name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "The definition for AKS Credentials",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.AKSCredentials"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the final definition",
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.AKSCredentials"
+            }
+          },
+          "default": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Is used to delete a AKS credentials",
+        "operationId": "DeleteAKSCredentials",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is name the of the AKS credentials you are acting upon",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the former AKS credentials",
+            "schema": {
+              "$ref": "#/definitions/v1alpha1.AKSCredentials"
+            }
+          },
+          "default": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
     "/api/v1alpha1/teams/{team}/allocations": {
       "get": {
         "consumes": [
@@ -8459,8 +8702,8 @@
     },
     "v1.OptionalSecretKeySelector": {
       "required": [
-        "key",
-        "name"
+        "name",
+        "key"
       ],
       "properties": {
         "key": {
@@ -9803,6 +10046,215 @@
         }
       }
     },
+    "v1alpha1.AKS": {
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1alpha1.AKSSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/v1alpha1.AKSStatus"
+        }
+      }
+    },
+    "v1alpha1.AKSCredentials": {
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1alpha1.AKSCredentialsSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/v1alpha1.AKSCredentialsStatus"
+        }
+      }
+    },
+    "v1alpha1.AKSCredentialsList": {
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1alpha1.AKSCredentials"
+          }
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ListMeta"
+        }
+      }
+    },
+    "v1alpha1.AKSCredentialsSpec": {
+      "required": [
+        "subscriptionID",
+        "tenantID",
+        "clientID"
+      ],
+      "properties": {
+        "clientID": {
+          "type": "string"
+        },
+        "credentialsRef": {
+          "$ref": "#/definitions/v1.SecretReference"
+        },
+        "subscriptionID": {
+          "type": "string"
+        },
+        "tenantID": {
+          "type": "string"
+        }
+      }
+    },
+    "v1alpha1.AKSCredentialsStatus": {
+      "properties": {
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.Condition"
+          }
+        },
+        "status": {
+          "type": "string"
+        },
+        "verified": {
+          "type": "boolean"
+        }
+      }
+    },
+    "v1alpha1.AKSList": {
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1alpha1.AKS"
+          }
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ListMeta"
+        }
+      }
+    },
+    "v1alpha1.AKSSpec": {
+      "required": [
+        "agentPoolProfiles",
+        "credentials",
+        "description",
+        "dnsPrefix",
+        "location",
+        "networkPlugin"
+      ],
+      "properties": {
+        "agentPoolProfiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1alpha1.AgentPoolProfile"
+          }
+        },
+        "authorizedIPRanges": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cluster": {
+          "$ref": "#/definitions/v1.Ownership"
+        },
+        "credentials": {
+          "$ref": "#/definitions/v1.Ownership"
+        },
+        "description": {
+          "type": "string"
+        },
+        "dnsPrefix": {
+          "type": "string"
+        },
+        "enablePodSecurityPolicy": {
+          "type": "boolean"
+        },
+        "enablePrivateCluster": {
+          "type": "boolean"
+        },
+        "kubernetesVersion": {
+          "type": "string"
+        },
+        "linuxProfile": {
+          "$ref": "#/definitions/v1alpha1.LinuxProfile"
+        },
+        "location": {
+          "type": "string"
+        },
+        "networkPlugin": {
+          "type": "string"
+        },
+        "networkPolicy": {
+          "type": "string"
+        },
+        "windowsProfile": {
+          "$ref": "#/definitions/v1alpha1.WindowsProfile"
+        }
+      }
+    },
+    "v1alpha1.AKSStatus": {
+      "properties": {
+        "caCertificate": {
+          "type": "string"
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.Component"
+          }
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
     "v1alpha1.AWSAccountClaim": {
       "properties": {
         "apiVersion": {
@@ -9967,6 +10419,70 @@
           "$ref": "#/definitions/v1.SecretReference"
         },
         "status": {
+          "type": "string"
+        }
+      }
+    },
+    "v1alpha1.AgentPoolProfile": {
+      "required": [
+        "name",
+        "mode",
+        "count",
+        "minCount",
+        "maxCount",
+        "vmSize",
+        "osType",
+        "osDiskSizeGB"
+      ],
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "enableAutoScaling": {
+          "type": "boolean"
+        },
+        "maxCount": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "maxPods": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "minCount": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "mode": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "nodeImageVersion": {
+          "type": "string"
+        },
+        "nodeLabels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "nodeTaints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1alpha1.NodeTaint"
+          }
+        },
+        "osDiskSizeGB": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "osType": {
+          "type": "string"
+        },
+        "vmSize": {
           "type": "string"
         }
       }
@@ -10799,6 +11315,23 @@
         }
       }
     },
+    "v1alpha1.LinuxProfile": {
+      "required": [
+        "adminUsername",
+        "sshPublicKeys"
+      ],
+      "properties": {
+        "adminUsername": {
+          "type": "string"
+        },
+        "sshPublicKeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "v1alpha1.NodeTaint": {
       "properties": {
         "effect": {
@@ -10997,6 +11530,20 @@
           "type": "string"
         },
         "lastName": {
+          "type": "string"
+        }
+      }
+    },
+    "v1alpha1.WindowsProfile": {
+      "required": [
+        "adminUsername",
+        "adminPassword"
+      ],
+      "properties": {
+        "adminPassword": {
+          "type": "string"
+        },
+        "adminUsername": {
           "type": "string"
         }
       }

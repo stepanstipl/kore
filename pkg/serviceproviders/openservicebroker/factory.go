@@ -38,7 +38,7 @@ func (p ProviderFactory) Type() string {
 
 func (p ProviderFactory) JSONSchema() string {
 	return `{
-		"$id": "https://appvia.io/schemas/serviceprovider/osb.json",
+		"$id": "https://appvia.io/kore/schemas/serviceprovider/osb.json",
 		"$schema": "http://json-schema.org/draft-07/schema#",
 		"description": "Open Service Broker Provider configuration schema",
 		"type": "object",

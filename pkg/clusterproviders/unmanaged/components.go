@@ -21,7 +21,7 @@ import (
 	"github.com/appvia/kore/pkg/kore"
 )
 
-// SetComponents adds all povider-specific cluster components and updates dependencies if required
+// SetComponents adds all provider-specific cluster components and updates dependencies if required
 func (p Provider) SetComponents(ctx kore.Context, cluster *clustersv1.Cluster, components *kore.ClusterComponents) error {
 	return nil
 }

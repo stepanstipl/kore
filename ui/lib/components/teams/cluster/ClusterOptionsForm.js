@@ -96,7 +96,7 @@ class ClusterOptionsForm extends React.Component {
       return Promise.reject('This name is already used!')
     }
 
-    const cloudAccountName = { 'GCP': 'Project', 'AWS': 'Account' }[selectedCloud]
+    const cloudAccountName = { 'GCP': 'Project', 'AWS': 'Account', 'Azure': 'Subscription' }[selectedCloud]
 
     return (
       <Card title="Cluster options">
@@ -167,7 +167,7 @@ class ClusterOptionsForm extends React.Component {
         {selectedPlan ? (
           <Collapse>
             <Collapse.Panel header="Cluster running cost estimate">
-              <CostEstimate 
+              <CostEstimate
                 planValues={this.state.planValuesForEstimate}
                 resourceType="cluster"
                 kind={selectedProvider}

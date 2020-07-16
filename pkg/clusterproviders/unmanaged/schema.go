@@ -17,9 +17,9 @@
 package unmanaged
 
 const schema = `{
-	"$id": "https://appvia.io/schemas/eks/plan.json",
+	"$id": "https://appvia.io/kore/schemas/unmanaged/plan.json",
 	"$schema": "http://json-schema.org/draft-07/schema#",
-	"description": "EKS Cluster Plan Schema",
+	"description": "Unmanaged Cluster Plan Schema",
 	"type": "object",
 	"additionalProperties": false,
 	"properties": {}

@@ -94,8 +94,6 @@ var _ = Describe("/plans", func() {
 				Description: stringPrt("Test plan 1"),
 				Labels: map[string]string{
 					"kore.appvia.io/environment": "test",
-					"kore.appvia.io/kind":        "GKE",
-					"kore.appvia.io/plural":      "gkes",
 				},
 				Configuration: apiextv1.JSON{
 					Raw: rawConfig,

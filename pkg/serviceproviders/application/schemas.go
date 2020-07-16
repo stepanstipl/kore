@@ -18,7 +18,7 @@ package application
 
 const ProviderSchema = `
 {
-	"$id": "https://appvia.io/schemas/serviceprovider/application.json",
+	"$id": "https://appvia.io/kore/schemas/serviceprovider/application.json",
 	"$schema": "http://json-schema.org/draft-07/schema#",
 	"description": "Kubernetes Application provider",
 	"type": "object",
@@ -27,9 +27,9 @@ const ProviderSchema = `
 
 const AppSchema = `
 {
-    "$id": "https://appvia.io/schemas/services/application/application.json",
+    "$id": "https://appvia.io/kore/schemas/services/application/app.json",
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "description": "Kubernetes Application",
+    "description": "Kubernetes Application defined by raw resources",
     "type": "object",
     "additionalProperties": false,
     "required": [
@@ -50,9 +50,9 @@ const AppSchema = `
 
 const HelmAppSchema = `
 {
-	"$id": "https://appvia.io/schemas/services/application/application.json",
+	"$id": "https://appvia.io/kore/schemas/services/application/helm-app.json",
 	"$schema": "http://json-schema.org/draft-07/schema#",
-	"description": "Kubernetes Application",
+	"description": "Kubernetes Application defined by a Helm package",
 	"type": "object",
 	"additionalProperties": false,
 	"required": [

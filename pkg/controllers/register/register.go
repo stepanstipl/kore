@@ -34,6 +34,9 @@ import (
 	_ "github.com/appvia/kore/pkg/controllers/cloud/gcp/projects"
 	_ "github.com/appvia/kore/pkg/controllers/cloud/gcp/projectsweeper"
 
+	// import the azure controllers
+	_ "github.com/appvia/kore/pkg/controllers/cloud/azure/aks"
+
 	// importing the management controller
 	_ "github.com/appvia/kore/pkg/controllers/management/cluster"
 	_ "github.com/appvia/kore/pkg/controllers/management/clusterbindings"

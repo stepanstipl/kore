@@ -4,7 +4,7 @@ import { Typography, Row, Col, Card, Tag } from 'antd'
 const { Paragraph } = Typography
 
 class CloudSelector extends React.Component {
-  static DEFAULT_ENABLED_CLOUDS = ['GCP', 'AWS']
+  static DEFAULT_ENABLED_CLOUDS = ['GCP', 'AWS', 'Azure']
 
   static propTypes = {
     selectedCloud: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]).isRequired,
@@ -91,16 +91,28 @@ class CloudSelector extends React.Component {
         <Col span={8}>
           <Card
             id="azure"
-            hoverable={false}
-            className={ selectedCloud === 'AKS' ? 'cloud-card selected' : 'cloud-card' }
+            onClick={this.selectCloud('Azure')}
+            hoverable={enabledCloudList.includes('Azure')}
+            className={ selectedCloud === 'Azure' ? 'cloud-card selected' : 'cloud-card' }
           >
-            <div className="unavailable">
-              <Paragraph style={{ paddingBottom: '15px', marginTop: '15px' }}>
-                <img src="/static/images/Azure.svg" height="50px" />
-              </Paragraph>
-              <Paragraph strong style={{ textAlign: 'center', marginTop: '20px', marginBottom: '0' }}>Microsoft Azure</Paragraph>
-            </div>
-            <ComingSoon />
+            {enabledCloudList.includes('Azure') ? (
+              <>
+                <Paragraph className="logo">
+                  <img src="/static/images/Azure.svg" height="80px" />
+                </Paragraph>
+                <Paragraph className="name" strong>Microsoft Azure</Paragraph>
+              </>
+            ) : (
+              <>
+                <div className="unavailable">
+                  <Paragraph>
+                    <img src="/static/images/Azure.svg" height="80px" />
+                  </Paragraph>
+                  <Paragraph strong style={{ textAlign: 'center', marginTop: '20px', marginBottom: '0' }}>Microsoft Azure</Paragraph>
+                </div>
+                <ComingSoon />
+              </>
+            )}
           </Card>
         </Col>
       </Row>

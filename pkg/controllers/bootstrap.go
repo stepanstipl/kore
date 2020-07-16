@@ -60,6 +60,10 @@ var _ Bootstrap = &bootstrapImpl{}
 // NewBootstrap wrapps cloud specific calls
 // TODO: move into cloud.go and create THE cloud interface
 func NewBootstrap(p Bootstrap) Bootstrap {
+	if _, ok := p.(*bootstrapImpl); ok {
+		panic("trying to wrap *bootstrapImpl in *bootstrapImpl")
+	}
+
 	b := &bootstrapImpl{
 		provider: p,
 	}

@@ -139,7 +139,7 @@ func NewCmdCreateCluster(factory cmdutil.Factory) *cobra.Command {
 		var filtered []string
 		for _, x := range list.Items {
 			switch x.Spec.Resource.Kind {
-			case "GKECredentials", "EKSCredentials", "AccountManagement":
+			case "AKSCredentials", "GKECredentials", "EKSCredentials", "AccountManagement":
 				filtered = append(filtered, x.Name)
 			}
 		}
@@ -389,8 +389,9 @@ func (o *CreateClusterOptions) GetDefaultAllocation(planName string) (*configv1.
 	var available []configv1.Allocation
 
 	matcher := map[string]string{
-		"GKE": "GKECredentials",
+		"AKS": "AKSCredentials",
 		"EKS": "EKSCredentials",
+		"GKE": "GKECredentials",
 	}
 	for _, x := range list.Items {
 		expected, found := matcher[plan.Spec.Kind]

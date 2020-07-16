@@ -59,7 +59,15 @@ func (a *Controller) setComponents(cluster *clustersv1.Cluster, components *kore
 			},
 		}
 
-		components.Add(kubernetesObj)
+		components.AddComponent(&kore.ClusterComponent{
+			Object: kubernetesObj,
+			OnSuccess: func(ctx kore.Context, cluster *clustersv1.Cluster, c *kore.ClusterComponent, components *kore.ClusterComponents) {
+				o := c.Object.(*clustersv1.Kubernetes)
+				cluster.Status.APIEndpoint = o.Status.APIEndpoint
+				cluster.Status.AuthProxyEndpoint = o.Status.Endpoint
+				cluster.Status.CaCertificate = o.Status.CaCertificate
+			},
+		})
 
 		kubeAppManager, err := a.createService(ctx, cluster, kore.AppAppManager)
 		if err != nil {
@@ -131,16 +139,6 @@ func (a *Controller) beforeComponentsUpdate(cluster *clustersv1.Cluster, compone
 // SetClusterStatus is responsible for ensure the status of the cluster
 func (a *Controller) SetClusterStatus(cluster *clustersv1.Cluster, components *kore.ClusterComponents) controllers.EnsureFunc {
 	return func(ctx kore.Context) (reconcile.Result, error) {
-		// @step: walk the component and find the kubernetes type
-		for _, comp := range *components {
-			switch o := comp.Object.(type) {
-			case *clustersv1.Kubernetes:
-				cluster.Status.APIEndpoint = o.Status.APIEndpoint
-				cluster.Status.AuthProxyEndpoint = o.Status.Endpoint
-				cluster.Status.CaCertificate = o.Status.CaCertificate
-			}
-		}
-
 		cluster.Status.Status = corev1.SuccessStatus
 		cluster.Status.Message = "The cluster has been created successfully"
 

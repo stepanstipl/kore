@@ -1,6 +1,13 @@
 module github.com/appvia/kore
 
+go 1.14
+
 require (
+	github.com/Azure/azure-sdk-for-go v44.0.0+incompatible
+	github.com/Azure/go-autorest/autorest v0.11.0
+	github.com/Azure/go-autorest/autorest/azure/auth v0.5.0
+	github.com/Azure/go-autorest/autorest/to v0.4.0
+	github.com/Azure/go-autorest/autorest/validation v0.3.0 // indirect
 	github.com/Masterminds/goutils v1.1.0 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Masterminds/sprig v2.22.0+incompatible
@@ -49,6 +56,7 @@ require (
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/huandu/xstrings v1.2.1 // indirect
+	github.com/idubinskiy/schematyper v0.0.0-20190118213059-f71b40dac30d
 	github.com/imdario/mergo v0.3.8 // indirect
 	github.com/jinzhu/gorm v1.9.12
 	github.com/jmhodges/levigo v1.0.0 // indirect
@@ -77,7 +85,7 @@ require (
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
 	github.com/steveyen/gtreap v0.0.0-20150807155958-0abe01ef9be2 // indirect
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.6.1
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/tcnksm/ghr v0.13.0
 	github.com/tecbot/gorocksdb v0.0.0-20191019123150-400c56251341 // indirect
@@ -85,9 +93,10 @@ require (
 	github.com/tidwall/sjson v1.1.1
 	github.com/urfave/cli/v2 v2.1.1
 	github.com/xeipuuv/gojsonschema v1.2.0
-	golang.org/x/crypto v0.0.0-20200311171314-f7b00557c8c4
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
+	golang.org/x/tools v0.0.0-20200707134715-9e0a013e855f // indirect
 	gonum.org/v1/gonum v0.7.0 // indirect
 	google.golang.org/api v0.20.0
 	google.golang.org/grpc v1.27.0
@@ -115,4 +124,4 @@ replace github.com/kubernetes-sigs/go-open-service-broker-client => github.com/a
 
 replace github.com/ahmetb/gen-crd-api-reference-docs => github.com/appvia/gen-crd-api-reference-docs v0.2.1-0.20200604183043-37e61fdd102c
 
-go 1.14
+replace github.com/idubinskiy/schematyper => github.com/appvia/schematyper v0.0.0-20200710151743-82d7f6f07f29

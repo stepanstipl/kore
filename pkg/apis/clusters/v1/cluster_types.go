@@ -62,6 +62,27 @@ type ClusterSpec struct {
 	Credentials corev1.Ownership `json:"credentials"`
 }
 
+func (c *ClusterSpec) GetConfiguration(v interface{}) error {
+	if err := json.Unmarshal(c.Configuration.Raw, v); err != nil {
+		return fmt.Errorf("failed to unmarshal AKS cluster configuration: %w", err)
+	}
+	return nil
+}
+
+func (c *ClusterSpec) SetConfiguration(v interface{}) error {
+	if v == nil {
+		c.Configuration = apiextv1.JSON{}
+		return nil
+	}
+
+	raw, err := json.Marshal(v)
+	if err != nil {
+		return fmt.Errorf("failed to marshal AKS cluster configuration: %w", err)
+	}
+	c.Configuration = apiextv1.JSON{Raw: raw}
+	return nil
+}
+
 // ClusterStatus defines the observed state of a cluster
 // +k8s:openapi-gen=true
 type ClusterStatus struct {
