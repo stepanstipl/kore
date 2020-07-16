@@ -19,8 +19,29 @@ package apiserver
 import (
 	"net/http"
 
+	gcp "github.com/appvia/kore/pkg/apis/gcp/v1alpha1"
+
 	restful "github.com/emicklei/go-restful"
 )
+
+func (u teamHandler) addGCPProjectClaimRoutes(ws *restful.WebService) {
+	ws.Route(
+		ws.GET("/{team}/projectclaims").To(u.findProjectClaims).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Doc("Is the used tor return a list of Google Container Engine clusters which thhe team has access").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", gcp.ProjectClaimList{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.GET("/{team}/projectclaims/{name}").To(u.findProjectClaim).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the resource you are acting on")).
+			Doc("Is the used tor return a list of Google Container Engine clusters which thhe team has access").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", gcp.ProjectClaim{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+}
 
 // findProjectClaims returns a list of credential claims
 func (u teamHandler) findProjectClaims(req *restful.Request, resp *restful.Response) {

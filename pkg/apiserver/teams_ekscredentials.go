@@ -24,6 +24,48 @@ import (
 	restful "github.com/emicklei/go-restful"
 )
 
+func (u teamHandler) addEKSCredentialsRoutes(ws *restful.WebService) {
+	ws.Route(
+		ws.GET("/{team}/ekscredentials").To(u.listEKSCredentials).
+			Operation("ListEKSCredentials").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Doc("Is the used tor return a list of Amazon EKS credentials which thhe team has access").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", eks.EKSCredentialsList{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.GET("/{team}/ekscredentials/{name}").To(u.getEKSCredentials).
+			Operation("GetEKSCredentials").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the EKS Credentials you are acting upon")).
+			Doc("Is the used tor return a list of EKS Credentials which the team has access").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", eks.EKSCredentials{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.PUT("/{team}/ekscredentials/{name}").To(u.updateEKSCredentials).
+			Operation("UpdateEKSCredentials").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the EKS credentials you are acting upon")).
+			Reads(eks.EKSCredentials{}, "The definition for EKS Credentials").
+			Doc("Is used to provision or update a EKS credentials in the kore").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", eks.EKSCredentials{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.DELETE("/{team}/ekscredentials/{name}").To(u.deleteEKSCredentials).
+			Operation("DeleteEKSCredentials").
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the EKS credentials you are acting upon")).
+			Doc("Is used to delete a EKS credentials from the kore").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", eks.EKSCredentials{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+}
+
 // listEKSCredentials returns all the credentials under the team
 func (u teamHandler) listEKSCredentials(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {

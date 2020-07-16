@@ -24,6 +24,47 @@ import (
 	restful "github.com/emicklei/go-restful"
 )
 
+func (u teamHandler) addGCPOrganizationRoutes(ws *restful.WebService) {
+	ws.Route(
+		ws.GET("/{team}/organizations").To(u.findOrganizations).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Doc("Is the used tor return a list of gcp organizations").
+			Operation("ListGCPOrganizations").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", gcp.OrganizationList{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.GET("/{team}/organizations/{name}").To(u.findOrganization).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the resource you are acting on")).
+			Doc("Is the used tor return a specific gcp organization").
+			Operation("GetGCPOrganization").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", gcp.Organization{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+	ws.Route(
+		ws.PUT("/{team}/organizations/{name}").To(u.updateOrganization).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the resource you are acting on")).
+			Operation("UpdateGCPOrganization").
+			Reads(gcp.Organization{}, "The definition for GCP organization").
+			Doc("Is used to provision or update a gcp organization").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", gcp.Organization{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	ws.Route(
+		ws.DELETE("/{team}/organizations/{name}").To(u.deleteOrganization).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.PathParameter("name", "Is name the of the resource you are acting on")).
+			Doc("Is used to delete a managed gcp organization").
+			Operation("DeleteGCPOrganization").
+			Returns(http.StatusOK, "Contains the former team definition from the kore", gcp.Organization{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+}
+
 // findOrganizations returns a list of credential claims
 func (u teamHandler) findOrganizations(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
