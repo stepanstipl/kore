@@ -60,6 +60,8 @@ type Streams struct {
 type Factory interface {
 	// CheckError handles the cli errors for us
 	CheckError(error)
+	// Client returns the underlying client
+	Client() client.Interface
 	// ClientWithEndpoint returns the api client with a specific endpoint
 	ClientWithEndpoint(endpoint string) client.RestInterface
 	// ClientWithResource returns the api client with a specific resource

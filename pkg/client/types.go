@@ -28,6 +28,10 @@ type Interface interface {
 	HTTPClient(*http.Client) Interface
 	// Request creates a request instance
 	Request() RestInterface
+	// CurrentProfile returns the current profile
+	CurrentProfile() string
+	// OverrideProfile allows you set the selected profile
+	OverrideProfile(string) Interface
 }
 
 // Plugin provides an interface for plugins

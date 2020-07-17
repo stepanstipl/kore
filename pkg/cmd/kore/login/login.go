@@ -95,11 +95,6 @@ func (o *LoginOptions) Validate() error {
 
 		case config.HasProfile(o.Name) && !o.Force:
 			return fmt.Errorf("profile name already used (note: you can use the --force option to force the update)")
-
-			/*
-				case !IsValidHostname(o.Endpoint):
-					return fmt.Errorf("invalid api server: %s", o.Endpoint)
-			*/
 		}
 
 		config.CreateProfile(o.Name, o.Endpoint)
@@ -113,10 +108,10 @@ func (o *LoginOptions) Validate() error {
 func (o *LoginOptions) Run() error {
 	var err error
 
-	config := o.Config()
+	current := o.Client().CurrentProfile()
 
 	// @check we have the minimum required for authentication
-	if err := o.Config().HasValidProfile(); err != nil {
+	if err := o.Config().HasValidProfile(current); err != nil {
 		o.Println("Unable to authenticate: %s", err.Error())
 		o.Println("You may need to reconfigure your profile via $ kore profile configure")
 
@@ -147,14 +142,14 @@ func (o *LoginOptions) Run() error {
 		}
 	}()
 
-	fmt.Printf("Attempting to authenticate to Appvia Kore: %s [%s]\n",
-		config.GetCurrentServer().Endpoint,
-		config.CurrentProfile,
+	o.Println("Attempting to authenticate to Appvia Kore: %s [%s]\n",
+		o.Config().GetServer(current).Endpoint,
+		o.Client().CurrentProfile(),
 	)
 
 	// @step: open a browser to the to the api server
 	redirectURL := fmt.Sprintf("%s/oauth/authorize?redirect_url=http://localhost:%d",
-		config.GetCurrentServer().Endpoint, o.Port)
+		o.Config().GetServer(current).Endpoint, o.Port)
 
 	if err := open.Run(redirectURL); err != nil {
 		return fmt.Errorf("trying to open web browser, error: %s", err)
@@ -169,7 +164,7 @@ func (o *LoginOptions) Run() error {
 		return errors.New("authorization request timed out waiting to complete")
 	}
 
-	auth := config.GetCurrentAuthInfo()
+	auth := o.Config().GetAuthInfo(current)
 	auth.OIDC = &restconfig.OIDC{
 		AccessToken:  token.AccessToken,
 		AuthorizeURL: token.AuthorizationURL,
@@ -185,7 +180,7 @@ func (o *LoginOptions) Run() error {
 		return fmt.Errorf("trying to update the client configuration: %s", err)
 	}
 
-	o.Println("Successfully authenticated")
+	o.Println("Successfully authenticated to %s", current)
 
 	return nil
 }

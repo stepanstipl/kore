@@ -28,7 +28,7 @@ import (
 const (
 	testConfig = `
 current-profile: local
-profiles: 
+profiles:
   local:
     server: local
     team: kore
@@ -77,9 +77,9 @@ func TestCurrentProfile(t *testing.T) {
 	assert.Equal(t, "local", c.CurrentProfile)
 }
 
-func TestGetCurrentProfile(t *testing.T) {
+func TestGetProfile(t *testing.T) {
 	c := newTestConfig(t)
-	profile := c.GetCurrentProfile()
+	profile := c.GetProfile("local")
 
 	require.NotNil(t, profile)
 	assert.Equal(t, "local", profile.Server)
@@ -89,7 +89,7 @@ func TestGetCurrentProfile(t *testing.T) {
 
 func TestGetCurrentServer(t *testing.T) {
 	c := newTestConfig(t)
-	current := c.GetCurrentServer()
+	current := c.GetServer("local")
 
 	require.NotNil(t, current)
 	assert.Equal(t, "http://127.0.0.1:10080", current.Endpoint)
@@ -97,7 +97,7 @@ func TestGetCurrentServer(t *testing.T) {
 
 func TestGetCurrentAuthInfo(t *testing.T) {
 	c := newTestConfig(t)
-	current := c.GetCurrentAuthInfo()
+	current := c.GetAuthInfo("local")
 
 	require.NotNil(t, current)
 	require.NotNil(t, current.OIDC)

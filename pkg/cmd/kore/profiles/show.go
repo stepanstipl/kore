@@ -62,7 +62,7 @@ func (o ShowOptions) Run() error {
 	}
 
 	o.Println("Profile:  %s", name)
-	o.Println("Endpoint: %s", config.GetCurrentServer().Endpoint)
+	o.Println("Endpoint: %s", config.GetServer(o.Config().CurrentProfile).Endpoint)
 
 	return nil
 }

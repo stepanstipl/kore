@@ -115,7 +115,7 @@ func (o *KubeConfigOptions) WriteConfig(clusters *clustersv1.ClusterList, path s
 		return err
 	}
 
-	auth := o.Config().GetCurrentAuthInfo()
+	auth := o.Config().GetAuthInfo(o.Client().CurrentProfile())
 	if auth.OIDC == nil {
 		return errors.New("you must be using a context backed by an idp")
 	}

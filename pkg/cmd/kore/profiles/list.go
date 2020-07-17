@@ -17,6 +17,8 @@
 package profiles
 
 import (
+	"sort"
+
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 	"github.com/appvia/kore/pkg/utils/render"
 
@@ -53,12 +55,17 @@ func (o *ListOptions) Run() error {
 	}
 	var list []profile
 
-	for k, v := range o.Config().Profiles {
-		if o.Config().HasServer(v.Server) {
+	// @step: we should order the list as they come from a map
+	profiles := o.Config().ListProfiles()
+	sort.Strings(profiles)
+
+	for _, x := range profiles {
+		p := o.Config().GetProfile(x)
+		if o.Config().HasServer(p.Server) {
 			list = append(list, profile{
-				Name:   k,
-				Server: o.Config().Servers[v.Server].Endpoint,
-				Team:   v.Team,
+				Name:   x,
+				Server: o.Config().GetServer(p.Server).Endpoint,
+				Team:   p.Team,
 			})
 		}
 	}
