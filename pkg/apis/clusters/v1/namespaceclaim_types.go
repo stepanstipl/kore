@@ -54,7 +54,6 @@ type NamespaceClaimStatus struct {
 	// Status is the status of the namespace
 	Status corev1.Status `json:"status,omitempty"`
 	// Conditions is a series of things that caused the failure if any
-	// +listType=set
 	Conditions []corev1.Condition `json:"conditions,omitempty"`
 }
 

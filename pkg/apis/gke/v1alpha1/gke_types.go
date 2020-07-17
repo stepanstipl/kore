@@ -51,7 +51,6 @@ type GKESpec struct {
 	// AuthorizedMasterNetworks is a collection of authorized networks which is
 	// permitted to speak to the kubernetes API, default to all if not provided.
 	// +kubebuilder:validation:Optional
-	// +listType=set
 	AuthorizedMasterNetworks []*AuthorizedNetwork `json:"authorizedMasterNetworks"`
 	// ServicesIPV4Cidr is an optional network cidr configured for the cluster
 	// services
@@ -114,7 +113,6 @@ type GKESpec struct {
 	Tags map[string]string `json:"tags,omitempty"`
 	// NodePools is the set of node pools for this cluster. Required unless ALL deprecated properties except subnetwork are set.
 	// +kubebuilder:validation:Optional
-	// +listType=set
 	NodePools []GKENodePool `json:"nodePools,omitempty"`
 
 	// DEPRECATED: Set on node group instead, this property is now ignored. Size is the number of nodes per zone which should exist in the cluster.

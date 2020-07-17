@@ -47,7 +47,6 @@ type AKSCredentialsSpec struct {
 // +k8s:openapi-gen=true
 type AKSCredentialsStatus struct {
 	// Conditions is a collection of potential issues
-	// +listType=set
 	Conditions []corev1.Condition `json:"conditions,omitempty"`
 	// Verified checks that the credentials are ok and valid
 	Verified *bool `json:"verified,omitempty"`

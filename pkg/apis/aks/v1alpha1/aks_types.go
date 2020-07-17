@@ -27,10 +27,8 @@ type AKSSpec struct {
 	// AgentPoolProfiles is the set of node pools for this cluster.
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=1
-	// +listType=set
 	AgentPoolProfiles []AgentPoolProfile `json:"agentPoolProfiles"`
 	// AuthorizedIPRanges are IP ranges to whitelist for incoming traffic to the API servers
-	// +listType=set
 	AuthorizedIPRanges []string `json:"authorizedIPRanges,omitempty"`
 	// Cluster refers to the cluster this object belongs to
 	// +kubebuilder:validation:Required
@@ -149,7 +147,6 @@ type LinuxProfile struct {
 	// AdminUsername is the admin username for Linux VMs
 	AdminUsername string `json:"adminUsername"`
 	// SSHPublicKeys is a list of public SSH keys to allow to connect to the Linux VMs
-	// +listType=set
 	SSHPublicKeys []string `json:"sshPublicKeys"`
 }
 

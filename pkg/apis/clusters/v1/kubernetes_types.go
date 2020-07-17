@@ -32,7 +32,6 @@ type KubernetesSpec struct {
 	// AuthProxyAllowedIPs is a list of IP address ranges (using CIDR format), which will be allowed to access the proxy
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=1
-	// +listType=set
 	AuthProxyAllowedIPs []string `json:"authProxyAllowedIPs,omitempty"`
 	// Cluster refers to the cluster this object belongs to
 	// +kubebuilder:validation:Required
@@ -40,7 +39,6 @@ type KubernetesSpec struct {
 	// ClusterUsers is a collection of users from the team whom have
 	// permissions across the cluster
 	// +kubebuilder:validation:Optional
-	// +listType=set
 	ClusterUsers []ClusterUser `json:"clusterUsers,omitempty"`
 	// EnableDefaultTrafficBlock indicates the cluster should default to
 	// enabling blocking network policies on all namespaces
@@ -69,7 +67,6 @@ type ClusterUser struct {
 	// Roles is the roles the user is permitted access to
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinItems=1
-	// +listType=set
 	Roles []string `json:"roles"`
 }
 

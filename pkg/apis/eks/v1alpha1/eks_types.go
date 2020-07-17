@@ -29,7 +29,6 @@ type EKSSpec struct {
 	// AuthorizedMasterNetworks is the network ranges which are permitted
 	// to access the EKS control plane endpoint i.e the managed one (not the
 	// authentication proxy)
-	// +listType=set
 	AuthorizedMasterNetworks []string `json:"authorizedMasterNetworks,omitempty"`
 	// Cluster refers to the cluster this object belongs to
 	// +kubebuilder:validation:Required
@@ -43,11 +42,9 @@ type EKSSpec struct {
 	Region string `json:"region"`
 	// SubnetIds is a list of subnet IDs
 	// +kubebuilder:validation:Required
-	// +listType=set
 	SubnetIDs []string `json:"subnetIDs"`
 	// SecurityGroupIds is a list of security group IDs
 	// +kubebuilder:validation:Required
-	// +listType=set
 	SecurityGroupIDs []string `json:"securityGroupIDs,omitempty"`
 	// Credentials is a reference to an EKSCredentials object to use for authentication
 	// +k8s:openapi-gen=false

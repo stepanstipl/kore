@@ -46,7 +46,6 @@ type IDPSpec struct {
 type IDPStatus struct {
 	// Conditions is a set of condition which has caused an error
 	// +kubebuilder:validation:Optional
-	// +listType=set
 	Conditions []Condition `json:"conditions"`
 	// Status is overall status of the IDP configuration
 	Status Status `json:"status"`

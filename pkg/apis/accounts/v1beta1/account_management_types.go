@@ -37,7 +37,6 @@ type AccountManagementSpec struct {
 	Provider string `json:"provider"`
 	// Rules is a set of rules for this provider
 	// +kubebuilder:validation:Optional
-	// +listType=set
 	Rules []*AccountsRule `json:"rules,omitempty"`
 	// Organization is the underlying organizational resource (only require if more than one)
 	// +kubebuilder:validation:Required
@@ -56,7 +55,6 @@ type AccountsRule struct {
 	// Plans is a list of plans permitted
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:Required
-	// +listType=set
 	Plans []string `json:"plans"`
 	// Suffix is the applied suffix
 	// +kubebuilder:validation:Optional
@@ -76,7 +74,6 @@ type AccountManagementStatus struct {
 	Status corev1.Status `json:"status,omitempty"`
 	// Conditions is a collection of potential issues
 	// +kubebuilder:validation:Optional
-	// +listType=set
 	Conditions []corev1.Condition `json:"conditions,omitempty"`
 }
 

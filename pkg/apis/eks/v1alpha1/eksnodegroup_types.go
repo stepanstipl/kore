@@ -56,7 +56,6 @@ type EKSNodeGroupSpec struct {
 	MinSize int64 `json:"minSize"`
 	// Subnets is the VPC networks to use for the nodes
 	// +kubebuilder:validation:Required
-	// +listType=set
 	Subnets []string `json:"subnets"`
 	// Tags are the AWS metadata to apply to the node group
 	// +kubebuilder:validation:Required
@@ -65,7 +64,6 @@ type EKSNodeGroupSpec struct {
 	// +kubebuilder:validation:Required
 	Region string `json:"region"`
 	// SSHSourceSecurityGroups is the security groups that are allowed SSH access (port 22) to the worker nodes
-	// +listType=set
 	SSHSourceSecurityGroups []string `json:"sshSourceSecurityGroups,omitempty"`
 	// EC2SSHKey is the Amazon EC2 SSH key that provides access for SSH communication with
 	// the worker nodes in the managed node group
@@ -90,7 +88,6 @@ type EKSNodeGroupStatus struct {
 	// NodeIAMRole is the IAM role assumed by the worker nodes themselves
 	NodeIAMRole string `json:"nodeIAMRole,omitempty"`
 	// AutoScalingGroupName is the name of the Auto Scaling Groups belonging to this node group
-	// +listType=set
 	AutoScalingGroupNames []string `json:"autoScalingGroupNames,omitempty"`
 	// Status provides a overall status
 	Status core.Status `json:"status,omitempty"`
