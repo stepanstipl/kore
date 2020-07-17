@@ -74,6 +74,7 @@ build-cluster() {
       cd ..
     fi
   else
+    args="${args} --disable-ui"
     args="${args} --set=ui.replicas=00"
   fi
 
@@ -91,7 +92,7 @@ build-cluster() {
         announce "Building & pushing the auth proxy image"
 
         args="${args} --set=api.images={}"
-        args="${args} --set=api.images.auth_proxy=quay.io/appvia/auth-proxy=${VERSION}"
+        args="${args} --set=api.images.auth_proxy=quay.io/appvia/auth-proxy:${VERSION}"
         VERSION=${VERSION} make auth-proxy-image-release
       fi
     fi
@@ -103,6 +104,7 @@ build-cluster() {
     --deployment-timeout=8m \
     --force=true \
     --release=charts/kore \
+    --set=api.admin_pass=${KORE_ADMIN_PASS} \
     --set=api.admin_token=${KORE_ADMIN_TOKEN} \
     --set=api.auth_plugin_config={} \
     --set=api.auth_plugin_config.local_jwt_publickey=${KORE_LOCAL_JWT_PUBLIC_KEY} \
