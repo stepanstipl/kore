@@ -38,10 +38,10 @@ jobs:
       - image: circleci/golang:1.14
     steps:
       - checkout
-      - run:
-          name: Build
-          command: |
-            make build
+#      - run:
+#          name: Build
+#          command: |
+#            make build
 
   check-linting:
     resource_class: large
@@ -49,10 +49,10 @@ jobs:
       - image: circleci/golang:1.14
     steps:
       - checkout
-      - run:
-          name: Check Linting
-          command: |
-            make check
+#      - run:
+#          name: Check Linting
+#          command: |
+#            make check
 
   check-units:
     resource_class: large
@@ -68,12 +68,12 @@ jobs:
              /usr/local/bin/docker-entrypoint.sh --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
     steps:
       - checkout
-      - run:
-          name: Running Unit Tests
-          environment:
-            TEST_USERS_DATABASE_URL: "root:pass@tcp(database:3306)/kore?parseTime=true"
-          command: |
-            make test
+#      - run:
+#          name: Running Unit Tests
+#          environment:
+#            TEST_USERS_DATABASE_URL: "root:pass@tcp(database:3306)/kore?parseTime=true"
+#          command: |
+#            make test
 
   check-apis:
     resource_class: large
@@ -81,10 +81,10 @@ jobs:
       - image: circleci/golang:1.14
     steps:
       - checkout
-      - run:
-          name: Checking Generated API in sync
-          command: |
-            make check-apis
+#      - run:
+#          name: Checking Generated API in sync
+#          command: |
+#            make check-apis
 
   validate-api:
     environment:
@@ -103,30 +103,30 @@ jobs:
 #              echo "Zero changes to the API found, skipping the rest"
 #              circleci-agent step halt
 #            fi
-      - run:
-          name: Docker Login
-          command: |
-            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
-      - run:
-          name: Provisioning Local Cluster
-          command: |
-            sudo mkdir -p /usr/local/go_workspace
-            test/bin/e2e.sh --version ${CIRCLE_SHA1}
-      - run:
-          name: Checking Swagger
-          command: |
-            sudo apt-get install jq
-            make swagger-json
-            make swagger-validate
-      - run:
-          name: Checking UI Autogeneration
-          working_directory: ~/project/ui
-          command: |
-            make check-kore-autogen
-      - run:
-          name: Integration testing API
-          command: |
-            make check-swagger-apiclient api-test
+#      - run:
+#          name: Docker Login
+#          command: |
+#            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
+#      - run:
+#          name: Provisioning Local Cluster
+#          command: |
+#            sudo mkdir -p /usr/local/go_workspace
+#            test/bin/e2e.sh --version ${CIRCLE_SHA1}
+#      - run:
+#          name: Checking Swagger
+#          command: |
+#            sudo apt-get install jq
+#            make swagger-json
+#            make swagger-validate
+#      - run:
+#          name: Checking UI Autogeneration
+#          working_directory: ~/project/ui
+#          command: |
+#            make check-kore-autogen
+#      - run:
+#          name: Integration testing API
+#          command: |
+#            make check-swagger-apiclient api-test
 
   release:
     docker:
@@ -175,16 +175,16 @@ jobs:
       - image: circleci/node:12
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - ui-node-v1-{{ checksum "ui/package-lock.json" }}
-      - run:
-          name: Testing UI
-          working_directory: ~/project/ui
-          command: |
-            # Restore node modules only if we've not got a cache hit.
-            [[ -d node_modules ]] || make deps
-            make test
+#      - restore_cache:
+#          keys:
+#            - ui-node-v1-{{ checksum "ui/package-lock.json" }}
+#      - run:
+#          name: Testing UI
+#          working_directory: ~/project/ui
+#          command: |
+#            # Restore node modules only if we've not got a cache hit.
+#            [[ -d node_modules ]] || make deps
+#            make test
 
   validate-ui:
     environment:
@@ -194,6 +194,10 @@ jobs:
       image: ubuntu-1604:202007-01
     steps:
       - checkout
+      - run:
+          name: Install Tools
+          command: |
+            node --version
       - kube-orb/install-kubectl:
           kubectl-version: latest
       - run:
@@ -203,18 +207,22 @@ jobs:
       - run:
           name: Provisioning Local Cluster
           command: |
-            test/bin/e2e.sh --version ${CIRCLE_SHA1}
-      - run:
-          name: Install Headless Chrome dependencies
-          command: |
-            ./ui/scripts/install-e2e-deps.sh
+            test/bin/e2e.sh --version ${CIRCLE_SHA1} --enable-ui true
+#      - run:
+#          name: Install Headless Chrome dependencies
+#          command: |
+#            ./ui/scripts/install-e2e-deps.sh
       - run:
           name: End-to-end testing UI
           working_directory: ~/project/ui
           environment:
             NODE_ENV: development
           command: |
-            make test-e2e
+            docker run -ti --rm --net=host \
+              -v ${PWD}:/workspace \
+              -w /workspace \
+              circleci/node:12 \
+              bash -c "./ui/scripts/install-e2e-deps.sh; make test-e2e"
 
   release-ui:
     environment:
