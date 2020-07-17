@@ -111,7 +111,7 @@ export default class PlanOptionClusterUsers extends PlanOptionBase {
   render() {
     const { name, editable, property } = this.props
     const { displayName, valueOrDefault, help } = this.prepCommonProps(this.props, [])
-    const roles = property.enum
+    const roles = property.items.properties.roles.items.enum
     const columns = [
       { title: 'User', dataIndex: 'username', key: 'username', width: '45%' },
       { title: 'Roles', dataIndex: 'roles', key: 'tags', width: '45%', render: function renderRoles(userRoles, r) { 
