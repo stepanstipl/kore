@@ -405,7 +405,6 @@ changelog: release
 apis: golang
 	@echo "--> Generating Clientsets & Deepcopies"
 	@${MAKE} deepcopy-gen
-	@${MAKE} openapi-gen
 	@${MAKE} register-gen
 	@${MAKE} crd-gen
 	@${MAKE} schema-gen
@@ -498,7 +497,7 @@ kind-apiserver-logs:
 
 kind-admintoken:
 	@echo `kubectl --context kind-kore -n kore get secret kore-api -o json | jq -r ".data.KORE_ADMIN_TOKEN" | base64 --decode`
-	
+
 kind-api-test:
 	@export KORE_ADMIN_TOKEN="$(shell kubectl --context kind-kore -n kore get secret kore-api -o json | jq -r ".data.KORE_ADMIN_TOKEN" | base64 --decode)" && ${MAKE} run-api-test
 

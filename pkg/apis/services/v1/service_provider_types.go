@@ -51,7 +51,6 @@ type ServiceProviderSpec struct {
 	// ConfigurationFrom is a way to load configuration values from alternative sources, e.g. from secrets
 	// The values from these sources will override any existing keys defined in Configuration
 	// +kubebuilder:validation:Optional
-	// +listType=set
 	ConfigurationFrom []corev1.ConfigurationFromSource `json:"configurationFrom,omitempty"`
 }
 
@@ -69,7 +68,6 @@ type ServiceProviderStatus struct {
 	Components corev1.Components `json:"components,omitempty"`
 	// SupportedKinds contains all the supported service kinds
 	// +kubebuilder:validation:Optional
-	// +listType=set
 	SupportedKinds []string `json:"supportedKinds,omitempty"`
 }
 

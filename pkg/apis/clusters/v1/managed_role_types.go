@@ -33,7 +33,6 @@ type ManagedRoleSpec struct {
 	Description string `json:"description"`
 	// Role are the permissions on the role
 	// +kubebuilder:validation:Required
-	// +listType=set
 	Role []rbacv1.PolicyRule `json:"role,omitempty"`
 }
 
@@ -41,7 +40,6 @@ type ManagedRoleSpec struct {
 // +k8s:openapi-gen=true
 type ManagedRoleStatus struct {
 	// Conditions is a set of condition which has caused an error
-	// +listType=set
 	Conditions []corev1.Condition `json:"conditions"`
 	// Status is overall status of the workspace
 	Status corev1.Status `json:"status"`

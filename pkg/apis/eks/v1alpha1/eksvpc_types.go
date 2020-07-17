@@ -47,19 +47,14 @@ type Infra struct {
 	// VpcID is the identifier of the VPC
 	VpcID string `json:"vpcID,omitempty"`
 	// AvailabilityZoneIDs is the list of AZ ids
-	// +listType=set
 	AvailabilityZoneIDs []string `json:"availabilityZoneIDs,omitempty"`
 	// AvailabilityZoneIDs is the list of AZ names
-	// +listType=set
 	AvailabilityZoneNames []string `json:"availabilityZoneNames,omitempty"`
 	// PrivateSubnetIds is a list of subnet IDs to use for the worker nodes
-	// +listType=set
 	PrivateSubnetIDs []string `json:"privateSubnetIDs,omitempty"`
 	// PublicSubnetIDs is a list of subnet IDs to use for resources that need a public IP (e.g. load balancers)
-	// +listType=set
 	PublicSubnetIDs []string `json:"publicSubnetIDs,omitempty"`
 	// SecurityGroupIds is a list of security group IDs to use for a cluster
-	// +listType=set
 	SecurityGroupIDs []string `json:"securityGroupIDs,omitempty"`
 	// PublicIPV4EgressAddresses provides the source addresses for traffic coming from the cluster
 	// - can provide input for securing Kube API endpoints in managed clusters

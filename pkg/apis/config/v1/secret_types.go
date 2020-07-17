@@ -51,7 +51,6 @@ type SecretStatus struct {
 	// SystemManaged indicates the secret is managed by kore and cannot be changed
 	SystemManaged *bool `json:"systemManaged,omitempty"`
 	// Conditions is a set of condition which has caused an error
-	// +listType=set
 	Conditions []corev1.Condition `json:"conditions,omitempty"`
 	// Status is overall status of the workspace
 	Status corev1.Status `json:"status,omitempty"`
