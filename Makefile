@@ -416,6 +416,9 @@ apis: golang
 	@${MAKE} schema-gen
 
 check-apis: apis
+	@${MAKE} check-api-sync
+
+check-api-sync:
 	@if [ $$(git status --porcelain | wc -l) -gt 0 ]; then \
 		echo "There are local changes after running 'make apis'. Did you forget to run it?"; \
 		git status --porcelain; \

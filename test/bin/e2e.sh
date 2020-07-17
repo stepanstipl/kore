@@ -44,7 +44,7 @@ usage() {
   --build-images <bool>    : indicates if we should build the images locally (defaults: ${BUILD_IMAGES})
   --build-proxy  <bool>    : indicates if we should build the auth proxy image (defaults: ${BUILD_AUTH_PROXY})
   --enable-api   <bool>    : enable the kore-apiserver deployment (defaults: ${ENABLE_API})
-  --enable-ui    <bool>    : enable building and deploying the ui (defaults: ${ENABLE_API})
+  --enable-ui    <bool>    : enable building and deploying the ui (defaults: ${ENABLE_UI})
   --version      <string>  : is the version name to build the components (default: "")
   -h|--help                : display this usage menu
 EOF
