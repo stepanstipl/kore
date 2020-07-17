@@ -196,7 +196,6 @@ spec:
                       type: string
                     minItems: 1
                     type: array
-                    x-kubernetes-list-type: set
                   prefix:
                     description: Prefix is a prefix for the account name
                     type: string
@@ -208,7 +207,6 @@ spec:
                 - plans
                 type: object
               type: array
-              x-kubernetes-list-type: set
           required:
           - provider
           type: object
@@ -232,7 +230,6 @@ spec:
                 - message
                 type: object
               type: array
-              x-kubernetes-list-type: set
             status:
               description: Status is the general status of the resource
               type: string
@@ -422,14 +419,12 @@ spec:
                 type: object
               minItems: 1
               type: array
-              x-kubernetes-list-type: set
             authorizedIPRanges:
               description: AuthorizedIPRanges are IP ranges to whitelist for incoming
                 traffic to the API servers
               items:
                 type: string
               type: array
-              x-kubernetes-list-type: set
             cluster:
               description: Cluster refers to the cluster this object belongs to
               properties:
@@ -519,7 +514,6 @@ spec:
                   items:
                     type: string
                   type: array
-                  x-kubernetes-list-type: set
               required:
               - adminUsername
               - sshPublicKeys
@@ -757,7 +751,6 @@ spec:
                 - message
                 type: object
               type: array
-              x-kubernetes-list-type: set
             status:
               description: Status provides a overall status
               type: string
@@ -853,7 +846,6 @@ spec:
               items:
                 type: string
               type: array
-              x-kubernetes-list-type: set
             cluster:
               description: Cluster refers to the cluster this object belongs to
               properties:
@@ -913,13 +905,11 @@ spec:
               items:
                 type: string
               type: array
-              x-kubernetes-list-type: set
             subnetIDs:
               description: SubnetIds is a list of subnet IDs
               items:
                 type: string
               type: array
-              x-kubernetes-list-type: set
             version:
               description: Version is the Kubernetes version to use
               minLength: 3
@@ -1111,7 +1101,6 @@ spec:
                 - message
                 type: object
               type: array
-              x-kubernetes-list-type: set
             status:
               description: Status provides a overall status
               type: string
@@ -1300,13 +1289,11 @@ spec:
               items:
                 type: string
               type: array
-              x-kubernetes-list-type: set
             subnets:
               description: Subnets is the VPC networks to use for the nodes
               items:
                 type: string
               type: array
-              x-kubernetes-list-type: set
             tags:
               additionalProperties:
                 type: string
@@ -1335,7 +1322,6 @@ spec:
               items:
                 type: string
               type: array
-              x-kubernetes-list-type: set
             conditions:
               description: Conditions is the status of the components
               items:
@@ -1581,13 +1567,11 @@ spec:
                   items:
                     type: string
                   type: array
-                  x-kubernetes-list-type: set
                 availabilityZoneNames:
                   description: AvailabilityZoneIDs is the list of AZ names
                   items:
                     type: string
                   type: array
-                  x-kubernetes-list-type: set
                 ipv4EgressAddresses:
                   description: PublicIPV4EgressAddresses provides the source addresses
                     for traffic coming from the cluster - can provide input for securing
@@ -1601,21 +1585,18 @@ spec:
                   items:
                     type: string
                   type: array
-                  x-kubernetes-list-type: set
                 publicSubnetIDs:
                   description: PublicSubnetIDs is a list of subnet IDs to use for
                     resources that need a public IP (e.g. load balancers)
                   items:
                     type: string
                   type: array
-                  x-kubernetes-list-type: set
                 securityGroupIDs:
                   description: SecurityGroupIds is a list of security group IDs to
                     use for a cluster
                   items:
                     type: string
                   type: array
-                  x-kubernetes-list-type: set
                 vpcID:
                   description: VpcID is the identifier of the VPC
                   type: string
@@ -2437,7 +2418,6 @@ spec:
                 type: string
               minItems: 1
               type: array
-              x-kubernetes-list-type: set
             authProxyImage:
               description: AuthProxyImage is the kube api proxy used to sso into the
                 cluster post provision
@@ -2479,7 +2459,6 @@ spec:
                       type: string
                     minItems: 1
                     type: array
-                    x-kubernetes-list-type: set
                   username:
                     description: Username is the team member the role is being applied
                       to
@@ -2490,7 +2469,6 @@ spec:
                 - username
                 type: object
               type: array
-              x-kubernetes-list-type: set
             defaultTeamRole:
               description: DefaultTeamRole is role inherited by all team members
               type: string
@@ -2691,7 +2669,6 @@ spec:
                 - version
                 type: object
               type: array
-              x-kubernetes-list-type: set
             description:
               description: Description provides a short summary of the nature of the
                 role
@@ -2750,13 +2727,11 @@ spec:
                 - verbs
                 type: object
               type: array
-              x-kubernetes-list-type: set
             teams:
               description: Teams is used to filter the clusters to apply by team references
               items:
                 type: string
               type: array
-              x-kubernetes-list-type: set
           type: object
         status:
           description: ManagedClusterRoleStatus defines the observed state of Cluster
@@ -2778,7 +2753,6 @@ spec:
                 - message
                 type: object
               type: array
-              x-kubernetes-list-type: set
             status:
               description: Status is overall status of the workspace
               type: string
@@ -2958,13 +2932,11 @@ spec:
                 - version
                 type: object
               type: array
-              x-kubernetes-list-type: set
             teams:
               description: Teams is a filter on the teams
               items:
                 type: string
               type: array
-              x-kubernetes-list-type: set
           required:
           - binding
           type: object
@@ -2989,7 +2961,6 @@ spec:
                 - message
                 type: object
               type: array
-              x-kubernetes-list-type: set
             status:
               description: Status is overall status of the workspace
               type: string
@@ -3190,7 +3161,6 @@ spec:
                 - message
                 type: object
               type: array
-              x-kubernetes-list-type: set
             phase:
               description: Phase indicates the phase of the cluster
               type: string
@@ -3299,7 +3269,6 @@ spec:
                 - version
                 type: object
               type: array
-              x-kubernetes-list-type: set
             description:
               description: Description describes the nature of this pod security policy
               minLength: 1
@@ -3673,7 +3642,6 @@ spec:
               items:
                 type: string
               type: array
-              x-kubernetes-list-type: set
           type: object
         status:
           description: ManagedPodSecurityPolicyStatus defines the observed state of
@@ -3696,7 +3664,6 @@ spec:
                 - message
                 type: object
               type: array
-              x-kubernetes-list-type: set
             status:
               description: Status is overall status of the workspace
               type: string
@@ -3851,7 +3818,6 @@ spec:
                 - verbs
                 type: object
               type: array
-              x-kubernetes-list-type: set
           required:
           - description
           type: object
@@ -3875,7 +3841,6 @@ spec:
                 - message
                 type: object
               type: array
-              x-kubernetes-list-type: set
             status:
               description: Status is overall status of the workspace
               type: string
@@ -4015,7 +3980,6 @@ spec:
                 - message
                 type: object
               type: array
-              x-kubernetes-list-type: set
             status:
               description: Status is the status of the namespace
               type: string
@@ -4215,7 +4179,6 @@ spec:
                 - message
                 type: object
               type: array
-              x-kubernetes-list-type: set
             status:
               description: Status is overall status of the workspace
               type: string
@@ -4347,7 +4310,6 @@ spec:
                 type: string
               minItems: 1
               type: array
-              x-kubernetes-list-type: set
           required:
           - name
           - resource
@@ -4374,7 +4336,6 @@ spec:
                 - message
                 type: object
               type: array
-              x-kubernetes-list-type: set
             status:
               description: Status is the general status of the resource
               type: string
@@ -4730,7 +4691,6 @@ spec:
                 - message
                 type: object
               type: array
-              x-kubernetes-list-type: set
             status:
               description: Status is overall status of the plan policy
               type: string
@@ -4854,7 +4814,6 @@ spec:
                 - message
                 type: object
               type: array
-              x-kubernetes-list-type: set
             status:
               description: Status is overall status of the workspace
               type: string
@@ -4966,7 +4925,6 @@ spec:
                 - message
                 type: object
               type: array
-              x-kubernetes-list-type: set
             status:
               description: Status is overall status of the workspace
               type: string
@@ -5218,7 +5176,6 @@ spec:
                 - message
                 type: object
               type: array
-              x-kubernetes-list-type: set
             status:
               description: Status is overall status of the IDP configuration
               type: string
@@ -5304,7 +5261,6 @@ spec:
               items:
                 type: string
               type: array
-              x-kubernetes-list-type: set
             secret:
               description: Secret for OIDC client
               type: string
@@ -5334,7 +5290,6 @@ spec:
                 - message
                 type: object
               type: array
-              x-kubernetes-list-type: set
             status:
               description: Status is overall status of the IDP configuration
               type: string
@@ -6021,7 +5976,6 @@ spec:
                 - message
                 type: object
               type: array
-              x-kubernetes-list-type: set
             status:
               description: Status provides a overall status
               type: string
@@ -6129,7 +6083,6 @@ spec:
                 - name
                 type: object
               type: array
-              x-kubernetes-list-type: set
             cluster:
               description: Cluster refers to the cluster this object belongs to
               properties:
@@ -6397,7 +6350,6 @@ spec:
                 - size
                 type: object
               type: array
-              x-kubernetes-list-type: set
             region:
               description: Region is the gcp region you want the cluster to reside
               minLength: 1
@@ -6981,7 +6933,6 @@ spec:
               items:
                 type: string
               type: array
-              x-kubernetes-list-type: set
             team:
               description: Team is the name of the team
               type: string
@@ -7013,7 +6964,6 @@ spec:
                 - message
                 type: object
               type: array
-              x-kubernetes-list-type: set
             status:
               description: Status is the status of the resource
               type: string
@@ -7118,7 +7068,6 @@ spec:
                 - message
                 type: object
               type: array
-              x-kubernetes-list-type: set
             status:
               description: Status is the status of the resource
               type: string
@@ -7223,7 +7172,6 @@ spec:
                 - message
                 type: object
               type: array
-              x-kubernetes-list-type: set
             status:
               description: Status is the status of the resource
               type: string
@@ -7334,7 +7282,6 @@ spec:
                 - message
                 type: object
               type: array
-              x-kubernetes-list-type: set
             status:
               description: Status provides an overview of the user status
               type: string
@@ -8233,7 +8180,6 @@ spec:
                 - secretKeyRef
                 type: object
               type: array
-              x-kubernetes-list-type: set
             description:
               description: Description is a detailed description of the service provider
               type: string
@@ -8309,7 +8255,6 @@ spec:
               items:
                 type: string
               type: array
-              x-kubernetes-list-type: set
           type: object
       type: object
   version: v1
@@ -8456,7 +8401,6 @@ spec:
                 - secretKeyRef
                 type: object
               type: array
-              x-kubernetes-list-type: set
             kind:
               description: Kind refers to the service type
               minLength: 1
