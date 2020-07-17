@@ -18,6 +18,8 @@
 
 ## Set the defaults
 BUILD_AUTH_PROXY=true
+BUILD_KORE_API=true
+BUILD_CLI=true
 BUILD_IMAGES=true
 ENABLE_API=true
 ENABLE_UI=false
@@ -37,6 +39,8 @@ failed()   { log "${YELLOW}[$(date +"%T")] [FAIL] $@"; }
 usage() {
   cat <<EOF
   Usage: $(basename $0)
+  --build-kore-api <bool>  : indicates we should build the kore-apiserver ourselves (defaults: ${BUILD_KORE_API})
+  --build-cli    <bool>    : indicates should should build the kore cli (defaults: ${BUILD_CLI})
   --build-images <bool>    : indicates if we should build the images locally (defaults: ${BUILD_IMAGES})
   --build-proxy  <bool>    : indicates if we should build the auth proxy image (defaults: ${BUILD_AUTH_PROXY})
   --enable-api   <bool>    : enable the kore-apiserver deployment (defaults: ${ENABLE_API})
@@ -52,8 +56,10 @@ EOF
 }
 
 build-cli() {
-  announce "Building the Kore CLI"
-  make kore
+  if [[ ${BUILD_CLI} == true ]]; then
+    announce "Building the Kore CLI"
+    make kore
+  fi
 }
 
 build-cluster() {
@@ -86,6 +92,10 @@ build-cluster() {
 
     if [[ ${BUILD_IMAGES} == true ]]; then
       args="${args} --kind-load-image=quay.io/appvia/kore-apiserver:${VERSION}"
+      # @step: do we need to compile the binary our self?
+      if [[ ${BUILD_KORE_API} == true ]]; then
+        VERSION=${VERSION} make kore-apiserver
+      fi
       VERSION=${VERSION} make kore-apiserver-image-local
       # we make and we push the images as it have to be remote
       if [[ ${BUILD_AUTH_PROXY} == true ]]; then
@@ -121,13 +131,15 @@ build-cluster() {
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-  --build-images) BUILD_IMAGES=${2};     shift 2; ;;
-  --build-proxy)  BUILD_AUTH_PROXY=${2}; shift 2; ;;
-  --enable-api)   ENABLE_API=$2;         shift 2; ;;
-  --enable-ui)    ENABLE_UI=$2;          shift 2; ;;
-  --version)      VERSION=${2};          shift 2; ;;
-  -h|--help)      usage;                          ;;
-  *)                                     shift 1; ;;
+  --build-kore-api) BUILD_KORE_API=${2};   shift 2; ;;
+  --build-images)   BUILD_IMAGES=${2};     shift 2; ;;
+  --build-proxy)    BUILD_AUTH_PROXY=${2}; shift 2; ;;
+  --build-cli)      BUILD_CLI=${2};        shift 2; ;;
+  --enable-api)     ENABLE_API=$2;         shift 2; ;;
+  --enable-ui)      ENABLE_UI=$2;          shift 2; ;;
+  --version)        VERSION=${2};          shift 2; ;;
+  -h|--help)        usage;                          ;;
+  *)                                       shift 1; ;;
   esac
 done
 

@@ -97,8 +97,8 @@ kore-apiserver-image: golang
 	@echo "--> Compiling the kore-apiserver image"
 	docker build -t ${REGISTRY}/${AUTHOR}/kore-apiserver:${VERSION} -f images/Dockerfile.kore-apiserver .
 
-kore-apiserver-image-local: kore-apiserver
-	@echo "--> Compiling the kore-apiserver image local"
+kore-apiserver-image-local:
+	@echo "--> Building the kore-apiserver image local"
 	docker build -t ${REGISTRY}/${AUTHOR}/kore-apiserver:${VERSION} -f images/Dockerfile.kore-apiserver.local .
 
 docker-build:
