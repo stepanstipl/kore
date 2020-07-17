@@ -23,6 +23,7 @@ BUILD_CLI=true
 BUILD_IMAGES=true
 ENABLE_API=true
 ENABLE_UI=false
+K8S_VERSION=""
 VERSION=""
 
 # Make this pretty
@@ -45,6 +46,7 @@ usage() {
   --build-proxy  <bool>    : indicates if we should build the auth proxy image (defaults: ${BUILD_AUTH_PROXY})
   --enable-api   <bool>    : enable the kore-apiserver deployment (defaults: ${ENABLE_API})
   --enable-ui    <bool>    : enable building and deploying the ui (defaults: ${ENABLE_UI})
+  --k8s-version  <string>  : the version of kubenetes we should run against (defaults: ${K8S_VERSION})
   --version      <string>  : is the version name to build the components (default: "")
   -h|--help                : display this usage menu
 EOF
@@ -110,6 +112,11 @@ build-cluster() {
     args="${args} --set=api.replicas=00"
   fi
 
+  if [[ -n "${K8S_VERSION}" && "${K8S_VERSION}" != "latest" ]]; then
+    announce "Using kubenetes version: ${K8S_VERSION}"
+    args="${args} --kind-image=kindest/node:${K8S_VERSION}"
+  fi
+
   kore alpha local up \
     --deployment-timeout=8m \
     --force=true \
@@ -136,7 +143,8 @@ while [[ $# -gt 0 ]]; do
   --build-proxy)    BUILD_AUTH_PROXY=${2}; shift 2; ;;
   --build-cli)      BUILD_CLI=${2};        shift 2; ;;
   --enable-api)     ENABLE_API=$2;         shift 2; ;;
-  --enable-ui)      ENABLE_UI=$2;          shift 2; ;;
+  --enable-ui)      ENABLE_UI=${2};        shift 2; ;;
+  --k8s-version)    K8S_VERSION=${2};      shift 2; ;;
   --version)        VERSION=${2};          shift 2; ;;
   -h|--help)        usage;                          ;;
   *)                                       shift 1; ;;
