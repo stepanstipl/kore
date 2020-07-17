@@ -292,9 +292,8 @@ var _ = Describe("/security", func() {
 				Expect(len(resp.Payload.Items)).To(Equal(2))
 				fmt.Printf("%+v", resp.Payload.Items[0].Spec)
 				fmt.Printf("%+v", resp.Payload.Items[1].Spec)
-				// @TODO NEED TO COME BACK TO
-				//Expect(resp.Payload.Items[0].Spec.ArchivedAt).ToNot(Equal(""))
-				//Expect(resp.Payload.Items[1].Spec.ArchivedAt).To(Equal(""))
+				Expect(resp.Payload.Items[0].Spec.ArchivedAt).ToNot(Equal(""))
+				Expect(resp.Payload.Items[1].Spec.ArchivedAt).To(Equal(""))
 				Expect(len(resp.Payload.Items[0].Spec.Results)).To(Equal(0))
 				Expect(len(resp.Payload.Items[1].Spec.Results)).To(Equal(0))
 				// TODO: check other fields.
