@@ -19,7 +19,7 @@ package server
 import (
 	"context"
 
-	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	monitoring "github.com/appvia/kore/pkg/apis/monitoring/v1beta1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	securityv1 "github.com/appvia/kore/pkg/apis/security/v1"
@@ -33,11 +33,6 @@ import (
 
 var (
 	filtered = []schema.GroupVersionKind{
-		{
-			Group:   clustersv1.GroupVersion.Group,
-			Version: clustersv1.GroupVersion.Version,
-			Kind:    "KubernetesCredentials",
-		},
 		{
 			Group:   orgv1.GroupVersion.Group,
 			Version: orgv1.GroupVersion.Version,
@@ -61,37 +56,22 @@ var (
 		{
 			Group:   securityv1.GroupVersion.Group,
 			Version: securityv1.GroupVersion.Version,
-			Kind:    "SecurityRule",
-		},
-		{
-			Group:   securityv1.GroupVersion.Group,
-			Version: securityv1.GroupVersion.Version,
-			Kind:    "SecurityRuleList",
-		},
-		{
-			Group:   securityv1.GroupVersion.Group,
-			Version: securityv1.GroupVersion.Version,
-			Kind:    "SecurityOverview",
-		},
-		{
-			Group:   securityv1.GroupVersion.Group,
-			Version: securityv1.GroupVersion.Version,
-			Kind:    "SecurityScanResult",
-		},
-		{
-			Group:   securityv1.GroupVersion.Group,
-			Version: securityv1.GroupVersion.Version,
-			Kind:    "SecurityScanResultList",
+			Kind:    "*",
 		},
 		{
 			Group:   monitoring.GroupVersion.Group,
 			Version: monitoring.GroupVersion.Version,
-			Kind:    "Alert",
+			Kind:    "*",
 		},
 		{
-			Group:   monitoring.GroupVersion.Group,
-			Version: monitoring.GroupVersion.Version,
-			Kind:    "AlertRule",
+			Group:   corev1.GroupVersion.Group,
+			Version: corev1.GroupVersion.Version,
+			Kind:    "IDP",
+		},
+		{
+			Group:   corev1.GroupVersion.Group,
+			Version: corev1.GroupVersion.Version,
+			Kind:    "IDPClient",
 		},
 	}
 )
@@ -100,8 +80,12 @@ var (
 func registerCustomResources(ctx context.Context, cc client.Interface) error {
 	isFiltered := func(crd *apiextensions.CustomResourceDefinition, list []schema.GroupVersionKind) bool {
 		for _, x := range list {
-			if x.Group == crd.Spec.Group && x.Version == crd.Spec.Version && x.Kind == crd.Spec.Names.Kind {
-				return true
+			if x.Group == crd.Spec.Group {
+				if x.Version == crd.Spec.Version {
+					if x.Kind == crd.Spec.Names.Kind || x.Kind == "*" {
+						return true
+					}
+				}
 			}
 		}
 
