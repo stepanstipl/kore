@@ -58,7 +58,7 @@ apiVersion: kind.x-k8s.io/v1alpha4
 kind: Cluster
 nodes:
 - role: control-plane
-  image: kindest/node:v1.16.9@sha256:7175872357bc85847ec4b1aba46ed1d12fa054c83ac7a8a11f5c268957fd5765
+  image: {{ .Image }}
   extraPortMappings:
 	{{- if not .DisableUI }}
   - containerPort: 3000
@@ -91,8 +91,12 @@ func GetKindConfiguration(options providers.CreateOptions) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	values := map[string]interface{}{
+		"DisableUI": options.DisableUI,
+		"Image":     kindVersion,
+	}
 	b := &bytes.Buffer{}
-	if err := tmpl.Execute(b, options); err != nil {
+	if err := tmpl.Execute(b, values); err != nil {
 		return "", err
 	}
 
@@ -142,6 +146,7 @@ func (p *providerImpl) Create(ctx context.Context, name string, options provider
 		"--wait", "10m",
 		"--config=-",
 	}
+	p.Info("Using Kind image: %q", strings.Split(kindVersion, "@")[0])
 	p.Info("Provisioning a kind cluster: %q (usually takes 3-5mins)", name)
 
 	cmd := exec.CommandContext(ctx, p.path, args...)
