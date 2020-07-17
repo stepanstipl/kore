@@ -12,6 +12,7 @@ for  i in {1..10} ; do
     curl \
         --retry $maxtries \
         --retry-delay 3 \
+        --retry-connrefused \
         -sSL ${address} >/dev/null 2>&1 || ret=$?
     if [ ${ret} -eq 52 ]; then
         echo "empty response with:$1, trying again..."
