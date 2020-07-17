@@ -21,6 +21,15 @@ export async function setCascader(pg, id, values) {
   }
 }
 
+export async function setSelect(pg, id, value) {
+  if (value === undefined) {
+    return
+  }
+  const select = await pg.waitForSelector(`#${id}`)
+  await select.click()
+  await expect(pg).toClick('li.ant-select-dropdown-menu-item', { text: value })
+}
+
 export async function setSwitch(pg, id, setOn) {
   if (setOn === undefined) {
     return

@@ -10,3 +10,4 @@ spec:
   configuration:
     gcp_credentials: kore-admin/gcp-appvia
     aws_credentials: kore-admin/aws-appvia
+    azure_credentials: kore-admin/azure-appvia
