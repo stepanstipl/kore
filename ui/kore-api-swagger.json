@@ -7619,8 +7619,8 @@
     },
     "kore.ServicePlanDetails": {
       "required": [
-        "summary",
         "kind",
+        "summary",
         "editableParams"
       ],
       "properties": {
@@ -9725,11 +9725,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
+        "clientScopes",
         "userClaims",
         "clientID",
         "clientSecret",
-        "issuer",
-        "clientScopes"
+        "issuer"
       ],
       "properties": {
         "clientID": {
@@ -11885,6 +11885,11 @@
       }
     },
     "v1beta1.CostEstimate": {
+      "required": [
+        "minCost",
+        "typicalCost",
+        "maxCost"
+      ],
       "properties": {
         "costElements": {
           "type": "array",
@@ -11910,6 +11915,11 @@
       }
     },
     "v1beta1.CostEstimateElement": {
+      "required": [
+        "minCost",
+        "typicalCost",
+        "maxCost"
+      ],
       "properties": {
         "maxCost": {
           "type": "integer",

@@ -148,6 +148,18 @@ func getPlanParamNames(provider string) (planParamNames, error) {
 			Spot:        "",
 			AutoScale:   "enableAutoscaler",
 		}, nil
+	case providerAzure:
+		return planParamNames{
+			NodePools:   "nodePools",
+			Name:        "name",
+			MinSize:     "minSize",
+			MaxSize:     "maxSize",
+			Size:        "size",
+			DiskSize:    "diskSize",
+			MachineType: "machineType",
+			Spot:        "",
+			AutoScale:   "enableAutoscaler",
+		}, nil
 	}
 	return planParamNames{}, fmt.Errorf("cannot determine plan parameter names for provider %s", provider)
 }

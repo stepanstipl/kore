@@ -23,10 +23,13 @@ class V1beta1CostEstimate {
     /**
      * Constructs a new <code>V1beta1CostEstimate</code>.
      * @alias module:model/V1beta1CostEstimate
+     * @param maxCost {Number} 
+     * @param minCost {Number} 
+     * @param typicalCost {Number} 
      */
-    constructor() { 
+    constructor(maxCost, minCost, typicalCost) { 
         
-        V1beta1CostEstimate.initialize(this);
+        V1beta1CostEstimate.initialize(this, maxCost, minCost, typicalCost);
     }
 
     /**
@@ -34,7 +37,10 @@ class V1beta1CostEstimate {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj) { 
+    static initialize(obj, maxCost, minCost, typicalCost) { 
+        obj['maxCost'] = maxCost;
+        obj['minCost'] = minCost;
+        obj['typicalCost'] = typicalCost;
     }
 
     /**

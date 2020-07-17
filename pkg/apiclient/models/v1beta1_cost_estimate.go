@@ -11,6 +11,7 @@ import (
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // V1beta1CostEstimate v1beta1 cost estimate
@@ -22,16 +23,19 @@ type V1beta1CostEstimate struct {
 	CostElements []*V1beta1CostEstimateElement `json:"costElements"`
 
 	// max cost
-	MaxCost int64 `json:"maxCost,omitempty"`
+	// Required: true
+	MaxCost *int64 `json:"maxCost"`
 
 	// min cost
-	MinCost int64 `json:"minCost,omitempty"`
+	// Required: true
+	MinCost *int64 `json:"minCost"`
 
 	// prepared at
 	PreparedAt string `json:"preparedAt,omitempty"`
 
 	// typical cost
-	TypicalCost int64 `json:"typicalCost,omitempty"`
+	// Required: true
+	TypicalCost *int64 `json:"typicalCost"`
 }
 
 // Validate validates this v1beta1 cost estimate
@@ -39,6 +43,18 @@ func (m *V1beta1CostEstimate) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateCostElements(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateMaxCost(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateMinCost(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateTypicalCost(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -68,6 +84,33 @@ func (m *V1beta1CostEstimate) validateCostElements(formats strfmt.Registry) erro
 			}
 		}
 
+	}
+
+	return nil
+}
+
+func (m *V1beta1CostEstimate) validateMaxCost(formats strfmt.Registry) error {
+
+	if err := validate.Required("maxCost", "body", m.MaxCost); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *V1beta1CostEstimate) validateMinCost(formats strfmt.Registry) error {
+
+	if err := validate.Required("minCost", "body", m.MinCost); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *V1beta1CostEstimate) validateTypicalCost(formats strfmt.Registry) error {
+
+	if err := validate.Required("typicalCost", "body", m.TypicalCost); err != nil {
+		return err
 	}
 
 	return nil
