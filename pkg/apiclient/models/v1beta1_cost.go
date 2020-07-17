@@ -27,14 +27,20 @@ type V1beta1Cost struct {
 	// from
 	From string `json:"from,omitempty"`
 
-	// prepared at
-	PreparedAt string `json:"preparedAt,omitempty"`
-
 	// resource
 	Resource *V1Ownership `json:"resource,omitempty"`
 
+	// resource identifier
+	ResourceIdentifier string `json:"resourceIdentifier,omitempty"`
+
+	// retrieved at
+	RetrievedAt string `json:"retrievedAt,omitempty"`
+
 	// team
 	Team string `json:"team,omitempty"`
+
+	// team identifier
+	TeamIdentifier string `json:"teamIdentifier,omitempty"`
 
 	// to
 	To string `json:"to,omitempty"`

@@ -14,24 +14,14 @@
  * limitations under the License.
  */
 
-package model
+package utils
 
 import (
-	"time"
+	"github.com/rs/xid"
 )
 
-// Team defines the kore team model
-type Team struct {
-	// ID is the unique record id
-	ID uint64 `gorm:"primary_key"`
-	// Identifier is the globally-unique immutable identifier for this team
-	Identifier string `sql:"type:char(20);DEFAULT:''"`
-	// CreatedAt is the timestamp of record creation
-	CreatedAt time.Time `sql:"DEFAULT:current_timestamp"`
-	// Name is the name of the team
-	Name string `gorm:"primary_key"`
-	// Description is a description for the team
-	Description string `gorm:"not null"`
-	// Summary is a short liner for the team
-	Summary string
+// GenerateIdentifier generates a new globally-unique identifier
+func GenerateIdentifier() string {
+	uuid := xid.New()
+	return uuid.String()
 }

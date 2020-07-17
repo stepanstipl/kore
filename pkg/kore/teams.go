@@ -52,6 +52,8 @@ type Teams interface {
 	Team(string) Team
 	// Update is responsible for creating / updating a team
 	Update(context.Context, *orgv1.Team) (*orgv1.Team, error)
+	// GenerateTeamIdentifier creates and records a new team identity
+	GenerateTeamIdentifier(ctx context.Context, teamName string) (string, error)
 }
 
 // teamsImpl provides the teams implementation
@@ -195,11 +197,15 @@ func (t *teamsImpl) Update(ctx context.Context, team *orgv1.Team) (*orgv1.Team, 
 	// - if the team does not exist then any user can claim the team and added as member
 	// - ensure the namespace name is valid
 
-	found, err := t.persistenceMgr.Teams().Exists(ctx, team.Name)
+	found := true
+	existingTeam, err := t.persistenceMgr.Teams().Get(ctx, team.Name)
 	if err != nil {
-		logger.WithError(err).Error("trying to check if the team exists")
+		if !t.persistenceMgr.IsNotFound(err) {
+			logger.WithError(err).Error("trying to check if the team exists")
 
-		return nil, err
+			return nil, err
+		}
+		found = false
 	}
 
 	if !user.IsGlobalAdmin() {
@@ -220,6 +226,24 @@ func (t *teamsImpl) Update(ctx context.Context, team *orgv1.Team) (*orgv1.Team, 
 	// @step: ensure the default and apply a timestamp for triggers
 	team.Annotations = map[string]string{
 		Label("changed"): fmt.Sprintf("%d", time.Now().Unix()),
+	}
+
+	// @step: ensure team has a globally-unique identifier and assign one if not
+	if found && team.Spec.Identifier == "" && existingTeam.Identifier != "" {
+		// Populate with current identifier if empty identifier specified.
+		team.Spec.Identifier = existingTeam.Identifier
+	}
+	if found && team.Spec.Identifier != existingTeam.Identifier {
+		return nil, ErrNotAllowed{message: "Identifier is assigned by Kore and cannot be changed"}
+	}
+	// Still empty? Need to generate and assign an identifier to this team
+	if team.Spec.Identifier == "" {
+		team.Spec.Identifier, err = t.GenerateTeamIdentifier(ctx, team.Name)
+		if err != nil {
+			logger.WithError(err).Error("trying to assign team identifier")
+
+			return nil, err
+		}
 	}
 
 	// @step: convert the team to a team model
@@ -265,6 +289,15 @@ func (t *teamsImpl) Update(ctx context.Context, team *orgv1.Team) (*orgv1.Team, 
 	}
 
 	return DefaultConvertor.FromTeamModel(model), nil
+}
+
+func (t *teamsImpl) GenerateTeamIdentifier(ctx context.Context, teamName string) (string, error) {
+	identifier := utils.GenerateIdentifier()
+	err := t.hubImpl.persistenceMgr.Teams().RecordTeamIdentity(ctx, identifier, teamName)
+	if err != nil {
+		return "", fmt.Errorf("Failed to persist identifier for team %s: %w", teamName, err)
+	}
+	return identifier, nil
 }
 
 // Team returns the team interface

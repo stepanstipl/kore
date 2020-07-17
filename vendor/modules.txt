@@ -745,6 +745,9 @@ github.com/romanyx/jwalk
 # github.com/romanyx/polluter v1.2.2
 ## explicit
 github.com/romanyx/polluter
+# github.com/rs/xid v1.2.1
+## explicit
+github.com/rs/xid
 # github.com/russellhaering/goxmldsig v0.0.0-20180430223755-7acd5e4a6ef7
 github.com/russellhaering/goxmldsig
 github.com/russellhaering/goxmldsig/etreeutils

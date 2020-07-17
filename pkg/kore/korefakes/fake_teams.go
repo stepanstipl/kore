@@ -50,6 +50,20 @@ type FakeTeams struct {
 		result1 bool
 		result2 error
 	}
+	GenerateTeamIdentifierStub        func(context.Context, string) (string, error)
+	generateTeamIdentifierMutex       sync.RWMutex
+	generateTeamIdentifierArgsForCall []struct {
+		arg1 context.Context
+		arg2 string
+	}
+	generateTeamIdentifierReturns struct {
+		result1 string
+		result2 error
+	}
+	generateTeamIdentifierReturnsOnCall map[int]struct {
+		result1 string
+		result2 error
+	}
 	GetStub        func(context.Context, string) (*v1.Team, error)
 	getMutex       sync.RWMutex
 	getArgsForCall []struct {
@@ -290,6 +304,70 @@ func (fake *FakeTeams) ExistsReturnsOnCall(i int, result1 bool, result2 error) {
 	}
 	fake.existsReturnsOnCall[i] = struct {
 		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeTeams) GenerateTeamIdentifier(arg1 context.Context, arg2 string) (string, error) {
+	fake.generateTeamIdentifierMutex.Lock()
+	ret, specificReturn := fake.generateTeamIdentifierReturnsOnCall[len(fake.generateTeamIdentifierArgsForCall)]
+	fake.generateTeamIdentifierArgsForCall = append(fake.generateTeamIdentifierArgsForCall, struct {
+		arg1 context.Context
+		arg2 string
+	}{arg1, arg2})
+	fake.recordInvocation("GenerateTeamIdentifier", []interface{}{arg1, arg2})
+	fake.generateTeamIdentifierMutex.Unlock()
+	if fake.GenerateTeamIdentifierStub != nil {
+		return fake.GenerateTeamIdentifierStub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	fakeReturns := fake.generateTeamIdentifierReturns
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeTeams) GenerateTeamIdentifierCallCount() int {
+	fake.generateTeamIdentifierMutex.RLock()
+	defer fake.generateTeamIdentifierMutex.RUnlock()
+	return len(fake.generateTeamIdentifierArgsForCall)
+}
+
+func (fake *FakeTeams) GenerateTeamIdentifierCalls(stub func(context.Context, string) (string, error)) {
+	fake.generateTeamIdentifierMutex.Lock()
+	defer fake.generateTeamIdentifierMutex.Unlock()
+	fake.GenerateTeamIdentifierStub = stub
+}
+
+func (fake *FakeTeams) GenerateTeamIdentifierArgsForCall(i int) (context.Context, string) {
+	fake.generateTeamIdentifierMutex.RLock()
+	defer fake.generateTeamIdentifierMutex.RUnlock()
+	argsForCall := fake.generateTeamIdentifierArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeTeams) GenerateTeamIdentifierReturns(result1 string, result2 error) {
+	fake.generateTeamIdentifierMutex.Lock()
+	defer fake.generateTeamIdentifierMutex.Unlock()
+	fake.GenerateTeamIdentifierStub = nil
+	fake.generateTeamIdentifierReturns = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeTeams) GenerateTeamIdentifierReturnsOnCall(i int, result1 string, result2 error) {
+	fake.generateTeamIdentifierMutex.Lock()
+	defer fake.generateTeamIdentifierMutex.Unlock()
+	fake.GenerateTeamIdentifierStub = nil
+	if fake.generateTeamIdentifierReturnsOnCall == nil {
+		fake.generateTeamIdentifierReturnsOnCall = make(map[int]struct {
+			result1 string
+			result2 error
+		})
+	}
+	fake.generateTeamIdentifierReturnsOnCall[i] = struct {
+		result1 string
 		result2 error
 	}{result1, result2}
 }
@@ -554,6 +632,8 @@ func (fake *FakeTeams) Invocations() map[string][][]interface{} {
 	defer fake.deleteMutex.RUnlock()
 	fake.existsMutex.RLock()
 	defer fake.existsMutex.RUnlock()
+	fake.generateTeamIdentifierMutex.RLock()
+	defer fake.generateTeamIdentifierMutex.RUnlock()
 	fake.getMutex.RLock()
 	defer fake.getMutex.RUnlock()
 	fake.listMutex.RLock()

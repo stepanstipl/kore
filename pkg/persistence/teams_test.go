@@ -32,6 +32,7 @@ func TestGetTeamBad(t *testing.T) {
 
 	_, err := store.Teams().Get(context.Background(), "not_there")
 	assert.Error(t, err)
+	assert.True(t, store.IsNotFound(err))
 }
 
 func TestGetTeamsOK(t *testing.T) {

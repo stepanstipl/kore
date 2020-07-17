@@ -150,3 +150,7 @@ func (s *storeImpl) Configs() Configs {
 		conn:      s.dbc,
 	}
 }
+
+func (s storeImpl) IsNotFound(err error) bool {
+	return gorm.IsRecordNotFoundError(err)
+}

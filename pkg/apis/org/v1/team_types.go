@@ -25,6 +25,9 @@ import (
 // TeamSpec defines the desired state of Team
 // +k8s:openapi-gen=true
 type TeamSpec struct {
+	// Identifier is the immutable unique identifier for this team. Assigned by Kore, should not be specified or updated by users.
+	// +kubebuilder:validation:Optional
+	Identifier string `json:"identifier,omitempty"`
 	// Summary is a summary name for this team
 	Summary string `json:"summary"`
 	// Description is a description for the team

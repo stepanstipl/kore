@@ -62,6 +62,9 @@ class V1ClusterSpec {
             if (data.hasOwnProperty('credentials')) {
                 obj['credentials'] = V1Ownership.constructFromObject(data['credentials']);
             }
+            if (data.hasOwnProperty('identifier')) {
+                obj['identifier'] = ApiClient.convertToType(data['identifier'], 'String');
+            }
             if (data.hasOwnProperty('kind')) {
                 obj['kind'] = ApiClient.convertToType(data['kind'], 'String');
             }
@@ -101,6 +104,19 @@ class V1ClusterSpec {
 /**
      * @return {String}
      */
+    getIdentifier() {
+        return this.identifier;
+    }
+
+    /**
+     * @param {String} identifier
+     */
+    setIdentifier(identifier) {
+        this['identifier'] = identifier;
+    }
+/**
+     * @return {String}
+     */
     getKind() {
         return this.kind;
     }
@@ -136,6 +152,11 @@ V1ClusterSpec.prototype['configuration'] = undefined;
  * @member {module:model/V1Ownership} credentials
  */
 V1ClusterSpec.prototype['credentials'] = undefined;
+
+/**
+ * @member {String} identifier
+ */
+V1ClusterSpec.prototype['identifier'] = undefined;
 
 /**
  * @member {String} kind

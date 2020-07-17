@@ -40,6 +40,10 @@ type Teams interface {
 	List(context.Context, ...ListFunc) ([]*model.Team, error)
 	// Update updates a team in the store
 	Update(context.Context, *model.Team) error
+	// RecordTeamIdentity persists a new team identifier
+	RecordTeamIdentity(ctx context.Context, teamIdentifier string, teamName string) error
+	// RecordAsset records an asset as being owned by a team
+	RecordAsset(ctx context.Context, teamIdentifier string, assetIdentifier string, assetType model.TeamAssetType, assetName string) error
 }
 
 type teamImpl struct {
@@ -141,6 +145,30 @@ func (t teamImpl) Update(ctx context.Context, team *model.Team) error {
 		}).
 		FirstOrCreate(team).
 		Error
+}
+
+// RecordTeamIdentiy records the existence of a team
+func (t teamImpl) RecordTeamIdentity(ctx context.Context, teamIdentifier string, teamName string) error {
+	timed := prometheus.NewTimer(setLatency)
+	defer timed.ObserveDuration()
+
+	return t.conn.Create(&model.TeamIdentity{
+		TeamIdentifier: teamIdentifier,
+		TeamName:       teamName,
+	}).Error
+}
+
+// RecordAsset records an asset as being owned by a team
+func (t teamImpl) RecordAsset(ctx context.Context, teamIdentifier string, assetIdentifier string, assetType model.TeamAssetType, assetName string) error {
+	timed := prometheus.NewTimer(setLatency)
+	defer timed.ObserveDuration()
+
+	return t.conn.Create(&model.TeamAsset{
+		TeamIdentifier:  teamIdentifier,
+		AssetIdentifier: assetIdentifier,
+		AssetType:       assetType,
+		AssetName:       assetName,
+	}).Error
 }
 
 // Preload allows access to the preload

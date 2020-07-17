@@ -26,6 +26,7 @@ import (
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
+	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
 	"github.com/appvia/kore/pkg/store"
 	"github.com/appvia/kore/pkg/utils"
@@ -203,8 +204,19 @@ func (c *clustersImpl) Update(ctx context.Context, cluster *clustersv1.Cluster) 
 		if existing.Spec.Plan != cluster.Spec.Plan {
 			verr.AddFieldErrorf("plan", validation.ReadOnly, "can not be changed after a cluster was created")
 		}
+		if existing.Spec.Identifier != cluster.Spec.Identifier {
+			verr.AddFieldErrorf("identifier", validation.ReadOnly, "assigned by Kore, leave blank for new cluster or keep existing value")
+		}
+		if existing.Spec.TeamIdentifier != cluster.Spec.TeamIdentifier {
+			verr.AddFieldErrorf("teamIdentifier", validation.ReadOnly, "assigned by Kore, leave blank for new cluster or keep existing value")
+		}
 		if verr.HasErrors() {
 			return verr
+		}
+	} else {
+		if cluster.Spec.Identifier != "" {
+			return validation.NewError("cluster has failed validation").
+				WithFieldError("identifier", validation.ReadOnly, "assigned by Kore, leave blank for new cluster or keep existing value")
 		}
 	}
 
@@ -224,6 +236,24 @@ func (c *clustersImpl) Update(ctx context.Context, cluster *clustersv1.Cluster) 
 	if len(cluster.Name) > 40 {
 		return validation.NewError("cluster has failed validation").
 			WithFieldError("name", validation.MaxLength, "must be 40 characters or less")
+	}
+
+	// Assign an identifier to this cluster if one hasn't been assigned
+	if cluster.Spec.Identifier == "" {
+		var err error
+		cluster.Spec.Identifier, err = c.hubImpl.Teams().Team(c.team).Assets().GenerateAssetIdentifier(ctx, orgv1.TeamAssetTypeCluster, cluster.Name)
+		if err != nil {
+			return err
+		}
+	}
+	// Look up team identifier if not provided
+	if cluster.Spec.TeamIdentifier == "" {
+		var err error
+		team, err := c.hubImpl.Teams().Get(ctx, c.team)
+		if err != nil {
+			return fmt.Errorf("error loading team metadata to apply identifier to cluster: %w", err)
+		}
+		cluster.Spec.TeamIdentifier = team.Spec.Identifier
 	}
 
 	if err := c.validateConfiguration(ctx, cluster); err != nil {

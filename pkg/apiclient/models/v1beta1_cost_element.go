@@ -20,6 +20,9 @@ type V1beta1CostElement struct {
 
 	// name
 	Name string `json:"name,omitempty"`
+
+	// resource identifier
+	ResourceIdentifier string `json:"resourceIdentifier,omitempty"`
 }
 
 // Validate validates this v1beta1 cost element

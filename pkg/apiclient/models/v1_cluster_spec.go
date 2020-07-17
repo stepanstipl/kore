@@ -25,6 +25,9 @@ type V1ClusterSpec struct {
 	// Required: true
 	Credentials *V1Ownership `json:"credentials"`
 
+	// identifier
+	Identifier string `json:"identifier,omitempty"`
+
 	// kind
 	// Required: true
 	Kind *string `json:"kind"`

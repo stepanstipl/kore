@@ -20,18 +20,15 @@ import (
 	"time"
 )
 
-// Team defines the kore team model
-type Team struct {
-	// ID is the unique record id
-	ID uint64 `gorm:"primary_key"`
-	// Identifier is the globally-unique immutable identifier for this team
-	Identifier string `sql:"type:char(20);DEFAULT:''"`
+// TeamIdentity records persistently the existence of a team. This continues to exist
+// even if the team is subsequently deleted.
+type TeamIdentity struct {
+	// TeamIdentifier is a globally-unique immutable identifier for a team
+	TeamIdentifier string `sql:"type:char(20)" gorm:"PRIMARY_KEY"`
+	// TeamName is the name of the team at the point it was created, for reference
+	TeamName string
 	// CreatedAt is the timestamp of record creation
 	CreatedAt time.Time `sql:"DEFAULT:current_timestamp"`
-	// Name is the name of the team
-	Name string `gorm:"primary_key"`
-	// Description is a description for the team
-	Description string `gorm:"not null"`
-	// Summary is a short liner for the team
-	Summary string
+	// DeletedAt is the timestamp the team was deleted from Kore, null if the team still exists
+	DeletedAt *time.Time `sql:"DEFAULT:null"`
 }

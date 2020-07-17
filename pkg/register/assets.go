@@ -2258,6 +2258,10 @@ spec:
               - namespace
               - version
               type: object
+            identifier:
+              description: Identifier is the immutable unique identifier for this
+                cluster. Assigned by Kore, should not be specified or changed by users.
+              type: string
             kind:
               description: Kind refers to the cluster type (e.g. GKE, EKS)
               minLength: 1
@@ -7144,6 +7148,10 @@ spec:
           properties:
             description:
               description: Description is a description for the team
+              type: string
+            identifier:
+              description: Identifier is the immutable unique identifier for this
+                team. Assigned by Kore, should not be specified or updated by users.
               type: string
             summary:
               description: Summary is a summary name for this team

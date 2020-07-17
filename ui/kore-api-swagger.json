@@ -7619,8 +7619,8 @@
     },
     "kore.ServicePlanDetails": {
       "required": [
-        "kind",
         "summary",
+        "kind",
         "editableParams"
       ],
       "properties": {
@@ -7929,6 +7929,9 @@
         },
         "credentials": {
           "$ref": "#/definitions/v1.Ownership"
+        },
+        "identifier": {
+          "type": "string"
         },
         "kind": {
           "type": "string"
@@ -9725,11 +9728,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
-        "clientScopes",
         "userClaims",
         "clientID",
         "clientSecret",
-        "issuer"
+        "issuer",
+        "clientScopes"
       ],
       "properties": {
         "clientID": {
@@ -9942,6 +9945,9 @@
       ],
       "properties": {
         "description": {
+          "type": "string"
+        },
+        "identifier": {
           "type": "string"
         },
         "summary": {
@@ -11859,13 +11865,19 @@
         "from": {
           "type": "string"
         },
-        "preparedAt": {
-          "type": "string"
-        },
         "resource": {
           "$ref": "#/definitions/v1.Ownership"
         },
+        "resourceIdentifier": {
+          "type": "string"
+        },
+        "retrievedAt": {
+          "type": "string"
+        },
         "team": {
+          "type": "string"
+        },
+        "teamIdentifier": {
           "type": "string"
         },
         "to": {
@@ -11880,6 +11892,9 @@
           "format": "int64"
         },
         "name": {
+          "type": "string"
+        },
+        "resourceIdentifier": {
           "type": "string"
         }
       }

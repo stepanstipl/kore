@@ -34,6 +34,11 @@ type CostList struct {
 type Cost struct {
 	// Resource is a reference to the piece of team infrastructure which this cost applies to.
 	Resource corev1.Ownership `json:"resource,omitempty"`
+	// ResourceIdentifier is the unique identifier assigned to the resource this cost applies to, e.g. the
+	// unique team ID, cluster ID, etc.
+	ResourceIdentifier string `json:"resourceIdentifier,omitempty"`
+	// TeamIdentifier is the unique identifier for the team this resource belongs to.
+	TeamIdentifier string `json:"teamIdentifier,omitempty"`
 	// Team is the name of the team this cost applies to.
 	Team string `json:"team,omitempty"`
 	// Cost is the actual incurred cost total cost for this piece of infrastructure for the
@@ -44,7 +49,7 @@ type Cost struct {
 	// To indicates the end of the period this cost is applicable for
 	To metav1.Time `json:"to,omitempty"`
 	// RetrievedAt indicates the time this cost was retrieved from the provider by Kore
-	RetrievedAt metav1.Time `json:"preparedAt,omitempty"`
+	RetrievedAt metav1.Time `json:"retrievedAt,omitempty"`
 	// CostElements provides details of the different components which make up this cost,
 	// may be empty if the top level infrastructure does not have any sub-components.
 	CostElements []CostElement `json:"costElements,omitempty"`
@@ -53,6 +58,10 @@ type Cost struct {
 // CostElement represents a logical component which has an associated cost
 // +k8s:openapi-gen=false
 type CostElement struct {
+	// ResourceIdentifier is the unique identifier assigned to the component this cost applies to,
+	// if available. May be nil where the component has no ResourceID or it is not possible
+	// to determine it from the cloud provider.
+	ResourceIdentifier string `json:"resourceIdentifier,omitempty"`
 	// Name is the name of this component
 	Name string `json:"name,omitempty"`
 	// Cost is the actual incurred cost in microdollars

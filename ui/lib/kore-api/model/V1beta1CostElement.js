@@ -53,6 +53,9 @@ class V1beta1CostElement {
             if (data.hasOwnProperty('name')) {
                 obj['name'] = ApiClient.convertToType(data['name'], 'String');
             }
+            if (data.hasOwnProperty('resourceIdentifier')) {
+                obj['resourceIdentifier'] = ApiClient.convertToType(data['resourceIdentifier'], 'String');
+            }
         }
         return obj;
     }
@@ -83,6 +86,19 @@ class V1beta1CostElement {
     setName(name) {
         this['name'] = name;
     }
+/**
+     * @return {String}
+     */
+    getResourceIdentifier() {
+        return this.resourceIdentifier;
+    }
+
+    /**
+     * @param {String} resourceIdentifier
+     */
+    setResourceIdentifier(resourceIdentifier) {
+        this['resourceIdentifier'] = resourceIdentifier;
+    }
 
 }
 
@@ -95,6 +111,11 @@ V1beta1CostElement.prototype['cost'] = undefined;
  * @member {String} name
  */
 V1beta1CostElement.prototype['name'] = undefined;
+
+/**
+ * @member {String} resourceIdentifier
+ */
+V1beta1CostElement.prototype['resourceIdentifier'] = undefined;
 
 
 

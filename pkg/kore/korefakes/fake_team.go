@@ -18,6 +18,16 @@ type FakeTeam struct {
 	allocationsReturnsOnCall map[int]struct {
 		result1 kore.Allocations
 	}
+	AssetsStub        func() kore.TeamAssets
+	assetsMutex       sync.RWMutex
+	assetsArgsForCall []struct {
+	}
+	assetsReturns struct {
+		result1 kore.TeamAssets
+	}
+	assetsReturnsOnCall map[int]struct {
+		result1 kore.TeamAssets
+	}
 	CloudStub        func() kore.Cloud
 	cloudMutex       sync.RWMutex
 	cloudArgsForCall []struct {
@@ -151,6 +161,58 @@ func (fake *FakeTeam) AllocationsReturnsOnCall(i int, result1 kore.Allocations) 
 	}
 	fake.allocationsReturnsOnCall[i] = struct {
 		result1 kore.Allocations
+	}{result1}
+}
+
+func (fake *FakeTeam) Assets() kore.TeamAssets {
+	fake.assetsMutex.Lock()
+	ret, specificReturn := fake.assetsReturnsOnCall[len(fake.assetsArgsForCall)]
+	fake.assetsArgsForCall = append(fake.assetsArgsForCall, struct {
+	}{})
+	fake.recordInvocation("Assets", []interface{}{})
+	fake.assetsMutex.Unlock()
+	if fake.AssetsStub != nil {
+		return fake.AssetsStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.assetsReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeTeam) AssetsCallCount() int {
+	fake.assetsMutex.RLock()
+	defer fake.assetsMutex.RUnlock()
+	return len(fake.assetsArgsForCall)
+}
+
+func (fake *FakeTeam) AssetsCalls(stub func() kore.TeamAssets) {
+	fake.assetsMutex.Lock()
+	defer fake.assetsMutex.Unlock()
+	fake.AssetsStub = stub
+}
+
+func (fake *FakeTeam) AssetsReturns(result1 kore.TeamAssets) {
+	fake.assetsMutex.Lock()
+	defer fake.assetsMutex.Unlock()
+	fake.AssetsStub = nil
+	fake.assetsReturns = struct {
+		result1 kore.TeamAssets
+	}{result1}
+}
+
+func (fake *FakeTeam) AssetsReturnsOnCall(i int, result1 kore.TeamAssets) {
+	fake.assetsMutex.Lock()
+	defer fake.assetsMutex.Unlock()
+	fake.AssetsStub = nil
+	if fake.assetsReturnsOnCall == nil {
+		fake.assetsReturnsOnCall = make(map[int]struct {
+			result1 kore.TeamAssets
+		})
+	}
+	fake.assetsReturnsOnCall[i] = struct {
+		result1 kore.TeamAssets
 	}{result1}
 }
 
@@ -575,6 +637,8 @@ func (fake *FakeTeam) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.allocationsMutex.RLock()
 	defer fake.allocationsMutex.RUnlock()
+	fake.assetsMutex.RLock()
+	defer fake.assetsMutex.RUnlock()
 	fake.cloudMutex.RLock()
 	defer fake.cloudMutex.RUnlock()
 	fake.clustersMutex.RLock()

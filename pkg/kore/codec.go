@@ -361,6 +361,7 @@ func (c Convertor) FromAlertsModelList(alerts []*model.Alert) (*monitoring.Alert
 // ToTeamModel converts from api to model
 func (c Convertor) ToTeamModel(team *orgv1.Team) *model.Team {
 	return &model.Team{
+		Identifier:  team.Spec.Identifier,
 		Name:        team.Name,
 		Description: team.Spec.Description,
 		Summary:     team.Spec.Summary,
@@ -380,6 +381,7 @@ func (c Convertor) FromTeamModel(team *model.Team) *orgv1.Team {
 			CreationTimestamp: metav1.NewTime(team.CreatedAt),
 		},
 		Spec: orgv1.TeamSpec{
+			Identifier:  team.Identifier,
 			Description: team.Description,
 			Summary:     team.Summary,
 		},
