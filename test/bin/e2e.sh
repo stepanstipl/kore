@@ -17,6 +17,7 @@
 #
 
 ## Set the defaults
+BUILD_AUTH_PROXY=true
 BUILD_IMAGES=true
 ENABLE_API=true
 ENABLE_UI=false
@@ -37,6 +38,7 @@ usage() {
   cat <<EOF
   Usage: $(basename $0)
   --build-images <bool>    : indicates if we should build the images locally (defaults: ${BUILD_IMAGES})
+  --build-proxy  <bool>    : indicates if we should build the auth proxy image (defaults: ${BUILD_AUTH_PROXY})
   --enable-api   <bool>    : enable the kore-apiserver deployment (defaults: ${ENABLE_API})
   --enable-ui    <bool>    : enable building and deploying the ui (defaults: ${ENABLE_API})
   --version      <string>  : is the version name to build the components (default: "")
@@ -83,11 +85,15 @@ build-cluster() {
 
     if [[ ${BUILD_IMAGES} == true ]]; then
       args="${args} --kind-load-image=quay.io/appvia/kore-apiserver:${VERSION}"
-      args="${args} --set=api.images={}"
-      args="${args} --set=api.images.auth_proxy=quay.io/appvia/auth-proxy=${VERSION}"
       VERSION=${VERSION} make kore-apiserver-image-local
       # we make and we push the images as it have to be remote
-      VERSION=${VERSION} make auth-proxy-image-release
+      if [[ ${BUILD_AUTH_PROXY} == true ]]; then
+        announce "Building & pushing the auth proxy image"
+
+        args="${args} --set=api.images={}"
+        args="${args} --set=api.images.auth_proxy=quay.io/appvia/auth-proxy=${VERSION}"
+        VERSION=${VERSION} make auth-proxy-image-release
+      fi
     fi
   else
     args="${args} --set=api.replicas=00"
@@ -113,12 +119,13 @@ build-cluster() {
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-  --build-images) BUILD_IMAGES=${2}; shift 2; ;;
-  --enable-api)   ENABLE_API=$2;     shift 2; ;;
-  --enable-ui)    ENABLE_UI=$2;      shift 2; ;;
-  --version)      VERSION=${2};      shift 2; ;;
-  -h|--help)      usage;                      ;;
-  *)                                 shift 1; ;;
+  --build-images) BUILD_IMAGES=${2};     shift 2; ;;
+  --build-proxy)  BUILD_AUTH_PROXY=${2}; shift 2; ;;
+  --enable-api)   ENABLE_API=$2;         shift 2; ;;
+  --enable-ui)    ENABLE_UI=$2;          shift 2; ;;
+  --version)      VERSION=${2};          shift 2; ;;
+  -h|--help)      usage;                          ;;
+  *)                                     shift 1; ;;
   esac
 done
 

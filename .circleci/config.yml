@@ -96,37 +96,30 @@ jobs:
       - checkout
       - kube-orb/install-kubectl:
           kubectl-version: latest
-#      - run:
-#          name: Checking for API changes
-#          command: |
-#            if ! git diff master... --name-only | egrep '^(pkg|cmd)/' >/dev/null; then
-#              echo "Zero changes to the API found, skipping the rest"
-#              circleci-agent step halt
-#            fi
-#      - run:
-#          name: Docker Login
-#          command: |
-#            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
-#      - run:
-#          name: Provisioning Local Cluster
-#          command: |
-#            sudo mkdir -p /usr/local/go_workspace
-#            test/bin/e2e.sh --version ${CIRCLE_SHA1}
-#      - run:
-#          name: Checking Swagger
-#          command: |
-#            sudo apt-get install jq
-#            make swagger-json
-#            make swagger-validate
-#      - run:
-#          name: Checking UI Autogeneration
-#          working_directory: ~/project/ui
-#          command: |
-#            make check-kore-autogen
-#      - run:
-#          name: Integration testing API
-#          command: |
-#            make check-swagger-apiclient api-test
+      - run:
+          name: Docker Login
+          command: |
+            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
+      - run:
+          name: Provisioning Local Cluster
+          command: |
+            sudo mkdir -p /usr/local/go_workspace
+            test/bin/e2e.sh --version ${CIRCLE_SHA1} --build-proxy false
+      - run:
+          name: Checking Swagger
+          command: |
+            sudo apt-get install jq
+            make swagger-json
+            make swagger-validate
+      - run:
+          name: Checking UI Autogeneration
+          working_directory: ~/project/ui
+          command: |
+            make check-kore-autogen
+      - run:
+          name: Integration testing API
+          command: |
+            make check-swagger-apiclient api-test
 
   release:
     docker:
@@ -194,24 +187,30 @@ jobs:
       image: ubuntu-1604:202007-01
     steps:
       - checkout
-      - run:
-          name: Install Tools
-          command: |
-            node --version
+      - restore_cache:
+          keys:
+            - ui-node-v1-{{ checksum "ui/package-lock.json" }}
       - kube-orb/install-kubectl:
           kubectl-version: latest
       - run:
-          name: Docker Login
+          name: Download Containers
+          background: true
           command: |
-            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
+            docker pull kindest/node:v1.15.11
       - run:
           name: Provisioning Local Cluster
+          background: true
           command: |
-            test/bin/e2e.sh --version ${CIRCLE_SHA1}
+            test/bin/e2e.sh \
+              --build-proxy false \
+              --version ${CIRCLE_SHA1}
       - run:
-          name: Running Redis
+          name: Running Redis Service
+          background: true
           command: |
             docker run --net=host -d redis
+      - attach_workspace:
+          at: /tmp/workspace
       - run:
           name: Running kore-ui
           working_directory: ~/project/ui
@@ -227,10 +226,11 @@ jobs:
             [[ -d node_modules ]] || make deps
             make build
             npm start
-#      - run:
-#          name: Install Headless Chrome dependencies
-#          command: |
-#            ./ui/scripts/install-e2e-deps.sh
+      - run:
+          name: Waiting for UI & API
+          command: |
+            timeout 600 bash -c 'until curl http://127.0.0.1:10080/healthz >/dev/null 2>&1; do sleep 5; done'
+            timeout 120 bash -c 'until curl http://127.0.0.1:3000 >/dev/null 2>&1; do sleep 5; done'
       - run:
           name: End-to-end testing UI
           environment:
@@ -325,6 +325,7 @@ jobs:
       - run:
           name: Provisioning Local Cluster
           command: |
+            sudo mkdir -p /usr/local/go_workspace
             test/bin/e2e.sh --version ${CIRCLE_SHA1}
       - run:
           name: Running GKE E2E Suite
@@ -359,6 +360,7 @@ jobs:
       - run:
           name: Provisioning Local Cluster
           command: |
+            sudo mkdir -p /usr/local/go_workspace
             test/bin/e2e.sh --version ${CIRCLE_SHA1}
       - run:
           name: Running EKS E2E Suite
