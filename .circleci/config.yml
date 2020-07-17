@@ -207,22 +207,40 @@ jobs:
       - run:
           name: Provisioning Local Cluster
           command: |
-            test/bin/e2e.sh --version ${CIRCLE_SHA1} --enable-ui true
+            test/bin/e2e.sh --version ${CIRCLE_SHA1}
+      - run:
+          name: Running Redis
+          command: |
+            docker run --net=host -d redis
+      - run:
+          name: Running kore-ui
+          working_directory: ~/project/ui
+          background: true
+          environment:
+            KORE_API_TOKEN: password
+            KORE_API_URL: http://localhost:10080/api/v1alpha1
+            KORE_BASE_URL: http://localhost:3000
+            KORE_UI_DISABLE_ANIMATIONS: 'true'
+            REDIS_URL: redis://127.0.0.1:6379
+          command: |
+            # Restore node modules only if we've not got a cache hit.
+            [[ -d node_modules ]] || make deps
+            make build
+            npm start
 #      - run:
 #          name: Install Headless Chrome dependencies
 #          command: |
 #            ./ui/scripts/install-e2e-deps.sh
       - run:
           name: End-to-end testing UI
-          working_directory: ~/project/ui
           environment:
             NODE_ENV: development
           command: |
             docker run -ti --rm --net=host \
               -v ${PWD}:/workspace \
-              -w /workspace \
+              -w /workspace/ui \
               circleci/node:12 \
-              bash -c "./ui/scripts/install-e2e-deps.sh; make test-e2e"
+              bash -c "./scripts/install-e2e-deps.sh; make test-e2e"
 
   release-ui:
     environment:
