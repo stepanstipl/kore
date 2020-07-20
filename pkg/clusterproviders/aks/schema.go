@@ -121,8 +121,7 @@ const schema = `{
 					"maxPodsPerNode": {
 						"type": "number",
 						"multipleOf": 1,
-						"description": "The maximum number of pods that can be scheduled onto each node of this pool",
-						"default": 110,
+						"description": "The maximum number of pods that can be scheduled onto each node of this pool - if left blank, it will set this automatically based on the machine type",
 						"maximum": 110,
 						"minimum": 8,
 						"immutable": true

@@ -192,7 +192,7 @@ export default class PlanOptionAKSNodePools extends PlanOptionBase {
                   <NodePoolCost prices={prices} nodePool={selected} help="Adjust pool size and machine type to see the cost impacts" />
                   <PlanOption id={`${id_prefix}_maxPodsPerNode`} {...this.props} displayName="Max pods per node" name={`${name}[${selectedIndex}].maxPodsPerNode`} property={property.items.properties.maxPodsPerNode} value={selected.maxPodsPerNode} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'maxPodsPerNode', v)} />
                 </Collapse.Panel>
-                <Collapse.Panel key="compute" header="Compute Configuration (machine type, disk size, image type, auto-repair)">
+                <Collapse.Panel key="compute" header="Compute Configuration (image type, machine type, disk size)">
                   <Form.Item label="Image Type" help="The image type used by the nodes">
                     <ConstrainedDropdown id={`${id_prefix}_imageType`} allowedValues={imageTypes} value={selected.imageType} onChange={(v) => this.setNodePoolProperty(selectedIndex, 'imageType', v)} />
                   </Form.Item>
