@@ -61,7 +61,7 @@ class ManageClusterPlanForm extends ManagePlanForm {
               currentRule.plans = currentRule.plans.filter(p => p !== values.name)
             }
             await api.UpdateAccount(accountMgtResource.metadata.name, accountMgtResource)
-            planResult.append = { automatedCloudAccount: addedToRule }
+            planResult.amend = { automatedCloudAccount: addedToRule }
           } else {
             console.error(`Error occurred setting automated ${this.cloudInfo.accountNoun}, could not find rule with name`, values.automatedCloudAccount)
           }
@@ -70,7 +70,7 @@ class ManageClusterPlanForm extends ManagePlanForm {
           if (currentRule) {
             currentRule.plans = currentRule.plans.filter(p => p !== values.name)
             await api.UpdateAccount(accountMgtResource.metadata.name, accountMgtResource)
-            planResult.append = { automatedCloudAccount: false }
+            planResult.amend = { automatedCloudAccount: false }
           }
         }
       }

@@ -71,7 +71,7 @@ class ResourceList extends React.Component {
                 status: {
                   ...resource.status, status: 'Pending'
                 },
-                ...updated.append
+                ...updated.amend
               }
             }
             return resource
@@ -83,15 +83,17 @@ class ResourceList extends React.Component {
   }
 
   handleAddSave = async (created) => {
-    const newItems = this.state.resources.items.concat([ created ])
-    this.setState({
-      add: false,
-      resources: {
-        items: newItems
+    this.setState(state => {
+      return {
+        add: false,
+        resources: {
+          items: [ ...state.resources.items, { ...created, ...created.amend } ]
+        }
       }
+    }, () => {
+      this.props.getResourceItemList && this.props.getResourceItemList(this.state.resources.items)
+      successMessage(this.createdMessage)
     })
-    this.props.getResourceItemList && this.props.getResourceItemList(newItems)
-    successMessage(this.createdMessage)
   }
 }
 
