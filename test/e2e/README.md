@@ -9,8 +9,10 @@
 
 You must have some valid credentials in the e2e folder
 
-- e2eci/gke-credentials.yml (containing a gkecredentials{} and allocation called gke for all teams).
-  A example can be found in the examples/gcp-credentials.yml
+ * e2eci/gke-credentials.yml (containing a GKECredentials object and Allocation called gke for all teams).
+   A example can be found in the examples/gcp-credentials.yml
+ * e2eci/aks-credentials.yml (containing an AKSCredentials object and Allocation called aks for all teams).
+   A example can be found in the examples/aks-credentials.yml
 
 ##  **Running the suite locally**
 

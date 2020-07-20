@@ -19,6 +19,7 @@ source test/e2e/environment.sh || exit 1
 BATS_OPTIONS="${BATS_OPTIONS:-""}"
 ENABLE_EKS_E2E=${ENABLE_EKS_E2E:-"false"}
 ENABLE_GKE_E2E=${ENABLE_GKE_E2E:-"false"}
+ENABLE_AKS_E2E=${ENABLE_AKS_E2E:-"false"}
 CLUSTER="${CLUSTER="ci-${CIRCLE_BUILD_NUM:-$USER}"}"
 
 usage() {
@@ -26,6 +27,7 @@ usage() {
   Usage: $(basename $0)
   --enable-gke <bool>  : indicates we should run the GKE (default: ${ENBALE_GKE_E2E})
   --enable-eks <bool>  : indicates we should run E2E on EKS (default: ${ENABLE_EKS_E2E})
+  --enable-aks <bool>  : indicates we should run E2E on AKS (default: ${ENABLE_AKS_E2E})
   -h|--help      : display this usage menu
 EOF
   if [[ -n $@ ]]; then
@@ -101,11 +103,27 @@ run-eks-checks() {
   run-cluster-checks ${name}
 }
 
+# run-aks-checks runs a collection of e2e on aks
+run-aks-checks() {
+  announce "running e2e suite on aks"
+  local units=(
+      aks-credentials.bats
+      aks.bats
+  )
+  local name="${CLUSTER="ci-${CIRCLE_BUILD_NUM:-$USER}"}"
+  for unit in ${units[@]}; do
+    CLUSTER=${name} bats ${BATS_OPTIONS} ${unit} || exit 1
+  done
+  # run the cluster checks on on it
+  run-cluster-checks ${name}
+}
+
 run-teardown() {
   announce "running the teardown checks"
   local units=(
       gke-deletion.bats
       eks-deletion.bats
+      aks-deletion.bats
   )
   local name="${CLUSTER="ci-${CIRCLE_BUILD_NUM:-$USER}"}"
   for unit in ${units[@]}; do
@@ -120,6 +138,7 @@ run-units() {
   run-generic-checks
   [[ "${ENABLE_GKE_E2E}" == "true" ]] && run-gke-checks
   [[ "${ENABLE_EKS_E2E}" == "true" ]] && run-eks-checks
+  [[ "${ENABLE_AKS_E2E}" == "true" ]] && run-aks-checks
   run-teardown
 }
 
@@ -127,6 +146,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
   --enable-gke) ENABLE_GKE_E2E=${2}; shift 2; ;;
   --enable-eks) ENABLE_EKS_E2E=${2}; shift 2; ;;
+  --enable-aks) ENABLE_AKS_E2E=${2}; shift 2; ;;
   -h|--help)    usage;                        ;;
   *)                                 shift 1; ;;
   esac

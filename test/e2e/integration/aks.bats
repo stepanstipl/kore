@@ -16,16 +16,16 @@
 #
 load helper
 
-@test "Ensuring we have an allocation to build a cluster in GKE" {
-  runit "${KORE} get allocations -t ${TEAM} | grep ^gkecredentials-gke"
+@test "Ensuring we have an allocation to build a cluster in AKS" {
+  runit "${KORE} get allocations -t ${TEAM} | grep ^akscredentials-aks"
   [[ "$status" -eq 0 ]]
 }
 
-@test "We should be able to build a cluster ${CLUSTER} in GKE" {
+@test "We should be able to build a cluster ${CLUSTER} in AKS" {
   if runit "${KORE} get clusters ${CLUSTER} -t ${TEAM}"; then
     skip
   else
-    runit "${KORE} create cluster -p gke-development -a gkecredentials-gke ${CLUSTER} --show-time -t ${TEAM}"
+    runit "${KORE} create cluster -p aks-development -a akscredentials-aks ${CLUSTER} --show-time -t ${TEAM}"
     [[ "$status" -eq 0 ]]
   fi
 }
@@ -40,10 +40,10 @@ load helper
   [[ "$status" -eq 0 ]]
 }
 
-@test "We should be able to see the gkes cloud provider in the team" {
-  runit "${KORE} get gkes ${CLUSTER} -t ${TEAM}"
+@test "We should be able to see the aks cloud provider in the team" {
+  runit "${KORE} get aks ${CLUSTER} -t ${TEAM}"
   [[ "$status" -eq 0 ]]
-  runit "${KORE} get gkes ${CLUSTER} -t ${TEAM} | grep -i success"
+  runit "${KORE} get aks ${CLUSTER} -t ${TEAM} | grep -i success"
   [[ "$status" -eq 0 ]]
 }
 
@@ -76,11 +76,6 @@ load helper
 
 @test "You should be able to retrieve the nodes of the cluster" {
   runit "${KUBECTL} --context=${CLUSTER} get nodes"
-  [[ "$status" -eq 0 ]]
-}
-
-@test "We need to ensure the default psp has been created" {
-  runit "${KUBECTL} --context=${CLUSTER} get psp kore.default"
   [[ "$status" -eq 0 ]]
 }
 
