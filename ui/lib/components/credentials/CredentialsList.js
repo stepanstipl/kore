@@ -102,7 +102,7 @@ class CredentialsList extends ResourceList {
       <>
         <Alert
           message={`Give Kore access to your existing  ${this.cloudInfo.cloudLong} ${pluralize(this.cloudInfo.accountNoun)}`}
-          description={`This will enable Kore to build clusters inside a ${this.cloudInfo.cloud} ${this.cloudInfo.accountNoun} that you already manage outside of Kore. You must create a Service Account inside your ${this.cloudInfo.accountNoun} and add the key in JSON format here.`}
+          description={`This will enable Kore to build clusters inside a ${this.cloudInfo.cloud} ${this.cloudInfo.accountNoun} that you already manage outside of Kore. ${this.cloudInfo.credentialsGuidance}`}
           type="info"
           showIcon
           style={{ marginBottom: '20px' }}
