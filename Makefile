@@ -3,7 +3,6 @@ NAME=kore-apiserver
 AUTHOR ?= appvia
 AUTHOR_EMAIL=gambol99@gmail.com
 BUILD_TIME=$(shell date '+%s')
-CURRENT_TAG=$(shell git describe --abbrev=0 --tags)
 DEPS=$(shell go list -f '{{range .TestImports}}{{.}} {{end}}' ./...)
 DOCKER_IMAGES ?= kore-apiserver auth-proxy
 GIT_SHA=$(shell git --no-pager describe --always --dirty)
@@ -26,11 +25,7 @@ API_HOST_IN_DOCKER = 127.0.0.1
 endif
 ifeq ($(USE_GIT_VERSION),true)
 	# in CI or if we're pushing images for test
-	ifeq ($(CURRENT_TAG),)
 	VERSION ?= $(GIT_LAST_TAG)-$(GIT_SHA)
-	else
-	VERSION ?= $(CURRENT_TAG)
-	endif
 else
 	# case of local build - must find upstream images
 	# - note the version reported by --version always includes the git SHA
@@ -175,7 +170,7 @@ swagger: compose
 	@$(MAKE) compose-down
 	@$(MAKE) swagger-validate
 
-swagger-json:
+swagger-json: api-wait
 	@curl --retry 20 --retry-delay 5 -sSL http://127.0.0.1:10080/swagger.json | jq . -M > swagger.json
 	@echo "--> Copy swagger JSON for UI to use for its auto-gen"
 	@cp swagger.json ui/kore-api-swagger.json

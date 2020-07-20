@@ -32,7 +32,7 @@ import (
 )
 
 var (
-	keypairRegex = regexp.MustCompile(`^([[:alnum:]].*)=([[:alnum:]\{\}].*)$`)
+	keypairRegex = regexp.MustCompile(`^([[:alnum:]].+)=([[:alnum:]\{\}].+)$`)
 )
 
 // GetHelmValues returns returns or prompts for the values

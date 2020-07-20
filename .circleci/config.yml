@@ -19,6 +19,10 @@ parameters:
     type: boolean
     default: false
 
+  enable_aks_e2e:
+    type: boolean
+    default: false
+
   enable_update_e2e:
     type: boolean
     default: false
@@ -448,6 +452,51 @@ jobs:
       - slack/notify-on-failure:
           only_for_branches: master
 
+  e2e_aks:
+    environment:
+      <<: *SERVICES_ENV
+    machine:
+      docker_layer_caching: true
+      image: ubuntu-1604:202007-01
+    steps:
+      - checkout
+      - kube-orb/install-kubectl:
+          kubectl-version: latest
+      - run:
+          name: Installing Tools
+          command: |
+            sudo apt-get update
+            sudo apt install -y bats jq awscli
+      - run:
+          name: Docker Login
+          command: |
+            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Provisioning Local Cluster
+          command: |
+            mkdir -p bin
+            # copy the cli from build
+            cp -f /tmp/workspace/* bin/
+            # build the cluster
+            test/bin/e2e.sh \
+              --build-cli false \
+              --build-kore-api false \
+              --build-proxy false \
+              --enable-ui false \
+              --version ${CIRCLE_SHA1}
+      - run:
+          name: Running EKS E2E Suite
+          no_output_timeout: 30m
+          command: |
+            rm -f ${HOME}/.kore/config
+            test/e2e/check-suite.sh \
+              --enable-e2e-user ${KORE_E2E_USER} \
+              --enable-aks true
+      - slack/notify-on-failure:
+          only_for_branches: master
+
   update_e2e:
     parameters:
       from:
@@ -611,13 +660,22 @@ workflows:
               only: /^v([0-9]+)\.([0-9]+)\.([0-9]+)($|-rc([0-9]+)|-beta([0-9]+)|-alpha([0-9]+))$/
           requires:
             - build-api
+      - e2e_aks:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v([0-9]+)\.([0-9]+)\.([0-9]+)($|-rc([0-9]+)|-beta([0-9]+)|-alpha([0-9]+))$/
+          requires:
+            - build-api
       - publish-release:
           requires:
             - check-release-notes
             - release
             - release-ui
-            - e2e_eks
             - e2e_gke
+            - e2e_eks
+            - e2e_aks
           filters:
             branches:
               ignore: /.*/
@@ -658,6 +716,14 @@ workflows:
           requires:
             - build-api
 
+  e2e_aks:
+    when: << pipeline.parameters.enable_aks_e2e >>
+    jobs:
+      - build-api
+      - e2e_aks:
+          requires:
+            - build-api
+
   update_e2e:
     when: << pipeline.parameters.enable_update_e2e >>
     jobs:
@@ -674,4 +740,5 @@ workflows:
     jobs:
       - e2e_gke
       - e2e_eks
+      - e2e_aks
 

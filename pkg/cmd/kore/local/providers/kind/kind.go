@@ -74,15 +74,15 @@ nodes:
 var (
 	// kindVersion is the version of kind image
 	kindVersion = "kindest/node:v1.15.11@sha256:6cc31f3533deb138792db2c7d1ffc36f7456a06f1db5556ad3b6927641016f50"
-	// loadedImages is a collection of images to load after creating the cluster
-	loadedImages []string
+	// loadImagess is a collection of images to load after creating the cluster
+	loadImages []string
 )
 
-// AddProviderFlags allows kind to all some provider specific flags
+// AddProviderFlags allows kind to add provider specific flags
 func AddProviderFlags(cmd *cobra.Command) {
 	flags := cmd.Flags()
-	flags.StringVar(&kindVersion, "kind-image", kindVersion, "the version of the kind image to use")
-	flags.StringSliceVar(&loadedImages, "kind-load-image", []string{}, "collection of images to load after creating cluster")
+	flags.StringVar(&kindVersion, "kind-image", kindVersion, "version of the kind image to use")
+	flags.StringSliceVar(&loadImages, "kind-load-image", []string{}, "collection of images to load after creating cluster")
 }
 
 // GetKindConfiguration returns the kind config
@@ -301,11 +301,11 @@ func (p *providerImpl) ensureRunning(ctx context.Context, name string) error {
 }
 
 func (p *providerImpl) ensureImages(ctx context.Context, name string) error {
-	if len(loadedImages) == 0 {
+	if len(loadImages) == 0 {
 		return nil
 	}
 
-	for _, image := range loadedImages {
+	for _, image := range loadImages {
 		p.Info("Attempting to load docker image: %s into cluster", image)
 
 		err := utils.RetryWithTimeout(ctx, 2*time.Minute, 5*time.Second, func() (bool, error) {
