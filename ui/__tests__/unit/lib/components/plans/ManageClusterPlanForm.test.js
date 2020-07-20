@@ -20,6 +20,7 @@ describe('ManageClusterPlanForm', () => {
     apiScope = (ApiTestHelpers.getScope())
       .get(`${ApiTestHelpers.basePath}/planschemas/GKE`).reply(200, schema)
       .get(`${ApiTestHelpers.basePath}/accountmanagements`).reply(200, { items: [] })
+      .get(`${ApiTestHelpers.basePath}/plans?kind=GKE`).reply(200, { items: [] })
 
     props = {
       form: {

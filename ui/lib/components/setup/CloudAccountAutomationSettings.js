@@ -18,6 +18,7 @@ import asyncForEach from '../../utils/async-foreach'
 import { errorMessage, successMessage } from '../../utils/message'
 import KoreTeamCloudIntegration from './radio-groups/KoreTeamCloudIntegration'
 import CloudAccountAutomationType from './radio-groups/CloudAccountAutomationType'
+import { filterCloudAccountList } from '../../utils/cloud'
 
 class CloudAccountAutomationSettings extends React.Component {
   static propTypes = {
@@ -124,13 +125,7 @@ class CloudAccountAutomationSettings extends React.Component {
       // each cloud org will use the same settings
       await asyncForEach(this.state.cloudOrgList, async (cloudOrg) => {
         let cloudAccountList = this.state.cloudAccountAutomationType === 'CUSTOM' ? copy(this.state.cloudAccountList) : false
-        cloudAccountList = cloudAccountList
-          // remove rules with no plans associated
-          .filter(cloudAccount => cloudAccount.plans.length > 0)
-          // remove non-existent plans from rules
-          .map(cloudAccount => {
-            return { ...cloudAccount, plans: cloudAccount.plans.filter(p => this.state.plans.map(p => p.metadata.name).includes(p)) }
-          })
+        cloudAccountList = filterCloudAccountList(cloudAccountList, this.state.plans)
         const resourceVersion = this.state.accountManagement && this.state.accountManagement.metadata.resourceVersion
         const resourceName = `am-${this.props.cloud.toLowerCase()}`
         const accountMgtResource = KoreApi.resources().generateAccountManagementResource(resourceName, this.props.provider, cloudOrg, cloudAccountList, resourceVersion)

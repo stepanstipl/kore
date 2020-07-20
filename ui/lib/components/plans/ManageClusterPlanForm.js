@@ -7,7 +7,7 @@ import { pluralize, titleize } from 'inflect'
 import KoreApi from '../../kore-api'
 import copy from '../../utils/object-copy'
 import ManagePlanForm from './ManagePlanForm'
-import { getProviderCloudInfo } from '../../utils/cloud'
+import { filterCloudAccountList, getProviderCloudInfo } from '../../utils/cloud'
 
 /**
  * ManageClusterPlanForm is for *managing* a cluster plan.
@@ -25,11 +25,15 @@ class ManageClusterPlanForm extends ManagePlanForm {
   async fetchComponentData() {
     const { kind } = this.props
     const api = await KoreApi.client()
-    const [ schema, accountManagementList ] = await Promise.all([
+    const [ schema, accountManagementList, planList ] = await Promise.all([
       api.GetPlanSchema(kind),
-      api.ListAccounts()
+      api.ListAccounts(),
+      api.ListPlans(kind)
     ])
     const accountManagement = accountManagementList.items.find(a => a.spec.provider === this.props.kind)
+    if (accountManagement) {
+      accountManagement.spec.rules = filterCloudAccountList(accountManagement.spec.rules, planList.items)
+    }
     this.setState({
       schema,
       accountManagement,
