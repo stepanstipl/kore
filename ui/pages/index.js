@@ -18,6 +18,7 @@ class IndexPage extends React.Component {
     gcpOrganizations: PropTypes.object,
     eksCredentials: PropTypes.object,
     awsOrganizations: PropTypes.object,
+    aksCredentials: PropTypes.object,
     version: PropTypes.string
   }
 
@@ -36,9 +37,10 @@ class IndexPage extends React.Component {
     let gcpOrganizations
     let eksCredentials
     let awsOrganizations
+    let aksCredentials
 
     if (user.isAdmin) {
-      [ allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations, eksCredentials, awsOrganizations ] = await Promise.all([
+      [ allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations, eksCredentials, awsOrganizations, aksCredentials ] = await Promise.all([
         api.ListTeams(),
         api.ListUsers(),
         api.ListTeamMembers(publicRuntimeConfig.koreAdminTeamName),
@@ -46,6 +48,7 @@ class IndexPage extends React.Component {
         api.ListGCPOrganizations(publicRuntimeConfig.koreAdminTeamName),
         api.ListEKSCredentials(publicRuntimeConfig.koreAdminTeamName),
         api.ListAWSOrganizations(publicRuntimeConfig.koreAdminTeamName),
+        api.ListAKSCredentials(publicRuntimeConfig.koreAdminTeamName),
       ])
     } else {
       [ allTeams, allUsers ] = await Promise.all([
@@ -55,7 +58,7 @@ class IndexPage extends React.Component {
     }
 
     allTeams.items = (allTeams.items || []).filter(t => !publicRuntimeConfig.ignoreTeams.includes(t.metadata.name))
-    return { allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations, eksCredentials, awsOrganizations }
+    return { allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations, eksCredentials, awsOrganizations, aksCredentials }
   }
 
   static getInitialProps = async (ctx) => {
@@ -64,7 +67,7 @@ class IndexPage extends React.Component {
   }
 
   render() {
-    const { user, allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations, eksCredentials, awsOrganizations, version } = this.props
+    const { user, allTeams, allUsers, adminMembers, gkeCredentials, gcpOrganizations, eksCredentials, awsOrganizations, aksCredentials, version } = this.props
     const userTeams = (user.teams.userTeams || []).filter(t => !publicRuntimeConfig.ignoreTeams.includes(t.metadata.name))
     const noUserTeamsExist = userTeams.length === 0
     const gcpCredsMissing = (gkeCredentials && gkeCredentials.items.length === 0) && (gcpOrganizations && gcpOrganizations.items.length === 0)
@@ -148,16 +151,16 @@ class IndexPage extends React.Component {
         <CloudIntegrationWarning/>
         <NoTeamInfoAlert />
         <Row gutter={16} type="flex" style={{ marginTop: '40px', marginBottom: '40px' }}>
-          <Col span={6}>
+          <Col span={12} xl={4}>
             <TeamStats />
           </Col>
-          <Col span={6}>
+          <Col span={12} xl={4}>
             <UserStats />
           </Col>
-          <Col span={12}>
+          <Col span={24} xl={16}>
             <Card title="Cloud provider integrations" extra={<Icon type="cloud" />} bordered={false}>
               <Row gutter={16}>
-                <Col span={12}>
+                <Col span={8} xs={24} xl={8}>
                   <Statistic
                     title={
                       <>
@@ -170,11 +173,11 @@ class IndexPage extends React.Component {
                       </>
                     }
                     valueRender={() => <>{gcpOrganizations.items.length === 0 ? <Icon type="exclamation-circle" theme="twoTone" twoToneColor="orange"  /> : <Icon type="check-circle" theme="twoTone" twoToneColor="#52c41a" />}<Text> / {gkeCredentials.items.length}</Text></>}
-                    style={{ textAlign: 'center' }}
+                    style={{ textAlign: 'center', marginBottom: '20px' }}
                     valueStyle={{ color: cloudIntegrationMissing ? 'orange' : '' }}
                   />
                 </Col>
-                <Col span={12}>
+                <Col span={8} xs={24} xl={8}>
                   <Statistic
                     title={
                       <>
@@ -187,8 +190,24 @@ class IndexPage extends React.Component {
                       </>
                     }
                     valueRender={() => <>{awsOrganizations.items.length === 0 ? <Icon type="exclamation-circle" theme="twoTone" twoToneColor="orange"  /> : <Icon type="check-circle" theme="twoTone" twoToneColor="#52c41a" />}<Text> / {eksCredentials.items.length}</Text></>}
-                    value={awsOrganizations.items.length + ' / ' + eksCredentials.items.length}
-                    style={{ textAlign: 'center' }}
+                    style={{ textAlign: 'center', marginBottom: '20px' }}
+                    valueStyle={{ color: cloudIntegrationMissing ? 'orange' : '' }}
+                  />
+                </Col>
+                <Col span={8} xs={24} xl={8}>
+                  <Statistic
+                    title={
+                      <>
+                        <span>
+                          <img src="/static/images/Azure.svg" height="18px" style={{ marginRight: '5px' }}/>
+                          <Text strong>Microsoft Azure</Text>
+                        </span>
+                        <br/>
+                        <Text style={{ display: 'inline-block', marginTop: '10px' }}>Subscriptions</Text>
+                      </>
+                    }
+                    value={aksCredentials.items.length}
+                    style={{ textAlign: 'center', marginBottom: '20px' }}
                     valueStyle={{ color: cloudIntegrationMissing ? 'orange' : '' }}
                   />
                 </Col>
