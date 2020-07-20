@@ -7,7 +7,7 @@ import { pluralize, titleize } from 'inflect'
 
 import KoreApi from '../../kore-api'
 import CostBreakdown from '../costs/CostBreakdown'
-import { getPlanCloudInfo } from '../../utils/plans'
+import { getProviderCloudInfo } from '../../utils/cloud'
 
 class PlanViewer extends React.Component {
   static propTypes = {
@@ -23,7 +23,7 @@ class PlanViewer extends React.Component {
     costEstimate: null
   }
 
-  planCloudInfo = getPlanCloudInfo(this.props.plan.spec.kind)
+  cloudInfo = getProviderCloudInfo(this.props.plan.spec.kind)
 
   componentDidMountComplete = null
   componentDidMount() {
@@ -138,11 +138,11 @@ class PlanViewer extends React.Component {
     return (
       <>
         {plan.automatedCloudAccount && (
-          <Paragraph>{this.planCloudInfo.cloud} {this.planCloudInfo.accountNoun} automation: <Tooltip overlay={`When using Kore managed ${this.planCloudInfo.cloud} ${pluralize(this.planCloudInfo.accountNoun)}, clusters using this plan will provisioned inside this ${this.planCloudInfo.accountNoun} type.`}><Tag style={{ marginLeft: '10px' }}>{plan.automatedCloudAccount.name}</Tag></Tooltip></Paragraph>
+          <Paragraph>{this.cloudInfo.cloud} {this.cloudInfo.accountNoun} automation: <Tooltip overlay={`When using Kore managed ${this.cloudInfo.cloud} ${pluralize(this.cloudInfo.accountNoun)}, clusters using this plan will provisioned inside this ${this.cloudInfo.accountNoun} type.`}><Tag style={{ marginLeft: '10px' }}>{plan.automatedCloudAccount.name}</Tag></Tooltip></Paragraph>
         )}
         {displayUnassociatedPlanWarning && (
           <Alert
-            message={`This plan not associated with any ${this.planCloudInfo.cloud} automated ${pluralize(this.planCloudInfo.accountNoun)} and will not be available for teams to use. Edit this plan or go to ${titleize(this.planCloudInfo.accountNoun)} automation settings to review this.`}
+            message={`This plan not associated with any ${this.cloudInfo.cloud} automated ${pluralize(this.cloudInfo.accountNoun)} and will not be available for teams to use. Edit this plan or go to ${titleize(this.cloudInfo.accountNoun)} automation settings to review this.`}
             type="warning"
             showIcon
             style={{ marginBottom: '20px' }}

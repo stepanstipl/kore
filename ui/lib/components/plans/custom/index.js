@@ -4,6 +4,7 @@ import PlanOptionGKENodePools from './PlanOptionGKENodePools'
 import PlanOptionGKEReleaseChannel from './PlanOptionGKEReleaseChannel'
 import PlanOptionGKEVersion from './PlanOptionGKEVersion'
 import PlanOptionClusterRegion from './PlanOptionClusterRegion'
+import PlanOptionAKSNodePools from './PlanOptionAKSNodePools'
 
 export default class CustomPlanOptionRegistry {
   static controls = {
@@ -18,7 +19,7 @@ export default class CustomPlanOptionRegistry {
         'releaseChannel': function releaseChannel(props) {
           return <PlanOptionGKEReleaseChannel {...props} />
         },
-        'version': function releaseChannel(props) {
+        'version': function version(props) {
           return <PlanOptionGKEVersion {...props} />
         },
         'region': function region(props) {
@@ -26,11 +27,19 @@ export default class CustomPlanOptionRegistry {
         }
       },
       'EKS': {
-        'clusterUsers': function clusterUsers(props) { 
-          return <PlanOptionClusterUsers {...props} /> 
+        'clusterUsers': function clusterUsers(props) {
+          return <PlanOptionClusterUsers {...props} />
         },
-        'nodeGroups': function nodeGroups(props) { 
-          return <PlanOptionEKSNodeGroups {...props} /> 
+        'nodeGroups': function nodeGroups(props) {
+          return <PlanOptionEKSNodeGroups {...props} />
+        },
+        'region': function region(props) {
+          return <PlanOptionClusterRegion {...props} />
+        }
+      },
+      'AKS': {
+        'nodePools': function nodePools(props) {
+          return <PlanOptionAKSNodePools {...props} />
         },
         'region': function region(props) {
           return <PlanOptionClusterRegion {...props} />

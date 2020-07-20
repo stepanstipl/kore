@@ -3,14 +3,6 @@ import { Typography, List, Button } from 'antd'
 const { Title, Text } = Typography
 
 const prototypeList = [{
-  title: 'Setup wizard',
-  description: 'Setup Kore cloud access and team project automation settings for GCP',
-  path: '/prototype/setup/kore'
-}, {
-  title: 'Project automation settings',
-  description: 'Configure the team project automation settings, within the configure cloud page',
-  path: '/prototype/configure/cloud'
-}, {
   title: 'Team costs',
   description: 'Page showing cloud costs for a team, select "Team costs" from the settings dropdown in the top-right corner',
   path: '/prototype/teams/proto'

@@ -224,41 +224,70 @@ describe('KoreApiResources', () => {
       name: 'eks',
       accountID: '1234567890'
     }
+    const resourceName = 'my-eks'
 
     it('generates expected resource', () => {
-      const eksCredential = koreApiResources.generateEKSCredentialsResource('team1', values, 'my-secret')
+      const eksCredential = koreApiResources.generateEKSCredentialsResource('team1', resourceName, values, 'my-secret')
       expect(eksCredential).toBeDefined()
       expect(eksCredential.apiVersion).toBe('aws.compute.kore.appvia.io/v1alpha1')
       expect(eksCredential.kind).toBe('EKSCredentials')
-      expect(eksCredential.metadata.name).toBe(values.name)
+      expect(eksCredential.metadata.name).toBe(resourceName)
       expect(eksCredential.metadata.namespace).toBe('team1')
       expect(eksCredential.spec.accountID).toBe(values.accountID)
       expect(eksCredential.spec.credentialsRef).toEqual({ name: 'my-secret', namespace: 'team1' })
     })
 
     it('works when using the team wrapper', () => {
-      const eksCredential = koreApiResources.team('team1').generateEKSCredentialsResource('team1', values, 'my-secret')
+      const eksCredential = koreApiResources.team('team1').generateEKSCredentialsResource('team1', resourceName, values, 'my-secret')
       expect(eksCredential).toBeDefined()
     })
   })
 
   describe('#generateGKECredentialsResource', () => {
     const values = { project: 'my-project' }
+    const resourceName = 'my-gke'
 
     it('generates expected resource', () => {
-      const gkeCredential = koreApiResources.generateGKECredentialsResource('team1', values, 'my-secret')
+      const gkeCredential = koreApiResources.generateGKECredentialsResource('team1', resourceName, values, 'my-secret')
       expect(gkeCredential).toBeDefined()
       expect(gkeCredential.apiVersion).toBe('gke.compute.kore.appvia.io/v1alpha1')
       expect(gkeCredential.kind).toBe('GKECredentials')
-      expect(gkeCredential.metadata.name).toBe(values.name)
+      expect(gkeCredential.metadata.name).toBe(resourceName)
       expect(gkeCredential.metadata.namespace).toBe('team1')
       expect(gkeCredential.spec.accountID).toBe(values.accountID)
       expect(gkeCredential.spec.credentialsRef).toEqual({ name: 'my-secret', namespace: 'team1' })
     })
 
     it('works when using the team wrapper', () => {
-      const gkeCredential = koreApiResources.team('team1').generateGKECredentialsResource('team1', values, 'my-secret')
+      const gkeCredential = koreApiResources.team('team1').generateGKECredentialsResource('team1', resourceName, values, 'my-secret')
       expect(gkeCredential).toBeDefined()
+    })
+  })
+
+  describe('#generateAKSCredentialsResource', () => {
+    const values = {
+      subscriptionID: '1234-abcd-5678',
+      tenantID: 'tenant-123',
+      clientID: 'client-123'
+    }
+    const resourceName = 'my-aks'
+
+    it('generates expected resource', () => {
+      const aksCredential = koreApiResources.generateAKSCredentialsResource('team1', resourceName, values, 'my-secret')
+      expect(aksCredential).toBeDefined()
+      expect(aksCredential.apiVersion).toBe('aks.compute.kore.appvia.io/v1alpha1')
+      expect(aksCredential.kind).toBe('AKSCredentials')
+      expect(aksCredential.metadata.name).toBe(resourceName)
+      expect(aksCredential.metadata.namespace).toBe('team1')
+      expect(aksCredential.spec.subscriptionID).toBe(values.subscriptionID)
+      expect(aksCredential.spec.tenantID).toBe(values.tenantID)
+      expect(aksCredential.spec.clientID).toBe(values.clientID)
+      expect(aksCredential.spec.credentialsRef).toEqual({ name: 'my-secret', namespace: 'team1' })
+    })
+
+    it('works when using the team wrapper', () => {
+      const aksCredential = koreApiResources.team('team1').generateAKSCredentialsResource('team1', resourceName, values, 'my-secret')
+      expect(aksCredential).toBeDefined()
     })
   })
 

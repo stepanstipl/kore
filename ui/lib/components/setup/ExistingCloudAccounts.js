@@ -5,10 +5,11 @@ import { Button, Card, Divider, Icon, Result, Steps, Typography } from 'antd'
 const { Paragraph } = Typography
 const { Step } = Steps
 import { pluralize, titleize } from 'inflect'
+import getConfig from 'next/config'
+const { publicRuntimeConfig } = getConfig()
 
 import RequestCredentialAccessForm from './forms/RequestCredentialAccessForm'
-import GKECredentialsList from '../credentials/GKECredentialsList'
-import EKSCredentialsList from '../credentials/EKSCredentialsList'
+import CredentialsList from '../credentials/CredentialsList'
 import FormErrorMessage from '../forms/FormErrorMessage'
 import KoreApi from '../../kore-api'
 import { errorMessage } from '../../utils/message'
@@ -50,8 +51,7 @@ class ExistingCloudAccounts extends React.Component {
   stepsContentCreds = () => (
     <>
       <Paragraph style={{ fontSize: '16px', fontWeight: '600' }}>Add one or more {this.props.cloud} {this.props.accountNoun} credentials</Paragraph>
-      {this.props.cloud === 'GCP' && <GKECredentialsList getResourceItemList={this.setCredsCount} />}
-      {this.props.cloud === 'AWS' && <EKSCredentialsList getResourceItemList={this.setCredsCount} />}
+      <CredentialsList provider={publicRuntimeConfig.clusterProviderMap[this.props.cloud]} getResourceItemList={this.setCredsCount} />
     </>
   )
 

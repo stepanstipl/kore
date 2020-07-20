@@ -24,11 +24,11 @@ import (
 // +k8s:openapi-gen=false
 type CostEstimate struct {
 	// MinCost is the minimum hourly cost estimate in microdollars
-	MinCost int64 `json:"minCost,omitempty"`
+	MinCost int64 `json:"minCost"`
 	// TypicalCost is the expected / likely hourly cost estimate in microdollars
-	TypicalCost int64 `json:"typicalCost,omitempty"`
+	TypicalCost int64 `json:"typicalCost"`
 	// MaxCost is the estimated upper limit of the hourly cost in microdollars
-	MaxCost int64 `json:"maxCost,omitempty"`
+	MaxCost int64 `json:"maxCost"`
 	// CostElements provides details of the different components which make up this cost estimate
 	CostElements []CostEstimateElement `json:"costElements,omitempty"`
 	// PreparedAt indicates the time this estimate was prepared
@@ -41,11 +41,11 @@ type CostEstimateElement struct {
 	// Name is the name of this component
 	Name string `json:"name,omitempty"`
 	// MinCost is the minimum hourly cost estimate of this component in microdollars
-	MinCost int64 `json:"minCost,omitempty"`
+	MinCost int64 `json:"minCost"`
 	// TypicalCost is the expected / likely hourly cost estimate of this component in microdollars
-	TypicalCost int64 `json:"typicalCost,omitempty"`
+	TypicalCost int64 `json:"typicalCost"`
 	// MaxCost is the estimated upper limit of the hourly cost of this component in microdollars
-	MaxCost int64 `json:"maxCost,omitempty"`
+	MaxCost int64 `json:"maxCost"`
 }
 
 // ContinentList provides the list of continents and regions available for a cloud

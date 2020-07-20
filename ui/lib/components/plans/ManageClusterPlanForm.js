@@ -7,7 +7,7 @@ import { pluralize, titleize } from 'inflect'
 import KoreApi from '../../kore-api'
 import copy from '../../utils/object-copy'
 import ManagePlanForm from './ManagePlanForm'
-import { getPlanCloudInfo } from '../../utils/plans'
+import { getProviderCloudInfo } from '../../utils/cloud'
 
 /**
  * ManageClusterPlanForm is for *managing* a cluster plan.
@@ -20,7 +20,7 @@ class ManageClusterPlanForm extends ManagePlanForm {
   resourceType = () => 'cluster'
   estimateSupported = () => true
 
-  planCloudInfo = getPlanCloudInfo(this.props.kind)
+  cloudInfo = getProviderCloudInfo(this.props.kind)
 
   async fetchComponentData() {
     const { kind } = this.props
@@ -63,7 +63,7 @@ class ManageClusterPlanForm extends ManagePlanForm {
             await api.UpdateAccount(accountMgtResource.metadata.name, accountMgtResource)
             planResult.append = { automatedCloudAccount: addedToRule }
           } else {
-            console.error(`Error occurred setting automated ${this.planCloudInfo.accountNoun}, could not find rule with name`, values.automatedCloudAccount)
+            console.error(`Error occurred setting automated ${this.cloudInfo.accountNoun}, could not find rule with name`, values.automatedCloudAccount)
           }
         } else {
           // remove from the existing rule, if one exists
@@ -111,16 +111,16 @@ class ManageClusterPlanForm extends ManagePlanForm {
     return (
       <Card style={{ marginBottom: '20px' }}>
         <Alert
-          message={`Associate with Kore managed ${pluralize(this.planCloudInfo.accountNoun)}`}
-          description={`Make this plan available to teams using Kore managed ${pluralize(this.planCloudInfo.accountNoun)}.`}
+          message={`Associate with Kore managed ${pluralize(this.cloudInfo.accountNoun)}`}
+          description={`Make this plan available to teams using Kore managed ${pluralize(this.cloudInfo.accountNoun)}.`}
           type="info"
           style={{ marginBottom: '20px' }}
         />
-        <Form.Item label={`${this.planCloudInfo.cloud} automated ${this.planCloudInfo.accountNoun}`} validateStatus={this.fieldError('automatedCloudAccount') ? 'error' : ''} help={this.fieldError('automatedCloudAccount') || `Which ${this.planCloudInfo.cloud} automated ${this.planCloudInfo.accountNoun} this plan is associated with`}>
+        <Form.Item label={`${this.cloudInfo.cloud} automated ${this.cloudInfo.accountNoun}`} validateStatus={this.fieldError('automatedCloudAccount') ? 'error' : ''} help={this.fieldError('automatedCloudAccount') || `Which ${this.cloudInfo.cloud} automated ${this.cloudInfo.accountNoun} this plan is associated with`}>
           {form.getFieldDecorator('automatedCloudAccount', {
             initialValue: data && data.automatedCloudAccount && data.automatedCloudAccount.name
           })(
-            <Select placeholder={`${this.planCloudInfo.cloud} automated ${this.planCloudInfo.accountNoun}`} allowClear={this.allowAutomatedProjectSelectionClear()} disabled={this.disableAutomatedProjectSelection()}>
+            <Select placeholder={`${this.cloudInfo.cloud} automated ${this.cloudInfo.accountNoun}`} allowClear={this.allowAutomatedProjectSelectionClear()} disabled={this.disableAutomatedProjectSelection()}>
               {this.state.accountManagement.spec.rules.map(rule => <Option key={rule.name} value={rule.name}>{rule.name} - {rule.description}</Option>)}
             </Select>
           )}
@@ -134,11 +134,11 @@ class ManageClusterPlanForm extends ManagePlanForm {
     return (
       <>
         {data && data.automatedCloudAccount && (
-          <Paragraph>{this.planCloudInfo.cloud} {this.planCloudInfo.accountNoun} automation: <Tooltip overlay={`When using Kore managed ${this.planCloudInfo.cloud} ${pluralize(this.planCloudInfo.accountNoun)}, clusters using this plan will provisioned inside this ${this.planCloudInfo.accountNoun} type.`}><Tag style={{ marginLeft: '10px' }}>{data.automatedCloudAccount.name}</Tag></Tooltip></Paragraph>
+          <Paragraph>{this.cloudInfo.cloud} {this.cloudInfo.accountNoun} automation: <Tooltip overlay={`When using Kore managed ${this.cloudInfo.cloud} ${pluralize(this.cloudInfo.accountNoun)}, clusters using this plan will provisioned inside this ${this.cloudInfo.accountNoun} type.`}><Tag style={{ marginLeft: '10px' }}>{data.automatedCloudAccount.name}</Tag></Tooltip></Paragraph>
         )}
         {displayUnassociatedPlanWarning && (
           <Alert
-            message={`This plan not associated with any ${this.planCloudInfo.cloud} automated ${pluralize(this.planCloudInfo.accountNoun)} and will not be available for teams to use. Set this below or go to ${titleize(this.planCloudInfo.accountNoun)} automation settings to review this.`}
+            message={`This plan not associated with any ${this.cloudInfo.cloud} automated ${pluralize(this.cloudInfo.accountNoun)} and will not be available for teams to use. Set this below or go to ${titleize(this.cloudInfo.accountNoun)} automation settings to review this.`}
             type="warning"
             showIcon
             style={{ marginBottom: '20px' }}

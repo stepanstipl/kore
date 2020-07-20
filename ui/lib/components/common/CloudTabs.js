@@ -28,9 +28,9 @@ class CloudTabs extends React.Component {
         <Tabs.TabPane tab={
           <span id="tab-azure">
             <img src="/static/images/Azure.svg" height="25px" style={{ marginRight: '15px' }} />
-            Microsoft Azure (coming soon)
+            Microsoft Azure
           </span>
-        } disabled key="Azure" />
+        } key="Azure" />
       </Tabs>
     )
   }

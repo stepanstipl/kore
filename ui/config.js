@@ -70,8 +70,27 @@ module.exports = {
     'Azure': 'AKS'
   },
   clusterProviderCloudMap: {
-    'GKE': { cloud: 'GCP', accountNoun: 'project' },
-    'EKS': { cloud: 'AWS', accountNoun: 'account' }
+    'GKE': {
+      cloud: 'GCP',
+      cloudLong: 'Google Cloud Platform',
+      accountNoun: 'project',
+      credentialsIdentifierKey: 'project',
+      credentialsGuidance: 'You must create a Service Account inside your project and add the key in JSON format here.'
+    },
+    'EKS': {
+      cloud: 'AWS',
+      cloudLong: 'Amazon Web Services',
+      accountNoun: 'account',
+      credentialsIdentifierKey: 'accountID',
+      credentialsGuidance: 'You must create an IAM user inside your account and add the access key here.'
+    },
+    'AKS': {
+      cloud: 'Azure',
+      cloudLong: 'Microsoft Azure',
+      accountNoun: 'subscription',
+      credentialsIdentifierKey: 'subscriptionID',
+      credentialsGuidance: 'You must create an Azure Active Directory (AD) service principal with a Contributor role.'
+    },
   },
   cloudAccountAutomation: {
     notprod: {

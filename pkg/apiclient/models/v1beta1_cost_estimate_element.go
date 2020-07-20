@@ -6,8 +6,10 @@ package models
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // V1beta1CostEstimateElement v1beta1 cost estimate element
@@ -16,20 +18,67 @@ import (
 type V1beta1CostEstimateElement struct {
 
 	// max cost
-	MaxCost int64 `json:"maxCost,omitempty"`
+	// Required: true
+	MaxCost *int64 `json:"maxCost"`
 
 	// min cost
-	MinCost int64 `json:"minCost,omitempty"`
+	// Required: true
+	MinCost *int64 `json:"minCost"`
 
 	// name
 	Name string `json:"name,omitempty"`
 
 	// typical cost
-	TypicalCost int64 `json:"typicalCost,omitempty"`
+	// Required: true
+	TypicalCost *int64 `json:"typicalCost"`
 }
 
 // Validate validates this v1beta1 cost estimate element
 func (m *V1beta1CostEstimateElement) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateMaxCost(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateMinCost(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateTypicalCost(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *V1beta1CostEstimateElement) validateMaxCost(formats strfmt.Registry) error {
+
+	if err := validate.Required("maxCost", "body", m.MaxCost); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *V1beta1CostEstimateElement) validateMinCost(formats strfmt.Registry) error {
+
+	if err := validate.Required("minCost", "body", m.MinCost); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *V1beta1CostEstimateElement) validateTypicalCost(formats strfmt.Registry) error {
+
+	if err := validate.Required("typicalCost", "body", m.TypicalCost); err != nil {
+		return err
+	}
+
 	return nil
 }
 

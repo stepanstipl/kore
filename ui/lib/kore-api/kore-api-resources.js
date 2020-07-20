@@ -195,8 +195,9 @@ export default class KoreApiResources {
   team(team) {
     return {
       generateSecretResource: (name, secretType, description, data) => this.generateSecretResource(team, name, secretType, description, data),
-      generateEKSCredentialsResource: (values, secretName) => this.generateEKSCredentialsResource(team, values, secretName),
-      generateGKECredentialsResource: (values, secretName) => this.generateGKECredentialsResource(team, values, secretName),
+      generateEKSCredentialsResource: (resourceName, values, secretName) => this.generateEKSCredentialsResource(team, resourceName, values, secretName),
+      generateGKECredentialsResource: (resourceName, values, secretName) => this.generateGKECredentialsResource(team, resourceName, values, secretName),
+      generateAKSCredentialsResource: (resourceName, values, secretName) => this.generateAKSCredentialsResource(team, resourceName, values, secretName),
       generateGCPOrganizationResource: (values, secretName) => this.generateGCPOrganizationResource(team, values, secretName),
       generateAWSOrganizationResource: (values, secretName) => this.generateAWSOrganizationResource(team, values, secretName),
       generateClusterResource: (user, values, plan, planValues, credentials) => this.generateClusterResource(team, user, values, plan, planValues, credentials),
@@ -224,12 +225,12 @@ export default class KoreApiResources {
     return resource
   }
 
-  generateEKSCredentialsResource(team, values, secretName) {
+  generateEKSCredentialsResource(team, resourceName, values, secretName) {
     const resource = this.newResource({
       type: 'V1alpha1EKSCredentials',
       apiVersion: 'aws.compute.kore.appvia.io/v1alpha1',
       kind: 'EKSCredentials',
-      name: values.name,
+      name: resourceName,
       namespace: team
     })
 
@@ -241,17 +242,36 @@ export default class KoreApiResources {
     return resource
   }
 
-  generateGKECredentialsResource(team, values, secretName) {
+  generateGKECredentialsResource(team, resourceName, values, secretName) {
     const resource = this.newResource({
       type: 'V1alpha1GKECredentials',
       apiVersion: 'gke.compute.kore.appvia.io/v1alpha1',
       kind: 'GKECredentials',
-      name: values.name,
+      name: resourceName,
       namespace: team
     })
 
     const spec = new models.V1alpha1GKECredentialsSpec()
     spec.setProject(values.project)
+    spec.setCredentialsRef(this.newV1SecretReference(secretName, team))
+    resource.setSpec(spec)
+
+    return resource
+  }
+
+  generateAKSCredentialsResource(team, resourceName, values, secretName) {
+    const resource = this.newResource({
+      type: 'V1alpha1AKSCredentials',
+      apiVersion: 'aks.compute.kore.appvia.io/v1alpha1',
+      kind: 'AKSCredentials',
+      name: resourceName,
+      namespace: team
+    })
+
+    const spec = new models.V1alpha1AKSCredentialsSpec()
+    spec.setSubscriptionID(values.subscriptionID)
+    spec.setTenantID(values.tenantID)
+    spec.setClientID(values.clientID)
     spec.setCredentialsRef(this.newV1SecretReference(secretName, team))
     resource.setSpec(spec)
 

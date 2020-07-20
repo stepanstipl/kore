@@ -5502,7 +5502,7 @@
           "application/json"
         ],
         "summary": "Returns a specific GKE Credential to which the team has access",
-        "operationId": "GetGKECredential",
+        "operationId": "GetGKECredentials",
         "parameters": [
           {
             "type": "string",
@@ -5542,7 +5542,7 @@
           "application/json"
         ],
         "summary": "Creates or updates a specific GKE Credential to which the team has access",
-        "operationId": "UpdateGKECredential",
+        "operationId": "UpdateGKECredentials",
         "parameters": [
           {
             "type": "string",
@@ -5591,7 +5591,7 @@
           "application/json"
         ],
         "summary": "Deletes a specific GKE Credential from the team",
-        "operationId": "RemoveGKECredential",
+        "operationId": "DeleteGKECredentials",
         "parameters": [
           {
             "type": "string",
@@ -11885,6 +11885,11 @@
       }
     },
     "v1beta1.CostEstimate": {
+      "required": [
+        "minCost",
+        "typicalCost",
+        "maxCost"
+      ],
       "properties": {
         "costElements": {
           "type": "array",
@@ -11910,6 +11915,11 @@
       }
     },
     "v1beta1.CostEstimateElement": {
+      "required": [
+        "minCost",
+        "typicalCost",
+        "maxCost"
+      ],
       "properties": {
         "maxCost": {
           "type": "integer",

@@ -7,24 +7,24 @@ class GKECredentialsForm extends VerifiedAllocatedResourceForm {
 
   getResource = async metadataName => {
     const api = await KoreApi.client()
-    const gkeCredentialsResult = await api.GetGKECredential(this.props.team, metadataName)
+    const gkeCredentialsResult = await api.GetGKECredentials(this.props.team, metadataName)
     gkeCredentialsResult.allocation = await AllocationHelpers.getAllocationForResource(gkeCredentialsResult)
     return gkeCredentialsResult
   }
 
   putResource = async values => {
     const api = await KoreApi.client()
-    values.name = this.getMetadataName(values)
-    const secretName = values.name
+    const resourceName = this.getMetadataName(values)
+    const secretName = resourceName
     const teamResources = KoreApi.resources().team(this.props.team)
 
     if (!this.props.data || this.state.replaceKey) {
       const secretData = { service_account_key: btoa(values.account) }
       const secretResource = teamResources.generateSecretResource(secretName, 'gke-credentials', `GCP ${values.project} project Service Account`, secretData)
-      await api.UpdateTeamSecret(this.props.team, values.name, secretResource)
+      await api.UpdateTeamSecret(this.props.team, secretName, secretResource)
     }
-    const gkeCredResource = teamResources.generateGKECredentialsResource(values, secretName)
-    const gkeResult = await api.UpdateGKECredential(this.props.team, values.name, gkeCredResource)
+    const gkeCredResource = teamResources.generateGKECredentialsResource(resourceName, values, secretName)
+    const gkeResult = await api.UpdateGKECredentials(this.props.team, values.name, gkeCredResource)
     gkeResult.allocation = await this.storeAllocation(gkeCredResource, values)
     return gkeResult
   }
