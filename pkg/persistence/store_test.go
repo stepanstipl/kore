@@ -24,6 +24,7 @@ import (
 	"os"
 	"sync"
 	"testing"
+	"time"
 
 	. "github.com/appvia/kore/pkg/persistence"
 
@@ -103,9 +104,11 @@ func makeTestStore(t testframework) Interface {
 		}
 	})
 
-	store, err := New(makeTestConfig())
+	// For reasons unknown, circleCI randomly fails with a panic due to a network error
+	// at this step. To get us working again, recover the panic and retry a few times...
+	store, err := newStoreWithRetry(makeTestConfig())
 	if err != nil {
-		t.Fatalf("faild to create a db store: %s", err)
+		t.Fatalf("failed to create a db store: %s", err)
 	}
 
 	once.Do(func() {
@@ -133,6 +136,32 @@ func makeTestStore(t testframework) Interface {
 	return store
 }
 
+func newStoreWithRetry(config Config) (store Interface, err error) {
+	maxRetries := 5
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		store, err = newStore(config)
+		if err == nil {
+			return
+		}
+		if attempt+1 < maxRetries {
+			fmt.Printf("Retrying after error preparing store, attempt %d of %d: %v", attempt, maxRetries, err)
+			time.Sleep(5 * time.Second)
+		}
+	}
+	return
+}
+
+func newStore(config Config) (store Interface, err error) {
+	err = nil
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("Panic initialising store: %v", r)
+		}
+	}()
+	store, err = New(makeTestConfig())
+	return
+}
+
 func TestNewBad(t *testing.T) {
 	store, err := New(Config{Driver: "non"})
 	assert.Error(t, err)
@@ -140,14 +169,14 @@ func TestNewBad(t *testing.T) {
 }
 
 func TestNewOK(t *testing.T) {
-	store, err := New(makeTestConfig())
+	store, err := newStoreWithRetry(makeTestConfig())
 	require.NoError(t, err)
 	require.NotNil(t, store)
 	defer store.Stop()
 }
 
 func TestTeams(t *testing.T) {
-	store, err := New(makeTestConfig())
+	store, err := newStoreWithRetry(makeTestConfig())
 	require.NoError(t, err)
 	require.NotNil(t, store)
 	defer store.Stop()
@@ -155,7 +184,7 @@ func TestTeams(t *testing.T) {
 }
 
 func TestUsers(t *testing.T) {
-	store, err := New(makeTestConfig())
+	store, err := newStoreWithRetry(makeTestConfig())
 	require.NoError(t, err)
 	require.NotNil(t, store)
 	defer store.Stop()
@@ -163,7 +192,7 @@ func TestUsers(t *testing.T) {
 }
 
 func TestAudit(t *testing.T) {
-	store, err := New(makeTestConfig())
+	store, err := newStoreWithRetry(makeTestConfig())
 	require.NoError(t, err)
 	require.NotNil(t, store)
 	defer store.Stop()

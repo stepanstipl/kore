@@ -18,17 +18,11 @@
 : ${CIRCLECI_TOKEN?"Your circle ci token must be set in the environment to trigger jobs"}
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
-ENABLE_GKE_E2E="false"
-ENABLE_EKS_E2E="false"
-ENABLE_AKS_E2E="false"
 
 usage() {
   cat <<EOF
   Usage: $(basename $0)
-  --branch <name>   : the branch to run the e2e on (defaults: ${BRANCH})
-  --enable-gke      : indicates we should run e2e on gke builds (defaults: ${ENABLE_GKE_E2E})
-  --enable-eks      : indicates we should run e2e on eks (defaults: ${ENABLE_EKS_E2E})
-  --enable-aks      : indicates we should run e2e on aks (defaults: ${ENABLE_AKS_E2E})
+  --branch <name>   : the branch to run the build on (defaults: ${BRANCH})
   -h|--help         : display this usage menu
 EOF
   if [[ -n $@ ]]; then
@@ -41,28 +35,18 @@ EOF
 while [[ $# -gt 0 ]]; do
   case "$1" in
   --branch)     BRANCH=${2};         shift 2; ;;
-  --enable-gke) ENABLE_GKE_E2E=true; shift 1; ;;
-  --enable-eks) ENABLE_EKS_E2E=true; shift 1; ;;
-  --enable-aks) ENABLE_AKS_E2E=true; shift 1; ;;
   -h|--help)    usage;                        ;;
   *)                                 shift 1; ;;
   esac
 done
 
-echo "Attempting to trigger the E2E, branch: ${BRANCH}"
-echo "Enable GKE: ${ENABLE_GKE_E2E}"
-echo "Enable EKS: ${ENABLE_EKS_E2E}"
-echo "Enable AKS: ${ENABLE_AKS_E2E}"
+echo "Attempting to trigger the build, branch: ${BRANCH}"
 
 JOB=$(curl -s -u ${CIRCLECI_TOKEN}: -X POST \
   --header "Accept: application/json" \
   --header "Content-Type: application/json" -d "{
     \"branch\": \"${BRANCH}\",
     \"parameters\": {
-      \"enable_e2e\": true,
-      \"enable_gke_e2e\": ${ENABLE_GKE_E2E},
-      \"enable_eks_e2e\": ${ENABLE_EKS_E2E},
-      \"enable_aks_e2e\": ${ENABLE_AKS_E2E}
     }
   }" \
   https://circleci.com/api/v2/project/github/appvia/kore/pipeline)
