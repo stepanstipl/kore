@@ -7,7 +7,7 @@ import { pluralize, titleize } from 'inflect'
 import KoreApi from '../../kore-api'
 import copy from '../../utils/object-copy'
 import ManagePlanForm from './ManagePlanForm'
-import { getProviderCloudInfo } from '../../utils/cloud'
+import { filterCloudAccountList, getProviderCloudInfo } from '../../utils/cloud'
 
 /**
  * ManageClusterPlanForm is for *managing* a cluster plan.
@@ -25,11 +25,15 @@ class ManageClusterPlanForm extends ManagePlanForm {
   async fetchComponentData() {
     const { kind } = this.props
     const api = await KoreApi.client()
-    const [ schema, accountManagementList ] = await Promise.all([
+    const [ schema, accountManagementList, planList ] = await Promise.all([
       api.GetPlanSchema(kind),
-      api.ListAccounts()
+      api.ListAccounts(),
+      api.ListPlans(kind)
     ])
     const accountManagement = accountManagementList.items.find(a => a.spec.provider === this.props.kind)
+    if (accountManagement) {
+      accountManagement.spec.rules = filterCloudAccountList(accountManagement.spec.rules, planList.items)
+    }
     this.setState({
       schema,
       accountManagement,
@@ -61,7 +65,7 @@ class ManageClusterPlanForm extends ManagePlanForm {
               currentRule.plans = currentRule.plans.filter(p => p !== values.name)
             }
             await api.UpdateAccount(accountMgtResource.metadata.name, accountMgtResource)
-            planResult.append = { automatedCloudAccount: addedToRule }
+            planResult.amend = { automatedCloudAccount: addedToRule }
           } else {
             console.error(`Error occurred setting automated ${this.cloudInfo.accountNoun}, could not find rule with name`, values.automatedCloudAccount)
           }
@@ -70,7 +74,7 @@ class ManageClusterPlanForm extends ManagePlanForm {
           if (currentRule) {
             currentRule.plans = currentRule.plans.filter(p => p !== values.name)
             await api.UpdateAccount(accountMgtResource.metadata.name, accountMgtResource)
-            planResult.append = { automatedCloudAccount: false }
+            planResult.amend = { automatedCloudAccount: false }
           }
         }
       }
