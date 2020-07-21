@@ -16,6 +16,7 @@
 
 package eks
 
+//go:generate go run github.com/appvia/kore/cmd/struct-gen Configuration
 const schema = `
 {
 	"$id": "https://appvia.io/kore/schemas/eks/plan.json",
