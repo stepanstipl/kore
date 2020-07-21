@@ -65,9 +65,9 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
         this.setState({
           selectedIndex: -1
         })
-    
+
         this.props.onChange(
-          this.props.name, 
+          this.props.name,
           this.props.value.filter((_, i) => i !== idx)
         )
       }
@@ -80,7 +80,7 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
     }
 
     this.props.onChange(
-      this.props.name, 
+      this.props.name,
       this.props.value.map((ng, i) => i !== idx ? ng : { ...ng, amiType: value, instanceType: null })
     )
   }
@@ -93,7 +93,7 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
     const releaseVersion = !checked ? `${this.props.plan.version}.` : undefined
 
     this.props.onChange(
-      this.props.name, 
+      this.props.name,
       this.props.value.map((ng, i) => i !== idx ? ng : { ...ng, releaseVersion })
     )
   }
@@ -104,7 +104,7 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
     }
 
     this.props.onChange(
-      this.props.name, 
+      this.props.name,
       this.props.value.map((ng, i) => i !== idx ? ng : { ...ng, [property]: value })
     )
   }
@@ -121,7 +121,7 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
     const actions = [
       <a id={`plan_nodegroup_${idx}_viewedit`} key="viewedit" onClick={() => this.viewEditNodeGroup(idx)}><Icon type={editable ? 'edit' : 'eye'}></Icon></a>
     ]
-    
+
     // Only show delete if we have more than one node group
     if (editable && this.props.value && this.props.value.length > 1) {
       actions.push(<a id={`plan_nodegroup_${idx}_del`} key="delete" onClick={() => this.removeNodeGroup(idx)}><Icon type="delete"></Icon></a>)
@@ -154,19 +154,20 @@ export default class PlanOptionEKSNodeGroups extends PlanOptionBase {
           <List id={`${id_prefix}s`} dataSource={valueOrDefault} renderItem={(ng, idx) => {
             return (
               <List.Item actions={this.nodeGroupActions(idx, editable)}>
-                <List.Item.Meta 
-                  title={<a id={`${id_prefix}_${idx}_viewedittitle`} onClick={() => this.viewEditNodeGroup(idx)}>{`Node Group ${idx + 1} (${ng.name})`}</a>} 
-                  description={ng.enableAutoscaler ? 
+                <List.Item.Meta
+                  title={<a id={`${id_prefix}_${idx}_viewedittitle`} onClick={() => this.viewEditNodeGroup(idx)}>{`Node Group ${idx + 1} (${ng.name})`}</a>}
+                  description={ng.enableAutoscaler ?
                     `Size: min=${ng.minSize} initial=${ng.desiredSize} max=${ng.maxSize} | Node type: ${ng.instanceType}`
                     :
                     `Desired Size: ${ng.desiredSize} | Node type: ${ng.instanceType}`
                   }
                 />
-                {!this.hasValidationErrors(`${name}[${idx}]`) ? null : <Alert type="error" message="Validation errors - please edit and resolve" />}
+                {!this.hasValidationErrors(`${name}[${idx}]`, false) ? null : <Alert type="error" message="Validation errors - please edit and resolve" />}
               </List.Item>
             )
           }} />
           {!editable ? null : <Button id={`${id_prefix}_add`} onClick={this.addNodeGroup} disabled={!(plan.region)}>Add node group {plan.region ? null : '(choose region first)'}</Button>}
+          {this.validationErrors(name, true)}
         </Form.Item>
         <Drawer
           title={`Node Group ${selected ? selectedIndex + 1 : ''}`}

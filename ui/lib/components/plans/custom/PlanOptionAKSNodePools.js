@@ -140,12 +140,12 @@ export default class PlanOptionAKSNodePools extends PlanOptionBase {
                     `Size: ${ng.size} | Node type: ${ng.machineType}`
                   }
                 />
-                {!this.hasValidationErrors(`${name}[${idx}]`) ? null : <Alert type="error" message="Validation errors - please edit and resolve" />}
+                {!this.hasValidationErrors(`${name}[${idx}]`, false) ? null : <Alert type="error" message="Validation errors - please edit and resolve" />}
               </List.Item>
             )
           }} />
           {!editable ? null : <Button id={`${id_prefix}_add`} onClick={this.addNodePool} disabled={!(plan.region)}>Add node pool {plan.region ? null : '(choose region first)'}</Button>}
-          {this.validationErrors(name)}
+          {this.validationErrors(name, true)}
         </Form.Item>
         <Drawer
           title={`Node Pool ${selected ? selectedIndex + 1 : ''}`}
