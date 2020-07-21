@@ -32,12 +32,12 @@ type Configuration struct {
 	Description string `json:"description"`
 	// Domain The domain for this cluster.
 	Domain                    string        `json:"domain"`
-	EnableDefaultTrafficBlock bool          `json:"enableDefaultTrafficBlock"`
+	EnableDefaultTrafficBlock bool          `json:"enableDefaultTrafficBlock,omitempty"`
 	EnablePodSecurityPolicy   bool          `json:"enablePodSecurityPolicy,omitempty"`
-	InheritTeamMembers        bool          `json:"inheritTeamMembers"`
+	InheritTeamMembers        bool          `json:"inheritTeamMembers,omitempty"`
 	LinuxProfile              *LinuxProfile `json:"linuxProfile,omitempty"`
 	NetworkPlugin             string        `json:"networkPlugin"`
-	NetworkPolicy             *string       `json:"networkPolicy"`
+	NetworkPolicy             string        `json:"networkPolicy,omitempty"`
 	NodePools                 []NodePool    `json:"nodePools"`
 	PrivateClusterEnabled     bool          `json:"privateClusterEnabled,omitempty"`
 	// Region Geographical location for this cluster
@@ -67,7 +67,7 @@ type NodePool struct {
 	Labels map[string]Label `json:"labels,omitempty"`
 	// MachineType The type of nodes used for this node pool
 	MachineType string `json:"machineType"`
-	// MaxPodsPerNode The maximum number of pods that can be scheduled onto each node of this pool
+	// MaxPodsPerNode The maximum number of pods that can be scheduled onto each node of this pool - if left blank, it will set this automatically based on the machine type
 	MaxPodsPerNode int64 `json:"maxPodsPerNode,omitempty"`
 	// MaxSize The maximum nodes this pool should contain (if auto-scale enabled)
 	MaxSize int64 `json:"maxSize,omitempty"`
