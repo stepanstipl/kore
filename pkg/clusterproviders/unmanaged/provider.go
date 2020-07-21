@@ -17,6 +17,7 @@
 package unmanaged
 
 import (
+	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	"github.com/appvia/kore/pkg/kore"
 )
@@ -46,5 +47,10 @@ func (p Provider) DefaultPlans() []configv1.Plan {
 
 // DefaultPlanPolicy returns with the built-in default plan policy
 func (p Provider) DefaultPlanPolicy() *configv1.PlanPolicy {
+	return nil
+}
+
+// Validate validates a cluster before create/update
+func (p Provider) Validate(ctx kore.Context, cluster *clustersv1.Cluster) error {
 	return nil
 }

@@ -76,6 +76,8 @@ type ClusterProvider interface {
 	DefaultPlans() []configv1.Plan
 	// DefaultPlanPolicy returns with the built-in default plan policy
 	DefaultPlanPolicy() *configv1.PlanPolicy
+	// Validate validates a cluster before create/update
+	Validate(Context, *clustersv1.Cluster) error
 	// SetComponents adds all provider-specific cluster components and updates dependencies if required
 	SetComponents(Context, *clustersv1.Cluster, *ClusterComponents) error
 	// BeforeComponentsUpdate runs after the components are loaded but before updated

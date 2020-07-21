@@ -68,8 +68,11 @@ export default class PlanOptionBase extends React.Component {
     if (!this.props.validationErrors) {
       return null
     }
+
     const dotName = name.replace(/\[([0-9+])\]/g, '.$1')
-    const valErrors = this.props.validationErrors.filter(v => v.field.indexOf(dotName) === 0)
+    const valErrors = this.props.validationErrors.filter(v =>
+      v.field.replace(/^spec\.configuration\./, '') === dotName
+    )
     if (valErrors.length === 0) {
       return null
     }
@@ -78,7 +81,9 @@ export default class PlanOptionBase extends React.Component {
 
   hasValidationErrors = (name) => {
     const dotName = name.replace(/\[([0-9+])\]/g, '.$1')
-    return this.props.validationErrors && this.props.validationErrors.some(v => v.field.indexOf(dotName) === 0)
+    return this.props.validationErrors && this.props.validationErrors.some(v =>
+      v.field.replace(/^spec\.configuration\./, '').indexOf(dotName) === 0
+    )
   }
 
   prepCommonProps = (props, defaultIfNoDefault = undefined) => {

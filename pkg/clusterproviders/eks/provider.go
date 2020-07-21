@@ -17,8 +17,12 @@
 package eks
 
 import (
+	"fmt"
+
+	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/utils/validation"
 )
 
 const Kind = "EKS"
@@ -47,4 +51,26 @@ func (p Provider) DefaultPlans() []configv1.Plan {
 // DefaultPlanPolicy returns with the built-in default plan policy
 func (p Provider) DefaultPlanPolicy() *configv1.PlanPolicy {
 	return &planPolicy
+}
+
+// Validate validates a cluster before create/update
+func (p Provider) Validate(ctx kore.Context, cluster *clustersv1.Cluster) error {
+	config := &Configuration{}
+	if err := cluster.Spec.GetConfiguration(config); err != nil {
+		return err
+	}
+
+	nodeGroupNames := make(map[string]bool, 4)
+	for i, nodeGroup := range config.NodeGroups {
+		if nodeGroupNames[nodeGroup.Name] {
+			return validation.NewError("cluster failed validation").WithFieldErrorf(
+				fmt.Sprintf("spec.configuration.nodeGroups.%d.name", i),
+				validation.MustBeUnique,
+				"duplicate node group name: %q", nodeGroup.Name,
+			)
+		}
+		nodeGroupNames[nodeGroup.Name] = true
+	}
+
+	return nil
 }
