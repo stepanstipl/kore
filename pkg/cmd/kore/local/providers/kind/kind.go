@@ -53,7 +53,7 @@ apiVersion: kind.x-k8s.io/v1alpha4
 kind: Cluster
 nodes:
 - role: control-plane
-  image: kindest/node:v1.15.11@sha256:6cc31f3533deb138792db2c7d1ffc36f7456a06f1db5556ad3b6927641016f50
+  image: kindest/node:v1.16.9@sha256:7175872357bc85847ec4b1aba46ed1d12fa054c83ac7a8a11f5c268957fd5765
   extraPortMappings:
 	{{- if not .DisableUI }}
   - containerPort: 3000
