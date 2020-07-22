@@ -14,13 +14,13 @@
 
     ## Impact
 
-    Not enabled the autoscaling can result in application becoming saturated by
+    Not enabling the autoscaling can result in application becoming saturated by
     runtime demand.
 
   rule: |
     package security
 
-    default msg = "GKE Autoscaling is enabled on all node pools"
+    default msg = "EKS Autoscaling is enabled on all node pools"
 
     plan[msg] {
       input.kind == "Plan"

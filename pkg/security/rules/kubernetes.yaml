@@ -5,8 +5,7 @@
   description: |
     ## Overview
 
-    This rule ensures that a plan specifies narrow (/16 or smaller) IP ranges
-    for the authentication proxy to accept.
+    This rule checks the network filters on the authentication proxy.
 
     ## Details
 
@@ -14,9 +13,6 @@
     running inside that cluster to authenticate access to the cluster. It is
     best practice to restrict the IP address ranges enabled by default on a
     cluster to a known set of IP ranges.
-
-    This rule returns a warning where a plan either does not specify any IP
-    ranges, or specifies any IP range wider than a /16.
 
     ## Impact
 

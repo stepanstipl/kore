@@ -10,12 +10,12 @@
     ## Details
 
     The horizontal pod auto-scaler in GKE allows the control-plane to
-    dynamically scale your replicas bases on the runtime requirements.
+    dynamically scale your replicas based on the runtime requirements.
 
     ## Impact
 
-    Switching the service off services removes the feature for the
-    control plane to manage the replicas based on demand.
+    Switching the HPA off removes the feature for the control plane to
+    manage the replicas based on demand.
 
   rule: |
     package security
@@ -47,7 +47,7 @@
 
     ## Impact
 
-    Switched this feature off reduces the overall security of the cluster.
+    Switching this feature off reduces the overall security of the cluster.
 
   rule: |
     package security
@@ -213,7 +213,7 @@
     ## Impact
 
     Not having this enabled means you may have unschedulable nodes or nodes with
-    health concerned.
+    health issues.
 
   rule: |
     package security
@@ -244,14 +244,15 @@
 
     ## Details
 
-    Although technically possible to change, you should probably retain the
-    same kubernetes sames on nodepools as with controlplane.
+    Although technically possible to change, keeping the node pool version
+    in sync with the control plane is strongly recommended unless you have
+    a concrete reason to run a node pool at a spec.
 
     ## Impact
 
-    There is no major impact created by the rule, it's more best practice to
-    keep the versions inline and allow the controlplane to take care of
-    kubernetes versions.
+    By setting the version explicitly you remove the ability of GKE to
+    automatically update and patch your nodepool.
+
   rule: |
     package security
 
