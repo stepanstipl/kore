@@ -55,6 +55,7 @@ generate-assets:
 	@echo "--> Generating assets"
 	@go generate ./pkg/kore/assets
 	@go generate -tags=dev ./pkg/kore/assets
+	@go generate ./pkg/security
 
 check-generate-assets: generate-assets
 	@if [ $$(git status --porcelain pkg/apiclient | wc -l) -gt 0 ]; then \

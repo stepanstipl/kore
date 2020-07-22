@@ -1,0 +1,37 @@
+---
+- name: EKS Autoscaling
+  code: EKS-AUTO-01
+  status: warning
+  description: |
+    ## Overview
+
+    This rule checks the status of the autoscaling options.
+
+    ## Details
+
+    Autoscaling on EKS permits the control plan to automatically scale the
+    worker nodes in a node pool to meet the required demand.
+
+    ## Impact
+
+    Not enabling the autoscaling can result in application becoming saturated by
+    runtime demand.
+
+  rule: |
+    package security
+
+    default msg = "EKS Autoscaling is enabled on all node pools"
+
+    plan[msg] {
+      input.kind == "Plan"
+      input.spec.kind == "EKS"
+      input.spec.configuration.nodePools[_].enableAutoscaler == false
+      msg := "EKS Autoscaling is disabled on one or more node pools"
+    }
+
+    cluster[msg] {
+      input.kind == "Cluster"
+      input.spec.kind == "EKS"
+      input.spec.configuration.nodePools[_].enableAutoscaler == false
+      msg := "EKS Autoscaling is disable on one or more node pools"
+    }

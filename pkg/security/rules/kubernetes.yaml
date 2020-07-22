@@ -1,0 +1,69 @@
+---
+- name: Auth Proxy IP Ranges
+  code: AUTHIP-01
+  status: warning
+  description: |
+    ## Overview
+
+    This rule checks the network filters on the authentication proxy.
+
+    ## Details
+
+    When Kore creates a Kubernetes cluster, it uses an authentication proxy
+    running inside that cluster to authenticate access to the cluster. It is
+    best practice to restrict the IP address ranges enabled by default on a
+    cluster to a known set of IP ranges.
+
+    ## Impact
+
+    The authentication proxy deployed is secure to be open to the internet,
+    so if necessary it is acceptable to run clusters without restricting the
+    range. However, where possible, the range should be restricted to those IP
+    ranges where your administrators will access the cluster from.
+
+  rule: |
+    package security
+
+    default msg = "All ranges specified checked and compliant"
+
+    plan[msg] {
+      input.kind == "Plan"
+      input.spec.configuration.authProxyAllowedIPs[_] = "0.0.0.0/0"
+      msg := "Authentication Proxy permitted is network range open on plan"
+    }
+
+    cluster[msg] {
+      input.kind == "Cluster"
+      input.spec.configuration.authProxyAllowedIPs[_] = "0.0.0.0/0"
+      msg := "Authentication Proxy permitted is network range open on cluster"
+    }
+
+- name: Default Team Role
+  code: KUBE_ROLES-01
+  status: warning
+  description: |
+    ## Overview
+
+    This rule checks if default team role on the cluster gives too much away.
+
+    ## Details
+
+    The default team role which is inherited by all users to seems very loose
+    and is giving a cluster admin to all team members
+
+    ## Impact
+
+    The default privileges of the team member is very high, we'd suggest
+    changing to 'view'
+
+  rule: |
+    package security
+
+    default msg = "Default team role on recommended setting"
+
+    plan[msg] {
+      input.kind == "Plan"
+      role := input.spec.configuration.defaultTeamRole
+      role != "view"
+      msg := "Default team role not recommended 'view' role"
+    }

@@ -64,7 +64,7 @@ var _ = Describe("/security", func() {
 						if rule.Spec.Code == "AUTHIP-01" {
 							Expect(rule.Spec.Name).To(Equal("Auth Proxy IP Ranges"))
 							Expect(rule.Spec.Description).ToNot(Equal(""))
-							Expect(rule.Spec.AppliesTo).To(Equal([]string{"Plan"}))
+							Expect(rule.Spec.AppliesTo).To(Equal([]string{"Plan", "Cluster"}))
 						}
 					}
 				})
@@ -89,7 +89,7 @@ var _ = Describe("/security", func() {
 					Expect(resp.Payload).To(BeAssignableToTypeOf(&models.V1SecurityRule{}))
 					Expect(resp.Payload.Spec.Name).To(Equal("Auth Proxy IP Ranges"))
 					Expect(resp.Payload.Spec.Description).ToNot(Equal(""))
-					Expect(resp.Payload.Spec.AppliesTo).To(Equal([]string{"Plan"}))
+					Expect(resp.Payload.Spec.AppliesTo).To(Equal([]string{"Plan", "Cluster"}))
 				})
 
 				It("should return 404 if the code does not exist", func() {
