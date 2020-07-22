@@ -9,7 +9,7 @@ export class ConfigureCloudGCPClusterPlans extends ConfigureCloudClusterPlansBas
 
   async openTab() {
     await this.selectCloud('gcp')
-    await this.selectSubTab('Cluster Plans', 'GCP/plans')
+    await this.selectSubTab('Cluster plans', 'GCP/plans')
   }
 
   async populatePlan({ description, name, planDescription, region }) {

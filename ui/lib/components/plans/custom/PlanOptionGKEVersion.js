@@ -1,16 +1,16 @@
 import * as React from 'react'
-import { Form, Typography, Input } from 'antd'
+import { Typography } from 'antd'
 const { Paragraph } = Typography
 
-import PlanOptionBase from '../PlanOptionBase'
+import PlanOptionVersion from './PlanOptionVersion'
 
-export default class PlanOptionGKEVersion extends PlanOptionBase {
+export default class PlanOptionGKEVersion extends PlanOptionVersion {
+
   render() {
-    const { name, editable, property, plan } = this.props
-    const { onChange, displayName, valueOrDefault, id } = this.prepCommonProps(this.props)
+    const releaseChannel = this.props.plan.releaseChannel
 
     // Drop the version control all together if release channel set.
-    if (plan.releaseChannel && plan.releaseChannel !== '') {
+    if (releaseChannel && releaseChannel !== '') {
       return null
     }
 
@@ -23,11 +23,6 @@ export default class PlanOptionGKEVersion extends PlanOptionBase {
       </>
     )
 
-    return (
-      <Form.Item label={displayName} help={help}>
-        <Input id={id} value={valueOrDefault} readOnly={!editable} pattern={property.pattern} onChange={(e) => onChange(name, e.target.value)} />
-        {this.validationErrors(name)}
-      </Form.Item>
-    )
+    return this.renderControl({ help })
   }
 }

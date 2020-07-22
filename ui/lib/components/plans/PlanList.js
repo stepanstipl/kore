@@ -22,7 +22,8 @@ class PlanList extends ResourceList {
 
   infoDescription = {
     GKE: 'These plans define the specification of the clusters that can be created using the Google Kubernetes Engine (GKE) on GCP. These help to give teams an easy way to provision clusters which match the requirements of the organization.',
-    EKS: 'These plans define the specification of the clusters that can be created using the Elastic Kubernetes Service (EKS) on AWS. These help to give teams an easy way to provision clusters which match the requirements of the organization.'
+    EKS: 'These plans define the specification of the clusters that can be created using the Elastic Kubernetes Service (EKS) on AWS. These help to give teams an easy way to provision clusters which match the requirements of the organization.',
+    AKS: 'These plans define the specification of the clusters that can be created using the Azure Kubernetes Service (AKS) on Microsoft Azure. These help to give teams an easy way to provision clusters which match the requirements of the organization.'
   }
 
   async fetchComponentData() {

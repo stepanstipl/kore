@@ -5,6 +5,7 @@ import PlanOptionGKEReleaseChannel from './PlanOptionGKEReleaseChannel'
 import PlanOptionGKEVersion from './PlanOptionGKEVersion'
 import PlanOptionClusterRegion from './PlanOptionClusterRegion'
 import PlanOptionAKSNodePools from './PlanOptionAKSNodePools'
+import PlanOptionVersion from './PlanOptionVersion'
 
 export default class CustomPlanOptionRegistry {
   static controls = {
@@ -20,7 +21,7 @@ export default class CustomPlanOptionRegistry {
           return <PlanOptionGKEReleaseChannel {...props} />
         },
         'version': function version(props) {
-          return <PlanOptionGKEVersion {...props} />
+          return <PlanOptionGKEVersion {...props} expandVersions={true} />
         },
         'region': function region(props) {
           return <PlanOptionClusterRegion {...props} />
@@ -35,6 +36,9 @@ export default class CustomPlanOptionRegistry {
         },
         'region': function region(props) {
           return <PlanOptionClusterRegion {...props} />
+        },
+        'version': function version(props) {
+          return <PlanOptionVersion {...props} expandVersions={true} />
         }
       },
       'AKS': {
@@ -43,6 +47,9 @@ export default class CustomPlanOptionRegistry {
         },
         'region': function region(props) {
           return <PlanOptionClusterRegion {...props} />
+        },
+        'version': function version(props) {
+          return <PlanOptionVersion {...props} />
         }
       }
     }

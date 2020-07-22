@@ -9,7 +9,7 @@ export class ConfigureCloudAzureClusterPlans extends ConfigureCloudClusterPlansB
 
   async openTab() {
     await this.selectCloud('azure')
-    await this.selectSubTab('Cluster Plans', 'Azure/plans')
+    await this.selectSubTab('Cluster plans', 'Azure/plans')
   }
 
   async populatePlan({ description, name, planDescription, region, version, dnsPrefix, networkPlugin }) {
@@ -18,6 +18,8 @@ export class ConfigureCloudAzureClusterPlans extends ConfigureCloudClusterPlansB
     await clearFillTextInput(this.p, 'plan_description', name)
     await clearFillTextInput(this.p, 'plan_input_description', planDescription)
     await clearFillTextInput(this.p, 'plan_input_region', region)
+    // wait for version control to be enabled after selecting the region
+    await this.p.waitForSelector('#plan_input_version.ant-select-disabled', { hidden: true })
     await clearFillTextInput(this.p, 'plan_input_version', version)
     await clearFillTextInput(this.p, 'plan_input_dnsPrefix', dnsPrefix)
     await setSelect(this.p, 'plan_input_networkPlugin', networkPlugin)

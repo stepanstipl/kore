@@ -8,6 +8,6 @@ export class ConfigureCloudAWSClusterPolicies extends ConfigureCloudClusterPolic
 
   async openTab() {
     await this.selectCloud('aws')
-    await this.selectSubTab('Cluster Policies', 'AWS/policies')
+    await this.selectSubTab('Cluster policies', 'AWS/policies')
   }
 }
