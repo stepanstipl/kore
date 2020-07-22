@@ -250,7 +250,7 @@
 
     ## Impact
 
-    By setting the version explicitly you remove the ability of GKE to
+    By setting at a specific version you remove the ability of GKE to
     automatically update and patch your nodepool.
 
   rule: |
