@@ -168,6 +168,7 @@ export default class PlanOptionAKSNodePools extends PlanOptionBase {
 
                   <Form.Item label="Mode" help="Type of the node pool. System node pools serve the primary purpose of hosting critical system pods such as CoreDNS and tunnelfront. User node pools serve the primary purpose of hosting your application pods.">
                     <ConstrainedDropdown id={`${id_prefix}_mode`} allowedValues={modes} value={selected.mode} onChange={(v) => this.setNodePoolProperty(selectedIndex, 'mode', v)} />
+                    {this.validationErrors(`${name}[${selectedIndex}].mode`)}
                   </Form.Item>
 
                   <PlanOption id={`${id_prefix}_version`} {...this.props} displayName="Version" name={`${name}[${selectedIndex}].version`} property={property.items.properties.version} value={selected.version} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'version', v)} />
@@ -195,6 +196,7 @@ export default class PlanOptionAKSNodePools extends PlanOptionBase {
                 <Collapse.Panel key="compute" header="Compute Configuration (image type, machine type, disk size)">
                   <Form.Item label="Image Type" help="The image type used by the nodes">
                     <ConstrainedDropdown id={`${id_prefix}_imageType`} allowedValues={imageTypes} value={selected.imageType} onChange={(v) => this.setNodePoolProperty(selectedIndex, 'imageType', v)} />
+                    {this.validationErrors(`${name}[${selectedIndex}].imageType`)}
                   </Form.Item>
                   <PlanOptionClusterMachineType id={`${id_prefix}_machineType`} {...this.props} displayName="Machine Type" name={`${name}[${selectedIndex}].machineType`} property={property.items.properties.machineType} value={selected.machineType} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'machineType', v )} nodePriceSet={(prices) => this.setState({ prices })} />
                   <PlanOption id={`${id_prefix}_diskSize`} {...this.props} displayName="Instance Root Disk Size (GiB)" name={`${name}[${selectedIndex}].diskSize`} property={property.items.properties.diskSize} value={selected.diskSize} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'diskSize', v)} />
