@@ -537,6 +537,12 @@ spec:
               - azure
               - calico
               type: string
+            tags:
+              additionalProperties:
+                type: string
+              description: Tags is a collection of metadata tags to apply to the Azure
+                resources which make up this cluster
+              type: object
             windowsProfile:
               description: WindowsProfile is the configuration for Windows VMs
               properties:
@@ -910,6 +916,12 @@ spec:
               items:
                 type: string
               type: array
+            tags:
+              additionalProperties:
+                type: string
+              description: Tags is a collection of tags to apply to the AWS resources
+                which make up this cluster
+              type: object
             version:
               description: Version is the Kubernetes version to use
               minLength: 3
@@ -1505,6 +1517,12 @@ spec:
             region:
               description: Region is the AWS region of the VPC and any resources created
               type: string
+            tags:
+              additionalProperties:
+                type: string
+              description: Tags is a collection of tags to apply to the AWS resources
+                which make up this VPC
+              type: object
           required:
           - credentials
           - privateIPV4Cidr
@@ -2270,6 +2288,11 @@ spec:
               description: Plan is the name of the cluster plan which was used to
                 create this cluster
               minLength: 1
+              type: string
+            teamIdentifier:
+              description: TeamIdentifier is the immutable unique identifier for the
+                team that owns this cluster. Assigned by Kore, should not be specified
+                or changed by users.
               type: string
           required:
           - configuration
@@ -6383,7 +6406,8 @@ spec:
             tags:
               additionalProperties:
                 type: string
-              description: Tags is a collection of tags related to the cluster type
+              description: Tags is a collection of tags (resource labels) to apply
+                to the GCP resources which make up this cluster
               type: object
             version:
               description: Version is the kubernetes version which the cluster master

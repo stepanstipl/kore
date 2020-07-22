@@ -38,6 +38,9 @@ type V1alpha1EKSSpec struct {
 	// Required: true
 	SubnetIDs []string `json:"subnetIDs"`
 
+	// tags
+	Tags map[string]string `json:"tags,omitempty"`
+
 	// version
 	Version string `json:"version,omitempty"`
 }

@@ -168,6 +168,7 @@ func (p Provider) BeforeComponentsUpdate(ctx kore.Context, cluster *clustersv1.C
 			}
 			o.Spec.Cluster = cluster.Ownership()
 			o.Spec.Credentials = p.getNewCredentialFromCluster(cluster)
+			clusterproviders.CheckCommonTags(&o.Spec.Tags, cluster)
 
 		case *eksv1alpha1.EKS:
 			if err := kubernetes.PatchSpec(o, config); err != nil {
@@ -180,6 +181,7 @@ func (p Provider) BeforeComponentsUpdate(ctx kore.Context, cluster *clustersv1.C
 			o.Spec.SecurityGroupIDs = vpc.Status.Infra.SecurityGroupIDs
 			o.Spec.SubnetIDs = vpc.Status.Infra.PrivateSubnetIDs
 			o.Spec.SubnetIDs = append(o.Spec.SubnetIDs, vpc.Status.Infra.PublicSubnetIDs...)
+			clusterproviders.CheckCommonTags(&o.Spec.Tags, cluster)
 
 		case *eksv1alpha1.EKSNodeGroup:
 			groupName := strings.TrimPrefix(o.Name, cluster.Name+"-")
@@ -215,6 +217,7 @@ func (p Provider) BeforeComponentsUpdate(ctx kore.Context, cluster *clustersv1.C
 			o.Spec.Credentials = p.getNewCredentialFromCluster(cluster)
 			o.Spec.Region = vpc.Spec.Region
 			o.Spec.Subnets = vpc.Status.Infra.PrivateSubnetIDs
+			clusterproviders.CheckCommonTags(&o.Spec.Tags, cluster)
 
 		case *awsv1alpha1.AWSAccountClaim:
 			// @step: we never touch the aws account object claim under these circumstances

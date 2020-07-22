@@ -218,6 +218,47 @@ func (n *ctrl) EnsureNodeGroup(client *aws.Client, group *eks.EKSNodeGroup) cont
 	}
 }
 
+// EnsureNodeTagging enusres that all nodes that are currently part of the node group have the appropriate
+// tags, as AWS does not push tags down from the node group to the underlying EC2 instances
+func (n *ctrl) EnsureNodeTagging(client *aws.Client, group *eks.EKSNodeGroup) controllers.EnsureFunc {
+	return func(ctx kore.Context) (reconcile.Result, error) {
+		logger := log.WithFields(log.Fields{
+			"name":      group.Name,
+			"namespace": group.Namespace,
+		})
+		logger.Debug("attempting to ensure eks node tagging")
+
+		instances, err := client.ListEKSNodeGroupNodes(group)
+		if err != nil {
+			logger.WithError(err).Error("trying to retrieve list of nodes in node group")
+
+			return reconcile.Result{}, err
+		}
+
+		var instancesToTag []string
+	INSTANCELOOP:
+		for _, i := range instances {
+			for k, v := range group.Spec.Tags {
+				if !client.HasTagWithValue(i, k, v) {
+					logger.WithField("instance", *i.InstanceId).Info("EKS node pool instance requires tagging")
+					instancesToTag = append(instancesToTag, *i.InstanceId)
+					continue INSTANCELOOP
+				}
+			}
+		}
+		if len(instancesToTag) > 0 {
+			err := client.SetEKSNodeGroupNodeTags(instancesToTag, group.Spec.Tags)
+			if err != nil {
+				logger.WithError(err).Error("trying to set tags on nodes in node group")
+
+				return reconcile.Result{}, err
+			}
+		}
+
+		return reconcile.Result{}, nil
+	}
+}
+
 // EnsureDeletionStatus makes sure the resource is set to deleting
 func (n *ctrl) EnsureDeletionStatus(group *eks.EKSNodeGroup) controllers.EnsureFunc {
 	return func(ctx kore.Context) (reconcile.Result, error) {

@@ -49,6 +49,9 @@ type EKSSpec struct {
 	// Credentials is a reference to an EKSCredentials object to use for authentication
 	// +k8s:openapi-gen=false
 	Credentials core.Ownership `json:"credentials"`
+	// Tags is a collection of tags to apply to the AWS resources which make up this cluster
+	// +kubebuilder:validation:Optional
+	Tags map[string]string `json:"tags,omitempty"`
 }
 
 // EKSStatus defines the observed state of EKS cluster

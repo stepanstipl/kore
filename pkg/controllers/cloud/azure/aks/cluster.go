@@ -212,6 +212,13 @@ func (c *clusterComponent) createOrUpdate(
 	client containerservice.ManagedClustersClient,
 	properties *containerservice.ManagedClusterProperties,
 ) error {
+	tags := map[string]*string{
+		"kore.appvia.io:owner": to.StringPtr("true"),
+		"kore.appvia.io:team":  to.StringPtr(c.AKSCluster.Namespace),
+	}
+	for k, v := range c.AKSCluster.Spec.Tags {
+		tags[k] = to.StringPtr(v)
+	}
 	_, err := client.CreateOrUpdate(ctx, resourceGroupName(c.AKSCluster), c.AKSCluster.Name, containerservice.ManagedCluster{
 		ManagedClusterProperties: properties,
 		Identity: &containerservice.ManagedClusterIdentity{
@@ -222,10 +229,7 @@ func (c *clusterComponent) createOrUpdate(
 			Tier: containerservice.Paid,
 		},
 		Location: to.StringPtr(c.AKSCluster.Spec.Location),
-		Tags: map[string]*string{
-			"kore.appvia.io:owner": to.StringPtr("true"),
-			"kore.appvia.io:team":  to.StringPtr(c.AKSCluster.Namespace),
-		},
+		Tags:     tags,
 	})
 	return err
 }
@@ -522,6 +526,10 @@ func (c *clusterComponent) setAgentPoolProfile(
 	}
 	if nodepool.MaxPods > 0 {
 		profile.MaxPods = to.Int32Ptr(int32(nodepool.MaxPods))
+	}
+
+	if len(profile.Tags) > 0 || len(c.AKSCluster.Spec.Tags) > 0 {
+		profile.Tags = *to.StringMapPtr(c.AKSCluster.Spec.Tags)
 	}
 }
 

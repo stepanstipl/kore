@@ -7938,6 +7938,9 @@
         },
         "plan": {
           "type": "string"
+        },
+        "teamIdentifier": {
+          "type": "string"
         }
       }
     },
@@ -8705,8 +8708,8 @@
     },
     "v1.OptionalSecretKeySelector": {
       "required": [
-        "name",
-        "key"
+        "key",
+        "name"
       ],
       "properties": {
         "key": {
@@ -9728,11 +9731,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
+        "issuer",
+        "clientScopes",
         "userClaims",
         "clientID",
-        "clientSecret",
-        "issuer",
-        "clientScopes"
+        "clientSecret"
       ],
       "properties": {
         "clientID": {
@@ -10233,6 +10236,12 @@
         },
         "networkPolicy": {
           "type": "string"
+        },
+        "tags": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "windowsProfile": {
           "$ref": "#/definitions/v1alpha1.WindowsProfile"
@@ -10816,6 +10825,12 @@
             "type": "string"
           }
         },
+        "tags": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
         "version": {
           "type": "string"
         }
@@ -10912,6 +10927,12 @@
         },
         "region": {
           "type": "string"
+        },
+        "tags": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       }
     },

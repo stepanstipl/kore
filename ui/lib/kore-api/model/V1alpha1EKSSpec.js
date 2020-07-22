@@ -72,6 +72,9 @@ class V1alpha1EKSSpec {
             if (data.hasOwnProperty('subnetIDs')) {
                 obj['subnetIDs'] = ApiClient.convertToType(data['subnetIDs'], ['String']);
             }
+            if (data.hasOwnProperty('tags')) {
+                obj['tags'] = ApiClient.convertToType(data['tags'], {'String': 'String'});
+            }
             if (data.hasOwnProperty('version')) {
                 obj['version'] = ApiClient.convertToType(data['version'], 'String');
             }
@@ -158,6 +161,19 @@ class V1alpha1EKSSpec {
         this['subnetIDs'] = subnetIDs;
     }
 /**
+     * @return {Object.<String, String>}
+     */
+    getTags() {
+        return this.tags;
+    }
+
+    /**
+     * @param {Object.<String, String>} tags
+     */
+    setTags(tags) {
+        this['tags'] = tags;
+    }
+/**
      * @return {String}
      */
     getVersion() {
@@ -202,6 +218,11 @@ V1alpha1EKSSpec.prototype['securityGroupIDs'] = undefined;
  * @member {Array.<String>} subnetIDs
  */
 V1alpha1EKSSpec.prototype['subnetIDs'] = undefined;
+
+/**
+ * @member {Object.<String, String>} tags
+ */
+V1alpha1EKSSpec.prototype['tags'] = undefined;
 
 /**
  * @member {String} version

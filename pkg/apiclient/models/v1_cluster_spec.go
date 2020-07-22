@@ -35,6 +35,9 @@ type V1ClusterSpec struct {
 	// plan
 	// Required: true
 	Plan *string `json:"plan"`
+
+	// team identifier
+	TeamIdentifier string `json:"teamIdentifier,omitempty"`
 }
 
 // Validate validates this v1 cluster spec

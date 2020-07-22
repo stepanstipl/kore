@@ -19,6 +19,7 @@ package aks
 import (
 	aksv1alpha1 "github.com/appvia/kore/pkg/apis/aks/v1alpha1"
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	"github.com/appvia/kore/pkg/clusterproviders"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -77,6 +78,7 @@ func (p Provider) BeforeComponentsUpdate(ctx kore.Context, cluster *clustersv1.C
 			if config.NetworkPolicy != "" {
 				o.Spec.NetworkPolicy = utils.StringPtr(config.NetworkPolicy)
 			}
+			clusterproviders.CheckCommonTags(&o.Spec.Tags, cluster)
 		}
 	}
 

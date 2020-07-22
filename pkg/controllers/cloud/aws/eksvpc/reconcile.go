@@ -105,14 +105,17 @@ func (t *eksvpcCtrl) Reconcile(request reconcile.Request) (reconcile.Result, err
 			return reconcile.Result{Requeue: true}, nil
 		}
 		logger.Info("Found EKSCredential")
-
+		tags := map[string]string{
+			aws.TagKoreManaged: "true",
+		}
+		for k, v := range resource.Spec.Tags {
+			tags[k] = v
+		}
 		client, err := aws.NewVPCClient(*credentials, aws.VPC{
 			CidrBlock: resource.Spec.PrivateIPV4Cidr,
 			Name:      resource.Name,
 			Region:    resource.Spec.Region,
-			Tags: map[string]string{
-				aws.TagKoreManaged: "true",
-			},
+			Tags:      tags,
 		})
 		if err != nil {
 			resource.Status.Conditions.SetCondition(core.Component{

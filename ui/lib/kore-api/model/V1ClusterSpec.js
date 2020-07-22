@@ -71,6 +71,9 @@ class V1ClusterSpec {
             if (data.hasOwnProperty('plan')) {
                 obj['plan'] = ApiClient.convertToType(data['plan'], 'String');
             }
+            if (data.hasOwnProperty('teamIdentifier')) {
+                obj['teamIdentifier'] = ApiClient.convertToType(data['teamIdentifier'], 'String');
+            }
         }
         return obj;
     }
@@ -140,6 +143,19 @@ class V1ClusterSpec {
     setPlan(plan) {
         this['plan'] = plan;
     }
+/**
+     * @return {String}
+     */
+    getTeamIdentifier() {
+        return this.teamIdentifier;
+    }
+
+    /**
+     * @param {String} teamIdentifier
+     */
+    setTeamIdentifier(teamIdentifier) {
+        this['teamIdentifier'] = teamIdentifier;
+    }
 
 }
 
@@ -167,6 +183,11 @@ V1ClusterSpec.prototype['kind'] = undefined;
  * @member {String} plan
  */
 V1ClusterSpec.prototype['plan'] = undefined;
+
+/**
+ * @member {String} teamIdentifier
+ */
+V1ClusterSpec.prototype['teamIdentifier'] = undefined;
 
 
 
