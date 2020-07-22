@@ -137,6 +137,13 @@ func (t *teamsImpl) Delete(ctx context.Context, name string, o ...DeleteOptionFu
 		return err
 	}
 
+	if teamRecord.Identifier != "" {
+		if err := t.persistenceMgr.Teams().MarkTeamIdentityDeleted(ctx, teamRecord.Identifier); err != nil {
+			log.WithError(err).Error("trying to mark team identity as deleted in kore")
+			return fmt.Errorf("error marking team identity as deleted: %w", err)
+		}
+	}
+
 	return t.Store().Client().Delete(ctx, store.DeleteOptions.From(team))
 }
 

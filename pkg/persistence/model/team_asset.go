@@ -52,5 +52,5 @@ type TeamAsset struct {
 	// CreatedAt is the timestamp of record creation
 	CreatedAt time.Time `sql:"DEFAULT:current_timestamp"`
 	// DeletedAt is the timestamp the asset was deleted from Kore, null if the asset still exists
-	DeletedAt time.Time `sql:"DEFAULT:null"`
+	DeletedAt *time.Time `sql:"DEFAULT:null"`
 }

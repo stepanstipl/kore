@@ -44,10 +44,14 @@ type ClusterComponent interface {
 // ClusterSpec defines the desired state of a cluster
 // +k8s:openapi-gen=true
 type ClusterSpec struct {
-	// Identifier is the immutable unique identifier for this cluster. Assigned by Kore, should not be specified or changed by users.
+	// Identifier is the immutable unique identifier for this cluster. This should be left blank for a new cluster (Kore will auto-assign a new value)
+	// or populated with the identifier of a previously-deleted cluster which this cluster replaces. No other values permitted, and read-only after
+	// the cluster is created.
 	// +kubebuilder:validation:Optional
 	Identifier string `json:"identifier,omitempty"`
-	// TeamIdentifier is the immutable unique identifier for the team that owns this cluster. Assigned by Kore, should not be specified or changed by users.
+	// TeamIdentifier is the immutable unique identifier for the team that owns this cluster. This should be left blank (Kore will auto-populate with
+	// the correct identifier for the team) or populated with the team's identifier. No other values permitted, and read-only after the cluster is
+	// created.
 	// +kubebuilder:validation:Optional
 	TeamIdentifier string `json:"teamIdentifier,omitempty"`
 	// Kind refers to the cluster type (e.g. GKE, EKS)

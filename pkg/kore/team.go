@@ -119,7 +119,8 @@ func (t *tmImpl) ServiceCredentials() ServiceCredentials {
 
 func (t *tmImpl) Assets() TeamAssets {
 	return &teamAssetsImpl{
-		team:         t.team,
-		teamsPersist: t.hubImpl.Persist().Teams(),
+		team:    t.team,
+		teams:   t.hubImpl.Teams(),
+		persist: t.hubImpl.Persist(),
 	}
 }

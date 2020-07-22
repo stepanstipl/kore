@@ -125,6 +125,12 @@ func (c *clustersImpl) Delete(ctx context.Context, name string, o ...DeleteOptio
 		return nil, err
 	}
 
+	if original.Spec.Identifier != "" {
+		if err := c.hubImpl.Teams().Team(c.team).Assets().MarkAssetDeleted(ctx, original.Spec.Identifier); err != nil {
+			return nil, fmt.Errorf("error marking asset as deleted: %w", err)
+		}
+	}
+
 	return original, c.Store().Client().Delete(ctx, append(opts.StoreOptions(), store.DeleteOptions.From(original))...)
 }
 
@@ -205,18 +211,13 @@ func (c *clustersImpl) Update(ctx context.Context, cluster *clustersv1.Cluster) 
 			verr.AddFieldErrorf("plan", validation.ReadOnly, "can not be changed after a cluster was created")
 		}
 		if existing.Spec.Identifier != cluster.Spec.Identifier {
-			verr.AddFieldErrorf("identifier", validation.ReadOnly, "assigned by Kore, leave blank for new cluster or keep existing value")
+			verr.AddFieldErrorf("identifier", validation.ReadOnly, "assigned by Kore, keep existing value")
 		}
 		if existing.Spec.TeamIdentifier != cluster.Spec.TeamIdentifier {
-			verr.AddFieldErrorf("teamIdentifier", validation.ReadOnly, "assigned by Kore, leave blank for new cluster or keep existing value")
+			verr.AddFieldErrorf("teamIdentifier", validation.ReadOnly, "assigned by Kore, keep existing value")
 		}
 		if verr.HasErrors() {
 			return verr
-		}
-	} else {
-		if cluster.Spec.Identifier != "" {
-			return validation.NewError("cluster has failed validation").
-				WithFieldError("identifier", validation.ReadOnly, "assigned by Kore, leave blank for new cluster or keep existing value")
 		}
 	}
 
@@ -238,22 +239,8 @@ func (c *clustersImpl) Update(ctx context.Context, cluster *clustersv1.Cluster) 
 			WithFieldError("name", validation.MaxLength, "must be 40 characters or less")
 	}
 
-	// Assign an identifier to this cluster if one hasn't been assigned
-	if cluster.Spec.Identifier == "" {
-		var err error
-		cluster.Spec.Identifier, err = c.hubImpl.Teams().Team(c.team).Assets().GenerateAssetIdentifier(ctx, orgv1.TeamAssetTypeCluster, cluster.Name)
-		if err != nil {
-			return err
-		}
-	}
-	// Look up team identifier if not provided
-	if cluster.Spec.TeamIdentifier == "" {
-		var err error
-		team, err := c.hubImpl.Teams().Get(ctx, c.team)
-		if err != nil {
-			return fmt.Errorf("error loading team metadata to apply identifier to cluster: %w", err)
-		}
-		cluster.Spec.TeamIdentifier = team.Spec.Identifier
+	if err := c.validateIdentifiers(ctx, cluster, existing == nil); err != nil {
+		return err
 	}
 
 	if err := c.validateConfiguration(ctx, cluster); err != nil {
@@ -272,6 +259,46 @@ func (c *clustersImpl) Update(ctx context.Context, cluster *clustersv1.Cluster) 
 		store.UpdateOptions.To(cluster),
 		store.UpdateOptions.WithCreate(true),
 	)
+}
+
+func (c *clustersImpl) validateIdentifiers(ctx context.Context, cluster *clustersv1.Cluster, isNewCluster bool) error {
+	assets := c.hubImpl.Teams().Team(c.team).Assets()
+
+	// @step: Validate / assign team identifier
+	var err error
+	var valid bool
+	valid, cluster.Spec.TeamIdentifier, err = assets.CheckTeamIdentifier(ctx, cluster.Spec.TeamIdentifier)
+	if err != nil {
+		return err
+	}
+	if !valid {
+		return validation.NewError("cluster has failed validation").
+			WithFieldError("teamIdentifier", validation.InvalidValue, "leave blank to have kore auto-populate or set to correct team ID")
+	}
+
+	// @step: If this is a new cluster and an identifier has been supplied, check valid for re-use
+	if isNewCluster && cluster.Spec.Identifier != "" {
+		valid, err := assets.ReuseAssetIdentifier(ctx, cluster.Spec.Identifier, orgv1.TeamAssetTypeCluster, cluster.Name)
+		if err != nil {
+			return err
+		}
+		if !valid {
+			return validation.NewError("cluster has failed validation").
+				WithFieldError("identifier", validation.InvalidValue, "assigned by Kore, leave blank or set to a previous cluster ID owned by your team for new cluster")
+		}
+	}
+
+	// @step: Assign an identifier to this cluster if needed (new cluster or existing
+	// cluster created before we assigned identifiers)
+	if cluster.Spec.Identifier == "" {
+		var err error
+		cluster.Spec.Identifier, err = assets.GenerateAssetIdentifier(ctx, orgv1.TeamAssetTypeCluster, cluster.Name)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // validateAccounting is responsible for checking if accounting
