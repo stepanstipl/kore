@@ -92,7 +92,8 @@ const schema = `
 						"type": "string",
 						"pattern": "^[a-z][-a-z0-9]{0,38}[a-z0-9]$",
 						"description": "Name of this node pool. Must be unique within the cluster.",
-						"immutable": true
+						"immutable": true,
+						"identifier": true
 					},
 					"enableAutoupgrade": {
 						"type": "boolean",

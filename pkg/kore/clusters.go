@@ -183,6 +183,12 @@ func (c *clustersImpl) Get(ctx context.Context, name string) (*clustersv1.Cluste
 
 // Update is used to update the cluster
 func (c *clustersImpl) Update(ctx context.Context, cluster *clustersv1.Cluster) error {
+	provider, ok := GetClusterProvider(cluster.Spec.Kind)
+	if !ok {
+		return validation.NewError("cluster has failed validation").
+			WithFieldError("kind", validation.InvalidValue, "not supported")
+	}
+
 	existing, err := c.Get(ctx, cluster.Name)
 	if err != nil && err != ErrNotFound {
 		return err
@@ -226,7 +232,7 @@ func (c *clustersImpl) Update(ctx context.Context, cluster *clustersv1.Cluster) 
 			WithFieldError("name", validation.MaxLength, "must be 40 characters or less")
 	}
 
-	if err := c.validateConfiguration(ctx, cluster); err != nil {
+	if err := c.validateConfiguration(ctx, provider, cluster, existing); err != nil {
 		return err
 	}
 
@@ -338,7 +344,9 @@ func (c *clustersImpl) validateCredentials(ctx context.Context, cluster *cluster
 	return nil
 }
 
-func (c *clustersImpl) validateConfiguration(ctx context.Context, cluster *clustersv1.Cluster) error {
+func (c *clustersImpl) validateConfiguration(
+	ctx context.Context, provider ClusterProvider, cluster, existing *clustersv1.Cluster,
+) error {
 	plan, err := c.plans.Get(ctx, cluster.Spec.Plan)
 	if err != nil {
 		if err == ErrNotFound {
@@ -364,16 +372,11 @@ func (c *clustersImpl) validateConfiguration(ctx context.Context, cluster *clust
 		return fmt.Errorf("failed to parse cluster configuration values: %s", err)
 	}
 
-	clusterProvider, exists := GetClusterProvider(cluster.Spec.Kind)
-	if !exists {
-		return fmt.Errorf("unknown cluster provider type %q", cluster.Spec.Kind)
-	}
-
-	if err := jsonschema.Validate(clusterProvider.PlanJSONSchema(), cluster.Name, clusterConfig); err != nil {
+	if err := jsonschema.Validate(provider.PlanJSONSchema(), cluster.Name, clusterConfig); err != nil {
 		return err
 	}
 
-	if err := clusterProvider.Validate(NewContext(ctx, log.StandardLogger(), c.Store().RuntimeClient(), c), cluster); err != nil {
+	if err := provider.Validate(NewContext(ctx, log.StandardLogger(), c.Store().RuntimeClient(), c), cluster); err != nil {
 		return err
 	}
 
@@ -391,6 +394,19 @@ func (c *clustersImpl) validateConfiguration(ctx context.Context, cluster *clust
 			}
 		}
 	}
+
+	if existing != nil {
+		if err := jsonschema.ValidateImmutableProperties(
+			provider.PlanJSONSchema(),
+			"cluster",
+			"spec.configuration",
+			existing.Spec.Configuration.Raw,
+			cluster.Spec.Configuration.Raw,
+		); err != nil {
+			return err
+		}
+	}
+
 	if verr.HasErrors() {
 		return verr
 	}
