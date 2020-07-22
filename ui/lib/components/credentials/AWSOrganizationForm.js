@@ -1,8 +1,9 @@
 import * as React from 'react'
 import VerifiedAllocatedResourceForm from '../resources/VerifiedAllocatedResourceForm'
 import KoreApi from '../../kore-api'
-import { Checkbox, Form, Input, Alert, Card, Select } from 'antd'
+import { Checkbox, Form, Input, Alert, Card, Select, Typography } from 'antd'
 const { Option } = Select
+const { Paragraph } = Typography
 import AllocationHelpers from '../../utils/allocation-helpers'
 
 class AWSOrganizationForm extends VerifiedAllocatedResourceForm {
@@ -60,30 +61,41 @@ class AWSOrganizationForm extends VerifiedAllocatedResourceForm {
       <>
         <Card style={{ marginBottom: '20px' }}>
           <Alert
-            message="AWS Organization details"
-            description="Retrieve these values from your AWS organization. Providing these gives Kore the ability to create Accounts for teams within the AWS organization. Teams will then be able to provision clusters within their Accounts."
+            message="AWS Organization Access"
             type="info"
+            description={
+              <>
+                <Paragraph>
+                  Kore can create AWS accounts within your AWS Organization as required for teams.
+                </Paragraph>
+                <Paragraph>
+                  See <a target="_blank" rel="noopener noreferrer" style={{ textDecoration:'underline' }} href="https://docs.appvia.io/kore/guide/admin/aws_accounting/#1-pre-requisites">AWS Account Management pre-requisites</a>.
+                </Paragraph>
+                <Paragraph>
+                  Providing these details grants Kore the ability to create Accounts for teams within the AWS organization. Teams will then be able to provision clusters within their Accounts.
+                </Paragraph>
+                <Paragraph>
+                  See <a target="_blank" rel="noopener noreferrer" style={{ textDecoration:'underline' }} href="https://docs.appvia.io/kore/guide/admin/aws_accounting/#aws-account-factory-access">AWS Account Factory Access</a> for how to obtain suitable access details below.
+                </Paragraph>
+              </>
+            }
             style={{ marginBottom: '20px' }}
           />
-          <Form.Item label="Organization Unit name" validateStatus={this.fieldError('ouName') ? 'error' : ''} help={this.fieldError('ouName') || 'The name of the parent Organizational Unit (OU) to use for provisioning accounts'}>
-            {form.getFieldDecorator('ouName', {
-              rules: [{ required: true, message: 'Please enter the Organization Unit name!' }],
-              initialValue: (data && data.spec.ouName) || 'Custom'
+          <Form.Item label="Region" validateStatus={this.fieldError('region') ? 'error' : ''} help={this.fieldError('region') || 'The region where AWS Control Tower is enabled in the master account'}>
+            {form.getFieldDecorator('region', {
+              rules: [{ required: true, message: 'Please enter the region where Control Tower is enabled!' }],
+              initialValue: data && data.spec.region
             })(
               <Select>
-                <Option value="Custom">Custom</Option>
+                <Option value="us-east-1">us-east-1 (Northern Virginia)</Option>
+                <Option value="us-east-2">us-east-2 (Ohio)</Option>
+                <Option value="us-west-2">us-west-2 (Oregon)</Option>
+                <Option value="eu-west-1">eu-west-1 (Ireland)</Option>
+                <Option value="ap-southeast-2">ap-southeast-2 (Sydney)</Option>
               </Select>,
             )}
           </Form.Item>
-          <Form.Item label="Region" validateStatus={this.fieldError('region') ? 'error' : ''} help={this.fieldError('region') || 'The region where Control Tower is enabled in the master account'}>
-            {form.getFieldDecorator('region', {
-              rules: [{ required: true, message: 'Please enter the region!' }],
-              initialValue: data && data.spec.region
-            })(
-              <Input placeholder="Region" />,
-            )}
-          </Form.Item>
-          <Form.Item label="Role ARN" validateStatus={this.fieldError('roleARN') ? 'error' : ''} help={this.fieldError('roleARN') || 'The role to assume when provisioning accounts'}>
+          <Form.Item label="Role ARN" validateStatus={this.fieldError('roleARN') ? 'error' : ''} help={this.fieldError('roleARN') || 'The role to assume when provisioning accounts.'}>
             {form.getFieldDecorator('roleARN', {
               rules: [{ required: true, message: 'Please enter the role ARN!' }],
               initialValue: data && data.spec.roleARN
@@ -126,18 +138,49 @@ class AWSOrganizationForm extends VerifiedAllocatedResourceForm {
             </>
 
           ) : null}
-
         </Card>
-
 
         <Card style={{ marginBottom: '20px' }}>
           <Alert
-            message="SSO User"
-            description="The user who will be the organisational account owner for all Kore provisioned accounts."
+            message="AWS Organization Details"
+            description="Kore needs to know where to create AWS Accounts in the AWS Organisation"
             type="info"
             style={{ marginBottom: '20px' }}
           />
 
+          <Form.Item label="Organization Unit name" validateStatus={this.fieldError('ouName') ? 'error' : ''} help={this.fieldError('ouName') || 'The name of the parent Organizational Unit (OU) to use for provisioning accounts'}>
+            {form.getFieldDecorator('ouName', {
+              rules: [{ required: true, message: 'Please select the Organization Unit name!' }],
+              initialValue: (data && data.spec.ouName) || 'Custom'
+            })(
+              <Select>
+                <Option value="Custom">Custom</Option>
+              </Select>,
+            )}
+          </Form.Item>
+        </Card>
+
+        <Card style={{ marginBottom: '20px' }}>
+          <Alert
+            message="SSO User"
+            type="info"
+            description={
+              <>
+                <Paragraph>
+                  The organization account owner for all Kore provisioned accounts.
+                </Paragraph>
+                <Paragraph>
+                  See <a target="_blank" rel="noopener noreferrer" style={{ textDecoration:'underline' }} href="https://docs.appvia.io/kore/guide/admin/aws_accounting/#sso-user-for-aws-account-administration">SSO User for AWS Account Administration</a> for more details.
+                </Paragraph>
+              </>
+            }
+          />
+          <Alert
+            message="The user will have root access to accounts created and a secure email address owned by the organization is required."
+            type="warning"
+            showIcon
+            style={{ marginBottom: '20px', marginTop: '5px' }}
+          />
           <Form.Item label="First name" validateStatus={this.fieldError('ssoUserFirstName') ? 'error' : ''} help={this.fieldError('ssoUserFirstName') || ''}>
             {form.getFieldDecorator('ssoUserFirstName', {
               rules: [{ required: true, message: 'Please enter the first name!' }],
