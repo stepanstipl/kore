@@ -240,13 +240,13 @@
   description: |
     ## Overview
 
-    This rule checks the status of nodepool versions
+    This rule checks the status of nodepool version.
 
     ## Details
 
     Although technically possible to change, keeping the node pool version
     in sync with the control plane is strongly recommended unless you have
-    a concrete reason to run a node pool at a spec.
+    a concrete reason to run a node pool at a specific version.
 
     ## Impact
 
