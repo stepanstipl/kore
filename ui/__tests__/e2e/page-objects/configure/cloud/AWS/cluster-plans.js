@@ -9,7 +9,7 @@ export class ConfigureCloudAWSClusterPlans extends ConfigureCloudClusterPlansBas
 
   async openTab() {
     await this.selectCloud('aws')
-    await this.selectSubTab('Cluster Plans', 'AWS/plans')
+    await this.selectSubTab('Cluster plans', 'AWS/plans')
   }
 
   async populatePlan({ description, name, planDescription, region, version }) {
@@ -18,6 +18,8 @@ export class ConfigureCloudAWSClusterPlans extends ConfigureCloudClusterPlansBas
     await clearFillTextInput(this.p, 'plan_description', name)
     await clearFillTextInput(this.p, 'plan_input_description', planDescription)
     await setCascader(this.p, 'plan_input_region', region)
+    // wait for version control to be enabled after selecting the region
+    await this.p.waitForSelector('#plan_input_version.ant-select-disabled', { hidden: true })
     await clearFillTextInput(this.p, 'plan_input_version', version)
   }
 

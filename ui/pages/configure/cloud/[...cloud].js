@@ -78,10 +78,10 @@ export default class ConfigureCloudPage extends React.Component {
               <Tabs.TabPane tab="Project automation" key="project_automation">
                 <CloudAccountAutomationSettings provider="GKE" cloudOrgsApiMethod="ListGCPOrganizations" cloud="GCP" accountNoun="project" />
               </Tabs.TabPane>
-              <Tabs.TabPane tab="Cluster Plans" key="plans">
+              <Tabs.TabPane tab="Cluster plans" key="plans">
                 <PlanList kind="GKE" />
               </Tabs.TabPane>
-              <Tabs.TabPane tab="Cluster Policies" key="policies">
+              <Tabs.TabPane tab="Cluster policies" key="policies">
                 <PolicyList kind="GKE"/>
               </Tabs.TabPane>
             </Tabs>
@@ -97,14 +97,14 @@ export default class ConfigureCloudPage extends React.Component {
               <Tabs.TabPane tab="Account automation" key="account-automation">
                 <CloudAccountAutomationSettings provider="EKS" cloudOrgsApiMethod="ListAWSOrganizations" cloud="AWS" accountNoun="account" />
               </Tabs.TabPane>
-              <Tabs.TabPane tab="Cluster Plans" key="plans">
+              <Tabs.TabPane tab="Cluster plans" key="plans">
                 <PlanList kind="EKS" />
               </Tabs.TabPane>
-              <Tabs.TabPane tab="Cluster Policies" key="policies">
+              <Tabs.TabPane tab="Cluster policies" key="policies">
                 <PolicyList kind="EKS" />
               </Tabs.TabPane>
               {!featureEnabled(KoreFeatures.SERVICES) ? null :
-                <Tabs.TabPane tab="Cloud Services" key="services">
+                <Tabs.TabPane tab="Cloud services" key="services">
                   <CloudServiceAdmin cloud="AWS" />
                 </Tabs.TabPane>
               }
@@ -115,10 +115,10 @@ export default class ConfigureCloudPage extends React.Component {
               <Tabs.TabPane tab="Subscription credentials" key="subscriptions">
                 <CredentialsList provider="AKS" />
               </Tabs.TabPane>
-              <Tabs.TabPane tab="Cluster Plans" key="plans">
+              <Tabs.TabPane tab="Cluster plans" key="plans">
                 <PlanList kind="AKS" />
               </Tabs.TabPane>
-              <Tabs.TabPane tab="Cluster Policies" key="policies">
+              <Tabs.TabPane tab="Cluster policies" key="policies">
                 <PolicyList kind="AKS" />
               </Tabs.TabPane>
             </Tabs>
