@@ -219,33 +219,8 @@ func (h hubImpl) Setup(ctx context.Context) error {
 		}
 	}
 
-	// @step: Ensure all clusters have identities
-	teams, err := h.Teams().List(getAdminContext(ctx))
-	if err != nil {
-		log.Errorf("error getting team list: %v", err)
+	if err := h.ensureTeamsAndClustersIdentified(ctx); err != nil {
 		return err
-	}
-	for _, team := range teams.Items {
-		if team.Name == "kore-admin" {
-			continue
-		}
-		teamClusters, err := h.Teams().Team(team.Name).Clusters().List(getAdminContext(ctx))
-		if err != nil {
-			log.Errorf("error getting cluster list for team %s: %v", team.Name, err)
-			return err
-		}
-		for _, teamCluster := range teamClusters.Items {
-			if teamCluster.Spec.Identifier == "" {
-				logger := log.WithField("team", team.Name).WithField("cluster", teamCluster.Name)
-				logger.Infof("assigning identifiers for cluster %s in team %s", teamCluster.Name, team.Name)
-				// the standard update assigns missing identifiers, so just run that:
-				if err := h.Teams().Team(team.Name).Clusters().Update(getAdminContext(ctx), &teamCluster); err != nil {
-					// Warn but continue if this fails - don't want to bork startup because of e.g. a validation
-					// rule changing or similar.
-					logger.Warnf("error updating cluster %s for team %s: %v", teamCluster.Name, team.Name, err)
-				}
-			}
-		}
 	}
 
 	return nil
@@ -376,5 +351,74 @@ func (h hubImpl) ensureHubIDPClientExists(ctx context.Context) error {
 	}
 	log.Info("API server OIDC client configured in IDP broker")
 
+	return nil
+}
+
+func (h hubImpl) ensureTeamsAndClustersIdentified(ctx context.Context) error {
+	teams, err := h.Teams().List(getAdminContext(ctx))
+	if err != nil {
+		log.Errorf("error getting team list: %v", err)
+		return err
+	}
+
+	for _, team := range teams.Items {
+		// @step: check team has identifier, assigning if needed
+		teamlog := log.WithField("team", team.Name)
+		if team.Labels[LabelTeamIdentifier] == "" {
+			teamlog.Info("assigning new identifier to team")
+			_, team.Labels[LabelTeamIdentifier], err = h.Teams().Team(team.Name).Assets().EnsureTeamIdentifier(getAdminContext(ctx), "")
+			if err != nil {
+				teamlog.Errorf("error assigning identifier to team: %v", err)
+				return err
+			}
+		}
+
+		// @step: check clusters owned by team all have identifiers
+		teamClusters, err := h.Teams().Team(team.Name).Clusters().List(getAdminContext(ctx))
+		if err != nil {
+			teamlog.Errorf("error getting cluster list for team: %v", err)
+			return err
+		}
+		for _, teamCluster := range teamClusters.Items {
+			cluster := (&teamCluster).DeepCopy()
+			updated := false
+			logger := teamlog.WithField("cluster", cluster.Name)
+
+			if cluster.Labels[LabelTeamIdentifier] == "" {
+				logger.Info("setting team identifier for cluster")
+				if cluster.Labels == nil {
+					cluster.Labels = map[string]string{}
+				}
+				cluster.Labels[LabelTeamIdentifier] = team.Labels[LabelTeamIdentifier]
+				updated = true
+			}
+
+			if cluster.Labels[LabelClusterIdentifier] == "" {
+				logger.Info("assigning cluster identifier")
+
+				if cluster.Labels == nil {
+					cluster.Labels = map[string]string{}
+				}
+				cluster.Labels[LabelClusterIdentifier], err = h.Teams().Team(team.Name).Assets().GenerateAssetIdentifier(ctx, orgv1.TeamAssetTypeCluster, cluster.Name)
+				if err != nil {
+					logger.Errorf("error generating identifier for team cluster: %v", err)
+					return err
+				}
+				updated = true
+			}
+
+			if updated {
+				logger.Debugf("persisting cluster after identifiers assigned - team: %s cluster: %s", cluster.Labels[LabelTeamIdentifier], cluster.Labels[LabelClusterIdentifier])
+				err = h.Store().Client().Update(
+					getAdminContext(ctx),
+					store.UpdateOptions.To(cluster),
+				)
+				if err != nil {
+					logger.Errorf("error updating team cluster: %v", err)
+					return err
+				}
+			}
+		}
+	}
 	return nil
 }

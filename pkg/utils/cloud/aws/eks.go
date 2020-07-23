@@ -206,7 +206,8 @@ func (c *Client) Update(ctx context.Context) (bool, error) {
 
 	// @step: Check cluster tags
 	tagsUpdate := &awseks.TagResourceInput{
-		Tags: map[string]*string{},
+		Tags:        map[string]*string{},
+		ResourceArn: state.Arn,
 	}
 	for k, v := range c.cluster.Spec.Tags {
 		if *state.Tags[k] != v {
@@ -214,7 +215,7 @@ func (c *Client) Update(ctx context.Context) (bool, error) {
 		}
 	}
 	if len(tagsUpdate.Tags) > 0 {
-		logger.Debug("eks cluster tagging needs updating, attempting to sync")
+		logger.Info("eks cluster tagging needs updating, attempting to sync")
 
 		if _, err := c.svc.TagResourceWithContext(ctx, tagsUpdate); err != nil {
 			return false, err

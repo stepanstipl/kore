@@ -21,9 +21,6 @@ type V1TeamSpec struct {
 	// Required: true
 	Description *string `json:"description"`
 
-	// identifier
-	Identifier string `json:"identifier,omitempty"`
-
 	// summary
 	// Required: true
 	Summary *string `json:"summary"`

@@ -236,16 +236,22 @@ func (t *teamsImpl) Update(ctx context.Context, team *orgv1.Team) (*orgv1.Team, 
 	}
 
 	// @step: ensure team has a globally-unique identifier and assign one if not
-	if found && team.Spec.Identifier == "" && existingTeam.Identifier != "" {
+	if found && team.Labels[LabelTeamIdentifier] == "" && existingTeam.Identifier != "" {
 		// Populate with current identifier if empty identifier specified.
-		team.Spec.Identifier = existingTeam.Identifier
+		if team.Labels == nil {
+			team.Labels = map[string]string{}
+		}
+		team.Labels[LabelTeamIdentifier] = existingTeam.Identifier
 	}
-	if found && team.Spec.Identifier != existingTeam.Identifier {
+	if found && team.Labels[LabelTeamIdentifier] != existingTeam.Identifier {
 		return nil, ErrNotAllowed{message: "Identifier is assigned by Kore and cannot be changed"}
 	}
 	// Still empty? Need to generate and assign an identifier to this team
-	if team.Spec.Identifier == "" {
-		team.Spec.Identifier, err = t.GenerateTeamIdentifier(ctx, team.Name)
+	if team.Labels[LabelTeamIdentifier] == "" {
+		if team.Labels == nil {
+			team.Labels = map[string]string{}
+		}
+		team.Labels[LabelTeamIdentifier], err = t.GenerateTeamIdentifier(ctx, team.Name)
 		if err != nil {
 			logger.WithError(err).Error("trying to assign team identifier")
 

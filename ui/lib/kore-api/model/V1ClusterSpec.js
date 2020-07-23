@@ -62,17 +62,11 @@ class V1ClusterSpec {
             if (data.hasOwnProperty('credentials')) {
                 obj['credentials'] = V1Ownership.constructFromObject(data['credentials']);
             }
-            if (data.hasOwnProperty('identifier')) {
-                obj['identifier'] = ApiClient.convertToType(data['identifier'], 'String');
-            }
             if (data.hasOwnProperty('kind')) {
                 obj['kind'] = ApiClient.convertToType(data['kind'], 'String');
             }
             if (data.hasOwnProperty('plan')) {
                 obj['plan'] = ApiClient.convertToType(data['plan'], 'String');
-            }
-            if (data.hasOwnProperty('teamIdentifier')) {
-                obj['teamIdentifier'] = ApiClient.convertToType(data['teamIdentifier'], 'String');
             }
         }
         return obj;
@@ -107,19 +101,6 @@ class V1ClusterSpec {
 /**
      * @return {String}
      */
-    getIdentifier() {
-        return this.identifier;
-    }
-
-    /**
-     * @param {String} identifier
-     */
-    setIdentifier(identifier) {
-        this['identifier'] = identifier;
-    }
-/**
-     * @return {String}
-     */
     getKind() {
         return this.kind;
     }
@@ -143,19 +124,6 @@ class V1ClusterSpec {
     setPlan(plan) {
         this['plan'] = plan;
     }
-/**
-     * @return {String}
-     */
-    getTeamIdentifier() {
-        return this.teamIdentifier;
-    }
-
-    /**
-     * @param {String} teamIdentifier
-     */
-    setTeamIdentifier(teamIdentifier) {
-        this['teamIdentifier'] = teamIdentifier;
-    }
 
 }
 
@@ -170,11 +138,6 @@ V1ClusterSpec.prototype['configuration'] = undefined;
 V1ClusterSpec.prototype['credentials'] = undefined;
 
 /**
- * @member {String} identifier
- */
-V1ClusterSpec.prototype['identifier'] = undefined;
-
-/**
  * @member {String} kind
  */
 V1ClusterSpec.prototype['kind'] = undefined;
@@ -183,11 +146,6 @@ V1ClusterSpec.prototype['kind'] = undefined;
  * @member {String} plan
  */
 V1ClusterSpec.prototype['plan'] = undefined;
-
-/**
- * @member {String} teamIdentifier
- */
-V1ClusterSpec.prototype['teamIdentifier'] = undefined;
 
 
 

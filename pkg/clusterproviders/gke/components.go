@@ -74,7 +74,7 @@ func (p Provider) BeforeComponentsUpdate(ctx kore.Context, cluster *clustersv1.C
 			}
 
 			o.Spec.Cluster = cluster.Ownership()
-			clusterproviders.CheckCommonTags(&o.Spec.Tags, cluster)
+			clusterproviders.SetCommonTags(&o.Spec.Tags, cluster)
 
 			switch clusterproviders.IsAccountManaged(cluster.Spec.Credentials) {
 			case true:

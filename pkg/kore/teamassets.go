@@ -28,10 +28,10 @@ import (
 
 // TeamAssets represents the interface to managing team assets.
 type TeamAssets interface {
-	// CheckTeamIdentifier validates and/or assigns a team identifier - if suppliedTeamIdentifier is non-empty,
+	// EnsureTeamIdentifier validates and/or assigns a team identifier - if suppliedTeamIdentifier is non-empty,
 	// it is checked against the team's current identifier and the return indicates whether the identifier is
-	// valid. If the team has no identifier one will be assigned and returned if no identifier is supplied.
-	CheckTeamIdentifier(ctx context.Context, suppliedTeamIdentifier string) (valid bool, assignedTeamIdentifier string, err error)
+	// valid. If the team has no identifier one will be assigned and returned.
+	EnsureTeamIdentifier(ctx context.Context, suppliedTeamIdentifier string) (valid bool, assignedTeamIdentifier string, err error)
 	// GenerateAssetIdentifier generates a new asset identifier and records it as owned by this team
 	GenerateAssetIdentifier(ctx context.Context, assetType orgv1.TeamAssetType, assetName string) (string, error)
 	// ReuseAssetIdentifier verifies that the supplied identifier is a previously-deleted asset for this
@@ -76,13 +76,13 @@ func (t *teamAssetsImpl) lookupTeamIdentifier(ctx context.Context, assign bool) 
 	return t.teamIdentifier, nil
 }
 
-func (t *teamAssetsImpl) CheckTeamIdentifier(ctx context.Context, suppliedTeamIdentifier string) (valid bool, assignedTeamIdentifier string, err error) {
+func (t *teamAssetsImpl) EnsureTeamIdentifier(ctx context.Context, suppliedTeamIdentifier string) (valid bool, assignedTeamIdentifier string, err error) {
 	valid = false
 	// @step: Check if team has an identifier, and assign one if not
 	if assignedTeamIdentifier, err = t.lookupTeamIdentifier(ctx, true); err != nil {
 		return
 	}
-	// @step: Validate supplied identifier matches the assigned one
+	// @step: Validate any supplied identifier matches the assigned one
 	if suppliedTeamIdentifier != "" && suppliedTeamIdentifier != assignedTeamIdentifier {
 		return
 	}

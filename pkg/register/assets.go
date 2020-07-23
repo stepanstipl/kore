@@ -2276,13 +2276,6 @@ spec:
               - namespace
               - version
               type: object
-            identifier:
-              description: Identifier is the immutable unique identifier for this
-                cluster. This should be left blank for a new cluster (Kore will auto-assign
-                a new value) or populated with the identifier of a previously-deleted
-                cluster which this cluster replaces. No other values permitted, and
-                read-only after the cluster is created.
-              type: string
             kind:
               description: Kind refers to the cluster type (e.g. GKE, EKS)
               minLength: 1
@@ -2291,13 +2284,6 @@ spec:
               description: Plan is the name of the cluster plan which was used to
                 create this cluster
               minLength: 1
-              type: string
-            teamIdentifier:
-              description: TeamIdentifier is the immutable unique identifier for the
-                team that owns this cluster. This should be left blank (Kore will
-                auto-populate with the correct identifier for the team) or populated
-                with the team's identifier. No other values permitted, and read-only
-                after the cluster is created.
               type: string
           required:
           - configuration
@@ -7177,10 +7163,6 @@ spec:
           properties:
             description:
               description: Description is a description for the team
-              type: string
-            identifier:
-              description: Identifier is the immutable unique identifier for this
-                team. Assigned by Kore, should not be specified or updated by users.
               type: string
             summary:
               description: Summary is a summary name for this team

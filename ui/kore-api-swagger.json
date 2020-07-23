@@ -7619,8 +7619,8 @@
     },
     "kore.ServicePlanDetails": {
       "required": [
-        "kind",
         "summary",
+        "kind",
         "editableParams"
       ],
       "properties": {
@@ -7930,16 +7930,10 @@
         "credentials": {
           "$ref": "#/definitions/v1.Ownership"
         },
-        "identifier": {
-          "type": "string"
-        },
         "kind": {
           "type": "string"
         },
         "plan": {
-          "type": "string"
-        },
-        "teamIdentifier": {
           "type": "string"
         }
       }
@@ -8708,8 +8702,8 @@
     },
     "v1.OptionalSecretKeySelector": {
       "required": [
-        "key",
-        "name"
+        "name",
+        "key"
       ],
       "properties": {
         "key": {
@@ -9948,9 +9942,6 @@
       ],
       "properties": {
         "description": {
-          "type": "string"
-        },
-        "identifier": {
           "type": "string"
         },
         "summary": {

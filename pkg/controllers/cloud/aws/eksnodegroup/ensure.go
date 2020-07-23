@@ -236,13 +236,12 @@ func (n *ctrl) EnsureNodeTagging(client *aws.Client, group *eks.EKSNodeGroup) co
 		}
 
 		var instancesToTag []string
-	INSTANCELOOP:
 		for _, i := range instances {
 			for k, v := range group.Spec.Tags {
 				if !client.HasTagWithValue(i, k, v) {
 					logger.WithField("instance", *i.InstanceId).Info("EKS node pool instance requires tagging")
 					instancesToTag = append(instancesToTag, *i.InstanceId)
-					continue INSTANCELOOP
+					break
 				}
 			}
 		}

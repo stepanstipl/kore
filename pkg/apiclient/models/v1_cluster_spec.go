@@ -25,9 +25,6 @@ type V1ClusterSpec struct {
 	// Required: true
 	Credentials *V1Ownership `json:"credentials"`
 
-	// identifier
-	Identifier string `json:"identifier,omitempty"`
-
 	// kind
 	// Required: true
 	Kind *string `json:"kind"`
@@ -35,9 +32,6 @@ type V1ClusterSpec struct {
 	// plan
 	// Required: true
 	Plan *string `json:"plan"`
-
-	// team identifier
-	TeamIdentifier string `json:"teamIdentifier,omitempty"`
 }
 
 // Validate validates this v1 cluster spec

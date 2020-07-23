@@ -54,9 +54,6 @@ class V1TeamSpec {
             if (data.hasOwnProperty('description')) {
                 obj['description'] = ApiClient.convertToType(data['description'], 'String');
             }
-            if (data.hasOwnProperty('identifier')) {
-                obj['identifier'] = ApiClient.convertToType(data['identifier'], 'String');
-            }
             if (data.hasOwnProperty('summary')) {
                 obj['summary'] = ApiClient.convertToType(data['summary'], 'String');
             }
@@ -80,19 +77,6 @@ class V1TeamSpec {
 /**
      * @return {String}
      */
-    getIdentifier() {
-        return this.identifier;
-    }
-
-    /**
-     * @param {String} identifier
-     */
-    setIdentifier(identifier) {
-        this['identifier'] = identifier;
-    }
-/**
-     * @return {String}
-     */
     getSummary() {
         return this.summary;
     }
@@ -110,11 +94,6 @@ class V1TeamSpec {
  * @member {String} description
  */
 V1TeamSpec.prototype['description'] = undefined;
-
-/**
- * @member {String} identifier
- */
-V1TeamSpec.prototype['identifier'] = undefined;
 
 /**
  * @member {String} summary

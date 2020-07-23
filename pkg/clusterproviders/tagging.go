@@ -18,18 +18,19 @@ package clusterproviders
 
 import (
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
+	"github.com/appvia/kore/pkg/kore"
 )
 
-// CheckCommonTags ensures that the common tags (such as team and cluster identifiers)
+// SetCommonTags ensures that the common tags (such as team and cluster identifiers)
 // are set on the provided tag map
-func CheckCommonTags(tags *map[string]string, cluster *clustersv1.Cluster) {
+func SetCommonTags(tags *map[string]string, cluster *clustersv1.Cluster) {
 	if *tags == nil {
 		*tags = map[string]string{}
 	}
-	if cluster.Spec.TeamIdentifier != "" {
-		(*tags)["kore-team"] = cluster.Spec.TeamIdentifier
+	if cluster.Labels[kore.LabelTeamIdentifier] != "" {
+		(*tags)["kore-team"] = cluster.Labels[kore.LabelTeamIdentifier]
 	}
-	if cluster.Spec.Identifier != "" {
-		(*tags)["kore-cluster"] = cluster.Spec.Identifier
+	if cluster.Labels[kore.LabelClusterIdentifier] != "" {
+		(*tags)["kore-cluster"] = cluster.Labels[kore.LabelClusterIdentifier]
 	}
 }

@@ -78,7 +78,7 @@ func (p Provider) BeforeComponentsUpdate(ctx kore.Context, cluster *clustersv1.C
 			if config.NetworkPolicy != "" {
 				o.Spec.NetworkPolicy = utils.StringPtr(config.NetworkPolicy)
 			}
-			clusterproviders.CheckCommonTags(&o.Spec.Tags, cluster)
+			clusterproviders.SetCommonTags(&o.Spec.Tags, cluster)
 		}
 	}
 
