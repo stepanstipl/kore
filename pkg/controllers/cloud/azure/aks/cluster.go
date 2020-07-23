@@ -19,18 +19,21 @@ package aks
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
 
-	aksv1alpha1 "github.com/appvia/kore/pkg/apis/aks/v1alpha1"
-	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-	"github.com/appvia/kore/pkg/controllers/helpers"
-	"github.com/appvia/kore/pkg/kore"
-	"github.com/appvia/kore/pkg/utils/jsonutils"
+	"github.com/appvia/kore/pkg/utils"
 
 	"github.com/Azure/azure-sdk-for-go/services/containerservice/mgmt/2020-06-01/containerservice"
 	"github.com/Azure/go-autorest/autorest/to"
+	aksv1alpha1 "github.com/appvia/kore/pkg/apis/aks/v1alpha1"
+	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
+	"github.com/appvia/kore/pkg/controllers"
+	"github.com/appvia/kore/pkg/controllers/helpers"
+	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/utils/jsonutils"
 	"gopkg.in/yaml.v2"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -39,6 +42,7 @@ type clusterComponent struct {
 	AKSCluster    *aksv1alpha1.AKS
 	CACertificate *string
 	ClientToken   *string
+	helper        *helpers.AKSHelper
 }
 
 func newClusterComponent(aks *aksv1alpha1.AKS, caCertificate, clientToken *string) *clusterComponent {
@@ -46,6 +50,7 @@ func newClusterComponent(aks *aksv1alpha1.AKS, caCertificate, clientToken *strin
 		AKSCluster:    aks,
 		CACertificate: caCertificate,
 		ClientToken:   clientToken,
+		helper:        helpers.NewAKSHelper(aks),
 	}
 }
 
@@ -54,9 +59,7 @@ func (c *clusterComponent) ComponentName() string {
 }
 
 func (c *clusterComponent) Reconcile(ctx kore.Context) (reconcile.Result, error) {
-	helper := helpers.NewAKSHelper(c.AKSCluster)
-
-	client, err := helper.CreateClustersClient(ctx)
+	client, err := c.helper.CreateClustersClient(ctx)
 	if err != nil {
 		return reconcile.Result{}, fmt.Errorf("failed to create AKS API client: %w", err)
 	}
@@ -74,13 +77,13 @@ func (c *clusterComponent) Reconcile(ctx kore.Context) (reconcile.Result, error)
 
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 	} else {
-		updated, res, err := c.update(ctx, client, existing)
+		updating, res, err := c.update(ctx, client, existing)
 
 		if err != nil || res.Requeue || res.RequeueAfter > 0 {
 			return res, err
 		}
 
-		if updated {
+		if updating {
 			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 		}
 	}
@@ -97,26 +100,61 @@ func (c *clusterComponent) Reconcile(ctx kore.Context) (reconcile.Result, error)
 
 		c.AKSCluster.Status.CACertificate = *c.CACertificate
 
+		ready, err := c.checkNodePoolStates(ctx)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		if !ready {
+			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+		}
+
 		return reconcile.Result{}, nil
+	case "Failed", "Canceled":
+		return reconcile.Result{}, controllers.NewCriticalError(fmt.Errorf("failed to provision cluster, state was %s", to.String(existing.ProvisioningState)))
 	default:
 		ctx.Logger().WithField("provisioningState", to.String(existing.ProvisioningState)).Debug("current state of the AKS cluster")
 		return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 	}
 }
 
-func (c *clusterComponent) setProperties(properties containerservice.ManagedClusterProperties) containerservice.ManagedClusterProperties {
-	var agentPoolProfiles []containerservice.ManagedClusterAgentPoolProfile
-	for _, agentPoolProfile := range c.AKSCluster.Spec.AgentPoolProfiles {
-		agentPoolProfiles = append(agentPoolProfiles, c.setAgentPoolProfile(agentPoolProfile, properties))
+func (c *clusterComponent) checkNodePoolStates(ctx kore.Context) (ready bool, _ error) {
+	agentPoolsClient, err := c.helper.CreateAgentPoolsClient(ctx)
+	if err != nil {
+		return false, err
 	}
 
+	res, err := agentPoolsClient.List(ctx, resourceGroupName(c.AKSCluster), c.AKSCluster.Name)
+	if err != nil {
+		return false, err
+	}
+
+	ready = true
+	for _, agentPool := range res.Values() {
+		switch to.String(agentPool.ProvisioningState) {
+		case "Succeeded":
+			continue
+		case "Failed", "Canceled":
+			return false, controllers.NewCriticalError(fmt.Errorf(
+				"failed to provision node pool %q, state was %s",
+				to.String(agentPool.Name),
+				to.String(agentPool.ProvisioningState),
+			))
+		default:
+			ctx.Logger().WithField("provisioningState", to.String(agentPool.ProvisioningState)).Debugf("current state of the %q AKS node pool", *agentPool.Name)
+			ready = false
+		}
+	}
+
+	return ready, nil
+}
+
+func (c *clusterComponent) setProperties(properties *containerservice.ManagedClusterProperties) {
 	if properties.APIServerAccessProfile == nil {
 		properties.APIServerAccessProfile = &containerservice.ManagedClusterAPIServerAccessProfile{}
 	}
 	properties.APIServerAccessProfile.AuthorizedIPRanges = to.StringSlicePtr(c.AKSCluster.Spec.AuthorizedIPRanges)
 	properties.APIServerAccessProfile.EnablePrivateCluster = to.BoolPtr(c.AKSCluster.Spec.EnablePrivateCluster)
 
-	properties.AgentPoolProfiles = &agentPoolProfiles
 	properties.DNSPrefix = to.StringPtr(c.AKSCluster.Spec.DNSPrefix)
 	properties.EnableRBAC = to.BoolPtr(true)
 	properties.KubernetesVersion = to.StringPtr(c.AKSCluster.Spec.KubernetesVersion)
@@ -132,12 +170,13 @@ func (c *clusterComponent) setProperties(properties containerservice.ManagedClus
 	properties.EnablePodSecurityPolicy = to.BoolPtr(c.AKSCluster.Spec.EnablePodSecurityPolicy)
 
 	if c.AKSCluster.Spec.LinuxProfile != nil {
-		if properties.LinuxProfile == nil {
-			properties.LinuxProfile = &containerservice.LinuxProfile{}
+		linuxProfile := containerservice.LinuxProfile{}
+		if properties.LinuxProfile != nil {
+			linuxProfile = *properties.LinuxProfile // make a copy
 		}
 
 		if c.AKSCluster.Spec.LinuxProfile.AdminUsername != "" {
-			properties.LinuxProfile.AdminUsername = to.StringPtr(c.AKSCluster.Spec.LinuxProfile.AdminUsername)
+			linuxProfile.AdminUsername = to.StringPtr(c.AKSCluster.Spec.LinuxProfile.AdminUsername)
 		}
 
 		var publicKeys []containerservice.SSHPublicKey
@@ -145,25 +184,27 @@ func (c *clusterComponent) setProperties(properties containerservice.ManagedClus
 			publicKeys = append(publicKeys, containerservice.SSHPublicKey{KeyData: to.StringPtr(publicKey)})
 		}
 		if len(publicKeys) > 0 {
-			properties.LinuxProfile.SSH = &containerservice.SSHConfiguration{PublicKeys: &publicKeys}
+			linuxProfile.SSH = &containerservice.SSHConfiguration{PublicKeys: &publicKeys}
 		}
+
+		properties.LinuxProfile = &linuxProfile
 	}
 
 	if c.AKSCluster.Spec.WindowsProfile != nil {
-		if properties.WindowsProfile == nil {
-			properties.WindowsProfile = &containerservice.ManagedClusterWindowsProfile{}
+		windowsProfile := containerservice.ManagedClusterWindowsProfile{}
+		if properties.WindowsProfile != nil {
+			windowsProfile = *properties.WindowsProfile // make a copy
 		}
 
 		if c.AKSCluster.Spec.WindowsProfile.AdminUsername != "" {
-			properties.WindowsProfile.AdminUsername = to.StringPtr(c.AKSCluster.Spec.WindowsProfile.AdminUsername)
+			windowsProfile.AdminUsername = to.StringPtr(c.AKSCluster.Spec.WindowsProfile.AdminUsername)
 		}
 
 		if c.AKSCluster.Spec.WindowsProfile.AdminPassword != "" {
-			properties.WindowsProfile.AdminPassword = to.StringPtr(c.AKSCluster.Spec.WindowsProfile.AdminPassword)
+			windowsProfile.AdminPassword = to.StringPtr(c.AKSCluster.Spec.WindowsProfile.AdminPassword)
 		}
+		properties.WindowsProfile = &windowsProfile
 	}
-
-	return properties
 }
 
 func (c *clusterComponent) createOrUpdate(
@@ -190,7 +231,16 @@ func (c *clusterComponent) createOrUpdate(
 }
 
 func (c *clusterComponent) create(ctx kore.Context, client containerservice.ManagedClustersClient) (reconcile.Result, error) {
-	properties := c.setProperties(containerservice.ManagedClusterProperties{})
+	properties := containerservice.ManagedClusterProperties{}
+	c.setProperties(&properties)
+
+	var agentPoolProfiles []containerservice.ManagedClusterAgentPoolProfile
+	for _, agentPoolProfile := range c.AKSCluster.Spec.AgentPoolProfiles {
+		profile := containerservice.ManagedClusterAgentPoolProfile{}
+		c.setAgentPoolProfile(agentPoolProfile, &profile)
+		agentPoolProfiles = append(agentPoolProfiles, profile)
+	}
+	properties.AgentPoolProfiles = &agentPoolProfiles
 
 	if err := c.createOrUpdate(ctx, client, &properties); err != nil {
 		return reconcile.Result{}, fmt.Errorf("failed to create AKS cluster: %w", err)
@@ -201,25 +251,128 @@ func (c *clusterComponent) create(ctx kore.Context, client containerservice.Mana
 
 func (c *clusterComponent) update(
 	ctx kore.Context, client containerservice.ManagedClustersClient, existing *containerservice.ManagedCluster,
-) (bool, reconcile.Result, error) {
-	updatedProperties := c.setProperties(*existing.ManagedClusterProperties)
+) (updating bool, _ reconcile.Result, _ error) {
+	properties := *existing.ManagedClusterProperties
+	c.setProperties(&properties)
 
-	diff, err := jsonutils.Diff(*existing.ManagedClusterProperties, updatedProperties)
+	diff, err := jsonutils.Diff(*existing.ManagedClusterProperties, properties)
 	if err != nil {
 		return false, reconcile.Result{}, fmt.Errorf("failed to compare cluster properties: %w", err)
 	}
 
-	if bytes.Equal(diff, []byte("{}")) {
-		return false, reconcile.Result{}, nil
+	if !bytes.Equal(diff, []byte("{}")) {
+		ctx.Logger().WithField("diff", string(diff)).Debug("updating the AKS cluster")
+
+		if err := c.createOrUpdate(ctx, client, &properties); err != nil {
+			return true, reconcile.Result{}, fmt.Errorf("failed to update the AKS cluster: %w", err)
+		}
+
+		updating = true
 	}
 
-	ctx.Logger().WithField("diff", string(diff)).Debug("updating the AKS cluster")
-
-	if err := c.createOrUpdate(ctx, client, &updatedProperties); err != nil {
-		return true, reconcile.Result{}, fmt.Errorf("failed to update the AKS cluster: %w", err)
+	agentPoolsClient, err := c.helper.CreateAgentPoolsClient(ctx)
+	if err != nil {
+		return false, reconcile.Result{}, err
 	}
 
-	return true, reconcile.Result{}, nil
+	for _, profile := range c.AKSCluster.Spec.AgentPoolProfiles {
+		profileUpdating, err := c.createOrUpdateAgentPoolProfile(ctx, agentPoolsClient, profile, *existing.ManagedClusterProperties)
+		if err != nil {
+			return updating, reconcile.Result{}, err
+		}
+		updating = updating || profileUpdating
+	}
+
+	// Check for deleted nodepools
+	for _, existingProfile := range *existing.ManagedClusterProperties.AgentPoolProfiles {
+		found := func() bool {
+			for _, profile := range c.AKSCluster.Spec.AgentPoolProfiles {
+				if to.String(existingProfile.Name) == profile.Name {
+					return true
+				}
+			}
+			return false
+		}()
+		if !found {
+			updating = true
+			if err := c.deleteAgentPoolProfile(ctx, agentPoolsClient, to.String(existingProfile.Name)); err != nil {
+				return updating, reconcile.Result{}, fmt.Errorf("failed to delete %q node pool: %w", to.String(existingProfile.Name), err)
+			}
+		}
+	}
+
+	return updating, reconcile.Result{}, nil
+}
+
+func (c *clusterComponent) createOrUpdateAgentPoolProfile(
+	ctx kore.Context, client containerservice.AgentPoolsClient,
+	aksNodePool aksv1alpha1.AgentPoolProfile, properties containerservice.ManagedClusterProperties,
+) (updating bool, _ error) {
+	var existing *containerservice.ManagedClusterAgentPoolProfile
+	var profile containerservice.ManagedClusterAgentPoolProfile
+	var needsUpdate bool
+
+	if properties.AgentPoolProfiles != nil {
+		for _, p := range *properties.AgentPoolProfiles {
+			if to.String(p.Name) == aksNodePool.Name {
+				existing = &p
+				break
+			}
+		}
+	}
+
+	if existing == nil {
+		profile = containerservice.ManagedClusterAgentPoolProfile{}
+		c.setAgentPoolProfile(aksNodePool, &profile)
+		needsUpdate = true
+	} else {
+		// Do not update the node pool while it's in a transient state
+		if utils.Contains(to.String(existing.ProvisioningState), []string{"Creating", "Updating", "Scaling"}) {
+			return true, nil
+		}
+
+		profile = *existing
+		c.setAgentPoolProfile(aksNodePool, &profile)
+
+		if to.Bool(profile.EnableAutoScaling) {
+			// If the current node count is smaller than the min count, we have to disable the autoscaling,
+			// so AKS scales the nodepool. Otherwise it will leave the node count as is, sigh.
+			if to.Int32(existing.Count) < to.Int32(profile.MinCount) {
+				profile.EnableAutoScaling = to.BoolPtr(false)
+				profile.Count = profile.MinCount
+				profile.MinCount = nil
+				profile.MaxCount = nil
+			}
+		}
+
+		diff, err := jsonutils.Diff(existing, profile)
+		if err != nil {
+			return false, fmt.Errorf("failed to compare agent pool profiles: %w", err)
+		}
+
+		if !bytes.Equal(diff, []byte("{}")) {
+			ctx.Logger().WithField("diff", string(diff)).Debugf("updating the %q AKS node pool", aksNodePool.Name)
+			needsUpdate = true
+		}
+	}
+
+	if needsUpdate {
+		_, err := client.CreateOrUpdate(ctx, resourceGroupName(c.AKSCluster), c.AKSCluster.Name, aksNodePool.Name, containerservice.AgentPool{
+			ManagedClusterAgentPoolProfileProperties: c.toManagedClusterAgentPoolProfileProperties(profile),
+		})
+		if err != nil {
+			return false, fmt.Errorf("failed to create or update agent pool profile %q: %w", aksNodePool.Name, err)
+		}
+
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (c *clusterComponent) deleteAgentPoolProfile(ctx kore.Context, client containerservice.AgentPoolsClient, name string) error {
+	_, err := client.Delete(ctx, resourceGroupName(c.AKSCluster), c.AKSCluster.Name, name)
+	return err
 }
 
 func (c *clusterComponent) getCredentials(ctx kore.Context, client containerservice.ManagedClustersClient) error {
@@ -326,30 +479,30 @@ func (c *clusterComponent) getClusterIfExists(ctx kore.Context, client container
 }
 
 func (c *clusterComponent) setAgentPoolProfile(
-	nodepool aksv1alpha1.AgentPoolProfile, properties containerservice.ManagedClusterProperties,
-) containerservice.ManagedClusterAgentPoolProfile {
+	nodepool aksv1alpha1.AgentPoolProfile,
+	profile *containerservice.ManagedClusterAgentPoolProfile,
+) {
 	taints := []string{}
 	for _, taint := range nodepool.NodeTaints {
 		taints = append(taints, fmt.Sprintf("%s=%s:%s", taint.Key, taint.Value, taint.Effect))
 	}
 
-	profile := containerservice.ManagedClusterAgentPoolProfile{}
-	if properties.AgentPoolProfiles != nil {
-		for _, existing := range *properties.AgentPoolProfiles {
-			if to.String(existing.Name) == nodepool.Name {
-				profile = existing
-			}
-		}
-	}
-
 	profile.Name = to.StringPtr(nodepool.Name)
-	profile.MinCount = to.Int32Ptr(int32(nodepool.MinCount))
-	profile.MaxCount = to.Int32Ptr(int32(nodepool.MaxCount))
 
-	// If autoscaling is enabled, we should only set the initial value
-	if nodepool.EnableAutoScaling && profile.Count == nil {
+	if nodepool.EnableAutoScaling {
+		profile.MinCount = to.Int32Ptr(int32(nodepool.MinCount))
+		profile.MaxCount = to.Int32Ptr(int32(nodepool.MaxCount))
+
+		// We should only set the initial value
+		if profile.Count == nil {
+			profile.Count = to.Int32Ptr(int32(nodepool.Count))
+		}
+	} else {
+		profile.MinCount = nil
+		profile.MaxCount = nil
 		profile.Count = to.Int32Ptr(int32(nodepool.Count))
 	}
+
 	profile.VMSize = containerservice.VMSizeTypes(nodepool.VMSize)
 	profile.OsDiskSizeGB = to.Int32Ptr(int32(nodepool.OsDiskSizeGB))
 	profile.OsType = containerservice.OSType(nodepool.OsType)
@@ -359,7 +512,9 @@ func (c *clusterComponent) setAgentPoolProfile(
 	if nodepool.NodeImageVersion != "" {
 		profile.NodeImageVersion = to.StringPtr(nodepool.NodeImageVersion)
 	}
-	profile.NodeLabels = *to.StringMapPtr(nodepool.NodeLabels)
+	if len(profile.NodeLabels) > 0 || len(nodepool.NodeLabels) > 0 {
+		profile.NodeLabels = *to.StringMapPtr(nodepool.NodeLabels)
+	}
 
 	// If there are no node taints on either objects, make sure we retain the exact empty value from the existing one
 	if (profile.NodeTaints != nil && len(*profile.NodeTaints) > 0) || len(taints) > 0 {
@@ -368,6 +523,11 @@ func (c *clusterComponent) setAgentPoolProfile(
 	if nodepool.MaxPods > 0 {
 		profile.MaxPods = to.Int32Ptr(int32(nodepool.MaxPods))
 	}
+}
 
-	return profile
+func (c *clusterComponent) toManagedClusterAgentPoolProfileProperties(profile containerservice.ManagedClusterAgentPoolProfile) *containerservice.ManagedClusterAgentPoolProfileProperties {
+	res := &containerservice.ManagedClusterAgentPoolProfileProperties{}
+	j, _ := json.Marshal(profile)
+	_ = json.Unmarshal(j, res)
+	return res
 }

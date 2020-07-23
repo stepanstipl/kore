@@ -373,6 +373,10 @@ func (c *clustersImpl) validateConfiguration(ctx context.Context, cluster *clust
 		return err
 	}
 
+	if err := clusterProvider.Validate(NewContext(ctx, log.StandardLogger(), c.Store().RuntimeClient(), c), cluster); err != nil {
+		return err
+	}
+
 	editableParams, err := c.plans.GetEditablePlanParams(ctx, c.team, cluster.Spec.Kind)
 	if err != nil {
 		return err

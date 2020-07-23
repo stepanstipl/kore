@@ -137,7 +137,8 @@ const schema = `{
 						"type": "string",
 						"enum": [ "Linux", "Windows" ],
 						"description": "The image type used by the nodes",
-						"default": "Linux"
+						"default": "Linux",
+						"immutable": true
 					},
 					"diskSize": {
 						"type": "number",
@@ -156,8 +157,7 @@ const schema = `{
 					    },
 						"additionalProperties": { "type": "string" },
 						"description": "A set of labels to help Kubernetes workloads find this group",
-						"default": {},
-						"immutable": true
+						"default": {}
 					},
 					"taints": {
 						"type": "array",

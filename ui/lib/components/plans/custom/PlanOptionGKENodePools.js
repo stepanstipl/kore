@@ -150,12 +150,12 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
                     `Size per zone: ${ng.size} | Node type: ${ng.machineType}`
                   }
                 />
-                {!this.hasValidationErrors(`${name}[${idx}]`) ? null : <Alert type="error" message="Validation errors - please edit and resolve" />}
+                {!this.hasValidationErrors(`${name}[${idx}]`, false) ? null : <Alert type="error" message="Validation errors - please edit and resolve" />}
               </List.Item>
             )
           }} />
           {!editable ? null : <Button id={`${id_prefix}_add`} onClick={this.addNodePool} disabled={!(plan.region)}>Add node pool {plan.region ? null : '(choose region first)'}</Button>}
-          {this.validationErrors(name)}
+          {this.validationErrors(name, true)}
         </Form.Item>
         <Drawer
           title={`Node Pool ${selected ? selectedIndex + 1 : ''}`}
@@ -211,12 +211,12 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
                       </Descriptions.Item>}
                     </Descriptions>
                   </Form.Item>
-                  <NodePoolCost 
-                    prices={prices} 
-                    nodePool={selected} 
-                    help={<>Adjust pool size, machine type and pre-emptible to see the cost impacts. No <a href="https://cloud.google.com/compute/docs/sustained-use-discounts" target="_blank" rel="noopener noreferrer">sustained use discounts</a> are included in this estimate.</>} 
-                    zoneMultiplier={3} 
-                    priceType={selected.preemptible ? 'PreEmptible' : null} 
+                  <NodePoolCost
+                    prices={prices}
+                    nodePool={selected}
+                    help={<>Adjust pool size, machine type and pre-emptible to see the cost impacts. No <a href="https://cloud.google.com/compute/docs/sustained-use-discounts" target="_blank" rel="noopener noreferrer">sustained use discounts</a> are included in this estimate.</>}
+                    zoneMultiplier={3}
+                    priceType={selected.preemptible ? 'PreEmptible' : null}
                   />
                   <PlanOption id={`${id_prefix}_maxPodsPerNode`} {...this.props} displayName="Max pods per node" name={`${name}[${selectedIndex}].maxPodsPerNode`} property={property.items.properties.maxPodsPerNode} value={selected.maxPodsPerNode} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'maxPodsPerNode', v)} />
                 </Collapse.Panel>
@@ -228,13 +228,13 @@ export default class PlanOptionGKENodePools extends PlanOptionBase {
                   <PlanOption id={`${id_prefix}_diskSize`} {...this.props} displayName="Instance Root Disk Size (GiB)" name={`${name}[${selectedIndex}].diskSize`} property={property.items.properties.diskSize} value={selected.diskSize} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'diskSize', v)} />
                   <PlanOption id={`${id_prefix}_enableAutorepair`} {...this.props} displayName="Auto-repair" name={`${name}[${selectedIndex}].enableAutorepair`} property={property.items.properties.enableAutorepair} value={selected.enableAutorepair} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'enableAutorepair', v)} />
                   <PlanOption id={`${id_prefix}_preemptible`} {...this.props} displayName="Pre-emptible" name={`${name}[${selectedIndex}].preemptible`} property={property.items.properties.preemptible} value={selected.preemptible} onChange={(_, v) => this.setNodePoolProperty(selectedIndex, 'preemptible', v)} />
-                  {!selected.preemptible ? null : 
+                  {!selected.preemptible ? null :
                     <Alert type="warning" message={
                       <>
-                        Pre-emptible nodes deliver significant cost savings but <b>can and will be destroyed</b> at any time, at 
+                        Pre-emptible nodes deliver significant cost savings but <b>can and will be destroyed</b> at any time, at
                         minimum once per 24 hour period.
                         <br/><br/>
-                        Auto-repair will attempt to re-create nodes when this happens, but capacity to create new pre-emptible 
+                        Auto-repair will attempt to re-create nodes when this happens, but capacity to create new pre-emptible
                         nodes is never guaranteed thus your pool may be smaller than your specified minimum size at times.
                         <br/><br/>
                         Ensure you understand the impact of this on your workloads before enabling.

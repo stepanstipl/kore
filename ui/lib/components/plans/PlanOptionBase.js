@@ -64,21 +64,35 @@ export default class PlanOptionBase extends React.Component {
     return values
   }
 
-  validationErrors = (name) => {
-    if (!this.props.validationErrors) {
+  validationErrors = (name, exactMatch) => {
+    const ve = this.getValidationErrors(name, exactMatch)
+
+    if (ve.length === 0) {
       return null
     }
-    const dotName = name.replace(/\[([0-9+])\]/g, '.$1')
-    const valErrors = this.props.validationErrors.filter(v => v.field.indexOf(dotName) === 0)
-    if (valErrors.length === 0) {
-      return null
-    }
-    return valErrors.map((ve, i) => <Alert key={`${name}.valError.${i}`} type="error" message={ve.message} style={{ marginTop: '10px' }} />)
+
+    return ve.map((ve, i) => <Alert key={`${name}.valError.${i}`} type="error" message={ve.message} style={{ marginTop: '10px' }} />)
   }
 
-  hasValidationErrors = (name) => {
+  hasValidationErrors = (name, exactMatch) => {
+    return this.getValidationErrors(name, exactMatch).length > 0
+  }
+
+  getValidationErrors = (name, exactMatch) => {
+    if (!this.props.validationErrors) {
+      return []
+    }
+
     const dotName = name.replace(/\[([0-9+])\]/g, '.$1')
-    return this.props.validationErrors && this.props.validationErrors.some(v => v.field.indexOf(dotName) === 0)
+    const valErrors = this.props.validationErrors.filter(v => {
+      const f = v.field.replace(/^spec\.configuration\./, '')
+      if (exactMatch === true) {
+        return f === dotName
+      } else {
+        return f.indexOf(dotName) === 0
+      }
+    })
+    return valErrors
   }
 
   prepCommonProps = (props, defaultIfNoDefault = undefined) => {

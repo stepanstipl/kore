@@ -68,6 +68,26 @@ func (a *AKSHelper) CreateClustersClient(ctx kore.Context) (containerservice.Man
 	return client, nil
 }
 
+// CreateAgentPoolsClient creates and AKS Agent Pools API client
+func (a *AKSHelper) CreateAgentPoolsClient(ctx kore.Context) (containerservice.AgentPoolsClient, error) {
+	// @step: first we need to check if we have access to the credentials
+	creds, err := a.GetCredentials(ctx)
+	if err != nil {
+		return containerservice.AgentPoolsClient{}, err
+	}
+
+	config := auth.NewClientCredentialsConfig(creds.clientID, creds.clientSecret, creds.tenantID)
+	authorizer, err := config.Authorizer()
+	if err != nil {
+		return containerservice.AgentPoolsClient{}, err
+	}
+
+	client := containerservice.NewAgentPoolsClient(creds.subscriptionID)
+	client.Authorizer = authorizer
+
+	return client, nil
+}
+
 // CreateResourceGroupsClient creates a ResourceGroup client
 func (a *AKSHelper) CreateResourceGroupsClient(ctx kore.Context) (resources.GroupsClient, error) {
 	// @step: first we need to check if we have access to the credentials

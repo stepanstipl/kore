@@ -513,3 +513,15 @@ generate-crd-reference:
 		-config=./hack/crd-reference-doc-gen/config.json \
 		-template-dir=./hack/crd-reference-doc-gen/template \
 		-out-file="${KORE_DOCS_PATH}/content/_generated/kore_crd_reference.html"
+
+.PHONY: generate-schema-structs
+generate-schema-structs:
+	go generate ./pkg/clusterproviders/...
+
+.PHONY: check-generate-schema-structs
+check-generate-schema-structs: generate-schema-structs
+	@if [ $$(git status --porcelain | wc -l) -gt 0 ]; then \
+		echo "There are local changes after running 'make generate-schema-structs'. Did you forget to run it?"; \
+		git status --porcelain; \
+		exit 1; \
+	fi

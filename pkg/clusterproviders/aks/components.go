@@ -20,6 +20,7 @@ import (
 	aksv1alpha1 "github.com/appvia/kore/pkg/apis/aks/v1alpha1"
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -68,11 +69,13 @@ func (p Provider) BeforeComponentsUpdate(ctx kore.Context, cluster *clustersv1.C
 				KubernetesVersion:       config.Version,
 				LinuxProfile:            ConvertLinuxProfile(config.LinuxProfile),
 				NetworkPlugin:           config.NetworkPlugin,
-				NetworkPolicy:           config.NetworkPolicy,
 				AgentPoolProfiles:       ConvertNodePools(config.NodePools),
 				EnablePrivateCluster:    config.PrivateClusterEnabled,
 				Location:                config.Region,
 				WindowsProfile:          ConvertWindowsProfile(config.WindowsProfile),
+			}
+			if config.NetworkPolicy != "" {
+				o.Spec.NetworkPolicy = utils.StringPtr(config.NetworkPolicy)
 			}
 		}
 	}

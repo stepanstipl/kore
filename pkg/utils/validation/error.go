@@ -129,4 +129,6 @@ const (
 	InvalidValue ErrorCode = "invalidValue"
 	// NotAllowed error indicates that the given value is not allowed
 	NotAllowed ErrorCode = "notAllowed"
+	// MustBeUnique error indicates the the given value is not unique
+	MustBeUnique ErrorCode = "mustBeUnique"
 )
