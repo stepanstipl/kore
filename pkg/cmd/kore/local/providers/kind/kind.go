@@ -254,7 +254,7 @@ func (p *providerImpl) Preflight(ctx context.Context) error {
 		}
 
 		p.Info("Kind binary not found in $PATH")
-		
+
 		if p.options.AskConfirmation {
 			p.Infof("Download: %s (%s) (y/N)? ", getReleaseURL(), path)
 			if ok := utils.AskForConfirmation(os.Stdin); !ok {

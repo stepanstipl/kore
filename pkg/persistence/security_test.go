@@ -405,13 +405,10 @@ var _ = Describe("Security Persistence", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(len(v)).To(Equal(4))
 
-				/*
-					  NO IDEA - BUT MOVING ON AND FIX LATER
-						Expect(v[0].ArchivedAt).To(Equal(v[1].CheckedAt))
-						Expect(v[1].ArchivedAt).To(Equal(v[2].CheckedAt))
-						Expect(v[2].ArchivedAt.IsZero()).To(BeTrue())
-						Expect(v[3].ArchivedAt.IsZero()).To(BeTrue())
-				*/
+				Expect(v[0].ArchivedAt).To(Equal(v[1].CheckedAt))
+				Expect(v[1].ArchivedAt).To(Equal(v[2].CheckedAt))
+				Expect(v[2].ArchivedAt.IsZero()).To(BeTrue())
+				Expect(v[3].ArchivedAt.IsZero()).To(BeTrue())
 
 				// The latest for test-team7, test7 should be scan 3
 				scanDetails, err := store.Security().GetLatestResourceScan(context.Background(), scan1.ResourceGroup, scan1.ResourceVersion, scan1.ResourceKind, "test-team9", "test9")
@@ -447,15 +444,12 @@ var _ = Describe("Security Persistence", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(len(v)).To(Equal(4))
 
-				/*
-					  NO IDEA - BUT MOVING ON AND FIX LATER
-						Expect(v[0].ArchivedAt).To(Equal(v[1].CheckedAt))
-						Expect(v[1].ArchivedAt).To(Equal(v[2].CheckedAt))
-						// This will have been set to the current time:
-						Expect(v[2].ArchivedAt.IsZero()).To(BeFalse())
-						// This should not have been archived as it has a different name:
-						Expect(v[3].ArchivedAt.IsZero()).To(BeTrue())
-				*/
+				Expect(v[0].ArchivedAt).To(Equal(v[1].CheckedAt))
+				Expect(v[1].ArchivedAt).To(Equal(v[2].CheckedAt))
+				// This will have been set to the current time:
+				Expect(v[2].ArchivedAt.IsZero()).To(BeFalse())
+				// This should not have been archived as it has a different name:
+				Expect(v[3].ArchivedAt.IsZero()).To(BeTrue())
 
 				scanDetails, err := store.Security().GetLatestResourceScan(context.Background(), scan1.ResourceGroup, scan1.ResourceVersion, scan1.ResourceKind, "test-team10", "test10")
 				Expect(err).ToNot(HaveOccurred())
