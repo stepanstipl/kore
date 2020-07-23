@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types'
 import { Typography, List, Button, Drawer, Icon, Alert, Modal } from 'antd'
 const { Title } = Typography
 import getConfig from 'next/config'
@@ -11,6 +12,10 @@ import AllocationHelpers from '../../utils/allocation-helpers'
 import { errorMessage, loadingMessage, successMessage } from '../../utils/message'
 
 class AWSOrganizationsList extends ResourceList {
+
+  static propTypes = {
+    user: PropTypes.object.isRequired
+  }
 
   createdMessage = 'AWS organization created successfully'
   updatedMessage = 'AWS organization updated successfully'
@@ -124,6 +129,7 @@ class AWSOrganizationsList extends ResourceList {
                 width={900}
               >
                 <AWSOrganizationForm
+                  user={this.props.user}
                   team={publicRuntimeConfig.koreAdminTeamName}
                   allTeams={allTeams}
                   handleSubmit={this.handleAddSave}

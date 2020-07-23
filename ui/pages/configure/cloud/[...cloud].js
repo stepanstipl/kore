@@ -16,6 +16,7 @@ import { featureEnabled, KoreFeatures } from '../../../lib/utils/features'
 
 export default class ConfigureCloudPage extends React.Component {
   static propTypes = {
+    user: PropTypes.object.isRequired,
     selectedCloud: PropTypes.string.isRequired,
     activeKeys: PropTypes.object.isRequired
   }
@@ -60,7 +61,7 @@ export default class ConfigureCloudPage extends React.Component {
   }
 
   render() {
-    const { selectedCloud, activeKeys } = this.props
+    const { selectedCloud, activeKeys, user } = this.props
 
     return (
       <>
@@ -89,7 +90,7 @@ export default class ConfigureCloudPage extends React.Component {
           {selectedCloud === 'AWS' ? (
             <Tabs activeKey={activeKeys['AWS']} onChange={(key) => this.handleSelectKey('AWS', key)} destroyInactiveTabPane={true} tabPosition="left" style={{ marginTop: '20px' }}>
               <Tabs.TabPane tab="Organization credentials" key="orgs">
-                <AWSOrganizationsList autoAllocateToAllTeams={true} />
+                <AWSOrganizationsList autoAllocateToAllTeams={true} user={user} />
               </Tabs.TabPane>
               <Tabs.TabPane tab="Account credentials" key="accounts">
                 <CredentialsList provider="EKS" />

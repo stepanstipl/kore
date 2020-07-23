@@ -16,5 +16,9 @@ export const patterns = {
     // double backslash as it seems to be escaped otherwise
     pattern: '^[^\\s@]+@[^\\s@]+\.[^\\s@]+$',
     message: 'Must be a valid email address'
+  },
+  amazonIamRoleArn: {
+    pattern: '^arn:aws:iam::[0-9]{12}:role\\/[\\S]+$',
+    message: 'Must be an Amazon IAM role ARN in the format "arn:aws:iam::[account]:role/[role]"'
   }
 }
