@@ -8,7 +8,7 @@ import { patterns } from '../../../utils/validation'
 class RequestCredentialAccessForm extends React.Component {
   static propTypes = {
     form: PropTypes.object.isRequired,
-    cloud: PropTypes.oneOf(['GCP', 'AWS']).isRequired,
+    cloud: PropTypes.oneOf(['GCP', 'AWS', 'Azure']).isRequired,
     data: PropTypes.object,
     onChange: PropTypes.func,
     helpInModal: PropTypes.bool
@@ -30,6 +30,15 @@ class RequestCredentialAccessForm extends React.Component {
         <div>
           <p>When using Kore with existing AWS accounts, you must allocate the account credentials to teams in order for them to provision clusters within those accounts.</p>
           <p style={{ marginBottom: '0' }}>When a new team is created they may not have access to any account credentials, here you can provide an email address which will be displayed to a team in this situation, in order to request access to an AWS account through Kore.</p>
+        </div>
+      )
+    },
+    'Azure': {
+      accountNoun: 'Subscription',
+      help: (
+        <div>
+          <p>When using Kore with existing Azure subscriptions, you must allocate the subscriptions credentials to teams in order for them to provision clusters within those accounts.</p>
+          <p style={{ marginBottom: '0' }}>When a new team is created they may not have access to any subscriptions credentials, here you can provide an email address which will be displayed to a team in this situation, in order to request access to an Azure subscription through Kore.</p>
         </div>
       )
     }

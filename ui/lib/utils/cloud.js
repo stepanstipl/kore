@@ -1,8 +1,21 @@
 import getConfig from 'next/config'
 const { publicRuntimeConfig } = getConfig()
 
-export function getProviderCloudInfo(planKind) {
-  return publicRuntimeConfig.clusterProviderCloudMap[planKind]
+/**
+ * Get cloud info for the cluster provider
+ * @param provider The cluster provider, eg GKE, EKS, AKS
+ */
+export function getProviderCloudInfo(provider) {
+  return publicRuntimeConfig.clusterProviderCloudMap[provider]
+}
+
+/**
+ * Get cloud info for the cloud, via the cluster provider
+ * @param cloud The cloud, eg GCP, AWS, Azure
+ * @returns {*}
+ */
+export function getCloudInfo(cloud) {
+  return getProviderCloudInfo(publicRuntimeConfig.clusterProviderMap[cloud])
 }
 
 /**

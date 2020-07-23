@@ -14,8 +14,9 @@ class CloudAccessPage extends React.Component {
   static propTypes = {
     gkeCredentialsList: PropTypes.array.isRequired,
     eksCredentialsList: PropTypes.array.isRequired,
+    aksCredentialsList: PropTypes.array.isRequired,
     gcpAccountManagement: PropTypes.object,
-    awsAccountManagement: PropTypes.object
+    awsAccountManagement: PropTypes.object,
   }
 
   static staticProps = {
@@ -27,9 +28,10 @@ class CloudAccessPage extends React.Component {
   static async getPageData(ctx) {
     try {
       const api = await KoreApi.client(ctx)
-      const [ gkeCredentialsList, eksCredentialsList, accountManagementList ] = await Promise.all([
+      const [ gkeCredentialsList, eksCredentialsList, aksCredentialsList, accountManagementList ] = await Promise.all([
         api.ListGKECredentials(publicRuntimeConfig.koreAdminTeamName),
         api.ListEKSCredentials(publicRuntimeConfig.koreAdminTeamName),
+        api.ListAKSCredentials(publicRuntimeConfig.koreAdminTeamName),
         api.ListAccounts()
       ])
       const gcpAccountManagement = accountManagementList.items.find(a => a.spec.provider === 'GKE')
@@ -37,6 +39,7 @@ class CloudAccessPage extends React.Component {
       return {
         gkeCredentialsList: gkeCredentialsList.items,
         eksCredentialsList: eksCredentialsList.items,
+        aksCredentialsList: aksCredentialsList.items,
         gcpAccountManagement,
         awsAccountManagement
       }
@@ -57,7 +60,7 @@ class CloudAccessPage extends React.Component {
   handleSelectCloud = (cloud) => this.setState({ selectedCloud: cloud })
 
   render() {
-    const { gcpAccountManagement, gkeCredentialsList, awsAccountManagement, eksCredentialsList } = this.props
+    const { gcpAccountManagement, gkeCredentialsList, awsAccountManagement, eksCredentialsList, aksCredentialsList } = this.props
     const { selectedCloud } = this.state
 
     return (
@@ -75,6 +78,7 @@ class CloudAccessPage extends React.Component {
         </div>
         {selectedCloud === 'GCP' && <CloudSetup provider="GKE" cloud="GCP" accountNoun="project" accountManagement={gcpAccountManagement} credentialsList={gkeCredentialsList} />}
         {selectedCloud === 'AWS' && <CloudSetup provider="EKS" cloud="AWS" accountNoun="account" accountManagement={awsAccountManagement} credentialsList={eksCredentialsList} />}
+        {selectedCloud === 'Azure' && <CloudSetup provider="AKS" cloud="Azure" accountNoun="subscription" credentialsList={aksCredentialsList} />}
       </>
     )
   }

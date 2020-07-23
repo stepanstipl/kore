@@ -6,18 +6,18 @@ const { Paragraph, Text } = Typography
 import { pluralize } from 'inflect'
 
 import KoreApi from '../../../kore-api'
+import { getCloudInfo } from '../../../utils/cloud'
 
 class MissingCredential extends React.Component {
   static propTypes = {
     team: PropTypes.string.isRequired,
-    cloud: PropTypes.oneOf(['GCP', 'AWS']).isRequired,
+    cloud: PropTypes.oneOf(['GCP', 'AWS', 'Azure']).isRequired,
   }
 
   state = {
-    dataLoading: true
+    dataLoading: true,
+    cloudInfo: getCloudInfo(this.props.cloud)
   }
-
-  accountNoun = () => ({ 'GCP' : 'project', 'AWS': 'account' }[this.props.cloud])
 
   async fetchComponentData() {
     const cloudConfig = await (await KoreApi.client()).GetConfig(this.props.cloud)
@@ -32,14 +32,14 @@ class MissingCredential extends React.Component {
 
   componentDidUpdate(prevProps) {
     if (prevProps.cloud !== this.props.cloud) {
-      this.setState({ dataLoading: true })
+      this.setState({ dataLoading: true, cloudInfo: getCloudInfo(this.props.cloud) })
       this.fetchComponentData()
         .then(data => this.setState({ ...data, dataLoading: false }))
     }
   }
 
   render() {
-    const { dataLoading, email } = this.state
+    const { dataLoading, email, cloudInfo } = this.state
 
     if (dataLoading) {
       return <Icon type="loading" />
@@ -48,10 +48,10 @@ class MissingCredential extends React.Component {
     return (
       <>
         <Alert
-          message={`${this.props.cloud} ${this.accountNoun()} access not found`}
+          message={`${cloudInfo.cloud} ${cloudInfo.accountNoun} access not found`}
           description={
             <>
-              <Paragraph>This team does not have access to create clusters in any {this.props.cloud} {pluralize(this.accountNoun())}. Please use the contact below to grant this team access to a {this.props.cloud} {this.accountNoun()}.</Paragraph>
+              <Paragraph>This team does not have access to create clusters in any {cloudInfo.cloud} {pluralize(cloudInfo.accountNoun)}. Please use the contact below to grant this team access to a {cloudInfo.cloud} {cloudInfo.accountNoun}.</Paragraph>
               <Text strong>
                 {email ? <a style={{ textDecoration: 'underline' }} href={`mailto: ${this.state.email}`}>{this.state.email}</a> : 'Kore administrator'}
               </Text>

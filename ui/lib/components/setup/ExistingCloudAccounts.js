@@ -17,7 +17,7 @@ import { errorMessage } from '../../utils/message'
 class ExistingCloudAccounts extends React.Component {
 
   static propTypes = {
-    cloud: PropTypes.oneOf(['GCP', 'AWS']),
+    cloud: PropTypes.oneOf(['GCP', 'AWS', 'Azure']),
     accountNoun: PropTypes.string.isRequired,
     setupComplete: PropTypes.bool.isRequired,
     handleSetupComplete: PropTypes.func.isRequired
@@ -39,7 +39,7 @@ class ExistingCloudAccounts extends React.Component {
 
   async fetchComponentData() {
     const cloudConfig = await (await KoreApi.client()).GetConfig(this.props.cloud)
-    const email = cloudConfig.spec && cloudConfig.spec.values.requestAccessEmail
+    const email = cloudConfig && cloudConfig.spec.values.requestAccessEmail
     const emailValid = email ? true : false
     return { email, emailValid }
   }
