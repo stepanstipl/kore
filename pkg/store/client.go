@@ -304,7 +304,19 @@ func (r *rclient) Update(ctx context.Context, options ...UpdateOptionFunc) error
 
 	// @step: check if the resource exists already
 	original, found, err := func() (runtime.Object, bool, error) {
+		if r.current != nil {
+			return r.current, true, nil
+		}
+
+		// @TODO: the DeepCopyObject here is NOT safe where objects have omitempty,
+		// as the k8s client Get below doesn't overwrite those fields if the CRD in k8s has
+		// no value on them, meaning patching fails. However, the below doesn't quite work
+		// as there's not always an object kind available on things passed in here:
 		current := r.value.DeepCopyObject()
+		// current, err := schema.GetScheme().New(r.value.GetObjectKind().GroupVersionKind())
+		// if err != nil {
+		// 	return
+		// }
 		if err := r.client.Get(ctx, key, current); err != nil {
 			if !kerrors.IsNotFound(err) {
 				return nil, false, err
