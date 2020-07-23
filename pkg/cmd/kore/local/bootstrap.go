@@ -120,3 +120,13 @@ func GetProvider(f cmdutil.Factory, name string) (providers.Interface, error) {
 		return nil, fmt.Errorf("unknown provider: %s", name)
 	}
 }
+
+// AddProviderFlags is used to add the provider specific options to the command line
+func AddProviderFlags(cmd *cobra.Command) {
+	kind.AddProviderFlags(cmd)
+}
+
+// GetProviders returns a list of support local cluster providers
+func GetProviders() []string {
+	return []string{"kind"}
+}

@@ -38,9 +38,9 @@ load helper
 }
 
 @test "The GKE credentials should come back as verified" {
-  retry 5 "${KORE} get gkecredentials gke -t kore-admin -o json | jq '.status.verified' | grep -i true"
+  retry 10 "${KORE} get gkecredentials gke -t kore-admin -o json | jq '.status.verified' | grep -i true"
   [[ "$status" -eq 0 ]]
-  retry 5 "${KORE} get gkecredentials gke -t kore-admin -o json | jq '.status.status' | grep -i success"
+  retry 10 "${KORE} get gkecredentials gke -t kore-admin -o json | jq '.status.status' | grep -i success"
   [[ "$status" -eq 0 ]]
 }
 
@@ -59,9 +59,9 @@ load helper
 @test "We should be able to reapply the valid credentials and be ok" {
   runit "${KORE} apply -f ${BASE_DIR}/e2eci/gke-credentials.yml -t kore-admin 2>&1 >/dev/null"
   [[ "$status" -eq 0 ]]
-  retry 5 "${KORE} get gkecredentials gke -t kore-admin -o json | jq '.status.verified' | grep -i true"
+  retry 10 "${KORE} get gkecredentials gke -t kore-admin -o json | jq '.status.verified' | grep -i true"
   [[ "$status" -eq 0 ]]
-  retry 5 "${KORE} get gkecredentials gke -t kore-admin -o json | jq '.status.status' | grep -i success"
+  retry 10 "${KORE} get gkecredentials gke -t kore-admin -o json | jq '.status.status' | grep -i success"
   [[ "$status" -eq 0 ]]
 }
 
@@ -84,10 +84,10 @@ load helper
 @test "We should reapply the credentials and get back the allocation in the ${TEAM} team" {
   runit "${KORE} apply -f ${BASE_DIR}/e2eci/gke-credentials.yml -t kore-admin 2>&1 >/dev/null"
   [[ "$status" -eq 0 ]]
-  retry 5 "${KORE} get gkecredentials gke -t kore-admin -o json | jq '.status.verified' | grep -i true"
+  retry 10 "${KORE} get gkecredentials gke -t kore-admin -o json | jq '.status.verified' | grep -i true"
   [[ "$status" -eq 0 ]]
-  retry 5 "${KORE} get gkecredentials gke -t kore-admin -o json | jq '.status.status' | grep -i success"
+  retry 10 "${KORE} get gkecredentials gke -t kore-admin -o json | jq '.status.status' | grep -i success"
   [[ "$status" -eq 0 ]]
-  retry 5 "${KORE} get allocations gkecredentials-gke -t ${TEAM}"
+  retry 10 "${KORE} get allocations gkecredentials-gke -t ${TEAM}"
   [[ "$status" -eq 0 ]]
 }

@@ -36,7 +36,7 @@ ENABLE_EKS_E2E=${ENABLE_EKS_E2E:-"false"}
 ENABLE_GKE_E2E=${ENABLE_GKE_E2E:-"false"}
 ENABLE_AKS_E2E=${ENABLE_AKS_E2E:-"false"}
 ENABLE_UNIT_TESTS=${ENABLE_UNIT_TESTS:-true}
-PATH=$PATH:${GOPATH}/bin
+PATH=$PATH:${GOPATH}/bin:${PWD}/bin
 KORE_CONFIG=${HOME}/.kore/config
 
 mkdir -p ${GOPATH}/bin
@@ -94,7 +94,7 @@ create-aws-profile() {
 }
 
 enable-admin-user() {
-  announce "Provisioning a admin e2e user"
+  announce "Provisioning a admin e2e user: ${ADMIN_USER}"
   cat <<EOF >/tmp/e2e.user
 {
   "apiVersion": "org.kore.appvia.io/v1",

@@ -18,81 +18,83 @@ package local
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
+	"regexp"
 
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 	"github.com/appvia/kore/pkg/utils"
+	"github.com/appvia/kore/pkg/utils/jsonutils"
 
 	"sigs.k8s.io/yaml"
 )
 
-// UpdateHelmValues is used to update the inline values
-func (o *UpOptions) UpdateHelmValues(path string) error {
-	// @step: get the current content
-	current, err := ioutil.ReadFile(path)
-	if err != nil {
-		return err
-	}
-	// make a copy of original
-	values := make([]byte, len(current))
-	copy(values, current)
-
-	// @step: iterate through any changes
-	updated, err := func() ([]byte, error) {
-		if utils.Contains("version", o.FlagsChanged) {
-			for _, x := range []string{"api.version", "ui.version"} {
-				values, err = UpdateYAML(values, x, o.Version)
-				if err != nil {
-					return nil, err
-				}
-			}
-		}
-
-		return values, nil
-	}()
-	if err != nil {
-		return err
-	}
-
-	if !bytes.Equal(current, updated) {
-		return ioutil.WriteFile(path, updated, valueFilePerms)
-	}
-
-	return nil
-}
+var (
+	keypairRegex = regexp.MustCompile(`^([[:alnum:]].+)=([[:alnum:]\{\}].+)$`)
+)
 
 // GetHelmValues returns returns or prompts for the values
 func (o *UpOptions) GetHelmValues(path string) (map[string]interface{}, error) {
+	values := make(map[string]interface{})
+
 	found, err := utils.FileExists(path)
 	if err != nil {
 		return nil, err
 
-	} else if !found {
-		values := o.GetDefaultHelmValues()
+	}
 
-		a := authInfoConfig{}
+	// @step: we retrieve the values from default or file
+	switch found {
+	case true:
+		values, err = GetHelmValuesFromFile(path)
+	default:
+		values, err = GetDefaultHelmValues()
+	}
+	if err != nil {
+		return nil, err
+	}
 
-		if err := (&cmdutil.Prompts{
-			&cmdutil.Prompt{Id: "Client ID", ErrMsg: "%s cannot be blank", Value: &a.ClientID},
-			&cmdutil.Prompt{Id: "Client Secret", ErrMsg: "%s cannot be blank", Value: &a.ClientSecret},
-			&cmdutil.Prompt{Id: "Authorization Endpoint", ErrMsg: "%s cannot be blank", Value: &a.AuthorizeURL},
-		}).Collect(); err != nil {
-			return nil, err
+	// @step: inject the flags if required
+	if utils.Contains("version", o.FlagsChanged) {
+		for _, x := range []string{"api.version", "ui.version"} {
+			o.HelmValues = append(o.HelmValues, fmt.Sprintf("%s=%s", x, o.Version))
 		}
-
-		values["idp"] = map[string]interface{}{
-			"client_id":     a.ClientID,
-			"client_secret": a.ClientSecret,
-			"server_url":    a.AuthorizeURL,
-		}
-
-		return values, nil
 	} else {
-		if err := o.UpdateHelmValues(path); err != nil {
+		if !found {
+			for _, x := range []string{"api.version", "ui.version"} {
+				o.HelmValues = append(o.HelmValues, fmt.Sprintf("%s=%s", x, o.Version))
+			}
+		}
+	}
+
+	// @step: marshal the values to json and apply the updates
+	b := &bytes.Buffer{}
+	if err := json.NewEncoder(b).Encode(&values); err != nil {
+		return nil, err
+	}
+	content := b.Bytes()
+
+	for _, x := range o.HelmValues {
+		e := keypairRegex.FindStringSubmatch(x)
+		if len(e) < 3 {
+			return nil, fmt.Errorf("invalid helm value: %q should be key=value", x)
+		}
+		content, err = jsonutils.SetJSONProperty(content, e[1], e[2])
+		if err != nil {
 			return nil, err
 		}
 	}
+	// @step: convert the json to values for writing
+	values = make(map[string]interface{})
+
+	return values, json.NewDecoder(bytes.NewReader(content)).Decode(&values)
+}
+
+// GetHelmValuesFromFile returns the current set values
+func GetHelmValuesFromFile(path string) (map[string]interface{}, error) {
+	values := make(map[string]interface{})
 
 	// @step: we read in the values.yml
 	file, err := os.Open(path)
@@ -105,16 +107,39 @@ func (o *UpOptions) GetHelmValues(path string) (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	values := make(map[string]interface{})
-	if err := yaml.Unmarshal(content, &values); err != nil {
-		return nil, err
+	return values, yaml.Unmarshal(content, &values)
+}
+
+// GetDefaultHelmValues returns the default values required
+func GetDefaultHelmValues() (map[string]interface{}, error) {
+	values := DefaultHelmValues()
+
+	a := authInfoConfig{}
+	a.AuthorizeURL = os.Getenv("KORE_IDP_SERVER_URL")
+	a.ClientID = os.Getenv("KORE_IDP_CLIENT_ID")
+	a.ClientSecret = os.Getenv("KORE_IDP_CLIENT_SECRET")
+
+	if a.AuthorizeURL == "" || a.ClientID == "" || a.ClientSecret == "" {
+		if err := (&cmdutil.Prompts{
+			&cmdutil.Prompt{Id: "Client ID", ErrMsg: "%s cannot be blank", Value: &a.ClientID},
+			&cmdutil.Prompt{Id: "Client Secret", ErrMsg: "%s cannot be blank", Value: &a.ClientSecret},
+			&cmdutil.Prompt{Id: "Authorization Endpoint", ErrMsg: "%s cannot be blank", Value: &a.AuthorizeURL},
+		}).Collect(); err != nil {
+			return nil, err
+		}
+	}
+
+	values["idp"] = map[string]interface{}{
+		"client_id":     a.ClientID,
+		"client_secret": a.ClientSecret,
+		"server_url":    a.AuthorizeURL,
 	}
 
 	return values, nil
 }
 
-// GetDefaultHelmValues returns the default values for the chart
-func (o *UpOptions) GetDefaultHelmValues() map[string]interface{} {
+// DefaultHelmValues returns the default values for the chart
+func DefaultHelmValues() map[string]interface{} {
 	features := []string{
 		"application_services=true",
 		"services=true",
@@ -126,14 +151,12 @@ func (o *UpOptions) GetDefaultHelmValues() map[string]interface{} {
 			"hostPort":      10080,
 			"replicas":      1,
 			"serviceType":   "NodePort",
-			"version":       o.Version,
 		},
 		"ui": map[string]interface{}{
 			"feature_gates": features,
 			"hostPort":      3000,
 			"replicas":      1,
 			"serviceType":   "NodePort",
-			"version":       o.Version,
 		},
 	}
 }

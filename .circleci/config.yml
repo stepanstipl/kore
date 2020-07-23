@@ -2,6 +2,7 @@
 version: 2.1
 
 orbs:
+  helm: circleci/helm@1.0.0
   kube-orb: circleci/kubernetes@0.11.0
   slack: circleci/slack@3.4.2
 
@@ -22,177 +23,26 @@ parameters:
     type: boolean
     default: false
 
-#
-# Templates ---
-#
+  enable_update_e2e:
+    type: boolean
+    default: false
 
-services_etcd: &SERVICES_ETCD
-  name: etcd
-  image: bitnami/etcd:latest
-  environment:
-    ALLOW_NONE_AUTHENTICATION: "yes"
-
-services_redis: &SERVICES_REDIS
-  name: redis
-  image: redis:5
-
-services_database: &SERVICES_DATABASE
-  name: database
-  image: mariadb:bionic
-  environment:
-    MYSQL_ROOT_PASSWORD: pass
-  command:
-    sh -c "
-      echo 'CREATE DATABASE IF NOT EXISTS kore;' > /docker-entrypoint-initdb.d/init.sql;
-      /usr/local/bin/docker-entrypoint.sh --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
-
-services_kubectrlmgr: &SERVICES_KUBECTRLMGR
-  name: kube-controller-manager
-  image: gcr.io/google-containers/kube-controller-manager-amd64:v1.15.11
-  command:
-    - /usr/local/bin/kube-controller-manager
-    - --master=http://kube-apiserver:8080
-
-services_kubeapisvr: &SERVICES_KUBEAPISVR
-  name: kube-apiserver
-  image: gcr.io/google-containers/kube-apiserver-amd64:v1.15.11
-  command:
-    - /usr/local/bin/kube-apiserver
-    - --address=0.0.0.0
-    - --alsologtostderr
-    - --authorization-mode=RBAC
-    - --bind-address=0.0.0.0
-    - --default-watch-cache-size=200
-    - --delete-collection-workers=10
-    - --etcd-servers=http://etcd:2379
-    - --log-flush-frequency=10s
-    - --runtime-config=autoscaling/v1=false
-    - --runtime-config=autoscaling/v2beta1=false
-    - --runtime-config=autoscaling/v2beta2=false
-    - --runtime-config=batch/v1=false
-    - --runtime-config=batch/v1beta1=false
-    - --runtime-config=networking.k8s.io/v1=false
-    - --runtime-config=networking.k8s.io/v1beta1=false
-    - --runtime-config=node.k8s.io/v1beta1=false
-
-services: &SERVICES
-  - image: circleci/golang:1.14
-  - *SERVICES_ETCD
-  - *SERVICES_REDIS
-  - *SERVICES_DATABASE
-  - *SERVICES_KUBECTRLMGR
-  - *SERVICES_KUBEAPISVR
-
-service_env: &SERVICES_ENV
+environment: &SERVICES_ENV
+  DEBIAN_FRONTEND: "noninteractive"
   KORE_ADMIN_PASS: "password"
   KORE_ADMIN_TOKEN: "password"
-  KORE_AUTHENTICATION_PLUGINS: "admintoken,basicauth,localjwt,openid"
-  KORE_CERTIFICATE_AUTHORITY: "hack/ca/ca.pem"
-  KORE_CERTIFICATE_AUTHORITY_KEY: "hack/ca/ca-key.pem"
-  KORE_HMAC: "bdT2Qg6DybsLIwc0TbYWrkGC4auovscg"
-  # The below must be matched with the private key in the API test project:
   KORE_LOCAL_JWT_PUBLIC_KEY: "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAIG6XiNhkwDETU2zk0tGlI0DKlbEJcN4jxwJBqhd3neReLDnqg9SBgKepdy9Nxw5LAd1gNoBkLvdFJg9SbHlM0sCAwEAAQ=="
   KORE_UI_PUBLIC_URL: "http://localhost:3000"
-  KUBE_API_SERVER: "http://kube-apiserver:8080"
-  USERS_DB_URL: "root:pass@tcp(database:3306)/kore?parseTime=true"
+  KORE_API_PUBLIC_URL: "http://localhost:10080"
+  TERM: linux
 
-e2e_job_template: &E2E_JOB_TEMPLATE
-  parameters:
-    enable_eks:
-      type: boolean
-      default: false
-    enable_gke:
-      type: boolean
-      default: false
-    enable_aks:
-      type: boolean
-      default: false
-    host:
-      type: string
-      default: http://127.0.0.1:10080
-
-  environment:
-    ENABLE_EKS_E2E: << parameters.enable_eks >>
-    ENABLE_GKE_E2E: << parameters.enable_gke >>
-    ENABLE_AKS_E2E: << parameters.enable_aks >>
-    KORE_ADMIN_TOKEN: "password"
-    KORE_API_PUBLIC_URL_QA: << parameters.host >>
-
-  docker:
-    *SERVICES
-
-  steps:
-    - checkout
-    - run:
-        name: Installing tools
-        command: |
-          sudo apt install -y bash bats curl jq awscli
-    - run:
-        name: Installing kubectl
-        command: |
-          sudo curl -L https://storage.googleapis.com/kubernetes-release/release/v1.15.11/bin/linux/amd64/kubectl -o /bin/kubectl
-          sudo chmod +x /bin/kubectl
-    - run:
-        name: Building binaries
-        command: |
-          make kore-apiserver
-          make kore
-          sudo cp bin/kore /bin/kore
-          /bin/kubectl version --client
-    - run:
-        name: Running the Kore API
-        command: |
-          export AUTH_PROXY_IMAGE="quay.io/appvia/auth-proxy:${CIRCLE_SHA1}"
-          bin/kore-apiserver --disable-json-logging --verbose
-        background: true
-        environment:
-          <<: *SERVICES_ENV
-    - run:
-        name: Waiting for API
-        command: |
-          curl -s \
-            --retry 10 \
-            --retry-connrefused \
-            --retry-delay 5 \
-            ${KORE_API_PUBLIC_URL_QA}/healthz
-    - run:
-        name: Running E2E Suite
-        no_output_timeout: 30m
-        command: |
-          test/e2e/check-suite.sh \
-            --enable-e2e-user ${KORE_E2E_USER} \
-            --enable-gke ${ENABLE_GKE_E2E} \
-            --enable-eks ${ENABLE_EKS_E2E} \
-            --enable-aks ${ENABLE_AKS_E2E}
-    - slack/notify-on-failure:
-        only_for_branches: master
 #
-# Jobs ---
+## Jobs
 #
-
 jobs:
-  check:
-    environment:
-      USE_GIT_VERSION: "true"
-
+  build-api:
     docker:
       - image: circleci/golang:1.14
-
-    steps:
-      - checkout
-      - run:
-          name: Check
-          command: |
-            make check
-
-  build:
-    environment:
-      USE_GIT_VERSION: "true"
-
-    resource_class: large
-    docker:
-      - image: circleci/golang:1.14
-
     steps:
       - checkout
       - run:
@@ -200,14 +50,23 @@ jobs:
           command: |
             make build
       - persist_to_workspace:
-          root: ~/project
+          root: bin
           paths:
-            - bin
+            - kore
+            - kore-apiserver
 
-  test:
-    environment:
-      USE_GIT_VERSION: "true"
+  check-linting:
+    resource_class: large
+    docker:
+      - image: circleci/golang:1.14
+    steps:
+      - checkout
+      - run:
+          name: Check Linting
+          command: |
+            make check
 
+  check-units:
     resource_class: large
     docker:
       - image: circleci/golang:1.14
@@ -217,76 +76,98 @@ jobs:
           MYSQL_ROOT_PASSWORD: pass
         command:
           sh -c "
-            echo 'CREATE DATABASE IF NOT EXISTS kore;' > /docker-entrypoint-initdb.d/init.sql;
-            /usr/local/bin/docker-entrypoint.sh --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
-
+             echo 'CREATE DATABASE IF NOT EXISTS kore;' > /docker-entrypoint-initdb.d/init.sql;
+             /usr/local/bin/docker-entrypoint.sh --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
     steps:
       - checkout
       - run:
-          name: Test
+          name: Running Unit Tests
           environment:
             TEST_USERS_DATABASE_URL: "root:pass@tcp(database:3306)/kore?parseTime=true"
           command: |
             make test
 
-  test-api:
-    environment:
-      USE_GIT_VERSION: "true"
-
-    resource_class: large
+  check-api-deepcopies:
     docker:
-      *SERVICES
-
+      - image: circleci/golang:1.14
     steps:
-      - setup_remote_docker:
-          docker_layer_caching: true
       - checkout
       - run:
+          name: Checking API Deepcopies
           command: |
-            make kore-apiserver
-            bin/kore-apiserver --verbose
-          background: true
-          environment:
-            <<: *SERVICES_ENV
+            make deepcopy-gen
+            make check-api-sync
+
+  check-api-register:
+    docker:
+      - image: circleci/golang:1.14
+    steps:
+      - checkout
       - run:
-          name: Checking swagger
+          name: Checking API Register
           command: |
+            make register-gen
+            make check-api-sync
+
+  check-api-crds:
+    docker:
+      - image: circleci/golang:1.14
+    steps:
+      - checkout
+      - run:
+          name: Checking API Schema
+          command: |
+            make crd-gen
+            make schema-gen
+            make check-api-sync
+
+  validate-api:
+    environment:
+      <<: *SERVICES_ENV
+    machine:
+      image: ubuntu-1604:202007-01
+      docker_layer_caching: true
+    steps:
+      - checkout
+#      - run:
+#          name: Checking API changes
+#          command: |
+#            git diff master... --name-only | egrep '^(pkg|cmd)/' || circleci-agent step halt
+      - kube-orb/install-kubectl:
+          kubectl-version: latest
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Provisioning Local Cluster
+          command: |
+            mkdir -p bin
+            # copy the cli from build
+            cp -f /tmp/workspace/* bin/
+            sudo mkdir -p /usr/local/go_workspace
+            test/bin/e2e.sh \
+              --build-cli false \
+              --build-kore-api false \
+              --build-proxy false \
+              --version ${CIRCLE_SHA1}
+      - run:
+          name: Checking Swagger
+          command: |
+            sudo apt-get install jq
             make swagger-json
             make swagger-validate
       - run:
-          name: Checking UI auto-gen
+          name: Checking UI Autogeneration
           working_directory: ~/project/ui
           command: |
-            # Now we've updated the swagger from the live API, we can check
-            # that the kore autogen in the UI project is up to date as well.
-            # Doesn't fit here logically but does in terms of efficiency.
             make check-kore-autogen
       - run:
           name: Integration testing API
           command: |
             make check-swagger-apiclient api-test
-          environment:
-            <<: *SERVICES_ENV
-
-  check-apis:
-    environment:
-      USE_GIT_VERSION: "true"
-
-    resource_class: large
-    docker:
-      - image: circleci/golang:1.14
-
-    steps:
-      - checkout
-      - run:
-          name: Checking generated API resources
-          command: |
-            make check-apis
 
   release:
     docker:
       - image: circleci/golang:1.14
-
     steps:
       - checkout
       - setup_remote_docker:
@@ -303,7 +184,6 @@ jobs:
   check-release-notes:
     docker:
       - image: circleci/golang:1.14
-
     steps:
       - checkout
       - run:
@@ -313,54 +193,28 @@ jobs:
   publish-release:
     docker:
       - image: circleci/golang:1.14
-
     steps:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
-      - run:
-          name: Installing helm
-          command: |
-            sudo curl -sL https://get.helm.sh/helm-v3.1.2-linux-amd64.tar.gz -o helm.tar.gz
-            sudo tar -xzf helm.tar.gz --strip-components=1 -C /bin/ linux-amd64/helm
-            sudo chmod +x /bin/helm
+      - helm/install-helm-client:
+          version: v3.1.2
       - deploy:
           command: |
             VERSION=${CIRCLE_TAG} make package
             VERSION=${CIRCLE_TAG} make push-release-packages
 
-  build-ui:
+  #
+  ## UI
+  #
+  check-ui:
     docker:
       - image: circleci/node:12
     steps:
       - checkout
       - restore_cache:
-            keys:
-              - ui-node-v1-{{ checksum "ui/package-lock.json" }}
-              - ui-node-v1-
-      - run:
-          name: Installing UI dependencies
-          working_directory: ~/project/ui
-          command: |
-            make deps
-      - save_cache:
-            paths:
-              - ui/node_modules
-            key: ui-node-v1-{{ checksum "ui/package-lock.json" }}
-      - run:
-          name: Building UI
-          working_directory: ~/project/ui
-          command: |
-            make build
-
-  test-ui:
-    docker:
-      - image: circleci/node:12
-    steps:
-      - checkout
-      - restore_cache:
-            keys:
-              - ui-node-v1-{{ checksum "ui/package-lock.json" }}
+          keys:
+            - ui-node-v1-{{ checksum "ui/package-lock.json" }}
       - run:
           name: Testing UI
           working_directory: ~/project/ui
@@ -369,60 +223,83 @@ jobs:
             [[ -d node_modules ]] || make deps
             make test
 
-  test-ui-e2e:
-    resource_class: xlarge
-    docker:
-      - image: circleci/node:12
-      - *SERVICES_ETCD
-      - *SERVICES_REDIS
-      - *SERVICES_DATABASE
-      - *SERVICES_KUBECTRLMGR
-      - *SERVICES_KUBEAPISVR
-
+  validate-ui:
+    environment:
+      <<: *SERVICES_ENV
+    machine:
+      docker_layer_caching: true
+      image: ubuntu-1604:202007-01
+    resource_class: large
     steps:
       - checkout
       - restore_cache:
-            keys:
-              - ui-node-v1-{{ checksum "ui/package-lock.json" }}
+          keys:
+            - ui-node-v1-{{ checksum "ui/package-lock.json" }}
+      - kube-orb/install-kubectl:
+          kubectl-version: latest
+      - run:
+          name: Download Containers
+          background: true
+          command: |
+            docker pull kindest/node:v1.15.11
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Provisioning Local Cluster
+          background: true
+          command: |
+            mkdir -p bin
+            # copy the cli from build
+            cp -f /tmp/workspace/* bin/
+            # build the cluster
+            test/bin/e2e.sh \
+              --build-cli false \
+              --build-kore-api false \
+              --build-proxy false \
+              --enable-ui false \
+              --version ${CIRCLE_SHA1}
+      - run:
+          name: Running Redis Service
+          background: true
+          command: |
+            docker run --net=host -d redis
       - run:
           name: Running kore-ui
           working_directory: ~/project/ui
+          background: true
+          environment:
+            KORE_API_TOKEN: password
+            KORE_API_URL: http://localhost:10080/api/v1alpha1
+            KORE_BASE_URL: http://localhost:3000
+            KORE_UI_DISABLE_ANIMATIONS: 'true'
+            REDIS_URL: redis://127.0.0.1:6379
           command: |
             # Restore node modules only if we've not got a cache hit.
             [[ -d node_modules ]] || make deps
             make build
             npm start
-          background: true
-          environment:
-            KORE_UI_DISABLE_ANIMATIONS: 'true'
-            KORE_BASE_URL: http://localhost:3000
-            KORE_API_URL: http://localhost:10080/api/v1alpha1
-            KORE_API_TOKEN: password
-            REDIS_URL: redis://redis:6379
       - run:
-          name: Install Headless Chrome dependencies
-          command: ./ui/scripts/install-e2e-deps.sh
-      - attach_workspace:
-          at: /tmp/workspace
-      - run:
-          name: Running kore-apiserver
+          name: Waiting for UI & API
           command: |
-            /tmp/workspace/bin/kore-apiserver --verbose
-          background: true
-          environment:
-            <<: *SERVICES_ENV
-      - run:
-          name: Waiting for API and UI
-          command: |
-            make api-wait
-            make ui-wait
+            echo "Waiting to API"
+            timeout 600 bash -c 'until curl http://127.0.0.1:10080/healthz >/dev/null 2>&1; do sleep 5; done'
+            echo "Waiting to UI"
+            timeout 300 bash -c 'until curl http://127.0.0.1:3000 >/dev/null 2>&1; do sleep 5; done'
+      - save_cache:
+          paths:
+            - ui/node_modules
+          key: ui-node-v1-{{ checksum "ui/package-lock.json" }}
       - run:
           name: End-to-end testing UI
-          working_directory: ~/project/ui
           environment:
             NODE_ENV: development
           command: |
-            make test-e2e
+            docker run -ti --rm --net=host \
+              -e NODE_ENV=${NODE_ENV} \
+              -v ${PWD}:/workspace \
+              -w /workspace/ui \
+              circleci/node:12 \
+              bash -c "./scripts/install-e2e-deps.sh; make test-e2e"
 
   release-ui:
     environment:
@@ -485,135 +362,272 @@ jobs:
       - slack/notify-on-failure:
         only_for_branches: master
 
-  # This releases the local images for kore-apiserver and the auth-proxy; to
-  # ensure we have a complete e2e
-  e2e-images:
-    docker:
-      - image: circleci/golang:1.14
+  e2e_gke:
+    environment:
+      <<: *SERVICES_ENV
+    machine:
+      docker_layer_caching: true
+      image: ubuntu-1604:202007-01
     steps:
       - checkout
-      - setup_remote_docker:
-          docker_layer_caching: true
+      - kube-orb/install-kubectl:
+          kubectl-version: latest
       - run:
-          name: Releasing E2E Images
+          name: Installing Tools
+          command: |
+            sudo apt-get update
+            sudo apt install -y bats jq awscli
+      - run:
+          name: Docker Login
           command: |
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
-            VERSION=${CIRCLE_SHA1} make images
-            VERSION=${CIRCLE_SHA1} make push-images
-
-  e2e_gke:
-    <<: *E2E_JOB_TEMPLATE
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Provisioning Local Cluster
+          command: |
+            mkdir -p bin
+            # copy the cli from build
+            cp -f /tmp/workspace/* bin/
+            # build the cluster
+            test/bin/e2e.sh \
+              --build-cli false \
+              --build-kore-api false \
+              --build-proxy false \
+              --enable-ui false \
+              --version ${CIRCLE_SHA1}
+      - run:
+          name: Running GKE E2E Suite
+          no_output_timeout: 30m
+          command: |
+            rm -f ${HOME}/.kore/config
+            test/e2e/check-suite.sh \
+              --enable-e2e-user ${KORE_E2E_USER} \
+              --enable-gke true
+      - slack/notify-on-failure:
+          only_for_branches: master
 
   e2e_eks:
-    <<: *E2E_JOB_TEMPLATE
+    environment:
+      <<: *SERVICES_ENV
+    machine:
+      docker_layer_caching: true
+      image: ubuntu-1604:202007-01
+    steps:
+      - checkout
+      - kube-orb/install-kubectl:
+          kubectl-version: latest
+      - run:
+          name: Installing Tools
+          command: |
+            sudo apt-get update
+            sudo apt install -y bats jq awscli
+      - run:
+          name: Docker Login
+          command: |
+            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Provisioning Local Cluster
+          command: |
+            mkdir -p bin
+            # copy the cli from build
+            cp -f /tmp/workspace/* bin/
+            # build the cluster
+            test/bin/e2e.sh \
+              --build-cli false \
+              --build-kore-api false \
+              --build-proxy false \
+              --enable-ui false \
+              --version ${CIRCLE_SHA1}
+      - run:
+          name: Running EKS E2E Suite
+          no_output_timeout: 30m
+          command: |
+            rm -f ${HOME}/.kore/config
+            test/e2e/check-suite.sh \
+              --enable-e2e-user ${KORE_E2E_USER} \
+              --enable-eks true
+      - slack/notify-on-failure:
+          only_for_branches: master
 
   e2e_aks:
-    <<: *E2E_JOB_TEMPLATE
+    environment:
+      <<: *SERVICES_ENV
+    machine:
+      docker_layer_caching: true
+      image: ubuntu-1604:202007-01
+    steps:
+      - checkout
+      - kube-orb/install-kubectl:
+          kubectl-version: latest
+      - run:
+          name: Installing Tools
+          command: |
+            sudo apt-get update
+            sudo apt install -y bats jq awscli
+      - run:
+          name: Docker Login
+          command: |
+            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Provisioning Local Cluster
+          command: |
+            mkdir -p bin
+            # copy the cli from build
+            cp -f /tmp/workspace/* bin/
+            # build the cluster
+            test/bin/e2e.sh \
+              --build-cli false \
+              --build-kore-api false \
+              --build-proxy false \
+              --enable-ui false \
+              --version ${CIRCLE_SHA1}
+      - run:
+          name: Running EKS E2E Suite
+          no_output_timeout: 30m
+          command: |
+            rm -f ${HOME}/.kore/config
+            test/e2e/check-suite.sh \
+              --enable-e2e-user ${KORE_E2E_USER} \
+              --enable-aks true
+      - slack/notify-on-failure:
+          only_for_branches: master
+
+  update_e2e:
+    parameters:
+      from:
+        type: string
+        default: latest
+    environment:
+      <<: *SERVICES_ENV
+      FROM_BUILD: << parameters.from >>
+
+    machine:
+      docker_layer_caching: true
+      image: ubuntu-1604:202007-01
+    steps:
+      - checkout
+      - kube-orb/install-kubectl:
+          kubectl-version: latest
+      - run:
+          name: Installing Tools
+          command: |
+            sudo apt-get update
+            sudo apt install -y bats jq awscli
+      - run:
+          name: Docker Login
+          command: |
+            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
+      - run:
+          name: Building Last Release
+          command: |
+            BUILD=$(git describe --tags --abbrev=0)
+            if [[ "${FROM_BUILD}" != "latest" ]]; then
+              BUILD=${FROM_BUILD}
+            fi
+            git checkout ${BUILD}
+            # we don't need to build the images this time
+            test/bin/e2e.sh \
+              --build-images false \
+              --version ${BUILD}
+      - run:
+          name: Running E2E Suite
+          no_output_timeout: 30m
+          command: |
+            rm -f ${HOME}/.kore/config
+            test/e2e/check-suite.sh \
+              --enable-e2e-user ${KORE_E2E_USER} \
+              --enable-gke true
+      - run:
+          name: Updating Kore Release
+          command: |
+            git checkout ${CIRCLE_SHA1}
+            test/bin/e2e.sh --version ${CIRCLE_SHA1}
+      - run:
+          name: Running E2E Suite
+          no_output_timeout: 30m
+          command: |
+            test/e2e/check-suite.sh \
+              --enable-e2e-user ${KORE_E2E_USER} \
+              --enable-gke true
+      - slack/notify-on-failure:
+          only_for_branches: master
 
 workflows:
   version: 2.1
   workflow:
     unless: << pipeline.parameters.enable_e2e >>
     jobs:
-      - check:
+      - build-api:
           filters:
             tags:
               only: /^v.*$/
-      - build:
+      - check-ui:
           filters:
             tags:
               only: /^v.*$/
-      - test:
+      - check-units:
           filters:
             tags:
               only: /^v.*$/
-      - test-api:
+          requires:
+            - build-api
+            - check-ui
+      - check-linting:
           filters:
             tags:
               only: /^v.*$/
-      - check-apis:
+          requires:
+            - build-api
+            - check-ui
+      - check-api-deepcopies:
           filters:
             tags:
               only: /^v.*$/
+          requires:
+            - build-api
+            - check-ui
+      - check-api-register:
+          filters:
+            tags:
+              only: /^v.*$/
+          requires:
+            - build-api
+            - check-ui
+      - check-api-crds:
+          filters:
+            tags:
+              only: /^v.*$/
+          requires:
+            - build-api
+            - check-ui
+      - validate-ui:
+          filters:
+            tags:
+              only: /^v.*$/
+          requires:
+            - build-api
+            - check-ui
+      - validate-api:
+          filters:
+            tags:
+              only: /^v.*$/
+          requires:
+            - check-api-crds
+            - check-api-deepcopies
+            - check-api-register
+            - check-linting
+            - check-units
       - release:
           requires:
-            - check
-            - build
-            - test
-            - test-api
-            - check-apis
+            - validate-api
           filters:
             branches:
               only: master
-            tags:
-              only: /^v.*$/
-      - check-release-notes:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v([0-9]+)\.([0-9]+)\.([0-9]+)($|-rc([0-9]+))$/
-      - e2e-images:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v([0-9]+)\.([0-9]+)\.([0-9]+)($|-rc([0-9]+)|-beta([0-9]+)|-alpha([0-9]+))$/
-      - e2e_gke:
-          enable_gke: true
-          requires:
-            - e2e-images
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v([0-9]+)\.([0-9]+)\.([0-9]+)($|-rc([0-9]+)|-beta([0-9]+)|-alpha([0-9]+))$/
-      - e2e_eks:
-          enable_eks: true
-          requires:
-            - e2e-images
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v([0-9]+)\.([0-9]+)\.([0-9]+)($|-rc([0-9]+)|-beta([0-9]+)|-alpha([0-9]+))$/
-      - e2e_aks:
-          enable_aks: true
-          requires:
-            - e2e-images
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v([0-9]+)\.([0-9]+)\.([0-9]+)($|-rc([0-9]+)|-beta([0-9]+)|-alpha([0-9]+))$/
-      - publish-release:
-          requires:
-            - check
-            - build
-            - test
-            - test-api
-            - check-apis
-            - check-release-notes
-            - e2e_eks
-            - e2e_gke
-            - e2e_aks
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^v.*$/
-      - build-ui:
-          filters:
-            tags:
-              only: /^v.*$/
-      - test-ui:
-          filters:
-            tags:
-              only: /^v.*$/
-      - test-ui-e2e:
-          requires:
-            - build
-          filters:
             tags:
               only: /^v.*$/
       - release-ui:
@@ -623,9 +637,50 @@ workflows:
             tags:
               only: /^v.*$/
           requires:
-            - build-ui
-            - test-ui
-            - test-ui-e2e
+            - validate-ui
+      - check-release-notes:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v([0-9]+)\.([0-9]+)\.([0-9]+)($|-rc([0-9]+))$/
+      - e2e_gke:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v([0-9]+)\.([0-9]+)\.([0-9]+)($|-rc([0-9]+)|-beta([0-9]+)|-alpha([0-9]+))$/
+          requires:
+            - build-api
+      - e2e_eks:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v([0-9]+)\.([0-9]+)\.([0-9]+)($|-rc([0-9]+)|-beta([0-9]+)|-alpha([0-9]+))$/
+          requires:
+            - build-api
+      - e2e_aks:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v([0-9]+)\.([0-9]+)\.([0-9]+)($|-rc([0-9]+)|-beta([0-9]+)|-alpha([0-9]+))$/
+          requires:
+            - build-api
+      - publish-release:
+          requires:
+            - check-release-notes
+            - release
+            - release-ui
+            - e2e_gke
+            - e2e_eks
+            - e2e_aks
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*$/
       - deploy-qa:
           filters:
             branches:
@@ -648,49 +703,42 @@ workflows:
   e2e_gke:
     when: << pipeline.parameters.enable_gke_e2e >>
     jobs:
-      - e2e-images
+      - build-api
       - e2e_gke:
-          enable_gke: true
           requires:
-            - e2e-images
+            - build-api
 
   e2e_eks:
     when: << pipeline.parameters.enable_eks_e2e >>
     jobs:
-      - e2e-images
+      - build-api
       - e2e_eks:
-          enable_eks: true
           requires:
-            - e2e-images
+            - build-api
 
   e2e_aks:
     when: << pipeline.parameters.enable_aks_e2e >>
     jobs:
-      - e2e-images
+      - build-api
       - e2e_aks:
-          enable_aks: true
           requires:
-            - e2e-images
+            - build-api
+
+  update_e2e:
+    when: << pipeline.parameters.enable_update_e2e >>
+    jobs:
+      - update_e2e
 
   nightly:
     triggers:
       - schedule:
-          cron: "0 21 * * 1-5"
+          cron: "0 20 * * 1-5"
           filters:
             branches:
               only:
                 - master
     jobs:
-      - e2e-images
-      - e2e_gke:
-          enable_gke: true
-          requires:
-            - e2e-images
-      - e2e_eks:
-          enable_eks: true
-          requires:
-            - e2e-images
-      - e2e_aks:
-          enable_aks: true
-          requires:
-            - e2e-images
+      - e2e_gke
+      - e2e_eks
+      - e2e_aks
+

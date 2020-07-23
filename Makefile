@@ -69,7 +69,7 @@ build: golang
 	@mkdir -p bin
 	@for binary in kore kore-apiserver auth-proxy; do \
 		echo "--> Building $${binary} binary" ; \
-		go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go || exit 1; \
+		CGO_ENABLED=0 go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go || exit 1; \
 	done
 
 kore: golang
@@ -80,20 +80,28 @@ kore: golang
 auth-proxy: golang
 	@echo "--> Compiling the auth-proxy binary"
 	@mkdir -p bin
-	go build -ldflags "${LFLAGS}" -o bin/auth-proxy cmd/auth-proxy/*.go
+	CGO_ENABLED=0 go build -ldflags "${LFLAGS}" -o bin/auth-proxy cmd/auth-proxy/*.go
 
 auth-proxy-image: golang
 	@echo "--> Build the auth-proxy docker image"
-	docker build -t ${REGISTRY}/${AUTHOR}/auth-proxy:${VERSION} -f images/Dockerfile.auth-proxy .
+	CGO_ENABLED=0 docker build -t ${REGISTRY}/${AUTHOR}/auth-proxy:${VERSION} -f images/Dockerfile.auth-proxy .
+
+auth-proxy-image-release: auth-proxy-image
+	@echo "--> Pushing auth image"
+	docker push ${REGISTRY}/${AUTHOR}/auth-proxy:${VERSION}
 
 kore-apiserver: golang
 	@echo "--> Compiling the kore-apiserver binary"
 	@mkdir -p bin
-	go build -ldflags "${LFLAGS}" -o bin/kore-apiserver cmd/kore-apiserver/*.go
+	CGO_ENABLED=0 go build -ldflags "${LFLAGS}" -o bin/kore-apiserver cmd/kore-apiserver/*.go
 
 kore-apiserver-image: golang
 	@echo "--> Compiling the kore-apiserver image"
 	docker build -t ${REGISTRY}/${AUTHOR}/kore-apiserver:${VERSION} -f images/Dockerfile.kore-apiserver .
+
+kore-apiserver-image-local:
+	@echo "--> Building the kore-apiserver image local"
+	docker build -t ${REGISTRY}/${AUTHOR}/kore-apiserver:${VERSION} -f images/Dockerfile.kore-apiserver.local .
 
 docker-build:
 	@echo "--> Running docker"
@@ -168,10 +176,9 @@ swagger: compose
 	@$(MAKE) swagger-json
 	@$(MAKE) compose-down
 	@$(MAKE) swagger-validate
-#@kill `cat $@ 2>/dev/null` 2>/dev/null && rm $@ 2>/dev/null
 
 swagger-json: api-wait
-	@curl --retry 20 --retry-delay 5 --retry-connrefused -sSL http://127.0.0.1:10080/swagger.json | jq > swagger.json
+	@curl --retry 20 --retry-delay 5 -sSL http://127.0.0.1:10080/swagger.json | jq . -M > swagger.json
 	@echo "--> Copy swagger JSON for UI to use for its auto-gen"
 	@cp swagger.json ui/kore-api-swagger.json
 
@@ -411,6 +418,9 @@ apis: golang
 	@${MAKE} schema-gen
 
 check-apis: apis
+	@${MAKE} check-api-sync
+
+check-api-sync:
 	@if [ $$(git status --porcelain | wc -l) -gt 0 ]; then \
 		echo "There are local changes after running 'make apis'. Did you forget to run it?"; \
 		git status --porcelain; \
