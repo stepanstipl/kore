@@ -96,15 +96,20 @@ class AWSOrganizationForm extends VerifiedAllocatedResourceForm {
                   Providing these details grants Kore the ability to create Accounts for teams within the AWS organization. Teams will then be able to provision clusters within their Accounts.
                 </Paragraph>
                 <Paragraph style={{ marginBottom: 0 }}>
-                  See <a target="_blank" rel="noopener noreferrer" style={{ textDecoration:'underline' }} href="https://docs.appvia.io/kore/guide/admin/aws_accounting/#aws-account-factory-access">AWS Account Factory Access</a> for how to obtain suitable access details below.
+                  See <a target="_blank" rel="noopener noreferrer" style={{ textDecoration:'underline' }} href="https://docs.appvia.io/kore/guide/admin/aws_accounting/#aws-account-factory-access">AWS Account Factory Access</a> for how to obtain suitable access details.
                 </Paragraph>
               </>
             }
             style={{ marginBottom: '20px' }}
           />
+          <Alert
+            message={ <> The Control Tower region does <b>not</b> dictate where EKS clusters or applications will run </> }
+            type="warning"
+            style={{ marginTop: '10px' }}
+          />
           <Form.Item label="Region" validateStatus={this.fieldError('region') ? 'error' : ''} help={this.fieldError('region') || 'The region where AWS Control Tower is enabled in the master account'}>
             {form.getFieldDecorator('region', {
-              rules: [{ required: true, message: 'Please enter the region where Control Tower is enabled!' }],
+              rules: [{ required: true, message: 'Please select the region where Control Tower is enabled' }],
               initialValue: data && data.spec.region
             })(
               <Select>
