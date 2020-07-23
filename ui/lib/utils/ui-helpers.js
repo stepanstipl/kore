@@ -12,7 +12,7 @@ module.exports = {
   clusterProviderIconSrcMap: {
     'GKE': '/static/images/GCP.png',
     'EKS': '/static/images/AWS.png',
-    'Azure': '/static/images/Azure.svg',
+    'AKS': '/static/images/Azure.svg',
     'Kore': '/static/images/appvia-colour.svg'
   },
   verifiedStatusMessageMap: {

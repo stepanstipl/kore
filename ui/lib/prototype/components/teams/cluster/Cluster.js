@@ -11,7 +11,8 @@ import { successMessage, errorMessage } from '../../../../utils/message'
 
 const clusterProviderIconSrcMap = {
   'GKE': '/static/images/GKE.png',
-  'EKS': '/static/images/AWS.png'
+  'EKS': '/static/images/AWS.png',
+  'AKS': '/static/images/Azure.svg'
 }
 
 class Cluster extends AutoRefreshComponent {
@@ -100,7 +101,7 @@ class Cluster extends AutoRefreshComponent {
     return (
       <List.Item actions={actions()}>
         <List.Item.Meta
-          avatar={<img src={clusterProviderIconSrcMap[cluster.spec.kind]} height="32px" />}
+          avatar={<img src={clusterProviderIconSrcMap[cluster.spec.kind]} style={{ maxHeight:32, maxWidth: 32 }} />}
           title={<Link href={`/teams/${team}/clusters/${cluster.metadata.name}`}><a><Text>{cluster.spec.kind} <Text style={{ fontFamily: 'monospace', marginLeft: '15px' }}>{cluster.metadata.name}</Text></Text></a></Link>}
           description={
             <div>
