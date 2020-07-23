@@ -9,8 +9,8 @@ import ExistingCloudAccounts from './ExistingCloudAccounts'
 class CloudSetup extends React.Component {
 
   static propTypes = {
-    provider: PropTypes.oneOf(['GKE', 'EKS']),
-    cloud: PropTypes.oneOf(['GCP', 'AWS']),
+    provider: PropTypes.oneOf(['GKE', 'EKS', 'AKS']),
+    cloud: PropTypes.oneOf(['GCP', 'AWS', 'Azure']),
     accountNoun: PropTypes.string.isRequired,
     accountManagement: PropTypes.object,
     credentialsList: PropTypes.array.isRequired
@@ -26,6 +26,11 @@ class CloudSetup extends React.Component {
 
   render() {
     const { cloudManagementType, setupComplete } = this.state
+
+    // Azure does not have account management yet
+    if (this.props.cloud === 'Azure') {
+      return <ExistingCloudAccounts cloud={this.props.cloud} accountNoun={this.props.accountNoun} setupComplete={setupComplete} handleSetupComplete={this.setupComplete} />
+    }
 
     return (
       <Card>
