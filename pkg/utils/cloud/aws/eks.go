@@ -510,9 +510,7 @@ func (c *Client) ListEKSNodeGroupNodes(group *eksv1alpha1.EKSNodeGroup) ([]*ec2.
 	}
 	var ret []*ec2.Instance
 	for _, r := range instances.Reservations {
-		for _, i := range r.Instances {
-			ret = append(ret, i)
-		}
+		ret = append(ret, r.Instances...)
 	}
 	return ret, nil
 }

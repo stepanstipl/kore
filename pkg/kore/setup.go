@@ -219,6 +219,35 @@ func (h hubImpl) Setup(ctx context.Context) error {
 		}
 	}
 
+	// @step: Ensure all clusters have identities
+	teams, err := h.Teams().List(getAdminContext(ctx))
+	if err != nil {
+		log.Errorf("error getting team list: %v", err)
+		return err
+	}
+	for _, team := range teams.Items {
+		if team.Name == "kore-admin" {
+			continue
+		}
+		teamClusters, err := h.Teams().Team(team.Name).Clusters().List(getAdminContext(ctx))
+		if err != nil {
+			log.Errorf("error getting cluster list for team %s: %v", team.Name, err)
+			return err
+		}
+		for _, teamCluster := range teamClusters.Items {
+			if teamCluster.Spec.Identifier == "" {
+				logger := log.WithField("team", team.Name).WithField("cluster", teamCluster.Name)
+				logger.Infof("assigning identifiers for cluster %s in team %s", teamCluster.Name, team.Name)
+				// the standard update assigns missing identifiers, so just run that:
+				if err := h.Teams().Team(team.Name).Clusters().Update(getAdminContext(ctx), &teamCluster); err != nil {
+					// Warn but continue if this fails - don't want to bork startup because of e.g. a validation
+					// rule changing or similar.
+					logger.Warnf("error updating cluster %s for team %s: %v", teamCluster.Name, team.Name, err)
+				}
+			}
+		}
+	}
+
 	return nil
 }
 
