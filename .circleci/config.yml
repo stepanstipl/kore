@@ -738,7 +738,13 @@ workflows:
               only:
                 - master
     jobs:
-      - e2e_gke
-      - e2e_eks
-      - e2e_aks
-
+      - build-api
+      - e2e_gke:
+          requires:
+            - build-api
+      - e2e_eks:
+          requires:
+            - build-api
+      - e2e_aks:
+          requires:
+            - build-api
