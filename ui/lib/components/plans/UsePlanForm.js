@@ -2,7 +2,6 @@ import * as React from 'react'
 import PropTypes from 'prop-types'
 import { set } from 'lodash'
 
-import copy from '../../utils/object-copy'
 import KoreApi from '../../kore-api'
 import PlanViewEdit from './PlanViewEdit'
 import { Icon } from 'antd'
@@ -36,7 +35,7 @@ class UsePlanForm extends React.Component {
   constructor(props) {
     super(props)
     // Use passed-in plan values if we have them.
-    const planValues = this.props.planValues ? this.props.planValues : UsePlanForm.initialState.planValues
+    const planValues = props.planValues ? props.planValues : UsePlanForm.initialState.planValues
     this.state = {
       ...UsePlanForm.initialState,
       planValues
@@ -50,14 +49,12 @@ class UsePlanForm extends React.Component {
 
   componentDidUpdateComplete = null
   componentDidUpdate(prevProps) {
-    if (this.props.plan !== prevProps.plan || this.props.team !== prevProps.team) {
+    if (this.props.plan !== prevProps.plan || this.props.team.metadata.name !== prevProps.team.metadata.name) {
       this.setState({ ...UsePlanForm.initialState })
       this.componentDidUpdateComplete = this.fetchComponentData()
     }
     if (this.props.planValues !== prevProps.planValues) {
-      this.setState({
-        planValues: this.props.planValues
-      })
+      this.setState({ planValues: this.props.planValues })
     }
   }
 
@@ -98,16 +95,20 @@ class UsePlanForm extends React.Component {
       schema = JSON.parse(schema)
     }
 
+    // Overwrite plan values only if it's still set to the default value of empty object
+    let newPlanValues = this.state.planValues
+    if (Object.keys(newPlanValues).length === 0) {
+      newPlanValues = planValues
+    }
+
     this.setState({
-      ...this.state,
       schema: schema || { properties:[] },
       editableParams: editableParams || [],
-      // Overwrite plan values only if it's still set to the default value
-      planValues: this.state.planValues === UsePlanForm.initialState.planValues ? copy(planValues || {}) : this.state.planValues,
+      planValues: newPlanValues,
       dataLoading: false
+    }, () => {
+      this.props.onPlanValuesChange && this.props.onPlanValuesChange({ ...this.state.planValues })
     })
-
-    this.props.onPlanValuesChange && this.props.onPlanValuesChange({ ...this.state.planValues })
   }
 
   onValueChange(name, value) {
