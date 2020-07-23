@@ -487,8 +487,8 @@ jobs:
               --enable-ui false \
               --version ${CIRCLE_SHA1}
       - run:
-          name: Running EKS E2E Suite
-          no_output_timeout: 30m
+          name: Running AKS E2E Suite
+          no_output_timeout: 60m
           command: |
             rm -f ${HOME}/.kore/config
             test/e2e/check-suite.sh \
