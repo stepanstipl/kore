@@ -1,4 +1,4 @@
-# How to develop localy using kind
+# How to develop locally using kind
 
 Kore depends on and manages it's dependencies in Kubernetes.
 
