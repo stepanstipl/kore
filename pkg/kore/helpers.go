@@ -274,7 +274,7 @@ func IsValidGVK(gvk schema.GroupVersionKind) error {
 
 // Label returns a kore label on a resource
 func Label(tag string) string {
-	return fmt.Sprintf("kore.appvia.io/%s", tag)
+	return utils.Label(tag)
 }
 
 // EmptyUser returns an empty user

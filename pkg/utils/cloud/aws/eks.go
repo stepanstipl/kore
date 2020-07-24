@@ -23,7 +23,6 @@ import (
 	"strings"
 
 	eksv1alpha1 "github.com/appvia/kore/pkg/apis/eks/v1alpha1"
-	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -546,9 +545,9 @@ func (c *Client) HasTagWithValue(instance *ec2.Instance, key string, value strin
 // createClusterInput is used to generate the EKS cluster definition
 func (c *Client) createClusterInput() *awseks.CreateClusterInput {
 	tags := map[string]*string{
-		kore.Label("name"):  aws.String(c.cluster.Name),
-		kore.Label("owned"): aws.String("true"),
-		kore.Label("team"):  aws.String(c.cluster.Namespace),
+		utils.Label("name"):  aws.String(c.cluster.Name),
+		utils.Label("owned"): aws.String("true"),
+		utils.Label("team"):  aws.String(c.cluster.Namespace),
 	}
 	for k, v := range c.cluster.Spec.Tags {
 		tags[k] = aws.String(v)
