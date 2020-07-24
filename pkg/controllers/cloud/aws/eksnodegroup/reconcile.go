@@ -118,7 +118,7 @@ func (n *ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 				n.EnsureClusterReady(resource),
 				n.EnsureNodeRole(resource, creds),
 				n.EnsureNodeGroup(client, resource),
-				n.EnsureNodeTagging(client, resource),
+				n.EnsureNodeTagging(client, resource), // NOTE: NodeTagging MUST ALWAYS BE LAST as it always requeues. Anything after this will NOT be run.
 			},
 		)
 	}()
