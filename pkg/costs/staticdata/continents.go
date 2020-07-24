@@ -22,6 +22,8 @@ func Continents(cloud string) string {
 		return gcpContinents
 	case "aws":
 		return awsContinents
+	case "azure":
+		return azureContinents
 	}
 	return ""
 }
@@ -210,3 +212,5 @@ const awsContinents = `[
 		 ]
 	 }
  ]`
+
+const azureContinents = `[{"name":"Australia","regions":[{"id":"australiasoutheast","name":"Australia Southeast"},{"id":"australiaeast","name":"Australia East"}]},{"name":"South America","regions":[{"id":"brazilsouth","name":"Brazil South"}]},{"name":"Africa","regions":[{"id":"southafricanorth","name":"South Africa North"}]},{"name":"Asia","regions":[{"id":"koreasouth","name":"Korea South"},{"id":"eastasia","name":"East Asia"},{"id":"southeastasia","name":"Southeast Asia"},{"id":"southindia","name":"South India"},{"id":"centralindia","name":"Central India"},{"id":"japanwest","name":"Japan West"},{"id":"japaneast","name":"Japan East"},{"id":"uaenorth","name":"UAE North"},{"id":"koreacentral","name":"Korea Central"}]},{"name":"North America","regions":[{"id":"westcentralus","name":"West Central US"},{"id":"southcentralus","name":"South Central US"},{"id":"canadacentral","name":"Canada Central"},{"id":"centralus","name":"Central US"},{"id":"westus2","name":"West US 2"},{"id":"eastus","name":"East US"},{"id":"westus","name":"West US"},{"id":"canadaeast","name":"Canada East"},{"id":"eastus2","name":"East US 2"},{"id":"northcentralus","name":"North Central US"}]},{"name":"Europe","regions":[{"id":"westeurope","name":"West Europe"},{"id":"norwayeast","name":"Norway East"},{"id":"germanynorth","name":"Germany North"},{"id":"northeurope","name":"North Europe"},{"id":"francecentral","name":"France Central"},{"id":"uksouth","name":"UK South"},{"id":"germanywestcentral","name":"Germany West Central"},{"id":"switzerlandnorth","name":"Switzerland North"},{"id":"switzerlandwest","name":"Switzerland West"},{"id":"norwaywest","name":"Norway West"},{"id":"ukwest","name":"UK West"}]}]`

@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: cloudinfo
-          image: quay.io/appvia/cloudinfo:0.13.0-patch1
+          image: quay.io/appvia/cloudinfo:0.14.0-patch1
           args: ["cloudinfo", "--scrape=true", "--config=/etc/cloudinfo/secrets/config.yaml", "--listen-address=0.0.0.0:8000", "--metrics-address=0.0.0.0:9000"]
           volumeMounts:
             - name: secretconfig

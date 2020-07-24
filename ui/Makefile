@@ -101,6 +101,11 @@ run-prod:
 	@$(MAKE) compose
 	@./scripts/run-with-env.sh npm start
 
+run-prod-no-animations:
+	@$(MAKE) build
+	@$(MAKE) compose
+	@export KORE_UI_DISABLE_ANIMATIONS="true" && ./scripts/run-with-env.sh npm start
+
 run-docker:
 	@$(MAKE) docker
 	@$(MAKE) compose

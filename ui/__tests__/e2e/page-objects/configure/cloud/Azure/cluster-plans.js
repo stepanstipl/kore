@@ -1,5 +1,5 @@
 import { ConfigureCloudClusterPlansBase } from '../cluster-plans-base'
-import { clearFillTextInput, setSelect, waitForDrawerOpenClose } from '../../../utils'
+import { clearFillTextInput, setSelect, waitForDrawerOpenClose, setCascader } from '../../../utils'
 
 export class ConfigureCloudAzureClusterPlans extends ConfigureCloudClusterPlansBase {
   constructor(p) {
@@ -17,7 +17,7 @@ export class ConfigureCloudAzureClusterPlans extends ConfigureCloudClusterPlansB
     await clearFillTextInput(this.p, 'plan_summary', description)
     await clearFillTextInput(this.p, 'plan_description', name)
     await clearFillTextInput(this.p, 'plan_input_description', planDescription)
-    await clearFillTextInput(this.p, 'plan_input_region', region)
+    await setCascader(this.p, 'plan_input_region', region)
     // wait for version control to be enabled after selecting the region
     await this.p.waitForSelector('#plan_input_version.ant-select-disabled', { hidden: true })
     await clearFillTextInput(this.p, 'plan_input_version', version)

@@ -82,7 +82,7 @@ describe('Configure Cloud - Azure', () => {
       name: `testplan-${Math.random().toString(36).substr(2, 5)}`,
       description: 'AKS plan for testing',
       planDescription: 'A plan description',
-      region: 'uksouth',
+      region: [ 'Europe', 'UK South - uksouth' ],
       version: '1.16.10',
       dnsPrefix: 'example',
       networkPlugin: 'azure'
