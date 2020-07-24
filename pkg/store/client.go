@@ -302,31 +302,14 @@ func (r *rclient) Update(ctx context.Context, options ...UpdateOptionFunc) error
 		return errors.New("no name on resource")
 	}
 
+	// @step: if possible we try and inject the gvk from the schema
+	gvk, gvkfound, _ := hubschema.GetGroupKindVersion(r.value)
+	if gvkfound {
+		r.value.GetObjectKind().SetGroupVersionKind(gvk)
+	}
+
 	// @step: check if the resource exists already
-	original, found, err := func() (runtime.Object, bool, error) {
-		if r.current != nil {
-			return r.current, true, nil
-		}
-
-		// @TODO: the DeepCopyObject here is NOT safe where objects have omitempty,
-		// as the k8s client Get below doesn't overwrite those fields if the CRD in k8s has
-		// no value on them, meaning patching fails. However, the below doesn't quite work
-		// as there's not always an object kind available on things passed in here:
-		current := r.value.DeepCopyObject()
-		// current, err := schema.GetScheme().New(r.value.GetObjectKind().GroupVersionKind())
-		// if err != nil {
-		// 	return
-		// }
-		if err := r.client.Get(ctx, key, current); err != nil {
-			if !kerrors.IsNotFound(err) {
-				return nil, false, err
-			}
-
-			return nil, false, nil
-		}
-
-		return current, true, nil
-	}()
+	original, found, err := r.getCurrent(ctx, key, gvkfound)
 	if err != nil {
 		return err
 	}
@@ -335,6 +318,7 @@ func (r *rclient) Update(ctx context.Context, options ...UpdateOptionFunc) error
 		if !found && r.withCreate {
 			return r.client.Create(ctx, r.value)
 		}
+		// @todo: what about not found and not withCreate? error?
 
 		if r.withForceApply {
 			r.value.(metav1.Object).SetGeneration(original.(metav1.Object).GetGeneration())
@@ -367,12 +351,33 @@ func (r *rclient) Update(ctx context.Context, options ...UpdateOptionFunc) error
 		}).Error("failed to update internal cache on create")
 	}
 
-	// @step: if possible we try and inject the gvk from the schema
-	if gvk, found, _ := hubschema.GetGroupKindVersion(r.value); found {
-		r.value.GetObjectKind().SetGroupVersionKind(gvk)
+	return nil
+}
+
+func (r *rclient) getCurrent(ctx context.Context, key types.NamespacedName, gvkfound bool) (runtime.Object, bool, error) {
+	if r.current != nil {
+		return r.current, true, nil
 	}
 
-	return nil
+	// create a new, empty instance of the appropriate GVK
+	if !gvkfound {
+		return nil, false, errors.New("no GVK found for supplied object - use UpdateOptions.From or ensure object is from a registered schema")
+	}
+	current, err := hubschema.GetScheme().New(r.value.GetObjectKind().GroupVersionKind())
+	if err != nil {
+		return nil, false, err
+	}
+
+	// try and retrieve the object
+	if err := r.client.Get(ctx, key, current); err != nil {
+		if !kerrors.IsNotFound(err) {
+			return nil, false, err
+		}
+
+		return nil, false, nil
+	}
+
+	return current, true, nil
 }
 
 // updateQueryFromList is responsible for filling in the scheme for query
