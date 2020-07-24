@@ -303,6 +303,17 @@ func (a *Controller) Cleanup(cluster *clustersv1.Cluster, components *kore.Clust
 				continue
 			}
 
+			object, err := kubernetes.NewObject(statusComponent.Resource.GroupVersionKind())
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+			object.SetName(statusComponent.Resource.Name)
+			object.SetNamespace(statusComponent.Resource.Namespace)
+
+			comp = &kore.ClusterComponent{Object: object}
+
+			ctx.Logger().WithField("component", comp.ComponentName()).Debug("component is not defined anymore, deleting")
+
 			res, err := a.removeComponent(ctx, cluster, components, comp)
 			if err != nil || res.Requeue || res.RequeueAfter > 0 {
 				return res, err
