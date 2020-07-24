@@ -61,5 +61,29 @@ describe('validation', () => {
         expect('a1-').not.toMatch(pattern)
       })
     })
+
+    describe('amazonIamRoleArn', () => {
+      const pattern = new RegExp(patterns.amazonIamRoleArn.pattern)
+      it('matches correctly', () => {
+        expect('arn:aws:iam::111222333444:role/some-role').toMatch(pattern)
+        expect('arn:aws:iam::555555666666:role/anotherrole').toMatch(pattern)
+      })
+
+      it('must start with valid prefix', () => {
+        expect('4rn:4ws:1am::111222333444:role/some-role').not.toMatch(pattern)
+      })
+
+      it('must include 12 digit account number', () => {
+        expect('arn:aws:iam::123:role/some-role').not.toMatch(pattern)
+      })
+
+      it('must include role suffix', () => {
+        expect('arn:aws:iam::111222333444:notrole/some-role').not.toMatch(pattern)
+      })
+
+      it('must include the role name', () => {
+        expect('arn:aws:iam::111222333444:role/').not.toMatch(pattern)
+      })
+    })
   })
 })
