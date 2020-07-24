@@ -1,8 +1,8 @@
 # Local Quick Start Guide
 
-In this guide, we'll walk you through how to use the Appvia Kore CLI to set up a sandbox team environment locally and deploy a sample application.
+In this guide, we'll walk you through how to use the Kore CLI to set up a sandbox team environment locally and deploy a sample application.
 
-We'll showcase how Appvia Kore can give you a head start with setting up [clusters](https://www.redhat.com/en/topics/containers/what-is-a-kubernetes-cluster), team members and environments.
+We'll showcase how Kore can give you a head start with setting up [clusters](https://www.redhat.com/en/topics/containers/what-is-a-kubernetes-cluster), team members and environments.
 
 **NOTE** The installation of Kore created by the `kore alpha local` command in this quick start is suitable for testing and proof-of-concept work only. Bootstrapping a production installation of Kore is coming soon with [issue/340](https://github.com/appvia/kore/issues/340).
 
@@ -14,7 +14,7 @@ You'll need a Kubernetes provider to work through this guide. We simplify this b
 
 ## Team Access
 
-Appvia Kore uses an external identity provider to manage team member identity and authenticate members.
+Kore uses an external identity provider to manage team member identity and authenticate members.
 
 For this guide, we'll help you to get set up on Auth0 to configure team access.
 
@@ -94,13 +94,13 @@ With the a GCP Project selected or created,
 
 (You can skip this step if you already have your Service Account key downloaded in JSON format)
 
-Appvia Kore will use this key to access the Service Account.
+Kore will use this key to access the Service Account.
 
 This is the last step, create a key and download it in JSON format.
 
 ### Configure Team Access
 
-Using Appvia Kore, team IAM (Identity and Access management) [is greatly simplified](security-gke.md#rbac).
+Using Kore, team IAM (Identity and Access management) [is greatly simplified](security-gke.md#rbac).
 
 Kore uses an external identity provider, like Auth0 or an enterprise's existing SSO system, to directly manage team member access to the team's provisioned environment.
 
@@ -156,7 +156,7 @@ chmod +x kore
 # kore version v0.1.0 (git+sha: aaaaaaa, built: 01-01-2020)
 ```
 
-#### Configure Appvia Kore
+#### Configure Kore
 
 You'll need access to the following details created earlier:
 
