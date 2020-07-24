@@ -4630,6 +4630,69 @@
         }
       }
     },
+    "/api/v1alpha1/teams/{team}/awsorganizations/awsAccountOUs": {
+      "get": {
+        "description": "Requires the authentication headers x-api-aws-secret-access-key, and x-api-aws-access-key-id",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Gets a list of AWS OU's suitable for creating aws accounts within",
+        "operationId": "ListAWSAccountOUs",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Is the name of the team you are acting within",
+            "name": "team",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Is the region where Control Tower and AWS Organizations are enabled",
+            "name": "region",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Is the role in the master account to use for querying the Organization",
+            "name": "roleARN",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "Is the AWS Secret Access Key used for authenticating to the AWS API",
+            "name": "x-api-aws-secret-access-key",
+            "in": "header"
+          },
+          {
+            "type": "string",
+            "description": "Is the AWS Access Key ID used for authenticating to the AWS API",
+            "name": "x-api-aws-access-key-id",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Account OUs",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "default": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
     "/api/v1alpha1/teams/{team}/awsorganizations/{name}": {
       "get": {
         "consumes": [
