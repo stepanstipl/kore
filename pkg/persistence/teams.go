@@ -223,7 +223,9 @@ func (t teamImpl) GetAsset(ctx context.Context, teamIdentifier string, assetIden
 
 	asset := &model.TeamAsset{}
 
-	return asset, t.conn.Where("team_identifier = ? AND asset_identifier = ?", teamIdentifier, assetIdentifier).Find(asset).Error
+	// @note: uses unscoped to include rows with deleted_at set - gorm by default
+	// excludes 'soft deleted' rows - http://gorm.io/docs/delete.html#Soft-Delete
+	return asset, t.conn.Unscoped().Where("team_identifier = ? AND asset_identifier = ?", teamIdentifier, assetIdentifier).First(asset).Error
 }
 
 // Preload allows access to the preload

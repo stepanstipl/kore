@@ -239,10 +239,6 @@ func (c *clustersImpl) Update(ctx context.Context, cluster *clustersv1.Cluster) 
 			WithFieldError("name", validation.MaxLength, "must be 40 characters or less")
 	}
 
-	if err := c.validateIdentifiers(ctx, cluster, existing == nil); err != nil {
-		return err
-	}
-
 	if err := c.validateConfiguration(ctx, cluster); err != nil {
 		return err
 	}
@@ -255,13 +251,31 @@ func (c *clustersImpl) Update(ctx context.Context, cluster *clustersv1.Cluster) 
 		return err
 	}
 
-	return c.Store().Client().Update(ctx,
+	identifierAssigned, err := c.validateIdentifiers(ctx, cluster, existing == nil)
+	if err != nil {
+		return err
+	}
+
+	err = c.Store().Client().Update(ctx,
 		store.UpdateOptions.To(cluster),
 		store.UpdateOptions.WithCreate(true),
 	)
+	if err != nil && identifierAssigned {
+		log.WithError(err).Warn("error occurred persisting update to cluster but an identifier has been assigned so marking as deleted")
+		delErr := c.hubImpl.Teams().Team(c.team).Assets().MarkAssetDeleted(ctx, cluster.Labels[LabelClusterIdentifier])
+		if delErr != nil {
+			// warn that this has happened, but let the causing error flow up - this is
+			// not a major problem and the causal error is more important to the caller
+			// than this one.
+			log.WithError(delErr).Warn("error marking asset as deleted after failure to persist update to cluster")
+		}
+	}
+	return err
 }
 
-func (c *clustersImpl) validateIdentifiers(ctx context.Context, cluster *clustersv1.Cluster, isNewCluster bool) error {
+// validateIdentifiers checks the team and cluster identifier labels are set, returning true if a cluster identifier has
+// been assigned (or re-assigned)
+func (c *clustersImpl) validateIdentifiers(ctx context.Context, cluster *clustersv1.Cluster, isNewCluster bool) (bool, error) {
 	if cluster.Labels == nil {
 		cluster.Labels = map[string]string{}
 	}
@@ -272,36 +286,42 @@ func (c *clustersImpl) validateIdentifiers(ctx context.Context, cluster *cluster
 	var valid bool
 	valid, cluster.Labels[LabelTeamIdentifier], err = assets.EnsureTeamIdentifier(ctx, cluster.Labels[LabelTeamIdentifier])
 	if err != nil {
-		return err
+		return false, err
 	}
 	if !valid {
-		return validation.NewError("cluster has failed validation").
+		return false, validation.NewError("cluster has failed validation").
 			WithFieldError("teamIdentifier", validation.InvalidValue, "leave blank to have kore auto-populate or set to correct team ID")
 	}
 
-	// @step: If this is a new cluster and an identifier has been supplied, check valid for re-use
-	if isNewCluster && cluster.Labels[LabelClusterIdentifier] != "" {
+	if !isNewCluster {
+		if cluster.Labels[LabelClusterIdentifier] == "" {
+			// should never get here, but defensively, return a validation error
+			return false, validation.NewError("cluster has failed validation").
+				WithFieldError("clusterIdentifier", validation.ReadOnly, "assigned by Kore, this should be set to the existing value when updating a cluster")
+		}
+		return false, nil
+	}
+
+	// @step: For a new cluster if an identifier has been supplied, check valid for re-use and mark it as
+	// active again
+	if cluster.Labels[LabelClusterIdentifier] != "" {
 		valid, err := assets.ReuseAssetIdentifier(ctx, cluster.Labels[LabelClusterIdentifier], orgv1.TeamAssetTypeCluster, cluster.Name)
 		if err != nil {
-			return err
+			return false, err
 		}
 		if !valid {
-			return validation.NewError("cluster has failed validation").
+			return false, validation.NewError("cluster has failed validation").
 				WithFieldError("clusterIdentifier", validation.InvalidValue, "assigned by Kore, leave blank or set to a previous cluster ID owned by your team for new cluster")
 		}
+		return true, nil
 	}
 
-	// @step: Assign an identifier to this cluster if needed (new cluster or existing
-	// cluster created before we assigned identifiers)
-	if cluster.Labels[LabelClusterIdentifier] == "" {
-		var err error
-		cluster.Labels[LabelClusterIdentifier], err = assets.GenerateAssetIdentifier(ctx, orgv1.TeamAssetTypeCluster, cluster.Name)
-		if err != nil {
-			return err
-		}
+	// @step: Assign an identifier to this new cluster
+	cluster.Labels[LabelClusterIdentifier], err = assets.GenerateAssetIdentifier(ctx, orgv1.TeamAssetTypeCluster, cluster.Name)
+	if err != nil {
+		return false, err
 	}
-
-	return nil
+	return true, nil
 }
 
 // validateAccounting is responsible for checking if accounting
