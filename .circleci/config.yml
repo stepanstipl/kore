@@ -126,7 +126,6 @@ jobs:
       <<: *SERVICES_ENV
     machine:
       image: ubuntu-1604:202007-01
-      docker_layer_caching: true
     steps:
       - checkout
 #      - run:
@@ -232,7 +231,6 @@ jobs:
     environment:
       <<: *SERVICES_ENV
     machine:
-      docker_layer_caching: true
       image: ubuntu-1604:202007-01
     resource_class: large
     steps:
@@ -376,7 +374,6 @@ jobs:
     environment:
       <<: *SERVICES_ENV
     machine:
-      docker_layer_caching: true
       image: ubuntu-1604:202007-01
     steps:
       - checkout
@@ -421,7 +418,6 @@ jobs:
     environment:
       <<: *SERVICES_ENV
     machine:
-      docker_layer_caching: true
       image: ubuntu-1604:202007-01
     steps:
       - checkout
@@ -466,7 +462,6 @@ jobs:
     environment:
       <<: *SERVICES_ENV
     machine:
-      docker_layer_caching: true
       image: ubuntu-1604:202007-01
     steps:
       - checkout
@@ -517,7 +512,6 @@ jobs:
       FROM_BUILD: << parameters.from >>
 
     machine:
-      docker_layer_caching: true
       image: ubuntu-1604:202007-01
     steps:
       - checkout
