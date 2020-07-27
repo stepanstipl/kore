@@ -150,6 +150,11 @@ jobs:
               --build-proxy false \
               --version ${CIRCLE_SHA1}
       - run:
+          name: API server logs
+          background: true
+          command: |
+            make kind-apiserver-logs
+      - run:
           name: Checking Swagger
           command: |
             sudo apt-get install jq
@@ -258,6 +263,11 @@ jobs:
               --build-proxy false \
               --enable-ui false \
               --version ${CIRCLE_SHA1}
+      - run:
+          name: API server logs
+          background: true
+          command: |
+            make kind-apiserver-logs
       - run:
           name: Running Redis Service
           background: true
