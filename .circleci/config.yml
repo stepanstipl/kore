@@ -32,8 +32,9 @@ environment: &SERVICES_ENV
   KORE_ADMIN_PASS: "password"
   KORE_ADMIN_TOKEN: "password"
   KORE_API_PUBLIC_URL: "http://localhost:10080"
+  KORE_API_PUBLIC_URL_E2E: "http://localhost:10080"
   KORE_LOCAL_JWT_PUBLIC_KEY: "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAIG6XiNhkwDETU2zk0tGlI0DKlbEJcN4jxwJBqhd3neReLDnqg9SBgKepdy9Nxw5LAd1gNoBkLvdFJg9SbHlM0sCAwEAAQ=="
-  KORE_UI_PUBLIC_URL_E2E: "http://localhost:3000"
+  KORE_UI_PUBLIC_URL: "http://localhost:3000"
   TERM: linux
 
 #
