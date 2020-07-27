@@ -31,9 +31,10 @@ environment: &SERVICES_ENV
   DEBIAN_FRONTEND: "noninteractive"
   KORE_ADMIN_PASS: "password"
   KORE_ADMIN_TOKEN: "password"
+  KORE_API_PUBLIC_URL: "http://localhost:10080"
+  KORE_API_PUBLIC_URL_E2E: "http://localhost:10080"
   KORE_LOCAL_JWT_PUBLIC_KEY: "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAIG6XiNhkwDETU2zk0tGlI0DKlbEJcN4jxwJBqhd3neReLDnqg9SBgKepdy9Nxw5LAd1gNoBkLvdFJg9SbHlM0sCAwEAAQ=="
   KORE_UI_PUBLIC_URL: "http://localhost:3000"
-  KORE_API_PUBLIC_URL: "http://localhost:10080"
   TERM: linux
 
 #
@@ -125,8 +126,8 @@ jobs:
     environment:
       <<: *SERVICES_ENV
     machine:
-      image: ubuntu-1604:202007-01
       docker_layer_caching: true
+      image: ubuntu-1604:202007-01
     steps:
       - checkout
 #      - run:
@@ -150,7 +151,7 @@ jobs:
               --build-proxy false \
               --version ${CIRCLE_SHA1}
       - run:
-          name: API server logs
+          name: Kore API Logs
           background: true
           command: |
             make kind-apiserver-logs
@@ -264,7 +265,7 @@ jobs:
               --enable-ui false \
               --version ${CIRCLE_SHA1}
       - run:
-          name: API server logs
+          name: Kore API Logs
           background: true
           command: |
             make kind-apiserver-logs
@@ -407,6 +408,11 @@ jobs:
               --enable-ui false \
               --version ${CIRCLE_SHA1}
       - run:
+          name: Kore API Logs
+          background: true
+          command: |
+            make kind-apiserver-logs
+      - run:
           name: Running GKE E2E Suite
           no_output_timeout: 30m
           command: |
@@ -452,6 +458,11 @@ jobs:
               --enable-ui false \
               --version ${CIRCLE_SHA1}
       - run:
+          name: Kore API Logs
+          background: true
+          command: |
+            make kind-apiserver-logs
+      - run:
           name: Running EKS E2E Suite
           no_output_timeout: 30m
           command: |
@@ -496,6 +507,11 @@ jobs:
               --build-proxy false \
               --enable-ui false \
               --version ${CIRCLE_SHA1}
+      - run:
+          name: Kore API Logs
+          background: true
+          command: |
+            make kind-apiserver-logs
       - run:
           name: Running AKS E2E Suite
           no_output_timeout: 60m
