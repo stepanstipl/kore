@@ -34,6 +34,7 @@ environment: &SERVICES_ENV
   KORE_LOCAL_JWT_PUBLIC_KEY: "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAIG6XiNhkwDETU2zk0tGlI0DKlbEJcN4jxwJBqhd3neReLDnqg9SBgKepdy9Nxw5LAd1gNoBkLvdFJg9SbHlM0sCAwEAAQ=="
   KORE_UI_PUBLIC_URL: "http://localhost:3000"
   KORE_API_PUBLIC_URL: "http://localhost:10080"
+  KORE_API_PUBLIC_URL_QA: "http://localhost:10080"
   TERM: linux
 
 #
@@ -404,6 +405,11 @@ jobs:
               --enable-ui false \
               --version ${CIRCLE_SHA1}
       - run:
+          name: Kore Logs
+          background: true
+          command: |
+            kubectl -n kore logs -l name=kore-apiserver -f
+      - run:
           name: Running GKE E2E Suite
           no_output_timeout: 30m
           command: |
@@ -448,6 +454,11 @@ jobs:
               --enable-ui false \
               --version ${CIRCLE_SHA1}
       - run:
+          name: Kore Logs
+          background: true
+          command: |
+            kubectl -n kore logs -l name=kore-apiserver -f
+      - run:
           name: Running EKS E2E Suite
           no_output_timeout: 30m
           command: |
@@ -491,6 +502,11 @@ jobs:
               --build-proxy false \
               --enable-ui false \
               --version ${CIRCLE_SHA1}
+      - run:
+          name: Kore Logs
+          background: true
+          command: |
+            kubectl -n kore logs -l name=kore-apiserver -f
       - run:
           name: Running AKS E2E Suite
           no_output_timeout: 60m
