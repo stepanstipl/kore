@@ -151,7 +151,7 @@ jobs:
               --build-proxy false \
               --version ${CIRCLE_SHA1}
       - run:
-          name: API server logs
+          name: Kore API Logs
           background: true
           command: |
             make kind-apiserver-logs
@@ -265,7 +265,7 @@ jobs:
               --enable-ui false \
               --version ${CIRCLE_SHA1}
       - run:
-          name: API server logs
+          name: Kore API Logs
           background: true
           command: |
             make kind-apiserver-logs
@@ -408,10 +408,10 @@ jobs:
               --enable-ui false \
               --version ${CIRCLE_SHA1}
       - run:
-          name: Kore Logs
+          name: Kore API Logs
           background: true
           command: |
-            kubectl -n kore logs -l name=kore-apiserver -f
+            make kind-apiserver-logs
       - run:
           name: Running GKE E2E Suite
           no_output_timeout: 30m
@@ -458,10 +458,10 @@ jobs:
               --enable-ui false \
               --version ${CIRCLE_SHA1}
       - run:
-          name: Kore Logs
+          name: Kore API Logs
           background: true
           command: |
-            kubectl -n kore logs -l name=kore-apiserver -f
+            make kind-apiserver-logs
       - run:
           name: Running EKS E2E Suite
           no_output_timeout: 30m
@@ -508,10 +508,10 @@ jobs:
               --enable-ui false \
               --version ${CIRCLE_SHA1}
       - run:
-          name: Kore Logs
+          name: Kore API Logs
           background: true
           command: |
-            kubectl -n kore logs -l name=kore-apiserver -f
+            make kind-apiserver-logs
       - run:
           name: Running AKS E2E Suite
           no_output_timeout: 60m
