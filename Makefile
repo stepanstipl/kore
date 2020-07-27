@@ -396,7 +396,7 @@ test:
 	@go test --cover -v $(PACKAGES)
 
 run-api-test:
-	(cd ${ROOT_DIR}/pkg/apiserver; go test -tags=integration -ginkgo.v)
+	(cd ${ROOT_DIR}/pkg/apiserver; go test -tags=integration -ginkgo.v -vet=off)
 
 api-test:
 	@$(MAKE) swagger-apiclient

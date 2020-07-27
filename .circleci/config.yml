@@ -160,6 +160,7 @@ jobs:
             sudo apt-get install jq
             make swagger-json
             make swagger-validate
+            make check-swagger-apiclient
       - run:
           name: Checking UI Autogeneration
           working_directory: ~/project/ui
@@ -168,7 +169,7 @@ jobs:
       - run:
           name: Integration testing API
           command: |
-            make check-swagger-apiclient api-test
+            make run-api-test
 
   release:
     docker:
