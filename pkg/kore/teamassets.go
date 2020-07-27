@@ -28,10 +28,9 @@ import (
 
 // TeamAssets represents the interface to managing team assets.
 type TeamAssets interface {
-	// EnsureTeamIdentifier validates and/or assigns a team identifier - if suppliedTeamIdentifier is non-empty,
-	// it is checked against the team's current identifier and the return indicates whether the identifier is
-	// valid. If the team has no identifier one will be assigned and returned.
-	EnsureTeamIdentifier(ctx context.Context, suppliedTeamIdentifier string) (valid bool, assignedTeamIdentifier string, err error)
+	// EnsureTeamIdentifier ensures that the team has an identifier (assigning one if not), returning
+	// the correct identifier for the team
+	EnsureTeamIdentifier(ctx context.Context) (teamIdentifier string, err error)
 	// GenerateAssetIdentifier generates a new asset identifier and records it as owned by this team
 	GenerateAssetIdentifier(ctx context.Context, assetType orgv1.TeamAssetType, assetName string) (string, error)
 	// ReuseAssetIdentifier verifies that the supplied identifier is a previously-deleted asset for this
@@ -52,7 +51,7 @@ type teamAssetsImpl struct {
 	persist        persistence.Interface
 }
 
-func (t *teamAssetsImpl) lookupTeamIdentifier(ctx context.Context, assign bool) (string, error) {
+func (t *teamAssetsImpl) getTeamIdentifier(ctx context.Context) (teamIdentifier string, err error) {
 	if t.teamIdentifier != "" {
 		return t.teamIdentifier, nil
 	}
@@ -60,39 +59,39 @@ func (t *teamAssetsImpl) lookupTeamIdentifier(ctx context.Context, assign bool) 
 	if err != nil {
 		return "", err
 	}
-	if team.Identifier == "" && assign {
-		var err error
-		team.Identifier, err = t.teams.GenerateTeamIdentifier(ctx, team.Name)
-		if err != nil {
-			return "", err
-		}
-
-		err = t.persist.Teams().Update(ctx, team)
-		if err != nil {
-			return "", fmt.Errorf("Failed to update team %s with new identifier: %w", t.team, err)
-		}
-	}
 	t.teamIdentifier = team.Identifier
 	return t.teamIdentifier, nil
 }
 
-func (t *teamAssetsImpl) EnsureTeamIdentifier(ctx context.Context, suppliedTeamIdentifier string) (valid bool, assignedTeamIdentifier string, err error) {
-	valid = false
+func (t *teamAssetsImpl) EnsureTeamIdentifier(ctx context.Context) (string, error) {
 	// @step: Check if team has an identifier, and assign one if not
-	if assignedTeamIdentifier, err = t.lookupTeamIdentifier(ctx, true); err != nil {
-		return
+	teamIdentifier, err := t.getTeamIdentifier(ctx)
+	if err != nil {
+		return "", err
 	}
-	// @step: Validate any supplied identifier matches the assigned one
-	if suppliedTeamIdentifier != "" && suppliedTeamIdentifier != assignedTeamIdentifier {
-		return
+	if teamIdentifier != "" {
+		return teamIdentifier, nil
 	}
-	// @step: Nothing supplied, or supplied matches assigned, either way, it's good.
-	valid = true
-	return
+
+	// @step: no identifier, so assign one
+	team, err := t.persist.Teams().Get(ctx, t.team)
+	if err != nil {
+		return "", err
+	}
+	team.Identifier, err = t.teams.GenerateTeamIdentifier(ctx, team.Name)
+	if err != nil {
+		return "", err
+	}
+
+	err = t.persist.Teams().Update(ctx, team)
+	if err != nil {
+		return "", fmt.Errorf("Failed to update team %s with new identifier: %w", t.team, err)
+	}
+	return team.Identifier, nil
 }
 
 func (t *teamAssetsImpl) GenerateAssetIdentifier(ctx context.Context, assetType orgv1.TeamAssetType, assetName string) (string, error) {
-	teamIdentifier, err := t.lookupTeamIdentifier(ctx, true)
+	teamIdentifier, err := t.getTeamIdentifier(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -106,7 +105,7 @@ func (t *teamAssetsImpl) GenerateAssetIdentifier(ctx context.Context, assetType 
 }
 
 func (t *teamAssetsImpl) ReuseAssetIdentifier(ctx context.Context, assetIdentifier string, assetType orgv1.TeamAssetType, assetName string) (bool, error) {
-	teamIdentifier, err := t.lookupTeamIdentifier(ctx, false)
+	teamIdentifier, err := t.getTeamIdentifier(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -129,16 +128,15 @@ func (t *teamAssetsImpl) ReuseAssetIdentifier(ctx context.Context, assetIdentifi
 }
 
 func (t *teamAssetsImpl) MarkAssetDeleted(ctx context.Context, assetIdentifier string) error {
-	teamIdentifier, err := t.lookupTeamIdentifier(ctx, false)
+	teamIdentifier, err := t.getTeamIdentifier(ctx)
 	if err != nil {
 		return err
 	}
-
 	return t.persist.Teams().MarkAssetDeleted(ctx, teamIdentifier, assetIdentifier)
 }
 
 func (t *teamAssetsImpl) ValidateTeamIdentifier(ctx context.Context, teamIdentifier string) (bool, error) {
-	correctTeamIdentifier, err := t.lookupTeamIdentifier(ctx, false)
+	correctTeamIdentifier, err := t.getTeamIdentifier(ctx)
 	if err != nil {
 		return false, err
 	}

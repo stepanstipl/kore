@@ -211,10 +211,10 @@ func (c *clustersImpl) Update(ctx context.Context, cluster *clustersv1.Cluster) 
 			verr.AddFieldErrorf("plan", validation.ReadOnly, "can not be changed after a cluster was created")
 		}
 		if existing.Labels[LabelClusterIdentifier] != cluster.Labels[LabelClusterIdentifier] {
-			verr.AddFieldErrorf("clusterIdentifier", validation.ReadOnly, "assigned by Kore, keep existing value")
+			verr.AddFieldErrorf(LabelClusterIdentifier, validation.ReadOnly, "assigned by Kore, keep existing value")
 		}
 		if existing.Labels[LabelTeamIdentifier] != cluster.Labels[LabelTeamIdentifier] {
-			verr.AddFieldErrorf("teamIdentifier", validation.ReadOnly, "assigned by Kore, keep existing value")
+			verr.AddFieldErrorf(LabelTeamIdentifier, validation.ReadOnly, "assigned by Kore, keep existing value")
 		}
 		if verr.HasErrors() {
 			return verr
@@ -251,7 +251,7 @@ func (c *clustersImpl) Update(ctx context.Context, cluster *clustersv1.Cluster) 
 		return err
 	}
 
-	identifierAssigned, err := c.validateIdentifiers(ctx, cluster, existing == nil)
+	identifierAssigned, err := c.ensureIdentifiers(ctx, cluster, existing == nil)
 	if err != nil {
 		return err
 	}
@@ -273,31 +273,35 @@ func (c *clustersImpl) Update(ctx context.Context, cluster *clustersv1.Cluster) 
 	return err
 }
 
-// validateIdentifiers checks the team and cluster identifier labels are set, returning true if a cluster identifier has
+// ensureIdentifiers checks the team and cluster identifier labels are set, returning true if a cluster identifier has
 // been assigned (or re-assigned)
-func (c *clustersImpl) validateIdentifiers(ctx context.Context, cluster *clustersv1.Cluster, isNewCluster bool) (bool, error) {
+func (c *clustersImpl) ensureIdentifiers(ctx context.Context, cluster *clustersv1.Cluster, isNewCluster bool) (bool, error) {
 	if cluster.Labels == nil {
 		cluster.Labels = map[string]string{}
 	}
 	assets := c.hubImpl.Teams().Team(c.team).Assets()
 
-	// @step: Validate / assign team identifier
+	// @step: Validate or ensure team identifier
 	var err error
-	var valid bool
-	valid, cluster.Labels[LabelTeamIdentifier], err = assets.EnsureTeamIdentifier(ctx, cluster.Labels[LabelTeamIdentifier])
+	valid := true
+	if cluster.Labels[LabelTeamIdentifier] != "" {
+		valid, err = assets.ValidateTeamIdentifier(ctx, cluster.Labels[LabelTeamIdentifier])
+	} else {
+		cluster.Labels[LabelTeamIdentifier], err = assets.EnsureTeamIdentifier(ctx)
+	}
 	if err != nil {
 		return false, err
 	}
 	if !valid {
 		return false, validation.NewError("cluster has failed validation").
-			WithFieldError("teamIdentifier", validation.InvalidValue, "leave blank to have kore auto-populate or set to correct team ID")
+			WithFieldError(LabelTeamIdentifier, validation.InvalidValue, "leave blank to have kore auto-populate or set to correct team ID")
 	}
 
 	if !isNewCluster {
 		if cluster.Labels[LabelClusterIdentifier] == "" {
 			// should never get here, but defensively, return a validation error
 			return false, validation.NewError("cluster has failed validation").
-				WithFieldError("clusterIdentifier", validation.ReadOnly, "assigned by Kore, this should be set to the existing value when updating a cluster")
+				WithFieldError(LabelClusterIdentifier, validation.ReadOnly, "assigned by Kore, this should be set to the existing value when updating a cluster")
 		}
 		return false, nil
 	}
@@ -311,7 +315,7 @@ func (c *clustersImpl) validateIdentifiers(ctx context.Context, cluster *cluster
 		}
 		if !valid {
 			return false, validation.NewError("cluster has failed validation").
-				WithFieldError("clusterIdentifier", validation.InvalidValue, "assigned by Kore, leave blank or set to a previous cluster ID owned by your team for new cluster")
+				WithFieldError(LabelClusterIdentifier, validation.InvalidValue, "assigned by Kore, leave blank or set to a previous cluster ID owned by your team for new cluster")
 		}
 		return true, nil
 	}

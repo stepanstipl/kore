@@ -29,6 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -302,14 +303,13 @@ func (r *rclient) Update(ctx context.Context, options ...UpdateOptionFunc) error
 		return errors.New("no name on resource")
 	}
 
-	// @step: if possible we try and inject the gvk from the schema
+	// @step: lookup the gvk for this object
+	// @todo: should this be an error if not found? I don't believe we need to support
+	// unregistered kinds here.
 	gvk, gvkfound, _ := hubschema.GetGroupKindVersion(r.value)
-	if gvkfound {
-		r.value.GetObjectKind().SetGroupVersionKind(gvk)
-	}
 
 	// @step: check if the resource exists already
-	original, found, err := r.getCurrent(ctx, key, gvkfound)
+	original, found, err := r.getCurrent(ctx, key, gvk)
 	if err != nil {
 		return err
 	}
@@ -318,7 +318,8 @@ func (r *rclient) Update(ctx context.Context, options ...UpdateOptionFunc) error
 		if !found && r.withCreate {
 			return r.client.Create(ctx, r.value)
 		}
-		// @todo: what about not found and not withCreate? error?
+		// @todo: what about not found and not withCreate? feels like it should be an error,
+		// rather than defaulting to trying to patch/update against a non-existent record
 
 		if r.withForceApply {
 			r.value.(metav1.Object).SetGeneration(original.(metav1.Object).GetGeneration())
@@ -351,20 +352,25 @@ func (r *rclient) Update(ctx context.Context, options ...UpdateOptionFunc) error
 		}).Error("failed to update internal cache on create")
 	}
 
+	// @step: inject the GVK to ensure the returned value has the GVK populated where possible
+	if gvkfound {
+		r.value.GetObjectKind().SetGroupVersionKind(gvk)
+	}
+
 	return nil
 }
 
-func (r *rclient) getCurrent(ctx context.Context, key types.NamespacedName, gvkfound bool) (runtime.Object, bool, error) {
+func (r *rclient) getCurrent(ctx context.Context, key types.NamespacedName, gvk schema.GroupVersionKind) (runtime.Object, bool, error) {
 	if r.current != nil {
 		return r.current, true, nil
 	}
 
-	// create a new, empty instance of the appropriate GVK
-	if !gvkfound {
-		return nil, false, errors.New("no GVK found for supplied object - use UpdateOptions.From or ensure object is from a registered schema")
-	}
-	current, err := hubschema.GetScheme().New(r.value.GetObjectKind().GroupVersionKind())
+	// create a new, empty instance of the appropriate kind
+	current, err := hubschema.GetScheme().New(gvk)
 	if err != nil {
+		if runtime.IsNotRegisteredError(err) {
+			return nil, false, errors.New("no registered kind found for supplied object - use UpdateOptions.From or ensure object is from a registered schema")
+		}
 		return nil, false, err
 	}
 

@@ -254,9 +254,7 @@ func (n *ctrl) EnsureNodeTagging(client *aws.Client, group *eks.EKSNodeGroup) co
 			}
 		}
 
-		// Always requeue this as we need to check the tags at an interval shorter than the
-		// auto-scale scale down timeout to ensure we don't miss tagging anyone.
-		return reconcile.Result{RequeueAfter: time.Minute * 7}, nil
+		return reconcile.Result{}, nil
 	}
 }
 

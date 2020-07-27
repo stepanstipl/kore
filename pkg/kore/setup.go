@@ -366,7 +366,7 @@ func (h hubImpl) ensureTeamsAndClustersIdentified(ctx context.Context) error {
 		teamlog := log.WithField("team", team.Name)
 		if team.Labels[LabelTeamIdentifier] == "" {
 			teamlog.Info("assigning new identifier to team")
-			_, team.Labels[LabelTeamIdentifier], err = h.Teams().Team(team.Name).Assets().EnsureTeamIdentifier(getAdminContext(ctx), "")
+			team.Labels[LabelTeamIdentifier], err = h.Teams().Team(team.Name).Assets().EnsureTeamIdentifier(getAdminContext(ctx))
 			if err != nil {
 				teamlog.Errorf("error assigning identifier to team: %v", err)
 				return err
