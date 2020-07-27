@@ -1,6 +1,6 @@
 <p align="center">
-    <img alt="Appvia" title="Appvia Kore" src="https://www.appvia.io/hubfs/Logos/appviaLogoHorizontal.svg" width="450">
-    <h1 align="center">Appvia Kore</h1>
+    <img alt="Kore logo" title="Kore" src="doc/images/appvia-colour.svg" width="200">
+    <h1 align="center">Kore</h1>
 </p>
 
 <p align="center">
@@ -43,7 +43,7 @@ Features
 
 Getting Started & Documentation
 ---
-The fastest way to provision teams on Appvia Kore is try it out locally.
+The fastest way to provision teams on Kore is try it out locally.
 - Our [Local Quick Start Guide](doc/local-quick-start.md) provides instructions on how to get Kore up and running locally.
 
 - Running Kore for development purposes? Follow our [how-to guide here](doc/devel-kore-with-kind.md)
