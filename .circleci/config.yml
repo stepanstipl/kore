@@ -150,6 +150,11 @@ jobs:
               --build-proxy false \
               --version ${CIRCLE_SHA1}
       - run:
+          name: API server logs
+          background: true
+          command: |
+            make kind-apiserver-logs
+      - run:
           name: Checking Swagger
           command: |
             sudo apt-get install jq
@@ -259,6 +264,11 @@ jobs:
               --enable-ui false \
               --version ${CIRCLE_SHA1}
       - run:
+          name: API server logs
+          background: true
+          command: |
+            make kind-apiserver-logs
+      - run:
           name: Running Redis Service
           background: true
           command: |
@@ -279,27 +289,27 @@ jobs:
             make build
             npm start
       - run:
+          name: Install Headless Chrome dependencies
+          command: ./ui/scripts/install-e2e-deps.sh
+      - run:
           name: Waiting for UI & API
           command: |
-            echo "Waiting to API"
+            echo "`date +"%T"`: Waiting for API"
             timeout 600 bash -c 'until curl http://127.0.0.1:10080/healthz >/dev/null 2>&1; do sleep 5; done'
-            echo "Waiting to UI"
-            timeout 300 bash -c 'until curl http://127.0.0.1:3000 >/dev/null 2>&1; do sleep 5; done'
+            echo "`date +"%T"`: Waiting for UI"
+            timeout 600 bash -c 'until curl http://127.0.0.1:3000 >/dev/null 2>&1; do sleep 5; done'
+            echo "`date +"%T"`: API and UI ready"
       - save_cache:
           paths:
             - ui/node_modules
           key: ui-node-v1-{{ checksum "ui/package-lock.json" }}
       - run:
           name: End-to-end testing UI
+          working_directory: ~/project/ui
           environment:
             NODE_ENV: development
           command: |
-            docker run -ti --rm --net=host \
-              -e NODE_ENV=${NODE_ENV} \
-              -v ${PWD}:/workspace \
-              -w /workspace/ui \
-              circleci/node:12 \
-              bash -c "./scripts/install-e2e-deps.sh; make test-e2e"
+            make test-e2e
 
   release-ui:
     environment:
@@ -574,57 +584,42 @@ workflows:
           filters:
             tags:
               only: /^v.*$/
-          requires:
-            - build-api
-            - check-ui
       - check-linting:
           filters:
             tags:
               only: /^v.*$/
-          requires:
-            - build-api
-            - check-ui
       - check-api-deepcopies:
           filters:
             tags:
               only: /^v.*$/
-          requires:
-            - build-api
-            - check-ui
       - check-api-register:
           filters:
             tags:
               only: /^v.*$/
-          requires:
-            - build-api
-            - check-ui
       - check-api-crds:
           filters:
             tags:
               only: /^v.*$/
-          requires:
-            - build-api
-            - check-ui
       - validate-ui:
           filters:
             tags:
               only: /^v.*$/
           requires:
             - build-api
-            - check-ui
       - validate-api:
           filters:
             tags:
               only: /^v.*$/
           requires:
+            - build-api
+      - release:
+          requires:
+            - validate-api
             - check-api-crds
             - check-api-deepcopies
             - check-api-register
             - check-linting
             - check-units
-      - release:
-          requires:
-            - validate-api
           filters:
             branches:
               only: master
@@ -638,6 +633,7 @@ workflows:
               only: /^v.*$/
           requires:
             - validate-ui
+            - check-ui
       - check-release-notes:
           filters:
             branches:
