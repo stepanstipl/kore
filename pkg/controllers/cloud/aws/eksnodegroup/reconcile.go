@@ -18,6 +18,7 @@ package eksnodegroup
 
 import (
 	"context"
+	"time"
 
 	"github.com/appvia/kore/pkg/kore"
 
@@ -118,6 +119,7 @@ func (n *ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 				n.EnsureClusterReady(resource),
 				n.EnsureNodeRole(resource, creds),
 				n.EnsureNodeGroup(client, resource),
+				n.EnsureNodeTagging(client, resource),
 			},
 		)
 	}()
@@ -131,6 +133,14 @@ func (n *ctrl) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 		logger.WithError(err).Error("updating the status of eks nodegroup")
 
 		return reconcile.Result{}, err
+	}
+
+	if err == nil && !controllers.IsRequeueResult(result) {
+		// In the normal case of no requeue and no error, always requeue as we
+		// need to check the node group tags at an interval shorter than the
+		// auto-scale scale down timeout (10 minutes) to ensure we don't miss
+		// tagging nodes created/destroyed by auto-scaling.
+		return reconcile.Result{RequeueAfter: time.Minute * 7}, nil
 	}
 
 	return result, err

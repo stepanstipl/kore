@@ -102,6 +102,9 @@ class V1alpha1AKSSpec {
             if (data.hasOwnProperty('networkPolicy')) {
                 obj['networkPolicy'] = ApiClient.convertToType(data['networkPolicy'], 'String');
             }
+            if (data.hasOwnProperty('tags')) {
+                obj['tags'] = ApiClient.convertToType(data['tags'], {'String': 'String'});
+            }
             if (data.hasOwnProperty('windowsProfile')) {
                 obj['windowsProfile'] = V1alpha1WindowsProfile.constructFromObject(data['windowsProfile']);
             }
@@ -279,6 +282,19 @@ class V1alpha1AKSSpec {
         this['networkPolicy'] = networkPolicy;
     }
 /**
+     * @return {Object.<String, String>}
+     */
+    getTags() {
+        return this.tags;
+    }
+
+    /**
+     * @param {Object.<String, String>} tags
+     */
+    setTags(tags) {
+        this['tags'] = tags;
+    }
+/**
      * @return {module:model/V1alpha1WindowsProfile}
      */
     getWindowsProfile() {
@@ -358,6 +374,11 @@ V1alpha1AKSSpec.prototype['networkPlugin'] = undefined;
  * @member {String} networkPolicy
  */
 V1alpha1AKSSpec.prototype['networkPolicy'] = undefined;
+
+/**
+ * @member {Object.<String, String>} tags
+ */
+V1alpha1AKSSpec.prototype['tags'] = undefined;
 
 /**
  * @member {module:model/V1alpha1WindowsProfile} windowsProfile

@@ -38,6 +38,9 @@ type EKSVPCSpec struct {
 	// Region is the AWS region of the VPC and any resources created
 	// +kubebuilder:validation:Required
 	Region string `json:"region"`
+	// Tags is a collection of tags to apply to the AWS resources which make up this VPC
+	// +kubebuilder:validation:Optional
+	Tags map[string]string `json:"tags,omitempty"`
 }
 
 // Infra defines types that cannot be specified at creation time

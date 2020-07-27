@@ -65,6 +65,8 @@ type Interface interface {
 	Users() Users
 	// Config returns the config interface
 	Configs() Configs
+	// IsNotFound checks if the supplied error is a not found error
+	IsNotFound(err error) bool
 }
 
 // Audit is the interface to the audit service

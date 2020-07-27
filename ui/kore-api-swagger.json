@@ -7619,8 +7619,8 @@
     },
     "kore.ServicePlanDetails": {
       "required": [
-        "kind",
         "summary",
+        "kind",
         "editableParams"
       ],
       "properties": {
@@ -9725,11 +9725,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
-        "clientScopes",
-        "userClaims",
         "clientID",
         "clientSecret",
-        "issuer"
+        "issuer",
+        "clientScopes",
+        "userClaims"
       ],
       "properties": {
         "clientID": {
@@ -10227,6 +10227,12 @@
         },
         "networkPolicy": {
           "type": "string"
+        },
+        "tags": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "windowsProfile": {
           "$ref": "#/definitions/v1alpha1.WindowsProfile"
@@ -10810,6 +10816,12 @@
             "type": "string"
           }
         },
+        "tags": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
         "version": {
           "type": "string"
         }
@@ -10906,6 +10918,12 @@
         },
         "region": {
           "type": "string"
+        },
+        "tags": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       }
     },
@@ -11859,13 +11877,19 @@
         "from": {
           "type": "string"
         },
-        "preparedAt": {
-          "type": "string"
-        },
         "resource": {
           "$ref": "#/definitions/v1.Ownership"
         },
+        "resourceIdentifier": {
+          "type": "string"
+        },
+        "retrievedAt": {
+          "type": "string"
+        },
         "team": {
+          "type": "string"
+        },
+        "teamIdentifier": {
           "type": "string"
         },
         "to": {
@@ -11880,6 +11904,9 @@
           "format": "int64"
         },
         "name": {
+          "type": "string"
+        },
+        "resourceIdentifier": {
           "type": "string"
         }
       }

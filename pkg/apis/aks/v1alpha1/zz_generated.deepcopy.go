@@ -227,6 +227,13 @@ func (in *AKSSpec) DeepCopyInto(out *AKSSpec) {
 		*out = new(WindowsProfile)
 		**out = **in
 	}
+	if in.Tags != nil {
+		in, out := &in.Tags, &out.Tags
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	return
 }
 

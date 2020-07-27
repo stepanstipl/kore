@@ -165,3 +165,8 @@ func PatchStatus(ctx context.Context, cc client.Client, resource, original runti
 
 	return nil
 }
+
+// IsRequeueResult returns true if the result is a requeue or has a requeue after time set.
+func IsRequeueResult(result reconcile.Result) bool {
+	return result.Requeue || result.RequeueAfter > 0
+}

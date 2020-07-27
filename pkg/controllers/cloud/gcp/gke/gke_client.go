@@ -234,6 +234,21 @@ func (g *gkeClient) Update(ctx context.Context) (bool, error) {
 		return false, err
 	}
 
+	path := fmt.Sprintf("projects/%s/locations/%s/clusters/%s",
+		g.credentials.project,
+		g.region,
+		g.cluster.Name)
+
+	setLabels := g.CreateUpdateLabelDefinition(state)
+	if setLabels != nil {
+		_, err = g.ce.Projects.Locations.Clusters.SetResourceLabels(path, setLabels).Context(ctx).Do()
+		if err != nil {
+			logger.WithError(err).Error("trying to set cluster resource labels")
+
+			return false, err
+		}
+	}
+
 	update, err := g.CreateUpdateDefinition(state)
 	if err != nil {
 		log.WithError(err).Error("creating the update request")
@@ -246,11 +261,6 @@ func (g *gkeClient) Update(ctx context.Context) (bool, error) {
 		return false, nil
 	}
 	logger.Debug("desired state of the cluster has drifted, attempting to update")
-
-	path := fmt.Sprintf("projects/%s/locations/%s/clusters/%s",
-		g.credentials.project,
-		g.region,
-		g.cluster.Name)
 
 	_, err = g.ce.Projects.Locations.Clusters.Update(path, update).Context(ctx).Do()
 	if err != nil {
@@ -534,6 +544,29 @@ func (g *gkeClient) setNodePoolSize(ctx context.Context, nodePoolPath string, no
 	return nil
 }
 
+// CreateUpdateLabelDefinition checks all required resource labels (tags) are set on the cluster
+// state and returns a request to update them if not, or nil if no update is required
+func (g *gkeClient) CreateUpdateLabelDefinition(state *container.Cluster) *container.SetLabelsRequest {
+	setLabels := &container.SetLabelsRequest{
+		ResourceLabels:   state.ResourceLabels,
+		LabelFingerprint: state.LabelFingerprint,
+	}
+	if setLabels.ResourceLabels == nil {
+		setLabels.ResourceLabels = map[string]string{}
+	}
+	doSet := false
+	for k, v := range g.cluster.Spec.Tags {
+		if state.ResourceLabels[k] != v {
+			setLabels.ResourceLabels[k] = v
+			doSet = true
+		}
+	}
+	if !doSet {
+		return nil
+	}
+	return setLabels
+}
+
 // CreateUpdateDefinition returns a cluster update definition
 // @notes: so GKE will only handle one update at a time, so if the user makes a bunch of changes to the
 // spec we need to return the first change, update, requeue and do the next i guess.
@@ -718,6 +751,7 @@ func (g *gkeClient) CreateDefinition() (*container.CreateClusterRequest, error) 
 			}
 			return ""
 		}(),
+		ResourceLabels: cluster.Spec.Tags,
 	}
 
 	for _, nodePool := range cluster.Spec.NodePools {

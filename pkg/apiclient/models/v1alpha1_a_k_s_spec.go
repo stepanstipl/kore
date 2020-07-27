@@ -64,6 +64,9 @@ type V1alpha1AKSSpec struct {
 	// network policy
 	NetworkPolicy string `json:"networkPolicy,omitempty"`
 
+	// tags
+	Tags map[string]string `json:"tags,omitempty"`
+
 	// windows profile
 	WindowsProfile *V1alpha1WindowsProfile `json:"windowsProfile,omitempty"`
 }

@@ -58,14 +58,20 @@ class V1beta1Cost {
             if (data.hasOwnProperty('from')) {
                 obj['from'] = ApiClient.convertToType(data['from'], 'String');
             }
-            if (data.hasOwnProperty('preparedAt')) {
-                obj['preparedAt'] = ApiClient.convertToType(data['preparedAt'], 'String');
-            }
             if (data.hasOwnProperty('resource')) {
                 obj['resource'] = V1Ownership.constructFromObject(data['resource']);
             }
+            if (data.hasOwnProperty('resourceIdentifier')) {
+                obj['resourceIdentifier'] = ApiClient.convertToType(data['resourceIdentifier'], 'String');
+            }
+            if (data.hasOwnProperty('retrievedAt')) {
+                obj['retrievedAt'] = ApiClient.convertToType(data['retrievedAt'], 'String');
+            }
             if (data.hasOwnProperty('team')) {
                 obj['team'] = ApiClient.convertToType(data['team'], 'String');
+            }
+            if (data.hasOwnProperty('teamIdentifier')) {
+                obj['teamIdentifier'] = ApiClient.convertToType(data['teamIdentifier'], 'String');
             }
             if (data.hasOwnProperty('to')) {
                 obj['to'] = ApiClient.convertToType(data['to'], 'String');
@@ -114,19 +120,6 @@ class V1beta1Cost {
         this['from'] = from;
     }
 /**
-     * @return {String}
-     */
-    getPreparedAt() {
-        return this.preparedAt;
-    }
-
-    /**
-     * @param {String} preparedAt
-     */
-    setPreparedAt(preparedAt) {
-        this['preparedAt'] = preparedAt;
-    }
-/**
      * @return {module:model/V1Ownership}
      */
     getResource() {
@@ -142,6 +135,32 @@ class V1beta1Cost {
 /**
      * @return {String}
      */
+    getResourceIdentifier() {
+        return this.resourceIdentifier;
+    }
+
+    /**
+     * @param {String} resourceIdentifier
+     */
+    setResourceIdentifier(resourceIdentifier) {
+        this['resourceIdentifier'] = resourceIdentifier;
+    }
+/**
+     * @return {String}
+     */
+    getRetrievedAt() {
+        return this.retrievedAt;
+    }
+
+    /**
+     * @param {String} retrievedAt
+     */
+    setRetrievedAt(retrievedAt) {
+        this['retrievedAt'] = retrievedAt;
+    }
+/**
+     * @return {String}
+     */
     getTeam() {
         return this.team;
     }
@@ -151,6 +170,19 @@ class V1beta1Cost {
      */
     setTeam(team) {
         this['team'] = team;
+    }
+/**
+     * @return {String}
+     */
+    getTeamIdentifier() {
+        return this.teamIdentifier;
+    }
+
+    /**
+     * @param {String} teamIdentifier
+     */
+    setTeamIdentifier(teamIdentifier) {
+        this['teamIdentifier'] = teamIdentifier;
     }
 /**
      * @return {String}
@@ -184,19 +216,29 @@ V1beta1Cost.prototype['costElements'] = undefined;
 V1beta1Cost.prototype['from'] = undefined;
 
 /**
- * @member {String} preparedAt
- */
-V1beta1Cost.prototype['preparedAt'] = undefined;
-
-/**
  * @member {module:model/V1Ownership} resource
  */
 V1beta1Cost.prototype['resource'] = undefined;
 
 /**
+ * @member {String} resourceIdentifier
+ */
+V1beta1Cost.prototype['resourceIdentifier'] = undefined;
+
+/**
+ * @member {String} retrievedAt
+ */
+V1beta1Cost.prototype['retrievedAt'] = undefined;
+
+/**
  * @member {String} team
  */
 V1beta1Cost.prototype['team'] = undefined;
+
+/**
+ * @member {String} teamIdentifier
+ */
+V1beta1Cost.prototype['teamIdentifier'] = undefined;
 
 /**
  * @member {String} to

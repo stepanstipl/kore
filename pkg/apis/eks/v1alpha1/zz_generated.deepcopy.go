@@ -350,6 +350,13 @@ func (in *EKSSpec) DeepCopyInto(out *EKSSpec) {
 		copy(*out, *in)
 	}
 	out.Credentials = in.Credentials
+	if in.Tags != nil {
+		in, out := &in.Tags, &out.Tags
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	return
 }
 
@@ -395,7 +402,7 @@ func (in *EKSVPC) DeepCopyInto(out *EKSVPC) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
 	in.ObjectMeta.DeepCopyInto(&out.ObjectMeta)
-	out.Spec = in.Spec
+	in.Spec.DeepCopyInto(&out.Spec)
 	in.Status.DeepCopyInto(&out.Status)
 	return
 }
@@ -456,6 +463,13 @@ func (in *EKSVPCSpec) DeepCopyInto(out *EKSVPCSpec) {
 	*out = *in
 	out.Credentials = in.Credentials
 	out.Cluster = in.Cluster
+	if in.Tags != nil {
+		in, out := &in.Tags, &out.Tags
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
+	}
 	return
 }
 

@@ -30,6 +30,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/eks"
 	awseks "github.com/aws/aws-sdk-go/service/eks"
 	log "github.com/sirupsen/logrus"
@@ -184,6 +185,7 @@ func (c *Client) Update(ctx context.Context) (bool, error) {
 		return false, err
 	}
 
+	// @step: Check cluster version up to date with spec
 	if c.cluster.Spec.Version != "" {
 		// @TODO we need to check the semvar and never try and downgrade??
 		if aws.StringValue(state.Version) != c.cluster.Spec.Version {
@@ -202,6 +204,25 @@ func (c *Client) Update(ctx context.Context) (bool, error) {
 		}
 	}
 
+	// @step: Check cluster tags
+	tagsUpdate := &awseks.TagResourceInput{
+		Tags:        map[string]*string{},
+		ResourceArn: state.Arn,
+	}
+	for k, v := range c.cluster.Spec.Tags {
+		if *state.Tags[k] != v {
+			tagsUpdate.Tags[k] = aws.String(v)
+		}
+	}
+	if len(tagsUpdate.Tags) > 0 {
+		logger.Info("eks cluster tagging needs updating, attempting to sync")
+
+		if _, err := c.svc.TagResourceWithContext(ctx, tagsUpdate); err != nil {
+			return false, err
+		}
+	}
+
+	// @step: Check cluster VPC config
 	update := &awseks.UpdateClusterConfigInput{
 		Name:               aws.String(c.cluster.Name),
 		ResourcesVpcConfig: &awseks.VpcConfigRequest{},
@@ -470,8 +491,68 @@ func (c *Client) GetEKSNodeGroupStatus(nodegroup *eksv1alpha1.EKSNodeGroup) (sta
 	return *out.Nodegroup.Status, err
 }
 
+// ListEKSNodeGroupNodes returns a list of the current nodes which make up this node group
+func (c *Client) ListEKSNodeGroupNodes(group *eksv1alpha1.EKSNodeGroup) ([]*ec2.Instance, error) {
+	ec2client := ec2.New(c.Sess)
+	instances, err := ec2client.DescribeInstances(&ec2.DescribeInstancesInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("instance-state-name"),
+				Values: aws.StringSlice([]string{"running"}),
+			},
+			{
+				Name:   aws.String("tag:eks:cluster-name"),
+				Values: []*string{aws.String(group.Spec.Cluster.Name)},
+			},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	var ret []*ec2.Instance
+	for _, r := range instances.Reservations {
+		ret = append(ret, r.Instances...)
+	}
+	return ret, nil
+}
+
+// SetEKSNodeGroupNodeTags requests the supplied set of tags to be set on all of the supplied instance IDs
+func (c *Client) SetEKSNodeGroupNodeTags(ids []string, tags map[string]string) error {
+	var ec2tags []*ec2.Tag
+	for k, v := range tags {
+		ec2tags = append(ec2tags, &ec2.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		})
+	}
+	ec2client := ec2.New(c.Sess)
+	_, err := ec2client.CreateTags(&ec2.CreateTagsInput{
+		Resources: aws.StringSlice(ids),
+		Tags:      ec2tags,
+	})
+	return err
+}
+
+// HasTagWithValue checks whether the supplied instance is tagged with the specified key/value pair
+func (c *Client) HasTagWithValue(instance *ec2.Instance, key string, value string) bool {
+	for _, t := range instance.Tags {
+		if *t.Key == key && *t.Value == value {
+			return true
+		}
+	}
+	return false
+}
+
 // createClusterInput is used to generate the EKS cluster definition
 func (c *Client) createClusterInput() *awseks.CreateClusterInput {
+	tags := map[string]*string{
+		kore.Label("name"):  aws.String(c.cluster.Name),
+		kore.Label("owned"): aws.String("true"),
+		kore.Label("team"):  aws.String(c.cluster.Namespace),
+	}
+	for k, v := range c.cluster.Spec.Tags {
+		tags[k] = aws.String(v)
+	}
 	d := &awseks.CreateClusterInput{
 		Name:    aws.String(c.cluster.Name),
 		RoleArn: aws.String(c.cluster.Status.RoleARN),
@@ -482,11 +563,7 @@ func (c *Client) createClusterInput() *awseks.CreateClusterInput {
 			EndpointPublicAccess:  aws.Bool(true),
 			EndpointPrivateAccess: aws.Bool(true),
 		},
-		Tags: map[string]*string{
-			kore.Label("name"):  aws.String(c.cluster.Name),
-			kore.Label("owned"): aws.String("true"),
-			kore.Label("team"):  aws.String(c.cluster.Namespace),
-		},
+		Tags: tags,
 	}
 
 	for _, x := range c.cluster.Spec.AuthorizedMasterNetworks {

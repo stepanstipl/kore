@@ -78,6 +78,7 @@ require (
 	github.com/prometheus/procfs v0.0.8 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20190728182440-6a916e37a237 // indirect
 	github.com/romanyx/polluter v1.2.2
+	github.com/rs/xid v1.2.1
 	github.com/satori/go.uuid v1.2.0
 	github.com/shurcooL/httpfs v0.0.0-20190707220628-8d4bc4ba7749 // indirect
 	github.com/shurcooL/vfsgen v0.0.0-20181202132449-6a9ea43bcacd

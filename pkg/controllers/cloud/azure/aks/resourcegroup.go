@@ -62,6 +62,7 @@ func (c resourceGroupComponent) Reconcile(ctx kore.Context) (reconcile.Result, e
 	if existing == nil {
 		group, err := client.CreateOrUpdate(ctx, c.ResourceGroupName, resources.Group{
 			Location: to.StringPtr(c.AKSCluster.Spec.Location),
+			Tags:     *to.StringMapPtr(c.AKSCluster.Spec.Tags),
 		})
 
 		if err != nil {

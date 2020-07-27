@@ -108,7 +108,7 @@ type GKESpec struct {
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:Required
 	MaintenanceWindow string `json:"maintenanceWindow"`
-	// Tags is a collection of tags related to the cluster type
+	// Tags is a collection of tags (resource labels) to apply to the GCP resources which make up this cluster
 	// +kubebuilder:validation:Optional
 	Tags map[string]string `json:"tags,omitempty"`
 	// NodePools is the set of node pools for this cluster. Required unless ALL deprecated properties except subnetwork are set.

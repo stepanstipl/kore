@@ -31,6 +31,9 @@ type V1alpha1EKSVPCSpec struct {
 	// region
 	// Required: true
 	Region *string `json:"region"`
+
+	// tags
+	Tags map[string]string `json:"tags,omitempty"`
 }
 
 // Validate validates this v1alpha1 e k s v p c spec

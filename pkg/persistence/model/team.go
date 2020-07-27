@@ -24,6 +24,8 @@ import (
 type Team struct {
 	// ID is the unique record id
 	ID uint64 `gorm:"primary_key"`
+	// Identifier is the globally-unique immutable identifier for this team
+	Identifier string `sql:"type:char(20);DEFAULT:''"`
 	// CreatedAt is the timestamp of record creation
 	CreatedAt time.Time `sql:"DEFAULT:current_timestamp"`
 	// Name is the name of the team

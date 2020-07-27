@@ -66,6 +66,9 @@ class V1alpha1EKSVPCSpec {
             if (data.hasOwnProperty('region')) {
                 obj['region'] = ApiClient.convertToType(data['region'], 'String');
             }
+            if (data.hasOwnProperty('tags')) {
+                obj['tags'] = ApiClient.convertToType(data['tags'], {'String': 'String'});
+            }
         }
         return obj;
     }
@@ -122,6 +125,19 @@ class V1alpha1EKSVPCSpec {
     setRegion(region) {
         this['region'] = region;
     }
+/**
+     * @return {Object.<String, String>}
+     */
+    getTags() {
+        return this.tags;
+    }
+
+    /**
+     * @param {Object.<String, String>} tags
+     */
+    setTags(tags) {
+        this['tags'] = tags;
+    }
 
 }
 
@@ -144,6 +160,11 @@ V1alpha1EKSVPCSpec.prototype['privateIPV4Cidr'] = undefined;
  * @member {String} region
  */
 V1alpha1EKSVPCSpec.prototype['region'] = undefined;
+
+/**
+ * @member {Object.<String, String>} tags
+ */
+V1alpha1EKSVPCSpec.prototype['tags'] = undefined;
 
 
 

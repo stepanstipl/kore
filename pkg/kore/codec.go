@@ -361,6 +361,7 @@ func (c Convertor) FromAlertsModelList(alerts []*model.Alert) (*monitoring.Alert
 // ToTeamModel converts from api to model
 func (c Convertor) ToTeamModel(team *orgv1.Team) *model.Team {
 	return &model.Team{
+		Identifier:  team.Labels[LabelTeamIdentifier],
 		Name:        team.Name,
 		Description: team.Spec.Description,
 		Summary:     team.Spec.Summary,
@@ -378,6 +379,9 @@ func (c Convertor) FromTeamModel(team *model.Team) *orgv1.Team {
 			Name:              team.Name,
 			Namespace:         HubNamespace,
 			CreationTimestamp: metav1.NewTime(team.CreatedAt),
+			Labels: map[string]string{
+				LabelTeamIdentifier: team.Identifier,
+			},
 		},
 		Spec: orgv1.TeamSpec{
 			Description: team.Description,

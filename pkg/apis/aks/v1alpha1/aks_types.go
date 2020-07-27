@@ -71,6 +71,9 @@ type AKSSpec struct {
 	NetworkPolicy *string `json:"networkPolicy,omitempty"`
 	// WindowsProfile is the configuration for Windows VMs
 	WindowsProfile *WindowsProfile `json:"windowsProfile,omitempty"`
+	// Tags is a collection of metadata tags to apply to the Azure resources which make up this cluster
+	// +kubebuilder:validation:Optional
+	Tags map[string]string `json:"tags,omitempty"`
 }
 
 // AgentPoolProfile represents a node pool within a GKE cluster

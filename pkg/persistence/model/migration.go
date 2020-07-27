@@ -88,6 +88,13 @@ func Migrations(db *gorm.DB) error {
 	db.AutoMigrate(ConfigItems{}).
 		AddForeignKey("item_id", "configs(id)", "CASCADE", "RESTRICT")
 
+	db.AutoMigrate(TeamIdentity{})
+
+	db.AutoMigrate(TeamAsset{}).
+		AddForeignKey("team_identifier", "team_identity(team_identifier)", "RESTRICT", "RESTRICT").
+		AddUniqueIndex("idx_asset", "team_identifier", "asset_identifier").
+		AddIndex("idx_assettype", "team_identifier", "asset_type")
+
 	return nil
 
 }
