@@ -45,7 +45,7 @@ setup() {
 @test "We should see the aks resource be deleted" {
   ${KORE} get cluster ${CLUSTER} -t ${TEAM} || skip
 
-  retry 360 "${KORE} get aks ${CLUSTER} -t ${TEAM} 2>&1 | grep 'not found$'"
+  retry 720 "${KORE} get aks ${CLUSTER} -t ${TEAM} 2>&1 | grep 'not found$'"
   [[ "$status" -eq 0 ]]
 }
 
