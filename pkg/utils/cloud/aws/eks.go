@@ -210,7 +210,7 @@ func (c *Client) Update(ctx context.Context) (bool, error) {
 		ResourceArn: state.Arn,
 	}
 	for k, v := range c.cluster.Spec.Tags {
-		if state.Tags == nil || *state.Tags[k] != v {
+		if state.Tags == nil || state.Tags[k] == nil || *state.Tags[k] != v {
 			tagsUpdate.Tags[k] = aws.String(v)
 		}
 	}
