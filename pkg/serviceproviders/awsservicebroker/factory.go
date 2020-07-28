@@ -260,6 +260,8 @@ func (d ProviderFactory) SetUp(ctx kore.Context, serviceProvider *servicesv1.Ser
 		return false, err
 	}
 
+	serviceProvider.Status.Components.SetCondition(corev1.Component{Name: ComponentIAMRole, Status: corev1.SuccessStatus})
+
 	if err := d.ensureDynamoDBTable(sess, config); err != nil {
 		serviceProvider.Status.Components.SetCondition(corev1.Component{
 			Name:    ComponentDynamoDB,
