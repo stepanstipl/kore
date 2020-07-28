@@ -1,6 +1,6 @@
 /**
- * Appvia Kore API
- * Kore API provides the frontend API for the Appvia Kore (kore.appvia.io)
+ * Kore API
+ * Kore API provides the frontend API (kore.appvia.io)
  *
  * The version of the OpenAPI document: 0.0.1
  * Contact: info@appvia.io

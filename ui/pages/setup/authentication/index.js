@@ -6,7 +6,7 @@ const SetupAuthIndexPage = () => (
   <div>
     <Result
       icon={<Icon type="smile" theme="twoTone" />}
-      title="Welcome to Appvia Kore!"
+      title="Welcome to Kore!"
       subTitle="Authentication is not currently configured"
       extra={[
         <Paragraph key="para1">This must be done before any teams can start using Kore</Paragraph>,

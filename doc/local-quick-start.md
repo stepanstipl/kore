@@ -185,7 +185,7 @@ This will use our Auth0 set up for IDP. As you're the only user, you'll be assig
 
 ```shell script
 ./kore login -a http//localhost:10080 local
-# Attempting to authenticate to Appvia Kore: http://127.0.0.1:10080 [local]
+# Attempting to authenticate to Kore: http://127.0.0.1:10080 [local]
 # Successfully authenticated
 ```
 

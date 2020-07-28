@@ -45,7 +45,7 @@ type gcppc struct {
 	team string
 }
 
-// Update is responsible for update a claim in the kore
+// Update is responsible for update a claim in kore
 func (h gcppc) Update(ctx context.Context, claim *gcp.ProjectClaim) (*gcp.ProjectClaim, error) {
 	claim.Namespace = h.team
 

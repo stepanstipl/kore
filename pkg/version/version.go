@@ -24,7 +24,7 @@ import (
 
 var (
 	// Prog is the name of the product - changes so often best to use a global var
-	Prog = "Appvia Kore"
+	Prog = "Kore"
 	// Author is the prog author
 	Author = "Appvia"
 	// Email is the default email

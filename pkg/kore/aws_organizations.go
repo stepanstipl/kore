@@ -43,7 +43,7 @@ type awsocl struct {
 	team string
 }
 
-// Update is responsible for update an aws org in the kore
+// Update is responsible for update an aws org in kore
 func (h awsocl) Update(ctx context.Context, org *aws.AWSOrganization) (*aws.AWSOrganization, error) {
 	org.Namespace = h.team
 

@@ -48,7 +48,7 @@ type ServicePlanDetails struct {
 type ServicePlans interface {
 	// CheckDelete verifies whether the service plan can be deleted
 	CheckDelete(context.Context, *servicesv1.ServicePlan, ...DeleteOptionFunc) error
-	// Delete is used to delete a service plan in the kore
+	// Delete is used to delete a service plan in kore
 	Delete(context.Context, string, ...DeleteOptionFunc) (*servicesv1.ServicePlan, error)
 	// Get returns the service plan
 	Get(context.Context, string) (*servicesv1.ServicePlan, error)
@@ -140,7 +140,7 @@ func (p servicePlansImpl) Update(ctx context.Context, plan *servicesv1.ServicePl
 		store.UpdateOptions.WithForce(true),
 	)
 	if err != nil {
-		log.WithError(err).Error("failed to update a service plan in the kore")
+		log.WithError(err).Error("failed to update a service plan in kore")
 
 		return err
 	}
@@ -183,7 +183,7 @@ func (p servicePlansImpl) CheckDelete(ctx context.Context, servicePlan *services
 	return nil
 }
 
-// Delete is used to delete a service plan in the kore
+// Delete is used to delete a service plan in kore
 func (p servicePlansImpl) Delete(ctx context.Context, name string, o ...DeleteOptionFunc) (*servicesv1.ServicePlan, error) {
 	opts := ResolveDeleteOptions(o)
 

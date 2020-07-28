@@ -28,7 +28,7 @@ import (
 )
 
 var _ = Describe("GET /teams/{team}/plans/{plan} (GetTeamPlanDetails)", func() {
-	var api *apiclient.AppviaKore
+	var api *apiclient.Kore
 	var testTeam1 string
 
 	BeforeEach(func() {

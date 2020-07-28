@@ -32,7 +32,7 @@ import (
 
 // Users is the kore api users interface
 type Users interface {
-	// EnableUser is used to create an user in the kore
+	// EnableUser is used to create an user in kore
 	EnableUser(context.Context, string, string) error
 	// Delete removes the user from the kore
 	Delete(context.Context, string) (*orgv1.User, error)
@@ -55,13 +55,13 @@ type usersImpl struct {
 	*hubImpl
 }
 
-// EnableUser is used to create an user in the kore
+// EnableUser is used to create an user in kore
 func (h *usersImpl) EnableUser(ctx context.Context, username, email string) error {
 	logger := log.WithFields(log.Fields{
 		"email":    email,
 		"username": username,
 	})
-	logger.Info("enabling the user in the kore")
+	logger.Info("enabling the user in kore")
 
 	found, err := h.Users().Exists(ctx, username)
 	if err != nil {
@@ -76,13 +76,13 @@ func (h *usersImpl) EnableUser(ctx context.Context, username, email string) erro
 	}
 
 	if !found {
-		logger.Debug("provisioning the user in the kore")
+		logger.Debug("provisioning the user in kore")
 
 		if err := h.persistenceMgr.Users().Update(ctx, &model.User{
 			Username: username,
 			Email:    email,
 		}); err != nil {
-			logger.WithError(err).Error("trying to create the user in the kore")
+			logger.WithError(err).Error("trying to create the user in kore")
 
 			return err
 		}
@@ -95,12 +95,12 @@ func (h *usersImpl) EnableUser(ctx context.Context, username, email string) erro
 
 			return err
 		}
-		logger.WithField("count", count).Debug("we have x users already in the kore")
+		logger.WithField("count", count).Debug("we have x users already in kore")
 
 		isAdmin := count == 2
 		roles := []string{"members"}
 		if isAdmin {
-			logger.Info("enabling the first user in the kore and providing admin access")
+			logger.Info("enabling the first user in kore and providing admin access")
 
 			// Add a custom audit for this special operation:
 			start := time.Now()
@@ -256,7 +256,7 @@ func (h *usersImpl) Update(ctx context.Context, user *orgv1.User) (*orgv1.User, 
 
 	// @step: update the user in the user management service
 	if err := h.persistenceMgr.Users().Update(ctx, DefaultConvertor.ToUserModel(user)); err != nil {
-		log.WithError(err).Error("trying to update the user in the kore")
+		log.WithError(err).Error("trying to update the user in kore")
 
 		return nil, err
 	}

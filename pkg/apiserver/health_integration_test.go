@@ -27,7 +27,7 @@ import (
 )
 
 var _ = Describe("/health", func() {
-	var api *apiclient.AppviaKore
+	var api *apiclient.Kore
 
 	BeforeEach(func() {
 		api = getApi()

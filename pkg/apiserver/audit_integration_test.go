@@ -42,7 +42,7 @@ func findEvent(list []*models.V1AuditEvent, user string, operation string, after
 }
 
 var _ = Describe("GET /audit (ListAuditEvents)", func() {
-	var api *apiclient.AppviaKore
+	var api *apiclient.Kore
 
 	BeforeEach(func() {
 		api = getApi()

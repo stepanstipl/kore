@@ -41,7 +41,7 @@ import (
 type NamespaceClaims interface {
 	// CheckDelete verifies whether the namespace claim can be deleted
 	CheckDelete(context.Context, *clustersv1.NamespaceClaim, ...DeleteOptionFunc) error
-	// Delete is used to delete a namespace claim in the kore
+	// Delete is used to delete a namespace claim in kore
 	Delete(context.Context, string, ...DeleteOptionFunc) (*clustersv1.NamespaceClaim, error)
 	// Get returns the class from the kore
 	Get(context.Context, string) (*clustersv1.NamespaceClaim, error)
@@ -50,7 +50,7 @@ type NamespaceClaims interface {
 	List(context.Context, ...func(clustersv1.NamespaceClaim) bool) (*clustersv1.NamespaceClaimList, error)
 	// Has checks if a resource exists
 	Has(context.Context, string) (bool, error)
-	// Update is responsible for update a namespace claim in the kore
+	// Update is responsible for update a namespace claim in kore
 	Update(context.Context, *clustersv1.NamespaceClaim) (*clustersv1.NamespaceClaim, error)
 	// CreateForCluster creates a namespace claim for a cluster and namespace, if it doesn't already exist
 	CreateForCluster(ctx context.Context, cluster v1.Ownership, clusterNamespace string) error
@@ -108,7 +108,7 @@ func (n *nsImpl) CheckDelete(ctx context.Context, namespaceClaim *clustersv1.Nam
 	return nil
 }
 
-// Delete is used to delete a namespace claim in the kore
+// Delete is used to delete a namespace claim in kore
 func (n *nsImpl) Delete(ctx context.Context, name string, o ...DeleteOptionFunc) (*clustersv1.NamespaceClaim, error) {
 	opts := ResolveDeleteOptions(o)
 
@@ -188,7 +188,7 @@ func (n *nsImpl) Has(ctx context.Context, name string) (bool, error) {
 	return true, nil
 }
 
-// Update is responsible for update a namespace claim in the kore
+// Update is responsible for update a namespace claim in kore
 func (n *nsImpl) Update(ctx context.Context, namespace *clustersv1.NamespaceClaim) (*clustersv1.NamespaceClaim, error) {
 	user := authentication.MustGetIdentity(ctx)
 

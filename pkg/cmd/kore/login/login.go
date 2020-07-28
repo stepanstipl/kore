@@ -68,7 +68,7 @@ func NewCmdLogin(factory cmdutil.Factory) *cobra.Command {
 
 	command := &cobra.Command{
 		Use:     "login",
-		Short:   "Authenticate yourself and retrieve a token for Appvia Kore",
+		Short:   "Authenticate yourself and retrieve a token for Kore",
 		Long:    loginLongDescription,
 		Example: loginExamples,
 		Run:     cmdutil.DefaultRunFunc(o),
@@ -142,7 +142,7 @@ func (o *LoginOptions) Run() error {
 		}
 	}()
 
-	o.Println("Attempting to authenticate to Appvia Kore: %s [%s]\n",
+	o.Println("Attempting to authenticate to Kore: %s [%s]\n",
 		o.Config().GetServer(current).Endpoint,
 		o.Client().CurrentProfile(),
 	)

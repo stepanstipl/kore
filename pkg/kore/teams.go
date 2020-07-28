@@ -171,7 +171,7 @@ func (t *teamsImpl) List(ctx context.Context) (*orgv1.TeamList, error) {
 	return DefaultConvertor.FromTeamsModelList(model), nil
 }
 
-// Exists checks if the team exists in the kore
+// Exists checks if the team exists in kore
 func (t *teamsImpl) Exists(ctx context.Context, name string) (bool, error) {
 	// @step: we check the user management service for teams
 	return t.persistenceMgr.Teams().Exists(ctx, name)

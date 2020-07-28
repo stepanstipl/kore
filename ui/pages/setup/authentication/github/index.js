@@ -125,7 +125,7 @@ class GithubSetupPage extends React.Component {
             <Paragraph>Choose <Text strong>OAuth Apps</Text> under <Text strong>Developer settings</Text> on the left side menu.</Paragraph>
             <Paragraph>Click the <Text strong>New OAuth App</Text> button and complete the form using the following to help.</Paragraph>
             <Paragraph>
-              <CopyTextWithLabel label="Application name" text="Appvia Kore" />
+              <CopyTextWithLabel label="Application name" text="Kore" />
               <CopyTextWithLabel label="Homepage URL" text={this.props.authUrl} />
               <CopyTextWithLabel label="Authorization callback URL" text={this.props.authCallbackUrl} />
             </Paragraph>
@@ -140,7 +140,7 @@ class GithubSetupPage extends React.Component {
       }
     },
     {
-      title: 'Configure Appvia Kore',
+      title: 'Configure Kore',
       content: () => (
         <div>
           <Alert

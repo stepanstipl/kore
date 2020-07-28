@@ -75,7 +75,7 @@ func (a idpImpl) Exists(ctx context.Context, name string) (bool, error) {
 	return true, nil
 }
 
-// Get returns the identity configurations in the kore
+// Get returns the identity configurations in kore
 func (a idpImpl) Get(ctx context.Context, name string) (*corev1.IDP, error) {
 	// Is DEX enabled?
 	if a.Config().DEX.EnabledDex {

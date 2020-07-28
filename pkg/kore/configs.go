@@ -110,7 +110,7 @@ func (v *configImpl) Update(ctx context.Context, config *configv1.Config) (*conf
 	}
 
 	if err := v.persistenceMgr.Configs().Update(ctx, DefaultConvertor.ToConfigModel(config)); err != nil {
-		log.WithError(err).Error("trying to update the config in the kore")
+		log.WithError(err).Error("trying to update the config in kore")
 
 		return nil, err
 	}

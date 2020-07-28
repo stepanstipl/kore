@@ -37,7 +37,7 @@ import (
 type ServiceKinds interface {
 	// CheckDelete verifies whether the service kind can be deleted
 	CheckDelete(context.Context, *servicesv1.ServiceKind, ...DeleteOptionFunc) error
-	// Delete is used to delete a service kind in the kore
+	// Delete is used to delete a service kind in kore
 	Delete(context.Context, string, ...DeleteOptionFunc) (*servicesv1.ServiceKind, error)
 	// Get returns the service kind
 	Get(context.Context, string) (*servicesv1.ServiceKind, error)
@@ -130,7 +130,7 @@ func (p serviceKindsImpl) CheckDelete(ctx context.Context, serviceKind *services
 	return nil
 }
 
-// Delete is used to delete a service kind in the kore
+// Delete is used to delete a service kind in kore
 func (p serviceKindsImpl) Delete(ctx context.Context, name string, o ...DeleteOptionFunc) (*servicesv1.ServiceKind, error) {
 	opts := ResolveDeleteOptions(o)
 

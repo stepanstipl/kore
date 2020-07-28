@@ -53,7 +53,7 @@ class NotificationIntegrationsTab extends React.Component {
           {slackIntegration.spec.enabled ? (
             <>
               <Paragraph type="secondary">
-                Visit <a style={{ textDecoration: 'underline' }} href="#">Slack&apos;s Appvia Kore Integration page</a> and click &quot;Add to Slack&quot;. Choose a channel, and click the &quot;Add Appvia Kore Integration&quot; button. Copy your Webhook URL and click the &quot;Save Integration&quot; button.
+                Visit <a style={{ textDecoration: 'underline' }} href="#">Slack&apos;s Kore Integration page</a> and click &quot;Add to Slack&quot;. Choose a channel, and click the &quot;Add Kore Integration&quot; button. Copy your Webhook URL and click the &quot;Save Integration&quot; button.
               </Paragraph>
               <Paragraph type="secondary">
                 Add your Webhook URL below.

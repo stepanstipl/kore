@@ -19,7 +19,7 @@ import (
 	securityops "github.com/appvia/kore/pkg/apiclient/security"
 )
 
-// Default appvia kore HTTP client.
+// Default kore HTTP client.
 var Default = NewHTTPClient(nil)
 
 const (
@@ -34,14 +34,14 @@ const (
 // DefaultSchemes are the default schemes found in Meta (info) section of spec file
 var DefaultSchemes = []string{"http"}
 
-// NewHTTPClient creates a new appvia kore HTTP client.
-func NewHTTPClient(formats strfmt.Registry) *AppviaKore {
+// NewHTTPClient creates a new kore HTTP client.
+func NewHTTPClient(formats strfmt.Registry) *Kore {
 	return NewHTTPClientWithConfig(formats, nil)
 }
 
-// NewHTTPClientWithConfig creates a new appvia kore HTTP client,
+// NewHTTPClientWithConfig creates a new kore HTTP client,
 // using a customizable transport config.
-func NewHTTPClientWithConfig(formats strfmt.Registry, cfg *TransportConfig) *AppviaKore {
+func NewHTTPClientWithConfig(formats strfmt.Registry, cfg *TransportConfig) *Kore {
 	// ensure nullable parameters have default
 	if cfg == nil {
 		cfg = DefaultTransportConfig()
@@ -52,14 +52,14 @@ func NewHTTPClientWithConfig(formats strfmt.Registry, cfg *TransportConfig) *App
 	return New(transport, formats)
 }
 
-// New creates a new appvia kore client
-func New(transport runtime.ClientTransport, formats strfmt.Registry) *AppviaKore {
+// New creates a new kore client
+func New(transport runtime.ClientTransport, formats strfmt.Registry) *Kore {
 	// ensure nullable parameters have default
 	if formats == nil {
 		formats = strfmt.Default
 	}
 
-	cli := new(AppviaKore)
+	cli := new(Kore)
 	cli.Transport = transport
 	cli.Costestimates = costestimates.New(transport, formats)
 	cli.Costs = costs.New(transport, formats)
@@ -110,8 +110,8 @@ func (cfg *TransportConfig) WithSchemes(schemes []string) *TransportConfig {
 	return cfg
 }
 
-// AppviaKore is a client for appvia kore
-type AppviaKore struct {
+// Kore is a client for kore
+type Kore struct {
 	Costestimates costestimates.ClientService
 
 	Costs costs.ClientService
@@ -130,7 +130,7 @@ type AppviaKore struct {
 }
 
 // SetTransport changes the transport on the client and all its subresources
-func (c *AppviaKore) SetTransport(transport runtime.ClientTransport) {
+func (c *Kore) SetTransport(transport runtime.ClientTransport) {
 	c.Transport = transport
 	c.Costestimates.SetTransport(transport)
 	c.Costs.SetTransport(transport)

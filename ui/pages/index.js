@@ -23,7 +23,7 @@ class IndexPage extends React.Component {
   }
 
   static staticProps = {
-    title: 'Appvia Kore Dashboard'
+    title: 'Kore Dashboard'
   }
 
   static async getPageData(ctx) {
@@ -235,7 +235,7 @@ class IndexPage extends React.Component {
     return (
       <div>
         <Tag style={{ float: 'right' }}>{version}</Tag>
-        <Title level={1} style={{ marginBottom: '0' }}>Appvia Kore</Title>
+        <Title level={1} style={{ marginBottom: '0' }}>Kore</Title>
         <Title level={4} type="secondary" style={{ marginTop: '10px' }}>Kubernetes for Teams, Making Cloud Simple for Developers and DevOps</Title>
         {user.isAdmin ? <AdminView /> : <UserView />}
       </div>
