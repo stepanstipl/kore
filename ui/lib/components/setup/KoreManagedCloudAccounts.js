@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import Link from 'next/link'
-import { Alert, Button, Card, Divider, Icon, Result, Steps, Typography } from 'antd'
+import { Button, Card, Divider, Icon, Result, Steps, Typography } from 'antd'
 const { Paragraph } = Typography
 const { Step } = Steps
 import { pluralize, titleize } from 'inflect'
@@ -16,7 +16,6 @@ import { successMessage } from '../../utils/message'
 import KoreManagedCloudAccountsCustom from './KoreManagedCloudAccountsCustom'
 import GCPOrganizationsList from '../credentials/GCPOrganizationsList'
 import AWSOrganizationsList from '../credentials/AWSOrganizationsList'
-import CloudAccountAutomationType from './radio-groups/CloudAccountAutomationType'
 
 class KoreManagedCloudAccounts extends React.Component {
 
@@ -61,8 +60,6 @@ class KoreManagedCloudAccounts extends React.Component {
   componentDidMount() {
     this.fetchComponentData().then(plans => this.setState({ plans }))
   }
-
-  selectCloudAccountAutomationType = (e) => this.setState({ cloudAccountAutomationType: e.target.value })
 
   handleResetCloudAccountList = (cloudAccountList) => this.setState({ cloudAccountList })
 
@@ -174,43 +171,17 @@ class KoreManagedCloudAccounts extends React.Component {
   stepsContentAccounts = () => (
     <>
       <Paragraph style={{ fontSize: '16px', fontWeight: '600' }}>Configure {this.props.cloud} {this.props.accountNoun} automation</Paragraph>
-      <Alert
-        message={`This defines how Kore will automate ${this.props.cloud} ${pluralize(this.props.accountNoun)} for teams`}
-        description={`When a team is created in Kore and a cluster is requested, Kore will ensure the ${this.props.cloud} ${this.props.accountNoun} is also created and the cluster placed inside it. You must also specify the plans available for each type of ${this.props.accountNoun}, this is to ensure the correct cluster specification is being used.`}
-        type="info"
-        showIcon
-        style={{ marginBottom: '20px' }}
-      />
-
-      <CloudAccountAutomationType
+      <KoreManagedCloudAccountsCustom
+        cloudAccountList={this.state.cloudAccountList}
+        plans={this.state.plans}
+        handleChange={this.handleCloudAccountChange}
+        handleDelete={this.handleCloudAccountDeleted}
+        handleEdit={this.handleCloudAccountEdited}
+        handleAdd={this.handleCloudAccountAdded}
+        handleReset={this.handleResetCloudAccountList}
         cloud={this.props.cloud}
         accountNoun={this.props.accountNoun}
-        onChange={this.selectCloudAccountAutomationType}
-        value={this.state.cloudAccountAutomationType}
       />
-
-      {this.state.cloudAccountAutomationType === 'CLUSTER' && (
-        <Alert
-          message={`For every cluster a team creates Kore will also create a ${this.props.cloud} ${this.props.accountNoun} and provision the cluster inside it. The ${this.props.cloud} ${this.props.accountNoun} will be named using the team name and the name of the cluster created.`}
-          type="info"
-          showIcon
-          style={{ marginBottom: '20px' }}
-        />
-      )}
-
-      {this.state.cloudAccountAutomationType === 'CUSTOM' && (
-        <KoreManagedCloudAccountsCustom
-          cloudAccountList={this.state.cloudAccountList}
-          plans={this.state.plans}
-          handleChange={this.handleCloudAccountChange}
-          handleDelete={this.handleCloudAccountDeleted}
-          handleEdit={this.handleCloudAccountEdited}
-          handleAdd={this.handleCloudAccountAdded}
-          handleReset={this.handleResetCloudAccountList}
-          cloud={this.props.cloud}
-          accountNoun={this.props.accountNoun}
-        />
-      )}
     </>
   )
 

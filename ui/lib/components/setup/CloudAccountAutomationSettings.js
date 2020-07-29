@@ -17,7 +17,6 @@ import copy from '../../utils/object-copy'
 import asyncForEach from '../../utils/async-foreach'
 import { errorMessage, successMessage } from '../../utils/message'
 import KoreTeamCloudIntegration from './radio-groups/KoreTeamCloudIntegration'
-import CloudAccountAutomationType from './radio-groups/CloudAccountAutomationType'
 import { filterCloudAccountList } from '../../utils/cloud'
 
 class CloudAccountAutomationSettings extends React.Component {
@@ -54,7 +53,7 @@ class CloudAccountAutomationSettings extends React.Component {
     let cloudAccountList = []
 
     if (accountManagement) {
-      cloudAccountAutomationType = (accountManagement.spec.rules || []).length === 0 ? 'CLUSTER' : 'CUSTOM'
+      cloudAccountAutomationType = 'CUSTOM'
       cloudAccountList = (accountManagement.spec.rules || []).map(rule => ({ code: canonical(rule.name), ...rule }))
     }
     const email = cloudConfig && cloudConfig.spec.values.requestAccessEmail
@@ -68,8 +67,6 @@ class CloudAccountAutomationSettings extends React.Component {
   }
 
   selectCloudManagementType = e => this.setState({ cloudManagementType: e.target.value })
-
-  selectCloudAccountAutomationType = e => this.setState({ cloudAccountAutomationType: e.target.value })
 
   disabledSave = () => {
     if (this.state.submitting || !this.state.cloudManagementType) {
@@ -211,28 +208,18 @@ class CloudAccountAutomationSettings extends React.Component {
     <>
       <Paragraph style={{ fontSize: '16px', fontWeight: '600' }}>Configure {this.props.cloud} {this.props.accountNoun} automation <Icon style={{ marginLeft: '5px' }} type="info-circle" theme="twoTone" onClick={this.accountAutomationHelp}/></Paragraph>
 
-      <CloudAccountAutomationType
+      <KoreManagedCloudAccountsCustom
+        cloudAccountList={this.state.cloudAccountList}
+        plans={this.state.plans}
+        handleChange={this.handleCloudAccountChange}
+        handleDelete={this.handleCloudAccountDeleted}
+        handleEdit={this.handleCloudAccountEdited}
+        handleAdd={this.handleCloudAccountAdded}
+        handleReset={this.handleResetCloudAccountList}
+        hideGuidance={true}
         cloud={this.props.cloud}
         accountNoun={this.props.accountNoun}
-        value={this.state.cloudAccountAutomationType}
-        onChange={this.selectCloudAccountAutomationType}
-        inlineHelp={true}
       />
-
-      {this.state.cloudAccountAutomationType === 'CUSTOM' && (
-        <KoreManagedCloudAccountsCustom
-          cloudAccountList={this.state.cloudAccountList}
-          plans={this.state.plans}
-          handleChange={this.handleCloudAccountChange}
-          handleDelete={this.handleCloudAccountDeleted}
-          handleEdit={this.handleCloudAccountEdited}
-          handleAdd={this.handleCloudAccountAdded}
-          handleReset={this.handleResetCloudAccountList}
-          hideGuidance={true}
-          cloud={this.props.cloud}
-          accountNoun={this.props.accountNoun}
-        />
-      )}
     </>
   )
 
