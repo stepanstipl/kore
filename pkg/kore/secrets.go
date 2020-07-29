@@ -31,7 +31,7 @@ import (
 
 // Secrets is the interface to the class plans
 type Secrets interface {
-	// Delete is used to delete a plan in the kore
+	// Delete is used to delete a plan in kore
 	Delete(context.Context, string) (*configv1.Secret, error)
 	// Get returns the class from the kore
 	Get(context.Context, string) (*configv1.Secret, error)
@@ -41,7 +41,7 @@ type Secrets interface {
 	List(context.Context) (*configv1.SecretList, error)
 	// SupportedSecretTypes returns a list of supported types
 	SupportedSecretTypes() []string
-	// Update is responsible for update a plan in the kore
+	// Update is responsible for update a plan in kore
 	Update(context.Context, *configv1.Secret) error
 }
 

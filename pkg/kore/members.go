@@ -90,7 +90,7 @@ func (t tmsImpl) Add(ctx context.Context, name string) error {
 			return err
 		}
 
-		return NewErrNotAllowed("user does not exist in the kore")
+		return NewErrNotAllowed("user does not exist in kore")
 	}
 
 	// @TODO we need to check if the caller is an member (and later admin) to
@@ -235,7 +235,7 @@ func (t tmsImpl) Invite(ctx context.Context, name string, options InvitationOpti
 	user, err := t.persistenceMgr.Users().Get(ctx, name)
 	if err != nil {
 		if persistence.IsNotFound(err) {
-			return ErrNotAllowed{message: "user does not exist in the appvia kore"}
+			return ErrNotAllowed{message: "user does not exist in Kore"}
 		}
 		logger.WithError(err).Error("trying to retrieve user")
 
@@ -244,7 +244,7 @@ func (t tmsImpl) Invite(ctx context.Context, name string, options InvitationOpti
 	team, err := t.persistenceMgr.Teams().Get(ctx, t.team)
 	if err != nil {
 		if persistence.IsNotFound(err) {
-			return ErrNotAllowed{message: "team does not exist in the appvia kore"}
+			return ErrNotAllowed{message: "team does not exist in Kore"}
 		}
 		logger.WithError(err).Error("trying to retrieve team from user service")
 

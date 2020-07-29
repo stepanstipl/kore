@@ -78,7 +78,7 @@ func (p planPoliciesImpl) Update(ctx context.Context, planPolicy *configv1.PlanP
 		store.UpdateOptions.WithForce(true),
 	)
 	if err != nil {
-		log.WithError(err).Error("failed to update the plan policy in the kore")
+		log.WithError(err).Error("failed to update the plan policy in kore")
 
 		return err
 	}

@@ -45,7 +45,7 @@ type awsac struct {
 	team string
 }
 
-// Update is responsible for update a claim in the kore
+// Update is responsible for update a claim in kore
 func (h awsac) Update(ctx context.Context, claim *aws.AWSAccountClaim) (*aws.AWSAccountClaim, error) {
 	claim.Namespace = h.team
 

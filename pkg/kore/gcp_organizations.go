@@ -43,7 +43,7 @@ type gcppcl struct {
 	team string
 }
 
-// Update is responsible for update a org in the kore
+// Update is responsible for update a org in kore
 func (h gcppcl) Update(ctx context.Context, org *gcp.Organization) (*gcp.Organization, error) {
 	org.Namespace = h.team
 

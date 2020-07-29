@@ -23,7 +23,6 @@ import (
 	"github.com/appvia/kore/cmd/kore-apiserver/options"
 	"github.com/appvia/kore/pkg/cmd"
 	"github.com/appvia/kore/pkg/version"
-
 	"github.com/urfave/cli/v2"
 )
 
@@ -41,7 +40,7 @@ func main() {
 			},
 		},
 		Flags:                options.Options(),
-		Usage:                "Kore API provides the frontend api services for the Appvia Kore",
+		Usage:                "Kore API provides the frontend api services",
 		Version:              version.Version(),
 		EnableBashCompletion: true,
 

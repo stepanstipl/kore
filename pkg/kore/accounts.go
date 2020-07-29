@@ -32,7 +32,7 @@ import (
 
 // Accounts is the interface to the account accounts
 type Accounts interface {
-	// Delete is used to delete a account in the kore
+	// Delete is used to delete a account in kore
 	Delete(context.Context, string) (*accountv1beta1.AccountManagement, error)
 	// Get returns the account from the kore
 	Get(context.Context, string) (*accountv1beta1.AccountManagement, error)
@@ -40,7 +40,7 @@ type Accounts interface {
 	List(context.Context) (*accountv1beta1.AccountManagementList, error)
 	// Has checks if a resource exists within an available account in the scope
 	Has(context.Context, string) (bool, error)
-	// Update is responsible for update a account in the kore
+	// Update is responsible for update a account in kore
 	Update(context.Context, *accountv1beta1.AccountManagement) error
 }
 
@@ -53,7 +53,7 @@ func (a accountsImpl) SupportedAccountProviders() []string {
 	return []string{"GKE", "EKS", "AKS"}
 }
 
-// Update is responsible for update a account in the kore
+// Update is responsible for update a account in kore
 func (a accountsImpl) Update(ctx context.Context, account *accountv1beta1.AccountManagement) error {
 	account.Namespace = HubAdminTeam
 
@@ -112,7 +112,7 @@ func (a accountsImpl) Update(ctx context.Context, account *accountv1beta1.Accoun
 		store.UpdateOptions.WithPatch(true),
 	)
 	if err != nil {
-		log.WithError(err).Error("trying to update a account in the kore")
+		log.WithError(err).Error("trying to update a account in kore")
 
 		return err
 	}
@@ -120,7 +120,7 @@ func (a accountsImpl) Update(ctx context.Context, account *accountv1beta1.Accoun
 	return nil
 }
 
-// Delete is used to delete a account in the kore
+// Delete is used to delete a account in kore
 func (a accountsImpl) Delete(ctx context.Context, name string) (*accountv1beta1.AccountManagement, error) {
 	user := authentication.MustGetIdentity(ctx)
 	if !user.IsGlobalAdmin() {
@@ -139,7 +139,7 @@ func (a accountsImpl) Delete(ctx context.Context, name string) (*accountv1beta1.
 		if kerrors.IsNotFound(err) {
 			return nil, ErrNotFound
 		}
-		log.WithError(err).Error("trying to retrieve account in the kore")
+		log.WithError(err).Error("trying to retrieve account in kore")
 
 		return nil, err
 	}

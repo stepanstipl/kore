@@ -26,8 +26,8 @@ import (
 func EnrichSwagger(swo *spec.Swagger) {
 	swo.Info = &spec.Info{
 		InfoProps: spec.InfoProps{
-			Title:       "Appvia Kore API",
-			Description: "Kore API provides the frontend API for the Appvia Kore (kore.appvia.io)",
+			Title:       "Kore API",
+			Description: "Kore API provides the frontend API (kore.appvia.io)",
 			Contact: &spec.ContactInfo{
 				ContactInfoProps: spec.ContactInfoProps{
 					Name:  "Appvia Ltd",

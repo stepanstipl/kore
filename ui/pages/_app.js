@@ -178,7 +178,7 @@ class MyApp extends App {
           `,
             }}
           />
-          <title>{props.title || 'Appvia Kore'}</title>
+          <title>{props.title || 'Kore'}</title>
           <meta charSet="utf-8"/>
           <meta name="viewport" content="initial-scale=1.0, width=device-width"/>
           {!publicRuntimeConfig.disableAnimations ? null : (
@@ -209,7 +209,7 @@ class MyApp extends App {
               </div>
               <div style={{ float: 'left', paddingLeft: '15px', paddingTop: '1px', fontSize: '20px' }}>
                 <Link href="/">
-                  <a style={{ color: '#FFFFFF' }}>Appvia Kore</a>
+                  <a style={{ color: '#FFFFFF' }}>Kore</a>
                 </Link>
               </div>
               {prototypePath ? <Link href="/prototype"><Tag style={{ marginLeft: '20px' }}>PROTOTYPE</Tag></Link> : null}
@@ -223,7 +223,7 @@ class MyApp extends App {
                 <Component {...this.props.pageProps} user={this.props.user} teamAdded={this.teamAdded} teamRemoved={this.teamRemoved} version={version} />
               </Content>
               <Footer className="footer">
-                <Paragraph className="version">Appvia Kore {version}</Paragraph>
+                <Paragraph className="version">Kore {version}</Paragraph>
               </Footer>
             </Layout>
           </Layout>

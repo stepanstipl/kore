@@ -7,7 +7,7 @@ const GitHubSetupComplete = () => (
     title="Authentication setup complete"
     subTitle="You have configured GitHub OAuth for authentication"
     extra={[
-      <Paragraph key="info">It&apos;s recommended that you now sign-in to continue the setup of Appvia Kore.</Paragraph>,
+      <Paragraph key="info">It&apos;s recommended that you now sign-in to continue the setup of Kore.</Paragraph>,
       <Button key="login" type="primary">
         <a href="/login">Login</a>
       </Button>

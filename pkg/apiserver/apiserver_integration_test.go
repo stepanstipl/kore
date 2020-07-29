@@ -77,7 +77,7 @@ const (
 var intTestData testData
 
 // getApi returns an instance of the API client.
-func getApi() *apiclient.AppviaKore {
+func getApi() *apiclient.Kore {
 	uri := os.Getenv("KORE_API_HOST")
 	if uri == "" {
 		uri = "localhost"

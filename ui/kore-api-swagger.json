@@ -1,8 +1,8 @@
 {
   "swagger": "2.0",
   "info": {
-    "description": "Kore API provides the frontend API for the Appvia Kore (kore.appvia.io)",
-    "title": "Appvia Kore API",
+    "description": "Kore API provides the frontend API (kore.appvia.io)",
+    "title": "Kore API",
     "contact": {
       "name": "Appvia Ltd",
       "url": "https://appvia.io",

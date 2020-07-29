@@ -36,7 +36,7 @@ func stringPrt(s string) *string {
 }
 
 var _ = Describe("/plans", func() {
-	var api *apiclient.AppviaKore
+	var api *apiclient.Kore
 	var plan *models.V1Plan
 	var planName string
 	var params map[string]interface{}

@@ -993,7 +993,7 @@ func (g *gkeClient) EnableRouter(name, network string) error {
 		g.region,
 		&compute.Router{
 			Name:        name,
-			Description: "Default router created by Appvia Kore",
+			Description: "Default router created by Kore",
 			Network:     net.SelfLink,
 			Nats: []*compute.RouterNat{
 				{

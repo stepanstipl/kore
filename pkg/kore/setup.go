@@ -278,7 +278,7 @@ func (h hubImpl) ensureHubAdminUser(ctx context.Context, name, email string) err
 	return nil
 }
 
-// ensureHubTeam ensure a kore team exists in the kore
+// ensureHubTeam ensure a kore team exists in kore
 func (h hubImpl) ensureHubTeam(ctx context.Context, name, description string) error {
 	nc := getAdminContext(ctx)
 
@@ -300,7 +300,7 @@ func (h hubImpl) ensureHubTeam(ctx context.Context, name, description string) er
 	return err
 }
 
-// ensureNamespace ensures the namespace exists in the kore
+// ensureNamespace ensures the namespace exists in kore
 func (h hubImpl) ensureNamespace(ctx context.Context, namespace string) error {
 	found, err := h.Store().Client().Has(ctx,
 		store.HasOptions.From(&corev1.Namespace{}),

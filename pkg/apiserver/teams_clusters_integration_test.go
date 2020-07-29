@@ -35,7 +35,7 @@ import (
 )
 
 var _ = Describe("/clusters", func() {
-	var api *apiclient.AppviaKore
+	var api *apiclient.Kore
 	var cluster *models.V1Cluster
 	var clusterName, planName, teamName, namespace string
 	var configuration map[string]interface{}

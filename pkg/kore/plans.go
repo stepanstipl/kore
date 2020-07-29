@@ -33,7 +33,7 @@ import (
 
 // Plans is the interface to the class plans
 type Plans interface {
-	// Delete is used to delete a plan in the kore
+	// Delete is used to delete a plan in kore
 	Delete(context.Context, string) (*configv1.Plan, error)
 	// Get returns the class from the kore
 	Get(context.Context, string) (*configv1.Plan, error)
@@ -41,7 +41,7 @@ type Plans interface {
 	List(context.Context) (*configv1.PlanList, error)
 	// Has checks if a resource exists within an available class in the scope
 	Has(context.Context, string) (bool, error)
-	// Update is responsible for update a plan in the kore
+	// Update is responsible for update a plan in kore
 	Update(ctx context.Context, plan *configv1.Plan, ignoreReadonly bool) error
 	// GetEditablePlanParams returns with the editable plan parameters for a specific team and cluster kind
 	GetEditablePlanParams(ctx context.Context, team string, clusterKind string) ([]string, error)
@@ -51,7 +51,7 @@ type plansImpl struct {
 	Interface
 }
 
-// Update is responsible for update a plan in the kore
+// Update is responsible for update a plan in kore
 func (p plansImpl) Update(ctx context.Context, plan *configv1.Plan, ignoreReadonly bool) error {
 	plan.Namespace = HubNamespace
 
@@ -92,7 +92,7 @@ func (p plansImpl) Update(ctx context.Context, plan *configv1.Plan, ignoreReadon
 		store.UpdateOptions.WithForce(true),
 	)
 	if err != nil {
-		log.WithError(err).Error("trying to update a plan in the kore")
+		log.WithError(err).Error("trying to update a plan in kore")
 
 		return err
 	}
@@ -100,7 +100,7 @@ func (p plansImpl) Update(ctx context.Context, plan *configv1.Plan, ignoreReadon
 	return nil
 }
 
-// Delete is used to delete a plan in the kore
+// Delete is used to delete a plan in kore
 func (p plansImpl) Delete(ctx context.Context, name string) (*configv1.Plan, error) {
 	user := authentication.MustGetIdentity(ctx)
 	if !user.IsGlobalAdmin() {
@@ -119,7 +119,7 @@ func (p plansImpl) Delete(ctx context.Context, name string) (*configv1.Plan, err
 		if kerrors.IsNotFound(err) {
 			return nil, ErrNotFound
 		}
-		log.WithError(err).Error("trying to retrieve plan in the kore")
+		log.WithError(err).Error("trying to retrieve plan in kore")
 
 		return nil, err
 	}

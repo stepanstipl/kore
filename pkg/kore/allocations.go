@@ -183,7 +183,7 @@ func (a acaImpl) GetAssigned(ctx context.Context, name string) (*configv1.Alloca
 
 // ListAllocationsAssigned returns a list of all allocations which you have access to
 func (a acaImpl) ListAllocationsAssigned(ctx context.Context) (*configv1.AllocationList, error) {
-	// @step: find all in the kore
+	// @step: find all in kore
 	all := &configv1.AllocationList{}
 
 	if err := a.Store().Client().List(ctx,

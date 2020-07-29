@@ -102,7 +102,7 @@ type ServiceProvider interface {
 type ServiceProviders interface {
 	// CheckDelete verifies whether the service providercan be deleted
 	CheckDelete(ctx context.Context, serviceProvider *servicesv1.ServiceProvider, o ...DeleteOptionFunc) error
-	// Delete is used to delete a service provider in the kore
+	// Delete is used to delete a service provider in kore
 	Delete(context.Context, string, ...DeleteOptionFunc) (*servicesv1.ServiceProvider, error)
 	// Get returns the service provider
 	Get(context.Context, string) (*servicesv1.ServiceProvider, error)
@@ -219,7 +219,7 @@ func (p *serviceProvidersImpl) CheckDelete(ctx context.Context, serviceProvider 
 	return nil
 }
 
-// Delete is used to delete a service provider in the kore
+// Delete is used to delete a service provider in kore
 func (p *serviceProvidersImpl) Delete(ctx context.Context, name string, o ...DeleteOptionFunc) (*servicesv1.ServiceProvider, error) {
 	opts := ResolveDeleteOptions(o)
 

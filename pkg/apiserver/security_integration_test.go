@@ -36,7 +36,7 @@ import (
 )
 
 var _ = Describe("/security", func() {
-	var api *apiclient.AppviaKore
+	var api *apiclient.Kore
 	BeforeEach(func() {
 		api = getApi()
 	})
