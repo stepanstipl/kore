@@ -151,6 +151,7 @@ func (t teamImpl) Update(ctx context.Context, team *model.Team) error {
 			Name:        team.Name,
 			Description: team.Description,
 			Summary:     team.Summary,
+			Identifier:  team.Identifier,
 		}).
 		FirstOrCreate(team).
 		Error
