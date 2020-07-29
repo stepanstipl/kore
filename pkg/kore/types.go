@@ -104,6 +104,8 @@ type Interface interface {
 	Costs() costs.Costs
 	// Features returns the kore feature control layer
 	Features() KoreFeatures
+	// KoreIdentifier returns the unique identifier for this instance of kore
+	KoreIdentifier() string
 }
 
 // DEX is the configuration required to setup identity providers

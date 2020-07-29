@@ -76,6 +76,8 @@ type hubImpl struct {
 	costs costs.Costs
 	// features is the features implementation
 	features KoreFeatures
+	// koreIdentifier is a unique identifier for this instance of kore
+	koreIdentifier string
 }
 
 // New returns a new instance of the kore bridge
@@ -273,4 +275,8 @@ func (h hubImpl) Costs() costs.Costs {
 
 func (h hubImpl) Features() KoreFeatures {
 	return h.features
+}
+
+func (h *hubImpl) KoreIdentifier() string {
+	return h.koreIdentifier
 }

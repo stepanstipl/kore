@@ -27,6 +27,9 @@ func SetCommonTags(tags *map[string]string, cluster *clustersv1.Cluster) {
 	if *tags == nil {
 		*tags = map[string]string{}
 	}
+	if cluster.Labels[kore.LabelKoreIdentifier] != "" {
+		(*tags)["kore-instance"] = cluster.Labels[kore.LabelKoreIdentifier]
+	}
 	if cluster.Labels[kore.LabelTeamIdentifier] != "" {
 		(*tags)["kore-team"] = cluster.Labels[kore.LabelTeamIdentifier]
 	}

@@ -16,6 +16,10 @@
 
 package kore
 
+// LabelKoreIdentifier is the label for the immutable unique identifier for this instance
+// of Kore. This will always be set by Kore and any user-provided values will be ignored.
+var LabelKoreIdentifier = Label("koreid")
+
 // LabelClusterIdentifier is the label for the immutable unique identifier for a cluster.
 // This should be left blank for new clusters (Kore will auto-assign a new value) or
 // populated with the identifier of a previously-deleted cluster which this cluster

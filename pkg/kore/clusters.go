@@ -281,6 +281,9 @@ func (c *clustersImpl) ensureIdentifiers(ctx context.Context, cluster *clustersv
 	}
 	assets := c.hubImpl.Teams().Team(c.team).Assets()
 
+	// @step: Set kore identifier no matter what, ignoring any values provided by the user
+	cluster.Labels[LabelKoreIdentifier] = c.hubImpl.KoreIdentifier()
+
 	// @step: Validate or ensure team identifier
 	var err error
 	valid := true

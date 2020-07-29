@@ -148,6 +148,16 @@ type FakeInterface struct {
 	invitationsReturnsOnCall map[int]struct {
 		result1 kore.Invitations
 	}
+	KoreIdentifierStub        func() string
+	koreIdentifierMutex       sync.RWMutex
+	koreIdentifierArgsForCall []struct {
+	}
+	koreIdentifierReturns struct {
+		result1 string
+	}
+	koreIdentifierReturnsOnCall map[int]struct {
+		result1 string
+	}
 	PersistStub        func() persistence.Interface
 	persistMutex       sync.RWMutex
 	persistArgsForCall []struct {
@@ -939,6 +949,58 @@ func (fake *FakeInterface) InvitationsReturnsOnCall(i int, result1 kore.Invitati
 	}{result1}
 }
 
+func (fake *FakeInterface) KoreIdentifier() string {
+	fake.koreIdentifierMutex.Lock()
+	ret, specificReturn := fake.koreIdentifierReturnsOnCall[len(fake.koreIdentifierArgsForCall)]
+	fake.koreIdentifierArgsForCall = append(fake.koreIdentifierArgsForCall, struct {
+	}{})
+	fake.recordInvocation("KoreIdentifier", []interface{}{})
+	fake.koreIdentifierMutex.Unlock()
+	if fake.KoreIdentifierStub != nil {
+		return fake.KoreIdentifierStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.koreIdentifierReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeInterface) KoreIdentifierCallCount() int {
+	fake.koreIdentifierMutex.RLock()
+	defer fake.koreIdentifierMutex.RUnlock()
+	return len(fake.koreIdentifierArgsForCall)
+}
+
+func (fake *FakeInterface) KoreIdentifierCalls(stub func() string) {
+	fake.koreIdentifierMutex.Lock()
+	defer fake.koreIdentifierMutex.Unlock()
+	fake.KoreIdentifierStub = stub
+}
+
+func (fake *FakeInterface) KoreIdentifierReturns(result1 string) {
+	fake.koreIdentifierMutex.Lock()
+	defer fake.koreIdentifierMutex.Unlock()
+	fake.KoreIdentifierStub = nil
+	fake.koreIdentifierReturns = struct {
+		result1 string
+	}{result1}
+}
+
+func (fake *FakeInterface) KoreIdentifierReturnsOnCall(i int, result1 string) {
+	fake.koreIdentifierMutex.Lock()
+	defer fake.koreIdentifierMutex.Unlock()
+	fake.KoreIdentifierStub = nil
+	if fake.koreIdentifierReturnsOnCall == nil {
+		fake.koreIdentifierReturnsOnCall = make(map[int]struct {
+			result1 string
+		})
+	}
+	fake.koreIdentifierReturnsOnCall[i] = struct {
+		result1 string
+	}{result1}
+}
+
 func (fake *FakeInterface) Persist() persistence.Interface {
 	fake.persistMutex.Lock()
 	ret, specificReturn := fake.persistReturnsOnCall[len(fake.persistArgsForCall)]
@@ -1625,6 +1687,8 @@ func (fake *FakeInterface) Invocations() map[string][][]interface{} {
 	defer fake.iDPMutex.RUnlock()
 	fake.invitationsMutex.RLock()
 	defer fake.invitationsMutex.RUnlock()
+	fake.koreIdentifierMutex.RLock()
+	defer fake.koreIdentifierMutex.RUnlock()
 	fake.persistMutex.RLock()
 	defer fake.persistMutex.RUnlock()
 	fake.planPoliciesMutex.RLock()
