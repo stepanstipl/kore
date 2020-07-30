@@ -18,6 +18,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -29,6 +30,7 @@ import (
 	"github.com/appvia/kore/pkg/cmd"
 	authproxy "github.com/appvia/kore/pkg/cmd/auth-proxy"
 	"github.com/appvia/kore/pkg/cmd/auth-proxy/verifiers"
+	"github.com/appvia/kore/pkg/cmd/auth-proxy/verifiers/jwt"
 	"github.com/appvia/kore/pkg/cmd/auth-proxy/verifiers/openid"
 	"github.com/appvia/kore/pkg/cmd/auth-proxy/verifiers/tokenreview"
 	"github.com/appvia/kore/pkg/utils"
@@ -39,6 +41,8 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+// @TODO the whole codebase needs a cleanup
+
 func init() {
 	cmd.DefaultLogging()
 	log.SetReportCaller(true)
@@ -48,6 +52,8 @@ func init() {
 type Config struct {
 	// OIDC are the openid options
 	OIDC openid.Options
+	// LocalJWT are the options for a local jwt verifier
+	LocalJWT jwt.Options
 	// Server is the main authproxy configuration
 	Server authproxy.Config
 	// TokenReview are the token review verifier
@@ -85,8 +91,10 @@ func main() {
 	flags.StringVar(&o.Server.MetricsListen, "metrics-listen", s("METRIC_LISTEN", ":8080"), "the interface prometheus metrics should listen")
 	flags.StringSliceVar(&o.Server.AllowedIPs, "allowed-ips", sl("ALLOWED_IPS", []string{"0.0.0.0/0"}), "network cidr allowed access")
 	flags.StringVar(&o.Server.UpstreamURL, "upstream-url", s("UPSTREAM_URL", "https://kubernetes.default.svc.cluster.local"), "upstream url to forward the requests")
-	flags.StringVar(&o.Server.Token, "upstream-token", s("UPSTREAM_AUTHENTICATION_TOKEN", "/var/run/secrets/kubernetes.io/serviceaccount/token"), "containing the authentication token for upstream")
+	flags.StringVar(&o.Server.Token, "upstream-token", s("UPSTREAM_AUTHENTICATION_TOKEN", "/var/run/secrets/kubernetes.io/serviceaccount/token"),
+		"containing the authentication token for upstream")
 	flags.DurationVar(&o.Server.FlushInterval, "flush-interval", 10*time.Millisecond, "the flush interval used on the revervse proxy")
+	flags.StringSliceVar(&o.Server.Verifiers, "verifiers", sl("VERIFIERS", []string{"tokenreview", "localjwt"}), "list of verifiers to enable")
 	flags.Bool("verbose", false, "switches on verbose logging for debugging purposes `BOOL`")
 
 	// OpenID options
@@ -94,6 +102,10 @@ func main() {
 	flags.StringVar(&o.OIDC.ClientID, "idp-client-id", s("IDP_CLIENT_ID", ""), "identity provider client id used to verify the token")
 	flags.StringSliceVar(&o.OIDC.UserClaims, "idp-user-claims", sl("IDP_USER_CLAIMS", []string{"preferred_username", "email", "name"}),
 		"order list of potential claims to extract the identity `CLAIMS`")
+
+	// LocalJWT options
+	flags.StringVar(&o.LocalJWT.ClientID, "jwt-client-id", s("JWT_CLIENT_ID", ""), "client id for the local jwt")
+	flags.StringVar(&o.LocalJWT.SignerPath, "jwt-signer-cert", s("JWT_SIGNER_CERT", ""), "path to the certificate used for signing")
 
 	// Tokenreview options
 	flags.DurationVar(&o.TokenReview.CacheSuccess, "token-cache-success", 10*time.Minute, "duration to cache successful reviews")
@@ -123,29 +135,59 @@ func Run() error {
 	}
 	token := strings.TrimSpace(string(content))
 
-	o.OIDC.Token = string(token)
+	var verifiers []verifiers.Interface
 
-	// @step: first we create the authentication providers
-	oidc, err := openid.New(o.OIDC)
-	if err != nil {
-		return err
+	if utils.Contains("openid", o.Server.Verifiers) {
+		log.Info("initializing the openid verifier")
+
+		o.OIDC.Token = string(token)
+		verifier, err := openid.New(o.OIDC)
+		if err != nil {
+			return err
+		}
+		verifiers = append(verifiers, verifier)
 	}
 
-	config := &rest.Config{
-		Host:            o.Server.UpstreamURL,
-		BearerToken:     string(token),
-		TLSClientConfig: rest.TLSClientConfig{Insecure: true},
+	if utils.Contains("tokenreview", o.Server.Verifiers) {
+		log.Info("initializing the tokenreview verifier")
+
+		config := &rest.Config{
+			Host:            o.Server.UpstreamURL,
+			BearerToken:     string(token),
+			TLSClientConfig: rest.TLSClientConfig{Insecure: true},
+		}
+		if err != nil {
+			return err
+		}
+		verifier, err := tokenreview.New(config, o.TokenReview)
+		if err != nil {
+			return err
+		}
+		verifiers = append(verifiers, verifier)
 	}
-	if err != nil {
-		return err
-	}
-	tokenrv, err := tokenreview.New(config, o.TokenReview)
-	if err != nil {
-		return err
+
+	if utils.Contains("localjwt", o.Server.Verifiers) {
+		log.Info("initializing the localjwt verifier")
+
+		if o.LocalJWT.SignerPath == "" {
+			return errors.New("no signing jwt certificate defined")
+		}
+		signer, err := ioutil.ReadFile(o.LocalJWT.SignerPath)
+		if err != nil {
+			return err
+		}
+		o.LocalJWT.Signer = signer
+		o.LocalJWT.ImpersonationToken = string(token)
+
+		verifier, err := jwt.New(o.LocalJWT)
+		if err != nil {
+			return err
+		}
+		verifiers = append(verifiers, verifier)
 	}
 
 	// @step: create the auth proxy service
-	svc, err := authproxy.New(&o.Server, []verifiers.Interface{oidc, tokenrv})
+	svc, err := authproxy.New(&o.Server, verifiers)
 	if err != nil {
 		return err
 	}
