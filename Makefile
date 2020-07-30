@@ -1,7 +1,7 @@
 SHELL = /bin/sh -e
 NAME=kore-apiserver
 AUTHOR ?= appvia
-AUTHOR_EMAIL=gambol99@gmail.com
+AUTHOR_EMAIL=kore@appvia.io
 BUILD_TIME=$(shell date '+%s')
 CURRENT_TAG=$(shell git tag --points-at HEAD)
 DEPS=$(shell go list -f '{{range .TestImports}}{{.}} {{end}}' ./...)

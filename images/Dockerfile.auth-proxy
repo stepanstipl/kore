@@ -12,7 +12,7 @@ FROM alpine:3.11
 
 LABEL Name=auth-proxy \
       Release=https://github.com/appvia/kore \
-      Maintainer=gambol99@gmail.com \
+      Maintainer=kore@appvia.io \
       Url=https://github.com/appvia/kore \
       Help=https://github.com/appvia/kore/issues
 
