@@ -108,10 +108,6 @@ func NewCmdCreateUser(factory cmdutils.Factory) *cobra.Command {
 		return suggestions, cobra.ShellCompDirectiveNoFileComp
 	})
 
-	if o.LocalPassword != "" {
-
-	}
-
 	return command
 }
 

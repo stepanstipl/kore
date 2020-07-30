@@ -55,6 +55,16 @@ type FakeInterface struct {
 	certificateAuthorityReturnsOnCall map[int]struct {
 		result1 []byte
 	}
+	CertificateAuthorityKeyStub        func() []byte
+	certificateAuthorityKeyMutex       sync.RWMutex
+	certificateAuthorityKeyArgsForCall []struct {
+	}
+	certificateAuthorityKeyReturns struct {
+		result1 []byte
+	}
+	certificateAuthorityKeyReturnsOnCall map[int]struct {
+		result1 []byte
+	}
 	ConfigStub        func() *kore.Config
 	configMutex       sync.RWMutex
 	configArgsForCall []struct {
@@ -95,11 +105,12 @@ type FakeInterface struct {
 	featuresReturnsOnCall map[int]struct {
 		result1 kore.KoreFeatures
 	}
-	GetUserIdentityStub        func(context.Context, string) (authentication.Identity, bool, error)
+	GetUserIdentityStub        func(context.Context, string, ...kore.MetaFunc) (authentication.Identity, bool, error)
 	getUserIdentityMutex       sync.RWMutex
 	getUserIdentityArgsForCall []struct {
 		arg1 context.Context
 		arg2 string
+		arg3 []kore.MetaFunc
 	}
 	getUserIdentityReturns struct {
 		result1 authentication.Identity
@@ -492,6 +503,58 @@ func (fake *FakeInterface) CertificateAuthorityReturnsOnCall(i int, result1 []by
 	}{result1}
 }
 
+func (fake *FakeInterface) CertificateAuthorityKey() []byte {
+	fake.certificateAuthorityKeyMutex.Lock()
+	ret, specificReturn := fake.certificateAuthorityKeyReturnsOnCall[len(fake.certificateAuthorityKeyArgsForCall)]
+	fake.certificateAuthorityKeyArgsForCall = append(fake.certificateAuthorityKeyArgsForCall, struct {
+	}{})
+	fake.recordInvocation("CertificateAuthorityKey", []interface{}{})
+	fake.certificateAuthorityKeyMutex.Unlock()
+	if fake.CertificateAuthorityKeyStub != nil {
+		return fake.CertificateAuthorityKeyStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.certificateAuthorityKeyReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeInterface) CertificateAuthorityKeyCallCount() int {
+	fake.certificateAuthorityKeyMutex.RLock()
+	defer fake.certificateAuthorityKeyMutex.RUnlock()
+	return len(fake.certificateAuthorityKeyArgsForCall)
+}
+
+func (fake *FakeInterface) CertificateAuthorityKeyCalls(stub func() []byte) {
+	fake.certificateAuthorityKeyMutex.Lock()
+	defer fake.certificateAuthorityKeyMutex.Unlock()
+	fake.CertificateAuthorityKeyStub = stub
+}
+
+func (fake *FakeInterface) CertificateAuthorityKeyReturns(result1 []byte) {
+	fake.certificateAuthorityKeyMutex.Lock()
+	defer fake.certificateAuthorityKeyMutex.Unlock()
+	fake.CertificateAuthorityKeyStub = nil
+	fake.certificateAuthorityKeyReturns = struct {
+		result1 []byte
+	}{result1}
+}
+
+func (fake *FakeInterface) CertificateAuthorityKeyReturnsOnCall(i int, result1 []byte) {
+	fake.certificateAuthorityKeyMutex.Lock()
+	defer fake.certificateAuthorityKeyMutex.Unlock()
+	fake.CertificateAuthorityKeyStub = nil
+	if fake.certificateAuthorityKeyReturnsOnCall == nil {
+		fake.certificateAuthorityKeyReturnsOnCall = make(map[int]struct {
+			result1 []byte
+		})
+	}
+	fake.certificateAuthorityKeyReturnsOnCall[i] = struct {
+		result1 []byte
+	}{result1}
+}
+
 func (fake *FakeInterface) Config() *kore.Config {
 	fake.configMutex.Lock()
 	ret, specificReturn := fake.configReturnsOnCall[len(fake.configArgsForCall)]
@@ -700,17 +763,18 @@ func (fake *FakeInterface) FeaturesReturnsOnCall(i int, result1 kore.KoreFeature
 	}{result1}
 }
 
-func (fake *FakeInterface) GetUserIdentity(arg1 context.Context, arg2 string) (authentication.Identity, bool, error) {
+func (fake *FakeInterface) GetUserIdentity(arg1 context.Context, arg2 string, arg3 ...kore.MetaFunc) (authentication.Identity, bool, error) {
 	fake.getUserIdentityMutex.Lock()
 	ret, specificReturn := fake.getUserIdentityReturnsOnCall[len(fake.getUserIdentityArgsForCall)]
 	fake.getUserIdentityArgsForCall = append(fake.getUserIdentityArgsForCall, struct {
 		arg1 context.Context
 		arg2 string
-	}{arg1, arg2})
-	fake.recordInvocation("GetUserIdentity", []interface{}{arg1, arg2})
+		arg3 []kore.MetaFunc
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("GetUserIdentity", []interface{}{arg1, arg2, arg3})
 	fake.getUserIdentityMutex.Unlock()
 	if fake.GetUserIdentityStub != nil {
-		return fake.GetUserIdentityStub(arg1, arg2)
+		return fake.GetUserIdentityStub(arg1, arg2, arg3...)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2, ret.result3
@@ -725,17 +789,17 @@ func (fake *FakeInterface) GetUserIdentityCallCount() int {
 	return len(fake.getUserIdentityArgsForCall)
 }
 
-func (fake *FakeInterface) GetUserIdentityCalls(stub func(context.Context, string) (authentication.Identity, bool, error)) {
+func (fake *FakeInterface) GetUserIdentityCalls(stub func(context.Context, string, ...kore.MetaFunc) (authentication.Identity, bool, error)) {
 	fake.getUserIdentityMutex.Lock()
 	defer fake.getUserIdentityMutex.Unlock()
 	fake.GetUserIdentityStub = stub
 }
 
-func (fake *FakeInterface) GetUserIdentityArgsForCall(i int) (context.Context, string) {
+func (fake *FakeInterface) GetUserIdentityArgsForCall(i int) (context.Context, string, []kore.MetaFunc) {
 	fake.getUserIdentityMutex.RLock()
 	defer fake.getUserIdentityMutex.RUnlock()
 	argsForCall := fake.getUserIdentityArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeInterface) GetUserIdentityReturns(result1 authentication.Identity, result2 bool, result3 error) {
@@ -1609,6 +1673,8 @@ func (fake *FakeInterface) Invocations() map[string][][]interface{} {
 	defer fake.auditMutex.RUnlock()
 	fake.certificateAuthorityMutex.RLock()
 	defer fake.certificateAuthorityMutex.RUnlock()
+	fake.certificateAuthorityKeyMutex.RLock()
+	defer fake.certificateAuthorityKeyMutex.RUnlock()
 	fake.configMutex.RLock()
 	defer fake.configMutex.RUnlock()
 	fake.configsMutex.RLock()
