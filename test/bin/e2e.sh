@@ -46,7 +46,7 @@ usage() {
   --build-proxy  <bool>    : indicates if we should build the auth proxy image (defaults: ${BUILD_AUTH_PROXY})
   --enable-api   <bool>    : enable the kore-apiserver deployment (defaults: ${ENABLE_API})
   --enable-ui    <bool>    : enable building and deploying the ui (defaults: ${ENABLE_UI})
-  --k8s-version  <string>  : the version of kubenetes we should run against (defaults: ${K8S_VERSION})
+  --k8s-version  <string>  : the version of kubernetes we should run against (defaults: ${K8S_VERSION})
   --version      <string>  : is the version name to build the components (default: "")
   -h|--help                : display this usage menu
 EOF
