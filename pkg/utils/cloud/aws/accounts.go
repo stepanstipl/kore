@@ -160,7 +160,7 @@ func NewAccountClientFromSessionAndRole(s *session.Session, roleARN, region stri
 func (a *AccountClient) Exists() (bool, error) {
 	if a.account.id != nil {
 
-		// return quickcly if we've done this already
+		// return quickly if we've done this already
 		return true, nil
 	}
 	err := a.updateAccountIDIfRequired()
@@ -676,18 +676,38 @@ func (a *AccountClient) updateAccountIDIfRequired() error {
 	}
 
 	orgSvc := organizations.New(a.session)
-	ao, err := orgSvc.ListAccounts(&organizations.ListAccountsInput{})
-	if err != nil {
 
-		return fmt.Errorf("unable to list accounts - %w", err)
-	}
-	for _, acc := range ao.Accounts {
-		if *acc.Name == a.account.NewAccountName {
-			if a.account.id != nil {
+	var ao *organizations.ListAccountsOutput
+	var ai *organizations.ListAccountsInput
 
-				return fmt.Errorf("more than one account found with account name %s - %s and %s", a.account.NewAccountName, *a.account.id, *acc.Id)
+	// Handle paginated aws api results
+	for {
+		if ao != nil {
+			ai = &organizations.ListAccountsInput{
+				NextToken: ao.NextToken,
 			}
-			a.account.id = acc.Id
+		} else {
+			ai = &organizations.ListAccountsInput{}
+		}
+		var err error
+		// Do not create new vars here (we have to use THIS ao on next iteration)
+		ao, err = orgSvc.ListAccounts(ai)
+		if err != nil {
+
+			return fmt.Errorf("unable to list accounts - %w", err)
+		}
+		for _, acc := range ao.Accounts {
+			if *acc.Name == a.account.NewAccountName {
+				if a.account.id != nil {
+
+					return fmt.Errorf("more than one account found with account name %s - %s and %s", a.account.NewAccountName, *a.account.id, *acc.Id)
+				}
+				a.account.id = acc.Id
+			}
+		}
+		if aws.StringValue(ao.NextToken) == "" {
+
+			break
 		}
 	}
 
