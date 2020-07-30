@@ -309,10 +309,16 @@ func (c *clustersImpl) ensureIdentifiers(ctx context.Context, cluster *clustersv
 		return false, nil
 	}
 
+	// work out the right cloud for the cluster provider so we can tag the asset correctly
+	cloud, mapErr := c.Costs().Metadata().MapProviderToCloud(cluster.Spec.Kind)
+	if mapErr != nil {
+		log.WithField("provider", cluster.Spec.Kind).WithError(mapErr).Warn("received error mapping k8s provider to cloud provider for asset identifier, will continue")
+	}
+
 	// @step: For a new cluster if an identifier has been supplied, check valid for re-use and mark it as
 	// active again
 	if cluster.Labels[LabelClusterIdentifier] != "" {
-		valid, err := assets.ReuseAssetIdentifier(ctx, cluster.Labels[LabelClusterIdentifier], orgv1.TeamAssetTypeCluster, cluster.Name)
+		valid, err := assets.ReuseAssetIdentifier(ctx, cluster.Labels[LabelClusterIdentifier], orgv1.TeamAssetTypeCluster, cluster.Name, cloud)
 		if err != nil {
 			return false, err
 		}
@@ -324,7 +330,7 @@ func (c *clustersImpl) ensureIdentifiers(ctx context.Context, cluster *clustersv
 	}
 
 	// @step: Assign an identifier to this new cluster
-	cluster.Labels[LabelClusterIdentifier], err = assets.GenerateAssetIdentifier(ctx, orgv1.TeamAssetTypeCluster, cluster.Name)
+	cluster.Labels[LabelClusterIdentifier], err = assets.GenerateAssetIdentifier(ctx, orgv1.TeamAssetTypeCluster, cluster.Name, cloud)
 	if err != nil {
 		return false, err
 	}

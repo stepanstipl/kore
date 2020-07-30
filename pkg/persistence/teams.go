@@ -19,7 +19,6 @@ package persistence
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/appvia/kore/pkg/persistence/model"
 
@@ -41,18 +40,6 @@ type Teams interface {
 	List(context.Context, ...ListFunc) ([]*model.Team, error)
 	// Update updates a team in the store
 	Update(context.Context, *model.Team) error
-	// RecordTeamIdentity persists a new team identifier
-	RecordTeamIdentity(ctx context.Context, teamIdentifier string, teamName string) error
-	// MarkTeamIdentityDeleted marks a specific team identifier as deleted
-	MarkTeamIdentityDeleted(ctx context.Context, teamIdentifier string) error
-	// RecordAsset records an asset as being owned by a team
-	RecordAsset(ctx context.Context, teamIdentifier string, assetIdentifier string, assetType model.TeamAssetType, assetName string) error
-	// GetAsset retrieves details of an asset from the store
-	GetAsset(ctx context.Context, teamIdentifier string, assetIdentifier string) (*model.TeamAsset, error)
-	// MarkAssetDeleted records an asset as no longer being active
-	MarkAssetDeleted(ctx context.Context, teamIdentifier string, assetIdentifier string) error
-	// MarkAssetUndeleted records an asset as being active after previously being deleted
-	MarkAssetUndeleted(ctx context.Context, teamIdentifier string, assetIdentifier string, assetName string) error
 }
 
 type teamImpl struct {
@@ -155,78 +142,6 @@ func (t teamImpl) Update(ctx context.Context, team *model.Team) error {
 		}).
 		FirstOrCreate(team).
 		Error
-}
-
-// RecordTeamIdentiy records the existence of a team
-func (t teamImpl) RecordTeamIdentity(ctx context.Context, teamIdentifier string, teamName string) error {
-	timed := prometheus.NewTimer(setLatency)
-	defer timed.ObserveDuration()
-
-	return t.conn.Create(&model.TeamIdentity{
-		TeamIdentifier: teamIdentifier,
-		TeamName:       teamName,
-	}).Error
-}
-
-func (t teamImpl) MarkTeamIdentityDeleted(ctx context.Context, teamIdentifier string) error {
-	timed := prometheus.NewTimer(setLatency)
-	defer timed.ObserveDuration()
-
-	return t.conn.Exec(
-		"UPDATE team_identities SET deleted_at = ? WHERE team_identifier = ?",
-		time.Now(),
-		teamIdentifier,
-	).Error
-}
-
-// RecordAsset records an asset as being owned by a team
-func (t teamImpl) RecordAsset(ctx context.Context, teamIdentifier string, assetIdentifier string, assetType model.TeamAssetType, assetName string) error {
-	timed := prometheus.NewTimer(setLatency)
-	defer timed.ObserveDuration()
-
-	return t.conn.Create(&model.TeamAsset{
-		TeamIdentifier:  teamIdentifier,
-		AssetIdentifier: assetIdentifier,
-		AssetType:       assetType,
-		AssetName:       assetName,
-	}).Error
-}
-
-// MarkAssetDeleted records an asset as no longer being active
-func (t teamImpl) MarkAssetDeleted(ctx context.Context, teamIdentifier string, assetIdentifier string) error {
-	timed := prometheus.NewTimer(setLatency)
-	defer timed.ObserveDuration()
-
-	return t.conn.Exec(
-		"UPDATE team_assets SET deleted_at = ? WHERE team_identifier = ? and asset_identifier = ?",
-		time.Now(),
-		teamIdentifier,
-		assetIdentifier,
-	).Error
-}
-
-// MarkAssetUndeleted records an asset as being active after previously being deleted
-func (t teamImpl) MarkAssetUndeleted(ctx context.Context, teamIdentifier string, assetIdentifier string, assetName string) error {
-	timed := prometheus.NewTimer(setLatency)
-	defer timed.ObserveDuration()
-
-	return t.conn.Exec(
-		"UPDATE team_assets SET deleted_at = NULL, asset_name = ? WHERE team_identifier = ? and asset_identifier = ?",
-		assetName,
-		teamIdentifier,
-		assetIdentifier,
-	).Error
-}
-
-func (t teamImpl) GetAsset(ctx context.Context, teamIdentifier string, assetIdentifier string) (*model.TeamAsset, error) {
-	timed := prometheus.NewTimer(getLatency)
-	defer timed.ObserveDuration()
-
-	asset := &model.TeamAsset{}
-
-	// @note: uses unscoped to include rows with deleted_at set - gorm by default
-	// excludes 'soft deleted' rows - http://gorm.io/docs/delete.html#Soft-Delete
-	return asset, t.conn.Unscoped().Where("team_identifier = ? AND asset_identifier = ?", teamIdentifier, assetIdentifier).First(asset).Error
 }
 
 // Preload allows access to the preload

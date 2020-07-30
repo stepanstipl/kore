@@ -32,12 +32,12 @@ type TeamAssets interface {
 	// the correct identifier for the team
 	EnsureTeamIdentifier(ctx context.Context) (teamIdentifier string, err error)
 	// GenerateAssetIdentifier generates a new asset identifier and records it as owned by this team
-	GenerateAssetIdentifier(ctx context.Context, assetType orgv1.TeamAssetType, assetName string) (string, error)
+	GenerateAssetIdentifier(ctx context.Context, assetType orgv1.TeamAssetType, assetName string, provider string) (string, error)
 	// ReuseAssetIdentifier verifies that the supplied identifier is a previously-deleted asset for this
 	// team of the relevant type and undeletes it for use with a new asset representing the same logical
 	// resource (e.g. a replacement cluster). Returns false if the identifier is not valid, true if it
 	// was successfully undeleted.
-	ReuseAssetIdentifier(ctx context.Context, assetIdentifier string, assetType orgv1.TeamAssetType, assetName string) (bool, error)
+	ReuseAssetIdentifier(ctx context.Context, assetIdentifier string, assetType orgv1.TeamAssetType, assetName string, provider string) (bool, error)
 	// MarkAssetDeleted marks a team asset as deleted
 	MarkAssetDeleted(ctx context.Context, assetIdentifier string) error
 	// ValidateTeamIdentifier checks that the supplied identifier is correct for the team
@@ -90,28 +90,28 @@ func (t *teamAssetsImpl) EnsureTeamIdentifier(ctx context.Context) (string, erro
 	return team.Identifier, nil
 }
 
-func (t *teamAssetsImpl) GenerateAssetIdentifier(ctx context.Context, assetType orgv1.TeamAssetType, assetName string) (string, error) {
+func (t *teamAssetsImpl) GenerateAssetIdentifier(ctx context.Context, assetType orgv1.TeamAssetType, assetName string, provider string) (string, error) {
 	teamIdentifier, err := t.getTeamIdentifier(ctx)
 	if err != nil {
 		return "", err
 	}
 
 	assetIdent := utils.GenerateIdentifier()
-	err = t.persist.Teams().RecordAsset(ctx, teamIdentifier, assetIdent, model.TeamAssetType(assetType), assetName)
+	err = t.persist.TeamAssets().RecordAsset(ctx, teamIdentifier, assetIdent, model.TeamAssetType(assetType), assetName, provider)
 	if err != nil {
 		return "", fmt.Errorf("Failed to persist new asset identifier to team %s: %w", t.team, err)
 	}
 	return assetIdent, nil
 }
 
-func (t *teamAssetsImpl) ReuseAssetIdentifier(ctx context.Context, assetIdentifier string, assetType orgv1.TeamAssetType, assetName string) (bool, error) {
+func (t *teamAssetsImpl) ReuseAssetIdentifier(ctx context.Context, assetIdentifier string, assetType orgv1.TeamAssetType, assetName string, provider string) (bool, error) {
 	teamIdentifier, err := t.getTeamIdentifier(ctx)
 	if err != nil {
 		return false, err
 	}
 
 	// Valid for re-use if it exists, is deleted, and previously referred to the same type of asset.
-	asset, err := t.persist.Teams().GetAsset(ctx, teamIdentifier, assetIdentifier)
+	asset, err := t.persist.TeamAssets().GetAsset(ctx, teamIdentifier, assetIdentifier)
 	if err != nil {
 		if t.persist.IsNotFound(err) {
 			return false, nil
@@ -121,7 +121,7 @@ func (t *teamAssetsImpl) ReuseAssetIdentifier(ctx context.Context, assetIdentifi
 	if asset.DeletedAt == nil || asset.AssetType != model.TeamAssetType(assetType) {
 		return false, nil
 	}
-	if err := t.persist.Teams().MarkAssetUndeleted(ctx, teamIdentifier, assetIdentifier, assetName); err != nil {
+	if err := t.persist.TeamAssets().MarkAssetUndeleted(ctx, teamIdentifier, assetIdentifier, assetName, provider); err != nil {
 		return false, err
 	}
 	return true, nil
@@ -132,7 +132,7 @@ func (t *teamAssetsImpl) MarkAssetDeleted(ctx context.Context, assetIdentifier s
 	if err != nil {
 		return err
 	}
-	return t.persist.Teams().MarkAssetDeleted(ctx, teamIdentifier, assetIdentifier)
+	return t.persist.TeamAssets().MarkAssetDeleted(ctx, teamIdentifier, assetIdentifier)
 }
 
 func (t *teamAssetsImpl) ValidateTeamIdentifier(ctx context.Context, teamIdentifier string) (bool, error) {

@@ -138,7 +138,7 @@ func (t *teamsImpl) Delete(ctx context.Context, name string, o ...DeleteOptionFu
 	}
 
 	if teamRecord.Identifier != "" {
-		if err := t.persistenceMgr.Teams().MarkTeamIdentityDeleted(ctx, teamRecord.Identifier); err != nil {
+		if err := t.persistenceMgr.TeamAssets().MarkTeamIdentityDeleted(ctx, teamRecord.Identifier); err != nil {
 			log.WithError(err).Error("trying to mark team identity as deleted in kore")
 			return fmt.Errorf("error marking team identity as deleted: %w", err)
 		}
@@ -306,7 +306,7 @@ func (t *teamsImpl) Update(ctx context.Context, team *orgv1.Team) (*orgv1.Team, 
 
 func (t *teamsImpl) GenerateTeamIdentifier(ctx context.Context, teamName string) (string, error) {
 	identifier := utils.GenerateIdentifier()
-	err := t.hubImpl.persistenceMgr.Teams().RecordTeamIdentity(ctx, identifier, teamName)
+	err := t.hubImpl.persistenceMgr.TeamAssets().RecordTeamIdentity(ctx, identifier, teamName)
 	if err != nil {
 		return "", fmt.Errorf("Failed to persist identifier for team %s: %w", teamName, err)
 	}

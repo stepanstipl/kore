@@ -61,6 +61,8 @@ type Interface interface {
 	Stop() error
 	// Teams returns the teams interface
 	Teams() Teams
+	// TeamAssets returns the team assets interface
+	TeamAssets() TeamAssets
 	// Users returns the users interface
 	Users() Users
 	// Config returns the config interface

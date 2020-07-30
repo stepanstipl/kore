@@ -411,7 +411,11 @@ func (h hubImpl) ensureTeamsAndClustersIdentified(ctx context.Context) error {
 
 			if cluster.Labels[LabelClusterIdentifier] == "" {
 				logger.Info("assigning cluster identifier")
-				cluster.Labels[LabelClusterIdentifier], err = h.Teams().Team(team.Name).Assets().GenerateAssetIdentifier(ctx, orgv1.TeamAssetTypeCluster, cluster.Name)
+				cloud, mapErr := h.Costs().Metadata().MapProviderToCloud(cluster.Spec.Kind)
+				if mapErr != nil {
+					log.WithField("provider", cluster.Spec.Kind).WithError(mapErr).Warn("received error mapping k8s provider to cloud provider for asset identifier, will continue with blank cloud provider")
+				}
+				cluster.Labels[LabelClusterIdentifier], err = h.Teams().Team(team.Name).Assets().GenerateAssetIdentifier(ctx, orgv1.TeamAssetTypeCluster, cluster.Name, cloud)
 				if err != nil {
 					logger.Errorf("error generating identifier for team cluster: %v", err)
 					return err

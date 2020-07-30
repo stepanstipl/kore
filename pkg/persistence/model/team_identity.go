@@ -31,4 +31,8 @@ type TeamIdentity struct {
 	CreatedAt time.Time `sql:"DEFAULT:current_timestamp"`
 	// DeletedAt is the timestamp the team was deleted from Kore, null if the team still exists
 	DeletedAt *time.Time `sql:"DEFAULT:null"`
+	// Assets represents the assets associated with this team identity
+	Assets []TeamAsset `gorm:"foreignkey:TeamIdentifier"`
+	// Costs represents the costs associated with this team identity
+	Costs []TeamAssetCost `gorm:"foreignkey:TeamIdentifier"`
 }

@@ -109,6 +109,14 @@ func (s *storeImpl) Teams() Teams {
 	}
 }
 
+// TeamAssets returns the teams interface
+func (s *storeImpl) TeamAssets() TeamAssets {
+	return &teamAssetsImpl{
+		Interface: s,
+		conn:      s.dbc,
+	}
+}
+
 // Identities returns the identities interface
 func (s *storeImpl) Identities() Identities {
 	return &idImpl{
