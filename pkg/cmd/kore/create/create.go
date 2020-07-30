@@ -17,6 +17,7 @@
 package create
 
 import (
+	"github.com/appvia/kore/pkg/cmd/kore/identity"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 	"github.com/appvia/kore/pkg/kore"
 
@@ -43,6 +44,7 @@ func NewCmdCreate(factory cmdutil.Factory) *cobra.Command {
 		NewCmdGKECredentials(factory),
 		NewCmdEKSCredentials(factory),
 		NewCmdCreateConfig(factory),
+		identity.NewCmdCreateIdentity(factory),
 	)
 
 	if factory.Config().FeatureGates[kore.FeatureGateServices] {

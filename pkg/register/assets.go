@@ -35,6 +35,7 @@
 // deploy/crds/monitoring.kore.appvia.io_alertrules.yaml
 // deploy/crds/monitoring.kore.appvia.io_alerts.yaml
 // deploy/crds/org.kore.appvia.io_auditevents.yaml
+// deploy/crds/org.kore.appvia.io_identities.yaml
 // deploy/crds/org.kore.appvia.io_members.yaml
 // deploy/crds/org.kore.appvia.io_teaminvitations.yaml
 // deploy/crds/org.kore.appvia.io_teams.yaml
@@ -6908,6 +6909,167 @@ func crdsOrgKoreAppviaIo_auditeventsYaml() (*asset, error) {
 	return a, nil
 }
 
+var _crdsOrgKoreAppviaIo_identitiesYaml = []byte(`
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: identities.org.kore.appvia.io
+spec:
+  group: org.kore.appvia.io
+  names:
+    kind: Identity
+    listKind: IdentityList
+    plural: identities
+    singular: identity
+  preserveUnknownFields: false
+  scope: Namespaced
+  validation:
+    openAPIV3Schema:
+      description: Identity is the Schema for the identities API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: IdentitySpec defines the desired state of User
+          properties:
+            accountType:
+              description: AccountType is the account type of the identity i.e. sso,
+                basicauth etc
+              minLength: 1
+              type: string
+            basicAuth:
+              description: BasicAuth defines a basicauth identity
+              properties:
+                password:
+                  description: Password is a password associated to the user
+                  minLength: 1
+                  type: string
+              required:
+              - password
+              type: object
+            idpUser:
+              description: IDPUser links to the associated idp user
+              properties:
+                email:
+                  description: Email for the associated user
+                  minLength: 1
+                  type: string
+                uuid:
+                  description: UUID is a unique id for the user in the external idp
+                  type: string
+              required:
+              - email
+              type: object
+            user:
+              description: User is the user spec the identity is associated
+              properties:
+                apiVersion:
+                  description: 'APIVersion defines the versioned schema of this representation
+                    of an object. Servers should convert recognized schemas to the
+                    latest internal value, and may reject unrecognized values. More
+                    info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+                  type: string
+                kind:
+                  description: 'Kind is a string value representing the REST resource
+                    this object represents. Servers may infer this from the endpoint
+                    the client submits requests to. Cannot be updated. In CamelCase.
+                    More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                  type: string
+                metadata:
+                  type: object
+                spec:
+                  description: UserSpec defines the desired state of User
+                  properties:
+                    disabled:
+                      description: Disabled indicates if the user is disabled
+                      type: boolean
+                    email:
+                      description: Email is the email for the user
+                      minLength: 1
+                      type: string
+                    username:
+                      description: Username is the userame or identity for this user
+                      minLength: 1
+                      type: string
+                  required:
+                  - disabled
+                  - email
+                  - username
+                  type: object
+                status:
+                  description: UserStatus defines the observed state of User
+                  properties:
+                    conditions:
+                      description: Conditions is collection of potentials error causes
+                      items:
+                        description: Condition is a reason why something failed
+                        properties:
+                          detail:
+                            description: Detail is a actual error which might contain
+                              technical reference
+                            type: string
+                          message:
+                            description: Message is a human readable message
+                            type: string
+                        required:
+                        - detail
+                        - message
+                        type: object
+                      type: array
+                    status:
+                      description: Status provides an overview of the user status
+                      type: string
+                  required:
+                  - status
+                  type: object
+              type: object
+          required:
+          - accountType
+          - user
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
+`)
+
+func crdsOrgKoreAppviaIo_identitiesYamlBytes() ([]byte, error) {
+	return _crdsOrgKoreAppviaIo_identitiesYaml, nil
+}
+
+func crdsOrgKoreAppviaIo_identitiesYaml() (*asset, error) {
+	bytes, err := crdsOrgKoreAppviaIo_identitiesYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "crds/org.kore.appvia.io_identities.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _crdsOrgKoreAppviaIo_membersYaml = []byte(`
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -8625,6 +8787,7 @@ var _bindata = map[string]func() (*asset, error){
 	"crds/monitoring.kore.appvia.io_alertrules.yaml":                      crdsMonitoringKoreAppviaIo_alertrulesYaml,
 	"crds/monitoring.kore.appvia.io_alerts.yaml":                          crdsMonitoringKoreAppviaIo_alertsYaml,
 	"crds/org.kore.appvia.io_auditevents.yaml":                            crdsOrgKoreAppviaIo_auditeventsYaml,
+	"crds/org.kore.appvia.io_identities.yaml":                             crdsOrgKoreAppviaIo_identitiesYaml,
 	"crds/org.kore.appvia.io_members.yaml":                                crdsOrgKoreAppviaIo_membersYaml,
 	"crds/org.kore.appvia.io_teaminvitations.yaml":                        crdsOrgKoreAppviaIo_teaminvitationsYaml,
 	"crds/org.kore.appvia.io_teams.yaml":                                  crdsOrgKoreAppviaIo_teamsYaml,
@@ -8716,6 +8879,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"monitoring.kore.appvia.io_alertrules.yaml":                      {crdsMonitoringKoreAppviaIo_alertrulesYaml, map[string]*bintree{}},
 		"monitoring.kore.appvia.io_alerts.yaml":                          {crdsMonitoringKoreAppviaIo_alertsYaml, map[string]*bintree{}},
 		"org.kore.appvia.io_auditevents.yaml":                            {crdsOrgKoreAppviaIo_auditeventsYaml, map[string]*bintree{}},
+		"org.kore.appvia.io_identities.yaml":                             {crdsOrgKoreAppviaIo_identitiesYaml, map[string]*bintree{}},
 		"org.kore.appvia.io_members.yaml":                                {crdsOrgKoreAppviaIo_membersYaml, map[string]*bintree{}},
 		"org.kore.appvia.io_teaminvitations.yaml":                        {crdsOrgKoreAppviaIo_teaminvitationsYaml, map[string]*bintree{}},
 		"org.kore.appvia.io_teams.yaml":                                  {crdsOrgKoreAppviaIo_teamsYaml, map[string]*bintree{}},

@@ -18,6 +18,7 @@ package server
 
 import (
 	"context"
+	"regexp"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
 	monitoring "github.com/appvia/kore/pkg/apis/monitoring/v1beta1"
@@ -36,42 +37,22 @@ var (
 		{
 			Group:   orgv1.GroupVersion.Group,
 			Version: orgv1.GroupVersion.Version,
-			Kind:    "TeamMember",
-		},
-		{
-			Group:   orgv1.GroupVersion.Group,
-			Version: orgv1.GroupVersion.Version,
-			Kind:    "TeamInvitation",
-		},
-		{
-			Group:   orgv1.GroupVersion.Group,
-			Version: orgv1.GroupVersion.Version,
-			Kind:    "User",
-		},
-		{
-			Group:   orgv1.GroupVersion.Group,
-			Version: orgv1.GroupVersion.Version,
-			Kind:    "AuditEvent",
+			Kind:    `^(TeamMember|TeamInvitation|User|AuditEvent|Identity)$`,
 		},
 		{
 			Group:   securityv1.GroupVersion.Group,
 			Version: securityv1.GroupVersion.Version,
-			Kind:    "*",
+			Kind:    `.*`,
 		},
 		{
 			Group:   monitoring.GroupVersion.Group,
 			Version: monitoring.GroupVersion.Version,
-			Kind:    "*",
+			Kind:    `.*`,
 		},
 		{
 			Group:   corev1.GroupVersion.Group,
 			Version: corev1.GroupVersion.Version,
-			Kind:    "IDP",
-		},
-		{
-			Group:   corev1.GroupVersion.Group,
-			Version: corev1.GroupVersion.Version,
-			Kind:    "IDPClient",
+			Kind:    `^(IDP|IDPClient)$`,
 		},
 	}
 )
@@ -82,7 +63,8 @@ func registerCustomResources(ctx context.Context, cc client.Interface) error {
 		for _, x := range list {
 			if x.Group == crd.Spec.Group {
 				if x.Version == crd.Spec.Version {
-					if x.Kind == crd.Spec.Names.Kind || x.Kind == "*" {
+					re := regexp.MustCompile(x.Kind)
+					if re.MatchString(crd.Spec.Names.Kind) {
 						return true
 					}
 				}

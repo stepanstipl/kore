@@ -157,6 +157,11 @@ func (l *ListOptions) HasProvider() bool {
 	return l.Has("provider.name")
 }
 
+// HasProviders checks the name
+func (l *ListOptions) HasProviders() bool {
+	return l.Has("provider.names")
+}
+
 // HasProviderToken checks the name
 func (l *ListOptions) HasProviderToken() bool {
 	return l.Has("provider.token")
@@ -325,6 +330,11 @@ func (l *ListOptions) GetKind() string {
 // GetProvider gets the name
 func (l *ListOptions) GetProvider() string {
 	return l.GetString("provider.name")
+}
+
+// GetProviders gets the name
+func (l *ListOptions) GetProviders() []string {
+	return l.GetStringSlice("provider.names")
 }
 
 // GetProviderToken gets the provider token

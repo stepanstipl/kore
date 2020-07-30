@@ -37,7 +37,10 @@ Provides the ability to provision a user in kore.
 
 	userExamples = `
 # Create the test user
-$ kore create username test -e test@appiva.io
+$ kore create user test -e test@appiva.io
+
+# Create a user and provision a local identity for them.
+$ kore create user test --password
 `
 )
 
@@ -51,6 +54,10 @@ type CreateUserOptions struct {
 	Name string
 	// Email is the user email address
 	Email string
+	// EnableLocal indicates a local identity
+	EnableLocal bool
+	// LocalPassword creates a user with a local password
+	LocalPassword string
 	// NoWait indicates if we should wait for a resource to provision
 	NoWait bool
 }
@@ -70,6 +77,7 @@ func NewCmdCreateUser(factory cmdutils.Factory) *cobra.Command {
 
 	flags := command.Flags()
 	flags.StringVarP(&o.Email, "email", "e", "", "an email address for the user `EMAIL`")
+	flags.BoolVar(&o.EnableLocal, "password", false, "used to set a local password on a user `BOOL`")
 	flags.BoolVar(&o.DryRun, "dry-run", false, "shows the resource but does not apply or create (defaults: false)")
 
 	cmdutils.MustMarkFlagRequired(command, "email")
@@ -100,26 +108,18 @@ func NewCmdCreateUser(factory cmdutils.Factory) *cobra.Command {
 		return suggestions, cobra.ShellCompDirectiveNoFileComp
 	})
 
+	if o.LocalPassword != "" {
+
+	}
+
 	return command
 }
 
 // Run implements the action
 func (o *CreateUserOptions) Run() error {
-	user := &orgv1.User{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "User",
-			APIVersion: orgv1.GroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      o.Name,
-			Namespace: kore.HubNamespace,
-		},
-		Spec: orgv1.UserSpec{
-			Username: o.Name,
-			Email:    o.Email,
-			Disabled: false,
-		},
-	}
+	var err error
+
+	user := makeUserModel(o.Name, o.Email)
 
 	if o.DryRun {
 		return render.Render().
@@ -129,10 +129,42 @@ func (o *CreateUserOptions) Run() error {
 			Do()
 	}
 
-	return o.WaitForCreation(
-		o.ClientWithResource(o.Resources().MustLookup("user")).
-			Name(o.Name).
-			Payload(user),
-		o.NoWait,
-	)
+	// @step: check if the user
+	found, err := o.ClientWithResource(o.Resources().MustLookup("user")).
+		Name(o.Name).
+		Exists()
+	if err != nil {
+		return err
+	}
+	if !found {
+		err = o.WaitForCreation(
+			o.ClientWithResource(o.Resources().MustLookup("user")).
+				Name(o.Name).
+				Payload(user),
+			o.NoWait)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func makeUserModel(username, email string) *orgv1.User {
+	return &orgv1.User{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "User",
+			APIVersion: orgv1.GroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      username,
+			Namespace: kore.HubNamespace,
+		},
+		Spec: orgv1.UserSpec{
+			Username: username,
+			Email:    email,
+			Disabled: false,
+		},
+	}
 }

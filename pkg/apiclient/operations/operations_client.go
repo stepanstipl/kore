@@ -29,6 +29,8 @@ type Client struct {
 type ClientService interface {
 	AddTeamMember(params *AddTeamMemberParams, authInfo runtime.ClientAuthInfoWriter) (*AddTeamMemberOK, error)
 
+	AssociateIDPIdentity(params *AssociateIDPIdentityParams, authInfo runtime.ClientAuthInfoWriter) (*AssociateIDPIdentityOK, error)
+
 	DeleteAKSCredentials(params *DeleteAKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteAKSCredentialsOK, error)
 
 	DeleteAWSOrganization(params *DeleteAWSOrganizationParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteAWSOrganizationOK, error)
@@ -145,6 +147,8 @@ type ClientService interface {
 
 	ListIDPs(params *ListIDPsParams, authInfo runtime.ClientAuthInfoWriter) (*ListIDPsOK, error)
 
+	ListIdentities(params *ListIdentitiesParams, authInfo runtime.ClientAuthInfoWriter) (*ListIdentitiesOK, error)
+
 	ListInvites(params *ListInvitesParams, authInfo runtime.ClientAuthInfoWriter) (*ListInvitesOK, error)
 
 	ListKubernetes(params *ListKubernetesParams, authInfo runtime.ClientAuthInfoWriter) (*ListKubernetesOK, error)
@@ -173,9 +177,13 @@ type ClientService interface {
 
 	ListTeams(params *ListTeamsParams, authInfo runtime.ClientAuthInfoWriter) (*ListTeamsOK, error)
 
+	ListUserIdentity(params *ListUserIdentityParams, authInfo runtime.ClientAuthInfoWriter) (*ListUserIdentityOK, error)
+
 	ListUserTeams(params *ListUserTeamsParams, authInfo runtime.ClientAuthInfoWriter) (*ListUserTeamsOK, error)
 
 	ListUsers(params *ListUsersParams, authInfo runtime.ClientAuthInfoWriter) (*ListUsersOK, error)
+
+	LocalAuthorize(params *LocalAuthorizeParams, authInfo runtime.ClientAuthInfoWriter) (*LocalAuthorizeOK, error)
 
 	LoginAttempted(params *LoginAttemptedParams, authInfo runtime.ClientAuthInfoWriter) (*LoginAttemptedOK, error)
 
@@ -247,6 +255,8 @@ type ClientService interface {
 
 	UpdateUser(params *UpdateUserParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateUserOK, error)
 
+	UpdateUserBasicauth(params *UpdateUserBasicauthParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateUserBasicauthOK, error)
+
 	WhoAmI(params *WhoAmIParams, authInfo runtime.ClientAuthInfoWriter) (*WhoAmIOK, error)
 
 	DeleteEKSVPC(params *DeleteEKSVPCParams, authInfo runtime.ClientAuthInfoWriter) (*DeleteEKSVPCOK, error)
@@ -312,6 +322,41 @@ func (a *Client) AddTeamMember(params *AddTeamMemberParams, authInfo runtime.Cli
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for AddTeamMember: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  AssociateIDPIdentity useds to associate an external ID p identity with a user in kore
+*/
+func (a *Client) AssociateIDPIdentity(params *AssociateIDPIdentityParams, authInfo runtime.ClientAuthInfoWriter) (*AssociateIDPIdentityOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewAssociateIDPIdentityParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "AssociateIDPIdentity",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/identities/{user}/associate",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &AssociateIDPIdentityReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*AssociateIDPIdentityOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for AssociateIDPIdentity: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -2330,6 +2375,41 @@ func (a *Client) ListIDPs(params *ListIDPsParams, authInfo runtime.ClientAuthInf
 }
 
 /*
+  ListIdentities returns all the identities for one or more users in kore
+*/
+func (a *Client) ListIdentities(params *ListIdentitiesParams, authInfo runtime.ClientAuthInfoWriter) (*ListIdentitiesOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewListIdentitiesParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "ListIdentities",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/identities",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &ListIdentitiesReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*ListIdentitiesOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for ListIdentities: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
   ListInvites useds to return a list of all the users whom have pending invitations
 */
 func (a *Client) ListInvites(params *ListInvitesParams, authInfo runtime.ClientAuthInfoWriter) (*ListInvitesOK, error) {
@@ -2819,6 +2899,41 @@ func (a *Client) ListTeams(params *ListTeamsParams, authInfo runtime.ClientAuthI
 }
 
 /*
+  ListUserIdentity finds all identities for a specific user in kore
+*/
+func (a *Client) ListUserIdentity(params *ListUserIdentityParams, authInfo runtime.ClientAuthInfoWriter) (*ListUserIdentityOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewListUserIdentityParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "ListUserIdentity",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/identities/{user}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &ListUserIdentityReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*ListUserIdentityOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for ListUserIdentity: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
   ListUserTeams returns a list of teams the user is a member of
 */
 func (a *Client) ListUserTeams(params *ListUserTeamsParams, authInfo runtime.ClientAuthInfoWriter) (*ListUserTeamsOK, error) {
@@ -2886,6 +3001,40 @@ func (a *Client) ListUsers(params *ListUsersParams, authInfo runtime.ClientAuthI
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for ListUsers: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
+}
+
+/*
+  LocalAuthorize useds to auhorize and swap tokens for a locally minted token
+*/
+func (a *Client) LocalAuthorize(params *LocalAuthorizeParams, authInfo runtime.ClientAuthInfoWriter) (*LocalAuthorizeOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewLocalAuthorizeParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "LocalAuthorize",
+		Method:             "PUT",
+		PathPattern:        "/api/v1alpha1/issue/authorize",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &LocalAuthorizeReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*LocalAuthorizeOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*LocalAuthorizeDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 
 /*
@@ -4100,6 +4249,41 @@ func (a *Client) UpdateUser(params *UpdateUserParams, authInfo runtime.ClientAut
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for UpdateUser: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+  UpdateUserBasicauth useds to update the basicauth of a local user in kore
+*/
+func (a *Client) UpdateUserBasicauth(params *UpdateUserBasicauthParams, authInfo runtime.ClientAuthInfoWriter) (*UpdateUserBasicauthOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewUpdateUserBasicauthParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "UpdateUserBasicauth",
+		Method:             "PUT",
+		PathPattern:        "/api/v1alpha1/identities/{user}/basicauth",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &UpdateUserBasicauthReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*UpdateUserBasicauthOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for UpdateUserBasicauth: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

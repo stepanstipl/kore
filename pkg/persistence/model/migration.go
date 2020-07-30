@@ -96,5 +96,4 @@ func Migrations(db *gorm.DB) error {
 		AddIndex("idx_assettype", "team_identifier", "asset_type")
 
 	return nil
-
 }

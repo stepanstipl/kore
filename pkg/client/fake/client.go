@@ -67,6 +67,11 @@ func (f *fake) Delete() client.RestInterface {
 	return f
 }
 
+// SubResource is an operation under the resource
+func (f *fake) SubResource(string) client.RestInterface {
+	return f
+}
+
 // Do returns the response and error
 func (f *fake) Do() (client.RestInterface, error) {
 	return f, nil

@@ -190,6 +190,17 @@ var (
 			},
 		},
 		{
+			Name:         "identity",
+			APIName:      "identities",
+			GroupVersion: orgv1.GroupVersion.String(),
+			Kind:         "Identity",
+			Scope:        GlobalScope,
+			ShortName:    "ident",
+			Printer: []Column{
+				{"Name", "metadata.name", ""},
+			},
+		},
+		{
 			Name:         "gke",
 			GroupVersion: gke.GroupVersion.String(),
 			Kind:         "GKE",

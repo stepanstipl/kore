@@ -19,6 +19,7 @@ package utils
 import (
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/appvia/kore/pkg/client"
 	"github.com/appvia/kore/pkg/client/config"
@@ -58,6 +59,15 @@ func DefaultRunFunc(o RunHandler) func(*cobra.Command, []string) {
 		utils.SetReflectedField("NoWait", GetFlagBool(cmd, "no-wait"), o)
 		utils.SetReflectedField("Output", GetFlagString(cmd, "output"), o)
 		utils.SetReflectedField("Headers", GetFlagBool(cmd, "show-headers"), o)
+
+		// @step: does the caller want to know the path of the kore binary?
+		if utils.HasReflectField("KorePath", o) {
+			exec, err := os.Executable()
+			if err != nil {
+				o.CheckError(err)
+			}
+			utils.SetReflectedField("KorePath", exec, o)
+		}
 
 		// @step: some handler require they know the diff between flags set and defaults
 		if utils.HasReflectField("FlagsChanged", o) {

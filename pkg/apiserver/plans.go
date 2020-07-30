@@ -35,7 +35,7 @@ func init() {
 
 type plansHandler struct {
 	kore.Interface
-	// DefaultHandler implements default features
+	// DfaultHandler implements default features
 	DefaultHandler
 }
 

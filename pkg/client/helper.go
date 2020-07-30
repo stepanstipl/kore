@@ -47,6 +47,11 @@ func IsNotAuthorized(err error) bool {
 	return isExpectedError(err, http.StatusUnauthorized)
 }
 
+// IsNotImplemented check if the error is a 501
+func IsNotImplemented(err error) bool {
+	return isExpectedError(err, http.StatusNotImplemented)
+}
+
 // IsNotAllowed checks if the response was a 403 forbidden
 func IsNotAllowed(err error) bool {
 	return isExpectedError(err, http.StatusForbidden)

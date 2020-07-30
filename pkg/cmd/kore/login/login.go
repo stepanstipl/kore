@@ -30,6 +30,7 @@ import (
 
 	"github.com/appvia/kore/pkg/apiserver"
 	restconfig "github.com/appvia/kore/pkg/client/config"
+	cmderr "github.com/appvia/kore/pkg/cmd/errors"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 
 	"github.com/skratchdot/open-golang/open"
@@ -58,6 +59,8 @@ type LoginOptions struct {
 	Endpoint string
 	// Force is used to force an operation
 	Force bool
+	// LocalUser indicates we are using local users
+	LocalUser bool
 	// Port is the local port to use for http server
 	Port int
 }
@@ -99,6 +102,7 @@ func (o *LoginOptions) Validate() error {
 
 		config.CreateProfile(o.Name, o.Endpoint)
 		config.CurrentProfile = o.Name
+		o.Client().OverrideProfile(config.CurrentProfile)
 	}
 
 	return nil
@@ -116,6 +120,12 @@ func (o *LoginOptions) Run() error {
 		o.Println("You may need to reconfigure your profile via $ kore profile configure")
 
 		return errors.New("invalid profile")
+	}
+
+	// @step: if the profile is not a single-sign-on - there's no need to login
+	auth := o.Config().GetAuthInfo(current)
+	if o.Config().HasAuth(current) && auth.OIDC == nil {
+		return cmderr.NewProfileInvalidError("profile is not single-sign-on, no need to login", current)
 	}
 
 	// @step: we make done channels to signal events
@@ -164,7 +174,7 @@ func (o *LoginOptions) Run() error {
 		return errors.New("authorization request timed out waiting to complete")
 	}
 
-	auth := o.Config().GetAuthInfo(current)
+	auth = o.Config().GetAuthInfo(current)
 	auth.OIDC = &restconfig.OIDC{
 		AccessToken:  token.AccessToken,
 		AuthorizeURL: token.AuthorizationURL,

@@ -16,8 +16,18 @@
 
 package types
 
+// IssuedToken is a minted token from kore
+type IssuedToken struct {
+	// Token is the actual token
+	Token []byte
+	// Expires is the time token will expire
+	Expires int64
+}
+
 // WhoAmI provides a description to who you are
 type WhoAmI struct {
+	// AuthMethod is the authentication method being used
+	AuthMethod string `json:"authMethod,omitempty"`
 	// Email is the user email
 	Email string `json:"email,omitempty"`
 	// Username is your username
@@ -26,6 +36,7 @@ type WhoAmI struct {
 	Teams []string `json:"teams,omitempty"`
 }
 
+// TeamInvitationResponse returns the team
 type TeamInvitationResponse struct {
 	// Team is the name of team which the user just has been been added to
 	Team string `json:"team"`

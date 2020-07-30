@@ -96,6 +96,27 @@ func (c *Config) GetProfile(name string) *Profile {
 	return c.Profiles[name]
 }
 
+// GetProfileAuthMethod returns the method of authentication for a profile
+func (c *Config) GetProfileAuthMethod(name string) string {
+	if !c.HasProfile(name) {
+		return ""
+	}
+	if !c.HasAuthInfo(c.Profiles[name].AuthInfo) {
+		return ""
+	}
+	auth := c.AuthInfos[c.Profiles[name].AuthInfo]
+	switch {
+	case auth.BasicAuth != nil:
+		return "basic"
+	case auth.OIDC != nil:
+		return "sso"
+	case auth.Token != nil:
+		return "token"
+	}
+
+	return "none"
+}
+
 // GetServer returns the endpoint for the profile
 func (c *Config) GetServer(name string) *Server {
 	if !c.HasProfile(name) {
@@ -119,6 +140,16 @@ func (c *Config) GetAuthInfo(name string) *AuthInfo {
 	}
 
 	return a
+}
+
+// HasAuth checks if we have auth enabled
+func (c *Config) HasAuth(name string) bool {
+	a := c.GetAuthInfo(name)
+	if a.OIDC != nil || a.BasicAuth != nil || a.Token != nil {
+		return true
+	}
+
+	return false
 }
 
 // AddProfile adds a profile to the config

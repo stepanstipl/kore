@@ -35,6 +35,16 @@ var (
 	keypairRegex = regexp.MustCompile(`^([[:alnum:]].+)=([[:alnum:]\{\}].+)$`)
 )
 
+// SetHelmValue is used to set a value if not already set
+func (o *UpOptions) SetHelmValue(key, value string) {
+	kv := fmt.Sprintf("%s=%s", key, value)
+	if utils.Contains(kv, o.HelmValues) {
+		return
+	}
+
+	o.HelmValues = append(o.HelmValues, kv)
+}
+
 // GetHelmValues returns returns or prompts for the values
 func (o *UpOptions) GetHelmValues(path string) (map[string]interface{}, error) {
 	values := make(map[string]interface{})
@@ -54,6 +64,32 @@ func (o *UpOptions) GetHelmValues(path string) (map[string]interface{}, error) {
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	o.SetHelmValue("api.auth_plugins.0", "basicauth")
+	o.SetHelmValue("api.auth_plugins.1", "admintoken")
+
+	// @step: inject the local admin - only if not set
+	if !o.EnableSSO {
+		if v, err := utils.MapLookup(values, "api", "admin_pass"); err == utils.ErrMapLookupNotFound {
+			if o.LocalAdminPassword == "" {
+				o.LocalAdminPassword = utils.Random(8)
+			}
+			o.SetHelmValue("api.admin_pass", o.LocalAdminPassword)
+		} else {
+			o.LocalAdminPassword = fmt.Sprintf("%v", v)
+		}
+	}
+
+	// @step: do we need to retrieve the idp settings
+	if o.EnableSSO {
+		v, err := GetSingleSignOnValues()
+		if err != nil {
+			return nil, err
+		}
+		values["idp"] = v
+
+		o.SetHelmValue("api.auth_plugins.3", "openid")
 	}
 
 	// @step: inject the flags if required
@@ -112,8 +148,11 @@ func GetHelmValuesFromFile(path string) (map[string]interface{}, error) {
 
 // GetDefaultHelmValues returns the default values required
 func GetDefaultHelmValues() (map[string]interface{}, error) {
-	values := DefaultHelmValues()
+	return DefaultHelmValues(), nil
+}
 
+// GetSingleSignOnValues returns single signon variables
+func GetSingleSignOnValues() (map[string]interface{}, error) {
 	a := authInfoConfig{}
 	a.AuthorizeURL = os.Getenv("KORE_IDP_SERVER_URL")
 	a.ClientID = os.Getenv("KORE_IDP_CLIENT_ID")
@@ -129,7 +168,7 @@ func GetDefaultHelmValues() (map[string]interface{}, error) {
 		}
 	}
 
-	values["idp"] = map[string]interface{}{
+	values := map[string]interface{}{
 		"client_id":     a.ClientID,
 		"client_secret": a.ClientSecret,
 		"server_url":    a.AuthorizeURL,

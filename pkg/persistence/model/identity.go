@@ -16,11 +16,6 @@
 
 package model
 
-const (
-	// APIToken provides an internal api token for the user
-	APIToken = "api_token"
-)
-
 // Identity defines a user identity in the
 type Identity struct {
 	// Provider is the provider name
@@ -36,7 +31,7 @@ type Identity struct {
 	// ProviderUID is the uid of the user in the provider
 	ProviderUID string
 	// User is the user the identity belong
-	User User `gorm:"foreignkey:UserID"`
+	User *User `gorm:"foreignkey:UserID"`
 	// UserID a reference to the user this belong to
 	UserID uint64 `gorm:"primary_key;auto_increment:false"`
 }

@@ -53,10 +53,6 @@ func NewCmdCreateMember(factory cmdutils.Factory) *cobra.Command {
 	cmdutils.MustMarkFlagRequired(command, "username")
 
 	cmdutils.MustRegisterFlagCompletionFunc(command, "username", func(cmd *cobra.Command, args []string, complete string) ([]string, cobra.ShellCompDirective) {
-		if len(complete) < 3 {
-			return nil, cobra.ShellCompDirectiveDefault
-		}
-
 		suggestions, err := o.Resources().LookResourceNamesWithFilter("user", "", "^"+complete)
 		if err != nil {
 			return nil, cobra.ShellCompDirectiveError

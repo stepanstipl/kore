@@ -19,6 +19,7 @@ package kore
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
@@ -28,6 +29,11 @@ import (
 	"github.com/appvia/kore/pkg/utils/validation"
 
 	log "github.com/sirupsen/logrus"
+)
+
+var (
+	// UsernameRegex is a filter for the username
+	UsernameRegex = regexp.MustCompile(`^[a-z-A-Z0-9\@\-\.]{3,63}$`)
 )
 
 // Users is the kore api users interface
@@ -40,6 +46,8 @@ type Users interface {
 	Exists(context.Context, string) (bool, error)
 	// Get returns the user from the kore
 	Get(context.Context, string) (*orgv1.User, error)
+	// Identities returns the identities interface
+	Identities() Identities
 	// List returns a list of users
 	List(context.Context) (*orgv1.UserList, error)
 	// ListInvitations returns a list of invitations for a user
@@ -55,7 +63,12 @@ type usersImpl struct {
 	*hubImpl
 }
 
-// EnableUser is used to create an user in kore
+// Identities returns the identities interface
+func (h *usersImpl) Identities() Identities {
+	return &idImpl{hubImpl: h.hubImpl}
+}
+
+// EnableUser is used to create an user in the kore
 func (h *usersImpl) EnableUser(ctx context.Context, username, email string) error {
 	logger := log.WithFields(log.Fields{
 		"email":    email,
@@ -242,13 +255,16 @@ func (h *usersImpl) Update(ctx context.Context, user *orgv1.User) (*orgv1.User, 
 	// @step: we need to validate the user
 	valErr := validation.NewError("user has failed validation")
 	if user.Name == "" {
-		valErr.AddFieldError("Name", validation.Required, "can not be empty")
+		valErr.AddFieldError("metadata.name", validation.Required, "can not be empty")
 	}
 	if user.Spec.Username == "" {
-		valErr.AddFieldError("Spec.Username", validation.Required, "can not be empty")
+		valErr.AddFieldError("spec.username", validation.Required, "can not be empty")
 	}
 	if user.Spec.Email == "" {
-		valErr.AddFieldError("Spec.Email", validation.Required, "can not be empty")
+		valErr.AddFieldError("spec.email", validation.Required, "can not be empty")
+	}
+	if !UsernameRegex.MatchString(user.Spec.Username) {
+		valErr.AddFieldError("spec.username", validation.InvalidValue, "invalid username")
 	}
 	if valErr.HasErrors() {
 		return nil, valErr

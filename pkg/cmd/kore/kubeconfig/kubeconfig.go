@@ -18,10 +18,13 @@ package kubeconfig
 
 import (
 	"errors"
+	"fmt"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-	cmdutils "github.com/appvia/kore/pkg/cmd/utils"
+	cmderr "github.com/appvia/kore/pkg/cmd/errors"
+	"github.com/appvia/kore/pkg/cmd/kore/alpha"
+	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 	"github.com/appvia/kore/pkg/utils/render"
 
@@ -37,7 +40,9 @@ const (
 
 // KubeConfigOptions is used to provision a team
 type KubeConfigOptions struct {
-	cmdutils.Factory
+	cmdutil.Factory
+	// KorePath is the location of the kore binary
+	KorePath string
 	// Team string
 	Team string
 	// Output is the output format
@@ -47,14 +52,14 @@ type KubeConfigOptions struct {
 }
 
 // NewCmdKubeConfig returns the create admin command
-func NewCmdKubeConfig(factory cmdutils.Factory) *cobra.Command {
+func NewCmdKubeConfig(factory cmdutil.Factory) *cobra.Command {
 	o := &KubeConfigOptions{Factory: factory}
 
 	command := &cobra.Command{
 		Use:     "kubeconfig",
 		Short:   "Adds your team provisioned clusters to your kubeconfig",
 		Example: "kore kubeconfig [-t team]",
-		Run:     cmdutils.DefaultRunFunc(o),
+		Run:     cmdutil.DefaultRunFunc(o),
 	}
 
 	return command
@@ -115,23 +120,48 @@ func (o *KubeConfigOptions) WriteConfig(clusters *clustersv1.ClusterList, path s
 		return err
 	}
 
-	auth := o.Config().GetAuthInfo(o.Client().CurrentProfile())
-	if auth.OIDC == nil {
-		return errors.New("you must be using a context backed by an idp")
-	}
+	// @step: we default to assuming the authentication method is sso
+	authUser := KoreContextUser
 
-	cfg.AuthInfos[KoreContextUser] = &api.AuthInfo{
-		AuthProvider: &api.AuthProviderConfig{
-			Name: "oidc",
-			Config: map[string]string{
-				"access-token":   auth.OIDC.AccessToken,
-				"client-id":      auth.OIDC.ClientID,
-				"client-secret":  auth.OIDC.ClientSecret,
-				"id-token":       auth.OIDC.IDToken,
-				"idp-issuer-url": auth.OIDC.AuthorizeURL,
-				"refresh-token":  auth.OIDC.RefreshToken,
+	current := o.Client().CurrentProfile()
+	auth := o.Config().GetAuthInfo(current)
+	switch {
+	case auth.OIDC != nil:
+		//
+		// @TODO: this comes with the caveat that they are using the 'SAME' idp
+		// across all kore instances (which might not be the case)
+		//
+		cfg.AuthInfos[KoreContextUser] = &api.AuthInfo{
+			AuthProvider: &api.AuthProviderConfig{
+				Name: "oidc",
+				Config: map[string]string{
+					"access-token":   auth.OIDC.AccessToken,
+					"client-id":      auth.OIDC.ClientID,
+					"client-secret":  auth.OIDC.ClientSecret,
+					"id-token":       auth.OIDC.IDToken,
+					"idp-issuer-url": auth.OIDC.AuthorizeURL,
+					"refresh-token":  auth.OIDC.RefreshToken,
+				},
 			},
-		},
+		}
+
+	case auth.BasicAuth != nil:
+		authUser = fmt.Sprintf("kore-pf-%s", current)
+
+		cfg.AuthInfos[authUser] = &api.AuthInfo{
+			Exec: &api.ExecConfig{
+				APIVersion: alpha.ExecAPIVersion,
+				Command:    o.KorePath,
+				Args: []string{
+					"--profile=" + current,
+					"alpha",
+					"authorize",
+				},
+			},
+		}
+
+	default:
+		return cmderr.NewProfileInvalidError("authentication method not supported", current)
 	}
 
 	for _, x := range clusters.Items {
@@ -143,7 +173,6 @@ func (o *KubeConfigOptions) WriteConfig(clusters *clustersv1.ClusterList, path s
 			continue
 		}
 
-		// @step: add the endpoint
 		cfg.Clusters[x.Name] = &api.Cluster{
 			InsecureSkipTLSVerify: true,
 			Server:                "https://" + x.Status.AuthProxyEndpoint,
@@ -152,7 +181,7 @@ func (o *KubeConfigOptions) WriteConfig(clusters *clustersv1.ClusterList, path s
 		// @step: add the context
 		if _, found := cfg.Contexts[x.Name]; !found {
 			cfg.Contexts[x.Name] = &api.Context{
-				AuthInfo: KoreContextUser,
+				AuthInfo: authUser,
 				Cluster:  x.Name,
 			}
 		}

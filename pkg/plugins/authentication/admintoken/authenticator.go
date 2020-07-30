@@ -58,7 +58,7 @@ func (o *authImpl) Admit(ctx context.Context, req identity.Requestor) (authentic
 		return nil, false
 	}
 
-	id, found, err := o.GetUserIdentity(ctx, "admin")
+	id, found, err := o.GetUserIdentity(ctx, "admin", kore.WithAuthMethod("admintoken"))
 	if err != nil || !found {
 		return nil, false
 	}

@@ -66,6 +66,7 @@ type User struct {
 // UserList contains a list of User
 type UserList struct {
 	metav1.TypeMeta `json:",inline"`
+
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []User `json:"items"`
 }

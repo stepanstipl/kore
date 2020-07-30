@@ -69,7 +69,7 @@ build: golang
 	@mkdir -p bin
 	@for binary in kore kore-apiserver auth-proxy; do \
 		echo "--> Building $${binary} binary" ; \
-		CGO_ENABLED=0 go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/$${binary} cmd/$${binary}/*.go || exit 1; \
+		CGO_ENABLED=0 go build -ldflags "${LFLAGS}" -tags=jsoniter -tags='mysql' -o bin/$${binary} cmd/$${binary}/*.go || exit 1; \
 	done
 
 kore: golang
@@ -93,7 +93,7 @@ auth-proxy-image-release: auth-proxy-image
 kore-apiserver: golang
 	@echo "--> Compiling the kore-apiserver binary"
 	@mkdir -p bin
-	CGO_ENABLED=0 go build -ldflags "${LFLAGS}" -o bin/kore-apiserver cmd/kore-apiserver/*.go
+	CGO_ENABLED=0 go build -ldflags "${LFLAGS}" -tags=jsoniter -o bin/kore-apiserver cmd/kore-apiserver/*.go
 
 kore-apiserver-image: golang
 	@echo "--> Compiling the kore-apiserver image"
@@ -436,19 +436,19 @@ schema-gen:
 	@go run github.com/go-bindata/go-bindata/go-bindata \
 		-nocompress \
 		-pkg register \
-	    -nometadata \
+	  -nometadata \
 		-o pkg/register/assets.go \
 		-prefix deploy deploy/crds
 	@gofmt -s -w pkg/register/assets.go
 
-openapi-gen:
-	@echo "--> Generating OpenAPI files"
-	@echo "--> packages $(APIS)"
-	@$(foreach api,$(APIS), \
-		go run k8s.io/kube-openapi/cmd/openapi-gen -h hack/boilerplate.go.txt \
-			--output-file-base zz_generated_openapi \
-			-i github.com/appvia/kore/pkg/apis/$(api) \
-			-p github.com/appvia/kore/pkg/apis/$(api); )
+db-migrations-gen:
+	@echo "--> Generating the Database Migrations"
+	@go run github.com/go-bindata/go-bindata/go-bindata \
+		-pkg migrations \
+	  -nometadata \
+		-o pkg/persistence/migrations/zz_migrations.go \
+		-prefix "pkg/persistence/migrations/files" pkg/persistence/migrations/files/...
+	@gofmt -s -w pkg/persistence/migrations/zz_migrations.go
 
 register-gen:
 	@echo "--> Generating Schema register.go"

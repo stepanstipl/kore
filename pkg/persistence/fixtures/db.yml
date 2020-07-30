@@ -15,7 +15,7 @@ identities:
   - user_id: 1
     provider: github
     provider_username: gambol99
-    provider_email: gambol99@gmail.com
+    provider_email: kore@appvia.io
     provider_uid: 42324234234
 teams:
   - id: 1

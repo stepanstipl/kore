@@ -22,6 +22,7 @@ import (
 
 	"github.com/appvia/kore/pkg/client"
 	"github.com/appvia/kore/pkg/cmd/errors"
+	"github.com/appvia/kore/pkg/cmd/kore/identity"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 	"github.com/appvia/kore/pkg/utils"
 
@@ -80,6 +81,7 @@ func NewCmdDelete(factory cmdutil.Factory) *cobra.Command {
 
 	command.AddCommand(
 		NewCmdDeleteAdmin(factory),
+		identity.NewCmdDeleteIdentity(factory),
 	)
 
 	return command

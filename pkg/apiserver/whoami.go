@@ -81,8 +81,9 @@ func (u *whoImpl) findWho(req *restful.Request, resp *restful.Response) {
 		}
 
 		who := &types.WhoAmI{
-			Username: user.Username(),
-			Email:    user.Email(),
+			AuthMethod: user.AuthMethod(),
+			Username:   user.Username(),
+			Email:      user.Email(),
 		}
 		for _, x := range teams.Items {
 			who.Teams = append(who.Teams, x.Name)

@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// ShowOptions are the options for the command
 type ShowOptions struct {
 	cmdutil.Factory
 }

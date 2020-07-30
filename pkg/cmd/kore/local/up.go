@@ -67,6 +67,8 @@ type UpOptions struct {
 	ContextName string
 	// EnableDeploy indicates we should deploy the application
 	EnableDeploy bool
+	// EnableSSO indicates that single-sign-on details should be prompted
+	EnableSSO bool
 	// DisableUI indicates we deploy without an UI
 	DisableUI bool
 	// DeploymentTimeout is the amount of time we will wait for deployment
@@ -77,6 +79,8 @@ type UpOptions struct {
 	FlagsChanged []string
 	// HelmPath is the path to the helm binary
 	HelmPath string
+	// LocalAdminPassword is the password for localadmin
+	LocalAdminPassword string
 	// Wait indicates we wait for the deployment to finish
 	Wait bool
 	// ValuesFile is the file containing the configurable values
@@ -108,6 +112,8 @@ func NewCmdBootstrapUp(factory cmdutil.Factory) *cobra.Command {
 	flags.StringVar(&o.ValuesFile, "values", os.ExpandEnv(filepath.Join(utils.UserHomeDir(), ".kore", "values.yaml")), "path to the file container helm values `PATH`")
 	flags.StringVar(&o.BinaryPath, "binary-path", filepath.Join(config.GetClientPath(), "build"), "path to place any downloaded binaries if requested `PATH`")
 	flags.BoolVar(&o.EnableDeploy, "enable-deploy", true, "indicates if we should deploy the kore application `BOOL`")
+	flags.BoolVar(&o.EnableSSO, "enable-sso", false, "indicates we want use a openid provider for authentication `BOOL`")
+	flags.StringVar(&o.LocalAdminPassword, "local-admin-password", "", "the password for local admin `PASSWORD`")
 	flags.BoolVar(&o.DisableUI, "disable-ui", false, "indicates the kore ui is not deployed `BOOL`")
 	flags.DurationVar(&o.DeploymentTimeout, "deployment-timeout", 5*time.Minute, "amount of time to wait for a successful deployment `DURATION`")
 	flags.StringSliceVar(&o.HelmValues, "set", []string{}, "a collection of path=value used to update the helm values `KEYPAIR`")
@@ -151,8 +157,13 @@ func (o *UpOptions) Run() error {
 	}
 
 	o.Println("")
-	o.Println("You can access the Kore portal via http://localhost:3000")
-	o.Println("Configure your CLI via $ kore login -a http://localhost:10080 local")
+	if !o.EnableSSO {
+		o.Println("Access the Kore portal via http://localhost:3000 [ admin | %s ]", o.LocalAdminPassword)
+		o.Println("Configure your CLI via $ kore profile configure local -a http://localhost:10080 --account basicauth")
+	} else {
+		o.Println("Access the Kore portal via http://localhost:3000")
+		o.Println("Configure your CLI via $ kore login -a http://localhost:10080")
+	}
 	o.Println("")
 
 	return nil
@@ -161,7 +172,8 @@ func (o *UpOptions) Run() error {
 // EnsurePreflightChecks is responsible for have everything moving forward
 func (o *UpOptions) EnsurePreflightChecks(ctx context.Context) error {
 	return (&Task{
-		Description: "Passed preflight checks for deployment",
+		Header:      "Provisioning Kore installation",
+		Description: "Passed preflight checks for installation",
 		Handler: func(ctx context.Context) error {
 			for _, x := range []string{Kubectl} {
 				if _, err := exec.LookPath(x); err != nil {
@@ -176,13 +188,7 @@ func (o *UpOptions) EnsurePreflightChecks(ctx context.Context) error {
 
 // EnsureHelmValues is responsible for retrieve the values for helm
 func (o *UpOptions) EnsureHelmValues(ctx context.Context) error {
-	found, err := utils.FileExists(o.ValuesFile)
-	if err != nil {
-		return err
-	}
-	if !found {
-		o.Println("First time running bootstrap, we need your IDP settings for OpenID")
-	}
+	var err error
 
 	o.Values, err = o.GetHelmValues(o.ValuesFile)
 	if err != nil {

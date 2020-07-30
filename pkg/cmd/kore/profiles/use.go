@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 
+	cmderr "github.com/appvia/kore/pkg/cmd/errors"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 
 	"github.com/spf13/cobra"
@@ -57,6 +58,9 @@ func (o *UseOptions) Run() error {
 
 	if !config.HasProfile(o.Name) {
 		return errors.New("the profile does not exist")
+	}
+	if err := config.HasValidProfile(o.Name); err != nil {
+		return cmderr.NewProfileInvalidError(err.Error(), o.Name)
 	}
 	config.CurrentProfile = o.Name
 

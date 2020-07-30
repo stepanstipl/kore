@@ -49,6 +49,13 @@ func (q ListFuncs) WithProvider(v string) ListFunc {
 	}
 }
 
+// WithProviders sets the provider name
+func (q ListFuncs) WithProviders(v []string) ListFunc {
+	return func(o *ListOptions) {
+		o.Fields["provider.names"] = v
+	}
+}
+
 // WithProviderToken sets the provider token
 func (q ListFuncs) WithProviderToken(v string) ListFunc {
 	return func(o *ListOptions) {

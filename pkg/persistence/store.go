@@ -17,14 +17,20 @@
 package persistence
 
 import (
+	"database/sql"
 	"time"
 
+	"github.com/appvia/kore/pkg/persistence/migrations"
 	"github.com/appvia/kore/pkg/persistence/model"
 
 	// include the database drivers
-	_ "github.com/jinzhu/gorm/dialects/mysql"
+	_ "github.com/golang-migrate/migrate/database/postgres"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 
+	"github.com/golang-migrate/migrate"
+	"github.com/golang-migrate/migrate/database/mysql"
+
+	bindata "github.com/golang-migrate/migrate/source/go_bindata"
 	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 )
@@ -56,12 +62,61 @@ func New(config Config) (Interface, error) {
 	db.DB().SetMaxOpenConns(0)
 
 	// @step: perform migrations on the models
-	log.Info("performing database migrations")
+	// @TODO once we are happy with the go-migrate we should turn
+	// gorm automigate off and use that only
+	log.Info("performing gorm database migrations")
 	if err := model.Migrations(db); err != nil {
 		return nil, err
 	}
 
+	log.Info("performing go-migrate database migrations")
+	if err := Migrations("kore", config.Driver, config.StoreURL); err != nil {
+		if err != migrate.ErrNoChange {
+			return nil, err
+		}
+	}
+
 	return &storeImpl{dbc: db, config: config}, nil
+}
+
+// Migrations is responsible for performing the database migrations
+func Migrations(dbname, driver, databaseURL string) error {
+	files := bindata.Resource(migrations.AssetNames(),
+		func(name string) ([]byte, error) {
+			return migrations.Asset(name)
+		})
+
+	// @step: perform the go-migrate migrations
+	source, err := bindata.WithInstance(files)
+	if err != nil {
+		return err
+	}
+
+	db, err := sql.Open(driver, databaseURL)
+	if err != nil {
+		return err
+	}
+
+	dest, err := mysql.WithInstance(db, &mysql.Config{
+		DatabaseName:    dbname,
+		MigrationsTable: "migrations",
+	})
+	if err != nil {
+		return err
+	}
+
+	m, err := migrate.NewWithInstance("kore", source, "kore", dest)
+	if err != nil {
+		return err
+	}
+
+	if err := m.Up(); err != nil {
+		log.WithError(err).Error("trying to perform database migrations")
+
+		return err
+	}
+
+	return nil
 }
 
 // Alerts returns the alerts interface

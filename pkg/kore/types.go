@@ -66,10 +66,12 @@ type Interface interface {
 	Config() *Config
 	// CertificateAuthority returns the CA
 	CertificateAuthority() []byte
+	// CertificateAuthorityKey is the private key for the CA
+	CertificateAuthorityKey() []byte
 	// Invitations returns the invitations interface
 	Invitations() Invitations
 	// GetUserIdenity returns the idenity if any of the a user
-	GetUserIdentity(context.Context, string) (authentication.Identity, bool, error)
+	GetUserIdentity(context.Context, string, ...MetaFunc) (authentication.Identity, bool, error)
 	// GetUserIdenityByProvider returns the idenity if any of the a user
 	GetUserIdentityByProvider(context.Context, string, string) (*model.Identity, bool, error)
 	// Plans returns the plans interface

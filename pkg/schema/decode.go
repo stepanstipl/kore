@@ -22,6 +22,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+// DecodeYAML decodes the yaml resource into a runtime.Object
 func DecodeYAML(data []byte) (runtime.Object, error) {
 	jsonData, err := yaml.YAMLToJSON(data)
 	if err != nil {
@@ -31,6 +32,7 @@ func DecodeYAML(data []byte) (runtime.Object, error) {
 	return DecodeJSON(jsonData)
 }
 
+// DecodeJSON decodes the json into a runtime.Object
 func DecodeJSON(data []byte) (runtime.Object, error) {
 	obj, _, err := GetCodecFactory().UniversalDeserializer().Decode(data, nil, nil)
 	if err != nil && !runtime.IsNotRegisteredError(err) {

@@ -38,6 +38,7 @@ func NewCmdAlpha(factory cmdutil.Factory) *cobra.Command {
 		patch.NewCmdPatch(factory),
 		featuregates.NewCmdFeatureGates(factory),
 		local.NewCmdBootstrap(factory),
+		NewCmdAlphaAuthorize(factory),
 	)
 
 	return command

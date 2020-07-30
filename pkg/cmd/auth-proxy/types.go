@@ -57,6 +57,8 @@ type Config struct {
 	Token string `json:"token"`
 	// UpstreamURL is the endpoint to forward requests
 	UpstreamURL string `json:"upstream-url,omitempty"`
+	// Verifiers is a collection of verifiers to switch on
+	Verifiers []string `json:"verifiers,omitempty"`
 }
 
 // Interface is the contract to the proxy

@@ -18,7 +18,6 @@ package basicauth
 
 import (
 	"context"
-	"encoding/base64"
 	"strings"
 
 	"github.com/appvia/kore/pkg/apiserver/plugins/identity"
@@ -39,32 +38,32 @@ func New(h kore.Interface) (identity.Plugin, error) {
 // Admit is called to authenticate the inbound request
 func (o *authImpl) Admit(ctx context.Context, req identity.Requestor) (authentication.Identity, bool) {
 	// @step: verify the authorization token
-	basic, found := utils.GetBasicAuthToken(req.Headers().Get("Authorization"))
+	username, password, found := utils.GetBasicAuthFromHeader(req.Headers().Get("Authorization"))
 	if !found {
 		return nil, false
 	}
 
-	payload, err := base64.StdEncoding.DecodeString(basic)
-	if err != nil {
-		return nil, false
-	}
-	keypair := strings.SplitN(string(payload), ":", 2)
-	if len(keypair) != 2 {
-		return nil, false
-	}
-	username := keypair[0]
-	password := keypair[1]
-
-	id, found, err := o.GetUserIdentityByProvider(ctx, username, "basicauth")
+	id, found, err := o.GetUserIdentityByProvider(ctx, username, kore.IdentityBasicAuth)
 	if err != nil || !found {
 		return nil, false
 	}
 
-	if id.ProviderToken != password {
-		return nil, false
+	// @TODO we rework this when i do the rbac piece as it will involve moving the
+	// authentication piece around alot - as we'd to wrap in some form of encryption service
+	current := id.ProviderToken
+	switch {
+	case strings.HasPrefix(current, "md5:"):
+		hash := strings.TrimPrefix(current, "md5:")
+		if utils.HashString(password) != hash {
+			return nil, false
+		}
+	default:
+		if current != password {
+			return nil, false
+		}
 	}
 
-	user, found, err := o.GetUserIdentity(ctx, username)
+	user, found, err := o.GetUserIdentity(ctx, username, kore.WithAuthMethod("basicauth"))
 	if err != nil || !found {
 		return nil, false
 	}

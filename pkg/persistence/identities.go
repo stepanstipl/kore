@@ -19,8 +19,10 @@ package persistence
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/appvia/kore/pkg/persistence/model"
+	"github.com/appvia/kore/pkg/utils"
 
 	"github.com/jinzhu/gorm"
 	"github.com/prometheus/client_golang/prometheus"
@@ -82,7 +84,7 @@ func (i *idImpl) Get(ctx context.Context, opts ...ListFunc) (*model.Identity, er
 	}
 }
 
-// List returns a filtered list of user identites
+// List returns a filtered list of user identities
 func (i *idImpl) List(ctx context.Context, opts ...ListFunc) ([]*model.Identity, error) {
 	timed := prometheus.NewTimer(listLatency)
 	defer timed.ObserveDuration()
@@ -90,6 +92,7 @@ func (i *idImpl) List(ctx context.Context, opts ...ListFunc) ([]*model.Identity,
 	terms := ApplyListOptions(opts...)
 
 	q := Preload(i.load, i.conn).
+		Preload("User").
 		Select("i.*").
 		Table("identities i").
 		Joins("JOIN users u ON u.id = i.user_id")
@@ -97,8 +100,8 @@ func (i *idImpl) List(ctx context.Context, opts ...ListFunc) ([]*model.Identity,
 	if terms.HasUser() {
 		q = q.Where("u.username = ?", terms.GetUser())
 	}
-	if terms.HasProvider() {
-		q = q.Where("i.provider = ?", terms.GetProvider())
+	if terms.HasProviders() {
+		q = q.Where("i.provider IN ?", terms.GetProviders())
 	}
 
 	list := []*model.Identity{}
@@ -124,6 +127,11 @@ func (i *idImpl) Update(ctx context.Context, id *model.Identity) error {
 	}
 	if id.Provider == "" {
 		return errors.New("provider is not defined")
+	}
+	if id.ProviderToken != "" && !strings.HasPrefix("md5", id.ProviderToken) {
+		//encoded, err := bcrypt.GenerateFromPassword([]byte(id.ProviderToken), 9)
+		// 38ms vs 1us
+		id.ProviderToken = "md5:" + utils.HashString(id.ProviderToken)
 	}
 
 	return i.conn.

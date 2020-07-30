@@ -193,7 +193,7 @@ func (a *apiClient) MakeDefaultURL() (string, error) {
 	if value, found := a.HasParameter("team"); found && value != "" {
 		paths = append(paths, []string{"teams", value}...)
 	}
-	for _, x := range []string{"resource", "name"} {
+	for _, x := range []string{"resource", "name", "subresource"} {
 		if value, found := a.HasParameter(x); found {
 			paths = append(paths, value)
 		}
@@ -251,7 +251,7 @@ func (a *apiClient) MakeRequest(method, url string) (*http.Response, error) {
 	case auth.OIDC != nil:
 		request.Header.Set("Authorization", "Bearer "+auth.OIDC.IDToken)
 	case auth.Token != nil:
-		request.Header.Set("Authorization:", "Bearer "+*auth.Token)
+		request.Header.Set("Authorization", "Bearer "+*auth.Token)
 	case auth.BasicAuth != nil:
 		request.SetBasicAuth(auth.BasicAuth.Username, auth.BasicAuth.Password)
 	}
@@ -423,6 +423,13 @@ func (a *apiClient) Parameters(params ...ParameterFunc) RestInterface {
 			a.queryparams.Add(param.Name, param.Value)
 		}
 	}
+
+	return a
+}
+
+// SubResource adds a subresource to the operation
+func (a *apiClient) SubResource(v string) RestInterface {
+	a.parameters["subresource"] = v
 
 	return a
 }

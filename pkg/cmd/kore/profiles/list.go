@@ -52,6 +52,7 @@ func (o *ListOptions) Run() error {
 		Name   string `json:"name"`
 		Server string `json:"server"`
 		Team   string `json:"team"`
+		Auth   string `json:"auth"`
 	}
 	var list []profile
 
@@ -66,6 +67,7 @@ func (o *ListOptions) Run() error {
 				Name:   x,
 				Server: o.Config().GetServer(p.Server).Endpoint,
 				Team:   p.Team,
+				Auth:   o.Config().GetProfileAuthMethod(x),
 			})
 		}
 	}
@@ -80,6 +82,7 @@ func (o *ListOptions) Run() error {
 			render.Column("Profile", "name"),
 			render.Column("Endpoint", "server"),
 			render.Column("Default Team", "team", render.Default("None")),
+			render.Column("Auth", "auth", render.Default("None")),
 			render.Column("Active", "name", render.IfEqualOr(current, "yes", `-`)),
 		).Do()
 }

@@ -89,7 +89,7 @@ func (o *authImpl) Admit(ctx context.Context, req identity.Requestor) (authentic
 			return nil, errors.New("issued token does not contain the username claim")
 		}
 
-		id, found, err := o.GetUserIdentity(ctx, username)
+		id, found, err := o.GetUserIdentity(ctx, username, kore.WithAuthMethod("localjwt"))
 		if err != nil {
 			return nil, err
 		}

@@ -23,6 +23,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/appvia/kore/pkg/apiserver/types"
 	"github.com/appvia/kore/pkg/client"
 	"github.com/appvia/kore/pkg/client/config"
 	"github.com/appvia/kore/pkg/cmd/errors"
@@ -114,9 +115,10 @@ func (f *factory) CheckError(kerror error) {
 			return errors.ErrAuthentication
 		case client.IsMethodNotAllowed(kerror):
 			return errors.ErrOperationNotPermitted
+		case client.IsNotImplemented(kerror):
+			return errors.ErrOperationNotSupported
 		case errors.IsError(kerror, &errors.ErrProfileInvalid{}):
-			return fmt.Errorf("invalid profile (%s), to fix run\n$ kore profiles configure %s --force",
-				kerror.Error(), kerror.(*errors.ErrProfileInvalid).Profile())
+			return fmt.Errorf("invalid: %s", kerror.Error())
 		}
 
 		return kerror
@@ -126,6 +128,13 @@ func (f *factory) CheckError(kerror error) {
 
 		os.Exit(1)
 	}
+}
+
+// Whoami returns the details of who they logged in with
+func (f *factory) Whoami() (*types.WhoAmI, error) {
+	who := &types.WhoAmI{}
+
+	return who, f.ClientWithEndpoint("/whoami").Result(who).Get().Error()
 }
 
 // UpdateConfig is responsible for updating the configuration

@@ -23,15 +23,18 @@ import (
 	"github.com/manifoldco/promptui"
 )
 
+// Prompt represents a input request
 type Prompt struct {
 	Id          string
 	LabelSuffix string
 	ErrMsg      string
 	Value       *string
 	AllowEdit   bool
+	Mask        bool
 	Validate    func(in string) error
 }
 
+// Do grabs the specific input
 func (p *Prompt) Do() error {
 	var value string
 	if p.Value != nil {
@@ -40,10 +43,15 @@ func (p *Prompt) Do() error {
 	if p.ErrMsg == "" {
 		p.ErrMsg = "%s cannot be blank"
 	}
+	var masked rune
+	if p.Mask {
+		masked = '*'
+	}
 	runner := promptui.Prompt{
 		Label:     p.Id + " " + p.LabelSuffix,
 		AllowEdit: p.AllowEdit,
 		Default:   value,
+		Mask:      masked,
 		Validate: func(in string) error {
 			if len(in) == 0 {
 				return fmt.Errorf(p.ErrMsg, p.Id)
@@ -61,18 +69,21 @@ func (p *Prompt) Do() error {
 	if err != nil {
 		return err
 	}
-
 	*p.Value = strings.TrimSpace(gathered)
+
 	return nil
 }
 
+// Prompts is a collection of inputs
 type Prompts []*Prompt
 
+// Collect grabs the inputs
 func (p Prompts) Collect() error {
 	for _, p := range p {
 		if err := p.Do(); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }

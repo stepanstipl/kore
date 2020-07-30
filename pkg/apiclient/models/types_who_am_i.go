@@ -15,6 +15,9 @@ import (
 // swagger:model types.WhoAmI
 type TypesWhoAmI struct {
 
+	// auth method
+	AuthMethod string `json:"authMethod,omitempty"`
+
 	// email
 	Email string `json:"email,omitempty"`
 

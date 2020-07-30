@@ -642,3 +642,59 @@ func (c Convertor) FromConfigModel(config *model.Config) *configv1.Config {
 		},
 	}
 }
+
+// ToIdentityModel convert from the api to db model
+func (c Convertor) ToIdentityModel(o *orgv1.Identity) *model.Identity {
+	model := &model.Identity{}
+	if o.Spec.User != nil {
+		model.User = c.ToUserModel(o.Spec.User)
+	}
+	switch {
+	case o.Spec.BasicAuth != nil:
+		model.ProviderToken = o.Spec.BasicAuth.Password
+	case o.Spec.IDPUser != nil:
+		model.ProviderEmail = o.Spec.IDPUser.Email
+		model.ProviderUID = o.Spec.IDPUser.UUID
+	}
+
+	return model
+}
+
+// FromIdentityModelList converts the db model list into a api list
+func (c Convertor) FromIdentityModelList(models []*model.Identity) *orgv1.IdentityList {
+	list := &orgv1.IdentityList{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "IdentityList",
+		},
+		Items: make([]orgv1.Identity, len(models)),
+	}
+	for i := 0; i < len(models); i++ {
+		list.Items[i] = *c.FromIdentityModel(models[i])
+	}
+
+	return list
+}
+
+// FromIdentityModel convert the db model to the api model
+func (c Convertor) FromIdentityModel(model *model.Identity) *orgv1.Identity {
+	i := &orgv1.Identity{
+		Spec: orgv1.IdentitySpec{
+			User: c.FromUserModel(model.User),
+		},
+	}
+
+	switch model.Provider {
+	case "basicauth":
+		i.Spec.BasicAuth = &orgv1.BasicAuth{}
+		i.Spec.AccountType = AccountLocal
+	case "sso":
+		i.Spec.IDPUser = &orgv1.IDPUser{
+			Email: model.ProviderEmail,
+			UUID:  model.ProviderUID,
+		}
+		i.Spec.AccountType = AccountSSO
+	}
+
+	return i
+}

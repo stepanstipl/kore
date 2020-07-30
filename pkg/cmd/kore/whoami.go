@@ -23,6 +23,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// WhoAmIOptions are the options for the whoami command
 type WhoAmIOptions struct {
 	cmdutil.Factory
 	cmdutil.DefaultHandler
@@ -52,9 +53,11 @@ func (o *WhoAmIOptions) Run() error {
 	return render.Render().
 		Writer(o.Writer()).
 		Resource(render.FromReader(resp.Body())).
+		Unknown("None").
 		Printer(
 			render.Column("Username", "username"),
 			render.Column("Email", "email"),
 			render.Column("Teams", "teams|@sjoin"),
+			render.Column("Authentication", "authMethod"),
 		).Do()
 }

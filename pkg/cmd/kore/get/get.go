@@ -23,6 +23,7 @@ import (
 
 	"github.com/appvia/kore/pkg/client"
 	cmderrors "github.com/appvia/kore/pkg/cmd/errors"
+	"github.com/appvia/kore/pkg/cmd/kore/identity"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/render"
@@ -110,6 +111,7 @@ func NewCmdGet(factory cmdutil.Factory) *cobra.Command {
 		NewCmdGetAdmin(factory),
 		NewCmdGetAlert(factory),
 		NewCmdGetAudit(factory),
+		identity.NewCmdGetIdentity(factory),
 	)
 
 	if factory.Config().FeatureGates[kore.FeatureGateServices] {

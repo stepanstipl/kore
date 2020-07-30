@@ -606,6 +606,189 @@
         }
       }
     },
+    "/api/v1alpha1/identities": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Returns all the identities for one or more users in kore",
+        "operationId": "ListIdentities",
+        "parameters": [
+          {
+            "type": "boolean",
+            "default": false,
+            "description": "returns all identities managed in kore",
+            "name": "all",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "set the type of identities to retrieve",
+            "name": "type",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of all the identities in the kore",
+            "schema": {
+              "$ref": "#/definitions/v1.IdentityList"
+            }
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/identities/{user}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Find all Identities for a specific user in kore",
+        "operationId": "ListUserIdentity",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of the user you wish to retrieve identities for",
+            "name": "user",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the identities definitions from the kore",
+            "schema": {
+              "$ref": "#/definitions/v1.IdentityList"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "User does not exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/identities/{user}/associate": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Used to associate an external IDP identity with a user in kore",
+        "operationId": "AssociateIDPIdentity",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of the user you wish to retrieve identities for",
+            "name": "user",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.UpdateIDPIdentity"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the identities definitions from the kore"
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "User does not exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/identities/{user}/basicauth": {
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Used to update the basicauth of a local user in kore",
+        "operationId": "UpdateUserBasicauth",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The name of the user we are updating",
+            "name": "user",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1.UpdateBasicAuthIdentity"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contains the identities definitions from the kore"
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "404": {
+            "description": "User does not exist"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
     "/api/v1alpha1/idp/clients/{name}": {
       "put": {
         "consumes": [
@@ -807,6 +990,38 @@
                 "$ref": "#/definitions/v1.IDPConfig"
               }
             }
+          },
+          "default": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/issue/authorize": {
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Used to auhorize and swap tokens for a locally minted token",
+        "operationId": "LocalAuthorize",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "The type of token being swapped, i.e basicauth, openid",
+            "name": "method",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
           },
           "default": {
             "description": "A generic API error containing the cause of the error",
@@ -7750,6 +7965,9 @@
     },
     "types.WhoAmI": {
       "properties": {
+        "authMethod": {
+          "type": "string"
+        },
         "email": {
           "type": "string"
         },
@@ -7930,6 +8148,16 @@
           "type": "string"
         },
         "verb": {
+          "type": "string"
+        }
+      }
+    },
+    "v1.BasicAuth": {
+      "required": [
+        "password"
+      ],
+      "properties": {
+        "password": {
           "type": "string"
         }
       }
@@ -8321,6 +8549,81 @@
         },
         "status": {
           "type": "string"
+        }
+      }
+    },
+    "v1.IDPUser": {
+      "required": [
+        "email"
+      ],
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "uuid": {
+          "type": "string"
+        }
+      }
+    },
+    "v1.Identity": {
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/v1.IdentitySpec"
+        }
+      }
+    },
+    "v1.IdentityList": {
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "apiVersion": {
+          "description": "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1.Identity"
+          }
+        },
+        "kind": {
+          "description": "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+          "type": "string"
+        },
+        "metadata": {
+          "$ref": "#/definitions/v1.ListMeta"
+        }
+      }
+    },
+    "v1.IdentitySpec": {
+      "required": [
+        "accountType",
+        "user"
+      ],
+      "properties": {
+        "accountType": {
+          "type": "string"
+        },
+        "basicAuth": {
+          "$ref": "#/definitions/v1.BasicAuth"
+        },
+        "idpUser": {
+          "$ref": "#/definitions/v1.IDPUser"
+        },
+        "user": {
+          "$ref": "#/definitions/v1.User"
         }
       }
     },
@@ -9788,11 +10091,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
-        "clientID",
         "clientSecret",
         "issuer",
         "clientScopes",
-        "userClaims"
+        "userClaims",
+        "clientID"
       ],
       "properties": {
         "clientID": {
@@ -10025,6 +10328,30 @@
           }
         },
         "status": {
+          "type": "string"
+        }
+      }
+    },
+    "v1.UpdateBasicAuthIdentity": {
+      "required": [
+        "password",
+        "username"
+      ],
+      "properties": {
+        "password": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        }
+      }
+    },
+    "v1.UpdateIDPIdentity": {
+      "required": [
+        "IDToken"
+      ],
+      "properties": {
+        "IDToken": {
           "type": "string"
         }
       }

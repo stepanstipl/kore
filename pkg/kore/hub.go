@@ -36,6 +36,8 @@ import (
 type hubImpl struct {
 	// caAuthority is the certificate authority for kore
 	caAuthority []byte
+	// caKey is the certificate authority key
+	caKey []byte
 	// config is the configuration of the kore
 	config *Config
 	// store is the access layer / kubernetes api
@@ -93,8 +95,12 @@ func New(sc store.Store, persistenceMgr persistence.Interface, config Config) (I
 		config.HMAC = utils.Random(32)
 	}
 
-	// @step: read the ca
+	// @step: read the public and private keys
 	authority, err := ioutil.ReadFile(config.CertificateAuthority)
+	if err != nil {
+		return nil, err
+	}
+	key, err := ioutil.ReadFile(config.CertificateAuthorityKey)
 	if err != nil {
 		return nil, err
 	}
@@ -112,6 +118,7 @@ func New(sc store.Store, persistenceMgr persistence.Interface, config Config) (I
 
 	h := &hubImpl{
 		caAuthority: authority,
+		caKey:       key,
 		config:      &config,
 		store:       sc,
 		signer:      signer,
@@ -148,6 +155,11 @@ func New(sc store.Store, persistenceMgr persistence.Interface, config Config) (I
 // CertificateAuthority returns the ca pem authority
 func (h *hubImpl) CertificateAuthority() []byte {
 	return h.caAuthority
+}
+
+// CertificateAuthority returns the ca pem authority key
+func (h *hubImpl) CertificateAuthorityKey() []byte {
+	return h.caKey
 }
 
 // SignedClientCertificate is used to generate a client certificate

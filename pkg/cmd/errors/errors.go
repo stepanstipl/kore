@@ -38,12 +38,16 @@ var (
 	ErrTeamMissing = kerrors.New("resource is team scoped and requires a team name")
 	// ErrOperationNotPermitted indicates the operation is not permitted
 	ErrOperationNotPermitted = kerrors.New("operation not permitted on the resource")
+	// ErrOperationNotSupported indicates the operation was not supported
+	ErrOperationNotSupported = kerrors.New("operation not supported")
 	// ErrMissingProfile indicate the profile does not exist
 	ErrMissingProfile = kerrors.New("profile does not exist")
 	// ErrNoFiles indicates no resources have been defined
 	ErrNoFiles = kerrors.New("no resource file defined")
 	// ErrUnknownResource indicates an unknown resource
 	ErrUnknownResource = kerrors.New("unknown resource type")
+	// ErrUnknownAccountType indicates an unknown account
+	ErrUnknownAccountType = kerrors.New("unknown account type")
 )
 
 // ErrResourceNotFound indicates the resources was not found
@@ -93,7 +97,7 @@ func (e *ErrProfileInvalid) Profile() string {
 }
 
 func (e *ErrProfileInvalid) Error() string {
-	return e.message
+	return fmt.Sprintf("%q %s", e.profile, e.message)
 }
 
 // IsError checks the error type is eqaul

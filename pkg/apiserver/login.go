@@ -54,12 +54,15 @@ type loginHandler struct {
 
 const googleAuthURL = "https://accounts.google.com"
 
-// @TODO Quick and dirty - the while this needs to be polished up
+// Path returns the handler path
+func (l *loginHandler) Path() string {
+	return "oauth"
+}
 
 // Register is responsible for handling the registration
 func (l *loginHandler) Register(i kore.Interface, builder utils.PathBuilder) (*restful.WebService, error) {
 	log.WithFields(log.Fields{
-		"path": "login",
+		"path": l.Path(),
 	}).Info("registering the login webservice with container")
 
 	l.Interface = i
@@ -67,9 +70,9 @@ func (l *loginHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 	ws := &restful.WebService{}
 	ws.Consumes(restful.MIME_JSON)
 	ws.Produces(restful.MIME_JSON)
-	ws.Path("oauth")
+	ws.Path(l.Path())
 
-	if l.Config().IDPServerURL != "" {
+	if l.Config().HasOpenID() {
 		provider, err := oidc.NewProvider(context.Background(), l.Config().IDPServerURL)
 		if err != nil {
 			log.WithError(err).Error("failed to create the openid provider")
@@ -129,16 +132,6 @@ func (l *loginHandler) Register(i kore.Interface, builder utils.PathBuilder) (*r
 	return ws, nil
 }
 
-// makeHostURL is used to retrieve the host url from the host headers
-func (l *loginHandler) makeHostURL(req *restful.Request) string {
-	scheme := "http"
-	if req.Request.TLS != nil || req.Request.Header.Get("X-Forward-Proto") == "https" {
-		scheme = "https"
-	}
-
-	return fmt.Sprintf("%s://%s", scheme, req.Request.Host)
-}
-
 // authorizerHandler is responsible for authorizing a client
 func (l *loginHandler) authorizerHandler(req *restful.Request, resp *restful.Response) {
 	// @step: check if the handler has been configured
@@ -158,7 +151,7 @@ func (l *loginHandler) authorizerHandler(req *restful.Request, resp *restful.Res
 
 	// @step: we either taken the public url or the host header
 	if l.Config().PublicAPIURL == "" {
-		l.oidcConfig.RedirectURL = fmt.Sprintf("%s/oauth/callback", l.makeHostURL(req))
+		l.oidcConfig.RedirectURL = fmt.Sprintf("%s/%s/oauth/callback", l.Path(), l.makeHostURL(req))
 	}
 
 	// @step: redirect the user to perform the login flow
@@ -332,4 +325,14 @@ func validateRedirectURL(redirectURL string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+// makeHostURL is used to retrieve the host url from the host headers
+func (l *loginHandler) makeHostURL(req *restful.Request) string {
+	scheme := "http"
+	if req.Request.TLS != nil || req.Request.Header.Get("X-Forward-Proto") == "https" {
+		scheme = "https"
+	}
+
+	return fmt.Sprintf("%s://%s", scheme, req.Request.Host)
 }

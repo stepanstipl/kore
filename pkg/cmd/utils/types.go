@@ -20,6 +20,7 @@ import (
 	"errors"
 	"io"
 
+	"github.com/appvia/kore/pkg/apiserver/types"
 	"github.com/appvia/kore/pkg/utils"
 
 	"github.com/appvia/kore/pkg/client"
@@ -86,6 +87,8 @@ type Factory interface {
 	WaitForCreation(client.RestInterface, bool) error
 	// WaitForDeletion is used to wait for the resource to be created
 	WaitForDeletion(client.RestInterface, string, bool) error
+	// Whoami returns the details of who they logged in with
+	Whoami() (*types.WhoAmI, error)
 	// Writer returns the io.Writer for output
 	Writer() io.Writer
 	// UpdateConfig is responsible for updating the configuration

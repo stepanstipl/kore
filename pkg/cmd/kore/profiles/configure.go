@@ -18,28 +18,40 @@ package profiles
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
+	"github.com/appvia/kore/pkg/client/config"
 	"github.com/appvia/kore/pkg/cmd/errors"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
+	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 
 	"github.com/spf13/cobra"
 )
 
+// ConfigureOptions are the options of the command
 type ConfigureOptions struct {
 	cmdutil.Factory
 	// Name is the name of the profile to configure
 	Name string
+	// Endpoint is the api endpoint to use
+	Endpoint string
 	// Force indicates we will overwrite any existing profiles
 	Force bool
+	// Account indicates the type of account
+	Account string
+	// LocalUser is an optional local username (used by basicauth)
+	LocalUser string
+	// LocalPass is an optional local password (user by basicauth)
+	LocalPass string
 }
 
 // NewCmdProfilesConfigure creates and returns the profile configure command
 func NewCmdProfilesConfigure(factory cmdutil.Factory) *cobra.Command {
 	o := &ConfigureOptions{Factory: factory}
 
-	command := &cobra.Command{
+	cmd := &cobra.Command{
 		Use:     "configure",
 		Aliases: []string{"config"},
 		Short:   "configure a new profile for you",
@@ -47,15 +59,26 @@ func NewCmdProfilesConfigure(factory cmdutil.Factory) *cobra.Command {
 		Run:     cmdutil.DefaultRunFunc(o),
 	}
 
-	command.Flags().BoolVarP(&o.Force, "force", "", false, "if true it overrides an existing profile with the same name")
+	flags := cmd.Flags()
+	flags.BoolVarP(&o.Force, "force", "", false, "if true it overrides an existing profile with the same name")
+	flags.StringVarP(&o.Endpoint, "api-url", "a", "", "url for the kore api endpoint `URL`")
+	flags.StringVar(&o.Account, "account", "sso", "indicates the type of account for this profile `ACCOUNT`")
+	flags.StringVarP(&o.LocalUser, "user", "u", "", "username when configuring basicauth profile `USERNAME`")
+	flags.StringVar(&o.LocalPass, "password", "", "password for basicauth profiles ('-' for stdin) `PASSWORD`")
 
-	return command
+	return cmd
 }
 
 // Validate checks the options
 func (o *ConfigureOptions) Validate() error {
 	if o.Name == "" {
 		return errors.ErrMissingResourceName
+	}
+	if !utils.Contains(o.Account, kore.SupportedAccounts) {
+		return errors.ErrUnknownAccountType
+	}
+	if o.Endpoint != "" && !utils.IsValidURL(o.Endpoint) {
+		return fmt.Errorf("invalid api endpoint")
 	}
 
 	return nil
@@ -70,37 +93,102 @@ func (o *ConfigureOptions) Run() error {
 		return errors.NewConflictError("profile name is already taken, please choose another name")
 	}
 
-	var endpoint string
-	prompts := cmdutil.Prompts{
-		&cmdutil.Prompt{
-			Id:    "Please enter the Kore API URL: (e.g https://api.domain.com)",
-			Value: &endpoint,
-			Validate: func(in string) error {
-				if !utils.IsValidURL(in) {
-					return fmt.Errorf("invalid endpoint: %s", in)
-				}
-				return nil
+	if o.Endpoint == "" {
+		prompts := cmdutil.Prompts{
+			&cmdutil.Prompt{
+				Id:    "Please enter the Kore API URL: (e.g https://api.domain.com)",
+				Value: &o.Endpoint,
+				Validate: func(in string) error {
+					if !utils.IsValidURL(in) {
+						return fmt.Errorf("invalid endpoint: %s", in)
+					}
+					return nil
+				},
 			},
-		},
-	}
-	if err := prompts.Collect(); err != nil {
-		return err
+		}
+		if err := prompts.Collect(); err != nil {
+			return err
+		}
 	}
 
-	endpoint = strings.TrimRight(endpoint, "/")
+	o.Endpoint = strings.TrimRight(o.Endpoint, "/")
 
 	// @step: create an empty endpoint for then
-	config.CreateProfile(o.Name, endpoint)
+	config.CreateProfile(o.Name, o.Endpoint)
 	config.CurrentProfile = o.Name
+
+	// @step: is the profile local?
+	switch o.Account {
+	case kore.AccountLocal, kore.AccountToken:
+		if err := o.GetLocalAccountDetails(); err != nil {
+			return err
+		}
+	}
 
 	// @step: attempt to update the configuration
 	if err := o.UpdateConfig(); err != nil {
 		return fmt.Errorf("trying to update your local $ kore profile configure <name>: %s", err)
 	}
-
 	o.Println("Successfully configured the profile to: %s", o.Name)
-	o.Println("In order to authenticate please run: $ kore login")
+
+	if o.Account == kore.AccountSSO {
+		o.Println("Authenticate by running: $ kore login")
+	}
 
 	return nil
+}
 
+// GetLocalAccountDetails retrieves the local account settings
+func (o *ConfigureOptions) GetLocalAccountDetails() error {
+	switch o.Account {
+	case kore.AccountLocal:
+		auth := &config.BasicAuth{Username: o.LocalUser}
+
+		if o.LocalUser == "" {
+			p := cmdutil.Prompts{
+				&cmdutil.Prompt{
+					Id:     "Please enter your username",
+					Value:  &auth.Username,
+					ErrMsg: "invalid username",
+				},
+			}
+			if err := p.Collect(); err != nil {
+				return err
+			}
+		}
+
+		if o.LocalPass == "" {
+			p := cmdutil.Prompts{
+				&cmdutil.Prompt{
+					Id:     "Please enter your password",
+					Value:  &auth.Password,
+					ErrMsg: "invalid password",
+				},
+			}
+			if err := p.Collect(); err != nil {
+				return err
+			}
+		}
+		if o.LocalPass != "" && o.LocalPass == "-" {
+			pass, err := utils.ReadFileOrStdin(os.Stdin, o.LocalPass)
+			if err != nil {
+				return err
+			}
+			o.LocalPass = string(pass)
+		}
+
+		o.Config().AddAuthInfo(o.Name, &config.AuthInfo{BasicAuth: auth})
+
+	case kore.AccountToken:
+		var token string
+		prompts := cmdutil.Prompts{
+			&cmdutil.Prompt{Id: "Please enter your api token", Value: &token, ErrMsg: "invalid api token"},
+		}
+		if err := prompts.Collect(); err != nil {
+			return err
+		}
+		o.Config().AddAuthInfo(o.Name, &config.AuthInfo{Token: &token})
+	}
+
+	return nil
 }

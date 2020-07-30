@@ -3,6 +3,7 @@ module github.com/appvia/kore
 go 1.14
 
 require (
+	cloud.google.com/go v0.61.0 // indirect
 	github.com/Azure/azure-sdk-for-go v44.0.0+incompatible
 	github.com/Azure/go-autorest/autorest v0.11.0
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.0
@@ -22,14 +23,18 @@ require (
 	github.com/blevesearch/go-porterstemmer v1.0.2 // indirect
 	github.com/blevesearch/segment v0.0.0-20160915185041-762005e7a34f // indirect
 	github.com/client9/misspell v0.3.4
+	github.com/containerd/containerd v1.3.3 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/couchbase/vellum v0.0.0-20190829182332-ef2e028c01fd // indirect
 	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
 	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
 	github.com/cznic/strutil v0.0.0-20181122101858-275e90344537 // indirect
 	github.com/davecgh/go-spew v1.1.1
+	github.com/denisenkom/go-mssqldb v0.0.0-20200620013148-b91950f658ec // indirect
 	github.com/dexidp/dex v0.0.0-00010101000000-000000000000
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/docker/distribution v2.7.1+incompatible // indirect
+	github.com/docker/docker v1.4.2-0.20200213202729-31a86c4ab209 // indirect
 	github.com/emicklei/go-restful v2.11.1+incompatible
 	github.com/emicklei/go-restful-openapi v1.2.0
 	github.com/etcd-io/bbolt v1.3.3 // indirect
@@ -50,9 +55,12 @@ require (
 	github.com/go-openapi/validate v0.19.7
 	github.com/go-resty/resty/v2 v2.3.0
 	github.com/go-swagger/go-swagger v0.23.0
+	github.com/golang-migrate/migrate v3.5.4+incompatible
 	github.com/golangci/golangci-lint v1.27.0
+	github.com/google/go-cmp v0.5.1 // indirect
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/uuid v1.1.1
+	github.com/gorilla/mux v1.7.4 // indirect
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/huandu/xstrings v1.2.1 // indirect
@@ -63,11 +71,13 @@ require (
 	github.com/jpillora/backoff v1.0.0
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/kubernetes-sigs/go-open-service-broker-client v0.0.0-20200323235047-56a01c84bf43
+	github.com/lib/pq v1.3.0 // indirect
 	github.com/manifoldco/promptui v0.7.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.2.2
 	github.com/mikefarah/yq/v3 v3.0.0-20200415014842-6f0a329331f9
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/mitchellh/gox v1.0.1
+	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.9.0
 	github.com/open-policy-agent/opa v0.21.1
@@ -93,16 +103,20 @@ require (
 	github.com/tecbot/gorocksdb v0.0.0-20191019123150-400c56251341 // indirect
 	github.com/tidwall/gjson v1.6.0
 	github.com/tidwall/sjson v1.1.1
+	github.com/ulule/limiter/v3 v3.5.0
 	github.com/urfave/cli/v2 v2.1.1
 	github.com/xeipuuv/gojsonschema v1.2.0
-	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
+	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
-	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
-	golang.org/x/tools v0.0.0-20200707134715-9e0a013e855f // indirect
+	golang.org/x/sys v0.0.0-20200724161237-0e2f3a69832c // indirect
+	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
+	golang.org/x/tools v0.0.0-20200725200936-102e7d357031 // indirect
 	gonum.org/v1/gonum v0.7.0 // indirect
-	google.golang.org/api v0.20.0
-	google.golang.org/grpc v1.27.0
+	google.golang.org/api v0.29.0
+	google.golang.org/genproto v0.0.0-20200726014623-da3ae01ef02d // indirect
+	google.golang.org/grpc v1.30.0
 	gopkg.in/yaml.v2 v2.2.8
+	gotest.tools/v3 v3.0.2 // indirect
 	k8s.io/api v0.18.2
 	k8s.io/apiextensions-apiserver v0.18.2
 	k8s.io/apimachinery v0.18.2

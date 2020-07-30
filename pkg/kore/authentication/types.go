@@ -21,6 +21,8 @@ type ContextKey struct{}
 
 // Identity provides the user
 type Identity interface {
+	// AuthMethod is the method the user logged in with
+	AuthMethod() string
 	// IsGlobalAdmin checks if the user is a global admin
 	IsGlobalAdmin() bool
 	// IsMember checks if the user is a member of a team

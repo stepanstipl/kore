@@ -26,6 +26,7 @@ import (
 	core "github.com/appvia/kore/pkg/apis/core/v1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
 	"github.com/appvia/kore/pkg/kore/assets"
+	"github.com/appvia/kore/pkg/persistence"
 	"github.com/appvia/kore/pkg/persistence/model"
 	"github.com/appvia/kore/pkg/store"
 
@@ -219,8 +220,54 @@ func (h hubImpl) Setup(ctx context.Context) error {
 		}
 	}
 
+	// @migration: ensure we move sso user to have an identity
+	if err := h.ensureUserMigration(ctx); err != nil {
+		log.WithError(err).Error("trying to migrate sso users")
+
+		return err
+	}
+
 	if err := h.ensureTeamsAndClustersIdentified(ctx); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// ensureUserMigration is called to ensure the users have a sso identity
+func (h hubImpl) ensureUserMigration(ctx context.Context) error {
+	// @step: we retrieve a list of users in system and ensure they have a sso user identity
+	list, err := h.persistenceMgr.Users().List(ctx)
+	if err != nil {
+		return err
+	}
+	for _, x := range list {
+		if x.Username == HubAdminUser {
+			continue
+		}
+		identities, err := h.persistenceMgr.Identities().List(ctx,
+			persistence.Filter.WithUser(x.Username),
+		)
+		if err != nil {
+			if !persistence.IsNotFound(err) {
+				return err
+			}
+		}
+
+		if identities == nil || len(identities) <= 0 {
+			// @logic
+			// - if no identity has been found on the user we assume this
+			//   was a sso user and needs to be copied in
+			err := h.persistenceMgr.Identities().Update(ctx, &model.Identity{
+				Provider:      IdentitySSO,
+				ProviderEmail: x.Email,
+				User:          x,
+				UserID:        x.ID,
+			})
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
