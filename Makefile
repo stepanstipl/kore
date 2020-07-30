@@ -509,6 +509,10 @@ kind-apiserver-logs:
 kind-admintoken:
 	@echo `kubectl --context kind-kore -n kore get secret kore-api -o json | jq -r ".data.KORE_ADMIN_TOKEN" | base64 --decode`
 
+.PHONY: kind-db-cli
+kind-db-cli:
+	@kubectl exec --stdin --tty `kubectl get pod -n kore -l name=kore-mysql -o name` -n kore -- mysql -u root --password=`kubectl get secret kore-mysql -n kore -o json | jq -r ".data.MYSQL_ROOT_PASSWORD" | base64 --decode` kore
+
 kind-api-test:
 	@export KORE_ADMIN_TOKEN="$(shell kubectl --context kind-kore -n kore get secret kore-api -o json | jq -r ".data.KORE_ADMIN_TOKEN" | base64 --decode)" && ${MAKE} run-api-test
 
