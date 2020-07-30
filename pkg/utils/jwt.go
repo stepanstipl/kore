@@ -17,6 +17,8 @@
 package utils
 
 import (
+	"encoding/json"
+	"errors"
 	"math"
 	"time"
 
@@ -45,15 +47,40 @@ func NewClaimsFromToken(token openid.IDToken) (*Claims, error) {
 	return NewClaims(c), nil
 }
 
+// NewClaimsFromRawBytesToken returns a claims by parsing a raw token
+func NewClaimsFromRawBytesToken(token []byte) (*Claims, error) {
+	return NewClaimsFromRawToken(string(token))
+}
+
 // NewClaimsFromRawToken returns a claims by parsing a raw token
 func NewClaimsFromRawToken(tokenString string) (*Claims, error) {
 	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
-
 	if err != nil {
 		return nil, err
 	}
 
 	return NewClaims(token.Claims.(jwt.MapClaims)), nil
+}
+
+// Sign is used to sign and mint a token
+func (c *Claims) Sign(rsa []byte) ([]byte, error) {
+	if !c.HasEmail() {
+		return nil, errors.New("email required")
+	}
+	signer, err := jwt.ParseRSAPrivateKeyFromPEM(rsa)
+	if err != nil {
+		return nil, err
+	}
+	c.claims["alg"] = jwt.SigningMethodRS256.Alg()
+	c.claims["iat"] = time.Now().UTC().Unix()
+
+	minted := jwt.NewWithClaims(jwt.SigningMethodRS256, c.claims)
+	token, err := minted.SignedString(signer)
+	if err != nil {
+		return nil, err
+	}
+
+	return []byte(token), nil
 }
 
 // GetUserClaim returns the username claim - defaults to 'name'
@@ -67,6 +94,16 @@ func (c *Claims) GetUserClaim(claims ...string) (string, bool) {
 	return "", false
 }
 
+// GetAudience returns the aud of the jwt
+func (c *Claims) GetAudience() (string, bool) {
+	return c.GetString("aud")
+}
+
+// GetIssuer returns the iss
+func (c *Claims) GetIssuer() (string, bool) {
+	return c.GetString("iss")
+}
+
 // GetEmail returns the email claim
 func (c *Claims) GetEmail() (string, bool) {
 	return c.GetString("email")
@@ -75,6 +112,13 @@ func (c *Claims) GetEmail() (string, bool) {
 // GetEmailVerified returns if the email is verified
 func (c *Claims) GetEmailVerified() (bool, bool) {
 	return c.GetBool("email_verified")
+}
+
+// HasEmail checks if the email exists
+func (c *Claims) HasEmail() bool {
+	_, found := c.GetEmail()
+
+	return found
 }
 
 // HasExpired indicates the token has expired
@@ -113,7 +157,7 @@ func (c *Claims) GetBool(key string) (bool, bool) {
 	return value, true
 }
 
-// GetBool returns the float64 if found in the claims
+// GetFloat64 returns the float64 if found in the claims
 func (c *Claims) GetFloat64(key string) (float64, bool) {
 	v, found := c.claims[key]
 	if !found {
@@ -167,4 +211,14 @@ func (c *Claims) GetString(key string) (string, bool) {
 	}
 
 	return value, true
+}
+
+// String returns the token itself
+func (c *Claims) String() string {
+	encoded, err := json.MarshalIndent(c.claims, "", "    ")
+	if err != nil {
+		return ""
+	}
+
+	return string(encoded)
 }

@@ -18,9 +18,31 @@ package utils
 
 import (
 	"bytes"
+	"io"
+	"io/ioutil"
+	"regexp"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 )
+
+// YAMLDocumentsFromString returns a series of documents from the string
+func YAMLDocumentsFromString(content string) ([]string, error) {
+	return YAMLDocuments(strings.NewReader(content))
+}
+
+// YAMLDocuments returns a collection of documents from the reader
+func YAMLDocuments(reader io.Reader) ([]string, error) {
+	// @step: read in the content of the file
+	content, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	splitter := regexp.MustCompile("(?m)^---\n")
+
+	return splitter.Split(string(content), -1), nil
+}
 
 // ToYAML marshalls the struct to yaml
 func ToYAML(in interface{}) ([]byte, error) {

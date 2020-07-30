@@ -16,7 +16,10 @@
 
 package utils
 
-import "strings"
+import (
+	"encoding/base64"
+	"strings"
+)
 
 // GetBearerToken returns the bearer token from an authorization header
 func GetBearerToken(header string) (string, bool) {
@@ -51,4 +54,23 @@ func GetBasicAuthToken(header string) (string, bool) {
 	}
 
 	return items[1], true
+}
+
+// GetBasicAuthFromHeader returns the basic auth from authorization
+func GetBasicAuthFromHeader(header string) (string, string, bool) {
+	auth, found := GetBasicAuthToken(header)
+	if !found {
+		return "", "", false
+	}
+
+	payload, err := base64.StdEncoding.DecodeString(auth)
+	if err != nil {
+		return "", "", false
+	}
+	keypair := strings.SplitN(string(payload), ":", 2)
+	if len(keypair) != 2 {
+		return "", "", false
+	}
+
+	return keypair[0], keypair[1], true
 }
