@@ -29,6 +29,7 @@ idp:
 api:
   feature_gates: []
   verbose: false
+  verbose_db: false
   endpoint:
     url: http://localhost:10080
     detect: false
