@@ -160,6 +160,9 @@ class KoreApiClient {
   UpdateAccount = (name, account) => this.apis.default.UpdateAccount({ name, body: JSON.stringify(account) })
   RemoveAccount = (name) => this.apis.default.RemoveAccount({ name })
 
+  // ListAWSAccountOUs will list the OU's for an organisation (used when setting up AWS Organization credentials)
+  ListAWSAccountOUs = (team, region, roleARN, awsKey, awsKeyID) => this.apis.default.ListAWSAccountOUs( { team, region, roleARN, 'x-api-aws-secret-access-key':awsKey, 'x-api-aws-access-key-id':awsKeyID })
+
   // Credentials
   ListGKECredentials = (team) => this.apis.default.ListGKECredentials({ team })
   GetGKECredentials = (team, name) => this.apis.default.GetGKECredentials({ team, name })
@@ -173,10 +176,10 @@ class KoreApiClient {
   GetEKSCredentials = (team, name) => this.apis.default.GetEKSCredentials({ team, name })
   UpdateEKSCredentials = (team, name, resource) => this.apis.default.UpdateEKSCredentials({ team, name, body: JSON.stringify(resource) })
   DeleteEKSCredentials = (team, name) => this.apis.default.DeleteEKSCredentials({ team, name })
-  ListAWSOrganizations = (team) => this.apis.default.ListAWSOrganizations({ team })
   GetAWSOrganization = (team, name) => this.apis.default.GetAWSOrganization({ team, name })
   UpdateAWSOrganization = (team, name, org) => this.apis.default.UpdateAWSOrganization({ team, name, body: JSON.stringify(org) })
   DeleteAWSOrganization = (team, name) => this.apis.default.DeleteAWSOrganization({ team, name })
+  ListAWSOrganizations = (team) => this.apis.default.ListAWSOrganizations({ team })
   ListAKSCredentials = (team) => this.apis.default.ListAKSCredentials({ team })
   GetAKSCredentials = (team, name) => this.apis.default.GetAKSCredentials({ team, name })
   UpdateAKSCredentials = (team, name, resource) => this.apis.default.UpdateAKSCredentials({ team, name, body: JSON.stringify(resource) })

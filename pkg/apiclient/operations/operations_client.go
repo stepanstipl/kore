@@ -119,6 +119,8 @@ type ClientService interface {
 
 	ListAKSCredentials(params *ListAKSCredentialsParams, authInfo runtime.ClientAuthInfoWriter) (*ListAKSCredentialsOK, error)
 
+	ListAWSAccountOUs(params *ListAWSAccountOUsParams, authInfo runtime.ClientAuthInfoWriter) (*ListAWSAccountOUsOK, error)
+
 	ListAWSOrganizations(params *ListAWSOrganizationsParams, authInfo runtime.ClientAuthInfoWriter) (*ListAWSOrganizationsOK, error)
 
 	ListAccounts(params *ListAccountsParams, authInfo runtime.ClientAuthInfoWriter) (*ListAccountsOK, error)
@@ -1873,6 +1875,42 @@ func (a *Client) ListAKSCredentials(params *ListAKSCredentialsParams, authInfo r
 	}
 	// unexpected success response
 	unexpectedSuccess := result.(*ListAKSCredentialsDefault)
+	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
+}
+
+/*
+  ListAWSAccountOUs gets a list of a w s o u s suitable for creating aws accounts within
+
+  Requires the authentication headers x-api-aws-secret-access-key, and x-api-aws-access-key-id
+*/
+func (a *Client) ListAWSAccountOUs(params *ListAWSAccountOUsParams, authInfo runtime.ClientAuthInfoWriter) (*ListAWSAccountOUsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewListAWSAccountOUsParams()
+	}
+
+	result, err := a.transport.Submit(&runtime.ClientOperation{
+		ID:                 "ListAWSAccountOUs",
+		Method:             "GET",
+		PathPattern:        "/api/v1alpha1/teams/{team}/awsorganizations/awsAccountOUs",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &ListAWSAccountOUsReader{formats: a.formats},
+		AuthInfo:           authInfo,
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	})
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*ListAWSAccountOUsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	unexpectedSuccess := result.(*ListAWSAccountOUsDefault)
 	return nil, runtime.NewAPIError("unexpected success response: content available as default response in error", unexpectedSuccess, unexpectedSuccess.Code())
 }
 

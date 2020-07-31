@@ -8,6 +8,7 @@ import VerifiedAllocatedResourceForm from '../resources/VerifiedAllocatedResourc
 import KoreApi from '../../kore-api'
 import AllocationHelpers from '../../utils/allocation-helpers'
 import { patterns } from '../../utils/validation'
+import { errorMessage } from '../../utils/message'
 
 class AWSOrganizationForm extends VerifiedAllocatedResourceForm {
 
@@ -75,8 +76,34 @@ class AWSOrganizationForm extends VerifiedAllocatedResourceForm {
     return Promise.reject(`This email must have the same domain as the user (${userEmailDomain})`)
   }
 
+  updateOUsIfPossible = () => {
+    const credentialFields = [ 'region', 'roleARN', 'accessKeyID', 'secretAccessKey' ]
+    // Have all the credential fields validated?
+    this.props.form.validateFields(credentialFields, async (errors, values) => {
+      if (errors) {
+        console.log('all form creds fields are NOT validated')
+        return
+      }
+      // Query the API...?
+      console.log('all form creds fields are validated')
+      try {
+        const api = await KoreApi.client()
+        const accountOus = await api.ListAWSAccountOUs(this.props.team, values.region, values.roleARN, values.secretAccessKey, values.accessKeyID)
+        this.setState({ accountOus })
+
+      } catch (err) {
+        errorMessage('Unable to verify aws credentials or role ARN', err)
+        console.warn('Error calling OUs api:', err)
+      }
+
+    })
+
+    return
+  }
+
   resourceFormFields = () => {
     const { form, data } = this.props
+    const accountOus = this.state.accountOus || []
     const { replaceKey } = this.state
     return (
       <>
@@ -107,7 +134,7 @@ class AWSOrganizationForm extends VerifiedAllocatedResourceForm {
             type="warning"
             style={{ marginTop: '10px' }}
           />
-          <Form.Item label="Region" validateStatus={this.fieldError('region') ? 'error' : ''} help={this.fieldError('region') || 'The region where AWS Control Tower is enabled in the master account'}>
+          <Form.Item label="Region" onChange={() => this.updateOUsIfPossible()} validateStatus={this.fieldError('region') ? 'error' : ''} help={this.fieldError('region') || 'The region where AWS Control Tower is enabled in the master account'}>
             {form.getFieldDecorator('region', {
               rules: [{ required: true, message: 'Please select the region where Control Tower is enabled' }],
               initialValue: data && data.spec.region
@@ -121,7 +148,7 @@ class AWSOrganizationForm extends VerifiedAllocatedResourceForm {
               </Select>,
             )}
           </Form.Item>
-          <Form.Item label="Role ARN" validateStatus={this.fieldError('roleARN') ? 'error' : ''} help={this.fieldError('roleARN') || 'The role to assume when provisioning accounts.'}>
+          <Form.Item label="Role ARN" onChange={() => this.updateOUsIfPossible()} validateStatus={this.fieldError('roleARN') ? 'error' : ''} help={this.fieldError('roleARN') || 'The role to assume when provisioning accounts.'}>
             {form.getFieldDecorator('roleARN', {
               rules: [{ required: true, message: 'Please enter the role ARN!' }, patterns.amazonIamRoleArn],
               initialValue: data && data.spec.roleARN
@@ -145,17 +172,17 @@ class AWSOrganizationForm extends VerifiedAllocatedResourceForm {
 
           {!data || replaceKey ? (
             <>
-              <Form.Item label="Access key ID" validateStatus={this.fieldError('accessKeyID') ? 'error' : ''} help={this.fieldError('accessKeyID') || 'The Access key ID part of the access key'}>
+              <Form.Item label="Access key ID" onChange={() => this.updateOUsIfPossible()} validateStatus={this.fieldError('accessKeyID') ? 'error' : ''} help={this.fieldError('accessKeyID') || 'The Access key ID part of the access key'}>
                 {form.getFieldDecorator('accessKeyID', {
-                  rules: [{ required: true, message: 'Please enter your Access key ID!' }],
+                  rules: [{ required: true, message: 'Please enter your Access key ID!' }, patterns.amazonAccessKeyID],
                   initialValue: data && data.spec.accessKeyID
                 })(
                   <Input placeholder="Access key ID" />,
                 )}
               </Form.Item>
-              <Form.Item label="Secret access key" validateStatus={this.fieldError('secretAccessKey') ? 'error' : ''} help={this.fieldError('secretAccessKey') || 'The Secret access key part of the access key'}>
+              <Form.Item label="Secret access key" onChange={() => this.updateOUsIfPossible()} validateStatus={this.fieldError('secretAccessKey') ? 'error' : ''} help={this.fieldError('secretAccessKey') || 'The Secret access key part of the access key'}>
                 {form.getFieldDecorator('secretAccessKey', {
-                  rules: [{ required: true, message: 'Please enter your Secret access key!' }],
+                  rules: [{ required: true, message: 'Please enter your Secret access key!' }, patterns.amazonSecretAccessKey],
                   initialValue: data && data.spec.secretAccessKey
                 })(
                   <Input placeholder="Secret access key" type="password" />,
@@ -173,14 +200,22 @@ class AWSOrganizationForm extends VerifiedAllocatedResourceForm {
             type="info"
             style={{ marginBottom: '20px' }}
           />
+          { (accountOus.length===0) ? (
+            <Alert
+              message="Valid AWS access keys and role ARN are required to set or change the Organization Unit."
+              type="warning"
+              showIcon
+              style={{ marginBottom: '20px', marginTop: '20px' }}
+            />
+          ) : null}
 
           <Form.Item label="Organization Unit name" validateStatus={this.fieldError('ouName') ? 'error' : ''} help={this.fieldError('ouName') || 'The name of the parent Organizational Unit (OU) to use for provisioning accounts'}>
             {form.getFieldDecorator('ouName', {
               rules: [{ required: true, message: 'Please select the Organization Unit name!' }],
-              initialValue: (data && data.spec.ouName) || 'Custom'
+              initialValue: data && data.spec.ouName
             })(
-              <Select>
-                <Option value="Custom">Custom</Option>
+              <Select disabled={ (accountOus.length===0) } >
+                {accountOus.map((allowedValue) => <Select.Option key={allowedValue} value={allowedValue}>{allowedValue}</Select.Option>)}
               </Select>,
             )}
           </Form.Item>

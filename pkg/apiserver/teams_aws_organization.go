@@ -17,11 +17,20 @@
 package apiserver
 
 import (
+	"fmt"
 	"net/http"
 
 	aws "github.com/appvia/kore/pkg/apis/aws/v1alpha1"
+	"github.com/appvia/kore/pkg/kore"
 
 	restful "github.com/emicklei/go-restful"
+)
+
+const (
+	// HeaderAWSSecretAccessKey is the header name used when passing the AWS secret access key credential to the API
+	HeaderAWSSecretAccessKey = "x-api-aws-secret-access-key"
+	// HeaderAWSAccessKeyID is the header name used when passing AWS access key id credential to the API
+	HeaderAWSAccessKeyID = "x-api-aws-access-key-id"
 )
 
 func (u teamHandler) addAWSOrganizationRoutes(ws *restful.WebService) {
@@ -61,6 +70,21 @@ func (u teamHandler) addAWSOrganizationRoutes(ws *restful.WebService) {
 			Doc("Is used to delete a managed gcp organization").
 			Operation("DeleteAWSOrganization").
 			Returns(http.StatusOK, "Contains the former team definition from the kore", aws.AWSOrganization{}).
+			DefaultReturns("A generic API error containing the cause of the error", Error{}),
+	)
+
+	// aws OU's (Organizational Units) available for accounts
+	ws.Route(
+		ws.GET("/{team}/awsorganizations/awsAccountOUs").To(u.getAccountOUs).
+			Param(ws.PathParameter("team", "Is the name of the team you are acting within")).
+			Param(ws.QueryParameter("region", "Is the region where Control Tower and AWS Organizations are enabled")).
+			Param(ws.QueryParameter("roleARN", "Is the role in the master account to use for querying the Organization")).
+			Param(ws.HeaderParameter(HeaderAWSSecretAccessKey, "Is the AWS Secret Access Key used for authenticating to the AWS API")).
+			Param(ws.HeaderParameter(HeaderAWSAccessKeyID, "Is the AWS Access Key ID used for authenticating to the AWS API")).
+			Doc("Gets a list of AWS OU's suitable for creating aws accounts within").
+			Notes(fmt.Sprintf("Requires the authentication headers %s, and %s", HeaderAWSSecretAccessKey, HeaderAWSAccessKeyID)).
+			Operation("ListAWSAccountOUs").
+			Returns(http.StatusOK, "Account OUs", []string{}).
 			DefaultReturns("A generic API error containing the cause of the error", Error{}),
 	)
 }
@@ -135,5 +159,29 @@ func (u teamHandler) deleteAWSOrganization(req *restful.Request, resp *restful.R
 		}
 
 		return resp.WriteHeaderAndEntity(http.StatusOK, original)
+	})
+}
+
+// getAccountOUs will retrieve a list of OU's that can have account provisioned
+func (u teamHandler) getAccountOUs(req *restful.Request, resp *restful.Response) {
+	handleErrors(req, resp, func() error {
+		team := req.PathParameter("team")
+		params := kore.OUParams{
+			AWSKey:   req.HeaderParameter(HeaderAWSSecretAccessKey),
+			AWSKeyID: req.HeaderParameter(HeaderAWSAccessKeyID),
+			Region:   req.QueryParameter("region"),
+			RoleARN:  req.QueryParameter("roleARN"),
+		}
+
+		ouList, err := u.Teams().Team(team).Cloud().AWS().AWSOrganizations().GetAccountOUs(
+			req.Request.Context(),
+			params,
+		)
+
+		if err != nil {
+
+			return err
+		}
+		return resp.WriteHeaderAndEntity(http.StatusOK, ouList)
 	})
 }

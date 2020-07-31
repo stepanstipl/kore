@@ -20,5 +20,13 @@ export const patterns = {
   amazonIamRoleArn: {
     pattern: '^arn:aws:iam::[0-9]{12}:role\\/[\\S]+$',
     message: 'Must be an Amazon IAM role ARN in the format "arn:aws:iam::[account]:role/[role]"'
+  },
+  amazonSecretAccessKey: {
+    pattern: '(^|[^A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=])',
+    message: 'Must be a valid AWS secret key'
+  },
+  amazonAccessKeyID: {
+    pattern: '(^|[^A-Z0-9])[A-Z0-9]{20}(?![A-Z0-9])',
+    message: 'Must be a valid AWS access key ID'
   }
 }
