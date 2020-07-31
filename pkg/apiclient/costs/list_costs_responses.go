@@ -60,23 +60,23 @@ func NewListCostsOK() *ListCostsOK {
 
 /*ListCostsOK handles this case with default header values.
 
-A list of all costs known to the system
+A list of costs known to the system, filtered by the above parameters
 */
 type ListCostsOK struct {
-	Payload *models.V1beta1CostList
+	Payload *models.V1beta1AssetCostList
 }
 
 func (o *ListCostsOK) Error() string {
 	return fmt.Sprintf("[GET /api/v1alpha1/costs][%d] listCostsOK  %+v", 200, o.Payload)
 }
 
-func (o *ListCostsOK) GetPayload() *models.V1beta1CostList {
+func (o *ListCostsOK) GetPayload() *models.V1beta1AssetCostList {
 	return o.Payload
 }
 
 func (o *ListCostsOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1beta1CostList)
+	o.Payload = new(models.V1beta1AssetCostList)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {

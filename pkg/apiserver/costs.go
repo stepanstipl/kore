@@ -17,12 +17,14 @@
 package apiserver
 
 import (
-	"errors"
 	"net/http"
+	"time"
 
 	costsv1 "github.com/appvia/kore/pkg/apis/costs/v1beta1"
 	"github.com/appvia/kore/pkg/kore"
+	"github.com/appvia/kore/pkg/persistence"
 	"github.com/appvia/kore/pkg/utils"
+	"github.com/appvia/kore/pkg/utils/validation"
 
 	restful "github.com/emicklei/go-restful"
 	restfulspec "github.com/emicklei/go-restful-openapi"
@@ -55,38 +57,120 @@ func (c *costHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	ws.Produces(restful.MIME_JSON)
 	ws.Path(path.Base())
 
+	// @TODO: admin filters
+
 	ws.Route(
 		withAllNonValidationErrors(ws.GET("")).To(c.listCosts).
 			Doc("Returns a list of actual costs").
 			Metadata(restfulspec.KeyOpenAPITags, tags).
 			Operation("ListCosts").
-			Returns(http.StatusOK, "A list of all costs known to the system", costsv1.CostList{}),
+			Param(ws.QueryParameter("team", "Identifier of a team to filter costs for")).
+			Param(ws.QueryParameter("asset", "Identifier of an asset to filter costs for")).
+			Param(ws.QueryParameter("from", "Start of time range to return costs for")).
+			Param(ws.QueryParameter("to", "End of time range to return costs for")).
+			Param(ws.QueryParameter("provider", "Cloud provider (e.g. gcp, aws, azure) to return costs for")).
+			Param(ws.QueryParameter("account", "Account/project/subscription to return costs for")).
+			Returns(http.StatusOK, "A list of costs known to the system, filtered by the above parameters", costsv1.AssetCostList{}),
 	)
 
 	ws.Route(
-		withAllNonValidationErrors(ws.GET("/{name}")).To(c.getCost).
-			Doc("Gets a specific cost").
+		withAllErrors(ws.POST("")).To(c.postCosts).
+			Doc("Persists one or more asset costs").
 			Metadata(restfulspec.KeyOpenAPITags, tags).
-			Operation("GetCost").
-			Param(ws.PathParameter("name", "The name of the cost to retrieve")).
-			Returns(http.StatusNotFound, "Cost doesn't exist", nil).
-			Returns(http.StatusOK, "Cost found", costsv1.Cost{}),
+			Operation("PostCosts").
+			Reads(costsv1.AssetCostList{}).
+			Returns(http.StatusOK, "Costs successfully persisted", nil),
+	)
+
+	ws.Route(
+		withAllNonValidationErrors(ws.GET("assets/{provider}")).To(c.getAssets).
+			Doc("Returns details of the assets known to kore which should be monitored for costs by a costs provider").
+			Metadata(restfulspec.KeyOpenAPITags, tags).
+			Operation("GetAssets").
+			Param(ws.PathParameter("provider", "Cloud provider (e.g. gcp, aws, azure) to return asset metadata for")).
+			Param(ws.QueryParameter("team", "Identifier of a team to filter assets for")).
+			Param(ws.QueryParameter("asset", "Identifier of an asset to filter assets for")).
+			Param(ws.QueryParameter("with_deleted", "Set to true to include deleted assets")).
+			Returns(http.StatusOK, "Metadata describing the assets for the cloud provider in question", costsv1.CostAssetList{}),
 	)
 
 	return ws, nil
 }
 
-func (c costHandler) listCosts(req *restful.Request, resp *restful.Response) {
+func (c costHandler) postCosts(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
-		return errors.New("not implemented")
-		// return resp.WriteHeaderAndEntity(http.StatusOK, &costsv1.CostList{})
+		costs := &costsv1.AssetCostList{}
+		if err := req.ReadEntity(costs); err != nil {
+			return err
+		}
+
+		err := c.Costs().Assets().StoreAssetCosts(req.Request.Context(), costs)
+		if err != nil {
+			return err
+		}
+		return resp.WriteHeaderAndEntity(http.StatusOK, nil)
 	})
 }
 
-func (c costHandler) getCost(req *restful.Request, resp *restful.Response) {
+func (c costHandler) listCosts(req *restful.Request, resp *restful.Response) {
 	handleErrors(req, resp, func() error {
-		return errors.New("not implemented")
-		// return resp.WriteHeaderAndEntity(http.StatusOK, &costsv1.Cost{})
+		filters := []persistence.TeamAssetFilterFunc{}
+		if req.QueryParameter("from") != "" {
+			fromTime, err := time.Parse(time.RFC3339, req.QueryParameter("from"))
+			if err != nil {
+				return validation.NewError("invalid request").WithFieldErrorf("from", validation.InvalidValue, "cannot parse 'from' time, expected format %s", time.RFC3339)
+			}
+			filters = append(filters, persistence.TeamAssetFilters.FromTime(fromTime))
+		}
+		if req.QueryParameter("to") != "" {
+			toTime, err := time.Parse(time.RFC3339, req.QueryParameter("to"))
+			if err != nil {
+				return validation.NewError("invalid request").WithFieldErrorf("to", validation.InvalidValue, "cannot parse 'to' time, expected format %s", time.RFC3339)
+			}
+			filters = append(filters, persistence.TeamAssetFilters.ToTime(toTime))
+		}
+		if req.QueryParameter("provider") != "" {
+			filters = append(filters, persistence.TeamAssetFilters.WithProvider(req.QueryParameter("provider")))
+		}
+		if req.QueryParameter("team") != "" {
+			filters = append(filters, persistence.TeamAssetFilters.WithTeam(req.QueryParameter("team")))
+		}
+		if req.QueryParameter("asset") != "" {
+			filters = append(filters, persistence.TeamAssetFilters.WithAsset(req.QueryParameter("asset")))
+		}
+		if req.QueryParameter("provider") != "" {
+			filters = append(filters, persistence.TeamAssetFilters.WithProvider(req.QueryParameter("provider")))
+		}
+		if req.QueryParameter("account") != "" {
+			filters = append(filters, persistence.TeamAssetFilters.WithAccount(req.QueryParameter("account")))
+		}
+		assets, err := c.Costs().Assets().ListCosts(req.Request.Context(), filters...)
+		if err != nil {
+			return err
+		}
+		return resp.WriteHeaderAndEntity(http.StatusOK, assets)
+	})
+}
+
+func (c costHandler) getAssets(req *restful.Request, resp *restful.Response) {
+	handleErrors(req, resp, func() error {
+		filters := []persistence.TeamAssetFilterFunc{
+			persistence.TeamAssetFilters.WithProvider(req.PathParameter("provider")),
+		}
+		if req.QueryParameter("team") != "" {
+			filters = append(filters, persistence.TeamAssetFilters.WithTeam(req.QueryParameter("team")))
+		}
+		if req.QueryParameter("asset") != "" {
+			filters = append(filters, persistence.TeamAssetFilters.WithAsset(req.QueryParameter("asset")))
+		}
+		if req.QueryParameter("with_deleted") != "" {
+			filters = append(filters, persistence.TeamAssetFilters.WithDeleted())
+		}
+		assets, err := c.Costs().Assets().ListAssets(req.Request.Context(), filters...)
+		if err != nil {
+			return err
+		}
+		return resp.WriteHeaderAndEntity(http.StatusOK, assets)
 	})
 }
 

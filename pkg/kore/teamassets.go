@@ -20,7 +20,9 @@ import (
 	"context"
 	"fmt"
 
+	costsv1 "github.com/appvia/kore/pkg/apis/costs/v1beta1"
 	orgv1 "github.com/appvia/kore/pkg/apis/org/v1"
+	"github.com/appvia/kore/pkg/costs"
 	"github.com/appvia/kore/pkg/persistence"
 	"github.com/appvia/kore/pkg/persistence/model"
 	"github.com/appvia/kore/pkg/utils"
@@ -42,6 +44,8 @@ type TeamAssets interface {
 	MarkAssetDeleted(ctx context.Context, assetIdentifier string) error
 	// ValidateTeamIdentifier checks that the supplied identifier is correct for the team
 	ValidateTeamIdentifier(ctx context.Context, teamIdentifier string) (bool, error)
+	// ListCosts returns costs for this team, filtered by any supplied filters
+	ListCosts(ctx context.Context, filters ...persistence.TeamAssetFilterFunc) (*costsv1.AssetCostList, error)
 }
 
 type teamAssetsImpl struct {
@@ -49,6 +53,7 @@ type teamAssetsImpl struct {
 	teamIdentifier string
 	teams          Teams
 	persist        persistence.Interface
+	assets         costs.Assets
 }
 
 func (t *teamAssetsImpl) getTeamIdentifier(ctx context.Context) (teamIdentifier string, err error) {
@@ -141,4 +146,13 @@ func (t *teamAssetsImpl) ValidateTeamIdentifier(ctx context.Context, teamIdentif
 		return false, err
 	}
 	return teamIdentifier == correctTeamIdentifier, nil
+}
+
+func (t *teamAssetsImpl) ListCosts(ctx context.Context, filters ...persistence.TeamAssetFilterFunc) (*costsv1.AssetCostList, error) {
+	teamIdentifier, err := t.getTeamIdentifier(ctx)
+	if err != nil {
+		return nil, err
+	}
+	filters = append(filters, persistence.TeamAssetFilters.WithTeam(teamIdentifier))
+	return t.assets.ListCosts(ctx, filters...)
 }

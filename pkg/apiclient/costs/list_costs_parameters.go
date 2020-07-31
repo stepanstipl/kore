@@ -19,7 +19,7 @@ import (
 // NewListCostsParams creates a new ListCostsParams object
 // with the default values initialized.
 func NewListCostsParams() *ListCostsParams {
-
+	var ()
 	return &ListCostsParams{
 
 		timeout: cr.DefaultTimeout,
@@ -29,7 +29,7 @@ func NewListCostsParams() *ListCostsParams {
 // NewListCostsParamsWithTimeout creates a new ListCostsParams object
 // with the default values initialized, and the ability to set a timeout on a request
 func NewListCostsParamsWithTimeout(timeout time.Duration) *ListCostsParams {
-
+	var ()
 	return &ListCostsParams{
 
 		timeout: timeout,
@@ -39,7 +39,7 @@ func NewListCostsParamsWithTimeout(timeout time.Duration) *ListCostsParams {
 // NewListCostsParamsWithContext creates a new ListCostsParams object
 // with the default values initialized, and the ability to set a context for a request
 func NewListCostsParamsWithContext(ctx context.Context) *ListCostsParams {
-
+	var ()
 	return &ListCostsParams{
 
 		Context: ctx,
@@ -49,7 +49,7 @@ func NewListCostsParamsWithContext(ctx context.Context) *ListCostsParams {
 // NewListCostsParamsWithHTTPClient creates a new ListCostsParams object
 // with the default values initialized, and the ability to set a custom HTTPClient for a request
 func NewListCostsParamsWithHTTPClient(client *http.Client) *ListCostsParams {
-
+	var ()
 	return &ListCostsParams{
 		HTTPClient: client,
 	}
@@ -59,6 +59,38 @@ func NewListCostsParamsWithHTTPClient(client *http.Client) *ListCostsParams {
 for the list costs operation typically these are written to a http.Request
 */
 type ListCostsParams struct {
+
+	/*Account
+	  Account/project/subscription to return costs for
+
+	*/
+	Account *string
+	/*Asset
+	  Identifier of an asset to filter costs for
+
+	*/
+	Asset *string
+	/*From
+	  Start of time range to return costs for
+
+	*/
+	From *string
+	/*Provider
+	  Cloud provider (e.g. gcp, aws, azure) to return costs for
+
+	*/
+	Provider *string
+	/*Team
+	  Identifier of a team to filter costs for
+
+	*/
+	Team *string
+	/*To
+	  End of time range to return costs for
+
+	*/
+	To *string
+
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
@@ -97,6 +129,72 @@ func (o *ListCostsParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithAccount adds the account to the list costs params
+func (o *ListCostsParams) WithAccount(account *string) *ListCostsParams {
+	o.SetAccount(account)
+	return o
+}
+
+// SetAccount adds the account to the list costs params
+func (o *ListCostsParams) SetAccount(account *string) {
+	o.Account = account
+}
+
+// WithAsset adds the asset to the list costs params
+func (o *ListCostsParams) WithAsset(asset *string) *ListCostsParams {
+	o.SetAsset(asset)
+	return o
+}
+
+// SetAsset adds the asset to the list costs params
+func (o *ListCostsParams) SetAsset(asset *string) {
+	o.Asset = asset
+}
+
+// WithFrom adds the from to the list costs params
+func (o *ListCostsParams) WithFrom(from *string) *ListCostsParams {
+	o.SetFrom(from)
+	return o
+}
+
+// SetFrom adds the from to the list costs params
+func (o *ListCostsParams) SetFrom(from *string) {
+	o.From = from
+}
+
+// WithProvider adds the provider to the list costs params
+func (o *ListCostsParams) WithProvider(provider *string) *ListCostsParams {
+	o.SetProvider(provider)
+	return o
+}
+
+// SetProvider adds the provider to the list costs params
+func (o *ListCostsParams) SetProvider(provider *string) {
+	o.Provider = provider
+}
+
+// WithTeam adds the team to the list costs params
+func (o *ListCostsParams) WithTeam(team *string) *ListCostsParams {
+	o.SetTeam(team)
+	return o
+}
+
+// SetTeam adds the team to the list costs params
+func (o *ListCostsParams) SetTeam(team *string) {
+	o.Team = team
+}
+
+// WithTo adds the to to the list costs params
+func (o *ListCostsParams) WithTo(to *string) *ListCostsParams {
+	o.SetTo(to)
+	return o
+}
+
+// SetTo adds the to to the list costs params
+func (o *ListCostsParams) SetTo(to *string) {
+	o.To = to
+}
+
 // WriteToRequest writes these params to a swagger request
 func (o *ListCostsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -104,6 +202,102 @@ func (o *ListCostsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Reg
 		return err
 	}
 	var res []error
+
+	if o.Account != nil {
+
+		// query param account
+		var qrAccount string
+		if o.Account != nil {
+			qrAccount = *o.Account
+		}
+		qAccount := qrAccount
+		if qAccount != "" {
+			if err := r.SetQueryParam("account", qAccount); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	if o.Asset != nil {
+
+		// query param asset
+		var qrAsset string
+		if o.Asset != nil {
+			qrAsset = *o.Asset
+		}
+		qAsset := qrAsset
+		if qAsset != "" {
+			if err := r.SetQueryParam("asset", qAsset); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	if o.From != nil {
+
+		// query param from
+		var qrFrom string
+		if o.From != nil {
+			qrFrom = *o.From
+		}
+		qFrom := qrFrom
+		if qFrom != "" {
+			if err := r.SetQueryParam("from", qFrom); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	if o.Provider != nil {
+
+		// query param provider
+		var qrProvider string
+		if o.Provider != nil {
+			qrProvider = *o.Provider
+		}
+		qProvider := qrProvider
+		if qProvider != "" {
+			if err := r.SetQueryParam("provider", qProvider); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	if o.Team != nil {
+
+		// query param team
+		var qrTeam string
+		if o.Team != nil {
+			qrTeam = *o.Team
+		}
+		qTeam := qrTeam
+		if qTeam != "" {
+			if err := r.SetQueryParam("team", qTeam); err != nil {
+				return err
+			}
+		}
+
+	}
+
+	if o.To != nil {
+
+		// query param to
+		var qrTo string
+		if o.To != nil {
+			qrTo = *o.To
+		}
+		qTo := qrTo
+		if qTo != "" {
+			if err := r.SetQueryParam("to", qTo); err != nil {
+				return err
+			}
+		}
+
+	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)

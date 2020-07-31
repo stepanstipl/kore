@@ -122,5 +122,6 @@ func (t *tmImpl) Assets() TeamAssets {
 		team:    t.team,
 		teams:   t.hubImpl.Teams(),
 		persist: t.hubImpl.Persist(),
+		assets:  t.hubImpl.Costs().Assets(),
 	}
 }

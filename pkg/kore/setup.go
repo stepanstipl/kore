@@ -37,7 +37,7 @@ import (
 )
 
 // Setup is called one on initialization and used to provision and empty kore
-func (h hubImpl) Setup(ctx context.Context) error {
+func (h *hubImpl) Setup(ctx context.Context) error {
 	log.Info("initializing the kore")
 
 	// @step: ensure the kore namespaces are there
@@ -354,7 +354,7 @@ func (h hubImpl) ensureHubIDPClientExists(ctx context.Context) error {
 	return nil
 }
 
-func (h hubImpl) ensureTeamsAndClustersIdentified(ctx context.Context) error {
+func (h *hubImpl) ensureTeamsAndClustersIdentified(ctx context.Context) error {
 	teams, err := h.Teams().List(getAdminContext(ctx))
 	if err != nil {
 		log.Errorf("error getting team list: %v", err)
@@ -376,7 +376,7 @@ func (h hubImpl) ensureTeamsAndClustersIdentified(ctx context.Context) error {
 		// @step: The kore admin team identifier is used to identify kore itself, so
 		// ensure the hub knows its identifier
 		if team.Name == HubAdminTeam {
-			h.koreIdentifier = team.Labels[LabelTeamIdentifier]
+			h.setKoreIdentifier(team.Labels[LabelTeamIdentifier])
 		}
 	}
 
