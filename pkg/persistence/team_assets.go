@@ -160,7 +160,7 @@ func (t teamAssetsImpl) ListCosts(ctx context.Context, filters ...TeamAssetFilte
 	timed := prometheus.NewTimer(listLatency)
 	defer timed.ObserveDuration()
 
-	q := t.conn.Model(&model.TeamAssetCost{})
+	q := t.conn.Preload("Team").Preload("Asset")
 	q = t.applyCostListFilters(q, filters)
 
 	var list []*model.TeamAssetCost

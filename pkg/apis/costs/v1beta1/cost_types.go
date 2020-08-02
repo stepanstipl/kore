@@ -50,6 +50,38 @@ type AssetCostList struct {
 	Items []AssetCost `json:"items"`
 }
 
+// CostSummary represents a total cost over a period of time
+// +k8s:openapi-gen=false
+type CostSummary struct {
+	// Cost is the actual incurred cost total cost for the specified time period in
+	// microdollars
+	Cost int64 `json:"cost"`
+	// StartTime indicates the start of the period this summary includes costs for
+	StartTime metav1.Time `json:"usageStartTime,omitempty"`
+	// EndTime indicates the end of the period this summary includes costs for
+	EndTime metav1.Time `json:"usageEndTime,omitempty"`
+}
+
+// OverallCostSummary represents the total costs known to kore over a period of time,
+// and acts as a container for TeamCostSummaries
+// +k8s:openapi-gen=false
+type OverallCostSummary struct {
+	CostSummary
+	TeamCosts []*TeamCostSummary `json:"teamCosts"`
+}
+
+// TeamCostSummary represents the total cost known to kore for a team (over a period of time)
+// +k8s:openapi-gen=false
+type TeamCostSummary struct {
+	// TeamIdentifier is the unique identifier for the team these costs belongs to.
+	TeamIdentifier string `json:"teamIdentifier,omitempty"`
+	// TeamName is the name of the team that these costs belong to
+	TeamName string `json:"teamName,omitempty"`
+	// AssetCosts gives the detail of the assets which make up this team cost
+	AssetCosts []*AssetCostSummary `json:"assetCosts"`
+	CostSummary
+}
+
 // AssetCostSummary represents the total cost known to kore for an asset (over a period of time)
 // +k8s:openapi-gen=false
 type AssetCostSummary struct {
@@ -58,13 +90,15 @@ type AssetCostSummary struct {
 	AssetIdentifier string `json:"assetIdentifier,omitempty"`
 	// TeamIdentifier is the unique identifier for the team this resource belongs to.
 	TeamIdentifier string `json:"teamIdentifier,omitempty"`
-	// Cost is the actual incurred cost total cost for this piece of infrastructure for the
-	// specified time period in microdollars
-	Cost int64 `json:"cost,omitempty"`
-	// StartTime indicates the start of the period this summary includes costs for
-	StartTime metav1.Time `json:"usageStartTime,omitempty"`
-	// EndTime indicates the end of the period this summary includes costs for
-	EndTime metav1.Time `json:"usageEndTime,omitempty"`
+	// AssetName is the name of the asset these costs relate to
+	AssetName string `json:"assetName,omitempty"`
+	// AssetType is the type of the asset these costs relate to
+	AssetType string `json:"assetType,omitempty"`
+	// Provider is the cloud provider who provides this assset
+	Provider string `json:"provider,omitempty"`
+	// Details provides the individual cost line items that make up this summary
+	Details []*AssetCost `json:"details,omitempty"`
+	CostSummary
 }
 
 // AssetCost defines the details about a cost related to a piece of infrastructure deployed by Kore for

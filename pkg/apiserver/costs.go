@@ -60,6 +60,15 @@ func (c *costHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	// @TODO: admin filters
 
 	ws.Route(
+		withAllErrors(ws.POST("")).To(c.postCosts).
+			Doc("Persists one or more asset costs").
+			Metadata(restfulspec.KeyOpenAPITags, tags).
+			Operation("PostCosts").
+			Reads(costsv1.AssetCostList{}).
+			Returns(http.StatusOK, "Costs successfully persisted", nil),
+	)
+
+	ws.Route(
 		withAllNonValidationErrors(ws.GET("")).To(c.listCosts).
 			Doc("Returns a list of actual costs").
 			Metadata(restfulspec.KeyOpenAPITags, tags).
@@ -74,12 +83,26 @@ func (c *costHandler) Register(i kore.Interface, builder utils.PathBuilder) (*re
 	)
 
 	ws.Route(
-		withAllErrors(ws.POST("")).To(c.postCosts).
-			Doc("Persists one or more asset costs").
+		withAllNonValidationErrors(ws.GET("summary/{from}/{to}")).To(c.getCostSummary).
+			Doc("Returns a summary of all costs known to kore for the specified time period").
 			Metadata(restfulspec.KeyOpenAPITags, tags).
-			Operation("PostCosts").
-			Reads(costsv1.AssetCostList{}).
-			Returns(http.StatusOK, "Costs successfully persisted", nil),
+			Operation("GetCostSummary").
+			Param(ws.PathParameter("from", "Start of time range to return summary for")).
+			Param(ws.PathParameter("to", "End of time range to return summary for")).
+			Param(ws.QueryParameter("provider", "Restrict to costs for specified cloud provider (e.g. gcp, aws, azure)")).
+			Returns(http.StatusOK, "A summary of costs known to the system", costsv1.OverallCostSummary{}),
+	)
+
+	ws.Route(
+		withAllNonValidationErrors(ws.GET("teamsummary/{teamIdentifier}/{from}/{to}")).To(c.getTeamCostSummary).
+			Doc("Returns a summary of all costs known to kore for the specified time period").
+			Metadata(restfulspec.KeyOpenAPITags, tags).
+			Operation("GetTeamCostSummary").
+			Param(ws.PathParameter("teamIdentifier", "Team identifier to retrieve costs for")).
+			Param(ws.PathParameter("from", "Start of time range to return summary for")).
+			Param(ws.PathParameter("to", "End of time range to return summary for")).
+			Param(ws.QueryParameter("provider", "Restrict to costs for specified cloud provider (e.g. gcp, aws, azure)")).
+			Returns(http.StatusOK, "A summary of costs known to the system for the team", costsv1.TeamCostSummary{}),
 	)
 
 	ws.Route(
@@ -149,6 +172,51 @@ func (c costHandler) listCosts(req *restful.Request, resp *restful.Response) {
 			return err
 		}
 		return resp.WriteHeaderAndEntity(http.StatusOK, assets)
+	})
+}
+
+func (c costHandler) getCostSummary(req *restful.Request, resp *restful.Response) {
+	handleErrors(req, resp, func() error {
+		fromTime, err := time.Parse(time.RFC3339, req.PathParameter("from"))
+		if err != nil {
+			return validation.NewError("invalid request").WithFieldErrorf("from", validation.InvalidValue, "cannot parse 'from' time, expected format %s", time.RFC3339)
+		}
+		toTime, err := time.Parse(time.RFC3339, req.PathParameter("to"))
+		if err != nil {
+			return validation.NewError("invalid request").WithFieldErrorf("to", validation.InvalidValue, "cannot parse 'to' time, expected format %s", time.RFC3339)
+		}
+		filters := []persistence.TeamAssetFilterFunc{}
+		if req.QueryParameter("provider") != "" {
+			filters = append(filters, persistence.TeamAssetFilters.WithProvider(req.QueryParameter("provider")))
+		}
+		summary, err := c.Costs().Assets().OverallCostsSummary(req.Request.Context(), fromTime, toTime, filters...)
+		if err != nil {
+			return err
+		}
+		return resp.WriteHeaderAndEntity(http.StatusOK, summary)
+	})
+}
+
+func (c costHandler) getTeamCostSummary(req *restful.Request, resp *restful.Response) {
+	handleErrors(req, resp, func() error {
+		teamIdentifier := req.PathParameter("teamIdentifier")
+		fromTime, err := time.Parse(time.RFC3339, req.PathParameter("from"))
+		if err != nil {
+			return validation.NewError("invalid request").WithFieldErrorf("from", validation.InvalidValue, "cannot parse 'from' time, expected format %s", time.RFC3339)
+		}
+		toTime, err := time.Parse(time.RFC3339, req.PathParameter("to"))
+		if err != nil {
+			return validation.NewError("invalid request").WithFieldErrorf("to", validation.InvalidValue, "cannot parse 'to' time, expected format %s", time.RFC3339)
+		}
+		filters := []persistence.TeamAssetFilterFunc{}
+		if req.QueryParameter("provider") != "" {
+			filters = append(filters, persistence.TeamAssetFilters.WithProvider(req.QueryParameter("provider")))
+		}
+		summary, err := c.Costs().Assets().TeamCostsSummary(req.Request.Context(), teamIdentifier, fromTime, toTime, filters...)
+		if err != nil {
+			return err
+		}
+		return resp.WriteHeaderAndEntity(http.StatusOK, summary)
 	})
 }
 

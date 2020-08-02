@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	costsv1 "github.com/appvia/kore/pkg/apis/costs/v1beta1"
 	"github.com/appvia/kore/pkg/persistence"
@@ -34,6 +35,8 @@ import (
 type Assets interface {
 	ListAssets(ctx context.Context, filters ...persistence.TeamAssetFilterFunc) ([]costsv1.CostAsset, error)
 	ListCosts(ctx context.Context, filters ...persistence.TeamAssetFilterFunc) (*costsv1.AssetCostList, error)
+	OverallCostsSummary(ctx context.Context, from time.Time, to time.Time, filters ...persistence.TeamAssetFilterFunc) (*costsv1.OverallCostSummary, error)
+	TeamCostsSummary(ctx context.Context, teamIdentifier string, from time.Time, to time.Time, filters ...persistence.TeamAssetFilterFunc) (*costsv1.TeamCostSummary, error)
 	StoreAssetCosts(ctx context.Context, costs *costsv1.AssetCostList) error
 }
 
@@ -74,6 +77,135 @@ func (a *assetsImpl) ListCosts(ctx context.Context, filters ...persistence.TeamA
 		results.Items[ind] = a.fromTeamAssetCostModel(cost)
 	}
 	return results, nil
+}
+
+func (a *assetsImpl) TeamCostsSummary(ctx context.Context, teamIdentifier string, from time.Time, to time.Time, filters ...persistence.TeamAssetFilterFunc) (*costsv1.TeamCostSummary, error) {
+	filters = append(filters, persistence.TeamAssetFilters.WithTeam(teamIdentifier))
+	filters = append(filters, persistence.TeamAssetFilters.FromTime(from))
+	filters = append(filters, persistence.TeamAssetFilters.ToTime(to))
+	costs, err := a.persistence.ListCosts(ctx, filters...)
+	if err != nil {
+		return nil, err
+	}
+
+	summary := &costsv1.TeamCostSummary{
+		AssetCosts: []*costsv1.AssetCostSummary{},
+		CostSummary: costsv1.CostSummary{
+			StartTime: metav1.NewTime(from),
+			EndTime:   metav1.NewTime(to),
+			Cost:      0,
+		},
+		TeamIdentifier: teamIdentifier,
+	}
+	assetSummaries := map[string]*costsv1.AssetCostSummary{}
+
+	for _, cost := range costs {
+		if summary.TeamName == "" {
+			summary.TeamName = cost.Team.TeamName
+		}
+		if assetSummaries[cost.AssetIdentifier] == nil {
+			assetSummaries[cost.AssetIdentifier] = &costsv1.AssetCostSummary{
+				AssetIdentifier: cost.AssetIdentifier,
+				TeamIdentifier:  cost.TeamIdentifier,
+				AssetName:       cost.Asset.AssetName,
+				Provider:        cost.Asset.Provider,
+				AssetType:       string(cost.Asset.AssetType),
+				CostSummary: costsv1.CostSummary{
+					StartTime: metav1.NewTime(cost.UsageStartTime),
+					EndTime:   metav1.NewTime(cost.UsageEndTime),
+					Cost:      0,
+				},
+				Details: []*costsv1.AssetCost{},
+			}
+			summary.AssetCosts = append(summary.AssetCosts, assetSummaries[cost.AssetIdentifier])
+		}
+		asset := assetSummaries[cost.AssetIdentifier]
+		asset.Details = a.summariseAssetCosts(asset.Details, cost)
+		asset.Cost += cost.Cost
+		if asset.StartTime.Time.After(cost.UsageStartTime) {
+			asset.StartTime = metav1.NewTime(cost.UsageStartTime)
+		}
+		if asset.EndTime.Time.Before(cost.UsageEndTime) {
+			asset.EndTime = metav1.NewTime(cost.UsageEndTime)
+		}
+		summary.Cost += cost.Cost
+	}
+	return summary, nil
+}
+
+// summariseAssetCosts is used to group together all usage of the same type for the same resource into a single line item
+func (a *assetsImpl) summariseAssetCosts(details []*costsv1.AssetCost, cost *model.TeamAssetCost) []*costsv1.AssetCost {
+	// check if usage type already in list
+	var detailToUpdate *costsv1.AssetCost = nil
+	for _, detail := range details {
+		if detail.Description == cost.Description {
+			detailToUpdate = detail
+			break
+		}
+	}
+	if detailToUpdate == nil {
+		c := a.fromTeamAssetCostModel(cost)
+		return append(details, &c)
+	}
+	if detailToUpdate.UsageStartTime.Time.After(cost.UsageStartTime) {
+		detailToUpdate.UsageStartTime = metav1.NewTime(cost.UsageStartTime)
+	}
+	if detailToUpdate.UsageEndTime.Time.Before(cost.UsageEndTime) {
+		detailToUpdate.UsageEndTime = metav1.NewTime(cost.UsageEndTime)
+	}
+	detailToUpdate.Cost += cost.Cost
+	amt, err := strconv.ParseFloat(detailToUpdate.UsageAmount, 64)
+	if err != nil {
+		// Just use the usage amount from this row if we can't parse what's in there, shouldn't happen:
+		detailToUpdate.UsageAmount = fmt.Sprintf("%f", cost.UsageAmount)
+	} else {
+		detailToUpdate.UsageAmount = fmt.Sprintf("%f", amt+cost.UsageAmount)
+	}
+	return details
+}
+
+func (a *assetsImpl) OverallCostsSummary(ctx context.Context, from time.Time, to time.Time, filters ...persistence.TeamAssetFilterFunc) (*costsv1.OverallCostSummary, error) {
+	filters = append(filters, persistence.TeamAssetFilters.FromTime(from))
+	filters = append(filters, persistence.TeamAssetFilters.ToTime(to))
+	costs, err := a.persistence.ListCosts(ctx, filters...)
+	if err != nil {
+		return nil, err
+	}
+
+	summary := &costsv1.OverallCostSummary{
+		TeamCosts: []*costsv1.TeamCostSummary{},
+		CostSummary: costsv1.CostSummary{
+			StartTime: metav1.NewTime(from),
+			EndTime:   metav1.NewTime(to),
+			Cost:      0,
+		},
+	}
+	teamSummaries := map[string]*costsv1.TeamCostSummary{}
+
+	for _, cost := range costs {
+		if teamSummaries[cost.TeamIdentifier] == nil {
+			teamSummaries[cost.TeamIdentifier] = &costsv1.TeamCostSummary{
+				TeamIdentifier: cost.TeamIdentifier,
+				TeamName:       cost.Team.TeamName,
+				CostSummary: costsv1.CostSummary{
+					StartTime: metav1.NewTime(cost.UsageStartTime),
+					EndTime:   metav1.NewTime(cost.UsageEndTime),
+					Cost:      0,
+				},
+			}
+			summary.TeamCosts = append(summary.TeamCosts, teamSummaries[cost.TeamIdentifier])
+		}
+		team := teamSummaries[cost.TeamIdentifier]
+		team.Cost += cost.Cost
+		if team.StartTime.Time.After(cost.UsageStartTime) {
+			team.StartTime = metav1.NewTime(cost.UsageStartTime)
+		}
+		if team.EndTime.Time.Before(cost.UsageEndTime) {
+			team.EndTime = metav1.NewTime(cost.UsageEndTime)
+		}
+		summary.Cost += cost.Cost
+	}
+	return summary, nil
 }
 
 func (a *assetsImpl) StoreAssetCosts(ctx context.Context, costs *costsv1.AssetCostList) error {

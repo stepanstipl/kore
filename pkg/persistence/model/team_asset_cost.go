@@ -48,4 +48,8 @@ type TeamAssetCost struct {
 	BillingYear uint16
 	// BillingMonth is the month in which this cost was billed (1 = Jan to 12 = Dec)
 	BillingMonth uint8
+	// Team is the identity record for the team who owns this asset
+	Team TeamIdentity `gorm:"foreignkey:TeamIdentifier"`
+	// Asset is the asset record this cost relates to
+	Asset TeamAsset `gorm:"foreignkey:AssetIdentifier"`
 }
