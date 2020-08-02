@@ -14,3 +14,6 @@ export function formatDailyCost(c) {
 export function formatMonthlyCost(c) {
   return `${MONTHLY_CURR_FORMATTER((c*HOURS_IN_MONTH)/MICRODOLLARS_IN_DOLLAR)}/mo`
 }
+export function formatCost(c) {
+  return DAILY_CURR_FORMATTER(c/MICRODOLLARS_IN_DOLLAR)
+}

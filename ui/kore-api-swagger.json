@@ -705,6 +705,127 @@
         }
       }
     },
+    "/api/v1alpha1/costs/summary/{from}/{to}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "costs"
+        ],
+        "summary": "Returns a summary of all costs known to kore for the specified time period",
+        "operationId": "GetCostSummary",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Start of time range to return summary for",
+            "name": "from",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "End of time range to return summary for",
+            "name": "to",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Restrict to costs for specified cloud provider (e.g. gcp, aws, azure)",
+            "name": "provider",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A summary of costs known to the system",
+            "schema": {
+              "$ref": "#/definitions/v1beta1.OverallCostSummary"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1alpha1/costs/teamsummary/{teamIdentifier}/{from}/{to}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "costs"
+        ],
+        "summary": "Returns a summary of all costs known to kore for the specified time period",
+        "operationId": "GetTeamCostSummary",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Team identifier to retrieve costs for",
+            "name": "teamIdentifier",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Start of time range to return summary for",
+            "name": "from",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "End of time range to return summary for",
+            "name": "to",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "Restrict to costs for specified cloud provider (e.g. gcp, aws, azure)",
+            "name": "provider",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A summary of costs known to the system for the team",
+            "schema": {
+              "$ref": "#/definitions/v1beta1.TeamCostSummary"
+            }
+          },
+          "401": {
+            "description": "If not authenticated"
+          },
+          "403": {
+            "description": "If authenticated but not authorized"
+          },
+          "500": {
+            "description": "A generic API error containing the cause of the error",
+            "schema": {
+              "$ref": "#/definitions/apiserver.Error"
+            }
+          }
+        }
+      }
+    },
     "/api/v1alpha1/idp/clients/{name}": {
       "put": {
         "consumes": [
@@ -8801,8 +8922,8 @@
     },
     "v1.OptionalSecretKeySelector": {
       "required": [
-        "key",
-        "name"
+        "name",
+        "key"
       ],
       "properties": {
         "key": {
@@ -9824,11 +9945,11 @@
     },
     "v1.StaticOIDCIDP": {
       "required": [
-        "clientScopes",
         "userClaims",
         "clientID",
         "clientSecret",
-        "issuer"
+        "issuer",
+        "clientScopes"
       ],
       "properties": {
         "clientID": {
@@ -11992,6 +12113,44 @@
         }
       }
     },
+    "v1beta1.AssetCostSummary": {
+      "required": [
+        "cost"
+      ],
+      "properties": {
+        "assetIdentifier": {
+          "type": "string"
+        },
+        "assetName": {
+          "type": "string"
+        },
+        "assetType": {
+          "type": "string"
+        },
+        "cost": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1.AssetCost"
+          }
+        },
+        "provider": {
+          "type": "string"
+        },
+        "teamIdentifier": {
+          "type": "string"
+        },
+        "usageEndTime": {
+          "type": "string"
+        },
+        "usageStartTime": {
+          "type": "string"
+        }
+      }
+    },
     "v1beta1.Continent": {
       "required": [
         "name",
@@ -12158,6 +12317,30 @@
         }
       }
     },
+    "v1beta1.OverallCostSummary": {
+      "required": [
+        "cost",
+        "teamCosts"
+      ],
+      "properties": {
+        "cost": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "teamCosts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1.TeamCostSummary"
+          }
+        },
+        "usageEndTime": {
+          "type": "string"
+        },
+        "usageStartTime": {
+          "type": "string"
+        }
+      }
+    },
     "v1beta1.Region": {
       "required": [
         "id",
@@ -12168,6 +12351,36 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        }
+      }
+    },
+    "v1beta1.TeamCostSummary": {
+      "required": [
+        "assetCosts",
+        "cost"
+      ],
+      "properties": {
+        "assetCosts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1beta1.AssetCostSummary"
+          }
+        },
+        "cost": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "teamIdentifier": {
+          "type": "string"
+        },
+        "teamName": {
+          "type": "string"
+        },
+        "usageEndTime": {
+          "type": "string"
+        },
+        "usageStartTime": {
           "type": "string"
         }
       }

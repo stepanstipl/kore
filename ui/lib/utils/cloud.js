@@ -15,7 +15,7 @@ export function getProviderCloudInfo(provider) {
  * @returns {*}
  */
 export function getCloudInfo(cloud) {
-  return getProviderCloudInfo(publicRuntimeConfig.clusterProviderMap[cloud])
+  return getProviderCloudInfo(publicRuntimeConfig.clusterProviderMap[cloud.toUpperCase()])
 }
 
 /**

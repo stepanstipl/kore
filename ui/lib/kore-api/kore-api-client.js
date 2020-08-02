@@ -148,6 +148,10 @@ class KoreApiClient {
     EstimateClusterPlanCost: (plan) => this.apis.costestimates.EstimateClusterPlanCost({ body: JSON.stringify(plan) }),
     EstimateServicePlanCost: (plan) => this.apis.costestimates.EstimateServicePlanCost({ body: JSON.stringify(plan) })
   }
+  costs = {
+    GetCostSummary: (from, to, provider) => this.apis.costs.GetCostSummary({ from, to, provider }),
+    GetTeamCostSummary: (teamIdentifier, from, to, provider) => this.apis.costs.GetTeamCostSummary({ teamIdentifier, from, to, provider })
+  }
 
   // Policies
   ListPlanPolicies = (kind) => this.apis.default.ListPlanPolicies({ kind })
