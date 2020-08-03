@@ -10,6 +10,7 @@ import AWSOrganizationsList from '../../../lib/components/credentials/AWSOrganiz
 import PlanList from '../../../lib/components/plans/PlanList'
 import PolicyList from '../../../lib/components/policies/PolicyList'
 import CloudAccountAutomationSettings from '../../../lib/components/setup/CloudAccountAutomationSettings'
+import AWSAccountsList from '../../../lib/components/setup/AWSAccountsList'
 import CloudTabs from '../../../lib/components/common/CloudTabs'
 import CloudServiceAdmin from '../../../lib/components/services/CloudServiceAdmin'
 import { featureEnabled, KoreFeatures } from '../../../lib/utils/features'
@@ -73,10 +74,10 @@ export default class ConfigureCloudPage extends React.Component {
               <Tabs.TabPane tab="Organization credentials" key="orgs">
                 <GCPOrganizationsList autoAllocateToAllTeams={true} />
               </Tabs.TabPane>
-              <Tabs.TabPane tab="Project credentials" key="projects">
+              <Tabs.TabPane tab="Project credentials" key="project-credentials">
                 <CredentialsList provider="GKE" />
               </Tabs.TabPane>
-              <Tabs.TabPane tab="Project automation" key="project_automation">
+              <Tabs.TabPane tab="Project automation" key="project-automation">
                 <CloudAccountAutomationSettings provider="GKE" cloudOrgsApiMethod="ListGCPOrganizations" cloud="GCP" accountNoun="project" />
               </Tabs.TabPane>
               <Tabs.TabPane tab="Cluster plans" key="plans">
@@ -92,11 +93,14 @@ export default class ConfigureCloudPage extends React.Component {
               <Tabs.TabPane tab="Organization credentials" key="orgs">
                 <AWSOrganizationsList autoAllocateToAllTeams={true} user={user} />
               </Tabs.TabPane>
-              <Tabs.TabPane tab="Account credentials" key="accounts">
+              <Tabs.TabPane tab="Account credentials" key="account-credentials">
                 <CredentialsList provider="EKS" />
               </Tabs.TabPane>
               <Tabs.TabPane tab="Account automation" key="account-automation">
                 <CloudAccountAutomationSettings provider="EKS" cloudOrgsApiMethod="ListAWSOrganizations" cloud="AWS" accountNoun="account" />
+              </Tabs.TabPane>
+              <Tabs.TabPane tab="Accounts" key="accounts">
+                <AWSAccountsList />
               </Tabs.TabPane>
               <Tabs.TabPane tab="Cluster plans" key="plans">
                 <PlanList kind="EKS" />
@@ -113,7 +117,7 @@ export default class ConfigureCloudPage extends React.Component {
           ) : null}
           {selectedCloud === 'Azure' ? (
             <Tabs activeKey={activeKeys['Azure']} onChange={(key) => this.handleSelectKey('Azure', key)} destroyInactiveTabPane={true} tabPosition="left" style={{ marginTop: '20px' }}>
-              <Tabs.TabPane tab="Subscription credentials" key="subscriptions">
+              <Tabs.TabPane tab="Subscription credentials" key="subscription-credentials">
                 <CredentialsList provider="AKS" />
               </Tabs.TabPane>
               <Tabs.TabPane tab="Cluster plans" key="plans">
