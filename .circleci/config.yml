@@ -123,8 +123,14 @@ jobs:
             make check-api-sync
 
   validate-api:
+    parameters:
+      kubernetes_version:
+        type: string
+        default: "latest"
+
     environment:
       <<: *SERVICES_ENV
+      KUBE_VERSION: << parameters.kubernetes_version >>
     machine:
       docker_layer_caching: true
       image: ubuntu-1604:202007-01
@@ -149,6 +155,7 @@ jobs:
               --build-cli false \
               --build-kore-api false \
               --build-proxy false \
+              --k8s-version ${KUBE_VERSION} \
               --version ${CIRCLE_SHA1}
       - run:
           name: Kore API Logs
@@ -759,5 +766,22 @@ workflows:
           requires:
             - build-api
       - e2e_aks:
+          requires:
+            - build-api
+
+  weekly:
+    triggers:
+      - schedule:
+          cron: "0 10 * * 1"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - build-api
+      - validate-api:
+          matrix:
+            parameters:
+              kubernetes_version: [v1.15.11, v1.16.9, v1.17.5, v1.18.6]
           requires:
             - build-api
