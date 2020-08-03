@@ -142,7 +142,7 @@ func (d Factory) createPlan(info os.FileInfo) (*servicesv1.ServicePlan, error) {
 				continue
 			}
 
-			obj, err := koreschema.DecodeYAML([]byte(document))
+			obj, err := koreschema.DecodeYAML([]byte(document), nil)
 			if err != nil {
 				return nil, err
 			}

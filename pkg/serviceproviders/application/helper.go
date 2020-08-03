@@ -151,7 +151,7 @@ func compileResource(obj runtime.Object, params ResourceParams) (runtime.Object,
 		return nil, fmt.Errorf("failed to apply templating %w", err)
 	}
 
-	o, err := koreschema.DecodeJSON(tmplBuf.Bytes())
+	o, err := koreschema.DecodeJSON(tmplBuf.Bytes(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode templated output %v %w", tmplBuf.String(), err)
 	}

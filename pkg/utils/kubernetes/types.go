@@ -118,7 +118,7 @@ func (r *Objects) UnmarshalYAML(data []byte) error {
 			continue
 		}
 
-		obj, err := koreschema.DecodeYAML([]byte(document))
+		obj, err := koreschema.DecodeYAML([]byte(document), nil)
 		if err != nil {
 			return err
 		}

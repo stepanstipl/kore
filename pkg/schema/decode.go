@@ -22,17 +22,17 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func DecodeYAML(data []byte) (runtime.Object, error) {
+func DecodeYAML(data []byte, into runtime.Object) (runtime.Object, error) {
 	jsonData, err := yaml.YAMLToJSON(data)
 	if err != nil {
 		return nil, err
 	}
 
-	return DecodeJSON(jsonData)
+	return DecodeJSON(jsonData, into)
 }
 
-func DecodeJSON(data []byte) (runtime.Object, error) {
-	obj, _, err := GetCodecFactory().UniversalDeserializer().Decode(data, nil, nil)
+func DecodeJSON(data []byte, into runtime.Object) (runtime.Object, error) {
+	obj, _, err := GetCodecFactory().UniversalDeserializer().Decode(data, nil, into)
 	if err != nil && !runtime.IsNotRegisteredError(err) {
 		return nil, err
 	}
