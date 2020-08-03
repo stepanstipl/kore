@@ -17,12 +17,17 @@
 package kubernetes
 
 import (
+	"bytes"
 	"fmt"
+	"regexp"
+	"strings"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
+	koreschema "github.com/appvia/kore/pkg/schema"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/yaml"
 )
 
 // Object is a Kubernetes object
@@ -79,4 +84,48 @@ type KubernetesAPI struct {
 	KubeConfig string
 	// SkipTLSVerify indicates we skip tls
 	SkipTLSVerify bool
+}
+
+type Objects []runtime.Object
+
+// MarshalYAML encodes the objects as a list of YAML objects
+func (r Objects) MarshalYAML() ([]byte, error) {
+	buf := bytes.NewBuffer(make([]byte, 0, 16384))
+	for _, obj := range r {
+		yamlData, err := yaml.Marshal(obj)
+		if err != nil {
+			return nil, err
+		}
+		buf.WriteString("---\n")
+		buf.Write(yamlData)
+		buf.WriteRune('\n')
+	}
+	return buf.Bytes(), nil
+}
+
+// UnmarshalYAML decodes a YAML manifest into one or more runtime objects
+func (r *Objects) UnmarshalYAML(data []byte) error {
+	if len(data) == 0 {
+		return nil
+	}
+
+	documents := regexp.MustCompile("(?m)^---\n").Split(string(data), -1)
+
+	var objects []runtime.Object
+
+	for _, document := range documents {
+		if strings.TrimSpace(document) == "" {
+			continue
+		}
+
+		obj, err := koreschema.DecodeYAML([]byte(document))
+		if err != nil {
+			return err
+		}
+
+		objects = append(objects, obj)
+	}
+
+	*r = objects
+	return nil
 }

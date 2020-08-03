@@ -17,17 +17,13 @@
 package application
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"regexp"
 	"strconv"
-	"strings"
 
-	koreschema "github.com/appvia/kore/pkg/schema"
+	"github.com/appvia/kore/pkg/utils/kubernetes"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	applicationv1beta "sigs.k8s.io/application/api/v1beta1"
-	"sigs.k8s.io/yaml"
 )
 
 type AppConfiguration struct {
@@ -63,21 +59,13 @@ func (r Resources) Application() *applicationv1beta.Application {
 }
 
 func (r Resources) MarshalJSON() ([]byte, error) {
-	buf := bytes.NewBuffer(make([]byte, 0, 16384))
-	for _, obj := range r {
-		jsonData, err := json.Marshal(obj)
-		if err != nil {
-			return nil, err
-		}
-		yamlData, err := yaml.JSONToYAML(jsonData)
-		if err != nil {
-			return nil, err
-		}
-		buf.WriteString("---\n")
-		buf.Write(yamlData)
-		buf.WriteRune('\n')
+	objects := kubernetes.Objects(r)
+	manifest, err := objects.MarshalYAML()
+	if err != nil {
+		return nil, err
 	}
-	return []byte(strconv.Quote(buf.String())), nil
+
+	return []byte(strconv.Quote(string(manifest))), nil
 }
 
 func (r *Resources) UnmarshalJSON(data []byte) error {
@@ -85,27 +73,17 @@ func (r *Resources) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	raw, err := strconv.Unquote(string(data))
+	unquoted, err := strconv.Unquote(string(data))
 	if err != nil {
 		return err
 	}
-	documents := regexp.MustCompile("(?m)^---\n").Split(raw, -1)
 
-	var objects []runtime.Object
+	objects := &kubernetes.Objects{}
 
-	for _, document := range documents {
-		if strings.TrimSpace(document) == "" {
-			continue
-		}
-
-		obj, err := koreschema.DecodeYAML([]byte(document))
-		if err != nil {
-			return err
-		}
-
-		objects = append(objects, obj)
+	if err := objects.UnmarshalYAML([]byte(unquoted)); err != nil {
+		return err
 	}
 
-	*r = objects
+	*r = Resources(*objects)
 	return nil
 }
