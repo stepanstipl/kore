@@ -19,6 +19,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"time"
 
 	_ "github.com/appvia/kore/pkg/clusterproviders/register"
 	_ "github.com/appvia/kore/pkg/controllers/register"
@@ -139,17 +140,7 @@ func (s serverImpl) Run(ctx context.Context) error {
 
 			err := func() error {
 				if c2, ok := c.(controllers.Interface2); ok {
-					mgr, err := manager.New(s.cfg, c2.ManagerOptions())
-					if err != nil {
-						return err
-					}
-
-					ctrl, err := controller.New(c2.Name(), mgr, c2.ControllerOptions())
-					if err != nil {
-						return err
-					}
-
-					return c2.RunWithDependencies(ctx, mgr, ctrl, s.hubcc)
+					return s.runController(ctx, c2)
 				}
 
 				return c.Run(ctx, s.cfg, s.hubcc)
@@ -168,6 +159,50 @@ func (s serverImpl) Run(ctx context.Context) error {
 	if err := s.apicc.Run(ctx); err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func (s serverImpl) runController(ctx context.Context, c controllers.Interface2) error {
+	mgr, err := manager.New(s.cfg, c.ManagerOptions())
+	if err != nil {
+		return err
+	}
+
+	ctrl, err := controller.New(c.Name(), mgr, c.ControllerOptions())
+	if err != nil {
+		return err
+	}
+
+	if err := c.Initialize(ctrl, mgr.GetClient(), s.hubcc); err != nil {
+		return err
+	}
+
+	var stopCh chan struct{}
+
+	go func() {
+		c.Logger().Info("starting the controller")
+
+		for {
+			stopCh = make(chan struct{})
+
+			if err := mgr.Start(stopCh); err != nil {
+				c.Logger().WithError(err).Error("controller failed, restarting")
+			}
+			time.Sleep(5 * time.Second)
+		}
+	}()
+
+	// @step: use a routine to catch the stop channel
+	go func() {
+		<-ctx.Done()
+
+		c.Logger().Info("stopping the controller")
+
+		if stopCh != nil {
+			close(stopCh)
+		}
+	}()
 
 	return nil
 }

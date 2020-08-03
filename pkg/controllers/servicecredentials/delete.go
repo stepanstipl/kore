@@ -59,7 +59,7 @@ func (c *Controller) delete(
 
 	result, err := func() (reconcile.Result, error) {
 		// @step: create client for the cluster credentials
-		client, err := controllers.CreateClient(context.Background(), c.mgr.GetClient(), serviceCreds.Spec.Cluster)
+		client, err := controllers.CreateClient(context.Background(), c.client, serviceCreds.Spec.Cluster)
 		if err != nil {
 			serviceCreds.Status.Components.SetCondition(corev1.Component{
 				Name:    ComponentKubernetesSecret,
@@ -98,7 +98,7 @@ func (c *Controller) delete(
 		serviceCreds.Status.Components.SetStatus(ComponentKubernetesSecret, corev1.DeletedStatus, "", "")
 
 		result, err := provider.DeleteCredentials(
-			kore.NewContext(ctx, logger, c.mgr.GetClient(), c),
+			kore.NewContext(ctx, logger, c.client, c),
 			service, serviceCreds,
 		)
 		if err != nil {

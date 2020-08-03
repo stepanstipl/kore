@@ -18,14 +18,15 @@ package cluster
 
 import (
 	"context"
-	"time"
+
+	"k8s.io/client-go/rest"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
 
 	log "github.com/sirupsen/logrus"
-	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -38,9 +39,8 @@ var _ controllers.Interface2 = &Controller{}
 type Controller struct {
 	kore.Interface
 	name   string
-	logger log.FieldLogger
-	mgr    manager.Manager
-	ctrl   controller.Controller
+	logger log.Ext1FieldLogger
+	client client.Client
 }
 
 func init() {
@@ -53,7 +53,7 @@ func init() {
 }
 
 // NewController creates and returns a clusters controller
-func NewController(logger log.FieldLogger) *Controller {
+func NewController(logger log.Ext1FieldLogger) *Controller {
 	name := "cluster"
 	return &Controller{
 		name: name,
@@ -64,76 +64,45 @@ func NewController(logger log.FieldLogger) *Controller {
 }
 
 // Name returns the name of the controller
-func (a *Controller) Name() string {
-	return a.name
+func (c *Controller) Name() string {
+	return c.name
+}
+
+func (c *Controller) Logger() log.Ext1FieldLogger {
+	return c.logger
 }
 
 // ManagerOptions returns the manager options for the controller
-func (a *Controller) ManagerOptions() manager.Options {
-	return controllers.DefaultManagerOptions(a)
+func (c *Controller) ManagerOptions() manager.Options {
+	return controllers.DefaultManagerOptions(c)
 }
 
 // ControllerOptions returns the controllers options
-func (a *Controller) ControllerOptions() controller.Options {
-	return controllers.DefaultControllerOptions(a)
+func (c *Controller) ControllerOptions() controller.Options {
+	return controllers.DefaultControllerOptions(c)
 }
 
-func (a *Controller) RunWithDependencies(ctx context.Context, mgr manager.Manager, ctrl controller.Controller, hi kore.Interface) error {
-	a.mgr = mgr
-	a.ctrl = ctrl
-	a.Interface = hi
+// Initialize registers dependencies and sets up watches
+func (c *Controller) Initialize(ctrl controller.Controller, client client.Client, hi kore.Interface) error {
+	c.client = client
+	c.Interface = hi
 
-	a.logger.Debug("controller has been started")
-
-	// @step: setup watches for the resources
-	if err := a.ctrl.Watch(
+	if err := ctrl.Watch(
 		&source.Kind{Type: &clustersv1.Cluster{}},
 		&handler.EnqueueRequestForObject{},
 		predicate.GenerationChangedPredicate{},
 	); err != nil {
-
-		a.logger.WithError(err).Error("failed to create watcher on Cluster resource")
-
+		c.logger.WithError(err).Error("failed to create watcher on Cluster resource")
 		return err
 	}
 
-	var stopCh chan struct{}
-
-	go func() {
-		a.logger.Info("starting the controller loop")
-
-		for {
-			stopCh = make(chan struct{})
-
-			if err := a.mgr.Start(stopCh); err != nil {
-				a.logger.WithError(err).Error("failed to start the controller")
-			}
-			time.Sleep(5 * time.Second)
-		}
-	}()
-
-	// @step: use a routine to catch the stop channel
-	go func() {
-		<-ctx.Done()
-
-		a.logger.Info("stopping the controller")
-
-		if stopCh != nil {
-			close(stopCh)
-		}
-	}()
-
 	return nil
 }
 
-// Run is called when the controller is started
-func (a *Controller) Run(ctx context.Context, cfg *rest.Config, hi kore.Interface) error {
-	panic("this controller implements controllers.Interface2 and only RunWithDependencies should be called")
+func (c *Controller) Run(context.Context, *rest.Config, kore.Interface) error {
+	panic("deprecated")
 }
 
-// Stop is responsible for calling a halt on the controller
-func (a *Controller) Stop(context.Context) error {
-	a.logger.Info("attempting to stop the controller")
-
-	return nil
+func (c *Controller) Stop(context.Context) error {
+	panic("deprecated")
 }

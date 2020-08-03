@@ -43,7 +43,7 @@ func (c *Controller) Delete(request reconcile.Request) (reconcile.Result, error)
 
 	// @step: retrieve the object from the api
 	claim := &gcp.ProjectClaim{}
-	if err := c.mgr.GetClient().Get(ctx, request.NamespacedName, claim); err != nil {
+	if err := c.client.Get(ctx, request.NamespacedName, claim); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
@@ -53,12 +53,12 @@ func (c *Controller) Delete(request reconcile.Request) (reconcile.Result, error)
 	}
 	original := claim.DeepCopy()
 
-	f := kubernetes.NewFinalizer(c.mgr.GetClient(), finalizerName)
+	f := kubernetes.NewFinalizer(c.client, finalizerName)
 	if !f.IsDeletionCandidate(claim) {
 		return reconcile.Result{}, nil
 	}
 
-	koreCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c)
+	koreCtx := kore.NewContext(ctx, logger, c.client, c)
 	result, err := func() (reconcile.Result, error) {
 		return controllers.DefaultEnsureHandler.Run(koreCtx,
 			[]controllers.EnsureFunc{
@@ -77,7 +77,7 @@ func (c *Controller) Delete(request reconcile.Request) (reconcile.Result, error)
 		}
 	}
 
-	if err := controllers.PatchStatus(ctx, c.mgr.GetClient(), claim, original); err != nil {
+	if err := controllers.PatchStatus(ctx, c.client, claim, original); err != nil {
 		logger.WithError(err).Error("trying to update the status")
 
 		return reconcile.Result{}, err

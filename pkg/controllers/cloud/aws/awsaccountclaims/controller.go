@@ -18,7 +18,6 @@ package awsaccountclaims
 
 import (
 	"context"
-	"time"
 
 	aws "github.com/appvia/kore/pkg/apis/aws/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
@@ -26,6 +25,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/rest"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -39,9 +39,8 @@ var _ controllers.Interface2 = &Controller{}
 type Controller struct {
 	kore.Interface
 	name   string
-	logger log.FieldLogger
-	mgr    manager.Manager
-	ctrl   controller.Controller
+	logger log.Ext1FieldLogger
+	client client.Client
 }
 
 func init() {
@@ -54,7 +53,7 @@ func init() {
 }
 
 // NewController creates and returns a serviceproviders controller
-func NewController(logger log.FieldLogger) *Controller {
+func NewController(logger log.Ext1FieldLogger) *Controller {
 	name := "aws-account-claims"
 
 	return &Controller{
@@ -70,6 +69,10 @@ func (c *Controller) Name() string {
 	return c.name
 }
 
+func (c *Controller) Logger() log.Ext1FieldLogger {
+	return c.logger
+}
+
 // ManagerOptions returns the manager options for the controller
 func (c *Controller) ManagerOptions() manager.Options {
 	return controllers.DefaultManagerOptions(c)
@@ -80,16 +83,13 @@ func (c *Controller) ControllerOptions() controller.Options {
 	return controllers.DefaultControllerOptions(c)
 }
 
-// RunWithDependencies will start the controller and dependencies
-func (c *Controller) RunWithDependencies(ctx context.Context, mgr manager.Manager, ctrl controller.Controller, hi kore.Interface) error {
-	c.mgr = mgr
-	c.ctrl = ctrl
+// Initialize registers dependencies and sets up watches
+func (c *Controller) Initialize(ctrl controller.Controller, client client.Client, hi kore.Interface) error {
+	c.client = client
 	c.Interface = hi
 
-	c.logger.Debug("controller has been started")
-
 	// @step: setup watches for the resources
-	if err := c.ctrl.Watch(
+	if err := ctrl.Watch(
 		&source.Kind{Type: &aws.AWSAccountClaim{}},
 		&handler.EnqueueRequestForObject{},
 		&predicate.GenerationChangedPredicate{},
@@ -98,47 +98,13 @@ func (c *Controller) RunWithDependencies(ctx context.Context, mgr manager.Manage
 		return err
 	}
 
-	var stopCh chan struct{}
-
-	go func() {
-		c.logger.Info("starting the controller loop")
-
-		for {
-			stopCh = make(chan struct{})
-
-			if err := c.mgr.Start(stopCh); err != nil {
-				c.logger.WithError(err).Error("failed to start the controller")
-			}
-			if ctx.Err() != nil {
-				// Context was cancelled
-				return
-			}
-			time.Sleep(5 * time.Second)
-		}
-	}()
-
-	// @step: use a routine to catch the stop channel
-	go func() {
-		<-ctx.Done()
-
-		c.logger.Info("stopping the controller")
-
-		if stopCh != nil {
-			close(stopCh)
-		}
-	}()
-
 	return nil
 }
 
-// Run is called when the controller is started
-func (c *Controller) Run(ctx context.Context, cfg *rest.Config, hi kore.Interface) error {
-	panic("this controller implements controllers.Interface2 and only RunWithDependencies should be called")
+func (c *Controller) Run(context.Context, *rest.Config, kore.Interface) error {
+	panic("deprecated")
 }
 
-// Stop is responsible for calling a halt on the controller
 func (c *Controller) Stop(context.Context) error {
-	c.logger.Info("attempting to stop the controller")
-
-	return nil
+	panic("deprecated")
 }

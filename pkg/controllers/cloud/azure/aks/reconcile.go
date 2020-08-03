@@ -41,12 +41,12 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		"name":      request.NamespacedName.Name,
 		"namespace": request.NamespacedName.Namespace,
 	})
-	ctx := kore.NewContext(context.Background(), logger, c.mgr.GetClient(), c)
+	ctx := kore.NewContext(context.Background(), logger, c.client, c)
 
 	logger.Debug("attempting to reconcile the AKS cluster")
 
 	aksCluster := &aksv1alpha1.AKS{}
-	if err := c.mgr.GetClient().Get(ctx, request.NamespacedName, aksCluster); err != nil {
+	if err := c.client.Get(ctx, request.NamespacedName, aksCluster); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
@@ -71,7 +71,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		logger.WithError(err).Error("failed to reconcile the AKS cluster")
 	}
 
-	if err := c.mgr.GetClient().Status().Patch(ctx, aksCluster, client.MergeFrom(original)); err != nil {
+	if err := c.client.Status().Patch(ctx, aksCluster, client.MergeFrom(original)); err != nil {
 		logger.WithError(err).Error("failed to update the status of the AKS cluster")
 
 		return reconcile.Result{}, fmt.Errorf("failed to update the status of the AKS cluster: %w", err)

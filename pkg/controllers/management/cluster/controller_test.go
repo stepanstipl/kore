@@ -289,7 +289,7 @@ var _ = Describe("Cluster Controller", func() {
 	})
 
 	JustBeforeEach(func() {
-		test.Run(controller)
+		test.Initialize(controller)
 
 		if clusterConfig != nil {
 			configJson, _ := json.Marshal(clusterConfig)

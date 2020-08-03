@@ -49,7 +49,6 @@ type Test struct {
 	StatusClient *controllersfakes.FakeStatusWriter
 	Objects      []kubernetes.Object
 	Controller   *controllersfakes.FakeController
-	Manager      *controllersfakes.FakeManager
 	Kore         *korefakes.FakeInterface
 	Logger       *logrus.Logger
 }
@@ -86,8 +85,6 @@ func NewTest(ctx context.Context) *Test {
 		}
 		return kerrors.NewNotFound(gr, name.Name)
 	}
-	test.Manager = &controllersfakes.FakeManager{}
-	test.Manager.GetClientReturns(test.Client)
 	test.Controller = &controllersfakes.FakeController{}
 	test.Kore = &korefakes.FakeInterface{}
 	test.Logger = logrus.New()
@@ -96,8 +93,8 @@ func NewTest(ctx context.Context) *Test {
 	return test
 }
 
-func (t *Test) Run(c controllers.Interface2) {
-	err := c.RunWithDependencies(t.Context, t.Manager, t.Controller, t.Kore)
+func (t *Test) Initialize(c controllers.Interface2) {
+	err := c.Initialize(t.Controller, t.Client, t.Kore)
 	Expect(err).ToNot(HaveOccurred())
 }
 

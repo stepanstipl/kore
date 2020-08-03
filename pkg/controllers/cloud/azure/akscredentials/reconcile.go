@@ -43,12 +43,12 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		"name":      request.NamespacedName.Name,
 		"namespace": request.NamespacedName.Namespace,
 	})
-	ctx := kore.NewContext(context.Background(), logger, c.mgr.GetClient(), c)
+	ctx := kore.NewContext(context.Background(), logger, c.client, c)
 
 	logger.Debug("attempting to reconcile the AKS cluster")
 
 	aksCredentials := &aksv1alpha1.AKSCredentials{}
-	if err := c.mgr.GetClient().Get(ctx, request.NamespacedName, aksCredentials); err != nil {
+	if err := c.client.Get(ctx, request.NamespacedName, aksCredentials); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
@@ -69,7 +69,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 	// TODO: implement AKS credentials verification
 	aksCredentials.Status.Verified = utils.BoolPtr(true)
 
-	if err := c.mgr.GetClient().Status().Patch(ctx, aksCredentials, client.MergeFrom(original)); err != nil {
+	if err := c.client.Status().Patch(ctx, aksCredentials, client.MergeFrom(original)); err != nil {
 		logger.WithError(err).Error("failed to update the status of the AKS cluster")
 
 		return reconcile.Result{}, fmt.Errorf("failed to update the status of the AKS cluster: %w", err)

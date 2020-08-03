@@ -69,7 +69,7 @@ func (c *Controller) delete(
 
 	result, err := func() (reconcile.Result, error) {
 		result, err := helpers.DeleteServices(
-			kore.NewContext(ctx, logger, c.mgr.GetClient(), c),
+			kore.NewContext(ctx, logger, c.client, c),
 			kore.HubAdminTeam,
 			serviceProvider,
 			&serviceProvider.Status.Components,
@@ -78,7 +78,7 @@ func (c *Controller) delete(
 			return result, err
 		}
 
-		complete, err := c.ServiceProviders().Unregister(kore.NewContext(ctx, logger, c.mgr.GetClient(), c), serviceProvider)
+		complete, err := c.ServiceProviders().Unregister(kore.NewContext(ctx, logger, c.client, c), serviceProvider)
 		if err != nil {
 			return reconcile.Result{}, err
 		}

@@ -52,7 +52,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 
 	// @step: retrieve the object from the api
 	creds := &servicesv1.ServiceCredentials{}
-	if err := c.mgr.GetClient().Get(ctx, request.NamespacedName, creds); err != nil {
+	if err := c.client.Get(ctx, request.NamespacedName, creds); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
@@ -63,7 +63,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 	original := creds.DeepCopy()
 
 	defer func() {
-		if err := c.mgr.GetClient().Status().Patch(ctx, creds, client.MergeFrom(original)); err != nil {
+		if err := c.client.Status().Patch(ctx, creds, client.MergeFrom(original)); err != nil {
 			if !kerrors.IsNotFound(err) {
 				logger.WithError(err).Error("failed to update the service credentials status")
 				reconcileResult = reconcile.Result{}
@@ -72,7 +72,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 		}
 	}()
 
-	koreCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c)
+	koreCtx := kore.NewContext(ctx, logger, c.client, c)
 
 	provider, err := c.ServiceProviders().GetProviderForKind(koreCtx, creds.Spec.Kind)
 	if err != nil {
@@ -96,13 +96,13 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 		return reconcile.Result{}, err
 	}
 
-	finalizer := kubernetes.NewFinalizer(c.mgr.GetClient(), finalizerName)
+	finalizer := kubernetes.NewFinalizer(c.client, finalizerName)
 	if finalizer.IsDeletionCandidate(creds) {
 		return c.delete(ctx, logger, service, creds, finalizer, provider)
 	}
 
 	if !kore.IsSystemResource(creds) && !kubernetes.HasOwnerReferenceWithKind(creds, servicesv1.ServiceGVK) {
-		return helpers.EnsureOwnerReference(ctx, c.mgr.GetClient(), creds, service)
+		return helpers.EnsureOwnerReference(ctx, c.client, creds, service)
 	}
 
 	if service.Status.Status != corev1.SuccessStatus {

@@ -51,7 +51,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 	// @step: retrieve the object from the api
 	claim := &gcp.ProjectClaim{}
-	if err := c.mgr.GetClient().Get(ctx, request.NamespacedName, claim); err != nil {
+	if err := c.client.Get(ctx, request.NamespacedName, claim); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
@@ -66,7 +66,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		return c.Delete(request)
 	}
 
-	koreCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c)
+	koreCtx := kore.NewContext(ctx, logger, c.client, c)
 	result, err := func() (reconcile.Result, error) {
 		return controllers.DefaultEnsureHandler.Run(koreCtx,
 			[]controllers.EnsureFunc{
@@ -88,7 +88,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		}
 	}
 
-	if err := controllers.PatchStatus(ctx, c.mgr.GetClient(), claim, original); err != nil {
+	if err := controllers.PatchStatus(ctx, c.client, claim, original); err != nil {
 		logger.WithError(err).Error("failed to update the service provider status")
 
 		return reconcile.Result{}, err
@@ -135,7 +135,7 @@ func (c *Controller) EnsurePending(claim *gcp.ProjectClaim) controllers.EnsureFu
 
 // EnsureProjectUnclaimed is responsible for checking the name is unique
 func (c *Controller) EnsureProjectUnclaimed(claim *gcp.ProjectClaim) controllers.EnsureFunc {
-	cc := c.mgr.GetClient()
+	cc := c.client
 
 	return func(ctx kore.Context) (reconcile.Result, error) {
 		// @step: ensure no claim exists outside of the team

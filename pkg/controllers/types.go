@@ -19,6 +19,8 @@ package controllers
 import (
 	"context"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/appvia/kore/pkg/kore"
 
 	"k8s.io/client-go/rest"
@@ -51,10 +53,16 @@ type Interface interface {
 // Interface2 is a temporary interface to introduce a new run function where the dependencies will be injected
 // TODO: migrate all controllers to the new interface
 type Interface2 interface {
-	Interface
+	RegisterInterface
+	reconcile.Reconciler
+	// Logger returns with a logger
+	Logger() log.Ext1FieldLogger
+	// ManagerOptions returns the manager options
 	ManagerOptions() manager.Options
+	// ControllerOptions returns the controller options
 	ControllerOptions() controller.Options
-	RunWithDependencies(context.Context, manager.Manager, controller.Controller, kore.Interface) error
+	// Initialize registers dependencies and sets up watches
+	Initialize(controller.Controller, client.Client, kore.Interface) error
 }
 
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Client

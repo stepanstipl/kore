@@ -36,7 +36,7 @@ import (
 )
 
 // Load is responsible for loading the expected components
-func (a *Controller) Load(cluster *clustersv1.Cluster, components *kore.ClusterComponents) controllers.EnsureFunc {
+func (c *Controller) Load(cluster *clustersv1.Cluster, components *kore.ClusterComponents) controllers.EnsureFunc {
 	return func(ctx kore.Context) (reconcile.Result, error) {
 		for _, comp := range *components {
 			comp.Object.SetNamespace(cluster.Namespace)
@@ -50,7 +50,7 @@ func (a *Controller) Load(cluster *clustersv1.Cluster, components *kore.ClusterC
 	}
 }
 
-func (a *Controller) setComponents(cluster *clustersv1.Cluster, components *kore.ClusterComponents) controllers.EnsureFunc {
+func (c *Controller) setComponents(cluster *clustersv1.Cluster, components *kore.ClusterComponents) controllers.EnsureFunc {
 	return func(ctx kore.Context) (reconcile.Result, error) {
 		kubernetesObj := &clustersv1.Kubernetes{
 			ObjectMeta: metav1.ObjectMeta{
@@ -69,13 +69,13 @@ func (a *Controller) setComponents(cluster *clustersv1.Cluster, components *kore
 			},
 		})
 
-		kubeAppManager, err := a.createService(ctx, cluster, kore.AppAppManager)
+		kubeAppManager, err := c.createService(ctx, cluster, kore.AppAppManager)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
 		components.Add(kubeAppManager, kubernetesObj)
 
-		fluxHelmOperator, err := a.createService(ctx, cluster, kore.AppHelmOperator)
+		fluxHelmOperator, err := c.createService(ctx, cluster, kore.AppHelmOperator)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -86,7 +86,7 @@ func (a *Controller) setComponents(cluster *clustersv1.Cluster, components *kore
 	}
 }
 
-func (a *Controller) setProviderComponents(provider kore.ClusterProvider, cluster *clustersv1.Cluster, components *kore.ClusterComponents) controllers.EnsureFunc {
+func (c *Controller) setProviderComponents(provider kore.ClusterProvider, cluster *clustersv1.Cluster, components *kore.ClusterComponents) controllers.EnsureFunc {
 	return func(ctx kore.Context) (reconcile.Result, error) {
 		if err := provider.SetComponents(ctx, cluster, components); err != nil {
 			return reconcile.Result{}, err
@@ -100,8 +100,8 @@ func (a *Controller) setProviderComponents(provider kore.ClusterProvider, cluste
 	}
 }
 
-func (a *Controller) createService(ctx context.Context, cluster *clustersv1.Cluster, name string) (*servicesv1.Service, error) {
-	servicePlan, err := a.ServicePlans().Get(ctx, "app-"+name)
+func (c *Controller) createService(ctx context.Context, cluster *clustersv1.Cluster, name string) (*servicesv1.Service, error) {
+	servicePlan, err := c.ServicePlans().Get(ctx, "app-"+name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get service plan %q: %w", "app-"+name, err)
 	}
@@ -114,7 +114,7 @@ func (a *Controller) createService(ctx context.Context, cluster *clustersv1.Clus
 	return &service, nil
 }
 
-func (a *Controller) beforeComponentsUpdate(cluster *clustersv1.Cluster, components *kore.ClusterComponents) controllers.EnsureFunc {
+func (c *Controller) beforeComponentsUpdate(cluster *clustersv1.Cluster, components *kore.ClusterComponents) controllers.EnsureFunc {
 	return func(ctx kore.Context) (reconcile.Result, error) {
 		providerComponent := components.Find(func(comp kore.ClusterComponent) bool { return comp.IsProvider })
 
@@ -137,7 +137,7 @@ func (a *Controller) beforeComponentsUpdate(cluster *clustersv1.Cluster, compone
 }
 
 // SetClusterStatus is responsible for ensure the status of the cluster
-func (a *Controller) SetClusterStatus(cluster *clustersv1.Cluster, components *kore.ClusterComponents) controllers.EnsureFunc {
+func (c *Controller) SetClusterStatus(cluster *clustersv1.Cluster, components *kore.ClusterComponents) controllers.EnsureFunc {
 	return func(ctx kore.Context) (reconcile.Result, error) {
 		cluster.Status.Status = corev1.SuccessStatus
 		cluster.Status.Message = "The cluster has been created successfully"

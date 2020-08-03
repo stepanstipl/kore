@@ -67,7 +67,7 @@ func (c *Controller) delete(
 
 	result, err := func() (reconcile.Result, error) {
 		result, err := helpers.DeleteServices(
-			kore.NewContext(ctx, logger, c.mgr.GetClient(), c.kore),
+			kore.NewContext(ctx, logger, c.client, c.kore),
 			kore.HubAdminTeam,
 			feature,
 			&feature.Status.Components,

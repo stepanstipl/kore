@@ -42,7 +42,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 	})
 	logger.Debug("attempting to cleanup the gcp projects")
 
-	koreCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c)
+	koreCtx := kore.NewContext(ctx, logger, c.client, c)
 	result, err := func() (reconcile.Result, error) {
 		return controllers.DefaultEnsureHandler.Run(koreCtx,
 			[]controllers.EnsureFunc{
@@ -60,7 +60,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 // EnsureRemoval is responsible for deleting any project no longer claims
 func (c *Controller) EnsureRemoval() controllers.EnsureFunc {
-	cc := c.mgr.GetClient()
+	cc := c.client
 
 	return func(ctx kore.Context) (reconcile.Result, error) {
 		// @logic

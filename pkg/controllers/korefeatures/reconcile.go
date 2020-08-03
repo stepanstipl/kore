@@ -50,7 +50,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 
 	// @step: retrieve the object from the api
 	feature := &configv1.KoreFeature{}
-	if err := c.mgr.GetClient().Get(ctx, request.NamespacedName, feature); err != nil {
+	if err := c.client.Get(ctx, request.NamespacedName, feature); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
@@ -63,7 +63,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 	logger = logger.WithField("feature", feature.Name)
 
 	defer func() {
-		if err := c.mgr.GetClient().Status().Patch(ctx, feature, client.MergeFrom(original)); err != nil {
+		if err := c.client.Status().Patch(ctx, feature, client.MergeFrom(original)); err != nil {
 			if !kerrors.IsNotFound(err) {
 				logger.WithError(err).Error("failed to update the feature status")
 				reconcileResult = reconcile.Result{}
@@ -72,7 +72,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 		}
 	}()
 
-	finalizer := kubernetes.NewFinalizer(c.mgr.GetClient(), finalizerName)
+	finalizer := kubernetes.NewFinalizer(c.client, finalizerName)
 	if finalizer.IsDeletionCandidate(feature) {
 		return c.delete(ctx, logger, feature, finalizer)
 	}
@@ -94,7 +94,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 				}
 
 				result, err = helpers.EnsureServices(
-					kore.NewContext(ctx, logger, c.mgr.GetClient(), c.kore),
+					kore.NewContext(ctx, logger, c.client, c.kore),
 					services,
 					feature,
 					&feature.Status.Components,
@@ -107,7 +107,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 			},
 		}
 
-		koreCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c.kore)
+		koreCtx := kore.NewContext(ctx, logger, c.client, c.kore)
 		for _, handler := range ensure {
 			result, err := handler(koreCtx)
 			if err != nil {
