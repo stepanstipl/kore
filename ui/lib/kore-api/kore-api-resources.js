@@ -198,8 +198,8 @@ export default class KoreApiResources {
       generateEKSCredentialsResource: (resourceName, values, secretName) => this.generateEKSCredentialsResource(team, resourceName, values, secretName),
       generateGKECredentialsResource: (resourceName, values, secretName) => this.generateGKECredentialsResource(team, resourceName, values, secretName),
       generateAKSCredentialsResource: (resourceName, values, secretName) => this.generateAKSCredentialsResource(team, resourceName, values, secretName),
-      generateGCPOrganizationResource: (values, secretName) => this.generateGCPOrganizationResource(team, values, secretName),
-      generateAWSOrganizationResource: (values, secretName) => this.generateAWSOrganizationResource(team, values, secretName),
+      generateGCPOrganizationResource: (values, resourceName, secretName) => this.generateGCPOrganizationResource(team, resourceName, values, secretName),
+      generateAWSOrganizationResource: (values, resourceName, secretName) => this.generateAWSOrganizationResource(team, resourceName, values, secretName),
       generateClusterResource: (user, values, plan, planValues, credentials) => this.generateClusterResource(team, user, values, plan, planValues, credentials),
       generateNamespaceClaimResource: (cluster, resourceName, values) => this.generateNamespaceClaimResource(team, cluster, resourceName, values),
       generateServiceResource: (cluster, values, plan, planValues) => this.generateServiceResource(team, cluster, values, plan, planValues),
@@ -278,12 +278,12 @@ export default class KoreApiResources {
     return resource
   }
 
-  generateGCPOrganizationResource(team, values, secretName) {
+  generateGCPOrganizationResource(team, resourceName, values, secretName) {
     const resource = this.newResource({
       type: 'V1alpha1Organization',
       apiVersion: 'gcp.compute.kore.appvia.io/v1alpha1',
       kind: 'Organization',
-      name: values.name,
+      name: resourceName,
       namespace: team
     })
 
@@ -298,12 +298,12 @@ export default class KoreApiResources {
     return resource
   }
 
-  generateAWSOrganizationResource(team, values, secretName) {
+  generateAWSOrganizationResource(team, resourceName, values, secretName) {
     const resource = this.newResource({
       type: 'V1alpha1AWSOrganization',
       apiVersion: 'aws.org.kore.appvia.io/v1alpha1',
       kind: 'AWSOrganization',
-      name: values.name,
+      name: resourceName,
       namespace: team
     })
 

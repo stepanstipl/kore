@@ -238,7 +238,7 @@ describe('KoreApiResources', () => {
     })
 
     it('works when using the team wrapper', () => {
-      const eksCredential = koreApiResources.team('team1').generateEKSCredentialsResource('team1', resourceName, values, 'my-secret')
+      const eksCredential = koreApiResources.team('team1').generateEKSCredentialsResource(resourceName, values, 'my-secret')
       expect(eksCredential).toBeDefined()
     })
   })
@@ -259,7 +259,7 @@ describe('KoreApiResources', () => {
     })
 
     it('works when using the team wrapper', () => {
-      const gkeCredential = koreApiResources.team('team1').generateGKECredentialsResource('team1', resourceName, values, 'my-secret')
+      const gkeCredential = koreApiResources.team('team1').generateGKECredentialsResource(resourceName, values, 'my-secret')
       expect(gkeCredential).toBeDefined()
     })
   })
@@ -286,24 +286,25 @@ describe('KoreApiResources', () => {
     })
 
     it('works when using the team wrapper', () => {
-      const aksCredential = koreApiResources.team('team1').generateAKSCredentialsResource('team1', resourceName, values, 'my-secret')
+      const aksCredential = koreApiResources.team('team1').generateAKSCredentialsResource(resourceName, values, 'my-secret')
       expect(aksCredential).toBeDefined()
     })
   })
 
   describe('#generateGCPOrganizationResource', () => {
     const values = {
-      name: 'gcp',
+      name: 'GCP org',
       parentID: '1234567890',
       billingAccount: 'ABC-124'
     }
+    const resourceName = 'gcp-org'
 
     it('generates expected resource', () => {
-      const gcpOrg = koreApiResources.generateGCPOrganizationResource('team1', values, 'my-secret')
+      const gcpOrg = koreApiResources.generateGCPOrganizationResource('team1', resourceName, values, 'my-secret')
       expect(gcpOrg).toBeDefined()
       expect(gcpOrg.apiVersion).toBe('gcp.compute.kore.appvia.io/v1alpha1')
       expect(gcpOrg.kind).toBe('Organization')
-      expect(gcpOrg.metadata.name).toBe(values.name)
+      expect(gcpOrg.metadata.name).toBe(resourceName)
       expect(gcpOrg.metadata.namespace).toBe('team1')
       expect(gcpOrg.spec.parentID).toBe(values.parentID)
       expect(gcpOrg.spec.billingAccount).toBe(values.billingAccount)
@@ -311,8 +312,42 @@ describe('KoreApiResources', () => {
     })
 
     it('works when using the team wrapper', () => {
-      const gcpOrg = koreApiResources.team('team1').generateGCPOrganizationResource('team1', values, 'my-secret')
+      const gcpOrg = koreApiResources.team('team1').generateGCPOrganizationResource(resourceName, values, 'my-secret')
       expect(gcpOrg).toBeDefined()
+    })
+  })
+
+  describe('#generateAWSOrganizationResource', () => {
+    const values = {
+      name: 'AWS org',
+      ouName: 'Custom',
+      region: 'eu-west-1',
+      roleARN: 'arn:aws:iam::333444555666:role/some-role',
+      ssoUserFirstName: 'Joe',
+      ssoUserLastName: 'Bloggs',
+      ssoUserEmailAddress: 'joe.bloggs@appvia.io'
+    }
+    const resourceName = 'aw-org'
+
+    it('generates expected resource', () => {
+      const awsOrg = koreApiResources.generateAWSOrganizationResource('team1', resourceName, values, 'my-secret')
+      expect(awsOrg).toBeDefined()
+      expect(awsOrg.apiVersion).toBe('aws.org.kore.appvia.io/v1alpha1')
+      expect(awsOrg.kind).toBe('AWSOrganization')
+      expect(awsOrg.metadata.name).toBe(resourceName)
+      expect(awsOrg.metadata.namespace).toBe('team1')
+      expect(awsOrg.spec.ouName).toBe(values.ouName)
+      expect(awsOrg.spec.region).toBe(values.region)
+      expect(awsOrg.spec.roleARN).toBe(values.roleARN)
+      expect(awsOrg.spec.ssoUser.firstName).toBe(values.ssoUserFirstName)
+      expect(awsOrg.spec.ssoUser.lastName).toBe(values.ssoUserLastName)
+      expect(awsOrg.spec.ssoUser.email).toBe(values.ssoUserEmailAddress)
+      expect(awsOrg.spec.credentialsRef).toEqual({ name: 'my-secret', namespace: 'team1' })
+    })
+
+    it('works when using the team wrapper', () => {
+      const awsOrg = koreApiResources.team('team1').generateAWSOrganizationResource(resourceName, values, 'my-secret')
+      expect(awsOrg).toBeDefined()
     })
   })
 
