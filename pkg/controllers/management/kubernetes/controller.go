@@ -44,11 +44,7 @@ type k8sCtrl struct {
 }
 
 func init() {
-	if err := controllers.Register(&k8sCtrl{}); err != nil {
-		log.WithFields(log.Fields{
-			"error": err.Error(),
-		}).Fatal("failed to register the kubernetes controller")
-	}
+	controllers.Register(&k8sCtrl{})
 }
 
 // Name returns the name of the controller

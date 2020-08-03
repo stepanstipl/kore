@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/appvia/kore/pkg/kore"
+
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -43,13 +45,13 @@ import (
 const LabelGetError = "testing.kore.appvia.io/get-error"
 
 type Test struct {
-	Context      context.Context
-	Cancel       context.CancelFunc
+	context      context.Context
+	cancel       context.CancelFunc
+	Context      kore.Context
 	Client       *controllersfakes.FakeClient
 	StatusClient *controllersfakes.FakeStatusWriter
 	Objects      []kubernetes.Object
 	Controller   *controllersfakes.FakeController
-	Manager      *controllersfakes.FakeManager
 	Kore         *korefakes.FakeInterface
 	Logger       *logrus.Logger
 }
@@ -57,7 +59,7 @@ type Test struct {
 func NewTest(ctx context.Context) *Test {
 	test := &Test{}
 
-	test.Context, test.Cancel = context.WithCancel(ctx)
+	test.context, test.cancel = context.WithCancel(ctx)
 
 	test.StatusClient = &controllersfakes.FakeStatusWriter{}
 	test.Client = &controllersfakes.FakeClient{}
@@ -86,23 +88,23 @@ func NewTest(ctx context.Context) *Test {
 		}
 		return kerrors.NewNotFound(gr, name.Name)
 	}
-	test.Manager = &controllersfakes.FakeManager{}
-	test.Manager.GetClientReturns(test.Client)
 	test.Controller = &controllersfakes.FakeController{}
 	test.Kore = &korefakes.FakeInterface{}
 	test.Logger = logrus.New()
 	test.Logger.Out = GinkgoWriter
 
+	test.Context = kore.NewContext(test.context, test.Logger, test.Client, test.Kore)
+
 	return test
 }
 
-func (t *Test) Run(c controllers.Interface2) {
-	err := c.RunWithDependencies(t.Context, t.Manager, t.Controller, t.Kore)
+func (t *Test) Initialize(c controllers.Interface2) {
+	err := c.Initialize(kore.NewContext(t.Context, t.Logger, t.Client, t.Kore), t.Controller)
 	Expect(err).ToNot(HaveOccurred())
 }
 
 func (t *Test) Stop() {
-	t.Cancel()
+	t.cancel()
 }
 
 func (t *Test) ExpectCreate(i int, obj interface{}) {

@@ -44,9 +44,7 @@ type nsCtrl struct {
 }
 
 func init() {
-	if err := controllers.Register(&nsCtrl{}); err != nil {
-		log.WithError(err).Fatal("failed to register namespaceclaim controller")
-	}
+	controllers.Register(&nsCtrl{})
 }
 
 // Run is called when the controller is started

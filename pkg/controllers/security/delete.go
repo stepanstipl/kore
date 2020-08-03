@@ -17,43 +17,30 @@
 package security
 
 import (
-	"context"
+	"github.com/appvia/kore/pkg/kore"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
-	"github.com/appvia/kore/pkg/utils"
 
-	log "github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 // Delete is responsible handling any cleaup
-func (c *Controller) Delete(resource runtime.Object) (reconcile.Result, error) {
-	ctx := context.Background()
+func (c *Controller) Delete(ctx kore.Context, resource runtime.Object) (reconcile.Result, error) {
+	ctx.Logger().Debug("attempting to reconcile the security scans deletion")
 
-	mo, err := utils.GetMetaObject(resource)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	logger := c.logger.WithFields(log.Fields{
-		"kind":      c.kind,
-		"name":      mo.GetName(),
-		"namespace": mo.GetNamespace(),
-	})
-	logger.Debug("attempting to reconcile the security scans deletion")
-
+	var err error
 	switch c.kind {
 	case "Cluster":
 		o := resource.(*clustersv1.Cluster)
-		err = c.kore.Security().ArchiveResourceScans(ctx, o.TypeMeta, o.ObjectMeta)
+		err = ctx.Kore().Security().ArchiveResourceScans(ctx, o.TypeMeta, o.ObjectMeta)
 	case "Plan":
 		o := resource.(*configv1.Plan)
-		err = c.kore.Security().ArchiveResourceScans(ctx, o.TypeMeta, o.ObjectMeta)
+		err = ctx.Kore().Security().ArchiveResourceScans(ctx, o.TypeMeta, o.ObjectMeta)
 	}
 	if err != nil {
-		logger.WithError(err).Warning("error while archiving security scans")
+		ctx.Logger().WithError(err).Warning("error while archiving security scans")
 
 		return reconcile.Result{}, err
 	}

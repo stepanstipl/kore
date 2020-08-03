@@ -218,7 +218,7 @@ var _ = Describe("Cluster Controller", func() {
 
 	BeforeEach(func() {
 		test = controllerstest.NewTest(context.Background())
-		controller = clusterctrl.NewController(test.Logger)
+		controller = &clusterctrl.Controller{}
 		provider = &korefakes.FakeClusterProvider{}
 		provider.TypeReturns("TEST")
 
@@ -289,14 +289,14 @@ var _ = Describe("Cluster Controller", func() {
 	})
 
 	JustBeforeEach(func() {
-		test.Run(controller)
+		test.Initialize(controller)
 
 		if clusterConfig != nil {
 			configJson, _ := json.Marshal(clusterConfig)
 			cluster.Spec.Configuration = v1beta1.JSON{Raw: configJson}
 		}
 
-		reconcileResult, reconcileErr = controller.Reconcile(reconcile.Request{NamespacedName: name})
+		reconcileResult, reconcileErr = controller.Reconcile(test.Context, reconcile.Request{NamespacedName: name})
 	})
 
 	AfterEach(func() {

@@ -17,7 +17,6 @@
 package awsaccountclaims
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -28,7 +27,6 @@ import (
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
-	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -40,22 +38,16 @@ const (
 )
 
 // Reconcile is the entrypoint for the reconciliation logic
-func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	ctx := context.Background()
-
-	logger := c.logger.WithFields(log.Fields{
-		"name":      request.NamespacedName.Name,
-		"namespace": request.NamespacedName.Namespace,
-	})
-	logger.Debug("attempting to reconcile the service provider")
+func (c *Controller) Reconcile(ctx kore.Context, request reconcile.Request) (reconcile.Result, error) {
+	ctx.Logger().Debug("attempting to reconcile the service provider")
 
 	// @step: retrieve the object from the api
 	claim := &aws.AWSAccountClaim{}
-	if err := c.mgr.GetClient().Get(ctx, request.NamespacedName, claim); err != nil {
+	if err := ctx.Client().Get(ctx, request.NamespacedName, claim); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
-		logger.WithError(err).Error("trying to retrieve service provider from api")
+		ctx.Logger().WithError(err).Error("trying to retrieve service provider from api")
 
 		return reconcile.Result{}, err
 	}
@@ -63,12 +55,11 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 	// @step: are we deleting the claim?
 	if !claim.GetDeletionTimestamp().IsZero() {
-		return c.Delete(request)
+		return c.Delete(ctx, request)
 	}
 
-	koreCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c)
 	result, err := func() (reconcile.Result, error) {
-		return controllers.DefaultEnsureHandler.Run(koreCtx,
+		return controllers.DefaultEnsureHandler.Run(ctx,
 			[]controllers.EnsureFunc{
 				c.EnsureFinalizer(claim),
 				c.EnsurePending(claim),
@@ -79,7 +70,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 	}()
 
 	if err != nil {
-		logger.WithError(err).Error("failed to reconcile the gcp project claim")
+		ctx.Logger().WithError(err).Error("failed to reconcile the gcp project claim")
 
 		claim.Status.Status = corev1.ErrorStatus
 
@@ -88,8 +79,8 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 		}
 	}
 
-	if err := controllers.PatchStatus(ctx, c.mgr.GetClient(), claim, original); err != nil {
-		logger.WithError(err).Error("failed to update the service provider status")
+	if err := controllers.PatchStatus(ctx, ctx.Client(), claim, original); err != nil {
+		ctx.Logger().WithError(err).Error("failed to update the service provider status")
 
 		return reconcile.Result{}, err
 	}
@@ -135,13 +126,11 @@ func (c *Controller) EnsurePending(claim *aws.AWSAccountClaim) controllers.Ensur
 
 // EnsureAccountUnclaimed is responsible for checking the name is unique
 func (c *Controller) EnsureAccountUnclaimed(claim *aws.AWSAccountClaim) controllers.EnsureFunc {
-	cc := c.mgr.GetClient()
-
 	return func(ctx kore.Context) (reconcile.Result, error) {
 		// @step: ensure no claim exists outside of the team
 		list := &aws.AWSAccountList{}
-		if err := cc.List(ctx, list, client.InNamespace("")); err != nil {
-			c.logger.WithError(err).Error("trying to retrieve all the projects")
+		if err := ctx.Client().List(ctx, list, client.InNamespace("")); err != nil {
+			ctx.Logger().WithError(err).Error("trying to retrieve all the projects")
 
 			return reconcile.Result{}, err
 		}
@@ -177,7 +166,7 @@ func (c *Controller) EnsureAccount(claim *aws.AWSAccountClaim) controllers.Ensur
 
 		found, err := kubernetes.GetIfExists(ctx, ctx.Client(), account)
 		if err != nil {
-			c.logger.WithError(err).Error("trying to check for account existence")
+			ctx.Logger().WithError(err).Error("trying to check for account existence")
 
 			return reconcile.Result{}, err
 		}
@@ -187,7 +176,7 @@ func (c *Controller) EnsureAccount(claim *aws.AWSAccountClaim) controllers.Ensur
 			account.Spec.Organization = claim.Spec.Organization
 
 			if _, err := kubernetes.CreateOrUpdate(ctx, ctx.Client(), account); err != nil {
-				c.logger.WithError(err).Error("trying to create the account")
+				ctx.Logger().WithError(err).Error("trying to create the account")
 
 				return reconcile.Result{}, err
 			}

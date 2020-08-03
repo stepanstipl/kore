@@ -43,11 +43,7 @@ type pspCtrl struct {
 }
 
 func init() {
-	if err := controllers.Register(&pspCtrl{}); err != nil {
-		log.WithFields(log.Fields{
-			"error": err.Error(),
-		}).Fatal("failed to register the pod security controller")
-	}
+	controllers.Register(&pspCtrl{})
 }
 
 // Run is called when the controller is started

@@ -17,7 +17,6 @@
 package cluster
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -25,8 +24,6 @@ import (
 	"github.com/appvia/kore/pkg/kore"
 
 	"github.com/appvia/kore/pkg/utils/validation"
-
-	log "github.com/sirupsen/logrus"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -39,13 +36,8 @@ import (
 )
 
 // Delete is responsible for deleting the cluster and all it's resources
-func (a *Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (reconcile.Result, error) {
-	logger := a.logger.WithFields(log.Fields{
-		"name":      cluster.Name,
-		"namespace": cluster.Namespace,
-	})
-
-	logger.Debug("attempting to delete the cluster from the api")
+func (c *Controller) Delete(ctx kore.Context, cluster *clustersv1.Cluster) (reconcile.Result, error) {
+	ctx.Logger().Debug("attempting to delete the cluster from the api")
 
 	original := cluster.DeepCopyObject()
 
@@ -57,22 +49,21 @@ func (a *Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (r
 
 		components := &kore.ClusterComponents{}
 
-		koreCtx := kore.NewContext(ctx, logger, a.mgr.GetClient(), a)
-		return controllers.DefaultEnsureHandler.Run(koreCtx,
+		return controllers.DefaultEnsureHandler.Run(ctx,
 			[]controllers.EnsureFunc{
-				a.Deleting(cluster),
-				a.CheckDelete(cluster),
-				a.setComponents(cluster, components),
-				a.setProviderComponents(provider, cluster, components),
-				a.Load(cluster, components),
-				a.Cleanup(cluster, components),
-				a.Remove(cluster, components),
-				a.RemoveFinalizer(cluster),
+				c.Deleting(cluster),
+				c.CheckDelete(cluster),
+				c.setComponents(cluster, components),
+				c.setProviderComponents(provider, cluster, components),
+				c.Load(cluster, components),
+				c.Cleanup(cluster, components),
+				c.Remove(cluster, components),
+				c.RemoveFinalizer(cluster),
 			},
 		)
 	}()
 	if err != nil {
-		logger.WithError(err).Error("trying to delete the cluster")
+		ctx.Logger().WithError(err).Error("trying to delete the cluster")
 
 		if controllers.IsCriticalError(err) {
 			cluster.Status.Status = corev1.FailureStatus
@@ -80,9 +71,9 @@ func (a *Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (r
 		}
 	}
 
-	if err := a.mgr.GetClient().Status().Patch(ctx, cluster, client.MergeFrom(original)); err != nil {
+	if err := ctx.Client().Status().Patch(ctx, cluster, client.MergeFrom(original)); err != nil {
 		if !kerrors.IsNotFound(err) {
-			logger.WithError(err).Error("failed to update the cluster status")
+			ctx.Logger().WithError(err).Error("failed to update the cluster status")
 
 			return reconcile.Result{}, err
 		}
@@ -92,7 +83,7 @@ func (a *Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (r
 }
 
 // Deleting ensures the state of the cluster is set to pending if not
-func (a *Controller) Deleting(cluster *clustersv1.Cluster) controllers.EnsureFunc {
+func (c *Controller) Deleting(cluster *clustersv1.Cluster) controllers.EnsureFunc {
 	return func(ctx kore.Context) (reconcile.Result, error) {
 		cluster.Status.Message = ""
 
@@ -107,9 +98,9 @@ func (a *Controller) Deleting(cluster *clustersv1.Cluster) controllers.EnsureFun
 }
 
 // CheckDelete checks whether the cluster can be deleted
-func (a *Controller) CheckDelete(cluster *clustersv1.Cluster) controllers.EnsureFunc {
+func (c *Controller) CheckDelete(cluster *clustersv1.Cluster) controllers.EnsureFunc {
 	return func(ctx kore.Context) (reconcile.Result, error) {
-		if err := a.Teams().Team(cluster.Namespace).Clusters().CheckDelete(ctx, cluster); err != nil {
+		if err := ctx.Kore().Teams().Team(cluster.Namespace).Clusters().CheckDelete(ctx, cluster); err != nil {
 			if dv, ok := err.(validation.ErrDependencyViolation); ok {
 				cluster.Status.Message = dv.Error()
 				return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
@@ -121,7 +112,7 @@ func (a *Controller) CheckDelete(cluster *clustersv1.Cluster) controllers.Ensure
 }
 
 // Remove is responsible for removing the resources one by one
-func (a *Controller) Remove(cluster *clustersv1.Cluster, components *kore.ClusterComponents) controllers.EnsureFunc {
+func (c *Controller) Remove(cluster *clustersv1.Cluster, components *kore.ClusterComponents) controllers.EnsureFunc {
 	return func(ctx kore.Context) (reconcile.Result, error) {
 		// @logic
 		// - we walk the components in reverse
@@ -130,7 +121,7 @@ func (a *Controller) Remove(cluster *clustersv1.Cluster, components *kore.Cluste
 		// - we wait for it to be delete and then to move to the next
 
 		for i := len(*components) - 1; i >= 0; i-- {
-			result, err := a.removeComponent(ctx, cluster, components, (*components)[i])
+			result, err := c.removeComponent(ctx, cluster, components, (*components)[i])
 			if err != nil || result.Requeue || result.RequeueAfter > 0 {
 				return result, err
 			}
@@ -143,7 +134,7 @@ func (a *Controller) Remove(cluster *clustersv1.Cluster, components *kore.Cluste
 	}
 }
 
-func (a *Controller) removeComponent(
+func (c *Controller) removeComponent(
 	ctx kore.Context, cluster *clustersv1.Cluster, components *kore.ClusterComponents, comp *kore.ClusterComponent,
 ) (reconcile.Result, error) {
 	statusComp, exists := cluster.Status.Components.GetComponent(comp.ComponentName())
@@ -151,7 +142,7 @@ func (a *Controller) removeComponent(
 		return reconcile.Result{}, nil
 	}
 
-	a.logger.WithField(
+	ctx.Logger().WithField(
 		"resource", comp.ComponentName(),
 	).Debug("attempting to delete the resource from the cluster")
 
@@ -161,7 +152,7 @@ func (a *Controller) removeComponent(
 		cluster.Status.Components.SetCondition(condition)
 	}()
 
-	found, err := kubernetes.CheckIfExists(ctx, a.mgr.GetClient(), comp.Object)
+	found, err := kubernetes.CheckIfExists(ctx, ctx.Client(), comp.Object)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -181,7 +172,7 @@ func (a *Controller) removeComponent(
 	condition.Status = corev1.DeletingStatus
 
 	if !IsDeleting(comp.Object) {
-		if err := kubernetes.DeleteIfExists(ctx, a.mgr.GetClient(), comp.Object); err != nil {
+		if err := kubernetes.DeleteIfExists(ctx, ctx.Client(), comp.Object); err != nil {
 			return reconcile.Result{}, err
 		}
 		return reconcile.Result{Requeue: true}, nil
@@ -203,7 +194,7 @@ func (a *Controller) removeComponent(
 }
 
 // RemoveFinalizer is responsible for removing the finalizer
-func (a *Controller) RemoveFinalizer(cluster *clustersv1.Cluster) controllers.EnsureFunc {
+func (c *Controller) RemoveFinalizer(cluster *clustersv1.Cluster) controllers.EnsureFunc {
 	return func(ctx kore.Context) (reconcile.Result, error) {
 		if cluster.Status.Status != corev1.DeletedStatus {
 			return reconcile.Result{RequeueAfter: 20 * time.Second}, nil

@@ -63,7 +63,7 @@ func NewEmpty() Scanner {
 type scannerImpl struct {
 	rulesLock *sync.RWMutex
 	rules     []Rule
-	logger    log.FieldLogger
+	logger    log.Ext1FieldLogger
 }
 
 func (s *scannerImpl) RegisterRule(rule Rule) {

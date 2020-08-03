@@ -26,7 +26,6 @@ import (
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
-	log "github.com/sirupsen/logrus"
 	k8scorev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,19 +33,18 @@ import (
 )
 
 func (c *Controller) delete(
-	ctx context.Context,
-	logger log.FieldLogger,
+	ctx kore.Context,
 	service *servicesv1.Service,
 	serviceCreds *servicesv1.ServiceCredentials,
 	finalizer *kubernetes.Finalizer,
 	provider kore.ServiceProvider,
 ) (reconcile.Result, error) {
-	logger.Debug("attempting to delete service credentials from the api")
+	ctx.Logger().Debug("attempting to delete service credentials from the api")
 
 	if serviceCreds.Status.Status == corev1.DeletedStatus {
 		err := finalizer.Remove(serviceCreds)
 		if err != nil {
-			logger.WithError(err).Error("failed to remove the finalizer from the service credentials")
+			ctx.Logger().WithError(err).Error("failed to remove the finalizer from the service credentials")
 			return reconcile.Result{}, err
 		}
 		return reconcile.Result{}, nil
@@ -59,7 +57,7 @@ func (c *Controller) delete(
 
 	result, err := func() (reconcile.Result, error) {
 		// @step: create client for the cluster credentials
-		client, err := controllers.CreateClient(context.Background(), c.mgr.GetClient(), serviceCreds.Spec.Cluster)
+		client, err := controllers.CreateClient(context.Background(), ctx.Client(), serviceCreds.Spec.Cluster)
 		if err != nil {
 			serviceCreds.Status.Components.SetCondition(corev1.Component{
 				Name:    ComponentKubernetesSecret,
@@ -98,7 +96,7 @@ func (c *Controller) delete(
 		serviceCreds.Status.Components.SetStatus(ComponentKubernetesSecret, corev1.DeletedStatus, "", "")
 
 		result, err := provider.DeleteCredentials(
-			kore.NewContext(ctx, logger, c.mgr.GetClient(), c),
+			ctx,
 			service, serviceCreds,
 		)
 		if err != nil {
@@ -120,7 +118,7 @@ func (c *Controller) delete(
 	}()
 
 	if err != nil {
-		logger.WithError(err).Error("failed to delete the service credentials")
+		ctx.Logger().WithError(err).Error("failed to delete the service credentials")
 
 		serviceCreds.Status.Status = corev1.ErrorStatus
 		serviceCreds.Status.Message = err.Error()

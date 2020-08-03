@@ -50,9 +50,7 @@ type crCtrl struct {
 }
 
 func init() {
-	if err := controllers.Register(&crCtrl{}); err != nil {
-		log.WithError(err).Fatal("failed to register cluster roles controller")
-	}
+	controllers.Register(&crCtrl{})
 }
 
 // Name returns the name of the controller

@@ -17,7 +17,6 @@
 package features
 
 import (
-	"context"
 	"time"
 
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
@@ -28,22 +27,20 @@ import (
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 	"github.com/appvia/kore/pkg/utils/validation"
 
-	log "github.com/sirupsen/logrus"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 func (c *Controller) delete(
-	ctx context.Context,
-	logger log.FieldLogger,
+	ctx kore.Context,
 	feature *configv1.KoreFeature,
 	finalizer *kubernetes.Finalizer,
 ) (reconcile.Result, error) {
-	logger.Debug("attempting to delete feature from the api")
+	ctx.Logger().Debug("attempting to delete feature from the api")
 
 	if feature.Status.Status == corev1.DeletedStatus {
 		err := finalizer.Remove(feature)
 		if err != nil {
-			logger.WithError(err).Error("failed to remove the finalizer from the service provider")
+			ctx.Logger().WithError(err).Error("failed to remove the finalizer from the service provider")
 			return reconcile.Result{}, err
 		}
 		return reconcile.Result{}, nil
@@ -55,7 +52,7 @@ func (c *Controller) delete(
 		return reconcile.Result{Requeue: true}, nil
 	}
 
-	if err := c.kore.Features().CheckDelete(ctx, feature); err != nil {
+	if err := ctx.Kore().Features().CheckDelete(ctx, feature); err != nil {
 		if dv, ok := err.(validation.ErrDependencyViolation); ok {
 			feature.Status.Message = dv.Error()
 			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
@@ -67,7 +64,7 @@ func (c *Controller) delete(
 
 	result, err := func() (reconcile.Result, error) {
 		result, err := helpers.DeleteServices(
-			kore.NewContext(ctx, logger, c.mgr.GetClient(), c.kore),
+			ctx,
 			kore.HubAdminTeam,
 			feature,
 			&feature.Status.Components,
@@ -80,7 +77,7 @@ func (c *Controller) delete(
 	}()
 
 	if err != nil {
-		logger.WithError(err).Error("failed to delete the feature")
+		ctx.Logger().WithError(err).Error("failed to delete the feature")
 
 		feature.Status.Status = corev1.ErrorStatus
 		feature.Status.Message = err.Error()

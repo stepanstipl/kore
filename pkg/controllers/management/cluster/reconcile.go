@@ -17,7 +17,6 @@
 package cluster
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 	"time"
@@ -39,21 +38,16 @@ const (
 )
 
 // Reconcile is the entrypoint for the reconciliation logic
-func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	ctx := context.Background()
-	logger := a.logger.WithFields(log.Fields{
-		"name":      request.NamespacedName.Name,
-		"namespace": request.NamespacedName.Namespace,
-	})
-	logger.Debug("attempting to reconcile the cluster")
+func (c *Controller) Reconcile(ctx kore.Context, request reconcile.Request) (reconcile.Result, error) {
+	ctx.Logger().Debug("attempting to reconcile the cluster")
 
 	// @step: retrieve the object from the api
 	cluster := &clustersv1.Cluster{}
-	if err := a.mgr.GetClient().Get(ctx, request.NamespacedName, cluster); err != nil {
+	if err := ctx.Client().Get(ctx, request.NamespacedName, cluster); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
-		logger.WithError(err).Error("trying to retrieve cluster from api")
+		ctx.Logger().WithError(err).Error("trying to retrieve cluster from api")
 
 		return reconcile.Result{}, err
 	}
@@ -61,16 +55,16 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 	if cluster.Annotations[kore.AnnotationSystem] == kore.AnnotationValueTrue {
 		cluster.Status.Status = corev1.SuccessStatus
-		if err := a.mgr.GetClient().Status().Patch(ctx, cluster, client.MergeFrom(original)); err != nil {
-			logger.WithError(err).Error("failed to update the cluster status")
+		if err := ctx.Client().Status().Patch(ctx, cluster, client.MergeFrom(original)); err != nil {
+			ctx.Logger().WithError(err).Error("failed to update the cluster status")
 			return reconcile.Result{}, err
 		}
 		return reconcile.Result{}, nil
 	}
 
-	finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
+	finalizer := kubernetes.NewFinalizer(ctx.Client(), finalizerName)
 	if finalizer.IsDeletionCandidate(cluster) {
-		return a.Delete(ctx, cluster)
+		return c.Delete(ctx, cluster)
 	}
 
 	// @logic:
@@ -88,30 +82,29 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 		components := &kore.ClusterComponents{}
 
-		koreCtx := kore.NewContext(ctx, logger, a.mgr.GetClient(), a)
-		return controllers.DefaultEnsureHandler.Run(koreCtx,
+		return controllers.DefaultEnsureHandler.Run(ctx,
 			[]controllers.EnsureFunc{
-				a.AddFinalizer(cluster),
-				a.SetPending(cluster),
-				a.setComponents(cluster, components),
-				a.setProviderComponents(provider, cluster, components),
-				a.Load(cluster, components),
+				c.AddFinalizer(cluster),
+				c.SetPending(cluster),
+				c.setComponents(cluster, components),
+				c.setProviderComponents(provider, cluster, components),
+				c.Load(cluster, components),
 				func(ctx kore.Context) (reconcile.Result, error) {
 					return reconcile.Result{}, provider.BeforeComponentsUpdate(ctx, cluster, components)
 				},
-				a.beforeComponentsUpdate(cluster, components),
-				a.Apply(cluster, components),
+				c.beforeComponentsUpdate(cluster, components),
+				c.Apply(cluster, components),
 				func(ctx kore.Context) (reconcile.Result, error) {
 					return reconcile.Result{}, provider.SetProviderData(ctx, cluster, components)
 				},
-				a.Cleanup(cluster, components),
-				a.SetClusterStatus(cluster, components),
+				c.Cleanup(cluster, components),
+				c.SetClusterStatus(cluster, components),
 			},
 		)
 	}()
 
 	if err != nil {
-		logger.WithError(err).Error("trying to ensure the cluster")
+		ctx.Logger().WithError(err).Error("trying to ensure the cluster")
 
 		if controllers.IsCriticalError(err) {
 			cluster.Status.Status = corev1.FailureStatus
@@ -120,8 +113,8 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 	}
 
 	if !reflect.DeepEqual(cluster, original) {
-		if err := a.mgr.GetClient().Status().Patch(ctx, cluster, client.MergeFrom(original)); err != nil {
-			logger.WithError(err).Error("trying to patch the cluster status")
+		if err := ctx.Client().Status().Patch(ctx, cluster, client.MergeFrom(original)); err != nil {
+			ctx.Logger().WithError(err).Error("trying to patch the cluster status")
 
 			return reconcile.Result{}, err
 		}
@@ -131,12 +124,12 @@ func (a *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 }
 
 // AddFinalizer ensures the finalizer is on the resource
-func (a *Controller) AddFinalizer(cluster *clustersv1.Cluster) controllers.EnsureFunc {
+func (c *Controller) AddFinalizer(cluster *clustersv1.Cluster) controllers.EnsureFunc {
 	return func(ctx kore.Context) (reconcile.Result, error) {
-		finalizer := kubernetes.NewFinalizer(a.mgr.GetClient(), finalizerName)
+		finalizer := kubernetes.NewFinalizer(ctx.Client(), finalizerName)
 		if finalizer.NeedToAdd(cluster) {
 			if err := finalizer.Add(cluster); err != nil {
-				a.logger.WithError(err).Error("trying to add the finalizer")
+				ctx.Logger().WithError(err).Error("trying to add the finalizer")
 
 				return reconcile.Result{}, err
 			}
@@ -149,7 +142,7 @@ func (a *Controller) AddFinalizer(cluster *clustersv1.Cluster) controllers.Ensur
 }
 
 // SetPending ensures the state of the cluster is set to pending if not
-func (a *Controller) SetPending(cluster *clustersv1.Cluster) controllers.EnsureFunc {
+func (c *Controller) SetPending(cluster *clustersv1.Cluster) controllers.EnsureFunc {
 	return func(ctx kore.Context) (reconcile.Result, error) {
 		switch cluster.Status.Status {
 		case corev1.DeletingStatus:
@@ -169,7 +162,7 @@ func (a *Controller) SetPending(cluster *clustersv1.Cluster) controllers.EnsureF
 }
 
 // Apply is responsible for applying the component and updating the component status
-func (a *Controller) Apply(cluster *clustersv1.Cluster, components *kore.ClusterComponents) controllers.EnsureFunc {
+func (c *Controller) Apply(cluster *clustersv1.Cluster, components *kore.ClusterComponents) controllers.EnsureFunc {
 	return func(ctx kore.Context) (reconcile.Result, error) {
 		if cluster.Status.Components == nil {
 			cluster.Status.Components = corev1.Components{}
@@ -183,7 +176,7 @@ func (a *Controller) Apply(cluster *clustersv1.Cluster, components *kore.Cluster
 				continue
 			}
 
-			result, err := a.applyComponent(ctx, cluster, comp)
+			result, err := c.applyComponent(ctx, cluster, comp)
 			if err != nil || result.Requeue || result.RequeueAfter > 0 {
 				return result, err
 			}
@@ -197,7 +190,7 @@ func (a *Controller) Apply(cluster *clustersv1.Cluster, components *kore.Cluster
 	}
 }
 
-func (a *Controller) applyComponent(ctx kore.Context, cluster *clustersv1.Cluster, comp *kore.ClusterComponent) (reconcile.Result, error) {
+func (c *Controller) applyComponent(ctx kore.Context, cluster *clustersv1.Cluster, comp *kore.ClusterComponent) (reconcile.Result, error) {
 	condition, found := cluster.Status.Components.GetComponent(comp.ComponentName())
 	if !found {
 		condition = &corev1.Component{
@@ -211,7 +204,7 @@ func (a *Controller) applyComponent(ctx kore.Context, cluster *clustersv1.Cluste
 
 	ownership := corev1.MustGetOwnershipFromObject(comp.Object)
 	condition.Resource = &ownership
-	logger := a.logger.WithFields(log.Fields{
+	logger := ctx.Logger().WithFields(log.Fields{
 		"component": comp.ComponentName(),
 		"condition": condition.Status,
 		"existing":  comp.Exists(),
@@ -270,7 +263,7 @@ func (a *Controller) applyComponent(ctx kore.Context, cluster *clustersv1.Cluste
 }
 
 // Cleanup is responsible for deleting any components no longer required
-func (a *Controller) Cleanup(cluster *clustersv1.Cluster, components *kore.ClusterComponents) controllers.EnsureFunc {
+func (c *Controller) Cleanup(cluster *clustersv1.Cluster, components *kore.ClusterComponents) controllers.EnsureFunc {
 	return func(ctx kore.Context) (reconcile.Result, error) {
 		// @logic:
 		// - we remove any absent components first in reverse dependency order
@@ -282,7 +275,7 @@ func (a *Controller) Cleanup(cluster *clustersv1.Cluster, components *kore.Clust
 				continue
 			}
 
-			result, err := a.removeComponent(ctx, cluster, components, comp)
+			result, err := c.removeComponent(ctx, cluster, components, comp)
 			if err != nil || result.Requeue || result.RequeueAfter > 0 {
 				return result, err
 			}
@@ -314,7 +307,7 @@ func (a *Controller) Cleanup(cluster *clustersv1.Cluster, components *kore.Clust
 
 			ctx.Logger().WithField("component", comp.ComponentName()).Debug("component is not defined anymore, deleting")
 
-			res, err := a.removeComponent(ctx, cluster, components, comp)
+			res, err := c.removeComponent(ctx, cluster, components, comp)
 			if err != nil || res.Requeue || res.RequeueAfter > 0 {
 				return res, err
 			}

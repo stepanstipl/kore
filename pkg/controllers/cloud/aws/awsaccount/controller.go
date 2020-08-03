@@ -42,9 +42,7 @@ type awsCtrl struct {
 }
 
 func init() {
-	if err := controllers.Register(&awsCtrl{}); err != nil {
-		log.WithError(err).Fatal("failed to register controller")
-	}
+	controllers.Register(&awsCtrl{})
 }
 
 // Name returns the name of the controller

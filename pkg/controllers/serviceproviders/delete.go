@@ -17,7 +17,6 @@
 package serviceproviders
 
 import (
-	"context"
 	"time"
 
 	"github.com/appvia/kore/pkg/utils/validation"
@@ -30,22 +29,20 @@ import (
 	"github.com/appvia/kore/pkg/controllers/helpers"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
-	log "github.com/sirupsen/logrus"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 func (c *Controller) delete(
-	ctx context.Context,
-	logger log.FieldLogger,
+	ctx kore.Context,
 	serviceProvider *servicesv1.ServiceProvider,
 	finalizer *kubernetes.Finalizer,
 ) (reconcile.Result, error) {
-	logger.Debug("attempting to delete service provider from the api")
+	ctx.Logger().Debug("attempting to delete service provider from the api")
 
 	if serviceProvider.Status.Status == corev1.DeletedStatus {
 		err := finalizer.Remove(serviceProvider)
 		if err != nil {
-			logger.WithError(err).Error("failed to remove the finalizer from the service provider")
+			ctx.Logger().WithError(err).Error("failed to remove the finalizer from the service provider")
 			return reconcile.Result{}, err
 		}
 		return reconcile.Result{}, nil
@@ -57,7 +54,7 @@ func (c *Controller) delete(
 		return reconcile.Result{Requeue: true}, nil
 	}
 
-	if err := c.ServiceProviders().CheckDelete(ctx, serviceProvider); err != nil {
+	if err := ctx.Kore().ServiceProviders().CheckDelete(ctx, serviceProvider); err != nil {
 		if dv, ok := err.(validation.ErrDependencyViolation); ok {
 			serviceProvider.Status.Message = dv.Error()
 			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
@@ -69,7 +66,7 @@ func (c *Controller) delete(
 
 	result, err := func() (reconcile.Result, error) {
 		result, err := helpers.DeleteServices(
-			kore.NewContext(ctx, logger, c.mgr.GetClient(), c),
+			ctx,
 			kore.HubAdminTeam,
 			serviceProvider,
 			&serviceProvider.Status.Components,
@@ -78,7 +75,7 @@ func (c *Controller) delete(
 			return result, err
 		}
 
-		complete, err := c.ServiceProviders().Unregister(kore.NewContext(ctx, logger, c.mgr.GetClient(), c), serviceProvider)
+		complete, err := ctx.Kore().ServiceProviders().Unregister(ctx, serviceProvider)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
@@ -90,7 +87,7 @@ func (c *Controller) delete(
 	}()
 
 	if err != nil {
-		logger.WithError(err).Error("failed to delete the service provider")
+		ctx.Logger().WithError(err).Error("failed to delete the service provider")
 
 		serviceProvider.Status.Status = corev1.ErrorStatus
 		serviceProvider.Status.Message = err.Error()

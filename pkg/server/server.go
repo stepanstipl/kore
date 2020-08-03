@@ -19,6 +19,11 @@ package server
 import (
 	"context"
 	"fmt"
+	"time"
+
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
+	"github.com/appvia/kore/pkg/utils"
 
 	_ "github.com/appvia/kore/pkg/clusterproviders/register"
 	_ "github.com/appvia/kore/pkg/controllers/register"
@@ -139,17 +144,7 @@ func (s serverImpl) Run(ctx context.Context) error {
 
 			err := func() error {
 				if c2, ok := c.(controllers.Interface2); ok {
-					mgr, err := manager.New(s.cfg, c2.ManagerOptions())
-					if err != nil {
-						return err
-					}
-
-					ctrl, err := controller.New(c2.Name(), mgr, c2.ControllerOptions())
-					if err != nil {
-						return err
-					}
-
-					return c2.RunWithDependencies(ctx, mgr, ctrl, s.hubcc)
+					return s.runController(ctx, c2)
 				}
 
 				return c.Run(ctx, s.cfg, s.hubcc)
@@ -168,6 +163,68 @@ func (s serverImpl) Run(ctx context.Context) error {
 	if err := s.apicc.Run(ctx); err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func (s serverImpl) runController(ctx context.Context, c controllers.Interface2) error {
+	logger := log.WithFields(log.Fields{
+		"controller": c.Name(),
+	})
+
+	var mopts manager.Options
+	if moa, ok := c.(controllers.ManagerOptionsAware); ok {
+		mopts = moa.ManagerOptions()
+	} else {
+		mopts = controllers.DefaultManagerOptions(c)
+	}
+
+	mgr, err := manager.New(s.cfg, mopts)
+	if err != nil {
+		return err
+	}
+
+	koreCtx := kore.NewContext(ctx, logger, mgr.GetClient(), s.hubcc)
+
+	var copts controller.Options
+	if coa, ok := c.(controllers.ControllerOptionsAware); ok {
+		copts = coa.ControllerOptions(koreCtx)
+	} else {
+		reconciler := reconcile.Func(func(request reconcile.Request) (reconcile.Result, error) {
+			logger := koreCtx.Logger().WithFields(log.Fields{
+				"name":      request.NamespacedName.Name,
+				"namespace": request.NamespacedName.Namespace,
+			})
+			return c.Reconcile(koreCtx.WithLogger(logger), request)
+		})
+		copts = controllers.DefaultControllerOptions(reconciler)
+	}
+
+	ctrl, err := controller.New(c.Name(), mgr, copts)
+	if err != nil {
+		return err
+	}
+
+	if err := c.Initialize(koreCtx, ctrl); err != nil {
+		return err
+	}
+
+	go func() {
+		logger.Info("starting the controller")
+
+		for {
+			if err := mgr.Start(ctx.Done()); err != nil {
+				logger.WithError(err).Error("failed to start the controller, retrying")
+			}
+
+			if ctx.Err() != nil {
+				logger.Info("stopping the controller")
+				return
+			}
+
+			utils.Sleep(ctx, 5*time.Second)
+		}
+	}()
 
 	return nil
 }

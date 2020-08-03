@@ -42,9 +42,7 @@ type teamController struct {
 }
 
 func init() {
-	if err := controllers.Register(&teamController{}); err != nil {
-		log.WithError(err).Fatal("failed to register controller")
-	}
+	controllers.Register(&teamController{})
 }
 
 // Name returns the name of the controller

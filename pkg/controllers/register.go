@@ -28,13 +28,11 @@ var (
 )
 
 // Register is responsible for registering a controller
-func Register(handler RegisterInterface) error {
+func Register(handler RegisterInterface) {
 	controllerLock.Lock()
 	defer controllerLock.Unlock()
 
 	controllerList = append(controllerList, handler)
-
-	return nil
 }
 
 // GetControllers returns all the registered controllers

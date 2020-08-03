@@ -45,9 +45,7 @@ type gkeCtrl struct {
 }
 
 func init() {
-	if err := controllers.Register(&gkeCtrl{}); err != nil {
-		log.WithError(err).Fatal("failed to register controller")
-	}
+	controllers.Register(&gkeCtrl{})
 }
 
 // Name returns the name of the controller

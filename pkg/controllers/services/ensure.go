@@ -69,7 +69,7 @@ func (c *Controller) EnsureFinalizer(service *servicesv1.Service, finalizer *kub
 
 func (c *Controller) EnsureDependencies(service *servicesv1.Service) controllers.EnsureFunc {
 	return func(ctx kore.Context) (reconcile.Result, error) {
-		serviceKind, err := c.ServiceKinds().Get(ctx, service.Spec.Kind)
+		serviceKind, err := ctx.Kore().ServiceKinds().Get(ctx, service.Spec.Kind)
 		if err != nil {
 			if err == kore.ErrNotFound {
 				service.Status.Status = corev1.PendingStatus
@@ -79,7 +79,7 @@ func (c *Controller) EnsureDependencies(service *servicesv1.Service) controllers
 			return reconcile.Result{}, err
 		}
 
-		servicePlan, err := c.ServicePlans().Get(ctx, service.Spec.Plan)
+		servicePlan, err := ctx.Kore().ServicePlans().Get(ctx, service.Spec.Plan)
 		if err != nil {
 			if err == kore.ErrNotFound {
 				service.Status.Status = corev1.PendingStatus
@@ -92,7 +92,7 @@ func (c *Controller) EnsureDependencies(service *servicesv1.Service) controllers
 		service.Status.ServiceAccessEnabled = serviceKind.Spec.ServiceAccessEnabled && !servicePlan.Spec.ServiceAccessDisabled
 
 		if !kore.IsSystemResource(service) && !kubernetes.HasOwnerReferenceWithKind(service, clustersv1.ClusterGVK) {
-			cluster, err := c.Teams().Team(service.Spec.Cluster.Namespace).Clusters().Get(ctx, service.Spec.Cluster.Name)
+			cluster, err := ctx.Kore().Teams().Team(service.Spec.Cluster.Namespace).Clusters().Get(ctx, service.Spec.Cluster.Name)
 			if err != nil {
 				if err == kore.ErrNotFound {
 					service.Status.Status = corev1.PendingStatus
@@ -108,7 +108,7 @@ func (c *Controller) EnsureDependencies(service *servicesv1.Service) controllers
 		if service.Spec.ClusterNamespace != "" && !kore.IsSystemResource(service) && !kubernetes.HasOwnerReferenceWithKind(service, clustersv1.NamespaceClaimGVK) {
 			name := fmt.Sprintf("%s-%s", service.Spec.Cluster.Name, service.Spec.ClusterNamespace)
 
-			namespaceClaim, err := c.Teams().Team(service.Namespace).NamespaceClaims().Get(ctx, name)
+			namespaceClaim, err := ctx.Kore().Teams().Team(service.Namespace).NamespaceClaims().Get(ctx, name)
 			if err != nil {
 				if kerrors.IsNotFound(err) || err == kore.ErrNotFound {
 					service.Status.Status = corev1.PendingStatus

@@ -42,9 +42,7 @@ type ctrl struct {
 }
 
 func init() {
-	if err := controllers.Register(&ctrl{}); err != nil {
-		log.WithError(err).Fatal("failed to register controller")
-	}
+	controllers.Register(&ctrl{})
 }
 
 // Name returns the name of the controller

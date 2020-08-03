@@ -20,7 +20,6 @@ import (
 	"context"
 
 	"github.com/appvia/kore/pkg/kore"
-
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -51,10 +50,20 @@ type Interface interface {
 // Interface2 is a temporary interface to introduce a new run function where the dependencies will be injected
 // TODO: migrate all controllers to the new interface
 type Interface2 interface {
-	Interface
+	RegisterInterface
+	Reconcile(kore.Context, reconcile.Request) (reconcile.Result, error)
+	// Initialize registers dependencies and sets up watches
+	Initialize(kore.Context, controller.Controller) error
+}
+
+type ManagerOptionsAware interface {
+	// ManagerOptions returns the manager options
 	ManagerOptions() manager.Options
-	ControllerOptions() controller.Options
-	RunWithDependencies(context.Context, manager.Manager, controller.Controller, kore.Interface) error
+}
+
+type ControllerOptionsAware interface {
+	// ControllerOptions returns the controller options
+	ControllerOptions(kore.Context) controller.Options
 }
 
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Client

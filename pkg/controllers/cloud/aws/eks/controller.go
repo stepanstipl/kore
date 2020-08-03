@@ -42,9 +42,7 @@ type eksCtrl struct {
 }
 
 func init() {
-	if err := controllers.Register(&eksCtrl{}); err != nil {
-		log.WithError(err).Fatal("failed to register controller")
-	}
+	controllers.Register(&eksCtrl{})
 }
 
 // Run starts the controller
