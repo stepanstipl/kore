@@ -96,7 +96,7 @@ export default class ConfigureCloudPage extends React.Component {
                 <CredentialsList provider="EKS" />
               </Tabs.TabPane>
               <Tabs.TabPane tab="Account automation" key="account-automation">
-                <CloudAccountAutomationSettings provider="EKS" cloudOrgsApiMethod="ListAWSOrganizations" cloud="AWS" accountNoun="account" />
+                <CloudAccountAutomationSettings provider="EKS" cloudOrgsApiMethod="ListAWSOrganizations" cloud="AWS" accountNoun="account" cloudAccountAutomationType="CUSTOM" />
               </Tabs.TabPane>
               <Tabs.TabPane tab="Cluster plans" key="plans">
                 <PlanList kind="EKS" />

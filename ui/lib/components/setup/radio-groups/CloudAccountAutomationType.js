@@ -4,7 +4,7 @@ import { pluralize, titleize } from 'inflect'
 
 import RadioGroup from '../../utils/RadioGroup'
 
-const CloudAccountAutomationType = ({ cloud, accountNoun, value, onChange, disabled, inlineHelp }) => {
+const CloudAccountAutomationType = ({ cloud, accountNoun, value, onChange, disabled, inlineHelp, valuesFilter }) => {
   const accountAutomationClusterHelp = () => {
     Modal.info({
       title: `${titleize(accountNoun)} automation: One per cluster`,
@@ -41,13 +41,14 @@ const CloudAccountAutomationType = ({ cloud, accountNoun, value, onChange, disab
     className: 'automated-accounts-custom',
     extra: inlineHelp ? <Icon style={{ marginTop: '28px' }} type="info-circle" theme="twoTone" onClick={accountAutomationClusterHelp}/> : undefined
   }]
+  const filteredOptions = options.filter(o => valuesFilter ? valuesFilter.includes(o.value) : true)
 
   return (
     <RadioGroup
       heading={`How do you want Kore to automate ${cloud} ${pluralize(accountNoun)} for teams?`}
       onChange={onChange}
-      options={options}
-      value={value}
+      options={filteredOptions}
+      value={value || ''}
       disabled={disabled}
       style={{ marginBottom: '15px' }}
     />
@@ -57,10 +58,11 @@ const CloudAccountAutomationType = ({ cloud, accountNoun, value, onChange, disab
 CloudAccountAutomationType.propTypes = {
   cloud: PropTypes.oneOf(['GCP', 'AWS']),
   accountNoun: PropTypes.string.isRequired,
-  value: PropTypes.string,
+  value: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]),
   onChange: PropTypes.func,
   disabled: PropTypes.bool,
-  inlineHelp: PropTypes.bool
+  inlineHelp: PropTypes.bool,
+  valuesFilter: PropTypes.arrayOf(PropTypes.oneOf(['CLUSTER', 'CUSTOM']))
 }
 
 export default CloudAccountAutomationType

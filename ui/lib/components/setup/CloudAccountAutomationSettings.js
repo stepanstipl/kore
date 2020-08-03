@@ -25,7 +25,8 @@ class CloudAccountAutomationSettings extends React.Component {
     provider: PropTypes.oneOf(['GKE', 'EKS']).isRequired,
     cloudOrgsApiMethod: PropTypes.string.isRequired,
     cloud: PropTypes.oneOf(['GCP', 'AWS']).isRequired,
-    accountNoun: PropTypes.string.isRequired
+    accountNoun: PropTypes.string.isRequired,
+    cloudAccountAutomationType: PropTypes.oneOf(['CLUSTER', 'CUSTOM'])
   }
 
   state = {
@@ -50,7 +51,7 @@ class CloudAccountAutomationSettings extends React.Component {
     const accountManagement = accountManagementList.items.find(a => a.spec.provider === this.props.provider)
     const cloudManagementType = accountManagement ? 'KORE' : 'EXISTING'
 
-    let cloudAccountAutomationType = false
+    let cloudAccountAutomationType = this.props.cloudAccountAutomationType || false
     let cloudAccountList = []
 
     if (accountManagement) {
@@ -217,6 +218,7 @@ class CloudAccountAutomationSettings extends React.Component {
         value={this.state.cloudAccountAutomationType}
         onChange={this.selectCloudAccountAutomationType}
         inlineHelp={true}
+        valuesFilter={this.props.cloudAccountAutomationType ? [this.props.cloudAccountAutomationType] : undefined}
       />
 
       {this.state.cloudAccountAutomationType === 'CUSTOM' && (
