@@ -122,6 +122,7 @@ func NewKoreCommand(streams cmdutil.Streams) (*cobra.Command, error) {
 		apiresources.NewCmdAPIResources(factory),
 		NewCmdVersion(factory),
 		alpha.NewCmdAlpha(factory),
+		NewCmdUp(factory),
 	)
 
 	// @step: seriously cobra is pretty damn awesome
