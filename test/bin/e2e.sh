@@ -129,6 +129,7 @@ build-cluster() {
     --set=api.auth_plugins.1=admintoken \
     --set=api.auth_plugins.2=localjwt \
     --set=api.auth_plugins.3=openid \
+    --set=api.verbose=true \
     --set=idp.client_id=${KORE_IDP_CLIENT_ID} \
     --set=idp.client_secret=${KORE_IDP_CLIENT_SECRET} \
     --set=idp.server_url=${KORE_IDP_SERVER_URL} \
