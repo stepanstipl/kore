@@ -105,6 +105,12 @@ func (c resourceGroupComponent) Delete(ctx kore.Context) (reconcile.Result, erro
 
 	ctx.Logger().WithField("provisioningState", to.String(existing.Properties.ProvisioningState)).Debug("current state of the Resource Group")
 
+	switch to.String(existing.Properties.ProvisioningState) {
+	case "Deleting":
+		// Deleting a resource group can take a long time (>1 hour), so we don't wait for it to go away
+		return reconcile.Result{}, nil
+	}
+
 	_, err = client.Delete(ctx, c.ResourceGroupName)
 	if err != nil {
 		return reconcile.Result{}, fmt.Errorf("failed to delete Resource Group: %w", err)
