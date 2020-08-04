@@ -9,6 +9,7 @@ import ExistingCloudAccounts from './ExistingCloudAccounts'
 class CloudSetup extends React.Component {
 
   static propTypes = {
+    user: PropTypes.object.isRequired,
     provider: PropTypes.oneOf(['GKE', 'EKS', 'AKS']),
     cloud: PropTypes.oneOf(['GCP', 'AWS', 'Azure']),
     accountNoun: PropTypes.string.isRequired,
@@ -41,7 +42,7 @@ class CloudSetup extends React.Component {
           value={cloudManagementType}
           disabled={setupComplete}
         />
-        {cloudManagementType === 'KORE' && <KoreManagedCloudAccounts provider={this.props.provider} cloud={this.props.cloud} accountNoun={this.props.accountNoun} accountManagement={this.props.accountManagement} setupComplete={setupComplete} handleSetupComplete={this.setupComplete} />}
+        {cloudManagementType === 'KORE' && <KoreManagedCloudAccounts provider={this.props.provider} cloud={this.props.cloud} accountNoun={this.props.accountNoun} accountManagement={this.props.accountManagement} setupComplete={setupComplete} handleSetupComplete={this.setupComplete} user={this.props.user} />}
         {cloudManagementType === 'EXISTING' && <ExistingCloudAccounts cloud={this.props.cloud} accountNoun={this.props.accountNoun} setupComplete={setupComplete} handleSetupComplete={this.setupComplete} />}
       </Card>
     )

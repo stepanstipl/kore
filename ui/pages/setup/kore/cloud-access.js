@@ -12,6 +12,7 @@ import KoreApi from '../../../lib/kore-api'
 class CloudAccessPage extends React.Component {
 
   static propTypes = {
+    user: PropTypes.object.isRequired,
     gkeCredentialsList: PropTypes.array.isRequired,
     eksCredentialsList: PropTypes.array.isRequired,
     aksCredentialsList: PropTypes.array.isRequired,
@@ -60,7 +61,7 @@ class CloudAccessPage extends React.Component {
   handleSelectCloud = (cloud) => this.setState({ selectedCloud: cloud })
 
   render() {
-    const { gcpAccountManagement, gkeCredentialsList, awsAccountManagement, eksCredentialsList, aksCredentialsList } = this.props
+    const { user, gcpAccountManagement, gkeCredentialsList, awsAccountManagement, eksCredentialsList, aksCredentialsList } = this.props
     const { selectedCloud } = this.state
 
     return (
@@ -76,9 +77,9 @@ class CloudAccessPage extends React.Component {
         <div style={{ marginTop: '20px', marginBottom: '20px' }}>
           <CloudSelector selectedCloud={selectedCloud} handleSelectCloud={this.handleSelectCloud} />
         </div>
-        {selectedCloud === 'GCP' && <CloudSetup provider="GKE" cloud="GCP" accountNoun="project" accountManagement={gcpAccountManagement} credentialsList={gkeCredentialsList} />}
-        {selectedCloud === 'AWS' && <CloudSetup provider="EKS" cloud="AWS" accountNoun="account" accountManagement={awsAccountManagement} credentialsList={eksCredentialsList} />}
-        {selectedCloud === 'Azure' && <CloudSetup provider="AKS" cloud="Azure" accountNoun="subscription" credentialsList={aksCredentialsList} />}
+        {selectedCloud === 'GCP' && <CloudSetup provider="GKE" cloud="GCP" accountNoun="project" accountManagement={gcpAccountManagement} credentialsList={gkeCredentialsList} user={user} />}
+        {selectedCloud === 'AWS' && <CloudSetup provider="EKS" cloud="AWS" accountNoun="account" accountManagement={awsAccountManagement} credentialsList={eksCredentialsList} user={user} />}
+        {selectedCloud === 'Azure' && <CloudSetup provider="AKS" cloud="Azure" accountNoun="subscription" credentialsList={aksCredentialsList} user={user} />}
       </>
     )
   }

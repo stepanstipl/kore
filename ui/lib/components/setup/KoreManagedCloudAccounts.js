@@ -21,6 +21,7 @@ import CloudAccountAutomationType from './radio-groups/CloudAccountAutomationTyp
 class KoreManagedCloudAccounts extends React.Component {
 
   static propTypes = {
+    user: PropTypes.object.isRequired,
     provider: PropTypes.oneOf(['GKE', 'EKS']).isRequired,
     cloud: PropTypes.oneOf(['GCP', 'AWS']),
     accountNoun: PropTypes.string.isRequired,
@@ -167,7 +168,7 @@ class KoreManagedCloudAccounts extends React.Component {
     <>
       <Paragraph style={{ fontSize: '16px', fontWeight: '600' }}>Configure your {this.props.cloud} organization credentials</Paragraph>
       {this.props.cloud === 'GCP' && <GCPOrganizationsList getResourceItemList={(list) => this.setState({ cloudOrgList: list })} autoAllocateToAllTeams={true} />}
-      {this.props.cloud === 'AWS' && <AWSOrganizationsList getResourceItemList={(list) => this.setState({ cloudOrgList: list })} autoAllocateToAllTeams={true} />}
+      {this.props.cloud === 'AWS' && <AWSOrganizationsList getResourceItemList={(list) => this.setState({ cloudOrgList: list })} autoAllocateToAllTeams={true} user={this.props.user} />}
     </>
   )
 

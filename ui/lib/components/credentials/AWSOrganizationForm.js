@@ -25,8 +25,8 @@ class AWSOrganizationForm extends VerifiedAllocatedResourceForm {
 
   putResource = async values => {
     const api = await KoreApi.client()
-    values.name = this.getMetadataName(values)
-    const secretName = values.name
+    const resourceName = this.getMetadataName(values)
+    const secretName = resourceName
     const teamResources = KoreApi.resources().team(this.props.team)
     if (!this.props.data || this.state.replaceKey) {
       const secretData = {
@@ -36,8 +36,8 @@ class AWSOrganizationForm extends VerifiedAllocatedResourceForm {
       const secretResource = teamResources.generateSecretResource(secretName, 'aws-credentials', `AWS creds for control tower in OU ${values.ouName}`, secretData)
       await api.UpdateTeamSecret(this.props.team, secretName, secretResource)
     }
-    const awsOrgResource = teamResources.generateAWSOrganizationResource(values, secretName)
-    const awsOrgResult = await api.UpdateAWSOrganization(this.props.team, values.name, awsOrgResource)
+    const awsOrgResource = teamResources.generateAWSOrganizationResource(values, resourceName, secretName)
+    const awsOrgResult = await api.UpdateAWSOrganization(this.props.team, resourceName, awsOrgResource)
     awsOrgResult.allocation = await this.storeAllocation(awsOrgResource, values)
     return awsOrgResult
   }
@@ -132,7 +132,7 @@ class AWSOrganizationForm extends VerifiedAllocatedResourceForm {
           <Alert
             message={ <> The Control Tower region does <b>not</b> dictate where EKS clusters or applications will run </> }
             type="warning"
-            style={{ marginTop: '10px' }}
+            style={{ marginTop: '10px', marginBottom: '20px' }}
           />
           <Form.Item label="Region" onChange={() => this.updateOUsIfPossible()} validateStatus={this.fieldError('region') ? 'error' : ''} help={this.fieldError('region') || 'The region where AWS Control Tower is enabled in the master account'}>
             {form.getFieldDecorator('region', {

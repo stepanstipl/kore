@@ -15,16 +15,16 @@ class GCPOrganizationForm extends VerifiedAllocatedResourceForm {
 
   putResource = async values => {
     const api = await KoreApi.client()
-    values.name = this.getMetadataName(values)
-    const secretName = values.name
+    const resourceName = this.getMetadataName(values)
+    const secretName = resourceName
     const teamResources = KoreApi.resources().team(this.props.team)
     if (!this.props.data || this.state.replaceKey) {
       const secretData = { key: btoa(values.account) }
       const secretResource = teamResources.generateSecretResource(secretName, 'gcp-org', `GCP admin project Service Account for ${values.parentID}`, secretData)
       await api.UpdateTeamSecret(this.props.team, secretName, secretResource)
     }
-    const gcpOrgResource = teamResources.generateGCPOrganizationResource(values, secretName)
-    const gcpOrgResult = await api.UpdateGCPOrganization(this.props.team, values.name, gcpOrgResource)
+    const gcpOrgResource = teamResources.generateGCPOrganizationResource(values, resourceName, secretName)
+    const gcpOrgResult = await api.UpdateGCPOrganization(this.props.team, resourceName, gcpOrgResource)
     gcpOrgResult.allocation = await this.storeAllocation(gcpOrgResource, values)
     return gcpOrgResult
   }

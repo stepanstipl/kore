@@ -113,6 +113,7 @@ class AWSOrganizationsList extends ResourceList {
                 width={900}
               >
                 <AWSOrganizationForm
+                  user={this.props.user}
                   team={publicRuntimeConfig.koreAdminTeamName}
                   allTeams={allTeams}
                   data={edit}
