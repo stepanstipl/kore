@@ -349,7 +349,7 @@ func (c *clustersImpl) validateAccounting(ctx context.Context, cluster *clusters
 		return nil
 	}
 
-	// @step: does this team having accounts enabled
+	// @step: does this team have accounts enabled
 	permitted, err := c.Teams().Team(c.team).Allocations().IsPermitted(ctx, cluster.Spec.Credentials)
 	if err != nil {
 		return err
@@ -358,14 +358,10 @@ func (c *clustersImpl) validateAccounting(ctx context.Context, cluster *clusters
 		return ErrNotAllowed{message: "account management is not allocated to the team"}
 	}
 
-	// @step: if the plan requested available in the account plan?
+	// @step: is the plan requested available in the account plan?
 	account, err := c.Accounts().Get(ctx, cluster.Spec.Credentials.Name)
 	if err != nil {
 		return err
-	}
-
-	if len(account.Spec.Rules) <= 0 {
-		return nil
 	}
 
 	found, list := func() (bool, []string) {

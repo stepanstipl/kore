@@ -49,7 +49,6 @@ describe('First time login and Kore setup - GCP', () => {
       await setupKoreCloudAccessPage.addGcpOrganization(testOrg)
       await expect(page).toMatch('GCP organization created successfully')
       await setupKoreCloudAccessPage.nextStep()
-      await setupKoreCloudAccessPage.selectKoreManagedAccounts('custom')
       await setupKoreCloudAccessPage.setAutomatedAccountDefaults()
       await setupKoreCloudAccessPage.save()
       await setupKorePage.clickPrimaryButton()

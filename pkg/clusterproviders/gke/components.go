@@ -108,30 +108,23 @@ func (p Provider) BeforeComponentsUpdate(ctx kore.Context, cluster *clustersv1.C
 				Version:   gcpv1alpha1.GroupVersion.Version,
 			}
 
-			switch len(mgmt.Spec.Rules) > 0 {
-			case true:
-				rule, found := clusterproviders.FindAccountingRule(mgmt, cluster.Spec.Plan)
-				if !found {
-					return controllers.NewCriticalError(
-						fmt.Errorf("no account rule matching plan: %q exist", cluster.Spec.Plan),
-					)
-				}
-
-				// @step: we derive the account name from the rule
-				name := cluster.Namespace
-				if rule.Suffix != "" {
-					name = fmt.Sprintf("%s-%s", name, rule.Suffix)
-				}
-				if rule.Prefix != "" {
-					name = fmt.Sprintf("%s-%s", rule.Prefix, name)
-				}
-
-				o.Spec.ProjectName = name
-
-			default:
-				// else we are just create a project per cluster
-				o.Spec.ProjectName = fmt.Sprintf("%s-%s", cluster.Namespace, cluster.Name)
+			rule, found := clusterproviders.FindAccountingRule(mgmt, cluster.Spec.Plan)
+			if !found {
+				return controllers.NewCriticalError(
+					fmt.Errorf("no account rule matching plan: %q exist", cluster.Spec.Plan),
+				)
 			}
+
+			// @step: we derive the account name from the rule
+			name := cluster.Namespace
+			if rule.Suffix != "" {
+				name = fmt.Sprintf("%s-%s", name, rule.Suffix)
+			}
+			if rule.Prefix != "" {
+				name = fmt.Sprintf("%s-%s", rule.Prefix, name)
+			}
+
+			o.Spec.ProjectName = name
 		}
 	}
 

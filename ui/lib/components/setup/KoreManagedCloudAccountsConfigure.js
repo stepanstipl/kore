@@ -1,7 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { pluralize, titleize } from 'inflect'
-import { Alert, Button, Drawer, Typography } from 'antd'
+import { Button, Drawer, Typography } from 'antd'
 const { Paragraph, Title } = Typography
 import getConfig from 'next/config'
 const { publicRuntimeConfig } = getConfig()
@@ -9,7 +9,7 @@ const { publicRuntimeConfig } = getConfig()
 import AutomatedCloudAccountList from './AutomatedCloudAccountList'
 import AutomatedCloudAccountForm from './forms/AutomatedCloudAccountForm'
 
-class KoreManagedCloudAccountsCustom extends React.Component {
+class KoreManagedCloudAccountsConfigure extends React.Component {
 
   static propTypes = {
     cloudAccountList: PropTypes.array.isRequired,
@@ -19,7 +19,6 @@ class KoreManagedCloudAccountsCustom extends React.Component {
     handleEdit: PropTypes.func.isRequired,
     handleAdd: PropTypes.func.isRequired,
     handleReset: PropTypes.func.isRequired,
-    hideGuidance: PropTypes.bool,
     cloud: PropTypes.oneOf(['GCP', 'AWS']).isRequired,
     accountNoun: PropTypes.string.isRequired
   }
@@ -62,18 +61,10 @@ class KoreManagedCloudAccountsCustom extends React.Component {
   }
 
   render() {
-    const { cloudAccountList, plans, hideGuidance } = this.props
+    const { cloudAccountList, plans } = this.props
 
     return (
       <>
-        {!hideGuidance && (
-          <Alert
-            message={`When a team is created in Kore and a cluster is requested, Kore will ensure the associated ${this.props.cloud} ${this.props.accountNoun} is also created and the cluster placed inside it. You must also specify the plans available for each type of ${this.props.accountNoun}, this is to ensure the correct cluster specification is being used.`}
-            type="info"
-            showIcon
-            style={{ marginBottom: '20px' }}
-          />
-        )}
         <div style={{ display: 'block', marginBottom: '20px', marginTop: '10px' }}>
           <Button type="primary" onClick={this.addCloudAccount(true)}>+ New</Button>
           <Button className="set-kore-defaults" style={{ marginLeft: '10px' }} onClick={() => this.props.handleReset(this.getDefaultCloudAccountList())}>Set to Kore defaults</Button>
@@ -125,4 +116,4 @@ class KoreManagedCloudAccountsCustom extends React.Component {
   }
 }
 
-export default KoreManagedCloudAccountsCustom
+export default KoreManagedCloudAccountsConfigure

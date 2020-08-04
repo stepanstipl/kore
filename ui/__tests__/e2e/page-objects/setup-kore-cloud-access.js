@@ -16,14 +16,6 @@ export class SetupKoreCloudAccessPage extends BasePage {
     await this.p.click('.use-kore-managed-projects')
   }
 
-  /**
-   * Select the managed accounts type
-   * @param type Either "cluster" or "custom"
-   */
-  async selectKoreManagedAccounts(type) {
-    await this.p.click(`.automated-accounts-${type}`)
-  }
-
   async addGcpOrganization(testOrg) {
     await this.orgsPage.add()
     await this.orgsPage.populate(testOrg)
