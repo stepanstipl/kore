@@ -26,14 +26,15 @@ import (
 
 type Context interface {
 	context.Context
-	Logger() log.FieldLogger
+	Logger() log.Ext1FieldLogger
 	Client() client.Client
 	Kore() Interface
+	WithLogger(log.Ext1FieldLogger) Context
 }
 
 type contextImpl struct {
 	ctx    context.Context
-	logger log.FieldLogger
+	logger log.Ext1FieldLogger
 	client client.Client
 	kore   Interface
 }
@@ -54,7 +55,7 @@ func (s contextImpl) Value(key interface{}) interface{} {
 	return s.ctx.Value(key)
 }
 
-func (s contextImpl) Logger() log.FieldLogger {
+func (s contextImpl) Logger() log.Ext1FieldLogger {
 	return s.logger
 }
 
@@ -66,9 +67,18 @@ func (s contextImpl) Kore() Interface {
 	return s.kore
 }
 
+func (s contextImpl) WithLogger(logger log.Ext1FieldLogger) Context {
+	return contextImpl{
+		ctx:    s.ctx,
+		logger: logger,
+		client: s.client,
+		kore:   s.kore,
+	}
+}
+
 func NewContext(
 	ctx context.Context,
-	logger log.FieldLogger,
+	logger log.Ext1FieldLogger,
 	client client.Client,
 	kore Interface,
 ) Context {

@@ -17,7 +17,6 @@
 package aks
 
 import (
-	"context"
 	"fmt"
 
 	aksv1alpha1 "github.com/appvia/kore/pkg/apis/aks/v1alpha1"
@@ -25,7 +24,6 @@ import (
 	cc "github.com/appvia/kore/pkg/controllers/components"
 	"github.com/appvia/kore/pkg/kore"
 
-	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -36,17 +34,11 @@ const (
 )
 
 // Reconcile is the entrypoint for the reconciliation logic
-func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	logger := log.WithFields(log.Fields{
-		"name":      request.NamespacedName.Name,
-		"namespace": request.NamespacedName.Namespace,
-	})
-	ctx := kore.NewContext(context.Background(), logger, c.mgr.GetClient(), c)
-
-	logger.Debug("attempting to reconcile the AKS cluster")
+func (c *Controller) Reconcile(ctx kore.Context, request reconcile.Request) (reconcile.Result, error) {
+	ctx.Logger().Debug("attempting to reconcile the AKS cluster")
 
 	aksCluster := &aksv1alpha1.AKS{}
-	if err := c.mgr.GetClient().Get(ctx, request.NamespacedName, aksCluster); err != nil {
+	if err := ctx.Client().Get(ctx, request.NamespacedName, aksCluster); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
@@ -68,11 +60,11 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 	res, err := components.Reconcile(ctx, aksCluster)
 	if err != nil {
-		logger.WithError(err).Error("failed to reconcile the AKS cluster")
+		ctx.Logger().WithError(err).Error("failed to reconcile the AKS cluster")
 	}
 
-	if err := c.mgr.GetClient().Status().Patch(ctx, aksCluster, client.MergeFrom(original)); err != nil {
-		logger.WithError(err).Error("failed to update the status of the AKS cluster")
+	if err := ctx.Client().Status().Patch(ctx, aksCluster, client.MergeFrom(original)); err != nil {
+		ctx.Logger().WithError(err).Error("failed to update the status of the AKS cluster")
 
 		return reconcile.Result{}, fmt.Errorf("failed to update the status of the AKS cluster: %w", err)
 	}

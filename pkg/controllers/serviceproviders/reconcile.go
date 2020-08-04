@@ -17,7 +17,6 @@
 package serviceproviders
 
 import (
-	"context"
 	"fmt"
 	"sort"
 	"time"
@@ -30,7 +29,6 @@ import (
 	"github.com/appvia/kore/pkg/controllers/helpers"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
-	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -41,39 +39,33 @@ const (
 )
 
 // Reconcile is the entrypoint for the reconciliation logic
-func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult reconcile.Result, reconcileError error) {
-	ctx := context.Background()
-
-	logger := c.logger.WithFields(log.Fields{
-		"name":      request.NamespacedName.Name,
-		"namespace": request.NamespacedName.Namespace,
-	})
-	logger.Debug("attempting to reconcile the service provider")
+func (c *Controller) Reconcile(ctx kore.Context, request reconcile.Request) (reconcileResult reconcile.Result, reconcileError error) {
+	ctx.Logger().Debug("attempting to reconcile the service provider")
 
 	// @step: retrieve the object from the api
 	serviceProvider := &servicesv1.ServiceProvider{}
-	if err := c.mgr.GetClient().Get(ctx, request.NamespacedName, serviceProvider); err != nil {
+	if err := ctx.Client().Get(ctx, request.NamespacedName, serviceProvider); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
-		logger.WithError(err).Error("trying to retrieve service provider from api")
+		ctx.Logger().WithError(err).Error("trying to retrieve service provider from api")
 
 		return reconcile.Result{}, err
 	}
 	original := serviceProvider.DeepCopy()
 
 	defer func() {
-		if err := c.mgr.GetClient().Status().Patch(ctx, serviceProvider, client.MergeFrom(original)); err != nil {
-			logger.WithError(err).Error("failed to update the service provider status")
+		if err := ctx.Client().Status().Patch(ctx, serviceProvider, client.MergeFrom(original)); err != nil {
+			ctx.Logger().WithError(err).Error("failed to update the service provider status")
 
 			reconcileResult = reconcile.Result{}
 			reconcileError = err
 		}
 	}()
 
-	finalizer := kubernetes.NewFinalizer(c.mgr.GetClient(), finalizerName)
+	finalizer := kubernetes.NewFinalizer(ctx.Client(), finalizerName)
 	if finalizer.IsDeletionCandidate(serviceProvider) {
-		return c.delete(ctx, logger, serviceProvider, finalizer)
+		return c.delete(ctx, serviceProvider, finalizer)
 	}
 
 	result, err := func() (reconcile.Result, error) {
@@ -81,7 +73,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 			c.ensureFinalizer(serviceProvider, finalizer),
 			c.ensurePending(serviceProvider),
 			func(ctx kore.Context) (result reconcile.Result, err error) {
-				complete, err := c.ServiceProviders().SetUp(ctx, serviceProvider)
+				complete, err := ctx.Kore().ServiceProviders().SetUp(ctx, serviceProvider)
 				if err != nil {
 					return reconcile.Result{}, fmt.Errorf("failed to set up service provider: %w", err)
 				}
@@ -89,12 +81,12 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 					return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 				}
 
-				provider, err := c.ServiceProviders().Register(ctx, serviceProvider)
+				provider, err := ctx.Kore().ServiceProviders().Register(ctx, serviceProvider)
 				if err != nil {
 					return reconcile.Result{}, fmt.Errorf("failed to register service provider: %w", err)
 				}
 
-				catalog, err := c.ServiceProviders().Catalog(ctx, serviceProvider)
+				catalog, err := ctx.Kore().ServiceProviders().Catalog(ctx, serviceProvider)
 				if err != nil {
 					return reconcile.Result{}, fmt.Errorf("failed to load service catalog: %w", err)
 				}
@@ -115,7 +107,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 					existing.SetGroupVersionKind(kind.GroupVersionKind())
 					existing.Name = kind.Name
 					existing.Namespace = kind.Namespace
-					exists, err := kubernetes.GetIfExists(ctx, c.mgr.GetClient(), existing)
+					exists, err := kubernetes.GetIfExists(ctx, ctx.Client(), existing)
 					if err != nil {
 						return reconcile.Result{}, fmt.Errorf("failed to retrieve service kind %q: %w", kind.Name, err)
 					}
@@ -125,7 +117,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 
 					kubernetes.EnsureOwnerReference(&kind, serviceProvider, true)
 
-					if _, err := kubernetes.CreateOrUpdate(ctx, c.mgr.GetClient(), &kind); err != nil {
+					if _, err := kubernetes.CreateOrUpdate(ctx, ctx.Client(), &kind); err != nil {
 						return reconcile.Result{}, fmt.Errorf("failed to create or update service kind %q: %w", kind.Name, err)
 					}
 
@@ -141,7 +133,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 					}
 					plan.Annotations[kore.AnnotationReadOnly] = kore.AnnotationValueTrue
 
-					if _, err := kubernetes.CreateOrUpdate(ctx, c.mgr.GetClient(), &plan); err != nil {
+					if _, err := kubernetes.CreateOrUpdate(ctx, ctx.Client(), &plan); err != nil {
 						return reconcile.Result{}, fmt.Errorf("failed to create or update service plan %q: %w", plan.Name, err)
 					}
 				}
@@ -158,7 +150,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 				}
 
 				result, err = helpers.EnsureServices(
-					kore.NewContext(ctx, logger, c.mgr.GetClient(), c),
+					ctx,
 					adminServices,
 					serviceProvider,
 					&serviceProvider.Status.Components,
@@ -171,9 +163,8 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 			},
 		}
 
-		koreCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c)
 		for _, handler := range ensure {
-			result, err := handler(koreCtx)
+			result, err := handler(ctx)
 			if err != nil {
 				return reconcile.Result{}, err
 			}
@@ -185,7 +176,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 	}()
 
 	if err != nil {
-		logger.WithError(err).Error("failed to reconcile the service provider")
+		ctx.Logger().WithError(err).Error("failed to reconcile the service provider")
 
 		serviceProvider.Status.Status = corev1.ErrorStatus
 		serviceProvider.Status.Message = err.Error()

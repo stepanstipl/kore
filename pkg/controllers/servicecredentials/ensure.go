@@ -91,7 +91,7 @@ func (c *Controller) ensureSecret(
 	provider kore.ServiceProvider) controllers.EnsureFunc {
 	return func(ctx kore.Context) (reconcile.Result, error) {
 		// @step: create client for the cluster credentials
-		client, err := controllers.CreateClient(context.Background(), c.mgr.GetClient(), serviceCreds.Spec.Cluster)
+		client, err := controllers.CreateClient(context.Background(), ctx.Client(), serviceCreds.Spec.Cluster)
 		if err != nil {
 			serviceCreds.Status.Components.SetCondition(corev1.Component{
 				Name:    ComponentKubernetesSecret,
@@ -172,7 +172,7 @@ func (c *Controller) ensureSecret(
 
 func (c *Controller) EnsureDependencies(serviceCredentials *servicesv1.ServiceCredentials) controllers.EnsureFunc {
 	return func(ctx kore.Context) (reconcile.Result, error) {
-		cluster, err := c.Teams().Team(serviceCredentials.Spec.Cluster.Namespace).Clusters().Get(context.Background(), serviceCredentials.Spec.Cluster.Name)
+		cluster, err := ctx.Kore().Teams().Team(serviceCredentials.Spec.Cluster.Namespace).Clusters().Get(context.Background(), serviceCredentials.Spec.Cluster.Name)
 		if err != nil {
 			if err == kore.ErrNotFound {
 				serviceCredentials.Status.Status = corev1.PendingStatus
@@ -191,7 +191,7 @@ func (c *Controller) EnsureDependencies(serviceCredentials *servicesv1.ServiceCr
 		if !kore.IsSystemResource(serviceCredentials) && !kubernetes.HasOwnerReferenceWithKind(serviceCredentials, clustersv1.NamespaceClaimGVK) {
 			name := fmt.Sprintf("%s-%s", serviceCredentials.Spec.Cluster.Name, serviceCredentials.Spec.ClusterNamespace)
 
-			namespaceClaim, err := c.Teams().Team(serviceCredentials.Namespace).NamespaceClaims().Get(ctx, name)
+			namespaceClaim, err := ctx.Kore().Teams().Team(serviceCredentials.Namespace).NamespaceClaims().Get(ctx, name)
 			if err != nil {
 				if kerrors.IsNotFound(err) || err == kore.ErrNotFound {
 					serviceCredentials.Status.Status = corev1.PendingStatus
@@ -201,7 +201,7 @@ func (c *Controller) EnsureDependencies(serviceCredentials *servicesv1.ServiceCr
 				return reconcile.Result{}, err
 			}
 
-			return helpers.EnsureOwnerReference(ctx, c.mgr.GetClient(), serviceCredentials, namespaceClaim)
+			return helpers.EnsureOwnerReference(ctx, ctx.Client(), serviceCredentials, namespaceClaim)
 		}
 
 		return reconcile.Result{}, nil

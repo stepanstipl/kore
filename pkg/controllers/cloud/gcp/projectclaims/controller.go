@@ -18,126 +18,51 @@ package projectclaims
 
 import (
 	"context"
-	"time"
 
 	gcp "github.com/appvia/kore/pkg/apis/gcp/v1alpha1"
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/kore"
 
-	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 var _ controllers.Interface2 = &Controller{}
 
-// Controller is the controller for the projectclaims
-type Controller struct {
-	kore.Interface
-	name   string
-	logger log.FieldLogger
-	mgr    manager.Manager
-	ctrl   controller.Controller
-}
-
 func init() {
-	ctrl := NewController(log.StandardLogger())
-	if err := controllers.Register(ctrl); err != nil {
-		log.WithFields(log.Fields{
-			"error": err.Error(),
-		}).Fatalf("failed to register the %s controller", ctrl.Name())
-	}
+	controllers.Register(&Controller{})
 }
 
-// NewController creates and returns a serviceproviders controller
-func NewController(logger log.FieldLogger) *Controller {
-	name := "projectclaims"
-
-	return &Controller{
-		name: name,
-		logger: logger.WithFields(log.Fields{
-			"controller": name,
-		}),
-	}
+type Controller struct {
 }
 
 // Name returns the name of the controller
 func (c *Controller) Name() string {
-	return c.name
+	return "projectclaims"
 }
 
-// ManagerOptions returns the manager options for the controller
-func (c *Controller) ManagerOptions() manager.Options {
-	return controllers.DefaultManagerOptions(c)
-}
-
-// ControllerOptions returns the controller options
-func (c *Controller) ControllerOptions() controller.Options {
-	return controllers.DefaultControllerOptions(c)
-}
-
-func (c *Controller) RunWithDependencies(ctx context.Context, mgr manager.Manager, ctrl controller.Controller, hi kore.Interface) error {
-	c.mgr = mgr
-	c.ctrl = ctrl
-	c.Interface = hi
-
-	c.logger.Debug("controller has been started")
-
+// Initialize registers dependencies and sets up watches
+func (c *Controller) Initialize(ctx kore.Context, ctrl controller.Controller) error {
 	// @step: setup watches for the resources
-	if err := c.ctrl.Watch(
+	if err := ctrl.Watch(
 		&source.Kind{Type: &gcp.ProjectClaim{}},
 		&handler.EnqueueRequestForObject{},
 		&predicate.GenerationChangedPredicate{},
 	); err != nil {
-		c.logger.WithError(err).Error("failed to create watcher on resource")
+		ctx.Logger().WithError(err).Error("failed to create watcher on resource")
 		return err
 	}
 
-	var stopCh chan struct{}
-
-	go func() {
-		c.logger.Info("starting the controller loop")
-
-		for {
-			stopCh = make(chan struct{})
-
-			if err := c.mgr.Start(stopCh); err != nil {
-				c.logger.WithError(err).Error("failed to start the controller")
-			}
-			if ctx.Err() != nil {
-				// Context was cancelled
-				return
-			}
-			time.Sleep(5 * time.Second)
-		}
-	}()
-
-	// @step: use a routine to catch the stop channel
-	go func() {
-		<-ctx.Done()
-
-		c.logger.Info("stopping the controller")
-
-		if stopCh != nil {
-			close(stopCh)
-		}
-	}()
-
 	return nil
 }
 
-// Run is called when the controller is started
-func (c *Controller) Run(ctx context.Context, cfg *rest.Config, hi kore.Interface) error {
-	panic("this controller implements controllers.Interface2 and only RunWithDependencies should be called")
+func (c *Controller) Run(context.Context, *rest.Config, kore.Interface) error {
+	panic("deprecated")
 }
 
-// Stop is responsible for calling a halt on the controller
 func (c *Controller) Stop(context.Context) error {
-	c.logger.Info("attempting to stop the controller")
-
-	return nil
+	panic("deprecated")
 }

@@ -17,35 +17,27 @@
 package security
 
 import (
-	"context"
+	"github.com/appvia/kore/pkg/kore"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
-	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 // Reconcile is responsible for handling the scanning of a kind
-func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	ctx := context.Background()
-
-	logger := c.logger.WithFields(log.Fields{
-		"kind":      c.kind,
-		"name":      request.Name,
-		"namespace": request.Namespace,
-	})
-	logger.Debug("attempting to reconcile the security scans")
+func (c *Controller) Reconcile(ctx kore.Context, request reconcile.Request) (reconcile.Result, error) {
+	ctx.Logger().Debug("attempting to reconcile the security scans")
 
 	// @step: retrieve the object from the api
 	t := c.srckind.Type.DeepCopyObject()
-	if err := c.mgr.GetClient().Get(ctx, request.NamespacedName, t); err != nil {
+	if err := ctx.Client().Get(ctx, request.NamespacedName, t); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
-		logger.WithError(err).Error("trying to retrieve from api")
+		ctx.Logger().WithError(err).Error("trying to retrieve from api")
 
 		return reconcile.Result{}, err
 	}
@@ -56,17 +48,17 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 	}
 
 	if !meta.GetDeletionTimestamp().IsZero() {
-		return c.Delete(t)
+		return c.Delete(ctx, t)
 	}
 
 	switch c.kind {
 	case "Cluster":
-		err = c.kore.Security().ScanCluster(ctx, c.mgr.GetClient(), t.(*clustersv1.Cluster))
+		err = ctx.Kore().Security().ScanCluster(ctx, ctx.Client(), t.(*clustersv1.Cluster))
 	case "Plan":
-		err = c.kore.Security().ScanPlan(ctx, c.mgr.GetClient(), t.(*configv1.Plan))
+		err = ctx.Kore().Security().ScanPlan(ctx, ctx.Client(), t.(*configv1.Plan))
 	}
 	if err != nil {
-		logger.WithError(err).Error("trying to run security scan")
+		ctx.Logger().WithError(err).Error("trying to run security scan")
 
 		return reconcile.Result{}, err
 	}

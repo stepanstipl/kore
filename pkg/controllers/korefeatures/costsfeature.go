@@ -28,8 +28,8 @@ import (
 	"github.com/appvia/kore/pkg/serviceproviders/application"
 )
 
-func (c *Controller) getCostsServices(koreCtx kore.Context, config *configv1.KoreFeature) ([]v1.Service, error) {
-	servicePlan, err := c.kore.ServicePlans().Get(koreCtx, "app-kore-costs")
+func (c *Controller) getCostsServices(ctx kore.Context, config *configv1.KoreFeature) ([]v1.Service, error) {
+	servicePlan, err := ctx.Kore().ServicePlans().Get(ctx, "app-kore-costs")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get service plan app-kore-costs: %w", err)
 	}

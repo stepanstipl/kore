@@ -17,8 +17,6 @@
 package awsaccountclaims
 
 import (
-	"context"
-
 	"github.com/appvia/kore/pkg/kore"
 
 	aws "github.com/appvia/kore/pkg/apis/aws/v1alpha1"
@@ -26,41 +24,33 @@ import (
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
-	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 // Delete is responsible for deleting the claim
-func (c *Controller) Delete(request reconcile.Request) (reconcile.Result, error) {
-	ctx := context.Background()
-
-	logger := c.logger.WithFields(log.Fields{
-		"name":      request.NamespacedName.Name,
-		"namespace": request.NamespacedName.Namespace,
-	})
-	logger.Debug("attempting to reconcile the service provider")
+func (c *Controller) Delete(ctx kore.Context, request reconcile.Request) (reconcile.Result, error) {
+	ctx.Logger().Debug("attempting to reconcile the service provider")
 
 	// @step: retrieve the object from the api
 	claim := &aws.AWSAccountClaim{}
-	if err := c.mgr.GetClient().Get(ctx, request.NamespacedName, claim); err != nil {
+	if err := ctx.Client().Get(ctx, request.NamespacedName, claim); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
-		c.logger.WithError(err).Error("trying to retrieve claim from api")
+		ctx.Logger().WithError(err).Error("trying to retrieve claim from api")
 
 		return reconcile.Result{}, err
 	}
 	original := claim.DeepCopy()
 
-	f := kubernetes.NewFinalizer(c.mgr.GetClient(), finalizerName)
+	f := kubernetes.NewFinalizer(ctx.Client(), finalizerName)
 	if !f.IsDeletionCandidate(claim) {
 		return reconcile.Result{}, nil
 	}
 
-	koreCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c)
 	result, err := func() (reconcile.Result, error) {
-		return controllers.DefaultEnsureHandler.Run(koreCtx,
+		return controllers.DefaultEnsureHandler.Run(ctx,
 			[]controllers.EnsureFunc{
 				c.EnsureDeleting(claim),
 				c.EnsureFinalizerRemoved(claim),
@@ -68,7 +58,7 @@ func (c *Controller) Delete(request reconcile.Request) (reconcile.Result, error)
 		)
 	}()
 	if err != nil {
-		logger.WithError(err).Error("trying to reconcile the aws account claim")
+		ctx.Logger().WithError(err).Error("trying to reconcile the aws account claim")
 
 		claim.Status.Status = corev1.ErrorStatus
 
@@ -77,8 +67,8 @@ func (c *Controller) Delete(request reconcile.Request) (reconcile.Result, error)
 		}
 	}
 
-	if err := controllers.PatchStatus(ctx, c.mgr.GetClient(), claim, original); err != nil {
-		logger.WithError(err).Error("trying to update the status")
+	if err := controllers.PatchStatus(ctx, ctx.Client(), claim, original); err != nil {
+		ctx.Logger().WithError(err).Error("trying to update the status")
 
 		return reconcile.Result{}, err
 	}

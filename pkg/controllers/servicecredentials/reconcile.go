@@ -17,7 +17,6 @@
 package servicecredentials
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -30,7 +29,6 @@ import (
 	"github.com/appvia/kore/pkg/controllers"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
-	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -41,40 +39,32 @@ const (
 )
 
 // Reconcile is the entrypoint for the reconciliation logic
-func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult reconcile.Result, reconcileError error) {
-	ctx := context.Background()
-
-	logger := c.logger.WithFields(log.Fields{
-		"name":      request.NamespacedName.Name,
-		"namespace": request.NamespacedName.Namespace,
-	})
-	logger.Debug("attempting to reconcile the service credentials")
+func (c *Controller) Reconcile(ctx kore.Context, request reconcile.Request) (reconcileResult reconcile.Result, reconcileError error) {
+	ctx.Logger().Debug("attempting to reconcile the service credentials")
 
 	// @step: retrieve the object from the api
 	creds := &servicesv1.ServiceCredentials{}
-	if err := c.mgr.GetClient().Get(ctx, request.NamespacedName, creds); err != nil {
+	if err := ctx.Client().Get(ctx, request.NamespacedName, creds); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
-		logger.WithError(err).Error("trying to retrieve service credentials from api")
+		ctx.Logger().WithError(err).Error("trying to retrieve service credentials from api")
 
 		return reconcile.Result{}, err
 	}
 	original := creds.DeepCopy()
 
 	defer func() {
-		if err := c.mgr.GetClient().Status().Patch(ctx, creds, client.MergeFrom(original)); err != nil {
+		if err := ctx.Client().Status().Patch(ctx, creds, client.MergeFrom(original)); err != nil {
 			if !kerrors.IsNotFound(err) {
-				logger.WithError(err).Error("failed to update the service credentials status")
+				ctx.Logger().WithError(err).Error("failed to update the service credentials status")
 				reconcileResult = reconcile.Result{}
 				reconcileError = err
 			}
 		}
 	}()
 
-	koreCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c)
-
-	provider, err := c.ServiceProviders().GetProviderForKind(koreCtx, creds.Spec.Kind)
+	provider, err := ctx.Kore().ServiceProviders().GetProviderForKind(ctx, creds.Spec.Kind)
 	if err != nil {
 		if err == kore.ErrNotFound {
 			creds.Status.Status = corev1.ErrorStatus
@@ -86,7 +76,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 		return reconcile.Result{}, err
 	}
 
-	service, err := c.Teams().Team(creds.Spec.Service.Namespace).Services().Get(ctx, creds.Spec.Service.Name)
+	service, err := ctx.Kore().Teams().Team(creds.Spec.Service.Namespace).Services().Get(ctx, creds.Spec.Service.Name)
 	if err != nil {
 		if err == kore.ErrNotFound {
 			creds.Status.Status = corev1.PendingStatus
@@ -96,13 +86,13 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 		return reconcile.Result{}, err
 	}
 
-	finalizer := kubernetes.NewFinalizer(c.mgr.GetClient(), finalizerName)
+	finalizer := kubernetes.NewFinalizer(ctx.Client(), finalizerName)
 	if finalizer.IsDeletionCandidate(creds) {
-		return c.delete(ctx, logger, service, creds, finalizer, provider)
+		return c.delete(ctx, service, creds, finalizer, provider)
 	}
 
 	if !kore.IsSystemResource(creds) && !kubernetes.HasOwnerReferenceWithKind(creds, servicesv1.ServiceGVK) {
-		return helpers.EnsureOwnerReference(ctx, c.mgr.GetClient(), creds, service)
+		return helpers.EnsureOwnerReference(ctx, ctx.Client(), creds, service)
 	}
 
 	if service.Status.Status != corev1.SuccessStatus {
@@ -120,7 +110,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 		}
 
 		for _, handler := range ensure {
-			result, err := handler(koreCtx)
+			result, err := handler(ctx)
 			if err != nil {
 				return reconcile.Result{}, err
 			}
@@ -132,7 +122,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 	}()
 
 	if err != nil {
-		logger.WithError(err).Error("failed to reconcile the service credentials")
+		ctx.Logger().WithError(err).Error("failed to reconcile the service credentials")
 
 		creds.Status.Status = corev1.ErrorStatus
 		creds.Status.Message = err.Error()

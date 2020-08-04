@@ -44,14 +44,14 @@ const (
 	ComponentClusterBootstrap = "Cluster Initialize Access"
 )
 
-func (t *eksCtrl) GetLoggerFromReq(request reconcile.Request) log.FieldLogger {
+func (t *eksCtrl) GetLoggerFromReq(request reconcile.Request) log.Ext1FieldLogger {
 	return log.WithFields(log.Fields{
 		"name":      request.NamespacedName.Name,
 		"namespace": request.NamespacedName.Namespace,
 	})
 }
 
-func (t *eksCtrl) GetLoggerFromRes(resource *eksv1alpha1.EKS) log.FieldLogger {
+func (t *eksCtrl) GetLoggerFromRes(resource *eksv1alpha1.EKS) log.Ext1FieldLogger {
 	return log.WithFields(log.Fields{
 		"name":      resource.Name,
 		"namespace": resource.Namespace,

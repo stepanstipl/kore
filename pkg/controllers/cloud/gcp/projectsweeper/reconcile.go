@@ -17,7 +17,6 @@
 package projectsweeper
 
 import (
-	"context"
 	"time"
 
 	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
@@ -33,18 +32,11 @@ import (
 )
 
 // Reconcile is the entrypoint for the reconciliation logic
-func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	ctx := context.TODO()
+func (c *Controller) Reconcile(ctx kore.Context, request reconcile.Request) (reconcile.Result, error) {
+	ctx.Logger().Debug("attempting to cleanup the gcp projects")
 
-	logger := c.logger.WithFields(log.Fields{
-		"name":      request.NamespacedName.Name,
-		"namespace": request.NamespacedName.Namespace,
-	})
-	logger.Debug("attempting to cleanup the gcp projects")
-
-	koreCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c)
 	result, err := func() (reconcile.Result, error) {
-		return controllers.DefaultEnsureHandler.Run(koreCtx,
+		return controllers.DefaultEnsureHandler.Run(ctx,
 			[]controllers.EnsureFunc{
 				c.EnsureRemoval(),
 			},
@@ -52,7 +44,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 	}()
 
 	if err != nil {
-		logger.WithError(err).Error("failed to reconcile the project sweeper")
+		ctx.Logger().WithError(err).Error("failed to reconcile the project sweeper")
 	}
 
 	return result, nil
@@ -60,8 +52,6 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 // EnsureRemoval is responsible for deleting any project no longer claims
 func (c *Controller) EnsureRemoval() controllers.EnsureFunc {
-	cc := c.mgr.GetClient()
-
 	return func(ctx kore.Context) (reconcile.Result, error) {
 		// @logic
 		// - we retrieve a list of projects
@@ -70,20 +60,20 @@ func (c *Controller) EnsureRemoval() controllers.EnsureFunc {
 
 		// @step: ensure no claim exists outside of the team
 		projects := &gcp.ProjectList{}
-		if err := cc.List(ctx, projects, client.InNamespace("")); err != nil {
-			c.logger.WithError(err).Error("trying to retrieve all the projects")
+		if err := ctx.Client().List(ctx, projects, client.InNamespace("")); err != nil {
+			ctx.Logger().WithError(err).Error("trying to retrieve all the projects")
 
 			return reconcile.Result{}, err
 		}
 
 		claims := &gcp.ProjectClaimList{}
-		if err := cc.List(ctx, claims, client.InNamespace("")); err != nil {
-			c.logger.WithError(err).Error("trying to retrieve all the projects")
+		if err := ctx.Client().List(ctx, claims, client.InNamespace("")); err != nil {
+			ctx.Logger().WithError(err).Error("trying to retrieve all the projects")
 
 			return reconcile.Result{}, err
 		}
 
-		c.logger.WithField(
+		ctx.Logger().WithField(
 			"size", len(projects.Items),
 		).Debug("found the following gcp projects")
 
@@ -93,7 +83,7 @@ func (c *Controller) EnsureRemoval() controllers.EnsureFunc {
 
 			switch projects.Items[i].Status.Status {
 			case corev1.PendingStatus, corev1.DeletingStatus, "":
-				c.logger.WithField(
+				ctx.Logger().WithField(
 					"name", name,
 				).Debug("skipping the gcp project due to state")
 
@@ -103,7 +93,7 @@ func (c *Controller) EnsureRemoval() controllers.EnsureFunc {
 			// has we need this project before?
 			v, found := c.cache.Get(name)
 			if !found {
-				c.logger.WithField(
+				ctx.Logger().WithField(
 					"name", name,
 				).Debug("first time seeing the project, holding off for now")
 
@@ -114,7 +104,7 @@ func (c *Controller) EnsureRemoval() controllers.EnsureFunc {
 			timer := v.(time.Time)
 
 			// @step: double check no cluster is using this as a projectclaim
-			logger := c.logger.WithFields(log.Fields{
+			logger := ctx.Logger().WithFields(log.Fields{
 				"age":       time.Since(timer).String(),
 				"name":      projects.Items[i].Name,
 				"namespace": projects.Items[i].Namespace,
@@ -143,7 +133,7 @@ func (c *Controller) EnsureRemoval() controllers.EnsureFunc {
 				if time.Since(timer) > expiration {
 					logger.Info("attempting to delete the unclaimed gcp project")
 
-					if err := kubernetes.DeleteIfExists(ctx, cc, &projects.Items[i]); err != nil {
+					if err := kubernetes.DeleteIfExists(ctx, ctx.Client(), &projects.Items[i]); err != nil {
 						logger.WithError(err).Error("trying to delete the gcp project")
 
 						return reconcile.Result{}, err

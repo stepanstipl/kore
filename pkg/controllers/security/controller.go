@@ -22,6 +22,9 @@ import (
 	"strings"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+
 	"github.com/appvia/kore/pkg/controllers/predicates"
 
 	clustersv1 "github.com/appvia/kore/pkg/apis/clusters/v1"
@@ -30,7 +33,6 @@ import (
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils"
 
-	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -42,11 +44,7 @@ import (
 var _ controllers.Interface2 = &Controller{}
 
 type Controller struct {
-	kore    kore.Interface
 	name    string
-	logger  log.FieldLogger
-	mgr     manager.Manager
-	ctrl    controller.Controller
 	srckind *source.Kind
 	kind    string
 }
@@ -69,25 +67,17 @@ func init() {
 	}
 
 	for _, kind := range kindsToScan {
-		ctrl := NewController(log.StandardLogger(), kind)
-		if err := controllers.Register(ctrl); err != nil {
-			log.WithFields(log.Fields{
-				"error": err.Error(),
-			}).Fatalf("failed to register the %s controller", ctrl.Name())
-		}
+		controllers.Register(NewController(kind))
 	}
 
 }
 
 // NewController creates and returns a new scan controller
-func NewController(logger log.FieldLogger, srckind *source.Kind) *Controller {
+func NewController(srckind *source.Kind) *Controller {
 	kind := srckind.Type.GetObjectKind().GroupVersionKind().Kind
 	name := fmt.Sprintf("security-%s", strings.ToLower(kind))
 	return &Controller{
-		name: name,
-		logger: logger.WithFields(log.Fields{
-			"controller": name,
-		}),
+		name:    name,
 		srckind: srckind,
 		kind:    kind,
 	}
@@ -106,64 +96,33 @@ func (c *Controller) ManagerOptions() manager.Options {
 	return options
 }
 
-// ControllerOptions are the controller options
-func (c *Controller) ControllerOptions() controller.Options {
-	return controllers.DefaultControllerOptions(c)
+func (c *Controller) ControllerOptions(ctx kore.Context) controller.Options {
+	reconciler := reconcile.Func(func(request reconcile.Request) (reconcile.Result, error) {
+		logger := ctx.Logger().WithFields(log.Fields{
+			"name":      request.NamespacedName.Name,
+			"namespace": request.NamespacedName.Namespace,
+			"kind":      c.kind,
+		})
+		return c.Reconcile(ctx.WithLogger(logger), request)
+	})
+	return controllers.DefaultControllerOptions(reconciler)
 }
 
-// RunWithDependencies provisions the controller
-func (c *Controller) RunWithDependencies(ctx context.Context, mgr manager.Manager, ctrl controller.Controller, ki kore.Interface) error {
-	c.kore = ki
-	c.mgr = mgr
-	c.ctrl = ctrl
-
-	c.logger.Debug("controller has been started")
-
+// Initialize registers dependencies and sets up watches
+func (c *Controller) Initialize(ctx kore.Context, ctrl controller.Controller) error {
 	// @step: setup watches for the resources which we support security scanning for
-	if err := c.ctrl.Watch(c.srckind, &handler.EnqueueRequestForObject{}, predicates.SystemResourcePredicate{}); err != nil {
-		c.logger.WithError(err).Errorf("failed to create watcher on %s resource", c.kind)
+	if err := ctrl.Watch(c.srckind, &handler.EnqueueRequestForObject{}, predicates.SystemResourcePredicate{}); err != nil {
+		ctx.Logger().WithError(err).Errorf("failed to create watcher on %s resource", c.kind)
 		return err
 	}
 
-	var stopCh chan struct{}
-
-	// Start a loop to repeatedly start the manager until the context is cancelled.
-	go func() {
-		c.logger.Info("starting the controller loop")
-		for {
-			stopCh = make(chan struct{})
-			if err := c.mgr.Start(stopCh); err != nil {
-				c.logger.WithError(err).Error("failed to start the controller")
-			}
-			if ctx.Err() != nil {
-				// Context was cancelled
-				return
-			}
-			time.Sleep(5 * time.Second)
-		}
-	}()
-
-	// Monitor for the context completing and, on completion, send the stop signal to the
-	// manager by closing the current stopCh.
-	go func() {
-		<-ctx.Done()
-		c.logger.Info("stopping the controller")
-		if stopCh != nil {
-			close(stopCh)
-		}
-	}()
-
 	return nil
 }
 
-// Run is called when the controller is started
-func (c *Controller) Run(ctx context.Context, cfg *rest.Config, hi kore.Interface) error {
-	panic("this controller implements controllers.Interface2 and only RunWithDependencies should be called")
+func (c *Controller) Run(context.Context, *rest.Config, kore.Interface) error {
+	panic("deprecated")
 }
 
-// Stop is responsible for calling a halt on the controller
 func (c *Controller) Stop(context.Context) error {
-	c.logger.Info("attempting to stop the controller")
-
-	return nil
+	panic("deprecated")
 }

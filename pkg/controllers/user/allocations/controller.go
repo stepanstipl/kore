@@ -48,9 +48,7 @@ type acCtrl struct {
 }
 
 func init() {
-	if err := controllers.Register(&acCtrl{}); err != nil {
-		log.WithError(err).Fatal("failed to register the allocations controller")
-	}
+	controllers.Register(&acCtrl{})
 }
 
 // Name returns the name of the controller

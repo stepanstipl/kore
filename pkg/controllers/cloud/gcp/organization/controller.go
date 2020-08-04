@@ -42,9 +42,7 @@ type gcpCtrl struct {
 }
 
 func init() {
-	if err := controllers.Register(&gcpCtrl{}); err != nil {
-		log.WithError(err).Fatal("failed to register controller")
-	}
+	controllers.Register(&gcpCtrl{})
 }
 
 // Name returns the name of the controller

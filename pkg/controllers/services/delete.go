@@ -17,7 +17,6 @@
 package services
 
 import (
-	"context"
 	"time"
 
 	"github.com/appvia/kore/pkg/utils/validation"
@@ -28,23 +27,21 @@ import (
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
 	servicesv1 "github.com/appvia/kore/pkg/apis/services/v1"
-	log "github.com/sirupsen/logrus"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 // Delete is responsible for removing the service
 func (c Controller) Delete(
-	ctx context.Context,
-	logger log.FieldLogger,
+	ctx kore.Context,
 	service *servicesv1.Service,
 	finalizer *kubernetes.Finalizer,
 	provider kore.ServiceProvider,
 ) (reconcile.Result, error) {
-	logger.Debug("attempting to delete service from the api")
+	ctx.Logger().Debug("attempting to delete service from the api")
 
 	if service.Status.Status == corev1.DeletedStatus || service.GetAnnotations()[kore.Label("finalize")] == "false" {
 		if err := finalizer.Remove(service); err != nil {
-			logger.WithError(err).Error("failed to remove the finalizer from the service")
+			ctx.Logger().WithError(err).Error("failed to remove the finalizer from the service")
 
 			return reconcile.Result{}, err
 		}
@@ -57,7 +54,7 @@ func (c Controller) Delete(
 		return reconcile.Result{Requeue: true}, nil
 	}
 
-	if err := c.Teams().Team(service.Namespace).Services().CheckDelete(ctx, service); err != nil {
+	if err := ctx.Kore().Teams().Team(service.Namespace).Services().CheckDelete(ctx, service); err != nil {
 		if dv, ok := err.(validation.ErrDependencyViolation); ok {
 			service.Status.Message = dv.Error()
 			return reconcile.Result{RequeueAfter: 1 * time.Minute}, nil
@@ -67,9 +64,9 @@ func (c Controller) Delete(
 		return reconcile.Result{}, err
 	}
 
-	result, err := provider.Delete(kore.NewContext(ctx, logger, c.mgr.GetClient(), c), service)
+	result, err := provider.Delete(ctx, service)
 	if err != nil {
-		logger.WithError(err).Error("failed to delete the service")
+		ctx.Logger().WithError(err).Error("failed to delete the service")
 
 		service.Status.Status = corev1.ErrorStatus
 		service.Status.Message = err.Error()

@@ -17,7 +17,6 @@
 package features
 
 import (
-	"context"
 	"fmt"
 
 	configv1 "github.com/appvia/kore/pkg/apis/config/v1"
@@ -28,7 +27,6 @@ import (
 	"github.com/appvia/kore/pkg/kore"
 	"github.com/appvia/kore/pkg/utils/kubernetes"
 
-	log "github.com/sirupsen/logrus"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -39,42 +37,34 @@ const (
 )
 
 // Reconcile is responsible for handling the scanning of a kind
-func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult reconcile.Result, reconcileError error) {
-	ctx := context.Background()
-
-	logger := c.logger.WithFields(log.Fields{
-		"name":      request.Name,
-		"namespace": request.Namespace,
-	})
-	logger.Debug("attempting to reconcile feature")
+func (c *Controller) Reconcile(ctx kore.Context, request reconcile.Request) (reconcileResult reconcile.Result, reconcileError error) {
+	ctx.Logger().Debug("attempting to reconcile feature")
 
 	// @step: retrieve the object from the api
 	feature := &configv1.KoreFeature{}
-	if err := c.mgr.GetClient().Get(ctx, request.NamespacedName, feature); err != nil {
+	if err := ctx.Client().Get(ctx, request.NamespacedName, feature); err != nil {
 		if kerrors.IsNotFound(err) {
 			return reconcile.Result{}, nil
 		}
-		logger.WithError(err).Error("failed to retrieve feature from api")
+		ctx.Logger().WithError(err).Error("failed to retrieve feature from api")
 
 		return reconcile.Result{}, err
 	}
 	original := feature.DeepCopy()
 
-	logger = logger.WithField("feature", feature.Name)
-
 	defer func() {
-		if err := c.mgr.GetClient().Status().Patch(ctx, feature, client.MergeFrom(original)); err != nil {
+		if err := ctx.Client().Status().Patch(ctx, feature, client.MergeFrom(original)); err != nil {
 			if !kerrors.IsNotFound(err) {
-				logger.WithError(err).Error("failed to update the feature status")
+				ctx.Logger().WithError(err).Error("failed to update the feature status")
 				reconcileResult = reconcile.Result{}
 				reconcileError = err
 			}
 		}
 	}()
 
-	finalizer := kubernetes.NewFinalizer(c.mgr.GetClient(), finalizerName)
+	finalizer := kubernetes.NewFinalizer(ctx.Client(), finalizerName)
 	if finalizer.IsDeletionCandidate(feature) {
-		return c.delete(ctx, logger, feature, finalizer)
+		return c.delete(ctx, feature, finalizer)
 	}
 
 	result, err := func() (reconcile.Result, error) {
@@ -94,7 +84,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 				}
 
 				result, err = helpers.EnsureServices(
-					kore.NewContext(ctx, logger, c.mgr.GetClient(), c.kore),
+					ctx,
 					services,
 					feature,
 					&feature.Status.Components,
@@ -107,9 +97,8 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 			},
 		}
 
-		koreCtx := kore.NewContext(ctx, logger, c.mgr.GetClient(), c.kore)
 		for _, handler := range ensure {
-			result, err := handler(koreCtx)
+			result, err := handler(ctx)
 			if err != nil {
 				return reconcile.Result{}, err
 			}
@@ -121,7 +110,7 @@ func (c *Controller) Reconcile(request reconcile.Request) (reconcileResult recon
 	}()
 
 	if err != nil {
-		logger.WithError(err).Error("failed to reconcile the feature")
+		ctx.Logger().WithError(err).Error("failed to reconcile the feature")
 
 		feature.Status.Status = corev1.ErrorStatus
 		feature.Status.Message = err.Error()
