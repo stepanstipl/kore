@@ -18,31 +18,7 @@ package kubernetes
 
 import (
 	"fmt"
-
-	corev1 "github.com/appvia/kore/pkg/apis/core/v1"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
-
-// Object is a Kubernetes object
-//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Object
-type Object interface {
-	runtime.Object
-	metav1.Object
-}
-
-// ObjectWithStatus is a Kubernetes object where you can set/get the status and manage the status components
-type ObjectWithStatus interface {
-	Object
-	GetStatus() (status corev1.Status, message string)
-	SetStatus(status corev1.Status, message string)
-}
-
-type ObjectWithStatusComponents interface {
-	Object
-	StatusComponents() *corev1.Components
-}
 
 // DependentReference is an object reference to a dependent object in the same namespace
 type DependentReference struct {

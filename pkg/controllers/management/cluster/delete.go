@@ -65,6 +65,7 @@ func (a *Controller) Delete(ctx context.Context, cluster *clustersv1.Cluster) (r
 				a.setComponents(cluster, components),
 				a.setProviderComponents(provider, cluster, components),
 				a.Load(cluster, components),
+				a.Cleanup(cluster, components),
 				a.Remove(cluster, components),
 				a.RemoveFinalizer(cluster),
 			},

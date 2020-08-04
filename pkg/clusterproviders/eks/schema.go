@@ -127,7 +127,9 @@ const schema = `
 					},
 					"name": {
 						"type": "string",
-						"minLength": 1
+						"minLength": 1,
+						"immutable": true,
+						"identifier": true
 					},
 					"releaseVersion": {
 						"type": "string",

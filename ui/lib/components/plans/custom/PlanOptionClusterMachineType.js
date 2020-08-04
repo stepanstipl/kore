@@ -29,7 +29,7 @@ const FAMILY_INFO = {
   },
   'EKS': {
     families: {
-      
+
     },
     categories: {
 
@@ -94,7 +94,7 @@ export default class PlanOptionClusterMachineType extends PlanOptionBase {
     const { valueOrDefault } = this.prepCommonProps(this.props)
     if (this.state.typeIndex && this.state.typeIndex[valueOrDefault] && this.state.extInfo === null) {
       this.setExtInfo(this.state.typeIndex[valueOrDefault])
-    }    
+    }
   }
 
   mapTypes(typeInfo, provider) {
@@ -156,7 +156,7 @@ export default class PlanOptionClusterMachineType extends PlanOptionBase {
         family.children.sort((a, b) => a.mCpus === b.mCpus ? a.mem - b.mem : a.mCpus - b.mCpus)
       })
     })
-    
+
     return { types, typeIndex, priceIndex }
   }
 
@@ -165,7 +165,7 @@ export default class PlanOptionClusterMachineType extends PlanOptionBase {
       return types
     }
     return types.filter((t) => this.props.filterCategories(t.value))
-  }  
+  }
 
   setExtInfo = (v) => {
     if (!v || v.length < 3) {
@@ -213,7 +213,7 @@ export default class PlanOptionClusterMachineType extends PlanOptionBase {
 
     const onChange = (v) => {
       if (this.props.onChange){
-        this.props.onChange(name, v[2]) 
+        this.props.onChange(name, v[2])
       }
       if (nodePriceSet && priceIndex[v[2]]) {
         nodePriceSet(priceIndex[v[2]])
@@ -225,6 +225,7 @@ export default class PlanOptionClusterMachineType extends PlanOptionBase {
       <>
         <Form.Item label={displayName} help={extInfo}>
           <Cascader id={id} style={{ width: '100%' }} disabled={!editable} options={this.getFilteredTypes(types)} value={selectedInstType} onChange={onChange} />
+          {this.validationErrors(name)}
         </Form.Item>
       </>
     )
