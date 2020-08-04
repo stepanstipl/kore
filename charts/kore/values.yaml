@@ -70,5 +70,6 @@ ui:
   version: v0.2.0-rc1
   replicas: 2
   show_prototypes: false
+  disable_animations: false
 kubectl:
   version: 1.16

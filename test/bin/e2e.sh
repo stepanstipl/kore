@@ -73,6 +73,7 @@ build-cluster() {
     args="${args} --set=ui.hostPort=3000"
     args="${args} --set=ui.replicas=01"
     args="${args} --set=ui.serviceType=NodePort"
+    args="${args} --set=ui.disable_animations=true"
 
     if [[ ${BUILD_IMAGES} == true ]]; then
       announce "Building the Kore UI Image"

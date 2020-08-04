@@ -431,6 +431,66 @@ jobs:
       - slack/notify-on-failure:
           only_for_branches: master
 
+  e2e_ui_gke:
+    environment:
+      <<: *SERVICES_ENV
+    machine:
+      docker_layer_caching: true
+      image: ubuntu-1604:202007-01
+    steps:
+      - checkout
+      - kube-orb/install-kubectl:
+          kubectl-version: latest
+      - run:
+          name: Installing Tools
+          command: |
+            sudo apt-get update
+            sudo apt install -y bats jq awscli
+      - run:
+          name: Docker Login
+          command: |
+            docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} quay.io
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Provisioning Local Cluster
+          command: |
+            mkdir -p bin
+            # copy the cli from build
+            cp -f /tmp/workspace/* bin/
+            # build the cluster
+            test/bin/e2e.sh \
+              --build-cli false \
+              --build-kore-api false \
+              --build-proxy false \
+              --enable-ui true \
+              --version ${CIRCLE_SHA1}
+      - run:
+          name: Kore API Logs
+          background: true
+          command: |
+            make kind-apiserver-logs
+      - run:
+          name: Setup environment
+          no_output_timeout: 30m
+          command: |
+            rm -f ${HOME}/.kore/config
+            test/e2e/create-kore-config.sh
+            test/e2e/check-suite.sh \
+              --enable-unit-tests false \
+              --enable-e2e-user ${KORE_E2E_USER}
+            echo -n ${GKE_SA_QA} | base64 -d > ./gke-credentials.yml 2>/dev/null
+            bin/kore apply -f ./gke-credentials.yml -t kore-admin 2>&1 >/dev/null
+      - run:
+          name: Running UI GKE E2E Suite
+          no_output_timeout: 30m
+          command: |
+            cd ui
+            npm install jest puppeteer jest-puppeteer
+            make test-e2e-nightly-gke
+      - slack/notify-on-failure:
+          only_for_branches: master
+
   e2e_eks:
     environment:
       <<: *SERVICES_ENV
@@ -725,6 +785,9 @@ workflows:
     jobs:
       - build-api
       - e2e_gke:
+          requires:
+            - build-api
+      - e2e_ui_gke:
           requires:
             - build-api
 

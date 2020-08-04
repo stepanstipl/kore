@@ -4,7 +4,7 @@
 
 - bats (bash tests)
 - jq
-- korectl
+- kore
 - kubectl
 
 You must have some valid credentials in the e2e folder
@@ -19,8 +19,8 @@ You must have some valid credentials in the e2e folder
 - Bring up the dependencies via `make compose` or `make demo`
 - If your not using the `make demo` bring up the kore-apiserver locally via `bin/kore-apiserver --verbose`; sourcing
   in any environment variables you usually do.
-- Login via the `korectl login` command which will provision your user locally
-- Ensure if you are using multiple profiles your pointing to the local instance `korectl profiles ls`
+- Login via the `kore login` command which will provision your user locally
+- Ensure if you are using multiple profiles your pointing to the local instance `kore profiles ls`
 
 You can then run the checks via:
 

@@ -37,7 +37,6 @@ ENABLE_GKE_E2E=${ENABLE_GKE_E2E:-"false"}
 ENABLE_AKS_E2E=${ENABLE_AKS_E2E:-"false"}
 ENABLE_UNIT_TESTS=${ENABLE_UNIT_TESTS:-true}
 PATH=$PATH:${GOPATH}/bin:${PWD}/bin
-KORE_CONFIG=${HOME}/.kore/config
 
 mkdir -p ${GOPATH}/bin
 
@@ -47,7 +46,7 @@ usage() {
   --enable-conformance   : run the kubernetes conformance check suite
   --enable-unit-tests    : run the bats unit tests
   --enable-e2e-user      : indicates we should provision a test user
-  --enable-gke           : indicates we should run the GKE (default: ${ENABLE_GKE_E2E})
+  --enable-gke           : indicates we should run E2E on GKE (default: ${ENABLE_GKE_E2E})
   --enable-eks           : indicates we should run E2E on EKS (default: ${ENABLE_EKS_E2E})
   --enable-aks           : indicates we should run E2E on AKS (default: ${ENABLE_AKS_E2E})
   --e2e-team             : is the name of the team to use
@@ -58,33 +57,6 @@ EOF
     exit 1
   fi
   exit 0
-}
-
-create-korectl-config() {
-  [[ -f ${KORE_CONFIG} ]] && return
-
-  mkdir -p $(dirname ${KORE_CONFIG}) || {
-    error "unable to create the client configuration directory";
-    exit 1;
-  }
-
-  announce "Generating a korectl configuration: ${KORE_CONFIG}"
-  cat << EOF > ${KORE_CONFIG}
-current-profile: local
-profiles:
-  local:
-    server: local
-    user: local
-servers:
-  local:
-    server: ${KORE_API_URL}
-users:
-  local:
-    oidc:
-      authorize-url: ${KORE_IDP_SERVER_URL}
-      client-id: ${KORE_IDP_CLIENT_ID}
-      id-token: ${KORE_ID_TOKEN}
-EOF
 }
 
 create-aws-profile() {
@@ -132,15 +104,15 @@ EOF
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-  --enable-conformance) ENABLE_CONFORMANCE="true"; shift 1; ;;
-  --enable-unit-tests)  ENABLE_UNIT_TESTS="true";  shift 1; ;;
-  --enable-gke)         ENABLE_GKE_E2E=${2};       shift 2; ;;
-  --enable-eks)         ENABLE_EKS_E2E=${2};       shift 2; ;;
-  --enable-aks)         ENABLE_AKS_E2E=${2};       shift 2; ;;
-  --enable-e2e-user)    ADMIN_USER=$2;             shift 2; ;;
-  --e2e-team)           TEAM=$2;                   shift 2; ;;
-  -h|--help)            usage;                              ;;
-  *)                                               shift 1; ;;
+  --enable-conformance) ENABLE_CONFORMANCE="true";      shift 1; ;;
+  --enable-unit-tests)  ENABLE_UNIT_TESTS=${2:-"true"}; shift 1; ;;
+  --enable-gke)         ENABLE_GKE_E2E=${2};            shift 2; ;;
+  --enable-eks)         ENABLE_EKS_E2E=${2};            shift 2; ;;
+  --enable-aks)         ENABLE_AKS_E2E=${2};            shift 2; ;;
+  --enable-e2e-user)    ADMIN_USER=$2;                  shift 2; ;;
+  --e2e-team)           TEAM=$2;                        shift 2; ;;
+  -h|--help)            usage;                                   ;;
+  *)                                                    shift 1; ;;
   esac
 done
 
@@ -177,7 +149,7 @@ if [[ "${ENABLE_UNIT_TESTS}" == "true" ]]; then
     fi
   fi
 
-  if ! create-korectl-config; then
+  if ! test/e2e/create-kore-config.sh; then
     error "failed to generate a client configuration for cli"
     exit 1
   fi
