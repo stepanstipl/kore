@@ -7,7 +7,7 @@ const { publicRuntimeConfig } = getConfig()
 import Link from 'next/link'
 import { titleize, pluralize } from 'inflect'
 
-import KoreManagedCloudAccountsCustom from './KoreManagedCloudAccountsCustom'
+import KoreManagedCloudAccountsConfigure from './KoreManagedCloudAccountsConfigure'
 import RequestCredentialAccessForm from './forms/RequestCredentialAccessForm'
 import AllocationHelpers from '../../utils/allocation-helpers'
 import FormErrorMessage from '../forms/FormErrorMessage'
@@ -17,7 +17,6 @@ import copy from '../../utils/object-copy'
 import asyncForEach from '../../utils/async-foreach'
 import { errorMessage, successMessage } from '../../utils/message'
 import KoreTeamCloudIntegration from './radio-groups/KoreTeamCloudIntegration'
-import CloudAccountAutomationType from './radio-groups/CloudAccountAutomationType'
 import { filterCloudAccountList } from '../../utils/cloud'
 
 class CloudAccountAutomationSettings extends React.Component {
@@ -50,16 +49,14 @@ class CloudAccountAutomationSettings extends React.Component {
     const accountManagement = accountManagementList.items.find(a => a.spec.provider === this.props.provider)
     const cloudManagementType = accountManagement ? 'KORE' : 'EXISTING'
 
-    let cloudAccountAutomationType = false
     let cloudAccountList = []
 
     if (accountManagement) {
-      cloudAccountAutomationType = (accountManagement.spec.rules || []).length === 0 ? 'CLUSTER' : 'CUSTOM'
       cloudAccountList = (accountManagement.spec.rules || []).map(rule => ({ code: canonical(rule.name), ...rule }))
     }
     const email = cloudConfig && cloudConfig.spec.values.requestAccessEmail
     const emailValid = email ? true : false
-    return { plans, accountManagement, cloudManagementType, cloudAccountList, cloudAccountAutomationType, cloudOrgList, email, emailValid }
+    return { plans, accountManagement, cloudManagementType, cloudAccountList, cloudOrgList, email, emailValid }
   }
 
   componentDidMount() {
@@ -69,8 +66,6 @@ class CloudAccountAutomationSettings extends React.Component {
 
   selectCloudManagementType = e => this.setState({ cloudManagementType: e.target.value })
 
-  selectCloudAccountAutomationType = e => this.setState({ cloudAccountAutomationType: e.target.value })
-
   disabledSave = () => {
     if (this.state.submitting || !this.state.cloudManagementType) {
       return true
@@ -78,11 +73,8 @@ class CloudAccountAutomationSettings extends React.Component {
     if (this.state.cloudManagementType === 'EXISTING') {
       return this.state.emailValid ? false : true
     }
-    if (this.state.cloudManagementType === 'KORE' && !this.state.cloudAccountAutomationType) {
-      return true
-    }
-    if (this.state.cloudAccountAutomationType === 'CUSTOM' && this.state.cloudAccountList.length === 0) {
-      return true
+    if (this.state.cloudManagementType === 'KORE') {
+      return this.state.cloudAccountList.length === 0
     }
     return false
   }
@@ -101,7 +93,6 @@ class CloudAccountAutomationSettings extends React.Component {
           await AllocationHelpers.removeAllocation(this.state.accountManagement)
           this.setState({
             submitting: false,
-            cloudAccountAutomationType: false,
             accountManagement: false,
             cloudAccountList: []
           })
@@ -124,7 +115,7 @@ class CloudAccountAutomationSettings extends React.Component {
       // create AccountManagement and Allocation CRDs, for each cloud Org
       // each cloud org will use the same settings
       await asyncForEach(this.state.cloudOrgList, async (cloudOrg) => {
-        let cloudAccountList = this.state.cloudAccountAutomationType === 'CUSTOM' ? copy(this.state.cloudAccountList) : false
+        let cloudAccountList = this.state.cloudAccountList
         cloudAccountList = filterCloudAccountList(cloudAccountList, this.state.plans)
         const resourceVersion = this.state.accountManagement && this.state.accountManagement.metadata.resourceVersion
         const resourceName = `am-${this.props.cloud.toLowerCase()}`
@@ -183,7 +174,7 @@ class CloudAccountAutomationSettings extends React.Component {
       title: `This defines how Kore will automate ${this.props.cloud} ${pluralize(this.props.accountNoun)} for teams`,
       content: (
         <div>
-          <p>When a team is created in Kore and a cluster is requested, Kore will ensure the {this.props.cloud} {this.props.accountNoun} is also created and the cluster placed inside it.</p>
+          <p>When a team is created in Kore and a cluster is requested, Kore will ensure the associated {this.props.cloud} {this.props.accountNoun} is also created and the cluster placed inside it.</p>
           <p>You can specify how the {this.props.cloud} {pluralize(this.props.accountNoun)} should be created for Kore teams.</p>
         </div>
       ),
@@ -211,28 +202,17 @@ class CloudAccountAutomationSettings extends React.Component {
     <>
       <Paragraph style={{ fontSize: '16px', fontWeight: '600' }}>Configure {this.props.cloud} {this.props.accountNoun} automation <Icon style={{ marginLeft: '5px' }} type="info-circle" theme="twoTone" onClick={this.accountAutomationHelp}/></Paragraph>
 
-      <CloudAccountAutomationType
+      <KoreManagedCloudAccountsConfigure
+        cloudAccountList={this.state.cloudAccountList}
+        plans={this.state.plans}
+        handleChange={this.handleCloudAccountChange}
+        handleDelete={this.handleCloudAccountDeleted}
+        handleEdit={this.handleCloudAccountEdited}
+        handleAdd={this.handleCloudAccountAdded}
+        handleReset={this.handleResetCloudAccountList}
         cloud={this.props.cloud}
         accountNoun={this.props.accountNoun}
-        value={this.state.cloudAccountAutomationType}
-        onChange={this.selectCloudAccountAutomationType}
-        inlineHelp={true}
       />
-
-      {this.state.cloudAccountAutomationType === 'CUSTOM' && (
-        <KoreManagedCloudAccountsCustom
-          cloudAccountList={this.state.cloudAccountList}
-          plans={this.state.plans}
-          handleChange={this.handleCloudAccountChange}
-          handleDelete={this.handleCloudAccountDeleted}
-          handleEdit={this.handleCloudAccountEdited}
-          handleAdd={this.handleCloudAccountAdded}
-          handleReset={this.handleResetCloudAccountList}
-          hideGuidance={true}
-          cloud={this.props.cloud}
-          accountNoun={this.props.accountNoun}
-        />
-      )}
     </>
   )
 

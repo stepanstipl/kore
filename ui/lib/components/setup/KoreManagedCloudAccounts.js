@@ -13,10 +13,9 @@ import asyncForEach from '../../utils/async-foreach'
 import FormErrorMessage from '../forms/FormErrorMessage'
 import AllocationHelpers from '../../utils/allocation-helpers'
 import { successMessage } from '../../utils/message'
-import KoreManagedCloudAccountsCustom from './KoreManagedCloudAccountsCustom'
+import KoreManagedCloudAccountsConfigure from './KoreManagedCloudAccountsConfigure'
 import GCPOrganizationsList from '../credentials/GCPOrganizationsList'
 import AWSOrganizationsList from '../credentials/AWSOrganizationsList'
-import CloudAccountAutomationType from './radio-groups/CloudAccountAutomationType'
 
 class KoreManagedCloudAccounts extends React.Component {
 
@@ -37,16 +36,13 @@ class KoreManagedCloudAccounts extends React.Component {
 
   constructor(props) {
     super(props)
-    let cloudAccountAutomationType = ''
     let cloudAccountList = []
     if (props.accountManagement) {
-      cloudAccountAutomationType = (props.accountManagement.spec.rules || []).length === 0 ? 'CLUSTER' : 'CUSTOM'
       cloudAccountList = (props.accountManagement.spec.rules || []).map(rule => ({ code: canonical(rule.name), ...rule }))
     }
     this.state = {
       cloudOrgList: [],
       currentStep: 0,
-      cloudAccountAutomationType,
       cloudAccountList,
       plans: [],
       submitting: false,
@@ -62,8 +58,6 @@ class KoreManagedCloudAccounts extends React.Component {
   componentDidMount() {
     this.fetchComponentData().then(plans => this.setState({ plans }))
   }
-
-  selectCloudAccountAutomationType = (e) => this.setState({ cloudAccountAutomationType: e.target.value })
 
   handleResetCloudAccountList = (cloudAccountList) => this.setState({ cloudAccountList })
 
@@ -129,9 +123,6 @@ class KoreManagedCloudAccounts extends React.Component {
   stepsCompleteCreds = () => this.state.cloudOrgList.length >= 1
 
   stepsCompleteAccounts = () => {
-    if (this.state.cloudAccountAutomationType === 'CLUSTER') {
-      return true
-    }
     return this.state.cloudAccountList.length >= 1
   }
 
@@ -142,7 +133,7 @@ class KoreManagedCloudAccounts extends React.Component {
       // create AccountManagement and Allocation CRDs, for each cloud Org
       // each cloud org will use the same settings
       await asyncForEach(this.state.cloudOrgList, async (cloudOrg) => {
-        const cloudAccountList = this.state.cloudAccountAutomationType === 'CUSTOM' ? this.state.cloudAccountList : false
+        const cloudAccountList = this.state.cloudAccountList
         const resourceVersion = this.props.accountManagement && this.props.accountManagement.metadata.resourceVersion
         const resourceName = `am-${this.props.cloud.toLowerCase()}`
         const accountMgtResource = KoreApi.resources().generateAccountManagementResource(resourceName, this.props.provider, cloudOrg, cloudAccountList, resourceVersion)
@@ -177,41 +168,23 @@ class KoreManagedCloudAccounts extends React.Component {
       <Paragraph style={{ fontSize: '16px', fontWeight: '600' }}>Configure {this.props.cloud} {this.props.accountNoun} automation</Paragraph>
       <Alert
         message={`This defines how Kore will automate ${this.props.cloud} ${pluralize(this.props.accountNoun)} for teams`}
-        description={`When a team is created in Kore and a cluster is requested, Kore will ensure the ${this.props.cloud} ${this.props.accountNoun} is also created and the cluster placed inside it. You must also specify the plans available for each type of ${this.props.accountNoun}, this is to ensure the correct cluster specification is being used.`}
+        description={`When a team is created in Kore and a cluster is requested, Kore will ensure the associated ${this.props.cloud} ${this.props.accountNoun} is also created and the cluster placed inside it. You must also specify the plans available for each type of ${this.props.accountNoun}, this is to ensure the correct cluster specification is being used.`}
         type="info"
         showIcon
         style={{ marginBottom: '20px' }}
       />
 
-      <CloudAccountAutomationType
+      <KoreManagedCloudAccountsConfigure
+        cloudAccountList={this.state.cloudAccountList}
+        plans={this.state.plans}
+        handleChange={this.handleCloudAccountChange}
+        handleDelete={this.handleCloudAccountDeleted}
+        handleEdit={this.handleCloudAccountEdited}
+        handleAdd={this.handleCloudAccountAdded}
+        handleReset={this.handleResetCloudAccountList}
         cloud={this.props.cloud}
         accountNoun={this.props.accountNoun}
-        onChange={this.selectCloudAccountAutomationType}
-        value={this.state.cloudAccountAutomationType}
       />
-
-      {this.state.cloudAccountAutomationType === 'CLUSTER' && (
-        <Alert
-          message={`For every cluster a team creates Kore will also create a ${this.props.cloud} ${this.props.accountNoun} and provision the cluster inside it. The ${this.props.cloud} ${this.props.accountNoun} will be named using the team name and the name of the cluster created.`}
-          type="info"
-          showIcon
-          style={{ marginBottom: '20px' }}
-        />
-      )}
-
-      {this.state.cloudAccountAutomationType === 'CUSTOM' && (
-        <KoreManagedCloudAccountsCustom
-          cloudAccountList={this.state.cloudAccountList}
-          plans={this.state.plans}
-          handleChange={this.handleCloudAccountChange}
-          handleDelete={this.handleCloudAccountDeleted}
-          handleEdit={this.handleCloudAccountEdited}
-          handleAdd={this.handleCloudAccountAdded}
-          handleReset={this.handleResetCloudAccountList}
-          cloud={this.props.cloud}
-          accountNoun={this.props.accountNoun}
-        />
-      )}
     </>
   )
 
