@@ -47,6 +47,9 @@ class TypesWhoAmI {
         if (data) {
             obj = obj || new TypesWhoAmI();
 
+            if (data.hasOwnProperty('authMethod')) {
+                obj['authMethod'] = ApiClient.convertToType(data['authMethod'], 'String');
+            }
             if (data.hasOwnProperty('email')) {
                 obj['email'] = ApiClient.convertToType(data['email'], 'String');
             }
@@ -60,6 +63,19 @@ class TypesWhoAmI {
         return obj;
     }
 
+/**
+     * @return {String}
+     */
+    getAuthMethod() {
+        return this.authMethod;
+    }
+
+    /**
+     * @param {String} authMethod
+     */
+    setAuthMethod(authMethod) {
+        this['authMethod'] = authMethod;
+    }
 /**
      * @return {String}
      */
@@ -101,6 +117,11 @@ class TypesWhoAmI {
     }
 
 }
+
+/**
+ * @member {String} authMethod
+ */
+TypesWhoAmI.prototype['authMethod'] = undefined;
 
 /**
  * @member {String} email
