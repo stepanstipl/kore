@@ -81,7 +81,7 @@ func (l *issueHandler) issueHandler(req *restful.Request, resp *restful.Response
 			if err != nil {
 				return err
 			}
-			resp.WriteHeaderAndEntity(http.StatusOK, &types.IssuedToken{Token: issued})
+			return resp.WriteHeaderAndEntity(http.StatusOK, &types.IssuedToken{Token: issued})
 
 		default:
 			resp.WriteHeader(http.StatusNotImplemented)

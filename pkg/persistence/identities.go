@@ -103,6 +103,9 @@ func (i *idImpl) List(ctx context.Context, opts ...ListFunc) ([]*model.Identity,
 	if terms.HasProviders() {
 		q = q.Where("i.provider IN ?", terms.GetProviders())
 	}
+	if terms.HasProvider() {
+		q = q.Where("i.provider = ?", terms.GetProvider())
+	}
 
 	list := []*model.Identity{}
 
