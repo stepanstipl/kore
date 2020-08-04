@@ -23,6 +23,7 @@ import (
 	"github.com/tidwall/sjson"
 )
 
+// SetJSONProperty sets a json property
 func SetJSONProperty(document []byte, key, value string) ([]byte, error) {
 	if strings.HasPrefix(value, "{") || strings.HasPrefix(value, "[") {
 		return sjson.SetRawBytes(document, key, []byte(value))
@@ -40,6 +41,7 @@ func SetJSONProperty(document []byte, key, value string) ([]byte, error) {
 		if val, err := strconv.Unquote(v); err == nil {
 			return val
 		}
+
 		return v
 	}(value))
 }

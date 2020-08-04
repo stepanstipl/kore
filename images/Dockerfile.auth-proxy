@@ -8,7 +8,7 @@ COPY . /go/src/github.com/appvia/kore
 
 RUN cd /go/src/github.com/appvia/kore && make auth-proxy
 
-FROM alpine:3.11
+FROM alpine:3.12
 
 LABEL Name=auth-proxy \
       Release=https://github.com/appvia/kore \
@@ -18,7 +18,7 @@ LABEL Name=auth-proxy \
 
 RUN apk --no-cache add ca-certificates
 
-COPY --from=0 /go/src/github.com/appvia/kore/bin/* /bin/
+COPY --from=0 /go/src/github.com/appvia/kore/bin/auth-proxy /bin/auth-proxy
 
 USER 65534
 

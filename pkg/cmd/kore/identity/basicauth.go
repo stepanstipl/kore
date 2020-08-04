@@ -17,7 +17,7 @@
 package identity
 
 import (
-	"fmt"
+	"errors"
 	"io/ioutil"
 	"os"
 
@@ -59,8 +59,6 @@ type BasicAuthOptions struct {
 	PassStdin bool
 	// Password is the user password
 	Password string
-	// Confirm is a confirmation of password
-	Confirm string
 }
 
 // NewCmdCreateBasicAuthIdentity creates and returns the command
@@ -110,25 +108,32 @@ func (o *BasicAuthOptions) Run() error {
 		}
 		o.Password = string(content)
 	} else {
-		p := cmdutil.Prompts{
+		if err := (cmdutil.Prompts{
 			&cmdutil.Prompt{
 				Id:     "Please enter the password for " + o.Username,
 				Value:  &o.Password,
 				Mask:   true,
 				ErrMsg: "invalid password",
 			},
-			&cmdutil.Prompt{
-				Id:     "Please confirm your password for " + o.Username,
-				Value:  &o.Confirm,
-				Mask:   true,
-				ErrMsg: "invalid password",
-			},
-		}
-		if err := p.Collect(); err != nil {
+		}).Collect(); err != nil {
 			return err
 		}
-		if o.Password != o.Confirm {
-			return fmt.Errorf("passwords are not the same")
+		var confirm string
+
+		if !o.PassStdin {
+			if err := (cmdutil.Prompts{
+				&cmdutil.Prompt{
+					Id:     "Please confirm password for " + o.Username,
+					Value:  &confirm,
+					Mask:   true,
+					ErrMsg: "invalid password",
+				},
+			}).Collect(); err != nil {
+				return err
+			}
+			if confirm != o.Password {
+				return errors.New("passwords do not match")
+			}
 		}
 	}
 

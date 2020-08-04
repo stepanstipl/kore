@@ -17,6 +17,7 @@
 package config
 
 import (
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -26,6 +27,42 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
+
+// ParseTokenConfiguration is used parse the token configuration
+func ParseTokenConfiguration(reader io.Reader) (*AuthorizedTokensConfig, error) {
+	content, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+	c := &AuthorizedTokensConfig{}
+
+	return c, yaml.Unmarshal(content, c)
+}
+
+// ParseTokenConfigurationFromFile reads the token config from a file
+func ParseTokenConfigurationFromFile(path string) (*AuthorizedTokensConfig, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return ParseTokenConfiguration(file)
+}
+
+// WriteTokenConfiguration marshals the token configuration
+func WriteTokenConfiguration(config *AuthorizedTokensConfig) ([]byte, error) {
+	return yaml.Marshal(config)
+}
+
+// WriteTokenConfigurationToFile writes to a file
+func WriteTokenConfigurationToFile(config *AuthorizedTokensConfig, path string) error {
+	content, err := WriteTokenConfiguration(config)
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(path, content, os.FileMode(0640))
+}
 
 // GetClientConfigurationPath returns the path to the client config
 func GetClientConfigurationPath() string {

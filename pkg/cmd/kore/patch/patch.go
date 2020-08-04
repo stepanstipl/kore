@@ -21,16 +21,15 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	"github.com/appvia/kore/pkg/utils/jsonutils"
-
 	"github.com/appvia/kore/pkg/client"
 	"github.com/appvia/kore/pkg/cmd/errors"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 	"github.com/appvia/kore/pkg/utils"
-	"github.com/tidwall/sjson"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"github.com/appvia/kore/pkg/utils/jsonutils"
 
 	"github.com/spf13/cobra"
+	"github.com/tidwall/sjson"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 var (

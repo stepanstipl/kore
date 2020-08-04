@@ -137,11 +137,10 @@ func (a k8sCtrl) EnsureAPIService(
 		}
 		kind := object.GetObjectKind().GroupVersionKind().Kind
 		ignore := []string{
-			"Service",
-			"ServiceAccount",
 			"ClusterRole",
 			"ClusterRoleBinding",
-			"HorizontalPodAutoscaler",
+			"Service",
+			"ServiceAccount",
 		}
 		if utils.Contains(kind, ignore) {
 			if found, err := kubernetes.CheckIfExists(ctx, cc, object); err != nil {

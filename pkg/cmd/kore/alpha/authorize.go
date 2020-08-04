@@ -18,12 +18,11 @@ package alpha
 
 import (
 	"errors"
-	"io/ioutil"
-	"os"
 	"path"
 
 	"github.com/appvia/kore/pkg/apiserver/types"
 	"github.com/appvia/kore/pkg/client"
+	clientcfg "github.com/appvia/kore/pkg/client/config"
 	cmderr "github.com/appvia/kore/pkg/cmd/errors"
 	cmdutil "github.com/appvia/kore/pkg/cmd/utils"
 	"github.com/appvia/kore/pkg/utils"
@@ -48,36 +47,46 @@ const (
 	ExecAPIVersion = "client.authentication.k8s.io/v1beta1"
 )
 
+var (
+	// AuthorizedTokensPath is the path to the authorized tokens
+	AuthorizedTokensPath = path.Join(utils.UserHomeDir(), ".kore", "authorized")
+)
+
 // AuthorizeOptions are the options for the authorize command
 type AuthorizeOptions struct {
 	cmdutil.Factory
 	cmdutil.DefaultHandler
+	// AuthorizedTokenPath is the path to the tokens file
+	AuthorizedTokenPath string
 }
 
 // NewCmdAlphaAuthorize creates and return the authorize command
 func NewCmdAlphaAuthorize(factory cmdutil.Factory) *cobra.Command {
 	o := &AuthorizeOptions{Factory: factory}
 
-	command := &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "authorize",
 		Long:  getAuthoizeLongDescription,
 		Short: "Authorize myself and retrieve a kubernetes token",
 		Run:   cmdutil.DefaultRunFunc(o),
 	}
 
-	return command
+	flags := cmd.Flags()
+	flags.StringVar(&o.AuthorizedTokenPath, "authorized-tokens", AuthorizedTokensPath, "path to authorized token `PATH`")
+
+	return cmd
 }
 
 // Run implements the action
 func (o *AuthorizeOptions) Run() error {
 	// @step: find the local token if any
-	tokenfile := os.ExpandEnv(path.Join(utils.UserHomeDir(), ".kore", "token"))
-	found, err := utils.FileExists(tokenfile)
+	found, err := utils.FileExists(o.AuthorizedTokenPath)
 	if err != nil {
 		return err
 	}
+
 	if found {
-		claims, err := o.GetCurrentKubeToken(tokenfile)
+		claims, err := o.GetCurrentKubeToken(o.AuthorizedTokenPath)
 		if err != nil {
 			log.WithError(err).Debug("trying to retrieve current token")
 		}
@@ -96,21 +105,55 @@ func (o *AuthorizeOptions) Run() error {
 	}
 
 	// @step: write the token to file
-	if err = ioutil.WriteFile(tokenfile, claims.RawToken, os.FileMode(0600)); err != nil {
+	if err := o.UpdateKubeToken(o.AuthorizedTokenPath, string(claims.RawToken)); err != nil {
 		return err
 	}
 
 	return o.RenderKubectlCredentials(claims)
 }
 
+// UpdateKubeToken is used to update the token in the token configuration
+func (o *AuthorizeOptions) UpdateKubeToken(path, token string) error {
+	config := &clientcfg.AuthorizedTokensConfig{}
+
+	found, err := utils.FileExists(path)
+	if err != nil {
+		return err
+	}
+	if found {
+		config, err = clientcfg.ParseTokenConfigurationFromFile(path)
+		if err != nil {
+			return err
+		}
+	}
+	if config.AuthInfos == nil {
+		config.AuthInfos = make(map[string]*clientcfg.AuthInfo)
+	}
+	config.AuthInfos[o.Client().CurrentProfile()] = &clientcfg.AuthInfo{Token: &token}
+
+	return clientcfg.WriteTokenConfigurationToFile(config, path)
+}
+
 // GetCurrentKubeToken returns the current token from file
 func (o *AuthorizeOptions) GetCurrentKubeToken(path string) (*utils.JWTToken, error) {
-	content, err := ioutil.ReadFile(path)
+	config, err := clientcfg.ParseTokenConfigurationFromFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	return utils.NewJWTTokenFromBytes(content)
+	if config.AuthInfos == nil {
+		return nil, errors.New("no authentication found")
+	}
+
+	auth, found := config.AuthInfos[o.Client().CurrentProfile()]
+	if !found {
+		return nil, errors.New("no profile authentication found")
+	}
+	if auth.Token == nil {
+		return nil, errors.New("no proile token found")
+	}
+
+	return utils.NewJWTTokenFromBytes([]byte(*auth.Token))
 }
 
 // RequestKubeToken is used to request a token from kore

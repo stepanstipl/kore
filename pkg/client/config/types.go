@@ -29,6 +29,14 @@ var (
 	DefaultKoreConfigPathEnv = "KORE_CONFIG"
 )
 
+// AuthorizedTokensConfig is used to store minted tokens for a profile
+type AuthorizedTokensConfig struct {
+	// Version is the version of the configuration
+	Version string `json:"version,omitempty" yaml:"version,omitempty"`
+	// AuthInfos are token used for authentication
+	AuthInfos map[string]*AuthInfo `json:"authinfos,omitempty" yaml:"authinfos"`
+}
+
 // Config is the configuration for the api
 type Config struct {
 	// AuthInfos is a collection of credentials

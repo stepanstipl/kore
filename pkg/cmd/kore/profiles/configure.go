@@ -66,6 +66,10 @@ func NewCmdProfilesConfigure(factory cmdutil.Factory) *cobra.Command {
 	flags.StringVarP(&o.LocalUser, "user", "u", "", "username when configuring basicauth profile `USERNAME`")
 	flags.StringVar(&o.LocalPass, "password", "", "password for basicauth profiles ('-' for stdin) `PASSWORD`")
 
+	cmdutil.MustRegisterFlagCompletionFunc(cmd, "account", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return kore.SupportedAccounts, cobra.ShellCompDirectiveDefault
+	})
+
 	return cmd
 }
 

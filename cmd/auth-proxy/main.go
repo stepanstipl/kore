@@ -119,10 +119,6 @@ func main() {
 
 // Validate is responsible for checkinn the inputs
 func Validate() error {
-	if err := o.OIDC.IsValid(); err != nil {
-		return err
-	}
-
 	return nil
 }
 

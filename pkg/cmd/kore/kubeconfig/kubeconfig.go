@@ -153,7 +153,7 @@ func (o *KubeConfigOptions) WriteConfig(clusters *clustersv1.ClusterList, path s
 				APIVersion: alpha.ExecAPIVersion,
 				Command:    o.KorePath,
 				Args: []string{
-					"--profile=" + current,
+					"--profile=" + o.Client().CurrentProfile(),
 					"alpha",
 					"authorize",
 				},
@@ -172,18 +172,21 @@ func (o *KubeConfigOptions) WriteConfig(clusters *clustersv1.ClusterList, path s
 			o.Println("SKIPPING CLUSTER: %s as it does not have an endpoint yet", x.Name)
 			continue
 		}
+		// ensure we have entries
+		if cfg.Clusters == nil {
+			cfg.Clusters = make(map[string]*api.Cluster)
+		}
+		if cfg.Contexts == nil {
+			cfg.Contexts = make(map[string]*api.Context)
+		}
 
 		cfg.Clusters[x.Name] = &api.Cluster{
 			InsecureSkipTLSVerify: true,
 			Server:                "https://" + x.Status.AuthProxyEndpoint,
 		}
-
-		// @step: add the context
-		if _, found := cfg.Contexts[x.Name]; !found {
-			cfg.Contexts[x.Name] = &api.Context{
-				AuthInfo: authUser,
-				Cluster:  x.Name,
-			}
+		cfg.Contexts[x.Name] = &api.Context{
+			AuthInfo: authUser,
+			Cluster:  x.Name,
 		}
 	}
 
