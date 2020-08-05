@@ -167,10 +167,10 @@ func (u teamHandler) getAccountOUs(req *restful.Request, resp *restful.Response)
 	handleErrors(req, resp, func() error {
 		team := req.PathParameter("team")
 		params := kore.OUParams{
-			AWSKey:   req.HeaderParameter(HeaderAWSSecretAccessKey),
-			AWSKeyID: req.HeaderParameter(HeaderAWSAccessKeyID),
-			Region:   req.QueryParameter("region"),
-			RoleARN:  req.QueryParameter("roleARN"),
+			AWSAccessKeyID:     req.HeaderParameter(HeaderAWSAccessKeyID),
+			AWSSecretAccessKey: req.HeaderParameter(HeaderAWSSecretAccessKey),
+			Region:             req.QueryParameter("region"),
+			RoleARN:            req.QueryParameter("roleARN"),
 		}
 
 		ouList, err := u.Teams().Team(team).Cloud().AWS().AWSOrganizations().GetAccountOUs(

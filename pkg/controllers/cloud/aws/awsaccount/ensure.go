@@ -213,6 +213,47 @@ func (t *awsCtrl) EnsureAWSAccountProvisioned(
 			account.Status.Conditions.SetCondition(successComponent)
 			return client, true, nil
 		}
+		// Need to ensure the AWS Account Factory service catalog portfolio is associated with our IAM role
+		err := client.EnsureAccountFactoryAssociatedWithRole()
+		if err != nil {
+			logger.Warnf("unable to associate service catalog product with role %s - %s", org.Spec.RoleARN, err)
+
+			account.Status.Conditions.SetCondition(corev1.Component{
+				Name:    ComponentAccountCreation,
+				Detail:  err.Error(),
+				Message: "Problem setting up AWS Control Tower's Account factory",
+				Status:  corev1.FailureStatus,
+			})
+
+			return client, false, err
+		}
+
+		// If this access has changed, we need to be able to back off and wait
+		ready, err := client.IsAccountFactoryReady()
+		if err != nil {
+			logger.Warnf("unable to check for AWS control tower readiness - %s", err)
+
+			account.Status.Conditions.SetCondition(corev1.Component{
+				Name:    ComponentAccountCreation,
+				Detail:  err.Error(),
+				Message: "Problem determining if AWS Control Tower is ready",
+				Status:  corev1.FailureStatus,
+			})
+
+			return client, false, err
+		}
+		if !ready {
+			account.Status.Conditions.SetCondition(corev1.Component{
+				Name:    ComponentAccountCreation,
+				Detail:  "AWS Control Tower is associating the Account Factory with the Kore AWS role",
+				Message: "Waiting for AWS access for Kore to provision accounts",
+				Status:  corev1.PendingStatus,
+			})
+
+			// We now need to back off and wait
+			return client, false, nil
+		}
+
 		// We need to provision now...
 		account.Status.ServiceCatalogProvisioningID, err = client.CreateNewAccount()
 		if err != nil {
@@ -261,7 +302,7 @@ func (t *awsCtrl) EnsureAccessFromMasterRole(
 			Name:    ComponentAccountMasterAccess,
 			Detail:  err.Error(),
 			Message: "Problem when deploying access to account",
-			Status:  corev1.WarningStatus,
+			Status:  corev1.FailureStatus,
 		})
 
 		return false, nil

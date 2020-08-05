@@ -48,7 +48,10 @@
                                         "cloudformation:CreateStackSet",
                                         "cloudformation:UpdateStackSet"
                                     ],
-                                    "Resource": "arn:aws:cloudformation:*:*:stackset/kore-admin-role-for-member-accounts:*"
+                                    "Resource": [
+                                        "arn:aws:cloudformation:*:*:stackset/kore-admin-role-for-member-accounts*:*",
+                                        "arn:aws:cloudformation:*::type/resource/AWS-IAM-Role"
+                                    ]
                                 },
                                 {
                                     "Effect": "Allow",
@@ -56,7 +59,11 @@
                                         "cloudformation:CreateStackInstances",
                                         "cloudformation:ListStackInstances"
                                     ],
-                                    "Resource": "arn:aws:cloudformation:*:*:stack/StackSet-kore-admin-role-for-member-accounts-*"
+                                    "Resource": [
+                                        "arn:aws:cloudformation::*:stackset-target/kore-admin-role-for-member-accounts*:*",
+                                        "arn:aws:cloudformation:*:*:stackset/kore-admin-role-for-member-accounts*:*",
+                                        "arn:aws:cloudformation:*::type/resource/AWS-IAM-Role"
+                                    ]
                                 }
                             ]
                         }
@@ -79,7 +86,8 @@
                                         "servicecatalog:DescribeProduct",
                                         "servicecatalog:ProvisionProduct",
                                         "servicecatalog:DescribeRecord",
-                                        "sts:AssumeRole"
+                                        "sts:AssumeRole",
+                                        "iam:GetRole"
                                     ],
                                     "Resource": "*"
                                 }

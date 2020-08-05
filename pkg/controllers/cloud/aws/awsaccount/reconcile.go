@@ -101,7 +101,7 @@ func (t awsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			return reconcile.Result{}, err
 		}
 
-		// @step: ensure the gcp organization
+		// @step: ensure the aws organization
 		org, err := t.EnsureOrganization(ctx, account)
 		if err != nil {
 			logger.WithError(err).Error("trying to retrieve the aws organization")
@@ -131,6 +131,9 @@ func (t awsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 			return reconcile.Result{Requeue: true}, nil
 		}
 
+		// Update the status with the ID for the account now we know it's been provisioned
+		account.Status.AccountID = client.GetAccountID()
+
 		// @step: ensure initial access
 		accessReady, err := t.EnsureAccessFromMasterRole(ctx, account, client)
 		if err != nil {
@@ -156,7 +159,6 @@ func (t awsCtrl) Reconcile(request reconcile.Request) (reconcile.Result, error) 
 
 			return reconcile.Result{}, err
 		}
-
 		account.Status.Status = corev1.SuccessStatus
 
 		return reconcile.Result{}, nil

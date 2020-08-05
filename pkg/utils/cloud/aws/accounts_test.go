@@ -121,14 +121,6 @@ func TestCreateAccountCredentials(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestDoAccountCredentialsExist(t *testing.T) {
-	test.SkipTestIfEnvNotSet(testAccountsPrefix, t)
-
-	a := getAccountClientForTest(t)
-	_, err := a.DoAccountCredentialsExist()
-	require.NoError(t, err)
-}
-
 func getAccountClientForTest(t *testing.T) *AccountClient {
 	td := getTestDataForAccountClient(t)
 	return NewAccountClientFromSessionAndRole(td.session, td.roleARN, td.newRegion, td.account)

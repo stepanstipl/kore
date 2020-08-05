@@ -30,10 +30,10 @@ import (
 
 // OUParams are the values required when querying OU's
 type OUParams struct {
-	// AWSKey is the AWS key used for carrying out the OU query
-	AWSKey string
-	// AWSKeyID is the AWS key ID used for carrying out the query
-	AWSKeyID string
+	// AWSAccessKeyID is the AWS access key ID used for carrying out the query
+	AWSAccessKeyID string
+	// AWSSecretAccessKey is the AWS secret access key used for carrying out the OU query
+	AWSSecretAccessKey string
 	// Region is the region to use for all Control Tower and organization APIS.
 	Region string
 	// RoleARN is the role to assume in the Master account
@@ -50,7 +50,7 @@ type AWSOrganizations interface {
 	List(context.Context) (*awsv1alpha1.AWSOrganizationList, error)
 	// Update is used to update the aws orgaisation definition
 	Update(context.Context, *awsv1alpha1.AWSOrganization) (*awsv1alpha1.AWSOrganization, error)
-	//GetAccGetAccountOUs will get OU's for Accounts given an awskey, awskeyid, region and roleArn
+	// GetAccountOUs will get OU's for Accounts given an awskey, awskeyid, region and roleArn
 	GetAccountOUs(context.Context, OUParams) ([]string, error)
 }
 
@@ -164,8 +164,8 @@ func (h awsocl) GetAccountOUs(ctx context.Context, p OUParams) ([]string, error)
 
 	s := awsutils.AssumeRoleFromCreds(
 		awsutils.Credentials{
-			AccessKeyID:     p.AWSKeyID,
-			SecretAccessKey: p.AWSKey,
+			AccessKeyID:     p.AWSAccessKeyID,
+			SecretAccessKey: p.AWSSecretAccessKey,
 		},
 		p.RoleARN,
 		p.Region,
@@ -174,7 +174,7 @@ func (h awsocl) GetAccountOUs(ctx context.Context, p OUParams) ([]string, error)
 	// Verify auth first:
 	_, err := s.Config.Credentials.Get()
 	if err != nil {
-		log.Debugf("unable to use aws credential id %s and assume role %s", p.AWSKeyID, p.RoleARN)
+		log.Debugf("unable to use aws credential id %s and assume role %s", p.AWSAccessKeyID, p.RoleARN)
 
 		return ous, ErrUnauthorized
 	}

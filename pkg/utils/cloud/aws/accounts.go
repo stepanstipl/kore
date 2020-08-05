@@ -26,6 +26,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/iam"
@@ -37,8 +38,8 @@ const (
 	serviceCatalogControlTowerPortfolioProviderName = "AWS Control Tower"
 	serviceCatalogControlTowerProductName           = "AWS Control Tower Account Factory"
 
-	// KoreAccountAdminStackSetName is the name of the stackset
-	KoreAccountAdminStackSetName = "kore-admin-role-for-member-accounts"
+	// KoreAccountAdminStackSetNamePrefix is the prefix for the name of the stackset
+	KoreAccountAdminStackSetNamePrefix = "kore-admin-role-for-member-accounts"
 	// KoreAccountsAdminRoleName is the iam role name to create in each new account
 	KoreAccountsAdminRoleName = "kore-accounts-admin-automation-role"
 	// KoreAccountAdminUserName is the username to use when creating credentials in the new accounts
@@ -91,19 +92,25 @@ const (
 type AccountClienter interface {
 	// Exists will check aws to see if the account exists
 	Exists() (bool, error)
+	// EnsureAccountFactoryAssociatedWithRole checks that the role arn has been associated with the account factory product
+	EnsureAccountFactoryAssociatedWithRole() error
+	// IsAccountFactoryReady checks to see if the service catalog account factory product is now associated for use
+	IsAccountFactoryReady() (bool, error)
 	// CreateNewAccount will create a new aws account and return a provisioning record id for checking status
 	CreateNewAccount() (string, error)
 	// WaitForAccountAvailable is used to wait for the account to be created
 	WaitForAccountAvailable(ctx context.Context, provisionRecordID string) error
 	// IsAccountReady will determine if the account provisioning is ready
 	IsAccountReady(provisionRecordID string) (bool, error)
+	// GetAccountID obtains the unique AWS account ID
+	GetAccountID() string
 	// EnsureInitialAccessCreated will ensure access to the account
 	EnsureInitialAccessCreated() error
 	// IsInitialAccessReady checks if initial access is working
 	IsInitialAccessReady() (bool, error)
 	// WaitForInitialAccess is used to wait for the account to be created
 	WaitForInitialAccess(ctx context.Context) error
-	// DoAccountCredentialsExist will create or update any missing accounts
+	// CreateAccountCredentials will create or update any missing accounts
 	CreateAccountCredentials() (*Credentials, error)
 }
 
@@ -121,14 +128,16 @@ type Account struct {
 
 // AccountClient provides access to account management methods
 type AccountClient struct {
-	session        *session.Session
-	svc            *servicecatalog.ServiceCatalog
-	roleARN        string
-	account        Account
-	region         string
-	cfSvc          *cloudformation.CloudFormation
-	sis            *cloudformation.StackInstanceSummary
-	accountSession *session.Session
+	session         *session.Session
+	svc             *servicecatalog.ServiceCatalog
+	roleARN         string
+	account         Account
+	region          string
+	cfSvc           *cloudformation.CloudFormation
+	sis             *cloudformation.StackInstanceSummary
+	accountSession  *session.Session
+	portfolioDetail *servicecatalog.PortfolioDetail
+	productID       *string
 }
 
 // Ensure we implement the public interface
@@ -179,11 +188,26 @@ func (a *AccountClient) Exists() (bool, error) {
 	return false, nil
 }
 
-// CreateNewAccount will create a new aws account and return a provisioning record id for checking status
-func (a *AccountClient) CreateNewAccount() (string, error) {
-	parsedARN, err := arn.Parse(a.roleARN)
+// GetAccountID obtains the unique AWS account ID (if set)
+func (a *AccountClient) GetAccountID() string {
+	if exist, err := a.Exists(); !exist {
+		if err != nil {
+
+			log.Debugf("error obtaining account id for %s - %s", a.account.NewAccountName, err.Error())
+		}
+
+		return ""
+	}
+
+	// account exists and has an ID
+	return aws.StringValue(a.account.id)
+}
+
+// EnsureAccountFactoryAssociatedWithRole will ensure the AWS Account factory product can be used
+func (a *AccountClient) EnsureAccountFactoryAssociatedWithRole() error {
+	_, err := arn.Parse(a.roleARN)
 	if err != nil {
-		return "", fmt.Errorf("unable to parse role arn %s for account id", a.roleARN)
+		return fmt.Errorf("unable to parse role arn %s for account id", a.roleARN)
 	}
 
 	// First ensure the portfolio can be found...
@@ -192,14 +216,14 @@ func (a *AccountClient) CreateNewAccount() (string, error) {
 	})
 	if err != nil {
 
-		return "", fmt.Errorf("role %s cannot list portfolios - %w", a.roleARN, err)
+		return fmt.Errorf("role %s cannot list portfolios - %w", a.roleARN, err)
 	}
 	var portfolioDetail *servicecatalog.PortfolioDetail
 	for _, pd := range po.PortfolioDetails {
 		if *pd.ProviderName == serviceCatalogControlTowerPortfolioProviderName {
 			if portfolioDetail != nil {
 
-				return "", fmt.Errorf("found more than one portfolio with provider name - %s", serviceCatalogControlTowerPortfolioProviderName)
+				return fmt.Errorf("found more than one portfolio with provider name - %s", serviceCatalogControlTowerPortfolioProviderName)
 			}
 			portfolioDetail = pd
 			// continue searching to make sure we have a unque ID
@@ -207,7 +231,7 @@ func (a *AccountClient) CreateNewAccount() (string, error) {
 	}
 	if portfolioDetail == nil {
 
-		return "", fmt.Errorf("role %s cannot find portfolios for %s using %v", a.roleARN, serviceCatalogControlTowerPortfolioProviderName, po.PortfolioDetails)
+		return fmt.Errorf("role %s cannot find portfolios for %s using %v", a.roleARN, serviceCatalogControlTowerPortfolioProviderName, po.PortfolioDetails)
 	}
 	// Now associate the portfolio with us...
 	_, err = a.svc.AssociatePrincipalWithPortfolio(&servicecatalog.AssociatePrincipalWithPortfolioInput{
@@ -217,35 +241,49 @@ func (a *AccountClient) CreateNewAccount() (string, error) {
 	})
 	if err != nil {
 
-		return "", fmt.Errorf("role %s cannot associate portfolios %s to own role %w", serviceCatalogControlTowerPortfolioProviderName, a.roleARN, err)
+		return fmt.Errorf("role %s cannot associate own priciple (role) with portfolio for %s - %w", a.roleARN, serviceCatalogControlTowerPortfolioProviderName, err)
 	}
+	a.portfolioDetail = portfolioDetail
 
-	// We should be able to find the right product now...
-	spo, err := a.svc.SearchProducts(&servicecatalog.SearchProductsInput{
-		Filters: map[string][]*string{
-			"FullTextSearch": {
-				aws.String(serviceCatalogControlTowerProductName),
-			},
-		},
-	})
+	return nil
+}
+
+// IsAccountFactoryReady will check to see if the Account Factory product is associated
+func (a *AccountClient) IsAccountFactoryReady() (bool, error) {
+	productID, err := a.getAccountFactoryProductID()
 	if err != nil {
 
-		return "", fmt.Errorf("unable to list products matching %s with error - %w", serviceCatalogControlTowerProductName, err)
-	}
-	var productID *string
-	for _, pvso := range spo.ProductViewSummaries {
-		if *pvso.Name == serviceCatalogControlTowerProductName {
-			if productID != nil {
-
-				return "", fmt.Errorf("found more than one product with name - %s", serviceCatalogControlTowerPortfolioProviderName)
-			}
-			productID = pvso.ProductId
-			// continue searching to make sure we have a unque ID
-		}
+		return false, err
 	}
 	if productID == nil {
 
-		return "", fmt.Errorf("role %s cannot find product %s - %v", serviceCatalogControlTowerProductName, a.roleARN, spo.ProductViewSummaries)
+		// Product not yet found (will happen a few times for the first account)
+		return false, nil
+	}
+
+	return true, nil
+}
+
+// CreateNewAccount will create a new aws account and return a provisioning record id for checking status
+func (a *AccountClient) CreateNewAccount() (string, error) {
+	parsedARN, err := arn.Parse(a.roleARN)
+	if err != nil {
+
+		return "", fmt.Errorf("unable to parse role arn %s for account id", a.roleARN)
+	}
+	if a.portfolioDetail == nil {
+
+		return "", fmt.Errorf("No portfolio known for role %s, have you called EnsureAccountFactoryAssociatedWithRole first", a.roleARN)
+	}
+
+	productID, err := a.getAccountFactoryProductID()
+	if err != nil {
+
+		return "", fmt.Errorf("role %s cannot find list products %s - %w", a.roleARN, serviceCatalogControlTowerProductName, err)
+	}
+	if productID == nil {
+
+		return "", fmt.Errorf("role %s cannot find product %s", a.roleARN, serviceCatalogControlTowerProductName)
 	}
 	// Get the provisioning artifact ID
 	dpo, err := a.svc.DescribeProduct(&servicecatalog.DescribeProductInput{
@@ -280,13 +318,13 @@ func (a *AccountClient) CreateNewAccount() (string, error) {
 	var launchPathID *string
 	for _, lps := range lpo.LaunchPathSummaries {
 		log.Debugf("launch path name '%s' with launch path id '%s'", *lps.Name, *lps.Id)
-		if aws.StringValue(lps.Name) == aws.StringValue(portfolioDetail.DisplayName) {
+		if aws.StringValue(lps.Name) == aws.StringValue(a.portfolioDetail.DisplayName) {
 			launchPathID = lps.Id
 		}
 	}
 	if launchPathID == nil {
 
-		return "", fmt.Errorf("unable to find a launch path ID with display name %s", *portfolioDetail.DisplayName)
+		return "", fmt.Errorf("unable to find a launch path ID with display name %s", *a.portfolioDetail.DisplayName)
 	}
 
 	// Not for crypto just for api requests
@@ -411,8 +449,8 @@ func (a *AccountClient) EnsureInitialAccessCreated() error {
 		return fmt.Errorf("unable to oibtain ou id from ou %s - %w", a.account.ManagedOrganizationalUnit, err)
 	}
 
-	_, err = cfSvc.DescribeStackSet(&cloudformation.DescribeStackSetInput{
-		StackSetName: aws.String(KoreAccountAdminStackSetName),
+	s, err := cfSvc.DescribeStackSet(&cloudformation.DescribeStackSetInput{
+		StackSetName: aws.String(a.getStacksetName()),
 	})
 	stackSetExists := true
 	if err != nil {
@@ -422,13 +460,13 @@ func (a *AccountClient) EnsureInitialAccessCreated() error {
 		}
 		stackSetExists = false
 	}
+	template := fmt.Sprintf(koreAccountsAdminCFTemplate, KoreAccountsAdminRoleName, a.roleARN)
 	if !stackSetExists {
 
 		// First we create a "service managed" stackset to deploy an admin role we can assume
 		// any kore managed identities (roles) will be created using this account
-		template := fmt.Sprintf(koreAccountsAdminCFTemplate, KoreAccountsAdminRoleName, a.roleARN)
 		_, err := cfSvc.CreateStackSet(&cloudformation.CreateStackSetInput{
-			StackSetName: aws.String(KoreAccountAdminStackSetName),
+			StackSetName: aws.String(a.getStacksetName()),
 			Description:  aws.String("Kore managed stackset to enable priovision an admin role to managed accounts"),
 			AutoDeployment: &cloudformation.AutoDeployment{
 				Enabled:                      aws.Bool(true),
@@ -445,10 +483,32 @@ func (a *AccountClient) EnsureInitialAccessCreated() error {
 		})
 		if err != nil {
 
-			return fmt.Errorf("error creating stackset %s from template %s - %w", KoreAccountAdminStackSetName, template, err)
+			return fmt.Errorf("error creating stackset %s from template %s - %w", a.getStacksetName(), template, err)
+		}
+	} else {
+		oldTemplate := aws.StringValue(s.StackSet.TemplateBody)
+		if oldTemplate != template {
+
+			log.Debugf("Changes detected from within kore, replacing old template - %s", oldTemplate)
+			_, err := cfSvc.UpdateStackSet(&cloudformation.UpdateStackSetInput{
+				StackSetName: aws.String(a.getStacksetName()),
+				Description:  aws.String("Changes detected from within kore, updating stackset"),
+				AutoDeployment: &cloudformation.AutoDeployment{
+					Enabled:                      aws.Bool(true),
+					RetainStacksOnAccountRemoval: aws.Bool(true),
+				},
+				PermissionModel: aws.String(cloudformation.PermissionModelsServiceManaged),
+				TemplateBody:    aws.String(template),
+				Capabilities: aws.StringSlice([]string{
+					cloudformation.CapabilityCapabilityNamedIam,
+				}),
+			})
+			if err != nil {
+
+				return fmt.Errorf("error updating stackset %s to new template %s - %w", a.getStacksetName(), template, err)
+			}
 		}
 	}
-	// TODO: add else detect drift here (does stackset match latest definition)
 
 	// Now ensure we have a stack instance for our account
 	err = a.updateStackSetInstanceSummary()
@@ -458,7 +518,7 @@ func (a *AccountClient) EnsureInitialAccessCreated() error {
 	if a.sis == nil {
 		// create a stackset instance
 		_, err := cfSvc.CreateStackInstances(&cloudformation.CreateStackInstancesInput{
-			StackSetName: aws.String(KoreAccountAdminStackSetName),
+			StackSetName: aws.String(a.getStacksetName()),
 			OperationId:  getAwsStringToken(),
 			Regions: []*string{
 				&a.account.PrimaryResourceRegion,
@@ -471,7 +531,7 @@ func (a *AccountClient) EnsureInitialAccessCreated() error {
 		})
 		if err != nil {
 
-			return fmt.Errorf("unable to create stackset instance for %s with account %s - %w", KoreAccountAdminStackSetName, *a.account.id, err)
+			return fmt.Errorf("unable to create stackset instance for %s with account %s - %w", a.getStacksetName(), *a.account.id, err)
 		}
 	}
 
@@ -516,21 +576,49 @@ func (a *AccountClient) IsInitialAccessReady() (bool, error) {
 	return a.isInitialAccessReady()
 }
 
-// DoAccountCredentialsExist will create or update any missing accounts
-func (a *AccountClient) DoAccountCredentialsExist() (bool, error) {
-	s, err := a.assumeAccountRole()
+func (a *AccountClient) getAccountFactoryProductID() (*string, error) {
+	if a.productID != nil {
+
+		return a.productID, nil
+	}
+
+	// We should be able to find the right product now...
+	spo, err := a.svc.SearchProducts(&servicecatalog.SearchProductsInput{
+		Filters: map[string][]*string{
+			"FullTextSearch": {
+				aws.String(serviceCatalogControlTowerProductName),
+			},
+		},
+	})
 	if err != nil {
 
-		return false, err
+		return nil, fmt.Errorf("unable to list products matching %s with error - %w", serviceCatalogControlTowerProductName, err)
 	}
-	i := iam.New(s)
-	_, err = i.GetUser(&iam.GetUserInput{
+	for _, pvso := range spo.ProductViewSummaries {
+		if *pvso.Name == serviceCatalogControlTowerProductName {
+			if a.productID != nil {
+
+				return nil, fmt.Errorf("found more than one product with name - %s", serviceCatalogControlTowerPortfolioProviderName)
+			}
+			a.productID = pvso.ProductId
+			// continue searching to make sure we have a unque ID
+		}
+	}
+
+	return a.productID, nil
+}
+
+// doesAccountUserExist will decipher if the user exists
+func (a *AccountClient) doesAccountUserExist(i *iam.IAM) (bool, error) {
+	_, err := i.GetUser(&iam.GetUserInput{
 		UserName: aws.String(KoreAccountAdminUserName),
 	})
 	if err != nil {
 		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+
 			return false, nil
 		}
+
 		return false, fmt.Errorf("error checking if user %s exists in account %s - %w", KoreAccountAdminUserName, a.account.NewAccountName, err)
 	}
 	return true, nil
@@ -543,13 +631,21 @@ func (a *AccountClient) CreateAccountCredentials() (*Credentials, error) {
 
 		return nil, err
 	}
+
 	i := iam.New(s)
-	_, err = i.CreateUser(&iam.CreateUserInput{
-		UserName: aws.String(KoreAccountAdminUserName),
-	})
+	exists, err := a.doesAccountUserExist(i)
 	if err != nil {
 
-		return nil, fmt.Errorf("error creating user %s in account %s - %w", KoreAccountAdminUserName, a.account.NewAccountName, err)
+		return nil, err
+	}
+	if !exists {
+		_, err = i.CreateUser(&iam.CreateUserInput{
+			UserName: aws.String(KoreAccountAdminUserName),
+		})
+		if err != nil {
+
+			return nil, fmt.Errorf("error creating user %s in account %s - %w", KoreAccountAdminUserName, a.account.NewAccountName, err)
+		}
 	}
 
 	// Attach admin policy for account scoped creds:
@@ -582,12 +678,17 @@ func (a *AccountClient) CreateAccountCredentials() (*Credentials, error) {
 	}, nil
 }
 
+func (a *AccountClient) getStacksetName() string {
+
+	return fmt.Sprintf("%s-ou-%s", KoreAccountAdminStackSetNamePrefix, a.account.ManagedOrganizationalUnit)
+}
+
 // isInitialAccessReady will determine if we are ready to assume role in new account
 func (a *AccountClient) isInitialAccessReady() (bool, error) {
 	ready, err := a.isStackSetInstanceReady(true)
 	if err != nil {
 
-		return false, fmt.Errorf("unbale to check if instance for %s with account %s is ready - %w", KoreAccountAdminStackSetName, *a.account.id, err)
+		return false, fmt.Errorf("unbale to check if instance for %s with account %s is ready - %w", a.getStacksetName(), *a.account.id, err)
 	}
 	if !ready {
 
@@ -603,6 +704,15 @@ func (a *AccountClient) isInitialAccessReady() (bool, error) {
 	// try and assume to acccount:
 	_, err = s.Config.Credentials.Get()
 	if err != nil {
+		// We need to back off when access denied here (the role may be being updated)
+		if reqerr, ok := err.(awserr.RequestFailure); ok {
+
+			if reqerr.StatusCode() == 403 {
+
+				// This is not an error - we are waiting for access so it is retryable
+				return false, nil
+			}
+		}
 
 		return false, err
 	}
@@ -640,13 +750,13 @@ func (a *AccountClient) isStackSetInstanceReady(checkNow bool) (bool, error) {
 
 func (a *AccountClient) updateStackSetInstanceSummary() error {
 	sio, err := a.getCfSvc().ListStackInstances(&cloudformation.ListStackInstancesInput{
-		StackSetName:         aws.String(KoreAccountAdminStackSetName),
+		StackSetName:         aws.String(a.getStacksetName()),
 		StackInstanceAccount: a.account.id,
 		StackInstanceRegion:  &a.account.PrimaryResourceRegion,
 	})
 	if err != nil {
 		if !isAWSErr(err, cloudformation.ErrCodeStackInstanceNotFoundException, "") {
-			return fmt.Errorf("unable to list stackset instances for %s - %w", KoreAccountAdminStackSetName, err)
+			return fmt.Errorf("unable to list stackset instances for %s - %w", a.getStacksetName(), err)
 		}
 	}
 	// determine if we have an instance for this account

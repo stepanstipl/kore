@@ -79,15 +79,21 @@ func GetOUID(s *session.Session, ouName string) (*string, error) {
 
 // ListOUsFromParent will obtain the OUs from a given parent ID (id of root or OR)
 func ListOUsFromParent(s *session.Session, parentID string) ([]*organizations.OrganizationalUnit, error) {
+	var ous []*organizations.OrganizationalUnit
+
 	orgSvc := organizations.New(s)
-	ouo, err := orgSvc.ListOrganizationalUnitsForParent(&organizations.ListOrganizationalUnitsForParentInput{
+	err := orgSvc.ListOrganizationalUnitsForParentPages(&organizations.ListOrganizationalUnitsForParentInput{
 		ParentId: aws.String(parentID),
+	}, func(output *organizations.ListOrganizationalUnitsForParentOutput, b bool) bool {
+		ous = append(ous, output.OrganizationalUnits...)
+		return true
 	})
+
 	if err != nil {
 
 		return nil, fmt.Errorf("unbale to list organisational units %w", err)
 	}
-	return ouo.OrganizationalUnits, nil
+	return ous, nil
 }
 
 // GetRoots gets all the Root IDs in an organisation
