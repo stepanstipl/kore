@@ -120,11 +120,12 @@ build-cluster() {
   kore alpha local up \
     --deployment-timeout=8m \
     --force=true \
+    --local-admin-password=${KORE_ADMIN_PASS} \
     --release=charts/kore \
     --set=api.admin_pass=${KORE_ADMIN_PASS} \
     --set=api.admin_token=${KORE_ADMIN_TOKEN} \
-    --set=api.auth_plugin_config={} \
     --set=api.auth_plugin_config.local_jwt_publickey=${KORE_LOCAL_JWT_PUBLIC_KEY} \
+    --set=api.auth_plugin_config={} \
     --set=api.auth_plugins.0=basicauth \
     --set=api.auth_plugins.1=admintoken \
     --set=api.auth_plugins.2=localjwt \
